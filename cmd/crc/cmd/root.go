@@ -1,9 +1,11 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/output"
 )
 
 var rootCmd = &cobra.Command{
@@ -23,16 +25,16 @@ func init() {
 }
 
 func runPrerun() {
-	fmt.Println(fmt.Sprintf("%s - %s", commandName, descriptionShort))
+	output.Out("%s - %s", commandName, descriptionShort)
 }
 
 func runRoot() {
-	fmt.Println("No command given")
+	output.Out("No command given")
 }
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println("ERR:", err.Error())
+		logging.Log("ERR: %s", err.Error())
 		os.Exit(1)
 	}
 }
