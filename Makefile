@@ -75,3 +75,6 @@ clean:
 	rm -rf $(BUILD_DIR)
 	rm -f $(GOPATH)/bin/crc
 
+.PHONY: integration ## Run integration tests
+integration:
+	go test $(REPOPATH)/test/integration -v --tags=integration
