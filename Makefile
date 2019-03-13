@@ -58,3 +58,6 @@ cross: $(BUILD_DIR)/darwin-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/w
 clean:
 	rm -rf $(BUILD_DIR)
 
+.PHONY: integration
+integration:
+		rm -rf $(BUILD_DIR)
