@@ -73,3 +73,6 @@ test:
 clean:
 	rm -rf $(BUILD_DIR)
 
+.PHONY: integration ## Run integration tests
+integration:
+	go test $(REPOPATH)/test/integration -v --tags=integration
