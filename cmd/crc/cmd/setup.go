@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/spf13/cobra"
 )
 
@@ -19,4 +20,6 @@ var setupCmd = &cobra.Command{
 }
 
 func runSetup(arguments []string) {
+	// TODO: check if user is root before launching setup
+	preflight.SetupHost()
 }
