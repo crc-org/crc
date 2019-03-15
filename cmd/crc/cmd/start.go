@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/spf13/cobra"
 )
 
@@ -18,4 +19,5 @@ var startCmd = &cobra.Command{
 }
 
 func runStart(arguments []string) {
+	preflight.StartPreflightChecks()
 }
