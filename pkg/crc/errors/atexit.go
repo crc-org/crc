@@ -17,6 +17,7 @@ limitations under the License.
 package errors
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -25,8 +26,10 @@ import (
 
 const ExitHandlerPanicMessage = "At least one exit handler vetoed to exit program execution"
 
+type exitHandlerFunc func(int) bool
+
 // exitHandlers keeps track of the list of registered exit handlers. Handlers are applied in the order defined in this list.
-var exitHandlers = []func(code int) bool{}
+var exitHandlers = []exitHandlerFunc{}
 
 // Exit runs all registered exit handlers and then exits the program with the specified exit code using os.Exit.
 func Exit(code int) {
@@ -39,23 +42,23 @@ func Exit(code int) {
 
 // ExitWithMessage runs all registered exit handlers, prints the specified message and then exits the program with the specified exit code.
 // If the exit code is 0, the message is prints to stdout, otherwise to stderr.
-func ExitWithMessage(code int, msg string) {
+func ExitWithMessage(code int, text string, args ...interface{}) {
 	if code == 0 {
-		output.OutW(os.Stdout, msg)
+		output.OutW(os.Stdout, fmt.Sprintf(text, args...))
 	} else {
-		output.OutW(os.Stderr, msg)
+		output.OutW(os.Stderr, fmt.Sprintf(text, args...))
 	}
 	Exit(code)
 }
 
 // Register registers an exit handler function which is run when Exit is called
-func RegisterExitHandler(exitHandler func(code int) bool) {
+func RegisterExitHandler(exitHandler exitHandlerFunc) {
 	exitHandlers = append(exitHandlers, exitHandler)
 }
 
 // ClearExitHandler clears all registered exit handlers
 func ClearExitHandler() {
-	exitHandlers = []func(code int) bool{}
+	exitHandlers = []exitHandlerFunc{}
 }
 
 // runHandlers runs all registered exit handlers, passing on the intended exit code.
@@ -70,7 +73,7 @@ func runHandlers(code int) bool {
 }
 
 // runHandler runs the single specified exit handler, returning whether this handler vetos the exit or not.
-func runHandler(exitHandler func(code int) bool, code int) bool {
+func runHandler(exitHandler exitHandlerFunc, code int) bool {
 	defer func() {
 		err := recover()
 		if err != nil {

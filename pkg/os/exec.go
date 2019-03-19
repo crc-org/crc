@@ -5,7 +5,7 @@ import (
 	"os/exec"
 )
 
-func RunWithPrivilage(cmdAndArgs ...string) (string, string, error) {
+func RunWithPrivilege(cmdAndArgs ...string) (string, string, error) {
 	sudo, err := exec.LookPath("sudo")
 	if err != nil {
 		return "", "", err

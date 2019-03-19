@@ -16,64 +16,25 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
+
 	. "github.com/code-ready/crc/pkg/os"
 	units "github.com/docker/go-units"
 )
 
 const (
-	driverBinaryDir      = "/usr/local/bin"
-	kvmDriverBinaryPath  = driverBinaryDir + "/docker-machine-driver-kvm"
-	kvmDriverDownloadURL = "https://github.com/dhiltgen/docker-machine-kvm/releases/download/v0.10.0/docker-machine-driver-kvm-centos7"
-	defaultPoolSize      = "20 GB"
-	nodeMac              = "52:fd:fc:07:21:82"
-	nodeIp               = "192.168.126.11"
-	domName              = "crc"
-	poolTemplate         = `<pool type='dir'>
-	<name>{{ .PoolName }}</name>
-		<target>
-			<path>{{ .PoolDir }}</path>
-		</target>
-</pool>`
+	driverBinaryDir          = "/usr/local/bin"
+	libvirtDriverCommand     = "crc-driver-libvirt"
+	libvirtDriverDownloadURL = "https://github.com/code-ready/machine-driver-libvirt/releases/download/0.9.1/crc-driver-libvirt"
+	defaultPoolSize          = "20 GB"
+)
 
-	crcNetworkTemplate = `<network>
-	<name>crc</name>
-	<uuid>49eee855-d342-46c3-9ed3-b8d1758814cd</uuid>
-	<forward mode='nat'>
-	  <nat>
-		<port start='1024' end='65535'/>
-	  </nat>
-	</forward>
-	<bridge name='tt0' stp='on' delay='0'/>
-	<mac address='52:54:00:fd:be:d0'/>
-	<domain name='test1.tt.testing' localOnly='yes'/>
-	<dns>
-	  <srv service='etcd-server-ssl' protocol='tcp' domain='test1.tt.testing' target='etcd-0.test1.tt.testing' port='2380' weight='10'/>
-	  <host ip='192.168.126.11'>
-		<hostname>api.test1.tt.testing</hostname>
-		<hostname>etcd-0.test1.tt.testing</hostname>
-	  </host>
-	</dns>
-	<ip family='ipv4' address='192.168.126.1' prefix='24'>
-	  <dhcp>
-		<host mac='{{ .NodeMac }}' name='{{ .NodeDomName }}' ip='{{ .NodeIP }}'/>
-	  </dhcp>
-	</ip>
-  </network>`
+var (
+	libvirtDriverBinaryPath = filepath.Join(driverBinaryDir, libvirtDriverCommand)
 )
 
 type poolXMLAvailableSpace struct {
 	Available float64 `xml:"available,unit"`
-}
-
-type nodeNetworkConfig struct {
-	NodeMac     string
-	NodeDomName string
-	NodeIP      string
-}
-type poolConfig struct {
-	PoolName string
-	PoolDir  string
 }
 
 func checkVirtualizationEnabled() (bool, error) {
@@ -137,7 +98,7 @@ func checkLibvirtInstalled() (bool, error) {
 }
 
 func fixLibvirtInstalled() (bool, error) {
-	stdOut, stdErr, err := RunWithPrivilage("yum", "install", "-y", "libvirt", "libvirt-daemon-kvm", "qemu-kvm")
+	stdOut, stdErr, err := RunWithPrivilege("yum", "install", "-y", "libvirt", "libvirt-daemon-kvm", "qemu-kvm")
 	if err != nil {
 		return false, fmt.Errorf("Could not install required packages: %s %v: %s", stdOut, err, stdErr)
 	}
@@ -169,7 +130,7 @@ func fixLibvirtEnabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	stdOut, stdErr, err := RunWithPrivilage(path, "enable", "libvirtd")
+	stdOut, stdErr, err := RunWithPrivilege(path, "enable", "libvirtd")
 	if err != nil {
 		return false, fmt.Errorf("%s, %v : %s", stdOut, err, stdErr)
 	}
@@ -206,7 +167,7 @@ func fixUserPartOfLibvirtGroup() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	stdOut, stdErr, err := RunWithPrivilage("usermod", "-a", "-G", "libvirt", currentUser.Username)
+	stdOut, stdErr, err := RunWithPrivilege("usermod", "-a", "-G", "libvirt", currentUser.Username)
 	if err != nil {
 		return false, fmt.Errorf("%s %v : %s", stdOut, err, stdErr)
 	}
@@ -236,7 +197,7 @@ func fixLibvirtServiceRunning() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	stdOut, stdErr, err := RunWithPrivilage(path, "start", "libvirtd")
+	stdOut, stdErr, err := RunWithPrivilege(path, "start", "libvirtd")
 	if err != nil {
 		return false, fmt.Errorf("%s %v : %s", stdOut, err, stdErr)
 	}
@@ -272,9 +233,9 @@ func fixIpForwardingEnabled() (bool, error) {
 	return true, nil
 }
 
-func checkDockerMachineDriverKvmInstalled() (bool, error) {
+func checkMachineDriverLibvirtInstalled() (bool, error) {
 	// Check if docker-machine-driver-kvm is available
-	path, err := exec.LookPath("docker-machine-driver-kvm")
+	path, err := exec.LookPath(libvirtDriverCommand)
 	if err != nil {
 		return false, err
 	}
@@ -288,20 +249,20 @@ func checkDockerMachineDriverKvmInstalled() (bool, error) {
 	}
 	// Check if permissions are correct
 	if fi.Mode()&0011 == 0 {
-		return false, errors.New("docker-machine-driver-kvm do not have correct permissions")
+		return false, errors.New("crc-driver-libvirt does not have correct permissions")
 	}
 	return true, nil
 }
 
-func fixDockerMachineDriverInstalled() (bool, error) {
+func fixMachineDriverLibvirtInstalled() (bool, error) {
 	// Download the driver binary in /tmp
-	tempFilePath := filepath.Join(os.TempDir(), "docker-machine-driver-kvm")
+	tempFilePath := filepath.Join(os.TempDir(), libvirtDriverCommand)
 	out, err := os.Create(tempFilePath)
 	if err != nil {
 		return false, err
 	}
 	defer out.Close()
-	resp, err := http.Get(kvmDriverDownloadURL)
+	resp, err := http.Get(libvirtDriverDownloadURL)
 	if err != nil {
 		return false, err
 	}
@@ -312,15 +273,15 @@ func fixDockerMachineDriverInstalled() (bool, error) {
 		return false, err
 	}
 
-	stdOut, stdErr, err := RunWithPrivilage("mkdir", "-p", driverBinaryDir)
+	stdOut, stdErr, err := RunWithPrivilege("mkdir", "-p", driverBinaryDir)
 	if err != nil {
 		return false, fmt.Errorf("%s %v: %s", stdOut, err, stdErr)
 	}
-	stdOut, stdErr, err = RunWithPrivilage("cp", tempFilePath, kvmDriverBinaryPath)
+	stdOut, stdErr, err = RunWithPrivilege("cp", tempFilePath, libvirtDriverBinaryPath)
 	if err != nil {
 		return false, fmt.Errorf("%s %v: %s", stdOut, err, stdErr)
 	}
-	stdOut, stdErr, err = RunWithPrivilage("chmod", "755", kvmDriverBinaryPath)
+	stdOut, stdErr, err = RunWithPrivilege("chmod", "755", libvirtDriverBinaryPath)
 	if err != nil {
 		return false, fmt.Errorf("%s %v: %s", stdOut, err, stdErr)
 	}
@@ -354,12 +315,12 @@ func checkDefaultPoolAvailable() (bool, error) {
 }
 
 func fixDefaultPoolAvailable() (bool, error) {
-	config := poolConfig{
-		PoolName: constants.PoolName,
-		PoolDir:  constants.PoolDir,
+	config := libvirt.PoolConfig{
+		PoolName: libvirt.PoolName,
+		Dir:      libvirt.PoolDir,
 	}
 
-	t, err := template.New("poolxml").Parse(poolTemplate)
+	t, err := template.New("poolxml").Parse(libvirt.StoragePoolTemplate)
 	if err != nil {
 		return false, err
 	}
@@ -430,13 +391,13 @@ func checkLibvirtCrcNetworkAvailable() (bool, error) {
 }
 
 func fixLibvirtCrcNetworkAvailable() (bool, error) {
-	config := nodeNetworkConfig{
-		NodeMac:     constants.NodeMac,
-		NodeDomName: constants.DomName,
-		NodeIP:      constants.NodeIP,
+	config := libvirt.NetworkConfig{
+		DomainName: libvirt.DefaultDomainName,
+		MAC:        libvirt.MACAddress,
+		IP:         libvirt.IPAddress,
 	}
 
-	t, err := template.New("netxml").Parse(crcNetworkTemplate)
+	t, err := template.New("netxml").Parse(libvirt.NetworkTemplate)
 	if err != nil {
 		return false, err
 	}

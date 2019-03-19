@@ -10,25 +10,25 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(stopCmd)
+	rootCmd.AddCommand(deleteCmd)
 }
 
-var stopCmd = &cobra.Command{
-	Use:   "stop",
-	Short: "Stop cluster",
-	Long:  "Stop cluster",
+var deleteCmd = &cobra.Command{
+	Use:   "delete",
+	Short: "Delete cluster",
+	Long:  "Delete cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		runStop(args)
+		runDelete(args)
 	},
 }
 
-func runStop(arguments []string) {
+func runDelete(arguments []string) {
 
-	stopConfig := machine.StopConfig{
+	deleteConfig := machine.DeleteConfig{
 		Name: constants.DefaultName,
 	}
 
-	commandResult, err := machine.Stop(stopConfig)
+	commandResult, err := machine.Delete(deleteConfig)
 	output.Out(commandResult.Success)
 	if err != nil {
 		output.Out(err.Error())
