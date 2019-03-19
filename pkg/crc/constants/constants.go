@@ -7,12 +7,21 @@ import (
 )
 
 const (
-	DomName      = "crc"
-	NodeMac      = "52:fd:fc:07:21:82"
-	NodeIP       = "192.168.126.11"
-	PoolName     = "crc"
-	PoolDir      = "/var/lib/libvirt/images"
+	DefaultName   = "crc"
+	DefaultCPUs   = 4
+	DefaultMemory = 8192
+
+	DefaultSSHPort = 22
+	DefaultSSHUser = "core"
+
 	CrcEnvPrefix = "CRC"
+
+	// TODO: this needs to be based on the OS
+	DefaultDriver = "libvirt"
+	//DefaultDriverLinux   = "libvirt"
+	//DefaultDriverWindows = "hyperv"
+	//DefaultDriverMacOS   = "hyperkit"
+	DefaultBundle = "crc_libvirt_0.16.1.tar.gz"
 )
 
 var (
@@ -21,6 +30,9 @@ var (
 	ConfigPath  = filepath.Join(CrcBaseDir, ConfigFile)
 	LogFile     = "crc.log"
 	LogFilePath = filepath.Join(CrcBaseDir, LogFile)
+
+	MachineBaseDir  = CrcBaseDir
+	MachineCertsDir = filepath.Join(MachineBaseDir, "certs")
 )
 
 // GetHomeDir returns the home directory for the current user

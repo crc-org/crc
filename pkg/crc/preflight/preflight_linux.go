@@ -37,10 +37,10 @@ func StartPreflightChecks() {
 		"Checking if Libvirt daemon is running",
 		config.GetBool(cmdConfig.WarnCheckLibvirtRunning.Name),
 	)
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckKvmDriver.Name),
-		checkDockerMachineDriverKvmInstalled,
-		"Checking if docker-machine-driver-kvm is installed",
-		config.GetBool(cmdConfig.WarnCheckKvmDriver.Name),
+	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckLibvirtDriver.Name),
+		checkMachineDriverLibvirtInstalled,
+		"Checking if crc-driver-libvirt is installed",
+		config.GetBool(cmdConfig.WarnCheckLibvirtDriver.Name),
 	)
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckDefaultPool.Name),
 		checkDefaultPoolAvailable,
@@ -90,9 +90,9 @@ func SetupHost() {
 		fixLibvirtServiceRunning,
 		"Starting Libvirt service",
 	)
-	preflightCheckAndFix(checkDockerMachineDriverKvmInstalled,
-		fixDockerMachineDriverInstalled,
-		"Installing docker-machine-driver-kvm",
+	preflightCheckAndFix(checkMachineDriverLibvirtInstalled,
+		fixMachineDriverLibvirtInstalled,
+		"Installing crc-driver-libvirt",
 	)
 	preflightCheckAndFix(checkDefaultPoolAvailable,
 		fixDefaultPoolAvailable,
