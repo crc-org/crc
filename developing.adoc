@@ -1,0 +1,48 @@
+
+
+= Developing CodeReady Containers
+
+[[developing-overview]]
+== Overview
+
+The following sections describe how to build the project.
+
+[[develop-prerequisites]]
+== Prerequisites
+
+- Git
+- Make
+- A recent Go distribution (>=1.11)
+
+[NOTE]
+====
+You should be able to develop the project on Linux, Windows, or macOS.
+====
+
+[[set-up-dev-env]]
+== Setting up the development environment
+
+[[cloning-repository]]
+=== Cloning the repository
+
+Get the sources from GitHub:
+
+----
+$ git clone https://github.com/code-ready/crc.git
+----
+
+[NOTE]
+====
+Do not keep the source code in your `$GOPATH`, as link:https://github.com/golang/go/wiki/Modules[Go modules] will cause `make` to fail.
+=====
+
+[[dependency-management]]
+== Dependency management
+
+CodeReady Containers uses link:https://github.com/golang/go/wiki/Modules[Go modules] for dependency management.
+
+For more information, see the following:
+
+. link:https://github.com/golang/go/wiki/Modules[Introduction to Go modules]
+. link:https://blog.golang.org/using-go-modules[Using Go modules]
+

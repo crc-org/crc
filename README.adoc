@@ -1,0 +1,33 @@
+= CodeReady Containers - OpenShift 4 on your Laptop
+:icons:
+:toc: macro
+:toc-title:
+:toclevels:
+
+toc::[]
+
+[[intro-to-crc]]
+== Introduction
+
+This project is focused on bringing a minimal http://github.com/openshift/origin[OpenShift 4.0 or newer] cluster to your local laptop or desktop computer. 
+
+If you are looking for a solution for running OpenShift 3.x, you will need tools such as `oc cluster up`, http://github.com/minishift/minishift[Minishift] or https://developers.redhat.com/products/cdk/overview/[CDK].
+
+Check back for updates, we plan to have something available "soon".
+
+[[documentation]]
+== Documentation
+
+- link:./developing.adoc[Developing CodeReady Containers]
+
+[[community]]
+== Community
+
+Contributions, questions, and comments are all welcomed and encouraged!
+
+You can reach the community by:
+
+- Joining the #codeready channel on https://freenode.net/[Freenode IRC]
+
+If you want to contribute, make sure to follow the link:CONTRIBUTING.adoc[contribution guidelines]
+when you open issues or submit pull requests.
