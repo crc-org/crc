@@ -3,18 +3,14 @@ package preflight
 import (
 	"fmt"
 	"github.com/code-ready/crc/pkg/crc/output"
-	"github.com/spf13/viper"
 	"os"
 )
 
 type PreflightCheckFixFuncType func() (bool, error)
 
-func preflightCheckSucceedsOrFails(configNameOverrideIfSkipped string, check PreflightCheckFixFuncType, message string, configNameOverrideIfWarning string) {
-	output.Out("-- %s ... ", message)
-	isConfiguredToSkip := viper.GetBool(configNameOverrideIfSkipped)
-	isConfiguredToWarn := viper.GetBool(configNameOverrideIfWarning)
-
-	if isConfiguredToSkip {
+func preflightCheckSucceedsOrFails(configuredToSkip bool, check PreflightCheckFixFuncType, message string, configuredToWarn bool) {
+	output.Out("%s ... ", message)
+	if configuredToSkip {
 		output.Out("SKIP")
 		return
 	}
@@ -26,7 +22,7 @@ func preflightCheckSucceedsOrFails(configNameOverrideIfSkipped string, check Pre
 	}
 
 	errorMessage := fmt.Sprintf("   %s", err.Error())
-	if isConfiguredToWarn {
+	if configuredToWarn {
 		output.Out("WARN")
 		output.Out(errorMessage)
 		return
@@ -52,4 +48,5 @@ func preflightCheckAndFix(check, fix PreflightCheckFixFuncType, message string) 
 
 	output.Out("FAIL")
 	output.Out(err.Error())
+	os.Exit(1)
 }
