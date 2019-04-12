@@ -1,14 +1,15 @@
 package cmd
 
 import (
+	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/spf13/cobra"
-	"os"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/output"
+	log "github.com/code-ready/crc/pkg/crc/logging"
 )
+
+var logLevel string
 
 var rootCmd = &cobra.Command{
 	Use:   commandName,
@@ -20,6 +21,9 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		runRoot()
 	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		runPostrun()
+	},
 }
 
 func init() {
@@ -29,10 +33,18 @@ func init() {
 	config.InitViper()
 	setConfigDefaults()
 	rootCmd.AddCommand(cmdConfig.ConfigCmd)
+	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "log level (e.g. \"debug | info | warn | error\")")
 }
 
 func runPrerun() {
-	output.Out("%s - %s", commandName, descriptionShort)
+	output.OutF("%s - %s\n", commandName, descriptionShort)
+
+	// Setting up logrus
+	log.InitLogrus(logLevel)
+}
+
+func runPostrun() {
+	log.CloseLogFile()
 }
 
 func runRoot() {
@@ -41,8 +53,7 @@ func runRoot() {
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		logging.Log("ERR: %s", err.Error())
-		os.Exit(1)
+		log.Fatal(err)
 	}
 }
 
