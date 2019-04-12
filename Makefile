@@ -26,6 +26,7 @@ ifeq ($(GOOS),windows)
 	IS_EXE := .exe
 endif
 
+PACKAGES := go list ./... | grep -v /out
 
 # Linker flags
 VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc.crcVersion=$(CRC_VERSION) \
@@ -62,6 +63,10 @@ $(BUILD_DIR)/windows-amd64/crc.exe:  $(BUILD_DIR)/$(GOOS)-$(GOARCH)
 
 .PHONY: cross ## Cross compiles all binaries
 cross: $(BUILD_DIR)/darwin-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/windows-amd64/crc.exe
+
+.PHONY: test
+test:
+	go test -v -ldflags="$(VERSION_VARIABLES)" $(shell $(PACKAGES))
 
 .PHONY: clean ## Remove all build artifacts
 clean:
