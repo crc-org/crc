@@ -1,52 +1,40 @@
 package preflight
 
 import (
-	"fmt"
-	"github.com/code-ready/crc/pkg/crc/output"
-	"os"
+	log "github.com/code-ready/crc/pkg/crc/logging"
 )
 
 type PreflightCheckFixFuncType func() (bool, error)
 
 func preflightCheckSucceedsOrFails(configuredToSkip bool, check PreflightCheckFixFuncType, message string, configuredToWarn bool) {
-	output.Out("%s ... ", message)
+	log.InfoF("%s", message)
 	if configuredToSkip {
-		output.Out("SKIP")
+		log.Info("Skipping above check ...")
 		return
 	}
 
 	ok, err := check()
 	if ok {
-		output.Out("OK")
 		return
 	}
 
-	errorMessage := fmt.Sprintf("   %s", err.Error())
 	if configuredToWarn {
-		output.Out("WARN")
-		output.Out(errorMessage)
+		log.Warn(err.Error())
 		return
 	}
 
-	output.Out("FAIL")
-	output.Out(errorMessage)
-	os.Exit(1)
+	log.Fatal(err.Error())
 }
 
 func preflightCheckAndFix(check, fix PreflightCheckFixFuncType, message string) {
-	output.Out("-- %s ... ", message)
-
+	log.InfoF("-- %s ... ", message)
 	if ok, _ := check(); ok {
-		output.Out("OK")
 		return
 	}
 	ok, err := fix()
 	if ok {
-		output.Out("OK")
 		return
 	}
 
-	output.Out("FAIL")
-	output.Out(err.Error())
-	os.Exit(1)
+	log.Fatal(err.Error())
 }

@@ -1,9 +1,11 @@
 package output
 
-import (
-	"fmt"
-)
+import "fmt"
 
-func Out(s string, args ... interface{}) {
-	fmt.Println(fmt.Sprintf(s, args...))
+func Out(args ...interface{}) {
+	fmt.Println(args)
+}
+
+func OutF(s string, args ...interface{}) {
+	fmt.Printf(s, args)
 }

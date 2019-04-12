@@ -1,8 +1,8 @@
 package config
 
 import (
-	"fmt"
 	"github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/spf13/cobra"
 )
 
@@ -23,6 +23,6 @@ to the options that you set when you run the 'crc start' command.`,
 func runConfigView() {
 	settings := config.AllConfigs()
 	for k, v := range settings {
-		fmt.Println(k, ":", v)
+		output.Out(k, ":", v)
 	}
 }
