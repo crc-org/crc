@@ -16,10 +16,11 @@ const (
 )
 
 var (
-	ConfigFile  = ".crc.json"
-	ConfigPath  = filepath.Join(GetHomeDir(), ConfigFile)
-	LogFile     = ".crc.log"
-	LogFilePath = filepath.Join(GetHomeDir(), LogFile)
+	CrcBaseDir  = filepath.Join(GetHomeDir(), ".crc")
+	ConfigFile  = "crc.json"
+	ConfigPath  = filepath.Join(CrcBaseDir, ConfigFile)
+	LogFile     = "crc.log"
+	LogFilePath = filepath.Join(CrcBaseDir, LogFile)
 )
 
 // GetHomeDir returns the home directory for the current user
@@ -38,4 +39,13 @@ func GetHomeDir() string {
 		}
 	}
 	return os.Getenv("HOME")
+}
+
+// EnsureBaseDirExists create the ~/.crc dir if its not there
+func EnsureBaseDirExists() error {
+	_, err := os.Stat(CrcBaseDir)
+	if err != nil {
+		return os.Mkdir(CrcBaseDir, 0755)
+	}
+	return nil
 }
