@@ -31,9 +31,15 @@ func runConfigSet(key string, value interface{}) {
 		output.Out("Config property doesnot exist:", key)
 		os.Exit(1)
 	}
-	if !runValidations(SettingsList[key].ValidationFns, key, value) {
-		output.Out("Config value is invalid:", key, value)
+
+	_, ok := SettingsList[key]
+	if !ok {
+		output.Out("Config property doesnot exist:", key)
 		os.Exit(1)
+	}
+
+	if !runValidations(SettingsList[key].ValidationFns, value) {
+		output.Out("Config value is invalid:", value)
 	}
 
 	config.Set(key, value)
@@ -42,9 +48,9 @@ func runConfigSet(key string, value interface{}) {
 	}
 }
 
-func runValidations(validations []validationFnType, key, value interface{}) bool {
+func runValidations(validations []validationFnType, value interface{}) bool {
 	for _, fn := range validations {
-		if !fn(key, value) {
+		if !fn(value) {
 			return false
 		}
 	}

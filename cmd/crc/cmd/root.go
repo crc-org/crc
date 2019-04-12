@@ -6,6 +6,7 @@ import (
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	log "github.com/code-ready/crc/pkg/crc/logging"
 )
 
@@ -27,8 +28,11 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	if err := constants.EnsureBaseDirExists(); err != nil {
+		log.Fatal(err.Error())
+	}
 	if err := config.EnsureConfigFileExists(); err != nil {
-		output.Out(err.Error())
+		log.Fatal(err.Error())
 	}
 	config.InitViper()
 	setConfigDefaults()
