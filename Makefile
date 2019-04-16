@@ -33,6 +33,15 @@ VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc.crcVersion=$(CRC_VERSION) \
 
 LDFLAGS := $(VERSION_VARIABLES)
 
+# Add default target
+.PHONY: default
+default: $(CURDIR)/bin/crc$(IS_EXE)
+
+# Create and update the vendor directory
+.PHONY: vendor
+vendor:
+	GO111MODULE=on go mod vendor
+
 # Start of the actual build targets
 
 .PHONY: $(CURDIR)/bin/crc$(IS_EXE)
