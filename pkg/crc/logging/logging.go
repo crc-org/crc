@@ -121,7 +121,7 @@ func Error(args ...interface{}) {
 }
 
 func ErrorF(s string, args ...interface{}) {
-	logrus.Error(s, args)
+	logrus.Errorf(s, args)
 }
 
 func Debug(args ...interface{}) {
