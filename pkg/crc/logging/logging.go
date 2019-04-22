@@ -93,41 +93,41 @@ func InitLogrus(logLevel string) {
 }
 
 func Info(args ...interface{}) {
-	logrus.Info(args)
+	logrus.Info(args...)
 }
 
 func InfoF(s string, args ...interface{}) {
-	logrus.Infof(s, args)
+	logrus.Infof(s, args...)
 }
 
 func Warn(args ...interface{}) {
-	logrus.Warn(args)
+	logrus.Warn(args...)
 }
 
 func WarnF(s string, args ...interface{}) {
-	logrus.Warnf(s, args)
+	logrus.Warnf(s, args...)
 }
 
 func Fatal(args ...interface{}) {
-	logrus.Fatal(args)
+	logrus.Fatal(args...)
 }
 
 func FatalF(s string, args ...interface{}) {
-	logrus.Fatalf(s, args)
+	logrus.Fatalf(s, args...)
 }
 
 func Error(args ...interface{}) {
-	logrus.Error(args)
+	logrus.Error(args...)
 }
 
 func ErrorF(s string, args ...interface{}) {
-	logrus.Errorf(s, args)
+	logrus.Errorf(s, args...)
 }
 
 func Debug(args ...interface{}) {
-	logrus.Debug(args)
+	logrus.Debug(args...)
 }
 
 func DebugF(s string, args ...interface{}) {
-	logrus.Debugf(s, args)
+	logrus.Debugf(s, args...)
 }
