@@ -1,3 +1,22 @@
+# github.com/code-ready/machine v0.7.1-0.20190422131945-b98b79e78236
+github.com/code-ready/machine/libmachine
+github.com/code-ready/machine/libmachine/host
+github.com/code-ready/machine/libmachine/log
+github.com/code-ready/machine/libmachine/state
+github.com/code-ready/machine/libmachine/drivers
+github.com/code-ready/machine/drivers/errdriver
+github.com/code-ready/machine/libmachine/auth
+github.com/code-ready/machine/libmachine/drivers/plugin/localbinary
+github.com/code-ready/machine/libmachine/drivers/rpc
+github.com/code-ready/machine/libmachine/mcnerror
+github.com/code-ready/machine/libmachine/mcnutils
+github.com/code-ready/machine/libmachine/persist
+github.com/code-ready/machine/libmachine/ssh
+github.com/code-ready/machine/libmachine/version
+github.com/code-ready/machine/drivers/none
+github.com/code-ready/machine/libmachine/engine
+github.com/code-ready/machine/libmachine/swarm
+github.com/code-ready/machine/libmachine/mcnflag
 # github.com/docker/go-units v0.3.3
 github.com/docker/go-units
 # github.com/fsnotify/fsnotify v1.4.7
@@ -40,11 +59,19 @@ github.com/spf13/jwalterweatherman
 github.com/spf13/pflag
 # github.com/spf13/viper v1.3.2
 github.com/spf13/viper
-# golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
+# golang.org/x/crypto v0.0.0-20190418165655-df01cb2cc480
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/sys v0.0.0-20181205085412-a5c9d58dba9a
+golang.org/x/crypto/ssh
+golang.org/x/crypto/curve25519
+golang.org/x/crypto/ed25519
+golang.org/x/crypto/internal/chacha20
+golang.org/x/crypto/poly1305
+golang.org/x/crypto/ed25519/internal/edwards25519
+golang.org/x/crypto/internal/subtle
+# golang.org/x/sys v0.0.0-20190419153524-e8e3143a4f4a
 golang.org/x/sys/unix
 golang.org/x/sys/windows
+golang.org/x/sys/cpu
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
