@@ -62,6 +62,11 @@ func StartPreflightChecks() {
 		"Checking if Libvirt crc network is active",
 		config.GetBool(cmdConfig.WarnCheckCrcNetworkActive.Name),
 	)
+	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckCrcDnsmasqFile.Name),
+		checkCrcDnsmasqConfigFile,
+		"Checking if /etc/NetworkManager/dnsmasq.d/crc.conf exists",
+		config.GetBool(cmdConfig.WarnCheckCrcDnsmasqFile.Name),
+	)
 }
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
@@ -109,5 +114,9 @@ func SetupHost() {
 	preflightCheckAndFix(checkLibvirtCrcNetworkActive,
 		fixLibvirtCrcNetworkActive,
 		"Starting Libvirt crc network",
+	)
+	preflightCheckAndFix(checkCrcDnsmasqConfigFile,
+		fixCrcDnsmasqConfigFile,
+		"Writing dnsmasq config for crc",
 	)
 }
