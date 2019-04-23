@@ -34,7 +34,7 @@ $ git clone https://github.com/code-ready/crc.git
 [NOTE]
 ====
 Do not keep the source code in your `$GOPATH`, as link:https://github.com/golang/go/wiki/Modules[Go modules] will cause `make` to fail.
-=====
+====
 
 [[dependency-management]]
 == Dependency management
