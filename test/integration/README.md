@@ -7,7 +7,7 @@ The general functionality of Clicumber is then extended by CRC specific test cod
 
 ## How to run
 
-1. get the Clicumber package: `go get -u github.com/agajdosi/clicumber`
+1. get the Clicumber package: `go get -u github.com/code-ready/clicumber`
 2. change the working directory to: `test/integration`
 3. make sure the tested `crc` binary is on the path (support for automatic setup should come later)
 4. to start the integration tests then run:
