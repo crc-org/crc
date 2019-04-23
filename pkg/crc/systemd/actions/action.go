@@ -5,6 +5,7 @@ type Action int
 const (
 	Start Action = iota
 	Stop
+	Reload
 	Restart
 	Enable
 	Disable
@@ -16,6 +17,7 @@ func (action Action) String() string {
 	actions := [...]string{
 		"start",
 		"stop",
+		"reload",
 		"restart",
 		"enable",
 		"disable",

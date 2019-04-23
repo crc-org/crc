@@ -12,6 +12,7 @@ import (
 type SystemdCommander interface {
 	Start(name string) (bool, error)
 	Stop(name string) (bool, error)
+	Reload(name string) (bool, error)
 	Restart(name string) (bool, error)
 	Status(name string) (states.State, error)
 	Enable(name string) (bool, error)
@@ -51,9 +52,20 @@ func (c HostSystemdCommander) DaemonReload() (bool, error) {
 	return true, nil
 }
 
+func (c HostSystemdCommander) Reload(name string) (bool, error) {
+	c.DaemonReload()
+	_, err := c.service(name, actions.Reload)
+
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func (c HostSystemdCommander) Restart(name string) (bool, error) {
 	c.DaemonReload()
 	_, err := c.service(name, actions.Restart)
+
 	if err != nil {
 		return false, err
 	}

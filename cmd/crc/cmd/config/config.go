@@ -44,6 +44,8 @@ var (
 	WarnCheckCrcNetwork         = createSetting("warn-check-crc-network", nil, []validationFnType{validations.ValidateBool})
 	SkipCheckCrcNetworkActive   = createSetting("skip-check-crc-network-active", nil, []validationFnType{validations.ValidateBool})
 	WarnCheckCrcNetworkActive   = createSetting("warn-check-crc-network-active", nil, []validationFnType{validations.ValidateBool})
+	SkipCheckCrcDnsmasqFile     = createSetting("skip-check-crc-dnsmasq-file", nil, []validationFnType{validations.ValidateBool})
+	WarnCheckCrcDnsmasqFile     = createSetting("warn-check-crc-dnsmasq-file", nil, []validationFnType{validations.ValidateBool})
 )
 
 // CreateSetting returns a filled struct of ConfigSetting
