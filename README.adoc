@@ -6,6 +6,9 @@
 
 toc::[]
 
+image:https://travis-ci.org/code-ready/crc.svg?branch=master["Travis CI Build Status", link="https://travis-ci.org/code-ready/crc"]
+image:https://circleci.com/gh/code-ready/crc/tree/master.svg?style=svg["CircleCI Build Status", link="https://circleci.com/gh/code-ready/crc"]
+
 [[intro-to-crc]]
 == Introduction
 
