@@ -143,20 +143,19 @@ func checkUserPartOfLibvirtGroup() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	gids, err := currentUser.GroupIds()
+	path, err := exec.LookPath("groups")
 	if err != nil {
 		return false, err
 	}
-
-	libvirtGroup, err := user.LookupGroup("libvirt")
+	cmd := exec.Command(path, currentUser.Username)
+	buf := new(bytes.Buffer)
+	cmd.Stderr = buf
+	stdOut, err := cmd.Output()
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("%+v : %s", err, buf.String())
 	}
-
-	for _, gid := range gids {
-		if gid == libvirtGroup.Gid {
-			return true, nil
-		}
+	if strings.Contains(string(stdOut), "libvirt") {
+		return true, nil
 	}
 	return false, err
 }

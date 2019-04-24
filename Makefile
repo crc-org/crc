@@ -32,7 +32,8 @@ PACKAGES := go list ./... | grep -v /out
 VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc.crcVersion=$(CRC_VERSION) \
 	-X $(REPOPATH)/pkg/crc.commitSha=$(COMMIT_SHA)
 
-LDFLAGS := $(VERSION_VARIABLES)
+# https://golang.org/cmd/link/
+LDFLAGS := $(VERSION_VARIABLES) -extldflags='-static' -s -w
 
 # Add default target
 .PHONY: default
