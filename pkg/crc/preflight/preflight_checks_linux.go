@@ -18,7 +18,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
 
-	. "github.com/code-ready/crc/pkg/os"
+	crcos "github.com/code-ready/crc/pkg/os"
 	units "github.com/docker/go-units"
 )
 
@@ -98,7 +98,7 @@ func checkLibvirtInstalled() (bool, error) {
 }
 
 func fixLibvirtInstalled() (bool, error) {
-	stdOut, stdErr, err := RunWithPrivilege("yum", "install", "-y", "libvirt", "libvirt-daemon-kvm", "qemu-kvm")
+	stdOut, stdErr, err := crcos.RunWithPrivilege("yum", "install", "-y", "libvirt", "libvirt-daemon-kvm", "qemu-kvm")
 	if err != nil {
 		return false, fmt.Errorf("Could not install required packages: %s %v: %s", stdOut, err, stdErr)
 	}
@@ -130,7 +130,7 @@ func fixLibvirtEnabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	stdOut, stdErr, err := RunWithPrivilege(path, "enable", "libvirtd")
+	stdOut, stdErr, err := crcos.RunWithPrivilege(path, "enable", "libvirtd")
 	if err != nil {
 		return false, fmt.Errorf("%s, %v : %s", stdOut, err, stdErr)
 	}
@@ -166,7 +166,7 @@ func fixUserPartOfLibvirtGroup() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	stdOut, stdErr, err := RunWithPrivilege("usermod", "-a", "-G", "libvirt", currentUser.Username)
+	stdOut, stdErr, err := crcos.RunWithPrivilege("usermod", "-a", "-G", "libvirt", currentUser.Username)
 	if err != nil {
 		return false, fmt.Errorf("%s %v : %s", stdOut, err, stdErr)
 	}
@@ -196,7 +196,7 @@ func fixLibvirtServiceRunning() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	stdOut, stdErr, err := RunWithPrivilege(path, "start", "libvirtd")
+	stdOut, stdErr, err := crcos.RunWithPrivilege(path, "start", "libvirtd")
 	if err != nil {
 		return false, fmt.Errorf("%s %v : %s", stdOut, err, stdErr)
 	}
@@ -272,15 +272,15 @@ func fixMachineDriverLibvirtInstalled() (bool, error) {
 		return false, err
 	}
 
-	stdOut, stdErr, err := RunWithPrivilege("mkdir", "-p", driverBinaryDir)
+	stdOut, stdErr, err := crcos.RunWithPrivilege("mkdir", "-p", driverBinaryDir)
 	if err != nil {
 		return false, fmt.Errorf("%s %v: %s", stdOut, err, stdErr)
 	}
-	stdOut, stdErr, err = RunWithPrivilege("cp", tempFilePath, libvirtDriverBinaryPath)
+	stdOut, stdErr, err = crcos.RunWithPrivilege("cp", tempFilePath, libvirtDriverBinaryPath)
 	if err != nil {
 		return false, fmt.Errorf("%s %v: %s", stdOut, err, stdErr)
 	}
-	stdOut, stdErr, err = RunWithPrivilege("chmod", "755", libvirtDriverBinaryPath)
+	stdOut, stdErr, err = crcos.RunWithPrivilege("chmod", "755", libvirtDriverBinaryPath)
 	if err != nil {
 		return false, fmt.Errorf("%s %v: %s", stdOut, err, stdErr)
 	}
