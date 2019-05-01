@@ -1,29 +1,36 @@
 package bundle
 
 import (
+	"archive/tar"
+	"github.com/xi2/xz"
 	"io"
 	"os"
 	"path/filepath"
-
-	"archive/tar"
-	"compress/gzip"
+	"strings"
 )
 
-func Extract(sourcepath string, destpath string) error {
+func Extract(sourcepath string, destpath string) (string, error) {
 	file, err := os.Open(sourcepath)
 
 	if err != nil {
-		return err
+		return "", err
+	}
+
+	extractedPath := strings.Split(filepath.Base(file.Name()), ".tar")[0]
+	extractedPath = filepath.Join(destpath, extractedPath)
+
+	_, err = os.Stat(extractedPath)
+	if err == nil {
+		return extractedPath, nil
 	}
 
 	defer file.Close()
 
-	var fileReader io.ReadCloser = file
+	var fileReader io.Reader = file
 
-	if fileReader, err = gzip.NewReader(file); err != nil {
-		return err
+	if fileReader, err = xz.NewReader(file, 0); err != nil {
+		return "", err
 	}
-	defer fileReader.Close()
 
 	tarBallReader := tar.NewReader(fileReader)
 
@@ -34,9 +41,8 @@ func Extract(sourcepath string, destpath string) error {
 			if err == io.EOF {
 				break
 			}
-			return err
+			return "", err
 		}
-
 		// get the individual filename and extract to the specified directory
 		filename := filepath.Join(destpath, header.Name)
 
@@ -47,16 +53,16 @@ func Extract(sourcepath string, destpath string) error {
 			err = os.MkdirAll(filename, os.FileMode(header.Mode))
 
 			if err != nil {
-				return err
+				return "", err
 			}
 
-		case tar.TypeReg:
+		case tar.TypeReg, tar.TypeGNUSparse:
 			// handle normal file
 			// log file (filename)
 			writer, err := os.Create(filename)
 
 			if err != nil {
-				return err
+				return "", err
 			}
 
 			io.Copy(writer, tarBallReader)
@@ -64,7 +70,7 @@ func Extract(sourcepath string, destpath string) error {
 			err = os.Chmod(filename, os.FileMode(header.Mode))
 
 			if err != nil {
-				return err
+				return "", err
 			}
 
 			writer.Close()
@@ -75,5 +81,5 @@ func Extract(sourcepath string, destpath string) error {
 
 	}
 
-	return nil
+	return extractedPath, nil
 }

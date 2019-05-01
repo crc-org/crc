@@ -1,4 +1,4 @@
-# github.com/code-ready/machine v0.7.1-0.20190424064536-bab5ede5500e
+# github.com/code-ready/machine v0.7.1-0.20190501073902-87391ca2ceed
 github.com/code-ready/machine/libmachine
 github.com/code-ready/machine/libmachine/host
 github.com/code-ready/machine/libmachine/log
@@ -59,6 +59,8 @@ github.com/spf13/jwalterweatherman
 github.com/spf13/pflag
 # github.com/spf13/viper v1.3.2
 github.com/spf13/viper
+# github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
+github.com/xi2/xz
 # golang.org/x/crypto v0.0.0-20190422183909-d864b10871cd
 golang.org/x/crypto/ssh/terminal
 golang.org/x/crypto/ssh

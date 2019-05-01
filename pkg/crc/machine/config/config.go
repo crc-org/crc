@@ -8,7 +8,10 @@ type MachineConfig struct {
 	VMDriver string
 
 	// Virtual machine configuration
-	Name   string
-	Memory int
-	CPUs   int
+	Name        string
+	Memory      int
+	CPUs        int
+	DiskPath    string
+	DiskPathURL string
+	SSHKeyPath  string
 }
