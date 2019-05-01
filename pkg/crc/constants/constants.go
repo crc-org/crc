@@ -21,7 +21,8 @@ const (
 	//DefaultDriverLinux   = "libvirt"
 	//DefaultDriverWindows = "hyperv"
 	//DefaultDriverMacOS   = "hyperkit"
-	DefaultBundle = "crc_libvirt_0.16.1.tar.gz"
+	DefaultBundle   = "crc_libvirt_v4.1.0-rc0.tar.xz"
+	DefaultHostname = "crc-jtskh-master-0"
 )
 
 var (
@@ -33,6 +34,7 @@ var (
 
 	MachineBaseDir  = CrcBaseDir
 	MachineCertsDir = filepath.Join(MachineBaseDir, "certs")
+	MachineCacheDir = filepath.Join(MachineBaseDir, "cache")
 )
 
 // GetHomeDir returns the home directory for the current user

@@ -1,9 +1,8 @@
 package libvirt
 
 import (
-	"path/filepath"
-
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"path/filepath"
 
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 
@@ -17,12 +16,14 @@ type libvirtDriver struct {
 	BundlePath string
 
 	// Driver specific configuration
-	Memory    int
-	CPU       int
-	Network   string
-	DiskPath  string
-	CacheMode string
-	IOMode    string
+	Memory      int
+	CPU         int
+	Network     string
+	DiskPath    string
+	CacheMode   string
+	IOMode      string
+	DiskPathUrl string
+	SSHKeyPath  string
 }
 
 func CreateHost(machineConfig config.MachineConfig) *libvirtDriver {
@@ -36,9 +37,11 @@ func CreateHost(machineConfig config.MachineConfig) *libvirtDriver {
 		Memory:     machineConfig.Memory,
 		CPU:        machineConfig.CPUs,
 		Network:    DefaultNetwork,
-		// DiskPath should come from the bundle's metadata (unflattened)
-		DiskPath:  filepath.Join(constants.MachineBaseDir, "machines", machineConfig.Name, "crc_libvirt_0.16.1", "crc"),
-		CacheMode: DefaultCacheMode,
-		IOMode:    DefaultIOMode,
+		CacheMode:  DefaultCacheMode,
+		IOMode:     DefaultIOMode,
+		// This force to add entry of DiskPath under crc machine config.json
+		DiskPath:    filepath.Join(constants.MachineBaseDir, "machines", machineConfig.Name, constants.DefaultName),
+		DiskPathUrl: machineConfig.DiskPathURL,
+		SSHKeyPath:  machineConfig.SSHKeyPath,
 	}
 }

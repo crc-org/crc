@@ -2,7 +2,10 @@ package machine
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"io/ioutil"
+	"path/filepath"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
@@ -37,6 +40,18 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		CPUs:       startConfig.CPUs,
 		Memory:     startConfig.Memory,
 	}
+
+	output.Out("Extracting the Bundle tarball ...")
+	crcBundleMetadata, extractedPath, err := bundle.GetCrcBundleInfo(machineConfig)
+	if err != nil {
+		logging.ErrorF("Error to get bundle Metadata %v", err)
+		result.Error = err.Error()
+		return *result, err
+	}
+
+	diskPath := filepath.Join(extractedPath, crcBundleMetadata.Storage.DiskImages[0].Name)
+	machineConfig.DiskPathURL = fmt.Sprintf("file://%s", diskPath)
+	machineConfig.SSHKeyPath = filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.SSHPrivateKeyFile)
 
 	exists, err := existVM(libMachineAPIClient, machineConfig)
 	if !exists {

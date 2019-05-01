@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/code-ready/machine/libmachine/host"
+	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/mcnerror"
 )
 
@@ -96,7 +97,8 @@ func (s Filestore) List() ([]string, error) {
 }
 
 func (s Filestore) Exists(name string) (bool, error) {
-	_, err := os.Stat(filepath.Join(s.GetMachinesDir(), name))
+	_, err := os.Stat(filepath.Join(s.GetMachinesDir(), name, fmt.Sprintf(".%s-exist", name)))
+	log.Debugf("Checking file: %s", filepath.Join(s.GetMachinesDir(), name, fmt.Sprintf(".%s-exist", name)))
 
 	if os.IsNotExist(err) {
 		return false, nil

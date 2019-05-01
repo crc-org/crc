@@ -16,27 +16,29 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
 	"github.com/code-ready/crc/pkg/crc/systemd"
 
 	crcos "github.com/code-ready/crc/pkg/os"
-	units "github.com/docker/go-units"
+	"github.com/docker/go-units"
 )
 
 const (
-	driverBinaryDir          = "/usr/local/bin"
-	libvirtDriverCommand     = "crc-driver-libvirt"
-	libvirtDriverDownloadURL = "https://github.com/code-ready/machine-driver-libvirt/releases/download/0.9.1/crc-driver-libvirt"
-	defaultPoolSize          = "20 GB"
-	crcDnsmasqConfigFile     = "crc.conf"
+	driverBinaryDir      = "/usr/local/bin"
+	libvirtDriverCommand = "crc-driver-libvirt"
+	defaultPoolSize      = "20 GB"
+	libvirtDriverVersion = "0.11.0"
+	crcDnsmasqConfigFile = "crc.conf"
 )
 
 var (
 	libvirtDriverBinaryPath = filepath.Join(driverBinaryDir, libvirtDriverCommand)
 	crcDnsmasqConfigPath    = filepath.Join(string(filepath.Separator), "etc", "NetworkManager", "dnsmasq.d", crcDnsmasqConfigFile)
-	crcDnsmasqConfig        = `server=/tt.testing/192.168.126.1
-address=/apps.tt.testing/192.168.126.11
+	crcDnsmasqConfig        = `server=/tt.testing/192.168.130.1
+address=/apps.tt.testing/192.168.130.11
 `
+	libvirtDriverDownloadURL = fmt.Sprintf("https://github.com/code-ready/machine-driver-libvirt/releases/download/%s/crc-driver-libvirt", libvirtDriverVersion)
 )
 
 type poolXMLAvailableSpace struct {
@@ -256,6 +258,14 @@ func checkMachineDriverLibvirtInstalled() (bool, error) {
 	if fi.Mode()&0011 == 0 {
 		return false, errors.New("crc-driver-libvirt does not have correct permissions")
 	}
+	// Check the version of driver if it matches to supported one
+	cmd := exec.Command(path, "version")
+	stdErrBuf := new(bytes.Buffer)
+	cmd.Stderr = stdErrBuf
+	cmd.Run()
+	if !strings.Contains(stdErrBuf.String(), libvirtDriverVersion) {
+		return false, fmt.Errorf("crc-driver-libvirt does not have right version \n Required: %s \n Got: %s use 'crc setup' command.", libvirtDriverVersion, stdErrBuf.String())
+	}
 	return true, nil
 }
 
@@ -389,6 +399,15 @@ func checkLibvirtCrcNetworkAvailable() (bool, error) {
 			return false, err
 		}
 		if match {
+			// Check if the network have defined hostname. It might be possible that User already have an outdated crc network
+			cmd := exec.Command("virsh", "--connect", "qemu:///system", "net-dumpxml", libvirt.DefaultNetwork)
+			out, err := cmd.CombinedOutput()
+			if err != nil {
+				return false, err
+			}
+			if !strings.Contains(string(out), constants.DefaultHostname) {
+				return false, fmt.Errorf("crc network is not updated with %s hostname, use 'crc setup' to update it.", constants.DefaultHostname)
+			}
 			return true, nil
 		}
 	}
@@ -397,9 +416,10 @@ func checkLibvirtCrcNetworkAvailable() (bool, error) {
 
 func fixLibvirtCrcNetworkAvailable() (bool, error) {
 	config := libvirt.NetworkConfig{
-		DomainName: libvirt.DefaultDomainName,
-		MAC:        libvirt.MACAddress,
-		IP:         libvirt.IPAddress,
+		NetworkName: libvirt.DefaultNetwork,
+		HostName:    constants.DefaultHostname,
+		MAC:         libvirt.MACAddress,
+		IP:          libvirt.IPAddress,
 	}
 
 	t, err := template.New("netxml").Parse(libvirt.NetworkTemplate)
@@ -411,7 +431,14 @@ func fixLibvirtCrcNetworkAvailable() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	cmd := exec.Command("virsh", "--connect", "qemu:///system", "net-define", "/dev/stdin")
+	// For time being we are going to override the crc network according what we have in our binary template.
+	// We also don't care about the error or output from those commands atm.
+	cmd := exec.Command("virsh", "--connect", "qemu:///system", "net-destroy", libvirt.DefaultNetwork)
+	cmd.Run()
+	cmd = exec.Command("virsh", "--connect", "qemu:///system", "net-undefine", libvirt.DefaultNetwork)
+	cmd.Run()
+	// Create the network according to our defined template
+	cmd = exec.Command("virsh", "--connect", "qemu:///system", "net-define", "/dev/stdin")
 	cmd.Stdin = strings.NewReader(netXMLDef.String())
 	buf := new(bytes.Buffer)
 	cmd.Stderr = buf
