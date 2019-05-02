@@ -1,0 +1,11 @@
+[id="understanding-codeready-containers_{context}"]
+= Understanding {prod}
+
+[IMPORTANT]
+====
+{rh-prod} currently runs on the {rhel}, {centos}, and {fed} operating systems using the `libvirt` driver.
+====
+
+{rh-prod} brings a minimal OpenShift 4.0 or newer cluster to your local computer.
+
+{prod} includes the [command]`{bin}` command-line interface (CLI) to interact with the {prod} virtual machine running the OpenShift cluster.

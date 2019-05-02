@@ -1,0 +1,14 @@
+[id="getting-started-with-codeready-containers_{context}"]
+= Getting started with {rh-prod}
+
+include::con_understanding-codeready-containers.adoc[leveloffset=+1]
+
+include::proc_setting-up-codeready-containers.adoc[leveloffset=+1]
+
+include::proc_starting-the-virtual-machine.adoc[leveloffset=+1]
+
+include::proc_accessing-the-openshift-cluster.adoc[leveloffset=+1]
+
+include::proc_stopping-the-virtual-machine.adoc[leveloffset=+1]
+
+include::proc_deleting-the-virtual-machine.adoc[leveloffset=+1]

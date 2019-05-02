@@ -19,6 +19,11 @@ COMMIT_SHA=$(shell git rev-parse --short HEAD)
 # Go and compilation related variables
 BUILD_DIR ?= out
 
+# Docs build related variables
+DOCS_BUILD_DIR ?= /docs/build
+DOCS_BUILD_CONTAINER ?= registry.gitlab.com/gbraad/asciidoctor-centos:latest
+DOCS_BUILD_TARGET ?= /docs/source/getting-started/master.adoc
+
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 ORG := github.com/code-ready
@@ -70,8 +75,16 @@ cross: $(BUILD_DIR)/darwin-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/w
 test:
 	go test -v -ldflags="$(VERSION_VARIABLES)" $(shell $(PACKAGES))
 
+.PHONY: build_docs
+build_docs:
+	podman run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) -b html5 -D $(DOCS_BUILD_DIR) $(DOCS_BUILD_TARGET)
+
+.PHONY: clean_docs
+clean_docs:
+	rm -rf $(CURDIR)/docs/build
+
 .PHONY: clean ## Remove all build artifacts
-clean:
+clean: clean_docs
 	rm -rf $(BUILD_DIR)
 	rm -f $(GOPATH)/bin/crc
 

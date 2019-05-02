@@ -1,0 +1,80 @@
+[id="accessing-the-openshift-cluster_{context}"]
+= Accessing the OpenShift cluster
+
+.Prerequisites
+
+* A running {prod} virtual machine.
+For more information, see <<starting-the-virtual-machine_{context}>>.
+* The link:{oc-download-url}[latest OpenShift client binary] ([command]`oc`) in your `_PATH_`.
+
+.Procedure
+
+* To access the OpenShift web console, follow these steps:
+
+  . Open the OpenShift web console URL printed in the output of the [command]`{bin} start` command:
++
+[subs="+quotes,attributes"]
+----
+$ _browser_command_ https://console-openshift-console.apps.tt.testing
+----
+// Can we use `xdg-open` here instead?
+
+  . Log in to the OpenShift web console as the `kubeadmin` user with the password printed in the output of the [command]`{bin} start` command.
++
+[NOTE]
+====
+You can also view the password for the `kubeadmin` user in the [filename]`~/.crc/cache/crc_libvirt_v4.1.0.rc0/kubeadmin-password` file.
+====
++
+See <<troubleshooting-codeready-containers_{context}>> if you cannot access the {prod} OpenShift cluster.
+
+* To access the OpenShift cluster via the [command]`oc` command, follow these steps:
+
+// TODO: Use attributes for the path here. Avoids manually maintaining it.
+  . Export the Kubernetes configuration for the {prod} OpenShift cluster:
++
+[subs="+quotes,attributes"]
+----
+$ export KUBECONFIG="$HOME/.crc/cache/crc_libvirt_v4.1.0.rc0/kubeconfig"
+----
+
+  . Verify that the OpenShift cluster operators are available using the [command]`oc get co` command:
++
+[subs="+quotes,attributes"]
+----
+$ oc get co
+NAME                                 VERSION      AVAILABLE   PROGRESSING   FAILING   SINCE
+authentication                       4.1.0-rc.0   True        False         False     6d6h
+cloud-credential                     4.1.0-rc.0   True        False         False     6d6h
+cluster-autoscaler                   4.1.0-rc.0   True        False         False     6d6h
+console                              4.1.0-rc.0   True        False         False     6d6h
+dns                                  4.1.0-rc.0   True        False         False     89m
+image-registry                       4.1.0-rc.0   True        False         False     6d6h
+ingress                              4.1.0-rc.0   True        False         False     89m
+kube-apiserver                       4.1.0-rc.0   True        False                   6d6h
+kube-controller-manager              4.1.0-rc.0   True        False                   6d6h
+kube-scheduler                       4.1.0-rc.0   True        False                   6d6h
+machine-api                          4.1.0-rc.0   True        False         False     6d6h
+machine-config                       4.1.0-rc.0   False       False         True      6d6h
+marketplace                          4.1.0-rc.0   False       False         True      6d6h
+monitoring                                        Unknown     True          Unknown   6d6h
+network                              4.1.0-rc.0   True        False                   6d6h
+node-tuning                          4.1.0-rc.0   True        False         False     89m
+openshift-apiserver                  4.1.0-rc.0   True        False                   6d6h
+openshift-controller-manager         4.1.0-rc.0   True        False                   5d11h
+openshift-samples                    4.1.0-rc.0   True        False         False     6d6h
+operator-lifecycle-manager           4.1.0-rc.0   True        False         False     6d6h
+operator-lifecycle-manager-catalog   4.1.0-rc.0   True        False         False     6d6h
+service-ca                           4.1.0-rc.0   True        False         False     6d6h
+service-catalog-apiserver            4.1.0-rc.0   True        False         False     88m
+service-catalog-controller-manager   4.1.0-rc.0   True        False         False     88m
+storage                              4.1.0-rc.0   True        False         False     6d6h
+----
++
+[NOTE]
+====
+The `machine-config` and `marketplace` cluster operators are expected to report `False` availability.
+The `monitoring` cluster operator is expected to report `Unknown` availability.
+====
++
+See <<troubleshooting-codeready-containers_{context}>> if you cannot access the {prod} OpenShift cluster.

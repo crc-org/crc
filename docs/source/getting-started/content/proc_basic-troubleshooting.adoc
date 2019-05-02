@@ -1,0 +1,41 @@
+[id="basic-troubleshooting_{context}"]
+= Basic troubleshooting
+
+The majority of issues can be resolved by stopping a running {prod} virtual machine, deleting the virtual machine, and starting a new instance of the virtual machine.
+
+.Prerequisites
+
+* The host machine has been set up using the [command]`{bin} setup` command.
+For more information, see <<setting-up-codeready-containers_{context}>>.
+* The virtual machine has been started using the [command]`{bin} start` command.
+For more information, see <<starting-the-virtual-machine_{context}>>.
+
+.Procedure
+
+To troubleshoot {prod}, perform the following steps:
+
+. Stop the {prod} virtual machine:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} stop
+----
+
+. Delete the {prod} virtual machine:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} delete
+----
+
+. Start the {prod} virtual machine:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} start -b _path_to_system_bundle_
+----
+
+[NOTE]
+====
+The cluster takes a minimum of four minutes to start the necessary containers and operators before serving a request.
+====

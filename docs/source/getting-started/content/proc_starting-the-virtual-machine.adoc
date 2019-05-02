@@ -1,0 +1,24 @@
+[id="starting-the-virtual-machine_{context}"]
+= Starting the virtual machine
+
+The [command]`{bin} start` command starts the {prod} virtual machine and OpenShift cluster.
+
+.Prerequisites
+
+* The host machine has been set up using the [command]`{bin} setup` command.
+For more information, see <<setting-up-codeready-containers_{context}>>.
+* A valid OpenShift system bundle in the `.tar.xz` format.
+
+.Procedure
+
+* Start the {prod} virtual machine:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} start -b _path_to_system_bundle_
+----
+
+[NOTE]
+====
+The cluster takes a minimum of four minutes to start the necessary containers and operators before serving a request.
+====
