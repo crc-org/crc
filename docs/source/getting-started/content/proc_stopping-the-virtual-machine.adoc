@@ -1,0 +1,13 @@
+[id="stopping-the-virtual-machine_{context}"]
+= Stopping the virtual machine
+
+The [command]`{bin} stop` command stops the running {prod} virtual machine and OpenShift cluster.
+
+.Procedure
+
+* Stop the {prod} virtual machine and OpenShift cluster:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} stop
+----

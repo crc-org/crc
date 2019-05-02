@@ -1,0 +1,13 @@
+[id="deleting-the-virtual-machine_{context}"]
+= Deleting the virtual machine
+
+The [command]`{bin} delete` command deletes an existing {prod} virtual machine.
+
+.Procedure
+
+* Delete the {prod} virtual machine:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} delete
+----

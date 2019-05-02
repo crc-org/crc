@@ -1,0 +1,4 @@
+[id="troubleshooting-codeready-containers_{context}"]
+= Troubleshooting {rh-prod}
+
+include::proc_basic-troubleshooting.adoc[leveloffset=+1]

@@ -1,0 +1,26 @@
+// AsciiDoc rendering
+:source-highlighter: prettify
+:last-update-label!:
+:attribute-missing: warn
+:toc: left
+:toclevels: 3
+:numbered:
+:sectanchors:
+:sectlinks:
+:experimental:
+
+// Platforms
+:rh: Red{nbsp}Hat
+:rhel: {rh} Enterprise{nbsp}Linux
+:fed: Fedora
+:centos: CentOS
+:mac: macOS
+:msw: Microsoft Windows
+
+// Product naming
+:prod: CodeReady Containers
+:rh-prod: {rh} {prod}
+:bin: crc
+
+// URLs
+:oc-download-url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/

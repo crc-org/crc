@@ -1,0 +1,20 @@
+[id="setting-up-codeready-containers_{context}"]
+= Setting up {prod}
+
+The [command]`{bin} setup` command performs operations to set up the environment of your host machine for the {prod} virtual machine.
+
+This procedure will create the [filename]`~/.crc` directory if it does not already exist.
+
+.Prerequisites
+
+// TODO: Verify that we need `sudo` permissions.
+* Your user account must have permission to use the [command]`sudo` command.
+
+.Procedure
+
+. Set up your host machine for {prod}:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} setup
+----
