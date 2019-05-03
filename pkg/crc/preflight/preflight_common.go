@@ -9,7 +9,7 @@ type PreflightCheckFixFuncType func() (bool, error)
 func preflightCheckSucceedsOrFails(configuredToSkip bool, check PreflightCheckFixFuncType, message string, configuredToWarn bool) {
 	log.InfoF(" %s", message)
 	if configuredToSkip {
-		log.Info(" Skipping above check ...")
+		log.Warn(" Skipping above check ...")
 		return
 	}
 
@@ -26,12 +26,24 @@ func preflightCheckSucceedsOrFails(configuredToSkip bool, check PreflightCheckFi
 	log.Fatal(err.Error())
 }
 
-func preflightCheckAndFix(check, fix PreflightCheckFixFuncType, message string) {
+func preflightCheckAndFix(configuredToSkip bool, check, fix PreflightCheckFixFuncType, message string, configuredToWarn bool) {
 	log.InfoF(" %s", message)
-	if ok, _ := check(); ok {
+	if configuredToSkip {
+		log.Warn(" Skipping above check ...")
 		return
 	}
-	ok, err := fix()
+
+	ok, err := check()
+	if ok {
+		return
+	}
+
+	if configuredToWarn {
+		log.Warn(err.Error())
+		return
+	}
+
+	ok, err = fix()
 	if ok {
 		return
 	}

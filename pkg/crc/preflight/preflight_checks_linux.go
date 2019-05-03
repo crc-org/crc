@@ -2,7 +2,6 @@ package preflight
 
 import (
 	"bytes"
-	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
@@ -21,7 +20,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/systemd"
 
 	crcos "github.com/code-ready/crc/pkg/os"
-	"github.com/docker/go-units"
 )
 
 const (
@@ -40,10 +38,6 @@ address=/apps.tt.testing/192.168.130.11
 `
 	libvirtDriverDownloadURL = fmt.Sprintf("https://github.com/code-ready/machine-driver-libvirt/releases/download/%s/crc-driver-libvirt", libvirtDriverVersion)
 )
-
-type poolXMLAvailableSpace struct {
-	Available float64 `xml:"available,unit"`
-}
 
 func checkVirtualizationEnabled() (bool, error) {
 	// Check if the cpu flags vmx or svm is present
@@ -211,35 +205,6 @@ func fixLibvirtServiceRunning() (bool, error) {
 	return true, nil
 }
 
-func checkIpForwardingEnabled() (bool, error) {
-	cmd := exec.Command("cat", "/proc/sys/net/ipv4/ip_forward")
-	buf := new(bytes.Buffer)
-	cmd.Stderr = buf
-	stdOut, err := cmd.Output()
-	if err != nil {
-		return false, fmt.Errorf("%v : %s", err, buf.String())
-	}
-	if strings.TrimSpace(string(stdOut)) != "1" {
-		return false, errors.New("IP forwarding is disabled")
-	}
-	return true, nil
-}
-
-func fixIpForwardingEnabled() (bool, error) {
-	path, err := exec.LookPath("sh")
-	if err != nil {
-		return false, err
-	}
-	cmd := exec.Command(path, "-c", "echo 'net.ipv4.ip_forward = 1' | sudo tee /etc/sysctl.d/99-ipforward.conf")
-	buf := new(bytes.Buffer)
-	cmd.Stderr = buf
-	err = cmd.Run()
-	if err != nil {
-		return false, fmt.Errorf("%v : %s", err, buf.String())
-	}
-	return true, nil
-}
-
 func checkMachineDriverLibvirtInstalled() (bool, error) {
 	// Check if docker-machine-driver-kvm is available
 	path, err := exec.LookPath(libvirtDriverCommand)
@@ -301,87 +266,6 @@ func fixMachineDriverLibvirtInstalled() (bool, error) {
 		return false, fmt.Errorf("%s %v: %s", stdOut, err, stdErr)
 	}
 	return true, nil
-}
-
-func checkDefaultPoolAvailable() (bool, error) {
-	// Check if the default pool by libvirt is available
-	cmd := exec.Command("virsh", "--connect", "qemu:///system", "pool-list")
-	//cmd.Env = cmdUtil.ReplaceEnv(os.Environ(), "LC_ALL", "C")
-	//cmd.Env = cmdUtil.ReplaceEnv(cmd.Env, "LANG", "C")
-
-	out, err := cmd.Output()
-	if err != nil {
-		return false, nil
-	}
-
-	stdOut := string(out)
-	outputSlice := strings.Split(stdOut, "\n")
-	for _, l := range outputSlice {
-		l = strings.TrimSpace(l)
-		match, err := regexp.MatchString("^default\\s", l)
-		if err != nil {
-			return false, err
-		}
-		if match {
-			return true, nil
-		}
-	}
-	return true, nil
-}
-
-func fixDefaultPoolAvailable() (bool, error) {
-	config := libvirt.PoolConfig{
-		PoolName: libvirt.PoolName,
-		Dir:      libvirt.PoolDir,
-	}
-
-	t, err := template.New("poolxml").Parse(libvirt.StoragePoolTemplate)
-	if err != nil {
-		return false, err
-	}
-	var poolXMLDef strings.Builder
-	err = t.Execute(&poolXMLDef, config)
-	if err != nil {
-		return false, err
-	}
-
-	cmd := exec.Command("virsh", "--connect", "qemu:///system", "pool-define", "/dev/stdin")
-	cmd.Stdin = strings.NewReader(poolXMLDef.String())
-	buf := new(bytes.Buffer)
-	cmd.Stderr = buf
-	err = cmd.Run()
-	if err != nil {
-		return false, fmt.Errorf("%v, %s", err, buf.String())
-	}
-	return true, nil
-}
-
-func checkDefaultPoolHasSufficientSpace() (bool, error) {
-	var freeSpace poolXMLAvailableSpace
-	// Check free space in default pool
-	cmd := exec.Command("virsh", "--connect", "qemu:///system", "pool-dumpxml", "default")
-	stdOut, err := cmd.Output()
-	if err != nil {
-		return false, err
-	}
-	err = xml.Unmarshal(stdOut, &freeSpace)
-	if err != nil {
-		return false, err
-	}
-
-	size, err := units.FromHumanSize(defaultPoolSize)
-	if err != nil {
-		return false, nil
-	}
-
-	if freeSpace.Available >= float64(size) {
-		return true, nil
-	}
-	return false, fmt.Errorf("Not enough space in default pool, available free space: %s", units.HumanSize(freeSpace.Available))
-}
-
-func fixDefaultPoolHasSufficientSpace() (bool, error) {
-	return false, errors.New("Increase the size of /var, or free up space by deleting")
 }
 
 func checkLibvirtCrcNetworkAvailable() (bool, error) {
