@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CRC_VERSION = 0.0.1-alpha.1
+BUNDLE_VERSION = 4.1.rc0
+CRC_VERSION = 0.85.0-alpha-$(BUNDLE_VERSION)
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 
 # Go and compilation related variables
