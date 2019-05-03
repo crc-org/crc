@@ -16,10 +16,8 @@ var setupCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		runSetup(args)
 	},
-	Hidden: true,
 }
 
 func runSetup(arguments []string) {
-	// TODO: check if user is root before launching setup
 	preflight.SetupHost()
 }

@@ -84,7 +84,7 @@ func InitLogrus(logLevel string) {
 		// hook's output instead of the logger's output.
 		ForceColors:            terminal.IsTerminal(int(os.Stderr.Fd())),
 		DisableTimestamp:       true,
-		DisableLevelTruncation: true,
+		DisableLevelTruncation: false,
 	}))
 	err = setupFileHook()
 	if err != nil {

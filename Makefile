@@ -72,4 +72,5 @@ test:
 .PHONY: clean ## Remove all build artifacts
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -f $(GOPATH)/bin/crc
 

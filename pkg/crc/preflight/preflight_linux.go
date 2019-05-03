@@ -42,16 +42,6 @@ func StartPreflightChecks() {
 		"Checking if crc-driver-libvirt is installed",
 		config.GetBool(cmdConfig.WarnCheckLibvirtDriver.Name),
 	)
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckDefaultPool.Name),
-		checkDefaultPoolAvailable,
-		"Checking if default pool is available",
-		config.GetBool(cmdConfig.WarnCheckDefaultPool.Name),
-	)
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckDefaultPoolSpace.Name),
-		checkDefaultPoolHasSufficientSpace,
-		"Checking if default pool has sufficient free space",
-		config.GetBool(cmdConfig.WarnCheckDefaultPoolSpace.Name),
-	)
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckCrcNetwork.Name),
 		checkLibvirtCrcNetworkAvailable,
 		"Checking if Libvirt crc network is available",
@@ -71,52 +61,64 @@ func StartPreflightChecks() {
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
 func SetupHost() {
-	preflightCheckAndFix(checkVirtualizationEnabled,
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckVirtEnabled.Name),
+		checkVirtualizationEnabled,
 		fixVirtualizationEnabled,
 		"Setting up virtualization",
+		config.GetBool(cmdConfig.WarnCheckVirtEnabled.Name),
 	)
-	preflightCheckAndFix(checkKvmEnabled,
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckKvmEnabled.Name),
+		checkKvmEnabled,
 		fixKvmEnabled,
 		"Setting up KVM",
+		config.GetBool(cmdConfig.WarnCheckKvmEnabled.Name),
 	)
-	preflightCheckAndFix(checkLibvirtInstalled,
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckLibvirtInstalled.Name),
+		checkLibvirtInstalled,
 		fixLibvirtInstalled,
 		"Installing Libvirt",
+		config.GetBool(cmdConfig.WarnCheckLibvirtInstalled.Name),
 	)
-	preflightCheckAndFix(checkUserPartOfLibvirtGroup,
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckUserInLibvirtGroup.Name),
+		checkUserPartOfLibvirtGroup,
 		fixUserPartOfLibvirtGroup,
 		"Adding user to libvirt group",
+		config.GetBool(cmdConfig.WarnCheckUserInLibvirtGroup.Name),
 	)
-	preflightCheckAndFix(checkLibvirtEnabled,
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckLibvirtEnabled.Name),
+		checkLibvirtEnabled,
 		fixLibvirtEnabled,
 		"Enabling libvirt",
+		config.GetBool(cmdConfig.WarnCheckLibvirtEnabled.Name),
 	)
-	preflightCheckAndFix(checkLibvirtServiceRunning,
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckLibvirtRunning.Name),
+		checkLibvirtServiceRunning,
 		fixLibvirtServiceRunning,
 		"Starting Libvirt service",
+		config.GetBool(cmdConfig.WarnCheckLibvirtRunning.Name),
 	)
-	preflightCheckAndFix(checkMachineDriverLibvirtInstalled,
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckLibvirtDriver.Name),
+		checkMachineDriverLibvirtInstalled,
 		fixMachineDriverLibvirtInstalled,
 		"Installing crc-driver-libvirt",
+		config.GetBool(cmdConfig.WarnCheckLibvirtDriver.Name),
 	)
-	preflightCheckAndFix(checkDefaultPoolAvailable,
-		fixDefaultPoolAvailable,
-		"Creating default storage pool",
-	)
-	preflightCheckAndFix(checkDefaultPoolHasSufficientSpace,
-		fixDefaultPoolHasSufficientSpace,
-		"Setting up default pool",
-	)
-	preflightCheckAndFix(checkLibvirtCrcNetworkAvailable,
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckCrcNetwork.Name),
+		checkLibvirtCrcNetworkAvailable,
 		fixLibvirtCrcNetworkAvailable,
 		"Setting up Libvirt crc network",
+		config.GetBool(cmdConfig.WarnCheckCrcNetwork.Name),
 	)
-	preflightCheckAndFix(checkLibvirtCrcNetworkActive,
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckCrcNetworkActive.Name),
+		checkLibvirtCrcNetworkActive,
 		fixLibvirtCrcNetworkActive,
 		"Starting Libvirt crc network",
+		config.GetBool(cmdConfig.WarnCheckCrcNetworkActive.Name),
 	)
-	preflightCheckAndFix(checkCrcDnsmasqConfigFile,
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckCrcDnsmasqFile.Name),
+		checkCrcDnsmasqConfigFile,
 		fixCrcDnsmasqConfigFile,
 		"Writing dnsmasq config for crc",
+		config.GetBool(cmdConfig.WarnCheckCrcDnsmasqFile.Name),
 	)
 }
