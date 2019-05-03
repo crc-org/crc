@@ -70,8 +70,8 @@ func AllConfigs() map[string]interface{} {
 	return globalViper.AllSettings()
 }
 
-// Exists returns true if the config property exists
-func Exists(key string) bool {
+// IsSet returns true if the config property is set
+func IsSet(key string) bool {
 	ss := AllConfigs()
 	_, ok := ss[key]
 	return ok
