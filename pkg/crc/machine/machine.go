@@ -6,12 +6,11 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"io/ioutil"
 	"path/filepath"
+	"time"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/output"
-
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
 
@@ -41,7 +40,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		Memory:     startConfig.Memory,
 	}
 
-	output.Out("Extracting the Bundle tarball ...")
+	logging.InfoF(" Extracting the Bundle tarball ...")
 	crcBundleMetadata, extractedPath, err := bundle.GetCrcBundleInfo(machineConfig)
 	if err != nil {
 		logging.ErrorF("Error to get bundle Metadata %v", err)
@@ -49,13 +48,31 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		return *result, err
 	}
 
+	// Retrieve metadata info
 	diskPath := filepath.Join(extractedPath, crcBundleMetadata.Storage.DiskImages[0].Name)
 	machineConfig.DiskPathURL = fmt.Sprintf("file://%s", diskPath)
 	machineConfig.SSHKeyPath = filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.SSHPrivateKeyFile)
 
+	// Get the content of kubeadmin-password file
+	kubeadminPassword, err := ioutil.ReadFile(filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.KubeadminPasswordFile))
+	if err != nil {
+		logging.ErrorF("Error reading the %s file %v", filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.KubeadminPasswordFile), err)
+		result.Error = err.Error()
+		return *result, err
+	}
+
+	// Put ClusterInfo to StartResult config.
+	clusterConfig := ClusterConfig{
+		KubeConfig:    filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.KubeConfig),
+		KubeAdminPass: string(kubeadminPassword),
+		ClusterAPI:    constants.DefaultWebConsoleURL,
+	}
+
+	result.ClusterConfig = clusterConfig
+
 	exists, err := existVM(libMachineAPIClient, machineConfig)
 	if !exists {
-		output.Out("Creating VM")
+		logging.InfoF(" Creating VM ...")
 
 		host, err := createHost(libMachineAPIClient, machineConfig)
 		if err != nil {
@@ -71,7 +88,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 		result.Status = vmState.String()
 	} else {
-		output.Out("Starting stopped VM")
+		logging.InfoF(" Starting stopped VM ...")
 		host, err := libMachineAPIClient.Load(machineConfig.Name)
 		s, err := host.Driver.GetState()
 		if err != nil {
@@ -98,6 +115,12 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 		result.Status = vmState.String()
 	}
+
+	logging.InfoF(" Waiting 3m0s for the openshift cluster to be started ...")
+	time.Sleep(time.Minute * 3)
+	logging.InfoF(" To access the cluster as the system:admin user when using 'oc', run 'export KUBECONFIG=%s'", result.ClusterConfig.KubeConfig)
+	logging.InfoF(" Access the OpenShift web-console here: %s", result.ClusterConfig.ClusterAPI)
+	logging.InfoF(" Login to the console with user: kubeadmin, password: %s", result.ClusterConfig.KubeAdminPass)
 
 	return *result, err
 }

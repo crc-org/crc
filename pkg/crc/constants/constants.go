@@ -21,8 +21,9 @@ const (
 	//DefaultDriverLinux   = "libvirt"
 	//DefaultDriverWindows = "hyperv"
 	//DefaultDriverMacOS   = "hyperkit"
-	DefaultBundle   = "crc_libvirt_v4.1.0-rc0.tar.xz"
-	DefaultHostname = "crc-jtskh-master-0"
+	DefaultBundle        = "crc_libvirt_v4.1.0-rc0.tar.xz"
+	DefaultHostname      = "crc-jtskh-master-0"
+	DefaultWebConsoleURL = "https://console-openshift-console.apps.tt.testing"
 )
 
 var (

@@ -15,10 +15,17 @@ type StartConfig struct {
 	Debug bool
 }
 
+type ClusterConfig struct {
+	KubeConfig    string
+	KubeAdminPass string
+	ClusterAPI    string
+}
+
 type StartResult struct {
-	Name   string
-	Status string
-	Error  string
+	Name          string
+	Status        string
+	Error         string
+	ClusterConfig ClusterConfig
 }
 
 type StopConfig struct {
