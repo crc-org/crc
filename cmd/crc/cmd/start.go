@@ -5,10 +5,9 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/output"
-
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/preflight"
+	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
 func init() {
@@ -51,8 +50,8 @@ func runStart(arguments []string) {
 	}
 
 	commandResult, err := machine.Start(startConfig)
-	output.Out(commandResult.Status)
+	logging.InfoF(commandResult.Status)
 	if err != nil {
-		output.Out(err.Error())
+		logging.ErrorF(err.Error())
 	}
 }
