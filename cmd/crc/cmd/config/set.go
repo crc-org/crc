@@ -27,14 +27,9 @@ to the options that you set when you run the 'crc start' command.`,
 }
 
 func runConfigSet(key string, value interface{}) {
-	if !config.Exists(key) {
-		output.Out("Config property doesnot exist:", key)
-		os.Exit(1)
-	}
-
 	_, ok := SettingsList[key]
 	if !ok {
-		output.Out("Config property doesnot exist:", key)
+		output.Out("Config property does not exist:", key)
 		os.Exit(1)
 	}
 
