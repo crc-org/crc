@@ -25,10 +25,11 @@ import (
 
 	"github.com/DATA-DOG/godog"
 	"github.com/code-ready/clicumber/testsuite"
-	//"github.com/code-ready/crc/test/integration/crcsuite"
+	"github.com/code-ready/crc/test/integration/crcsuite"
 )
 
 func TestMain(m *testing.M) {
+
 	parseFlags()
 
 	status := godog.RunWithOptions("crc", func(s *godog.Suite) {
@@ -50,7 +51,7 @@ func getFeatureContext(s *godog.Suite) {
 	testsuite.FeatureContext(s)
 
 	// here you can load additional step definitions, for example:
-	// crcsuite.FeatureContext(s) // CRC specific step definitions
+	crcsuite.FeatureContext(s) // CRC specific step definitions
 }
 
 func parseFlags() {
@@ -58,5 +59,5 @@ func parseFlags() {
 	testsuite.ParseFlags()
 
 	// here you can get additional flag values if needed, for example:
-	// mypackage.ParseFlags()
+	crcsuite.ParseFlags()
 }

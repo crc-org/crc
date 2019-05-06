@@ -15,43 +15,182 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/*
-
-This file is not needed yet.
-
-*/
-
 package crcsuite
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/DATA-DOG/godog"
-	"github.com/code-ready/clicumber/testsuite"
+	"github.com/DATA-DOG/godog/gherkin"
+
+	clicumber "github.com/code-ready/clicumber/testsuite"
 )
 
-var sh testsuite.ShellInstance
+var (
+	CRCHome    string
+	bundleURL  string
+	bundleName string
+)
 
-func crcStateIs(expected string) error {
+// FeatureContext defines godog.Suite steps for the test suite.
+func FeatureContext(s *godog.Suite) {
 
-	fmt.Println("checking state of CRC...")
-	err := testsuite.ExecuteCommand("crc state")
+	// CRC related steps
+	s.Step(`^removing CRC home directory succeeds$`,
+		RemoveCRCHome)
+	s.Step(`^starting CRC with default bundle and default hypervisor (succeeds|fails)$`,
+		StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails)
+	s.Step(`^starting CRC with default bundle and hypervisor "(.*)" (succeeds|fails)$`,
+		StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails)
+	s.Step(`^setting config property "(.*)" to value "(.*)" (succeeds$|fails)$`,
+		SetConfigPropertyToValueSucceedsOrFails)
 
+	// CRC file operations
+	s.Step(`^file "([^"]*)" exists in CRC home folder$`,
+		FileExistsInCRCHome)
+	s.Step(`"(JSON|YAML)" config file "(.*)" in CRC home folder (contains|does not contain) key "(.*)" with value matching "(.*)"$`,
+		ConfigFileInCRCHomeContainsKeyMatchingValue)
+	s.Step(`"(JSON|YAML)" config file "(.*)" in CRC home folder (contains|does not contain) key "(.*)"$`,
+		ConfigFileInCRCHomeContainsKey)
+	s.Step(`removing file "(.*)" from CRC home folder succeeds$`,
+		DeleteFileFromCRCHome)
+
+	s.BeforeSuite(func() {
+		// set CRC home var
+		CRCHome = SetCRCHome()
+
+		// remove $HOME/.crc
+		err := RemoveCRCHome()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+	})
+
+	s.AfterSuite(func() {
+		err := DeleteCRC()
+		if err != nil {
+			fmt.Println(err)
+		}
+	})
+
+	s.BeforeFeature(func(this *gherkin.Feature) {
+
+		if _, err := os.Stat(bundleName); os.IsNotExist(err) {
+			// Obtain the bundle to current dir
+			fmt.Println("Obtaining bundle...")
+			bundle, err := DownloadBundle(bundleURL, ".")
+			if err != nil {
+				fmt.Errorf("Failed to obtain CRC bundle, %v\n", err)
+			}
+			fmt.Println("Using bundle:", bundle)
+		} else if err != nil {
+			fmt.Errorf("Unknown error obtaining the bundle %v.\n", bundleName)
+		} else {
+			fmt.Println("Using existing bundle:", bundleName)
+		}
+
+	})
+}
+
+func DeleteFileFromCRCHome(fileName string) error {
+
+	theFile := filepath.Join(CRCHome, fileName)
+
+	if _, err := os.Stat(theFile); os.IsNotExist(err) {
+		return nil
+	}
+
+	err := clicumber.DeleteFile(theFile)
+	if err != nil {
+		fmt.Errorf("Error deleting file %v", theFile)
+	}
+	return nil
+}
+
+func FileExistsInCRCHome(fileName string) error {
+
+	theFile := filepath.Join(CRCHome, fileName)
+
+	_, err := os.Stat(theFile)
+	if os.IsNotExist(err) {
+		return fmt.Errorf("file %s does not exists, error: %v ", theFile, err)
+	}
+
+	return err
+}
+
+func ConfigFileInCRCHomeContainsKeyMatchingValue(format string, configFile string, condition string, keyPath string, expectedValue string) error {
+
+	configPath := filepath.Join(CRCHome, configFile)
+
+	config, err := clicumber.GetFileContent(configPath)
 	if err != nil {
 		return err
 	}
 
-	actual := sh.GetLastCmdOutput("stdout")
-	if actual != expected {
-		return fmt.Errorf("CRC state does not match %s. Expected: %s, Actual: %s.\n", expected, expected, actual)
+	keyValue, err := clicumber.GetConfigKeyValue([]byte(config), format, keyPath)
+	if err != nil {
+		return err
+	}
+
+	matches, err := clicumber.PerformRegexMatch(expectedValue, keyValue)
+	if err != nil {
+		return err
+	} else if (condition == "contains") && !matches {
+		return fmt.Errorf("For key '%s' config contains unexpected value '%s'", keyPath, keyValue)
+	} else if (condition == "does not contain") && matches {
+		return fmt.Errorf("For key '%s' config contains value '%s', which it should not contain", keyPath, keyValue)
 	}
 
 	return nil
 }
 
-// FeatureContext defines godog.Suite steps for the test suite.
-func FeatureContext(s *godog.Suite) {
-	// Status verification
-	s.Step(`^CRC (should be|is) in state "([^"]*)"$`,
-		crcStateIs)
+func ConfigFileInCRCHomeContainsKey(format string, configFile string, condition string, keyPath string) error {
+
+	configPath := filepath.Join(CRCHome, configFile)
+
+	config, err := clicumber.GetFileContent(configPath)
+	if err != nil {
+		return err
+	}
+
+	keyValue, err := clicumber.GetConfigKeyValue([]byte(config), format, keyPath)
+	if err != nil {
+		return err
+	}
+
+	if (condition == "contains") && (keyValue == "<nil>") {
+		return fmt.Errorf("Config does not contain any value for key %s", keyPath)
+	} else if (condition == "does not contain") && (keyValue != "<nil>") {
+		return fmt.Errorf("Config contains key %s with assigned value: %s", keyPath, keyValue)
+	}
+
+	return nil
+}
+
+func StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails(expected string) error {
+
+	cmd := "crc start -b " + bundleName
+	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
+
+	return err
+}
+
+func StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails(hypervisor string, expected string) error {
+
+	cmd := "crc start -b " + bundleName + " -d " + hypervisor
+	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
+
+	return err
+}
+
+func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
+
+	cmd := "crc config set " + property + " " + value
+	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
+
+	return err
 }

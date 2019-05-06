@@ -17,8 +17,9 @@ Clicumber allows running commands in a persistent shell instance (`bash`, `tcsh`
 To start integration tests, run:
 
 ```bash
-$ make integration
+$ make integration BUNDLE_LOCATION=<bundle location>
 ```
+where `<bundle location>` is either the bundle's URL or its path in the filesystem.
 
 
 [[integration-test-logs]]

@@ -90,8 +90,9 @@ clean: clean_docs
 	rm -f $(GOPATH)/bin/crc
 
 .PHONY: integration ## Run integration tests
+integration: GODOG_OPTS = --godog.tags=$(GOOS)
 integration:
-	go test $(REPOPATH)/test/integration -v --tags=integration --timeout=40m
+	go test --timeout=60m $(REPOPATH)/test/integration -v --tags=integration $(GODOG_OPTS) $(BUNDLE_LOCATION)
 
 .PHONY: fmt
 fmt:
