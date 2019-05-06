@@ -13,12 +13,14 @@ Checks whether CRC top-level commands behave correctly.
     And stdout should contain "Available Commands:"
     And stdout should contain "Flags:"
     And stdout should contain 
-    """Use "crc [command] --help" for more information about a command.
+    """
+    Use "crc [command] --help" for more information about a command.
     """
 
   Scenario: CRC setup
     When executing "crc setup" succeeds
-    Then stdout should contain "Starting Libvirt crc network"
+    Then stdout should contain "Caching oc binary"
+    And stdout should contain "Starting Libvirt crc network"
     And stdout should contain "Setting up virtualization"
     And stdout should contain "Setting up KVM"
     And stdout should contain "Installing Libvirt"
@@ -28,17 +30,14 @@ Checks whether CRC top-level commands behave correctly.
     And stdout should contain "Installing crc-driver-libvirt"
     And stdout should contain "Setting up Libvirt crc network"
     And stdout should contain "Starting Libvirt crc network"
-    
+
   Scenario: CRC start
-    When executing "crc start -b ~/Downloads/crc_libvirt_v4.1.0.rc0.tar.xz" succeeds
-    Then stdout should contain "Creating VM"
-    And stdout should contain "Running"
+    When executing "crc start -b ~/Downloads/crc_libvirt_4.1.0-rc.5.tar.xz" succeeds
+    Then stdout should contain "Running"
     
-  Scenario: CRC stop
-    When executing "crc stop" succeeds
-    Then stdout should contain """Stopping "crc" """
-    And stdout should contain "true"
-    And stdout should not contain "VM Failed to gracefully shutdown, try the kill command"
+  Scenario: CRC kill
+    When executing "crc stop -f"
+    Then stdout should contain "true"
     
   Scenario: CRC delete
     When executing "crc delete" succeeds
