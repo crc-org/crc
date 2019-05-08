@@ -1,6 +1,7 @@
 package constants
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -16,14 +17,10 @@ const (
 
 	CrcEnvPrefix = "CRC"
 
-	// TODO: this needs to be based on the OS
-	DefaultDriver = "libvirt"
-	//DefaultDriverLinux   = "libvirt"
-	//DefaultDriverWindows = "hyperv"
-	//DefaultDriverMacOS   = "hyperkit"
 	DefaultBundle        = "crc_libvirt_v4.1.0-rc0.tar.xz"
 	DefaultHostname      = "crc-jtskh-master-0"
 	DefaultWebConsoleURL = "https://console-openshift-console.apps.tt.testing"
+	DefaultDiskImage     = "crc.disk"
 )
 
 var (
@@ -63,4 +60,14 @@ func EnsureBaseDirExists() error {
 		return os.Mkdir(CrcBaseDir, 0755)
 	}
 	return nil
+}
+
+// Validate the given driver is supported or not
+func ValidateDriver(driver string) error {
+	for _, d := range SupportedVMDrivers {
+		if driver == d {
+			return nil
+		}
+	}
+	return fmt.Errorf("Unsupported driver: %s, use '--vm-driver' option to provide a supported driver %s\n", driver, SupportedVMDrivers)
 }

@@ -6,19 +6,20 @@ import (
 )
 
 const (
-	DefaultSSHUser          = "root"
-	DefaultSSHPort          = 22
+	DefaultSSHUser = "core"
+	DefaultSSHPort = 22
+	DefaultPrivateKey = "id_rsa_rsc"
 )
 
 // BaseDriver - Embed this struct into drivers to provide the common set
 // of fields and functions.
 type BaseDriver struct {
-	IPAddress      string
-	MachineName    string
-	SSHUser        string
-	SSHPort        int
-	SSHKeyPath     string
-	StorePath      string
+	IPAddress   string
+	MachineName string
+	SSHUser     string
+	SSHPort     int
+	SSHKeyPath  string
+	StorePath   string
 }
 
 // DriverName returns the name of the driver
@@ -47,7 +48,7 @@ func (d *BaseDriver) GetIP() (string, error) {
 // GetSSHKeyPath returns the ssh key path
 func (d *BaseDriver) GetSSHKeyPath() string {
 	if d.SSHKeyPath == "" {
-		d.SSHKeyPath = d.ResolveStorePath("id_rsa")
+		d.SSHKeyPath = d.ResolveStorePath(DefaultPrivateKey)
 	}
 	return d.SSHKeyPath
 }

@@ -3,9 +3,8 @@ package config
 import (
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/output"
+	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 func init() {
@@ -19,8 +18,7 @@ var configSetCmd = &cobra.Command{
 to the options that you set when you run the 'crc start' command.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 2 {
-			output.Out("Please a provide a configuration property and value to set")
-			os.Exit(1)
+			errors.ExitWithMessage(1, "Please a provide a configuration property and value to set")
 		}
 		runConfigSet(args[0], args[1])
 	},
@@ -29,25 +27,26 @@ to the options that you set when you run the 'crc start' command.`,
 func runConfigSet(key string, value interface{}) {
 	_, ok := SettingsList[key]
 	if !ok {
-		output.Out("Config property does not exist:", key)
-		os.Exit(1)
+		errors.ExitWithMessage(1, "Config property does not exist: %s", key)
 	}
 
-	if !runValidations(SettingsList[key].ValidationFns, value) {
-		output.Out("Config value is invalid:", value)
+	ok, expectedValue := runValidations(SettingsList[key].ValidationFns, value)
+	if !ok {
+		errors.ExitWithMessage(1, "Config value is invalid: %s, Expected: %s\n", value, expectedValue)
 	}
 
 	config.Set(key, value)
 	if err := config.WriteConfig(); err != nil {
-		output.Out("Error Writing config to file:", constants.ConfigPath, err.Error())
+		errors.ExitWithMessage(1, "Error Writing config to file %s: %s", constants.ConfigPath, err.Error())
 	}
 }
 
-func runValidations(validations []validationFnType, value interface{}) bool {
+func runValidations(validations []validationFnType, value interface{}) (bool, string) {
 	for _, fn := range validations {
-		if !fn(value) {
-			return false
+		ok, expectedValue := fn(value)
+		if !ok {
+			return false, expectedValue
 		}
 	}
-	return true
+	return true, ""
 }

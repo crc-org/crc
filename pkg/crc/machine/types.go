@@ -47,3 +47,14 @@ type DeleteResult struct {
 	Success bool
 	Error   string
 }
+
+type IpConfig struct {
+	Name string
+}
+
+type IpResult struct {
+	Name    string
+	IP      string
+	Success bool
+	Error   string
+}

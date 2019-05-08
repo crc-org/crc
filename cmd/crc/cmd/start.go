@@ -1,20 +1,23 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
+	"fmt"
+	"github.com/code-ready/crc/cmd/crc/cmd/config"
 
+	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/preflight"
+	"github.com/spf13/cobra"
 )
 
 func init() {
 	rootCmd.AddCommand(startCmd)
 
 	startCmd.Flags().StringVarP(&bundlePath, "Bundle", "b", constants.DefaultBundle, "The system bundle used for deployment of the OpenShift cluster.")
-	startCmd.Flags().StringVarP(&vmDriver, "VMDriver", "d", constants.DefaultDriver, "The hypervisor driver to use")
+	startCmd.Flags().StringP(config.VMDriver.Name, "d", constants.DefaultVMDriver, fmt.Sprintf("The driver to use for the CRC VM. Possible values: %v", constants.SupportedVMDrivers))
 }
 
 var startCmd = &cobra.Command{
@@ -28,14 +31,11 @@ var startCmd = &cobra.Command{
 
 var (
 	bundlePath string
-	vmDriver   string
 )
 
 func runStart(arguments []string) {
-
-	// TODO: this should be a validation
-	if vmDriver != "libvirt" {
-		errors.ExitWithMessage(1, "Unsupported driver: %s", vmDriver)
+	if err := constants.ValidateDriver(crcConfig.GetString(config.VMDriver.Name)); err != nil {
+		errors.ExitWithMessage(1, err.Error())
 	}
 
 	preflight.StartPreflightChecks()
@@ -43,7 +43,7 @@ func runStart(arguments []string) {
 	startConfig := machine.StartConfig{
 		Name:       constants.DefaultName,
 		BundlePath: bundlePath,
-		VMDriver:   vmDriver,
+		VMDriver:   crcConfig.GetString(config.VMDriver.Name),
 		Memory:     constants.DefaultMemory,
 		CPUs:       constants.DefaultCPUs,
 		Debug:      false, // TODO: make this configurable

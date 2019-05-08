@@ -24,6 +24,11 @@ func Set(key string, value interface{}) {
 	globalViper.Set(key, value)
 }
 
+// GetString return the value of a key in string
+func GetString(key string) string {
+	return globalViper.GetString(key)
+}
+
 // EnsureConfigFileExists creates the viper config file it does not exists
 func EnsureConfigFileExists() error {
 	_, err := os.Stat(constants.ConfigPath)

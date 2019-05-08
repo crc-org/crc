@@ -15,9 +15,9 @@ import (
 var (
 	// Timeout where we will bail if we're not able to properly contact the
 	// plugin server.
-	defaultTimeout               = 10 * time.Second
-	CurrentBinaryIsDockerMachine = false
-	CoreDrivers                  = []string{"generic", "hyperv", "none", "virtualbox"}
+	defaultTimeout            = 10 * time.Second
+	CurrentBinaryIsCRCMachine = false
+	CoreDrivers               = []string{"generic", "hyperv", "none", "virtualbox"}
 )
 
 const (
@@ -90,17 +90,16 @@ func (e ErrPluginBinaryNotFound) Error() string {
 }
 
 // driverPath finds the path of a driver binary by its name.
-//  + If the driver is a core driver, there is no separate driver binary. We reuse current binary if it's `docker-machine`
-// or we assume `docker-machine` is in the PATH.
+//  + If the driver is a core driver, there is no separate driver binary. We reuse current binary if it's `crc`
+// or we assume `crc` is in the PATH.
 //  + If the driver is NOT a core driver, then the separate binary must be in the PATH and it's name must be
-// `docker-machine-driver-driverName`
+// `machine-driver-driverName`
 func driverPath(driverName string) string {
 	for _, coreDriver := range CoreDrivers {
 		if coreDriver == driverName {
-			if CurrentBinaryIsDockerMachine {
+			if CurrentBinaryIsCRCMachine {
 				return os.Args[0]
 			}
-
 			return "crc-machine"
 		}
 	}

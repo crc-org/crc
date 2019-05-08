@@ -3,7 +3,7 @@ module github.com/code-ready/crc
 require (
 	github.com/DATA-DOG/godog v0.7.13
 	github.com/code-ready/clicumber v0.0.0-20190503113956-2563aed4ef12
-	github.com/code-ready/machine v0.7.1-0.20190501073902-87391ca2ceed
+	github.com/code-ready/machine v0.0.0-20190513092840-66a8c3b3c494
 	github.com/docker/go-units v0.3.3 // indirect
 	github.com/google/pprof v0.0.0-20190404155422-f8f10df84213 // indirect
 	github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6 // indirect

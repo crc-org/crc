@@ -13,9 +13,11 @@ import (
 )
 
 const (
-	defaultDiskFilename    = "crc"
+	// This is the disk file name which gets copied to machine directory.
+	// crc.disk naming make sure it doesn't conflict with the machine name
+	// which right now is `crc`
+	defaultDiskFilename = "crc.disk"
 )
-
 
 func defaultTimeout(network, addr string) (net.Conn, error) {
 	return net.Dial(network, addr)
@@ -151,7 +153,6 @@ func (*crcReleaseGetter) download(dir, file, isoURL string) error {
 
 	return os.Rename(f.Name(), dest)
 }
-
 
 type B2dUtils struct {
 	releaseGetter

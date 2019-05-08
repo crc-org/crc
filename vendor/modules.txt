@@ -5,15 +5,17 @@ github.com/DATA-DOG/godog/gherkin
 # github.com/code-ready/clicumber v0.0.0-20190503113956-2563aed4ef12
 github.com/code-ready/clicumber/testsuite
 github.com/code-ready/clicumber/util
-# github.com/code-ready/machine v0.7.1-0.20190501073902-87391ca2ceed
+# github.com/code-ready/machine v0.0.0-20190508082104-8102d8fe6aa1
 github.com/code-ready/machine/libmachine
 github.com/code-ready/machine/libmachine/host
 github.com/code-ready/machine/libmachine/log
 github.com/code-ready/machine/libmachine/state
+github.com/code-ready/machine/drivers/virtualbox
+github.com/code-ready/machine/libmachine/drivers/plugin
+github.com/code-ready/machine/libmachine/drivers/plugin/localbinary
 github.com/code-ready/machine/libmachine/drivers
 github.com/code-ready/machine/drivers/errdriver
 github.com/code-ready/machine/libmachine/auth
-github.com/code-ready/machine/libmachine/drivers/plugin/localbinary
 github.com/code-ready/machine/libmachine/drivers/rpc
 github.com/code-ready/machine/libmachine/mcnerror
 github.com/code-ready/machine/libmachine/mcnutils
@@ -39,6 +41,8 @@ github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
+# github.com/intel-go/cpuid v0.0.0-20181003105527-1a4a6f06a1c6
+github.com/intel-go/cpuid
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1
 github.com/konsorten/go-windows-terminal-sequences
 # github.com/magiconair/properties v1.8.0
@@ -78,6 +82,7 @@ golang.org/x/crypto/internal/subtle
 # golang.org/x/sys v0.0.0-20190422165155-953cdadca894
 golang.org/x/sys/unix
 golang.org/x/sys/windows
+golang.org/x/sys/windows/registry
 golang.org/x/sys/cpu
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform

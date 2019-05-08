@@ -3,7 +3,6 @@ package machine
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"io/ioutil"
 	"path/filepath"
 	"time"
@@ -11,9 +10,10 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
-
+	"github.com/code-ready/crc/pkg/crc/machine/virtualbox"
 	"github.com/code-ready/machine/libmachine"
 	"github.com/code-ready/machine/libmachine/host"
 	"github.com/code-ready/machine/libmachine/log"
@@ -204,6 +204,8 @@ func getDriverOptions(machineConfig config.MachineConfig) interface{} {
 
 	case "libvirt":
 		driver = libvirt.CreateHost(machineConfig)
+	case "virtualbox":
+		driver = virtualbox.CreateHost(machineConfig)
 
 	default:
 		errors.ExitWithMessage(1, "Unsupported driver: %s", machineConfig.VMDriver)

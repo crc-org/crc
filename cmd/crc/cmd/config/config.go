@@ -7,7 +7,7 @@ import (
 )
 
 // validationFnType takes the key, value as args and checks if valid
-type validationFnType func(interface{}) bool
+type validationFnType func(interface{}) (bool, string)
 
 type setting struct {
 	Name          string
@@ -19,6 +19,9 @@ type setting struct {
 var SettingsList = make(map[string]*setting)
 
 var (
+	// Start command settings in config
+	VMDriver = createSetting("vm-driver", nil, []validationFnType{validations.ValidateDriver})
+
 	// Preflight checks
 	SkipCheckVirtEnabled             = createSetting("skip-check-virt-enabled", nil, []validationFnType{validations.ValidateBool})
 	WarnCheckVirtEnabled             = createSetting("warn-check-virt-enabled", nil, []validationFnType{validations.ValidateBool})
