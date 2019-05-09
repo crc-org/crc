@@ -5,6 +5,8 @@ import (
 	"github.com/spf13/cobra"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
+	cmdDaemon "github.com/code-ready/crc/cmd/crc/cmd/daemon"
+
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	log "github.com/code-ready/crc/pkg/crc/logging"
@@ -33,8 +35,13 @@ func init() {
 		log.Fatal(err.Error())
 	}
 	config.InitViper()
+
 	setConfigDefaults()
+
+	// subcommands
 	rootCmd.AddCommand(cmdConfig.ConfigCmd)
+	rootCmd.AddCommand(cmdDaemon.DaemonCmd)
+
 	rootCmd.PersistentFlags().StringVar(&log.LogLevel, "log-level", constants.DefaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
 }
 

@@ -16,6 +16,8 @@ import (
 const (
 	virtualBoxDownloadURL   = "https://download.virtualbox.org/virtualbox/6.0.4/VirtualBox-6.0.4-128413-OSX.dmg"
 	virtualBoxMountLocation = "/Volumes/VirtualBox"
+
+	resolverFile = "/etc/resolver/testing"
 )
 
 var (
@@ -59,16 +61,42 @@ func fixVirtualBoxInstallation() (bool, error) {
 
 	stdOut, stdErr, err := crcos.RunWithPrivilege("hdiutil", "attach", tempFilePath)
 	if err != nil {
-		return false, fmt.Errorf("Could not able to mount the virtualbox.dmg file: %s %v: %s", stdOut, err, stdErr)
+		return false, fmt.Errorf("Could not mount the virtualbox.dmg file: %s %v: %s", stdOut, err, stdErr)
 	}
 	stdOut, stdErr, err = crcos.RunWithPrivilege("installer", "-package", virtualBoxPkgLocation, "-target", "/")
 	if err != nil {
-		return false, fmt.Errorf("Could not able to install VirtualBox.pkg: %s %v: %s", stdOut, err, stdErr)
+		return false, fmt.Errorf("Could not install VirtualBox.pkg: %s %v: %s", stdOut, err, stdErr)
 	}
 	stdOut, stdErr, err = crcos.RunWithPrivilege("hdiutil", "detach", virtualBoxMountLocation)
 	if err != nil {
-		return false, fmt.Errorf("Could not able to install VirtualBox.pkg: %s %v: %s", stdOut, err, stdErr)
+		return false, fmt.Errorf("Could not install VirtualBox.pkg: %s %v: %s", stdOut, err, stdErr)
 	}
+	return true, nil
+}
+
+func checkResolverFilePermissions() (bool, error) {
+	info, err := os.Stat(resolverFile)
+	if err != nil {
+		return false, fmt.Errorf("Unable to get permissions of the resolver file: %s", err)
+	}
+
+	m := info.Mode()
+
+	// 16 is checking for user write permissions
+	return m&16 != 1, nil
+}
+
+func fixResolverFilePermissions() (bool, error) {
+	stdOut, stdErr, err := crcos.RunWithPrivilege("touch", resolverFile)
+	if err != nil {
+		return false, fmt.Errorf("Unable to create the resolver file: %s %v: %s", stdOut, err, stdErr)
+	}
+
+	stdOut, stdErr, err = crcos.RunWithPrivilege("chown", string(os.Getuid()), resolverFile)
+	if err != nil {
+		return false, fmt.Errorf("Unable to change permissions of the resolver file: %s %v: %s", stdOut, err, stdErr)
+	}
+
 	return true, nil
 }
 

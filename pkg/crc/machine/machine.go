@@ -10,18 +10,25 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
+
+	// host and instance related
+	"github.com/code-ready/crc/pkg/crc/network"
+
+	// cluster services
+	"github.com/code-ready/crc/pkg/crc/services"
+	"github.com/code-ready/crc/pkg/crc/services/dns"
+
+	// machine related imports
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
 	"github.com/code-ready/crc/pkg/crc/machine/virtualbox"
+
 	"github.com/code-ready/machine/libmachine"
 	"github.com/code-ready/machine/libmachine/host"
 	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/state"
 )
-
-func init() {
-}
 
 func Start(startConfig StartConfig) (StartResult, error) {
 	defer unsetMachineLogging()
@@ -75,6 +82,18 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	result.ClusterConfig = clusterConfig
 
+	// Pre-VM start
+	driverInfo, _ := getDriverInfo(startConfig.VMDriver)
+	if driverInfo.UseDNSService {
+		servicePreStartConfig := services.ServicePreStartConfig{
+			Name: startConfig.Name,
+			// TODO: should be more finegrained
+			BundleMetadata: *crcBundleMetadata,
+		}
+		dns.RunPreStart(servicePreStartConfig)
+	}
+	//
+
 	exists, err := existVM(libMachineAPIClient, machineConfig)
 	if !exists {
 		logging.InfoF(" Creating VM ...")
@@ -114,18 +133,51 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 		vmState, err := host.Driver.GetState()
 		if err != nil {
-			logging.ErrorF("Error getting the state for host: %s", err)
+			logging.ErrorF("Error getting the state: %s", err)
 			result.Error = err.Error()
 		}
 
 		result.Status = vmState.String()
 	}
 
-	logging.InfoF(" Waiting 3m0s for the openshift cluster to be started ...")
-	time.Sleep(time.Minute * 3)
-	logging.InfoF(" To access the cluster as the system:admin user when using 'oc', run 'export KUBECONFIG=%s'", result.ClusterConfig.KubeConfig)
-	logging.InfoF(" Access the OpenShift web-console here: %s", result.ClusterConfig.ClusterAPI)
-	logging.InfoF(" Login to the console with user: kubeadmin, password: %s", result.ClusterConfig.KubeAdminPass)
+	// Post-VM start
+	host, err := libMachineAPIClient.Load(machineConfig.Name)
+	instanceIP, err := host.Driver.GetIP()
+	if err != nil {
+		logging.ErrorF("Error getting the IP: %s", err)
+		result.Error = err.Error()
+		return *result, err
+	}
+
+	hostIP, err := network.DetermineHostIP(instanceIP)
+	if err != nil {
+		logging.ErrorF("Error determining host IP: %s", err)
+		result.Error = err.Error()
+		return *result, err
+	}
+
+	if driverInfo.UseDNSService {
+		servicePostStartConfig := services.ServicePostStartConfig{
+			Name: startConfig.Name,
+			// TODO: would prefer passing in a more generic type
+			Driver: host.Driver,
+			IP:     instanceIP,
+			HostIP: hostIP,
+			// TODO: should be more finegrained
+			BundleMetadata: *crcBundleMetadata,
+		}
+		dns.RunPostStart(servicePostStartConfig)
+	}
+	//
+
+	// If no error, return usage message
+	if result.Error == "" {
+		logging.InfoF(" Waiting 3m0s for the openshift cluster to be started ...")
+		time.Sleep(time.Minute * 3)
+		logging.InfoF(" To access the cluster as the system:admin user when using 'oc', run 'export KUBECONFIG=%s'", result.ClusterConfig.KubeConfig)
+		logging.InfoF(" Access the OpenShift web-console here: %s", result.ClusterConfig.ClusterAPI)
+		logging.InfoF(" Login to the console with user: kubeadmin, password: %s", result.ClusterConfig.KubeAdminPass)
+	}
 
 	return *result, err
 }

@@ -23,6 +23,7 @@ const (
 	DefaultLogLevel      = "info"
 	ConfigFile           = "crc.json"
 	LogFile              = "crc.log"
+	GlobalStateFile      = "globalstate.json"
 )
 
 var (
@@ -32,6 +33,7 @@ var (
 	MachineBaseDir  = CrcBaseDir
 	MachineCertsDir = filepath.Join(MachineBaseDir, "certs")
 	MachineCacheDir = filepath.Join(MachineBaseDir, "cache")
+	GlobalStatePath = filepath.Join(CrcBaseDir, GlobalStateFile)
 )
 
 // GetHomeDir returns the home directory for the current user
