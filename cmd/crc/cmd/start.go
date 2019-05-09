@@ -3,6 +3,9 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -11,8 +14,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/validation"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 func init() {
@@ -56,12 +57,13 @@ func runStart(arguments []string) {
 	if err != nil {
 		logging.ErrorF(err.Error())
 	}
+
 }
 
 func initStartCmdFlagSet() *pflag.FlagSet {
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
 	flagSet.StringP(config.Bundle.Name, "b", constants.DefaultBundle, "The system bundle used for deployment of the OpenShift cluster.")
-	flagSet.StringP(config.VMDriver.Name, "d", constants.DefaultVMDriver, fmt.Sprintf("The driver to use for the CRC VM. Possible values: %v", constants.SupportedVMDrivers))
+	flagSet.StringP(config.VMDriver.Name, "d", machine.DefaultDriver.Driver, fmt.Sprintf("The driver to use for the CRC VM. Possible values: %v", machine.SupportedDriverValues()))
 	flagSet.IntP(config.CPUs.Name, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the CRC VM")
 	flagSet.IntP(config.Memory.Name, "m", constants.DefaultMemory, "MiB of Memory to allocate to the CRC VM")
 
