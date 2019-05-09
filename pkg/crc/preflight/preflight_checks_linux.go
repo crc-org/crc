@@ -23,11 +23,12 @@ import (
 )
 
 const (
-	driverBinaryDir      = "/usr/local/bin"
-	libvirtDriverCommand = "crc-driver-libvirt"
-	defaultPoolSize      = "20 GB"
-	libvirtDriverVersion = "0.11.0"
-	crcDnsmasqConfigFile = "crc.conf"
+	driverBinaryDir             = "/usr/local/bin"
+	libvirtDriverCommand        = "crc-driver-libvirt"
+	defaultPoolSize             = "20 GB"
+	libvirtDriverVersion        = "0.11.0"
+	crcDnsmasqConfigFile        = "crc.conf"
+	crcNetworkManagerConfigFile = "crc-nm-dnsmasq.conf"
 )
 
 var (
@@ -35,6 +36,10 @@ var (
 	crcDnsmasqConfigPath    = filepath.Join(string(filepath.Separator), "etc", "NetworkManager", "dnsmasq.d", crcDnsmasqConfigFile)
 	crcDnsmasqConfig        = `server=/tt.testing/192.168.130.1
 address=/apps.tt.testing/192.168.130.11
+`
+	crcNetworkManagerConfigPath = filepath.Join(string(filepath.Separator), "etc", "NetworkManager", "conf.d", crcNetworkManagerConfigFile)
+	crcNetworkManagerConfig     = `[main]
+dns=dnsmasq
 `
 	libvirtDriverDownloadURL = fmt.Sprintf("https://github.com/code-ready/machine-driver-libvirt/releases/download/%s/crc-driver-libvirt", libvirtDriverVersion)
 )
@@ -396,6 +401,37 @@ func fixCrcDnsmasqConfigFile() (bool, error) {
 	cmd.Stderr = buf
 	if err := cmd.Run(); err != nil {
 		return false, fmt.Errorf("Failed to write dnsmasq config file: %s: %s: %v", crcDnsmasqConfigPath, buf.String(), err)
+	}
+
+	sd := systemd.NewHostSystemdCommander()
+	if _, err := sd.Reload("NetworkManager"); err != nil {
+		return false, fmt.Errorf("Failed to restart NetworkManager: %v", err)
+	}
+
+	return true, nil
+}
+func checkCrcNetworkManagerConfig() (bool, error) {
+	c := []byte(crcNetworkManagerConfig)
+	_, err := os.Stat(crcNetworkManagerConfigPath)
+	if err != nil {
+		return false, fmt.Errorf("File not found: %s: %s", crcNetworkManagerConfigPath, err.Error())
+	}
+	config, err := ioutil.ReadFile(crcNetworkManagerConfigPath)
+	if err != nil {
+		return false, fmt.Errorf("Error opening file: %s: %s", crcNetworkManagerConfigPath, err.Error())
+	}
+	if !bytes.Equal(config, c) {
+		return false, fmt.Errorf("Config file contains changes: %s", crcNetworkManagerConfigPath)
+	}
+	return true, nil
+}
+func fixCrcNetworkManagerConfig() (bool, error) {
+	cmd := exec.Command("sudo", "tee", crcNetworkManagerConfigPath)
+	cmd.Stdin = strings.NewReader(crcNetworkManagerConfig)
+	buf := new(bytes.Buffer)
+	cmd.Stderr = buf
+	if err := cmd.Run(); err != nil {
+		return false, fmt.Errorf("Failed to write NetworkManager config file: %s: %s: %v", crcNetworkManagerConfigPath, buf.String(), err)
 	}
 
 	sd := systemd.NewHostSystemdCommander()
