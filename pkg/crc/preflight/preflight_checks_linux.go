@@ -118,14 +118,11 @@ func checkLibvirtEnabled() (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("systemctl not found on path: %s", err.Error())
 	}
-	cmd := exec.Command(path, "is-enabled", "libvirtd")
-	buf := new(bytes.Buffer)
-	cmd.Stderr = buf
-	stdOut, err := cmd.Output()
+	stdOut, stdErr, err := crcos.RunWithDefaultLocale(path, "is-enabled", "libvirtd")
 	if err != nil {
-		return false, fmt.Errorf("%v : %s", err, buf.String())
+		return false, fmt.Errorf("%v : %s", err, stdErr)
 	}
-	if strings.TrimSpace(string(stdOut)) != "enabled" {
+	if strings.TrimSpace(stdOut) != "enabled" {
 		return false, errors.New("Libvirt is not enabled")
 	}
 	return true, nil
@@ -154,14 +151,11 @@ func checkUserPartOfLibvirtGroup() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	cmd := exec.Command(path, currentUser.Username)
-	buf := new(bytes.Buffer)
-	cmd.Stderr = buf
-	stdOut, err := cmd.Output()
+	stdOut, stdErr, err := crcos.RunWithDefaultLocale(path, currentUser.Username)
 	if err != nil {
-		return false, fmt.Errorf("%+v : %s", err, buf.String())
+		return false, fmt.Errorf("%+v : %s", err, stdErr)
 	}
-	if strings.Contains(string(stdOut), "libvirt") {
+	if strings.Contains(stdOut, "libvirt") {
 		return true, nil
 	}
 	return false, err
@@ -185,14 +179,11 @@ func checkLibvirtServiceRunning() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	cmd := exec.Command(path, "is-active", "libvirtd")
-	buf := new(bytes.Buffer)
-	cmd.Stderr = buf
-	stdOut, err := cmd.Output()
+	stdOut, stdErr, err := crcos.RunWithDefaultLocale(path, "is-active", "libvirtd")
 	if err != nil {
-		return false, fmt.Errorf("%v : %s", err, buf.String())
+		return false, fmt.Errorf("%v : %s", err, stdErr)
 	}
-	if strings.TrimSpace(string(stdOut)) != "active" {
+	if strings.TrimSpace(stdOut) != "active" {
 		return false, errors.New("Libvirt service is not running")
 	}
 	return true, nil
@@ -229,12 +220,9 @@ func checkMachineDriverLibvirtInstalled() (bool, error) {
 		return false, errors.New("crc-driver-libvirt does not have correct permissions")
 	}
 	// Check the version of driver if it matches to supported one
-	cmd := exec.Command(path, "version")
-	stdErrBuf := new(bytes.Buffer)
-	cmd.Stderr = stdErrBuf
-	cmd.Run()
-	if !strings.Contains(stdErrBuf.String(), libvirtDriverVersion) {
-		return false, fmt.Errorf("crc-driver-libvirt does not have right version \n Required: %s \n Got: %s use 'crc setup' command.", libvirtDriverVersion, stdErrBuf.String())
+	_, stdErr, _ := crcos.RunWithDefaultLocale(path, "version")
+	if !strings.Contains(stdErr, libvirtDriverVersion) {
+		return false, fmt.Errorf("crc-driver-libvirt does not have right version \n Required: %s \n Got: %s use 'crc setup' command.", libvirtDriverVersion, stdErr)
 	}
 	return true, nil
 }
@@ -274,12 +262,10 @@ func fixMachineDriverLibvirtInstalled() (bool, error) {
 }
 
 func checkLibvirtCrcNetworkAvailable() (bool, error) {
-	cmd := exec.Command("virsh", "--connect", "qemu:///system", "net-list")
-	out, err := cmd.CombinedOutput()
+	stdOut, stdErr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-list")
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("%+v: %s", err, stdErr)
 	}
-	stdOut := string(out)
 	outputSlice := strings.Split(stdOut, "\n")
 	for _, stdOut = range outputSlice {
 		stdOut = strings.TrimSpace(stdOut)
@@ -289,12 +275,11 @@ func checkLibvirtCrcNetworkAvailable() (bool, error) {
 		}
 		if match {
 			// Check if the network have defined hostname. It might be possible that User already have an outdated crc network
-			cmd := exec.Command("virsh", "--connect", "qemu:///system", "net-dumpxml", libvirt.DefaultNetwork)
-			out, err := cmd.CombinedOutput()
+			stdOut, stdErr, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-dumpxml", libvirt.DefaultNetwork)
 			if err != nil {
-				return false, err
+				return false, fmt.Errorf("%+v: %s", err, stdErr)
 			}
-			if !strings.Contains(string(out), constants.DefaultHostname) {
+			if !strings.Contains(stdOut, constants.DefaultHostname) {
 				return false, fmt.Errorf("crc network is not updated with %s hostname, use 'crc setup' to update it.", constants.DefaultHostname)
 			}
 			return true, nil
@@ -339,14 +324,10 @@ func fixLibvirtCrcNetworkAvailable() (bool, error) {
 }
 
 func checkLibvirtCrcNetworkActive() (bool, error) {
-	cmd := exec.Command("virsh", "--connect", "qemu:///system", "net-list")
-	//cmd.Env = cmdUtil.ReplaceEnv(os.Environ(), "LC_ALL", "C")
-	//cmd.Env = cmdUtil.ReplaceEnv(cmd.Env, "LANG", "C")
-	stdOutStdError, err := cmd.CombinedOutput()
+	stdOut, stdErr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-list")
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("%+v: %s", err, stdErr)
 	}
-	stdOut := string(stdOutStdError)
 	outputSlice := strings.Split(stdOut, "\n")
 
 	for _, stdOut = range outputSlice {
