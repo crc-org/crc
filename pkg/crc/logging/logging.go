@@ -12,7 +12,10 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-var logfile *os.File
+var (
+	logfile  *os.File
+	LogLevel string
+)
 
 type fileHook struct {
 	file      io.Writer
@@ -49,8 +52,16 @@ func (h *fileHook) Fire(entry *logrus.Entry) error {
 	return err
 }
 
-func setupFileHook() error {
+func OpenLogfile() (*os.File, error) {
 	logfile, err := os.OpenFile(filepath.Join(constants.LogFilePath), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
+	if err != nil {
+		return nil, err
+	}
+	return logfile, nil
+}
+
+func setupFileHook() error {
+	logfile, err := OpenLogfile()
 	if err != nil {
 		return err
 	}

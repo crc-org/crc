@@ -21,15 +21,15 @@ const (
 	DefaultHostname      = "crc-jtskh-master-0"
 	DefaultWebConsoleURL = "https://console-openshift-console.apps.tt.testing"
 	DefaultDiskImage     = "crc.disk"
+	DefaultLogLevel      = "info"
+	ConfigFile           = "crc.json"
+	LogFile              = "crc.log"
 )
 
 var (
-	CrcBaseDir  = filepath.Join(GetHomeDir(), ".crc")
-	ConfigFile  = "crc.json"
-	ConfigPath  = filepath.Join(CrcBaseDir, ConfigFile)
-	LogFile     = "crc.log"
-	LogFilePath = filepath.Join(CrcBaseDir, LogFile)
-
+	CrcBaseDir      = filepath.Join(GetHomeDir(), ".crc")
+	ConfigPath      = filepath.Join(CrcBaseDir, ConfigFile)
+	LogFilePath     = filepath.Join(CrcBaseDir, LogFile)
 	MachineBaseDir  = CrcBaseDir
 	MachineCertsDir = filepath.Join(MachineBaseDir, "certs")
 	MachineCacheDir = filepath.Join(MachineBaseDir, "cache")

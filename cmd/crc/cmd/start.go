@@ -48,7 +48,7 @@ func runStart(arguments []string) {
 		VMDriver:   crcConfig.GetString(config.VMDriver.Name),
 		Memory:     constants.DefaultMemory,
 		CPUs:       constants.DefaultCPUs,
-		Debug:      false, // TODO: make this configurable
+		Debug:      isDebugLog(),
 	}
 
 	commandResult, err := machine.Start(startConfig)
@@ -64,4 +64,11 @@ func initStartCmdFlagSet() *pflag.FlagSet {
 	flagSet.StringP(config.VMDriver.Name, "d", constants.DefaultVMDriver, fmt.Sprintf("The driver to use for the CRC VM. Possible values: %v", constants.SupportedVMDrivers))
 
 	return flagSet
+}
+
+func isDebugLog() bool {
+	if logging.LogLevel == "debug" {
+		return true
+	}
+	return false
 }
