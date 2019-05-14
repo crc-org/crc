@@ -24,10 +24,15 @@ func init() {
 }
 
 func Start(startConfig StartConfig) (StartResult, error) {
+	defer unsetMachineLogging()
+
 	result := &StartResult{Name: startConfig.Name}
 
 	// Set libmachine logging
-	setMachineLogging(startConfig.Debug)
+	err := setMachineLogging(startConfig.Debug)
+	if err != nil {
+		return *result, err
+	}
 
 	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	defer libMachineAPIClient.Close()
@@ -214,11 +219,23 @@ func getDriverOptions(machineConfig config.MachineConfig) interface{} {
 	return driver
 }
 
-func setMachineLogging(logging bool) {
-	if !logging {
-		log.SetOutWriter(ioutil.Discard)
-		log.SetErrWriter(ioutil.Discard)
+func setMachineLogging(logs bool) error {
+	if !logs {
+		log.SetDebug(true)
+		logging.CloseLogFile()
+		logfile, err := logging.OpenLogfile()
+		if err != nil {
+			return err
+		}
+		log.SetOutWriter(logfile)
+		log.SetErrWriter(logfile)
 	} else {
 		log.SetDebug(true)
 	}
+	return nil
+}
+
+func unsetMachineLogging() {
+	logging.CloseLogFile()
+	logging.InitLogrus(logging.LogLevel)
 }

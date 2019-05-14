@@ -10,8 +10,6 @@ import (
 	log "github.com/code-ready/crc/pkg/crc/logging"
 )
 
-var logLevel string
-
 var rootCmd = &cobra.Command{
 	Use:   commandName,
 	Short: descriptionShort,
@@ -37,14 +35,14 @@ func init() {
 	config.InitViper()
 	setConfigDefaults()
 	rootCmd.AddCommand(cmdConfig.ConfigCmd)
-	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "log level (e.g. \"debug | info | warn | error\")")
+	rootCmd.PersistentFlags().StringVar(&log.LogLevel, "log-level", constants.DefaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
 }
 
 func runPrerun() {
 	output.OutF("%s - %s\n", commandName, descriptionShort)
 
 	// Setting up logrus
-	log.InitLogrus(logLevel)
+	log.InitLogrus(log.LogLevel)
 }
 
 func runPostrun() {
