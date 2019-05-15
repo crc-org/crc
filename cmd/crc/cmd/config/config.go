@@ -21,6 +21,7 @@ var SettingsList = make(map[string]*setting)
 var (
 	// Start command settings in config
 	VMDriver = createSetting("vm-driver", nil, []validationFnType{validations.ValidateDriver})
+	Bundle   = createSetting("bundle", nil, nil)
 
 	// Preflight checks
 	SkipCheckVirtEnabled             = createSetting("skip-check-virt-enabled", nil, []validationFnType{validations.ValidateBool})
