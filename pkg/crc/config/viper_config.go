@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -51,7 +52,6 @@ func InitViper() error {
 	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	v.AutomaticEnv()
 	v.SetTypeByDefaultValue(true)
-	// TODO: add flags and bind to configs
 	err := v.ReadInConfig()
 	if err != nil {
 		return fmt.Errorf("Error Reading config file: %s : %v", constants.ConfigFile, err)
@@ -80,4 +80,14 @@ func IsSet(key string) bool {
 	ss := AllConfigs()
 	_, ok := ss[key]
 	return ok
+}
+
+// BindFlags binds flags to config properties
+func BindFlag(key string, flag *pflag.Flag) error {
+	return globalViper.BindPFlag(key, flag)
+}
+
+// BindFlagset binds a flagset to their repective config properties
+func BindFlagSet(flagSet *pflag.FlagSet) error {
+	return globalViper.BindPFlags(flagSet)
 }

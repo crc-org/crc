@@ -11,13 +11,14 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 func init() {
 	rootCmd.AddCommand(startCmd)
+	startCmd.Flags().AddFlagSet(startCmdFlagSet)
 
-	startCmd.Flags().StringVarP(&bundlePath, "Bundle", "b", constants.DefaultBundle, "The system bundle used for deployment of the OpenShift cluster.")
-	startCmd.Flags().StringP(config.VMDriver.Name, "d", constants.DefaultVMDriver, fmt.Sprintf("The driver to use for the CRC VM. Possible values: %v", constants.SupportedVMDrivers))
+	crcConfig.BindFlagSet(startCmd.Flags())
 }
 
 var startCmd = &cobra.Command{
@@ -30,7 +31,8 @@ var startCmd = &cobra.Command{
 }
 
 var (
-	bundlePath string
+	bundlePath      string
+	startCmdFlagSet = initStartCmdFlagSet()
 )
 
 func runStart(arguments []string) {
@@ -42,7 +44,7 @@ func runStart(arguments []string) {
 
 	startConfig := machine.StartConfig{
 		Name:       constants.DefaultName,
-		BundlePath: bundlePath,
+		BundlePath: crcConfig.GetString(config.Bundle.Name),
 		VMDriver:   crcConfig.GetString(config.VMDriver.Name),
 		Memory:     constants.DefaultMemory,
 		CPUs:       constants.DefaultCPUs,
@@ -54,4 +56,12 @@ func runStart(arguments []string) {
 	if err != nil {
 		logging.ErrorF(err.Error())
 	}
+}
+
+func initStartCmdFlagSet() *pflag.FlagSet {
+	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
+	flagSet.StringP(config.Bundle.Name, "b", constants.DefaultBundle, "The system bundle used for deployment of the OpenShift cluster.")
+	flagSet.StringP(config.VMDriver.Name, "d", constants.DefaultVMDriver, fmt.Sprintf("The driver to use for the CRC VM. Possible values: %v", constants.SupportedVMDrivers))
+
+	return flagSet
 }
