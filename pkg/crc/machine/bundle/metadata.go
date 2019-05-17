@@ -12,6 +12,7 @@ import (
 // Metadata structure to unmarshal the crc-bundle-info.json file
 
 type CrcBundleInfo struct {
+	Version   string `json:"version"`
 	Type      string `json:"type"`
 	BuildInfo struct {
 		BuildTime                 string `json:"buildTime"`
@@ -21,11 +22,16 @@ type CrcBundleInfo struct {
 	ClusterInfo struct {
 		ClusterName           string `json:"clusterName"`
 		BaseDomain            string `json:"baseDomain"`
-		MasterHostname        string `json:"masterHostname"`
+		AppsDomain            string `json:"appsDomain"`
 		SSHPrivateKeyFile     string `json:"sshPrivateKeyFile"`
 		KubeConfig            string `json:"kubeConfig"`
 		KubeadminPasswordFile string `json:"kubeadminPasswordFile"`
 	} `json:"clusterInfo"`
+	Nodes []struct {
+		Kind      []string `json:"kind"`
+		Hostname  string   `json:"hostname"`
+		DiskImage string   `json:"diskImage"`
+	} `json:"nodes"`
 	Storage struct {
 		DiskImages []struct {
 			Name   string `json:"name"`
