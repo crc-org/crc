@@ -1,11 +1,14 @@
 package config
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -23,6 +26,20 @@ func GetBool(key string) bool {
 // Set sets the value for a give config key
 func Set(key string, value interface{}) {
 	globalViper.Set(key, value)
+}
+
+// Unset unsets a given config key
+func Unset(key string) error {
+	delete(ViperConfig, key)
+	encodedConfig, err := json.MarshalIndent(ViperConfig, "", " ")
+	if err != nil {
+		return errors.NewF("Error encoding config to JSON: %v", err)
+	}
+	err = globalViper.ReadConfig(bytes.NewBuffer(encodedConfig))
+	if err != nil {
+		return errors.NewF("Error reading in new config: %s : %v", constants.ConfigFile, err)
+	}
+	return nil
 }
 
 // GetString return the value of a key in string
