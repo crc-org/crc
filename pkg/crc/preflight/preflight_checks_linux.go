@@ -25,7 +25,7 @@ import (
 const (
 	driverBinaryDir             = "/usr/local/bin"
 	libvirtDriverCommand        = "crc-driver-libvirt"
-	libvirtDriverVersion        = "0.12.0"
+	libvirtDriverVersion        = "0.12.1"
 	crcDnsmasqConfigFile        = "crc.conf"
 	crcNetworkManagerConfigFile = "crc-nm-dnsmasq.conf"
 )
@@ -33,8 +33,8 @@ const (
 var (
 	libvirtDriverBinaryPath = filepath.Join(driverBinaryDir, libvirtDriverCommand)
 	crcDnsmasqConfigPath    = filepath.Join(string(filepath.Separator), "etc", "NetworkManager", "dnsmasq.d", crcDnsmasqConfigFile)
-	crcDnsmasqConfig        = `server=/tt.testing/192.168.130.1
-address=/apps.tt.testing/192.168.130.11
+	crcDnsmasqConfig        = `server=/crc.testing/192.168.130.1
+address=/apps-crc.testing/192.168.130.11
 `
 	crcNetworkManagerConfigPath = filepath.Join(string(filepath.Separator), "etc", "NetworkManager", "conf.d", crcNetworkManagerConfigFile)
 	crcNetworkManagerConfig     = `[main]

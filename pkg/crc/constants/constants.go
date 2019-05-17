@@ -16,9 +16,9 @@ const (
 
 	CrcEnvPrefix = "CRC"
 
-	DefaultBundle        = "crc_libvirt_v4.1.0-rc0.tar.xz"
-	DefaultHostname      = "crc-jtskh-master-0"
-	DefaultWebConsoleURL = "https://console-openshift-console.apps.tt.testing"
+	DefaultBundle        = "crc_libvirt_4.1.0-rc.5.tar.xz"
+	DefaultHostname      = "crc-g8g2v-master-0"
+	DefaultWebConsoleURL = "https://console-openshift-console.apps-crc.testing"
 	DefaultDiskImage     = "crc.disk"
 	DefaultLogLevel      = "info"
 	ConfigFile           = "crc.json"
