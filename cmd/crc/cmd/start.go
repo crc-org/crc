@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/code-ready/crc/cmd/crc/cmd/config"
 
+	"github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/preflight"
+	"github.com/code-ready/crc/pkg/crc/validation"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -36,7 +37,7 @@ var (
 )
 
 func runStart(arguments []string) {
-	if err := constants.ValidateDriver(crcConfig.GetString(config.VMDriver.Name)); err != nil {
+	if err := validateStartFlags(); err != nil {
 		errors.ExitWithMessage(1, err.Error())
 	}
 
@@ -46,8 +47,8 @@ func runStart(arguments []string) {
 		Name:       constants.DefaultName,
 		BundlePath: crcConfig.GetString(config.Bundle.Name),
 		VMDriver:   crcConfig.GetString(config.VMDriver.Name),
-		Memory:     constants.DefaultMemory,
-		CPUs:       constants.DefaultCPUs,
+		Memory:     crcConfig.GetInt(config.Memory.Name),
+		CPUs:       crcConfig.GetInt(config.CPUs.Name),
 		Debug:      isDebugLog(),
 	}
 
@@ -62,6 +63,8 @@ func initStartCmdFlagSet() *pflag.FlagSet {
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
 	flagSet.StringP(config.Bundle.Name, "b", constants.DefaultBundle, "The system bundle used for deployment of the OpenShift cluster.")
 	flagSet.StringP(config.VMDriver.Name, "d", constants.DefaultVMDriver, fmt.Sprintf("The driver to use for the CRC VM. Possible values: %v", constants.SupportedVMDrivers))
+	flagSet.IntP(config.CPUs.Name, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the CRC VM")
+	flagSet.IntP(config.Memory.Name, "m", constants.DefaultMemory, "MiB of Memory to allocate to the CRC VM")
 
 	return flagSet
 }
@@ -71,4 +74,20 @@ func isDebugLog() bool {
 		return true
 	}
 	return false
+}
+
+func validateStartFlags() error {
+	if err := validation.ValidateDriver(crcConfig.GetString(config.VMDriver.Name)); err != nil {
+		return err
+	}
+	if err := validation.ValidateMemory(crcConfig.GetInt(config.Memory.Name)); err != nil {
+		return err
+	}
+	if err := validation.ValidateCPUs(crcConfig.GetInt(config.CPUs.Name)); err != nil {
+		return err
+	}
+	if err := validation.ValidateBundle(crcConfig.GetString(config.Bundle.Name)); err != nil {
+		return err
+	}
+	return nil
 }

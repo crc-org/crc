@@ -2,6 +2,7 @@ package config
 
 import (
 	validations "github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -20,8 +21,10 @@ var SettingsList = make(map[string]*setting)
 
 var (
 	// Start command settings in config
-	VMDriver = createSetting("vm-driver", nil, []validationFnType{validations.ValidateDriver})
-	Bundle   = createSetting("bundle", nil, nil)
+	VMDriver = createSetting("vm-driver", constants.DefaultVMDriver, []validationFnType{validations.ValidateDriver})
+	Bundle   = createSetting("bundle", nil, []validationFnType{validations.ValidateBundle})
+	CPUs     = createSetting("cpus", constants.DefaultCPUs, []validationFnType{validations.ValidateCPUs})
+	Memory   = createSetting("memory", constants.DefaultMemory, []validationFnType{validations.ValidateMemory})
 
 	// Preflight checks
 	SkipCheckVirtEnabled             = createSetting("skip-check-virt-enabled", nil, []validationFnType{validations.ValidateBool})
