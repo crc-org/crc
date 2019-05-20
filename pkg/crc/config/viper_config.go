@@ -47,6 +47,11 @@ func GetString(key string) string {
 	return globalViper.GetString(key)
 }
 
+// GetInt return the value of a key in int
+func GetInt(key string) int {
+	return globalViper.GetInt(key)
+}
+
 // EnsureConfigFileExists creates the viper config file it does not exists
 func EnsureConfigFileExists() error {
 	_, err := os.Stat(constants.ConfigPath)

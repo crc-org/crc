@@ -1,7 +1,6 @@
 package constants
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -60,14 +59,4 @@ func EnsureBaseDirExists() error {
 		return os.Mkdir(CrcBaseDir, 0755)
 	}
 	return nil
-}
-
-// Validate the given driver is supported or not
-func ValidateDriver(driver string) error {
-	for _, d := range SupportedVMDrivers {
-		if driver == d {
-			return nil
-		}
-	}
-	return fmt.Errorf("Unsupported driver: %s, use '--vm-driver' option to provide a supported driver %s\n", driver, SupportedVMDrivers)
 }
