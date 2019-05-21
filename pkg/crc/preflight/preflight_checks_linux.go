@@ -25,8 +25,7 @@ import (
 const (
 	driverBinaryDir             = "/usr/local/bin"
 	libvirtDriverCommand        = "crc-driver-libvirt"
-	defaultPoolSize             = "20 GB"
-	libvirtDriverVersion        = "0.11.0"
+	libvirtDriverVersion        = "0.12.0"
 	crcDnsmasqConfigFile        = "crc.conf"
 	crcNetworkManagerConfigFile = "crc-nm-dnsmasq.conf"
 )
@@ -220,9 +219,9 @@ func checkMachineDriverLibvirtInstalled() (bool, error) {
 		return false, errors.New("crc-driver-libvirt does not have correct permissions")
 	}
 	// Check the version of driver if it matches to supported one
-	_, stdErr, _ := crcos.RunWithDefaultLocale(path, "version")
-	if !strings.Contains(stdErr, libvirtDriverVersion) {
-		return false, fmt.Errorf("crc-driver-libvirt does not have right version \n Required: %s \n Got: %s use 'crc setup' command.", libvirtDriverVersion, stdErr)
+	stdOut, stdErr, _ := crcos.RunWithDefaultLocale(path, "version")
+	if !strings.Contains(stdOut, libvirtDriverVersion) {
+		return false, fmt.Errorf("crc-driver-libvirt does not have right version \n Required: %s \n Got: %s use 'crc setup' command.\n %v\n", libvirtDriverVersion, stdOut, stdErr)
 	}
 	return true, nil
 }
