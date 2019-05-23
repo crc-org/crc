@@ -32,7 +32,6 @@ var startCmd = &cobra.Command{
 }
 
 var (
-	bundlePath      string
 	startCmdFlagSet = initStartCmdFlagSet()
 )
 

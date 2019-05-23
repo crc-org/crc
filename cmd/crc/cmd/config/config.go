@@ -39,8 +39,6 @@ var (
 	WarnCheckLibvirtRunning          = createSetting("warn-check-libvirt-running", nil, []validationFnType{validations.ValidateBool})
 	SkipCheckUserInLibvirtGroup      = createSetting("skip-check-user-in-libvirt-group", nil, []validationFnType{validations.ValidateBool})
 	WarnCheckUserInLibvirtGroup      = createSetting("warn-check-user-in-libvirt-group", nil, []validationFnType{validations.ValidateBool})
-	SkipCheckIPForwarding            = createSetting("skip-check-ip-forwarding", nil, []validationFnType{validations.ValidateBool})
-	WarnCheckIPForwarding            = createSetting("warn-check-ip-forwarding", nil, []validationFnType{validations.ValidateBool})
 	SkipCheckLibvirtDriver           = createSetting("skip-check-libvirt-driver", nil, []validationFnType{validations.ValidateBool})
 	WarnCheckLibvirtDriver           = createSetting("warn-check-libvirt-driver", nil, []validationFnType{validations.ValidateBool})
 	SkipCheckCrcNetwork              = createSetting("skip-check-crc-network", nil, []validationFnType{validations.ValidateBool})
