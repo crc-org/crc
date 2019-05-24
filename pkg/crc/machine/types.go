@@ -1,5 +1,7 @@
 package machine
 
+import "github.com/code-ready/machine/libmachine/state"
+
 type StartConfig struct {
 	Name string
 
@@ -33,7 +35,18 @@ type StopConfig struct {
 	Debug bool
 }
 
+type PowerOffConfig struct {
+	Name string
+}
+
 type StopResult struct {
+	Name    string
+	Success bool
+	State   state.State
+	Error   string
+}
+
+type PowerOffResult struct {
 	Name    string
 	Success bool
 	Error   string
