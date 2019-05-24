@@ -142,7 +142,31 @@ func Stop(stopConfig StopConfig) (StopResult, error) {
 		return *result, err
 	}
 
+	result.State, _ = host.Driver.GetState()
+
 	if err := host.Stop(); err != nil {
+		result.Success = false
+		result.Error = err.Error()
+		return *result, err
+	}
+
+	result.Success = true
+	return *result, nil
+}
+
+func PowerOff(PowerOff PowerOffConfig) (PowerOffResult, error) {
+	result := &PowerOffResult{Name: PowerOff.Name}
+
+	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	host, err := libMachineAPIClient.Load(PowerOff.Name)
+
+	if err != nil {
+		result.Success = false
+		result.Error = err.Error()
+		return *result, err
+	}
+
+	if err := host.Kill(); err != nil {
 		result.Success = false
 		result.Error = err.Error()
 		return *result, err
