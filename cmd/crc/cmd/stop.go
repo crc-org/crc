@@ -25,7 +25,8 @@ var stopCmd = &cobra.Command{
 func runStop(arguments []string) {
 
 	stopConfig := machine.StopConfig{
-		Name: constants.DefaultName,
+		Name:  constants.DefaultName,
+		Debug: isDebugLog(),
 	}
 
 	commandResult, err := machine.Stop(stopConfig)
