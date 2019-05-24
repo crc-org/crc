@@ -131,7 +131,14 @@ func Start(startConfig StartConfig) (StartResult, error) {
 }
 
 func Stop(stopConfig StopConfig) (StopResult, error) {
+	defer unsetMachineLogging()
+
 	result := &StopResult{Name: stopConfig.Name}
+	// Set libmachine logging
+	err := setMachineLogging(stopConfig.Debug)
+	if err != nil {
+		return *result, err
+	}
 
 	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	host, err := libMachineAPIClient.Load(stopConfig.Name)

@@ -29,7 +29,8 @@ type StartResult struct {
 }
 
 type StopConfig struct {
-	Name string
+	Name  string
+	Debug bool
 }
 
 type StopResult struct {
