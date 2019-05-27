@@ -3,6 +3,7 @@ package preflight
 import (
 	"errors"
 	"fmt"
+	"github.com/code-ready/crc/pkg/crc/oc"
 	"io"
 	"net/http"
 	"os"
@@ -67,6 +68,23 @@ func fixVirtualBoxInstallation() (bool, error) {
 	stdOut, stdErr, err = crcos.RunWithPrivilege("hdiutil", "detach", virtualBoxMountLocation)
 	if err != nil {
 		return false, fmt.Errorf("Could not able to install VirtualBox.pkg: %s %v: %s", stdOut, err, stdErr)
+	}
+	return true, nil
+}
+
+// Check if oc binary is cached or not
+func checkOcBinaryCached() (bool, error) {
+	oc := oc.OcCached{}
+	if !oc.IsCached() {
+		return false, errors.New("oc binary is not cached.")
+	}
+	return true, nil
+}
+
+func fixOcBinaryCached() (bool, error) {
+	oc := oc.OcCached{}
+	if err := oc.EnsureIsCached(); err != nil {
+		return false, fmt.Errorf("Not able to download oc %v", err)
 	}
 	return true, nil
 }
