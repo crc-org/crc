@@ -2,6 +2,7 @@ module github.com/code-ready/crc
 
 require (
 	github.com/DATA-DOG/godog v0.7.13
+	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/code-ready/clicumber v0.0.0-20190503113956-2563aed4ef12
 	github.com/code-ready/machine v0.0.0-20190513092840-66a8c3b3c494
 	github.com/docker/go-units v0.3.3 // indirect

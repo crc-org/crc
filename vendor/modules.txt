@@ -2,10 +2,12 @@
 github.com/DATA-DOG/godog
 github.com/DATA-DOG/godog/colors
 github.com/DATA-DOG/godog/gherkin
+# github.com/cavaliercoder/grab v2.0.0+incompatible
+github.com/cavaliercoder/grab
 # github.com/code-ready/clicumber v0.0.0-20190503113956-2563aed4ef12
 github.com/code-ready/clicumber/testsuite
 github.com/code-ready/clicumber/util
-# github.com/code-ready/machine v0.0.0-20190508082104-8102d8fe6aa1
+# github.com/code-ready/machine v0.0.0-20190513092840-66a8c3b3c494
 github.com/code-ready/machine/libmachine
 github.com/code-ready/machine/libmachine/host
 github.com/code-ready/machine/libmachine/log
