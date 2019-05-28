@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/code-ready/crc/pkg/crc/config"
-	log "github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/spf13/cobra"
 	"io"
 	"os"
@@ -37,10 +37,10 @@ to the options that you set when you run the 'crc start' command.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		tmpl, err := determineTemplate(configViewFormat)
 		if err != nil {
-			log.Fatal(err)
+			logging.Fatal(err)
 		}
 		if err := runConfigView(config.AllConfigs(), tmpl, os.Stdout); err != nil {
-			log.Fatal(err)
+			logging.Fatal(err)
 		}
 	},
 }

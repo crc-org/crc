@@ -1,15 +1,15 @@
 package preflight
 
 import (
-	log "github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
 type PreflightCheckFixFuncType func() (bool, error)
 
 func preflightCheckSucceedsOrFails(configuredToSkip bool, check PreflightCheckFixFuncType, message string, configuredToWarn bool) {
-	log.InfoF(" %s", message)
+	logging.InfoF(" %s", message)
 	if configuredToSkip {
-		log.Warn(" Skipping above check ...")
+		logging.Warn(" Skipping above check ...")
 		return
 	}
 
@@ -19,17 +19,17 @@ func preflightCheckSucceedsOrFails(configuredToSkip bool, check PreflightCheckFi
 	}
 
 	if configuredToWarn {
-		log.Warn(err.Error())
+		logging.Warn(err.Error())
 		return
 	}
 
-	log.Fatal(err.Error())
+	logging.Fatal(err.Error())
 }
 
 func preflightCheckAndFix(configuredToSkip bool, check, fix PreflightCheckFixFuncType, message string, configuredToWarn bool) {
-	log.InfoF(" %s", message)
+	logging.InfoF(" %s", message)
 	if configuredToSkip {
-		log.Warn(" Skipping above check ...")
+		logging.Warn(" Skipping above check ...")
 		return
 	}
 
@@ -39,7 +39,7 @@ func preflightCheckAndFix(configuredToSkip bool, check, fix PreflightCheckFixFun
 	}
 
 	if configuredToWarn {
-		log.Warn(err.Error())
+		logging.Warn(err.Error())
 		return
 	}
 
@@ -48,5 +48,5 @@ func preflightCheckAndFix(configuredToSkip bool, check, fix PreflightCheckFixFun
 		return
 	}
 
-	log.Fatal(err.Error())
+	logging.Fatal(err.Error())
 }

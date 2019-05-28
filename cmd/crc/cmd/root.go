@@ -9,7 +9,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	log "github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
 var rootCmd = &cobra.Command{
@@ -29,10 +29,10 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	if err := constants.EnsureBaseDirExists(); err != nil {
-		log.Fatal(err.Error())
+		logging.Fatal(err.Error())
 	}
 	if err := config.EnsureConfigFileExists(); err != nil {
-		log.Fatal(err.Error())
+		logging.Fatal(err.Error())
 	}
 	config.InitViper()
 
@@ -42,18 +42,18 @@ func init() {
 	rootCmd.AddCommand(cmdConfig.ConfigCmd)
 	rootCmd.AddCommand(cmdDaemon.DaemonCmd)
 
-	rootCmd.PersistentFlags().StringVar(&log.LogLevel, "log-level", constants.DefaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
+	rootCmd.PersistentFlags().StringVar(&logging.LogLevel, "log-level", constants.DefaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
 }
 
 func runPrerun() {
 	output.OutF("%s - %s\n", commandName, descriptionShort)
 
 	// Setting up logrus
-	log.InitLogrus(log.LogLevel)
+	logging.InitLogrus(logging.LogLevel)
 }
 
 func runPostrun() {
-	log.CloseLogFile()
+	logging.CloseLogFile()
 }
 
 func runRoot() {
@@ -62,7 +62,7 @@ func runRoot() {
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		log.Fatal(err)
+		logging.Fatal(err)
 	}
 }
 
