@@ -53,7 +53,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		Memory:     startConfig.Memory,
 	}
 
-	logging.InfoF(" Extracting the Bundle tarball ...")
+	logging.InfoF("Extracting the Bundle tarball ...")
 	crcBundleMetadata, extractedPath, err := bundle.GetCrcBundleInfo(machineConfig)
 	if err != nil {
 		logging.ErrorF("Error to get bundle Metadata %v", err)
@@ -87,7 +87,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	driverInfo, _ := getDriverInfo(startConfig.VMDriver)
 	exists, err := existVM(libMachineAPIClient, machineConfig)
 	if !exists {
-		logging.InfoF(" Creating VM ...")
+		logging.InfoF("Creating VM ...")
 
 		host, err := createHost(libMachineAPIClient, machineConfig)
 		if err != nil {
@@ -103,6 +103,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 		result.Status = vmState.String()
 	} else {
+		logging.InfoF("Starting stopped VM ...")
 		host, err := libMachineAPIClient.Load(machineConfig.Name)
 		s, err := host.Driver.GetState()
 		if err != nil {
@@ -150,7 +151,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		result.Error = err.Error()
 		return *result, err
 	}
-	logging.InfoF(" Bridge IP on the host: %s", hostIP)
+	logging.InfoF("Bridge IP on the host: %s", hostIP)
 
 	if driverInfo.UseDNSService {
 		servicePostStartConfig := services.ServicePostStartConfig{
@@ -178,7 +179,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		result.Error = err.Error()
 	}
 	if kubeletStarted {
-		logging.InfoF(" Starting OpenShift cluster ... [waiting 3m]")
+		logging.InfoF("Starting OpenShift cluster ... [waiting 3m]")
 	}
 	result.KubeletStarted = kubeletStarted
 	//
@@ -186,11 +187,11 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	// If no error, return usage message
 	if result.Error == "" {
 		time.Sleep(time.Minute * 3)
-		logging.InfoF(" To access the cluster as the system:admin user when using 'oc', run 'export KUBECONFIG=%s'", result.ClusterConfig.KubeConfig)
-		logging.InfoF(" Access the OpenShift web-console here: %s", result.ClusterConfig.ClusterAPI)
-		logging.InfoF(" Login to the console with user: kubeadmin, password: %s", result.ClusterConfig.KubeAdminPass)
+		logging.InfoF("To access the cluster as the system:admin user when using 'oc', run 'export KUBECONFIG=%s'", result.ClusterConfig.KubeConfig)
+		logging.InfoF("Access the OpenShift web-console here: %s", result.ClusterConfig.ClusterAPI)
+		logging.InfoF("Login to the console with user: kubeadmin, password: %s", result.ClusterConfig.KubeAdminPass)
 		if os.CurrentOS() == os.DARWIN {
-			logging.WarnF(fmt.Sprintf(" Make sure add 'nameserver %s' as first entry to '/etc/resolv.conf' file", instanceIP))
+			logging.WarnF(fmt.Sprintf("Make sure add 'nameserver %s' as first entry to '/etc/resolv.conf' file", instanceIP))
 		}
 	}
 
@@ -320,8 +321,8 @@ func getDriverOptions(machineConfig config.MachineConfig) interface{} {
 func setMachineLogging(logs bool) error {
 	if !logs {
 		log.SetDebug(true)
-		logging.CloseLogFile()
-		logfile, err := logging.OpenLogfile()
+		logging.RemoveFileHook()
+		logfile, err := logging.OpenLogFile()
 		if err != nil {
 			return err
 		}
@@ -335,5 +336,5 @@ func setMachineLogging(logs bool) error {
 
 func unsetMachineLogging() {
 	logging.CloseLogFile()
-	logging.InitLogrus(logging.LogLevel)
+	logging.SetupFileHook()
 }

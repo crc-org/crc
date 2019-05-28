@@ -47,13 +47,13 @@ func init() {
 
 func runPrerun() {
 	output.OutF("%s - %s\n", commandName, descriptionShort)
-
 	// Setting up logrus
 	logging.InitLogrus(logging.LogLevel)
+	logging.SetupFileHook()
 }
 
 func runPostrun() {
-	logging.CloseLogFile()
+	logging.CloseLogging()
 }
 
 func runRoot() {
