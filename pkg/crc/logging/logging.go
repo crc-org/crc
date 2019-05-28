@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	logfile  *os.File
-	LogLevel string
+	logfile       *os.File
+	LogLevel      string
+	originalHooks = logrus.LevelHooks{}
 )
 
 type fileHook struct {
@@ -52,16 +53,16 @@ func (h *fileHook) Fire(entry *logrus.Entry) error {
 	return err
 }
 
-func OpenLogfile() (*os.File, error) {
-	logfile, err := os.OpenFile(filepath.Join(constants.LogFilePath), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
+func OpenLogFile() (*os.File, error) {
+	l, err := os.OpenFile(filepath.Join(constants.LogFilePath), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
 		return nil, err
 	}
-	return logfile, nil
+	return l, nil
 }
 
 func setupFileHook() error {
-	logfile, err := OpenLogfile()
+	logfile, err := OpenLogFile()
 	if err != nil {
 		return err
 	}
@@ -75,8 +76,25 @@ func setupFileHook() error {
 	return nil
 }
 
+func SetupFileHook() {
+	err := setupFileHook()
+	if err != nil {
+		logrus.Fatal(errors.Wrap(err, "Failed to open logfile"))
+	}
+}
+
+func RemoveFileHook() {
+	CloseLogFile()
+	logrus.StandardLogger().ReplaceHooks(originalHooks)
+}
+
 func CloseLogFile() {
 	logfile.Close()
+}
+
+func CloseLogging() {
+	CloseLogFile()
+	logrus.StandardLogger().ReplaceHooks(make(logrus.LevelHooks))
 }
 
 func InitLogrus(logLevel string) {
@@ -97,9 +115,9 @@ func InitLogrus(logLevel string) {
 		DisableTimestamp:       true,
 		DisableLevelTruncation: false,
 	}))
-	err = setupFileHook()
-	if err != nil {
-		logrus.Fatal(errors.Wrap(err, "Failed to open logfile"))
+
+	for k, v := range logrus.StandardLogger().Hooks {
+		originalHooks[k] = v
 	}
 }
 
