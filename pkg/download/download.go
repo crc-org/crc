@@ -21,6 +21,6 @@ func Download(uri, destination string) (string, error) {
 		return "", errors.NewF("Download failed: %v\n", err)
 	}
 
-	logging.DebugF("Download saved to ./%v \n", resp.Filename)
+	logging.DebugF("Download saved to %v \n", resp.Filename)
 	return resp.Filename, nil
 }
