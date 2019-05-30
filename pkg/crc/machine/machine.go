@@ -155,6 +155,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		result.Error = err.Error()
 		return *result, err
 	}
+	logging.InfoF(" Bridge IP on the host: %s", hostIP)
 
 	if driverInfo.UseDNSService {
 		servicePostStartConfig := services.ServicePostStartConfig{
