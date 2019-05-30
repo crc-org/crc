@@ -16,7 +16,7 @@ This project is focused on bringing a minimal http://github.com/openshift/origin
 
 If you are looking for a solution for running OpenShift 3.x, you will need tools such as `oc cluster up`, http://github.com/minishift/minishift[Minishift] or https://developers.redhat.com/products/cdk/overview/[CDK].
 
-Currently only alpha link:./releases[Releases] are available.
+Currently only alpha releases are available.
 
 [[documentation]]
 == Documentation
