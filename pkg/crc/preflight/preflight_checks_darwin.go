@@ -3,13 +3,14 @@ package preflight
 import (
 	"errors"
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/oc"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 
+	"github.com/code-ready/crc/pkg/crc/oc"
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
@@ -92,7 +93,12 @@ func fixResolverFilePermissions() (bool, error) {
 		return false, fmt.Errorf("Unable to create the resolver file: %s %v: %s", stdOut, err, stdErr)
 	}
 
-	stdOut, stdErr, err = crcos.RunWithPrivilege("chown", string(os.Getuid()), resolverFile)
+	currentUser, err := user.Current()
+	if err != nil {
+		return false, err
+	}
+
+	stdOut, stdErr, err = crcos.RunWithPrivilege("chown", currentUser.Username, resolverFile)
 	if err != nil {
 		return false, fmt.Errorf("Unable to change permissions of the resolver file: %s %v: %s", stdOut, err, stdErr)
 	}

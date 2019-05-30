@@ -11,7 +11,7 @@ import (
 
 const (
 	resolverFileTemplate = `port {{ .Port }}
-	nameserver {{ .IP }}
+nameserver {{ .IP }}
 search_order {{ .SearchOrder }}`
 )
 
@@ -45,6 +45,9 @@ func createResolverFile(hostIP string, path string) (bool, error) {
 	t.Execute(&resolverFile, values)
 
 	err = ioutil.WriteFile(path, resolverFile.Bytes(), 0644)
+	if err != nil {
+		return false, err
+	}
 
 	return true, nil
 }
