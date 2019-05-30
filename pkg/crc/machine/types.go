@@ -24,10 +24,11 @@ type ClusterConfig struct {
 }
 
 type StartResult struct {
-	Name          string
-	Status        string
-	Error         string
-	ClusterConfig ClusterConfig
+	Name           string
+	Status         string
+	Error          string
+	ClusterConfig  ClusterConfig
+	KubeletStarted bool
 }
 
 type StopConfig struct {
