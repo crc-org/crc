@@ -44,14 +44,6 @@ func RunPreStart(serviceConfig services.ServicePreStartConfig) (services.Service
 		return *result, err
 	}
 
-	// run Process
-	err = EnsureDNSDaemonRunning()
-	if err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, err
-	}
-
 	result.Success = true
 	return *result, nil
 }
@@ -74,6 +66,14 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.Servi
 		NameServers:   []network.NameServer{nameserver}}
 
 	network.CreateResolvFileOnInstance(serviceConfig.Driver, resolvFileValues)
+
+	// run Process
+	err = EnsureDNSDaemonRunning()
+	if err != nil {
+		result.Success = false
+		result.Error = err.Error()
+		return *result, err
+	}
 
 	return runPostStartForOS(serviceConfig, result)
 }
