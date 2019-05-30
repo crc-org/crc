@@ -66,7 +66,14 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.Servi
 		return *result, err
 	}
 
-	network.AddNameserversToInstance(serviceConfig.Driver, []string{serviceConfig.HostIP})
+	// override resolv.conf file
+	searchdomain := network.SearchDomain{Domain: serviceConfig.BundleMetadata.ClusterInfo.BaseDomain}
+	nameserver := network.NameServer{IPAddress: serviceConfig.HostIP}
+	resolvFileValues := network.ResolvFileValues{
+		SearchDomains: []network.SearchDomain{searchdomain},
+		NameServers:   []network.NameServer{nameserver}}
+
+	network.CreateResolvFileOnInstance(serviceConfig.Driver, resolvFileValues)
 
 	return runPostStartForOS(serviceConfig, result)
 }
