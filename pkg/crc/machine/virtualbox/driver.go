@@ -15,6 +15,9 @@ func CreateHost(machineConfig config.MachineConfig) *virtualbox.Driver {
 	virtualboxDriver.BundlePath = machineConfig.BundlePath
 	virtualboxDriver.Memory = machineConfig.Memory
 
+	// Network
+	virtualboxDriver.HostOnlyCIDR = "192.168.130.1/24"
+
 	// DiskPath should come from the bundle's metadata (unflattened)
 	// This force to add entry of DiskPath under crc machine config.json
 	virtualboxDriver.DiskPath = filepath.Join(constants.MachineBaseDir, "machines", machineConfig.Name, constants.DefaultDiskImage)
