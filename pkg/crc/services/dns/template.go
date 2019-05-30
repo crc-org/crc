@@ -16,23 +16,25 @@ const (
     log
     errors
     file {{ .ZonefilePath }}
+}
+.   {
+        forward . /etc/resolv.conf {
+             except testing
+        }
+    }
 }`
 	zoneFileSOATemplate = `$ORIGIN .
-@    3600   IN      SOA     ns.{{ .Domain }}. root.({{ .Domain }}). (
-                              5         ; serial
-                         604800         ; refresh
-                          86400         ; retry
-                        2419200         ; expire
-                          36000         ; minimum
+@    3600   IN      SOA     ns.{{ .Domain }}. root.{{ .Domain }}. (
+                              5
+                         604800
+                          86400
+                        2419200
+                          36000
 			  )
 `
 	zoneFileAddressTemplate = `; Name Server Information
 _etcd-server-ssl._tcp.{{ .ClusterName}}.{{ .BaseDomain }}. IN SRV 10 10 2380 etcd-0.{{ .ClusterName }}.{{ .BaseDomain }}.
-{{ .Hostname }}.{{ .ClusterName }}.{{ .BaseDomain }}.    IN  A     {{ .IP }}
-api.{{ .ClusterName }}.{{ .BaseDomain }}.                   IN  A     {{ .IP }}
-api-int.{{ .ClusterName }}.{{ .BaseDomain }}.               IN  A     {{ .IP }}
-etcd-0.{{ .ClusterName }}.{{ .BaseDomain }}.                IN  A     {{ .IP }}
-*.{{ .AppsDomain }}.                IN  A     {{ .IP }}
+*.{{ .BaseDomain }}.                IN  A     {{ .IP }}
 `
 )
 

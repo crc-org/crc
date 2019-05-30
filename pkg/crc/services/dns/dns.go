@@ -22,7 +22,7 @@ import (
 
 const (
 	serverType     = "dns"
-	dnsServicePort = 1053
+	dnsServicePort = 53
 )
 
 func init() {
