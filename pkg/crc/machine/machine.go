@@ -13,6 +13,7 @@ import (
 
 	// host and instance related
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/systemd"
 
 	// cluster services
 	"github.com/code-ready/crc/pkg/crc/services"
@@ -171,9 +172,21 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 	//
 
+	// Start kubelet inside the VM
+	sd := systemd.NewInstanceSystemdCommander(host.Driver)
+	kubeletStarted, err := sd.Start("kubelet")
+	if err != nil {
+		logging.ErrorF("Error starting kubelet: %s", err)
+		result.Error = err.Error()
+	}
+	if kubeletStarted {
+		logging.InfoF(" Starting OpenShift cluster ... [waiting 3m]")
+	}
+	result.KubeletStarted = kubeletStarted
+	//
+
 	// If no error, return usage message
 	if result.Error == "" {
-		logging.InfoF(" Waiting 3m0s for the openshift cluster to be started ...")
 		time.Sleep(time.Minute * 3)
 		logging.InfoF(" To access the cluster as the system:admin user when using 'oc', run 'export KUBECONFIG=%s'", result.ClusterConfig.KubeConfig)
 		logging.InfoF(" Access the OpenShift web-console here: %s", result.ClusterConfig.ClusterAPI)
