@@ -25,6 +25,47 @@ func HasNameserversConfigured(driver drivers.Driver) bool {
 	return i != 0
 }
 
+func GetResolvValuesFromInstance(driver drivers.Driver) *ResolvFileValues {
+	cmd := "cat /etc/resolv.conf"
+	out, err := drivers.RunSSHCommandFromDriver(driver, cmd)
+
+	if err != nil {
+		return nil
+	}
+
+	searchdomains := []SearchDomain{}
+	nameservers := []NameServer{}
+
+	for _, line := range strings.Split(strings.TrimSuffix(out, "\n"), "\n") {
+		if len(line) > 0 && (line[0] == ';' || line[0] == '#') {
+			continue
+		}
+
+		f := strings.Fields(line)
+		if len(f) < 1 {
+			continue
+		}
+
+		switch f[0] {
+		case "nameserver":
+			nameservers = append(nameservers, NameServer{IPAddress: f[1]})
+		case "search":
+			for i := 0; i < len(f)-1; i++ {
+				searchdomains = append(searchdomains, SearchDomain{Domain: f[i+1]})
+			}
+		default:
+			// ignore
+		}
+	}
+
+	resolvFileValues := ResolvFileValues{
+		SearchDomains: searchdomains,
+		NameServers:   nameservers,
+	}
+
+	return &resolvFileValues
+}
+
 func CreateResolvFileOnInstance(driver drivers.Driver, resolvFileValues ResolvFileValues) {
 	resolvFile, _ := createResolvFile(resolvFileValues)
 	encodedFile := base64.StdEncoding.EncodeToString([]byte(resolvFile))

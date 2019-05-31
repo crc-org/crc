@@ -17,17 +17,18 @@ func EnsureDNSDaemonRunning() error {
 		return nil
 	}
 
-	proxyCmd, err := createDNSCommand()
+	daemonCmd, err := createDNSCommand()
 	if err != nil {
 		return err
 	}
 
-	err = proxyCmd.Start()
+	err = daemonCmd.Start()
 	if err != nil {
 		return err
 	}
 
-	state.GlobalState.DnsPID = proxyCmd.Process.Pid
+	state.GlobalState.DnsPID = daemonCmd.Process.Pid
+
 	state.GlobalState.Write()
 	return nil
 }
@@ -42,12 +43,13 @@ func createDNSCommand() (*exec.Cmd, error) {
 		"daemon",
 		"dns"}
 	daemonCmd := exec.Command(cmd, args...)
+
 	// don't inherit any file handles
 	daemonCmd.Stderr = nil
 	daemonCmd.Stdin = nil
 	daemonCmd.Stdout = nil
-	//exportCmd.SysProcAttr = process.SysProcForBackgroundProcess()
-	//exportCmd.Env = process.EnvForBackgroundProcess()
+	daemonCmd.SysProcAttr = sysProcForBackgroundProcess()
+	daemonCmd.Env = envForBackgroundProcess()
 
 	return daemonCmd, nil
 }
