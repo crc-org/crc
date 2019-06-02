@@ -2,6 +2,8 @@ package dns
 
 import (
 	"bytes"
+	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -9,6 +11,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/services"
+	"github.com/code-ready/machine/libmachine/drivers"
 )
 
 const (
@@ -36,6 +39,21 @@ const (
 _etcd-server-ssl._tcp.{{ .ClusterName}}.{{ .BaseDomain }}. IN SRV 10 10 2380 etcd-0.{{ .ClusterName }}.{{ .BaseDomain }}.
 *.{{ .BaseDomain }}.                IN  A     {{ .IP }}
 `
+
+	dnsmasqConfTemplate = `user=root
+port= {{ .Port }}
+bind-interfaces
+expand-hosts
+log-queries
+srv-host=_etcd-server-ssl._tcp.{{ .ClusterName}}.{{ .BaseDomain }},etcd-0.{{ .ClusterName}}.{{ .BaseDomain }},2380,10
+local=/{{ .ClusterName}}.{{ .BaseDomain }}/
+domain={{ .ClusterName}}.{{ .BaseDomain }}
+address=/{{ .AppsDomain }}/{{ .IP }}
+address=/etcd-0.{{ .ClusterName}}.{{ .BaseDomain }}/{{ .IP }}
+address=/api.{{ .ClusterName}}.{{ .BaseDomain }}/{{ .IP }}
+address=/api-int.{{ .ClusterName}}.{{ .BaseDomain }}/{{ .IP }}
+address=/{{ .Hostname }}.{{ .ClusterName}}.{{ .BaseDomain }}/{{ .IP }}
+`
 )
 
 type coreFileValues struct {
@@ -55,6 +73,15 @@ type zoneFileAddressValues struct {
 	AppsDomain  string
 	Hostname    string
 	IP          string
+}
+
+type dnsmasqConfFileValues struct {
+	BaseDomain  string
+	Port        int
+	ClusterName string
+	Hostname    string
+	IP          string
+	AppsDomain  string
 }
 
 func createCoreDNSConfig(serviceConfig services.ServicePreStartConfig) error {
@@ -86,6 +113,33 @@ func createCoreDNSConfig(serviceConfig services.ServicePreStartConfig) error {
 		return err2
 	}
 
+	return nil
+}
+
+func createDnsmasqDNSConfig(serviceConfig services.ServicePostStartConfig) error {
+	domain := serviceConfig.BundleMetadata.ClusterInfo.BaseDomain
+
+	dnsmasqConfFileValues := dnsmasqConfFileValues{
+		BaseDomain:  domain,
+		Hostname:    serviceConfig.BundleMetadata.Nodes[0].Hostname,
+		Port:        dnsServicePort,
+		AppsDomain:  serviceConfig.BundleMetadata.ClusterInfo.AppsDomain,
+		ClusterName: serviceConfig.BundleMetadata.ClusterInfo.ClusterName,
+		IP:          serviceConfig.IP,
+	}
+
+	dnsConfig, err := createDnsConfigFile(dnsmasqConfFileValues)
+	if err != nil {
+		return err
+	}
+
+	encodeddnsConfig := base64.StdEncoding.EncodeToString([]byte(dnsConfig))
+	_, err = drivers.RunSSHCommandFromDriver(serviceConfig.Driver,
+		fmt.Sprintf("echo '%s' | openssl enc -base64 -d | sudo tee /var/srv/dnsmasq.conf > /dev/null",
+			encodeddnsConfig))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -165,4 +219,15 @@ func createCoreFile(values coreFileValues, path string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func createDnsConfigFile(values dnsmasqConfFileValues) (string, error) {
+	var dnsConfigFile bytes.Buffer
+
+	t, err := template.New("dnsConfigFile").Parse(dnsmasqConfTemplate)
+	if err != nil {
+		return "", err
+	}
+	t.Execute(&dnsConfigFile, values)
+	return dnsConfigFile.String(), nil
 }
