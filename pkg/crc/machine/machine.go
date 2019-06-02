@@ -3,6 +3,8 @@ package machine
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/code-ready/crc/pkg/crc/systemd"
+	"github.com/code-ready/crc/pkg/os"
 	"io/ioutil"
 	"path/filepath"
 	"time"
@@ -13,8 +15,6 @@ import (
 
 	// host and instance related
 	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/systemd"
-
 	// cluster services
 	"github.com/code-ready/crc/pkg/crc/services"
 	"github.com/code-ready/crc/pkg/crc/services/dns"
@@ -85,29 +85,19 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	// Pre-VM start
 	driverInfo, _ := getDriverInfo(startConfig.VMDriver)
-	if driverInfo.UseDNSService {
-		servicePreStartConfig := services.ServicePreStartConfig{
-			Name: startConfig.Name,
-			// TODO: should be more finegrained
-			BundleMetadata: *crcBundleMetadata,
-		}
-		dns.RunPreStart(servicePreStartConfig)
-	}
-	//
-
 	exists, err := existVM(libMachineAPIClient, machineConfig)
 	if !exists {
 		logging.InfoF(" Creating VM ...")
 
 		host, err := createHost(libMachineAPIClient, machineConfig)
 		if err != nil {
-			logging.ErrorF("Error creating host: %s", err)
+			logging.ErrorF("Error creating host: %v", err)
 			result.Error = err.Error()
 		}
 
 		vmState, err := host.Driver.GetState()
 		if err != nil {
-			logging.ErrorF("Error getting the state for host: %s", err)
+			logging.ErrorF("Error getting the state for host: %v", err)
 			result.Error = err.Error()
 		}
 
@@ -117,24 +107,24 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		host, err := libMachineAPIClient.Load(machineConfig.Name)
 		s, err := host.Driver.GetState()
 		if err != nil {
-			logging.ErrorF("Error getting the state for host: %s", err)
+			logging.ErrorF("Error getting the state for host: %v", err)
 			result.Error = err.Error()
 		}
 
 		if s != state.Running {
 			if err := host.Driver.Start(); err != nil {
-				logging.ErrorF("Error starting stopped VM: %s", err)
+				logging.ErrorF("Error starting stopped VM: %v", err)
 				result.Error = err.Error()
 			}
 			if err := libMachineAPIClient.Save(host); err != nil {
-				logging.ErrorF("Error saving state for VM: %s", err)
+				logging.ErrorF("Error saving state for VM: %v", err)
 				result.Error = err.Error()
 			}
 		}
 
 		vmState, err := host.Driver.GetState()
 		if err != nil {
-			logging.ErrorF("Error getting the state: %s", err)
+			logging.ErrorF("Error getting the state: %v", err)
 			result.Error = err.Error()
 		}
 
@@ -145,14 +135,14 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	host, err := libMachineAPIClient.Load(machineConfig.Name)
 	instanceIP, err := host.Driver.GetIP()
 	if err != nil {
-		logging.ErrorF("Error getting the IP: %s", err)
+		logging.ErrorF("Error getting the IP: %v", err)
 		result.Error = err.Error()
 		return *result, err
 	}
 
 	hostIP, err := network.DetermineHostIP(instanceIP)
 	if err != nil {
-		logging.ErrorF("Error determining host IP: %s", err)
+		logging.ErrorF("Error determining host IP: %v", err)
 		result.Error = err.Error()
 		return *result, err
 	}
@@ -168,7 +158,11 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			// TODO: should be more finegrained
 			BundleMetadata: *crcBundleMetadata,
 		}
-		dns.RunPostStart(servicePostStartConfig)
+		if _, err := dns.RunPostStart(servicePostStartConfig); err != nil {
+			logging.ErrorF("Error running post start: %v", err)
+			result.Error = err.Error()
+			return *result, err
+		}
 	}
 	//
 
@@ -191,6 +185,9 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		logging.InfoF(" To access the cluster as the system:admin user when using 'oc', run 'export KUBECONFIG=%s'", result.ClusterConfig.KubeConfig)
 		logging.InfoF(" Access the OpenShift web-console here: %s", result.ClusterConfig.ClusterAPI)
 		logging.InfoF(" Login to the console with user: kubeadmin, password: %s", result.ClusterConfig.KubeAdminPass)
+		if os.CurrentOS() == os.DARWIN {
+			logging.WarnF(fmt.Sprintf(" Make sure add 'nameserver %s' as first entry to '/etc/resolv.conf' file", instanceIP))
+		}
 	}
 
 	return *result, err

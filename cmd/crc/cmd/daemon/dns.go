@@ -1,9 +1,8 @@
 package daemon
 
 import (
-	"github.com/spf13/cobra"
-
 	"github.com/code-ready/crc/pkg/crc/services/dns"
+	"github.com/spf13/cobra"
 )
 
 var (

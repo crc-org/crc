@@ -2,6 +2,7 @@ package dns
 
 import (
 	"fmt"
+	"github.com/code-ready/machine/libmachine/drivers"
 	"path/filepath"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -21,8 +22,11 @@ import (
 )
 
 const (
-	serverType     = "dns"
-	dnsServicePort = 53
+	serverType                  = "dns"
+	dnsServicePort              = 53
+	dnsConfigFilePathInInstance = "/var/srv/dnsmasq.conf"
+	dnsContainerIP              = "10.88.0.8"
+	dnsContainerImage           = "quay.io/crcont/dnsmasq:latest"
 )
 
 func init() {
@@ -51,7 +55,20 @@ func RunPreStart(serviceConfig services.ServicePreStartConfig) (services.Service
 func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.ServicePostStartResult, error) {
 	result := &services.ServicePostStartResult{Name: serviceConfig.Name}
 
-	err := createZonefileConfig(serviceConfig)
+	err := createDnsmasqDNSConfig(serviceConfig)
+	if err != nil {
+		result.Success = false
+		result.Error = err.Error()
+		return *result, err
+	}
+
+	// Remove the dnsmasq container if exist during the VM stop cycle
+	drivers.RunSSHCommandFromDriver(serviceConfig.Driver,"sudo podman rm -f dnsmasq")
+
+	// Start the dnsmasq container
+	dnsServerRunCmd := fmt.Sprintf("sudo podman run  --ip %s --name dnsmasq -v %s:/etc/dnsmasq.conf -p 53:%d/udp --privileged -d %s",
+		dnsContainerIP, dnsConfigFilePathInInstance, dnsServicePort, dnsContainerImage)
+	_, err = drivers.RunSSHCommandFromDriver(serviceConfig.Driver, dnsServerRunCmd)
 	if err != nil {
 		result.Success = false
 		result.Error = err.Error()
@@ -60,8 +77,8 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.Servi
 
 	orgResolvValues := network.GetResolvValuesFromInstance(serviceConfig.Driver)
 	// override resolv.conf file
-	searchdomain := network.SearchDomain{Domain: serviceConfig.BundleMetadata.ClusterInfo.BaseDomain}
-	nameserver := network.NameServer{IPAddress: serviceConfig.HostIP}
+	searchdomain := network.SearchDomain{Domain: fmt.Sprintf("%s.%s", serviceConfig.Name, serviceConfig.BundleMetadata.ClusterInfo.BaseDomain)}
+	nameserver := network.NameServer{IPAddress: dnsContainerIP}
 	nameservers := []network.NameServer{nameserver}
 	nameservers = append(nameservers, orgResolvValues.NameServers...)
 
@@ -71,13 +88,15 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.Servi
 
 	network.CreateResolvFileOnInstance(serviceConfig.Driver, resolvFileValues)
 
-	// run Process
+	/*// run Process (This is for using the CoreDNS)
+	// CoreDNS is not working as expected for us so in future
+	// we will remove it along with all the CoreDNS part.
 	err = EnsureDNSDaemonRunning()
 	if err != nil {
 		result.Success = false
 		result.Error = err.Error()
 		return *result, err
-	}
+	}*/
 
 	return runPostStartForOS(serviceConfig, result)
 }
