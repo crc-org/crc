@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 
 	"github.com/code-ready/crc/pkg/crc/oc"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
@@ -28,6 +29,7 @@ var (
 
 // Add darwin specific checks
 func checkVirtualBoxInstalled() (bool, error) {
+	logging.Debug("Checking if VirtualBox is installed")
 	path, err := exec.LookPath("VBoxManage")
 	if err != nil {
 		return false, errors.New("VirtualBox cli VBoxManage is not found in the path")
@@ -39,16 +41,19 @@ func checkVirtualBoxInstalled() (bool, error) {
 			return false, errors.New("VirtualBox cli VBoxManage is not found in the path")
 		}
 	}
+	logging.Debug("VirtualBox was found")
 	return true, nil
 }
 
 func fixVirtualBoxInstallation() (bool, error) {
+	logging.Debug("Downloading VirtualBox")
 	// Download the driver binary in /tmp
 	tempFilePath := filepath.Join(os.TempDir(), "virtualbox.dmg")
 	out, err := os.Create(tempFilePath)
 	if err != nil {
 		return false, err
 	}
+	logging.Debug("Downloading from ", virtualBoxDownloadURL, " to ", tempFilePath)
 	defer out.Close()
 	resp, err := http.Get(virtualBoxDownloadURL)
 	if err != nil {
@@ -61,6 +66,7 @@ func fixVirtualBoxInstallation() (bool, error) {
 		return false, err
 	}
 
+	logging.Debug("Installing VirtualBox")
 	stdOut, stdErr, err := crcos.RunWithPrivilege("hdiutil", "attach", tempFilePath)
 	if err != nil {
 		return false, fmt.Errorf("Could not mount the virtualbox.dmg file: %s %v: %s", stdOut, err, stdErr)
@@ -73,6 +79,7 @@ func fixVirtualBoxInstallation() (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("Could not install VirtualBox.pkg: %s %v: %s", stdOut, err, stdErr)
 	}
+	logging.Debug("VirtualBox installed")
 	return true, nil
 }
 
@@ -86,6 +93,7 @@ func checkResolverFilePermissions() (bool, error) {
 }
 
 func fixResolverFilePermissions() (bool, error) {
+	logging.DebugF("Making %s readable/writable by the current user", resolverFile)
 	stdOut, stdErr, err := crcos.RunWithPrivilege("touch", resolverFile)
 	if err != nil {
 		return false, fmt.Errorf("Unable to create the resolver file: %s %v: %s", stdOut, err, stdErr)
@@ -105,6 +113,7 @@ func fixResolverFilePermissions() (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("Unable to change permissions of the resolver file: %s %v: %s", stdOut, err, stdErr)
 	}
+	logging.DebugF("%s is readable/writable by current user", resolverFile)
 
 	return true, nil
 }
@@ -115,6 +124,7 @@ func checkOcBinaryCached() (bool, error) {
 	if !oc.IsCached() {
 		return false, errors.New("oc binary is not cached.")
 	}
+	logging.Debug("oc binary already cached")
 	return true, nil
 }
 
@@ -123,5 +133,6 @@ func fixOcBinaryCached() (bool, error) {
 	if err := oc.EnsureIsCached(); err != nil {
 		return false, fmt.Errorf("Not able to download oc %v", err)
 	}
+	logging.Debug("oc binary cached")
 	return true, nil
 }
