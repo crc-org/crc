@@ -3,6 +3,7 @@ package preflight
 import (
 	"errors"
 	"fmt"
+	"golang.org/x/sys/unix"
 	"io"
 	"net/http"
 	"os"
@@ -76,15 +77,12 @@ func fixVirtualBoxInstallation() (bool, error) {
 }
 
 func checkResolverFilePermissions() (bool, error) {
-	info, err := os.Stat(resolverFile)
+	err := unix.Access(resolverFile, unix.R_OK | unix.W_OK)
 	if err != nil {
-		return false, fmt.Errorf("Unable to get permissions of the resolver file: %s", err)
+		return false, fmt.Errorf("%s is not readable/writable by the current user", resolverFile)
 	}
 
-	m := info.Mode()
-
-	// 16 is checking for user write permissions
-	return m&16 != 1, nil
+	return true, nil
 }
 
 func fixResolverFilePermissions() (bool, error) {
