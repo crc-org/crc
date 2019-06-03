@@ -21,7 +21,23 @@ Check back for updates, we plan to have something available "soon".
 [[documentation]]
 == Documentation
 
-- link:./developing.adoc[Developing CodeReady Containers]
+=== Using CodeReady Containers
+
+You can find the source files for the documentation in the link:./docs/source[docs/source] directory.
+
+To build the formatted documentation, use the following:
+
+```bash
+$ git clone https://github.com/code-ready/crc
+$ cd crc
+$ make build_docs
+```
+
+This will create a [filename]`docs/build/master.html` file which you can view in your browser.
+
+=== Developing CodeReady Containers
+
+Developers who want to work on CodeReady Containers should visit the link:./developing.adoc[Developing CodeReady Containers] document.
 
 [[community]]
 == Community
