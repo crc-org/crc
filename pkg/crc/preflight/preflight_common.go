@@ -42,6 +42,7 @@ func preflightCheckAndFix(configuredToSkip bool, check, fix PreflightCheckFixFun
 		logging.Warn(err.Error())
 		return
 	}
+	logging.Debug(err.Error())
 
 	ok, err = fix()
 	if ok {

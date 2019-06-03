@@ -49,6 +49,7 @@ func (oc *OcCached) IsCached() bool {
 // cacheOc downloads and caches the oc binary into the minishift directory
 func (oc *OcCached) cacheOc() error {
 	if !oc.IsCached() {
+		logging.Debug("Downloading oc")
 		// Create tmp dir to download the oc tarball
 		tmpDir, err := ioutil.TempDir("", "crc")
 		if err != nil {
