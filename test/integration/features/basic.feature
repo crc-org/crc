@@ -30,15 +30,13 @@ Checks whether CRC top-level commands behave correctly.
     And stdout should contain "Starting Libvirt crc network"
     
   Scenario: CRC start
-    When executing "crc start -b ~/Downloads/crc_libvirt_v4.1.0.rc0.tar.xz" succeeds
+    When executing "crc start -b ~/Downloads/crc_libvirt_4.1.0-rc.5.tar.xz" succeeds
     Then stdout should contain "Creating VM"
     And stdout should contain "Running"
     
   Scenario: CRC stop
-    When executing "crc stop" succeeds
-    Then stdout should contain """Stopping "crc" """
-    And stdout should contain "true"
-    And stdout should not contain "VM Failed to gracefully shutdown, try the kill command"
+    When executing "crc stop -f" succeeds
+    Then stdout should contain "true"
     
   Scenario: CRC delete
     When executing "crc delete" succeeds

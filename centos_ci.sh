@@ -101,6 +101,7 @@ get_bundle
 
 # setup and run integration tests
 make
+make cross
 crc setup
 make integration
 
