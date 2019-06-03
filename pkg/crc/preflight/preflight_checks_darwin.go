@@ -98,6 +98,11 @@ func fixResolverFilePermissions() (bool, error) {
 
 	stdOut, stdErr, err = crcos.RunWithPrivilege("chown", currentUser.Username, resolverFile)
 	if err != nil {
+		return false, fmt.Errorf("Unable to change ownership of the resolver file: %s %v: %s", stdOut, err, stdErr)
+	}
+
+	err = os.Chmod(resolverFile, 0644)
+	if err != nil {
 		return false, fmt.Errorf("Unable to change permissions of the resolver file: %s %v: %s", stdOut, err, stdErr)
 	}
 
