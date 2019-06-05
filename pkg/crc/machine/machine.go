@@ -152,23 +152,36 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 	logging.InfoF(" Bridge IP on the host: %s", hostIP)
 
+	// Create servicePostStartConfig for dns checks and dns start.
+	servicePostStartConfig := services.ServicePostStartConfig{
+		Name: startConfig.Name,
+		// TODO: would prefer passing in a more generic type
+		Driver: host.Driver,
+		IP:     instanceIP,
+		HostIP: hostIP,
+		// TODO: should be more finegrained
+		BundleMetadata: *crcBundleMetadata,
+	}
+
+	// If driver need dns service then start it
 	if driverInfo.UseDNSService {
-		servicePostStartConfig := services.ServicePostStartConfig{
-			Name: startConfig.Name,
-			// TODO: would prefer passing in a more generic type
-			Driver: host.Driver,
-			IP:     instanceIP,
-			HostIP: hostIP,
-			// TODO: should be more finegrained
-			BundleMetadata: *crcBundleMetadata,
-		}
 		if _, err := dns.RunPostStart(servicePostStartConfig); err != nil {
 			logging.ErrorF("Error running post start: %v", err)
 			result.Error = err.Error()
 			return *result, err
 		}
 	}
-	//
+	// Check DNS looksup before starting the kubelet
+	if queryOutput, err := dns.CheckCRCLocalDNSReachable(servicePostStartConfig); err != nil {
+		logging.ErrorF("Failed internal dns query: %v : %s", err, queryOutput)
+		result.Error = err.Error()
+		return *result, err
+	}
+	logging.InfoF("Check internal and public dns query ...")
+
+	if queryOutput, err := dns.CheckCRCPublicDNSReachable(servicePostStartConfig); err != nil {
+		logging.WarnF("Failed Public dns query: %v : %s", err, queryOutput)
+	}
 
 	// Start kubelet inside the VM
 	sd := systemd.NewInstanceSystemdCommander(host.Driver)
