@@ -27,6 +27,7 @@ const (
 	dnsConfigFilePathInInstance = "/var/srv/dnsmasq.conf"
 	dnsContainerIP              = "10.88.0.8"
 	dnsContainerImage           = "quay.io/crcont/dnsmasq:latest"
+	publicDNSQueryURI           = "quay.io"
 )
 
 func init() {
@@ -118,4 +119,13 @@ func RunDaemon() {
 	}
 
 	instance.Wait()
+}
+
+func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (string, error) {
+	appsURI := fmt.Sprintf("foo.%s", serviceConfig.BundleMetadata.ClusterInfo.AppsDomain)
+	return drivers.RunSSHCommandFromDriver(serviceConfig.Driver,fmt.Sprintf("host -R 3 %s", appsURI))
+}
+
+func CheckCRCPublicDNSReachable(serviceConfig services.ServicePostStartConfig) (string, error) {
+	return drivers.RunSSHCommandFromDriver(serviceConfig.Driver,fmt.Sprintf("host -R 3 %s", publicDNSQueryURI))
 }
