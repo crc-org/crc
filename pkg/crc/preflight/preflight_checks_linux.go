@@ -2,6 +2,7 @@ package preflight
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,7 +16,6 @@ import (
 	"text/template"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
 	"github.com/code-ready/crc/pkg/crc/oc"
@@ -175,7 +175,7 @@ func checkUserPartOfLibvirtGroup() (bool, error) {
 		logging.Debug("Current user is already in the libvirt group")
 		return true, nil
 	}
-	return false, errors.NewF("%s not part of libvirtd group", currentUser.Username)
+	return false, fmt.Errorf("%s not part of libvirtd group", currentUser.Username)
 }
 
 func fixUserPartOfLibvirtGroup() (bool, error) {
