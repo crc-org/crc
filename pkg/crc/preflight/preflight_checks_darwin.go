@@ -11,8 +11,8 @@ import (
 	"os/user"
 	"path/filepath"
 
-	"github.com/code-ready/crc/pkg/crc/oc"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/oc"
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
@@ -84,7 +84,7 @@ func fixVirtualBoxInstallation() (bool, error) {
 }
 
 func checkResolverFilePermissions() (bool, error) {
-	err := unix.Access(resolverFile, unix.R_OK | unix.W_OK)
+	err := unix.Access(resolverFile, unix.R_OK|unix.W_OK)
 	if err != nil {
 		return false, fmt.Errorf("%s is not readable/writable by the current user", resolverFile)
 	}
