@@ -3,6 +3,9 @@ package preflight
 import (
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/logging"
+
+	crcos "github.com/code-ready/crc/pkg/os"
 )
 
 // StartPreflightChecks performs the preflight checks before starting the cluster
@@ -76,6 +79,13 @@ func StartPreflightChecks(vmDriver string) {
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
 func SetupHost(vmDriver string) {
+
+	distro, err := crcos.CurrentDistribution()
+	if err != nil {
+		logging.Warn(err)
+	}
+	logging.Infof("Running on %s", distro.ID)
+
 	preflightCheckAndFix(false,
 		checkOcBinaryCached,
 		fixOcBinaryCached,
@@ -94,18 +104,36 @@ func SetupHost(vmDriver string) {
 		"Setting up KVM",
 		config.GetBool(cmdConfig.WarnCheckKvmEnabled.Name),
 	)
-	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckLibvirtInstalled.Name),
-		checkLibvirtInstalled,
-		fixLibvirtInstalled,
-		"Installing libvirt service and dependencies",
-		config.GetBool(cmdConfig.WarnCheckLibvirtInstalled.Name),
-	)
-	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckUserInLibvirtGroup.Name),
-		checkUserPartOfLibvirtGroup,
-		fixUserPartOfLibvirtGroup,
-		"Adding user to libvirt group",
-		config.GetBool(cmdConfig.WarnCheckUserInLibvirtGroup.Name),
-	)
+
+	if distro.ID == crcos.FEDORA || distro.ID == crcos.RHEL {
+		preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckLibvirtInstalled.Name),
+			checkLibvirtInstalled,
+			fixLibvirtInstalled,
+			"Installing Libvirt",
+			config.GetBool(cmdConfig.WarnCheckLibvirtInstalled.Name),
+		)
+		preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckUserInLibvirtGroup.Name),
+			checkUserPartOfLibvirtGroup,
+			fixUserPartOfLibvirtGroup,
+			"Adding user to libvirt group",
+			config.GetBool(cmdConfig.WarnCheckUserInLibvirtGroup.Name),
+		)
+	}
+	if distro.ID == crcos.UBUNTU /* || distro.ID == crcos.DEBIAN */ {
+		preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckLibvirtInstalled.Name),
+			checkLibvirtInstalled,
+			fixLibvirtInstalledUbuntu,
+			"Installing Libvirt",
+			config.GetBool(cmdConfig.WarnCheckLibvirtInstalled.Name),
+		)
+		preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckUserInLibvirtGroup.Name),
+			checkUserPartOfLibvirtdGroup,
+			fixUserPartOfLibvirtdGroup,
+			"Adding user to libvirt group",
+			config.GetBool(cmdConfig.WarnCheckUserInLibvirtGroup.Name),
+		)
+	}
+
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckLibvirtEnabled.Name),
 		checkLibvirtEnabled,
 		fixLibvirtEnabled,

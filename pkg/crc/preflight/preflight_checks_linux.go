@@ -113,9 +113,20 @@ func checkLibvirtInstalled() (bool, error) {
 	return true, nil
 }
 
+// TODO: needs refactor
 func fixLibvirtInstalled() (bool, error) {
 	logging.Debug("Trying to install libvirt")
 	stdOut, stdErr, err := crcos.RunWithPrivilege("yum", "install", "-y", "libvirt", "libvirt-daemon-kvm", "qemu-kvm")
+	if err != nil {
+		return false, fmt.Errorf("Could not install required packages: %s %v: %s", stdOut, err, stdErr)
+	}
+	logging.Debug("libvirt was successfully installed")
+	return true, nil
+}
+
+func fixLibvirtInstalledUbuntu() (bool, error) {
+	logging.Debug("Trying to install libvirt")
+	stdOut, stdErr, err := crcos.RunWithPrivilege("apt-get", "install", "-y", "qemu-kvm", "libvirt-daemon", "libvirt-daemon-system")
 	if err != nil {
 		return false, fmt.Errorf("Could not install required packages: %s %v: %s", stdOut, err, stdErr)
 	}
@@ -157,6 +168,14 @@ func fixLibvirtEnabled() (bool, error) {
 }
 
 func checkUserPartOfLibvirtGroup() (bool, error) {
+	return checkUserPartOfGroup("libvirt")
+}
+
+func checkUserPartOfLibvirtdGroup() (bool, error) {
+	return checkUserPartOfGroup("libvirtd")
+}
+
+func checkUserPartOfGroup(groupname string) (bool, error) {
 	logging.Debug("Checking if current user is part of the libvirt group")
 	// check if user is part of libvirt group
 	currentUser, err := user.Current()
@@ -171,25 +190,32 @@ func checkUserPartOfLibvirtGroup() (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("%+v : %s", err, stdErr)
 	}
-	if strings.Contains(stdOut, "libvirt") {
-		logging.Debug("Current user is already in the libvirt group")
+	if strings.Contains(stdOut, groupname) {
+		logging.Debugf("Current user is already in the %s group", groupname)
 		return true, nil
 	}
-	return false, fmt.Errorf("%s not part of libvirtd group", currentUser.Username)
+	return false, fmt.Errorf("%s not part of %s group", currentUser.Username, groupname)
 }
 
 func fixUserPartOfLibvirtGroup() (bool, error) {
+	return fixUserPartOfGroup("libvirt")
+}
+
+func fixUserPartOfLibvirtdGroup() (bool, error) {
+	return fixUserPartOfGroup("libvirtd")
+}
+
+func fixUserPartOfGroup(groupname string) (bool, error) {
 	logging.Debug("Adding current user to the libvirt group")
-	// Add user to libvirt/libvirtd group based on distro
 	currentUser, err := user.Current()
 	if err != nil {
 		return false, err
 	}
-	stdOut, stdErr, err := crcos.RunWithPrivilege("usermod", "-a", "-G", "libvirt", currentUser.Username)
+	stdOut, stdErr, err := crcos.RunWithPrivilege("usermod", "-a", "-G", groupname, currentUser.Username)
 	if err != nil {
 		return false, fmt.Errorf("%s %v : %s", stdOut, err, stdErr)
 	}
-	logging.Debug("Current user is in the libvirt group")
+	logging.Debugf("Current user is in the %s group", groupname)
 	return true, nil
 }
 
