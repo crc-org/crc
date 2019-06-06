@@ -10,6 +10,6 @@ func init() {
 	var err error
 	state.GlobalState, err = state.NewGlobalState(constants.GlobalStatePath)
 	if err != nil {
-		log.InfoF("Error loading global state: %s", err.Error())
+		log.DebugF("Error loading global state: %s", err.Error())
 	}
 }

@@ -122,7 +122,7 @@ func (oc *OcCached) cacheOc() error {
 }
 
 func copy(src, dest string) error {
-	logging.InfoF(" Copying '%s' to '%s'\n", src, dest)
+	logging.DebugF("Copying '%s' to '%s'\n", src, dest)
 	srcFile, err := os.Open(src)
 	defer srcFile.Close()
 	if err != nil {
