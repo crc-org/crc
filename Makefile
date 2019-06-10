@@ -18,6 +18,7 @@ COMMIT_SHA=$(shell git rev-parse --short HEAD)
 
 # Go and compilation related variables
 BUILD_DIR ?= out
+SOURCE_DIRS = cmd pkg test
 
 # Docs build related variables
 DOCS_BUILD_DIR ?= /docs/build
@@ -91,3 +92,12 @@ clean: clean_docs
 .PHONY: integration ## Run integration tests
 integration:
 	go test $(REPOPATH)/test/integration -v --tags=integration --timeout=20m
+
+.PHONY: fmt
+fmt:
+	@gofmt -l -w $(SOURCE_DIRS)
+
+.PHONY: fmtcheck
+fmtcheck: ## Checks for style violation using gofmt
+	@gofmt -l $(SOURCE_DIRS) | grep ".*\.go"; if [ "$$?" = "0" ]; then exit 1; fi
+
