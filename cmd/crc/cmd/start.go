@@ -55,7 +55,7 @@ func runStart(arguments []string) {
 	commandResult, err := machine.Start(startConfig)
 	logging.InfoF(commandResult.Status)
 	if err != nil {
-		logging.ErrorF(err.Error())
+		errors.ExitWithMessage(1, err.Error())
 	}
 
 }
