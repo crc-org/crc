@@ -34,6 +34,9 @@ jobs:
         name: Make
         command: make
     - run:
+        name: Make fmtcheck
+        command: make fmtcheck
+    - run:
         name: Make cross
         command: make cross
     - run:
