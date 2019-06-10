@@ -67,9 +67,9 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.Servi
 
 func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (string, error) {
 	appsURI := fmt.Sprintf("foo.%s", serviceConfig.BundleMetadata.ClusterInfo.AppsDomain)
-	return drivers.RunSSHCommandFromDriver(serviceConfig.Driver,fmt.Sprintf("host -R 3 %s", appsURI))
+	return drivers.RunSSHCommandFromDriver(serviceConfig.Driver, fmt.Sprintf("host -R 3 %s", appsURI))
 }
 
 func CheckCRCPublicDNSReachable(serviceConfig services.ServicePostStartConfig) (string, error) {
-	return drivers.RunSSHCommandFromDriver(serviceConfig.Driver,fmt.Sprintf("host -R 3 %s", publicDNSQueryURI))
+	return drivers.RunSSHCommandFromDriver(serviceConfig.Driver, fmt.Sprintf("host -R 3 %s", publicDNSQueryURI))
 }
