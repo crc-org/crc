@@ -86,10 +86,9 @@ function perform_artifacts_upload() {
 }
 
 function get_bundle() {
-mkdir $HOME/Downloads
-curl -L 'https://dl.dropboxusercontent.com/s/e16w2ceox8qv9ey/crc_bundle.zip?dl=0' -o $HOME/Downloads/bundle.zip
-unzip -P $CRC_BUNDLE_PASSWORD $HOME/Downloads/bundle.zip -d $HOME/Downloads/
-
+  mkdir $HOME/Downloads
+  curl -L 'https://github.com/code-ready/crc-ci-jobs/releases/download/4.0.1/crc_bundle.zip' -o $HOME/Downloads/bundle.zip
+  unzip -P $CRC_BUNDLE_PASSWORD $HOME/Downloads/bundle.zip -d $HOME/Downloads/
 }
 
 # Execution starts here

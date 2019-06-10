@@ -30,7 +30,7 @@ Checks whether CRC top-level commands behave correctly.
     And stdout should contain "Starting Libvirt crc network"
     
   Scenario: CRC start
-    When executing "crc start -b ~/Downloads/crc_libvirt_4.1.0-rc.5.tar.xz" succeeds
+    When executing "crc start -b ~/Downloads/crc_libvirt_4.1.0.tar.xz" succeeds
     Then stdout should contain "Creating VM"
     And stdout should contain "Running"
     
