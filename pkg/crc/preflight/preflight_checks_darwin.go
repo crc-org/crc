@@ -20,6 +20,7 @@ const (
 	virtualBoxDownloadURL   = "https://download.virtualbox.org/virtualbox/6.0.4/VirtualBox-6.0.4-128413-OSX.dmg"
 	virtualBoxMountLocation = "/Volumes/VirtualBox"
 
+	resolverDir  = "/etc/resolver"
 	resolverFile = "/etc/resolver/testing"
 )
 
@@ -93,6 +94,15 @@ func checkResolverFilePermissions() (bool, error) {
 }
 
 func fixResolverFilePermissions() (bool, error) {
+	// Check if resolver directory available or not
+	if _, err := os.Stat(resolverDir); os.IsNotExist(err) {
+		logging.DebugF("Creating %s directory", resolverDir)
+		stdOut, stdErr, err := crcos.RunWithPrivilege("mkdir", resolverDir)
+		if err != nil {
+			return false, fmt.Errorf("Unable to create the resolver Dir: %s %v: %s", stdOut, err, stdErr)
+		}
+
+	}
 	logging.DebugF("Making %s readable/writable by the current user", resolverFile)
 	stdOut, stdErr, err := crcos.RunWithPrivilege("touch", resolverFile)
 	if err != nil {
