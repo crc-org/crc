@@ -5,4 +5,5 @@ go:
 
 script:
 - make
+- make fmtcheck
 - make cross
