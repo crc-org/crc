@@ -78,7 +78,8 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	clusterConfig := ClusterConfig{
 		KubeConfig:    filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.KubeConfig),
 		KubeAdminPass: string(kubeadminPassword),
-		ClusterAPI:    constants.DefaultWebConsoleURL,
+		WebConsoleURL: constants.DefaultWebConsoleURL,
+		ClusterAPI:    constants.DefaultAPIURL,
 	}
 
 	result.ClusterConfig = clusterConfig
@@ -200,8 +201,8 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	// If no error, return usage message
 	if result.Error == "" {
 		time.Sleep(time.Minute * 3)
-		logging.InfoF("To access the cluster as the system:admin user when using 'oc', run 'export KUBECONFIG=%s'", result.ClusterConfig.KubeConfig)
-		logging.InfoF("Access the OpenShift web-console here: %s", result.ClusterConfig.ClusterAPI)
+		logging.InfoF("To access the cluster using 'oc', run 'oc login -u kubeadmin -p %s %s'", result.ClusterConfig.KubeAdminPass, result.ClusterConfig.ClusterAPI)
+		logging.InfoF("Access the OpenShift web-console here: %s", result.ClusterConfig.WebConsoleURL)
 		logging.InfoF("Login to the console with user: kubeadmin, password: %s", result.ClusterConfig.KubeAdminPass)
 		if os.CurrentOS() == os.DARWIN {
 			logging.WarnF(fmt.Sprintf("Make sure add 'nameserver %s' as first entry to '/etc/resolv.conf' file", instanceIP))

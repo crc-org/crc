@@ -21,6 +21,7 @@ type ClusterConfig struct {
 	KubeConfig    string
 	KubeAdminPass string
 	ClusterAPI    string
+	WebConsoleURL string
 }
 
 type StartResult struct {
