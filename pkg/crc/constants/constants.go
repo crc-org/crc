@@ -16,7 +16,6 @@ const (
 
 	CrcEnvPrefix = "CRC"
 
-	DefaultBundle        = "crc_libvirt_4.1.0-rc.5.tar.xz"
 	DefaultHostname      = "crc-g8g2v-master-0"
 	DefaultWebConsoleURL = "https://console-openshift-console.apps-crc.testing"
 	DefaultAPIURL        = "https://api.crc.testing:6443"
