@@ -27,7 +27,7 @@ import (
 const (
 	driverBinaryDir             = "/usr/local/bin"
 	libvirtDriverCommand        = "crc-driver-libvirt"
-	libvirtDriverVersion        = "0.12.1"
+	libvirtDriverVersion        = "0.12.2"
 	crcDnsmasqConfigFile        = "crc.conf"
 	crcNetworkManagerConfigFile = "crc-nm-dnsmasq.conf"
 )

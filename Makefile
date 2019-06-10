@@ -91,7 +91,7 @@ clean: clean_docs
 
 .PHONY: integration ## Run integration tests
 integration:
-	go test $(REPOPATH)/test/integration -v --tags=integration --timeout=20m
+	go test $(REPOPATH)/test/integration -v --tags=integration --timeout=40m
 
 .PHONY: fmt
 fmt:
