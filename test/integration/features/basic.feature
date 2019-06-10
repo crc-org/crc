@@ -35,7 +35,7 @@ Checks whether CRC top-level commands behave correctly.
     And stdout should contain "Running"
     
   Scenario: CRC stop
-    When executing "crc stop -f" succeeds
+    When executing "crc stop" succeeds
     Then stdout should contain "true"
     
   Scenario: CRC delete
