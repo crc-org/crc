@@ -104,7 +104,6 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 		result.Status = vmState.String()
 	} else {
-		logging.InfoF("Starting stopped VM ...")
 		host, err := libMachineAPIClient.Load(machineConfig.Name)
 		s, err := host.Driver.GetState()
 		if err != nil {
@@ -117,7 +116,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		}
 
 		if s != state.Running {
-			logging.InfoF(" Starting stopped VM ...")
+			logging.InfoF("Starting stopped VM ...")
 			if err := host.Driver.Start(); err != nil {
 				logging.ErrorF("Error starting stopped VM: %v", err)
 				result.Error = err.Error()
