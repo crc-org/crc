@@ -71,7 +71,7 @@ func CreateResolvFileOnInstance(driver drivers.Driver, resolvFileValues ResolvFi
 	encodedFile := base64.StdEncoding.EncodeToString([]byte(resolvFile))
 
 	executeCommandOrExit(driver,
-		fmt.Sprintf("echo %s | base64 --decode | sudo tee /etc/resolv.conf > /dev/null", encodedFile),
+		fmt.Sprintf("echo %s | base64 --decode | sudo tee /etc/resolv.conf", encodedFile),
 		"Error creating /etc/resolv on instance")
 }
 
