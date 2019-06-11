@@ -94,6 +94,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		if err != nil {
 			logging.ErrorF("Error creating host: %v", err)
 			result.Error = err.Error()
+			return *result, err
 		}
 
 		vmState, err := host.Driver.GetState()
