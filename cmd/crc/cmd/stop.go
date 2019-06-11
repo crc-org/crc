@@ -41,16 +41,18 @@ func runStop(arguments []string) {
 		Name: constants.DefaultName,
 	}
 
-	if force {
-		killVM(killConfig)
-		errors.Exit(0)
-	}
-
 	commandResult, err := machine.Stop(stopConfig)
 	if err != nil {
 		// Here we are checking the VM state and if it is still running then
 		// Ask user to forcefully power off it.
 		if commandResult.State == state.Running {
+			// Most of the time force kill don't work and libvirt throw
+			// Device or resource busy error. To make sure we give some
+			// graceful time to cluster before kill it.
+			if force {
+				killVM(killConfig)
+				errors.Exit(0)
+			}
 			var userInput string
 			output.OutF("Do you want to force power off [y/n]: ")
 			fmt.Scan(&userInput)
