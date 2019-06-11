@@ -38,7 +38,7 @@ var (
 
 func runStart(arguments []string) {
 	if err := validateStartFlags(); err != nil {
-		errors.ExitWithMessage(1, err.Error())
+		errors.Exit(1)
 	}
 
 	preflight.StartPreflightChecks()
@@ -53,11 +53,10 @@ func runStart(arguments []string) {
 	}
 
 	commandResult, err := machine.Start(startConfig)
-	logging.InfoF(commandResult.Status)
 	if err != nil {
-		errors.ExitWithMessage(1, err.Error())
+		errors.Exit(1)
 	}
-
+	logging.InfoF(commandResult.Status)
 }
 
 func initStartCmdFlagSet() *pflag.FlagSet {
