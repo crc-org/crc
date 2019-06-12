@@ -12,6 +12,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/validation"
 )
@@ -56,7 +57,11 @@ func runStart(arguments []string) {
 	if err != nil {
 		errors.Exit(1)
 	}
-	logging.InfoF(commandResult.Status)
+	if commandResult.Status == "Running" {
+		output.Out("CodeReady Containers instance is running")
+	} else {
+		logging.WarnF("Unexpected status: %s", commandResult.Status)
+	}
 }
 
 func initStartCmdFlagSet() *pflag.FlagSet {

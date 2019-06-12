@@ -32,12 +32,12 @@ Checks whether CRC top-level commands behave correctly.
   Scenario: CRC start
     When executing "crc start -b ~/Downloads/crc_libvirt_4.1.0.tar.xz" succeeds
     Then stdout should contain "Creating VM"
-    And stdout should contain "Running"
+    And stdout should contain "CodeReady Containers instance is running"
     
   Scenario: CRC stop
     When executing "crc stop -f" succeeds
-    Then stdout should contain "true"
+    Then stdout should contain "CodeReady Containers instance stopped"
     
   Scenario: CRC delete
     When executing "crc delete" succeeds
-    Then stdout should contain "true"
+    Then stdout should contain "CodeReady Containers instance deleted"
