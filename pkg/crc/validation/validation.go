@@ -18,7 +18,7 @@ func ValidateDriver(driver string) error {
 	return errors.NewF("Unsupported driver: %s, use '--vm-driver' option to provide a supported driver %s\n", driver, machine.SupportedDriverValues())
 }
 
-// ValidateCPUs is check if provided cpus count is valid
+// ValidateCPUs checks if provided cpus count is valid
 func ValidateCPUs(value int) error {
 	if value < constants.DefaultCPUs {
 		return errors.NewF("CPUs required >=%d", constants.DefaultCPUs)
@@ -26,7 +26,7 @@ func ValidateCPUs(value int) error {
 	return nil
 }
 
-// ValidateMemory is check if provided Memory count is valid
+// ValidateMemory checks if provided Memory count is valid
 func ValidateMemory(value int) error {
 	if value < constants.DefaultMemory {
 		return errors.NewF("Memory required >=%d", constants.DefaultMemory)
@@ -34,10 +34,10 @@ func ValidateMemory(value int) error {
 	return nil
 }
 
-// ValidateBundle is check if provided bundle path exist
+// ValidateBundle checks if provided bundle path exist
 func ValidateBundle(bundle string) error {
 	if _, err := os.Stat(bundle); os.IsNotExist(err) {
-		return errors.NewF("Provided file %s does not exist", bundle)
+		return errors.NewF("Expected file %s does not exist", bundle)
 	}
 	return nil
 }

@@ -17,7 +17,7 @@ func ValidateBool(value interface{}) (bool, string) {
 	return false, "true/false"
 }
 
-// ValidateDriver is check if driver is valid in the config
+// ValidateDriver checks if driver is valid in the config
 func ValidateDriver(value interface{}) (bool, string) {
 	if err := validation.ValidateDriver(value.(string)); err != nil {
 		return false, err.Error()
@@ -25,7 +25,7 @@ func ValidateDriver(value interface{}) (bool, string) {
 	return true, ""
 }
 
-// ValidateCPUs is check if provided cpus count is valid in the config
+// ValidateCPUs checks if provided cpus count is valid in the config
 func ValidateCPUs(value interface{}) (bool, string) {
 	v, err := strconv.Atoi(value.(string))
 	if err != nil {
@@ -37,7 +37,7 @@ func ValidateCPUs(value interface{}) (bool, string) {
 	return true, ""
 }
 
-// ValidateMemory is check if provided memory is valid in the config
+// ValidateMemory checks if provided memory is valid in the config
 func ValidateMemory(value interface{}) (bool, string) {
 	v, err := strconv.Atoi(value.(string))
 	if err != nil {
@@ -49,7 +49,7 @@ func ValidateMemory(value interface{}) (bool, string) {
 	return true, ""
 }
 
-// ValidateBundle is check if provided bundle path is valid
+// ValidateBundle checks if provided bundle path is valid
 func ValidateBundle(value interface{}) (bool, string) {
 	if err := validation.ValidateBundle(value.(string)); err != nil {
 		return false, err.Error()
