@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/output"
@@ -37,11 +38,11 @@ func runDelete(arguments []string) {
 		deleteCache()
 	}
 
-	commandResult, err := machine.Delete(deleteConfig)
-	output.Out(commandResult.Success)
+	_, err := machine.Delete(deleteConfig)
 	if err != nil {
-		output.Out(err.Error())
+		errors.ExitWithMessage(1, err.Error())
 	}
+	output.Out("CodeReady Containers instance deleted")
 }
 
 func deleteCache() {

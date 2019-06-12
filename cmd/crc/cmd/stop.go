@@ -4,6 +4,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/input"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/machine/libmachine/state"
@@ -50,13 +51,18 @@ func runStop(arguments []string) {
 		}
 		errors.ExitWithMessage(1, err.Error())
 	}
-	output.Out(commandResult.Success)
+	if commandResult.Success {
+		output.Out("CodeReady Containers instance stopped")
+	} else {
+		/* If we did not get an error, the status should be true */
+		logging.WarnF("Unexpected status %v", commandResult.Success)
+	}
 }
 
 func killVM(killConfig machine.PowerOffConfig) {
-	commandResult, err := machine.PowerOff(killConfig)
-	output.Out(commandResult.Success)
+	_, err := machine.PowerOff(killConfig)
 	if err != nil {
 		errors.ExitWithMessage(1, err.Error())
 	}
+	output.Out("CodeReady Containers instance forcibly stopped")
 }
