@@ -18,7 +18,7 @@ var configGetCmd = &cobra.Command{
 to the options that you set when you run the 'crc start' command.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
-			output.Out("Please a provide a configuration property to retrieve")
+			output.Out("Please provide a configuration property to retrieve")
 			os.Exit(1)
 		}
 		runConfigGet(args[0])

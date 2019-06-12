@@ -18,7 +18,7 @@ var configSetCmd = &cobra.Command{
 to the options that you set when you run the 'crc start' command.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 2 {
-			errors.ExitWithMessage(1, "Please a provide a configuration property and value to set")
+			errors.ExitWithMessage(1, "Please provide a configuration property and value to set")
 		}
 		runConfigSet(args[0], args[1])
 	},
