@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/machine/libmachine/drivers"
 )
 
@@ -25,45 +26,15 @@ func HasNameserversConfigured(driver drivers.Driver) bool {
 	return i != 0
 }
 
-func GetResolvValuesFromInstance(driver drivers.Driver) *ResolvFileValues {
+func GetResolvValuesFromInstance(driver drivers.Driver) (*ResolvFileValues, error) {
 	cmd := "cat /etc/resolv.conf"
 	out, err := drivers.RunSSHCommandFromDriver(driver, cmd)
 
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
-	searchdomains := []SearchDomain{}
-	nameservers := []NameServer{}
-
-	for _, line := range strings.Split(strings.TrimSuffix(out, "\n"), "\n") {
-		if len(line) > 0 && (line[0] == ';' || line[0] == '#') {
-			continue
-		}
-
-		f := strings.Fields(line)
-		if len(f) < 1 {
-			continue
-		}
-
-		switch f[0] {
-		case "nameserver":
-			nameservers = append(nameservers, NameServer{IPAddress: f[1]})
-		case "search":
-			for i := 0; i < len(f)-1; i++ {
-				searchdomains = append(searchdomains, SearchDomain{Domain: f[i+1]})
-			}
-		default:
-			// ignore
-		}
-	}
-
-	resolvFileValues := ResolvFileValues{
-		SearchDomains: searchdomains,
-		NameServers:   nameservers,
-	}
-
-	return &resolvFileValues
+	return parseResolveConfFile(out)
 }
 
 func CreateResolvFileOnInstance(driver drivers.Driver, resolvFileValues ResolvFileValues) {
@@ -99,4 +70,51 @@ func HasNameserverConfiguredLocally(nameserver NameServer) (bool, error) {
 	}
 
 	return strings.Contains(string(file), nameserver.IPAddress), nil
+}
+
+func GetResolvValuesFromHost() (*ResolvFileValues, error) {
+	// TODO: we need to add runtime OS in case of windows.
+	out, stderr, err := crcos.RunWithDefaultLocale("cat", "/etc/resolv.conf")
+	if crcos.CurrentOS() == crcos.WINDOWS {
+		// TODO: we need to add logic in case of windows.
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("%s : %v", stderr, err)
+	}
+	return parseResolveConfFile(out)
+}
+
+func parseResolveConfFile(resolvfile string) (*ResolvFileValues, error) {
+	searchdomains := []SearchDomain{}
+	nameservers := []NameServer{}
+
+	for _, line := range strings.Split(strings.TrimSuffix(resolvfile, "\n"), "\n") {
+		if len(line) > 0 && (line[0] == ';' || line[0] == '#') {
+			continue
+		}
+
+		f := strings.Fields(line)
+		if len(f) < 1 {
+			continue
+		}
+
+		switch f[0] {
+		case "nameserver":
+			nameservers = append(nameservers, NameServer{IPAddress: f[1]})
+		case "search":
+			for i := 0; i < len(f)-1; i++ {
+				searchdomains = append(searchdomains, SearchDomain{Domain: f[i+1]})
+			}
+		default:
+			// ignore
+		}
+	}
+
+	resolvFileValues := ResolvFileValues{
+		SearchDomains: searchdomains,
+		NameServers:   nameservers,
+	}
+
+	return &resolvFileValues, nil
 }
