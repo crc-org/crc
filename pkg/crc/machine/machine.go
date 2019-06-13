@@ -204,7 +204,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		logging.InfoF("Access the OpenShift web-console here: %s", result.ClusterConfig.WebConsoleURL)
 		logging.InfoF("Login to the console with user: kubeadmin, password: %s", result.ClusterConfig.KubeAdminPass)
 		if os.CurrentOS() == os.DARWIN {
-			logging.WarnF(fmt.Sprintf("Make sure add 'nameserver %s' as first entry to '/etc/resolv.conf' file", instanceIP))
+			logging.WarnF(fmt.Sprintf("Make sure to add 'nameserver %s' as first entry to '/etc/resolv.conf' file", instanceIP))
 		}
 	}
 
