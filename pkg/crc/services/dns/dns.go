@@ -55,7 +55,21 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.Servi
 		return *result, err
 	}
 
-	orgResolvValues := network.GetResolvValuesFromInstance(serviceConfig.Driver)
+	// We need to restart the Host Network before updating
+	// the VM's /etc/resolv.conf file.
+	res, err := runPostStartForOS(serviceConfig, result)
+	if err != nil {
+		result.Success = res.Success
+		result.Error = err.Error()
+		return *result, err
+	}
+
+	orgResolvValues, err := network.GetResolvValuesFromInstance(serviceConfig.Driver)
+	if err != nil {
+		result.Success = false
+		result.Error = err.Error()
+		return *result, err
+	}
 	// override resolv.conf file
 	searchdomain := network.SearchDomain{Domain: fmt.Sprintf("%s.%s", serviceConfig.Name, serviceConfig.BundleMetadata.ClusterInfo.BaseDomain)}
 	nameserver := network.NameServer{IPAddress: dnsContainerIP}
@@ -68,7 +82,8 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.Servi
 
 	network.CreateResolvFileOnInstance(serviceConfig.Driver, resolvFileValues)
 
-	return runPostStartForOS(serviceConfig, result)
+	result.Success = true
+	return *result, nil
 }
 
 func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (string, error) {

@@ -151,7 +151,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		result.Error = err.Error()
 		return *result, err
 	}
-	logging.InfoF("Bridge IP on the host: %s", hostIP)
+	logging.DebugF("Bridge IP on the host: %s", hostIP)
 
 	// Create servicePostStartConfig for dns checks and dns start.
 	servicePostStartConfig := services.ServicePostStartConfig{
