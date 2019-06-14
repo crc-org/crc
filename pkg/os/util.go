@@ -2,9 +2,12 @@ package os
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"runtime"
 	"strings"
 
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/kardianos/osext"
 )
 
@@ -54,4 +57,31 @@ func CurrentExecutable() (string, error) {
 		return "", err
 	}
 	return currentExec, nil
+}
+
+func CopyFileContents(src string, dst string, permission os.FileMode) error {
+	logging.DebugF("Copying '%s' to '%s'\n", src, dst)
+	srcFile, err := os.Open(src)
+	defer srcFile.Close()
+	if err != nil {
+		return fmt.Errorf("[%v] Cannot open src file '%s'", err, src)
+	}
+
+	destFile, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE, permission)
+	defer destFile.Close()
+	if err != nil {
+		return fmt.Errorf("[%v] Cannot create dst file '%s'", err, dst)
+	}
+
+	_, err = io.Copy(destFile, srcFile)
+	if err != nil {
+		return fmt.Errorf("[%v] Cannot copy '%s' to '%s'", err, src, dst)
+	}
+
+	err = destFile.Sync()
+	if err != nil {
+		return fmt.Errorf("[%v] Cannot sync '%s' to '%s'", err, src, dst)
+	}
+
+	return nil
 }

@@ -27,14 +27,15 @@ const (
 )
 
 var (
-	CrcBaseDir      = filepath.Join(GetHomeDir(), ".crc")
-	ConfigPath      = filepath.Join(CrcBaseDir, ConfigFile)
-	LogFilePath     = filepath.Join(CrcBaseDir, LogFile)
-	MachineBaseDir  = CrcBaseDir
-	MachineCertsDir = filepath.Join(MachineBaseDir, "certs")
-	MachineCacheDir = filepath.Join(MachineBaseDir, "cache")
-	OcCacheDir      = filepath.Join(MachineCacheDir, "oc")
-	GlobalStatePath = filepath.Join(CrcBaseDir, GlobalStateFile)
+	CrcBaseDir         = filepath.Join(GetHomeDir(), ".crc")
+	ConfigPath         = filepath.Join(CrcBaseDir, ConfigFile)
+	LogFilePath        = filepath.Join(CrcBaseDir, LogFile)
+	MachineBaseDir     = CrcBaseDir
+	MachineCertsDir    = filepath.Join(MachineBaseDir, "certs")
+	MachineCacheDir    = filepath.Join(MachineBaseDir, "cache")
+	OcCacheDir         = filepath.Join(MachineCacheDir, "oc")
+	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
+	GlobalStatePath    = filepath.Join(CrcBaseDir, GlobalStateFile)
 )
 
 // GetHomeDir returns the home directory for the current user
