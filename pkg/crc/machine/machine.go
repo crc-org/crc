@@ -3,8 +3,6 @@ package machine
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/systemd"
-	"github.com/code-ready/crc/pkg/os"
 	"io/ioutil"
 	"path/filepath"
 	"time"
@@ -15,6 +13,8 @@ import (
 
 	// host and instance related
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/systemd"
+	crcos "github.com/code-ready/crc/pkg/os"
 	// cluster services
 	"github.com/code-ready/crc/pkg/crc/services"
 	"github.com/code-ready/crc/pkg/crc/services/dns"
@@ -190,6 +190,18 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		logging.WarnF("Failed Public dns query: %v : %s", err, queryOutput)
 	}
 
+	// Copy Kubeconfig file from bundle extract path to machine directory.
+	// In our case it would be ~/machine/crc
+	logging.InfoF("Copying kubeconfig file to instance dir ...")
+	if err := crcos.CopyFileContents(
+		filepath.Join(extractedPath, "kubeconfig"),
+		filepath.Join(constants.MachineInstanceDir, machineConfig.Name, "kubeconfig"),
+		0644); err != nil {
+		logging.ErrorF("Error to copy kubeconfig content %v", err)
+		result.Error = err.Error()
+		return *result, err
+	}
+
 	// Start kubelet inside the VM
 	sd := systemd.NewInstanceSystemdCommander(host.Driver)
 	kubeletStarted, err := sd.Start("kubelet")
@@ -209,7 +221,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		logging.InfoF("To access the cluster using 'oc', run 'oc login -u kubeadmin -p %s %s'", result.ClusterConfig.KubeAdminPass, result.ClusterConfig.ClusterAPI)
 		logging.InfoF("Access the OpenShift web-console here: %s", result.ClusterConfig.WebConsoleURL)
 		logging.InfoF("Login to the console with user: kubeadmin, password: %s", result.ClusterConfig.KubeAdminPass)
-		if os.CurrentOS() == os.DARWIN {
+		if crcos.CurrentOS() == crcos.DARWIN {
 			logging.WarnF(fmt.Sprintf("Make sure to add 'nameserver %s' as first entry to '/etc/resolv.conf' file", instanceIP))
 		}
 	}

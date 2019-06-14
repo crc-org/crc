@@ -2,17 +2,18 @@ package oc
 
 import (
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/download"
-	"github.com/code-ready/crc/pkg/extract"
-	"github.com/pkg/errors"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/download"
+	"github.com/code-ready/crc/pkg/extract"
+	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -102,7 +103,7 @@ func (oc *OcCached) cacheOc() error {
 		}
 
 		finalBinaryPath := filepath.Join(outputPath, binaryName)
-		copy(binaryPath, finalBinaryPath)
+		crcos.CopyFileContents(binaryPath, finalBinaryPath, 0755)
 		if err != nil {
 			return err
 		}
@@ -114,33 +115,6 @@ func (oc *OcCached) cacheOc() error {
 
 		return nil
 	}
-	return nil
-}
-
-func copy(src, dest string) error {
-	logging.DebugF("Copying '%s' to '%s'\n", src, dest)
-	srcFile, err := os.Open(src)
-	defer srcFile.Close()
-	if err != nil {
-		return errors.Wrapf(err, "Cannot open src file '%s'", src)
-	}
-
-	destFile, err := os.Create(dest)
-	defer destFile.Close()
-	if err != nil {
-		return errors.Wrapf(err, "Cannot create dst file '%s'", dest)
-	}
-
-	_, err = io.Copy(destFile, srcFile)
-	if err != nil {
-		return errors.Wrapf(err, "Cannot copy '%s' to '%s'", src, dest)
-	}
-
-	err = destFile.Sync()
-	if err != nil {
-		return errors.Wrapf(err, "Cannot copy '%s' to '%s'", src, dest)
-	}
-
 	return nil
 }
 
