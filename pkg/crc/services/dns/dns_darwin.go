@@ -75,7 +75,7 @@ func restartNetwork(serviceConfig services.ServicePostStartConfig) (bool, error)
 		return false, err
 	}
 	for _, netdevice := range strings.Split(netDeviceList, "\n")[1:] {
-		time.Sleep(2 * time.Nanosecond)
+		time.Sleep(2 * time.Second)
 		_, stderr, err := crcos.RunWithDefaultLocale("networksetup", "-setnetworkserviceenabled", netdevice, "off")
 		if err != nil {
 			return false, fmt.Errorf("%s: %v", stderr, err)
