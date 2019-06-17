@@ -29,6 +29,10 @@ type resolverFileValues struct {
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *services.ServicePostStartResult) (services.ServicePostStartResult, error) {
 	// Write resolver file
 	success, err := createResolverFile(serviceConfig.IP, filepath.Join("/", "etc", "resolver", serviceConfig.BundleMetadata.ClusterInfo.BaseDomain))
+	if !success {
+		result.Success = success
+		return *result, err
+	}
 	// Restart the Network on mac
 	logging.InfoF("Restarting the network")
 	success, err = restartNetwork(serviceConfig)
@@ -50,7 +54,10 @@ func createResolverFile(InstanceIP string, path string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	t.Execute(&resolverFile, values)
+	err = t.Execute(&resolverFile, values)
+	if err != nil {
+		return false, err
+	}
 
 	err = ioutil.WriteFile(path, resolverFile.Bytes(), 0644)
 	if err != nil {
@@ -68,8 +75,11 @@ func restartNetwork(serviceConfig services.ServicePostStartConfig) (bool, error)
 		return false, err
 	}
 	for _, netdevice := range strings.Split(netDeviceList, "\n")[1:] {
-		time.Sleep(2)
+		time.Sleep(2 * time.Nanosecond)
 		_, stderr, err := crcos.RunWithDefaultLocale("networksetup", "-setnetworkserviceenabled", netdevice, "off")
+		if err != nil {
+			return false, fmt.Errorf("%s: %v", stderr, err)
+		}
 		_, stderr, err = crcos.RunWithDefaultLocale("networksetup", "-setnetworkserviceenabled", netdevice, "on")
 		if err != nil {
 			return false, fmt.Errorf("%s: %v", stderr, err)
