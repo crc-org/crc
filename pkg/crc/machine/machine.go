@@ -105,6 +105,12 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		result.Status = vmState.String()
 	} else {
 		host, err := libMachineAPIClient.Load(machineConfig.Name)
+		if host.Driver.DriverName() != startConfig.VMDriver {
+			err := errors.NewF("VM driver '%s' was requested, but loaded VM is using '%s' instead",
+				startConfig.VMDriver, host.Driver.DriverName())
+			result.Error = err.Error()
+			return *result, err
+		}
 		s, err := host.Driver.GetState()
 		if err != nil {
 			logging.ErrorF("Error getting the state for host: %v", err)
