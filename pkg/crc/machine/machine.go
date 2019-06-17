@@ -212,13 +212,39 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		result.Error = err.Error()
 	}
 	if kubeletStarted {
-		logging.InfoF("Starting OpenShift cluster ... [waiting 3m]")
+		logging.InfoF("Starting OpenShift cluster ... [waiting 5m]")
 	}
 	result.KubeletStarted = kubeletStarted
 
 	// If no error, return usage message
 	if result.Error == "" {
+		// This initial sleep time is really required to make sure the cluster
+		// operators able to register their state to apiserver from last
+		// time since we are using the disk image which have it older
+		// state as part of etcd  data.
 		time.Sleep(time.Minute * 3)
+		// Checks after 3 mins wait all the operators are in 'Available' state.
+		// If any of the operator still not available then wait for 2 more mins and tell users
+		// about which operator is still not available and need time.
+		var status bool
+		crcoc := oc.GetOC(machineConfig.Name)
+		for i := 0; i < 2; i++ {
+			status, err = oc.GetClusterOperatorStatus(crcoc)
+			if err != nil {
+				logging.ErrorF("Failed to get cluster status: %v", err)
+				result.Error = err.Error()
+				return *result, err
+			}
+			if status {
+				continue
+			}
+			time.Sleep(time.Minute)
+		}
+
+		if !status {
+			logging.Warn("Some cluster operators are still not in completely 'Available' state. Check with 'crc status' command")
+		}
+
 		logging.InfoF("To access the cluster using 'oc', run 'oc login -u kubeadmin -p %s %s'", result.ClusterConfig.KubeAdminPass, result.ClusterConfig.ClusterAPI)
 		logging.InfoF("Access the OpenShift web-console here: %s", result.ClusterConfig.WebConsoleURL)
 		logging.InfoF("Login to the console with user: kubeadmin, password: %s", result.ClusterConfig.KubeAdminPass)
