@@ -13,6 +13,6 @@ func New(text string) error {
 }
 
 func NewF(text string, args ...interface{}) error {
-	logging.ErrorF(fmt.Sprintf("Error occured: %s", text), args)
+	logging.ErrorF(fmt.Sprintf("Error occured: %s", text), args...)
 	return fmt.Errorf(text, args...)
 }
