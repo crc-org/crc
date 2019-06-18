@@ -88,11 +88,11 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.Servi
 
 func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (string, error) {
 	appsURI := fmt.Sprintf("foo.%s", serviceConfig.BundleMetadata.ClusterInfo.AppsDomain)
-	// Try 3 times for 1 second interval, In nested environment most of time crc failed to get
+	// Try 30 times for 1 second interval, In nested environment most of time crc failed to get
 	// Internal dns query resolved for some time.
 	var queryOutput string
 	var err error
-	for i := 0; i <= 3; i++ {
+	for i := 0; i <= 30; i++ {
 		time.Sleep(time.Second)
 		queryOutput, err = drivers.RunSSHCommandFromDriver(serviceConfig.Driver, fmt.Sprintf("host -R 3 %s", appsURI))
 		if err == nil {
