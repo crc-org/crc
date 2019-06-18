@@ -91,6 +91,26 @@ function get_bundle() {
   unzip -P $CRC_BUNDLE_PASSWORD $HOME/Downloads/bundle.zip -d $HOME/Downloads/
 }
 
+function upload_logs() {
+  set +x
+
+  # http://stackoverflow.com/a/22908437/1120530; Using --relative as --rsync-path not working
+  mkdir -p pr/$ghprbPullId/
+  cp -R test/integration/out/test-results/* pr/$ghprbPullId/
+  cp $HOME/.crc/crc.log pr/$ghprbPullId/crc_$(date '+%Y_%m_%d_%H_%M_%S').log
+  RSYNC_PASSWORD=$1 rsync -a --relative pr/$ghprbPullId/ minishift@artifacts.ci.centos.org::minishift/crc/
+  echo "Find Logs here: http://artifacts.ci.centos.org/minishift/crc/pr/$ghprbPullId ."
+}
+
+function run_tests() {
+  set +e
+  make integration
+  if [[ $? -ne 0 ]]; then
+    upload_logs $1
+    exit 1
+  fi
+}
+
 # Execution starts here
 load_jenkins_vars
 install_required_packages
@@ -98,13 +118,14 @@ setup_golang
 export TERM=xterm-256color
 get_bundle
 
-# setup and run integration tests
+# setup to run integration tests
 make
 make fmtcheck
 make cross
 crc setup
-make integration
 
-# Retrieve password for rsync
+# Retrieve password for rsync and run integration tests
 CICO_PASS=$(echo $CICO_API_KEY | cut -d'-' -f1-2)
+run_tests $CICO_PASS
 perform_artifacts_upload $CICO_PASS
+
