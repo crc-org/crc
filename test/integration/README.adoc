@@ -1,0 +1,27 @@
+= CodeReady Containers Integration Tests
+:toc: macro
+:toc-title:
+:toclevels:
+
+toc::[]
+
+[[intro-to-integration-testing]]
+== Introduction
+Integration tests use the link:http://github.com/code-ready/clicumber[Clicumber] package to provide basic functionality for testing CLI binaries.
+
+Clicumber allows running commands in a persistent shell instance (`bash`, `tcsh`, `zsh`, Command Prompt, or PowerShell), assert its outputs (standard output, standard error, or exit code), check configuration files, and so on. The general functionality of Clicumber is then extended by CodeReady Containers specific test code to cover the whole functionality of CodeReady Containers.
+
+[[how-to-run-integration-tests]]
+== How to run
+
+To start integration tests, run:
+
+```bash
+$ make integration
+```
+
+
+[[integration-test-logs]]
+== Logs
+
+Test logs can be found in [filename]`test/integration/out/test-results`.
