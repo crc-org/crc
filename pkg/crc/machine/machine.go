@@ -109,6 +109,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		if err != nil {
 			logging.ErrorF("Error getting the state for host: %v", err)
 			result.Error = err.Error()
+			return *result, err
 		}
 
 		result.Status = vmState.String()
@@ -124,6 +125,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		if err != nil {
 			logging.ErrorF("Error getting the state for host: %v", err)
 			result.Error = err.Error()
+			return *result, err
 		}
 		if s == state.Running {
 			result.Status = s.String()
@@ -135,10 +137,12 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			if err := host.Driver.Start(); err != nil {
 				logging.ErrorF("Error starting stopped VM: %v", err)
 				result.Error = err.Error()
+				return *result, err
 			}
 			if err := libMachineAPIClient.Save(host); err != nil {
 				logging.ErrorF("Error saving state for VM: %v", err)
 				result.Error = err.Error()
+				return *result, err
 			}
 		}
 
@@ -146,6 +150,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		if err != nil {
 			logging.ErrorF("Error getting the state: %v", err)
 			result.Error = err.Error()
+			return *result, err
 		}
 
 		result.Status = vmState.String()
