@@ -15,7 +15,6 @@ import (
 
 func init() {
 	rootCmd.AddCommand(stopCmd)
-	stopCmd.Flags().BoolVarP(&force, "force", "f", false, "Stop the VM forcefully")
 }
 
 var stopCmd = &cobra.Command{
@@ -26,10 +25,6 @@ var stopCmd = &cobra.Command{
 		runStop(args)
 	},
 }
-
-var (
-	force bool
-)
 
 func runStop(arguments []string) {
 	stopConfig := machine.StopConfig{
@@ -49,7 +44,7 @@ func runStop(arguments []string) {
 			// Most of the time force kill don't work and libvirt throw
 			// Device or resource busy error. To make sure we give some
 			// graceful time to cluster before kill it.
-			if force {
+			if globalForce {
 				killVM(killConfig)
 				errors.Exit(0)
 			}
