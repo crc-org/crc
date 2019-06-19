@@ -1,16 +1,14 @@
 package cmd
 
 import (
-	"fmt"
-	"github.com/code-ready/machine/libmachine/state"
-	"strings"
-
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/output"
-	"github.com/spf13/cobra"
-
+	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/output"
+	"github.com/code-ready/machine/libmachine/state"
+
+	"github.com/spf13/cobra"
 )
 
 func init() {
@@ -44,14 +42,8 @@ func runStop(arguments []string) {
 			// Most of the time force kill don't work and libvirt throw
 			// Device or resource busy error. To make sure we give some
 			// graceful time to cluster before kill it.
-			if globalForce {
-				killVM(killConfig)
-				errors.Exit(0)
-			}
-			var userInput string
-			output.OutF("Do you want to force power off [y/n]: ")
-			fmt.Scan(&userInput)
-			if strings.ToLower(userInput) == "y" {
+			yes := input.PromptUserForYesOrNo("Do you want to force power off", globalForce)
+			if yes {
 				killVM(killConfig)
 				errors.Exit(0)
 			}
