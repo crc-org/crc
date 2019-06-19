@@ -127,18 +127,18 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			result.Error = err.Error()
 			return *result, err
 		}
-		s, err := host.Driver.GetState()
+		vmState, err := host.Driver.GetState()
 		if err != nil {
 			logging.ErrorF("Error getting the state for host: %v", err)
 			result.Error = err.Error()
 			return *result, err
 		}
-		if s == state.Running {
-			result.Status = s.String()
+		if vmState == state.Running {
+			result.Status = vmState.String()
 			return *result, nil
 		}
 
-		if s != state.Running {
+		if vmState != state.Running {
 			logging.InfoF("Starting stopped VM ...")
 			if err := host.Driver.Start(); err != nil {
 				logging.ErrorF("Error starting stopped VM: %v", err)
@@ -152,7 +152,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			}
 		}
 
-		vmState, err := host.Driver.GetState()
+		vmState, err = host.Driver.GetState()
 		if err != nil {
 			logging.ErrorF("Error getting the state: %v", err)
 			result.Error = err.Error()
