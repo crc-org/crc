@@ -38,7 +38,7 @@ func GetResolvValuesFromInstance(driver drivers.Driver) (*ResolvFileValues, erro
 }
 
 func CreateResolvFileOnInstance(driver drivers.Driver, resolvFileValues ResolvFileValues) {
-	resolvFile, _ := createResolvFile(resolvFileValues)
+	resolvFile, _ := CreateResolvFile(resolvFileValues)
 	encodedFile := base64.StdEncoding.EncodeToString([]byte(resolvFile))
 
 	executeCommandOrExit(driver,

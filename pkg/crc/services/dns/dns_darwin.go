@@ -28,8 +28,15 @@ type resolverFileValues struct {
 }
 
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *services.ServicePostStartResult) (services.ServicePostStartResult, error) {
-	// Write resolver file
-	success, err := createResolverFile(serviceConfig.IP, filepath.Join("/", "etc", "resolver", serviceConfig.BundleMetadata.ClusterInfo.BaseDomain))
+	// Update resolv.conf file for host
+	success, err := updateResolvConfFile(serviceConfig.IP, filepath.Join("/", "etc", "resolv.conf"))
+	if !success {
+		result.Success = success
+		return *result, err
+	}
+
+	// Write resolver config to host
+	success, err = createResolverFile(serviceConfig.IP, filepath.Join("/", "etc", "resolver", serviceConfig.BundleMetadata.ClusterInfo.BaseDomain))
 	if !success {
 		result.Success = success
 		return *result, err
@@ -107,4 +114,39 @@ func waitForNetwork() {
 		}
 	}
 	logging.Warn("Host is not connected to internet.")
+}
+
+// updateResolvConfFile updates the host's /etc/resolv.conf file with Instance IP.
+func updateResolvConfFile(instanceIP string, resolvConfFile string) (bool, error) {
+	// Get the current value of resolv.conf file
+	hostResolv, err := network.GetResolvValuesFromHost()
+	if err != nil {
+		return false, fmt.Errorf("Unable to read host resolv file (%v)", err)
+	}
+
+	foundExistingInstanceIP := false
+
+	for i, ns := range hostResolv.NameServers {
+		// Update the nameserver IP with instance IP if already exist
+		if strings.Contains(ns.IPAddress, "192.168.130") {
+			hostResolv.NameServers[i].IPAddress = instanceIP
+			foundExistingInstanceIP = true
+			break
+		}
+	}
+
+	if !foundExistingInstanceIP {
+		nameserver := network.NameServer{IPAddress: instanceIP}
+		nameservers := []network.NameServer{nameserver}
+		hostResolv.NameServers = append(nameservers, hostResolv.NameServers...)
+	}
+
+	// Write to the resolv.conf file.
+	resolvFile, _ := network.CreateResolvFile(*hostResolv)
+	err = ioutil.WriteFile(resolvConfFile, []byte(resolvFile), 0644)
+	if err != nil {
+		return false, err
+	}
+
+	return true, err
 }

@@ -22,6 +22,7 @@ const (
 
 	resolverDir  = "/etc/resolver"
 	resolverFile = "/etc/resolver/testing"
+	resolvFile   = "/etc/resolv.conf"
 )
 
 var (
@@ -85,12 +86,7 @@ func fixVirtualBoxInstallation() (bool, error) {
 }
 
 func checkResolverFilePermissions() (bool, error) {
-	err := unix.Access(resolverFile, unix.R_OK|unix.W_OK)
-	if err != nil {
-		return false, fmt.Errorf("%s is not readable/writable by the current user", resolverFile)
-	}
-
-	return true, nil
+	return isUserHaveFileWritePermission(resolverFile)
 }
 
 func fixResolverFilePermissions() (bool, error) {
@@ -101,7 +97,6 @@ func fixResolverFilePermissions() (bool, error) {
 		if err != nil {
 			return false, fmt.Errorf("Unable to create the resolver Dir: %s %v: %s", stdOut, err, stdErr)
 		}
-
 	}
 	logging.DebugF("Making %s readable/writable by the current user", resolverFile)
 	stdOut, stdErr, err := crcos.RunWithPrivilege("touch", resolverFile)
@@ -109,23 +104,7 @@ func fixResolverFilePermissions() (bool, error) {
 		return false, fmt.Errorf("Unable to create the resolver file: %s %v: %s", stdOut, err, stdErr)
 	}
 
-	currentUser, err := user.Current()
-	if err != nil {
-		return false, err
-	}
-
-	stdOut, stdErr, err = crcos.RunWithPrivilege("chown", currentUser.Username, resolverFile)
-	if err != nil {
-		return false, fmt.Errorf("Unable to change ownership of the resolver file: %s %v: %s", stdOut, err, stdErr)
-	}
-
-	err = os.Chmod(resolverFile, 0644)
-	if err != nil {
-		return false, fmt.Errorf("Unable to change permissions of the resolver file: %s %v: %s", stdOut, err, stdErr)
-	}
-	logging.DebugF("%s is readable/writable by current user", resolverFile)
-
-	return true, nil
+	return addFileWritePermissionToUser(resolverFile)
 }
 
 // Check if oc binary is cached or not
@@ -144,5 +123,42 @@ func fixOcBinaryCached() (bool, error) {
 		return false, fmt.Errorf("Not able to download oc %v", err)
 	}
 	logging.Debug("oc binary cached")
+	return true, nil
+}
+
+func checkResolvConfFilePermissions() (bool, error) {
+	return isUserHaveFileWritePermission(resolvFile)
+}
+
+func fixResolvConfFilePermissions() (bool, error) {
+	return addFileWritePermissionToUser(resolvFile)
+}
+
+func isUserHaveFileWritePermission(filename string) (bool, error) {
+	err := unix.Access(filename, unix.R_OK|unix.W_OK)
+	if err != nil {
+		return false, fmt.Errorf("%s is not readable/writable by the current user", filename)
+	}
+	return true, nil
+}
+
+func addFileWritePermissionToUser(filename string) (bool, error) {
+	logging.DebugF("Making %s readable/writable by the current user", filename)
+	currentUser, err := user.Current()
+	if err != nil {
+		return false, err
+	}
+
+	stdOut, stdErr, err := crcos.RunWithPrivilege("chown", currentUser.Username, filename)
+	if err != nil {
+		return false, fmt.Errorf("Unable to change ownership of the filename: %s %v: %s", stdOut, err, stdErr)
+	}
+
+	err = os.Chmod(filename, 0644)
+	if err != nil {
+		return false, fmt.Errorf("Unable to change permissions of the filename: %s %v: %s", stdOut, err, stdErr)
+	}
+	logging.DebugF("%s is readable/writable by current user", filename)
+
 	return true, nil
 }

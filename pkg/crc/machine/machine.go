@@ -222,9 +222,6 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		logging.InfoF("To access the cluster using 'oc', run 'oc login -u kubeadmin -p %s %s'", result.ClusterConfig.KubeAdminPass, result.ClusterConfig.ClusterAPI)
 		logging.InfoF("Access the OpenShift web-console here: %s", result.ClusterConfig.WebConsoleURL)
 		logging.InfoF("Login to the console with user: kubeadmin, password: %s", result.ClusterConfig.KubeAdminPass)
-		if crcos.CurrentOS() == crcos.DARWIN {
-			logging.WarnF(fmt.Sprintf("Make sure to add 'nameserver %s' as first entry to '/etc/resolv.conf' file", instanceIP))
-		}
 	}
 
 	return *result, err

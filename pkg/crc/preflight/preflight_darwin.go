@@ -1,6 +1,7 @@
 package preflight
 
 import (
+	"fmt"
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
 )
@@ -20,8 +21,14 @@ func StartPreflightChecks() {
 
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckResolverFilePermissions.Name),
 		checkResolverFilePermissions,
-		"Checking file permissions for resolver",
+		fmt.Sprintf("Checking file permissions for %s", resolverFile),
 		config.GetBool(cmdConfig.WarnCheckResolverFilePermissions.Name),
+	)
+
+	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckResolvConfFilePermissions.Name),
+		checkResolvConfFilePermissions,
+		fmt.Sprintf("Checking file permissions for %s", resolvFile),
+		config.GetBool(cmdConfig.WarnCheckResolvConfFilePermissions.Name),
 	)
 }
 
@@ -43,9 +50,14 @@ func SetupHost() {
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckResolverFilePermissions.Name),
 		checkResolverFilePermissions,
 		fixResolverFilePermissions,
-		"Setting file permissions for resolver",
+		fmt.Sprintf("Setting file permissions for %s", resolverFile),
 		config.GetBool(cmdConfig.WarnCheckResolverFilePermissions.Name),
 	)
 
-	// fix user permissions for /etc/resolver/testing
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckResolvConfFilePermissions.Name),
+		checkResolvConfFilePermissions,
+		fixResolvConfFilePermissions,
+		fmt.Sprintf("Setting file permissions for %s", resolvFile),
+		config.GetBool(cmdConfig.WarnCheckResolvConfFilePermissions.Name),
+	)
 }
