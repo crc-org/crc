@@ -24,7 +24,7 @@ func StartPreflightChecks() {
 	)
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckLibvirtInstalled.Name),
 		checkLibvirtInstalled,
-		"Checking if Libvirt is installed",
+		"Checking if libvirt is installed",
 		config.GetBool(cmdConfig.WarnCheckLibvirtInstalled.Name),
 	)
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckUserInLibvirtGroup.Name),
@@ -34,12 +34,12 @@ func StartPreflightChecks() {
 	)
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckLibvirtEnabled.Name),
 		checkLibvirtEnabled,
-		"Checking if Libvirt is enabled",
+		"Checking if libvirt is enabled",
 		config.GetBool(cmdConfig.WarnCheckLibvirtEnabled.Name),
 	)
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckLibvirtRunning.Name),
 		checkLibvirtServiceRunning,
-		"Checking if Libvirt daemon is running",
+		"Checking if libvirt daemon is running",
 		config.GetBool(cmdConfig.WarnCheckLibvirtRunning.Name),
 	)
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckLibvirtDriver.Name),
@@ -49,12 +49,12 @@ func StartPreflightChecks() {
 	)
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckCrcNetwork.Name),
 		checkLibvirtCrcNetworkAvailable,
-		"Checking if Libvirt crc network is available",
+		"Checking if libvirt 'crc' network is available",
 		config.GetBool(cmdConfig.WarnCheckCrcNetwork.Name),
 	)
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckCrcNetworkActive.Name),
 		checkLibvirtCrcNetworkActive,
-		"Checking if Libvirt crc network is active",
+		"Checking if libvirt 'crc' network is active",
 		config.GetBool(cmdConfig.WarnCheckCrcNetworkActive.Name),
 	)
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckCrcNetworkManagerConfig.Name),
@@ -92,7 +92,7 @@ func SetupHost() {
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckLibvirtInstalled.Name),
 		checkLibvirtInstalled,
 		fixLibvirtInstalled,
-		"Installing Libvirt",
+		"Installing libvirt service and dependencies",
 		config.GetBool(cmdConfig.WarnCheckLibvirtInstalled.Name),
 	)
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckUserInLibvirtGroup.Name),
@@ -110,7 +110,7 @@ func SetupHost() {
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckLibvirtRunning.Name),
 		checkLibvirtServiceRunning,
 		fixLibvirtServiceRunning,
-		"Starting Libvirt service",
+		"Starting libvirt service",
 		config.GetBool(cmdConfig.WarnCheckLibvirtRunning.Name),
 	)
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckLibvirtDriver.Name),
@@ -122,13 +122,13 @@ func SetupHost() {
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckCrcNetwork.Name),
 		checkLibvirtCrcNetworkAvailable,
 		fixLibvirtCrcNetworkAvailable,
-		"Setting up Libvirt crc network",
+		"Setting up libvirt 'crc' network",
 		config.GetBool(cmdConfig.WarnCheckCrcNetwork.Name),
 	)
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckCrcNetworkActive.Name),
 		checkLibvirtCrcNetworkActive,
 		fixLibvirtCrcNetworkActive,
-		"Starting Libvirt crc network",
+		"Starting libvirt 'crc' network",
 		config.GetBool(cmdConfig.WarnCheckCrcNetworkActive.Name),
 	)
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckCrcNetworkManagerConfig.Name),
