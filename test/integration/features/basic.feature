@@ -18,16 +18,16 @@ Checks whether CRC top-level commands behave correctly.
 
   Scenario: CRC setup
     When executing "crc setup" succeeds
-    Then stdout should contain "Starting Libvirt crc network"
+    Then stdout should contain "Starting libvirt 'crc' network"
     And stdout should contain "Setting up virtualization"
     And stdout should contain "Setting up KVM"
-    And stdout should contain "Installing Libvirt"
+    And stdout should contain "Installing libvirt service and dependencies"
     And stdout should contain "Adding user to libvirt group"
     And stdout should contain "Enabling libvirt"
-    And stdout should contain "Starting Libvirt service"
+    And stdout should contain "Starting libvirt service"
     And stdout should contain "Installing crc-driver-libvirt"
-    And stdout should contain "Setting up Libvirt crc network"
-    And stdout should contain "Starting Libvirt crc network"
+    And stdout should contain "Setting up libvirt 'crc' network"
+    And stdout should contain "Starting libvirt 'crc' network"
     
   Scenario: CRC start
     When executing "crc start -b ~/Downloads/crc_libvirt_4.1.0.tar.xz" succeeds
