@@ -355,13 +355,65 @@ func Ip(ipConfig IpConfig) (IpResult, error) {
 		result.Error = err.Error()
 		return *result, err
 	}
-
 	if result.IP, err = host.Driver.GetIP(); err != nil {
 		result.Success = false
 		result.Error = err.Error()
 		return *result, err
 	}
+	return *result, nil
+}
 
+func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
+	result := &ClusterStatusResult{Name: statusConfig.Name, Success: true}
+	api := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	_, err := api.Exists(statusConfig.Name)
+	if err != nil {
+		result.Success = false
+		result.Error = err.Error()
+		return *result, err
+	}
+
+	openshiftStatus := "Stopped"
+	var diskUse int64
+	var diskSize int64
+
+	host, err := api.Load(statusConfig.Name)
+	if err != nil {
+		result.Success = false
+		result.Error = err.Error()
+		return *result, err
+	}
+	vmStatus, err := host.Driver.GetState()
+	if err != nil {
+		result.Success = false
+		result.Error = err.Error()
+		return *result, err
+	}
+
+	if vmStatus == state.Running {
+		// check if all the clusteroperators are running
+		ocConfig := oc.UseOCWithConfig(statusConfig.Name)
+		operatorsRunning, err := oc.GetClusterOperatorStatus(ocConfig)
+		if err != nil {
+			result.Success = false
+			result.Error = err.Error()
+			return *result, err
+		}
+		if operatorsRunning {
+			// TODO:get openshift version as well and add to status
+			openshiftStatus = fmt.Sprintf("Running (v4.x)")
+		}
+		diskSize, diskUse, err = cluster.GetDiskUsage(host.Driver, "/dev/vda3")
+		if err != nil {
+			result.Success = false
+			result.Error = err.Error()
+			return *result, err
+		}
+	}
+	result.OpenshiftStatus = openshiftStatus
+	result.DiskUse = diskUse
+	result.DiskSize = diskSize
+	result.CrcStatus = vmStatus.String()
 	return *result, nil
 }
 

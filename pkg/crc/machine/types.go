@@ -75,3 +75,17 @@ type IpResult struct {
 	Success bool
 	Error   string
 }
+
+type ClusterStatusConfig struct {
+	Name string
+}
+
+type ClusterStatusResult struct {
+	Name            string
+	CrcStatus       string
+	OpenshiftStatus string
+	DiskUse         int64
+	DiskSize        int64
+	Error           string
+	Success         bool
+}
