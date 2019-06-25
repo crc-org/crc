@@ -304,6 +304,32 @@ func Delete(deleteConfig DeleteConfig) (DeleteResult, error) {
 	return *result, nil
 }
 
+func Ip(ipConfig IpConfig) (IpResult, error) {
+	result := &IpResult{Name: ipConfig.Name, Success: true}
+
+	err := setMachineLogging(ipConfig.Debug)
+	if err != nil {
+		return *result, err
+	}
+
+	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	host, err := libMachineAPIClient.Load(ipConfig.Name)
+
+	if err != nil {
+		result.Success = false
+		result.Error = err.Error()
+		return *result, err
+	}
+
+	if result.IP, err = host.Driver.GetIP(); err != nil {
+		result.Success = false
+		result.Error = err.Error()
+		return *result, err
+	}
+
+	return *result, nil
+}
+
 func existVM(api libmachine.API, machineConfig config.MachineConfig) (bool, error) {
 	exists, err := api.Exists(machineConfig.Name)
 	if err != nil {
