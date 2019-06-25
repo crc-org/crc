@@ -65,7 +65,8 @@ type DeleteResult struct {
 }
 
 type IpConfig struct {
-	Name string
+	Name  string
+	Debug bool
 }
 
 type IpResult struct {
