@@ -25,7 +25,7 @@ Check back for updates, we plan to have something available "soon".
 
 The documentation for CodeReady Containers is currently hosted by GitHub Pages.
 
-See the link:https//code-ready.github.io/crc/[Red Hat CodeReady Containers Getting Started Guide].
+See the link:https://code-ready.github.io/crc/[Red Hat CodeReady Containers Getting Started Guide].
 
 === Building the documentation
 
