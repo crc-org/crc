@@ -1,0 +1,73 @@
+// +build integration
+
+/*
+Copyright (C) 2018 Red Hat, Inc.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+	Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package crcsuite
+
+import (
+	"fmt"
+	"strings"
+
+	clicumber "github.com/code-ready/clicumber/testsuite"
+)
+
+func verifyCOStatus(operatorName string, status string, statusType string) error {
+
+	statusValue := "False"
+	if status == "is" {
+		statusValue = "True"
+	} else if status == "is not known" {
+		statusValue = "Unknown"
+	}
+
+	cmd := "oc get co -o=jsonpath='{.items[?(@.metadata.name==\"" + operatorName + "\")].status.conditions[?(@.type==\"" + strings.Title(statusType) + "\")].status}{\"\\n\"}'"
+
+	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, "succeeds")
+	if err != nil {
+		fmt.Errorf("Command '%v' failed.\n", cmd)
+	}
+	err = clicumber.CommandReturnShouldEqual("stdout", statusValue)
+
+	return err
+}
+
+func verifyCOStatusWithRetry(retryCount int, retryTime string, operatorName string, status string, statusType string) error {
+
+	statusValue := "False"
+	if status == "is" {
+		statusValue = "True"
+	} else if status == "is not known" {
+		statusValue = "Unknown"
+	}
+
+	cmd := "oc get co -o=jsonpath='{.items[?(@.metadata.name==\"" + operatorName + "\")].status.conditions[?(@.type==\"" + strings.Title(statusType) + "\")].status}{\"\\n\"}'"
+
+	err := clicumber.ExecuteCommandWithRetry(retryCount, retryTime, cmd, statusValue)
+
+	return err
+}
+
+func verifyPodStatusWithRetry(retryCount int, retryTime string, podName string, status string, statusType string) error {
+
+	statusValue := "False"
+	if status == "is" {
+		statusValue = "True"
+	}
+
+	cmd := "oc get pods -o=jsonpath='{.items[?(@.metadata.name==\"" + podName + "\")].status.conditions[?(@.type==\"" + strings.Title(statusType) + "\")].status}{\"\\n\"}'"
+
+	err := clicumber.ExecuteCommandWithRetry(retryCount, retryTime, cmd, statusValue)
+
+	return err
+}

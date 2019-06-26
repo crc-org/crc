@@ -13,18 +13,17 @@ import (
 	"github.com/code-ready/crc/pkg/download"
 )
 
-// Download bundle for testing
-func DownloadBundle(bundleLocation string, bundleDestination string) (string, error) {
+// Get the bundle for testing
+func GetBundle(bundleLocation string, bundleDestination string) (string, error) {
 
+	// Copy the bundle locally
 	if bundleLocation[:4] != "http" {
-
-		// copy the file locall
 
 		if bundleDestination == "." {
 			bundleDestination, _ = os.Getwd()
 		}
 		fmt.Printf("Copying bundle from %s to %s.\n", bundleLocation, bundleDestination)
-		bundleDestination = filepath.Join(bundleDestination, bundleName)
+		bundleDestination = filepath.Join(bundleDestination, BundleName)
 
 		source, err := os.Open(bundleLocation)
 		if err != nil {
@@ -48,6 +47,7 @@ func DownloadBundle(bundleLocation string, bundleDestination string) (string, er
 		return bundleDestination, err
 	}
 
+	// Download the bundle over http
 	filename, err := download.Download(bundleLocation, bundleDestination)
 	fmt.Printf("Downloading bundle from %s to %s.\n", bundleLocation, bundleDestination)
 	if err != nil {
@@ -57,12 +57,10 @@ func DownloadBundle(bundleLocation string, bundleDestination string) (string, er
 	return filename, nil
 }
 
-// Parse GODOG flags (in feature files)
 func ParseFlags() {
 
-	flag.Parse()
-	bundleURL = flag.Args()[0]
-	_, bundleName = filepath.Split(bundleURL)
+	flag.StringVar(&BundleLocation, "bundle", "", "Bundle URL or filepath")
+
 }
 
 // Set CRCHome var to ~/.crc
@@ -70,4 +68,10 @@ func SetCRCHome() string {
 	usr, _ := user.Current()
 	crcHome := filepath.Join(usr.HomeDir, ".crc")
 	return crcHome
+}
+
+func SetBundleName() string {
+
+	_, bname := filepath.Split(BundleLocation)
+	return bname
 }

@@ -29,9 +29,9 @@ import (
 )
 
 var (
-	CRCHome    string
-	bundleURL  string
-	bundleName string
+	CRCHome        string
+	BundleLocation string
+	BundleName     string
 )
 
 // FeatureContext defines godog.Suite steps for the test suite.
@@ -57,11 +57,21 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`removing file "(.*)" from CRC home folder succeeds$`,
 		DeleteFileFromCRCHome)
 
-	s.BeforeSuite(func() {
-		// set CRC home var
-		CRCHome = SetCRCHome()
+	// OpenShift steps
 
-		// remove $HOME/.crc
+	s.Step(`^cluster operator "(.*)" (is|is not|is not known) (available|progressing)$`,
+		verifyCOStatus)
+	s.Step(`^check at most "(\d+)" times with delay of "(.*)" that cluster operator "(.*)" (is|is not|is not known) (available|progressing)$`,
+		verifyCOStatusWithRetry)
+	s.Step(`^check at most "(\d+)" times with delay of "(.*)" that pod "(.*)" (is|is not) (initialized|ready)$`,
+		verifyPodStatusWithRetry)
+
+	s.BeforeSuite(func() {
+		// Set suite vars
+		CRCHome = SetCRCHome()
+		BundleName = SetBundleName()
+
+		// Remove $HOME/.crc
 		err := RemoveCRCHome()
 		if err != nil {
 			fmt.Println(err)
@@ -70,26 +80,27 @@ func FeatureContext(s *godog.Suite) {
 	})
 
 	s.AfterSuite(func() {
-		err := DeleteCRC()
-		if err != nil {
-			fmt.Println(err)
-		}
+
+		ForceStopCRC()
+		DeleteCRC()
 	})
 
 	s.BeforeFeature(func(this *gherkin.Feature) {
 
-		if _, err := os.Stat(bundleName); os.IsNotExist(err) {
+		if _, err := os.Stat(BundleName); os.IsNotExist(err) {
 			// Obtain the bundle to current dir
 			fmt.Println("Obtaining bundle...")
-			bundle, err := DownloadBundle(bundleURL, ".")
+			bundle, err := GetBundle(BundleLocation, ".")
 			if err != nil {
 				fmt.Errorf("Failed to obtain CRC bundle, %v\n", err)
+				os.Exit(1)
+			} else {
+				fmt.Println("Using bundle:", bundle)
 			}
-			fmt.Println("Using bundle:", bundle)
 		} else if err != nil {
-			fmt.Errorf("Unknown error obtaining the bundle %v.\n", bundleName)
+			fmt.Errorf("Unknown error obtaining the bundle %v.\n", BundleName)
 		} else {
-			fmt.Println("Using existing bundle:", bundleName)
+			fmt.Println("Using existing bundle:", BundleName)
 		}
 
 	})
@@ -125,7 +136,7 @@ func FileExistsInCRCHome(fileName string) error {
 func ConfigFileInCRCHomeContainsKeyMatchingValue(format string, configFile string, condition string, keyPath string, expectedValue string) error {
 
 	if expectedValue == "current bundle" {
-		expectedValue = bundleName
+		expectedValue = BundleName
 	}
 	configPath := filepath.Join(CRCHome, configFile)
 
@@ -176,7 +187,7 @@ func ConfigFileInCRCHomeContainsKey(format string, configFile string, condition 
 
 func StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails(expected string) error {
 
-	cmd := "crc start -b " + bundleName
+	cmd := "crc start -b " + BundleName
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
@@ -184,7 +195,7 @@ func StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails(expected strin
 
 func StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails(hypervisor string, expected string) error {
 
-	cmd := "crc start -b " + bundleName + " -d " + hypervisor
+	cmd := "crc start -b " + BundleName + " -d " + hypervisor
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
@@ -193,7 +204,7 @@ func StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails(hypervisor string, ex
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
 
 	if value == "current bundle" {
-		value = bundleName
+		value = BundleName
 	}
 
 	cmd := "crc config set " + property + " " + value

@@ -48,9 +48,14 @@ Feature: Basic test
     Scenario: CRC start on Mac
         When starting CRC with default bundle and hypervisor "virtualbox" succeeds
         Then stdout should contain "CodeReady Containers instance is running"
-    
+
     @darwin @linux @windows
-    Scenario: CRC kill
+    Scenario: CRC IP
+        When executing "crc ip" succeeds
+        Then stdout should match "\d+\.\d+\.\d+\.\d+"
+
+    @darwin @linux @windows
+    Scenario: CRC forcible stop
         When executing "crc stop -f"
         Then stdout should contain "CodeReady Containers instance stopped"
     

@@ -47,17 +47,21 @@ func TestMain(m *testing.M) {
 }
 
 func getFeatureContext(s *godog.Suite) {
-	// load default step definitions of clicumber testsuite
-	testsuite.FeatureContext(s)
 
-	// here you can load additional step definitions, for example:
+	// NOTE:
+	// Preserve the order in which FeatureContexts are loaded.
+
+	testsuite.FeatureContext(s) // Clicumber step definitions
+
 	crcsuite.FeatureContext(s) // CRC specific step definitions
+
 }
 
 func parseFlags() {
-	// get flag values for clicumber testsuite
+
+	// NOTE:
+	// testsuite.ParseFlags() needs to be last - it calls flag.Parse()
+	crcsuite.ParseFlags()
 	testsuite.ParseFlags()
 
-	// here you can get additional flag values if needed, for example:
-	crcsuite.ParseFlags()
 }

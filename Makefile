@@ -92,8 +92,9 @@ clean: clean_docs
 
 .PHONY: integration ## Run integration tests
 integration: GODOG_OPTS = --godog.tags=$(GOOS)
+integration: BUNDLE_LOCATION = http://cdk-builds.usersys.redhat.com/builds/crc/4.1.3/libvirt/crc_libvirt_4.1.3.tar.xz
 integration:
-	go test --timeout=60m $(REPOPATH)/test/integration -v --tags=integration $(GODOG_OPTS) $(BUNDLE_LOCATION)
+	go test $(REPOPATH)/test/integration -v --timeout=60m --tags=integration $(GODOG_OPTS) --bundle=$(BUNDLE_LOCATION)
 
 .PHONY: fmt
 fmt:

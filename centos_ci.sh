@@ -138,7 +138,7 @@ if [[ "$UID" = 0 ]]; then
 	prepare_ci_user
 	runuser -l crc_ci -c "/bin/bash centos_ci.sh"
 else
-	source ~/jenkins-env # Source environment variables for minishift_ci user
+	source ~/jenkins-env # Source environment variables for crc_ci user
 	export TERM=xterm-256color
 	get_bundle
 	setup_golang
