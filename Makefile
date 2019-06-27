@@ -13,7 +13,7 @@
 # limitations under the License.
 
 BUNDLE_VERSION = 4.1.0
-CRC_VERSION = 0.87.0-alpha-$(BUNDLE_VERSION)
+CRC_VERSION = 0.87.0-alpha
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 
 # Go and compilation related variables
@@ -37,6 +37,7 @@ PACKAGES := go list ./... | grep -v /out
 
 # Linker flags
 VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc.crcVersion=$(CRC_VERSION) \
+    -X $(REPOPATH)/pkg/crc.bundleVersion=$(BUNDLE_VERSION) \
 	-X $(REPOPATH)/pkg/crc.commitSha=$(COMMIT_SHA)
 
 # https://golang.org/cmd/link/

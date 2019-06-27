@@ -37,5 +37,5 @@ var versionCmd = &cobra.Command{
 }
 
 func runPrintVersion(arguments []string) {
-	fmt.Printf("version: %s+%s\n", crcPkg.GetCRCVersion(), crcPkg.GetCommitSha())
+	fmt.Printf("version: %s-%s+%s\n", crcPkg.GetCRCVersion(), crcPkg.GetBundleVersion(), crcPkg.GetCommitSha())
 }

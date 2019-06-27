@@ -11,7 +11,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 
-	// host and instance related
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/systemd"
 	crcos "github.com/code-ready/crc/pkg/os"
@@ -53,7 +52,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		Memory:     startConfig.Memory,
 	}
 
-	logging.InfoF("Extracting the Bundle tarball ...")
+	logging.InfoF("Extracting the %s Bundle tarball ...", filepath.Base(machineConfig.BundlePath))
 	crcBundleMetadata, extractedPath, err := bundle.GetCrcBundleInfo(machineConfig)
 	if err != nil {
 		logging.ErrorF("Error to get bundle Metadata %v", err)
