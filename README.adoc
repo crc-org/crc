@@ -31,7 +31,7 @@ See the link:https://code-ready.github.io/crc/[Red Hat CodeReady Containers Gett
 
 You can find the source files for the documentation in the link:./docs/source[docs/source] directory.
 
-To build the formatted documentation, use the following:
+To build the formatted documentation, link:https://github.com/containers/libpod/blob/master/install.md[install podman] then use the following:
 
 ```bash
 $ git clone https://github.com/code-ready/crc
