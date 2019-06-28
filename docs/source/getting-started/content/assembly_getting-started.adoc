@@ -3,7 +3,9 @@
 
 include::con_understanding-codeready-containers.adoc[leveloffset=+1]
 
-include::ref_minimum-system-requirements.adoc[leveloffset=+1]
+include::proc_installing-codeready-containers.adoc[leveloffset=+1]
+
+include::ref_required-software-packages.adoc[leveloffset=+1]
 
 include::proc_setting-up-codeready-containers.adoc[leveloffset=+1]
 

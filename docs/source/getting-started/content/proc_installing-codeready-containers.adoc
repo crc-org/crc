@@ -1,0 +1,60 @@
+[id="installing-codeready-containers_{context}"]
+= Installing {prod}
+
+.Prerequisites
+
+* {prod} requires the following system resources in order to run OpenShift:
+** 4 virtual CPUs (vCPUs)
+** 8 GB of memory
+** 20 GB of storage space
+
+[NOTE]
+====
+These requirements must be met in order to run OpenShift in the {prod} virtual machine.
+Other applications running on top of OpenShift may require additional resources to run.
+====
+
+* {prod} requires installation of the following software packages:
+** [package]`NetworkManager`
+** [package]`libvirt`
+
+[NOTE]
+====
+See <<required-software-packages_{context}>> to install the required packages for your Linux distribution.
+====
+
+.Procedure
+
+. Download the link:{crc-download-url}[latest release of {prod}] for your platform and extract the contents of the archive to a location in your `_PATH_`.
+
+. **On Debian or Ubuntu,** perform the following steps:
+
+.. Add your user to the `libvirtd` group:
++
+----
+$ sudo usermod -aG libvirtd $(whoami)
+----
+
+.. Update your current session to apply the group change:
++
+----
+$ newgrp libvirtd
+----
+
+.. Disable the `libvirt` group check performed by the `{bin} start` command:
++
+----
+$ crc config set skip-check-user-in-libvirt-group true
+----
+
+. Check the status of the `libvirtd` service:
++
+----
+$ systemctl is-active libvirtd
+----
+.. If `libvirtd` is not active, start and enable the `libvirtd` service:
++
+----
+$ sudo systemctl start libvirtd
+$ sudo systemctl enable libvirtd
+----
