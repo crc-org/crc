@@ -15,7 +15,9 @@ import (
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/systemd"
 	crcos "github.com/code-ready/crc/pkg/os"
+
 	// cluster services
+	"github.com/code-ready/crc/pkg/crc/oc"
 	"github.com/code-ready/crc/pkg/crc/services"
 	"github.com/code-ready/crc/pkg/crc/services/dns"
 
@@ -214,7 +216,6 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		logging.InfoF("Starting OpenShift cluster ... [waiting 3m]")
 	}
 	result.KubeletStarted = kubeletStarted
-	//
 
 	// If no error, return usage message
 	if result.Error == "" {
@@ -222,6 +223,14 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		logging.InfoF("To access the cluster using 'oc', run 'oc login -u kubeadmin -p %s %s'", result.ClusterConfig.KubeAdminPass, result.ClusterConfig.ClusterAPI)
 		logging.InfoF("Access the OpenShift web-console here: %s", result.ClusterConfig.WebConsoleURL)
 		logging.InfoF("Login to the console with user: kubeadmin, password: %s", result.ClusterConfig.KubeAdminPass)
+	}
+
+	// Approve the node certificate.
+	ocConfig := oc.UseOCWithConfig(machineConfig.Name)
+	if err := oc.ApproveNodeCSR(ocConfig); err != nil {
+		logging.ErrorF("Error approving the node csr %v", err)
+		result.Error = err.Error()
+		return *result, err
 	}
 
 	return *result, err
