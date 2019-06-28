@@ -23,4 +23,5 @@
 :bin: crc
 
 // URLs
+:crc-download-url: https://github.com/code-ready/crc/releases/latest
 :oc-download-url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/
