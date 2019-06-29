@@ -22,6 +22,7 @@ import (
 	// machine related imports
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
+	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
 	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
 	"github.com/code-ready/crc/pkg/crc/machine/virtualbox"
 
@@ -65,6 +66,9 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	diskPath := filepath.Join(extractedPath, crcBundleMetadata.Storage.DiskImages[0].Name)
 	machineConfig.DiskPathURL = fmt.Sprintf("file://%s", diskPath)
 	machineConfig.SSHKeyPath = filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.SSHPrivateKeyFile)
+	machineConfig.KernelCmdLine = crcBundleMetadata.Nodes[0].KernelCmdLine
+	machineConfig.Initramfs = filepath.Join(extractedPath, crcBundleMetadata.Nodes[0].Initramfs)
+	machineConfig.Kernel = filepath.Join(extractedPath, crcBundleMetadata.Nodes[0].Kernel)
 
 	// Get the content of kubeadmin-password file
 	kubeadminPassword, err := ioutil.ReadFile(filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.KubeadminPasswordFile))
@@ -365,6 +369,8 @@ func getDriverOptions(machineConfig config.MachineConfig) interface{} {
 		driver = libvirt.CreateHost(machineConfig)
 	case "virtualbox":
 		driver = virtualbox.CreateHost(machineConfig)
+	case "hyperkit":
+		driver = hyperkit.CreateHost(machineConfig)
 
 	default:
 		errors.ExitWithMessage(1, "Unsupported driver: %s", machineConfig.VMDriver)

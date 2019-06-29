@@ -28,9 +28,12 @@ type CrcBundleInfo struct {
 		KubeadminPasswordFile string `json:"kubeadminPasswordFile"`
 	} `json:"clusterInfo"`
 	Nodes []struct {
-		Kind      []string `json:"kind"`
-		Hostname  string   `json:"hostname"`
-		DiskImage string   `json:"diskImage"`
+		Kind          []string `json:"kind"`
+		Hostname      string   `json:"hostname"`
+		DiskImage     string   `json:"diskImage"`
+		KernelCmdLine string   `json:"kernelCmdLine"`
+		Initramfs     string   `json:"initramfs"`
+		Kernel        string   `json:"kernel"`
 	} `json:"nodes"`
 	Storage struct {
 		DiskImages []struct {

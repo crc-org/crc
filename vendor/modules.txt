@@ -1,7 +1,7 @@
 # github.com/DATA-DOG/godog v0.7.13
 github.com/DATA-DOG/godog
-github.com/DATA-DOG/godog/colors
 github.com/DATA-DOG/godog/gherkin
+github.com/DATA-DOG/godog/colors
 # github.com/cavaliercoder/grab v2.0.0+incompatible
 github.com/cavaliercoder/grab
 # github.com/code-ready/clicumber v0.0.0-20190503113956-2563aed4ef12
@@ -16,6 +16,7 @@ github.com/code-ready/machine/drivers/virtualbox
 github.com/code-ready/machine/libmachine/drivers/plugin
 github.com/code-ready/machine/libmachine/drivers/plugin/localbinary
 github.com/code-ready/machine/libmachine/drivers
+github.com/code-ready/machine/libmachine/shell
 github.com/code-ready/machine/drivers/errdriver
 github.com/code-ready/machine/libmachine/auth
 github.com/code-ready/machine/libmachine/drivers/rpc
@@ -30,6 +31,8 @@ github.com/code-ready/machine/libmachine/swarm
 github.com/code-ready/machine/libmachine/mcnflag
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
+# github.com/google/uuid v1.0.0
+github.com/google/uuid
 # github.com/hashicorp/hcl v1.0.0
 github.com/hashicorp/hcl
 github.com/hashicorp/hcl/hcl/printer
@@ -53,6 +56,8 @@ github.com/konsorten/go-windows-terminal-sequences
 github.com/magiconair/properties
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
+# github.com/pborman/uuid v1.2.0
+github.com/pborman/uuid
 # github.com/pelletier/go-toml v1.2.0
 github.com/pelletier/go-toml
 # github.com/pkg/errors v0.8.1

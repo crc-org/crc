@@ -128,7 +128,7 @@ func updateResolvConfFile(instanceIP string, resolvConfFile string) (bool, error
 
 	for i, ns := range hostResolv.NameServers {
 		// Update the nameserver IP with instance IP if already exist
-		if strings.Contains(ns.IPAddress, "192.168.130") {
+		if strings.Contains(ns.IPAddress, "192.168.130") || strings.Contains(ns.IPAddress, "192.168.64") {
 			hostResolv.NameServers[i].IPAddress = instanceIP
 			foundExistingInstanceIP = true
 			break
