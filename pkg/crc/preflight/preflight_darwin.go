@@ -7,17 +7,21 @@ import (
 )
 
 // StartPreflightChecks performs the preflight checks before starting the cluster
-func StartPreflightChecks() {
+func StartPreflightChecks(vmDriver string) {
 	preflightCheckSucceedsOrFails(false,
 		checkOcBinaryCached,
 		"Checking if oc binary is cached",
 		false,
 	)
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckVirtualBoxInstalled.Name),
-		checkVirtualBoxInstalled,
-		"Checking if VirtualBox is Installed",
-		config.GetBool(cmdConfig.WarnCheckVirtualBoxInstalled.Name),
-	)
+
+	switch vmDriver {
+	case "virtualbox":
+		preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckVirtualBoxInstalled.Name),
+			checkVirtualBoxInstalled,
+			"Checking if VirtualBox is Installed",
+			config.GetBool(cmdConfig.WarnCheckVirtualBoxInstalled.Name),
+		)
+	}
 
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckResolverFilePermissions.Name),
 		checkResolverFilePermissions,
@@ -33,19 +37,23 @@ func StartPreflightChecks() {
 }
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
-func SetupHost() {
+func SetupHost(vmDriver string) {
 	preflightCheckAndFix(false,
 		checkOcBinaryCached,
 		fixOcBinaryCached,
 		"Caching oc binary",
 		false,
 	)
-	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckVirtualBoxInstalled.Name),
-		checkVirtualBoxInstalled,
-		fixVirtualBoxInstallation,
-		"Setting up virtualization",
-		config.GetBool(cmdConfig.WarnCheckVirtualBoxInstalled.Name),
-	)
+
+	switch vmDriver {
+	case "virtualbox":
+		preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckVirtualBoxInstalled.Name),
+			checkVirtualBoxInstalled,
+			fixVirtualBoxInstallation,
+			"Setting up virtualization",
+			config.GetBool(cmdConfig.WarnCheckVirtualBoxInstalled.Name),
+		)
+	}
 
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckResolverFilePermissions.Name),
 		checkResolverFilePermissions,
