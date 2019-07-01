@@ -42,7 +42,7 @@ func runStart(arguments []string) {
 		errors.Exit(1)
 	}
 
-	preflight.StartPreflightChecks()
+	preflight.StartPreflightChecks(crcConfig.GetString(config.VMDriver.Name))
 
 	startConfig := machine.StartConfig{
 		Name:       constants.DefaultName,
