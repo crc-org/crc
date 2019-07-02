@@ -13,7 +13,7 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
         @darwin
         Examples: Config settings on Mac 
             | property  | value1                | value2                                     |
-            | bundle    | crc_vbox_4.1.0.tar.xz | /path/to/fake/bundle/crc_vbox_4.1.0.tar.xz |
+            | bundle    | crc_vbox_4.1.3.tar.xz | /path/to/fake/bundle/crc_vbox_4.1.3.tar.xz |
             | cpus      | 4                     | 3                                          |
             | memory    | 8192                  | 4096                                       |
             | vm-driver | virtualbox            | libvirt                                    |
@@ -21,7 +21,7 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
         @linux
         Examples: Config settings on Linux
             | property  | value1                   | value2                                               |
-            | bundle    | crc_libvirt_4.1.0.tar.xz | /path/to/nonexistent/bundle/crc_libvirt_4.1.0.tar.xz |
+            | bundle    | crc_libvirt_4.1.3.tar.xz | /path/to/nonexistent/bundle/crc_libvirt_4.1.3.tar.xz |
             | cpus      | 4                        | 3                                                    |
             | memory    | 8192                     | 4096                                                 |
             | vm-driver | libvirt                  | hyperkit                                             |
