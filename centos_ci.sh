@@ -104,7 +104,7 @@ function upload_logs() {
 
 function run_tests() {
   set +e
-  make integration BUNDLE_LOCATION="/root/Downloads/crc_libvirt_4.1.0.tar.xz"
+  make integration BUNDLE_LOCATION="/root/Downloads/crc_libvirt_4.1.3.tar.xz"
   if [[ $? -ne 0 ]]; then
     upload_logs $1
     exit 1
