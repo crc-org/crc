@@ -44,7 +44,7 @@ func FeatureContext(s *godog.Suite) {
 		StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails)
 	s.Step(`^starting CRC with default bundle and hypervisor "(.*)" (succeeds|fails)$`,
 		StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails)
-	s.Step(`^setting config property "(.*)" to value "(.*)" (succeeds$|fails)$`,
+	s.Step(`^setting config property "(.*)" to value "(.*)" (succeeds|fails)$`,
 		SetConfigPropertyToValueSucceedsOrFails)
 
 	// CRC file operations
@@ -124,6 +124,9 @@ func FileExistsInCRCHome(fileName string) error {
 
 func ConfigFileInCRCHomeContainsKeyMatchingValue(format string, configFile string, condition string, keyPath string, expectedValue string) error {
 
+	if expectedValue == "current bundle" {
+		expectedValue = bundleName
+	}
 	configPath := filepath.Join(CRCHome, configFile)
 
 	config, err := clicumber.GetFileContent(configPath)
@@ -188,6 +191,10 @@ func StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails(hypervisor string, ex
 }
 
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
+
+	if value == "current bundle" {
+		value = bundleName
+	}
 
 	cmd := "crc config set " + property + " " + value
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
