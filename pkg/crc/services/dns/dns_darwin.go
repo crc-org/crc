@@ -93,27 +93,30 @@ func restartNetwork() (bool, error) {
 		}
 	}
 
-	waitForNetwork()
-
-	return true, err
+	err = waitForNetwork()
+	if err != nil {
+		return false, err
+	} else {
+		return true, nil
+	}
 }
 
 // Wait for Network wait till the network is up, since it is required to resolve external dnsquery
-func waitForNetwork() {
+func waitForNetwork() error {
 	hostResolv, err := network.GetResolvValuesFromHost()
 	if err != nil {
-		logging.WarnF("Unable to read host resolv file (%v)", err)
+		return fmt.Errorf("Unable to read host resolv file (%v)", err)
 	}
 	// retry for 5 times
 	for i := 0; i < 5; i++ {
 		for _, ns := range hostResolv.NameServers {
 			_, _, err := crcos.RunWithDefaultLocale("ping", "-c4", ns.IPAddress)
 			if err == nil {
-				return
+				return nil
 			}
 		}
 	}
-	logging.Warn("Host is not connected to internet.")
+	return fmt.Errorf("Host is not connected to internet.")
 }
 
 // updateResolvConfFile updates the host's /etc/resolv.conf file with Instance IP.
