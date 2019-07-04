@@ -171,13 +171,22 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		return *result, err
 	}
 
-	hostIP, err := network.DetermineHostIP(instanceIP)
+	var hostIP string
+	for i := 0; i < 30; i++ {
+		hostIP, err = network.DetermineHostIP(instanceIP)
+		if err == nil {
+			logging.DebugF("Bridge IP on the host: %s", hostIP)
+			break
+		} else {
+			logging.DebugF("Error finding host IP (%v) - retrying", err)
+		}
+		time.Sleep(2 * time.Second)
+	}
 	if err != nil {
 		logging.ErrorF("Error determining host IP: %v", err)
 		result.Error = err.Error()
 		return *result, err
 	}
-	logging.DebugF("Bridge IP on the host: %s", hostIP)
 
 	// Create servicePostStartConfig for dns checks and dns start.
 	servicePostStartConfig := services.ServicePostStartConfig{
