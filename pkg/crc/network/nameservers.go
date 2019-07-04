@@ -74,15 +74,15 @@ func HasNameserverConfiguredLocally(nameserver NameServer) (bool, error) {
 
 func GetResolvValuesFromHost() (*ResolvFileValues, error) {
 	// TODO: we need to add runtime OS in case of windows.
-	out, stderr, err := crcos.RunWithDefaultLocale("cat", "/etc/resolv.conf")
+	out, err := ioutil.ReadFile("/etc/resolv.conf")
 	if crcos.CurrentOS() == crcos.WINDOWS {
 		// TODO: we need to add logic in case of windows.
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("%s : %v", stderr, err)
+		return nil, fmt.Errorf("Failed to read resolv.conf: %v", err)
 	}
-	return parseResolveConfFile(out)
+	return parseResolveConfFile(string(out))
 }
 
 func parseResolveConfFile(resolvfile string) (*ResolvFileValues, error) {
