@@ -36,9 +36,9 @@ endif
 PACKAGES := go list ./... | grep -v /out
 
 # Linker flags
-VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc.crcVersion=$(CRC_VERSION) \
-    -X $(REPOPATH)/pkg/crc.bundleVersion=$(BUNDLE_VERSION) \
-	-X $(REPOPATH)/pkg/crc.commitSha=$(COMMIT_SHA)
+VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
+    -X $(REPOPATH)/pkg/crc/version.bundleVersion=$(BUNDLE_VERSION) \
+	-X $(REPOPATH)/pkg/crc/version.commitSha=$(COMMIT_SHA)
 
 # https://golang.org/cmd/link/
 LDFLAGS := $(VERSION_VARIABLES) -extldflags='-static' -s -w

@@ -2,11 +2,11 @@ package validation
 
 import (
 	"fmt"
+	"github.com/code-ready/crc/pkg/crc/version"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -44,7 +44,7 @@ func ValidateBundle(bundle string) error {
 		return errors.NewF("Expected file %s does not exist", bundle)
 	}
 	// Check if the version of the bundle provided by user is same as what is released with crc.
-	releaseBundleVersion := crc.GetBundleVersion()
+	releaseBundleVersion := version.GetBundleVersion()
 	userProvidedBundleVersion := filepath.Base(bundle)
 	if !strings.Contains(userProvidedBundleVersion, fmt.Sprintf("%s.tar.xz", releaseBundleVersion)) {
 		return errors.NewF("%s bundle is not supported for this release use updated one (crc_<hypervisor>_%s.tar.xz)", userProvidedBundleVersion, releaseBundleVersion)

@@ -19,7 +19,7 @@ package cmd
 import (
 	"fmt"
 
-	crcPkg "github.com/code-ready/crc/pkg/crc"
+	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/spf13/cobra"
 )
 
@@ -37,5 +37,5 @@ var versionCmd = &cobra.Command{
 }
 
 func runPrintVersion(arguments []string) {
-	fmt.Printf("version: %s-%s+%s\n", crcPkg.GetCRCVersion(), crcPkg.GetBundleVersion(), crcPkg.GetCommitSha())
+	fmt.Printf("version: %s-%s+%s\n", version.GetCRCVersion(), version.GetBundleVersion(), version.GetCommitSha())
 }
