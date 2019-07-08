@@ -5,6 +5,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/pborman/uuid"
+	"path/filepath"
 )
 
 type hyperkitDriver struct {
@@ -24,7 +25,7 @@ type hyperkitDriver struct {
 }
 
 func CreateHost(config config.MachineConfig) *hyperkitDriver {
-	return &hyperkitDriver{
+	d := &hyperkitDriver{
 		BaseDriver: &drivers.BaseDriver{
 			MachineName: config.Name,
 			StorePath:   constants.MachineBaseDir,
@@ -39,4 +40,7 @@ func CreateHost(config config.MachineConfig) *hyperkitDriver {
 		DiskPathUrl: config.DiskPathURL,
 		SSHKeyPath:  config.SSHKeyPath,
 	}
+	d.HyperKitPath = filepath.Join(constants.CrcBaseDir, "bin", "hyperkit")
+
+	return d
 }
