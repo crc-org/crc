@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# bundle location
+BUNDLE=crc_libvirt_4.1.3.tar.xz
+
 # Output command before executing
 set -x
 
@@ -57,6 +60,22 @@ function install_required_packages() {
   echo 'CICO: Required packages installed'
 }
 
+# Create a user which has NOPASSWD sudoer role
+function prepare_ci_user() {
+
+  groupadd -g 1000 -r crc_ci && useradd -g crc_ci -u 1000 crc_ci
+  chmod +w /etc/sudoers && echo "crc_ci ALL=(ALL)    NOPASSWD: ALL" >> /etc/sudoers && chmod -w /etc/sudoers
+
+  # Copy centos_ci.sh to newly created user home dir
+  cp centos_ci.sh /home/crc_ci/
+  mkdir /home/crc_ci/payload
+  # Copy crc repo content into crc_ci user payload directory for later use
+  cp -R /root/payload /home/crc_ci/
+  chown -R crc_ci:crc_ci /home/crc_ci/payload
+  # Copy the jenkins-env into crc_ci home dir
+  cp ~/.jenkins-env /home/crc_ci/jenkins-env
+}
+
 function setup_golang() {
   # Show which version of golang in the offical repo.
   go version
@@ -104,7 +123,7 @@ function upload_logs() {
 
 function run_tests() {
   set +e
-  make integration BUNDLE_LOCATION="/root/Downloads/crc_libvirt_4.1.3.tar.xz"
+  make integration BUNDLE_LOCATION=$HOME/Downloads/$BUNDLE
   if [[ $? -ne 0 ]]; then
     upload_logs $1
     exit 1
@@ -112,20 +131,28 @@ function run_tests() {
 }
 
 # Execution starts here
-load_jenkins_vars
-install_required_packages
-setup_golang
-export TERM=xterm-256color
-get_bundle
 
-# setup to run integration tests
-make
-make fmtcheck
-make cross
-crc setup
+if [[ "$UID" = 0 ]]; then
+	load_jenkins_vars
+	install_required_packages
+	prepare_ci_user
+	runuser -l crc_ci -c "/bin/bash centos_ci.sh"
+else
+	source ~/jenkins-env # Source environment variables for minishift_ci user
+	export TERM=xterm-256color
+	get_bundle
+	setup_golang
 
-# Retrieve password for rsync and run integration tests
-CICO_PASS=$(echo $CICO_API_KEY | cut -d'-' -f1-2)
-run_tests $CICO_PASS
-perform_artifacts_upload $CICO_PASS
+	# setup to run integration tests
+	cd payload
+	make
+	make fmtcheck
+	make cross
+	crc setup
+	
+	# Retrieve password for rsync and run integration tests
+	CICO_PASS=$(echo $CICO_API_KEY | cut -d'-' -f1-2)
+	run_tests $CICO_PASS
+	perform_artifacts_upload $CICO_PASS
+fi
 
