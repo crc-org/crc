@@ -30,6 +30,11 @@ func StartPreflightChecks() {
 		fmt.Sprintf("Checking file permissions for %s", resolvFile),
 		config.GetBool(cmdConfig.WarnCheckResolvConfFilePermissions.Name),
 	)
+	preflightCheckSucceedsOrFails(false,
+		checkBundlePresent,
+		"Checking if CRC bundle is unpacked",
+		false,
+	)
 }
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
@@ -59,5 +64,11 @@ func SetupHost() {
 		fixResolvConfFilePermissions,
 		fmt.Sprintf("Setting file permissions for %s", resolvFile),
 		config.GetBool(cmdConfig.WarnCheckResolvConfFilePermissions.Name),
+	)
+	preflightCheckAndFix(false,
+		checkBundlePresent,
+		fixBundlePresent,
+		"Unpacking CRC bundle",
+		false,
 	)
 }

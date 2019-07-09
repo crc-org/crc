@@ -1,6 +1,11 @@
 package preflight
 
 import (
+	"io/ioutil"
+	"os"
+
+	"github.com/code-ready/crc/bundle_bindata"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
@@ -50,4 +55,24 @@ func preflightCheckAndFix(configuredToSkip bool, check, fix PreflightCheckFixFun
 	}
 
 	logging.Fatal(err.Error())
+}
+
+func checkBundlePresent() (bool, error) {
+	if _, err := os.Stat(constants.DefaultBundlePath); os.IsNotExist(err) {
+		return false, err
+	}
+	return true, nil
+}
+
+func fixBundlePresent() (bool, error) {
+	// unpack bundle using bindata.Asset
+	data, err := bundle_bindata.Asset(constants.GetDefaultBundle())
+	if err != nil {
+		return false, err
+	}
+	err = ioutil.WriteFile(constants.DefaultBundlePath, data, 0664)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }

@@ -66,7 +66,7 @@ func runStart(arguments []string) {
 
 func initStartCmdFlagSet() *pflag.FlagSet {
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
-	flagSet.StringP(config.Bundle.Name, "b", constants.GetDefaultBundle(), "The system bundle used for deployment of the OpenShift cluster.")
+	flagSet.StringP(config.Bundle.Name, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster.")
 	flagSet.StringP(config.VMDriver.Name, "d", machine.DefaultDriver.Driver, fmt.Sprintf("The driver to use for the CRC VM. Possible values: %v", machine.SupportedDriverValues()))
 	flagSet.IntP(config.CPUs.Name, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the CRC VM")
 	flagSet.IntP(config.Memory.Name, "m", constants.DefaultMemory, "MiB of Memory to allocate to the CRC VM")

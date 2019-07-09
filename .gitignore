@@ -1,2 +1,3 @@
 out/
 docs/build/
+bundle_bindata/bundle_data.go

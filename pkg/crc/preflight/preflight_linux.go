@@ -67,6 +67,11 @@ func StartPreflightChecks() {
 		"Checking if /etc/NetworkManager/dnsmasq.d/crc.conf exists",
 		config.GetBool(cmdConfig.WarnCheckCrcDnsmasqFile.Name),
 	)
+	preflightCheckSucceedsOrFails(false,
+		checkBundlePresent,
+		"Checking if CRC bundle is unpacked",
+		false,
+	)
 }
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
@@ -142,5 +147,11 @@ func SetupHost() {
 		fixCrcDnsmasqConfigFile,
 		"Writing dnsmasq config for crc",
 		config.GetBool(cmdConfig.WarnCheckCrcDnsmasqFile.Name),
+	)
+	preflightCheckAndFix(false,
+		checkBundlePresent,
+		fixBundlePresent,
+		"Unpacking CRC bundle",
+		false,
 	)
 }

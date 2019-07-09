@@ -36,7 +36,7 @@ var (
 	OcCacheDir         = filepath.Join(MachineCacheDir, "oc")
 	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
 	GlobalStatePath    = filepath.Join(CrcBaseDir, GlobalStateFile)
-	bundleEmbedded	   = "false"
+	bundleEmbedded     = "false"
 )
 
 // GetHomeDir returns the home directory for the current user
