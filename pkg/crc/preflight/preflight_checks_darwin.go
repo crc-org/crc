@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"golang.org/x/sys/unix"
-	"io"
-	"net/http"
 	neturl "net/url"
 	"os"
 	"os/exec"
@@ -55,19 +53,7 @@ func fixVirtualBoxInstallation() (bool, error) {
 	logging.Debug("Downloading VirtualBox")
 	// Download the driver binary in /tmp
 	tempFilePath := filepath.Join(os.TempDir(), "virtualbox.dmg")
-	out, err := os.Create(tempFilePath)
-	if err != nil {
-		return false, err
-	}
-	logging.Debug("Downloading from ", virtualBoxDownloadURL, " to ", tempFilePath)
-	defer out.Close()
-	resp, err := http.Get(virtualBoxDownloadURL)
-	if err != nil {
-		return false, err
-	}
-	defer resp.Body.Close()
-
-	_, err = io.Copy(out, resp.Body)
+	_, err := dl.Download(virtualBoxDownloadURL, tempFilePath)
 	if err != nil {
 		return false, err
 	}

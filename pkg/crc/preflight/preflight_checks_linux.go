@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"os/user"
@@ -20,6 +18,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
 	"github.com/code-ready/crc/pkg/crc/oc"
 	"github.com/code-ready/crc/pkg/crc/systemd"
+	"github.com/code-ready/crc/pkg/download"
 
 	crcos "github.com/code-ready/crc/pkg/os"
 )
@@ -248,19 +247,7 @@ func fixMachineDriverLibvirtInstalled() (bool, error) {
 	logging.Debugf("Installing %s", libvirtDriverCommand)
 	// Download the driver binary in /tmp
 	tempFilePath := filepath.Join(os.TempDir(), libvirtDriverCommand)
-	logging.Debugf("Downloading %s in %s", libvirtDriverDownloadURL, tempFilePath)
-	out, err := os.Create(tempFilePath)
-	if err != nil {
-		return false, err
-	}
-	defer out.Close()
-	resp, err := http.Get(libvirtDriverDownloadURL)
-	if err != nil {
-		return false, err
-	}
-	defer resp.Body.Close()
-
-	_, err = io.Copy(out, resp.Body)
+	_, err := download.Download(libvirtDriverDownloadURL, tempFilePath)
 	if err != nil {
 		return false, err
 	}
