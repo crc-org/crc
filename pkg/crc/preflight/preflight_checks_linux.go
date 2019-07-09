@@ -247,7 +247,7 @@ func fixMachineDriverLibvirtInstalled() (bool, error) {
 	logging.Debugf("Installing %s", libvirtDriverCommand)
 	// Download the driver binary in ~/.crc/cache
 	tempFilePath := filepath.Join(constants.MachineCacheDir, libvirtDriverCommand)
-	_, err := download.Download(libvirtDriverDownloadURL, tempFilePath)
+	_, err := download.Download(libvirtDriverDownloadURL, tempFilePath, 0755)
 	if err != nil {
 		return false, err
 	}
@@ -259,10 +259,6 @@ func fixMachineDriverLibvirtInstalled() (bool, error) {
 		return false, fmt.Errorf("%s %v: %s", stdOut, err, stdErr)
 	}
 	stdOut, stdErr, err = crcos.RunWithPrivilege("cp", tempFilePath, libvirtDriverBinaryPath)
-	if err != nil {
-		return false, fmt.Errorf("%s %v: %s", stdOut, err, stdErr)
-	}
-	stdOut, stdErr, err = crcos.RunWithPrivilege("chmod", "755", libvirtDriverBinaryPath)
 	if err != nil {
 		return false, fmt.Errorf("%s %v: %s", stdOut, err, stdErr)
 	}
