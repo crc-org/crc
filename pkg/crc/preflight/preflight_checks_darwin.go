@@ -57,7 +57,7 @@ func fixVirtualBoxInstallation() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
+	defer os.Remove(tempFilePath)
 	logging.Debug("Installing VirtualBox")
 	stdOut, stdErr, err := crcos.RunWithPrivilege("hdiutil", "attach", tempFilePath)
 	if err != nil {

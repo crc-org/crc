@@ -251,6 +251,7 @@ func fixMachineDriverLibvirtInstalled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	defer os.Remove(tempFilePath)
 
 	logging.Debugf("Copying %s in %s", libvirtDriverCommand, libvirtDriverBinaryPath)
 	stdOut, stdErr, err := crcos.RunWithPrivilege("mkdir", "-p", driverBinaryDir)
