@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"net"
@@ -41,8 +42,8 @@ func ValidateMemory(value int) error {
 
 // ValidateBundle checks if provided bundle path exist
 func ValidateBundle(bundle string) error {
-	if _, err := os.Stat(bundle); os.IsNotExist(err) {
-		return errors.NewF("Expected file %s does not exist", bundle)
+	if err := ValidatePath(bundle); err != nil {
+		return err
 	}
 	// Check if the version of the bundle provided by user is same as what is released with crc.
 	releaseBundleVersion := version.GetBundleVersion()
@@ -58,6 +59,39 @@ func ValidateIpAddress(ipAddress string) error {
 	ip := net.ParseIP(ipAddress).To4()
 	if ip == nil {
 		return errors.NewF("IPv4 address is not valid: '%s'", ipAddress)
+	}
+	return nil
+}
+
+// ValidatePath check if provide path is exist
+func ValidatePath(path string) error {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return errors.NewF("File %s does not exist", path)
+	}
+	return nil
+}
+
+type imagePullSecret struct {
+	Auths map[string]map[string]interface{} `json:"auths"`
+}
+
+// ImagePullSecret checks if the given string is a valid image pull secret and returns an error if not.
+func ImagePullSecret(secret string) error {
+	var s imagePullSecret
+	err := json.Unmarshal([]byte(secret), &s)
+	if err != nil {
+		return fmt.Errorf("invalid pull secret: %v", err)
+	}
+	if len(s.Auths) == 0 {
+		return fmt.Errorf("invalid pull secret, auths required")
+	}
+
+	for d, a := range s.Auths {
+		_, authPresent := a["auth"]
+		_, credsStorePresent := a["credsStore"]
+		if !authPresent && !credsStorePresent {
+			return fmt.Errorf("invalid pull secret, %q requires either auth or credsStore", d)
+		}
 	}
 	return nil
 }

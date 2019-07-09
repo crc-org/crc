@@ -63,6 +63,7 @@ func ParseFlags() {
 	flag.Parse()
 	bundleURL = flag.Args()[0]
 	_, bundleName = filepath.Split(bundleURL)
+	pullSecretFile = flag.Args()[1]
 }
 
 // Set CRCHome var to ~/.crc

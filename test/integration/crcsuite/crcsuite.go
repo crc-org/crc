@@ -29,9 +29,10 @@ import (
 )
 
 var (
-	CRCHome    string
-	bundleURL  string
-	bundleName string
+	CRCHome        string
+	bundleURL      string
+	bundleName     string
+	pullSecretFile string
 )
 
 // FeatureContext defines godog.Suite steps for the test suite.
@@ -176,7 +177,7 @@ func ConfigFileInCRCHomeContainsKey(format string, configFile string, condition 
 
 func StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails(expected string) error {
 
-	cmd := "crc start -b " + bundleName
+	cmd := fmt.Sprintf("crc start -b %s -p '%s'", bundleName, pullSecretFile)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
@@ -184,7 +185,7 @@ func StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails(expected strin
 
 func StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails(hypervisor string, expected string) error {
 
-	cmd := "crc start -b " + bundleName + " -d " + hypervisor
+	cmd := fmt.Sprintf("crc start -b %s -d %s -p '%s'", bundleName, hypervisor, pullSecretFile)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err

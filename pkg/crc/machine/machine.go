@@ -3,6 +3,7 @@ package machine
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/code-ready/crc/pkg/crc/pullsecret"
 	"io/ioutil"
 	"path/filepath"
 	"time"
@@ -242,13 +243,25 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	// Copy Kubeconfig file from bundle extract path to machine directory.
 	// In our case it would be ~/machine/crc
 	logging.InfoF("Copying kubeconfig file to instance dir ...")
+	kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, machineConfig.Name, "kubeconfig")
 	if err := crcos.CopyFileContents(
 		filepath.Join(extractedPath, "kubeconfig"),
-		filepath.Join(constants.MachineInstanceDir, machineConfig.Name, "kubeconfig"),
+		kubeConfigFilePath,
 		0644); err != nil {
 		logging.ErrorF("Error to copy kubeconfig content %v", err)
 		result.Error = err.Error()
 		return *result, err
+	}
+
+	// On VM creation, we need to add the user pull secret and generate a cluster ID
+	if !exists {
+		// Update the user pull secret before kubelet start.
+		logging.Info("Adding user's pull secret and cluster ID ...")
+		if err := pullsecret.AddPullSecretAndClusterID(host.Driver, startConfig.PullSecret, kubeConfigFilePath); err != nil {
+			logging.ErrorF("Failed to update user pull secret or cluster ID: %v", err)
+			result.Error = err.Error()
+			return *result, err
+		}
 	}
 
 	// Start kubelet inside the VM
