@@ -64,3 +64,11 @@ func ValidateIpAddress(value interface{}) (bool, string) {
 	}
 	return true, ""
 }
+
+// ValidatePath checks if provided path is exist
+func ValidatePath(value interface{}) (bool, string) {
+	if err := validation.ValidatePath(value.(string)); err != nil {
+		return false, err.Error()
+	}
+	return true, ""
+}

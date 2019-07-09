@@ -25,6 +25,7 @@ function exit_on_failure() {
 # Source environment variables of the jenkins slave
 # that might interest this worker.
 function load_jenkins_vars() {
+  set +x
   if [ -e "jenkins-env" ]; then
     cat jenkins-env \
       | grep -E "(JENKINS_URL|GIT_BRANCH|GIT_COMMIT|BUILD_NUMBER|ghprbSourceBranch|ghprbActualCommit|BUILD_URL|ghprbPullId|CICO_API_KEY|GITHUB_TOKEN|JOB_NAME|RELEASE_VERSION|RH_REGISTRY_PASSWORD|CRC_BUNDLE_PASSWORD)=" \
@@ -123,7 +124,9 @@ function upload_logs() {
 
 function run_tests() {
   set +e
-  make integration BUNDLE_LOCATION=$HOME/Downloads/$BUNDLE
+  # In Jenkins slave we have pull secret file in the $HOME/payload/crc_pull_secret
+  # this is copied over using https://github.com/minishift/minishift-ci-jobs/blob/master/minishift-ci-index.yaml#L99
+  make integration BUNDLE_LOCATION=$HOME/Downloads/$BUNDLE PULL_SECRET_FILE=$HOME/payload/crc_pull_secret
   if [[ $? -ne 0 ]]; then
     upload_logs $1
     exit 1

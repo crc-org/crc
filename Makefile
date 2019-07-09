@@ -93,7 +93,7 @@ clean: clean_docs
 .PHONY: integration ## Run integration tests
 integration: GODOG_OPTS = --godog.tags=$(GOOS)
 integration:
-	go test --timeout=60m $(REPOPATH)/test/integration -v --tags=integration $(GODOG_OPTS) $(BUNDLE_LOCATION)
+	@go test --timeout=60m $(REPOPATH)/test/integration -v --tags=integration $(GODOG_OPTS) $(BUNDLE_LOCATION) $(PULL_SECRET_FILE)
 
 .PHONY: fmt
 fmt:

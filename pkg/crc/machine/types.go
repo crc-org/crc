@@ -18,6 +18,9 @@ type StartConfig struct {
 
 	// Machine log output
 	Debug bool
+
+	// User Pull secret
+	PullSecret string
 }
 
 type ClusterConfig struct {

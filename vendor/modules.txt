@@ -57,10 +57,18 @@ github.com/inconshreveable/mousetrap
 github.com/intel-go/cpuid
 # github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 github.com/kardianos/osext
+# github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
+github.com/kballard/go-shellquote
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1
 github.com/konsorten/go-windows-terminal-sequences
 # github.com/magiconair/properties v1.8.0
 github.com/magiconair/properties
+# github.com/mattn/go-colorable v0.0.9
+github.com/mattn/go-colorable
+# github.com/mattn/go-isatty v0.0.3
+github.com/mattn/go-isatty
+# github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
+github.com/mgutz/ansi
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
 # github.com/pborman/uuid v1.2.0
@@ -103,5 +111,9 @@ golang.org/x/sys/cpu
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
+# gopkg.in/AlecAivazis/survey.v1 v1.8.5
+gopkg.in/AlecAivazis/survey.v1
+gopkg.in/AlecAivazis/survey.v1/core
+gopkg.in/AlecAivazis/survey.v1/terminal
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2

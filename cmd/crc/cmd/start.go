@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -10,10 +12,12 @@ import (
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/preflight"
+	ps "github.com/code-ready/crc/pkg/crc/pullsecret"
 	"github.com/code-ready/crc/pkg/crc/validation"
 )
 
@@ -35,6 +39,7 @@ var startCmd = &cobra.Command{
 
 var (
 	startCmdFlagSet = initStartCmdFlagSet()
+	pullSecretFile  string
 )
 
 func runStart(arguments []string) {
@@ -44,6 +49,11 @@ func runStart(arguments []string) {
 
 	preflight.StartPreflightChecks(crcConfig.GetString(config.VMDriver.Name))
 
+	pullsecretFileContent, err := getPullSecretFileContent()
+	if err != nil {
+		errors.ExitWithMessage(1, err.Error())
+	}
+
 	startConfig := machine.StartConfig{
 		Name:       constants.DefaultName,
 		BundlePath: crcConfig.GetString(config.Bundle.Name),
@@ -51,6 +61,7 @@ func runStart(arguments []string) {
 		Memory:     crcConfig.GetInt(config.Memory.Name),
 		CPUs:       crcConfig.GetInt(config.CPUs.Name),
 		NameServer: crcConfig.GetString(config.NameServer.Name),
+		PullSecret: pullsecretFileContent,
 		Debug:      isDebugLog(),
 	}
 
@@ -69,6 +80,7 @@ func initStartCmdFlagSet() *pflag.FlagSet {
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
 	flagSet.StringP(config.Bundle.Name, "b", constants.GetDefaultBundle(), "The system bundle used for deployment of the OpenShift cluster.")
 	flagSet.StringP(config.VMDriver.Name, "d", machine.DefaultDriver.Driver, fmt.Sprintf("The driver to use for the CRC VM. Possible values: %v", machine.SupportedDriverValues()))
+	flagSet.StringP(config.PullSecretFile.Name, "p", "", fmt.Sprintf("File path of Image pull secret for User (Download it from %s)", constants.DefaultPullSecretURL))
 	flagSet.IntP(config.CPUs.Name, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the CRC VM")
 	flagSet.IntP(config.Memory.Name, "m", constants.DefaultMemory, "MiB of Memory to allocate to the CRC VM")
 	flagSet.StringP(config.NameServer.Name, "n", "", "Specify nameserver to use for the instance. (i.e. 8.8.8.8)")
@@ -102,4 +114,47 @@ func validateStartFlags() error {
 		}
 	}
 	return nil
+}
+
+func getPullSecretFileContent() (string, error) {
+	var (
+		pullsecret string
+		err        error
+	)
+	// Check if pull secret is stored in cache then read it and return.
+	pullsecret, pullSecretFilePresent, err := ps.GetPullSecretFromFilePath(filepath.Join(constants.MachineCacheDir, constants.PullSecretFile))
+	if err != nil {
+		return "", err
+	}
+
+	if !pullSecretFilePresent {
+		// In case user doesn't provide a file in start command or in config then ask for it.
+		if crcConfig.GetString(config.PullSecretFile.Name) == "" {
+			pullsecret, err = input.PromptUserForSecret("Image pull secret", fmt.Sprintf("Copy it from %s", constants.DefaultPullSecretURL))
+			// This is just to provide a new line after user enter the pull secret.
+			fmt.Println()
+			if err != nil {
+				return "", err
+			}
+		} else {
+			// Read the file content
+			data, err := ioutil.ReadFile(crcConfig.GetString(config.PullSecretFile.Name))
+			if err != nil {
+				return "", err
+			}
+			pullsecret = string(data)
+		}
+	}
+	if err := validation.ImagePullSecret(pullsecret); err != nil {
+		return "", err
+	}
+
+	// Add pull secret to cache.
+	if !pullSecretFilePresent {
+		if err := ps.StorePullSecretToFile(pullsecret, constants.MachineCacheDir, constants.PullSecretFile); err != nil {
+			return "", err
+		}
+	}
+
+	return pullsecret, nil
 }
