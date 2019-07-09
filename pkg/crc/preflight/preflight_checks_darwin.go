@@ -51,8 +51,8 @@ func checkVirtualBoxInstalled() (bool, error) {
 
 func fixVirtualBoxInstallation() (bool, error) {
 	logging.Debug("Downloading VirtualBox")
-	// Download the driver binary in /tmp
-	tempFilePath := filepath.Join(os.TempDir(), "virtualbox.dmg")
+	// Download the virtualbox installer in ~/.crc/cache
+	tempFilePath := filepath.Join(constants.MachineCacheDir, "virtualbox.dmg")
 	_, err := dl.Download(virtualBoxDownloadURL, tempFilePath)
 	if err != nil {
 		return false, err

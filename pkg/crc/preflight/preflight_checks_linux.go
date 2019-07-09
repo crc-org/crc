@@ -245,8 +245,8 @@ func checkMachineDriverLibvirtInstalled() (bool, error) {
 
 func fixMachineDriverLibvirtInstalled() (bool, error) {
 	logging.Debugf("Installing %s", libvirtDriverCommand)
-	// Download the driver binary in /tmp
-	tempFilePath := filepath.Join(os.TempDir(), libvirtDriverCommand)
+	// Download the driver binary in ~/.crc/cache
+	tempFilePath := filepath.Join(constants.MachineCacheDir, libvirtDriverCommand)
 	_, err := download.Download(libvirtDriverDownloadURL, tempFilePath)
 	if err != nil {
 		return false, err
