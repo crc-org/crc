@@ -1,13 +1,15 @@
 package download
 
 import (
+	"os"
+
+	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 
 	"github.com/cavaliercoder/grab"
-	"github.com/code-ready/crc/pkg/crc/errors"
 )
 
-func Download(uri, destination string) (string, error) {
+func Download(uri, destination string, mode os.FileMode) (string, error) {
 	// create client
 	logging.Debugf("Downloading %s to %s", uri, destination)
 	client := grab.NewClient()
@@ -24,6 +26,12 @@ func Download(uri, destination string) (string, error) {
 	// check for errors
 	if err := resp.Err(); err != nil {
 		return "", errors.Newf("Download failed: %v\n", err)
+	}
+
+	err = os.Chmod(resp.Filename, mode)
+	if err != nil {
+		os.Remove(resp.Filename)
+		return "", err
 	}
 
 	logging.Debugf("Download saved to %v \n", resp.Filename)

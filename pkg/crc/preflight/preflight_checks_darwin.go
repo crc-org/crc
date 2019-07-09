@@ -53,7 +53,7 @@ func fixVirtualBoxInstallation() (bool, error) {
 	logging.Debug("Downloading VirtualBox")
 	// Download the virtualbox installer in ~/.crc/cache
 	tempFilePath := filepath.Join(constants.MachineCacheDir, "virtualbox.dmg")
-	_, err := dl.Download(virtualBoxDownloadURL, tempFilePath)
+	_, err := dl.Download(virtualBoxDownloadURL, tempFilePath, 0600)
 	if err != nil {
 		return false, err
 	}
@@ -108,7 +108,7 @@ func download(url string, destDir string, mode os.FileMode) (string, error) {
 		return "", err
 	}
 
-	filename, err := dl.Download(url, destDir)
+	filename, err := dl.Download(url, destDir, 0644)
 	if err != nil {
 		return "", err
 	}

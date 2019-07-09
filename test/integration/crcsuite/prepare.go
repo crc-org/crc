@@ -48,7 +48,7 @@ func DownloadBundle(bundleLocation string, bundleDestination string) (string, er
 		return bundleDestination, err
 	}
 
-	filename, err := download.Download(bundleLocation, bundleDestination)
+	filename, err := download.Download(bundleLocation, bundleDestination, 0644)
 	fmt.Printf("Downloading bundle from %s to %s.\n", bundleLocation, bundleDestination)
 	if err != nil {
 		return "", err
