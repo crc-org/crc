@@ -43,16 +43,9 @@ var (
 // Add darwin specific checks
 func checkVirtualBoxInstalled() (bool, error) {
 	logging.Debug("Checking if VirtualBox is installed")
-	path, err := exec.LookPath("VBoxManage")
+	_, err := exec.LookPath("VBoxManage")
 	if err != nil {
 		return false, errors.New("VirtualBox cli VBoxManage is not found in the path")
-	}
-	fi, _ := os.Stat(path)
-	if fi.Mode()&os.ModeSymlink != 0 {
-		path, err = os.Readlink(path)
-		if err != nil {
-			return false, errors.New("VirtualBox cli VBoxManage is not found in the path")
-		}
 	}
 	logging.Debug("VirtualBox was found")
 	return true, nil

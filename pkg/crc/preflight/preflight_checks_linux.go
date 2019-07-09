@@ -102,13 +102,6 @@ func checkLibvirtInstalled() (bool, error) {
 	if err != nil {
 		return false, errors.New("Libvirt cli virsh was not found in path")
 	}
-	fi, _ := os.Stat(path)
-	if fi.Mode()&os.ModeSymlink != 0 {
-		path, err = os.Readlink(path)
-		if err != nil {
-			return false, errors.New("Libvirt cli virsh was not found in path")
-		}
-	}
 	logging.Debug("'virsh' was found in ", path)
 	return true, nil
 }
@@ -232,13 +225,6 @@ func checkMachineDriverLibvirtInstalled() (bool, error) {
 		return false, err
 	}
 	fi, _ := os.Stat(path)
-	// follow symlinks
-	if fi.Mode()&os.ModeSymlink != 0 {
-		path, err = os.Readlink(path)
-		if err != nil {
-			return false, err
-		}
-	}
 	// Check if permissions are correct
 	if fi.Mode()&0011 == 0 {
 		return false, errors.New("crc-driver-libvirt does not have correct permissions")
