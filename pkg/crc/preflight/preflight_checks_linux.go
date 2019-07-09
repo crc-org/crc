@@ -224,13 +224,19 @@ func checkMachineDriverLibvirtInstalled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	fi, _ := os.Stat(path)
+	fi, err := os.Stat(path)
+	if err != nil {
+		return false, err
+	}
 	// Check if permissions are correct
 	if fi.Mode()&0011 == 0 {
 		return false, errors.New("crc-driver-libvirt does not have correct permissions")
 	}
 	// Check the version of driver if it matches to supported one
-	stdOut, stdErr, _ := crcos.RunWithDefaultLocale(path, "version")
+	stdOut, stdErr, err := crcos.RunWithDefaultLocale(path, "version")
+	if err != nil {
+		return false, err
+	}
 	if !strings.Contains(stdOut, libvirtDriverVersion) {
 		return false, fmt.Errorf("crc-driver-libvirt does not have right version \n Required: %s \n Got: %s use 'crc setup' command.\n %v\n", libvirtDriverVersion, stdOut, stdErr)
 	}
