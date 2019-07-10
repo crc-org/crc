@@ -76,13 +76,13 @@ vendor:
 
 # Get go-bindata
 bindata:
-	GO111MODULE=off go get -u github.com/jteeuwen/go-bindata/...
+	GO111MODULE=off go get -u github.com/go-bindata/go-bindata/...
 
 # Generate go files for assets (bundle)
 assets: bindata
 	@:$(call check_defined, BUNDLE_LOCATION, "BUNDLE_LOCATION needs to be set and pointing to a CRC bundle")
 	@mkdir -p $(BUNDLE_ASSET_DIR)
-	go-bindata -tags "embed_bundle" -o $(BUNDLE_ASSET_FILE) -prefix $(BUNDLE_ASSET_DIR) -pkg bundle_bindata $(BUNDLE_LOCATION)
+	go-bindata -nocompress -tags "embed_bundle" -o $(BUNDLE_ASSET_FILE) -prefix $(BUNDLE_ASSET_DIR) -pkg bundle_bindata $(BUNDLE_LOCATION)
 
 # Start of the actual build targets
 

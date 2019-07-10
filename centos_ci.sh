@@ -145,7 +145,8 @@ else
 
 	# setup to run integration tests
 	cd payload
-	make
+	make BUNDLE_LOCATION=$HOME/Downloads/$BUNDLE EMBED_BUNDLE=true
+	make package BUNDLE_LOCATION=$HOME/Downloads/$BUNDLE EMBED_BUNDLE=true
 	make fmtcheck
 	make cross
 	crc setup
