@@ -55,7 +55,7 @@ func runStart(arguments []string) {
 
 	commandResult, err := machine.Start(startConfig)
 	if err != nil {
-		errors.Exit(1)
+		errors.ExitWithMessage(1, err.Error())
 	}
 	if commandResult.Status == "Running" {
 		output.Out("CodeReady Containers instance is running")
