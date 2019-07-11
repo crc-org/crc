@@ -30,6 +30,9 @@ import (
 	"github.com/code-ready/machine/libmachine/host"
 	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/state"
+
+	// cluster related import
+	"github.com/code-ready/crc/pkg/crc/cluster"
 )
 
 func Start(startConfig StartConfig) (StartResult, error) {
@@ -146,6 +149,17 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	// Post-VM start
 	host, err := libMachineAPIClient.Load(machineConfig.Name)
+	if err != nil {
+		logging.ErrorF("Error loading %s vm: %v", machineConfig.Name, err)
+		result.Error = err.Error()
+		return *result, err
+	}
+	// Check the certs validity inside the vm
+	logging.Info("Verifying validity of the cluster certificates ...")
+	if err := cluster.CheckCertsValidity(host.Driver); err != nil {
+		result.Error = err.Error()
+		return *result, err
+	}
 	instanceIP, err := host.Driver.GetIP()
 	if err != nil {
 		logging.ErrorF("Error getting the IP: %v", err)
