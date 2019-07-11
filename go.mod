@@ -6,7 +6,7 @@ require (
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/code-ready/clicumber v0.0.0-20190503113956-2563aed4ef12
 	github.com/code-ready/goodhosts v0.0.0-20190712111040-f090f3f77c26
-	github.com/code-ready/machine v0.0.0-20190513092840-66a8c3b3c494
+	github.com/code-ready/machine v0.0.0-20190717101121-b310e5ddb702
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/pborman/uuid v1.2.0

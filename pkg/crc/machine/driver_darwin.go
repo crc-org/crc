@@ -1,6 +1,7 @@
 package machine
 
 import (
+	"github.com/code-ready/crc/pkg/crc/constants"
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
@@ -10,6 +11,7 @@ func init() {
 		Platform:      crcos.DARWIN,
 		Driver:        "hyperkit",
 		UseDNSService: true,
+		DriverPath:    constants.CrcBinDir,
 	}
 
 	VirtualBoxMacOSDriver := MachineDriver{

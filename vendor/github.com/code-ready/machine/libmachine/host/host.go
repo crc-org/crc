@@ -35,6 +35,7 @@ type Host struct {
 	ConfigVersion int
 	Driver        drivers.Driver
 	DriverName    string
+	DriverPath    string
 	HostOptions   *Options
 	Name          string
 	RawDriver     []byte `json:"-"`

@@ -98,7 +98,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	if !exists {
 		logging.InfoF("Creating VM ...")
 
-		host, err := createHost(libMachineAPIClient, machineConfig)
+		host, err := createHost(libMachineAPIClient, driverInfo.DriverPath, machineConfig)
 		if err != nil {
 			logging.ErrorF("Error creating host: %v", err)
 			result.Error = err.Error()
@@ -373,11 +373,11 @@ func existVM(api libmachine.API, machineConfig config.MachineConfig) (bool, erro
 	return exists, nil
 }
 
-func createHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {
+func createHost(api libmachine.API, driverPath string, machineConfig config.MachineConfig) (*host.Host, error) {
 	driverOptions := getDriverOptions(machineConfig)
 	jsonDriverConfig, err := json.Marshal(driverOptions)
 
-	vm, err := api.NewHost(machineConfig.VMDriver, jsonDriverConfig)
+	vm, err := api.NewHost(machineConfig.VMDriver, driverPath, jsonDriverConfig)
 
 	if err != nil {
 		return nil, errors.NewF("Error creating new host: %s", err)
