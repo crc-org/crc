@@ -13,6 +13,10 @@ github.com/code-ready/goodhosts v0.0.0-20190712111040-f090f3f77c26 h1:rNdqNBHRAA
 github.com/code-ready/goodhosts v0.0.0-20190712111040-f090f3f77c26/go.mod h1:kc1Z2UDuIlxPOo7VWCIkYPOaD55KPX0t5qS5cmLBe8Y=
 github.com/code-ready/machine v0.0.0-20190513092840-66a8c3b3c494 h1:Krl/Ub9djuzrYW49kUgyroWDMlrqeagL2QrNCjgx1mA=
 github.com/code-ready/machine v0.0.0-20190513092840-66a8c3b3c494/go.mod h1:2Kr23hBx5xUHetynE+4hFBwn7Xkx5qoF0SY1FzmLz74=
+github.com/code-ready/machine v0.0.0-20190717092700-c8790c03edf3 h1:wOj0jnpe0p2oyanMqWy5jSTO/uirZuL7qTXqRne3Njg=
+github.com/code-ready/machine v0.0.0-20190717092700-c8790c03edf3/go.mod h1:2Kr23hBx5xUHetynE+4hFBwn7Xkx5qoF0SY1FzmLz74=
+github.com/code-ready/machine v0.0.0-20190717101121-b310e5ddb702 h1:DLrbSIhvNYRmX3JNjWWlorz83Z+HvcVY4JYpqBu1hu4=
+github.com/code-ready/machine v0.0.0-20190717101121-b310e5ddb702/go.mod h1:2Kr23hBx5xUHetynE+4hFBwn7Xkx5qoF0SY1FzmLz74=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/go-etcd v2.0.0+incompatible/go.mod h1:Jez6KQU2B/sWsbdaef3ED8NzMklzPG4d5KIOhIy30Tk=
 github.com/coreos/go-semver v0.2.0/go.mod h1:nnelYz7RCh+5ahJtPPxZlU+153eP4D4r3EedlOD2RNk=

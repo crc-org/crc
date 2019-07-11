@@ -10,6 +10,7 @@ type MachineDriver struct {
 	Platform      crcos.OS
 	Driver        string
 	UseDNSService bool
+	DriverPath    string
 }
 
 var (

@@ -23,7 +23,7 @@ import (
 
 type API interface {
 	io.Closer
-	NewHost(driverName string, rawDriver []byte) (*host.Host, error)
+	NewHost(driverName string, driverPath string, rawDriver []byte) (*host.Host, error)
 	Create(h *host.Host) error
 	persist.Store
 	GetMachinesDir() string
@@ -48,8 +48,8 @@ func NewClient(storePath, certsDir string) *Client {
 	}
 }
 
-func (api *Client) NewHost(driverName string, rawDriver []byte) (*host.Host, error) {
-	driver, err := api.clientDriverFactory.NewRPCClientDriver(driverName, rawDriver)
+func (api *Client) NewHost(driverName string, driverPath string, rawDriver []byte) (*host.Host, error) {
+	driver, err := api.clientDriverFactory.NewRPCClientDriver(driverName, driverPath, rawDriver)
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +59,7 @@ func (api *Client) NewHost(driverName string, rawDriver []byte) (*host.Host, err
 		Name:          driver.GetMachineName(),
 		Driver:        driver,
 		DriverName:    driver.DriverName(),
+		DriverPath:    driverPath,
 		HostOptions: &host.Options{
 			AuthOptions: &auth.Options{
 				CertDir:          api.certsDir,
@@ -79,7 +80,7 @@ func (api *Client) Load(name string) (*host.Host, error) {
 		return nil, err
 	}
 
-	d, err := api.clientDriverFactory.NewRPCClientDriver(h.DriverName, h.RawDriver)
+	d, err := api.clientDriverFactory.NewRPCClientDriver(h.DriverName, h.DriverPath, h.RawDriver)
 	if err != nil {
 		// Not being able to find a driver binary is a "known error"
 		if _, ok := err.(localbinary.ErrPluginBinaryNotFound); ok {
@@ -119,7 +120,10 @@ func (api *Client) Create(h *host.Host) error {
 		return fmt.Errorf("Error creating machine: %s", err)
 	}
 
-	log.Debug("Reticulating splines...")
+	log.Debug("Machine successfully created")
+	if err := api.SetExists(h.Name); err != nil {
+		log.Debug("Failed to record VM existence")
+	}
 
 	return nil
 }

@@ -21,7 +21,7 @@ var (
 )
 
 type RPCClientDriverFactory interface {
-	NewRPCClientDriver(driverName string, rawDriver []byte) (*RPCClientDriver, error)
+	NewRPCClientDriver(driverName string, driverPath string, rawDriver []byte) (*RPCClientDriver, error)
 	io.Closer
 }
 
@@ -118,10 +118,10 @@ func (f *DefaultRPCClientDriverFactory) Close() error {
 	return nil
 }
 
-func (f *DefaultRPCClientDriverFactory) NewRPCClientDriver(driverName string, rawDriver []byte) (*RPCClientDriver, error) {
+func (f *DefaultRPCClientDriverFactory) NewRPCClientDriver(driverName string, driverPath string, rawDriver []byte) (*RPCClientDriver, error) {
 	mcnName := ""
 
-	p, err := localbinary.NewPlugin(driverName)
+	p, err := localbinary.NewPlugin(driverName, driverPath)
 	if err != nil {
 		return nil, err
 	}

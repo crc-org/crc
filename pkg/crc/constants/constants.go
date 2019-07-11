@@ -28,6 +28,7 @@ const (
 
 var (
 	CrcBaseDir         = filepath.Join(GetHomeDir(), ".crc")
+	CrcBinDir          = filepath.Join(CrcBaseDir, "bin")
 	ConfigPath         = filepath.Join(CrcBaseDir, ConfigFile)
 	LogFilePath        = filepath.Join(CrcBaseDir, LogFile)
 	MachineBaseDir     = CrcBaseDir
