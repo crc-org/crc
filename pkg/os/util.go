@@ -85,3 +85,15 @@ func CopyFileContents(src string, dst string, permission os.FileMode) error {
 
 	return nil
 }
+
+// GetFilePath returns the file path even it is symlink
+func GetFilePath(path string) (string, error) {
+	fInfo, err := os.Lstat(path)
+	if err != nil {
+		return path, err
+	}
+	if fInfo.Mode()&os.ModeSymlink != 0 {
+		return os.Readlink(path)
+	}
+	return path, nil
+}
