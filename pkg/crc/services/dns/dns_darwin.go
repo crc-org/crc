@@ -76,6 +76,14 @@ func createResolverFile(InstanceIP string, path string) (bool, error) {
 }
 
 func restartNetwork() (bool, error) {
+	// Get the Nameservers available on host
+	// We should get it before the network restart otherwise this file not available
+	// until network start.
+	hostResolv, err := network.GetResolvValuesFromHost()
+	if err != nil {
+		return false, fmt.Errorf("Unable to read host resolv file (%v)", err)
+	}
+
 	// https://medium.com/@kumar_pravin/network-restart-on-mac-os-using-shell-script-ab19ba6e6e99
 	netDeviceList, _, err := crcos.RunWithDefaultLocale("networksetup", "-listallnetworkservices")
 	netDeviceList = strings.TrimSpace(netDeviceList)
@@ -93,7 +101,7 @@ func restartNetwork() (bool, error) {
 		}
 	}
 
-	err = waitForNetwork()
+	err = waitForNetwork(hostResolv)
 	if err != nil {
 		return false, err
 	} else {
@@ -102,11 +110,7 @@ func restartNetwork() (bool, error) {
 }
 
 // Wait for Network wait till the network is up, since it is required to resolve external dnsquery
-func waitForNetwork() error {
-	hostResolv, err := network.GetResolvValuesFromHost()
-	if err != nil {
-		return fmt.Errorf("Unable to read host resolv file (%v)", err)
-	}
+func waitForNetwork(hostResolv *network.ResolvFileValues) error {
 	// retry for 5 times
 	for i := 0; i < 5; i++ {
 		for _, ns := range hostResolv.NameServers {
