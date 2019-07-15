@@ -30,27 +30,29 @@ type resolverFileValues struct {
 
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *services.ServicePostStartResult) (services.ServicePostStartResult, error) {
 	// Update /etc/hosts file for host
-	success, err := updateHostsConfFile(serviceConfig.IP, serviceConfig.BundleMetadata.GetAPIHostname(), serviceConfig.BundleMetadata.GetAppHostname("oauth-openshift"))
-	if err != nil {
+	if err := updateHostsConfFile(serviceConfig.IP, serviceConfig.BundleMetadata.GetAPIHostname(),
+		serviceConfig.BundleMetadata.GetAppHostname("oauth-openshift")); err != nil {
 		result.Success = false
 		return *result, err
 	}
 
 	// Write resolver config to host
-	success, err = createResolverFile(serviceConfig.IP, filepath.Join("/", "etc", "resolver", serviceConfig.BundleMetadata.ClusterInfo.BaseDomain))
-	if !success {
-		result.Success = success
+	if err := createResolverFile(serviceConfig.IP, filepath.Join("/", "etc", "resolver", serviceConfig.BundleMetadata.ClusterInfo.BaseDomain)); err != nil {
+		result.Success = false
 		return *result, err
 	}
 	// Restart the Network on mac
 	logging.InfoF("Restarting the host network")
-	success, err = restartNetwork()
+	if err := restartNetwork(); err != nil {
+		result.Success = false
+		return *result, err
+	}
 	// we pass the result and error on
-	result.Success = success
-	return *result, err
+	result.Success = true
+	return *result, nil
 }
 
-func createResolverFile(InstanceIP string, path string) (bool, error) {
+func createResolverFile(InstanceIP string, path string) error {
 	var resolverFile bytes.Buffer
 
 	values := resolverFileValues{
@@ -61,35 +63,35 @@ func createResolverFile(InstanceIP string, path string) (bool, error) {
 
 	t, err := template.New("resolver").Parse(resolverFileTemplate)
 	if err != nil {
-		return false, err
+		return err
 	}
 	err = t.Execute(&resolverFile, values)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	err = ioutil.WriteFile(path, resolverFile.Bytes(), 0644)
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	return true, nil
+	return nil
 }
 
-func restartNetwork() (bool, error) {
+func restartNetwork() error {
 	// Get the Nameservers available on host
 	// We should get it before the network restart otherwise this file not available
 	// until network start.
 	hostResolv, err := network.GetResolvValuesFromHost()
 	if err != nil {
-		return false, fmt.Errorf("Unable to read host resolv file (%v)", err)
+		return fmt.Errorf("Unable to read host resolv file (%v)", err)
 	}
 
 	// https://medium.com/@kumar_pravin/network-restart-on-mac-os-using-shell-script-ab19ba6e6e99
 	netDeviceList, _, err := crcos.RunWithDefaultLocale("networksetup", "-listallnetworkservices")
 	netDeviceList = strings.TrimSpace(netDeviceList)
 	if err != nil {
-		return false, err
+		return err
 	}
 	for _, netdevice := range strings.Split(netDeviceList, "\n")[1:] {
 		time.Sleep(1 * time.Second)
@@ -98,16 +100,11 @@ func restartNetwork() (bool, error) {
 		stdout, stderr, err = crcos.RunWithDefaultLocale("networksetup", "-setnetworkserviceenabled", netdevice, "on")
 		logging.DebugF("Enabling the %s Device (stdout: %s), (stderr: %s)", netdevice, stdout, stderr)
 		if err != nil {
-			return false, fmt.Errorf("%s: %v", stderr, err)
+			return fmt.Errorf("%s: %v", stderr, err)
 		}
 	}
 
-	err = waitForNetwork(hostResolv)
-	if err != nil {
-		return false, err
-	} else {
-		return true, nil
-	}
+	return waitForNetwork(hostResolv)
 }
 
 // Wait for Network wait till the network is up, since it is required to resolve external dnsquery
@@ -125,25 +122,24 @@ func waitForNetwork(hostResolv *network.ResolvFileValues) error {
 }
 
 // updateHostsConfFile updates the host's /etc/hosts file with Instance IP.
-func updateHostsConfFile(instanceIP string, hostnames ...string) (bool, error) {
+func updateHostsConfFile(instanceIP string, hostnames ...string) error {
 	// Get the current value of /etc/hosts file
 	hosts, err := goodhosts.NewHosts()
 	if err != nil {
-		return false, err
+		return err
 	}
 	for _, hostname := range hostnames {
 		if err := replaceHostname(&hosts, instanceIP, hostname); err != nil {
-			return false, err
+			return err
 		}
 	}
 
 	// Flush operation is required just after replacing the host this
 	// add the entry to /etc/hosts file
-	if err := hosts.Flush(); err !=nil {
-		return false, err
+	if err := hosts.Flush(); err != nil {
+		return err
 	}
-
-	return true, nil
+	return nil
 }
 
 func replaceHostname(hosts *goodhosts.Hosts, ipAddress string, hostname string) error {
