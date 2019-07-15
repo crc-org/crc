@@ -22,7 +22,7 @@ const (
 
 	resolverDir  = "/etc/resolver"
 	resolverFile = "/etc/resolver/testing"
-	resolvFile   = "/etc/resolv.conf"
+	hostFile     = "/etc/hosts"
 )
 
 var (
@@ -127,11 +127,11 @@ func fixOcBinaryCached() (bool, error) {
 }
 
 func checkResolvConfFilePermissions() (bool, error) {
-	return isUserHaveFileWritePermission(resolvFile)
+	return isUserHaveFileWritePermission(hostFile)
 }
 
 func fixResolvConfFilePermissions() (bool, error) {
-	return addFileWritePermissionToUser(resolvFile)
+	return addFileWritePermissionToUser(hostFile)
 }
 
 func isUserHaveFileWritePermission(filename string) (bool, error) {
