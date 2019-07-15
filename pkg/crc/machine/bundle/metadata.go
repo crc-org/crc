@@ -58,3 +58,11 @@ func GetCrcBundleInfo(machineConfig config.MachineConfig) (*CrcBundleInfo, strin
 	}
 	return &bundleInfo, extractedPath, nil
 }
+
+func (bundle *CrcBundleInfo) GetAPIHostname() string {
+	return fmt.Sprintf("api.%s.%s", bundle.ClusterInfo.ClusterName, bundle.ClusterInfo.BaseDomain)
+}
+
+func (bundle *CrcBundleInfo) GetAppHostname(appName string) string {
+	return fmt.Sprintf("%s.%s", appName, bundle.ClusterInfo.AppsDomain)
+}

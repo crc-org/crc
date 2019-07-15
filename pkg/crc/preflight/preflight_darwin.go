@@ -27,7 +27,7 @@ func StartPreflightChecks() {
 
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckResolvConfFilePermissions.Name),
 		checkResolvConfFilePermissions,
-		fmt.Sprintf("Checking file permissions for %s", resolvFile),
+		fmt.Sprintf("Checking file permissions for %s", hostFile),
 		config.GetBool(cmdConfig.WarnCheckResolvConfFilePermissions.Name),
 	)
 }
@@ -57,7 +57,7 @@ func SetupHost() {
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckResolvConfFilePermissions.Name),
 		checkResolvConfFilePermissions,
 		fixResolvConfFilePermissions,
-		fmt.Sprintf("Setting file permissions for %s", resolvFile),
+		fmt.Sprintf("Setting file permissions for %s", hostFile),
 		config.GetBool(cmdConfig.WarnCheckResolvConfFilePermissions.Name),
 	)
 }

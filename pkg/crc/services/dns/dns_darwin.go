@@ -3,16 +3,17 @@ package dns
 import (
 	"bytes"
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/network"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
 	"text/template"
 	"time"
 
+	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/services"
 	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/code-ready/goodhosts"
 )
 
 const (
@@ -28,10 +29,10 @@ type resolverFileValues struct {
 }
 
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *services.ServicePostStartResult) (services.ServicePostStartResult, error) {
-	// Update resolv.conf file for host
-	success, err := updateResolvConfFile(serviceConfig.IP, filepath.Join("/", "etc", "resolv.conf"))
-	if !success {
-		result.Success = success
+	// Update /etc/hosts file for host
+	success, err := updateHostsConfFile(serviceConfig.IP, serviceConfig.BundleMetadata.GetAPIHostname(), serviceConfig.BundleMetadata.GetAppHostname("oauth-openshift"))
+	if err != nil {
+		result.Success = false
 		return *result, err
 	}
 
@@ -123,37 +124,39 @@ func waitForNetwork(hostResolv *network.ResolvFileValues) error {
 	return fmt.Errorf("Host is not connected to internet.")
 }
 
-// updateResolvConfFile updates the host's /etc/resolv.conf file with Instance IP.
-func updateResolvConfFile(instanceIP string, resolvConfFile string) (bool, error) {
-	// Get the current value of resolv.conf file
-	hostResolv, err := network.GetResolvValuesFromHost()
-	if err != nil {
-		return false, fmt.Errorf("Unable to read host resolv file (%v)", err)
-	}
-
-	foundExistingInstanceIP := false
-
-	for i, ns := range hostResolv.NameServers {
-		// Update the nameserver IP with instance IP if already exist
-		if strings.Contains(ns.IPAddress, "192.168.130") {
-			hostResolv.NameServers[i].IPAddress = instanceIP
-			foundExistingInstanceIP = true
-			break
-		}
-	}
-
-	if !foundExistingInstanceIP {
-		nameserver := network.NameServer{IPAddress: instanceIP}
-		nameservers := []network.NameServer{nameserver}
-		hostResolv.NameServers = append(nameservers, hostResolv.NameServers...)
-	}
-
-	// Write to the resolv.conf file.
-	resolvFile, _ := network.CreateResolvFile(*hostResolv)
-	err = ioutil.WriteFile(resolvConfFile, []byte(resolvFile), 0644)
+// updateHostsConfFile updates the host's /etc/hosts file with Instance IP.
+func updateHostsConfFile(instanceIP string, hostnames ...string) (bool, error) {
+	// Get the current value of /etc/hosts file
+	hosts, err := goodhosts.NewHosts()
 	if err != nil {
 		return false, err
 	}
+	for _, hostname := range hostnames {
+		if err := replaceHostname(&hosts, instanceIP, hostname); err != nil {
+			return false, err
+		}
+	}
 
-	return true, err
+	// Flush operation is required just after replacing the host this
+	// add the entry to /etc/hosts file
+	if err := hosts.Flush(); err !=nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func replaceHostname(hosts *goodhosts.Hosts, ipAddress string, hostname string) error {
+	logging.DebugF("Updating %s to %s in /etc/hosts file", hostname, ipAddress)
+	if hosts.HasHostname(hostname) {
+		if err := hosts.RemoveByHostname(hostname); err != nil {
+			return err
+		}
+	}
+
+	if err := hosts.Add(ipAddress, hostname); err != nil {
+		return err
+	}
+
+	return nil
 }
