@@ -16,7 +16,7 @@ func Extract(sourcepath string, destpath string) (string, error) {
 		return "", err
 	}
 
-	extractedPath := strings.Split(filepath.Base(file.Name()), ".tar")[0]
+	extractedPath := strings.Split(filepath.Base(file.Name()), ".crcbundle")[0]
 	extractedPath = filepath.Join(destpath, extractedPath)
 
 	_, err = os.Stat(extractedPath)
