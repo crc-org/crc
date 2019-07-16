@@ -3,7 +3,6 @@ package dns
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -37,22 +36,28 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *se
 	}
 
 	// Write resolver config to host
-	if err := createResolverFile(serviceConfig.IP, filepath.Join("/", "etc", "resolver", serviceConfig.BundleMetadata.ClusterInfo.BaseDomain)); err != nil {
+	needRestart, err := createResolverFile(serviceConfig.IP, filepath.Join("/", "etc", "resolver", serviceConfig.BundleMetadata.ClusterInfo.BaseDomain))
+	if err != nil {
 		result.Success = false
 		return *result, err
 	}
-	// Restart the Network on mac
-	logging.InfoF("Restarting the host network")
-	if err := restartNetwork(); err != nil {
-		result.Success = false
-		return *result, err
+	if needRestart {
+		// Restart the Network on mac
+		logging.InfoF("Restarting the host network")
+		if err := restartNetwork(); err != nil {
+			result.Success = false
+			return *result, err
+		}
+	} else {
+		logging.InfoF("Network restart not needed")
 	}
+
 	// we pass the result and error on
 	result.Success = true
 	return *result, nil
 }
 
-func createResolverFile(InstanceIP string, path string) error {
+func createResolverFile(InstanceIP string, path string) (bool, error) {
 	var resolverFile bytes.Buffer
 
 	values := resolverFileValues{
@@ -63,19 +68,14 @@ func createResolverFile(InstanceIP string, path string) error {
 
 	t, err := template.New("resolver").Parse(resolverFileTemplate)
 	if err != nil {
-		return err
+		return false, err
 	}
 	err = t.Execute(&resolverFile, values)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	err = ioutil.WriteFile(path, resolverFile.Bytes(), 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return crcos.WriteFileIfContentChanged(path, resolverFile.Bytes(), 0644)
 }
 
 func restartNetwork() error {
