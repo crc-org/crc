@@ -13,6 +13,9 @@ type StartConfig struct {
 	Memory   int
 	CPUs     int
 
+	// Nameserver
+	NameServer string
+
 	// Machine log output
 	Debug bool
 }

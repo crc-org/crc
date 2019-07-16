@@ -10,6 +10,18 @@ import (
 	"github.com/code-ready/machine/libmachine/drivers"
 )
 
+// HasGivenNameserversConfigured returns true if the instance uses a provided nameserver.
+func HasGivenNameserversConfigured(driver drivers.Driver, nameserver NameServer) (bool, error) {
+	cmd := "cat /etc/resolv.conf"
+	out, err := drivers.RunSSHCommandFromDriver(driver, cmd)
+
+	if err != nil {
+		return false, err
+	}
+
+	return strings.Contains(out, nameserver.IPAddress), nil
+}
+
 func GetResolvValuesFromInstance(driver drivers.Driver) (*ResolvFileValues, error) {
 	cmd := "cat /etc/resolv.conf"
 	out, err := drivers.RunSSHCommandFromDriver(driver, cmd)
@@ -33,8 +45,6 @@ func CreateResolvFileOnInstance(driver drivers.Driver, resolvFileValues ResolvFi
 // AddNameserversToInstance will add additional nameservers to the end of the
 // /etc/resolv.conf file inside the instance.
 func AddNameserversToInstance(driver drivers.Driver, nameservers []NameServer) {
-	// TODO: verify values to be valid
-
 	for _, ns := range nameservers {
 		addNameserverToInstance(driver, ns)
 	}

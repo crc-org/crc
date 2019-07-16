@@ -28,6 +28,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/virtualbox"
 
 	"github.com/code-ready/machine/libmachine"
+	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/host"
 	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/state"
@@ -175,6 +176,14 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		result.Error = err.Error()
 		return *result, err
 	}
+	// Add nameserver to VM if provided by User
+	if startConfig.NameServer != "" {
+		if addNameServerToInstance(host.Driver, startConfig.NameServer); err != nil {
+			result.Error = err.Error()
+			return *result, err
+		}
+	}
+
 	instanceIP, err := host.Driver.GetIP()
 	if err != nil {
 		logging.ErrorF("Error getting the IP: %v", err)
@@ -492,4 +501,18 @@ func setMachineLogging(logs bool) error {
 func unsetMachineLogging() {
 	logging.CloseLogFile()
 	logging.SetupFileHook()
+}
+
+func addNameServerToInstance(driver drivers.Driver, ns string) error {
+	nameserver := network.NameServer{IPAddress: ns}
+	nameservers := []network.NameServer{nameserver}
+	exist, err := network.HasGivenNameserversConfigured(driver, nameserver)
+	if err != nil {
+		return err
+	}
+	if !exist {
+		logging.InfoF("Adding %s as nameserver to Instance ...", nameserver.IPAddress)
+		network.AddNameserversToInstance(driver, nameservers)
+	}
+	return nil
 }

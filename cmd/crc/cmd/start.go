@@ -50,6 +50,7 @@ func runStart(arguments []string) {
 		VMDriver:   crcConfig.GetString(config.VMDriver.Name),
 		Memory:     crcConfig.GetInt(config.Memory.Name),
 		CPUs:       crcConfig.GetInt(config.CPUs.Name),
+		NameServer: crcConfig.GetString(config.NameServer.Name),
 		Debug:      isDebugLog(),
 	}
 
@@ -70,6 +71,7 @@ func initStartCmdFlagSet() *pflag.FlagSet {
 	flagSet.StringP(config.VMDriver.Name, "d", machine.DefaultDriver.Driver, fmt.Sprintf("The driver to use for the CRC VM. Possible values: %v", machine.SupportedDriverValues()))
 	flagSet.IntP(config.CPUs.Name, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the CRC VM")
 	flagSet.IntP(config.Memory.Name, "m", constants.DefaultMemory, "MiB of Memory to allocate to the CRC VM")
+	flagSet.StringP(config.NameServer.Name, "n", "", "Specify nameserver to use for the instance. (i.e. 8.8.8.8)")
 
 	return flagSet
 }
@@ -93,6 +95,11 @@ func validateStartFlags() error {
 	}
 	if err := validation.ValidateBundle(crcConfig.GetString(config.Bundle.Name)); err != nil {
 		return err
+	}
+	if crcConfig.GetString(config.NameServer.Name) != "" {
+		if err := validation.ValidateIpAddress(crcConfig.GetString(config.NameServer.Name)); err != nil {
+			return err
+		}
 	}
 	return nil
 }

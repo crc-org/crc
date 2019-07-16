@@ -23,10 +23,11 @@ var SettingsList = make(map[string]*setting)
 
 var (
 	// Start command settings in config
-	VMDriver = createSetting("vm-driver", machine.DefaultDriver.Driver, []validationFnType{validations.ValidateDriver})
-	Bundle   = createSetting("bundle", nil, []validationFnType{validations.ValidateBundle})
-	CPUs     = createSetting("cpus", constants.DefaultCPUs, []validationFnType{validations.ValidateCPUs})
-	Memory   = createSetting("memory", constants.DefaultMemory, []validationFnType{validations.ValidateMemory})
+	VMDriver   = createSetting("vm-driver", machine.DefaultDriver.Driver, []validationFnType{validations.ValidateDriver})
+	Bundle     = createSetting("bundle", nil, []validationFnType{validations.ValidateBundle})
+	CPUs       = createSetting("cpus", constants.DefaultCPUs, []validationFnType{validations.ValidateCPUs})
+	Memory     = createSetting("memory", constants.DefaultMemory, []validationFnType{validations.ValidateMemory})
+	NameServer = createSetting("nameserver", nil, []validationFnType{validations.ValidateIpAddress})
 
 	// Preflight checks
 	SkipCheckVirtualBoxInstalled = createSetting("skip-check-virtualbox-installed", nil, []validationFnType{validations.ValidateBool})
