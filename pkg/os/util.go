@@ -1,8 +1,10 @@
 package os
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"runtime"
 	"strings"
@@ -96,4 +98,18 @@ func GetFilePath(path string) (string, error) {
 		return os.Readlink(path)
 	}
 	return path, nil
+}
+
+func WriteFileIfContentChanged(path string, new_content []byte, perm os.FileMode) (bool, error) {
+	old_content, err := ioutil.ReadFile(path)
+	if (err == nil) && (bytes.Equal(old_content, new_content)) {
+		return false, nil
+	}
+	/* Intentionally ignore errors, just try to write the file if we can't read it */
+
+	err = ioutil.WriteFile(path, new_content, perm)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
