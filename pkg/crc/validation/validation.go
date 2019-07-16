@@ -3,6 +3,7 @@ package validation
 import (
 	"fmt"
 	"github.com/code-ready/crc/pkg/crc/version"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -48,6 +49,15 @@ func ValidateBundle(bundle string) error {
 	userProvidedBundleVersion := filepath.Base(bundle)
 	if !strings.Contains(userProvidedBundleVersion, fmt.Sprintf("%s.tar.xz", releaseBundleVersion)) {
 		return errors.NewF("%s bundle is not supported for this release use updated one (crc_<hypervisor>_%s.tar.xz)", userProvidedBundleVersion, releaseBundleVersion)
+	}
+	return nil
+}
+
+// ValidateIpAddress checks if provided IP is valid
+func ValidateIpAddress(ipAddress string) error {
+	ip := net.ParseIP(ipAddress).To4()
+	if ip == nil {
+		return errors.NewF("IPv4 address is not valid: '%s'", ipAddress)
 	}
 	return nil
 }

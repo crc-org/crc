@@ -56,3 +56,11 @@ func ValidateBundle(value interface{}) (bool, string) {
 	}
 	return true, ""
 }
+
+// ValidateIP checks if provided IP is valid
+func ValidateIpAddress(value interface{}) (bool, string) {
+	if err := validation.ValidateIpAddress(value.(string)); err != nil {
+		return false, err.Error()
+	}
+	return true, ""
+}
