@@ -56,7 +56,7 @@ var ocEnvCmd = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {},
 	Run: func(cmd *cobra.Command, args []string) {
 		var shellCfg *OcShellConfig
-		shellCfg, err := getOcShellConfig(constants.OcCacheDir, forceShell)
+		shellCfg, err := getOcShellConfig(constants.CrcBinDir, forceShell)
 		if err != nil {
 			errors.ExitWithMessage(1, fmt.Sprintf("Error running the oc-env command: %s", err.Error()))
 		}
