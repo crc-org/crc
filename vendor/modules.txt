@@ -13,9 +13,9 @@ github.com/code-ready/goodhosts
 github.com/code-ready/machine/libmachine/state
 github.com/code-ready/machine/libmachine/drivers
 # github.com/code-ready/machine v0.0.0-20190513092840-66a8c3b3c494
-github.com/code-ready/machine/libmachine
-github.com/code-ready/machine/libmachine/drivers
 github.com/code-ready/machine/libmachine/state
+github.com/code-ready/machine/libmachine/drivers
+github.com/code-ready/machine/libmachine
 github.com/code-ready/machine/libmachine/host
 github.com/code-ready/machine/libmachine/log
 github.com/code-ready/machine/drivers/virtualbox
@@ -31,7 +31,6 @@ github.com/code-ready/machine/libmachine/drivers/rpc
 github.com/code-ready/machine/libmachine/mcnerror
 github.com/code-ready/machine/libmachine/persist
 github.com/code-ready/machine/libmachine/version
-github.com/code-ready/machine/libmachine/mcnflag
 github.com/code-ready/machine/drivers/none
 github.com/code-ready/machine/libmachine/engine
 github.com/code-ready/machine/libmachine/swarm
