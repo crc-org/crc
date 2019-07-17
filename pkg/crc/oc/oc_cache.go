@@ -37,7 +37,7 @@ func (oc *OcCached) EnsureIsCached() error {
 }
 
 func (oc *OcCached) IsCached() bool {
-	if _, err := os.Stat(filepath.Join(constants.OcCacheDir, constants.OcBinaryName)); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(constants.CrcBinDir, constants.OcBinaryName)); os.IsNotExist(err) {
 		return false
 	}
 	return true
@@ -96,7 +96,7 @@ func (oc *OcCached) cacheOc() error {
 		binaryPath = filepath.Join(binaryPath, binaryName)
 
 		// Copy the requested asset into its final destination
-		outputPath := constants.OcCacheDir
+		outputPath := constants.CrcBinDir
 		err = os.MkdirAll(outputPath, 0755)
 		if err != nil && !os.IsExist(err) {
 			return errors.Wrap(err, "Cannot create the target directory.")

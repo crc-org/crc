@@ -17,7 +17,7 @@ type OcConfig struct {
 // UseOcWithConfig return the oc binary along with valid kubeconfig
 func UseOCWithConfig(machineName string) OcConfig {
 	oc := OcConfig{
-		OcBinaryPath:   filepath.Join(constants.OcCacheDir, constants.OcBinaryName),
+		OcBinaryPath:   filepath.Join(constants.CrcBinDir, constants.OcBinaryName),
 		KubeconfigPath: filepath.Join(constants.MachineInstanceDir, machineName, "kubeconfig"),
 	}
 	return oc

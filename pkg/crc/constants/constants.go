@@ -34,7 +34,6 @@ var (
 	MachineBaseDir     = CrcBaseDir
 	MachineCertsDir    = filepath.Join(MachineBaseDir, "certs")
 	MachineCacheDir    = filepath.Join(MachineBaseDir, "cache")
-	OcCacheDir         = filepath.Join(MachineCacheDir, "oc")
 	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
 	GlobalStatePath    = filepath.Join(CrcBaseDir, GlobalStateFile)
 )
