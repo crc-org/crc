@@ -27,7 +27,7 @@ const (
 	virtualBoxMountLocation = "/Volumes/VirtualBox"
 
 	hyperkitDriverCommand = "crc-driver-hyperkit"
-	hyperkitDriverVersion = "0.12.3"
+	hyperkitDriverVersion = "0.12.4"
 
 	resolverDir  = "/etc/resolver"
 	resolverFile = "/etc/resolver/testing"
