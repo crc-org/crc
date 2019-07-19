@@ -59,17 +59,12 @@ func addNameserverToInstance(driver drivers.Driver, nameserver NameServer) {
 
 func GetResolvValuesFromHost() (*ResolvFileValues, error) {
 	// TODO: we need to add runtime OS in case of windows.
-	fInfo, err := crcos.GetFilePath("/etc/resolv.conf")
-	if err != nil {
-		return nil, err
-	}
-	out, err := ioutil.ReadFile(fInfo)
+	out, err := ioutil.ReadFile("/etc/resolv.conf")
 	if crcos.CurrentOS() == crcos.WINDOWS {
 		// TODO: we need to add logic in case of windows.
 	}
 
 	if err != nil {
-		fmt.Println("This is the error here")
 		return nil, fmt.Errorf("Failed to read resolv.conf: %v", err)
 	}
 	return parseResolveConfFile(string(out))

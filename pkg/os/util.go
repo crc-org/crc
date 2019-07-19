@@ -88,18 +88,6 @@ func CopyFileContents(src string, dst string, permission os.FileMode) error {
 	return nil
 }
 
-// GetFilePath returns the file path even it is symlink
-func GetFilePath(path string) (string, error) {
-	fInfo, err := os.Lstat(path)
-	if err != nil {
-		return path, err
-	}
-	if fInfo.Mode()&os.ModeSymlink != 0 {
-		return os.Readlink(path)
-	}
-	return path, nil
-}
-
 func WriteFileIfContentChanged(path string, new_content []byte, perm os.FileMode) (bool, error) {
 	old_content, err := ioutil.ReadFile(path)
 	if (err == nil) && (bytes.Equal(old_content, new_content)) {
