@@ -42,11 +42,12 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *se
 		return *result, err
 	}
 	if needRestart {
-		// Restart the Network on mac
+		// Restart the Network but in case of error log it to error info.
+		// If we make it blocking call then in offline use case for mac is
+		// always going to be broken.
 		logging.InfoF("Restarting the host network")
 		if err := restartNetwork(); err != nil {
-			result.Success = false
-			return *result, err
+			logging.ErrorF("Restarting the host network failed: %v", err)
 		}
 	} else {
 		logging.InfoF("Network restart not needed")
@@ -78,6 +79,7 @@ func createResolverFile(InstanceIP string, path string) (bool, error) {
 	return crcos.WriteFileIfContentChanged(path, resolverFile.Bytes(), 0644)
 }
 
+// restartNetwork is required to update the resolver file on OSx.
 func restartNetwork() error {
 	// https://medium.com/@kumar_pravin/network-restart-on-mac-os-using-shell-script-ab19ba6e6e99
 	netDeviceList, _, err := crcos.RunWithDefaultLocale("networksetup", "-listallnetworkservices")
