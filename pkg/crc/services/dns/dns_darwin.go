@@ -42,12 +42,16 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *se
 		return *result, err
 	}
 	if needRestart {
-		// Restart the Network but in case of error log it to error info.
-		// If we make it blocking call then in offline use case for mac is
-		// always going to be broken.
 		logging.InfoF("Restarting the host network")
 		if err := restartNetwork(); err != nil {
-			logging.ErrorF("Restarting the host network failed: %v", err)
+			result.Success = false
+			return *result, fmt.Errorf("Restarting the host network failed: %v", err)
+		}
+		// Wait for the Network to come up but in the case of error, log it to error info.
+		// If we make it as fatal call then in offline use case for mac is
+		// always going to be broken.
+		if err := waitForNetwork(); err != nil {
+			logging.Error(err)
 		}
 	} else {
 		logging.InfoF("Network restart not needed")
@@ -98,7 +102,7 @@ func restartNetwork() error {
 		}
 	}
 
-	return waitForNetwork()
+	return nil
 }
 
 // Wait for Network wait till the network is up, since it is required to resolve external dnsquery
