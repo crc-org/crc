@@ -17,6 +17,15 @@ Feature: Basic test
             """
             Use "crc [command] --help" for more information about a command.
             """
+
+    @darwin @linux @windows
+    Scenario: CRC status
+        When executing "crc status" fails
+        Then stderr should contain 
+        """
+        Machine \"crc\" does not exist. Use \"crc start\" to add a new one.
+        """
+
     @linux
     Scenario: CRC setup on Linux
         When executing "crc setup" succeeds
@@ -50,10 +59,20 @@ Feature: Basic test
         Then stdout should contain "CodeReady Containers instance is running"
     
     @darwin @linux @windows
+    Scenario: CRC status check
+        When with up to "10" retries with wait period of "1m" command "crc status" output should not contain "Stopped"
+        And stdout should contain "Running"
+
+    @darwin @linux @windows
     Scenario: CRC kill
         When executing "crc stop -f"
-        Then stdout should contain "CodeReady Containers instance stopped"
-    
+        Then stdout should contain "CodeReady Containers instance stopped"    
+
+    @darwin @linux @windows
+    Scenario: CRC status check
+        When with up to "2" retries with wait period of "1m" command "crc status" output should not contain "Running"
+        And stdout should contain "Stopped"
+
     @darwin @linux @windows
     Scenario: CRC delete
         When executing "crc delete" succeeds
