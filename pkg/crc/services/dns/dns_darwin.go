@@ -101,12 +101,20 @@ func restartNetwork() error {
 
 // Wait for Network wait till the network is up, since it is required to resolve external dnsquery
 func waitForNetwork() error {
-	hostResolv, err := network.GetResolvValuesFromHost()
+	var hostResolv *network.ResolvFileValues
+	var err error
+
+	for i := 1; i <= 5; i++ {
+		hostResolv, err = network.GetResolvValuesFromHost()
+		if err == nil {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
 	if err != nil {
-		// wait and retry
 		return fmt.Errorf("Unable to read host resolv file (%v)", err)
 	}
-	// retry for 5 times
+	// retry up to 5 times
 	for i := 0; i < 5; i++ {
 		for _, ns := range hostResolv.NameServers {
 			_, _, err := crcos.RunWithDefaultLocale("ping", "-c4", ns.IPAddress)
