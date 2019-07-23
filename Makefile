@@ -19,6 +19,7 @@ COMMIT_SHA=$(shell git rev-parse --short HEAD)
 # Go and compilation related variables
 BUILD_DIR ?= out
 SOURCE_DIRS = cmd pkg test
+RELEASE_DIR ?= release
 
 # Docs build related variables
 DOCS_BUILD_DIR ?= /docs/build
@@ -89,6 +90,8 @@ clean_docs:
 clean: clean_docs
 	rm -rf $(BUILD_DIR)
 	rm -f $(GOPATH)/bin/crc
+	rm -rf $(RELEASE_DIR)
+       
 
 .PHONY: integration ## Run integration tests
 integration: GODOG_OPTS = --godog.tags=$(GOOS)
@@ -103,3 +106,14 @@ fmt:
 fmtcheck: ## Checks for style violation using gofmt
 	@gofmt -l $(SOURCE_DIRS) | grep ".*\.go"; if [ "$$?" = "0" ]; then exit 1; fi
 
+.PHONY: release
+release: clean fmtcheck cross
+	mkdir $(RELEASE_DIR)
+	
+	@mkdir -p $(BUILD_DIR)/crc-$(CRC_VERSION)-darwin-amd64
+	@cp LICENSE $(BUILD_DIR)/darwin-amd64/crc $(BUILD_DIR)/crc-$(CRC_VERSION)-darwin-amd64
+	tar cJSf $(RELEASE_DIR)/crc-$(CRC_VERSION)-darwin-amd64.tar.xz -C $(BUILD_DIR) crc-$(CRC_VERSION)-darwin-amd64
+
+	@mkdir -p $(BUILD_DIR)/crc-$(CRC_VERSION)-linux-amd64
+	@cp LICENSE $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-$(CRC_VERSION)-linux-amd64
+	tar cJSf $(RELEASE_DIR)/crc-$(CRC_VERSION)-linux-amd64.tar.xz -C $(BUILD_DIR) crc-$(CRC_VERSION)-linux-amd64
