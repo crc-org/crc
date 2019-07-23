@@ -21,13 +21,13 @@ func ValidateDriver(driver string) error {
 			return nil
 		}
 	}
-	return errors.NewF("Unsupported driver: %s, use '--vm-driver' option to provide a supported driver %s\n", driver, machine.SupportedDriverValues())
+	return errors.Newf("Unsupported driver: %s, use '--vm-driver' option to provide a supported driver %s\n", driver, machine.SupportedDriverValues())
 }
 
 // ValidateCPUs checks if provided cpus count is valid
 func ValidateCPUs(value int) error {
 	if value < constants.DefaultCPUs {
-		return errors.NewF("CPUs required >=%d", constants.DefaultCPUs)
+		return errors.Newf("CPUs required >=%d", constants.DefaultCPUs)
 	}
 	return nil
 }
@@ -35,7 +35,7 @@ func ValidateCPUs(value int) error {
 // ValidateMemory checks if provided Memory count is valid
 func ValidateMemory(value int) error {
 	if value < constants.DefaultMemory {
-		return errors.NewF("Memory required >=%d", constants.DefaultMemory)
+		return errors.Newf("Memory required >=%d", constants.DefaultMemory)
 	}
 	return nil
 }
@@ -49,7 +49,7 @@ func ValidateBundle(bundle string) error {
 	releaseBundleVersion := version.GetBundleVersion()
 	userProvidedBundleVersion := filepath.Base(bundle)
 	if !strings.Contains(userProvidedBundleVersion, fmt.Sprintf("%s.crcbundle", releaseBundleVersion)) {
-		return errors.NewF("%s bundle is not supported for this release use updated one (crc_<hypervisor>_%s.crcbundle)", userProvidedBundleVersion, releaseBundleVersion)
+		return errors.Newf("%s bundle is not supported for this release use updated one (crc_<hypervisor>_%s.crcbundle)", userProvidedBundleVersion, releaseBundleVersion)
 	}
 	return nil
 }
@@ -58,7 +58,7 @@ func ValidateBundle(bundle string) error {
 func ValidateIpAddress(ipAddress string) error {
 	ip := net.ParseIP(ipAddress).To4()
 	if ip == nil {
-		return errors.NewF("IPv4 address is not valid: '%s'", ipAddress)
+		return errors.Newf("IPv4 address is not valid: '%s'", ipAddress)
 	}
 	return nil
 }
@@ -66,7 +66,7 @@ func ValidateIpAddress(ipAddress string) error {
 // ValidatePath check if provide path is exist
 func ValidatePath(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return errors.NewF("File %s does not exist", path)
+		return errors.Newf("File %s does not exist", path)
 	}
 	return nil
 }

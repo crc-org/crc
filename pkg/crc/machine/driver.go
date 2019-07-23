@@ -32,5 +32,5 @@ func getDriverInfo(driver string) (*MachineDriver, error) {
 			return &d, nil
 		}
 	}
-	return nil, errors.NewF("No info about unknown driver: %s", driver)
+	return nil, errors.Newf("No info about unknown driver: %s", driver)
 }

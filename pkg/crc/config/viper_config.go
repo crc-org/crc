@@ -33,11 +33,11 @@ func Unset(key string) error {
 	delete(ViperConfig, key)
 	encodedConfig, err := json.MarshalIndent(ViperConfig, "", " ")
 	if err != nil {
-		return errors.NewF("Error encoding config to JSON: %v", err)
+		return errors.Newf("Error encoding config to JSON: %v", err)
 	}
 	err = globalViper.ReadConfig(bytes.NewBuffer(encodedConfig))
 	if err != nil {
-		return errors.NewF("Error reading in new config: %s : %v", constants.ConfigFile, err)
+		return errors.Newf("Error reading in new config: %s : %v", constants.ConfigFile, err)
 	}
 	return nil
 }
