@@ -124,7 +124,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		}
 
 		if host.Driver.DriverName() != startConfig.VMDriver {
-			err := errors.NewF("VM driver '%s' was requested, but loaded VM is using '%s' instead",
+			err := errors.Newf("VM driver '%s' was requested, but loaded VM is using '%s' instead",
 				startConfig.VMDriver, host.Driver.DriverName())
 			result.Error = err.Error()
 			return *result, err
@@ -453,7 +453,7 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 func existVM(api libmachine.API, machineConfig config.MachineConfig) (bool, error) {
 	exists, err := api.Exists(machineConfig.Name)
 	if err != nil {
-		return false, errors.NewF("Error checking if the host exists: %s", err)
+		return false, errors.Newf("Error checking if the host exists: %s", err)
 	}
 	return exists, nil
 }
@@ -465,11 +465,11 @@ func createHost(api libmachine.API, driverPath string, machineConfig config.Mach
 	vm, err := api.NewHost(machineConfig.VMDriver, driverPath, jsonDriverConfig)
 
 	if err != nil {
-		return nil, errors.NewF("Error creating new host: %s", err)
+		return nil, errors.Newf("Error creating new host: %s", err)
 	}
 
 	if err := api.Create(vm); err != nil {
-		return nil, errors.NewF("Error creating the VM. %s", err)
+		return nil, errors.Newf("Error creating the VM. %s", err)
 	}
 
 	return vm, nil

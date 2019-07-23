@@ -12,7 +12,7 @@ func New(text string) error {
 	return goerrors.New(text)
 }
 
-func NewF(text string, args ...interface{}) error {
+func Newf(text string, args ...interface{}) error {
 	logging.Errorf(fmt.Sprintf("Error occurred: %s", text), args...)
 	return fmt.Errorf(text, args...)
 }
