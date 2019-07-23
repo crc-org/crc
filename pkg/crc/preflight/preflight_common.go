@@ -7,7 +7,7 @@ import (
 type PreflightCheckFixFuncType func() (bool, error)
 
 func preflightCheckSucceedsOrFails(configuredToSkip bool, check PreflightCheckFixFuncType, message string, configuredToWarn bool) {
-	logging.InfoF("%s", message)
+	logging.Infof("%s", message)
 	if configuredToSkip {
 		logging.Warn("Skipping above check ...")
 		return
@@ -27,7 +27,7 @@ func preflightCheckSucceedsOrFails(configuredToSkip bool, check PreflightCheckFi
 }
 
 func preflightCheckAndFix(configuredToSkip bool, check, fix PreflightCheckFixFuncType, message string, configuredToWarn bool) {
-	logging.InfoF("%s", message)
+	logging.Infof("%s", message)
 	if configuredToSkip {
 		logging.Warn("Skipping above check ...")
 		return

@@ -55,7 +55,7 @@ func runStop(arguments []string) {
 		output.Out("CodeReady Containers instance stopped")
 	} else {
 		/* If we did not get an error, the status should be true */
-		logging.WarnF("Unexpected status %v", commandResult.Success)
+		logging.Warnf("Unexpected status %v", commandResult.Success)
 	}
 }
 

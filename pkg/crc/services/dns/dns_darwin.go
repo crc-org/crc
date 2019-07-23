@@ -42,7 +42,8 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *se
 		return *result, err
 	}
 	if needRestart {
-		logging.InfoF("Restarting the host network")
+		// Restart the Network on mac
+		logging.Infof("Restarting the host network")
 		if err := restartNetwork(); err != nil {
 			result.Success = false
 			return *result, fmt.Errorf("Restarting the host network failed: %v", err)
@@ -54,7 +55,7 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *se
 			logging.Error(err)
 		}
 	} else {
-		logging.InfoF("Network restart not needed")
+		logging.Infof("Network restart not needed")
 	}
 
 	// we pass the result and error on
@@ -94,9 +95,9 @@ func restartNetwork() error {
 	for _, netdevice := range strings.Split(netDeviceList, "\n")[1:] {
 		time.Sleep(1 * time.Second)
 		stdout, stderr, err := crcos.RunWithDefaultLocale("networksetup", "-setnetworkserviceenabled", netdevice, "off")
-		logging.DebugF("Disabling the %s Device (stdout: %s), (stderr: %s)", netdevice, stdout, stderr)
+		logging.Debugf("Disabling the %s Device (stdout: %s), (stderr: %s)", netdevice, stdout, stderr)
 		stdout, stderr, err = crcos.RunWithDefaultLocale("networksetup", "-setnetworkserviceenabled", netdevice, "on")
-		logging.DebugF("Enabling the %s Device (stdout: %s), (stderr: %s)", netdevice, stdout, stderr)
+		logging.Debugf("Enabling the %s Device (stdout: %s), (stderr: %s)", netdevice, stdout, stderr)
 		if err != nil {
 			return fmt.Errorf("%s: %v", stderr, err)
 		}
@@ -154,7 +155,7 @@ func updateHostsConfFile(instanceIP string, hostnames ...string) error {
 }
 
 func replaceHostname(hosts *goodhosts.Hosts, ipAddress string, hostname string) error {
-	logging.DebugF("Updating %s to %s in /etc/hosts file", hostname, ipAddress)
+	logging.Debugf("Updating %s to %s in /etc/hosts file", hostname, ipAddress)
 	if hosts.HasHostname(hostname) {
 		if err := hosts.RemoveByHostname(hostname); err != nil {
 			return err

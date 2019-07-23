@@ -225,7 +225,7 @@ func fixLibvirtServiceRunning() (bool, error) {
 }
 
 func checkMachineDriverLibvirtInstalled() (bool, error) {
-	logging.DebugF("Checking if %s is installed", libvirtDriverCommand)
+	logging.Debugf("Checking if %s is installed", libvirtDriverCommand)
 	// Check if crc-driver-libvirt is available
 	path, err := exec.LookPath(libvirtDriverCommand)
 	if err != nil {
@@ -248,15 +248,15 @@ func checkMachineDriverLibvirtInstalled() (bool, error) {
 	if !strings.Contains(stdOut, libvirtDriverVersion) {
 		return false, fmt.Errorf("crc-driver-libvirt does not have right version \n Required: %s \n Got: %s use 'crc setup' command.\n %v\n", libvirtDriverVersion, stdOut, stdErr)
 	}
-	logging.DebugF("%s is already installed in %s", libvirtDriverCommand, path)
+	logging.Debugf("%s is already installed in %s", libvirtDriverCommand, path)
 	return true, nil
 }
 
 func fixMachineDriverLibvirtInstalled() (bool, error) {
-	logging.DebugF("Installing %s", libvirtDriverCommand)
+	logging.Debugf("Installing %s", libvirtDriverCommand)
 	// Download the driver binary in /tmp
 	tempFilePath := filepath.Join(os.TempDir(), libvirtDriverCommand)
-	logging.DebugF("Downloading %s in %s", libvirtDriverDownloadURL, tempFilePath)
+	logging.Debugf("Downloading %s in %s", libvirtDriverDownloadURL, tempFilePath)
 	out, err := os.Create(tempFilePath)
 	if err != nil {
 		return false, err
@@ -273,7 +273,7 @@ func fixMachineDriverLibvirtInstalled() (bool, error) {
 		return false, err
 	}
 
-	logging.DebugF("Copying %s in %s", libvirtDriverCommand, libvirtDriverBinaryPath)
+	logging.Debugf("Copying %s in %s", libvirtDriverCommand, libvirtDriverBinaryPath)
 	stdOut, stdErr, err := crcos.RunWithPrivilege("mkdir", "-p", driverBinaryDir)
 	if err != nil {
 		return false, fmt.Errorf("%s %v: %s", stdOut, err, stdErr)
@@ -286,7 +286,7 @@ func fixMachineDriverLibvirtInstalled() (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("%s %v: %s", stdOut, err, stdErr)
 	}
-	logging.DebugF("%s is installed in %s", libvirtDriverCommand, libvirtDriverBinaryPath)
+	logging.Debugf("%s is installed in %s", libvirtDriverCommand, libvirtDriverBinaryPath)
 	return true, nil
 }
 

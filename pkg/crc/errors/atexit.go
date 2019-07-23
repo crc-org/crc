@@ -77,7 +77,7 @@ func runHandler(exitHandler exitHandlerFunc, code int) bool {
 	defer func() {
 		err := recover()
 		if err != nil {
-			logging.ErrorF("Error running exit handler: %v", err)
+			logging.Errorf("Error running exit handler: %v", err)
 		}
 	}()
 
