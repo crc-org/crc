@@ -49,7 +49,7 @@ func runStop(arguments []string) {
 				errors.Exit(0)
 			}
 		}
-		errors.ExitWithMessage(1, err.Error())
+		errors.Exit(1)
 	}
 	if commandResult.Success {
 		output.Out("CodeReady Containers instance stopped")
@@ -62,7 +62,7 @@ func runStop(arguments []string) {
 func killVM(killConfig machine.PowerOffConfig) {
 	_, err := machine.PowerOff(killConfig)
 	if err != nil {
-		errors.ExitWithMessage(1, err.Error())
+		errors.Exit(1)
 	}
 	output.Out("CodeReady Containers instance forcibly stopped")
 }
