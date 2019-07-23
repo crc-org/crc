@@ -16,7 +16,7 @@ const (
 
 	CrcEnvPrefix = "CRC"
 
-	DefaultHostname      = "crc-cvgnz-master-0"
+	DefaultHostname      = "crc-rv4tg-master-0"
 	DefaultWebConsoleURL = "https://console-openshift-console.apps-crc.testing"
 	DefaultAPIURL        = "https://api.crc.testing:6443"
 	DefaultDiskImage     = "crc.disk"
