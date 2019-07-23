@@ -9,7 +9,7 @@ import (
 
 func Download(uri, destination string) (string, error) {
 	// create client
-	logging.DebugF("Downloading %s to %s", uri, destination)
+	logging.Debugf("Downloading %s to %s", uri, destination)
 	client := grab.NewClient()
 	req, err := grab.NewRequest(destination, uri)
 	if err != nil {
@@ -21,6 +21,6 @@ func Download(uri, destination string) (string, error) {
 		return "", errors.NewF("Download failed: %v\n", err)
 	}
 
-	logging.DebugF("Download saved to %v \n", resp.Filename)
+	logging.Debugf("Download saved to %v \n", resp.Filename)
 	return resp.Filename, nil
 }

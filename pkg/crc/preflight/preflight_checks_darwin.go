@@ -144,7 +144,7 @@ func download(url string, destDir string, mode os.FileMode) (string, error) {
 }
 
 func setSuid(path string) error {
-	logging.DebugF("Making %s suid", path)
+	logging.Debugf("Making %s suid", path)
 
 	stdOut, stdErr, err := crcos.RunWithPrivilege("chown", "root:wheel", path)
 	if err != nil {
@@ -176,11 +176,11 @@ func checkSuid(path string) (bool, error) {
 }
 
 func checkHyperKitInstalled() (bool, error) {
-	logging.DebugF("Checking if hyperkit is installed")
+	logging.Debugf("Checking if hyperkit is installed")
 	hyperkitPath := filepath.Join(constants.CrcBinDir, "hyperkit")
 	err := unix.Access(hyperkitPath, unix.X_OK)
 	if err != nil {
-		logging.DebugF("%s not executable", hyperkitPath)
+		logging.Debugf("%s not executable", hyperkitPath)
 		return false, err
 	}
 
@@ -202,7 +202,7 @@ func fixHyperKitInstallation() (bool, error) {
 }
 
 func checkMachineDriverHyperKitInstalled() (bool, error) {
-	logging.DebugF("Checking if %s is installed", hyperkitDriverCommand)
+	logging.Debugf("Checking if %s is installed", hyperkitDriverCommand)
 	hyperkitPath := filepath.Join(constants.CrcBinDir, hyperkitDriverCommand)
 	err := unix.Access(hyperkitPath, unix.X_OK)
 	if err != nil {
@@ -217,7 +217,7 @@ func checkMachineDriverHyperKitInstalled() (bool, error) {
 	if !strings.Contains(stdOut, hyperkitDriverVersion) {
 		return false, fmt.Errorf("%s does not have right version \n Required: %s \n Got: %s use 'crc setup' command.\n %v\n", hyperkitDriverCommand, hyperkitDriverVersion, stdOut, stdErr)
 	}
-	logging.DebugF("%s is already installed in %s", hyperkitDriverCommand, hyperkitPath)
+	logging.Debugf("%s is already installed in %s", hyperkitDriverCommand, hyperkitPath)
 
 	return checkSuid(hyperkitPath)
 }
@@ -243,13 +243,13 @@ func checkResolverFilePermissions() (bool, error) {
 func fixResolverFilePermissions() (bool, error) {
 	// Check if resolver directory available or not
 	if _, err := os.Stat(resolverDir); os.IsNotExist(err) {
-		logging.DebugF("Creating %s directory", resolverDir)
+		logging.Debugf("Creating %s directory", resolverDir)
 		stdOut, stdErr, err := crcos.RunWithPrivilege("mkdir", resolverDir)
 		if err != nil {
 			return false, fmt.Errorf("Unable to create the resolver Dir: %s %v: %s", stdOut, err, stdErr)
 		}
 	}
-	logging.DebugF("Making %s readable/writable by the current user", resolverFile)
+	logging.Debugf("Making %s readable/writable by the current user", resolverFile)
 	stdOut, stdErr, err := crcos.RunWithPrivilege("touch", resolverFile)
 	if err != nil {
 		return false, fmt.Errorf("Unable to create the resolver file: %s %v: %s", stdOut, err, stdErr)
@@ -294,7 +294,7 @@ func isUserHaveFileWritePermission(filename string) (bool, error) {
 }
 
 func addFileWritePermissionToUser(filename string) (bool, error) {
-	logging.DebugF("Making %s readable/writable by the current user", filename)
+	logging.Debugf("Making %s readable/writable by the current user", filename)
 	currentUser, err := user.Current()
 	if err != nil {
 		return false, err
@@ -309,7 +309,7 @@ func addFileWritePermissionToUser(filename string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("Unable to change permissions of the filename: %s %v: %s", stdOut, err, stdErr)
 	}
-	logging.DebugF("%s is readable/writable by current user", filename)
+	logging.Debugf("%s is readable/writable by current user", filename)
 
 	return true, nil
 }

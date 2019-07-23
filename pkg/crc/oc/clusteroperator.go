@@ -60,7 +60,7 @@ func GetClusterOperatorStatus(oc OcConfig) (bool, error) {
 					allAvailable = false
 				}
 			default:
-				logging.DebugF("Unexpected operator status for %s: %s", c.Metadata.Name, con.Type)
+				logging.Debugf("Unexpected operator status for %s: %s", c.Metadata.Name, con.Type)
 			}
 		}
 	}

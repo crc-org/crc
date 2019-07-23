@@ -72,7 +72,7 @@ func addpullSecretSpecToInstance(driver drivers.Driver, pullSec string) error {
 	if err != nil {
 		return err
 	}
-	logging.DebugF("Output is : %s", output)
+	logging.Debugf("Output is : %s", output)
 	return nil
 }
 
@@ -81,7 +81,7 @@ func addpullSecretToInstanceDisk(driver drivers.Driver, pullSec string) error {
 	if err != nil {
 		return err
 	}
-	logging.DebugF("Output is : %s", output)
+	logging.Debugf("Output is : %s", output)
 	return nil
 }
 
@@ -102,7 +102,7 @@ func replaceUserPullSecret(driver drivers.Driver) error {
 	if err != nil {
 		return err
 	}
-	logging.DebugF("Output of %s: %s", replacePullSecretCmd, output)
+	logging.Debugf("Output of %s: %s", replacePullSecretCmd, output)
 	return nil
 }
 
@@ -113,7 +113,7 @@ func addClusterID(driver drivers.Driver) error {
 	if err != nil {
 		return err
 	}
-	logging.DebugF("Output of %s: %s", updateClusterIdCmd, output)
+	logging.Debugf("Output of %s: %s", updateClusterIdCmd, output)
 	return nil
 }
 
@@ -126,7 +126,7 @@ func setPullSecretAndClusterID(driver drivers.Driver) (rerr error) {
 			m.Collect(err)
 		}
 		output, err := drivers.RunSSHCommandFromDriver(driver, stopAndRemovePodsCmd)
-		logging.DebugF("Output of %s: %s", stopAndRemovePodsCmd, output)
+		logging.Debugf("Output of %s: %s", stopAndRemovePodsCmd, output)
 		if err != nil {
 			m.Collect(err)
 		}

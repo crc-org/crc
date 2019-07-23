@@ -125,7 +125,7 @@ func Info(args ...interface{}) {
 	logrus.Info(args...)
 }
 
-func InfoF(s string, args ...interface{}) {
+func Infof(s string, args ...interface{}) {
 	logrus.Infof(s, args...)
 }
 
@@ -133,7 +133,7 @@ func Warn(args ...interface{}) {
 	logrus.Warn(args...)
 }
 
-func WarnF(s string, args ...interface{}) {
+func Warnf(s string, args ...interface{}) {
 	logrus.Warnf(s, args...)
 }
 
@@ -141,7 +141,7 @@ func Fatal(args ...interface{}) {
 	logrus.Fatal(args...)
 }
 
-func FatalF(s string, args ...interface{}) {
+func Fatalf(s string, args ...interface{}) {
 	logrus.Fatalf(s, args...)
 }
 
@@ -149,7 +149,7 @@ func Error(args ...interface{}) {
 	logrus.Error(args...)
 }
 
-func ErrorF(s string, args ...interface{}) {
+func Errorf(s string, args ...interface{}) {
 	logrus.Errorf(s, args...)
 }
 
@@ -157,6 +157,6 @@ func Debug(args ...interface{}) {
 	logrus.Debug(args...)
 }
 
-func DebugF(s string, args ...interface{}) {
+func Debugf(s string, args ...interface{}) {
 	logrus.Debugf(s, args...)
 }
