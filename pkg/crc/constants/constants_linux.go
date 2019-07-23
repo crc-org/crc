@@ -11,5 +11,5 @@ const (
 )
 
 func GetDefaultBundle() string {
-	return fmt.Sprintf("crc_libvirt_%s.tar.xz", version.GetBundleVersion())
+	return fmt.Sprintf("crc_libvirt_%s.crcbundle", version.GetBundleVersion())
 }
