@@ -51,7 +51,7 @@ func runStart(arguments []string) {
 
 	pullsecretFileContent, err := getPullSecretFileContent()
 	if err != nil {
-		errors.ExitWithMessage(1, err.Error())
+		errors.Exit(1)
 	}
 
 	startConfig := machine.StartConfig{
@@ -67,7 +67,7 @@ func runStart(arguments []string) {
 
 	commandResult, err := machine.Start(startConfig)
 	if err != nil {
-		errors.ExitWithMessage(1, err.Error())
+		errors.Exit(1)
 	}
 	if commandResult.Status == "Running" {
 		output.Out("CodeReady Containers instance is running")
@@ -97,20 +97,20 @@ func isDebugLog() bool {
 
 func validateStartFlags() error {
 	if err := validation.ValidateDriver(crcConfig.GetString(config.VMDriver.Name)); err != nil {
-		return err
+		return errors.New(err.Error())
 	}
 	if err := validation.ValidateMemory(crcConfig.GetInt(config.Memory.Name)); err != nil {
-		return err
+		return errors.New(err.Error())
 	}
 	if err := validation.ValidateCPUs(crcConfig.GetInt(config.CPUs.Name)); err != nil {
-		return err
+		return errors.New(err.Error())
 	}
 	if err := validation.ValidateBundle(crcConfig.GetString(config.Bundle.Name)); err != nil {
-		return err
+		return errors.New(err.Error())
 	}
 	if crcConfig.GetString(config.NameServer.Name) != "" {
 		if err := validation.ValidateIpAddress(crcConfig.GetString(config.NameServer.Name)); err != nil {
-			return err
+			return errors.New(err.Error())
 		}
 	}
 	return nil
@@ -124,7 +124,7 @@ func getPullSecretFileContent() (string, error) {
 	// Check if pull secret is stored in cache then read it and return.
 	pullsecret, pullSecretFilePresent, err := ps.GetPullSecretFromFilePath(filepath.Join(constants.MachineCacheDir, constants.PullSecretFile))
 	if err != nil {
-		return "", err
+		return "", errors.New(err.Error())
 	}
 
 	if !pullSecretFilePresent {
@@ -134,25 +134,25 @@ func getPullSecretFileContent() (string, error) {
 			// This is just to provide a new line after user enter the pull secret.
 			fmt.Println()
 			if err != nil {
-				return "", err
+				return "", errors.New(err.Error())
 			}
 		} else {
 			// Read the file content
 			data, err := ioutil.ReadFile(crcConfig.GetString(config.PullSecretFile.Name))
 			if err != nil {
-				return "", err
+				return "", errors.New(err.Error())
 			}
 			pullsecret = string(data)
 		}
 	}
 	if err := validation.ImagePullSecret(pullsecret); err != nil {
-		return "", err
+		return "", errors.New(err.Error())
 	}
 
 	// Add pull secret to cache.
 	if !pullSecretFilePresent {
 		if err := ps.StorePullSecretToFile(pullsecret, constants.MachineCacheDir, constants.PullSecretFile); err != nil {
-			return "", err
+			return "", errors.New(err.Error())
 		}
 	}
 

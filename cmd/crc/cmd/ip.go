@@ -30,7 +30,7 @@ func runIP(arguments []string) {
 
 	result, err := machine.Ip(ipConfig)
 	if err != nil {
-		errors.ExitWithMessage(1, err.Error())
+		errors.Exit(1)
 	}
 	output.Out(result.IP)
 }

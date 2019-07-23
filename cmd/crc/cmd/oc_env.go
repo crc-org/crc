@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"text/template"
 
@@ -28,7 +27,7 @@ type OcShellConfig struct {
 func getOcShellConfig(ocPath string, forcedShell string) (*OcShellConfig, error) {
 	userShell, err := shell.GetShell(forcedShell)
 	if err != nil {
-		return nil, err
+		return nil, errors.Newf("Error running the oc-env command: %s", err.Error())
 	}
 
 	cmdLine := "crc oc-env"
@@ -58,7 +57,7 @@ var ocEnvCmd = &cobra.Command{
 		var shellCfg *OcShellConfig
 		shellCfg, err := getOcShellConfig(constants.CrcBinDir, forceShell)
 		if err != nil {
-			errors.ExitWithMessage(1, fmt.Sprintf("Error running the oc-env command: %s", err.Error()))
+			errors.Exit(1)
 		}
 		executeOcTemplateStdout(shellCfg)
 	},

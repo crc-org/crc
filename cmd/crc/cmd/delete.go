@@ -40,7 +40,7 @@ func runDelete(arguments []string) {
 
 	_, err := machine.Delete(deleteConfig)
 	if err != nil {
-		errors.ExitWithMessage(1, err.Error())
+		errors.Exit(1)
 	}
 	output.Out("CodeReady Containers instance deleted")
 }

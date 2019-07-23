@@ -45,7 +45,7 @@ func runStatus() {
 	statusConfig := machine.ClusterStatusConfig{Name: constants.DefaultName}
 	clusterStatus, err := machine.Status(statusConfig)
 	if err != nil {
-		errors.ExitWithMessage(1, "Error while getting cluster status: %v", err)
+		errors.Exit(1)
 	}
 	cacheDir := constants.MachineCacheDir
 	var size int64
