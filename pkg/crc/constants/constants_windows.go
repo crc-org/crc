@@ -12,5 +12,5 @@ const (
 
 func GetDefaultBundle() string {
 	// TODO: we will change once we have correct bundle for windows
-	return fmt.Sprintf("crc_hyperv_%s.tar.xz", version.GetBundleVersion())
+	return fmt.Sprintf("crc_hyperv_%s.crcbundle", version.GetBundleVersion())
 }
