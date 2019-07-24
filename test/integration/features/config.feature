@@ -122,7 +122,7 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
        And executing "crc config set skip-check-crc-network-active true" succeeds
        # Start CRC
        Then starting CRC with default bundle and default hypervisor fails
-       And stdout contains "Network not found: no network with matching name 'crc'"
+       And stderr contains "Network not found: no network with matching name 'crc'"
 
    @linux
    Scenario: Clean-up

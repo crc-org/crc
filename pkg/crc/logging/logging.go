@@ -1,14 +1,13 @@
 package logging
 
 import (
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -17,41 +16,6 @@ var (
 	LogLevel      string
 	originalHooks = logrus.LevelHooks{}
 )
-
-type fileHook struct {
-	file      io.Writer
-	formatter logrus.Formatter
-	level     logrus.Level
-}
-
-func newFileHook(file io.Writer, level logrus.Level, formatter logrus.Formatter) *fileHook {
-	return &fileHook{
-		file:      file,
-		formatter: formatter,
-		level:     level,
-	}
-}
-
-func (h fileHook) Levels() []logrus.Level {
-	var levels []logrus.Level
-	for _, level := range logrus.AllLevels {
-		if level <= h.level {
-			levels = append(levels, level)
-		}
-	}
-
-	return levels
-}
-
-func (h *fileHook) Fire(entry *logrus.Entry) error {
-	line, err := h.formatter.Format(entry)
-	if err != nil {
-		return err
-	}
-
-	_, err = h.file.Write(line)
-	return err
-}
 
 func OpenLogFile() (*os.File, error) {
 	l, err := os.OpenFile(filepath.Join(constants.LogFilePath), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
@@ -105,12 +69,20 @@ func InitLogrus(logLevel string) {
 		level = logrus.InfoLevel
 	}
 
-	logrus.AddHook(newFileHook(os.Stdout, level, &logrus.TextFormatter{
+	// Add hook to send non error logs to stdout
+	logrus.AddHook(newstdOutHook(level, &logrus.TextFormatter{
 		// Setting ForceColors is necessary because logrus.TextFormatter determines
 		// whether or not to enable colors by looking at the output of the logger.
 		// In this case, the output is ioutil.Discard, which is not a terminal.
 		// Overriding it here allows the same check to be done, but against the
 		// hook's output instead of the logger's output.
+		ForceColors:            terminal.IsTerminal(int(os.Stderr.Fd())),
+		DisableTimestamp:       true,
+		DisableLevelTruncation: false,
+	}))
+
+	// Add hook to send error/fatal to stderr
+	logrus.AddHook(newstdErrHook(level, &logrus.TextFormatter{
 		ForceColors:            terminal.IsTerminal(int(os.Stderr.Fd())),
 		DisableTimestamp:       true,
 		DisableLevelTruncation: false,
