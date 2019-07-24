@@ -19,14 +19,13 @@ package crcsuite
 
 import (
 	"fmt"
+	"github.com/DATA-DOG/godog"
+	"github.com/DATA-DOG/godog/gherkin"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/DATA-DOG/godog"
-	"github.com/DATA-DOG/godog/gherkin"
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
 	"github.com/code-ready/crc/pkg/crc/oc"
@@ -210,13 +209,8 @@ func LoginToOcClusterSucceedsOrFails(expected string) error {
 	bundle := strings.Split(bundleName, ".crcbundle")[0]
 	pswdLocation := filepath.Join(CRCHome, "cache", bundle, "kubeadmin-password")
 
-	pswdFile, err := os.Open(pswdLocation)
-	if err != nil {
-		return err
-	}
-	defer pswdFile.Close()
+	pswd, err := ioutil.ReadFile(pswdLocation)
 
-	pswd, err := ioutil.ReadAll(pswdFile)
 	if err != nil {
 		return err
 	}
@@ -237,7 +231,7 @@ func StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails(expected strin
 
 func StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails(hypervisor string, expected string) error {
 
-	cmd := fmt.Sprintf("crc start -b %s -d %s -p '%s'", bundleName, hypervisor, pullSecretFile)
+	cmd := fmt.Sprintf("crc start -b %s -d %s -p '%s' --log-level debug", bundleName, hypervisor, pullSecretFile)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
