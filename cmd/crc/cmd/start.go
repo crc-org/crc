@@ -97,20 +97,20 @@ func isDebugLog() bool {
 
 func validateStartFlags() error {
 	if err := validation.ValidateDriver(crcConfig.GetString(config.VMDriver.Name)); err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 	if err := validation.ValidateMemory(crcConfig.GetInt(config.Memory.Name)); err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 	if err := validation.ValidateCPUs(crcConfig.GetInt(config.CPUs.Name)); err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 	if err := validation.ValidateBundle(crcConfig.GetString(config.Bundle.Name)); err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 	if crcConfig.GetString(config.NameServer.Name) != "" {
 		if err := validation.ValidateIpAddress(crcConfig.GetString(config.NameServer.Name)); err != nil {
-			return errors.New(err.Error())
+			return err
 		}
 	}
 	return nil
