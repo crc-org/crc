@@ -13,6 +13,7 @@
 # limitations under the License.
 
 BUNDLE_VERSION = 4.1.6
+BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 0.89.0-alpha
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 
@@ -36,10 +37,25 @@ endif
 
 PACKAGES := go list ./... | grep -v /out
 
+# Check that given variables are set and all have non-empty values,
+# die with an error otherwise.
+#
+# Params:
+#   1. Variable name(s) to test.
+#   2. (optional) Error message to print.
+check_defined = \
+    $(strip $(foreach 1,$1, \
+        $(call __check_defined,$1,$(strip $(value 2)))))
+__check_defined = \
+    $(if $(value $1),, \
+      $(error Undefined $1$(if $2, ($2))))
+
 # Linker flags
 VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
     -X $(REPOPATH)/pkg/crc/version.bundleVersion=$(BUNDLE_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.commitSha=$(COMMIT_SHA)
+
+BUNDLE_EMBEDDED := -X $(REPOPATH)/pkg/crc/constants.bundleEmbedded=true
 
 # https://golang.org/cmd/link/
 LDFLAGS := $(VERSION_VARIABLES) -extldflags='-static' -s -w
@@ -52,6 +68,10 @@ default: $(CURDIR)/bin/crc$(IS_EXE)
 .PHONY: vendor
 vendor:
 	GO111MODULE=on go mod vendor
+
+# Get binappend
+binappend:
+	GO111MODULE=off go get -u github.com/yourfin/binappend-cli
 
 # Start of the actual build targets
 
@@ -117,3 +137,10 @@ release: clean fmtcheck cross
 	@mkdir -p $(BUILD_DIR)/crc-$(CRC_VERSION)-linux-amd64
 	@cp LICENSE $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-$(CRC_VERSION)-linux-amd64
 	tar cJSf $(RELEASE_DIR)/crc-$(CRC_VERSION)-linux-amd64.tar.xz -C $(BUILD_DIR) crc-$(CRC_VERSION)-linux-amd64
+
+.PHONY: embed_bundle
+embed_bundle: LDFLAGS += $(BUNDLE_EMBEDDED)
+embed_bundle: cross binappend
+	@$(call check_defined, BUNDLE_DIR, "Embedding bundle requires BUNDLE_DIR set to a directory containing CRC bundles for all hypervisors")
+	binappend-cli write $(BUILD_DIR)/linux-amd64/crc $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+	binappend-cli write $(BUILD_DIR)/darwin-amd64/crc $(BUNDLE_DIR)/crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
