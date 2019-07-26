@@ -15,7 +15,7 @@ For more information, see <<starting-the-virtual-machine_{context}>>.
 +
 [subs="+quotes,attributes"]
 ----
-$ _browser_command_ https://console-openshift-console.apps.tt.testing
+$ _browser_command_ https://console-openshift-console.apps-crc.testing
 ----
 // Can we use `xdg-open` here instead?
 
