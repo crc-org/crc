@@ -37,11 +37,6 @@ func preflightCheckAndFix(configuredToSkip bool, check, fix PreflightCheckFixFun
 	if ok {
 		return
 	}
-
-	if configuredToWarn {
-		logging.Warn(err.Error())
-		return
-	}
 	logging.Debug(err.Error())
 
 	ok, err = fix()
@@ -49,5 +44,9 @@ func preflightCheckAndFix(configuredToSkip bool, check, fix PreflightCheckFixFun
 		return
 	}
 
+	if configuredToWarn {
+		logging.Warn(err.Error())
+		return
+	}
 	logging.Fatal(err.Error())
 }

@@ -78,7 +78,7 @@ func runStart(arguments []string) {
 
 func initStartCmdFlagSet() *pflag.FlagSet {
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
-	flagSet.StringP(config.Bundle.Name, "b", constants.GetDefaultBundle(), "The system bundle used for deployment of the OpenShift cluster.")
+	flagSet.StringP(config.Bundle.Name, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster.")
 	flagSet.StringP(config.VMDriver.Name, "d", machine.DefaultDriver.Driver, fmt.Sprintf("The driver to use for the CRC VM. Possible values: %v", machine.SupportedDriverValues()))
 	flagSet.StringP(config.PullSecretFile.Name, "p", "", fmt.Sprintf("File path of Image pull secret for User (Download it from %s)", constants.DefaultPullSecretURL))
 	flagSet.IntP(config.CPUs.Name, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the CRC VM")
