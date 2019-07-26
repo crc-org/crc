@@ -33,6 +33,8 @@ var (
 	// Preflight checks
 	SkipCheckVirtualBoxInstalled = createSetting("skip-check-virtualbox-installed", nil, []validationFnType{validations.ValidateBool})
 	WarnCheckVirtualBoxInstalled = createSetting("warn-check-virtualbox-installed", nil, []validationFnType{validations.ValidateBool})
+	SkipCheckBundleCached        = createSetting("skip-check-bundle-cached", nil, []validationFnType{validations.ValidateBool})
+	WarnCheckBundleCached        = createSetting("warn-check-bundle-cached", true, []validationFnType{validations.ValidateBool})
 )
 
 // CreateSetting returns a filled struct of ConfigSetting
