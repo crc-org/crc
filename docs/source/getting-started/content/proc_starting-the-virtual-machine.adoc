@@ -7,7 +7,7 @@ The [command]`{bin} start` command starts the {prod} virtual machine and OpenShi
 
 * The host machine has been set up using the [command]`{bin} setup` command.
 For more information, see <<setting-up-codeready-containers_{context}>>.
-* A valid OpenShift system bundle in the `.tar.xz` format.
+* A valid OpenShift system bundle with the `.crcbundle` extension.
 
 .Procedure
 
