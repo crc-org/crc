@@ -38,6 +38,7 @@ var (
 	MachineCacheDir    = filepath.Join(MachineBaseDir, "cache")
 	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
 	GlobalStatePath    = filepath.Join(CrcBaseDir, GlobalStateFile)
+	bundleEmbedded     = "false"
 )
 
 // GetHomeDir returns the home directory for the current user
@@ -65,4 +66,12 @@ func EnsureBaseDirExists() error {
 		return os.Mkdir(CrcBaseDir, 0755)
 	}
 	return nil
+}
+
+// IsBundleEmbedded returns true if the binary was compiled to contain the bundle
+func BundleEmbedded() bool {
+	if bundleEmbedded == "true" {
+		return true
+	}
+	return false
 }
