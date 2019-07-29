@@ -18,7 +18,7 @@ var (
 		`$adminRole = [System.Security.Principal.WindowsBuiltInRole]::Administrator;`,
 		`if (-Not ($myWindowsPrincipal.IsInRole($adminRole))) {`,
 		`  $procInfo = New-Object System.Diagnostics.ProcessStartInfo;`,
-		`  $procInfo.FileName = "` + locatePowerShell() + `"`,
+		`  $procInfo.FileName = "` + LocatePowerShell() + `"`,
 		`  $procInfo.WindowStyle = [Diagnostics.ProcessWindowStyle]::Hidden`,
 		`  $procInfo.Arguments = "& '" + $script:MyInvocation.MyCommand.Path + "'"`,
 		`  $procInfo.Verb = "runas";`,
@@ -32,7 +32,7 @@ var (
 	}
 )
 
-func locatePowerShell() string {
+func LocatePowerShell() string {
 	ps, _ := exec.LookPath("powershell.exe")
 	return ps
 }
@@ -52,7 +52,7 @@ func IsAdmin() bool {
 
 func Execute(args ...string) (stdOut string, stdErr string, err error) {
 	args = append([]string{"-NoProfile", "-NonInteractive", "-ExecutionPolicy", "RemoteSigned", "-Command"}, args...)
-	cmd := exec.Command(locatePowerShell(), args...)
+	cmd := exec.Command(LocatePowerShell(), args...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 
 	var stdout bytes.Buffer
