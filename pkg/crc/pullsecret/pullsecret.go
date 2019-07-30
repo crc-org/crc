@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -39,7 +40,7 @@ do echo "Waiting for recovery apiserver to come up."; sleep 1; done'`
 	// the pods are not completely stopped and when remove happens it will throw
 	// an error like below.
 	// remove /var/run/containers/storage/overlay-containers/97e5858e610afc9f71d145b1a7bd5ad930e537ccae79969ae256636f7fb7e77c/userdata/shm: device or resource busy
-	stopAndRemovePodsCmd = `bash -c 'sudo crictl stopp $(sudo crictl pods -q) && sleep 2 &&\
+	stopAndRemovePodsCmd = `bash -c 'sudo crictl stopp $(sudo crictl pods -q) &&\
 sudo crictl rmp $(sudo crictl pods -q)'`
 )
 
@@ -125,9 +126,15 @@ func setPullSecretAndClusterID(driver drivers.Driver) (rerr error) {
 		if _, err := sd.Stop("kubelet"); err != nil {
 			m.Collect(err)
 		}
-		output, err := drivers.RunSSHCommandFromDriver(driver, stopAndRemovePodsCmd)
-		logging.Debugf("Output of %s: %s", stopAndRemovePodsCmd, output)
-		if err != nil {
+		stopAndRemovePods := func() error {
+			output, err := drivers.RunSSHCommandFromDriver(driver, stopAndRemovePodsCmd)
+			logging.Debugf("Output of %s: %s", stopAndRemovePodsCmd, output)
+			if err != nil {
+				return &errors.RetriableError{Err: err}
+			}
+			return nil
+		}
+		if err := errors.RetryAfter(2, stopAndRemovePods, 2*time.Second); err != nil {
 			m.Collect(err)
 		}
 		rerr = m.ToError()

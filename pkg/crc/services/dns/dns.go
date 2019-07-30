@@ -2,6 +2,7 @@ package dns
 
 import (
 	"fmt"
+	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/machine/libmachine/drivers"
 	"time"
 
@@ -92,12 +93,16 @@ func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (s
 	// Internal dns query resolved for some time.
 	var queryOutput string
 	var err error
-	for i := 0; i <= 30; i++ {
-		time.Sleep(time.Second)
+	checkLocalDNSReach := func() error {
 		queryOutput, err = drivers.RunSSHCommandFromDriver(serviceConfig.Driver, fmt.Sprintf("host -R 3 %s", appsURI))
-		if err == nil {
-			return queryOutput, err
+		if err != nil {
+			return &errors.RetriableError{Err: err}
 		}
+		return nil
+	}
+
+	if err := errors.RetryAfter(30, checkLocalDNSReach, time.Second); err != nil {
+		return queryOutput, err
 	}
 	return queryOutput, err
 }
