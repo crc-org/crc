@@ -7,7 +7,7 @@ require (
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/code-ready/clicumber v0.0.0-20190503113956-2563aed4ef12
 	github.com/code-ready/goodhosts v0.0.0-20190712111040-f090f3f77c26
-	github.com/code-ready/machine v0.0.0-20190717101121-b310e5ddb702
+	github.com/code-ready/machine v0.0.0-20190731093717-b6d974ad44d0
 	github.com/docker/go-units v0.4.0
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0

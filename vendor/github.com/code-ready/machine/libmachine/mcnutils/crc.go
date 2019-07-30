@@ -2,7 +2,6 @@ package mcnutils
 
 import (
 	"fmt"
-	"github.com/code-ready/machine/libmachine/log"
 	"io"
 	"io/ioutil"
 	"net"
@@ -10,6 +9,8 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+
+	"github.com/code-ready/machine/libmachine/log"
 )
 
 const (
@@ -97,8 +98,12 @@ func (b *crcReleaseGetter) filename() string {
 
 func (*crcReleaseGetter) download(dir, file, isoURL string) error {
 	u, err := url.Parse(isoURL)
+	if err != nil {
+		return err
+	}
 
 	var src io.ReadCloser
+
 	if u.Scheme == "file" || u.Scheme == "" {
 		s, err := os.Open(u.Path)
 		if err != nil {
@@ -161,13 +166,17 @@ type B2dUtils struct {
 	imgCachePath string
 }
 
-func NewB2dUtils(storePath string) *B2dUtils {
+func NewB2dUtils(storePath string, diskFilename string) *B2dUtils {
 	imgCachePath := filepath.Join(storePath, "cache")
 
+	if diskFilename == "" {
+		diskFilename = defaultDiskFilename
+	}
+
 	return &B2dUtils{
-		releaseGetter: &crcReleaseGetter{diskFilename: defaultDiskFilename},
+		releaseGetter: &crcReleaseGetter{diskFilename: diskFilename},
 		disk: &crcDisk{
-			commonDiskPath: filepath.Join(imgCachePath, defaultDiskFilename),
+			commonDiskPath: filepath.Join(imgCachePath, diskFilename),
 		},
 		storePath:    storePath,
 		imgCachePath: imgCachePath,

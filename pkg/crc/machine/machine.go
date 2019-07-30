@@ -3,10 +3,12 @@ package machine
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/pullsecret"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 	"time"
+
+	"github.com/code-ready/crc/pkg/crc/pullsecret"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
@@ -24,9 +26,6 @@ import (
 	// machine related imports
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
-	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
-	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
-	"github.com/code-ready/crc/pkg/crc/machine/virtualbox"
 
 	"github.com/code-ready/machine/libmachine"
 	"github.com/code-ready/machine/libmachine/drivers"
@@ -69,7 +68,9 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	// Retrieve metadata info
 	diskPath := filepath.Join(extractedPath, crcBundleMetadata.Storage.DiskImages[0].Name)
-	machineConfig.DiskPathURL = fmt.Sprintf("file://%s", diskPath)
+	// TODO: QnD Windows workaround hack
+	machineConfig.DiskPathURL = fmt.Sprintf("file://%s", strings.Replace(diskPath, "\\", "/", -1))
+
 	machineConfig.SSHKeyPath = filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.SSHPrivateKeyFile)
 	machineConfig.KernelCmdLine = crcBundleMetadata.Nodes[0].KernelCmdLine
 	machineConfig.Initramfs = filepath.Join(extractedPath, crcBundleMetadata.Nodes[0].Initramfs)
@@ -462,26 +463,6 @@ func createHost(api libmachine.API, driverPath string, machineConfig config.Mach
 	}
 
 	return vm, nil
-}
-
-func getDriverOptions(machineConfig config.MachineConfig) interface{} {
-	var driver interface{}
-
-	// Supported drivers
-	switch machineConfig.VMDriver {
-
-	case "libvirt":
-		driver = libvirt.CreateHost(machineConfig)
-	case "virtualbox":
-		driver = virtualbox.CreateHost(machineConfig)
-	case "hyperkit":
-		driver = hyperkit.CreateHost(machineConfig)
-
-	default:
-		errors.ExitWithMessage(1, "Unsupported driver: %s", machineConfig.VMDriver)
-	}
-
-	return driver
 }
 
 func setMachineLogging(logs bool) error {

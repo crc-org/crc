@@ -2,9 +2,10 @@ package virtualbox
 
 import (
 	"bufio"
-	"github.com/code-ready/machine/libmachine/mcnutils"
 	"math/rand"
 	"os"
+
+	"github.com/code-ready/machine/libmachine/mcnutils"
 
 	"time"
 
@@ -23,7 +24,7 @@ func NewCRCDiskCopier() CRCDiskCopier {
 type crcDiskUtilsCopier struct{}
 
 func (u *crcDiskUtilsCopier) CopyDiskToMachineDir(storePath, machineName, isoURL string) error {
-	return mcnutils.NewB2dUtils(storePath).CopyDiskToMachineDir(isoURL, machineName)
+	return mcnutils.NewB2dUtils(storePath, "").CopyDiskToMachineDir(isoURL, machineName)
 }
 
 // SSHKeyGenerator describes the generation of ssh keys.
