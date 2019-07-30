@@ -163,7 +163,14 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 	// Check the certs validity inside the vm
 	logging.Info("Verifying validity of the cluster certificates ...")
-	if err := cluster.CheckCertsValidity(host.Driver); err != nil {
+	checkCertValidity := func() error {
+		err := cluster.CheckCertsValidity(host.Driver)
+		if err != nil {
+			return &errors.RetriableError{Err: err}
+		}
+		return nil
+	}
+	if err := errors.RetryAfter(4, checkCertValidity, time.Second); err != nil {
 		result.Error = err.Error()
 		return *result, errors.New(err.Error())
 	}
@@ -182,17 +189,16 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 
 	var hostIP string
-	for i := 0; i < 30; i++ {
+	determinHostIP := func() error {
 		hostIP, err = network.DetermineHostIP(instanceIP)
-		if err == nil {
-			logging.Debugf("Bridge IP on the host: %s", hostIP)
-			break
-		} else {
+		if err != nil {
 			logging.Debugf("Error finding host IP (%v) - retrying", err)
+			return &errors.RetriableError{Err: err}
 		}
-		time.Sleep(2 * time.Second)
+		return nil
 	}
-	if err != nil {
+
+	if err := errors.RetryAfter(30, determinHostIP, 2*time.Second); err != nil {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error determining host IP: %v", err)
 	}

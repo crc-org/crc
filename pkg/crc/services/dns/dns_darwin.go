@@ -3,6 +3,7 @@ package dns
 import (
 	"bytes"
 	"fmt"
+	"github.com/code-ready/crc/pkg/crc/errors"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -111,14 +112,16 @@ func waitForNetwork() error {
 	var hostResolv *network.ResolvFileValues
 	var err error
 
-	for i := 1; i <= 5; i++ {
+	getResolvValueFromHost := func() error {
 		hostResolv, err = network.GetResolvValuesFromHost()
-		if err == nil {
-			break
+		if err != nil {
+			logging.Debugf("Not able read file: %v", err)
+			return &errors.RetriableError{Err: err}
 		}
-		time.Sleep(1 * time.Second)
+		return nil
 	}
-	if err != nil {
+
+	if err := errors.RetryAfter(10, getResolvValueFromHost, time.Second); err != nil {
 		return fmt.Errorf("Unable to read host resolv file (%v)", err)
 	}
 	// retry up to 5 times
