@@ -56,7 +56,8 @@ function install_required_packages() {
 		 glib2-devel \
 		 openssl-devel \
 		 asciidoc \
-		 unzip
+		 unzip \
+		 podman
 
   echo 'CICO: Required packages installed'
 }
