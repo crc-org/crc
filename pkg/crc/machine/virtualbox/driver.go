@@ -1,9 +1,10 @@
 package virtualbox
 
 import (
+	"path/filepath"
+
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/machine/drivers/virtualbox"
-	"path/filepath"
 
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 )
