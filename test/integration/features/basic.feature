@@ -64,7 +64,12 @@ Feature: Basic test
         And stdout should contain "Running"
 
     @darwin @linux @windows
-    Scenario: CRC kill
+    Scenario: CRC IP check
+        When executing "crc ip" succeeds
+        Then stdout should match "\d+\.\d+\.\d+\.\d+"
+
+    @darwin @linux @windows
+    Scenario: CRC forcible stop
         When executing "crc stop -f"
         Then stdout should contain "CodeReady Containers instance stopped"    
 
