@@ -19,13 +19,17 @@ package crcsuite
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/gherkin"
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
+	"github.com/code-ready/crc/pkg/crc/oc"
 )
 
 var (
@@ -47,6 +51,10 @@ func FeatureContext(s *godog.Suite) {
 		StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails)
 	s.Step(`^setting config property "(.*)" to value "(.*)" (succeeds|fails)$`,
 		SetConfigPropertyToValueSucceedsOrFails)
+	s.Step(`^login to the oc cluster (succeeds|fails)$`,
+		LoginToOcClusterSucceedsOrFails)
+	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" all cluster operators are running$`,
+		CheckClusterOperatorsWithRetry)
 
 	// CRC file operations
 	s.Step(`^file "([^"]*)" exists in CRC home folder$`,
@@ -94,6 +102,28 @@ func FeatureContext(s *godog.Suite) {
 		}
 
 	})
+}
+
+func CheckClusterOperatorsWithRetry(retryCount int, retryWait string) error {
+
+	retryDuration, err := time.ParseDuration(retryWait)
+	if err != nil {
+		return err
+	}
+
+	ocConfig := oc.UseOCWithConfig("crc")
+	for i := 0; i < retryCount; i++ {
+		s, err := oc.GetClusterOperatorStatus(ocConfig)
+		if err != nil {
+			return err
+		}
+		if s == true {
+			return nil
+		}
+		time.Sleep(retryDuration)
+	}
+
+	return fmt.Errorf("Some cluster operators are still not running.\n")
 }
 
 func DeleteFileFromCRCHome(fileName string) error {
@@ -175,9 +205,31 @@ func ConfigFileInCRCHomeContainsKey(format string, configFile string, condition 
 	return nil
 }
 
+func LoginToOcClusterSucceedsOrFails(expected string) error {
+
+	bundle := strings.Split(bundleName, ".crcbundle")[0]
+	pswdLocation := filepath.Join(CRCHome, "cache", bundle, "kubeadmin-password")
+
+	pswdFile, err := os.Open(pswdLocation)
+	if err != nil {
+		return err
+	}
+	defer pswdFile.Close()
+
+	pswd, err := ioutil.ReadAll(pswdFile)
+	if err != nil {
+		return err
+	}
+
+	cmd := fmt.Sprintf("oc login --insecure-skip-tls-verify -u kubeadmin -p %s https://api.crc.testing:6443", pswd)
+	err = clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
+
+	return err
+}
+
 func StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails(expected string) error {
 
-	cmd := fmt.Sprintf("crc start -b %s -p '%s'", bundleName, pullSecretFile)
+	cmd := fmt.Sprintf("crc start -b %s -p '%s' --log-level debug", bundleName, pullSecretFile)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err

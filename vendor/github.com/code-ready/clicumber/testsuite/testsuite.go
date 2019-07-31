@@ -86,7 +86,7 @@ func FeatureContext(s *godog.Suite) {
 		ShouldBeInValidFormat)
 
 	// Command output and execution: extra steps
-	s.Step(`^with up to "(\d*)" retries with wait period of "(\d*(?:ms|s|m))" command "(.*)" output (?:should contain|contains) "(.*)"$`,
+	s.Step(`^with up to "(\d*)" retries with wait period of "(\d*(?:ms|s|m))" command "(.*)" output (should contain|contains|should not contain|does not contain) "(.*)"$`,
 		ExecuteCommandWithRetry)
 	s.Step(`^evaluating stdout of the previous command succeeds$`,
 		ExecuteStdoutLineByLine)

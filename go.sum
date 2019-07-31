@@ -13,6 +13,8 @@ github.com/cavaliercoder/grab v2.0.0+incompatible h1:wZHbBQx56+Yxjx2TCGDcenhh3cJ
 github.com/cavaliercoder/grab v2.0.0+incompatible/go.mod h1:tTBkfNqSBfuMmMBFaO2phgyhdYhiZQ/+iXCZDzcDsMI=
 github.com/code-ready/clicumber v0.0.0-20190503113956-2563aed4ef12 h1:h7ppinXfQf2BuaKRqdgA+BjWEL5H5LICRL0Ubq920ys=
 github.com/code-ready/clicumber v0.0.0-20190503113956-2563aed4ef12/go.mod h1:bjcKpFX8OebrlwSDgDAf0KAqpdVPGQssQk+IcVwlcog=
+github.com/code-ready/clicumber v0.0.0-20190801094041-02a92c8f7ece h1:ZuvFtsdv+H0JlBkKU+M6zGZOH0JcH7hnIvVNy5PQZro=
+github.com/code-ready/clicumber v0.0.0-20190801094041-02a92c8f7ece/go.mod h1:bjcKpFX8OebrlwSDgDAf0KAqpdVPGQssQk+IcVwlcog=
 github.com/code-ready/goodhosts v0.0.0-20190712111040-f090f3f77c26 h1:rNdqNBHRAAuGv68zZCX0rQAekl0g4qwnseA8OFM2j54=
 github.com/code-ready/goodhosts v0.0.0-20190712111040-f090f3f77c26/go.mod h1:kc1Z2UDuIlxPOo7VWCIkYPOaD55KPX0t5qS5cmLBe8Y=
 github.com/code-ready/machine v0.0.0-20190513092840-66a8c3b3c494 h1:Krl/Ub9djuzrYW49kUgyroWDMlrqeagL2QrNCjgx1mA=
