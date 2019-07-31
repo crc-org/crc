@@ -249,7 +249,7 @@ func ExecuteCommandSucceedsOrFails(command string, expectedResult string) error 
 	return err
 }
 
-func ExecuteCommandWithRetry(retryCount int, retryTime string, command string, expected string) error {
+func ExecuteCommandWithRetry(retryCount int, retryTime string, command string, containsOrNot string, expected string) error {
 	var exitCode, stdout string
 	retryDuration, err := time.ParseDuration(retryTime)
 	if err != nil {
@@ -259,8 +259,14 @@ func ExecuteCommandWithRetry(retryCount int, retryTime string, command string, e
 	for i := 0; i < retryCount; i++ {
 		err := ExecuteCommand(command)
 		exitCode, stdout := shell.excbuf.String(), shell.outbuf.String()
-		if err == nil && exitCode == "0" && strings.Contains(stdout, expected) {
-			return nil
+		if strings.Contains(containsOrNot, " not ") {
+			if err == nil && exitCode == "0" && !strings.Contains(stdout, expected) {
+				return nil
+			}
+		} else {
+			if err == nil && exitCode == "0" && strings.Contains(stdout, expected) {
+				return nil
+			}
 		}
 		time.Sleep(retryDuration)
 	}
