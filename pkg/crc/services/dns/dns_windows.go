@@ -10,18 +10,18 @@ import (
 	"github.com/code-ready/crc/pkg/crc/services"
 
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
+	"github.com/code-ready/crc/pkg/os/windows/win32"
 )
 
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *services.ServicePostStartResult) (services.ServicePostStartResult, error) {
-	mainInterface := getMainInterface()
-	serverAddresses := getInterfaceNameserverValues(mainInterface)
-	serverAddresses = append([]string{serviceConfig.IP}, serverAddresses...)
+	// TODO: localize
+	networkInterface := "vEthernet (Default Switch)" //getMainInterface()
 
-	setInterfaceNameserverValues(mainInterface, serverAddresses)
+	setInterfaceNameserverValue(networkInterface, serviceConfig.IP)
 
 	time.Sleep(2 * time.Second)
 
-	if !contains(getInterfaceNameserverValues(mainInterface), serviceConfig.IP) {
+	if !contains(getInterfaceNameserverValues(networkInterface), serviceConfig.IP) {
 		err := errors.New("Nameserver not successfully set")
 		result.Success = false
 		result.Error = err.Error()
@@ -60,11 +60,11 @@ func formatValues(serverAddresses []string) string {
 	return out
 }
 
-func setInterfaceNameserverValues(iface string, serverAddresses []string) {
-	setDNSServerCommand := fmt.Sprintf(`Set-DNSClientServerAddress "%s" -ServerAddresses (%s)`,
-		iface, formatValues(serverAddresses))
+func setInterfaceNameserverValue(iface string, address string) {
+	exe := "netsh"
+	args := fmt.Sprintf(`interface ip set dns "%s" static %s primary`, iface, address)
 
-	powershell.ExecuteAsAdmin(setDNSServerCommand)
+	win32.ShellExecute(win32.HWND_DESKTOP, "runas", exe, args, "", 0)
 }
 
 func getMainInterface() string {
