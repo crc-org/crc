@@ -1,10 +1,10 @@
 package win32
 
 import (
+	"errors"
+	"fmt"
 	"syscall"
 	"unsafe"
-
-	"github.com/code-ready/crc/pkg/crc/errors"
 )
 
 var (
@@ -35,9 +35,9 @@ func ShellExecute(hwnd HWND, verb, file, parameters, directory string, showCmd i
 
 	ret, _, _ := procShellExecute.Call(uintptr(hwnd), op, toUintptr(file), params, dir, uintptr(showCmd))
 
-	if ret == 0 {
+	if ret == 0 || ret < 32 {
 		return nil
 	}
 
-	return errors.Newf("win32 error %v", ret)
+	return errors.New(fmt.Sprintf("win32 error %v", ret))
 }
