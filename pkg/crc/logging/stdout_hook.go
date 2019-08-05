@@ -3,7 +3,9 @@ package logging
 import (
 	"io"
 	"os"
+	"runtime"
 
+	"github.com/mattn/go-colorable"
 	"github.com/sirupsen/logrus"
 )
 
@@ -15,6 +17,14 @@ type stdOutHook struct {
 }
 
 func newstdOutHook(level logrus.Level, formatter logrus.Formatter) *stdOutHook {
+	// For windows to display colors we need to use the go-colorable writer
+	if runtime.GOOS == "windows" {
+		return &stdOutHook{
+			stdout:    colorable.NewColorableStdout(),
+			formatter: formatter,
+			level:     level,
+		}
+	}
 	return &stdOutHook{
 		stdout:    os.Stdout,
 		formatter: formatter,

@@ -3,7 +3,9 @@ package logging
 import (
 	"io"
 	"os"
+	"runtime"
 
+	"github.com/mattn/go-colorable"
 	"github.com/sirupsen/logrus"
 )
 
@@ -15,6 +17,14 @@ type stdErrHook struct {
 }
 
 func newstdErrHook(level logrus.Level, formatter logrus.Formatter) *stdErrHook {
+	// For windows to display colors we need to use the go-colorable writer
+	if runtime.GOOS == "windows" {
+		return &stdErrHook{
+			stderr:    colorable.NewColorableStderr(),
+			formatter: formatter,
+			level:     level,
+		}
+	}
 	return &stdErrHook{
 		stderr:    os.Stderr,
 		formatter: formatter,
