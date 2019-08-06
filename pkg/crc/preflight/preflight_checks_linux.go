@@ -283,11 +283,7 @@ func checkLibvirtCrcNetworkAvailable() (bool, error) {
 	outputSlice := strings.Split(stdOut, "\n")
 	for _, stdOut = range outputSlice {
 		stdOut = strings.TrimSpace(stdOut)
-		match, err := regexp.MatchString("^crc\\s", stdOut)
-		if err != nil {
-			return false, err
-		}
-		if match {
+		if strings.HasPrefix(stdOut, "crc") {
 			logging.Debug("libvirt 'crc' network exists")
 			logging.Debug("Checking if libvirt 'crc' network definition contains ", constants.DefaultHostname)
 			// Check if the network have defined hostname. It might be possible that User already have an outdated crc network
@@ -352,11 +348,7 @@ func checkLibvirtCrcNetworkActive() (bool, error) {
 
 	for _, stdOut = range outputSlice {
 		stdOut = strings.TrimSpace(stdOut)
-		match, err := regexp.MatchString("^crc\\s", stdOut)
-		if err != nil {
-			return false, err
-		}
-		if match && strings.Contains(stdOut, "active") {
+		if strings.HasPrefix(stdOut, "crc") && strings.Contains(stdOut, "active") {
 			logging.Debug("libvirt 'crc' network is already active")
 			return true, nil
 		}
