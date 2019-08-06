@@ -14,7 +14,10 @@ These requirements must be met in order to run OpenShift in the {prod} virtual m
 Other applications running on top of OpenShift may require additional resources to run.
 ====
 
-* {prod} requires installation of the following software packages:
+* On {msw}, {prod} requires the Windows 10 Fall Creators Update (version 1709).
+{prod} does not work on earlier versions of {msw}.
+
+* On Linux, {prod} requires installation of the following software packages:
 ** [package]`NetworkManager`
 ** [package]`libvirt`
 
