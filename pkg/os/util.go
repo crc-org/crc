@@ -64,16 +64,16 @@ func CurrentExecutable() (string, error) {
 func CopyFileContents(src string, dst string, permission os.FileMode) error {
 	logging.Debugf("Copying '%s' to '%s'\n", src, dst)
 	srcFile, err := os.Open(src)
-	defer srcFile.Close()
 	if err != nil {
 		return fmt.Errorf("[%v] Cannot open src file '%s'", err, src)
 	}
+	defer srcFile.Close()
 
 	destFile, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE, permission)
-	defer destFile.Close()
 	if err != nil {
 		return fmt.Errorf("[%v] Cannot create dst file '%s'", err, dst)
 	}
+	defer destFile.Close()
 
 	_, err = io.Copy(destFile, srcFile)
 	if err != nil {
