@@ -39,7 +39,6 @@ var startCmd = &cobra.Command{
 
 var (
 	startCmdFlagSet = initStartCmdFlagSet()
-	pullSecretFile  string
 )
 
 func runStart(arguments []string) {
