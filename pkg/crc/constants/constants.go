@@ -70,8 +70,5 @@ func EnsureBaseDirExists() error {
 
 // IsBundleEmbedded returns true if the binary was compiled to contain the bundle
 func BundleEmbedded() bool {
-	if bundleEmbedded == "true" {
-		return true
-	}
-	return false
+	return bundleEmbedded == "true"
 }

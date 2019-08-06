@@ -15,10 +15,8 @@ func PromptUserForYesOrNo(message string, force bool) bool {
 	var response string
 	output.OutF(message + "? [y/N]: ")
 	fmt.Scanf("%s", &response)
-	if strings.ToLower(response) == "y" {
-		return true
-	}
-	return false
+
+	return strings.ToLower(response) == "y"
 }
 
 // PromptUserForSecret can be used for any kind of secret like image pull
