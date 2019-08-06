@@ -52,16 +52,18 @@ func GetInt(key string) int {
 	return globalViper.GetInt(key)
 }
 
-// EnsureConfigFileExists creates the viper config file it does not exists
+// EnsureConfigFileExists creates the viper config file if it does not exists
 func EnsureConfigFileExists() error {
 	_, err := os.Stat(constants.ConfigPath)
 	if err != nil {
 		f, err := os.Create(constants.ConfigPath)
-		defer f.Close()
-		f.WriteString("{}")
+		if err == nil {
+			f.WriteString("{}")
+			f.Close()
+		}
 		return err
 	}
-	return err
+	return nil
 }
 
 // InitViper initializes viper
