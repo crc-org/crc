@@ -88,10 +88,7 @@ func initStartCmdFlagSet() *pflag.FlagSet {
 }
 
 func isDebugLog() bool {
-	if logging.LogLevel == "debug" {
-		return true
-	}
-	return false
+	return logging.LogLevel == "debug"
 }
 
 func validateStartFlags() error {
