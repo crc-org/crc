@@ -14,5 +14,5 @@ func OutF(s string, args ...interface{}) {
 }
 
 func OutW(w io.Writer, args ...interface{}) (n int, err error) {
-	return fmt.Fprintln(w, args)
+	return fmt.Fprintln(w, args...)
 }
