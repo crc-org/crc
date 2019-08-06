@@ -486,6 +486,9 @@ func existVM(api libmachine.API, name string) (bool, error) {
 func createHost(api libmachine.API, driverPath string, machineConfig config.MachineConfig) (*host.Host, error) {
 	driverOptions := getDriverOptions(machineConfig)
 	jsonDriverConfig, err := json.Marshal(driverOptions)
+	if err != nil {
+		return nil, errors.New("marshal failed")
+	}
 
 	vm, err := api.NewHost(machineConfig.VMDriver, driverPath, jsonDriverConfig)
 
