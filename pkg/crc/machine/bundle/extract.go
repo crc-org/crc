@@ -18,7 +18,7 @@ func Extract(sourcepath string) (*CrcBundleInfo, error) {
 	}
 	defer file.Close()
 
-	var fileReader io.Reader = file
+	var fileReader io.Reader
 
 	if fileReader, err = xz.NewReader(file, 0); err != nil {
 		return nil, err
