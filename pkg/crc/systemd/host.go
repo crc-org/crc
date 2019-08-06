@@ -10,7 +10,6 @@ import (
 )
 
 type HostSystemdCommander struct {
-	commander SystemdCommander
 }
 
 func NewHostSystemdCommander() *HostSystemdCommander {
