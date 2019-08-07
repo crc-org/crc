@@ -25,7 +25,7 @@ func init() {
 	rootCmd.AddCommand(startCmd)
 	startCmd.Flags().AddFlagSet(startCmdFlagSet)
 
-	crcConfig.BindFlagSet(startCmd.Flags())
+	_ = crcConfig.BindFlagSet(startCmd.Flags())
 }
 
 var startCmd = &cobra.Command{

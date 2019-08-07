@@ -322,9 +322,9 @@ func fixLibvirtCrcNetworkAvailable() (bool, error) {
 	// For time being we are going to override the crc network according what we have in our binary template.
 	// We also don't care about the error or output from those commands atm.
 	cmd := exec.Command("virsh", "--connect", "qemu:///system", "net-destroy", libvirt.DefaultNetwork)
-	cmd.Run()
+	_ = cmd.Run()
 	cmd = exec.Command("virsh", "--connect", "qemu:///system", "net-undefine", libvirt.DefaultNetwork)
-	cmd.Run()
+	_ = cmd.Run()
 	// Create the network according to our defined template
 	cmd = exec.Command("virsh", "--connect", "qemu:///system", "net-define", "/dev/stdin")
 	cmd.Stdin = strings.NewReader(netXMLDef.String())

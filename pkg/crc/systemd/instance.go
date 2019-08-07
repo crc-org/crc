@@ -45,7 +45,7 @@ func (c InstanceSystemdCommander) DaemonReload() (bool, error) {
 }
 
 func (c InstanceSystemdCommander) Restart(name string) (bool, error) {
-	c.DaemonReload()
+	_, _ = c.DaemonReload()
 	_, err := c.service(name, actions.Restart)
 	if err != nil {
 		return false, err
@@ -54,7 +54,7 @@ func (c InstanceSystemdCommander) Restart(name string) (bool, error) {
 }
 
 func (c InstanceSystemdCommander) Start(name string) (bool, error) {
-	c.DaemonReload()
+	_, _ = c.DaemonReload()
 	_, err := c.service(name, actions.Start)
 	if err != nil {
 		return false, err

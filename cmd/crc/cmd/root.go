@@ -20,7 +20,7 @@ var rootCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		runRoot()
-		cmd.Help()
+		_ = cmd.Help()
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		runPostrun()
