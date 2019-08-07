@@ -50,7 +50,7 @@ var (
 		Use:   "config SUBCOMMAND [flags]",
 		Short: "Modifies crc configuration properties.",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Help()
+			_ = cmd.Help()
 		},
 	}
 )

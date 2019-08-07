@@ -59,7 +59,7 @@ var ocEnvCmd = &cobra.Command{
 		if err != nil {
 			errors.Exit(1)
 		}
-		executeOcTemplateStdout(shellCfg)
+		_ = executeOcTemplateStdout(shellCfg)
 	},
 }
 

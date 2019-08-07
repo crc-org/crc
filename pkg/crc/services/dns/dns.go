@@ -38,13 +38,13 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.Servi
 		return *result, err
 	}
 
-	// Remove the dnsmasq container if exist during the VM stop cycle
-	drivers.RunSSHCommandFromDriver(serviceConfig.Driver, "sudo podman rm -f dnsmasq")
+	// Remove the dnsmasq container if it exists during the VM stop cycle
+	_, _ = drivers.RunSSHCommandFromDriver(serviceConfig.Driver, "sudo podman rm -f dnsmasq")
 
 	// Remove the CNI network definition forcefully
 	// https://github.com/containers/libpod/issues/2767
 	// TODO: We need to revisit it once podman update the CNI plugins.
-	drivers.RunSSHCommandFromDriver(serviceConfig.Driver, fmt.Sprintf("sudo rm -f /var/lib/cni/networks/podman/%s", dnsContainerIP))
+	_, _ = drivers.RunSSHCommandFromDriver(serviceConfig.Driver, fmt.Sprintf("sudo rm -f /var/lib/cni/networks/podman/%s", dnsContainerIP))
 
 	// Start the dnsmasq container
 	dnsServerRunCmd := fmt.Sprintf("sudo podman run  --ip %s --name dnsmasq -v %s:/etc/dnsmasq.conf -p 53:%d/udp --privileged -d %s",

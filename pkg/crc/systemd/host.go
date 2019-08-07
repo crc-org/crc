@@ -41,7 +41,7 @@ func (c HostSystemdCommander) DaemonReload() (bool, error) {
 }
 
 func (c HostSystemdCommander) Reload(name string) (bool, error) {
-	c.DaemonReload()
+	_, _ = c.DaemonReload()
 	_, err := c.service(name, actions.Reload)
 
 	if err != nil {
@@ -51,7 +51,7 @@ func (c HostSystemdCommander) Reload(name string) (bool, error) {
 }
 
 func (c HostSystemdCommander) Restart(name string) (bool, error) {
-	c.DaemonReload()
+	_, _ = c.DaemonReload()
 	_, err := c.service(name, actions.Restart)
 
 	if err != nil {
@@ -61,7 +61,7 @@ func (c HostSystemdCommander) Restart(name string) (bool, error) {
 }
 
 func (c HostSystemdCommander) Start(name string) (bool, error) {
-	c.DaemonReload()
+	_, _ = c.DaemonReload()
 	_, err := c.service(name, actions.Start)
 	if err != nil {
 		return false, err
