@@ -773,7 +773,7 @@ func getProxyConfig(baseDomainName string) (*network.ProxyConfig, error) {
 	return proxy, nil
 }
 
-func configProxyForCluster(ocConfig oc.Config, sshRunner *crcssh.Runner, sd *systemd.InstanceSystemdCommander,
+func configProxyForCluster(ocConfig oc.Config, sshRunner *crcssh.Runner, sd *systemd.Commander,
 	proxy *network.ProxyConfig, instanceIP string) (err error) {
 	if !proxy.IsEnabled() {
 		return nil
