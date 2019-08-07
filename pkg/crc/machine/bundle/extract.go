@@ -56,6 +56,7 @@ func Extract(sourcepath string) (*CrcBundleInfo, error) {
 			if err != nil {
 				return nil, err
 			}
+			defer writer.Close()
 
 			io.Copy(writer, tarBallReader)
 
@@ -64,8 +65,6 @@ func Extract(sourcepath string) (*CrcBundleInfo, error) {
 			if err != nil {
 				return nil, err
 			}
-
-			writer.Close()
 
 		default:
 			// ignore
