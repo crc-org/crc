@@ -5,6 +5,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/crc/systemd/actions"
+	"github.com/code-ready/crc/pkg/crc/systemd/states"
 )
 
 type InstanceSystemdCommander struct {
@@ -69,7 +70,7 @@ func (c InstanceSystemdCommander) Stop(name string) (bool, error) {
 	return true, nil
 }
 
-func (c InstanceSystemdCommander) Status(name string) (string, error) {
+func (c InstanceSystemdCommander) Status(name string) (states.State, error) {
 	return c.service(name, actions.Status)
 
 }
@@ -82,7 +83,12 @@ func (c InstanceSystemdCommander) IsActive(name string) (bool, error) {
 	return true, nil
 }
 
-func (c InstanceSystemdCommander) service(name string, action actions.Action) (string, error) {
+func (c InstanceSystemdCommander) service(name string, action actions.Action) (states.State, error) {
 	command := fmt.Sprintf("sudo systemctl -f %s %s", action.String(), name)
-	return c.sshRunner.Run(command)
+	out, err := c.sshRunner.Run(command)
+	if err != nil {
+		return states.Error, err
+	}
+
+	return states.Compare(out), nil
 }
