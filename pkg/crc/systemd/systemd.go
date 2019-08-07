@@ -25,57 +25,37 @@ func NewHostSystemdCommander() *Commander {
 	}
 }
 
-func (c Commander) Enable(name string) (bool, error) {
+func (c Commander) Enable(name string) error {
 	_, err := c.service(name, actions.Enable)
-	if err != nil {
-		return false, err
-	}
-	return true, nil
+	return err
 }
 
-func (c Commander) Disable(name string) (bool, error) {
+func (c Commander) Disable(name string) error {
 	_, err := c.service(name, actions.Disable)
-	if err != nil {
-		return false, err
-	}
-	return true, nil
+	return err
 }
 
-func (c Commander) Reload(name string) (bool, error) {
-	_, _ = c.DaemonReload()
+func (c Commander) Reload(name string) error {
+	_ = c.DaemonReload()
 	_, err := c.service(name, actions.Reload)
-
-	if err != nil {
-		return false, err
-	}
-	return true, nil
+	return err
 }
 
-func (c Commander) Restart(name string) (bool, error) {
-	_, _ = c.DaemonReload()
+func (c Commander) Restart(name string) error {
+	_ = c.DaemonReload()
 	_, err := c.service(name, actions.Restart)
-
-	if err != nil {
-		return false, err
-	}
-	return true, nil
+	return err
 }
 
-func (c Commander) Start(name string) (bool, error) {
-	_, _ = c.DaemonReload()
+func (c Commander) Start(name string) error {
+	_ = c.DaemonReload()
 	_, err := c.service(name, actions.Start)
-	if err != nil {
-		return false, err
-	}
-	return true, nil
+	return err
 }
 
-func (c Commander) Stop(name string) (bool, error) {
+func (c Commander) Stop(name string) error {
 	_, err := c.service(name, actions.Stop)
-	if err != nil {
-		return false, err
-	}
-	return true, nil
+	return err
 }
 
 func (c Commander) Status(name string) (states.State, error) {
@@ -83,12 +63,12 @@ func (c Commander) Status(name string) (states.State, error) {
 
 }
 
-func (c Commander) DaemonReload() (bool, error) {
+func (c Commander) DaemonReload() error {
 	stdOut, stdErr, err := c.commandRunner.RunPrivileged("execute systemctl daemon-reload command", "systemctl", "daemon-reload")
 	if err != nil {
-		return false, fmt.Errorf("Executing systemctl daemon-reload failed: %s %v: %s", stdOut, err, stdErr)
+		return fmt.Errorf("Executing systemctl daemon-reload failed: %s %v: %s", stdOut, err, stdErr)
 	}
-	return true, nil
+	return nil
 }
 
 func (c Commander) service(name string, action actions.Action) (states.State, error) {

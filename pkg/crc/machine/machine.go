@@ -355,7 +355,7 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 
 	logging.Info("Starting OpenShift kubelet service")
 	sd := systemd.NewInstanceSystemdCommander(sshRunner)
-	if _, err := sd.Start("kubelet"); err != nil {
+	if err := sd.Start("kubelet"); err != nil {
 		return startError(startConfig.Name, "Error starting kubelet", err)
 	}
 	if !exists {
@@ -778,16 +778,15 @@ func configProxyForCluster(ocConfig oc.Config, sshRunner *crcssh.Runner, sd *sys
 	if !proxy.IsEnabled() {
 		return nil
 	}
-
 	defer func() {
 		// Restart the crio service
 		if proxy.IsEnabled() {
 			// Restart reload the daemon and then restart the service
 			// So no need to explicit reload the daemon.
-			if _, ferr := sd.Restart("crio"); ferr != nil {
+			if ferr := sd.Restart("crio"); ferr != nil {
 				err = ferr
 			}
-			if _, ferr := sd.Restart("kubelet"); ferr != nil {
+			if ferr := sd.Restart("kubelet"); ferr != nil {
 				err = ferr
 			}
 		}
