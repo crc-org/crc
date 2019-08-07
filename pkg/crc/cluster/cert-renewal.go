@@ -33,11 +33,13 @@ func waitForPendingCsrs(ocConfig oc.Config) error {
 
 func RegenerateCertificates(sshRunner *ssh.Runner, ocConfig oc.Config) error {
 	sd := systemd.NewInstanceSystemdCommander(sshRunner)
-	startedKubelet, err := sd.Start("kubelet")
+	err := sd.Start("kubelet")
 	if err != nil {
 		logging.Debugf("Error starting kubelet service: %v", err)
 		return err
 	}
+	// FIXME: regression compared to previous API
+	startedKubelet := false
 	if startedKubelet {
 		defer sd.Stop("kubelet") //nolint:errcheck
 	}

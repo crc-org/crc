@@ -208,7 +208,7 @@ func fixLibvirtServiceRunning() error {
 	* need to start multiple components by hand, so we just start the
 	* monolithic daemon
 	 */
-	_, err := sd.Start("libvirtd")
+	err := sd.Start("libvirtd")
 	if err != nil {
 		return fmt.Errorf("Failed to start libvirt service")
 	}
@@ -475,7 +475,7 @@ func fixCrcDnsmasqConfigFile() error {
 
 	logging.Debug("Reloading NetworkManager")
 	sd := systemd.NewHostSystemdCommander()
-	if _, err := sd.Reload("NetworkManager"); err != nil {
+	if err := sd.Reload("NetworkManager"); err != nil {
 		return fmt.Errorf("Failed to restart NetworkManager: %v", err)
 	}
 
@@ -502,7 +502,7 @@ func removeCrcDnsmasqConfigFile() error {
 
 		logging.Debug("Reloading NetworkManager")
 		sd := systemd.NewHostSystemdCommander()
-		if _, err := sd.Reload("NetworkManager"); err != nil {
+		if err := sd.Reload("NetworkManager"); err != nil {
 			return fmt.Errorf("Failed to restart NetworkManager: %v", err)
 		}
 	}
@@ -541,7 +541,7 @@ func fixCrcNetworkManagerConfig() error {
 
 	logging.Debug("Reloading NetworkManager")
 	sd := systemd.NewHostSystemdCommander()
-	if _, err := sd.Reload("NetworkManager"); err != nil {
+	if err := sd.Reload("NetworkManager"); err != nil {
 		return fmt.Errorf("Failed to restart NetworkManager: %v", err)
 	}
 
@@ -566,7 +566,7 @@ func removeCrcNetworkManagerConfig() error {
 
 		logging.Debug("Reloading NetworkManager")
 		sd := systemd.NewHostSystemdCommander()
-		if _, err := sd.Reload("NetworkManager"); err != nil {
+		if err := sd.Reload("NetworkManager"); err != nil {
 			return fmt.Errorf("Failed to restart NetworkManager: %v", err)
 		}
 	}
