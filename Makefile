@@ -137,6 +137,10 @@ release: clean fmtcheck cross
 	@mkdir -p $(BUILD_DIR)/crc-$(CRC_VERSION)-linux-amd64
 	@cp LICENSE $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-$(CRC_VERSION)-linux-amd64
 	tar cJSf $(RELEASE_DIR)/crc-$(CRC_VERSION)-linux-amd64.tar.xz -C $(BUILD_DIR) crc-$(CRC_VERSION)-linux-amd64
+	
+	@mkdir -p $(BUILD_DIR)/crc-$(CRC_VERSION)-windows-amd64
+	@cp LICENSE $(BUILD_DIR)/windows-amd64/crc.exe $(BUILD_DIR)/crc-$(CRC_VERSION)-windows-amd64
+	cd $(BUILD_DIR) && zip -r $(CURDIR)/$(RELEASE_DIR)/crc-$(CRC_VERSION)-windows-amd64.zip crc-$(CRC_VERSION)-windows-amd64
 
 .PHONY: embed_bundle
 embed_bundle: LDFLAGS += $(BUNDLE_EMBEDDED)
