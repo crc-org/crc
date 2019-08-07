@@ -58,7 +58,7 @@ func EnsureConfigFileExists() error {
 	if err != nil {
 		f, err := os.Create(constants.ConfigPath)
 		if err == nil {
-			f.WriteString("{}")
+			_, err = f.WriteString("{}")
 			f.Close()
 		}
 		return err

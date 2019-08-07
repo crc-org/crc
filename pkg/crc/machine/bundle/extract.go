@@ -58,7 +58,11 @@ func Extract(sourcepath string) (*CrcBundleInfo, error) {
 			}
 			defer writer.Close()
 
-			io.Copy(writer, tarBallReader)
+			_, err = io.Copy(writer, tarBallReader)
+
+			if err != nil {
+				return nil, err
+			}
 
 			err = os.Chmod(filename, os.FileMode(header.Mode))
 

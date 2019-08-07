@@ -211,7 +211,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 	// Add nameserver to VM if provided by User
 	if startConfig.NameServer != "" {
-		if addNameServerToInstance(host.Driver, startConfig.NameServer); err != nil {
+		if err = addNameServerToInstance(host.Driver, startConfig.NameServer); err != nil {
 			result.Error = err.Error()
 			return *result, errors.New(err.Error())
 		}
