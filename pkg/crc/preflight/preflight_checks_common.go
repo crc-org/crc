@@ -44,7 +44,10 @@ func fixBundleCached() (bool, error) {
 		}
 		w := bufio.NewWriter(f)
 		defer w.Flush()
-		w.Write(data)
+		_, err = w.Write(data)
+		if err != nil {
+			return false, err
+		}
 		return true, nil
 	}
 	return false, fmt.Errorf("CRC bundle is not embedded in the binary, see 'crc help' for more details.")

@@ -70,6 +70,9 @@ func createDnsConfigFile(values dnsmasqConfFileValues) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	t.Execute(&dnsConfigFile, values)
+	err = t.Execute(&dnsConfigFile, values)
+	if err != nil {
+		return "", err
+	}
 	return dnsConfigFile.String(), nil
 }

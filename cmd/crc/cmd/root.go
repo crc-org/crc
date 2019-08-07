@@ -36,7 +36,9 @@ func init() {
 	if err := config.EnsureConfigFileExists(); err != nil {
 		logging.Fatal(err.Error())
 	}
-	config.InitViper()
+	if err := config.InitViper(); err != nil {
+		logging.Fatal(err.Error())
+	}
 
 	setConfigDefaults()
 

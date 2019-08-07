@@ -68,6 +68,9 @@ func (cfg *GlobalStateType) read() error {
 		return errors.New("Invalid JSON")
 	}
 
-	json.Unmarshal(raw, &cfg)
+	err = json.Unmarshal(raw, &cfg)
+	if err != nil {
+		return err
+	}
 	return nil
 }

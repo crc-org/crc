@@ -20,7 +20,10 @@ func CreateResolvFile(values ResolvFileValues) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	t.Execute(&resolvFile, values)
+	err = t.Execute(&resolvFile, values)
+	if err != nil {
+		return "", err
+	}
 
 	return resolvFile.String(), nil
 }
