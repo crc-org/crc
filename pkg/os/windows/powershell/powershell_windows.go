@@ -76,7 +76,17 @@ func ExecuteAsAdmin(cmd string) (stdOut string, stdErr string, err error) {
 	}
 
 	// Write a temporary script
-	psFile.WriteString(scriptContent)
+	/* Add UTF-8 BOM at the beginning of the script so that Windows
+	 * correctly detects the file encoding
+	 */
+	_, err = psFile.Write([]byte{0xef, 0xbb, 0xbf})
+	if err != nil {
+		return "", "", err
+	}
+	_, err = psFile.WriteString(scriptContent)
+	if err != nil {
+		return "", "", err
+	}
 	psFile.Close()
 
 	return Execute(psFile.Name())

@@ -3,6 +3,7 @@ package preflight
 import (
 	//"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/oc"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/os/windows/win32"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 )
 
@@ -115,14 +115,13 @@ func fixUserPartOfHyperVAdmins() (bool, error) {
 	}
 	groupName := strings.TrimSpace(strings.Replace(strings.TrimSpace(outGroupName), "BUILTIN\\", "", -1))
 
-	outUsername, _, err := powershell.Execute(`Write-Host $env:USERNAME`)
+	username := os.Getenv("USERNAME")
+
+	netCmdArgs := fmt.Sprintf(`([adsi]"WinNT://./%s,group").Add("WinNT://%s,user")`, groupName, username)
+	_, _, err = powershell.ExecuteAsAdmin(netCmdArgs)
 	if err != nil {
 		return false, errors.New("Unable to get user name")
 	}
-	username := strings.TrimSpace(outUsername)
-
-	netCmdArgs := fmt.Sprintf(`localgroup "%s" "%s" /add`, groupName, username)
-	win32.ShellExecuteAsAdmin(win32.HWND_DESKTOP, "net", netCmdArgs, "", 0)
 
 	return true, nil
 }
