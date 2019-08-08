@@ -43,7 +43,7 @@ func ValidateMemory(value int) error {
 // ValidateBundle checks if provided bundle path exist
 func ValidateBundle(bundle string) error {
 	if err := ValidatePath(bundle); err != nil {
-		return err
+		return errors.Newf("Run 'crc setup' to unpack the bundle to disk.")
 	}
 	// Check if the version of the bundle provided by user is same as what is released with crc.
 	releaseBundleVersion := version.GetBundleVersion()
