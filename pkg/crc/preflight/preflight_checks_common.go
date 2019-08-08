@@ -8,11 +8,13 @@ import (
 	"github.com/YourFin/binappend"
 	"github.com/kardianos/osext"
 
+	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
+	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 )
 
 func checkBundleCached() (bool, error) {
-	if _, err := os.Stat(constants.DefaultBundlePath); os.IsNotExist(err) {
+	if _, err := os.Stat(config.GetString(cmdConfig.Bundle.Name)); os.IsNotExist(err) {
 		return false, err
 	}
 	return true, nil
