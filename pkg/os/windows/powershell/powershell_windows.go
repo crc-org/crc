@@ -20,7 +20,7 @@ var (
 		`  $procInfo = New-Object System.Diagnostics.ProcessStartInfo;`,
 		`  $procInfo.FileName = "` + LocatePowerShell() + `"`,
 		`  $procInfo.WindowStyle = [Diagnostics.ProcessWindowStyle]::Hidden`,
-		`  $procInfo.Arguments = "& '" + $script:MyInvocation.MyCommand.Path + "'"`,
+		`  $procInfo.Arguments = "-ExecutionPolicy RemoteSigned & '" + $script:MyInvocation.MyCommand.Path + "'"`,
 		`  $procInfo.Verb = "runas";`,
 		`  [System.Diagnostics.Process]::Start($procInfo);`,
 		`  Exit;`,
