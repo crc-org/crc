@@ -1,6 +1,8 @@
 package machine
 
-import "github.com/code-ready/machine/libmachine/state"
+import (
+	"github.com/code-ready/machine/libmachine/state"
+)
 
 type StartConfig struct {
 	Name string
@@ -94,4 +96,14 @@ type ClusterStatusResult struct {
 	DiskSize        int64
 	Error           string
 	Success         bool
+}
+
+type ConsoleConfig struct {
+	Name string
+}
+
+type ConsoleResult struct {
+	URL     string
+	Success bool
+	Error   string
 }

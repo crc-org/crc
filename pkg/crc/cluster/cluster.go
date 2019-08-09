@@ -2,10 +2,11 @@ package cluster
 
 import (
 	"fmt"
-	"github.com/code-ready/machine/libmachine/drivers"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/code-ready/machine/libmachine/drivers"
 )
 
 // CheckCertsValidity checks if the cluster certs have expired

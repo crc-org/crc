@@ -499,3 +499,21 @@ func addNameServerToInstance(driver drivers.Driver, ns string) error {
 	}
 	return nil
 }
+
+// Return console URL if the VM is present.
+func GetConsoleURL(consoleConfig ConsoleConfig) (ConsoleResult, error) {
+	result := &ConsoleResult{Success: true}
+	// Here we are only checking if the VM exist and not the status of the VM.
+	// We might need to improve and use crc status logic, only
+	// return if the Openshift is running as part of status.
+	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	_, err := libMachineAPIClient.Load(consoleConfig.Name)
+
+	if err != nil {
+		result.Success = false
+		result.Error = err.Error()
+		return *result, errors.New(err.Error())
+	}
+	result.URL = constants.DefaultWebConsoleURL
+	return *result, nil
+}
