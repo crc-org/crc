@@ -137,10 +137,16 @@ release: clean fmtcheck embed_bundle
 	@cp LICENSE $(BUILD_DIR)/windows-amd64/crc.exe $(BUILD_DIR)/crc-$(CRC_VERSION)-windows-amd64
 	cd $(BUILD_DIR) && zip -r $(CURDIR)/$(RELEASE_DIR)/crc-$(CRC_VERSION)-windows-amd64.zip crc-$(CRC_VERSION)-windows-amd64
 
-.PHONY: embed_bundle
-embed_bundle: LDFLAGS += $(BUNDLE_EMBEDDED)
-embed_bundle: cross binappend
+BUNDLES := $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION) \
+	   $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION) \
+	   $(BUNDLE_DIR)/crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+
+.PHONY: embed_bundle check_bundledir
+check_bundledir:
 	@$(call check_defined, BUNDLE_DIR, "Embedding bundle requires BUNDLE_DIR set to a directory containing CRC bundles for all hypervisors")
+
+embed_bundle: LDFLAGS += $(BUNDLE_EMBEDDED)
+embed_bundle: cross binappend check_bundledir $(BUNDLES)
 	binappend-cli write $(BUILD_DIR)/linux-amd64/crc $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
 	binappend-cli write $(BUILD_DIR)/darwin-amd64/crc $(BUNDLE_DIR)/crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
 	binappend-cli write $(BUILD_DIR)/windows-amd64/crc.exe $(BUNDLE_DIR)/crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
