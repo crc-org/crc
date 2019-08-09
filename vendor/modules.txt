@@ -13,8 +13,8 @@ github.com/code-ready/clicumber/util
 github.com/code-ready/goodhosts
 # github.com/code-ready/machine v0.0.0-20190731093717-b6d974ad44d0
 github.com/code-ready/machine/libmachine/state
-github.com/code-ready/machine/libmachine/drivers
 github.com/code-ready/machine/libmachine
+github.com/code-ready/machine/libmachine/drivers
 github.com/code-ready/machine/libmachine/host
 github.com/code-ready/machine/libmachine/log
 github.com/code-ready/machine/drivers/hyperv
@@ -22,15 +22,15 @@ github.com/code-ready/machine/drivers/virtualbox
 github.com/code-ready/machine/libmachine/drivers/plugin
 github.com/code-ready/machine/libmachine/drivers/plugin/localbinary
 github.com/code-ready/machine/libmachine/shell
-github.com/code-ready/machine/libmachine/mcnflag
-github.com/code-ready/machine/libmachine/mcnutils
-github.com/code-ready/machine/libmachine/ssh
 github.com/code-ready/machine/drivers/errdriver
 github.com/code-ready/machine/libmachine/auth
 github.com/code-ready/machine/libmachine/drivers/rpc
 github.com/code-ready/machine/libmachine/mcnerror
+github.com/code-ready/machine/libmachine/mcnutils
 github.com/code-ready/machine/libmachine/persist
+github.com/code-ready/machine/libmachine/ssh
 github.com/code-ready/machine/libmachine/version
+github.com/code-ready/machine/libmachine/mcnflag
 github.com/code-ready/machine/drivers/none
 github.com/code-ready/machine/libmachine/engine
 github.com/code-ready/machine/libmachine/swarm
@@ -75,6 +75,8 @@ github.com/mitchellh/mapstructure
 github.com/pborman/uuid
 # github.com/pelletier/go-toml v1.2.0
 github.com/pelletier/go-toml
+# github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
+github.com/pkg/browser
 # github.com/pkg/errors v0.8.1
 github.com/pkg/errors
 # github.com/sirupsen/logrus v1.4.1
