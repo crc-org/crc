@@ -79,16 +79,13 @@ binappend:
 $(CURDIR)/bin/crc$(IS_EXE):
 	go install -ldflags="$(VERSION_VARIABLES)" ./cmd/crc
 
-$(BUILD_DIR)/$(GOOS)-$(GOARCH):
-	mkdir -p $(BUILD_DIR)/$(GOOS)-$(GOARCH)
-
-$(BUILD_DIR)/darwin-amd64/crc: $(BUILD_DIR)/$(GOOS)-$(GOARCH)
+$(BUILD_DIR)/darwin-amd64/crc:
 	GOARCH=amd64 GOOS=darwin go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/darwin-amd64/crc ./cmd/crc
 
-$(BUILD_DIR)/linux-amd64/crc:  $(BUILD_DIR)/$(GOOS)-$(GOARCH)
+$(BUILD_DIR)/linux-amd64/crc:
 	GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/linux-amd64/crc ./cmd/crc
 
-$(BUILD_DIR)/windows-amd64/crc.exe:  $(BUILD_DIR)/$(GOOS)-$(GOARCH)
+$(BUILD_DIR)/windows-amd64/crc.exe:
 	GOARCH=amd64 GOOS=windows go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/windows-amd64/crc.exe ./cmd/crc
 
 .PHONY: cross ## Cross compiles all binaries
