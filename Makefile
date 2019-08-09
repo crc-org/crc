@@ -31,9 +31,6 @@ GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 ORG := github.com/code-ready
 REPOPATH ?= $(ORG)/crc
-ifeq ($(GOOS),windows)
-	IS_EXE := .exe
-endif
 
 PACKAGES := go list ./... | grep -v /out
 
@@ -62,7 +59,7 @@ LDFLAGS := $(VERSION_VARIABLES) -extldflags='-static' -s -w
 
 # Add default target
 .PHONY: default
-default: $(CURDIR)/bin/crc$(IS_EXE)
+default: install
 
 # Create and update the vendor directory
 .PHONY: vendor
@@ -75,8 +72,8 @@ binappend:
 
 # Start of the actual build targets
 
-.PHONY: $(CURDIR)/bin/crc$(IS_EXE)
-$(CURDIR)/bin/crc$(IS_EXE):
+.PHONY: install
+install:
 	go install -ldflags="$(VERSION_VARIABLES)" ./cmd/crc
 
 $(BUILD_DIR)/darwin-amd64/crc:
