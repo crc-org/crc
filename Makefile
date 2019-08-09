@@ -33,6 +33,7 @@ ORG := github.com/code-ready
 REPOPATH ?= $(ORG)/crc
 
 PACKAGES := go list ./... | grep -v /out
+SOURCES := $(shell git ls-files  *.go ":^vendor")
 
 # Check that given variables are set and all have non-empty values,
 # die with an error otherwise.
@@ -73,16 +74,16 @@ binappend:
 # Start of the actual build targets
 
 .PHONY: install
-install:
+install: $(SOURCES)
 	go install -ldflags="$(VERSION_VARIABLES)" ./cmd/crc
 
-$(BUILD_DIR)/darwin-amd64/crc:
+$(BUILD_DIR)/darwin-amd64/crc: $(SOURCES)
 	GOARCH=amd64 GOOS=darwin go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/darwin-amd64/crc ./cmd/crc
 
-$(BUILD_DIR)/linux-amd64/crc:
+$(BUILD_DIR)/linux-amd64/crc: $(SOURCES)
 	GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/linux-amd64/crc ./cmd/crc
 
-$(BUILD_DIR)/windows-amd64/crc.exe:
+$(BUILD_DIR)/windows-amd64/crc.exe: $(SOURCES)
 	GOARCH=amd64 GOOS=windows go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/windows-amd64/crc.exe ./cmd/crc
 
 .PHONY: cross ## Cross compiles all binaries
