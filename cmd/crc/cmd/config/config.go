@@ -21,10 +21,6 @@ var (
 
 	DisableUpdateCheck = cfg.AddSetting("disable-update-check", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 
-	// Preflight checks
-	SkipCheckBundleCached = cfg.AddSetting("skip-check-bundle-cached", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
-	WarnCheckBundleCached = cfg.AddSetting("warn-check-bundle-cached", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
-
 	// Proxy Configuration
 	HttpProxy  = cfg.AddSetting("http-proxy", nil, []cfg.ValidationFnType{cfg.ValidateURI}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	HttpsProxy = cfg.AddSetting("https-proxy", nil, []cfg.ValidationFnType{cfg.ValidateURI}, []cfg.SetFn{cfg.SuccessfullyApplied})

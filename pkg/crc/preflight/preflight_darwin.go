@@ -2,13 +2,11 @@ package preflight
 
 import (
 	"fmt"
-	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 )
 
 var genericPreflightChecks = [...]PreflightCheck{
 	{
-		skipConfigName:   cmdConfig.SkipCheckRootUser.Name,
-		warnConfigName:   cmdConfig.WarnCheckRootUser.Name,
+		configKeySuffix:  "check-root-user",
 		checkDescription: "Checking if running as non-root",
 		check:            checkIfRunningAsNormalUser,
 		fix:              fixRunAsNormalUser,
@@ -20,8 +18,7 @@ var genericPreflightChecks = [...]PreflightCheck{
 		fix:              fixOcBinaryCached,
 	},
 	{
-		skipConfigName:   cmdConfig.SkipCheckBundleCached.Name,
-		warnConfigName:   cmdConfig.WarnCheckBundleCached.Name,
+		configKeySuffix:  "check-bundle-cached",
 		checkDescription: "Unpacking bundle from the CRC binary",
 		check:            checkBundleCached,
 		fix:              fixBundleCached,
@@ -32,16 +29,14 @@ var genericPreflightChecks = [...]PreflightCheck{
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
 var hyperkitPreflightChecks = [...]PreflightCheck{
 	{
-		skipConfigName:   cmdConfig.SkipCheckHyperKitInstalled.Name,
-		warnConfigName:   cmdConfig.WarnCheckHyperKitInstalled.Name,
+		configKeySuffix:  "check-hyperkit-installed",
 		checkDescription: "Checking if HyperKit is installed",
 		check:            checkHyperKitInstalled,
 		fixDescription:   "Setting up virtualization with HyperKit",
 		fix:              fixHyperKitInstallation,
 	},
 	{
-		skipConfigName:   cmdConfig.SkipCheckHyperKitDriver.Name,
-		warnConfigName:   cmdConfig.WarnCheckHyperKitDriver.Name,
+		configKeySuffix:  "check-hyperkit-driver",
 		checkDescription: "Checking if crc-driver-hyperkit is installed",
 		check:            checkMachineDriverHyperKitInstalled,
 		fixDescription:   "Installing crc-machine-hyperkit",
@@ -51,16 +46,14 @@ var hyperkitPreflightChecks = [...]PreflightCheck{
 
 var dnsPreflightChecks = [...]PreflightCheck{
 	{
-		skipConfigName:   cmdConfig.SkipCheckResolverFilePermissions.Name,
-		warnConfigName:   cmdConfig.WarnCheckResolverFilePermissions.Name,
+		configKeySuffix:  "check-resolver-file-permissions",
 		checkDescription: fmt.Sprintf("Checking file permissions for %s", resolverFile),
 		check:            checkResolverFilePermissions,
 		fixDescription:   fmt.Sprintf("Setting file permissions for %s", resolverFile),
 		fix:              fixResolverFilePermissions,
 	},
 	{
-		skipConfigName:   cmdConfig.SkipCheckHostsFilePermissions.Name,
-		warnConfigName:   cmdConfig.WarnCheckHostsFilePermissions.Name,
+		configKeySuffix:  "check-hosts-file-permissions",
 		checkDescription: fmt.Sprintf("Checking file permissions for %s", hostFile),
 		check:            checkHostsFilePermissions,
 		fixDescription:   fmt.Sprintf("Setting file permissions for %s", hostFile),
@@ -86,4 +79,8 @@ func StartPreflightChecks() {
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
 func SetupHost() {
 	doFixPreflightChecks(getPreflightChecks())
+}
+
+func RegisterSettings() {
+	doRegisterSettings(getPreflightChecks())
 }

@@ -1,7 +1,7 @@
 package preflight
 
 import (
-	"github.com/code-ready/crc/pkg/crc/config"
+	cfg "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
@@ -18,13 +18,40 @@ type PreflightCheckFunc func() (bool, error)
 type PreflightFixFunc func() (bool, error)
 
 type PreflightCheck struct {
-	skipConfigName   string
-	warnConfigName   string
+	configKeySuffix  string
 	checkDescription string
 	check            PreflightCheckFunc
 	fixDescription   string
 	fix              PreflightFixFunc
 	flags            PreflightCheckFlags
+}
+
+func (check *PreflightCheck) getSkipConfigName() string {
+	if check.configKeySuffix == "" {
+		return ""
+	}
+	return "skip-" + check.configKeySuffix
+}
+
+func (check *PreflightCheck) shouldSkip() bool {
+	if check.configKeySuffix == "" {
+		return false
+	}
+	return cfg.GetBool(check.getSkipConfigName())
+}
+
+func (check *PreflightCheck) getWarnConfigName() string {
+	if check.configKeySuffix == "" {
+		return ""
+	}
+	return "warn-" + check.configKeySuffix
+}
+
+func (check *PreflightCheck) shouldWarn() bool {
+	if check.configKeySuffix == "" {
+		return false
+	}
+	return cfg.GetBool(check.getWarnConfigName())
 }
 
 func (check *PreflightCheck) doCheck() error {
@@ -33,7 +60,7 @@ func (check *PreflightCheck) doCheck() error {
 	} else {
 		logging.Infof("%s", check.checkDescription)
 	}
-	if check.skipConfigName != "" && config.GetBool(check.skipConfigName) {
+	if check.shouldSkip() {
 		logging.Warn("Skipping above check ...")
 		return nil
 	}
@@ -66,7 +93,7 @@ func doPreflightChecks(checks []PreflightCheck) {
 		}
 		err := check.doCheck()
 		if err != nil {
-			if check.warnConfigName != "" && config.GetBool(check.warnConfigName) {
+			if check.shouldWarn() {
 				logging.Warn(err.Error())
 			} else {
 				logging.Fatal(err.Error())
@@ -86,11 +113,20 @@ func doFixPreflightChecks(checks []PreflightCheck) {
 		}
 		err = check.doFix()
 		if err != nil {
-			if check.warnConfigName != "" && config.GetBool(check.warnConfigName) {
+			if check.shouldWarn() {
 				logging.Warn(err.Error())
 			} else {
 				logging.Fatal(err.Error())
 			}
+		}
+	}
+}
+
+func doRegisterSettings(checks []PreflightCheck) {
+	for _, check := range checks {
+		if check.configKeySuffix != "" {
+			cfg.AddSetting(check.getSkipConfigName(), false, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
+			cfg.AddSetting(check.getWarnConfigName(), false, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 		}
 	}
 }
