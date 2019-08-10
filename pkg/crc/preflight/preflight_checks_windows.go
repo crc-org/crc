@@ -7,9 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/oc"
-
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 )
@@ -21,25 +18,6 @@ const (
 	hypervDefaultVirtualSwitchName = "Default Switch"
 	hypervDefaultVirtualSwitchId   = "c08cb7b8-9b3c-408e-8e30-5e16a3aeb444"
 )
-
-// Check if oc binary is cached or not
-func checkOcBinaryCached() (bool, error) {
-	oc := oc.OcCached{}
-	if !oc.IsCached() {
-		return false, errors.New("oc binary is not cached.")
-	}
-	logging.Debug("oc binary already cached")
-	return true, nil
-}
-
-func fixOcBinaryCached() (bool, error) {
-	oc := oc.OcCached{}
-	if err := oc.EnsureIsCached(); err != nil {
-		return false, fmt.Errorf("Not able to download oc %v", err)
-	}
-	logging.Debug("oc binary cached")
-	return true, nil
-}
 
 func checkVersionOfWindowsUpdate() (bool, error) {
 	windowsReleaseId := `(Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseId`

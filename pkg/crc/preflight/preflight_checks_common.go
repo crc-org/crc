@@ -2,6 +2,7 @@ package preflight
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 
@@ -11,6 +12,8 @@ import (
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/oc"
 )
 
 func checkBundleCached() (bool, error) {
@@ -45,4 +48,23 @@ func fixBundleCached() (bool, error) {
 		return true, nil
 	}
 	return false, fmt.Errorf("CRC bundle is not embedded in the binary, see 'crc help' for more details.")
+}
+
+// Check if oc binary is cached or not
+func checkOcBinaryCached() (bool, error) {
+	oc := oc.OcCached{}
+	if !oc.IsCached() {
+		return false, errors.New("oc binary is not cached.")
+	}
+	logging.Debug("oc binary already cached")
+	return true, nil
+}
+
+func fixOcBinaryCached() (bool, error) {
+	oc := oc.OcCached{}
+	if err := oc.EnsureIsCached(); err != nil {
+		return false, fmt.Errorf("Not able to download oc %v", err)
+	}
+	logging.Debug("oc binary cached")
+	return true, nil
 }
