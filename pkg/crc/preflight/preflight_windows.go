@@ -1,8 +1,6 @@
 package preflight
 
-import (
-	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
-)
+import ()
 
 var genericPreflightChecks = [...]PreflightCheck{
 	{
@@ -12,8 +10,7 @@ var genericPreflightChecks = [...]PreflightCheck{
 		fix:              fixOcBinaryCached,
 	},
 	{
-		skipConfigName:   cmdConfig.SkipCheckBundleCached.Name,
-		warnConfigName:   cmdConfig.WarnCheckBundleCached.Name,
+		configKeySuffix:  "check-bundle-cached",
 		checkDescription: "Unpacking bundle from the CRC binary",
 		check:            checkBundleCached,
 		fix:              fixBundleCached,
@@ -23,44 +20,38 @@ var genericPreflightChecks = [...]PreflightCheck{
 
 var hypervPreflightChecks = [...]PreflightCheck{
 	{
-		skipConfigName:   cmdConfig.SkipCheckAdministratorUser.Name,
-		warnConfigName:   cmdConfig.WarnCheckAdministratorUser.Name,
+		configKeySuffix:  "check-administrator-user",
 		checkDescription: "Checking if running as normal user",
 		check:            checkIfRunningAsNormalUserInWindows,
 		fix:              fixRunAsNormalUserInWindows,
 	},
 	{
-		skipConfigName:   cmdConfig.SkipCheckWindowsVersionCheck.Name,
-		warnConfigName:   cmdConfig.WarnCheckWindowsVersionCheck.Name,
+		configKeySuffix:  "check-windows-version",
 		checkDescription: "Check Windows 10 release",
 		check:            checkVersionOfWindowsUpdate,
 		fix:              fixVersionOfWindowsUpdate,
 	},
 	{
-		skipConfigName:   cmdConfig.SkipCheckHyperVInstalled.Name,
-		warnConfigName:   cmdConfig.WarnCheckHyperVInstalled.Name,
+		configKeySuffix:  "check-hyperv-installed",
 		checkDescription: "Hyper-V installed and operational",
 		check:            checkHyperVInstalled,
 		fix:              fixHyperVInstalled,
 	},
 	{
-		skipConfigName:   cmdConfig.SkipCheckUserInHyperVGroup.Name,
-		warnConfigName:   cmdConfig.WarnCheckUserInHyperVGroup.Name,
+		configKeySuffix:  "check-user-in-hyperv-group",
 		checkDescription: "Is user a member of the Hyper-V Administrators group",
 		check:            checkIfUserPartOfHyperVAdmins,
 		fix:              fixUserPartOfHyperVAdmins,
 	},
 	{
-		skipConfigName:   cmdConfig.SkipCheckHyperVServiceRunning.Name,
-		warnConfigName:   cmdConfig.WarnCheckHyperVServiceRunning.Name,
+		configKeySuffix:  "check-hyperv-service-running",
 		checkDescription: "Hyper-V service enabled",
 		check:            checkHyperVServiceRunning,
 		fixDescription:   "Hyper-V service enabled",
 		fix:              fixHyperVServiceRunning,
 	},
 	{
-		skipConfigName:   cmdConfig.SkipCheckHyperVSwitch.Name,
-		warnConfigName:   cmdConfig.WarnCheckHyperVSwitch.Name,
+		configKeySuffix:  "check-hyperv-switch",
 		checkDescription: "Does the Hyper-V virtual switch exist",
 		check:            checkIfHyperVVirtualSwitchExists,
 		fix:              fixHyperVVirtualSwitch,
@@ -83,4 +74,8 @@ func StartPreflightChecks() {
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
 func SetupHost() {
 	doFixPreflightChecks(getPreflightChecks())
+}
+
+func RegisterSettings() {
+	doRegisterSettings(getPreflightChecks())
 }

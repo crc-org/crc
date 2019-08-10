@@ -12,6 +12,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/preflight"
 )
 
 var rootCmd = &cobra.Command{
@@ -43,6 +44,7 @@ func init() {
 		logging.Fatal(err.Error())
 	}
 
+	preflight.RegisterSettings()
 	setConfigDefaults()
 
 	// subcommands
