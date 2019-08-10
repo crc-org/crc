@@ -14,6 +14,23 @@ import (
 	"github.com/code-ready/crc/pkg/crc/oc"
 )
 
+var genericPreflightChecks = [...]PreflightCheck{
+	{
+		checkDescription: "Checking if oc binary is cached",
+		check:            checkOcBinaryCached,
+		fixDescription:   "Caching oc binary",
+		fix:              fixOcBinaryCached,
+	},
+	{
+		configKeySuffix:  "check-bundle-cached",
+		checkDescription: "Checking if CRC bundle is cached in '$HOME/.crc'",
+		check:            checkBundleCached,
+		fixDescription:   "Unpacking bundle from the CRC binary",
+		fix:              fixBundleCached,
+		flags:            SetupOnly,
+	},
+}
+
 func checkBundleCached() (bool, error) {
 	if !constants.BundleEmbedded() {
 		return true, nil

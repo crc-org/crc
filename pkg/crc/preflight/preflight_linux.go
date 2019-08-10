@@ -2,29 +2,6 @@ package preflight
 
 import ()
 
-var genericPreflightChecks = [...]PreflightCheck{
-	{
-		configKeySuffix:  "check-root-user",
-		checkDescription: "Checking if running as non-root",
-		check:            checkIfRunningAsNormalUser,
-		fix:              fixRunAsNormalUser,
-	},
-	{
-		checkDescription: "Checking if oc binary is cached",
-		check:            checkOcBinaryCached,
-		fixDescription:   "Caching oc binary",
-		fix:              fixOcBinaryCached,
-	},
-	{
-		configKeySuffix:  "check-bundle-cached",
-		checkDescription: "Checking if CRC bundle is cached in '$HOME/.crc'",
-		check:            checkBundleCached,
-		fixDescription:   "Unpacking bundle from the CRC binary",
-		fix:              fixBundleCached,
-		flags:            SetupOnly,
-	},
-}
-
 var libvirtPreflightChecks = [...]PreflightCheck{
 	{
 		configKeySuffix:  "check-virt-enabled",
@@ -134,6 +111,7 @@ var libvirtPreflightChecks = [...]PreflightCheck{
 func getPreflightChecks() []PreflightCheck {
 	checks := []PreflightCheck{}
 	checks = append(checks, genericPreflightChecks[:]...)
+	checks = append(checks, nonWinPreflightChecks[:]...)
 	checks = append(checks, libvirtPreflightChecks[:]...)
 
 	return checks

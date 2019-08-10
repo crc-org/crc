@@ -2,28 +2,12 @@ package preflight
 
 import ()
 
-var genericPreflightChecks = [...]PreflightCheck{
-	{
-		checkDescription: "Caching oc binary",
-		check:            checkOcBinaryCached,
-		fixDescription:   "",
-		fix:              fixOcBinaryCached,
-	},
-	{
-		configKeySuffix:  "check-bundle-cached",
-		checkDescription: "Unpacking bundle from the CRC binary",
-		check:            checkBundleCached,
-		fix:              fixBundleCached,
-		flags:            SetupOnly,
-	},
-}
-
 var hypervPreflightChecks = [...]PreflightCheck{
 	{
 		configKeySuffix:  "check-administrator-user",
 		checkDescription: "Checking if running as normal user",
-		check:            checkIfRunningAsNormalUserInWindows,
-		fix:              fixRunAsNormalUserInWindows,
+		check:            checkIfRunningAsNormalUser,
+		fix:              fixRunAsNormalUser,
 	},
 	{
 		configKeySuffix:  "check-windows-version",

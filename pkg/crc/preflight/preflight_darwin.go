@@ -4,28 +4,6 @@ import (
 	"fmt"
 )
 
-var genericPreflightChecks = [...]PreflightCheck{
-	{
-		configKeySuffix:  "check-root-user",
-		checkDescription: "Checking if running as non-root",
-		check:            checkIfRunningAsNormalUser,
-		fix:              fixRunAsNormalUser,
-	},
-	{
-		checkDescription: "Checking if oc binary is cached",
-		check:            checkOcBinaryCached,
-		fixDescription:   "Caching oc binary",
-		fix:              fixOcBinaryCached,
-	},
-	{
-		configKeySuffix:  "check-bundle-cached",
-		checkDescription: "Unpacking bundle from the CRC binary",
-		check:            checkBundleCached,
-		fix:              fixBundleCached,
-		flags:            SetupOnly,
-	},
-}
-
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
 var hyperkitPreflightChecks = [...]PreflightCheck{
 	{
@@ -65,6 +43,7 @@ func getPreflightChecks() []PreflightCheck {
 	checks := []PreflightCheck{}
 
 	checks = append(checks, genericPreflightChecks[:]...)
+	checks = append(checks, nonWinPreflightChecks[:]...)
 	checks = append(checks, hyperkitPreflightChecks[:]...)
 	checks = append(checks, dnsPreflightChecks[:]...)
 
