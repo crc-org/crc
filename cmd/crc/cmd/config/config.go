@@ -28,7 +28,7 @@ var (
 )
 
 var (
-	ConfigCmd = &cobra.Command{
+	configCmd = &cobra.Command{
 		Use:   "config SUBCOMMAND [flags]",
 		Short: "Modify crc configuration",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -38,7 +38,7 @@ var (
 )
 
 func init() {
-	ConfigCmd.Long = `Modifies crc configuration properties.
+	configCmd.Long = `Modifies crc configuration properties.
 Configurable properties (enter after SUBCOMMAND): ` + "\n\n" + configurableFields()
 }
 
@@ -86,4 +86,14 @@ func configurableFields() string {
 		fields = append(fields, " * "+key)
 	}
 	return strings.Join(fields, "\n")
+}
+
+func GetConfigCmd() *cobra.Command {
+	/* Delay generation of configCmd.Long as much as possible as some parts of crc may have registered more
+	 * fields after init() time but before the command is registered
+	 */
+	configCmd.Long = `Modifies crc configuration properties.
+Configurable properties (enter as SUBCOMMAND): ` + "\n\n" + configurableFields()
+
+	return configCmd
 }

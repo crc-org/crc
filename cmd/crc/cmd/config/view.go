@@ -24,7 +24,7 @@ type configViewTemplate struct {
 }
 
 func init() {
-	ConfigCmd.AddCommand(configViewCmd)
+	configCmd.AddCommand(configViewCmd)
 	configViewCmd.Flags().StringVar(&configViewFormat, "format", DefaultConfigViewFormat,
 		`Go template format to apply to the configuration file. For more information about Go templates, see: https://golang.org/pkg/text/template/`)
 }

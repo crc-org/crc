@@ -48,7 +48,7 @@ func init() {
 	setConfigDefaults()
 
 	// subcommands
-	rootCmd.AddCommand(cmdConfig.ConfigCmd)
+	rootCmd.AddCommand(cmdConfig.GetConfigCmd())
 
 	rootCmd.PersistentFlags().StringVar(&logging.LogLevel, "log-level", constants.DefaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
 	rootCmd.PersistentFlags().BoolVarP(&globalForce, "force", "f", false, "Forcefully perform an action")
