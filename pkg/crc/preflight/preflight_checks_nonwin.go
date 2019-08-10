@@ -9,6 +9,15 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
+var nonWinPreflightChecks = [...]PreflightCheck{
+	{
+		configKeySuffix:  "check-root-user",
+		checkDescription: "Checking if running as non-root",
+		check:            checkIfRunningAsNormalUser,
+		fix:              fixRunAsNormalUser,
+	},
+}
+
 func checkIfRunningAsNormalUser() (bool, error) {
 	if os.Geteuid() != 0 {
 		return true, nil

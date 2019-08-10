@@ -170,7 +170,7 @@ func fixHyperVVirtualSwitch() (bool, error) {
 	return false, errors.New("Unable to perform Hyper-V administrative commands. Please make sure to re-login or reboot your system")
 }
 
-func checkIfRunningAsNormalUserInWindows() (bool, error) {
+func checkIfRunningAsNormalUser() (bool, error) {
 	if !powershell.IsAdmin() {
 		return true, nil
 	}
@@ -178,6 +178,6 @@ func checkIfRunningAsNormalUserInWindows() (bool, error) {
 	return false, fmt.Errorf("crc should be ran as a normal user")
 }
 
-func fixRunAsNormalUserInWindows() (bool, error) {
+func fixRunAsNormalUser() (bool, error) {
 	return false, fmt.Errorf("crc should be ran as a normal user")
 }
