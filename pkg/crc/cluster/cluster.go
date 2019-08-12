@@ -19,7 +19,7 @@ func WaitForSsh(driver drivers.Driver) error {
 		return nil
 	}
 
-	return errors.RetryAfter(4, checkSshConnectivity, time.Second)
+	return errors.RetryAfter(10, checkSshConnectivity, time.Second)
 }
 
 // CheckCertsValidity checks if the cluster certs have expired
