@@ -6,8 +6,21 @@ import (
 	"strings"
 	"time"
 
+	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/machine/libmachine/drivers"
 )
+
+func WaitForSsh(driver drivers.Driver) error {
+	checkSshConnectivity := func() error {
+		_, err := drivers.RunSSHCommandFromDriver(driver, "exit 0")
+		if err != nil {
+			return &errors.RetriableError{Err: err}
+		}
+		return nil
+	}
+
+	return errors.RetryAfter(4, checkSshConnectivity, time.Second)
+}
 
 // CheckCertsValidity checks if the cluster certs have expired
 func CheckCertsValidity(driver drivers.Driver) error {
