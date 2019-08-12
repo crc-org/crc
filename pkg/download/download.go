@@ -15,6 +15,11 @@ func Download(uri, destination string) (string, error) {
 	if err != nil {
 		return "", errors.Newf("Not able to get response from %s: %v", uri, err)
 	}
+	defer func() {
+		if err != nil {
+			os.Remove(destination)
+		}
+	}()
 	resp := client.Do(req)
 	// check for errors
 	if err := resp.Err(); err != nil {
