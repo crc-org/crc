@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # bundle location
-BUNDLE=crc_libvirt_4.1.6.crcbundle
+BUNDLE=crc_libvirt_4.1.9.crcbundle
 
 # Output command before executing
 set -x
