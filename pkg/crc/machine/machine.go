@@ -277,7 +277,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	// Approve the node certificate.
 	ocConfig := oc.UseOCWithConfig(machineConfig.Name)
-	if err := oc.ApproveNodeCSR(ocConfig); err != nil {
+	if err := ocConfig.ApproveNodeCSR(); err != nil {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error approving the node csr %v", err)
 	}
