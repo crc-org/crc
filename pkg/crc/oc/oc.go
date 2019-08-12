@@ -29,7 +29,7 @@ func (oc OcConfig) RunOcCommand(args ...string) (string, string, error) {
 }
 
 // ApproveNodeCSR approves the certificate for the node.
-func ApproveNodeCSR(oc OcConfig) error {
+func (oc OcConfig) ApproveNodeCSR() error {
 	// Execute 'oc get csr -oname' and store the output
 	certNamses, stderr, err := oc.RunOcCommand("get", "csr", "-oname")
 	if err != nil {
