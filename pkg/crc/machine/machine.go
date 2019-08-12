@@ -162,16 +162,16 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error loading %s vm: %v", machineConfig.Name, err)
 	}
+
+	logging.Debug("Waiting until ssh is available")
+	if err := cluster.WaitForSsh(host.Driver); err != nil {
+		result.Error = err.Error()
+		return *result, errors.New(err.Error())
+	}
+
 	// Check the certs validity inside the vm
 	logging.Info("Verifying validity of the cluster certificates ...")
-	checkCertValidity := func() error {
-		err := cluster.CheckCertsValidity(host.Driver)
-		if err != nil {
-			return &errors.RetriableError{Err: err}
-		}
-		return nil
-	}
-	if err := errors.RetryAfter(4, checkCertValidity, time.Second); err != nil {
+	if err := cluster.CheckCertsValidity(host.Driver); err != nil {
 		result.Error = err.Error()
 		return *result, errors.New(err.Error())
 	}
