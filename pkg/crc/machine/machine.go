@@ -59,7 +59,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		Memory:     startConfig.Memory,
 	}
 
-	logging.Infof("Extracting the %s Bundle tarball ...", filepath.Base(machineConfig.BundlePath))
+	logging.Infof("Extracting bundle: %s ...", filepath.Base(machineConfig.BundlePath))
 	crcBundleMetadata, extractedPath, err := bundle.GetCrcBundleInfo(machineConfig)
 	if err != nil {
 		result.Error = err.Error()
@@ -166,7 +166,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	logging.Debug("Waiting until ssh is available")
 	if err := cluster.WaitForSsh(host.Driver); err != nil {
 		result.Error = err.Error()
-		return *result, errors.New(err.Error())
+		return *result, errors.New("Failed to connect to the crc VM with SSH")
 	}
 
 	// Check the certs validity inside the vm
