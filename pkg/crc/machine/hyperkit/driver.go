@@ -30,6 +30,7 @@ func CreateHost(config config.MachineConfig) *hyperkitDriver {
 			MachineName: config.Name,
 			StorePath:   constants.MachineBaseDir,
 			SSHUser:     constants.DefaultSSHUser,
+			BundleName:  config.BundleName,
 		},
 		Memory:      config.Memory,
 		CPU:         config.CPUs,

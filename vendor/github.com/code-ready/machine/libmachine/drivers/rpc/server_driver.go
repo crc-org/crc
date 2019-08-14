@@ -181,6 +181,12 @@ func (r *RPCServerDriver) GetSSHUsername(_ *struct{}, reply *string) error {
 	return nil
 }
 
+func (r *RPCServerDriver) GetBundleName(_ *struct{}, reply *string) error {
+	path, err := r.ActualDriver.GetBundleName()
+	*reply = path
+	return err
+}
+
 func (r *RPCServerDriver) GetURL(_ *struct{}, reply *string) error {
 	info, err := r.ActualDriver.GetURL()
 	*reply = info

@@ -13,7 +13,7 @@ func CreateHost(machineConfig config.MachineConfig) *hyperv.Driver {
 	hypervDriver := hyperv.NewDriver(machineConfig.Name, constants.MachineBaseDir)
 
 	hypervDriver.CPU = machineConfig.CPUs
-	hypervDriver.BundlePath = machineConfig.BundlePath
+	hypervDriver.BundleName = machineConfig.BundleName
 	hypervDriver.Memory = machineConfig.Memory
 
 	// TODO: VirtualSwitch name is supposed to be localized or by ID

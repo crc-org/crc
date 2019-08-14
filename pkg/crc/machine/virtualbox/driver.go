@@ -13,7 +13,7 @@ func CreateHost(machineConfig config.MachineConfig) *virtualbox.Driver {
 	virtualboxDriver := virtualbox.NewDriver(machineConfig.Name, constants.MachineBaseDir)
 
 	virtualboxDriver.CPU = machineConfig.CPUs
-	virtualboxDriver.BundlePath = machineConfig.BundlePath
+	virtualboxDriver.BundleName = machineConfig.BundleName
 	virtualboxDriver.Memory = machineConfig.Memory
 
 	// Network

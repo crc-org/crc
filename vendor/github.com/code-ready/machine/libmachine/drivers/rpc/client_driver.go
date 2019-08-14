@@ -74,6 +74,7 @@ const (
 	GetSSHKeyPathMethod      = `.GetSSHKeyPath`
 	GetSSHPortMethod         = `.GetSSHPort`
 	GetSSHUsernameMethod     = `.GetSSHUsername`
+	GetBundleNameMethod      = `.GetBundleName`
 	GetStateMethod           = `.GetState`
 	PreCreateCheckMethod     = `.PreCreateCheck`
 	CreateMethod             = `.Create`
@@ -332,6 +333,10 @@ func (c *RPCClientDriver) GetSSHUsername() string {
 	}
 
 	return username
+}
+
+func (c *RPCClientDriver) GetBundleName() (string, error) {
+	return c.rpcStringCall(GetBundleNameMethod)
 }
 
 func (c *RPCClientDriver) GetState() (state.State, error) {

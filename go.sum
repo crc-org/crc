@@ -27,6 +27,8 @@ github.com/code-ready/machine v0.0.0-20190723085830-e8c8edb7c88d h1:tUtGbx3gDEkG
 github.com/code-ready/machine v0.0.0-20190723085830-e8c8edb7c88d/go.mod h1:2Kr23hBx5xUHetynE+4hFBwn7Xkx5qoF0SY1FzmLz74=
 github.com/code-ready/machine v0.0.0-20190731093717-b6d974ad44d0 h1:036aGx7BK4a7FtdBUprV64az1cY2cQC4PrhMU63Wzxs=
 github.com/code-ready/machine v0.0.0-20190731093717-b6d974ad44d0/go.mod h1:2Kr23hBx5xUHetynE+4hFBwn7Xkx5qoF0SY1FzmLz74=
+github.com/code-ready/machine v0.0.0-20190821063716-34d5b6049a38 h1:aWtngqG5thaPezD/qobOkxrhOx0+fe9FgRBFlcsweyw=
+github.com/code-ready/machine v0.0.0-20190821063716-34d5b6049a38/go.mod h1:2Kr23hBx5xUHetynE+4hFBwn7Xkx5qoF0SY1FzmLz74=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/go-etcd v2.0.0+incompatible/go.mod h1:Jez6KQU2B/sWsbdaef3ED8NzMklzPG4d5KIOhIy30Tk=
 github.com/coreos/go-semver v0.2.0/go.mod h1:nnelYz7RCh+5ahJtPPxZlU+153eP4D4r3EedlOD2RNk=

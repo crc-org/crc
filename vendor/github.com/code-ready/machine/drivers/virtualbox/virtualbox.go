@@ -22,7 +22,7 @@ import (
 const (
 	defaultCPU                 = 4
 	defaultMemory              = 8192
-	defaultBundlePath          = ""
+	defaultBundleName          = ""
 	defaultHostOnlyCIDR        = "192.168.99.1/24"
 	defaultHostOnlyNictype     = "82540EM"
 	defaultHostOnlyPromiscMode = "deny"
@@ -43,8 +43,6 @@ var (
 
 type Driver struct {
 	*drivers.BaseDriver
-	// CRC System bundle
-	BundlePath string
 	VBoxManager
 	HostInterfaces
 	logsReader          LogsReader
@@ -124,8 +122,8 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 		mcnflag.StringFlag{
 			Name:   "virtualbox-bundlepath-url",
 			Usage:  "The URL of the crc bundlepath. Defaults to the latest available version",
-			Value:  defaultBundlePath,
-			EnvVar: "VIRTUALBOX_BundlePath_URL",
+			Value:  defaultBundleName,
+			EnvVar: "VIRTUALBOX_BundleName_URL",
 		},
 		mcnflag.BoolFlag{
 			Name:   "virtualbox-host-dns-resolver",
