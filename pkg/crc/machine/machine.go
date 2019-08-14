@@ -3,7 +3,6 @@ package machine
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"path/filepath"
 	"time"
 
@@ -51,23 +50,23 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	defer libMachineAPIClient.Close()
 
 	logging.Infof("Extracting bundle: %s ...", filepath.Base(startConfig.BundlePath))
-	crcBundleMetadata, extractedPath, err := bundle.GetCrcBundleInfo(startConfig.BundlePath)
+	crcBundleMetadata, err := bundle.GetCrcBundleInfo(startConfig.BundlePath)
 	if err != nil {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error to get bundle Metadata %v", err)
 	}
 
 	// Get the content of kubeadmin-password file
-	kubeadminPassword, err := ioutil.ReadFile(filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.KubeadminPasswordFile))
+	kubeadminPassword, err := crcBundleMetadata.GetKubeadminPassword()
 	if err != nil {
 		result.Error = err.Error()
-		return *result, errors.Newf("Error reading the %s file %v", filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.KubeadminPasswordFile), err)
+		return *result, errors.Newf("Error reading kubeadmin password from bundle %v", err)
 	}
 
 	// Put ClusterInfo to StartResult config.
 	clusterConfig := ClusterConfig{
-		KubeConfig:    filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.KubeConfig),
-		KubeAdminPass: string(kubeadminPassword),
+		KubeConfig:    crcBundleMetadata.GetKubeConfigPath(),
+		KubeAdminPass: kubeadminPassword,
 		WebConsoleURL: constants.DefaultWebConsoleURL,
 		ClusterAPI:    constants.DefaultAPIURL,
 	}
@@ -88,13 +87,13 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		}
 
 		// Retrieve metadata info
-		diskPath := filepath.Join(extractedPath, crcBundleMetadata.Storage.DiskImages[0].Name)
+		diskPath := crcBundleMetadata.GetDiskImagePath()
 		machineConfig.DiskPathURL = fmt.Sprintf("file://%s", filepath.ToSlash(diskPath))
 
-		machineConfig.SSHKeyPath = filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.SSHPrivateKeyFile)
+		machineConfig.SSHKeyPath = crcBundleMetadata.GetSSHKeyPath()
 		machineConfig.KernelCmdLine = crcBundleMetadata.Nodes[0].KernelCmdLine
-		machineConfig.Initramfs = filepath.Join(extractedPath, crcBundleMetadata.Nodes[0].Initramfs)
-		machineConfig.Kernel = filepath.Join(extractedPath, crcBundleMetadata.Nodes[0].Kernel)
+		machineConfig.Initramfs = crcBundleMetadata.GetInitramfsPath()
+		machineConfig.Kernel = crcBundleMetadata.GetKernelPath()
 
 		host, err := createHost(libMachineAPIClient, driverInfo.DriverPath, machineConfig)
 		if err != nil {
@@ -236,7 +235,8 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		// In our case it would be ~/.crc/machines/crc/
 		logging.Infof("Copying kubeconfig file to instance dir ...")
 		kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, startConfig.Name, "kubeconfig")
-		err := crcos.CopyFileContents(filepath.Join(extractedPath, "kubeconfig"),
+
+		err := crcos.CopyFileContents(crcBundleMetadata.GetKubeConfigPath(),
 			kubeConfigFilePath,
 			0644)
 		if err != nil {
