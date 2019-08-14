@@ -93,7 +93,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	// Pre-VM start
 	driverInfo, _ := getDriverInfo(startConfig.VMDriver)
-	exists, err := existVM(libMachineAPIClient, machineConfig)
+	exists, err := existVM(libMachineAPIClient, startConfig.Name)
 	if !exists {
 		logging.Infof("Creating VM ...")
 
@@ -438,8 +438,8 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 	return *result, nil
 }
 
-func existVM(api libmachine.API, machineConfig config.MachineConfig) (bool, error) {
-	exists, err := api.Exists(machineConfig.Name)
+func existVM(api libmachine.API, name string) (bool, error) {
+	exists, err := api.Exists(name)
 	if err != nil {
 		return false, errors.Newf("Error checking if the host exists: %s", err)
 	}
