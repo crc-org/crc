@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"io/ioutil"
 	"path/filepath"
 )
@@ -43,9 +42,9 @@ type CrcBundleInfo struct {
 	} `json:"storage"`
 }
 
-func GetCrcBundleInfo(machineConfig config.MachineConfig) (*CrcBundleInfo, string, error) {
+func GetCrcBundleInfo(bundlePath string) (*CrcBundleInfo, string, error) {
 	var bundleInfo CrcBundleInfo
-	extractedPath, err := Extract(machineConfig.BundlePath, constants.MachineCacheDir)
+	extractedPath, err := Extract(bundlePath, constants.MachineCacheDir)
 	if err != nil {
 		return nil, extractedPath, fmt.Errorf("Error during extraction : %+v", err)
 	}
