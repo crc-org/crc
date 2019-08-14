@@ -35,6 +35,21 @@ import (
 	"github.com/code-ready/crc/pkg/crc/cluster"
 )
 
+func fillClusterConfig(bundleInfo *bundle.CrcBundleInfo, clusterConfig *ClusterConfig) error {
+	kubeadminPassword, err := bundleInfo.GetKubeadminPassword()
+	if err != nil {
+		return fmt.Errorf("Error reading kubeadmin password from bundle %v", err)
+	}
+
+	*clusterConfig = ClusterConfig{
+		KubeConfig:    bundleInfo.GetKubeConfigPath(),
+		KubeAdminPass: kubeadminPassword,
+		WebConsoleURL: constants.DefaultWebConsoleURL,
+		ClusterAPI:    constants.DefaultAPIURL,
+	}
+	return nil
+}
+
 func Start(startConfig StartConfig) (StartResult, error) {
 	defer unsetMachineLogging()
 
@@ -56,22 +71,11 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		return *result, errors.Newf("Error to get bundle Metadata %v", err)
 	}
 
-	// Get the content of kubeadmin-password file
-	kubeadminPassword, err := crcBundleMetadata.GetKubeadminPassword()
+	err = fillClusterConfig(crcBundleMetadata, &result.ClusterConfig)
 	if err != nil {
 		result.Error = err.Error()
-		return *result, errors.Newf("Error reading kubeadmin password from bundle %v", err)
+		return *result, errors.Newf("%s", err.Error())
 	}
-
-	// Put ClusterInfo to StartResult config.
-	clusterConfig := ClusterConfig{
-		KubeConfig:    crcBundleMetadata.GetKubeConfigPath(),
-		KubeAdminPass: kubeadminPassword,
-		WebConsoleURL: constants.DefaultWebConsoleURL,
-		ClusterAPI:    constants.DefaultAPIURL,
-	}
-
-	result.ClusterConfig = clusterConfig
 
 	// Pre-VM start
 	driverInfo, _ := getDriverInfo(startConfig.VMDriver)
