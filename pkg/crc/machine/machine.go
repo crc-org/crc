@@ -50,29 +50,12 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	defer libMachineAPIClient.Close()
 
-	machineConfig := config.MachineConfig{
-		Name:       startConfig.Name,
-		BundleName: filepath.Base(startConfig.BundlePath),
-		VMDriver:   startConfig.VMDriver,
-		CPUs:       startConfig.CPUs,
-		Memory:     startConfig.Memory,
-	}
-
 	logging.Infof("Extracting bundle: %s ...", filepath.Base(startConfig.BundlePath))
 	crcBundleMetadata, extractedPath, err := bundle.GetCrcBundleInfo(startConfig.BundlePath)
 	if err != nil {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error to get bundle Metadata %v", err)
 	}
-
-	// Retrieve metadata info
-	diskPath := filepath.Join(extractedPath, crcBundleMetadata.Storage.DiskImages[0].Name)
-	machineConfig.DiskPathURL = fmt.Sprintf("file://%s", filepath.ToSlash(diskPath))
-
-	machineConfig.SSHKeyPath = filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.SSHPrivateKeyFile)
-	machineConfig.KernelCmdLine = crcBundleMetadata.Nodes[0].KernelCmdLine
-	machineConfig.Initramfs = filepath.Join(extractedPath, crcBundleMetadata.Nodes[0].Initramfs)
-	machineConfig.Kernel = filepath.Join(extractedPath, crcBundleMetadata.Nodes[0].Kernel)
 
 	// Get the content of kubeadmin-password file
 	kubeadminPassword, err := ioutil.ReadFile(filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.KubeadminPasswordFile))
@@ -96,6 +79,23 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	exists, err := existVM(libMachineAPIClient, startConfig.Name)
 	if !exists {
 		logging.Infof("Creating VM ...")
+		machineConfig := config.MachineConfig{
+			Name:       startConfig.Name,
+			BundleName: filepath.Base(startConfig.BundlePath),
+			VMDriver:   startConfig.VMDriver,
+			CPUs:       startConfig.CPUs,
+			Memory:     startConfig.Memory,
+		}
+
+		// Retrieve metadata info
+		diskPath := filepath.Join(extractedPath, crcBundleMetadata.Storage.DiskImages[0].Name)
+		machineConfig.DiskPathURL = fmt.Sprintf("file://%s", filepath.ToSlash(diskPath))
+
+		machineConfig.SSHKeyPath = filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.SSHPrivateKeyFile)
+		machineConfig.KernelCmdLine = crcBundleMetadata.Nodes[0].KernelCmdLine
+		machineConfig.Initramfs = filepath.Join(extractedPath, crcBundleMetadata.Nodes[0].Initramfs)
+		machineConfig.Kernel = filepath.Join(extractedPath, crcBundleMetadata.Nodes[0].Kernel)
+
 		host, err := createHost(libMachineAPIClient, driverInfo.DriverPath, machineConfig)
 		if err != nil {
 			result.Error = err.Error()
@@ -110,7 +110,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 		result.Status = vmState.String()
 	} else {
-		host, err := libMachineAPIClient.Load(machineConfig.Name)
+		host, err := libMachineAPIClient.Load(startConfig.Name)
 		if err != nil {
 			result.Error = err.Error()
 			return *result, errors.Newf("Error loading host: %v", err)
@@ -154,10 +154,10 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 
 	// Post-VM start
-	host, err := libMachineAPIClient.Load(machineConfig.Name)
+	host, err := libMachineAPIClient.Load(startConfig.Name)
 	if err != nil {
 		result.Error = err.Error()
-		return *result, errors.Newf("Error loading %s vm: %v", machineConfig.Name, err)
+		return *result, errors.Newf("Error loading %s vm: %v", startConfig.Name, err)
 	}
 
 	logging.Debug("Waiting until ssh is available")
@@ -233,7 +233,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	// Copy Kubeconfig file from bundle extract path to machine directory.
 	// In our case it would be ~/machine/crc
 	logging.Infof("Copying kubeconfig file to instance dir ...")
-	kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, machineConfig.Name, "kubeconfig")
+	kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, startConfig.Name, "kubeconfig")
 	if err := crcos.CopyFileContents(
 		filepath.Join(extractedPath, "kubeconfig"),
 		kubeConfigFilePath,
@@ -273,7 +273,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 
 	// Approve the node certificate.
-	ocConfig := oc.UseOCWithConfig(machineConfig.Name)
+	ocConfig := oc.UseOCWithConfig(startConfig.Name)
 	if err := ocConfig.ApproveNodeCSR(); err != nil {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error approving the node csr %v", err)
