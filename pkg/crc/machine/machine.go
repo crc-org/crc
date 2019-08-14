@@ -58,8 +58,8 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		Memory:     startConfig.Memory,
 	}
 
-	logging.Infof("Extracting bundle: %s ...", filepath.Base(machineConfig.BundlePath))
-	crcBundleMetadata, extractedPath, err := bundle.GetCrcBundleInfo(machineConfig)
+	logging.Infof("Extracting bundle: %s ...", filepath.Base(startConfig.BundlePath))
+	crcBundleMetadata, extractedPath, err := bundle.GetCrcBundleInfo(startConfig.BundlePath)
 	if err != nil {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error to get bundle Metadata %v", err)
