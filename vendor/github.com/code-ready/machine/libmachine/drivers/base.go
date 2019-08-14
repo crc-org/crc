@@ -20,6 +20,7 @@ type BaseDriver struct {
 	SSHPort     int
 	SSHKeyPath  string
 	StorePath   string
+	BundleName  string
 }
 
 // DriverName returns the name of the driver
@@ -78,4 +79,9 @@ func (d *BaseDriver) PreCreateCheck() error {
 // ResolveStorePath returns the store path where the machine is
 func (d *BaseDriver) ResolveStorePath(file string) string {
 	return filepath.Join(d.StorePath, "machines", d.MachineName, file)
+}
+
+// Returns the name of the bundle which was used to create this machine
+func (d* BaseDriver) GetBundleName() (string, error) {
+	return d.BundleName, nil
 }

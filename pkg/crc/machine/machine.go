@@ -52,7 +52,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	machineConfig := config.MachineConfig{
 		Name:       startConfig.Name,
-		BundlePath: startConfig.BundlePath,
+		BundleName: filepath.Base(startConfig.BundlePath),
 		VMDriver:   startConfig.VMDriver,
 		CPUs:       startConfig.CPUs,
 		Memory:     startConfig.Memory,
@@ -96,7 +96,6 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	exists, err := existVM(libMachineAPIClient, startConfig.Name)
 	if !exists {
 		logging.Infof("Creating VM ...")
-
 		host, err := createHost(libMachineAPIClient, driverInfo.DriverPath, machineConfig)
 		if err != nil {
 			result.Error = err.Error()

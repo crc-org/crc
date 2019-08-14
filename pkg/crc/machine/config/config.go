@@ -2,7 +2,7 @@ package config
 
 type MachineConfig struct {
 	// CRC system bundle
-	BundlePath string
+	BundleName string
 
 	// Hypervisor
 	VMDriver string

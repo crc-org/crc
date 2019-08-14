@@ -12,9 +12,6 @@ import (
 type libvirtDriver struct {
 	*drivers.BaseDriver
 
-	// CRC System bundle
-	BundlePath string
-
 	// Driver specific configuration
 	Memory      int
 	CPU         int
@@ -32,13 +29,13 @@ func CreateHost(machineConfig config.MachineConfig) *libvirtDriver {
 			MachineName: machineConfig.Name,
 			StorePath:   constants.MachineBaseDir,
 			SSHUser:     constants.DefaultSSHUser,
+			BundleName:  machineConfig.BundleName,
 		},
-		BundlePath: machineConfig.BundlePath,
-		Memory:     machineConfig.Memory,
-		CPU:        machineConfig.CPUs,
-		Network:    DefaultNetwork,
-		CacheMode:  DefaultCacheMode,
-		IOMode:     DefaultIOMode,
+		Memory:    machineConfig.Memory,
+		CPU:       machineConfig.CPUs,
+		Network:   DefaultNetwork,
+		CacheMode: DefaultCacheMode,
+		IOMode:    DefaultIOMode,
 		// This force to add entry of DiskPath under crc machine config.json
 		DiskPath:    filepath.Join(constants.MachineBaseDir, "machines", machineConfig.Name, constants.DefaultName),
 		DiskPathUrl: machineConfig.DiskPathURL,

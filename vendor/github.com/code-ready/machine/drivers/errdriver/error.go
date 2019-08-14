@@ -76,6 +76,10 @@ func (d *Driver) GetSSHUsername() string {
 	return ""
 }
 
+func (d *Driver) GetBundleName() (string, error) {
+	return "", NotLoadable{d.Name}
+}
+
 func (d *Driver) GetState() (state.State, error) {
 	return state.Error, NotLoadable{d.Name}
 }

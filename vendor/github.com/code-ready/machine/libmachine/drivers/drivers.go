@@ -41,6 +41,9 @@ type Driver interface {
 	// GetSSHUsername returns username for use with ssh
 	GetSSHUsername() string
 
+	// GetBundleName() Returns the name of the unpacked bundle which was used to create this machine
+	GetBundleName() (string, error)
+
 	// GetURL returns a Docker compatible host URL for connecting to this host
 	// e.g. tcp://1.2.3.4:2376
 	GetURL() (string, error)
