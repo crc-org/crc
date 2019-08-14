@@ -230,20 +230,20 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		logging.Warnf("Failed Public dns query: %v : %s", err, queryOutput)
 	}
 
-	// Copy Kubeconfig file from bundle extract path to machine directory.
-	// In our case it would be ~/machine/crc
-	logging.Infof("Copying kubeconfig file to instance dir ...")
-	kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, startConfig.Name, "kubeconfig")
-	if err := crcos.CopyFileContents(
-		filepath.Join(extractedPath, "kubeconfig"),
-		kubeConfigFilePath,
-		0644); err != nil {
-		result.Error = err.Error()
-		return *result, errors.Newf("Error to copy kubeconfig content %v", err)
-	}
-
-	// On VM creation, we need to add the user pull secret and generate a cluster ID
+	// Additional steps to perform after newly created VM is up
 	if !exists {
+		// Copy Kubeconfig file from bundle extract path to machine directory.
+		// In our case it would be ~/.crc/machines/crc/
+		logging.Infof("Copying kubeconfig file to instance dir ...")
+		kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, startConfig.Name, "kubeconfig")
+		err := crcos.CopyFileContents(filepath.Join(extractedPath, "kubeconfig"),
+			kubeConfigFilePath,
+			0644)
+		if err != nil {
+			result.Error = err.Error()
+			return *result, errors.Newf("Error copying kubeconfig file  %v", err)
+		}
+
 		// Update the user pull secret before kubelet start.
 		logging.Info("Adding user's pull secret and cluster ID ...")
 		if err := pullsecret.AddPullSecretAndClusterID(host.Driver, startConfig.PullSecret, kubeConfigFilePath); err != nil {
