@@ -50,6 +50,17 @@ func fillClusterConfig(bundleInfo *bundle.CrcBundleInfo, clusterConfig *ClusterC
 	return nil
 }
 
+func getCrcBundleInfo(bundlePath string) (*bundle.CrcBundleInfo, error) {
+	bundleName := filepath.Base(bundlePath)
+	logging.Infof("Loading bundle: %s ...", bundleName)
+	bundleInfo, err := bundle.GetCachedBundleInfo(bundleName)
+	if err == nil {
+		return bundleInfo, nil
+	}
+	logging.Infof("Extracting bundle: %s ...", bundleName)
+	return bundle.Extract(bundlePath)
+}
+
 func Start(startConfig StartConfig) (StartResult, error) {
 	defer unsetMachineLogging()
 
@@ -64,8 +75,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	defer libMachineAPIClient.Close()
 
-	logging.Infof("Extracting bundle: %s ...", filepath.Base(startConfig.BundlePath))
-	crcBundleMetadata, err := bundle.GetCrcBundleInfo(startConfig.BundlePath)
+	crcBundleMetadata, err := getCrcBundleInfo(startConfig.BundlePath)
 	if err != nil {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error to get bundle Metadata %v", err)
@@ -87,7 +97,6 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		// Retrieve metadata info
 		diskPath := crcBundleMetadata.GetDiskImagePath()
 		machineConfig.DiskPathURL = fmt.Sprintf("file://%s", filepath.ToSlash(diskPath))
-
 		machineConfig.SSHKeyPath = crcBundleMetadata.GetSSHKeyPath()
 		machineConfig.KernelCmdLine = crcBundleMetadata.Nodes[0].KernelCmdLine
 		machineConfig.Initramfs = crcBundleMetadata.GetInitramfsPath()
