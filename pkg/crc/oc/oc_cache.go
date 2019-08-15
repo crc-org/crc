@@ -1,12 +1,9 @@
 package oc
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -43,6 +40,10 @@ func (oc *OcCached) IsCached() bool {
 	return true
 }
 
+func matchOcBinaryName(filename string) bool {
+	return filepath.Base(filename) == constants.OcBinaryName
+}
+
 // cacheOc downloads and caches the oc binary into the minishift directory
 func (oc *OcCached) cacheOc() error {
 	if !oc.IsCached() {
@@ -59,19 +60,9 @@ func (oc *OcCached) cacheOc() error {
 		}
 
 		// Extract the tarball and put it the cache directory.
-		err = extract.Uncompress(assetTmpFile, tmpDir)
+		err = extract.UncompressWithFilter(assetTmpFile, tmpDir, matchOcBinaryName)
 		if err != nil {
 			return errors.Wrapf(err, "Cannot uncompress '%s'", assetTmpFile)
-		}
-		switch {
-		case strings.HasSuffix(assetTmpFile, TARGZ):
-			content, err := listDirExcluding(tmpDir, ".*.tar.*")
-			if err != nil {
-				return errors.Wrapf(err, "Cannot list content of '%s'", tmpDir)
-			}
-			if len(content) > 1 {
-				return errors.New(fmt.Sprintf("Unexpected number of files in tmp directory: %s", content))
-			}
 		}
 
 		binaryName := constants.OcBinaryName
@@ -98,26 +89,4 @@ func (oc *OcCached) cacheOc() error {
 		return nil
 	}
 	return nil
-}
-
-func listDirExcluding(dir string, excludeRegexp string) ([]string, error) {
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-
-	result := []string{}
-	for _, f := range files {
-		matched, err := regexp.MatchString(excludeRegexp, f.Name())
-		if err != nil {
-			return nil, err
-		}
-
-		if !matched {
-			result = append(result, f.Name())
-		}
-
-	}
-
-	return result, nil
 }
