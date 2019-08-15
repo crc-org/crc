@@ -59,22 +59,12 @@ func (oc *OcCached) cacheOc() error {
 		}
 
 		// Extract the tarball and put it the cache directory.
-		binaryPath := ""
+		err = extract.Uncompress(assetTmpFile, tmpDir)
+		if err != nil {
+			return errors.Wrapf(err, "Cannot uncompress '%s'", assetTmpFile)
+		}
 		switch {
 		case strings.HasSuffix(assetTmpFile, TAR):
-			// unzip
-			tarFile := assetTmpFile[:len(assetTmpFile)-3]
-			err = extract.Ungzip(assetTmpFile, tarFile)
-			if err != nil {
-				return errors.Wrapf(err, "Cannot ungzip '%s'", assetTmpFile)
-			}
-
-			// untar
-			err = extract.Untar(tarFile, tmpDir)
-			if err != nil {
-				return errors.Wrapf(err, "Cannot untar '%s'", tarFile)
-			}
-
 			content, err := listDirExcluding(tmpDir, ".*.tar.*")
 			if err != nil {
 				return errors.Wrapf(err, "Cannot list content of '%s'", tmpDir)
@@ -82,19 +72,10 @@ func (oc *OcCached) cacheOc() error {
 			if len(content) > 1 {
 				return errors.New(fmt.Sprintf("Unexpected number of files in tmp directory: %s", content))
 			}
-
-			binaryPath = tmpDir
-		case strings.HasSuffix(assetTmpFile, ZIP):
-			contentDir := assetTmpFile[:len(assetTmpFile)-4]
-			err = extract.Unzip(assetTmpFile, contentDir)
-			if err != nil {
-				return errors.Wrapf(err, "Cannot unzip '%s'", assetTmpFile)
-			}
-			binaryPath = contentDir
 		}
 
 		binaryName := constants.OcBinaryName
-		binaryPath = filepath.Join(binaryPath, binaryName)
+		binaryPath := filepath.Join(tmpDir, binaryName)
 
 		// Copy the requested asset into its final destination
 		outputPath := constants.CrcBinDir
