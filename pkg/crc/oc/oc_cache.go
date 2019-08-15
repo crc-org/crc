@@ -18,7 +18,7 @@ import (
 
 const (
 	OC_CACHE_DIR = "oc"
-	TAR          = "tar.gz"
+	TARGZ        = "tar.gz"
 	ZIP          = "zip"
 )
 
@@ -64,7 +64,7 @@ func (oc *OcCached) cacheOc() error {
 			return errors.Wrapf(err, "Cannot uncompress '%s'", assetTmpFile)
 		}
 		switch {
-		case strings.HasSuffix(assetTmpFile, TAR):
+		case strings.HasSuffix(assetTmpFile, TARGZ):
 			content, err := listDirExcluding(tmpDir, ".*.tar.*")
 			if err != nil {
 				return errors.Wrapf(err, "Cannot list content of '%s'", tmpDir)
