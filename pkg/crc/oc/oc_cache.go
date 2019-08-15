@@ -104,7 +104,7 @@ func (oc *OcCached) cacheOc() error {
 		}
 
 		finalBinaryPath := filepath.Join(outputPath, binaryName)
-		crcos.CopyFileContents(binaryPath, finalBinaryPath, 0755)
+		err = crcos.CopyFileContents(binaryPath, finalBinaryPath, 0755)
 		if err != nil {
 			return err
 		}
