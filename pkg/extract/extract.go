@@ -9,6 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/xi2/xz"
 )
 
 func Ungzip(source, target string) error {
@@ -34,12 +37,52 @@ func Ungzip(source, target string) error {
 	return err
 }
 
+func Uncompress(tarball, targetDir string) error {
+	logging.Debugf("Uncompressing %s to %s", tarball, targetDir)
+
+	if strings.HasSuffix(tarball, ".zip") {
+		return Unzip(tarball, targetDir)
+	}
+
+	var filereader io.Reader
+	file, err := os.Open(filepath.Clean(tarball))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	if strings.HasSuffix(tarball, ".tar.xz") || strings.HasSuffix(tarball, ".crcbundle") {
+		filereader, err = xz.NewReader(file, 0)
+		if err != nil {
+			return err
+		}
+	} else if strings.HasSuffix(tarball, ".tar.gz") {
+		reader, err := gzip.NewReader(file)
+		if err != nil {
+			return err
+		}
+		defer reader.Close()
+		filereader = io.Reader(reader)
+	} else if strings.HasSuffix(tarball, ".tar") {
+		filereader = file
+	} else {
+		logging.Warnf("Unknown file format when trying to uncompress %s", tarball)
+	}
+
+	return untar(filereader, targetDir)
+}
+
 func Untar(tarball, targetDir string) error {
 	reader, err := os.Open(filepath.Clean(tarball))
 	if err != nil {
 		return err
 	}
 	defer reader.Close()
+
+	return untar(reader, targetDir)
+}
+
+func untar(reader io.Reader, targetDir string) error {
 	tarReader := tar.NewReader(reader)
 
 	for {
