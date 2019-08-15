@@ -14,11 +14,19 @@ import (
 	"github.com/xi2/xz"
 )
 
+func UncompressWithFilter(tarball, targetDir string, fileFilter func(string) bool) error {
+	return uncompress(tarball, targetDir, fileFilter)
+}
+
 func Uncompress(tarball, targetDir string) error {
+	return uncompress(tarball, targetDir, nil)
+}
+
+func uncompress(tarball, targetDir string, fileFilter func(string) bool) error {
 	logging.Debugf("Uncompressing %s to %s", tarball, targetDir)
 
 	if strings.HasSuffix(tarball, ".zip") {
-		return Unzip(tarball, targetDir)
+		return unzip(tarball, targetDir, fileFilter)
 	}
 
 	var filereader io.Reader
@@ -46,10 +54,10 @@ func Uncompress(tarball, targetDir string) error {
 		logging.Warnf("Unknown file format when trying to uncompress %s", tarball)
 	}
 
-	return untar(filereader, targetDir)
+	return untar(filereader, targetDir, fileFilter)
 }
 
-func untar(reader io.Reader, targetDir string) error {
+func untar(reader io.Reader, targetDir string, fileFilter func(string) bool) error {
 	tarReader := tar.NewReader(reader)
 
 	for {
@@ -70,6 +78,10 @@ func untar(reader io.Reader, targetDir string) error {
 
 		// the target location where the dir/file should be created
 		path := filepath.Join(targetDir, header.Name)
+		if fileFilter != nil && !fileFilter(path) {
+			logging.Debugf("untar: Skipping %s", path)
+			continue
+		}
 
 		// check the file type
 		switch header.Typeflag {
@@ -103,6 +115,10 @@ func untar(reader io.Reader, targetDir string) error {
 }
 
 func Unzip(archive, target string) error {
+	return unzip(archive, target, nil)
+}
+
+func unzip(archive, target string, fileFilter func(string) bool) error {
 	reader, err := zip.OpenReader(archive)
 	if err != nil {
 		return err
@@ -120,6 +136,10 @@ func Unzip(archive, target string) error {
 			return fmt.Errorf("%s: illegal file path", path)
 		}
 
+		if fileFilter != nil && !fileFilter(path) {
+			logging.Debugf("untar: Skipping %s", path)
+			continue
+		}
 		if file.FileInfo().IsDir() {
 			err = os.MkdirAll(path, file.Mode())
 			if err != nil {
