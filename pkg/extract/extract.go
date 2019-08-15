@@ -14,29 +14,6 @@ import (
 	"github.com/xi2/xz"
 )
 
-func Ungzip(source, target string) error {
-	reader, err := os.Open(filepath.Clean(source))
-	if err != nil {
-		return err
-	}
-	defer reader.Close()
-
-	archive, err := gzip.NewReader(reader)
-	if err != nil {
-		return err
-	}
-	defer archive.Close()
-
-	writer, err := os.Create(target)
-	if err != nil {
-		return err
-	}
-	defer writer.Close()
-
-	_, err = io.Copy(writer, archive)
-	return err
-}
-
 func Uncompress(tarball, targetDir string) error {
 	logging.Debugf("Uncompressing %s to %s", tarball, targetDir)
 
@@ -70,16 +47,6 @@ func Uncompress(tarball, targetDir string) error {
 	}
 
 	return untar(filereader, targetDir)
-}
-
-func Untar(tarball, targetDir string) error {
-	reader, err := os.Open(filepath.Clean(tarball))
-	if err != nil {
-		return err
-	}
-	defer reader.Close()
-
-	return untar(reader, targetDir)
 }
 
 func untar(reader io.Reader, targetDir string) error {
