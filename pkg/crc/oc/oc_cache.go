@@ -76,14 +76,9 @@ func (oc *OcCached) cacheOc() error {
 		}
 
 		finalBinaryPath := filepath.Join(outputPath, binaryName)
-		err = crcos.CopyFileContents(binaryPath, finalBinaryPath, 0750)
+		err = crcos.CopyFileContents(binaryPath, finalBinaryPath, 0500)
 		if err != nil {
 			return err
-		}
-
-		err = os.Chmod(finalBinaryPath, 0500)
-		if err != nil {
-			return errors.Wrapf(err, "Cannot make '%s' executable", finalBinaryPath)
 		}
 
 		return nil
