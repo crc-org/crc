@@ -6,30 +6,22 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
+
+	"github.com/code-ready/crc/pkg/crc/constants"
 )
 
-func Extract(sourcepath string, destpath string) (string, error) {
+func Extract(sourcepath string) (*CrcBundleInfo, error) {
 	file, err := os.Open(sourcepath)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-
-	extractedPath := strings.Split(filepath.Base(file.Name()), ".crcbundle")[0]
-	extractedPath = filepath.Join(destpath, extractedPath)
-
-	_, err = os.Stat(extractedPath)
-	if err == nil {
-		return extractedPath, nil
-	}
-
 	defer file.Close()
 
 	var fileReader io.Reader = file
 
 	if fileReader, err = xz.NewReader(file, 0); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	tarBallReader := tar.NewReader(fileReader)
@@ -41,10 +33,10 @@ func Extract(sourcepath string, destpath string) (string, error) {
 			if err == io.EOF {
 				break
 			}
-			return "", err
+			return nil, err
 		}
 		// get the individual filename and extract to the specified directory
-		filename := filepath.Join(destpath, header.Name)
+		filename := filepath.Join(constants.MachineCacheDir, header.Name)
 
 		switch header.Typeflag {
 		case tar.TypeDir:
@@ -53,7 +45,7 @@ func Extract(sourcepath string, destpath string) (string, error) {
 			err = os.MkdirAll(filename, os.FileMode(header.Mode))
 
 			if err != nil {
-				return "", err
+				return nil, err
 			}
 
 		case tar.TypeReg, tar.TypeGNUSparse:
@@ -62,7 +54,7 @@ func Extract(sourcepath string, destpath string) (string, error) {
 			writer, err := os.Create(filename)
 
 			if err != nil {
-				return "", err
+				return nil, err
 			}
 
 			io.Copy(writer, tarBallReader)
@@ -70,7 +62,7 @@ func Extract(sourcepath string, destpath string) (string, error) {
 			err = os.Chmod(filename, os.FileMode(header.Mode))
 
 			if err != nil {
-				return "", err
+				return nil, err
 			}
 
 			writer.Close()
@@ -81,5 +73,5 @@ func Extract(sourcepath string, destpath string) (string, error) {
 
 	}
 
-	return extractedPath, nil
+	return GetCachedBundleInfo(filepath.Base(sourcepath))
 }

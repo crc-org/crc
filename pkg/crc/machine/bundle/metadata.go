@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"io/ioutil"
+	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Metadata structure to unmarshal the crc-bundle-info.json file
@@ -43,23 +45,41 @@ type CrcBundleInfo struct {
 	cachedPath string
 }
 
-func GetCrcBundleInfo(bundlePath string) (*CrcBundleInfo, error) {
-	var bundleInfo CrcBundleInfo
-	extractedPath, err := Extract(bundlePath, constants.MachineCacheDir)
+func getCachedBundlePath(bundleName string) string {
+	path := strings.TrimSuffix(bundleName, ".crcbundle")
+	return filepath.Join(constants.MachineCacheDir, path)
+}
+
+func (bundle *CrcBundleInfo) isCached() bool {
+	_, err := os.Stat(bundle.cachedPath)
+	return err == nil
+}
+
+func (bundle *CrcBundleInfo) readBundleInfo() error {
+	bundleInfoPath := bundle.resolvePath("crc-bundle-info.json")
+	f, err := ioutil.ReadFile(bundleInfoPath)
 	if err != nil {
-		return nil, fmt.Errorf("Error during extraction : %+v", err)
-	}
-	BundleInfoPath := filepath.Join(extractedPath, "crc-bundle-info.json")
-	f, err := ioutil.ReadFile(BundleInfoPath)
-	if err != nil {
-		return nil, fmt.Errorf("Error reading %s file : %+v", BundleInfoPath, err)
+		return fmt.Errorf("Error reading %s file : %+v", bundleInfoPath, err)
 	}
 
-	err = json.Unmarshal(f, &bundleInfo)
+	err = json.Unmarshal(f, bundle)
 	if err != nil {
-		return nil, fmt.Errorf("Error Unmarshal the data: %+v", err)
+		return fmt.Errorf("Error Unmarshal the data: %+v", err)
 	}
-	bundleInfo.cachedPath = extractedPath
+
+	return nil
+}
+
+func GetCachedBundleInfo(bundleName string) (*CrcBundleInfo, error) {
+	var bundleInfo CrcBundleInfo
+	bundleInfo.cachedPath = getCachedBundlePath(bundleName)
+	if !bundleInfo.isCached() {
+		return nil, fmt.Errorf("Could not find cached bundle info")
+	}
+	err := bundleInfo.readBundleInfo()
+	if err != nil {
+		return nil, err
+	}
 	return &bundleInfo, nil
 }
 
