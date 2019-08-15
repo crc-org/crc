@@ -73,7 +73,7 @@ func Untar(tarball, targetDir string) error {
 			}
 
 		// if it's a file create it
-		case tar.TypeReg:
+		case tar.TypeReg, tar.TypeGNUSparse:
 			// tar.Next() will externally only iterate files, so we might have to create intermediate directories here
 			if err = os.MkdirAll(filepath.Dir(path), 0750); err != nil {
 				return err
