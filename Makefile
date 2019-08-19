@@ -95,7 +95,7 @@ test:
 
 .PHONY: build_docs
 build_docs:
-	podman run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) -b html5 -D $(DOCS_BUILD_DIR) $(DOCS_BUILD_TARGET)
+	podman run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) -b html5 -D $(DOCS_BUILD_DIR) -o index.html $(DOCS_BUILD_TARGET)
 
 .PHONY: clean_docs
 clean_docs:
