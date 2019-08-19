@@ -45,3 +45,73 @@ jobs:
     - store_artifacts:
         path: ~/project/out
         destination: crc
+
+  build_docs:
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+    - checkout
+    - run:
+        name: Update repo
+        command: sudo apt -y update
+    - run:
+        name: Add podman ppa
+        command: sudo add-apt-repository -y ppa:projectatomic/ppa && sudo apt -y update
+    - run:
+        name: Update repo
+        command: sudo apt -y update
+    - run:
+        name: Install podman
+        command: sudo apt -y install podman
+    - run:
+        name: Install slirp4netns
+        command: sudo apt -y install slirp4netns
+    - run:
+        name: Check podman
+        command: podman info
+    - run:
+        name: Make build_docs
+        command: make build_docs
+    - persist_to_workspace:
+        root: docs/build
+        paths: index.html
+
+  docs_deploy:
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+    - attach_workspace:
+        at: docs/build
+    - add_ssh_keys:
+        fingerprints:
+          - "c5:64:d4:79:8f:c7:9b:80:b8:16:71:20:57:6b:8c:94"
+    - run:
+        name: Configure git
+        command: |
+          cd docs/build/
+          git init
+          git remote add origin git@github.com:code-ready/crc.git
+          git config user.email "codereadycontainers@gmail.com"
+          git config user.name "crc-bot"
+    - run:
+        name: Deploy docs to gh-pages branch
+        command: |
+          cd docs/build/
+          git checkout -b gh-pages
+          git add .
+          git commit -m "[skip ci] Docs update"
+          git push origin HEAD -f
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
+      - build_docs
+      - docs_deploy:
+          requires:
+            - build
+            - build_docs
+          filters:
+            branches:
+              only: master
