@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"golang.org/x/sys/unix"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -23,7 +24,6 @@ import (
 )
 
 const (
-	driverBinaryDir             = "/usr/local/bin"
 	libvirtDriverCommand        = "crc-driver-libvirt"
 	libvirtDriverVersion        = "0.12.4"
 	crcDnsmasqConfigFile        = "crc.conf"
@@ -31,9 +31,8 @@ const (
 )
 
 var (
-	libvirtDriverBinaryPath = filepath.Join(driverBinaryDir, libvirtDriverCommand)
-	crcDnsmasqConfigPath    = filepath.Join(string(filepath.Separator), "etc", "NetworkManager", "dnsmasq.d", crcDnsmasqConfigFile)
-	crcDnsmasqConfig        = `server=/crc.testing/192.168.130.1
+	crcDnsmasqConfigPath = filepath.Join(string(filepath.Separator), "etc", "NetworkManager", "dnsmasq.d", crcDnsmasqConfigFile)
+	crcDnsmasqConfig     = `server=/crc.testing/192.168.130.1
 address=/apps-crc.testing/192.168.130.11
 `
 	crcNetworkManagerConfigPath = filepath.Join(string(filepath.Separator), "etc", "NetworkManager", "conf.d", crcNetworkManagerConfigFile)
@@ -217,51 +216,35 @@ func fixLibvirtServiceRunning() (bool, error) {
 
 func checkMachineDriverLibvirtInstalled() (bool, error) {
 	logging.Debugf("Checking if %s is installed", libvirtDriverCommand)
+
 	// Check if crc-driver-libvirt is available
-	path, err := exec.LookPath(libvirtDriverCommand)
+	libvirtDriverPath := filepath.Join(constants.CrcBinDir, libvirtDriverCommand)
+	err := unix.Access(libvirtDriverPath, unix.X_OK)
 	if err != nil {
+		logging.Debugf("%s not executable", libvirtDriverPath)
 		return false, err
 	}
-	fi, err := os.Stat(path)
-	if err != nil {
-		return false, err
-	}
-	// Check if permissions are correct
-	if fi.Mode()&0011 == 0 {
-		return false, errors.New("crc-driver-libvirt does not have correct permissions")
-	}
+
 	// Check the version of driver if it matches to supported one
-	stdOut, stdErr, err := crcos.RunWithDefaultLocale(path, "version")
+	stdOut, stdErr, err := crcos.RunWithDefaultLocale(libvirtDriverPath, "version")
 	if err != nil {
 		return false, err
 	}
 	if !strings.Contains(stdOut, libvirtDriverVersion) {
 		return false, fmt.Errorf("crc-driver-libvirt does not have right version \n Required: %s \n Got: %s use 'crc setup' command.\n %v\n", libvirtDriverVersion, stdOut, stdErr)
 	}
-	logging.Debugf("%s is already installed in %s", libvirtDriverCommand, path)
+	logging.Debugf("%s is already installed in %s", libvirtDriverCommand, libvirtDriverPath)
 	return true, nil
 }
 
 func fixMachineDriverLibvirtInstalled() (bool, error) {
 	logging.Debugf("Installing %s", libvirtDriverCommand)
-	// Download the driver binary in ~/.crc/cache
-	tempFilePath := filepath.Join(constants.MachineCacheDir, libvirtDriverCommand)
-	_, err := download.Download(libvirtDriverDownloadURL, tempFilePath, 0755)
+	_, err := download.Download(libvirtDriverDownloadURL, constants.CrcBinDir, 0755)
 	if err != nil {
 		return false, err
 	}
-	defer os.Remove(tempFilePath)
+	logging.Debugf("%s is installed in %s", libvirtDriverCommand, constants.CrcBinDir)
 
-	logging.Debugf("Copying %s in %s", libvirtDriverCommand, libvirtDriverBinaryPath)
-	stdOut, stdErr, err := crcos.RunWithPrivilege("mkdir", "-p", driverBinaryDir)
-	if err != nil {
-		return false, fmt.Errorf("%s %v: %s", stdOut, err, stdErr)
-	}
-	stdOut, stdErr, err = crcos.RunWithPrivilege("cp", tempFilePath, libvirtDriverBinaryPath)
-	if err != nil {
-		return false, fmt.Errorf("%s %v: %s", stdOut, err, stdErr)
-	}
-	logging.Debugf("%s is installed in %s", libvirtDriverCommand, libvirtDriverBinaryPath)
 	return true, nil
 }
 
