@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/pullsecret"
@@ -68,8 +67,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	// Retrieve metadata info
 	diskPath := filepath.Join(extractedPath, crcBundleMetadata.Storage.DiskImages[0].Name)
-	// TODO: QnD Windows workaround hack
-	machineConfig.DiskPathURL = fmt.Sprintf("file://%s", strings.Replace(diskPath, "\\", "/", -1))
+	machineConfig.DiskPathURL = fmt.Sprintf("file://%s", filepath.ToSlash(diskPath))
 
 	machineConfig.SSHKeyPath = filepath.Join(extractedPath, crcBundleMetadata.ClusterInfo.SSHPrivateKeyFile)
 	machineConfig.KernelCmdLine = crcBundleMetadata.Nodes[0].KernelCmdLine
