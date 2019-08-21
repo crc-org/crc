@@ -40,10 +40,8 @@ func CheckCertsValidity(driver drivers.Driver) error {
 }
 
 // Return size of disk, used space in bytes and the mountpoint
-func GetDiskUsage(driver drivers.Driver, device string) (int64, int64, error) {
-	cmd := fmt.Sprintf(
-		"df -B1 --output=size,used,target %s | tail -1",
-		device)
+func GetRootPartitionUsage(driver drivers.Driver) (int64, int64, error) {
+	cmd := "df -B1 --output=size,used,target /sysroot | tail -1"
 
 	out, err := drivers.RunSSHCommandFromDriver(driver, cmd)
 

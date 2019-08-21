@@ -424,7 +424,7 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 			// TODO:get openshift version as well and add to status
 			openshiftStatus = fmt.Sprintf("Running (v4.x)")
 		}
-		diskSize, diskUse, err = cluster.GetDiskUsage(host.Driver, "/dev/vda3")
+		diskSize, diskUse, err = cluster.GetRootPartitionUsage(host.Driver)
 		if err != nil {
 			result.Success = false
 			result.Error = err.Error()
