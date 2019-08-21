@@ -3,12 +3,14 @@ package bundle
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/extract"
 )
 
 // Metadata structure to unmarshal the crc-bundle-info.json file
@@ -87,6 +89,15 @@ func GetCachedBundleInfo(bundleName string) (*CrcBundleInfo, error) {
 
 func (bundle *CrcBundleInfo) resolvePath(filename string) string {
 	return filepath.Join(bundle.cachedPath, filename)
+}
+
+func Extract(sourcepath string) (*CrcBundleInfo, error) {
+	err := extract.Uncompress(sourcepath, constants.MachineCacheDir)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetCachedBundleInfo(filepath.Base(sourcepath))
 }
 
 func (bundle *CrcBundleInfo) GetAPIHostname() string {
