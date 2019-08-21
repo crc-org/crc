@@ -71,12 +71,6 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		return *result, errors.Newf("Error to get bundle Metadata %v", err)
 	}
 
-	err = fillClusterConfig(crcBundleMetadata, &result.ClusterConfig)
-	if err != nil {
-		result.Error = err.Error()
-		return *result, errors.Newf("%s", err.Error())
-	}
-
 	// Pre-VM start
 	driverInfo, _ := getDriverInfo(startConfig.VMDriver)
 	exists, err := existVM(libMachineAPIClient, startConfig.Name)
@@ -154,6 +148,12 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		}
 
 		result.Status = vmState.String()
+	}
+
+	err = fillClusterConfig(crcBundleMetadata, &result.ClusterConfig)
+	if err != nil {
+		result.Error = err.Error()
+		return *result, errors.Newf("%s", err.Error())
 	}
 
 	// Post-VM start
