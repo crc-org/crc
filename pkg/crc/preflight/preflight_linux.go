@@ -124,6 +124,12 @@ func SetupHost(vmDriver string) {
 		"Installing crc-driver-libvirt",
 		config.GetBool(cmdConfig.WarnCheckLibvirtDriver.Name),
 	)
+	preflightCheckAndFix(false,
+		checkOldMachineDriverLibvirtInstalled,
+		fixOldMachineDriverLibvirtInstalled,
+		"Removing older system-wide crc-driver-libvirt",
+		false,
+	)
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckCrcNetwork.Name),
 		checkLibvirtCrcNetworkAvailable,
 		fixLibvirtCrcNetworkAvailable,
