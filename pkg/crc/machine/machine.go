@@ -61,7 +61,21 @@ func getCrcBundleInfo(bundlePath string) (*bundle.CrcBundleInfo, error) {
 	return bundle.Extract(bundlePath)
 }
 
+func loadCrcBundleInfo(startConfig *StartConfig, bundleName string) (*bundle.CrcBundleInfo, error) {
+	crcBundleMetadata, err := bundle.GetCachedBundleInfo(bundleName)
+	if err != nil {
+		return nil, err
+	}
+	if bundleName != filepath.Base(startConfig.BundlePath) {
+		logging.Warnf("Bundle '%s' was requested, but loaded VM is using '%s'",
+			filepath.Base(startConfig.BundlePath), bundleName)
+	}
+
+	return crcBundleMetadata, nil
+}
+
 func Start(startConfig StartConfig) (StartResult, error) {
+	var crcBundleMetadata *bundle.CrcBundleInfo
 	defer unsetMachineLogging()
 
 	result := &StartResult{Name: startConfig.Name}
@@ -75,17 +89,10 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	defer libMachineAPIClient.Close()
 
-	crcBundleMetadata, err := getCrcBundleInfo(startConfig.BundlePath)
-	if err != nil {
-		result.Error = err.Error()
-		return *result, errors.Newf("Error to get bundle Metadata %v", err)
-	}
-
 	// Pre-VM start
 	driverInfo, _ := getDriverInfo(startConfig.VMDriver)
 	exists, err := existVM(libMachineAPIClient, startConfig.Name)
 	if !exists {
-		logging.Infof("Creating VM ...")
 		machineConfig := config.MachineConfig{
 			Name:       startConfig.Name,
 			BundleName: filepath.Base(startConfig.BundlePath),
@@ -94,6 +101,13 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			Memory:     startConfig.Memory,
 		}
 
+		crcBundleMetadata, err = getCrcBundleInfo(startConfig.BundlePath)
+		if err != nil {
+			result.Error = err.Error()
+			return *result, errors.Newf("Error to get bundle Metadata %v", err)
+		}
+
+		logging.Infof("Creating VM ...")
 		// Retrieve metadata info
 		diskPath := crcBundleMetadata.GetDiskImagePath()
 		machineConfig.DiskPathURL = fmt.Sprintf("file://%s", filepath.ToSlash(diskPath))
@@ -122,6 +136,17 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			return *result, errors.Newf("Error loading host: %v", err)
 		}
 
+		bundleName, _ := host.Driver.GetBundleName()
+		if bundleName == "" {
+			err := errors.Newf("Error getting bundle name from CodeReady Containers instance, make sure you ran 'crc setup' and are using the latest bundle")
+			result.Error = err.Error()
+			return *result, err
+		}
+		crcBundleMetadata, err = loadCrcBundleInfo(&startConfig, bundleName)
+		if err != nil {
+			result.Error = err.Error()
+			return *result, errors.Newf(err.Error())
+		}
 		if host.Driver.DriverName() != startConfig.VMDriver {
 			err := errors.Newf("VM driver '%s' was requested, but loaded VM is using '%s' instead",
 				startConfig.VMDriver, host.Driver.DriverName())
