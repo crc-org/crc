@@ -7,8 +7,13 @@ This procedure will create the [filename]`~/.crc` directory if it does not alrea
 
 .Prerequisites
 
-// TODO: Verify that we need `sudo` permissions.
 * Your user account must have permission to use the [command]`sudo` command.
+
+[NOTE]
+====
+The `{bin}` binary should not be run as `root` (or Administrator).
+The `{bin}` binary should always be run with your user account.
+====
 
 .Procedure
 
