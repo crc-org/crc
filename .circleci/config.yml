@@ -37,6 +37,9 @@ jobs:
         name: Make fmtcheck
         command: make fmtcheck
     - run:
+        name: Run golangci-lint
+        command: make lint
+    - run:
         name: Make cross
         command: make cross
     - run:
@@ -71,7 +74,9 @@ jobs:
         command: podman info
     - run:
         name: Make build_docs
-        command: make build_docs
+        # force GOPATH to a sane value as the image we are using has an older go version
+        # with a 'go env GOPATH' output which causes make failures
+        command: make GOPATH="/home/circleci/go" build_docs
     - persist_to_workspace:
         root: docs/build
         paths: index.html

@@ -6,4 +6,5 @@ go:
 script:
 - make
 - make fmtcheck
+- make lint
 - make cross
