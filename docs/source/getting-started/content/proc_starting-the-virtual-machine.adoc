@@ -8,6 +8,13 @@ The [command]`{bin} start` command starts the {prod} virtual machine and OpenShi
 * The host machine has been set up using the [command]`{bin} setup` command.
 For more information, see <<setting-up-codeready-containers_{context}>>.
 * A valid OpenShift system bundle with the `.crcbundle` extension.
+* A valid OpenShift user pull secret.
+The pull secret can be copied or downloaded from the Pull Secret section of the link:https://cloud.redhat.com/openshift/install/metal/user-provisioned[Install on Bare Metal: User-Provisioned Infrastructure] page on cloud.redhat.com.
++
+[NOTE]
+====
+A Red Hat account is required in order to access the user pull secret.
+====
 
 .Procedure
 
@@ -17,6 +24,8 @@ For more information, see <<setting-up-codeready-containers_{context}>>.
 ----
 $ {bin} start -b _path_to_system_bundle_
 ----
+
+* When prompted, supply your user pull secret.
 
 [NOTE]
 ====
