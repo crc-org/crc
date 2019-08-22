@@ -40,7 +40,7 @@ func GenerateUsageHint(userShell, cmdLine string) string {
 
 	switch userShell {
 	case "powershell":
-		cmd = fmt.Sprintf("& %s | Invoke-Expression", cmdLine)
+		cmd = fmt.Sprintf("[System.Console]::OutputEncoding = [Text.UTF8Encoding]::UTF8; & %s | Invoke-Expression", cmdLine)
 	case "cmd":
 		cmd = fmt.Sprintf("\t@FOR /f \"tokens=*\" %%i IN ('%s') DO @call %%i", cmdLine)
 		comment = "REM"
