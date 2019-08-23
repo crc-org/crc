@@ -125,20 +125,20 @@ fmtcheck: ## Checks for style violation using gofmt
 release: fmtcheck embed_bundle
 	mkdir $(RELEASE_DIR)
 	
-	@mkdir -p $(BUILD_DIR)/crc-$(CRC_VERSION)-darwin-amd64
-	@cp LICENSE $(BUILD_DIR)/darwin-amd64/crc $(BUILD_DIR)/crc-$(CRC_VERSION)-darwin-amd64
-	tar cJSf $(RELEASE_DIR)/crc-$(CRC_VERSION)-darwin-amd64.tar.xz -C $(BUILD_DIR) crc-$(CRC_VERSION)-darwin-amd64
-	sha256sum $(RELEASE_DIR)/crc-$(CRC_VERSION)-darwin-amd64.tar.xz > $(RELEASE_DIR)/sha256sum.txt
+	@mkdir -p $(BUILD_DIR)/crc-darwin-amd64
+	@cp LICENSE $(BUILD_DIR)/darwin-amd64/crc $(BUILD_DIR)/crc-darwin-amd64
+	tar cJSf $(RELEASE_DIR)/crc-darwin-amd64.tar.xz -C $(BUILD_DIR) crc-darwin-amd64
+	sha256sum $(RELEASE_DIR)/crc-darwin-amd64.tar.xz > $(RELEASE_DIR)/sha256sum.txt
 
-	@mkdir -p $(BUILD_DIR)/crc-$(CRC_VERSION)-linux-amd64
-	@cp LICENSE $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-$(CRC_VERSION)-linux-amd64
-	tar cJSf $(RELEASE_DIR)/crc-$(CRC_VERSION)-linux-amd64.tar.xz -C $(BUILD_DIR) crc-$(CRC_VERSION)-linux-amd64
-	sha256sum $(RELEASE_DIR)/crc-$(CRC_VERSION)-linux-amd64.tar.xz >> $(RELEASE_DIR)/sha256sum.txt
+	@mkdir -p $(BUILD_DIR)/crc-linux-amd64
+	@cp LICENSE $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-linux-amd64
+	tar cJSf $(RELEASE_DIR)/crc-linux-amd64.tar.xz -C $(BUILD_DIR) crc-linux-amd64
+	sha256sum $(RELEASE_DIR)/crc-linux-amd64.tar.xz >> $(RELEASE_DIR)/sha256sum.txt
 	
-	@mkdir -p $(BUILD_DIR)/crc-$(CRC_VERSION)-windows-amd64
-	@cp LICENSE $(BUILD_DIR)/windows-amd64/crc.exe $(BUILD_DIR)/crc-$(CRC_VERSION)-windows-amd64
-	cd $(BUILD_DIR) && zip -r $(CURDIR)/$(RELEASE_DIR)/crc-$(CRC_VERSION)-windows-amd64.zip crc-$(CRC_VERSION)-windows-amd64
-	sha256sum $(RELEASE_DIR)/crc-$(CRC_VERSION)-windows-amd64.zip >> $(RELEASE_DIR)/sha256sum.txt
+	@mkdir -p $(BUILD_DIR)/crc-windows-amd64
+	@cp LICENSE $(BUILD_DIR)/windows-amd64/crc.exe $(BUILD_DIR)/crc-windows-amd64
+	cd $(BUILD_DIR) && zip -r $(CURDIR)/$(RELEASE_DIR)/crc-windows-amd64.zip crc-windows-amd64
+	sha256sum $(RELEASE_DIR)/crc-windows-amd64.zip >> $(RELEASE_DIR)/sha256sum.txt
 
 BUNDLES := $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION) \
 	   $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION) \
