@@ -77,8 +77,8 @@ binappend:
 install: $(SOURCES)
 	go install -ldflags="$(VERSION_VARIABLES)" ./cmd/crc
 
-$(BUILD_DIR)/darwin-amd64/crc: $(SOURCES)
-	GOARCH=amd64 GOOS=darwin go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/darwin-amd64/crc ./cmd/crc
+$(BUILD_DIR)/macos-amd64/crc: $(SOURCES)
+	GOARCH=amd64 GOOS=darwin go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/macos-amd64/crc ./cmd/crc
 
 $(BUILD_DIR)/linux-amd64/crc: $(SOURCES)
 	GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/linux-amd64/crc ./cmd/crc
@@ -87,7 +87,7 @@ $(BUILD_DIR)/windows-amd64/crc.exe: $(SOURCES)
 	GOARCH=amd64 GOOS=windows go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/windows-amd64/crc.exe ./cmd/crc
 
 .PHONY: cross ## Cross compiles all binaries
-cross: $(BUILD_DIR)/darwin-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/windows-amd64/crc.exe
+cross: $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/windows-amd64/crc.exe
 
 .PHONY: test
 test:
@@ -125,10 +125,10 @@ fmtcheck: ## Checks for style violation using gofmt
 release: fmtcheck embed_bundle
 	mkdir $(RELEASE_DIR)
 	
-	@mkdir -p $(BUILD_DIR)/crc-darwin-amd64
-	@cp LICENSE $(BUILD_DIR)/darwin-amd64/crc $(BUILD_DIR)/crc-darwin-amd64
-	tar cJSf $(RELEASE_DIR)/crc-darwin-amd64.tar.xz -C $(BUILD_DIR) crc-darwin-amd64
-	sha256sum $(RELEASE_DIR)/crc-darwin-amd64.tar.xz > $(RELEASE_DIR)/sha256sum.txt
+	@mkdir -p $(BUILD_DIR)/crc-macos-amd64
+	@cp LICENSE $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/crc-macos-amd64
+	tar cJSf $(RELEASE_DIR)/crc-macos-amd64.tar.xz -C $(BUILD_DIR) crc-macos-amd64
+	sha256sum $(RELEASE_DIR)/crc-macos-amd64.tar.xz > $(RELEASE_DIR)/sha256sum.txt
 
 	@mkdir -p $(BUILD_DIR)/crc-linux-amd64
 	@cp LICENSE $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-linux-amd64
@@ -151,5 +151,5 @@ check_bundledir:
 embed_bundle: LDFLAGS += $(BUNDLE_EMBEDDED)
 embed_bundle: clean cross binappend check_bundledir $(BUNDLES)
 	binappend-cli write $(BUILD_DIR)/linux-amd64/crc $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
-	binappend-cli write $(BUILD_DIR)/darwin-amd64/crc $(BUNDLE_DIR)/crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+	binappend-cli write $(BUILD_DIR)/macos-amd64/crc $(BUNDLE_DIR)/crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
 	binappend-cli write $(BUILD_DIR)/windows-amd64/crc.exe $(BUNDLE_DIR)/crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
