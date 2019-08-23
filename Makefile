@@ -155,7 +155,7 @@ release: fmtcheck embed_bundle build_docs_pdf
 	sha256sum $(RELEASE_DIR)/crc-windows-amd64.zip >> $(RELEASE_DIR)/sha256sum.txt
 
 BUNDLES := $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION) \
-	   $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION) \
+	   $(BUNDLE_DIR)/crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION) \
 	   $(BUNDLE_DIR)/crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
 
 .PHONY: embed_bundle check_bundledir
