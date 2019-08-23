@@ -154,16 +154,16 @@ release: fmtcheck embed_bundle build_docs_pdf
 	cd $(BUILD_DIR) && zip -r $(CURDIR)/$(RELEASE_DIR)/crc-windows-amd64.zip crc-windows-$(CRC_VERSION)-amd64
 	sha256sum $(RELEASE_DIR)/crc-windows-amd64.zip >> $(RELEASE_DIR)/sha256sum.txt
 
-BUNDLES := $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION) \
-	   $(BUNDLE_DIR)/crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION) \
-	   $(BUNDLE_DIR)/crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+HYPERKIT_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+HYPERV_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+LIBVIRT_BUNDLENAME = $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
 
 .PHONY: embed_bundle check_bundledir
 check_bundledir:
 	@$(call check_defined, BUNDLE_DIR, "Embedding bundle requires BUNDLE_DIR set to a directory containing CRC bundles for all hypervisors")
 
 embed_bundle: LDFLAGS += $(BUNDLE_EMBEDDED)
-embed_bundle: clean cross binappend check_bundledir $(BUNDLES)
-	binappend-cli write $(BUILD_DIR)/linux-amd64/crc $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
-	binappend-cli write $(BUILD_DIR)/macos-amd64/crc $(BUNDLE_DIR)/crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
-	binappend-cli write $(BUILD_DIR)/windows-amd64/crc.exe $(BUNDLE_DIR)/crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+embed_bundle: clean cross binappend-cli check_bundledir $(HYPERKIT_BUNDLENAME) $(HYPERV_BUNDLENAME) $(LIBVIRT_BUNDLENAME)
+	binappend-cli write $(BUILD_DIR)/linux-amd64/crc $(LIBVIRT_BUNDLENAME)
+	binappend-cli write $(BUILD_DIR)/macos-amd64/crc $(HYPERKIT_BUNDLENAME)
+	binappend-cli write $(BUILD_DIR)/windows-amd64/crc.exe $(HYPERV_BUNDLENAME)
