@@ -70,7 +70,7 @@ vendor:
 	GO111MODULE=on go mod vendor
 
 # Get binappend
-binappend:
+$(GOPATH)/bin/binappend-cli:
 	GO111MODULE=off go get -u github.com/yourfin/binappend-cli
 
 # Start of the actual build targets
@@ -163,7 +163,7 @@ check_bundledir:
 	@$(call check_defined, BUNDLE_DIR, "Embedding bundle requires BUNDLE_DIR set to a directory containing CRC bundles for all hypervisors")
 
 embed_bundle: LDFLAGS += $(BUNDLE_EMBEDDED)
-embed_bundle: clean cross binappend-cli check_bundledir $(HYPERKIT_BUNDLENAME) $(HYPERV_BUNDLENAME) $(LIBVIRT_BUNDLENAME)
-	binappend-cli write $(BUILD_DIR)/linux-amd64/crc $(LIBVIRT_BUNDLENAME)
-	binappend-cli write $(BUILD_DIR)/macos-amd64/crc $(HYPERKIT_BUNDLENAME)
-	binappend-cli write $(BUILD_DIR)/windows-amd64/crc.exe $(HYPERV_BUNDLENAME)
+embed_bundle: clean cross $(GOPATH)/bin/binappend-cli check_bundledir $(HYPERKIT_BUNDLENAME) $(HYPERV_BUNDLENAME) $(LIBVIRT_BUNDLENAME)
+	$(GOPATH)/bin/binappend-cli write $(BUILD_DIR)/linux-amd64/crc $(LIBVIRT_BUNDLENAME)
+	$(GOPATH)/bin/binappend-cli write $(BUILD_DIR)/macos-amd64/crc $(HYPERKIT_BUNDLENAME)
+	$(GOPATH)/bin/binappend-cli write $(BUILD_DIR)/windows-amd64/crc.exe $(HYPERV_BUNDLENAME)
