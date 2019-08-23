@@ -5,7 +5,6 @@
 
 * A running {prod} virtual machine.
 For more information, see <<starting-the-virtual-machine_{context}>>.
-* The link:{oc-download-url}[latest OpenShift client binary] ([command]`oc`) in your `_PATH_`.
 
 .Procedure
 
@@ -30,13 +29,14 @@ See <<troubleshooting-codeready-containers_{context}>> if you cannot access the 
 
 * To access the OpenShift cluster via the [command]`oc` command, follow these steps:
 
-// TODO: Use attributes for the path here. Avoids manually maintaining it.
-  . Export the Kubernetes configuration for the {prod} OpenShift cluster:
+  . Run the [command]`{bin} oc-env` command to print the command needed to add the cached [command]`oc` binary to your `_PATH_`:
 +
 [subs="+quotes,attributes"]
 ----
-$ export KUBECONFIG="$HOME/.crc/cache/crc_libvirt_v4.1.0.rc0/kubeconfig"
+$ crc oc-env
 ----
+
+  . Run the printed command.
 
   . Verify that the OpenShift cluster operators are available using the [command]`oc get co` command:
 +
