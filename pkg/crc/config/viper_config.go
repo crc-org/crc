@@ -26,20 +26,25 @@ func GetBool(key string) bool {
 // Set sets the value for a give config key
 func Set(key string, value interface{}) {
 	globalViper.Set(key, value)
+	ViperConfig[key] = value
+}
+
+func syncViperState(viper *viper.Viper) error {
+	encodedConfig, err := json.MarshalIndent(ViperConfig, "", " ")
+	if err != nil {
+		return errors.Newf("Error encoding config to JSON: %v", err)
+	}
+	err = viper.ReadConfig(bytes.NewBuffer(encodedConfig))
+	if err != nil {
+		return errors.Newf("Error reading in new config: %s : %v", constants.ConfigFile, err)
+	}
+	return nil
 }
 
 // Unset unsets a given config key
 func Unset(key string) error {
 	delete(ViperConfig, key)
-	encodedConfig, err := json.MarshalIndent(ViperConfig, "", " ")
-	if err != nil {
-		return errors.Newf("Error encoding config to JSON: %v", err)
-	}
-	err = globalViper.ReadConfig(bytes.NewBuffer(encodedConfig))
-	if err != nil {
-		return errors.Newf("Error reading in new config: %s : %v", constants.ConfigFile, err)
-	}
-	return nil
+	return syncViperState(globalViper)
 }
 
 // GetString return the value of a key in string
@@ -91,7 +96,17 @@ func SetDefault(key string, value interface{}) {
 
 // WriteConfig write config to file
 func WriteConfig() error {
-	return globalViper.WriteConfig()
+	// We recreate a new viper instance, as globalViper.WriteConfig()
+	// writes both default values and set values back to disk while we only
+	// want the latter to be written
+	v := viper.New()
+	v.SetConfigFile(constants.ConfigPath)
+	v.SetConfigType("json")
+	err := syncViperState(v)
+	if err != nil {
+		return err
+	}
+	return v.WriteConfig()
 }
 
 // AllConfigs returns all the configs
