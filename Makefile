@@ -25,6 +25,7 @@ RELEASE_DIR ?= release
 # Docs build related variables
 DOCS_BUILD_DIR ?= /docs/build
 DOCS_BUILD_CONTAINER ?= registry.gitlab.com/gbraad/asciidoctor-centos:latest
+DOCS_PDF_CONTAINER ?= quay.io/crcont/asciidoctor-pdf:latest
 DOCS_BUILD_TARGET ?= /docs/source/getting-started/master.adoc
 
 GOOS ?= $(shell go env GOOS)
@@ -97,6 +98,10 @@ test:
 build_docs:
 	podman run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) -b html5 -D $(DOCS_BUILD_DIR) -o index.html $(DOCS_BUILD_TARGET)
 
+.PHONY: build_docs_pdf
+build_docs_pdf:
+	podman run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_PDF_CONTAINER) -D $(DOCS_BUILD_DIR) -o doc.pdf $(DOCS_BUILD_TARGET)
+
 .PHONY: clean_docs
 clean_docs:
 	rm -rf $(CURDIR)/docs/build
@@ -122,21 +127,21 @@ fmtcheck: ## Checks for style violation using gofmt
 	@gofmt -l $(SOURCE_DIRS) | grep ".*\.go"; if [ "$$?" = "0" ]; then exit 1; fi
 
 .PHONY: release
-release: fmtcheck embed_bundle
+release: fmtcheck embed_bundle build_docs_pdf
 	mkdir $(RELEASE_DIR)
 	
 	@mkdir -p $(BUILD_DIR)/crc-macos-amd64
-	@cp LICENSE $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/crc-macos-amd64
+	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/crc-macos-amd64
 	tar cJSf $(RELEASE_DIR)/crc-macos-amd64.tar.xz -C $(BUILD_DIR) crc-macos-amd64
 	sha256sum $(RELEASE_DIR)/crc-macos-amd64.tar.xz > $(RELEASE_DIR)/sha256sum.txt
 
 	@mkdir -p $(BUILD_DIR)/crc-linux-amd64
-	@cp LICENSE $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-linux-amd64
+	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-linux-amd64
 	tar cJSf $(RELEASE_DIR)/crc-linux-amd64.tar.xz -C $(BUILD_DIR) crc-linux-amd64
 	sha256sum $(RELEASE_DIR)/crc-linux-amd64.tar.xz >> $(RELEASE_DIR)/sha256sum.txt
 	
 	@mkdir -p $(BUILD_DIR)/crc-windows-amd64
-	@cp LICENSE $(BUILD_DIR)/windows-amd64/crc.exe $(BUILD_DIR)/crc-windows-amd64
+	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/windows-amd64/crc.exe $(BUILD_DIR)/crc-windows-amd64
 	cd $(BUILD_DIR) && zip -r $(CURDIR)/$(RELEASE_DIR)/crc-windows-amd64.zip crc-windows-amd64
 	sha256sum $(RELEASE_DIR)/crc-windows-amd64.zip >> $(RELEASE_DIR)/sha256sum.txt
 
