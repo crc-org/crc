@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/YourFin/binappend"
 	"github.com/kardianos/osext"
@@ -33,6 +34,12 @@ func fixBundleCached() (bool, error) {
 		extractor, err := binappend.MakeExtractor(currentExecutable)
 		if err != nil {
 			return false, err
+		}
+
+		bundleDir := filepath.Base(constants.DefaultBundlePath)
+		err = os.MkdirAll(bundleDir, 0600)
+		if err != nil && !os.IsExist(err) {
+			return false, fmt.Errorf("Cannot create directory %s", bundleDir)
 		}
 		f, err := os.Create(constants.DefaultBundlePath)
 		if err != nil {
