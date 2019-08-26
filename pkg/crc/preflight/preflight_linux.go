@@ -7,6 +7,16 @@ import (
 
 // StartPreflightChecks performs the preflight checks before starting the cluster
 func StartPreflightChecks(vmDriver string) {
+	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckNetworkManagerInstalled.Name),
+		checkNetworkManagerInstalled,
+		"Checking if NetworkManager is installed",
+		config.GetBool(cmdConfig.WarnCheckNetworkManagerInstalled.Name),
+	)
+	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckNetworkManagerRunning.Name),
+		CheckNetworkManagerIsRunning,
+		"Checking if NetworkManager service is running",
+		config.GetBool(cmdConfig.WarnCheckNetworkManagerRunning.Name),
+	)
 	preflightCheckSucceedsOrFails(false,
 		checkOcBinaryCached,
 		"Checking if oc binary is cached",
@@ -76,6 +86,18 @@ func StartPreflightChecks(vmDriver string) {
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
 func SetupHost(vmDriver string) {
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckNetworkManagerInstalled.Name),
+		checkNetworkManagerInstalled,
+		fixNetworkManagerInstalled,
+		"Checking if NetworkManager is installed",
+		config.GetBool(cmdConfig.WarnCheckNetworkManagerInstalled.Name),
+	)
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckNetworkManagerRunning.Name),
+		CheckNetworkManagerIsRunning,
+		fixNetworkManagerIsRunning,
+		"Checking if NetworkManager service is running",
+		config.GetBool(cmdConfig.WarnCheckNetworkManagerRunning.Name),
+	)
 	preflightCheckAndFix(false,
 		checkOcBinaryCached,
 		fixOcBinaryCached,

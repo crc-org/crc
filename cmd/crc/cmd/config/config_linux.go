@@ -30,4 +30,8 @@ var (
 	WarnCheckCrcDnsmasqFile          = createSetting("warn-check-crc-dnsmasq-file", nil, []validationFnType{validations.ValidateBool})
 	SkipCheckCrcNetworkManagerConfig = createSetting("skip-check-network-manager-config", nil, []validationFnType{validations.ValidateBool})
 	WarnCheckCrcNetworkManagerConfig = createSetting("warn-check-network-manager-config", nil, []validationFnType{validations.ValidateBool})
+	WarnCheckNetworkManagerInstalled = createSetting("warn-check-network-manager-installed", nil, []validationFnType{validations.ValidateBool})
+	SkipCheckNetworkManagerInstalled = createSetting("skip-check-network-manager-installed", nil, []validationFnType{validations.ValidateBool})
+	WarnCheckNetworkManagerRunning   = createSetting("warn-check-network-manager-running", nil, []validationFnType{validations.ValidateBool})
+	SkipCheckNetworkManagerRunning   = createSetting("skip-check-network-manager-running", nil, []validationFnType{validations.ValidateBool})
 )
