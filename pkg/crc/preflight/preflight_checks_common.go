@@ -50,7 +50,7 @@ func fixBundleCached() (bool, error) {
 		}
 		return true, nil
 	}
-	return false, fmt.Errorf("CRC bundle is not embedded in the binary, see 'crc help' for more details.")
+	return false, fmt.Errorf("CRC bundle is not embedded in the binary")
 }
 
 // Check if oc binary is cached or not
