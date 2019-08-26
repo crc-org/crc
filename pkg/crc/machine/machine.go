@@ -440,7 +440,7 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 func existVM(api libmachine.API, name string) (bool, error) {
 	exists, err := api.Exists(name)
 	if err != nil {
-		return false, errors.Newf("Error checking if the host exists: %s", err)
+		return false, fmt.Errorf("Error checking if the host exists: %s", err)
 	}
 	return exists, nil
 }
@@ -452,11 +452,11 @@ func createHost(api libmachine.API, driverPath string, machineConfig config.Mach
 	vm, err := api.NewHost(machineConfig.VMDriver, driverPath, jsonDriverConfig)
 
 	if err != nil {
-		return nil, errors.Newf("Error creating new host: %s", err)
+		return nil, fmt.Errorf("Error creating new host: %s", err)
 	}
 
 	if err := api.Create(vm); err != nil {
-		return nil, errors.Newf("Error creating the VM. %s", err)
+		return nil, fmt.Errorf("Error creating the VM. %s", err)
 	}
 
 	return vm, nil
