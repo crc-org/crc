@@ -104,7 +104,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		crcBundleMetadata, err = getCrcBundleInfo(startConfig.BundlePath)
 		if err != nil {
 			result.Error = err.Error()
-			return *result, errors.Newf("Error to get bundle Metadata %v", err)
+			return *result, errors.Newf("Error getting bundle metadata: %v", err)
 		}
 
 		logging.Infof("Creating VM ...")
