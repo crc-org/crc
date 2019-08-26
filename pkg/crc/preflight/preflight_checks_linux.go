@@ -455,3 +455,34 @@ func fixCrcNetworkManagerConfig() (bool, error) {
 	logging.Debug("NetworkManager configuration fixed")
 	return true, nil
 }
+func checkNetworkManagerInstalled() (bool, error) {
+	logging.Debug("Checking if 'nmcli' is available")
+	path, err := exec.LookPath("nmcli")
+	if err != nil {
+		return false, errors.New("NetworkManager cli nmcli was not found in path")
+	}
+	logging.Debug("'nmcli' was found in ", path)
+	return true, nil
+}
+func fixNetworkManagerInstalled() (bool, error) {
+	return false, fmt.Errorf("NetworkManager is required and must be installed manually")
+}
+func CheckNetworkManagerIsRunning() (bool, error) {
+	logging.Debug("Checking if NetworkManager.service is running")
+	path, err := exec.LookPath("systemctl")
+	if err != nil {
+		return false, err
+	}
+	stdOut, stdErr, err := crcos.RunWithDefaultLocale(path, "is-active", "NetworkManager")
+	if err != nil {
+		return false, fmt.Errorf("%v : %s", err, stdErr)
+	}
+	if strings.TrimSpace(stdOut) != "active" {
+		return false, errors.New("NetworkManager.service is not running")
+	}
+	logging.Debug("NetworkManager.service is already running")
+	return true, nil
+}
+func fixNetworkManagerIsRunning() (bool, error) {
+	return false, fmt.Errorf("NetworkManager is required. Please make sure it is installed and running manually")
+}
