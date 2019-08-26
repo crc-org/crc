@@ -3,16 +3,11 @@ package constants
 import (
 	"fmt"
 	"github.com/code-ready/crc/pkg/crc/version"
-	"path/filepath"
 )
 
 const (
 	OcBinaryName = "oc.exe"
 	DefaultOcURL = "https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/windows/oc.zip"
-)
-
-var (
-	DefaultBundlePath = filepath.Join(CrcBaseDir, GetDefaultBundle())
 )
 
 func GetDefaultBundle() string {

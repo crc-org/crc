@@ -37,6 +37,7 @@ var (
 	MachineCacheDir    = filepath.Join(MachineBaseDir, "cache")
 	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
 	GlobalStatePath    = filepath.Join(CrcBaseDir, GlobalStateFile)
+	DefaultBundlePath  = filepath.Join(CrcBaseDir, GetDefaultBundle())
 	bundleEmbedded     = "false"
 )
 
