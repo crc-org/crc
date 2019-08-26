@@ -41,7 +41,7 @@ func CreateHost(config config.MachineConfig) *hyperkitDriver {
 		DiskPathUrl: config.DiskPathURL,
 		SSHKeyPath:  config.SSHKeyPath,
 	}
-	d.HyperKitPath = filepath.Join(constants.CrcBaseDir, "bin", "hyperkit")
+	d.HyperKitPath = filepath.Join(constants.CrcBinDir, "hyperkit")
 
 	return d
 }
