@@ -35,7 +35,7 @@ $ {bin} delete
 +
 [subs="+quotes,attributes"]
 ----
-$ {bin} start -b _path_to_system_bundle_
+$ {bin} start
 ----
 +
 [NOTE]
