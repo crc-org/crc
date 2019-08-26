@@ -23,7 +23,7 @@ SOURCE_DIRS = cmd pkg test
 RELEASE_DIR ?= release
 
 # Docs build related variables
-DOCS_BUILD_DIR ?= /docs/build
+DOCS_BUILD_DIR ?= docs/build
 DOCS_BUILD_CONTAINER ?= registry.gitlab.com/gbraad/asciidoctor-centos:latest
 DOCS_PDF_CONTAINER ?= quay.io/crcont/asciidoctor-pdf:latest
 DOCS_BUILD_TARGET ?= /docs/source/getting-started/master.adoc
@@ -96,11 +96,11 @@ test:
 
 .PHONY: build_docs
 build_docs:
-	podman run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) -b html5 -D $(DOCS_BUILD_DIR) -o index.html $(DOCS_BUILD_TARGET)
+	podman run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) -b html5 -D /$(DOCS_BUILD_DIR) -o index.html $(DOCS_BUILD_TARGET)
 
 .PHONY: build_docs_pdf
 build_docs_pdf:
-	podman run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_PDF_CONTAINER) -D $(DOCS_BUILD_DIR) -o doc.pdf $(DOCS_BUILD_TARGET)
+	podman run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_PDF_CONTAINER) -D /$(DOCS_BUILD_DIR) -o doc.pdf $(DOCS_BUILD_TARGET)
 
 .PHONY: clean_docs
 clean_docs:
