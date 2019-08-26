@@ -130,19 +130,19 @@ fmtcheck: ## Checks for style violation using gofmt
 release: fmtcheck embed_bundle build_docs_pdf
 	mkdir $(RELEASE_DIR)
 	
-	@mkdir -p $(BUILD_DIR)/crc-macos-amd64
-	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/crc-macos-amd64
-	tar cJSf $(RELEASE_DIR)/crc-macos-amd64.tar.xz -C $(BUILD_DIR) crc-macos-amd64
+	@mkdir -p $(BUILD_DIR)/crc-macos-$(CRC_VERSION)-amd64
+	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/crc-macos-$(CRC_VERSION)-amd64
+	tar cJSf $(RELEASE_DIR)/crc-macos-amd64.tar.xz -C $(BUILD_DIR) crc-macos-$(CRC_VERSION)-amd64
 	sha256sum $(RELEASE_DIR)/crc-macos-amd64.tar.xz > $(RELEASE_DIR)/sha256sum.txt
 
-	@mkdir -p $(BUILD_DIR)/crc-linux-amd64
-	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-linux-amd64
-	tar cJSf $(RELEASE_DIR)/crc-linux-amd64.tar.xz -C $(BUILD_DIR) crc-linux-amd64
+	@mkdir -p $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
+	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
+	tar cJSf $(RELEASE_DIR)/crc-linux-amd64.tar.xz -C $(BUILD_DIR) crc-linux-$(CRC_VERSION)-amd64
 	sha256sum $(RELEASE_DIR)/crc-linux-amd64.tar.xz >> $(RELEASE_DIR)/sha256sum.txt
 	
-	@mkdir -p $(BUILD_DIR)/crc-windows-amd64
-	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/windows-amd64/crc.exe $(BUILD_DIR)/crc-windows-amd64
-	cd $(BUILD_DIR) && zip -r $(CURDIR)/$(RELEASE_DIR)/crc-windows-amd64.zip crc-windows-amd64
+	@mkdir -p $(BUILD_DIR)/crc-windows-$(CRC_VERSION)-amd64
+	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/windows-amd64/crc.exe $(BUILD_DIR)/crc-windows-$(CRC_VERSION)-amd64
+	cd $(BUILD_DIR) && zip -r $(CURDIR)/$(RELEASE_DIR)/crc-windows-amd64.zip crc-windows-$(CRC_VERSION)-amd64
 	sha256sum $(RELEASE_DIR)/crc-windows-amd64.zip >> $(RELEASE_DIR)/sha256sum.txt
 
 BUNDLES := $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION) \
