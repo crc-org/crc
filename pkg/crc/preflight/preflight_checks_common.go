@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/YourFin/binappend"
-	"github.com/kardianos/osext"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -27,7 +26,7 @@ func checkBundleCached() (bool, error) {
 
 func fixBundleCached() (bool, error) {
 	if constants.BundleEmbedded() {
-		currentExecutable, err := osext.Executable()
+		currentExecutable, err := os.Executable()
 		if err != nil {
 			return false, err
 		}
