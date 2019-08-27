@@ -177,7 +177,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			return *result, errors.Newf("Error loading bundle metadata: %v", err)
 		}
 		if bundleName != filepath.Base(startConfig.BundlePath) {
-			logging.Warnf("Bundle '%s' was requested, but loaded VM is using '%s'",
+			logging.Fatalf("Bundle '%s' was requested, but loaded VM is using '%s'",
 				filepath.Base(startConfig.BundlePath), bundleName)
 		}
 		if host.Driver.DriverName() != startConfig.VMDriver {
