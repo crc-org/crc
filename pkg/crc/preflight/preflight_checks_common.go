@@ -1,9 +1,9 @@
 package preflight
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -34,27 +34,31 @@ func fixBundleCached() (bool, error) {
 		if err != nil {
 			return false, err
 		}
+		available := extractor.AvalibleData()
+		if len(available) < 1 {
+			return false, fmt.Errorf("Invalid bundle data")
+		}
+		reader, err := extractor.GetReader(available[0])
+		if err != nil {
+			return false, err
+		}
+		defer reader.Close()
 
-		bundleDir := filepath.Base(constants.DefaultBundlePath)
-		err = os.MkdirAll(bundleDir, 0600)
+		bundleDir := filepath.Dir(constants.DefaultBundlePath)
+		err = os.MkdirAll(bundleDir, 0700)
 		if err != nil && !os.IsExist(err) {
 			return false, fmt.Errorf("Cannot create directory %s", bundleDir)
 		}
-		f, err := os.Create(constants.DefaultBundlePath)
+		writer, err := os.Create(constants.DefaultBundlePath)
 		if err != nil {
 			return false, err
 		}
-		available := extractor.AvalibleData()
-		data, err := extractor.ByteArray(available[0])
+		defer writer.Close()
+		_, err = io.Copy(writer, reader)
 		if err != nil {
 			return false, err
 		}
-		w := bufio.NewWriter(f)
-		defer w.Flush()
-		_, err = w.Write(data)
-		if err != nil {
-			return false, err
-		}
+
 		return true, nil
 	}
 	return false, fmt.Errorf("CRC bundle is not embedded in the binary")
