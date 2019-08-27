@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/kardianos/osext"
 )
 
 const (
@@ -52,14 +51,6 @@ func ReplaceEnv(variables []string, varName string, value string) []string {
 	}
 
 	return result
-}
-
-func CurrentExecutable() (string, error) {
-	currentExec, err := osext.Executable()
-	if err != nil {
-		return "", err
-	}
-	return currentExec, nil
 }
 
 func CopyFileContents(src string, dst string, permission os.FileMode) error {
