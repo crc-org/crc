@@ -11,7 +11,7 @@ github.com/code-ready/clicumber/testsuite
 github.com/code-ready/clicumber/util
 # github.com/code-ready/goodhosts v0.0.0-20190712111040-f090f3f77c26
 github.com/code-ready/goodhosts
-# github.com/code-ready/machine v0.0.0-20190821063716-34d5b6049a38
+# github.com/code-ready/machine v0.0.0-20190827140617-a42716b9bc5f
 github.com/code-ready/machine/libmachine/state
 github.com/code-ready/machine/libmachine/drivers
 github.com/code-ready/machine/libmachine
