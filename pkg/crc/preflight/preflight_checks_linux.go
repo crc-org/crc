@@ -228,7 +228,7 @@ func checkMachineDriverLibvirtInstalled() (bool, error) {
 	// Check the version of driver if it matches to supported one
 	stdOut, stdErr, err := crcos.RunWithDefaultLocale(libvirtDriverPath, "version")
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("%v : %s", err, stdErr)
 	}
 	if !strings.Contains(stdOut, libvirtDriverVersion) {
 		return false, fmt.Errorf("crc-driver-libvirt does not have right version \n Required: %s \n Got: %s use 'crc setup' command.\n %v\n", libvirtDriverVersion, stdOut, stdErr)
