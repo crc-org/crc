@@ -14,7 +14,6 @@ import (
 type Driver struct {
 	*drivers.BaseDriver
 	CrcDiskCopier        CRCDiskCopier
-	BundleName           string
 	VirtualSwitch        string
 	DiskPath             string
 	DiskPathUrl          string
@@ -85,7 +84,6 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 }
 
 func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
-	d.BundleName = flags.String("hyperv-bundlepath-url")
 	d.VirtualSwitch = flags.String("hyperv-virtual-switch")
 	d.Memory = flags.Int("hyperv-memory")
 	d.CPU = flags.Int("hyperv-cpu-count")
