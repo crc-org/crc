@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-BUNDLE_VERSION = 4.1.11
+BUNDLE_VERSION = 4.1.14
 BUNDLE_EXTENSION = crcbundle
-CRC_VERSION = 1.0.0-beta.2
+CRC_VERSION = 1.0.0-beta.4
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 
 # Go and compilation related variables
