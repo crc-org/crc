@@ -52,9 +52,9 @@ func fillClusterConfig(bundleInfo *bundle.CrcBundleInfo, clusterConfig *ClusterC
 
 func getCrcBundleInfo(bundlePath string) (*bundle.CrcBundleInfo, error) {
 	bundleName := filepath.Base(bundlePath)
-	logging.Infof("Loading bundle: %s ...", bundleName)
 	bundleInfo, err := bundle.GetCachedBundleInfo(bundleName)
 	if err == nil {
+		logging.Infof("Loading bundle: %s ...", bundleName)
 		return bundleInfo, nil
 	}
 	logging.Infof("Extracting bundle: %s ...", bundleName)
