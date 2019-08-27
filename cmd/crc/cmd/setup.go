@@ -5,8 +5,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/validation"
 )
@@ -31,6 +33,11 @@ func runSetup(arguments []string) {
 		errors.Exit(1)
 	}
 	preflight.SetupHost(vmDriver)
+	if constants.BundleEmbedded() {
+		output.Out("Setup is complete, you can now run 'crc start' to start a CodeReady Containers instance")
+	} else {
+		output.Out("Setup is complete, you can now run 'crc start -b $bundlename' to start a CodeReady Containers instance")
+	}
 }
 
 var vmDriver string
