@@ -14,16 +14,8 @@ func init() {
 		DriverPath:    constants.CrcBinDir,
 	}
 
-	VirtualBoxLinuxDriver := MachineDriver{
-		Name:          "VirtualBox",
-		Platform:      crcos.LINUX,
-		Driver:        "virtualbox",
-		UseDNSService: true,
-	}
-
 	SupportedDrivers = []MachineDriver{
 		LibvirtDriver,
-		VirtualBoxLinuxDriver,
 	}
 
 	DefaultDriver = LibvirtDriver
