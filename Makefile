@@ -26,6 +26,7 @@ RELEASE_DIR ?= release
 DOCS_BUILD_DIR ?= docs/build
 DOCS_BUILD_CONTAINER ?= registry.gitlab.com/gbraad/asciidoctor-centos:latest
 DOCS_PDF_CONTAINER ?= quay.io/crcont/asciidoctor-pdf:latest
+DOCS_SERVE_CONTAINER ?= quay.io/crcont/docs-server:latest
 DOCS_BUILD_TARGET ?= /docs/source/getting-started/master.adoc
 
 GOOS ?= $(shell go env GOOS)
@@ -102,6 +103,10 @@ build_docs:
 .PHONY: build_docs_pdf
 build_docs_pdf:
 	podman run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_PDF_CONTAINER) -D /$(DOCS_BUILD_DIR) -o doc.pdf $(DOCS_BUILD_TARGET)
+
+.PHONY: docs_serve
+docs_serve: build_docs
+	podman run -v $(CURDIR)/docs:/docs:Z --rm -p 8088:8088/tcp $(DOCS_SERVE_CONTAINER)
 
 .PHONY: clean_docs
 clean_docs:
