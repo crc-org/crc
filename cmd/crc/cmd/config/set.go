@@ -25,12 +25,12 @@ to the options that you set when you run the 'crc start' command.`,
 }
 
 func runConfigSet(key string, value interface{}) {
-	_, ok := SettingsList[key]
+	_, ok := config.SettingsList[key]
 	if !ok {
 		errors.ExitWithMessage(1, "Config property does not exist: %s", key)
 	}
 
-	ok, expectedValue := runValidations(SettingsList[key].ValidationFns, value)
+	ok, expectedValue := runValidations(config.SettingsList[key].ValidationFns, value)
 	if !ok {
 		errors.ExitWithMessage(1, "Config value is invalid: %s, Expected: %s\n", value, expectedValue)
 	}
@@ -41,7 +41,7 @@ func runConfigSet(key string, value interface{}) {
 	}
 }
 
-func runValidations(validations []validationFnType, value interface{}) (bool, string) {
+func runValidations(validations []config.ValidationFnType, value interface{}) (bool, string) {
 	for _, fn := range validations {
 		ok, expectedValue := fn(value)
 		if !ok {

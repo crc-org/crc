@@ -5,45 +5,25 @@ import (
 	"github.com/spf13/cobra"
 	"strings"
 
-	validations "github.com/code-ready/crc/pkg/crc/config"
+	cfg "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
-// validationFnType takes the key, value as args and checks if valid
-type validationFnType func(interface{}) (bool, string)
-
-type setting struct {
-	Name          string
-	DefaultValue  interface{}
-	ValidationFns []validationFnType
-}
-
-// SettingsList holds all the config settings
-var SettingsList = make(map[string]*setting)
-
 var (
 	// Start command settings in config
-	VMDriver       = createSetting("vm-driver", machine.DefaultDriver.Driver, []validationFnType{validations.ValidateDriver})
-	Bundle         = createSetting("bundle", nil, []validationFnType{validations.ValidateBundle})
-	CPUs           = createSetting("cpus", constants.DefaultCPUs, []validationFnType{validations.ValidateCPUs})
-	Memory         = createSetting("memory", constants.DefaultMemory, []validationFnType{validations.ValidateMemory})
-	NameServer     = createSetting("nameserver", nil, []validationFnType{validations.ValidateIpAddress})
-	PullSecretFile = createSetting("pull-secret-file", nil, []validationFnType{validations.ValidatePath})
+	VMDriver       = cfg.AddSetting("vm-driver", machine.DefaultDriver.Driver, []cfg.ValidationFnType{cfg.ValidateDriver})
+	Bundle         = cfg.AddSetting("bundle", nil, []cfg.ValidationFnType{cfg.ValidateBundle})
+	CPUs           = cfg.AddSetting("cpus", constants.DefaultCPUs, []cfg.ValidationFnType{cfg.ValidateCPUs})
+	Memory         = cfg.AddSetting("memory", constants.DefaultMemory, []cfg.ValidationFnType{cfg.ValidateMemory})
+	NameServer     = cfg.AddSetting("nameserver", nil, []cfg.ValidationFnType{cfg.ValidateIpAddress})
+	PullSecretFile = cfg.AddSetting("pull-secret-file", nil, []cfg.ValidationFnType{cfg.ValidatePath})
 
 	// Preflight checks
-	SkipCheckVirtualBoxInstalled = createSetting("skip-check-virtualbox-installed", nil, []validationFnType{validations.ValidateBool})
-	WarnCheckVirtualBoxInstalled = createSetting("warn-check-virtualbox-installed", nil, []validationFnType{validations.ValidateBool})
-	SkipCheckBundleCached        = createSetting("skip-check-bundle-cached", nil, []validationFnType{validations.ValidateBool})
-	WarnCheckBundleCached        = createSetting("warn-check-bundle-cached", true, []validationFnType{validations.ValidateBool})
+	SkipCheckVirtualBoxInstalled = cfg.AddSetting("skip-check-virtualbox-installed", nil, []cfg.ValidationFnType{cfg.ValidateBool})
+	WarnCheckVirtualBoxInstalled = cfg.AddSetting("warn-check-virtualbox-installed", nil, []cfg.ValidationFnType{cfg.ValidateBool})
+	SkipCheckBundleCached        = cfg.AddSetting("skip-check-bundle-cached", nil, []cfg.ValidationFnType{cfg.ValidateBool})
+	WarnCheckBundleCached        = cfg.AddSetting("warn-check-bundle-cached", true, []cfg.ValidationFnType{cfg.ValidateBool})
 )
-
-// CreateSetting returns a filled struct of ConfigSetting
-// takes the config name and default value as arguments
-func createSetting(name string, defValue interface{}, validationFn []validationFnType) *setting {
-	s := setting{Name: name, DefaultValue: defValue, ValidationFns: validationFn}
-	SettingsList[name] = &s
-	return &s
-}
 
 var (
 	ConfigCmd = &cobra.Command{
@@ -63,7 +43,7 @@ Configurable properties (enter as SUBCOMMAND): ` + "\n\n" + configurableFields()
 
 func configurableFields() string {
 	var fields []string
-	for _, s := range SettingsList {
+	for _, s := range cfg.SettingsList {
 		fields = append(fields, " * "+s.Name)
 	}
 	return strings.Join(fields, "\n")

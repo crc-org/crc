@@ -25,7 +25,7 @@ to the options that you set when you run the 'crc start' command.`,
 }
 
 func runConfigUnset(key string) {
-	_, ok := SettingsList[key]
+	_, ok := config.SettingsList[key]
 	if !ok {
 		errors.ExitWithMessage(1, "Config property does not exist: %s", key)
 	}

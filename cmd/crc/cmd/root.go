@@ -70,7 +70,7 @@ func Execute() {
 }
 
 func setConfigDefaults() {
-	for _, setting := range cmdConfig.SettingsList {
+	for _, setting := range config.SettingsList {
 		config.SetDefault(setting.Name, setting.DefaultValue)
 	}
 }
