@@ -15,8 +15,8 @@ import (
 
 type setting struct {
 	Name          string
-	DefaultValue  interface{}
-	ValidationFns []ValidationFnType
+	defaultValue  interface{}
+	validationFns []ValidationFnType
 }
 
 var (
@@ -105,7 +105,7 @@ func setDefault(key string, value interface{}) {
 
 func SetDefaults() {
 	for _, setting := range allSettings {
-		setDefault(setting.Name, setting.DefaultValue)
+		setDefault(setting.Name, setting.defaultValue)
 	}
 }
 
@@ -168,7 +168,7 @@ func BindFlagSet(flagSet *pflag.FlagSet) error {
 // CreateSetting returns a filled struct of ConfigSetting
 // takes the config name and default value as arguments
 func AddSetting(name string, defValue interface{}, validationFn []ValidationFnType) *setting {
-	s := setting{Name: name, DefaultValue: defValue, ValidationFns: validationFn}
+	s := setting{Name: name, defaultValue: defValue, validationFns: validationFn}
 	allSettings[name] = &s
 	return &s
 }
@@ -190,7 +190,7 @@ func Set(key string, value interface{}) error {
 		return fmt.Errorf("Config property '%s' does not exist", key)
 	}
 
-	ok, expectedValue := runValidations(allSettings[key].ValidationFns, value)
+	ok, expectedValue := runValidations(allSettings[key].validationFns, value)
 	if !ok {
 		return fmt.Errorf("Config value is invalid: %s, Expected: %s\n", value, expectedValue)
 	}
