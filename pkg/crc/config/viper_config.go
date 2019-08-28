@@ -13,9 +13,17 @@ import (
 	"github.com/spf13/viper"
 )
 
+type setting struct {
+	Name          string
+	DefaultValue  interface{}
+	ValidationFns []ValidationFnType
+}
+
 var (
 	globalViper *viper.Viper
 	ViperConfig map[string]interface{}
+	// allSettings holds all the config settings
+	allSettings = make(map[string]*setting)
 )
 
 // GetBool returns the value of a boolean config key
@@ -23,8 +31,7 @@ func GetBool(key string) bool {
 	return globalViper.GetBool(key)
 }
 
-// Set sets the value for a give config key
-func Set(key string, value interface{}) {
+func set(key string, value interface{}) {
 	globalViper.Set(key, value)
 	ViperConfig[key] = value
 }
@@ -41,8 +48,7 @@ func syncViperState(viper *viper.Viper) error {
 	return nil
 }
 
-// Unset unsets a given config key
-func Unset(key string) error {
+func unset(key string) error {
 	delete(ViperConfig, key)
 	return syncViperState(globalViper)
 }
@@ -89,9 +95,15 @@ func InitViper() error {
 	return v.Unmarshal(&ViperConfig)
 }
 
-// SetDefault sets the default for a config
-func SetDefault(key string, value interface{}) {
+// setDefault sets the default for a config
+func setDefault(key string, value interface{}) {
 	globalViper.SetDefault(key, value)
+}
+
+func SetDefaults() {
+	for _, setting := range allSettings {
+		setDefault(setting.Name, setting.DefaultValue)
+	}
 }
 
 // WriteConfig write config to file
@@ -110,8 +122,27 @@ func WriteConfig() error {
 }
 
 // AllConfigs returns all the configs
+// 'all the configs' means
+// - config keys with a default value
+// - config keys with a value set
+// This does not include config keys with no default value, and no value set
 func AllConfigs() map[string]interface{} {
 	return globalViper.AllSettings()
+}
+
+// AllConfigKeys returns all the known config keys
+// A known config key is one which was registered through AddSetting
+// - config keys with a default value
+// - config keys with a value set
+// - config keys with no value set
+// This is different from AllConfigs behaviour, and is there to maintain backwards compatibility
+// while this is refactored
+func AllConfigKeys() []string {
+	var keys []string
+	for key := range allSettings {
+		keys = append(keys, key)
+	}
+	return keys
 }
 
 // IsSet returns true if the config property is set
@@ -131,19 +162,54 @@ func BindFlagSet(flagSet *pflag.FlagSet) error {
 	return globalViper.BindPFlags(flagSet)
 }
 
-type setting struct {
-	Name          string
-	DefaultValue  interface{}
-	ValidationFns []ValidationFnType
-}
-
-// SettingsList holds all the config settings
-var SettingsList = make(map[string]*setting)
-
 // CreateSetting returns a filled struct of ConfigSetting
 // takes the config name and default value as arguments
 func AddSetting(name string, defValue interface{}, validationFn []ValidationFnType) *setting {
 	s := setting{Name: name, DefaultValue: defValue, ValidationFns: validationFn}
-	SettingsList[name] = &s
+	allSettings[name] = &s
 	return &s
+}
+
+func runValidations(validations []ValidationFnType, value interface{}) (bool, string) {
+	for _, fn := range validations {
+		ok, expectedValue := fn(value)
+		if !ok {
+			return false, expectedValue
+		}
+	}
+	return true, ""
+}
+
+// Set sets the value for a give config key
+func Set(key string, value interface{}) error {
+	_, ok := allSettings[key]
+	if !ok {
+		return fmt.Errorf("Config property '%s' does not exist", key)
+	}
+
+	ok, expectedValue := runValidations(allSettings[key].ValidationFns, value)
+	if !ok {
+		return fmt.Errorf("Config value is invalid: %s, Expected: %s\n", value, expectedValue)
+	}
+
+	set(key, value)
+
+	return nil
+}
+
+// Unset unsets a given config key
+func Unset(key string) error {
+	_, ok := allSettings[key]
+	if !ok {
+		return fmt.Errorf("Config property does not exist: %s", key)
+	}
+
+	if !IsSet(key) {
+		return fmt.Errorf("Config property is not set: %s", key)
+	}
+	if err := unset(key); err != nil {
+		return fmt.Errorf("Error unsetting config property: %s : %v", key, err)
+	}
+
+	return nil
 }

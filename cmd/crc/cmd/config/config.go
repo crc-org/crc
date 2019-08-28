@@ -43,8 +43,8 @@ Configurable properties (enter as SUBCOMMAND): ` + "\n\n" + configurableFields()
 
 func configurableFields() string {
 	var fields []string
-	for _, s := range cfg.SettingsList {
-		fields = append(fields, " * "+s.Name)
+	for _, key := range cfg.AllConfigKeys() {
+		fields = append(fields, " * "+key)
 	}
 	return strings.Join(fields, "\n")
 }

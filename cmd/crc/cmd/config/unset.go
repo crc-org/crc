@@ -25,16 +25,8 @@ to the options that you set when you run the 'crc start' command.`,
 }
 
 func runConfigUnset(key string) {
-	_, ok := config.SettingsList[key]
-	if !ok {
-		errors.ExitWithMessage(1, "Config property does not exist: %s", key)
-	}
-
-	if !config.IsSet(key) {
-		errors.ExitWithMessage(1, "Config property is not set: %s", key)
-	}
 	if err := config.Unset(key); err != nil {
-		errors.ExitWithMessage(1, "Error unsetting config property: %s : %v", key, err)
+		errors.ExitWithMessage(1, err.Error())
 	}
 	if err := config.WriteConfig(); err != nil {
 		errors.ExitWithMessage(1, "Error Writing config to file %s: %s", constants.ConfigPath, err.Error())
