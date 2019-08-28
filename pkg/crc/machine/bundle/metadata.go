@@ -22,6 +22,7 @@ type CrcBundleInfo struct {
 		SncVersion                string `json:"sncVersion"`
 	} `json:"buildInfo"`
 	ClusterInfo struct {
+		OpenShiftVersion      string `json:"openshiftVersion"`
 		ClusterName           string `json:"clusterName"`
 		BaseDomain            string `json:"baseDomain"`
 		AppsDomain            string `json:"appsDomain"`
@@ -129,4 +130,8 @@ func (bundle *CrcBundleInfo) GetKubeadminPassword() (string, error) {
 
 func (bundle *CrcBundleInfo) GetBundleBuildTime() (time.Time, error) {
 	return time.Parse(time.RFC3339, strings.TrimSpace(bundle.BuildInfo.BuildTime))
+}
+
+func (bundle *CrcBundleInfo) GetOpenshiftVersion() string {
+	return bundle.ClusterInfo.OpenShiftVersion
 }

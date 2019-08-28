@@ -128,7 +128,13 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			logging.Warnf("Bundle certificates are going to expire in %d days, better to use new release", duration)
 		}
 
-		logging.Infof("Creating VM ...")
+		openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
+		if openshiftVersion == "" {
+			logging.Infof("Creating VM...")
+		} else {
+			logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", openshiftVersion)
+		}
+
 		// Retrieve metadata info
 		diskPath := crcBundleMetadata.GetDiskImagePath()
 		machineConfig.DiskPathURL = fmt.Sprintf("file://%s", filepath.ToSlash(diskPath))
@@ -181,12 +187,23 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			return *result, errors.Newf("Error getting the state for host: %v", err)
 		}
 		if vmState == state.Running {
+			openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
+			if openshiftVersion == "" {
+				logging.Infof("A CodeReady Containers VM is already running")
+			} else {
+				logging.Infof("A CodeReady Containers VM for OpenShift %s is already running", openshiftVersion)
+			}
 			result.Status = vmState.String()
 			return *result, nil
 		}
 
 		if vmState != state.Running {
-			logging.Infof("Starting stopped VM ...")
+			openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
+			if openshiftVersion == "" {
+				logging.Infof("Starting CodeReady Containers VM ...")
+			} else {
+				logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", openshiftVersion)
+			}
 			if err := host.Driver.Start(); err != nil {
 				result.Error = err.Error()
 				return *result, errors.Newf("Error starting stopped VM: %v", err)
