@@ -117,6 +117,8 @@ clean: clean_docs
 .PHONY: integration ## Run integration tests
 integration: GODOG_OPTS = --godog.tags=$(GOOS)
 integration:
+	@$(call check_defined, BUNDLE_LOCATION, "'make integration' requires BUNDLE_LOCATION to contain the full path to a bundle file")
+	@$(call check_defined, PULL_SECRET_FILE, "'make integration' requires PULL_SECRET_FILE to point to a file with the pull secret to use")
 	@go test --timeout=60m $(REPOPATH)/test/integration -v --tags=integration $(GODOG_OPTS) $(BUNDLE_LOCATION) $(PULL_SECRET_FILE)
 
 .PHONY: fmt

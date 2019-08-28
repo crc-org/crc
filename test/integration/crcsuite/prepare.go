@@ -61,6 +61,10 @@ func DownloadBundle(bundleLocation string, bundleDestination string) (string, er
 func ParseFlags() {
 
 	flag.Parse()
+	if flag.NArg() < 2 {
+		fmt.Printf("Invalid number of arguments, the paths to the bundle file and to the pull secret file are required\n")
+		os.Exit(1)
+	}
 	bundleURL = flag.Args()[0]
 	_, bundleName = filepath.Split(bundleURL)
 	pullSecretFile = flag.Args()[1]
