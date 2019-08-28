@@ -176,16 +176,6 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			result.Error = err.Error()
 			return *result, errors.Newf("Error loading bundle metadata: %v", err)
 		}
-		if bundleName != filepath.Base(startConfig.BundlePath) {
-			logging.Fatalf("Bundle '%s' was requested, but loaded VM is using '%s'",
-				filepath.Base(startConfig.BundlePath), bundleName)
-		}
-		if host.Driver.DriverName() != startConfig.VMDriver {
-			err := errors.Newf("VM driver '%s' was requested, but loaded VM is using '%s' instead",
-				startConfig.VMDriver, host.Driver.DriverName())
-			result.Error = err.Error()
-			return *result, err
-		}
 		vmState, err := host.Driver.GetState()
 		if err != nil {
 			result.Error = err.Error()
@@ -200,6 +190,17 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			}
 			result.Status = vmState.String()
 			return *result, nil
+		}
+
+		if bundleName != filepath.Base(startConfig.BundlePath) {
+			logging.Fatalf("Bundle '%s' was requested, but loaded VM is using '%s'",
+				filepath.Base(startConfig.BundlePath), bundleName)
+		}
+		if host.Driver.DriverName() != startConfig.VMDriver {
+			err := errors.Newf("VM driver '%s' was requested, but loaded VM is using '%s' instead",
+				startConfig.VMDriver, host.Driver.DriverName())
+			result.Error = err.Error()
+			return *result, err
 		}
 
 		if vmState != state.Running {
