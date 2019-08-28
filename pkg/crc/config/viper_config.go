@@ -148,13 +148,6 @@ func AllConfigKeys() []string {
 	return keys
 }
 
-// IsSet returns true if the config property is set
-func IsSet(key string) bool {
-	ss := AllConfigs()
-	_, ok := ss[key]
-	return ok
-}
-
 // BindFlags binds flags to config properties
 func BindFlag(key string, flag *pflag.Flag) error {
 	return globalViper.BindPFlag(key, flag)
@@ -207,9 +200,6 @@ func Unset(key string) error {
 		return fmt.Errorf("Config property does not exist: %s", key)
 	}
 
-	if !IsSet(key) {
-		return fmt.Errorf("Config property is not set: %s", key)
-	}
 	if err := unset(key); err != nil {
 		return fmt.Errorf("Error unsetting config property: %s : %v", key, err)
 	}
