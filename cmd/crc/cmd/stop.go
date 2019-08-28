@@ -35,6 +35,7 @@ func runStop(arguments []string) {
 		Name: constants.DefaultName,
 	}
 
+	output.Out("Stopping CodeReady Containers instance... this may take a few minutes")
 	commandResult, err := machine.Stop(stopConfig)
 	if err != nil {
 		// Here we are checking the VM state and if it is still running then
