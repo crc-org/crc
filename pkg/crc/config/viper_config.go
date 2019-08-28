@@ -130,3 +130,20 @@ func BindFlag(key string, flag *pflag.Flag) error {
 func BindFlagSet(flagSet *pflag.FlagSet) error {
 	return globalViper.BindPFlags(flagSet)
 }
+
+type setting struct {
+	Name          string
+	DefaultValue  interface{}
+	ValidationFns []ValidationFnType
+}
+
+// SettingsList holds all the config settings
+var SettingsList = make(map[string]*setting)
+
+// CreateSetting returns a filled struct of ConfigSetting
+// takes the config name and default value as arguments
+func AddSetting(name string, defValue interface{}, validationFn []ValidationFnType) *setting {
+	s := setting{Name: name, DefaultValue: defValue, ValidationFns: validationFn}
+	SettingsList[name] = &s
+	return &s
+}

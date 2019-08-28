@@ -1,17 +1,17 @@
 package config
 
 import (
-	validations "github.com/code-ready/crc/pkg/crc/config"
+	cfg "github.com/code-ready/crc/pkg/crc/config"
 )
 
 var (
 	// Preflight checks
-	SkipCheckResolverFilePermissions   = createSetting("skip-check-resolver-file-permissions", nil, []validationFnType{validations.ValidateBool})
-	WarnCheckResolverFilePermissions   = createSetting("warn-check-resolver-file-permissions", nil, []validationFnType{validations.ValidateBool})
-	SkipCheckResolvConfFilePermissions = createSetting("skip-check-resolv-conf-file-permissions", nil, []validationFnType{validations.ValidateBool})
-	WarnCheckResolvConfFilePermissions = createSetting("warn-check-resolv-conf-file-permissions", nil, []validationFnType{validations.ValidateBool})
-	SkipCheckHyperKitDriver            = createSetting("skip-check-hyperkit-installed", nil, []validationFnType{validations.ValidateBool})
-	WarnCheckHyperKitDriver            = createSetting("warn-check-hyperkit-installed", nil, []validationFnType{validations.ValidateBool})
-	SkipCheckHyperKitInstalled         = createSetting("skip-check-hyperkit-driver", nil, []validationFnType{validations.ValidateBool})
-	WarnCheckHyperKitInstalled         = createSetting("warn-check-hyperkit-driver", nil, []validationFnType{validations.ValidateBool})
+	SkipCheckResolverFilePermissions   = cfg.AddSetting("skip-check-resolver-file-permissions", nil, []cfg.ValidationFnType{cfg.ValidateBool})
+	WarnCheckResolverFilePermissions   = cfg.AddSetting("warn-check-resolver-file-permissions", nil, []cfg.ValidationFnType{cfg.ValidateBool})
+	SkipCheckResolvConfFilePermissions = cfg.AddSetting("skip-check-resolv-conf-file-permissions", nil, []cfg.ValidationFnType{cfg.ValidateBool})
+	WarnCheckResolvConfFilePermissions = cfg.AddSetting("warn-check-resolv-conf-file-permissions", nil, []cfg.ValidationFnType{cfg.ValidateBool})
+	SkipCheckHyperKitDriver            = cfg.AddSetting("skip-check-hyperkit-installed", nil, []cfg.ValidationFnType{cfg.ValidateBool})
+	WarnCheckHyperKitDriver            = cfg.AddSetting("warn-check-hyperkit-installed", nil, []cfg.ValidationFnType{cfg.ValidateBool})
+	SkipCheckHyperKitInstalled         = cfg.AddSetting("skip-check-hyperkit-driver", nil, []cfg.ValidationFnType{cfg.ValidateBool})
+	WarnCheckHyperKitInstalled         = cfg.AddSetting("warn-check-hyperkit-driver", nil, []cfg.ValidationFnType{cfg.ValidateBool})
 )
