@@ -21,7 +21,10 @@ type setting struct {
 
 var (
 	globalViper *viper.Viper
-	ViperConfig map[string]interface{}
+	// changedConfigs holds the config keys/values which have a non
+	// default value (either because they are set in the config file, or
+	// because they were changed at runtime)
+	changedConfigs map[string]interface{}
 	// allSettings holds all the config settings
 	allSettings = make(map[string]*setting)
 )
@@ -33,11 +36,11 @@ func GetBool(key string) bool {
 
 func set(key string, value interface{}) {
 	globalViper.Set(key, value)
-	ViperConfig[key] = value
+	changedConfigs[key] = value
 }
 
 func syncViperState(viper *viper.Viper) error {
-	encodedConfig, err := json.MarshalIndent(ViperConfig, "", " ")
+	encodedConfig, err := json.MarshalIndent(changedConfigs, "", " ")
 	if err != nil {
 		return errors.Newf("Error encoding config to JSON: %v", err)
 	}
@@ -49,7 +52,7 @@ func syncViperState(viper *viper.Viper) error {
 }
 
 func unset(key string) error {
-	delete(ViperConfig, key)
+	delete(changedConfigs, key)
 	return syncViperState(globalViper)
 }
 
@@ -92,7 +95,7 @@ func InitViper() error {
 		return fmt.Errorf("Error Reading config file: %s : %v", constants.ConfigFile, err)
 	}
 	globalViper = v
-	return v.Unmarshal(&ViperConfig)
+	return v.Unmarshal(&changedConfigs)
 }
 
 // setDefault sets the default for a config
@@ -212,4 +215,13 @@ func Unset(key string) error {
 	}
 
 	return nil
+}
+
+func Get(key string) (interface{}, error) {
+	v, ok := changedConfigs[key]
+	if !ok {
+		return nil, fmt.Errorf("Config property '%s' does not exist", key)
+	}
+
+	return v, nil
 }

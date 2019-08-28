@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/spf13/cobra"
 	"os"
@@ -26,9 +27,9 @@ to the options that you set when you run the 'crc start' command.`,
 }
 
 func runConfigGet(key string) {
-	if v, ok := config.ViperConfig[key]; ok {
-		output.Out(key, ":", v)
-		return
+	v, err := config.Get(key)
+	if err != nil {
+		errors.ExitWithMessage(1, err.Error())
 	}
-	output.Out("Config not found:", key)
+	output.Out(key, ":", v)
 }
