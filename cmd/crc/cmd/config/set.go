@@ -25,28 +25,11 @@ to the options that you set when you run the 'crc start' command.`,
 }
 
 func runConfigSet(key string, value interface{}) {
-	_, ok := config.SettingsList[key]
-	if !ok {
-		errors.ExitWithMessage(1, "Config property does not exist: %s", key)
+	if err := config.Set(key, value); err != nil {
+		errors.ExitWithMessage(1, err.Error())
 	}
 
-	ok, expectedValue := runValidations(config.SettingsList[key].ValidationFns, value)
-	if !ok {
-		errors.ExitWithMessage(1, "Config value is invalid: %s, Expected: %s\n", value, expectedValue)
-	}
-
-	config.Set(key, value)
 	if err := config.WriteConfig(); err != nil {
 		errors.ExitWithMessage(1, "Error Writing config to file %s: %s", constants.ConfigPath, err.Error())
 	}
-}
-
-func runValidations(validations []config.ValidationFnType, value interface{}) (bool, string) {
-	for _, fn := range validations {
-		ok, expectedValue := fn(value)
-		if !ok {
-			return false, expectedValue
-		}
-	}
-	return true, ""
 }
