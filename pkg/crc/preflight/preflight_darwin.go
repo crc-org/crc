@@ -45,11 +45,6 @@ func StartPreflightChecks(vmDriver string) {
 		fmt.Sprintf("Checking file permissions for %s", hostFile),
 		config.GetBool(cmdConfig.WarnCheckResolvConfFilePermissions.Name),
 	)
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckBundleCached.Name),
-		checkBundleCached,
-		"Checking if CRC bundle is cached in '$HOME/.crc'",
-		config.GetBool(cmdConfig.WarnCheckBundleCached.Name),
-	)
 }
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster

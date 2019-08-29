@@ -14,11 +14,6 @@ func StartPreflightChecks(vmDriver string) {
 		"Checking if oc binary is cached",
 		false,
 	)
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckBundleCached.Name),
-		checkBundleCached,
-		"Checking if CRC bundle is cached in '$HOME/.crc'",
-		config.GetBool(cmdConfig.WarnCheckBundleCached.Name),
-	)
 
 	if vmDriver == "hyperv" {
 		preflightCheckSucceedsOrFails(false,
