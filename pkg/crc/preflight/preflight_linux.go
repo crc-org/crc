@@ -77,11 +77,6 @@ func StartPreflightChecks(vmDriver string) {
 		"Checking if /etc/NetworkManager/dnsmasq.d/crc.conf exists",
 		config.GetBool(cmdConfig.WarnCheckCrcDnsmasqFile.Name),
 	)
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckBundleCached.Name),
-		checkBundleCached,
-		"Checking if CRC bundle is cached in '$HOME/.crc'",
-		config.GetBool(cmdConfig.WarnCheckBundleCached.Name),
-	)
 }
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
