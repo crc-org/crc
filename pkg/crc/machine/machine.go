@@ -305,10 +305,12 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	// If no error, return usage message
 	if result.Error == "" {
 		time.Sleep(time.Minute * 3)
+		logging.Infof("")
 		logging.Infof("To access the cluster, first set up your environment by following 'crc oc-env' instructions")
-		logging.Infof("Then you can access it with oc by running 'oc login -u kubeadmin -p %s %s'", result.ClusterConfig.KubeAdminPass, result.ClusterConfig.ClusterAPI)
-		logging.Infof("Access the OpenShift web-console here: %s", result.ClusterConfig.WebConsoleURL)
-		logging.Infof("Login to the console with user: kubeadmin, password: %s", result.ClusterConfig.KubeAdminPass)
+		logging.Infof("Then you can access it by running 'oc login -u developer -p developer %s'", result.ClusterConfig.ClusterAPI)
+		logging.Infof("To login as an admin, username is 'kubeadmin' and password is %s", result.ClusterConfig.KubeAdminPass)
+		logging.Infof("")
+		logging.Infof("These credentials can also be used to access the OpenShift web console at %s", result.ClusterConfig.WebConsoleURL)
 	}
 
 	// Approve the node certificate.
