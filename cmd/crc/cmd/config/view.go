@@ -39,7 +39,7 @@ to the options that you set when you run the 'crc start' command.`,
 		if err != nil {
 			logging.Fatal(err)
 		}
-		if err := runConfigView(config.AllConfigs(), tmpl, os.Stdout); err != nil {
+		if err := runConfigView(config.ChangedConfigs(), tmpl, os.Stdout); err != nil {
 			logging.Fatal(err)
 		}
 	},

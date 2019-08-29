@@ -124,13 +124,12 @@ func WriteConfig() error {
 	return v.WriteConfig()
 }
 
-// AllConfigs returns all the configs
-// 'all the configs' means
-// - config keys with a default value
-// - config keys with a value set
-// This does not include config keys with no default value, and no value set
-func AllConfigs() map[string]interface{} {
-	return globalViper.AllSettings()
+// ChangedConfigs returns all the changed config keys/values
+// 'changed' means config keys with a value set either because they are set in
+// the config file, or because they were changed at runtime.
+// This does not include config keys with no default value, or with a default value
+func ChangedConfigs() map[string]interface{} {
+	return changedConfigs
 }
 
 // AllConfigKeys returns all the known config keys
@@ -138,8 +137,6 @@ func AllConfigs() map[string]interface{} {
 // - config keys with a default value
 // - config keys with a value set
 // - config keys with no value set
-// This is different from AllConfigs behaviour, and is there to maintain backwards compatibility
-// while this is refactored
 func AllConfigKeys() []string {
 	var keys []string
 	for key := range allSettings {
