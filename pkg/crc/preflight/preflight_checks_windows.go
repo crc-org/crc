@@ -1,13 +1,13 @@
 package preflight
 
 import (
-	//"errors"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 )
 
@@ -125,4 +125,16 @@ func checkIfHyperVVirtualSwitchExists() (bool, error) {
 // Unable to do for now
 func fixHyperVVirtualSwitch() (bool, error) {
 	return false, errors.New("Please override the default by adding an external virtual switch and set configuration")
+}
+
+func checkIfRunningAsNormalUserInWindows() (bool, error) {
+	if !powershell.IsAdmin() {
+		return true, nil
+	}
+	logging.Debug("Ran as administrator")
+	return false, fmt.Errorf("crc should be ran as a normal user")
+}
+
+func fixRunAsNormalUserInWindows() (bool, error) {
+	return false, fmt.Errorf("crc should be ran as a normal user")
 }
