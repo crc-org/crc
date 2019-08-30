@@ -9,6 +9,11 @@ import (
 // StartPreflightChecks performs the preflight checks before starting the cluster
 func StartPreflightChecks(vmDriver string) {
 	preflightCheckSucceedsOrFails(false,
+		checkIfRunningAsNormalUser,
+		"Checking if running as root",
+		false,
+	)
+	preflightCheckSucceedsOrFails(false,
 		checkOcBinaryCached,
 		"Checking if oc binary is cached",
 		false,
@@ -49,6 +54,12 @@ func StartPreflightChecks(vmDriver string) {
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
 func SetupHost(vmDriver string) {
+	preflightCheckAndFix(false,
+		checkIfRunningAsNormalUser,
+		fixRunAsNormalUser,
+		"Checking if running as root",
+		false,
+	)
 	preflightCheckAndFix(false,
 		checkOcBinaryCached,
 		fixOcBinaryCached,
