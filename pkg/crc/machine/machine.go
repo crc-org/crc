@@ -27,6 +27,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 
 	"github.com/code-ready/machine/libmachine"
+	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/host"
 	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/ssh"
@@ -64,17 +65,22 @@ func getCrcBundleInfo(bundlePath string) (*bundle.CrcBundleInfo, error) {
 	return bundle.Extract(bundlePath)
 }
 
-func loadCrcBundleInfo(startConfig *StartConfig, bundleName string) (*bundle.CrcBundleInfo, error) {
-	crcBundleMetadata, err := bundle.GetCachedBundleInfo(bundleName)
-	if err != nil {
-		return nil, err
+func getBundleMetadataFromDriver(driver drivers.Driver) (string, *bundle.CrcBundleInfo, error) {
+	bundleName, err := driver.GetBundleName()
+	/* FIXME: the bundleName == "" check can be removed when all machine
+	* drivers have been rebuilt with
+	* https://github.com/code-ready/machine/commit/edeebfe54d1ca3f46c1c0bfb86846e54baf23708
+	 */
+	if bundleName == "" || err != nil {
+		err := fmt.Errorf("Error getting bundle name from CodeReady Containers instance, make sure you ran 'crc setup' and are using the latest bundle")
+		return "", nil, err
 	}
-	if bundleName != filepath.Base(startConfig.BundlePath) {
-		logging.Warnf("Bundle '%s' was requested, but loaded VM is using '%s'",
-			filepath.Base(startConfig.BundlePath), bundleName)
+	metadata, err := bundle.GetCachedBundleInfo(bundleName)
+	if err != nil {
+		return "", nil, err
 	}
 
-	return crcBundleMetadata, nil
+	return bundleName, metadata, err
 }
 
 func Start(startConfig StartConfig) (StartResult, error) {
@@ -164,16 +170,15 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			return *result, errors.Newf("Error loading host: %v", err)
 		}
 
-		bundleName, _ := host.Driver.GetBundleName()
-		if bundleName == "" {
-			err := errors.Newf("Error getting bundle name from CodeReady Containers instance, make sure you ran 'crc setup' and are using the latest bundle")
-			result.Error = err.Error()
-			return *result, err
-		}
-		crcBundleMetadata, err = loadCrcBundleInfo(&startConfig, bundleName)
+		var bundleName string
+		bundleName, crcBundleMetadata, err = getBundleMetadataFromDriver(host.Driver)
 		if err != nil {
 			result.Error = err.Error()
-			return *result, errors.Newf(err.Error())
+			return *result, errors.Newf("Error loading bundle metadata: %v", err)
+		}
+		if bundleName != filepath.Base(startConfig.BundlePath) {
+			logging.Warnf("Bundle '%s' was requested, but loaded VM is using '%s'",
+				filepath.Base(startConfig.BundlePath), bundleName)
 		}
 		if host.Driver.DriverName() != startConfig.VMDriver {
 			err := errors.Newf("VM driver '%s' was requested, but loaded VM is using '%s' instead",
