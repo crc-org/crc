@@ -8,7 +8,7 @@ Feature:
         When starting CRC with default bundle and hypervisor "<vm-driver>" succeeds
         Then stdout should contain "CodeReady Containers instance is running"
         And executing "eval $(crc oc-env)" succeeds
-        When with up to "4" retries with wait period of "2m" command "crc status" output should contain "Running (v4.x)"
+        When with up to "4" retries with wait period of "2m" command "crc status" output should contain "Running (v4."
         Then login to the oc cluster succeeds
 
     @darwin
@@ -24,7 +24,7 @@ Feature:
     @darwin @linux 
     Scenario: Check cluster health
         Given executing "crc status" succeeds
-        And stdout contains "Running (v4.x)"
+        And stdout contains "Running (v4."
         When executing "oc get nodes"
         Then stdout contains "Ready" 
         And stdout does not contain "Not ready"

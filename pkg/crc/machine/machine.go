@@ -518,8 +518,14 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 			return *result, errors.New(err.Error())
 		}
 		if operatorsRunning {
-			// TODO:get openshift version as well and add to status
-			openshiftStatus = fmt.Sprintf("Running (v4.x)")
+			openshiftVersion := "4.x"
+			_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
+			if err != nil {
+				logging.Debugf("Failed to load bundle metadata: %s", err.Error())
+			} else if crcBundleMetadata.GetOpenshiftVersion() != "" {
+				openshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
+			}
+			openshiftStatus = fmt.Sprintf("Running (v%s)", openshiftVersion)
 		}
 		sshRunner := crcssh.CreateRunner(host.Driver)
 		diskSize, diskUse, err = cluster.GetRootPartitionUsage(sshRunner)
