@@ -4,8 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
@@ -156,28 +154,4 @@ func setPullSecretAndClusterID(driver drivers.Driver) (rerr error) {
 	}
 
 	return nil
-}
-
-func StorePullSecretToFile(pullsecret string, destDir string, fileName string) error {
-	err := os.MkdirAll(destDir, 0755)
-	if err != nil && !os.IsExist(err) {
-		return fmt.Errorf("Cannot create directory %s: %v", destDir, err)
-	}
-	pullSecretFilePath := filepath.Join(destDir, fileName)
-	// Use 0600 mode to create this so it is readable only by current user.
-	if err := ioutil.WriteFile(pullSecretFilePath, []byte(pullsecret), 0600); err != nil {
-		return fmt.Errorf("Cannot write to %s: %v", pullSecretFilePath, err)
-	}
-	return nil
-}
-
-func GetPullSecretFromFilePath(pullSecretFilePath string) (string, bool, error) {
-	// Check if file exist
-	if _, err := os.Stat(pullSecretFilePath); os.IsNotExist(err) {
-		return "", false, nil
-	}
-
-	// Read the file
-	data, err := ioutil.ReadFile(pullSecretFilePath)
-	return string(data), true, err
 }
