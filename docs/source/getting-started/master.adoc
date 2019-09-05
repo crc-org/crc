@@ -6,4 +6,6 @@ include::common-content/attributes.adoc[]
 
 include::content/assembly_getting-started.adoc[leveloffset=+1]
 
+include::content/assembly_common-tasks.adoc[leveloffset=+1]
+
 include::content/assembly_troubleshooting.adoc[leveloffset=+1]
