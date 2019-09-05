@@ -39,16 +39,16 @@ func StartPreflightChecks(vmDriver string) {
 		)
 	}
 
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckResolverFilePermissions.Name),
-		checkResolverFilePermissions,
+	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckHostsFilePermissions.Name),
+		checkHostsFilePermissions,
 		fmt.Sprintf("Checking file permissions for %s", resolverFile),
-		config.GetBool(cmdConfig.WarnCheckResolverFilePermissions.Name),
+		config.GetBool(cmdConfig.WarnCheckHostsFilePermissions.Name),
 	)
 
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckResolvConfFilePermissions.Name),
-		checkResolvConfFilePermissions,
+	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckHostsFilePermissions.Name),
+		checkHostsFilePermissions,
 		fmt.Sprintf("Checking file permissions for %s", hostFile),
-		config.GetBool(cmdConfig.WarnCheckResolvConfFilePermissions.Name),
+		config.GetBool(cmdConfig.WarnCheckHostsFilePermissions.Name),
 	)
 }
 
@@ -97,11 +97,11 @@ func SetupHost(vmDriver string) {
 		config.GetBool(cmdConfig.WarnCheckResolverFilePermissions.Name),
 	)
 
-	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckResolvConfFilePermissions.Name),
-		checkResolvConfFilePermissions,
-		fixResolvConfFilePermissions,
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckHostsFilePermissions.Name),
+		checkHostsFilePermissions,
+		fixHostsFilePermissions,
 		fmt.Sprintf("Setting file permissions for %s", hostFile),
-		config.GetBool(cmdConfig.WarnCheckResolvConfFilePermissions.Name),
+		config.GetBool(cmdConfig.WarnCheckHostsFilePermissions.Name),
 	)
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckBundleCached.Name),
 		checkBundleCached,

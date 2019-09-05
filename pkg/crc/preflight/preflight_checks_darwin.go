@@ -236,11 +236,11 @@ func fixResolverFilePermissions() (bool, error) {
 	return addFileWritePermissionToUser(resolverFile)
 }
 
-func checkResolvConfFilePermissions() (bool, error) {
+func checkHostsFilePermissions() (bool, error) {
 	return isUserHaveFileWritePermission(hostFile)
 }
 
-func fixResolvConfFilePermissions() (bool, error) {
+func fixHostsFilePermissions() (bool, error) {
 	return addFileWritePermissionToUser(hostFile)
 }
 
