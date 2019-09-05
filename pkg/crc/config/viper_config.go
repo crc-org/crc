@@ -13,10 +13,13 @@ import (
 	"github.com/spf13/viper"
 )
 
+type SetFn func(string, string) string
+
 type setting struct {
 	Name          string
 	defaultValue  interface{}
 	validationFns []ValidationFnType
+	callbackFns   []SetFn
 }
 
 var (
@@ -157,8 +160,8 @@ func BindFlagSet(flagSet *pflag.FlagSet) error {
 
 // CreateSetting returns a filled struct of ConfigSetting
 // takes the config name and default value as arguments
-func AddSetting(name string, defValue interface{}, validationFn []ValidationFnType) *setting {
-	s := setting{Name: name, defaultValue: defValue, validationFns: validationFn}
+func AddSetting(name string, defValue interface{}, validationFn []ValidationFnType, callbackFn []SetFn) *setting {
+	s := setting{Name: name, defaultValue: defValue, validationFns: validationFn, callbackFns: callbackFn}
 	allSettings[name] = &s
 	return &s
 }
@@ -173,21 +176,33 @@ func runValidations(validations []ValidationFnType, value interface{}) (bool, st
 	return true, ""
 }
 
+func runCallbacks(callbacks []SetFn, key interface{}, value interface{}) string {
+	for _, fn := range callbacks {
+		return fn(key.(string), value.(string))
+	}
+	return ""
+}
+
 // Set sets the value for a give config key
-func Set(key string, value interface{}) error {
+func Set(key string, value interface{}) (string, error) {
 	_, ok := allSettings[key]
 	if !ok {
-		return fmt.Errorf("Config property '%s' does not exist", key)
+		return "", fmt.Errorf("Config property '%s' does not exist", key)
 	}
 
 	ok, expectedValue := runValidations(allSettings[key].validationFns, value)
 	if !ok {
-		return fmt.Errorf("Config value is invalid: %s, Expected: %s\n", value, expectedValue)
+		return "", fmt.Errorf("Config value is invalid: %s, Expected: %s\n", value, expectedValue)
 	}
 
 	set(key, value)
 
-	return nil
+	callbackMsg := runCallbacks(allSettings[key].callbackFns, key, value)
+	if callbackMsg != "" {
+		return callbackMsg, nil
+	}
+
+	return "", nil
 }
 
 // Unset unsets a given config key
