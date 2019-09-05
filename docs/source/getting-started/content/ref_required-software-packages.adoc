@@ -8,7 +8,7 @@ Consult the following table to determine the command used to install these packa
 [options="header"]
 |====
 |Linux Distribution|Installation command
-|{fed}|`sudo dnf install qemu-kvm libvirt NetworkManager`
-|{rhel}/{centos}|`su -c 'yum install qemu-kvm libvirt NetworkManager'`
+|{fed}|`sudo dnf install NetworkManager`
+|{rhel}/{centos}|`su -c 'yum install NetworkManager'`
 |Debian/Ubuntu|`sudo apt install qemu-kvm libvirt-daemon libvirt-daemon-system network-manager`
 |====
