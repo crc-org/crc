@@ -1,0 +1,19 @@
+[id="starting-monitoring-alerting-telemetry_{context}"]
+= Starting Monitoring, Alerting, and Telemetry
+
+In order to make sure {prod} can run on a typical laptop, some resource–heavy services get disabled by default.
+One of these is Prometheus and all the related monitoring, alerting, and telemetry functionality, with the latter being responsible for your cluster being listed in the link:https://cloud.redhat.com/openshift[Red Hat OpenShift Cluster Manager].
+
+.Prerequisites
+
+* A running {prod} virtual machine and a working [command]`oc` command.
+For more information, see <<accessing-the-openshift-cluster_{context}>>.
+
+.Procedure
+
+. Start monitoring, alerting, and telemetry services:
++
+[subs="+quotes,attributes"]
+----
+$ oc scale --replicas=1 statefulset --all -n openshift-monitoring; oc scale --replicas=1 deployment --all -n openshift-monitoring
+----
