@@ -22,7 +22,6 @@ Other applications running on top of OpenShift may require additional resources 
 
 * On Linux, {prod} requires installation of the following software packages:
 ** [package]`NetworkManager`
-** [package]`libvirt`
 
 [NOTE]
 ====
@@ -34,7 +33,6 @@ See <<required-software-packages_{context}>> to install the required packages fo
 . Download the link:{crc-download-url}[latest release of {prod}] for your platform and extract the contents of the archive to a location in your `_PATH_`.
 
 . **On Debian or Ubuntu,** perform the following steps:
-
 .. Add your user to the `libvirtd` group:
 +
 ----
@@ -51,16 +49,4 @@ $ newgrp libvirtd
 +
 ----
 $ crc config set skip-check-user-in-libvirt-group true
-----
-
-. Check the status of the `libvirtd` service:
-+
-----
-$ systemctl is-active libvirtd
-----
-.. If `libvirtd` is not active, start and enable the `libvirtd` service:
-+
-----
-$ sudo systemctl start libvirtd
-$ sudo systemctl enable libvirtd
 ----
