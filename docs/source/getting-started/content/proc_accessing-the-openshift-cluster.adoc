@@ -38,7 +38,7 @@ $ crc oc-env
 
   . Run the printed command.
 
-  . Verify that the OpenShift cluster operators are available using the [command]`oc get co` command:
+  . You can now use `oc` to interact with your OpenShift cluster. For example, to verify that the OpenShift cluster operators are available using the [command]`oc get co` command:
 +
 [subs="+quotes,attributes"]
 ----
