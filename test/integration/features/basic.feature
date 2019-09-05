@@ -60,7 +60,7 @@ Feature: Basic test
     
     @darwin @linux @windows
     Scenario: CRC status check
-        When with up to "10" retries with wait period of "1m" command "crc status" output should not contain "Stopped"
+        When with up to "15" retries with wait period of "1m" command "crc status" output should not contain "Stopped"
         And stdout should contain "Running"
 
     @darwin @linux @windows

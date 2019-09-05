@@ -28,6 +28,7 @@ import (
 	"time"
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/oc"
 )
 
@@ -223,7 +224,13 @@ func LoginToOcClusterSucceedsOrFails(expected string) error {
 
 func StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails(expected string) error {
 
-	cmd := fmt.Sprintf("crc start -b %s -p '%s' --log-level debug", bundleName, pullSecretFile)
+	var cmd string
+	var extraBundleArgs string
+
+	if !constants.BundleEmbedded() {
+		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
+	}
+	cmd = fmt.Sprintf("crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
@@ -231,7 +238,13 @@ func StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails(expected strin
 
 func StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails(hypervisor string, expected string) error {
 
-	cmd := fmt.Sprintf("crc start -b %s -d %s -p '%s' --log-level debug", bundleName, hypervisor, pullSecretFile)
+	var cmd string
+	var extraBundleArgs string
+
+	if !constants.BundleEmbedded() {
+		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
+	}
+	cmd = fmt.Sprintf("crc start -d %s -p '%s' %s --log-level debug", hypervisor, pullSecretFile, extraBundleArgs)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
