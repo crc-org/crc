@@ -4,6 +4,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/spf13/cobra"
 )
 
@@ -25,11 +26,16 @@ to the options that you set when you run the 'crc start' command.`,
 }
 
 func runConfigSet(key string, value interface{}) {
-	if err := config.Set(key, value); err != nil {
+	setMessage, err := config.Set(key, value)
+	if err != nil {
 		errors.ExitWithMessage(1, err.Error())
 	}
 
 	if err := config.WriteConfig(); err != nil {
 		errors.ExitWithMessage(1, "Error Writing config to file %s: %s", constants.ConfigPath, err.Error())
+	}
+
+	if setMessage != "" {
+		output.Out(setMessage)
 	}
 }
