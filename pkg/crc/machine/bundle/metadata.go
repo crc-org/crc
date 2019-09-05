@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // Metadata structure to unmarshal the crc-bundle-info.json file
@@ -124,4 +125,8 @@ func (bundle *CrcBundleInfo) GetInitramfsPath() string {
 func (bundle *CrcBundleInfo) GetKubeadminPassword() (string, error) {
 	rawData, err := ioutil.ReadFile(bundle.resolvePath(bundle.ClusterInfo.KubeadminPasswordFile))
 	return string(rawData), err
+}
+
+func (bundle *CrcBundleInfo) GetBundleBuildTime() (time.Time, error) {
+	return time.Parse(time.RFC3339, strings.TrimSpace(bundle.BuildInfo.BuildTime))
 }
