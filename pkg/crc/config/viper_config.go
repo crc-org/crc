@@ -206,17 +206,17 @@ func Set(key string, value interface{}) (string, error) {
 }
 
 // Unset unsets a given config key
-func Unset(key string) error {
+func Unset(key string) (string, error) {
 	_, ok := allSettings[key]
 	if !ok {
-		return fmt.Errorf("Config property does not exist: %s", key)
+		return "", fmt.Errorf("Config property does not exist: %s", key)
 	}
 
 	if err := unset(key); err != nil {
-		return fmt.Errorf("Error unsetting config property: %s : %v", key, err)
+		return "", fmt.Errorf("Error unsetting config property: %s : %v", key, err)
 	}
 
-	return nil
+	return fmt.Sprintf("Successfully removed config for: %s", key), nil
 }
 
 func Get(key string) (interface{}, error) {
