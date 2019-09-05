@@ -2,6 +2,10 @@
 = Deleting the virtual machine
 
 The [command]`{bin} delete` command deletes an existing {prod} virtual machine.
+[WARNING]
+====
+All the changes which have been made to the OpenShift cluster will be lost.
+====
 
 .Procedure
 
