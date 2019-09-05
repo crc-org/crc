@@ -4,6 +4,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/spf13/cobra"
 )
 
@@ -31,4 +32,5 @@ func runConfigUnset(key string) {
 	if err := config.WriteConfig(); err != nil {
 		errors.ExitWithMessage(1, "Error Writing config to file %s: %s", constants.ConfigPath, err.Error())
 	}
+	output.Out("Successfully removed config for:", key)
 }
