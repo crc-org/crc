@@ -2,6 +2,7 @@
 = Stopping the virtual machine
 
 The [command]`{bin} stop` command stops the running {prod} virtual machine and OpenShift cluster.
+The stopping process will take a few minutes while the cluster shuts down.
 
 .Procedure
 
