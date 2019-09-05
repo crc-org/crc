@@ -7,7 +7,6 @@ The [command]`{bin} start` command starts the {prod} virtual machine and OpenShi
 
 * The host machine has been set up using the [command]`{bin} setup` command.
 For more information, see <<setting-up-codeready-containers_{context}>>.
-* A valid OpenShift system bundle with the `.crcbundle` extension.
 * A valid OpenShift user pull secret.
 The pull secret can be copied or downloaded from the Pull Secret section of the link:https://cloud.redhat.com/openshift/install/crc/installer-provisioned[Install on Laptop: Red Hat CodeReady Containers] page on cloud.redhat.com.
 +
@@ -27,7 +26,7 @@ A Red Hat account is required in order to access the user pull secret.
 $ {bin} start
 ----
 
-** For VirtualBox, the `--vm-driver virtualbox` and `--bundle` flags are required:
+** For VirtualBox, a bundle file downloaded separately and the `--vm-driver virtualbox` and `--bundle` flags are required:
 +
 [subs="+quotes,attributes"]
 ----
