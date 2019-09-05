@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -17,7 +16,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/preflight"
-	ps "github.com/code-ready/crc/pkg/crc/pullsecret"
 	"github.com/code-ready/crc/pkg/crc/validation"
 )
 
@@ -117,39 +115,25 @@ func getPullSecretFileContent() (string, error) {
 		pullsecret string
 		err        error
 	)
-	// Check if pull secret is stored in cache then read it and return.
-	pullsecret, pullSecretFilePresent, err := ps.GetPullSecretFromFilePath(filepath.Join(constants.MachineCacheDir, constants.PullSecretFile))
-	if err != nil {
-		return "", errors.New(err.Error())
-	}
 
-	if !pullSecretFilePresent {
-		// In case user doesn't provide a file in start command or in config then ask for it.
-		if crcConfig.GetString(config.PullSecretFile.Name) == "" {
-			pullsecret, err = input.PromptUserForSecret("Image pull secret", fmt.Sprintf("Copy it from %s", constants.DefaultPullSecretURL))
-			// This is just to provide a new line after user enter the pull secret.
-			fmt.Println()
-			if err != nil {
-				return "", errors.New(err.Error())
-			}
-		} else {
-			// Read the file content
-			data, err := ioutil.ReadFile(crcConfig.GetString(config.PullSecretFile.Name))
-			if err != nil {
-				return "", errors.New(err.Error())
-			}
-			pullsecret = string(data)
+	// In case user doesn't provide a file in start command or in config then ask for it.
+	if crcConfig.GetString(config.PullSecretFile.Name) == "" {
+		pullsecret, err = input.PromptUserForSecret("Image pull secret", fmt.Sprintf("Copy it from %s", constants.DefaultPullSecretURL))
+		// This is just to provide a new line after user enter the pull secret.
+		fmt.Println()
+		if err != nil {
+			return "", errors.New(err.Error())
 		}
+	} else {
+		// Read the file content
+		data, err := ioutil.ReadFile(crcConfig.GetString(config.PullSecretFile.Name))
+		if err != nil {
+			return "", errors.New(err.Error())
+		}
+		pullsecret = string(data)
 	}
 	if err := validation.ImagePullSecret(pullsecret); err != nil {
 		return "", errors.New(err.Error())
-	}
-
-	// Add pull secret to cache.
-	if !pullSecretFilePresent {
-		if err := ps.StorePullSecretToFile(pullsecret, constants.MachineCacheDir, constants.PullSecretFile); err != nil {
-			return "", errors.New(err.Error())
-		}
 	}
 
 	return pullsecret, nil
