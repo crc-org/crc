@@ -1,3 +1,12 @@
+---
+name: Bug report
+about: Create a report to help us improve
+title: "[BUG]"
+labels: 'kind/bug'
+assignees: ''
+
+---
+
 ### General information
 
   * OS: Linux / macOS / Windows
@@ -17,6 +26,13 @@
 ## CRC config
 ```bash
 # Put `crc config view` output here
+```
+
+## Host Operating System
+```bash
+# Put the output of `cat /etc/os-release` in case of Linux
+# put the output of `sw_vers` in case of Mac
+# Put the output of `sysinfo` in case of Windows
 ```
 
 
