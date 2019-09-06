@@ -72,8 +72,18 @@ Feature: Basic test
         And stdout should contain "Will use root access: set suid"
         And stdout should contain "Setting file permissions"
 
-    @linux
-    Scenario: CRC start on Linux
+    @windows
+    Scenario: CRC setup on Windows
+        When executing "crc setup" succeeds
+        Then stdout should contain "Caching oc binary"
+        Then stdout should contain "Unpacking bundle from the CRC binary"
+        Then stdout should contain "Check Windows 10 release"
+        Then stdout should contain "Hyper-V installed"
+        Then stdout should contain "Is user a member of the Hyper-V Administrators group"
+        Then stdout should contain "Does the Hyper-V virtual switch exist"
+
+    @linux @windows
+    Scenario: CRC start
         When starting CRC with default bundle and default hypervisor succeeds
         Then stdout should contain "The OpenShift cluster is running"
 
