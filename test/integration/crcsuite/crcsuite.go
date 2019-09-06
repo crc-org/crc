@@ -51,6 +51,8 @@ func FeatureContext(s *godog.Suite) {
 		StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails)
 	s.Step(`^starting CRC with default bundle and hypervisor "(.*)" (succeeds|fails)$`,
 		StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails)
+	s.Step(`^starting CRC with default bundle and nameserver "(.*)" (succeeds|fails)$`,
+		StartCRCWithDefaultBundleAndNameServerSucceedsOrFails)
 	s.Step(`^setting config property "(.*)" to value "(.*)" (succeeds|fails)$`,
 		SetConfigPropertyToValueSucceedsOrFails)
 	s.Step(`^login to the oc cluster (succeeds|fails)$`,
@@ -303,6 +305,16 @@ func StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails(hypervisor string, ex
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
 	}
 	cmd = fmt.Sprintf("crc start -d %s -p '%s' %s --log-level debug", hypervisor, pullSecretFile, extraBundleArgs)
+	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
+
+	return err
+}
+
+func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, expected string) error {
+
+	var cmd string
+
+	cmd = fmt.Sprintf("crc start -n %s -p '%s' --log-level debug", nameserver, pullSecretFile)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err

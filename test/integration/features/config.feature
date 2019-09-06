@@ -25,7 +25,14 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
             | memory    |    8192 |     4096 |
             | vm-driver | libvirt | hyperkit |
 
-    @darwin @linux
+        @windows
+        Examples: Config settings on Windows
+            | property  | value1                   | value2                                               |
+            | cpus      | 4                        | 3                                                    |
+            | memory    | 8192                     | 4096                                                 |
+            | vm-driver | hyperv                   | hyperkit                                             |
+
+    @linux @darwin @windows
     Scenario: CRC config checks (bundle version)
         When setting config property "bundle" to value "current bundle" succeeds
         And "JSON" config file "crc.json" in CRC home folder contains key "bundle" with value matching "current bundle"
@@ -59,6 +66,11 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
             | warn-check-crc-network           | true   | false  |
             | warn-check-crc-network-active    | true   | false  |
 
+        @windows
+        Examples: Config warnings on Windows
+            | property                             | value1 | value2 |
+            | warn-check-bundle-cached             | true   | false  |
+
 # SKIP
 
     Scenario Outline: CRC config checks (skips)
@@ -90,6 +102,11 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
             | skip-check-crc-network           | true   | false  |
             | skip-check-crc-dnsmasq-file      | true   | false  |
             | skip-check-user-in-libvirt-group | true   | false  |
+
+        @windows
+        Examples:
+            | property                             | value1 | value2 |
+            | skip-check-bundle-cached             | true   | false  |
 
 # --------------------------------------
 # Linux-specific Scenarios
