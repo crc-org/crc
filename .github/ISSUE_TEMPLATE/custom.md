@@ -1,3 +1,12 @@
+---
+name: Issue template
+about: Any generic issue
+title: ''
+labels: ''
+assignees: ''
+
+---
+
 ### General information
 
   * OS: Linux / macOS / Windows
