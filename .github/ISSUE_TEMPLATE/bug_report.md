@@ -1,39 +1,38 @@
-### General information
+---
+name: Bug report
+about: Create a report to help us improve
+title: ''
+labels: ''
+assignees: ''
 
-  * OS: Linux / macOS / Windows
-  * Hypervisor: KVM / Hyper-V / VirtualBox / hyperkit
-  * Did you run `crc setup` before starting it (Yes/No)?
+---
 
-## CRC version
-```bash
-# Put `crc version` output here
-```
-  
-## CRC status
-```bash
-# Put `crc status` output here
-```
+**Describe the bug**
+A clear and concise description of what the bug is.
 
-## CRC config
-```bash
-# Put `crc config view` output here
-```
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
+4. See error
 
+**Expected behavior**
+A clear and concise description of what you expected to happen.
 
-### Steps to reproduce
+**Screenshots**
+If applicable, add screenshots to help explain your problem.
 
-  1. 
-  2. 
-  3. 
-  4. 
+**Desktop (please complete the following information):**
+ - OS: [e.g. iOS]
+ - Browser [e.g. chrome, safari]
+ - Version [e.g. 22]
 
-### Expected
+**Smartphone (please complete the following information):**
+ - Device: [e.g. iPhone6]
+ - OS: [e.g. iOS8.1]
+ - Browser [e.g. stock browser, safari]
+ - Version [e.g. 22]
 
-
-### Actual
-
-
-### Logs
-
-You can start crc with `crc start --log-level debug` to collect logs.
-Please consider posting this on http://gist.github.com/ and post the link in the issue.
+**Additional context**
+Add any other context about the problem here.
