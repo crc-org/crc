@@ -14,6 +14,7 @@ import (
 )
 
 var (
+	/* #nosec G101 */
 	pullSecret = `apiVersion: v1
 data:
   .dockerconfigjson: %s
@@ -24,6 +25,7 @@ metadata:
 type: kubernetes.io/dockerconfigjson`
 
 	// This command timeout in 80 secs if not able to replace the pull secret.
+	/* #nosec G101 */
 	replacePullSecretCmd = `timeout 80 bash -c 'until oc --config /tmp/kubeconfig replace -f /tmp/pull-secret.yaml 2>/dev/null 1>&2; \
 do echo "Waiting for recovery apiserver to come up."; sleep 1; done'`
 
