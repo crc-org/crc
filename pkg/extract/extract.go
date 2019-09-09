@@ -4,9 +4,11 @@ import (
 	"archive/tar"
 	"archive/zip"
 	"compress/gzip"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func Ungzip(source, target string) error {
@@ -101,7 +103,13 @@ func Unzip(archive, target string) error {
 	}
 
 	for _, file := range reader.File {
-		path := filepath.Join(target, file.Name)
+		path := filepath.Join(target, file.Name) // #nosec G305
+
+		// Check for ZipSlip. More Info: https://snyk.io/research/zip-slip-vulnerability
+		if !strings.HasPrefix(path, filepath.Clean(target)+string(os.PathSeparator)) {
+			return fmt.Errorf("%s: illegal file path", path)
+		}
+
 		if file.FileInfo().IsDir() {
 			err = os.MkdirAll(path, file.Mode())
 			if err != nil {
