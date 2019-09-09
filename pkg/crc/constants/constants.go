@@ -23,7 +23,7 @@ const (
 	ConfigFile           = "crc.json"
 	LogFile              = "crc.log"
 	GlobalStateFile      = "globalstate.json"
-	DefaultPullSecretURL = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned"
+	DefaultPullSecretURL = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
 	PullSecretFile       = "pullsecret.json"
 )
 
