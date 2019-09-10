@@ -12,7 +12,7 @@ import (
 )
 
 func Ungzip(source, target string) error {
-	reader, err := os.Open(source)
+	reader, err := os.Open(filepath.Clean(source))
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func Ungzip(source, target string) error {
 }
 
 func Untar(tarball, targetDir string) error {
-	reader, err := os.Open(tarball)
+	reader, err := os.Open(filepath.Clean(tarball))
 	if err != nil {
 		return err
 	}

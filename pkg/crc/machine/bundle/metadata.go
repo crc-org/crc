@@ -58,7 +58,7 @@ func (bundle *CrcBundleInfo) isCached() bool {
 
 func (bundle *CrcBundleInfo) readBundleInfo() error {
 	bundleInfoPath := bundle.resolvePath("crc-bundle-info.json")
-	f, err := ioutil.ReadFile(bundleInfoPath)
+	f, err := ioutil.ReadFile(filepath.Clean(bundleInfoPath))
 	if err != nil {
 		return fmt.Errorf("Error reading %s file : %+v", bundleInfoPath, err)
 	}
