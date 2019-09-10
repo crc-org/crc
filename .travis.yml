@@ -7,4 +7,5 @@ script:
 - make
 - make fmtcheck
 - make lint
+- make gosec
 - make cross
