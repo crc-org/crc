@@ -11,7 +11,7 @@ import (
 
 func WriteToFileAsRoot(reason, content, filepath string) error {
 	logging.Infof("Will use root access: %s", reason)
-	cmd := exec.Command("sudo", "tee", filepath)
+	cmd := exec.Command("sudo", "tee", filepath) // #nosec G204
 	cmd.Stdin = strings.NewReader(content)
 	buf := new(bytes.Buffer)
 	cmd.Stderr = buf

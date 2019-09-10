@@ -54,7 +54,7 @@ func IsAdmin() bool {
 
 func Execute(args ...string) (stdOut string, stdErr string, err error) {
 	args = append([]string{"-NoProfile", "-NonInteractive", "-ExecutionPolicy", "RemoteSigned", "-Command"}, args...)
-	cmd := exec.Command(LocatePowerShell(), args...)
+	cmd := exec.Command(LocatePowerShell(), args...) // #nosec G204
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 
 	var stdout bytes.Buffer
