@@ -142,6 +142,13 @@ $(GOPATH)/bin/golangci-lint:
 lint: $(GOPATH)/bin/golangci-lint
 	$(GOPATH)/bin/golangci-lint run
 
+$(GOPATH)/bin/gosec:
+	GO111MODULE=on go get github.com/securego/gosec/cmd/gosec@2.0.0
+
+# Run gosec against code
+gosec: $(GOPATH)/bin/gosec
+	$(GOPATH)/bin/gosec -tests -severity medium  ./...
+
 .PHONY: release
 release: fmtcheck embed_bundle build_docs_pdf
 	mkdir $(RELEASE_DIR)
