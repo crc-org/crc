@@ -52,9 +52,9 @@ func runConsole(arguments []string) {
 	}
 
 	if consoleURLMode {
-		output.Outln(result.URL)
+		output.Outln(result.ClusterConfig.WebConsoleURL)
 		return
 	}
 	output.Outln("Opening the OpenShift Web console in the default browser...")
-	_ = browser.OpenURL(result.URL)
+	_ = browser.OpenURL(result.ClusterConfig.WebConsoleURL)
 }
