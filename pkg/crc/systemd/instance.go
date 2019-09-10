@@ -2,6 +2,7 @@ package systemd
 
 import (
 	"fmt"
+	"github.com/code-ready/crc/pkg/crc/constants"
 
 	"github.com/code-ready/crc/pkg/crc/systemd/actions"
 
@@ -37,7 +38,7 @@ func (c InstanceSystemdCommander) Disable(name string) (bool, error) {
 
 func (c InstanceSystemdCommander) DaemonReload() (bool, error) {
 	// Might be needed for Start or Restart
-	_, err := drivers.RunSSHCommandFromDriver(c.driver, "sudo systemctl daemon-reload")
+	_, err := drivers.RunSSHCommandFromDriver(c.driver, constants.GetPrivateKeyPath(), "sudo systemctl daemon-reload")
 	if err != nil {
 		return false, err
 	}
@@ -78,7 +79,7 @@ func (c InstanceSystemdCommander) Status(name string) (string, error) {
 func (c InstanceSystemdCommander) service(name string, action actions.Action) (string, error) {
 	command := fmt.Sprintf("sudo systemctl -f %s %s", action.String(), name)
 
-	if out, err := drivers.RunSSHCommandFromDriver(c.driver, command); err != nil {
+	if out, err := drivers.RunSSHCommandFromDriver(c.driver, constants.GetPrivateKeyPath(), command); err != nil {
 		return out, err
 	} else {
 		return out, nil

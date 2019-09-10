@@ -60,8 +60,8 @@ func ValidateHostName(name string) bool {
 	return validHostNamePattern.MatchString(name)
 }
 
-func (h *Host) RunSSHCommand(command string) (string, error) {
-	return drivers.RunSSHCommandFromDriver(h.Driver, command)
+func (h *Host) RunSSHCommand(command string, sshPrivateKeyPath string) (string, error) {
+	return drivers.RunSSHCommandFromDriver(h.Driver, sshPrivateKeyPath, command)
 }
 
 func (h *Host) CreateSSHClient() (ssh.Client, error) {

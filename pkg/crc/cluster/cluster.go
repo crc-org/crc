@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"fmt"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"strconv"
 	"strings"
 	"time"
@@ -12,7 +13,7 @@ import (
 
 func WaitForSsh(driver drivers.Driver) error {
 	checkSshConnectivity := func() error {
-		_, err := drivers.RunSSHCommandFromDriver(driver, "exit 0")
+		_, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), "exit 0")
 		if err != nil {
 			return &errors.RetriableError{Err: err}
 		}
@@ -51,7 +52,7 @@ func CheckCertsValidity(driver drivers.Driver) (bool, int, error) {
 func getcertExipryDateFromVM(driver drivers.Driver) (time.Time, error) {
 	certExpiryDate := time.Time{}
 	certExpiryDateCmd := `date --date="$(sudo openssl x509 -in /var/lib/kubelet/pki/kubelet-client-current.pem -noout -enddate | cut -d= -f 2)" --iso-8601=seconds`
-	output, err := drivers.RunSSHCommandFromDriver(driver, certExpiryDateCmd)
+	output, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), certExpiryDateCmd)
 	if err != nil {
 		return certExpiryDate, err
 	}
@@ -66,7 +67,7 @@ func getcertExipryDateFromVM(driver drivers.Driver) (time.Time, error) {
 func GetRootPartitionUsage(driver drivers.Driver) (int64, int64, error) {
 	cmd := "df -B1 --output=size,used,target /sysroot | tail -1"
 
-	out, err := drivers.RunSSHCommandFromDriver(driver, cmd)
+	out, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), cmd)
 
 	if err != nil {
 		return 0, 0, err

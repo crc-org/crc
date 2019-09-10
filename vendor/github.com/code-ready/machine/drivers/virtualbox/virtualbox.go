@@ -458,11 +458,6 @@ func (d *Driver) Start() error {
 		}
 	}
 
-	log.Infof("Waiting for an IP...")
-	if err := d.ipWaiter.Wait(d); err != nil {
-		return err
-	}
-
 	if hostOnlyAdapter == nil {
 		return nil
 	}
@@ -690,9 +685,13 @@ func (d *Driver) GetIP() (string, error) {
 
 	log.Debugf("Host-only MAC: %s\n", macAddress)
 
-	output, err := drivers.RunSSHCommandFromDriver(d, "ip addr show")
+	output, err := drivers.RunSSHCommandFromDriver(d, d.SSHKeyPath, "ip addr show")
 	if err != nil {
-		return "", err
+		// If the default SSHKeyPath failed to perform ssh command that means we updated the generated
+		// keypair to authorized_key on the VM and now we have to use the generated key path.
+		if output, err = drivers.RunSSHCommandFromDriver(d, d.ResolveStorePath("id_rsa"), "ip addr show"); err != nil {
+			return "", err
+		}
 	}
 
 	log.Debugf("SSH returned: %s\nEND SSH\n", output)

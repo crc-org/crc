@@ -3,6 +3,8 @@ package machine
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/code-ready/machine/libmachine/ssh"
+	"io/ioutil"
 	"path/filepath"
 	"time"
 
@@ -138,6 +140,10 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			return *result, errors.Newf("Error getting the state for host: %v", err)
 		}
 
+		if err := updateSSHKeyPair(host); err != nil {
+			result.Error = err.Error()
+			return *result, errors.Newf("Error Updating public key: %v", err)
+		}
 		result.Status = vmState.String()
 	} else {
 		host, err := libMachineAPIClient.Load(startConfig.Name)
@@ -574,4 +580,24 @@ func GetConsoleURL(consoleConfig ConsoleConfig) (ConsoleResult, error) {
 	}
 	result.URL = constants.DefaultWebConsoleURL
 	return *result, nil
+}
+
+func updateSSHKeyPair(host *host.Host) error {
+	// Generate ssh key pair
+	if err := ssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
+		return fmt.Errorf("Error generating ssh key pair: %v", err)
+	}
+
+	// Read generated public key
+	publicKey, err := ioutil.ReadFile(constants.GetPublicKeyPath())
+	if err != nil {
+		return err
+	}
+	cmd := fmt.Sprintf("echo '%s' > /home/core/.ssh/authorized_keys", publicKey)
+	_, err = host.RunSSHCommand(cmd, "")
+	if err != nil {
+		return err
+	}
+
+	return err
 }

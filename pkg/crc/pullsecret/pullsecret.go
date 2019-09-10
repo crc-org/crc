@@ -3,6 +3,7 @@ package pullsecret
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"io/ioutil"
 	"time"
 
@@ -67,7 +68,7 @@ func AddPullSecretAndClusterID(driver drivers.Driver, pullSec string, kubeconfig
 
 func addpullSecretSpecToInstance(driver drivers.Driver, pullSec string) error {
 	base64OfPullSec := base64.StdEncoding.EncodeToString([]byte(pullSec))
-	output, err := drivers.RunSSHCommandFromDriver(driver, fmt.Sprintf("cat <<EOF | tee /tmp/pull-secret.yaml\n%s\nEOF", fmt.Sprintf(pullSecret, base64OfPullSec)))
+	output, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), fmt.Sprintf("cat <<EOF | tee /tmp/pull-secret.yaml\n%s\nEOF", fmt.Sprintf(pullSecret, base64OfPullSec)))
 	if err != nil {
 		return err
 	}
@@ -76,7 +77,7 @@ func addpullSecretSpecToInstance(driver drivers.Driver, pullSec string) error {
 }
 
 func addpullSecretToInstanceDisk(driver drivers.Driver, pullSec string) error {
-	output, err := drivers.RunSSHCommandFromDriver(driver, fmt.Sprintf("cat <<EOF | sudo tee /var/lib/kubelet/config.json\n%s\nEOF", pullSec))
+	output, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), fmt.Sprintf("cat <<EOF | sudo tee /var/lib/kubelet/config.json\n%s\nEOF", pullSec))
 	if err != nil {
 		return err
 	}
@@ -89,7 +90,7 @@ func addKubeconfigFileToInstance(driver drivers.Driver, kubeconfigFilePath strin
 	if err != nil {
 		return err
 	}
-	_, err = drivers.RunSSHCommandFromDriver(driver, fmt.Sprintf("cat <<EOF | tee /tmp/kubeconfig\n%s\nEOF", string(kubeconfig)))
+	_, err = drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), fmt.Sprintf("cat <<EOF | tee /tmp/kubeconfig\n%s\nEOF", string(kubeconfig)))
 	if err != nil {
 		return err
 	}
@@ -97,7 +98,7 @@ func addKubeconfigFileToInstance(driver drivers.Driver, kubeconfigFilePath strin
 }
 
 func replaceUserPullSecret(driver drivers.Driver) error {
-	output, err := drivers.RunSSHCommandFromDriver(driver, replacePullSecretCmd)
+	output, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), replacePullSecretCmd)
 	if err != nil {
 		return err
 	}
@@ -108,7 +109,7 @@ func replaceUserPullSecret(driver drivers.Driver) error {
 func addClusterID(driver drivers.Driver) error {
 	clusterID := uuid.New()
 	updateClusterIdCmd := fmt.Sprintf(updateClusterIdCmd, clusterID)
-	output, err := drivers.RunSSHCommandFromDriver(driver, updateClusterIdCmd)
+	output, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), updateClusterIdCmd)
 	if err != nil {
 		return err
 	}
@@ -125,7 +126,7 @@ func setPullSecretAndClusterID(driver drivers.Driver) (rerr error) {
 			m.Collect(err)
 		}
 		stopAndRemovePods := func() error {
-			output, err := drivers.RunSSHCommandFromDriver(driver, stopAndRemovePodsCmd)
+			output, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), stopAndRemovePodsCmd)
 			logging.Debugf("Output of %s: %s", stopAndRemovePodsCmd, output)
 			if err != nil {
 				return &errors.RetriableError{Err: err}

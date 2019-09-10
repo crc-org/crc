@@ -3,6 +3,7 @@ package network
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"io/ioutil"
 	"strings"
 
@@ -12,7 +13,7 @@ import (
 // HasGivenNameserversConfigured returns true if the instance uses a provided nameserver.
 func HasGivenNameserversConfigured(driver drivers.Driver, nameserver NameServer) (bool, error) {
 	cmd := "cat /etc/resolv.conf"
-	out, err := drivers.RunSSHCommandFromDriver(driver, cmd)
+	out, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), cmd)
 
 	if err != nil {
 		return false, err
@@ -23,7 +24,7 @@ func HasGivenNameserversConfigured(driver drivers.Driver, nameserver NameServer)
 
 func GetResolvValuesFromInstance(driver drivers.Driver) (*ResolvFileValues, error) {
 	cmd := "cat /etc/resolv.conf"
-	out, err := drivers.RunSSHCommandFromDriver(driver, cmd)
+	out, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), cmd)
 
 	if err != nil {
 		return nil, err

@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"net"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
@@ -10,7 +11,7 @@ import (
 )
 
 func executeCommandOrExit(driver drivers.Driver, command string, errorMessage string) string {
-	result, err := drivers.RunSSHCommandFromDriver(driver, command)
+	result, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), command)
 
 	if err != nil {
 		errors.ExitWithMessage(1, fmt.Sprintf("%s: %s", errorMessage, err.Error()))

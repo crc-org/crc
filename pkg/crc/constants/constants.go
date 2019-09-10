@@ -72,3 +72,11 @@ func EnsureBaseDirExists() error {
 func BundleEmbedded() bool {
 	return bundleEmbedded == "true"
 }
+
+func GetPublicKeyPath() string {
+	return filepath.Join(MachineInstanceDir, DefaultName, "id_rsa.pub")
+}
+
+func GetPrivateKeyPath() string {
+	return filepath.Join(MachineInstanceDir, DefaultName, "id_rsa")
+}
