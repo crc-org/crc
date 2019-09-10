@@ -8,7 +8,7 @@ import (
 	"github.com/code-ready/machine/libmachine/ssh"
 )
 
-func GetSSHClientFromDriver(d Driver) (ssh.Client, error) {
+func GetSSHClientFromDriver(d Driver, sshPrivateKeyPath string) (ssh.Client, error) {
 	address, err := d.GetSSHHostname()
 	if err != nil {
 		return nil, err
@@ -27,14 +27,18 @@ func GetSSHClientFromDriver(d Driver) (ssh.Client, error) {
 			Keys: []string{d.GetSSHKeyPath()},
 		}
 	}
-
+	if sshPrivateKeyPath != "" {
+		auth = &ssh.Auth{
+			Keys: []string{sshPrivateKeyPath},
+		}
+	}
 	client, err := ssh.NewClient(d.GetSSHUsername(), address, port, auth)
 	return client, err
 
 }
 
-func RunSSHCommandFromDriver(d Driver, command string) (string, error) {
-	client, err := GetSSHClientFromDriver(d)
+func RunSSHCommandFromDriver(d Driver, sshPrivateKeyPath, command string) (string, error) {
+	client, err := GetSSHClientFromDriver(d, sshPrivateKeyPath)
 	if err != nil {
 		return "", err
 	}
@@ -56,7 +60,7 @@ output  : %s`, command, err, output)
 func sshAvailableFunc(d Driver) func() bool {
 	return func() bool {
 		log.Debug("Getting to WaitForSSH function...")
-		if _, err := RunSSHCommandFromDriver(d, "exit 0"); err != nil {
+		if _, err := RunSSHCommandFromDriver(d, "", "exit 0"); err != nil {
 			log.Debugf("Error getting ssh command 'exit 0' : %s", err)
 			return false
 		}
