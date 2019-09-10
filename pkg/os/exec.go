@@ -14,7 +14,7 @@ func RunWithPrivilege(reason string, cmdAndArgs ...string) (string, string, erro
 	if err != nil {
 		return "", "", err
 	}
-	cmd := exec.Command(sudo, cmdAndArgs...)
+	cmd := exec.Command(sudo, cmdAndArgs...) // #nosec G204
 	stdOut := new(bytes.Buffer)
 	stdErr := new(bytes.Buffer)
 	cmd.Stdout = stdOut
@@ -25,7 +25,7 @@ func RunWithPrivilege(reason string, cmdAndArgs ...string) (string, string, erro
 }
 
 func RunWithDefaultLocale(command string, args ...string) (string, string, error) {
-	cmd := exec.Command(command, args...)
+	cmd := exec.Command(command, args...) // #nosec G204
 	cmd.Env = ReplaceEnv(os.Environ(), "LC_ALL", "C")
 	cmd.Env = ReplaceEnv(cmd.Env, "LANG", "C")
 	stdOut := new(bytes.Buffer)
