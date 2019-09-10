@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
@@ -87,7 +88,7 @@ func addpullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error
 }
 
 func addKubeconfigFileToInstance(sshRunner *ssh.SSHRunner, kubeconfigFilePath string) error {
-	kubeconfig, err := ioutil.ReadFile(kubeconfigFilePath)
+	kubeconfig, err := ioutil.ReadFile(filepath.Clean(kubeconfigFilePath))
 	if err != nil {
 		return err
 	}

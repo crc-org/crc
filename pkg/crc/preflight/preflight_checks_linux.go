@@ -370,7 +370,7 @@ func checkCrcDnsmasqConfigFile() (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("File not found: %s: %s", crcDnsmasqConfigPath, err.Error())
 	}
-	config, err := ioutil.ReadFile(crcDnsmasqConfigPath)
+	config, err := ioutil.ReadFile(filepath.Clean(crcDnsmasqConfigPath))
 	if err != nil {
 		return false, fmt.Errorf("Error opening file: %s: %s", crcDnsmasqConfigPath, err.Error())
 	}
@@ -409,7 +409,7 @@ func checkCrcNetworkManagerConfig() (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("File not found: %s: %s", crcNetworkManagerConfigPath, err.Error())
 	}
-	config, err := ioutil.ReadFile(crcNetworkManagerConfigPath)
+	config, err := ioutil.ReadFile(filepath.Clean(crcNetworkManagerConfigPath))
 	if err != nil {
 		return false, fmt.Errorf("Error opening file: %s: %s", crcNetworkManagerConfigPath, err.Error())
 	}

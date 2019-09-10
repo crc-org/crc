@@ -11,7 +11,7 @@ import (
 )
 
 func Extract(sourcepath string) (*CrcBundleInfo, error) {
-	file, err := os.Open(sourcepath)
+	file, err := os.Open(filepath.Clean(sourcepath))
 
 	if err != nil {
 		return nil, err

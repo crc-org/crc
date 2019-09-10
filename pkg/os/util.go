@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -63,7 +64,7 @@ func CurrentExecutable() (string, error) {
 
 func CopyFileContents(src string, dst string, permission os.FileMode) error {
 	logging.Debugf("Copying '%s' to '%s'\n", src, dst)
-	srcFile, err := os.Open(src)
+	srcFile, err := os.Open(filepath.Clean(src))
 	if err != nil {
 		return fmt.Errorf("[%v] Cannot open src file '%s'", err, src)
 	}
@@ -89,7 +90,7 @@ func CopyFileContents(src string, dst string, permission os.FileMode) error {
 }
 
 func WriteFileIfContentChanged(path string, new_content []byte, perm os.FileMode) (bool, error) {
-	old_content, err := ioutil.ReadFile(path)
+	old_content, err := ioutil.ReadFile(filepath.Clean(path))
 	if (err == nil) && (bytes.Equal(old_content, new_content)) {
 		return false, nil
 	}
