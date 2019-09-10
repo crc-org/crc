@@ -23,11 +23,13 @@ import (
 )
 
 var (
-	consoleURLMode bool
+	consoleURLMode          bool
+	consolePrintCredentials bool
 )
 
 func init() {
 	consoleCmd.Flags().BoolVar(&consoleURLMode, "url", false, "Prints the OpenShift Web Console URL to the console.")
+	consoleCmd.Flags().BoolVar(&consolePrintCredentials, "credentials", false, "Prints the credentials which can be used to connect to the OpenShift Web Console.")
 	rootCmd.AddCommand(consoleCmd)
 }
 
@@ -53,6 +55,12 @@ func runConsole(arguments []string) {
 
 	if consoleURLMode {
 		output.Outln(result.ClusterConfig.WebConsoleURL)
+	}
+	if consolePrintCredentials {
+		output.Outln("To login as a normal user, username is 'developer' and password is 'developer'.")
+		output.Outf("To login as an admin, username is 'kubeadmin' and password is '%s'.\n", result.ClusterConfig.KubeAdminPass)
+	}
+	if consoleURLMode || consolePrintCredentials {
 		return
 	}
 	output.Outln("Opening the OpenShift Web console in the default browser...")
