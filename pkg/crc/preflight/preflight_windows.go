@@ -1,8 +1,6 @@
 package preflight
 
 import (
-	"errors"
-
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
 )
@@ -80,11 +78,12 @@ func SetupHost(vmDriver string) {
 		)
 		preflightCheckAndFix(false,
 			// Workaround to an issue the check returns "True"
-			func() (bool, error) { return false, errors.New("Always add user") },
+			checkIfUserPartOfHyperVAdmins,
 			fixUserPartOfHyperVAdmins,
 			"Is user a member of the Hyper-V Administrators group",
 			false,
 		)
+
 		preflightCheckAndFix(false,
 			checkIfHyperVVirtualSwitchExists,
 			fixHyperVVirtualSwitch,

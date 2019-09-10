@@ -116,7 +116,10 @@ func checkIfHyperVVirtualSwitchExists() (bool, error) {
 		if !strings.Contains(stdErr, "Get-VMSwitch") {
 			// found the default
 			return true, nil
+		} else {
+			return false, errors.New("Incorrect permissions")
 		}
+
 	}
 
 	return false, errors.New("Virtual Switch not found")
@@ -124,7 +127,7 @@ func checkIfHyperVVirtualSwitchExists() (bool, error) {
 
 // Unable to do for now
 func fixHyperVVirtualSwitch() (bool, error) {
-	return false, errors.New("Please override the default by adding an external virtual switch and set configuration")
+	return false, errors.New("Unable to perform Hyper-V administrative commands. Please make sure to re-login or reboot your system")
 }
 
 func checkIfRunningAsNormalUserInWindows() (bool, error) {
