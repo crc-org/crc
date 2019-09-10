@@ -1,6 +1,7 @@
 package preflight
 
 import (
+	//"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -30,7 +31,7 @@ func checkVersionOfWindowsUpdate() (bool, error) {
 	}
 
 	if yourWindowsReleaseId < minimumWindowsReleaseId {
-		return false, errors.Newf("Please update Windows. Currently %d is the minimum release needed to run. You are running %d", minimumWindowsReleaseId, yourWindowsReleaseId)
+		return false, errors.New(fmt.Sprintf("Please update Windows. Currently %d is the minimum release needed to run. You are running %d", minimumWindowsReleaseId, yourWindowsReleaseId))
 	}
 	return true, nil
 }
@@ -116,7 +117,10 @@ func checkIfHyperVVirtualSwitchExists() (bool, error) {
 		if !strings.Contains(stdErr, "Get-VMSwitch") {
 			// found the default
 			return true, nil
+		} else {
+			return false, errors.New("Incorrect permissions")
 		}
+
 	}
 
 	return false, errors.New("Virtual Switch not found")
@@ -124,7 +128,7 @@ func checkIfHyperVVirtualSwitchExists() (bool, error) {
 
 // Unable to do for now
 func fixHyperVVirtualSwitch() (bool, error) {
-	return false, errors.New("Please override the default by adding an external virtual switch and set configuration")
+	return false, errors.New("Unable to perform Hyper-V administrative commands. Please make sure to re-login or reboot your system.")
 }
 
 func checkIfRunningAsNormalUserInWindows() (bool, error) {
