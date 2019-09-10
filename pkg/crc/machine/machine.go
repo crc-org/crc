@@ -367,7 +367,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		logging.Infof("Then you can access it by running 'oc login -u developer -p developer %s'", result.ClusterConfig.ClusterAPI)
 		logging.Infof("To login as an admin, username is 'kubeadmin' and password is %s", result.ClusterConfig.KubeAdminPass)
 		logging.Infof("")
-		logging.Infof("These credentials can also be used to access the OpenShift web console at %s", result.ClusterConfig.WebConsoleURL)
+		logging.Infof("You can now run 'crc console' and use these credentials to access the OpenShift web console")
 	}
 
 	// Approve the node certificate.
@@ -612,14 +612,24 @@ func GetConsoleURL(consoleConfig ConsoleConfig) (ConsoleResult, error) {
 	// We might need to improve and use crc status logic, only
 	// return if the Openshift is running as part of status.
 	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
-	_, err := libMachineAPIClient.Load(consoleConfig.Name)
+	host, err := libMachineAPIClient.Load(consoleConfig.Name)
 
 	if err != nil {
 		result.Success = false
 		result.Error = err.Error()
 		return *result, errors.New(err.Error())
 	}
-	result.URL = constants.DefaultWebConsoleURL
+	_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
+	if err != nil {
+		result.Error = err.Error()
+		return *result, errors.Newf("Error loading bundle metadata: %v", err)
+	}
+	err = fillClusterConfig(crcBundleMetadata, &result.ClusterConfig)
+	if err != nil {
+		result.Error = err.Error()
+		return *result, errors.Newf("Error loading cluster configuration: %v", err)
+	}
+
 	return *result, nil
 }
 

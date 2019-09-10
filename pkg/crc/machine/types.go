@@ -105,7 +105,7 @@ type ConsoleConfig struct {
 }
 
 type ConsoleResult struct {
-	URL     string
-	Success bool
-	Error   string
+	ClusterConfig ClusterConfig
+	Success       bool
+	Error         string
 }
