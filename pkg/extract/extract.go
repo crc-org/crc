@@ -67,7 +67,7 @@ func Untar(tarball, targetDir string) error {
 		// if its a dir and it doesn't exist create it
 		case tar.TypeDir:
 			if _, err := os.Stat(path); err != nil {
-				if err := os.MkdirAll(path, 0755); err != nil {
+				if err := os.MkdirAll(path, 0750); err != nil {
 					return err
 				}
 			}
@@ -75,7 +75,7 @@ func Untar(tarball, targetDir string) error {
 		// if it's a file create it
 		case tar.TypeReg:
 			// tar.Next() will externally only iterate files, so we might have to create intermediate directories here
-			if err = os.MkdirAll(filepath.Dir(path), 0770); err != nil {
+			if err = os.MkdirAll(filepath.Dir(path), 0750); err != nil {
 				return err
 			}
 			file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, header.FileInfo().Mode())
@@ -98,7 +98,7 @@ func Unzip(archive, target string) error {
 		return err
 	}
 
-	if err := os.MkdirAll(target, 0755); err != nil {
+	if err := os.MkdirAll(target, 0750); err != nil {
 		return err
 	}
 

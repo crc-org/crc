@@ -63,7 +63,7 @@ func GetHomeDir() string {
 func EnsureBaseDirExists() error {
 	_, err := os.Stat(CrcBaseDir)
 	if err != nil {
-		return os.Mkdir(CrcBaseDir, 0755)
+		return os.Mkdir(CrcBaseDir, 0750)
 	}
 	return nil
 }

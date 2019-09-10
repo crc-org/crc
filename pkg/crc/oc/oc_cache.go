@@ -98,18 +98,18 @@ func (oc *OcCached) cacheOc() error {
 
 		// Copy the requested asset into its final destination
 		outputPath := constants.CrcBinDir
-		err = os.MkdirAll(outputPath, 0755)
+		err = os.MkdirAll(outputPath, 0750)
 		if err != nil && !os.IsExist(err) {
 			return errors.Wrap(err, "Cannot create the target directory.")
 		}
 
 		finalBinaryPath := filepath.Join(outputPath, binaryName)
-		err = crcos.CopyFileContents(binaryPath, finalBinaryPath, 0755)
+		err = crcos.CopyFileContents(binaryPath, finalBinaryPath, 0750)
 		if err != nil {
 			return err
 		}
 
-		err = os.Chmod(finalBinaryPath, 0777)
+		err = os.Chmod(finalBinaryPath, 0750)
 		if err != nil {
 			return errors.Wrapf(err, "Cannot make '%s' executable", finalBinaryPath)
 		}
