@@ -109,7 +109,7 @@ func (oc *OcCached) cacheOc() error {
 			return err
 		}
 
-		err = os.Chmod(finalBinaryPath, 0750)
+		err = os.Chmod(finalBinaryPath, 0500)
 		if err != nil {
 			return errors.Wrapf(err, "Cannot make '%s' executable", finalBinaryPath)
 		}
