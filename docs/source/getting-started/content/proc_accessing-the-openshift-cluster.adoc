@@ -22,7 +22,7 @@ $ _browser_command_ https://console-openshift-console.apps-crc.testing
 +
 [NOTE]
 ====
-You can also view the password for the `kubeadmin` user in the [filename]`~/.crc/cache/crc_libvirt_v4.1.0.rc0/kubeadmin-password` file.
+You can also view the password for the `kubeadmin` user by running [command]`{bin} console --credentials`.
 ====
 +
 See <<troubleshooting-codeready-containers_{context}>> if you cannot access the {prod} OpenShift cluster.
