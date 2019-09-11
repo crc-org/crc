@@ -32,7 +32,7 @@ assignees: ''
 ```bash
 # Put the output of `cat /etc/os-release` in case of Linux
 # put the output of `sw_vers` in case of Mac
-# Put the output of `sysinfo` in case of Windows
+# Put the output of `systeminfo` in case of Windows
 ```
 
 ### Steps to reproduce
