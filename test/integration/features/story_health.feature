@@ -51,7 +51,7 @@ Feature:
         When executing "oc rollout status dc/httpd-ex" succeeds
         Then stdout should contain "successfully rolled out"
         And executing "oc expose svc/httpd-ex" succeeds
-        And with up to "2" retries with wait period of "60s" command "curl -kI http://httpd-ex-testproj.apps-crc.testing" output should contain "HTTP/1.1 200 OK"
+        And with up to "2" retries with wait period of "60s" http response from "http://httpd-ex-testproj.apps-crc.testing" should have status code "200"
 
     Scenario: Clean up
         Given executing "oc delete project testproj" succeeds
