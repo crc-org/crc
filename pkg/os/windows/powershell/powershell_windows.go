@@ -9,6 +9,8 @@ import (
 	"syscall"
 
 	"os/exec"
+
+	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
 var (
@@ -66,7 +68,7 @@ func Execute(args ...string) (stdOut string, stdErr string, err error) {
 	return
 }
 
-func ExecuteAsAdmin(cmd string) (stdOut string, stdErr string, err error) {
+func ExecuteAsAdmin(reason, cmd string) (stdOut string, stdErr string, err error) {
 	scriptContent := strings.Join(append(runAsCmds, cmd), "\n")
 
 	tempDir, _ := ioutil.TempDir("", "crcScripts")
@@ -88,6 +90,7 @@ func ExecuteAsAdmin(cmd string) (stdOut string, stdErr string, err error) {
 		return "", "", err
 	}
 	psFile.Close()
+	logging.Infof("Will run as admin: %s", reason)
 
 	return Execute(psFile.Name())
 

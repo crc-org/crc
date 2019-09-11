@@ -2,11 +2,14 @@ package os
 
 import (
 	"bytes"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"os"
 	"os/exec"
 )
 
-func RunWithPrivilege(cmdAndArgs ...string) (string, string, error) {
+// RunWithPrivilege executes a command using sudo
+// provide a reason why root is needed as the first argument
+func RunWithPrivilege(reason string, cmdAndArgs ...string) (string, string, error) {
 	sudo, err := exec.LookPath("sudo")
 	if err != nil {
 		return "", "", err
@@ -16,6 +19,7 @@ func RunWithPrivilege(cmdAndArgs ...string) (string, string, error) {
 	stdErr := new(bytes.Buffer)
 	cmd.Stdout = stdOut
 	cmd.Stderr = stdErr
+	logging.Infof("Will use root access: %s", reason)
 	err = cmd.Run()
 	return stdOut.String(), stdErr.String(), err
 }

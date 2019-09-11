@@ -29,17 +29,33 @@ Feature: Basic test
     @linux
     Scenario: CRC setup on Linux
         When executing "crc setup" succeeds
-        Then stdout should contain "Caching oc binary"
-        And stdout should contain "Starting libvirt 'crc' network"
-        And stdout should contain "Setting up virtualization"
+        Then stdout should contain "Checking if running as root" 
+        And stdout should contain "Caching oc binary" 
+        And stdout should contain "Setting up virtualization" 
         And stdout should contain "Setting up KVM"
-        And stdout should contain "Installing libvirt"
+        And stdout should contain "Installing libvirt service and dependencies" 
         And stdout should contain "Adding user to libvirt group"
+        And stdout should contain "Will use root access: add user to libvirt group"
         And stdout should contain "Enabling libvirt"
         And stdout should contain "Starting libvirt service"
+        And stdout should contain "Will use root access: start libvirtd service"
         And stdout should contain "Installing crc-driver-libvirt"
+        And stdout should contain "Removing older system-wide crc-driver-libvirt"
         And stdout should contain "Setting up libvirt 'crc' network"
         And stdout should contain "Starting libvirt 'crc' network"
+        And stdout should contain "Checking if NetworkManager is installed"
+        And stdout should contain "Checking if NetworkManager service is running"
+        And stdout should contain "Writing Network Manager config for crc"
+	And stdout should contain "Will use root access: write NetworkManager config in /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf"
+        And stdout should contain "Will use root access: execute systemctl daemon-reload command"
+        And stdout should contain "Will use root access: execute systemctl stop/start command"
+        And stdout should contain "Writing dnsmasq config for crc"
+	And stdout should contain "Will use root access: write dnsmasq configuration in /etc/NetworkManager/dnsmasq.d/crc.conf"
+	And stdout should contain "Will use root access: execute systemctl daemon-reload command"
+	And stdout should contain "Will use root access: execute systemctl stop/start command"
+        And stdout should contain "Unpacking bundle from the CRC binary"
+        And stdout should contain "CRC bundle is not embedded in the binary"
+        And stdout should contain "Setup is complete, you can now run 'crc start -b $bundlename' to start a CodeReady Containers instance"
 
     @darwin
     Scenario: CRC setup on Mac

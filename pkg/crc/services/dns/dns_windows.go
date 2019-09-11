@@ -72,7 +72,7 @@ func setInterfaceNameserverValue(iface string, address string) {
 	exe := "netsh"
 	args := fmt.Sprintf(`interface ip set dns "%s" static %s primary`, iface, address)
 
-	win32.ShellExecuteAsAdmin(win32.HWND_DESKTOP, exe, args, "", 0)
+	win32.ShellExecuteAsAdmin(fmt.Sprintf("add dns server address to interface %s", iface), win32.HWND_DESKTOP, exe, args, "", 0)
 }
 
 func getMainInterface() string {
