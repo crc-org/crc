@@ -59,6 +59,8 @@ func GetClusterOperatorStatus(oc OcConfig) (bool, error) {
 					logging.Debug(c.Metadata.Name, " operator is still progressing, Reason: ", con.Reason)
 					allAvailable = false
 				}
+			case "Upgradeable":
+				continue
 			default:
 				logging.Debugf("Unexpected operator status for %s: %s", c.Metadata.Name, con.Type)
 			}
