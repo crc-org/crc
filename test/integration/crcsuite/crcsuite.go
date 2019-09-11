@@ -18,10 +18,12 @@ limitations under the License.
 package crcsuite
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/gherkin"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -55,6 +57,8 @@ func FeatureContext(s *godog.Suite) {
 		LoginToOcClusterSucceedsOrFails)
 	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" all cluster operators are running$`,
 		CheckClusterOperatorsWithRetry)
+	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" http response from "(.*)" should have status code "(\d+)"$`,
+		CheckHTTPResponseWithRetry)
 
 	// CRC file operations
 	s.Step(`^file "([^"]*)" exists in CRC home folder$`,
@@ -124,6 +128,33 @@ func CheckClusterOperatorsWithRetry(retryCount int, retryWait string) error {
 	}
 
 	return fmt.Errorf("Some cluster operators are still not running.\n")
+}
+
+func CheckHTTPResponseWithRetry(retryCount int, retryWait string, address string, expectedStatusCode int) error {
+
+	retryDuration, err := time.ParseDuration(retryWait)
+	if err != nil {
+		return err
+	}
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+
+	var resp *http.Response
+	for i := 0; i < retryCount; i++ {
+		resp, err = client.Get(address)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode == expectedStatusCode {
+			return nil
+		}
+		time.Sleep(retryDuration)
+	}
+
+	return fmt.Errorf("Got %d as Status Code instead of expected %d.", resp.StatusCode, expectedStatusCode)
 }
 
 func DeleteFileFromCRCHome(fileName string) error {
