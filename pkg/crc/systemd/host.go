@@ -33,7 +33,7 @@ func (c HostSystemdCommander) Disable(name string) (bool, error) {
 }
 
 func (c HostSystemdCommander) DaemonReload() (bool, error) {
-	stdOut, stdErr, err := crcos.RunWithPrivilege("systemctl", "daemon-reload")
+	stdOut, stdErr, err := crcos.RunWithPrivilege("execute systemctl daemon-reload command", "systemctl", "daemon-reload")
 	if err != nil {
 		return false, fmt.Errorf("Executing systemctl daemon-reload failed: %s %v: %s", stdOut, err, stdErr)
 	}
@@ -83,7 +83,7 @@ func (c HostSystemdCommander) Status(name string) (states.State, error) {
 }
 
 func (c HostSystemdCommander) service(name string, action actions.Action) (states.State, error) {
-	stdOut, stdErr, err := crcos.RunWithPrivilege("systemctl", action.String(), name)
+	stdOut, stdErr, err := crcos.RunWithPrivilege("execute systemctl stop/start command", "systemctl", action.String(), name)
 	if err != nil {
 		return states.Error, fmt.Errorf("Executing systemctl action failed: %s %v: %s", stdOut, err, stdErr)
 	}

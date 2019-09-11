@@ -105,7 +105,7 @@ func checkLibvirtInstalled() (bool, error) {
 
 func fixLibvirtInstalled() (bool, error) {
 	logging.Debug("Trying to install libvirt")
-	stdOut, stdErr, err := crcos.RunWithPrivilege("yum", "install", "-y", "libvirt", "libvirt-daemon-kvm", "qemu-kvm")
+	stdOut, stdErr, err := crcos.RunWithPrivilege("install virtualization related packages", "yum", "install", "-y", "libvirt", "libvirt-daemon-kvm", "qemu-kvm")
 	if err != nil {
 		return false, fmt.Errorf("Could not install required packages: %s %v: %s", stdOut, err, stdErr)
 	}
@@ -138,7 +138,7 @@ func fixLibvirtEnabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	stdOut, stdErr, err := crcos.RunWithPrivilege(path, "enable", "libvirtd")
+	stdOut, stdErr, err := crcos.RunWithPrivilege("enable libvirtd service", path, "enable", "libvirtd")
 	if err != nil {
 		return false, fmt.Errorf("%s, %v : %s", stdOut, err, stdErr)
 	}
@@ -175,7 +175,7 @@ func fixUserPartOfLibvirtGroup() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	stdOut, stdErr, err := crcos.RunWithPrivilege("usermod", "-a", "-G", "libvirt", currentUser.Username)
+	stdOut, stdErr, err := crcos.RunWithPrivilege("add user to libvirt group", "usermod", "-a", "-G", "libvirt", currentUser.Username)
 	if err != nil {
 		return false, fmt.Errorf("%s %v : %s", stdOut, err, stdErr)
 	}
@@ -206,7 +206,7 @@ func fixLibvirtServiceRunning() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	stdOut, stdErr, err := crcos.RunWithPrivilege(path, "start", "libvirtd")
+	stdOut, stdErr, err := crcos.RunWithPrivilege("start libvirtd service", path, "start", "libvirtd")
 	if err != nil {
 		return false, fmt.Errorf("%s %v : %s", stdOut, err, stdErr)
 	}
@@ -263,7 +263,7 @@ func checkOldMachineDriverLibvirtInstalled() (bool, error) {
 func fixOldMachineDriverLibvirtInstalled() (bool, error) {
 	oldLibvirtDriverPath := filepath.Join("/usr/local/bin/", libvirtDriverCommand)
 	logging.Debugf("Removing %s", oldLibvirtDriverPath)
-	_, _, err := crcos.RunWithPrivilege("rm", "-f", oldLibvirtDriverPath)
+	_, _, err := crcos.RunWithPrivilege("remove old libvirt driver", "rm", "-f", oldLibvirtDriverPath)
 	if err != nil {
 		logging.Debugf("Removal of %s failed", oldLibvirtDriverPath)
 		/* Ignoring error, an obsolete file being still present is not a fatal error */
@@ -394,12 +394,13 @@ func checkCrcDnsmasqConfigFile() (bool, error) {
 
 func fixCrcDnsmasqConfigFile() (bool, error) {
 	logging.Debug("Fixing dnsmasq configuration")
-	cmd := exec.Command("sudo", "tee", crcDnsmasqConfigPath)
-	cmd.Stdin = strings.NewReader(crcDnsmasqConfig)
-	buf := new(bytes.Buffer)
-	cmd.Stderr = buf
-	if err := cmd.Run(); err != nil {
-		return false, fmt.Errorf("Failed to write dnsmasq config file: %s: %s: %v", crcDnsmasqConfigPath, buf.String(), err)
+	err := crcos.WriteToFileAsRoot(
+		fmt.Sprintf("write dnsmasq configuration in %s", crcDnsmasqConfigPath),
+		crcDnsmasqConfig,
+		crcDnsmasqConfigPath,
+	)
+	if err != nil {
+		return false, fmt.Errorf("Failed to write dnsmasq config file: %s: %v", crcDnsmasqConfigPath, err)
 	}
 
 	logging.Debug("Reloading NetworkManager")
@@ -430,12 +431,13 @@ func checkCrcNetworkManagerConfig() (bool, error) {
 }
 func fixCrcNetworkManagerConfig() (bool, error) {
 	logging.Debug("Fixing NetworkManager configuration")
-	cmd := exec.Command("sudo", "tee", crcNetworkManagerConfigPath)
-	cmd.Stdin = strings.NewReader(crcNetworkManagerConfig)
-	buf := new(bytes.Buffer)
-	cmd.Stderr = buf
-	if err := cmd.Run(); err != nil {
-		return false, fmt.Errorf("Failed to write NetworkManager config file: %s: %s: %v", crcNetworkManagerConfigPath, buf.String(), err)
+	err := crcos.WriteToFileAsRoot(
+		fmt.Sprintf("write NetworkManager config in %s", crcNetworkManagerConfigPath),
+		crcNetworkManagerConfig,
+		crcNetworkManagerConfigPath,
+	)
+	if err != nil {
+		return false, fmt.Errorf("Failed to write NetworkManager config file: %s: %v", crcNetworkManagerConfigPath, err)
 	}
 
 	logging.Debug("Reloading NetworkManager")

@@ -3,6 +3,7 @@ package win32
 import (
 	"errors"
 	"fmt"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"syscall"
 	"unsafe"
 )
@@ -13,7 +14,8 @@ var (
 )
 
 // Uses "runas" as verb to execute as Elevated privileges
-func ShellExecuteAsAdmin(hwnd HWND, file, parameters, directory string, showCmd int) error {
+func ShellExecuteAsAdmin(reason string, hwnd HWND, file, parameters, directory string, showCmd int) error {
+	logging.Infof("Will run as admin: %s", reason)
 	return ShellExecute(hwnd, "runas", file, parameters, directory, showCmd)
 }
 

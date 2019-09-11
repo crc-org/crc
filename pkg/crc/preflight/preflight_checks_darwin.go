@@ -58,15 +58,15 @@ func fixVirtualBoxInstallation() (bool, error) {
 	}
 	defer os.Remove(tempFilePath)
 	logging.Debug("Installing VirtualBox")
-	stdOut, stdErr, err := crcos.RunWithPrivilege("hdiutil", "attach", tempFilePath)
+	stdOut, stdErr, err := crcos.RunWithPrivilege("mount VirtualBox disk image", "hdiutil", "attach", tempFilePath)
 	if err != nil {
 		return false, fmt.Errorf("Could not mount the virtualbox.dmg file: %s %v: %s", stdOut, err, stdErr)
 	}
-	stdOut, stdErr, err = crcos.RunWithPrivilege("installer", "-package", virtualBoxPkgLocation, "-target", "/")
+	stdOut, stdErr, err = crcos.RunWithPrivilege("run VirtualBox installation", "installer", "-package", virtualBoxPkgLocation, "-target", "/")
 	if err != nil {
 		return false, fmt.Errorf("Could not install VirtualBox.pkg: %s %v: %s", stdOut, err, stdErr)
 	}
-	stdOut, stdErr, err = crcos.RunWithPrivilege("hdiutil", "detach", virtualBoxMountLocation)
+	stdOut, stdErr, err = crcos.RunWithPrivilege("unmount VirtualBox disk image", "hdiutil", "detach", virtualBoxMountLocation)
 	if err != nil {
 		return false, fmt.Errorf("Could not install VirtualBox.pkg: %s %v: %s", stdOut, err, stdErr)
 	}
@@ -124,14 +124,14 @@ func download(url string, destDir string, mode os.FileMode) (string, error) {
 func setSuid(path string) error {
 	logging.Debugf("Making %s suid", path)
 
-	stdOut, stdErr, err := crcos.RunWithPrivilege("chown", "root:wheel", path)
+	stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("change ownership of %s", path), "chown", "root:wheel", path)
 	if err != nil {
 		return fmt.Errorf("Unable to set ownership of %s to root:wheel: %s %v: %s",
 			path, stdOut, err, stdErr)
 	}
 
 	/* Can't do this before the chown as the chown will reset the suid bit */
-	stdOut, stdErr, err = crcos.RunWithPrivilege("chmod", "u+s", path)
+	stdOut, stdErr, err = crcos.RunWithPrivilege(fmt.Sprintf("set suid for %s", path), "chmod", "u+s", path)
 	if err != nil {
 		return fmt.Errorf("Unable to set suid bit on %s: %s %v: %s", path, stdOut, err, stdErr)
 	}
@@ -222,13 +222,13 @@ func fixResolverFilePermissions() (bool, error) {
 	// Check if resolver directory available or not
 	if _, err := os.Stat(resolverDir); os.IsNotExist(err) {
 		logging.Debugf("Creating %s directory", resolverDir)
-		stdOut, stdErr, err := crcos.RunWithPrivilege("mkdir", resolverDir)
+		stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("create dir %s", resolverDir), "mkdir", resolverDir)
 		if err != nil {
 			return false, fmt.Errorf("Unable to create the resolver Dir: %s %v: %s", stdOut, err, stdErr)
 		}
 	}
 	logging.Debugf("Making %s readable/writable by the current user", resolverFile)
-	stdOut, stdErr, err := crcos.RunWithPrivilege("touch", resolverFile)
+	stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("create file %s", resolverFile), "touch", resolverFile)
 	if err != nil {
 		return false, fmt.Errorf("Unable to create the resolver file: %s %v: %s", stdOut, err, stdErr)
 	}
@@ -259,7 +259,7 @@ func addFileWritePermissionToUser(filename string) (bool, error) {
 		return false, err
 	}
 
-	stdOut, stdErr, err := crcos.RunWithPrivilege("chown", currentUser.Username, filename)
+	stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("change ownership of %s", filename), "chown", currentUser.Username, filename)
 	if err != nil {
 		return false, fmt.Errorf("Unable to change ownership of the filename: %s %v: %s", stdOut, err, stdErr)
 	}

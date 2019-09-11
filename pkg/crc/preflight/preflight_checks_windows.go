@@ -61,7 +61,7 @@ func checkHyperVInstalled() (bool, error) {
 //
 func fixHyperVInstalled() (bool, error) {
 	enableHyperVCommand := `Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All`
-	_, _, err := powershell.ExecuteAsAdmin(enableHyperVCommand)
+	_, _, err := powershell.ExecuteAsAdmin("enable Hyper-V", enableHyperVCommand)
 
 	if err != nil {
 		return false, errors.New("Error occured installing Hyper-V")
@@ -96,7 +96,7 @@ func fixUserPartOfHyperVAdmins() (bool, error) {
 	username := os.Getenv("USERNAME")
 
 	netCmdArgs := fmt.Sprintf(`([adsi]"WinNT://./%s,group").Add("WinNT://%s,user")`, groupName, username)
-	_, _, err = powershell.ExecuteAsAdmin(netCmdArgs)
+	_, _, err = powershell.ExecuteAsAdmin("add user to hyperv admins group", netCmdArgs)
 	if err != nil {
 		return false, errors.New("Unable to get user name")
 	}
