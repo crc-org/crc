@@ -411,6 +411,7 @@ func fixCrcDnsmasqConfigFile() (bool, error) {
 	logging.Debug("dnsmasq configuration fixed")
 	return true, nil
 }
+
 func checkCrcNetworkManagerConfig() (bool, error) {
 	logging.Debug("Checking NetworkManager configuration")
 	c := []byte(crcNetworkManagerConfig)
@@ -428,6 +429,7 @@ func checkCrcNetworkManagerConfig() (bool, error) {
 	logging.Debug("NetworkManager configuration is good")
 	return true, nil
 }
+
 func fixCrcNetworkManagerConfig() (bool, error) {
 	logging.Debug("Fixing NetworkManager configuration")
 	cmd := exec.Command("sudo", "tee", crcNetworkManagerConfigPath)
@@ -447,6 +449,7 @@ func fixCrcNetworkManagerConfig() (bool, error) {
 	logging.Debug("NetworkManager configuration fixed")
 	return true, nil
 }
+
 func checkNetworkManagerInstalled() (bool, error) {
 	logging.Debug("Checking if 'nmcli' is available")
 	path, err := exec.LookPath("nmcli")
@@ -456,9 +459,11 @@ func checkNetworkManagerInstalled() (bool, error) {
 	logging.Debug("'nmcli' was found in ", path)
 	return true, nil
 }
+
 func fixNetworkManagerInstalled() (bool, error) {
 	return false, fmt.Errorf("NetworkManager is required and must be installed manually")
 }
+
 func CheckNetworkManagerIsRunning() (bool, error) {
 	logging.Debug("Checking if NetworkManager.service is running")
 	path, err := exec.LookPath("systemctl")
@@ -475,6 +480,7 @@ func CheckNetworkManagerIsRunning() (bool, error) {
 	logging.Debug("NetworkManager.service is already running")
 	return true, nil
 }
+
 func fixNetworkManagerIsRunning() (bool, error) {
 	return false, fmt.Errorf("NetworkManager is required. Please make sure it is installed and running manually")
 }
