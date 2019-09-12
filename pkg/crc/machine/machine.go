@@ -13,6 +13,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/systemd"
@@ -28,7 +29,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 
 	"github.com/code-ready/machine/libmachine"
-	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/host"
 	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/state"
@@ -140,7 +140,8 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			return *result, errors.Newf("Error getting the state for host: %v", err)
 		}
 
-		if err := updateSSHKeyPair(host); err != nil {
+		sshRunner := crcssh.CreateRunnerWithPrivateKey(host.Driver, crcBundleMetadata.GetSSHKeyPath())
+		if err := updateSSHKeyPair(sshRunner); err != nil {
 			result.Error = err.Error()
 			return *result, errors.Newf("Error Updating public key: %v", err)
 		}
@@ -212,16 +213,17 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error loading %s vm: %v", startConfig.Name, err)
 	}
+	sshRunner := crcssh.CreateRunnerWithPrivateKey(host.Driver, constants.GetPrivateKeyPath())
 
 	logging.Debug("Waiting until ssh is available")
-	if err := cluster.WaitForSsh(host.Driver); err != nil {
+	if err := cluster.WaitForSsh(sshRunner); err != nil {
 		result.Error = err.Error()
 		return *result, errors.New("Failed to connect to the crc VM with SSH")
 	}
 
 	// Check the certs validity inside the vm
 	logging.Info("Verifying validity of the cluster certificates ...")
-	expiringIn7Days, duration, err := cluster.CheckCertsValidity(host.Driver)
+	expiringIn7Days, duration, err := cluster.CheckCertsValidity(sshRunner)
 	if err != nil {
 		result.Error = err.Error()
 		return *result, errors.New(err.Error())
@@ -234,7 +236,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 	// Add nameserver to VM if provided by User
 	if startConfig.NameServer != "" {
-		if err = addNameServerToInstance(host.Driver, startConfig.NameServer); err != nil {
+		if err = addNameServerToInstance(sshRunner, startConfig.NameServer); err != nil {
 			result.Error = err.Error()
 			return *result, errors.New(err.Error())
 		}
@@ -263,11 +265,12 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	// Create servicePostStartConfig for dns checks and dns start.
 	servicePostStartConfig := services.ServicePostStartConfig{
-		Name: startConfig.Name,
+		Name:       startConfig.Name,
+		DriverName: host.Driver.DriverName(),
 		// TODO: would prefer passing in a more generic type
-		Driver: host.Driver,
-		IP:     instanceIP,
-		HostIP: hostIP,
+		SSHRunner: sshRunner,
+		IP:        instanceIP,
+		HostIP:    hostIP,
 		// TODO: should be more finegrained
 		BundleMetadata: *crcBundleMetadata,
 	}
@@ -307,14 +310,14 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 		// Update the user pull secret before kubelet start.
 		logging.Info("Adding user's pull secret and cluster ID ...")
-		if err := pullsecret.AddPullSecretAndClusterID(host.Driver, startConfig.PullSecret, kubeConfigFilePath); err != nil {
+		if err := pullsecret.AddPullSecretAndClusterID(sshRunner, startConfig.PullSecret, kubeConfigFilePath); err != nil {
 			result.Error = err.Error()
 			return *result, errors.Newf("Failed to update user pull secret or cluster ID: %v", err)
 		}
 	}
 
 	// Start kubelet inside the VM
-	sd := systemd.NewInstanceSystemdCommander(host.Driver)
+	sd := systemd.NewInstanceSystemdCommander(sshRunner)
 	kubeletStarted, err := sd.Start("kubelet")
 	if err != nil {
 		result.Error = err.Error()
@@ -487,7 +490,8 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 			// TODO:get openshift version as well and add to status
 			openshiftStatus = fmt.Sprintf("Running (v4.x)")
 		}
-		diskSize, diskUse, err = cluster.GetRootPartitionUsage(host.Driver)
+		sshRunner := crcssh.CreateRunner(host.Driver)
+		diskSize, diskUse, err = cluster.GetRootPartitionUsage(sshRunner)
 		if err != nil {
 			result.Success = false
 			result.Error = err.Error()
@@ -550,16 +554,16 @@ func unsetMachineLogging() {
 	logging.SetupFileHook()
 }
 
-func addNameServerToInstance(driver drivers.Driver, ns string) error {
+func addNameServerToInstance(sshRunner *crcssh.SSHRunner, ns string) error {
 	nameserver := network.NameServer{IPAddress: ns}
 	nameservers := []network.NameServer{nameserver}
-	exist, err := network.HasGivenNameserversConfigured(driver, nameserver)
+	exist, err := network.HasGivenNameserversConfigured(sshRunner, nameserver)
 	if err != nil {
 		return err
 	}
 	if !exist {
 		logging.Infof("Adding %s as nameserver to Instance ...", nameserver.IPAddress)
-		network.AddNameserversToInstance(driver, nameservers)
+		network.AddNameserversToInstance(sshRunner, nameservers)
 	}
 	return nil
 }
@@ -582,7 +586,7 @@ func GetConsoleURL(consoleConfig ConsoleConfig) (ConsoleResult, error) {
 	return *result, nil
 }
 
-func updateSSHKeyPair(host *host.Host) error {
+func updateSSHKeyPair(sshRunner *crcssh.SSHRunner) error {
 	// Generate ssh key pair
 	if err := ssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
 		return fmt.Errorf("Error generating ssh key pair: %v", err)
@@ -594,7 +598,7 @@ func updateSSHKeyPair(host *host.Host) error {
 		return err
 	}
 	cmd := fmt.Sprintf("echo '%s' > /home/core/.ssh/authorized_keys", publicKey)
-	_, err = host.RunSSHCommand(cmd, "")
+	_, err = sshRunner.Run(cmd)
 	if err != nil {
 		return err
 	}

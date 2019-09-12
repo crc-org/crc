@@ -3,17 +3,16 @@ package network
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"io/ioutil"
 	"strings"
 
-	"github.com/code-ready/machine/libmachine/drivers"
+	"github.com/code-ready/crc/pkg/crc/ssh"
 )
 
 // HasGivenNameserversConfigured returns true if the instance uses a provided nameserver.
-func HasGivenNameserversConfigured(driver drivers.Driver, nameserver NameServer) (bool, error) {
+func HasGivenNameserversConfigured(sshRunner *ssh.SSHRunner, nameserver NameServer) (bool, error) {
 	cmd := "cat /etc/resolv.conf"
-	out, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), cmd)
+	out, err := sshRunner.Run(cmd)
 
 	if err != nil {
 		return false, err
@@ -22,9 +21,9 @@ func HasGivenNameserversConfigured(driver drivers.Driver, nameserver NameServer)
 	return strings.Contains(out, nameserver.IPAddress), nil
 }
 
-func GetResolvValuesFromInstance(driver drivers.Driver) (*ResolvFileValues, error) {
+func GetResolvValuesFromInstance(sshRunner *ssh.SSHRunner) (*ResolvFileValues, error) {
 	cmd := "cat /etc/resolv.conf"
-	out, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), cmd)
+	out, err := sshRunner.Run(cmd)
 
 	if err != nil {
 		return nil, err
@@ -33,26 +32,26 @@ func GetResolvValuesFromInstance(driver drivers.Driver) (*ResolvFileValues, erro
 	return parseResolveConfFile(out)
 }
 
-func CreateResolvFileOnInstance(driver drivers.Driver, resolvFileValues ResolvFileValues) {
+func CreateResolvFileOnInstance(sshRunner *ssh.SSHRunner, resolvFileValues ResolvFileValues) {
 	resolvFile, _ := CreateResolvFile(resolvFileValues)
 	encodedFile := base64.StdEncoding.EncodeToString([]byte(resolvFile))
 
-	executeCommandOrExit(driver,
+	executeCommandOrExit(sshRunner,
 		fmt.Sprintf("echo %s | base64 --decode | sudo tee /etc/resolv.conf > /dev/null", encodedFile),
 		"Error creating /etc/resolv on instance")
 }
 
 // AddNameserversToInstance will add additional nameservers to the end of the
 // /etc/resolv.conf file inside the instance.
-func AddNameserversToInstance(driver drivers.Driver, nameservers []NameServer) {
+func AddNameserversToInstance(sshRunner *ssh.SSHRunner, nameservers []NameServer) {
 	for _, ns := range nameservers {
-		addNameserverToInstance(driver, ns)
+		addNameserverToInstance(sshRunner, ns)
 	}
 }
 
 // writes nameserver to the /etc/resolv.conf inside the instance
-func addNameserverToInstance(driver drivers.Driver, nameserver NameServer) {
-	executeCommandOrExit(driver,
+func addNameserverToInstance(sshRunner *ssh.SSHRunner, nameserver NameServer) {
+	executeCommandOrExit(sshRunner,
 		fmt.Sprintf("NS=%s; cat /etc/resolv.conf |grep -i \"^nameserver $NS\" || echo \"nameserver $NS\" | sudo tee -a /etc/resolv.conf", nameserver.IPAddress),
 		"Error adding nameserver")
 }

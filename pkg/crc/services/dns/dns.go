@@ -2,9 +2,7 @@ package dns
 
 import (
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/machine/libmachine/drivers"
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/network"
@@ -40,17 +38,17 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.Servi
 	}
 
 	// Remove the dnsmasq container if it exists during the VM stop cycle
-	_, _ = drivers.RunSSHCommandFromDriver(serviceConfig.Driver, constants.GetPrivateKeyPath(), "sudo podman rm -f dnsmasq")
+	_, _ = serviceConfig.SSHRunner.Run("sudo podman rm -f dnsmasq")
 
 	// Remove the CNI network definition forcefully
 	// https://github.com/containers/libpod/issues/2767
 	// TODO: We need to revisit it once podman update the CNI plugins.
-	_, _ = drivers.RunSSHCommandFromDriver(serviceConfig.Driver, constants.GetPrivateKeyPath(), fmt.Sprintf("sudo rm -f /var/lib/cni/networks/podman/%s", dnsContainerIP))
+	_, _ = serviceConfig.SSHRunner.Run(fmt.Sprintf("sudo rm -f /var/lib/cni/networks/podman/%s", dnsContainerIP))
 
 	// Start the dnsmasq container
 	dnsServerRunCmd := fmt.Sprintf("sudo podman run  --ip %s --name dnsmasq -v %s:/etc/dnsmasq.conf -p 53:%d/udp --privileged -d %s",
 		dnsContainerIP, dnsConfigFilePathInInstance, dnsServicePort, dnsContainerImage)
-	_, err = drivers.RunSSHCommandFromDriver(serviceConfig.Driver, constants.GetPrivateKeyPath(), dnsServerRunCmd)
+	_, err = serviceConfig.SSHRunner.Run(dnsServerRunCmd)
 	if err != nil {
 		result.Success = false
 		result.Error = err.Error()
@@ -66,7 +64,7 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.Servi
 		return *result, err
 	}
 
-	orgResolvValues, err := network.GetResolvValuesFromInstance(serviceConfig.Driver)
+	orgResolvValues, err := network.GetResolvValuesFromInstance(serviceConfig.SSHRunner)
 	if err != nil {
 		result.Success = false
 		result.Error = err.Error()
@@ -82,7 +80,7 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.Servi
 		SearchDomains: []network.SearchDomain{searchdomain},
 		NameServers:   nameservers}
 
-	network.CreateResolvFileOnInstance(serviceConfig.Driver, resolvFileValues)
+	network.CreateResolvFileOnInstance(serviceConfig.SSHRunner, resolvFileValues)
 
 	result.Success = true
 	return *result, nil
@@ -95,7 +93,7 @@ func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (s
 	var queryOutput string
 	var err error
 	checkLocalDNSReach := func() error {
-		queryOutput, err = drivers.RunSSHCommandFromDriver(serviceConfig.Driver, constants.GetPrivateKeyPath(), fmt.Sprintf("host -R 3 %s", appsURI))
+		queryOutput, err = serviceConfig.SSHRunner.Run(fmt.Sprintf("host -R 3 %s", appsURI))
 		if err != nil {
 			return &errors.RetriableError{Err: err}
 		}
@@ -109,5 +107,5 @@ func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (s
 }
 
 func CheckCRCPublicDNSReachable(serviceConfig services.ServicePostStartConfig) (string, error) {
-	return drivers.RunSSHCommandFromDriver(serviceConfig.Driver, constants.GetPrivateKeyPath(), fmt.Sprintf("host -R 3 %s", publicDNSQueryURI))
+	return serviceConfig.SSHRunner.Run(fmt.Sprintf("host -R 3 %s", publicDNSQueryURI))
 }

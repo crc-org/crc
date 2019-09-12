@@ -2,18 +2,17 @@ package cluster
 
 import (
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/machine/libmachine/drivers"
+	"github.com/code-ready/crc/pkg/crc/ssh"
 )
 
-func WaitForSsh(driver drivers.Driver) error {
+func WaitForSsh(sshRunner *ssh.SSHRunner) error {
 	checkSshConnectivity := func() error {
-		_, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), "exit 0")
+		_, err := sshRunner.Run("exit 0")
 		if err != nil {
 			return &errors.RetriableError{Err: err}
 		}
@@ -32,8 +31,8 @@ func CheckCertsValidityUsingBundleBuildTime(buildTime time.Time) (bool, int) {
 }
 
 // CheckCertsValidity checks if the cluster certs have expired or going to expire in next 7 days
-func CheckCertsValidity(driver drivers.Driver) (bool, int, error) {
-	certExpiryDate, err := getcertExipryDateFromVM(driver)
+func CheckCertsValidity(sshRunner *ssh.SSHRunner) (bool, int, error) {
+	certExpiryDate, err := getcertExipryDateFromVM(sshRunner)
 	if err != nil {
 		return false, 0, err
 	}
@@ -49,10 +48,10 @@ func CheckCertsValidity(driver drivers.Driver) (bool, int, error) {
 	return false, 0, nil
 }
 
-func getcertExipryDateFromVM(driver drivers.Driver) (time.Time, error) {
+func getcertExipryDateFromVM(sshRunner *ssh.SSHRunner) (time.Time, error) {
 	certExpiryDate := time.Time{}
 	certExpiryDateCmd := `date --date="$(sudo openssl x509 -in /var/lib/kubelet/pki/kubelet-client-current.pem -noout -enddate | cut -d= -f 2)" --iso-8601=seconds`
-	output, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), certExpiryDateCmd)
+	output, err := sshRunner.Run(certExpiryDateCmd)
 	if err != nil {
 		return certExpiryDate, err
 	}
@@ -64,10 +63,10 @@ func getcertExipryDateFromVM(driver drivers.Driver) (time.Time, error) {
 }
 
 // Return size of disk, used space in bytes and the mountpoint
-func GetRootPartitionUsage(driver drivers.Driver) (int64, int64, error) {
+func GetRootPartitionUsage(sshRunner *ssh.SSHRunner) (int64, int64, error) {
 	cmd := "df -B1 --output=size,used,target /sysroot | tail -1"
 
-	out, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), cmd)
+	out, err := sshRunner.Run(cmd)
 
 	if err != nil {
 		return 0, 0, err

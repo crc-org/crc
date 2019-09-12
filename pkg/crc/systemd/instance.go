@@ -2,21 +2,19 @@ package systemd
 
 import (
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/constants"
 
+	"github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/crc/systemd/actions"
-
-	"github.com/code-ready/machine/libmachine/drivers"
 )
 
 type InstanceSystemdCommander struct {
-	driver drivers.Driver
+	sshRunner *ssh.SSHRunner
 }
 
 // NewVmSystemdCommander creates a new instance of a VmSystemdCommander
-func NewInstanceSystemdCommander(driver drivers.Driver) *InstanceSystemdCommander {
+func NewInstanceSystemdCommander(sshRunner *ssh.SSHRunner) *InstanceSystemdCommander {
 	return &InstanceSystemdCommander{
-		driver: driver,
+		sshRunner: sshRunner,
 	}
 }
 
@@ -38,7 +36,7 @@ func (c InstanceSystemdCommander) Disable(name string) (bool, error) {
 
 func (c InstanceSystemdCommander) DaemonReload() (bool, error) {
 	// Might be needed for Start or Restart
-	_, err := drivers.RunSSHCommandFromDriver(c.driver, constants.GetPrivateKeyPath(), "sudo systemctl daemon-reload")
+	_, err := c.sshRunner.Run("sudo systemctl daemon-reload")
 	if err != nil {
 		return false, err
 	}
@@ -79,7 +77,7 @@ func (c InstanceSystemdCommander) Status(name string) (string, error) {
 func (c InstanceSystemdCommander) service(name string, action actions.Action) (string, error) {
 	command := fmt.Sprintf("sudo systemctl -f %s %s", action.String(), name)
 
-	if out, err := drivers.RunSSHCommandFromDriver(c.driver, constants.GetPrivateKeyPath(), command); err != nil {
+	if out, err := c.sshRunner.Run(command); err != nil {
 		return out, err
 	} else {
 		return out, nil
