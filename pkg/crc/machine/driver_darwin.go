@@ -7,18 +7,16 @@ import (
 
 func init() {
 	HyperkitDriver := MachineDriver{
-		Name:          "Hyperkit",
-		Platform:      crcos.DARWIN,
-		Driver:        "hyperkit",
-		UseDNSService: true,
-		DriverPath:    constants.CrcBinDir,
+		Name:       "Hyperkit",
+		Platform:   crcos.DARWIN,
+		Driver:     "hyperkit",
+		DriverPath: constants.CrcBinDir,
 	}
 
 	VirtualBoxMacOSDriver := MachineDriver{
-		Name:          "VirtualBox",
-		Platform:      crcos.DARWIN,
-		Driver:        "virtualbox",
-		UseDNSService: true,
+		Name:     "VirtualBox",
+		Platform: crcos.DARWIN,
+		Driver:   "virtualbox",
 	}
 
 	SupportedDrivers = []MachineDriver{

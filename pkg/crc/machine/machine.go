@@ -280,13 +280,12 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		BundleMetadata: *crcBundleMetadata,
 	}
 
-	// If driver need dns service then start it
-	if driverInfo.UseDNSService {
-		if _, err := dns.RunPostStart(servicePostStartConfig); err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error running post start: %v", err)
-		}
+	// Run the dns server inside the VM
+	if _, err := dns.RunPostStart(servicePostStartConfig); err != nil {
+		result.Error = err.Error()
+		return *result, errors.Newf("Error running post start: %v", err)
 	}
+
 	// Check DNS looksup before starting the kubelet
 	if queryOutput, err := dns.CheckCRCLocalDNSReachable(servicePostStartConfig); err != nil {
 		result.Error = err.Error()
