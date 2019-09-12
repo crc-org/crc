@@ -11,11 +11,10 @@ import (
 )
 
 type MachineDriver struct {
-	Name          string
-	Platform      crcos.OS
-	Driver        string
-	UseDNSService bool
-	DriverPath    string
+	Name       string
+	Platform   crcos.OS
+	Driver     string
+	DriverPath string
 }
 
 var (
