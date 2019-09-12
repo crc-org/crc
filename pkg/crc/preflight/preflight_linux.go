@@ -57,16 +57,6 @@ func StartPreflightChecks(vmDriver string) {
 		"Checking if crc-driver-libvirt is installed",
 		config.GetBool(cmdConfig.WarnCheckLibvirtDriver.Name),
 	)
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckCrcNetwork.Name),
-		checkLibvirtCrcNetworkAvailable,
-		"Checking if libvirt 'crc' network is available",
-		config.GetBool(cmdConfig.WarnCheckCrcNetwork.Name),
-	)
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckCrcNetworkActive.Name),
-		checkLibvirtCrcNetworkActive,
-		"Checking if libvirt 'crc' network is active",
-		config.GetBool(cmdConfig.WarnCheckCrcNetworkActive.Name),
-	)
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckNetworkManagerInstalled.Name),
 		checkNetworkManagerInstalled,
 		"Checking if NetworkManager is installed",
@@ -77,15 +67,10 @@ func StartPreflightChecks(vmDriver string) {
 		"Checking if NetworkManager service is running",
 		config.GetBool(cmdConfig.WarnCheckNetworkManagerRunning.Name),
 	)
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckCrcNetworkManagerConfig.Name),
-		checkCrcNetworkManagerConfig,
-		"Checking if /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf exists",
-		config.GetBool(cmdConfig.WarnCheckCrcNetworkManagerConfig.Name),
-	)
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckCrcDnsmasqFile.Name),
-		checkCrcDnsmasqConfigFile,
-		"Checking if /etc/NetworkManager/dnsmasq.d/crc.conf exists",
-		config.GetBool(cmdConfig.WarnCheckCrcDnsmasqFile.Name),
+	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckCrcNetworkActive.Name),
+		checkLibvirtCrcNetworkActive,
+		"Checking if libvirt 'crc' network is active",
+		config.GetBool(cmdConfig.WarnCheckCrcNetworkActive.Name),
 	)
 }
 
@@ -157,18 +142,6 @@ func SetupHost(vmDriver string) {
 		"Removing older system-wide crc-driver-libvirt",
 		false,
 	)
-	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckCrcNetwork.Name),
-		checkLibvirtCrcNetworkAvailable,
-		fixLibvirtCrcNetworkAvailable,
-		"Setting up libvirt 'crc' network",
-		config.GetBool(cmdConfig.WarnCheckCrcNetwork.Name),
-	)
-	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckCrcNetworkActive.Name),
-		checkLibvirtCrcNetworkActive,
-		fixLibvirtCrcNetworkActive,
-		"Starting libvirt 'crc' network",
-		config.GetBool(cmdConfig.WarnCheckCrcNetworkActive.Name),
-	)
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckNetworkManagerInstalled.Name),
 		checkNetworkManagerInstalled,
 		fixNetworkManagerInstalled,
@@ -181,17 +154,17 @@ func SetupHost(vmDriver string) {
 		"Checking if NetworkManager service is running",
 		config.GetBool(cmdConfig.WarnCheckNetworkManagerRunning.Name),
 	)
-	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckCrcNetworkManagerConfig.Name),
-		checkCrcNetworkManagerConfig,
-		fixCrcNetworkManagerConfig,
-		"Writing Network Manager config for crc",
-		config.GetBool(cmdConfig.WarnCheckCrcNetworkManagerConfig.Name),
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckCrcNetwork.Name),
+		checkLibvirtCrcNetworkAvailable,
+		fixLibvirtCrcNetworkAvailable,
+		"Setting up libvirt 'crc' network",
+		config.GetBool(cmdConfig.WarnCheckCrcNetwork.Name),
 	)
-	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckCrcDnsmasqFile.Name),
-		checkCrcDnsmasqConfigFile,
-		fixCrcDnsmasqConfigFile,
-		"Writing dnsmasq config for crc",
-		config.GetBool(cmdConfig.WarnCheckCrcDnsmasqFile.Name),
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckCrcNetworkActive.Name),
+		checkLibvirtCrcNetworkActive,
+		fixLibvirtCrcNetworkActive,
+		"Starting libvirt 'crc' network",
+		config.GetBool(cmdConfig.WarnCheckCrcNetworkActive.Name),
 	)
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckBundleCached.Name),
 		checkBundleCached,

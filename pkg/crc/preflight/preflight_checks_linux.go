@@ -17,7 +17,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
-	"github.com/code-ready/crc/pkg/crc/systemd"
 	"github.com/code-ready/crc/pkg/download"
 
 	"github.com/Masterminds/semver"
@@ -28,21 +27,11 @@ import (
 const (
 	libvirtDriverCommand        = "crc-driver-libvirt"
 	libvirtDriverVersion        = "0.12.6"
-	crcDnsmasqConfigFile        = "crc.conf"
-	crcNetworkManagerConfigFile = "crc-nm-dnsmasq.conf"
 	// This is defined in https://github.com/code-ready/machine-driver-libvirt/blob/master/go.mod#L5
 	minSupportedLibvirtVersion = "3.4.0"
 )
 
 var (
-	crcDnsmasqConfigPath = filepath.Join(string(filepath.Separator), "etc", "NetworkManager", "dnsmasq.d", crcDnsmasqConfigFile)
-	crcDnsmasqConfig     = `server=/apps-crc.testing/192.168.130.11
-server=/crc.testing/192.168.130.11
-`
-	crcNetworkManagerConfigPath = filepath.Join(string(filepath.Separator), "etc", "NetworkManager", "conf.d", crcNetworkManagerConfigFile)
-	crcNetworkManagerConfig     = `[main]
-dns=dnsmasq
-`
 	libvirtDriverDownloadURL = fmt.Sprintf("https://github.com/code-ready/machine-driver-libvirt/releases/download/%s/crc-driver-libvirt", libvirtDriverVersion)
 )
 
@@ -388,85 +377,25 @@ func fixLibvirtCrcNetworkActive() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	// Set DNS on the network
+	cmd = exec.Command("nmcli", "connection", "modify", "crc",
+		"ipv4.dns", "192.168.130.11",
+		"ipv4.dns-priority", "10")
+	buf = new(bytes.Buffer)
+	cmd.Stderr = buf
+	err = cmd.Run()
+	if err != nil {
+		return false, fmt.Errorf("%v : %s", err, buf.String())
+	}
+	// We need to do this to get NetworkManager to set the DNS in the resolv.conf
+	cmd = exec.Command("nmcli", "connection", "up", "crc")
+	buf = new(bytes.Buffer)
+	cmd.Stderr = buf
+	err = cmd.Run()
+	if err != nil {
+		return false, fmt.Errorf("%v : %s", err, buf.String())
+	}
 	logging.Debug("libvirt 'crc' network started")
-	return true, nil
-}
-
-func checkCrcDnsmasqConfigFile() (bool, error) {
-	logging.Debug("Checking dnsmasq configuration")
-	c := []byte(crcDnsmasqConfig)
-	_, err := os.Stat(crcDnsmasqConfigPath)
-	if err != nil {
-		return false, fmt.Errorf("File not found: %s: %s", crcDnsmasqConfigPath, err.Error())
-	}
-	config, err := ioutil.ReadFile(filepath.Clean(crcDnsmasqConfigPath))
-	if err != nil {
-		return false, fmt.Errorf("Error opening file: %s: %s", crcDnsmasqConfigPath, err.Error())
-	}
-	if !bytes.Equal(config, c) {
-		return false, fmt.Errorf("Config file contains changes: %s", crcDnsmasqConfigPath)
-	}
-	logging.Debug("dnsmasq configuration is good")
-	return true, nil
-}
-
-func fixCrcDnsmasqConfigFile() (bool, error) {
-	logging.Debug("Fixing dnsmasq configuration")
-	err := crcos.WriteToFileAsRoot(
-		fmt.Sprintf("write dnsmasq configuration in %s", crcDnsmasqConfigPath),
-		crcDnsmasqConfig,
-		crcDnsmasqConfigPath,
-	)
-	if err != nil {
-		return false, fmt.Errorf("Failed to write dnsmasq config file: %s: %v", crcDnsmasqConfigPath, err)
-	}
-
-	logging.Debug("Reloading NetworkManager")
-	sd := systemd.NewHostSystemdCommander()
-	if _, err := sd.Reload("NetworkManager"); err != nil {
-		return false, fmt.Errorf("Failed to restart NetworkManager: %v", err)
-	}
-
-	logging.Debug("dnsmasq configuration fixed")
-	return true, nil
-}
-
-func checkCrcNetworkManagerConfig() (bool, error) {
-	logging.Debug("Checking NetworkManager configuration")
-	c := []byte(crcNetworkManagerConfig)
-	_, err := os.Stat(crcNetworkManagerConfigPath)
-	if err != nil {
-		return false, fmt.Errorf("File not found: %s: %s", crcNetworkManagerConfigPath, err.Error())
-	}
-	config, err := ioutil.ReadFile(filepath.Clean(crcNetworkManagerConfigPath))
-	if err != nil {
-		return false, fmt.Errorf("Error opening file: %s: %s", crcNetworkManagerConfigPath, err.Error())
-	}
-	if !bytes.Equal(config, c) {
-		return false, fmt.Errorf("Config file contains changes: %s", crcNetworkManagerConfigPath)
-	}
-	logging.Debug("NetworkManager configuration is good")
-	return true, nil
-}
-
-func fixCrcNetworkManagerConfig() (bool, error) {
-	logging.Debug("Fixing NetworkManager configuration")
-	err := crcos.WriteToFileAsRoot(
-		fmt.Sprintf("write NetworkManager config in %s", crcNetworkManagerConfigPath),
-		crcNetworkManagerConfig,
-		crcNetworkManagerConfigPath,
-	)
-	if err != nil {
-		return false, fmt.Errorf("Failed to write NetworkManager config file: %s: %v", crcNetworkManagerConfigPath, err)
-	}
-
-	logging.Debug("Reloading NetworkManager")
-	sd := systemd.NewHostSystemdCommander()
-	if _, err := sd.Reload("NetworkManager"); err != nil {
-		return false, fmt.Errorf("Failed to restart NetworkManager: %v", err)
-	}
-
-	logging.Debug("NetworkManager configuration fixed")
 	return true, nil
 }
 
