@@ -46,20 +46,15 @@ func runStart(arguments []string) {
 
 	preflight.StartPreflightChecks(crcConfig.GetString(config.VMDriver.Name))
 
-	pullsecretFileContent, err := getPullSecretFileContent()
-	if err != nil {
-		errors.Exit(1)
-	}
-
 	startConfig := machine.StartConfig{
-		Name:       constants.DefaultName,
-		BundlePath: crcConfig.GetString(config.Bundle.Name),
-		VMDriver:   crcConfig.GetString(config.VMDriver.Name),
-		Memory:     crcConfig.GetInt(config.Memory.Name),
-		CPUs:       crcConfig.GetInt(config.CPUs.Name),
-		NameServer: crcConfig.GetString(config.NameServer.Name),
-		PullSecret: pullsecretFileContent,
-		Debug:      isDebugLog(),
+		Name:          constants.DefaultName,
+		BundlePath:    crcConfig.GetString(config.Bundle.Name),
+		VMDriver:      crcConfig.GetString(config.VMDriver.Name),
+		Memory:        crcConfig.GetInt(config.Memory.Name),
+		CPUs:          crcConfig.GetInt(config.CPUs.Name),
+		NameServer:    crcConfig.GetString(config.NameServer.Name),
+		GetPullSecret: getPullSecretFileContent,
+		Debug:         isDebugLog(),
 	}
 
 	commandResult, err := machine.Start(startConfig)
