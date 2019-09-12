@@ -11,7 +11,7 @@ import (
 func StartPreflightChecks(vmDriver string) {
 	preflightCheckSucceedsOrFails(false,
 		checkIfRunningAsNormalUserInWindows,
-		"Checking if running as adminstrator",
+		"Checking if running as normal user",
 		false,
 	)
 	preflightCheckSucceedsOrFails(false,
@@ -49,7 +49,7 @@ func SetupHost(vmDriver string) {
 	preflightCheckAndFix(false,
 		checkIfRunningAsNormalUserInWindows,
 		fixRunAsNormalUserInWindows,
-		"Checking if running as adminstrator",
+		"Checking if running as normal user",
 		false,
 	)
 	preflightCheckAndFix(false,

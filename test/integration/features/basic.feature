@@ -29,7 +29,7 @@ Feature: Basic test
     @linux
     Scenario: CRC setup on Linux
         When executing "crc setup" succeeds
-        Then stdout should contain "Checking if running as root" 
+        Then stdout should contain "Checking if running as non-root" 
         And stdout should contain "Caching oc binary" 
         And stdout should contain "Setting up virtualization" 
         And stdout should contain "Setting up KVM"
