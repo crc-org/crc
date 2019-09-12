@@ -93,6 +93,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	// Pre-VM start
 	var privateKeyPath string
+	var pullSecret string
 	driverInfo, _ := getDriverInfo(startConfig.VMDriver)
 	exists, err := existVM(libMachineAPIClient, startConfig.Name)
 	if !exists {
@@ -102,6 +103,12 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			VMDriver:   startConfig.VMDriver,
 			CPUs:       startConfig.CPUs,
 			Memory:     startConfig.Memory,
+		}
+
+		pullSecret, err = startConfig.GetPullSecret()
+		if err != nil {
+			result.Error = err.Error()
+			return *result, errors.Newf("Failed to get pull secret: %v", err)
 		}
 
 		crcBundleMetadata, err = getCrcBundleInfo(startConfig.BundlePath)
@@ -312,7 +319,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 		// Update the user pull secret before kubelet start.
 		logging.Info("Adding user's pull secret and cluster ID ...")
-		if err := pullsecret.AddPullSecretAndClusterID(sshRunner, startConfig.PullSecret, kubeConfigFilePath); err != nil {
+		if err := pullsecret.AddPullSecretAndClusterID(sshRunner, pullSecret, kubeConfigFilePath); err != nil {
 			result.Error = err.Error()
 			return *result, errors.Newf("Failed to update user pull secret or cluster ID: %v", err)
 		}

@@ -4,6 +4,8 @@ import (
 	"github.com/code-ready/machine/libmachine/state"
 )
 
+type GetPullSecretFunc func() (string, error)
+
 type StartConfig struct {
 	Name string
 
@@ -22,7 +24,7 @@ type StartConfig struct {
 	Debug bool
 
 	// User Pull secret
-	PullSecret string
+	GetPullSecret GetPullSecretFunc
 }
 
 type ClusterConfig struct {
