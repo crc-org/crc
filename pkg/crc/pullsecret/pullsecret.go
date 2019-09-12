@@ -3,14 +3,13 @@ package pullsecret
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"io/ioutil"
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/crc/systemd"
-	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/pborman/uuid"
 )
 
@@ -43,32 +42,32 @@ do echo "Waiting for recovery apiserver to come up."; sleep 1; done'`
 sudo crictl rmp $(sudo crictl pods -q)'`
 )
 
-func AddPullSecretAndClusterID(driver drivers.Driver, pullSec string, kubeconfigFilePath string) error {
+func AddPullSecretAndClusterID(sshRunner *ssh.SSHRunner, pullSec string, kubeconfigFilePath string) error {
 	// Add the kubeconfig File to the Instance.
-	if err := addKubeconfigFileToInstance(driver, kubeconfigFilePath); err != nil {
+	if err := addKubeconfigFileToInstance(sshRunner, kubeconfigFilePath); err != nil {
 		return err
 	}
 
 	// Add the Pull secret kubernetes resource definition to Instance
-	if err := addpullSecretSpecToInstance(driver, pullSec); err != nil {
+	if err := addpullSecretSpecToInstance(sshRunner, pullSec); err != nil {
 		return err
 	}
 
 	// Replace user pull secret and add cluster ID
-	if err := setPullSecretAndClusterID(driver); err != nil {
+	if err := setPullSecretAndClusterID(sshRunner); err != nil {
 		return err
 	}
 
 	// Add user pull secret to the instance
-	if err := addpullSecretToInstanceDisk(driver, pullSec); err != nil {
+	if err := addpullSecretToInstanceDisk(sshRunner, pullSec); err != nil {
 		return err
 	}
 	return nil
 }
 
-func addpullSecretSpecToInstance(driver drivers.Driver, pullSec string) error {
+func addpullSecretSpecToInstance(sshRunner *ssh.SSHRunner, pullSec string) error {
 	base64OfPullSec := base64.StdEncoding.EncodeToString([]byte(pullSec))
-	output, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), fmt.Sprintf("cat <<EOF | tee /tmp/pull-secret.yaml\n%s\nEOF", fmt.Sprintf(pullSecret, base64OfPullSec)))
+	output, err := sshRunner.Run(fmt.Sprintf("cat <<EOF | tee /tmp/pull-secret.yaml\n%s\nEOF", fmt.Sprintf(pullSecret, base64OfPullSec)))
 	if err != nil {
 		return err
 	}
@@ -76,8 +75,8 @@ func addpullSecretSpecToInstance(driver drivers.Driver, pullSec string) error {
 	return nil
 }
 
-func addpullSecretToInstanceDisk(driver drivers.Driver, pullSec string) error {
-	output, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), fmt.Sprintf("cat <<EOF | sudo tee /var/lib/kubelet/config.json\n%s\nEOF", pullSec))
+func addpullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error {
+	output, err := sshRunner.Run(fmt.Sprintf("cat <<EOF | sudo tee /var/lib/kubelet/config.json\n%s\nEOF", pullSec))
 	if err != nil {
 		return err
 	}
@@ -85,20 +84,20 @@ func addpullSecretToInstanceDisk(driver drivers.Driver, pullSec string) error {
 	return nil
 }
 
-func addKubeconfigFileToInstance(driver drivers.Driver, kubeconfigFilePath string) error {
+func addKubeconfigFileToInstance(sshRunner *ssh.SSHRunner, kubeconfigFilePath string) error {
 	kubeconfig, err := ioutil.ReadFile(kubeconfigFilePath)
 	if err != nil {
 		return err
 	}
-	_, err = drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), fmt.Sprintf("cat <<EOF | tee /tmp/kubeconfig\n%s\nEOF", string(kubeconfig)))
+	_, err = sshRunner.Run(fmt.Sprintf("cat <<EOF | tee /tmp/kubeconfig\n%s\nEOF", string(kubeconfig)))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func replaceUserPullSecret(driver drivers.Driver) error {
-	output, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), replacePullSecretCmd)
+func replaceUserPullSecret(sshRunner *ssh.SSHRunner) error {
+	output, err := sshRunner.Run(replacePullSecretCmd)
 	if err != nil {
 		return err
 	}
@@ -106,10 +105,10 @@ func replaceUserPullSecret(driver drivers.Driver) error {
 	return nil
 }
 
-func addClusterID(driver drivers.Driver) error {
+func addClusterID(sshRunner *ssh.SSHRunner) error {
 	clusterID := uuid.New()
 	updateClusterIdCmd := fmt.Sprintf(updateClusterIdCmd, clusterID)
-	output, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), updateClusterIdCmd)
+	output, err := sshRunner.Run(updateClusterIdCmd)
 	if err != nil {
 		return err
 	}
@@ -117,16 +116,16 @@ func addClusterID(driver drivers.Driver) error {
 	return nil
 }
 
-func setPullSecretAndClusterID(driver drivers.Driver) (rerr error) {
+func setPullSecretAndClusterID(sshRunner *ssh.SSHRunner) (rerr error) {
 	m := errors.MultiError{}
-	sd := systemd.NewInstanceSystemdCommander(driver)
+	sd := systemd.NewInstanceSystemdCommander(sshRunner)
 	defer func() {
 		// Stop the kubelet service.
 		if _, err := sd.Stop("kubelet"); err != nil {
 			m.Collect(err)
 		}
 		stopAndRemovePods := func() error {
-			output, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), stopAndRemovePodsCmd)
+			output, err := sshRunner.Run(stopAndRemovePodsCmd)
 			logging.Debugf("Output of %s: %s", stopAndRemovePodsCmd, output)
 			if err != nil {
 				return &errors.RetriableError{Err: err}
@@ -145,12 +144,12 @@ func setPullSecretAndClusterID(driver drivers.Driver) (rerr error) {
 	}
 
 	// Replace existing pull secret with the user pull secret
-	if err := replaceUserPullSecret(driver); err != nil {
+	if err := replaceUserPullSecret(sshRunner); err != nil {
 		m.Collect(err)
 	}
 
 	// add random cluster id
-	if err := addClusterID(driver); err != nil {
+	if err := addClusterID(sshRunner); err != nil {
 		m.Collect(err)
 	}
 

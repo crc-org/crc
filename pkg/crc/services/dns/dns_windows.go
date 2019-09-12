@@ -16,7 +16,7 @@ import (
 
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *services.ServicePostStartResult) (services.ServicePostStartResult, error) {
 	// bailout for Virtualbox
-	if serviceConfig.Driver.DriverName() == "virtualbox" {
+	if serviceConfig.DriverName == "virtualbox" {
 		output.Out("Please follow instructions in the documentation about setting hostnames for Virtualbox.")
 		result.Success = true
 		return *result, nil

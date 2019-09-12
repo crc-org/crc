@@ -2,8 +2,7 @@ package services
 
 import (
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
-
-	"github.com/code-ready/machine/libmachine/drivers"
+	"github.com/code-ready/crc/pkg/crc/ssh"
 )
 
 type ServicePreStartConfig struct {
@@ -19,7 +18,8 @@ type ServicePreStartResult struct {
 
 type ServicePostStartConfig struct {
 	Name           string
-	Driver         drivers.Driver
+	SSHRunner      *ssh.SSHRunner
+	DriverName     string
 	BundleMetadata bundle.CrcBundleInfo
 	IP             string
 	HostIP         string

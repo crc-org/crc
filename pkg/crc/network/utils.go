@@ -2,16 +2,14 @@ package network
 
 import (
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"net"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
-
-	"github.com/code-ready/machine/libmachine/drivers"
+	"github.com/code-ready/crc/pkg/crc/ssh"
 )
 
-func executeCommandOrExit(driver drivers.Driver, command string, errorMessage string) string {
-	result, err := drivers.RunSSHCommandFromDriver(driver, constants.GetPrivateKeyPath(), command)
+func executeCommandOrExit(sshRunner *ssh.SSHRunner, command string, errorMessage string) string {
+	result, err := sshRunner.Run(command)
 
 	if err != nil {
 		errors.ExitWithMessage(1, fmt.Sprintf("%s: %s", errorMessage, err.Error()))

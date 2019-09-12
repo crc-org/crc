@@ -4,11 +4,9 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"text/template"
 
 	"github.com/code-ready/crc/pkg/crc/services"
-	"github.com/code-ready/machine/libmachine/drivers"
 )
 
 const (
@@ -55,7 +53,7 @@ func createDnsmasqDNSConfig(serviceConfig services.ServicePostStartConfig) error
 	}
 
 	encodeddnsConfig := base64.StdEncoding.EncodeToString([]byte(dnsConfig))
-	_, err = drivers.RunSSHCommandFromDriver(serviceConfig.Driver, constants.GetPrivateKeyPath(),
+	_, err = serviceConfig.SSHRunner.Run(
 		fmt.Sprintf("echo '%s' | openssl enc -base64 -d | sudo tee /var/srv/dnsmasq.conf > /dev/null",
 			encodeddnsConfig))
 	if err != nil {
