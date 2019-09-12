@@ -32,8 +32,8 @@ const (
 
 var (
 	crcDnsmasqConfigPath = filepath.Join(string(filepath.Separator), "etc", "NetworkManager", "dnsmasq.d", crcDnsmasqConfigFile)
-	crcDnsmasqConfig     = `server=/crc.testing/192.168.130.1
-address=/apps-crc.testing/192.168.130.11
+	crcDnsmasqConfig     = `server=/apps-crc.testing/192.168.130.11
+server=/crc.testing/192.168.130.11
 `
 	crcNetworkManagerConfigPath = filepath.Join(string(filepath.Separator), "etc", "NetworkManager", "conf.d", crcNetworkManagerConfigFile)
 	crcNetworkManagerConfig     = `[main]
