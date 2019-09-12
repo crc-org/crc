@@ -92,6 +92,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	defer libMachineAPIClient.Close()
 
 	// Pre-VM start
+	var privateKeyPath string
 	driverInfo, _ := getDriverInfo(startConfig.VMDriver)
 	exists, err := existVM(libMachineAPIClient, startConfig.Name)
 	if !exists {
@@ -140,12 +141,8 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			return *result, errors.Newf("Error getting the state for host: %v", err)
 		}
 
-		sshRunner := crcssh.CreateRunnerWithPrivateKey(host.Driver, crcBundleMetadata.GetSSHKeyPath())
-		if err := updateSSHKeyPair(sshRunner); err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error Updating public key: %v", err)
-		}
 		result.Status = vmState.String()
+		privateKeyPath = crcBundleMetadata.GetSSHKeyPath()
 	} else {
 		host, err := libMachineAPIClient.Load(startConfig.Name)
 		if err != nil {
@@ -199,6 +196,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		}
 
 		result.Status = vmState.String()
+		privateKeyPath = constants.GetPrivateKeyPath()
 	}
 
 	err = fillClusterConfig(crcBundleMetadata, &result.ClusterConfig)
@@ -213,7 +211,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error loading %s vm: %v", startConfig.Name, err)
 	}
-	sshRunner := crcssh.CreateRunnerWithPrivateKey(host.Driver, constants.GetPrivateKeyPath())
+	sshRunner := crcssh.CreateRunnerWithPrivateKey(host.Driver, privateKeyPath)
 
 	logging.Debug("Waiting until ssh is available")
 	if err := cluster.WaitForSsh(sshRunner); err != nil {
@@ -295,6 +293,10 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	// Additional steps to perform after newly created VM is up
 	if !exists {
+		if err := updateSSHKeyPair(sshRunner); err != nil {
+			result.Error = err.Error()
+			return *result, errors.Newf("Error Updating public key: %v", err)
+		}
 		// Copy Kubeconfig file from bundle extract path to machine directory.
 		// In our case it would be ~/.crc/machines/crc/
 		logging.Infof("Copying kubeconfig file to instance dir ...")
@@ -602,6 +604,7 @@ func updateSSHKeyPair(sshRunner *crcssh.SSHRunner) error {
 	if err != nil {
 		return err
 	}
+	sshRunner.SetPrivateKeyPath(constants.GetPrivateKeyPath())
 
 	return err
 }
