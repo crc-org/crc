@@ -152,7 +152,6 @@ else
 	make
 	make fmtcheck
 	make cross
-	crc setup
 	
 	# Retrieve password for rsync and run integration tests
 	CICO_PASS=$(echo $CICO_API_KEY | cut -d'-' -f1-2)
