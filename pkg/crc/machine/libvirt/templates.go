@@ -13,7 +13,7 @@ const (
 	<mac address='52:54:00:fd:be:d0'/>
 	<ip family='ipv4' address='192.168.130.1' prefix='24'>
 	  <dhcp>
-		<host mac='{{ .MAC }}' name='{{ .HostName }}' ip='{{ .IP }}'/>
+		<host mac='{{ .MAC }}' ip='{{ .IP }}'/>
 	  </dhcp>
 	</ip>
   </network>`
@@ -21,7 +21,6 @@ const (
 
 type NetworkConfig struct {
 	NetworkName string
-	HostName    string
 	MAC         string
 	IP          string
 }

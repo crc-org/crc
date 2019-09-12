@@ -285,16 +285,6 @@ func checkLibvirtCrcNetworkAvailable() (bool, error) {
 		stdOut = strings.TrimSpace(stdOut)
 		if strings.HasPrefix(stdOut, "crc") {
 			logging.Debug("libvirt 'crc' network exists")
-			logging.Debug("Checking if libvirt 'crc' network definition contains ", constants.DefaultHostname)
-			// Check if the network have defined hostname. It might be possible that User already have an outdated crc network
-			stdOut, stdErr, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-dumpxml", libvirt.DefaultNetwork)
-			if err != nil {
-				return false, fmt.Errorf("%+v: %s", err, stdErr)
-			}
-			if !strings.Contains(stdOut, constants.DefaultHostname) {
-				return false, fmt.Errorf("crc network is not updated with %s hostname, use 'crc setup' to update it.", constants.DefaultHostname)
-			}
-			logging.Debug("libvirt 'crc' network definition contains ", constants.DefaultHostname)
 			return true, nil
 		}
 	}
@@ -305,7 +295,6 @@ func fixLibvirtCrcNetworkAvailable() (bool, error) {
 	logging.Debug("Creating libvirt 'crc' network")
 	config := libvirt.NetworkConfig{
 		NetworkName: libvirt.DefaultNetwork,
-		HostName:    constants.DefaultHostname,
 		MAC:         libvirt.MACAddress,
 		IP:          libvirt.IPAddress,
 	}
