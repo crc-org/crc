@@ -56,30 +56,11 @@ func contains(s []string, e string) bool {
 	return false
 }
 
-func formatValues(serverAddresses []string) string {
-	var out string
-	for index, serverAddress := range serverAddresses {
-		out = fmt.Sprintf(`%s"%s"`, out, serverAddress)
-		if index < len(serverAddresses)-1 {
-			out = fmt.Sprintf(`%s, `, out)
-		}
-	}
-
-	return out
-}
-
 func setInterfaceNameserverValue(iface string, address string) {
 	exe := "netsh"
 	args := fmt.Sprintf(`interface ip set dns "%s" static %s primary`, iface, address)
 
 	win32.ShellExecuteAsAdmin(fmt.Sprintf("add dns server address to interface %s", iface), win32.HWND_DESKTOP, exe, args, "", 0)
-}
-
-func getMainInterface() string {
-	getMainInterfaceCommand := `(Get-NetAdapter | Where-Object {$_.MediaConnectionState -eq 'Connected'} | Sort-Object LinkSpeed -Descending)[0].Name`
-	mainInterface, _, _ := powershell.Execute(getMainInterfaceCommand)
-
-	return strings.TrimSpace(mainInterface)
 }
 
 func parseLines(input string) []string {
