@@ -38,7 +38,7 @@ var versionCmd = &cobra.Command{
 }
 
 func runPrintVersion(arguments []string) {
-	fmt.Printf("version: %s-%s+%s\n", version.GetCRCVersion(), version.GetBundleVersion(), version.GetCommitSha())
+	fmt.Printf("version: %s+%s\n", version.GetCRCVersion(), version.GetCommitSha())
 	var embedded string
 	if constants.BundleEmbedded() {
 		embedded = "embedded in binary"
