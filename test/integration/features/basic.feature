@@ -47,22 +47,25 @@ Feature: Basic test
         And stdout should contain "Checking if NetworkManager is installed"
         And stdout should contain "Checking if NetworkManager service is running"
         And stdout should contain "Writing Network Manager config for crc"
-	And stdout should contain "Will use root access: write NetworkManager config in /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf"
+        And stdout should contain "Will use root access: write NetworkManager config in /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf"
         And stdout should contain "Will use root access: execute systemctl daemon-reload command"
         And stdout should contain "Will use root access: execute systemctl stop/start command"
         And stdout should contain "Writing dnsmasq config for crc"
-	And stdout should contain "Will use root access: write dnsmasq configuration in /etc/NetworkManager/dnsmasq.d/crc.conf"
-	And stdout should contain "Will use root access: execute systemctl daemon-reload command"
-	And stdout should contain "Will use root access: execute systemctl stop/start command"
+        And stdout should contain "Will use root access: write dnsmasq configuration in /etc/NetworkManager/dnsmasq.d/crc.conf"
+        And stdout should contain "Will use root access: execute systemctl daemon-reload command"
+        And stdout should contain "Will use root access: execute systemctl stop/start command"
         And stdout should contain "Unpacking bundle from the CRC binary"
-        And stdout should contain "Setup is complete, you can now run 'crc start -b $bundlename' to start a CodeReady Containers instance"
+        And stdout should contain "Setup is complete"
 
     @darwin
     Scenario: CRC setup on Mac
         When executing "crc setup" succeeds
-        Then stdout should contain "Caching oc binary"
+        Then stdout should contain "Checking if running as non-root" 
+        And stdout should contain "Caching oc binary"
         And stdout should contain "Setting up virtualization"
-        And stdout should contain "Setting file permissions for resolver"
+        And stdout should contain "Will use root access: change ownership"
+        And stdout should contain "Will use root access: set suid"
+        And stdout should contain "Setting file permissions"
 
     @linux
     Scenario: CRC start on Linux
