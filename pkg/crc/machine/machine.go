@@ -37,6 +37,11 @@ import (
 	"github.com/code-ready/crc/pkg/crc/cluster"
 )
 
+func init() {
+	// Force using the golang SSH implementation
+	ssh.SetDefaultClient(ssh.Native)
+}
+
 func fillClusterConfig(bundleInfo *bundle.CrcBundleInfo, clusterConfig *ClusterConfig) error {
 	kubeadminPassword, err := bundleInfo.GetKubeadminPassword()
 	if err != nil {
