@@ -17,6 +17,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/validation"
+	"github.com/code-ready/crc/pkg/crc/version"
 )
 
 func init() {
@@ -43,6 +44,8 @@ func runStart(arguments []string) {
 	if err := validateStartFlags(); err != nil {
 		errors.Exit(1)
 	}
+
+	checkIfNewVersionAvailable(crcConfig.GetBool(config.DisableUpdateCheck.Name))
 
 	preflight.StartPreflightChecks(crcConfig.GetString(config.VMDriver.Name))
 
@@ -76,6 +79,7 @@ func initStartCmdFlagSet() *pflag.FlagSet {
 	flagSet.IntP(config.CPUs.Name, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the CRC VM")
 	flagSet.IntP(config.Memory.Name, "m", constants.DefaultMemory, "MiB of Memory to allocate to the CRC VM")
 	flagSet.StringP(config.NameServer.Name, "n", "", "Specify nameserver to use for the instance. (i.e. 8.8.8.8)")
+	flagSet.Bool(config.DisableUpdateCheck.Name, false, "Don't check for update")
 
 	return flagSet
 }
@@ -132,4 +136,20 @@ func getPullSecretFileContent() (string, error) {
 	}
 
 	return pullsecret, nil
+}
+
+func checkIfNewVersionAvailable(noUpdateCheck bool) {
+	if noUpdateCheck {
+		return
+	}
+	isNewVersionAvailable, newVersion, err := version.NewVersionAvailable()
+	if err != nil {
+		logging.Debugf("Error checking if a new version is available: %v", err)
+		return
+	}
+	if isNewVersionAvailable {
+		logging.Warnf("A new version (%s) has been published on %s", newVersion, constants.CrcLandingPageURL)
+		return
+	}
+	logging.Debugf("No new version available, latest version at mirror is %s", newVersion)
 }
