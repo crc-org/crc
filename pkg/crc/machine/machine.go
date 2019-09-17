@@ -3,19 +3,17 @@ package machine
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/code-ready/machine/libmachine/ssh"
 	"io/ioutil"
 	"path/filepath"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/pullsecret"
-
+	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
-
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/pullsecret"
+	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/crc/systemd"
 	crcos "github.com/code-ready/crc/pkg/os"
 
@@ -31,10 +29,8 @@ import (
 	"github.com/code-ready/machine/libmachine"
 	"github.com/code-ready/machine/libmachine/host"
 	"github.com/code-ready/machine/libmachine/log"
+	"github.com/code-ready/machine/libmachine/ssh"
 	"github.com/code-ready/machine/libmachine/state"
-
-	// cluster related import
-	"github.com/code-ready/crc/pkg/crc/cluster"
 )
 
 func fillClusterConfig(bundleInfo *bundle.CrcBundleInfo, clusterConfig *ClusterConfig) error {
