@@ -9,7 +9,7 @@ Feature:
         When starting CRC with default bundle and hypervisor "<vm-driver>" succeeds
         Then stdout should contain "CodeReady Containers instance is running"
         And executing "eval $(crc oc-env)" succeeds
-        When with up to "4" retries with wait period of "2m" command "crc status" output should contain "Running (v4."
+        When with up to "4" retries with wait period of "2m" command "crc status" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
         Then login to the oc cluster succeeds
 
     @darwin
@@ -25,7 +25,7 @@ Feature:
     @darwin @linux 
     Scenario: Check cluster health
         Given executing "crc status" succeeds
-        And stdout contains "Running (v4."
+        And stdout should match ".*Running \(v\d+\.\d+\.\d+.*\).*"
         When executing "oc get nodes"
         Then stdout contains "Ready" 
         And stdout does not contain "Not ready"
@@ -52,8 +52,9 @@ Feature:
         When executing "oc rollout status dc/httpd-ex" succeeds
         Then stdout should contain "successfully rolled out"
         And executing "oc expose svc/httpd-ex" succeeds
-        And with up to "2" retries with wait period of "60s" http response from "http://httpd-ex-testproj.apps-crc.testing" should have status code "200"
+        And with up to "2" retries with wait period of "60s" http response from "http://httpd-ex-testproj.apps-crc.testing" has status code "200"
 
+    @darwin @linux
     Scenario: Clean up
         Given executing "oc delete project testproj" succeeds
         When executing "crc stop -f" succeeds

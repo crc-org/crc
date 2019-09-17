@@ -57,8 +57,10 @@ func FeatureContext(s *godog.Suite) {
 		LoginToOcClusterSucceedsOrFails)
 	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" all cluster operators are running$`,
 		CheckClusterOperatorsWithRetry)
-	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" http response from "(.*)" should have status code "(\d+)"$`,
+	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" http response from "(.*)" has status code "(\d+)"$`,
 		CheckHTTPResponseWithRetry)
+	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" command "(.*)" output (?:should match|matches) "(.*)"$`,
+		CheckOutputMatchWithRetry)
 
 	// CRC file operations
 	s.Step(`^file "([^"]*)" exists in CRC home folder$`,
@@ -157,6 +159,29 @@ func CheckHTTPResponseWithRetry(retryCount int, retryWait string, address string
 	}
 
 	return fmt.Errorf("Got %d as Status Code instead of expected %d.", resp.StatusCode, expectedStatusCode)
+}
+
+func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string, expected string) error {
+
+	retryDuration, err := time.ParseDuration(retryTime)
+	if err != nil {
+		return err
+	}
+
+	var match_err error
+
+	for i := 0; i < retryCount; i++ {
+		exec_err := clicumber.ExecuteCommand(command)
+		if exec_err == nil {
+			match_err = clicumber.CommandReturnShouldMatch("stdout", expected)
+			if match_err == nil {
+				return nil
+			}
+		}
+		time.Sleep(retryDuration)
+	}
+
+	return match_err
 }
 
 func DeleteFileFromCRCHome(fileName string) error {

@@ -11,7 +11,7 @@ Feature: Local image to image-registry to deployment
         When starting CRC with default bundle and hypervisor "<vm-driver>" succeeds
         Then stdout should contain "CodeReady Containers instance is running"
         And executing "eval $(crc oc-env)" succeeds
-        When with up to "4" retries with wait period of "2m" command "crc status" output should contain "Running (v4."
+        When with up to "4" retries with wait period of "2m" command "crc status" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
         Then login to the oc cluster succeeds
 
         Examples:
