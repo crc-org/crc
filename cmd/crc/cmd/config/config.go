@@ -19,6 +19,8 @@ var (
 	NameServer     = cfg.AddSetting("nameserver", nil, []cfg.ValidationFnType{cfg.ValidateIpAddress}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	PullSecretFile = cfg.AddSetting("pull-secret-file", nil, []cfg.ValidationFnType{cfg.ValidatePath}, []cfg.SetFn{cfg.SuccessfullyApplied})
 
+	DisableUpdateCheck = cfg.AddSetting("disable-update-check", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
+
 	// Preflight checks
 	SkipCheckVirtualBoxInstalled = cfg.AddSetting("skip-check-virtualbox-installed", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	WarnCheckVirtualBoxInstalled = cfg.AddSetting("warn-check-virtualbox-installed", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
