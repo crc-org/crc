@@ -4,6 +4,7 @@ require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/DATA-DOG/godog v0.7.13
 	github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
+	github.com/blang/semver v0.0.0-20190414102917-ba2c2ddd8906
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/code-ready/clicumber v0.0.0-20190801094041-02a92c8f7ece
 	github.com/code-ready/goodhosts v0.0.0-20190712111040-f090f3f77c26

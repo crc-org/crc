@@ -17,6 +17,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/validation"
+	"github.com/code-ready/crc/pkg/crc/version"
 )
 
 func init() {
@@ -42,6 +43,16 @@ var (
 func runStart(arguments []string) {
 	if err := validateStartFlags(); err != nil {
 		errors.Exit(1)
+	}
+	newVersionAvailable, newVersion, err := version.NewVersionAvailable()
+	if err == nil && newVersionAvailable {
+		logging.Infof("A new version (%s) is available for download", newVersion)
+		yes := input.PromptUserForYesOrNo("Would you like to continue using the current version", false)
+		if !yes {
+			errors.ExitWithMessage(0, fmt.Sprintf("Please download the new version from %s", constants.DefaultPullSecretURL))
+		}
+	} else {
+		logging.Debugf("Error checking if a new version is available: %v", err)
 	}
 
 	preflight.StartPreflightChecks(crcConfig.GetString(config.VMDriver.Name))
