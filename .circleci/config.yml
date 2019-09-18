@@ -38,7 +38,7 @@ jobs:
         command: make fmtcheck
     - run:
         name: Run golangci-lint
-        command: make lint
+        command: make cross-lint
     - run:
         name: Run gosec
         command: make gosec 

@@ -138,9 +138,14 @@ $(GOPATH)/bin/golangci-lint:
 	GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.17.1
 
 # Run golangci-lint against code
-.PHONY: lint
+.PHONY: lint cross-lint
 lint: $(GOPATH)/bin/golangci-lint
 	$(GOPATH)/bin/golangci-lint run
+
+cross-lint: $(GOPATH)/bin/golangci-lint
+	GOOS=darwin $(GOPATH)/bin/golangci-lint run
+	GOOS=linux $(GOPATH)/bin/golangci-lint run
+	GOOS=windows $(GOPATH)/bin/golangci-lint run
 
 $(GOPATH)/bin/gosec:
 	GO111MODULE=on go get github.com/securego/gosec/cmd/gosec@2.0.0
