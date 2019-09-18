@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/services"
 
@@ -61,10 +60,8 @@ func setInterfaceNameserverValue(iface string, address string) {
 	exe := "netsh"
 	args := fmt.Sprintf(`interface ip set dns "%s" static %s primary`, iface, address)
 
-	err := win32.ShellExecuteAsAdmin(fmt.Sprintf("add dns server address to interface %s", iface), win32.HWND_DESKTOP, exe, args, "", 0)
-	if err != nil {
-		logging.Warnf("Error occured setting interface nameserver: %v", err)
-	}
+	// ignore the error as this is useless (prefer not to use nolint here)
+	_ = win32.ShellExecuteAsAdmin(fmt.Sprintf("add dns server address to interface %s", iface), win32.HWND_DESKTOP, exe, args, "", 0)
 }
 
 func parseLines(input string) []string {

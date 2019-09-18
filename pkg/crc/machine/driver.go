@@ -2,11 +2,7 @@ package machine
 
 import (
 	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/machine/config"
-	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
-	"github.com/code-ready/crc/pkg/crc/machine/hyperv"
-	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
-	"github.com/code-ready/crc/pkg/crc/machine/virtualbox"
+
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
@@ -37,26 +33,4 @@ func getDriverInfo(driver string) (*MachineDriver, error) {
 		}
 	}
 	return nil, errors.Newf("No info about unknown driver: %s", driver)
-}
-
-func getDriverOptions(machineConfig config.MachineConfig) interface{} {
-	var driver interface{}
-
-	// Supported drivers
-	switch machineConfig.VMDriver {
-
-	case "libvirt":
-		driver = libvirt.CreateHost(machineConfig)
-	case "virtualbox":
-		driver = virtualbox.CreateHost(machineConfig)
-	case "hyperkit":
-		driver = hyperkit.CreateHost(machineConfig)
-	case "hyperv":
-		driver = hyperv.CreateHost(machineConfig)
-
-	default:
-		errors.ExitWithMessage(1, "Unsupported driver: %s", machineConfig.VMDriver)
-	}
-
-	return driver
 }
