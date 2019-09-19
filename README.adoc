@@ -21,6 +21,10 @@ Check back for updates, we plan to have something available "soon".
 [[documentation]]
 == Documentation
 
+=== Getting CodeReady Containers
+
+CodeReady Containers binaries with an embedded OpenShift disk image can be downloaded from link:https://cloud.redhat.com/openshift/install/crc/installer-provisioned[this page].
+
 === Using CodeReady Containers
 
 The documentation for CodeReady Containers is currently hosted by GitHub Pages.
