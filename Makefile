@@ -38,6 +38,8 @@ REPOPATH ?= $(ORG)/crc
 PACKAGES := go list ./... | grep -v /out
 SOURCES := $(shell git ls-files  *.go ":^vendor")
 
+RELEASE_INFO := release-info.json
+
 # Check that given variables are set and all have non-empty values,
 # die with an error otherwise.
 #
@@ -154,8 +156,14 @@ $(GOPATH)/bin/gosec:
 gosec: $(GOPATH)/bin/gosec
 	$(GOPATH)/bin/gosec -tests -severity medium  ./...
 
+.PHONY: gen_release_info
+gen_release_info:
+	@cat release-info.json.sample | sed s/@CRC_VERSION@/\"$(CRC_VERSION)\"/ > $(RELEASE_INFO)
+	@sed -i s/@GIT_COMMIT_SHA@/\"$(COMMIT_SHA)\"/ $(RELEASE_INFO)
+	@sed -i s/@OPENSHIFT_VERSION@/\"$(BUNDLE_VERSION)\"/ $(RELEASE_INFO)
+
 .PHONY: release
-release: fmtcheck embed_bundle build_docs_pdf
+release: fmtcheck embed_bundle build_docs_pdf gen_release_info
 	mkdir $(RELEASE_DIR)
 	
 	@mkdir -p $(BUILD_DIR)/crc-macos-$(CRC_VERSION)-amd64
@@ -170,6 +178,8 @@ release: fmtcheck embed_bundle build_docs_pdf
 	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/windows-amd64/crc.exe $(BUILD_DIR)/crc-windows-$(CRC_VERSION)-amd64
 	cd $(BUILD_DIR) && zip -r $(CURDIR)/$(RELEASE_DIR)/crc-windows-amd64.zip crc-windows-$(CRC_VERSION)-amd64
 
+	@mv $(RELEASE_INFO) $(RELEASE_DIR)/$(RELEASE_INFO)
+	
 	pushd $(RELEASE_DIR) && sha256sum * > sha256sum.txt && popd
 
 HYPERKIT_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
