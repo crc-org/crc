@@ -1,0 +1,7 @@
+{
+	"version": {
+		"crcVersion": @CRC_VERSION@,
+		"gitSha": @GIT_COMMIT_SHA@,
+		"openshiftVersion": @OPENSHIFT_VERSION@
+	}
+}
