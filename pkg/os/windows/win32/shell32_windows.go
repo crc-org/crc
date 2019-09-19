@@ -17,7 +17,12 @@ func ShellExecuteAsAdmin(reason string, hwnd windows.Handle, file, parameters, d
 }
 
 func toUint16ptr(input string) *uint16 {
-	return syscall.StringToUTF16Ptr(input)
+	uint16ptr, err := syscall.UTF16PtrFromString(input)
+	if err != nil {
+		logging.Warnf("Failed to convert %s to UTF16: %v", input, err)
+	}
+
+	return uint16ptr
 }
 
 func ShellExecute(hwnd windows.Handle, verb, file, parameters, directory string, showCmd int) error {
