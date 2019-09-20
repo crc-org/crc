@@ -106,6 +106,7 @@ type ConsoleConfig struct {
 
 type ConsoleResult struct {
 	ClusterConfig ClusterConfig
+	State         state.State
 	Success       bool
 	Error         string
 }
