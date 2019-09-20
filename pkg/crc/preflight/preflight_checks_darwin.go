@@ -264,7 +264,7 @@ func addFileWritePermissionToUser(filename string) (bool, error) {
 		return false, fmt.Errorf("Unable to change ownership of the filename: %s %v: %s", stdOut, err, stdErr)
 	}
 
-	err = os.Chmod(filename, 0500)
+	err = os.Chmod(filename, 0600)
 	if err != nil {
 		return false, fmt.Errorf("Unable to change permissions of the filename: %s %v: %s", stdOut, err, stdErr)
 	}
