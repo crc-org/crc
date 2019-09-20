@@ -621,6 +621,15 @@ func GetConsoleURL(consoleConfig ConsoleConfig) (ConsoleResult, error) {
 		result.Error = err.Error()
 		return *result, errors.New(err.Error())
 	}
+
+	vmState, err := host.Driver.GetState()
+	if err != nil {
+		result.Success = false
+		result.Error = err.Error()
+		return *result, errors.Newf("Error getting the state for host: %v", err)
+	}
+	result.State = vmState
+
 	_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
 	if err != nil {
 		result.Error = err.Error()
