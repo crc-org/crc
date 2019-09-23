@@ -68,7 +68,8 @@ func fixHyperVInstalled() (bool, error) {
 	}
 
 	// We do need to error out as a restart might be needed (unfortunately no output redirect possible)
-	return true, errors.New("Please reboot your system")
+	logging.Error("Please reboot your system")
+	return true, nil
 }
 
 func checkIfUserPartOfHyperVAdmins() (bool, error) {
