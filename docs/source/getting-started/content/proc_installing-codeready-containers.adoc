@@ -31,22 +31,3 @@ See <<required-software-packages_{context}>> to install the required packages fo
 .Procedure
 
 . Download the link:{crc-download-url}[latest release of {prod}] for your platform and extract the contents of the archive to a location in your `_PATH_`.
-
-. **On Debian or Ubuntu,** perform the following steps:
-.. Add your user to the `libvirtd` group:
-+
-----
-$ sudo usermod -aG libvirtd $(whoami)
-----
-
-.. Update your current session to apply the group change:
-+
-----
-$ newgrp libvirtd
-----
-
-.. Disable the `libvirt` group check performed by the `{bin} start` command:
-+
-----
-$ crc config set skip-check-user-in-libvirt-group true
-----

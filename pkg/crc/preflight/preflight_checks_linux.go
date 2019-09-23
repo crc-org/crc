@@ -200,7 +200,6 @@ func checkUserPartOfLibvirtGroup() (bool, error) {
 
 func fixUserPartOfLibvirtGroup() (bool, error) {
 	logging.Debug("Adding current user to the libvirt group")
-	// Add user to libvirt/libvirtd group based on distro
 	currentUser, err := user.Current()
 	if err != nil {
 		return false, err
