@@ -20,100 +20,100 @@ const (
 	minimumWindowsReleaseId = 1709
 )
 
-func checkVersionOfWindowsUpdate() (bool, error) {
+func checkVersionOfWindowsUpdate() error {
 	windowsReleaseId := `(Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseId`
 
 	stdOut, _, err := powershell.Execute(windowsReleaseId)
 	if err != nil {
 		logging.Debug(err.Error())
-		return false, errors.New("Failed to get Windows release id")
+		return errors.New("Failed to get Windows release id")
 	}
 	yourWindowsReleaseId, err := strconv.Atoi(strings.TrimSpace(stdOut))
 
 	if err != nil {
 		logging.Debug(err.Error())
-		return false, errors.Newf("Failed to parse Windows release id: %s", stdOut)
+		return errors.Newf("Failed to parse Windows release id: %s", stdOut)
 	}
 
 	if yourWindowsReleaseId < minimumWindowsReleaseId {
-		return false, errors.Newf("Please update Windows. Currently %d is the minimum release needed to run. You are running %d", minimumWindowsReleaseId, yourWindowsReleaseId)
+		return errors.Newf("Please update Windows. Currently %d is the minimum release needed to run. You are running %d", minimumWindowsReleaseId, yourWindowsReleaseId)
 	}
-	return true, nil
+	return nil
 }
 
 // Unable to update automatically
-func fixVersionOfWindowsUpdate() (bool, error) {
-	return false, errors.New("Please manually update your Windows 10 installation")
+func fixVersionOfWindowsUpdate() error {
+	return errors.New("Please manually update your Windows 10 installation")
 }
 
-func checkHyperVInstalled() (bool, error) {
+func checkHyperVInstalled() error {
 	// check to see if a hypervisor is present. if hyper-v is installed and enabled,
 	checkHypervisorPresent := `@(Get-Wmiobject Win32_ComputerSystem).HypervisorPresent`
 	stdOut, _, err := powershell.Execute(checkHypervisorPresent)
 	if err != nil {
 		logging.Debug(err.Error())
-		return false, errors.New("Failed checking if Hyper-V is installed")
+		return errors.New("Failed checking if Hyper-V is installed")
 	}
 	if !strings.Contains(stdOut, "True") {
-		return false, errors.New("Hyper-V not installed")
+		return errors.New("Hyper-V not installed")
 	}
 
 	checkVmmsExists := `@(Get-Service vmms).Status`
 	_, stdErr, err := powershell.Execute(checkVmmsExists)
 	if err != nil {
 		logging.Debug(err.Error())
-		return false, errors.New("Failed checking if Hyper-V management service exists")
+		return errors.New("Failed checking if Hyper-V management service exists")
 	}
 	if strings.Contains(stdErr, "Get-Service") {
-		return false, errors.New("Hyper-V management service not available")
+		return errors.New("Hyper-V management service not available")
 	}
 
-	return true, nil
+	return nil
 }
 
 //
-func fixHyperVInstalled() (bool, error) {
+func fixHyperVInstalled() error {
 	enableHyperVCommand := `Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All`
 	_, _, err := powershell.ExecuteAsAdmin("enable Hyper-V", enableHyperVCommand)
 
 	if err != nil {
 		logging.Debug(err.Error())
-		return false, errors.New("Error occurred installing Hyper-V")
+		return errors.New("Error occurred installing Hyper-V")
 	}
 
 	// We do need to error out as a restart might be needed (unfortunately no output redirect possible)
 	logging.Error("Please reboot your system")
-	return true, nil
+	return nil
 }
 
-func checkHyperVServiceRunning() (bool, error) {
+func checkHyperVServiceRunning() error {
 	// Check if Hyper-V's Virtual Machine Management Service is running
 	checkVmmsRunning := `@(Get-Service vmms).Status`
 	stdOut, _, err := powershell.Execute(checkVmmsRunning)
 	if err != nil {
 		logging.Debug(err.Error())
-		return false, errors.New("Failed checking if Hyper-V is running")
+		return errors.New("Failed checking if Hyper-V is running")
 	}
 	if strings.TrimSpace(stdOut) != "Running" {
-		return false, errors.New("Hyper-V Virtual Machine Management service not running")
+		return errors.New("Hyper-V Virtual Machine Management service not running")
 	}
 
-	return true, nil
+	return nil
 }
 
-func fixHyperVServiceRunning() (bool, error) {
+func fixHyperVServiceRunning() error {
 	enableVmmsService := `Set-Service -Name vmms -StartupType Automatic; Set-Service -Name vmms -Status Running -PassThru`
 	_, _, err := powershell.ExecuteAsAdmin("enable Hyper-V service", enableVmmsService)
 
 	if err != nil {
 		logging.Debug(err.Error())
-		return false, errors.New("Error occurred enabling Hyper-V service")
+		return errors.New("Error occurred enabling Hyper-V service")
 	}
 
-	return true, nil
+	return nil
 }
 
-func checkIfUserPartOfHyperVAdmins() (bool, error) {
+func checkIfUserPartOfHyperVAdmins() error {
 	// https://support.microsoft.com/en-us/help/243330/well-known-security-identifiers-in-windows-operating-systems
 	// BUILTIN\Hyper-V Administrators => S-1-5-32-578
 
@@ -123,20 +123,20 @@ func checkIfUserPartOfHyperVAdmins() (bool, error) {
 	stdOut, _, err := powershell.Execute(checkIfMemberOfHyperVAdmins)
 	if err != nil {
 		logging.Debug(err.Error())
-		return false, errors.New("Failed checking if user is part of hyperv admins group")
+		return errors.New("Failed checking if user is part of hyperv admins group")
 	}
 	if !strings.Contains(stdOut, "True") {
-		return false, errors.New("User is not a member of the Hyper-V administrators group")
+		return errors.New("User is not a member of the Hyper-V administrators group")
 	}
 
-	return true, nil
+	return nil
 }
 
-func fixUserPartOfHyperVAdmins() (bool, error) {
+func fixUserPartOfHyperVAdmins() error {
 	outGroupName, _, err := powershell.Execute(`(New-Object System.Security.Principal.SecurityIdentifier("S-1-5-32-578")).Translate([System.Security.Principal.NTAccount]).Value`)
 	if err != nil {
 		logging.Debug(err.Error())
-		return false, errors.New("Unable to get group name")
+		return errors.New("Unable to get group name")
 	}
 	groupName := strings.TrimSpace(strings.Replace(strings.TrimSpace(outGroupName), "BUILTIN\\", "", -1))
 
@@ -146,38 +146,38 @@ func fixUserPartOfHyperVAdmins() (bool, error) {
 	_, _, err = powershell.ExecuteAsAdmin("add user to hyperv admins group", netCmdArgs)
 	if err != nil {
 		logging.Debug(err.Error())
-		return false, errors.New("Unable to get user name")
+		return errors.New("Unable to get user name")
 	}
 
-	return true, nil
+	return nil
 }
 
-func checkIfHyperVVirtualSwitchExists() (bool, error) {
+func checkIfHyperVVirtualSwitchExists() error {
 	switchName := hyperv.AlternativeNetwork
 
 	// use winnet instead
 	exists, foundName := winnet.SelectSwitchByNameOrDefault(switchName)
 	if exists {
 		logging.Info("Found Virtual Switch to use: ", foundName)
-		return true, nil
+		return nil
 	}
 
-	return false, errors.New("Virtual Switch not found")
+	return errors.New("Virtual Switch not found")
 }
 
 // Unable to do for now
-func fixHyperVVirtualSwitch() (bool, error) {
-	return false, errors.New("Unable to perform Hyper-V administrative commands. Please make sure to re-login or reboot your system")
+func fixHyperVVirtualSwitch() error {
+	return errors.New("Unable to perform Hyper-V administrative commands. Please make sure to re-login or reboot your system")
 }
 
-func checkIfRunningAsNormalUser() (bool, error) {
+func checkIfRunningAsNormalUser() error {
 	if !powershell.IsAdmin() {
-		return true, nil
+		return nil
 	}
 	logging.Debug("Ran as administrator")
-	return false, fmt.Errorf("crc should be ran as a normal user")
+	return fmt.Errorf("crc should be ran as a normal user")
 }
 
-func fixRunAsNormalUser() (bool, error) {
-	return false, fmt.Errorf("crc should be ran as a normal user")
+func fixRunAsNormalUser() error {
+	return fmt.Errorf("crc should be ran as a normal user")
 }

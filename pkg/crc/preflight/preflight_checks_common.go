@@ -31,71 +31,71 @@ var genericPreflightChecks = [...]PreflightCheck{
 	},
 }
 
-func checkBundleCached() (bool, error) {
+func checkBundleCached() error {
 	if !constants.BundleEmbedded() {
-		return true, nil
+		return nil
 	}
 	if _, err := os.Stat(constants.DefaultBundlePath); os.IsNotExist(err) {
-		return false, err
+		return err
 	}
-	return true, nil
+	return nil
 }
 
-func fixBundleCached() (bool, error) {
+func fixBundleCached() error {
 	if constants.BundleEmbedded() {
 		currentExecutable, err := os.Executable()
 		if err != nil {
-			return false, err
+			return err
 		}
 		extractor, err := binappend.MakeExtractor(currentExecutable)
 		if err != nil {
-			return false, err
+			return err
 		}
 		available := extractor.AvalibleData()
 		if len(available) < 1 {
-			return false, fmt.Errorf("Invalid bundle data")
+			return fmt.Errorf("Invalid bundle data")
 		}
 		reader, err := extractor.GetReader(available[0])
 		if err != nil {
-			return false, err
+			return err
 		}
 		defer reader.Close()
 
 		bundleDir := filepath.Dir(constants.DefaultBundlePath)
 		err = os.MkdirAll(bundleDir, 0700)
 		if err != nil && !os.IsExist(err) {
-			return false, fmt.Errorf("Cannot create directory %s", bundleDir)
+			return fmt.Errorf("Cannot create directory %s", bundleDir)
 		}
 		writer, err := os.Create(constants.DefaultBundlePath)
 		if err != nil {
-			return false, err
+			return err
 		}
 		defer writer.Close()
 		_, err = io.Copy(writer, reader)
 		if err != nil {
-			return false, err
+			return err
 		}
 
-		return true, nil
+		return nil
 	}
-	return false, fmt.Errorf("CRC bundle is not embedded in the binary")
+	return fmt.Errorf("CRC bundle is not embedded in the binary")
 }
 
 // Check if oc binary is cached or not
-func checkOcBinaryCached() (bool, error) {
+func checkOcBinaryCached() error {
 	oc := oc.OcCached{}
 	if !oc.IsCached() {
-		return false, errors.New("oc binary is not cached")
+		return errors.New("oc binary is not cached")
 	}
 	logging.Debug("oc binary already cached")
-	return true, nil
+	return nil
 }
 
-func fixOcBinaryCached() (bool, error) {
+func fixOcBinaryCached() error {
 	oc := oc.OcCached{}
 	if err := oc.EnsureIsCached(); err != nil {
-		return false, fmt.Errorf("Unable to download oc %v", err)
+		return fmt.Errorf("Unable to download oc %v", err)
 	}
 	logging.Debug("oc binary cached")
-	return true, nil
+	return nil
 }

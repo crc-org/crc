@@ -18,14 +18,14 @@ var nonWinPreflightChecks = [...]PreflightCheck{
 	},
 }
 
-func checkIfRunningAsNormalUser() (bool, error) {
+func checkIfRunningAsNormalUser() error {
 	if os.Geteuid() != 0 {
-		return true, nil
+		return nil
 	}
 	logging.Debug("Ran as root")
-	return false, fmt.Errorf("crc should be ran as a normal user")
+	return fmt.Errorf("crc should be ran as a normal user")
 }
 
-func fixRunAsNormalUser() (bool, error) {
-	return false, fmt.Errorf("crc should be ran as a normal user")
+func fixRunAsNormalUser() error {
+	return fmt.Errorf("crc should be ran as a normal user")
 }
