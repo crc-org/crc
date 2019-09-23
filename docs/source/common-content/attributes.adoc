@@ -16,6 +16,8 @@
 :centos: CentOS
 :mac: macOS
 :msw: Microsoft Windows
+:debian: Debian
+:ubuntu: Ubuntu
 
 // Product naming
 :prod: CodeReady Containers
