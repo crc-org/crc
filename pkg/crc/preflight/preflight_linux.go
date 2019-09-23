@@ -47,6 +47,11 @@ func StartPreflightChecks(vmDriver string) {
 		"Checking if libvirt daemon is running",
 		config.GetBool(cmdConfig.WarnCheckLibvirtRunning.Name),
 	)
+	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckLibvirtVersionCheck.Name),
+		checkLibvirtVersion,
+		"Checking if a supported libvirt version is installed",
+		config.GetBool(cmdConfig.WarnCheckLibvirtVersionCheck.Name),
+	)
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckLibvirtDriver.Name),
 		checkMachineDriverLibvirtInstalled,
 		"Checking if crc-driver-libvirt is installed",
