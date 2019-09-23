@@ -3,6 +3,7 @@ module github.com/code-ready/crc
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/DATA-DOG/godog v0.7.13
+	github.com/Masterminds/semver v1.5.0
 	github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/code-ready/clicumber v0.0.0-20190801094041-02a92c8f7ece

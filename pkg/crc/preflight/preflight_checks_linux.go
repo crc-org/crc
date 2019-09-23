@@ -20,6 +20,8 @@ import (
 	"github.com/code-ready/crc/pkg/crc/systemd"
 	"github.com/code-ready/crc/pkg/download"
 
+	"github.com/Masterminds/semver"
+
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
@@ -28,6 +30,8 @@ const (
 	libvirtDriverVersion        = "0.12.5"
 	crcDnsmasqConfigFile        = "crc.conf"
 	crcNetworkManagerConfigFile = "crc-nm-dnsmasq.conf"
+	// This is defined in https://github.com/code-ready/machine-driver-libvirt/blob/master/go.mod#L5
+	minSupportedLibvirtVersion = "3.4.0"
 )
 
 var (
@@ -143,6 +147,28 @@ func fixLibvirtEnabled() (bool, error) {
 		return false, fmt.Errorf("%s, %v : %s", stdOut, err, stdErr)
 	}
 	logging.Debug("libvirtd.service is enabled")
+	return true, nil
+}
+
+func checkLibvirtVersion() (bool, error) {
+	logging.Debugf("Checking if libvirt version is >=%s\n", minSupportedLibvirtVersion)
+	stdOut, stdErr, err := crcos.RunWithDefaultLocale("virsh", "-v")
+	if err != nil {
+		return false, fmt.Errorf("%v : %s", err, stdErr)
+	}
+	installedLibvirtVersion, err := semver.NewVersion(strings.TrimSpace(stdOut))
+	if err != nil {
+		return false, fmt.Errorf("Unable to parse installed libvirt version %v", err)
+	}
+	supportedLibvirtVersion, err := semver.NewVersion(minSupportedLibvirtVersion)
+	if err != nil {
+		return false, fmt.Errorf("Unable to parse %s libvirt version %v", minSupportedLibvirtVersion, err)
+	}
+
+	if installedLibvirtVersion.LessThan(supportedLibvirtVersion) {
+		return false, fmt.Errorf("libvirt version %s is installed, but %s or higher is required", installedLibvirtVersion.String(), minSupportedLibvirtVersion)
+	}
+
 	return true, nil
 }
 

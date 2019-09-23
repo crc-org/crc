@@ -15,6 +15,8 @@ var (
 	SkipCheckLibvirtEnabled          = cfg.AddSetting("skip-check-libvirt-enabled", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	WarnCheckLibvirtEnabled          = cfg.AddSetting("warn-check-libvirt-enabled", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	SkipCheckLibvirtRunning          = cfg.AddSetting("skip-check-libvirt-running", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	WarnCheckLibvirtVersionCheck     = cfg.AddSetting("warn-check-libvirt-version", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	SkipCheckLibvirtVersionCheck     = cfg.AddSetting("skip-check-libvirt-version", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	WarnCheckLibvirtRunning          = cfg.AddSetting("warn-check-libvirt-running", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	SkipCheckUserInLibvirtGroup      = cfg.AddSetting("skip-check-user-in-libvirt-group", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	WarnCheckUserInLibvirtGroup      = cfg.AddSetting("warn-check-user-in-libvirt-group", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
