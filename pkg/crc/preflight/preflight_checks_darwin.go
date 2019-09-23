@@ -96,137 +96,127 @@ func setSuid(path string) error {
 	return nil
 }
 
-func checkSuid(path string) (bool, error) {
+func checkSuid(path string) error {
 	fi, err := os.Stat(path)
 	if err != nil {
-		return false, err
+		return err
 	}
 	if fi.Mode()&os.ModeSetuid == 0 {
-		return false, fmt.Errorf("%s does not have the SUID bit set (%s)", path, fi.Mode().String())
+		return fmt.Errorf("%s does not have the SUID bit set (%s)", path, fi.Mode().String())
 	}
 	if fi.Sys().(*syscall.Stat_t).Uid != 0 {
-		return false, fmt.Errorf("%s is not owned by root", path)
+		return fmt.Errorf("%s is not owned by root", path)
 	}
 
-	return true, nil
+	return nil
 }
 
-func checkHyperKitInstalled() (bool, error) {
+func checkHyperKitInstalled() error {
 	logging.Debugf("Checking if hyperkit is installed")
 	hyperkitPath := filepath.Join(constants.CrcBinDir, "hyperkit")
 	err := unix.Access(hyperkitPath, unix.X_OK)
 	if err != nil {
 		logging.Debugf("%s not executable", hyperkitPath)
-		return false, err
+		return err
 	}
 
 	return checkSuid(hyperkitPath)
 }
 
-func fixHyperKitInstallation() (bool, error) {
+func fixHyperKitInstallation() error {
 	hyperkitFile, err := download(hyperkitDownloadURL, constants.CrcBinDir, 0755)
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	err = setSuid(hyperkitFile)
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
+	return setSuid(hyperkitFile)
 }
 
-func checkMachineDriverHyperKitInstalled() (bool, error) {
+func checkMachineDriverHyperKitInstalled() error {
 	logging.Debugf("Checking if %s is installed", hyperkitDriverCommand)
 	hyperkitPath := filepath.Join(constants.CrcBinDir, hyperkitDriverCommand)
 	err := unix.Access(hyperkitPath, unix.X_OK)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	// Check the version of driver if it matches to supported one
 	stdOut, stdErr, err := crcos.RunWithDefaultLocale(hyperkitPath, "version")
 	if err != nil {
-		return false, err
+		return err
 	}
 	if !strings.Contains(stdOut, hyperkitDriverVersion) {
-		return false, fmt.Errorf("%s does not have right version \n Required: %s \n Got: %s use 'crc setup' command.\n %v\n", hyperkitDriverCommand, hyperkitDriverVersion, stdOut, stdErr)
+		return fmt.Errorf("%s does not have right version \n Required: %s \n Got: %s use 'crc setup' command.\n %v\n", hyperkitDriverCommand, hyperkitDriverVersion, stdOut, stdErr)
 	}
 	logging.Debugf("%s is already installed in %s", hyperkitDriverCommand, hyperkitPath)
 
 	return checkSuid(hyperkitPath)
 }
 
-func fixMachineDriverHyperKitInstalled() (bool, error) {
+func fixMachineDriverHyperKitInstalled() error {
 	hyperkitDriverPath, err := download(hyperkitDriverDownloadURL, constants.CrcBinDir, 0755)
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	err = setSuid(hyperkitDriverPath)
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
+	return setSuid(hyperkitDriverPath)
 }
 
-func checkResolverFilePermissions() (bool, error) {
+func checkResolverFilePermissions() error {
 	return isUserHaveFileWritePermission(resolverFile)
 }
 
-func fixResolverFilePermissions() (bool, error) {
+func fixResolverFilePermissions() error {
 	// Check if resolver directory available or not
 	if _, err := os.Stat(resolverDir); os.IsNotExist(err) {
 		logging.Debugf("Creating %s directory", resolverDir)
 		stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("create dir %s", resolverDir), "mkdir", resolverDir)
 		if err != nil {
-			return false, fmt.Errorf("Unable to create the resolver Dir: %s %v: %s", stdOut, err, stdErr)
+			return fmt.Errorf("Unable to create the resolver Dir: %s %v: %s", stdOut, err, stdErr)
 		}
 	}
 	logging.Debugf("Making %s readable/writable by the current user", resolverFile)
 	stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("create file %s", resolverFile), "touch", resolverFile)
 	if err != nil {
-		return false, fmt.Errorf("Unable to create the resolver file: %s %v: %s", stdOut, err, stdErr)
+		return fmt.Errorf("Unable to create the resolver file: %s %v: %s", stdOut, err, stdErr)
 	}
 
 	return addFileWritePermissionToUser(resolverFile)
 }
 
-func checkHostsFilePermissions() (bool, error) {
+func checkHostsFilePermissions() error {
 	return isUserHaveFileWritePermission(hostFile)
 }
 
-func fixHostsFilePermissions() (bool, error) {
+func fixHostsFilePermissions() error {
 	return addFileWritePermissionToUser(hostFile)
 }
 
-func isUserHaveFileWritePermission(filename string) (bool, error) {
+func isUserHaveFileWritePermission(filename string) error {
 	err := unix.Access(filename, unix.R_OK|unix.W_OK)
 	if err != nil {
-		return false, fmt.Errorf("%s is not readable/writable by the current user", filename)
+		return fmt.Errorf("%s is not readable/writable by the current user", filename)
 	}
-	return true, nil
+	return nil
 }
 
-func addFileWritePermissionToUser(filename string) (bool, error) {
+func addFileWritePermissionToUser(filename string) error {
 	logging.Debugf("Making %s readable/writable by the current user", filename)
 	currentUser, err := user.Current()
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("change ownership of %s", filename), "chown", currentUser.Username, filename)
 	if err != nil {
-		return false, fmt.Errorf("Unable to change ownership of the filename: %s %v: %s", stdOut, err, stdErr)
+		return fmt.Errorf("Unable to change ownership of the filename: %s %v: %s", stdOut, err, stdErr)
 	}
 
 	err = os.Chmod(filename, 0600)
 	if err != nil {
-		return false, fmt.Errorf("Unable to change permissions of the filename: %s %v: %s", stdOut, err, stdErr)
+		return fmt.Errorf("Unable to change permissions of the filename: %s %v: %s", stdOut, err, stdErr)
 	}
 	logging.Debugf("%s is readable/writable by current user", filename)
 
-	return true, nil
+	return nil
 }

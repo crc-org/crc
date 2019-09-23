@@ -14,8 +14,8 @@ const (
 	StartOnly
 )
 
-type PreflightCheckFunc func() (bool, error)
-type PreflightFixFunc func() (bool, error)
+type PreflightCheckFunc func() error
+type PreflightFixFunc func() error
 
 type PreflightCheck struct {
 	configKeySuffix  string
@@ -65,7 +65,7 @@ func (check *PreflightCheck) doCheck() error {
 		return nil
 	}
 
-	_, err := check.check()
+	err := check.check()
 	if err != nil {
 		logging.Debug(err.Error())
 	}
@@ -78,12 +78,8 @@ func (check *PreflightCheck) doFix() error {
 	} else {
 		logging.Infof("%s", check.fixDescription)
 	}
-	ok, err := check.fix()
-	if ok {
-		return nil
-	}
 
-	return err
+	return check.fix()
 }
 
 func doPreflightChecks(checks []PreflightCheck) {
