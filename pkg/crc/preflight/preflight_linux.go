@@ -139,6 +139,12 @@ func SetupHost(vmDriver string) {
 		"Starting libvirt service",
 		config.GetBool(cmdConfig.WarnCheckLibvirtRunning.Name),
 	)
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckLibvirtVersionCheck.Name),
+		checkLibvirtVersion,
+		fixLibvirtVersion,
+		"Checking if a supported libvirt version is installed",
+		config.GetBool(cmdConfig.WarnCheckLibvirtVersionCheck.Name),
+	)
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckLibvirtDriver.Name),
 		checkMachineDriverLibvirtInstalled,
 		fixMachineDriverLibvirtInstalled,

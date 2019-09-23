@@ -150,6 +150,10 @@ func fixLibvirtEnabled() (bool, error) {
 	return true, nil
 }
 
+func fixLibvirtVersion() (bool, error) {
+	return false, fmt.Errorf("libvirt v%s or newer is required and must be updated manually", minSupportedLibvirtVersion)
+}
+
 func checkLibvirtVersion() (bool, error) {
 	logging.Debugf("Checking if libvirt version is >=%s\n", minSupportedLibvirtVersion)
 	stdOut, stdErr, err := crcos.RunWithDefaultLocale("virsh", "-v")
