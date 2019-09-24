@@ -15,6 +15,9 @@ import (
 )
 
 func checkBundleCached() (bool, error) {
+	if !constants.BundleEmbedded() {
+		return true, nil
+	}
 	if _, err := os.Stat(constants.DefaultBundlePath); os.IsNotExist(err) {
 		return false, err
 	}

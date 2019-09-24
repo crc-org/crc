@@ -23,7 +23,7 @@ var (
 	SkipCheckVirtualBoxInstalled = cfg.AddSetting("skip-check-virtualbox-installed", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	WarnCheckVirtualBoxInstalled = cfg.AddSetting("warn-check-virtualbox-installed", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	SkipCheckBundleCached        = cfg.AddSetting("skip-check-bundle-cached", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
-	WarnCheckBundleCached        = cfg.AddSetting("warn-check-bundle-cached", true, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	WarnCheckBundleCached        = cfg.AddSetting("warn-check-bundle-cached", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 )
 
 var (

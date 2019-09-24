@@ -54,7 +54,6 @@ Feature: Basic test
 	And stdout should contain "Will use root access: execute systemctl daemon-reload command"
 	And stdout should contain "Will use root access: execute systemctl stop/start command"
         And stdout should contain "Unpacking bundle from the CRC binary"
-        And stdout should contain "CRC bundle is not embedded in the binary"
         And stdout should contain "Setup is complete, you can now run 'crc start -b $bundlename' to start a CodeReady Containers instance"
 
     @darwin
