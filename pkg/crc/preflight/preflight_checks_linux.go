@@ -27,7 +27,7 @@ import (
 
 const (
 	libvirtDriverCommand        = "crc-driver-libvirt"
-	libvirtDriverVersion        = "0.12.5"
+	libvirtDriverVersion        = "0.12.6"
 	crcDnsmasqConfigFile        = "crc.conf"
 	crcNetworkManagerConfigFile = "crc-nm-dnsmasq.conf"
 	// This is defined in https://github.com/code-ready/machine-driver-libvirt/blob/master/go.mod#L5
