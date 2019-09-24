@@ -32,7 +32,7 @@ func CheckCertsValidityUsingBundleBuildTime(buildTime time.Time) (bool, int) {
 
 // CheckCertsValidity checks if the cluster certs have expired or going to expire in next 7 days
 func CheckCertsValidity(sshRunner *ssh.SSHRunner) (bool, int, error) {
-	certExpiryDate, err := getcertExipryDateFromVM(sshRunner)
+	certExpiryDate, err := getcertExpiryDateFromVM(sshRunner)
 	if err != nil {
 		return false, 0, err
 	}
@@ -48,7 +48,7 @@ func CheckCertsValidity(sshRunner *ssh.SSHRunner) (bool, int, error) {
 	return false, 0, nil
 }
 
-func getcertExipryDateFromVM(sshRunner *ssh.SSHRunner) (time.Time, error) {
+func getcertExpiryDateFromVM(sshRunner *ssh.SSHRunner) (time.Time, error) {
 	certExpiryDate := time.Time{}
 	certExpiryDateCmd := `date --date="$(sudo openssl x509 -in /var/lib/kubelet/pki/kubelet-client-current.pem -noout -enddate | cut -d= -f 2)" --iso-8601=seconds`
 	output, err := sshRunner.Run(certExpiryDateCmd)
