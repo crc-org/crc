@@ -17,9 +17,11 @@ Clicumber allows running commands in a persistent shell instance (`bash`, `tcsh`
 To start integration tests, run:
 
 ```bash
-$ make integration BUNDLE_LOCATION=<bundle location>
+$ make integration BUNDLE_LOCATION=<bundle location> PULL_SECRET_FILE=<pull secret path>
 ```
-where `<bundle location>` is either the bundle's URL or its path in the filesystem.
+where `<bundle location>` is either the bundle's URL or its path in the filesystem,
+and `<pull secret path>` is the path to a file containing your OpenShift pull secret.
+The paths must be absolute paths.
 
 
 [[integration-test-logs]]
