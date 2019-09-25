@@ -35,6 +35,6 @@ func runConfigUnset(key string) {
 	}
 
 	if unsetMsg != "" {
-		output.Out(unsetMsg)
+		output.Outln(unsetMsg)
 	}
 }

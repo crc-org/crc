@@ -42,7 +42,7 @@ func runDelete(arguments []string) {
 	if err != nil {
 		errors.Exit(1)
 	}
-	output.Out("CodeReady Containers instance deleted")
+	output.Outln("CodeReady Containers instance deleted")
 }
 
 func deleteCache() {

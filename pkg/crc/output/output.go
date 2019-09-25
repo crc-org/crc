@@ -5,14 +5,14 @@ import (
 	"io"
 )
 
-func Out(args ...interface{}) {
+func Outln(args ...interface{}) {
 	fmt.Println(args...)
 }
 
-func OutF(s string, args ...interface{}) {
+func Outf(s string, args ...interface{}) {
 	fmt.Printf(s, args...)
 }
 
-func OutW(w io.Writer, args ...interface{}) (n int, err error) {
+func Fout(w io.Writer, args ...interface{}) (n int, err error) {
 	return fmt.Fprintln(w, args...)
 }

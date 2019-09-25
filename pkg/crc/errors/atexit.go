@@ -44,9 +44,9 @@ func Exit(code int) {
 // If the exit code is 0, the message is prints to stdout, otherwise to stderr.
 func ExitWithMessage(code int, text string, args ...interface{}) {
 	if code == 0 {
-		_, _ = output.OutW(os.Stdout, fmt.Sprintf(text, args...))
+		_, _ = output.Fout(os.Stdout, fmt.Sprintf(text, args...))
 	} else {
-		_, _ = output.OutW(os.Stderr, fmt.Sprintf(text, args...))
+		_, _ = output.Fout(os.Stderr, fmt.Sprintf(text, args...))
 	}
 	Exit(code)
 }
