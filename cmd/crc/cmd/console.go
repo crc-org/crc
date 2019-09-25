@@ -67,7 +67,7 @@ func runConsole(arguments []string) {
 	if !machine.IsRunning(result.State) {
 		errors.ExitWithMessage(1, "CodeReady Containers instance is not running, cannot open the OpenShift Web Console.")
 	}
-	output.Outln("Opening the OpenShift Web console in the default browser...")
+	output.Outln("Opening the OpenShift Web Console in the default browser...")
 	err = browser.OpenURL(result.ClusterConfig.WebConsoleURL)
 	if err != nil {
 		errors.ExitWithMessage(1, "Failed to open the OpenShift Web Console, you can access it by opening %s in your web browser.", result.ClusterConfig.WebConsoleURL)
