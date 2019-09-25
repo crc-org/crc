@@ -83,6 +83,10 @@ func getBundleMetadataFromDriver(driver drivers.Driver) (string, *bundle.CrcBund
 	return bundleName, metadata, err
 }
 
+func IsRunning(st state.State) bool {
+	return st == state.Running
+}
+
 func Start(startConfig StartConfig) (StartResult, error) {
 	var crcBundleMetadata *bundle.CrcBundleInfo
 	defer unsetMachineLogging()
@@ -191,7 +195,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			result.Error = err.Error()
 			return *result, errors.Newf("Error getting the state for host: %v", err)
 		}
-		if vmState == state.Running {
+		if IsRunning(vmState) {
 			openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
 			if openshiftVersion == "" {
 				logging.Infof("A CodeReady Containers VM is already running")
@@ -200,9 +204,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			}
 			result.Status = vmState.String()
 			return *result, nil
-		}
-
-		if vmState != state.Running {
+		} else {
 			openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
 			if openshiftVersion == "" {
 				logging.Infof("Starting CodeReady Containers VM ...")
@@ -508,7 +510,7 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 		return *result, errors.New(err.Error())
 	}
 
-	if vmStatus == state.Running {
+	if IsRunning(vmStatus) {
 		// check if all the clusteroperators are running
 		ocConfig := oc.UseOCWithConfig(statusConfig.Name)
 		operatorsRunning, err := oc.GetClusterOperatorStatus(ocConfig)
