@@ -96,11 +96,13 @@ func FeatureContext(s *godog.Suite) {
 			fmt.Println("Obtaining bundle...")
 			bundle, err := DownloadBundle(bundleURL, ".")
 			if err != nil {
-				fmt.Errorf("Failed to obtain CRC bundle, %v\n", err)
+				fmt.Printf("Failed to obtain CRC bundle, %v\n", err)
+				os.Exit(1)
 			}
 			fmt.Println("Using bundle:", bundle)
 		} else if err != nil {
-			fmt.Errorf("Unknown error obtaining the bundle %v.\n", bundleName)
+			fmt.Printf("Unknown error obtaining the bundle %v.\n", bundleName)
+			os.Exit(1)
 		} else {
 			fmt.Println("Using existing bundle:", bundleName)
 		}
