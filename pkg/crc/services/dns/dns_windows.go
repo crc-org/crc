@@ -10,6 +10,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/services"
 
+	winnet "github.com/code-ready/crc/pkg/os/windows/network"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 	"github.com/code-ready/crc/pkg/os/windows/win32"
 )
@@ -22,8 +23,8 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *se
 		return *result, nil
 	}
 
-	// TODO: localize
-	networkInterface := "vEthernet (Default Switch)" //getMainInterface()
+	_, switchName := winnet.GetDefaultSwitchName()
+	networkInterface := fmt.Sprintf("vEthernet (%s)", switchName)
 
 	setInterfaceNameserverValue(networkInterface, serviceConfig.IP)
 
