@@ -34,9 +34,9 @@ func runSetup(arguments []string) {
 	}
 	preflight.SetupHost(vmDriver)
 	if constants.BundleEmbedded() {
-		output.Out("Setup is complete, you can now run 'crc start' to start a CodeReady Containers instance")
+		output.Outln("Setup is complete, you can now run 'crc start' to start a CodeReady Containers instance")
 	} else {
-		output.Out("Setup is complete, you can now run 'crc start -b $bundlename' to start a CodeReady Containers instance")
+		output.Outln("Setup is complete, you can now run 'crc start -b $bundlename' to start a CodeReady Containers instance")
 	}
 }
 

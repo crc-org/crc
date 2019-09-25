@@ -36,6 +36,6 @@ func runConfigSet(key string, value interface{}) {
 	}
 
 	if setMessage != "" {
-		output.Out(setMessage)
+		output.Outln(setMessage)
 	}
 }

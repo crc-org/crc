@@ -13,7 +13,7 @@ func PromptUserForYesOrNo(message string, force bool) bool {
 		return true
 	}
 	var response string
-	output.OutF(message + "? [y/N]: ")
+	output.Outf(message + "? [y/N]: ")
 	fmt.Scanf("%s", &response)
 
 	return strings.ToLower(response) == "y"

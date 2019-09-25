@@ -32,5 +32,5 @@ func runIP(arguments []string) {
 	if err != nil {
 		errors.Exit(1)
 	}
-	output.Out(result.IP)
+	output.Outln(result.IP)
 }

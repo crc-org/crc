@@ -35,7 +35,7 @@ func runStop(arguments []string) {
 		Name: constants.DefaultName,
 	}
 
-	output.Out("Stopping CodeReady Containers instance... this may take a few minutes")
+	output.Outln("Stopping CodeReady Containers instance... this may take a few minutes")
 	commandResult, err := machine.Stop(stopConfig)
 	if err != nil {
 		// Here we are checking the VM state and if it is still running then
@@ -53,7 +53,7 @@ func runStop(arguments []string) {
 		errors.Exit(1)
 	}
 	if commandResult.Success {
-		output.Out("CodeReady Containers instance stopped")
+		output.Outln("CodeReady Containers instance stopped")
 	} else {
 		/* If we did not get an error, the status should be true */
 		logging.Warnf("Unexpected status %v", commandResult.Success)
@@ -65,5 +65,5 @@ func killVM(killConfig machine.PowerOffConfig) {
 	if err != nil {
 		errors.Exit(1)
 	}
-	output.Out("CodeReady Containers instance forcibly stopped")
+	output.Outln("CodeReady Containers instance forcibly stopped")
 }

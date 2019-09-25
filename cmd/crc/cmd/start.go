@@ -62,7 +62,7 @@ func runStart(arguments []string) {
 		errors.Exit(1)
 	}
 	if commandResult.Status == "Running" {
-		output.Out("CodeReady Containers instance is running")
+		output.Outln("CodeReady Containers instance is running")
 	} else {
 		logging.Warnf("Unexpected status: %s", commandResult.Status)
 	}

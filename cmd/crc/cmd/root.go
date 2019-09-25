@@ -60,7 +60,7 @@ func runPostrun() {
 }
 
 func runRoot() {
-	output.Out("No command given")
+	output.Outln("No command given")
 }
 
 func Execute() {
