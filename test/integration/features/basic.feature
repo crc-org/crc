@@ -85,6 +85,17 @@ Feature: Basic test
         Then stdout should match "\d+\.\d+\.\d+\.\d+"
 
     @darwin @linux @windows
+    Scenario: CRC console URL
+        When executing "crc console --url" succeeds
+        Then stdout should contain "https://console-openshift-console.apps-crc.testing"
+
+    @darwin @linux @windows
+    Scenario: CRC console credentials
+        When executing "crc console --credentials" succeeds
+        Then stdout should contain "To login as a normal user, username is 'developer' and password is 'developer'."
+        And stdout should contain "To login as an admin, username is 'kubeadmin' and password is "
+
+    @darwin @linux @windows
     Scenario: CRC forcible stop
         When executing "crc stop -f"
         Then stdout should contain "CodeReady Containers instance stopped"    
@@ -93,6 +104,13 @@ Feature: Basic test
     Scenario: CRC status check
         When with up to "2" retries with wait period of "1m" command "crc status" output should not contain "Running"
         And stdout should contain "Stopped"
+
+    @darwin @linux @windows
+    Scenario: CRC console check
+        Given executing "crc status" succeeds
+        And stdout contains "Stopped"
+        When executing "crc console"
+        Then stderr should contain "CodeReady Containers instance is not running, cannot open the OpenShift Web Console."
 
     @darwin @linux @windows
     Scenario: CRC delete
