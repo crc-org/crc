@@ -20,3 +20,8 @@ func WriteToFileAsRoot(reason, content, filepath string) error {
 	}
 	return nil
 }
+
+func RemoveFileAsRoot(reason, filepath string) error {
+	_, _, err := RunWithPrivilege(reason, "rm", "-fr", filepath)
+	return err
+}

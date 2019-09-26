@@ -19,18 +19,22 @@ const (
 	// Indicates a PreflightCheck should only be run as part of "crc start"
 	StartOnly
 	NoFix
+	CleanUpOnly
 )
 
 type PreflightCheckFunc func() error
 type PreflightFixFunc func() error
+type PreflightCleanUpFunc func() error
 
 type PreflightCheck struct {
-	configKeySuffix  string
-	checkDescription string
-	check            PreflightCheckFunc
-	fixDescription   string
-	fix              PreflightFixFunc
-	flags            PreflightCheckFlags
+	configKeySuffix    string
+	checkDescription   string
+	check              PreflightCheckFunc
+	fixDescription     string
+	fix                PreflightFixFunc
+	flags              PreflightCheckFlags
+	cleanupDescription string
+	cleanup            PreflightCleanUpFunc
 }
 
 func (check *PreflightCheck) getSkipConfigName() string {
@@ -92,9 +96,19 @@ func (check *PreflightCheck) doFix() error {
 	return check.fix()
 }
 
+func (check *PreflightCheck) doCleanUp() error {
+	if check.cleanupDescription == "" {
+		panic(fmt.Sprintf("Should not happen, empty description for cleanup '%s'", check.configKeySuffix))
+	}
+
+	logging.Infof("%s", check.cleanupDescription)
+
+	return check.cleanup()
+}
+
 func doPreflightChecks(checks []PreflightCheck) {
 	for _, check := range checks {
-		if check.flags&SetupOnly == SetupOnly {
+		if check.flags&SetupOnly == SetupOnly || check.flags&CleanUpOnly == CleanUpOnly {
 			continue
 		}
 		err := check.doCheck()
@@ -110,7 +124,7 @@ func doPreflightChecks(checks []PreflightCheck) {
 
 func doFixPreflightChecks(checks []PreflightCheck) {
 	for _, check := range checks {
-		if check.flags&StartOnly == StartOnly {
+		if check.flags&StartOnly == StartOnly || check.flags&CleanUpOnly == CleanUpOnly {
 			continue
 		}
 		err := check.doCheck()
@@ -124,6 +138,20 @@ func doFixPreflightChecks(checks []PreflightCheck) {
 			} else {
 				logging.Fatal(err.Error())
 			}
+		}
+	}
+}
+
+func doCleanUpPreflightChecks(checks []PreflightCheck) {
+	// Do the cleanup in reverse order to avoid any dependency during cleanup
+	for i := len(checks) - 1; i >= 0; i-- {
+		check := checks[i]
+		if check.cleanup == nil {
+			continue
+		}
+		err := check.doCleanUp()
+		if err != nil {
+			logging.Fatal(err.Error())
 		}
 	}
 }

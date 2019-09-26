@@ -65,11 +65,13 @@ var libvirtPreflightChecks = [...]PreflightCheck{
 		flags:            SetupOnly,
 	},
 	{
-		configKeySuffix:  "check-crc-network",
-		checkDescription: "Checking if libvirt 'crc' network is available",
-		check:            checkLibvirtCrcNetworkAvailable,
-		fixDescription:   "Setting up libvirt 'crc' network",
-		fix:              fixLibvirtCrcNetworkAvailable,
+		configKeySuffix:    "check-crc-network",
+		checkDescription:   "Checking if libvirt 'crc' network is available",
+		check:              checkLibvirtCrcNetworkAvailable,
+		fixDescription:     "Setting up libvirt 'crc' network",
+		fix:                fixLibvirtCrcNetworkAvailable,
+		cleanupDescription: "Removing 'crc' network from libvirt",
+		cleanup:            removeLibvirtCrcNetwork,
 	},
 	{
 		configKeySuffix:  "check-crc-network-active",
@@ -93,18 +95,27 @@ var libvirtPreflightChecks = [...]PreflightCheck{
 		fix:              fixNetworkManagerIsRunning,
 	},
 	{
-		configKeySuffix:  "check-network-manager-config",
-		checkDescription: "Checking if /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf exists",
-		check:            checkCrcNetworkManagerConfig,
-		fixDescription:   "Writing Network Manager config for crc",
-		fix:              fixCrcNetworkManagerConfig,
+		configKeySuffix:    "check-network-manager-config",
+		checkDescription:   "Checking if /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf exists",
+		check:              checkCrcNetworkManagerConfig,
+		fixDescription:     "Writing Network Manager config for crc",
+		fix:                fixCrcNetworkManagerConfig,
+		cleanupDescription: "Removing /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf file",
+		cleanup:            removeCrcNetworkManagerConfig,
 	},
 	{
-		configKeySuffix:  "check-crc-dnsmasq-file",
-		checkDescription: "Checking if /etc/NetworkManager/dnsmasq.d/crc.conf exists",
-		check:            checkCrcDnsmasqConfigFile,
-		fixDescription:   "Writing dnsmasq config for crc",
-		fix:              fixCrcDnsmasqConfigFile,
+		configKeySuffix:    "check-crc-dnsmasq-file",
+		checkDescription:   "Checking if /etc/NetworkManager/dnsmasq.d/crc.conf exists",
+		check:              checkCrcDnsmasqConfigFile,
+		fixDescription:     "Writing dnsmasq config for crc",
+		fix:                fixCrcDnsmasqConfigFile,
+		cleanupDescription: "Removing /etc/NetworkManager/dnsmasq.d/crc.conf file",
+		cleanup:            removeCrcDnsmasqConfigFile,
+	},
+	{
+		cleanupDescription: "Removing the crc VM if exists",
+		cleanup:            removeCrcVM,
+		flags:              CleanUpOnly,
 	},
 }
 
@@ -129,4 +140,8 @@ func SetupHost() {
 
 func RegisterSettings() {
 	doRegisterSettings(getPreflightChecks())
+}
+
+func CleanUpHost() {
+	doCleanUpPreflightChecks(getPreflightChecks())
 }

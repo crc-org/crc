@@ -2,6 +2,8 @@ package preflight
 
 import (
 	"fmt"
+
+	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
@@ -112,4 +114,9 @@ func SetupHost() {
 
 func RegisterSettings() {
 	doRegisterSettings(getPreflightChecks())
+}
+
+func CleanUpHost() {
+	logging.Warn("Cleanup is not supported for MacOS")
+	doCleanUpPreflightChecks(getPreflightChecks())
 }
