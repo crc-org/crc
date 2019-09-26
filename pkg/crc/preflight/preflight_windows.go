@@ -12,32 +12,32 @@ func StartPreflightChecks(vmDriver string) {
 		"Checking if running as normal user",
 		false,
 	)
-	preflightCheckSucceedsOrFails(false,
+	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckWindowsVersionCheck.Name),
 		checkOcBinaryCached,
 		"Checking if oc binary is cached",
-		false,
+		config.GetBool(cmdConfig.WarnCheckWindowsVersionCheck.Name),
 	)
 
 	if vmDriver == "hyperv" {
-		preflightCheckSucceedsOrFails(false,
+		preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckWindowsVersionCheck.Name),
 			checkVersionOfWindowsUpdate,
 			"Check Windows 10 release",
-			false,
+			config.GetBool(cmdConfig.WarnCheckWindowsVersionCheck.Name),
 		)
-		preflightCheckSucceedsOrFails(false,
+		preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckHyperVInstalled.Name),
 			checkHyperVInstalled,
 			"Hyper-V installed and operational",
-			false,
+			config.GetBool(cmdConfig.WarnCheckHyperVInstalled.Name),
 		)
-		preflightCheckSucceedsOrFails(false,
+		preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckUserInHyperVGroup.Name),
 			checkIfUserPartOfHyperVAdmins,
 			"Is user a member of the Hyper-V Administrators group",
-			false,
+			config.GetBool(cmdConfig.WarnCheckUserInHyperVGroup.Name),
 		)
-		preflightCheckSucceedsOrFails(false,
+		preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckHyperVSwitch.Name),
 			checkIfHyperVVirtualSwitchExists,
 			"Does the Hyper-V virtual switch exist",
-			false,
+			config.GetBool(cmdConfig.WarnCheckHyperVSwitch.Name),
 		)
 	}
 }
@@ -64,31 +64,31 @@ func SetupHost(vmDriver string) {
 	)
 
 	if vmDriver == "hyperv" {
-		preflightCheckAndFix(false,
+		preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckWindowsVersionCheck.Name),
 			checkVersionOfWindowsUpdate,
 			fixVersionOfWindowsUpdate,
 			"Check Windows 10 release",
-			false,
+			config.GetBool(cmdConfig.WarnCheckWindowsVersionCheck.Name),
 		)
-		preflightCheckAndFix(false,
+		preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckHyperVInstalled.Name),
 			checkHyperVInstalled,
 			fixHyperVInstalled,
 			"Hyper-V installed",
-			false,
+			config.GetBool(cmdConfig.WarnCheckHyperVInstalled.Name),
 		)
-		preflightCheckAndFix(false,
+		preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckUserInHyperVGroup.Name),
 			// Workaround to an issue the check returns "True"
 			checkIfUserPartOfHyperVAdmins,
 			fixUserPartOfHyperVAdmins,
 			"Is user a member of the Hyper-V Administrators group",
-			false,
+			config.GetBool(cmdConfig.WarnCheckUserInHyperVGroup.Name),
 		)
 
-		preflightCheckAndFix(false,
+		preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckHyperVSwitch.Name),
 			checkIfHyperVVirtualSwitchExists,
 			fixHyperVVirtualSwitch,
 			"Does the Hyper-V virtual switch exist",
-			false,
+			config.GetBool(cmdConfig.WarnCheckHyperVSwitch.Name),
 		)
 	}
 }
