@@ -26,7 +26,7 @@ to the options that you set when you run the 'crc start' command.`,
 }
 
 func runConfigUnset(key string) {
-	unsetMsg, err := config.Unset(key)
+	unsetMessage, err := config.Unset(key)
 	if err != nil {
 		errors.ExitWithMessage(1, err.Error())
 	}
@@ -34,7 +34,7 @@ func runConfigUnset(key string) {
 		errors.ExitWithMessage(1, "Error Writing config to file %s: %s", constants.ConfigPath, err.Error())
 	}
 
-	if unsetMsg != "" {
-		output.Outln(unsetMsg)
+	if unsetMessage != "" {
+		output.Outln(unsetMessage)
 	}
 }
