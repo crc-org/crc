@@ -98,7 +98,7 @@ Feature: Basic test
     @darwin @linux @windows
     Scenario: CRC forcible stop
         When executing "crc stop -f"
-        Then stdout should contain "CodeReady Containers instance stopped"    
+        Then stdout should match "CodeReady Containers instance(.*)stopped"
 
     @darwin @linux @windows
     Scenario: CRC status check
