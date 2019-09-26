@@ -1,6 +1,20 @@
 [id="basic-troubleshooting_{context}"]
 = Basic troubleshooting
 
+[NOTE]
+====
+Each released `crc` binary expires 30 days after the release due to certificates embedded in the Openshift cluster.
+Using an older `crc` binary will result in an expired certificates error.
+
+To resolve this error:
+
+* link:https://github.com/code-ready/crc/releases[Download the latest CodeReady Containers release] and place the `crc` binary in your `$PATH`.
+* Remove the cluster with certificate errors using the `crc delete` command.
+* Set up the new release with the `crc setup` command.
+* Start the new cluster with the `crc start` command.
+
+====
+
 The majority of issues can be resolved by stopping a running {prod} virtual machine, deleting the virtual machine, and starting a new instance of the virtual machine.
 
 .Prerequisites
@@ -9,9 +23,6 @@ The majority of issues can be resolved by stopping a running {prod} virtual mach
 For more information, see <<setting-up-codeready-containers_{context}>>.
 * The virtual machine has been started using the [command]`{bin} start` command.
 For more information, see <<starting-the-virtual-machine_{context}>>.
-* You are using the latest {prod} release
-The generated certificates for the embedded system image bundle expire after 30 days.
-Using an older system image bundle may result in errors related to expired x509 certificates.
 
 .Procedure
 
