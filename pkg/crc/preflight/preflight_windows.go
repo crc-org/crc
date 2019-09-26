@@ -1,5 +1,7 @@
 package preflight
 
+import "github.com/code-ready/crc/pkg/crc/logging"
+
 var hypervPreflightChecks = [...]PreflightCheck{
 	{
 		configKeySuffix:  "check-administrator-user",
@@ -65,4 +67,9 @@ func SetupHost() {
 
 func RegisterSettings() {
 	doRegisterSettings(getPreflightChecks())
+}
+
+func CleanUpHost() {
+	logging.Warn("Cleanup is not supported for Windows")
+	doCleanUpPreflightChecks(getPreflightChecks())
 }

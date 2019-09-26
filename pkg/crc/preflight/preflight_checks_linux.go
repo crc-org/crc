@@ -362,6 +362,56 @@ func fixLibvirtCrcNetworkAvailable() error {
 	return nil
 }
 
+func removeLibvirtCrcNetwork() error {
+	logging.Debug("Removing libvirt 'crc' network")
+	_, _, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-info", libvirt.DefaultNetwork)
+	if err != nil {
+		// Ignore if no crc network exists for libvirt
+		// User may have manually deleted the `crc` network from libvirt
+		return nil
+	}
+	_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-destroy", libvirt.DefaultNetwork)
+	if err != nil {
+		logging.Debugf("%v : %s", err, stderr)
+		return fmt.Errorf("Failed to destroy libvirt 'crc' network")
+	}
+
+	_, stderr, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-undefine", libvirt.DefaultNetwork)
+	if err != nil {
+		logging.Debugf("%v : %s", err, stderr)
+		return fmt.Errorf("Failed to undefine libvirt 'crc' network")
+	}
+	logging.Debug("libvirt 'crc' network removed")
+	return nil
+}
+
+func removeCrcVM() error {
+	logging.Debug("Removing 'crc' VM")
+	_, _, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "dominfo", constants.DefaultName)
+	if err != nil {
+		//  User may have run `crc delete` before `crc cleanup`
+		//  in that case there is no crc vm so return early.
+		return nil
+	}
+	_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "destroy", constants.DefaultName)
+	if err != nil {
+		logging.Debugf("%v : %s", err, stderr)
+		return fmt.Errorf("Failed to destroy 'crc' VM")
+	}
+	_, stderr, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "undefine", constants.DefaultName)
+	if err != nil {
+		logging.Debugf("%v : %s", err, stderr)
+		return fmt.Errorf("Failed to undefine 'crc' VM")
+	}
+	if err := os.RemoveAll(constants.MachineInstanceDir); err != nil {
+		logging.Debugf("Error removing %s dir: %v", constants.MachineInstanceDir, err)
+		return fmt.Errorf("Error removing %s dir", constants.MachineInstanceDir)
+	}
+	logging.Debug("'crc' VM is removed")
+
+	return nil
+}
+
 func trimSpacesFromXML(str string) string {
 	strs := strings.Split(str, "\n")
 	var builder strings.Builder
@@ -472,6 +522,32 @@ func fixCrcDnsmasqConfigFile() error {
 	return nil
 }
 
+func removeCrcDnsmasqConfigFile() error {
+	if err := checkNetworkManagerInstalled(); err != nil {
+		// When NetworkManager is not installed, this file won't exist
+		return nil
+	}
+	// Delete the `crcDnsmasqConfigPath` file if exists,
+	// ignore all the os PathError except `IsNotExist` one.
+	if _, err := os.Stat(crcDnsmasqConfigPath); !os.IsNotExist(err) {
+		logging.Debug("Removing dnsmasq configuration")
+		err := crcos.RemoveFileAsRoot(
+			fmt.Sprintf("removing dnsmasq configuration in %s", crcDnsmasqConfigPath),
+			crcDnsmasqConfigPath,
+		)
+		if err != nil {
+			return fmt.Errorf("Failed to remove dnsmasq config file: %s: %v", crcDnsmasqConfigPath, err)
+		}
+
+		logging.Debug("Reloading NetworkManager")
+		sd := systemd.NewHostSystemdCommander()
+		if _, err := sd.Reload("NetworkManager"); err != nil {
+			return fmt.Errorf("Failed to restart NetworkManager: %v", err)
+		}
+	}
+	return nil
+}
+
 func checkCrcNetworkManagerConfig() error {
 	logging.Debug("Checking NetworkManager configuration")
 	c := []byte(crcNetworkManagerConfig)
@@ -508,6 +584,30 @@ func fixCrcNetworkManagerConfig() error {
 	}
 
 	logging.Debug("NetworkManager configuration fixed")
+	return nil
+}
+
+func removeCrcNetworkManagerConfig() error {
+	if err := checkNetworkManagerInstalled(); err != nil {
+		// When NetworkManager is not installed, this file won't exist
+		return nil
+	}
+	if _, err := os.Stat(crcNetworkManagerConfigPath); !os.IsNotExist(err) {
+		logging.Debug("Removing NetworkManager configuration")
+		err := crcos.RemoveFileAsRoot(
+			fmt.Sprintf("Removing NetworkManager config in %s", crcNetworkManagerConfigPath),
+			crcNetworkManagerConfigPath,
+		)
+		if err != nil {
+			return fmt.Errorf("Failed to remove NetworkManager config file: %s: %v", crcNetworkManagerConfigPath, err)
+		}
+
+		logging.Debug("Reloading NetworkManager")
+		sd := systemd.NewHostSystemdCommander()
+		if _, err := sd.Reload("NetworkManager"); err != nil {
+			return fmt.Errorf("Failed to restart NetworkManager: %v", err)
+		}
+	}
 	return nil
 }
 
