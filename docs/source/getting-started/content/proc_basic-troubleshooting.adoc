@@ -60,7 +60,7 @@ If your issue has not been resolved by this procedure, perform the following ste
 . If no existing issue addresses the encountered issue, link:https://github.com/code-ready/crc/issues/new[create an issue] and link:https://help.github.com/en/articles/file-attachments-on-issues-and-pull-requests[attach the [filename]`~/.crc/crc.log` file] to the created issue.
 The [filename]`~/.crc/crc.log` file contains detailed debugging and troubleshooting information which can help diagnose the problem that you are experiencing.
 
-= DNS configuration details
+== DNS configuration details
 
 This section describes how {prod} configures networking.
 This can be useful for troubleshooting, or in case you are using a non-standard DNS setup, and want to adjust it for {prod} needs.
