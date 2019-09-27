@@ -20,8 +20,6 @@ var (
 	WarnCheckLibvirtRunning          = cfg.AddSetting("warn-check-libvirt-running", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	SkipCheckUserInLibvirtGroup      = cfg.AddSetting("skip-check-user-in-libvirt-group", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	WarnCheckUserInLibvirtGroup      = cfg.AddSetting("warn-check-user-in-libvirt-group", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
-	SkipCheckIPForwarding            = cfg.AddSetting("skip-check-ip-forwarding", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
-	WarnCheckIPForwarding            = cfg.AddSetting("warn-check-ip-forwarding", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	SkipCheckLibvirtDriver           = cfg.AddSetting("skip-check-libvirt-driver", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	WarnCheckLibvirtDriver           = cfg.AddSetting("warn-check-libvirt-driver", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	SkipCheckCrcNetwork              = cfg.AddSetting("skip-check-crc-network", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
