@@ -114,5 +114,5 @@ Feature: Basic test
 
     @darwin @linux @windows
     Scenario: CRC delete
-        When executing "crc delete" succeeds
+        When executing "crc delete -f" succeeds
         Then stdout should contain "CodeReady Containers instance deleted"

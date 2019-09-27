@@ -57,5 +57,5 @@ Feature:
         Given executing "oc delete project testproj" succeeds
         When executing "crc stop -f" succeeds
         Then stdout should match "CodeReady Containers instance(.*)stopped"
-        When executing "crc delete" succeeds
+        When executing "crc delete -f" succeeds
         Then stdout should contain "CodeReady Containers instance deleted"
