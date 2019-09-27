@@ -1,3 +1,4 @@
+@config
 Feature: Test configuration settings
 Checks whether CRC `config set` command works as expected in conjunction with `crc setup` and `crc start`.
 

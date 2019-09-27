@@ -1,3 +1,4 @@
+@story_health
 Feature: 
     End-to-end health check. Set-up and start CRC. Then create a
     project and deploy an app. Check on the app and delete the

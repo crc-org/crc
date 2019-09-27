@@ -1,3 +1,4 @@
+@basic
 Feature: Basic test
     Checks whether CRC top-level commands behave correctly.
 

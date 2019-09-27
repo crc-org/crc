@@ -1,4 +1,4 @@
-@linux
+@story_registry @linux
 Feature: Local image to image-registry to deployment
 
     The user creates a local container image with an app. They then
