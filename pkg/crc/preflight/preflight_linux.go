@@ -80,7 +80,7 @@ func StartPreflightChecks(vmDriver string) {
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckCrcNetworkManagerConfig.Name),
 		checkCrcNetworkManagerConfig,
 		"Checking if /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf exists",
-		config.GetBool(cmdConfig.WarnCheckCrcDnsmasqFile.Name),
+		config.GetBool(cmdConfig.WarnCheckCrcNetworkManagerConfig.Name),
 	)
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckCrcDnsmasqFile.Name),
 		checkCrcDnsmasqConfigFile,
@@ -185,7 +185,7 @@ func SetupHost(vmDriver string) {
 		checkCrcNetworkManagerConfig,
 		fixCrcNetworkManagerConfig,
 		"Writing Network Manager config for crc",
-		config.GetBool(cmdConfig.WarnCheckCrcDnsmasqFile.Name),
+		config.GetBool(cmdConfig.WarnCheckCrcNetworkManagerConfig.Name),
 	)
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckCrcDnsmasqFile.Name),
 		checkCrcDnsmasqConfigFile,
