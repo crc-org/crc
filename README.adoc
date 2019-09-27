@@ -11,11 +11,10 @@ Using an older `crc` binary will result in an expired certificates error.
 
 To resolve this error:
 
-* link:https://github.com/code-ready/crc/releases[Download the latest CodeReady Containers release] and place the `crc` binary in your `$PATH`.
+* link:https://cloud.redhat.com/openshift/install/crc/installer-provisioned[Download the latest CodeReady Containers release] and place the `crc` binary in your `$PATH`.
 * Remove the cluster with certificate errors using the `crc delete` command.
 * Set up the new release with the `crc setup` command.
 * Start the new cluster with the `crc start` command.
-
 ====
 
 toc::[]

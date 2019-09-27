@@ -25,4 +25,4 @@
 :bin: crc
 
 // URLs
-:crc-download-url: https://mirror.openshift.com/pub/openshift-v4/clients/crc/latest/
+:crc-download-url: https://cloud.redhat.com/openshift/install/crc/installer-provisioned
