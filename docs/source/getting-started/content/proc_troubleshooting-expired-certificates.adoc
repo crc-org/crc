@@ -1,0 +1,37 @@
+[id="troubleshooting-expired-certificates_{context}"]
+= Troubleshooting expired certificates
+
+Each released `{bin}` binary includes an embedded system bundle that expires 30 days after the release due to certificates embedded in the OpenShift cluster.
+Using an older `{bin}` binary or system bundle will result in an expired certificates error.
+
+.Procedure
+
+To resolve expired certificate errors:
+
+. link:{crc-download-url}[Download the latest {prod} release] and place the `{bin}` binary in your `$PATH`.
+
+. Remove the cluster with certificate errors using the [command]`{bin} delete` command:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} delete
+----
++
+[NOTE]
+====
+The [command]`{bin} delete` command will result in the loss of data stored in the {prod} virtual machine.
+====
+
+. Set up the new release:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} setup
+----
+
+. Start the new cluster:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} start
+----

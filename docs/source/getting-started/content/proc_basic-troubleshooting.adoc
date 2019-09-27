@@ -9,9 +9,10 @@ The majority of issues can be resolved by stopping a running {prod} virtual mach
 For more information, see <<setting-up-codeready-containers_{context}>>.
 * The virtual machine has been started using the [command]`{bin} start` command.
 For more information, see <<starting-the-virtual-machine_{context}>>.
-* You are using the latest {prod} release
+* You are using the latest {prod} release.
 The generated certificates for the embedded system image bundle expire after 30 days.
 Using an older system image bundle may result in errors related to expired x509 certificates.
+For more information, see <<troubleshooting-expired-certificates_{context}>>.
 
 .Procedure
 
