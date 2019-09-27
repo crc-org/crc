@@ -72,7 +72,7 @@ func initStartCmdFlagSet() *pflag.FlagSet {
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
 	flagSet.StringP(config.Bundle.Name, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster.")
 	flagSet.StringP(config.VMDriver.Name, "d", machine.DefaultDriver.Driver, fmt.Sprintf("The driver to use for the CRC VM. Possible values: %v", machine.SupportedDriverValues()))
-	flagSet.StringP(config.PullSecretFile.Name, "p", "", fmt.Sprintf("File path of Image pull secret for User (Download it from %s)", constants.DefaultPullSecretURL))
+	flagSet.StringP(config.PullSecretFile.Name, "p", "", fmt.Sprintf("File path of Image pull secret for User (Download it from %s)", constants.CrcLandingPageURL))
 	flagSet.IntP(config.CPUs.Name, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the CRC VM")
 	flagSet.IntP(config.Memory.Name, "m", constants.DefaultMemory, "MiB of Memory to allocate to the CRC VM")
 	flagSet.StringP(config.NameServer.Name, "n", "", "Specify nameserver to use for the instance. (i.e. 8.8.8.8)")
@@ -113,7 +113,7 @@ func getPullSecretFileContent() (string, error) {
 
 	// In case user doesn't provide a file in start command or in config then ask for it.
 	if crcConfig.GetString(config.PullSecretFile.Name) == "" {
-		pullsecret, err = input.PromptUserForSecret("Image pull secret", fmt.Sprintf("Copy it from %s", constants.DefaultPullSecretURL))
+		pullsecret, err = input.PromptUserForSecret("Image pull secret", fmt.Sprintf("Copy it from %s", constants.CrcLandingPageURL))
 		// This is just to provide a new line after user enter the pull secret.
 		fmt.Println()
 		if err != nil {
