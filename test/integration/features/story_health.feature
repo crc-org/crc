@@ -56,6 +56,6 @@ Feature:
     Scenario: Clean up
         Given executing "oc delete project testproj" succeeds
         When executing "crc stop -f" succeeds
-        Then stdout should contain "CodeReady Containers instance stopped"
+        Then stdout should match "CodeReady Containers instance(.*)stopped"
         When executing "crc delete" succeeds
         Then stdout should contain "CodeReady Containers instance deleted"
