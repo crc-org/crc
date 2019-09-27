@@ -37,12 +37,14 @@ func runDelete(arguments []string) {
 	if clearCache {
 		deleteCache()
 	}
-
-	_, err := machine.Delete(deleteConfig)
-	if err != nil {
-		errors.Exit(1)
+	yes := input.PromptUserForYesOrNo("Do you want to delete the crc VM", globalForce)
+	if yes {
+		_, err := machine.Delete(deleteConfig)
+		if err != nil {
+			errors.Exit(1)
+		}
+		output.Outln("CodeReady Containers instance deleted")
 	}
-	output.Outln("CodeReady Containers instance deleted")
 }
 
 func deleteCache() {
