@@ -24,7 +24,7 @@ Feature: Basic test
         When executing "crc status" fails
         Then stderr should contain 
         """
-        Machine \"crc\" does not exist. Use \"crc start\" to add a new one.
+        Machine "crc" does not exist. Use "crc start" to add a new one.
         """
 
     @linux

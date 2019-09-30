@@ -35,6 +35,8 @@ func runStop(arguments []string) {
 		Name: constants.DefaultName,
 	}
 
+	exitIfMachineMissing(stopConfig.Name)
+
 	output.Outln("Stopping CodeReady Containers instance... this may take a few minutes")
 	commandResult, err := machine.Stop(stopConfig)
 	if err != nil {

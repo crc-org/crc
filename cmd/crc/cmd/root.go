@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/spf13/cobra"
 
@@ -71,4 +73,14 @@ func Execute() {
 
 func setConfigDefaults() {
 	config.SetDefaults()
+}
+
+func exitIfMachineMissing(name string) {
+	exists, err := machine.MachineExists(name)
+	if err != nil {
+		errors.ExitWithMessage(1, err.Error())
+	}
+	if !exists {
+		errors.ExitWithMessage(1, "Machine \"crc\" does not exist. Use \"crc start\" to add a new one.")
+	}
 }

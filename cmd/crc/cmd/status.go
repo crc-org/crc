@@ -43,6 +43,9 @@ type Status struct {
 
 func runStatus() {
 	statusConfig := machine.ClusterStatusConfig{Name: constants.DefaultName}
+
+	exitIfMachineMissing(statusConfig.Name)
+
 	clusterStatus, err := machine.Status(statusConfig)
 	if err != nil {
 		errors.Exit(1)
