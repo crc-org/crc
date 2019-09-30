@@ -106,7 +106,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	var privateKeyPath string
 	var pullSecret string
 	driverInfo, _ := getDriverInfo(startConfig.VMDriver)
-	exists, err := existVM(libMachineAPIClient, startConfig.Name)
+	exists, err := MachineExists(startConfig.Name)
 	if !exists {
 		machineConfig := config.MachineConfig{
 			Name:       startConfig.Name,
@@ -544,8 +544,10 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 	return *result, nil
 }
 
-func existVM(api libmachine.API, name string) (bool, error) {
-	exists, err := api.Exists(name)
+func MachineExists(name string) (bool, error) {
+	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	defer libMachineAPIClient.Close()
+	exists, err := libMachineAPIClient.Exists(name)
 	if err != nil {
 		return false, fmt.Errorf("Error checking if the host exists: %s", err)
 	}
