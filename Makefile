@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-BUNDLE_VERSION = 4.1.14
+BUNDLE_VERSION = 4.2.0-0.nightly-2019-09-26-192831
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 1.0.0-dev
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
