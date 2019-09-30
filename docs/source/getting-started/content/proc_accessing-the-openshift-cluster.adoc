@@ -12,11 +12,18 @@ For more information, see <<starting-the-virtual-machine_{context}>>.
 
   . Run [command]`{bin} console`. This will open your web browser and direct it to the web console.
 
-  . Log in to the OpenShift web console as the `kubeadmin` user with the password printed in the output of the [command]`{bin} start` command.
+  . Log in to the OpenShift web console as the `developer` user with the password printed in the output of the [command]`{bin} start` command.
 +
 [NOTE]
 ====
-You can also view the password for the `kubeadmin` user by running [command]`{bin} console --credentials`.
+You can also view the password for the `developer` user by running [command]`{bin} console --credentials`.
+====
++
+[NOTE]
+====
+The cluster can initially be accessed through either the `kubeadmin` or `developer` user.
+For creating projects or OpenShift applications, and for application deployment, the `developer` user should be used.
+The `kubeadmin` user should only be used for administrative tasks such as creating new users, setting roles, and so on.
 ====
 +
 See <<troubleshooting-codeready-containers_{context}>> if you cannot access the {prod} OpenShift cluster.
