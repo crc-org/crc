@@ -5,7 +5,7 @@
 [[developing-overview]]
 == Overview
 
-The following sections describe how to build the project.
+The following sections describe how to build and test the project.
 
 [[develop-prerequisites]]
 == Prerequisites
@@ -46,3 +46,41 @@ For more information, see the following:
 . link:https://github.com/golang/go/wiki/Modules[Introduction to Go modules]
 . link:https://blog.golang.org/using-go-modules[Using Go modules]
 
+[[running-integration-tests]]
+== Running integration tests
+
+We have automated integration tests which keep CodeReady Containers in shape.
+
+[[intro-to-integration-testing]]
+=== Introduction
+Integration tests use the link:http://github.com/code-ready/clicumber[Clicumber] package to provide basic functionality for testing CLI binaries.
+
+Clicumber allows running commands in a persistent shell instance (`bash`, `tcsh`, `zsh`, Command Prompt, or PowerShell), assert its outputs (standard output, standard error, or exit code), check configuration files, and so on. The general functionality of Clicumber is then extended by CodeReady Containers specific test code to cover the whole functionality of CodeReady Containers.
+
+[[how-to-run-integration-tests]]
+=== How to run
+
+To start integration tests, run:
+
+```bash
+$ make integration BUNDLE_LOCATION=<bundle location> PULL_SECRET_FILE=<pull secret path>
+```
+where `<bundle location>` is either the bundle's URL or its path in the filesystem,
+and `<pull secret path>` is the path to a file containing your OpenShift pull secret.
+The paths must be absolute paths.
+
+===== How to run only a subset of all integration tests
+
+Implicitly, all integration tests for your operating system are executed. If you want to run only tests from one feature file, you have to override `GODOG_OPTS` environment variable. For example:
+
+```bash
+make integration GODOG_OPTS="--godog.tags='@basic && @windows'" BUNDLE_LOCATION=<bundle location> PULL_SECRET_FILE=<pull secret path>
+```
+
+Please notice `@basic && @windows`, where `@basic` tag stands for `basic.feature` file and `@windows` tag for integration tests designed for Windows.
+
+
+[[integration-test-logs]]
+=== Logs
+
+Test logs can be found in [filename]`test/integration/out/test-results`.
