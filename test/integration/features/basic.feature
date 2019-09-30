@@ -81,7 +81,7 @@ Feature: Basic test
 
     @darwin
     Scenario: CRC start on Mac
-        When starting CRC with default bundle and hypervisor "virtualbox" succeeds
+        When starting CRC with default bundle and hypervisor "hyperkit" succeeds
         Then stdout should contain "CodeReady Containers instance is running"
     
     @darwin @linux @windows
