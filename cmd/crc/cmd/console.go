@@ -48,6 +48,9 @@ func runConsole(arguments []string) {
 	consoleConfig := machine.ConsoleConfig{
 		Name: constants.DefaultName,
 	}
+
+	exitIfMachineMissing(consoleConfig.Name)
+
 	result, err := machine.GetConsoleURL(consoleConfig)
 	if err != nil {
 		errors.Exit(1)

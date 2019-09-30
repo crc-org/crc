@@ -28,6 +28,8 @@ func runIP(arguments []string) {
 		Debug: isDebugLog(),
 	}
 
+	exitIfMachineMissing(ipConfig.Name)
+
 	result, err := machine.Ip(ipConfig)
 	if err != nil {
 		errors.Exit(1)

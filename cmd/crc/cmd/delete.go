@@ -34,6 +34,9 @@ func runDelete(arguments []string) {
 	deleteConfig := machine.DeleteConfig{
 		Name: constants.DefaultName,
 	}
+
+	exitIfMachineMissing(deleteConfig.Name)
+
 	if clearCache {
 		deleteCache()
 	}
