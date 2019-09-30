@@ -13,6 +13,13 @@ Feature: Basic test
         When executing "crc --help" succeeds
         Then stdout should contain "Usage:"
         And stdout should contain "Available Commands:"
+        And stdout should contain "help"
+        And stdout should contain "version"
+        And stdout should contain "setup"
+        And stdout should contain "start"
+        And stdout should contain "stop"
+        And stdout should contain "delete"
+        And stdout should contain "status"
         And stdout should contain "Flags:"
         And stdout should contain 
             """
