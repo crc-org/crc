@@ -108,7 +108,7 @@ function perform_artifacts_upload() {
 
 function get_bundle() {
   mkdir $HOME/Downloads
-  curl -L 'https://github.com/code-ready/crc-ci-jobs/releases/download/4.0.1/crc_bundle.zip' -o $HOME/Downloads/bundle.zip
+  curl -L 'https://storage.googleapis.com/crc-bundle-github-ci/crc_bundle.zip' -o $HOME/Downloads/bundle.zip
   unzip -P $CRC_BUNDLE_PASSWORD $HOME/Downloads/bundle.zip -d $HOME/Downloads/
 }
 
