@@ -118,6 +118,8 @@ function upload_logs() {
   # http://stackoverflow.com/a/22908437/1120530; Using --relative as --rsync-path not working
   mkdir -p pr/$ghprbPullId/
   cp -R test/integration/out/test-results/* pr/$ghprbPullId/
+  # Change the file permission to 0644 so after rsync it can be readable by other user.
+  chmod 0644 $HOME/.crc/crc.log
   cp $HOME/.crc/crc.log pr/$ghprbPullId/crc_$(date '+%Y_%m_%d_%H_%M_%S').log
   RSYNC_PASSWORD=$1 rsync -a --relative pr/$ghprbPullId/ minishift@artifacts.ci.centos.org::minishift/crc/
   echo "Find Logs here: http://artifacts.ci.centos.org/minishift/crc/pr/$ghprbPullId ."
