@@ -26,6 +26,8 @@ For creating projects or OpenShift applications, and for application deployment,
 The `kubeadmin` user should only be used for administrative tasks such as creating new users, setting roles, and so on.
 ====
 +
+  . The link:https://docs.openshift.com/container-platform/latest/applications/projects/working-with-projects.html[OpenShift documentation] covers the creation of projects and applications.
++
 See <<troubleshooting-codeready-containers_{context}>> if you cannot access the {prod} OpenShift cluster.
 
 * To access the OpenShift cluster via the [command]`oc` command, follow these steps:
@@ -85,5 +87,7 @@ storage                              4.1.0-rc.0   True        False         Fals
 The `machine-config` and `marketplace` cluster operators are expected to report `False` availability.
 The `monitoring` cluster operator is expected to report `Unknown` availability.
 ====
++
+  . The link:https://docs.openshift.com/container-platform/latest/applications/projects/working-with-projects.html[OpenShift documentation] covers the creation of projects and applications.
 +
 See <<troubleshooting-codeready-containers_{context}>> if you cannot access the {prod} OpenShift cluster.
