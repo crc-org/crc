@@ -400,6 +400,7 @@ func Stop(stopConfig StopConfig) (StopResult, error) {
 		result.Error = err.Error()
 		return *result, errors.New(err.Error())
 	}
+	defer libMachineAPIClient.Close()
 
 	result.State, _ = host.Driver.GetState()
 
@@ -424,6 +425,7 @@ func PowerOff(PowerOff PowerOffConfig) (PowerOffResult, error) {
 		result.Error = err.Error()
 		return *result, errors.New(err.Error())
 	}
+	defer libMachineAPIClient.Close()
 
 	if err := host.Kill(); err != nil {
 		result.Success = false
@@ -446,6 +448,7 @@ func Delete(deleteConfig DeleteConfig) (DeleteResult, error) {
 		result.Error = err.Error()
 		return *result, errors.New(err.Error())
 	}
+	defer libMachineAPIClient.Close()
 
 	m := errors.MultiError{}
 	m.Collect(host.Driver.Remove())
@@ -475,6 +478,7 @@ func Ip(ipConfig IpConfig) (IpResult, error) {
 		result.Error = err.Error()
 		return *result, errors.New(err.Error())
 	}
+	defer libMachineAPIClient.Close()
 	if result.IP, err = host.Driver.GetIP(); err != nil {
 		result.Success = false
 		result.Error = err.Error()
@@ -492,6 +496,7 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 		result.Error = err.Error()
 		return *result, errors.New(err.Error())
 	}
+	defer api.Close()
 
 	openshiftStatus := "Stopped"
 	var diskUse int64
