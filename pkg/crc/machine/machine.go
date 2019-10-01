@@ -489,20 +489,20 @@ func Ip(ipConfig IpConfig) (IpResult, error) {
 
 func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 	result := &ClusterStatusResult{Name: statusConfig.Name, Success: true}
-	api := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
-	_, err := api.Exists(statusConfig.Name)
+	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	_, err := libMachineAPIClient.Exists(statusConfig.Name)
 	if err != nil {
 		result.Success = false
 		result.Error = err.Error()
 		return *result, errors.New(err.Error())
 	}
-	defer api.Close()
+	defer libMachineAPIClient.Close()
 
 	openshiftStatus := "Stopped"
 	var diskUse int64
 	var diskSize int64
 
-	host, err := api.Load(statusConfig.Name)
+	host, err := libMachineAPIClient.Load(statusConfig.Name)
 	if err != nil {
 		result.Success = false
 		result.Error = err.Error()
