@@ -30,14 +30,15 @@ import (
 	"time"
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/oc"
 )
 
 var (
 	CRCHome        string
+	bundleEmbedded bool
 	bundleURL      string
 	bundleName     string
+	bundleVersion  string
 	pullSecretFile string
 )
 
@@ -91,21 +92,25 @@ func FeatureContext(s *godog.Suite) {
 
 	s.BeforeFeature(func(this *gherkin.Feature) {
 
-		if _, err := os.Stat(bundleName); os.IsNotExist(err) {
-			// Obtain the bundle to current dir
-			fmt.Println("Obtaining bundle...")
-			bundle, err := DownloadBundle(bundleURL, ".")
-			if err != nil {
-				fmt.Printf("Failed to obtain CRC bundle, %v\n", err)
+		if !bundleEmbedded {
+			if _, err := os.Stat(bundleName); os.IsNotExist(err) {
+				// Obtain the bundle to current dir
+				fmt.Println("Obtaining bundle...")
+				fmt.Printf("bundleURL = %s\n", bundleURL)
+				bundle, err := DownloadBundle(bundleURL, ".")
+				if err != nil {
+					fmt.Printf("Failed to obtain CRC bundle, %v\n", err)
+					os.Exit(1)
+				}
+				fmt.Println("Using bundle:", bundle)
+			} else if err != nil {
+				fmt.Printf("Unknown error obtaining the bundle %v.\n", bundleName)
 				os.Exit(1)
+			} else {
+				fmt.Println("Using existing bundle:", bundleName)
 			}
-			fmt.Println("Using bundle:", bundle)
-		} else if err != nil {
-			fmt.Printf("Unknown error obtaining the bundle %v.\n", bundleName)
-			os.Exit(1)
-		} else {
-			fmt.Println("Using existing bundle:", bundleName)
 		}
+		fmt.Println("Expecting bundle to be embedded in the CRC binary.")
 
 	})
 }
@@ -260,7 +265,7 @@ func StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails(expected strin
 	var cmd string
 	var extraBundleArgs string
 
-	if !constants.BundleEmbedded() {
+	if !bundleEmbedded {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
 	}
 	cmd = fmt.Sprintf("crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
@@ -274,7 +279,7 @@ func StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails(hypervisor string, ex
 	var cmd string
 	var extraBundleArgs string
 
-	if !constants.BundleEmbedded() {
+	if !bundleEmbedded {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
 	}
 	cmd = fmt.Sprintf("crc start -d %s -p '%s' %s --log-level debug", hypervisor, pullSecretFile, extraBundleArgs)

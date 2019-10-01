@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"runtime"
 
 	"github.com/code-ready/crc/pkg/download"
 )
@@ -62,12 +63,43 @@ func ParseFlags() {
 
 	flag.Parse()
 	if flag.NArg() < 2 {
-		fmt.Printf("Invalid number of arguments, the paths to the bundle file and to the pull secret file are required\n")
+		fmt.Printf("Invalid number of arguments, the path to the pull secret file and the bundle version are required\n")
 		os.Exit(1)
 	}
-	bundleURL = flag.Args()[0]
-	_, bundleName = filepath.Split(bundleURL)
-	pullSecretFile = flag.Args()[1]
+
+	pullSecretFile = flag.Args()[0]
+
+	// embedded bundle
+	// this will never occur on Centos CI
+	if flag.NArg() == 2 {
+		bundleEmbedded = true
+		bundleVersion = flag.Args()[1]
+		// assume default hypervisor
+		var hypervisor string
+		switch os := runtime.GOOS; os {
+		case "darwin":
+			hypervisor = "hyperkit"
+		case "linux":
+			hypervisor = "libvirt"
+		case "windows":
+			hypervisor = "hyperv"
+		default:
+			fmt.Printf("Unsupported OS: %s", os)
+		}
+
+		bundleName = fmt.Sprintf("crc_%s_%s.crcbundle", hypervisor, bundleVersion)
+
+	}
+
+	// separate bundle
+	// 3: on laptop
+	// 4: on Centos CI
+	if flag.NArg() > 2 {
+		bundleEmbedded = false
+		bundleURL = flag.Args()[1]
+		_, bundleName = filepath.Split(bundleURL)
+	}
+
 }
 
 // Set CRCHome var to ~/.crc

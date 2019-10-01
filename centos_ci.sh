@@ -130,7 +130,7 @@ function run_tests() {
   set +e
   # In Jenkins slave we have pull secret file in the $HOME/payload/crc_pull_secret
   # this is copied over using https://github.com/minishift/minishift-ci-jobs/blob/master/minishift-ci-index.yaml#L99
-  make integration BUNDLE_LOCATION=$HOME/Downloads/$BUNDLE PULL_SECRET_FILE=$HOME/payload/crc_pull_secret
+  make integration PULL_SECRET_FILE=$HOME/payload/crc_pull_secret BUNDLE_LOCATION=$HOME/Downloads/$BUNDLE
   if [[ $? -ne 0 ]]; then
     upload_logs $1
     exit 1
