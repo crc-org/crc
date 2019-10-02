@@ -13,17 +13,17 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
         # always return to default values
         @darwin
         Examples: Config settings on Mac 
-            | property  | value1                | value2                                     |
-            | cpus      | 4                     | 3                                          |
-            | memory    | 8192                  | 4096                                       |
-            | vm-driver | virtualbox            | libvirt                                    |
+            | property  |   value1 |  value2 |
+            | cpus      |        4 |       3 |
+            | memory    |     8192 |    4096 |
+            | vm-driver | hyperkit | libvirt |
 
         @linux
         Examples: Config settings on Linux
-            | property  | value1                   | value2                                               |
-            | cpus      | 4                        | 3                                                    |
-            | memory    | 8192                     | 4096                                                 |
-            | vm-driver | libvirt                  | hyperkit                                             |
+            | property  |  value1 |   value2 |
+            | cpus      |       4 |        3 |
+            | memory    |    8192 |     4096 |
+            | vm-driver | libvirt | hyperkit |
 
     @darwin @linux
     Scenario: CRC config checks (bundle version)
@@ -42,7 +42,7 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
         @darwin
         Examples: Config warnings on Mac
             | property                             | value1 | value2 |
-            | warn-check-virtualbox-installed      | true   | false  |
+            | warn-check-hyperkit-installed        | true   | false  |
             | warn-check-resolver-file-permissions | true   | false  |
 
         @linux
@@ -74,7 +74,7 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
         @darwin
         Examples:
             | property                             | value1 | value2 |
-            | skip-check-virtualbox-installed      | true   | false  |
+            | skip-check-hyperkit-installed        | true   | false  |
             | skip-check-resolver-file-permissions | true   | false  |
 
         @linux
