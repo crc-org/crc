@@ -41,3 +41,13 @@ Feature: Local image to image-registry to deployment
         When executing "oc logs -f dc/hello" succeeds
         Then stdout should contain "Hello, it works!"
 
+    Scenario: Clean up
+        Given executing "sudo podman images" succeeds
+        When stdout contains "localhost/hello"
+        Then executing "sudo podman image rm localhost/hello:test" succeeds
+        And executing "oc delete project testproj-img" succeeds
+        When executing "crc stop -f" succeeds
+        Then stdout should match "(.*)[Ss]topped the OpenShift cluster"
+        And executing "crc delete -f" succeeds
+        Then stdout should contain "Deleted the OpenShift cluster"
+
