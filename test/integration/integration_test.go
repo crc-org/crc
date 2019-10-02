@@ -55,9 +55,9 @@ func getFeatureContext(s *godog.Suite) {
 }
 
 func parseFlags() {
-	// get flag values for clicumber testsuite
-	testsuite.ParseFlags()
 
-	// here you can get additional flag values if needed, for example:
+	// NOTE:
+	// testsuite.ParseFlags() needs to be last: it calls flag.Parse()
 	crcsuite.ParseFlags()
+	testsuite.ParseFlags()
 }

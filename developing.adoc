@@ -60,14 +60,16 @@ Clicumber allows running commands in a persistent shell instance (`bash`, `tcsh`
 [[how-to-run-integration-tests]]
 === How to run
 
-To start integration tests, run:
+First, one needs to set the following flags in `Makefile`, under `integration` target:
 
+- `--pull-secret-file`: absolute path to your OpenShift pull secret.
+- `--bundle-location`: if bundle is embedded, this flag should be set to `--bundle-location=embedded` or not passed at all; if bundle is not embedded, then absolute path to the bundle should be passed.
+- `--crc-binary`: if `crc` binary resides in `$GOPATH/bin`, then this flag needs not be passed; otherwise absolute path to the `crc` binary should be passed.
+
+To start integrationt tests, run:
 ```bash
-$ make integration BUNDLE_LOCATION=<bundle location> PULL_SECRET_FILE=<pull secret path>
+$ make integration
 ```
-where `<bundle location>` is either the bundle's URL or its path in the filesystem,
-and `<pull secret path>` is the path to a file containing your OpenShift pull secret.
-The paths must be absolute paths.
 
 ===== How to run only a subset of all integration tests
 

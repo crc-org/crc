@@ -25,20 +25,25 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/user"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/oc"
 )
 
 var (
 	CRCHome        string
-	bundleURL      string
+	CRCBinary      string
+	bundleEmbedded bool
 	bundleName     string
+	bundleURL      string
+	bundleVersion  string
 	pullSecretFile string
+	goPath         string
 )
 
 // FeatureContext defines godog.Suite steps for the test suite.
@@ -75,11 +80,59 @@ func FeatureContext(s *godog.Suite) {
 		DeleteFileFromCRCHome)
 
 	s.BeforeSuite(func() {
-		// set CRC home var
-		CRCHome = SetCRCHome()
+
+		usr, _ := user.Current()
+		CRCHome = filepath.Join(usr.HomeDir, ".crc")
+
+		// init CRCBinary if no location provided by user
+		if CRCBinary == "" {
+			fmt.Println("Expecting the CRC binary to be in $HOME/go/bin.")
+			usr, _ := user.Current()
+			CRCBinary = filepath.Join(usr.HomeDir, "go", "bin")
+		}
+
+		// put CRC binary location on top of PATH
+		path := os.Getenv("PATH")
+		newPath := fmt.Sprintf("%s%s%s", CRCBinary, os.PathListSeparator, path)
+		err := os.Setenv("PATH", newPath)
+		if err != nil {
+			fmt.Println("Could not put CRC location on top of PATH")
+			os.Exit(1)
+		}
+
+		if bundleURL == "embedded" {
+			fmt.Println("Expecting the bundle to be embedded in the CRC binary.")
+			bundleEmbedded = true
+			if bundleVersion == "" {
+				fmt.Println("User must specify --bundle-version if bundle is embedded")
+				os.Exit(1)
+			}
+			// assume default hypervisor
+			var hypervisor string
+			switch platform := runtime.GOOS; platform {
+			case "darwin":
+				hypervisor = "hyperkit"
+			case "linux":
+				hypervisor = "libvirt"
+			case "windows":
+				hypervisor = "hyperv"
+			default:
+				fmt.Printf("Unsupported OS: %s", platform)
+				os.Exit(1)
+			}
+			bundleName = fmt.Sprintf("crc_%s_%s.crcbundle", hypervisor, bundleVersion)
+		} else {
+			bundleEmbedded = false
+			_, bundleName = filepath.Split(bundleURL)
+		}
+
+		if pullSecretFile == "" {
+			fmt.Println("User must specify the pull secret file via --pull-secret-file flag.")
+			os.Exit(1)
+		}
 
 		// remove $HOME/.crc
-		err := RemoveCRCHome()
+		err = RemoveCRCHome()
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -89,28 +142,29 @@ func FeatureContext(s *godog.Suite) {
 	s.AfterSuite(func() {
 		err := DeleteCRC()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("Could not delete CRC VM: %s.", err)
 		}
 	})
 
 	s.BeforeFeature(func(this *gherkin.Feature) {
 
-		if _, err := os.Stat(bundleName); os.IsNotExist(err) {
-			// Obtain the bundle to current dir
-			fmt.Println("Obtaining bundle...")
-			bundle, err := DownloadBundle(bundleURL, ".")
-			if err != nil {
-				fmt.Printf("Failed to obtain CRC bundle, %v\n", err)
+		if bundleEmbedded == false {
+			if _, err := os.Stat(bundleName); os.IsNotExist(err) {
+				// Obtain the bundle to current dir
+				fmt.Println("Obtaining bundle...")
+				bundle, err := DownloadBundle(bundleURL, ".")
+				if err != nil {
+					fmt.Printf("Failed to obtain CRC bundle, %v\n", err)
+					os.Exit(1)
+				}
+				fmt.Println("Using bundle:", bundle)
+			} else if err != nil {
+				fmt.Printf("Unexpected error obtaining the bundle %v.\n", bundleName)
 				os.Exit(1)
+			} else {
+				fmt.Println("Using existing bundle:", bundleName)
 			}
-			fmt.Println("Using bundle:", bundle)
-		} else if err != nil {
-			fmt.Printf("Unknown error obtaining the bundle %v.\n", bundleName)
-			os.Exit(1)
-		} else {
-			fmt.Println("Using existing bundle:", bundleName)
 		}
-
 	})
 }
 
@@ -287,7 +341,7 @@ func StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails(expected strin
 	var cmd string
 	var extraBundleArgs string
 
-	if !constants.BundleEmbedded() {
+	if bundleEmbedded == false {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
 	}
 	cmd = fmt.Sprintf("crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
@@ -301,7 +355,7 @@ func StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails(hypervisor string, ex
 	var cmd string
 	var extraBundleArgs string
 
-	if !constants.BundleEmbedded() {
+	if bundleEmbedded == false {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
 	}
 	cmd = fmt.Sprintf("crc start -d %s -p '%s' %s --log-level debug", hypervisor, pullSecretFile, extraBundleArgs)
@@ -312,9 +366,14 @@ func StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails(hypervisor string, ex
 
 func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, expected string) error {
 
+	var extraBundleArgs string
+	if bundleEmbedded == false {
+		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
+	}
+
 	var cmd string
 
-	cmd = fmt.Sprintf("crc start -n %s -p '%s' --log-level debug", nameserver, pullSecretFile)
+	cmd = fmt.Sprintf("crc start -n %s -p '%s' %s --log-level debug", nameserver, pullSecretFile, extraBundleArgs)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
@@ -323,7 +382,12 @@ func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, ex
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
 
 	if value == "current bundle" {
-		value = bundleName
+
+		if bundleEmbedded {
+			value = filepath.Join(CRCHome, bundleName)
+		} else {
+			value = bundleName
+		}
 	}
 
 	cmd := "crc config set " + property + " " + value

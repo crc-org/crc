@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/user"
 	"path/filepath"
 
 	"github.com/code-ready/crc/pkg/download"
@@ -57,22 +56,10 @@ func DownloadBundle(bundleLocation string, bundleDestination string) (string, er
 	return filename, nil
 }
 
-// Parse GODOG flags (in feature files)
 func ParseFlags() {
 
-	flag.Parse()
-	if flag.NArg() < 2 {
-		fmt.Printf("Invalid number of arguments, the paths to the bundle file and to the pull secret file are required\n")
-		os.Exit(1)
-	}
-	bundleURL = flag.Args()[0]
-	_, bundleName = filepath.Split(bundleURL)
-	pullSecretFile = flag.Args()[1]
-}
-
-// Set CRCHome var to ~/.crc
-func SetCRCHome() string {
-	usr, _ := user.Current()
-	crcHome := filepath.Join(usr.HomeDir, ".crc")
-	return crcHome
+	flag.StringVar(&bundleURL, "bundle-location", "embedded", "Path to the bundle to be used in tests")
+	flag.StringVar(&pullSecretFile, "pull-secret-file", "", "Path to the file containing pull secret")
+	flag.StringVar(&CRCBinary, "crc-binary", "", "Path to the CRC binary to be tested")
+	flag.StringVar(&bundleVersion, "bundle-version", "", "Version of the bundle used in tests")
 }
