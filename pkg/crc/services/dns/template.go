@@ -13,6 +13,8 @@ const (
 	dnsmasqConfTemplate = `user=root
 port= {{ .Port }}
 bind-interfaces
+resolv-file=/etc/resolv.dnsmasq.conf
+addn-hosts=/etc/dnsmasq.hosts
 expand-hosts
 log-queries
 srv-host=_etcd-server-ssl._tcp.{{ .ClusterName}}.{{ .BaseDomain }},etcd-0.{{ .ClusterName}}.{{ .BaseDomain }},2380,10
