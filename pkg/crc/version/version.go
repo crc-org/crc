@@ -69,6 +69,9 @@ func getCRCLatestVersionFromMirror() (*semver.Version, error) {
 		return nil, err
 	}
 	defer response.Body.Close()
+	if response.StatusCode != 200 {
+		return nil, fmt.Errorf("HTTP error: %s: %d", response.Status, response.StatusCode)
+	}
 	releaseMetaData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
