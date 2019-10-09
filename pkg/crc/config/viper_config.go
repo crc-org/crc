@@ -153,7 +153,7 @@ func BindFlag(key string, flag *pflag.Flag) error {
 	return globalViper.BindPFlag(key, flag)
 }
 
-// BindFlagset binds a flagset to their repective config properties
+// BindFlagset binds a flagset to their respective config properties
 func BindFlagSet(flagSet *pflag.FlagSet) error {
 	return globalViper.BindPFlags(flagSet)
 }
