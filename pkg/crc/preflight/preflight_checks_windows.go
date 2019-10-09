@@ -64,7 +64,7 @@ func fixHyperVInstalled() (bool, error) {
 	_, _, err := powershell.ExecuteAsAdmin("enable Hyper-V", enableHyperVCommand)
 
 	if err != nil {
-		return false, errors.New("Error occured installing Hyper-V")
+		return false, errors.New("Error occurred installing Hyper-V")
 	}
 
 	// We do need to error out as a restart might be needed (unfortunately no output redirect possible)
