@@ -58,7 +58,7 @@ func fixBundleCached() (bool, error) {
 func checkOcBinaryCached() (bool, error) {
 	oc := oc.OcCached{}
 	if !oc.IsCached() {
-		return false, errors.New("oc binary is not cached.")
+		return false, errors.New("oc binary is not cached")
 	}
 	logging.Debug("oc binary already cached")
 	return true, nil
@@ -67,7 +67,7 @@ func checkOcBinaryCached() (bool, error) {
 func fixOcBinaryCached() (bool, error) {
 	oc := oc.OcCached{}
 	if err := oc.EnsureIsCached(); err != nil {
-		return false, fmt.Errorf("Not able to download oc %v", err)
+		return false, fmt.Errorf("Unable to download oc %v", err)
 	}
 	logging.Debug("oc binary cached")
 	return true, nil

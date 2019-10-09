@@ -63,7 +63,7 @@ func CurrentExecutable() (string, error) {
 }
 
 func CopyFileContents(src string, dst string, permission os.FileMode) error {
-	logging.Debugf("Copying '%s' to '%s'\n", src, dst)
+	logging.Debugf("Copying '%s' to '%s'", src, dst)
 	srcFile, err := os.Open(filepath.Clean(src))
 	if err != nil {
 		return fmt.Errorf("[%v] Cannot open src file '%s'", err, src)

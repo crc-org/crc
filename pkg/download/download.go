@@ -15,7 +15,7 @@ func Download(uri, destination string, mode os.FileMode) (string, error) {
 	client := grab.NewClient()
 	req, err := grab.NewRequest(destination, uri)
 	if err != nil {
-		return "", errors.Newf("Not able to get response from %s: %v", uri, err)
+		return "", errors.Newf("Unable to get response from %s: %v", uri, err)
 	}
 	defer func() {
 		if err != nil {
@@ -25,7 +25,7 @@ func Download(uri, destination string, mode os.FileMode) (string, error) {
 	resp := client.Do(req)
 	// check for errors
 	if err := resp.Err(); err != nil {
-		return "", errors.Newf("Download failed: %v\n", err)
+		return "", errors.Newf("Download failed: %v", err)
 	}
 
 	err = os.Chmod(resp.Filename, mode)
@@ -34,6 +34,6 @@ func Download(uri, destination string, mode os.FileMode) (string, error) {
 		return "", err
 	}
 
-	logging.Debugf("Download saved to %v \n", resp.Filename)
+	logging.Debugf("Download saved to %v", resp.Filename)
 	return resp.Filename, nil
 }
