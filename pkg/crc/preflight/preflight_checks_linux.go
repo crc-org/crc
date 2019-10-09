@@ -155,7 +155,7 @@ func fixLibvirtVersion() (bool, error) {
 }
 
 func checkLibvirtVersion() (bool, error) {
-	logging.Debugf("Checking if libvirt version is >=%s\n", minSupportedLibvirtVersion)
+	logging.Debugf("Checking if libvirt version is >=%s", minSupportedLibvirtVersion)
 	stdOut, stdErr, err := crcos.RunWithDefaultLocale("virsh", "-v")
 	if err != nil {
 		return false, fmt.Errorf("%v : %s", err, stdErr)
