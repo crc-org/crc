@@ -38,4 +38,6 @@ var (
 	SkipCheckNetworkManagerInstalled = cfg.AddSetting("skip-check-network-manager-installed", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	WarnCheckNetworkManagerRunning   = cfg.AddSetting("warn-check-network-manager-running", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	SkipCheckNetworkManagerRunning   = cfg.AddSetting("skip-check-network-manager-running", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	WarnCheckSystemLibvirtVM         = cfg.AddSetting("warn-check-system-libvirt-vm", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	SkipCheckSystemLibvirtVM         = cfg.AddSetting("skip-check-system-libvirt-vm", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 )

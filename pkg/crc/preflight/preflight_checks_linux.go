@@ -547,3 +547,50 @@ func CheckNetworkManagerIsRunning() error {
 func fixNetworkManagerIsRunning() error {
 	return fmt.Errorf("NetworkManager is required. Please make sure it is installed and running manually")
 }
+
+func checkSystemLibvirtVM() error {
+	logging.Debug("Checking for existing VM on libvirt's system connection")
+	stdOut, stdErr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "list", "--all")
+	if err != nil {
+		return fmt.Errorf("%+v: %s", err, stdErr)
+	}
+	regex := regexp.MustCompile(`- +crc`)
+
+	outputSlice := strings.Split(stdOut, "\n")
+	for _, stdOut = range outputSlice {
+		if regex.Match([]byte(stdOut)) {
+			return errors.New("Existing VM on system libvirt connection")
+		}
+	}
+	logging.Debug("No existing existing VM on libvirt system connection")
+	return nil
+}
+
+func fixSystemLibvirtVM() error {
+	logging.Debug("Deleting existing VM from libvirt's system connection")
+	_, stdErr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "delete", "crc")
+	if err != nil {
+		// VM is probably not running, that's OK.
+		logging.Debug("Failed to stop `crc` VM: %+v: %s", err, stdErr)
+	}
+	_, stdErr, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "undefine", "crc")
+	if err != nil {
+		return fmt.Errorf("%+v: %s", err, stdErr)
+	}
+
+	// Ensure disk is owned by current user
+
+	// FIXME: First check if owner isn't already correctly set, even though if this function is called, it likely means
+	// it's not.
+	currentUser, err := user.Current()
+	if err != nil {
+		return fmt.Errorf("Error fetching current user info: %+v: %s", err, stdErr)
+	}
+	diskPath := filepath.Join(constants.MachineBaseDir, "machines", constants.DefaultName, constants.DefaultName)
+	err = crcos.ChownAsRoot(currentUser, diskPath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

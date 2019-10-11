@@ -115,6 +115,13 @@ var libvirtPreflightChecks = [...]PreflightCheck{
 		fixDescription:   "Writing dnsmasq config for crc",
 		fix:              fixCrcDnsmasqConfigFile,
 	},
+	{
+		configKeySuffix:  "check-system-libvirt-vm",
+		checkDescription: "Checking for existing `crc` VM on system libvirt connection",
+		check:            checkSystemLibvirtVM,
+		fixDescription:   "Importing existing `crc` VM",
+		fix:              fixSystemLibvirtVM,
+	},
 }
 
 func getPreflightChecks() []PreflightCheck {
