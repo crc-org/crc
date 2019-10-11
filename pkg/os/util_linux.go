@@ -10,8 +10,20 @@ import (
 )
 
 func WriteToFileAsRoot(reason, content, filepath string) error {
+	return writeToFileAsRoot(reason, content, filepath, false)
+}
+
+func AppendToFileAsRoot(reason, content, filepath string) error {
+	return writeToFileAsRoot(reason, content, filepath, true)
+}
+
+func writeToFileAsRoot(reason, content, filepath string, append bool) error {
 	logging.Infof("Will use root access: %s", reason)
-	cmd := exec.Command("sudo", "tee", filepath) // #nosec G204
+	append_option := ""
+	if append {
+		append_option = "-a"
+	}
+	cmd := exec.Command("sudo", "tee", append_option, filepath) // #nosec G204
 	cmd.Stdin = strings.NewReader(content)
 	buf := new(bytes.Buffer)
 	cmd.Stderr = buf
