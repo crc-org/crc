@@ -81,6 +81,13 @@ var libvirtPreflightChecks = [...]PreflightCheck{
 		fix:              fixLibvirtCrcNetworkActive,
 	},
 	{
+		configKeySuffix:  "check-crc-network-permission",
+		checkDescription: "Checking for appropriate permissions on 'crc' network",
+		check:            checkLibvirtCrcBridgePermissions,
+		fixDescription:   "Setting appropriate permissions on 'crc' network",
+		fix:              fixLibvirtCrcBridgePermissions,
+	},
+	{
 		configKeySuffix:  "check-network-manager-installed",
 		checkDescription: "Checking if NetworkManager is installed",
 		check:            checkNetworkManagerInstalled,

@@ -41,6 +41,11 @@ server=/crc.testing/192.168.130.11
 	crcNetworkManagerConfig     = `[main]
 dns=dnsmasq
 `
+	qemuBridgeConfig      = "allow crc"
+	qemuBridgeConfigPaths = []string{
+		"/etc/qemu/bridge.conf",     // Upstream
+		"/etc/qemu-kvm/bridge.conf", // RHEL
+	}
 )
 
 func checkVirtualizationEnabled() error {
@@ -389,6 +394,44 @@ func fixLibvirtCrcNetworkActive() error {
 		return err
 	}
 	logging.Debug("libvirt 'crc' network started")
+	return nil
+}
+
+func checkLibvirtCrcBridgePermissions() error {
+	logging.Debug("Checking if 'crc' bridge has appropriate permissions setup")
+	configPath, err := crcos.GetFirstExistentPath(qemuBridgeConfigPaths[:])
+	if err != nil {
+		return fmt.Errorf("Failed to find Qemu bridge configuration file: %s", err)
+	}
+
+	config, err := ioutil.ReadFile(filepath.Clean(configPath))
+	if err != nil {
+		return fmt.Errorf("Failed to read %s: %v", configPath, err)
+	}
+	regex := regexp.MustCompile(fmt.Sprintf("(?m)(\n|^)[[:space:]]*%s[[:space:]]*(\n|$)", qemuBridgeConfig))
+	if !regex.Match(config) {
+		return fmt.Errorf("Unpriviledged access to crc network is not allowed")
+	}
+	logging.Debug("The 'crc' bridge can be used by qemu-bridge-helper/session libvirt")
+	return nil
+}
+
+func fixLibvirtCrcBridgePermissions() error {
+	logging.Debug("Fixing permissions for 'crc'")
+	configPath, err := crcos.GetFirstExistentPath(qemuBridgeConfigPaths[:])
+	if err != nil {
+		return fmt.Errorf("Failed to find Qemu bridge configuration file: %s", err)
+	}
+
+	err = crcos.AppendToFileAsRoot(
+		"Allow 'crc' network to be used from session libvirt",
+		fmt.Sprintf("%s\n", qemuBridgeConfig),
+		configPath,
+	)
+	if err != nil {
+		return fmt.Errorf("Failed to write to %s: %v", configPath, err)
+	}
+	logging.Debug("The 'crc' bridge can now be used by qemu-bridge-helper/session libvirt")
 	return nil
 }
 
