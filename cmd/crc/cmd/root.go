@@ -81,6 +81,6 @@ func exitIfMachineMissing(name string) {
 		errors.ExitWithMessage(1, err.Error())
 	}
 	if !exists {
-		errors.ExitWithMessage(1, "Machine \"crc\" does not exist. Use \"crc start\" to add a new one.")
+		errors.ExitWithMessage(1, "Machine '%s' does not exist. Use 'crc start' to create it.", name)
 	}
 }

@@ -28,8 +28,8 @@ var (
 )
 
 func init() {
-	consoleCmd.Flags().BoolVar(&consolePrintURL, "url", false, "Prints the OpenShift Web Console URL to the console.")
-	consoleCmd.Flags().BoolVar(&consolePrintCredentials, "credentials", false, "Prints the credentials which can be used to connect to the OpenShift Web Console.")
+	consoleCmd.Flags().BoolVar(&consolePrintURL, "url", false, "Print the URL for the OpenShift Web Console")
+	consoleCmd.Flags().BoolVar(&consolePrintCredentials, "credentials", false, "Print the credentials for the OpenShift Web Console")
 	rootCmd.AddCommand(consoleCmd)
 }
 
@@ -37,8 +37,8 @@ func init() {
 var consoleCmd = &cobra.Command{
 	Use:     "console",
 	Aliases: []string{"dashboard"},
-	Short:   "Opens or displays the OpenShift Web Console URL.",
-	Long:    `Opens the OpenShift Web Console URL in the default browser or displays it to the console.`,
+	Short:   "Open the OpenShift Web Console in the default browser",
+	Long:    `Open the OpenShift Web Console in the default browser or print its URL or credentials`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runConsole(args)
 	},
@@ -60,7 +60,7 @@ func runConsole(arguments []string) {
 		output.Outln(result.ClusterConfig.WebConsoleURL)
 	}
 	if consolePrintCredentials {
-		output.Outln("To login as a normal user, username is 'developer' and password is 'developer'.")
+		output.Outln("To login as a regular user, username is 'developer' and password is 'developer'.")
 		output.Outf("To login as an admin, username is 'kubeadmin' and password is '%s'.\n", result.ClusterConfig.KubeAdminPass)
 	}
 	if consolePrintURL || consolePrintCredentials {
@@ -68,7 +68,7 @@ func runConsole(arguments []string) {
 	}
 
 	if !machine.IsRunning(result.State) {
-		errors.ExitWithMessage(1, "CodeReady Containers instance is not running, cannot open the OpenShift Web Console.")
+		errors.ExitWithMessage(1, "The OpenShift cluster is not running, cannot open the OpenShift Web Console.")
 	}
 	output.Outln("Opening the OpenShift Web Console in the default browser...")
 	err = browser.OpenURL(result.ClusterConfig.WebConsoleURL)

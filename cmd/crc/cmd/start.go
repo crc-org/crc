@@ -29,8 +29,8 @@ func init() {
 
 var startCmd = &cobra.Command{
 	Use:   "start",
-	Short: "start cluster",
-	Long:  "Start cluster",
+	Short: "Start the OpenShift cluster",
+	Long:  "Start the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		runStart(args)
 	},
@@ -65,20 +65,20 @@ func runStart(arguments []string) {
 		errors.Exit(1)
 	}
 	if commandResult.Status == "Running" {
-		output.Outln("CodeReady Containers instance is running")
+		output.Outln("The OpenShift cluster is running")
 	} else {
-		logging.Warnf("Unexpected status: %s", commandResult.Status)
+		logging.Warnf("Unexpected status of the OpenShift cluster: %s", commandResult.Status)
 	}
 }
 
 func initStartCmdFlagSet() *pflag.FlagSet {
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
-	flagSet.StringP(config.Bundle.Name, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster.")
-	flagSet.StringP(config.VMDriver.Name, "d", machine.DefaultDriver.Driver, fmt.Sprintf("The driver to use for the CRC VM. Possible values: %v", machine.SupportedDriverValues()))
-	flagSet.StringP(config.PullSecretFile.Name, "p", "", fmt.Sprintf("File path of Image pull secret for User (Download it from %s)", constants.CrcLandingPageURL))
-	flagSet.IntP(config.CPUs.Name, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the CRC VM")
-	flagSet.IntP(config.Memory.Name, "m", constants.DefaultMemory, "MiB of Memory to allocate to the CRC VM")
-	flagSet.StringP(config.NameServer.Name, "n", "", "Specify nameserver to use for the instance. (i.e. 8.8.8.8)")
+	flagSet.StringP(config.Bundle.Name, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster")
+	flagSet.StringP(config.VMDriver.Name, "d", machine.DefaultDriver.Driver, fmt.Sprintf("The driver to use for the OpenShift cluster. Possible values: %v", machine.SupportedDriverValues()))
+	flagSet.StringP(config.PullSecretFile.Name, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
+	flagSet.IntP(config.CPUs.Name, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the OpenShift cluster")
+	flagSet.IntP(config.Memory.Name, "m", constants.DefaultMemory, "MiB of memory to allocate to the OpenShift cluster")
+	flagSet.StringP(config.NameServer.Name, "n", "", "IPv4 address of nameserver to use for the OpenShift cluster")
 	flagSet.Bool(config.DisableUpdateCheck.Name, false, "Don't check for update")
 
 	return flagSet
@@ -144,12 +144,12 @@ func checkIfNewVersionAvailable(noUpdateCheck bool) {
 	}
 	isNewVersionAvailable, newVersion, err := version.NewVersionAvailable()
 	if err != nil {
-		logging.Debugf("Error checking if a new version is available: %v", err)
+		logging.Debugf("Unable to find out if a new version is available: %v", err)
 		return
 	}
 	if isNewVersionAvailable {
 		logging.Warnf("A new version (%s) has been published on %s", newVersion, constants.CrcLandingPageURL)
 		return
 	}
-	logging.Debugf("No new version available, latest version at mirror is %s", newVersion)
+	logging.Debugf("No new version available. The latest version is %s", newVersion)
 }

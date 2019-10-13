@@ -17,7 +17,7 @@ func ValidateBool(value interface{}) (bool, string) {
 	if value.(string) == "true" || value.(string) == "false" {
 		return true, ""
 	}
-	return false, "true/false"
+	return false, "must be true or false"
 }
 
 // ValidateDriver checks if driver is valid in the config
@@ -32,7 +32,7 @@ func ValidateDriver(value interface{}) (bool, string) {
 func ValidateCPUs(value interface{}) (bool, string) {
 	v, err := strconv.Atoi(value.(string))
 	if err != nil {
-		return false, fmt.Sprintf("Required integer value >=%d", constants.DefaultCPUs)
+		return false, fmt.Sprintf("requires integer value >= %d", constants.DefaultCPUs)
 	}
 	if err := validation.ValidateCPUs(v); err != nil {
 		return false, err.Error()
@@ -44,7 +44,7 @@ func ValidateCPUs(value interface{}) (bool, string) {
 func ValidateMemory(value interface{}) (bool, string) {
 	v, err := strconv.Atoi(value.(string))
 	if err != nil {
-		return false, fmt.Sprintf("Required integer value in MB >=%d", constants.DefaultMemory)
+		return false, fmt.Sprintf("requires integer value in MiB >= %d", constants.DefaultMemory)
 	}
 	if err := validation.ValidateMemory(v); err != nil {
 		return false, err.Error()

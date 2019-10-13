@@ -181,11 +181,11 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			return *result, errors.Newf("Error loading bundle metadata: %v", err)
 		}
 		if bundleName != filepath.Base(startConfig.BundlePath) {
-			logging.Fatalf("Bundle '%s' was requested, but loaded VM is using '%s'",
+			logging.Fatalf("Bundle '%s' was requested, but the existing VM is using '%s'",
 				filepath.Base(startConfig.BundlePath), bundleName)
 		}
 		if host.Driver.DriverName() != startConfig.VMDriver {
-			err := errors.Newf("VM driver '%s' was requested, but loaded VM is using '%s' instead",
+			err := errors.Newf("VM driver '%s' was requested, but the existin VM is using '%s' instead",
 				startConfig.VMDriver, host.Driver.DriverName())
 			result.Error = err.Error()
 			return *result, err
@@ -248,7 +248,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	logging.Debug("Waiting until ssh is available")
 	if err := cluster.WaitForSsh(sshRunner); err != nil {
 		result.Error = err.Error()
-		return *result, errors.New("Failed to connect to the crc VM with SSH")
+		return *result, errors.New("Failed to connect to the CRC VM with SSH")
 	}
 
 	// Check the certs validity inside the vm
@@ -293,7 +293,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		return *result, errors.Newf("Error determining host IP: %v", err)
 	}
 
-	// Create servicePostStartConfig for dns checks and dns start.
+	// Create servicePostStartConfig for DNS checks and DNS start.
 	servicePostStartConfig := services.ServicePostStartConfig{
 		Name:       startConfig.Name,
 		DriverName: host.Driver.DriverName(),
@@ -305,28 +305,28 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		BundleMetadata: *crcBundleMetadata,
 	}
 
-	// Run the dns server inside the VM
+	// Run the DNS server inside the VM
 	if _, err := dns.RunPostStart(servicePostStartConfig); err != nil {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error running post start: %v", err)
 	}
 
-	// Check DNS looksup before starting the kubelet
+	// Check DNS lookup before starting the kubelet
 	if queryOutput, err := dns.CheckCRCLocalDNSReachable(servicePostStartConfig); err != nil {
 		result.Error = err.Error()
-		return *result, errors.Newf("Failed internal dns query: %v : %s", err, queryOutput)
+		return *result, errors.Newf("Failed internal DNS query: %v : %s", err, queryOutput)
 	}
-	logging.Infof("Check internal and public dns query ...")
+	logging.Infof("Check internal and public DNS query ...")
 
 	if queryOutput, err := dns.CheckCRCPublicDNSReachable(servicePostStartConfig); err != nil {
-		logging.Warnf("Failed Public dns query: %v : %s", err, queryOutput)
+		logging.Warnf("Failed public DNS query: %v : %s", err, queryOutput)
 	}
 
 	// Additional steps to perform after newly created VM is up
 	if !exists {
 		if err := updateSSHKeyPair(sshRunner); err != nil {
 			result.Error = err.Error()
-			return *result, errors.Newf("Error Updating public key: %v", err)
+			return *result, errors.Newf("Error updating public key: %v", err)
 		}
 		// Copy Kubeconfig file from bundle extract path to machine directory.
 		// In our case it would be ~/.crc/machines/crc/
@@ -563,7 +563,7 @@ func createHost(api libmachine.API, driverPath string, machineConfig config.Mach
 	driverOptions := getDriverOptions(machineConfig)
 	jsonDriverConfig, err := json.Marshal(driverOptions)
 	if err != nil {
-		return nil, errors.New("marshal failed")
+		return nil, errors.New("Failed to marshal driver options")
 	}
 
 	vm, err := api.NewHost(machineConfig.VMDriver, driverPath, jsonDriverConfig)
@@ -573,7 +573,7 @@ func createHost(api libmachine.API, driverPath string, machineConfig config.Mach
 	}
 
 	if err := api.Create(vm); err != nil {
-		return nil, fmt.Errorf("Error creating the VM. %s", err)
+		return nil, fmt.Errorf("Error creating the VM: %s", err)
 	}
 
 	return vm, nil
@@ -608,7 +608,7 @@ func addNameServerToInstance(sshRunner *crcssh.SSHRunner, ns string) error {
 		return err
 	}
 	if !exist {
-		logging.Infof("Adding %s as nameserver to Instance ...", nameserver.IPAddress)
+		logging.Infof("Adding %s as nameserver to the instance ...", nameserver.IPAddress)
 		network.AddNameserversToInstance(sshRunner, nameservers)
 	}
 	return nil

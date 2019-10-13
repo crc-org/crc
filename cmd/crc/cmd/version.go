@@ -30,20 +30,18 @@ func init() {
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Get CodeReady Container version.",
-	Long:  "Get the CodeReady Container version currently installed.",
+	Short: "Print version information",
+	Long:  "Print version information",
 	Run: func(cmd *cobra.Command, args []string) {
 		runPrintVersion(args)
 	},
 }
 
 func runPrintVersion(arguments []string) {
-	fmt.Printf("version: %s+%s\n", version.GetCRCVersion(), version.GetCommitSha())
+	fmt.Printf("crc version: %s+%s\n", version.GetCRCVersion(), version.GetCommitSha())
 	var embedded string
-	if constants.BundleEmbedded() {
-		embedded = "embedded in binary"
-	} else {
-		embedded = "not embedded in binary"
+	if !constants.BundleEmbedded() {
+		embedded = "not "
 	}
-	fmt.Printf("OpenShift version: %s (%s)\n", version.GetBundleVersion(), embedded)
+	fmt.Printf("OpenShift version: %s (%sembedded in binary)\n", version.GetBundleVersion(), embedded)
 }

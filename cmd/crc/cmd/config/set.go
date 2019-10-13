@@ -14,12 +14,11 @@ func init() {
 
 var configSetCmd = &cobra.Command{
 	Use:   "set CONFIG-KEY VALUE",
-	Short: "Sets a crc configuration property.",
-	Long: `Sets a crc configuration property. Some of the configuration properties are equivalent
-to the options that you set when you run the 'crc start' command.`,
+	Short: "Set a crc configuration property",
+	Long:  `Sets a crc configuration property.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 2 {
-			errors.ExitWithMessage(1, "Please provide a configuration property and value to set")
+			errors.ExitWithMessage(1, "Please provide a configuration property and its value as in 'crc config set KEY VALUE'")
 		}
 		runConfigSet(args[0], args[1])
 	},
@@ -32,7 +31,7 @@ func runConfigSet(key string, value interface{}) {
 	}
 
 	if err := config.WriteConfig(); err != nil {
-		errors.ExitWithMessage(1, "Error Writing config to file %s: %s", constants.ConfigPath, err.Error())
+		errors.ExitWithMessage(1, "Error writing configuration to file '%s': %s", constants.ConfigPath, err.Error())
 	}
 
 	if setMessage != "" {

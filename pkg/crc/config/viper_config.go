@@ -22,6 +22,10 @@ type setting struct {
 	callbackFns   []SetFn
 }
 
+const (
+	configPropDoesntExistMsg = "Configuration property '%s' does not exist"
+)
+
 var (
 	globalViper *viper.Viper
 	// changedConfigs holds the config keys/values which have a non
@@ -45,11 +49,11 @@ func set(key string, value interface{}) {
 func syncViperState(viper *viper.Viper) error {
 	encodedConfig, err := json.MarshalIndent(changedConfigs, "", " ")
 	if err != nil {
-		return errors.Newf("Error encoding config to JSON: %v", err)
+		return errors.Newf("Error encoding configuration to JSON: %v", err)
 	}
 	err = viper.ReadConfig(bytes.NewBuffer(encodedConfig))
 	if err != nil {
-		return errors.Newf("Error reading in new config: %s : %v", constants.ConfigFile, err)
+		return errors.Newf("Error reading configuration file '%s': %v", constants.ConfigFile, err)
 	}
 	return nil
 }
@@ -95,7 +99,7 @@ func InitViper() error {
 	v.SetTypeByDefaultValue(true)
 	err := v.ReadInConfig()
 	if err != nil {
-		return fmt.Errorf("Error Reading config file: %s : %v", constants.ConfigFile, err)
+		return fmt.Errorf("Error reading configuration file '%s': %v", constants.ConfigFile, err)
 	}
 	globalViper = v
 	return v.Unmarshal(&changedConfigs)
@@ -187,12 +191,12 @@ func runCallbacks(callbacks []SetFn, key interface{}, value interface{}) string 
 func Set(key string, value interface{}) (string, error) {
 	_, ok := allSettings[key]
 	if !ok {
-		return "", fmt.Errorf("Config property '%s' does not exist", key)
+		return "", fmt.Errorf(configPropDoesntExistMsg, key)
 	}
 
 	ok, expectedValue := runValidations(allSettings[key].validationFns, value)
 	if !ok {
-		return "", fmt.Errorf("Config value is invalid: %s, Expected: %s\n", value, expectedValue)
+		return "", fmt.Errorf("Value '%s' for configuration property '%s' is invalid, reason: %s", value, key, expectedValue)
 	}
 
 	set(key, value)
@@ -209,20 +213,25 @@ func Set(key string, value interface{}) (string, error) {
 func Unset(key string) (string, error) {
 	_, ok := allSettings[key]
 	if !ok {
-		return "", fmt.Errorf("Config property does not exist: %s", key)
+		return "", fmt.Errorf(configPropDoesntExistMsg, key)
 	}
 
 	if err := unset(key); err != nil {
-		return "", fmt.Errorf("Error unsetting config property: %s : %v", key, err)
+		return "", fmt.Errorf("Error unsetting configuration property '%s': %v", key, err)
 	}
 
-	return fmt.Sprintf("Successfully removed config for: %s", key), nil
+	return fmt.Sprintf("Successfully unset configuration property '%s'", key), nil
 }
 
 func Get(key string) (interface{}, error) {
+	_, ok := allSettings[key]
+	if !ok {
+		return "", fmt.Errorf(configPropDoesntExistMsg, key)
+	}
+
 	v, ok := changedConfigs[key]
 	if !ok {
-		return nil, fmt.Errorf("Config property '%s' does not exist", key)
+		return nil, fmt.Errorf("Configuration property '%s' is not set", key)
 	}
 
 	return v, nil
