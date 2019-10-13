@@ -19,8 +19,8 @@ func init() {
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Display status of the cluster",
-	Long:  "Show details about OpenShift cluster and crc vm",
+	Short: "Display status of the OpenShift cluster",
+	Long:  "Show details about the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		runStatus()
 	},
@@ -76,6 +76,6 @@ func printStatus(status interface{}, statusFormat string) {
 	}
 	err = tmpl.Execute(os.Stdout, status)
 	if err != nil {
-		errors.ExitWithMessage(1, fmt.Sprintf("Error executing status template:: %s", err.Error()))
+		errors.ExitWithMessage(1, fmt.Sprintf("Error executing status template: %s", err.Error()))
 	}
 }

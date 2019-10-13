@@ -15,14 +15,14 @@ import (
 
 func init() {
 	deleteCmd.Flags().BoolVarP(&clearCache, "clear-cache", "", false,
-		fmt.Sprintf("Clear the cache directory: %s", constants.MachineCacheDir))
+		fmt.Sprintf("Clear the OpenShift cluster cache at: %s", constants.MachineCacheDir))
 	rootCmd.AddCommand(deleteCmd)
 }
 
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
-	Short: "Delete cluster",
-	Long:  "Delete cluster",
+	Short: "Delete the OpenShift cluster",
+	Long:  "Delete the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		runDelete(args)
 	},
@@ -40,18 +40,18 @@ func runDelete(arguments []string) {
 	if clearCache {
 		deleteCache()
 	}
-	yes := input.PromptUserForYesOrNo("Do you want to delete the crc VM", globalForce)
+	yes := input.PromptUserForYesOrNo("Do you want to delete the OpenShift cluster", globalForce)
 	if yes {
 		_, err := machine.Delete(deleteConfig)
 		if err != nil {
 			errors.Exit(1)
 		}
-		output.Outln("CodeReady Containers instance deleted")
+		output.Outln("The OpenShift cluster deleted")
 	}
 }
 
 func deleteCache() {
-	yes := input.PromptUserForYesOrNo("Do you want to delete cache", globalForce)
+	yes := input.PromptUserForYesOrNo("Do you want to delete the OpenShift cluster cache", globalForce)
 	if yes {
 		os.RemoveAll(constants.MachineCacheDir)
 	}

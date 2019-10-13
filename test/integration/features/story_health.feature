@@ -7,7 +7,7 @@ Feature:
     Scenario Outline: Start CRC
         Given executing "crc setup" succeeds
         When starting CRC with default bundle and hypervisor "<vm-driver>" succeeds
-        Then stdout should contain "CodeReady Containers instance is running"
+        Then stdout should contain "The OpenShift cluster is running"
         And executing "eval $(crc oc-env)" succeeds
         When with up to "4" retries with wait period of "2m" command "crc status" output should contain "Running (v4."
         Then login to the oc cluster succeeds
@@ -57,6 +57,6 @@ Feature:
     Scenario: Clean up
         Given executing "oc delete project testproj" succeeds
         When executing "crc stop -f" succeeds
-        Then stdout should match "CodeReady Containers instance(.*)stopped"
+        Then stdout should match "The OpenShift cluster(.*)stopped"
         When executing "crc delete -f" succeeds
-        Then stdout should contain "CodeReady Containers instance deleted"
+        Then stdout should contain "The OpenShift cluster deleted"

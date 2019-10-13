@@ -49,8 +49,8 @@ func executeOcTemplateStdout(shellCfg *OcShellConfig) error {
 
 var ocEnvCmd = &cobra.Command{
 	Use:   "oc-env",
-	Short: "Sets the path of the 'oc' binary.",
-	Long:  `Sets the path of OpenShift client binary 'oc'.`,
+	Short: "Add the 'oc' binary to PATH",
+	Long:  `Add the OpenShift client binary 'oc' to PATH`,
 	// This is required to make sure root command Persistent PreRun not run.
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -65,5 +65,5 @@ var ocEnvCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(ocEnvCmd)
-	ocEnvCmd.Flags().StringVar(&forceShell, "shell", "", "Force setting the environment for a specified shell: [fish, cmd, powershell, tcsh, bash, zsh]. Default is auto-detect.")
+	ocEnvCmd.Flags().StringVar(&forceShell, "shell", "", "Set the environment for the specified shell: [fish, cmd, powershell, tcsh, bash, zsh]. Default is auto-detect.")
 }

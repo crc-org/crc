@@ -27,7 +27,7 @@ func ValidateDriver(driver string) error {
 // ValidateCPUs checks if provided cpus count is valid
 func ValidateCPUs(value int) error {
 	if value < constants.DefaultCPUs {
-		return errors.Newf("CPUs required >=%d", constants.DefaultCPUs)
+		return errors.Newf("requires CPUs >= %d", constants.DefaultCPUs)
 	}
 	return nil
 }
@@ -35,7 +35,7 @@ func ValidateCPUs(value int) error {
 // ValidateMemory checks if provided Memory count is valid
 func ValidateMemory(value int) error {
 	if value < constants.DefaultMemory {
-		return errors.Newf("Memory required >=%d", constants.DefaultMemory)
+		return errors.Newf("requires memory in MiB >= %d", constants.DefaultMemory)
 	}
 	return nil
 }
@@ -46,14 +46,14 @@ func ValidateBundle(bundle string) error {
 		if constants.BundleEmbedded() {
 			return errors.Newf("Run 'crc setup' to unpack the bundle to disk")
 		} else {
-			return errors.Newf("You must provide the path to a valid bundle using the -b option")
+			return errors.Newf("Please provide the path to a valid bundle using the -b option")
 		}
 	}
 	// Check if the version of the bundle provided by user is same as what is released with crc.
 	releaseBundleVersion := version.GetBundleVersion()
 	userProvidedBundleVersion := filepath.Base(bundle)
 	if !strings.Contains(userProvidedBundleVersion, fmt.Sprintf("%s.crcbundle", releaseBundleVersion)) {
-		return errors.Newf("%s bundle is not supported by this binary, you must use crc_<hypervisor>_%s.crcbundle", userProvidedBundleVersion, releaseBundleVersion)
+		return errors.Newf("%s bundle is not supported by this binary, please use crc_<hypervisor>_%s.crcbundle", userProvidedBundleVersion, releaseBundleVersion)
 	}
 	return nil
 }
@@ -62,7 +62,7 @@ func ValidateBundle(bundle string) error {
 func ValidateIpAddress(ipAddress string) error {
 	ip := net.ParseIP(ipAddress).To4()
 	if ip == nil {
-		return errors.Newf("IPv4 address is not valid: '%s'", ipAddress)
+		return errors.Newf("'%s' is not a valid IPv4 address", ipAddress)
 	}
 	return nil
 }
@@ -70,7 +70,7 @@ func ValidateIpAddress(ipAddress string) error {
 // ValidatePath check if provide path is exist
 func ValidatePath(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return errors.Newf("File %s does not exist", path)
+		return errors.Newf("file '%s' does not exist", path)
 	}
 	return nil
 }
@@ -87,14 +87,14 @@ func ImagePullSecret(secret string) error {
 		return fmt.Errorf("invalid pull secret: %v", err)
 	}
 	if len(s.Auths) == 0 {
-		return fmt.Errorf("invalid pull secret, auths required")
+		return fmt.Errorf("invalid pull secret: missing 'auths' JSON-object field")
 	}
 
 	for d, a := range s.Auths {
 		_, authPresent := a["auth"]
 		_, credsStorePresent := a["credsStore"]
 		if !authPresent && !credsStorePresent {
-			return fmt.Errorf("invalid pull secret, %q requires either auth or credsStore", d)
+			return fmt.Errorf("invalid pull secret, '%q' JSON-object requires either 'auth' or 'credsStore' field", d)
 		}
 	}
 	return nil

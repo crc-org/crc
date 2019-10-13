@@ -31,7 +31,7 @@ Feature: Basic test
         When executing "crc status" fails
         Then stderr should contain 
         """
-        Machine "crc" does not exist. Use "crc start" to add a new one.
+        Machine 'crc' does not exist. Use 'crc start' to create it.
         """
 
     @linux
@@ -77,12 +77,12 @@ Feature: Basic test
     @linux
     Scenario: CRC start on Linux
         When starting CRC with default bundle and default hypervisor succeeds
-        Then stdout should contain "CodeReady Containers instance is running"
+        Then stdout should contain "The OpenShift cluster is running"
 
     @darwin
     Scenario: CRC start on Mac
         When starting CRC with default bundle and hypervisor "hyperkit" succeeds
-        Then stdout should contain "CodeReady Containers instance is running"
+        Then stdout should contain "The OpenShift cluster is running"
     
     @darwin @linux @windows
     Scenario: CRC status check
@@ -102,13 +102,13 @@ Feature: Basic test
     @darwin @linux @windows
     Scenario: CRC console credentials
         When executing "crc console --credentials" succeeds
-        Then stdout should contain "To login as a normal user, username is 'developer' and password is 'developer'."
+        Then stdout should contain "To login as a regular user, username is 'developer' and password is 'developer'."
         And stdout should contain "To login as an admin, username is 'kubeadmin' and password is "
 
     @darwin @linux @windows
     Scenario: CRC forcible stop
         When executing "crc stop -f"
-        Then stdout should match "CodeReady Containers instance(.*)stopped"
+        Then stdout should match "The OpenShift cluster(.*)stopped"
 
     @darwin @linux @windows
     Scenario: CRC status check
@@ -120,9 +120,9 @@ Feature: Basic test
         Given executing "crc status" succeeds
         And stdout contains "Stopped"
         When executing "crc console"
-        Then stderr should contain "CodeReady Containers instance is not running, cannot open the OpenShift Web Console."
+        Then stderr should contain "The OpenShift cluster is not running, cannot open the OpenShift Web Console."
 
     @darwin @linux @windows
     Scenario: CRC delete
         When executing "crc delete -f" succeeds
-        Then stdout should contain "CodeReady Containers instance deleted"
+        Then stdout should contain "The OpenShift cluster deleted"

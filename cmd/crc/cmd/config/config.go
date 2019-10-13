@@ -29,7 +29,7 @@ var (
 var (
 	ConfigCmd = &cobra.Command{
 		Use:   "config SUBCOMMAND [flags]",
-		Short: "Modifies crc configuration properties.",
+		Short: "Modify crc configuration",
 		Run: func(cmd *cobra.Command, args []string) {
 			_ = cmd.Help()
 		},
@@ -37,8 +37,7 @@ var (
 )
 
 func init() {
-	ConfigCmd.Long = `Modifies crc configuration properties. Some of the configuration properties are equivalent
-to the options that you set when you run the 'crc start' command.
+	ConfigCmd.Long = `Modifies crc configuration properties.
 Configurable properties (enter as SUBCOMMAND): ` + "\n\n" + configurableFields()
 }
 

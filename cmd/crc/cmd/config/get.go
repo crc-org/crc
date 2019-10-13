@@ -14,12 +14,11 @@ func init() {
 
 var configGetCmd = &cobra.Command{
 	Use:   "get CONFIG-KEY",
-	Short: "Gets a crc configuration property.",
-	Long: `Gets a crc configuration property. Some of the configuration properties are equivalent
-to the options that you set when you run the 'crc start' command.`,
+	Short: "Get a crc configuration property",
+	Long:  `Gets a crc configuration property.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
-			output.Outln("Please provide a configuration property to retrieve")
+			output.Outln("Please provide a configuration property to get")
 			os.Exit(1)
 		}
 		runConfigGet(args[0])

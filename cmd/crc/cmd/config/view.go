@@ -31,9 +31,8 @@ func init() {
 
 var configViewCmd = &cobra.Command{
 	Use:   "view",
-	Short: "Display complete crc configurations.",
-	Long: `Retrieves full list of crc configurations. Some of the configuration properties are equivalent
-to the options that you set when you run the 'crc start' command.`,
+	Short: "Display all assigned crc configuration properties",
+	Long:  `Displays all assigned crc configuration properties and their values.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		tmpl, err := determineTemplate(configViewFormat)
 		if err != nil {

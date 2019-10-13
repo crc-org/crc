@@ -15,8 +15,8 @@ func init() {
 
 var ipCmd = &cobra.Command{
 	Use:   "ip",
-	Short: "Get IP of the instance",
-	Long:  "Get IP of the instance",
+	Short: "Get IP address of the running OpenShift cluster",
+	Long:  "Get IP address of the running OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		runIP(args)
 	},

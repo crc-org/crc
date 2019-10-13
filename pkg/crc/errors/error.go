@@ -8,11 +8,11 @@ import (
 )
 
 func New(text string) error {
-	logging.Error(fmt.Sprintf("Error occurred: %s", text))
+	logging.Error(text)
 	return goerrors.New(text)
 }
 
-func Newf(text string, args ...interface{}) error {
-	logging.Errorf(fmt.Sprintf("Error occurred: %s", text), args...)
-	return fmt.Errorf(text, args...)
+func Newf(format string, args ...interface{}) error {
+	logging.Errorf(format, args...)
+	return fmt.Errorf(format, args...)
 }

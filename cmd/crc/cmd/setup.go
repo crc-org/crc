@@ -15,14 +15,14 @@ import (
 
 func init() {
 	setupCmd.Flags().StringVarP(&vmDriver, config.VMDriver.Name, "d",
-		machine.DefaultDriver.Driver, fmt.Sprintf("The driver to use for the CRC VM. Possible values: %v", machine.SupportedDriverValues()))
+		machine.DefaultDriver.Driver, fmt.Sprintf("The driver to use for the OpenShift cluster. Possible values: %v", machine.SupportedDriverValues()))
 	rootCmd.AddCommand(setupCmd)
 }
 
 var setupCmd = &cobra.Command{
 	Use:   "setup",
-	Short: "setup hypervisor",
-	Long:  "setup hypervisor to run the cluster",
+	Short: "Set up prerequisites for the OpenShift cluster",
+	Long:  "Set up local virtualization and networking infrastructure for the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		runSetup(args)
 	},
@@ -33,11 +33,11 @@ func runSetup(arguments []string) {
 		errors.Exit(1)
 	}
 	preflight.SetupHost(vmDriver)
+	var bundle string
 	if constants.BundleEmbedded() {
-		output.Outln("Setup is complete, you can now run 'crc start' to start a CodeReady Containers instance")
-	} else {
-		output.Outln("Setup is complete, you can now run 'crc start -b $bundlename' to start a CodeReady Containers instance")
+		bundle = " -b $bundlename"
 	}
+	output.Outf("Setup is complete, you can now run 'crc start%s' to start the OpenShift cluster\n", bundle)
 }
 
 var vmDriver string
