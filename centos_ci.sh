@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # bundle location
-BUNDLE=crc_libvirt_4.2.0-rc.0.crcbundle
+BUNDLE_VERSION=4.2.0-rc.5
+BUNDLE=crc_libvirt_$BUNDLE_VERSION.crcbundle
 
 # Output command before executing
 set -x
@@ -108,7 +109,7 @@ function perform_artifacts_upload() {
 
 function get_bundle() {
   mkdir $HOME/Downloads
-  curl -L 'https://storage.googleapis.com/crc-bundle-github-ci/crc_bundle.zip' -o $HOME/Downloads/bundle.zip
+  curl -L "https://storage.googleapis.com/crc-bundle-github-ci/crc_libvirt_$BUNDLE_VERSION.zip" -o $HOME/Downloads/bundle.zip
   unzip -P $CRC_BUNDLE_PASSWORD $HOME/Downloads/bundle.zip -d $HOME/Downloads/
 }
 
