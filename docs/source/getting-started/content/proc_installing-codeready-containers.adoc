@@ -3,32 +3,7 @@
 
 .Prerequisites
 
-* {prod} requires the following system resources in order to run OpenShift:
-** 4 virtual CPUs (vCPUs)
-** 8 GB of memory
-** 35 GB of storage space
-
-[NOTE]
-====
-These requirements must be met in order to run OpenShift in the {prod} virtual machine.
-Other applications running on top of OpenShift may require additional resources to run.
-====
-
-* On {msw}, {prod} requires the Windows 10 Fall Creators Update (version 1709).
-{prod} does not work on earlier versions of {msw}.
-
-* On {mac}, {prod} requires macOS 10.12 Sierra or newer.
-{prod} does not work on earlier versions of {mac}.
-
-* On Linux, {prod} is only supported on {rhel}/{centos} 7.5 or newer (including 8.x versions) and on the latest two stable {fed} releases.
-{ubuntu} 18.04 LTS or newer and {debian} 10 or newer are not officially supported and may require manual set up of the host machine.
-* On Linux, {prod} requires installation of the following software packages:
-** [package]`NetworkManager`
-
-[NOTE]
-====
-See <<required-software-packages_{context}>> to install the required packages for your Linux distribution.
-====
+* Your host machine must meet the <<minimum-system-requirements_{context}>>.
 
 .Procedure
 
