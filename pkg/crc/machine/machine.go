@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/cluster"
@@ -35,8 +36,10 @@ import (
 )
 
 func init() {
-	// Force using the golang SSH implementation
-	ssh.SetDefaultClient(ssh.Native)
+	// Force using the golang SSH implementation for windows
+	if runtime.GOOS == crcos.WINDOWS.String() {
+		ssh.SetDefaultClient(ssh.Native)
+	}
 }
 
 func fillClusterConfig(bundleInfo *bundle.CrcBundleInfo, clusterConfig *ClusterConfig) error {
