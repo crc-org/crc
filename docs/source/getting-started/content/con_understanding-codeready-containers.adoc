@@ -15,7 +15,7 @@ You can refer to the link:https://docs.openshift.com/container-platform/latest/w
 {rh-prod} is a regular OpenShift installation with the following notable differences:
 
 * It uses a single node which behaves both as a master and as a worker node.
-* The `machine-config`, `marketplace` and `monitoring` Operators are disabled by default.
+* The `machine-config` and `monitoring` Operators are disabled by default.
 * These disabled Operators will cause the corresponding parts of the web console to be non functional.
 * For the same reason, there is currently no upgrade path to newer OpenShift versions.
 * Due to technical limitations, the {prod} cluster is ephemeral and will need to be recreated from scratch once a month using a newer release.
