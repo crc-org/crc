@@ -34,7 +34,7 @@ func runSetup(arguments []string) {
 	}
 	preflight.SetupHost(vmDriver)
 	var bundle string
-	if constants.BundleEmbedded() {
+	if !constants.BundleEmbedded() {
 		bundle = " -b $bundlename"
 	}
 	output.Outf("Setup is complete, you can now run 'crc start%s' to start the OpenShift cluster\n", bundle)
