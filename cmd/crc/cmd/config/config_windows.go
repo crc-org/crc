@@ -6,6 +6,8 @@ import (
 
 var (
 	// Preflight checks
+	SkipCheckAdministratorUser   = cfg.AddSetting("skip-check-administrator-user", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	WarnCheckAdministratorUser   = cfg.AddSetting("warn-check-administrator-user", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	SkipCheckWindowsVersionCheck = cfg.AddSetting("skip-check-windows-version", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	WarnCheckWindowsVersionCheck = cfg.AddSetting("warn-check-windows-version", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	SkipCheckHyperVInstalled     = cfg.AddSetting("skip-check-hyperv-installed", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})

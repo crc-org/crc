@@ -7,10 +7,10 @@ import (
 
 // StartPreflightChecks performs the preflight checks before starting the cluster
 func StartPreflightChecks(vmDriver string) {
-	preflightCheckSucceedsOrFails(false,
+	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckAdministratorUser.Name),
 		checkIfRunningAsNormalUserInWindows,
 		"Checking if running as normal user",
-		false,
+		config.GetBool(cmdConfig.WarnCheckAdministratorUser.Name),
 	)
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckWindowsVersionCheck.Name),
 		checkOcBinaryCached,

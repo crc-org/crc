@@ -6,6 +6,8 @@ import (
 
 var (
 	// Preflight checks
+	SkipCheckRootUser                = cfg.AddSetting("skip-check-root-user", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	WarnCheckRootUser                = cfg.AddSetting("warn-check-root-user", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	SkipCheckVirtEnabled             = cfg.AddSetting("skip-check-virt-enabled", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	WarnCheckVirtEnabled             = cfg.AddSetting("warn-check-virt-enabled", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	SkipCheckKvmEnabled              = cfg.AddSetting("skip-check-kvm-enabled", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
