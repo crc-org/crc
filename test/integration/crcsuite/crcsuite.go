@@ -59,6 +59,8 @@ func FeatureContext(s *godog.Suite) {
 		CheckClusterOperatorsWithRetry)
 	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" http response from "(.*)" should have status code "(\d+)"$`,
 		CheckHTTPResponseWithRetry)
+	s.Step(`stdout (?:should contain|contains) "(.*)" if bundle (is|is not) embedded$`,
+		StdoutContainsIfBundleEmbeddedOrNot)
 
 	// CRC file operations
 	s.Step(`^file "([^"]*)" exists in CRC home folder$`,
@@ -281,6 +283,24 @@ func StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails(hypervisor string, ex
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
+}
+
+func StdoutContainsIfBundleEmbeddedOrNot(value string, expected string) error {
+
+	if expected == "is" { // expect embedded
+		if constants.BundleEmbedded() { // really embedded
+			return clicumber.CommandReturnShouldContain("stdout", value)
+		} else {
+			return clicumber.CommandReturnShouldNotContain("stdout", value)
+		}
+	} else { // expect not embedded
+		if !constants.BundleEmbedded() { // really not embedded
+			return clicumber.CommandReturnShouldContain("stdout", value)
+		} else {
+			return clicumber.CommandReturnShouldNotContain("stdout", value)
+		}
+	}
+
 }
 
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
