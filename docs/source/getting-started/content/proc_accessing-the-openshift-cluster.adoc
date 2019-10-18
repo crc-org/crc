@@ -51,7 +51,7 @@ You can also view it by running the [command]`{bin} console --credentials` comma
 +
   . You can now use `oc` to interact with your OpenShift cluster. For example, to verify that the OpenShift cluster operators are available using the [command]`oc get co` command:
 +
-[subs="+quotes,attributes"]
+[subs="+quotes,attributes",options="nowrap"]
 ----
 $ oc get co
 NAME                                 VERSION      AVAILABLE   PROGRESSING   FAILING   SINCE
@@ -67,7 +67,7 @@ kube-controller-manager              4.1.0-rc.0   True        False             
 kube-scheduler                       4.1.0-rc.0   True        False                   6d6h
 machine-api                          4.1.0-rc.0   True        False         False     6d6h
 machine-config                       4.1.0-rc.0   False       False         True      6d6h
-marketplace                          4.1.0-rc.0   False       False         True      6d6h
+marketplace                          4.1.0-rc.0   True        False         False     6d6h
 monitoring                                        Unknown     True          Unknown   6d6h
 network                              4.1.0-rc.0   True        False                   6d6h
 node-tuning                          4.1.0-rc.0   True        False         False     89m
@@ -84,7 +84,7 @@ storage                              4.1.0-rc.0   True        False         Fals
 +
 [NOTE]
 ====
-The `machine-config` and `marketplace` cluster operators are expected to report `False` availability.
+The `machine-config` cluster operator is expected to report `False` availability.
 The `monitoring` cluster operator is expected to report `Unknown` availability.
 ====
 +
