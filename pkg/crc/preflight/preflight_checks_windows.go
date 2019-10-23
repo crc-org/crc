@@ -22,11 +22,16 @@ const (
 func checkVersionOfWindowsUpdate() (bool, error) {
 	windowsReleaseId := `(Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseId`
 
-	stdOut, _, _ := powershell.Execute(windowsReleaseId)
+	stdOut, _, err := powershell.Execute(windowsReleaseId)
+	if err != nil {
+		logging.Debug(err.Error())
+		return false, errors.New("Failed to get Windows release id")
+	}
 	yourWindowsReleaseId, err := strconv.Atoi(strings.TrimSpace(stdOut))
 
 	if err != nil {
-		return false, errors.New("Failed to get Windows release id")
+		logging.Debug(err.Error())
+		return false, errors.Newf("Failed to parse Windows release id: %s", stdOut)
 	}
 
 	if yourWindowsReleaseId < minimumWindowsReleaseId {
@@ -43,14 +48,22 @@ func fixVersionOfWindowsUpdate() (bool, error) {
 func checkHyperVInstalled() (bool, error) {
 	// check to see if a hypervisor is present. if hyper-v is installed and enabled,
 	checkHypervisorPresent := `@(Get-Wmiobject Win32_ComputerSystem).HypervisorPresent`
-	stdOut, _, _ := powershell.Execute(checkHypervisorPresent)
+	stdOut, _, err := powershell.Execute(checkHypervisorPresent)
+	if err != nil {
+		logging.Debug(err.Error())
+		return false, errors.New("Failed checking if Hyper-V is installed")
+	}
 	if !strings.Contains(stdOut, "True") {
 		return false, errors.New("Hyper-V not installed")
 	}
 
 	// Check if Hyper-V's Virtual Machine Management Service is running
 	checkVmmsRunning := `@(Get-Service vmms).Status`
-	stdOut, _, _ = powershell.Execute(checkVmmsRunning)
+	stdOut, _, err = powershell.Execute(checkVmmsRunning)
+	if err != nil {
+		logging.Debug(err.Error())
+		return false, errors.New("Failed checking if Hyper-V is running")
+	}
 	if strings.TrimSpace(stdOut) != "Running" {
 		return false, errors.New("Hyper-V Virtual Machine Management service not running")
 	}
@@ -64,6 +77,7 @@ func fixHyperVInstalled() (bool, error) {
 	_, _, err := powershell.ExecuteAsAdmin("enable Hyper-V", enableHyperVCommand)
 
 	if err != nil {
+		logging.Debug(err.Error())
 		return false, errors.New("Error occurred installing Hyper-V")
 	}
 
@@ -79,7 +93,11 @@ func checkIfUserPartOfHyperVAdmins() (bool, error) {
 	checkIfMemberOfHyperVAdmins :=
 		`$sid = New-Object System.Security.Principal.SecurityIdentifier("S-1-5-32-578")
 	@([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole($sid)`
-	stdOut, _, _ := powershell.Execute(checkIfMemberOfHyperVAdmins)
+	stdOut, _, err := powershell.Execute(checkIfMemberOfHyperVAdmins)
+	if err != nil {
+		logging.Debug(err.Error())
+		return false, errors.New("Failed checking if user is part of hyperv admins group")
+	}
 	if !strings.Contains(stdOut, "True") {
 		return false, errors.New("User is not a member of the Hyper-V administrators group")
 	}
@@ -90,6 +108,7 @@ func checkIfUserPartOfHyperVAdmins() (bool, error) {
 func fixUserPartOfHyperVAdmins() (bool, error) {
 	outGroupName, _, err := powershell.Execute(`(New-Object System.Security.Principal.SecurityIdentifier("S-1-5-32-578")).Translate([System.Security.Principal.NTAccount]).Value`)
 	if err != nil {
+		logging.Debug(err.Error())
 		return false, errors.New("Unable to get group name")
 	}
 	groupName := strings.TrimSpace(strings.Replace(strings.TrimSpace(outGroupName), "BUILTIN\\", "", -1))
@@ -99,6 +118,7 @@ func fixUserPartOfHyperVAdmins() (bool, error) {
 	netCmdArgs := fmt.Sprintf(`([adsi]"WinNT://./%s,group").Add("WinNT://%s,user")`, groupName, username)
 	_, _, err = powershell.ExecuteAsAdmin("add user to hyperv admins group", netCmdArgs)
 	if err != nil {
+		logging.Debug(err.Error())
 		return false, errors.New("Unable to get user name")
 	}
 
@@ -112,7 +132,11 @@ func checkIfHyperVVirtualSwitchExists() (bool, error) {
 	// check for default switch by using the Id
 	if switchName == hypervDefaultVirtualSwitchName {
 		checkIfDefaultSwitchExists := fmt.Sprintf("Get-VMSwitch -Id %s | ForEach-Object { $_.Name }", hypervDefaultVirtualSwitchId)
-		_, stdErr, _ := powershell.Execute(checkIfDefaultSwitchExists)
+		_, stdErr, err := powershell.Execute(checkIfDefaultSwitchExists)
+		if err != nil {
+			logging.Debug(err.Error())
+			return false, errors.New("Failed checking if Hyper-V Default Switch exists")
+		}
 
 		if !strings.Contains(stdErr, "Get-VMSwitch") {
 			// found the default
