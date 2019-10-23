@@ -32,10 +32,17 @@ var (
 		"$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())",
 		"$currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)",
 	}
+
+	poshStdLocation = filepath.Join(os.Getenv("SYSTEMROOT"), "System32", "WindowsPowerShell", "v1.0", "powershell.exe")
 )
 
 func LocatePowerShell() string {
-	ps, _ := exec.LookPath("powershell.exe")
+	ps, err := exec.LookPath("powershell.exe")
+	if err != nil {
+		logging.Debugf("Could not find powershell.exe on path %s", err.Error())
+		logging.Debug("Falling back to ", poshStdLocation)
+		return poshStdLocation
+	}
 	return ps
 }
 
