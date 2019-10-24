@@ -19,7 +19,7 @@ func WaitForSsh(sshRunner *ssh.SSHRunner) error {
 		return nil
 	}
 
-	return errors.RetryAfter(10, checkSshConnectivity, time.Second)
+	return errors.RetryAfter(60, checkSshConnectivity, time.Second)
 }
 
 // CheckCertsValidityUsingBundleBuildTime check if the cluster certs going to expire soon.
