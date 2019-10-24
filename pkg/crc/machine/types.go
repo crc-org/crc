@@ -112,3 +112,10 @@ type ConsoleResult struct {
 	Success       bool
 	Error         string
 }
+
+type VersionResult struct {
+	CrcVersion       string
+	CommitSha        string
+	OpenshiftVersion string
+	Success          bool
+}
