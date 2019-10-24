@@ -21,6 +21,7 @@ toc::[]
 
 image:https://travis-ci.org/code-ready/crc.svg?branch=master["Travis CI Build Status", link="https://travis-ci.org/code-ready/crc"]
 image:https://circleci.com/gh/code-ready/crc/tree/master.svg?style=svg["CircleCI Build Status", link="https://circleci.com/gh/code-ready/crc"]
+image:https://ci.centos.org/buildStatus/icon?job=codeready-crc-master["CentOS CI Build Status", link="https://ci.centos.org/job/codeready-crc-master"]
 
 [[intro-to-crc]]
 == Introduction
