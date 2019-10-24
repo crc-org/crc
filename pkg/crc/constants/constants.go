@@ -72,6 +72,7 @@ var (
 	GlobalStatePath    = filepath.Join(CrcBaseDir, GlobalStateFile)
 	DefaultBundlePath  = filepath.Join(MachineCacheDir, GetDefaultBundle())
 	bundleEmbedded     = "false"
+	DaemonSocketPath   = filepath.Join(CrcBaseDir, "crc.sock")
 )
 
 // GetHomeDir returns the home directory for the current user
