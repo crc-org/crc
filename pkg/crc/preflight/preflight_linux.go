@@ -91,11 +91,11 @@ func StartPreflightChecks(vmDriver string) {
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
 func SetupHost(vmDriver string) {
-	preflightCheckAndFix(false,
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckRootUser.Name),
 		checkIfRunningAsNormalUser,
 		fixRunAsNormalUser,
 		"Checking if running as non-root",
-		false,
+		config.GetBool(cmdConfig.WarnCheckRootUser.Name),
 	)
 	preflightCheckAndFix(false,
 		checkOcBinaryCached,

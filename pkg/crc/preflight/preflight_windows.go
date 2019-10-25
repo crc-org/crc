@@ -44,11 +44,11 @@ func StartPreflightChecks(vmDriver string) {
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
 func SetupHost(vmDriver string) {
-	preflightCheckAndFix(false,
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckAdministratorUser.Name),
 		checkIfRunningAsNormalUserInWindows,
 		fixRunAsNormalUserInWindows,
 		"Checking if running as normal user",
-		false,
+		config.GetBool(cmdConfig.WarnCheckAdministratorUser.Name),
 	)
 	preflightCheckAndFix(false,
 		checkOcBinaryCached,
