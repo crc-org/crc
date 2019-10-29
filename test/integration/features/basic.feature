@@ -83,9 +83,10 @@ Feature: Basic test
         Then stdout should contain "The OpenShift cluster is running"
     
     @darwin @linux @windows
-    Scenario: CRC status check
+    Scenario: CRC status and disk space check
         When with up to "15" retries with wait period of "1m" command "crc status" output should not contain "Stopped"
         And stdout should contain "Running"
+        And stdout should match ".*Disk Usage: *\d+\.\d+GB of 32.\d+GB.*"
 
     @darwin @linux @windows
     Scenario: CRC IP check
