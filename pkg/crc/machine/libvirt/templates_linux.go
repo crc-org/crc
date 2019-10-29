@@ -9,7 +9,7 @@ const (
 		<port start='1024' end='65535'/>
 	  </nat>
 	</forward>
-	<bridge name='crc' stp='on' delay='0'/>
+	<bridge name='{{ .NetworkName }}' stp='on' delay='0'/>
 	<mac address='52:54:00:fd:be:d0'/>
 	<ip family='ipv4' address='192.168.130.1' prefix='24'>
 	  <dhcp>
