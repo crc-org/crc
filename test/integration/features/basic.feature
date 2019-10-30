@@ -85,12 +85,12 @@ Feature: Basic test
     @linux @windows
     Scenario: CRC start
         When starting CRC with default bundle and default hypervisor succeeds
-        Then stdout should contain "The OpenShift cluster is running"
+        Then stdout should contain "Started the OpenShift cluster"
 
     @darwin
     Scenario: CRC start on Mac
         When starting CRC with default bundle and hypervisor "hyperkit" succeeds
-        Then stdout should contain "The OpenShift cluster is running"
+        Then stdout should contain "Started the OpenShift cluster"
     
     @darwin @linux @windows
     Scenario: CRC status and disk space check
@@ -117,7 +117,7 @@ Feature: Basic test
     @darwin @linux @windows
     Scenario: CRC forcible stop
         When executing "crc stop -f"
-        Then stdout should match "The OpenShift cluster(.*)stopped"
+        Then stdout should match "(.*)[Ss]topped the OpenShift cluster"
 
     @darwin @linux @windows
     Scenario: CRC status check
@@ -134,4 +134,4 @@ Feature: Basic test
     @darwin @linux @windows
     Scenario: CRC delete
         When executing "crc delete -f" succeeds
-        Then stdout should contain "The OpenShift cluster deleted"
+        Then stdout should contain "Deleted the OpenShift cluster"

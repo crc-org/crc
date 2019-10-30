@@ -55,7 +55,7 @@ func runStop(arguments []string) {
 		errors.Exit(1)
 	}
 	if commandResult.Success {
-		output.Outln("The OpenShift cluster stopped")
+		output.Outln("Stopped the OpenShift cluster")
 	} else {
 		/* If we did not get an error, the status should be true */
 		logging.Warnf("Unexpected status of the OpenShift cluster: %v", commandResult.Success)
@@ -67,5 +67,5 @@ func killVM(killConfig machine.PowerOffConfig) {
 	if err != nil {
 		errors.Exit(1)
 	}
-	output.Outln("The OpenShift cluster forcibly stopped")
+	output.Outln("Forcibly stopped the OpenShift cluster")
 }

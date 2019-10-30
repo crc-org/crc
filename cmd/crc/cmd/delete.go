@@ -46,7 +46,7 @@ func runDelete(arguments []string) {
 		if err != nil {
 			errors.Exit(1)
 		}
-		output.Outln("The OpenShift cluster deleted")
+		output.Outln("Deleted the OpenShift cluster")
 	}
 }
 
