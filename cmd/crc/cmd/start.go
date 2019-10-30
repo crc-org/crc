@@ -65,7 +65,7 @@ func runStart(arguments []string) {
 		errors.Exit(1)
 	}
 	if commandResult.Status == "Running" {
-		output.Outln("The OpenShift cluster is running")
+		output.Outln("Started the OpenShift cluster")
 
 		logging.Warn("The cluster might report a degraded or error state. This is expected since several operators have been disabled to lower the resource usage. For more information, please consult the documentation")
 	} else {
