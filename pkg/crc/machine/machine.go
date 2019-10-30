@@ -188,7 +188,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 				filepath.Base(startConfig.BundlePath), bundleName)
 		}
 		if host.Driver.DriverName() != startConfig.VMDriver {
-			err := errors.Newf("VM driver '%s' was requested, but the existin VM is using '%s' instead",
+			err := errors.Newf("VM driver '%s' was requested, but the existing VM is using '%s' instead",
 				startConfig.VMDriver, host.Driver.DriverName())
 			result.Error = err.Error()
 			return *result, err
