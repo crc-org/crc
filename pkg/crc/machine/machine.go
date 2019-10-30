@@ -322,7 +322,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	logging.Infof("Check internal and public DNS query ...")
 
 	if queryOutput, err := dns.CheckCRCPublicDNSReachable(servicePostStartConfig); err != nil {
-		logging.Warnf("Failed public DNS query: %v : %s", err, queryOutput)
+		logging.Warnf("Failed public DNS query from the cluster: %v : %s", err, queryOutput)
 	}
 
 	// Additional steps to perform after newly created VM is up
