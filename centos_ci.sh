@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # bundle location
-BUNDLE_VERSION=4.2.0
+BUNDLE_VERSION=4.2.2
 BUNDLE=crc_libvirt_$BUNDLE_VERSION.crcbundle
 
 # Output command before executing
