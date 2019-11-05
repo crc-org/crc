@@ -60,7 +60,8 @@ Feature: Basic test
         And stdout should contain "Will use root access: execute systemctl daemon-reload command"
         And stdout should contain "Will use root access: execute systemctl stop/start command"
         And stdout should contain "Unpacking bundle from the CRC binary"
-        And stdout should contain "Setup is complete"
+        And stdout should contain "Setup is complete, you can now run 'crc start -b $bundlename' to start the OpenShift cluster" if bundle is not embedded
+        And stdout should contain "Setup is complete, you can now run 'crc start' to start the OpenShift cluster" if bundle is embedded
 
     @darwin
     Scenario: CRC setup on Mac
