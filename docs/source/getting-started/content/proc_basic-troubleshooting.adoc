@@ -50,6 +50,24 @@ If your issue has not been resolved by this procedure, perform the following ste
 . If no existing issue addresses the encountered issue, link:https://github.com/code-ready/crc/issues/new[create an issue] and link:https://help.github.com/en/articles/file-attachments-on-issues-and-pull-requests[attach the [filename]`~/.crc/crc.log` file] to the created issue.
 The [filename]`~/.crc/crc.log` file contains detailed debugging and troubleshooting information which can help diagnose the problem that you are experiencing.
 
+= Getting shell access to the OpenShift cluster
+
+Direct access to the OpenShift cluster is not needed for regular cluster use, and is strongly discouraged.
+If such access is needed for troubleshooting or debugging purposes, follow these steps:
+
+  . Enable `oc` access to the cluster, logging in as `kubeadmin`. For detailed steps, see <<accessing-the-openshift-cluster_{context}>>.
+
+  . Run [command]`oc get nodes`. The output will be similar to this:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+$ oc get nodes
+NAME                 STATUS   ROLES           AGE    VERSION
+crc-shdl4-master-0   Ready    master,worker   7d7h   v1.14.6+7e13ab9a7
+----
+
+  . Run [command]`oc debug nodes/crc-shdl4-master-0` where `crc-shdl4-master-0` is the name of the node which was printed at the previous step.
+
 = DNS configuration details
 
 This section describes how {prod} configures networking.
