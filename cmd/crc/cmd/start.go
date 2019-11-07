@@ -47,7 +47,7 @@ func runStart(arguments []string) {
 
 	checkIfNewVersionAvailable(crcConfig.GetBool(config.DisableUpdateCheck.Name))
 
-	preflight.StartPreflightChecks(crcConfig.GetString(config.VMDriver.Name))
+	preflight.StartPreflightChecks()
 
 	startConfig := machine.StartConfig{
 		Name:          constants.DefaultName,
