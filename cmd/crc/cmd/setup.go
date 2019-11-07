@@ -32,7 +32,7 @@ func runSetup(arguments []string) {
 	if err := validateSetupFlags(); err != nil {
 		errors.Exit(1)
 	}
-	preflight.SetupHost(vmDriver)
+	preflight.SetupHost()
 	var bundle string
 	if !constants.BundleEmbedded() {
 		bundle = " -b $bundlename"
