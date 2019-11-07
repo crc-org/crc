@@ -68,10 +68,12 @@ Feature: Basic test
         When executing "crc setup" succeeds
         Then stdout should contain "Checking if running as non-root" 
         And stdout should contain "Caching oc binary"
-        And stdout should contain "Setting up virtualization"
+        And stdout should contain "Checking if HyperKit is installed"
+        And stdout should contain "Checking if crc-driver-hyperkit is installed"
+        And stdout should contain "Installing crc-machine-hyperkit"
         And stdout should contain "Will use root access: change ownership"
         And stdout should contain "Will use root access: set suid"
-        And stdout should contain "Setting file permissions"
+        And stdout should contain "Checking file permissions"
 
     @windows
     Scenario: CRC setup on Windows

@@ -3,91 +3,87 @@ package preflight
 import (
 	"fmt"
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
-	"github.com/code-ready/crc/pkg/crc/config"
 )
+
+var genericPreflightChecks = [...]PreflightCheck{
+	{
+		skipConfigName:   cmdConfig.SkipCheckRootUser.Name,
+		warnConfigName:   cmdConfig.WarnCheckRootUser.Name,
+		checkDescription: "Checking if running as non-root",
+		check:            checkIfRunningAsNormalUser,
+		fix:              fixRunAsNormalUser,
+	},
+	{
+		checkDescription: "Checking if oc binary is cached",
+		check:            checkOcBinaryCached,
+		fixDescription:   "Caching oc binary",
+		fix:              fixOcBinaryCached,
+	},
+	{
+		skipConfigName:   cmdConfig.SkipCheckBundleCached.Name,
+		warnConfigName:   cmdConfig.WarnCheckBundleCached.Name,
+		checkDescription: "Unpacking bundle from the CRC binary",
+		check:            checkBundleCached,
+		fix:              fixBundleCached,
+		flags:            SetupOnly,
+	},
+}
+
+// SetupHost performs the prerequisite checks and setups the host to run the cluster
+var hyperkitPreflightChecks = [...]PreflightCheck{
+	{
+		skipConfigName:   cmdConfig.SkipCheckHyperKitInstalled.Name,
+		warnConfigName:   cmdConfig.WarnCheckHyperKitInstalled.Name,
+		checkDescription: "Checking if HyperKit is installed",
+		check:            checkHyperKitInstalled,
+		fixDescription:   "Setting up virtualization with HyperKit",
+		fix:              fixHyperKitInstallation,
+	},
+	{
+		skipConfigName:   cmdConfig.SkipCheckHyperKitDriver.Name,
+		warnConfigName:   cmdConfig.WarnCheckHyperKitDriver.Name,
+		checkDescription: "Checking if crc-driver-hyperkit is installed",
+		check:            checkMachineDriverHyperKitInstalled,
+		fixDescription:   "Installing crc-machine-hyperkit",
+		fix:              fixMachineDriverHyperKitInstalled,
+	},
+}
+
+var dnsPreflightChecks = [...]PreflightCheck{
+	{
+		skipConfigName:   cmdConfig.SkipCheckResolverFilePermissions.Name,
+		warnConfigName:   cmdConfig.WarnCheckResolverFilePermissions.Name,
+		checkDescription: fmt.Sprintf("Checking file permissions for %s", resolverFile),
+		check:            checkResolverFilePermissions,
+		fixDescription:   fmt.Sprintf("Setting file permissions for %s", resolverFile),
+		fix:              fixResolverFilePermissions,
+	},
+	{
+		skipConfigName:   cmdConfig.SkipCheckHostsFilePermissions.Name,
+		warnConfigName:   cmdConfig.WarnCheckHostsFilePermissions.Name,
+		checkDescription: fmt.Sprintf("Checking file permissions for %s", hostFile),
+		check:            checkHostsFilePermissions,
+		fixDescription:   fmt.Sprintf("Setting file permissions for %s", hostFile),
+		fix:              fixHostsFilePermissions,
+	},
+}
+
+func getPreflightChecks() []PreflightCheck {
+	checks := []PreflightCheck{}
+
+	checks = append(checks, genericPreflightChecks[:]...)
+	checks = append(checks, hyperkitPreflightChecks[:]...)
+	checks = append(checks, dnsPreflightChecks[:]...)
+
+	return checks
+}
 
 // StartPreflightChecks performs the preflight checks before starting the cluster
 func StartPreflightChecks() {
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckRootUser.Name),
-		checkIfRunningAsNormalUser,
-		"Checking if running as non-root",
-		config.GetBool(cmdConfig.WarnCheckRootUser.Name),
-	)
-	preflightCheckSucceedsOrFails(false,
-		checkOcBinaryCached,
-		"Checking if oc binary is cached",
-		false,
-	)
-
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckHyperKitInstalled.Name),
-		checkHyperKitInstalled,
-		"Checking if HyperKit is installed",
-		config.GetBool(cmdConfig.WarnCheckHyperKitInstalled.Name),
-	)
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckHyperKitDriver.Name),
-		checkMachineDriverHyperKitInstalled,
-		"Checking if crc-driver-hyperkit is installed",
-		config.GetBool(cmdConfig.WarnCheckHyperKitDriver.Name),
-	)
-
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckHostsFilePermissions.Name),
-		checkHostsFilePermissions,
-		fmt.Sprintf("Checking file permissions for %s", resolverFile),
-		config.GetBool(cmdConfig.WarnCheckHostsFilePermissions.Name),
-	)
-
-	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckHostsFilePermissions.Name),
-		checkHostsFilePermissions,
-		fmt.Sprintf("Checking file permissions for %s", hostFile),
-		config.GetBool(cmdConfig.WarnCheckHostsFilePermissions.Name),
-	)
+	doPreflightChecks(getPreflightChecks())
 }
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
 func SetupHost() {
-	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckRootUser.Name),
-		checkIfRunningAsNormalUser,
-		fixRunAsNormalUser,
-		"Checking if running as non-root",
-		config.GetBool(cmdConfig.WarnCheckRootUser.Name),
-	)
-	preflightCheckAndFix(false,
-		checkOcBinaryCached,
-		fixOcBinaryCached,
-		"Caching oc binary",
-		false,
-	)
-
-	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckHyperKitInstalled.Name),
-		checkHyperKitInstalled,
-		fixHyperKitInstallation,
-		"Setting up virtualization with HyperKit",
-		config.GetBool(cmdConfig.WarnCheckHyperKitInstalled.Name),
-	)
-	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckHyperKitDriver.Name),
-		checkMachineDriverHyperKitInstalled,
-		fixMachineDriverHyperKitInstalled,
-		"Installing crc-machine-hyperkit",
-		config.GetBool(cmdConfig.WarnCheckHyperKitDriver.Name),
-	)
-
-	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckResolverFilePermissions.Name),
-		checkResolverFilePermissions,
-		fixResolverFilePermissions,
-		fmt.Sprintf("Setting file permissions for %s", resolverFile),
-		config.GetBool(cmdConfig.WarnCheckResolverFilePermissions.Name),
-	)
-
-	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckHostsFilePermissions.Name),
-		checkHostsFilePermissions,
-		fixHostsFilePermissions,
-		fmt.Sprintf("Setting file permissions for %s", hostFile),
-		config.GetBool(cmdConfig.WarnCheckHostsFilePermissions.Name),
-	)
-	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckBundleCached.Name),
-		checkBundleCached,
-		fixBundleCached,
-		"Unpacking bundle from the CRC binary",
-		config.GetBool(cmdConfig.WarnCheckBundleCached.Name),
-	)
+	doFixPreflightChecks(getPreflightChecks())
 }
