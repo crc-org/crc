@@ -1,12 +1,10 @@
 package preflight
 
 import (
-	"errors"
 	"fmt"
 	"golang.org/x/sys/unix"
 	neturl "net/url"
 	"os"
-	"os/exec"
 	"os/user"
 	"path"
 	"path/filepath"
@@ -20,9 +18,6 @@ import (
 )
 
 const (
-	virtualBoxDownloadURL   = "https://download.virtualbox.org/virtualbox/6.0.4/VirtualBox-6.0.4-128413-OSX.dmg"
-	virtualBoxMountLocation = "/Volumes/VirtualBox"
-
 	hyperkitDriverCommand = "crc-driver-hyperkit"
 	hyperkitDriverVersion = "0.12.6"
 
@@ -32,48 +27,11 @@ const (
 )
 
 var (
-	virtualBoxPkgLocation     = fmt.Sprintf("%s/VirtualBox.pkg", virtualBoxMountLocation)
 	hyperkitDownloadURL       = fmt.Sprintf("https://github.com/code-ready/machine-driver-hyperkit/releases/download/v%s/hyperkit", hyperkitDriverVersion)
 	hyperkitDriverDownloadURL = fmt.Sprintf("https://github.com/code-ready/machine-driver-hyperkit/releases/download/v%s/crc-driver-hyperkit", hyperkitDriverVersion)
 )
 
 // Add darwin specific checks
-func checkVirtualBoxInstalled() (bool, error) {
-	logging.Debug("Checking if VirtualBox is installed")
-	_, err := exec.LookPath("VBoxManage")
-	if err != nil {
-		return false, errors.New("VirtualBox cli VBoxManage is not found in the path")
-	}
-	logging.Debug("VirtualBox was found")
-	return true, nil
-}
-
-func fixVirtualBoxInstallation() (bool, error) {
-	logging.Debug("Downloading VirtualBox")
-	// Download the virtualbox installer in ~/.crc/cache
-	tempFilePath := filepath.Join(constants.MachineCacheDir, "virtualbox.dmg")
-	_, err := dl.Download(virtualBoxDownloadURL, tempFilePath, 0600)
-	if err != nil {
-		return false, err
-	}
-	defer os.Remove(tempFilePath)
-	logging.Debug("Installing VirtualBox")
-	stdOut, stdErr, err := crcos.RunWithPrivilege("mount VirtualBox disk image", "hdiutil", "attach", tempFilePath)
-	if err != nil {
-		return false, fmt.Errorf("Could not mount the virtualbox.dmg file: %s %v: %s", stdOut, err, stdErr)
-	}
-	stdOut, stdErr, err = crcos.RunWithPrivilege("run VirtualBox installation", "installer", "-package", virtualBoxPkgLocation, "-target", "/")
-	if err != nil {
-		return false, fmt.Errorf("Could not install VirtualBox.pkg: %s %v: %s", stdOut, err, stdErr)
-	}
-	stdOut, stdErr, err = crcos.RunWithPrivilege("unmount VirtualBox disk image", "hdiutil", "detach", virtualBoxMountLocation)
-	if err != nil {
-		return false, fmt.Errorf("Could not install VirtualBox.pkg: %s %v: %s", stdOut, err, stdErr)
-	}
-	logging.Debug("VirtualBox installed")
-	return true, nil
-}
-
 func tryRemoveDestFile(url string, destDir string) error {
 	u, err := neturl.Parse(url)
 	if err != nil {
