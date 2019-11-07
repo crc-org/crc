@@ -75,7 +75,6 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
             | warn-check-hyperkit-installed        | true   | false  |
             | warn-check-resolver-file-permissions | true   | false  |
             | warn-check-root-user                 | true   | false  |
-            | warn-check-virtualbox-installed      | true   | false  |
 
         @linux
         Examples: Config warnings on Linux
@@ -130,7 +129,6 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
             | skip-check-hyperkit-installed        | true   | false  |
             | skip-check-resolver-file-permissions | true   | false  |
             | skip-check-root-user                 | true   | false  |
-            | skip-check-virtualbox-installed      | true   | false  |
 
         @linux
         Examples:

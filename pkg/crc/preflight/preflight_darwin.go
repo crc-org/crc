@@ -19,25 +19,16 @@ func StartPreflightChecks(vmDriver string) {
 		false,
 	)
 
-	switch vmDriver {
-	case "virtualbox":
-		preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckVirtualBoxInstalled.Name),
-			checkVirtualBoxInstalled,
-			"Checking if VirtualBox is Installed",
-			config.GetBool(cmdConfig.WarnCheckVirtualBoxInstalled.Name),
-		)
-	case "hyperkit":
-		preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckHyperKitInstalled.Name),
-			checkHyperKitInstalled,
-			"Checking if HyperKit is installed",
-			config.GetBool(cmdConfig.WarnCheckHyperKitInstalled.Name),
-		)
-		preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckHyperKitDriver.Name),
-			checkMachineDriverHyperKitInstalled,
-			"Checking if crc-driver-hyperkit is installed",
-			config.GetBool(cmdConfig.WarnCheckHyperKitDriver.Name),
-		)
-	}
+	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckHyperKitInstalled.Name),
+		checkHyperKitInstalled,
+		"Checking if HyperKit is installed",
+		config.GetBool(cmdConfig.WarnCheckHyperKitInstalled.Name),
+	)
+	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckHyperKitDriver.Name),
+		checkMachineDriverHyperKitInstalled,
+		"Checking if crc-driver-hyperkit is installed",
+		config.GetBool(cmdConfig.WarnCheckHyperKitDriver.Name),
+	)
 
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckHostsFilePermissions.Name),
 		checkHostsFilePermissions,
@@ -67,28 +58,18 @@ func SetupHost(vmDriver string) {
 		false,
 	)
 
-	switch vmDriver {
-	case "virtualbox":
-		preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckVirtualBoxInstalled.Name),
-			checkVirtualBoxInstalled,
-			fixVirtualBoxInstallation,
-			"Setting up virtualization with VirtualBox",
-			config.GetBool(cmdConfig.WarnCheckVirtualBoxInstalled.Name),
-		)
-	case "hyperkit":
-		preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckHyperKitInstalled.Name),
-			checkHyperKitInstalled,
-			fixHyperKitInstallation,
-			"Setting up virtualization with HyperKit",
-			config.GetBool(cmdConfig.WarnCheckHyperKitInstalled.Name),
-		)
-		preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckHyperKitDriver.Name),
-			checkMachineDriverHyperKitInstalled,
-			fixMachineDriverHyperKitInstalled,
-			"Installing crc-machine-hyperkit",
-			config.GetBool(cmdConfig.WarnCheckHyperKitDriver.Name),
-		)
-	}
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckHyperKitInstalled.Name),
+		checkHyperKitInstalled,
+		fixHyperKitInstallation,
+		"Setting up virtualization with HyperKit",
+		config.GetBool(cmdConfig.WarnCheckHyperKitInstalled.Name),
+	)
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckHyperKitDriver.Name),
+		checkMachineDriverHyperKitInstalled,
+		fixMachineDriverHyperKitInstalled,
+		"Installing crc-machine-hyperkit",
+		config.GetBool(cmdConfig.WarnCheckHyperKitDriver.Name),
+	)
 
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckResolverFilePermissions.Name),
 		checkResolverFilePermissions,
