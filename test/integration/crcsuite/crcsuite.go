@@ -60,6 +60,8 @@ func FeatureContext(s *godog.Suite) {
 		StartCRCWithDefaultBundleAndNameServerSucceedsOrFails)
 	s.Step(`^setting config property "(.*)" to value "(.*)" (succeeds|fails)$`,
 		SetConfigPropertyToValueSucceedsOrFails)
+	s.Step(`^unsetting config property "(.*)" (succeeds|fails)$`,
+		UnsetConfigPropertySucceedsOrFails)
 	s.Step(`^login to the oc cluster (succeeds|fails)$`,
 		LoginToOcClusterSucceedsOrFails)
 	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" all cluster operators are running$`,
@@ -411,6 +413,14 @@ func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expe
 	}
 
 	cmd := "crc config set " + property + " " + value
+	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
+
+	return err
+}
+
+func UnsetConfigPropertySucceedsOrFails(property string, expected string) error {
+
+	cmd := "crc config unset " + property
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
