@@ -4,7 +4,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"github.com/code-ready/machine/libmachine/drivers"
-	"github.com/pborman/uuid"
 	"path/filepath"
 )
 
@@ -34,7 +33,7 @@ func CreateHost(config config.MachineConfig) *hyperkitDriver {
 		},
 		Memory:      config.Memory,
 		CPU:         config.CPUs,
-		UUID:        uuid.NewUUID().String(),
+		UUID:        "c3d68012-0208-11ea-9fd7-f2189899ab08",
 		Cmdline:     config.KernelCmdLine,
 		VmlinuzPath: config.Kernel,
 		InitrdPath:  config.Initramfs,
