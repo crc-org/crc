@@ -97,7 +97,7 @@ func FeatureContext(s *godog.Suite) {
 
 		// put CRC binary location on top of PATH
 		path := os.Getenv("PATH")
-		newPath := fmt.Sprintf("%s%s%s", CRCBinary, os.PathListSeparator, path)
+		newPath := fmt.Sprintf("%s%c%s", CRCBinary, os.PathListSeparator, path)
 		err := os.Setenv("PATH", newPath)
 		if err != nil {
 			fmt.Println("Could not put CRC location on top of PATH")
