@@ -68,7 +68,7 @@ func FeatureContext(s *godog.Suite) {
 		CheckClusterOperatorsWithRetry)
 	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" http response from "(.*)" has status code "(\d+)"$`,
 		CheckHTTPResponseWithRetry)
-	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" command "(.*)" output (?:should match|matches) "(.*)"$`,
+	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" command "(.*)" output (should match|matches|should not match|does not match) "(.*)"$`,
 		CheckOutputMatchWithRetry)
 	s.Step(`stdout (?:should contain|contains) "(.*)" if bundle (is|is not) embedded$`,
 		StdoutContainsIfBundleEmbeddedOrNot)
@@ -140,7 +140,6 @@ func FeatureContext(s *godog.Suite) {
 		if err != nil {
 			fmt.Println(err)
 		}
-
 	})
 
 	s.AfterSuite(func() {
@@ -151,6 +150,9 @@ func FeatureContext(s *godog.Suite) {
 	})
 
 	s.BeforeFeature(func(this *gherkin.Feature) {
+
+		// copy data/config files to test dir
+		CopyFilesToTestDir()
 
 		if bundleEmbedded == false {
 			if _, err := os.Stat(bundleName); os.IsNotExist(err) {
@@ -221,7 +223,7 @@ func CheckHTTPResponseWithRetry(retryCount int, retryWait string, address string
 	return fmt.Errorf("Got %d as Status Code instead of expected %d.", resp.StatusCode, expectedStatusCode)
 }
 
-func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string, expected string) error {
+func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string, expected string, expectedOutput string) error {
 
 	retryDuration, err := time.ParseDuration(retryTime)
 	if err != nil {
@@ -233,7 +235,11 @@ func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string,
 	for i := 0; i < retryCount; i++ {
 		exec_err := clicumber.ExecuteCommand(command)
 		if exec_err == nil {
-			match_err = clicumber.CommandReturnShouldMatch("stdout", expected)
+			if strings.Contains(expected, " not ") {
+				match_err = clicumber.CommandReturnShouldNotMatch("stdout", expectedOutput)
+			} else {
+				match_err = clicumber.CommandReturnShouldMatch("stdout", expectedOutput)
+			}
 			if match_err == nil {
 				return nil
 			}
