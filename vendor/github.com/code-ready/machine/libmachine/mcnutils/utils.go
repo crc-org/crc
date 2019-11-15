@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"runtime"
 	"strconv"
 	"time"
 )
@@ -21,34 +20,6 @@ func (e MultiError) Error() string {
 		aggregate += err.Error() + "\n"
 	}
 	return aggregate
-}
-
-// GetHomeDir returns the home directory
-// TODO: Having this here just strikes me as dangerous, but some of the drivers
-// depend on it ;_;
-func GetHomeDir() string {
-	if runtime.GOOS == "windows" {
-		return os.Getenv("USERPROFILE")
-	}
-	return os.Getenv("HOME")
-}
-
-func GetUsername() string {
-	u := "unknown"
-	osUser := ""
-
-	switch runtime.GOOS {
-	case "darwin", "linux":
-		osUser = os.Getenv("USER")
-	case "windows":
-		osUser = os.Getenv("USERNAME")
-	}
-
-	if osUser != "" {
-		u = osUser
-	}
-
-	return u
 }
 
 func CopyFile(src, dst string) error {
