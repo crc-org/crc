@@ -13,7 +13,7 @@ github.com/code-ready/clicumber/testsuite
 github.com/code-ready/clicumber/util
 # github.com/code-ready/goodhosts v0.0.0-20190712111040-f090f3f77c26
 github.com/code-ready/goodhosts
-# github.com/code-ready/machine v0.0.0-20190904103148-0fde37b5d95b
+# github.com/code-ready/machine v0.0.0-20191115055627-b284f794e910
 github.com/code-ready/machine/libmachine/state
 github.com/code-ready/machine/libmachine
 github.com/code-ready/machine/libmachine/drivers
@@ -60,8 +60,6 @@ github.com/hectane/go-acl/api
 github.com/inconshreveable/mousetrap
 # github.com/intel-go/cpuid v0.0.0-20181003105527-1a4a6f06a1c6
 github.com/intel-go/cpuid
-# github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
-github.com/kardianos/osext
 # github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 github.com/kballard/go-shellquote
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1
