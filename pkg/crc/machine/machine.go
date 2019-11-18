@@ -364,22 +364,23 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 	result.KubeletStarted = kubeletStarted
 
-	// If no error, return usage message
-	if result.Error == "" {
-		time.Sleep(time.Minute * 3)
-		logging.Infof("")
-		logging.Infof("To access the cluster, first set up your environment by following 'crc oc-env' instructions")
-		logging.Infof("Then you can access it by running 'oc login -u developer -p developer %s'", result.ClusterConfig.ClusterAPI)
-		logging.Infof("To login as an admin, username is 'kubeadmin' and password is %s", result.ClusterConfig.KubeAdminPass)
-		logging.Infof("")
-		logging.Infof("You can now run 'crc console' and use these credentials to access the OpenShift web console")
-	}
+	time.Sleep(time.Minute * 3)
 
 	// Approve the node certificate.
 	ocConfig := oc.UseOCWithConfig(startConfig.Name)
 	if err := ocConfig.ApproveNodeCSR(); err != nil {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error approving the node csr %v", err)
+	}
+
+	// If no error, return usage message
+	if result.Error == "" {
+		logging.Infof("")
+		logging.Infof("To access the cluster, first set up your environment by following 'crc oc-env' instructions")
+		logging.Infof("Then you can access it by running 'oc login -u developer -p developer %s'", result.ClusterConfig.ClusterAPI)
+		logging.Infof("To login as an admin, username is 'kubeadmin' and password is %s", result.ClusterConfig.KubeAdminPass)
+		logging.Infof("")
+		logging.Infof("You can now run 'crc console' and use these credentials to access the OpenShift web console")
 	}
 
 	return *result, err
