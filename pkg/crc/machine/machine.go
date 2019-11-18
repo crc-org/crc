@@ -282,7 +282,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 
 	var hostIP string
-	determinHostIP := func() error {
+	determineHostIP := func() error {
 		hostIP, err = network.DetermineHostIP(instanceIP)
 		if err != nil {
 			logging.Debugf("Error finding host IP (%v) - retrying", err)
@@ -291,7 +291,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		return nil
 	}
 
-	if err := errors.RetryAfter(30, determinHostIP, 2*time.Second); err != nil {
+	if err := errors.RetryAfter(30, determineHostIP, 2*time.Second); err != nil {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error determining host IP: %v", err)
 	}
