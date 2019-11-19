@@ -18,7 +18,8 @@ func CreateHost(machineConfig config.MachineConfig) *hyperv.Driver {
 	hypervDriver.BundleName = machineConfig.BundleName
 	hypervDriver.Memory = machineConfig.Memory
 
-	_, switchName := winnet.GetDefaultSwitchName()
+	// Determine the Virtual Switch to be used
+	_, switchName := winnet.SelectSwitchByNameOrDefault(AlternativeNetwork)
 	hypervDriver.VirtualSwitch = switchName
 
 	// DiskPath should come from the bundle's metadata (unflattened)

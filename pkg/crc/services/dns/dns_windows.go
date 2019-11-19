@@ -15,6 +15,11 @@ import (
 	"github.com/code-ready/crc/pkg/os/windows/win32"
 )
 
+const (
+	// Alternative
+	AlternativeNetwork = "crc"
+)
+
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *services.ServicePostStartResult) (services.ServicePostStartResult, error) {
 	// bailout for Virtualbox
 	if serviceConfig.DriverName == "virtualbox" {
@@ -23,7 +28,7 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *se
 		return *result, nil
 	}
 
-	_, switchName := winnet.GetDefaultSwitchName()
+	_, switchName := winnet.SelectSwitchByNameOrDefault(AlternativeNetwork)
 	networkInterface := fmt.Sprintf("vEthernet (%s)", switchName)
 
 	setInterfaceNameserverValue(networkInterface, serviceConfig.IP)

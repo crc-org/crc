@@ -8,15 +8,16 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
+
+	winnet "github.com/code-ready/crc/pkg/os/windows/network"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
+
+	"github.com/code-ready/crc/pkg/crc/machine/hyperv"
 )
 
 const (
 	// Fall Creators update comes with the "Default Switch"
 	minimumWindowsReleaseId = 1709
-
-	hypervDefaultVirtualSwitchName = "Default Switch"
-	hypervDefaultVirtualSwitchId   = "c08cb7b8-9b3c-408e-8e30-5e16a3aeb444"
 )
 
 func checkVersionOfWindowsUpdate() (bool, error) {
@@ -126,25 +127,13 @@ func fixUserPartOfHyperVAdmins() (bool, error) {
 }
 
 func checkIfHyperVVirtualSwitchExists() (bool, error) {
-	// TODO: vswitch configurable (use MachineConfig)
-	switchName := hypervDefaultVirtualSwitchName
+	switchName := hyperv.AlternativeNetwork
 
-	// check for default switch by using the Id
-	if switchName == hypervDefaultVirtualSwitchName {
-		checkIfDefaultSwitchExists := fmt.Sprintf("Get-VMSwitch -Id %s | ForEach-Object { $_.Name }", hypervDefaultVirtualSwitchId)
-		_, stdErr, err := powershell.Execute(checkIfDefaultSwitchExists)
-		if err != nil {
-			logging.Debug(err.Error())
-			return false, errors.New("Failed checking if Hyper-V Default Switch exists")
-		}
-
-		if !strings.Contains(stdErr, "Get-VMSwitch") {
-			// found the default
-			return true, nil
-		} else {
-			return false, errors.New("Incorrect permissions")
-		}
-
+	// use winnet instead
+	exists, foundName := winnet.SelectSwitchByNameOrDefault(switchName)
+	if exists {
+		logging.Info("Found Virtual Switch to use: ", foundName)
+		return true, nil
 	}
 
 	return false, errors.New("Virtual Switch not found")
