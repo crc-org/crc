@@ -10,23 +10,44 @@ import (
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
+type OcRunner interface {
+	Run(args ...string) (string, string, error)
+	GetKubeconfigPath() string
+}
+
 type OcConfig struct {
+	runner OcRunner
+}
+
+type OcLocalRunner struct {
 	OcBinaryPath   string
 	KubeconfigPath string
 }
 
+func (oc OcLocalRunner) Run(args ...string) (string, string, error) {
+	return crcos.RunWithDefaultLocale(oc.OcBinaryPath, args...)
+}
+
+func (oc OcLocalRunner) GetKubeconfigPath() string {
+	return oc.KubeconfigPath
+}
+
 // UseOcWithConfig return the oc binary along with valid kubeconfig
 func UseOCWithConfig(machineName string) OcConfig {
-	oc := OcConfig{
+	localRunner := OcLocalRunner{
 		OcBinaryPath:   filepath.Join(constants.CrcBinDir, constants.OcBinaryName),
 		KubeconfigPath: filepath.Join(constants.MachineInstanceDir, machineName, "kubeconfig"),
 	}
-	return oc
+	return NewOcConfig(localRunner)
 }
 
 func (oc OcConfig) RunOcCommand(args ...string) (string, string, error) {
-	args = append(args, "--kubeconfig", oc.KubeconfigPath)
-	return crcos.RunWithDefaultLocale(oc.OcBinaryPath, args...)
+	args = append(args, "--kubeconfig", oc.runner.GetKubeconfigPath())
+	return oc.runner.Run(args...)
+}
+
+func NewOcConfig(runner OcRunner) OcConfig {
+	return OcConfig{runner: runner}
 }
 
 // ApproveNodeCSR approves the certificate for the node.
