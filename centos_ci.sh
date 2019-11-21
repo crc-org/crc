@@ -48,7 +48,6 @@ function install_required_packages() {
                  kvm \
                  qemu-kvm \
                  libvirt \
-                 python-requests \
                  libvirt-devel \
                  jq \
                  gcc \
