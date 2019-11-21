@@ -3,6 +3,7 @@
 # bundle location
 BUNDLE_VERSION=4.2.7
 BUNDLE=crc_libvirt_$BUNDLE_VERSION.crcbundle
+GO_VERSION=1.12.13
 
 # Output command before executing
 set -x
@@ -51,7 +52,6 @@ function install_required_packages() {
                  libvirt-devel \
                  jq \
                  gcc \
-		 golang \
 		 libcurl-devel \
 		 glib2-devel \
 		 openssl-devel \
@@ -59,6 +59,10 @@ function install_required_packages() {
 		 unzip \
 		 podman
 
+  # Install the required version of golang
+  curl -L -O https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz
+  tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz
+  
   echo 'CICO: Required packages installed'
 }
 
@@ -79,6 +83,8 @@ function prepare_ci_user() {
 }
 
 function setup_golang() {
+  export PATH=$PATH:/usr/local/go/bin
+
   # Show which version of golang in the offical repo.
   go version
   # Setup GOPATH
