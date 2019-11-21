@@ -1,11 +1,12 @@
 package oc
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
@@ -31,19 +32,23 @@ func (oc OcConfig) RunOcCommand(args ...string) (string, string, error) {
 // ApproveNodeCSR approves the certificate for the node.
 func (oc OcConfig) ApproveNodeCSR() error {
 	// Execute 'oc get csr -oname' and store the output
-	certNamses, stderr, err := oc.RunOcCommand("get", "csr", "-oname")
+	csrsJson, stderr, err := oc.RunOcCommand("get", "csr", "-ojson")
 	if err != nil {
 		return fmt.Errorf("Not able to get csr names (%v : %s)", err, stderr)
 	}
-
-	// Split the output with new line and run 'oc adm certificate approve <certName>'
-	for _, certName := range strings.Split(certNamses, "\n") {
-		if certName == "" {
-			continue
-		}
-		_, stderr, err := oc.RunOcCommand("adm", "certificate", "approve", certName)
-		if err != nil {
-			return fmt.Errorf("Not able to get csr names (%v : %s)", err, stderr)
+	var csrs K8sResource
+	err = json.Unmarshal([]byte(csrsJson), &csrs)
+	if err != nil {
+		return err
+	}
+	for _, csr := range csrs.Items {
+		/* When the CSR hasn't been approved, csr.status is empty in the json data */
+		if len(csr.Status.Conditions) == 0 {
+			logging.Debugf("Approving csr %s", csr.Metadata.Name)
+			_, stderr, err := oc.RunOcCommand("adm", "certificate", "approve", csr.Metadata.Name)
+			if err != nil {
+				return fmt.Errorf("Not able to approve csr (%v : %s)", err, stderr)
+			}
 		}
 	}
 	return nil
