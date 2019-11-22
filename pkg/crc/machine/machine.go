@@ -255,14 +255,13 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 
 	// Check the certs validity inside the vm
+	needsCertsRenewal := false
 	logging.Info("Verifying validity of the cluster certificates ...")
 	expiringIn7Days, duration, err := cluster.CheckCertsValidity(sshRunner)
 	if err != nil {
-		result.Error = err.Error()
-		return *result, errors.New(err.Error())
-	}
-	// Only show when VM is started from stopped state.
-	if exists {
+		needsCertsRenewal = true
+	} else if exists {
+		// Only show when VM is started from stopped state.
 		if expiringIn7Days {
 			logging.Warnf("Bundle certificates are going to expire in %d days, better to use new release", duration)
 		}
@@ -335,7 +334,6 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		// In our case it would be ~/.crc/machines/crc/
 		logging.Infof("Copying kubeconfig file to instance dir ...")
 		kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, startConfig.Name, "kubeconfig")
-
 		err := crcos.CopyFileContents(crcBundleMetadata.GetKubeConfigPath(),
 			kubeConfigFilePath,
 			0644)
@@ -344,8 +342,26 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			return *result, errors.Newf("Error copying kubeconfig file  %v", err)
 		}
 
+		err = pullsecret.AddPullSecretToInstanceDisk(sshRunner, pullSecret)
+		if err != nil {
+			result.Error = err.Error()
+			return *result, errors.Newf("Failed to update user pull secret or cluster ID: %v", err)
+		}
+	}
+
+	if needsCertsRenewal {
+		logging.Infof("Cluster TLS certificates have expired, renewing them...")
+		err = RegenerateCertificates(sshRunner, startConfig.Name)
+		if err != nil {
+			result.Error = err.Error()
+			return *result, errors.Newf("Failed to renew TLS certificates: %v", err)
+		}
+	}
+
+	if !exists {
 		// Update the user pull secret before kubelet start.
 		logging.Info("Adding user's pull secret and cluster ID ...")
+		kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, startConfig.Name, "kubeconfig")
 		if err := pullsecret.AddPullSecretAndClusterID(sshRunner, pullSecret, kubeConfigFilePath); err != nil {
 			result.Error = err.Error()
 			return *result, errors.Newf("Failed to update user pull secret or cluster ID: %v", err)
