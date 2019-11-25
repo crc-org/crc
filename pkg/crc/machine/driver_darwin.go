@@ -3,6 +3,7 @@ package machine
 import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	crcos "github.com/code-ready/crc/pkg/os"
 
 	"github.com/code-ready/crc/pkg/crc/machine/config"
@@ -39,6 +40,7 @@ func getDriverOptions(machineConfig config.MachineConfig) interface{} {
 	switch machineConfig.VMDriver {
 
 	case "virtualbox":
+		logging.Warn("Virtualbox support is deprecated and will be removed in the next release.")
 		driver = virtualbox.CreateHost(machineConfig)
 	case "hyperkit":
 		driver = hyperkit.CreateHost(machineConfig)

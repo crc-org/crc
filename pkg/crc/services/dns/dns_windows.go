@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/services"
 
 	winnet "github.com/code-ready/crc/pkg/os/windows/network"
@@ -18,7 +17,6 @@ import (
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *services.ServicePostStartResult) (services.ServicePostStartResult, error) {
 	// bailout for Virtualbox
 	if serviceConfig.DriverName == "virtualbox" {
-		output.Outln("Please follow instructions in the documentation about setting hostnames for Virtualbox.")
 		result.Success = true
 		return *result, nil
 	}
