@@ -280,7 +280,7 @@ func FileExistsInCRCHome(fileName string) error {
 func ConfigFileInCRCHomeContainsKeyMatchingValue(format string, configFile string, condition string, keyPath string, expectedValue string) error {
 
 	if expectedValue == "current bundle" {
-		expectedValue = bundleName
+		expectedValue = fmt.Sprintf(".*%s", bundleName)
 	}
 	configPath := filepath.Join(CRCHome, configFile)
 
@@ -412,7 +412,7 @@ func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expe
 	if value == "current bundle" {
 
 		if bundleEmbedded {
-			value = filepath.Join(CRCHome, bundleName)
+			value = filepath.Join(CRCHome, "cache", bundleName)
 		} else {
 			value = bundleName
 		}
