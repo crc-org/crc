@@ -51,7 +51,7 @@ func (recoveryPod recoveryPod) Run(args ...string) (string, string, error) {
 }
 
 func (recoveryPod *recoveryPod) runPodCommand(cmd string) (string, error) {
-	podmanCmd := fmt.Sprintf("sudo podman run -it --network=host -v /etc/kubernetes/:/etc/kubernetes/:Z --entrypoint=/usr/bin/cluster-kube-apiserver-operator '%s'", recoveryPod.kaoImage)
+	podmanCmd := fmt.Sprintf("sudo podman run -it --rm --network=host -v /etc/kubernetes/:/etc/kubernetes/:Z --entrypoint=/usr/bin/cluster-kube-apiserver-operator '%s'", recoveryPod.kaoImage)
 	podmanCmd = podmanCmd + " " + cmd
 	return recoveryPod.sshRunner.Run(podmanCmd)
 }
