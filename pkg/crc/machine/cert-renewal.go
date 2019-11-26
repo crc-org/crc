@@ -11,11 +11,10 @@ import (
 	"github.com/code-ready/crc/pkg/crc/oc"
 	"github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/crc/systemd"
-	"github.com/code-ready/crc/pkg/crc/version"
 )
 
 var (
-	releaseImage = fmt.Sprintf("quay.io/openshift-release-dev/ocp-release:%s", version.GetBundleVersion())
+	kaoImage = "openshift/cert-recovery"
 )
 
 func getRecoveryKubeConfig(output string) (string, error) {
@@ -35,10 +34,9 @@ func getRecoveryKubeConfig(output string) (string, error) {
 }
 
 type recoveryPod struct {
-	sshRunner    *ssh.SSHRunner
-	releaseImage string
-	kaoImage     string
-	kubeconfig   string
+	sshRunner  *ssh.SSHRunner
+	kaoImage   string
+	kubeconfig string
 }
 
 func (recoveryPod recoveryPod) GetKubeconfigPath() string {
@@ -61,20 +59,9 @@ func (recoveryPod *recoveryPod) runPodCommand(cmd string) (string, error) {
 func startRecoveryPod(sshRunner *ssh.SSHRunner) (*recoveryPod, error) {
 	recoveryPod := recoveryPod{}
 	recoveryPod.sshRunner = sshRunner
-	recoveryPod.releaseImage = releaseImage
-
-	logging.Debugf("Using release image %s", recoveryPod.releaseImage)
-	kaoImage, err := sshRunner.Run(fmt.Sprintf("sudo oc adm release info --registry-config='/var/lib/kubelet/config.json' '%s' --image-for=cluster-kube-apiserver-operator", releaseImage))
-	if err != nil {
-		return nil, err
-	}
-	recoveryPod.kaoImage = strings.TrimSpace(kaoImage)
+	recoveryPod.kaoImage = kaoImage
 	logging.Debugf("kube-apiserver-operator image: %s", kaoImage)
 
-	_, err = sshRunner.Run(fmt.Sprintf("sudo podman pull --authfile='/var/lib/kubelet/config.json' %s", kaoImage))
-	if err != nil {
-		return nil, err
-	}
 	output, err := recoveryPod.runPodCommand("recovery-apiserver create")
 	if err != nil {
 		return nil, err
