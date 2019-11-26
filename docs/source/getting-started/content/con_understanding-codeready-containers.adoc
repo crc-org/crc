@@ -1,7 +1,7 @@
 [id="understanding-codeready-containers_{context}"]
 = Understanding {prod}
 
-{rh-prod} brings a minimal OpenShift 4.0 or newer cluster to your local computer.
+{rh-prod} brings a minimal OpenShift 4 cluster to your local computer.
 This cluster provides a minimal environment for development and testing purposes.
 It's mainly targetted at running on developers' desktops.
 For other use cases, such as headless, multi-developer/team-based setups, ..., use of the link:https://cloud.redhat.com/openshift/install/[full-fledged OpenShift installer] is recommended.
