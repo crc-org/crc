@@ -20,12 +20,6 @@ const (
 )
 
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *services.ServicePostStartResult) (services.ServicePostStartResult, error) {
-	// bailout for Virtualbox
-	if serviceConfig.DriverName == "virtualbox" {
-		result.Success = true
-		return *result, nil
-	}
-
 	_, switchName := winnet.SelectSwitchByNameOrDefault(AlternativeNetwork)
 	networkInterface := fmt.Sprintf("vEthernet (%s)", switchName)
 
