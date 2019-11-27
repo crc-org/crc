@@ -89,5 +89,6 @@ The `monitoring` cluster operator is expected to report `Unknown` availability.
 ====
 +
   . The link:https://docs.openshift.com/container-platform/latest/applications/projects/working-with-projects.html[OpenShift documentation] covers the creation of projects and applications.
+  link:https://docs.openshift.com/container-platform/4.2/cli_reference/openshift_developer_cli/understanding-odo.html[OpenShift Do] (`odo`) can also be used to create OpenShift projects and applications from the command line.
 +
 See <<troubleshooting-codeready-containers_{context}>> if you cannot access the {prod} OpenShift cluster.
