@@ -2,12 +2,10 @@ package machine
 
 import (
 	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/logging"
 	crcos "github.com/code-ready/crc/pkg/os"
 
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"github.com/code-ready/crc/pkg/crc/machine/hyperv"
-	"github.com/code-ready/crc/pkg/crc/machine/virtualbox"
 )
 
 func init() {
@@ -17,15 +15,8 @@ func init() {
 		Driver:   "hyperv",
 	}
 
-	VirtualBoxWindowsDriver := MachineDriver{
-		Name:     "VirtualBox",
-		Platform: crcos.WINDOWS,
-		Driver:   "virtualbox",
-	}
-
 	SupportedDrivers = []MachineDriver{
 		HyperVDriver,
-		VirtualBoxWindowsDriver,
 	}
 
 	DefaultDriver = HyperVDriver
@@ -37,9 +28,6 @@ func getDriverOptions(machineConfig config.MachineConfig) interface{} {
 	// Supported drivers
 	switch machineConfig.VMDriver {
 
-	case "virtualbox":
-		logging.Warn("Virtualbox support is deprecated and will be removed in the next release.")
-		driver = virtualbox.CreateHost(machineConfig)
 	case "hyperv":
 		driver = hyperv.CreateHost(machineConfig)
 
