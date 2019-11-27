@@ -22,30 +22,25 @@ func WaitForSsh(sshRunner *ssh.SSHRunner) error {
 	return errors.RetryAfter(60, checkSshConnectivity, time.Second)
 }
 
-// CheckCertsValidityUsingBundleBuildTime check if the cluster certs going to expire soon.
-func CheckCertsValidityUsingBundleBuildTime(buildTime time.Time) (bool, int) {
-	certExpiryDate := buildTime.AddDate(0, 1, 0)
-	// Warn user if the cert expiry going to happen starting of the 7 days
-	timeAfter7Days := time.Now().AddDate(0, 0, 7)
-	return timeAfter7Days.After(certExpiryDate), int(time.Until(certExpiryDate).Hours()) / 24
-}
+type CertExpiryState int
+
+const (
+	Unknown CertExpiryState = iota
+	CertNotExpired
+	CertExpired
+)
 
 // CheckCertsValidity checks if the cluster certs have expired or going to expire in next 7 days
-func CheckCertsValidity(sshRunner *ssh.SSHRunner) (bool, int, error) {
+func CheckCertsValidity(sshRunner *ssh.SSHRunner) (CertExpiryState, error) {
 	certExpiryDate, err := getcertExpiryDateFromVM(sshRunner)
 	if err != nil {
-		return false, 0, err
+		return Unknown, err
 	}
 	if time.Now().After(certExpiryDate) {
-		return false, 0, fmt.Errorf("Certs have expired, they were valid till: %s", certExpiryDate.Format(time.RFC822))
+		return CertExpired, fmt.Errorf("Certs have expired, they were valid till: %s", certExpiryDate.Format(time.RFC822))
 	}
 
-	// Warn user if the cert expiry going to happen starting of the 7 days
-	timeAfter7Days := time.Now().AddDate(0, 0, 7)
-	if timeAfter7Days.After(certExpiryDate) {
-		return true, int(time.Until(certExpiryDate).Hours()) / 24, nil
-	}
-	return false, 0, nil
+	return CertNotExpired, nil
 }
 
 func getcertExpiryDateFromVM(sshRunner *ssh.SSHRunner) (time.Time, error) {
