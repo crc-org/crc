@@ -58,15 +58,14 @@ func checkHyperVInstalled() (bool, error) {
 		return false, errors.New("Hyper-V not installed")
 	}
 
-	// Check if Hyper-V's Virtual Machine Management Service is running
-	checkVmmsRunning := `@(Get-Service vmms).Status`
-	stdOut, _, err = powershell.Execute(checkVmmsRunning)
+	checkVmmsExists := `@(Get-Service vmms).Status`
+	_, stdErr, err := powershell.Execute(checkVmmsExists)
 	if err != nil {
 		logging.Debug(err.Error())
-		return false, errors.New("Failed checking if Hyper-V is running")
+		return false, errors.New("Failed checking if Hyper-V management service exists")
 	}
-	if strings.TrimSpace(stdOut) != "Running" {
-		return false, errors.New("Hyper-V Virtual Machine Management service not running")
+	if strings.Contains(stdErr, "Get-Service") {
+		return false, errors.New("Hyper-V management service not available")
 	}
 
 	return true, nil
@@ -84,6 +83,33 @@ func fixHyperVInstalled() (bool, error) {
 
 	// We do need to error out as a restart might be needed (unfortunately no output redirect possible)
 	logging.Error("Please reboot your system")
+	return true, nil
+}
+
+func checkHyperVServiceRunning() (bool, error) {
+	// Check if Hyper-V's Virtual Machine Management Service is running
+	checkVmmsRunning := `@(Get-Service vmms).Status`
+	stdOut, _, err := powershell.Execute(checkVmmsRunning)
+	if err != nil {
+		logging.Debug(err.Error())
+		return false, errors.New("Failed checking if Hyper-V is running")
+	}
+	if strings.TrimSpace(stdOut) != "Running" {
+		return false, errors.New("Hyper-V Virtual Machine Management service not running")
+	}
+
+	return true, nil
+}
+
+func fixHyperVServiceRunning() (bool, error) {
+	enableVmmsService := `Set-Service -Name vmms -StartupType Automatic; Set-Service -Name vmms -Status Running -PassThru`
+	_, _, err := powershell.ExecuteAsAdmin("enable Hyper-V service", enableVmmsService)
+
+	if err != nil {
+		logging.Debug(err.Error())
+		return false, errors.New("Error occurred enabling Hyper-V service")
+	}
+
 	return true, nil
 }
 
