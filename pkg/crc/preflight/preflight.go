@@ -1,6 +1,8 @@
 package preflight
 
 import (
+	"fmt"
+
 	cfg "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
@@ -56,7 +58,7 @@ func (check *PreflightCheck) shouldWarn() bool {
 
 func (check *PreflightCheck) doCheck() error {
 	if check.checkDescription == "" {
-		// warning, this is a programming error
+		panic(fmt.Sprintf("Should not happen, empty description for check '%s'", check.configKeySuffix))
 	} else {
 		logging.Infof("%s", check.checkDescription)
 	}
