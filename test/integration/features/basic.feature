@@ -82,10 +82,10 @@ Feature: Basic test
         When executing "crc setup" succeeds
         Then stdout should contain "Caching oc binary"
         Then stdout should contain "Unpacking bundle from the CRC binary"
-        Then stdout should contain "Check Windows 10 release"
-        Then stdout should contain "Hyper-V installed"
-        Then stdout should contain "Is user a member of the Hyper-V Administrators group"
-        Then stdout should contain "Does the Hyper-V virtual switch exist"
+        Then stdout should contain "Checking Windows 10 release"
+        Then stdout should contain "Checking if Hyper-V is installed"
+        Then stdout should contain "Checking if user is a member of the Hyper-V Administrators group"
+        Then stdout should contain "Checking if the Hyper-V virtual switch exist"
 
     @linux @windows
     Scenario: CRC start
