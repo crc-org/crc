@@ -62,7 +62,7 @@ func AddPullSecretAndClusterID(sshRunner *ssh.SSHRunner, pullSec string, kubecon
 	}
 
 	// Add user pull secret to the instance
-	if err := AddPullSecretToInstanceDisk(sshRunner, pullSec); err != nil {
+	if err := addPullSecretToInstanceDisk(sshRunner, pullSec); err != nil {
 		return err
 	}
 	return nil
@@ -78,7 +78,7 @@ func addpullSecretSpecToInstance(sshRunner *ssh.SSHRunner, pullSec string) error
 	return nil
 }
 
-func AddPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error {
+func addPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error {
 	output, err := sshRunner.Run(fmt.Sprintf("cat <<EOF | sudo tee /var/lib/kubelet/config.json\n%s\nEOF", pullSec))
 	if err != nil {
 		return err
