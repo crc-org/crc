@@ -49,6 +49,7 @@ var libvirtPreflightChecks = [...]PreflightCheck{
 		configKeySuffix:  "check-libvirt-version",
 		checkDescription: "Checking if a supported libvirt version is installed",
 		check:            checkLibvirtVersion,
+		fixDescription:   "Installing a supported libvirt version",
 		fix:              fixLibvirtVersion,
 	},
 	{
@@ -59,10 +60,11 @@ var libvirtPreflightChecks = [...]PreflightCheck{
 		fix:              fixMachineDriverLibvirtInstalled,
 	},
 	{
-		check:          checkOldMachineDriverLibvirtInstalled,
-		fixDescription: "Removing older system-wide crc-driver-libvirt",
-		fix:            fixOldMachineDriverLibvirtInstalled,
-		flags:          SetupOnly,
+		checkDescription: "Checking for obsolete crc-driver-libvirt",
+		check:            checkOldMachineDriverLibvirtInstalled,
+		fixDescription:   "Removing older system-wide crc-driver-libvirt",
+		fix:              fixOldMachineDriverLibvirtInstalled,
+		flags:            SetupOnly,
 	},
 	{
 		configKeySuffix:  "check-crc-network",

@@ -19,12 +19,14 @@ var hypervPreflightChecks = [...]PreflightCheck{
 		configKeySuffix:  "check-hyperv-installed",
 		checkDescription: "Hyper-V installed and operational",
 		check:            checkHyperVInstalled,
+		fixDescription:   "Installing Hyper-V",
 		fix:              fixHyperVInstalled,
 	},
 	{
 		configKeySuffix:  "check-user-in-hyperv-group",
 		checkDescription: "Is user a member of the Hyper-V Administrators group",
 		check:            checkIfUserPartOfHyperVAdmins,
+		fixDescription:   "Adding user to the Hyper-V Administrators group",
 		fix:              fixUserPartOfHyperVAdmins,
 	},
 	{

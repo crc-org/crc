@@ -47,6 +47,7 @@ Feature: Basic test
         And stdout should contain "Checking if libvirt is enabled"
         And stdout should contain "Checking if libvirt daemon is running"
         And stdout should contain "Checking if a supported libvirt version is installed"
+        And stdout should contain "Checking for obsolete crc-driver-libvirt"
         And stdout should contain "Checking if libvirt 'crc' network is available"
         And stdout should contain "Checking if libvirt 'crc' network is active"
         And stdout should contain "Checking if NetworkManager is installed"
