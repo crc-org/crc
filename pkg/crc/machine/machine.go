@@ -341,12 +341,6 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			result.Error = err.Error()
 			return *result, errors.Newf("Error copying kubeconfig file  %v", err)
 		}
-
-		err = pullsecret.AddPullSecretToInstanceDisk(sshRunner, pullSecret)
-		if err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Failed to update user pull secret or cluster ID: %v", err)
-		}
 	}
 
 	if needsCertsRenewal {
