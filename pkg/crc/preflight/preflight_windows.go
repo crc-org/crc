@@ -33,6 +33,11 @@ func StartPreflightChecks() {
 		"Is user a member of the Hyper-V Administrators group",
 		config.GetBool(cmdConfig.WarnCheckUserInHyperVGroup.Name),
 	)
+	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckHyperVServiceRunning.Name),
+		checkHyperVServiceRunning,
+		"Hyper-V service enabled",
+		config.GetBool(cmdConfig.WarnCheckHyperVServiceRunning.Name),
+	)
 	preflightCheckSucceedsOrFails(config.GetBool(cmdConfig.SkipCheckHyperVSwitch.Name),
 		checkIfHyperVVirtualSwitchExists,
 		"Does the Hyper-V virtual switch exist",
@@ -60,7 +65,6 @@ func SetupHost() {
 		"Unpacking bundle from the CRC binary",
 		config.GetBool(cmdConfig.WarnCheckBundleCached.Name),
 	)
-
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckWindowsVersionCheck.Name),
 		checkVersionOfWindowsUpdate,
 		fixVersionOfWindowsUpdate,
@@ -80,7 +84,12 @@ func SetupHost() {
 		"Is user a member of the Hyper-V Administrators group",
 		config.GetBool(cmdConfig.WarnCheckUserInHyperVGroup.Name),
 	)
-
+	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckHyperVServiceRunning.Name),
+		checkHyperVServiceRunning,
+		fixHyperVServiceRunning,
+		"Hyper-V service enabled",
+		config.GetBool(cmdConfig.WarnCheckHyperVServiceRunning.Name),
+	)
 	preflightCheckAndFix(config.GetBool(cmdConfig.SkipCheckHyperVSwitch.Name),
 		checkIfHyperVVirtualSwitchExists,
 		fixHyperVVirtualSwitch,
