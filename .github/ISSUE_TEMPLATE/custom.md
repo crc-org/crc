@@ -10,7 +10,7 @@ assignees: ''
 ### General information
 
   * OS: Linux / macOS / Windows
-  * Hypervisor: KVM / Hyper-V / VirtualBox / hyperkit
+  * Hypervisor: KVM / Hyper-V / hyperkit
   * Did you run `crc setup` before starting it (Yes/No)?
 
 ## CRC version
