@@ -26,13 +26,6 @@ A Red Hat account is required in order to access the user pull secret.
 $ {bin} start
 ----
 
-** For VirtualBox, a bundle file downloaded separately and the `--vm-driver virtualbox` and `--bundle` flags are required:
-+
-[subs="+quotes,attributes"]
-----
-$ {bin} start --vm-driver virtualbox --bundle _path_to_system_bundle_
-----
-
 * When prompted, supply your user pull secret.
 
 [NOTE]
