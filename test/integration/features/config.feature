@@ -42,6 +42,7 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
 
     @linux @darwin @windows
     Scenario: CRC config checks (bundle version)
+        Given executing "crc setup" succeeds
         When setting config property "bundle" to value "current bundle" succeeds
         And "JSON" config file "crc.json" in CRC home folder contains key "bundle" with value matching "current bundle"
         And setting config property "bundle" to value "/path/to/nonexistent/bundle/crc_hypervisor_version.tar.xz" fails
