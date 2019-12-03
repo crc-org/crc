@@ -5,11 +5,13 @@ require (
 	github.com/DATA-DOG/godog v0.7.13
 	github.com/Masterminds/semver v1.5.0
 	github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
+	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/code-ready/clicumber v0.0.0-20190801094041-02a92c8f7ece
 	github.com/code-ready/goodhosts v0.0.0-20190712111040-f090f3f77c26
 	github.com/code-ready/machine v0.0.0-20191115055627-b284f794e910
 	github.com/docker/go-units v0.4.0
+	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/mattn/go-colorable v0.0.9
 	github.com/pborman/uuid v1.2.0

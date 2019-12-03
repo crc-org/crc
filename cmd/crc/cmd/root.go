@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/spf13/cobra"
 
@@ -55,6 +56,7 @@ func runPrerun() {
 	// Setting up logrus
 	logging.InitLogrus(logging.LogLevel)
 	logging.SetupFileHook()
+	setProxyDefaults()
 }
 
 func runPostrun() {
@@ -82,5 +84,25 @@ func exitIfMachineMissing(name string) {
 	}
 	if !exists {
 		errors.ExitWithMessage(1, "Machine '%s' does not exist. Use 'crc start' to create it.", name)
+	}
+}
+
+func setProxyDefaults() {
+	network.DefaultProxy = &network.ProxyConfig{
+		HttpProxy:  config.GetString(cmdConfig.HttpProxy.Name),
+		HttpsProxy: config.GetString(cmdConfig.HttpsProxy.Name),
+		NoProxy:    config.GetString(cmdConfig.NoProxy.Name),
+	}
+
+	proxyConfig, err := network.NewProxyConfig()
+
+	if err != nil {
+		errors.ExitWithMessage(1, err.Error())
+	}
+
+	if proxyConfig.IsEnabled() {
+		logging.Debugf("HTTP-PROXY: %s, HTTPS-PROXY: %s, NO-PROXY: %v", proxyConfig.HttpProxyForDisplay(),
+			proxyConfig.HttpsProxyForDisplay(), proxyConfig.NoProxy)
+		proxyConfig.ApplyToEnvironment()
 	}
 }
