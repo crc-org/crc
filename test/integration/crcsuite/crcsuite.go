@@ -139,6 +139,7 @@ func FeatureContext(s *godog.Suite) {
 		err = RemoveCRCHome()
 		if err != nil {
 			fmt.Println(err)
+			os.Exit(1)
 		}
 	})
 
