@@ -5,6 +5,7 @@ package crcsuite
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
 )
@@ -22,14 +23,21 @@ func DeleteCRC() error {
 // Remove CRC home folder ~/.crc
 func RemoveCRCHome() error {
 
-	err := os.RemoveAll(CRCHome)
+	keepFile := filepath.Join(CRCHome, ".keep")
 
-	if err != nil {
-		fmt.Printf("Problem deleting CRC home folder %s.\n", CRCHome)
-		return err
+	_, err := os.Stat(keepFile)
+	if err != nil { // cannot get keepFile's status
+		err = os.RemoveAll(CRCHome)
+
+		if err != nil {
+			fmt.Printf("Problem deleting CRC home folder %s.\n", CRCHome)
+			return err
+		}
+
+		fmt.Printf("Deleted CRC home folder %s.\n", CRCHome)
+		return nil
+
 	}
-
-	fmt.Printf("Deleted CRC home folder %s.\n", CRCHome)
-	return nil
-
+	// keepFile exists
+	return fmt.Errorf("Folder %s not removed as per request: %s present.\n", CRCHome, keepFile)
 }
