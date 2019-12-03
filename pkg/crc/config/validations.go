@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/validation"
 )
 
@@ -71,6 +72,14 @@ func ValidateIpAddress(value interface{}) (bool, string) {
 // ValidatePath checks if provided path is exist
 func ValidatePath(value interface{}) (bool, string) {
 	if err := validation.ValidatePath(value.(string)); err != nil {
+		return false, err.Error()
+	}
+	return true, ""
+}
+
+// ValidateURI check if given URI is valid
+func ValidateURI(value interface{}) (bool, string) {
+	if err := network.ValidateProxyURL(value.(string)); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
