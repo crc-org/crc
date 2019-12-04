@@ -54,7 +54,7 @@ func (oc *OcCached) cacheOc() error {
 			return err
 		}
 		defer os.RemoveAll(tmpDir)
-		assetTmpFile, err := download.Download(constants.DefaultOcURL, tmpDir, 0600)
+		assetTmpFile, err := download.Download(constants.GetOcUrl(), tmpDir, 0600)
 		if err != nil {
 			return err
 		}
