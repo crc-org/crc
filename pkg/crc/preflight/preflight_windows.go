@@ -7,13 +7,15 @@ var hypervPreflightChecks = [...]PreflightCheck{
 		configKeySuffix:  "check-administrator-user",
 		checkDescription: "Checking if running as normal user",
 		check:            checkIfRunningAsNormalUser,
-		fix:              fixRunAsNormalUser,
+		fixDescription:   "crc should be ran as a normal user",
+		flags:            NoFix,
 	},
 	{
 		configKeySuffix:  "check-windows-version",
 		checkDescription: "Checking Windows 10 release",
 		check:            checkVersionOfWindowsUpdate,
-		fix:              fixVersionOfWindowsUpdate,
+		fixDescription:   "Please manually update your Windows 10 installation",
+		flags:            NoFix,
 	},
 	{
 		configKeySuffix:  "check-hyperv-installed",
@@ -40,7 +42,8 @@ var hypervPreflightChecks = [...]PreflightCheck{
 		configKeySuffix:  "check-hyperv-switch",
 		checkDescription: "Checking if the Hyper-V virtual switch exist",
 		check:            checkIfHyperVVirtualSwitchExists,
-		fix:              fixHyperVVirtualSwitch,
+		fixDescription:   "Unable to perform Hyper-V administrative commands. Please make sure to re-login or reboot your system",
+		flags:            NoFix,
 	},
 }
 
