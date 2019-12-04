@@ -1,3 +1,5 @@
+//+build darwin build
+
 package hyperkit
 
 import "fmt"

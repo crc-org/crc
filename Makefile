@@ -31,11 +31,12 @@ DOCS_BUILD_TARGET ?= /docs/source/getting-started/master.adoc
 
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
+HOST_BUILD_DIR=$(BUILD_DIR)/$(GOOS)-$(GOARCH)
 GOPATH ?= $(shell go env GOPATH)
 ORG := github.com/code-ready
 REPOPATH ?= $(ORG)/crc
 
-PACKAGES := go list ./...
+PACKAGES := go list --tags build ./...
 SOURCES := $(shell git ls-files  *.go ":^vendor")
 
 RELEASE_INFO := release-info.json
@@ -72,10 +73,6 @@ default: install
 vendor:
 	GO111MODULE=on go mod vendor
 
-# Get binappend
-$(GOPATH)/bin/binappend-cli:
-	GO111MODULE=off go get -u github.com/yourfin/binappend-cli
-
 # Start of the actual build targets
 
 .PHONY: install
@@ -91,12 +88,15 @@ $(BUILD_DIR)/linux-amd64/crc: $(SOURCES)
 $(BUILD_DIR)/windows-amd64/crc.exe: $(SOURCES)
 	GOARCH=amd64 GOOS=windows go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/windows-amd64/crc.exe ./cmd/crc
 
+$(HOST_BUILD_DIR)/crc-embedder: $(SOURCES)
+	go build --tags="build" -ldflags="$(LDFLAGS)" -o $(HOST_BUILD_DIR)/crc-embedder ./cmd/crc-embedder
+
 .PHONY: cross ## Cross compiles all binaries
 cross: $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/windows-amd64/crc.exe
 
 .PHONY: test
 test:
-	go test -v -ldflags="$(VERSION_VARIABLES)" $(shell $(PACKAGES))
+	go test --tags build -v -ldflags="$(VERSION_VARIABLES)" $(shell $(PACKAGES))
 
 .PHONY: build_docs
 build_docs:
@@ -148,21 +148,22 @@ $(GOPATH)/bin/golangci-lint:
 	GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.17.1
 
 # Run golangci-lint against code
+GOLANGCI_FLAGS=--build-tags build
 .PHONY: lint cross-lint
 lint: $(GOPATH)/bin/golangci-lint
-	$(GOPATH)/bin/golangci-lint run
+	$(GOPATH)/bin/golangci-lint $(GOLANGCI_FLAGS) run
 
 cross-lint: $(GOPATH)/bin/golangci-lint
-	GOOS=darwin $(GOPATH)/bin/golangci-lint run
-	GOOS=linux $(GOPATH)/bin/golangci-lint run
-	GOOS=windows $(GOPATH)/bin/golangci-lint run
+	GOOS=darwin $(GOPATH)/bin/golangci-lint $(GOLANGCI_FLAGS) run
+	GOOS=linux $(GOPATH)/bin/golangci-lint $(GOLANGCI_FLAGS) run
+	GOOS=windows $(GOPATH)/bin/golangci-lint $(GOLANGCI_FLAGS) run
 
 $(GOPATH)/bin/gosec:
 	GO111MODULE=on go get github.com/securego/gosec/cmd/gosec@2.0.0
 
 # Run gosec against code
 gosec: $(GOPATH)/bin/gosec
-	$(GOPATH)/bin/gosec -tests -severity medium  ./...
+	$(GOPATH)/bin/gosec -tags build -tests -severity medium  ./...
 
 .PHONY: gen_release_info
 gen_release_info:
@@ -199,7 +200,7 @@ check_bundledir:
 	@$(call check_defined, BUNDLE_DIR, "Embedding bundle requires BUNDLE_DIR set to a directory containing CRC bundles for all hypervisors")
 
 embed_bundle: LDFLAGS += $(BUNDLE_EMBEDDED)
-embed_bundle: clean cross $(GOPATH)/bin/binappend-cli check_bundledir $(HYPERKIT_BUNDLENAME) $(HYPERV_BUNDLENAME) $(LIBVIRT_BUNDLENAME)
-	$(GOPATH)/bin/binappend-cli write $(BUILD_DIR)/linux-amd64/crc $(LIBVIRT_BUNDLENAME)
-	$(GOPATH)/bin/binappend-cli write $(BUILD_DIR)/macos-amd64/crc $(HYPERKIT_BUNDLENAME)
-	$(GOPATH)/bin/binappend-cli write $(BUILD_DIR)/windows-amd64/crc.exe $(HYPERV_BUNDLENAME)
+embed_bundle: clean cross $(HOST_BUILD_DIR)/crc-embedder check_bundledir $(HYPERKIT_BUNDLENAME) $(HYPERV_BUNDLENAME) $(LIBVIRT_BUNDLENAME)
+	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=darwin --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/macos-amd64/crc
+	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=linux --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/linux-amd64/crc
+	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=windows --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/windows-amd64/crc.exe
