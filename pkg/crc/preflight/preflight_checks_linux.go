@@ -26,8 +26,6 @@ import (
 )
 
 const (
-	libvirtDriverCommand        = "crc-driver-libvirt"
-	libvirtDriverVersion        = "0.12.6"
 	crcDnsmasqConfigFile        = "crc.conf"
 	crcNetworkManagerConfigFile = "crc-nm-dnsmasq.conf"
 	// This is defined in https://github.com/code-ready/machine-driver-libvirt/blob/master/go.mod#L5
@@ -43,7 +41,6 @@ server=/crc.testing/192.168.130.11
 	crcNetworkManagerConfig     = `[main]
 dns=dnsmasq
 `
-	libvirtDriverDownloadURL = fmt.Sprintf("https://github.com/code-ready/machine-driver-libvirt/releases/download/%s/crc-driver-libvirt", libvirtDriverVersion)
 )
 
 func checkVirtualizationEnabled() error {
@@ -244,10 +241,10 @@ func fixLibvirtServiceRunning() error {
 }
 
 func checkMachineDriverLibvirtInstalled() error {
-	logging.Debugf("Checking if %s is installed", libvirtDriverCommand)
+	logging.Debugf("Checking if %s is installed", libvirt.MachineDriverCommand)
 
 	// Check if crc-driver-libvirt is available
-	libvirtDriverPath := filepath.Join(constants.CrcBinDir, libvirtDriverCommand)
+	libvirtDriverPath := filepath.Join(constants.CrcBinDir, libvirt.MachineDriverCommand)
 	err := unix.Access(libvirtDriverPath, unix.X_OK)
 	if err != nil {
 		logging.Debugf("%s not executable", libvirtDriverPath)
@@ -259,38 +256,38 @@ func checkMachineDriverLibvirtInstalled() error {
 	if err != nil {
 		return fmt.Errorf("%v : %s", err, stdErr)
 	}
-	if !strings.Contains(stdOut, libvirtDriverVersion) {
-		return fmt.Errorf("crc-driver-libvirt does not have right version \n Required: %s \n Got: %s use 'crc setup' command.\n %v\n", libvirtDriverVersion, stdOut, stdErr)
+	if !strings.Contains(stdOut, libvirt.MachineDriverVersion) {
+		return fmt.Errorf("crc-driver-libvirt does not have right version \n Required: %s \n Got: %s use 'crc setup' command.\n %v\n", libvirt.MachineDriverVersion, stdOut, stdErr)
 	}
-	logging.Debugf("%s is already installed in %s", libvirtDriverCommand, libvirtDriverPath)
+	logging.Debugf("%s is already installed in %s", libvirt.MachineDriverCommand, libvirtDriverPath)
 	return nil
 }
 
 func fixMachineDriverLibvirtInstalled() error {
-	logging.Debugf("Installing %s", libvirtDriverCommand)
-	_, err := download.Download(libvirtDriverDownloadURL, constants.CrcBinDir, 0755)
+	logging.Debugf("Installing %s", libvirt.MachineDriverCommand)
+	_, err := download.Download(libvirt.MachineDriverDownloadUrl, constants.CrcBinDir, 0755)
 	if err != nil {
 		return err
 	}
-	logging.Debugf("%s is installed in %s", libvirtDriverCommand, constants.CrcBinDir)
+	logging.Debugf("%s is installed in %s", libvirt.MachineDriverCommand, constants.CrcBinDir)
 
 	return nil
 }
 
 /* These 2 checks can be removed after a few releases */
 func checkOldMachineDriverLibvirtInstalled() error {
-	logging.Debugf("Checking if an older libvirt driver %s is installed", libvirtDriverCommand)
-	oldLibvirtDriverPath := filepath.Join("/usr/local/bin/", libvirtDriverCommand)
+	logging.Debugf("Checking if an older libvirt driver %s is installed", libvirt.MachineDriverCommand)
+	oldLibvirtDriverPath := filepath.Join("/usr/local/bin/", libvirt.MachineDriverCommand)
 	if _, err := os.Stat(oldLibvirtDriverPath); !os.IsNotExist(err) {
 		return fmt.Errorf("Found old system-wide crc-machine-driver binary")
 	}
-	logging.Debugf("No older %s installation found", libvirtDriverCommand)
+	logging.Debugf("No older %s installation found", libvirt.MachineDriverCommand)
 
 	return nil
 }
 
 func fixOldMachineDriverLibvirtInstalled() error {
-	oldLibvirtDriverPath := filepath.Join("/usr/local/bin/", libvirtDriverCommand)
+	oldLibvirtDriverPath := filepath.Join("/usr/local/bin/", libvirt.MachineDriverCommand)
 	logging.Debugf("Removing %s", oldLibvirtDriverPath)
 	_, _, err := crcos.RunWithPrivilege("remove old libvirt driver", "rm", "-f", oldLibvirtDriverPath)
 	if err != nil {
