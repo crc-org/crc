@@ -382,7 +382,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		logging.Infof("")
 		logging.Infof("To access the cluster, first set up your environment by following 'crc oc-env' instructions")
 		logging.Infof("Then you can access it by running 'oc login -u developer -p developer %s'", result.ClusterConfig.ClusterAPI)
-		logging.Infof("To login as an admin, username is 'kubeadmin' and password is %s", result.ClusterConfig.KubeAdminPass)
+		logging.Infof("To login as an admin, run 'oc login -u kubeadmin -p %s %s'", result.ClusterConfig.KubeAdminPass, result.ClusterConfig.ClusterAPI)
 		logging.Infof("")
 		logging.Infof("You can now run 'crc console' and use these credentials to access the OpenShift web console")
 	}

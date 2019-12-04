@@ -60,8 +60,8 @@ func runConsole(arguments []string) {
 		output.Outln(result.ClusterConfig.WebConsoleURL)
 	}
 	if consolePrintCredentials {
-		output.Outln("To login as a regular user, username is 'developer' and password is 'developer'.")
-		output.Outf("To login as an admin, username is 'kubeadmin' and password is '%s'.\n", result.ClusterConfig.KubeAdminPass)
+		output.Outf("To login as a regular user, run 'oc login -u developer -p developer %s'.\n", result.ClusterConfig.ClusterAPI)
+		output.Outf("To login as an admin, run 'oc login -u kubeadmin -p %s %s'\n", result.ClusterConfig.KubeAdminPass, result.ClusterConfig.ClusterAPI)
 	}
 	if consolePrintURL || consolePrintCredentials {
 		return
