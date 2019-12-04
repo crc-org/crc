@@ -41,11 +41,6 @@ func checkVersionOfWindowsUpdate() error {
 	return nil
 }
 
-// Unable to update automatically
-func fixVersionOfWindowsUpdate() error {
-	return errors.New("Please manually update your Windows 10 installation")
-}
-
 func checkHyperVInstalled() error {
 	// check to see if a hypervisor is present. if hyper-v is installed and enabled,
 	checkHypervisorPresent := `@(Get-Wmiobject Win32_ComputerSystem).HypervisorPresent`
@@ -165,19 +160,10 @@ func checkIfHyperVVirtualSwitchExists() error {
 	return errors.New("Virtual Switch not found")
 }
 
-// Unable to do for now
-func fixHyperVVirtualSwitch() error {
-	return errors.New("Unable to perform Hyper-V administrative commands. Please make sure to re-login or reboot your system")
-}
-
 func checkIfRunningAsNormalUser() error {
 	if !powershell.IsAdmin() {
 		return nil
 	}
 	logging.Debug("Ran as administrator")
-	return fmt.Errorf("crc should be ran as a normal user")
-}
-
-func fixRunAsNormalUser() error {
 	return fmt.Errorf("crc should be ran as a normal user")
 }

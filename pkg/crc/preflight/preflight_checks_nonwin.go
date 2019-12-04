@@ -14,7 +14,8 @@ var nonWinPreflightChecks = [...]PreflightCheck{
 		configKeySuffix:  "check-root-user",
 		checkDescription: "Checking if running as non-root",
 		check:            checkIfRunningAsNormalUser,
-		fix:              fixRunAsNormalUser,
+		fixDescription:   "crc should be ran as a normal user",
+		flags:            NoFix,
 	},
 }
 
@@ -23,9 +24,5 @@ func checkIfRunningAsNormalUser() error {
 		return nil
 	}
 	logging.Debug("Ran as root")
-	return fmt.Errorf("crc should be ran as a normal user")
-}
-
-func fixRunAsNormalUser() error {
 	return fmt.Errorf("crc should be ran as a normal user")
 }

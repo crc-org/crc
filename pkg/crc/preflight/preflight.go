@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	cfg "github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
@@ -14,6 +15,7 @@ const (
 	SetupOnly PreflightCheckFlags = 1 << iota
 	// Indicates a PreflightCheck should only be run as part of "crc start"
 	StartOnly
+	NoFix
 )
 
 type PreflightCheckFunc func() error
@@ -76,10 +78,13 @@ func (check *PreflightCheck) doCheck() error {
 
 func (check *PreflightCheck) doFix() error {
 	if check.fixDescription == "" {
-		// warning, this is a programming error
-	} else {
-		logging.Infof("%s", check.fixDescription)
+		panic(fmt.Sprintf("Should not happen, empty description for fix '%s'", check.configKeySuffix))
 	}
+	if check.flags&NoFix == NoFix {
+		return errors.Newf(check.fixDescription)
+	}
+
+	logging.Infof("%s", check.fixDescription)
 
 	return check.fix()
 }
