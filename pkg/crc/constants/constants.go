@@ -1,6 +1,7 @@
 package constants
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -25,7 +26,23 @@ const (
 	GlobalStateFile      = "globalstate.json"
 	CrcLandingPageURL    = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
 	PullSecretFile       = "pullsecret.json"
+
+	DefaultOcUrlBase = "https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest"
 )
+
+var ocUrlForOs = map[string]string{
+	"darwin":  fmt.Sprintf("%s/%s", DefaultOcUrlBase, "macosx/oc.tar.gz"),
+	"linux":   fmt.Sprintf("%s/%s", DefaultOcUrlBase, "linux/oc.tar.gz"),
+	"windows": fmt.Sprintf("%s/%s", DefaultOcUrlBase, "windows/oc.zip"),
+}
+
+func GetOcUrlForOs(os string) string {
+	return ocUrlForOs[os]
+}
+
+func GetOcUrl() string {
+	return GetOcUrlForOs(runtime.GOOS)
+}
 
 var (
 	CrcBaseDir         = filepath.Join(GetHomeDir(), ".crc")
