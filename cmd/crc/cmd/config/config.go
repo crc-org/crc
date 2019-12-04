@@ -38,7 +38,7 @@ var (
 
 func init() {
 	ConfigCmd.Long = `Modifies crc configuration properties.
-Configurable properties (enter as SUBCOMMAND): ` + "\n\n" + configurableFields()
+Configurable properties (enter after SUBCOMMAND): ` + "\n\n" + configurableFields()
 }
 
 func isPreflightKey(key string) bool {
