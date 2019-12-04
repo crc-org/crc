@@ -13,22 +13,15 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
 	dl "github.com/code-ready/crc/pkg/download"
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
 const (
-	hyperkitDriverCommand = "crc-driver-hyperkit"
-	hyperkitDriverVersion = "0.12.6"
-
 	resolverDir  = "/etc/resolver"
 	resolverFile = "/etc/resolver/testing"
 	hostFile     = "/etc/hosts"
-)
-
-var (
-	hyperkitDownloadURL       = fmt.Sprintf("https://github.com/code-ready/machine-driver-hyperkit/releases/download/v%s/hyperkit", hyperkitDriverVersion)
-	hyperkitDriverDownloadURL = fmt.Sprintf("https://github.com/code-ready/machine-driver-hyperkit/releases/download/v%s/crc-driver-hyperkit", hyperkitDriverVersion)
 )
 
 // Add darwin specific checks
@@ -124,7 +117,7 @@ func checkHyperKitInstalled() error {
 }
 
 func fixHyperKitInstallation() error {
-	hyperkitFile, err := download(hyperkitDownloadURL, constants.CrcBinDir, 0755)
+	hyperkitFile, err := download(hyperkit.HyperkitDownloadUrl, constants.CrcBinDir, 0755)
 	if err != nil {
 		return err
 	}
@@ -133,8 +126,8 @@ func fixHyperKitInstallation() error {
 }
 
 func checkMachineDriverHyperKitInstalled() error {
-	logging.Debugf("Checking if %s is installed", hyperkitDriverCommand)
-	hyperkitPath := filepath.Join(constants.CrcBinDir, hyperkitDriverCommand)
+	logging.Debugf("Checking if %s is installed", hyperkit.MachineDriverCommand)
+	hyperkitPath := filepath.Join(constants.CrcBinDir, hyperkit.MachineDriverCommand)
 	err := unix.Access(hyperkitPath, unix.X_OK)
 	if err != nil {
 		return err
@@ -145,16 +138,16 @@ func checkMachineDriverHyperKitInstalled() error {
 	if err != nil {
 		return err
 	}
-	if !strings.Contains(stdOut, hyperkitDriverVersion) {
-		return fmt.Errorf("%s does not have right version \n Required: %s \n Got: %s use 'crc setup' command.\n %v\n", hyperkitDriverCommand, hyperkitDriverVersion, stdOut, stdErr)
+	if !strings.Contains(stdOut, hyperkit.MachineDriverVersion) {
+		return fmt.Errorf("%s does not have right version \n Required: %s \n Got: %s use 'crc setup' command.\n %v\n", hyperkit.MachineDriverCommand, hyperkit.MachineDriverVersion, stdOut, stdErr)
 	}
-	logging.Debugf("%s is already installed in %s", hyperkitDriverCommand, hyperkitPath)
+	logging.Debugf("%s is already installed in %s", hyperkit.MachineDriverCommand, hyperkitPath)
 
 	return checkSuid(hyperkitPath)
 }
 
 func fixMachineDriverHyperKitInstalled() error {
-	hyperkitDriverPath, err := download(hyperkitDriverDownloadURL, constants.CrcBinDir, 0755)
+	hyperkitDriverPath, err := download(hyperkit.MachineDriverDownloadUrl, constants.CrcBinDir, 0755)
 	if err != nil {
 		return err
 	}
