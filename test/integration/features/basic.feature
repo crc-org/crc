@@ -112,8 +112,8 @@ Feature: Basic test
     @darwin @linux @windows
     Scenario: CRC console credentials
         When executing "crc console --credentials" succeeds
-        Then stdout should contain "To login as a regular user, username is 'developer' and password is 'developer'."
-        And stdout should contain "To login as an admin, username is 'kubeadmin' and password is "
+        Then stdout should contain "To login as a regular user, run 'oc login -u developer -p developer"
+        And stdout should contain "To login as an admin, run 'oc login -u kubeadmin -p "
 
     @darwin @linux @windows
     Scenario: CRC forcible stop
