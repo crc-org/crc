@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/code-ready/crc/pkg/crc/version"
 )
 
 const (
@@ -42,6 +44,20 @@ func GetOcUrlForOs(os string) string {
 
 func GetOcUrl() string {
 	return GetOcUrlForOs(runtime.GOOS)
+}
+
+var defaultBundleForOs = map[string]string{
+	"darwin":  fmt.Sprintf("crc_hyperkit_%s.crcbundle", version.GetBundleVersion()),
+	"linux":   fmt.Sprintf("crc_libvirt_%s.crcbundle", version.GetBundleVersion()),
+	"windows": fmt.Sprintf("crc_hyperv_%s.crcbundle", version.GetBundleVersion()),
+}
+
+func GetDefaultBundleForOs(os string) string {
+	return defaultBundleForOs[os]
+}
+
+func GetDefaultBundle() string {
+	return GetDefaultBundleForOs(runtime.GOOS)
 }
 
 var (
