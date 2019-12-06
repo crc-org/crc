@@ -13,7 +13,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/pullsecret"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/crc/systemd"
 	crcos "github.com/code-ready/crc/pkg/os"
@@ -350,13 +349,11 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		}
 	}
 
+	ocConfig := oc.UseOCWithConfig(startConfig.Name)
 	if !exists {
-		// Update the user pull secret before kubelet start.
-		logging.Info("Adding user's pull secret and cluster ID ...")
-		kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, startConfig.Name, "kubeconfig")
-		if err := pullsecret.AddPullSecretAndClusterID(sshRunner, pullSecret, kubeConfigFilePath); err != nil {
+		if err := configureCluster(ocConfig, sshRunner, pullSecret); err != nil {
 			result.Error = err.Error()
-			return *result, errors.Newf("Failed to update user pull secret or cluster ID: %v", err)
+			return *result, errors.Newf("Error Setting cluster config: %s", err)
 		}
 	}
 
@@ -375,7 +372,6 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	time.Sleep(time.Minute * 3)
 
 	// Approve the node certificate.
-	ocConfig := oc.UseOCWithConfig(startConfig.Name)
 	if err := ocConfig.ApproveNodeCSR(); err != nil {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error approving the node csr %v", err)
@@ -682,4 +678,32 @@ func updateSSHKeyPair(sshRunner *crcssh.SSHRunner) error {
 	sshRunner.SetPrivateKeyPath(constants.GetPrivateKeyPath())
 
 	return err
+}
+
+func configureCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, pullSecret string) (rerr error) {
+	sd := systemd.NewInstanceSystemdCommander(sshRunner)
+	if _, err := sd.Start("kubelet"); err != nil {
+		return fmt.Errorf("Error starting kubelet: %s", err)
+	}
+
+	defer func() {
+		// Stop the kubelet service.
+		if _, err := sd.Stop("kubelet"); err != nil {
+			rerr = err
+		}
+		if err := cluster.StopAndRemovePodsInVM(sshRunner); err != nil {
+			rerr = err
+		}
+		rerr = nil
+	}()
+
+	logging.Info("Adding user's pull secret ...")
+	if err := cluster.AddPullSecret(sshRunner, ocConfig, pullSecret); err != nil {
+		return fmt.Errorf("Failed to update user pull secret or cluster ID: %v", err)
+	}
+	logging.Info("Updating cluster ID ...")
+	if err := cluster.UpdateClusterID(ocConfig); err != nil {
+		return fmt.Errorf("Failed to update cluster ID: %v", err)
+	}
+	return nil
 }

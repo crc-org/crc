@@ -1,13 +1,17 @@
 package cluster
 
 import (
+	"encoding/base64"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/oc"
 	"github.com/code-ready/crc/pkg/crc/ssh"
+	"github.com/pborman/uuid"
 )
 
 func WaitForSsh(sshRunner *ssh.SSHRunner) error {
@@ -76,4 +80,80 @@ func GetRootPartitionUsage(sshRunner *ssh.SSHRunner) (int64, int64, error) {
 		return 0, 0, err
 	}
 	return diskSize, diskUsage, nil
+}
+
+func AddPullSecret(sshRunner *ssh.SSHRunner, oc oc.OcConfig, pullSec string) error {
+	if err := addPullSecretToInstanceDisk(sshRunner, pullSec); err != nil {
+		return err
+	}
+
+	base64OfPullSec := base64.StdEncoding.EncodeToString([]byte(pullSec))
+	cmdArgs := []string{"patch", "secret", "pull-secret", "-p",
+		fmt.Sprintf(`{"data":{".dockerconfigjson":"%s"}}`, base64OfPullSec),
+		"-n", "openshift-config", "--type", "merge"}
+
+	if err := waitForOpenshiftAPIServer(oc); err != nil {
+		return err
+	}
+	_, stderr, err := oc.RunOcCommand(cmdArgs...)
+	if err != nil {
+		return fmt.Errorf("Failed to add Pull secret %v: %s", err, stderr)
+	}
+	return nil
+}
+
+func UpdateClusterID(oc oc.OcConfig) error {
+	clusterID := uuid.New()
+	cmdArgs := []string{"patch", "clusterversion", "version", "-p",
+		fmt.Sprintf(`{"spec":{"clusterID":"%s"}}`, clusterID), "--type", "merge"}
+
+	if err := waitForOpenshiftAPIServer(oc); err != nil {
+		return err
+	}
+	_, stderr, err := oc.RunOcCommand(cmdArgs...)
+	if err != nil {
+		return fmt.Errorf("Failed to update cluster ID %v: %s", err, stderr)
+	}
+
+	return nil
+}
+
+func StopAndRemovePodsInVM(sshRunner *ssh.SSHRunner) error {
+	// This command make sure we stop the kubelet and clean up the pods
+	// We also providing a 2 seconds sleep so that stopped pods get settled and
+	// ready for removal. Without this 2 seconds time sometime it happens some of
+	// the pods are not completely stopped and when remove happens it will throw
+	// an error like below.
+	// remove /var/run/containers/storage/overlay-containers/97e5858e610afc9f71d145b1a7bd5ad930e537ccae79969ae256636f7fb7e77c/userdata/shm: device or resource busy
+	stopAndRemovePodsCmd := `bash -c 'sudo crictl stopp $(sudo crictl pods -q) && sudo crictl rmp $(sudo crictl pods -q)'`
+	stopAndRemovePods := func() error {
+		output, err := sshRunner.Run(stopAndRemovePodsCmd)
+		logging.Debugf("Output of %s: %s", stopAndRemovePodsCmd, output)
+		if err != nil {
+			return &errors.RetriableError{Err: err}
+		}
+		return nil
+	}
+
+	return errors.RetryAfter(2, stopAndRemovePods, 2*time.Second)
+}
+
+func addPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error {
+	_, err := sshRunner.RunPrivate(fmt.Sprintf("cat <<EOF | sudo tee /var/lib/kubelet/config.json\n%s\nEOF", pullSec))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func waitForOpenshiftAPIServer(oc oc.OcConfig) error {
+	waitForApiServer := func() error {
+		_, stderr, err := oc.RunOcCommand("get", "pods")
+		if err != nil {
+			logging.Debug(stderr)
+			return &errors.RetriableError{Err: err}
+		}
+		return nil
+	}
+	return errors.RetryAfter(80, waitForApiServer, time.Second)
 }
