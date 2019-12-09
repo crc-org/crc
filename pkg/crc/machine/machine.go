@@ -314,6 +314,14 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		logging.Warnf("Failed public DNS query from the cluster: %v : %s", err, queryOutput)
 	}
 
+	// Check DNS lookup from host to VM
+	logging.Info("Check DNS query from host ...")
+	if err := network.CheckCRCLocalDNSReachableFromHost(crcBundleMetadata.ClusterInfo.ClusterName,
+		crcBundleMetadata.ClusterInfo.BaseDomain, crcBundleMetadata.ClusterInfo.AppsDomain); err != nil {
+		result.Error = err.Error()
+		return *result, errors.Newf("Failed to query DNS from host: %v", err)
+	}
+
 	// Additional steps to perform after newly created VM is up
 	if !exists {
 		if err := updateSSHKeyPair(sshRunner); err != nil {
