@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"net"
 	"net/url"
 
@@ -91,4 +92,18 @@ func UriStringForDisplay(uri string) (string, error) {
 		return fmt.Sprintf("%s://%s:xxx@%s", u.Scheme, u.User.Username(), u.Host), nil
 	}
 	return uri, nil
+}
+
+func CheckCRCLocalDNSReachableFromHost(clusterName, domainName, appsDomainName string) error {
+	ip, err := net.LookupIP(fmt.Sprintf("api.%s.%s", clusterName, domainName))
+	if err != nil {
+		return err
+	}
+	logging.Debugf("api.%s.%s resolved to %s", clusterName, domainName, ip)
+	ip, err = net.LookupIP(fmt.Sprintf("foo.%s", appsDomainName))
+	if err != nil {
+		return err
+	}
+	logging.Debugf("foo.%s resolved to %s", appsDomainName, ip)
+	return nil
 }
