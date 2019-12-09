@@ -38,5 +38,5 @@ $ {bin} start --vm-driver virtualbox --bundle _path_to_system_bundle_
 [NOTE]
 ====
 * The cluster takes a minimum of four minutes to start the necessary containers and operators before serving a request.
-* If errors are encountered on the start command due to a mismatch in the hyperkit bundle, use the '{bin} delete' command to remove older versions.  These older versions may have user data and care should be taken before issuing the command to insure past work is not lost. 
+* If errors are encountered on the start command due to a mismatch in dependencies (such as the hyperkit bundle), use the '{bin} delete' command to remove older versions.  These older versions may have user data and care should be taken before issuing the command to insure past work is not lost. 
 ====
