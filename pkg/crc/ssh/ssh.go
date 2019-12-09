@@ -1,7 +1,9 @@
 package ssh
 
 import (
+	"fmt"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/machine/libmachine/drivers"
 )
 
@@ -20,9 +22,29 @@ func CreateRunnerWithPrivateKey(driver drivers.Driver, privateKey string) *SSHRu
 
 // Create a host using the driver's config
 func (runner *SSHRunner) Run(command string) (string, error) {
-	return drivers.RunSSHCommandFromDriver(runner.driver, runner.privateSSHKey, command)
+	return runner.runSSHCommandFromDriver(command)
 }
 
 func (runner *SSHRunner) SetPrivateKeyPath(path string) {
 	runner.privateSSHKey = path
+}
+
+func (runner *SSHRunner) runSSHCommandFromDriver(command string) (string, error) {
+	client, err := drivers.GetSSHClientFromDriver(runner.driver, runner.privateSSHKey)
+	if err != nil {
+		return "", err
+	}
+
+	logging.Debugf("About to run SSH command:\n%s", command)
+
+	output, err := client.Output(command)
+	logging.Debugf("SSH cmd err, output: %v: %s", err, output)
+	if err != nil {
+		return "", fmt.Errorf(`ssh command error:
+command : %s
+err     : %v
+output  : %s`, command, err, output)
+	}
+
+	return output, nil
 }
