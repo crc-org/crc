@@ -4,19 +4,6 @@
 :toc-title:
 :toclevels:
 
-[NOTE]
-====
-Before 1.2.0, each released `crc` binary expired 30 days after the release due to certificates embedded in the Openshift cluster.
-Using a `crc` binary older than 1.2.0 will result in an expired certificates error after 30 days.
-
-To resolve this error:
-
-* link:https://cloud.redhat.com/openshift/install/crc/installer-provisioned[Download the latest CodeReady Containers release] and place the `crc` binary in your `$PATH`.
-* Remove the cluster with certificate errors using the `crc delete` command.
-* Set up the new release with the `crc setup` command.
-* Start the new cluster with the `crc start` command.
-====
-
 toc::[]
 
 image:https://travis-ci.org/code-ready/crc.svg?branch=master["Travis CI Build Status", link="https://travis-ci.org/code-ready/crc"]
