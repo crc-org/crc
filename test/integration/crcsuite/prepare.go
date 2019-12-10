@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/code-ready/crc/pkg/download"
@@ -67,9 +68,14 @@ func CopyFilesToTestDir() {
 	}
 
 	l := strings.Split(cwd, string(filepath.Separator))
-	dataDirPieces := append([]string{string(filepath.Separator)}, l[:len(l)-3]...)
-	dataDirPieces = append(dataDirPieces, "testdata")
+	dataDirPieces := append(l[:len(l)-3], "testdata")
+	var volume string
+	if runtime.GOOS == "windows" {
+		volume = filepath.VolumeName(cwd)
+		dataDirPieces = dataDirPieces[1:] // drop volume from list of dirs
+	}
 	dataDir := filepath.Join(dataDirPieces...)
+	dataDir = fmt.Sprintf("%s%c%s", volume, filepath.Separator, dataDir) // prepend volume back
 
 	files, err := ioutil.ReadDir(dataDir)
 	if err != nil {
