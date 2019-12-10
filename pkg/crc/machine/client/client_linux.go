@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
@@ -11,7 +10,7 @@ import (
 // StartDriver starts the desired machine driver if necessary.
 func StartDriver() {
 	if os.Getenv(localbinary.PluginEnvKey) == localbinary.PluginEnvVal {
-		errors.ExitWithMessage(1, fmt.Sprintf("Unregistered driver: %s\n", os.Getenv(localbinary.PluginEnvDriverName)))
+		errors.ExitWithMessage(1, "Unregistered driver: %s\n", os.Getenv(localbinary.PluginEnvDriverName))
 		return
 	}
 	localbinary.CurrentBinaryIsCRCMachine = true
