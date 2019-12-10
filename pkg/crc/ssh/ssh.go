@@ -25,6 +25,10 @@ func (runner *SSHRunner) Run(command string) (string, error) {
 	return runner.runSSHCommandFromDriver(command, false)
 }
 
+func (runner *SSHRunner) RunPrivate(command string) (string, error) {
+	return runner.runSSHCommandFromDriver(command, true)
+}
+
 func (runner *SSHRunner) SetPrivateKeyPath(path string) {
 	runner.privateSSHKey = path
 }
