@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
@@ -18,7 +17,7 @@ func StartDriver() {
 		case "hyperv":
 			plugin.RegisterDriver(hyperv.NewDriver("", ""))
 		default:
-			errors.ExitWithMessage(1, fmt.Sprintf("Unregistered driver: %s\n", driverName))
+			errors.ExitWithMessage(1, "Unregistered driver: %s\n", driverName)
 		}
 		return
 	}

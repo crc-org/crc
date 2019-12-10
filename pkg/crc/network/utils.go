@@ -17,7 +17,7 @@ func executeCommandOrExit(sshRunner *ssh.SSHRunner, command string, errorMessage
 	result, err := sshRunner.Run(command)
 
 	if err != nil {
-		errors.ExitWithMessage(1, fmt.Sprintf("%s: %s", errorMessage, err.Error()))
+		errors.ExitWithMessage(1, "%s: %s", errorMessage, err.Error())
 	}
 	return result
 }

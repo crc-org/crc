@@ -37,7 +37,7 @@ func CreateResolvFileOnInstance(sshRunner *ssh.SSHRunner, resolvFileValues Resol
 
 	err := sshRunner.CopyData([]byte(resolvFile), "/etc/resolv.conf")
 	if err != nil {
-		errors.ExitWithMessage(1, fmt.Sprintf("Error creating /etc/resolv on instance: %s", err.Error()))
+		errors.ExitWithMessage(1, "Error creating /etc/resolv on instance: %s", err.Error())
 	}
 }
 
