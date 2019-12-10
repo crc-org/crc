@@ -22,23 +22,29 @@ func CreateRunnerWithPrivateKey(driver drivers.Driver, privateKey string) *SSHRu
 
 // Create a host using the driver's config
 func (runner *SSHRunner) Run(command string) (string, error) {
-	return runner.runSSHCommandFromDriver(command)
+	return runner.runSSHCommandFromDriver(command, false)
 }
 
 func (runner *SSHRunner) SetPrivateKeyPath(path string) {
 	runner.privateSSHKey = path
 }
 
-func (runner *SSHRunner) runSSHCommandFromDriver(command string) (string, error) {
+func (runner *SSHRunner) runSSHCommandFromDriver(command string, runPrivate bool) (string, error) {
 	client, err := drivers.GetSSHClientFromDriver(runner.driver, runner.privateSSHKey)
 	if err != nil {
 		return "", err
 	}
 
-	logging.Debugf("About to run SSH command:\n%s", command)
+	if runPrivate {
+		logging.Debugf("About to run SSH command with hidden output")
+	} else {
+		logging.Debugf("About to run SSH command:\n%s", command)
+	}
 
 	output, err := client.Output(command)
-	logging.Debugf("SSH cmd err, output: %v: %s", err, output)
+	if !runPrivate {
+		logging.Debugf("SSH cmd err, output: %v: %s", err, output)
+	}
 	if err != nil {
 		return "", fmt.Errorf(`ssh command error:
 command : %s
