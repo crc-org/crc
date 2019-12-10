@@ -6,8 +6,8 @@
 
 [NOTE]
 ====
-Each released `crc` binary expires 30 days after the release due to certificates embedded in the Openshift cluster.
-Using an older `crc` binary will result in an expired certificates error.
+Before 1.2.0, each released `crc` binary expired 30 days after the release due to certificates embedded in the Openshift cluster.
+Using a `crc` binary older than 1.2.0 will result in an expired certificates error after 30 days.
 
 To resolve this error:
 
