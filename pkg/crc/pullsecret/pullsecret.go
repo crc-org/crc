@@ -70,20 +70,18 @@ func AddPullSecretAndClusterID(sshRunner *ssh.SSHRunner, pullSec string, kubecon
 
 func addpullSecretSpecToInstance(sshRunner *ssh.SSHRunner, pullSec string) error {
 	base64OfPullSec := base64.StdEncoding.EncodeToString([]byte(pullSec))
-	output, err := sshRunner.RunPrivate(fmt.Sprintf("cat <<EOF | tee /tmp/pull-secret.yaml\n%s\nEOF", fmt.Sprintf(pullSecret, base64OfPullSec)))
+	_, err := sshRunner.RunPrivate(fmt.Sprintf("cat <<EOF | tee /tmp/pull-secret.yaml\n%s\nEOF", fmt.Sprintf(pullSecret, base64OfPullSec)))
 	if err != nil {
 		return err
 	}
-	logging.Debugf("Output is : %s", output)
 	return nil
 }
 
 func addPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error {
-	output, err := sshRunner.RunPrivate(fmt.Sprintf("cat <<EOF | sudo tee /var/lib/kubelet/config.json\n%s\nEOF", pullSec))
+	_, err := sshRunner.RunPrivate(fmt.Sprintf("cat <<EOF | sudo tee /var/lib/kubelet/config.json\n%s\nEOF", pullSec))
 	if err != nil {
 		return err
 	}
-	logging.Debugf("Output is : %s", output)
 	return nil
 }
 
