@@ -66,14 +66,8 @@ func download(url string, destDir string, mode os.FileMode) (string, error) {
 		return "", err
 	}
 
-	filename, err := dl.Download(url, destDir, 0644)
+	filename, err := dl.Download(url, destDir, mode)
 	if err != nil {
-		return "", err
-	}
-
-	err = os.Chmod(filename, mode)
-	if err != nil {
-		os.Remove(filename)
 		return "", err
 	}
 
