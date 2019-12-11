@@ -265,9 +265,12 @@ func checkMachineDriverLibvirtInstalled() error {
 
 func fixMachineDriverLibvirtInstalled() error {
 	logging.Debugf("Installing %s", libvirt.MachineDriverCommand)
-	_, err := download.Download(libvirt.MachineDriverDownloadUrl, constants.CrcBinDir, 0755)
+	_, err := extractBinary(libvirt.MachineDriverCommand)
 	if err != nil {
-		return err
+		_, err = download.Download(libvirt.MachineDriverDownloadUrl, constants.CrcBinDir, 0755)
+		if err != nil {
+			return err
+		}
 	}
 	logging.Debugf("%s is installed in %s", libvirt.MachineDriverCommand, constants.CrcBinDir)
 

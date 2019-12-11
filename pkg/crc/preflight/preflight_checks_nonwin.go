@@ -5,8 +5,11 @@ package preflight
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/embed"
 )
 
 var nonWinPreflightChecks = [...]PreflightCheck{
@@ -25,4 +28,20 @@ func checkIfRunningAsNormalUser() error {
 	}
 	logging.Debug("Ran as root")
 	return fmt.Errorf("crc should be ran as a normal user")
+}
+
+func extractBinary(binaryName string) (string, error) {
+	destPath := filepath.Join(constants.CrcBinDir, binaryName)
+	err := embed.Extract(binaryName, destPath)
+	if err != nil {
+		return "", err
+	}
+
+	err = os.Chmod(destPath, 0500)
+	if err != nil {
+		os.Remove(destPath)
+		return "", err
+	}
+
+	return destPath, nil
 }
