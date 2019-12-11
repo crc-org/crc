@@ -3,15 +3,13 @@ package preflight
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
-
-	"github.com/YourFin/binappend"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/oc"
+	"github.com/code-ready/crc/pkg/embed"
 )
 
 var genericPreflightChecks = [...]PreflightCheck{
@@ -43,40 +41,13 @@ func checkBundleCached() error {
 
 func fixBundleCached() error {
 	if constants.BundleEmbedded() {
-		currentExecutable, err := os.Executable()
-		if err != nil {
-			return err
-		}
-		extractor, err := binappend.MakeExtractor(currentExecutable)
-		if err != nil {
-			return err
-		}
-		available := extractor.AvalibleData()
-		if len(available) < 1 {
-			return fmt.Errorf("Invalid bundle data")
-		}
-		reader, err := extractor.GetReader(available[0])
-		if err != nil {
-			return err
-		}
-		defer reader.Close()
-
 		bundleDir := filepath.Dir(constants.DefaultBundlePath)
-		err = os.MkdirAll(bundleDir, 0700)
+		err := os.MkdirAll(bundleDir, 0700)
 		if err != nil && !os.IsExist(err) {
 			return fmt.Errorf("Cannot create directory %s", bundleDir)
 		}
-		writer, err := os.Create(constants.DefaultBundlePath)
-		if err != nil {
-			return err
-		}
-		defer writer.Close()
-		_, err = io.Copy(writer, reader)
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return embed.Extract(filepath.Base(constants.DefaultBundlePath), constants.DefaultBundlePath)
 	}
 	return fmt.Errorf("CRC bundle is not embedded in the binary")
 }
