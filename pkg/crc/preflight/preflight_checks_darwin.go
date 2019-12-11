@@ -24,18 +24,26 @@ const (
 	hostFile     = "/etc/hosts"
 )
 
-// Add darwin specific checks
-func tryRemoveDestFile(url string, destDir string) error {
+func basenameFromUrl(url string) (string, error) {
 	u, err := neturl.Parse(url)
 	if err != nil {
-		return fmt.Errorf("Cannot parse URL %s", url)
+		return "", fmt.Errorf("Cannot parse URL %s", url)
 	}
 
 	urlPath, err := neturl.PathUnescape(u.EscapedPath())
 	if err != nil {
-		return fmt.Errorf("Cannot unescape URL path %s", urlPath)
+		return "", fmt.Errorf("Cannot unescape URL path %s", urlPath)
 	}
-	destFilename := path.Base(urlPath)
+
+	return path.Base(urlPath), nil
+}
+
+// Add darwin specific checks
+func tryRemoveDestFile(url string, destDir string) error {
+	destFilename, err := basenameFromUrl(url)
+	if err != nil {
+		return err
+	}
 	destPath := filepath.Join(destDir, destFilename)
 	err = os.Remove(destPath)
 	if err != nil && !os.IsNotExist(err) {
@@ -116,13 +124,25 @@ func checkHyperKitInstalled() error {
 	return checkSuid(hyperkitPath)
 }
 
-func fixHyperKitInstallation() error {
-	hyperkitFile, err := download(hyperkit.HyperkitDownloadUrl, constants.CrcBinDir, 0755)
+func extractOrDownloadBinary(url string) error {
+	binaryName, err := basenameFromUrl(url)
 	if err != nil {
 		return err
 	}
+	logging.Debugf("Installing %s", binaryName)
+	binaryPath, err := extractBinary(binaryName)
+	if err != nil {
+		binaryPath, err = download(url, constants.CrcBinDir, 0755)
+		if err != nil {
+			return err
+		}
+	}
 
-	return setSuid(hyperkitFile)
+	return setSuid(binaryPath)
+}
+
+func fixHyperKitInstallation() error {
+	return extractOrDownloadBinary(hyperkit.HyperkitDownloadUrl)
 }
 
 func checkMachineDriverHyperKitInstalled() error {
@@ -147,12 +167,7 @@ func checkMachineDriverHyperKitInstalled() error {
 }
 
 func fixMachineDriverHyperKitInstalled() error {
-	hyperkitDriverPath, err := download(hyperkit.MachineDriverDownloadUrl, constants.CrcBinDir, 0755)
-	if err != nil {
-		return err
-	}
-
-	return setSuid(hyperkitDriverPath)
+	return extractOrDownloadBinary(hyperkit.MachineDriverDownloadUrl)
 }
 
 func checkResolverFilePermissions() error {
