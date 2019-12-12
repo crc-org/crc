@@ -53,7 +53,7 @@ func ValidateBundle(bundle string) error {
 	releaseBundleVersion := version.GetBundleVersion()
 	userProvidedBundleVersion := filepath.Base(bundle)
 	if !strings.Contains(userProvidedBundleVersion, fmt.Sprintf("%s.crcbundle", releaseBundleVersion)) {
-		return errors.Newf("%s bundle is not supported by this binary, please use crc_<hypervisor>_%s.crcbundle", userProvidedBundleVersion, releaseBundleVersion)
+		return errors.Newf("%s bundle is not supported by this binary, please use %s", userProvidedBundleVersion, constants.GetDefaultBundle())
 	}
 	return nil
 }
