@@ -351,7 +351,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	ocConfig := oc.UseOCWithConfig(startConfig.Name)
 	if !exists {
-		if err := configureCluster(ocConfig, sshRunner, pullSecret); err != nil {
+		if err := configureCluster(ocConfig, sshRunner, crcBundleMetadata.ClusterInfo.BaseDomain, pullSecret, instanceIP); err != nil {
 			result.Error = err.Error()
 			return *result, errors.Newf("Error Setting cluster config: %s", err)
 		}
@@ -680,7 +680,7 @@ func updateSSHKeyPair(sshRunner *crcssh.SSHRunner) error {
 	return err
 }
 
-func configureCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, pullSecret string) (rerr error) {
+func configureCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, baseDomainName, pullSecret, instanceIP string) (rerr error) {
 	sd := systemd.NewInstanceSystemdCommander(sshRunner)
 	if _, err := sd.Start("kubelet"); err != nil {
 		return fmt.Errorf("Error starting kubelet: %s", err)
@@ -695,6 +695,9 @@ func configureCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, pullSec
 			rerr = err
 		}
 	}()
+	if err := configProxyForCluster(ocConfig, sshRunner, sd, baseDomainName, instanceIP); err != nil {
+		return fmt.Errorf("Failed to configure proxy for cluster: %v", err)
+	}
 
 	logging.Info("Adding user's pull secret ...")
 	if err := cluster.AddPullSecret(sshRunner, ocConfig, pullSecret); err != nil {
@@ -703,6 +706,41 @@ func configureCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, pullSec
 	logging.Info("Updating cluster ID ...")
 	if err := cluster.UpdateClusterID(ocConfig); err != nil {
 		return fmt.Errorf("Failed to update cluster ID: %v", err)
+	}
+
+	return nil
+}
+
+func configProxyForCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, sd *systemd.InstanceSystemdCommander,
+	baseDomainName, instanceIP string) (err error) {
+	proxy, err := network.NewProxyConfig()
+	if err != nil {
+		return err
+	}
+	if proxy.IsEnabled() {
+		defer func() {
+			// Restart the crio service
+			if proxy.IsEnabled() {
+				// Restart reload the daemon and then restart the service
+				// So no need to explicit reload the daemon.
+				if _, ferr := sd.Restart("crio"); ferr != nil {
+					err = ferr
+				}
+			}
+		}()
+
+		proxy.AddNoProxy([]string{fmt.Sprintf(".%s", baseDomainName), instanceIP})
+		proxy.ApplyToEnvironment()
+
+		logging.Info("Adding proxy configuration to the cluster ...")
+		if err := cluster.AddProxyConfigToCluster(ocConfig, proxy); err != nil {
+			return err
+		}
+
+		logging.Info("Adding proxy configuration to kubelet and crio service ...")
+		if err := cluster.AddProxyToKubeletAndCriO(sshRunner, proxy); err != nil {
+			return err
+		}
 	}
 	return nil
 }

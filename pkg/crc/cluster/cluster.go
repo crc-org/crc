@@ -9,6 +9,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/oc"
 	"github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/pborman/uuid"
@@ -136,6 +137,44 @@ func StopAndRemovePodsInVM(sshRunner *ssh.SSHRunner) error {
 	}
 
 	return errors.RetryAfter(2, stopAndRemovePods, 2*time.Second)
+}
+
+func AddProxyConfigToCluster(oc oc.OcConfig, proxy *network.ProxyConfig) error {
+	cmdArgs := []string{"patch", "proxy", "cluster", "-p",
+		fmt.Sprintf(`{"spec":{"httpProxy":"%s", "httpsProxy":"%s", "noProxy":"%s"}}`, proxy.HttpProxy, proxy.HttpsProxy, proxy.NoProxy),
+		"-n", "openshift-config", "--type", "merge"}
+
+	if err := waitForOpenshiftAPIServer(oc); err != nil {
+		return err
+	}
+	if _, stderr, err := oc.RunOcCommand(cmdArgs...); err != nil {
+		return fmt.Errorf("Failed to add proxy details %v: %s", err, stderr)
+	}
+	return nil
+}
+
+// AddProxyToKubeletAndCriO adds the systemd drop-in proxy configuration file to the instance,
+// both services (kubelet and crio) need to be restarted after this change.
+// Since proxy operator is not able to make changes to in the kubelet/crio side,
+// this is the job of machine config operator on the node and for crc this is not
+// possible so we do need to put it here.
+func AddProxyToKubeletAndCriO(sshRunner *ssh.SSHRunner, proxy *network.ProxyConfig) error {
+	proxyTemplate := `[Service]
+Environment=HTTP_PROXY=%s
+Environment=HTTPS_PROXY=%s
+Environment=NO_PROXY=.cluster.local,.svc,10.128.0.0/14,172.30.0.0/16,%s`
+
+	p := fmt.Sprintf(proxyTemplate, proxy.HttpProxy, proxy.HttpsProxy, proxy.NoProxy)
+	// This will create a systemd drop-in configuration for proxy (both for kubelet and crio services) on the VM.
+	_, err := sshRunner.RunPrivate(fmt.Sprintf("cat <<EOF | sudo tee /etc/systemd/system/crio.service.d/10-default-env.conf\n%s\nEOF", p))
+	if err != nil {
+		return err
+	}
+	_, err = sshRunner.RunPrivate(fmt.Sprintf("cat <<EOF | sudo tee /etc/systemd/system/kubelet.service.d/10-default-env.conf\n%s\nEOF", p))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func addPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error {
