@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
@@ -77,10 +78,18 @@ func ValidatePath(value interface{}) (bool, string) {
 	return true, ""
 }
 
-// ValidateURI check if given URI is valid
+// ValidateURI checks if given URI is valid
 func ValidateURI(value interface{}) (bool, string) {
 	if err := network.ValidateProxyURL(value.(string)); err != nil {
 		return false, err.Error()
+	}
+	return true, ""
+}
+
+// ValidateNoProxy checks if the NoProxy string has the correct format
+func ValidateNoProxy(value interface{}) (bool, string) {
+	if strings.Contains(value.(string), " ") {
+		return false, "NoProxy string can't contain spaces"
 	}
 	return true, ""
 }
