@@ -79,8 +79,9 @@ func (p *ProxyConfig) HttpsProxyForDisplay() string {
 }
 
 // AddNoProxy appends the specified host to the list of no proxied hosts.
-func (p *ProxyConfig) AddNoProxy(host string) {
-	p.NoProxy = fmt.Sprintf("%s,%s", host, p.NoProxy)
+func (p *ProxyConfig) AddNoProxy(host []string) {
+	host = append(host, p.NoProxy)
+	p.NoProxy = strings.Join(host, ",")
 }
 
 // Sets the current config as environment variables in the current process.
