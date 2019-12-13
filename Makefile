@@ -35,7 +35,7 @@ GOPATH ?= $(shell go env GOPATH)
 ORG := github.com/code-ready
 REPOPATH ?= $(ORG)/crc
 
-PACKAGES := go list ./... | grep -v /out
+PACKAGES := go list ./...
 SOURCES := $(shell git ls-files  *.go ":^vendor")
 
 RELEASE_INFO := release-info.json
