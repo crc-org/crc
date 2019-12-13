@@ -694,7 +694,6 @@ func configureCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, pullSec
 		if err := cluster.StopAndRemovePodsInVM(sshRunner); err != nil {
 			rerr = err
 		}
-		rerr = nil
 	}()
 
 	logging.Info("Adding user's pull secret ...")
