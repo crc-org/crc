@@ -79,7 +79,7 @@ func (p *ProxyConfig) HttpsProxyForDisplay() string {
 }
 
 // AddNoProxy appends the specified host to the list of no proxied hosts.
-func (p *ProxyConfig) AddNoProxy(host []string) {
+func (p *ProxyConfig) AddNoProxy(host ...string) {
 	host = append(host, p.NoProxy)
 	p.NoProxy = strings.Join(host, ",")
 }
