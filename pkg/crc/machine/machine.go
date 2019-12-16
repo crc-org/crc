@@ -703,9 +703,21 @@ func configureCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, baseDom
 	return nil
 }
 
+func getProxyConfig(baseDomainName string) (*network.ProxyConfig, error) {
+	proxy, err := network.NewProxyConfig()
+	if err != nil {
+		return nil, err
+	}
+	if proxy.IsEnabled() {
+		proxy.AddNoProxy(fmt.Sprintf(".%s", baseDomainName))
+	}
+
+	return proxy, nil
+}
+
 func configProxyForCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, sd *systemd.InstanceSystemdCommander,
 	baseDomainName, instanceIP string) (err error) {
-	proxy, err := network.NewProxyConfig()
+	proxy, err := getProxyConfig(baseDomainName)
 	if err != nil {
 		return err
 	}
@@ -720,8 +732,7 @@ func configProxyForCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, sd
 				}
 			}
 		}()
-
-		proxy.AddNoProxy(fmt.Sprintf(".%s", baseDomainName), instanceIP)
+		proxy.AddNoProxy(instanceIP)
 		proxy.ApplyToEnvironment()
 
 		logging.Info("Adding proxy configuration to the cluster ...")
