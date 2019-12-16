@@ -1,0 +1,20 @@
+[id="starting-codeready-containers-with-proxy_{context}"]
+= Starting {prod} behind proxy
+
+Proxy can be defined as part of environment variable or with `crc config set` command option as following:
+
+```
+$ crc config set http-proxy http://example.proxy.com:<port>
+$ crc config set https-proxy http://example.proxy.com:<port>
+$ crc config set no-proxy '<multiple-no-proxy-entries-with-comma-separated>'
+```
+
+Once proxy is set by environment variable or by config, `crc` commands will able to use it.
+
+
+[NOTE]
+====
+- If both config and env are set for proxy, the values set in crc config have priority over the ones set in the environment.
+- Make sure to export `.testing` as part of `no_proxy/NO_PROXY` environment variable before login to cluster using `oc` command
+line on the host.
+====
