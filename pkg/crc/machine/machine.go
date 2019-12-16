@@ -740,10 +740,10 @@ func configProxyForCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, sd
 				}
 			}
 		}()
-		proxy.AddNoProxy(instanceIP)
 		proxy.ApplyToEnvironment()
 
 		logging.Info("Adding proxy configuration to the cluster ...")
+		proxy.AddNoProxy(instanceIP)
 		if err := cluster.AddProxyConfigToCluster(ocConfig, proxy); err != nil {
 			return err
 		}
