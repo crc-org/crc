@@ -729,7 +729,7 @@ func configProxyForCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, sd
 			}
 		}()
 
-		proxy.AddNoProxy([]string{fmt.Sprintf(".%s", baseDomainName), instanceIP})
+		proxy.AddNoProxy(fmt.Sprintf(".%s", baseDomainName), instanceIP)
 		proxy.ApplyToEnvironment()
 
 		logging.Info("Adding proxy configuration to the cluster ...")
