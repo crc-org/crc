@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	DefaultProxy     *ProxyConfig
+	DefaultProxy     ProxyConfig
 	defaultNoProxies = "127.0.0.1, localhost"
 )
 
@@ -20,39 +20,47 @@ type ProxyConfig struct {
 	NoProxy    string
 }
 
-// NewProxyConfig creates a proxy configuration with the specified parameters. If an empty string is passed
-// the corresponding environment variable is checked.
-func NewProxyConfig() (*ProxyConfig, error) {
+func NewProxyDefaults(httpProxy, httpsProxy, noProxy string) (*ProxyConfig, error) {
+	DefaultProxy = ProxyConfig{
+		HttpProxy:  httpProxy,
+		HttpsProxy: httpsProxy,
+		NoProxy:    noProxy,
+	}
+
 	if DefaultProxy.HttpProxy == "" {
 		DefaultProxy.HttpProxy = getProxyFromEnv("http_proxy")
 	}
-	err := ValidateProxyURL(DefaultProxy.HttpProxy)
-	if err != nil {
-		return nil, err
-	}
-
 	if DefaultProxy.HttpsProxy == "" {
 		DefaultProxy.HttpsProxy = getProxyFromEnv("https_proxy")
 	}
-	err = ValidateProxyURL(DefaultProxy.HttpsProxy)
-	if err != nil {
-		return nil, err
-	}
-
-	np := defaultNoProxies
-
 	if DefaultProxy.NoProxy == "" {
 		DefaultProxy.NoProxy = getProxyFromEnv("no_proxy")
 	}
 
-	if DefaultProxy.NoProxy != "" {
-		np = fmt.Sprintf("%s,%s", np, DefaultProxy.NoProxy)
-	}
+	return NewProxyConfig()
+}
 
+// NewProxyConfig creates a proxy configuration with the specified parameters. If an empty string is passed
+// the corresponding environment variable is checked.
+func NewProxyConfig() (*ProxyConfig, error) {
 	config := ProxyConfig{
 		HttpProxy:  DefaultProxy.HttpProxy,
 		HttpsProxy: DefaultProxy.HttpsProxy,
-		NoProxy:    np,
+	}
+
+	config.NoProxy = defaultNoProxies
+	if DefaultProxy.NoProxy != "" {
+		config.NoProxy = fmt.Sprintf("%s,%s", config.NoProxy, DefaultProxy.NoProxy)
+	}
+
+	err := ValidateProxyURL(config.HttpProxy)
+	if err != nil {
+		return nil, err
+	}
+
+	err = ValidateProxyURL(config.HttpsProxy)
+	if err != nil {
+		return nil, err
 	}
 
 	return &config, nil

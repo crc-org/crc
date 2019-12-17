@@ -90,14 +90,11 @@ func exitIfMachineMissing(name string) {
 }
 
 func setProxyDefaults() {
-	network.DefaultProxy = &network.ProxyConfig{
-		HttpProxy:  config.GetString(cmdConfig.HttpProxy.Name),
-		HttpsProxy: config.GetString(cmdConfig.HttpsProxy.Name),
-		NoProxy:    config.GetString(cmdConfig.NoProxy.Name),
-	}
+	httpProxy := config.GetString(cmdConfig.HttpProxy.Name)
+	httpsProxy := config.GetString(cmdConfig.HttpsProxy.Name)
+	noProxy := config.GetString(cmdConfig.NoProxy.Name)
 
-	proxyConfig, err := network.NewProxyConfig()
-
+	proxyConfig, err := network.NewProxyDefaults(httpProxy, httpsProxy, noProxy)
 	if err != nil {
 		errors.ExitWithMessage(1, err.Error())
 	}
