@@ -75,24 +75,3 @@ func GetPathEnvString(userShell string, prependedPath string) string {
 
 	return GetEnvString(userShell, "PATH", pathStr)
 }
-
-func GetPrefixSuffixDelimiterForSet(userShell string) (prefix, delimiter, suffix, pathSuffix string) {
-	switch userShell {
-	case "powershell":
-		prefix = "$Env:"
-		delimiter = " = \""
-		suffix = "\"\n"
-		pathSuffix = ";" + prefix + "PATH" + suffix
-	case "cmd":
-		prefix = "SET "
-		delimiter = "="
-		suffix = "\n"
-		pathSuffix = ";%PATH%" + suffix
-	default:
-		prefix = "export "
-		delimiter = "=\""
-		suffix = "\"\n"
-		pathSuffix = ":$PATH" + suffix
-	}
-	return
-}

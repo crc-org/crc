@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"os"
-	"text/template"
-
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/output"
@@ -11,44 +8,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	ocEnvTmpl = `{{ .Prefix }}PATH{{ .Delimiter }}{{ .OcDirPath }}{{ .PathSuffix }}{{ .UsageHint }}`
-)
-
 var (
 	forceShell string
 )
-
-type OcShellConfig struct {
-	UserShell string
-	shell.ShellConfig
-	OcDirPath string
-	UsageHint string
-}
-
-func getOcShellConfig(ocPath string, forcedShell string) (*OcShellConfig, error) {
-	userShell, err := shell.GetShell(forcedShell)
-	if err != nil {
-		return nil, errors.Newf("Error running the oc-env command: %s", err.Error())
-	}
-
-	cmdLine := "crc oc-env"
-
-	shellCfg := &OcShellConfig{
-		OcDirPath: ocPath,
-		UserShell: userShell,
-	}
-
-	shellCfg.UsageHint = shell.GenerateUsageHint(userShell, cmdLine)
-	shellCfg.Prefix, shellCfg.Delimiter, shellCfg.Suffix, shellCfg.PathSuffix = shell.GetPrefixSuffixDelimiterForSet(userShell)
-
-	return shellCfg, nil
-}
-
-func executeOcTemplateStdout(shellCfg *OcShellConfig) error {
-	tmpl := template.Must(template.New("envConfig").Parse(ocEnvTmpl))
-	return tmpl.Execute(os.Stdout, shellCfg)
-}
 
 var ocEnvCmd = &cobra.Command{
 	Use:   "oc-env",
@@ -57,14 +19,13 @@ var ocEnvCmd = &cobra.Command{
 	// This is required to make sure root command Persistent PreRun not run.
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {},
 	Run: func(cmd *cobra.Command, args []string) {
-		var shellCfg *OcShellConfig
-		shellCfg, err := getOcShellConfig(constants.CrcBinDir, forceShell)
+		userShell, err := shell.GetShell(forceShell)
 		if err != nil {
-			errors.Exit(1)
+			errors.ExitWithMessage(1, "Error running the oc-env command: %s", err.Error())
 		}
 
-		output.Outln(shell.GetPathEnvString(shellCfg.UserShell, constants.CrcBinDir))
-		output.Outln(shellCfg.UsageHint)
+		output.Outln(shell.GetPathEnvString(userShell, constants.CrcBinDir))
+		output.Outln(shell.GenerateUsageHint(userShell, "crc oc-env"))
 	},
 }
 
