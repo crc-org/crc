@@ -87,22 +87,14 @@ Feature: Basic test
         Then stdout should contain "Checking if user is a member of the Hyper-V Administrators group"
         Then stdout should contain "Checking if the Hyper-V virtual switch exist"
 
-    @linux @windows
+    @darwin @linux @windows
     Scenario: CRC start
-        When starting CRC with default bundle and default hypervisor succeeds
+        When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
         # Check if user can copy-paste login details for developer and kubeadmin users
         And stdout should match "(?s)(.*)oc login -u developer -p developer https:\/\/api\.crc\.testing:6443(.*)$"
         And stdout should match "(?s)(.*)oc login -u kubeadmin -p ([a-zA-Z0-9]{5}-){3}[a-zA-Z0-9]{5} https:\/\/api\.crc\.testing:6443(.*)$"
 
-    @darwin
-    Scenario: CRC start on Mac
-        When starting CRC with default bundle and hypervisor "hyperkit" succeeds
-        Then stdout should contain "Started the OpenShift cluster"
-        # Check if user can copy-paste login details for developer and kubeadmin users
-        And stdout should match "(?s)(.*)oc login -u developer -p developer https:\/\/api\.crc\.testing:6443(.*)$"
-        And stdout should match "(?s)(.*)oc login -u kubeadmin -p ([a-zA-Z0-9]{5}-){3}[a-zA-Z0-9]{5} https:\/\/api\.crc\.testing:6443(.*)$"
-    
     @darwin @linux @windows
     Scenario: CRC status and disk space check
         When with up to "15" retries with wait period of "1m" command "crc status" output should not contain "Stopped"

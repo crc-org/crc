@@ -3,23 +3,14 @@ Feature:
     Install OpenShift operator from OperatorHub and use it to manage
     admin tasks.
 
-    Scenario Outline: Start CRC and login to cluster
+    @linux @darwin
+    Scenario: Start CRC and login to cluster
         Given executing "crc setup" succeeds
-        When starting CRC with default bundle and hypervisor "<vm-driver>" succeeds
+        When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
         When with up to "8" retries with wait period of "2m" command "crc status" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
         Then executing "eval $(crc oc-env)" succeeds
         And login to the oc cluster succeeds
-
-    @darwin
-        Examples:
-            | vm-driver  |
-            | hyperkit   |
-
-    @linux
-        Examples:
-            | vm-driver |
-            | libvirt   |
 
     @windows
     Scenario: Start CRC on Windows

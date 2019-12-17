@@ -6,17 +6,13 @@ Feature: Local image to image-registry to deployment
     project/namespace. They deploy and expose the app and check its
     accessibility.
 
-    Scenario Outline: Start CRC
+    Scenario: Start CRC
         Given executing "crc setup" succeeds
-        When starting CRC with default bundle and hypervisor "<vm-driver>" succeeds
+        When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
         And executing "eval $(crc oc-env)" succeeds
         When with up to "4" retries with wait period of "2m" command "crc status" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
         Then login to the oc cluster succeeds
-
-        Examples:
-            | vm-driver |
-            | libvirt   |
 
     Scenario: Create local image
         Given executing "cd ../../../testdata" succeeds

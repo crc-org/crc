@@ -52,10 +52,8 @@ func FeatureContext(s *godog.Suite) {
 	// CRC related steps
 	s.Step(`^removing CRC home directory succeeds$`,
 		RemoveCRCHome)
-	s.Step(`^starting CRC with default bundle and default hypervisor (succeeds|fails)$`,
-		StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails)
-	s.Step(`^starting CRC with default bundle and hypervisor "(.*)" (succeeds|fails)$`,
-		StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails)
+	s.Step(`^starting CRC with default bundle (succeeds|fails)$`,
+		StartCRCWithDefaultBundleSucceedsOrFails)
 	s.Step(`^starting CRC with default bundle and nameserver "(.*)" (succeeds|fails)$`,
 		StartCRCWithDefaultBundleAndNameServerSucceedsOrFails)
 	s.Step(`^setting config property "(.*)" to value "(.*)" (succeeds|fails)$`,
@@ -347,7 +345,7 @@ func LoginToOcClusterSucceedsOrFails(expected string) error {
 	return err
 }
 
-func StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails(expected string) error {
+func StartCRCWithDefaultBundleSucceedsOrFails(expected string) error {
 
 	var cmd string
 	var extraBundleArgs string
@@ -356,20 +354,6 @@ func StartCRCWithDefaultBundleAndDefaultHypervisorSucceedsOrFails(expected strin
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
 	}
 	cmd = fmt.Sprintf("crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
-	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
-
-	return err
-}
-
-func StartCRCWithDefaultBundleAndHypervisorSucceedsOrFails(hypervisor string, expected string) error {
-
-	var cmd string
-	var extraBundleArgs string
-
-	if bundleEmbedded == false {
-		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
-	}
-	cmd = fmt.Sprintf("crc start -d %s -p '%s' %s --log-level debug", hypervisor, pullSecretFile, extraBundleArgs)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
