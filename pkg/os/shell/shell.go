@@ -51,6 +51,31 @@ func GenerateUsageHint(userShell, cmdLine string) string {
 	return fmt.Sprintf("%s Run this command to configure your shell:\n%s %s\n", comment, comment, cmd)
 }
 
+func GetEnvString(userShell string, envName string, envValue string) string {
+	switch userShell {
+	case "powershell":
+		return fmt.Sprintf("$Env:%s = \"%s\"", envName, envValue)
+	case "cmd":
+		return fmt.Sprintf("SET %s=%s", envName, envValue)
+	default:
+		return fmt.Sprintf("export %s=\"%s\"", envName, envValue)
+	}
+}
+
+func GetPathEnvString(userShell string, prependedPath string) string {
+	var pathStr string
+	switch userShell {
+	case "powershell":
+		pathStr = fmt.Sprintf("%s;$Env:PATH", prependedPath)
+	case "cmd":
+		pathStr = fmt.Sprintf("%s;%%PATH%%", prependedPath)
+	default:
+		pathStr = fmt.Sprintf("%s:$PATH", prependedPath)
+	}
+
+	return GetEnvString(userShell, "PATH", pathStr)
+}
+
 func GetPrefixSuffixDelimiterForSet(userShell string) (prefix, delimiter, suffix, pathSuffix string) {
 	switch userShell {
 	case "powershell":

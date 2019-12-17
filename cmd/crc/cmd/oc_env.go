@@ -6,6 +6,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/os/shell"
 	"github.com/spf13/cobra"
 )
@@ -19,6 +20,7 @@ var (
 )
 
 type OcShellConfig struct {
+	UserShell string
 	shell.ShellConfig
 	OcDirPath string
 	UsageHint string
@@ -34,6 +36,7 @@ func getOcShellConfig(ocPath string, forcedShell string) (*OcShellConfig, error)
 
 	shellCfg := &OcShellConfig{
 		OcDirPath: ocPath,
+		UserShell: userShell,
 	}
 
 	shellCfg.UsageHint = shell.GenerateUsageHint(userShell, cmdLine)
@@ -59,7 +62,9 @@ var ocEnvCmd = &cobra.Command{
 		if err != nil {
 			errors.Exit(1)
 		}
-		_ = executeOcTemplateStdout(shellCfg)
+
+		output.Outln(shell.GetPathEnvString(shellCfg.UserShell, constants.CrcBinDir))
+		output.Outln(shellCfg.UsageHint)
 	},
 }
 
