@@ -16,8 +16,6 @@ var ocEnvCmd = &cobra.Command{
 	Use:   "oc-env",
 	Short: "Add the 'oc' binary to PATH",
 	Long:  `Add the OpenShift client binary 'oc' to PATH`,
-	// This is required to make sure root command Persistent PreRun not run.
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {},
 	Run: func(cmd *cobra.Command, args []string) {
 		userShell, err := shell.GetShell(forceShell)
 		if err != nil {
