@@ -1,6 +1,7 @@
 package machine
 
 import (
+	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/machine/libmachine/state"
 )
 
@@ -32,6 +33,7 @@ type ClusterConfig struct {
 	KubeAdminPass string
 	ClusterAPI    string
 	WebConsoleURL string
+	ProxyConfig   *network.ProxyConfig
 }
 
 type StartResult struct {
