@@ -10,21 +10,20 @@ import (
 
 var (
 	DefaultProxy     ProxyConfig
-	defaultNoProxies = "127.0.0.1, localhost"
+	defaultNoProxies = []string{"127.0.0.1", "localhost"}
 )
 
 // ProxyConfig keeps the proxy configuration for the current environment
 type ProxyConfig struct {
 	HttpProxy  string
 	HttpsProxy string
-	NoProxy    string
+	NoProxy    []string
 }
 
 func NewProxyDefaults(httpProxy, httpsProxy, noProxy string) (*ProxyConfig, error) {
 	DefaultProxy = ProxyConfig{
 		HttpProxy:  httpProxy,
 		HttpsProxy: httpsProxy,
-		NoProxy:    noProxy,
 	}
 
 	if DefaultProxy.HttpProxy == "" {
@@ -33,9 +32,10 @@ func NewProxyDefaults(httpProxy, httpsProxy, noProxy string) (*ProxyConfig, erro
 	if DefaultProxy.HttpsProxy == "" {
 		DefaultProxy.HttpsProxy = getProxyFromEnv("https_proxy")
 	}
-	if DefaultProxy.NoProxy == "" {
-		DefaultProxy.NoProxy = getProxyFromEnv("no_proxy")
+	if noProxy == "" {
+		noProxy = getProxyFromEnv("no_proxy")
 	}
+	DefaultProxy.setNoProxyString(noProxy)
 
 	return NewProxyConfig()
 }
@@ -49,8 +49,8 @@ func NewProxyConfig() (*ProxyConfig, error) {
 	}
 
 	config.NoProxy = defaultNoProxies
-	if DefaultProxy.NoProxy != "" {
-		config.NoProxy = fmt.Sprintf("%s,%s", config.NoProxy, DefaultProxy.NoProxy)
+	if len(DefaultProxy.NoProxy) != 0 {
+		config.AddNoProxy(DefaultProxy.NoProxy...)
 	}
 
 	err := ValidateProxyURL(config.HttpProxy)
@@ -88,8 +88,18 @@ func (p *ProxyConfig) HttpsProxyForDisplay() string {
 
 // AddNoProxy appends the specified host to the list of no proxied hosts.
 func (p *ProxyConfig) AddNoProxy(host ...string) {
-	host = append(host, p.NoProxy)
-	p.NoProxy = strings.Join(host, ",")
+	p.NoProxy = append(p.NoProxy, host...)
+}
+
+func (p *ProxyConfig) setNoProxyString(noProxies string) {
+	if noProxies == "" {
+		return
+	}
+	p.NoProxy = strings.Split(noProxies, ",")
+}
+
+func (p *ProxyConfig) GetNoProxyString() string {
+	return strings.Join(p.NoProxy, ",")
 }
 
 // Sets the current config as environment variables in the current process.
@@ -107,8 +117,8 @@ func (p *ProxyConfig) ApplyToEnvironment() {
 		os.Setenv("https_proxy", p.HttpsProxy)
 	}
 	if len(p.NoProxy) != 0 {
-		os.Setenv("NO_PROXY", p.NoProxy)
-		os.Setenv("no_proxy", p.NoProxy)
+		os.Setenv("NO_PROXY", p.GetNoProxyString())
+		os.Setenv("no_proxy", p.GetNoProxyString())
 	}
 }
 
