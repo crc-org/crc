@@ -192,7 +192,7 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
        When executing "crc config set skip-check-crc-network true" succeeds
        And executing "crc config set skip-check-crc-network-active true" succeeds
        # Start CRC
-       Then starting CRC with default bundle and default hypervisor fails
+       Then starting CRC with default bundle fails
        And stderr contains "Network not found: no network with matching name 'crc'"
 
    @linux

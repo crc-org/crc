@@ -4,23 +4,14 @@ Feature:
     project and deploy an app. Check on the app and delete the
     project. Stop and delete CRC.
 
-    Scenario Outline: Start CRC
+    @linux @darwin
+    Scenario: Start CRC
         Given executing "crc setup" succeeds
-        When starting CRC with default bundle and hypervisor "<vm-driver>" succeeds
+        When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
         And executing "eval $(crc oc-env)" succeeds
         When with up to "4" retries with wait period of "2m" command "crc status" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
         Then login to the oc cluster succeeds
-
-    @darwin
-        Examples:
-            | vm-driver  |
-            | hyperkit   |
-
-    @linux
-        Examples:
-            | vm-driver |
-            | libvirt   |
 
     @windows
     Scenario: Start CRC on Windows
@@ -68,7 +59,7 @@ Feature:
         Given with up to "2" retries with wait period of "60s" http response from "http://httpd-ex-testproj.apps-crc.testing" has status code "200"
         When executing "crc stop -f" succeeds
         Then with up to "4" retries with wait period of "2m" command "crc status" output should contain "Stopped"
-        When starting CRC with default bundle and default hypervisor succeeds
+        When starting CRC with default bundle succeeds
         Then with up to "4" retries with wait period of "2m" command "crc status" output should match ".*Running \(v\d+\.\d+\.\d+.*\).*"
         And with up to "2" retries with wait period of "60s" http response from "http://httpd-ex-testproj.apps-crc.testing" has status code "200"
 
