@@ -47,12 +47,18 @@ func fillClusterConfig(bundleInfo *bundle.CrcBundleInfo, clusterConfig *ClusterC
 		return fmt.Errorf("Error reading kubeadmin password from bundle %v", err)
 	}
 
+	proxyConfig, err := getProxyConfig(bundleInfo.ClusterInfo.BaseDomain)
+	if err != nil {
+		return err
+	}
 	*clusterConfig = ClusterConfig{
 		KubeConfig:    bundleInfo.GetKubeConfigPath(),
 		KubeAdminPass: kubeadminPassword,
 		WebConsoleURL: constants.DefaultWebConsoleURL,
 		ClusterAPI:    constants.DefaultAPIURL,
+		ProxyConfig:   proxyConfig,
 	}
+
 	return nil
 }
 
@@ -612,6 +618,33 @@ func addNameServerToInstance(sshRunner *crcssh.SSHRunner, ns string) error {
 		network.AddNameserversToInstance(sshRunner, nameservers)
 	}
 	return nil
+}
+
+// Return proxy config if VM is present
+func GetProxyConfig(machineName string) (*network.ProxyConfig, error) {
+	// Here we are only checking if the VM exist and not the status of the VM.
+	// We might need to improve and use crc status logic, only
+	// return if the Openshift is running as part of status.
+	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	host, err := libMachineAPIClient.Load(machineName)
+
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
+	if err != nil {
+		return nil, errors.Newf("Error loading bundle metadata: %v", err)
+	}
+
+	var clusterConfig ClusterConfig
+
+	err = fillClusterConfig(crcBundleMetadata, &clusterConfig)
+	if err != nil {
+		return nil, errors.Newf("Error loading cluster configuration: %v", err)
+	}
+
+	return clusterConfig.ProxyConfig, nil
 }
 
 // Return console URL if the VM is present.

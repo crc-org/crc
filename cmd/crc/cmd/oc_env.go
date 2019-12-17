@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/os/shell"
 	"github.com/spf13/cobra"
@@ -22,7 +23,16 @@ var ocEnvCmd = &cobra.Command{
 			errors.ExitWithMessage(1, "Error running the oc-env command: %s", err.Error())
 		}
 
+		proxyConfig, err := machine.GetProxyConfig(constants.DefaultName)
+		if err != nil {
+			errors.Exit(1)
+		}
 		output.Outln(shell.GetPathEnvString(userShell, constants.CrcBinDir))
+		if proxyConfig.IsEnabled() {
+			output.Outln(shell.GetEnvString(userShell, "HTTP_PROXY", proxyConfig.HttpProxy))
+			output.Outln(shell.GetEnvString(userShell, "HTTPS_PROXY", proxyConfig.HttpsProxy))
+			output.Outln(shell.GetEnvString(userShell, "NO_PROXY", proxyConfig.GetNoProxyString()))
+		}
 		output.Outln(shell.GenerateUsageHint(userShell, "crc oc-env"))
 	},
 }
