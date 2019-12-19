@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	crcos "github.com/code-ready/crc/pkg/os"
 )
@@ -48,6 +50,19 @@ func (oc OcConfig) RunOcCommand(args ...string) (string, string, error) {
 
 func NewOcConfig(runner OcRunner) OcConfig {
 	return OcConfig{runner: runner}
+}
+
+func (oc OcConfig) WaitForOpenshiftResource(resource string) error {
+	waitForApiServer := func() error {
+		stdout, stderr, err := oc.RunOcCommand("get", resource)
+		if err != nil {
+			logging.Debug(stderr)
+			return &errors.RetriableError{Err: err}
+		}
+		logging.Debug(stdout)
+		return nil
+	}
+	return errors.RetryAfter(80, waitForApiServer, time.Second)
 }
 
 // ApproveNodeCSR approves the certificate for the node.
