@@ -93,7 +93,7 @@ func AddPullSecret(sshRunner *ssh.SSHRunner, oc oc.OcConfig, pullSec string) err
 		fmt.Sprintf(`{"data":{".dockerconfigjson":"%s"}}`, base64OfPullSec),
 		"-n", "openshift-config", "--type", "merge"}
 
-	if err := waitForOpenshiftAPIServer(oc, "secret"); err != nil {
+	if err := oc.WaitForOpenshiftResource("secret"); err != nil {
 		return err
 	}
 	_, stderr, err := oc.RunOcCommand(cmdArgs...)
@@ -108,7 +108,7 @@ func UpdateClusterID(oc oc.OcConfig) error {
 	cmdArgs := []string{"patch", "clusterversion", "version", "-p",
 		fmt.Sprintf(`{"spec":{"clusterID":"%s"}}`, clusterID), "--type", "merge"}
 
-	if err := waitForOpenshiftAPIServer(oc, "clusterversion"); err != nil {
+	if err := oc.WaitForOpenshiftResource("clusterversion"); err != nil {
 		return err
 	}
 	_, stderr, err := oc.RunOcCommand(cmdArgs...)
@@ -144,7 +144,7 @@ func AddProxyConfigToCluster(oc oc.OcConfig, proxy *network.ProxyConfig) error {
 		fmt.Sprintf(`{"spec":{"httpProxy":"%s", "httpsProxy":"%s", "noProxy":"%s"}}`, proxy.HttpProxy, proxy.HttpsProxy, proxy.NoProxy),
 		"-n", "openshift-config", "--type", "merge"}
 
-	if err := waitForOpenshiftAPIServer(oc, "proxy"); err != nil {
+	if err := oc.WaitForOpenshiftResource("proxy"); err != nil {
 		return err
 	}
 	if _, stderr, err := oc.RunOcCommand(cmdArgs...); err != nil {
@@ -183,17 +183,4 @@ func addPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error
 		return err
 	}
 	return nil
-}
-
-func waitForOpenshiftAPIServer(oc oc.OcConfig, resource string) error {
-	waitForApiServer := func() error {
-		stdout, stderr, err := oc.RunOcCommand("get", resource)
-		if err != nil {
-			logging.Debug(stderr)
-			return &errors.RetriableError{Err: err}
-		}
-		logging.Debug(stdout)
-		return nil
-	}
-	return errors.RetryAfter(80, waitForApiServer, time.Second)
 }
