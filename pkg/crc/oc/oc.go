@@ -67,6 +67,10 @@ func (oc OcConfig) WaitForOpenshiftResource(resource string) error {
 
 // ApproveNodeCSR approves the certificate for the node.
 func (oc OcConfig) ApproveNodeCSR() error {
+	err := oc.WaitForOpenshiftResource("csr")
+	if err != nil {
+		return err
+	}
 	// Execute 'oc get csr -oname' and store the output
 	csrsJson, stderr, err := oc.RunOcCommand("get", "csr", "-ojson")
 	if err != nil {
