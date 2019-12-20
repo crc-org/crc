@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -52,4 +53,15 @@ func GetFirstExistentPath(paths []string) (string, error) {
 	}
 
 	return readablePath, nil
+}
+
+func ChownAsRoot(user *user.User, filepath string) error {
+	logging.Infof("Will use root access to change owner & group of file %s to %s", filepath, user.Username)
+	cmd := exec.Command("sudo", "chown", fmt.Sprintf("%s.%s", user.Uid, user.Gid), filepath) // #nosec G204
+	buf := new(bytes.Buffer)
+	cmd.Stderr = buf
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("Failed to change owner & group of %s to %s: %s: %s: %v", filepath, user.Username, buf.String(), err)
+	}
+	return nil
 }
