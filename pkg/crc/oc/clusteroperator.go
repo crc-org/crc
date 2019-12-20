@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var ignoreClusterOperators = []string{"monitoring", "machine-config", "marketplace"}
+var ignoreClusterOperators = []string{"monitoring", "machine-config", "marketplace", "insights"}
 
 type K8sResource struct {
 	Items []struct {
