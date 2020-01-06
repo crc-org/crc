@@ -58,5 +58,8 @@ func RetryAfter(attempts int, callback func() error, d time.Duration) (err error
 		logging.Debugf("error: %v - sleeping %s", err, d)
 		time.Sleep(d)
 	}
-	return m.ToError()
+	err = m.ToError()
+
+	logging.Debugf("RetryAfter timeout after %d tries", attempts)
+	return err
 }
