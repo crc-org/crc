@@ -3,7 +3,6 @@ package logging
 import (
 	"io/ioutil"
 	"os"
-	"path/filepath"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/pkg/errors"
@@ -17,22 +16,22 @@ var (
 	originalHooks = logrus.LevelHooks{}
 )
 
-func OpenLogFile() (*os.File, error) {
+func OpenLogFile(path string) (*os.File, error) {
 	err := constants.EnsureBaseDirExists()
 	if err != nil {
 		return nil, err
 	}
-	l, err := os.OpenFile(filepath.Join(constants.LogFilePath), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
+	l, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, err
 	}
 	return l, nil
 }
 
-func setupFileHook() error {
-	logfile, err := OpenLogFile()
+func SetupFileHook(path string) {
+	logfile, err := OpenLogFile(path)
 	if err != nil {
-		return err
+		logrus.Fatal(errors.Wrap(err, "Failed to open logfile"))
 	}
 
 	logrus.AddHook(newFileHook(logfile, logrus.TraceLevel, &logrus.TextFormatter{
@@ -41,14 +40,6 @@ func setupFileHook() error {
 		FullTimestamp:          true,
 		DisableLevelTruncation: false,
 	}))
-	return nil
-}
-
-func SetupFileHook() {
-	err := setupFileHook()
-	if err != nil {
-		logrus.Fatal(errors.Wrap(err, "Failed to open logfile"))
-	}
 }
 
 func RemoveFileHook() {

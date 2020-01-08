@@ -616,7 +616,7 @@ func setMachineLogging(logs bool) error {
 	if !logs {
 		log.SetDebug(true)
 		logging.RemoveFileHook()
-		logfile, err := logging.OpenLogFile()
+		logfile, err := logging.OpenLogFile(constants.LogFilePath)
 		if err != nil {
 			return err
 		}
@@ -630,7 +630,7 @@ func setMachineLogging(logs bool) error {
 
 func unsetMachineLogging() {
 	logging.CloseLogFile()
-	logging.SetupFileHook()
+	logging.SetupFileHook(constants.LogFilePath)
 }
 
 func addNameServerToInstance(sshRunner *crcssh.SSHRunner, ns string) error {

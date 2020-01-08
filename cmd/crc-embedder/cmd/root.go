@@ -38,7 +38,7 @@ func Execute() {
 func runPrerun() {
 	// Setting up logrus
 	logging.InitLogrus(logging.LogLevel)
-	logging.SetupFileHook()
+	logging.SetupFileHook(constants.LogFilePath)
 }
 
 func runRoot() {

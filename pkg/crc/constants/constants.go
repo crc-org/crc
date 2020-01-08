@@ -25,6 +25,7 @@ const (
 	DefaultLogLevel      = "info"
 	ConfigFile           = "crc.json"
 	LogFile              = "crc.log"
+	DaemonLogFile        = "crcd.log"
 	GlobalStateFile      = "globalstate.json"
 	CrcLandingPageURL    = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
 	PullSecretFile       = "pullsecret.json"
@@ -65,6 +66,7 @@ var (
 	CrcBinDir          = filepath.Join(CrcBaseDir, "bin")
 	ConfigPath         = filepath.Join(CrcBaseDir, ConfigFile)
 	LogFilePath        = filepath.Join(CrcBaseDir, LogFile)
+	DaemonLogFilePath  = filepath.Join(CrcBaseDir, DaemonLogFile)
 	MachineBaseDir     = CrcBaseDir
 	MachineCertsDir    = filepath.Join(MachineBaseDir, "certs")
 	MachineCacheDir    = filepath.Join(MachineBaseDir, "cache")
