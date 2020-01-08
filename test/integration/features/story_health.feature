@@ -66,7 +66,7 @@ Feature:
     @darwin @linux @windows
     Scenario: Stop and start CRC, then check app still runs
         Given with up to "2" retries with wait period of "60s" http response from "http://httpd-ex-testproj.apps-crc.testing" has status code "200"
-        When executing "crc stop" succeeds
+        When executing "crc stop -f" succeeds
         Then with up to "4" retries with wait period of "2m" command "crc status" output should contain "Stopped"
         When starting CRC with default bundle and default hypervisor succeeds
         Then with up to "4" retries with wait period of "2m" command "crc status" output should match ".*Running \(v\d+\.\d+\.\d+.*\).*"
