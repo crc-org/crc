@@ -38,5 +38,5 @@ $ {bin} start --vm-driver virtualbox --bundle _path_to_system_bundle_
 [NOTE]
 ====
 * The cluster takes a minimum of four minutes to start the necessary containers and operators before serving a request.
-* If errors are encountered on the start, check the Troubleshooting section for potential solutions. 
+* If errors are encountered on the start, check the <<troubleshooting-codeready-containers_{context}>> section for potential solutions. 
 ====
