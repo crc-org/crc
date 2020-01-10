@@ -23,16 +23,17 @@ var ocEnvCmd = &cobra.Command{
 			errors.ExitWithMessage(1, "Error running the oc-env command: %s", err.Error())
 		}
 
-		proxyConfig, err := machine.GetProxyConfig(constants.DefaultName)
+		clusterConfig, err := machine.GetClusterConfig(constants.DefaultName)
 		if err != nil {
 			errors.Exit(1)
 		}
 		output.Outln(shell.GetPathEnvString(userShell, constants.CrcBinDir))
-		if proxyConfig.IsEnabled() {
-			output.Outln(shell.GetEnvString(userShell, "HTTP_PROXY", proxyConfig.HttpProxy))
-			output.Outln(shell.GetEnvString(userShell, "HTTPS_PROXY", proxyConfig.HttpsProxy))
-			output.Outln(shell.GetEnvString(userShell, "NO_PROXY", proxyConfig.GetNoProxyString()))
+		if clusterConfig.ProxyConfig.IsEnabled() {
+			output.Outln(shell.GetEnvString(userShell, "HTTP_PROXY", clusterConfig.ProxyConfig.HttpProxy))
+			output.Outln(shell.GetEnvString(userShell, "HTTPS_PROXY", clusterConfig.ProxyConfig.HttpsProxy))
+			output.Outln(shell.GetEnvString(userShell, "NO_PROXY", clusterConfig.ProxyConfig.GetNoProxyString()))
 		}
+		output.Outf("echo \"You can now login to the OpenShift cluster with 'oc login -p developer -u developer %s'\"\n", clusterConfig.ClusterAPI)
 		output.Outln(shell.GenerateUsageHint(userShell, "crc oc-env"))
 	},
 }

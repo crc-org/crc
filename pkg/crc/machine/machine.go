@@ -664,8 +664,8 @@ func addNameServerToInstance(sshRunner *crcssh.SSHRunner, ns string) error {
 	return nil
 }
 
-// Return proxy config if VM is present
-func GetProxyConfig(machineName string) (*network.ProxyConfig, error) {
+// Return cluster config if VM is present
+func GetClusterConfig(machineName string) (*ClusterConfig, error) {
 	// Here we are only checking if the VM exist and not the status of the VM.
 	// We might need to improve and use crc status logic, only
 	// return if the Openshift is running as part of status.
@@ -688,7 +688,7 @@ func GetProxyConfig(machineName string) (*network.ProxyConfig, error) {
 		return nil, errors.Newf("Error loading cluster configuration: %v", err)
 	}
 
-	return clusterConfig.ProxyConfig, nil
+	return &clusterConfig, nil
 }
 
 // Return console URL if the VM is present.
