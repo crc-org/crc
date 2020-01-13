@@ -90,6 +90,7 @@ var (
 			hyperkit.MachineDriverDownloadUrl,
 			hyperkit.HyperkitDownloadUrl,
 			constants.GetOcUrlForOs("darwin"),
+			constants.GetCrcTrayDownloadURL(),
 		},
 		"linux": []string{
 			libvirt.MachineDriverDownloadUrl,

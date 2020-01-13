@@ -39,6 +39,8 @@ var (
 
 const (
 	releaseInfoLink = "https://mirror.openshift.com/pub/openshift-v4/clients/crc/latest/release-info.json"
+	// Tray version to be embedded in binary
+	crcTrayVersion = "1.0.0-alpha"
 )
 
 type CrcReleaseInfo struct {
@@ -57,6 +59,10 @@ func GetCommitSha() string {
 
 func GetBundleVersion() string {
 	return bundleVersion
+}
+
+func GetCRCTrayVersion() string {
+	return crcTrayVersion
 }
 
 func getCRCLatestVersionFromMirror() (*semver.Version, error) {
