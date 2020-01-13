@@ -30,14 +30,14 @@ func checkIfRunningAsNormalUser() error {
 	return fmt.Errorf("crc should be ran as a normal user")
 }
 
-func extractBinary(binaryName string) (string, error) {
+func extractBinary(binaryName string, mode os.FileMode) (string, error) {
 	destPath := filepath.Join(constants.CrcBinDir, binaryName)
 	err := embed.Extract(binaryName, destPath)
 	if err != nil {
 		return "", err
 	}
 
-	err = os.Chmod(destPath, 0500)
+	err = os.Chmod(destPath, mode)
 	if err != nil {
 		os.Remove(destPath)
 		return "", err
