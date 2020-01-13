@@ -30,8 +30,9 @@ const (
 	CrcLandingPageURL    = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
 	PullSecretFile       = "pullsecret.json"
 
-	DefaultOcUrlBase   = "https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest"
-	CrcTrayDownloadURL = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
+	DefaultOcUrlBase     = "https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest"
+	DefaultPodmanUrlBase = "https://storage.googleapis.com/libpod-master-releases"
+	CrcTrayDownloadURL   = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
 )
 
 var ocUrlForOs = map[string]string{
@@ -46,6 +47,16 @@ func GetOcUrlForOs(os string) string {
 
 func GetOcUrl() string {
 	return GetOcUrlForOs(runtime.GOOS)
+}
+
+var PodmanUrlForOs = map[string]string{
+	"darwin":  fmt.Sprintf("%s/%s", DefaultPodmanUrlBase, "podman-remote-latest-master-darwin-amd64.zip"),
+	"linux":   fmt.Sprintf("%s/%s", DefaultPodmanUrlBase, "podman-remote-latest-master-linux---amd64.zip"),
+	"windows": fmt.Sprintf("%s/%s", DefaultPodmanUrlBase, "podman-remote-latest-master-windows-amd64.zip"),
+}
+
+func GetPodmanUrl() string {
+	return PodmanUrlForOs[runtime.GOOS]
 }
 
 var defaultBundleForOs = map[string]string{
