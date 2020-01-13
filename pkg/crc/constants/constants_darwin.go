@@ -3,8 +3,9 @@ package constants
 import "path/filepath"
 
 const (
-	OcBinaryName   = "oc"
-	TrayBinaryName = "CodeReady Containers.app"
+	OcBinaryName     = "oc"
+	PodmanBinaryName = "podman"
+	TrayBinaryName   = "CodeReady Containers.app"
 )
 
 var (

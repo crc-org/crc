@@ -1,5 +1,6 @@
 package constants
 
 const (
-	OcBinaryName = "oc.exe"
+	OcBinaryName     = "oc.exe"
+	PodmanBinaryName = "podman.exe"
 )

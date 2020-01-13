@@ -9,6 +9,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/oc"
+	"github.com/code-ready/crc/pkg/crc/podman"
 	"github.com/code-ready/crc/pkg/embed"
 )
 
@@ -18,6 +19,12 @@ var genericPreflightChecks = [...]PreflightCheck{
 		check:            checkOcBinaryCached,
 		fixDescription:   "Caching oc binary",
 		fix:              fixOcBinaryCached,
+	},
+	{
+		checkDescription: "Checking if podman remote binary is cached",
+		check:            checkPodmanBinaryCached,
+		fixDescription:   "Caching podman remote binary",
+		fix:              fixPodmanBinaryCached,
 	},
 	{
 		configKeySuffix:  "check-bundle-cached",
@@ -68,5 +75,24 @@ func fixOcBinaryCached() error {
 		return fmt.Errorf("Unable to download oc %v", err)
 	}
 	logging.Debug("oc binary cached")
+	return nil
+}
+
+// Check if podman binary is cached or not
+func checkPodmanBinaryCached() error {
+	podman := podman.PodmanCached{}
+	if !podman.IsCached() {
+		return errors.New("podman remote binary is not cached")
+	}
+	logging.Debug("podman remote binary already cached")
+	return nil
+}
+
+func fixPodmanBinaryCached() error {
+	podman := podman.PodmanCached{}
+	if err := podman.EnsureIsCached(); err != nil {
+		return fmt.Errorf("Unable to download podman remote binary %v", err)
+	}
+	logging.Debug("podman remote binary cached")
 	return nil
 }
