@@ -30,7 +30,8 @@ const (
 	CrcLandingPageURL    = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
 	PullSecretFile       = "pullsecret.json"
 
-	DefaultOcUrlBase = "https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest"
+	DefaultOcUrlBase   = "https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest"
+	CrcTrayDownloadURL = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
 )
 
 var ocUrlForOs = map[string]string{
@@ -115,4 +116,8 @@ func GetPublicKeyPath() string {
 
 func GetPrivateKeyPath() string {
 	return filepath.Join(MachineInstanceDir, DefaultName, "id_rsa")
+}
+
+func GetCrcTrayDownloadURL() string {
+	return fmt.Sprintf(CrcTrayDownloadURL, version.GetCRCTrayVersion())
 }
