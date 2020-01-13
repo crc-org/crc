@@ -93,3 +93,11 @@ func WriteFileIfContentChanged(path string, new_content []byte, perm os.FileMode
 	}
 	return true, nil
 }
+
+func FileExists(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil && os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
