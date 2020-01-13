@@ -18,6 +18,10 @@ var (
 )
 
 func OpenLogFile() (*os.File, error) {
+	err := constants.EnsureBaseDirExists()
+	if err != nil {
+		return nil, err
+	}
 	l, err := os.OpenFile(filepath.Join(constants.LogFilePath), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, err
