@@ -124,7 +124,7 @@ func extractOrDownloadBinary(url string) error {
 		return err
 	}
 	logging.Debugf("Installing %s", binaryName)
-	binaryPath, err := extractBinary(binaryName)
+	binaryPath, err := extractBinary(binaryName, 0755)
 	if err != nil {
 		binaryPath, err = download(url, constants.CrcBinDir, 0755)
 		if err != nil {
