@@ -39,6 +39,15 @@ var dnsPreflightChecks = [...]PreflightCheck{
 	},
 }
 
+var traySetupCheck = PreflightCheck{
+	configKeySuffix:  "check-tray-setup",
+	checkDescription: "Checking if the tray is installed and running",
+	check:            checkTrayExistsAndRunning,
+	fixDescription:   "Installing and setting up tray app",
+	fix:              fixTrayExistsAndRunning,
+	flags:            SetupOnly,
+}
+
 func getPreflightChecks() []PreflightCheck {
 	checks := []PreflightCheck{}
 
@@ -46,6 +55,7 @@ func getPreflightChecks() []PreflightCheck {
 	checks = append(checks, nonWinPreflightChecks[:]...)
 	checks = append(checks, hyperkitPreflightChecks[:]...)
 	checks = append(checks, dnsPreflightChecks[:]...)
+	checks = append(checks, traySetupCheck)
 
 	return checks
 }
