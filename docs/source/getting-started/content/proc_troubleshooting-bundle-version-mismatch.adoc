@@ -1,7 +1,10 @@
 [id="troubleshooting-bundle-version-mismatch_{context}"]
 = Troubleshooting bundle version mismatch
 
-As {prod} releases are set up and started, instances are created with bundle information and instance data.  When a new {prod} release is setup, the bundle information and instance data is not updated due to the customization in the previous instance data.  This will lead to errors on [command]`{bin} start` command. The error will be similar to this:
+As {prod} releases are set up and started, instances are created with bundle information and instance data.  
+When a new {prod} release is setup, the bundle information and instance data is not updated due to the customization in the previous instance data.  
+This will lead to errors on [command]`{bin} start` command. 
+The error will be similar to this:
 
 ----
 $ {bin} start
@@ -26,6 +29,7 @@ $ {bin} delete
 
 [NOTE]
 ====
-The [command]`{bin} delete` command will result in the loss of data stored in the {prod} virtual machine. Steps should be taken to save any instance information before issuing the command. 
+The [command]`{bin} delete` command will result in the loss of data stored in the {prod} virtual machine. 
+Steps should be taken to save any instance information before issuing the command. 
 ====
 
