@@ -30,5 +30,6 @@ $ {bin} start
 
 [NOTE]
 ====
-The cluster takes a minimum of four minutes to start the necessary containers and operators before serving a request.
+* The cluster takes a minimum of four minutes to start the necessary containers and operators before serving a request.
+* If errors are encountered on the start, check the <<troubleshooting-codeready-containers_{context}>> section for potential solutions. 
 ====

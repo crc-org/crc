@@ -11,8 +11,10 @@ This procedure will create the [filename]`~/.crc` directory if it does not alrea
 
 [NOTE]
 ====
-The `{bin}` binary should not be run as `root` (or Administrator).
+* The `{bin}` binary should not be run as `root` (or Administrator).
 The `{bin}` binary should always be run with your user account.
+* If you are setting up a new version, capture any changes made to the instance before 
+setting up a new {prod} release.  
 ====
 
 .Procedure
