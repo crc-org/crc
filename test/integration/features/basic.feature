@@ -91,11 +91,17 @@ Feature: Basic test
     Scenario: CRC start
         When starting CRC with default bundle and default hypervisor succeeds
         Then stdout should contain "Started the OpenShift cluster"
+        # Check if user can copy-paste login details for developer and kubeadmin users
+        And stdout should match "(?s)(.*)oc login -u developer -p developer https:\/\/api\.crc\.testing:6443(.*)$"
+        And stdout should match "(?s)(.*)oc login -u kubeadmin -p ([a-zA-Z0-9]{5}-){3}[a-zA-Z0-9]{5} https:\/\/api\.crc\.testing:6443(.*)$"
 
     @darwin
     Scenario: CRC start on Mac
         When starting CRC with default bundle and hypervisor "hyperkit" succeeds
         Then stdout should contain "Started the OpenShift cluster"
+        # Check if user can copy-paste login details for developer and kubeadmin users
+        And stdout should match "(?s)(.*)oc login -u developer -p developer https:\/\/api\.crc\.testing:6443(.*)$"
+        And stdout should match "(?s)(.*)oc login -u kubeadmin -p ([a-zA-Z0-9]{5}-){3}[a-zA-Z0-9]{5} https:\/\/api\.crc\.testing:6443(.*)$"
     
     @darwin @linux @windows
     Scenario: CRC status and disk space check
