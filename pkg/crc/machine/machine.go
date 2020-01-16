@@ -347,7 +347,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 
 	if needsCertsRenewal {
-		logging.Infof("Cluster TLS certificates have expired, renewing them...")
+		logging.Infof("Cluster TLS certificates have expired, renewing them... [will take up to 5 minutes]")
 		err = RegenerateCertificates(sshRunner, startConfig.Name)
 		if err != nil {
 			result.Error = err.Error()
