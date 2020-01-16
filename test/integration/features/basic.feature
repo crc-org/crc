@@ -81,7 +81,7 @@ Feature: Basic test
     Scenario: CRC setup on Windows
         When executing "crc setup" succeeds
         Then stdout should contain "Caching oc binary"
-        Then stdout should contain "Unpacking bundle from the CRC binary"
+        Then stdout should contain "Unpacking bundle from the CRC binary" if bundle is embedded
         Then stdout should contain "Checking Windows 10 release"
         Then stdout should contain "Checking if Hyper-V is installed"
         Then stdout should contain "Checking if user is a member of the Hyper-V Administrators group"
