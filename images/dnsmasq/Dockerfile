@@ -1,4 +1,4 @@
-FROM centos:7
+FROM centos:8
 MAINTAINER CodeReady Container <devtools-cdk@redhat.com>
 
 RUN yum -y install dnsmasq && \
