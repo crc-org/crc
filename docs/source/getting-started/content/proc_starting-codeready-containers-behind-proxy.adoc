@@ -1,0 +1,31 @@
+[id="starting-codeready-containers-behind-proxy_{context}"]
+= Starting {prod} behind a proxy
+
+.Prerequisites
+
+* To use an existing [command]`oc` binary on your host machine, export the `.testing` domain as part of the `no_proxy` environment variable.
+
+* No manual settings are required to use the embedded [command]`oc` binary.
+For more information on using the embedded [command]`oc` binary, see <<accessing-the-openshift-cluster_{context}>>.
+
+
+.Procedure
+
+* To start {prod} behind a proxy:
+
+  . Define a proxy using the `http_proxy` and `https_proxy` environment variables or using the [command]`{bin} config set` command as follows:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} config set http-proxy http://example.proxy.com:__<port>__
+$ {bin} config set https-proxy http://example.proxy.com:__<port>__
+$ {bin} config set no-proxy __<comma-separated-no-proxy-entries>__
+----
++
+The [command]`{bin}` binary will be able to use the defined proxy once set via environment variables or {prod} configuration.
+
+[NOTE]
+====
+* Proxy-related values set in the configuration for {prod} have priority over values set via environment variables.
+* SOCKS proxies are not supported by OpenShift Container Platform.
+====
