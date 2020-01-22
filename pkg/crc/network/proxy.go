@@ -17,7 +17,7 @@ var (
 type ProxyConfig struct {
 	HttpProxy  string
 	HttpsProxy string
-	NoProxy    []string
+	noProxy    []string
 }
 
 func NewProxyDefaults(httpProxy, httpsProxy, noProxy string) (*ProxyConfig, error) {
@@ -48,9 +48,9 @@ func NewProxyConfig() (*ProxyConfig, error) {
 		HttpsProxy: DefaultProxy.HttpsProxy,
 	}
 
-	config.NoProxy = defaultNoProxies
-	if len(DefaultProxy.NoProxy) != 0 {
-		config.AddNoProxy(DefaultProxy.NoProxy...)
+	config.noProxy = defaultNoProxies
+	if len(DefaultProxy.noProxy) != 0 {
+		config.AddNoProxy(DefaultProxy.noProxy...)
 	}
 
 	err := ValidateProxyURL(config.HttpProxy)
@@ -88,18 +88,18 @@ func (p *ProxyConfig) HttpsProxyForDisplay() string {
 
 // AddNoProxy appends the specified host to the list of no proxied hosts.
 func (p *ProxyConfig) AddNoProxy(host ...string) {
-	p.NoProxy = append(p.NoProxy, host...)
+	p.noProxy = append(p.noProxy, host...)
 }
 
 func (p *ProxyConfig) setNoProxyString(noProxies string) {
 	if noProxies == "" {
 		return
 	}
-	p.NoProxy = strings.Split(noProxies, ",")
+	p.noProxy = strings.Split(noProxies, ",")
 }
 
 func (p *ProxyConfig) GetNoProxyString() string {
-	return strings.Join(p.NoProxy, ",")
+	return strings.Join(p.noProxy, ",")
 }
 
 // Sets the current config as environment variables in the current process.
@@ -116,7 +116,7 @@ func (p *ProxyConfig) ApplyToEnvironment() {
 		os.Setenv("HTTPS_PROXY", p.HttpsProxy)
 		os.Setenv("https_proxy", p.HttpsProxy)
 	}
-	if len(p.NoProxy) != 0 {
+	if len(p.noProxy) != 0 {
 		os.Setenv("NO_PROXY", p.GetNoProxyString())
 		os.Setenv("no_proxy", p.GetNoProxyString())
 	}

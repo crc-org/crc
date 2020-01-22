@@ -100,8 +100,8 @@ func setProxyDefaults() {
 	}
 
 	if proxyConfig.IsEnabled() {
-		logging.Debugf("HTTP-PROXY: %s, HTTPS-PROXY: %s, NO-PROXY: %v", proxyConfig.HttpProxyForDisplay(),
-			proxyConfig.HttpsProxyForDisplay(), proxyConfig.NoProxy)
+		logging.Debugf("HTTP-PROXY: %s, HTTPS-PROXY: %s, NO-PROXY: %s", proxyConfig.HttpProxyForDisplay(),
+			proxyConfig.HttpsProxyForDisplay(), proxyConfig.GetNoProxyString())
 		proxyConfig.ApplyToEnvironment()
 	}
 }
