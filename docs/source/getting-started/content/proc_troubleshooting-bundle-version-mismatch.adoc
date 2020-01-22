@@ -6,6 +6,7 @@ When a new {prod} release is setup, the bundle information and instance data is 
 This will lead to errors on [command]`{bin} start` command. 
 The error will be similar to this:
 
+[subs="+quotes,attributes"]
 ----
 $ {bin} start
 INFO Checking if running as non-root
