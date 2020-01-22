@@ -141,7 +141,7 @@ func StopAndRemovePodsInVM(sshRunner *ssh.SSHRunner) error {
 
 func AddProxyConfigToCluster(oc oc.OcConfig, proxy *network.ProxyConfig) error {
 	cmdArgs := []string{"patch", "proxy", "cluster", "-p",
-		fmt.Sprintf(`{"spec":{"httpProxy":"%s", "httpsProxy":"%s", "noProxy":"%s"}}`, proxy.HttpProxy, proxy.HttpsProxy, proxy.NoProxy),
+		fmt.Sprintf(`{"spec":{"httpProxy":"%s", "httpsProxy":"%s", "noProxy":"%s"}}`, proxy.HttpProxy, proxy.HttpsProxy, proxy.GetNoProxyString()),
 		"-n", "openshift-config", "--type", "merge"}
 
 	if err := oc.WaitForOpenshiftResource("proxy"); err != nil {
