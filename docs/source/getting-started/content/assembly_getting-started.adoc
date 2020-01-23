@@ -9,6 +9,8 @@ include::ref_required-software-packages.adoc[leveloffset=+1]
 
 include::proc_installing-codeready-containers.adoc[leveloffset=+1]
 
+include::proc_upgrading-codeready-containers.adoc[leveloffset=+1]
+
 include::proc_setting-up-codeready-containers.adoc[leveloffset=+1]
 
 include::proc_starting-the-virtual-machine.adoc[leveloffset=+1]
