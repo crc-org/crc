@@ -798,6 +798,11 @@ func configProxyForCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, sd
 		return err
 	}
 
+	logging.Info("Adding proxy configuration to marketplace operator ...")
+	if err := cluster.AddProxyConfigToMarketplaceOperator(ocConfig, proxy); err != nil {
+		return err
+	}
+
 	logging.Info("Adding proxy configuration to kubelet and crio service ...")
 	if err := cluster.AddProxyToKubeletAndCriO(sshRunner, proxy); err != nil {
 		return err

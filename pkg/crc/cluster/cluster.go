@@ -176,6 +176,21 @@ Environment=NO_PROXY=.cluster.local,.svc,10.128.0.0/14,172.30.0.0/16,%s`
 	return nil
 }
 
+// Only marketplace operator doesn't get updated with proxy when it is set using proxy resource
+// All other operators which have `config.openshift.io/inject-proxy` annotation get updated except marketplace.
+func AddProxyConfigToMarketplaceOperator(oc oc.OcConfig, proxy *network.ProxyConfig) error {
+	cmdArgs := []string{"set", "env", "deployment", "marketplace-operator", "-n", "openshift-marketplace",
+		fmt.Sprintf(`HTTP_PROXY="%s", HTTPS_PROXY="%s", NO_PROXY="%s"}}`, proxy.HttpProxy, proxy.HttpsProxy, proxy.GetNoProxyString()),
+	}
+	if err := oc.WaitForOpenshiftResource("deployment"); err != nil {
+		return err
+	}
+	if _, stderr, err := oc.RunOcCommand(cmdArgs...); err != nil {
+		return fmt.Errorf("Failed to add proxy details to marketplace-operator %v: %s", err, stderr)
+	}
+	return nil
+}
+
 func addPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error {
 	_, err := sshRunner.RunPrivate(fmt.Sprintf("cat <<EOF | sudo tee /var/lib/kubelet/config.json\n%s\nEOF", pullSec))
 	if err != nil {
