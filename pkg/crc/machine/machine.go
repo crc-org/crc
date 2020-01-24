@@ -290,6 +290,13 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		return *result, errors.Newf("Error determining host IP: %v", err)
 	}
 
+	proxyConfig, err := getProxyConfig(crcBundleMetadata.ClusterInfo.BaseDomain)
+	if err != nil {
+		result.Error = err.Error()
+		return *result, errors.Newf("Error getting proxy configuration: %v", err)
+	}
+	proxyConfig.ApplyToEnvironment()
+
 	// Create servicePostStartConfig for DNS checks and DNS start.
 	servicePostStartConfig := services.ServicePostStartConfig{
 		Name:       startConfig.Name,
@@ -357,7 +364,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	ocConfig := oc.UseOCWithConfig(startConfig.Name)
 	if !exists {
-		if err := configureCluster(ocConfig, sshRunner, crcBundleMetadata.ClusterInfo.BaseDomain, pullSecret, instanceIP); err != nil {
+		if err := configureCluster(ocConfig, sshRunner, proxyConfig, pullSecret, instanceIP); err != nil {
 			result.Error = err.Error()
 			return *result, errors.Newf("Error Setting cluster config: %s", err)
 		}
@@ -713,7 +720,7 @@ func updateSSHKeyPair(sshRunner *crcssh.SSHRunner) error {
 	return err
 }
 
-func configureCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, baseDomainName, pullSecret, instanceIP string) (rerr error) {
+func configureCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, proxyConfig *network.ProxyConfig, pullSecret, instanceIP string) (rerr error) {
 	sd := systemd.NewInstanceSystemdCommander(sshRunner)
 	if _, err := sd.Start("kubelet"); err != nil {
 		return fmt.Errorf("Error starting kubelet: %s", err)
@@ -728,7 +735,7 @@ func configureCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, baseDom
 			rerr = err
 		}
 	}()
-	if err := configProxyForCluster(ocConfig, sshRunner, sd, baseDomainName, instanceIP); err != nil {
+	if err := configProxyForCluster(ocConfig, sshRunner, sd, proxyConfig, instanceIP); err != nil {
 		return fmt.Errorf("Failed to configure proxy for cluster: %v", err)
 	}
 
@@ -757,11 +764,7 @@ func getProxyConfig(baseDomainName string) (*network.ProxyConfig, error) {
 }
 
 func configProxyForCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, sd *systemd.InstanceSystemdCommander,
-	baseDomainName, instanceIP string) (err error) {
-	proxy, err := getProxyConfig(baseDomainName)
-	if err != nil {
-		return err
-	}
+	proxy *network.ProxyConfig, instanceIP string) (err error) {
 	if proxy.IsEnabled() {
 		defer func() {
 			// Restart the crio service
@@ -773,7 +776,6 @@ func configProxyForCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, sd
 				}
 			}
 		}()
-		proxy.ApplyToEnvironment()
 
 		logging.Info("Adding proxy configuration to the cluster ...")
 		proxy.AddNoProxy(instanceIP)
