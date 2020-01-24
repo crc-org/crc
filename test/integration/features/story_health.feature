@@ -9,7 +9,7 @@ Feature:
         When starting CRC with default bundle and hypervisor "<vm-driver>" succeeds
         Then stdout should contain "Started the OpenShift cluster"
         And executing "eval $(crc oc-env)" succeeds
-        When with up to "4" retries with wait period of "2m" command "crc status --log-level debug" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
+        When with up to "8" retries with wait period of "2m" command "crc status --log-level debug" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
         Then login to the oc cluster succeeds
 
     @darwin
@@ -28,7 +28,7 @@ Feature:
         When starting CRC with default bundle and nameserver "10.75.5.25" succeeds
         Then stdout should contain "Started the OpenShift cluster"
         And executing "crc oc-env | Invoke-Expression" succeeds
-        When with up to "4" retries with wait period of "2m" command "crc status --log-level debug" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
+        When with up to "8" retries with wait period of "2m" command "crc status --log-level debug" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
         Then login to the oc cluster succeeds
 
     @linux @darwin @windows    
@@ -39,7 +39,7 @@ Feature:
         Then stdout contains "Ready" 
         And stdout does not contain "Not ready"
         # next line checks similar things as `crc status` except gives more informative output
-        And with up to "5" retries with wait period of "1m" all cluster operators are running
+        And with up to "8" retries with wait period of "2m" all cluster operators are running
 
     @darwin @linux @windows
     Scenario: Create project
@@ -67,9 +67,9 @@ Feature:
     Scenario: Stop and start CRC, then check app still runs
         Given with up to "2" retries with wait period of "60s" http response from "http://httpd-ex-testproj.apps-crc.testing" has status code "200"
         When executing "crc stop -f" succeeds
-        Then with up to "4" retries with wait period of "2m" command "crc status --log-level debug" output should contain "Stopped"
+        Then with up to "8" retries with wait period of "2m" command "crc status --log-level debug" output should contain "Stopped"
         When starting CRC with default bundle and default hypervisor succeeds
-        Then with up to "4" retries with wait period of "2m" command "crc status --log-level debug" output should match ".*Running \(v\d+\.\d+\.\d+.*\).*"
+        Then with up to "8" retries with wait period of "2m" command "crc status --log-level debug" output should match ".*Running \(v\d+\.\d+\.\d+.*\).*"
         And with up to "2" retries with wait period of "60s" http response from "http://httpd-ex-testproj.apps-crc.testing" has status code "200"
 
     @darwin @linux @windows
