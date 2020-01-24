@@ -69,6 +69,7 @@ func NewOcConfig(runner OcRunner, context string, clusterName string) OcConfig {
 }
 
 func (oc OcConfig) WaitForOpenshiftResource(resource string) error {
+	logging.Debugf("Waiting for availability of resource type '%s'", resource)
 	waitForApiServer := func() error {
 		stdout, stderr, err := oc.RunOcCommand("get", resource)
 		if err != nil {
@@ -87,6 +88,8 @@ func (oc OcConfig) ApproveNodeCSR() error {
 	if err != nil {
 		return err
 	}
+
+	logging.Debug("Approving pending CSRs")
 	// Execute 'oc get csr -oname' and store the output
 	csrsJson, stderr, err := oc.RunOcCommand("get", "csr", "-ojson")
 	if err != nil {
