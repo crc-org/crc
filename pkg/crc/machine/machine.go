@@ -765,28 +765,31 @@ func getProxyConfig(baseDomainName string) (*network.ProxyConfig, error) {
 
 func configProxyForCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, sd *systemd.InstanceSystemdCommander,
 	proxy *network.ProxyConfig, instanceIP string) (err error) {
-	if proxy.IsEnabled() {
-		defer func() {
-			// Restart the crio service
-			if proxy.IsEnabled() {
-				// Restart reload the daemon and then restart the service
-				// So no need to explicit reload the daemon.
-				if _, ferr := sd.Restart("crio"); ferr != nil {
-					err = ferr
-				}
-			}
-		}()
-
-		logging.Info("Adding proxy configuration to the cluster ...")
-		proxy.AddNoProxy(instanceIP)
-		if err := cluster.AddProxyConfigToCluster(ocConfig, proxy); err != nil {
-			return err
-		}
-
-		logging.Info("Adding proxy configuration to kubelet and crio service ...")
-		if err := cluster.AddProxyToKubeletAndCriO(sshRunner, proxy); err != nil {
-			return err
-		}
+	if !proxy.IsEnabled() {
+		return nil
 	}
+
+	defer func() {
+		// Restart the crio service
+		if proxy.IsEnabled() {
+			// Restart reload the daemon and then restart the service
+			// So no need to explicit reload the daemon.
+			if _, ferr := sd.Restart("crio"); ferr != nil {
+				err = ferr
+			}
+		}
+	}()
+
+	logging.Info("Adding proxy configuration to the cluster ...")
+	proxy.AddNoProxy(instanceIP)
+	if err := cluster.AddProxyConfigToCluster(ocConfig, proxy); err != nil {
+		return err
+	}
+
+	logging.Info("Adding proxy configuration to kubelet and crio service ...")
+	if err := cluster.AddProxyToKubeletAndCriO(sshRunner, proxy); err != nil {
+		return err
+	}
+
 	return nil
 }
