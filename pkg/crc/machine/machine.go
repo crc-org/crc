@@ -537,6 +537,18 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 	}
 
 	if IsRunning(vmStatus) {
+		_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
+		if err != nil {
+			result.Error = err.Error()
+			return *result, errors.Newf("Error loading bundle metadata: %v", err)
+		}
+		proxyConfig, err := getProxyConfig(crcBundleMetadata.ClusterInfo.BaseDomain)
+		if err != nil {
+			result.Error = err.Error()
+			return *result, errors.Newf("Error getting proxy configuration: %v", err)
+		}
+		proxyConfig.ApplyToEnvironment()
+
 		// check if all the clusteroperators are running
 		ocConfig := oc.UseOCWithConfig(statusConfig.Name)
 		operatorsRunning, err := oc.GetClusterOperatorStatus(ocConfig)
