@@ -16,6 +16,8 @@ import (
 func init() {
 	setupCmd.Flags().StringVarP(&vmDriver, config.VMDriver.Name, "d",
 		machine.DefaultDriver.Driver, fmt.Sprintf("The driver to use for the OpenShift cluster. Possible values: %v", machine.SupportedDriverValues()))
+	setupCmd.Flags().Bool(config.ExperimentalFeatures.Name, false, "Allow the use of experimental features")
+
 	rootCmd.AddCommand(setupCmd)
 }
 
