@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
+	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -33,6 +34,10 @@ var setupCmd = &cobra.Command{
 func runSetup(arguments []string) {
 	if err := validateSetupFlags(); err != nil {
 		errors.Exit(1)
+	}
+
+	if crcConfig.GetBool(config.ExperimentalFeatures.Name) {
+		preflight.EnableExperimentalFeatures = true
 	}
 	preflight.SetupHost()
 	var bundle string

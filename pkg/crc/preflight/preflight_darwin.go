@@ -55,7 +55,11 @@ func getPreflightChecks() []PreflightCheck {
 	checks = append(checks, nonWinPreflightChecks[:]...)
 	checks = append(checks, hyperkitPreflightChecks[:]...)
 	checks = append(checks, dnsPreflightChecks[:]...)
-	checks = append(checks, traySetupCheck)
+
+	// Experimental feature
+	if EnableExperimentalFeatures {
+		checks = append(checks, traySetupCheck)
+	}
 
 	return checks
 }
