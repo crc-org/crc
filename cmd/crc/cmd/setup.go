@@ -35,6 +35,10 @@ func runSetup(arguments []string) {
 	if err := validateSetupFlags(); err != nil {
 		errors.Exit(1)
 	}
+
+	if crcConfig.GetBool(config.ExperimentalFeatures.Name) {
+		preflight.EnableExperimentalFeatures = true
+	}
 	preflight.SetupHost()
 	var bundle string
 	if !constants.BundleEmbedded() {
