@@ -10,6 +10,9 @@ import (
 
 type PreflightCheckFlags uint32
 
+// Enables the use of experimental features
+var EnableExperimentalFeatures bool
+
 const (
 	// Indicates a PreflightCheck should only be run as part of "crc setup"
 	SetupOnly PreflightCheckFlags = 1 << iota
