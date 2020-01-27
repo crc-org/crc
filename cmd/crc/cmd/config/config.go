@@ -19,7 +19,8 @@ var (
 	NameServer     = cfg.AddSetting("nameserver", nil, []cfg.ValidationFnType{cfg.ValidateIpAddress}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	PullSecretFile = cfg.AddSetting("pull-secret-file", nil, []cfg.ValidationFnType{cfg.ValidatePath}, []cfg.SetFn{cfg.SuccessfullyApplied})
 
-	DisableUpdateCheck = cfg.AddSetting("disable-update-check", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	DisableUpdateCheck   = cfg.AddSetting("disable-update-check", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	ExperimentalFeatures = cfg.AddSetting("enable-experimental-features", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 
 	// Proxy Configuration
 	HttpProxy  = cfg.AddSetting("http-proxy", nil, []cfg.ValidationFnType{cfg.ValidateURI}, []cfg.SetFn{cfg.SuccessfullyApplied})

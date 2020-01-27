@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
+	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -16,6 +17,8 @@ import (
 func init() {
 	setupCmd.Flags().StringVarP(&vmDriver, config.VMDriver.Name, "d",
 		machine.DefaultDriver.Driver, fmt.Sprintf("The driver to use for the OpenShift cluster. Possible values: %v", machine.SupportedDriverValues()))
+	setupCmd.Flags().Bool(config.ExperimentalFeatures.Name, false, "Allow the use of experimental features")
+	_ = crcConfig.BindFlagSet(setupCmd.Flags())
 	rootCmd.AddCommand(setupCmd)
 }
 
