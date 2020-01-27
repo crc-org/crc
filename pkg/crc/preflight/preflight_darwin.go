@@ -40,7 +40,6 @@ var dnsPreflightChecks = [...]PreflightCheck{
 }
 
 var traySetupCheck = PreflightCheck{
-	configKeySuffix:  "",
 	checkDescription: "Checking if the tray is installed and running",
 	check:            checkTrayExistsAndRunning,
 	fixDescription:   "Installing and setting up tray app",
