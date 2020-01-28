@@ -52,7 +52,6 @@ func runStart(arguments []string) {
 	startConfig := machine.StartConfig{
 		Name:          constants.DefaultName,
 		BundlePath:    crcConfig.GetString(config.Bundle.Name),
-		VMDriver:      crcConfig.GetString(config.VMDriver.Name),
 		Memory:        crcConfig.GetInt(config.Memory.Name),
 		CPUs:          crcConfig.GetInt(config.CPUs.Name),
 		NameServer:    crcConfig.GetString(config.NameServer.Name),
@@ -76,7 +75,6 @@ func runStart(arguments []string) {
 func initStartCmdFlagSet() *pflag.FlagSet {
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
 	flagSet.StringP(config.Bundle.Name, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster")
-	flagSet.StringP(config.VMDriver.Name, "d", machine.DefaultDriver.Driver, fmt.Sprintf("The driver to use for the OpenShift cluster. Possible values: %v", machine.SupportedDriverValues()))
 	flagSet.StringP(config.PullSecretFile.Name, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
 	flagSet.IntP(config.CPUs.Name, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the OpenShift cluster")
 	flagSet.IntP(config.Memory.Name, "m", constants.DefaultMemory, "MiB of memory to allocate to the OpenShift cluster")
@@ -91,9 +89,6 @@ func isDebugLog() bool {
 }
 
 func validateStartFlags() error {
-	if err := validation.ValidateDriver(crcConfig.GetString(config.VMDriver.Name)); err != nil {
-		return err
-	}
 	if err := validation.ValidateMemory(crcConfig.GetInt(config.Memory.Name)); err != nil {
 		return err
 	}

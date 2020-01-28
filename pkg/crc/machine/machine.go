@@ -113,13 +113,13 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	// Pre-VM start
 	var privateKeyPath string
 	var pullSecret string
-	driverInfo, _ := getDriverInfo(startConfig.VMDriver)
+	driverInfo := DefaultDriver
 	exists, err := MachineExists(startConfig.Name)
 	if !exists {
 		machineConfig := config.MachineConfig{
 			Name:       startConfig.Name,
 			BundleName: filepath.Base(startConfig.BundlePath),
-			VMDriver:   startConfig.VMDriver,
+			VMDriver:   driverInfo.Driver,
 			CPUs:       startConfig.CPUs,
 			Memory:     startConfig.Memory,
 		}
@@ -181,12 +181,6 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		if bundleName != filepath.Base(startConfig.BundlePath) {
 			logging.Fatalf("Bundle '%s' was requested, but the existing VM is using '%s'",
 				filepath.Base(startConfig.BundlePath), bundleName)
-		}
-		if host.Driver.DriverName() != startConfig.VMDriver {
-			err := errors.Newf("VM driver '%s' was requested, but the existing VM is using '%s' instead",
-				startConfig.VMDriver, host.Driver.DriverName())
-			result.Error = err.Error()
-			return *result, err
 		}
 		vmState, err := host.Driver.GetState()
 		if err != nil {

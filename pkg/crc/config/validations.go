@@ -22,14 +22,6 @@ func ValidateBool(value interface{}) (bool, string) {
 	return false, "must be true or false"
 }
 
-// ValidateDriver checks if driver is valid in the config
-func ValidateDriver(value interface{}) (bool, string) {
-	if err := validation.ValidateDriver(value.(string)); err != nil {
-		return false, err.Error()
-	}
-	return true, ""
-}
-
 // ValidateCPUs checks if provided cpus count is valid in the config
 func ValidateCPUs(value interface{}) (bool, string) {
 	v, err := strconv.Atoi(value.(string))

@@ -1,8 +1,6 @@
 package machine
 
 import (
-	"github.com/code-ready/crc/pkg/crc/errors"
-
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
@@ -24,13 +22,4 @@ func SupportedDriverValues() []string {
 		supportedDrivers = append(supportedDrivers, d.Driver)
 	}
 	return supportedDrivers
-}
-
-func getDriverInfo(driver string) (*MachineDriver, error) {
-	for _, d := range SupportedDrivers {
-		if driver == d.Driver {
-			return &d, nil
-		}
-	}
-	return nil, errors.Newf("No info about unknown driver: %s", driver)
 }
