@@ -6,13 +6,11 @@ import (
 
 	cfg "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/spf13/cobra"
 )
 
 var (
 	// Start command settings in config
-	VMDriver       = cfg.AddSetting("vm-driver", machine.DefaultDriver.Driver, []cfg.ValidationFnType{cfg.ValidateDriver}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	Bundle         = cfg.AddSetting("bundle", nil, []cfg.ValidationFnType{cfg.ValidateBundle}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	CPUs           = cfg.AddSetting("cpus", constants.DefaultCPUs, []cfg.ValidationFnType{cfg.ValidateCPUs}, []cfg.SetFn{cfg.RequiresRestartMsg})
 	Memory         = cfg.AddSetting("memory", constants.DefaultMemory, []cfg.ValidationFnType{cfg.ValidateMemory}, []cfg.SetFn{cfg.RequiresRestartMsg})

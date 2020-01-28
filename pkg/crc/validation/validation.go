@@ -11,18 +11,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/machine"
 )
-
-// Validate the given driver is supported or not
-func ValidateDriver(driver string) error {
-	for _, d := range machine.SupportedDriverValues() {
-		if driver == d {
-			return nil
-		}
-	}
-	return errors.Newf("Unsupported driver: %s, use '--vm-driver' option to provide a supported driver %s\n", driver, machine.SupportedDriverValues())
-}
 
 // ValidateCPUs checks if provided cpus count is valid
 func ValidateCPUs(value int) error {

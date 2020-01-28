@@ -32,7 +32,6 @@ func startHandler(_ ArgsType) string {
 	startConfig := machine.StartConfig{
 		Name:          constants.DefaultName,
 		BundlePath:    crcConfig.GetString(config.Bundle.Name),
-		VMDriver:      crcConfig.GetString(config.VMDriver.Name),
 		Memory:        crcConfig.GetInt(config.Memory.Name),
 		CPUs:          crcConfig.GetInt(config.CPUs.Name),
 		NameServer:    crcConfig.GetString(config.NameServer.Name),

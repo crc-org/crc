@@ -14,9 +14,8 @@ type StartConfig struct {
 	BundlePath string
 
 	// Hypervisor
-	VMDriver string
-	Memory   int
-	CPUs     int
+	Memory int
+	CPUs   int
 
 	// Nameserver
 	NameServer string
