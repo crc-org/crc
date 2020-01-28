@@ -14,7 +14,7 @@
 
 BUNDLE_VERSION = 4.3.0
 BUNDLE_EXTENSION = crcbundle
-CRC_VERSION = 1.5.0
+CRC_VERSION = 1.6.0-dev
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 
 # Go and compilation related variables
