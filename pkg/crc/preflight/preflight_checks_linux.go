@@ -305,19 +305,11 @@ func fixOldMachineDriverLibvirtInstalled() error {
 
 func checkLibvirtCrcNetworkAvailable() error {
 	logging.Debug("Checking if libvirt 'crc' network exists")
-	stdOut, stdErr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-list")
+	_, stdErr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-info", "crc")
 	if err != nil {
-		return fmt.Errorf("%+v: %s", err, stdErr)
+		return errors.New("Libvirt network crc not found")
 	}
-	outputSlice := strings.Split(stdOut, "\n")
-	for _, stdOut = range outputSlice {
-		stdOut = strings.TrimSpace(stdOut)
-		if strings.HasPrefix(stdOut, "crc") {
-			logging.Debug("libvirt 'crc' network exists")
-			return nil
-		}
-	}
-	return errors.New("Libvirt network crc not found")
+	return nil
 }
 
 func fixLibvirtCrcNetworkAvailable() error {
@@ -358,7 +350,7 @@ func fixLibvirtCrcNetworkAvailable() error {
 
 func checkLibvirtCrcNetworkActive() error {
 	logging.Debug("Checking if libvirt 'crc' network is active")
-	stdOut, stdErr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-list")
+	stdOut, stdErr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-info", "crc")
 	if err != nil {
 		return fmt.Errorf("%+v: %s", err, stdErr)
 	}
@@ -366,7 +358,7 @@ func checkLibvirtCrcNetworkActive() error {
 
 	for _, stdOut = range outputSlice {
 		stdOut = strings.TrimSpace(stdOut)
-		if strings.HasPrefix(stdOut, "crc") && strings.Contains(stdOut, "active") {
+		if strings.HasPrefix(stdOut, "Active") && strings.Contains(stdOut, "yes") {
 			logging.Debug("libvirt 'crc' network is already active")
 			return nil
 		}
