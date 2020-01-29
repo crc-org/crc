@@ -305,30 +305,41 @@ func fixOldMachineDriverLibvirtInstalled() error {
 
 func checkLibvirtCrcNetworkAvailable() error {
 	logging.Debug("Checking if libvirt 'crc' network exists")
-	_, stdErr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-info", "crc")
+	_, _, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-info", "crc")
 	if err != nil {
 		return errors.New("Libvirt network crc not found")
 	}
-	return nil
+
+	return checkLibvirtCrcNetworkDefinition()
 }
 
-func fixLibvirtCrcNetworkAvailable() error {
-	logging.Debug("Creating libvirt 'crc' network")
+func getLibvirtNetworkXml() (string, error) {
 	config := libvirt.NetworkConfig{
 		NetworkName: libvirt.DefaultNetwork,
 		MAC:         libvirt.MACAddress,
 		IP:          libvirt.IPAddress,
 	}
-
 	t, err := template.New("netxml").Parse(libvirt.NetworkTemplate)
 	if err != nil {
-		return err
+		return "", err
 	}
 	var netXMLDef strings.Builder
 	err = t.Execute(&netXMLDef, config)
 	if err != nil {
+		return "", err
+	}
+
+	return netXMLDef.String(), nil
+}
+
+func fixLibvirtCrcNetworkAvailable() error {
+	logging.Debug("Creating libvirt 'crc' network")
+
+	netXMLDef, err := getLibvirtNetworkXml()
+	if err != nil {
 		return err
 	}
+
 	// For time being we are going to override the crc network according what we have in our binary template.
 	// We also don't care about the error or output from those commands atm.
 	cmd := exec.Command("virsh", "--connect", "qemu:///system", "net-destroy", libvirt.DefaultNetwork)
@@ -337,7 +348,7 @@ func fixLibvirtCrcNetworkAvailable() error {
 	_ = cmd.Run()
 	// Create the network according to our defined template
 	cmd = exec.Command("virsh", "--connect", "qemu:///system", "net-define", "/dev/stdin")
-	cmd.Stdin = strings.NewReader(netXMLDef.String())
+	cmd.Stdin = strings.NewReader(netXMLDef)
 	buf := new(bytes.Buffer)
 	cmd.Stderr = buf
 	err = cmd.Run()
@@ -345,6 +356,42 @@ func fixLibvirtCrcNetworkAvailable() error {
 		return fmt.Errorf("%v : %s", err, buf.String())
 	}
 	logging.Debug("libvirt 'crc' network created")
+	return nil
+}
+
+func trimSpacesFromXML(str string) string {
+	strs := strings.Split(str, "\n")
+	var builder strings.Builder
+	for _, s := range strs {
+		builder.WriteString(strings.TrimSpace(s))
+	}
+
+	return builder.String()
+}
+
+func checkLibvirtCrcNetworkDefinition() error {
+	logging.Debug("Checking if libvirt 'crc' definition is up to date")
+	stdOut, stdErr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-dumpxml", "--inactive", "crc")
+	if err != nil {
+		logging.Debugf("Failed to get 'crc' network XML: %s", err)
+		return fmt.Errorf("%+v: %s", err, stdErr)
+	}
+	stdOut = trimSpacesFromXML(stdOut)
+
+	netXMLDef, err := getLibvirtNetworkXml()
+	if err != nil {
+		logging.Debugf("Failed to generate 'crc' network XML from template: %s", err)
+		return err
+	}
+	netXMLDef = trimSpacesFromXML(netXMLDef)
+
+	if stdOut != netXMLDef {
+		logging.Debugf("libvirt 'crc' network definition does not have the expected value")
+		logging.Debugf("expected: %s", netXMLDef)
+		logging.Debugf("current: %s", stdOut)
+		return fmt.Errorf("libvirt 'crc' network definition is incorrect")
+	}
+	logging.Debugf("libvirt 'crc' network has the expected value")
 	return nil
 }
 
