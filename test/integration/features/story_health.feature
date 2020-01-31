@@ -9,8 +9,8 @@ Feature:
         Given executing "crc setup" succeeds
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
+        When with up to "15" retries with wait period of "1m" command "crc status --log-level debug" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
         And executing "eval $(crc oc-env)" succeeds
-        When with up to "4" retries with wait period of "2m" command "crc status --log-level debug" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
         Then login to the oc cluster succeeds
 
     @windows
@@ -18,8 +18,8 @@ Feature:
         Given executing "crc setup" succeeds
         When starting CRC with default bundle and nameserver "10.75.5.25" succeeds
         Then stdout should contain "Started the OpenShift cluster"
+        When with up to "15" retries with wait period of "1m" command "crc status --log-level debug" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
         And executing "crc oc-env | Invoke-Expression" succeeds
-        When with up to "4" retries with wait period of "2m" command "crc status --log-level debug" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
         Then login to the oc cluster succeeds
 
     @linux @darwin @windows    
@@ -60,7 +60,7 @@ Feature:
         When executing "crc stop -f" succeeds
         Then with up to "4" retries with wait period of "2m" command "crc status" output should contain "Stopped"
         When starting CRC with default bundle succeeds
-        Then with up to "4" retries with wait period of "2m" command "crc status" output should match ".*Running \(v\d+\.\d+\.\d+.*\).*"
+        Then with up to "15" retries with wait period of "1m" command "crc status" output should match ".*Running \(v\d+\.\d+\.\d+.*\).*"
         And with up to "2" retries with wait period of "60s" http response from "http://httpd-ex-testproj.apps-crc.testing" has status code "200"
 
     @darwin @linux @windows

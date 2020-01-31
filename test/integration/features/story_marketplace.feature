@@ -8,9 +8,9 @@ Feature:
         Given executing "crc setup" succeeds
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
-        When with up to "8" retries with wait period of "2m" command "crc status" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
-        Then executing "eval $(crc oc-env)" succeeds
-        And login to the oc cluster succeeds
+        When with up to "15" retries with wait period of "1m" command "crc status" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
+        And executing "eval $(crc oc-env)" succeeds
+        Then login to the oc cluster succeeds
 
     @windows
     Scenario: Start CRC on Windows
@@ -18,7 +18,7 @@ Feature:
         When starting CRC with default bundle and nameserver "10.75.5.25" succeeds
         Then stdout should contain "Started the OpenShift cluster"
         And executing "crc oc-env | Invoke-Expression" succeeds
-        When with up to "4" retries with wait period of "2m" command "crc status --log-level debug" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
+        When with up to "15" retries with wait period of "1m" command "crc status --log-level debug" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
         Then login to the oc cluster succeeds
 
     @darwin @linux @windows
