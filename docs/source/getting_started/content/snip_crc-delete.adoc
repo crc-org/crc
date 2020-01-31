@@ -1,0 +1,10 @@
+[subs="+quotes,attributes"]
+----
+$ {bin} delete
+----
++
+[WARNING]
+====
+The [command]`{bin} delete` command will result in the loss of data stored in the {prod} virtual machine.
+Save any desired instance information before running this command.
+====

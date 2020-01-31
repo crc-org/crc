@@ -8,7 +8,7 @@ The [command]`{bin} start` command starts the {prod} virtual machine and OpenShi
 * The host machine has been set up using the [command]`{bin} setup` command.
 For more information, see <<setting-up-codeready-containers_{context}>>.
 * A valid OpenShift user pull secret.
-The pull secret can be copied or downloaded from the Pull Secret section of the link:https://cloud.redhat.com/openshift/install/crc/installer-provisioned[Install on Laptop: Red Hat CodeReady Containers] page on cloud.redhat.com.
+The pull secret can be copied or downloaded from the Pull Secret section of the link:https://cloud.redhat.com/openshift/install/crc/installer-provisioned[Install on Laptop: {rh-prod}] page on cloud.redhat.com.
 +
 [NOTE]
 ====
@@ -31,5 +31,5 @@ $ {bin} start
 [NOTE]
 ====
 * The cluster takes a minimum of four minutes to start the necessary containers and operators before serving a request.
-* If errors are encountered on the start, check the <<troubleshooting-codeready-containers_{context}>> section for potential solutions. 
+* If errors are encountered during [command]`{bin} start`, check the <<troubleshooting-codeready-containers_{context}>> section for potential solutions.
 ====

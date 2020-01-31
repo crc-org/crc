@@ -1,0 +1,4 @@
+[id="administrative-tasks_{context}"]
+= Administrative tasks
+
+include::proc_starting-monitoring-alerting-telemetry.adoc[leveloffset=+1]

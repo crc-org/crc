@@ -1,0 +1,54 @@
+[id="accessing-the-openshift-cluster-with-oc_{context}"]
+= Accessing the OpenShift cluster with `oc`
+
+.Prerequisites
+
+* A running {prod} virtual machine.
+For more information, see <<starting-the-virtual-machine_{context}>>.
+
+.Procedure
+
+To access the OpenShift cluster via the [command]`oc` command, follow these steps:
+
+. Run the [command]`{bin} oc-env` command to print the command needed to add the cached [command]`oc` binary to your `_PATH_`:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} oc-env
+----
+
+. Run the printed command.
+
+. Log in as the `developer` user:
++
+[subs="+quotes,attributes"]
+----
+$ oc login -u developer https://api.crc.testing:6443
+----
++
+[NOTE]
+====
+The password for the `developer` user was printed in the output of the [command]`{bin} start` command.
+You can also view it by running the [command]`{bin} console --credentials` command.
+====
+
+. You can now use [command]`oc` to interact with your OpenShift cluster.
+For example, to verify that the OpenShift cluster operators are available:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+$ oc get co
+----
++
+[NOTE]
+====
+* The `machine-config` cluster operator is expected to report `False` availability.
+* The `monitoring` cluster operator is expected to report `Unknown` availability.
+====
+
+See <<troubleshooting-codeready-containers_{context}>> if you cannot access the {prod} OpenShift cluster.
+
+.Additional resources
+
+* The link:https://docs.openshift.com/container-platform/latest/applications/projects/working-with-projects.html[OpenShift documentation] covers the creation of projects and applications.
+* link:https://docs.openshift.com/container-platform/4.2/cli_reference/openshift_developer_cli/understanding-odo.html[OpenShift Do] (`odo`) can also be used to create OpenShift projects and applications from the command line.

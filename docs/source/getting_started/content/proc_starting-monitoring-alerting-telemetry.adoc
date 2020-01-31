@@ -7,7 +7,7 @@ One of these is Prometheus and all the related monitoring, alerting, and telemet
 .Prerequisites
 
 * A running {prod} virtual machine and a working [command]`oc` command.
-For more information, see <<accessing-the-openshift-cluster_{context}>>.
+For more information, see <<accessing-the-openshift-cluster-with-oc_{context}>>.
 
 .Procedure
 

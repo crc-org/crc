@@ -1,5 +1,0 @@
-[id="common-tasks_{context}"]
-= Common tasks
-
-include::proc_starting-monitoring-alerting-telemetry.adoc[leveloffset=+1]
-include::proc_starting-codeready-containers-behind-proxy.adoc[leveloffset=+1]
