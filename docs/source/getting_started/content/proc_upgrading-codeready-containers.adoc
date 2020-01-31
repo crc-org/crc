@@ -9,10 +9,7 @@ Newer versions of the {prod} binary require manual set up to prevent potential i
 
 * Delete the existing {prod} virtual machine:
 +
-[subs="+quotes,attributes"]
-----
-$ {bin} delete
-----
+include::snip_crc-delete.adoc[]
 
 * Replace the previous [command]`{bin}` binary with the binary of the latest release.
 Verify that the new [command]`{bin}` binary is in use by checking its version:

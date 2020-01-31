@@ -1,0 +1,30 @@
+[id="dns-configuration_{context}"]
+= DNS configuration details
+
+[id="dns-configuration-linux_{context}"]
+== Linux
+
+* {prod} expects NetworkManager to be used to manage networking.
+* NetworkManager is set up to use `dnsmasq` through the [filename]`/etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf` configuration file.
+* The configuration file for this `dnsmasq` instance is [filename]`/etc/NetworkManager/dnsmasq.d/crc.conf`:
++
+----
+server=/crc.testing/192.168.130.11
+server=/apps-crc.testing/192.168.130.11
+----
+** The NetworkManager `dnsmasq` instance forwards requests for the `crc.testing` and `apps-crc.testing` domains to the `192.168.130.11` DNS server.
+This DNS server is a `dnsmasq` instance running inside of the virtual machine.
+
+[id="dns-configuration-mac_{context}"]
+== {mac}
+
+* {prod} creates a [filename]`/etc/resolver/testing` file which instructs {mac} to forward all DNS requests  for the `testing` domain to the {prod} virtual machine.
+* {prod} also adds an `api.crc.testing` entry to [filename]`/etc/hosts` pointing at the VM IP address.
+This is needed by the `oc` binary.
+See https://github.com/openshift/origin/issues/23266[OpenShift issue #23266] for more information.
+
+////
+== {msw}
+
+TODO
+////

@@ -4,7 +4,7 @@
 Prior to {rh-prod} 1.2.0, the system bundle included in each released `{bin}` binary expired 30 days after the release due to certificates embedded in the OpenShift cluster.
 Using an older `{bin}` binary or system bundle will result in an expired certificates error.
 
-Starting from {prod} 1.2.0, the embedded certificates can be automatically renewed by {bin}.
+Starting from {prod} 1.2.0, the embedded certificates can be automatically renewed by `{bin}`.
 The certificate renewal process is triggered when needed when [command]`{bin} start` is run.
 When certificates need to be renewed, this can add up to five minutes to the start time of the cluster.
 
@@ -16,15 +16,7 @@ With {prod} releases older than 1.2.0, to resolve expired certificate errors:
 
 . Remove the cluster with certificate errors using the [command]`{bin} delete` command:
 +
-[subs="+quotes,attributes"]
-----
-$ {bin} delete
-----
-+
-[NOTE]
-====
-The [command]`{bin} delete` command will result in the loss of data stored in the {prod} virtual machine.
-====
+include::snip_crc-delete.adoc[]
 
 . Set up the new release:
 +

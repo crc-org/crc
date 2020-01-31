@@ -1,0 +1,6 @@
+[id="networking_{context}"]
+= Networking
+
+include::ref_dns-configuration.adoc[leveloffset=+1]
+
+include::proc_starting-codeready-containers-behind-proxy.adoc[leveloffset=+1]

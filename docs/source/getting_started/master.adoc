@@ -1,0 +1,17 @@
+include::product-meta/product-attributes.adoc[]
+
+:context: gsg
+
+= Getting Started Guide
+
+include::content/assembly_introducing-codeready-containers.adoc[leveloffset=+1]
+
+include::content/assembly_installation.adoc[leveloffset=+1]
+
+include::content/assembly_using-codeready-containers.adoc[leveloffset=+1]
+
+include::content/assembly_networking.adoc[leveloffset=+1]
+
+include::content/assembly_administrative-tasks.adoc[leveloffset=+1]
+
+include::content/assembly_troubleshooting.adoc[leveloffset=+1]

@@ -27,7 +27,7 @@ DOCS_BUILD_DIR ?= docs/build
 DOCS_BUILD_CONTAINER ?= registry.gitlab.com/gbraad/asciidoctor-centos:latest
 DOCS_PDF_CONTAINER ?= quay.io/crcont/asciidoctor-pdf:latest
 DOCS_SERVE_CONTAINER ?= quay.io/crcont/docs-server:latest
-DOCS_BUILD_TARGET ?= /docs/source/getting-started/master.adoc
+DOCS_BUILD_TARGET ?= /docs/source/getting_started/master.adoc
 
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)

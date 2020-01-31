@@ -1,0 +1,23 @@
+[id="getting-shell-access-to-the-openshift-cluster_{context}"]
+= Getting shell access to the OpenShift cluster
+
+Direct access to the OpenShift cluster is not needed for regular use and is strongly discouraged.
+If direct access to the cluster is needed for troubleshooting or debugging purposes, follow this procedure.
+
+.Prerequisites
+
+* [command]`oc` access to the cluster is enabled and you are logged in as the `kubeadmin` user.
+For detailed steps, see <<accessing-the-openshift-cluster-with-oc_{context}>>.
+
+.Procedure
+
+. Run [command]`oc get nodes`. The output will be similar to this:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+$ oc get nodes
+NAME                 STATUS   ROLES           AGE    VERSION
+crc-shdl4-master-0   Ready    master,worker   7d7h   v1.14.6+7e13ab9a7
+----
+
+. Run [command]`oc debug nodes/_<node>_` where `_<node>_` is the name of the node which was printed in the previous step.

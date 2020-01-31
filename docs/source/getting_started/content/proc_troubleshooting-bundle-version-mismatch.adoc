@@ -1,0 +1,20 @@
+[id="troubleshooting-bundle-version-mismatch_{context}"]
+= Troubleshooting bundle version mismatch
+
+{prod} instances are created with bundle information and instance data.
+When a new {prod} release is set up, the bundle information and instance data is not updated due to customization in the previous instance data.
+This will lead to errors when running the [command]`{bin} start` command:
+
+[subs="+quotes,attributes"]
+----
+$ {bin} start
+...
+FATA Bundle 'crc_hyperkit_4.2.8.crcbundle' was requested, but the existing VM is using
+'crc_hyperkit_4.2.2.crcbundle'
+----
+
+.Procedure
+
+. Issue the [command]`{bin} delete` command before attempting to start the instance:
++
+include::snip_crc-delete.adoc[]
