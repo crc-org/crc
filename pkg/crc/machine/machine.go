@@ -382,6 +382,20 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 	result.KubeletStarted = kubeletStarted
 
+	if err := cluster.StartKubeApiserverOperator(ocConfig); err != nil {
+		result.Error = err.Error()
+		return *result, errors.New(err.Error())
+	}
+
+	if err := cluster.WaitforRequestHeaderClientCaFile(ocConfig); err != nil {
+		result.Error = err.Error()
+		return *result, errors.New(err.Error())
+	}
+
+	if err := cluster.ScaleDeployment(ocConfig); err != nil {
+		result.Error = err.Error()
+		return *result, errors.New(err.Error())
+	}
 	time.Sleep(time.Minute * 3)
 
 	// Approve the node certificate.

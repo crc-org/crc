@@ -15,6 +15,28 @@ import (
 	"github.com/pborman/uuid"
 )
 
+var resourceNamespaces = []string{"openshift-apiserver-operator",
+	"openshift-authentication-operator",
+	"openshift-authentication",
+	"openshift-cluster-samples-operator",
+	"openshift-cluster-storage-operator",
+	"openshift-console-operator",
+	"openshift-console",
+	"openshift-controller-manager-operator",
+	"openshift-dns-operator",
+	"openshift-image-registry",
+	"openshift-ingress-operator",
+	"openshift-kube-controller-manager-operator",
+	"openshift-kube-scheduler-operator",
+	"openshift-operator-lifecycle-manager",
+	"openshift-service-ca-operator",
+	"openshift-service-ca",
+	"openshift-service-catalog-apiserver-operator",
+	"openshift-service-catalog-controller-manager-operator",
+	"openshift-network-operator",
+	"openshift-marketplace",
+}
+
 func WaitForSsh(sshRunner *ssh.SSHRunner) error {
 	checkSshConnectivity := func() error {
 		_, err := sshRunner.Run("exit 0")
@@ -195,6 +217,50 @@ func addPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error
 	_, err := sshRunner.RunPrivate(fmt.Sprintf("cat <<EOF | sudo tee /var/lib/kubelet/config.json\n%s\nEOF", pullSec))
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func StartKubeApiserverOperator(oc oc.OcConfig) error {
+	cmdArgs := []string{"scale", "--replicas=1", "deployment", "--all", "-n", "openshift-kube-apiserver-operator"}
+
+	if err := oc.WaitForOpenshiftResource("deployment"); err != nil {
+		return err
+	}
+
+	if _, stderr, err := oc.RunOcCommand(cmdArgs...); err != nil {
+		return fmt.Errorf("Failed to start Openshift apiserver  %v: %s", err, stderr)
+	}
+	return nil
+}
+
+func WaitforRequestHeaderClientCaFile(oc oc.OcConfig) error {
+	cmdArgs := []string{"get", "cm/extension-apiserver-authentication", `-ojsonpath={.data.requestheader-client-ca-file}`,
+		"-n", "kube-system"}
+	stdout, stderr, err := oc.RunOcCommand(cmdArgs...)
+	if err != nil {
+		return fmt.Errorf("Failed to start Openshift apiserver  %v: %s", err, stderr)
+	}
+	for stdout == "" {
+		stdout, stderr, err = oc.RunOcCommand(cmdArgs...)
+		if err != nil {
+			return fmt.Errorf("Failed to start Openshift apiserver  %v: %s", err, stderr)
+		}
+		logging.Debug(stdout)
+		time.Sleep(2 * time.Second)
+	}
+	return nil
+}
+
+func ScaleDeployment(oc oc.OcConfig) error {
+	for _, ns := range resourceNamespaces {
+		cmdArgs := []string{"scale", "--replicas=1", "deployment", "--all", fmt.Sprintf("-n=%s", ns)}
+		if err := oc.WaitForOpenshiftResource("deployment"); err != nil {
+			return err
+		}
+		if _, stderr, err := oc.RunOcCommand(cmdArgs...); err != nil {
+			return fmt.Errorf("Failed to scale deployment for %s namespace  %v: %s", ns, err, stderr)
+		}
 	}
 	return nil
 }
