@@ -1,4 +1,4 @@
-= CodeReady Containers - OpenShift 4 on your Laptop
+= Red Hat CodeReady Containers - OpenShift 4 on your Laptop
 :icons:
 :toc: macro
 :toc-title:
