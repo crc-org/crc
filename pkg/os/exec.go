@@ -5,6 +5,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 // RunWithPrivilege executes a command using sudo
@@ -20,6 +21,7 @@ func RunWithPrivilege(reason string, cmdAndArgs ...string) (string, string, erro
 	cmd.Stdout = stdOut
 	cmd.Stderr = stdErr
 	logging.Infof("Will use root access: %s", reason)
+	logging.Debugf("Running %s with sudo", strings.Join(cmdAndArgs, " "))
 	err = cmd.Run()
 	return stdOut.String(), stdErr.String(), err
 }
@@ -32,6 +34,7 @@ func RunWithDefaultLocale(command string, args ...string) (string, string, error
 	stdErr := new(bytes.Buffer)
 	cmd.Stdout = stdOut
 	cmd.Stderr = stdErr
+	logging.Debugf("Running %s %s", command, strings.Join(args, " "))
 	err := cmd.Run()
 	return stdOut.String(), stdErr.String(), err
 }
