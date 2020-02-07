@@ -378,6 +378,29 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		return *result, errors.Newf("Error starting kubelet: %s", err)
 	}
 	if kubeletStarted {
+		// In Openshift 4.3, when cluster comes up, the following happens
+		// 1. After the openshift-apiserver pod is started, its log contains multiple occurrences of `certificate has expired or is not yet valid`
+		// 2. Initially there is no request-header's client-ca crt available to `extension-apiserver-authentication` configmap
+		// 3. In the pod logs `missing content for CA bundle "client-ca::kube-system::extension-apiserver-authentication::requestheader-client-ca-file"`
+		// 4. After ~1 min /etc/kubernetes/static-pod-resources/kube-apiserver-certs/configmaps/aggregator-client-ca/ca-bundle.crt is regenerated
+		// 5. It is now also appear to `extension-apiserver-authentication` configmap as part of request-header's client-ca content
+		// 6. Openshift-apiserver is able to load the CA which was regenerated
+		// 7. Now apiserver pod log contains multiple occurrences of `error x509: certificate signed by unknown authority`
+		// When the openshift-apiserver is in this state, the cluster is non functional.
+		// A restart of the openshift-apiserver pod is enough to clear that error and get a working cluster.
+		// This is a work-around while the root cause is being identified.
+		// More info: https://bugzilla.redhat.com/show_bug.cgi?id=1795163
+		logging.Debug("Waiting for update of client-ca request header ...")
+		if err := cluster.WaitforRequestHeaderClientCaFile(ocConfig); err != nil {
+			result.Error = err.Error()
+			return *result, errors.New(err.Error())
+		}
+
+		if err := cluster.DeleteOpenshiftApiServerPods(ocConfig); err != nil {
+			result.Error = err.Error()
+			return *result, errors.New(err.Error())
+		}
+
 		logging.Infof("Starting OpenShift cluster ... [waiting 3m]")
 	}
 	result.KubeletStarted = kubeletStarted
