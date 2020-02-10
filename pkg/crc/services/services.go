@@ -1,7 +1,7 @@
 package services
 
 import (
-	"github.com/code-ready/crc/pkg/crc/machine/bundle"
+	"github.com/code-ready/crc/pkg/crc/bundle"
 	"github.com/code-ready/crc/pkg/crc/ssh"
 )
 

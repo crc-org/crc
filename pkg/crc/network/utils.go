@@ -6,9 +6,9 @@ import (
 	"net/url"
 	"runtime"
 
+	"github.com/code-ready/crc/pkg/crc/bundle"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/ssh"
 )
 

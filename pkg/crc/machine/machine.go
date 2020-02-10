@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/code-ready/crc/pkg/crc/bundle"
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
@@ -23,7 +24,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/services/dns"
 
 	// machine related imports
-	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 
 	"github.com/code-ready/machine/libmachine"
