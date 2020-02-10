@@ -528,7 +528,7 @@ func fixNetworkManagerInstalled() error {
 	return fmt.Errorf("NetworkManager is required and must be installed manually")
 }
 
-func CheckNetworkManagerIsRunning() error {
+func checkNetworkManagerIsRunning() error {
 	logging.Debug("Checking if NetworkManager.service is running")
 	path, err := exec.LookPath("systemctl")
 	if err != nil {
