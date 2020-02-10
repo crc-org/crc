@@ -90,7 +90,7 @@ var libvirtPreflightChecks = [...]PreflightCheck{
 	{
 		configKeySuffix:  "check-network-manager-running",
 		checkDescription: "Checking if NetworkManager service is running",
-		check:            CheckNetworkManagerIsRunning,
+		check:            checkNetworkManagerIsRunning,
 		fixDescription:   "Checking if NetworkManager service is running",
 		fix:              fixNetworkManagerIsRunning,
 	},
