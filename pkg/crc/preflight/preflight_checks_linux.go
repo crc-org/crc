@@ -2,7 +2,6 @@ package preflight
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"golang.org/x/sys/unix"
 	"io/ioutil"
@@ -49,34 +48,34 @@ func checkVirtualizationEnabled() error {
 	out, err := ioutil.ReadFile("/proc/cpuinfo")
 	if err != nil {
 		logging.Debugf("Failed to read /proc/cpuinfo: %v", err)
-		return errors.New("Failed to read /proc/cpuinfo")
+		return fmt.Errorf("Failed to read /proc/cpuinfo")
 	}
 	re := regexp.MustCompile(`flags.*:.*`)
 
 	flags := re.FindString(string(out))
 	if flags == "" {
-		return errors.New("Could not find cpu flags from /proc/cpuinfo")
+		return fmt.Errorf("Could not find cpu flags from /proc/cpuinfo")
 	}
 
 	re = regexp.MustCompile(`(vmx|svm)`)
 
 	cputype := re.FindString(flags)
 	if cputype == "" {
-		return errors.New("Virtualization is not available for you CPU")
+		return fmt.Errorf("Virtualization is not available for you CPU")
 	}
 	logging.Debug("CPU virtualization flags are good")
 	return nil
 }
 
 func fixVirtualizationEnabled() error {
-	return errors.New("You need to enable virtualization in BIOS")
+	return fmt.Errorf("You need to enable virtualization in BIOS")
 }
 
 func checkKvmEnabled() error {
 	logging.Debug("Checking if /dev/kvm exists")
 	// Check if /dev/kvm exists
 	if _, err := os.Stat("/dev/kvm"); os.IsNotExist(err) {
-		return errors.New("kvm kernel module is not loaded")
+		return fmt.Errorf("kvm kernel module is not loaded")
 	}
 	logging.Debug("/dev/kvm was found")
 	return nil
@@ -100,7 +99,7 @@ func checkLibvirtInstalled() error {
 	logging.Debug("Checking if 'virsh' is available")
 	path, err := exec.LookPath("virsh")
 	if err != nil {
-		return errors.New("Libvirt cli virsh was not found in path")
+		return fmt.Errorf("Libvirt cli virsh was not found in path")
 	}
 	logging.Debug("'virsh' was found in ", path)
 	return nil
@@ -128,7 +127,7 @@ func checkLibvirtEnabled() error {
 		return fmt.Errorf("Error checking if libvirtd service is enabled")
 	}
 	if strings.TrimSpace(stdOut) != "enabled" {
-		return errors.New("libvirtd.service is not enabled")
+		return fmt.Errorf("libvirtd.service is not enabled")
 	}
 	logging.Debug("libvirtd.service is already enabled")
 	return nil
@@ -224,7 +223,7 @@ func checkLibvirtServiceRunning() error {
 		return fmt.Errorf("Failed to check if libvirtd service is active")
 	}
 	if strings.TrimSpace(stdOut) != "active" {
-		return errors.New("libvirtd.service is not running")
+		return fmt.Errorf("libvirtd.service is not running")
 	}
 	logging.Debug("libvirtd.service is already running")
 	return nil
@@ -311,7 +310,7 @@ func checkLibvirtCrcNetworkAvailable() error {
 	logging.Debug("Checking if libvirt 'crc' network exists")
 	_, _, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-info", "crc")
 	if err != nil {
-		return errors.New("Libvirt network crc not found")
+		return fmt.Errorf("Libvirt network crc not found")
 	}
 
 	return checkLibvirtCrcNetworkDefinition()
@@ -414,7 +413,7 @@ func checkLibvirtCrcNetworkActive() error {
 			return nil
 		}
 	}
-	return errors.New("Libvirt crc network is not active")
+	return fmt.Errorf("Libvirt crc network is not active")
 }
 
 func fixLibvirtCrcNetworkActive() error {
@@ -518,7 +517,7 @@ func checkNetworkManagerInstalled() error {
 	logging.Debug("Checking if 'nmcli' is available")
 	path, err := exec.LookPath("nmcli")
 	if err != nil {
-		return errors.New("NetworkManager cli nmcli was not found in path")
+		return fmt.Errorf("NetworkManager cli nmcli was not found in path")
 	}
 	logging.Debug("'nmcli' was found in ", path)
 	return nil
@@ -539,7 +538,7 @@ func checkNetworkManagerIsRunning() error {
 		return fmt.Errorf("%v : %s", err, stdErr)
 	}
 	if strings.TrimSpace(stdOut) != "active" {
-		return errors.New("NetworkManager.service is not running")
+		return fmt.Errorf("NetworkManager.service is not running")
 	}
 	logging.Debug("NetworkManager.service is already running")
 	return nil

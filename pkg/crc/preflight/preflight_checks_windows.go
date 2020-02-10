@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 
 	winnet "github.com/code-ready/crc/pkg/os/windows/network"
@@ -26,17 +25,17 @@ func checkVersionOfWindowsUpdate() error {
 	stdOut, _, err := powershell.Execute(windowsReleaseId)
 	if err != nil {
 		logging.Debug(err.Error())
-		return errors.New("Failed to get Windows release id")
+		return fmt.Errorf("Failed to get Windows release id")
 	}
 	yourWindowsReleaseId, err := strconv.Atoi(strings.TrimSpace(stdOut))
 
 	if err != nil {
 		logging.Debug(err.Error())
-		return errors.Newf("Failed to parse Windows release id: %s", stdOut)
+		return fmt.Errorf("Failed to parse Windows release id: %s", stdOut)
 	}
 
 	if yourWindowsReleaseId < minimumWindowsReleaseId {
-		return errors.Newf("Please update Windows. Currently %d is the minimum release needed to run. You are running %d", minimumWindowsReleaseId, yourWindowsReleaseId)
+		return fmt.Errorf("Please update Windows. Currently %d is the minimum release needed to run. You are running %d", minimumWindowsReleaseId, yourWindowsReleaseId)
 	}
 	return nil
 }
@@ -47,20 +46,20 @@ func checkHyperVInstalled() error {
 	stdOut, _, err := powershell.Execute(checkHypervisorPresent)
 	if err != nil {
 		logging.Debug(err.Error())
-		return errors.New("Failed checking if Hyper-V is installed")
+		return fmt.Errorf("Failed checking if Hyper-V is installed")
 	}
 	if !strings.Contains(stdOut, "True") {
-		return errors.New("Hyper-V not installed")
+		return fmt.Errorf("Hyper-V not installed")
 	}
 
 	checkVmmsExists := `@(Get-Service vmms).Status`
 	_, stdErr, err := powershell.Execute(checkVmmsExists)
 	if err != nil {
 		logging.Debug(err.Error())
-		return errors.New("Failed checking if Hyper-V management service exists")
+		return fmt.Errorf("Failed checking if Hyper-V management service exists")
 	}
 	if strings.Contains(stdErr, "Get-Service") {
-		return errors.New("Hyper-V management service not available")
+		return fmt.Errorf("Hyper-V management service not available")
 	}
 
 	return nil
@@ -73,7 +72,7 @@ func fixHyperVInstalled() error {
 
 	if err != nil {
 		logging.Debug(err.Error())
-		return errors.New("Error occurred installing Hyper-V")
+		return fmt.Errorf("Error occurred installing Hyper-V")
 	}
 
 	// We do need to error out as a restart might be needed (unfortunately no output redirect possible)
@@ -87,10 +86,10 @@ func checkHyperVServiceRunning() error {
 	stdOut, _, err := powershell.Execute(checkVmmsRunning)
 	if err != nil {
 		logging.Debug(err.Error())
-		return errors.New("Failed checking if Hyper-V is running")
+		return fmt.Errorf("Failed checking if Hyper-V is running")
 	}
 	if strings.TrimSpace(stdOut) != "Running" {
-		return errors.New("Hyper-V Virtual Machine Management service not running")
+		return fmt.Errorf("Hyper-V Virtual Machine Management service not running")
 	}
 
 	return nil
@@ -102,7 +101,7 @@ func fixHyperVServiceRunning() error {
 
 	if err != nil {
 		logging.Debug(err.Error())
-		return errors.New("Error occurred enabling Hyper-V service")
+		return fmt.Errorf("Error occurred enabling Hyper-V service")
 	}
 
 	return nil
@@ -118,10 +117,10 @@ func checkIfUserPartOfHyperVAdmins() error {
 	stdOut, _, err := powershell.Execute(checkIfMemberOfHyperVAdmins)
 	if err != nil {
 		logging.Debug(err.Error())
-		return errors.New("Failed checking if user is part of hyperv admins group")
+		return fmt.Errorf("Failed checking if user is part of hyperv admins group")
 	}
 	if !strings.Contains(stdOut, "True") {
-		return errors.New("User is not a member of the Hyper-V administrators group")
+		return fmt.Errorf("User is not a member of the Hyper-V administrators group")
 	}
 
 	return nil
@@ -131,7 +130,7 @@ func fixUserPartOfHyperVAdmins() error {
 	outGroupName, _, err := powershell.Execute(`(New-Object System.Security.Principal.SecurityIdentifier("S-1-5-32-578")).Translate([System.Security.Principal.NTAccount]).Value`)
 	if err != nil {
 		logging.Debug(err.Error())
-		return errors.New("Unable to get group name")
+		return fmt.Errorf("Unable to get group name")
 	}
 	groupName := strings.TrimSpace(strings.Replace(strings.TrimSpace(outGroupName), "BUILTIN\\", "", -1))
 
@@ -141,7 +140,7 @@ func fixUserPartOfHyperVAdmins() error {
 	_, _, err = powershell.ExecuteAsAdmin("add user to hyperv admins group", netCmdArgs)
 	if err != nil {
 		logging.Debug(err.Error())
-		return errors.New("Unable to get user name")
+		return fmt.Errorf("Unable to get user name")
 	}
 
 	return nil
@@ -157,7 +156,7 @@ func checkIfHyperVVirtualSwitchExists() error {
 		return nil
 	}
 
-	return errors.New("Virtual Switch not found")
+	return fmt.Errorf("Virtual Switch not found")
 }
 
 func checkIfRunningAsNormalUser() error {
