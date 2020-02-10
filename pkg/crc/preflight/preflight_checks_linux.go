@@ -18,6 +18,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
 	"github.com/code-ready/crc/pkg/crc/systemd"
+	"github.com/code-ready/crc/pkg/crc/systemd/states"
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
@@ -182,17 +183,13 @@ func fixUserPartOfLibvirtGroup() error {
 }
 
 func checkLibvirtServiceRunning() error {
-
-	logging.Debug("Checking if libvirtd.service is running")
-	path, err := exec.LookPath("systemctl")
-	if err != nil {
-		return err
-	}
+	logging.Debug("Checking if libvirtd service is running")
+	sd := systemd.NewHostSystemdCommander()
 
 	libvirtSystemdUnits := []string{"virtqemud.socket", "libvirtd.socket", "virtqemud.service", "libvirtd.service"}
 	for _, unit := range libvirtSystemdUnits {
-		stdOut, _, err := crcos.RunWithDefaultLocale(path, "is-active", unit)
-		if err == nil && strings.TrimSpace(stdOut) == "active" {
+		status, err := sd.Status(unit)
+		if err == nil && status == states.Running {
 			logging.Debugf("%s is running", unit)
 			return nil
 		}
@@ -206,15 +203,12 @@ func checkLibvirtServiceRunning() error {
 
 func fixLibvirtServiceRunning() error {
 	logging.Debug("Starting libvirtd.service")
-	path, err := exec.LookPath("systemctl")
-	if err != nil {
-		return err
-	}
+	sd := systemd.NewHostSystemdCommander()
 	/* split libvirt daemon is a bit tricky to startup properly as we'd
 	* need to start multiple components by hand, so we just start the
 	* monolithic daemon
 	 */
-	_, _, err = crcos.RunWithPrivilege("start libvirtd service", path, "start", "libvirtd")
+	_, err := sd.Start("libvirtd")
 	if err != nil {
 		return fmt.Errorf("Failed to start libvirt service")
 	}
@@ -595,15 +589,12 @@ func fixNetworkManagerInstalled() error {
 
 func checkNetworkManagerIsRunning() error {
 	logging.Debug("Checking if NetworkManager.service is running")
-	path, err := exec.LookPath("systemctl")
+	sd := systemd.NewHostSystemdCommander()
+	status, err := sd.Status("NetworkManager")
 	if err != nil {
 		return err
 	}
-	stdOut, stdErr, err := crcos.RunWithDefaultLocale(path, "is-active", "NetworkManager")
-	if err != nil {
-		return fmt.Errorf("%v : %s", err, stdErr)
-	}
-	if strings.TrimSpace(stdOut) != "active" {
+	if status != states.Running {
 		return fmt.Errorf("NetworkManager.service is not running")
 	}
 	logging.Debug("NetworkManager.service is already running")
