@@ -20,8 +20,13 @@ func run(command string, args []string, env map[string]string) (string, string, 
 	stdErr := new(bytes.Buffer)
 	cmd.Stdout = stdOut
 	cmd.Stderr = stdErr
-	logging.Debugf("Running %s %s", command, strings.Join(args, " "))
+	logging.Debugf("Running '%s %s'", command, strings.Join(args, " "))
 	err := cmd.Run()
+	if err != nil {
+		logging.Debugf("Command failed: %v", err)
+		logging.Debugf("stdout: %s", stdOut.String())
+		logging.Debugf("stderr: %s", stdErr.String())
+	}
 	return stdOut.String(), stdErr.String(), err
 }
 
