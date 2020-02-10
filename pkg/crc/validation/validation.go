@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/code-ready/crc/pkg/crc/bundle"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/version"
@@ -29,20 +30,33 @@ func ValidateMemory(value int) error {
 	return nil
 }
 
-// ValidateBundle checks if provided bundle path exist
-func ValidateBundle(bundle string) error {
-	if err := ValidatePath(bundle); err != nil {
+func ValidateBundlePath(bundlePath string) error {
+	if err := ValidatePath(bundlePath); err != nil {
 		if constants.BundleEmbedded() {
 			return errors.Newf("Run 'crc setup' to unpack the bundle to disk")
 		} else {
 			return errors.Newf("Please provide the path to a valid bundle using the -b option")
 		}
 	}
+
+	return nil
+}
+
+// ValidateBundle checks if provided bundle path exist
+func ValidateBundle(bundlePath string) error {
+	// check if this bundle version is cached already, in which case we don't
+	// need the bundle file to exist
+	bundleName := filepath.Base(bundlePath)
+	_, err := bundle.GetCachedBundleInfo(bundleName)
+	if err != nil {
+		if err := ValidateBundlePath(bundlePath); err != nil {
+			return err
+		}
+	}
 	// Check if the version of the bundle provided by user is same as what is released with crc.
 	releaseBundleVersion := version.GetBundleVersion()
-	userProvidedBundleVersion := filepath.Base(bundle)
-	if !strings.Contains(userProvidedBundleVersion, fmt.Sprintf("%s.crcbundle", releaseBundleVersion)) {
-		return errors.Newf("%s bundle is not supported by this binary, please use %s", userProvidedBundleVersion, constants.GetDefaultBundle())
+	if !strings.Contains(bundleName, fmt.Sprintf("%s.crcbundle", releaseBundleVersion)) {
+		return errors.Newf("%s bundle is not supported by this binary, please use %s", bundleName, constants.GetDefaultBundle())
 	}
 	return nil
 }
