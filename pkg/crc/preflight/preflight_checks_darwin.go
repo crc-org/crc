@@ -144,13 +144,13 @@ func checkMachineDriverHyperKitInstalled() error {
 	hyperkitPath := filepath.Join(constants.CrcBinDir, hyperkit.MachineDriverCommand)
 	err := unix.Access(hyperkitPath, unix.X_OK)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s is not executable", hyperkitPath)
 	}
 
 	// Check the version of driver if it matches to supported one
 	stdOut, stdErr, err := crcos.RunWithDefaultLocale(hyperkitPath, "version")
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to check hyperkit machine driver's version")
 	}
 	if !strings.Contains(stdOut, hyperkit.MachineDriverVersion) {
 		return fmt.Errorf("%s does not have right version \n Required: %s \n Got: %s use 'crc setup' command.\n %v\n", hyperkit.MachineDriverCommand, hyperkit.MachineDriverVersion, stdOut, stdErr)
@@ -206,7 +206,8 @@ func addFileWritePermissionToUser(filename string) error {
 	logging.Debugf("Making %s readable/writable by the current user", filename)
 	currentUser, err := user.Current()
 	if err != nil {
-		return err
+		logging.Debugf("user.Current() failed: %v", err)
+		return fmt.Errorf("Failed to get current user id")
 	}
 
 	stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("change ownership of %s", filename), "chown", currentUser.Username, filename)
