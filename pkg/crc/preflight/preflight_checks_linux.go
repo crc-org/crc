@@ -61,7 +61,7 @@ func checkVirtualizationEnabled() error {
 
 	cputype := re.FindString(flags)
 	if cputype == "" {
-		return fmt.Errorf("Virtualization is not available for you CPU")
+		return fmt.Errorf("Virtualization is not available for your CPU")
 	}
 	logging.Debug("CPU virtualization flags are good")
 	return nil
