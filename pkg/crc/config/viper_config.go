@@ -101,6 +101,7 @@ func InitViper() error {
 	if err != nil {
 		return fmt.Errorf("Error reading configuration file '%s': %v", constants.ConfigFile, err)
 	}
+	v.WatchConfig()
 	globalViper = v
 	return v.Unmarshal(&changedConfigs)
 }
