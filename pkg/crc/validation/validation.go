@@ -6,12 +6,10 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/bundle"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/version"
 )
 
 // ValidateCPUs checks if provided cpus count is valid
@@ -54,8 +52,7 @@ func ValidateBundle(bundlePath string) error {
 		}
 	}
 	// Check if the version of the bundle provided by user is same as what is released with crc.
-	releaseBundleVersion := version.GetBundleVersion()
-	if !strings.Contains(bundleName, fmt.Sprintf("%s.crcbundle", releaseBundleVersion)) {
+	if bundleName != constants.GetDefaultBundle() {
 		return errors.Newf("%s bundle is not supported by this binary, please use %s", bundleName, constants.GetDefaultBundle())
 	}
 	return nil
