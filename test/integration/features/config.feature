@@ -18,7 +18,6 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
             | property         |    value1 |            value2 |
             | cpus             |         4 |                 3 |
             | memory           |      8192 |              4096 |
-            | vm-driver        |  hyperkit |           libvirt |
             | nameserver       | 120.0.0.1 |   999.999.999.999 |
             | pull-secret-file |      /etc | /nonexistent-file |
 
@@ -27,7 +26,6 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
             | property         |    value1 |            value2 |
             | cpus             |         4 |                 3 |
             | memory           |      8192 |              4096 |
-            | vm-driver        |   libvirt |          hyperkit |
             | nameserver       | 120.0.0.1 |   999.999.999.999 |
             | pull-secret-file |      /etc | /nonexistent-file |
 
@@ -36,7 +34,6 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
             | property         |    value1 |            value2 |
             | cpus             |         4 |                 3 |
             | memory           |      8192 |              4096 |
-            | vm-driver        |    hyperv |          hyperkit |
             | nameserver       | 120.0.0.1 |   999.999.999.999 |
             | pull-secret-file |    /Users | /nonexistent-file |
 
