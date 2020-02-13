@@ -9,27 +9,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
-type ArgsType map[string]string
-type handlerFunc func(ArgsType) string
-
-type CrcApiServer struct {
-	listener               net.Listener
-	clusterOpsRequestsChan chan clusterOpsRequest
-	handlers               map[string]handlerFunc // relates commands to handler func
-}
-
-// commandRequest struct is used to decode the json request from tray
-type commandRequest struct {
-	Command string            `json:"command"`
-	Args    map[string]string `json:"args,omitempty"`
-}
-
-// clusterOpsRequest struct is used to store the command request and associated socket
-type clusterOpsRequest struct {
-	command commandRequest
-	socket  net.Conn
-}
-
 func CreateApiServer(socketPath string) (CrcApiServer, error) {
 	listener, err := net.Listen("unix", socketPath)
 	if err != nil {
