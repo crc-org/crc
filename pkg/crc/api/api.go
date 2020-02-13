@@ -50,12 +50,13 @@ func (api CrcApiServer) handleClusterOperations() {
 
 func (api CrcApiServer) handleRequest(req commandRequest, conn net.Conn) {
 	defer conn.Close()
+	var result string
 	if handler, ok := api.handlers[req.Command]; ok {
-		result := handler(req.Args)
-		writeStringToSocket(conn, result)
+		result = handler(req.Args)
 	} else {
-		writeStringToSocket(conn, fmt.Sprintf("Unknown command supplied: %s", req.Command))
+		result = encodeErrorToJson(fmt.Sprintf("Unknown command supplied: %s", req.Command))
 	}
+	writeStringToSocket(conn, result)
 }
 
 func (api CrcApiServer) handleConnections(conn net.Conn) {
@@ -84,7 +85,8 @@ func (api CrcApiServer) handleConnections(conn net.Conn) {
 		if !addRequestToChannel(r, api.clusterOpsRequestsChan) {
 			defer conn.Close()
 			logging.Error("Channel capacity reached, unable to add new request")
-			writeStringToSocket(conn, "Channel capacity reached, unable to add new request")
+			errMsg := encodeErrorToJson("Sockets channel capacity reached, unable to add new request")
+			writeStringToSocket(conn, errMsg)
 			return
 		}
 	} else {
