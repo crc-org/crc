@@ -7,6 +7,10 @@ import (
 type ArgsType map[string]string
 type handlerFunc func(ArgsType) string
 
+type commandError struct {
+	Err string
+}
+
 type CrcApiServer struct {
 	listener               net.Listener
 	clusterOpsRequestsChan chan clusterOpsRequest

@@ -80,7 +80,18 @@ func encodeStructToJson(v interface{}) string {
 	s, err := json.Marshal(v)
 	if err != nil {
 		logging.Error(err.Error())
-		return "Failed"
+		err := commandError{
+			Err: "Failed while encoding JSON to string",
+		}
+		s, _ := json.Marshal(err)
+		return string(s)
 	}
 	return string(s)
+}
+
+func encodeErrorToJson(errMsg string) string {
+	err := commandError{
+		Err: errMsg,
+	}
+	return encodeStructToJson(err)
 }
