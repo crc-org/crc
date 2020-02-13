@@ -13,14 +13,21 @@ type ArgsType map[string]string
 type handlerFunc func(ArgsType) string
 
 type CrcApiServer struct {
-	listener net.Listener
-	handlers map[string]handlerFunc // relates commands to handler func
+	listener               net.Listener
+	clusterOpsRequestsChan chan clusterOpsRequest
+	handlers               map[string]handlerFunc // relates commands to handler func
 }
 
 // commandRequest struct is used to decode the json request from tray
 type commandRequest struct {
 	Command string            `json:"command"`
 	Args    map[string]string `json:"args,omitempty"`
+}
+
+// clusterOpsRequest struct is used to store the command request and associated socket
+type clusterOpsRequest struct {
+	command commandRequest
+	socket  net.Conn
 }
 
 func CreateApiServer(socketPath string) (CrcApiServer, error) {
@@ -30,7 +37,8 @@ func CreateApiServer(socketPath string) (CrcApiServer, error) {
 		return CrcApiServer{}, err
 	}
 	apiServer := CrcApiServer{
-		listener: listener,
+		listener:               listener,
+		clusterOpsRequestsChan: make(chan clusterOpsRequest, 10),
 		handlers: map[string]handlerFunc{
 			"start":         startHandler,
 			"stop":          stopHandler,
@@ -44,18 +52,34 @@ func CreateApiServer(socketPath string) (CrcApiServer, error) {
 }
 
 func (api CrcApiServer) Serve() {
+	go api.handleClusterOperations() // go routine that handles start, stop and delete calls
 	for {
 		conn, err := api.listener.Accept()
 		if err != nil {
 			logging.Error("Error establishing communication: ", err.Error())
 			continue
 		}
-		go api.handleConnection(conn)
+		api.handleConnections(conn) // handle version, status, webconsole, etc. requests
 	}
 }
 
-func (api CrcApiServer) handleConnection(conn net.Conn) {
+func (api CrcApiServer) handleClusterOperations() {
+	for req := range api.clusterOpsRequestsChan {
+		api.handleRequest(req.command, req.socket)
+	}
+}
+
+func (api CrcApiServer) handleRequest(req commandRequest, conn net.Conn) {
 	defer conn.Close()
+	if handler, ok := api.handlers[req.Command]; ok {
+		result := handler(req.Args)
+		writeStringToSocket(conn, result)
+	} else {
+		writeStringToSocket(conn, fmt.Sprintf("Unknown command supplied: %s", req.Command))
+	}
+}
+
+func (api CrcApiServer) handleConnections(conn net.Conn) {
 	inBuffer := make([]byte, 1024)
 	var req commandRequest
 	numBytes, err := conn.Read(inBuffer)
@@ -69,12 +93,23 @@ func (api CrcApiServer) handleConnection(conn net.Conn) {
 		logging.Error("Error decoding request: ", err.Error())
 		return
 	}
-
-	if handler, ok := api.handlers[req.Command]; ok {
-		result := handler(req.Args)
-		writeStringToSocket(conn, result)
+	// start, stop and delete are slow operations, and change the VM state so they have to run sequentially.
+	// We don't want other operations querying the status of the VM to be blocked by these,
+	// so they are treated by a dedicated go routine
+	if req.Command == "start" || req.Command == "stop" || req.Command == "delete" {
+		// queue new request to channel
+		r := clusterOpsRequest{
+			command: req,
+			socket:  conn,
+		}
+		if !addRequestToChannel(r, api.clusterOpsRequestsChan) {
+			defer conn.Close()
+			logging.Error("Channel capacity reached, unable to add new request")
+			writeStringToSocket(conn, "Channel capacity reached, unable to add new request")
+			return
+		}
 	} else {
-		writeStringToSocket(conn, fmt.Sprintf("Unknown command supplied: %s", req.Command))
+		go api.handleRequest(req, conn)
 	}
 }
 
@@ -89,5 +124,14 @@ func writeStringToSocket(socket net.Conn, msg string) {
 	if err != nil {
 		logging.Error("Failed writing string to socket", err.Error())
 		return
+	}
+}
+
+func addRequestToChannel(req clusterOpsRequest, requestsChan chan clusterOpsRequest) bool {
+	select {
+	case requestsChan <- req:
+		return true
+	default:
+		return false
 	}
 }
