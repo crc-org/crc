@@ -23,6 +23,7 @@ import (
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/gherkin"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"os/user"
@@ -70,6 +71,8 @@ func FeatureContext(s *godog.Suite) {
 		CheckOutputMatchWithRetry)
 	s.Step(`stdout (?:should contain|contains) "(.*)" if bundle (is|is not) embedded$`,
 		StdoutContainsIfBundleEmbeddedOrNot)
+	s.Step(`sending "(.*)" command to daemon succeeds$`,
+		SendingCommandToDaemonSucceeds)
 
 	// CRC file operations
 	s.Step(`^file "([^"]*)" exists in CRC home folder$`,
@@ -402,6 +405,9 @@ func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expe
 			value = bundleName
 		}
 	}
+	if property == "pull-secret-file" && value == "default pull secret" {
+		value = pullSecretFile
+	}
 
 	cmd := "crc config set " + property + " " + value
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
@@ -415,4 +421,36 @@ func UnsetConfigPropertySucceedsOrFails(property string, expected string) error 
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
+}
+
+func SendingCommandToDaemonSucceeds(command string) error {
+
+	time.Sleep(10 * time.Second) // wait for daemon to create socket
+	sock := filepath.Join(CRCHome, "crc.sock")
+	c, err := net.Dial("unix", sock)
+
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+
+	readerChan := make(chan error) // declare unbuffered channel
+	wg.Add(1)
+	go SockReader(c, command, readerChan)
+
+	cmd_str := fmt.Sprintf("{\"command\":\"%s\"}", command)
+	_, err = c.Write([]byte(cmd_str))
+	if err != nil {
+		fmt.Printf("Failed sending message to daemon: %s\n", err)
+		return err
+	}
+
+	var readerErr error
+	readerErr = <-readerChan
+	close(readerChan) // close channel
+	wg.Wait()
+
+	time.Sleep(1 * time.Second) // give daemon time to respond before closing connection
+
+	return readerErr
 }

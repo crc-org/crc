@@ -3,6 +3,7 @@
 package crcsuite
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -11,9 +12,56 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/code-ready/crc/pkg/download"
 )
+
+var wg sync.WaitGroup
+
+type proxy struct {
+	HttpProxy  string
+	HttpsProxy string
+}
+
+type cluster struct {
+	KubeConfig    string
+	KubeAdminPass string
+	ClusterAPI    string
+	WebConsoleURL string
+	ProxyConfig   proxy
+}
+
+type message struct {
+	Name             string
+	CrcStatus        string
+	OpenshiftStatus  string
+	DiskUse          int
+	DiskSize         int
+	Error            string
+	Success          bool
+	CrcVersion       string
+	CommitSha        string
+	OpenshiftVersion string
+	ClusterConfig    cluster
+	KubeletStarted   bool
+	State            int
+}
+
+func (m *message) recordResponse() bool {
+
+	// record response to JSON file ~/.crc/answer.json
+	msgJson, _ := json.Marshal(m)
+	dest := filepath.Join(CRCHome, "answer.json")
+	err := ioutil.WriteFile(dest, msgJson, 0644)
+
+	if err != nil {
+		fmt.Printf("Error recording response: %v\n", err)
+		return false
+	}
+
+	return true
+}
 
 // Download bundle for testing
 func DownloadBundle(bundleLocation string, bundleDestination string) (string, error) {
@@ -116,6 +164,32 @@ func CopyFilesToTestDir() {
 			os.Exit(1)
 		}
 	}
+}
+
+func SockReader(r io.Reader, command string, reader_err chan error) {
+
+	defer wg.Done() // schedule call to WaitGroup's Done to announce goroutine finished
+
+	d := json.NewDecoder(r)
+
+	var msg message
+
+	err := d.Decode(&msg)
+
+	if err == io.EOF {
+		fmt.Printf("End of File exception: %s\n", err)
+		reader_err <- err
+	} else if err != nil {
+		fmt.Printf("Unexpected error: %s\n", err)
+		reader_err <- err
+	}
+
+	// record response to JSON file ~/.crc/answer.json
+	msgJson, _ := json.Marshal(msg)
+	dest := filepath.Join(CRCHome, "answer.json")
+	err = ioutil.WriteFile(dest, msgJson, 0644)
+
+	reader_err <- err
 }
 
 func ParseFlags() {
