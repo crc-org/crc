@@ -66,9 +66,9 @@ const (
 )
 
 var (
-	launchAgentDir       = filepath.Join(constants.GetHomeDir(), "Library", "LaunchAgents")
-	daemonPlistFilePath  = filepath.Join(launchAgentDir, "crc.daemon.plist")
-	trayPlistFilePath    = filepath.Join(launchAgentDir, "crc.tray.plist")
+	launchAgentsDir      = filepath.Join(constants.GetHomeDir(), "Library", "LaunchAgents")
+	daemonPlistFilePath  = filepath.Join(launchAgentsDir, "crc.daemon.plist")
+	trayPlistFilePath    = filepath.Join(launchAgentsDir, "crc.tray.plist")
 	stdOutFilePathDaemon = filepath.Join(constants.CrcBaseDir, ".crcd-agent.log")
 	stdOutFilePathTray   = filepath.Join(constants.CrcBaseDir, ".crct-agent.log")
 )
@@ -99,6 +99,9 @@ func checkTrayExistsAndRunning() error {
 }
 
 func fixTrayExistsAndRunning() error {
+	if err := ensureLaunchAgentsDirExists(); err != nil {
+		return err
+	}
 	// get the tray app
 	if !trayAppCached() {
 		err := downloadOrExtractTrayApp()
@@ -230,6 +233,12 @@ func downloadOrExtractTrayApp() error {
 	err = extract.Uncompress(archivePath, outputPath)
 	if err != nil {
 		return errors.Wrapf(err, "Cannot uncompress '%s'", archivePath)
+	}
+	return nil
+}
+func ensureLaunchAgentsDirExists() error {
+	if err := goos.MkdirAll(launchAgentsDir, 0700); err != nil {
+		return err
 	}
 	return nil
 }
