@@ -180,7 +180,9 @@ Environment=NO_PROXY=.cluster.local,.svc,10.128.0.0/14,172.30.0.0/16,%s`
 // All other operators which have `config.openshift.io/inject-proxy` annotation get updated except marketplace.
 func AddProxyConfigToMarketplaceOperator(oc oc.OcConfig, proxy *network.ProxyConfig) error {
 	cmdArgs := []string{"set", "env", "deployment", "marketplace-operator", "-n", "openshift-marketplace",
-		fmt.Sprintf(`HTTP_PROXY="%s", HTTPS_PROXY="%s", NO_PROXY="%s"}}`, proxy.HttpProxy, proxy.HttpsProxy, proxy.GetNoProxyString()),
+		fmt.Sprintf("HTTP_PROXY=%s", proxy.HttpProxy),
+		fmt.Sprintf("HTTPS_PROXY=%s", proxy.HttpsProxy),
+		fmt.Sprintf("NO_PROXY=%s", proxy.GetNoProxyString()),
 	}
 	if err := oc.WaitForOpenshiftResource("deployment"); err != nil {
 		return err
