@@ -103,11 +103,9 @@ func fixTrayExistsAndRunning() error {
 		return err
 	}
 	// get the tray app
-	if !trayAppCached() {
-		err := downloadOrExtractTrayApp()
-		if err != nil {
-			return err
-		}
+	err := downloadOrExtractTrayApp()
+	if err != nil {
+		return err
 	}
 	currentExecutablePath, err := goos.Executable()
 	if err != nil {
@@ -153,6 +151,15 @@ func fixTrayExistsAndRunning() error {
 			return err
 		}
 	}
+	// restart tray and daemon agents
+	err = restartAgent(daemonAgentLabel)
+	if err != nil {
+		return err
+	}
+	err = restartAgent(trayAgentLabel)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -180,6 +187,15 @@ func startAgent(label string) error {
 	return err
 }
 
+func restartAgent(label string) error {
+	_, err := exec.Command("launchctl", "stop", label).Output() // #nosec G204
+	if err != nil {
+		return err
+	}
+	_, err = exec.Command("launchctl", "start", label).Output() // #nosec G204
+	return err
+}
+
 // check if a service (daemon,tray) is running
 func agentRunning(label string) bool {
 	// This command return a PID if the process
@@ -196,15 +212,7 @@ func agentRunning(label string) bool {
 	return true
 }
 
-func trayAppCached() bool {
-	return os.FileExists(constants.TrayBinaryPath)
-}
-
 func downloadOrExtractTrayApp() error {
-	if trayAppCached() {
-		return nil
-	}
-
 	// Extract the tray and put it in the bin directory.
 	tmpArchivePath, err := ioutil.TempDir("", "crc")
 	if err != nil {
