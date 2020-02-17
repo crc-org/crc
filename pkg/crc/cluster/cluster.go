@@ -153,6 +153,8 @@ func AddProxyConfigToCluster(oc oc.OcConfig, proxy *network.ProxyConfig) error {
 	return nil
 }
 
+const internalNoProxy = ".cluster.local,.svc,10.128.0.0/14,172.30.0.0/16"
+
 // AddProxyToKubeletAndCriO adds the systemd drop-in proxy configuration file to the instance,
 // both services (kubelet and crio) need to be restarted after this change.
 // Since proxy operator is not able to make changes to in the kubelet/crio side,
@@ -162,8 +164,8 @@ func AddProxyToKubeletAndCriO(sshRunner *ssh.SSHRunner, proxy *network.ProxyConf
 	proxyTemplate := `[Service]
 Environment=HTTP_PROXY=%s
 Environment=HTTPS_PROXY=%s
-Environment=NO_PROXY=.cluster.local,.svc,10.128.0.0/14,172.30.0.0/16,%s`
-	p := fmt.Sprintf(proxyTemplate, proxy.HttpProxy, proxy.HttpsProxy, proxy.GetNoProxyString())
+Environment=NO_PROXY=%s,%s`
+	p := fmt.Sprintf(proxyTemplate, proxy.HttpProxy, proxy.HttpsProxy, internalNoProxy, proxy.GetNoProxyString())
 	// This will create a systemd drop-in configuration for proxy (both for kubelet and crio services) on the VM.
 	_, err := sshRunner.RunPrivate(fmt.Sprintf("cat <<EOF | sudo tee /etc/systemd/system/crio.service.d/10-default-env.conf\n%s\nEOF", p))
 	if err != nil {
@@ -182,7 +184,7 @@ func AddProxyConfigToMarketplaceOperator(oc oc.OcConfig, proxy *network.ProxyCon
 	cmdArgs := []string{"set", "env", "deployment", "marketplace-operator", "-n", "openshift-marketplace",
 		fmt.Sprintf("HTTP_PROXY=%s", proxy.HttpProxy),
 		fmt.Sprintf("HTTPS_PROXY=%s", proxy.HttpsProxy),
-		fmt.Sprintf("NO_PROXY=%s", proxy.GetNoProxyString()),
+		fmt.Sprintf("NO_PROXY=%s,%s", proxy.GetNoProxyString(), internalNoProxy),
 	}
 	if err := oc.WaitForOpenshiftResource("deployment"); err != nil {
 		return err
