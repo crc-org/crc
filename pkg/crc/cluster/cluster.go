@@ -196,10 +196,11 @@ func AddProxyConfigToMarketplaceOperator(oc oc.OcConfig, proxy *network.ProxyCon
 }
 
 func addPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error {
-	err := sshRunner.SetTextContentAsRoot("/var/lib/kubelet/config.json", pullSec, 0644)
+	err := sshRunner.SetTextContentAsRoot("/var/lib/kubelet/config.json", pullSec, 0600)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
