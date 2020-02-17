@@ -10,13 +10,16 @@ import (
 	"strings"
 	goTemplate "text/template"
 
+	"github.com/Masterminds/semver"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/version"
 	dl "github.com/code-ready/crc/pkg/download"
 	"github.com/code-ready/crc/pkg/embed"
 	"github.com/code-ready/crc/pkg/extract"
 	"github.com/code-ready/crc/pkg/os"
 	"github.com/pkg/errors"
+	"howett.net/plist"
 )
 
 const (
@@ -78,6 +81,10 @@ type AgentConfig struct {
 	StdOutFilePath string
 }
 
+type TrayVersion struct {
+	ShortVersion string `plist:"CFBundleShortVersionString"`
+}
+
 func checkTrayExistsAndRunning() error {
 	logging.Debug("Checking if daemon plist file exists")
 	if !os.FileExists(daemonPlistFilePath) {
@@ -94,6 +101,10 @@ func checkTrayExistsAndRunning() error {
 	logging.Debug("Checking if tray agent running")
 	if !agentRunning(trayAgentLabel) {
 		return errors.New("Tray is not running")
+	}
+	logging.Debug("Check if correct version of tray exists")
+	if !checkTrayVersion() {
+		return errors.New("cached tray version is older then expected")
 	}
 	return nil
 }
@@ -249,4 +260,42 @@ func ensureLaunchAgentsDirExists() error {
 		return err
 	}
 	return nil
+}
+
+func getTrayVersion(trayAppPath string) (string, error) {
+	var version TrayVersion
+	f, err := ioutil.ReadFile(filepath.Join(trayAppPath, "Contents", "Info.plist")) // #nosec G304
+	if err != nil {
+		return "", err
+	}
+	decoder := plist.NewDecoder(bytes.NewReader(f))
+	err = decoder.Decode(&version)
+	if err != nil {
+		return "", err
+	}
+
+	return version.ShortVersion, nil
+}
+
+func checkTrayVersion() bool {
+	v, err := getTrayVersion(constants.TrayBinaryPath)
+	if err != nil {
+		logging.Error(err.Error())
+		return false
+	}
+	currentVersion, err := semver.NewVersion(v)
+	if err != nil {
+		logging.Error(err.Error())
+		return false
+	}
+	expectedVersion, err := semver.NewVersion(version.GetCRCTrayVersion())
+	if err != nil {
+		logging.Error(err.Error())
+		return false
+	}
+
+	if expectedVersion.GreaterThan(currentVersion) {
+		return false
+	}
+	return true
 }
