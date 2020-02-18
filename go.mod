@@ -11,7 +11,7 @@ require (
 	github.com/code-ready/goodhosts v0.0.0-20190712111040-f090f3f77c26
 	github.com/code-ready/machine v0.0.0-20191115055627-b284f794e910
 	github.com/docker/go-units v0.4.0
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
+	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/mattn/go-colorable v0.0.9
 	github.com/pborman/uuid v1.2.0
