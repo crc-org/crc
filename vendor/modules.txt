@@ -23,7 +23,6 @@ github.com/code-ready/machine/libmachine/host
 github.com/code-ready/machine/libmachine/log
 github.com/code-ready/machine/libmachine/ssh
 github.com/code-ready/machine/drivers/hyperv
-github.com/code-ready/machine/drivers/virtualbox
 github.com/code-ready/machine/libmachine/drivers/plugin
 github.com/code-ready/machine/libmachine/drivers/plugin/localbinary
 github.com/code-ready/machine/libmachine/shell
@@ -42,8 +41,6 @@ github.com/code-ready/machine/libmachine/swarm
 github.com/docker/go-units
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
-# github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-github.com/golang/glog
 # github.com/google/uuid v1.0.0
 github.com/google/uuid
 # github.com/hashicorp/hcl v1.0.0
@@ -62,8 +59,6 @@ github.com/hectane/go-acl
 github.com/hectane/go-acl/api
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
-# github.com/intel-go/cpuid v0.0.0-20181003105527-1a4a6f06a1c6
-github.com/intel-go/cpuid
 # github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 github.com/kballard/go-shellquote
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1
@@ -115,7 +110,6 @@ golang.org/x/crypto/internal/subtle
 # golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-golang.org/x/sys/windows/registry
 golang.org/x/sys/cpu
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform
@@ -126,3 +120,5 @@ gopkg.in/AlecAivazis/survey.v1/core
 gopkg.in/AlecAivazis/survey.v1/terminal
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
+# howett.net/plist v0.0.0-20181124034731-591f970eefbb
+howett.net/plist
