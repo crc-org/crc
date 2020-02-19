@@ -240,7 +240,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	logging.Debug("Waiting until ssh is available")
 	if err := cluster.WaitForSsh(sshRunner); err != nil {
 		result.Error = err.Error()
-		return *result, errors.New("Failed to connect to the CRC VM with SSH")
+		return *result, errors.New("Failed to connect to the CRC VM with SSH -- host might be unreachable")
 	}
 
 	// Check the certs validity inside the vm
