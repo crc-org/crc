@@ -178,17 +178,12 @@ Environment=NO_PROXY=%s,%s`
 	return nil
 }
 
-// crc clusters are not running the cluster-version-operator, which is responsible for adding proxy env variables
-// to deployments which have the 'inject-proxy' annotation. This helper will be used to add the proxy env variables
-// to the deployments which should have it
-func AddProxyConfigToDeployment(oc oc.OcConfig, deployment string, namespace string, proxy *network.ProxyConfig) error {
+func addProxyConfigToDeployment(oc oc.OcConfig, deployment string, namespace string, proxy *network.ProxyConfig) error {
+	logging.Debugf("Adding proxy configuration to %s/%s", namespace, deployment)
 	cmdArgs := []string{"set", "env", "deployment", deployment, "-n", namespace,
 		fmt.Sprintf("HTTP_PROXY=%s", proxy.HttpProxy),
 		fmt.Sprintf("HTTPS_PROXY=%s", proxy.HttpsProxy),
 		fmt.Sprintf("NO_PROXY=%s,%s", proxy.GetNoProxyString(), internalNoProxy),
-	}
-	if err := oc.WaitForOpenshiftResource("deployment"); err != nil {
-		return err
 	}
 	if _, stderr, err := oc.RunOcCommand(cmdArgs...); err != nil {
 		return fmt.Errorf("Failed to add proxy details to %s (namespace: %s) %v: %s", deployment, namespace, err, stderr)
@@ -196,10 +191,36 @@ func AddProxyConfigToDeployment(oc oc.OcConfig, deployment string, namespace str
 	return nil
 }
 
-// Only marketplace operator doesn't get updated with proxy when it is set using proxy resource
-// All other operators which have `config.openshift.io/inject-proxy` annotation get updated except marketplace.
-func AddProxyConfigToMarketplaceOperator(oc oc.OcConfig, proxy *network.ProxyConfig) error {
-	return AddProxyConfigToDeployment(oc, "marketplace-operator", "openshift-marketplace", proxy)
+// crc clusters are not running the cluster-version-operator, which is
+// responsible for adding proxy env variables to deployments which have the
+// 'inject-proxy' annotation.
+// This is why we have to set the proxy configuration manually on some of the
+// deployments
+func AddProxyConfigToDeployments(oc oc.OcConfig, proxy *network.ProxyConfig) error {
+	if err := oc.WaitForOpenshiftResource("deployment"); err != nil {
+		return err
+	}
+
+	multiErr := errors.MultiError{}
+	err := addProxyConfigToDeployment(oc, "marketplace-operator", "openshift-marketplace", proxy)
+	if err != nil {
+		logging.Debugf("Failed to add proxy settings to marketplace operator: %v", err)
+		multiErr.Collect(err)
+	}
+
+	err = addProxyConfigToDeployment(oc, "ingress-operator", "openshift-ingress-operator", proxy)
+	if err != nil {
+		logging.Debugf("Failed to add proxy settings to ingress operator: %v", err)
+		multiErr.Collect(err)
+	}
+
+	err = addProxyConfigToDeployment(oc, "cluster-image-registry-operator", "openshift-image-registry", proxy)
+	if err != nil {
+		logging.Debugf("Failed to add proxy settings to image registry operator: %v", err)
+		multiErr.Collect(err)
+	}
+
+	return multiErr.ToError()
 }
 
 func addPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error {
