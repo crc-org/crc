@@ -85,39 +85,14 @@ type TrayVersion struct {
 	ShortVersion string `plist:"CFBundleShortVersionString"`
 }
 
-func checkTrayExistsAndRunning() error {
-	logging.Debug("Checking if daemon plist file exists")
+func checkIfDaemonPlistFileExists() error {
 	if !os.FileExists(daemonPlistFilePath) {
-		return errors.New("Daemon plist file does not exist")
-	}
-	logging.Debug("Checking if crc agent running")
-	if !agentRunning(daemonAgentLabel) {
-		return errors.New("crc daemon is not running")
-	}
-	logging.Debug("Checking if tray plist file exists")
-	if !os.FileExists(trayPlistFilePath) {
-		return errors.New("Tray plist file does not exist")
-	}
-	logging.Debug("Checking if tray agent running")
-	if !agentRunning(trayAgentLabel) {
-		return errors.New("Tray is not running")
-	}
-	logging.Debug("Check if correct version of tray exists")
-	if !checkTrayVersion() {
-		return errors.New("cached tray version is older then expected")
+		return fmt.Errorf("Daemon plist file does not exist")
 	}
 	return nil
 }
 
-func fixTrayExistsAndRunning() error {
-	if err := ensureLaunchAgentsDirExists(); err != nil {
-		return err
-	}
-	// get the tray app
-	err := downloadOrExtractTrayApp()
-	if err != nil {
-		return err
-	}
+func fixDaemonPlistFileExists() error {
 	currentExecutablePath, err := goos.Executable()
 	if err != nil {
 		return err
@@ -126,52 +101,87 @@ func fixTrayExistsAndRunning() error {
 		BinaryPath:     currentExecutablePath,
 		StdOutFilePath: stdOutFilePathDaemon,
 	}
+	return fixPlistFileExists(daemonPlistTemplate, daemonConfig, daemonPlistFilePath)
+}
 
-	trayConfig := AgentConfig{
-		BinaryPath:     filepath.Join(constants.CrcBinDir, constants.TrayBinaryName, "Contents", "MacOS", "CodeReady Containers"),
-		StdOutFilePath: stdOutFilePathTray,
-	}
-	logging.Debug("Creating daemon plist")
-	err = createPlist(daemonPlistTemplate, daemonConfig, daemonPlistFilePath)
-	if err != nil {
-		return err
-	}
-	logging.Debug("Creating tray plist")
-	err = createPlist(trayPlistTemplate, trayConfig, trayPlistFilePath)
-	if err != nil {
-		return err
-	}
-
-	// load crc daemon
-	err = launchctlLoadPlist(daemonPlistFilePath)
-	if err != nil {
-		return err
-	}
-	if !agentRunning(daemonAgentLabel) {
-		if err = startAgent(daemonAgentLabel); err != nil {
-			return err
-		}
-	}
-	// load tray
-	err = launchctlLoadPlist(trayPlistFilePath)
-	if err != nil {
-		return err
-	}
-	if !agentRunning(trayAgentLabel) {
-		if err = startAgent(trayAgentLabel); err != nil {
-			return err
-		}
-	}
-	// restart tray and daemon agents
-	err = restartAgent(daemonAgentLabel)
-	if err != nil {
-		return err
-	}
-	err = restartAgent(trayAgentLabel)
-	if err != nil {
-		return err
+func checkIfTrayPlistFileExists() error {
+	if !os.FileExists(trayPlistFilePath) {
+		return fmt.Errorf("Tray plist file does not exist")
 	}
 	return nil
+}
+
+func fixTrayPlistFileExists() error {
+	trayConfig := AgentConfig{
+		BinaryPath:     constants.TrayBinaryPath,
+		StdOutFilePath: stdOutFilePathTray,
+	}
+	return fixPlistFileExists(trayPlistTemplate, trayConfig, trayPlistFilePath)
+}
+
+func checkIfDaemonAgentRunning() error {
+	if !agentRunning(daemonAgentLabel) {
+		return fmt.Errorf("crc daemon is not running")
+	}
+	return nil
+}
+
+func fixDaemonAgentRunning() error {
+	return startAgent(daemonAgentLabel)
+}
+
+func checkIfTrayAgentRunning() error {
+	if !agentRunning(trayAgentLabel) {
+		return fmt.Errorf("Tray is not running")
+	}
+	return nil
+}
+
+func fixTrayAgentRunning() error {
+	return startAgent(trayAgentLabel)
+}
+
+func checkTrayVersion() error {
+	v, err := getTrayVersion(constants.TrayAppBundlePath)
+	if err != nil {
+		logging.Error(err.Error())
+		return err
+	}
+	currentVersion, err := semver.NewVersion(v)
+	if err != nil {
+		logging.Error(err.Error())
+		return err
+	}
+	expectedVersion, err := semver.NewVersion(version.GetCRCTrayVersion())
+	if err != nil {
+		logging.Error(err.Error())
+		return err
+	}
+
+	if expectedVersion.GreaterThan(currentVersion) {
+		return fmt.Errorf("Cached version is older then latest version: %s < %s", currentVersion.String(), expectedVersion.String())
+	}
+	return nil
+}
+
+func fixTrayVersion() error {
+	// get the tray app
+	err := downloadOrExtractTrayApp()
+	if err != nil {
+		return err
+	}
+	return restartAgent(trayAgentLabel)
+}
+
+func checkTrayBinaryPresent() error {
+	if !os.FileExists(constants.TrayBinaryPath) {
+		return fmt.Errorf("Tray binary does not exist")
+	}
+	return nil
+}
+
+func fixTrayBinaryPresent() error {
+	return downloadOrExtractTrayApp()
 }
 
 func createPlist(template string, config AgentConfig, plistPath string) error {
@@ -185,26 +195,26 @@ func createPlist(template string, config AgentConfig, plistPath string) error {
 		return err
 	}
 	err = ioutil.WriteFile(plistPath, plistContent.Bytes(), 0644)
-	return err
-}
-
-func launchctlLoadPlist(plistFilePath string) error {
-	_, err := exec.Command("launchctl", "load", plistFilePath).Output() // #nosec G204
-	return err
-}
-
-func startAgent(label string) error {
-	_, err := exec.Command("launchctl", "start", label).Output() // #nosec G204
-	return err
-}
-
-func restartAgent(label string) error {
-	_, err := exec.Command("launchctl", "stop", label).Output() // #nosec G204
 	if err != nil {
 		return err
 	}
-	_, err = exec.Command("launchctl", "start", label).Output() // #nosec G204
-	return err
+	return launchctlLoadPlist(plistPath)
+}
+
+func launchctlLoadPlist(plistFilePath string) error {
+	return exec.Command("launchctl", "load", plistFilePath).Run() // #nosec G204
+}
+
+func startAgent(label string) error {
+	return exec.Command("launchctl", "start", label).Run() // #nosec G204
+}
+
+func restartAgent(label string) error {
+	err := exec.Command("launchctl", "stop", label).Run() // #nosec G204
+	if err != nil {
+		return err
+	}
+	return exec.Command("launchctl", "start", label).Run() // #nosec G204
 }
 
 // check if a service (daemon,tray) is running
@@ -223,6 +233,23 @@ func agentRunning(label string) bool {
 	return true
 }
 
+func fixPlistFileExists(plistTemplate string, agentConfig AgentConfig, plistFilePath string) error {
+	if err := ensureLaunchAgentsDirExists(); err != nil {
+		return err
+	}
+	logging.Debugf("Creating plist %s", plistFilePath)
+	err := createPlist(plistTemplate, agentConfig, plistFilePath)
+	if err != nil {
+		return err
+	}
+	// load plist
+	if err := launchctlLoadPlist(plistFilePath); err != nil {
+		logging.Debug("failed while creating plist:", err.Error())
+		return err
+	}
+	return nil
+}
+
 func downloadOrExtractTrayApp() error {
 	// Extract the tray and put it in the bin directory.
 	tmpArchivePath, err := ioutil.TempDir("", "crc")
@@ -237,6 +264,7 @@ func downloadOrExtractTrayApp() error {
 	logging.Debug("Trying to extract tray from crc binary")
 	err = embed.Extract(filepath.Base(constants.GetCrcTrayDownloadURL()), tmpArchivePath)
 	if err != nil {
+		logging.Debug("Could not extract tray from crc binary", err)
 		logging.Debug("Downloading crc tray")
 		_, err = dl.Download(constants.GetCrcTrayDownloadURL(), tmpArchivePath, 0600)
 		if err != nil {
@@ -255,6 +283,7 @@ func downloadOrExtractTrayApp() error {
 	}
 	return nil
 }
+
 func ensureLaunchAgentsDirExists() error {
 	if err := goos.MkdirAll(launchAgentsDir, 0700); err != nil {
 		return err
@@ -275,27 +304,4 @@ func getTrayVersion(trayAppPath string) (string, error) {
 	}
 
 	return version.ShortVersion, nil
-}
-
-func checkTrayVersion() bool {
-	v, err := getTrayVersion(constants.TrayBinaryPath)
-	if err != nil {
-		logging.Error(err.Error())
-		return false
-	}
-	currentVersion, err := semver.NewVersion(v)
-	if err != nil {
-		logging.Error(err.Error())
-		return false
-	}
-	expectedVersion, err := semver.NewVersion(version.GetCRCTrayVersion())
-	if err != nil {
-		logging.Error(err.Error())
-		return false
-	}
-
-	if expectedVersion.GreaterThan(currentVersion) {
-		return false
-	}
-	return true
 }
