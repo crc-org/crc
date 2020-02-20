@@ -8,5 +8,6 @@ const (
 )
 
 var (
-	TrayBinaryPath = filepath.Join(CrcBinDir, TrayBinaryName)
+	TrayAppBundlePath = filepath.Join(CrcBinDir, TrayBinaryName)
+	TrayBinaryPath    = filepath.Join(TrayAppBundlePath, "Contents", "MacOS", "CodeReady Containers")
 )
