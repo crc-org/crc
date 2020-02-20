@@ -126,7 +126,7 @@ func StopAndRemovePodsInVM(sshRunner *ssh.SSHRunner) error {
 	// the pods are not completely stopped and when remove happens it will throw
 	// an error like below.
 	// remove /var/run/containers/storage/overlay-containers/97e5858e610afc9f71d145b1a7bd5ad930e537ccae79969ae256636f7fb7e77c/userdata/shm: device or resource busy
-	stopAndRemovePodsCmd := `bash -c 'sudo crictl stopp $(sudo crictl pods -q) && sudo crictl rmp $(sudo crictl pods -q)'`
+	stopAndRemovePodsCmd := `sudo bash -c 'export pods=$(crictl pods -q) && crictl stopp ${pods} && crictl rmp ${pods}'`
 	stopAndRemovePods := func() error {
 		output, err := sshRunner.Run(stopAndRemovePodsCmd)
 		logging.Debugf("Output of %s: %s", stopAndRemovePodsCmd, output)
