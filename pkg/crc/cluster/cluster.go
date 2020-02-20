@@ -150,7 +150,7 @@ func AddProxyConfigToCluster(oc oc.OcConfig, proxy *network.ProxyConfig) error {
 	if _, stderr, err := oc.RunOcCommand(cmdArgs...); err != nil {
 		return fmt.Errorf("Failed to add proxy details %v: %s", err, stderr)
 	}
-	return nil
+	return addProxyConfigToDeployments(oc, proxy)
 }
 
 const internalNoProxy = ".cluster.local,.svc,10.128.0.0/14,172.30.0.0/16"
@@ -196,7 +196,7 @@ func addProxyConfigToDeployment(oc oc.OcConfig, deployment string, namespace str
 // 'inject-proxy' annotation.
 // This is why we have to set the proxy configuration manually on some of the
 // deployments
-func AddProxyConfigToDeployments(oc oc.OcConfig, proxy *network.ProxyConfig) error {
+func addProxyConfigToDeployments(oc oc.OcConfig, proxy *network.ProxyConfig) error {
 	if err := oc.WaitForOpenshiftResource("deployment"); err != nil {
 		return err
 	}
@@ -215,6 +215,12 @@ func AddProxyConfigToDeployments(oc oc.OcConfig, proxy *network.ProxyConfig) err
 	}
 
 	err = addProxyConfigToDeployment(oc, "cluster-image-registry-operator", "openshift-image-registry", proxy)
+	if err != nil {
+		logging.Debugf("Failed to add proxy settings to image registry operator: %v", err)
+		multiErr.Collect(err)
+	}
+
+	err = addProxyConfigToDeployment(oc, "openshift-controller-manager-operator", "openshift-controller-manager-operator", proxy)
 	if err != nil {
 		logging.Debugf("Failed to add proxy settings to image registry operator: %v", err)
 		multiErr.Collect(err)
