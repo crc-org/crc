@@ -178,10 +178,11 @@ Environment=NO_PROXY=%s,%s`
 	return nil
 }
 
-// Only marketplace operator doesn't get updated with proxy when it is set using proxy resource
-// All other operators which have `config.openshift.io/inject-proxy` annotation get updated except marketplace.
-func AddProxyConfigToMarketplaceOperator(oc oc.OcConfig, proxy *network.ProxyConfig) error {
-	cmdArgs := []string{"set", "env", "deployment", "marketplace-operator", "-n", "openshift-marketplace",
+// crc clusters are not running the cluster-version-operator, which is responsible for adding proxy env variables
+// to deployments which have the 'inject-proxy' annotation. This helper will be used to add the proxy env variables
+// to the deployments which should have it
+func AddProxyConfigToDeployment(oc oc.OcConfig, deployment string, namespace string, proxy *network.ProxyConfig) error {
+	cmdArgs := []string{"set", "env", "deployment", deployment, "-n", namespace,
 		fmt.Sprintf("HTTP_PROXY=%s", proxy.HttpProxy),
 		fmt.Sprintf("HTTPS_PROXY=%s", proxy.HttpsProxy),
 		fmt.Sprintf("NO_PROXY=%s,%s", proxy.GetNoProxyString(), internalNoProxy),
@@ -190,9 +191,15 @@ func AddProxyConfigToMarketplaceOperator(oc oc.OcConfig, proxy *network.ProxyCon
 		return err
 	}
 	if _, stderr, err := oc.RunOcCommand(cmdArgs...); err != nil {
-		return fmt.Errorf("Failed to add proxy details to marketplace-operator %v: %s", err, stderr)
+		return fmt.Errorf("Failed to add proxy details to %s (namespace: %s) %v: %s", deployment, namespace, err, stderr)
 	}
 	return nil
+}
+
+// Only marketplace operator doesn't get updated with proxy when it is set using proxy resource
+// All other operators which have `config.openshift.io/inject-proxy` annotation get updated except marketplace.
+func AddProxyConfigToMarketplaceOperator(oc oc.OcConfig, proxy *network.ProxyConfig) error {
+	return AddProxyConfigToDeployment(oc, "marketplace-operator", "openshift-marketplace", proxy)
 }
 
 func addPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error {
