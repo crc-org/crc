@@ -14,12 +14,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	OC_CACHE_DIR = "oc"
-	TARGZ        = "tar.gz"
-	ZIP          = "zip"
-)
-
 // Oc is a struct with methods designed for dealing with the oc binary
 type OcCached struct{}
 
