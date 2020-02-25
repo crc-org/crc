@@ -322,8 +322,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	// Check DNS lookup from host to VM
 	logging.Info("Check DNS query from host ...")
-	if err := network.CheckCRCLocalDNSReachableFromHost(crcBundleMetadata.ClusterInfo.ClusterName,
-		crcBundleMetadata.ClusterInfo.BaseDomain, crcBundleMetadata.ClusterInfo.AppsDomain); err != nil {
+	if err := network.CheckCRCLocalDNSReachableFromHost(crcBundleMetadata, instanceIP); err != nil {
 		result.Error = err.Error()
 		return *result, errors.Newf("Failed to query DNS from host: %v", err)
 	}
