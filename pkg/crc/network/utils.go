@@ -9,6 +9,8 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/ssh"
+
+	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 )
 
 func executeCommandOrExit(sshRunner *ssh.SSHRunner, command string, errorMessage string) string {
@@ -95,23 +97,42 @@ func UriStringForDisplay(uri string) (string, error) {
 	return uri, nil
 }
 
-func CheckCRCLocalDNSReachableFromHost(clusterName, domainName, appsDomainName string) error {
-	ip, err := net.LookupIP(fmt.Sprintf("api.%s.%s", clusterName, domainName))
+func matchIP(ips []net.IP, expectedIP string) bool {
+	for _, ip := range ips {
+		if ip.String() == expectedIP {
+			return true
+		}
+	}
+
+	return false
+}
+func CheckCRCLocalDNSReachableFromHost(bundle *bundle.CrcBundleInfo, expectedIP string) error {
+	apiHostname := bundle.GetAPIHostname()
+	ip, err := net.LookupIP(apiHostname)
 	if err != nil {
 		return err
 	}
-	logging.Debugf("api.%s.%s resolved to %s", clusterName, domainName, ip)
+	logging.Debugf("%s resolved to %s", apiHostname, ip)
+	if !matchIP(ip, expectedIP) {
+		logging.Warnf("%s resolved to %s but %s was expected", apiHostname, ip, expectedIP)
+		return fmt.Errorf("Invalid IP for %s", apiHostname)
+	}
 
 	if runtime.GOOS != "darwin" {
 		/* This check will fail with !CGO_ENABLED builds on darwin as
 		 * in this case, /etc/resolver/ will not be used, so we won't
 		 * have wildcard DNS for our domains
 		 */
-		ip, err = net.LookupIP(fmt.Sprintf("foo.%s", appsDomainName))
+		appsHostname := bundle.GetAppHostname("foo")
+		ip, err = net.LookupIP(appsHostname)
 		if err != nil {
 			return err
 		}
-		logging.Debugf("foo.%s resolved to %s", appsDomainName, ip)
+		logging.Debugf("%s resolved to %s", appsHostname, ip)
+		if !matchIP(ip, expectedIP) {
+			logging.Warnf("%s resolved to %s but %s was expected", appsHostname, ip, expectedIP)
+			return fmt.Errorf("Invalid IP for %s", appsHostname)
+		}
 	}
 	return nil
 }
