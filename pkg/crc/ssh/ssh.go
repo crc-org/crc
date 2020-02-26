@@ -2,6 +2,8 @@ package ssh
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/machine/libmachine/drivers"
@@ -23,6 +25,14 @@ func CreateRunnerWithPrivateKey(driver drivers.Driver, privateKey string) *SSHRu
 // Create a host using the driver's config
 func (runner *SSHRunner) Run(command string) (string, error) {
 	return runner.runSSHCommandFromDriver(command, false)
+}
+
+func (runner *SSHRunner) SetTextContentAsRoot(destFilename string, content string, mode os.FileMode) error {
+	logging.Debugf("Creating %s with permissions 0%o in the CRC VM", destFilename, mode)
+	command := fmt.Sprintf("sudo install -m 0%o /dev/null %s && cat <<EOF | sudo tee %s\n%s\nEOF", mode, destFilename, destFilename, content)
+	_, err := runner.RunPrivate(command)
+
+	return err
 }
 
 func (runner *SSHRunner) RunPrivate(command string) (string, error) {
