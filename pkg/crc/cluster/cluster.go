@@ -167,11 +167,11 @@ Environment=HTTPS_PROXY=%s
 Environment=NO_PROXY=%s,%s`
 	p := fmt.Sprintf(proxyTemplate, proxy.HttpProxy, proxy.HttpsProxy, internalNoProxy, proxy.GetNoProxyString())
 	// This will create a systemd drop-in configuration for proxy (both for kubelet and crio services) on the VM.
-	_, err := sshRunner.RunPrivate(fmt.Sprintf("cat <<EOF | sudo tee /etc/systemd/system/crio.service.d/10-default-env.conf\n%s\nEOF", p))
+	err := sshRunner.SetTextContentAsRoot("/etc/systemd/system/crio.service.d/10-default-env.conf", p, 0644)
 	if err != nil {
 		return err
 	}
-	_, err = sshRunner.RunPrivate(fmt.Sprintf("cat <<EOF | sudo tee /etc/systemd/system/kubelet.service.d/10-default-env.conf\n%s\nEOF", p))
+	err = sshRunner.SetTextContentAsRoot("/etc/systemd/system/kubelet.service.d/10-default-env.conf", p, 0644)
 	if err != nil {
 		return err
 	}
@@ -196,7 +196,7 @@ func AddProxyConfigToMarketplaceOperator(oc oc.OcConfig, proxy *network.ProxyCon
 }
 
 func addPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error {
-	_, err := sshRunner.RunPrivate(fmt.Sprintf("cat <<EOF | sudo tee /var/lib/kubelet/config.json\n%s\nEOF", pullSec))
+	err := sshRunner.SetTextContentAsRoot("/var/lib/kubelet/config.json", pullSec, 0644)
 	if err != nil {
 		return err
 	}

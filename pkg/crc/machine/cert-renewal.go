@@ -180,7 +180,7 @@ func RegenerateCertificates(sshRunner *ssh.SSHRunner, machineName string) error 
 		return err
 	}
 	/* Copy the ca-bundle data we just read to etc/kubernetes/kubelet-ca.crt */
-	_, err = sshRunner.Run(fmt.Sprintf("cat <<EOF | sudo tee /etc/kubernetes/kubelet-ca.crt\n%s\nEOF", output))
+	err = sshRunner.SetTextContentAsRoot("/etc/kubernetes/kubelet-ca.crt", output, 0644)
 	if err != nil {
 		logging.Debugf("Error writing kubelet client CA to /etc/kubernetes/kubelet-ca.crt: %v", err)
 		return err
