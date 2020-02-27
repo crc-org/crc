@@ -5,6 +5,6 @@ $ {bin} delete
 +
 [WARNING]
 ====
-The [command]`{bin} delete` command will result in the loss of data stored in the {prod} virtual machine.
-Save any desired instance information before running this command.
+The [command]`{bin} delete` command results in the loss of data stored in the {prod} virtual machine.
+Save any desired information stored in the virtual machine before running this command.
 ====

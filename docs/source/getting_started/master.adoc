@@ -10,6 +10,8 @@ include::content/assembly_installation.adoc[leveloffset=+1]
 
 include::content/assembly_using-codeready-containers.adoc[leveloffset=+1]
 
+include::content/assembly_configuring-codeready-containers.adoc[leveloffset=+1]
+
 include::content/assembly_networking.adoc[leveloffset=+1]
 
 include::content/assembly_administrative-tasks.adoc[leveloffset=+1]
