@@ -50,6 +50,12 @@ func (recoveryPod recoveryPod) Run(args ...string) (string, string, error) {
 	return stdout, "", err
 }
 
+func (recoveryPod recoveryPod) RunPrivate(args ...string) (string, string, error) {
+	cmd := fmt.Sprintf("sudo oc %s", strings.Join(args, " "))
+	stdout, err := recoveryPod.sshRunner.RunPrivate(cmd)
+	return stdout, "", err
+}
+
 func (recoveryPod *recoveryPod) runPodCommand(cmd string) (string, error) {
 	podmanCmd := fmt.Sprintf("sudo podman run -it --rm --network=host -v /etc/kubernetes/:/etc/kubernetes/:Z --entrypoint=/usr/bin/cluster-kube-apiserver-operator '%s'", recoveryPod.kaoImage)
 	podmanCmd = podmanCmd + " " + cmd
