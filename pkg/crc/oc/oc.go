@@ -14,6 +14,7 @@ import (
 
 type OcRunner interface {
 	Run(args ...string) (string, string, error)
+	RunPrivate(args ...string) (string, string, error)
 	GetKubeconfigPath() string
 }
 
@@ -28,6 +29,10 @@ type OcLocalRunner struct {
 
 func (oc OcLocalRunner) Run(args ...string) (string, string, error) {
 	return crcos.RunWithDefaultLocale(oc.OcBinaryPath, args...)
+}
+
+func (oc OcLocalRunner) RunPrivate(args ...string) (string, string, error) {
+	return crcos.RunWithDefaultLocalePrivate(oc.OcBinaryPath, args...)
 }
 
 func (oc OcLocalRunner) GetKubeconfigPath() string {
