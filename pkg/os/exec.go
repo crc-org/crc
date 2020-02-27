@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func run(command string, args []string, env map[string]string) (string, string, error) {
+func runCmd(command string, args []string, env map[string]string) (string, string, error) {
 	cmd := exec.Command(command, args...) // #nosec G204
 	if len(env) != 0 {
 		cmd.Env = os.Environ()
@@ -20,7 +20,6 @@ func run(command string, args []string, env map[string]string) (string, string, 
 	stdErr := new(bytes.Buffer)
 	cmd.Stdout = stdOut
 	cmd.Stderr = stdErr
-	logging.Debugf("Running '%s %s'", command, strings.Join(args, " "))
 	err := cmd.Run()
 	if err != nil {
 		logging.Debugf("Command failed: %v", err)
@@ -28,6 +27,16 @@ func run(command string, args []string, env map[string]string) (string, string, 
 		logging.Debugf("stderr: %s", stdErr.String())
 	}
 	return stdOut.String(), stdErr.String(), err
+}
+
+func run(command string, args []string, env map[string]string) (string, string, error) {
+	logging.Debugf("Running '%s %s'", command, strings.Join(args, " "))
+	return runCmd(command, args, env)
+}
+
+func runPrivate(command string, args []string, env map[string]string) (string, string, error) {
+	logging.Debugf("About to run a hidden command")
+	return runCmd(command, args, env)
 }
 
 // RunWithPrivilege executes a command using sudo
@@ -43,4 +52,8 @@ func RunWithPrivilege(reason string, cmdAndArgs ...string) (string, string, erro
 
 func RunWithDefaultLocale(command string, args ...string) (string, string, error) {
 	return run(command, args, map[string]string{"LC_ALL": "C", "LANG": "C"})
+}
+
+func RunWithDefaultLocalePrivate(command string, args ...string) (string, string, error) {
+	return runPrivate(command, args, map[string]string{"LC_ALL": "C", "LANG": "C"})
 }
