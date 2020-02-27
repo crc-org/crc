@@ -39,6 +39,8 @@ func GenerateUsageHint(userShell, cmdLine string) string {
 	comment := "#"
 
 	switch userShell {
+	case "fish":
+		cmd = fmt.Sprintf("eval (%s)", cmdLine)
 	case "powershell":
 		cmd = fmt.Sprintf("& %s | Invoke-Expression", cmdLine)
 	case "cmd":
@@ -57,6 +59,8 @@ func GetEnvString(userShell string, envName string, envValue string) string {
 		return fmt.Sprintf("$Env:%s = \"%s\"", envName, envValue)
 	case "cmd":
 		return fmt.Sprintf("SET %s=%s", envName, envValue)
+	case "fish":
+		return fmt.Sprintf("contains %s $fish_user_paths; or set -U fish_user_paths %s $fish_user_paths", envValue, envValue)
 	default:
 		return fmt.Sprintf("export %s=\"%s\"", envName, envValue)
 	}
@@ -65,6 +69,8 @@ func GetEnvString(userShell string, envName string, envValue string) string {
 func GetPathEnvString(userShell string, prependedPath string) string {
 	var pathStr string
 	switch userShell {
+	case "fish":
+		pathStr = prependedPath
 	case "powershell":
 		pathStr = fmt.Sprintf("%s;$Env:PATH", prependedPath)
 	case "cmd":
