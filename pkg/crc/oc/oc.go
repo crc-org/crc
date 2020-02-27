@@ -53,6 +53,11 @@ func (oc OcConfig) RunOcCommand(args ...string) (string, string, error) {
 	return oc.runner.Run(args...)
 }
 
+func (oc OcConfig) RunOcCommandPrivate(args ...string) (string, string, error) {
+	args = append(args, "--kubeconfig", oc.runner.GetKubeconfigPath())
+	return oc.runner.RunPrivate(args...)
+}
+
 func NewOcConfig(runner OcRunner) OcConfig {
 	return OcConfig{runner: runner}
 }
