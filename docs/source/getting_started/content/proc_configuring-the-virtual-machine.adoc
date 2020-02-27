@@ -1,0 +1,52 @@
+[id="configuring-the-virtual-machine_{context}"]
+= Configuring the virtual machine
+
+Use the `cpus` and `memory` properties to configure the default number of vCPUs and amount of memory available to the {prod} virtual machine, respectively.
+
+[IMPORTANT]
+====
+You cannot modify the configuration of an existing {prod} virtual machine.
+To enable configuration changes, you must delete the existing virtual machine and create a new one.
+
+To create the new virtual machine, first delete the existing {prod} virtual machine, then start a new virtual machine with the configuration changes:
+
+[subs="+quotes,attributes"]
+----
+$ {bin} delete
+$ {bin} start
+----
+====
+
+[WARNING]
+====
+The [command]`{bin} delete` command results in the loss of data stored in the {prod} virtual machine.
+Save any desired information stored in the virtual machine before running this command.
+====
+
+.Procedure
+
+* To increase the number of vCPUs available to the virtual machine:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} config set cpus _<number>_
+----
++
+The default value for the `cpus` property is `4`.
+The number of vCPUs to allocate must be greater than or equal to the default.
+
+* To increase the memory available to the virtual machine:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} config set memory _<number-in-mib>_
+----
++
+[NOTE]
+====
+Values for available memory must be supplied in mebibytes (MiB).
+One gibibyte (GiB) of memory is equal to 1024 MiB.
+====
++
+The default value for the `memory` property is `8192`.
+The amount of memory to allocate must be greater than or equal to the default.

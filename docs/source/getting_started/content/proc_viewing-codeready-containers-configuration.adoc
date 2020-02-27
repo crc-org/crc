@@ -1,0 +1,32 @@
+[id="viewing-codeready-containers-configuration_{context}"]
+= Viewing {prod} configuration
+
+The {prod} binary provides commands to view configurable properties and the current {prod} configuration.
+
+.Procedure
+
+* To view the available configurable properties:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} config --help
+----
+
+* To view the values for a configurable property:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} config get _<property>_
+----
+
+* To view the complete current configuration:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} config view
+----
++
+[NOTE]
+====
+The [command]`{bin} config view` command does not return any information if the configuration consists of default values.
+====
