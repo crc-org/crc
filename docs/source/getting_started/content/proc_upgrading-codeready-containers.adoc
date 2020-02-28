@@ -1,7 +1,7 @@
 [id="upgrading-codeready-containers_{context}"]
 = Upgrading {prod}
 
-Newer versions of the {prod} binary require manual set up to prevent potential incompatilibities with previous versions.
+Newer versions of the {prod} binary require manual set up to prevent potential incompatibilities with previous versions.
 
 .Procedure
 
