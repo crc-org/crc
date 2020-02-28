@@ -1,9 +1,13 @@
 package machine
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"runtime"
 	"time"
@@ -73,6 +77,34 @@ func getCrcBundleInfo(bundlePath string) (*bundle.CrcBundleInfo, error) {
 	return bundle.Extract(bundlePath)
 }
 
+func checkDiskImageSha256sum(bundleinfo *bundle.CrcBundleInfo) error {
+	diskImagePath := bundleinfo.GetDiskImagePath()
+	expectedSha := bundleinfo.GetSha256sumOfDisk()
+	logging.Infof("Checking sha256sum of disk image %s ...", diskImagePath)
+	gotSha, err := getSha256Sum(diskImagePath)
+	if err != nil {
+		return err
+	}
+	if expectedSha != gotSha {
+		return fmt.Errorf("Expected sha %s Got %s", expectedSha, gotSha)
+	}
+	return nil
+}
+
+func getSha256Sum(filePath string) (string, error) {
+	f, err := os.Open(filepath.Clean(filePath))
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
 func getBundleMetadataFromDriver(driver drivers.Driver) (string, *bundle.CrcBundleInfo, error) {
 	bundleName, err := driver.GetBundleName()
 	/* FIXME: the bundleName == "" check can be removed when all machine
@@ -134,6 +166,11 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		if err != nil {
 			result.Error = err.Error()
 			return *result, errors.Newf("Error getting bundle metadata: %v", err)
+		}
+
+		if err := checkDiskImageSha256sum(crcBundleMetadata); err != nil {
+			result.Error = err.Error()
+			return *result, errors.Newf("Error to match bundle sha256sum %v", err)
 		}
 
 		openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()

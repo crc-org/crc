@@ -42,8 +42,10 @@ type CrcBundleInfo struct {
 	} `json:"nodes"`
 	Storage struct {
 		DiskImages []struct {
-			Name   string `json:"name"`
-			Format string `json:"format"`
+			Name      string `json:"name"`
+			Format    string `json:"format"`
+			Size      string `json:"size"`
+			Sha256sum string `json:"sha256sum"`
 		} `json:"diskImages"`
 	} `json:"storage"`
 	cachedPath string
@@ -145,4 +147,8 @@ func (bundle *CrcBundleInfo) GetBundleBuildTime() (time.Time, error) {
 
 func (bundle *CrcBundleInfo) GetOpenshiftVersion() string {
 	return bundle.ClusterInfo.OpenShiftVersion
+}
+
+func (bundle *CrcBundleInfo) GetSha256sumOfDisk() string {
+	return bundle.Storage.DiskImages[0].Sha256sum
 }
