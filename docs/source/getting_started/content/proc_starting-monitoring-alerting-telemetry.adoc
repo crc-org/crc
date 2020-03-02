@@ -1,8 +1,9 @@
 [id="starting-monitoring-alerting-telemetry_{context}"]
 = Starting Monitoring, Alerting, and Telemetry
 
-In order to make sure {prod} can run on a typical laptop, some resource–heavy services get disabled by default.
-One of these is Prometheus and all the related monitoring, alerting, and telemetry functionality, with the latter being responsible for your cluster being listed in the link:https://cloud.redhat.com/openshift[Red Hat OpenShift Cluster Manager].
+To make sure {prod} can run on a typical laptop, some resource-heavy services get disabled by default.
+One of these is Prometheus and the related monitoring, alerting, and telemetry functionality.
+Telemetry functionality is responsible for listing your cluster in the link:https://cloud.redhat.com/openshift[Red Hat OpenShift Cluster Manager].
 
 .Prerequisites
 

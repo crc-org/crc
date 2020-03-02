@@ -4,8 +4,9 @@
 [NOTE]
 ====
 The goal of {rh-prod} is to deliver an OpenShift environment for development and testing purposes.
-Issues occurring during installation or usage of specific OpenShift applications are outside of the scope of {prod} and should be reported to the relevant project.
-For example, OpenShift issues are tracked on link:https://github.com/openshift/origin/issues[GitHub].
+Issues occurring during installation or usage of specific OpenShift applications are outside of the scope of {prod}.
+Report such issues to the relevant project.
+For example, OpenShift tracks issues on link:https://github.com/openshift/origin/issues[GitHub].
 ====
 
 include::proc_basic-troubleshooting.adoc[leveloffset=+1]

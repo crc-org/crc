@@ -1,0 +1,11 @@
+[id="about-codeready-containers_{context}"]
+= About {prod}
+
+{rh-prod} brings a minimal OpenShift 4 cluster to your local computer.
+This cluster provides a minimal environment for development and testing purposes.
+{prod} is mainly targeted at running on developers' desktops.
+For other use cases, such as headless or multi-developer setups, use the link:https://cloud.redhat.com/openshift/install/[full OpenShift installer].
+
+Refer to the link:https://docs.openshift.com/container-platform/latest/welcome/index.html#developer-activities[OpenShift documentation] for a full introduction to OpenShift.
+
+{prod} includes the [command]`{bin}` command-line interface (CLI) to interact with the {prod} virtual machine running the OpenShift cluster.

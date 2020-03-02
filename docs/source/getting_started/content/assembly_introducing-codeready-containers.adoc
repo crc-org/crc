@@ -1,6 +1,6 @@
 [id="introducing-codeready-containers_{context}"]
 = Introducing {rh-prod}
 
-include::con_understanding-codeready-containers.adoc[leveloffset=+1]
+include::con_about-codeready-containers.adoc[leveloffset=+1]
 
 include::con_differences-from-production-openshift-install.adoc[leveloffset=+1]

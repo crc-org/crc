@@ -17,10 +17,10 @@ This will open your web browser and direct it to the web console.
 +
 [NOTE]
 ====
-* You can also view the password for the `developer` and `kubeadmin` user by running [command]`{bin} console --credentials`.
-* The cluster can initially be accessed through either the `kubeadmin` or `developer` user.
-For creating projects or OpenShift applications, and for application deployment, the `developer` user should be used.
-The `kubeadmin` user should only be used for administrative tasks such as creating new users, setting roles, and so on.
+* You can also view the password for the `developer` and `kubeadmin` users by running [command]`{bin} console --credentials`.
+* You can initially access the cluster through either the `kubeadmin` or `developer` user.
+Use the `developer` user for creating projects or OpenShift applications and for application deployment.
+Only use the `kubeadmin` user for administrative tasks such as creating new users, setting roles, and so on.
 ====
 
 See <<troubleshooting-codeready-containers_{context}>> if you cannot access the {prod} OpenShift cluster.

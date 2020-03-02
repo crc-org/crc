@@ -1,11 +1,12 @@
 [id="differences-from-production-openshift-install_{context}"]
-= Differences from a production OpenShift install
+= Differences from a production OpenShift installation
 
 {rh-prod} is a regular OpenShift installation with the following notable differences:
 
-* It uses a single node which behaves both as a master and as a worker node.
-* The `machine-config` and `monitoring` Operators are disabled by default.
-* These disabled Operators will cause the corresponding parts of the web console to be non functional.
-* For the same reason, there is currently no upgrade path to newer OpenShift versions.
-* Due to technical limitations, the {prod} cluster is ephemeral and will need to be recreated from scratch once a month using a newer release.
-* The OpenShift instance is running in a virtual machine, which could cause some other differences, in particular in relation with external networking.
+* **The {prod} OpenShift cluster is ephemeral and is not intended for production use.**
+* It uses a single node which behaves as both a master and worker node.
+* It disables the `machine-config` and `monitoring` Operators by default.
+** These disabled Operators cause the corresponding parts of the web console to be non-functional.
+** For the same reason, there is no upgrade path to newer OpenShift versions.
+* The OpenShift instance runs in a virtual machine.
+This may cause other differences, particularly with external networking.

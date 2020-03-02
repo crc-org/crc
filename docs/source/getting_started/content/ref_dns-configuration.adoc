@@ -4,8 +4,10 @@
 [id="dns-configuration-linux_{context}"]
 == Linux
 
-* {prod} expects NetworkManager to be used to manage networking.
-* NetworkManager is set up to use `dnsmasq` through the [filename]`/etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf` configuration file.
+On Linux, {prod} expects the following DNS configuration:
+
+* {prod} expects NetworkManager to manage networking.
+* NetworkManager uses `dnsmasq` via the [filename]`/etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf` configuration file.
 * The configuration file for this `dnsmasq` instance is [filename]`/etc/NetworkManager/dnsmasq.d/crc.conf`:
 +
 ----
@@ -18,9 +20,11 @@ This DNS server is a `dnsmasq` instance running inside of the virtual machine.
 [id="dns-configuration-mac_{context}"]
 == {mac}
 
+On {mac}, {prod} expects the following DNS configuration:
+
 * {prod} creates a [filename]`/etc/resolver/testing` file which instructs {mac} to forward all DNS requests  for the `testing` domain to the {prod} virtual machine.
 * {prod} also adds an `api.crc.testing` entry to [filename]`/etc/hosts` pointing at the VM IP address.
-This is needed by the `oc` binary.
+The [command]`oc` binary requires this entry.
 See https://github.com/openshift/origin/issues/23266[OpenShift issue #23266] for more information.
 
 ////

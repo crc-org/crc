@@ -1,7 +1,7 @@
 [id="accessing-the-openshift-cluster_{context}"]
 = Accessing the OpenShift cluster
 
-The OpenShift cluster running in the {prod} virtual machine can be accessed via the OpenShift web console or the OpenShift client binary ([command]`oc`).
+Access the OpenShift cluster running in the {prod} virtual machine via the OpenShift web console or client binary ([command]`oc`).
 
 include::proc_accessing-the-openshift-web-console.adoc[leveloffset=+1]
 
