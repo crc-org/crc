@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -44,6 +45,7 @@ type CrcBundleInfo struct {
 		DiskImages []struct {
 			Name   string `json:"name"`
 			Format string `json:"format"`
+			Size   string `json:"size"`
 		} `json:"diskImages"`
 	} `json:"storage"`
 	cachedPath string
@@ -145,4 +147,29 @@ func (bundle *CrcBundleInfo) GetBundleBuildTime() (time.Time, error) {
 
 func (bundle *CrcBundleInfo) GetOpenshiftVersion() string {
 	return bundle.ClusterInfo.OpenShiftVersion
+}
+
+func (bundle *CrcBundleInfo) GetDiskSize() (int64, error) {
+	size, err := strconv.ParseInt(bundle.Storage.DiskImages[0].Size, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return size, nil
+}
+
+func (bundle *CrcBundleInfo) CheckDiskImageSize() error {
+	diskImagePath := bundle.GetDiskImagePath()
+	expectedSize, err := bundle.GetDiskSize()
+	if err != nil {
+		return err
+	}
+	f, err := os.Stat(diskImagePath)
+	if err != nil {
+		return err
+	}
+	gotSize := f.Size()
+	if expectedSize != gotSize {
+		return fmt.Errorf("Expected size %d Got %d", expectedSize, gotSize)
+	}
+	return nil
 }

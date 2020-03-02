@@ -136,6 +136,12 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			return *result, errors.Newf("Error getting bundle metadata: %v", err)
 		}
 
+		logging.Infof("Checking size of the disk image %s ...", crcBundleMetadata.GetDiskImagePath())
+		if err := crcBundleMetadata.CheckDiskImageSize(); err != nil {
+			result.Error = err.Error()
+			return *result, errors.Newf("Invalid bundle disk image '%s', %v", crcBundleMetadata.GetDiskImagePath(), err)
+		}
+
 		openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
 		if openshiftVersion == "" {
 			logging.Infof("Creating VM...")
