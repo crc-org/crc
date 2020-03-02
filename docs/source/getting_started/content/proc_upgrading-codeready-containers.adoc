@@ -1,7 +1,7 @@
 [id="upgrading-codeready-containers_{context}"]
 = Upgrading {prod}
 
-Newer versions of the {prod} binary require manual set up to prevent potential incompatibilities with previous versions.
+Newer versions of the {prod} binary require manual set up to prevent potential incompatibilities with earlier versions.
 
 .Procedure
 
@@ -11,7 +11,7 @@ Newer versions of the {prod} binary require manual set up to prevent potential i
 +
 include::snip_crc-delete.adoc[]
 
-* Replace the previous [command]`{bin}` binary with the binary of the latest release.
+* Replace the earlier [command]`{bin}` binary with the binary of the latest release.
 Verify that the new [command]`{bin}` binary is in use by checking its version:
 +
 [subs="+quotes,attributes"]

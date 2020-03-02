@@ -1,18 +1,19 @@
 [id="troubleshooting-expired-certificates_{context}"]
 = Troubleshooting expired certificates
 
-Prior to {rh-prod} 1.2.0, the system bundle included in each released `{bin}` binary expired 30 days after the release due to certificates embedded in the OpenShift cluster.
-Using an older `{bin}` binary or system bundle will result in an expired certificates error.
+Before {rh-prod} 1.2.0, the system bundle in each released [command]`{bin}` binary expired 30 days after the release.
+This expiration was due to certificates embedded in the OpenShift cluster.
+As a result, using an older [command]`{bin}` binary or system bundle results in an expired certificates error.
 
-Starting from {prod} 1.2.0, the embedded certificates can be automatically renewed by `{bin}`.
-The certificate renewal process is triggered when needed when [command]`{bin} start` is run.
-When certificates need to be renewed, this can add up to five minutes to the start time of the cluster.
+Starting from {prod} 1.2.0, the embedded certificates can be automatically renewed by [command]`{bin}`.
+The [command]`{bin} start` command triggers the certificate renewal process when needed.
+Certificate renewal can add up to five minutes to the start time of the cluster.
 
 .Procedure
 
 With {prod} releases older than 1.2.0, to resolve expired certificate errors:
 
-. link:{crc-download-url}[Download the latest {prod} release] and place the `{bin}` binary in your `$PATH`.
+. link:{crc-download-url}[Download the latest {prod} release] and place the [command]`{bin}` binary in your `$PATH`.
 
 . Remove the cluster with certificate errors using the [command]`{bin} delete` command:
 +
@@ -25,7 +26,7 @@ include::snip_crc-delete.adoc[]
 $ {bin} setup
 ----
 
-. Start the new cluster:
+. Start the new virtual machine:
 +
 [subs="+quotes,attributes"]
 ----

@@ -28,12 +28,12 @@ $ oc login -u developer https://api.crc.testing:6443
 +
 [NOTE]
 ====
-The password for the `developer` user was printed in the output of the [command]`{bin} start` command.
+The [command]`{bin} start` command prints the password for the `developer` user.
 You can also view it by running the [command]`{bin} console --credentials` command.
 ====
 
 . You can now use [command]`oc` to interact with your OpenShift cluster.
-For example, to verify that the OpenShift cluster operators are available:
+For example, to verify that the OpenShift cluster Operators are available:
 +
 [subs="+quotes,attributes",options="nowrap"]
 ----
@@ -42,8 +42,7 @@ $ oc get co
 +
 [NOTE]
 ====
-* The `machine-config` cluster operator is expected to report `False` availability.
-* The `monitoring` cluster operator is expected to report `Unknown` availability.
+* {prod} disables the `machine-config` and `monitoring` Operators by default.
 ====
 
 See <<troubleshooting-codeready-containers_{context}>> if you cannot access the {prod} OpenShift cluster.
@@ -51,4 +50,4 @@ See <<troubleshooting-codeready-containers_{context}>> if you cannot access the 
 .Additional resources
 
 * The link:https://docs.openshift.com/container-platform/latest/applications/projects/working-with-projects.html[OpenShift documentation] covers the creation of projects and applications.
-* link:https://docs.openshift.com/container-platform/4.2/cli_reference/openshift_developer_cli/understanding-odo.html[OpenShift Do] (`odo`) can also be used to create OpenShift projects and applications from the command line.
+* You can also use link:https://docs.openshift.com/container-platform/4.2/cli_reference/openshift_developer_cli/understanding-odo.html[OpenShift Do] (`odo`) to create OpenShift projects and applications from the command line.

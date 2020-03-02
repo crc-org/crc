@@ -7,13 +7,13 @@ This procedure will create the [filename]`~/.crc` directory if it does not alrea
 
 .Prerequisites
 
-* Your user account must have permission to use the [command]`sudo` command.
+* Your user account has permission to use the [command]`sudo` command.
 
 [NOTE]
 ====
-* The `{bin}` binary should not be run as `root` (or Administrator).
-The `{bin}` binary should always be run with your user account.
-* If you are setting up a new version, capture any changes made to the instance before setting up a new {prod} release.
+* Do not run the [command]`{bin}` binary as `root` (or Administrator).
+Always run the [command]`{bin}` binary with your user account.
+* If you are setting up a new version, capture any changes made to the virtual machine before setting up a new {prod} release.
 ====
 
 .Procedure

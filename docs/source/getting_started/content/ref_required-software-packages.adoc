@@ -2,7 +2,7 @@
 = Required software packages
 
 {prod} requires the `libvirt` and `NetworkManager` packages.
-Consult the following table to determine the command used to install these packages for your Linux distribution.
+Consult the following table to find the command used to install these packages for your Linux distribution:
 
 .Package installation commands by distribution
 [options="header"]
