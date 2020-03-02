@@ -8,6 +8,9 @@ One of these is Prometheus and all the related monitoring, alerting, and telemet
 
 * A running {prod} virtual machine and a working [command]`oc` command.
 For more information, see <<accessing-the-openshift-cluster-with-oc_{context}>>.
+* You must assign additional memory to the {prod} virtual machine.
+At least 12 GiB of memory (a value of `12288`) is recommended.
+For more information, see <<configuring-the-virtual-machine_{context}>>.
 
 .Procedure
 
