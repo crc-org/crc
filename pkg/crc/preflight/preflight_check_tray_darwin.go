@@ -5,10 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	goos "os"
-	"os/exec"
 	"path/filepath"
-	"strings"
-	goTemplate "text/template"
 
 	"github.com/Masterminds/semver"
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -17,53 +14,13 @@ import (
 	dl "github.com/code-ready/crc/pkg/download"
 	"github.com/code-ready/crc/pkg/embed"
 	"github.com/code-ready/crc/pkg/extract"
+	"github.com/code-ready/crc/pkg/launchd"
 	"github.com/code-ready/crc/pkg/os"
 	"github.com/pkg/errors"
 	"howett.net/plist"
 )
 
 const (
-	trayPlistTemplate = `<?xml version='1.0' encoding='UTF-8'?>
-	<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-	<plist version='1.0'>
-		<dict>
-			<key>Label</key>
-			<string>crc.tray</string>
-			<key>ProgramArguments</key>
-			<array>
-				<string>{{ .BinaryPath }}</string>
-			</array>
-			<key>StandardOutPath</key>
-			<string>{{ .StdOutFilePath }}</string>
-			<key>Disabled</key>
-			<false/>
-			<key>RunAtLoad</key>
-			<true/>
-		</dict>
-	</plist>`
-
-	daemonPlistTemplate = `<?xml version='1.0' encoding='UTF-8'?>
-	<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-	<plist version='1.0'>
-		<dict>
-			<key>Label</key>
-			<string>crc.daemon</string>
-			<key>ProgramArguments</key>
-			<array>
-				<string>{{ .BinaryPath }}</string>
-				<string>daemon</string>
-				<string>--log-level</string>
-				<string>debug</string>
-			</array>
-			<key>StandardOutPath</key>
-			<string>{{ .StdOutFilePath }}</string>
-			<key>KeepAlive</key>
-			<true/>
-			<key>Disabled</key>
-			<false/>
-		</dict>
-	</plist>`
-
 	daemonAgentLabel = "crc.daemon"
 	trayAgentLabel   = "crc.tray"
 )
@@ -75,11 +32,6 @@ var (
 	stdOutFilePathDaemon = filepath.Join(constants.CrcBaseDir, ".crcd-agent.log")
 	stdOutFilePathTray   = filepath.Join(constants.CrcBaseDir, ".crct-agent.log")
 )
-
-type AgentConfig struct {
-	BinaryPath     string
-	StdOutFilePath string
-}
 
 type TrayVersion struct {
 	ShortVersion string `plist:"CFBundleShortVersionString"`
@@ -97,11 +49,13 @@ func fixDaemonPlistFileExists() error {
 	if err != nil {
 		return err
 	}
-	daemonConfig := AgentConfig{
+	daemonConfig := launchd.AgentConfig{
+		Label:          daemonAgentLabel,
 		BinaryPath:     currentExecutablePath,
 		StdOutFilePath: stdOutFilePathDaemon,
+		Args:           []string{"daemon", "--log-level", "debug"},
 	}
-	return fixPlistFileExists(daemonPlistTemplate, daemonConfig, daemonPlistFilePath)
+	return fixPlistFileExists(daemonConfig, daemonPlistFilePath)
 }
 
 func checkIfTrayPlistFileExists() error {
@@ -112,33 +66,34 @@ func checkIfTrayPlistFileExists() error {
 }
 
 func fixTrayPlistFileExists() error {
-	trayConfig := AgentConfig{
+	trayConfig := launchd.AgentConfig{
+		Label:          trayAgentLabel,
 		BinaryPath:     constants.TrayBinaryPath,
 		StdOutFilePath: stdOutFilePathTray,
 	}
-	return fixPlistFileExists(trayPlistTemplate, trayConfig, trayPlistFilePath)
+	return fixPlistFileExists(trayConfig, trayPlistFilePath)
 }
 
 func checkIfDaemonAgentRunning() error {
-	if !agentRunning(daemonAgentLabel) {
+	if !launchd.AgentRunning(daemonAgentLabel) {
 		return fmt.Errorf("crc daemon is not running")
 	}
 	return nil
 }
 
 func fixDaemonAgentRunning() error {
-	return startAgent(daemonAgentLabel)
+	return launchd.StartAgent(daemonAgentLabel)
 }
 
 func checkIfTrayAgentRunning() error {
-	if !agentRunning(trayAgentLabel) {
+	if !launchd.AgentRunning(trayAgentLabel) {
 		return fmt.Errorf("Tray is not running")
 	}
 	return nil
 }
 
 func fixTrayAgentRunning() error {
-	return startAgent(trayAgentLabel)
+	return launchd.StartAgent(trayAgentLabel)
 }
 
 func checkTrayVersion() error {
@@ -170,7 +125,7 @@ func fixTrayVersion() error {
 	if err != nil {
 		return err
 	}
-	return restartAgent(trayAgentLabel)
+	return launchd.RestartAgent(trayAgentLabel)
 }
 
 func checkTrayBinaryPresent() error {
@@ -184,66 +139,17 @@ func fixTrayBinaryPresent() error {
 	return downloadOrExtractTrayApp()
 }
 
-func createPlist(template string, config AgentConfig, plistPath string) error {
-	var plistContent bytes.Buffer
-	t, err := goTemplate.New("plist").Parse(template)
-	if err != nil {
-		return err
-	}
-	err = t.Execute(&plistContent, config)
-	if err != nil {
-		return err
-	}
-	err = ioutil.WriteFile(plistPath, plistContent.Bytes(), 0644)
-	if err != nil {
-		return err
-	}
-	return launchctlLoadPlist(plistPath)
-}
-
-func launchctlLoadPlist(plistFilePath string) error {
-	return exec.Command("launchctl", "load", plistFilePath).Run() // #nosec G204
-}
-
-func startAgent(label string) error {
-	return exec.Command("launchctl", "start", label).Run() // #nosec G204
-}
-
-func restartAgent(label string) error {
-	err := exec.Command("launchctl", "stop", label).Run() // #nosec G204
-	if err != nil {
-		return err
-	}
-	return exec.Command("launchctl", "start", label).Run() // #nosec G204
-}
-
-// check if a service (daemon,tray) is running
-func agentRunning(label string) bool {
-	// This command return a PID if the process
-	// is running, otherwise returns "-"
-	launchctlListCommand := `launchctl list | grep %s | awk '{print $1}'`
-	cmd := fmt.Sprintf(launchctlListCommand, label)
-	out, err := exec.Command("bash", "-c", cmd).Output() // #nosec G204
-	if err != nil {
-		return false
-	}
-	if strings.TrimSpace(string(out)) == "-" {
-		return false
-	}
-	return true
-}
-
-func fixPlistFileExists(plistTemplate string, agentConfig AgentConfig, plistFilePath string) error {
+func fixPlistFileExists(agentConfig launchd.AgentConfig, plistFilePath string) error {
 	if err := ensureLaunchAgentsDirExists(); err != nil {
 		return err
 	}
-	logging.Debugf("Creating plist %s", plistFilePath)
-	err := createPlist(plistTemplate, agentConfig, plistFilePath)
+	logging.Debugf("Creating plist for %s", agentConfig.Label)
+	err := launchd.CreatePlist(agentConfig, plistFilePath)
 	if err != nil {
 		return err
 	}
 	// load plist
-	if err := launchctlLoadPlist(plistFilePath); err != nil {
+	if err := launchd.LoadPlist(plistFilePath); err != nil {
 		logging.Debug("failed while creating plist:", err.Error())
 		return err
 	}
