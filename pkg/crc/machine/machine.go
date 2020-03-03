@@ -601,10 +601,7 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 		switch {
 		case operatorsStatus.Available:
 			openshiftVersion := "4.x"
-			_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
-			if err != nil {
-				logging.Debugf("Failed to load bundle metadata: %s", err.Error())
-			} else if crcBundleMetadata.GetOpenshiftVersion() != "" {
+			if crcBundleMetadata.GetOpenshiftVersion() != "" {
 				openshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
 			}
 			openshiftStatus = fmt.Sprintf("Running (v%s)", openshiftVersion)
