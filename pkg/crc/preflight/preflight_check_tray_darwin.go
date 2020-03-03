@@ -26,9 +26,6 @@ const (
 )
 
 var (
-	launchAgentsDir      = filepath.Join(constants.GetHomeDir(), "Library", "LaunchAgents")
-	daemonPlistFilePath  = filepath.Join(launchAgentsDir, "crc.daemon.plist")
-	trayPlistFilePath    = filepath.Join(launchAgentsDir, "crc.tray.plist")
 	stdOutFilePathDaemon = filepath.Join(constants.CrcBaseDir, ".crcd-agent.log")
 	stdOutFilePathTray   = filepath.Join(constants.CrcBaseDir, ".crct-agent.log")
 )
@@ -38,7 +35,7 @@ type TrayVersion struct {
 }
 
 func checkIfDaemonPlistFileExists() error {
-	if !os.FileExists(daemonPlistFilePath) {
+	if !launchd.PlistExists(daemonAgentLabel) {
 		return fmt.Errorf("Daemon plist file does not exist")
 	}
 	return nil
@@ -55,11 +52,11 @@ func fixDaemonPlistFileExists() error {
 		StdOutFilePath: stdOutFilePathDaemon,
 		Args:           []string{"daemon", "--log-level", "debug"},
 	}
-	return fixPlistFileExists(daemonConfig, daemonPlistFilePath)
+	return fixPlistFileExists(daemonConfig)
 }
 
 func checkIfTrayPlistFileExists() error {
-	if !os.FileExists(trayPlistFilePath) {
+	if !launchd.PlistExists(trayAgentLabel) {
 		return fmt.Errorf("Tray plist file does not exist")
 	}
 	return nil
@@ -71,7 +68,7 @@ func fixTrayPlistFileExists() error {
 		BinaryPath:     constants.TrayBinaryPath,
 		StdOutFilePath: stdOutFilePathTray,
 	}
-	return fixPlistFileExists(trayConfig, trayPlistFilePath)
+	return fixPlistFileExists(trayConfig)
 }
 
 func checkIfDaemonAgentRunning() error {
@@ -139,17 +136,14 @@ func fixTrayBinaryPresent() error {
 	return downloadOrExtractTrayApp()
 }
 
-func fixPlistFileExists(agentConfig launchd.AgentConfig, plistFilePath string) error {
-	if err := ensureLaunchAgentsDirExists(); err != nil {
-		return err
-	}
+func fixPlistFileExists(agentConfig launchd.AgentConfig) error {
 	logging.Debugf("Creating plist for %s", agentConfig.Label)
-	err := launchd.CreatePlist(agentConfig, plistFilePath)
+	err := launchd.CreatePlist(agentConfig)
 	if err != nil {
 		return err
 	}
 	// load plist
-	if err := launchd.LoadPlist(plistFilePath); err != nil {
+	if err := launchd.LoadPlist(agentConfig.Label); err != nil {
 		logging.Debug("failed while creating plist:", err.Error())
 		return err
 	}
@@ -186,13 +180,6 @@ func downloadOrExtractTrayApp() error {
 	err = extract.Uncompress(archivePath, outputPath)
 	if err != nil {
 		return errors.Wrapf(err, "Cannot uncompress '%s'", archivePath)
-	}
-	return nil
-}
-
-func ensureLaunchAgentsDirExists() error {
-	if err := goos.MkdirAll(launchAgentsDir, 0700); err != nil {
-		return err
 	}
 	return nil
 }

@@ -4,9 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	goos "os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/os"
 )
 
 const (
@@ -41,8 +46,29 @@ type AgentConfig struct {
 	Args           []string
 }
 
+var (
+	launchAgentsDir = filepath.Join(constants.GetHomeDir(), "Library", "LaunchAgents")
+)
+
+func ensureLaunchAgentsDirExists() error {
+	if err := goos.MkdirAll(launchAgentsDir, 0700); err != nil {
+		return err
+	}
+	return nil
+}
+
+func getPlistPath(label string) string {
+	plistName := fmt.Sprintf("%s.plist", label)
+
+	return filepath.Join(launchAgentsDir, plistName)
+}
+
 // CreatePlist creates a launchd agent plist config file
-func CreatePlist(config AgentConfig, plistPath string) error {
+func CreatePlist(config AgentConfig) error {
+	if err := ensureLaunchAgentsDirExists(); err != nil {
+		return err
+	}
+
 	var plistContent bytes.Buffer
 	t, err := template.New("plist").Parse(plistTemplate)
 	if err != nil {
@@ -52,13 +78,17 @@ func CreatePlist(config AgentConfig, plistPath string) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(plistPath, plistContent.Bytes(), 0644)
+	err = ioutil.WriteFile(getPlistPath(config.Label), plistContent.Bytes(), 0644)
 	return err
 }
 
+func PlistExists(label string) bool {
+	return os.FileExists(getPlistPath(label))
+}
+
 // LoadPlist loads a launchd agents' plist file
-func LoadPlist(plistFilePath string) error {
-	return exec.Command("launchctl", "load", plistFilePath).Run() // #nosec G204
+func LoadPlist(label string) error {
+	return exec.Command("launchctl", "load", getPlistPath(label)).Run() // #nosec G204
 }
 
 // StartAgent starts a launchd agent
