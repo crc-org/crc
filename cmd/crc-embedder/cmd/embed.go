@@ -8,6 +8,9 @@ import (
 	"runtime"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/constants/darwin"
+	"github.com/code-ready/crc/pkg/crc/constants/linux"
+	"github.com/code-ready/crc/pkg/crc/constants/windows"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/download"
 
@@ -53,7 +56,7 @@ func runEmbed(args []string) {
 		logging.Errorf(fmt.Sprintf("Failed to download data files: %v", err))
 	}
 
-	bundlePath := path.Join(bundleDir, constants.GetDefaultBundleForOs(goos))
+	bundlePath := path.Join(bundleDir, getDefaultBundleForOs(goos))
 	downloadedFiles = append(downloadedFiles, bundlePath)
 	err = embedFiles(binaryPath, downloadedFiles)
 	if err != nil {
@@ -84,22 +87,32 @@ func embedFiles(binary string, filenames []string) error {
 	return nil
 }
 
+var defaultBundleForOs = map[string]string{
+	"darwin":  darwin.DefaultBundle,
+	"linux":   linux.DefaultBundle,
+	"windows": windows.DefaultBundle,
+}
+
+func getDefaultBundleForOs(os string) string {
+	return defaultBundleForOs[os]
+}
+
 var (
 	dataFileUrls = map[string][]string{
 		"darwin": []string{
 			hyperkit.MachineDriverDownloadUrl,
 			hyperkit.HyperkitDownloadUrl,
-			constants.GetOcUrlForOs("darwin"),
+			darwin.OcUrl,
 			constants.GetCrcTrayDownloadURL(),
-			constants.GetPodmanUrlForOs("darwin"),
+			darwin.PodmanUrl,
 		},
 		"linux": []string{
 			libvirt.MachineDriverDownloadUrl,
-			constants.GetOcUrlForOs("linux"),
-			constants.GetPodmanUrlForOs("linux"),
+			linux.OcUrl,
+			linux.PodmanUrl,
 		},
 		"windows": []string{
-			constants.GetOcUrlForOs("windows"),
+			windows.OcUrl,
 		},
 	}
 )

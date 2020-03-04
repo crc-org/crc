@@ -30,52 +30,8 @@ const (
 	CrcLandingPageURL    = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
 	PullSecretFile       = "pullsecret.json"
 
-	DefaultOcUrlBase     = "https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest"
-	DefaultPodmanUrlBase = "https://storage.googleapis.com/libpod-master-releases"
-	CrcTrayDownloadURL   = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
+	CrcTrayDownloadURL = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
 )
-
-var ocUrlForOs = map[string]string{
-	"darwin":  fmt.Sprintf("%s/%s", DefaultOcUrlBase, "macosx/oc.tar.gz"),
-	"linux":   fmt.Sprintf("%s/%s", DefaultOcUrlBase, "linux/oc.tar.gz"),
-	"windows": fmt.Sprintf("%s/%s", DefaultOcUrlBase, "windows/oc.zip"),
-}
-
-func GetOcUrlForOs(os string) string {
-	return ocUrlForOs[os]
-}
-
-func GetOcUrl() string {
-	return GetOcUrlForOs(runtime.GOOS)
-}
-
-var podmanUrlForOs = map[string]string{
-	"darwin":  fmt.Sprintf("%s/%s", DefaultPodmanUrlBase, "podman-remote-latest-master-darwin-amd64.zip"),
-	"linux":   fmt.Sprintf("%s/%s", DefaultPodmanUrlBase, "podman-remote-latest-master-linux---amd64.zip"),
-	"windows": fmt.Sprintf("%s/%s", DefaultPodmanUrlBase, "podman-remote-latest-master-windows-amd64.zip"),
-}
-
-func GetPodmanUrlForOs(os string) string {
-	return podmanUrlForOs[os]
-}
-
-func GetPodmanUrl() string {
-	return podmanUrlForOs[runtime.GOOS]
-}
-
-var defaultBundleForOs = map[string]string{
-	"darwin":  fmt.Sprintf("crc_hyperkit_%s.crcbundle", version.GetBundleVersion()),
-	"linux":   fmt.Sprintf("crc_libvirt_%s.crcbundle", version.GetBundleVersion()),
-	"windows": fmt.Sprintf("crc_hyperv_%s.crcbundle", version.GetBundleVersion()),
-}
-
-func GetDefaultBundleForOs(os string) string {
-	return defaultBundleForOs[os]
-}
-
-func GetDefaultBundle() string {
-	return GetDefaultBundleForOs(runtime.GOOS)
-}
 
 var (
 	CrcBaseDir         = filepath.Join(GetHomeDir(), ".crc")
