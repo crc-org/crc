@@ -185,8 +185,11 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			return *result, errors.Newf("Error loading bundle metadata: %v", err)
 		}
 		if bundleName != filepath.Base(startConfig.BundlePath) {
-			logging.Fatalf("Bundle '%s' was requested, but the existing VM is using '%s'",
+			logging.Debugf("Bundle '%s' was requested, but the existing VM is using '%s'",
 				filepath.Base(startConfig.BundlePath), bundleName)
+			result.Error = fmt.Sprintf("Bundle '%s' was requested, but the existing VM is using '%s'",
+				filepath.Base(startConfig.BundlePath), bundleName)
+			return *result, errors.New(result.Error)
 		}
 		vmState, err := host.Driver.GetState()
 		if err != nil {
