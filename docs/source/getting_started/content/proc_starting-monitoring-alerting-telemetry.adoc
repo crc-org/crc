@@ -9,15 +9,33 @@ Telemetry functionality is responsible for listing your cluster in the link:http
 
 * A running {prod} virtual machine and a working [command]`oc` command.
 For more information, see <<accessing-the-openshift-cluster-with-oc_{context}>>.
+* You must log in via [command]`oc` as the `kubeadmin` user.
 * You must assign additional memory to the {prod} virtual machine.
 At least 12 GiB of memory (a value of `12288`) is recommended.
 For more information, see <<configuring-the-virtual-machine_{context}>>.
 
 .Procedure
 
-. Start monitoring, alerting, and telemetry services:
+. List unmanaged Operators and note the numeric index for `cluster-monitoring-operator`:
+
+** On Linux or {mac}:
 +
 [subs="+quotes,attributes"]
 ----
-$ oc scale --replicas=1 statefulset --all -n openshift-monitoring; oc scale --replicas=1 deployment --all -n openshift-monitoring
+$ oc get clusterversion version -ojsonpath='{range .spec.overrides[*]}{.name}{"\n"}{end}' | nl -v 0
+----
+
+// TODO: Revise the command for PowerShell in the future.
+** On {msw} using PowerShell:
++
+[subs="+quotes,attributes"]
+----
+PS> oc get clusterversion version -ojsonpath='{range .spec.overrides[*]}{.name}{"\n"}{end}' | % {$nl++;"`t$($nl-1) `t $_"};$nl=0
+----
+
+. Start monitoring, alerting, and telemetry services using the identified numeric index:
++
+[subs="+quotes,attributes"]
+----
+$ oc patch clusterversion/version --type='json' -p '[{"op":"remove", "path":"/spec/overrides/_<unmanaged-operator-index>_"}]' -oyaml
 ----
