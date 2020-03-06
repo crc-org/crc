@@ -5,6 +5,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/output"
+	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/shell"
 	"github.com/spf13/cobra"
 )
@@ -14,6 +15,12 @@ var podmanEnvCmd = &cobra.Command{
 	Short: "Setup podman environment",
 	Long:  `Setup environment for 'podman' binary to access podman on CRC VM`,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		// See issue #961; Currently does not work on Windows in combination with the CRC vm.
+		if crcos.CurrentOS() == crcos.WINDOWS {
+			errors.ExitWithMessage(1, "Currently not supported on this platform.")
+		}
+
 		userShell, err := shell.GetShell(forceShell)
 		if err != nil {
 			errors.ExitWithMessage(1, "Error running the podman-env command: %s", err.Error())
