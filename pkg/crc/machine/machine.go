@@ -415,6 +415,11 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		return *result, errors.Newf("Error approving the node csr %v", err)
 	}
 
+	if proxyConfig.IsEnabled() {
+		logging.Info("Waiting for the proxy configuration to be applied ...")
+		waitForProxyPropagation(ocConfig, proxyConfig)
+	}
+
 	// If no error, return usage message
 	if result.Error == "" {
 		logging.Infof("")
@@ -829,4 +834,23 @@ func configProxyForCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, sd
 	}
 
 	return nil
+}
+
+func waitForProxyPropagation(ocConfig oc.OcConfig, proxyConfig *network.ProxyConfig) {
+	checkProxySettingsForOperator := func() error {
+		proxySet, err := cluster.CheckProxySettingsForOperator(ocConfig, proxyConfig, "redhat-operators", "openshift-marketplace")
+		if err != nil {
+			logging.Debugf("Error getting proxy setting for openshift-marketplace operator %v", err)
+			return &errors.RetriableError{Err: err}
+		}
+		if !proxySet {
+			logging.Debug("Proxy changes for cluster in progress")
+			return &errors.RetriableError{Err: fmt.Errorf("")}
+		}
+		return nil
+	}
+
+	if err := errors.RetryAfter(60, checkProxySettingsForOperator, 2*time.Second); err != nil {
+		logging.Debug("Failed to propagate proxy settings to cluster")
+	}
 }
