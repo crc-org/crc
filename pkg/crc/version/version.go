@@ -40,7 +40,7 @@ var (
 const (
 	releaseInfoLink = "https://mirror.openshift.com/pub/openshift-v4/clients/crc/latest/release-info.json"
 	// Tray version to be embedded in binary
-	crcTrayVersion = "1.0.0-alpha.2"
+	crcTrayVersion = "1.0.0-alpha.3"
 )
 
 type CrcReleaseInfo struct {
