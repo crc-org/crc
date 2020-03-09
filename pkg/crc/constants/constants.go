@@ -49,18 +49,18 @@ func GetOcUrl() string {
 	return GetOcUrlForOs(runtime.GOOS)
 }
 
-var PodmanUrlForOs = map[string]string{
+var podmanUrlForOs = map[string]string{
 	"darwin":  fmt.Sprintf("%s/%s", DefaultPodmanUrlBase, "podman-remote-latest-master-darwin-amd64.zip"),
 	"linux":   fmt.Sprintf("%s/%s", DefaultPodmanUrlBase, "podman-remote-latest-master-linux---amd64.zip"),
 	"windows": fmt.Sprintf("%s/%s", DefaultPodmanUrlBase, "podman-remote-latest-master-windows-amd64.zip"),
 }
 
 func GetPodmanUrlForOs(os string) string {
-	return PodmanUrlForOs[os]
+	return podmanUrlForOs[os]
 }
 
 func GetPodmanUrl() string {
-	return PodmanUrlForOs[runtime.GOOS]
+	return podmanUrlForOs[runtime.GOOS]
 }
 
 var defaultBundleForOs = map[string]string{
