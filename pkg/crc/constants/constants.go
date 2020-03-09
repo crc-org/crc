@@ -55,6 +55,10 @@ var PodmanUrlForOs = map[string]string{
 	"windows": fmt.Sprintf("%s/%s", DefaultPodmanUrlBase, "podman-remote-latest-master-windows-amd64.zip"),
 }
 
+func GetPodmanUrlForOs(os string) string {
+	return PodmanUrlForOs[os]
+}
+
 func GetPodmanUrl() string {
 	return PodmanUrlForOs[runtime.GOOS]
 }
