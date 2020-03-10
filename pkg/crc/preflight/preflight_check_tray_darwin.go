@@ -14,8 +14,8 @@ import (
 	dl "github.com/code-ready/crc/pkg/download"
 	"github.com/code-ready/crc/pkg/embed"
 	"github.com/code-ready/crc/pkg/extract"
-	"github.com/code-ready/crc/pkg/launchd"
 	"github.com/code-ready/crc/pkg/os"
+	"github.com/code-ready/crc/pkg/os/launchd"
 	"github.com/pkg/errors"
 	"howett.net/plist"
 )
