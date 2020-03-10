@@ -1,12 +1,9 @@
 package constants
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
-
-	"github.com/code-ready/crc/pkg/crc/version"
 )
 
 const (
@@ -29,8 +26,6 @@ const (
 	GlobalStateFile      = "globalstate.json"
 	CrcLandingPageURL    = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
 	PullSecretFile       = "pullsecret.json"
-
-	CrcTrayDownloadURL = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
 )
 
 var (
@@ -87,8 +82,4 @@ func GetPublicKeyPath() string {
 
 func GetPrivateKeyPath() string {
 	return filepath.Join(MachineInstanceDir, DefaultName, "id_rsa")
-}
-
-func GetCrcTrayDownloadURL() string {
-	return fmt.Sprintf(CrcTrayDownloadURL, version.GetCRCTrayVersion())
 }

@@ -103,7 +103,7 @@ var (
 			hyperkit.MachineDriverDownloadUrl,
 			hyperkit.HyperkitDownloadUrl,
 			darwin.OcUrl,
-			constants.GetCrcTrayDownloadURL(),
+			darwin.GetCrcTrayUrl(),
 			darwin.PodmanUrl,
 		},
 		"linux": []string{

@@ -9,6 +9,7 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/constants/darwin"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/version"
 	dl "github.com/code-ready/crc/pkg/download"
@@ -162,16 +163,16 @@ func downloadOrExtractTrayApp() error {
 	}()
 
 	logging.Debug("Trying to extract tray from crc binary")
-	err = embed.Extract(filepath.Base(constants.GetCrcTrayDownloadURL()), tmpArchivePath)
+	err = embed.Extract(filepath.Base(darwin.GetCrcTrayUrl()), tmpArchivePath)
 	if err != nil {
 		logging.Debug("Could not extract tray from crc binary", err)
 		logging.Debug("Downloading crc tray")
-		_, err = dl.Download(constants.GetCrcTrayDownloadURL(), tmpArchivePath, 0600)
+		_, err = dl.Download(darwin.GetCrcTrayUrl(), tmpArchivePath, 0600)
 		if err != nil {
 			return err
 		}
 	}
-	archivePath := filepath.Join(tmpArchivePath, filepath.Base(constants.GetCrcTrayDownloadURL()))
+	archivePath := filepath.Join(tmpArchivePath, filepath.Base(darwin.GetCrcTrayUrl()))
 	outputPath := constants.CrcBinDir
 	err = goos.MkdirAll(outputPath, 0750)
 	if err != nil && !goos.IsExist(err) {
