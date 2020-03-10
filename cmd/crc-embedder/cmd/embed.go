@@ -96,6 +96,7 @@ var (
 		"linux": []string{
 			libvirt.MachineDriverDownloadUrl,
 			constants.GetOcUrlForOs("linux"),
+			constants.GetPodmanUrlForOs("linux"),
 		},
 		"windows": []string{
 			constants.GetOcUrlForOs("windows"),
