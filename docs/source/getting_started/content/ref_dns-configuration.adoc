@@ -1,6 +1,19 @@
 [id="dns-configuration_{context}"]
 = DNS configuration details
 
+[id="dns-configuration-general{context}"]
+== General DNS setup
+
+The OpenShift cluster managed by {prod} uses 2 DNS domain names, `crc.testing` and `apps-crc.testing`.
+The `crc.testing` domain is for core OpenShift services.
+The `apps-crc.testing` domain is for accessing OpenShift applications deployed on the cluster.
+
+For example, the OpenShift API server will be exposed as `api.crc.testing` while the OpenShift console is accessed through `console-openshift-console.apps-crc.testing`.
+These DNS domains are served by a `dnsmasq` DNS container running inside the {prod} virtual machine.
+
+Running [command]`{bin} setup` will adjust your system DNS configuration so that it can resolve these domains.
+Additional checks are done to verify DNS is properly configured when running [command]`{bin} start`.
+
 [id="dns-configuration-linux_{context}"]
 == Linux
 
@@ -15,7 +28,6 @@ server=/crc.testing/192.168.130.11
 server=/apps-crc.testing/192.168.130.11
 ----
 ** The NetworkManager `dnsmasq` instance forwards requests for the `crc.testing` and `apps-crc.testing` domains to the `192.168.130.11` DNS server.
-This DNS server is a `dnsmasq` instance running inside of the virtual machine.
 
 [id="dns-configuration-mac_{context}"]
 == {mac}
