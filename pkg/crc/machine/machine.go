@@ -501,15 +501,18 @@ func Delete(deleteConfig DeleteConfig) (DeleteResult, error) {
 	}
 	defer libMachineAPIClient.Close()
 
-	m := errors.MultiError{}
-	m.Collect(host.Driver.Remove())
-	m.Collect(libMachineAPIClient.Remove(deleteConfig.Name))
-
-	if len(m.Errors) != 0 {
+	if err := host.Driver.Remove(); err != nil {
 		result.Success = false
-		result.Error = m.ToError().Error()
-		return *result, errors.New(m.ToError().Error())
+		result.Error = err.Error()
+		return *result, errors.New(err.Error())
 	}
+
+	if err := libMachineAPIClient.Remove(deleteConfig.Name); err != nil {
+		result.Success = false
+		result.Error = err.Error()
+		return *result, errors.New(err.Error())
+	}
+
 	return *result, nil
 }
 
