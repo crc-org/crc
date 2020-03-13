@@ -33,6 +33,7 @@ const (
 	DefaultOcUrlBase     = "https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest"
 	DefaultPodmanUrlBase = "https://storage.googleapis.com/libpod-master-releases"
 	CrcTrayDownloadURL   = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
+	DefaultContext       = "admin"
 )
 
 var ocUrlForOs = map[string]string{
