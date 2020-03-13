@@ -35,11 +35,12 @@ func runDelete(arguments []string) {
 		Name: constants.DefaultName,
 	}
 
-	exitIfMachineMissing(deleteConfig.Name)
-
 	if clearCache {
 		deleteCache()
 	}
+
+	exitIfMachineMissing(deleteConfig.Name)
+
 	yes := input.PromptUserForYesOrNo("Do you want to delete the OpenShift cluster", globalForce)
 	if yes {
 		_, err := machine.Delete(deleteConfig)
