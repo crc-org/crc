@@ -19,7 +19,9 @@ type OcRunner interface {
 }
 
 type OcConfig struct {
-	runner OcRunner
+	runner  OcRunner
+	Context string
+	Cluster string
 }
 
 type OcLocalRunner struct {
@@ -45,21 +47,25 @@ func UseOCWithConfig(machineName string) OcConfig {
 		OcBinaryPath:   filepath.Join(constants.CrcBinDir, constants.OcBinaryName),
 		KubeconfigPath: filepath.Join(constants.MachineInstanceDir, machineName, "kubeconfig"),
 	}
-	return NewOcConfig(localRunner)
+	return NewOcConfig(localRunner, constants.DefaultContext, constants.DefaultName)
 }
 
 func (oc OcConfig) RunOcCommand(args ...string) (string, string, error) {
-	args = append(args, "--kubeconfig", oc.runner.GetKubeconfigPath())
+	args = append(args, "--kubeconfig", oc.runner.GetKubeconfigPath(), "--context", oc.Context, "--cluster", oc.Cluster)
 	return oc.runner.Run(args...)
 }
 
 func (oc OcConfig) RunOcCommandPrivate(args ...string) (string, string, error) {
-	args = append(args, "--kubeconfig", oc.runner.GetKubeconfigPath())
+	args = append(args, "--kubeconfig", oc.runner.GetKubeconfigPath(), "--context", oc.Context, "--cluster", oc.Cluster)
 	return oc.runner.RunPrivate(args...)
 }
 
-func NewOcConfig(runner OcRunner) OcConfig {
-	return OcConfig{runner: runner}
+func NewOcConfig(runner OcRunner, context string, clusterName string) OcConfig {
+	return OcConfig{
+		runner:  runner,
+		Context: context,
+		Cluster: clusterName,
+	}
 }
 
 func (oc OcConfig) WaitForOpenshiftResource(resource string) error {

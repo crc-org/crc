@@ -147,7 +147,7 @@ func RegenerateCertificates(sshRunner *ssh.SSHRunner, machineName string) error 
 	}
 	defer recoveryPod.runPodCommand("recovery-apiserver destroy") //nolint:errcheck
 
-	oc := oc.NewOcConfig(recoveryPod)
+	oc := oc.NewOcConfig(recoveryPod, "admin", "recovery")
 	err = waitForRecoveryPod(oc)
 	if err != nil {
 		logging.Debugf("Error waiting for recovery apiserver to come up: %v", err)
