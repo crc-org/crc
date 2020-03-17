@@ -584,13 +584,13 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 
 		// check if all the clusteroperators are running
 		ocConfig := oc.UseOCWithConfig(statusConfig.Name)
-		operatorsRunning, err := oc.GetClusterOperatorStatus(ocConfig)
+		operatorsStatus, err := oc.GetClusterOperatorStatus(ocConfig)
 		if err != nil {
 			result.Success = false
 			result.Error = err.Error()
 			return *result, errors.New(err.Error())
 		}
-		if operatorsRunning {
+		if operatorsStatus.Available {
 			openshiftVersion := "4.x"
 			_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
 			if err != nil {
