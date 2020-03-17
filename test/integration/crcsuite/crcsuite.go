@@ -186,7 +186,7 @@ func CheckClusterOperatorsWithRetry(retryCount int, retryWait string) error {
 		if err != nil {
 			return err
 		}
-		if s == true {
+		if s.Available == true {
 			return nil
 		}
 		time.Sleep(retryDuration)
