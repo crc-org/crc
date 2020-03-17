@@ -16,6 +16,9 @@ func CreateHost(machineConfig config.MachineConfig) *hyperv.Driver {
 
 	hypervDriver.CPU = machineConfig.CPUs
 	hypervDriver.BundleName = machineConfig.BundleName
+
+	// memory related settings
+	hypervDriver.DisableDynamicMemory = true
 	hypervDriver.Memory = machineConfig.Memory
 
 	// Determine the Virtual Switch to be used
