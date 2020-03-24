@@ -2,15 +2,14 @@ package network
 
 import (
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/logging"
 	"net"
 	"net/url"
 	"runtime"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/ssh"
-
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
+	"github.com/code-ready/crc/pkg/crc/ssh"
 )
 
 func executeCommandOrExit(sshRunner *ssh.SSHRunner, command string, errorMessage string) string {

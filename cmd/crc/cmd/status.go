@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/docker/go-units"
-	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -11,6 +9,8 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/docker/go-units"
+	"github.com/spf13/cobra"
 )
 
 func init() {

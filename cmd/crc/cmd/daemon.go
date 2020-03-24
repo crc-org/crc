@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/code-ready/crc/pkg/crc/api"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 func init() {

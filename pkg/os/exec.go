@@ -2,10 +2,11 @@ package os
 
 import (
 	"bytes"
-	"github.com/code-ready/crc/pkg/crc/logging"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
 func runCmd(command string, args []string, env map[string]string) (string, string, error) {

@@ -3,7 +3,6 @@ package validation
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/version"
 	"net"
 	"os"
 	"path/filepath"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/version"
 )
 
 // ValidateCPUs checks if provided cpus count is valid

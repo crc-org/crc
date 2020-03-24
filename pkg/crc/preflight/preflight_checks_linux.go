@@ -3,7 +3,6 @@ package preflight
 import (
 	"bytes"
 	"fmt"
-	"golang.org/x/sys/unix"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -13,15 +12,14 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Masterminds/semver"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
 	"github.com/code-ready/crc/pkg/crc/systemd"
 	"github.com/code-ready/crc/pkg/download"
-
-	"github.com/Masterminds/semver"
-
 	crcos "github.com/code-ready/crc/pkg/os"
+	"golang.org/x/sys/unix"
 )
 
 const (

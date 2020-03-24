@@ -1,0 +1,8 @@
+run:
+  build-tags:
+    - build
+
+linters:
+  enable:
+    - goimports
+
