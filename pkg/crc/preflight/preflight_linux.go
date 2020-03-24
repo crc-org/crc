@@ -1,7 +1,5 @@
 package preflight
 
-import ()
-
 var libvirtPreflightChecks = [...]PreflightCheck{
 	{
 		configKeySuffix:  "check-virt-enabled",

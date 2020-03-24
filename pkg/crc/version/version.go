@@ -19,10 +19,11 @@ package version
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Masterminds/semver"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/Masterminds/semver"
 )
 
 // The following variables are private fields and should be set when compiling with ldflags, for example --ldflags="-X github.com/code-ready/crc/pkg/version.crcVersion=vX.Y.Z

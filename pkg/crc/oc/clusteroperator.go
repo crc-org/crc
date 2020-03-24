@@ -3,8 +3,9 @@ package oc
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/logging"
 	"time"
+
+	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
 var ignoreClusterOperators = []string{"monitoring", "machine-config", "marketplace", "insights"}

@@ -1,11 +1,12 @@
 package config
 
 import (
+	"os"
+
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 func init() {

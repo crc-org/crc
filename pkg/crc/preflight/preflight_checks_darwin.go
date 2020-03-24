@@ -2,7 +2,6 @@ package preflight
 
 import (
 	"fmt"
-	"golang.org/x/sys/unix"
 	neturl "net/url"
 	"os"
 	"os/user"
@@ -16,6 +15,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
 	dl "github.com/code-ready/crc/pkg/download"
 	crcos "github.com/code-ready/crc/pkg/os"
+	"golang.org/x/sys/unix"
 )
 
 const (

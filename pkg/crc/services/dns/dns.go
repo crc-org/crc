@@ -2,9 +2,9 @@ package dns
 
 import (
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/errors"
 	"time"
 
+	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/services"
 )

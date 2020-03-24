@@ -1,7 +1,5 @@
 package preflight
 
-import ()
-
 var hypervPreflightChecks = [...]PreflightCheck{
 	{
 		configKeySuffix:  "check-administrator-user",

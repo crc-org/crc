@@ -3,13 +3,14 @@ package config
 import (
 	"bytes"
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/spf13/cobra"
 	"io"
 	"os"
 	"sort"
 	"text/template"
+
+	"github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/spf13/cobra"
 )
 
 const (
