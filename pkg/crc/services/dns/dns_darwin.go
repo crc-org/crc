@@ -33,7 +33,9 @@ type resolverFileValues struct {
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *services.ServicePostStartResult) (services.ServicePostStartResult, error) {
 	// Update /etc/hosts file for host
 	if err := updateHostsConfFile(serviceConfig.IP, serviceConfig.BundleMetadata.GetAPIHostname(),
-		serviceConfig.BundleMetadata.GetAppHostname("oauth-openshift")); err != nil {
+		serviceConfig.BundleMetadata.GetAppHostname("oauth-openshift"),
+		serviceConfig.BundleMetadata.GetAppHostname("console-openshift-console"),
+		serviceConfig.BundleMetadata.GetAppHostname("default-route-openshift-image-registry")); err != nil {
 		result.Success = false
 		return *result, err
 	}
