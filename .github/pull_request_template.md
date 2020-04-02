@@ -1,11 +1,11 @@
 
 **Fixes:** Issue #N
 
-**Relates to:** Issue #1, Issue #2, PR #1, ...
+**Relates to:** Issue #N, PR #N, ...
 
 ## Solution/Idea
 
-Describe in plain English what you solved and how. For instance, _Added `start` command to CRC so the user can create a VM and set-up a single-node OpenShift cluster on it with one command. It required blablabla..._
+Describe in plain English what you solved and how. For instance, _Added `start` command to CRC so the user can create a VM and set-up a single-node OpenShift cluster on it with one command. It requires blablabla..._
 
 ## Proposed changes
 
