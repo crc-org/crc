@@ -9,7 +9,9 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *se
 	// We might need to set the firewall here to forward
 	// Update /etc/hosts file for host
 	if err := goodhosts.UpdateHostsFile(serviceConfig.IP, serviceConfig.BundleMetadata.GetAPIHostname(),
-		serviceConfig.BundleMetadata.GetAppHostname("oauth-openshift")); err != nil {
+		serviceConfig.BundleMetadata.GetAppHostname("oauth-openshift"),
+		serviceConfig.BundleMetadata.GetAppHostname("console-openshift-console"),
+		serviceConfig.BundleMetadata.GetAppHostname("default-route-openshift-image-registry")); err != nil {
 		result.Success = false
 		return *result, err
 	}
