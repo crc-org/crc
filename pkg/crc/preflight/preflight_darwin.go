@@ -32,15 +32,6 @@ var dnsPreflightChecks = [...]PreflightCheck{
 		cleanupDescription: fmt.Sprintf("Removing %s file", resolverFile),
 		cleanup:            removeResolverFile,
 	},
-	{
-		configKeySuffix:    "check-hosts-file-permissions",
-		checkDescription:   fmt.Sprintf("Checking file permissions for %s", hostFile),
-		check:              checkHostsFilePermissions,
-		fixDescription:     fmt.Sprintf("Setting file permissions for %s", hostFile),
-		fix:                fixHostsFilePermissions,
-		cleanupDescription: fmt.Sprintf("Removing current user permission for %s file", hostFile),
-		cleanup:            removeUserPermissionForHostsFile,
-	},
 }
 
 var traySetupChecks = [...]PreflightCheck{
