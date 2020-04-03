@@ -16,6 +16,7 @@ var (
 	Memory         = cfg.AddSetting("memory", constants.DefaultMemory, []cfg.ValidationFnType{cfg.ValidateMemory}, []cfg.SetFn{cfg.RequiresRestartMsg})
 	NameServer     = cfg.AddSetting("nameserver", nil, []cfg.ValidationFnType{cfg.ValidateIpAddress}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	PullSecretFile = cfg.AddSetting("pull-secret-file", nil, []cfg.ValidationFnType{cfg.ValidatePath}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	DisableCluster = cfg.AddSetting("disable-cluster", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 
 	DisableUpdateCheck   = cfg.AddSetting("disable-update-check", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	ExperimentalFeatures = cfg.AddSetting("enable-experimental-features", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})

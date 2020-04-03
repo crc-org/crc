@@ -28,6 +28,7 @@ var statusCmd = &cobra.Command{
 
 var statusFormat = `CRC VM:          {{.CrcStatus}}
 OpenShift:       {{.OpenShiftStatus}}
+Podman:          {{.PodmanStatus}}
 Disk Usage:      {{.DiskUsage}}
 Cache Usage:     {{.CacheUsage}}
 Cache Directory: {{.CacheDir}}
@@ -36,6 +37,7 @@ Cache Directory: {{.CacheDir}}
 type Status struct {
 	CrcStatus       string
 	OpenShiftStatus string
+	PodmanStatus    string
 	DiskUsage       string
 	CacheUsage      string
 	CacheDir        string
@@ -65,7 +67,7 @@ func runStatus() {
 	diskUse := units.HumanSize(float64(clusterStatus.DiskUse))
 	diskSize := units.HumanSize(float64(clusterStatus.DiskSize))
 	diskUsage := fmt.Sprintf("%s of %s (Inside the CRC VM)", diskUse, diskSize)
-	status := Status{clusterStatus.CrcStatus, clusterStatus.OpenshiftStatus, diskUsage, cacheUsage, cacheDir}
+	status := Status{clusterStatus.CrcStatus, clusterStatus.OpenshiftStatus, clusterStatus.PodmanStatus, diskUsage, cacheUsage, cacheDir}
 	printStatus(status, statusFormat)
 }
 

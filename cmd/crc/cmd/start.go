@@ -50,13 +50,14 @@ func runStart(arguments []string) {
 	preflight.StartPreflightChecks()
 
 	startConfig := machine.StartConfig{
-		Name:          constants.DefaultName,
-		BundlePath:    crcConfig.GetString(config.Bundle.Name),
-		Memory:        crcConfig.GetInt(config.Memory.Name),
-		CPUs:          crcConfig.GetInt(config.CPUs.Name),
-		NameServer:    crcConfig.GetString(config.NameServer.Name),
-		GetPullSecret: getPullSecretFileContent,
-		Debug:         isDebugLog(),
+		Name:           constants.DefaultName,
+		BundlePath:     crcConfig.GetString(config.Bundle.Name),
+		Memory:         crcConfig.GetInt(config.Memory.Name),
+		CPUs:           crcConfig.GetInt(config.CPUs.Name),
+		NameServer:     crcConfig.GetString(config.NameServer.Name),
+		GetPullSecret:  getPullSecretFileContent,
+		Debug:          isDebugLog(),
+		DisableCluster: crcConfig.GetBool(config.DisableCluster.Name),
 	}
 
 	commandResult, err := machine.Start(startConfig)
@@ -64,9 +65,13 @@ func runStart(arguments []string) {
 		errors.Exit(1)
 	}
 	if commandResult.Status == "Running" {
-		output.Outln("Started the OpenShift cluster")
+		if startConfig.DisableCluster {
+			output.Outln("Podman service now available")
+		} else {
+			output.Outln("Started the OpenShift cluster")
 
-		logging.Warn("The cluster might report a degraded or error state. This is expected since several operators have been disabled to lower the resource usage. For more information, please consult the documentation")
+			logging.Warn("The cluster might report a degraded or error state. This is expected since several operators have been disabled to lower the resource usage. For more information, please consult the documentation")
+		}
 	} else {
 		logging.Warnf("Unexpected status of the OpenShift cluster: %s", commandResult.Status)
 	}
@@ -80,6 +85,7 @@ func initStartCmdFlagSet() *pflag.FlagSet {
 	flagSet.IntP(config.Memory.Name, "m", constants.DefaultMemory, "MiB of memory to allocate to the OpenShift cluster")
 	flagSet.StringP(config.NameServer.Name, "n", "", "IPv4 address of nameserver to use for the OpenShift cluster")
 	flagSet.Bool(config.DisableUpdateCheck.Name, false, "Don't check for update")
+	flagSet.BoolP(config.DisableCluster.Name, "d", false, "Don't start the OpenShift cluster")
 
 	return flagSet
 }

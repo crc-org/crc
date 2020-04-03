@@ -25,6 +25,9 @@ type StartConfig struct {
 
 	// User Pull secret
 	GetPullSecret GetPullSecretFunc
+
+	// To disable launching of the cluster, or not
+	DisableCluster bool
 }
 
 type ClusterConfig struct {
@@ -94,6 +97,7 @@ type ClusterStatusConfig struct {
 type ClusterStatusResult struct {
 	Name            string
 	CrcStatus       string
+	PodmanStatus    string
 	OpenshiftStatus string
 	DiskUse         int64
 	DiskSize        int64

@@ -15,6 +15,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/network"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/crc/systemd"
+	"github.com/code-ready/crc/pkg/crc/systemd/states"
 	crcos "github.com/code-ready/crc/pkg/os"
 
 	// cluster services
@@ -355,6 +356,12 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		}
 	}
 
+	if startConfig.DisableCluster {
+		logging.Infof("To access the podman service, first set up your environment by following 'crc podman-env' instructions")
+
+		return *result, nil
+	}
+
 	if needsCertsRenewal {
 		logging.Infof("Cluster TLS certificates have expired, renewing them... [will take up to 5 minutes]")
 		err = RegenerateCertificates(sshRunner, startConfig.Name)
@@ -553,6 +560,7 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 	defer libMachineAPIClient.Close()
 
 	openshiftStatus := "Stopped"
+	podmanStatus := "Running"
 	var diskUse int64
 	var diskSize int64
 
@@ -582,37 +590,51 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 		}
 		proxyConfig.ApplyToEnvironment()
 
-		// check if all the clusteroperators are running
-		ocConfig := oc.UseOCWithConfig(statusConfig.Name)
-		operatorsStatus, err := oc.GetClusterOperatorStatus(ocConfig)
-		if err != nil {
-			result.Success = false
-			result.Error = err.Error()
-			return *result, errors.New(err.Error())
-		}
-		if operatorsStatus.Available {
-			openshiftVersion := "4.x"
-			_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
-			if err != nil {
-				logging.Debugf("Failed to load bundle metadata: %s", err.Error())
-			} else if crcBundleMetadata.GetOpenshiftVersion() != "" {
-				openshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
-			}
-			openshiftStatus = fmt.Sprintf("Running (v%s)", openshiftVersion)
-		} else if operatorsStatus.Degraded {
-			openshiftStatus = fmt.Sprintf("Degraded")
-		} else if operatorsStatus.Progressing {
-			openshiftStatus = fmt.Sprintf("Starting")
-		}
 		sshRunner := crcssh.CreateRunner(host.Driver)
-		diskSize, diskUse, err = cluster.GetRootPartitionUsage(sshRunner)
+		if err = cluster.WaitForSsh(sshRunner); err != nil {
+			return *result, errors.Newf("Error waiting for SSH serivce: %v", err)
+		}
+
+		sd := systemd.NewInstanceSystemdCommander(sshRunner)
+		status, err := sd.Status("kubelet")
 		if err != nil {
 			result.Success = false
 			result.Error = err.Error()
-			return *result, errors.New(err.Error())
+			return *result, errors.Newf("Error fetching status of kubelet service: %v", err.Error())
+		}
+		if states.Compare(status) == states.Running {
+			// check if all the clusteroperators are running
+			ocConfig := oc.UseOCWithConfig(statusConfig.Name)
+			operatorsStatus, err := oc.GetClusterOperatorStatus(ocConfig)
+			if err != nil {
+				result.Success = false
+				result.Error = err.Error()
+				return *result, errors.New(err.Error())
+			}
+			if operatorsStatus.Available {
+				openshiftVersion := "4.x"
+				_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
+				if err != nil {
+					logging.Debugf("Failed to load bundle metadata: %s", err.Error())
+				} else if crcBundleMetadata.GetOpenshiftVersion() != "" {
+					openshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
+				}
+				openshiftStatus = fmt.Sprintf("Running (v%s)", openshiftVersion)
+			} else if operatorsStatus.Degraded {
+				openshiftStatus = fmt.Sprintf("Degraded")
+			} else if operatorsStatus.Progressing {
+				openshiftStatus = fmt.Sprintf("Starting")
+			}
+			diskSize, diskUse, err = cluster.GetRootPartitionUsage(sshRunner)
+			if err != nil {
+				result.Success = false
+				result.Error = err.Error()
+				return *result, errors.New(err.Error())
+			}
 		}
 	}
 	result.OpenshiftStatus = openshiftStatus
+	result.PodmanStatus = podmanStatus
 	result.DiskUse = diskUse
 	result.DiskSize = diskSize
 	result.CrcStatus = vmStatus.String()
