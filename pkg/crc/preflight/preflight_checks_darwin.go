@@ -20,7 +20,6 @@ import (
 const (
 	resolverDir  = "/etc/resolver"
 	resolverFile = "/etc/resolver/testing"
-	hostFile     = "/etc/hosts"
 )
 
 func basenameFromUrl(url string) (string, error) {
@@ -161,22 +160,6 @@ func removeResolverFile() error {
 		if err != nil {
 			return fmt.Errorf("Unable to delete the resolver File: %s %v: %s", resolverFile, err, stdErr)
 		}
-	}
-	return nil
-}
-
-func checkHostsFilePermissions() error {
-	return isUserHaveFileWritePermission(hostFile)
-}
-
-func fixHostsFilePermissions() error {
-	return addFileWritePermissionToUser(hostFile)
-}
-
-func removeUserPermissionForHostsFile() error {
-	_, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("change ownership of %s", hostFile), "chown", "root", hostFile)
-	if err != nil {
-		return fmt.Errorf("Unable to change ownership of the filename: %s %v: %s", hostFile, err, stdErr)
 	}
 	return nil
 }
