@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/goodhosts"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/services"
 	crcos "github.com/code-ready/crc/pkg/os"
-	"github.com/code-ready/goodhosts"
 )
 
 const (
@@ -32,7 +32,7 @@ type resolverFileValues struct {
 
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *services.ServicePostStartResult) (services.ServicePostStartResult, error) {
 	// Update /etc/hosts file for host
-	if err := updateHostsConfFile(serviceConfig.IP, serviceConfig.BundleMetadata.GetAPIHostname(),
+	if err := goodhosts.UpdateHostsFile(serviceConfig.IP, serviceConfig.BundleMetadata.GetAPIHostname(),
 		serviceConfig.BundleMetadata.GetAppHostname("oauth-openshift"),
 		serviceConfig.BundleMetadata.GetAppHostname("console-openshift-console"),
 		serviceConfig.BundleMetadata.GetAppHostname("default-route-openshift-image-registry")); err != nil {
@@ -141,40 +141,4 @@ func waitForNetwork() error {
 		}
 	}
 	return fmt.Errorf("Host is not connected to internet.")
-}
-
-// updateHostsConfFile updates the host's /etc/hosts file with Instance IP.
-func updateHostsConfFile(instanceIP string, hostnames ...string) error {
-	// Get the current value of /etc/hosts file
-	hosts, err := goodhosts.NewHosts()
-	if err != nil {
-		return err
-	}
-	for _, hostname := range hostnames {
-		if err := replaceHostname(&hosts, instanceIP, hostname); err != nil {
-			return err
-		}
-	}
-
-	// Flush operation is required just after replacing the host this
-	// add the entry to /etc/hosts file
-	if err := hosts.Flush(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func replaceHostname(hosts *goodhosts.Hosts, ipAddress string, hostname string) error {
-	logging.Debugf("Updating %s to %s in /etc/hosts file", hostname, ipAddress)
-	if hosts.HasHostname(hostname) {
-		if err := hosts.RemoveByHostname(hostname); err != nil {
-			return err
-		}
-	}
-
-	if err := hosts.Add(ipAddress, hostname); err != nil {
-		return err
-	}
-
-	return nil
 }
