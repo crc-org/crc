@@ -7,6 +7,7 @@ import (
 	goos "os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"text/template"
 
@@ -113,15 +114,17 @@ func RestartAgent(label string) error {
 // AgentRunning checks if a launchd service is running
 func AgentRunning(label string) bool {
 	// This command return a PID if the process
-	// is running, otherwise returns "-"
+	// is running, otherwise returns "-" or empty
+	// output if the agent is not loaded in launchd
 	launchctlListCommand := `launchctl list | grep %s | awk '{print $1}'`
 	cmd := fmt.Sprintf(launchctlListCommand, label)
 	out, err := exec.Command("bash", "-c", cmd).Output() // #nosec G204
 	if err != nil {
 		return false
 	}
-	if strings.TrimSpace(string(out)) == "-" {
-		return false
+	// match PID
+	if match, err := regexp.MatchString(`^\d+$`, strings.TrimSpace(string(out))); err == nil && match {
+		return true
 	}
-	return true
+	return false
 }
