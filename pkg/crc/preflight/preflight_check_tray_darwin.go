@@ -79,6 +79,9 @@ func checkIfDaemonAgentRunning() error {
 }
 
 func fixDaemonAgentRunning() error {
+	if err := launchd.LoadPlist(daemonAgentLabel); err != nil {
+		return err
+	}
 	return launchd.StartAgent(daemonAgentLabel)
 }
 
@@ -90,6 +93,9 @@ func checkIfTrayAgentRunning() error {
 }
 
 func fixTrayAgentRunning() error {
+	if err := launchd.LoadPlist(trayAgentLabel); err != nil {
+		return err
+	}
 	return launchd.StartAgent(trayAgentLabel)
 }
 
