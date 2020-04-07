@@ -128,3 +128,8 @@ func AgentRunning(label string) bool {
 	}
 	return false
 }
+
+// Remove removes the agent from launchd
+func Remove(label string) error {
+	return exec.Command("launchctl", "remove", label).Run() // #nosec G204
+}
