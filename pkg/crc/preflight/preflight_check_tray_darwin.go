@@ -86,6 +86,7 @@ func checkIfDaemonAgentRunning() error {
 }
 
 func fixDaemonAgentRunning() error {
+	logging.Debug("Starting daemon agent")
 	if err := launchd.LoadPlist(daemonAgentLabel); err != nil {
 		return err
 	}
@@ -100,6 +101,7 @@ func checkIfTrayAgentRunning() error {
 }
 
 func fixTrayAgentRunning() error {
+	logging.Debug("Starting tray agent")
 	if err := launchd.LoadPlist(trayAgentLabel); err != nil {
 		return err
 	}
@@ -130,6 +132,7 @@ func checkTrayVersion() error {
 }
 
 func fixTrayVersion() error {
+	logging.Debug("Downloading/extracting tray binary")
 	// get the tray app
 	err := downloadOrExtractTrayApp()
 	if err != nil {
@@ -146,6 +149,7 @@ func checkTrayBinaryPresent() error {
 }
 
 func fixTrayBinaryPresent() error {
+	logging.Debug("Downloading/extracting tray binary")
 	return downloadOrExtractTrayApp()
 }
 
