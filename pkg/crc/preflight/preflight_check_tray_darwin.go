@@ -35,13 +35,20 @@ type TrayVersion struct {
 }
 
 func checkIfDaemonPlistFileExists() error {
-	if !launchd.PlistExists(daemonAgentLabel) {
-		return fmt.Errorf("Daemon plist file does not exist")
-	}
-	return nil
+	// crc setup can be ran from any location in the
+	// users computer, and we need to update the plist
+	// file with the path of the crc binary which was
+	// used to run setup, to force it this check needs
+	// to always fail so the fix routine is triggered
+
+	return fmt.Errorf("Ignoring this check and triggering creation of daemon plist")
 }
 
 func fixDaemonPlistFileExists() error {
+	// Try to remove the daemon agent from launchd
+	// and recreate its plist
+	_ = launchd.Remove(daemonAgentLabel)
+
 	currentExecutablePath, err := goos.Executable()
 	if err != nil {
 		return err
