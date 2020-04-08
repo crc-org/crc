@@ -20,7 +20,7 @@ For more information, see <<configuring-the-virtual-machine_{context}>>.
 
 ** On Linux or {mac}:
 +
-[subs="+quotes,attributes"]
+[subs="+quotes"]
 ----
 $ oc get clusterversion version -ojsonpath='{range .spec.overrides[*]}{.name}{"\n"}{end}' | nl -v 0
 ----
@@ -28,14 +28,14 @@ $ oc get clusterversion version -ojsonpath='{range .spec.overrides[*]}{.name}{"\
 // TODO: Revise the command for PowerShell in the future.
 ** On {msw} using PowerShell:
 +
-[subs="+quotes,attributes"]
+[subs="+quotes"]
 ----
 PS> oc get clusterversion version -ojsonpath='{range .spec.overrides[*]}{.name}{"\n"}{end}' | % {$nl++;"`t$($nl-1) `t $_"};$nl=0
 ----
 
 . Start monitoring, alerting, and telemetry services using the identified numeric index:
 +
-[subs="+quotes,attributes"]
+[subs="+quotes"]
 ----
 $ oc patch clusterversion/version --type='json' -p '[{"op":"remove", "path":"/spec/overrides/_<unmanaged-operator-index>_"}]' -oyaml
 ----
