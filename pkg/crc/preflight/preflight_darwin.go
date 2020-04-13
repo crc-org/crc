@@ -2,8 +2,6 @@ package preflight
 
 import (
 	"fmt"
-
-	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
@@ -26,18 +24,22 @@ var hyperkitPreflightChecks = [...]PreflightCheck{
 
 var dnsPreflightChecks = [...]PreflightCheck{
 	{
-		configKeySuffix:  "check-resolver-file-permissions",
-		checkDescription: fmt.Sprintf("Checking file permissions for %s", resolverFile),
-		check:            checkResolverFilePermissions,
-		fixDescription:   fmt.Sprintf("Setting file permissions for %s", resolverFile),
-		fix:              fixResolverFilePermissions,
+		configKeySuffix:    "check-resolver-file-permissions",
+		checkDescription:   fmt.Sprintf("Checking file permissions for %s", resolverFile),
+		check:              checkResolverFilePermissions,
+		fixDescription:     fmt.Sprintf("Setting file permissions for %s", resolverFile),
+		fix:                fixResolverFilePermissions,
+		cleanupDescription: fmt.Sprintf("Removing %s file", resolverFile),
+		cleanup:            removeResolverFile,
 	},
 	{
-		configKeySuffix:  "check-hosts-file-permissions",
-		checkDescription: fmt.Sprintf("Checking file permissions for %s", hostFile),
-		check:            checkHostsFilePermissions,
-		fixDescription:   fmt.Sprintf("Setting file permissions for %s", hostFile),
-		fix:              fixHostsFilePermissions,
+		configKeySuffix:    "check-hosts-file-permissions",
+		checkDescription:   fmt.Sprintf("Checking file permissions for %s", hostFile),
+		check:              checkHostsFilePermissions,
+		fixDescription:     fmt.Sprintf("Setting file permissions for %s", hostFile),
+		fix:                fixHostsFilePermissions,
+		cleanupDescription: fmt.Sprintf("Removing current user permission for %s file", hostFile),
+		cleanup:            removeUserPermissionForHostsFile,
 	},
 }
 
@@ -50,18 +52,22 @@ var traySetupChecks = [...]PreflightCheck{
 		flags:            SetupOnly,
 	},
 	{
-		checkDescription: "Checking if launchd configuration for daemon exists",
-		check:            checkIfDaemonPlistFileExists,
-		fixDescription:   "Creating launchd configuration for daemon",
-		fix:              fixDaemonPlistFileExists,
-		flags:            SetupOnly,
+		checkDescription:   "Checking if launchd configuration for daemon exists",
+		check:              checkIfDaemonPlistFileExists,
+		fixDescription:     "Creating launchd configuration for daemon",
+		fix:                fixDaemonPlistFileExists,
+		flags:              SetupOnly,
+		cleanupDescription: "Removing launchd configuration for daemon",
+		cleanup:            removeDaemonPlistFile,
 	},
 	{
-		checkDescription: "Checking if launchd configuration for tray exists",
-		check:            checkIfTrayPlistFileExists,
-		fixDescription:   "Creating launchd configuration for tray",
-		fix:              fixTrayPlistFileExists,
-		flags:            SetupOnly,
+		checkDescription:   "Checking if launchd configuration for tray exists",
+		check:              checkIfTrayPlistFileExists,
+		fixDescription:     "Creating launchd configuration for tray",
+		fix:                fixTrayPlistFileExists,
+		flags:              SetupOnly,
+		cleanupDescription: "Removing launchd configuration for tray",
+		cleanup:            removeTrayPlistFile,
 	},
 	{
 		checkDescription: "Checking installed tray version",
@@ -71,18 +77,22 @@ var traySetupChecks = [...]PreflightCheck{
 		flags:            SetupOnly,
 	},
 	{
-		checkDescription: "Checking if CodeReady Containers daemon is running",
-		check:            checkIfDaemonAgentRunning,
-		fixDescription:   "Starting CodeReady Containers daemon",
-		fix:              fixDaemonAgentRunning,
-		flags:            SetupOnly,
+		checkDescription:   "Checking if CodeReady Containers daemon is running",
+		check:              checkIfDaemonAgentRunning,
+		fixDescription:     "Starting CodeReady Containers daemon",
+		fix:                fixDaemonAgentRunning,
+		flags:              SetupOnly,
+		cleanupDescription: "Unload CodeReady Containers daemon",
+		cleanup:            unLoadDaemonAgent,
 	},
 	{
-		checkDescription: "Check if CodeReady Containers tray is running",
-		check:            checkIfTrayAgentRunning,
-		fixDescription:   "Starting CodeReady Containers tray",
-		fix:              fixTrayAgentRunning,
-		flags:            SetupOnly,
+		checkDescription:   "Check if CodeReady Containers tray is running",
+		check:              checkIfTrayAgentRunning,
+		fixDescription:     "Starting CodeReady Containers tray",
+		fix:                fixTrayAgentRunning,
+		flags:              SetupOnly,
+		cleanupDescription: "Unload CodeReady Containers tray",
+		cleanup:            unLoadTrayAgent,
 	},
 }
 
@@ -117,6 +127,12 @@ func RegisterSettings() {
 }
 
 func CleanUpHost() {
-	logging.Warn("Cleanup is not supported for MacOS")
-	doCleanUpPreflightChecks(getPreflightChecks())
+	// A user can use setup with experiment flag
+	// and not use cleanup with same flag, to avoid
+	// any extra step/confusion we are just adding the checks
+	// which are behind the experiment flag. This way cleanup
+	// perform action in a sane way.
+	checks := getPreflightChecks()
+	checks = append(checks, traySetupChecks[:]...)
+	doCleanUpPreflightChecks(checks)
 }

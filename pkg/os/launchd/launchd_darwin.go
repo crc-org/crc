@@ -92,6 +92,19 @@ func LoadPlist(label string) error {
 	return exec.Command("launchctl", "load", getPlistPath(label)).Run() // #nosec G204
 }
 
+// UnloadPlist Unloads a launchd agent's service
+func UnloadPlist(label string) error {
+	return exec.Command("launchctl", "unload", getPlistPath(label)).Run() // #nosec G204
+}
+
+// RemovePlist removes a launchd agent plist config file
+func RemovePlist(label string) error {
+	if _, err := goos.Stat(getPlistPath(label)); !goos.IsNotExist(err) {
+		return goos.Remove(getPlistPath(label))
+	}
+	return nil
+}
+
 // StartAgent starts a launchd agent
 func StartAgent(label string) error {
 	return exec.Command("launchctl", "start", label).Run() // #nosec G204
