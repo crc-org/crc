@@ -186,12 +186,32 @@ func fixResolverFilePermissions() error {
 	return addFileWritePermissionToUser(resolverFile)
 }
 
+func removeResolverFile() error {
+	// Check if the resolver file exist or not
+	if _, err := os.Stat(resolverFile); !os.IsNotExist(err) {
+		logging.Debugf("Removing %s file", resolverFile)
+		_, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("Remove file %s", resolverFile), "rm", "-f", resolverFile)
+		if err != nil {
+			return fmt.Errorf("Unable to delete the resolver File: %s %v: %s", resolverFile, err, stdErr)
+		}
+	}
+	return nil
+}
+
 func checkHostsFilePermissions() error {
 	return isUserHaveFileWritePermission(hostFile)
 }
 
 func fixHostsFilePermissions() error {
 	return addFileWritePermissionToUser(hostFile)
+}
+
+func removeUserPermissionForHostsFile() error {
+	_, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("change ownership of %s", hostFile), "chown", "root", hostFile)
+	if err != nil {
+		return fmt.Errorf("Unable to change ownership of the filename: %s %v: %s", hostFile, err, stdErr)
+	}
+	return nil
 }
 
 func isUserHaveFileWritePermission(filename string) error {

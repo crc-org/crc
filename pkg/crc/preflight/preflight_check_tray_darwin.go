@@ -62,6 +62,10 @@ func fixDaemonPlistFileExists() error {
 	return fixPlistFileExists(daemonConfig)
 }
 
+func removeDaemonPlistFile() error {
+	return launchd.RemovePlist(daemonAgentLabel)
+}
+
 func checkIfTrayPlistFileExists() error {
 	if !launchd.PlistExists(trayAgentLabel) {
 		return fmt.Errorf("Tray plist file does not exist")
@@ -76,6 +80,10 @@ func fixTrayPlistFileExists() error {
 		StdOutFilePath: stdOutFilePathTray,
 	}
 	return fixPlistFileExists(trayConfig)
+}
+
+func removeTrayPlistFile() error {
+	return launchd.RemovePlist(trayAgentLabel)
 }
 
 func checkIfDaemonAgentRunning() error {
@@ -93,6 +101,10 @@ func fixDaemonAgentRunning() error {
 	return launchd.StartAgent(daemonAgentLabel)
 }
 
+func unLoadDaemonAgent() error {
+	return launchd.UnloadPlist(daemonAgentLabel)
+}
+
 func checkIfTrayAgentRunning() error {
 	if !launchd.AgentRunning(trayAgentLabel) {
 		return fmt.Errorf("Tray is not running")
@@ -106,6 +118,10 @@ func fixTrayAgentRunning() error {
 		return err
 	}
 	return launchd.StartAgent(trayAgentLabel)
+}
+
+func unLoadTrayAgent() error {
+	return launchd.UnloadPlist(trayAgentLabel)
 }
 
 func checkTrayVersion() error {
