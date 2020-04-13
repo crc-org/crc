@@ -20,7 +20,7 @@ address=/{{ .AppsDomain }}/{{ .IP }}
 address=/etcd-0.{{ .ClusterName}}.{{ .BaseDomain }}/{{ .IP }}
 address=/api.{{ .ClusterName}}.{{ .BaseDomain }}/{{ .IP }}
 address=/api-int.{{ .ClusterName}}.{{ .BaseDomain }}/{{ .IP }}
-address=/{{ .Hostname }}.{{ .ClusterName}}.{{ .BaseDomain }}/{{ .IP }}
+address=/{{ .Hostname }}.{{ .ClusterName}}.{{ .BaseDomain }}/{{ .InternalIP }}
 `
 )
 
@@ -31,6 +31,7 @@ type dnsmasqConfFileValues struct {
 	Hostname    string
 	IP          string
 	AppsDomain  string
+	InternalIP  string
 }
 
 func createDnsmasqDNSConfig(serviceConfig services.ServicePostStartConfig) error {
@@ -43,9 +44,10 @@ func createDnsmasqDNSConfig(serviceConfig services.ServicePostStartConfig) error
 		AppsDomain:  serviceConfig.BundleMetadata.ClusterInfo.AppsDomain,
 		ClusterName: serviceConfig.BundleMetadata.ClusterInfo.ClusterName,
 		IP:          serviceConfig.IP,
+		InternalIP:  serviceConfig.BundleMetadata.Nodes[0].InternalIP,
 	}
 
-	dnsConfig, err := createDnsConfigFile(dnsmasqConfFileValues)
+	dnsConfig, err := createDnsConfigFile(dnsmasqConfFileValues, dnsmasqConfTemplate)
 	if err != nil {
 		return err
 	}
@@ -53,10 +55,10 @@ func createDnsmasqDNSConfig(serviceConfig services.ServicePostStartConfig) error
 	return serviceConfig.SSHRunner.CopyData([]byte(dnsConfig), "/var/srv/dnsmasq.conf")
 }
 
-func createDnsConfigFile(values dnsmasqConfFileValues) (string, error) {
+func createDnsConfigFile(values dnsmasqConfFileValues, tmpl string) (string, error) {
 	var dnsConfigFile bytes.Buffer
 
-	t, err := template.New("dnsConfigFile").Parse(dnsmasqConfTemplate)
+	t, err := template.New("dnsConfigFile").Parse(tmpl)
 	if err != nil {
 		return "", err
 	}
