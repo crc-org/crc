@@ -6,7 +6,7 @@
 * To use an existing [command]`oc` binary on your host machine, export the `.testing` domain as part of the `no_proxy` environment variable.
 
 * The embedded [command]`oc` binary does not require manual settings.
-For more information on using the embedded [command]`oc` binary, see <<accessing-the-openshift-cluster-with-oc_{context}>>.
+For more information about using the embedded [command]`oc` binary, see <<accessing-the-openshift-cluster-with-oc_{context}>>.
 
 
 .Procedure
@@ -22,10 +22,10 @@ $ {bin} config set https-proxy http://example.proxy.com:__<port>__
 $ {bin} config set no-proxy __<comma-separated-no-proxy-entries>__
 ----
 +
-The [command]`{bin}` binary will be able to use the defined proxy once set via environment variables or {prod} configuration.
+The [command]`{bin}` binary will be able to use the defined proxy once set through environment variables or {prod} configuration.
 
 [NOTE]
 ====
-* Proxy-related values set in the configuration for {prod} have priority over values set via environment variables.
+* Proxy-related values set in the configuration for {prod} have priority over values set through environment variables.
 * SOCKS proxies are not supported by OpenShift Container Platform.
 ====

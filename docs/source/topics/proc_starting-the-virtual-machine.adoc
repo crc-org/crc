@@ -5,7 +5,7 @@ The [command]`{bin} start` command starts the {prod} virtual machine and OpenShi
 
 .Prerequisites
 
-* You set up the host machine via the [command]`{bin} setup` command.
+* You set up the host machine through the [command]`{bin} setup` command.
 For more information, see <<setting-up-codeready-containers_{context}>>.
 * You have a valid OpenShift user pull secret.
 Copy or download the pull secret from the Pull Secret section of the link:https://cloud.redhat.com/openshift/install/crc/installer-provisioned[Install on Laptop: {rh-prod}] page on cloud.redhat.com.
