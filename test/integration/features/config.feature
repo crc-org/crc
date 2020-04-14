@@ -37,6 +37,18 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
             | nameserver       | 120.0.0.1 |   999.999.999.999 |
             | pull-secret-file |    /Users | /nonexistent-file |
 
+   @linux
+   Scenario: Check bundle version validation (command line)
+       Given executing "touch crc_libvirt_99.9.9.crcbundle" succeeds
+       When executing "crc start --bundle crc_libvirt_99.9.9.crcbundle" fails
+       Then stderr should contain "crc_libvirt_99.9.9.crcbundle bundle is not supported by this binary"
+
+   @linux
+   Scenario: Check bundle version validation (config)
+       Given executing "touch crc_libvirt_99.9.9.crcbundle" succeeds
+       When executing "crc config set bundle crc_libvirt_99.9.9.crcbundle" fails
+       Then stderr should contain "crc_libvirt_99.9.9.crcbundle bundle is not supported by this binary"
+
     @linux @darwin @windows
     Scenario: CRC config checks (bundle version)
         Given executing "crc setup" succeeds
