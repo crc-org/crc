@@ -1,7 +1,5 @@
 package preflight
 
-import "github.com/code-ready/crc/pkg/crc/logging"
-
 var hypervPreflightChecks = [...]PreflightCheck{
 	{
 		configKeySuffix:  "check-administrator-user",
@@ -45,6 +43,16 @@ var hypervPreflightChecks = [...]PreflightCheck{
 		fixDescription:   "Unable to perform Hyper-V administrative commands. Please make sure to re-login or reboot your system",
 		flags:            NoFix,
 	},
+	{
+		cleanupDescription: "Removing dns server from interface",
+		cleanup:            removeDnsServerAddress,
+		flags:              CleanUpOnly,
+	},
+	{
+		cleanupDescription: "Removing the crc VM if exists",
+		cleanup:            removeCrcVM,
+		flags:              CleanUpOnly,
+	},
 }
 
 func getPreflightChecks() []PreflightCheck {
@@ -70,6 +78,5 @@ func RegisterSettings() {
 }
 
 func CleanUpHost() {
-	logging.Warn("Cleanup is not supported for Windows")
 	doCleanUpPreflightChecks(getPreflightChecks())
 }

@@ -11,6 +11,7 @@ import (
 	winnet "github.com/code-ready/crc/pkg/os/windows/network"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/hyperv"
 )
 
@@ -165,4 +166,40 @@ func checkIfRunningAsNormalUser() error {
 	}
 	logging.Debug("Ran as administrator")
 	return fmt.Errorf("crc should be ran as a normal user")
+}
+
+func removeDnsServerAddress() error {
+	resetDnsCommand := `Set-DnsClientServerAddress -InterfaceAlias ("vEthernet (crc)") -ResetServerAddresses`
+	if exist, defaultSwitch := winnet.GetDefaultSwitchName(); exist {
+		resetDnsCommand = fmt.Sprintf(`Set-DnsClientServerAddress -InterfaceAlias ("vEthernet (%s)","vEthernet (crc)") -ResetServerAddresses`, defaultSwitch)
+	}
+	if _, _, err := powershell.ExecuteAsAdmin("Remove dns entry for default switch", resetDnsCommand); err != nil {
+		return err
+	}
+	return nil
+}
+
+func removeCrcVM() (err error) {
+	defer func() {
+		if ferr := os.RemoveAll(constants.MachineInstanceDir); ferr != nil {
+			logging.Debugf("Error removing %s dir: %v", constants.MachineInstanceDir, err)
+			err = fmt.Errorf("Error removing %s dir", constants.MachineInstanceDir)
+		}
+	}()
+	if _, _, err := powershell.Execute("Get-VM -Name crc"); err != nil {
+		// This means that there is no crc VM exist
+		return nil
+	}
+	stopVMCommand := fmt.Sprintf(`Stop-VM -Name "%s" -Force`, constants.DefaultName)
+	if _, _, err := powershell.Execute(stopVMCommand); err != nil {
+		// ignore the error as this is useless (prefer not to use nolint here)
+		return err
+	}
+	removeVMCommand := fmt.Sprintf(`Remove-VM -Name "%s" -Force`, constants.DefaultName)
+	if _, _, err := powershell.Execute(removeVMCommand); err != nil {
+		// ignore the error as this is useless (prefer not to use nolint here)
+		return err
+	}
+	logging.Debug("'crc' VM is removed")
+	return nil
 }
