@@ -5,9 +5,9 @@ Resolve most issues by stopping the {prod} virtual machine, deleting it, and sta
 
 .Prerequisites
 
-* You set up the host machine via the [command]`{bin} setup` command.
+* You set up the host machine through the [command]`{bin} setup` command.
 For more information, see <<setting-up-codeready-containers_{context}>>.
-* You started {prod} via the [command]`{bin} start` command.
+* You started {prod} through the [command]`{bin} start` command.
 For more information, see <<starting-the-virtual-machine_{context}>>.
 * You are using the latest {prod} release.
 Using a version earlier than {prod} 1.2.0 may result in errors related to expired x509 certificates.

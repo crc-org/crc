@@ -9,7 +9,7 @@ Telemetry functionality is responsible for listing your cluster in the link:http
 
 * A running {prod} virtual machine and a working [command]`oc` command.
 For more information, see <<accessing-the-openshift-cluster-with-oc_{context}>>.
-* You must log in via [command]`oc` as the `kubeadmin` user.
+* You must log in through [command]`oc` as the `kubeadmin` user.
 * You must assign additional memory to the {prod} virtual machine.
 At least 12 GiB of memory (a value of `12288`) is recommended.
 For more information, see <<configuring-the-virtual-machine_{context}>>.

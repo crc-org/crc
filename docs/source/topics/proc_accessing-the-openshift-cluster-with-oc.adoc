@@ -8,7 +8,7 @@ For more information, see <<starting-the-virtual-machine_{context}>>.
 
 .Procedure
 
-To access the OpenShift cluster via the [command]`oc` command, follow these steps:
+To access the OpenShift cluster through the [command]`oc` command, follow these steps:
 
 . Run the [command]`{bin} oc-env` command to print the command needed to add the cached [command]`oc` binary to your `_PATH_`:
 +
