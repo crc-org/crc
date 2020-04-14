@@ -507,6 +507,7 @@ func fixCrcDnsmasqConfigFile() error {
 		fmt.Sprintf("write dnsmasq configuration in %s", crcDnsmasqConfigPath),
 		crcDnsmasqConfig,
 		crcDnsmasqConfigPath,
+		0644,
 	)
 	if err != nil {
 		return fmt.Errorf("Failed to write dnsmasq config file: %s: %v", crcDnsmasqConfigPath, err)
@@ -572,6 +573,7 @@ func fixCrcNetworkManagerConfig() error {
 		fmt.Sprintf("write NetworkManager config in %s", crcNetworkManagerConfigPath),
 		crcNetworkManagerConfig,
 		crcNetworkManagerConfigPath,
+		0644,
 	)
 	if err != nil {
 		return fmt.Errorf("Failed to write NetworkManager config file: %s: %v", crcNetworkManagerConfigPath, err)
