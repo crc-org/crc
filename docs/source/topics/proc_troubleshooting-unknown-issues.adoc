@@ -1,7 +1,8 @@
-[id="basic-troubleshooting_{context}"]
-= Basic troubleshooting
+[id="troubleshooting-unknown-issues_{context}"]
+= Troubleshooting unknown issues
 
-Resolve most issues by stopping the {prod} virtual machine, deleting it, and starting a new instance.
+Resolve most issues by restarting {prod} with a clean state.
+This involves stopping the virtual machine, deleting it, reverting changes made by the [command]`{bin} setup` command, reapplying those changes, and restarting the virtual machine.
 
 .Prerequisites
 
@@ -26,9 +27,26 @@ $ {bin} stop
 
 . Delete the {prod} virtual machine:
 +
+include::snip_crc-delete.adoc[]
+
+. Clean up remaining changes from the [command]`{bin} setup` command:
++
 [subs="+quotes,attributes"]
 ----
-$ {bin} delete
+$ {bin} cleanup
+----
++
+[NOTE]
+====
+The [command]`{bin} cleanup` command removes an existing {prod} virtual machine and reverts changes to DNS entries created by the [command]`{bin} setup` command.
+On {mac}, the [command]`{bin} cleanup` command also removes the system tray.
+====
+
+. Set up your host machine to reapply the changes:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} setup
 ----
 
 . Start the {prod} virtual machine:

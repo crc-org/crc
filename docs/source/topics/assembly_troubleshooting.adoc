@@ -9,10 +9,10 @@ Report such issues to the relevant project.
 For example, OpenShift tracks issues on link:https://github.com/openshift/origin/issues[GitHub].
 ====
 
-include::proc_basic-troubleshooting.adoc[leveloffset=+1]
-
 include::proc_getting-shell-access-to-the-openshift-cluster.adoc[leveloffset=+1]
 
 include::proc_troubleshooting-expired-certificates.adoc[leveloffset=+1]
 
 include::proc_troubleshooting-bundle-version-mismatch.adoc[leveloffset=+1]
+
+include::proc_troubleshooting-unknown-issues.adoc[leveloffset=+1]
