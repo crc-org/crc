@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/download"
 	"github.com/code-ready/crc/pkg/embed"
@@ -21,6 +22,14 @@ type Cache struct {
 
 func New(binarName string, archiveURL string, destDir string) *Cache {
 	return &Cache{binaryName: binarName, archiveURL: archiveURL, destDir: destDir}
+}
+
+func NewOcCache(destDir string) *Cache {
+	return New(constants.OcBinaryName, constants.GetOcUrl(), destDir)
+}
+
+func NewPodmanCache(destDir string) *Cache {
+	return New(constants.PodmanBinaryName, constants.GetPodmanUrl(), destDir)
 }
 
 func (c *Cache) IsCached() bool {

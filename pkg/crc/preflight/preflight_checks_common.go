@@ -6,10 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/code-ready/crc/pkg/crc/cache"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/oc"
-	"github.com/code-ready/crc/pkg/crc/podman"
 	"github.com/code-ready/crc/pkg/embed"
 )
 
@@ -62,7 +61,7 @@ func fixBundleCached() error {
 
 // Check if oc binary is cached or not
 func checkOcBinaryCached() error {
-	oc := oc.OcCached{}
+	oc := cache.NewOcCache(constants.CrcBinDir)
 	if !oc.IsCached() {
 		return errors.New("oc binary is not cached")
 	}
@@ -71,7 +70,7 @@ func checkOcBinaryCached() error {
 }
 
 func fixOcBinaryCached() error {
-	oc := oc.OcCached{}
+	oc := cache.NewOcCache(constants.CrcBinDir)
 	if err := oc.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download oc %v", err)
 	}
@@ -87,7 +86,7 @@ func checkPodmanBinaryCached() error {
 }
 
 func fixPodmanBinaryCached() error {
-	podman := podman.PodmanCached{}
+	podman := cache.NewPodmanCache(constants.CrcBinDir)
 	if err := podman.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download podman remote binary %v", err)
 	}
