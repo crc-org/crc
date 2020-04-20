@@ -67,7 +67,7 @@ func (oc *OcCached) cacheOc() error {
 		}
 
 		// Extract the tarball and put it the cache directory.
-		err = extract.UncompressWithFilter(assetTmpFile, tmpDir, matchOcBinaryName)
+		_, err = extract.UncompressWithFilter(assetTmpFile, tmpDir, matchOcBinaryName)
 		if err != nil {
 			return errors.Wrapf(err, "Cannot uncompress '%s'", assetTmpFile)
 		}

@@ -67,7 +67,7 @@ func (podman *PodmanCached) cachePodman() error {
 	}
 
 	// Extract the tarball and put it the cache directory.
-	err = extract.Uncompress(assetTmpFile, tmpDir)
+	_, err = extract.Uncompress(assetTmpFile, tmpDir)
 	if err != nil {
 		return errors.Wrapf(err, "Cannot uncompress '%s'", assetTmpFile)
 	}
