@@ -95,7 +95,7 @@ func (bundle *CrcBundleInfo) resolvePath(filename string) string {
 }
 
 func Extract(sourcepath string) (*CrcBundleInfo, error) {
-	err := extract.Uncompress(sourcepath, constants.MachineCacheDir)
+	_, err := extract.Uncompress(sourcepath, constants.MachineCacheDir)
 	if err != nil {
 		return nil, err
 	}
