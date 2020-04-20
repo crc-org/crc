@@ -151,6 +151,11 @@ func unzip(archive, target string, fileFilter func(string) bool) ([]string, erro
 			continue
 		}
 
+		// with a file filter, we may have skipped the intermediate directories, make sure they exist
+		if err = os.MkdirAll(filepath.Dir(path), 0750); err != nil {
+			return nil, err
+		}
+
 		fileReader, err := file.Open()
 		if err != nil {
 			return nil, err
