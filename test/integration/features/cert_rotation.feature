@@ -20,6 +20,7 @@ Feature: Check the cert is rotation happen after it expire
     Scenario: Set clock back to original time
       Given executing "sudo timedatectl set-ntp on" succeeds
 
-    Scenario: CRC delete
+    Scenario: CRC delete and cleanup
       When executing "crc delete -f" succeeds
       Then stdout should contain "Deleted the OpenShift cluster"
+      When executing "crc cleanup" succeeds
