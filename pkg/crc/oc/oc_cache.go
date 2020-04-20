@@ -67,13 +67,10 @@ func (oc *OcCached) cacheOc() error {
 		}
 
 		// Extract the tarball and put it the cache directory.
-		_, err = extract.UncompressWithFilter(assetTmpFile, tmpDir, matchOcBinaryName)
+		extractedFiles, err := extract.UncompressWithFilter(assetTmpFile, tmpDir, matchOcBinaryName)
 		if err != nil {
 			return errors.Wrapf(err, "Cannot uncompress '%s'", assetTmpFile)
 		}
-
-		binaryName := constants.OcBinaryName
-		binaryPath := filepath.Join(tmpDir, binaryName)
 
 		// Copy the requested asset into its final destination
 		outputPath := constants.CrcBinDir
@@ -82,10 +79,12 @@ func (oc *OcCached) cacheOc() error {
 			return errors.Wrap(err, "Cannot create the target directory.")
 		}
 
-		finalBinaryPath := filepath.Join(outputPath, binaryName)
-		err = crcos.CopyFileContents(binaryPath, finalBinaryPath, 0500)
-		if err != nil {
-			return err
+		for _, extractedFilePath := range extractedFiles {
+			finalBinaryPath := filepath.Join(outputPath, filepath.Base(extractedFilePath))
+			err = crcos.CopyFileContents(extractedFilePath, finalBinaryPath, 0500)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
