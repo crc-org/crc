@@ -1,7 +1,6 @@
 package podman
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -36,6 +35,10 @@ func (podman *PodmanCached) IsCached() bool {
 	return true
 }
 
+func matchPodmanBinaryName(filename string) bool {
+	return filepath.Base(filename) == constants.PodmanBinaryName
+}
+
 func (podman *PodmanCached) getPodman(destDir string) (string, error) {
 	logging.Debug("Trying to extract podman from crc binary")
 	archiveName := filepath.Base(constants.GetPodmanUrl())
@@ -67,15 +70,9 @@ func (podman *PodmanCached) cachePodman() error {
 	}
 
 	// Extract the tarball and put it the cache directory.
-	_, err = extract.Uncompress(assetTmpFile, tmpDir)
+	extractedFiles, err := extract.UncompressWithFilter(assetTmpFile, tmpDir, matchPodmanBinaryName)
 	if err != nil {
 		return errors.Wrapf(err, "Cannot uncompress '%s'", assetTmpFile)
-	}
-
-	binaryName := constants.PodmanBinaryName
-	binaryPath, err := findBinary(tmpDir, binaryName)
-	if err != nil {
-		return err
 	}
 
 	// Copy the requested asset into its final destination
@@ -85,34 +82,13 @@ func (podman *PodmanCached) cachePodman() error {
 		return errors.Wrap(err, "Cannot create the target directory.")
 	}
 
-	finalBinaryPath := filepath.Join(outputPath, binaryName)
-	err = crcos.CopyFileContents(binaryPath, finalBinaryPath, 0500)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func findBinary(dirPath string, binaryName string) (string, error) {
-	var binaryPath string
-
-	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+	for _, extractedFilePath := range extractedFiles {
+		finalBinaryPath := filepath.Join(outputPath, filepath.Base(extractedFilePath))
+		err = crcos.CopyFileContents(extractedFilePath, finalBinaryPath, 0500)
 		if err != nil {
 			return err
 		}
-
-		if filepath.Base(path) == binaryName {
-			binaryPath = path
-
-			return filepath.SkipDir
-		}
-
-		return nil
-	})
-	if binaryPath == "" && err == nil {
-		err = fmt.Errorf("Failed to find `%s` binary in `%s`.", binaryName, dirPath)
 	}
 
-	return binaryPath, err
+	return nil
 }
