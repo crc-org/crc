@@ -61,10 +61,10 @@ Feature:
         Then with up to "4" retries with wait period of "2m" command "crc status" output should match ".*Running \(v\d+\.\d+\.\d+.*\).*"
         And with up to "2" retries with wait period of "60s" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
 
+
     @darwin @linux @windows
-    Scenario: Clean up
-        Given executing "oc delete project testproj" succeeds
-        When executing "crc stop -f" succeeds
-        Then stdout should match "(.*)[Ss]topped the OpenShift cluster"
-        When executing "crc delete -f" succeeds
-        Then stdout should contain "Deleted the OpenShift cluster"
+    Scenario: Switch off CRC
+        When executing "oc delete project testproj" succeeds
+        Then executing "crc stop -f" succeeds
+        And executing "crc delete -f" succeeds
+        And executing "crc cleanup" succeeds

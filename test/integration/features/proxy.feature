@@ -28,4 +28,6 @@ Feature: Test the proxy
     When executing "crc delete -f" succeeds
     Then stdout should contain "Deleted the OpenShift cluster"
     And  executing "crc config unset http-proxy" succeeds
-    Then executing "crc config unset https-proxy" succeeds
+    And executing "crc config unset https-proxy" succeeds
+    And executing "crc cleanup" succeeds
+

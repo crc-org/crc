@@ -137,3 +137,39 @@ Feature: Basic test
     Scenario: CRC delete
         When executing "crc delete -f" succeeds
         Then stdout should contain "Deleted the OpenShift cluster"
+
+    @darwin
+    Scenario Outline: CRC clean-up
+        When executing "crc cleanup" succeeds
+        Then stdout should contain "Unload CodeReady Containers tray"
+        And stdout should contain "Unload CodeReady Containers daemon"
+        And stdout should contain "Removing launchd configuration for tray"
+        And stdout should contain "Removing launchd configuration for daemon"
+        And stdout should contain "Removing /etc/resolver/testing file"
+        And stdout should contain "Will use root access: Remove file /etc/resolver/testing"
+        And stdout should contain "Cleanup finished"
+
+    @linux
+    Scenario Outline: CRC clean-up
+        When executing "crc cleanup" succeeds
+        Then stdout should contain "Removing the crc VM if exists"
+        And stdout should contain "Removing /etc/NetworkManager/dnsmasq.d/crc.conf file"
+        And stdout should contain "Will use root access: removing dnsmasq configuration in /etc/NetworkManager/dnsmasq.d/crc.conf"
+        And stdout should contain "Will use root access: execute systemctl daemon-reload command"
+        And stdout should contain "Will use root access: execute systemctl stop/start command"
+        And stdout should contain "Removing /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf file"
+        And stdout should contain "Will use root access: Removing NetworkManager config in /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf"
+        And stdout should contain "Will use root access: execute systemctl daemon-reload command"
+        And stdout should contain "Will use root access: execute systemctl stop/start command"
+        And stdout should contain "Removing 'crc' network from libvirt"
+        And stdout should contain "Cleanup finished"
+
+    @windows
+    Scenario Outline: CRC clean-up
+        When executing "crc cleanup" succeeds
+        Then stdout should contain "Uninstalling tray if installed"
+        And stdout should contain "Will run as admin: Uninstalling CodeReady Containers System Tray"
+        And stdout should contain "Removing the crc VM if exists"
+        And stdout should contain "Removing dns server from interface"
+        And stdout should contain "Will run as admin: Remove dns entry for default switch"
+        And stdout should contain "Cleanup finished"

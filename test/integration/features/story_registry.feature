@@ -43,4 +43,5 @@ Feature: Local image to image-registry to deployment
         Then stdout should match "(.*)[Ss]topped the OpenShift cluster"
         And executing "crc delete -f" succeeds
         Then stdout should contain "Deleted the OpenShift cluster"
-
+        When executing "crc cleanup" succeeds
+        Then stdout should contain "Cleanup finished"
