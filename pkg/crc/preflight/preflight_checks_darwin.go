@@ -84,7 +84,7 @@ func setSuid(path string) error {
 	}
 
 	/* Can't do this before the chown as the chown will reset the suid bit */
-	stdOut, stdErr, err = crcos.RunWithPrivilege(fmt.Sprintf("set suid for %s", path), "chmod", "u+s", path)
+	stdOut, stdErr, err = crcos.RunWithPrivilege(fmt.Sprintf("set suid for %s", path), "chmod", "u+s,g+x", path)
 	if err != nil {
 		return fmt.Errorf("Unable to set suid bit on %s: %s %v: %s", path, stdOut, err, stdErr)
 	}
