@@ -27,6 +27,12 @@ var genericPreflightChecks = [...]PreflightCheck{
 		fix:              fixPodmanBinaryCached,
 	},
 	{
+		checkDescription: "Checking if goodhosts binary is cached",
+		check:            checkGoodhostsBinaryCached,
+		fixDescription:   "Caching goodhosts binary",
+		fix:              fixGoodhostsBinaryCached,
+	},
+	{
 		configKeySuffix:  "check-bundle-cached",
 		checkDescription: "Checking if CRC bundle is cached in '$HOME/.crc'",
 		check:            checkBundleCached,
@@ -92,4 +98,25 @@ func fixPodmanBinaryCached() error {
 	}
 	logging.Debug("podman remote binary cached")
 	return nil
+}
+
+// Check if goodhost binary is cached or not
+func checkGoodhostsBinaryCached() error {
+	goodhostPath := filepath.Join(constants.CrcBinDir, constants.GoodhostsBinaryName)
+	goodhost := cache.NewGoodhostsCache(constants.CrcBinDir)
+	if !goodhost.IsCached() {
+		return errors.New("goodhost binary is not cached")
+	}
+	logging.Debug("goodhost binary already cached")
+	return checkSuid(goodhostPath)
+}
+
+func fixGoodhostsBinaryCached() error {
+	goodhostPath := filepath.Join(constants.CrcBinDir, constants.GoodhostsBinaryName)
+	goodhost := cache.NewGoodhostsCache(constants.CrcBinDir)
+	if err := goodhost.EnsureIsCached(); err != nil {
+		return fmt.Errorf("Unable to download goodhost binary %v", err)
+	}
+	logging.Debug("goodhost binary cached")
+	return setSuid(goodhostPath)
 }

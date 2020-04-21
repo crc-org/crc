@@ -32,6 +32,10 @@ func NewPodmanCache(destDir string) *Cache {
 	return New(constants.PodmanBinaryName, constants.GetPodmanUrl(), destDir)
 }
 
+func NewGoodhostsCache(destDir string) *Cache {
+	return New(constants.GoodhostsBinaryName, constants.GetGoodhostsUrl(), destDir)
+}
+
 func (c *Cache) IsCached() bool {
 	if _, err := os.Stat(filepath.Join(c.destDir, c.binaryName)); os.IsNotExist(err) {
 		return false

@@ -30,10 +30,11 @@ const (
 	CrcLandingPageURL    = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
 	PullSecretFile       = "pullsecret.json"
 
-	DefaultOcUrlBase     = "https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest"
-	DefaultPodmanUrlBase = "https://storage.googleapis.com/libpod-master-releases"
-	CrcTrayDownloadURL   = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
-	DefaultContext       = "admin"
+	DefaultOcUrlBase        = "https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest"
+	DefaultPodmanUrlBase    = "https://storage.googleapis.com/libpod-master-releases"
+	DefaultGoodhostsCliBase = "https://github.com/code-ready/goodhosts-cli/releases/download/v1.0.0"
+	CrcTrayDownloadURL      = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
+	DefaultContext          = "admin"
 )
 
 var ocUrlForOs = map[string]string{
@@ -62,6 +63,20 @@ func GetPodmanUrlForOs(os string) string {
 
 func GetPodmanUrl() string {
 	return podmanUrlForOs[runtime.GOOS]
+}
+
+var goodhostsUrlForOs = map[string]string{
+	"darwin":  fmt.Sprintf("%s/%s", DefaultGoodhostsCliBase, "goodhosts-cli-macos-amd64.tar.xz"),
+	"linux":   fmt.Sprintf("%s/%s", DefaultGoodhostsCliBase, "goodhosts-cli-linux-amd64.tar.xz"),
+	"windows": fmt.Sprintf("%s/%s", DefaultGoodhostsCliBase, "goodhosts-cli-windows-amd64.tar.xz"),
+}
+
+func GetGoodhostsUrlForOs(os string) string {
+	return goodhostsUrlForOs[os]
+}
+
+func GetGoodhostsUrl() string {
+	return goodhostsUrlForOs[runtime.GOOS]
 }
 
 var defaultBundleForOs = map[string]string{

@@ -91,13 +91,16 @@ var (
 			hyperkit.HyperkitDownloadUrl,
 			constants.GetOcUrlForOs("darwin"),
 			constants.GetCrcTrayDownloadURL(),
+			constants.GetGoodhostsUrlForOs("darwin"),
 		},
 		"linux": []string{
 			libvirt.MachineDriverDownloadUrl,
 			constants.GetOcUrlForOs("linux"),
+			constants.GetGoodhostsUrlForOs("linux"),
 		},
 		"windows": []string{
 			constants.GetOcUrlForOs("windows"),
+			constants.GetGoodhostsUrlForOs("windows"),
 		},
 	}
 )
