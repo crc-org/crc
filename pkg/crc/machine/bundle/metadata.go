@@ -40,6 +40,7 @@ type CrcBundleInfo struct {
 		KernelCmdLine string   `json:"kernelCmdLine"`
 		Initramfs     string   `json:"initramfs"`
 		Kernel        string   `json:"kernel"`
+		InternalIP    string   `json:"internalIP"`
 	} `json:"nodes"`
 	Storage struct {
 		DiskImages []struct {
@@ -134,6 +135,13 @@ func (bundle *CrcBundleInfo) GetInitramfsPath() string {
 		return ""
 	}
 	return bundle.resolvePath(bundle.Nodes[0].Initramfs)
+}
+
+func (bundle *CrcBundleInfo) GetInternalIP() string {
+	if bundle.Nodes[0].InternalIP == "" {
+		return ""
+	}
+	return bundle.resolvePath(bundle.Nodes[0].InternalIP)
 }
 
 func (bundle *CrcBundleInfo) GetKubeadminPassword() (string, error) {
