@@ -2,8 +2,6 @@ package dns
 
 import (
 	"bytes"
-	"encoding/base64"
-	"fmt"
 	"text/template"
 
 	"github.com/code-ready/crc/pkg/crc/services"
@@ -52,14 +50,7 @@ func createDnsmasqDNSConfig(serviceConfig services.ServicePostStartConfig) error
 		return err
 	}
 
-	encodeddnsConfig := base64.StdEncoding.EncodeToString([]byte(dnsConfig))
-	_, err = serviceConfig.SSHRunner.Run(
-		fmt.Sprintf("echo '%s' | openssl enc -base64 -d | sudo tee /var/srv/dnsmasq.conf > /dev/null",
-			encodeddnsConfig))
-	if err != nil {
-		return err
-	}
-	return nil
+	return serviceConfig.SSHRunner.CopyData([]byte(dnsConfig), "/var/srv/dnsmasq.conf")
 }
 
 func createDnsConfigFile(values dnsmasqConfFileValues) (string, error) {
