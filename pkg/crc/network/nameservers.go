@@ -1,11 +1,11 @@
 package network
 
 import (
-	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"strings"
 
+	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/ssh"
 )
 
@@ -34,11 +34,11 @@ func GetResolvValuesFromInstance(sshRunner *ssh.SSHRunner) (*ResolvFileValues, e
 
 func CreateResolvFileOnInstance(sshRunner *ssh.SSHRunner, resolvFileValues ResolvFileValues) {
 	resolvFile, _ := CreateResolvFile(resolvFileValues)
-	encodedFile := base64.StdEncoding.EncodeToString([]byte(resolvFile))
 
-	executeCommandOrExit(sshRunner,
-		fmt.Sprintf("echo %s | base64 --decode | sudo tee /etc/resolv.conf > /dev/null", encodedFile),
-		"Error creating /etc/resolv on instance")
+	err := sshRunner.CopyData([]byte(resolvFile), "/etc/resolv.conf")
+	if err != nil {
+		errors.ExitWithMessage(1, fmt.Sprintf("Error creating /etc/resolv on instance: %s", err.Error()))
+	}
 }
 
 // AddNameserversToInstance will add additional nameservers to the end of the

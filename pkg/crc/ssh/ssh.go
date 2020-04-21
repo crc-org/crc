@@ -1,6 +1,7 @@
 package ssh
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 
@@ -41,6 +42,14 @@ func (runner *SSHRunner) RunPrivate(command string) (string, error) {
 
 func (runner *SSHRunner) SetPrivateKeyPath(path string) {
 	runner.privateSSHKey = path
+}
+
+func (runner *SSHRunner) CopyData(data []byte, destFilename string) error {
+	base64Data := base64.StdEncoding.EncodeToString(data)
+	command := fmt.Sprintf("echo %s | base64 --decode | sudo tee %s > /dev/null", base64Data, destFilename)
+	_, err := runner.Run(command)
+
+	return err
 }
 
 func (runner *SSHRunner) runSSHCommandFromDriver(command string, runPrivate bool) (string, error) {
