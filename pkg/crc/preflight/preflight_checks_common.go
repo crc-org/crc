@@ -22,6 +22,7 @@ var genericPreflightChecks = [...]PreflightCheck{
 		fix:              fixOcBinaryCached,
 	},
 	{
+		configKeySuffix:  "check-podman-cached",
 		checkDescription: "Checking if podman remote binary is cached",
 		check:            checkPodmanBinaryCached,
 		fixDescription:   "Caching podman remote binary",
