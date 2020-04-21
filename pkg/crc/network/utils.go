@@ -125,7 +125,8 @@ func CheckCRCLocalDNSReachableFromHost(bundle *bundle.CrcBundleInfo, expectedIP 
 		appsHostname := bundle.GetAppHostname("foo")
 		ip, err = net.LookupIP(appsHostname)
 		if err != nil {
-			return err
+			logging.Warnf("Wildcard DNS resolution for %s does not appear to be working", bundle.ClusterInfo.AppsDomain)
+			return nil
 		}
 		logging.Debugf("%s resolved to %s", appsHostname, ip)
 		if !matchIP(ip, expectedIP) {
