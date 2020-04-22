@@ -25,7 +25,7 @@ Some workloads may require more resources.
 
 === {msw}
 
-* On {msw}, {prod} requires the Windows 10 Pro Fall Creators Update (version 1709).
+* On {msw}, {prod} requires the Windows 10 Pro Fall Creators Update (version 1709) or newer.
 {prod} does not work on earlier versions or editions of {msw}.
 
 === {mac}
