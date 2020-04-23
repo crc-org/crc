@@ -119,26 +119,6 @@ func UpdateClusterID(oc oc.OcConfig) error {
 	return nil
 }
 
-func StopAndRemovePodsInVM(sshRunner *ssh.SSHRunner) error {
-	// This command make sure we stop the kubelet and clean up the pods
-	// We also providing a 2 seconds sleep so that stopped pods get settled and
-	// ready for removal. Without this 2 seconds time sometime it happens some of
-	// the pods are not completely stopped and when remove happens it will throw
-	// an error like below.
-	// remove /var/run/containers/storage/overlay-containers/97e5858e610afc9f71d145b1a7bd5ad930e537ccae79969ae256636f7fb7e77c/userdata/shm: device or resource busy
-	stopAndRemovePodsCmd := `sudo bash -c 'export pods=$(crictl pods -q) && crictl stopp ${pods} && crictl rmp ${pods}'`
-	stopAndRemovePods := func() error {
-		output, err := sshRunner.Run(stopAndRemovePodsCmd)
-		logging.Debugf("Output of %s: %s", stopAndRemovePodsCmd, output)
-		if err != nil {
-			return &errors.RetriableError{Err: err}
-		}
-		return nil
-	}
-
-	return errors.RetryAfter(2, stopAndRemovePods, 2*time.Second)
-}
-
 func AddProxyConfigToCluster(oc oc.OcConfig, proxy *network.ProxyConfig) error {
 	cmdArgs := []string{"patch", "proxy", "cluster", "-p",
 		fmt.Sprintf(`{"spec":{"httpProxy":"%s", "httpsProxy":"%s", "noProxy":"%s"}}`, proxy.HttpProxy, proxy.HttpsProxy, proxy.GetNoProxyString()),
