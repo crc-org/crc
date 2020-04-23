@@ -74,6 +74,14 @@ func (c InstanceSystemdCommander) Status(name string) (string, error) {
 
 }
 
+func (c InstanceSystemdCommander) IsActive(name string) (bool, error) {
+	_, err := c.service(name, actions.IsActive)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func (c InstanceSystemdCommander) service(name string, action actions.Action) (string, error) {
 	command := fmt.Sprintf("sudo systemctl -f %s %s", action.String(), name)
 
