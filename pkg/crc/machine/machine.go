@@ -364,6 +364,11 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		}
 	}
 
+	sd := systemd.NewInstanceSystemdCommander(sshRunner)
+	if _, err := sd.Start("kubelet"); err != nil {
+		result.Error = err.Error()
+		return *result, errors.Newf("Error starting kubelet: %s", err)
+	}
 	ocConfig := oc.UseOCWithConfig(startConfig.Name)
 	if !exists {
 		if err := configureCluster(ocConfig, sshRunner, proxyConfig, pullSecret, instanceIP); err != nil {
@@ -372,12 +377,11 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		}
 	}
 
-	// Start kubelet inside the VM
-	sd := systemd.NewInstanceSystemdCommander(sshRunner)
-	kubeletStarted, err := sd.Start("kubelet")
+	// Check if kubelet service is running inside the VM
+	kubeletStarted, err := sd.IsActive("kubelet")
 	if err != nil {
 		result.Error = err.Error()
-		return *result, errors.Newf("Error starting kubelet: %s", err)
+		return *result, errors.Newf("kubelet service is not running: %s", err)
 	}
 	if kubeletStarted {
 		// In Openshift 4.3, when cluster comes up, the following happens
@@ -771,19 +775,7 @@ func updateSSHKeyPair(sshRunner *crcssh.SSHRunner) error {
 
 func configureCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, proxyConfig *network.ProxyConfig, pullSecret, instanceIP string) (rerr error) {
 	sd := systemd.NewInstanceSystemdCommander(sshRunner)
-	if _, err := sd.Start("kubelet"); err != nil {
-		return fmt.Errorf("Error starting kubelet: %s", err)
-	}
 
-	defer func() {
-		// Stop the kubelet service.
-		if _, err := sd.Stop("kubelet"); err != nil {
-			rerr = err
-		}
-		if err := cluster.StopAndRemovePodsInVM(sshRunner); err != nil {
-			rerr = err
-		}
-	}()
 	if err := configProxyForCluster(ocConfig, sshRunner, sd, proxyConfig, instanceIP); err != nil {
 		return fmt.Errorf("Failed to configure proxy for cluster: %v", err)
 	}
