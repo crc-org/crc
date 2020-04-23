@@ -251,6 +251,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		result.Error = err.Error()
 		return *result, errors.New("Failed to connect to the CRC VM with SSH -- host might be unreachable")
 	}
+	logging.Info("CodeReady Containers VM is running")
 
 	// Check the certs validity inside the vm
 	needsCertsRenewal := false
@@ -338,6 +339,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	// Additional steps to perform after newly created VM is up
 	if !exists {
+		logging.Info("Generating new SSH key")
 		if err := updateSSHKeyPair(sshRunner); err != nil {
 			result.Error = err.Error()
 			return *result, errors.Newf("Error updating public key: %v", err)
@@ -364,6 +366,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		}
 	}
 
+	logging.Info("Starting OpenShift kubelet service")
 	sd := systemd.NewInstanceSystemdCommander(sshRunner)
 	if _, err := sd.Start("kubelet"); err != nil {
 		result.Error = err.Error()
@@ -371,6 +374,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 	ocConfig := oc.UseOCWithConfig(startConfig.Name)
 	if !exists {
+		logging.Info("Configuring cluster for first start")
 		if err := configureCluster(ocConfig, sshRunner, proxyConfig, pullSecret, instanceIP); err != nil {
 			result.Error = err.Error()
 			return *result, errors.Newf("Error Setting cluster config: %s", err)
