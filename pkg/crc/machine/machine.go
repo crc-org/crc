@@ -144,7 +144,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 		openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
 		if openshiftVersion == "" {
-			logging.Infof("Creating VM...")
+			logging.Info("Creating VM...")
 		} else {
 			logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", openshiftVersion)
 		}
@@ -199,7 +199,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		if IsRunning(vmState) {
 			openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
 			if openshiftVersion == "" {
-				logging.Infof("A CodeReady Containers VM is already running")
+				logging.Info("A CodeReady Containers VM is already running")
 			} else {
 				logging.Infof("A CodeReady Containers VM for OpenShift %s is already running", openshiftVersion)
 			}
@@ -208,7 +208,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		} else {
 			openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
 			if openshiftVersion == "" {
-				logging.Infof("Starting CodeReady Containers VM ...")
+				logging.Info("Starting CodeReady Containers VM ...")
 			} else {
 				logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", openshiftVersion)
 			}
@@ -323,7 +323,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		result.Error = err.Error()
 		return *result, errors.Newf("Failed internal DNS query: %v : %s", err, queryOutput)
 	}
-	logging.Infof("Check internal and public DNS query ...")
+	logging.Info("Check internal and public DNS query ...")
 
 	if queryOutput, err := dns.CheckCRCPublicDNSReachable(servicePostStartConfig); err != nil {
 		logging.Warnf("Failed public DNS query from the cluster: %v : %s", err, queryOutput)
@@ -344,7 +344,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		}
 		// Copy Kubeconfig file from bundle extract path to machine directory.
 		// In our case it would be ~/.crc/machines/crc/
-		logging.Infof("Copying kubeconfig file to instance dir ...")
+		logging.Info("Copying kubeconfig file to instance dir ...")
 		kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, startConfig.Name, "kubeconfig")
 		err := crcos.CopyFileContents(crcBundleMetadata.GetKubeConfigPath(),
 			kubeConfigFilePath,
@@ -356,7 +356,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 
 	if needsCertsRenewal {
-		logging.Infof("Cluster TLS certificates have expired, renewing them... [will take up to 5 minutes]")
+		logging.Info("Cluster TLS certificates have expired, renewing them... [will take up to 5 minutes]")
 		err = RegenerateCertificates(sshRunner, startConfig.Name)
 		if err != nil {
 			result.Error = err.Error()
@@ -407,7 +407,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			return *result, errors.New(err.Error())
 		}
 
-		logging.Infof("Starting OpenShift cluster ... [waiting 3m]")
+		logging.Info("Starting OpenShift cluster ... [waiting 3m]")
 	}
 	result.KubeletStarted = kubeletStarted
 
@@ -426,12 +426,12 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	// If no error, return usage message
 	if result.Error == "" {
-		logging.Infof("")
-		logging.Infof("To access the cluster, first set up your environment by following 'crc oc-env' instructions")
+		logging.Info("")
+		logging.Info("To access the cluster, first set up your environment by following 'crc oc-env' instructions")
 		logging.Infof("Then you can access it by running 'oc login -u developer -p developer %s'", result.ClusterConfig.ClusterAPI)
 		logging.Infof("To login as an admin, run 'oc login -u kubeadmin -p %s %s'", result.ClusterConfig.KubeAdminPass, result.ClusterConfig.ClusterAPI)
-		logging.Infof("")
-		logging.Infof("You can now run 'crc console' and use these credentials to access the OpenShift web console")
+		logging.Info("")
+		logging.Info("You can now run 'crc console' and use these credentials to access the OpenShift web console")
 	}
 
 	return *result, err
