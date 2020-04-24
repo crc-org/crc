@@ -1,0 +1,80 @@
+[id="deploying-sample-application-with-odo_{context}"]
+= Deploying a sample application with `odo`
+
+You can use OpenShift Do ([command]`odo`) to create OpenShift projects and applications from the command line.
+This procedure deploys a sample application to the OpenShift cluster running in the {prod} virtual machine.
+
+.Prerequisites
+
+* You have installed [command]`odo`.
+For more information, see link:{odo-docs-url-installing}[Installing `odo`] in the [command]`odo` documentation.
+* The {prod} virtual machine is running.
+For more information, see <<starting-the-virtual-machine_{context}>>.
+
+.Procedure
+
+To deploy a sample application through [command]`odo`, follow these steps:
+
+. Log in to the running {prod} OpenShift cluster as the `developer` user:
++
+[subs="+quotes,attributes"]
+----
+$ odo login -u developer -p developer
+----
+
+. Create a project for your application:
++
+[subs="+quotes,attributes"]
+----
+$ odo project create sample-app
+----
+
+. Create a directory for your components:
++
+[subs="+quotes,attributes"]
+----
+$ mkdir sample-app
+$ cd sample-app
+----
+
+. Create a component from a sample application on GitHub:
++
+[subs="+quotes,attributes"]
+----
+$ odo create nodejs --git https://github.com/openshift/nodejs-ex
+----
++
+[NOTE]
+====
+Creating a component from a remote Git repository will rebuild the application each time you run the [command]`odo push` command.
+To create a component from a local Git repository, see link:{odo-docs-url-single-component}[Creating a single-component application with `odo`] in the [command]`odo` documentation.
+====
+
+. Create a URL and add an entry to the local configuration file:
++
+[subs="+quotes,attributes"]
+----
+$ odo url create --port 8080
+----
+
+. Push the changes:
++
+[subs="+quotes,attributes"]
+----
+$ odo push
+----
++
+Your component is now deployed to the cluster with an accessible URL.
+
+. List the URLs and check the desired URL for the component:
++
+[subs="+quotes,attributes"]
+----
+$ odo url list
+----
+
+. View the deployed application using the generated URL.
+
+.Additional resources
+
+* For more information about using [command]`odo`, see the link:{odo-docs-url}[`odo` documentation].

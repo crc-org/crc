@@ -50,4 +50,3 @@ See <<troubleshooting-codeready-containers_{context}>> if you cannot access the 
 .Additional resources
 
 * The link:https://docs.openshift.com/container-platform/latest/applications/projects/working-with-projects.html[OpenShift documentation] covers the creation of projects and applications.
-* You can also use link:{odo-docs-url}[OpenShift Do] (`odo`) to create OpenShift projects and applications from the command line.
