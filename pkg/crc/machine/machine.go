@@ -818,6 +818,9 @@ func configProxyForCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, sd
 			if _, ferr := sd.Restart("crio"); ferr != nil {
 				err = ferr
 			}
+			if _, ferr := sd.Restart("kubelet"); ferr != nil {
+				err = ferr
+			}
 		}
 	}()
 
