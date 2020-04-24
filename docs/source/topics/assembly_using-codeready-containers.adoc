@@ -7,6 +7,8 @@ include::proc_starting-the-virtual-machine.adoc[leveloffset=+1]
 
 include::assembly_accessing-the-openshift-cluster.adoc[leveloffset=+1]
 
+include::proc_deploying-sample-application-with-odo.adoc[leveloffset=+1]
+
 include::proc_stopping-the-virtual-machine.adoc[leveloffset=+1]
 
 include::proc_deleting-the-virtual-machine.adoc[leveloffset=+1]
