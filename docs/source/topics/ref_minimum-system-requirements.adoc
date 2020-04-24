@@ -9,13 +9,14 @@
 {prod} requires the following system resources:
 
 * 4 virtual CPUs (vCPUs)
-* 8 GB of memory
+* 9 GB of free memory
 * 35 GB of storage space
 
 [NOTE]
 ====
 The OpenShift cluster requires these minimum resources to run in the {prod} virtual machine.
 Some workloads may require more resources.
+To assign more resources to the {prod} virtual machine, see <<configuring-the-virtual-machine_{context}>>.
 ====
 
 [id="minimum-system-requirements-operating-system_{context}"]
