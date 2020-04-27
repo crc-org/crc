@@ -48,5 +48,5 @@ Values for available memory are set in mebibytes (MiB).
 One gibibyte (GiB) of memory is equal to 1024 MiB.
 ====
 +
-The default value for the `memory` property is `8192`.
+The default value for the `memory` property is `9216`.
 The amount of memory to assign must be greater than or equal to the default.
