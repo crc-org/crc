@@ -17,7 +17,7 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
         Examples: Config settings on Mac 
             | property         |    value1 |            value2 |
             | cpus             |         4 |                 3 |
-            | memory           |      8192 |              4096 |
+            | memory           |      9216 |              4096 |
             | nameserver       | 120.0.0.1 |   999.999.999.999 |
             | pull-secret-file |      /etc | /nonexistent-file |
 
@@ -25,7 +25,7 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
         Examples: Config settings on Linux
             | property         |    value1 |            value2 |
             | cpus             |         4 |                 3 |
-            | memory           |      8192 |              4096 |
+            | memory           |      9216 |              4096 |
             | nameserver       | 120.0.0.1 |   999.999.999.999 |
             | pull-secret-file |      /etc | /nonexistent-file |
 
@@ -33,7 +33,7 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
         Examples: Config settings on Windows
             | property         |    value1 |            value2 |
             | cpus             |         4 |                 3 |
-            | memory           |      8192 |              4096 |
+            | memory           |      9216 |              4096 |
             | nameserver       | 120.0.0.1 |   999.999.999.999 |
             | pull-secret-file |    /Users | /nonexistent-file |
 

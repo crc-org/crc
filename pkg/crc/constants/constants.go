@@ -12,7 +12,7 @@ import (
 const (
 	DefaultName   = "crc"
 	DefaultCPUs   = 4
-	DefaultMemory = 8192
+	DefaultMemory = 9216
 
 	DefaultSSHPort = 22
 	DefaultSSHUser = "core"
