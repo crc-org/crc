@@ -72,7 +72,7 @@ func (runner *SSHRunner) runSSHCommandFromDriver(command string, runPrivate bool
 			logging.Debugf("SSH command succeeded")
 		}
 	} else {
-		logging.Debugf("SSH cmd err, output: %v: %s", err, output)
+		logging.Debugf("SSH command results: err: %v, output: %s", err, output)
 	}
 
 	if err != nil {
