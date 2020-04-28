@@ -11,7 +11,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/oc"
 	"github.com/code-ready/crc/pkg/crc/podman"
 	"github.com/code-ready/crc/pkg/embed"
-	crcos "github.com/code-ready/crc/pkg/os"
 )
 
 var genericPreflightChecks = [...]PreflightCheck{
@@ -82,18 +81,8 @@ func fixOcBinaryCached() error {
 
 // Check if podman binary is cached or not
 func checkPodmanBinaryCached() error {
-
-	// See issue #961; Currently does not work on Windows in combination with the CRC vm.
-	if crcos.CurrentOS() == crcos.WINDOWS {
-		logging.Debug("podman remote currently not supported on this platform")
-		return nil
-	}
-
-	podman := podman.PodmanCached{}
-	if !podman.IsCached() {
-		return errors.New("podman remote binary is not cached")
-	}
-	logging.Debug("podman remote binary already cached")
+	// Disable the podman cache until further notice
+	logging.Debug("Currently podman remote is not supported")
 	return nil
 }
 
