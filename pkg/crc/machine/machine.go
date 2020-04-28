@@ -594,9 +594,8 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 		ocConfig := oc.UseOCWithConfig(statusConfig.Name)
 		operatorsStatus, err := oc.GetClusterOperatorStatus(ocConfig)
 		if err != nil {
-			result.Success = false
-			result.Error = err.Error()
-			return *result, errors.New(err.Error())
+			openshiftStatus = "Not Reachable"
+			logging.Debug(err.Error())
 		}
 		if operatorsStatus.Available {
 			openshiftVersion := "4.x"
