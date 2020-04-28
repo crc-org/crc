@@ -91,12 +91,10 @@ var (
 			hyperkit.HyperkitDownloadUrl,
 			constants.GetOcUrlForOs("darwin"),
 			constants.GetCrcTrayDownloadURL(),
-			constants.GetPodmanUrlForOs("darwin"),
 		},
 		"linux": []string{
 			libvirt.MachineDriverDownloadUrl,
 			constants.GetOcUrlForOs("linux"),
-			constants.GetPodmanUrlForOs("linux"),
 		},
 		"windows": []string{
 			constants.GetOcUrlForOs("windows"),
