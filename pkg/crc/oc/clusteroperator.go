@@ -38,7 +38,7 @@ func GetClusterOperatorStatus(oc OcConfig) (*ClusterStatus, error) {
 	cs := &ClusterStatus{}
 	data, stderr, err := oc.RunOcCommand("get", "co", "-ojson")
 	if err != nil {
-		return cs, fmt.Errorf("%s - %v", stderr, err)
+		return cs, fmt.Errorf("%s", stderr)
 	}
 
 	var co K8sResource
