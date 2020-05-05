@@ -67,7 +67,11 @@ func fixBundleCached() error {
 
 // Check if oc binary is cached or not
 func checkOcBinaryCached() error {
-	oc := cache.NewOcCache(constants.CrcBinDir)
+	// Remove oc binary from older location and ignore the error
+	// We should remove this code after 3-4 releases. (after 2020-07-10)
+	os.Remove(filepath.Join(constants.CrcBinDir, "oc"))
+
+	oc := cache.NewOcCache(constants.CrcOcBinDir)
 	if !oc.IsCached() {
 		return errors.New("oc binary is not cached")
 	}
@@ -76,7 +80,7 @@ func checkOcBinaryCached() error {
 }
 
 func fixOcBinaryCached() error {
-	oc := cache.NewOcCache(constants.CrcBinDir)
+	oc := cache.NewOcCache(constants.CrcOcBinDir)
 	if err := oc.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download oc %v", err)
 	}

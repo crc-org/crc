@@ -27,7 +27,7 @@ var ocEnvCmd = &cobra.Command{
 		if err != nil {
 			errors.Exit(1)
 		}
-		output.Outln(shell.GetPathEnvString(userShell, constants.CrcBinDir))
+		output.Outln(shell.GetPathEnvString(userShell, constants.CrcOcBinDir))
 		if proxyConfig.IsEnabled() {
 			output.Outln(shell.GetEnvString(userShell, "HTTP_PROXY", proxyConfig.HttpProxy))
 			output.Outln(shell.GetEnvString(userShell, "HTTPS_PROXY", proxyConfig.HttpsProxy))

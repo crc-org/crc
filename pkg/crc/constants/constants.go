@@ -97,6 +97,7 @@ func GetDefaultBundle() string {
 var (
 	CrcBaseDir         = filepath.Join(GetHomeDir(), ".crc")
 	CrcBinDir          = filepath.Join(CrcBaseDir, "bin")
+	CrcOcBinDir        = filepath.Join(CrcBinDir, "oc")
 	ConfigPath         = filepath.Join(CrcBaseDir, ConfigFile)
 	LogFilePath        = filepath.Join(CrcBaseDir, LogFile)
 	DaemonLogFilePath  = filepath.Join(CrcBaseDir, DaemonLogFile)
