@@ -7,7 +7,7 @@ jobs:
     macos:
       xcode: "10.0.0"
     environment:
-      GOVERSION: "1.12.8"
+      GOVERSION: "1.13.4"
 
 ## Build crc
     steps:
