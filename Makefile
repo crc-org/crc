@@ -145,7 +145,7 @@ fmtcheck: ## Checks for style violation using gofmt
 	@gofmt -l $(SOURCE_DIRS) | grep ".*\.go"; if [ "$$?" = "0" ]; then exit 1; fi
 
 $(GOPATH)/bin/golangci-lint:
-	GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.17.1
+	GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.26.0
 
 # Run golangci-lint against code
 .PHONY: lint cross-lint
