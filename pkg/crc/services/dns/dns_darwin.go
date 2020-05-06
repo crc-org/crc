@@ -18,12 +18,14 @@ import (
 
 const (
 	resolverFileTemplate = `port {{ .Port }}
+domain {{ .Domain }}
 nameserver {{ .IP }}
 search_order {{ .SearchOrder }}`
 )
 
 type resolverFileValues struct {
 	Port        int
+	Domain      string
 	IP          string
 	SearchOrder int
 }
@@ -37,7 +39,8 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *se
 	}
 
 	// Write resolver config to host
-	needRestart, err := createResolverFile(serviceConfig.IP, filepath.Join("/", "etc", "resolver", serviceConfig.BundleMetadata.ClusterInfo.BaseDomain))
+	needRestart, err := createResolverFile(serviceConfig.IP, serviceConfig.BundleMetadata.ClusterInfo.BaseDomain,
+		serviceConfig.BundleMetadata.ClusterInfo.BaseDomain)
 	if err != nil {
 		result.Success = false
 		return *result, err
@@ -64,11 +67,12 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *se
 	return *result, nil
 }
 
-func createResolverFile(InstanceIP string, path string) (bool, error) {
+func createResolverFile(InstanceIP string, domain string, filename string) (bool, error) {
 	var resolverFile bytes.Buffer
 
 	values := resolverFileValues{
 		Port:        dnsServicePort,
+		Domain:      domain,
 		IP:          InstanceIP,
 		SearchOrder: 1,
 	}
@@ -82,6 +86,7 @@ func createResolverFile(InstanceIP string, path string) (bool, error) {
 		return false, err
 	}
 
+	path := filepath.Join("/", "etc", "resolver", filename)
 	return crcos.WriteFileIfContentChanged(path, resolverFile.Bytes(), 0644)
 }
 
