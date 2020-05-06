@@ -55,10 +55,60 @@ var hypervPreflightChecks = [...]PreflightCheck{
 	},
 }
 
+var traySetupChecks = [...]PreflightCheck{
+	{
+		checkDescription: "Checking if daemon service is installed",
+		check:            checkIfDaemonServiceInstalled,
+		fixDescription:   "Installing daemon service",
+		fix:              fixDaemonServiceInstalled,
+		flags:            SetupOnly,
+	},
+	{
+		checkDescription: "Checking if daemon service is running",
+		check:            checkIfDaemonServiceRunning,
+		fixDescription:   "Starting daemon service",
+		fix:              fixDaemonServiceRunning,
+		flags:            SetupOnly,
+	},
+	{
+		checkDescription: "Checking if tray binary is present",
+		check:            checkTrayBinaryExists,
+		fixDescription:   "Caching tray binary",
+		fix:              fixTrayBinaryExists,
+		flags:            SetupOnly,
+	},
+	{
+		checkDescription: "Checking if tray binary is added to startup applications",
+		check:            checkTrayBinaryAddedToStartupFolder,
+		fixDescription:   "Adding tray binary to startup applications",
+		fix:              fixTrayBinaryAddedToStartupFolder,
+		flags:            SetupOnly,
+	},
+	{
+		checkDescription: "Checking if tray version is correct",
+		check:            checkTrayBinaryVersion,
+		fixDescription:   "Caching correct tray version",
+		fix:              fixTrayBinaryVersion,
+		flags:            SetupOnly,
+	},
+	{
+		checkDescription: "Checking if tray is running",
+		check:            checkTrayRunning,
+		fixDescription:   "Starting CodeReady Containers tray",
+		fix:              fixTrayRunning,
+		flags:            SetupOnly,
+	},
+}
+
 func getPreflightChecks() []PreflightCheck {
 	checks := []PreflightCheck{}
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, hypervPreflightChecks[:]...)
+
+	// Experimental feature
+	if EnableExperimentalFeatures {
+		checks = append(checks, traySetupChecks[:]...)
+	}
 
 	return checks
 }
