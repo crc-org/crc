@@ -30,11 +30,12 @@ const (
 	CrcLandingPageURL    = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
 	PullSecretFile       = "pullsecret.json"
 
-	DefaultOcUrlBase        = "https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest"
-	DefaultPodmanUrlBase    = "https://storage.googleapis.com/libpod-master-releases"
-	DefaultGoodhostsCliBase = "https://github.com/code-ready/goodhosts-cli/releases/download/v1.0.0"
-	CrcTrayDownloadURL      = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
-	DefaultContext          = "admin"
+	DefaultOcUrlBase          = "https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest"
+	DefaultPodmanUrlBase      = "https://storage.googleapis.com/libpod-master-releases"
+	DefaultGoodhostsCliBase   = "https://github.com/code-ready/goodhosts-cli/releases/download/v1.0.0"
+	CrcTrayDownloadURL        = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
+	CRCWindowsTrayDownloadURL = "https://github.com/code-ready/tray-windows/releases/download/v%s/crc-tray-windows.zip"
+	DefaultContext            = "admin"
 )
 
 var ocUrlForOs = map[string]string{
@@ -149,6 +150,11 @@ func GetPrivateKeyPath() string {
 	return filepath.Join(MachineInstanceDir, DefaultName, "id_rsa")
 }
 
+// TODO: follow the same pattern as oc and podman above
 func GetCrcTrayDownloadURL() string {
 	return fmt.Sprintf(CrcTrayDownloadURL, version.GetCRCTrayVersion())
+}
+
+func GetCRCWindowsTrayDownloadURL() string {
+	return fmt.Sprintf(CRCWindowsTrayDownloadURL, version.GetCRCWindowsTrayVersion())
 }

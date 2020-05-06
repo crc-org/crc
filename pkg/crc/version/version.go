@@ -42,6 +42,8 @@ const (
 	releaseInfoLink = "https://mirror.openshift.com/pub/openshift-v4/clients/crc/latest/release-info.json"
 	// Tray version to be embedded in binary
 	crcTrayVersion = "1.0.0-alpha.3"
+	// Windows forms application version type major.minor.buildnumber.revesion
+	crcWindowsTrayVersion = "0.1.0.0"
 )
 
 type CrcReleaseInfo struct {
@@ -64,6 +66,10 @@ func GetBundleVersion() string {
 
 func GetCRCTrayVersion() string {
 	return crcTrayVersion
+}
+
+func GetCRCWindowsTrayVersion() string {
+	return crcWindowsTrayVersion
 }
 
 func getCRCLatestVersionFromMirror() (*semver.Version, error) {
