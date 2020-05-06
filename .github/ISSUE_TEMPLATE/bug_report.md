@@ -12,6 +12,7 @@ assignees: ''
   * OS: Linux / macOS / Windows
   * Hypervisor: KVM / Hyper-V / hyperkit
   * Did you run `crc setup` before starting it (Yes/No)?
+  * Running CRC on: Laptop / Baremetal-Server / VM
 
 ## CRC version
 ```bash
@@ -20,7 +21,7 @@ assignees: ''
   
 ## CRC status
 ```bash
-# Put `crc status` output here
+# Put `crc status --log-level debug` output here
 ```
 
 ## CRC config
@@ -34,7 +35,6 @@ assignees: ''
 # put the output of `sw_vers` in case of Mac
 # Put the output of `systeminfo` in case of Windows
 ```
-
 
 ### Steps to reproduce
 
@@ -51,5 +51,12 @@ assignees: ''
 
 ### Logs
 
-You can start crc with `crc start --log-level debug` to collect logs.
-Please consider posting this on http://gist.github.com/ and post the link in the issue.
+Before gather the logs try following if that fix your issue
+```bash
+$ crc delete -f
+$ crc cleanup
+$ crc setup
+$ crc start --log-level debug
+```
+
+Please consider posting the output of `crc start --log-level debug`  on http://gist.github.com/ and post the link in the issue.
