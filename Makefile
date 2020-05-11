@@ -146,7 +146,7 @@ ifndef CRC_BINARY
 	CRC_BINARY = --crc-binary=$(GOPATH)/bin
 endif
 integration:
-	@go test --timeout=180m $(REPOPATH)/test/integration -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --bundle-version=$(BUNDLE_VERSION) $(GODOG_OPTS)
+	@go test --timeout=1440m $(REPOPATH)/test/integration -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --bundle-version=$(BUNDLE_VERSION) $(GODOG_OPTS)
 
 .PHONY: fmt
 fmt:

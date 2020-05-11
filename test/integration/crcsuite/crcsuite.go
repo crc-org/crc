@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/user"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -66,6 +67,14 @@ func FeatureContext(s *godog.Suite) {
 		ConfigFileInCRCHomeContainsKey)
 	s.Step(`removing file "(.*)" from CRC home folder succeeds$`,
 		DeleteFileFromCRCHome)
+
+	// Monitoring
+	s.Step(`^preparing and recording the environment succeeds$`,
+		PrepareAndRecordEnvironment)
+	s.Step(`^taking snapshot of the node every "(\d*(?:ms|s|m))" exactly "(\d+)" times succeeds$`,
+		TakeTemperatureRepeatedlyAtIntervals)
+	s.Step(`^packaging and uploading data succeeds$`,
+		PackageAndUpload)
 
 	s.BeforeSuite(func() {
 		usr, _ := user.Current()
@@ -245,6 +254,104 @@ func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string,
 	}
 
 	return matchErr
+}
+
+func PackageAndUpload() error {
+
+	curTime := time.Now()
+	curDir, _ := os.Getwd()
+	pathbase := path.Dir(curDir) // currently in the out/test-run
+
+	dateStamp := curTime.Format("2006-01-02")
+	dataDir := fmt.Sprintf("%s%s", "data_", dateStamp)
+	dataDirPath := path.Join(pathbase, "test-results", dataDir)
+
+	// round up files to upload to Github
+	var files []string
+	err := filepath.Walk(dataDirPath, func(path string, info os.FileInfo, err error) error {
+		files = append(files, path)
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	for i, file := range files {
+		if i == 0 { // skip the folder itself
+			continue
+		}
+		filename := filepath.Base(file) // only take the filename without path
+		err := CreateGithubFile(file, "crc-data", filepath.Join(dataDir, filename), "Commit message")
+		if err != nil {
+			fmt.Printf("Github upload failed: %s", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func PrepareAndRecordEnvironment() error {
+
+	curTime := time.Now()
+	curDir, _ := os.Getwd()
+	pathbase := path.Dir(curDir) // currently in the out/test-run
+	dateStamp := curTime.Format("2006-01-02")
+	dataDir := fmt.Sprintf("%s%s", "data_", dateStamp)
+	newDir := path.Join(pathbase, "test-results", dataDir)
+	if _, err := os.Stat(newDir); os.IsNotExist(err) {
+		os.Mkdir(newDir, 0777)
+	}
+	cmd_crcVersion := fmt.Sprintf("crc version > %s", path.Join(newDir, "crc_version.txt"))
+	cmd_systemHardware := fmt.Sprintf("sudo lshw > %s", path.Join(newDir, "system_hardware.txt"))
+	cmd_systemInfo := fmt.Sprintf("uname -a > %s", path.Join(newDir, "system_info.txt"))
+	cmd_hypervisorVersion := fmt.Sprintf("virsh --version > %s", path.Join(newDir, "hypervisor_version.txt"))
+
+	cmds := []string{cmd_crcVersion,
+		cmd_systemHardware,
+		cmd_systemInfo,
+		cmd_hypervisorVersion}
+
+	for _, cmd := range cmds {
+		exec_err := clicumber.ExecuteCommand(cmd)
+		if exec_err != nil {
+			fmt.Println("Failed to execute command %s", cmd)
+			return exec_err
+		}
+	}
+
+	return nil
+}
+
+func TakeTemperatureRepeatedlyAtIntervals(offTime string, repeatCount int) error {
+
+	waitDuration, err := time.ParseDuration(offTime)
+	if err != nil {
+		return err
+	}
+
+	curDir, _ := os.Getwd()
+	pathbase := path.Dir(curDir) // currently in the out/test-run
+
+	for i := 0; i < repeatCount; i++ {
+		curTime := time.Now()
+		timeStamp := curTime.Format("2006-01-02T15:04:05")
+		dateStamp := curTime.Format("2006-01-02")
+		dataDir := fmt.Sprintf("%s%s", "data_", dateStamp)
+		dumpFile := fmt.Sprintf("%s%s%s", "node-describe_", timeStamp, ".txt")
+		dumpFileLocation := path.Join(pathbase, "test-results", dataDir, dumpFile)
+
+		cmd := fmt.Sprintf("oc describe node > %s", dumpFileLocation)
+
+		exec_err := clicumber.ExecuteCommand(cmd)
+		if exec_err != nil {
+			fmt.Println("Failed to execute command %s", cmd)
+			return exec_err
+		}
+		time.Sleep(waitDuration)
+	}
+
+	return nil
 }
 
 func DeleteFileFromCRCHome(fileName string) error {
