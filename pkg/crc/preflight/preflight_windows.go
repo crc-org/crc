@@ -57,11 +57,13 @@ var hypervPreflightChecks = [...]PreflightCheck{
 
 var traySetupChecks = [...]PreflightCheck{
 	{
-		checkDescription: "Checking if daemon service is installed",
-		check:            checkIfDaemonServiceInstalled,
-		fixDescription:   "Installing daemon service",
-		fix:              fixDaemonServiceInstalled,
-		flags:            SetupOnly,
+		checkDescription:   "Checking if daemon service is installed",
+		check:              checkIfDaemonServiceInstalled,
+		fixDescription:     "Installing daemon service",
+		fix:                fixDaemonServiceInstalled,
+		cleanupDescription: "Removing daemon service if exists",
+		cleanup:            removeDaemonService,
+		flags:              SetupOnly,
 	},
 	{
 		checkDescription: "Checking if daemon service is running",
@@ -78,11 +80,13 @@ var traySetupChecks = [...]PreflightCheck{
 		flags:            SetupOnly,
 	},
 	{
-		checkDescription: "Checking if tray binary is added to startup applications",
-		check:            checkTrayBinaryAddedToStartupFolder,
-		fixDescription:   "Adding tray binary to startup applications",
-		fix:              fixTrayBinaryAddedToStartupFolder,
-		flags:            SetupOnly,
+		checkDescription:   "Checking if tray binary is added to startup applications",
+		check:              checkTrayBinaryAddedToStartupFolder,
+		fixDescription:     "Adding tray binary to startup applications",
+		fix:                fixTrayBinaryAddedToStartupFolder,
+		cleanupDescription: "Removing tray binary from startup folder if exists",
+		cleanup:            removeTrayBinaryFromStartupFolder,
+		flags:              SetupOnly,
 	},
 	{
 		checkDescription: "Checking if tray version is correct",
@@ -92,11 +96,13 @@ var traySetupChecks = [...]PreflightCheck{
 		flags:            SetupOnly,
 	},
 	{
-		checkDescription: "Checking if tray is running",
-		check:            checkTrayRunning,
-		fixDescription:   "Starting CodeReady Containers tray",
-		fix:              fixTrayRunning,
-		flags:            SetupOnly,
+		checkDescription:   "Checking if tray is running",
+		check:              checkTrayRunning,
+		fixDescription:     "Starting CodeReady Containers tray",
+		fix:                fixTrayRunning,
+		cleanupDescription: "Stopping tray process if running",
+		cleanup:            stopTray,
+		flags:              SetupOnly,
 	},
 }
 
@@ -128,5 +134,12 @@ func RegisterSettings() {
 }
 
 func CleanUpHost() {
-	doCleanUpPreflightChecks(getPreflightChecks())
+	// A user can use setup with experiment flag
+	// and not use cleanup with same flag, to avoid
+	// any extra step/confusion we are just adding the checks
+	// which are behind the experiment flag. This way cleanup
+	// perform action in a sane way.
+	checks := getPreflightChecks()
+	checks = append(checks, traySetupChecks[:]...)
+	doCleanUpPreflightChecks(checks)
 }

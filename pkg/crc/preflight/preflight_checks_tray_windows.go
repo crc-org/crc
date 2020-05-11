@@ -20,7 +20,10 @@ import (
 	"github.com/code-ready/crc/pkg/os/windows/service"
 )
 
-var startUpFolder = filepath.Join(constants.GetHomeDir(), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup")
+var (
+	startUpFolder   = filepath.Join(constants.GetHomeDir(), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup")
+	trayProcessName = constants.TrayBinaryName[:len(constants.TrayBinaryName)-4]
+)
 
 func checkIfDaemonServiceInstalled() error {
 	// We want to force installation whenever setup is ran
@@ -62,6 +65,14 @@ func fixDaemonServiceInstalled() error {
 		return fmt.Errorf("Failed to install CodeReady Containers daemon service: %v", err)
 	}
 	return nil
+}
+
+func removeDaemonService() error {
+	err := service.Stop(constants.DaemonServiceName)
+	if err != nil {
+		return fmt.Errorf("Failed to stop the daemon service: %v", err)
+	}
+	return service.Delete(constants.DaemonServiceName)
 }
 
 func checkIfDaemonServiceRunning() error {
@@ -166,7 +177,6 @@ func removeTrayBinaryFromStartupFolder() error {
 }
 
 func checkTrayRunning() error {
-	trayProcessName := constants.TrayBinaryName[:len(constants.TrayBinaryName)-4]
 	cmd := fmt.Sprintf("Get-Process -Name \"%s\"", trayProcessName)
 	_, stdErr, err := powershell.Execute(cmd)
 	if err != nil {
@@ -182,6 +192,15 @@ func fixTrayRunning() error {
 	err := exec.Command(constants.TrayBinaryPath).Start()
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func stopTray() error {
+	cmd := fmt.Sprintf("Stop-Process -Name %s", trayProcessName)
+	_, _, err := powershell.Execute(cmd)
+	if err != nil {
+		return fmt.Errorf("Failed to stop running tray: %v", err)
 	}
 	return nil
 }
