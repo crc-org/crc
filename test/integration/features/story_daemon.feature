@@ -1,14 +1,14 @@
 @story_daemon @darwin @linux @windows
 Feature: CRC daemon
 
-    User starts the CRC daemon and performs basic operations: start, stop, delete, and status.
+    User starts the CRC daemon and performs basic operations: start,
+    stop, delete, and status.
 
     Scenario: Prepare
         When setting config property "pull-secret-file" to value "default pull secret" succeeds
         Then "JSON" config file "crc.json" in CRC home folder contains key "pull-secret-file"
-        When executing "crc setup" succeeds
+        When executing "crc setup --enable-environmental-features" succeeds
         Then stdout should contain "Setup is complete"
-        And executing "crc daemon &" succeeds
 
     Scenario: 'Version' command
         Then sending "version" command to daemon succeeds
