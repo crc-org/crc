@@ -163,7 +163,7 @@ func BindFlagSet(flagSet *pflag.FlagSet) error {
 	return globalViper.BindPFlags(flagSet)
 }
 
-// CreateSetting returns a filled struct of ConfigSetting
+// AddSetting returns a filled struct of ConfigSetting
 // takes the config name and default value as arguments
 func AddSetting(name string, defValue interface{}, validationFn []ValidationFnType, callbackFn []SetFn) *setting {
 	s := setting{Name: name, defaultValue: defValue, validationFns: validationFn, callbackFns: callbackFn}
