@@ -42,7 +42,7 @@ func GenerateUsageHint(userShell, cmdLine string) string {
 	case "fish":
 		cmd = fmt.Sprintf("eval (%s)", cmdLine)
 	case "powershell":
-		cmd = fmt.Sprintf("& %s | Invoke-Expression", cmdLine)
+		cmd = fmt.Sprintf("\"& %s\" | Invoke-Expression", cmdLine)
 	case "cmd":
 		cmd = fmt.Sprintf("\t@FOR /f \"tokens=*\" %%i IN ('%s') DO @call %%i", cmdLine)
 		comment = "REM"
