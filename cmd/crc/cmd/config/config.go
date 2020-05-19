@@ -77,7 +77,11 @@ func less(lhsKey, rhsKey string) bool {
 
 func configurableFields() string {
 	var fields []string
-	keys := cfg.AllConfigKeys()
+	var keys = make([]string, len(cfg.AllConfigs()))
+
+	for key := range cfg.AllConfigs() {
+		keys = append(keys, key)
+	}
 	sort.Slice(keys, func(i, j int) bool {
 		return less(keys[i], keys[j])
 	})
