@@ -139,17 +139,22 @@ func ChangedConfigs() map[string]interface{} {
 	return changedConfigs
 }
 
-// AllConfigKeys returns all the known config keys
-// A known config key is one which was registered through AddSetting
-// - config keys with a default value
-// - config keys with a value set
-// - config keys with no value set
-func AllConfigKeys() []string {
-	var keys []string
+// AllConfigs returns all the known configs
+// A known config is one which was registered through AddSetting
+// - config with a default value
+// - config with a value set
+// - config with no value set
+func AllConfigs() map[string]interface{} {
+	var allConfigs = make(map[string]interface{})
+
 	for key := range allSettings {
-		keys = append(keys, key)
+		v, err := Get(key)
+		if err != nil {
+			allConfigs[key] = nil
+		}
+		allConfigs[key] = v
 	}
-	return keys
+	return allConfigs
 }
 
 // BindFlags binds flags to config properties
