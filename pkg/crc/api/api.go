@@ -30,6 +30,9 @@ func createAPIServerWithListener(listener net.Listener, client machine.Client) (
 			"status":        statusHandler,
 			"delete":        deleteHandler,
 			"version":       versionHandler,
+			"setconfig":     setConfigHandler,
+			"unsetconfig":   unsetConfigHandler,
+			"getconfig":     getConfigHandler,
 			"webconsoleurl": webconsoleURLHandler,
 		},
 	}
