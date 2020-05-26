@@ -387,18 +387,20 @@ func removeLibvirtCrcNetwork() error {
 
 func removeCrcVM() error {
 	logging.Debug("Removing 'crc' VM")
-	_, _, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "dominfo", constants.DefaultName)
+	stdout, _, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "domstate", constants.DefaultName)
 	if err != nil {
 		//  User may have run `crc delete` before `crc cleanup`
 		//  in that case there is no crc vm so return early.
 		return nil
 	}
-	_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "destroy", constants.DefaultName)
-	if err != nil {
-		logging.Debugf("%v : %s", err, stderr)
-		return fmt.Errorf("Failed to destroy 'crc' VM")
+	if stdout == "running" {
+		_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "destroy", constants.DefaultName)
+		if err != nil {
+			logging.Debugf("%v : %s", err, stderr)
+			return fmt.Errorf("Failed to destroy 'crc' VM")
+		}
 	}
-	_, stderr, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "undefine", constants.DefaultName)
+	_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "undefine", constants.DefaultName)
 	if err != nil {
 		logging.Debugf("%v : %s", err, stderr)
 		return fmt.Errorf("Failed to undefine 'crc' VM")
