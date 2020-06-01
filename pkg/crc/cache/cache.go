@@ -85,6 +85,9 @@ func (c *Cache) CacheBinary() error {
 
 	for _, extractedFilePath := range extractedFiles {
 		finalBinaryPath := filepath.Join(c.destDir, filepath.Base(extractedFilePath))
+		// If the file exists then remove it (ignore error) first before copy because with `0500` permission
+		// it is not possible to overwrite the file.
+		os.Remove(finalBinaryPath)
 		err = crcos.CopyFileContents(extractedFilePath, finalBinaryPath, 0500)
 		if err != nil {
 			return err
