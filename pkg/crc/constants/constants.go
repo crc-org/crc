@@ -30,7 +30,7 @@ const (
 	CrcLandingPageURL    = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
 	PullSecretFile       = "pullsecret.json"
 
-	DefaultOcUrlBase          = "https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest"
+	DefaultOcUrlBase          = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp"
 	DefaultPodmanUrlBase      = "https://storage.googleapis.com/libpod-master-releases"
 	DefaultGoodhostsCliBase   = "https://github.com/code-ready/goodhosts-cli/releases/download/v1.0.0"
 	CrcTrayDownloadURL        = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
@@ -39,9 +39,9 @@ const (
 )
 
 var ocUrlForOs = map[string]string{
-	"darwin":  fmt.Sprintf("%s/%s", DefaultOcUrlBase, "macosx/oc.tar.gz"),
-	"linux":   fmt.Sprintf("%s/%s", DefaultOcUrlBase, "linux/oc.tar.gz"),
-	"windows": fmt.Sprintf("%s/%s", DefaultOcUrlBase, "windows/oc.zip"),
+	"darwin":  fmt.Sprintf("%s/%s/%s", DefaultOcUrlBase, version.GetOcVersion(), "openshift-client-mac.tar.gz"),
+	"linux":   fmt.Sprintf("%s/%s/%s", DefaultOcUrlBase, version.GetOcVersion(), "openshift-client-linux.tar.gz"),
+	"windows": fmt.Sprintf("%s/%s/%s", DefaultOcUrlBase, version.GetOcVersion(), "openshift-client-windows.zip"),
 }
 
 func GetOcUrlForOs(os string) string {
