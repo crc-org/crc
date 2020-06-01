@@ -13,6 +13,10 @@
 # limitations under the License.
 
 BUNDLE_VERSION = 4.5.0-rc.5
+# OC_VERSION and BUNDLE_VERSION are going to same for release artifacts but
+# different for nightly and CI bits where bundle version would be any random
+# string or dd-mm-yyyy format.
+OC_VERSION ?= ${BUNDLE_VERSION}
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 1.12.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
@@ -57,6 +61,7 @@ __check_defined = \
 # Linker flags
 VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
     -X $(REPOPATH)/pkg/crc/version.bundleVersion=$(BUNDLE_VERSION) \
+    -X $(REPOPATH)/pkg/crc/version.ocVersion=$(OC_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.commitSha=$(COMMIT_SHA)
 
 BUNDLE_EMBEDDED := -X $(REPOPATH)/pkg/crc/constants.bundleEmbedded=true

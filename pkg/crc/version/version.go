@@ -36,6 +36,9 @@ var (
 
 	// Bundle version which used for the release.
 	bundleVersion = "0.0.0-unset"
+
+	// OC version which should be used.
+	ocVersion = "0.0.0-unset"
 )
 
 const (
@@ -62,6 +65,10 @@ func GetCommitSha() string {
 
 func GetBundleVersion() string {
 	return bundleVersion
+}
+
+func GetOcVersion() string {
+	return ocVersion
 }
 
 func GetCRCTrayVersion() string {

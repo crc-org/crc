@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/cache"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/embed"
+	crcos "github.com/code-ready/crc/pkg/os"
 )
 
 var genericPreflightChecks = [...]PreflightCheck{
@@ -71,16 +74,19 @@ func checkOcBinaryCached() error {
 	// We should remove this code after 3-4 releases. (after 2020-07-10)
 	os.Remove(filepath.Join(constants.CrcBinDir, "oc"))
 
-	oc := cache.NewOcCache("", nil)
+	oc := cache.NewOcCache(version.GetOcVersion(), getCurrentOcversion)
 	if !oc.IsCached() {
 		return errors.New("oc binary is not cached")
+	}
+	if err := oc.CheckVersion(); err != nil {
+		return err
 	}
 	logging.Debug("oc binary already cached")
 	return nil
 }
 
 func fixOcBinaryCached() error {
-	oc := cache.NewOcCache("", nil)
+	oc := cache.NewOcCache(version.GetOcVersion(), getCurrentOcversion)
 	if err := oc.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download oc %v", err)
 	}
@@ -123,4 +129,13 @@ func fixGoodhostsBinaryCached() error {
 	}
 	logging.Debug("goodhost binary cached")
 	return setSuid(goodhostPath)
+}
+
+func getCurrentOcversion() (string, error) {
+	ocPath := filepath.Join(constants.CrcOcBinDir, constants.OcBinaryName)
+	stdOut, _, err := crcos.RunWithDefaultLocale(ocPath, "version", "--client")
+	if len(strings.Split(stdOut, ":")) < 2 {
+		return "", fmt.Errorf("Unable to parse the version information of %s", ocPath)
+	}
+	return strings.TrimSpace(strings.Split(stdOut, ":")[1]), err
 }
