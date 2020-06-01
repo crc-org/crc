@@ -1,10 +1,7 @@
 package cache
 
 import (
-	"io/ioutil"
-	"os"
-	"path/filepath"
-
+	"fmt"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/download"
@@ -12,28 +9,42 @@ import (
 	"github.com/code-ready/crc/pkg/extract"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/pkg/errors"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 type Cache struct {
 	binaryName string
 	archiveURL string
 	destDir    string
+	version    string
+	getVersion func() (string, error)
 }
 
-func New(binarName string, archiveURL string, destDir string) *Cache {
-	return &Cache{binaryName: binarName, archiveURL: archiveURL, destDir: destDir}
+type VersionMismatchError struct {
+	ExpectedVersion string
+	CurrentVersion  string
 }
 
-func NewOcCache() *Cache {
-	return New(constants.OcBinaryName, constants.GetOcUrl(), constants.CrcOcBinDir)
+func (e *VersionMismatchError) Error() string {
+	return fmt.Sprintf("expected: %s but got: %s", e.ExpectedVersion, e.CurrentVersion)
 }
 
-func NewPodmanCache() *Cache {
-	return New(constants.PodmanBinaryName, constants.GetPodmanUrl(), constants.CrcBinDir)
+func New(binaryName string, archiveURL string, destDir string, version string, getVersion func() (string, error)) *Cache {
+	return &Cache{binaryName: binaryName, archiveURL: archiveURL, destDir: destDir, version: version, getVersion: getVersion}
 }
 
-func NewGoodhostsCache() *Cache {
-	return New(constants.GoodhostsBinaryName, constants.GetGoodhostsUrl(), constants.CrcBinDir)
+func NewOcCache(version string, getVersion func() (string, error)) *Cache {
+	return New(constants.OcBinaryName, constants.GetOcUrl(), constants.CrcOcBinDir, version, getVersion)
+}
+
+func NewPodmanCache(version string, getVersion func() (string, error)) *Cache {
+	return New(constants.PodmanBinaryName, constants.GetPodmanUrl(), constants.CrcBinDir, version, getVersion)
+}
+
+func NewGoodhostsCache(version string, getVersion func() (string, error)) *Cache {
+	return New(constants.GoodhostsBinaryName, constants.GetGoodhostsUrl(), constants.CrcBinDir, version, getVersion)
 }
 
 func (c *Cache) IsCached() bool {
@@ -44,7 +55,7 @@ func (c *Cache) IsCached() bool {
 }
 
 func (c *Cache) EnsureIsCached() error {
-	if !c.IsCached() {
+	if !c.IsCached() || c.CheckVersion() != nil {
 		err := c.CacheBinary()
 		if err != nil {
 			return err
@@ -55,7 +66,7 @@ func (c *Cache) EnsureIsCached() error {
 
 // CacheBinary downloads and caches the requested binary into the CRC directory
 func (c *Cache) CacheBinary() error {
-	if c.IsCached() {
+	if c.IsCached() && c.CheckVersion() == nil {
 		return nil
 	}
 
@@ -108,4 +119,19 @@ func (c *Cache) getBinary(destDir string) (string, error) {
 	}
 
 	return destPath, err
+}
+
+func (c *Cache) CheckVersion() error {
+	// Check if version string is non-empty
+	if c.version == "" {
+		return nil
+	}
+	currentVersion, err := c.getVersion()
+	if err != nil {
+		return err
+	}
+	if currentVersion != c.version {
+		return &VersionMismatchError{CurrentVersion: currentVersion, ExpectedVersion: c.version}
+	}
+	return nil
 }
