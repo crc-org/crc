@@ -56,7 +56,7 @@ func uncompress(tarball, targetDir string, fileFilter func(string) bool, showPro
 	case strings.HasSuffix(tarball, ".tar"):
 		filereader = file
 	default:
-		logging.Warnf("Unknown file format when trying to uncompress %s", tarball)
+		return nil, fmt.Errorf("Unknown file format when trying to uncompress %s", tarball)
 	}
 
 	return untar(filereader, targetDir, fileFilter, showProgress)
