@@ -20,8 +20,8 @@ type Cache struct {
 	destDir    string
 }
 
-func New(binarName string, archiveURL string, destDir string) *Cache {
-	return &Cache{binaryName: binarName, archiveURL: archiveURL, destDir: destDir}
+func New(binaryName string, archiveURL string, destDir string) *Cache {
+	return &Cache{binaryName: binaryName, archiveURL: archiveURL, destDir: destDir}
 }
 
 func NewOcCache(destDir string) *Cache {

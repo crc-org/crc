@@ -2,19 +2,16 @@ package preflight
 
 import (
 	"fmt"
-	"io/ioutil"
 	goos "os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/code-ready/crc/pkg/crc/cache"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/version"
-	dl "github.com/code-ready/crc/pkg/download"
-	"github.com/code-ready/crc/pkg/embed"
-	"github.com/code-ready/crc/pkg/extract"
 	"github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 	"github.com/code-ready/crc/pkg/os/windows/service"
@@ -94,43 +91,11 @@ func checkTrayBinaryExists() error {
 }
 
 func fixTrayBinaryExists() error {
-	tmpArchivePath, err := ioutil.TempDir("", "crc")
-	if err != nil {
-		logging.Error("Failed creating temporary directory for extracting tray")
-		return err
+	tray := cache.NewWindowsTrayCache(constants.TrayBinaryDir)
+	if err := tray.EnsureIsCached(); err != nil {
+		return fmt.Errorf("Unable to cache system tray: %v", err)
 	}
-	defer func() {
-		_ = goos.RemoveAll(tmpArchivePath)
-	}()
-
-	logging.Debug("Trying to extract tray from crc binary")
-	err = embed.Extract(filepath.Base(constants.GetCRCWindowsTrayDownloadURL()), tmpArchivePath)
-	if err != nil {
-		logging.Debug("Could not extract tray from crc binary", err)
-		logging.Debug("Downloading crc tray")
-		_, err = dl.Download(constants.GetCRCWindowsTrayDownloadURL(), tmpArchivePath, 0600)
-		if err != nil {
-			return err
-		}
-	}
-	archivePath := filepath.Join(tmpArchivePath, filepath.Base(constants.GetCRCWindowsTrayDownloadURL()))
-	outputPath := constants.TrayBinaryDir
-	err = goos.MkdirAll(outputPath, 0750)
-	if err != nil && !goos.IsExist(err) {
-		return fmt.Errorf("Cannot create the target directory: %v", err)
-	}
-	_, err = extract.Uncompress(archivePath, outputPath)
-	if err != nil {
-		return fmt.Errorf("Cannot uncompress '%s': %v", archivePath, err)
-	}
-
-	// If a tray is already running kill it
-	if err := checkTrayRunning(); err == nil {
-		cmd := `Stop-Process -Name "tray-windows"`
-		if _, _, err := powershell.Execute(cmd); err != nil {
-			logging.Debugf("Failed to kill running tray: %v", err)
-		}
-	}
+	logging.Debugf("System tray is cached")
 	return nil
 }
 
@@ -148,6 +113,12 @@ func checkTrayBinaryVersion() error {
 }
 
 func fixTrayBinaryVersion() error {
+	// Kill older running tray
+	if err := checkTrayRunning(); err == nil {
+		if err := stopTray(); err != nil {
+			logging.Debugf("Failed to kill running tray: %v", err)
+		}
+	}
 	return fixTrayBinaryExists()
 }
 
