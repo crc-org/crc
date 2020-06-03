@@ -2,6 +2,11 @@ package cache
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/download"
@@ -9,9 +14,6 @@ import (
 	"github.com/code-ready/crc/pkg/extract"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/pkg/errors"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 type Cache struct {
@@ -81,11 +83,20 @@ func (c *Cache) CacheBinary() error {
 		return err
 	}
 
-	// Extract the tarball and put it the cache directory.
-	extractedFiles, err := extract.UncompressWithFilter(assetTmpFile, tmpDir, false,
-		func(filename string) bool { return filepath.Base(filename) == c.binaryName })
-	if err != nil {
-		return errors.Wrapf(err, "Cannot uncompress '%s'", assetTmpFile)
+	var extractedFiles []string
+	// Check the file is tarball or not
+	if IsTarball(assetTmpFile) {
+		// Extract the tarball and put it the cache directory.
+		extractedFiles, err = extract.UncompressWithFilter(assetTmpFile, tmpDir, false,
+			func(filename string) bool { return filepath.Base(filename) == c.binaryName })
+		if err != nil {
+			return errors.Wrapf(err, "Cannot uncompress '%s'", assetTmpFile)
+		}
+	} else {
+		extractedFiles = append(extractedFiles, assetTmpFile)
+		if filepath.Base(assetTmpFile) != c.binaryName {
+			logging.Warnf("Binary name is %s but extracted file name is %s", c.binaryName, filepath.Base(assetTmpFile))
+		}
 	}
 
 	// Copy the requested asset into its final destination
@@ -104,7 +115,6 @@ func (c *Cache) CacheBinary() error {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -134,4 +144,14 @@ func (c *Cache) CheckVersion() error {
 		return &VersionMismatchError{CurrentVersion: currentVersion, ExpectedVersion: c.version}
 	}
 	return nil
+}
+
+func IsTarball(filename string) bool {
+	tarballExtensions := []string{".tar", ".tar.gz", ".tar.xz", ".zip", ".tar.bz2", ".crcbundle"}
+	for _, extension := range tarballExtensions {
+		if strings.HasSuffix(strings.ToLower(filename), extension) {
+			return true
+		}
+	}
+	return false
 }
