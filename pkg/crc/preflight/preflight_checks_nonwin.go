@@ -51,9 +51,9 @@ func extractBinary(binaryName string, mode os.FileMode) (string, error) {
 func setSuid(path string) error {
 	logging.Debugf("Making %s suid", path)
 
-	stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("change ownership of %s", path), "chown", "root:wheel", path)
+	stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("change ownership of %s", path), "chown", "root", path)
 	if err != nil {
-		return fmt.Errorf("Unable to set ownership of %s to root:wheel: %s %v: %s",
+		return fmt.Errorf("Unable to set ownership of %s to root: %s %v: %s",
 			path, stdOut, err, stdErr)
 	}
 
