@@ -44,7 +44,7 @@ func GetVersionStrings() []string {
 		embedded = "not "
 	}
 	return []string{
-		fmt.Sprintf("crc version: %s+%s", version.GetCRCVersion(), version.GetCommitSha()),
+		fmt.Sprintf("CodeReady Containers version: %s+%s", version.GetCRCVersion(), version.GetCommitSha()),
 		fmt.Sprintf("OpenShift version: %s (%sembedded in binary)", version.GetBundleVersion(), embedded),
 	}
 }
