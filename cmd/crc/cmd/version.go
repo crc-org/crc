@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/version"
@@ -37,11 +38,17 @@ var versionCmd = &cobra.Command{
 	},
 }
 
-func runPrintVersion(arguments []string) {
-	fmt.Printf("crc version: %s+%s\n", version.GetCRCVersion(), version.GetCommitSha())
+func GetVersionStrings() []string {
 	var embedded string
 	if !constants.BundleEmbedded() {
 		embedded = "not "
 	}
-	fmt.Printf("OpenShift version: %s (%sembedded in binary)\n", version.GetBundleVersion(), embedded)
+	return []string{
+		fmt.Sprintf("crc version: %s+%s", version.GetCRCVersion(), version.GetCommitSha()),
+		fmt.Sprintf("OpenShift version: %s (%sembedded in binary)", version.GetBundleVersion(), embedded),
+	}
+}
+
+func runPrintVersion(arguments []string) {
+	fmt.Println(strings.Join(GetVersionStrings(), "\n"))
 }
