@@ -114,12 +114,7 @@ func fixTrayBinaryExists() error {
 		}
 	}
 	archivePath := filepath.Join(tmpArchivePath, filepath.Base(constants.GetCRCWindowsTrayDownloadURL()))
-	outputPath := constants.CrcBinDir
-	//err = goos.MkdirAll(filepath.Join(outputPath, "tray-windows"), 0750)
-	if err != nil && !goos.IsExist(err) {
-		return fmt.Errorf("Cannot create the target directory: %v", err)
-	}
-	_, err = extract.Uncompress(archivePath, outputPath) //filepath.Join(outputPath, "tray-windows"))
+	_, err = extract.Uncompress(archivePath, constants.TrayBinaryDir)
 	if err != nil {
 		return fmt.Errorf("Cannot uncompress '%s': %v", archivePath, err)
 	}
