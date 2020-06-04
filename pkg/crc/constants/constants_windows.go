@@ -11,4 +11,6 @@ const (
 	TrayShortcutName    = "tray-windows.lnk"
 )
 
-var TrayBinaryPath = filepath.Join(CrcBinDir, "tray-windows", TrayBinaryName)
+var (	TrayBinaryDir = filepath.Join(CrcBinDir, "tray-windows")
+	TrayBinaryPath = filepath.Join(TrayBinaryDir, TrayBinaryName)
+)
