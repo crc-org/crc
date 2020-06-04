@@ -56,8 +56,7 @@ func init() {
 
 func runPrerun() {
 	// Setting up logrus
-	logging.InitLogrus(logging.LogLevel)
-	logging.SetupFileHook(constants.LogFilePath)
+	logging.InitLogrus(logging.LogLevel, constants.LogFilePath)
 	setProxyDefaults()
 	for _, str := range GetVersionStrings() {
 		logging.Debugf(str)
