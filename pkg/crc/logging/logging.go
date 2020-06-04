@@ -1,11 +1,9 @@
 package logging
 
 import (
-	"io/ioutil"
 	"os"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -28,25 +26,6 @@ func OpenLogFile(path string) (*os.File, error) {
 	return l, nil
 }
 
-func SetupFileHook(path string) {
-	logfile, err := OpenLogFile(path)
-	if err != nil {
-		logrus.Fatal(errors.Wrap(err, "Failed to open logfile"))
-	}
-
-	logrus.AddHook(newFileHook(logfile, logrus.TraceLevel, &logrus.TextFormatter{
-		DisableColors:          true,
-		DisableTimestamp:       false,
-		FullTimestamp:          true,
-		DisableLevelTruncation: false,
-	}))
-}
-
-func RemoveFileHook() {
-	CloseLogFile()
-	logrus.StandardLogger().ReplaceHooks(originalHooks)
-}
-
 func CloseLogFile() {
 	logfile.Close()
 }
@@ -56,9 +35,16 @@ func CloseLogging() {
 	logrus.StandardLogger().ReplaceHooks(make(logrus.LevelHooks))
 }
 
-func InitLogrus(logLevel string) {
-	logrus.SetOutput(ioutil.Discard)
+func InitLogrus(logLevel, logFilePath string) {
+	logFile, err := OpenLogFile(logFilePath)
+	if err != nil {
+		logrus.Fatal("Unable to open log file: ", err)
+	}
+	// send logs to file
+	logrus.SetOutput(logFile)
+
 	logrus.SetLevel(logrus.TraceLevel)
+
 	level, err := logrus.ParseLevel(logLevel)
 	if err != nil {
 		level = logrus.InfoLevel
