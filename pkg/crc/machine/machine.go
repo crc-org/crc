@@ -361,8 +361,17 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		logging.Info("Cluster TLS certificates have expired, renewing them... [will take up to 5 minutes]")
 		err = RegenerateCertificates(sshRunner, startConfig.Name)
 		if err != nil {
+			logging.Debugf("Failed to renew TLS certificates: %v", err)
+			buildTime, getBuildTimeErr := crcBundleMetadata.GetBundleBuildTime()
+			if getBuildTimeErr == nil {
+				bundleAgeDays := time.Since(buildTime).Hours() / 24
+				if bundleAgeDays >= 30 {
+					/* Initial bundle certificates are only valid for 30 days */
+					logging.Debugf("Bundle has been generated %d days ago", int(bundleAgeDays))
+				}
+			}
 			result.Error = err.Error()
-			return *result, errors.Newf("Failed to renew TLS certificates: %v", err)
+			return *result, errors.Newf("Failed to renew TLS certificates: please check if a newer CodeReady Containers release is available")
 		}
 	}
 
