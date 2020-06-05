@@ -10,7 +10,6 @@ const (
 	Enable
 	Disable
 	Status
-	IsActive
 	DaemonReload
 )
 
@@ -23,7 +22,6 @@ func (action Action) String() string {
 		"enable",
 		"disable",
 		"status",
-		"is-active",
 		"daemon-reload",
 	}
 

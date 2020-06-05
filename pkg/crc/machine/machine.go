@@ -16,6 +16,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/network"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/crc/systemd"
+	"github.com/code-ready/crc/pkg/crc/systemd/states"
 	crcos "github.com/code-ready/crc/pkg/os"
 
 	// cluster services
@@ -365,11 +366,11 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	}
 
 	// Check if kubelet service is running inside the VM
-	kubeletStarted, err := sd.IsActive("kubelet")
-	if err != nil {
+	kubeletStatus, err := sd.Status("kubelet")
+	if err != nil || kubeletStatus != states.Running {
 		return startError(startConfig.Name, "kubelet service is not running", err)
 	}
-	if kubeletStarted {
+	if kubeletStatus == states.Running {
 		// In Openshift 4.3, when cluster comes up, the following happens
 		// 1. After the openshift-apiserver pod is started, its log contains multiple occurrences of `certificate has expired or is not yet valid`
 		// 2. Initially there is no request-header's client-ca crt available to `extension-apiserver-authentication` configmap
@@ -413,7 +414,7 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 
 	return StartResult{
 		Name:           startConfig.Name,
-		KubeletStarted: kubeletStarted,
+		KubeletStarted: (kubeletStatus == states.Running),
 		ClusterConfig:  *clusterConfig,
 		Status:         vmState.String(),
 	}, err
