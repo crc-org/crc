@@ -383,15 +383,13 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	// Check if kubelet service is running inside the VM
 	kubeletStarted, err := sd.IsActive("kubelet")
-	if err != nil {
+	if err != nil || !kubeletStarted {
 		result.Error = err.Error()
 		return *result, errors.Newf("kubelet service is not running: %s", err)
 	}
-	if kubeletStarted {
-		logging.Info("Starting OpenShift cluster ... [waiting 3m]")
-	}
-	result.KubeletStarted = kubeletStarted
+	result.KubeletStarted = true
 
+	logging.Info("Starting OpenShift cluster ... [waiting 3m]")
 	time.Sleep(time.Minute * 3)
 
 	// Approve the node certificate.
