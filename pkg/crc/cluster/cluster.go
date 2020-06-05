@@ -165,45 +165,6 @@ func addPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error
 	return nil
 }
 
-func WaitforRequestHeaderClientCaFile(oc oc.OcConfig) error {
-	if err := oc.WaitForOpenshiftResource("configmaps"); err != nil {
-		return err
-	}
-
-	lookupRequestHeaderClientCa := func() error {
-		cmdArgs := []string{"get", "configmaps/extension-apiserver-authentication", `-ojsonpath={.data.requestheader-client-ca-file}`,
-			"-n", "kube-system"}
-
-		stdout, stderr, err := oc.RunOcCommand(cmdArgs...)
-		if err != nil {
-			return fmt.Errorf("Failed to get request header client ca file %v: %s", err, stderr)
-		}
-		if stdout == "" {
-			return &errors.RetriableError{Err: fmt.Errorf("missing .data.requestheader-client-ca-file")}
-		}
-		logging.Debugf("Found .data.requestheader-client-ca-file: %s", stdout)
-		return nil
-	}
-	return errors.RetryAfter(90, lookupRequestHeaderClientCa, 2*time.Second)
-}
-
-func DeleteOpenshiftApiServerPods(oc oc.OcConfig) error {
-	if err := oc.WaitForOpenshiftResource("pod"); err != nil {
-		return err
-	}
-
-	deleteOpenshiftApiserverPods := func() error {
-		cmdArgs := []string{"delete", "pod", "--all", "-n", "openshift-apiserver"}
-		_, _, err := oc.RunOcCommand(cmdArgs...)
-		if err != nil {
-			return &errors.RetriableError{Err: err}
-		}
-		return nil
-	}
-
-	return errors.RetryAfter(60, deleteOpenshiftApiserverPods, time.Second)
-}
-
 func CheckProxySettingsForOperator(oc oc.OcConfig, proxy *network.ProxyConfig, deployment, namespace string) (bool, error) {
 	if !proxy.IsEnabled() {
 		logging.Debugf("No proxy in use")
