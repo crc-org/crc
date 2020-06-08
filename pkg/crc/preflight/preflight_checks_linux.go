@@ -393,7 +393,7 @@ func removeCrcVM() error {
 		//  in that case there is no crc vm so return early.
 		return nil
 	}
-	if stdout == "running" {
+	if strings.TrimSpace(stdout) == "running" {
 		_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "destroy", constants.DefaultName)
 		if err != nil {
 			logging.Debugf("%v : %s", err, stderr)
