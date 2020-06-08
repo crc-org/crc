@@ -113,39 +113,6 @@ func fixLibvirtInstalled() error {
 	return nil
 }
 
-func checkLibvirtEnabled() error {
-	logging.Debug("Checking if libvirtd.service is enabled")
-	// check if libvirt service is enabled
-	path, err := exec.LookPath("systemctl")
-	if err != nil {
-		return fmt.Errorf("systemctl not found on path: %s", err.Error())
-	}
-	stdOut, _, err := crcos.RunWithDefaultLocale(path, "is-enabled", "libvirtd")
-	if err != nil {
-		return fmt.Errorf("Error checking if libvirtd service is enabled")
-	}
-	if strings.TrimSpace(stdOut) != "enabled" {
-		return fmt.Errorf("libvirtd.service is not enabled")
-	}
-	logging.Debug("libvirtd.service is already enabled")
-	return nil
-}
-
-func fixLibvirtEnabled() error {
-	logging.Debug("Enabling libvirtd.service")
-	// Start libvirt service
-	path, err := exec.LookPath("systemctl")
-	if err != nil {
-		return err
-	}
-	_, _, err = crcos.RunWithPrivilege("enable libvirtd service", path, "enable", "libvirtd")
-	if err != nil {
-		return fmt.Errorf("Failed to enable libvirtd service")
-	}
-	logging.Debug("libvirtd.service is enabled")
-	return nil
-}
-
 func fixLibvirtVersion() error {
 	return fmt.Errorf("libvirt v%s or newer is required and must be updated manually", minSupportedLibvirtVersion)
 }
