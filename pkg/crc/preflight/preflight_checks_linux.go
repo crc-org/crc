@@ -178,22 +178,26 @@ func fixUserPartOfLibvirtGroup() error {
 }
 
 func checkLibvirtServiceRunning() error {
+
 	logging.Debug("Checking if libvirtd.service is running")
 	path, err := exec.LookPath("systemctl")
 	if err != nil {
 		return err
 	}
-	stdOut, _, err := crcos.RunWithDefaultLocale(path, "is-active", "libvirtd")
-	if err != nil {
-		logging.Warnf("No active (running) libvirtd systemd unit could be found - make sure one of libvirt systemd unit could be found - make sure one of libvirt systemd units is enabled so that it's autostarted at boot time.")
-		return fmt.Errorf("Failed to check if libvirtd service is active")
+
+	libvirtSystemdUnits := []string{"virtqemud.socket", "libvirtd.socket", "virtqemud.service", "libvirtd.service"}
+	for _, unit := range libvirtSystemdUnits {
+		stdOut, _, err := crcos.RunWithDefaultLocale(path, "is-active", unit)
+		if err == nil && strings.TrimSpace(stdOut) == "active" {
+			logging.Debugf("%s is running", unit)
+			return nil
+		}
+
+		logging.Debugf("%s is not running", unit)
 	}
-	if strings.TrimSpace(stdOut) != "active" {
-		logging.Warnf("No active (running) libvirtd systemd unit could be found - make sure one of libvirt systemd unit could be found - make sure one of libvirt systemd units is enabled so that it's autostarted at boot time.")
-		return fmt.Errorf("libvirtd.service is not running")
-	}
-	logging.Debug("libvirtd.service is already running")
-	return nil
+
+	logging.Warnf("No active (running) libvirtd systemd unit could be found - make sure one of libvirt systemd units is enabled so that it's autostarted at boot time.")
+	return fmt.Errorf("found no active libvirtd systemd unit")
 }
 
 func fixLibvirtServiceRunning() error {
@@ -202,6 +206,10 @@ func fixLibvirtServiceRunning() error {
 	if err != nil {
 		return err
 	}
+	/* split libvirt daemon is a bit tricky to startup properly as we'd
+	* need to start multiple components by hand, so we just start the
+	* monolithic daemon
+	 */
 	_, _, err = crcos.RunWithPrivilege("start libvirtd service", path, "start", "libvirtd")
 	if err != nil {
 		return fmt.Errorf("Failed to start libvirt service")
