@@ -176,11 +176,11 @@ release: fmtcheck embed_bundle build_docs_pdf gen_release_info
 	
 	@mkdir -p $(BUILD_DIR)/crc-macos-$(CRC_VERSION)-amd64
 	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/crc-macos-$(CRC_VERSION)-amd64
-	tar cJSf $(RELEASE_DIR)/crc-macos-amd64.tar.xz -C $(BUILD_DIR) crc-macos-$(CRC_VERSION)-amd64
+	tar cJSf $(RELEASE_DIR)/crc-macos-amd64.tar.xz -C $(BUILD_DIR) crc-macos-$(CRC_VERSION)-amd64 --owner=0 --group=0
 
 	@mkdir -p $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
 	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
-	tar cJSf $(RELEASE_DIR)/crc-linux-amd64.tar.xz -C $(BUILD_DIR) crc-linux-$(CRC_VERSION)-amd64
+	tar cJSf $(RELEASE_DIR)/crc-linux-amd64.tar.xz -C $(BUILD_DIR) crc-linux-$(CRC_VERSION)-amd64 --owner=0 --group=0
 	
 	@mkdir -p $(BUILD_DIR)/crc-windows-$(CRC_VERSION)-amd64
 	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/windows-amd64/crc.exe $(BUILD_DIR)/crc-windows-$(CRC_VERSION)-amd64
