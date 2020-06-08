@@ -30,13 +30,6 @@ var libvirtPreflightChecks = [...]PreflightCheck{
 		fix:              fixUserPartOfLibvirtGroup,
 	},
 	{
-		configKeySuffix:  "check-libvirt-enabled",
-		checkDescription: "Checking if libvirt is enabled",
-		check:            checkLibvirtEnabled,
-		fixDescription:   "Enabling libvirt",
-		fix:              fixLibvirtEnabled,
-	},
-	{
 		configKeySuffix:  "check-libvirt-running",
 		checkDescription: "Checking if libvirt daemon is running",
 		check:            checkLibvirtServiceRunning,
