@@ -185,9 +185,11 @@ func checkLibvirtServiceRunning() error {
 	}
 	stdOut, _, err := crcos.RunWithDefaultLocale(path, "is-active", "libvirtd")
 	if err != nil {
+		logging.Warnf("No active (running) libvirtd systemd unit could be found - make sure one of libvirt systemd unit could be found - make sure one of libvirt systemd units is enabled so that it's autostarted at boot time.")
 		return fmt.Errorf("Failed to check if libvirtd service is active")
 	}
 	if strings.TrimSpace(stdOut) != "active" {
+		logging.Warnf("No active (running) libvirtd systemd unit could be found - make sure one of libvirt systemd unit could be found - make sure one of libvirt systemd units is enabled so that it's autostarted at boot time.")
 		return fmt.Errorf("libvirtd.service is not running")
 	}
 	logging.Debug("libvirtd.service is already running")
