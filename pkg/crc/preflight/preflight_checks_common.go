@@ -71,7 +71,7 @@ func checkOcBinaryCached() error {
 	// We should remove this code after 3-4 releases. (after 2020-07-10)
 	os.Remove(filepath.Join(constants.CrcBinDir, "oc"))
 
-	oc := cache.NewOcCache(constants.CrcOcBinDir)
+	oc := cache.NewOcCache()
 	if !oc.IsCached() {
 		return errors.New("oc binary is not cached")
 	}
@@ -80,7 +80,7 @@ func checkOcBinaryCached() error {
 }
 
 func fixOcBinaryCached() error {
-	oc := cache.NewOcCache(constants.CrcOcBinDir)
+	oc := cache.NewOcCache()
 	if err := oc.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download oc %v", err)
 	}
@@ -96,7 +96,7 @@ func checkPodmanBinaryCached() error {
 }
 
 func fixPodmanBinaryCached() error {
-	podman := cache.NewPodmanCache(constants.CrcBinDir)
+	podman := cache.NewPodmanCache()
 	if err := podman.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download podman remote binary %v", err)
 	}
@@ -107,7 +107,7 @@ func fixPodmanBinaryCached() error {
 // Check if goodhost binary is cached or not
 func checkGoodhostsBinaryCached() error {
 	goodhostPath := filepath.Join(constants.CrcBinDir, constants.GoodhostsBinaryName)
-	goodhost := cache.NewGoodhostsCache(constants.CrcBinDir)
+	goodhost := cache.NewGoodhostsCache()
 	if !goodhost.IsCached() {
 		return errors.New("goodhost binary is not cached")
 	}
@@ -117,7 +117,7 @@ func checkGoodhostsBinaryCached() error {
 
 func fixGoodhostsBinaryCached() error {
 	goodhostPath := filepath.Join(constants.CrcBinDir, constants.GoodhostsBinaryName)
-	goodhost := cache.NewGoodhostsCache(constants.CrcBinDir)
+	goodhost := cache.NewGoodhostsCache()
 	if err := goodhost.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download goodhost binary %v", err)
 	}
