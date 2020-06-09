@@ -24,16 +24,16 @@ func New(binarName string, archiveURL string, destDir string) *Cache {
 	return &Cache{binaryName: binarName, archiveURL: archiveURL, destDir: destDir}
 }
 
-func NewOcCache(destDir string) *Cache {
-	return New(constants.OcBinaryName, constants.GetOcUrl(), destDir)
+func NewOcCache() *Cache {
+	return New(constants.OcBinaryName, constants.GetOcUrl(), constants.CrcOcBinDir)
 }
 
-func NewPodmanCache(destDir string) *Cache {
-	return New(constants.PodmanBinaryName, constants.GetPodmanUrl(), destDir)
+func NewPodmanCache() *Cache {
+	return New(constants.PodmanBinaryName, constants.GetPodmanUrl(), constants.CrcBinDir)
 }
 
-func NewGoodhostsCache(destDir string) *Cache {
-	return New(constants.GoodhostsBinaryName, constants.GetGoodhostsUrl(), destDir)
+func NewGoodhostsCache() *Cache {
+	return New(constants.GoodhostsBinaryName, constants.GetGoodhostsUrl(), constants.CrcBinDir)
 }
 
 func (c *Cache) IsCached() bool {
