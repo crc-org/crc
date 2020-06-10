@@ -44,7 +44,6 @@ Feature: Basic test
         And stdout should contain "Checking if KVM is enabled"
         And stdout should contain "Checking if libvirt is installed"
         And stdout should contain "Checking if user is part of libvirt group"
-        And stdout should contain "Checking if libvirt is enabled"
         And stdout should contain "Checking if libvirt daemon is running"
         And stdout should contain "Checking if a supported libvirt version is installed"
         And stdout should contain "Checking for obsolete crc-driver-libvirt"

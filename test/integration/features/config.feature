@@ -83,7 +83,6 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
             | warn-check-crc-network-active        | true   | false  |
             | warn-check-kvm-enabled               | true   | false  |
             | warn-check-libvirt-driver            | true   | false  |
-            | warn-check-libvirt-enabled           | true   | false  |
             | warn-check-libvirt-installed         | true   | false  |
             | warn-check-libvirt-running           | true   | false  |
             | warn-check-libvirt-version           | true   | false  |
@@ -137,7 +136,6 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
             | skip-check-crc-network-active        | true   | false  |
             | skip-check-kvm-enabled               | true   | false  |
             | skip-check-libvirt-driver            | true   | false  |
-            | skip-check-libvirt-enabled           | true   | false  |
             | skip-check-libvirt-installed         | true   | false  |
             | skip-check-libvirt-running           | true   | false  |
             | skip-check-libvirt-version           | true   | false  |
