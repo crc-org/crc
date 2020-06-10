@@ -1,7 +1,7 @@
 [id="required-software-packages_{context}"]
-= Required software packages
+= Required software packages for Linux
 
-{prod} requires the `libvirt` and `NetworkManager` packages.
+{prod} requires the `libvirt` and `NetworkManager` packages to run on Linux.
 Consult the following table to find the command used to install these packages for your Linux distribution:
 
 .Package installation commands by distribution
