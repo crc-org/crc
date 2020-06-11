@@ -8,7 +8,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/code-ready/clicumber v0.0.0-20190801094041-02a92c8f7ece
-	github.com/code-ready/goodhosts v0.0.0-20190712111040-f090f3f77c26
+	github.com/code-ready/goodhosts v0.0.0-20190712111040-f090f3f77c26 // indirect
 	github.com/code-ready/machine v0.0.0-20191115055627-b284f794e910
 	github.com/docker/go-units v0.4.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
