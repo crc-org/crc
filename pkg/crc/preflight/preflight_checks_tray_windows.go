@@ -119,13 +119,6 @@ func fixTrayBinaryExists() error {
 		return fmt.Errorf("Cannot uncompress '%s': %v", archivePath, err)
 	}
 
-	// If a tray is already running kill it
-	if err := checkTrayRunning(); err == nil {
-		cmd := `Stop-Process -Name "tray-windows"`
-		if _, _, err := powershell.Execute(cmd); err != nil {
-			logging.Debugf("Failed to kill running tray: %v", err)
-		}
-	}
 	return nil
 }
 
@@ -143,6 +136,13 @@ func checkTrayBinaryVersion() error {
 }
 
 func fixTrayBinaryVersion() error {
+	// If a tray is already running kill it
+	if err := checkTrayRunning(); err == nil {
+		cmd := `Stop-Process -Name "tray-windows"`
+		if _, _, err := powershell.Execute(cmd); err != nil {
+			logging.Debugf("Failed to kill running tray: %v", err)
+		}
+	}
 	return fixTrayBinaryExists()
 }
 
