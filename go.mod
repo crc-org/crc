@@ -24,6 +24,7 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7
+	golang.org/x/text v0.3.0
 	gopkg.in/AlecAivazis/survey.v1 v1.8.5
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb
 )
