@@ -170,7 +170,11 @@ func fixTrayBinaryAddedToStartupFolder() error {
 }
 
 func removeTrayBinaryFromStartupFolder() error {
-	return goos.Remove(filepath.Join(startUpFolder, constants.TrayShortcutName))
+	err := goos.Remove(filepath.Join(startUpFolder, constants.TrayShortcutName))
+	if err != nil {
+		logging.Warn("Failed to remove tray from startup folder: ", err)
+	}
+	return nil
 }
 
 func checkTrayRunning() error {
@@ -195,10 +199,14 @@ func fixTrayRunning() error {
 }
 
 func stopTray() error {
+	if err := checkTrayRunning(); err != nil {
+		logging.Debug("Failed to check if a tray is running: ", err)
+		return nil
+	}
 	cmd := fmt.Sprintf("Stop-Process -Name %s", trayProcessName)
 	_, _, err := powershell.Execute(cmd)
 	if err != nil {
-		return fmt.Errorf("Failed to stop running tray: %v", err)
+		logging.Warn("Failed to stop running tray: ", err)
 	}
 	return nil
 }
@@ -231,5 +239,8 @@ func getCurrentUsername() string {
 func disableUserServiceLogon() error {
 	username := getCurrentUsername()
 
-	return secpol.RemoveLogonAsServiceUserRight(username)
+	if err := secpol.RemoveLogonAsServiceUserRight(username); err != nil {
+		logging.Warn("Failed trying to remove log on as a service user right: ", err)
+	}
+	return nil
 }
