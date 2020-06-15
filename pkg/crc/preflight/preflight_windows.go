@@ -57,6 +57,15 @@ var hypervPreflightChecks = [...]PreflightCheck{
 
 var traySetupChecks = [...]PreflightCheck{
 	{
+		checkDescription:   "Checking if user is allowed to log on as a service",
+		check:              checkUserHasServiceLogonEnabled,
+		fixDescription:     "Enabling service log on for user",
+		fix:                fixUserHasServiceLogonEnabled,
+		cleanupDescription: "Removing service log on permission from user",
+		cleanup:            disableUserServiceLogon,
+		flags:              SetupOnly,
+	},
+	{
 		checkDescription:   "Checking if daemon service is installed",
 		check:              checkIfDaemonServiceInstalled,
 		fixDescription:     "Installing daemon service",

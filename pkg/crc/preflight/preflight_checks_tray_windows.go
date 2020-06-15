@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	goos "os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"strings"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/code-ready/crc/pkg/extract"
 	"github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
+	"github.com/code-ready/crc/pkg/os/windows/secpol"
 	"github.com/code-ready/crc/pkg/os/windows/service"
 )
 
@@ -199,4 +201,35 @@ func stopTray() error {
 		return fmt.Errorf("Failed to stop running tray: %v", err)
 	}
 	return nil
+}
+
+func checkUserHasServiceLogonEnabled() error {
+	username := getCurrentUsername()
+	enabled, err := secpol.UserAllowedToLogonAsService(username)
+	if enabled {
+		return nil
+	}
+	return fmt.Errorf("Failed to check if user is allowed to log on as service: %v", err)
+}
+
+func fixUserHasServiceLogonEnabled() error {
+	// get the username
+	username := getCurrentUsername()
+
+	return secpol.AllowUserToLogonAsService(username)
+}
+
+func getCurrentUsername() string {
+	user, err := user.Current()
+	if err != nil {
+		logging.Debugf("Unable to get current user's name: %v", err)
+		return ""
+	}
+	return strings.TrimSpace(strings.Split(user.Username, "\\")[1])
+}
+
+func disableUserServiceLogon() error {
+	username := getCurrentUsername()
+
+	return secpol.RemoveLogonAsServiceUserRight(username)
 }
