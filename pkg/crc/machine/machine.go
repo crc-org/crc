@@ -607,9 +607,9 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 			}
 			openshiftStatus = fmt.Sprintf("Running (v%s)", openshiftVersion)
 		} else if operatorsStatus.Degraded {
-			openshiftStatus = fmt.Sprintf("Degraded")
+			openshiftStatus = "Degraded"
 		} else if operatorsStatus.Progressing {
-			openshiftStatus = fmt.Sprintf("Starting")
+			openshiftStatus = "Starting"
 		}
 		sshRunner := crcssh.CreateRunner(host.Driver)
 		diskSize, diskUse, err = cluster.GetRootPartitionUsage(sshRunner)
