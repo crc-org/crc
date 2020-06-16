@@ -35,9 +35,14 @@ func checkIfDaemonServiceInstalled() error {
 }
 
 func fixDaemonServiceInstalled() error {
-	// try to remove if a previous version exists
-	_ = service.Stop(constants.DaemonServiceName)
-	_ = service.Delete(constants.DaemonServiceName)
+	// only try to remove if a previous version exists
+	if service.IsInstalled(constants.DaemonServiceName) {
+		if service.IsRunning(constants.DaemonServiceName) {
+			_ = service.Stop(constants.DaemonServiceName)
+		}
+		_ = service.Delete(constants.DaemonServiceName)
+	}
+
 	// get executables path
 	binPath, err := goos.Executable()
 	if err != nil {
