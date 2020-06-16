@@ -74,6 +74,10 @@ vendor:
 	GO111MODULE=on go mod tidy
 	GO111MODULE=on go mod vendor
 
+.PHONY: vendorcheck
+vendorcheck:
+	./verify-vendor.sh
+
 # Start of the actual build targets
 
 .PHONY: install
