@@ -37,9 +37,6 @@ jobs:
         name: Verify vendoring
         command: make vendorcheck
     - run:
-        name: Make fmtcheck
-        command: make fmtcheck
-    - run:
         name: Run golangci-lint
         command: make cross-lint
     - run:

@@ -86,19 +86,19 @@ func embedFiles(binary string, filenames []string) error {
 
 var (
 	dataFileUrls = map[string][]string{
-		"darwin": []string{
+		"darwin": {
 			hyperkit.MachineDriverDownloadUrl,
 			hyperkit.HyperkitDownloadUrl,
 			constants.GetOcUrlForOs("darwin"),
 			constants.GetCrcTrayDownloadURL(),
 			constants.GetGoodhostsUrlForOs("darwin"),
 		},
-		"linux": []string{
+		"linux": {
 			libvirt.MachineDriverDownloadUrl,
 			constants.GetOcUrlForOs("linux"),
 			constants.GetGoodhostsUrlForOs("linux"),
 		},
-		"windows": []string{
+		"windows": {
 			constants.GetOcUrlForOs("windows"),
 			constants.GetGoodhostsUrlForOs("windows"),
 		},
