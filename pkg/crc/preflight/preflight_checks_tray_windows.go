@@ -48,7 +48,7 @@ func fixDaemonServiceInstalled() error {
 	if err != nil {
 		return fmt.Errorf("Unable to find the current executables location: %v", err)
 	}
-	binPathWithArgs := fmt.Sprintf("%s daemon --log-level debug", strings.TrimSpace(binPath))
+	binPathWithArgs := fmt.Sprintf("%s daemon", strings.TrimSpace(binPath))
 
 	// get the account name
 	whoami, err := exec.LookPath("whoami.exe")
