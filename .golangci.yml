@@ -5,4 +5,4 @@ run:
 linters:
   enable:
     - goimports
-
+    - gofmt

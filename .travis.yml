@@ -6,7 +6,6 @@ go:
 script:
 - make
 - make vendorcheck
-- make fmtcheck
 - make cross-lint
 - make gosec
 - make cross
