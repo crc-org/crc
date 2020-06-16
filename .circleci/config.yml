@@ -40,9 +40,6 @@ jobs:
         name: Run golangci-lint
         command: make cross-lint
     - run:
-        name: Run gosec
-        command: make gosec 
-    - run:
         name: Make cross
         command: make cross
     - run:

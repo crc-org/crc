@@ -158,13 +158,6 @@ cross-lint: $(GOPATH)/bin/golangci-lint
 	GOOS=linux $(GOPATH)/bin/golangci-lint run
 	GOOS=windows $(GOPATH)/bin/golangci-lint run
 
-$(GOPATH)/bin/gosec:
-	GO111MODULE=on go get github.com/securego/gosec/cmd/gosec@2.0.0
-
-# Run gosec against code
-gosec: $(GOPATH)/bin/gosec
-	$(GOPATH)/bin/gosec -tags build -tests -severity medium  ./...
-
 .PHONY: gen_release_info
 gen_release_info:
 	@cat release-info.json.sample | sed s/@CRC_VERSION@/\"$(CRC_VERSION)\"/ > $(RELEASE_INFO)

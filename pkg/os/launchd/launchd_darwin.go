@@ -79,6 +79,7 @@ func CreatePlist(config AgentConfig) error {
 	if err != nil {
 		return err
 	}
+	// #nosec G306
 	err = ioutil.WriteFile(getPlistPath(config.Label), plistContent.Bytes(), 0644)
 	return err
 }

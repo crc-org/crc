@@ -6,3 +6,4 @@ linters:
   enable:
     - goimports
     - gofmt
+    - gosec

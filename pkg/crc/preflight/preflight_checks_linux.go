@@ -321,8 +321,10 @@ func fixLibvirtCrcNetworkAvailable() error {
 
 	// For time being we are going to override the crc network according what we have in our binary template.
 	// We also don't care about the error or output from those commands atm.
+	// #nosec G204
 	cmd := exec.Command("virsh", "--connect", "qemu:///system", "net-destroy", libvirt.DefaultNetwork)
 	_ = cmd.Run()
+	// #nosec G204
 	cmd = exec.Command("virsh", "--connect", "qemu:///system", "net-undefine", libvirt.DefaultNetwork)
 	_ = cmd.Run()
 	// Create the network according to our defined template

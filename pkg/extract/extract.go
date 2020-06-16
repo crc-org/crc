@@ -108,6 +108,7 @@ func untar(reader io.Reader, targetDir string, fileFilter func(string) bool) ([]
 			defer file.Close()
 
 			// copy over contents
+			// #nosec G110
 			if _, err := io.Copy(file, tarReader); err != nil {
 				return nil, err
 			}
@@ -168,6 +169,7 @@ func unzip(archive, target string, fileFilter func(string) bool) ([]string, erro
 		}
 		defer targetFile.Close()
 
+		// #nosec G110
 		if _, err := io.Copy(targetFile, fileReader); err != nil {
 			return nil, err
 		}
