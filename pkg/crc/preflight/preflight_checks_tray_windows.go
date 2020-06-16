@@ -189,6 +189,7 @@ func checkTrayRunning() error {
 }
 
 func fixTrayRunning() error {
+	// #nosec G204
 	err := exec.Command(constants.TrayBinaryPath).Start()
 	if err != nil {
 		return err
