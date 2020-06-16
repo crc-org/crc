@@ -7,6 +7,7 @@ script:
 - make
 - make vendorcheck
 - make fmtcheck
+- make cross-lint
 - make gosec
 - make cross
-- make cross-lint
+- make test
