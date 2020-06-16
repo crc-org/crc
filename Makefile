@@ -71,6 +71,7 @@ default: install
 # Create and update the vendor directory
 .PHONY: vendor
 vendor:
+	GO111MODULE=on go mod tidy
 	GO111MODULE=on go mod vendor
 
 # Start of the actual build targets
