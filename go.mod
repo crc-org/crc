@@ -1,5 +1,7 @@
 module github.com/code-ready/crc
 
+go 1.13
+
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/DATA-DOG/godog v0.7.13
@@ -25,5 +27,3 @@ require (
 	gopkg.in/AlecAivazis/survey.v1 v1.8.5
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb
 )
-
-go 1.12
