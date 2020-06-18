@@ -7,6 +7,7 @@ COPY . .
 RUN make cross
 
 FROM centos:7
+COPY --from=builder /go/src/github.com/code-ready/crc /opt/crc
 COPY --from=builder /go/src/github.com/code-ready/crc/out/linux-amd64/crc /bin/crc
 COPY --from=builder /go/src/github.com/code-ready/crc/images/openshift-ci/mock-nss.sh /bin/mock-nss.sh
 COPY --from=builder /go/src/github.com/code-ready/crc/images/openshift-ci/google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
