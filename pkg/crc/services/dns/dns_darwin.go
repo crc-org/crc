@@ -69,13 +69,13 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *se
 	return *result, nil
 }
 
-func createResolverFile(InstanceIP string, domain string, filename string) (bool, error) {
+func createResolverFile(instanceIP string, domain string, filename string) (bool, error) {
 	var resolverFile bytes.Buffer
 
 	values := resolverFileValues{
 		Port:        dnsServicePort,
 		Domain:      domain,
-		IP:          InstanceIP,
+		IP:          instanceIP,
 		SearchOrder: 1,
 	}
 

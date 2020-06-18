@@ -36,21 +36,22 @@ func uncompress(tarball, targetDir string, fileFilter func(string) bool) ([]stri
 	}
 	defer file.Close()
 
-	if strings.HasSuffix(tarball, ".tar.xz") || strings.HasSuffix(tarball, ".crcbundle") {
+	switch {
+	case strings.HasSuffix(tarball, ".tar.xz"), strings.HasSuffix(tarball, ".crcbundle"):
 		filereader, err = xz.NewReader(file, 0)
 		if err != nil {
 			return nil, err
 		}
-	} else if strings.HasSuffix(tarball, ".tar.gz") {
+	case strings.HasSuffix(tarball, ".tar.gz"):
 		reader, err := gzip.NewReader(file)
 		if err != nil {
 			return nil, err
 		}
 		defer reader.Close()
 		filereader = io.Reader(reader)
-	} else if strings.HasSuffix(tarball, ".tar") {
+	case strings.HasSuffix(tarball, ".tar"):
 		filereader = file
-	} else {
+	default:
 		logging.Warnf("Unknown file format when trying to uncompress %s", tarball)
 	}
 
