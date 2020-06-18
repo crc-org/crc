@@ -160,8 +160,10 @@ else
 	# setup to run integration tests
 	cd payload
 	make
-	make fmtcheck
+	make vendorcheck
+	make cross-lint
 	make cross
+	make test
 	
 	# Retrieve password for rsync and run integration tests
 	CICO_PASS=$(echo $CICO_API_KEY | cut -d'-' -f1-2)
