@@ -473,11 +473,11 @@ func Stop(stopConfig StopConfig) (StopResult, error) {
 	return *result, nil
 }
 
-func PowerOff(PowerOff PowerOffConfig) (PowerOffResult, error) {
-	result := &PowerOffResult{Name: PowerOff.Name}
+func PowerOff(powerOff PowerOffConfig) (PowerOffResult, error) {
+	result := &PowerOffResult{Name: powerOff.Name}
 
 	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
-	host, err := libMachineAPIClient.Load(PowerOff.Name)
+	host, err := libMachineAPIClient.Load(powerOff.Name)
 
 	if err != nil {
 		result.Success = false
@@ -597,7 +597,8 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 			openshiftStatus = "Not Reachable"
 			logging.Debug(err.Error())
 		}
-		if operatorsStatus.Available {
+		switch {
+		case operatorsStatus.Available:
 			openshiftVersion := "4.x"
 			_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
 			if err != nil {
@@ -606,9 +607,9 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 				openshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
 			}
 			openshiftStatus = fmt.Sprintf("Running (v%s)", openshiftVersion)
-		} else if operatorsStatus.Degraded {
+		case operatorsStatus.Degraded:
 			openshiftStatus = "Degraded"
-		} else if operatorsStatus.Progressing {
+		case operatorsStatus.Progressing:
 			openshiftStatus = "Starting"
 		}
 		sshRunner := crcssh.CreateRunner(host.Driver)

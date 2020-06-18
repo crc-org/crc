@@ -11,11 +11,7 @@ import (
 // StartDriver starts the desired machine driver if necessary.
 func StartDriver() {
 	if os.Getenv(localbinary.PluginEnvKey) == localbinary.PluginEnvVal {
-		driverName := os.Getenv(localbinary.PluginEnvDriverName)
-		switch driverName {
-		default:
-			errors.ExitWithMessage(1, fmt.Sprintf("Unregistered driver: %s\n", driverName))
-		}
+		errors.ExitWithMessage(1, fmt.Sprintf("Unregistered driver: %s\n", os.Getenv(localbinary.PluginEnvDriverName)))
 		return
 	}
 	localbinary.CurrentBinaryIsCRCMachine = true

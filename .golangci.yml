@@ -7,3 +7,4 @@ linters:
     - goimports
     - gofmt
     - gosec
+    - gocritic
