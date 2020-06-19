@@ -20,6 +20,7 @@ RUN yum update -y && \
     libvirt-client \
     libvirt-libs \
     nss_wrapper \
+    unzip \
     openssh-clients && \
     yum clean all && rm -rf /var/cache/yum/*
 RUN mkdir /output && chown 1000:1000 /output
