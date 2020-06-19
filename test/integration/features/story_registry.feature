@@ -29,7 +29,7 @@ Feature: Local image to image-registry to deployment
 
     Scenario: Deploy the image
         Given executing "oc new-app testproj-img/hello:test" succeeds
-        When executing "oc rollout status dc/hello" succeeds
+        When executing "oc rollout status deployment hello" succeeds
         Then stdout should contain "successfully rolled out"
         When executing "oc get pods" succeeds
         Then stdout should contain "Running"
