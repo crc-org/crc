@@ -13,16 +13,13 @@ github.com/cavaliercoder/grab
 # github.com/code-ready/clicumber v0.0.0-20190801094041-02a92c8f7ece
 github.com/code-ready/clicumber/testsuite
 github.com/code-ready/clicumber/util
-# github.com/code-ready/machine v0.0.0-20191115055627-b284f794e910
-github.com/code-ready/machine/drivers/errdriver
+# github.com/code-ready/machine v0.0.0-20191115055627-b284f794e910 => github.com/guillaumerose/machine v0.0.0-20200619124724-12ed8a700840
+github.com/code-ready/machine/drivers/hyperkit
 github.com/code-ready/machine/drivers/hyperv
+github.com/code-ready/machine/drivers/libvirt
 github.com/code-ready/machine/drivers/none
-github.com/code-ready/machine/libmachine
 github.com/code-ready/machine/libmachine/auth
 github.com/code-ready/machine/libmachine/drivers
-github.com/code-ready/machine/libmachine/drivers/plugin
-github.com/code-ready/machine/libmachine/drivers/plugin/localbinary
-github.com/code-ready/machine/libmachine/drivers/rpc
 github.com/code-ready/machine/libmachine/engine
 github.com/code-ready/machine/libmachine/host
 github.com/code-ready/machine/libmachine/log
@@ -61,6 +58,8 @@ github.com/inconshreveable/mousetrap
 github.com/kballard/go-shellquote
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1
 github.com/konsorten/go-windows-terminal-sequences
+# github.com/libvirt/libvirt-go v3.4.0+incompatible
+github.com/libvirt/libvirt-go
 # github.com/magiconair/properties v1.8.0
 github.com/magiconair/properties
 # github.com/mattn/go-colorable v0.0.9
@@ -69,8 +68,12 @@ github.com/mattn/go-colorable
 github.com/mattn/go-isatty
 # github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
 github.com/mgutz/ansi
+# github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
+github.com/mitchellh/go-ps
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
+# github.com/moby/hyperkit v0.0.0-20171204115932-858492e3d919
+github.com/moby/hyperkit/go
 # github.com/pborman/uuid v1.2.0
 github.com/pborman/uuid
 # github.com/pelletier/go-toml v1.2.0
@@ -96,6 +99,8 @@ github.com/spf13/pflag
 github.com/spf13/viper
 # github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 github.com/xi2/xz
+# github.com/zchee/go-vmnet v0.0.0-20161021174912-97ebf9174097
+github.com/zchee/go-vmnet
 # golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 golang.org/x/crypto/curve25519
 golang.org/x/crypto/ed25519

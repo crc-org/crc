@@ -1,13 +1,14 @@
 package machine
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/code-ready/machine/libmachine/host"
-	"github.com/code-ready/machine/libmachine/ssh"
 	"io/ioutil"
 	"path/filepath"
 	"time"
+
+	"github.com/code-ready/crc/pkg/crc/machine/libmachine2"
+	"github.com/code-ready/machine/libmachine/host"
+	"github.com/code-ready/machine/libmachine/ssh"
 
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -26,8 +27,6 @@ import (
 	// machine related imports
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
-
-	"github.com/code-ready/machine/libmachine"
 )
 
 func Start(startConfig StartConfig) (StartResult, error) {
@@ -42,19 +41,17 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		return *result, errors.New(err.Error())
 	}
 
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	libMachineAPIClient := libmachine2.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	defer libMachineAPIClient.Close()
 
 	// Pre-VM start
 	var privateKeyPath string
 	var pullSecret string
-	driverInfo := DefaultDriver
 	exists, err := MachineExists(startConfig.Name)
 	if !exists {
 		machineConfig := config.MachineConfig{
 			Name:       startConfig.Name,
 			BundleName: filepath.Base(startConfig.BundlePath),
-			VMDriver:   driverInfo.Driver,
 			CPUs:       startConfig.CPUs,
 			Memory:     startConfig.Memory,
 		}
@@ -92,7 +89,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		machineConfig.Initramfs = crcBundleMetadata.GetInitramfsPath()
 		machineConfig.Kernel = crcBundleMetadata.GetKernelPath()
 
-		host, err := createHost(libMachineAPIClient, driverInfo.DriverPath, machineConfig)
+		host, err := createHost(libMachineAPIClient, machineConfig)
 		if err != nil {
 			result.Error = err.Error()
 			return *result, errors.Newf("Error creating host: %v", err)
@@ -396,14 +393,8 @@ func getCrcBundleInfo(bundlePath string) (*bundle.CrcBundleInfo, error) {
 	return bundle.Extract(bundlePath)
 }
 
-func createHost(api libmachine.API, driverPath string, machineConfig config.MachineConfig) (*host.Host, error) {
-	driverOptions := getDriverOptions(machineConfig)
-	jsonDriverConfig, err := json.Marshal(driverOptions)
-	if err != nil {
-		return nil, errors.New("Failed to marshal driver options")
-	}
-
-	vm, err := api.NewHost(machineConfig.VMDriver, driverPath, jsonDriverConfig)
+func createHost(api *libmachine2.Client, machineConfig config.MachineConfig) (*host.Host, error) {
+	vm, err := api.NewHost(machineConfig)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error creating new host: %s", err)

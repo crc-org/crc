@@ -5,13 +5,14 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/machine/drivers/hyperv"
+	"github.com/code-ready/machine/libmachine/drivers"
 
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 
 	winnet "github.com/code-ready/crc/pkg/os/windows/network"
 )
 
-func CreateHost(machineConfig config.MachineConfig) *hyperv.Driver {
+func CreateHost(machineConfig config.MachineConfig, baseDriver *drivers.BaseDriver) *hyperv.Driver {
 	hypervDriver := hyperv.NewDriver(machineConfig.Name, constants.MachineBaseDir)
 
 	hypervDriver.CPU = machineConfig.CPUs
@@ -32,5 +33,6 @@ func CreateHost(machineConfig config.MachineConfig) *hyperv.Driver {
 	hypervDriver.DiskPathUrl = machineConfig.DiskPathURL
 	hypervDriver.SSHKeyPath = machineConfig.SSHKeyPath
 
+	hypervDriver.BaseDriver = baseDriver
 	return hypervDriver
 }

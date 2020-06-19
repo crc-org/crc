@@ -2,20 +2,21 @@ package machine
 
 import (
 	"fmt"
+	"runtime"
+
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/machine/libmachine2"
 	"github.com/code-ready/crc/pkg/crc/network"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	crcos "github.com/code-ready/crc/pkg/os"
-	"runtime"
 
 	// cluster services
 	"github.com/code-ready/crc/pkg/crc/oc"
 	// machine related imports
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
-	"github.com/code-ready/machine/libmachine"
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/ssh"
@@ -43,7 +44,7 @@ func Stop(stopConfig StopConfig) (StopResult, error) {
 		return *result, errors.New(err.Error())
 	}
 
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	libMachineAPIClient := libmachine2.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	host, err := libMachineAPIClient.Load(stopConfig.Name)
 
 	if err != nil {
@@ -68,7 +69,7 @@ func Stop(stopConfig StopConfig) (StopResult, error) {
 func PowerOff(powerOff PowerOffConfig) (PowerOffResult, error) {
 	result := &PowerOffResult{Name: powerOff.Name}
 
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	libMachineAPIClient := libmachine2.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	host, err := libMachineAPIClient.Load(powerOff.Name)
 
 	if err != nil {
@@ -91,7 +92,7 @@ func PowerOff(powerOff PowerOffConfig) (PowerOffResult, error) {
 func Delete(deleteConfig DeleteConfig) (DeleteResult, error) {
 	result := &DeleteResult{Name: deleteConfig.Name, Success: true}
 
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	libMachineAPIClient := libmachine2.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	host, err := libMachineAPIClient.Load(deleteConfig.Name)
 
 	if err != nil {
@@ -124,7 +125,7 @@ func Ip(ipConfig IpConfig) (IpResult, error) {
 		return *result, err
 	}
 
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	libMachineAPIClient := libmachine2.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	host, err := libMachineAPIClient.Load(ipConfig.Name)
 
 	if err != nil {
@@ -143,7 +144,7 @@ func Ip(ipConfig IpConfig) (IpResult, error) {
 
 func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 	result := &ClusterStatusResult{Name: statusConfig.Name, Success: true}
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	libMachineAPIClient := libmachine2.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	defer libMachineAPIClient.Close()
 
 	_, err := libMachineAPIClient.Exists(statusConfig.Name)
@@ -218,7 +219,7 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 }
 
 func MachineExists(name string) (bool, error) {
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	libMachineAPIClient := libmachine2.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	defer libMachineAPIClient.Close()
 	exists, err := libMachineAPIClient.Exists(name)
 	if err != nil {
@@ -232,7 +233,7 @@ func GetProxyConfig(machineName string) (*network.ProxyConfig, error) {
 	// Here we are only checking if the VM exist and not the status of the VM.
 	// We might need to improve and use crc status logic, only
 	// return if the Openshift is running as part of status.
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	libMachineAPIClient := libmachine2.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	host, err := libMachineAPIClient.Load(machineName)
 
 	if err != nil {
@@ -260,7 +261,7 @@ func GetConsoleURL(consoleConfig ConsoleConfig) (ConsoleResult, error) {
 	// Here we are only checking if the VM exist and not the status of the VM.
 	// We might need to improve and use crc status logic, only
 	// return if the Openshift is running as part of status.
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	libMachineAPIClient := libmachine2.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	host, err := libMachineAPIClient.Load(consoleConfig.Name)
 
 	if err != nil {

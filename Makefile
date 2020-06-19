@@ -62,7 +62,7 @@ VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
 BUNDLE_EMBEDDED := -X $(REPOPATH)/pkg/crc/constants.bundleEmbedded=true
 
 # https://golang.org/cmd/link/
-LDFLAGS := $(VERSION_VARIABLES) -extldflags='-static' -s -w
+LDFLAGS := $(VERSION_VARIABLES) -s -w
 
 # Add default target
 .PHONY: default

@@ -13,13 +13,6 @@ var hyperkitPreflightChecks = [...]PreflightCheck{
 		fixDescription:   "Setting up virtualization with HyperKit",
 		fix:              fixHyperKitInstallation,
 	},
-	{
-		configKeySuffix:  "check-hyperkit-driver",
-		checkDescription: "Checking if crc-driver-hyperkit is installed",
-		check:            checkMachineDriverHyperKitInstalled,
-		fixDescription:   "Installing crc-machine-hyperkit",
-		fix:              fixMachineDriverHyperKitInstalled,
-	},
 }
 
 var dnsPreflightChecks = [...]PreflightCheck{

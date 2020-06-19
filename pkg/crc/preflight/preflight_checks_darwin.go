@@ -7,7 +7,8 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
-	"strings"
+
+	"github.com/code-ready/crc/pkg/embed"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -105,31 +106,6 @@ func fixHyperKitInstallation() error {
 	return extractOrDownloadBinary(hyperkit.HyperkitDownloadUrl)
 }
 
-func checkMachineDriverHyperKitInstalled() error {
-	logging.Debugf("Checking if %s is installed", hyperkit.MachineDriverCommand)
-	hyperkitPath := filepath.Join(constants.CrcBinDir, hyperkit.MachineDriverCommand)
-	err := unix.Access(hyperkitPath, unix.X_OK)
-	if err != nil {
-		return fmt.Errorf("%s is not executable", hyperkitPath)
-	}
-
-	// Check the version of driver if it matches to supported one
-	stdOut, stdErr, err := crcos.RunWithDefaultLocale(hyperkitPath, "version")
-	if err != nil {
-		return fmt.Errorf("Failed to check hyperkit machine driver's version")
-	}
-	if !strings.Contains(stdOut, hyperkit.MachineDriverVersion) {
-		return fmt.Errorf("%s does not have right version \n Required: %s \n Got: %s use 'crc setup' command.\n %v\n", hyperkit.MachineDriverCommand, hyperkit.MachineDriverVersion, stdOut, stdErr)
-	}
-	logging.Debugf("%s is already installed in %s", hyperkit.MachineDriverCommand, hyperkitPath)
-
-	return checkSuid(hyperkitPath)
-}
-
-func fixMachineDriverHyperKitInstalled() error {
-	return extractOrDownloadBinary(hyperkit.MachineDriverDownloadUrl)
-}
-
 func checkResolverFilePermissions() error {
 	return isUserHaveFileWritePermission(resolverFile)
 }
@@ -192,4 +168,20 @@ func addFileWritePermissionToUser(filename string) error {
 	logging.Debugf("%s is readable/writable by current user", filename)
 
 	return nil
+}
+
+func extractBinary(binaryName string, mode os.FileMode) (string, error) {
+	destPath := filepath.Join(constants.CrcBinDir, binaryName)
+	err := embed.Extract(binaryName, destPath)
+	if err != nil {
+		return "", err
+	}
+
+	err = os.Chmod(destPath, mode)
+	if err != nil {
+		os.Remove(destPath)
+		return "", err
+	}
+
+	return destPath, nil
 }

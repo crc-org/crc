@@ -27,3 +27,5 @@ require (
 	gopkg.in/AlecAivazis/survey.v1 v1.8.5
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb
 )
+
+replace github.com/code-ready/machine => github.com/guillaumerose/machine v0.0.0-20200619124724-12ed8a700840

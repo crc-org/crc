@@ -11,10 +11,8 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/download"
 
-	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
-	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
-
 	"github.com/YourFin/binappend"
+	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
 	"github.com/spf13/cobra"
 )
 
@@ -87,14 +85,12 @@ func embedFiles(binary string, filenames []string) error {
 var (
 	dataFileUrls = map[string][]string{
 		"darwin": {
-			hyperkit.MachineDriverDownloadUrl,
 			hyperkit.HyperkitDownloadUrl,
 			constants.GetOcUrlForOs("darwin"),
 			constants.GetCrcTrayDownloadURL(),
 			constants.GetGoodhostsUrlForOs("darwin"),
 		},
 		"linux": {
-			libvirt.MachineDriverDownloadUrl,
 			constants.GetOcUrlForOs("linux"),
 			constants.GetGoodhostsUrlForOs("linux"),
 		},
