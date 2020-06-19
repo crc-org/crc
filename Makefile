@@ -71,8 +71,8 @@ default: install
 # Create and update the vendor directory
 .PHONY: vendor
 vendor:
-	GO111MODULE=on go mod tidy
-	GO111MODULE=on go mod vendor
+	go mod tidy
+	go mod vendor
 
 .PHONY: vendorcheck
 vendorcheck:
@@ -146,7 +146,7 @@ fmt:
 	@gofmt -l -w $(SOURCE_DIRS)
 
 $(GOPATH)/bin/golangci-lint:
-	GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.27.0
+	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.27.0
 
 # Run golangci-lint against code
 .PHONY: lint cross-lint
