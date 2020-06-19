@@ -51,16 +51,12 @@ func fixDaemonServiceInstalled() error {
 	binPathWithArgs := fmt.Sprintf("%s daemon", strings.TrimSpace(binPath))
 
 	// get the account name
-	whoami, err := exec.LookPath("whoami.exe")
+	u, err := user.Current()
 	if err != nil {
-		return fmt.Errorf("Unable to find whoami.exe in path: %v", err)
+		return fmt.Errorf("Failed to get username: %v", err)
 	}
-	stdOut, err := exec.Command(whoami).Output() // #nosec
-	if err != nil {
-		return fmt.Errorf("Unable to get the current account name: %v", err)
-	}
-	accountName := string(stdOut)
-	accountName = strings.TrimSpace(accountName)
+	logging.Debug("Got username: ", u.Username)
+	accountName := strings.TrimSpace(u.Username)
 
 	// get the password from user
 	password, err := input.PromptUserForSecret("Enter account login password for service installation", "This is the login password of your current account, needed to install the daemon service")
