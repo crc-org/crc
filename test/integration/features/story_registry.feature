@@ -33,8 +33,7 @@ Feature: Local image to image-registry to deployment
         Then stdout should contain "successfully rolled out"
         When executing "oc get pods" succeeds
         Then stdout should contain "Running"
-        And stdout should contain "Completed"
-        When executing "oc logs -f dc/hello" succeeds
+        When executing "oc logs deployment/hello" succeeds
         Then stdout should contain "Hello, it works!"
 
     Scenario: Clean up
