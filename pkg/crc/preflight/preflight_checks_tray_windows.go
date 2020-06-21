@@ -71,11 +71,17 @@ func fixDaemonServiceInstalled() error {
 }
 
 func removeDaemonService() error {
-	err := service.Stop(constants.DaemonServiceName)
-	if err != nil {
-		return fmt.Errorf("Failed to stop the daemon service: %v", err)
+	// try to remove service if only it is installed
+	// this should remove unnecessary UAC prompts during cleanup
+	// service.IsInstalled doesn't need an admin shell to run
+	if service.IsInstalled(constants.DaemonServiceName) {
+		err := service.Stop(constants.DaemonServiceName)
+		if err != nil {
+			return fmt.Errorf("Failed to stop the daemon service: %v", err)
+		}
+		return service.Delete(constants.DaemonServiceName)
 	}
-	return service.Delete(constants.DaemonServiceName)
+	return nil
 }
 
 func checkIfDaemonServiceRunning() error {
