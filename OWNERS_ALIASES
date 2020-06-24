@@ -1,0 +1,22 @@
+# See the OWNERS_ALIASES docs: https://git.k8s.io/community/contributors/guide/owners.md#OWNERS_ALIASES
+
+aliases:
+  crc-approvers:
+    - cfergeau
+    - praveenkumar
+    - anjannath
+    - jsliacan
+    - guillaumerose
+    - robin-owen
+    - gbraad
+  crc-reviewers:
+    - cfergeau
+    - praveenkumar
+    - anjannath
+    - guillaumerose
+    - gbraad
+  doc-reviewers:
+    - robin-owen
+  test-reviewers:
+    - jsliacan
+
