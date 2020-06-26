@@ -7,7 +7,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/output"
-	"github.com/code-ready/machine/libmachine/state"
+	"github.com/code-ready/crc/pkg/libmachine/state"
 
 	"github.com/spf13/cobra"
 )

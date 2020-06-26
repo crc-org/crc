@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/machine/drivers/hyperv"
+	"github.com/code-ready/crc/pkg/drivers/hyperv"
 
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 

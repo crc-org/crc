@@ -10,8 +10,8 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/code-ready/clicumber v0.0.0-20190801094041-02a92c8f7ece
-	github.com/code-ready/machine v0.0.0-20191115055627-b284f794e910
 	github.com/docker/go-units v0.4.0
+	github.com/hectane/go-acl v0.0.0-20190604041725-da78bae5fc95
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/mattn/go-colorable v0.0.9
 	github.com/pborman/uuid v1.2.0
@@ -21,6 +21,7 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.3.2
+	github.com/stretchr/testify v1.3.0
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7

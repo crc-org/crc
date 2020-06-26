@@ -2,7 +2,7 @@ package machine
 
 import (
 	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/machine/libmachine/state"
+	"github.com/code-ready/crc/pkg/libmachine/state"
 )
 
 type GetPullSecretFunc func() (string, error)

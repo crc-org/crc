@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/machine/libmachine/shell"
+	"github.com/code-ready/crc/pkg/libmachine/shell"
 )
 
 type ShellConfig struct {

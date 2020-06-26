@@ -5,7 +5,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
-	"github.com/code-ready/machine/libmachine/drivers"
+	"github.com/code-ready/crc/pkg/libmachine/drivers"
 )
 
 type hyperkitDriver struct {

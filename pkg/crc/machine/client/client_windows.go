@@ -4,9 +4,9 @@ import (
 	"os"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/machine/drivers/hyperv"
-	"github.com/code-ready/machine/libmachine/drivers/plugin"
-	"github.com/code-ready/machine/libmachine/drivers/plugin/localbinary"
+	"github.com/code-ready/crc/pkg/drivers/hyperv"
+	"github.com/code-ready/crc/pkg/libmachine/drivers/plugin"
+	"github.com/code-ready/crc/pkg/libmachine/drivers/plugin/localbinary"
 )
 
 // StartDriver starts the desired machine driver if necessary.

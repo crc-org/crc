@@ -26,12 +26,12 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 
-	"github.com/code-ready/machine/libmachine"
-	"github.com/code-ready/machine/libmachine/drivers"
-	"github.com/code-ready/machine/libmachine/host"
-	"github.com/code-ready/machine/libmachine/log"
-	"github.com/code-ready/machine/libmachine/ssh"
-	"github.com/code-ready/machine/libmachine/state"
+	"github.com/code-ready/crc/pkg/libmachine"
+	"github.com/code-ready/crc/pkg/libmachine/drivers"
+	"github.com/code-ready/crc/pkg/libmachine/host"
+	"github.com/code-ready/crc/pkg/libmachine/log"
+	"github.com/code-ready/crc/pkg/libmachine/ssh"
+	"github.com/code-ready/crc/pkg/libmachine/state"
 )
 
 func init() {
