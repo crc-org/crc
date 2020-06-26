@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	goos "os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -25,13 +26,12 @@ Revision=1
 seservicelogonright = %s`
 )
 
-func getSidOfUser(username string) (string, error) {
-	cmd := "(Get-LocalUser -Name %s).Sid.value"
-	stdOut, stdErr, err := powershell.Execute(fmt.Sprintf(cmd, username))
-	if stdErr != "" || err != nil {
-		return "", fmt.Errorf("%s: %v", stdErr, err)
+func getSidOfCurrentUser() (string, error) {
+	u, err := user.Current()
+	if err != nil {
+		return "", err
 	}
-	return strings.TrimSpace(stdOut), nil
+	return u.Uid, nil
 }
 
 func getSeceditPath() string {
@@ -66,7 +66,7 @@ func hasLogonUserRight(username string) bool {
 		 * the SID has a * at the beginning which needs to be removed to match with user's sid
 		 * if its a username it doesn't have the '*' in the begining
 		 */
-		userSid, err := getSidOfUser(username)
+		userSid, err := getSidOfCurrentUser()
 		if err != nil || sid == "" {
 			logging.Debug("Unable to get sid of user: ", err)
 		}
@@ -80,7 +80,7 @@ func hasLogonUserRight(username string) bool {
 
 // AllowUserToLogonAsService adds user's SID to 'seservicelogonright' config key in the security database
 func AllowUserToLogonAsService(username string) error {
-	userSid, err := getSidOfUser(username)
+	userSid, err := getSidOfCurrentUser()
 	if err != nil {
 		return fmt.Errorf("Unable to get sid for username: %s: %v", username, err)
 	}
@@ -232,7 +232,7 @@ func RemoveLogonAsServiceUserRight(username string) error {
 		logging.Debugf("User does not have log on as a service right.")
 		return nil
 	}
-	userSid, err := getSidOfUser(username)
+	userSid, err := getSidOfCurrentUser()
 	if err != nil {
 		return err
 	}
