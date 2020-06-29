@@ -71,7 +71,7 @@ func (c *Cache) CacheBinary() error {
 	}
 
 	// Extract the tarball and put it the cache directory.
-	extractedFiles, err := extract.UncompressWithFilter(assetTmpFile, tmpDir,
+	extractedFiles, err := extract.UncompressWithFilter(assetTmpFile, tmpDir, false,
 		func(filename string) bool { return filepath.Base(filename) == c.binaryName })
 	if err != nil {
 		return errors.Wrapf(err, "Cannot uncompress '%s'", assetTmpFile)

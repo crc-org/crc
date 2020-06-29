@@ -210,7 +210,7 @@ func downloadOrExtractTrayApp() error {
 	if err != nil && !goos.IsExist(err) {
 		return errors.Wrap(err, "Cannot create the target directory.")
 	}
-	_, err = extract.Uncompress(archivePath, outputPath)
+	_, err = extract.Uncompress(archivePath, outputPath, false)
 	if err != nil {
 		return errors.Wrapf(err, "Cannot uncompress '%s'", archivePath)
 	}
