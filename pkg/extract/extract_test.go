@@ -138,6 +138,11 @@ func TestUncompress(t *testing.T) {
 		t.Errorf("Failed to uncompress test.zip: %v", err)
 	}
 
+	err = testUncompress("testdata/test.tar.xz", nil, files)
+	if err != nil {
+		t.Errorf("Failed to uncompress test.tar.xz: %v", err)
+	}
+
 	err = testUncompress("testdata/test.tar.gz", fileFilter, filteredFiles)
 	if err != nil {
 		t.Errorf("Failed to uncompress c.txt from test.tar.gz: %v", err)
@@ -146,5 +151,10 @@ func TestUncompress(t *testing.T) {
 	err = testUncompress("testdata/test.zip", fileFilter, filteredFiles)
 	if err != nil {
 		t.Errorf("Failed to uncompress c.txt from test.zip: %v", err)
+	}
+
+	err = testUncompress("testdata/test.tar.xz", fileFilter, filteredFiles)
+	if err != nil {
+		t.Errorf("Failed to uncompress c.txt from test.tar.xz: %v", err)
 	}
 }
