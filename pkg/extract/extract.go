@@ -123,10 +123,6 @@ func untarFile(tarReader *tar.Reader, header *tar.Header, path string) error {
 	return err
 }
 
-func Unzip(archive, target string) ([]string, error) {
-	return unzip(archive, target, nil)
-}
-
 func unzip(archive, target string, fileFilter func(string) bool) ([]string, error) {
 	var extractedFiles []string
 	reader, err := zip.OpenReader(archive)
