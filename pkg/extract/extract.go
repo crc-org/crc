@@ -99,23 +99,28 @@ func untar(reader io.Reader, targetDir string, fileFilter func(string) bool) ([]
 		// if it's a file create it
 		case tar.TypeReg, tar.TypeGNUSparse:
 			// tar.Next() will externally only iterate files, so we might have to create intermediate directories here
-			if err = os.MkdirAll(filepath.Dir(path), 0750); err != nil {
-				return nil, err
-			}
-			file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, header.FileInfo().Mode())
-			if err != nil {
-				return nil, err
-			}
-			defer file.Close()
-
-			// copy over contents
-			// #nosec G110
-			if _, err := io.Copy(file, tarReader); err != nil {
+			if err := untarFile(tarReader, header, path); err != nil {
 				return nil, err
 			}
 			extractedFiles = append(extractedFiles, path)
 		}
 	}
+}
+
+func untarFile(tarReader *tar.Reader, header *tar.Header, path string) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0750); err != nil {
+		return err
+	}
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, header.FileInfo().Mode())
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// copy over contents
+	// #nosec G110
+	_, err = io.Copy(file, tarReader)
+	return err
 }
 
 func Unzip(archive, target string) ([]string, error) {
@@ -153,29 +158,34 @@ func unzip(archive, target string, fileFilter func(string) bool) ([]string, erro
 			continue
 		}
 
-		// with a file filter, we may have skipped the intermediate directories, make sure they exist
-		if err = os.MkdirAll(filepath.Dir(path), 0750); err != nil {
-			return nil, err
-		}
-
-		fileReader, err := file.Open()
-		if err != nil {
-			return nil, err
-		}
-		defer fileReader.Close()
-
-		targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
-		if err != nil {
-			return nil, err
-		}
-		defer targetFile.Close()
-
-		// #nosec G110
-		if _, err := io.Copy(targetFile, fileReader); err != nil {
+		if err := unzipFile(path, file); err != nil {
 			return nil, err
 		}
 		extractedFiles = append(extractedFiles, path)
 	}
 
 	return extractedFiles, nil
+}
+
+func unzipFile(path string, file *zip.File) error {
+	// with a file filter, we may have skipped the intermediate directories, make sure they exist
+	if err := os.MkdirAll(filepath.Dir(path), 0750); err != nil {
+		return err
+	}
+
+	fileReader, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer fileReader.Close()
+
+	targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+	if err != nil {
+		return err
+	}
+	defer targetFile.Close()
+
+	// #nosec G110
+	_, err = io.Copy(targetFile, fileReader)
+	return err
 }
