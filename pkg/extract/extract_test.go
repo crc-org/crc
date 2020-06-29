@@ -99,9 +99,9 @@ func testUncompress(archiveName string, fileFilter func(string) bool, files File
 
 	var fileList []string
 	if fileFilter != nil {
-		fileList, err = UncompressWithFilter(archiveName, destDir, fileFilter)
+		fileList, err = UncompressWithFilter(archiveName, destDir, false, fileFilter)
 	} else {
-		fileList, err = Uncompress(archiveName, destDir)
+		fileList, err = Uncompress(archiveName, destDir, false)
 	}
 	if err != nil {
 		return err

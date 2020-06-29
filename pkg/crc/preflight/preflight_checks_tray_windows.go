@@ -123,7 +123,7 @@ func fixTrayBinaryExists() error {
 		}
 	}
 	archivePath := filepath.Join(tmpArchivePath, filepath.Base(constants.GetCRCWindowsTrayDownloadURL()))
-	_, err = extract.Uncompress(archivePath, constants.TrayBinaryDir)
+	_, err = extract.Uncompress(archivePath, constants.TrayBinaryDir, false)
 	if err != nil {
 		return fmt.Errorf("Cannot uncompress '%s': %v", archivePath, err)
 	}

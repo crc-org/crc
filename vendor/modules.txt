@@ -4,12 +4,17 @@ github.com/DATA-DOG/godog/colors
 github.com/DATA-DOG/godog/gherkin
 # github.com/Masterminds/semver v1.5.0
 github.com/Masterminds/semver
+# github.com/VividCortex/ewma v1.1.1
+github.com/VividCortex/ewma
 # github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
 github.com/YourFin/binappend
 # github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 github.com/asaskevich/govalidator
 # github.com/cavaliercoder/grab v2.0.0+incompatible
 github.com/cavaliercoder/grab
+# github.com/cheggaaa/pb/v3 v3.0.4
+github.com/cheggaaa/pb/v3
+github.com/cheggaaa/pb/v3/termutil
 # github.com/code-ready/clicumber v0.0.0-20190801094041-02a92c8f7ece
 github.com/code-ready/clicumber/testsuite
 github.com/code-ready/clicumber/util
@@ -37,6 +42,8 @@ github.com/code-ready/machine/libmachine/swarm
 github.com/code-ready/machine/libmachine/version
 # github.com/docker/go-units v0.4.0
 github.com/docker/go-units
+# github.com/fatih/color v1.7.0
+github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
 # github.com/google/uuid v1.0.0
@@ -63,10 +70,12 @@ github.com/kballard/go-shellquote
 github.com/konsorten/go-windows-terminal-sequences
 # github.com/magiconair/properties v1.8.0
 github.com/magiconair/properties
-# github.com/mattn/go-colorable v0.0.9
+# github.com/mattn/go-colorable v0.1.2
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.3
+# github.com/mattn/go-isatty v0.0.12
 github.com/mattn/go-isatty
+# github.com/mattn/go-runewidth v0.0.7
+github.com/mattn/go-runewidth
 # github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
 github.com/mgutz/ansi
 # github.com/mitchellh/mapstructure v1.1.2
@@ -105,7 +114,7 @@ golang.org/x/crypto/internal/subtle
 golang.org/x/crypto/poly1305
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7
+# golang.org/x/sys v0.0.0-20200116001909-b77594299b42
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
 golang.org/x/sys/windows
