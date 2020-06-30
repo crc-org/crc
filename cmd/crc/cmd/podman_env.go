@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -40,7 +42,7 @@ var podmanEnvCmd = &cobra.Command{
 		output.Outln(shell.GetEnvString(userShell, "PODMAN_HOST", result.IP))
 		output.Outln(shell.GetEnvString(userShell, "PODMAN_IDENTITY_FILE", constants.GetPrivateKeyPath()))
 		output.Outln(shell.GetEnvString(userShell, "PODMAN_IGNORE_HOSTS", "1"))
-		output.Outln(shell.GenerateUsageHint(userShell, "crc podman-env"))
+		output.Outln(shell.GenerateUsageHint(userShell, os.Args[0]+" podman-env"))
 	},
 }
 
