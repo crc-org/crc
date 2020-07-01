@@ -49,7 +49,7 @@ Feature:
             """
             service "httpd-ex" created
             """
-        When executing "oc rollout status deployment httpd-ex" succeeds
+        When executing "oc rollout status dc/httpd-ex || oc rollout status deployment httpd-ex" succeeds
         Then stdout should contain "successfully rolled out"
         And executing "oc expose svc/httpd-ex" succeeds
         And with up to "2" retries with wait period of "60s" http response from "http://httpd-ex-testproj.apps-crc.testing" has status code "200"
