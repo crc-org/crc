@@ -24,6 +24,13 @@ var hyperkitPreflightChecks = [...]PreflightCheck{
 
 var dnsPreflightChecks = [...]PreflightCheck{
 	{
+		configKeySuffix:  "check-hosts-file-permissions",
+		checkDescription: fmt.Sprintf("Checking file permissions for %s", hostsFile),
+		check:            checkEtcHostsFilePermissions,
+		fixDescription:   fmt.Sprintf("Setting file permissions for %s", hostsFile),
+		fix:              fixEtcHostsFilePermissions,
+	},
+	{
 		configKeySuffix:    "check-resolver-file-permissions",
 		checkDescription:   fmt.Sprintf("Checking file permissions for %s", resolverFile),
 		check:              checkResolverFilePermissions,
