@@ -1,7 +1,7 @@
 [id="minimum-system-requirements_{context}"]
 = Minimum system requirements
 
-{prod} requires the following minimum hardware and operating system requirements.
+{prod} has the following minimum hardware and operating system requirements.
 
 [id="minimum-system-requirements-hardware_{context}"]
 == Hardware requirements
