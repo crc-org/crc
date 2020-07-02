@@ -5,13 +5,13 @@ Newer versions of the {prod} binary require manual set up to prevent potential i
 
 .Procedure
 
-* link:{crc-download-url}[Download the latest release of {prod}].
+. link:{crc-download-url}[Download the latest release of {prod}].
 
-* Delete the existing {prod} virtual machine:
+. Delete the existing {prod} virtual machine:
 +
 include::snip_crc-delete.adoc[]
 
-* Replace the earlier [command]`{bin}` binary with the binary of the latest release.
+. Replace the earlier [command]`{bin}` binary with the binary of the latest release.
 Verify that the new [command]`{bin}` binary is in use by checking its version:
 +
 [subs="+quotes,attributes"]
@@ -19,14 +19,14 @@ Verify that the new [command]`{bin}` binary is in use by checking its version:
 $ {bin} version
 ----
 
-* Set up the new {prod} release:
+. Set up the new {prod} release:
 +
 [subs="+quotes,attributes"]
 ----
 $ {bin} setup
 ----
 
-* Start the new {prod} virtual machine:
+. Start the new {prod} virtual machine:
 +
 [subs="+quotes,attributes"]
 ----

@@ -17,14 +17,14 @@ Accessing the user pull secret requires a Red Hat account.
 
 .Procedure
 
-* Start the {prod} virtual machine:
+. Start the {prod} virtual machine:
 +
 [subs="+quotes,attributes"]
 ----
 $ {bin} start
 ----
 
-* When prompted, supply your user pull secret.
+. When prompted, supply your user pull secret.
 
 [NOTE]
 ====
