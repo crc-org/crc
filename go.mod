@@ -10,7 +10,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/cheggaaa/pb/v3 v3.0.4
-	github.com/code-ready/clicumber v0.0.0-20190801094041-02a92c8f7ece
+	github.com/code-ready/clicumber v0.0.0-20200702080628-f552997899ec
 	github.com/code-ready/machine v0.0.0-20191115055627-b284f794e910
 	github.com/docker/go-units v0.4.0
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect

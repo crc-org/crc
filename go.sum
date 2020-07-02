@@ -19,8 +19,8 @@ github.com/cavaliercoder/grab v2.0.0+incompatible h1:wZHbBQx56+Yxjx2TCGDcenhh3cJ
 github.com/cavaliercoder/grab v2.0.0+incompatible/go.mod h1:tTBkfNqSBfuMmMBFaO2phgyhdYhiZQ/+iXCZDzcDsMI=
 github.com/cheggaaa/pb/v3 v3.0.4 h1:QZEPYOj2ix6d5oEg63fbHmpolrnNiwjUsk+h74Yt4bM=
 github.com/cheggaaa/pb/v3 v3.0.4/go.mod h1:7rgWxLrAUcFMkvJuv09+DYi7mMUYi8nO9iOWcvGJPfw=
-github.com/code-ready/clicumber v0.0.0-20190801094041-02a92c8f7ece h1:ZuvFtsdv+H0JlBkKU+M6zGZOH0JcH7hnIvVNy5PQZro=
-github.com/code-ready/clicumber v0.0.0-20190801094041-02a92c8f7ece/go.mod h1:bjcKpFX8OebrlwSDgDAf0KAqpdVPGQssQk+IcVwlcog=
+github.com/code-ready/clicumber v0.0.0-20200702080628-f552997899ec h1:bJvlgJsuUN/x9DwKZXVnxZZLqMuOfhCfo7pNnWno65M=
+github.com/code-ready/clicumber v0.0.0-20200702080628-f552997899ec/go.mod h1:bjcKpFX8OebrlwSDgDAf0KAqpdVPGQssQk+IcVwlcog=
 github.com/code-ready/machine v0.0.0-20191115055627-b284f794e910 h1:roFnY4xZrCGYgzxymOxCONENB6VOZICijEPsN+2x5zw=
 github.com/code-ready/machine v0.0.0-20191115055627-b284f794e910/go.mod h1:x/y5No186t4X+Z9fQafLByNoo+K4MyNzxgcKKq76N+U=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
