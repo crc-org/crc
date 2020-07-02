@@ -15,7 +15,7 @@ github.com/cavaliercoder/grab
 # github.com/cheggaaa/pb/v3 v3.0.4
 github.com/cheggaaa/pb/v3
 github.com/cheggaaa/pb/v3/termutil
-# github.com/code-ready/clicumber v0.0.0-20190801094041-02a92c8f7ece
+# github.com/code-ready/clicumber v0.0.0-20200702080628-f552997899ec
 github.com/code-ready/clicumber/testsuite
 github.com/code-ready/clicumber/util
 # github.com/code-ready/machine v0.0.0-20191115055627-b284f794e910

@@ -240,10 +240,10 @@ func ExecuteCommandSucceedsOrFails(command string, expectedResult string) error 
 	exitCode := shell.excbuf.String()
 
 	if expectedResult == "succeeds" && exitCode != "0" {
-		err = fmt.Errorf("command '%s', expected to succeed, exited with exit code: %s", command, exitCode)
+		err = fmt.Errorf("command '%s', expected to succeed, exited with exit code: %s\nCommand stdout: %s\nCommand stderr: %s", command, exitCode, shell.outbuf.String(), shell.errbuf.String())
 	}
 	if expectedResult == "fails" && exitCode == "0" {
-		err = fmt.Errorf("command '%s', expected to fail, exited with exit code: %s", command, exitCode)
+		err = fmt.Errorf("command '%s', expected to fail, exited with exit code: %s\nCommand stdout: %s\nCommand stderr: %s", command, exitCode, shell.outbuf.String(), shell.errbuf.String())
 	}
 
 	return err
