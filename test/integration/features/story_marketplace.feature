@@ -23,7 +23,6 @@ Feature:
 
     @darwin @linux @windows
     Scenario: Install new operator
-        Given executing "oc apply -f etcdop-csc.yaml" succeeds
         When executing "oc apply -f etcdop-sub.yaml" succeeds
         # check if cluster operator is running
         Then with up to "20" retries with wait period of "30s" command "oc get csv" output matches ".*etcdoperator\.(.*)Succeeded$"

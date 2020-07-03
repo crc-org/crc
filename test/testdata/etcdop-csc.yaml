@@ -1,9 +1,0 @@
-apiVersion: operators.coreos.com/v1
-kind: CatalogSourceConfig
-metadata:
-  name: etcd
-  namespace: openshift-marketplace
-spec:
-  targetNamespace: openshift-operators
-  packages: etcd
-  source: community-operators
