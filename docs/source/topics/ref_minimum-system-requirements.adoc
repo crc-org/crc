@@ -28,6 +28,7 @@ To assign more resources to the {prod} virtual machine, see <<configuring-the-vi
 
 * On {msw}, {prod} requires the Windows 10 Pro Fall Creators Update (version 1709) or newer.
 {prod} does not work on earlier versions or editions of {msw}.
+{msw} 10 Home Edition is not supported.
 
 === {mac}
 
