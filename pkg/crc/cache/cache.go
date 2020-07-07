@@ -155,3 +155,12 @@ func IsTarball(filename string) bool {
 	}
 	return false
 }
+
+func (c *Cache) Executable() bool {
+	f := filepath.Join(c.destDir, c.binaryName)
+	fInfo, err := os.Stat(f)
+	if err != nil {
+		return false
+	}
+	return fInfo.Mode()&0100 != 0
+}
