@@ -44,7 +44,7 @@ func RetryAfter(attempts int, callback func() error, d time.Duration) (err error
 	m := MultiError{}
 	for i := 0; i < attempts; i++ {
 		if i > 0 {
-			logging.Debugf("retry loop %d", i)
+			logging.Debugf("retry loop: attempt %d out of %d", i, attempts)
 		}
 		err = callback()
 		if err == nil {
