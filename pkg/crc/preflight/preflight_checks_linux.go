@@ -13,13 +13,12 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/semver"
+	"github.com/code-ready/crc/pkg/crc/cache"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
 	"github.com/code-ready/crc/pkg/crc/systemd"
-	"github.com/code-ready/crc/pkg/download"
 	crcos "github.com/code-ready/crc/pkg/os"
-	"golang.org/x/sys/unix"
 )
 
 const (
@@ -221,37 +220,27 @@ func fixLibvirtServiceRunning() error {
 func checkMachineDriverLibvirtInstalled() error {
 	logging.Debugf("Checking if %s is installed", libvirt.MachineDriverCommand)
 
-	// Check if crc-driver-libvirt is available
-	libvirtDriverPath := filepath.Join(constants.CrcBinDir, libvirt.MachineDriverCommand)
-	err := unix.Access(libvirtDriverPath, unix.X_OK)
-	if err != nil {
-		return fmt.Errorf("%s is not executable", libvirtDriverPath)
+	machineDriverLibvirt := cache.NewMachineDriverLibvirtCache(libvirt.MachineDriverVersion, getCurrentLibvirtDriverVersion)
+	if !machineDriverLibvirt.IsCached() {
+		return fmt.Errorf("%s binary is not cached", libvirt.MachineDriverCommand)
 	}
-
-	// Check the version of driver if it matches to supported one
-	stdOut, stdErr, err := crcos.RunWithDefaultLocale(libvirtDriverPath, "version")
-	if err != nil {
-		return fmt.Errorf("Failed to check libvirt machine driver's version")
+	if !machineDriverLibvirt.Executable() {
+		return fmt.Errorf("%s is not executable", filepath.Join(constants.CrcBinDir, libvirt.MachineDriverCommand))
 	}
-	if !strings.Contains(stdOut, libvirt.MachineDriverVersion) {
-		return fmt.Errorf("crc-driver-libvirt does not have right version \n Required: %s \n Got: %s use 'crc setup' command.\n %v\n", libvirt.MachineDriverVersion, stdOut, stdErr)
+	if err := machineDriverLibvirt.CheckVersion(); err != nil {
+		return err
 	}
-	logging.Debugf("%s is already installed in %s", libvirt.MachineDriverCommand, libvirtDriverPath)
+	logging.Debugf("%s is already installed", libvirt.MachineDriverCommand)
 	return nil
 }
 
 func fixMachineDriverLibvirtInstalled() error {
 	logging.Debugf("Installing %s", libvirt.MachineDriverCommand)
-	_, err := extractBinary(libvirt.MachineDriverCommand, 0755)
-	if err != nil {
-		_, err = download.Download(libvirt.MachineDriverDownloadUrl, constants.CrcBinDir, 0755)
-		if err != nil {
-			logging.Debugf("download.Download() failed: %v", err)
-			return fmt.Errorf("Failed to download libvirt machine driver")
-		}
+	machineDriverLibvirt := cache.NewMachineDriverLibvirtCache(libvirt.MachineDriverVersion, getCurrentLibvirtDriverVersion)
+	if err := machineDriverLibvirt.EnsureIsCached(); err != nil {
+		return fmt.Errorf("Unable to download %s: %v", libvirt.MachineDriverCommand, err)
 	}
 	logging.Debugf("%s is installed in %s", libvirt.MachineDriverCommand, constants.CrcBinDir)
-
 	return nil
 }
 
@@ -628,4 +617,13 @@ func checkNetworkManagerIsRunning() error {
 
 func fixNetworkManagerIsRunning() error {
 	return fmt.Errorf("NetworkManager is required. Please make sure it is installed and running manually")
+}
+
+func getCurrentLibvirtDriverVersion() (string, error) {
+	driverBinPath := filepath.Join(constants.CrcBinDir, libvirt.MachineDriverCommand)
+	stdOut, _, err := crcos.RunWithDefaultLocale(driverBinPath, "version")
+	if len(strings.Split(stdOut, ":")) < 2 {
+		return "", fmt.Errorf("Unable to parse the version information of %s", driverBinPath)
+	}
+	return strings.TrimSpace(strings.Split(stdOut, ":")[1]), err
 }
