@@ -2,17 +2,15 @@ package preflight
 
 import (
 	"fmt"
-	neturl "net/url"
 	"os"
 	"os/user"
-	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/code-ready/crc/pkg/crc/cache"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
-	dl "github.com/code-ready/crc/pkg/download"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"golang.org/x/sys/unix"
 )
@@ -23,112 +21,49 @@ const (
 	hostsFile    = "/etc/hosts"
 )
 
-func basenameFromUrl(url string) (string, error) {
-	u, err := neturl.Parse(url)
-	if err != nil {
-		return "", fmt.Errorf("Cannot parse URL %s", url)
-	}
-
-	urlPath, err := neturl.PathUnescape(u.EscapedPath())
-	if err != nil {
-		return "", fmt.Errorf("Cannot unescape URL path %s", urlPath)
-	}
-
-	return path.Base(urlPath), nil
-}
-
-// Add darwin specific checks
-func tryRemoveDestFile(url string, destDir string) error {
-	destFilename, err := basenameFromUrl(url)
-	if err != nil {
-		return err
-	}
-	destPath := filepath.Join(destDir, destFilename)
-	err = os.Remove(destPath)
-	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("Could not remove %s: %v", destPath, err)
-	}
-
-	return nil
-}
-
-func download(url string, destDir string, mode os.FileMode) (string, error) {
-	err := os.MkdirAll(destDir, 0111|mode)
-	if err != nil && !os.IsExist(err) {
-		return "", fmt.Errorf("Cannot create directory %s", destDir)
-	}
-
-	// If the destination file already exists, dl.Download may not be able to
-	// overwrite it if we made it suid. We can however delete it beforehand.
-	err = tryRemoveDestFile(url, destDir)
-	if err != nil {
-		return "", err
-	}
-
-	filename, err := dl.Download(url, destDir, mode)
-	if err != nil {
-		return "", err
-	}
-
-	return filename, nil
-}
-
 func checkHyperKitInstalled() error {
-	logging.Debugf("Checking if hyperkit is installed")
-	hyperkitPath := filepath.Join(constants.CrcBinDir, "hyperkit")
-	err := unix.Access(hyperkitPath, unix.X_OK)
-	if err != nil {
-		logging.Debugf("%s not executable", hyperkitPath)
-		return err
+	h := cache.NewHyperkitCache("", nil)
+	if !h.IsCached() {
+		return fmt.Errorf("%s binary is not cached", hyperkit.HyperkitCommand)
 	}
-
+	hyperkitPath := filepath.Join(constants.CrcBinDir, hyperkit.HyperkitCommand)
+	if !h.Executable() {
+		return fmt.Errorf("%s not executable", hyperkitPath)
+	}
 	return checkSuid(hyperkitPath)
 }
 
-func extractOrDownloadBinary(url string) error {
-	binaryName, err := basenameFromUrl(url)
-	if err != nil {
-		return err
-	}
-	logging.Debugf("Installing %s", binaryName)
-	binaryPath, err := extractBinary(binaryName, 0755)
-	if err != nil {
-		binaryPath, err = download(url, constants.CrcBinDir, 0755)
-		if err != nil {
-			return err
-		}
-	}
-
-	return setSuid(binaryPath)
-}
-
 func fixHyperKitInstallation() error {
-	return extractOrDownloadBinary(hyperkit.HyperkitDownloadUrl)
+	logging.Debugf("Installing %s", hyperkit.HyperkitCommand)
+	h := cache.NewHyperkitCache("", nil)
+	if err := h.EnsureIsCached(); err != nil {
+		return fmt.Errorf("Unable to download %s : %v", hyperkit.HyperkitCommand, err)
+	}
+	return setSuid(filepath.Join(constants.CrcBinDir, hyperkit.HyperkitCommand))
 }
 
 func checkMachineDriverHyperKitInstalled() error {
 	logging.Debugf("Checking if %s is installed", hyperkit.MachineDriverCommand)
-	hyperkitPath := filepath.Join(constants.CrcBinDir, hyperkit.MachineDriverCommand)
-	err := unix.Access(hyperkitPath, unix.X_OK)
-	if err != nil {
-		return fmt.Errorf("%s is not executable", hyperkitPath)
+	hyperkitDriver := cache.NewMachineDriverHyperkitCache(hyperkit.MachineDriverVersion, getHyperKitMachineDriverVersion)
+	if !hyperkitDriver.IsCached() {
+		return fmt.Errorf("%s binary is not cached", hyperkit.MachineDriverCommand)
 	}
-
-	// Check the version of driver if it matches to supported one
-	stdOut, stdErr, err := crcos.RunWithDefaultLocale(hyperkitPath, "version")
-	if err != nil {
-		return fmt.Errorf("Failed to check hyperkit machine driver's version")
+	if !hyperkitDriver.Executable() {
+		return fmt.Errorf("%s is not executable", filepath.Join(constants.CrcBinDir, hyperkit.MachineDriverCommand))
 	}
-	if !strings.Contains(stdOut, hyperkit.MachineDriverVersion) {
-		return fmt.Errorf("%s does not have right version \n Required: %s \n Got: %s use 'crc setup' command.\n %v\n", hyperkit.MachineDriverCommand, hyperkit.MachineDriverVersion, stdOut, stdErr)
+	if err := hyperkitDriver.CheckVersion(); err != nil {
+		return err
 	}
-	logging.Debugf("%s is already installed in %s", hyperkit.MachineDriverCommand, hyperkitPath)
-
-	return checkSuid(hyperkitPath)
+	return checkSuid(filepath.Join(constants.CrcBinDir, hyperkit.MachineDriverCommand))
 }
 
 func fixMachineDriverHyperKitInstalled() error {
-	return extractOrDownloadBinary(hyperkit.MachineDriverDownloadUrl)
+	logging.Debugf("Installing %s", hyperkit.MachineDriverCommand)
+	hyperkitDriver := cache.NewMachineDriverHyperkitCache(hyperkit.MachineDriverVersion, getHyperKitMachineDriverVersion)
+	if err := hyperkitDriver.EnsureIsCached(); err != nil {
+		return fmt.Errorf("Unable to download %s : %v", hyperkit.MachineDriverCommand, err)
+	}
+	return setSuid(filepath.Join(constants.CrcBinDir, hyperkit.MachineDriverCommand))
 }
 
 func checkEtcHostsFilePermissions() error {
@@ -222,4 +157,13 @@ func addFileWritePermissionToUser(filename string) error {
 	logging.Debugf("%s is readable/writable by current user", filename)
 
 	return nil
+}
+
+func getHyperKitMachineDriverVersion() (string, error) {
+	driverBinPath := filepath.Join(constants.CrcBinDir, hyperkit.MachineDriverCommand)
+	stdOut, _, err := crcos.RunWithDefaultLocale(driverBinPath, "version")
+	if len(strings.Split(stdOut, ":")) < 2 {
+		return "", fmt.Errorf("Unable to parse the version information of %s", driverBinPath)
+	}
+	return strings.TrimSpace(strings.Split(stdOut, ":")[1]), err
 }

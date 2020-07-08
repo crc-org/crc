@@ -7,6 +7,7 @@ import "fmt"
 const (
 	MachineDriverCommand = "crc-driver-hyperkit"
 	MachineDriverVersion = "0.12.6"
+	HyperkitCommand      = "hyperkit"
 )
 
 var (
