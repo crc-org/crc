@@ -12,18 +12,18 @@ import (
 
 	"github.com/cheggaaa/pb/v3"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/mattn/go-isatty"
 	"github.com/xi2/xz"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 const minSizeForProgressBar = 100_000_000
 
 func UncompressWithFilter(tarball, targetDir string, showProgress bool, fileFilter func(string) bool) ([]string, error) {
-	return uncompress(tarball, targetDir, fileFilter, showProgress && isatty.IsTerminal(os.Stdout.Fd()))
+	return uncompress(tarball, targetDir, fileFilter, showProgress && terminal.IsTerminal(int(os.Stdout.Fd())))
 }
 
 func Uncompress(tarball, targetDir string, showProgress bool) ([]string, error) {
-	return uncompress(tarball, targetDir, nil, showProgress && isatty.IsTerminal(os.Stdout.Fd()))
+	return uncompress(tarball, targetDir, nil, showProgress && terminal.IsTerminal(int(os.Stdout.Fd())))
 }
 
 func uncompress(tarball, targetDir string, fileFilter func(string) bool, showProgress bool) ([]string, error) {
