@@ -4,95 +4,145 @@ import (
 	"fmt"
 	"io/ioutil"
 	goos "os"
-	"os/exec"
-	"os/user"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/version"
 	dl "github.com/code-ready/crc/pkg/download"
 	"github.com/code-ready/crc/pkg/embed"
 	"github.com/code-ready/crc/pkg/extract"
 	"github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
-	"github.com/code-ready/crc/pkg/os/windows/secpol"
-	"github.com/code-ready/crc/pkg/os/windows/service"
 )
 
-var (
-	startUpFolder   = filepath.Join(constants.GetHomeDir(), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup")
-	trayProcessName = constants.TrayBinaryName[:len(constants.TrayBinaryName)-4]
-)
+func checkIfTrayInstalled() error {
+	/* We want to force installation whenever setup is ran
+	 * as we want the service config to point to the binary
+	 * with which the setup command was issued.
+	 */
 
-func checkIfDaemonServiceInstalled() error {
-	// We want to force installation whenever setup is ran
-	// as we want the service config to point to the binary
-	// with which the setup command was issued
-	return fmt.Errorf("Ignoring check and forcing installation of daemon service")
+	return fmt.Errorf("Ignoring check and forcing installation of System Tray")
 }
 
-func fixDaemonServiceInstalled() error {
-	// only try to remove if a previous version exists
-	if service.IsInstalled(constants.DaemonServiceName) {
-		if service.IsRunning(constants.DaemonServiceName) {
-			_ = service.Stop(constants.DaemonServiceName)
-		}
-		_ = service.Delete(constants.DaemonServiceName)
+func fixTrayInstalled() error {
+	/* To avoid asking for elevated privileges again and again
+	 * this takes care of all the steps needed to have a running
+	 * tray by invoking a ps script which does the following:
+	 * a) Add logon as service permission for the user
+	 * b) Create the daemon service and start it
+	 * c) Add tray to startup folder and start it
+	 */
+
+	tempDir, err := ioutil.TempDir("", "crc")
+	if err != nil {
+		logging.Error("Failed creating temporary directory for tray installation")
+		return err
 	}
 
-	// get executables path
+	defer func() {
+		_ = goos.RemoveAll(tempDir)
+	}()
+
+	// prepare the ps script
 	binPath, err := goos.Executable()
 	if err != nil {
 		return fmt.Errorf("Unable to find the current executables location: %v", err)
 	}
 	binPathWithArgs := fmt.Sprintf("%s daemon", strings.TrimSpace(binPath))
 
-	// get the account name
-	u, err := user.Current()
-	if err != nil {
-		return fmt.Errorf("Failed to get username: %v", err)
-	}
-	logging.Debug("Got username: ", u.Username)
-	accountName := strings.TrimSpace(u.Username)
-
 	// get the password from user
 	password, err := input.PromptUserForSecret("Enter account login password for service installation", "This is the login password of your current account, needed to install the daemon service")
 	if err != nil {
 		return fmt.Errorf("Unable to get login password: %v", err)
 	}
-	err = service.Create(constants.DaemonServiceName, binPathWithArgs, accountName, password)
+
+	// sanitize password
+	password = escapeWindowsPassword(password)
+
+	psScriptContent := genTrayInstallScript(
+		password,
+		tempDir,
+		binPathWithArgs,
+		constants.TrayBinaryPath,
+		constants.TrayShortcutName,
+		constants.DaemonServiceName,
+	)
+	psFilePath := filepath.Join(tempDir, "trayInstallation.ps1")
+
+	// write temporary ps script
+	if err = writePsScriptContentToFile(psScriptContent, psFilePath); err != nil {
+		return err
+	}
+
+	// invoke the ps script
+	_, _, err = powershell.ExecuteAsAdmin("Installing System Tray for CodeReady Containers", psFilePath)
+	// wait for the script to finish executing
+	time.Sleep(2 * time.Second)
 	if err != nil {
-		return fmt.Errorf("Failed to install CodeReady Containers daemon service: %v", err)
+		logging.Debug("Failed to execute tray installation script")
+		return err
+	}
+
+	// check for 'success' file
+	if _, err = goos.Stat(filepath.Join(tempDir, "success")); goos.IsNotExist(err) {
+		return fmt.Errorf("Installation script didn't execute successfully: %v", err)
 	}
 	return nil
 }
 
-func removeDaemonService() error {
-	// try to remove service if only it is installed
-	// this should remove unnecessary UAC prompts during cleanup
-	// service.IsInstalled doesn't need an admin shell to run
-	if service.IsInstalled(constants.DaemonServiceName) {
-		err := service.Stop(constants.DaemonServiceName)
-		if err != nil {
-			return fmt.Errorf("Failed to stop the daemon service: %v", err)
-		}
-		return service.Delete(constants.DaemonServiceName)
+func escapeWindowsPassword(password string) string {
+	// escape specials characters (|`|$|"|') with '`' if present in password
+	if strings.Contains(password, "`") {
+		password = strings.Replace(password, "`", "``", -1)
 	}
-	return nil
+	if strings.Contains(password, "$") {
+		password = strings.Replace(password, "$", "`$", -1)
+	}
+	if strings.Contains(password, "\"") {
+		password = strings.Replace(password, "\"", "`\"", -1)
+	}
+	if strings.Contains(password, "'") {
+		password = strings.Replace(password, "'", "`'", -1)
+	}
+	return password
 }
 
-func checkIfDaemonServiceRunning() error {
-	if service.IsRunning(constants.DaemonServiceName) {
+func removeTray() error {
+	trayProcessName := constants.TrayBinaryName[:len(constants.TrayBinaryName)-4]
+
+	tempDir, err := ioutil.TempDir("", "crc")
+	if err != nil {
+		logging.Debug("Failed to create temporary directory for System Tray removal")
 		return nil
 	}
-	return fmt.Errorf("CodeReady Containers dameon service is not running")
-}
+	defer func() {
+		_ = goos.RemoveAll(tempDir)
+	}()
 
-func fixDaemonServiceRunning() error {
-	return service.Start(constants.DaemonServiceName)
+	psScriptContent := genTrayRemovalScript(
+		trayProcessName,
+		constants.TrayShortcutName,
+		constants.DaemonServiceName,
+		tempDir,
+	)
+	psFilePath := filepath.Join(tempDir, "trayRemoval.ps1")
+
+	// write script content to temporary file
+	if err = writePsScriptContentToFile(psScriptContent, psFilePath); err != nil {
+		logging.Debug(err)
+		return nil
+	}
+
+	_, _, err = powershell.ExecuteAsAdmin("Uninstalling CodeReady Containers System Tray", psFilePath)
+	// wait for the script to finish executing
+	time.Sleep(2 * time.Second)
+	if err != nil {
+		logging.Debugf("Unable to execute System Tray uninstall script: %v", err)
+	}
+	return nil
 }
 
 func checkTrayBinaryExists() error {
@@ -131,123 +181,27 @@ func fixTrayBinaryExists() error {
 	return nil
 }
 
-func checkTrayBinaryVersion() error {
-	versionCmd := `(Get-Item %s).VersionInfo.ProductVersion`
-	stdOut, stdErr, err := powershell.Execute(fmt.Sprintf(versionCmd, constants.TrayBinaryPath))
+func writePsScriptContentToFile(psScriptContent, psFilePath string) error {
+	psFile, err := goos.Create(psFilePath)
 	if err != nil {
-		return fmt.Errorf("Failed to get the version of tray: %v: %s", err, stdErr)
-	}
-	currentTrayVersion := strings.TrimSpace(stdOut)
-	if currentTrayVersion != version.GetCRCWindowsTrayVersion() {
-		return fmt.Errorf("Current tray version doesn't match with expected version")
-	}
-	return nil
-}
-
-func fixTrayBinaryVersion() error {
-	// If a tray is already running kill it
-	if err := checkTrayRunning(); err == nil {
-		cmd := `Stop-Process -Name "tray-windows"`
-		if _, _, err := powershell.Execute(cmd); err != nil {
-			logging.Debugf("Failed to kill running tray: %v", err)
-		}
-	}
-	return fixTrayBinaryExists()
-}
-
-func checkTrayBinaryAddedToStartupFolder() error {
-	if os.FileExists(filepath.Join(startUpFolder, constants.TrayShortcutName)) {
-		return nil
-	}
-	return fmt.Errorf("Tray shortcut does not exists in startup folder")
-}
-
-func fixTrayBinaryAddedToStartupFolder() error {
-	cmd := fmt.Sprintf(
-		"New-Item -ItemType SymbolicLink -Path \"%s\" -Name \"%s\" -Value \"%s\"",
-		startUpFolder,
-		constants.TrayShortcutName,
-		constants.TrayBinaryPath,
-	)
-	_, _, err := powershell.ExecuteAsAdmin("Adding tray binary to startup applications", cmd)
-	if err != nil {
-		return fmt.Errorf("Failed to create shortcut of tray binary in startup folder: %v", err)
-	}
-	return nil
-}
-
-func removeTrayBinaryFromStartupFolder() error {
-	err := goos.Remove(filepath.Join(startUpFolder, constants.TrayShortcutName))
-	if err != nil {
-		logging.Warn("Failed to remove tray from startup folder: ", err)
-	}
-	return nil
-}
-
-func checkTrayRunning() error {
-	cmd := fmt.Sprintf("Get-Process -Name \"%s\"", trayProcessName)
-	_, stdErr, err := powershell.Execute(cmd)
-	if err != nil {
-		return fmt.Errorf("Failed to check if the tray is running: %v", err)
-	}
-	if strings.Contains(stdErr, constants.TrayBinaryName) {
-		return fmt.Errorf("Tray binary is not running")
-	}
-	return nil
-}
-
-func fixTrayRunning() error {
-	// #nosec G204
-	err := exec.Command(constants.TrayBinaryPath).Start()
-	if err != nil {
+		logging.Debugf("Unable to create file to write scipt content: %v", err)
 		return err
 	}
-	return nil
-}
-
-func stopTray() error {
-	if err := checkTrayRunning(); err != nil {
-		logging.Debug("Failed to check if a tray is running: ", err)
-		return nil
-	}
-	cmd := fmt.Sprintf("Stop-Process -Name %s", trayProcessName)
-	_, _, err := powershell.Execute(cmd)
+	defer psFile.Close()
+	// write the ps script
+	/* Add UTF-8 BOM at the beginning of the script so that Windows
+	 * correctly detects the file encoding
+	 */
+	_, err = psFile.Write([]byte{0xef, 0xbb, 0xbf})
 	if err != nil {
-		logging.Warn("Failed to stop running tray: ", err)
+		logging.Debugf("Unable to write script content to file: %v", err)
+		return err
 	}
-	return nil
-}
-
-func checkUserHasServiceLogonEnabled() error {
-	username := getCurrentUsername()
-	enabled, err := secpol.UserAllowedToLogonAsService(username)
-	if enabled {
-		return nil
-	}
-	return fmt.Errorf("Failed to check if user is allowed to log on as service: %v", err)
-}
-
-func fixUserHasServiceLogonEnabled() error {
-	// get the username
-	username := getCurrentUsername()
-
-	return secpol.AllowUserToLogonAsService(username)
-}
-
-func getCurrentUsername() string {
-	user, err := user.Current()
+	_, err = psFile.WriteString(psScriptContent)
 	if err != nil {
-		logging.Debugf("Unable to get current user's name: %v", err)
-		return ""
+		logging.Debugf("Unable to write script content to file: %v", err)
+		return err
 	}
-	return strings.TrimSpace(strings.Split(user.Username, "\\")[1])
-}
 
-func disableUserServiceLogon() error {
-	username := getCurrentUsername()
-
-	if err := secpol.RemoveLogonAsServiceUserRight(username); err != nil {
-		logging.Warn("Failed trying to remove log on as a service user right: ", err)
-	}
 	return nil
 }
