@@ -10,3 +10,11 @@
 ** For the same reason, there is no upgrade path to newer OpenShift versions.
 * The OpenShift instance runs in a virtual machine.
 This may cause other differences, particularly with external networking.
+
+{prod} also includes the following non-customizable cluster settings.
+These settings should not be modified:
+
+* Use of the ***.crc.testing** domain.
+* The address range used for internal cluster communication.
+** The cluster uses the **172** address range.
+This can cause issues when, for example, a proxy is run in the same address space.
