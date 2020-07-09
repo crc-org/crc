@@ -7,12 +7,12 @@ This involves stopping the virtual machine, deleting it, reverting changes made 
 .Prerequisites
 
 * You set up the host machine through the [command]`{bin} setup` command.
-For more information, see <<setting-up-codeready-containers_{context}>>.
+For more information, see link:{crc-gsg-url}#setting-up-codeready-containers_gsg[Setting up {prod}].
 * You started {prod} through the [command]`{bin} start` command.
-For more information, see <<starting-the-virtual-machine_{context}>>.
+For more information, see link:{crc-gsg-url}#starting-the-virtual-machine_gsg[Starting the virtual machine].
 * You are using the latest {prod} release.
 Using a version earlier than {prod} 1.2.0 may result in errors related to expired x509 certificates.
-For more information, see <<troubleshooting-expired-certificates_{context}>>.
+For more information, see link:{crc-gsg-url}#troubleshooting-expired-certificates_gsg[Troubleshooting expired certificates].
 
 .Procedure
 

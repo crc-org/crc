@@ -7,7 +7,7 @@ To access the cluster for troubleshooting or debugging purposes, follow this pro
 .Prerequisites
 
 * Enable [command]`oc` access to the cluster and log in as the `kubeadmin` user.
-For detailed steps, see <<accessing-the-openshift-cluster-with-oc_{context}>>.
+For detailed steps, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the OpenShift cluster with `oc`].
 
 .Procedure
 

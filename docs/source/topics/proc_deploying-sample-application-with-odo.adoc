@@ -9,7 +9,7 @@ This procedure deploys a sample application to the OpenShift cluster running in 
 * You have installed [command]`odo`.
 For more information, see link:{odo-docs-url-installing}[Installing `odo`] in the [command]`odo` documentation.
 * The {prod} virtual machine is running.
-For more information, see <<starting-the-virtual-machine_{context}>>.
+For more information, see link:{crc-gsg-url}#starting-the-virtual-machine_gsg[Starting the virtual machine].
 
 .Procedure
 

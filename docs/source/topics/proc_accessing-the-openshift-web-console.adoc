@@ -4,7 +4,7 @@
 .Prerequisites
 
 * A running {prod} virtual machine.
-For more information, see <<starting-the-virtual-machine_{context}>>.
+For more information, see link:{crc-gsg-url}#starting-the-virtual-machine_gsg[Starting the virtual machine].
 
 .Procedure
 
@@ -23,7 +23,7 @@ Use the `developer` user for creating projects or OpenShift applications and for
 Only use the `kubeadmin` user for administrative tasks such as creating new users, setting roles, and so on.
 ====
 
-See <<troubleshooting-codeready-containers_{context}>> if you cannot access the {prod} OpenShift cluster.
+See link:{crc-gsg-url}#troubleshooting-codeready-containers_gsg[Troubleshooting {prod}] if you cannot access the {prod} OpenShift cluster.
 
 .Additional resources
 

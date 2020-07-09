@@ -4,7 +4,7 @@
 .Prerequisites
 
 * Your host machine must meet the minimum system requirements.
-For more information, see <<minimum-system-requirements_{context}>>.
+For more information, see link:{crc-gsg-url}#minimum-system-requirements_gsg[Minimum system requirements].
 
 .Procedure
 

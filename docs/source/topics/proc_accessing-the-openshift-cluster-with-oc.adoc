@@ -4,7 +4,7 @@
 .Prerequisites
 
 * A running {prod} virtual machine.
-For more information, see <<starting-the-virtual-machine_{context}>>.
+For more information, see link:{crc-gsg-url}#starting-the-virtual-machine_gsg[Starting the virtual machine].
 
 .Procedure
 
@@ -45,7 +45,7 @@ $ oc get co
 * {prod} disables the `machine-config` and `monitoring` Operators by default.
 ====
 
-See <<troubleshooting-codeready-containers_{context}>> if you cannot access the {prod} OpenShift cluster.
+See link:{crc-gsg-url}#troubleshooting-codeready-containers_gsg[Troubleshooting {prod}] if you cannot access the {prod} OpenShift cluster.
 
 .Additional resources
 

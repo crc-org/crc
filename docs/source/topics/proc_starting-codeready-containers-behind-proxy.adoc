@@ -6,7 +6,7 @@
 * To use an existing [command]`oc` binary on your host machine, export the `.testing` domain as part of the `no_proxy` environment variable.
 
 * The embedded [command]`oc` binary does not require manual settings.
-For more information about using the embedded [command]`oc` binary, see <<accessing-the-openshift-cluster-with-oc_{context}>>.
+For more information about using the embedded [command]`oc` binary, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the OpenShift cluster with `oc`].
 
 
 .Procedure

@@ -16,7 +16,7 @@
 ====
 The OpenShift cluster requires these minimum resources to run in the {prod} virtual machine.
 Some workloads may require more resources.
-To assign more resources to the {prod} virtual machine, see <<configuring-the-virtual-machine_{context}>>.
+To assign more resources to the {prod} virtual machine, see link:{crc-gsg-url}#configuring-the-virtual-machine_gsg[Configuring the virtual machine].
 ====
 
 [id="minimum-system-requirements-operating-system_{context}"]
@@ -40,4 +40,4 @@ To assign more resources to the {prod} virtual machine, see <<configuring-the-vi
 * On Linux, {prod} is only supported on {rhel}/{centos} 7.5 or newer (including 8.x versions) and on the latest two stable {fed} releases.
 * When using {rhel}, the machine running {prod} must be link:https://access.redhat.com/solutions/253273[registered with the Red Hat Customer Portal].
 * {ubuntu} 18.04 LTS or newer and {debian} 10 or newer are not officially supported and may require manual set up of the host machine.
-* See <<required-software-packages_{context}>> to install the required packages for your Linux distribution.
+* See link:{crc-gsg-url}#required-software-packages_gsg[Required software packages] to install the required packages for your Linux distribution.

@@ -6,7 +6,7 @@ The [command]`{bin} start` command starts the {prod} virtual machine and OpenShi
 .Prerequisites
 
 * You set up the host machine through the [command]`{bin} setup` command.
-For more information, see <<setting-up-codeready-containers_{context}>>.
+For more information, see link:{crc-gsg-url}#setting-up-codeready-containers_gsg[Setting up {prod}].
 * You have a valid OpenShift user pull secret.
 Copy or download the pull secret from the Pull Secret section of the link:https://cloud.redhat.com/openshift/install/crc/installer-provisioned[Install on Laptop: {rh-prod}] page on cloud.redhat.com.
 +
@@ -29,5 +29,5 @@ $ {bin} start
 [NOTE]
 ====
 * The cluster takes a minimum of four minutes to start the necessary containers and Operators before serving a request.
-* If you see errors during [command]`{bin} start`, check the <<troubleshooting-codeready-containers_{context}>> section for potential solutions.
+* If you see errors during [command]`{bin} start`, check the link:{crc-gsg-url}#troubleshooting-codeready-containers_gsg[Troubleshooting {prod}] section for potential solutions.
 ====
