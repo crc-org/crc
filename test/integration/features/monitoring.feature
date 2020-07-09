@@ -13,7 +13,7 @@ Feature:
 
     Scenario: Monitoring
         Given preparing and recording the environment succeeds
-        When taking snapshot of the node every "1m" exactly "5" times succeeds
+        When taking snapshot of the node every "60m" exactly "20" times succeeds
         Then packaging and uploading data succeeds
 
     Scenario: Closing shop
