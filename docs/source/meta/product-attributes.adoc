@@ -24,8 +24,13 @@
 :rh-prod: {rh} {prod}
 :bin: crc
 
+// Documentation naming
+:crc-gsg: {rh-prod} Getting Started Guide
+
 // URLs
 :crc-download-url: https://cloud.redhat.com/openshift/install/crc/installer-provisioned
+:crc-gsg-url: https://code-ready.github.io/crc/
+
 :odo-docs-url: https://docs.openshift.com/container-platform/latest/cli_reference/openshift_developer_cli/understanding-odo.html
 :odo-docs-url-installing: https://docs.openshift.com/container-platform/latest/cli_reference/openshift_developer_cli/installing-odo.html
 :odo-docs-url-single-component: https://docs.openshift.com/container-platform/latest/cli_reference/openshift_developer_cli/creating-a-single-component-application-with-odo.html
