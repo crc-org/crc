@@ -31,7 +31,7 @@ func waitForPendingCsrs(oc oc.OcConfig) error {
 	return errors.RetryAfter(120, waitForPendingCsr, time.Second*5)
 }
 
-func RegenerateCertificates(sshRunner *ssh.SSHRunner, machineName string) error {
+func RegenerateCertificates(sshRunner *ssh.SSHRunner, ocConfig oc.OcConfig) error {
 	sd := systemd.NewInstanceSystemdCommander(sshRunner)
 	startedKubelet, err := sd.Start("kubelet")
 	if err != nil {
@@ -41,7 +41,6 @@ func RegenerateCertificates(sshRunner *ssh.SSHRunner, machineName string) error 
 	if startedKubelet {
 		defer sd.Stop("kubelet") //nolint:errcheck
 	}
-	ocConfig := oc.UseOCWithConfig(machineName)
 	/* 2 CSRs to approve, one right after kubelet restart, the other one a few dozen seconds after
 	approving the first one
 	- First one is requested by system:serviceaccount:openshift-machine-config-operator:node-bootstrapper

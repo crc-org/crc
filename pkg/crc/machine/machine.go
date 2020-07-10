@@ -357,9 +357,10 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		}
 	}
 
+	ocConfig := oc.UseOCWithConfig(startConfig.Name)
 	if needsCertsRenewal {
 		logging.Info("Cluster TLS certificates have expired, renewing them... [will take up to 5 minutes]")
-		err = RegenerateCertificates(sshRunner, startConfig.Name)
+		err = RegenerateCertificates(sshRunner, ocConfig)
 		if err != nil {
 			logging.Debugf("Failed to renew TLS certificates: %v", err)
 			buildTime, getBuildTimeErr := crcBundleMetadata.GetBundleBuildTime()
@@ -381,7 +382,6 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error starting kubelet: %s", err)
 	}
-	ocConfig := oc.UseOCWithConfig(startConfig.Name)
 	if !exists {
 		logging.Info("Configuring cluster for first start")
 		if err := configureCluster(ocConfig, sshRunner, proxyConfig, pullSecret, instanceIP); err != nil {
