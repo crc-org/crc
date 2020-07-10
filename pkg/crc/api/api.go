@@ -10,7 +10,7 @@ import (
 )
 
 func CreateAPIServer(socketPath string) (CrcAPIServer, error) {
-	listener, err := net.Listen("unix", socketPath)
+	listener, err := createIPCListener(socketPath)
 	if err != nil {
 		logging.Error("Failed to create socket: ", err.Error())
 		return CrcAPIServer{}, err
