@@ -68,7 +68,7 @@ func NewOcConfig(runner OcRunner, context string, clusterName string) OcConfig {
 	}
 }
 
-func (oc OcConfig) WaitForOpenshiftResource(resource string) error {
+func WaitForOpenshiftResource(oc OcConfig, resource string) error {
 	logging.Debugf("Waiting for availability of resource type '%s'", resource)
 	waitForApiServer := func() error {
 		stdout, stderr, err := oc.RunOcCommand("get", resource)
@@ -83,15 +83,15 @@ func (oc OcConfig) WaitForOpenshiftResource(resource string) error {
 }
 
 // ApproveNodeCSR approves the certificate for the node.
-func (oc OcConfig) ApproveNodeCSR() error {
-	err := oc.WaitForOpenshiftResource("csr")
+func ApproveNodeCSR(ocConfig OcConfig) error {
+	err := WaitForOpenshiftResource(ocConfig, "csr")
 	if err != nil {
 		return err
 	}
 
 	logging.Debug("Approving pending CSRs")
 	// Execute 'oc get csr -oname' and store the output
-	csrsJson, stderr, err := oc.RunOcCommand("get", "csr", "-ojson")
+	csrsJson, stderr, err := ocConfig.RunOcCommand("get", "csr", "-ojson")
 	if err != nil {
 		return fmt.Errorf("Not able to get csr names (%v : %s)", err, stderr)
 	}
@@ -104,7 +104,7 @@ func (oc OcConfig) ApproveNodeCSR() error {
 		/* When the CSR hasn't been approved, csr.status is empty in the json data */
 		if len(csr.Status.Conditions) == 0 {
 			logging.Debugf("Approving csr %s", csr.Metadata.Name)
-			_, stderr, err := oc.RunOcCommand("adm", "certificate", "approve", csr.Metadata.Name)
+			_, stderr, err := ocConfig.RunOcCommand("adm", "certificate", "approve", csr.Metadata.Name)
 			if err != nil {
 				return fmt.Errorf("Not able to approve csr (%v : %s)", err, stderr)
 			}

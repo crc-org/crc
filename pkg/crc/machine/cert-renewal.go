@@ -41,28 +41,28 @@ func RegenerateCertificates(sshRunner *ssh.SSHRunner, machineName string) error 
 	if startedKubelet {
 		defer sd.Stop("kubelet") //nolint:errcheck
 	}
-	oc := oc.UseOCWithConfig(machineName)
+	ocConfig := oc.UseOCWithConfig(machineName)
 	/* 2 CSRs to approve, one right after kubelet restart, the other one a few dozen seconds after
 	approving the first one
 	- First one is requested by system:serviceaccount:openshift-machine-config-operator:node-bootstrapper
 	- Second one is requested by system:node:<node_name> */
-	err = waitForPendingCsrs(oc)
+	err = waitForPendingCsrs(ocConfig)
 	if err != nil {
 		logging.Debugf("Error waiting for first pending (node-bootstrapper) CSR: %v", err)
 		return err
 	}
-	err = oc.ApproveNodeCSR()
+	err = oc.ApproveNodeCSR(ocConfig)
 	if err != nil {
 		logging.Debugf("Error approving first pending (node-bootstrapper) CSR: %v", err)
 		return err
 	}
 
-	err = waitForPendingCsrs(oc)
+	err = waitForPendingCsrs(ocConfig)
 	if err != nil {
 		logging.Debugf("Error waiting for second pending (system:node) CSR: %v", err)
 		return err
 	}
-	err = oc.ApproveNodeCSR()
+	err = oc.ApproveNodeCSR(ocConfig)
 	if err != nil {
 		logging.Debugf("Error approving second pending (system:node) CSR: %v", err)
 		return err

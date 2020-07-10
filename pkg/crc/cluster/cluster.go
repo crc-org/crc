@@ -83,7 +83,7 @@ func GetRootPartitionUsage(sshRunner *ssh.SSHRunner) (int64, int64, error) {
 	return diskSize, diskUsage, nil
 }
 
-func AddPullSecret(sshRunner *ssh.SSHRunner, oc oc.OcConfig, pullSec string) error {
+func AddPullSecret(sshRunner *ssh.SSHRunner, ocConfig oc.OcConfig, pullSec string) error {
 	if err := addPullSecretToInstanceDisk(sshRunner, pullSec); err != nil {
 		return err
 	}
@@ -93,25 +93,25 @@ func AddPullSecret(sshRunner *ssh.SSHRunner, oc oc.OcConfig, pullSec string) err
 		fmt.Sprintf(`{"data":{".dockerconfigjson":"%s"}}`, base64OfPullSec),
 		"-n", "openshift-config", "--type", "merge"}
 
-	if err := oc.WaitForOpenshiftResource("secret"); err != nil {
+	if err := oc.WaitForOpenshiftResource(ocConfig, "secret"); err != nil {
 		return err
 	}
-	_, stderr, err := oc.RunOcCommandPrivate(cmdArgs...)
+	_, stderr, err := ocConfig.RunOcCommandPrivate(cmdArgs...)
 	if err != nil {
 		return fmt.Errorf("Failed to add Pull secret %v: %s", err, stderr)
 	}
 	return nil
 }
 
-func UpdateClusterID(oc oc.OcConfig) error {
+func UpdateClusterID(ocConfig oc.OcConfig) error {
 	clusterID := uuid.New()
 	cmdArgs := []string{"patch", "clusterversion", "version", "-p",
 		fmt.Sprintf(`{"spec":{"clusterID":"%s"}}`, clusterID), "--type", "merge"}
 
-	if err := oc.WaitForOpenshiftResource("clusterversion"); err != nil {
+	if err := oc.WaitForOpenshiftResource(ocConfig, "clusterversion"); err != nil {
 		return err
 	}
-	_, stderr, err := oc.RunOcCommand(cmdArgs...)
+	_, stderr, err := ocConfig.RunOcCommand(cmdArgs...)
 	if err != nil {
 		return fmt.Errorf("Failed to update cluster ID %v: %s", err, stderr)
 	}
@@ -119,15 +119,15 @@ func UpdateClusterID(oc oc.OcConfig) error {
 	return nil
 }
 
-func AddProxyConfigToCluster(oc oc.OcConfig, proxy *network.ProxyConfig) error {
+func AddProxyConfigToCluster(ocConfig oc.OcConfig, proxy *network.ProxyConfig) error {
 	cmdArgs := []string{"patch", "proxy", "cluster", "-p",
 		fmt.Sprintf(`{"spec":{"httpProxy":"%s", "httpsProxy":"%s", "noProxy":"%s"}}`, proxy.HttpProxy, proxy.HttpsProxy, proxy.GetNoProxyString()),
 		"-n", "openshift-config", "--type", "merge"}
 
-	if err := oc.WaitForOpenshiftResource("proxy"); err != nil {
+	if err := oc.WaitForOpenshiftResource(ocConfig, "proxy"); err != nil {
 		return err
 	}
-	if _, stderr, err := oc.RunOcCommand(cmdArgs...); err != nil {
+	if _, stderr, err := ocConfig.RunOcCommand(cmdArgs...); err != nil {
 		return fmt.Errorf("Failed to add proxy details %v: %s", err, stderr)
 	}
 	return nil
@@ -165,8 +165,8 @@ func addPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error
 	return nil
 }
 
-func WaitforRequestHeaderClientCaFile(oc oc.OcConfig) error {
-	if err := oc.WaitForOpenshiftResource("configmaps"); err != nil {
+func WaitforRequestHeaderClientCaFile(ocConfig oc.OcConfig) error {
+	if err := oc.WaitForOpenshiftResource(ocConfig, "configmaps"); err != nil {
 		return err
 	}
 
@@ -174,7 +174,7 @@ func WaitforRequestHeaderClientCaFile(oc oc.OcConfig) error {
 		cmdArgs := []string{"get", "configmaps/extension-apiserver-authentication", `-ojsonpath={.data.requestheader-client-ca-file}`,
 			"-n", "kube-system"}
 
-		stdout, stderr, err := oc.RunOcCommand(cmdArgs...)
+		stdout, stderr, err := ocConfig.RunOcCommand(cmdArgs...)
 		if err != nil {
 			return fmt.Errorf("Failed to get request header client ca file %v: %s", err, stderr)
 		}
@@ -187,14 +187,14 @@ func WaitforRequestHeaderClientCaFile(oc oc.OcConfig) error {
 	return errors.RetryAfter(90, lookupRequestHeaderClientCa, 2*time.Second)
 }
 
-func DeleteOpenshiftApiServerPods(oc oc.OcConfig) error {
-	if err := oc.WaitForOpenshiftResource("pod"); err != nil {
+func DeleteOpenshiftApiServerPods(ocConfig oc.OcConfig) error {
+	if err := oc.WaitForOpenshiftResource(ocConfig, "pod"); err != nil {
 		return err
 	}
 
 	deleteOpenshiftApiserverPods := func() error {
 		cmdArgs := []string{"delete", "pod", "--all", "-n", "openshift-apiserver"}
-		_, _, err := oc.RunOcCommand(cmdArgs...)
+		_, _, err := ocConfig.RunOcCommand(cmdArgs...)
 		if err != nil {
 			return &errors.RetriableError{Err: err}
 		}
