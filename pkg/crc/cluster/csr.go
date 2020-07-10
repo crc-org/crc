@@ -10,10 +10,10 @@ import (
 	"github.com/code-ready/crc/pkg/crc/oc"
 )
 
-func WaitForOpenshiftResource(oc oc.OcConfig, resource string) error {
+func WaitForOpenshiftResource(ocConfig oc.OcConfig, resource string) error {
 	logging.Debugf("Waiting for availability of resource type '%s'", resource)
 	waitForApiServer := func() error {
-		stdout, stderr, err := oc.RunOcCommand("get", resource)
+		stdout, stderr, err := ocConfig.RunOcCommand("get", resource)
 		if err != nil {
 			logging.Debug(stderr)
 			return &errors.RetriableError{Err: err}
