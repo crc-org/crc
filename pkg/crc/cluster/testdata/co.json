@@ -1,0 +1,112 @@
+{
+    "apiVersion": "v1",
+    "items": [
+        {
+            "apiVersion": "config.openshift.io/v1",
+            "kind": "ClusterOperator",
+            "metadata": {
+                "name": "authentication"
+            },
+            "status": {
+                "conditions": [
+                    {
+                        "lastTransitionTime": "2020-07-09T13:33:35Z",
+                        "reason": "AsExpected",
+                        "status": "False",
+                        "type": "Degraded"
+                    },
+                    {
+                        "lastTransitionTime": "2020-06-21T10:40:40Z",
+                        "reason": "AsExpected",
+                        "status": "False",
+                        "type": "Progressing"
+                    },
+                    {
+                        "lastTransitionTime": "2020-06-20T07:29:47Z",
+                        "reason": "AsExpected",
+                        "status": "True",
+                        "type": "Available"
+                    },
+                    {
+                        "lastTransitionTime": "2020-06-20T07:03:21Z",
+                        "reason": "AsExpected",
+                        "status": "True",
+                        "type": "Upgradeable"
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "config.openshift.io/v1",
+            "kind": "ClusterOperator",
+            "metadata": {
+                "name": "cloud-credential"
+            },
+            "status": {
+                "conditions": [
+                    {
+                        "lastTransitionTime": "2020-06-20T06:58:30Z",
+                        "message": "No credentials requests reporting errors.",
+                        "reason": "NoCredentialsFailing",
+                        "status": "False",
+                        "type": "Degraded"
+                    },
+                    {
+                        "lastTransitionTime": "2020-06-20T07:21:19Z",
+                        "message": "0 of 0 credentials requests provisioned and reconciled.",
+                        "reason": "ReconcilingComplete",
+                        "status": "False",
+                        "type": "Progressing"
+                    },
+                    {
+                        "lastTransitionTime": "2020-06-20T06:58:30Z",
+                        "status": "True",
+                        "type": "Available"
+                    },
+                    {
+                        "lastTransitionTime": "2020-06-20T06:58:30Z",
+                        "status": "True",
+                        "type": "Upgradeable"
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "config.openshift.io/v1",
+            "kind": "ClusterOperator",
+            "metadata": {
+                "name": "cluster-autoscaler"
+            },
+            "status": {
+                "conditions": [
+                    {
+                        "lastTransitionTime": "2020-06-20T07:26:09Z",
+                        "message": "at version 4.4.8",
+                        "status": "True",
+                        "type": "Available"
+                    },
+                    {
+                        "lastTransitionTime": "2020-06-20T07:26:09Z",
+                        "status": "False",
+                        "type": "Progressing"
+                    },
+                    {
+                        "lastTransitionTime": "2020-06-20T07:26:09Z",
+                        "status": "False",
+                        "type": "Degraded"
+                    },
+                    {
+                        "lastTransitionTime": "2020-06-20T07:26:09Z",
+                        "status": "True",
+                        "type": "Upgradeable"
+                    }
+                ]
+            }
+        }
+    ],
+    "kind": "List",
+    "metadata": {
+        "resourceVersion": "",
+        "selfLink": ""
+    }
+}

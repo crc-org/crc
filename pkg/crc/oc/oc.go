@@ -14,7 +14,7 @@ type OcRunner interface {
 }
 
 type OcConfig struct {
-	runner  OcRunner
+	Runner  OcRunner
 	Context string
 	Cluster string
 }
@@ -46,18 +46,18 @@ func UseOCWithConfig(machineName string) OcConfig {
 }
 
 func (oc OcConfig) RunOcCommand(args ...string) (string, string, error) {
-	args = append(args, "--kubeconfig", oc.runner.GetKubeconfigPath(), "--context", oc.Context, "--cluster", oc.Cluster)
-	return oc.runner.Run(args...)
+	args = append(args, "--kubeconfig", oc.Runner.GetKubeconfigPath(), "--context", oc.Context, "--cluster", oc.Cluster)
+	return oc.Runner.Run(args...)
 }
 
 func (oc OcConfig) RunOcCommandPrivate(args ...string) (string, string, error) {
-	args = append(args, "--kubeconfig", oc.runner.GetKubeconfigPath(), "--context", oc.Context, "--cluster", oc.Cluster)
-	return oc.runner.RunPrivate(args...)
+	args = append(args, "--kubeconfig", oc.Runner.GetKubeconfigPath(), "--context", oc.Context, "--cluster", oc.Cluster)
+	return oc.Runner.RunPrivate(args...)
 }
 
 func NewOcConfig(runner OcRunner, context string, clusterName string) OcConfig {
 	return OcConfig{
-		runner:  runner,
+		Runner:  runner,
 		Context: context,
 		Cluster: clusterName,
 	}
