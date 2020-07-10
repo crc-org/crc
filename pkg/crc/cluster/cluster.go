@@ -204,13 +204,13 @@ func DeleteOpenshiftApiServerPods(ocConfig oc.OcConfig) error {
 	return errors.RetryAfter(60, deleteOpenshiftApiserverPods, time.Second)
 }
 
-func CheckProxySettingsForOperator(oc oc.OcConfig, proxy *network.ProxyConfig, deployment, namespace string) (bool, error) {
+func CheckProxySettingsForOperator(ocConfig oc.OcConfig, proxy *network.ProxyConfig, deployment, namespace string) (bool, error) {
 	if !proxy.IsEnabled() {
 		logging.Debugf("No proxy in use")
 		return true, nil
 	}
 	cmdArgs := []string{"set", "env", "deployment", deployment, "--list", "-n", namespace}
-	out, _, err := oc.RunOcCommand(cmdArgs...)
+	out, _, err := ocConfig.RunOcCommand(cmdArgs...)
 	if err != nil {
 		return false, err
 	}

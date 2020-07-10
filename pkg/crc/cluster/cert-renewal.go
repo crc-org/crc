@@ -12,9 +12,9 @@ import (
 	"github.com/code-ready/crc/pkg/crc/systemd"
 )
 
-func waitForPendingCsrs(oc oc.OcConfig) error {
+func waitForPendingCsrs(ocConfig oc.OcConfig) error {
 	waitForPendingCsr := func() error {
-		output, _, err := oc.RunOcCommand("get", "csr")
+		output, _, err := ocConfig.RunOcCommand("get", "csr")
 		if err != nil {
 			return &errors.RetriableError{Err: err}
 		}

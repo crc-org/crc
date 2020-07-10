@@ -35,9 +35,9 @@ type ClusterStatus struct {
 	Disabled    bool
 }
 
-func GetClusterOperatorStatus(oc oc.OcConfig) (*ClusterStatus, error) {
+func GetClusterOperatorStatus(ocConfig oc.OcConfig) (*ClusterStatus, error) {
 	cs := &ClusterStatus{}
-	data, stderr, err := oc.RunOcCommand("get", "co", "-ojson")
+	data, stderr, err := ocConfig.RunOcCommand("get", "co", "-ojson")
 	if err != nil {
 		return cs, fmt.Errorf("%s", stderr)
 	}
