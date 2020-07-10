@@ -1,4 +1,4 @@
-package oc
+package cluster
 
 import (
 	"encoding/json"
@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/oc"
 )
 
 var ignoreClusterOperators = []string{"monitoring", "machine-config", "marketplace", "insights"}
@@ -34,7 +35,7 @@ type ClusterStatus struct {
 	Disabled    bool
 }
 
-func GetClusterOperatorStatus(oc OcConfig) (*ClusterStatus, error) {
+func GetClusterOperatorStatus(oc oc.OcConfig) (*ClusterStatus, error) {
 	cs := &ClusterStatus{}
 	data, stderr, err := oc.RunOcCommand("get", "co", "-ojson")
 	if err != nil {

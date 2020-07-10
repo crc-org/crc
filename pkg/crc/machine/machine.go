@@ -360,7 +360,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	ocConfig := oc.UseOCWithConfig(startConfig.Name)
 	if needsCertsRenewal {
 		logging.Info("Cluster TLS certificates have expired, renewing them... [will take up to 5 minutes]")
-		err = RegenerateCertificates(sshRunner, ocConfig)
+		err = cluster.RegenerateCertificates(sshRunner, ocConfig)
 		if err != nil {
 			logging.Debugf("Failed to renew TLS certificates: %v", err)
 			buildTime, getBuildTimeErr := crcBundleMetadata.GetBundleBuildTime()
@@ -427,7 +427,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	time.Sleep(time.Minute * 3)
 
 	// Approve the node certificate.
-	if err := oc.ApproveNodeCSR(ocConfig); err != nil {
+	if err := cluster.ApproveNodeCSR(ocConfig); err != nil {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error approving the node csr %v", err)
 	}
@@ -602,7 +602,7 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 
 		// check if all the clusteroperators are running
 		ocConfig := oc.UseOCWithConfig(statusConfig.Name)
-		operatorsStatus, err := oc.GetClusterOperatorStatus(ocConfig)
+		operatorsStatus, err := cluster.GetClusterOperatorStatus(ocConfig)
 		if err != nil {
 			openshiftStatus = "Not Reachable"
 			logging.Debug(err.Error())
