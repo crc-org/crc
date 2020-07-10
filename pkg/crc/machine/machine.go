@@ -427,7 +427,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	time.Sleep(time.Minute * 3)
 
 	// Approve the node certificate.
-	if err := ocConfig.ApproveNodeCSR(); err != nil {
+	if err := oc.ApproveNodeCSR(ocConfig); err != nil {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error approving the node csr %v", err)
 	}
