@@ -20,8 +20,6 @@ package crcsuite
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/DATA-DOG/godog"
-	"github.com/DATA-DOG/godog/gherkin"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -30,6 +28,10 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/DATA-DOG/godog"
+	"github.com/DATA-DOG/godog/gherkin"
+	"github.com/code-ready/crc/pkg/crc/cluster"
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
 	"github.com/code-ready/crc/pkg/crc/oc"
@@ -182,7 +184,7 @@ func CheckClusterOperatorsWithRetry(retryCount int, retryWait string) error {
 
 	ocConfig := oc.UseOCWithConfig("crc")
 	for i := 0; i < retryCount; i++ {
-		s, err := oc.GetClusterOperatorStatus(ocConfig)
+		s, err := cluster.GetClusterOperatorStatus(ocConfig)
 		if err != nil {
 			return err
 		}

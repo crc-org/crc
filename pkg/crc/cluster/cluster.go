@@ -93,7 +93,7 @@ func AddPullSecret(sshRunner *ssh.SSHRunner, ocConfig oc.OcConfig, pullSec strin
 		fmt.Sprintf(`{"data":{".dockerconfigjson":"%s"}}`, base64OfPullSec),
 		"-n", "openshift-config", "--type", "merge"}
 
-	if err := oc.WaitForOpenshiftResource(ocConfig, "secret"); err != nil {
+	if err := WaitForOpenshiftResource(ocConfig, "secret"); err != nil {
 		return err
 	}
 	_, stderr, err := ocConfig.RunOcCommandPrivate(cmdArgs...)
@@ -108,7 +108,7 @@ func UpdateClusterID(ocConfig oc.OcConfig) error {
 	cmdArgs := []string{"patch", "clusterversion", "version", "-p",
 		fmt.Sprintf(`{"spec":{"clusterID":"%s"}}`, clusterID), "--type", "merge"}
 
-	if err := oc.WaitForOpenshiftResource(ocConfig, "clusterversion"); err != nil {
+	if err := WaitForOpenshiftResource(ocConfig, "clusterversion"); err != nil {
 		return err
 	}
 	_, stderr, err := ocConfig.RunOcCommand(cmdArgs...)
@@ -124,7 +124,7 @@ func AddProxyConfigToCluster(ocConfig oc.OcConfig, proxy *network.ProxyConfig) e
 		fmt.Sprintf(`{"spec":{"httpProxy":"%s", "httpsProxy":"%s", "noProxy":"%s"}}`, proxy.HttpProxy, proxy.HttpsProxy, proxy.GetNoProxyString()),
 		"-n", "openshift-config", "--type", "merge"}
 
-	if err := oc.WaitForOpenshiftResource(ocConfig, "proxy"); err != nil {
+	if err := WaitForOpenshiftResource(ocConfig, "proxy"); err != nil {
 		return err
 	}
 	if _, stderr, err := ocConfig.RunOcCommand(cmdArgs...); err != nil {
@@ -166,7 +166,7 @@ func addPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error
 }
 
 func WaitforRequestHeaderClientCaFile(ocConfig oc.OcConfig) error {
-	if err := oc.WaitForOpenshiftResource(ocConfig, "configmaps"); err != nil {
+	if err := WaitForOpenshiftResource(ocConfig, "configmaps"); err != nil {
 		return err
 	}
 
@@ -188,7 +188,7 @@ func WaitforRequestHeaderClientCaFile(ocConfig oc.OcConfig) error {
 }
 
 func DeleteOpenshiftApiServerPods(ocConfig oc.OcConfig) error {
-	if err := oc.WaitForOpenshiftResource(ocConfig, "pod"); err != nil {
+	if err := WaitForOpenshiftResource(ocConfig, "pod"); err != nil {
 		return err
 	}
 

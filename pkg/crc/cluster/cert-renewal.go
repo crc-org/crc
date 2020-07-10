@@ -1,4 +1,4 @@
-package machine
+package cluster
 
 import (
 	"fmt"
@@ -50,7 +50,7 @@ func RegenerateCertificates(sshRunner *ssh.SSHRunner, ocConfig oc.OcConfig) erro
 		logging.Debugf("Error waiting for first pending (node-bootstrapper) CSR: %v", err)
 		return err
 	}
-	err = oc.ApproveNodeCSR(ocConfig)
+	err = ApproveNodeCSR(ocConfig)
 	if err != nil {
 		logging.Debugf("Error approving first pending (node-bootstrapper) CSR: %v", err)
 		return err
@@ -61,7 +61,7 @@ func RegenerateCertificates(sshRunner *ssh.SSHRunner, ocConfig oc.OcConfig) erro
 		logging.Debugf("Error waiting for second pending (system:node) CSR: %v", err)
 		return err
 	}
-	err = oc.ApproveNodeCSR(ocConfig)
+	err = ApproveNodeCSR(ocConfig)
 	if err != nil {
 		logging.Debugf("Error approving second pending (system:node) CSR: %v", err)
 		return err
