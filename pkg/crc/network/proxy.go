@@ -133,6 +133,12 @@ func ValidateProxyURL(proxyUrl string) error {
 		return nil
 	}
 
+	if strings.HasPrefix(proxyUrl, "https://") {
+		return fmt.Errorf("Proxy URL '%s' is not valid: https is not supported", proxyUrl)
+	}
+	if !strings.HasPrefix(proxyUrl, "http://") {
+		return fmt.Errorf("Proxy URL '%s' is not valid: url should start with http://", proxyUrl)
+	}
 	if !govalidator.IsURL(proxyUrl) {
 		return fmt.Errorf("Proxy URL '%s' is not valid.", proxyUrl)
 	}
