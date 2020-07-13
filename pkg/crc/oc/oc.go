@@ -10,7 +10,6 @@ import (
 type OcRunner interface {
 	Run(args ...string) (string, string, error)
 	RunPrivate(args ...string) (string, string, error)
-	GetKubeconfigPath() string
 }
 
 type OcConfig struct {
@@ -25,15 +24,13 @@ type OcLocalRunner struct {
 }
 
 func (oc OcLocalRunner) Run(args ...string) (string, string, error) {
+	args = append(args, "--kubeconfig", oc.KubeconfigPath)
 	return crcos.RunWithDefaultLocale(oc.OcBinaryPath, args...)
 }
 
 func (oc OcLocalRunner) RunPrivate(args ...string) (string, string, error) {
+	args = append(args, "--kubeconfig", oc.KubeconfigPath)
 	return crcos.RunWithDefaultLocalePrivate(oc.OcBinaryPath, args...)
-}
-
-func (oc OcLocalRunner) GetKubeconfigPath() string {
-	return oc.KubeconfigPath
 }
 
 // UseOcWithConfig return the oc binary along with valid kubeconfig
@@ -46,12 +43,12 @@ func UseOCWithConfig(machineName string) OcConfig {
 }
 
 func (oc OcConfig) RunOcCommand(args ...string) (string, string, error) {
-	args = append(args, "--kubeconfig", oc.Runner.GetKubeconfigPath(), "--context", oc.Context, "--cluster", oc.Cluster)
+	args = append(args, "--context", oc.Context, "--cluster", oc.Cluster)
 	return oc.Runner.Run(args...)
 }
 
 func (oc OcConfig) RunOcCommandPrivate(args ...string) (string, string, error) {
-	args = append(args, "--kubeconfig", oc.Runner.GetKubeconfigPath(), "--context", oc.Context, "--cluster", oc.Cluster)
+	args = append(args, "--context", oc.Context, "--cluster", oc.Cluster)
 	return oc.Runner.RunPrivate(args...)
 }
 
