@@ -1,3 +1,5 @@
+dist: bionic
+
 language: go
 
 go:
@@ -10,4 +12,3 @@ script:
 - make cross
 - make test
 - alias podman=docker
-- make BUNDLE_DIR=/tmp MOCK_BUNDLE=true release
