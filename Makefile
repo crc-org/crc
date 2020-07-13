@@ -45,6 +45,8 @@ SOURCES := $(shell git ls-files  *.go ":^vendor")
 
 RELEASE_INFO := release-info.json
 
+MOCK_BUNDLE ?= false
+
 # Check that given variables are set and all have non-empty values,
 # die with an error otherwise.
 #
@@ -195,6 +197,9 @@ LIBVIRT_BUNDLENAME = $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENS
 
 .PHONY: embed_bundle check_bundledir
 check_bundledir:
+ifeq ($(MOCK_BUNDLE),true)
+	touch $(HYPERKIT_BUNDLENAME) $(HYPERV_BUNDLENAME) $(LIBVIRT_BUNDLENAME)
+endif
 	@$(call check_defined, BUNDLE_DIR, "Embedding bundle requires BUNDLE_DIR set to a directory containing CRC bundles for all hypervisors")
 
 embed_bundle: LDFLAGS += $(BUNDLE_EMBEDDED)
