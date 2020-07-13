@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-BUNDLE_VERSION = 4.5.0-rc.7
+BUNDLE_VERSION = 4.5.1
 # OC_VERSION and BUNDLE_VERSION are going to same for release artifacts but
 # different for nightly and CI bits where bundle version would be any random
 # string or dd-mm-yyyy format.
