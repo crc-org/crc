@@ -17,4 +17,4 @@ script:
 - make cross-lint
 - make cross
 - make test
-- alias podman=docker
+- make BUNDLE_DIR=/tmp MOCK_BUNDLE=true release
