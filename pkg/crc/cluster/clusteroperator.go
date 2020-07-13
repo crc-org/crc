@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -35,24 +36,38 @@ type ClusterStatus struct {
 	Disabled    bool
 }
 
-func GetClusterOperatorStatus(ocConfig oc.OcConfig) (*ClusterStatus, error) {
-	cs := &ClusterStatus{}
+func GetClusterOperatorStatus(ocConfig oc.OcConfig, operator string) (*ClusterStatus, error) {
+	return getStatus(ocConfig, []string{operator})
+}
+
+func GetClusterOperatorsStatus(ocConfig oc.OcConfig) (*ClusterStatus, error) {
+	return getStatus(ocConfig, []string{})
+}
+
+func getStatus(ocConfig oc.OcConfig, selector []string) (*ClusterStatus, error) {
+	cs := &ClusterStatus{
+		Available: true,
+	}
+
 	data, stderr, err := ocConfig.RunOcCommand("get", "co", "-ojson")
 	if err != nil {
 		return cs, fmt.Errorf("%s", stderr)
 	}
 
 	var co K8sResource
-
-	err = json.Unmarshal([]byte(data), &co)
-	if err != nil {
+	if err := json.Unmarshal([]byte(data), &co); err != nil {
 		return cs, err
 	}
-	cs.Available = true
+
+	found := false
 	for _, c := range co.Items {
 		if contains(c.Metadata.Name, ignoreClusterOperators) {
 			continue
 		}
+		if len(selector) > 0 && !contains(c.Metadata.Name, selector) {
+			continue
+		}
+		found = true
 		for _, con := range c.Status.Conditions {
 			switch con.Type {
 			case "Available":
@@ -81,6 +96,9 @@ func GetClusterOperatorStatus(ocConfig oc.OcConfig) (*ClusterStatus, error) {
 				logging.Debugf("Unexpected operator status for %s: %s", c.Metadata.Name, con.Type)
 			}
 		}
+	}
+	if !found {
+		return nil, errors.New("no cluster operator found")
 	}
 	return cs, nil
 }

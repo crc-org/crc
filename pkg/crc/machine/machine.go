@@ -602,7 +602,7 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 
 		// check if all the clusteroperators are running
 		ocConfig := oc.UseOCWithConfig(statusConfig.Name)
-		operatorsStatus, err := cluster.GetClusterOperatorStatus(ocConfig)
+		operatorsStatus, err := cluster.GetClusterOperatorsStatus(ocConfig)
 		if err != nil {
 			openshiftStatus = "Not Reachable"
 			logging.Debug(err.Error())
