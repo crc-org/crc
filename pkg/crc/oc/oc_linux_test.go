@@ -29,3 +29,15 @@ func TestEnvRunner(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, stdout, "KUBECONFIG=some-env\n")
 }
+
+func TestRunCommandWithoutContextAndCluster(t *testing.T) {
+	ocConfig := OcConfig{
+		Runner: OcLocalRunner{
+			OcBinaryPath:   "/bin/echo",
+			KubeconfigPath: "kubeconfig-file",
+		},
+	}
+	stdout, _, err := ocConfig.RunOcCommand("a-command")
+	assert.NoError(t, err)
+	assert.Equal(t, "a-command --kubeconfig kubeconfig-file\n", stdout)
+}
