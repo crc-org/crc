@@ -64,11 +64,21 @@ func UseOCWithConfig(machineName string) OcConfig {
 }
 
 func (oc OcConfig) RunOcCommand(args ...string) (string, string, error) {
-	args = append(args, "--context", oc.Context, "--cluster", oc.Cluster)
+	if oc.Context != "" {
+		args = append(args, "--context", oc.Context)
+	}
+	if oc.Cluster != "" {
+		args = append(args, "--cluster", oc.Cluster)
+	}
 	return oc.Runner.Run(args...)
 }
 
 func (oc OcConfig) RunOcCommandPrivate(args ...string) (string, string, error) {
-	args = append(args, "--context", oc.Context, "--cluster", oc.Cluster)
+	if oc.Context != "" {
+		args = append(args, "--context", oc.Context)
+	}
+	if oc.Cluster != "" {
+		args = append(args, "--cluster", oc.Cluster)
+	}
 	return oc.Runner.RunPrivate(args...)
 }
