@@ -45,19 +45,19 @@ func runEmbed(args []string) {
 	binaryPath := args[0]
 	destDir, err := ioutil.TempDir("", "crc-embedder")
 	if err != nil {
-		logging.Errorf(fmt.Sprintf("Failed to create temporary directory: %v", err))
+		logging.Fatalf("Failed to create temporary directory: %v", err)
 	}
 	defer os.RemoveAll(destDir)
 	downloadedFiles, err := downloadDataFiles(goos, destDir)
 	if err != nil {
-		logging.Errorf(fmt.Sprintf("Failed to download data files: %v", err))
+		logging.Fatalf("Failed to download data files: %v", err)
 	}
 
 	bundlePath := path.Join(bundleDir, constants.GetDefaultBundleForOs(goos))
 	downloadedFiles = append(downloadedFiles, bundlePath)
 	err = embedFiles(binaryPath, downloadedFiles)
 	if err != nil {
-		logging.Errorf(fmt.Sprintf("Failed to embed data files: %v", err))
+		logging.Fatalf("Failed to embed data files: %v", err)
 	}
 }
 
