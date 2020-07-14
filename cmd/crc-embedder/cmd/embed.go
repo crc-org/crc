@@ -40,7 +40,7 @@ var embedCmd = &cobra.Command{
 
 func runEmbed(args []string) {
 	if len(args) != 1 {
-		logging.Fatalf("embed takes exactly one argument")
+		logging.Fatal("embed takes exactly one argument")
 	}
 	binaryPath := args[0]
 	destDir, err := ioutil.TempDir("", "crc-embedder")
