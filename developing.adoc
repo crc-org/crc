@@ -81,6 +81,24 @@ make integration GODOG_OPTS="--godog.tags='@basic && @windows'" BUNDLE_LOCATION=
 
 Please notice `@basic && @windows`, where `@basic` tag stands for `basic.feature` file and `@windows` tag for integration tests designed for Windows.
 
+[[how-to-test-cert-rotation]]
+=== How to test cert rotation
+
+On linux platform first stop the network time sync using:
+```
+$ sudo timedatectl set-ntp off
+```
+
+Set the time 2 month ahead:
+```
+$ sudo date -s '2 month'
+```
+
+Start the crc with `CRC_DEBUG_ENABLE_STOP_NTP=true` set:
+```
+$ CRC_DEBUG_ENABLE_STOP_NTP=true crc start
+```
+
 
 [[integration-test-logs]]
 === Logs
