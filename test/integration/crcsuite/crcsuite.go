@@ -41,6 +41,8 @@ func FeatureContext(s *godog.Suite) {
 		RemoveCRCHome)
 	s.Step(`^starting CRC with default bundle (succeeds|fails)$`,
 		StartCRCWithDefaultBundleSucceedsOrFails)
+	s.Step(`^starting CRC with default bundle along with stopped network time synchronization (succeeds|fails)$`,
+		StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails)
 	s.Step(`^starting CRC with default bundle and nameserver "(.*)" (succeeds|fails)$`,
 		StartCRCWithDefaultBundleAndNameServerSucceedsOrFails)
 	s.Step(`^setting config property "(.*)" to value "(.*)" (succeeds|fails)$`,
@@ -341,6 +343,20 @@ func StartCRCWithDefaultBundleSucceedsOrFails(expected string) error {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
 	}
 	cmd = fmt.Sprintf("crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
+	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
+
+	return err
+}
+
+func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(expected string) error {
+
+	var cmd string
+	var extraBundleArgs string
+
+	if bundleEmbedded == false {
+		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
+	}
+	cmd = fmt.Sprintf("CRC_DEBUG_ENABLE_STOP_NTP=true crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
