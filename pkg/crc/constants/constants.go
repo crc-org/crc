@@ -21,8 +21,6 @@ const (
 
 	CrcEnvPrefix = "CRC"
 
-	DefaultWebConsoleURL      = "https://console-openshift-console.apps-crc.testing"
-	DefaultAPIURL             = "https://api.crc.testing:6443"
 	DefaultLogLevel           = "info"
 	ConfigFile                = "crc.json"
 	LogFile                   = "crc.log"

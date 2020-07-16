@@ -29,8 +29,8 @@ func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*ClusterConfig, error) 
 		ClusterCACert: base64.StdEncoding.EncodeToString(clusterCACert),
 		KubeConfig:    bundleInfo.GetKubeConfigPath(),
 		KubeAdminPass: kubeadminPassword,
-		WebConsoleURL: constants.DefaultWebConsoleURL,
-		ClusterAPI:    constants.DefaultAPIURL,
+		WebConsoleURL: fmt.Sprintf("https://%s", bundleInfo.GetAppHostname("console-openshift-console")),
+		ClusterAPI:    fmt.Sprintf("https://%s:6443", bundleInfo.GetAPIHostname()),
 		ProxyConfig:   proxyConfig,
 	}, nil
 }
