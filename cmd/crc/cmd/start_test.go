@@ -6,10 +6,14 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/os/shell"
 	"github.com/stretchr/testify/assert"
+)
+
+const (
+	defaultWebConsoleURL = "https://console-openshift-console.apps-crc.testing"
+	defaultAPIURL        = "https://api.crc.testing:6443"
 )
 
 func TestRenderActionPlainSuccess(t *testing.T) {
@@ -17,8 +21,8 @@ func TestRenderActionPlainSuccess(t *testing.T) {
 	assert.NoError(t, render(&startResult{
 		Success: true,
 		ClusterConfig: &clusterConfig{
-			URL:           constants.DefaultAPIURL,
-			WebConsoleURL: constants.DefaultWebConsoleURL,
+			WebConsoleURL: defaultWebConsoleURL,
+			URL:           defaultAPIURL,
 			AdminCredentials: credentials{
 				Username: "kubeadmin",
 				Password: "secret",
@@ -50,8 +54,8 @@ func TestRenderActionJSONSuccess(t *testing.T) {
 	assert.NoError(t, render(&startResult{
 		Success: true,
 		ClusterConfig: &clusterConfig{
-			WebConsoleURL: constants.DefaultWebConsoleURL,
-			URL:           constants.DefaultAPIURL,
+			WebConsoleURL: defaultWebConsoleURL,
+			URL:           defaultAPIURL,
 			AdminCredentials: credentials{
 				Username: "kubeadmin",
 				Password: "secret",
