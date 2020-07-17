@@ -7,6 +7,6 @@ import (
 )
 
 func execute(args ...string) error {
-	_, _, err := crcos.RunWithDefaultLocale(goodhostPath, args...)
+	_, _, err := crcos.RunWithDefaultLocale(adminHelperPath, args...)
 	return err
 }

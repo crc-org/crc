@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	goodhostPath = filepath.Join(constants.CrcBinDir, constants.AdminHelperExecutableName)
+	adminHelperPath = filepath.Join(constants.CrcBinDir, constants.AdminHelperExecutableName)
 )
 
 // UpdateHostsFile updates the host's /etc/hosts file with Instance IP.

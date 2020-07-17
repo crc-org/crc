@@ -7,6 +7,6 @@ import (
 )
 
 func execute(args ...string) error {
-	_, _, err := powershell.ExecuteAsAdmin("modifying hosts file", strings.Join(append([]string{goodhostPath}, args...), " "))
+	_, _, err := powershell.ExecuteAsAdmin("modifying hosts file", strings.Join(append([]string{adminHelperPath}, args...), " "))
 	return err
 }

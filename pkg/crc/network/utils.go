@@ -50,8 +50,8 @@ func CheckCRCLocalDNSReachableFromHost(bundle *bundle.CrcBundleInfo, expectedIP 
 		appsHostname := bundle.GetAppHostname("foo")
 		ip, err = net.LookupIP(appsHostname)
 		if err != nil {
-			// Right now goodhosts fallback is not implemented in windows so
-			// this checks should still return the error.
+			// Right now admin helper fallback is not implemented on windows so
+			// this check should still return an error.
 			if runtime.GOOS == "windows" {
 				return err
 			}
