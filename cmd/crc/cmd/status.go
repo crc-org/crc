@@ -22,7 +22,9 @@ var statusCmd = &cobra.Command{
 	Short: "Display status of the OpenShift cluster",
 	Long:  "Show details about the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		runStatus()
+		if err := runStatus(args); err != nil {
+			exit.WithMessage(1, err.Error())
+		}
 	},
 }
 
@@ -41,14 +43,16 @@ type Status struct {
 	CacheDir        string
 }
 
-func runStatus() {
+func runStatus(args []string) error {
 	statusConfig := machine.ClusterStatusConfig{Name: constants.DefaultName}
 
-	exitIfMachineMissing(statusConfig.Name)
+	if err := checkIfMachineMissing(statusConfig.Name); err != nil {
+		return err
+	}
 
 	clusterStatus, err := machine.Status(statusConfig)
 	if err != nil {
-		exit.WithoutMessage(1)
+		return err
 	}
 	cacheDir := constants.MachineCacheDir
 	var size int64
@@ -59,23 +63,24 @@ func runStatus() {
 		return err
 	})
 	if err != nil {
-		exit.WithMessage(1, "Error finding size of cache: %s", err.Error())
+		return fmt.Errorf("Error finding size of cache: %s", err.Error())
 	}
 	cacheUsage := units.HumanSize(float64(size))
 	diskUse := units.HumanSize(float64(clusterStatus.DiskUse))
 	diskSize := units.HumanSize(float64(clusterStatus.DiskSize))
 	diskUsage := fmt.Sprintf("%s of %s (Inside the CRC VM)", diskUse, diskSize)
 	status := Status{clusterStatus.CrcStatus, clusterStatus.OpenshiftStatus, diskUsage, cacheUsage, cacheDir}
-	printStatus(status, statusFormat)
+	return printStatus(status, statusFormat)
 }
 
-func printStatus(status interface{}, statusFormat string) {
+func printStatus(status interface{}, statusFormat string) error {
 	tmpl, err := template.New("status").Parse(statusFormat)
 	if err != nil {
-		exit.WithMessage(1, "Error creating status template: %s", err.Error())
+		return fmt.Errorf("Error creating status template: %s", err.Error())
 	}
 	err = tmpl.Execute(os.Stdout, status)
 	if err != nil {
-		exit.WithMessage(1, "Error executing status template: %s", err.Error())
+		return fmt.Errorf("Error executing status template: %s", err.Error())
 	}
+	return nil
 }

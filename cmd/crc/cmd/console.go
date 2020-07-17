@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -27,20 +30,24 @@ var consoleCmd = &cobra.Command{
 	Short:   "Open the OpenShift Web Console in the default browser",
 	Long:    `Open the OpenShift Web Console in the default browser or print its URL or credentials`,
 	Run: func(cmd *cobra.Command, args []string) {
-		runConsole(args)
+		if err := runConsole(args); err != nil {
+			exit.WithMessage(1, err.Error())
+		}
 	},
 }
 
-func runConsole(arguments []string) {
+func runConsole(arguments []string) error {
 	consoleConfig := machine.ConsoleConfig{
 		Name: constants.DefaultName,
 	}
 
-	exitIfMachineMissing(consoleConfig.Name)
+	if err := checkIfMachineMissing(consoleConfig.Name); err != nil {
+		return err
+	}
 
 	result, err := machine.GetConsoleURL(consoleConfig)
 	if err != nil {
-		exit.WithoutMessage(1)
+		return err
 	}
 
 	if consolePrintURL {
@@ -51,15 +58,16 @@ func runConsole(arguments []string) {
 		output.Outf("To login as an admin, run 'oc login -u kubeadmin -p %s %s'\n", result.ClusterConfig.KubeAdminPass, result.ClusterConfig.ClusterAPI)
 	}
 	if consolePrintURL || consolePrintCredentials {
-		return
+		return nil
 	}
 
 	if !machine.IsRunning(result.State) {
-		exit.WithMessage(1, "The OpenShift cluster is not running, cannot open the OpenShift Web Console.")
+		return errors.New("The OpenShift cluster is not running, cannot open the OpenShift Web Console")
 	}
 	output.Outln("Opening the OpenShift Web Console in the default browser...")
 	err = browser.OpenURL(result.ClusterConfig.WebConsoleURL)
 	if err != nil {
-		exit.WithMessage(1, "Failed to open the OpenShift Web Console, you can access it by opening %s in your web browser.", result.ClusterConfig.WebConsoleURL)
+		return fmt.Errorf("Failed to open the OpenShift Web Console, you can access it by opening %s in your web browser", result.ClusterConfig.WebConsoleURL)
 	}
+	return nil
 }

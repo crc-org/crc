@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/docker/go-units"
@@ -19,7 +18,7 @@ import (
 // ValidateCPUs checks if provided cpus count is valid
 func ValidateCPUs(value int) error {
 	if value < constants.DefaultCPUs {
-		return errors.Newf("requires CPUs >= %d", constants.DefaultCPUs)
+		return fmt.Errorf("requires CPUs >= %d", constants.DefaultCPUs)
 	}
 	return nil
 }
@@ -27,7 +26,7 @@ func ValidateCPUs(value int) error {
 // ValidateMemory checks if provided Memory count is valid
 func ValidateMemory(value int) error {
 	if value < constants.DefaultMemory {
-		return errors.Newf("requires memory in MiB >= %d", constants.DefaultMemory)
+		return fmt.Errorf("requires memory in MiB >= %d", constants.DefaultMemory)
 	}
 	return ValidateEnoughMemory(value)
 }
@@ -49,15 +48,15 @@ func ValidateEnoughMemory(value int) error {
 func ValidateBundle(bundle string) error {
 	if err := ValidatePath(bundle); err != nil {
 		if constants.BundleEmbedded() {
-			return errors.Newf("Run 'crc setup' to unpack the bundle to disk")
+			return fmt.Errorf("Run 'crc setup' to unpack the bundle to disk")
 		}
-		return errors.Newf("Please provide the path to a valid bundle using the -b option")
+		return fmt.Errorf("Please provide the path to a valid bundle using the -b option")
 	}
 	// Check if the version of the bundle provided by user is same as what is released with crc.
 	releaseBundleVersion := version.GetBundleVersion()
 	userProvidedBundleVersion := filepath.Base(bundle)
 	if !strings.Contains(userProvidedBundleVersion, fmt.Sprintf("%s.crcbundle", releaseBundleVersion)) {
-		return errors.Newf("%s bundle is not supported by this binary, please use %s", userProvidedBundleVersion, constants.GetDefaultBundle())
+		return fmt.Errorf("%s bundle is not supported by this binary, please use %s", userProvidedBundleVersion, constants.GetDefaultBundle())
 	}
 	return nil
 }
@@ -66,7 +65,7 @@ func ValidateBundle(bundle string) error {
 func ValidateIPAddress(ipAddress string) error {
 	ip := net.ParseIP(ipAddress).To4()
 	if ip == nil {
-		return errors.Newf("'%s' is not a valid IPv4 address", ipAddress)
+		return fmt.Errorf("'%s' is not a valid IPv4 address", ipAddress)
 	}
 	return nil
 }
@@ -74,7 +73,7 @@ func ValidateIPAddress(ipAddress string) error {
 // ValidatePath check if provide path is exist
 func ValidatePath(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return errors.Newf("file '%s' does not exist", path)
+		return fmt.Errorf("file '%s' does not exist", path)
 	}
 	return nil
 }

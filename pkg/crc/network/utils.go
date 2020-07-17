@@ -1,27 +1,16 @@
 package network
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/url"
 	"runtime"
 
-	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
-	"github.com/code-ready/crc/pkg/crc/ssh"
 	crcos "github.com/code-ready/crc/pkg/os"
 )
-
-func executeCommandOrExit(sshRunner *ssh.Runner, command string, errorMessage string) string {
-	result, err := sshRunner.Run(command)
-
-	if err != nil {
-		exit.WithMessage(1, "%s: %s", errorMessage, err.Error())
-	}
-	return result
-}
 
 // Contains returns true if the IP address belongs to the network given
 func Contains(network string, ip string) bool {

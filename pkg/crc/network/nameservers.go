@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/ssh"
 )
 
@@ -32,28 +31,34 @@ func GetResolvValuesFromInstance(sshRunner *ssh.Runner) (*ResolvFileValues, erro
 	return parseResolveConfFile(out)
 }
 
-func CreateResolvFileOnInstance(sshRunner *ssh.Runner, resolvFileValues ResolvFileValues) {
+func CreateResolvFileOnInstance(sshRunner *ssh.Runner, resolvFileValues ResolvFileValues) error {
 	resolvFile, _ := CreateResolvFile(resolvFileValues)
 
 	err := sshRunner.CopyData([]byte(resolvFile), "/etc/resolv.conf")
 	if err != nil {
-		exit.WithMessage(1, "Error creating /etc/resolv on instance: %s", err.Error())
+		return fmt.Errorf("Error creating /etc/resolv on instance: %s", err.Error())
 	}
+	return nil
 }
 
 // AddNameserversToInstance will add additional nameservers to the end of the
 // /etc/resolv.conf file inside the instance.
-func AddNameserversToInstance(sshRunner *ssh.Runner, nameservers []NameServer) {
+func AddNameserversToInstance(sshRunner *ssh.Runner, nameservers []NameServer) error {
 	for _, ns := range nameservers {
-		addNameserverToInstance(sshRunner, ns)
+		if err := addNameserverToInstance(sshRunner, ns); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // writes nameserver to the /etc/resolv.conf inside the instance
-func addNameserverToInstance(sshRunner *ssh.Runner, nameserver NameServer) {
-	executeCommandOrExit(sshRunner,
-		fmt.Sprintf("NS=%s; cat /etc/resolv.conf |grep -i \"^nameserver $NS\" || echo \"nameserver $NS\" | sudo tee -a /etc/resolv.conf", nameserver.IPAddress),
-		"Error adding nameserver")
+func addNameserverToInstance(sshRunner *ssh.Runner, nameserver NameServer) error {
+	_, err := sshRunner.Run(fmt.Sprintf("NS=%s; cat /etc/resolv.conf |grep -i \"^nameserver $NS\" || echo \"nameserver $NS\" | sudo tee -a /etc/resolv.conf", nameserver.IPAddress))
+	if err != nil {
+		return fmt.Errorf("%s: %s", "Error adding nameserver", err.Error())
+	}
+	return nil
 }
 
 func GetResolvValuesFromHost() (*ResolvFileValues, error) {

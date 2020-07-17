@@ -1,8 +1,6 @@
 package config
 
 import (
-	"os"
-
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/output"
@@ -19,8 +17,7 @@ var configGetCmd = &cobra.Command{
 	Long:  `Gets a crc configuration property.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
-			output.Outln("Please provide a configuration property to get")
-			os.Exit(1)
+			exit.WithMessage(1, "Please provide a configuration property to get")
 		}
 		runConfigGet(args[0])
 	},

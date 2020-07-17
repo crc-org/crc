@@ -1,13 +1,13 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -32,7 +32,9 @@ var startCmd = &cobra.Command{
 	Short: "Start the OpenShift cluster",
 	Long:  "Start the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		runStart(args)
+		if err := runStart(args); err != nil {
+			exit.WithMessage(1, err.Error())
+		}
 	},
 }
 
@@ -40,9 +42,9 @@ var (
 	startCmdFlagSet = initStartCmdFlagSet()
 )
 
-func runStart(arguments []string) {
+func runStart(arguments []string) error {
 	if err := validateStartFlags(); err != nil {
-		exit.WithoutMessage(1)
+		return err
 	}
 
 	checkIfNewVersionAvailable(crcConfig.GetBool(config.DisableUpdateCheck.Name))
@@ -61,15 +63,15 @@ func runStart(arguments []string) {
 
 	commandResult, err := machine.Start(startConfig)
 	if err != nil {
-		exit.WithoutMessage(1)
+		return err
 	}
 	if commandResult.Status == "Running" {
 		output.Outln("Started the OpenShift cluster")
-
 		logging.Warn("The cluster might report a degraded or error state. This is expected since several operators have been disabled to lower the resource usage. For more information, please consult the documentation")
 	} else {
 		logging.Warnf("Unexpected status of the OpenShift cluster: %s", commandResult.Status)
 	}
+	return nil
 }
 
 func initStartCmdFlagSet() *pflag.FlagSet {

@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/preflight"
+	"github.com/spf13/cobra"
 )
 
 func init() {
@@ -21,11 +21,13 @@ var setupCmd = &cobra.Command{
 	Short: "Set up prerequisites for the OpenShift cluster",
 	Long:  "Set up local virtualization and networking infrastructure for the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		runSetup(args)
+		if err := runSetup(args); err != nil {
+			exit.WithMessage(1, err.Error())
+		}
 	},
 }
 
-func runSetup(arguments []string) {
+func runSetup(arguments []string) error {
 	if crcConfig.GetBool(config.ExperimentalFeatures.Name) {
 		preflight.EnableExperimentalFeatures = true
 	}
@@ -35,4 +37,5 @@ func runSetup(arguments []string) {
 		bundle = " -b $bundlename"
 	}
 	output.Outf("Setup is complete, you can now run 'crc start%s' to start the OpenShift cluster\n", bundle)
+	return nil
 }
