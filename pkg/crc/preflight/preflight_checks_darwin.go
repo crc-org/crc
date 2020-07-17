@@ -27,7 +27,8 @@ func checkHyperKitInstalled() error {
 		return fmt.Errorf("%s binary is not cached", hyperkit.HyperkitCommand)
 	}
 	hyperkitPath := filepath.Join(constants.CrcBinDir, hyperkit.HyperkitCommand)
-	if !h.Executable() {
+	err := unix.Access(hyperkitPath, unix.X_OK)
+	if err != nil {
 		return fmt.Errorf("%s not executable", hyperkitPath)
 	}
 	return checkSuid(hyperkitPath)
@@ -48,9 +49,7 @@ func checkMachineDriverHyperKitInstalled() error {
 	if !hyperkitDriver.IsCached() {
 		return fmt.Errorf("%s binary is not cached", hyperkit.MachineDriverCommand)
 	}
-	if !hyperkitDriver.Executable() {
-		return fmt.Errorf("%s is not executable", filepath.Join(constants.CrcBinDir, hyperkit.MachineDriverCommand))
-	}
+
 	if err := hyperkitDriver.CheckVersion(); err != nil {
 		return err
 	}
