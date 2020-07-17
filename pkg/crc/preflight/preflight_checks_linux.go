@@ -224,9 +224,6 @@ func checkMachineDriverLibvirtInstalled() error {
 	if !machineDriverLibvirt.IsCached() {
 		return fmt.Errorf("%s binary is not cached", libvirt.MachineDriverCommand)
 	}
-	if !machineDriverLibvirt.Executable() {
-		return fmt.Errorf("%s is not executable", filepath.Join(constants.CrcBinDir, libvirt.MachineDriverCommand))
-	}
 	if err := machineDriverLibvirt.CheckVersion(); err != nil {
 		return err
 	}
