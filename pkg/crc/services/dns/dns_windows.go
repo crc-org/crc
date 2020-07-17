@@ -2,13 +2,12 @@ package dns
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/services"
-
 	winnet "github.com/code-ready/crc/pkg/os/windows/network"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 	"github.com/code-ready/crc/pkg/os/windows/win32"

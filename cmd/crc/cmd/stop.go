@@ -8,7 +8,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/machine/libmachine/state"
-
 	"github.com/spf13/cobra"
 )
 
@@ -21,11 +20,13 @@ var stopCmd = &cobra.Command{
 	Short: "Stop the OpenShift cluster",
 	Long:  "Stop the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		runStop(args)
+		if err := runStop(args); err != nil {
+			exit.WithMessage(1, err.Error())
+		}
 	},
 }
 
-func runStop(arguments []string) {
+func runStop(arguments []string) error {
 	stopConfig := machine.StopConfig{
 		Name:  constants.DefaultName,
 		Debug: isDebugLog(),
@@ -35,7 +36,9 @@ func runStop(arguments []string) {
 		Name: constants.DefaultName,
 	}
 
-	exitIfMachineMissing(stopConfig.Name)
+	if err := checkIfMachineMissing(stopConfig.Name); err != nil {
+		return err
+	}
 
 	output.Outln("Stopping the OpenShift cluster, this may take a few minutes...")
 	commandResult, err := machine.Stop(stopConfig)
@@ -48,11 +51,10 @@ func runStop(arguments []string) {
 			// graceful time to cluster before kill it.
 			yes := input.PromptUserForYesOrNo("Do you want to force power off", globalForce)
 			if yes {
-				killVM(killConfig)
-				exit.WithoutMessage(0)
+				return killVM(killConfig)
 			}
 		}
-		exit.WithoutMessage(1)
+		return err
 	}
 	if commandResult.Success {
 		output.Outln("Stopped the OpenShift cluster")
@@ -60,12 +62,14 @@ func runStop(arguments []string) {
 		/* If we did not get an error, the status should be true */
 		logging.Warnf("Unexpected status of the OpenShift cluster: %v", commandResult.Success)
 	}
+	return nil
 }
 
-func killVM(killConfig machine.PowerOffConfig) {
+func killVM(killConfig machine.PowerOffConfig) error {
 	_, err := machine.PowerOff(killConfig)
 	if err != nil {
-		exit.WithoutMessage(1)
+		return err
 	}
 	output.Outln("Forcibly stopped the OpenShift cluster")
+	return nil
 }

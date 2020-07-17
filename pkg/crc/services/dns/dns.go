@@ -80,7 +80,11 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.Servi
 		SearchDomains: []network.SearchDomain{searchdomain},
 		NameServers:   nameservers}
 
-	network.CreateResolvFileOnInstance(serviceConfig.SSHRunner, resolvFileValues)
+	if err := network.CreateResolvFileOnInstance(serviceConfig.SSHRunner, resolvFileValues); err != nil {
+		result.Success = false
+		result.Error = err.Error()
+		return *result, err
+	}
 
 	result.Success = true
 	return *result, nil

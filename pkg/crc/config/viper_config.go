@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -49,11 +48,11 @@ func set(key string, value interface{}) {
 func syncViperState(viper *viper.Viper) error {
 	encodedConfig, err := json.MarshalIndent(changedConfigs, "", " ")
 	if err != nil {
-		return errors.Newf("Error encoding configuration to JSON: %v", err)
+		return fmt.Errorf("Error encoding configuration to JSON: %v", err)
 	}
 	err = viper.ReadConfig(bytes.NewBuffer(encodedConfig))
 	if err != nil {
-		return errors.Newf("Error reading configuration file '%s': %v", constants.ConfigFile, err)
+		return fmt.Errorf("Error reading configuration file '%s': %v", constants.ConfigFile, err)
 	}
 	return nil
 }

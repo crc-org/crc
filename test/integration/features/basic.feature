@@ -31,7 +31,7 @@ Feature: Basic test
         When executing "crc status" fails
         Then stderr should contain 
         """
-        Machine 'crc' does not exist. Use 'crc start' to create it.
+        Machine 'crc' does not exist. Use 'crc start' to create it
         """
 
     @linux
@@ -131,7 +131,7 @@ Feature: Basic test
         Given executing "crc status" succeeds
         And stdout contains "Stopped"
         When executing "crc console"
-        Then stderr should contain "The OpenShift cluster is not running, cannot open the OpenShift Web Console."
+        Then stderr should contain "The OpenShift cluster is not running, cannot open the OpenShift Web Console"
 
     @darwin @linux @windows
     Scenario: CRC delete

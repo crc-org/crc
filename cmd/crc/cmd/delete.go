@@ -23,13 +23,15 @@ var deleteCmd = &cobra.Command{
 	Short: "Delete the OpenShift cluster",
 	Long:  "Delete the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		runDelete(args)
+		if err := runDelete(args); err != nil {
+			exit.WithMessage(1, err.Error())
+		}
 	},
 }
 
 var clearCache bool
 
-func runDelete(arguments []string) {
+func runDelete(arguments []string) error {
 	deleteConfig := machine.DeleteConfig{
 		Name: constants.DefaultName,
 	}
@@ -38,16 +40,19 @@ func runDelete(arguments []string) {
 		deleteCache()
 	}
 
-	exitIfMachineMissing(deleteConfig.Name)
+	if err := checkIfMachineMissing(deleteConfig.Name); err != nil {
+		return err
+	}
 
 	yes := input.PromptUserForYesOrNo("Do you want to delete the OpenShift cluster", globalForce)
 	if yes {
 		_, err := machine.Delete(deleteConfig)
 		if err != nil {
-			exit.WithoutMessage(1)
+			return err
 		}
 		output.Outln("Deleted the OpenShift cluster")
 	}
+	return nil
 }
 
 func deleteCache() {

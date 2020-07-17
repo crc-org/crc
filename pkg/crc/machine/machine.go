@@ -672,7 +672,7 @@ func addNameServerToInstance(sshRunner *crcssh.Runner, ns string) error {
 	}
 	if !exist {
 		logging.Infof("Adding %s as nameserver to the instance ...", nameserver.IPAddress)
-		network.AddNameserversToInstance(sshRunner, nameservers)
+		return network.AddNameserversToInstance(sshRunner, nameservers)
 	}
 	return nil
 }

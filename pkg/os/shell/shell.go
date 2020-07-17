@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/machine/libmachine/shell"
 )
 
@@ -18,7 +17,7 @@ type Config struct {
 func GetShell(userShell string) (string, error) {
 	if userShell != "" {
 		if !isSupportedShell(userShell) {
-			return "", errors.Newf("'%s' is not a supported shell.\nSupported shells are %s.", userShell, strings.Join(supportedShell, ", "))
+			return "", fmt.Errorf("'%s' is not a supported shell.\nSupported shells are %s", userShell, strings.Join(supportedShell, ", "))
 		}
 		return userShell, nil
 	}

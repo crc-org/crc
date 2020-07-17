@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	cfg "github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
@@ -88,7 +87,7 @@ func (check *Check) doFix() error {
 		panic(fmt.Sprintf("Should not happen, empty description for fix '%s'", check.configKeySuffix))
 	}
 	if check.flags&NoFix == NoFix {
-		return errors.Newf(check.fixDescription)
+		return fmt.Errorf(check.fixDescription)
 	}
 
 	logging.Infof("%s", check.fixDescription)

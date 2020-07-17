@@ -1,18 +1,18 @@
 package cmd
 
 import (
+	"fmt"
+
+	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
+	"github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/output"
-	"github.com/spf13/cobra"
-
-	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
-
-	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/preflight"
+	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
@@ -81,14 +81,15 @@ func setConfigDefaults() {
 	config.SetDefaults()
 }
 
-func exitIfMachineMissing(name string) {
+func checkIfMachineMissing(name string) error {
 	exists, err := machine.Exists(name)
 	if err != nil {
-		exit.WithMessage(1, err.Error())
+		return err
 	}
 	if !exists {
-		exit.WithMessage(1, "Machine '%s' does not exist. Use 'crc start' to create it.", name)
+		return fmt.Errorf("Machine '%s' does not exist. Use 'crc start' to create it", constants.DefaultName)
 	}
+	return nil
 }
 
 func setProxyDefaults() {

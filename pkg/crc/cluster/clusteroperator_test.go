@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/code-ready/crc/pkg/crc/oc"
-
 	"github.com/stretchr/testify/assert"
 )
 

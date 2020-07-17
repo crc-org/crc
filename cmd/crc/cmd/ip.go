@@ -17,21 +17,26 @@ var ipCmd = &cobra.Command{
 	Short: "Get IP address of the running OpenShift cluster",
 	Long:  "Get IP address of the running OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		runIP(args)
+		if err := runIP(args); err != nil {
+			exit.WithMessage(1, err.Error())
+		}
 	},
 }
 
-func runIP(arguments []string) {
+func runIP(arguments []string) error {
 	ipConfig := machine.IPConfig{
 		Name:  constants.DefaultName,
 		Debug: isDebugLog(),
 	}
 
-	exitIfMachineMissing(ipConfig.Name)
+	if err := checkIfMachineMissing(ipConfig.Name); err != nil {
+		return err
+	}
 
 	result, err := machine.IP(ipConfig)
 	if err != nil {
-		exit.WithoutMessage(1)
+		return err
 	}
 	output.Outln(result.IP)
+	return nil
 }
