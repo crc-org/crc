@@ -21,13 +21,34 @@ func TestPlainStatus(t *testing.T) {
 	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
 
 	out := new(bytes.Buffer)
-	assert.NoError(t, runStatus(out, &mockClient{}, cacheDir))
+	assert.NoError(t, runStatus(out, &mockClient{}, cacheDir, ""))
 
 	expected := `CRC VM:          Running
 OpenShift:       Stopped
 Disk Usage:      10GB of 20GB (Inside the CRC VM)
 Cache Usage:     10kB
 Cache Directory: %s
+`
+	assert.Equal(t, fmt.Sprintf(expected, cacheDir), out.String())
+}
+
+func TestJsonStatus(t *testing.T) {
+	cacheDir, err := ioutil.TempDir("", "cache")
+	require.NoError(t, err)
+	defer os.RemoveAll(cacheDir)
+
+	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
+
+	out := new(bytes.Buffer)
+	assert.NoError(t, runStatus(out, &mockClient{}, cacheDir, jsonFormat))
+
+	expected := `{
+  "crcStatus": "Running",
+  "openshiftStatus": "Stopped",
+  "diskUsage": "10GB of 20GB (Inside the CRC VM)",
+  "cacheUsage": "10kB",
+  "cacheDir": "%s"
+}
 `
 	assert.Equal(t, fmt.Sprintf(expected, cacheDir), out.String())
 }
