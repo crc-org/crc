@@ -40,8 +40,9 @@ var statusCmd = &cobra.Command{
 type Status struct {
 	CrcStatus       string `json:"crcStatus"`
 	OpenShiftStatus string `json:"openshiftStatus"`
-	DiskUsage       string `json:"diskUsage"`
-	CacheUsage      string `json:"cacheUsage"`
+	DiskUsage       int64  `json:"diskUsage"`
+	DiskSize        int64  `json:"diskSize"`
+	CacheUsage      int64  `json:"cacheUsage"`
 	CacheDir        string `json:"cacheDir"`
 }
 
@@ -66,15 +67,12 @@ func runStatus(writer io.Writer, client client, cacheDir, outputFormat string) e
 	if err != nil {
 		return fmt.Errorf("Error finding size of cache: %s", err.Error())
 	}
-	cacheUsage := units.HumanSize(float64(size))
-	diskUse := units.HumanSize(float64(clusterStatus.DiskUse))
-	diskSize := units.HumanSize(float64(clusterStatus.DiskSize))
-	diskUsage := fmt.Sprintf("%s of %s (Inside the CRC VM)", diskUse, diskSize)
 	status := Status{
 		CrcStatus:       clusterStatus.CrcStatus,
 		OpenShiftStatus: clusterStatus.OpenshiftStatus,
-		DiskUsage:       diskUsage,
-		CacheUsage:      cacheUsage,
+		DiskUsage:       clusterStatus.DiskUse,
+		DiskSize:        clusterStatus.DiskSize,
+		CacheUsage:      size,
 		CacheDir:        cacheDir,
 	}
 
@@ -93,8 +91,11 @@ func printStatus(writer io.Writer, status Status) error {
 	}{
 		{"CRC VM", status.CrcStatus},
 		{"OpenShift", status.OpenShiftStatus},
-		{"Disk Usage", status.DiskUsage},
-		{"Cache Usage", status.CacheUsage},
+		{"Disk Usage", fmt.Sprintf(
+			"%s of %s (Inside the CRC VM)",
+			units.HumanSize(float64(status.DiskUsage)),
+			units.HumanSize(float64(status.DiskSize)))},
+		{"Cache Usage", units.HumanSize(float64(status.CacheUsage))},
 		{"Cache Directory", status.CacheDir},
 	}
 	for _, line := range lines {

@@ -45,8 +45,9 @@ func TestJsonStatus(t *testing.T) {
 	expected := `{
   "crcStatus": "Running",
   "openshiftStatus": "Stopped",
-  "diskUsage": "10GB of 20GB (Inside the CRC VM)",
-  "cacheUsage": "10kB",
+  "diskUsage": 10000000000,
+  "diskSize": 20000000000,
+  "cacheUsage": 10000,
   "cacheDir": "%s"
 }
 `
