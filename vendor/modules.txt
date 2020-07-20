@@ -109,6 +109,7 @@ github.com/spf13/pflag
 github.com/spf13/viper
 # github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
+github.com/stretchr/testify/require
 # github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 github.com/xi2/xz
 # golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
