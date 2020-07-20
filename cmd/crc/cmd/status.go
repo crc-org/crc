@@ -38,12 +38,13 @@ var statusCmd = &cobra.Command{
 }
 
 type Status struct {
-	CrcStatus       string `json:"crcStatus"`
-	OpenShiftStatus string `json:"openshiftStatus"`
-	DiskUsage       int64  `json:"diskUsage"`
-	DiskSize        int64  `json:"diskSize"`
-	CacheUsage      int64  `json:"cacheUsage"`
-	CacheDir        string `json:"cacheDir"`
+	CrcStatus        string `json:"crcStatus"`
+	OpenShiftStatus  string `json:"openshiftStatus"`
+	OpenShiftVersion string `json:"openshiftVersion"`
+	DiskUsage        int64  `json:"diskUsage"`
+	DiskSize         int64  `json:"diskSize"`
+	CacheUsage       int64  `json:"cacheUsage"`
+	CacheDir         string `json:"cacheDir"`
 }
 
 func runStatus(writer io.Writer, client client, cacheDir, outputFormat string) error {
@@ -68,12 +69,13 @@ func runStatus(writer io.Writer, client client, cacheDir, outputFormat string) e
 		return fmt.Errorf("Error finding size of cache: %s", err.Error())
 	}
 	status := Status{
-		CrcStatus:       clusterStatus.CrcStatus,
-		OpenShiftStatus: clusterStatus.OpenshiftStatus,
-		DiskUsage:       clusterStatus.DiskUse,
-		DiskSize:        clusterStatus.DiskSize,
-		CacheUsage:      size,
-		CacheDir:        cacheDir,
+		CrcStatus:        clusterStatus.CrcStatus,
+		OpenShiftStatus:  clusterStatus.OpenshiftStatus,
+		OpenShiftVersion: clusterStatus.OpenshiftVersion,
+		DiskUsage:        clusterStatus.DiskUse,
+		DiskSize:         clusterStatus.DiskSize,
+		CacheUsage:       size,
+		CacheDir:         cacheDir,
 	}
 
 	if outputFormat == jsonFormat {
@@ -86,11 +88,12 @@ func runStatus(writer io.Writer, client client, cacheDir, outputFormat string) e
 
 func printStatus(writer io.Writer, status Status) error {
 	w := tabwriter.NewWriter(writer, 0, 0, 1, ' ', 0)
+
 	lines := []struct {
 		left, right string
 	}{
 		{"CRC VM", status.CrcStatus},
-		{"OpenShift", status.OpenShiftStatus},
+		{"OpenShift", openshiftStatus(status)},
 		{"Disk Usage", fmt.Sprintf(
 			"%s of %s (Inside the CRC VM)",
 			units.HumanSize(float64(status.DiskUsage)),
@@ -104,6 +107,13 @@ func printStatus(writer io.Writer, status Status) error {
 		}
 	}
 	return w.Flush()
+}
+
+func openshiftStatus(status Status) string {
+	if status.OpenShiftVersion != "" {
+		return fmt.Sprintf("%s (v%s)", status.OpenShiftStatus, status.OpenShiftVersion)
+	}
+	return status.OpenShiftStatus
 }
 
 func printLine(w *tabwriter.Writer, left string, right string) error {

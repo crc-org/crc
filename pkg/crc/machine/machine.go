@@ -553,6 +553,7 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 	}
 
 	openshiftStatus := "Stopped"
+	openshiftVersion := ""
 	var diskUse int64
 	var diskSize int64
 
@@ -586,11 +587,11 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 		}
 		switch {
 		case operatorsStatus.Available:
-			openshiftVersion := "4.x"
+			openshiftVersion = "4.x"
 			if crcBundleMetadata.GetOpenshiftVersion() != "" {
 				openshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
 			}
-			openshiftStatus = fmt.Sprintf("Running (v%s)", openshiftVersion)
+			openshiftStatus = "Running"
 		case operatorsStatus.Degraded:
 			openshiftStatus = "Degraded"
 		case operatorsStatus.Progressing:
@@ -602,12 +603,13 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 		}
 	}
 	return ClusterStatusResult{
-		Name:            statusConfig.Name,
-		CrcStatus:       vmStatus.String(),
-		OpenshiftStatus: openshiftStatus,
-		DiskUse:         diskUse,
-		DiskSize:        diskSize,
-		Success:         true,
+		Name:             statusConfig.Name,
+		CrcStatus:        vmStatus.String(),
+		OpenshiftStatus:  openshiftStatus,
+		OpenshiftVersion: openshiftVersion,
+		DiskUse:          diskUse,
+		DiskSize:         diskSize,
+		Success:          true,
 	}, nil
 }
 
