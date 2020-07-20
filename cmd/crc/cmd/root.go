@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"strconv"
+
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/network"
@@ -50,16 +52,28 @@ func init() {
 	// subcommands
 	rootCmd.AddCommand(cmdConfig.GetConfigCmd())
 
-	rootCmd.PersistentFlags().StringVar(&logging.LogLevel, "log-level", constants.DefaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
+	rootCmd.PersistentFlags().StringVar(&logging.LogLevel, "loglevel", constants.DefaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
 	rootCmd.PersistentFlags().BoolVarP(&globalForce, "force", "f", false, "Forcefully perform an action")
 }
 
 func runPrerun() {
+	convertNumericLogLevelToStringLevel()
 	// Setting up logrus
 	logging.InitLogrus(logging.LogLevel, constants.LogFilePath)
 	setProxyDefaults()
 	for _, str := range GetVersionStrings() {
 		logging.Debugf(str)
+	}
+}
+
+func convertNumericLogLevelToStringLevel() {
+	n, err := strconv.Atoi(logging.LogLevel)
+	if err == nil {
+		if n > 0 {
+			logging.LogLevel = "debug"
+		} else {
+			logging.LogLevel = "info"
+		}
 	}
 }
 

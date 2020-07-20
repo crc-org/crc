@@ -50,5 +50,5 @@ assignees: ''
 
 ### Logs
 
-You can start crc with `crc start --log-level debug` to collect logs.
+You can start crc with `crc start --loglevel debug` to collect logs.
 Please consider posting this on http://gist.github.com/ and post the link in the issue.

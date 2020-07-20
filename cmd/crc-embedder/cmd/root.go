@@ -26,7 +26,7 @@ when building the crc binary for release`,
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&logging.LogLevel, "log-level", constants.DefaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
+	rootCmd.PersistentFlags().StringVar(&logging.LogLevel, "loglevel", constants.DefaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
 }
 
 func Execute() {

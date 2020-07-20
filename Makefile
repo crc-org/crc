@@ -206,6 +206,6 @@ endif
 
 embed_bundle: LDFLAGS += $(BUNDLE_EMBEDDED)
 embed_bundle: clean cross $(HOST_BUILD_DIR)/crc-embedder check_bundledir $(HYPERKIT_BUNDLENAME) $(HYPERV_BUNDLENAME) $(LIBVIRT_BUNDLENAME)
-	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=darwin --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/macos-amd64/crc
-	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=linux --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/linux-amd64/crc
-	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=windows --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/windows-amd64/crc.exe
+	$(HOST_BUILD_DIR)/crc-embedder embed --loglevel debug --goos=darwin --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/macos-amd64/crc
+	$(HOST_BUILD_DIR)/crc-embedder embed --loglevel debug --goos=linux --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/linux-amd64/crc
+	$(HOST_BUILD_DIR)/crc-embedder embed --loglevel debug --goos=windows --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/windows-amd64/crc.exe

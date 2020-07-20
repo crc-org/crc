@@ -21,7 +21,7 @@ assignees: ''
   
 ## CRC status
 ```bash
-# Put `crc status --log-level debug` output here
+# Put `crc status --loglevel debug` output here
 ```
 
 ## CRC config
@@ -56,7 +56,7 @@ Before gather the logs try following if that fix your issue
 $ crc delete -f
 $ crc cleanup
 $ crc setup
-$ crc start --log-level debug
+$ crc start --loglevel debug
 ```
 
-Please consider posting the output of `crc start --log-level debug`  on http://gist.github.com/ and post the link in the issue.
+Please consider posting the output of `crc start --loglevel debug`  on http://gist.github.com/ and post the link in the issue.
