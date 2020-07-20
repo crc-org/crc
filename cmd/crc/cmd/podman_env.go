@@ -36,7 +36,7 @@ func runPodmanEnv(args []string) error {
 		Debug: isDebugLog(),
 	}
 
-	if err := checkIfMachineMissing(ipConfig.Name); err != nil {
+	if err := checkIfMachineMissing(&libmachineClient{}, ipConfig.Name); err != nil {
 		return err
 	}
 

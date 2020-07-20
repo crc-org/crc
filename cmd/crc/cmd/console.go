@@ -41,7 +41,7 @@ func runConsole(arguments []string) error {
 		Name: constants.DefaultName,
 	}
 
-	if err := checkIfMachineMissing(consoleConfig.Name); err != nil {
+	if err := checkIfMachineMissing(&libmachineClient{}, consoleConfig.Name); err != nil {
 		return err
 	}
 

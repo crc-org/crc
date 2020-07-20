@@ -40,7 +40,7 @@ func runDelete(arguments []string) error {
 		deleteCache()
 	}
 
-	if err := checkIfMachineMissing(deleteConfig.Name); err != nil {
+	if err := checkIfMachineMissing(&libmachineClient{}, deleteConfig.Name); err != nil {
 		return err
 	}
 

@@ -36,7 +36,7 @@ func runStop(arguments []string) error {
 		Name: constants.DefaultName,
 	}
 
-	if err := checkIfMachineMissing(stopConfig.Name); err != nil {
+	if err := checkIfMachineMissing(&libmachineClient{}, stopConfig.Name); err != nil {
 		return err
 	}
 
