@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"text/template"
+	"text/tabwriter"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
@@ -36,13 +36,6 @@ var statusCmd = &cobra.Command{
 		}
 	},
 }
-
-var statusFormat = `CRC VM:          {{.CrcStatus}}
-OpenShift:       {{.OpenShiftStatus}}
-Disk Usage:      {{.DiskUsage}}
-Cache Usage:     {{.CacheUsage}}
-Cache Directory: {{.CacheDir}}
-`
 
 type Status struct {
 	CrcStatus       string `json:"crcStatus"`
@@ -90,17 +83,31 @@ func runStatus(writer io.Writer, client client, cacheDir, outputFormat string) e
 		encoder.SetIndent("", "  ")
 		return encoder.Encode(status)
 	}
-	return printStatus(writer, status, statusFormat)
+	return printStatus(writer, status)
 }
 
-func printStatus(writer io.Writer, status interface{}, statusFormat string) error {
-	tmpl, err := template.New("status").Parse(statusFormat)
-	if err != nil {
-		return fmt.Errorf("Error creating status template: %s", err.Error())
+func printStatus(writer io.Writer, status Status) error {
+	w := tabwriter.NewWriter(writer, 0, 0, 1, ' ', 0)
+	lines := []struct {
+		left, right string
+	}{
+		{"CRC VM", status.CrcStatus},
+		{"OpenShift", status.OpenShiftStatus},
+		{"Disk Usage", status.DiskUsage},
+		{"Cache Usage", status.CacheUsage},
+		{"Cache Directory", status.CacheDir},
 	}
-	err = tmpl.Execute(writer, status)
-	if err != nil {
-		return fmt.Errorf("Error executing status template: %s", err.Error())
+	for _, line := range lines {
+		if err := printLine(w, line.left, line.right); err != nil {
+			return err
+		}
+	}
+	return w.Flush()
+}
+
+func printLine(w *tabwriter.Writer, left string, right string) error {
+	if _, err := fmt.Fprintf(w, "%s:\t%s\n", left, right); err != nil {
+		return err
 	}
 	return nil
 }
