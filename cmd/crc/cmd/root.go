@@ -8,7 +8,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/preflight"
@@ -81,13 +80,13 @@ func setConfigDefaults() {
 	config.SetDefaults()
 }
 
-func checkIfMachineMissing(name string) error {
-	exists, err := machine.Exists(name)
+func checkIfMachineMissing(client client, name string) error {
+	exists, err := client.Exists(name)
 	if err != nil {
 		return err
 	}
 	if !exists {
-		return fmt.Errorf("Machine '%s' does not exist. Use 'crc start' to create it", constants.DefaultName)
+		return fmt.Errorf("Machine '%s' does not exist. Use 'crc start' to create it", name)
 	}
 	return nil
 }
