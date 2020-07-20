@@ -15,6 +15,10 @@ func CreateApiServer(socketPath string) (CrcApiServer, error) {
 		logging.Error("Failed to create socket: ", err.Error())
 		return CrcApiServer{}, err
 	}
+	return createApiServerWithListener(listener)
+}
+
+func createApiServerWithListener(listener net.Listener) (CrcApiServer, error) {
 	apiServer := CrcApiServer{
 		listener:               listener,
 		clusterOpsRequestsChan: make(chan clusterOpsRequest, 10),
