@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/output"
@@ -84,10 +84,10 @@ func setConfigDefaults() {
 func exitIfMachineMissing(name string) {
 	exists, err := machine.Exists(name)
 	if err != nil {
-		errors.ExitWithMessage(1, err.Error())
+		exit.WithMessage(1, err.Error())
 	}
 	if !exists {
-		errors.ExitWithMessage(1, "Machine '%s' does not exist. Use 'crc start' to create it.", name)
+		exit.WithMessage(1, "Machine '%s' does not exist. Use 'crc start' to create it.", name)
 	}
 }
 
@@ -98,7 +98,7 @@ func setProxyDefaults() {
 
 	proxyConfig, err := network.NewProxyDefaults(httpProxy, httpsProxy, noProxy)
 	if err != nil {
-		errors.ExitWithMessage(1, err.Error())
+		exit.WithMessage(1, err.Error())
 	}
 
 	if proxyConfig.IsEnabled() {

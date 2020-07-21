@@ -1,12 +1,11 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/output"
+	"github.com/spf13/cobra"
 )
 
 func init() {
@@ -32,7 +31,7 @@ func runIP(arguments []string) {
 
 	result, err := machine.IP(ipConfig)
 	if err != nil {
-		errors.Exit(1)
+		exit.WithoutMessage(1)
 	}
 	output.Outln(result.IP)
 }

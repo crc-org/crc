@@ -1,4 +1,4 @@
-package errors
+package exit
 
 import (
 	"fmt"
@@ -15,8 +15,8 @@ type exitHandlerFunc func(int) bool
 // exitHandlers keeps track of the list of registered exit handlers. Handlers are applied in the order defined in this list.
 var exitHandlers = []exitHandlerFunc{}
 
-// Exit runs all registered exit handlers and then exits the program with the specified exit code using os.Exit.
-func Exit(code int) {
+// WithoutMessage runs all registered exit handlers and then exits the program with the specified exit code using os.Exit.
+func WithoutMessage(code int) {
 	veto := runHandlers(code)
 	if veto {
 		panic(ExitHandlerPanicMessage)
@@ -24,18 +24,18 @@ func Exit(code int) {
 	os.Exit(code)
 }
 
-// ExitWithMessage runs all registered exit handlers, prints the specified message and then exits the program with the specified exit code.
+// WithMessage runs all registered exit handlers, prints the specified message and then exits the program with the specified exit code.
 // If the exit code is 0, the message is prints to stdout, otherwise to stderr.
-func ExitWithMessage(code int, text string, args ...interface{}) {
+func WithMessage(code int, text string, args ...interface{}) {
 	if code == 0 {
 		_, _ = output.Fout(os.Stdout, fmt.Sprintf(text, args...))
 	} else {
 		_, _ = output.Fout(os.Stderr, fmt.Sprintf(text, args...))
 	}
-	Exit(code)
+	WithoutMessage(code)
 }
 
-// Register registers an exit handler function which is run when Exit is called
+// Register registers an exit handler function which is run when WithoutMessage is called
 func RegisterExitHandler(exitHandler exitHandlerFunc) {
 	exitHandlers = append(exitHandlers, exitHandler)
 }

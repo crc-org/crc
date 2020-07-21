@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -49,10 +49,10 @@ func runStop(arguments []string) {
 			yes := input.PromptUserForYesOrNo("Do you want to force power off", globalForce)
 			if yes {
 				killVM(killConfig)
-				errors.Exit(0)
+				exit.WithoutMessage(0)
 			}
 		}
-		errors.Exit(1)
+		exit.WithoutMessage(1)
 	}
 	if commandResult.Success {
 		output.Outln("Stopped the OpenShift cluster")
@@ -65,7 +65,7 @@ func runStop(arguments []string) {
 func killVM(killConfig machine.PowerOffConfig) {
 	_, err := machine.PowerOff(killConfig)
 	if err != nil {
-		errors.Exit(1)
+		exit.WithoutMessage(1)
 	}
 	output.Outln("Forcibly stopped the OpenShift cluster")
 }

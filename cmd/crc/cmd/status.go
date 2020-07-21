@@ -7,7 +7,7 @@ import (
 	"text/template"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/docker/go-units"
 	"github.com/spf13/cobra"
@@ -48,7 +48,7 @@ func runStatus() {
 
 	clusterStatus, err := machine.Status(statusConfig)
 	if err != nil {
-		errors.Exit(1)
+		exit.WithoutMessage(1)
 	}
 	cacheDir := constants.MachineCacheDir
 	var size int64
@@ -59,7 +59,7 @@ func runStatus() {
 		return err
 	})
 	if err != nil {
-		errors.ExitWithMessage(1, "Error finding size of cache: %s", err.Error())
+		exit.WithMessage(1, "Error finding size of cache: %s", err.Error())
 	}
 	cacheUsage := units.HumanSize(float64(size))
 	diskUse := units.HumanSize(float64(clusterStatus.DiskUse))
@@ -72,10 +72,10 @@ func runStatus() {
 func printStatus(status interface{}, statusFormat string) {
 	tmpl, err := template.New("status").Parse(statusFormat)
 	if err != nil {
-		errors.ExitWithMessage(1, "Error creating status template: %s", err.Error())
+		exit.WithMessage(1, "Error creating status template: %s", err.Error())
 	}
 	err = tmpl.Execute(os.Stdout, status)
 	if err != nil {
-		errors.ExitWithMessage(1, "Error executing status template: %s", err.Error())
+		exit.WithMessage(1, "Error executing status template: %s", err.Error())
 	}
 }

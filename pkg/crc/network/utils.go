@@ -7,6 +7,7 @@ import (
 	"runtime"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/ssh"
@@ -17,7 +18,7 @@ func executeCommandOrExit(sshRunner *ssh.Runner, command string, errorMessage st
 	result, err := sshRunner.Run(command)
 
 	if err != nil {
-		errors.ExitWithMessage(1, "%s: %s", errorMessage, err.Error())
+		exit.WithMessage(1, "%s: %s", errorMessage, err.Error())
 	}
 	return result
 }

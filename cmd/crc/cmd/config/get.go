@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/spf13/cobra"
 )
@@ -29,7 +29,7 @@ var configGetCmd = &cobra.Command{
 func runConfigGet(key string) {
 	v, err := config.Get(key)
 	if err != nil {
-		errors.ExitWithMessage(1, err.Error())
+		exit.WithMessage(1, err.Error())
 	}
 	output.Outln(key, ":", v)
 }

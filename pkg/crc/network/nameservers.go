@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/ssh"
 )
 
@@ -37,7 +37,7 @@ func CreateResolvFileOnInstance(sshRunner *ssh.Runner, resolvFileValues ResolvFi
 
 	err := sshRunner.CopyData([]byte(resolvFile), "/etc/resolv.conf")
 	if err != nil {
-		errors.ExitWithMessage(1, "Error creating /etc/resolv on instance: %s", err.Error())
+		exit.WithMessage(1, "Error creating /etc/resolv on instance: %s", err.Error())
 	}
 }
 
