@@ -4,7 +4,10 @@ run:
 
 linters:
   enable:
+    - errcheck
     - goimports
     - gofmt
     - gosec
     - gocritic
+    - deadcode
+    - misspell

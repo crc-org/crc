@@ -64,7 +64,7 @@ func hasLogonUserRight(username string) bool {
 	for _, sid := range getUsersWithLogonUserRights() {
 		/* seservicelogonright could either contain the username or the SID
 		 * the SID has a * at the beginning which needs to be removed to match with user's sid
-		 * if its a username it doesn't have the '*' in the begining
+		 * if its a username it doesn't have the '*' in the beginning
 		 */
 		userSid, err := getSidOfCurrentUser()
 		if err != nil || sid == "" {
