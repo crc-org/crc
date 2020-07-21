@@ -8,64 +8,64 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
-type PreflightCheckFlags uint32
+type Flags uint32
 
-// Enables the use of experimental features
+// EnableExperimentalFeatures enables the use of experimental features
 var EnableExperimentalFeatures bool
 
 const (
 	// Indicates a PreflightCheck should only be run as part of "crc setup"
-	SetupOnly PreflightCheckFlags = 1 << iota
+	SetupOnly Flags = 1 << iota
 	// Indicates a PreflightCheck should only be run as part of "crc start"
 	StartOnly
 	NoFix
 	CleanUpOnly
 )
 
-type PreflightCheckFunc func() error
-type PreflightFixFunc func() error
-type PreflightCleanUpFunc func() error
+type CheckFunc func() error
+type FixFunc func() error
+type CleanUpFunc func() error
 
-type PreflightCheck struct {
+type Check struct {
 	configKeySuffix    string
 	checkDescription   string
-	check              PreflightCheckFunc
+	check              CheckFunc
 	fixDescription     string
-	fix                PreflightFixFunc
-	flags              PreflightCheckFlags
+	fix                FixFunc
+	flags              Flags
 	cleanupDescription string
-	cleanup            PreflightCleanUpFunc
+	cleanup            CleanUpFunc
 }
 
-func (check *PreflightCheck) getSkipConfigName() string {
+func (check *Check) getSkipConfigName() string {
 	if check.configKeySuffix == "" {
 		return ""
 	}
 	return "skip-" + check.configKeySuffix
 }
 
-func (check *PreflightCheck) shouldSkip() bool {
+func (check *Check) shouldSkip() bool {
 	if check.configKeySuffix == "" {
 		return false
 	}
 	return cfg.GetBool(check.getSkipConfigName())
 }
 
-func (check *PreflightCheck) getWarnConfigName() string {
+func (check *Check) getWarnConfigName() string {
 	if check.configKeySuffix == "" {
 		return ""
 	}
 	return "warn-" + check.configKeySuffix
 }
 
-func (check *PreflightCheck) shouldWarn() bool {
+func (check *Check) shouldWarn() bool {
 	if check.configKeySuffix == "" {
 		return false
 	}
 	return cfg.GetBool(check.getWarnConfigName())
 }
 
-func (check *PreflightCheck) doCheck() error {
+func (check *Check) doCheck() error {
 	if check.checkDescription == "" {
 		panic(fmt.Sprintf("Should not happen, empty description for check '%s'", check.configKeySuffix))
 	} else {
@@ -83,7 +83,7 @@ func (check *PreflightCheck) doCheck() error {
 	return err
 }
 
-func (check *PreflightCheck) doFix() error {
+func (check *Check) doFix() error {
 	if check.fixDescription == "" {
 		panic(fmt.Sprintf("Should not happen, empty description for fix '%s'", check.configKeySuffix))
 	}
@@ -96,7 +96,7 @@ func (check *PreflightCheck) doFix() error {
 	return check.fix()
 }
 
-func (check *PreflightCheck) doCleanUp() error {
+func (check *Check) doCleanUp() error {
 	if check.cleanupDescription == "" {
 		panic(fmt.Sprintf("Should not happen, empty description for cleanup '%s'", check.configKeySuffix))
 	}
@@ -106,7 +106,7 @@ func (check *PreflightCheck) doCleanUp() error {
 	return check.cleanup()
 }
 
-func doPreflightChecks(checks []PreflightCheck) {
+func doPreflightChecks(checks []Check) {
 	for _, check := range checks {
 		if check.flags&SetupOnly == SetupOnly || check.flags&CleanUpOnly == CleanUpOnly {
 			continue
@@ -122,7 +122,7 @@ func doPreflightChecks(checks []PreflightCheck) {
 	}
 }
 
-func doFixPreflightChecks(checks []PreflightCheck) {
+func doFixPreflightChecks(checks []Check) {
 	for _, check := range checks {
 		if check.flags&StartOnly == StartOnly || check.flags&CleanUpOnly == CleanUpOnly {
 			continue
@@ -142,7 +142,7 @@ func doFixPreflightChecks(checks []PreflightCheck) {
 	}
 }
 
-func doCleanUpPreflightChecks(checks []PreflightCheck) {
+func doCleanUpPreflightChecks(checks []Check) {
 	// Do the cleanup in reverse order to avoid any dependency during cleanup
 	for i := len(checks) - 1; i >= 0; i-- {
 		check := checks[i]
@@ -156,7 +156,7 @@ func doCleanUpPreflightChecks(checks []PreflightCheck) {
 	}
 }
 
-func doRegisterSettings(checks []PreflightCheck) {
+func doRegisterSettings(checks []Check) {
 	for _, check := range checks {
 		if check.configKeySuffix != "" {
 			cfg.AddSetting(check.getSkipConfigName(), false, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})

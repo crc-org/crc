@@ -17,16 +17,16 @@ type crcDaemonService struct {
 
 func (m *crcDaemonService) Execute(args []string, r <-chan svc.ChangeRequest, changes chan<- svc.Status) (ssec bool, errno uint32) {
 	const cmdsAccepted = svc.AcceptStop | svc.AcceptShutdown
-	crcApiServer, err := CreateApiServer(m.socketPath)
+	crcAPIServer, err := CreateAPIServer(m.socketPath)
 	if err != nil {
 		elog.Error(1, fmt.Sprintf("Failed to start CRC daemon service: %v", err)) // nolint
 		return
 	}
 	// Windows servivce manager calls OnStart when starting the service
 	// and it calls this method, which the service manager expects to handle
-	// commands like stop, shutdown. crcApiServer.Serve is being called as a go routine
+	// commands like stop, shutdown. crcAPIServer.Serve is being called as a go routine
 	// since we don't want it block
-	go crcApiServer.Serve()
+	go crcAPIServer.Serve()
 	changes <- svc.Status{State: svc.Running, Accepts: cmdsAccepted}
 
 	MainLoop(r, changes)

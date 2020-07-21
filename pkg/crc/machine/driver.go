@@ -4,7 +4,7 @@ import (
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
-type MachineDriver struct {
+type Driver struct {
 	Name       string
 	Platform   crcos.OS
 	Driver     string
@@ -12,8 +12,8 @@ type MachineDriver struct {
 }
 
 var (
-	SupportedDrivers []MachineDriver
-	DefaultDriver    MachineDriver
+	SupportedDrivers []Driver
+	DefaultDriver    Driver
 )
 
 func SupportedDriverValues() []string {

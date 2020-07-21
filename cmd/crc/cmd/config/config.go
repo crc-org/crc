@@ -11,18 +11,20 @@ import (
 
 var (
 	// Start command settings in config
+
 	Bundle         = cfg.AddSetting("bundle", nil, []cfg.ValidationFnType{cfg.ValidateBundle}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	CPUs           = cfg.AddSetting("cpus", constants.DefaultCPUs, []cfg.ValidationFnType{cfg.ValidateCPUs}, []cfg.SetFn{cfg.RequiresRestartMsg})
 	Memory         = cfg.AddSetting("memory", constants.DefaultMemory, []cfg.ValidationFnType{cfg.ValidateMemory}, []cfg.SetFn{cfg.RequiresRestartMsg})
-	NameServer     = cfg.AddSetting("nameserver", nil, []cfg.ValidationFnType{cfg.ValidateIpAddress}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	NameServer     = cfg.AddSetting("nameserver", nil, []cfg.ValidationFnType{cfg.ValidateIPAddress}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	PullSecretFile = cfg.AddSetting("pull-secret-file", nil, []cfg.ValidationFnType{cfg.ValidatePath}, []cfg.SetFn{cfg.SuccessfullyApplied})
 
 	DisableUpdateCheck   = cfg.AddSetting("disable-update-check", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	ExperimentalFeatures = cfg.AddSetting("enable-experimental-features", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 
 	// Proxy Configuration
-	HttpProxy  = cfg.AddSetting("http-proxy", nil, []cfg.ValidationFnType{cfg.ValidateURI}, []cfg.SetFn{cfg.SuccessfullyApplied})
-	HttpsProxy = cfg.AddSetting("https-proxy", nil, []cfg.ValidationFnType{cfg.ValidateURI}, []cfg.SetFn{cfg.SuccessfullyApplied})
+
+	HTTPProxy  = cfg.AddSetting("http-proxy", nil, []cfg.ValidationFnType{cfg.ValidateURI}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	HTTPSProxy = cfg.AddSetting("https-proxy", nil, []cfg.ValidationFnType{cfg.ValidateURI}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	NoProxy    = cfg.AddSetting("no-proxy", nil, []cfg.ValidationFnType{cfg.ValidateNoProxy}, []cfg.SetFn{cfg.SuccessfullyApplied})
 )
 
@@ -56,14 +58,12 @@ func less(lhsKey, rhsKey string) bool {
 			if lhsKey[4:] == rhsKey[4:] {
 				// we want skip-foo before warn-foo
 				return lhsKey < rhsKey
-			} else {
-				// ignore skip-/warn- prefix
-				return lhsKey[4:] < rhsKey[4:]
 			}
-		} else {
-			// lhs is preflight, rhs is not preflight
-			return false
+			// ignore skip-/warn- prefix
+			return lhsKey[4:] < rhsKey[4:]
 		}
+		// lhs is preflight, rhs is not preflight
+		return false
 	}
 
 	if isPreflightKey(rhsKey) {

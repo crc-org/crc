@@ -13,9 +13,9 @@ import (
 func runDaemon() {
 	// Remove if an old socket is present
 	os.Remove(constants.DaemonSocketPath)
-	crcApiServer, err := api.CreateApiServer(constants.DaemonSocketPath)
+	crcAPIServer, err := api.CreateAPIServer(constants.DaemonSocketPath)
 	if err != nil {
 		logging.Fatal("Failed to launch daemon", err)
 	}
-	crcApiServer.Serve()
+	crcAPIServer.Serve()
 }

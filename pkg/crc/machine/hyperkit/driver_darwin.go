@@ -8,7 +8,7 @@ import (
 	"github.com/code-ready/machine/libmachine/drivers"
 )
 
-type hyperkitDriver struct {
+type Driver struct {
 	*drivers.BaseDriver
 	CPU           int
 	Memory        int
@@ -19,13 +19,13 @@ type hyperkitDriver struct {
 	VmlinuzPath   string
 	InitrdPath    string
 	KernelCmdLine string
-	DiskPathUrl   string
+	DiskPathURL   string
 	SSHKeyPath    string
 	HyperKitPath  string
 }
 
-func CreateHost(config config.MachineConfig) *hyperkitDriver {
-	d := &hyperkitDriver{
+func CreateHost(config config.MachineConfig) *Driver {
+	d := &Driver{
 		BaseDriver: &drivers.BaseDriver{
 			MachineName: config.Name,
 			StorePath:   constants.MachineBaseDir,
@@ -38,7 +38,7 @@ func CreateHost(config config.MachineConfig) *hyperkitDriver {
 		Cmdline:     config.KernelCmdLine,
 		VmlinuzPath: config.Kernel,
 		InitrdPath:  config.Initramfs,
-		DiskPathUrl: config.DiskPathURL,
+		DiskPathURL: config.DiskPathURL,
 		SSHKeyPath:  config.SSHKeyPath,
 	}
 	d.HyperKitPath = filepath.Join(constants.CrcBinDir, "hyperkit")

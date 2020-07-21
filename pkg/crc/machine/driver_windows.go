@@ -9,13 +9,13 @@ import (
 )
 
 func init() {
-	HyperVDriver := MachineDriver{
+	HyperVDriver := Driver{
 		Name:     "Microsoft Hyper-V",
 		Platform: crcos.WINDOWS,
 		Driver:   "hyperv",
 	}
 
-	SupportedDrivers = []MachineDriver{
+	SupportedDrivers = []Driver{
 		HyperVDriver,
 	}
 

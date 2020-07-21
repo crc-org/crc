@@ -114,7 +114,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	var privateKeyPath string
 	var pullSecret string
 	driverInfo := DefaultDriver
-	exists, err := MachineExists(startConfig.Name)
+	exists, err := Exists(startConfig.Name)
 	if !exists {
 		machineConfig := config.MachineConfig{
 			Name:       startConfig.Name,
@@ -205,21 +205,21 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			}
 			result.Status = vmState.String()
 			return *result, nil
+		}
+
+		openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
+		if openshiftVersion == "" {
+			logging.Info("Starting CodeReady Containers VM ...")
 		} else {
-			openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
-			if openshiftVersion == "" {
-				logging.Info("Starting CodeReady Containers VM ...")
-			} else {
-				logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", openshiftVersion)
-			}
-			if err := host.Driver.Start(); err != nil {
-				result.Error = err.Error()
-				return *result, errors.Newf("Error starting stopped VM: %v", err)
-			}
-			if err := libMachineAPIClient.Save(host); err != nil {
-				result.Error = err.Error()
-				return *result, errors.Newf("Error saving state for VM: %v", err)
-			}
+			logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", openshiftVersion)
+		}
+		if err := host.Driver.Start(); err != nil {
+			result.Error = err.Error()
+			return *result, errors.Newf("Error starting stopped VM: %v", err)
+		}
+		if err := libMachineAPIClient.Save(host); err != nil {
+			result.Error = err.Error()
+			return *result, errors.Newf("Error saving state for VM: %v", err)
 		}
 
 		vmState, err = host.Driver.GetState()
@@ -247,7 +247,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	sshRunner := crcssh.CreateRunnerWithPrivateKey(host.Driver, privateKeyPath)
 
 	logging.Debug("Waiting until ssh is available")
-	if err := cluster.WaitForSsh(sshRunner); err != nil {
+	if err := cluster.WaitForSSH(sshRunner); err != nil {
 		result.Error = err.Error()
 		return *result, errors.New("Failed to connect to the CRC VM with SSH -- host might be unreachable")
 	}
@@ -415,7 +415,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			return *result, errors.New(err.Error())
 		}
 
-		if err := cluster.DeleteOpenshiftApiServerPods(ocConfig); err != nil {
+		if err := cluster.DeleteOpenshiftAPIServerPods(ocConfig); err != nil {
 			result.Error = err.Error()
 			return *result, errors.New(err.Error())
 		}
@@ -533,8 +533,8 @@ func Delete(deleteConfig DeleteConfig) (DeleteResult, error) {
 	return *result, nil
 }
 
-func Ip(ipConfig IpConfig) (IpResult, error) {
-	result := &IpResult{Name: ipConfig.Name, Success: true}
+func IP(ipConfig IPConfig) (IPResult, error) {
+	result := &IPResult{Name: ipConfig.Name, Success: true}
 
 	err := setMachineLogging(ipConfig.Debug)
 	if err != nil {
@@ -634,7 +634,7 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 	return *result, nil
 }
 
-func MachineExists(name string) (bool, error) {
+func Exists(name string) (bool, error) {
 	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	defer libMachineAPIClient.Close()
 	exists, err := libMachineAPIClient.Exists(name)
@@ -683,7 +683,7 @@ func unsetMachineLogging() {
 	logging.CloseLogFile()
 }
 
-func addNameServerToInstance(sshRunner *crcssh.SSHRunner, ns string) error {
+func addNameServerToInstance(sshRunner *crcssh.Runner, ns string) error {
 	nameserver := network.NameServer{IPAddress: ns}
 	nameservers := []network.NameServer{nameserver}
 	exist, err := network.HasGivenNameserversConfigured(sshRunner, nameserver)
@@ -761,7 +761,7 @@ func GetConsoleURL(consoleConfig ConsoleConfig) (ConsoleResult, error) {
 	return *result, nil
 }
 
-func updateSSHKeyPair(sshRunner *crcssh.SSHRunner) error {
+func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	// Generate ssh key pair
 	if err := ssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
 		return fmt.Errorf("Error generating ssh key pair: %v", err)
@@ -782,7 +782,7 @@ func updateSSHKeyPair(sshRunner *crcssh.SSHRunner) error {
 	return err
 }
 
-func configureCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, proxyConfig *network.ProxyConfig, pullSecret, instanceIP string) (rerr error) {
+func configureCluster(ocConfig oc.Config, sshRunner *crcssh.Runner, proxyConfig *network.ProxyConfig, pullSecret, instanceIP string) (rerr error) {
 	sd := systemd.NewInstanceSystemdCommander(sshRunner)
 
 	if err := configProxyForCluster(ocConfig, sshRunner, sd, proxyConfig, instanceIP); err != nil {
@@ -813,7 +813,7 @@ func getProxyConfig(baseDomainName string) (*network.ProxyConfig, error) {
 	return proxy, nil
 }
 
-func configProxyForCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, sd *systemd.InstanceSystemdCommander,
+func configProxyForCluster(ocConfig oc.Config, sshRunner *crcssh.Runner, sd *systemd.InstanceSystemdCommander,
 	proxy *network.ProxyConfig, instanceIP string) (err error) {
 	if !proxy.IsEnabled() {
 		return nil
@@ -847,7 +847,7 @@ func configProxyForCluster(ocConfig oc.OcConfig, sshRunner *crcssh.SSHRunner, sd
 	return nil
 }
 
-func waitForProxyPropagation(ocConfig oc.OcConfig, proxyConfig *network.ProxyConfig) {
+func waitForProxyPropagation(ocConfig oc.Config, proxyConfig *network.ProxyConfig) {
 	checkProxySettingsForOperator := func() error {
 		proxySet, err := cluster.CheckProxySettingsForOperator(ocConfig, proxyConfig, "redhat-operators", "openshift-marketplace")
 		if err != nil {

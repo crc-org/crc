@@ -18,7 +18,7 @@ type ServicePreStartResult struct {
 
 type ServicePostStartConfig struct {
 	Name           string
-	SSHRunner      *ssh.SSHRunner
+	SSHRunner      *ssh.Runner
 	DriverName     string
 	BundleMetadata bundle.CrcBundleInfo
 	IP             string

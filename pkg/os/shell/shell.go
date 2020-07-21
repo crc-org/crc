@@ -8,7 +8,7 @@ import (
 	"github.com/code-ready/machine/libmachine/shell"
 )
 
-type ShellConfig struct {
+type Config struct {
 	Prefix     string
 	Delimiter  string
 	Suffix     string

@@ -24,7 +24,7 @@ func TestApi(t *testing.T) {
 	require.NoError(t, err)
 	defer listener.Close()
 
-	api, err := createApiServerWithListener(listener)
+	api, err := createAPIServerWithListener(listener)
 	require.NoError(t, err)
 	go api.Serve()
 

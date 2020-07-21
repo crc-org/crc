@@ -10,14 +10,14 @@ import (
 )
 
 func init() {
-	LibvirtDriver := MachineDriver{
+	LibvirtDriver := Driver{
 		Name:       "Libvirt",
 		Platform:   crcos.LINUX,
 		Driver:     "libvirt",
 		DriverPath: constants.CrcBinDir,
 	}
 
-	SupportedDrivers = []MachineDriver{
+	SupportedDrivers = []Driver{
 		LibvirtDriver,
 	}
 

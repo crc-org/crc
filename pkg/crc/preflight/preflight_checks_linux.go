@@ -277,7 +277,7 @@ func checkLibvirtCrcNetworkAvailable() error {
 	return checkLibvirtCrcNetworkDefinition()
 }
 
-func getLibvirtNetworkXml() (string, error) {
+func getLibvirtNetworkXML() (string, error) {
 	config := libvirt.NetworkConfig{
 		NetworkName: libvirt.DefaultNetwork,
 		MAC:         libvirt.MACAddress,
@@ -299,9 +299,9 @@ func getLibvirtNetworkXml() (string, error) {
 func fixLibvirtCrcNetworkAvailable() error {
 	logging.Debug("Creating libvirt 'crc' network")
 
-	netXMLDef, err := getLibvirtNetworkXml()
+	netXMLDef, err := getLibvirtNetworkXML()
 	if err != nil {
-		logging.Debugf("getLibvirtNetworkXml() failed: %v", err)
+		logging.Debugf("getLibvirtNetworkXML() failed: %v", err)
 		return fmt.Errorf("Failed to read libvirt 'crc' network definition")
 	}
 
@@ -398,7 +398,7 @@ func checkLibvirtCrcNetworkDefinition() error {
 	}
 	stdOut = trimSpacesFromXML(stdOut)
 
-	netXMLDef, err := getLibvirtNetworkXml()
+	netXMLDef, err := getLibvirtNetworkXML()
 	if err != nil {
 		return fmt.Errorf("Failed to generate 'crc' network XML from template: %s", err)
 	}

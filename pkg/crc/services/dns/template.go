@@ -47,7 +47,7 @@ func createDnsmasqDNSConfig(serviceConfig services.ServicePostStartConfig) error
 		InternalIP:  serviceConfig.BundleMetadata.Nodes[0].InternalIP,
 	}
 
-	dnsConfig, err := createDnsConfigFile(dnsmasqConfFileValues, dnsmasqConfTemplate)
+	dnsConfig, err := createDNSConfigFile(dnsmasqConfFileValues, dnsmasqConfTemplate)
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func createDnsmasqDNSConfig(serviceConfig services.ServicePostStartConfig) error
 	return serviceConfig.SSHRunner.CopyData([]byte(dnsConfig), "/var/srv/dnsmasq.conf")
 }
 
-func createDnsConfigFile(values dnsmasqConfFileValues, tmpl string) (string, error) {
+func createDNSConfigFile(values dnsmasqConfFileValues, tmpl string) (string, error) {
 	var dnsConfigFile bytes.Buffer
 
 	t, err := template.New("dnsConfigFile").Parse(tmpl)

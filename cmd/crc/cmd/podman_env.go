@@ -23,14 +23,14 @@ var podmanEnvCmd = &cobra.Command{
 			errors.ExitWithMessage(1, "Error running the podman-env command: %s", err.Error())
 		}
 
-		ipConfig := machine.IpConfig{
+		ipConfig := machine.IPConfig{
 			Name:  constants.DefaultName,
 			Debug: isDebugLog(),
 		}
 
 		exitIfMachineMissing(ipConfig.Name)
 
-		result, err := machine.Ip(ipConfig)
+		result, err := machine.IP(ipConfig)
 		if err != nil {
 			errors.Exit(1)
 		}

@@ -12,7 +12,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/systemd"
 )
 
-func waitForPendingCsrs(ocConfig oc.OcConfig) error {
+func waitForPendingCsrs(ocConfig oc.Config) error {
 	waitForPendingCsr := func() error {
 		output, _, err := ocConfig.RunOcCommand("get", "csr")
 		if err != nil {
@@ -31,7 +31,7 @@ func waitForPendingCsrs(ocConfig oc.OcConfig) error {
 	return errors.RetryAfter(120, waitForPendingCsr, time.Second*5)
 }
 
-func RegenerateCertificates(sshRunner *ssh.SSHRunner, ocConfig oc.OcConfig) error {
+func RegenerateCertificates(sshRunner *ssh.Runner, ocConfig oc.Config) error {
 	sd := systemd.NewInstanceSystemdCommander(sshRunner)
 	startedKubelet, err := sd.Start("kubelet")
 	if err != nil {

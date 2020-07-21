@@ -82,7 +82,7 @@ func setConfigDefaults() {
 }
 
 func exitIfMachineMissing(name string) {
-	exists, err := machine.MachineExists(name)
+	exists, err := machine.Exists(name)
 	if err != nil {
 		errors.ExitWithMessage(1, err.Error())
 	}
@@ -92,8 +92,8 @@ func exitIfMachineMissing(name string) {
 }
 
 func setProxyDefaults() {
-	httpProxy := config.GetString(cmdConfig.HttpProxy.Name)
-	httpsProxy := config.GetString(cmdConfig.HttpsProxy.Name)
+	httpProxy := config.GetString(cmdConfig.HTTPProxy.Name)
+	httpsProxy := config.GetString(cmdConfig.HTTPSProxy.Name)
 	noProxy := config.GetString(cmdConfig.NoProxy.Name)
 
 	proxyConfig, err := network.NewProxyDefaults(httpProxy, httpsProxy, noProxy)
@@ -102,8 +102,8 @@ func setProxyDefaults() {
 	}
 
 	if proxyConfig.IsEnabled() {
-		logging.Debugf("HTTP-PROXY: %s, HTTPS-PROXY: %s, NO-PROXY: %s", proxyConfig.HttpProxyForDisplay(),
-			proxyConfig.HttpsProxyForDisplay(), proxyConfig.GetNoProxyString())
+		logging.Debugf("HTTP-PROXY: %s, HTTPS-PROXY: %s, NO-PROXY: %s", proxyConfig.HTTPProxyForDisplay(),
+			proxyConfig.HTTPSProxyForDisplay(), proxyConfig.GetNoProxyString())
 		proxyConfig.ApplyToEnvironment()
 	}
 }

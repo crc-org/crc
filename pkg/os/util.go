@@ -86,14 +86,14 @@ func CopyFileContents(src string, dst string, permission os.FileMode) error {
 	return nil
 }
 
-func WriteFileIfContentChanged(path string, new_content []byte, perm os.FileMode) (bool, error) {
-	old_content, err := ioutil.ReadFile(filepath.Clean(path))
-	if (err == nil) && (bytes.Equal(old_content, new_content)) {
+func WriteFileIfContentChanged(path string, newContent []byte, perm os.FileMode) (bool, error) {
+	oldContent, err := ioutil.ReadFile(filepath.Clean(path))
+	if (err == nil) && (bytes.Equal(oldContent, newContent)) {
 		return false, nil
 	}
 	/* Intentionally ignore errors, just try to write the file if we can't read it */
 
-	err = ioutil.WriteFile(path, new_content, perm)
+	err = ioutil.WriteFile(path, newContent, perm)
 	if err != nil {
 		return false, err
 	}

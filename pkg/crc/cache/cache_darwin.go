@@ -6,9 +6,9 @@ import (
 )
 
 func NewMachineDriverHyperkitCache(version string, getVersion func() (string, error)) *Cache {
-	return New(hyperkit.MachineDriverCommand, hyperkit.MachineDriverDownloadUrl, constants.CrcBinDir, version, getVersion)
+	return New(hyperkit.MachineDriverCommand, hyperkit.MachineDriverDownloadURL, constants.CrcBinDir, version, getVersion)
 }
 
 func NewHyperkitCache(version string, getVersion func() (string, error)) *Cache {
-	return New(hyperkit.HyperkitCommand, hyperkit.HyperkitDownloadUrl, constants.CrcBinDir, version, getVersion)
+	return New(hyperkit.HyperkitCommand, hyperkit.HyperkitDownloadURL, constants.CrcBinDir, version, getVersion)
 }

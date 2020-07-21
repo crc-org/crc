@@ -7,8 +7,8 @@ import (
 )
 
 func TestRunCommand(t *testing.T) {
-	ocConfig := OcConfig{
-		Runner: OcLocalRunner{
+	ocConfig := Config{
+		Runner: LocalRunner{
 			OcBinaryPath:   "/bin/echo",
 			KubeconfigPath: "kubeconfig-file",
 		},
@@ -21,7 +21,7 @@ func TestRunCommand(t *testing.T) {
 }
 
 func TestEnvRunner(t *testing.T) {
-	runner := OcEnvRunner{
+	runner := EnvRunner{
 		OcBinaryPath:  "printenv",
 		KubeconfigEnv: "some-env",
 	}
@@ -31,8 +31,8 @@ func TestEnvRunner(t *testing.T) {
 }
 
 func TestRunCommandWithoutContextAndCluster(t *testing.T) {
-	ocConfig := OcConfig{
-		Runner: OcLocalRunner{
+	ocConfig := Config{
+		Runner: LocalRunner{
 			OcBinaryPath:   "/bin/echo",
 			KubeconfigPath: "kubeconfig-file",
 		},

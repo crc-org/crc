@@ -99,7 +99,7 @@ func validateStartFlags() error {
 		return err
 	}
 	if crcConfig.GetString(config.NameServer.Name) != "" {
-		if err := validation.ValidateIpAddress(crcConfig.GetString(config.NameServer.Name)); err != nil {
+		if err := validation.ValidateIPAddress(crcConfig.GetString(config.NameServer.Name)); err != nil {
 			return err
 		}
 	}

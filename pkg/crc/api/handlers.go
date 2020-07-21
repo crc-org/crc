@@ -16,7 +16,7 @@ import (
 func statusHandler(_ ArgsType) string {
 	statusConfig := machine.ClusterStatusConfig{Name: constants.DefaultName}
 	clusterStatus, _ := machine.Status(statusConfig)
-	return encodeStructToJson(clusterStatus)
+	return encodeStructToJSON(clusterStatus)
 }
 
 func stopHandler(_ ArgsType) string {
@@ -25,7 +25,7 @@ func stopHandler(_ ArgsType) string {
 		Debug: true,
 	}
 	commandResult, _ := machine.Stop(stopConfig)
-	return encodeStructToJson(commandResult)
+	return encodeStructToJSON(commandResult)
 }
 
 func startHandler(_ ArgsType) string {
@@ -39,7 +39,7 @@ func startHandler(_ ArgsType) string {
 		Debug:         true,
 	}
 	status, _ := machine.Start(startConfig)
-	return encodeStructToJson(status)
+	return encodeStructToJSON(status)
 }
 
 func versionHandler(_ ArgsType) string {
@@ -49,7 +49,7 @@ func versionHandler(_ ArgsType) string {
 		OpenshiftVersion: version.GetBundleVersion(),
 		Success:          true,
 	}
-	return encodeStructToJson(v)
+	return encodeStructToJSON(v)
 }
 
 func getPullSecretFileContent() (string, error) {
@@ -67,16 +67,16 @@ func getPullSecretFileContent() (string, error) {
 func deleteHandler(_ ArgsType) string {
 	delConfig := machine.DeleteConfig{Name: constants.DefaultName}
 	r, _ := machine.Delete(delConfig)
-	return encodeStructToJson(r)
+	return encodeStructToJSON(r)
 }
 
 func webconsoleURLHandler(_ ArgsType) string {
 	consoleConfig := machine.ConsoleConfig{Name: constants.DefaultName}
 	r, _ := machine.GetConsoleURL(consoleConfig)
-	return encodeStructToJson(r)
+	return encodeStructToJSON(r)
 }
 
-func encodeStructToJson(v interface{}) string {
+func encodeStructToJSON(v interface{}) string {
 	s, err := json.Marshal(v)
 	if err != nil {
 		logging.Error(err.Error())
@@ -89,9 +89,9 @@ func encodeStructToJson(v interface{}) string {
 	return string(s)
 }
 
-func encodeErrorToJson(errMsg string) string {
+func encodeErrorToJSON(errMsg string) string {
 	err := commandError{
 		Err: errMsg,
 	}
-	return encodeStructToJson(err)
+	return encodeStructToJSON(err)
 }

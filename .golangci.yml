@@ -11,3 +11,4 @@ linters:
     - gocritic
     - deadcode
     - misspell
+    - golint

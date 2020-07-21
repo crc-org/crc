@@ -75,12 +75,12 @@ type DeleteResult struct {
 	Error   string
 }
 
-type IpConfig struct {
+type IPConfig struct {
 	Name  string
 	Debug bool
 }
 
-type IpResult struct {
+type IPResult struct {
 	Name    string
 	IP      string
 	Success bool

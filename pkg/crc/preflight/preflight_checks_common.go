@@ -15,7 +15,7 @@ import (
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
-var genericPreflightChecks = [...]PreflightCheck{
+var genericPreflightChecks = [...]Check{
 	{
 		checkDescription: "Checking if oc binary is cached",
 		check:            checkOcBinaryCached,

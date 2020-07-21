@@ -59,7 +59,7 @@ func setInterfaceNameserverValue(iface string, address string) {
 	args := fmt.Sprintf(`interface ip set dns "%s" static %s primary`, iface, address)
 
 	// ignore the error as this is useless (prefer not to use nolint here)
-	_ = win32.ShellExecuteAsAdmin(fmt.Sprintf("add dns server address to interface %s", iface), win32.HWND_DESKTOP, exe, args, "", 0)
+	_ = win32.ShellExecuteAsAdmin(fmt.Sprintf("add dns server address to interface %s", iface), win32.HwndDesktop, exe, args, "", 0)
 }
 
 func parseLines(input string) []string {
