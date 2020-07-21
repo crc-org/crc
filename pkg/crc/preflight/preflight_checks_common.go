@@ -10,9 +10,11 @@ import (
 	"github.com/code-ready/crc/pkg/crc/cache"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/validation"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/embed"
 	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/docker/go-units"
 )
 
 var genericPreflightChecks = [...]PreflightCheck{
@@ -42,6 +44,15 @@ var genericPreflightChecks = [...]PreflightCheck{
 		fixDescription:   "Unpacking bundle from the CRC binary",
 		fix:              fixBundleCached,
 		flags:            SetupOnly,
+	},
+	{
+		configKeySuffix:  "check-ram",
+		checkDescription: "Checking minimum RAM requirements",
+		check: func() error {
+			return validation.ValidateEnoughMemory(constants.DefaultMemory)
+		},
+		fixDescription: fmt.Sprintf("crc requires at least %s to run", units.HumanSize(float64(constants.DefaultMemory*1024*1024))),
+		flags:          NoFix,
 	},
 }
 

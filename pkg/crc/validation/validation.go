@@ -10,7 +10,10 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/version"
+	"github.com/docker/go-units"
+	"github.com/pbnjay/memory"
 )
 
 // ValidateCPUs checks if provided cpus count is valid
@@ -25,6 +28,19 @@ func ValidateCPUs(value int) error {
 func ValidateMemory(value int) error {
 	if value < constants.DefaultMemory {
 		return errors.Newf("requires memory in MiB >= %d", constants.DefaultMemory)
+	}
+	return ValidateEnoughMemory(value)
+}
+
+// ValidateEnoughMemory checks if enough memory is installed on the host
+func ValidateEnoughMemory(value int) error {
+	totalMemory := memory.TotalMemory()
+	logging.Debugf("Total memory of system is %d bytes", totalMemory)
+	valueBytes := value * 1024 * 1024
+	if totalMemory < uint64(valueBytes) {
+		return fmt.Errorf("only %s of memory found (%s required)",
+			units.HumanSize(float64(totalMemory)),
+			units.HumanSize(float64(valueBytes)))
 	}
 	return nil
 }
