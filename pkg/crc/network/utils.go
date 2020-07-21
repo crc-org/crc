@@ -13,7 +13,7 @@ import (
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
-func executeCommandOrExit(sshRunner *ssh.SSHRunner, command string, errorMessage string) string {
+func executeCommandOrExit(sshRunner *ssh.Runner, command string, errorMessage string) string {
 	result, err := sshRunner.Run(command)
 
 	if err != nil {
@@ -22,8 +22,8 @@ func executeCommandOrExit(sshRunner *ssh.SSHRunner, command string, errorMessage
 	return result
 }
 
-// NetworkContains returns true if the IP address belongs to the network given
-func NetworkContains(network string, ip string) bool {
+// Contains returns true if the IP address belongs to the network given
+func Contains(network string, ip string) bool {
 	_, ipnet, _ := net.ParseCIDR(network)
 	address := net.ParseIP(ip)
 	return ipnet.Contains(address)
@@ -71,7 +71,7 @@ func HostIPs() []string {
 func DetermineHostIP(instanceIP string) (string, error) {
 	for _, hostaddr := range HostIPs() {
 
-		if NetworkContains(hostaddr, instanceIP) {
+		if Contains(hostaddr, instanceIP) {
 			hostip, _, _ := net.ParseCIDR(hostaddr)
 			// This step is not working with Windows + VirtualBox as of now
 			// This test is required for CIFS mount-folder case.
@@ -86,7 +86,7 @@ func DetermineHostIP(instanceIP string) (string, error) {
 	return "", errors.New("unknown error occurred")
 }
 
-func UriStringForDisplay(uri string) (string, error) {
+func URIStringForDisplay(uri string) (string, error) {
 	u, err := url.Parse(uri)
 	if err != nil {
 		return "", err

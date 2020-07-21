@@ -10,9 +10,9 @@ import (
 	"github.com/code-ready/crc/pkg/crc/oc"
 )
 
-func WaitForOpenshiftResource(ocConfig oc.OcConfig, resource string) error {
+func WaitForOpenshiftResource(ocConfig oc.Config, resource string) error {
 	logging.Debugf("Waiting for availability of resource type '%s'", resource)
-	waitForApiServer := func() error {
+	waitForAPIServer := func() error {
 		stdout, stderr, err := ocConfig.RunOcCommand("get", resource)
 		if err != nil {
 			logging.Debug(stderr)
@@ -21,11 +21,11 @@ func WaitForOpenshiftResource(ocConfig oc.OcConfig, resource string) error {
 		logging.Debug(stdout)
 		return nil
 	}
-	return errors.RetryAfter(80, waitForApiServer, time.Second)
+	return errors.RetryAfter(80, waitForAPIServer, time.Second)
 }
 
 // ApproveNodeCSR approves the certificate for the node.
-func ApproveNodeCSR(ocConfig oc.OcConfig) error {
+func ApproveNodeCSR(ocConfig oc.Config) error {
 	err := WaitForOpenshiftResource(ocConfig, "csr")
 	if err != nil {
 		return err
@@ -33,12 +33,12 @@ func ApproveNodeCSR(ocConfig oc.OcConfig) error {
 
 	logging.Debug("Approving pending CSRs")
 	// Execute 'oc get csr -oname' and store the output
-	csrsJson, stderr, err := ocConfig.RunOcCommand("get", "csr", "-ojson")
+	csrsJSON, stderr, err := ocConfig.RunOcCommand("get", "csr", "-ojson")
 	if err != nil {
 		return fmt.Errorf("Not able to get csr names (%v : %s)", err, stderr)
 	}
 	var csrs K8sResource
-	err = json.Unmarshal([]byte(csrsJson), &csrs)
+	err = json.Unmarshal([]byte(csrsJSON), &csrs)
 	if err != nil {
 		return err
 	}

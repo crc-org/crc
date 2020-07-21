@@ -8,11 +8,11 @@ import (
 )
 
 type InstanceSystemdCommander struct {
-	sshRunner *ssh.SSHRunner
+	sshRunner *ssh.Runner
 }
 
 // NewVmSystemdCommander creates a new instance of a VmSystemdCommander
-func NewInstanceSystemdCommander(sshRunner *ssh.SSHRunner) *InstanceSystemdCommander {
+func NewInstanceSystemdCommander(sshRunner *ssh.Runner) *InstanceSystemdCommander {
 	return &InstanceSystemdCommander{
 		sshRunner: sshRunner,
 	}
@@ -84,10 +84,5 @@ func (c InstanceSystemdCommander) IsActive(name string) (bool, error) {
 
 func (c InstanceSystemdCommander) service(name string, action actions.Action) (string, error) {
 	command := fmt.Sprintf("sudo systemctl -f %s %s", action.String(), name)
-
-	if out, err := c.sshRunner.Run(command); err != nil {
-		return out, err
-	} else {
-		return out, nil
-	}
+	return c.sshRunner.Run(command)
 }

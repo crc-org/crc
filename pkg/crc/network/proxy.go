@@ -15,22 +15,22 @@ var (
 
 // ProxyConfig keeps the proxy configuration for the current environment
 type ProxyConfig struct {
-	HttpProxy  string
-	HttpsProxy string
+	HTTPProxy  string
+	HTTPSProxy string
 	noProxy    []string
 }
 
 func NewProxyDefaults(httpProxy, httpsProxy, noProxy string) (*ProxyConfig, error) {
 	DefaultProxy = ProxyConfig{
-		HttpProxy:  httpProxy,
-		HttpsProxy: httpsProxy,
+		HTTPProxy:  httpProxy,
+		HTTPSProxy: httpsProxy,
 	}
 
-	if DefaultProxy.HttpProxy == "" {
-		DefaultProxy.HttpProxy = getProxyFromEnv("http_proxy")
+	if DefaultProxy.HTTPProxy == "" {
+		DefaultProxy.HTTPProxy = getProxyFromEnv("http_proxy")
 	}
-	if DefaultProxy.HttpsProxy == "" {
-		DefaultProxy.HttpsProxy = getProxyFromEnv("https_proxy")
+	if DefaultProxy.HTTPSProxy == "" {
+		DefaultProxy.HTTPSProxy = getProxyFromEnv("https_proxy")
 	}
 	if noProxy == "" {
 		noProxy = getProxyFromEnv("no_proxy")
@@ -44,8 +44,8 @@ func NewProxyDefaults(httpProxy, httpsProxy, noProxy string) (*ProxyConfig, erro
 // the corresponding environment variable is checked.
 func NewProxyConfig() (*ProxyConfig, error) {
 	config := ProxyConfig{
-		HttpProxy:  DefaultProxy.HttpProxy,
-		HttpsProxy: DefaultProxy.HttpsProxy,
+		HTTPProxy:  DefaultProxy.HTTPProxy,
+		HTTPSProxy: DefaultProxy.HTTPSProxy,
 	}
 
 	config.noProxy = defaultNoProxies
@@ -53,12 +53,12 @@ func NewProxyConfig() (*ProxyConfig, error) {
 		config.AddNoProxy(DefaultProxy.noProxy...)
 	}
 
-	err := ValidateProxyURL(config.HttpProxy)
+	err := ValidateProxyURL(config.HTTPProxy)
 	if err != nil {
 		return nil, err
 	}
 
-	err = ValidateProxyURL(config.HttpsProxy)
+	err = ValidateProxyURL(config.HTTPSProxy)
 	if err != nil {
 		return nil, err
 	}
@@ -74,15 +74,15 @@ func getProxyFromEnv(proxyScheme string) string {
 	return p
 }
 
-// HttpProxy with hidden credentials
-func (p *ProxyConfig) HttpProxyForDisplay() string {
-	httpProxy, _ := UriStringForDisplay(p.HttpProxy)
+// HTTPProxy with hidden credentials
+func (p *ProxyConfig) HTTPProxyForDisplay() string {
+	httpProxy, _ := URIStringForDisplay(p.HTTPProxy)
 	return httpProxy
 }
 
-// HttpsProxy with hidden credentials
-func (p *ProxyConfig) HttpsProxyForDisplay() string {
-	httpsProxy, _ := UriStringForDisplay(p.HttpsProxy)
+// HTTPSProxy with hidden credentials
+func (p *ProxyConfig) HTTPSProxyForDisplay() string {
+	httpsProxy, _ := URIStringForDisplay(p.HTTPSProxy)
 	return httpsProxy
 }
 
@@ -108,13 +108,13 @@ func (p *ProxyConfig) ApplyToEnvironment() {
 		return
 	}
 
-	if p.HttpProxy != "" {
-		os.Setenv("HTTP_PROXY", p.HttpProxy)
-		os.Setenv("http_proxy", p.HttpProxy)
+	if p.HTTPProxy != "" {
+		os.Setenv("HTTP_PROXY", p.HTTPProxy)
+		os.Setenv("http_proxy", p.HTTPProxy)
 	}
-	if p.HttpsProxy != "" {
-		os.Setenv("HTTPS_PROXY", p.HttpsProxy)
-		os.Setenv("https_proxy", p.HttpsProxy)
+	if p.HTTPSProxy != "" {
+		os.Setenv("HTTPS_PROXY", p.HTTPSProxy)
+		os.Setenv("https_proxy", p.HTTPSProxy)
 	}
 	if len(p.noProxy) != 0 {
 		os.Setenv("NO_PROXY", p.GetNoProxyString())
@@ -124,23 +124,23 @@ func (p *ProxyConfig) ApplyToEnvironment() {
 
 // Enabled returns true if at least one proxy (HTTP or HTTPS) is configured. Returns false otherwise.
 func (p *ProxyConfig) IsEnabled() bool {
-	return p.HttpProxy != "" || p.HttpsProxy != ""
+	return p.HTTPProxy != "" || p.HTTPSProxy != ""
 }
 
 // ValidateProxyURL validates that the specified proxyURL is valid
-func ValidateProxyURL(proxyUrl string) error {
-	if proxyUrl == "" {
+func ValidateProxyURL(proxyURL string) error {
+	if proxyURL == "" {
 		return nil
 	}
 
-	if strings.HasPrefix(proxyUrl, "https://") {
-		return fmt.Errorf("Proxy URL '%s' is not valid: https is not supported", proxyUrl)
+	if strings.HasPrefix(proxyURL, "https://") {
+		return fmt.Errorf("Proxy URL '%s' is not valid: https is not supported", proxyURL)
 	}
-	if !strings.HasPrefix(proxyUrl, "http://") {
-		return fmt.Errorf("Proxy URL '%s' is not valid: url should start with http://", proxyUrl)
+	if !strings.HasPrefix(proxyURL, "http://") {
+		return fmt.Errorf("Proxy URL '%s' is not valid: url should start with http://", proxyURL)
 	}
-	if !govalidator.IsURL(proxyUrl) {
-		return fmt.Errorf("Proxy URL '%s' is not valid.", proxyUrl)
+	if !govalidator.IsURL(proxyURL) {
+		return fmt.Errorf("Proxy URL '%s' is not valid", proxyURL)
 	}
 	return nil
 }

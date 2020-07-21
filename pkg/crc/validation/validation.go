@@ -50,9 +50,8 @@ func ValidateBundle(bundle string) error {
 	if err := ValidatePath(bundle); err != nil {
 		if constants.BundleEmbedded() {
 			return errors.Newf("Run 'crc setup' to unpack the bundle to disk")
-		} else {
-			return errors.Newf("Please provide the path to a valid bundle using the -b option")
 		}
+		return errors.Newf("Please provide the path to a valid bundle using the -b option")
 	}
 	// Check if the version of the bundle provided by user is same as what is released with crc.
 	releaseBundleVersion := version.GetBundleVersion()
@@ -63,8 +62,8 @@ func ValidateBundle(bundle string) error {
 	return nil
 }
 
-// ValidateIpAddress checks if provided IP is valid
-func ValidateIpAddress(ipAddress string) error {
+// ValidateIPAddress checks if provided IP is valid
+func ValidateIPAddress(ipAddress string) error {
 	ip := net.ParseIP(ipAddress).To4()
 	if ip == nil {
 		return errors.Newf("'%s' is not a valid IPv4 address", ipAddress)

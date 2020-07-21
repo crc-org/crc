@@ -9,17 +9,17 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
-func CreateApiServer(socketPath string) (CrcApiServer, error) {
+func CreateAPIServer(socketPath string) (CrcAPIServer, error) {
 	listener, err := net.Listen("unix", socketPath)
 	if err != nil {
 		logging.Error("Failed to create socket: ", err.Error())
-		return CrcApiServer{}, err
+		return CrcAPIServer{}, err
 	}
-	return createApiServerWithListener(listener)
+	return createAPIServerWithListener(listener)
 }
 
-func createApiServerWithListener(listener net.Listener) (CrcApiServer, error) {
-	apiServer := CrcApiServer{
+func createAPIServerWithListener(listener net.Listener) (CrcAPIServer, error) {
+	apiServer := CrcAPIServer{
 		listener:               listener,
 		clusterOpsRequestsChan: make(chan clusterOpsRequest, 10),
 		handlers: map[string]handlerFunc{
@@ -34,7 +34,7 @@ func createApiServerWithListener(listener net.Listener) (CrcApiServer, error) {
 	return apiServer, nil
 }
 
-func (api CrcApiServer) Serve() {
+func (api CrcAPIServer) Serve() {
 	go api.handleClusterOperations() // go routine that handles start, stop and delete calls
 	for {
 		conn, err := api.listener.Accept()
@@ -46,24 +46,24 @@ func (api CrcApiServer) Serve() {
 	}
 }
 
-func (api CrcApiServer) handleClusterOperations() {
+func (api CrcAPIServer) handleClusterOperations() {
 	for req := range api.clusterOpsRequestsChan {
 		api.handleRequest(req.command, req.socket)
 	}
 }
 
-func (api CrcApiServer) handleRequest(req commandRequest, conn net.Conn) {
+func (api CrcAPIServer) handleRequest(req commandRequest, conn net.Conn) {
 	defer conn.Close()
 	var result string
 	if handler, ok := api.handlers[req.Command]; ok {
 		result = handler(req.Args)
 	} else {
-		result = encodeErrorToJson(fmt.Sprintf("Unknown command supplied: %s", req.Command))
+		result = encodeErrorToJSON(fmt.Sprintf("Unknown command supplied: %s", req.Command))
 	}
 	writeStringToSocket(conn, result)
 }
 
-func (api CrcApiServer) handleConnections(conn net.Conn) {
+func (api CrcAPIServer) handleConnections(conn net.Conn) {
 	inBuffer := make([]byte, 1024)
 	var req commandRequest
 	numBytes, err := conn.Read(inBuffer)
@@ -89,7 +89,7 @@ func (api CrcApiServer) handleConnections(conn net.Conn) {
 		if !addRequestToChannel(r, api.clusterOpsRequestsChan) {
 			defer conn.Close()
 			logging.Error("Channel capacity reached, unable to add new request")
-			errMsg := encodeErrorToJson("Sockets channel capacity reached, unable to add new request")
+			errMsg := encodeErrorToJSON("Sockets channel capacity reached, unable to add new request")
 			writeStringToSocket(conn, errMsg)
 			return
 		}

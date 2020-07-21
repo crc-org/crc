@@ -8,7 +8,7 @@ import (
 	"github.com/code-ready/machine/libmachine/drivers"
 )
 
-type libvirtDriver struct {
+type Driver struct {
 	*drivers.BaseDriver
 
 	// Driver specific configuration
@@ -18,12 +18,12 @@ type libvirtDriver struct {
 	DiskPath    string
 	CacheMode   string
 	IOMode      string
-	DiskPathUrl string
+	DiskPathURL string
 	SSHKeyPath  string
 }
 
-func CreateHost(machineConfig config.MachineConfig) *libvirtDriver {
-	return &libvirtDriver{
+func CreateHost(machineConfig config.MachineConfig) *Driver {
+	return &Driver{
 		BaseDriver: &drivers.BaseDriver{
 			MachineName: machineConfig.Name,
 			StorePath:   constants.MachineBaseDir,
@@ -37,7 +37,7 @@ func CreateHost(machineConfig config.MachineConfig) *libvirtDriver {
 		IOMode:    DefaultIOMode,
 		// This force to add entry of DiskPath under crc machine config.json
 		DiskPath:    filepath.Join(constants.MachineBaseDir, "machines", machineConfig.Name, constants.DefaultName),
-		DiskPathUrl: machineConfig.DiskPathURL,
+		DiskPathURL: machineConfig.DiskPathURL,
 		SSHKeyPath:  machineConfig.SSHKeyPath,
 	}
 }

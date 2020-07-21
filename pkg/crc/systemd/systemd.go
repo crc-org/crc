@@ -4,7 +4,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/systemd/states"
 )
 
-type SystemdCommander interface {
+type Commander interface {
 	Start(name string) (bool, error)
 	Stop(name string) (bool, error)
 	Reload(name string) (bool, error)

@@ -10,14 +10,14 @@ import (
 )
 
 func init() {
-	HyperkitDriver := MachineDriver{
+	HyperkitDriver := Driver{
 		Name:       "Hyperkit",
 		Platform:   crcos.DARWIN,
 		Driver:     "hyperkit",
 		DriverPath: constants.CrcBinDir,
 	}
 
-	SupportedDrivers = []MachineDriver{
+	SupportedDrivers = []Driver{
 		HyperkitDriver,
 	}
 

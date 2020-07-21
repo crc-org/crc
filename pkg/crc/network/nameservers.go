@@ -10,7 +10,7 @@ import (
 )
 
 // HasGivenNameserversConfigured returns true if the instance uses a provided nameserver.
-func HasGivenNameserversConfigured(sshRunner *ssh.SSHRunner, nameserver NameServer) (bool, error) {
+func HasGivenNameserversConfigured(sshRunner *ssh.Runner, nameserver NameServer) (bool, error) {
 	cmd := "cat /etc/resolv.conf"
 	out, err := sshRunner.Run(cmd)
 
@@ -21,7 +21,7 @@ func HasGivenNameserversConfigured(sshRunner *ssh.SSHRunner, nameserver NameServ
 	return strings.Contains(out, nameserver.IPAddress), nil
 }
 
-func GetResolvValuesFromInstance(sshRunner *ssh.SSHRunner) (*ResolvFileValues, error) {
+func GetResolvValuesFromInstance(sshRunner *ssh.Runner) (*ResolvFileValues, error) {
 	cmd := "cat /etc/resolv.conf"
 	out, err := sshRunner.Run(cmd)
 
@@ -32,7 +32,7 @@ func GetResolvValuesFromInstance(sshRunner *ssh.SSHRunner) (*ResolvFileValues, e
 	return parseResolveConfFile(out)
 }
 
-func CreateResolvFileOnInstance(sshRunner *ssh.SSHRunner, resolvFileValues ResolvFileValues) {
+func CreateResolvFileOnInstance(sshRunner *ssh.Runner, resolvFileValues ResolvFileValues) {
 	resolvFile, _ := CreateResolvFile(resolvFileValues)
 
 	err := sshRunner.CopyData([]byte(resolvFile), "/etc/resolv.conf")
@@ -43,14 +43,14 @@ func CreateResolvFileOnInstance(sshRunner *ssh.SSHRunner, resolvFileValues Resol
 
 // AddNameserversToInstance will add additional nameservers to the end of the
 // /etc/resolv.conf file inside the instance.
-func AddNameserversToInstance(sshRunner *ssh.SSHRunner, nameservers []NameServer) {
+func AddNameserversToInstance(sshRunner *ssh.Runner, nameservers []NameServer) {
 	for _, ns := range nameservers {
 		addNameserverToInstance(sshRunner, ns)
 	}
 }
 
 // writes nameserver to the /etc/resolv.conf inside the instance
-func addNameserverToInstance(sshRunner *ssh.SSHRunner, nameserver NameServer) {
+func addNameserverToInstance(sshRunner *ssh.Runner, nameserver NameServer) {
 	executeCommandOrExit(sshRunner,
 		fmt.Sprintf("NS=%s; cat /etc/resolv.conf |grep -i \"^nameserver $NS\" || echo \"nameserver $NS\" | sudo tee -a /etc/resolv.conf", nameserver.IPAddress),
 		"Error adding nameserver")

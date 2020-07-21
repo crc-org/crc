@@ -12,10 +12,10 @@ import (
 )
 
 var (
-	available = &ClusterStatus{
+	available = &Status{
 		Available: true,
 	}
-	progressing = &ClusterStatus{
+	progressing = &Status{
 		Available:   true,
 		Progressing: true,
 	}
@@ -52,8 +52,8 @@ func TestGetClusterOperatorStatusNotFound(t *testing.T) {
 	assert.EqualError(t, err, "no cluster operator found")
 }
 
-func ocConfig(s string) oc.OcConfig {
-	return oc.OcConfig{
+func ocConfig(s string) oc.Config {
+	return oc.Config{
 		Runner: &mockRunner{file: filepath.Join("testdata", s)},
 	}
 }

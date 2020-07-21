@@ -17,26 +17,26 @@ import (
 
 const (
 	// Fall Creators update comes with the "Default Switch"
-	minimumWindowsReleaseId = 1709
+	minimumWindowsReleaseID = 1709
 )
 
 func checkVersionOfWindowsUpdate() error {
-	windowsReleaseId := `(Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseId`
+	windowsReleaseID := `(Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseId`
 
-	stdOut, _, err := powershell.Execute(windowsReleaseId)
+	stdOut, _, err := powershell.Execute(windowsReleaseID)
 	if err != nil {
 		logging.Debug(err.Error())
 		return fmt.Errorf("Failed to get Windows release id")
 	}
-	yourWindowsReleaseId, err := strconv.Atoi(strings.TrimSpace(stdOut))
+	yourWindowsReleaseID, err := strconv.Atoi(strings.TrimSpace(stdOut))
 
 	if err != nil {
 		logging.Debug(err.Error())
 		return fmt.Errorf("Failed to parse Windows release id: %s", stdOut)
 	}
 
-	if yourWindowsReleaseId < minimumWindowsReleaseId {
-		return fmt.Errorf("Please update Windows. Currently %d is the minimum release needed to run. You are running %d", minimumWindowsReleaseId, yourWindowsReleaseId)
+	if yourWindowsReleaseID < minimumWindowsReleaseID {
+		return fmt.Errorf("Please update Windows. Currently %d is the minimum release needed to run. You are running %d", minimumWindowsReleaseID, yourWindowsReleaseID)
 	}
 	return nil
 }
@@ -168,12 +168,12 @@ func checkIfRunningAsNormalUser() error {
 	return fmt.Errorf("crc should be ran as a normal user")
 }
 
-func removeDnsServerAddress() error {
-	resetDnsCommand := `Set-DnsClientServerAddress -InterfaceAlias ("vEthernet (crc)") -ResetServerAddresses`
+func removeDNSServerAddress() error {
+	resetDNSCommand := `Set-DnsClientServerAddress -InterfaceAlias ("vEthernet (crc)") -ResetServerAddresses`
 	if exist, defaultSwitch := winnet.GetDefaultSwitchName(); exist {
-		resetDnsCommand = fmt.Sprintf(`Set-DnsClientServerAddress -InterfaceAlias ("vEthernet (%s)","vEthernet (crc)") -ResetServerAddresses`, defaultSwitch)
+		resetDNSCommand = fmt.Sprintf(`Set-DnsClientServerAddress -InterfaceAlias ("vEthernet (%s)","vEthernet (crc)") -ResetServerAddresses`, defaultSwitch)
 	}
-	if _, _, err := powershell.ExecuteAsAdmin("Remove dns entry for default switch", resetDnsCommand); err != nil {
+	if _, _, err := powershell.ExecuteAsAdmin("Remove dns entry for default switch", resetDNSCommand); err != nil {
 		return err
 	}
 	return nil

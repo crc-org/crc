@@ -5,7 +5,7 @@ import (
 )
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
-var hyperkitPreflightChecks = [...]PreflightCheck{
+var hyperkitPreflightChecks = [...]Check{
 	{
 		configKeySuffix:  "check-hyperkit-installed",
 		checkDescription: "Checking if HyperKit is installed",
@@ -22,7 +22,7 @@ var hyperkitPreflightChecks = [...]PreflightCheck{
 	},
 }
 
-var dnsPreflightChecks = [...]PreflightCheck{
+var dnsPreflightChecks = [...]Check{
 	{
 		configKeySuffix:  "check-hosts-file-permissions",
 		checkDescription: fmt.Sprintf("Checking file permissions for %s", hostsFile),
@@ -41,7 +41,7 @@ var dnsPreflightChecks = [...]PreflightCheck{
 	},
 }
 
-var traySetupChecks = [...]PreflightCheck{
+var traySetupChecks = [...]Check{
 	{
 		checkDescription: "Checking if tray binary is installed",
 		check:            checkTrayBinaryPresent,
@@ -94,8 +94,8 @@ var traySetupChecks = [...]PreflightCheck{
 	},
 }
 
-func getPreflightChecks() []PreflightCheck {
-	checks := []PreflightCheck{}
+func getPreflightChecks() []Check {
+	checks := []Check{}
 
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, nonWinPreflightChecks[:]...)

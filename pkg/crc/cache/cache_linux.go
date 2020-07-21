@@ -6,5 +6,5 @@ import (
 )
 
 func NewMachineDriverLibvirtCache(version string, getVersion func() (string, error)) *Cache {
-	return New(libvirt.MachineDriverCommand, libvirt.MachineDriverDownloadUrl, constants.CrcBinDir, version, getVersion)
+	return New(libvirt.MachineDriverCommand, libvirt.MachineDriverDownloadURL, constants.CrcBinDir, version, getVersion)
 }

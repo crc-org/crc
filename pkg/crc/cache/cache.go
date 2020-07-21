@@ -38,15 +38,15 @@ func New(binaryName string, archiveURL string, destDir string, version string, g
 }
 
 func NewOcCache(version string, getVersion func() (string, error)) *Cache {
-	return New(constants.OcBinaryName, constants.GetOcUrl(), constants.CrcOcBinDir, version, getVersion)
+	return New(constants.OcBinaryName, constants.GetOcURL(), constants.CrcOcBinDir, version, getVersion)
 }
 
 func NewPodmanCache(version string, getVersion func() (string, error)) *Cache {
-	return New(constants.PodmanBinaryName, constants.GetPodmanUrl(), constants.CrcBinDir, version, getVersion)
+	return New(constants.PodmanBinaryName, constants.GetPodmanURL(), constants.CrcBinDir, version, getVersion)
 }
 
 func NewGoodhostsCache(version string, getVersion func() (string, error)) *Cache {
-	return New(constants.GoodhostsBinaryName, constants.GetGoodhostsUrl(), constants.CrcBinDir, version, getVersion)
+	return New(constants.GoodhostsBinaryName, constants.GetGoodhostsURL(), constants.CrcBinDir, version, getVersion)
 }
 
 func (c *Cache) IsCached() bool {

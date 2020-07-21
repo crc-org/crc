@@ -11,7 +11,7 @@ type commandError struct {
 	Err string
 }
 
-type CrcApiServer struct {
+type CrcAPIServer struct {
 	listener               net.Listener
 	clusterOpsRequestsChan chan clusterOpsRequest
 	handlers               map[string]handlerFunc // relates commands to handler func

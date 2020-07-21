@@ -15,7 +15,7 @@ import (
 
 type SetFn func(string, string) string
 
-type setting struct {
+type Setting struct {
 	Name          string
 	defaultValue  interface{}
 	validationFns []ValidationFnType
@@ -33,7 +33,7 @@ var (
 	// because they were changed at runtime)
 	changedConfigs map[string]interface{}
 	// allSettings holds all the config settings
-	allSettings = make(map[string]*setting)
+	allSettings = make(map[string]*Setting)
 )
 
 // GetBool returns the value of a boolean config key
@@ -165,8 +165,8 @@ func BindFlagSet(flagSet *pflag.FlagSet) error {
 
 // AddSetting returns a filled struct of ConfigSetting
 // takes the config name and default value as arguments
-func AddSetting(name string, defValue interface{}, validationFn []ValidationFnType, callbackFn []SetFn) *setting {
-	s := setting{Name: name, defaultValue: defValue, validationFns: validationFn, callbackFns: callbackFn}
+func AddSetting(name string, defValue interface{}, validationFn []ValidationFnType, callbackFn []SetFn) *Setting {
+	s := Setting{Name: name, defaultValue: defValue, validationFns: validationFn, callbackFns: callbackFn}
 	allSettings[name] = &s
 	return &s
 }

@@ -1,6 +1,6 @@
 package preflight
 
-var hypervPreflightChecks = [...]PreflightCheck{
+var hypervPreflightChecks = [...]Check{
 	{
 		configKeySuffix:  "check-administrator-user",
 		checkDescription: "Checking if running as normal user",
@@ -45,7 +45,7 @@ var hypervPreflightChecks = [...]PreflightCheck{
 	},
 	{
 		cleanupDescription: "Removing dns server from interface",
-		cleanup:            removeDnsServerAddress,
+		cleanup:            removeDNSServerAddress,
 		flags:              CleanUpOnly,
 	},
 	{
@@ -55,7 +55,7 @@ var hypervPreflightChecks = [...]PreflightCheck{
 	},
 }
 
-var traySetupChecks = [...]PreflightCheck{
+var traySetupChecks = [...]Check{
 	{
 		checkDescription:   "Checking if user is allowed to log on as a service",
 		check:              checkUserHasServiceLogonEnabled,
@@ -115,8 +115,8 @@ var traySetupChecks = [...]PreflightCheck{
 	},
 }
 
-func getPreflightChecks() []PreflightCheck {
-	checks := []PreflightCheck{}
+func getPreflightChecks() []Check {
+	checks := []Check{}
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, hypervPreflightChecks[:]...)
 

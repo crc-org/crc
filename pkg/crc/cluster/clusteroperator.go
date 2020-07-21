@@ -29,23 +29,23 @@ type K8sResource struct {
 }
 
 // https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusteroperator.md#what-should-an-operator-report-with-clusteroperator-custom-resource
-type ClusterStatus struct {
+type Status struct {
 	Available   bool
 	Degraded    bool
 	Progressing bool
 	Disabled    bool
 }
 
-func GetClusterOperatorStatus(ocConfig oc.OcConfig, operator string) (*ClusterStatus, error) {
+func GetClusterOperatorStatus(ocConfig oc.Config, operator string) (*Status, error) {
 	return getStatus(ocConfig, []string{operator})
 }
 
-func GetClusterOperatorsStatus(ocConfig oc.OcConfig) (*ClusterStatus, error) {
+func GetClusterOperatorsStatus(ocConfig oc.Config) (*Status, error) {
 	return getStatus(ocConfig, []string{})
 }
 
-func getStatus(ocConfig oc.OcConfig, selector []string) (*ClusterStatus, error) {
-	cs := &ClusterStatus{
+func getStatus(ocConfig oc.Config, selector []string) (*Status, error) {
+	cs := &Status{
 		Available: true,
 	}
 

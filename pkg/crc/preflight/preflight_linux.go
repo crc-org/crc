@@ -1,6 +1,6 @@
 package preflight
 
-var libvirtPreflightChecks = [...]PreflightCheck{
+var libvirtPreflightChecks = [...]Check{
 	{
 		configKeySuffix:  "check-virt-enabled",
 		checkDescription: "Checking if Virtualization is enabled",
@@ -112,8 +112,8 @@ var libvirtPreflightChecks = [...]PreflightCheck{
 	},
 }
 
-func getPreflightChecks() []PreflightCheck {
-	checks := []PreflightCheck{}
+func getPreflightChecks() []Check {
+	checks := []Check{}
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, nonWinPreflightChecks[:]...)
 	checks = append(checks, libvirtPreflightChecks[:]...)

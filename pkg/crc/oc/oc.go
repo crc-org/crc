@@ -7,63 +7,63 @@ import (
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
-type OcRunner interface {
+type Runner interface {
 	Run(args ...string) (string, string, error)
 	RunPrivate(args ...string) (string, string, error)
 }
 
-type OcConfig struct {
-	Runner  OcRunner
+type Config struct {
+	Runner  Runner
 	Context string
 	Cluster string
 }
 
-type OcLocalRunner struct {
+type LocalRunner struct {
 	OcBinaryPath   string
 	KubeconfigPath string
 }
 
-func (oc OcLocalRunner) Run(args ...string) (string, string, error) {
+func (oc LocalRunner) Run(args ...string) (string, string, error) {
 	args = append(args, "--kubeconfig", oc.KubeconfigPath)
 	return crcos.RunWithDefaultLocale(oc.OcBinaryPath, args...)
 }
 
-func (oc OcLocalRunner) RunPrivate(args ...string) (string, string, error) {
+func (oc LocalRunner) RunPrivate(args ...string) (string, string, error) {
 	args = append(args, "--kubeconfig", oc.KubeconfigPath)
 	return crcos.RunWithDefaultLocalePrivate(oc.OcBinaryPath, args...)
 }
 
-type OcEnvRunner struct {
+type EnvRunner struct {
 	OcBinaryPath  string
 	KubeconfigEnv string
 }
 
-func (oc OcEnvRunner) Run(args ...string) (string, string, error) {
+func (oc EnvRunner) Run(args ...string) (string, string, error) {
 	return crcos.RunWithDefaultLocaleAndEnv(oc.OcBinaryPath, args, map[string]string{
 		"KUBECONFIG": oc.KubeconfigEnv,
 	})
 }
 
-func (oc OcEnvRunner) RunPrivate(args ...string) (string, string, error) {
+func (oc EnvRunner) RunPrivate(args ...string) (string, string, error) {
 	return crcos.RunWithDefaultLocalePrivateAndEnv(oc.OcBinaryPath, args, map[string]string{
 		"KUBECONFIG": oc.KubeconfigEnv,
 	})
 }
 
 // UseOcWithConfig return the oc binary along with valid kubeconfig
-func UseOCWithConfig(machineName string) OcConfig {
-	localRunner := OcLocalRunner{
+func UseOCWithConfig(machineName string) Config {
+	localRunner := LocalRunner{
 		OcBinaryPath:   filepath.Join(constants.CrcOcBinDir, constants.OcBinaryName),
 		KubeconfigPath: filepath.Join(constants.MachineInstanceDir, machineName, "kubeconfig"),
 	}
-	return OcConfig{
+	return Config{
 		Runner:  localRunner,
 		Context: constants.DefaultContext,
 		Cluster: constants.DefaultName,
 	}
 }
 
-func (oc OcConfig) RunOcCommand(args ...string) (string, string, error) {
+func (oc Config) RunOcCommand(args ...string) (string, string, error) {
 	if oc.Context != "" {
 		args = append(args, "--context", oc.Context)
 	}
@@ -73,7 +73,7 @@ func (oc OcConfig) RunOcCommand(args ...string) (string, string, error) {
 	return oc.Runner.Run(args...)
 }
 
-func (oc OcConfig) RunOcCommandPrivate(args ...string) (string, string, error) {
+func (oc Config) RunOcCommandPrivate(args ...string) (string, string, error) {
 	if oc.Context != "" {
 		args = append(args, "--context", oc.Context)
 	}

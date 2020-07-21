@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	HWND_DESKTOP = windows.Handle(0)
+	HwndDesktop = windows.Handle(0)
 )
 
 // Uses "runas" as verb to execute as Elevated privileges

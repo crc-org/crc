@@ -140,5 +140,5 @@ func waitForNetwork() error {
 			}
 		}
 	}
-	return fmt.Errorf("Host is not connected to internet.")
+	return fmt.Errorf("Host is not connected to internet")
 }

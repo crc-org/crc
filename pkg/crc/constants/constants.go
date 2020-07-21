@@ -30,54 +30,54 @@ const (
 	CrcLandingPageURL    = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
 	PullSecretFile       = "pullsecret.json"
 
-	DefaultOcUrlBase          = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp"
-	DefaultPodmanUrlBase      = "https://storage.googleapis.com/libpod-master-releases"
+	DefaultOcURLBase          = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp"
+	DefaultPodmanURLBase      = "https://storage.googleapis.com/libpod-master-releases"
 	DefaultGoodhostsCliBase   = "https://github.com/code-ready/goodhosts-cli/releases/download/v1.0.0"
 	CrcTrayDownloadURL        = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
 	CRCWindowsTrayDownloadURL = "https://github.com/code-ready/tray-windows/releases/download/v%s/crc-tray-windows.zip"
 	DefaultContext            = "admin"
 )
 
-var ocUrlForOs = map[string]string{
-	"darwin":  fmt.Sprintf("%s/%s/%s", DefaultOcUrlBase, version.GetOcVersion(), "openshift-client-mac.tar.gz"),
-	"linux":   fmt.Sprintf("%s/%s/%s", DefaultOcUrlBase, version.GetOcVersion(), "openshift-client-linux.tar.gz"),
-	"windows": fmt.Sprintf("%s/%s/%s", DefaultOcUrlBase, version.GetOcVersion(), "openshift-client-windows.zip"),
+var ocURLForOs = map[string]string{
+	"darwin":  fmt.Sprintf("%s/%s/%s", DefaultOcURLBase, version.GetOcVersion(), "openshift-client-mac.tar.gz"),
+	"linux":   fmt.Sprintf("%s/%s/%s", DefaultOcURLBase, version.GetOcVersion(), "openshift-client-linux.tar.gz"),
+	"windows": fmt.Sprintf("%s/%s/%s", DefaultOcURLBase, version.GetOcVersion(), "openshift-client-windows.zip"),
 }
 
-func GetOcUrlForOs(os string) string {
-	return ocUrlForOs[os]
+func GetOcURLForOs(os string) string {
+	return ocURLForOs[os]
 }
 
-func GetOcUrl() string {
-	return GetOcUrlForOs(runtime.GOOS)
+func GetOcURL() string {
+	return GetOcURLForOs(runtime.GOOS)
 }
 
-var podmanUrlForOs = map[string]string{
-	"darwin":  fmt.Sprintf("%s/%s", DefaultPodmanUrlBase, "podman-remote-latest-master-darwin-amd64.zip"),
-	"linux":   fmt.Sprintf("%s/%s", DefaultPodmanUrlBase, "podman-remote-latest-master-linux---amd64.zip"),
-	"windows": fmt.Sprintf("%s/%s", DefaultPodmanUrlBase, "podman-remote-latest-master-windows-amd64.zip"),
+var podmanURLForOs = map[string]string{
+	"darwin":  fmt.Sprintf("%s/%s", DefaultPodmanURLBase, "podman-remote-latest-master-darwin-amd64.zip"),
+	"linux":   fmt.Sprintf("%s/%s", DefaultPodmanURLBase, "podman-remote-latest-master-linux---amd64.zip"),
+	"windows": fmt.Sprintf("%s/%s", DefaultPodmanURLBase, "podman-remote-latest-master-windows-amd64.zip"),
 }
 
-func GetPodmanUrlForOs(os string) string {
-	return podmanUrlForOs[os]
+func GetPodmanURLForOs(os string) string {
+	return podmanURLForOs[os]
 }
 
-func GetPodmanUrl() string {
-	return podmanUrlForOs[runtime.GOOS]
+func GetPodmanURL() string {
+	return podmanURLForOs[runtime.GOOS]
 }
 
-var goodhostsUrlForOs = map[string]string{
+var goodhostsURLForOs = map[string]string{
 	"darwin":  fmt.Sprintf("%s/%s", DefaultGoodhostsCliBase, "goodhosts-cli-macos-amd64.tar.xz"),
 	"linux":   fmt.Sprintf("%s/%s", DefaultGoodhostsCliBase, "goodhosts-cli-linux-amd64.tar.xz"),
 	"windows": fmt.Sprintf("%s/%s", DefaultGoodhostsCliBase, "goodhosts-cli-windows-amd64.tar.xz"),
 }
 
-func GetGoodhostsUrlForOs(os string) string {
-	return goodhostsUrlForOs[os]
+func GetGoodhostsURLForOs(os string) string {
+	return goodhostsURLForOs[os]
 }
 
-func GetGoodhostsUrl() string {
-	return goodhostsUrlForOs[runtime.GOOS]
+func GetGoodhostsURL() string {
+	return goodhostsURLForOs[runtime.GOOS]
 }
 
 var defaultBundleForOs = map[string]string{

@@ -15,8 +15,8 @@ import (
 	"github.com/pborman/uuid"
 )
 
-func WaitForSsh(sshRunner *ssh.SSHRunner) error {
-	checkSshConnectivity := func() error {
+func WaitForSSH(sshRunner *ssh.Runner) error {
+	checkSSHConnectivity := func() error {
 		_, err := sshRunner.Run("exit 0")
 		if err != nil {
 			return &errors.RetriableError{Err: err}
@@ -24,7 +24,7 @@ func WaitForSsh(sshRunner *ssh.SSHRunner) error {
 		return nil
 	}
 
-	return errors.RetryAfter(60, checkSshConnectivity, time.Second)
+	return errors.RetryAfter(60, checkSSHConnectivity, time.Second)
 }
 
 type CertExpiryState int
@@ -36,7 +36,7 @@ const (
 )
 
 // CheckCertsValidity checks if the cluster certs have expired or going to expire in next 7 days
-func CheckCertsValidity(sshRunner *ssh.SSHRunner) (CertExpiryState, error) {
+func CheckCertsValidity(sshRunner *ssh.Runner) (CertExpiryState, error) {
 	certExpiryDate, err := getcertExpiryDateFromVM(sshRunner)
 	if err != nil {
 		return Unknown, err
@@ -48,7 +48,7 @@ func CheckCertsValidity(sshRunner *ssh.SSHRunner) (CertExpiryState, error) {
 	return CertNotExpired, nil
 }
 
-func getcertExpiryDateFromVM(sshRunner *ssh.SSHRunner) (time.Time, error) {
+func getcertExpiryDateFromVM(sshRunner *ssh.Runner) (time.Time, error) {
 	certExpiryDate := time.Time{}
 	certExpiryDateCmd := `date --date="$(sudo openssl x509 -in /var/lib/kubelet/pki/kubelet-client-current.pem -noout -enddate | cut -d= -f 2)" --iso-8601=seconds`
 	output, err := sshRunner.Run(certExpiryDateCmd)
@@ -63,7 +63,7 @@ func getcertExpiryDateFromVM(sshRunner *ssh.SSHRunner) (time.Time, error) {
 }
 
 // Return size of disk, used space in bytes and the mountpoint
-func GetRootPartitionUsage(sshRunner *ssh.SSHRunner) (int64, int64, error) {
+func GetRootPartitionUsage(sshRunner *ssh.Runner) (int64, int64, error) {
 	cmd := "df -B1 --output=size,used,target /sysroot | tail -1"
 
 	out, err := sshRunner.Run(cmd)
@@ -83,7 +83,7 @@ func GetRootPartitionUsage(sshRunner *ssh.SSHRunner) (int64, int64, error) {
 	return diskSize, diskUsage, nil
 }
 
-func AddPullSecret(sshRunner *ssh.SSHRunner, ocConfig oc.OcConfig, pullSec string) error {
+func AddPullSecret(sshRunner *ssh.Runner, ocConfig oc.Config, pullSec string) error {
 	if err := addPullSecretToInstanceDisk(sshRunner, pullSec); err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func AddPullSecret(sshRunner *ssh.SSHRunner, ocConfig oc.OcConfig, pullSec strin
 	return nil
 }
 
-func UpdateClusterID(ocConfig oc.OcConfig) error {
+func UpdateClusterID(ocConfig oc.Config) error {
 	clusterID := uuid.New()
 	cmdArgs := []string{"patch", "clusterversion", "version", "-p",
 		fmt.Sprintf(`{"spec":{"clusterID":"%s"}}`, clusterID), "--type", "merge"}
@@ -119,9 +119,9 @@ func UpdateClusterID(ocConfig oc.OcConfig) error {
 	return nil
 }
 
-func AddProxyConfigToCluster(ocConfig oc.OcConfig, proxy *network.ProxyConfig) error {
+func AddProxyConfigToCluster(ocConfig oc.Config, proxy *network.ProxyConfig) error {
 	cmdArgs := []string{"patch", "proxy", "cluster", "-p",
-		fmt.Sprintf(`{"spec":{"httpProxy":"%s", "httpsProxy":"%s", "noProxy":"%s"}}`, proxy.HttpProxy, proxy.HttpsProxy, proxy.GetNoProxyString()),
+		fmt.Sprintf(`{"spec":{"httpProxy":"%s", "httpsProxy":"%s", "noProxy":"%s"}}`, proxy.HTTPProxy, proxy.HTTPSProxy, proxy.GetNoProxyString()),
 		"-n", "openshift-config", "--type", "merge"}
 
 	if err := WaitForOpenshiftResource(ocConfig, "proxy"); err != nil {
@@ -138,12 +138,12 @@ func AddProxyConfigToCluster(ocConfig oc.OcConfig, proxy *network.ProxyConfig) e
 // Since proxy operator is not able to make changes to in the kubelet/crio side,
 // this is the job of machine config operator on the node and for crc this is not
 // possible so we do need to put it here.
-func AddProxyToKubeletAndCriO(sshRunner *ssh.SSHRunner, proxy *network.ProxyConfig) error {
+func AddProxyToKubeletAndCriO(sshRunner *ssh.Runner, proxy *network.ProxyConfig) error {
 	proxyTemplate := `[Service]
 Environment=HTTP_PROXY=%s
 Environment=HTTPS_PROXY=%s
 Environment=NO_PROXY=.cluster.local,.svc,10.128.0.0/14,172.30.0.0/16,%s`
-	p := fmt.Sprintf(proxyTemplate, proxy.HttpProxy, proxy.HttpsProxy, proxy.GetNoProxyString())
+	p := fmt.Sprintf(proxyTemplate, proxy.HTTPProxy, proxy.HTTPSProxy, proxy.GetNoProxyString())
 	// This will create a systemd drop-in configuration for proxy (both for kubelet and crio services) on the VM.
 	err := sshRunner.SetTextContentAsRoot("/etc/systemd/system/crio.service.d/10-default-env.conf", p, 0644)
 	if err != nil {
@@ -156,7 +156,7 @@ Environment=NO_PROXY=.cluster.local,.svc,10.128.0.0/14,172.30.0.0/16,%s`
 	return nil
 }
 
-func addPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error {
+func addPullSecretToInstanceDisk(sshRunner *ssh.Runner, pullSec string) error {
 	err := sshRunner.SetTextContentAsRoot("/var/lib/kubelet/config.json", pullSec, 0600)
 	if err != nil {
 		return err
@@ -165,7 +165,7 @@ func addPullSecretToInstanceDisk(sshRunner *ssh.SSHRunner, pullSec string) error
 	return nil
 }
 
-func WaitforRequestHeaderClientCaFile(ocConfig oc.OcConfig) error {
+func WaitforRequestHeaderClientCaFile(ocConfig oc.Config) error {
 	if err := WaitForOpenshiftResource(ocConfig, "configmaps"); err != nil {
 		return err
 	}
@@ -187,12 +187,12 @@ func WaitforRequestHeaderClientCaFile(ocConfig oc.OcConfig) error {
 	return errors.RetryAfter(90, lookupRequestHeaderClientCa, 2*time.Second)
 }
 
-func DeleteOpenshiftApiServerPods(ocConfig oc.OcConfig) error {
+func DeleteOpenshiftAPIServerPods(ocConfig oc.Config) error {
 	if err := WaitForOpenshiftResource(ocConfig, "pod"); err != nil {
 		return err
 	}
 
-	deleteOpenshiftApiserverPods := func() error {
+	deleteOpenshiftAPIServerPods := func() error {
 		cmdArgs := []string{"delete", "pod", "--all", "-n", "openshift-apiserver"}
 		_, _, err := ocConfig.RunOcCommand(cmdArgs...)
 		if err != nil {
@@ -201,10 +201,10 @@ func DeleteOpenshiftApiServerPods(ocConfig oc.OcConfig) error {
 		return nil
 	}
 
-	return errors.RetryAfter(60, deleteOpenshiftApiserverPods, time.Second)
+	return errors.RetryAfter(60, deleteOpenshiftAPIServerPods, time.Second)
 }
 
-func CheckProxySettingsForOperator(ocConfig oc.OcConfig, proxy *network.ProxyConfig, deployment, namespace string) (bool, error) {
+func CheckProxySettingsForOperator(ocConfig oc.Config, proxy *network.ProxyConfig, deployment, namespace string) (bool, error) {
 	if !proxy.IsEnabled() {
 		logging.Debugf("No proxy in use")
 		return true, nil
@@ -214,7 +214,7 @@ func CheckProxySettingsForOperator(ocConfig oc.OcConfig, proxy *network.ProxyCon
 	if err != nil {
 		return false, err
 	}
-	if strings.Contains(out, proxy.HttpsProxy) || strings.Contains(out, proxy.HttpProxy) {
+	if strings.Contains(out, proxy.HTTPSProxy) || strings.Contains(out, proxy.HTTPProxy) {
 		return true, nil
 	}
 	return false, nil
