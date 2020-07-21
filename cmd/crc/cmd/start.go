@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -18,6 +16,8 @@ import (
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	"github.com/code-ready/crc/pkg/crc/version"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 func init() {
@@ -42,7 +42,7 @@ var (
 
 func runStart(arguments []string) {
 	if err := validateStartFlags(); err != nil {
-		errors.Exit(1)
+		exit.WithoutMessage(1)
 	}
 
 	checkIfNewVersionAvailable(crcConfig.GetBool(config.DisableUpdateCheck.Name))
@@ -61,7 +61,7 @@ func runStart(arguments []string) {
 
 	commandResult, err := machine.Start(startConfig)
 	if err != nil {
-		errors.Exit(1)
+		exit.WithoutMessage(1)
 	}
 	if commandResult.Status == "Running" {
 		output.Outln("Started the OpenShift cluster")

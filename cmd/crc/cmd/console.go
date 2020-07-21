@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/pkg/browser"
@@ -40,7 +40,7 @@ func runConsole(arguments []string) {
 
 	result, err := machine.GetConsoleURL(consoleConfig)
 	if err != nil {
-		errors.Exit(1)
+		exit.WithoutMessage(1)
 	}
 
 	if consolePrintURL {
@@ -55,11 +55,11 @@ func runConsole(arguments []string) {
 	}
 
 	if !machine.IsRunning(result.State) {
-		errors.ExitWithMessage(1, "The OpenShift cluster is not running, cannot open the OpenShift Web Console.")
+		exit.WithMessage(1, "The OpenShift cluster is not running, cannot open the OpenShift Web Console.")
 	}
 	output.Outln("Opening the OpenShift Web Console in the default browser...")
 	err = browser.OpenURL(result.ClusterConfig.WebConsoleURL)
 	if err != nil {
-		errors.ExitWithMessage(1, "Failed to open the OpenShift Web Console, you can access it by opening %s in your web browser.", result.ClusterConfig.WebConsoleURL)
+		exit.WithMessage(1, "Failed to open the OpenShift Web Console, you can access it by opening %s in your web browser.", result.ClusterConfig.WebConsoleURL)
 	}
 }

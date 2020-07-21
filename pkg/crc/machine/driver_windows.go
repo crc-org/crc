@@ -1,11 +1,10 @@
 package machine
 
 import (
-	"github.com/code-ready/crc/pkg/crc/errors"
-	crcos "github.com/code-ready/crc/pkg/os"
-
+	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"github.com/code-ready/crc/pkg/crc/machine/hyperv"
+	crcos "github.com/code-ready/crc/pkg/os"
 )
 
 func init() {
@@ -32,7 +31,7 @@ func getDriverOptions(machineConfig config.MachineConfig) interface{} {
 		driver = hyperv.CreateHost(machineConfig)
 
 	default:
-		errors.ExitWithMessage(1, "Unsupported driver: %s", machineConfig.VMDriver)
+		exit.WithMessage(1, "Unsupported driver: %s", machineConfig.VMDriver)
 	}
 
 	return driver

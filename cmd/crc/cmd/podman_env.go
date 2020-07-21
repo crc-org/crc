@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/os/shell"
@@ -16,11 +16,11 @@ var podmanEnvCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// See issue #961; Currently does not work on Windows in combination with the CRC vm.
-		errors.ExitWithMessage(1, "Currently not supported.")
+		exit.WithMessage(1, "Currently not supported.")
 
 		userShell, err := shell.GetShell(forceShell)
 		if err != nil {
-			errors.ExitWithMessage(1, "Error running the podman-env command: %s", err.Error())
+			exit.WithMessage(1, "Error running the podman-env command: %s", err.Error())
 		}
 
 		ipConfig := machine.IPConfig{
@@ -32,7 +32,7 @@ var podmanEnvCmd = &cobra.Command{
 
 		result, err := machine.IP(ipConfig)
 		if err != nil {
-			errors.Exit(1)
+			exit.WithoutMessage(1)
 		}
 
 		output.Outln(shell.GetPathEnvString(userShell, constants.CrcBinDir))
