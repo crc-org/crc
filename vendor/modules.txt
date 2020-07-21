@@ -82,6 +82,8 @@ github.com/mattn/go-runewidth
 github.com/mgutz/ansi
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
+# github.com/pbnjay/memory v0.0.0-20190104145345-974d429e7ae4
+github.com/pbnjay/memory
 # github.com/pborman/uuid v1.2.0
 github.com/pborman/uuid
 # github.com/pelletier/go-toml v1.2.0
