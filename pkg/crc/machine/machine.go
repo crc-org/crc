@@ -355,9 +355,16 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			result.Error = err.Error()
 			return *result, errors.Newf("Error copying kubeconfig file  %v", err)
 		}
+		// Copy kubeconfig file inside the VM
+		kubeconfigContent, _ := ioutil.ReadFile(kubeConfigFilePath)
+		_, err = sshRunner.RunPrivate(fmt.Sprintf("cat <<EOF | sudo tee /opt/kubeconfig\n%s\nEOF", string(kubeconfigContent)))
+		if err != nil {
+			result.Error = err.Error()
+			return *result, errors.Newf("Error copying kubeconfig file in VM %v", err)
+		}
 	}
 
-	ocConfig := oc.UseOCWithConfig(startConfig.Name)
+	ocConfig := oc.UseOCWithSSH(sshRunner)
 	if needsCertsRenewal {
 		logging.Info("Cluster TLS certificates have expired, renewing them... [will take up to 5 minutes]")
 		err = cluster.RegenerateCertificates(sshRunner, ocConfig)
@@ -600,8 +607,9 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 		}
 		proxyConfig.ApplyToEnvironment()
 
+		sshRunner := crcssh.CreateRunner(host.Driver)
 		// check if all the clusteroperators are running
-		ocConfig := oc.UseOCWithConfig(statusConfig.Name)
+		ocConfig := oc.UseOCWithSSH(sshRunner)
 		operatorsStatus, err := cluster.GetClusterOperatorsStatus(ocConfig)
 		if err != nil {
 			openshiftStatus = "Not Reachable"
@@ -619,7 +627,6 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 		case operatorsStatus.Progressing:
 			openshiftStatus = "Starting"
 		}
-		sshRunner := crcssh.CreateRunner(host.Driver)
 		diskSize, diskUse, err = cluster.GetRootPartitionUsage(sshRunner)
 		if err != nil {
 			result.Success = false

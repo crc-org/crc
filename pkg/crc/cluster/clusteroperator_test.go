@@ -7,7 +7,6 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/oc"
 
-	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -68,7 +67,8 @@ func (r *mockRunner) Run(args ...string) (string, string, error) {
 }
 
 func (r *mockRunner) RunPrivate(args ...string) (string, string, error) {
-	return "", "", errors.New("not implemented")
+	bin, err := ioutil.ReadFile(r.file)
+	return string(bin), "", err
 }
 
 func (r *mockRunner) GetKubeconfigPath() string {

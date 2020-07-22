@@ -33,7 +33,7 @@ func ApproveNodeCSR(ocConfig oc.Config) error {
 
 	logging.Debug("Approving pending CSRs")
 	// Execute 'oc get csr -oname' and store the output
-	csrsJSON, stderr, err := ocConfig.RunOcCommand("get", "csr", "-ojson")
+	csrsJSON, stderr, err := ocConfig.RunOcCommandPrivate("get", "csr", "-ojson")
 	if err != nil {
 		return fmt.Errorf("Not able to get csr names (%v : %s)", err, stderr)
 	}
