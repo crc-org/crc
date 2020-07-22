@@ -49,7 +49,7 @@ func getStatus(ocConfig oc.Config, selector []string) (*Status, error) {
 		Available: true,
 	}
 
-	data, stderr, err := ocConfig.RunOcCommand("get", "co", "-ojson")
+	data, stderr, err := ocConfig.RunOcCommandPrivate("get", "co", "-ojson")
 	if err != nil {
 		return cs, fmt.Errorf("%s", stderr)
 	}

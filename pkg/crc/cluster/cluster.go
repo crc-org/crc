@@ -90,7 +90,7 @@ func AddPullSecret(sshRunner *ssh.Runner, ocConfig oc.Config, pullSec string) er
 
 	base64OfPullSec := base64.StdEncoding.EncodeToString([]byte(pullSec))
 	cmdArgs := []string{"patch", "secret", "pull-secret", "-p",
-		fmt.Sprintf(`{"data":{".dockerconfigjson":"%s"}}`, base64OfPullSec),
+		fmt.Sprintf(`'{"data":{".dockerconfigjson":"%s"}}'`, base64OfPullSec),
 		"-n", "openshift-config", "--type", "merge"}
 
 	if err := WaitForOpenshiftResource(ocConfig, "secret"); err != nil {
@@ -106,7 +106,7 @@ func AddPullSecret(sshRunner *ssh.Runner, ocConfig oc.Config, pullSec string) er
 func UpdateClusterID(ocConfig oc.Config) error {
 	clusterID := uuid.New()
 	cmdArgs := []string{"patch", "clusterversion", "version", "-p",
-		fmt.Sprintf(`{"spec":{"clusterID":"%s"}}`, clusterID), "--type", "merge"}
+		fmt.Sprintf(`'{"spec":{"clusterID":"%s"}}'`, clusterID), "--type", "merge"}
 
 	if err := WaitForOpenshiftResource(ocConfig, "clusterversion"); err != nil {
 		return err
@@ -121,7 +121,7 @@ func UpdateClusterID(ocConfig oc.Config) error {
 
 func AddProxyConfigToCluster(ocConfig oc.Config, proxy *network.ProxyConfig) error {
 	cmdArgs := []string{"patch", "proxy", "cluster", "-p",
-		fmt.Sprintf(`{"spec":{"httpProxy":"%s", "httpsProxy":"%s", "noProxy":"%s"}}`, proxy.HTTPProxy, proxy.HTTPSProxy, proxy.GetNoProxyString()),
+		fmt.Sprintf(`'{"spec":{"httpProxy":"%s", "httpsProxy":"%s", "noProxy":"%s"}}'`, proxy.HTTPProxy, proxy.HTTPSProxy, proxy.GetNoProxyString()),
 		"-n", "openshift-config", "--type", "merge"}
 
 	if err := WaitForOpenshiftResource(ocConfig, "proxy"); err != nil {

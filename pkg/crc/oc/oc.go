@@ -1,9 +1,12 @@
 package oc
 
 import (
+	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/ssh"
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
@@ -81,4 +84,30 @@ func (oc Config) RunOcCommandPrivate(args ...string) (string, string, error) {
 		args = append(args, "--cluster", oc.Cluster)
 	}
 	return oc.Runner.RunPrivate(args...)
+}
+
+type SSHRunner struct {
+	Runner *ssh.Runner
+}
+
+func UseOCWithSSH(sshRunner *ssh.Runner) Config {
+	return Config{
+		Runner: SSHRunner{
+			Runner: sshRunner,
+		},
+		Context: constants.DefaultContext,
+		Cluster: constants.DefaultName,
+	}
+}
+
+func (oc SSHRunner) Run(args ...string) (string, string, error) {
+	command := fmt.Sprintf("oc --kubeconfig /opt/kubeconfig %s", strings.Join(args, " "))
+	stdout, err := oc.Runner.Run(command)
+	return stdout, "", err
+}
+
+func (oc SSHRunner) RunPrivate(args ...string) (string, string, error) {
+	command := fmt.Sprintf("oc --kubeconfig /opt/kubeconfig %s", strings.Join(args, " "))
+	stdout, err := oc.Runner.RunPrivate(command)
+	return stdout, "", err
 }
