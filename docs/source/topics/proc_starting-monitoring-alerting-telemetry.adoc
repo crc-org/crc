@@ -11,7 +11,7 @@ Telemetry functionality is responsible for listing your cluster in the link:http
 For more information, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the OpenShift cluster with `oc`].
 * You must log in through [command]`oc` as the `kubeadmin` user.
 * You must assign additional memory to the {prod} virtual machine.
-At least 12 GiB of memory (a value of `12288`) is recommended.
+At least 20 GiB of memory (a value of `20480`) is recommended.
 For more information, see link:{crc-gsg-url}#configuring-the-virtual-machine_gsg[Configuring the virtual machine].
 
 .Procedure
