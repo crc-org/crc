@@ -50,7 +50,7 @@ func GenerateUsageHint(userShell, cmdLine string) string {
 		cmd = fmt.Sprintf("eval $(%s)", cmdLine)
 	}
 
-	return fmt.Sprintf("%s Run this command to configure your shell:\n%s %s\n", comment, comment, cmd)
+	return fmt.Sprintf("%s Run this command to configure your shell:\n%s %s", comment, comment, cmd)
 }
 
 func GetEnvString(userShell string, envName string, envValue string) string {
