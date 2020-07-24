@@ -92,18 +92,28 @@ func IsRunning(st state.State) bool {
 	return st == state.Running
 }
 
+func createLibMachineClient(debug bool) (*libmachine.Client, func(), error) {
+	err := setMachineLogging(debug)
+	if err != nil {
+		return nil, func() {
+			unsetMachineLogging()
+		}, err
+	}
+	client := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	return client, func() {
+		client.Close()
+		unsetMachineLogging()
+	}, nil
+}
+
 func Start(startConfig StartConfig) (StartResult, error) {
 	var crcBundleMetadata *bundle.CrcBundleInfo
-	defer unsetMachineLogging()
 
-	// Set libmachine logging
-	err := setMachineLogging(startConfig.Debug)
+	libMachineAPIClient, cleanup, err := createLibMachineClient(startConfig.Debug)
+	defer cleanup()
 	if err != nil {
-		return startError(startConfig.Name, "Initialize logging", err)
+		return startError(startConfig.Name, "Cannot initialize libmachine", err)
 	}
-
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
-	defer libMachineAPIClient.Close()
 
 	// Pre-VM start
 	var privateKeyPath string
@@ -431,13 +441,16 @@ func Stop(stopConfig StopConfig) (StopResult, error) {
 		return stopError(stopConfig.Name, "Cannot initialize logging", err)
 	}
 
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	libMachineAPIClient, cleanup, err := createLibMachineClient(stopConfig.Debug)
+	defer cleanup()
+	if err != nil {
+		return stopError(stopConfig.Name, "Cannot initialize libmachine", err)
+	}
 	host, err := libMachineAPIClient.Load(stopConfig.Name)
 
 	if err != nil {
 		return stopError(stopConfig.Name, "Cannot load machine", err)
 	}
-	defer libMachineAPIClient.Close()
 
 	state, _ := host.Driver.GetState()
 
@@ -453,13 +466,16 @@ func Stop(stopConfig StopConfig) (StopResult, error) {
 }
 
 func PowerOff(powerOff PowerOffConfig) (PowerOffResult, error) {
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
+	defer cleanup()
+	if err != nil {
+		return powerOffError(powerOff.Name, "Cannot initialize libmachine", err)
+	}
 	host, err := libMachineAPIClient.Load(powerOff.Name)
 
 	if err != nil {
 		return powerOffError(powerOff.Name, "Cannot load machine", err)
 	}
-	defer libMachineAPIClient.Close()
 
 	if err := host.Kill(); err != nil {
 		return powerOffError(powerOff.Name, "Cannot kill machine", err)
@@ -472,13 +488,16 @@ func PowerOff(powerOff PowerOffConfig) (PowerOffResult, error) {
 }
 
 func Delete(deleteConfig DeleteConfig) (DeleteResult, error) {
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
+	defer cleanup()
+	if err != nil {
+		return deleteError(deleteConfig.Name, "Cannot initialize libmachine", err)
+	}
 	host, err := libMachineAPIClient.Load(deleteConfig.Name)
 
 	if err != nil {
 		return deleteError(deleteConfig.Name, "Cannot load machine", err)
 	}
-	defer libMachineAPIClient.Close()
 
 	if err := host.Driver.Remove(); err != nil {
 		return deleteError(deleteConfig.Name, "Driver cannot remove machine", err)
@@ -500,13 +519,16 @@ func IP(ipConfig IPConfig) (IPResult, error) {
 		return ipError(ipConfig.Name, "Cannot initialize logging", err)
 	}
 
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	libMachineAPIClient, cleanup, err := createLibMachineClient(ipConfig.Debug)
+	defer cleanup()
+	if err != nil {
+		return ipError(ipConfig.Name, "Cannot initialize libmachine", err)
+	}
 	host, err := libMachineAPIClient.Load(ipConfig.Name)
 
 	if err != nil {
 		return ipError(ipConfig.Name, "Cannot load machine", err)
 	}
-	defer libMachineAPIClient.Close()
 	ip, err := host.Driver.GetIP()
 	if err != nil {
 		return ipError(ipConfig.Name, "Cannot get IP", err)
@@ -519,10 +541,13 @@ func IP(ipConfig IPConfig) (IPResult, error) {
 }
 
 func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
-	defer libMachineAPIClient.Close()
+	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
+	defer cleanup()
+	if err != nil {
+		return statusError(statusConfig.Name, "Cannot initialize libmachine", err)
+	}
 
-	_, err := libMachineAPIClient.Exists(statusConfig.Name)
+	_, err = libMachineAPIClient.Exists(statusConfig.Name)
 	if err != nil {
 		return statusError(statusConfig.Name, "Cannot check if machine exists", err)
 	}
@@ -587,8 +612,11 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 }
 
 func Exists(name string) (bool, error) {
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
-	defer libMachineAPIClient.Close()
+	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
+	defer cleanup()
+	if err != nil {
+		return false, err
+	}
 	exists, err := libMachineAPIClient.Exists(name)
 	if err != nil {
 		return false, fmt.Errorf("Error checking if the host exists: %s", err)
@@ -654,7 +682,11 @@ func GetProxyConfig(machineName string) (*network.ProxyConfig, error) {
 	// Here we are only checking if the VM exist and not the status of the VM.
 	// We might need to improve and use crc status logic, only
 	// return if the Openshift is running as part of status.
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
+	defer cleanup()
+	if err != nil {
+		return nil, err
+	}
 	host, err := libMachineAPIClient.Load(machineName)
 
 	if err != nil {
@@ -679,7 +711,11 @@ func GetConsoleURL(consoleConfig ConsoleConfig) (ConsoleResult, error) {
 	// Here we are only checking if the VM exist and not the status of the VM.
 	// We might need to improve and use crc status logic, only
 	// return if the Openshift is running as part of status.
-	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
+	defer cleanup()
+	if err != nil {
+		return consoleURLError("Cannot initialize libmachine", err)
+	}
 	host, err := libMachineAPIClient.Load(consoleConfig.Name)
 	if err != nil {
 		return consoleURLError("Cannot load machine", err)
