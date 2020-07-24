@@ -99,12 +99,10 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	var crcBundleMetadata *bundle.CrcBundleInfo
 	defer unsetMachineLogging()
 
-	result := &StartResult{Name: startConfig.Name}
-
 	// Set libmachine logging
 	err := setMachineLogging(startConfig.Debug)
 	if err != nil {
-		return *result, errors.New(err.Error())
+		return startError(startConfig.Name, "Initialize logging", err)
 	}
 
 	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
@@ -126,20 +124,17 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 		pullSecret, err = startConfig.GetPullSecret()
 		if err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Failed to get pull secret: %v", err)
+			return startError(startConfig.Name, "Failed to get pull secret", err)
 		}
 
 		crcBundleMetadata, err = getCrcBundleInfo(startConfig.BundlePath)
 		if err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error getting bundle metadata: %v", err)
+			return startError(startConfig.Name, "Error getting bundle metadata", err)
 		}
 
 		logging.Infof("Checking size of the disk image %s ...", crcBundleMetadata.GetDiskImagePath())
 		if err := crcBundleMetadata.CheckDiskImageSize(); err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Invalid bundle disk image '%s', %v", crcBundleMetadata.GetDiskImagePath(), err)
+			return startError(startConfig.Name, fmt.Sprintf("Invalid bundle disk image '%s'", crcBundleMetadata.GetDiskImagePath()), err)
 		}
 
 		openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
@@ -157,44 +152,36 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		machineConfig.Initramfs = crcBundleMetadata.GetInitramfsPath()
 		machineConfig.Kernel = crcBundleMetadata.GetKernelPath()
 
-		host, err := createHost(libMachineAPIClient, driverInfo.DriverPath, machineConfig)
+		_, err := createHost(libMachineAPIClient, driverInfo.DriverPath, machineConfig)
 		if err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error creating host: %v", err)
+			return startError(startConfig.Name, "Error creating host", err)
 		}
 
-		vmState, err := host.Driver.GetState()
-		if err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error getting the state for host: %v", err)
-		}
-
-		result.Status = vmState.String()
 		privateKeyPath = crcBundleMetadata.GetSSHKeyPath()
 	} else {
 		host, err := libMachineAPIClient.Load(startConfig.Name)
 		if err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error loading host: %v", err)
+			return startError(startConfig.Name, "Error loading host", err)
 		}
 
 		var bundleName string
 		bundleName, crcBundleMetadata, err = getBundleMetadataFromDriver(host.Driver)
 		if err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error loading bundle metadata: %v", err)
+			return startError(startConfig.Name, "Error loading bundle metadata", err)
 		}
 		if bundleName != filepath.Base(startConfig.BundlePath) {
 			logging.Debugf("Bundle '%s' was requested, but the existing VM is using '%s'",
 				filepath.Base(startConfig.BundlePath), bundleName)
-			result.Error = fmt.Sprintf("Bundle '%s' was requested, but the existing VM is using '%s'",
-				filepath.Base(startConfig.BundlePath), bundleName)
-			return *result, errors.New(result.Error)
+			return startError(
+				startConfig.Name,
+				"Invalid bundle",
+				fmt.Errorf("Bundle '%s' was requested, but the existing VM is using '%s'",
+					filepath.Base(startConfig.BundlePath),
+					bundleName))
 		}
 		vmState, err := host.Driver.GetState()
 		if err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error getting the state for host: %v", err)
+			return startError(startConfig.Name, "Error getting the state for host", err)
 		}
 		if IsRunning(vmState) {
 			openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
@@ -203,8 +190,10 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			} else {
 				logging.Infof("A CodeReady Containers VM for OpenShift %s is already running", openshiftVersion)
 			}
-			result.Status = vmState.String()
-			return *result, nil
+			return StartResult{
+				Name:   startConfig.Name,
+				Status: vmState.String(),
+			}, nil
 		}
 
 		openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
@@ -214,42 +203,37 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", openshiftVersion)
 		}
 		if err := host.Driver.Start(); err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error starting stopped VM: %v", err)
+			return startError(startConfig.Name, "Error starting stopped VM", err)
 		}
 		if err := libMachineAPIClient.Save(host); err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error saving state for VM: %v", err)
+			return startError(startConfig.Name, "Error saving state for VM", err)
 		}
 
-		vmState, err = host.Driver.GetState()
-		if err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error getting the state: %v", err)
-		}
-
-		result.Status = vmState.String()
 		privateKeyPath = constants.GetPrivateKeyPath()
 	}
 
-	err = fillClusterConfig(crcBundleMetadata, &result.ClusterConfig)
+	var clusterConfig ClusterConfig
+	err = fillClusterConfig(crcBundleMetadata, &clusterConfig)
 	if err != nil {
-		result.Error = err.Error()
-		return *result, errors.Newf("%s", err.Error())
+		return startError(startConfig.Name, "Cannot create cluster configuration", err)
 	}
 
 	// Post-VM start
 	host, err := libMachineAPIClient.Load(startConfig.Name)
 	if err != nil {
-		result.Error = err.Error()
-		return *result, errors.Newf("Error loading %s vm: %v", startConfig.Name, err)
+		return startError(startConfig.Name, fmt.Sprintf("Error loading %s vm", startConfig.Name), err)
 	}
+
+	vmState, err := host.Driver.GetState()
+	if err != nil {
+		return startError(startConfig.Name, "Error getting the state", err)
+	}
+
 	sshRunner := crcssh.CreateRunnerWithPrivateKey(host.Driver, privateKeyPath)
 
 	logging.Debug("Waiting until ssh is available")
 	if err := cluster.WaitForSSH(sshRunner); err != nil {
-		result.Error = err.Error()
-		return *result, errors.New("Failed to connect to the CRC VM with SSH -- host might be unreachable")
+		return startError(startConfig.Name, "Failed to connect to the CRC VM with SSH -- host might be unreachable", err)
 	}
 	logging.Info("CodeReady Containers VM is running")
 
@@ -261,22 +245,19 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		if certExpiryState == cluster.CertExpired {
 			needsCertsRenewal = true
 		} else {
-			result.Error = err.Error()
-			return *result, errors.New(err.Error())
+			return startError(startConfig.Name, "Failed to check certificate validity", err)
 		}
 	}
 	// Add nameserver to VM if provided by User
 	if startConfig.NameServer != "" {
 		if err = addNameServerToInstance(sshRunner, startConfig.NameServer); err != nil {
-			result.Error = err.Error()
-			return *result, errors.New(err.Error())
+			return startError(startConfig.Name, "Failed to add nameserver to the VM", err)
 		}
 	}
 
 	instanceIP, err := host.Driver.GetIP()
 	if err != nil {
-		result.Error = err.Error()
-		return *result, errors.Newf("Error getting the IP: %v", err)
+		return startError(startConfig.Name, "Error getting the IP", err)
 	}
 
 	var hostIP string
@@ -290,14 +271,12 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 
 	if err := errors.RetryAfter(30, determineHostIP, 2*time.Second); err != nil {
-		result.Error = err.Error()
-		return *result, errors.Newf("Error determining host IP: %v", err)
+		return startError(startConfig.Name, "Error determining host IP", err)
 	}
 
 	proxyConfig, err := getProxyConfig(crcBundleMetadata.ClusterInfo.BaseDomain)
 	if err != nil {
-		result.Error = err.Error()
-		return *result, errors.Newf("Error getting proxy configuration: %v", err)
+		return startError(startConfig.Name, "Error getting proxy configuration", err)
 	}
 	proxyConfig.ApplyToEnvironment()
 
@@ -315,14 +294,12 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	// Run the DNS server inside the VM
 	if _, err := dns.RunPostStart(servicePostStartConfig); err != nil {
-		result.Error = err.Error()
-		return *result, errors.Newf("Error running post start: %v", err)
+		return startError(startConfig.Name, "Error running post start", err)
 	}
 
 	// Check DNS lookup before starting the kubelet
 	if queryOutput, err := dns.CheckCRCLocalDNSReachable(servicePostStartConfig); err != nil {
-		result.Error = err.Error()
-		return *result, errors.Newf("Failed internal DNS query: %v : %s", err, queryOutput)
+		return startError(startConfig.Name, fmt.Sprintf("Failed internal DNS query: %s", queryOutput), err)
 	}
 	logging.Info("Check internal and public DNS query ...")
 
@@ -333,16 +310,15 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	// Check DNS lookup from host to VM
 	logging.Info("Check DNS query from host ...")
 	if err := network.CheckCRCLocalDNSReachableFromHost(crcBundleMetadata, instanceIP); err != nil {
-		result.Error = err.Error()
-		return *result, errors.Newf("Failed to query DNS from host: %v", err)
+		return startError(startConfig.Name, "Failed to query DNS from host", err)
 	}
 
 	// Additional steps to perform after newly created VM is up
 	if !exists {
 		logging.Info("Generating new SSH key")
 		if err := updateSSHKeyPair(sshRunner); err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error updating public key: %v", err)
+
+			return startError(startConfig.Name, "Error updating public key", err)
 		}
 		// Copy Kubeconfig file from bundle extract path to machine directory.
 		// In our case it would be ~/.crc/machines/crc/
@@ -352,15 +328,13 @@ func Start(startConfig StartConfig) (StartResult, error) {
 			kubeConfigFilePath,
 			0644)
 		if err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error copying kubeconfig file  %v", err)
+			return startError(startConfig.Name, "Error copying kubeconfig file", err)
 		}
 		// Copy kubeconfig file inside the VM
 		kubeconfigContent, _ := ioutil.ReadFile(kubeConfigFilePath)
 		_, err = sshRunner.RunPrivate(fmt.Sprintf("cat <<EOF | sudo tee /opt/kubeconfig\n%s\nEOF", string(kubeconfigContent)))
 		if err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error copying kubeconfig file in VM %v", err)
+			return startError(startConfig.Name, "Error copying kubeconfig file in VM", err)
 		}
 	}
 
@@ -378,30 +352,26 @@ func Start(startConfig StartConfig) (StartResult, error) {
 					logging.Debugf("Bundle has been generated %d days ago", int(bundleAgeDays))
 				}
 			}
-			result.Error = err.Error()
-			return *result, errors.Newf("Failed to renew TLS certificates: please check if a newer CodeReady Containers release is available")
+			return startError(startConfig.Name, "Failed to renew TLS certificates: please check if a newer CodeReady Containers release is available", err)
 		}
 	}
 
 	logging.Info("Starting OpenShift kubelet service")
 	sd := systemd.NewInstanceSystemdCommander(sshRunner)
 	if _, err := sd.Start("kubelet"); err != nil {
-		result.Error = err.Error()
-		return *result, errors.Newf("Error starting kubelet: %s", err)
+		return startError(startConfig.Name, "Error starting kubelet", err)
 	}
 	if !exists {
 		logging.Info("Configuring cluster for first start")
 		if err := configureCluster(ocConfig, sshRunner, proxyConfig, pullSecret, instanceIP); err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error Setting cluster config: %s", err)
+			return startError(startConfig.Name, "Error Setting cluster config", err)
 		}
 	}
 
 	// Check if kubelet service is running inside the VM
 	kubeletStarted, err := sd.IsActive("kubelet")
 	if err != nil {
-		result.Error = err.Error()
-		return *result, errors.Newf("kubelet service is not running: %s", err)
+		return startError(startConfig.Name, "kubelet service is not running", err)
 	}
 	if kubeletStarted {
 		// In Openshift 4.3, when cluster comes up, the following happens
@@ -418,25 +388,21 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		// More info: https://bugzilla.redhat.com/show_bug.cgi?id=1795163
 		logging.Debug("Waiting for update of client-ca request header ...")
 		if err := cluster.WaitforRequestHeaderClientCaFile(ocConfig); err != nil {
-			result.Error = err.Error()
-			return *result, errors.New(err.Error())
+			return startError(startConfig.Name, "Failed to wait for the client-ca request header update", err)
 		}
 
 		if err := cluster.DeleteOpenshiftAPIServerPods(ocConfig); err != nil {
-			result.Error = err.Error()
-			return *result, errors.New(err.Error())
+			return startError(startConfig.Name, "Cannot delete OpenShift API Server pods", err)
 		}
 
 		logging.Info("Starting OpenShift cluster ... [waiting 3m]")
 	}
-	result.KubeletStarted = kubeletStarted
 
 	time.Sleep(time.Minute * 3)
 
 	// Approve the node certificate.
 	if err := cluster.ApproveNodeCSR(ocConfig); err != nil {
-		result.Error = err.Error()
-		return *result, errors.Newf("Error approving the node csr %v", err)
+		return startError(startConfig.Name, "Error approving the node csr", err)
 	}
 
 	if proxyConfig.IsEnabled() {
@@ -445,16 +411,19 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 
 	// If no error, return usage message
-	if result.Error == "" {
-		logging.Info("")
-		logging.Info("To access the cluster, first set up your environment by following 'crc oc-env' instructions")
-		logging.Infof("Then you can access it by running 'oc login -u developer -p developer %s'", result.ClusterConfig.ClusterAPI)
-		logging.Infof("To login as an admin, run 'oc login -u kubeadmin -p %s %s'", result.ClusterConfig.KubeAdminPass, result.ClusterConfig.ClusterAPI)
-		logging.Info("")
-		logging.Info("You can now run 'crc console' and use these credentials to access the OpenShift web console")
-	}
+	logging.Info("")
+	logging.Info("To access the cluster, first set up your environment by following 'crc oc-env' instructions")
+	logging.Infof("Then you can access it by running 'oc login -u developer -p developer %s'", clusterConfig.ClusterAPI)
+	logging.Infof("To login as an admin, run 'oc login -u kubeadmin -p %s %s'", clusterConfig.KubeAdminPass, clusterConfig.ClusterAPI)
+	logging.Info("")
+	logging.Info("You can now run 'crc console' and use these credentials to access the OpenShift web console")
 
-	return *result, err
+	return StartResult{
+		Name:           startConfig.Name,
+		KubeletStarted: kubeletStarted,
+		ClusterConfig:  clusterConfig,
+		Status:         vmState.String(),
+	}, err
 }
 
 func Stop(stopConfig StopConfig) (StopResult, error) {
