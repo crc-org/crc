@@ -41,25 +41,22 @@ func init() {
 	}
 }
 
-func fillClusterConfig(bundleInfo *bundle.CrcBundleInfo, clusterConfig *ClusterConfig) error {
+func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*ClusterConfig, error) {
 	kubeadminPassword, err := bundleInfo.GetKubeadminPassword()
 	if err != nil {
-		return fmt.Errorf("Error reading kubeadmin password from bundle %v", err)
+		return nil, fmt.Errorf("Error reading kubeadmin password from bundle %v", err)
 	}
-
 	proxyConfig, err := getProxyConfig(bundleInfo.ClusterInfo.BaseDomain)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	*clusterConfig = ClusterConfig{
+	return &ClusterConfig{
 		KubeConfig:    bundleInfo.GetKubeConfigPath(),
 		KubeAdminPass: kubeadminPassword,
 		WebConsoleURL: constants.DefaultWebConsoleURL,
 		ClusterAPI:    constants.DefaultAPIURL,
 		ProxyConfig:   proxyConfig,
-	}
-
-	return nil
+	}, nil
 }
 
 func getCrcBundleInfo(bundlePath string) (*bundle.CrcBundleInfo, error) {
@@ -212,8 +209,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		privateKeyPath = constants.GetPrivateKeyPath()
 	}
 
-	var clusterConfig ClusterConfig
-	err = fillClusterConfig(crcBundleMetadata, &clusterConfig)
+	clusterConfig, err := getClusterConfig(crcBundleMetadata)
 	if err != nil {
 		return startError(startConfig.Name, "Cannot create cluster configuration", err)
 	}
@@ -421,7 +417,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	return StartResult{
 		Name:           startConfig.Name,
 		KubeletStarted: kubeletStarted,
-		ClusterConfig:  clusterConfig,
+		ClusterConfig:  *clusterConfig,
 		Status:         vmState.String(),
 	}, err
 }
@@ -690,9 +686,7 @@ func GetProxyConfig(machineName string) (*network.ProxyConfig, error) {
 		return nil, errors.Newf("Error loading bundle metadata: %v", err)
 	}
 
-	var clusterConfig ClusterConfig
-
-	err = fillClusterConfig(crcBundleMetadata, &clusterConfig)
+	clusterConfig, err := getClusterConfig(crcBundleMetadata)
 	if err != nil {
 		return nil, errors.Newf("Error loading cluster configuration: %v", err)
 	}
@@ -728,11 +722,12 @@ func GetConsoleURL(consoleConfig ConsoleConfig) (ConsoleResult, error) {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error loading bundle metadata: %v", err)
 	}
-	err = fillClusterConfig(crcBundleMetadata, &result.ClusterConfig)
+	clusterConfig, err := getClusterConfig(crcBundleMetadata)
 	if err != nil {
 		result.Error = err.Error()
 		return *result, errors.Newf("Error loading cluster configuration: %v", err)
 	}
+	result.ClusterConfig = *clusterConfig
 
 	return *result, nil
 }
