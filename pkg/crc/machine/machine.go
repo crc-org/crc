@@ -151,14 +151,14 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 		_, err := createHost(libMachineAPIClient, driverInfo.DriverPath, machineConfig)
 		if err != nil {
-			return startError(startConfig.Name, "Error creating host", err)
+			return startError(startConfig.Name, "Error creating machine", err)
 		}
 
 		privateKeyPath = crcBundleMetadata.GetSSHKeyPath()
 	} else {
 		host, err := libMachineAPIClient.Load(startConfig.Name)
 		if err != nil {
-			return startError(startConfig.Name, "Error loading host", err)
+			return startError(startConfig.Name, "Error loading machine", err)
 		}
 
 		var bundleName string
@@ -178,7 +178,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		}
 		vmState, err := host.Driver.GetState()
 		if err != nil {
-			return startError(startConfig.Name, "Error getting the state for host", err)
+			return startError(startConfig.Name, "Error getting the machine state", err)
 		}
 		if IsRunning(vmState) {
 			openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
@@ -425,121 +425,106 @@ func Start(startConfig StartConfig) (StartResult, error) {
 func Stop(stopConfig StopConfig) (StopResult, error) {
 	defer unsetMachineLogging()
 
-	result := &StopResult{Name: stopConfig.Name}
 	// Set libmachine logging
 	err := setMachineLogging(stopConfig.Debug)
 	if err != nil {
-		return *result, errors.New(err.Error())
+		return stopError(stopConfig.Name, "Cannot initialize logging", err)
 	}
 
 	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	host, err := libMachineAPIClient.Load(stopConfig.Name)
 
 	if err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, errors.New(err.Error())
+		return stopError(stopConfig.Name, "Cannot load machine", err)
 	}
 	defer libMachineAPIClient.Close()
 
-	result.State, _ = host.Driver.GetState()
+	state, _ := host.Driver.GetState()
 
 	if err := host.Stop(); err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, errors.New(err.Error())
+		return stopError(stopConfig.Name, "Cannot stop machine", err)
 	}
 
-	result.Success = true
-	return *result, nil
+	return StopResult{
+		Name:    stopConfig.Name,
+		Success: true,
+		State:   state,
+	}, nil
 }
 
 func PowerOff(powerOff PowerOffConfig) (PowerOffResult, error) {
-	result := &PowerOffResult{Name: powerOff.Name}
-
 	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	host, err := libMachineAPIClient.Load(powerOff.Name)
 
 	if err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, errors.New(err.Error())
+		return powerOffError(powerOff.Name, "Cannot load machine", err)
 	}
 	defer libMachineAPIClient.Close()
 
 	if err := host.Kill(); err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, errors.New(err.Error())
+		return powerOffError(powerOff.Name, "Cannot kill machine", err)
 	}
 
-	result.Success = true
-	return *result, nil
+	return PowerOffResult{
+		Name:    powerOff.Name,
+		Success: true,
+	}, nil
 }
 
 func Delete(deleteConfig DeleteConfig) (DeleteResult, error) {
-	result := &DeleteResult{Name: deleteConfig.Name, Success: true}
-
 	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	host, err := libMachineAPIClient.Load(deleteConfig.Name)
 
 	if err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, errors.New(err.Error())
+		return deleteError(deleteConfig.Name, "Cannot load machine", err)
 	}
 	defer libMachineAPIClient.Close()
 
 	if err := host.Driver.Remove(); err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, errors.New(err.Error())
+		return deleteError(deleteConfig.Name, "Driver cannot remove machine", err)
 	}
 
 	if err := libMachineAPIClient.Remove(deleteConfig.Name); err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, errors.New(err.Error())
+		return deleteError(deleteConfig.Name, "Cannot remove machine", err)
 	}
 
-	return *result, nil
+	return DeleteResult{
+		Name:    deleteConfig.Name,
+		Success: true,
+	}, nil
 }
 
 func IP(ipConfig IPConfig) (IPResult, error) {
-	result := &IPResult{Name: ipConfig.Name, Success: true}
-
 	err := setMachineLogging(ipConfig.Debug)
 	if err != nil {
-		return *result, err
+		return ipError(ipConfig.Name, "Cannot initialize logging", err)
 	}
 
 	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	host, err := libMachineAPIClient.Load(ipConfig.Name)
 
 	if err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, errors.New(err.Error())
+		return ipError(ipConfig.Name, "Cannot load machine", err)
 	}
 	defer libMachineAPIClient.Close()
-	if result.IP, err = host.Driver.GetIP(); err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, errors.New(err.Error())
+	ip, err := host.Driver.GetIP()
+	if err != nil {
+		return ipError(ipConfig.Name, "Cannot get IP", err)
 	}
-	return *result, nil
+	return IPResult{
+		Name:    ipConfig.Name,
+		Success: true,
+		IP:      ip,
+	}, nil
 }
 
 func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
-	result := &ClusterStatusResult{Name: statusConfig.Name, Success: true}
 	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	defer libMachineAPIClient.Close()
 
 	_, err := libMachineAPIClient.Exists(statusConfig.Name)
 	if err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, errors.New(err.Error())
+		return statusError(statusConfig.Name, "Cannot check if machine exists", err)
 	}
 
 	openshiftStatus := "Stopped"
@@ -548,27 +533,21 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 
 	host, err := libMachineAPIClient.Load(statusConfig.Name)
 	if err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, errors.New(err.Error())
+		return statusError(statusConfig.Name, "Cannot load machine", err)
 	}
 	vmStatus, err := host.Driver.GetState()
 	if err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, errors.New(err.Error())
+		return statusError(statusConfig.Name, "Cannot get machine state", err)
 	}
 
 	if IsRunning(vmStatus) {
 		_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
 		if err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error loading bundle metadata: %v", err)
+			return statusError(statusConfig.Name, "Error loading bundle metadata", err)
 		}
 		proxyConfig, err := getProxyConfig(crcBundleMetadata.ClusterInfo.BaseDomain)
 		if err != nil {
-			result.Error = err.Error()
-			return *result, errors.Newf("Error getting proxy configuration: %v", err)
+			return statusError(statusConfig.Name, "Error getting proxy configuration", err)
 		}
 		proxyConfig.ApplyToEnvironment()
 
@@ -594,16 +573,17 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 		}
 		diskSize, diskUse, err = cluster.GetRootPartitionUsage(sshRunner)
 		if err != nil {
-			result.Success = false
-			result.Error = err.Error()
-			return *result, errors.New(err.Error())
+			return statusError(statusConfig.Name, "Cannot get root partition usage", err)
 		}
 	}
-	result.OpenshiftStatus = openshiftStatus
-	result.DiskUse = diskUse
-	result.DiskSize = diskSize
-	result.CrcStatus = vmStatus.String()
-	return *result, nil
+	return ClusterStatusResult{
+		Name:            statusConfig.Name,
+		CrcStatus:       vmStatus.String(),
+		OpenshiftStatus: openshiftStatus,
+		DiskUse:         diskUse,
+		DiskSize:        diskSize,
+		Success:         true,
+	}, nil
 }
 
 func Exists(name string) (bool, error) {
@@ -696,40 +676,35 @@ func GetProxyConfig(machineName string) (*network.ProxyConfig, error) {
 
 // Return console URL if the VM is present.
 func GetConsoleURL(consoleConfig ConsoleConfig) (ConsoleResult, error) {
-	result := &ConsoleResult{Success: true}
 	// Here we are only checking if the VM exist and not the status of the VM.
 	// We might need to improve and use crc status logic, only
 	// return if the Openshift is running as part of status.
 	libMachineAPIClient := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
 	host, err := libMachineAPIClient.Load(consoleConfig.Name)
-
 	if err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, errors.New(err.Error())
+		return consoleURLError("Cannot load machine", err)
 	}
 
 	vmState, err := host.Driver.GetState()
 	if err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, errors.Newf("Error getting the state for host: %v", err)
+		return consoleURLError("Error getting the state for host", err)
 	}
-	result.State = vmState
 
 	_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
 	if err != nil {
-		result.Error = err.Error()
-		return *result, errors.Newf("Error loading bundle metadata: %v", err)
+		return consoleURLError("Error loading bundle metadata", err)
 	}
+
 	clusterConfig, err := getClusterConfig(crcBundleMetadata)
 	if err != nil {
-		result.Error = err.Error()
-		return *result, errors.Newf("Error loading cluster configuration: %v", err)
+		return consoleURLError("Error loading cluster configuration", err)
 	}
-	result.ClusterConfig = *clusterConfig
 
-	return *result, nil
+	return ConsoleResult{
+		Success:       true,
+		ClusterConfig: *clusterConfig,
+		State:         vmState,
+	}, nil
 }
 
 func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
