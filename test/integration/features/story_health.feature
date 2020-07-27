@@ -43,25 +43,23 @@ Feature:
 
     @darwin @linux @windows
     Scenario: Create and test app
-        When executing "oc new-app centos/httpd-24-centos7~https://github.com/sclorg/httpd-ex" succeeds
+        When executing "oc new-app httpd-example" succeeds
         Then stdout should contain "Creating resources"
         And stdout should contain
             """
-            service "httpd-ex" created
+            service "httpd-example" created
             """
-        When executing "oc rollout status dc/httpd-ex || oc rollout status deployment httpd-ex" succeeds
+        When executing "oc rollout status dc/httpd-example || oc rollout status deployment httpd-example" succeeds
         Then stdout should contain "successfully rolled out"
-        And executing "oc expose svc/httpd-ex" succeeds
-        And with up to "2" retries with wait period of "60s" http response from "http://httpd-ex-testproj.apps-crc.testing" has status code "200"
 
     @darwin @linux @windows
     Scenario: Stop and start CRC, then check app still runs
-        Given with up to "2" retries with wait period of "60s" http response from "http://httpd-ex-testproj.apps-crc.testing" has status code "200"
+        Given with up to "2" retries with wait period of "60s" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
         When executing "crc stop -f" succeeds
         Then with up to "4" retries with wait period of "2m" command "crc status" output should contain "Stopped"
         When starting CRC with default bundle succeeds
         Then with up to "4" retries with wait period of "2m" command "crc status" output should match ".*Running \(v\d+\.\d+\.\d+.*\).*"
-        And with up to "2" retries with wait period of "60s" http response from "http://httpd-ex-testproj.apps-crc.testing" has status code "200"
+        And with up to "2" retries with wait period of "60s" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
 
     @darwin @linux @windows
     Scenario: Clean up
