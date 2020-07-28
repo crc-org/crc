@@ -5,6 +5,11 @@ The [command]`{bin} start` command starts the {prod} virtual machine and OpenShi
 
 .Prerequisites
 
+[NOTE]
+====
+To avoid networking-related issues, ensure that you are not connected to a VPN and that your network connection is reliable.
+====
+
 * You set up the host machine through the [command]`{bin} setup` command.
 For more information, see link:{crc-gsg-url}#setting-up-codeready-containers_gsg[Setting up {prod}].
 * You have a valid OpenShift user pull secret.
