@@ -1,5 +1,3 @@
-//+build linux build
-
 package libvirt
 
 import "fmt"

@@ -28,7 +28,7 @@ GOPATH ?= $(shell go env GOPATH)
 ORG := github.com/code-ready
 REPOPATH ?= $(ORG)/crc
 
-PACKAGES := go list --tags build ./...
+PACKAGES := go list ./...
 SOURCES := $(shell git ls-files  *.go ":^vendor")
 
 RELEASE_INFO := release-info.json
@@ -89,14 +89,14 @@ $(BUILD_DIR)/windows-amd64/crc.exe: $(SOURCES)
 	GOARCH=amd64 GOOS=windows go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/windows-amd64/crc.exe ./cmd/crc
 
 $(HOST_BUILD_DIR)/crc-embedder: $(SOURCES)
-	go build --tags="build" -ldflags="$(LDFLAGS)" -o $(HOST_BUILD_DIR)/crc-embedder ./cmd/crc-embedder
+	go build -ldflags="$(LDFLAGS)" -o $(HOST_BUILD_DIR)/crc-embedder ./cmd/crc-embedder
 
 .PHONY: cross ## Cross compiles all binaries
 cross: $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/windows-amd64/crc.exe
 
 .PHONY: test
 test:
-	go test --tags build -v -ldflags="$(VERSION_VARIABLES)" $(shell $(PACKAGES))
+	go test -v -ldflags="$(VERSION_VARIABLES)" $(shell $(PACKAGES))
 
 .PHONY: build_docs
 build_docs:
