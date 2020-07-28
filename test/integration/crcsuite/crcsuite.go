@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DATA-DOG/godog"
-	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/code-ready/crc/pkg/crc/cluster"
+	"github.com/cucumber/godog"
+	"github.com/cucumber/messages-go/v10"
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
 	"github.com/code-ready/crc/pkg/crc/oc"
@@ -135,7 +135,7 @@ func FeatureContext(s *godog.Suite) {
 		}
 	})
 
-	s.BeforeFeature(func(this *gherkin.Feature) {
+	s.BeforeFeature(func(this *messages.GherkinDocument) {
 
 		// copy data/config files to test dir
 		CopyFilesToTestDir()

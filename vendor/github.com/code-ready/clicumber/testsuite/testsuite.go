@@ -20,9 +20,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/DATA-DOG/godog"
-	"github.com/DATA-DOG/godog/gherkin"
-
+	"github.com/cucumber/godog"
+	"github.com/cucumber/messages-go/v10"
 	"github.com/code-ready/clicumber/util"
 )
 
@@ -147,8 +146,8 @@ func FeatureContext(s *godog.Suite) {
 		}
 	})
 
-	s.BeforeFeature(func(this *gherkin.Feature) {
-		util.LogMessage("info", fmt.Sprintf("----- Feature: %s -----", this.Name))
+	s.BeforeFeature(func(this *messages.GherkinDocument) {
+		util.LogMessage("info", fmt.Sprintf("----- Feature: %s -----", this.String()))
 		StartHostShellInstance(testWithShell)
 		util.ClearScenarioVariables()
 		err := CleanTestRunDir()
@@ -158,29 +157,19 @@ func FeatureContext(s *godog.Suite) {
 		}
 	})
 
-	s.BeforeScenario(func(this interface{}) {
-		switch this.(type) {
-		case *gherkin.Scenario:
-			scenario := *this.(*gherkin.Scenario)
-			util.LogMessage("info", fmt.Sprintf("----- Scenario: %s -----", scenario.ScenarioDefinition.Name))
-		case *gherkin.ScenarioOutline:
-			scenario := *this.(*gherkin.ScenarioOutline)
-			util.LogMessage("info", fmt.Sprintf("----- Scenario Outline: %s -----", scenario.ScenarioDefinition.Name))
-		}
+	s.BeforeScenario(func(this *messages.Pickle) {
+		util.LogMessage("info", fmt.Sprintf("----- Scenario: %s -----", this.Name))
+		util.LogMessage("info", fmt.Sprintf("----- Scenario Outline: %s -----", this.String()))
 	})
 
-	s.BeforeStep(func(this *gherkin.Step) {
+	s.BeforeStep(func(this *messages.Pickle_PickleStep) {
 		this.Text = util.ProcessScenarioVariables(this.Text)
-		switch v := this.Argument.(type) {
-		case *gherkin.DocString:
-			v.Content = util.ProcessScenarioVariables(v.Content)
-		}
 	})
 
-	s.AfterScenario(func(interface{}, error) {
+	s.AfterScenario(func(*messages.Pickle, error) {
 	})
 
-	s.AfterFeature(func(this *gherkin.Feature) {
+	s.AfterFeature(func(*messages.GherkinDocument) {
 		util.LogMessage("info", "----- Cleaning after feature -----")
 		CloseHostShellInstance()
 	})
