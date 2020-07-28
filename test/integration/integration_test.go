@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/DATA-DOG/godog"
 	"github.com/code-ready/clicumber/testsuite"
 	"github.com/code-ready/crc/test/integration/crcsuite"
+	"github.com/cucumber/godog"
 )
 
 func TestMain(m *testing.M) {
