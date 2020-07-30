@@ -6,20 +6,18 @@ Feature: Local image to image-registry to deployment
     project/namespace. They deploy and expose the app and check its
     accessibility.
 
-    Scenario: Start CRC
+    Scenario: Start CRC and login to cluster
         Given executing "crc setup" succeeds
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
-        And executing "eval $(crc oc-env)" succeeds
-        When with up to "4" retries with wait period of "2m" command "crc status --log-level debug" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
-        Then login to the oc cluster succeeds
+        When with up to "8" retries with wait period of "2m" command "crc status" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
+        Then executing "eval $(crc oc-env)" succeeds
+        And login to the oc cluster succeeds
 
     Scenario: Create local image
-        Given executing "cd ../../../testdata" succeeds
-        When executing "sudo podman build -t hello:test ." succeeds
-        And executing "cd ../integration" succeeds
-        Then executing "sudo podman images" succeeds
-        And stdout should contain "localhost/hello"
+        Given executing "sudo podman build -t hello:test -f Dockerfile" succeeds
+        When executing "sudo podman images" succeeds
+        Then stdout should contain "localhost/hello"
         
     Scenario: Push local image to OpenShift image registry
         Given executing "oc new-project testproj-img" succeeds
