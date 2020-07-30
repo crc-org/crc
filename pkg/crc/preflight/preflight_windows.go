@@ -40,7 +40,7 @@ var hypervPreflightChecks = [...]Check{
 		configKeySuffix:  "check-hyperv-switch",
 		checkDescription: "Checking if the Hyper-V virtual switch exist",
 		check:            checkIfHyperVVirtualSwitchExists,
-		fixDescription:   "Unable to perform Hyper-V administrative commands. Please make sure to re-login or reboot your system",
+		fixDescription:   "Unable to perform Hyper-V administrative commands. Please reboot your system and run 'crc setup' to complete the setup process",
 		flags:            NoFix,
 	},
 	{
