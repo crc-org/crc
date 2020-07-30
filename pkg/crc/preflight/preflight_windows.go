@@ -16,6 +16,13 @@ var hypervPreflightChecks = [...]Check{
 		flags:            NoFix,
 	},
 	{
+		configKeySuffix:  "check-windows-edition",
+		checkDescription: "Checking Windows edition",
+		check:            checkWindowsEdition,
+		fixDescription:   "Your Windows edition is not supported. Consider using Professional or Enterprise editions of Windows",
+		flags:            NoFix,
+	},
+	{
 		configKeySuffix:  "check-hyperv-installed",
 		checkDescription: "Checking if Hyper-V is installed and operational",
 		check:            checkHyperVInstalled,
