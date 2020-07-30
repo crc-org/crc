@@ -41,6 +41,30 @@ func checkVersionOfWindowsUpdate() error {
 	return nil
 }
 
+func checkWindowsEdition() error {
+	windowsEditionCmd := `(Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").EditionID`
+
+	stdOut, _, err := powershell.Execute(windowsEditionCmd)
+	if err != nil {
+		logging.Debug(err.Error())
+		return fmt.Errorf("Failed to get Windows edition")
+	}
+
+	windowsEdition := strings.TrimSpace(stdOut)
+	logging.Debugf("Running on Windows %s edition", windowsEdition)
+
+	if strings.HasPrefix(windowsEdition, "Professional") {
+		return nil
+	}
+
+	switch windowsEdition {
+	case "Enterprise":
+		return nil
+	default:
+		return fmt.Errorf("Supported Windows editions are Professional and Enterprise. Windows %s edition is not supported", windowsEdition)
+	}
+}
+
 func checkHyperVInstalled() error {
 	// check to see if a hypervisor is present. if hyper-v is installed and enabled,
 	checkHypervisorPresent := `@(Get-Wmiobject Win32_ComputerSystem).HypervisorPresent`
