@@ -1,7 +1,6 @@
 package network
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -12,18 +11,14 @@ import (
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
-// Contains returns true if the IP address belongs to the network given
-func Contains(network string, ip string) bool {
-	_, ipnet, _ := net.ParseCIDR(network)
-	address := net.ParseIP(ip)
-	return ipnet.Contains(address)
-}
-
-// HostIPs returns the IP addresses assigned to the host
-func HostIPs() []string {
+// hostIPs returns the IP addresses assigned to the host
+func hostIPs() ([]string, error) {
 	ips := []string{}
 
-	ifaces, _ := net.Interfaces()
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
 	for _, iface := range ifaces {
 		if iface.Flags&net.FlagUp == 0 {
 			continue // interface down
@@ -33,6 +28,7 @@ func HostIPs() []string {
 		}
 		addrs, err := iface.Addrs()
 		if err != nil {
+			logging.Errorf("cannot get interface address: %v", err)
 			continue
 		}
 		for _, addr := range addrs {
@@ -55,14 +51,23 @@ func HostIPs() []string {
 		}
 	}
 
-	return ips
+	return ips, nil
 }
 
 func DetermineHostIP(instanceIP string) (string, error) {
-	for _, hostaddr := range HostIPs() {
-
-		if Contains(hostaddr, instanceIP) {
-			hostip, _, _ := net.ParseCIDR(hostaddr)
+	ips, err := hostIPs()
+	if err != nil {
+		return "", err
+	}
+	if len(ips) == 0 {
+		return "", fmt.Errorf("no host ip address found for instance %s", instanceIP)
+	}
+	for _, hostaddr := range ips {
+		hostip, hostaddr, err := net.ParseCIDR(hostaddr)
+		if err != nil {
+			return "", fmt.Errorf("cannot parse subnet %s", hostaddr)
+		}
+		if hostaddr.Contains(net.ParseIP(instanceIP)) {
 			// This step is not working with Windows + VirtualBox as of now
 			// This test is required for CIFS mount-folder case.
 			// Details: https://github.com/minishift/minishift/issues/2561
@@ -72,8 +77,7 @@ func DetermineHostIP(instanceIP string) (string, error) {
 			return hostip.String(), nil
 		}
 	}
-
-	return "", errors.New("unknown error occurred")
+	return "", fmt.Errorf("instance ip address %s is not in any host subnets %v", instanceIP, ips)
 }
 
 func URIStringForDisplay(uri string) (string, error) {
