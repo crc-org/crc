@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -13,7 +12,7 @@ import (
 )
 
 func init() {
-	versionCmd.Flags().StringVarP(&outputFormat, "output", "o", "", "Output format. One of: json")
+	addOutputFormatFlag(versionCmd)
 	rootCmd.AddCommand(versionCmd)
 }
 
@@ -29,21 +28,7 @@ var versionCmd = &cobra.Command{
 }
 
 func runPrintVersion(writer io.Writer, version *version, outputFormat string) error {
-	if outputFormat == jsonFormat {
-		encoder := json.NewEncoder(writer)
-		encoder.SetIndent("", "  ")
-		return encoder.Encode(version)
-	}
-	return printVersion(writer, version)
-}
-
-func printVersion(writer io.Writer, version *version) error {
-	for _, line := range version.lines() {
-		if _, err := fmt.Fprintf(writer, line); err != nil {
-			return err
-		}
-	}
-	return nil
+	return render(version, writer, outputFormat)
 }
 
 type version struct {
@@ -60,6 +45,15 @@ func defaultVersion() *version {
 		OpenshiftVersion: crcversion.GetBundleVersion(),
 		Embedded:         constants.BundleEmbedded(),
 	}
+}
+
+func (v *version) prettyPrintTo(writer io.Writer) error {
+	for _, line := range v.lines() {
+		if _, err := fmt.Fprint(writer, line); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (v *version) lines() []string {
