@@ -2,28 +2,49 @@ package extract
 
 import (
 	"fmt"
+	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
-type FileMap map[string]string
+type fileMap map[string]string
 
-func copyFileMap(orig FileMap) FileMap {
-	copy := FileMap{}
+var (
+	files fileMap = map[string]string{
+		"/a/b/c.txt": "ccc",
+		"/a/d/e.txt": "eee",
+	}
+	filteredFiles fileMap = map[string]string{
+		"/a/b/c.txt": "ccc",
+	}
+	archives = []string{
+		"test.tar.gz",
+		"test.zip",
+		"test.tar.xz",
+	}
+)
+
+func TestUncompress(t *testing.T) {
+	for _, archive := range archives {
+		assert.NoError(t, testUncompress(filepath.Join("testdata", archive), nil, files))
+		assert.NoError(t, testUncompress(filepath.Join("testdata", archive), fileFilter, filteredFiles))
+	}
+}
+
+func copyFileMap(orig fileMap) fileMap {
+	copy := fileMap{}
 	for key, value := range orig {
 		copy[key] = value
 	}
-
 	return copy
 }
 
 // This checks that the list of files returned by Uncompress matches what we expect
-func checkFileList(destDir string, extractedFiles []string, expectedFiles FileMap) error {
+func checkFileList(destDir string, extractedFiles []string, expectedFiles fileMap) error {
 	// We are going to remove elements from  the map, but we don't want to modify the map used by the caller
 	expectedFiles = copyFileMap(expectedFiles)
 
@@ -45,7 +66,7 @@ func checkFileList(destDir string, extractedFiles []string, expectedFiles FileMa
 }
 
 // This checks that the files in the destination directory matches what we expect
-func checkFiles(destDir string, files FileMap) error {
+func checkFiles(destDir string, files fileMap) error {
 	// We are going to remove elements from  the map, but we don't want to modify the map used by the caller
 	files = copyFileMap(files)
 
@@ -86,12 +107,8 @@ func checkFiles(destDir string, files FileMap) error {
 	return nil
 }
 
-func testUncompress(archiveName string, fileFilter func(string) bool, files FileMap) error {
+func testUncompress(archiveName string, fileFilter func(string) bool, files fileMap) error {
 	destDir, err := ioutil.TempDir("", "crc-extract-test")
-	if err != nil {
-		return err
-	}
-	err = os.MkdirAll(destDir, 0700)
 	if err != nil {
 		return err
 	}
@@ -117,44 +134,4 @@ func testUncompress(archiveName string, fileFilter func(string) bool, files File
 
 func fileFilter(filename string) bool {
 	return filepath.Base(filename) == "c.txt"
-}
-
-func TestUncompress(t *testing.T) {
-	var files FileMap = map[string]string{
-		"/a/b/c.txt": "ccc",
-		"/a/d/e.txt": "eee",
-	}
-	var filteredFiles FileMap = map[string]string{
-		"/a/b/c.txt": "ccc",
-	}
-
-	err := testUncompress("testdata/test.tar.gz", nil, files)
-	if err != nil {
-		t.Errorf("Failed to uncompress test.tar.gz: %v", err)
-	}
-
-	err = testUncompress("testdata/test.zip", nil, files)
-	if err != nil {
-		t.Errorf("Failed to uncompress test.zip: %v", err)
-	}
-
-	err = testUncompress("testdata/test.tar.xz", nil, files)
-	if err != nil {
-		t.Errorf("Failed to uncompress test.tar.xz: %v", err)
-	}
-
-	err = testUncompress("testdata/test.tar.gz", fileFilter, filteredFiles)
-	if err != nil {
-		t.Errorf("Failed to uncompress c.txt from test.tar.gz: %v", err)
-	}
-
-	err = testUncompress("testdata/test.zip", fileFilter, filteredFiles)
-	if err != nil {
-		t.Errorf("Failed to uncompress c.txt from test.zip: %v", err)
-	}
-
-	err = testUncompress("testdata/test.tar.xz", fileFilter, filteredFiles)
-	if err != nil {
-		t.Errorf("Failed to uncompress c.txt from test.tar.xz: %v", err)
-	}
 }
