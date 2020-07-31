@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -15,14 +14,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const jsonFormat = "json"
-
-var (
-	outputFormat string
-)
-
 func init() {
-	statusCmd.Flags().StringVarP(&outputFormat, "output", "o", "", "Output format. One of: json")
+	addOutputFormatFlag(statusCmd)
 	rootCmd.AddCommand(statusCmd)
 }
 
@@ -37,7 +30,7 @@ var statusCmd = &cobra.Command{
 	},
 }
 
-type Status struct {
+type status struct {
 	CrcStatus        string `json:"crcStatus"`
 	OpenShiftStatus  string `json:"openshiftStatus"`
 	OpenShiftVersion string `json:"openshiftVersion"`
@@ -68,7 +61,7 @@ func runStatus(writer io.Writer, client client, cacheDir, outputFormat string) e
 	if err != nil {
 		return fmt.Errorf("Error finding size of cache: %s", err.Error())
 	}
-	status := Status{
+	status := &status{
 		CrcStatus:        clusterStatus.CrcStatus,
 		OpenShiftStatus:  clusterStatus.OpenshiftStatus,
 		OpenShiftVersion: clusterStatus.OpenshiftVersion,
@@ -77,29 +70,23 @@ func runStatus(writer io.Writer, client client, cacheDir, outputFormat string) e
 		CacheUsage:       size,
 		CacheDir:         cacheDir,
 	}
-
-	if outputFormat == jsonFormat {
-		encoder := json.NewEncoder(writer)
-		encoder.SetIndent("", "  ")
-		return encoder.Encode(status)
-	}
-	return printStatus(writer, status)
+	return render(status, writer, outputFormat)
 }
 
-func printStatus(writer io.Writer, status Status) error {
+func (s *status) prettyPrintTo(writer io.Writer) error {
 	w := tabwriter.NewWriter(writer, 0, 0, 1, ' ', 0)
 
 	lines := []struct {
 		left, right string
 	}{
-		{"CRC VM", status.CrcStatus},
-		{"OpenShift", openshiftStatus(status)},
+		{"CRC VM", s.CrcStatus},
+		{"OpenShift", openshiftStatus(s)},
 		{"Disk Usage", fmt.Sprintf(
 			"%s of %s (Inside the CRC VM)",
-			units.HumanSize(float64(status.DiskUsage)),
-			units.HumanSize(float64(status.DiskSize)))},
-		{"Cache Usage", units.HumanSize(float64(status.CacheUsage))},
-		{"Cache Directory", status.CacheDir},
+			units.HumanSize(float64(s.DiskUsage)),
+			units.HumanSize(float64(s.DiskSize)))},
+		{"Cache Usage", units.HumanSize(float64(s.CacheUsage))},
+		{"Cache Directory", s.CacheDir},
 	}
 	for _, line := range lines {
 		if err := printLine(w, line.left, line.right); err != nil {
@@ -109,7 +96,7 @@ func printStatus(writer io.Writer, status Status) error {
 	return w.Flush()
 }
 
-func openshiftStatus(status Status) string {
+func openshiftStatus(status *status) string {
 	if status.OpenShiftVersion != "" {
 		return fmt.Sprintf("%s (v%s)", status.OpenShiftStatus, status.OpenShiftVersion)
 	}
