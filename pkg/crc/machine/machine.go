@@ -242,6 +242,14 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	}
 	logging.Info("CodeReady Containers VM is running")
 
+	// Post VM start immediately update SSH key and copy kubeconfig to instance
+	// dir and VM
+	if !exists {
+		if err := updateSSHKeyAndCopyKubeconfigToVM(sshRunner, startConfig, crcBundleMetadata); err != nil {
+			return startError(startConfig.Name, "Error updating public key", err)
+		}
+	}
+
 	// Start network time synchronization if `CRC_DEBUG_ENABLE_STOP_NTP` is not set
 	if stopNtp, _ := strconv.ParseBool(os.Getenv("CRC_DEBUG_ENABLE_STOP_NTP")); !stopNtp {
 		logging.Info("Starting network time synchronization in CodeReady Containers VM")
@@ -324,31 +332,6 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	logging.Info("Check DNS query from host ...")
 	if err := network.CheckCRCLocalDNSReachableFromHost(crcBundleMetadata, instanceIP); err != nil {
 		return startError(startConfig.Name, "Failed to query DNS from host", err)
-	}
-
-	// Additional steps to perform after newly created VM is up
-	if !exists {
-		logging.Info("Generating new SSH key")
-		if err := updateSSHKeyPair(sshRunner); err != nil {
-
-			return startError(startConfig.Name, "Error updating public key", err)
-		}
-		// Copy Kubeconfig file from bundle extract path to machine directory.
-		// In our case it would be ~/.crc/machines/crc/
-		logging.Info("Copying kubeconfig file to instance dir ...")
-		kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, startConfig.Name, "kubeconfig")
-		err := crcos.CopyFileContents(crcBundleMetadata.GetKubeConfigPath(),
-			kubeConfigFilePath,
-			0644)
-		if err != nil {
-			return startError(startConfig.Name, "Error copying kubeconfig file", err)
-		}
-
-		logging.Info("Copying kubeconfig file to CRC VM ...")
-		err = sshRunner.CopyFile(kubeConfigFilePath, "/opt/kubeconfig", 0644)
-		if err != nil {
-			return startError(startConfig.Name, "Error copying kubeconfig file in VM", err)
-		}
 	}
 
 	ocConfig := oc.UseOCWithSSH(sshRunner)
@@ -738,6 +721,32 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	sshRunner.SetPrivateKeyPath(constants.GetPrivateKeyPath())
 
 	return err
+}
+
+func updateSSHKeyAndCopyKubeconfigToVM(sshRunner *crcssh.Runner, startConfig StartConfig, crcBundleMetadata *bundle.CrcBundleInfo) error {
+	logging.Info("Generating new SSH Key pair ...")
+	if err := updateSSHKeyPair(sshRunner); err != nil {
+		return fmt.Errorf("Error updating SSH Keys: %v", err)
+	}
+
+	// Copy Kubeconfig file from bundle extract path to machine directory.
+	// In our case it would be ~/.crc/machines/crc/
+	logging.Info("Copying kubeconfig file to instance dir ...")
+	kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, startConfig.Name, "kubeconfig")
+	err := crcos.CopyFileContents(crcBundleMetadata.GetKubeConfigPath(),
+		kubeConfigFilePath,
+		0644)
+	if err != nil {
+		return fmt.Errorf("Error copying kubeconfig file to instance dir: %v", err)
+	}
+
+	logging.Info("Copying kubeconfig file to CRC VM ...")
+	err = sshRunner.CopyFile(kubeConfigFilePath, "/opt/kubeconfig", 0644)
+	if err != nil {
+		return fmt.Errorf("Error copying kubeconfig file to VM: %v", err)
+	}
+
+	return nil
 }
 
 func configureCluster(ocConfig oc.Config, sshRunner *crcssh.Runner, proxyConfig *network.ProxyConfig, pullSecret, instanceIP string) (rerr error) {
