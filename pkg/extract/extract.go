@@ -12,6 +12,8 @@ import (
 
 	"github.com/cheggaaa/pb/v3"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/h2non/filetype"
+	"github.com/pkg/errors"
 	"github.com/xi2/xz"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -33,33 +35,52 @@ func uncompress(tarball, targetDir string, fileFilter func(string) bool, showPro
 		return unzip(tarball, targetDir, fileFilter, showProgress)
 	}
 
-	var filereader io.Reader
 	file, err := os.Open(filepath.Clean(tarball))
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
+	stat, err := file.Stat()
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot read file information")
+	}
+	header := make([]byte, min(262, stat.Size()))
+	if _, err := io.ReadFull(file, header); err != nil {
+		return nil, errors.Wrap(err, "cannot determine type by reading file header")
+	}
+	if _, err := file.Seek(0, 0); err != nil {
+		return nil, errors.Wrap(err, "cannot seek file")
+	}
+
 	switch {
-	case strings.HasSuffix(tarball, ".tar.xz"), strings.HasSuffix(tarball, ".crcbundle"):
-		filereader, err = xz.NewReader(file, 0)
+	case filetype.Is(header, "xz"):
+		reader, err := xz.NewReader(file, 0)
 		if err != nil {
 			return nil, err
 		}
-	case strings.HasSuffix(tarball, ".tar.gz"):
+		return untar(reader, targetDir, fileFilter, showProgress)
+	case filetype.Is(header, "gz"):
 		reader, err := gzip.NewReader(file)
 		if err != nil {
 			return nil, err
 		}
 		defer reader.Close()
-		filereader = io.Reader(reader)
-	case strings.HasSuffix(tarball, ".tar"):
-		filereader = file
+		return untar(io.Reader(reader), targetDir, fileFilter, showProgress)
+	case filetype.Is(header, "zip"):
+		return unzip(tarball, targetDir, fileFilter, showProgress)
+	case filetype.Is(header, "tar"):
+		return untar(file, targetDir, fileFilter, showProgress)
 	default:
 		return nil, fmt.Errorf("Unknown file format when trying to uncompress %s", tarball)
 	}
+}
 
-	return untar(filereader, targetDir, fileFilter, showProgress)
+func min(a int64, b int64) int64 {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 func untar(reader io.Reader, targetDir string, fileFilter func(string) bool, showProgress bool) ([]string, error) {
