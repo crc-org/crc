@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -57,7 +56,8 @@ func runPrerun() {
 	// Setting up logrus
 	logging.InitLogrus(logging.LogLevel, constants.LogFilePath)
 	setProxyDefaults()
-	for _, str := range GetVersionStrings() {
+
+	for _, str := range defaultVersion().lines() {
 		logging.Debugf(str)
 	}
 }
