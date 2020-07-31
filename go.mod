@@ -14,6 +14,7 @@ require (
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/go-units v0.4.0
+	github.com/h2non/filetype v1.1.0
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/mattn/go-colorable v0.1.2
 	github.com/pbnjay/memory v0.0.0-20190104145345-974d429e7ae4

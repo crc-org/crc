@@ -2,13 +2,16 @@ package extract
 
 import (
 	"fmt"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/code-ready/crc/pkg/crc/logging"
+	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type fileMap map[string]string
@@ -22,6 +25,7 @@ var (
 		"/a/b/c.txt": "ccc",
 	}
 	archives = []string{
+		"test.tar",
 		"test.tar.gz",
 		"test.zip",
 		"test.tar.xz",
@@ -32,6 +36,19 @@ func TestUncompress(t *testing.T) {
 	for _, archive := range archives {
 		assert.NoError(t, testUncompress(filepath.Join("testdata", archive), nil, files))
 		assert.NoError(t, testUncompress(filepath.Join("testdata", archive), fileFilter, filteredFiles))
+	}
+}
+
+func TestUnCompressBundle(t *testing.T) {
+	dir, err := ioutil.TempDir("", "bundles")
+	require.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	bundle := filepath.Join(dir, "test.crcbundle")
+	for _, archive := range archives {
+		require.NoError(t, crcos.CopyFileContents(filepath.Join("testdata", archive), bundle, 0600))
+		assert.NoError(t, testUncompress(bundle, nil, files))
+		assert.NoError(t, testUncompress(bundle, fileFilter, filteredFiles))
 	}
 }
 
