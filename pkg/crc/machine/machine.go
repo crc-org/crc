@@ -713,7 +713,7 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	if err != nil {
 		return err
 	}
-	cmd := fmt.Sprintf("echo '%s' > /home/core/.ssh/authorized_keys", publicKey)
+	cmd := fmt.Sprintf("echo '%s' > /home/core/.ssh/authorized_keys; chmod 644 /home/core/.ssh/authorized_keys", publicKey)
 	_, err = sshRunner.Run(cmd)
 	if err != nil {
 		return err
