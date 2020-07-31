@@ -15,7 +15,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/validation"
-	"github.com/code-ready/crc/pkg/crc/version"
+	crcversion "github.com/code-ready/crc/pkg/crc/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -141,7 +141,7 @@ func checkIfNewVersionAvailable(noUpdateCheck bool) {
 	if noUpdateCheck {
 		return
 	}
-	isNewVersionAvailable, newVersion, err := version.NewVersionAvailable()
+	isNewVersionAvailable, newVersion, err := crcversion.NewVersionAvailable()
 	if err != nil {
 		logging.Debugf("Unable to find out if a new version is available: %v", err)
 		return
