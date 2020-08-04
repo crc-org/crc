@@ -246,8 +246,8 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}
 	logging.Info("CodeReady Containers VM is running")
 
-	// Start network time synchronization if `CRC_DEBUG_ENABLE_STOP_NTP` not set
-	if b, _ := strconv.ParseBool(os.Getenv("CRC_DEBUG_ENABLE_STOP_NTP")); !b {
+	// Start network time synchronization if `CRC_DEBUG_ENABLE_STOP_NTP` is not set
+	if stopNtp, _ := strconv.ParseBool(os.Getenv("CRC_DEBUG_ENABLE_STOP_NTP")); !stopNtp {
 		logging.Info("Stopping network time synchronization in CodeReady Containers VM")
 		if _, err := sshRunner.Run("sudo timedatectl set-ntp on"); err != nil {
 			return startError(startConfig.Name, "Failed to stop network time synchronization", err)
