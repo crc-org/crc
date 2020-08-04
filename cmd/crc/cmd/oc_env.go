@@ -32,10 +32,13 @@ func runOcEnv(args []string) error {
 		return fmt.Errorf("Error running the oc-env command: %s", err.Error())
 	}
 
-	proxyConfig, err := machine.GetProxyConfig(constants.DefaultName)
+	consoleResult, err := machine.GetConsoleURL(machine.ConsoleConfig{
+		Name: constants.DefaultName,
+	})
 	if err != nil {
 		return err
 	}
+	proxyConfig := consoleResult.ClusterConfig.ProxyConfig
 	output.Outln(shell.GetPathEnvString(userShell, constants.CrcOcBinDir))
 	if proxyConfig.IsEnabled() {
 		output.Outln(shell.GetEnvString(userShell, "HTTP_PROXY", proxyConfig.HTTPProxy))
