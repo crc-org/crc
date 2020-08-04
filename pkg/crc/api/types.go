@@ -2,16 +2,19 @@ package api
 
 import (
 	"net"
+
+	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
 type ArgsType map[string]string
-type handlerFunc func(ArgsType) string
+type handlerFunc func(machine.Client, ArgsType) string
 
 type commandError struct {
 	Err string
 }
 
 type CrcAPIServer struct {
+	client                 machine.Client
 	listener               net.Listener
 	clusterOpsRequestsChan chan clusterOpsRequest
 	handlers               map[string]handlerFunc // relates commands to handler func

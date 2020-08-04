@@ -24,7 +24,7 @@ var statusCmd = &cobra.Command{
 	Short: "Display status of the OpenShift cluster",
 	Long:  "Show details about the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := runStatus(os.Stdout, &libmachineClient{}, constants.MachineCacheDir, outputFormat); err != nil {
+		if err := runStatus(os.Stdout, machine.NewClient(), constants.MachineCacheDir, outputFormat); err != nil {
 			exit.WithMessage(1, err.Error())
 		}
 	},
@@ -40,7 +40,7 @@ type status struct {
 	CacheDir         string `json:"cacheDir"`
 }
 
-func runStatus(writer io.Writer, client client, cacheDir, outputFormat string) error {
+func runStatus(writer io.Writer, client machine.Client, cacheDir, outputFormat string) error {
 	statusConfig := machine.ClusterStatusConfig{Name: constants.DefaultName}
 
 	if err := checkIfMachineMissing(client, statusConfig.Name); err != nil {

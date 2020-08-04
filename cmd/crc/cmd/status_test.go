@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -53,22 +52,4 @@ func TestJsonStatus(t *testing.T) {
 }
 `
 	assert.Equal(t, fmt.Sprintf(expected, cacheDir), out.String())
-}
-
-type mockClient struct{}
-
-func (mockClient) Status(statusConfig machine.ClusterStatusConfig) (machine.ClusterStatusResult, error) {
-	return machine.ClusterStatusResult{
-		Name:             "crc",
-		CrcStatus:        "Running",
-		OpenshiftStatus:  "Running",
-		OpenshiftVersion: "4.5.1",
-		DiskUse:          10_000_000_000,
-		DiskSize:         20_000_000_000,
-		Success:          true,
-	}, nil
-}
-
-func (mockClient) Exists(name string) (bool, error) {
-	return true, nil
 }
