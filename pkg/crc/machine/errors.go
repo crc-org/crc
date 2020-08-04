@@ -1,9 +1,13 @@
 package machine
 
-import "github.com/code-ready/crc/pkg/crc/errors"
+import (
+	"fmt"
+
+	"github.com/code-ready/crc/pkg/crc/logging"
+)
 
 func startError(name string, description string, err error) (StartResult, error) {
-	fullErr := errors.Newf("%s: %v", description, err)
+	fullErr := logErrorf("%s: %v", description, err)
 	return StartResult{
 		Name:  name,
 		Error: fullErr.Error(),
@@ -11,7 +15,7 @@ func startError(name string, description string, err error) (StartResult, error)
 }
 
 func stopError(name string, description string, err error) (StopResult, error) {
-	fullErr := errors.Newf("%s: %v", description, err)
+	fullErr := logErrorf("%s: %v", description, err)
 	return StopResult{
 		Name:    name,
 		Success: false,
@@ -20,7 +24,7 @@ func stopError(name string, description string, err error) (StopResult, error) {
 }
 
 func powerOffError(name string, description string, err error) (PowerOffResult, error) {
-	fullErr := errors.Newf("%s: %v", description, err)
+	fullErr := logErrorf("%s: %v", description, err)
 	return PowerOffResult{
 		Name:    name,
 		Success: false,
@@ -29,7 +33,7 @@ func powerOffError(name string, description string, err error) (PowerOffResult, 
 }
 
 func deleteError(name string, description string, err error) (DeleteResult, error) {
-	fullErr := errors.Newf("%s: %v", description, err)
+	fullErr := logErrorf("%s: %v", description, err)
 	return DeleteResult{
 		Name:    name,
 		Success: false,
@@ -38,7 +42,7 @@ func deleteError(name string, description string, err error) (DeleteResult, erro
 }
 
 func ipError(name string, description string, err error) (IPResult, error) {
-	fullErr := errors.Newf("%s: %v", description, err)
+	fullErr := logErrorf("%s: %v", description, err)
 	return IPResult{
 		Name:    name,
 		Success: false,
@@ -47,7 +51,7 @@ func ipError(name string, description string, err error) (IPResult, error) {
 }
 
 func statusError(name string, description string, err error) (ClusterStatusResult, error) {
-	fullErr := errors.Newf("%s: %v", description, err)
+	fullErr := logErrorf("%s: %v", description, err)
 	return ClusterStatusResult{
 		Name:    name,
 		Success: false,
@@ -56,9 +60,14 @@ func statusError(name string, description string, err error) (ClusterStatusResul
 }
 
 func consoleURLError(description string, err error) (ConsoleResult, error) {
-	fullErr := errors.Newf("%s: %v", description, err)
+	fullErr := logErrorf("%s: %v", description, err)
 	return ConsoleResult{
 		Success: false,
 		Error:   fullErr.Error(),
 	}, fullErr
+}
+
+func logErrorf(format string, args ...interface{}) error {
+	logging.Errorf(format, args...)
+	return fmt.Errorf(format, args...)
 }
