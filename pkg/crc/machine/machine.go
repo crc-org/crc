@@ -2,6 +2,7 @@ package machine
 
 import (
 	"encoding/json"
+	goerrors "errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -640,7 +641,7 @@ func createHost(api libmachine.API, driverPath string, machineConfig config.Mach
 	driverOptions := getDriverOptions(machineConfig)
 	jsonDriverConfig, err := json.Marshal(driverOptions)
 	if err != nil {
-		return nil, errors.New("Failed to marshal driver options")
+		return nil, goerrors.New("Failed to marshal driver options")
 	}
 
 	vm, err := api.NewHost(machineConfig.VMDriver, driverPath, jsonDriverConfig)
