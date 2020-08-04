@@ -28,14 +28,6 @@ func (runner *Runner) Run(command string) (string, error) {
 	return runner.runSSHCommandFromDriver(command, false)
 }
 
-func (runner *Runner) SetTextContentAsRoot(destFilename string, content string, mode os.FileMode) error {
-	logging.Debugf("Creating %s with permissions 0%o in the CRC VM", destFilename, mode)
-	command := fmt.Sprintf("sudo install -m 0%o /dev/null %s && cat <<EOF | sudo tee %s\n%s\nEOF", mode, destFilename, destFilename, content)
-	_, err := runner.RunPrivate(command)
-
-	return err
-}
-
 func (runner *Runner) RunPrivate(command string) (string, error) {
 	return runner.runSSHCommandFromDriver(command, true)
 }
@@ -44,10 +36,11 @@ func (runner *Runner) SetPrivateKeyPath(path string) {
 	runner.privateSSHKey = path
 }
 
-func (runner *Runner) CopyData(data []byte, destFilename string) error {
+func (runner *Runner) CopyData(data []byte, destFilename string, mode os.FileMode) error {
+	logging.Debugf("Creating %s with permissions 0%o in the CRC VM", destFilename, mode)
 	base64Data := base64.StdEncoding.EncodeToString(data)
-	command := fmt.Sprintf("echo %s | base64 --decode | sudo tee %s > /dev/null", base64Data, destFilename)
-	_, err := runner.Run(command)
+	command := fmt.Sprintf("sudo install -m 0%o /dev/null %s && cat <<EOF | base64 --decode | sudo tee %s\n%s\nEOF", mode, destFilename, destFilename, base64Data)
+	_, err := runner.RunPrivate(command)
 
 	return err
 }
