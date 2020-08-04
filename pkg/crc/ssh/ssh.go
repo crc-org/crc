@@ -3,6 +3,7 @@ package ssh
 import (
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -43,6 +44,14 @@ func (runner *Runner) CopyData(data []byte, destFilename string, mode os.FileMod
 	_, err := runner.RunPrivate(command)
 
 	return err
+}
+
+func (runner *Runner) CopyFile(srcFilename string, destFilename string, mode os.FileMode) error {
+	data, err := ioutil.ReadFile(srcFilename)
+	if err != nil {
+		return err
+	}
+	return runner.CopyData(data, destFilename, mode)
 }
 
 func (runner *Runner) runSSHCommandFromDriver(command string, runPrivate bool) (string, error) {
