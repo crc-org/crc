@@ -145,11 +145,11 @@ Environment=HTTPS_PROXY=%s
 Environment=NO_PROXY=.cluster.local,.svc,10.128.0.0/14,172.30.0.0/16,%s`
 	p := fmt.Sprintf(proxyTemplate, proxy.HTTPProxy, proxy.HTTPSProxy, proxy.GetNoProxyString())
 	// This will create a systemd drop-in configuration for proxy (both for kubelet and crio services) on the VM.
-	err := sshRunner.SetTextContentAsRoot("/etc/systemd/system/crio.service.d/10-default-env.conf", p, 0644)
+	err := sshRunner.CopyData([]byte(p), "/etc/systemd/system/crio.service.d/10-default-env.conf", 0644)
 	if err != nil {
 		return err
 	}
-	err = sshRunner.SetTextContentAsRoot("/etc/systemd/system/kubelet.service.d/10-default-env.conf", p, 0644)
+	err = sshRunner.CopyData([]byte(p), "/etc/systemd/system/kubelet.service.d/10-default-env.conf", 0644)
 	if err != nil {
 		return err
 	}
@@ -157,7 +157,7 @@ Environment=NO_PROXY=.cluster.local,.svc,10.128.0.0/14,172.30.0.0/16,%s`
 }
 
 func addPullSecretToInstanceDisk(sshRunner *ssh.Runner, pullSec string) error {
-	err := sshRunner.SetTextContentAsRoot("/var/lib/kubelet/config.json", pullSec, 0600)
+	err := sshRunner.CopyData([]byte(pullSec), "/var/lib/kubelet/config.json", 0600)
 	if err != nil {
 		return err
 	}
