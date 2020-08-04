@@ -61,7 +61,8 @@ func runStart(arguments []string) error {
 		Debug:         isDebugLog(),
 	}
 
-	commandResult, err := machine.Start(startConfig)
+	client := machine.NewClient()
+	commandResult, err := client.Start(startConfig)
 	if err != nil {
 		return err
 	}

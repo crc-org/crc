@@ -36,12 +36,13 @@ func runStop(arguments []string) error {
 		Name: constants.DefaultName,
 	}
 
-	if err := checkIfMachineMissing(&libmachineClient{}, stopConfig.Name); err != nil {
+	client := machine.NewClient()
+	if err := checkIfMachineMissing(client, stopConfig.Name); err != nil {
 		return err
 	}
 
 	output.Outln("Stopping the OpenShift cluster, this may take a few minutes...")
-	commandResult, err := machine.Stop(stopConfig)
+	commandResult, err := client.Stop(stopConfig)
 	if err != nil {
 		// Here we are checking the VM state and if it is still running then
 		// Ask user to forcefully power off it.
@@ -51,7 +52,12 @@ func runStop(arguments []string) error {
 			// graceful time to cluster before kill it.
 			yes := input.PromptUserForYesOrNo("Do you want to force power off", globalForce)
 			if yes {
-				return killVM(killConfig)
+				_, err := client.PowerOff(killConfig)
+				if err != nil {
+					return err
+				}
+				output.Outln("Forcibly stopped the OpenShift cluster")
+				return nil
 			}
 		}
 		return err
@@ -62,14 +68,5 @@ func runStop(arguments []string) error {
 		/* If we did not get an error, the status should be true */
 		logging.Warnf("Unexpected status of the OpenShift cluster: %v", commandResult.Success)
 	}
-	return nil
-}
-
-func killVM(killConfig machine.PowerOffConfig) error {
-	_, err := machine.PowerOff(killConfig)
-	if err != nil {
-		return err
-	}
-	output.Outln("Forcibly stopped the OpenShift cluster")
 	return nil
 }

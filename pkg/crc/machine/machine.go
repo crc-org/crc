@@ -107,7 +107,7 @@ func createLibMachineClient(debug bool) (*libmachine.Client, func(), error) {
 	}, nil
 }
 
-func Start(startConfig StartConfig) (StartResult, error) {
+func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	var crcBundleMetadata *bundle.CrcBundleInfo
 
 	libMachineAPIClient, cleanup, err := createLibMachineClient(startConfig.Debug)
@@ -119,7 +119,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	// Pre-VM start
 	var privateKeyPath string
 	var pullSecret string
-	exists, err := Exists(startConfig.Name)
+	exists, err := client.Exists(startConfig.Name)
 	if !exists {
 		machineConfig := config.MachineConfig{
 			Name:       startConfig.Name,
@@ -439,7 +439,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	}, err
 }
 
-func Stop(stopConfig StopConfig) (StopResult, error) {
+func (*client) Stop(stopConfig StopConfig) (StopResult, error) {
 	defer unsetMachineLogging()
 
 	// Set libmachine logging
@@ -472,7 +472,7 @@ func Stop(stopConfig StopConfig) (StopResult, error) {
 	}, nil
 }
 
-func PowerOff(powerOff PowerOffConfig) (PowerOffResult, error) {
+func (*client) PowerOff(powerOff PowerOffConfig) (PowerOffResult, error) {
 	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
 	defer cleanup()
 	if err != nil {
@@ -494,7 +494,7 @@ func PowerOff(powerOff PowerOffConfig) (PowerOffResult, error) {
 	}, nil
 }
 
-func Delete(deleteConfig DeleteConfig) (DeleteResult, error) {
+func (*client) Delete(deleteConfig DeleteConfig) (DeleteResult, error) {
 	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
 	defer cleanup()
 	if err != nil {
@@ -520,7 +520,7 @@ func Delete(deleteConfig DeleteConfig) (DeleteResult, error) {
 	}, nil
 }
 
-func IP(ipConfig IPConfig) (IPResult, error) {
+func (*client) IP(ipConfig IPConfig) (IPResult, error) {
 	err := setMachineLogging(ipConfig.Debug)
 	if err != nil {
 		return ipError(ipConfig.Name, "Cannot initialize logging", err)
@@ -547,7 +547,7 @@ func IP(ipConfig IPConfig) (IPResult, error) {
 	}, nil
 }
 
-func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
+func (*client) Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
 	defer cleanup()
 	if err != nil {
@@ -620,7 +620,7 @@ func Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 	}, nil
 }
 
-func Exists(name string) (bool, error) {
+func (*client) Exists(name string) (bool, error) {
 	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
 	defer cleanup()
 	if err != nil {
@@ -678,7 +678,7 @@ func addNameServerToInstance(sshRunner *crcssh.Runner, ns string) error {
 }
 
 // Return console URL if the VM is present.
-func GetConsoleURL(consoleConfig ConsoleConfig) (ConsoleResult, error) {
+func (*client) GetConsoleURL(consoleConfig ConsoleConfig) (ConsoleResult, error) {
 	// Here we are only checking if the VM exist and not the status of the VM.
 	// We might need to improve and use crc status logic, only
 	// return if the Openshift is running as part of status.

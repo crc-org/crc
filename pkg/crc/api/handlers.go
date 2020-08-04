@@ -13,22 +13,22 @@ import (
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
-func statusHandler(_ ArgsType) string {
+func statusHandler(client machine.Client, _ ArgsType) string {
 	statusConfig := machine.ClusterStatusConfig{Name: constants.DefaultName}
-	clusterStatus, _ := machine.Status(statusConfig)
+	clusterStatus, _ := client.Status(statusConfig)
 	return encodeStructToJSON(clusterStatus)
 }
 
-func stopHandler(_ ArgsType) string {
+func stopHandler(client machine.Client, _ ArgsType) string {
 	stopConfig := machine.StopConfig{
 		Name:  constants.DefaultName,
 		Debug: true,
 	}
-	commandResult, _ := machine.Stop(stopConfig)
+	commandResult, _ := client.Stop(stopConfig)
 	return encodeStructToJSON(commandResult)
 }
 
-func startHandler(_ ArgsType) string {
+func startHandler(client machine.Client, _ ArgsType) string {
 	startConfig := machine.StartConfig{
 		Name:          constants.DefaultName,
 		BundlePath:    crcConfig.GetString(config.Bundle.Name),
@@ -38,11 +38,11 @@ func startHandler(_ ArgsType) string {
 		GetPullSecret: getPullSecretFileContent,
 		Debug:         true,
 	}
-	status, _ := machine.Start(startConfig)
+	status, _ := client.Start(startConfig)
 	return encodeStructToJSON(status)
 }
 
-func versionHandler(_ ArgsType) string {
+func versionHandler(client machine.Client, _ ArgsType) string {
 	v := &machine.VersionResult{
 		CrcVersion:       version.GetCRCVersion(),
 		CommitSha:        version.GetCommitSha(),
@@ -64,15 +64,15 @@ func getPullSecretFileContent() (string, error) {
 	return pullsecret, nil
 }
 
-func deleteHandler(_ ArgsType) string {
+func deleteHandler(client machine.Client, _ ArgsType) string {
 	delConfig := machine.DeleteConfig{Name: constants.DefaultName}
-	r, _ := machine.Delete(delConfig)
+	r, _ := client.Delete(delConfig)
 	return encodeStructToJSON(r)
 }
 
-func webconsoleURLHandler(_ ArgsType) string {
+func webconsoleURLHandler(client machine.Client, _ ArgsType) string {
 	consoleConfig := machine.ConsoleConfig{Name: constants.DefaultName}
-	r, _ := machine.GetConsoleURL(consoleConfig)
+	r, _ := client.GetConsoleURL(consoleConfig)
 	return encodeStructToJSON(r)
 }
 

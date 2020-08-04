@@ -40,13 +40,14 @@ func runDelete(arguments []string) error {
 		deleteCache()
 	}
 
-	if err := checkIfMachineMissing(&libmachineClient{}, deleteConfig.Name); err != nil {
+	client := machine.NewClient()
+	if err := checkIfMachineMissing(client, deleteConfig.Name); err != nil {
 		return err
 	}
 
 	yes := input.PromptUserForYesOrNo("Do you want to delete the OpenShift cluster", globalForce)
 	if yes {
-		_, err := machine.Delete(deleteConfig)
+		_, err := client.Delete(deleteConfig)
 		if err != nil {
 			return err
 		}

@@ -7,6 +7,7 @@ import (
 	"net"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
 func CreateAPIServer(socketPath string) (CrcAPIServer, error) {
@@ -20,6 +21,7 @@ func CreateAPIServer(socketPath string) (CrcAPIServer, error) {
 
 func createAPIServerWithListener(listener net.Listener) (CrcAPIServer, error) {
 	apiServer := CrcAPIServer{
+		client:                 machine.NewClient(),
 		listener:               listener,
 		clusterOpsRequestsChan: make(chan clusterOpsRequest, 10),
 		handlers: map[string]handlerFunc{
@@ -56,7 +58,7 @@ func (api CrcAPIServer) handleRequest(req commandRequest, conn net.Conn) {
 	defer conn.Close()
 	var result string
 	if handler, ok := api.handlers[req.Command]; ok {
-		result = handler(req.Args)
+		result = handler(api.client, req.Args)
 	} else {
 		result = encodeErrorToJSON(fmt.Sprintf("Unknown command supplied: %s", req.Command))
 	}
