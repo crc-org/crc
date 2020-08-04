@@ -346,9 +346,9 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		if err != nil {
 			return startError(startConfig.Name, "Error copying kubeconfig file", err)
 		}
-		// Copy kubeconfig file inside the VM
-		kubeconfigContent, _ := ioutil.ReadFile(kubeConfigFilePath)
-		_, err = sshRunner.RunPrivate(fmt.Sprintf("cat <<EOF | sudo tee /opt/kubeconfig\n%s\nEOF", string(kubeconfigContent)))
+
+		logging.Info("Copying kubeconfig file to CRC VM ...")
+		err = sshRunner.CopyFile(kubeConfigFilePath, "/opt/kubeconfig", 0644)
 		if err != nil {
 			return startError(startConfig.Name, "Error copying kubeconfig file in VM", err)
 		}
