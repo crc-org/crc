@@ -28,7 +28,6 @@ var (
 	bundleURL      string
 	bundleVersion  string
 	pullSecretFile string
-	goPath         string
 )
 
 // FeatureContext defines godog.Suite steps for the test suite.
@@ -135,13 +134,17 @@ func FeatureContext(s *godog.Suite) {
 		}
 	})
 
+	// nolint:staticcheck
 	s.BeforeFeature(func(this *messages.GherkinDocument) {
-
 		// copy data/config files to test dir
 		CopyFilesToTestDir()
 
-		if bundleEmbedded == false {
-			if _, err := os.Stat(bundleName); os.IsNotExist(err) {
+		if !bundleEmbedded {
+			if _, err := os.Stat(bundleName); err != nil {
+				if !os.IsNotExist(err) {
+					fmt.Printf("Unexpected error obtaining the bundle %v.\n", bundleName)
+					os.Exit(1)
+				}
 				// Obtain the bundle to current dir
 				fmt.Println("Obtaining bundle...")
 				bundle, err := DownloadBundle(bundleURL, ".")
@@ -150,9 +153,6 @@ func FeatureContext(s *godog.Suite) {
 					os.Exit(1)
 				}
 				fmt.Println("Using bundle:", bundle)
-			} else if err != nil {
-				fmt.Printf("Unexpected error obtaining the bundle %v.\n", bundleName)
-				os.Exit(1)
 			} else {
 				fmt.Println("Using existing bundle:", bundleName)
 			}
@@ -173,13 +173,13 @@ func CheckClusterOperatorsWithRetry(retryCount int, retryWait string) error {
 		if err != nil {
 			return err
 		}
-		if s.Available == true {
+		if s.Available {
 			return nil
 		}
 		time.Sleep(retryDuration)
 	}
 
-	return fmt.Errorf("Some cluster operators are still not running.\n")
+	return fmt.Errorf("Some cluster operators are still not running")
 }
 
 func CheckHTTPResponseWithRetry(retryCount int, retryWait string, address string, expectedStatusCode int) error {
@@ -190,6 +190,7 @@ func CheckHTTPResponseWithRetry(retryCount int, retryWait string, address string
 	}
 
 	tr := &http.Transport{
+		// #nosec G402
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
@@ -206,7 +207,7 @@ func CheckHTTPResponseWithRetry(retryCount int, retryWait string, address string
 		time.Sleep(retryDuration)
 	}
 
-	return fmt.Errorf("Got %d as Status Code instead of expected %d.", resp.StatusCode, expectedStatusCode)
+	return fmt.Errorf("Got %d as Status Code instead of expected %d", resp.StatusCode, expectedStatusCode)
 }
 
 func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string, expected string, expectedOutput string) error {
@@ -216,24 +217,24 @@ func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string,
 		return err
 	}
 
-	var match_err error
+	var matchErr error
 
 	for i := 0; i < retryCount; i++ {
-		exec_err := clicumber.ExecuteCommand(command)
-		if exec_err == nil {
+		execErr := clicumber.ExecuteCommand(command)
+		if execErr == nil {
 			if strings.Contains(expected, " not ") {
-				match_err = clicumber.CommandReturnShouldNotMatch("stdout", expectedOutput)
+				matchErr = clicumber.CommandReturnShouldNotMatch("stdout", expectedOutput)
 			} else {
-				match_err = clicumber.CommandReturnShouldMatch("stdout", expectedOutput)
+				matchErr = clicumber.CommandReturnShouldMatch("stdout", expectedOutput)
 			}
-			if match_err == nil {
+			if matchErr == nil {
 				return nil
 			}
 		}
 		time.Sleep(retryDuration)
 	}
 
-	return match_err
+	return matchErr
 }
 
 func DeleteFileFromCRCHome(fileName string) error {
@@ -244,9 +245,8 @@ func DeleteFileFromCRCHome(fileName string) error {
 		return nil
 	}
 
-	err := clicumber.DeleteFile(theFile)
-	if err != nil {
-		fmt.Errorf("Error deleting file %v", theFile)
+	if err := clicumber.DeleteFile(theFile); err != nil {
+		return fmt.Errorf("Error deleting file %v", theFile)
 	}
 	return nil
 }
@@ -283,12 +283,12 @@ func ConfigFileInCRCHomeContainsKeyMatchingValue(format string, configFile strin
 	matches, err := clicumber.PerformRegexMatch(expectedValue, keyValue)
 	if err != nil {
 		return err
-	} else if (condition == "contains") && !matches {
+	}
+	if (condition == "contains") && !matches {
 		return fmt.Errorf("For key '%s' config contains unexpected value '%s'", keyPath, keyValue)
 	} else if (condition == "does not contain") && matches {
 		return fmt.Errorf("For key '%s' config contains value '%s', which it should not contain", keyPath, keyValue)
 	}
-
 	return nil
 }
 
@@ -337,7 +337,7 @@ func StartCRCWithDefaultBundleSucceedsOrFails(expected string) error {
 	var cmd string
 	var extraBundleArgs string
 
-	if bundleEmbedded == false {
+	if !bundleEmbedded {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
 	}
 	cmd = fmt.Sprintf("crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
@@ -351,7 +351,7 @@ func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(
 	var cmd string
 	var extraBundleArgs string
 
-	if bundleEmbedded == false {
+	if !bundleEmbedded {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
 	}
 	cmd = fmt.Sprintf("CRC_DEBUG_ENABLE_STOP_NTP=true crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
@@ -363,34 +363,26 @@ func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(
 func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, expected string) error {
 
 	var extraBundleArgs string
-	if bundleEmbedded == false {
+	if !bundleEmbedded {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
 	}
 
-	var cmd string
-
-	cmd = fmt.Sprintf("crc start -n %s -p '%s' %s --log-level debug", nameserver, pullSecretFile, extraBundleArgs)
-	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
-
-	return err
+	cmd := fmt.Sprintf("crc start -n %s -p '%s' %s --log-level debug", nameserver, pullSecretFile, extraBundleArgs)
+	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
 
 func StdoutContainsIfBundleEmbeddedOrNot(value string, expected string) error {
-
 	if expected == "is" { // expect embedded
 		if bundleEmbedded { // really embedded
 			return clicumber.CommandReturnShouldContain("stdout", value)
-		} else {
-			return clicumber.CommandReturnShouldNotContain("stdout", value)
 		}
-	} else { // expect not embedded
-		if !bundleEmbedded { // really not embedded
-			return clicumber.CommandReturnShouldContain("stdout", value)
-		} else {
-			return clicumber.CommandReturnShouldNotContain("stdout", value)
-		}
+		return clicumber.CommandReturnShouldNotContain("stdout", value)
 	}
-
+	// expect not embedded
+	if !bundleEmbedded { // really not embedded
+		return clicumber.CommandReturnShouldContain("stdout", value)
+	}
+	return clicumber.CommandReturnShouldNotContain("stdout", value)
 }
 
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
