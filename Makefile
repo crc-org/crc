@@ -28,7 +28,6 @@ GOPATH ?= $(shell go env GOPATH)
 ORG := github.com/code-ready
 REPOPATH ?= $(ORG)/crc
 
-PACKAGES := go list --tags build ./...
 SOURCES := $(shell git ls-files  *.go ":^vendor")
 
 RELEASE_INFO := release-info.json
@@ -96,7 +95,7 @@ cross: $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/wi
 
 .PHONY: test
 test:
-	go test --tags build -v -ldflags="$(VERSION_VARIABLES)" $(shell $(PACKAGES))
+	go test --tags build -v -ldflags="$(VERSION_VARIABLES)" ./pkg/... ./cmd/...
 
 .PHONY: build_docs
 build_docs:
@@ -120,7 +119,6 @@ clean: clean_docs
 	rm -f $(GOPATH)/bin/crc
 	rm -rf $(RELEASE_DIR)
        
-
 .PHONY: integration ## Run integration tests
 integration:
 GODOG_OPTS = --godog.tags=$(GOOS)
@@ -134,7 +132,7 @@ ifndef CRC_BINARY
 	CRC_BINARY = --crc-binary=$(GOPATH)/bin
 endif
 integration:
-	@go test --timeout=120m $(REPOPATH)/test/integration -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --bundle-version=$(BUNDLE_VERSION) --tags=integration $(GODOG_OPTS)
+	@go test --timeout=120m $(REPOPATH)/test/integration -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --bundle-version=$(BUNDLE_VERSION) $(GODOG_OPTS)
 
 .PHONY: fmt
 fmt:
