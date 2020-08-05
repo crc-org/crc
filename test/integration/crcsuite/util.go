@@ -37,5 +37,5 @@ func RemoveCRCHome() error {
 
 	}
 	// keepFile exists
-	return fmt.Errorf("Folder %s not removed as per request: %s present.\n", CRCHome, keepFile)
+	return fmt.Errorf("Folder %s not removed as per request: %s present", CRCHome, keepFile)
 }
