@@ -118,7 +118,13 @@ clean: clean_docs
 	rm -rf $(BUILD_DIR)
 	rm -f $(GOPATH)/bin/crc
 	rm -rf $(RELEASE_DIR)
-       
+
+.PHONY: build_integration
+build_integration: $(SOURCES)
+	GOOS=linux   go test ./test/integration/ -c -o $(BUILD_DIR)/linux-amd64/integration.test
+	GOOS=windows go test ./test/integration/ -c -o $(BUILD_DIR)/windows-amd64/integration.test.exe
+	GOOS=darwin  go test ./test/integration/ -c -o $(BUILD_DIR)/macos-amd64/integration.test
+
 .PHONY: integration ## Run integration tests
 integration:
 GODOG_OPTS = --godog.tags=$(GOOS)

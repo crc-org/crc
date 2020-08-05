@@ -45,6 +45,9 @@ jobs:
     - run:
         name: Run unit tests
         command: make test
+    - run:
+        name: Compile integration tests
+        command: make build_integration
     - store_artifacts:
         path: ~/project/out
         destination: crc
