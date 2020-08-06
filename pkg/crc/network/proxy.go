@@ -15,15 +15,17 @@ var (
 
 // ProxyConfig keeps the proxy configuration for the current environment
 type ProxyConfig struct {
-	HTTPProxy  string
-	HTTPSProxy string
-	noProxy    []string
+	HTTPProxy   string
+	HTTPSProxy  string
+	noProxy     []string
+	ProxyCACert string
 }
 
-func NewProxyDefaults(httpProxy, httpsProxy, noProxy string) (*ProxyConfig, error) {
+func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCACert string) (*ProxyConfig, error) {
 	DefaultProxy = ProxyConfig{
-		HTTPProxy:  httpProxy,
-		HTTPSProxy: httpsProxy,
+		HTTPProxy:   httpProxy,
+		HTTPSProxy:  httpsProxy,
+		ProxyCACert: proxyCACert,
 	}
 
 	if DefaultProxy.HTTPProxy == "" {
@@ -44,8 +46,9 @@ func NewProxyDefaults(httpProxy, httpsProxy, noProxy string) (*ProxyConfig, erro
 // the corresponding environment variable is checked.
 func NewProxyConfig() (*ProxyConfig, error) {
 	config := ProxyConfig{
-		HTTPProxy:  DefaultProxy.HTTPProxy,
-		HTTPSProxy: DefaultProxy.HTTPSProxy,
+		HTTPProxy:   DefaultProxy.HTTPProxy,
+		HTTPSProxy:  DefaultProxy.HTTPSProxy,
+		ProxyCACert: DefaultProxy.ProxyCACert,
 	}
 
 	config.noProxy = defaultNoProxies

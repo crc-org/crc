@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
+	"strings"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
@@ -97,15 +99,37 @@ func setProxyDefaults() {
 	httpProxy := config.GetString(cmdConfig.HTTPProxy.Name)
 	httpsProxy := config.GetString(cmdConfig.HTTPSProxy.Name)
 	noProxy := config.GetString(cmdConfig.NoProxy.Name)
+	proxyCAFile := config.GetString(cmdConfig.ProxyCAFile.Name)
 
-	proxyConfig, err := network.NewProxyDefaults(httpProxy, httpsProxy, noProxy)
+	proxyCAData, err := getProxyCAData(proxyCAFile)
+	if err != nil {
+		exit.WithMessage(1, fmt.Sprintf("not able to read proxyCAFile %s: %v", proxyCAFile, err.Error()))
+	}
+
+	proxyConfig, err := network.NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAData)
 	if err != nil {
 		exit.WithMessage(1, err.Error())
 	}
 
 	if proxyConfig.IsEnabled() {
-		logging.Debugf("HTTP-PROXY: %s, HTTPS-PROXY: %s, NO-PROXY: %s", proxyConfig.HTTPProxyForDisplay(),
-			proxyConfig.HTTPSProxyForDisplay(), proxyConfig.GetNoProxyString())
+		logging.Debugf("HTTP-PROXY: %s, HTTPS-PROXY: %s, NO-PROXY: %s, proxyCAFile: %s", proxyConfig.HTTPProxyForDisplay(),
+			proxyConfig.HTTPSProxyForDisplay(), proxyConfig.GetNoProxyString(), proxyCAFile)
 		proxyConfig.ApplyToEnvironment()
 	}
+}
+
+func getProxyCAData(proxyCAFile string) (string, error) {
+	if proxyCAFile == "" {
+		return "", nil
+	}
+	proxyCACert, err := ioutil.ReadFile(proxyCAFile)
+	if err != nil {
+		return "", err
+	}
+	// Before passing string back to caller function, remove the empty lines in the end
+	return trimTrailingEOL(string(proxyCACert)), nil
+}
+
+func trimTrailingEOL(s string) string {
+	return strings.TrimRight(s, "\n")
 }

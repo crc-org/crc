@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -119,16 +120,79 @@ func UpdateClusterID(ocConfig oc.Config) error {
 	return nil
 }
 
-func AddProxyConfigToCluster(ocConfig oc.Config, proxy *network.ProxyConfig) error {
-	cmdArgs := []string{"patch", "proxy", "cluster", "-p",
-		fmt.Sprintf(`'{"spec":{"httpProxy":"%s", "httpsProxy":"%s", "noProxy":"%s"}}'`, proxy.HTTPProxy, proxy.HTTPSProxy, proxy.GetNoProxyString()),
-		"-n", "openshift-config", "--type", "merge"}
+func AddProxyConfigToCluster(sshRunner *ssh.Runner, ocConfig oc.Config, proxy *network.ProxyConfig) error {
+	type trustedCA struct {
+		Name string `json:"name"`
+	}
+
+	type proxySpecConfig struct {
+		HTTPProxy  string    `json:"httpProxy"`
+		HTTPSProxy string    `json:"httpsProxy"`
+		NoProxy    string    `json:"noProxy"`
+		TrustedCA  trustedCA `json:"trustedCA"`
+	}
+
+	type patchSpec struct {
+		Spec proxySpecConfig `json:"spec"`
+	}
+
+	patch := &patchSpec{
+		Spec: proxySpecConfig{
+			HTTPProxy:  proxy.HTTPProxy,
+			HTTPSProxy: proxy.HTTPSProxy,
+			NoProxy:    proxy.GetNoProxyString(),
+		},
+	}
 
 	if err := WaitForOpenshiftResource(ocConfig, "proxy"); err != nil {
 		return err
 	}
+
+	if proxy.ProxyCACert != "" {
+		trustedCAName := "user-ca-bundle"
+		logging.Debug("Adding proxy CA cert to cluster")
+		if err := addProxyCACertToCluster(sshRunner, ocConfig, proxy, trustedCAName); err != nil {
+			return err
+		}
+		patch.Spec.TrustedCA = trustedCA{Name: trustedCAName}
+	}
+
+	patchEncode, err := json.Marshal(patch)
+	if err != nil {
+		return fmt.Errorf("Failed to encode to json: %v", err)
+	}
+	logging.Debugf("Patch string %s", string(patchEncode))
+
+	cmdArgs := []string{"patch", "proxy", "cluster", "-p", fmt.Sprintf("'%s'", string(patchEncode)), "-n", "openshift-config", "--type", "merge"}
 	if _, stderr, err := ocConfig.RunOcCommand(cmdArgs...); err != nil {
 		return fmt.Errorf("Failed to add proxy details %v: %s", err, stderr)
+	}
+	return nil
+}
+
+func addProxyCACertToCluster(sshRunner *ssh.Runner, ocConfig oc.Config, proxy *network.ProxyConfig, trustedCAName string) error {
+	proxyConfigMapFileName := fmt.Sprintf("/tmp/%s.json", trustedCAName)
+	proxyCABundleTemplate := `{
+  "apiVersion": "v1",
+  "data": {
+    "ca-bundle.crt": "%s"
+  },
+  "kind": "ConfigMap",
+  "metadata": {
+    "name": "%s",
+    "namespace": "openshift-config"
+  }
+}
+`
+	// Replace the carriage return with `\n` char
+	p := fmt.Sprintf(proxyCABundleTemplate, strings.ReplaceAll(proxy.ProxyCACert, "\n", `\n`), trustedCAName)
+	err := sshRunner.CopyData([]byte(p), proxyConfigMapFileName, 0644)
+	if err != nil {
+		return err
+	}
+	cmdArgs := []string{"apply", "-f", proxyConfigMapFileName}
+	if _, stderr, err := ocConfig.RunOcCommand(cmdArgs...); err != nil {
+		return fmt.Errorf("Failed to add proxy cert details %v: %s", err, stderr)
 	}
 	return nil
 }
@@ -151,6 +215,21 @@ Environment=NO_PROXY=.cluster.local,.svc,10.128.0.0/14,172.30.0.0/16,%s`
 	}
 	err = sshRunner.CopyData([]byte(p), "/etc/systemd/system/kubelet.service.d/10-default-env.conf", 0644)
 	if err != nil {
+		return err
+	}
+
+	if proxy.ProxyCACert != "" {
+		logging.Debug("Adding proxy CA cert to instance")
+		return addProxyCACertToInstance(sshRunner, proxy)
+	}
+	return nil
+}
+
+func addProxyCACertToInstance(sshRunner *ssh.Runner, proxy *network.ProxyConfig) error {
+	if err := sshRunner.CopyData([]byte(proxy.ProxyCACert), "/etc/pki/ca-trust/source/anchors/openshift-config-user-ca-bundle.crt", 0600); err != nil {
+		return err
+	}
+	if _, err := sshRunner.Run("sudo update-ca-trust"); err != nil {
 		return err
 	}
 	return nil

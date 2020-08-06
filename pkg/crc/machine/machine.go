@@ -795,7 +795,7 @@ func configProxyForCluster(ocConfig oc.Config, sshRunner *crcssh.Runner, sd *sys
 
 	logging.Info("Adding proxy configuration to the cluster ...")
 	proxy.AddNoProxy(instanceIP)
-	if err := cluster.AddProxyConfigToCluster(ocConfig, proxy); err != nil {
+	if err := cluster.AddProxyConfigToCluster(sshRunner, ocConfig, proxy); err != nil {
 		return err
 	}
 
