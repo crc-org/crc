@@ -23,9 +23,10 @@ var (
 
 	// Proxy Configuration
 
-	HTTPProxy  = cfg.AddSetting("http-proxy", nil, []cfg.ValidationFnType{cfg.ValidateURI}, []cfg.SetFn{cfg.SuccessfullyApplied})
-	HTTPSProxy = cfg.AddSetting("https-proxy", nil, []cfg.ValidationFnType{cfg.ValidateURI}, []cfg.SetFn{cfg.SuccessfullyApplied})
-	NoProxy    = cfg.AddSetting("no-proxy", nil, []cfg.ValidationFnType{cfg.ValidateNoProxy}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	HTTPProxy   = cfg.AddSetting("http-proxy", nil, []cfg.ValidationFnType{cfg.ValidateURI}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	HTTPSProxy  = cfg.AddSetting("https-proxy", nil, []cfg.ValidationFnType{cfg.ValidateURI}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	NoProxy     = cfg.AddSetting("no-proxy", nil, []cfg.ValidationFnType{cfg.ValidateNoProxy}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	ProxyCAFile = cfg.AddSetting("proxy-ca-file", nil, []cfg.ValidationFnType{cfg.ValidatePath}, []cfg.SetFn{cfg.SuccessfullyApplied})
 )
 
 var (

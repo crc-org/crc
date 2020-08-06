@@ -22,6 +22,16 @@ $ {bin} config set https-proxy http://example.proxy.com:__<port>__
 $ {bin} config set no-proxy __<comma-separated-no-proxy-entries>__
 ----
 +
+
+. If proxy uses custom CA then use the `{bin} config set` command as follows:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} config set proxy-ca-file __<Path to custom CA file>__
+----
++
+
+
 The [command]`{bin}` binary will be able to use the defined proxy once set through environment variables or {prod} configuration.
 
 [NOTE]
