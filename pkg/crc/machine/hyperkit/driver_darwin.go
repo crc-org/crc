@@ -5,43 +5,22 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
-	"github.com/code-ready/machine/libmachine/drivers"
+	"github.com/code-ready/machine/drivers/hyperkit"
 )
 
-type Driver struct {
-	*drivers.BaseDriver
-	CPU           int
-	Memory        int
-	Cmdline       string
-	UUID          string
-	VpnKitSock    string
-	VSockPorts    []string
-	VmlinuzPath   string
-	InitrdPath    string
-	KernelCmdLine string
-	DiskPathURL   string
-	SSHKeyPath    string
-	HyperKitPath  string
-}
+func CreateHost(machineConfig config.MachineConfig) *hyperkit.Driver {
+	hyperkitDriver := hyperkit.NewDriver(machineConfig.Name, constants.MachineBaseDir)
 
-func CreateHost(config config.MachineConfig) *Driver {
-	d := &Driver{
-		BaseDriver: &drivers.BaseDriver{
-			MachineName: config.Name,
-			StorePath:   constants.MachineBaseDir,
-			SSHUser:     constants.DefaultSSHUser,
-			BundleName:  config.BundleName,
-		},
-		Memory:      config.Memory,
-		CPU:         config.CPUs,
-		UUID:        "c3d68012-0208-11ea-9fd7-f2189899ab08",
-		Cmdline:     config.KernelCmdLine,
-		VmlinuzPath: config.Kernel,
-		InitrdPath:  config.Initramfs,
-		DiskPathURL: config.DiskPathURL,
-		SSHKeyPath:  config.SSHKeyPath,
-	}
-	d.HyperKitPath = filepath.Join(constants.CrcBinDir, "hyperkit")
+	hyperkitDriver.BundleName = machineConfig.BundleName
+	hyperkitDriver.Memory = machineConfig.Memory
+	hyperkitDriver.CPU = machineConfig.CPUs
+	hyperkitDriver.UUID = "c3d68012-0208-11ea-9fd7-f2189899ab08"
+	hyperkitDriver.Cmdline = machineConfig.KernelCmdLine
+	hyperkitDriver.VmlinuzPath = machineConfig.Kernel
+	hyperkitDriver.InitrdPath = machineConfig.Initramfs
+	hyperkitDriver.DiskPathURL = machineConfig.DiskPathURL
+	hyperkitDriver.SSHKeyPath = machineConfig.SSHKeyPath
+	hyperkitDriver.HyperKitPath = filepath.Join(constants.CrcBinDir, "hyperkit")
 
-	return d
+	return hyperkitDriver
 }

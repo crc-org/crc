@@ -10,7 +10,7 @@ import (
 
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/drivers/plugin/localbinary"
-	"github.com/code-ready/machine/libmachine/drivers/rpc"
+	rpcdriver "github.com/code-ready/machine/libmachine/drivers/rpc"
 	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/version"
 )
@@ -33,8 +33,12 @@ Please use this plugin through the main 'crc' binary.
 	os.Setenv("MACHINE_DEBUG", "1")
 
 	rpcd := rpcdriver.NewRPCServerDriver(d)
-	rpc.RegisterName(rpcdriver.RPCServiceNameV0, rpcd)
-	rpc.RegisterName(rpcdriver.RPCServiceNameV1, rpcd)
+	if err := rpc.RegisterName(rpcdriver.RPCServiceNameV0, rpcd); err != nil {
+		log.Error(err)
+	}
+	if err := rpc.RegisterName(rpcdriver.RPCServiceNameV1, rpcd); err != nil {
+		log.Error(err)
+	}
 	rpc.HandleHTTP()
 
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
@@ -46,7 +50,9 @@ Please use this plugin through the main 'crc' binary.
 
 	fmt.Println(listener.Addr())
 
-	go http.Serve(listener, nil)
+	go func() {
+		_ = http.Serve(listener, nil)
+	}()
 
 	for {
 		select {

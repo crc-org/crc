@@ -15,7 +15,9 @@ func getProcessEntry(pid int) (pe *syscall.ProcessEntry32, err error) {
 	if err != nil {
 		return nil, err
 	}
-	defer syscall.CloseHandle(syscall.Handle(snapshot))
+	defer func() {
+		_ = syscall.CloseHandle(syscall.Handle(snapshot))
+	}()
 
 	var processEntry syscall.ProcessEntry32
 	processEntry.Size = uint32(unsafe.Sizeof(processEntry))
@@ -56,20 +58,22 @@ func Detect() (string, error) {
 		if err != nil {
 			return "cmd", err // defaulting to cmd
 		}
-		if strings.Contains(strings.ToLower(shell), "powershell") {
+		switch {
+		case strings.Contains(strings.ToLower(shell), "powershell"):
 			return "powershell", nil
-		} else if strings.Contains(strings.ToLower(shell), "cmd") {
+		case strings.Contains(strings.ToLower(shell), "cmd"):
 			return "cmd", nil
-		} else {
+		default:
 			shell, _, err := getNameAndItsPpid(shellppid)
 			if err != nil {
 				return "cmd", err // defaulting to cmd
 			}
-			if strings.Contains(strings.ToLower(shell), "powershell") {
+			switch {
+			case strings.Contains(strings.ToLower(shell), "powershell"):
 				return "powershell", nil
-			} else if strings.Contains(strings.ToLower(shell), "cmd") {
+			case strings.Contains(strings.ToLower(shell), "cmd"):
 				return "cmd", nil
-			} else {
+			default:
 				fmt.Printf("You can further specify your shell with either 'cmd' or 'powershell' with the --shell flag.\n\n")
 				return "cmd", nil // this could be either powershell or cmd, defaulting to cmd
 			}

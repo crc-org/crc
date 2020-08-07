@@ -20,9 +20,9 @@ func (e NotLoadable) Error() string {
 	return fmt.Sprintf("Driver %q not found. Do you have the plugin binary accessible in your PATH?", e.Name)
 }
 
-func NewDriver(Name string) drivers.Driver {
+func NewDriver(name string) drivers.Driver {
 	return &Driver{
-		Name: Name,
+		Name: name,
 	}
 }
 

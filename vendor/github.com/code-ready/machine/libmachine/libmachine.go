@@ -10,7 +10,7 @@ import (
 	"github.com/code-ready/machine/libmachine/auth"
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/drivers/plugin/localbinary"
-	"github.com/code-ready/machine/libmachine/drivers/rpc"
+	rpcdriver "github.com/code-ready/machine/libmachine/drivers/rpc"
 	"github.com/code-ready/machine/libmachine/host"
 	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/mcnerror"
@@ -90,11 +90,7 @@ func (api *Client) Load(name string) (*host.Host, error) {
 		return nil, err
 	}
 
-	if h.DriverName == "virtualbox" {
-		h.Driver = drivers.NewSerialDriver(d)
-	} else {
-		h.Driver = d
-	}
+	h.Driver = d
 
 	return h, nil
 }

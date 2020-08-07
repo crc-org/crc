@@ -137,6 +137,7 @@ func (lbe *Executor) Start() (*bufio.Scanner, *bufio.Scanner, error) {
 
 	log.Debugf("Launching plugin server for driver %s", lbe.DriverName)
 
+	// #nosec G204
 	lbe.cmd = exec.Command(lbe.binaryPath)
 
 	lbe.pluginStdout, err = lbe.cmd.StdoutPipe()

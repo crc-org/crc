@@ -3,6 +3,7 @@ package ssh
 import (
 	"encoding/pem"
 	"os"
+
 	"github.com/hectane/go-acl"
 )
 
@@ -33,7 +34,6 @@ func (kp *KeyPair) WriteToFile(privateKeyPath string, publicKeyPath string) erro
 			return ErrUnableToWriteFile
 		}
 
-
 		if err := windowsChmod(v.File, 0600); err != nil {
 			return err
 		}
@@ -43,7 +43,7 @@ func (kp *KeyPair) WriteToFile(privateKeyPath string, publicKeyPath string) erro
 	return nil
 }
 
-func windowsChmod(filePath string, fileMode os.FileMode) error  {
+func windowsChmod(filePath string, fileMode os.FileMode) error {
 	if err := acl.Chmod(filePath, fileMode); err != nil {
 		return err
 	}

@@ -9,7 +9,7 @@ require (
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/cheggaaa/pb/v3 v3.0.4
 	github.com/code-ready/clicumber v0.0.0-20200728062640-1203dda97f67
-	github.com/code-ready/machine v0.0.0-20191115055627-b284f794e910
+	github.com/code-ready/machine v0.0.0-20200810103403-d2277fb226c4
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/docker v1.13.1 // indirect

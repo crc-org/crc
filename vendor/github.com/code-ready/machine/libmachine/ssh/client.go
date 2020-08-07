@@ -56,10 +56,6 @@ type Auth struct {
 type ClientType string
 
 const (
-	maxDialAttempts = 10
-)
-
-const (
 	External ClientType = "external"
 	Native   ClientType = "native"
 )
@@ -151,8 +147,9 @@ func NewNativeConfig(user string, auth *Auth) (ssh.ClientConfig, error) {
 	}
 
 	return ssh.ClientConfig{
-		User:            user,
-		Auth:            authMethods,
+		User: user,
+		Auth: authMethods,
+		// #nosec G106
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}, nil
 }
@@ -300,7 +297,9 @@ func (client *NativeClient) Shell(args ...string) error {
 			return err
 		}
 
-		defer terminal.Restore(fd, oldState)
+		defer func() {
+			_ = terminal.Restore(fd, oldState)
+		}()
 
 		sizeWidth, sizeHeight, err := terminal.GetSize(fd)
 		if err != nil {
@@ -323,11 +322,10 @@ func (client *NativeClient) Shell(args ...string) error {
 		if err := session.Wait(); err != nil {
 			return err
 		}
-	} else {
-		if err := session.Run(strings.Join(args, " ")); err != nil {
-			return err
-		}
+	} else if err := session.Run(strings.Join(args, " ")); err != nil {
+		return err
 	}
+
 	return nil
 }
 
