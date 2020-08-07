@@ -413,6 +413,11 @@ func Start(startConfig StartConfig) (StartResult, error) {
 
 	time.Sleep(time.Minute * 3)
 
+	logging.Info("Updating kubeconfig")
+	if err := eventuallyWriteKubeconfig(ocConfig, instanceIP, clusterConfig); err != nil {
+		log.Warnf("Cannot update kubeconfig: %v", err)
+	}
+
 	// Approve the node certificate.
 	if err := cluster.ApproveNodeCSR(ocConfig); err != nil {
 		return startError(startConfig.Name, "Error approving the node csr", err)
