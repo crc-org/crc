@@ -6,9 +6,7 @@ import "fmt"
 
 const (
 	// Defaults
-	DefaultNetwork   = "crc"
-	DefaultCacheMode = "default"
-	DefaultIOMode    = "threads"
+	DefaultNetwork = "crc"
 
 	// Static addresses
 	MACAddress = "52:fd:fc:07:21:82"

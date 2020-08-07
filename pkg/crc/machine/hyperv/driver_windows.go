@@ -29,7 +29,7 @@ func CreateHost(machineConfig config.MachineConfig) *hyperv.Driver {
 	// This force to add entry of DiskPath under crc machine config.json
 	hypervDriver.DiskPath = filepath.Join(constants.MachineBaseDir, "machines", machineConfig.Name, "crc.vhdx")
 	// The DiskPathURL will contain the cache path of where the image is located (not the actual image location)
-	hypervDriver.DiskPathUrl = machineConfig.DiskPathURL
+	hypervDriver.DiskPathURL = machineConfig.DiskPathURL
 	hypervDriver.SSHKeyPath = machineConfig.SSHKeyPath
 
 	return hypervDriver

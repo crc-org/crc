@@ -109,10 +109,9 @@ func (f *DefaultRPCClientDriverFactory) Close() error {
 	defer f.openedDriversLock.Unlock()
 
 	for _, openedDriver := range f.openedDrivers {
-		if err := openedDriver.close(); err != nil {
-			// No need to display an error.
-			// There's nothing we can do and it doesn't add value to the user.
-		}
+		// No need to display an error.
+		// There's nothing we can do and it doesn't add value to the user.
+		_ = openedDriver.close()
 	}
 	f.openedDrivers = []*RPCClientDriver{}
 

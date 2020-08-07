@@ -1,16 +1,14 @@
 package ssh
 
 import (
-	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/base64"
 	"errors"
 	"fmt"
-	gossh "golang.org/x/crypto/ssh"
-	"io"
 	"os"
+
+	gossh "golang.org/x/crypto/ssh"
 )
 
 var (
@@ -48,16 +46,6 @@ func NewKeyPair() (keyPair *KeyPair, err error) {
 		PrivateKey: privDer,
 		PublicKey:  gossh.MarshalAuthorizedKey(pubSSH),
 	}, nil
-}
-
-// Fingerprint calculates the fingerprint of the public key
-func (kp *KeyPair) Fingerprint() string {
-	b, _ := base64.StdEncoding.DecodeString(string(kp.PublicKey))
-	h := md5.New()
-
-	io.WriteString(h, string(b))
-
-	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
 // GenerateSSHKey generates SSH keypair based on path of the private key

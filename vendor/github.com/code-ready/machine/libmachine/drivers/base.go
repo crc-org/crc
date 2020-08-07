@@ -23,6 +23,13 @@ type BaseDriver struct {
 	BundleName  string
 }
 
+type VMDriver struct {
+	*BaseDriver
+	DiskPathURL string
+	Memory      int
+	CPU         int
+}
+
 // DriverName returns the name of the driver
 func (d *BaseDriver) DriverName() string {
 	return "unknown"
