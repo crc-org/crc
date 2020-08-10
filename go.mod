@@ -16,6 +16,7 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/h2non/filetype v1.1.0
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/libvirt/libvirt-go v3.4.0+incompatible
 	github.com/mattn/go-colorable v0.1.2
 	github.com/pbnjay/memory v0.0.0-20190104145345-974d429e7ae4
 	github.com/pborman/uuid v1.2.0

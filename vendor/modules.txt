@@ -83,6 +83,8 @@ github.com/inconshreveable/mousetrap
 github.com/kballard/go-shellquote
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1
 github.com/konsorten/go-windows-terminal-sequences
+# github.com/libvirt/libvirt-go v3.4.0+incompatible
+github.com/libvirt/libvirt-go
 # github.com/magiconair/properties v1.8.0
 github.com/magiconair/properties
 # github.com/mattn/go-colorable v0.1.2
