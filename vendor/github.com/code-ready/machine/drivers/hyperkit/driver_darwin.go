@@ -19,6 +19,7 @@ type Driver struct {
 	InitrdPath    string
 	KernelCmdLine string
 	HyperKitPath  string
+	VMNet         bool
 }
 
 func NewDriver(hostName, storePath string) *Driver {

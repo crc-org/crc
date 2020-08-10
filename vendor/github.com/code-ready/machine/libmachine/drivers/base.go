@@ -29,6 +29,7 @@ type VMDriver struct {
 	ImageFormat     string
 	Memory          int
 	CPU             int
+	DiskCapacity    uint64
 }
 
 // DriverName returns the name of the driver

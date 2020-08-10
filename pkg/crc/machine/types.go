@@ -11,8 +11,9 @@ type StartConfig struct {
 	BundlePath string
 
 	// Hypervisor
-	Memory int
-	CPUs   int
+	Memory   int // Memory size in MiB
+	CPUs     int
+	DiskSize int // Disk size in GiB
 
 	// Nameserver
 	NameServer string

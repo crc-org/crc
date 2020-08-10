@@ -128,6 +128,19 @@ func (client *client) updateVMConfig(startConfig StartConfig, api libmachine.API
 		return err
 	}
 
+	/* Disk size */
+	if startConfig.DiskSize != constants.DefaultDiskSize {
+		if err := setDiskSize(host, startConfig.DiskSize); err != nil {
+			logging.Debugf("Failed to update CRC disk configuration: %v", err)
+			if err != drivers.ErrNotImplemented {
+				return err
+			}
+		}
+		if err := api.Save(host); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -260,6 +273,11 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	// dir and VM
 	if err := updateSSHKeyAndCopyKubeconfig(sshRunner, client.name, crcBundleMetadata); err != nil {
 		return nil, errors.Wrap(err, "Error updating public key")
+	}
+
+	// Trigger disk resize, this will be a no-op if no disk size change is needed
+	if _, err = sshRunner.Run("sudo xfs_growfs / >/dev/null"); err != nil {
+		return nil, errors.Wrap(err, "Error updating filesystem size")
 	}
 
 	// Start network time synchronization if `CRC_DEBUG_ENABLE_STOP_NTP` is not set
