@@ -8,8 +8,8 @@ type MachineConfig struct {
 	Name            string
 	Memory          int
 	CPUs            int
-	DiskPath        string
 	ImageSourcePath string
+	ImageFormat     string
 	SSHKeyPath      string
 
 	// HyperKit specific configuration

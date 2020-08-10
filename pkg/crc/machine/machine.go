@@ -142,6 +142,7 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 
 		// Retrieve metadata info
 		machineConfig.ImageSourcePath = crcBundleMetadata.GetDiskImagePath()
+		machineConfig.ImageFormat = crcBundleMetadata.Storage.DiskImages[0].Format
 		machineConfig.SSHKeyPath = crcBundleMetadata.GetSSHKeyPath()
 		machineConfig.KernelCmdLine = crcBundleMetadata.Nodes[0].KernelCmdLine
 		machineConfig.Initramfs = crcBundleMetadata.GetInitramfsPath()
