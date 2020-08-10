@@ -1,8 +1,6 @@
 package machine
 
 import (
-	"encoding/json"
-	goerrors "errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -121,13 +119,11 @@ func Start(startConfig StartConfig) (StartResult, error) {
 	// Pre-VM start
 	var privateKeyPath string
 	var pullSecret string
-	driverInfo := DefaultDriver
 	exists, err := Exists(startConfig.Name)
 	if !exists {
 		machineConfig := config.MachineConfig{
 			Name:       startConfig.Name,
 			BundleName: filepath.Base(startConfig.BundlePath),
-			VMDriver:   driverInfo.Driver,
 			CPUs:       startConfig.CPUs,
 			Memory:     startConfig.Memory,
 		}
@@ -162,7 +158,7 @@ func Start(startConfig StartConfig) (StartResult, error) {
 		machineConfig.Initramfs = crcBundleMetadata.GetInitramfsPath()
 		machineConfig.Kernel = crcBundleMetadata.GetKernelPath()
 
-		_, err := createHost(libMachineAPIClient, driverInfo.DriverPath, machineConfig)
+		_, err := createHost(libMachineAPIClient, machineConfig)
 		if err != nil {
 			return startError(startConfig.Name, "Error creating machine", err)
 		}
@@ -637,23 +633,14 @@ func Exists(name string) (bool, error) {
 	return exists, nil
 }
 
-func createHost(api libmachine.API, driverPath string, machineConfig config.MachineConfig) (*host.Host, error) {
-	driverOptions := getDriverOptions(machineConfig)
-	jsonDriverConfig, err := json.Marshal(driverOptions)
-	if err != nil {
-		return nil, goerrors.New("Failed to marshal driver options")
-	}
-
-	vm, err := api.NewHost(machineConfig.VMDriver, driverPath, jsonDriverConfig)
-
+func createHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {
+	vm, err := newHost(api, machineConfig)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating new host: %s", err)
 	}
-
 	if err := api.Create(vm); err != nil {
 		return nil, fmt.Errorf("Error creating the VM: %s", err)
 	}
-
 	return vm, nil
 }
 

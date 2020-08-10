@@ -1,40 +1,20 @@
 package machine
 
 import (
+	"encoding/json"
+	"errors"
+
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
-	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/code-ready/machine/libmachine"
+	"github.com/code-ready/machine/libmachine/host"
 )
 
-func init() {
-	HyperkitDriver := Driver{
-		Name:       "Hyperkit",
-		Platform:   crcos.DARWIN,
-		Driver:     "hyperkit",
-		DriverPath: constants.CrcBinDir,
+func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {
+	json, err := json.Marshal(hyperkit.CreateHost(machineConfig))
+	if err != nil {
+		return nil, errors.New("Failed to marshal driver options")
 	}
-
-	SupportedDrivers = []Driver{
-		HyperkitDriver,
-	}
-
-	DefaultDriver = HyperkitDriver
-}
-
-func getDriverOptions(machineConfig config.MachineConfig) interface{} {
-	var driver interface{}
-
-	// Supported drivers
-	switch machineConfig.VMDriver {
-
-	case "hyperkit":
-		driver = hyperkit.CreateHost(machineConfig)
-
-	default:
-		exit.WithMessage(1, "Unsupported driver: %s", machineConfig.VMDriver)
-	}
-
-	return driver
+	return api.NewHost("hyperkit", constants.CrcBinDir, json)
 }
