@@ -14,21 +14,17 @@ const (
 	DefaultCPUs   = 4
 	DefaultMemory = 9216
 
-	DefaultSSHPort = 22
 	DefaultSSHUser = "core"
 
 	CrcEnvPrefix = "CRC"
 
 	DefaultWebConsoleURL = "https://console-openshift-console.apps-crc.testing"
 	DefaultAPIURL        = "https://api.crc.testing:6443"
-	DefaultDiskImage     = "crc.disk"
 	DefaultLogLevel      = "info"
 	ConfigFile           = "crc.json"
 	LogFile              = "crc.log"
 	DaemonLogFile        = "crcd.log"
-	GlobalStateFile      = "globalstate.json"
 	CrcLandingPageURL    = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
-	PullSecretFile       = "pullsecret.json"
 
 	DefaultOcURLBase          = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp"
 	DefaultPodmanURLBase      = "https://storage.googleapis.com/libpod-master-releases"
@@ -105,7 +101,6 @@ var (
 	MachineCertsDir    = filepath.Join(MachineBaseDir, "certs")
 	MachineCacheDir    = filepath.Join(MachineBaseDir, "cache")
 	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
-	GlobalStatePath    = filepath.Join(CrcBaseDir, GlobalStateFile)
 	DefaultBundlePath  = filepath.Join(MachineCacheDir, GetDefaultBundle())
 	bundleEmbedded     = "false"
 	DaemonSocketPath   = filepath.Join(CrcBaseDir, "crc.sock")
