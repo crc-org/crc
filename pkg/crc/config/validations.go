@@ -19,6 +19,19 @@ func ValidateBool(value interface{}) (bool, string) {
 	return false, "must be true or false"
 }
 
+// ValidateDiskSize checks if provided disk size is valid in the config
+func ValidateDiskSize(value interface{}) (bool, string) {
+	diskSize, err := cast.ToIntE(value)
+	if err != nil {
+		return false, fmt.Sprintf("could not convert '%s' to integer", value)
+	}
+	if err := validation.ValidateDiskSize(diskSize); err != nil {
+		return false, err.Error()
+	}
+
+	return true, ""
+}
+
 // ValidateCPUs checks if provided cpus count is valid in the config
 func ValidateCPUs(value interface{}) (bool, string) {
 	v, err := cast.ToIntE(value)

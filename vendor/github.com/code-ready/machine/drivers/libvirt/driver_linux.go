@@ -8,10 +8,11 @@ type Driver struct {
 	*drivers.VMDriver
 
 	// Driver specific configuration
-	Network   string
-	CacheMode string
-	IOMode    string
-	VSock     bool
+	Network     string
+	CacheMode   string
+	IOMode      string
+	VSock       bool
+	StoragePool string
 }
 
 const (

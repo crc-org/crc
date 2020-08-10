@@ -13,6 +13,7 @@ const (
 	Bundle               = "bundle"
 	CPUs                 = "cpus"
 	Memory               = "memory"
+	DiskSize             = "disk-size"
 	NameServer           = "nameserver"
 	PullSecretFile       = "pull-secret-file"
 	DisableUpdateCheck   = "disable-update-check"
@@ -28,6 +29,7 @@ func RegisterSettings(cfg *config.Config) {
 	cfg.AddSetting(Bundle, constants.DefaultBundlePath, config.ValidateBundle, config.SuccessfullyApplied)
 	cfg.AddSetting(CPUs, constants.DefaultCPUs, config.ValidateCPUs, config.RequiresRestartMsg)
 	cfg.AddSetting(Memory, constants.DefaultMemory, config.ValidateMemory, config.RequiresRestartMsg)
+	cfg.AddSetting(DiskSize, constants.DefaultDiskSize, config.ValidateDiskSize, config.RequiresRestartMsg)
 	cfg.AddSetting(NameServer, "", config.ValidateIPAddress, config.SuccessfullyApplied)
 	cfg.AddSetting(PullSecretFile, "", config.ValidatePath, config.SuccessfullyApplied)
 	cfg.AddSetting(DisableUpdateCheck, false, config.ValidateBool, config.SuccessfullyApplied)

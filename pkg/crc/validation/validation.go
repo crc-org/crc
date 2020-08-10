@@ -31,6 +31,13 @@ func ValidateMemory(value int) error {
 	return ValidateEnoughMemory(value)
 }
 
+func ValidateDiskSize(value int) error {
+	if value <= constants.DefaultDiskSize {
+		return fmt.Errorf("requires disk size in GiB >= %d", constants.DefaultDiskSize)
+	}
+	return nil
+}
+
 // ValidateEnoughMemory checks if enough memory is installed on the host
 func ValidateEnoughMemory(value int) error {
 	totalMemory := memory.TotalMemory()

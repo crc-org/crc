@@ -91,6 +91,10 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	return nil
 }
 
+func toBytes(gibibytes uint) string {
+	return fmt.Sprintf("%d", gibibytes*1024*1024*1024)
+}
+
 func (d *Driver) UpdateConfigRaw(rawConfig []byte) error {
 	var newDriver Driver
 
@@ -116,6 +120,14 @@ func (d *Driver) UpdateConfigRaw(rawConfig []byte) error {
 			"-Count", fmt.Sprintf("%d", newDriver.CPU))
 		if err != nil {
 			log.Warnf("Failed to set CPU count to %d", newDriver.CPU)
+			return err
+		}
+	}
+	if newDriver.DiskCapacity != d.DiskCapacity {
+		log.Debugf("Resizing disk from %d GiB to %d GiB", d.DiskCapacity, newDriver.DiskCapacity)
+		err := cmd("Hyper-V\\Resize-VHD", "-Path", quote(d.getDiskPath()), "-SizeBytes", toBytes(uint(newDriver.DiskCapacity)))
+		if err != nil {
+			log.Warnf("Failed to set disk size to %d", newDriver.DiskCapacity)
 			return err
 		}
 	}
@@ -199,9 +211,12 @@ func (d *Driver) PreCreateCheck() error {
 	return err
 }
 
+func (d *Driver) getDiskPath() string {
+	return d.ResolveStorePath(fmt.Sprintf("%s.%s", d.MachineName, d.ImageFormat))
+}
+
 func (d *Driver) Create() error {
-	diskPath := d.ResolveStorePath(fmt.Sprintf("%s.%s", d.MachineName, d.ImageFormat))
-	if err := mcnutils.CopyFile(d.ImageSourcePath, diskPath); err != nil {
+	if err := mcnutils.CopyFile(d.ImageSourcePath, d.getDiskPath()); err != nil {
 		return err
 	}
 
@@ -246,7 +261,7 @@ func (d *Driver) Create() error {
 
 	if err := cmd("Hyper-V\\Add-VMHardDiskDrive",
 		"-VMName", d.MachineName,
-		"-Path", quote(diskPath)); err != nil {
+		"-Path", quote(d.getDiskPath())); err != nil {
 		return err
 	}
 
