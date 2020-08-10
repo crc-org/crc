@@ -19,6 +19,7 @@ func CreateHost(machineConfig config.MachineConfig) *hyperkit.Driver {
 	hyperkitDriver.VmlinuzPath = machineConfig.Kernel
 	hyperkitDriver.InitrdPath = machineConfig.Initramfs
 	hyperkitDriver.ImageSourcePath = machineConfig.ImageSourcePath
+	hyperkitDriver.ImageFormat = machineConfig.ImageFormat
 	hyperkitDriver.SSHKeyPath = machineConfig.SSHKeyPath
 	hyperkitDriver.HyperKitPath = filepath.Join(constants.CrcBinDir, "hyperkit")
 
