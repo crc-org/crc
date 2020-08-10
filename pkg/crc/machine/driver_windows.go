@@ -1,38 +1,19 @@
 package machine
 
 import (
-	"github.com/code-ready/crc/pkg/crc/exit"
+	"encoding/json"
+	"errors"
+
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"github.com/code-ready/crc/pkg/crc/machine/hyperv"
-	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/code-ready/machine/libmachine"
+	"github.com/code-ready/machine/libmachine/host"
 )
 
-func init() {
-	HyperVDriver := Driver{
-		Name:     "Microsoft Hyper-V",
-		Platform: crcos.WINDOWS,
-		Driver:   "hyperv",
+func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {
+	json, err := json.Marshal(hyperv.CreateHost(machineConfig))
+	if err != nil {
+		return nil, errors.New("Failed to marshal driver options")
 	}
-
-	SupportedDrivers = []Driver{
-		HyperVDriver,
-	}
-
-	DefaultDriver = HyperVDriver
-}
-
-func getDriverOptions(machineConfig config.MachineConfig) interface{} {
-	var driver interface{}
-
-	// Supported drivers
-	switch machineConfig.VMDriver {
-
-	case "hyperv":
-		driver = hyperv.CreateHost(machineConfig)
-
-	default:
-		exit.WithMessage(1, "Unsupported driver: %s", machineConfig.VMDriver)
-	}
-
-	return driver
+	return api.NewHost("hyperv", "", json)
 }

@@ -1,40 +1,20 @@
 package machine
 
 import (
+	"encoding/json"
+	"errors"
+
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
-	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/code-ready/machine/libmachine"
+	"github.com/code-ready/machine/libmachine/host"
 )
 
-func init() {
-	LibvirtDriver := Driver{
-		Name:       "Libvirt",
-		Platform:   crcos.LINUX,
-		Driver:     "libvirt",
-		DriverPath: constants.CrcBinDir,
+func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {
+	json, err := json.Marshal(libvirt.CreateHost(machineConfig))
+	if err != nil {
+		return nil, errors.New("Failed to marshal driver options")
 	}
-
-	SupportedDrivers = []Driver{
-		LibvirtDriver,
-	}
-
-	DefaultDriver = LibvirtDriver
-}
-
-func getDriverOptions(machineConfig config.MachineConfig) interface{} {
-	var driver interface{}
-
-	// Supported drivers
-	switch machineConfig.VMDriver {
-
-	case "libvirt":
-		driver = libvirt.CreateHost(machineConfig)
-
-	default:
-		exit.WithMessage(1, "Unsupported driver: %s", machineConfig.VMDriver)
-	}
-
-	return driver
+	return api.NewHost("libvirt", constants.CrcBinDir, json)
 }

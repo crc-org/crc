@@ -4,9 +4,6 @@ type MachineConfig struct {
 	// CRC system bundle
 	BundleName string
 
-	// Hypervisor
-	VMDriver string
-
 	// Virtual machine configuration
 	Name        string
 	Memory      int
