@@ -13,14 +13,13 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/libvirt/libvirt-go"
-
-	// Machine-drivers
+	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/mcnflag"
 	"github.com/code-ready/machine/libmachine/mcnutils"
 	"github.com/code-ready/machine/libmachine/state"
+	"github.com/libvirt/libvirt-go"
 )
 
 type Driver struct {
@@ -123,7 +122,7 @@ func (d *Driver) DriverName() string {
 }
 
 func (d *Driver) DriverVersion() string {
-	return DriverVersion
+	return version.GetCommitSha()
 }
 
 func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {

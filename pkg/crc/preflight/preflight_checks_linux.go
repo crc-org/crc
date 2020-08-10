@@ -18,6 +18,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
 	"github.com/code-ready/crc/pkg/crc/systemd"
+	"github.com/code-ready/crc/pkg/crc/version"
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
@@ -220,7 +221,7 @@ func fixLibvirtServiceRunning() error {
 func checkMachineDriverLibvirtInstalled() error {
 	logging.Debugf("Checking if %s is installed", libvirt.MachineDriverCommand)
 
-	machineDriverLibvirt := cache.NewMachineDriverLibvirtCache(libvirt.MachineDriverVersion, getCurrentLibvirtDriverVersion)
+	machineDriverLibvirt := cache.NewMachineDriverLibvirtCache(version.GetCommitSha(), getCurrentLibvirtDriverVersion)
 	if !machineDriverLibvirt.IsCached() {
 		return fmt.Errorf("%s binary is not cached", libvirt.MachineDriverCommand)
 	}
@@ -233,7 +234,7 @@ func checkMachineDriverLibvirtInstalled() error {
 
 func fixMachineDriverLibvirtInstalled() error {
 	logging.Debugf("Installing %s", libvirt.MachineDriverCommand)
-	machineDriverLibvirt := cache.NewMachineDriverLibvirtCache(libvirt.MachineDriverVersion, getCurrentLibvirtDriverVersion)
+	machineDriverLibvirt := cache.NewMachineDriverLibvirtCache(version.GetCommitSha(), getCurrentLibvirtDriverVersion)
 	if err := machineDriverLibvirt.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download %s: %v", libvirt.MachineDriverCommand, err)
 	}
