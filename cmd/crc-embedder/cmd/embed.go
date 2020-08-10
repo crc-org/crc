@@ -1,29 +1,33 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
-
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/download"
-
-	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
-	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
+	"strings"
 
 	"github.com/YourFin/binappend"
+	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
+	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
+	"github.com/code-ready/crc/pkg/download"
+	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/spf13/cobra"
 )
 
 var (
+	onlyLocal bool
 	bundleDir string
 	goos      string
 )
 
 func init() {
+	embedCmd.Flags().BoolVar(&onlyLocal, "only-local", false, "")
 	embedCmd.Flags().StringVar(&bundleDir, "bundle-dir", constants.MachineCacheDir, "Directory where the OpenShift bundle can be found")
 	embedCmd.Flags().StringVar(&goos, "goos", runtime.GOOS, "Target platform (darwin, linux or windows)")
 	rootCmd.AddCommand(embedCmd)
@@ -34,31 +38,37 @@ var embedCmd = &cobra.Command{
 	Short: "Embed data files in crc binary",
 	Long:  `Embed the OpenShift bundle and the binaries needed at runtime in the crc binary`,
 	Run: func(cmd *cobra.Command, args []string) {
-		runEmbed(args)
+		if err := runEmbed(args); err != nil {
+			logging.Fatal(err)
+		}
 	},
 }
 
-func runEmbed(args []string) {
+func runEmbed(args []string) error {
 	if len(args) != 1 {
-		logging.Fatal("embed takes exactly one argument")
+		return errors.New("embed takes exactly one argument")
 	}
 	binaryPath := args[0]
 	destDir, err := ioutil.TempDir("", "crc-embedder")
 	if err != nil {
-		logging.Fatalf("Failed to create temporary directory: %v", err)
+		return fmt.Errorf("Failed to create temporary directory: %v", err)
 	}
 	defer os.RemoveAll(destDir)
 	downloadedFiles, err := downloadDataFiles(goos, destDir)
 	if err != nil {
-		logging.Fatalf("Failed to download data files: %v", err)
+		return fmt.Errorf("Failed to download data files: %v", err)
 	}
 
-	bundlePath := path.Join(bundleDir, constants.GetDefaultBundleForOs(goos))
-	downloadedFiles = append(downloadedFiles, bundlePath)
+	if !onlyLocal {
+		bundlePath := path.Join(bundleDir, constants.GetDefaultBundleForOs(goos))
+		downloadedFiles = append(downloadedFiles, bundlePath)
+	}
+
 	err = embedFiles(binaryPath, downloadedFiles)
 	if err != nil {
-		logging.Fatalf("Failed to embed data files: %v", err)
+		return fmt.Errorf("Failed to embed data files: %v", err)
 	}
+	return nil
 }
 
 func embedFiles(binary string, filenames []string) error {
@@ -109,11 +119,19 @@ func downloadDataFiles(goos string, destDir string) ([]string, error) {
 	downloadedFiles := []string{}
 	downloads := dataFileUrls[goos]
 	for _, url := range downloads {
-		filename, err := download.Download(url, destDir, 0644)
-		if err != nil {
-			return nil, err
+		if strings.HasPrefix(url, "file://") {
+			relativePath := strings.Split(url, "file://")[1]
+			downloadedFiles = append(downloadedFiles, relativePath)
+			if err := crcos.CopyFileContents(relativePath, filepath.Join(destDir, filepath.Base(relativePath)), 0644); err != nil {
+				return nil, err
+			}
+		} else if !onlyLocal {
+			filename, err := download.Download(url, destDir, 0644)
+			if err != nil {
+				return nil, err
+			}
+			downloadedFiles = append(downloadedFiles, filename)
 		}
-		downloadedFiles = append(downloadedFiles, filename)
 	}
 
 	return downloadedFiles, nil

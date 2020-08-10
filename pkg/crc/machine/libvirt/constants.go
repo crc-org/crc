@@ -2,8 +2,6 @@
 
 package libvirt
 
-import "fmt"
-
 const (
 	// Defaults
 	DefaultNetwork   = "crc"
@@ -21,5 +19,5 @@ const (
 )
 
 var (
-	MachineDriverDownloadURL = fmt.Sprintf("https://github.com/code-ready/machine-driver-libvirt/releases/download/%s/crc-driver-libvirt", MachineDriverVersion)
+	MachineDriverDownloadURL = "file://./out/linux-amd64/crc-driver-libvirt"
 )

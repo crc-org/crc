@@ -25,6 +25,7 @@ GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 HOST_BUILD_DIR=$(BUILD_DIR)/$(GOOS)-$(GOARCH)
 GOPATH ?= $(shell go env GOPATH)
+GOBIN ?= $(GOPATH)/bin
 ORG := github.com/code-ready
 REPOPATH ?= $(ORG)/crc
 
@@ -54,7 +55,8 @@ VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.commitSha=$(COMMIT_SHA)
 
 # https://golang.org/cmd/link/
-LDFLAGS := $(VERSION_VARIABLES) -extldflags='-static' -s -w
+NON_STATIC_LDFLAGS := $(VERSION_VARIABLES) -s -w
+LDFLAGS := $(NON_STATIC_LDFLAGS) -extldflags='-static'
 
 # Add default target
 .PHONY: default
@@ -73,14 +75,16 @@ vendorcheck:
 # Start of the actual build targets
 
 .PHONY: install
-install: $(SOURCES)
+install: $(SOURCES) $(HOST_BUILD_DIR)/crc-embedder drivers
 	go install -ldflags="$(VERSION_VARIABLES)" ./cmd/crc
+	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=$(GOOS) --only-local $(GOBIN)/crc
 
 $(BUILD_DIR)/macos-amd64/crc: $(SOURCES)
 	GOARCH=amd64 GOOS=darwin go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/macos-amd64/crc ./cmd/crc
 
-$(BUILD_DIR)/linux-amd64/crc: $(SOURCES)
+$(BUILD_DIR)/linux-amd64/crc: $(SOURCES) $(HOST_BUILD_DIR)/crc-embedder drivers
 	GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/linux-amd64/crc ./cmd/crc
+	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=$(GOOS) --only-local $(BUILD_DIR)/linux-amd64/crc
 
 $(BUILD_DIR)/windows-amd64/crc.exe: $(SOURCES)
 	GOARCH=amd64 GOOS=windows go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/windows-amd64/crc.exe ./cmd/crc
@@ -152,7 +156,11 @@ lint: $(GOPATH)/bin/golangci-lint
 
 cross-lint: $(GOPATH)/bin/golangci-lint
 	GOOS=darwin $(GOPATH)/bin/golangci-lint run
+ifeq ($(GOOS), linux)
 	GOOS=linux $(GOPATH)/bin/golangci-lint run
+else
+	echo "cannot run linux linters on darwin and windows."
+endif
 	GOOS=windows $(GOPATH)/bin/golangci-lint run
 
 .PHONY: gen_release_info
@@ -192,7 +200,18 @@ ifeq ($(MOCK_BUNDLE),true)
 endif
 	@$(call check_defined, BUNDLE_DIR, "Embedding bundle requires BUNDLE_DIR set to a directory containing CRC bundles for all hypervisors")
 
-embed_bundle: clean cross $(HOST_BUILD_DIR)/crc-embedder check_bundledir $(HYPERKIT_BUNDLENAME) $(HYPERV_BUNDLENAME) $(LIBVIRT_BUNDLENAME)
+embed_bundle: clean cross $(HOST_BUILD_DIR)/crc-embedder check_bundledir $(HYPERKIT_BUNDLENAME) $(HYPERV_BUNDLENAME) $(LIBVIRT_BUNDLENAME) drivers
 	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=darwin --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/macos-amd64/crc
 	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=linux --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/linux-amd64/crc
 	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=windows --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/windows-amd64/crc.exe
+
+.PHONY: drivers
+drivers: $(BUILD_DIR)/linux-amd64/crc-driver-libvirt
+
+$(BUILD_DIR)/linux-amd64/crc-driver-libvirt: $(SOURCES)
+ifeq ($(GOOS), linux)
+	GOOS=linux GOARCH=amd64 go build -ldflags="$(NON_STATIC_LDFLAGS)" -o $(BUILD_DIR)/linux-amd64/crc-driver-libvirt ./cmd/crc-driver-libvirt
+else
+	mkdir -p $(BUILD_DIR)/linux-amd64
+	touch $(BUILD_DIR)/linux-amd64/crc-driver-libvirt
+endif

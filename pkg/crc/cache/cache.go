@@ -124,7 +124,10 @@ func (c *Cache) getBinary(destDir string) (string, error) {
 	destPath := filepath.Join(destDir, archiveName)
 	err := embed.Extract(archiveName, destPath)
 	if err != nil {
-		logging.Debug("Downloading oc")
+		if strings.HasPrefix(c.archiveURL, "file://") {
+			return "", err
+		}
+		logging.Debugf("Downloading %s", archiveName)
 		return download.Download(c.archiveURL, destDir, 0600)
 	}
 
