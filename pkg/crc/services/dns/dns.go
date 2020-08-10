@@ -20,13 +20,6 @@ const (
 func init() {
 }
 
-func RunPreStart(serviceConfig services.ServicePreStartConfig) (services.ServicePreStartResult, error) {
-	result := &services.ServicePreStartResult{Name: serviceConfig.Name}
-
-	result.Success = true
-	return *result, nil
-}
-
 func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.ServicePostStartResult, error) {
 	result := &services.ServicePostStartResult{Name: serviceConfig.Name}
 
