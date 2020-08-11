@@ -5,12 +5,12 @@ type MachineConfig struct {
 	BundleName string
 
 	// Virtual machine configuration
-	Name        string
-	Memory      int
-	CPUs        int
-	DiskPath    string
-	DiskPathURL string
-	SSHKeyPath  string
+	Name            string
+	Memory          int
+	CPUs            int
+	DiskPath        string
+	ImageSourcePath string
+	SSHKeyPath      string
 
 	// HyperKit specific configuration
 	KernelCmdLine string

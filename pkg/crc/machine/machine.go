@@ -141,8 +141,7 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
 
 		// Retrieve metadata info
-		diskPath := crcBundleMetadata.GetDiskImagePath()
-		machineConfig.DiskPathURL = fmt.Sprintf("file://%s", filepath.ToSlash(diskPath))
+		machineConfig.ImageSourcePath = crcBundleMetadata.GetDiskImagePath()
 		machineConfig.SSHKeyPath = crcBundleMetadata.GetSSHKeyPath()
 		machineConfig.KernelCmdLine = crcBundleMetadata.Nodes[0].KernelCmdLine
 		machineConfig.Initramfs = crcBundleMetadata.GetInitramfsPath()

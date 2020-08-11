@@ -121,6 +121,8 @@ github.com/code-ready/clicumber v0.0.0-20200728062640-1203dda97f67 h1:C+EVPWw8sj
 github.com/code-ready/clicumber v0.0.0-20200728062640-1203dda97f67/go.mod h1:ZPZUcYGpv/FQGnwakUuhiHP9x/IIcU2SKbn8xPe4ROc=
 github.com/code-ready/machine v0.0.0-20200810103403-d2277fb226c4 h1:7rvtC0pR4q6UXWpywkvpYhHpIk5b5g27al2wLynx7sI=
 github.com/code-ready/machine v0.0.0-20200810103403-d2277fb226c4/go.mod h1:g30jKsf0FV9yJjsqZFAuFzVxwJE2h5cqDXSuMUV1G/U=
+github.com/code-ready/machine v0.0.0-20200914130222-8fb9497666ab h1:56RlouIod7gpu4OayF0/qkGUdes7mH7DIshHnchA7Ds=
+github.com/code-ready/machine v0.0.0-20200914130222-8fb9497666ab/go.mod h1:g30jKsf0FV9yJjsqZFAuFzVxwJE2h5cqDXSuMUV1G/U=
 github.com/codegangsta/negroni v1.0.0/go.mod h1:v0y3T5G7Y1UlFfyxFn/QLRU4a2EuNau2iZY63YTKWo0=
 github.com/container-storage-interface/spec v1.2.0/go.mod h1:6URME8mwIBbpVyZV93Ce5St17xBiQJQY67NDsuohiy4=
 github.com/containerd/cgroups v0.0.0-20190919134610-bf292b21730f/go.mod h1:OApqhQ4XNSNC13gXIwDjhOQxjWa/NxkwZXJ1EvqT0ko=
