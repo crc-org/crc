@@ -7,7 +7,8 @@ This procedure will create the [filename]`~/.crc` directory if it does not alrea
 
 .Prerequisites
 
-* Your user account has permission to use the [command]`sudo` command.
+* On Linux or {mac}, ensure that your user account has permission to use the [command]`sudo` command.
+On {msw}, ensure that your user account can elevate to Administrator privileges.
 
 [NOTE]
 ====

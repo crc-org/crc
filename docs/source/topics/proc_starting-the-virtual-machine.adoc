@@ -8,6 +8,7 @@ The [command]`{bin} start` command starts the {prod} virtual machine and OpenShi
 * To avoid networking-related issues, ensure that you are not connected to a VPN and that your network connection is reliable.
 * You set up the host machine through the [command]`{bin} setup` command.
 For more information, see link:{crc-gsg-url}#setting-up-codeready-containers_gsg[Setting up {prod}].
+* On {msw}, ensure that your user account can elevate to Administrator privileges.
 * You have a valid OpenShift user pull secret.
 Copy or download the pull secret from the Pull Secret section of the link:https://cloud.redhat.com/openshift/install/crc/installer-provisioned[Install on Laptop: {rh-prod}] page on cloud.redhat.com.
 +
