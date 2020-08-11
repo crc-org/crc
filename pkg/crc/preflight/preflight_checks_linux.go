@@ -236,7 +236,7 @@ func fixMachineDriverLibvirtInstalled() error {
 	logging.Debugf("Installing %s", libvirt.MachineDriverCommand)
 	machineDriverLibvirt := cache.NewMachineDriverLibvirtCache(version.GetCommitSha(), getCurrentLibvirtDriverVersion)
 	if err := machineDriverLibvirt.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download %s: %v", libvirt.MachineDriverCommand, err)
+		return fmt.Errorf("Unable to install %s: %v", libvirt.MachineDriverCommand, err)
 	}
 	logging.Debugf("%s is installed in %s", libvirt.MachineDriverCommand, constants.CrcBinDir)
 	return nil

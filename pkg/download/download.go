@@ -9,7 +9,6 @@ import (
 )
 
 func Download(uri, destination string, mode os.FileMode) (string, error) {
-	// create client
 	logging.Debugf("Downloading %s to %s", uri, destination)
 	client := grab.NewClient()
 	req, err := grab.NewRequest(destination, uri)

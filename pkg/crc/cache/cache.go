@@ -58,10 +58,7 @@ func (c *Cache) IsCached() bool {
 
 func (c *Cache) EnsureIsCached() error {
 	if !c.IsCached() || c.CheckVersion() != nil {
-		err := c.CacheBinary()
-		if err != nil {
-			return err
-		}
+		return c.CacheBinary()
 	}
 	return nil
 }
@@ -85,7 +82,7 @@ func (c *Cache) CacheBinary() error {
 
 	var extractedFiles []string
 	// Check the file is tarball or not
-	if IsTarball(assetTmpFile) {
+	if isTarball(assetTmpFile) {
 		// Extract the tarball and put it the cache directory.
 		extractedFiles, err = extract.UncompressWithFilter(assetTmpFile, tmpDir, false,
 			func(filename string) bool { return filepath.Base(filename) == c.binaryName })
@@ -119,19 +116,19 @@ func (c *Cache) CacheBinary() error {
 }
 
 func (c *Cache) getBinary(destDir string) (string, error) {
-	logging.Debug("Trying to extract oc from crc binary")
 	archiveName := filepath.Base(c.archiveURL)
+	logging.Debugf("Trying to extract %s from crc binary", archiveName)
+
 	destPath := filepath.Join(destDir, archiveName)
-	err := embed.Extract(archiveName, destPath)
-	if err != nil {
+	if err := embed.Extract(archiveName, destPath); err != nil {
 		if strings.HasPrefix(c.archiveURL, "file://") {
 			return "", err
 		}
-		logging.Debugf("Downloading %s", archiveName)
+		logging.Debugf("Trying to download %s", archiveName)
 		return download.Download(c.archiveURL, destDir, 0600)
 	}
 
-	return destPath, err
+	return destPath, nil
 }
 
 func (c *Cache) CheckVersion() error {
@@ -149,7 +146,7 @@ func (c *Cache) CheckVersion() error {
 	return nil
 }
 
-func IsTarball(filename string) bool {
+func isTarball(filename string) bool {
 	tarballExtensions := []string{".tar", ".tar.gz", ".tar.xz", ".zip", ".tar.bz2", ".crcbundle"}
 	for _, extension := range tarballExtensions {
 		if strings.HasSuffix(strings.ToLower(filename), extension) {
