@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/YourFin/binappend"
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
@@ -102,7 +103,6 @@ var (
 	MachineCacheDir    = filepath.Join(MachineBaseDir, "cache")
 	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
 	DefaultBundlePath  = filepath.Join(MachineCacheDir, GetDefaultBundle())
-	bundleEmbedded     = "false"
 	DaemonSocketPath   = filepath.Join(CrcBaseDir, "crc.sock")
 )
 
@@ -135,7 +135,24 @@ func EnsureBaseDirExists() error {
 
 // IsBundleEmbedded returns true if the binary was compiled to contain the bundle
 func BundleEmbedded() bool {
-	return bundleEmbedded == "true"
+	binaryPath, err := os.Executable()
+	if err != nil {
+		return false
+	}
+	extractor, err := binappend.MakeExtractor(binaryPath)
+	if err != nil {
+		return false
+	}
+	return contains(extractor.AvalibleData(), GetDefaultBundle())
+}
+
+func contains(arr []string, str string) bool {
+	for _, a := range arr {
+		if a == str {
+			return true
+		}
+	}
+	return false
 }
 
 func GetPublicKeyPath() string {
