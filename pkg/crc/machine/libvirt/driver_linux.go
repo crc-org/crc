@@ -16,7 +16,7 @@ func CreateHost(machineConfig config.MachineConfig) *libvirt.Driver {
 	libvirtDriver.BundleName = machineConfig.BundleName
 	libvirtDriver.Network = DefaultNetwork
 	libvirtDriver.DiskPath = filepath.Join(constants.MachineBaseDir, "machines", machineConfig.Name, constants.DefaultName)
-	libvirtDriver.DiskPathURL = machineConfig.DiskPathURL
+	libvirtDriver.ImageSourcePath = machineConfig.ImageSourcePath
 	libvirtDriver.SSHKeyPath = machineConfig.SSHKeyPath
 
 	return libvirtDriver
