@@ -46,7 +46,6 @@ function install_required_packages() {
   yum -y install make \
                  git \
                  curl \
-                 kvm \
                  qemu-kvm \
                  libvirt \
                  libvirt-devel \
