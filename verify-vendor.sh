@@ -17,6 +17,11 @@ trap "cleanup" EXIT SIGINT
 
 cleanup
 
+if [[ -n $(git status -s vendor/) ]]; then
+        echo 'vendor/ directory has uncommitted changes, please check `git status vendor`'
+        exit 1
+fi
+
 mkdir "${TMP_DIFFROOT}"
 cp -aR "${REPO_ROOT_DIR}/vendor" "${TMP_DIFFROOT}"
 
