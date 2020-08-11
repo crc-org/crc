@@ -42,19 +42,12 @@ dns=dnsmasq
 func checkVirtualizationEnabled() error {
 	logging.Debug("Checking if the vmx/svm flags are present in /proc/cpuinfo")
 	// Check if the cpu flags vmx or svm is present
-	out, err := ioutil.ReadFile("/proc/cpuinfo")
+	flags, err := getCPUFlags()
 	if err != nil {
-		logging.Debugf("Failed to read /proc/cpuinfo: %v", err)
-		return fmt.Errorf("Failed to read /proc/cpuinfo")
-	}
-	re := regexp.MustCompile(`flags.*:.*`)
-
-	flags := re.FindString(string(out))
-	if flags == "" {
-		return fmt.Errorf("Could not find cpu flags from /proc/cpuinfo")
+		return err
 	}
 
-	re = regexp.MustCompile(`(vmx|svm)`)
+	re := regexp.MustCompile(`(vmx|svm)`)
 
 	cputype := re.FindString(flags)
 	if cputype == "" {
@@ -80,10 +73,26 @@ func checkKvmEnabled() error {
 
 func fixKvmEnabled() error {
 	logging.Debug("Trying to load kvm module")
-	stdOut, stdErr, err := crcos.RunWithPrivilege("Load kvm kernel module","modprobe", "kvm")
+	flags, err := getCPUFlags()
 	if err != nil {
-		return fmt.Errorf("Failed to load kvm module: %s %v: %s", stdOut, err, stdErr)
+		return err
 	}
+
+	switch {
+	case strings.Contains(flags, "vmx"):
+		stdOut, stdErr, err := crcos.RunWithPrivilege("Load kvm_intel kernel module", "modprobe", "kvm_intel")
+		if err != nil {
+			return fmt.Errorf("Failed to load kvm intel module: %s %v: %s", stdOut, err, stdErr)
+		}
+	case strings.Contains(flags, "svm"):
+		stdOut, stdErr, err := crcos.RunWithPrivilege("Load kvm_amd kernel module", "modprobe", "kvm_amd")
+		if err != nil {
+			return fmt.Errorf("Failed to load kvm amd module: %s %v: %s", stdOut, err, stdErr)
+		}
+	default:
+		logging.Debug("Unable to detect processor details")
+	}
+
 	logging.Debug("kvm module loaded")
 	return nil
 }
@@ -612,4 +621,20 @@ func getCurrentLibvirtDriverVersion() (string, error) {
 		return "", fmt.Errorf("Unable to parse the version information of %s", driverBinPath)
 	}
 	return strings.TrimSpace(strings.Split(stdOut, ":")[1]), err
+}
+
+func getCPUFlags() (string, error) {
+	// Check if the cpu flags vmx or svm is present
+	out, err := ioutil.ReadFile("/proc/cpuinfo")
+	if err != nil {
+		logging.Debugf("Failed to read /proc/cpuinfo: %v", err)
+		return "", fmt.Errorf("Failed to read /proc/cpuinfo")
+	}
+	re := regexp.MustCompile(`flags.*:.*`)
+
+	flags := re.FindString(string(out))
+	if flags == "" {
+		return "", fmt.Errorf("Could not find cpu flags from /proc/cpuinfo")
+	}
+	return flags, nil
 }
