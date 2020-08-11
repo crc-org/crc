@@ -80,7 +80,7 @@ func checkKvmEnabled() error {
 
 func fixKvmEnabled() error {
 	logging.Debug("Trying to load kvm module")
-	stdOut, stdErr, err := crcos.RunWithDefaultLocale("modprobe", "kvm")
+	stdOut, stdErr, err := crcos.RunWithPrivilege("Load kvm kernel module","modprobe", "kvm")
 	if err != nil {
 		return fmt.Errorf("Failed to load kvm module: %s %v: %s", stdOut, err, stdErr)
 	}
