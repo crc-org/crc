@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -18,11 +17,11 @@ type fileMap map[string]string
 
 var (
 	files fileMap = map[string]string{
-		"/a/b/c.txt": "ccc",
-		"/a/d/e.txt": "eee",
+		filepath.Join("a", "b", "c.txt"): "ccc",
+		filepath.Join("a", "d", "e.txt"): "eee",
 	}
 	filteredFiles fileMap = map[string]string{
-		"/a/b/c.txt": "ccc",
+		filepath.Join("a", "b", "c.txt"): "ccc",
 	}
 	archives = []string{
 		"test.tar",
@@ -66,13 +65,15 @@ func checkFileList(destDir string, extractedFiles []string, expectedFiles fileMa
 	expectedFiles = copyFileMap(expectedFiles)
 
 	for _, file := range extractedFiles {
-		logging.Debugf("Checking %s", file)
-		file = strings.TrimPrefix(file, destDir)
-		_, found := expectedFiles[file]
-		if !found {
-			return fmt.Errorf("Unexpected file '%s' in file list", file)
+		rel, err := filepath.Rel(destDir, file)
+		if err != nil {
+			return err
 		}
-		delete(expectedFiles, file)
+		_, found := expectedFiles[rel]
+		if !found {
+			return fmt.Errorf("Unexpected file '%s' in file list %v", rel, expectedFiles)
+		}
+		delete(expectedFiles, rel)
 	}
 
 	if len(expectedFiles) != 0 {
@@ -97,7 +98,10 @@ func checkFiles(destDir string, files fileMap) error {
 			return nil
 		}
 		logging.Debugf("Checking file %s", path)
-		archivePath := strings.TrimPrefix(path, destDir)
+		archivePath, err := filepath.Rel(destDir, path)
+		if err != nil {
+			return err
+		}
 		expectedContent, found := files[archivePath]
 		if !found {
 			return fmt.Errorf("Unexpected extracted file '%s'", path)
