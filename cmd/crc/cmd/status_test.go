@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
@@ -53,5 +54,5 @@ func TestJsonStatus(t *testing.T) {
   "cacheDir": "%s"
 }
 `
-	assert.Equal(t, fmt.Sprintf(expected, cacheDir), out.String())
+	assert.Equal(t, fmt.Sprintf(expected, strings.Replace(cacheDir, `\`, `\\`, -1)), out.String())
 }
