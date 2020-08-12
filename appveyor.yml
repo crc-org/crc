@@ -1,0 +1,15 @@
+build: off
+
+clone_folder: c:\gopath\src\github.com\code-ready\crc
+
+environment:
+  GOPATH: c:\gopath
+
+stack: go 1.13
+
+before_test:
+  - choco install make
+  - make cross
+
+test_script:
+  - make test
