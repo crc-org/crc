@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +22,7 @@ func TestPlainStatus(t *testing.T) {
 	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
 
 	out := new(bytes.Buffer)
-	assert.NoError(t, runStatus(out, &mockClient{}, cacheDir, ""))
+	assert.NoError(t, runStatus(out, fakemachine.NewClient(), cacheDir, ""))
 
 	expected := `CRC VM:          Running
 OpenShift:       Running (v4.5.1)
@@ -39,7 +41,7 @@ func TestJsonStatus(t *testing.T) {
 	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
 
 	out := new(bytes.Buffer)
-	assert.NoError(t, runStatus(out, &mockClient{}, cacheDir, jsonFormat))
+	assert.NoError(t, runStatus(out, fakemachine.NewClient(), cacheDir, jsonFormat))
 
 	expected := `{
   "crcStatus": "Running",
