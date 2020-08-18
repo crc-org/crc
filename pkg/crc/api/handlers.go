@@ -13,13 +13,13 @@ import (
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
-func statusHandler(client machine.Client, _ ArgsType) string {
+func statusHandler(client machine.Client, _ json.RawMessage) string {
 	statusConfig := machine.ClusterStatusConfig{Name: constants.DefaultName}
 	clusterStatus, _ := client.Status(statusConfig)
 	return encodeStructToJSON(clusterStatus)
 }
 
-func stopHandler(client machine.Client, _ ArgsType) string {
+func stopHandler(client machine.Client, _ json.RawMessage) string {
 	stopConfig := machine.StopConfig{
 		Name:  constants.DefaultName,
 		Debug: true,
@@ -28,7 +28,7 @@ func stopHandler(client machine.Client, _ ArgsType) string {
 	return encodeStructToJSON(commandResult)
 }
 
-func startHandler(client machine.Client, _ ArgsType) string {
+func startHandler(client machine.Client, _ json.RawMessage) string {
 	startConfig := machine.StartConfig{
 		Name:          constants.DefaultName,
 		BundlePath:    crcConfig.GetString(config.Bundle.Name),
@@ -42,7 +42,7 @@ func startHandler(client machine.Client, _ ArgsType) string {
 	return encodeStructToJSON(status)
 }
 
-func versionHandler(client machine.Client, _ ArgsType) string {
+func versionHandler(client machine.Client, _ json.RawMessage) string {
 	v := &machine.VersionResult{
 		CrcVersion:       version.GetCRCVersion(),
 		CommitSha:        version.GetCommitSha(),
@@ -64,13 +64,13 @@ func getPullSecretFileContent() (string, error) {
 	return pullsecret, nil
 }
 
-func deleteHandler(client machine.Client, _ ArgsType) string {
+func deleteHandler(client machine.Client, _ json.RawMessage) string {
 	delConfig := machine.DeleteConfig{Name: constants.DefaultName}
 	r, _ := client.Delete(delConfig)
 	return encodeStructToJSON(r)
 }
 
-func webconsoleURLHandler(client machine.Client, _ ArgsType) string {
+func webconsoleURLHandler(client machine.Client, _ json.RawMessage) string {
 	consoleConfig := machine.ConsoleConfig{Name: constants.DefaultName}
 	r, _ := client.GetConsoleURL(consoleConfig)
 	return encodeStructToJSON(r)

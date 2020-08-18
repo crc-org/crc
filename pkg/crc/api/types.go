@@ -1,13 +1,13 @@
 package api
 
 import (
+	"encoding/json"
 	"net"
 
 	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
-type ArgsType map[string]string
-type handlerFunc func(machine.Client, ArgsType) string
+type handlerFunc func(machine.Client, json.RawMessage) string
 
 type commandError struct {
 	Err string
@@ -28,6 +28,6 @@ type clusterOpsRequest struct {
 
 // commandRequest struct is used to decode the json request from tray
 type commandRequest struct {
-	Command string            `json:"command"`
-	Args    map[string]string `json:"args,omitempty"`
+	Command string          `json:"command"`
+	Args    json.RawMessage `json:"args,omitempty"`
 }
