@@ -245,7 +245,7 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	// Post VM start immediately update SSH key and copy kubeconfig to instance
 	// dir and VM
 	if !exists {
-		if err := updateSSHKeyAndCopyKubeconfigToVM(sshRunner, startConfig, crcBundleMetadata); err != nil {
+		if err := updateSSHKeyAndCopyKubeconfig(sshRunner, startConfig, crcBundleMetadata); err != nil {
 			return startError(startConfig.Name, "Error updating public key", err)
 		}
 	}
@@ -723,7 +723,7 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	return err
 }
 
-func updateSSHKeyAndCopyKubeconfigToVM(sshRunner *crcssh.Runner, startConfig StartConfig, crcBundleMetadata *bundle.CrcBundleInfo) error {
+func updateSSHKeyAndCopyKubeconfig(sshRunner *crcssh.Runner, startConfig StartConfig, crcBundleMetadata *bundle.CrcBundleInfo) error {
 	logging.Info("Generating new SSH Key pair ...")
 	if err := updateSSHKeyPair(sshRunner); err != nil {
 		return fmt.Errorf("Error updating SSH Keys: %v", err)
