@@ -739,13 +739,6 @@ func updateSSHKeyAndCopyKubeconfigToVM(sshRunner *crcssh.Runner, startConfig Sta
 	if err != nil {
 		return fmt.Errorf("Error copying kubeconfig file to instance dir: %v", err)
 	}
-
-	logging.Info("Copying kubeconfig file to CRC VM ...")
-	err = sshRunner.CopyFile(kubeConfigFilePath, "/opt/kubeconfig", 0644)
-	if err != nil {
-		return fmt.Errorf("Error copying kubeconfig file to VM: %v", err)
-	}
-
 	return nil
 }
 
