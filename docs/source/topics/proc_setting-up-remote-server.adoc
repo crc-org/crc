@@ -1,0 +1,106 @@
+[id="setting-up-remote-server_{context}"]
+= Setting up {prod} on a remote server
+
+Follow this procedure to configure a remote server to run a {prod} OpenShift cluster.
+
+[NOTE]
+====
+* **It is strongly advised to perform this procedure on a local network.**
+Exposing an insecure server on the internet comes with many security implications.
+* All of the commands in this procedure must be run on the remote server.
+* This procedure assumes the use of a {rhel}, {fed}, or {centos} server.
+====
+
+.Prerequisites
+
+* {prod} is installed and set up on the remote server.
+For more information, see link:{crc-gsg-url}#installing-codeready-containers_gsg[Installing {prod}] and link:{crc-gsg-url}#setting-up-codeready-containers_gsg[Setting up {prod}].
+* Your user account has `sudo` permissions on the remote server.
+
+.Procedure
+
+. Start the cluster:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} start
+----
++
+Ensure that the cluster remains running throughout this procedure.
+
+. Install the [package]`haproxy` package and other utilities:
++
+----
+$ sudo dnf install haproxy policycoreutils-python-utils jq
+----
+
+. Modify the firewall to allow communication with the cluster:
++
+----
+$ sudo systemctl start firewalld
+$ sudo firewall-cmd --add-port=80/tcp --permanent
+$ sudo firewall-cmd --add-port=6443/tcp --permanent
+$ sudo firewall-cmd --add-port=443/tcp --permanent
+$ sudo systemctl restart firewalld
+----
+
+. For SELinux, allow listening to TCP port 6443:
++
+----
+$ sudo semanage port -a -t http_port_t -p tcp 6443
+----
+
+. Create a backup of the default [application]`haproxy` configuration:
++
+----
+$ sudo cp /etc/haproxy/haproxy.cfg{,.bak}
+----
+
+. Configure [application]`haproxy` for use with the cluster:
++
+[subs="+quotes,attributes"]
+----
+$ export CRC_IP=$({bin} ip)
+$ sudo tee /etc/haproxy/haproxy.cfg &>/dev/null <<EOF
+global
+    debug
+
+defaults
+    log global
+    mode http
+    timeout connect 5000
+    timeout client 5000
+    timeout server 5000
+
+frontend apps
+    bind 0.0.0.0:80
+    bind 0.0.0.0:443
+    option tcplog
+    mode tcp
+    default_backend apps
+
+backend apps
+    mode tcp
+    balance roundrobin
+    option ssl-hello-chk
+    server webserver1 $CRC_IP check
+
+frontend api
+    bind 0.0.0.0:6443
+    option tcplog
+    mode tcp
+    default_backend api
+
+backend api
+    mode tcp
+    balance roundrobin
+    option ssl-hello-chk
+    server webserver1 $CRC_IP:6443 check
+EOF
+----
+
+. Start the [application]`haproxy` service:
++
+----
+$ sudo systemctl start haproxy
+----
