@@ -28,6 +28,8 @@ require (
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/mapstructure v1.4.0 // indirect
+	github.com/onsi/ginkgo v1.12.0
+	github.com/onsi/gomega v1.9.0
 	github.com/openshift/api v0.0.0-20200930075302-db52bc4ef99f
 	github.com/openshift/oc v0.0.0-alpha.0.0.20201126035554-299b6af535d1
 	github.com/pbnjay/memory v0.0.0-20201129165224-b12e5d931931
@@ -60,7 +62,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	howett.net/plist v0.0.0-20201203080718-1454fab16a06
 	k8s.io/api v0.19.0
-	k8s.io/client-go v0.19.0
+	k8s.io/client-go v8.0.0+incompatible
 )
 
 replace (
