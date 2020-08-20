@@ -4,3 +4,7 @@
 include::ref_dns-configuration.adoc[leveloffset=+1]
 
 include::proc_starting-codeready-containers-behind-proxy.adoc[leveloffset=+1]
+
+include::proc_setting-up-remote-server.adoc[leveloffset=+1]
+
+include::proc_connecting-to-remote-instance.adoc[leveloffset=+1]
