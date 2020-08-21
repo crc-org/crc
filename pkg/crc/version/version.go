@@ -30,7 +30,7 @@ const (
 	// Tray version to be embedded in binary
 	crcTrayVersion = "1.0.0-alpha.5"
 	// Windows forms application version type major.minor.buildnumber.revesion
-	crcWindowsTrayVersion = "0.1.0.0"
+	crcWindowsTrayVersion = "0.2.0.0"
 )
 
 type CrcReleaseInfo struct {
