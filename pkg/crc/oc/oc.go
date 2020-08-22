@@ -36,23 +36,6 @@ func (oc LocalRunner) RunPrivate(args ...string) (string, string, error) {
 	return crcos.RunWithDefaultLocalePrivate(oc.OcBinaryPath, args...)
 }
 
-type EnvRunner struct {
-	OcBinaryPath  string
-	KubeconfigEnv string
-}
-
-func (oc EnvRunner) Run(args ...string) (string, string, error) {
-	return crcos.RunWithDefaultLocaleAndEnv(oc.OcBinaryPath, args, map[string]string{
-		"KUBECONFIG": oc.KubeconfigEnv,
-	})
-}
-
-func (oc EnvRunner) RunPrivate(args ...string) (string, string, error) {
-	return crcos.RunWithDefaultLocalePrivateAndEnv(oc.OcBinaryPath, args, map[string]string{
-		"KUBECONFIG": oc.KubeconfigEnv,
-	})
-}
-
 // UseOcWithConfig return the oc binary along with valid kubeconfig
 func UseOCWithConfig(machineName string) Config {
 	localRunner := LocalRunner{
