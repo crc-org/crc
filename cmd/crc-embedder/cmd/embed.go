@@ -90,7 +90,7 @@ var (
 			hyperkit.MachineDriverDownloadURL,
 			hyperkit.HyperkitDownloadURL,
 			constants.GetOcURLForOs("darwin"),
-			constants.GetCrcTrayDownloadURL(),
+			constants.GetCRCMacTrayDownloadURL(),
 			constants.GetGoodhostsURLForOs("darwin"),
 		},
 		"linux": {

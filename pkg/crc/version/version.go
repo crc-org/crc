@@ -28,7 +28,7 @@ var (
 const (
 	releaseInfoLink = "https://mirror.openshift.com/pub/openshift-v4/clients/crc/latest/release-info.json"
 	// Tray version to be embedded in binary
-	crcTrayVersion = "1.0.0-alpha.5"
+	crcMacTrayVersion = "1.0.0-alpha.5"
 	// Windows forms application version type major.minor.buildnumber.revesion
 	crcWindowsTrayVersion = "0.2.0.0"
 )
@@ -55,8 +55,8 @@ func GetOcVersion() string {
 	return ocVersion
 }
 
-func GetCRCTrayVersion() string {
-	return crcTrayVersion
+func GetCRCMacTrayVersion() string {
+	return crcMacTrayVersion
 }
 
 func GetCRCWindowsTrayVersion() string {
