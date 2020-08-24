@@ -101,6 +101,7 @@ var (
 		"windows": {
 			constants.GetOcURLForOs("windows"),
 			constants.GetGoodhostsURLForOs("windows"),
+			constants.GetCRCWindowsTrayDownloadURL(),
 		},
 	}
 )
