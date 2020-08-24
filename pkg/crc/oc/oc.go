@@ -49,24 +49,27 @@ func UseOCWithConfig(machineName string) Config {
 	}
 }
 
-func (oc Config) RunOcCommand(args ...string) (string, string, error) {
+func (oc Config) runCommand(isPrivate bool, args ...string) (string, string, error) {
 	if oc.Context != "" {
 		args = append(args, "--context", oc.Context)
 	}
 	if oc.Cluster != "" {
 		args = append(args, "--cluster", oc.Cluster)
 	}
+
+	if isPrivate {
+		return oc.Runner.RunPrivate(args...)
+	}
+
 	return oc.Runner.Run(args...)
 }
 
+func (oc Config) RunOcCommand(args ...string) (string, string, error) {
+	return oc.runCommand(false, args...)
+}
+
 func (oc Config) RunOcCommandPrivate(args ...string) (string, string, error) {
-	if oc.Context != "" {
-		args = append(args, "--context", oc.Context)
-	}
-	if oc.Cluster != "" {
-		args = append(args, "--cluster", oc.Cluster)
-	}
-	return oc.Runner.RunPrivate(args...)
+	return oc.runCommand(true, args...)
 }
 
 type SSHRunner struct {
