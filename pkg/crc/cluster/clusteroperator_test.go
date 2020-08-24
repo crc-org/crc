@@ -60,12 +60,12 @@ type mockRunner struct {
 	file string
 }
 
-func (r *mockRunner) Run(args ...string) (string, string, error) {
+func (r *mockRunner) Run(binaryPath string, args ...string) (string, string, error) {
 	bin, err := ioutil.ReadFile(r.file)
 	return string(bin), "", err
 }
 
-func (r *mockRunner) RunPrivate(args ...string) (string, string, error) {
+func (r *mockRunner) RunPrivate(binaryPath string, args ...string) (string, string, error) {
 	bin, err := ioutil.ReadFile(r.file)
 	return string(bin), "", err
 }
