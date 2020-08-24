@@ -135,7 +135,7 @@ func checkTrayVersion() error {
 		logging.Error(err.Error())
 		return err
 	}
-	expectedVersion, err := semver.NewVersion(version.GetCRCTrayVersion())
+	expectedVersion, err := semver.NewVersion(version.GetCRCMacTrayVersion())
 	if err != nil {
 		logging.Error(err.Error())
 		return err
@@ -195,16 +195,16 @@ func downloadOrExtractTrayApp() error {
 	}()
 
 	logging.Debug("Trying to extract tray from crc binary")
-	err = embed.Extract(filepath.Base(constants.GetCrcTrayDownloadURL()), tmpArchivePath)
+	err = embed.Extract(filepath.Base(constants.GetCRCMacTrayDownloadURL()), tmpArchivePath)
 	if err != nil {
 		logging.Debug("Could not extract tray from crc binary", err)
 		logging.Debug("Downloading crc tray")
-		_, err = dl.Download(constants.GetCrcTrayDownloadURL(), tmpArchivePath, 0600)
+		_, err = dl.Download(constants.GetCRCMacTrayDownloadURL(), tmpArchivePath, 0600)
 		if err != nil {
 			return err
 		}
 	}
-	archivePath := filepath.Join(tmpArchivePath, filepath.Base(constants.GetCrcTrayDownloadURL()))
+	archivePath := filepath.Join(tmpArchivePath, filepath.Base(constants.GetCRCMacTrayDownloadURL()))
 	outputPath := constants.CrcBinDir
 	err = goos.MkdirAll(outputPath, 0750)
 	if err != nil && !goos.IsExist(err) {
