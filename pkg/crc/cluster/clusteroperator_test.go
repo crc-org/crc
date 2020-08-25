@@ -70,6 +70,11 @@ func (r *mockRunner) RunPrivate(binaryPath string, args ...string) (string, stri
 	return string(bin), "", err
 }
 
+func (r *mockRunner) RunPrivileged(reason string, args ...string) (string, string, error) {
+	bin, err := ioutil.ReadFile(r.file)
+	return string(bin), "", err
+}
+
 func (r *mockRunner) GetKubeconfigPath() string {
 	return ""
 }
