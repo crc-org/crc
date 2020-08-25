@@ -3,12 +3,14 @@ package oc
 import (
 	"testing"
 
+	crcos "github.com/code-ready/crc/pkg/os"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRunCommand(t *testing.T) {
 	ocConfig := Config{
-		Runner:         LocalRunner{},
+		Runner:         crcos.NewLocalCommandRunner(),
 		OcBinaryPath:   "/bin/echo",
 		KubeconfigPath: "kubeconfig-file",
 		Context:        "a-context",
@@ -21,7 +23,7 @@ func TestRunCommand(t *testing.T) {
 
 func TestRunCommandWithoutContextAndCluster(t *testing.T) {
 	ocConfig := Config{
-		Runner:         LocalRunner{},
+		Runner:         crcos.NewLocalCommandRunner(),
 		OcBinaryPath:   "/bin/echo",
 		KubeconfigPath: "kubeconfig-file",
 	}
