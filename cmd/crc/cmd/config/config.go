@@ -78,7 +78,7 @@ func less(lhsKey, rhsKey string) bool {
 
 func configurableFields() string {
 	var fields []string
-	var keys = make([]string, len(cfg.AllConfigs()))
+	var keys []string
 
 	for key := range cfg.AllConfigs() {
 		keys = append(keys, key)
