@@ -100,6 +100,28 @@ func createLibMachineClient(debug bool) (*libmachine.Client, func(), error) {
 	}, nil
 }
 
+func (client *client) updateVMConfig(startConfig StartConfig, api libmachine.API, host *host.Host) error {
+	/* Memory */
+	logging.Debugf("Updating CRC VM configuration")
+	if err := setMemory(host, startConfig.Memory); err != nil {
+		logging.Debugf("Failed to update CRC VM configuration: %v", err)
+		if err != drivers.ErrNotImplemented {
+			return err
+		}
+	}
+	if err := setVcpus(host, startConfig.CPUs); err != nil {
+		logging.Debugf("Failed to update CRC VM configuration: %v", err)
+		if err != drivers.ErrNotImplemented {
+			return err
+		}
+	}
+	if err := api.Save(host); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	var crcBundleMetadata *bundle.CrcBundleInfo
 
@@ -193,6 +215,11 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		}
 
 		logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
+
+		if err := client.updateVMConfig(startConfig, libMachineAPIClient, host); err != nil {
+			return startError(startConfig.Name, "Could not update CRC VM configuration", err)
+		}
+
 		if err := host.Driver.Start(); err != nil {
 			return startError(startConfig.Name, "Error starting stopped VM", err)
 		}
