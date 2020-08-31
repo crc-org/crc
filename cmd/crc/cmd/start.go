@@ -62,16 +62,23 @@ func runStart(arguments []string) error {
 	}
 
 	client := machine.NewClient()
-	commandResult, err := client.Start(startConfig)
+	result, err := client.Start(startConfig)
 	if err != nil {
 		return err
 	}
-	if commandResult.Status == "Running" {
-		output.Outln("Started the OpenShift cluster")
-		logging.Warn("The cluster might report a degraded or error state. This is expected since several operators have been disabled to lower the resource usage. For more information, please consult the documentation")
-	} else {
-		logging.Warnf("Unexpected status of the OpenShift cluster: %s", commandResult.Status)
+	if result.Status != "Running" {
+		return fmt.Errorf("Unexpected status of the OpenShift cluster: %s", result.Status)
 	}
+
+	logging.Warn("The cluster might report a degraded or error state. This is expected since several operators have been disabled to lower the resource usage. For more information, please consult the documentation")
+
+	output.Outln("Started the OpenShift cluster.")
+	output.Outln("")
+	output.Outln("To access the cluster, first set up your environment by following 'crc oc-env' instructions.")
+	output.Outf("Then you can access it by running 'oc login -u developer -p developer %s'.\n", result.ClusterConfig.ClusterAPI)
+	output.Outf("To login as an admin, run 'oc login -u kubeadmin -p %s %s'.\n", result.ClusterConfig.KubeAdminPass, result.ClusterConfig.ClusterAPI)
+	output.Outln("")
+	output.Outln("You can now run 'crc console' and use these credentials to access the OpenShift web console.")
 	return nil
 }
 
