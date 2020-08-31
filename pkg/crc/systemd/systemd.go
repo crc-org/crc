@@ -19,12 +19,6 @@ func NewInstanceSystemdCommander(sshRunner *ssh.Runner) *Commander {
 	}
 }
 
-func NewHostSystemdCommander() *Commander {
-	return &Commander{
-		commandRunner: crcos.NewLocalCommandRunner(),
-	}
-}
-
 func (c Commander) Enable(name string) error {
 	_, err := c.service(name, actions.Enable)
 	return err
