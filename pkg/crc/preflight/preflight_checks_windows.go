@@ -53,16 +53,11 @@ func checkWindowsEdition() error {
 	windowsEdition := strings.TrimSpace(stdOut)
 	logging.Debugf("Running on Windows %s edition", windowsEdition)
 
-	if strings.HasPrefix(windowsEdition, "Professional") {
-		return nil
+	if strings.HasPrefix(windowsEdition, "Home") {
+		return fmt.Errorf("Windows Home edition is not supported")
 	}
 
-	switch windowsEdition {
-	case "Enterprise":
-		return nil
-	default:
-		return fmt.Errorf("Supported Windows editions are Professional and Enterprise. Windows %s edition is not supported", windowsEdition)
-	}
+	return nil
 }
 
 func checkHyperVInstalled() error {
