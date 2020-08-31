@@ -72,7 +72,16 @@ func (c Commander) DaemonReload() error {
 }
 
 func (c Commander) service(name string, action actions.Action) (states.State, error) {
-	stdOut, stdErr, err := c.commandRunner.RunPrivileged("execute systemctl command", "systemctl", action.String(), name)
+	var (
+		stdOut, stdErr string
+		err            error
+	)
+	if action.IsPriviledged() {
+		stdOut, stdErr, err = c.commandRunner.RunPrivileged("execute systemctl command", "systemctl", action.String(), name)
+	} else {
+		stdOut, stdErr, err = c.commandRunner.Run("systemctl", action.String(), name)
+	}
+
 	if err != nil {
 		return states.Error, fmt.Errorf("Executing systemctl action failed: %s %v: %s", stdOut, err, stdErr)
 	}

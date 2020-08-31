@@ -31,3 +31,15 @@ func (action Action) String() string {
 
 	return ""
 }
+
+func (action Action) IsPriviledged() bool {
+	switch action {
+	case Status:
+		return false
+	case Start, Stop, Reload, Restart, Enable, Disable, DaemonReload:
+		return true
+	default:
+		/* This should not be reached */
+		return false
+	}
+}
