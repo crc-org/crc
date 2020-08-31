@@ -411,14 +411,6 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		waitForProxyPropagation(ocConfig, proxyConfig)
 	}
 
-	// If no error, return usage message
-	logging.Info("")
-	logging.Info("To access the cluster, first set up your environment by following 'crc oc-env' instructions")
-	logging.Infof("Then you can access it by running 'oc login -u developer -p developer %s'", clusterConfig.ClusterAPI)
-	logging.Infof("To login as an admin, run 'oc login -u kubeadmin -p %s %s'", clusterConfig.KubeAdminPass, clusterConfig.ClusterAPI)
-	logging.Info("")
-	logging.Info("You can now run 'crc console' and use these credentials to access the OpenShift web console")
-
 	return StartResult{
 		Name:           startConfig.Name,
 		KubeletStarted: kubeletStarted,
