@@ -2,7 +2,7 @@
 set -e
 
 if [ $# -lt 1 ]; then
-	echo "You need to provide an argument [build_docs, build_docs_pdf, docs_serve]"
+	echo "You need to provide an argument [build_docs, build_docs_pdf, docs_check_links, docs_serve]"
 fi
 
 case $1 in
@@ -16,12 +16,16 @@ case $1 in
 		shift 
 		asciidoctor-pdf $@
 		;;
+	docs_check_links)
+		echo "Checking if all links are alive in docs source"
+		find . -name \*.adoc | xargs -n1 asciidoc-link-check -c /links_whitelist.json -q
+		;;
 	docs_serve)
 		cd build
 		python3 -m http.server 8088
 		;;
 	*)
-		echo "Need to provide one of: build_docs, build_docs_pdf,  docs_serve"
+		echo "Need to provide one of: build_docs, build_docs_pdf, docs_check_links, docs_serve"
 		exit 1
 		;;
 esac

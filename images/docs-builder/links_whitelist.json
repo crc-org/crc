@@ -1,0 +1,9 @@
+{
+    "ignorePatterns": [
+        { "pattern": "^https://api.crc.testing" },
+        { "pattern": "^http://api.crc.testing" },
+        { "pattern": "https://console-openshift-console.apps-crc.testing" },
+        { "pattern": "http://proxy.example.com" }
+    ]
+
+}
