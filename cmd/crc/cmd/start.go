@@ -52,7 +52,9 @@ func runStart(arguments []string) error {
 
 	checkIfNewVersionAvailable(crcConfig.GetBool(config.DisableUpdateCheck.Name))
 
-	preflight.StartPreflightChecks()
+	if err := preflight.StartPreflightChecks(); err != nil {
+		return err
+	}
 
 	startConfig := machine.StartConfig{
 		Name:          constants.DefaultName,

@@ -110,7 +110,7 @@ func getPreflightChecks() []Check {
 	return checks
 }
 
-func CleanUpHost() {
+func CleanUpHost() error {
 	// A user can use setup with experiment flag
 	// and not use cleanup with same flag, to avoid
 	// any extra step/confusion we are just adding the checks
@@ -118,5 +118,5 @@ func CleanUpHost() {
 	// perform action in a sane way.
 	checks := getPreflightChecks()
 	checks = append(checks, traySetupChecks[:]...)
-	doCleanUpPreflightChecks(checks)
+	return doCleanUpPreflightChecks(checks)
 }

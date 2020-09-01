@@ -105,7 +105,7 @@ func (check *Check) doCleanUp() error {
 	return check.cleanup()
 }
 
-func doPreflightChecks(checks []Check) {
+func doPreflightChecks(checks []Check) error {
 	for _, check := range checks {
 		if check.flags&SetupOnly == SetupOnly || check.flags&CleanUpOnly == CleanUpOnly {
 			continue
@@ -115,13 +115,14 @@ func doPreflightChecks(checks []Check) {
 			if check.shouldWarn() {
 				logging.Warn(err.Error())
 			} else {
-				logging.Fatal(err.Error())
+				return err
 			}
 		}
 	}
+	return nil
 }
 
-func doFixPreflightChecks(checks []Check) {
+func doFixPreflightChecks(checks []Check) error {
 	for _, check := range checks {
 		if check.flags&StartOnly == StartOnly || check.flags&CleanUpOnly == CleanUpOnly {
 			continue
@@ -135,13 +136,14 @@ func doFixPreflightChecks(checks []Check) {
 			if check.shouldWarn() {
 				logging.Warn(err.Error())
 			} else {
-				logging.Fatal(err.Error())
+				return err
 			}
 		}
 	}
+	return nil
 }
 
-func doCleanUpPreflightChecks(checks []Check) {
+func doCleanUpPreflightChecks(checks []Check) error {
 	// Do the cleanup in reverse order to avoid any dependency during cleanup
 	for i := len(checks) - 1; i >= 0; i-- {
 		check := checks[i]
@@ -150,9 +152,10 @@ func doCleanUpPreflightChecks(checks []Check) {
 		}
 		err := check.doCleanUp()
 		if err != nil {
-			logging.Fatal(err.Error())
+			return err
 		}
 	}
+	return nil
 }
 
 func doRegisterSettings(checks []Check) {
@@ -165,13 +168,13 @@ func doRegisterSettings(checks []Check) {
 }
 
 // StartPreflightChecks performs the preflight checks before starting the cluster
-func StartPreflightChecks() {
-	doPreflightChecks(getPreflightChecks())
+func StartPreflightChecks() error {
+	return doPreflightChecks(getPreflightChecks())
 }
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
-func SetupHost() {
-	doFixPreflightChecks(getPreflightChecks())
+func SetupHost() error {
+	return doFixPreflightChecks(getPreflightChecks())
 }
 
 func RegisterSettings() {
