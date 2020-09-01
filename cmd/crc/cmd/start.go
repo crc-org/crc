@@ -3,7 +3,10 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
+	"strings"
 
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
@@ -12,7 +15,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
-	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
@@ -22,6 +24,7 @@ import (
 
 func init() {
 	rootCmd.AddCommand(startCmd)
+	addOutputFormatFlag(startCmd)
 	startCmd.Flags().AddFlagSet(startCmdFlagSet)
 
 	_ = crcConfig.BindFlagSet(startCmd.Flags())
@@ -63,19 +66,73 @@ func runStart(arguments []string) error {
 
 	client := machine.NewClient()
 	result, err := client.Start(startConfig)
-	if err != nil {
-		return err
-	}
-	logging.Warn("The cluster might report a degraded or error state. This is expected since several operators have been disabled to lower the resource usage. For more information, please consult the documentation")
+	return render(&startResult{
+		Success:       err == nil,
+		Error:         errorMessage(err),
+		ClusterConfig: toClusterConfig(result),
+	}, os.Stdout, outputFormat)
+}
 
-	output.Outln("Started the OpenShift cluster.")
-	output.Outln("")
-	output.Outln("To access the cluster, first set up your environment by following 'crc oc-env' instructions.")
-	output.Outf("Then you can access it by running 'oc login -u developer -p developer %s'.\n", result.ClusterConfig.ClusterAPI)
-	output.Outf("To login as an admin, run 'oc login -u kubeadmin -p %s %s'.\n", result.ClusterConfig.KubeAdminPass, result.ClusterConfig.ClusterAPI)
-	output.Outln("")
-	output.Outln("You can now run 'crc console' and use these credentials to access the OpenShift web console.")
-	return nil
+func toClusterConfig(result machine.StartResult) *clusterConfig {
+	if result.Error != "" {
+		return nil
+	}
+	return &clusterConfig{
+		URL: result.ClusterConfig.ClusterAPI,
+		AdminCredentials: credentials{
+			Username: "kubeadmin",
+			Password: result.ClusterConfig.KubeAdminPass,
+		},
+		DeveloperCredentials: credentials{
+			Username: "developer",
+			Password: "developer",
+		},
+	}
+}
+
+func errorMessage(err error) string {
+	if err != nil {
+		return err.Error()
+	}
+	return ""
+}
+
+type clusterConfig struct {
+	URL                  string      `json:"url"`
+	AdminCredentials     credentials `json:"adminCredentials"`
+	DeveloperCredentials credentials `json:"developerCredentials"`
+}
+
+type credentials struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type startResult struct {
+	Success       bool           `json:"success"`
+	Error         string         `json:"error,omitempty"`
+	ClusterConfig *clusterConfig `json:"clusterConfig,omitempty"`
+}
+
+func (s *startResult) prettyPrintTo(writer io.Writer) error {
+	if s.Error != "" {
+		return errors.New(s.Error)
+	}
+	if s.ClusterConfig == nil {
+		return errors.New("either Error or ClusterConfig are needed")
+	}
+
+	_, err := fmt.Fprintln(writer, strings.Join([]string{
+		"Started the OpenShift cluster",
+		"",
+		"To access the cluster, first set up your environment by following 'crc oc-env' instructions.",
+		fmt.Sprintf("Then you can access it by running 'oc login -u %s -p %s %s'.", s.ClusterConfig.DeveloperCredentials.Username, s.ClusterConfig.DeveloperCredentials.Password, s.ClusterConfig.URL),
+		fmt.Sprintf("To login as an admin, run 'oc login -u %s -p %s %s'.", s.ClusterConfig.AdminCredentials.Username, s.ClusterConfig.AdminCredentials.Password, s.ClusterConfig.URL),
+		"To access the cluster, first set up your environment by following 'crc oc-env' instructions.",
+		"",
+		"You can now run 'crc console' and use these credentials to access the OpenShift web console.",
+	}, "\n"))
+	return err
 }
 
 func initStartCmdFlagSet() *pflag.FlagSet {
