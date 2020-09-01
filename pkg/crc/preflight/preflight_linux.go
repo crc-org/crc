@@ -121,6 +121,6 @@ func getPreflightChecks() []Check {
 	return checks
 }
 
-func CleanUpHost() {
-	doCleanUpPreflightChecks(getPreflightChecks())
+func CleanUpHost() error {
+	return doCleanUpPreflightChecks(getPreflightChecks())
 }

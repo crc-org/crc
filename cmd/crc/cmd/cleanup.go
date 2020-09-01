@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/spf13/cobra"
@@ -20,6 +21,8 @@ var cleanupCmd = &cobra.Command{
 }
 
 func runCleanup(arguments []string) {
-	preflight.CleanUpHost()
+	if err := preflight.CleanUpHost(); err != nil {
+		exit.WithMessage(1, err.Error())
+	}
 	output.Outln("Cleanup finished")
 }
