@@ -110,20 +110,6 @@ func getPreflightChecks() []Check {
 	return checks
 }
 
-// StartPreflightChecks performs the preflight checks before starting the cluster
-func StartPreflightChecks() {
-	doPreflightChecks(getPreflightChecks())
-}
-
-// SetupHost performs the prerequisite checks and setups the host to run the cluster
-func SetupHost() {
-	doFixPreflightChecks(getPreflightChecks())
-}
-
-func RegisterSettings() {
-	doRegisterSettings(getPreflightChecks())
-}
-
 func CleanUpHost() {
 	// A user can use setup with experiment flag
 	// and not use cleanup with same flag, to avoid
