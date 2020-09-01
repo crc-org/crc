@@ -407,6 +407,7 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		waitForProxyPropagation(ocConfig, proxyConfig)
 	}
 
+	logging.Warn("The cluster might report a degraded or error state. This is expected since several operators have been disabled to lower the resource usage. For more information, please consult the documentation")
 	return StartResult{
 		Name:           startConfig.Name,
 		KubeletStarted: true,
