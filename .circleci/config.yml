@@ -77,6 +77,9 @@ jobs:
         # force GOPATH to a sane value as the image we are using has an older go version
         # with a 'go env GOPATH' output which causes make failures
         command: make GOPATH="/home/circleci/go" build_docs
+    - run:
+        name: Check links in docs
+        command: make GOPATH="/home/circleci/go" docs_check_links
     - persist_to_workspace:
         root: docs/build
         paths: index.html
