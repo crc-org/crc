@@ -105,6 +105,10 @@ build_docs_pdf:
 docs_serve: build_docs
 	podman run -it -v $(CURDIR)/docs:/docs:Z --rm -p 8088:8088/tcp $(DOCS_BUILD_CONTAINER) docs_serve 
 
+.PHONY: docs_check_links
+docs_check_links:
+	podman run -it -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) docs_check_links
+
 .PHONY: clean_docs
 clean_docs:
 	rm -rf $(CURDIR)/docs/build
