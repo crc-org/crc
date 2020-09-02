@@ -23,6 +23,7 @@ type CrcBundleInfo struct {
 	Storage     Storage     `json:"storage"`
 	DriverInfo  DriverInfo  `json:"driverInfo"`
 	cachedPath  string
+	bundleName  string
 }
 
 type BuildInfo struct {
@@ -69,6 +70,10 @@ type DriverInfo struct {
 
 func (bundle *CrcBundleInfo) resolvePath(filename string) string {
 	return filepath.Join(bundle.cachedPath, filename)
+}
+
+func (bundle *CrcBundleInfo) GetBundleName() string {
+	return bundle.bundleName
 }
 
 func (bundle *CrcBundleInfo) GetAPIHostname() string {

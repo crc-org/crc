@@ -19,7 +19,7 @@ func (client *client) GetConsoleURL() (*ConsoleResult, error) {
 		return nil, errors.Wrap(err, "Error getting the state for host")
 	}
 
-	_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
+	crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error loading bundle metadata")
 	}
