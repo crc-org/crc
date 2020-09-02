@@ -162,11 +162,11 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 			return nil, errors.Wrap(err, "Error loading machine")
 		}
 
-		var bundleName string
-		bundleName, crcBundleMetadata, err = getBundleMetadataFromDriver(host.Driver)
+		crcBundleMetadata, err = getBundleMetadataFromDriver(host.Driver)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error loading bundle metadata")
 		}
+		bundleName := crcBundleMetadata.GetBundleName()
 		if bundleName != filepath.Base(startConfig.BundlePath) {
 			logging.Debugf("Bundle '%s' was requested, but the existing VM is using '%s'",
 				filepath.Base(startConfig.BundlePath), bundleName)

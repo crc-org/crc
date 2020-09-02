@@ -35,18 +35,18 @@ func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*ClusterConfig, error) 
 	}, nil
 }
 
-func getBundleMetadataFromDriver(driver drivers.Driver) (string, *bundle.CrcBundleInfo, error) {
+func getBundleMetadataFromDriver(driver drivers.Driver) (*bundle.CrcBundleInfo, error) {
 	bundleName, err := driver.GetBundleName()
 	if err != nil {
 		err := fmt.Errorf("Error getting bundle name from CodeReady Containers instance, make sure you ran 'crc setup' and are using the latest bundle")
-		return "", nil, err
+		return nil, err
 	}
 	metadata, err := bundle.Get(bundleName)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
-	return bundleName, metadata, err
+	return metadata, err
 }
 
 func createLibMachineClient() (*libmachine.Client, func()) {
