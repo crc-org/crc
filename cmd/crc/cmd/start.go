@@ -44,25 +44,21 @@ var startCmd = &cobra.Command{
 	Short: "Start the OpenShift cluster",
 	Long:  "Start the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := runStart(args); err != nil {
+		if err := renderStartResult(runStart(args)); err != nil {
 			exit.WithMessage(1, err.Error())
 		}
 	},
 }
 
-var (
-	startCmdFlagSet = initStartCmdFlagSet()
-)
-
-func runStart(arguments []string) error {
+func runStart(arguments []string) (*machine.StartResult, error) {
 	if err := validateStartFlags(); err != nil {
-		return err
+		return nil, err
 	}
 
 	checkIfNewVersionAvailable(crcConfig.GetBool(config.DisableUpdateCheck.Name))
 
 	if err := preflight.StartPreflightChecks(); err != nil {
-		return err
+		return nil, err
 	}
 
 	startConfig := machine.StartConfig{
@@ -77,6 +73,10 @@ func runStart(arguments []string) error {
 
 	client := machine.NewClient()
 	result, err := client.Start(startConfig)
+	return &result, err
+}
+
+func renderStartResult(result *machine.StartResult, err error) error {
 	return render(&startResult{
 		Success:       err == nil,
 		Error:         errorMessage(err),
@@ -84,8 +84,8 @@ func runStart(arguments []string) error {
 	}, os.Stdout, outputFormat)
 }
 
-func toClusterConfig(result machine.StartResult) *clusterConfig {
-	if result.Error != "" {
+func toClusterConfig(result *machine.StartResult) *clusterConfig {
+	if result == nil || result.Error != "" {
 		return nil
 	}
 	return &clusterConfig{
