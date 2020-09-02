@@ -25,7 +25,16 @@ import (
 func init() {
 	rootCmd.AddCommand(startCmd)
 	addOutputFormatFlag(startCmd)
-	startCmd.Flags().AddFlagSet(startCmdFlagSet)
+
+	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
+	flagSet.StringP(config.Bundle.Name, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster")
+	flagSet.StringP(config.PullSecretFile.Name, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
+	flagSet.IntP(config.CPUs.Name, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the OpenShift cluster")
+	flagSet.IntP(config.Memory.Name, "m", constants.DefaultMemory, "MiB of memory to allocate to the OpenShift cluster")
+	flagSet.StringP(config.NameServer.Name, "n", "", "IPv4 address of nameserver to use for the OpenShift cluster")
+	flagSet.Bool(config.DisableUpdateCheck.Name, false, "Don't check for update")
+
+	startCmd.Flags().AddFlagSet(flagSet)
 
 	_ = crcConfig.BindFlagSet(startCmd.Flags())
 }
@@ -135,18 +144,6 @@ func (s *startResult) prettyPrintTo(writer io.Writer) error {
 		"You can now run 'crc console' and use these credentials to access the OpenShift web console.",
 	}, "\n"))
 	return err
-}
-
-func initStartCmdFlagSet() *pflag.FlagSet {
-	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
-	flagSet.StringP(config.Bundle.Name, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster")
-	flagSet.StringP(config.PullSecretFile.Name, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
-	flagSet.IntP(config.CPUs.Name, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the OpenShift cluster")
-	flagSet.IntP(config.Memory.Name, "m", constants.DefaultMemory, "MiB of memory to allocate to the OpenShift cluster")
-	flagSet.StringP(config.NameServer.Name, "n", "", "IPv4 address of nameserver to use for the OpenShift cluster")
-	flagSet.Bool(config.DisableUpdateCheck.Name, false, "Don't check for update")
-
-	return flagSet
 }
 
 func isDebugLog() bool {
