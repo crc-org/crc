@@ -193,9 +193,15 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 			} else {
 				logging.Infof("A CodeReady Containers VM for OpenShift %s is already running", openshiftVersion)
 			}
+			clusterConfig, err := getClusterConfig(crcBundleMetadata)
+			if err != nil {
+				return startError(startConfig.Name, "Cannot create cluster configuration", err)
+			}
 			return StartResult{
-				Name:   startConfig.Name,
-				Status: vmState.String(),
+				Name:           startConfig.Name,
+				Status:         vmState.String(),
+				ClusterConfig:  *clusterConfig,
+				KubeletStarted: true,
 			}, nil
 		}
 
