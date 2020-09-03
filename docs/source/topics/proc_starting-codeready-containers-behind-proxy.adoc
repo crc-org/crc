@@ -17,8 +17,8 @@ For more information about using the embedded [command]`oc` binary, see link:{cr
 +
 [subs="+quotes,attributes"]
 ----
-$ {bin} config set http-proxy http://example.proxy.com:__<port>__
-$ {bin} config set https-proxy http://example.proxy.com:__<port>__
+$ {bin} config set http-proxy http://proxy.example.com:__<port>__
+$ {bin} config set https-proxy http://proxy.example.com:__<port>__
 $ {bin} config set no-proxy __<comma-separated-no-proxy-entries>__
 ----
 +
