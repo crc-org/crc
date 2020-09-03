@@ -55,12 +55,12 @@ Feature: Basic test
         And stdout should contain "Writing Network Manager config for crc"
         And stdout should contain "Will use root access: write NetworkManager config in /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf"
         And stdout should contain "Will use root access: executing systemctl daemon-reload command"
-        And stdout should contain "Will use root access: executing systemctl stop/start command"
+        And stdout should contain "Will use root access: executing systemctl reload NetworkManager"
         And stdout should contain "Checking if /etc/NetworkManager/dnsmasq.d/crc.conf exists"
         And stdout should contain "Writing dnsmasq config for crc"
         And stdout should contain "Will use root access: write dnsmasq configuration in /etc/NetworkManager/dnsmasq.d/crc.conf"
         And stdout should contain "Will use root access: executing systemctl daemon-reload command"
-        And stdout should contain "Will use root access: executing systemctl stop/start command"
+        And stdout should contain "Will use root access: executing systemctl reload NetworkManager"
         And stdout should contain "Setup is complete, you can now run 'crc start -b $bundlename' to start the OpenShift cluster" if bundle is not embedded
         And stdout should contain "Setup is complete, you can now run 'crc start' to start the OpenShift cluster" if bundle is embedded
 
