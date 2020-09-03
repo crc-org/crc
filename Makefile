@@ -5,7 +5,6 @@ BUNDLE_VERSION ?= 4.5.7
 # different for nightly and CI bits where bundle version would be any random
 # string or dd-mm-yyyy format.
 OC_VERSION ?= ${BUNDLE_VERSION}
-OPENSHIFT_VERSION ?= ${BUNDLE_VERSION}
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 1.15.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
@@ -51,7 +50,7 @@ __check_defined = \
 
 # Linker flags
 VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
-    -X $(REPOPATH)/pkg/crc/version.bundleVersion=$(OPENSHIFT_VERSION) \
+    -X $(REPOPATH)/pkg/crc/version.bundleVersion=$(BUNDLE_VERSION) \
     -X $(REPOPATH)/pkg/crc/version.ocVersion=$(OC_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.defaultOcURLBase=$(MIRROR) \
 	-X $(REPOPATH)/pkg/crc/version.commitSha=$(COMMIT_SHA)
@@ -133,13 +132,13 @@ ifndef PULL_SECRET_FILE
 	PULL_SECRET_FILE = --pull-secret-file=$(HOME)/Downloads/crc-pull-secret
 endif
 ifndef BUNDLE_LOCATION
-	BUNDLE_LOCATION = --bundle-location=$(HOME)/Downloads/crc_libvirt_$(OPENSHIFT_VERSION).$(BUNDLE_EXTENSION)
+	BUNDLE_LOCATION = --bundle-location=$(HOME)/Downloads/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
 endif
 ifndef CRC_BINARY
 	CRC_BINARY = --crc-binary=$(GOPATH)/bin
 endif
 integration:
-	@go test --timeout=120m $(REPOPATH)/test/integration -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --bundle-version=$(OPENSHIFT_VERSION) $(GODOG_OPTS)
+	@go test --timeout=120m $(REPOPATH)/test/integration -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --bundle-version=$(BUNDLE_VERSION) $(GODOG_OPTS)
 
 .PHONY: fmt
 fmt:
@@ -162,7 +161,7 @@ cross-lint: $(GOPATH)/bin/golangci-lint
 gen_release_info:
 	@cat release-info.json.sample | sed s/@CRC_VERSION@/\"$(CRC_VERSION)\"/ > $(RELEASE_INFO)
 	@sed -i s/@GIT_COMMIT_SHA@/\"$(COMMIT_SHA)\"/ $(RELEASE_INFO)
-	@sed -i s/@OPENSHIFT_VERSION@/\"$(OPENSHIFT_VERSION)\"/ $(RELEASE_INFO)
+	@sed -i s/@BUNDLE_VERSION@/\"$(BUNDLE_VERSION)\"/ $(RELEASE_INFO)
 
 .PHONY: release
 release: cross-lint embed_bundle build_docs_pdf gen_release_info
@@ -184,9 +183,9 @@ release: cross-lint embed_bundle build_docs_pdf gen_release_info
 	
 	pushd $(RELEASE_DIR) && sha256sum * > sha256sum.txt && popd
 
-HYPERKIT_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperkit_$(OPENSHIFT_VERSION).$(BUNDLE_EXTENSION)
-HYPERV_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperv_$(OPENSHIFT_VERSION).$(BUNDLE_EXTENSION)
-LIBVIRT_BUNDLENAME = $(BUNDLE_DIR)/crc_libvirt_$(OPENSHIFT_VERSION).$(BUNDLE_EXTENSION)
+HYPERKIT_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+HYPERV_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+LIBVIRT_BUNDLENAME = $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
 
 .PHONY: embed_bundle check_bundledir
 check_bundledir:
