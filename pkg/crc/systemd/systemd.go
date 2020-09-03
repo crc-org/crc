@@ -71,7 +71,7 @@ func (c Commander) service(name string, action actions.Action) (states.State, er
 		err            error
 	)
 	if action.IsPriviledged() {
-		msg := fmt.Sprintf("execute systemctl %s %s", action.String(), name)
+		msg := fmt.Sprintf("executing systemctl %s %s", action.String(), name)
 		stdOut, stdErr, err = c.commandRunner.RunPrivileged(msg, "systemctl", action.String(), name)
 	} else {
 		stdOut, stdErr, err = c.commandRunner.Run("systemctl", action.String(), name)
