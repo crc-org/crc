@@ -103,7 +103,7 @@ build_docs_pdf:
 
 .PHONY: docs_serve
 docs_serve: build_docs
-	podman run -v $(CURDIR)/docs:/docs:Z --rm -p 8088:8088/tcp $(DOCS_BUILD_CONTAINER) docs_serve 
+	podman run -it -v $(CURDIR)/docs:/docs:Z --rm -p 8088:8088/tcp $(DOCS_BUILD_CONTAINER) docs_serve 
 
 .PHONY: clean_docs
 clean_docs:
