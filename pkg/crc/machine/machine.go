@@ -111,6 +111,7 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 
 	// Pre-VM start
 	var pullSecret string
+	var host *host.Host
 	exists, err := client.Exists(startConfig.Name)
 	if err != nil {
 		return startError(startConfig.Name, "Cannot determine if VM exists", err)
@@ -148,12 +149,12 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		machineConfig.Initramfs = crcBundleMetadata.GetInitramfsPath()
 		machineConfig.Kernel = crcBundleMetadata.GetKernelPath()
 
-		_, err := createHost(libMachineAPIClient, machineConfig)
+		host, err = createHost(libMachineAPIClient, machineConfig)
 		if err != nil {
 			return startError(startConfig.Name, "Error creating machine", err)
 		}
 	} else {
-		host, err := libMachineAPIClient.Load(startConfig.Name)
+		host, err = libMachineAPIClient.Load(startConfig.Name)
 		if err != nil {
 			return startError(startConfig.Name, "Error loading machine", err)
 		}
@@ -195,9 +196,6 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		if err := host.Driver.Start(); err != nil {
 			return startError(startConfig.Name, "Error starting stopped VM", err)
 		}
-		if err := libMachineAPIClient.Save(host); err != nil {
-			return startError(startConfig.Name, "Error saving state for VM", err)
-		}
 	}
 
 	clusterConfig, err := getClusterConfig(crcBundleMetadata)
@@ -206,14 +204,12 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	}
 
 	// Post-VM start
-	host, err := libMachineAPIClient.Load(startConfig.Name)
-	if err != nil {
-		return startError(startConfig.Name, fmt.Sprintf("Error loading %s vm", startConfig.Name), err)
-	}
-
 	vmState, err := host.Driver.GetState()
 	if err != nil {
 		return startError(startConfig.Name, "Error getting the state", err)
+	}
+	if vmState != state.Running {
+		return startError(startConfig.Name, "CodeReady Containers VM is not running", err)
 	}
 
 	instanceIP, err := host.Driver.GetIP()
