@@ -35,9 +35,9 @@ const (
 )
 
 var ocURLForOs = map[string]string{
-	"darwin":  fmt.Sprintf("%s/%s/%s-%s.%s", version.GetDefaultOcURLBase(), version.GetOcVersion(), "openshift-client-mac", version.GetOcVersion(), ".tar.gz"),
-	"linux":   fmt.Sprintf("%s/%s/%s-%s.%s", version.GetDefaultOcURLBase(), version.GetOcVersion(), "openshift-client-linux", version.GetOcVersion(), ".tar.gz"),
-	"windows": fmt.Sprintf("%s/%s/%s-%s.%s", version.GetDefaultOcURLBase(), version.GetOcVersion(), "openshift-client-windows", version.GetOcVersion(), ".zip"),
+	"darwin":  fmt.Sprintf("%s/%s/%s-%s.%s", version.GetDefaultOcURLBase(), version.GetOcVersion(), "openshift-client-mac", version.GetOcVersion(), "tar.gz"),
+	"linux":   fmt.Sprintf("%s/%s/%s-%s.%s", version.GetDefaultOcURLBase(), version.GetOcVersion(), "openshift-client-linux", version.GetOcVersion(), "tar.gz"),
+	"windows": fmt.Sprintf("%s/%s/%s-%s.%s", version.GetDefaultOcURLBase(), version.GetOcVersion(), "openshift-client-windows", version.GetOcVersion(), "zip"),
 }
 
 func GetOcURLForOs(os string) string {
