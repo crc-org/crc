@@ -17,14 +17,14 @@ const (
 var defaultConfig *Config
 
 type Config struct {
-	storage     RawStorage
-	allSettings map[string]*Setting
+	storage        RawStorage
+	settingsByName map[string]Setting
 }
 
 func New(storage RawStorage) *Config {
 	return &Config{
-		storage:     storage,
-		allSettings: make(map[string]*Setting),
+		storage:        storage,
+		settingsByName: make(map[string]Setting),
 	}
 }
 
@@ -49,7 +49,7 @@ func AllConfigs() map[string]SettingValue {
 
 func (c *Config) AllConfigs() map[string]SettingValue {
 	var allConfigs = make(map[string]SettingValue)
-	for key := range c.allSettings {
+	for key := range c.settingsByName {
 		allConfigs[key] = c.Get(key)
 	}
 	return allConfigs
@@ -69,14 +69,17 @@ func (c *Config) BindFlagSet(flagSet *pflag.FlagSet) error {
 
 // AddSetting returns a filled struct of ConfigSetting
 // takes the config name and default value as arguments
-func AddSetting(name string, defValue interface{}, validationFn ValidationFnType, callbackFn SetFn) *Setting {
-	return defaultConfig.AddSetting(name, defValue, validationFn, callbackFn)
+func AddSetting(name string, defValue interface{}, validationFn ValidationFnType, callbackFn SetFn) {
+	defaultConfig.AddSetting(name, defValue, validationFn, callbackFn)
 }
 
-func (c *Config) AddSetting(name string, defValue interface{}, validationFn ValidationFnType, callbackFn SetFn) *Setting {
-	s := Setting{Name: name, defaultValue: defValue, validationFn: validationFn, callbackFn: callbackFn}
-	c.allSettings[name] = &s
-	return &s
+func (c *Config) AddSetting(name string, defValue interface{}, validationFn ValidationFnType, callbackFn SetFn) {
+	c.settingsByName[name] = Setting{
+		Name:         name,
+		defaultValue: defValue,
+		validationFn: validationFn,
+		callbackFn:   callbackFn,
+	}
 }
 
 // Set sets the value for a given config key
@@ -85,7 +88,7 @@ func Set(key string, value interface{}) (string, error) {
 }
 
 func (c *Config) Set(key string, value interface{}) (string, error) {
-	setting, ok := c.allSettings[key]
+	setting, ok := c.settingsByName[key]
 	if !ok {
 		return "", fmt.Errorf(configPropDoesntExistMsg, key)
 	}
@@ -100,7 +103,7 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 		castValue = cast.ToBool(value)
 	}
 
-	ok, expectedValue := c.allSettings[key].validationFn(castValue)
+	ok, expectedValue := c.settingsByName[key].validationFn(castValue)
 	if !ok {
 		return "", fmt.Errorf("Value '%s' for configuration property '%s' is invalid, reason: %s", castValue, key, expectedValue)
 	}
@@ -109,7 +112,7 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 		return "", err
 	}
 
-	return c.allSettings[key].callbackFn(key, castValue), nil
+	return c.settingsByName[key].callbackFn(key, castValue), nil
 }
 
 // Unset unsets a given config key
@@ -118,7 +121,7 @@ func Unset(key string) (string, error) {
 }
 
 func (c *Config) Unset(key string) (string, error) {
-	_, ok := c.allSettings[key]
+	_, ok := c.settingsByName[key]
 	if !ok {
 		return "", fmt.Errorf(configPropDoesntExistMsg, key)
 	}
@@ -135,7 +138,7 @@ func Get(key string) SettingValue {
 }
 
 func (c *Config) Get(key string) SettingValue {
-	setting, ok := c.allSettings[key]
+	setting, ok := c.settingsByName[key]
 	if !ok {
 		return SettingValue{
 			Invalid: true,
