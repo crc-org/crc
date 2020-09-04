@@ -16,7 +16,6 @@ import (
 
 func init() {
 	setupCmd.Flags().Bool(config.ExperimentalFeatures.Name, false, "Allow the use of experimental features")
-	_ = crcConfig.BindFlagSet(setupCmd.Flags())
 	addOutputFormatFlag(setupCmd)
 	rootCmd.AddCommand(setupCmd)
 }
@@ -26,6 +25,9 @@ var setupCmd = &cobra.Command{
 	Short: "Set up prerequisites for the OpenShift cluster",
 	Long:  "Set up local virtualization and networking infrastructure for the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
+		if err := crcConfig.BindFlagSet(cmd.Flags()); err != nil {
+			exit.WithMessage(1, err.Error())
+		}
 		if err := runSetup(args); err != nil {
 			exit.WithMessage(1, err.Error())
 		}
