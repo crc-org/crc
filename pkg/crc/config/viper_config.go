@@ -160,12 +160,7 @@ func Set(key string, value interface{}) (string, error) {
 	globalViper.Set(key, value)
 	changedConfigs[key] = value
 
-	callbackMsg := allSettings[key].callbackFn(key, value)
-	if callbackMsg != "" {
-		return callbackMsg, nil
-	}
-
-	return "", nil
+	return allSettings[key].callbackFn(key, value), WriteConfig()
 }
 
 // Unset unsets a given config key
@@ -180,7 +175,7 @@ func Unset(key string) (string, error) {
 		return "", fmt.Errorf("Error unsetting configuration property '%s': %v", key, err)
 	}
 
-	return fmt.Sprintf("Successfully unset configuration property '%s'", key), nil
+	return fmt.Sprintf("Successfully unset configuration property '%s'", key), WriteConfig()
 }
 
 func Get(key string) SettingValue {

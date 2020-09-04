@@ -105,11 +105,6 @@ func setConfigHandler(_ machine.Client, args json.RawMessage) string {
 			multiError.Collect(err)
 			continue
 		}
-		err = crcConfig.WriteConfig()
-		if err != nil {
-			multiError.Collect(err)
-			continue
-		}
 		successProps = append(successProps, k)
 	}
 
@@ -143,11 +138,6 @@ func unsetConfigHandler(_ machine.Client, args json.RawMessage) string {
 	keysToUnset := keys["properties"]
 	for _, key := range keysToUnset {
 		_, err := crcConfig.Unset(key)
-		if err != nil {
-			multiError.Collect(err)
-			continue
-		}
-		err = crcConfig.WriteConfig()
 		if err != nil {
 			multiError.Collect(err)
 			continue
