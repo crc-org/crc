@@ -110,17 +110,6 @@ func InitViper() error {
 	return v.Unmarshal(&changedConfigs)
 }
 
-// setDefault sets the default for a config
-func setDefault(key string, value interface{}) {
-	globalViper.SetDefault(key, value)
-}
-
-func SetDefaults() {
-	for _, setting := range allSettings {
-		setDefault(setting.Name, setting.defaultValue)
-	}
-}
-
 // WriteConfig write config to file
 func WriteConfig() error {
 	// We recreate a new viper instance, as globalViper.WriteConfig()
@@ -159,6 +148,7 @@ func BindFlagSet(flagSet *pflag.FlagSet) error {
 func AddSetting(name string, defValue interface{}, validationFn ValidationFnType, callbackFn SetFn) *Setting {
 	s := Setting{Name: name, defaultValue: defValue, validationFn: validationFn, callbackFn: callbackFn}
 	allSettings[name] = &s
+	globalViper.SetDefault(name, defValue)
 	return &s
 }
 

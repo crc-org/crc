@@ -48,7 +48,6 @@ func init() {
 	cmdConfig.RegisterSettings()
 
 	preflight.RegisterSettings()
-	setConfigDefaults()
 
 	// subcommands
 	rootCmd.AddCommand(cmdConfig.GetConfigCmd())
@@ -79,10 +78,6 @@ func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		logging.Fatal(err)
 	}
-}
-
-func setConfigDefaults() {
-	config.SetDefaults()
 }
 
 func checkIfMachineMissing(client machine.Client, name string) error {
