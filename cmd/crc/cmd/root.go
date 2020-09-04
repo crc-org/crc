@@ -45,6 +45,7 @@ func init() {
 	if err := config.InitViper(); err != nil {
 		logging.Fatal(err.Error())
 	}
+	cmdConfig.RegisterSettings()
 
 	preflight.RegisterSettings()
 	setConfigDefaults()

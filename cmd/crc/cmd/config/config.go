@@ -23,7 +23,7 @@ const (
 	ProxyCAFile          = "proxy-ca-file"
 )
 
-func init() {
+func RegisterSettings() {
 	// Start command settings in config
 	cfg.AddSetting(Bundle, nil, cfg.ValidateBundle, cfg.SuccessfullyApplied)
 	cfg.AddSetting(CPUs, constants.DefaultCPUs, cfg.ValidateCPUs, cfg.RequiresRestartMsg)
