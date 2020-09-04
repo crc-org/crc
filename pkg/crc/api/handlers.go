@@ -33,10 +33,10 @@ func stopHandler(client machine.Client, _ json.RawMessage) string {
 func startHandler(client machine.Client, _ json.RawMessage) string {
 	startConfig := machine.StartConfig{
 		Name:          constants.DefaultName,
-		BundlePath:    crcConfig.Get(config.Bundle.Name).AsString(),
-		Memory:        crcConfig.Get(config.Memory.Name).AsInt(),
-		CPUs:          crcConfig.Get(config.CPUs.Name).AsInt(),
-		NameServer:    crcConfig.Get(config.NameServer.Name).AsString(),
+		BundlePath:    crcConfig.Get(config.Bundle).AsString(),
+		Memory:        crcConfig.Get(config.Memory).AsInt(),
+		CPUs:          crcConfig.Get(config.CPUs).AsInt(),
+		NameServer:    crcConfig.Get(config.NameServer).AsString(),
 		GetPullSecret: getPullSecretFileContent,
 		Debug:         true,
 	}
@@ -55,7 +55,7 @@ func versionHandler(client machine.Client, _ json.RawMessage) string {
 }
 
 func getPullSecretFileContent() (string, error) {
-	data, err := ioutil.ReadFile(crcConfig.Get(config.PullSecretFile.Name).AsString())
+	data, err := ioutil.ReadFile(crcConfig.Get(config.PullSecretFile).AsString())
 	if err != nil {
 		return "", err
 	}
