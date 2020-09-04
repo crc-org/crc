@@ -49,11 +49,6 @@ var (
 	}
 )
 
-func init() {
-	configCmd.Long = `Modifies crc configuration properties.
-Configurable properties (enter after SUBCOMMAND): ` + "\n\n" + configurableFields()
-}
-
 func isPreflightKey(key string) bool {
 	return strings.HasPrefix(key, "skip-") || strings.HasPrefix(key, "warn-")
 }

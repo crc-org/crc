@@ -27,17 +27,19 @@ const (
 	configPropDoesntExistMsg = "Configuration property '%s' does not exist"
 )
 
-var (
+var defaultConfig *Config
+
+type Config struct {
 	globalViper *viper.Viper
 	// changedConfigs holds the config keys/values which have a non
 	// default value (either because they are set in the config file, or
 	// because they were changed at runtime)
 	changedConfigs map[string]interface{}
 	// allSettings holds all the config settings
-	allSettings = make(map[string]*Setting)
-)
+	allSettings map[string]*Setting
+}
 
-func syncViperState(viper *viper.Viper) error {
+func syncViperState(changedConfigs map[string]interface{}, viper *viper.Viper) error {
 	encodedConfig, err := json.MarshalIndent(changedConfigs, "", " ")
 	if err != nil {
 		return fmt.Errorf("Error encoding configuration to JSON: %v", err)
@@ -81,10 +83,9 @@ func ensureConfigFileExists() error {
 	return nil
 }
 
-// InitViper initializes viper
-func InitViper() error {
+func New() (*Config, error) {
 	if err := ensureConfigFileExists(); err != nil {
-		return err
+		return nil, err
 	}
 	v := viper.New()
 	v.SetConfigFile(constants.ConfigPath)
@@ -96,22 +97,36 @@ func InitViper() error {
 	v.SetTypeByDefaultValue(true)
 	err := v.ReadInConfig()
 	if err != nil {
-		return fmt.Errorf("Error reading configuration file '%s': %v", constants.ConfigFile, err)
+		return nil, fmt.Errorf("Error reading configuration file '%s': %v", constants.ConfigFile, err)
 	}
 	v.WatchConfig()
-	globalViper = v
-	return v.Unmarshal(&changedConfigs)
+	changedConfigs := make(map[string]interface{})
+	if err := v.Unmarshal(&changedConfigs); err != nil {
+		return nil, err
+	}
+	return &Config{
+		globalViper:    v,
+		changedConfigs: changedConfigs,
+		allSettings:    make(map[string]*Setting),
+	}, nil
+}
+
+// InitViper initializes viper
+func InitViper() error {
+	var err error
+	defaultConfig, err = New()
+	return err
 }
 
 // WriteConfig write config to file
-func WriteConfig() error {
+func WriteConfig(changedConfigs map[string]interface{}) error {
 	// We recreate a new viper instance, as globalViper.WriteConfig()
 	// writes both default values and set values back to disk while we only
 	// want the latter to be written
 	v := viper.New()
 	v.SetConfigFile(constants.ConfigPath)
 	v.SetConfigType("json")
-	err := syncViperState(v)
+	err := syncViperState(changedConfigs, v)
 	if err != nil {
 		return err
 	}
@@ -124,68 +139,92 @@ func WriteConfig() error {
 // - config with a value set
 // - config with no value set
 func AllConfigs() map[string]SettingValue {
+	return defaultConfig.AllConfigs()
+}
+
+func (c *Config) AllConfigs() map[string]SettingValue {
 	var allConfigs = make(map[string]SettingValue)
-	for key := range allSettings {
-		allConfigs[key] = Get(key)
+	for key := range c.allSettings {
+		allConfigs[key] = c.Get(key)
 	}
 	return allConfigs
 }
 
 // BindFlagset binds a flagset to their respective config properties
 func BindFlagSet(flagSet *pflag.FlagSet) error {
-	return globalViper.BindPFlags(flagSet)
+	return defaultConfig.BindFlagSet(flagSet)
+}
+
+func (c *Config) BindFlagSet(flagSet *pflag.FlagSet) error {
+	return c.globalViper.BindPFlags(flagSet)
 }
 
 // AddSetting returns a filled struct of ConfigSetting
 // takes the config name and default value as arguments
 func AddSetting(name string, defValue interface{}, validationFn ValidationFnType, callbackFn SetFn) *Setting {
+	return defaultConfig.AddSetting(name, defValue, validationFn, callbackFn)
+}
+
+func (c *Config) AddSetting(name string, defValue interface{}, validationFn ValidationFnType, callbackFn SetFn) *Setting {
 	s := Setting{Name: name, defaultValue: defValue, validationFn: validationFn, callbackFn: callbackFn}
-	allSettings[name] = &s
-	globalViper.SetDefault(name, defValue)
+	c.allSettings[name] = &s
+	c.globalViper.SetDefault(name, defValue)
 	return &s
 }
 
 // Set sets the value for a give config key
 func Set(key string, value interface{}) (string, error) {
-	_, ok := allSettings[key]
+	return defaultConfig.Set(key, value)
+}
+
+func (c *Config) Set(key string, value interface{}) (string, error) {
+	_, ok := c.allSettings[key]
 	if !ok {
 		return "", fmt.Errorf(configPropDoesntExistMsg, key)
 	}
 
-	ok, expectedValue := allSettings[key].validationFn(value)
+	ok, expectedValue := c.allSettings[key].validationFn(value)
 	if !ok {
 		return "", fmt.Errorf("Value '%s' for configuration property '%s' is invalid, reason: %s", value, key, expectedValue)
 	}
 
-	globalViper.Set(key, value)
-	changedConfigs[key] = value
+	c.globalViper.Set(key, value)
+	c.changedConfigs[key] = value
 
-	return allSettings[key].callbackFn(key, value), WriteConfig()
+	return c.allSettings[key].callbackFn(key, value), WriteConfig(c.changedConfigs)
 }
 
 // Unset unsets a given config key
 func Unset(key string) (string, error) {
-	_, ok := allSettings[key]
+	return defaultConfig.Unset(key)
+}
+
+func (c *Config) Unset(key string) (string, error) {
+	_, ok := c.allSettings[key]
 	if !ok {
 		return "", fmt.Errorf(configPropDoesntExistMsg, key)
 	}
 
-	delete(changedConfigs, key)
-	if err := syncViperState(globalViper); err != nil {
+	delete(c.changedConfigs, key)
+	if err := syncViperState(c.changedConfigs, c.globalViper); err != nil {
 		return "", fmt.Errorf("Error unsetting configuration property '%s': %v", key, err)
 	}
 
-	return fmt.Sprintf("Successfully unset configuration property '%s'", key), WriteConfig()
+	return fmt.Sprintf("Successfully unset configuration property '%s'", key), WriteConfig(c.changedConfigs)
 }
 
 func Get(key string) SettingValue {
-	setting, ok := allSettings[key]
-	if !ok || globalViper == nil {
+	return defaultConfig.Get(key)
+}
+
+func (c *Config) Get(key string) SettingValue {
+	setting, ok := c.allSettings[key]
+	if !ok || c.globalViper == nil {
 		return SettingValue{
 			Invalid: true,
 		}
 	}
-	value := globalViper.Get(key)
+	value := c.globalViper.Get(key)
 	if value == nil {
 		value = setting.defaultValue
 	}
