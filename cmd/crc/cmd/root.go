@@ -39,9 +39,6 @@ func init() {
 	if err := constants.EnsureBaseDirExists(); err != nil {
 		logging.Fatal(err.Error())
 	}
-	if err := config.EnsureConfigFileExists(); err != nil {
-		logging.Fatal(err.Error())
-	}
 	if err := config.InitViper(); err != nil {
 		logging.Fatal(err.Error())
 	}
