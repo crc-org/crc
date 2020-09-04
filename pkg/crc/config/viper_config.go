@@ -177,11 +177,6 @@ func AllConfigs() map[string]interface{} {
 	return allConfigs
 }
 
-// BindFlags binds flags to config properties
-func BindFlag(key string, flag *pflag.Flag) error {
-	return globalViper.BindPFlag(key, flag)
-}
-
 // BindFlagset binds a flagset to their respective config properties
 func BindFlagSet(flagSet *pflag.FlagSet) error {
 	return globalViper.BindPFlags(flagSet)
