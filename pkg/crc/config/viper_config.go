@@ -67,8 +67,8 @@ func (v SettingValue) AsInt() int {
 	return cast.ToInt(v.Value)
 }
 
-// EnsureConfigFileExists creates the viper config file if it does not exists
-func EnsureConfigFileExists() error {
+// ensureConfigFileExists creates the viper config file if it does not exists
+func ensureConfigFileExists() error {
 	_, err := os.Stat(constants.ConfigPath)
 	if err != nil {
 		f, err := os.Create(constants.ConfigPath)
@@ -83,6 +83,9 @@ func EnsureConfigFileExists() error {
 
 // InitViper initializes viper
 func InitViper() error {
+	if err := ensureConfigFileExists(); err != nil {
+		return err
+	}
 	v := viper.New()
 	v.SetConfigFile(constants.ConfigPath)
 	v.SetConfigType("json")

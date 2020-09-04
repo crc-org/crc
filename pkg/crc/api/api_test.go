@@ -102,8 +102,6 @@ func TestSetconfigApi(t *testing.T) {
 	// setup viper
 	err := constants.EnsureBaseDirExists()
 	assert.NoError(t, err)
-	err = config.EnsureConfigFileExists()
-	assert.NoError(t, err)
 	err = config.InitViper()
 	assert.NoError(t, err)
 	cmdConfig.RegisterSettings()
@@ -136,8 +134,6 @@ func TestSetconfigApi(t *testing.T) {
 func TestGetconfigApi(t *testing.T) {
 	// setup viper
 	err := constants.EnsureBaseDirExists()
-	assert.NoError(t, err)
-	err = config.EnsureConfigFileExists()
 	assert.NoError(t, err)
 	err = config.InitViper()
 	assert.NoError(t, err)
