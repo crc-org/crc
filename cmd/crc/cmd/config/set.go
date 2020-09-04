@@ -2,7 +2,6 @@ package config
 
 import (
 	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/spf13/cobra"
@@ -28,10 +27,6 @@ func runConfigSet(key string, value interface{}) {
 	setMessage, err := config.Set(key, value)
 	if err != nil {
 		exit.WithMessage(1, err.Error())
-	}
-
-	if err := config.WriteConfig(); err != nil {
-		exit.WithMessage(1, "Error writing configuration to file '%s': %s", constants.ConfigPath, err.Error())
 	}
 
 	if setMessage != "" {
