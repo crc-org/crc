@@ -37,16 +37,17 @@ type Config struct {
 	changedConfigs map[string]interface{}
 	// allSettings holds all the config settings
 	allSettings map[string]*Setting
+	configFile  string
 }
 
-func syncViperState(changedConfigs map[string]interface{}, viper *viper.Viper) error {
+func syncViperState(configFile string, changedConfigs map[string]interface{}, viper *viper.Viper) error {
 	encodedConfig, err := json.MarshalIndent(changedConfigs, "", " ")
 	if err != nil {
 		return fmt.Errorf("Error encoding configuration to JSON: %v", err)
 	}
 	err = viper.ReadConfig(bytes.NewBuffer(encodedConfig))
 	if err != nil {
-		return fmt.Errorf("Error reading configuration file '%s': %v", constants.ConfigFile, err)
+		return fmt.Errorf("Error reading configuration file '%s': %v", configFile, err)
 	}
 	return nil
 }
@@ -70,10 +71,10 @@ func (v SettingValue) AsInt() int {
 }
 
 // ensureConfigFileExists creates the viper config file if it does not exists
-func ensureConfigFileExists() error {
-	_, err := os.Stat(constants.ConfigPath)
+func ensureConfigFileExists(configFile string) error {
+	_, err := os.Stat(configFile)
 	if err != nil {
-		f, err := os.Create(constants.ConfigPath)
+		f, err := os.Create(configFile)
 		if err == nil {
 			_, err = f.WriteString("{}")
 			f.Close()
@@ -83,21 +84,21 @@ func ensureConfigFileExists() error {
 	return nil
 }
 
-func New() (*Config, error) {
-	if err := ensureConfigFileExists(); err != nil {
+func New(configFile, envPrefix string) (*Config, error) {
+	if err := ensureConfigFileExists(configFile); err != nil {
 		return nil, err
 	}
 	v := viper.New()
-	v.SetConfigFile(constants.ConfigPath)
+	v.SetConfigFile(configFile)
 	v.SetConfigType("json")
-	v.SetEnvPrefix(constants.CrcEnvPrefix)
+	v.SetEnvPrefix(envPrefix)
 	// Replaces '-' in flags with '_' in env variables
 	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	v.AutomaticEnv()
 	v.SetTypeByDefaultValue(true)
 	err := v.ReadInConfig()
 	if err != nil {
-		return nil, fmt.Errorf("Error reading configuration file '%s': %v", constants.ConfigFile, err)
+		return nil, fmt.Errorf("Error reading configuration file '%s': %v", configFile, err)
 	}
 	v.WatchConfig()
 	changedConfigs := make(map[string]interface{})
@@ -108,25 +109,26 @@ func New() (*Config, error) {
 		globalViper:    v,
 		changedConfigs: changedConfigs,
 		allSettings:    make(map[string]*Setting),
+		configFile:     configFile,
 	}, nil
 }
 
 // InitViper initializes viper
 func InitViper() error {
 	var err error
-	defaultConfig, err = New()
+	defaultConfig, err = New(constants.ConfigPath, constants.CrcEnvPrefix)
 	return err
 }
 
 // WriteConfig write config to file
-func WriteConfig(changedConfigs map[string]interface{}) error {
+func writeConfig(configFile string, changedConfigs map[string]interface{}) error {
 	// We recreate a new viper instance, as globalViper.WriteConfig()
 	// writes both default values and set values back to disk while we only
 	// want the latter to be written
 	v := viper.New()
-	v.SetConfigFile(constants.ConfigPath)
+	v.SetConfigFile(configFile)
 	v.SetConfigType("json")
-	err := syncViperState(changedConfigs, v)
+	err := syncViperState(configFile, changedConfigs, v)
 	if err != nil {
 		return err
 	}
@@ -191,7 +193,7 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 	c.globalViper.Set(key, value)
 	c.changedConfigs[key] = value
 
-	return c.allSettings[key].callbackFn(key, value), WriteConfig(c.changedConfigs)
+	return c.allSettings[key].callbackFn(key, value), writeConfig(c.configFile, c.changedConfigs)
 }
 
 // Unset unsets a given config key
@@ -206,11 +208,11 @@ func (c *Config) Unset(key string) (string, error) {
 	}
 
 	delete(c.changedConfigs, key)
-	if err := syncViperState(c.changedConfigs, c.globalViper); err != nil {
+	if err := syncViperState(c.configFile, c.changedConfigs, c.globalViper); err != nil {
 		return "", fmt.Errorf("Error unsetting configuration property '%s': %v", key, err)
 	}
 
-	return fmt.Sprintf("Successfully unset configuration property '%s'", key), WriteConfig(c.changedConfigs)
+	return fmt.Sprintf("Successfully unset configuration property '%s'", key), writeConfig(c.configFile, c.changedConfigs)
 }
 
 func Get(key string) SettingValue {
