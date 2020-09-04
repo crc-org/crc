@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	setupCmd.Flags().Bool(config.ExperimentalFeatures.Name, false, "Allow the use of experimental features")
+	setupCmd.Flags().Bool(config.ExperimentalFeatures, false, "Allow the use of experimental features")
 	addOutputFormatFlag(setupCmd)
 	rootCmd.AddCommand(setupCmd)
 }
@@ -35,7 +35,7 @@ var setupCmd = &cobra.Command{
 }
 
 func runSetup(arguments []string) error {
-	if crcConfig.Get(config.ExperimentalFeatures.Name).AsBool() {
+	if crcConfig.Get(config.ExperimentalFeatures).AsBool() {
 		preflight.EnableExperimentalFeatures = true
 	}
 	err := preflight.SetupHost()

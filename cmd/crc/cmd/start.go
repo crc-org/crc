@@ -27,12 +27,12 @@ func init() {
 	addOutputFormatFlag(startCmd)
 
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
-	flagSet.StringP(config.Bundle.Name, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster")
-	flagSet.StringP(config.PullSecretFile.Name, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
-	flagSet.IntP(config.CPUs.Name, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the OpenShift cluster")
-	flagSet.IntP(config.Memory.Name, "m", constants.DefaultMemory, "MiB of memory to allocate to the OpenShift cluster")
-	flagSet.StringP(config.NameServer.Name, "n", "", "IPv4 address of nameserver to use for the OpenShift cluster")
-	flagSet.Bool(config.DisableUpdateCheck.Name, false, "Don't check for update")
+	flagSet.StringP(config.Bundle, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster")
+	flagSet.StringP(config.PullSecretFile, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
+	flagSet.IntP(config.CPUs, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the OpenShift cluster")
+	flagSet.IntP(config.Memory, "m", constants.DefaultMemory, "MiB of memory to allocate to the OpenShift cluster")
+	flagSet.StringP(config.NameServer, "n", "", "IPv4 address of nameserver to use for the OpenShift cluster")
+	flagSet.Bool(config.DisableUpdateCheck, false, "Don't check for update")
 
 	startCmd.Flags().AddFlagSet(flagSet)
 }
@@ -56,7 +56,7 @@ func runStart(arguments []string) (*machine.StartResult, error) {
 		return nil, err
 	}
 
-	checkIfNewVersionAvailable(crcConfig.Get(config.DisableUpdateCheck.Name).AsBool())
+	checkIfNewVersionAvailable(crcConfig.Get(config.DisableUpdateCheck).AsBool())
 
 	if err := preflight.StartPreflightChecks(); err != nil {
 		return nil, err
@@ -64,10 +64,10 @@ func runStart(arguments []string) (*machine.StartResult, error) {
 
 	startConfig := machine.StartConfig{
 		Name:          constants.DefaultName,
-		BundlePath:    crcConfig.Get(config.Bundle.Name).AsString(),
-		Memory:        crcConfig.Get(config.Memory.Name).AsInt(),
-		CPUs:          crcConfig.Get(config.CPUs.Name).AsInt(),
-		NameServer:    crcConfig.Get(config.NameServer.Name).AsString(),
+		BundlePath:    crcConfig.Get(config.Bundle).AsString(),
+		Memory:        crcConfig.Get(config.Memory).AsInt(),
+		CPUs:          crcConfig.Get(config.CPUs).AsInt(),
+		NameServer:    crcConfig.Get(config.NameServer).AsString(),
 		GetPullSecret: getPullSecretFileContent,
 		Debug:         isDebugLog(),
 	}
@@ -154,17 +154,17 @@ func isDebugLog() bool {
 }
 
 func validateStartFlags() error {
-	if err := validation.ValidateMemory(crcConfig.Get(config.Memory.Name).AsInt()); err != nil {
+	if err := validation.ValidateMemory(crcConfig.Get(config.Memory).AsInt()); err != nil {
 		return err
 	}
-	if err := validation.ValidateCPUs(crcConfig.Get(config.CPUs.Name).AsInt()); err != nil {
+	if err := validation.ValidateCPUs(crcConfig.Get(config.CPUs).AsInt()); err != nil {
 		return err
 	}
-	if err := validation.ValidateBundle(crcConfig.Get(config.Bundle.Name).AsString()); err != nil {
+	if err := validation.ValidateBundle(crcConfig.Get(config.Bundle).AsString()); err != nil {
 		return err
 	}
-	if crcConfig.Get(config.NameServer.Name).AsString() != "" {
-		if err := validation.ValidateIPAddress(crcConfig.Get(config.NameServer.Name).AsString()); err != nil {
+	if crcConfig.Get(config.NameServer).AsString() != "" {
+		if err := validation.ValidateIPAddress(crcConfig.Get(config.NameServer).AsString()); err != nil {
 			return err
 		}
 	}
@@ -178,7 +178,7 @@ func getPullSecretFileContent() (string, error) {
 	)
 
 	// In case user doesn't provide a file in start command or in config then ask for it.
-	if crcConfig.Get(config.PullSecretFile.Name).AsString() == "" {
+	if crcConfig.Get(config.PullSecretFile).AsString() == "" {
 		pullsecret, err = input.PromptUserForSecret("Image pull secret", fmt.Sprintf("Copy it from %s", constants.CrcLandingPageURL))
 		// This is just to provide a new line after user enter the pull secret.
 		fmt.Println()
@@ -187,7 +187,7 @@ func getPullSecretFileContent() (string, error) {
 		}
 	} else {
 		// Read the file content
-		data, err := ioutil.ReadFile(crcConfig.Get(config.PullSecretFile.Name).AsString())
+		data, err := ioutil.ReadFile(crcConfig.Get(config.PullSecretFile).AsString())
 		if err != nil {
 			return "", errors.New(err.Error())
 		}

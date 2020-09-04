@@ -9,25 +9,35 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	// Start command settings in config
-
-	Bundle         = cfg.AddSetting("bundle", nil, cfg.ValidateBundle, cfg.SuccessfullyApplied)
-	CPUs           = cfg.AddSetting("cpus", constants.DefaultCPUs, cfg.ValidateCPUs, cfg.RequiresRestartMsg)
-	Memory         = cfg.AddSetting("memory", constants.DefaultMemory, cfg.ValidateMemory, cfg.RequiresRestartMsg)
-	NameServer     = cfg.AddSetting("nameserver", nil, cfg.ValidateIPAddress, cfg.SuccessfullyApplied)
-	PullSecretFile = cfg.AddSetting("pull-secret-file", nil, cfg.ValidatePath, cfg.SuccessfullyApplied)
-
-	DisableUpdateCheck   = cfg.AddSetting("disable-update-check", nil, cfg.ValidateBool, cfg.SuccessfullyApplied)
-	ExperimentalFeatures = cfg.AddSetting("enable-experimental-features", nil, cfg.ValidateBool, cfg.SuccessfullyApplied)
-
-	// Proxy Configuration
-
-	HTTPProxy   = cfg.AddSetting("http-proxy", nil, cfg.ValidateURI, cfg.SuccessfullyApplied)
-	HTTPSProxy  = cfg.AddSetting("https-proxy", nil, cfg.ValidateURI, cfg.SuccessfullyApplied)
-	NoProxy     = cfg.AddSetting("no-proxy", nil, cfg.ValidateNoProxy, cfg.SuccessfullyApplied)
-	ProxyCAFile = cfg.AddSetting("proxy-ca-file", nil, cfg.ValidatePath, cfg.SuccessfullyApplied)
+const (
+	Bundle               = "bundle"
+	CPUs                 = "cpus"
+	Memory               = "memory"
+	NameServer           = "nameserver"
+	PullSecretFile       = "pull-secret-file"
+	DisableUpdateCheck   = "disable-update-check"
+	ExperimentalFeatures = "enable-experimental-features"
+	HTTPProxy            = "http-proxy"
+	HTTPSProxy           = "https-proxy"
+	NoProxy              = "no-proxy"
+	ProxyCAFile          = "proxy-ca-file"
 )
+
+func init() {
+	// Start command settings in config
+	cfg.AddSetting(Bundle, nil, cfg.ValidateBundle, cfg.SuccessfullyApplied)
+	cfg.AddSetting(CPUs, constants.DefaultCPUs, cfg.ValidateCPUs, cfg.RequiresRestartMsg)
+	cfg.AddSetting(Memory, constants.DefaultMemory, cfg.ValidateMemory, cfg.RequiresRestartMsg)
+	cfg.AddSetting(NameServer, nil, cfg.ValidateIPAddress, cfg.SuccessfullyApplied)
+	cfg.AddSetting(PullSecretFile, nil, cfg.ValidatePath, cfg.SuccessfullyApplied)
+	cfg.AddSetting(DisableUpdateCheck, nil, cfg.ValidateBool, cfg.SuccessfullyApplied)
+	// Proxy Configuration
+	cfg.AddSetting(ExperimentalFeatures, nil, cfg.ValidateBool, cfg.SuccessfullyApplied)
+	cfg.AddSetting(HTTPProxy, nil, cfg.ValidateURI, cfg.SuccessfullyApplied)
+	cfg.AddSetting(HTTPSProxy, nil, cfg.ValidateURI, cfg.SuccessfullyApplied)
+	cfg.AddSetting(NoProxy, nil, cfg.ValidateNoProxy, cfg.SuccessfullyApplied)
+	cfg.AddSetting(ProxyCAFile, nil, cfg.ValidatePath, cfg.SuccessfullyApplied)
+}
 
 var (
 	configCmd = &cobra.Command{
