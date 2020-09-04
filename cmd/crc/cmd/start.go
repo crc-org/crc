@@ -35,8 +35,6 @@ func init() {
 	flagSet.Bool(config.DisableUpdateCheck.Name, false, "Don't check for update")
 
 	startCmd.Flags().AddFlagSet(flagSet)
-
-	_ = crcConfig.BindFlagSet(startCmd.Flags())
 }
 
 var startCmd = &cobra.Command{
@@ -44,6 +42,9 @@ var startCmd = &cobra.Command{
 	Short: "Start the OpenShift cluster",
 	Long:  "Start the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
+		if err := crcConfig.BindFlagSet(cmd.Flags()); err != nil {
+			exit.WithMessage(1, err.Error())
+		}
 		if err := renderStartResult(runStart(args)); err != nil {
 			exit.WithMessage(1, err.Error())
 		}
