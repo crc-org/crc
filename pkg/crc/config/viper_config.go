@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/spf13/cast"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -60,6 +62,24 @@ func syncViperState(viper *viper.Viper) error {
 func unset(key string) error {
 	delete(changedConfigs, key)
 	return syncViperState(globalViper)
+}
+
+type SettingValue struct {
+	Value     interface{}
+	Invalid   bool
+	IsDefault bool
+}
+
+func (v SettingValue) AsBool() bool {
+	return cast.ToBool(v.Value)
+}
+
+func (v SettingValue) AsString() string {
+	return cast.ToString(v.Value)
+}
+
+func (v SettingValue) AsInt() int {
+	return cast.ToInt(v.Value)
 }
 
 // GetString return the value of a key in string
@@ -148,11 +168,11 @@ func AllConfigs() map[string]interface{} {
 	var allConfigs = make(map[string]interface{})
 
 	for key := range allSettings {
-		v, err := Get(key)
-		if err != nil {
+		v := Get(key)
+		if v.Invalid {
 			allConfigs[key] = nil
 		}
-		allConfigs[key] = v
+		allConfigs[key] = v.Value
 	}
 	return allConfigs
 }
@@ -228,16 +248,19 @@ func Unset(key string) (string, error) {
 	return fmt.Sprintf("Successfully unset configuration property '%s'", key), nil
 }
 
-func Get(key string) (interface{}, error) {
-	_, ok := allSettings[key]
-	if !ok {
-		return "", fmt.Errorf(configPropDoesntExistMsg, key)
+func Get(key string) SettingValue {
+	setting, ok := allSettings[key]
+	if !ok || globalViper == nil {
+		return SettingValue{
+			Invalid: true,
+		}
 	}
-
-	v, ok := changedConfigs[key]
-	if !ok {
-		return nil, fmt.Errorf("Configuration property '%s' is not set", key)
+	value := globalViper.Get(key)
+	if value == nil {
+		value = setting.defaultValue
 	}
-
-	return v, nil
+	return SettingValue{
+		Value:     value,
+		IsDefault: reflect.DeepEqual(setting.defaultValue, value),
+	}
 }

@@ -183,11 +183,11 @@ func getConfigHandler(_ machine.Client, args json.RawMessage) string {
 	var configs = make(map[string]interface{})
 
 	for _, key := range keys {
-		v, err := crcConfig.Get(key)
-		if err != nil {
+		v := crcConfig.Get(key)
+		if v.Invalid {
 			continue
 		}
-		configs[key] = v
+		configs[key] = v.Value
 	}
 	if len(configs) == 0 {
 		configResult.Error = "Unable to get configs"

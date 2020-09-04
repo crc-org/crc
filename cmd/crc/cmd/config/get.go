@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/output"
@@ -24,9 +26,13 @@ var configGetCmd = &cobra.Command{
 }
 
 func runConfigGet(key string) {
-	v, err := config.Get(key)
-	if err != nil {
-		exit.WithMessage(1, err.Error())
+	v := config.Get(key)
+	switch {
+	case v.Invalid:
+		exit.WithMessage(1, fmt.Sprintf("Configuration property '%s' does not exist", key))
+	case v.IsDefault:
+		exit.WithMessage(1, fmt.Sprintf("Configuration property '%s' is not set. Default value is '%s'", key, v.AsString()))
+	default:
+		output.Outln(key, ":", v.AsString())
 	}
-	output.Outln(key, ":", v)
 }
