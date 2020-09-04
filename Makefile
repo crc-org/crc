@@ -74,7 +74,7 @@ vendorcheck:
 
 .PHONY: install
 install: $(SOURCES)
-	go install -ldflags="$(VERSION_VARIABLES)" ./cmd/crc
+	go install -ldflags="$(LDFLAGS)" ./cmd/crc
 
 $(BUILD_DIR)/macos-amd64/crc: $(SOURCES)
 	GOARCH=amd64 GOOS=darwin go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/macos-amd64/crc ./cmd/crc
