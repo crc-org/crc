@@ -14,15 +14,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-type SetFn func(string, interface{}) string
-
-type Setting struct {
-	Name         string
-	defaultValue interface{}
-	validationFn ValidationFnType
-	callbackFn   SetFn
-}
-
 const (
 	configPropDoesntExistMsg = "Configuration property '%s' does not exist"
 )
@@ -34,24 +25,6 @@ type Config struct {
 	// allSettings holds all the config settings
 	allSettings map[string]*Setting
 	configFile  string
-}
-
-type SettingValue struct {
-	Value     interface{}
-	Invalid   bool
-	IsDefault bool
-}
-
-func (v SettingValue) AsBool() bool {
-	return cast.ToBool(v.Value)
-}
-
-func (v SettingValue) AsString() string {
-	return cast.ToString(v.Value)
-}
-
-func (v SettingValue) AsInt() int {
-	return cast.ToInt(v.Value)
 }
 
 // ensureConfigFileExists creates the viper config file if it does not exists

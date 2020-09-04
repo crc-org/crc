@@ -10,9 +10,6 @@ import (
 	"github.com/spf13/cast"
 )
 
-// validationFnType takes the key, value as args and checks if valid
-type ValidationFnType func(interface{}) (bool, string)
-
 // ValidateBool is a fail safe in the case user
 // makes a typo for boolean config values
 func ValidateBool(value interface{}) (bool, string) {
