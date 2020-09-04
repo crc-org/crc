@@ -47,7 +47,7 @@ func (check *Check) shouldSkip() bool {
 	if check.configKeySuffix == "" {
 		return false
 	}
-	return cfg.GetBool(check.getSkipConfigName())
+	return cfg.Get(check.getSkipConfigName()).AsBool()
 }
 
 func (check *Check) getWarnConfigName() string {
@@ -61,7 +61,7 @@ func (check *Check) shouldWarn() bool {
 	if check.configKeySuffix == "" {
 		return false
 	}
-	return cfg.GetBool(check.getWarnConfigName())
+	return cfg.Get(check.getWarnConfigName()).AsBool()
 }
 
 func (check *Check) doCheck() error {

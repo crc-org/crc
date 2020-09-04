@@ -96,10 +96,10 @@ func checkIfMachineMissing(client machine.Client, name string) error {
 }
 
 func setProxyDefaults() {
-	httpProxy := config.GetString(cmdConfig.HTTPProxy.Name)
-	httpsProxy := config.GetString(cmdConfig.HTTPSProxy.Name)
-	noProxy := config.GetString(cmdConfig.NoProxy.Name)
-	proxyCAFile := config.GetString(cmdConfig.ProxyCAFile.Name)
+	httpProxy := config.Get(cmdConfig.HTTPProxy.Name).AsString()
+	httpsProxy := config.Get(cmdConfig.HTTPSProxy.Name).AsString()
+	noProxy := config.Get(cmdConfig.NoProxy.Name).AsString()
+	proxyCAFile := config.Get(cmdConfig.ProxyCAFile.Name).AsString()
 
 	proxyCAData, err := getProxyCAData(proxyCAFile)
 	if err != nil {

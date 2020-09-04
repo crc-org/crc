@@ -56,7 +56,7 @@ func runStart(arguments []string) (*machine.StartResult, error) {
 		return nil, err
 	}
 
-	checkIfNewVersionAvailable(crcConfig.GetBool(config.DisableUpdateCheck.Name))
+	checkIfNewVersionAvailable(crcConfig.Get(config.DisableUpdateCheck.Name).AsBool())
 
 	if err := preflight.StartPreflightChecks(); err != nil {
 		return nil, err
@@ -64,10 +64,10 @@ func runStart(arguments []string) (*machine.StartResult, error) {
 
 	startConfig := machine.StartConfig{
 		Name:          constants.DefaultName,
-		BundlePath:    crcConfig.GetString(config.Bundle.Name),
-		Memory:        crcConfig.GetInt(config.Memory.Name),
-		CPUs:          crcConfig.GetInt(config.CPUs.Name),
-		NameServer:    crcConfig.GetString(config.NameServer.Name),
+		BundlePath:    crcConfig.Get(config.Bundle.Name).AsString(),
+		Memory:        crcConfig.Get(config.Memory.Name).AsInt(),
+		CPUs:          crcConfig.Get(config.CPUs.Name).AsInt(),
+		NameServer:    crcConfig.Get(config.NameServer.Name).AsString(),
 		GetPullSecret: getPullSecretFileContent,
 		Debug:         isDebugLog(),
 	}
@@ -154,17 +154,17 @@ func isDebugLog() bool {
 }
 
 func validateStartFlags() error {
-	if err := validation.ValidateMemory(crcConfig.GetInt(config.Memory.Name)); err != nil {
+	if err := validation.ValidateMemory(crcConfig.Get(config.Memory.Name).AsInt()); err != nil {
 		return err
 	}
-	if err := validation.ValidateCPUs(crcConfig.GetInt(config.CPUs.Name)); err != nil {
+	if err := validation.ValidateCPUs(crcConfig.Get(config.CPUs.Name).AsInt()); err != nil {
 		return err
 	}
-	if err := validation.ValidateBundle(crcConfig.GetString(config.Bundle.Name)); err != nil {
+	if err := validation.ValidateBundle(crcConfig.Get(config.Bundle.Name).AsString()); err != nil {
 		return err
 	}
-	if crcConfig.GetString(config.NameServer.Name) != "" {
-		if err := validation.ValidateIPAddress(crcConfig.GetString(config.NameServer.Name)); err != nil {
+	if crcConfig.Get(config.NameServer.Name).AsString() != "" {
+		if err := validation.ValidateIPAddress(crcConfig.Get(config.NameServer.Name).AsString()); err != nil {
 			return err
 		}
 	}
@@ -178,7 +178,7 @@ func getPullSecretFileContent() (string, error) {
 	)
 
 	// In case user doesn't provide a file in start command or in config then ask for it.
-	if crcConfig.GetString(config.PullSecretFile.Name) == "" {
+	if crcConfig.Get(config.PullSecretFile.Name).AsString() == "" {
 		pullsecret, err = input.PromptUserForSecret("Image pull secret", fmt.Sprintf("Copy it from %s", constants.CrcLandingPageURL))
 		// This is just to provide a new line after user enter the pull secret.
 		fmt.Println()
@@ -187,7 +187,7 @@ func getPullSecretFileContent() (string, error) {
 		}
 	} else {
 		// Read the file content
-		data, err := ioutil.ReadFile(crcConfig.GetString(config.PullSecretFile.Name))
+		data, err := ioutil.ReadFile(crcConfig.Get(config.PullSecretFile.Name).AsString())
 		if err != nil {
 			return "", errors.New(err.Error())
 		}
