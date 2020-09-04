@@ -164,7 +164,7 @@ func TestGetconfigApi(t *testing.T) {
 	assert.NoError(t, json.Unmarshal(payload[:n], &getconfigRes))
 
 	configs := make(map[string]interface{})
-	configs["cpus"] = "5"
+	configs["cpus"] = 5.0
 
 	assert.Equal(t, getConfigResult{
 		Error:   "",
