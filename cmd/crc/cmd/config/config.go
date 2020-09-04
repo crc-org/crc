@@ -12,21 +12,21 @@ import (
 var (
 	// Start command settings in config
 
-	Bundle         = cfg.AddSetting("bundle", nil, []cfg.ValidationFnType{cfg.ValidateBundle}, []cfg.SetFn{cfg.SuccessfullyApplied})
-	CPUs           = cfg.AddSetting("cpus", constants.DefaultCPUs, []cfg.ValidationFnType{cfg.ValidateCPUs}, []cfg.SetFn{cfg.RequiresRestartMsg})
-	Memory         = cfg.AddSetting("memory", constants.DefaultMemory, []cfg.ValidationFnType{cfg.ValidateMemory}, []cfg.SetFn{cfg.RequiresRestartMsg})
-	NameServer     = cfg.AddSetting("nameserver", nil, []cfg.ValidationFnType{cfg.ValidateIPAddress}, []cfg.SetFn{cfg.SuccessfullyApplied})
-	PullSecretFile = cfg.AddSetting("pull-secret-file", nil, []cfg.ValidationFnType{cfg.ValidatePath}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	Bundle         = cfg.AddSetting("bundle", nil, cfg.ValidateBundle, cfg.SuccessfullyApplied)
+	CPUs           = cfg.AddSetting("cpus", constants.DefaultCPUs, cfg.ValidateCPUs, cfg.RequiresRestartMsg)
+	Memory         = cfg.AddSetting("memory", constants.DefaultMemory, cfg.ValidateMemory, cfg.RequiresRestartMsg)
+	NameServer     = cfg.AddSetting("nameserver", nil, cfg.ValidateIPAddress, cfg.SuccessfullyApplied)
+	PullSecretFile = cfg.AddSetting("pull-secret-file", nil, cfg.ValidatePath, cfg.SuccessfullyApplied)
 
-	DisableUpdateCheck   = cfg.AddSetting("disable-update-check", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
-	ExperimentalFeatures = cfg.AddSetting("enable-experimental-features", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	DisableUpdateCheck   = cfg.AddSetting("disable-update-check", nil, cfg.ValidateBool, cfg.SuccessfullyApplied)
+	ExperimentalFeatures = cfg.AddSetting("enable-experimental-features", nil, cfg.ValidateBool, cfg.SuccessfullyApplied)
 
 	// Proxy Configuration
 
-	HTTPProxy   = cfg.AddSetting("http-proxy", nil, []cfg.ValidationFnType{cfg.ValidateURI}, []cfg.SetFn{cfg.SuccessfullyApplied})
-	HTTPSProxy  = cfg.AddSetting("https-proxy", nil, []cfg.ValidationFnType{cfg.ValidateURI}, []cfg.SetFn{cfg.SuccessfullyApplied})
-	NoProxy     = cfg.AddSetting("no-proxy", nil, []cfg.ValidationFnType{cfg.ValidateNoProxy}, []cfg.SetFn{cfg.SuccessfullyApplied})
-	ProxyCAFile = cfg.AddSetting("proxy-ca-file", nil, []cfg.ValidationFnType{cfg.ValidatePath}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	HTTPProxy   = cfg.AddSetting("http-proxy", nil, cfg.ValidateURI, cfg.SuccessfullyApplied)
+	HTTPSProxy  = cfg.AddSetting("https-proxy", nil, cfg.ValidateURI, cfg.SuccessfullyApplied)
+	NoProxy     = cfg.AddSetting("no-proxy", nil, cfg.ValidateNoProxy, cfg.SuccessfullyApplied)
+	ProxyCAFile = cfg.AddSetting("proxy-ca-file", nil, cfg.ValidatePath, cfg.SuccessfullyApplied)
 )
 
 var (

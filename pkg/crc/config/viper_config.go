@@ -14,13 +14,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-type SetFn func(string, string) string
+type SetFn func(string, interface{}) string
 
 type Setting struct {
-	Name          string
-	defaultValue  interface{}
-	validationFns []ValidationFnType
-	callbackFns   []SetFn
+	Name         string
+	defaultValue interface{}
+	validationFn ValidationFnType
+	callbackFn   SetFn
 }
 
 const (
@@ -169,27 +169,10 @@ func BindFlagSet(flagSet *pflag.FlagSet) error {
 
 // AddSetting returns a filled struct of ConfigSetting
 // takes the config name and default value as arguments
-func AddSetting(name string, defValue interface{}, validationFn []ValidationFnType, callbackFn []SetFn) *Setting {
-	s := Setting{Name: name, defaultValue: defValue, validationFns: validationFn, callbackFns: callbackFn}
+func AddSetting(name string, defValue interface{}, validationFn ValidationFnType, callbackFn SetFn) *Setting {
+	s := Setting{Name: name, defaultValue: defValue, validationFn: validationFn, callbackFn: callbackFn}
 	allSettings[name] = &s
 	return &s
-}
-
-func runValidations(validations []ValidationFnType, value interface{}) (bool, string) {
-	for _, fn := range validations {
-		ok, expectedValue := fn(value)
-		if !ok {
-			return false, expectedValue
-		}
-	}
-	return true, ""
-}
-
-func runCallbacks(callbacks []SetFn, key interface{}, value interface{}) string {
-	for _, fn := range callbacks {
-		return fn(key.(string), value.(string))
-	}
-	return ""
 }
 
 // Set sets the value for a give config key
@@ -199,14 +182,14 @@ func Set(key string, value interface{}) (string, error) {
 		return "", fmt.Errorf(configPropDoesntExistMsg, key)
 	}
 
-	ok, expectedValue := runValidations(allSettings[key].validationFns, value)
+	ok, expectedValue := allSettings[key].validationFn(value)
 	if !ok {
 		return "", fmt.Errorf("Value '%s' for configuration property '%s' is invalid, reason: %s", value, key, expectedValue)
 	}
 
 	set(key, value)
 
-	callbackMsg := runCallbacks(allSettings[key].callbackFns, key, value)
+	callbackMsg := allSettings[key].callbackFn(key, value)
 	if callbackMsg != "" {
 		return callbackMsg, nil
 	}
