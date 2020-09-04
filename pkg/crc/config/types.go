@@ -2,6 +2,17 @@ package config
 
 import "github.com/spf13/cast"
 
+type Storage interface {
+	Get(key string) SettingValue
+	Set(key string, value interface{}) (string, error)
+	Unset(key string) (string, error)
+	AllConfigs() map[string]SettingValue
+}
+
+type Schema interface {
+	AddSetting(name string, defValue interface{}, validationFn ValidationFnType, callbackFn SetFn)
+}
+
 type Setting struct {
 	Name         string
 	defaultValue interface{}

@@ -15,13 +15,13 @@ import (
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
-func statusHandler(client machine.Client, _ json.RawMessage) string {
+func statusHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.RawMessage) string {
 	statusConfig := machine.ClusterStatusConfig{Name: constants.DefaultName}
 	clusterStatus, _ := client.Status(statusConfig)
 	return encodeStructToJSON(clusterStatus)
 }
 
-func stopHandler(client machine.Client, _ json.RawMessage) string {
+func stopHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.RawMessage) string {
 	stopConfig := machine.StopConfig{
 		Name:  constants.DefaultName,
 		Debug: true,
@@ -30,21 +30,21 @@ func stopHandler(client machine.Client, _ json.RawMessage) string {
 	return encodeStructToJSON(commandResult)
 }
 
-func startHandler(client machine.Client, _ json.RawMessage) string {
+func startHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.RawMessage) string {
 	startConfig := machine.StartConfig{
 		Name:          constants.DefaultName,
 		BundlePath:    crcConfig.Get(config.Bundle).AsString(),
 		Memory:        crcConfig.Get(config.Memory).AsInt(),
 		CPUs:          crcConfig.Get(config.CPUs).AsInt(),
 		NameServer:    crcConfig.Get(config.NameServer).AsString(),
-		GetPullSecret: getPullSecretFileContent,
+		GetPullSecret: getPullSecretFileContent(crcConfig),
 		Debug:         true,
 	}
 	status, _ := client.Start(startConfig)
 	return encodeStructToJSON(status)
 }
 
-func versionHandler(client machine.Client, _ json.RawMessage) string {
+func versionHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.RawMessage) string {
 	v := &machine.VersionResult{
 		CrcVersion:       version.GetCRCVersion(),
 		CommitSha:        version.GetCommitSha(),
@@ -54,31 +54,33 @@ func versionHandler(client machine.Client, _ json.RawMessage) string {
 	return encodeStructToJSON(v)
 }
 
-func getPullSecretFileContent() (string, error) {
-	data, err := ioutil.ReadFile(crcConfig.Get(config.PullSecretFile).AsString())
-	if err != nil {
-		return "", err
+func getPullSecretFileContent(cfg crcConfig.Storage) func() (string, error) {
+	return func() (string, error) {
+		data, err := ioutil.ReadFile(cfg.Get(config.PullSecretFile).AsString())
+		if err != nil {
+			return "", err
+		}
+		pullsecret := string(data)
+		if err := validation.ImagePullSecret(pullsecret); err != nil {
+			return "", err
+		}
+		return pullsecret, nil
 	}
-	pullsecret := string(data)
-	if err := validation.ImagePullSecret(pullsecret); err != nil {
-		return "", err
-	}
-	return pullsecret, nil
 }
 
-func deleteHandler(client machine.Client, _ json.RawMessage) string {
+func deleteHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.RawMessage) string {
 	delConfig := machine.DeleteConfig{Name: constants.DefaultName}
 	r, _ := client.Delete(delConfig)
 	return encodeStructToJSON(r)
 }
 
-func webconsoleURLHandler(client machine.Client, _ json.RawMessage) string {
+func webconsoleURLHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.RawMessage) string {
 	consoleConfig := machine.ConsoleConfig{Name: constants.DefaultName}
 	r, _ := client.GetConsoleURL(consoleConfig)
 	return encodeStructToJSON(r)
 }
 
-func setConfigHandler(_ machine.Client, args json.RawMessage) string {
+func setConfigHandler(_ machine.Client, crcConfig crcConfig.Storage, args json.RawMessage) string {
 	setConfigResult := setOrUnsetConfigResult{}
 	if args == nil {
 		setConfigResult.Error = "No config keys provided"
@@ -116,7 +118,7 @@ func setConfigHandler(_ machine.Client, args json.RawMessage) string {
 	return encodeStructToJSON(setConfigResult)
 }
 
-func unsetConfigHandler(_ machine.Client, args json.RawMessage) string {
+func unsetConfigHandler(_ machine.Client, crcConfig crcConfig.Storage, args json.RawMessage) string {
 	unsetConfigResult := setOrUnsetConfigResult{}
 	if args == nil {
 		unsetConfigResult.Error = "No config keys provided"
@@ -151,7 +153,7 @@ func unsetConfigHandler(_ machine.Client, args json.RawMessage) string {
 	return encodeStructToJSON(unsetConfigResult)
 }
 
-func getConfigHandler(_ machine.Client, args json.RawMessage) string {
+func getConfigHandler(_ machine.Client, crcConfig crcConfig.Storage, args json.RawMessage) string {
 	configResult := getConfigResult{}
 	if args == nil {
 		allConfigs := crcConfig.AllConfigs()

@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	cfg "github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/spf13/cobra"
 )
@@ -23,31 +23,21 @@ const (
 	ProxyCAFile          = "proxy-ca-file"
 )
 
-func RegisterSettings() {
+func RegisterSettings(cfg *config.Config) {
 	// Start command settings in config
-	cfg.AddSetting(Bundle, constants.DefaultBundlePath, cfg.ValidateBundle, cfg.SuccessfullyApplied)
-	cfg.AddSetting(CPUs, constants.DefaultCPUs, cfg.ValidateCPUs, cfg.RequiresRestartMsg)
-	cfg.AddSetting(Memory, constants.DefaultMemory, cfg.ValidateMemory, cfg.RequiresRestartMsg)
-	cfg.AddSetting(NameServer, "", cfg.ValidateIPAddress, cfg.SuccessfullyApplied)
-	cfg.AddSetting(PullSecretFile, "", cfg.ValidatePath, cfg.SuccessfullyApplied)
-	cfg.AddSetting(DisableUpdateCheck, false, cfg.ValidateBool, cfg.SuccessfullyApplied)
+	cfg.AddSetting(Bundle, constants.DefaultBundlePath, config.ValidateBundle, config.SuccessfullyApplied)
+	cfg.AddSetting(CPUs, constants.DefaultCPUs, config.ValidateCPUs, config.RequiresRestartMsg)
+	cfg.AddSetting(Memory, constants.DefaultMemory, config.ValidateMemory, config.RequiresRestartMsg)
+	cfg.AddSetting(NameServer, "", config.ValidateIPAddress, config.SuccessfullyApplied)
+	cfg.AddSetting(PullSecretFile, "", config.ValidatePath, config.SuccessfullyApplied)
+	cfg.AddSetting(DisableUpdateCheck, false, config.ValidateBool, config.SuccessfullyApplied)
+	cfg.AddSetting(ExperimentalFeatures, false, config.ValidateBool, config.SuccessfullyApplied)
 	// Proxy Configuration
-	cfg.AddSetting(ExperimentalFeatures, false, cfg.ValidateBool, cfg.SuccessfullyApplied)
-	cfg.AddSetting(HTTPProxy, "", cfg.ValidateURI, cfg.SuccessfullyApplied)
-	cfg.AddSetting(HTTPSProxy, "", cfg.ValidateURI, cfg.SuccessfullyApplied)
-	cfg.AddSetting(NoProxy, "", cfg.ValidateNoProxy, cfg.SuccessfullyApplied)
-	cfg.AddSetting(ProxyCAFile, "", cfg.ValidatePath, cfg.SuccessfullyApplied)
+	cfg.AddSetting(HTTPProxy, "", config.ValidateURI, config.SuccessfullyApplied)
+	cfg.AddSetting(HTTPSProxy, "", config.ValidateURI, config.SuccessfullyApplied)
+	cfg.AddSetting(NoProxy, "", config.ValidateNoProxy, config.SuccessfullyApplied)
+	cfg.AddSetting(ProxyCAFile, "", config.ValidatePath, config.SuccessfullyApplied)
 }
-
-var (
-	configCmd = &cobra.Command{
-		Use:   "config SUBCOMMAND [flags]",
-		Short: "Modify crc configuration",
-		Run: func(cmd *cobra.Command, args []string) {
-			_ = cmd.Help()
-		},
-	}
-)
 
 func isPreflightKey(key string) bool {
 	return strings.HasPrefix(key, "skip-") || strings.HasPrefix(key, "warn-")
@@ -81,11 +71,11 @@ func less(lhsKey, rhsKey string) bool {
 	return lhsKey < rhsKey
 }
 
-func configurableFields() string {
+func configurableFields(config *config.Config) string {
 	var fields []string
 	var keys []string
 
-	for key := range cfg.AllConfigs() {
+	for key := range config.AllConfigs() {
 		keys = append(keys, key)
 	}
 	sort.Slice(keys, func(i, j int) bool {
@@ -97,12 +87,19 @@ func configurableFields() string {
 	return strings.Join(fields, "\n")
 }
 
-func GetConfigCmd() *cobra.Command {
-	/* Delay generation of configCmd.Long as much as possible as some parts of crc may have registered more
-	 * fields after init() time but before the command is registered
-	 */
-	configCmd.Long = `Modifies crc configuration properties.
-Configurable properties (enter as SUBCOMMAND): ` + "\n\n" + configurableFields()
-
+func GetConfigCmd(config *config.Config) *cobra.Command {
+	configCmd := &cobra.Command{
+		Use:   "config SUBCOMMAND [flags]",
+		Short: "Modify crc configuration",
+		Long: `Modifies crc configuration properties.
+Configurable properties (enter as SUBCOMMAND): ` + "\n\n" + configurableFields(config),
+		Run: func(cmd *cobra.Command, args []string) {
+			_ = cmd.Help()
+		},
+	}
+	configCmd.AddCommand(configGetCmd(config))
+	configCmd.AddCommand(configSetCmd(config))
+	configCmd.AddCommand(configUnsetCmd(config))
+	configCmd.AddCommand(configViewCmd(config))
 	return configCmd
 }

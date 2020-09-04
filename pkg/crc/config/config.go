@@ -1,20 +1,15 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/spf13/cast"
-	"github.com/spf13/pflag"
 )
 
 const (
 	configPropDoesntExistMsg = "Configuration property '%s' does not exist"
 )
-
-var defaultConfig *Config
 
 type Config struct {
 	storage        RawStorage
@@ -28,25 +23,11 @@ func New(storage RawStorage) *Config {
 	}
 }
 
-// InitViper initializes viper
-func InitViper() error {
-	storage, err := NewViperStorage(constants.ConfigPath, constants.CrcEnvPrefix)
-	if err != nil {
-		return err
-	}
-	defaultConfig = New(storage)
-	return nil
-}
-
 // AllConfigs returns all the known configs
 // A known config is one which was registered through AddSetting
 // - config with a default value
 // - config with a value set
 // - config with no value set
-func AllConfigs() map[string]SettingValue {
-	return defaultConfig.AllConfigs()
-}
-
 func (c *Config) AllConfigs() map[string]SettingValue {
 	var allConfigs = make(map[string]SettingValue)
 	for key := range c.settingsByName {
@@ -55,24 +36,8 @@ func (c *Config) AllConfigs() map[string]SettingValue {
 	return allConfigs
 }
 
-// BindFlagset binds a flagset to their respective config properties
-func BindFlagSet(flagSet *pflag.FlagSet) error {
-	return defaultConfig.BindFlagSet(flagSet)
-}
-
-func (c *Config) BindFlagSet(flagSet *pflag.FlagSet) error {
-	if v, ok := c.storage.(*ViperStorage); ok {
-		return v.BindFlagSet(flagSet)
-	}
-	return errors.New("not implemented")
-}
-
 // AddSetting returns a filled struct of ConfigSetting
 // takes the config name and default value as arguments
-func AddSetting(name string, defValue interface{}, validationFn ValidationFnType, callbackFn SetFn) {
-	defaultConfig.AddSetting(name, defValue, validationFn, callbackFn)
-}
-
 func (c *Config) AddSetting(name string, defValue interface{}, validationFn ValidationFnType, callbackFn SetFn) {
 	c.settingsByName[name] = Setting{
 		Name:         name,
@@ -83,10 +48,6 @@ func (c *Config) AddSetting(name string, defValue interface{}, validationFn Vali
 }
 
 // Set sets the value for a given config key
-func Set(key string, value interface{}) (string, error) {
-	return defaultConfig.Set(key, value)
-}
-
 func (c *Config) Set(key string, value interface{}) (string, error) {
 	setting, ok := c.settingsByName[key]
 	if !ok {
@@ -116,10 +77,6 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 }
 
 // Unset unsets a given config key
-func Unset(key string) (string, error) {
-	return defaultConfig.Unset(key)
-}
-
 func (c *Config) Unset(key string) (string, error) {
 	_, ok := c.settingsByName[key]
 	if !ok {
@@ -131,10 +88,6 @@ func (c *Config) Unset(key string) (string, error) {
 	}
 
 	return fmt.Sprintf("Successfully unset configuration property '%s'", key), nil
-}
-
-func Get(key string) SettingValue {
-	return defaultConfig.Get(key)
 }
 
 func (c *Config) Get(key string) SettingValue {

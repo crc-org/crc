@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
-	"github.com/code-ready/crc/pkg/crc/config"
+	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -33,21 +33,28 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-var globalForce bool
+var (
+	globalForce bool
+	viper       *crcConfig.ViperStorage
+	config      *crcConfig.Config
+)
 
 func init() {
 	if err := constants.EnsureBaseDirExists(); err != nil {
 		logging.Fatal(err.Error())
 	}
-	if err := config.InitViper(); err != nil {
+	var err error
+	viper, err = crcConfig.NewViperStorage(constants.ConfigPath, constants.CrcEnvPrefix)
+	if err != nil {
 		logging.Fatal(err.Error())
 	}
-	cmdConfig.RegisterSettings()
+	config = crcConfig.New(viper)
+	cmdConfig.RegisterSettings(config)
 
-	preflight.RegisterSettings()
+	preflight.RegisterSettings(config)
 
 	// subcommands
-	rootCmd.AddCommand(cmdConfig.GetConfigCmd())
+	rootCmd.AddCommand(cmdConfig.GetConfigCmd(config))
 
 	rootCmd.PersistentFlags().StringVar(&logging.LogLevel, "log-level", constants.DefaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
 	rootCmd.PersistentFlags().BoolVarP(&globalForce, "force", "f", false, "Forcefully perform an action")

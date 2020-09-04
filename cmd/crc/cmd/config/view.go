@@ -24,25 +24,24 @@ type configViewTemplate struct {
 	ConfigValue interface{}
 }
 
-func init() {
-	configCmd.AddCommand(configViewCmd)
+func configViewCmd(config config.Storage) *cobra.Command {
+	configViewCmd := &cobra.Command{
+		Use:   "view",
+		Short: "Display all assigned crc configuration properties",
+		Long:  `Displays all assigned crc configuration properties and their values.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			tmpl, err := determineTemplate(configViewFormat)
+			if err != nil {
+				logging.Fatal(err)
+			}
+			if err := runConfigView(config.AllConfigs(), tmpl, os.Stdout); err != nil {
+				logging.Fatal(err)
+			}
+		},
+	}
 	configViewCmd.Flags().StringVar(&configViewFormat, "format", DefaultConfigViewFormat,
 		`Go template format to apply to the configuration file. For more information about Go templates, see: https://golang.org/pkg/text/template/`)
-}
-
-var configViewCmd = &cobra.Command{
-	Use:   "view",
-	Short: "Display all assigned crc configuration properties",
-	Long:  `Displays all assigned crc configuration properties and their values.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		tmpl, err := determineTemplate(configViewFormat)
-		if err != nil {
-			logging.Fatal(err)
-		}
-		if err := runConfigView(config.AllConfigs(), tmpl, os.Stdout); err != nil {
-			logging.Fatal(err)
-		}
-	},
+	return configViewCmd
 }
 
 func determineTemplate(tempFormat string) (*template.Template, error) {
