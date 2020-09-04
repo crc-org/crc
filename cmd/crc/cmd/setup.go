@@ -35,7 +35,7 @@ var setupCmd = &cobra.Command{
 }
 
 func runSetup(arguments []string) error {
-	if crcConfig.GetBool(config.ExperimentalFeatures.Name) {
+	if crcConfig.Get(config.ExperimentalFeatures.Name).AsBool() {
 		preflight.EnableExperimentalFeatures = true
 	}
 	err := preflight.SetupHost()

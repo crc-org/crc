@@ -37,11 +37,6 @@ var (
 	allSettings = make(map[string]*Setting)
 )
 
-// GetBool returns the value of a boolean config key
-func GetBool(key string) bool {
-	return globalViper.GetBool(key)
-}
-
 func set(key string, value interface{}) {
 	globalViper.Set(key, value)
 	changedConfigs[key] = value
@@ -80,16 +75,6 @@ func (v SettingValue) AsString() string {
 
 func (v SettingValue) AsInt() int {
 	return cast.ToInt(v.Value)
-}
-
-// GetString return the value of a key in string
-func GetString(key string) string {
-	return globalViper.GetString(key)
-}
-
-// GetInt return the value of a key in int
-func GetInt(key string) int {
-	return globalViper.GetInt(key)
 }
 
 // EnsureConfigFileExists creates the viper config file if it does not exists
