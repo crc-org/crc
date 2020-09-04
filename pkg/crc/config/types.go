@@ -30,3 +30,10 @@ func (v SettingValue) AsInt() int {
 // validationFnType takes the key, value as args and checks if valid
 type ValidationFnType func(interface{}) (bool, string)
 type SetFn func(string, interface{}) string
+
+// RawStorage stores any key-value pair without validation
+type RawStorage interface {
+	Get(key string) interface{}
+	Set(key string, value interface{}) error
+	Unset(key string) error
+}

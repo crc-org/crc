@@ -17,10 +17,11 @@ const (
 )
 
 func newTestConfig(configFile, envPrefix string) (*Config, error) {
-	config, err := New(configFile, envPrefix)
+	storage, err := NewViperStorage(configFile, envPrefix)
 	if err != nil {
 		return nil, err
 	}
+	config := New(storage)
 	config.AddSetting(CPUs, 4, ValidateCPUs, RequiresRestartMsg)
 	config.AddSetting(NameServer, "", ValidateIPAddress, SuccessfullyApplied)
 	return config, nil
