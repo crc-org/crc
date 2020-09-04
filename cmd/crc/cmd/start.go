@@ -8,8 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/code-ready/crc/cmd/crc/cmd/config"
-	crcConfig "github.com/code-ready/crc/pkg/crc/config"
+	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/input"
@@ -27,12 +26,12 @@ func init() {
 	addOutputFormatFlag(startCmd)
 
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
-	flagSet.StringP(config.Bundle, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster")
-	flagSet.StringP(config.PullSecretFile, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
-	flagSet.IntP(config.CPUs, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the OpenShift cluster")
-	flagSet.IntP(config.Memory, "m", constants.DefaultMemory, "MiB of memory to allocate to the OpenShift cluster")
-	flagSet.StringP(config.NameServer, "n", "", "IPv4 address of nameserver to use for the OpenShift cluster")
-	flagSet.Bool(config.DisableUpdateCheck, false, "Don't check for update")
+	flagSet.StringP(cmdConfig.Bundle, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster")
+	flagSet.StringP(cmdConfig.PullSecretFile, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
+	flagSet.IntP(cmdConfig.CPUs, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the OpenShift cluster")
+	flagSet.IntP(cmdConfig.Memory, "m", constants.DefaultMemory, "MiB of memory to allocate to the OpenShift cluster")
+	flagSet.StringP(cmdConfig.NameServer, "n", "", "IPv4 address of nameserver to use for the OpenShift cluster")
+	flagSet.Bool(cmdConfig.DisableUpdateCheck, false, "Don't check for update")
 
 	startCmd.Flags().AddFlagSet(flagSet)
 }
@@ -42,7 +41,7 @@ var startCmd = &cobra.Command{
 	Short: "Start the OpenShift cluster",
 	Long:  "Start the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := crcConfig.BindFlagSet(cmd.Flags()); err != nil {
+		if err := viper.BindFlagSet(cmd.Flags()); err != nil {
 			exit.WithMessage(1, err.Error())
 		}
 		if err := renderStartResult(runStart(args)); err != nil {
@@ -56,18 +55,18 @@ func runStart(arguments []string) (*machine.StartResult, error) {
 		return nil, err
 	}
 
-	checkIfNewVersionAvailable(crcConfig.Get(config.DisableUpdateCheck).AsBool())
+	checkIfNewVersionAvailable(config.Get(cmdConfig.DisableUpdateCheck).AsBool())
 
-	if err := preflight.StartPreflightChecks(); err != nil {
+	if err := preflight.StartPreflightChecks(config); err != nil {
 		return nil, err
 	}
 
 	startConfig := machine.StartConfig{
 		Name:          constants.DefaultName,
-		BundlePath:    crcConfig.Get(config.Bundle).AsString(),
-		Memory:        crcConfig.Get(config.Memory).AsInt(),
-		CPUs:          crcConfig.Get(config.CPUs).AsInt(),
-		NameServer:    crcConfig.Get(config.NameServer).AsString(),
+		BundlePath:    config.Get(cmdConfig.Bundle).AsString(),
+		Memory:        config.Get(cmdConfig.Memory).AsInt(),
+		CPUs:          config.Get(cmdConfig.CPUs).AsInt(),
+		NameServer:    config.Get(cmdConfig.NameServer).AsString(),
 		GetPullSecret: getPullSecretFileContent,
 		Debug:         isDebugLog(),
 	}
@@ -154,17 +153,17 @@ func isDebugLog() bool {
 }
 
 func validateStartFlags() error {
-	if err := validation.ValidateMemory(crcConfig.Get(config.Memory).AsInt()); err != nil {
+	if err := validation.ValidateMemory(config.Get(cmdConfig.Memory).AsInt()); err != nil {
 		return err
 	}
-	if err := validation.ValidateCPUs(crcConfig.Get(config.CPUs).AsInt()); err != nil {
+	if err := validation.ValidateCPUs(config.Get(cmdConfig.CPUs).AsInt()); err != nil {
 		return err
 	}
-	if err := validation.ValidateBundle(crcConfig.Get(config.Bundle).AsString()); err != nil {
+	if err := validation.ValidateBundle(config.Get(cmdConfig.Bundle).AsString()); err != nil {
 		return err
 	}
-	if crcConfig.Get(config.NameServer).AsString() != "" {
-		if err := validation.ValidateIPAddress(crcConfig.Get(config.NameServer).AsString()); err != nil {
+	if config.Get(cmdConfig.NameServer).AsString() != "" {
+		if err := validation.ValidateIPAddress(config.Get(cmdConfig.NameServer).AsString()); err != nil {
 			return err
 		}
 	}
@@ -178,7 +177,7 @@ func getPullSecretFileContent() (string, error) {
 	)
 
 	// In case user doesn't provide a file in start command or in config then ask for it.
-	if crcConfig.Get(config.PullSecretFile).AsString() == "" {
+	if config.Get(cmdConfig.PullSecretFile).AsString() == "" {
 		pullsecret, err = input.PromptUserForSecret("Image pull secret", fmt.Sprintf("Copy it from %s", constants.CrcLandingPageURL))
 		// This is just to provide a new line after user enter the pull secret.
 		fmt.Println()
@@ -187,7 +186,7 @@ func getPullSecretFileContent() (string, error) {
 		}
 	} else {
 		// Read the file content
-		data, err := ioutil.ReadFile(crcConfig.Get(config.PullSecretFile).AsString())
+		data, err := ioutil.ReadFile(config.Get(cmdConfig.PullSecretFile).AsString())
 		if err != nil {
 			return "", errors.New(err.Error())
 		}

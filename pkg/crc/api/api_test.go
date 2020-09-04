@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
-
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
@@ -30,7 +29,7 @@ func TestApi(t *testing.T) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createAPIServerWithListener(listener, client)
+	api, err := createAPIServerWithListener(listener, client, config.New(config.NewEmptyInMemoryStorage()))
 	require.NoError(t, err)
 	go api.Serve()
 
@@ -102,9 +101,9 @@ func TestSetconfigApi(t *testing.T) {
 	// setup viper
 	err := constants.EnsureBaseDirExists()
 	assert.NoError(t, err)
-	err = config.InitViper()
+	config := config.New(config.NewEmptyInMemoryStorage())
 	assert.NoError(t, err)
-	cmdConfig.RegisterSettings()
+	cmdConfig.RegisterSettings(config)
 
 	socket, cleanup := setupAPIServer(t)
 	client, err := net.Dial("unix", socket)
@@ -135,9 +134,9 @@ func TestGetconfigApi(t *testing.T) {
 	// setup viper
 	err := constants.EnsureBaseDirExists()
 	assert.NoError(t, err)
-	err = config.InitViper()
+	config := config.New(config.NewEmptyInMemoryStorage())
 	assert.NoError(t, err)
-	cmdConfig.RegisterSettings()
+	cmdConfig.RegisterSettings(config)
 
 	socket, cleanup := setupAPIServer(t)
 	client, err := net.Dial("unix", socket)
@@ -160,7 +159,7 @@ func TestGetconfigApi(t *testing.T) {
 	assert.NoError(t, json.Unmarshal(payload[:n], &getconfigRes))
 
 	configs := make(map[string]interface{})
-	configs["cpus"] = 5.0
+	configs["cpus"] = 4.0
 
 	assert.Equal(t, getConfigResult{
 		Error:   "",
@@ -177,7 +176,10 @@ func setupAPIServer(t *testing.T) (string, func()) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createAPIServerWithListener(listener, client)
+	cfg := config.New(config.NewEmptyInMemoryStorage())
+	cmdConfig.RegisterSettings(cfg)
+
+	api, err := createAPIServerWithListener(listener, client, cfg)
 	require.NoError(t, err)
 	go api.Serve()
 

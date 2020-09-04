@@ -148,14 +148,17 @@ func TestViperConfigBindFlagSet(t *testing.T) {
 	defer os.RemoveAll(dir)
 	configFile := filepath.Join(dir, "crc.json")
 
-	config, err := newTestConfig(configFile, "CRC")
+	storage, err := NewViperStorage(configFile, "CRC")
 	require.NoError(t, err)
+	config := New(storage)
+	config.AddSetting(CPUs, 4, ValidateCPUs, RequiresRestartMsg)
+	config.AddSetting(NameServer, "", ValidateIPAddress, SuccessfullyApplied)
 
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
 	flagSet.IntP(CPUs, "c", 4, "")
 	flagSet.StringP(NameServer, "n", "", "")
 
-	_ = config.BindFlagSet(flagSet)
+	_ = storage.BindFlagSet(flagSet)
 
 	assert.Equal(t, SettingValue{
 		Value:     4,

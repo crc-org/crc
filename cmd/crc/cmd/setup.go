@@ -6,8 +6,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/code-ready/crc/cmd/crc/cmd/config"
-	crcConfig "github.com/code-ready/crc/pkg/crc/config"
+	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/preflight"
@@ -15,7 +14,7 @@ import (
 )
 
 func init() {
-	setupCmd.Flags().Bool(config.ExperimentalFeatures, false, "Allow the use of experimental features")
+	setupCmd.Flags().Bool(cmdConfig.ExperimentalFeatures, false, "Allow the use of experimental features")
 	addOutputFormatFlag(setupCmd)
 	rootCmd.AddCommand(setupCmd)
 }
@@ -25,7 +24,7 @@ var setupCmd = &cobra.Command{
 	Short: "Set up prerequisites for the OpenShift cluster",
 	Long:  "Set up local virtualization and networking infrastructure for the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := crcConfig.BindFlagSet(cmd.Flags()); err != nil {
+		if err := viper.BindFlagSet(cmd.Flags()); err != nil {
 			exit.WithMessage(1, err.Error())
 		}
 		if err := runSetup(args); err != nil {
@@ -35,10 +34,10 @@ var setupCmd = &cobra.Command{
 }
 
 func runSetup(arguments []string) error {
-	if crcConfig.Get(config.ExperimentalFeatures).AsBool() {
+	if config.Get(cmdConfig.ExperimentalFeatures).AsBool() {
 		preflight.EnableExperimentalFeatures = true
 	}
-	err := preflight.SetupHost()
+	err := preflight.SetupHost(config)
 	return render(&setupResult{
 		Success: err == nil,
 		Error:   errorMessage(err),

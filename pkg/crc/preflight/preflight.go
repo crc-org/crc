@@ -3,7 +3,7 @@ package preflight
 import (
 	"fmt"
 
-	cfg "github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
@@ -43,11 +43,11 @@ func (check *Check) getSkipConfigName() string {
 	return "skip-" + check.configKeySuffix
 }
 
-func (check *Check) shouldSkip() bool {
+func (check *Check) shouldSkip(config config.Storage) bool {
 	if check.configKeySuffix == "" {
 		return false
 	}
-	return cfg.Get(check.getSkipConfigName()).AsBool()
+	return config.Get(check.getSkipConfigName()).AsBool()
 }
 
 func (check *Check) getWarnConfigName() string {
@@ -57,20 +57,20 @@ func (check *Check) getWarnConfigName() string {
 	return "warn-" + check.configKeySuffix
 }
 
-func (check *Check) shouldWarn() bool {
+func (check *Check) shouldWarn(config config.Storage) bool {
 	if check.configKeySuffix == "" {
 		return false
 	}
-	return cfg.Get(check.getWarnConfigName()).AsBool()
+	return config.Get(check.getWarnConfigName()).AsBool()
 }
 
-func (check *Check) doCheck() error {
+func (check *Check) doCheck(config config.Storage) error {
 	if check.checkDescription == "" {
 		panic(fmt.Sprintf("Should not happen, empty description for check '%s'", check.configKeySuffix))
 	} else {
 		logging.Infof("%s", check.checkDescription)
 	}
-	if check.shouldSkip() {
+	if check.shouldSkip(config) {
 		logging.Warn("Skipping above check ...")
 		return nil
 	}
@@ -105,14 +105,14 @@ func (check *Check) doCleanUp() error {
 	return check.cleanup()
 }
 
-func doPreflightChecks(checks []Check) error {
+func doPreflightChecks(config config.Storage, checks []Check) error {
 	for _, check := range checks {
 		if check.flags&SetupOnly == SetupOnly || check.flags&CleanUpOnly == CleanUpOnly {
 			continue
 		}
-		err := check.doCheck()
+		err := check.doCheck(config)
 		if err != nil {
-			if check.shouldWarn() {
+			if check.shouldWarn(config) {
 				logging.Warn(err.Error())
 			} else {
 				return err
@@ -122,18 +122,18 @@ func doPreflightChecks(checks []Check) error {
 	return nil
 }
 
-func doFixPreflightChecks(checks []Check) error {
+func doFixPreflightChecks(config config.Storage, checks []Check) error {
 	for _, check := range checks {
 		if check.flags&StartOnly == StartOnly || check.flags&CleanUpOnly == CleanUpOnly {
 			continue
 		}
-		err := check.doCheck()
+		err := check.doCheck(config)
 		if err == nil {
 			continue
 		}
 		err = check.doFix()
 		if err != nil {
-			if check.shouldWarn() {
+			if check.shouldWarn(config) {
 				logging.Warn(err.Error())
 			} else {
 				return err
@@ -158,25 +158,25 @@ func doCleanUpPreflightChecks(checks []Check) error {
 	return nil
 }
 
-func doRegisterSettings(checks []Check) {
+func doRegisterSettings(cfg config.Schema, checks []Check) {
 	for _, check := range checks {
 		if check.configKeySuffix != "" {
-			cfg.AddSetting(check.getSkipConfigName(), false, cfg.ValidateBool, cfg.SuccessfullyApplied)
-			cfg.AddSetting(check.getWarnConfigName(), false, cfg.ValidateBool, cfg.SuccessfullyApplied)
+			cfg.AddSetting(check.getSkipConfigName(), false, config.ValidateBool, config.SuccessfullyApplied)
+			cfg.AddSetting(check.getWarnConfigName(), false, config.ValidateBool, config.SuccessfullyApplied)
 		}
 	}
 }
 
 // StartPreflightChecks performs the preflight checks before starting the cluster
-func StartPreflightChecks() error {
-	return doPreflightChecks(getPreflightChecks())
+func StartPreflightChecks(config config.Storage) error {
+	return doPreflightChecks(config, getPreflightChecks())
 }
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
-func SetupHost() error {
-	return doFixPreflightChecks(getPreflightChecks())
+func SetupHost(config config.Storage) error {
+	return doFixPreflightChecks(config, getPreflightChecks())
 }
 
-func RegisterSettings() {
-	doRegisterSettings(getPreflightChecks())
+func RegisterSettings(config config.Schema) {
+	doRegisterSettings(config, getPreflightChecks())
 }

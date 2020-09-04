@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"net"
 
+	"github.com/code-ready/crc/pkg/crc/config"
+
 	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
-type handlerFunc func(machine.Client, json.RawMessage) string
+type handlerFunc func(machine.Client, config.Storage, json.RawMessage) string
 
 type commandError struct {
 	Err string
@@ -15,6 +17,7 @@ type commandError struct {
 
 type CrcAPIServer struct {
 	client                 machine.Client
+	config                 config.Storage
 	listener               net.Listener
 	clusterOpsRequestsChan chan clusterOpsRequest
 	handlers               map[string]handlerFunc // relates commands to handler func

@@ -20,6 +20,6 @@ var daemonCmd = &cobra.Command{
 		logging.CloseLogging()
 		logging.InitLogrus(logging.LogLevel, constants.DaemonLogFilePath)
 
-		runDaemon()
+		runDaemon(config)
 	},
 }
