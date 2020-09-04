@@ -166,7 +166,10 @@ func getConfigHandler(_ machine.Client, args json.RawMessage) string {
 	if args == nil {
 		allConfigs := crcConfig.AllConfigs()
 		configResult.Error = ""
-		configResult.Configs = allConfigs
+		configResult.Configs = make(map[string]interface{})
+		for k, v := range allConfigs {
+			configResult.Configs[k] = v.Value
+		}
 		return encodeStructToJSON(configResult)
 	}
 
