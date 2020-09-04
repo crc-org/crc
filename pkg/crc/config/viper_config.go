@@ -37,11 +37,6 @@ var (
 	allSettings = make(map[string]*Setting)
 )
 
-func set(key string, value interface{}) {
-	globalViper.Set(key, value)
-	changedConfigs[key] = value
-}
-
 func syncViperState(viper *viper.Viper) error {
 	encodedConfig, err := json.MarshalIndent(changedConfigs, "", " ")
 	if err != nil {
@@ -52,11 +47,6 @@ func syncViperState(viper *viper.Viper) error {
 		return fmt.Errorf("Error reading configuration file '%s': %v", constants.ConfigFile, err)
 	}
 	return nil
-}
-
-func unset(key string) error {
-	delete(changedConfigs, key)
-	return syncViperState(globalViper)
 }
 
 type SettingValue struct {
@@ -164,7 +154,8 @@ func Set(key string, value interface{}) (string, error) {
 		return "", fmt.Errorf("Value '%s' for configuration property '%s' is invalid, reason: %s", value, key, expectedValue)
 	}
 
-	set(key, value)
+	globalViper.Set(key, value)
+	changedConfigs[key] = value
 
 	callbackMsg := allSettings[key].callbackFn(key, value)
 	if callbackMsg != "" {
@@ -181,7 +172,8 @@ func Unset(key string) (string, error) {
 		return "", fmt.Errorf(configPropDoesntExistMsg, key)
 	}
 
-	if err := unset(key); err != nil {
+	delete(changedConfigs, key)
+	if err := syncViperState(globalViper); err != nil {
 		return "", fmt.Errorf("Error unsetting configuration property '%s': %v", key, err)
 	}
 
