@@ -161,7 +161,7 @@ cross-lint: $(GOPATH)/bin/golangci-lint
 gen_release_info:
 	@cat release-info.json.sample | sed s/@CRC_VERSION@/\"$(CRC_VERSION)\"/ > $(RELEASE_INFO)
 	@sed -i s/@GIT_COMMIT_SHA@/\"$(COMMIT_SHA)\"/ $(RELEASE_INFO)
-	@sed -i s/@BUNDLE_VERSION@/\"$(BUNDLE_VERSION)\"/ $(RELEASE_INFO)
+	@sed -i s/@OPENSHIFT_VERSION@/\"$(BUNDLE_VERSION)\"/ $(RELEASE_INFO)
 
 .PHONY: release
 release: cross-lint embed_bundle build_docs_pdf gen_release_info
