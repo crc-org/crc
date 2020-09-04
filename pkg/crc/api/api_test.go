@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
+
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
@@ -104,6 +106,7 @@ func TestSetconfigApi(t *testing.T) {
 	assert.NoError(t, err)
 	err = config.InitViper()
 	assert.NoError(t, err)
+	cmdConfig.RegisterSettings()
 
 	socket, cleanup := setupAPIServer(t)
 	client, err := net.Dial("unix", socket)
@@ -138,6 +141,7 @@ func TestGetconfigApi(t *testing.T) {
 	assert.NoError(t, err)
 	err = config.InitViper()
 	assert.NoError(t, err)
+	cmdConfig.RegisterSettings()
 
 	socket, cleanup := setupAPIServer(t)
 	client, err := net.Dial("unix", socket)
