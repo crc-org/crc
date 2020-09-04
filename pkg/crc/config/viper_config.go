@@ -136,28 +136,15 @@ func WriteConfig() error {
 	return v.WriteConfig()
 }
 
-// ChangedConfigs returns all the changed config keys/values
-// 'changed' means config keys with a value set either because they are set in
-// the config file, or because they were changed at runtime.
-// This does not include config keys with no default value, or with a default value
-func ChangedConfigs() map[string]interface{} {
-	return changedConfigs
-}
-
 // AllConfigs returns all the known configs
 // A known config is one which was registered through AddSetting
 // - config with a default value
 // - config with a value set
 // - config with no value set
-func AllConfigs() map[string]interface{} {
-	var allConfigs = make(map[string]interface{})
-
+func AllConfigs() map[string]SettingValue {
+	var allConfigs = make(map[string]SettingValue)
 	for key := range allSettings {
-		v := Get(key)
-		if v.Invalid {
-			allConfigs[key] = nil
-		}
-		allConfigs[key] = v.Value
+		allConfigs[key] = Get(key)
 	}
 	return allConfigs
 }

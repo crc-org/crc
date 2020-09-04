@@ -39,7 +39,7 @@ var configViewCmd = &cobra.Command{
 		if err != nil {
 			logging.Fatal(err)
 		}
-		if err := runConfigView(config.ChangedConfigs(), tmpl, os.Stdout); err != nil {
+		if err := runConfigView(config.AllConfigs(), tmpl, os.Stdout); err != nil {
 			logging.Fatal(err)
 		}
 	},
@@ -53,10 +53,13 @@ func determineTemplate(tempFormat string) (*template.Template, error) {
 	return tmpl, nil
 }
 
-func runConfigView(cfg map[string]interface{}, tmpl *template.Template, writer io.Writer) error {
+func runConfigView(cfg map[string]config.SettingValue, tmpl *template.Template, writer io.Writer) error {
 	var lines []string
 	for k, v := range cfg {
-		viewTmplt := configViewTemplate{k, v}
+		if v.IsDefault {
+			continue
+		}
+		viewTmplt := configViewTemplate{k, v.AsString()}
 		var buffer bytes.Buffer
 		if err := tmpl.Execute(&buffer, viewTmplt); err != nil {
 			return err
