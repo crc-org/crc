@@ -161,8 +161,8 @@ func doCleanUpPreflightChecks(checks []Check) error {
 func doRegisterSettings(checks []Check) {
 	for _, check := range checks {
 		if check.configKeySuffix != "" {
-			cfg.AddSetting(check.getSkipConfigName(), false, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
-			cfg.AddSetting(check.getWarnConfigName(), false, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
+			cfg.AddSetting(check.getSkipConfigName(), false, cfg.ValidateBool, cfg.SuccessfullyApplied)
+			cfg.AddSetting(check.getWarnConfigName(), false, cfg.ValidateBool, cfg.SuccessfullyApplied)
 		}
 	}
 }
