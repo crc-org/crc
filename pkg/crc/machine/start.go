@@ -254,8 +254,11 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 
 	// Post VM start immediately update SSH key and copy kubeconfig to instance
 	// dir and VM
-	if err := updateSSHKeyAndCopyKubeconfig(sshRunner, client.name, crcBundleMetadata); err != nil {
+	if err := updateSSHKeyPair(sshRunner); err != nil {
 		return nil, errors.Wrap(err, "Error updating public key")
+	}
+	if err := copyKubeconfig(client.name, crcBundleMetadata); err != nil {
+		return nil, errors.Wrap(err, "Error copying kubeconfig file")
 	}
 
 	// Trigger disk resize, this will be a no-op if no disk size change is needed
@@ -523,11 +526,7 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	return err
 }
 
-func updateSSHKeyAndCopyKubeconfig(sshRunner *crcssh.Runner, name string, crcBundleMetadata *bundle.CrcBundleInfo) error {
-	if err := updateSSHKeyPair(sshRunner); err != nil {
-		return fmt.Errorf("Error updating SSH Keys: %v", err)
-	}
-
+func copyKubeconfig(name string, crcBundleMetadata *bundle.CrcBundleInfo) error {
 	kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, name, "kubeconfig")
 	if _, err := os.Stat(kubeConfigFilePath); err == nil {
 		return nil
