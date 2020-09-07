@@ -15,7 +15,7 @@ const (
 
 const (
 	MachineDriverCommand = "crc-driver-libvirt"
-	MachineDriverVersion = "0.12.8"
+	MachineDriverVersion = "0.12.10"
 )
 
 var (
