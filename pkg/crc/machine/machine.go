@@ -243,11 +243,25 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	}
 	logging.Info("CodeReady Containers VM is running")
 
+	instanceIP, err := host.Driver.GetIP()
+	if err != nil {
+		return startError(startConfig.Name, "Error getting the IP", err)
+	}
+
 	// Post VM start immediately update SSH key and copy kubeconfig to instance
 	// dir and VM
 	if !exists {
 		if err := updateSSHKeyAndCopyKubeconfig(sshRunner, startConfig, crcBundleMetadata); err != nil {
 			return startError(startConfig.Name, "Error updating public key", err)
+		}
+		if _, err := sshRunner.Run(fmt.Sprintf(`sudo sed -i "s|192.168.126.11|%s|g" /etc/kubernetes/manifests/etcd-pod.yaml`, instanceIP)); err != nil {
+			return startError(startConfig.Name, "Error updating etcd data", err)
+		}
+		if _, err := sshRunner.Run("sudo nmcli connection delete internalEtcd "); err != nil {
+			return startError(startConfig.Name, "Error deleting nmcli connection", err)
+		}
+		if _, err := sshRunner.Run(`sudo sed -i '/--node/d' /etc/systemd/system/kubelet.service`); err != nil {
+			return startError(startConfig.Name, "Error updating etcd data", err)
 		}
 	}
 
@@ -275,11 +289,6 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		if err = addNameServerToInstance(sshRunner, startConfig.NameServer); err != nil {
 			return startError(startConfig.Name, "Failed to add nameserver to the VM", err)
 		}
-	}
-
-	instanceIP, err := host.Driver.GetIP()
-	if err != nil {
-		return startError(startConfig.Name, "Error getting the IP", err)
 	}
 
 	var hostIP string
