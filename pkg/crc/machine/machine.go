@@ -74,11 +74,7 @@ func getCrcBundleInfo(bundlePath string) (*bundle.CrcBundleInfo, error) {
 
 func getBundleMetadataFromDriver(driver drivers.Driver) (string, *bundle.CrcBundleInfo, error) {
 	bundleName, err := driver.GetBundleName()
-	/* FIXME: the bundleName == "" check can be removed when all machine
-	* drivers have been rebuilt with
-	* https://github.com/code-ready/machine/commit/edeebfe54d1ca3f46c1c0bfb86846e54baf23708
-	 */
-	if bundleName == "" || err != nil {
+	if err != nil {
 		err := fmt.Errorf("Error getting bundle name from CodeReady Containers instance, make sure you ran 'crc setup' and are using the latest bundle")
 		return "", nil, err
 	}
