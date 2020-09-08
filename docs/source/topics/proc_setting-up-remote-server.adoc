@@ -83,7 +83,7 @@ backend apps
     mode tcp
     balance roundrobin
     option ssl-hello-chk
-    server webserver1 $CRC_IP check
+    server webserver1 $CRC_IP:443 check
 
 frontend api
     bind 0.0.0.0:6443
