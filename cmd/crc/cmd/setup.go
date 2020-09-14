@@ -1,11 +1,15 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
+	"io"
+	"os"
+
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
-	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/spf13/cobra"
 )
@@ -13,6 +17,7 @@ import (
 func init() {
 	setupCmd.Flags().Bool(config.ExperimentalFeatures.Name, false, "Allow the use of experimental features")
 	_ = crcConfig.BindFlagSet(setupCmd.Flags())
+	addOutputFormatFlag(setupCmd)
 	rootCmd.AddCommand(setupCmd)
 }
 
@@ -31,13 +36,30 @@ func runSetup(arguments []string) error {
 	if crcConfig.GetBool(config.ExperimentalFeatures.Name) {
 		preflight.EnableExperimentalFeatures = true
 	}
-	if err := preflight.SetupHost(); err != nil {
-		return err
+	err := preflight.SetupHost()
+	return render(&setupResult{
+		Success: err == nil,
+		Error:   errorMessage(err),
+	}, os.Stdout, outputFormat)
+}
+
+type setupResult struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error,omitempty"`
+}
+
+func (s *setupResult) prettyPrintTo(writer io.Writer) error {
+	if s.Error != "" {
+		return errors.New(s.Error)
 	}
+	_, err := fmt.Fprintf(writer, "Setup is complete, you can now run 'crc start%s' to start the OpenShift cluster\n", extraArguments())
+	return err
+}
+
+func extraArguments() string {
 	var bundle string
 	if !constants.BundleEmbedded() {
 		bundle = " -b $bundlename"
 	}
-	output.Outf("Setup is complete, you can now run 'crc start%s' to start the OpenShift cluster\n", bundle)
-	return nil
+	return bundle
 }
