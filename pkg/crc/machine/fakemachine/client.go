@@ -23,7 +23,17 @@ type Client struct {
 }
 
 func (c *Client) Delete(deleteConfig machine.DeleteConfig) (machine.DeleteResult, error) {
-	return machine.DeleteResult{}, errors.New("not implemented")
+	if c.Failing {
+		return machine.DeleteResult{
+			Name:    "crc",
+			Success: false,
+			Error:   "delete failed",
+		}, errors.New("delete failed")
+	}
+	return machine.DeleteResult{
+		Name:    "crc",
+		Success: true,
+	}, nil
 }
 
 func (c *Client) GetConsoleURL(consoleConfig machine.ConsoleConfig) (machine.ConsoleResult, error) {
