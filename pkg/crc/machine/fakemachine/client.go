@@ -5,10 +5,17 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/machine/libmachine/state"
 )
 
 func NewClient() *Client {
 	return &Client{}
+}
+
+func NewFailingClient() *Client {
+	return &Client{
+		Failing: true,
+	}
 }
 
 type Client struct {
@@ -32,7 +39,17 @@ func (c *Client) IP(ipConfig machine.IPConfig) (machine.IPResult, error) {
 }
 
 func (c *Client) PowerOff(powerOff machine.PowerOffConfig) (machine.PowerOffResult, error) {
-	return machine.PowerOffResult{}, errors.New("not implemented")
+	if c.Failing {
+		return machine.PowerOffResult{
+			Name:    "crc",
+			Success: false,
+			Error:   "poweroff failed",
+		}, errors.New("poweroff failed")
+	}
+	return machine.PowerOffResult{
+		Name:    "crc",
+		Success: true,
+	}, nil
 }
 
 func (c *Client) Start(startConfig machine.StartConfig) (machine.StartResult, error) {
@@ -40,7 +57,19 @@ func (c *Client) Start(startConfig machine.StartConfig) (machine.StartResult, er
 }
 
 func (c *Client) Stop(stopConfig machine.StopConfig) (machine.StopResult, error) {
-	return machine.StopResult{}, errors.New("not implemented")
+	if c.Failing {
+		return machine.StopResult{
+			Name:    "crc",
+			Success: false,
+			Error:   "stop failed",
+			State:   state.Running,
+		}, errors.New("stop failed")
+	}
+	return machine.StopResult{
+		Name:    "crc",
+		Success: true,
+		State:   state.Stopped,
+	}, nil
 }
 
 func (c *Client) Status(statusConfig machine.ClusterStatusConfig) (machine.ClusterStatusResult, error) {
