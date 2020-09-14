@@ -89,7 +89,8 @@ func toClusterConfig(result *machine.StartResult) *clusterConfig {
 		return nil
 	}
 	return &clusterConfig{
-		URL: result.ClusterConfig.ClusterAPI,
+		WebConsoleURL: result.ClusterConfig.WebConsoleURL,
+		URL:           result.ClusterConfig.ClusterAPI,
 		AdminCredentials: credentials{
 			Username: "kubeadmin",
 			Password: result.ClusterConfig.KubeAdminPass,
@@ -109,6 +110,7 @@ func errorMessage(err error) string {
 }
 
 type clusterConfig struct {
+	WebConsoleURL        string      `json:"webConsoleUrl"`
 	URL                  string      `json:"url"`
 	AdminCredentials     credentials `json:"adminCredentials"`
 	DeveloperCredentials credentials `json:"developerCredentials"`
