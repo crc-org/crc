@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var clearCache bool
+
 func init() {
 	deleteCmd.Flags().BoolVarP(&clearCache, "clear-cache", "", false,
 		fmt.Sprintf("Clear the OpenShift cluster cache at: %s", constants.MachineCacheDir))
@@ -23,42 +25,33 @@ var deleteCmd = &cobra.Command{
 	Short: "Delete the OpenShift cluster",
 	Long:  "Delete the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := runDelete(args); err != nil {
+		if err := runDelete(machine.NewClient()); err != nil {
 			exit.WithMessage(1, err.Error())
 		}
 	},
 }
 
-var clearCache bool
-
-func runDelete(arguments []string) error {
-	deleteConfig := machine.DeleteConfig{
-		Name: constants.DefaultName,
-	}
-
+func runDelete(client machine.Client) error {
 	if clearCache {
-		deleteCache()
+		yes := input.PromptUserForYesOrNo("Do you want to delete the OpenShift cluster cache", globalForce)
+		if yes {
+			_ = os.RemoveAll(constants.MachineCacheDir)
+		}
 	}
 
-	client := machine.NewClient()
-	if err := checkIfMachineMissing(client, deleteConfig.Name); err != nil {
+	if err := checkIfMachineMissing(client, constants.DefaultName); err != nil {
 		return err
 	}
 
 	yes := input.PromptUserForYesOrNo("Do you want to delete the OpenShift cluster", globalForce)
 	if yes {
-		_, err := client.Delete(deleteConfig)
+		_, err := client.Delete(machine.DeleteConfig{
+			Name: constants.DefaultName,
+		})
 		if err != nil {
 			return err
 		}
 		output.Outln("Deleted the OpenShift cluster")
 	}
 	return nil
-}
-
-func deleteCache() {
-	yes := input.PromptUserForYesOrNo("Do you want to delete the OpenShift cluster cache", globalForce)
-	if yes {
-		os.RemoveAll(constants.MachineCacheDir)
-	}
 }
