@@ -6,7 +6,7 @@ BUNDLE_VERSION = 4.5.9
 # string or dd-mm-yyyy format.
 OC_VERSION ?= ${BUNDLE_VERSION}
 BUNDLE_EXTENSION = crcbundle
-CRC_VERSION = 1.15.0
+CRC_VERSION = 1.16.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 
 # Go and compilation related variables
