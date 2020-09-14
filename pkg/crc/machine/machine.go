@@ -86,10 +86,6 @@ func getBundleMetadataFromDriver(driver drivers.Driver) (string, *bundle.CrcBund
 	return bundleName, metadata, err
 }
 
-func IsRunning(st state.State) bool {
-	return st == state.Running
-}
-
 func createLibMachineClient(debug bool) (*libmachine.Client, func(), error) {
 	err := setMachineLogging(debug)
 	if err != nil {
@@ -189,7 +185,7 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		if err != nil {
 			return startError(startConfig.Name, "Error getting the machine state", err)
 		}
-		if IsRunning(vmState) {
+		if vmState == state.Running {
 			openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
 			if openshiftVersion == "" {
 				logging.Info("A CodeReady Containers VM is already running")
@@ -545,7 +541,7 @@ func (*client) Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, er
 		return statusError(statusConfig.Name, "Cannot get machine state", err)
 	}
 
-	if IsRunning(vmStatus) {
+	if vmStatus == state.Running {
 		_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
 		if err != nil {
 			return statusError(statusConfig.Name, "Error loading bundle metadata", err)

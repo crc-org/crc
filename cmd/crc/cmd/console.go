@@ -8,6 +8,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/output"
+	"github.com/code-ready/machine/libmachine/state"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 )
@@ -62,7 +63,7 @@ func runConsole(arguments []string) error {
 		return nil
 	}
 
-	if !machine.IsRunning(result.State) {
+	if result.State != state.Running {
 		return errors.New("The OpenShift cluster is not running, cannot open the OpenShift Web Console")
 	}
 	output.Outln("Opening the OpenShift Web Console in the default browser...")
