@@ -49,7 +49,8 @@ func TestRenderActionJSONSuccess(t *testing.T) {
 	assert.NoError(t, render(&startResult{
 		Success: true,
 		ClusterConfig: &clusterConfig{
-			URL: constants.DefaultAPIURL,
+			WebConsoleURL: constants.DefaultWebConsoleURL,
+			URL:           constants.DefaultAPIURL,
 			AdminCredentials: credentials{
 				Username: "kubeadmin",
 				Password: "secret",
@@ -63,6 +64,7 @@ func TestRenderActionJSONSuccess(t *testing.T) {
 	assert.Equal(t, `{
   "success": true,
   "clusterConfig": {
+    "webConsoleUrl": "https://console-openshift-console.apps-crc.testing",
     "url": "https://api.crc.testing:6443",
     "adminCredentials": {
       "username": "kubeadmin",
