@@ -444,6 +444,7 @@ func (*client) Stop(stopConfig StopConfig) (StopResult, error) {
 
 	state, _ := host.Driver.GetState()
 
+	logging.Info("Stopping the OpenShift cluster, this may take a few minutes...")
 	if err := host.Stop(); err != nil {
 		return stopError(stopConfig.Name, "Cannot stop machine", err)
 	}

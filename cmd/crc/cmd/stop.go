@@ -20,39 +20,34 @@ var stopCmd = &cobra.Command{
 	Short: "Stop the OpenShift cluster",
 	Long:  "Stop the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := runStop(args); err != nil {
+		if err := runStop(); err != nil {
 			exit.WithMessage(1, err.Error())
 		}
 	},
 }
 
-func runStop(arguments []string) error {
-	stopConfig := machine.StopConfig{
-		Name:  constants.DefaultName,
-		Debug: isDebugLog(),
-	}
-
-	killConfig := machine.PowerOffConfig{
-		Name: constants.DefaultName,
-	}
-
+func runStop() error {
 	client := machine.NewClient()
-	if err := checkIfMachineMissing(client, stopConfig.Name); err != nil {
+	if err := checkIfMachineMissing(client, constants.DefaultName); err != nil {
 		return err
 	}
 
-	output.Outln("Stopping the OpenShift cluster, this may take a few minutes...")
-	commandResult, err := client.Stop(stopConfig)
+	result, err := client.Stop(machine.StopConfig{
+		Name:  constants.DefaultName,
+		Debug: isDebugLog(),
+	})
 	if err != nil {
 		// Here we are checking the VM state and if it is still running then
 		// Ask user to forcefully power off it.
-		if commandResult.State == state.Running {
+		if result.State == state.Running {
 			// Most of the time force kill don't work and libvirt throw
 			// Device or resource busy error. To make sure we give some
 			// graceful time to cluster before kill it.
 			yes := input.PromptUserForYesOrNo("Do you want to force power off", globalForce)
 			if yes {
-				_, err := client.PowerOff(killConfig)
+				_, err := client.PowerOff(machine.PowerOffConfig{
+					Name: constants.DefaultName,
+				})
 				if err != nil {
 					return err
 				}
@@ -62,11 +57,11 @@ func runStop(arguments []string) error {
 		}
 		return err
 	}
-	if commandResult.Success {
+	if result.Success {
 		output.Outln("Stopped the OpenShift cluster")
 	} else {
 		/* If we did not get an error, the status should be true */
-		logging.Warnf("Unexpected status of the OpenShift cluster: %v", commandResult.Success)
+		logging.Warnf("Unexpected status of the OpenShift cluster: %v", result.Success)
 	}
 	return nil
 }
