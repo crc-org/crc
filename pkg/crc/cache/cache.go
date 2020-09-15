@@ -25,12 +25,13 @@ type Cache struct {
 }
 
 type VersionMismatchError struct {
+	BinaryName      string
 	ExpectedVersion string
 	CurrentVersion  string
 }
 
 func (e *VersionMismatchError) Error() string {
-	return fmt.Sprintf("expected: %s but got: %s", e.ExpectedVersion, e.CurrentVersion)
+	return fmt.Sprintf("%s version mismatch: %s expected but %s found in the cache", e.BinaryName, e.ExpectedVersion, e.CurrentVersion)
 }
 
 func New(binaryName string, archiveURL string, destDir string, version string, getVersion func() (string, error)) *Cache {
@@ -141,7 +142,11 @@ func (c *Cache) CheckVersion() error {
 		return err
 	}
 	if currentVersion != c.version {
-		return &VersionMismatchError{CurrentVersion: currentVersion, ExpectedVersion: c.version}
+		return &VersionMismatchError{
+			BinaryName:      c.binaryName,
+			CurrentVersion:  currentVersion,
+			ExpectedVersion: c.version,
+		}
 	}
 	return nil
 }
