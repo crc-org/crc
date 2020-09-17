@@ -22,7 +22,7 @@ type Cache struct {
 	archiveURL string
 	destDir    string
 	version    string
-	getVersion func() (string, error)
+	getVersion func(string) (string, error)
 }
 
 type VersionMismatchError struct {
@@ -35,17 +35,31 @@ func (e *VersionMismatchError) Error() string {
 	return fmt.Sprintf("%s version mismatch: %s expected but %s found in the cache", e.BinaryName, e.ExpectedVersion, e.CurrentVersion)
 }
 
-func New(binaryName string, archiveURL string, destDir string, version string, getVersion func() (string, error)) *Cache {
+func New(binaryName string, archiveURL string, destDir string, version string, getVersion func(string) (string, error)) *Cache {
 	return &Cache{binaryName: binaryName, archiveURL: archiveURL, destDir: destDir, version: version, getVersion: getVersion}
 }
 
-func getCurrentOcVersion() (string, error) {
-	ocPath := filepath.Join(constants.CrcOcBinDir, constants.OcBinaryName)
-	stdOut, _, err := crcos.RunWithDefaultLocale(ocPath, "version", "--client")
-	if len(strings.Split(stdOut, ":")) < 2 {
-		return "", fmt.Errorf("Unable to parse the version information of %s", ocPath)
+func getCurrentOcVersion(binaryPath string) (string, error) {
+	return getVersionGeneric(binaryPath, "version", "--client")
+}
+
+func (c *Cache) getBinaryPath() string {
+	return filepath.Join(c.destDir, c.binaryName)
+}
+
+/* getVersionGeneric runs the cached binary with 'args', and assumes the version string
+ * was output on stdout's first line with this format:
+ * something: <version>
+ *
+ * It returns <version> as a string
+ */
+func getVersionGeneric(binaryPath string, args ...string) (string, error) {
+	stdOut, _, err := crcos.RunWithDefaultLocale(binaryPath, args...)
+	parsedOutput := strings.Split(stdOut, ":")
+	if len(parsedOutput) < 2 {
+		return "", fmt.Errorf("Unable to parse the version information of %s", binaryPath)
 	}
-	return strings.TrimSpace(strings.Split(stdOut, ":")[1]), err
+	return strings.TrimSpace(parsedOutput[1]), err
 }
 
 func NewOcCache() *Cache {
@@ -147,7 +161,7 @@ func (c *Cache) CheckVersion() error {
 	if c.version == "" {
 		return nil
 	}
-	currentVersion, err := c.getVersion()
+	currentVersion, err := c.getVersion(c.getBinaryPath())
 	if err != nil {
 		return err
 	}
