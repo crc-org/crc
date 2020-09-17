@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/cache"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/validation"
-	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/embed"
-	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/docker/go-units"
 )
 
@@ -85,7 +82,7 @@ func checkOcBinaryCached() error {
 	// We should remove this code after 3-4 releases. (after 2020-07-10)
 	os.Remove(filepath.Join(constants.CrcBinDir, "oc"))
 
-	oc := cache.NewOcCache(version.GetOcVersion(), getCurrentOcversion)
+	oc := cache.NewOcCache()
 	if !oc.IsCached() {
 		return errors.New("oc binary is not cached")
 	}
@@ -97,7 +94,7 @@ func checkOcBinaryCached() error {
 }
 
 func fixOcBinaryCached() error {
-	oc := cache.NewOcCache(version.GetOcVersion(), getCurrentOcversion)
+	oc := cache.NewOcCache()
 	if err := oc.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download oc %v", err)
 	}
@@ -113,7 +110,7 @@ func checkPodmanBinaryCached() error {
 }
 
 func fixPodmanBinaryCached() error {
-	podman := cache.NewPodmanCache("", nil)
+	podman := cache.NewPodmanCache()
 	if err := podman.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download podman remote binary %v", err)
 	}
@@ -124,7 +121,7 @@ func fixPodmanBinaryCached() error {
 // Check if goodhost binary is cached or not
 func checkGoodhostsBinaryCached() error {
 	goodhostPath := filepath.Join(constants.CrcBinDir, constants.GoodhostsBinaryName)
-	goodhost := cache.NewGoodhostsCache("", nil)
+	goodhost := cache.NewGoodhostsCache()
 	if !goodhost.IsCached() {
 		return errors.New("goodhost binary is not cached")
 	}
@@ -134,19 +131,10 @@ func checkGoodhostsBinaryCached() error {
 
 func fixGoodhostsBinaryCached() error {
 	goodhostPath := filepath.Join(constants.CrcBinDir, constants.GoodhostsBinaryName)
-	goodhost := cache.NewGoodhostsCache("", nil)
+	goodhost := cache.NewGoodhostsCache()
 	if err := goodhost.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download goodhost binary %v", err)
 	}
 	logging.Debug("goodhost binary cached")
 	return setSuid(goodhostPath)
-}
-
-func getCurrentOcversion() (string, error) {
-	ocPath := filepath.Join(constants.CrcOcBinDir, constants.OcBinaryName)
-	stdOut, _, err := crcos.RunWithDefaultLocale(ocPath, "version", "--client")
-	if len(strings.Split(stdOut, ":")) < 2 {
-		return "", fmt.Errorf("Unable to parse the version information of %s", ocPath)
-	}
-	return strings.TrimSpace(strings.Split(stdOut, ":")[1]), err
 }

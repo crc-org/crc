@@ -9,6 +9,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/download"
 	"github.com/code-ready/crc/pkg/embed"
 	"github.com/code-ready/crc/pkg/extract"
@@ -38,16 +39,25 @@ func New(binaryName string, archiveURL string, destDir string, version string, g
 	return &Cache{binaryName: binaryName, archiveURL: archiveURL, destDir: destDir, version: version, getVersion: getVersion}
 }
 
-func NewOcCache(version string, getVersion func() (string, error)) *Cache {
-	return New(constants.OcBinaryName, constants.GetOcURL(), constants.CrcOcBinDir, version, getVersion)
+func getCurrentOcVersion() (string, error) {
+	ocPath := filepath.Join(constants.CrcOcBinDir, constants.OcBinaryName)
+	stdOut, _, err := crcos.RunWithDefaultLocale(ocPath, "version", "--client")
+	if len(strings.Split(stdOut, ":")) < 2 {
+		return "", fmt.Errorf("Unable to parse the version information of %s", ocPath)
+	}
+	return strings.TrimSpace(strings.Split(stdOut, ":")[1]), err
 }
 
-func NewPodmanCache(version string, getVersion func() (string, error)) *Cache {
-	return New(constants.PodmanBinaryName, constants.GetPodmanURL(), constants.CrcBinDir, version, getVersion)
+func NewOcCache() *Cache {
+	return New(constants.OcBinaryName, constants.GetOcURL(), constants.CrcOcBinDir, version.GetOcVersion(), getCurrentOcVersion)
 }
 
-func NewGoodhostsCache(version string, getVersion func() (string, error)) *Cache {
-	return New(constants.GoodhostsBinaryName, constants.GetGoodhostsURL(), constants.CrcBinDir, version, getVersion)
+func NewPodmanCache() *Cache {
+	return New(constants.PodmanBinaryName, constants.GetPodmanURL(), constants.CrcBinDir, "", nil)
+}
+
+func NewGoodhostsCache() *Cache {
+	return New(constants.GoodhostsBinaryName, constants.GetGoodhostsURL(), constants.CrcBinDir, "", nil)
 }
 
 func (c *Cache) IsCached() bool {
