@@ -12,7 +12,7 @@ type MachineConfig struct {
 	DiskPathURL string
 	SSHKeyPath  string
 
-	// Hyperkit specific configuration
+	// HyperKit specific configuration
 	KernelCmdLine string
 	Initramfs     string
 	Kernel        string

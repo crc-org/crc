@@ -5,12 +5,12 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
 )
 
-func NewMachineDriverHyperkitCache() *Cache {
+func NewMachineDriverHyperKitCache() *Cache {
 	return New(hyperkit.MachineDriverCommand, hyperkit.MachineDriverDownloadURL, constants.CrcBinDir, hyperkit.MachineDriverVersion, getHyperKitMachineDriverVersion)
 }
 
-func NewHyperkitCache() *Cache {
-	return New(hyperkit.HyperkitCommand, hyperkit.HyperkitDownloadURL, constants.CrcBinDir, "", nil)
+func NewHyperKitCache() *Cache {
+	return New(hyperkit.HyperKitCommand, hyperkit.HyperKitDownloadURL, constants.CrcBinDir, "", nil)
 }
 
 func getHyperKitMachineDriverVersion(binaryPath string) (string, error) {
