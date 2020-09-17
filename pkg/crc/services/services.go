@@ -22,7 +22,6 @@ type ServicePostStartConfig struct {
 	DriverName     string
 	BundleMetadata bundle.CrcBundleInfo
 	IP             string
-	HostIP         string
 }
 
 type ServicePostStartResult struct {

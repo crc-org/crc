@@ -117,6 +117,9 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	var privateKeyPath string
 	var pullSecret string
 	exists, err := client.Exists(startConfig.Name)
+	if err != nil {
+		return startError(startConfig.Name, "Cannot determine if VM exists", err)
+	}
 	if !exists {
 		machineConfig := config.MachineConfig{
 			Name:       startConfig.Name,
@@ -284,20 +287,6 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		return startError(startConfig.Name, "Error getting the IP", err)
 	}
 
-	var hostIP string
-	determineHostIP := func() error {
-		hostIP, err = network.DetermineHostIP(instanceIP)
-		if err != nil {
-			logging.Debugf("Error finding host IP (%v) - retrying", err)
-			return &errors.RetriableError{Err: err}
-		}
-		return nil
-	}
-
-	if err := errors.RetryAfter(30, determineHostIP, 2*time.Second); err != nil {
-		return startError(startConfig.Name, "Error determining host IP", err)
-	}
-
 	proxyConfig, err := getProxyConfig(crcBundleMetadata.ClusterInfo.BaseDomain)
 	if err != nil {
 		return startError(startConfig.Name, "Error getting proxy configuration", err)
@@ -311,7 +300,6 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		// TODO: would prefer passing in a more generic type
 		SSHRunner: sshRunner,
 		IP:        instanceIP,
-		HostIP:    hostIP,
 		// TODO: should be more finegrained
 		BundleMetadata: *crcBundleMetadata,
 	}
