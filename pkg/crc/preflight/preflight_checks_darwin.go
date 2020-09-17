@@ -27,6 +27,9 @@ func checkHyperKitInstalled() error {
 	if err != nil {
 		return fmt.Errorf("%s not executable", hyperkitPath)
 	}
+	if err := h.CheckVersion(); err != nil {
+		return err
+	}
 	return checkSuid(hyperkitPath)
 }
 
