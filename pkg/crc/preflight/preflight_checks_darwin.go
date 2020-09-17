@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/cache"
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -22,7 +21,7 @@ const (
 )
 
 func checkHyperKitInstalled() error {
-	h := cache.NewHyperkitCache("", nil)
+	h := cache.NewHyperkitCache()
 	if !h.IsCached() {
 		return fmt.Errorf("%s binary is not cached", hyperkit.HyperkitCommand)
 	}
@@ -36,7 +35,7 @@ func checkHyperKitInstalled() error {
 
 func fixHyperKitInstallation() error {
 	logging.Debugf("Installing %s", hyperkit.HyperkitCommand)
-	h := cache.NewHyperkitCache("", nil)
+	h := cache.NewHyperkitCache()
 	if err := h.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download %s : %v", hyperkit.HyperkitCommand, err)
 	}
@@ -45,7 +44,7 @@ func fixHyperKitInstallation() error {
 
 func checkMachineDriverHyperKitInstalled() error {
 	logging.Debugf("Checking if %s is installed", hyperkit.MachineDriverCommand)
-	hyperkitDriver := cache.NewMachineDriverHyperkitCache(hyperkit.MachineDriverVersion, getHyperKitMachineDriverVersion)
+	hyperkitDriver := cache.NewMachineDriverHyperkitCache()
 	if !hyperkitDriver.IsCached() {
 		return fmt.Errorf("%s binary is not cached", hyperkit.MachineDriverCommand)
 	}
@@ -58,7 +57,7 @@ func checkMachineDriverHyperKitInstalled() error {
 
 func fixMachineDriverHyperKitInstalled() error {
 	logging.Debugf("Installing %s", hyperkit.MachineDriverCommand)
-	hyperkitDriver := cache.NewMachineDriverHyperkitCache(hyperkit.MachineDriverVersion, getHyperKitMachineDriverVersion)
+	hyperkitDriver := cache.NewMachineDriverHyperkitCache()
 	if err := hyperkitDriver.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download %s : %v", hyperkit.MachineDriverCommand, err)
 	}
@@ -156,13 +155,4 @@ func addFileWritePermissionToUser(filename string) error {
 	logging.Debugf("%s is readable/writable by current user", filename)
 
 	return nil
-}
-
-func getHyperKitMachineDriverVersion() (string, error) {
-	driverBinPath := filepath.Join(constants.CrcBinDir, hyperkit.MachineDriverCommand)
-	stdOut, _, err := crcos.RunWithDefaultLocale(driverBinPath, "version")
-	if len(strings.Split(stdOut, ":")) < 2 {
-		return "", fmt.Errorf("Unable to parse the version information of %s", driverBinPath)
-	}
-	return strings.TrimSpace(strings.Split(stdOut, ":")[1]), err
 }

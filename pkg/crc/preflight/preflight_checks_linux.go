@@ -219,7 +219,7 @@ func fixLibvirtServiceRunning() error {
 func checkMachineDriverLibvirtInstalled() error {
 	logging.Debugf("Checking if %s is installed", libvirt.MachineDriverCommand)
 
-	machineDriverLibvirt := cache.NewMachineDriverLibvirtCache(libvirt.MachineDriverVersion, getCurrentLibvirtDriverVersion)
+	machineDriverLibvirt := cache.NewMachineDriverLibvirtCache()
 	if !machineDriverLibvirt.IsCached() {
 		return fmt.Errorf("%s binary is not cached", libvirt.MachineDriverCommand)
 	}
@@ -232,7 +232,7 @@ func checkMachineDriverLibvirtInstalled() error {
 
 func fixMachineDriverLibvirtInstalled() error {
 	logging.Debugf("Installing %s", libvirt.MachineDriverCommand)
-	machineDriverLibvirt := cache.NewMachineDriverLibvirtCache(libvirt.MachineDriverVersion, getCurrentLibvirtDriverVersion)
+	machineDriverLibvirt := cache.NewMachineDriverLibvirtCache()
 	if err := machineDriverLibvirt.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download %s: %v", libvirt.MachineDriverCommand, err)
 	}
@@ -603,15 +603,6 @@ func checkNetworkManagerIsRunning() error {
 
 func fixNetworkManagerIsRunning() error {
 	return fmt.Errorf("NetworkManager is required. Please make sure it is installed and running manually")
-}
-
-func getCurrentLibvirtDriverVersion() (string, error) {
-	driverBinPath := filepath.Join(constants.CrcBinDir, libvirt.MachineDriverCommand)
-	stdOut, _, err := crcos.RunWithDefaultLocale(driverBinPath, "version")
-	if len(strings.Split(stdOut, ":")) < 2 {
-		return "", fmt.Errorf("Unable to parse the version information of %s", driverBinPath)
-	}
-	return strings.TrimSpace(strings.Split(stdOut, ":")[1]), err
 }
 
 func getCPUFlags() (string, error) {
