@@ -88,7 +88,7 @@ var (
 	dataFileUrls = map[string][]string{
 		"darwin": {
 			hyperkit.MachineDriverDownloadURL,
-			hyperkit.HyperkitDownloadURL,
+			hyperkit.HyperKitDownloadURL,
 			constants.GetOcURLForOs("darwin"),
 			constants.GetCRCMacTrayDownloadURL(),
 			constants.GetGoodhostsURLForOs("darwin"),

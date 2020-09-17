@@ -18,7 +18,7 @@ const (
 )
 
 func checkHyperKitInstalled() error {
-	h := cache.NewHyperkitCache()
+	h := cache.NewHyperKitCache()
 	if !h.IsCached() {
 		return fmt.Errorf("%s binary is not cached", h.GetBinaryName())
 	}
@@ -31,7 +31,7 @@ func checkHyperKitInstalled() error {
 }
 
 func fixHyperKitInstallation() error {
-	h := cache.NewHyperkitCache()
+	h := cache.NewHyperKitCache()
 
 	logging.Debugf("Installing %s", h.GetBinaryName())
 
@@ -42,10 +42,9 @@ func fixHyperKitInstallation() error {
 }
 
 func checkMachineDriverHyperKitInstalled() error {
-	hyperkitDriver := cache.NewMachineDriverHyperkitCache()
+	hyperkitDriver := cache.NewMachineDriverHyperKitCache()
 
 	logging.Debugf("Checking if %s is installed", hyperkitDriver.GetBinaryName())
-
 	if !hyperkitDriver.IsCached() {
 		return fmt.Errorf("%s binary is not cached", hyperkitDriver.GetBinaryName())
 	}
@@ -57,7 +56,7 @@ func checkMachineDriverHyperKitInstalled() error {
 }
 
 func fixMachineDriverHyperKitInstalled() error {
-	hyperkitDriver := cache.NewMachineDriverHyperkitCache()
+	hyperkitDriver := cache.NewMachineDriverHyperKitCache()
 
 	logging.Debugf("Installing %s", hyperkitDriver.GetBinaryName())
 
