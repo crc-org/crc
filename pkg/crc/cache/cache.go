@@ -148,12 +148,11 @@ func (c *Cache) CacheBinary() error {
 }
 
 func (c *Cache) getBinary(destDir string) (string, error) {
-	logging.Debug("Trying to extract oc from crc binary")
+	logging.Debugf("Trying to extract %s from crc binary", c.binaryName)
 	archiveName := filepath.Base(c.archiveURL)
 	destPath := filepath.Join(destDir, archiveName)
 	err := embed.Extract(archiveName, destPath)
 	if err != nil {
-		logging.Debug("Downloading oc")
 		return download.Download(c.archiveURL, destDir, 0600)
 	}
 
@@ -170,12 +169,15 @@ func (c *Cache) CheckVersion() error {
 		return err
 	}
 	if currentVersion != c.version {
-		return &VersionMismatchError{
+		err := &VersionMismatchError{
 			BinaryName:      c.binaryName,
 			CurrentVersion:  currentVersion,
 			ExpectedVersion: c.version,
 		}
+		logging.Debugf("%s", err.Error())
+		return err
 	}
+	logging.Debugf("Found %s version %s", c.binaryName, c.version)
 	return nil
 }
 
