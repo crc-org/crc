@@ -43,8 +43,12 @@ func getCurrentOcVersion(binaryPath string) (string, error) {
 	return getVersionGeneric(binaryPath, "version", "--client")
 }
 
-func (c *Cache) getBinaryPath() string {
+func (c *Cache) GetBinaryPath() string {
 	return filepath.Join(c.destDir, c.binaryName)
+}
+
+func (c *Cache) GetBinaryName() string {
+	return c.binaryName
 }
 
 /* getVersionGeneric runs the cached binary with 'args', and assumes the version string
@@ -75,7 +79,7 @@ func NewGoodhostsCache() *Cache {
 }
 
 func (c *Cache) IsCached() bool {
-	if _, err := os.Stat(filepath.Join(c.destDir, c.binaryName)); os.IsNotExist(err) {
+	if _, err := os.Stat(c.GetBinaryPath()); os.IsNotExist(err) {
 		return false
 	}
 	return true
@@ -161,7 +165,7 @@ func (c *Cache) CheckVersion() error {
 	if c.version == "" {
 		return nil
 	}
-	currentVersion, err := c.getVersion(c.getBinaryPath())
+	currentVersion, err := c.getVersion(c.GetBinaryPath())
 	if err != nil {
 		return err
 	}
