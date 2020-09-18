@@ -4,12 +4,9 @@ import (
 	"fmt"
 	"os"
 	"os/user"
-	"path/filepath"
 
 	"github.com/code-ready/crc/pkg/crc/cache"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"golang.org/x/sys/unix"
 )
@@ -23,9 +20,9 @@ const (
 func checkHyperKitInstalled() error {
 	h := cache.NewHyperkitCache()
 	if !h.IsCached() {
-		return fmt.Errorf("%s binary is not cached", hyperkit.HyperkitCommand)
+		return fmt.Errorf("%s binary is not cached", h.GetBinaryName())
 	}
-	hyperkitPath := filepath.Join(constants.CrcBinDir, hyperkit.HyperkitCommand)
+	hyperkitPath := h.GetBinaryPath()
 	err := unix.Access(hyperkitPath, unix.X_OK)
 	if err != nil {
 		return fmt.Errorf("%s not executable", hyperkitPath)
@@ -34,34 +31,40 @@ func checkHyperKitInstalled() error {
 }
 
 func fixHyperKitInstallation() error {
-	logging.Debugf("Installing %s", hyperkit.HyperkitCommand)
 	h := cache.NewHyperkitCache()
+
+	logging.Debugf("Installing %s", h.GetBinaryName())
+
 	if err := h.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download %s : %v", hyperkit.HyperkitCommand, err)
+		return fmt.Errorf("Unable to download %s : %v", h.GetBinaryName(), err)
 	}
-	return setSuid(filepath.Join(constants.CrcBinDir, hyperkit.HyperkitCommand))
+	return setSuid(h.GetBinaryPath())
 }
 
 func checkMachineDriverHyperKitInstalled() error {
-	logging.Debugf("Checking if %s is installed", hyperkit.MachineDriverCommand)
 	hyperkitDriver := cache.NewMachineDriverHyperkitCache()
+
+	logging.Debugf("Checking if %s is installed", hyperkitDriver.GetBinaryName())
+
 	if !hyperkitDriver.IsCached() {
-		return fmt.Errorf("%s binary is not cached", hyperkit.MachineDriverCommand)
+		return fmt.Errorf("%s binary is not cached", hyperkitDriver.GetBinaryName())
 	}
 
 	if err := hyperkitDriver.CheckVersion(); err != nil {
 		return err
 	}
-	return checkSuid(filepath.Join(constants.CrcBinDir, hyperkit.MachineDriverCommand))
+	return checkSuid(hyperkitDriver.GetBinaryPath())
 }
 
 func fixMachineDriverHyperKitInstalled() error {
-	logging.Debugf("Installing %s", hyperkit.MachineDriverCommand)
 	hyperkitDriver := cache.NewMachineDriverHyperkitCache()
+
+	logging.Debugf("Installing %s", hyperkitDriver.GetBinaryName())
+
 	if err := hyperkitDriver.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download %s : %v", hyperkit.MachineDriverCommand, err)
+		return fmt.Errorf("Unable to download %s : %v", hyperkitDriver.GetBinaryName(), err)
 	}
-	return setSuid(filepath.Join(constants.CrcBinDir, hyperkit.MachineDriverCommand))
+	return setSuid(hyperkitDriver.GetBinaryPath())
 }
 
 func checkEtcHostsFilePermissions() error {
