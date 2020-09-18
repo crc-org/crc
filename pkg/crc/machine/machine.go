@@ -346,8 +346,18 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	}
 	if !exists {
 		logging.Info("Configuring cluster for first start")
-		if err := configureCluster(ocConfig, sshRunner, proxyConfig, pullSecret, instanceIP); err != nil {
+		if err := configProxyForCluster(ocConfig, sshRunner, sd, proxyConfig, instanceIP); err != nil {
 			return startError(startConfig.Name, "Error Setting cluster config", err)
+		}
+
+		logging.Info("Adding user's pull secret ...")
+		if err := cluster.AddPullSecret(sshRunner, ocConfig, pullSecret); err != nil {
+			return startError(startConfig.Name, "Failed to update user pull secret", err)
+		}
+
+		logging.Info("Updating cluster ID ...")
+		if err := cluster.UpdateClusterID(ocConfig); err != nil {
+			return startError(startConfig.Name, "Failed to update cluster ID", err)
 		}
 	}
 
@@ -738,25 +748,6 @@ func updateSSHKeyAndCopyKubeconfig(sshRunner *crcssh.Runner, startConfig StartCo
 	return nil
 }
 
-func configureCluster(ocConfig oc.Config, sshRunner *crcssh.Runner, proxyConfig *network.ProxyConfig, pullSecret, instanceIP string) (rerr error) {
-	sd := systemd.NewInstanceSystemdCommander(sshRunner)
-
-	if err := configProxyForCluster(ocConfig, sshRunner, sd, proxyConfig, instanceIP); err != nil {
-		return fmt.Errorf("Failed to configure proxy for cluster: %v", err)
-	}
-
-	logging.Info("Adding user's pull secret ...")
-	if err := cluster.AddPullSecret(sshRunner, ocConfig, pullSecret); err != nil {
-		return fmt.Errorf("Failed to update user pull secret or cluster ID: %v", err)
-	}
-	logging.Info("Updating cluster ID ...")
-	if err := cluster.UpdateClusterID(ocConfig); err != nil {
-		return fmt.Errorf("Failed to update cluster ID: %v", err)
-	}
-
-	return nil
-}
-
 func getProxyConfig(baseDomainName string) (*network.ProxyConfig, error) {
 	proxy, err := network.NewProxyConfig()
 	if err != nil {
@@ -769,8 +760,7 @@ func getProxyConfig(baseDomainName string) (*network.ProxyConfig, error) {
 	return proxy, nil
 }
 
-func configProxyForCluster(ocConfig oc.Config, sshRunner *crcssh.Runner, sd *systemd.Commander,
-	proxy *network.ProxyConfig, instanceIP string) (err error) {
+func configProxyForCluster(ocConfig oc.Config, sshRunner *crcssh.Runner, sd *systemd.Commander, proxy *network.ProxyConfig, instanceIP string) (err error) {
 	if !proxy.IsEnabled() {
 		return nil
 	}
