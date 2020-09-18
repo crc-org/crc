@@ -217,26 +217,29 @@ func fixLibvirtServiceRunning() error {
 }
 
 func checkMachineDriverLibvirtInstalled() error {
-	logging.Debugf("Checking if %s is installed", libvirt.MachineDriverCommand)
-
 	machineDriverLibvirt := cache.NewMachineDriverLibvirtCache()
+
+	logging.Debugf("Checking if %s is installed", machineDriverLibvirt.GetBinaryName())
+
 	if !machineDriverLibvirt.IsCached() {
-		return fmt.Errorf("%s binary is not cached", libvirt.MachineDriverCommand)
+		return fmt.Errorf("%s binary is not cached", machineDriverLibvirt.GetBinaryName())
 	}
 	if err := machineDriverLibvirt.CheckVersion(); err != nil {
 		return err
 	}
-	logging.Debugf("%s is already installed", libvirt.MachineDriverCommand)
+	logging.Debugf("%s is already installed", machineDriverLibvirt.GetBinaryName())
 	return nil
 }
 
 func fixMachineDriverLibvirtInstalled() error {
-	logging.Debugf("Installing %s", libvirt.MachineDriverCommand)
 	machineDriverLibvirt := cache.NewMachineDriverLibvirtCache()
+
+	logging.Debugf("Installing %s", machineDriverLibvirt.GetBinaryName())
+
 	if err := machineDriverLibvirt.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download %s: %v", libvirt.MachineDriverCommand, err)
+		return fmt.Errorf("Unable to download %s: %v", machineDriverLibvirt.GetBinaryName(), err)
 	}
-	logging.Debugf("%s is installed in %s", libvirt.MachineDriverCommand, constants.CrcBinDir)
+	logging.Debugf("%s is installed in %s", machineDriverLibvirt.GetBinaryName(), filepath.Dir(machineDriverLibvirt.GetBinaryPath()))
 	return nil
 }
 

@@ -120,21 +120,19 @@ func fixPodmanBinaryCached() error {
 
 // Check if goodhost binary is cached or not
 func checkGoodhostsBinaryCached() error {
-	goodhostPath := filepath.Join(constants.CrcBinDir, constants.GoodhostsBinaryName)
 	goodhost := cache.NewGoodhostsCache()
 	if !goodhost.IsCached() {
 		return errors.New("goodhost binary is not cached")
 	}
 	logging.Debug("goodhost binary already cached")
-	return checkSuid(goodhostPath)
+	return checkSuid(goodhost.GetBinaryPath())
 }
 
 func fixGoodhostsBinaryCached() error {
-	goodhostPath := filepath.Join(constants.CrcBinDir, constants.GoodhostsBinaryName)
 	goodhost := cache.NewGoodhostsCache()
 	if err := goodhost.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download goodhost binary %v", err)
 	}
 	logging.Debug("goodhost binary cached")
-	return setSuid(goodhostPath)
+	return setSuid(goodhost.GetBinaryPath())
 }
