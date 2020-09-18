@@ -33,7 +33,7 @@ func TestRetryAfterMaxAttempts(t *testing.T) {
 		calls++
 		return &RetriableError{Err: errors.New("failed")}
 	}, 0)
-	assert.EqualError(t, ret, "Temporary Error: failed\nTemporary Error: failed\nTemporary Error: failed")
+	assert.EqualError(t, ret, "Temporary error: failed\nTemporary error: failed\nTemporary error: failed")
 	assert.Equal(t, 3, calls)
 }
 

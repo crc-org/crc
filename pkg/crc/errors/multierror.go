@@ -36,7 +36,7 @@ type RetriableError struct {
 }
 
 func (r RetriableError) Error() string {
-	return "Temporary Error: " + r.Err.Error()
+	return "Temporary error: " + r.Err.Error()
 }
 
 // RetryAfter retries a number of attempts, after a delay
