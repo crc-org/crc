@@ -321,6 +321,10 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		return startError(startConfig.Name, "Failed to query DNS from host", err)
 	}
 
+	if err := cluster.EnsurePullSecretPresentOnInstanceDisk(sshRunner, startConfig.PullSecret); err != nil {
+		return startError(startConfig.Name, "Failed to update VM pull secret", err)
+	}
+
 	ocConfig := oc.UseOCWithSSH(sshRunner)
 	if needsCertsRenewal {
 		logging.Info("Cluster TLS certificates have expired, renewing them... [will take up to 5 minutes]")
@@ -350,11 +354,7 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 			return startError(startConfig.Name, "Error Setting cluster config", err)
 		}
 
-		logging.Info("Adding user's pull secret ...")
-		if err := cluster.AddPullSecretToInstanceDisk(sshRunner, startConfig.PullSecret); err != nil {
-			return startError(startConfig.Name, "Failed to update user pull secret", err)
-		}
-
+		logging.Info("Adding user's pull secret to the cluster ...")
 		if err := cluster.AddPullSecretInTheCluster(ocConfig, startConfig.PullSecret); err != nil {
 			return startError(startConfig.Name, "Failed to update user pull secret", err)
 		}
