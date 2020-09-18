@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
+	"github.com/code-ready/crc/pkg/crc/cluster"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
@@ -32,13 +33,15 @@ func stopHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.RawM
 
 func startHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.RawMessage) string {
 	startConfig := machine.StartConfig{
-		Name:          constants.DefaultName,
-		BundlePath:    crcConfig.Get(config.Bundle).AsString(),
-		Memory:        crcConfig.Get(config.Memory).AsInt(),
-		CPUs:          crcConfig.Get(config.CPUs).AsInt(),
-		NameServer:    crcConfig.Get(config.NameServer).AsString(),
-		GetPullSecret: getPullSecretFileContent(crcConfig),
-		Debug:         true,
+		Name:       constants.DefaultName,
+		BundlePath: crcConfig.Get(config.Bundle).AsString(),
+		Memory:     crcConfig.Get(config.Memory).AsInt(),
+		CPUs:       crcConfig.Get(config.CPUs).AsInt(),
+		NameServer: crcConfig.Get(config.NameServer).AsString(),
+		PullSecret: &cluster.PullSecret{
+			Getter: getPullSecretFileContent(crcConfig),
+		},
+		Debug: true,
 	}
 	status, _ := client.Start(startConfig)
 	return encodeStructToJSON(status)

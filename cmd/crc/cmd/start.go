@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
+	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/input"
@@ -62,13 +63,15 @@ func runStart(arguments []string) (*machine.StartResult, error) {
 	}
 
 	startConfig := machine.StartConfig{
-		Name:          constants.DefaultName,
-		BundlePath:    config.Get(cmdConfig.Bundle).AsString(),
-		Memory:        config.Get(cmdConfig.Memory).AsInt(),
-		CPUs:          config.Get(cmdConfig.CPUs).AsInt(),
-		NameServer:    config.Get(cmdConfig.NameServer).AsString(),
-		GetPullSecret: getPullSecretFileContent,
-		Debug:         isDebugLog(),
+		Name:       constants.DefaultName,
+		BundlePath: config.Get(cmdConfig.Bundle).AsString(),
+		Memory:     config.Get(cmdConfig.Memory).AsInt(),
+		CPUs:       config.Get(cmdConfig.CPUs).AsInt(),
+		NameServer: config.Get(cmdConfig.NameServer).AsString(),
+		PullSecret: &cluster.PullSecret{
+			Getter: getPullSecretFileContent,
+		},
+		Debug: isDebugLog(),
 	}
 
 	client := machine.NewClient()

@@ -1,6 +1,7 @@
 package machine
 
 import (
+	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/machine/libmachine/state"
 )
@@ -24,7 +25,7 @@ type StartConfig struct {
 	Debug bool
 
 	// User Pull secret
-	GetPullSecret GetPullSecretFunc
+	PullSecret *cluster.PullSecret
 }
 
 type ClusterConfig struct {

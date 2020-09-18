@@ -133,23 +133,23 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	}
 
 	// Pre-VM start
-	var pullSecret string
 	var host *host.Host
 	exists, err := client.Exists(startConfig.Name)
 	if err != nil {
 		return startError(startConfig.Name, "Cannot determine if VM exists", err)
 	}
 	if !exists {
+		// Ask early for pull secret if it hasn't been requested yet
+		_, err = startConfig.PullSecret.Value()
+		if err != nil {
+			return startError(startConfig.Name, "Failed to ask for pull secret", err)
+		}
+
 		machineConfig := config.MachineConfig{
 			Name:       startConfig.Name,
 			BundleName: filepath.Base(startConfig.BundlePath),
 			CPUs:       startConfig.CPUs,
 			Memory:     startConfig.Memory,
-		}
-
-		pullSecret, err = startConfig.GetPullSecret()
-		if err != nil {
-			return startError(startConfig.Name, "Failed to get pull secret", err)
 		}
 
 		crcBundleMetadata, err = getCrcBundleInfo(startConfig.BundlePath)
@@ -351,11 +351,11 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		}
 
 		logging.Info("Adding user's pull secret ...")
-		if err := cluster.AddPullSecretToInstanceDisk(sshRunner, pullSecret); err != nil {
+		if err := cluster.AddPullSecretToInstanceDisk(sshRunner, startConfig.PullSecret); err != nil {
 			return startError(startConfig.Name, "Failed to update user pull secret", err)
 		}
 
-		if err := cluster.AddPullSecretInTheCluster(ocConfig, pullSecret); err != nil {
+		if err := cluster.AddPullSecretInTheCluster(ocConfig, startConfig.PullSecret); err != nil {
 			return startError(startConfig.Name, "Failed to update user pull secret", err)
 		}
 
