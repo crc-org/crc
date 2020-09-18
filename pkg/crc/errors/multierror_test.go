@@ -33,7 +33,7 @@ func TestRetryAfterMaxAttempts(t *testing.T) {
 		calls++
 		return &RetriableError{Err: errors.New("failed")}
 	}, 0)
-	assert.EqualError(t, ret, "Temporary error: failed\nTemporary error: failed\nTemporary error: failed")
+	assert.EqualError(t, ret, "Temporary error: failed (x3)")
 	assert.Equal(t, 3, calls)
 }
 
@@ -48,4 +48,25 @@ func TestRetryAfterSuccessAfterFailures(t *testing.T) {
 	}, 0)
 	assert.NoError(t, ret)
 	assert.Equal(t, 3, calls)
+}
+
+func TestMultiErrorString(t *testing.T) {
+	assert.Equal(t, "Temporary Error: No Pending CSR (x4)", MultiError{
+		Errors: []error{
+			errors.New("Temporary Error: No Pending CSR"),
+			errors.New("Temporary Error: No Pending CSR"),
+			errors.New("Temporary Error: No Pending CSR"),
+			errors.New("Temporary Error: No Pending CSR"),
+		},
+	}.Error())
+
+	assert.Equal(t, "No Pending CSR (x2)\nConnection refused (x2)\nNo Pending CSR", MultiError{
+		Errors: []error{
+			errors.New("No Pending CSR"),
+			errors.New("No Pending CSR"),
+			errors.New("Connection refused"),
+			errors.New("Connection refused"),
+			errors.New("No Pending CSR"),
+		},
+	}.Error())
 }
