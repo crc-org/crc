@@ -114,7 +114,7 @@ func setConfigHandler(_ machine.Client, args json.RawMessage) string {
 	}
 
 	if len(multiError.Errors) != 0 {
-		setConfigResult.Error = fmt.Sprintf("%v", multiError.ToError())
+		setConfigResult.Error = fmt.Sprintf("%v", multiError)
 	}
 
 	setConfigResult.Properties = successProps
@@ -155,7 +155,7 @@ func unsetConfigHandler(_ machine.Client, args json.RawMessage) string {
 		successProps = append(successProps, key)
 	}
 	if len(multiError.Errors) != 0 {
-		unsetConfigResult.Error = fmt.Sprintf("%v", multiError.ToError())
+		unsetConfigResult.Error = fmt.Sprintf("%v", multiError)
 	}
 	unsetConfigResult.Properties = successProps
 	return encodeStructToJSON(unsetConfigResult)
