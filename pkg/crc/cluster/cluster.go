@@ -84,11 +84,7 @@ func GetRootPartitionUsage(sshRunner *ssh.Runner) (int64, int64, error) {
 	return diskSize, diskUsage, nil
 }
 
-func AddPullSecret(sshRunner *ssh.Runner, ocConfig oc.Config, pullSec string) error {
-	if err := addPullSecretToInstanceDisk(sshRunner, pullSec); err != nil {
-		return err
-	}
-
+func AddPullSecretInTheCluster(ocConfig oc.Config, pullSec string) error {
 	base64OfPullSec := base64.StdEncoding.EncodeToString([]byte(pullSec))
 	cmdArgs := []string{"patch", "secret", "pull-secret", "-p",
 		fmt.Sprintf(`'{"data":{".dockerconfigjson":"%s"}}'`, base64OfPullSec),
@@ -235,7 +231,7 @@ func addProxyCACertToInstance(sshRunner *ssh.Runner, proxy *network.ProxyConfig)
 	return nil
 }
 
-func addPullSecretToInstanceDisk(sshRunner *ssh.Runner, pullSec string) error {
+func AddPullSecretToInstanceDisk(sshRunner *ssh.Runner, pullSec string) error {
 	err := sshRunner.CopyData([]byte(pullSec), "/var/lib/kubelet/config.json", 0600)
 	if err != nil {
 		return err
