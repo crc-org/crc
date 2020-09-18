@@ -85,5 +85,5 @@ func TestRenderActionJSONFailure(t *testing.T) {
 		Success: false,
 		Error:   "broken",
 	}, out, jsonFormat))
-	assert.Equal(t, "{\n  \"success\": false,\n  \"error\": \"broken\"\n}\n", out.String())
+	assert.JSONEq(t, `{"success": false, "error": "broken"}`, out.String())
 }

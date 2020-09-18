@@ -29,12 +29,6 @@ func TestJsonVersion(t *testing.T) {
 		Embedded:         false,
 	}, "json"))
 
-	expected := `{
-  "version": "1.13",
-  "commit": "aabbcc",
-  "openshiftVersion": "4.5.4",
-  "embedded": false
-}
-`
-	assert.Equal(t, expected, out.String())
+	expected := `{"version": "1.13", "commit": "aabbcc", "openshiftVersion": "4.5.4", "embedded": false}`
+	assert.JSONEq(t, expected, out.String())
 }
