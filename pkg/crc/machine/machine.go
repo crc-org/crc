@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/cluster"
@@ -253,10 +254,8 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 
 	// Post VM start immediately update SSH key and copy kubeconfig to instance
 	// dir and VM
-	if !exists {
-		if err := updateSSHKeyAndCopyKubeconfig(sshRunner, startConfig, crcBundleMetadata); err != nil {
-			return startError(startConfig.Name, "Error updating public key", err)
-		}
+	if err := updateSSHKeyAndCopyKubeconfig(sshRunner, startConfig, crcBundleMetadata); err != nil {
+		return startError(startConfig.Name, "Error updating public key", err)
 	}
 
 	// Start network time synchronization if `CRC_DEBUG_ENABLE_STOP_NTP` is not set
@@ -685,9 +684,16 @@ func (*client) GetConsoleURL(consoleConfig ConsoleConfig) (ConsoleResult, error)
 }
 
 func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
-	// Generate ssh key pair
-	if err := ssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
-		return fmt.Errorf("Error generating ssh key pair: %v", err)
+	if _, err := os.Stat(constants.GetPrivateKeyPath()); err != nil {
+		if !os.IsNotExist(err) {
+			return err
+		}
+
+		// Generate ssh key pair
+		logging.Info("Generating new SSH Key pair ...")
+		if err := ssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
+			return fmt.Errorf("Error generating ssh key pair: %v", err)
+		}
 	}
 
 	// Read generated public key
@@ -695,6 +701,13 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	if err != nil {
 		return err
 	}
+
+	authorizedKeys, err := sshRunner.Run("cat /home/core/.ssh/authorized_keys")
+	if err == nil && strings.TrimSpace(authorizedKeys) == strings.TrimSpace(string(publicKey)) {
+		return nil
+	}
+
+	logging.Info("Updating authorized keys ...")
 	cmd := fmt.Sprintf("echo '%s' > /home/core/.ssh/authorized_keys; chmod 644 /home/core/.ssh/authorized_keys", publicKey)
 	_, err = sshRunner.Run(cmd)
 	if err != nil {
@@ -704,15 +717,18 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 }
 
 func updateSSHKeyAndCopyKubeconfig(sshRunner *crcssh.Runner, startConfig StartConfig, crcBundleMetadata *bundle.CrcBundleInfo) error {
-	logging.Info("Generating new SSH Key pair ...")
 	if err := updateSSHKeyPair(sshRunner); err != nil {
 		return fmt.Errorf("Error updating SSH Keys: %v", err)
+	}
+
+	kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, startConfig.Name, "kubeconfig")
+	if _, err := os.Stat(kubeConfigFilePath); err == nil {
+		return nil
 	}
 
 	// Copy Kubeconfig file from bundle extract path to machine directory.
 	// In our case it would be ~/.crc/machines/crc/
 	logging.Info("Copying kubeconfig file to instance dir ...")
-	kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, startConfig.Name, "kubeconfig")
 	err := crcos.CopyFileContents(crcBundleMetadata.GetKubeConfigPath(),
 		kubeConfigFilePath,
 		0644)
