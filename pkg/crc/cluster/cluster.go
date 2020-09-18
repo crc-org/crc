@@ -16,6 +16,9 @@ import (
 	"github.com/pborman/uuid"
 )
 
+// #nosec G101
+const vmPullSecretPath = "/var/lib/kubelet/config.json"
+
 func WaitForSSH(sshRunner *ssh.Runner) error {
 	checkSSHConnectivity := func() error {
 		_, err := sshRunner.Run("exit 0")
@@ -251,12 +254,16 @@ func (p *PullSecret) Value() (string, error) {
 	return val, err
 }
 
-func AddPullSecretToInstanceDisk(sshRunner *ssh.Runner, pullSecret *PullSecret) error {
+func EnsurePullSecretPresentOnInstanceDisk(sshRunner *ssh.Runner, pullSecret *PullSecret) error {
+	if _, err := sshRunner.Run(fmt.Sprintf("test -e %s", vmPullSecretPath)); err == nil {
+		return nil
+	}
+	logging.Info("Adding user's pull secret to instance disk...")
 	content, err := pullSecret.Value()
 	if err != nil {
 		return err
 	}
-	return sshRunner.CopyData([]byte(content), "/var/lib/kubelet/config.json", 0600)
+	return sshRunner.CopyData([]byte(content), vmPullSecretPath, 0600)
 }
 
 func WaitforRequestHeaderClientCaFile(ocConfig oc.Config) error {
