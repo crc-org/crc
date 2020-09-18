@@ -326,14 +326,19 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		return startError(startConfig.Name, "Failed to update VM pull secret", err)
 	}
 
+	logging.Info("Starting OpenShift kubelet service")
+	sd := systemd.NewInstanceSystemdCommander(sshRunner)
+	if err := sd.Start("kubelet"); err != nil {
+		return startError(startConfig.Name, "Error starting kubelet", err)
+	}
+
 	ocConfig := oc.UseOCWithSSH(sshRunner)
+
 	if certsExpired {
 		logging.Info("Cluster TLS certificates have expired, renewing them... [will take up to 5 minutes]")
-		err = cluster.RegenerateCertificates(sshRunner, ocConfig)
-		if err != nil {
+		if err := cluster.RegenerateCertificates(ocConfig); err != nil {
 			logging.Debugf("Failed to renew TLS certificates: %v", err)
-			buildTime, getBuildTimeErr := crcBundleMetadata.GetBundleBuildTime()
-			if getBuildTimeErr == nil {
+			if buildTime, err := crcBundleMetadata.GetBundleBuildTime(); err == nil {
 				bundleAgeDays := time.Since(buildTime).Hours() / 24
 				if bundleAgeDays >= 30 {
 					/* Initial bundle certificates are only valid for 30 days */
@@ -344,11 +349,6 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		}
 	}
 
-	logging.Info("Starting OpenShift kubelet service")
-	sd := systemd.NewInstanceSystemdCommander(sshRunner)
-	if err := sd.Start("kubelet"); err != nil {
-		return startError(startConfig.Name, "Error starting kubelet", err)
-	}
 	if !exists {
 		logging.Info("Configuring cluster for first start")
 		if err := configProxyForCluster(ocConfig, sshRunner, sd, proxyConfig, instanceIP); err != nil {
