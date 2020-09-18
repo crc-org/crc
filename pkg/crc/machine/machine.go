@@ -351,7 +351,11 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		}
 
 		logging.Info("Adding user's pull secret ...")
-		if err := cluster.AddPullSecret(sshRunner, ocConfig, pullSecret); err != nil {
+		if err := cluster.AddPullSecretToInstanceDisk(sshRunner, pullSecret); err != nil {
+			return startError(startConfig.Name, "Failed to update user pull secret", err)
+		}
+
+		if err := cluster.AddPullSecretInTheCluster(ocConfig, pullSecret); err != nil {
 			return startError(startConfig.Name, "Failed to update user pull secret", err)
 		}
 
