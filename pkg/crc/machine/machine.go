@@ -273,15 +273,10 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	}
 
 	// Check the certs validity inside the vm
-	needsCertsRenewal := false
 	logging.Info("Verifying validity of the cluster certificates ...")
-	certExpiryState, err := cluster.CheckCertsValidity(sshRunner)
+	certsExpired, err := cluster.CheckCertsValidity(sshRunner)
 	if err != nil {
-		if certExpiryState == cluster.CertExpired {
-			needsCertsRenewal = true
-		} else {
-			return startError(startConfig.Name, "Failed to check certificate validity", err)
-		}
+		return startError(startConfig.Name, "Failed to check certificate validity", err)
 	}
 	// Add nameserver to VM if provided by User
 	if startConfig.NameServer != "" {
@@ -332,7 +327,7 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	}
 
 	ocConfig := oc.UseOCWithSSH(sshRunner)
-	if needsCertsRenewal {
+	if certsExpired {
 		logging.Info("Cluster TLS certificates have expired, renewing them... [will take up to 5 minutes]")
 		err = cluster.RegenerateCertificates(sshRunner, ocConfig)
 		if err != nil {

@@ -32,25 +32,17 @@ func WaitForSSH(sshRunner *ssh.Runner) error {
 	return errors.RetryAfter(60*time.Second, checkSSHConnectivity, time.Second)
 }
 
-type CertExpiryState int
-
-const (
-	Unknown CertExpiryState = iota
-	CertNotExpired
-	CertExpired
-)
-
 // CheckCertsValidity checks if the cluster certs have expired or going to expire in next 7 days
-func CheckCertsValidity(sshRunner *ssh.Runner) (CertExpiryState, error) {
+func CheckCertsValidity(sshRunner *ssh.Runner) (bool, error) {
 	certExpiryDate, err := getcertExpiryDateFromVM(sshRunner)
 	if err != nil {
-		return Unknown, err
+		return false, err
 	}
 	if time.Now().After(certExpiryDate) {
-		return CertExpired, fmt.Errorf("Certs have expired, they were valid till: %s", certExpiryDate.Format(time.RFC822))
+		logging.Debugf("Certs have expired, they were valid till: %s", certExpiryDate.Format(time.RFC822))
+		return true, nil
 	}
-
-	return CertNotExpired, nil
+	return false, nil
 }
 
 func getcertExpiryDateFromVM(sshRunner *ssh.Runner) (time.Time, error) {
