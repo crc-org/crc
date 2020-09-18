@@ -84,8 +84,12 @@ func GetRootPartitionUsage(sshRunner *ssh.Runner) (int64, int64, error) {
 	return diskSize, diskUsage, nil
 }
 
-func AddPullSecretInTheCluster(ocConfig oc.Config, pullSec string) error {
-	base64OfPullSec := base64.StdEncoding.EncodeToString([]byte(pullSec))
+func AddPullSecretInTheCluster(ocConfig oc.Config, pullSec *PullSecret) error {
+	content, err := pullSec.Value()
+	if err != nil {
+		return err
+	}
+	base64OfPullSec := base64.StdEncoding.EncodeToString([]byte(content))
 	cmdArgs := []string{"patch", "secret", "pull-secret", "-p",
 		fmt.Sprintf(`'{"data":{".dockerconfigjson":"%s"}}'`, base64OfPullSec),
 		"-n", "openshift-config", "--type", "merge"}
@@ -231,13 +235,28 @@ func addProxyCACertToInstance(sshRunner *ssh.Runner, proxy *network.ProxyConfig)
 	return nil
 }
 
-func AddPullSecretToInstanceDisk(sshRunner *ssh.Runner, pullSec string) error {
-	err := sshRunner.CopyData([]byte(pullSec), "/var/lib/kubelet/config.json", 0600)
+type PullSecret struct {
+	value  string
+	Getter func() (string, error)
+}
+
+func (p *PullSecret) Value() (string, error) {
+	if p.value != "" {
+		return p.value, nil
+	}
+	val, err := p.Getter()
+	if err == nil {
+		p.value = val
+	}
+	return val, err
+}
+
+func AddPullSecretToInstanceDisk(sshRunner *ssh.Runner, pullSecret *PullSecret) error {
+	content, err := pullSecret.Value()
 	if err != nil {
 		return err
 	}
-
-	return nil
+	return sshRunner.CopyData([]byte(content), "/var/lib/kubelet/config.json", 0600)
 }
 
 func WaitforRequestHeaderClientCaFile(ocConfig oc.Config) error {
