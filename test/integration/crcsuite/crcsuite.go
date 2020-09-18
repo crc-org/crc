@@ -128,6 +128,8 @@ func FeatureContext(s *godog.Suite) {
 	})
 
 	s.AfterSuite(func() {
+		_ = clicumber.ExecuteCommand("crc diagnose")
+
 		err := DeleteCRC()
 		if err != nil {
 			fmt.Printf("Could not delete CRC VM: %s.", err)
