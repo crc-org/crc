@@ -54,5 +54,5 @@ func TestJsonStatus(t *testing.T) {
   "cacheDir": "%s"
 }
 `
-	assert.Equal(t, fmt.Sprintf(expected, strings.Replace(cacheDir, `\`, `\\`, -1)), out.String())
+	assert.Equal(t, fmt.Sprintf(expected, strings.ReplaceAll(cacheDir, `\`, `\\`)), out.String())
 }

@@ -96,16 +96,16 @@ func fixTrayInstalled() error {
 func escapeWindowsPassword(password string) string {
 	// escape specials characters (|`|$|"|') with '`' if present in password
 	if strings.Contains(password, "`") {
-		password = strings.Replace(password, "`", "``", -1)
+		password = strings.ReplaceAll(password, "`", "``")
 	}
 	if strings.Contains(password, "$") {
-		password = strings.Replace(password, "$", "`$", -1)
+		password = strings.ReplaceAll(password, "$", "`$")
 	}
 	if strings.Contains(password, "\"") {
-		password = strings.Replace(password, "\"", "`\"", -1)
+		password = strings.ReplaceAll(password, "\"", "`\"")
 	}
 	if strings.Contains(password, "'") {
-		password = strings.Replace(password, "'", "`'", -1)
+		password = strings.ReplaceAll(password, "'", "`'")
 	}
 	return password
 }
