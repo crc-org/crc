@@ -57,12 +57,12 @@ func DownloadBundle(bundleLocation string, bundleDestination string) (string, er
 	return filename, nil
 }
 
-func CopyFilesToTestDir() {
+func CopyFilesToTestDir() error {
 
 	cwd, err := os.Getwd()
 	if err != nil {
 		fmt.Printf("Error retrieving current dir: %s", err)
-		os.Exit(1)
+		return err
 	}
 
 	l := strings.Split(cwd, string(filepath.Separator))
@@ -78,7 +78,7 @@ func CopyFilesToTestDir() {
 	files, err := ioutil.ReadDir(dataDir)
 	if err != nil {
 		fmt.Printf("Error occurred loading data files: %s", err)
-		os.Exit(1)
+		return err
 	}
 
 	destLoc, _ := os.Getwd()
@@ -90,7 +90,7 @@ func CopyFilesToTestDir() {
 		sFile, err := os.Open(sFileName)
 		if err != nil {
 			fmt.Printf("Error occurred opening file: %s", err)
-			os.Exit(1)
+			return err
 		}
 		defer sFile.Close()
 
@@ -98,22 +98,24 @@ func CopyFilesToTestDir() {
 		dFile, err := os.Create(dFileName)
 		if err != nil {
 			fmt.Printf("Error occurred creating file: %s", err)
-			os.Exit(1)
+			return err
 		}
 		defer dFile.Close()
 
 		_, err = io.Copy(dFile, sFile) // ignore num of bytes
 		if err != nil {
 			fmt.Printf("Error occurred copying file: %s", err)
-			os.Exit(1)
+			return err
 		}
 
 		err = dFile.Sync()
 		if err != nil {
 			fmt.Printf("Error occurred syncing file: %s", err)
-			os.Exit(1)
+			return err
 		}
 	}
+
+	return nil
 }
 
 func ParseFlags() {
