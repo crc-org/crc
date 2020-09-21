@@ -152,7 +152,7 @@ func fixUserPartOfHyperVAdmins() error {
 		logging.Debug(err.Error())
 		return fmt.Errorf("Unable to get group name")
 	}
-	groupName := strings.TrimSpace(strings.Replace(strings.TrimSpace(outGroupName), "BUILTIN\\", "", -1))
+	groupName := strings.TrimSpace(strings.ReplaceAll(strings.TrimSpace(outGroupName), "BUILTIN\\", ""))
 
 	username := os.Getenv("USERNAME")
 
