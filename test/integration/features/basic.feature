@@ -37,54 +37,54 @@ Feature: Basic test
     @linux
     Scenario: CRC setup on Linux
         When executing "crc setup" succeeds
-        Then stdout should contain "Caching oc binary"
-        And stdout should contain "Checking if CRC bundle is cached in '$HOME/.crc'"
-        And stdout should contain "Checking if running as non-root"
-        And stdout should contain "Checking if Virtualization is enabled"
-        And stdout should contain "Checking if KVM is enabled"
-        And stdout should contain "Checking if libvirt is installed"
-        And stdout should contain "Checking if user is part of libvirt group"
-        And stdout should contain "Checking if libvirt daemon is running"
-        And stdout should contain "Checking if a supported libvirt version is installed"
-        And stdout should contain "Checking for obsolete crc-driver-libvirt"
-        And stdout should contain "Checking if libvirt 'crc' network is available"
-        And stdout should contain "Checking if libvirt 'crc' network is active"
-        And stdout should contain "Checking if NetworkManager is installed"
-        And stdout should contain "Checking if NetworkManager service is running"
-        And stdout should contain "Checking if /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf exists"
-        And stdout should contain "Writing Network Manager config for crc"
-        And stdout should contain "Will use root access: write NetworkManager config in /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf"
-        And stdout should contain "Will use root access: executing systemctl daemon-reload command"
-        And stdout should contain "Will use root access: executing systemctl reload NetworkManager"
-        And stdout should contain "Checking if /etc/NetworkManager/dnsmasq.d/crc.conf exists"
-        And stdout should contain "Writing dnsmasq config for crc"
-        And stdout should contain "Will use root access: write dnsmasq configuration in /etc/NetworkManager/dnsmasq.d/crc.conf"
-        And stdout should contain "Will use root access: executing systemctl daemon-reload command"
-        And stdout should contain "Will use root access: executing systemctl reload NetworkManager"
+        Then stderr should contain "Caching oc binary"
+        And stderr should contain "Checking if CRC bundle is cached in '$HOME/.crc'"
+        And stderr should contain "Checking if running as non-root"
+        And stderr should contain "Checking if Virtualization is enabled"
+        And stderr should contain "Checking if KVM is enabled"
+        And stderr should contain "Checking if libvirt is installed"
+        And stderr should contain "Checking if user is part of libvirt group"
+        And stderr should contain "Checking if libvirt daemon is running"
+        And stderr should contain "Checking if a supported libvirt version is installed"
+        And stderr should contain "Checking for obsolete crc-driver-libvirt"
+        And stderr should contain "Checking if libvirt 'crc' network is available"
+        And stderr should contain "Checking if libvirt 'crc' network is active"
+        And stderr should contain "Checking if NetworkManager is installed"
+        And stderr should contain "Checking if NetworkManager service is running"
+        And stderr should contain "Checking if /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf exists"
+        And stderr should contain "Writing Network Manager config for crc"
+        And stderr should contain "Will use root access: write NetworkManager config in /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf"
+        And stderr should contain "Will use root access: executing systemctl daemon-reload command"
+        And stderr should contain "Will use root access: executing systemctl reload NetworkManager"
+        And stderr should contain "Checking if /etc/NetworkManager/dnsmasq.d/crc.conf exists"
+        And stderr should contain "Writing dnsmasq config for crc"
+        And stderr should contain "Will use root access: write dnsmasq configuration in /etc/NetworkManager/dnsmasq.d/crc.conf"
+        And stderr should contain "Will use root access: executing systemctl daemon-reload command"
+        And stderr should contain "Will use root access: executing systemctl reload NetworkManager"
         And stdout should contain "Setup is complete, you can now run 'crc start -b $bundlename' to start the OpenShift cluster" if bundle is not embedded
         And stdout should contain "Setup is complete, you can now run 'crc start' to start the OpenShift cluster" if bundle is embedded
 
     @darwin
     Scenario: CRC setup on Mac
         When executing "crc setup" succeeds
-        Then stdout should contain "Caching oc binary"
-        And stdout should contain "Checking if running as non-root"
-        And stdout should contain "Checking if HyperKit is installed"
-        And stdout should contain "Checking if crc-driver-hyperkit is installed"
-        And stdout should contain "Installing crc-machine-hyperkit"
-        And stdout should contain "Will use root access: change ownership"
-        And stdout should contain "Will use root access: set suid"
-        And stdout should contain "Checking file permissions"
+        Then stderr should contain "Caching oc binary"
+        And stderr should contain "Checking if running as non-root"
+        And stderr should contain "Checking if HyperKit is installed"
+        And stderr should contain "Checking if crc-driver-hyperkit is installed"
+        And stderr should contain "Installing crc-machine-hyperkit"
+        And stderr should contain "Will use root access: change ownership"
+        And stderr should contain "Will use root access: set suid"
+        And stderr should contain "Checking file permissions"
 
     @windows
     Scenario: CRC setup on Windows
         When executing "crc setup" succeeds
-        Then stdout should contain "Caching oc binary"
-        Then stdout should contain "Unpacking bundle from the CRC binary" if bundle is embedded
-        Then stdout should contain "Checking Windows 10 release"
-        Then stdout should contain "Checking if Hyper-V is installed"
-        Then stdout should contain "Checking if user is a member of the Hyper-V Administrators group"
-        Then stdout should contain "Checking if the Hyper-V virtual switch exist"
+        Then stderr should contain "Caching oc binary"
+        Then stderr should contain "Unpacking bundle from the CRC binary" if bundle is embedded
+        Then stderr should contain "Checking Windows 10 release"
+        Then stderr should contain "Checking if Hyper-V is installed"
+        Then stderr should contain "Checking if user is a member of the Hyper-V Administrators group"
+        Then stderr should contain "Checking if the Hyper-V virtual switch exist"
 
     @darwin @linux @windows
     Scenario: CRC start
@@ -141,35 +141,35 @@ Feature: Basic test
     @darwin
     Scenario Outline: CRC clean-up
         When executing "crc cleanup" succeeds
-        Then stdout should contain "Unload CodeReady Containers tray"
-        And stdout should contain "Unload CodeReady Containers daemon"
-        And stdout should contain "Removing launchd configuration for tray"
-        And stdout should contain "Removing launchd configuration for daemon"
-        And stdout should contain "Removing /etc/resolver/testing file"
-        And stdout should contain "Will use root access: Remove file /etc/resolver/testing"
+        Then stderr should contain "Unload CodeReady Containers tray"
+        And stderr should contain "Unload CodeReady Containers daemon"
+        And stderr should contain "Removing launchd configuration for tray"
+        And stderr should contain "Removing launchd configuration for daemon"
+        And stderr should contain "Removing /etc/resolver/testing file"
+        And stderr should contain "Will use root access: Remove file /etc/resolver/testing"
         And stdout should contain "Cleanup finished"
 
     @linux
     Scenario Outline: CRC clean-up
         When executing "crc cleanup" succeeds
-        Then stdout should contain "Removing the crc VM if exists"
-        And stdout should contain "Removing /etc/NetworkManager/dnsmasq.d/crc.conf file"
-        And stdout should contain "Will use root access: removing dnsmasq configuration in /etc/NetworkManager/dnsmasq.d/crc.conf"
-        And stdout should contain "Will use root access: executing systemctl daemon-reload command"
-        And stdout should contain "Will use root access: executing systemctl reload NetworkManager"
-        And stdout should contain "Removing /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf file"
-        And stdout should contain "Will use root access: Removing NetworkManager config in /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf"
-        And stdout should contain "Will use root access: executing systemctl daemon-reload command"
-        And stdout should contain "Will use root access: executing systemctl reload NetworkManager"
-        And stdout should contain "Removing 'crc' network from libvirt"
+        Then stderr should contain "Removing the crc VM if exists"
+        And stderr should contain "Removing /etc/NetworkManager/dnsmasq.d/crc.conf file"
+        And stderr should contain "Will use root access: removing dnsmasq configuration in /etc/NetworkManager/dnsmasq.d/crc.conf"
+        And stderr should contain "Will use root access: executing systemctl daemon-reload command"
+        And stderr should contain "Will use root access: executing systemctl reload NetworkManager"
+        And stderr should contain "Removing /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf file"
+        And stderr should contain "Will use root access: Removing NetworkManager config in /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf"
+        And stderr should contain "Will use root access: executing systemctl daemon-reload command"
+        And stderr should contain "Will use root access: executing systemctl reload NetworkManager"
+        And stderr should contain "Removing 'crc' network from libvirt"
         And stdout should contain "Cleanup finished"
 
     @windows
     Scenario Outline: CRC clean-up
         When executing "crc cleanup" succeeds
-        Then stdout should contain "Uninstalling tray if installed"
-        And stdout should contain "Will run as admin: Uninstalling CodeReady Containers System Tray"
-        And stdout should contain "Removing the crc VM if exists"
-        And stdout should contain "Removing dns server from interface"
-        And stdout should contain "Will run as admin: Remove dns entry for default switch"
+        Then stderr should contain "Uninstalling tray if installed"
+        And stderr should contain "Will run as admin: Uninstalling CodeReady Containers System Tray"
+        And stderr should contain "Removing the crc VM if exists"
+        And stderr should contain "Removing dns server from interface"
+        And stderr should contain "Will run as admin: Remove dns entry for default switch"
         And stdout should contain "Cleanup finished"
