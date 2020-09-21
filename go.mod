@@ -72,3 +72,5 @@ replace (
 	k8s.io/metrics => k8s.io/metrics v0.18.2
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.18.2
 )
+
+replace vbom.ml/util => github.com/fvbommel/util v0.0.2
