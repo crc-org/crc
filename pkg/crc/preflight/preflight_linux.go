@@ -1,5 +1,10 @@
 package preflight
 
+import (
+	"github.com/code-ready/crc/pkg/crc/logging"
+	crcos "github.com/code-ready/crc/pkg/os/linux"
+)
+
 var libvirtPreflightChecks = [...]Check{
 	{
 		configKeySuffix:  "check-virt-enabled",
@@ -75,38 +80,6 @@ var libvirtPreflightChecks = [...]Check{
 		fix:              fixLibvirtCrcNetworkActive,
 	},
 	{
-		configKeySuffix:  "check-network-manager-installed",
-		checkDescription: "Checking if NetworkManager is installed",
-		check:            checkNetworkManagerInstalled,
-		fixDescription:   "Checking if NetworkManager is installed",
-		fix:              fixNetworkManagerInstalled,
-	},
-	{
-		configKeySuffix:  "check-network-manager-running",
-		checkDescription: "Checking if NetworkManager service is running",
-		check:            checkNetworkManagerIsRunning,
-		fixDescription:   "Checking if NetworkManager service is running",
-		fix:              fixNetworkManagerIsRunning,
-	},
-	{
-		configKeySuffix:    "check-network-manager-config",
-		checkDescription:   "Checking if /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf exists",
-		check:              checkCrcNetworkManagerConfig,
-		fixDescription:     "Writing Network Manager config for crc",
-		fix:                fixCrcNetworkManagerConfig,
-		cleanupDescription: "Removing /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf file",
-		cleanup:            removeCrcNetworkManagerConfig,
-	},
-	{
-		configKeySuffix:    "check-crc-dnsmasq-file",
-		checkDescription:   "Checking if /etc/NetworkManager/dnsmasq.d/crc.conf exists",
-		check:              checkCrcDnsmasqConfigFile,
-		fixDescription:     "Writing dnsmasq config for crc",
-		fix:                fixCrcDnsmasqConfigFile,
-		cleanupDescription: "Removing /etc/NetworkManager/dnsmasq.d/crc.conf file",
-		cleanup:            removeCrcDnsmasqConfigFile,
-	},
-	{
 		cleanupDescription: "Removing the crc VM if exists",
 		cleanup:            removeCrcVM,
 		flags:              CleanUpOnly,
@@ -114,10 +87,32 @@ var libvirtPreflightChecks = [...]Check{
 }
 
 func getPreflightChecks(experimentalFeatures bool) []Check {
-	checks := []Check{}
+	return getPreflightChecksForDistro(distro(), experimentalFeatures)
+}
+
+func getPreflightChecksForDistro(distro crcos.OsType, experimentalFeatures bool) []Check {
+	var checks []Check
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, nonWinPreflightChecks[:]...)
 	checks = append(checks, libvirtPreflightChecks[:]...)
 
+	switch distro {
+	case crcos.Ubuntu:
+	case crcos.RHEL, crcos.CentOS, crcos.Fedora:
+		checks = append(checks, redhatPreflightChecks[:]...)
+	default:
+		logging.Warnf("distribution-specific preflight checks are not implemented for %s", distro)
+		checks = append(checks, redhatPreflightChecks[:]...)
+	}
+
 	return checks
+}
+
+func distro() crcos.OsType {
+	distro, err := crcos.GetOsRelease()
+	if err != nil {
+		logging.Warnf("cannot get distribution name: %v", err)
+		return "unknown"
+	}
+	return distro.ID
 }
