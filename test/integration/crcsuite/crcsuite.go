@@ -137,7 +137,10 @@ func FeatureContext(s *godog.Suite) {
 	// nolint:staticcheck
 	s.BeforeFeature(func(this *messages.GherkinDocument) {
 		// copy data/config files to test dir
-		CopyFilesToTestDir()
+		err := CopyFilesToTestDir()
+		if err != nil {
+			os.Exit(1)
+		}
 
 		if !bundleEmbedded {
 			if _, err := os.Stat(bundleName); err != nil {
