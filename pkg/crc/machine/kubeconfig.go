@@ -132,7 +132,8 @@ func addContext(cfg *api.Config, ip string, clusterConfig *ClusterConfig, ca []b
 		Host: clusterConfig.ClusterAPI,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				RootCAs: roots,
+				RootCAs:    roots,
+				MinVersion: tls.VersionTLS12,
 			},
 			DialContext: func(ctx gocontext.Context, network, address string) (net.Conn, error) {
 				port := strings.SplitN(address, ":", 2)[1]
