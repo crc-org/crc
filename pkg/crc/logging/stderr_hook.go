@@ -36,13 +36,9 @@ func (h stdErrHook) Levels() []logrus.Level {
 	var levels []logrus.Level
 	for _, level := range logrus.AllLevels {
 		if level <= h.level {
-			// Only capture error and Fatal logs.
-			if level == logrus.ErrorLevel || level == logrus.FatalLevel {
-				levels = append(levels, level)
-			}
+			levels = append(levels, level)
 		}
 	}
-
 	return levels
 }
 
