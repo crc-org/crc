@@ -9,6 +9,7 @@ import (
 
 const (
 	configPropDoesntExistMsg = "Configuration property '%s' does not exist"
+	invalidProp              = "Value '%s' for configuration property '%s' is invalid, reason: %s"
 )
 
 type Config struct {
@@ -55,18 +56,25 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 	}
 
 	var castValue interface{}
+	var err error
 	switch setting.defaultValue.(type) {
 	case int:
-		castValue = cast.ToInt(value)
+		castValue, err = cast.ToIntE(value)
+		if err != nil {
+			return "", fmt.Errorf(invalidProp, value, key, err)
+		}
 	case string:
 		castValue = cast.ToString(value)
 	case bool:
-		castValue = cast.ToBool(value)
+		castValue, err = cast.ToBoolE(value)
+		if err != nil {
+			return "", fmt.Errorf(invalidProp, value, key, err)
+		}
 	}
 
 	ok, expectedValue := c.settingsByName[key].validationFn(castValue)
 	if !ok {
-		return "", fmt.Errorf("Value '%s' for configuration property '%s' is invalid, reason: %s", castValue, key, expectedValue)
+		return "", fmt.Errorf(invalidProp, castValue, key, expectedValue)
 	}
 
 	if err := c.storage.Set(key, castValue); err != nil {
@@ -101,13 +109,24 @@ func (c *Config) Get(key string) SettingValue {
 	if value == nil {
 		value = setting.defaultValue
 	}
+	var err error
 	switch setting.defaultValue.(type) {
 	case int:
-		value = cast.ToInt(value)
+		value, err = cast.ToIntE(value)
+		if err != nil {
+			return SettingValue{
+				Invalid: true,
+			}
+		}
 	case string:
 		value = cast.ToString(value)
 	case bool:
-		value = cast.ToBool(value)
+		value, err = cast.ToBoolE(value)
+		if err != nil {
+			return SettingValue{
+				Invalid: true,
+			}
+		}
 	default:
 		return SettingValue{
 			Invalid: true,
