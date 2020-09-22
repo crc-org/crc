@@ -23,6 +23,9 @@ var (
 
 	// OC version which should be used.
 	ocVersion = "0.0.0-unset"
+
+	// Base URL for oc download
+	defaultOcURLBase = "url-unset"
 )
 
 const (
@@ -53,6 +56,10 @@ func GetBundleVersion() string {
 
 func GetOcVersion() string {
 	return ocVersion
+}
+
+func GetDefaultOcURLBase() string {
+	return defaultOcURLBase
 }
 
 func GetCRCMacTrayVersion() string {

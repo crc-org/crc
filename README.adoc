@@ -50,6 +50,20 @@ This will create a [filename]`docs/build/master.html` file which you can view in
 
 Developers who want to work on CodeReady Containers should visit the link:./developing.adoc[Developing CodeReady Containers] document.
 
+=== Building CodeReady Containers for OKD 4
+
+You can build the crc binaries with OKD 4 embedded images by overriding a couple of environment variables:
+
+You first need to have OKD 4 crcbundle images built from: link:https://github.com/code-ready/snc[https://github.com/code-ready/snc]
+
+```bash
+export BUNDLE_VERSION=4.5.0-0.okd-2020-08-12-020541               # The version that you built snc from
+export OC_BASE_URL=https://github.com/openshift/okd/releases/download
+export BUNDLE_DIR=/path/to/your/snc/bundles
+
+make embed_bundle
+```
+
 [[community]]
 == Community
 
