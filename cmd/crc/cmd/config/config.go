@@ -25,18 +25,18 @@ const (
 
 func RegisterSettings() {
 	// Start command settings in config
-	cfg.AddSetting(Bundle, nil, cfg.ValidateBundle, cfg.SuccessfullyApplied)
+	cfg.AddSetting(Bundle, constants.DefaultBundlePath, cfg.ValidateBundle, cfg.SuccessfullyApplied)
 	cfg.AddSetting(CPUs, constants.DefaultCPUs, cfg.ValidateCPUs, cfg.RequiresRestartMsg)
 	cfg.AddSetting(Memory, constants.DefaultMemory, cfg.ValidateMemory, cfg.RequiresRestartMsg)
-	cfg.AddSetting(NameServer, nil, cfg.ValidateIPAddress, cfg.SuccessfullyApplied)
-	cfg.AddSetting(PullSecretFile, nil, cfg.ValidatePath, cfg.SuccessfullyApplied)
-	cfg.AddSetting(DisableUpdateCheck, nil, cfg.ValidateBool, cfg.SuccessfullyApplied)
+	cfg.AddSetting(NameServer, "", cfg.ValidateIPAddress, cfg.SuccessfullyApplied)
+	cfg.AddSetting(PullSecretFile, "", cfg.ValidatePath, cfg.SuccessfullyApplied)
+	cfg.AddSetting(DisableUpdateCheck, false, cfg.ValidateBool, cfg.SuccessfullyApplied)
 	// Proxy Configuration
-	cfg.AddSetting(ExperimentalFeatures, nil, cfg.ValidateBool, cfg.SuccessfullyApplied)
-	cfg.AddSetting(HTTPProxy, nil, cfg.ValidateURI, cfg.SuccessfullyApplied)
-	cfg.AddSetting(HTTPSProxy, nil, cfg.ValidateURI, cfg.SuccessfullyApplied)
-	cfg.AddSetting(NoProxy, nil, cfg.ValidateNoProxy, cfg.SuccessfullyApplied)
-	cfg.AddSetting(ProxyCAFile, nil, cfg.ValidatePath, cfg.SuccessfullyApplied)
+	cfg.AddSetting(ExperimentalFeatures, false, cfg.ValidateBool, cfg.SuccessfullyApplied)
+	cfg.AddSetting(HTTPProxy, "", cfg.ValidateURI, cfg.SuccessfullyApplied)
+	cfg.AddSetting(HTTPSProxy, "", cfg.ValidateURI, cfg.SuccessfullyApplied)
+	cfg.AddSetting(NoProxy, "", cfg.ValidateNoProxy, cfg.SuccessfullyApplied)
+	cfg.AddSetting(ProxyCAFile, "", cfg.ValidatePath, cfg.SuccessfullyApplied)
 }
 
 var (
