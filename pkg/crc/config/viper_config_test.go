@@ -180,3 +180,28 @@ func TestViperConfigBindFlagSet(t *testing.T) {
 		IsDefault: false,
 	}, config.Get(CPUs))
 }
+
+func TestViperConfigCastSet(t *testing.T) {
+	dir, err := ioutil.TempDir("", "cfg")
+	require.NoError(t, err)
+	defer os.RemoveAll(dir)
+	configFile := filepath.Join(dir, "crc.json")
+
+	config, err := newTestConfig(configFile, "CRC")
+	require.NoError(t, err)
+
+	_, err = config.Set(CPUs, "5")
+	require.NoError(t, err)
+
+	config, err = newTestConfig(configFile, "CRC")
+	require.NoError(t, err)
+
+	assert.Equal(t, SettingValue{
+		Value:     5,
+		IsDefault: false,
+	}, config.Get(CPUs))
+
+	bin, err := ioutil.ReadFile(configFile)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `{"cpus": 5}`, string(bin))
+}
