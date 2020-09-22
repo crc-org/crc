@@ -2,12 +2,12 @@ package config
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/validation"
+	"github.com/spf13/cast"
 )
 
 // validationFnType takes the key, value as args and checks if valid
@@ -24,7 +24,7 @@ func ValidateBool(value interface{}) (bool, string) {
 
 // ValidateCPUs checks if provided cpus count is valid in the config
 func ValidateCPUs(value interface{}) (bool, string) {
-	v, err := strconv.Atoi(value.(string))
+	v, err := cast.ToIntE(value)
 	if err != nil {
 		return false, fmt.Sprintf("requires integer value >= %d", constants.DefaultCPUs)
 	}
@@ -36,7 +36,7 @@ func ValidateCPUs(value interface{}) (bool, string) {
 
 // ValidateMemory checks if provided memory is valid in the config
 func ValidateMemory(value interface{}) (bool, string) {
-	v, err := strconv.Atoi(value.(string))
+	v, err := cast.ToIntE(value)
 	if err != nil {
 		return false, fmt.Sprintf("requires integer value in MiB >= %d", constants.DefaultMemory)
 	}
