@@ -231,3 +231,29 @@ func TestViperConfigWatch(t *testing.T) {
 		return config.Get(CPUs).Value == 5
 	}, time.Second, 10*time.Millisecond)
 }
+
+func TestCannotSetWithWrongType(t *testing.T) {
+	dir, err := ioutil.TempDir("", "cfg")
+	require.NoError(t, err)
+	defer os.RemoveAll(dir)
+	configFile := filepath.Join(dir, "crc.json")
+
+	config, err := newTestConfig(configFile, "CRC")
+	require.NoError(t, err)
+
+	_, err = config.Set(CPUs, "helloworld")
+	assert.EqualError(t, err, "Value 'helloworld' for configuration property 'cpus' is invalid, reason: unable to cast \"helloworld\" of type string to int")
+}
+
+func TestCannotGetWithWrongType(t *testing.T) {
+	dir, err := ioutil.TempDir("", "cfg")
+	require.NoError(t, err)
+	defer os.RemoveAll(dir)
+	configFile := filepath.Join(dir, "crc.json")
+	assert.NoError(t, ioutil.WriteFile(configFile, []byte("{\"cpus\": \"hello\"}"), 0600))
+
+	config, err := newTestConfig(configFile, "CRC")
+	require.NoError(t, err)
+
+	assert.True(t, config.Get(CPUs).Invalid)
+}
