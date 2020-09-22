@@ -16,7 +16,7 @@ type ValidationFnType func(interface{}) (bool, string)
 // ValidateBool is a fail safe in the case user
 // makes a typo for boolean config values
 func ValidateBool(value interface{}) (bool, string) {
-	if value.(string) == "true" || value.(string) == "false" {
+	if cast.ToString(value) == "true" || cast.ToString(value) == "false" {
 		return true, ""
 	}
 	return false, "must be true or false"
@@ -48,7 +48,7 @@ func ValidateMemory(value interface{}) (bool, string) {
 
 // ValidateBundle checks if provided bundle path is valid
 func ValidateBundle(value interface{}) (bool, string) {
-	if err := validation.ValidateBundle(value.(string)); err != nil {
+	if err := validation.ValidateBundle(cast.ToString(value)); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
@@ -56,7 +56,7 @@ func ValidateBundle(value interface{}) (bool, string) {
 
 // ValidateIP checks if provided IP is valid
 func ValidateIPAddress(value interface{}) (bool, string) {
-	if err := validation.ValidateIPAddress(value.(string)); err != nil {
+	if err := validation.ValidateIPAddress(cast.ToString(value)); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
@@ -64,7 +64,7 @@ func ValidateIPAddress(value interface{}) (bool, string) {
 
 // ValidatePath checks if provided path is exist
 func ValidatePath(value interface{}) (bool, string) {
-	if err := validation.ValidatePath(value.(string)); err != nil {
+	if err := validation.ValidatePath(cast.ToString(value)); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
@@ -72,7 +72,7 @@ func ValidatePath(value interface{}) (bool, string) {
 
 // ValidateURI checks if given URI is valid
 func ValidateURI(value interface{}) (bool, string) {
-	if err := network.ValidateProxyURL(value.(string)); err != nil {
+	if err := network.ValidateProxyURL(cast.ToString(value)); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
@@ -80,7 +80,7 @@ func ValidateURI(value interface{}) (bool, string) {
 
 // ValidateNoProxy checks if the NoProxy string has the correct format
 func ValidateNoProxy(value interface{}) (bool, string) {
-	if strings.Contains(value.(string), " ") {
+	if strings.Contains(cast.ToString(value), " ") {
 		return false, "NoProxy string can't contain spaces"
 	}
 	return true, ""
