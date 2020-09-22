@@ -31,25 +31,9 @@ var defaultConfig *Config
 
 type Config struct {
 	globalViper *viper.Viper
-	// changedConfigs holds the config keys/values which have a non
-	// default value (either because they are set in the config file, or
-	// because they were changed at runtime)
-	changedConfigs map[string]interface{}
 	// allSettings holds all the config settings
 	allSettings map[string]*Setting
 	configFile  string
-}
-
-func syncViperState(configFile string, changedConfigs map[string]interface{}, viper *viper.Viper) error {
-	encodedConfig, err := json.MarshalIndent(changedConfigs, "", " ")
-	if err != nil {
-		return fmt.Errorf("Error encoding configuration to JSON: %v", err)
-	}
-	err = viper.ReadConfig(bytes.NewBuffer(encodedConfig))
-	if err != nil {
-		return fmt.Errorf("Error reading configuration file '%s': %v", configFile, err)
-	}
-	return nil
 }
 
 type SettingValue struct {
@@ -101,15 +85,10 @@ func New(configFile, envPrefix string) (*Config, error) {
 		return nil, fmt.Errorf("Error reading configuration file '%s': %v", configFile, err)
 	}
 	v.WatchConfig()
-	changedConfigs := make(map[string]interface{})
-	if err := v.Unmarshal(&changedConfigs); err != nil {
-		return nil, err
-	}
 	return &Config{
-		globalViper:    v,
-		changedConfigs: changedConfigs,
-		allSettings:    make(map[string]*Setting),
-		configFile:     configFile,
+		globalViper: v,
+		allSettings: make(map[string]*Setting),
+		configFile:  configFile,
 	}, nil
 }
 
@@ -118,21 +97,6 @@ func InitViper() error {
 	var err error
 	defaultConfig, err = New(constants.ConfigPath, constants.CrcEnvPrefix)
 	return err
-}
-
-// WriteConfig write config to file
-func writeConfig(configFile string, changedConfigs map[string]interface{}) error {
-	// We recreate a new viper instance, as globalViper.WriteConfig()
-	// writes both default values and set values back to disk while we only
-	// want the latter to be written
-	v := viper.New()
-	v.SetConfigFile(configFile)
-	v.SetConfigType("json")
-	err := syncViperState(configFile, changedConfigs, v)
-	if err != nil {
-		return err
-	}
-	return v.WriteConfig()
 }
 
 // AllConfigs returns all the known configs
@@ -170,7 +134,6 @@ func AddSetting(name string, defValue interface{}, validationFn ValidationFnType
 func (c *Config) AddSetting(name string, defValue interface{}, validationFn ValidationFnType, callbackFn SetFn) *Setting {
 	s := Setting{Name: name, defaultValue: defValue, validationFn: validationFn, callbackFn: callbackFn}
 	c.allSettings[name] = &s
-	c.globalViper.SetDefault(name, defValue)
 	return &s
 }
 
@@ -180,7 +143,7 @@ func Set(key string, value interface{}) (string, error) {
 }
 
 func (c *Config) Set(key string, value interface{}) (string, error) {
-	_, ok := c.allSettings[key]
+	setting, ok := c.allSettings[key]
 	if !ok {
 		return "", fmt.Errorf(configPropDoesntExistMsg, key)
 	}
@@ -191,9 +154,8 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 	}
 
 	c.globalViper.Set(key, value)
-	c.changedConfigs[key] = value
 
-	return c.allSettings[key].callbackFn(key, value), writeConfig(c.configFile, c.changedConfigs)
+	return c.allSettings[key].callbackFn(key, value), c.globalViper.WriteConfig()
 }
 
 // Unset unsets a given config key
@@ -207,12 +169,17 @@ func (c *Config) Unset(key string) (string, error) {
 		return "", fmt.Errorf(configPropDoesntExistMsg, key)
 	}
 
-	delete(c.changedConfigs, key)
-	if err := syncViperState(c.configFile, c.changedConfigs, c.globalViper); err != nil {
-		return "", fmt.Errorf("Error unsetting configuration property '%s': %v", key, err)
+	settings := c.globalViper.AllSettings()
+	delete(settings, key)
+	bin, err := json.Marshal(settings)
+	if err != nil {
+		return "", err
+	}
+	if err = c.globalViper.ReadConfig(bytes.NewReader(bin)); err != nil {
+		return "", err
 	}
 
-	return fmt.Sprintf("Successfully unset configuration property '%s'", key), writeConfig(c.configFile, c.changedConfigs)
+	return fmt.Sprintf("Successfully unset configuration property '%s'", key), c.globalViper.WriteConfig()
 }
 
 func Get(key string) SettingValue {
