@@ -148,14 +148,24 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 		return "", fmt.Errorf(configPropDoesntExistMsg, key)
 	}
 
-	ok, expectedValue := c.allSettings[key].validationFn(value)
-	if !ok {
-		return "", fmt.Errorf("Value '%s' for configuration property '%s' is invalid, reason: %s", value, key, expectedValue)
+	var castValue interface{}
+	switch setting.defaultValue.(type) {
+	case int:
+		castValue = cast.ToInt(value)
+	case string:
+		castValue = cast.ToString(value)
+	case bool:
+		castValue = cast.ToBool(value)
 	}
 
-	c.globalViper.Set(key, value)
+	ok, expectedValue := c.allSettings[key].validationFn(castValue)
+	if !ok {
+		return "", fmt.Errorf("Value '%s' for configuration property '%s' is invalid, reason: %s", castValue, key, expectedValue)
+	}
 
-	return c.allSettings[key].callbackFn(key, value), c.globalViper.WriteConfig()
+	c.globalViper.Set(key, castValue)
+
+	return c.allSettings[key].callbackFn(key, castValue), c.globalViper.WriteConfig()
 }
 
 // Unset unsets a given config key
@@ -196,6 +206,18 @@ func (c *Config) Get(key string) SettingValue {
 	value := c.globalViper.Get(key)
 	if value == nil {
 		value = setting.defaultValue
+	}
+	switch setting.defaultValue.(type) {
+	case int:
+		value = cast.ToInt(value)
+	case string:
+		value = cast.ToString(value)
+	case bool:
+		value = cast.ToBool(value)
+	default:
+		return SettingValue{
+			Invalid: true,
+		}
 	}
 	return SettingValue{
 		Value:     value,
