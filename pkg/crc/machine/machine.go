@@ -358,11 +358,10 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		if err := cluster.AddPullSecretInTheCluster(ocConfig, startConfig.PullSecret); err != nil {
 			return startError(startConfig.Name, "Failed to update user pull secret", err)
 		}
+	}
 
-		logging.Info("Updating cluster ID ...")
-		if err := cluster.UpdateClusterID(ocConfig); err != nil {
-			return startError(startConfig.Name, "Failed to update cluster ID", err)
-		}
+	if err := cluster.EnsureClusterIDIsNotEmpty(ocConfig); err != nil {
+		return startError(startConfig.Name, "Failed to update cluster ID", err)
 	}
 
 	// Check if kubelet service is running inside the VM
