@@ -32,52 +32,39 @@ func WaitForSSH(sshRunner *ssh.Runner) error {
 	return errors.RetryAfter(60*time.Second, checkSSHConnectivity, time.Second)
 }
 
+const (
+	kubeletServerCert = "/var/lib/kubelet/pki/kubelet-server-current.pem"
+	kubeletClientCert = "/var/lib/kubelet/pki/kubelet-client-current.pem"
+
+	kubeletClientSignerName = "kubernetes.io/kube-apiserver-client-kubelet"
+)
+
 func CheckCertsValidity(sshRunner *ssh.Runner) (bool, bool, error) {
-	client, err := CheckKubeletClientCertValidity(sshRunner)
+	client, err := checkCertValidity(sshRunner, kubeletClientCert)
 	if err != nil {
 		return false, false, err
 	}
-	server, err := CheckKubeletServerCertValidity(sshRunner)
+	server, err := checkCertValidity(sshRunner, kubeletServerCert)
 	if err != nil {
 		return false, false, err
 	}
 	return client, server, nil
 }
 
-// CheckKubeletClientCertValidity checks if the kubelet server cert have expired
-func CheckKubeletServerCertValidity(sshRunner *ssh.Runner) (bool, error) {
-	return checkCertValidity(sshRunner, "/var/lib/kubelet/pki/kubelet-server-current.pem")
-}
-
-// CheckKubeletClientCertValidity checks if the kubelet client cert have expired
-func CheckKubeletClientCertValidity(sshRunner *ssh.Runner) (bool, error) {
-	return checkCertValidity(sshRunner, "/var/lib/kubelet/pki/kubelet-client-current.pem")
-}
-
 func checkCertValidity(sshRunner *ssh.Runner, cert string) (bool, error) {
-	certExpiryDate, err := getCertExpiryDateFromVM(sshRunner, cert)
+	output, err := sshRunner.Run(fmt.Sprintf(`date --date="$(sudo openssl x509 -in %s -noout -enddate | cut -d= -f 2)" --iso-8601=seconds`, cert))
 	if err != nil {
 		return false, err
 	}
-	if time.Now().After(certExpiryDate) {
-		logging.Debugf("Certs have expired, they were valid till: %s", certExpiryDate.Format(time.RFC822))
+	expiryDate, err := time.Parse(time.RFC3339, strings.TrimSpace(output))
+	if err != nil {
+		return false, err
+	}
+	if time.Now().After(expiryDate) {
+		logging.Debugf("Certs have expired, they were valid till: %s", expiryDate.Format(time.RFC822))
 		return true, nil
 	}
 	return false, nil
-}
-
-func getCertExpiryDateFromVM(sshRunner *ssh.Runner, cert string) (time.Time, error) {
-	certExpiryDate := time.Time{}
-	certExpiryDateCmd := fmt.Sprintf(`date --date="$(sudo openssl x509 -in %s -noout -enddate | cut -d= -f 2)" --iso-8601=seconds`, cert)
-	output, err := sshRunner.Run(certExpiryDateCmd)
-	if err != nil {
-		return certExpiryDate, err
-	}
-	certExpiryDate, err = time.Parse(time.RFC3339, strings.TrimSpace(output))
-	if err != nil {
-		return certExpiryDate, err
-	}
-	return certExpiryDate, nil
 }
 
 // Return size of disk, used space in bytes and the mountpoint

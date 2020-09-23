@@ -24,13 +24,8 @@ func WaitForOpenshiftResource(ocConfig oc.Config, resource string) error {
 	return crcerrors.RetryAfter(80*time.Second, waitForAPIServer, time.Second)
 }
 
-// ApproveNodeCSR approves the certificate for the node.
-func ApproveNodeCSR(ocConfig oc.Config, signerName string) error {
-	err := WaitForOpenshiftResource(ocConfig, "csr")
-	if err != nil {
-		return err
-	}
-
+// approveNodeCSR approves the certificate for the node.
+func approveNodeCSR(ocConfig oc.Config, signerName string) error {
 	logging.Debug("Approving pending CSRs")
 	output, stderr, err := ocConfig.RunOcCommandPrivate("get", "csr", "-ojson")
 	if err != nil {
