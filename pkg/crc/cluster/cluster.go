@@ -107,14 +107,24 @@ func AddPullSecretInTheCluster(ocConfig oc.Config, pullSec *PullSecret) error {
 	return nil
 }
 
-func UpdateClusterID(ocConfig oc.Config) error {
+func EnsureClusterIDIsNotEmpty(ocConfig oc.Config) error {
+	if err := WaitForOpenshiftResource(ocConfig, "clusterversion"); err != nil {
+		return err
+	}
+
+	stdout, _, err := ocConfig.RunOcCommand("get", "clusterversion", "version", "-o", `jsonpath="{['spec']['clusterID']}"`)
+	if err != nil {
+		return err
+	}
+	if strings.TrimSpace(stdout) != "" {
+		return nil
+	}
+
+	logging.Info("Updating cluster ID ...")
 	clusterID := uuid.New()
 	cmdArgs := []string{"patch", "clusterversion", "version", "-p",
 		fmt.Sprintf(`'{"spec":{"clusterID":"%s"}}'`, clusterID), "--type", "merge"}
 
-	if err := WaitForOpenshiftResource(ocConfig, "clusterversion"); err != nil {
-		return err
-	}
 	_, stderr, err := ocConfig.RunOcCommand(cmdArgs...)
 	if err != nil {
 		return fmt.Errorf("Failed to update cluster ID %v: %s", err, stderr)
