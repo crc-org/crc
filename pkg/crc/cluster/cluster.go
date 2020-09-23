@@ -13,6 +13,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/oc"
 	"github.com/code-ready/crc/pkg/crc/ssh"
+	"github.com/code-ready/crc/pkg/crc/validation"
 	"github.com/pborman/uuid"
 )
 
@@ -87,7 +88,24 @@ func GetRootPartitionUsage(sshRunner *ssh.Runner) (int64, int64, error) {
 	return diskSize, diskUsage, nil
 }
 
-func AddPullSecretInTheCluster(ocConfig oc.Config, pullSec *PullSecret) error {
+func EnsurePullSecretPresentInTheCluster(ocConfig oc.Config, pullSec *PullSecret) error {
+	if err := WaitForOpenshiftResource(ocConfig, "secret"); err != nil {
+		return err
+	}
+
+	stdout, _, err := ocConfig.RunOcCommandPrivate("get", "secret", "pull-secret", "-n", "openshift-config", "-o", `jsonpath="{['data']['\.dockerconfigjson']}"`)
+	if err != nil {
+		return err
+	}
+	decoded, err := base64.StdEncoding.DecodeString(stdout)
+	if err != nil {
+		return err
+	}
+	if err := validation.ImagePullSecret(string(decoded)); err == nil {
+		return nil
+	}
+
+	logging.Info("Adding user's pull secret to the cluster ...")
 	content, err := pullSec.Value()
 	if err != nil {
 		return err
@@ -97,9 +115,6 @@ func AddPullSecretInTheCluster(ocConfig oc.Config, pullSec *PullSecret) error {
 		fmt.Sprintf(`'{"data":{".dockerconfigjson":"%s"}}'`, base64OfPullSec),
 		"-n", "openshift-config", "--type", "merge"}
 
-	if err := WaitForOpenshiftResource(ocConfig, "secret"); err != nil {
-		return err
-	}
 	_, stderr, err := ocConfig.RunOcCommandPrivate(cmdArgs...)
 	if err != nil {
 		return fmt.Errorf("Failed to add Pull secret %v: %s", err, stderr)

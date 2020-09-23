@@ -353,11 +353,10 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		if err := configProxyForCluster(ocConfig, sshRunner, sd, proxyConfig, instanceIP); err != nil {
 			return startError(startConfig.Name, "Error Setting cluster config", err)
 		}
+	}
 
-		logging.Info("Adding user's pull secret to the cluster ...")
-		if err := cluster.AddPullSecretInTheCluster(ocConfig, startConfig.PullSecret); err != nil {
-			return startError(startConfig.Name, "Failed to update user pull secret", err)
-		}
+	if err := cluster.EnsurePullSecretPresentInTheCluster(ocConfig, startConfig.PullSecret); err != nil {
+		return startError(startConfig.Name, "Failed to update cluster pull secret", err)
 	}
 
 	if err := cluster.EnsureClusterIDIsNotEmpty(ocConfig); err != nil {
