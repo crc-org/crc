@@ -12,7 +12,7 @@ import (
 
 var ignoreClusterOperators = []string{"monitoring", "machine-config", "marketplace", "insights"}
 
-type K8sResource struct {
+type k8sResource struct {
 	Items []struct {
 		Metadata struct {
 			Name string `json:"name"`
@@ -54,7 +54,7 @@ func getStatus(ocConfig oc.Config, selector []string) (*Status, error) {
 		return cs, fmt.Errorf("%s", stderr)
 	}
 
-	var co K8sResource
+	var co k8sResource
 	if err := json.Unmarshal([]byte(data), &co); err != nil {
 		return cs, err
 	}
