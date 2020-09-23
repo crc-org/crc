@@ -37,9 +37,8 @@ func ApproveNodeCSR(ocConfig oc.Config) error {
 	if err != nil {
 		return fmt.Errorf("Not able to get csr names (%v : %s)", err, stderr)
 	}
-	var csrs K8sResource
-	err = json.Unmarshal([]byte(csrsJSON), &csrs)
-	if err != nil {
+	var csrs k8sResource
+	if err := json.Unmarshal([]byte(csrsJSON), &csrs); err != nil {
 		return err
 	}
 	for _, csr := range csrs.Items {
