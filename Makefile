@@ -8,6 +8,7 @@ OC_VERSION ?= ${BUNDLE_VERSION}
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 1.16.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
+CONTAINER_RUNTIME ?= podman
 
 # Go and compilation related variables
 BUILD_DIR ?= out
@@ -95,19 +96,19 @@ test:
 
 .PHONY: build_docs
 build_docs:
-	podman run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) build_docs -b html5 -D /$(DOCS_BUILD_DIR) -o index.html $(DOCS_BUILD_TARGET)
+	${CONTAINER_RUNTIME} run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) build_docs -b html5 -D /$(DOCS_BUILD_DIR) -o index.html $(DOCS_BUILD_TARGET)
 
 .PHONY: build_docs_pdf
 build_docs_pdf:
-	podman run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) build_docs_pdf -D /$(DOCS_BUILD_DIR) -o doc.pdf $(DOCS_BUILD_TARGET)
+	${CONTAINER_RUNTIME} run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) build_docs_pdf -D /$(DOCS_BUILD_DIR) -o doc.pdf $(DOCS_BUILD_TARGET)
 
 .PHONY: docs_serve
 docs_serve: build_docs
-	podman run -it -v $(CURDIR)/docs:/docs:Z --rm -p 8088:8088/tcp $(DOCS_BUILD_CONTAINER) docs_serve 
+	${CONTAINER_RUNTIME} run -it -v $(CURDIR)/docs:/docs:Z --rm -p 8088:8088/tcp $(DOCS_BUILD_CONTAINER) docs_serve 
 
 .PHONY: docs_check_links
 docs_check_links:
-	podman run -it -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) docs_check_links
+	${CONTAINER_RUNTIME} run -it -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) docs_check_links
 
 .PHONY: clean_docs
 clean_docs:
