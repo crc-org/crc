@@ -335,7 +335,7 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 
 	ocConfig := oc.UseOCWithSSH(sshRunner)
 
-	if err := cluster.WaitAndApprovePendingCSRs(ocConfig, clientExpired, serverExpired); err != nil {
+	if err := cluster.ApproveCSRAndWaitForCertsRenewal(sshRunner, ocConfig, clientExpired, serverExpired); err != nil {
 		logBundleDate(crcBundleMetadata)
 		return startError(startConfig.Name, "Failed to renew TLS certificates: please check if a newer CodeReady Containers release is available", err)
 	}
