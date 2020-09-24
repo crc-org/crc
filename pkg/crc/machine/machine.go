@@ -110,7 +110,6 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	}
 
 	// Pre-VM start
-	var privateKeyPath string
 	var pullSecret string
 	exists, err := client.Exists(startConfig.Name)
 	if err != nil {
@@ -158,8 +157,6 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		if err != nil {
 			return startError(startConfig.Name, "Error creating machine", err)
 		}
-
-		privateKeyPath = crcBundleMetadata.GetSSHKeyPath()
 	} else {
 		host, err := libMachineAPIClient.Load(startConfig.Name)
 		if err != nil {
@@ -216,8 +213,6 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		if err := libMachineAPIClient.Save(host); err != nil {
 			return startError(startConfig.Name, "Error saving state for VM", err)
 		}
-
-		privateKeyPath = constants.GetPrivateKeyPath()
 	}
 
 	clusterConfig, err := getClusterConfig(crcBundleMetadata)
@@ -240,7 +235,7 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	if err != nil {
 		return startError(startConfig.Name, "Error getting the IP", err)
 	}
-	sshRunner := crcssh.CreateRunnerWithPrivateKey(instanceIP, constants.DefaultSSHPort, privateKeyPath)
+	sshRunner := crcssh.CreateRunner(instanceIP, constants.DefaultSSHPort, crcBundleMetadata.GetSSHKeyPath(), constants.GetPrivateKeyPath())
 
 	logging.Debug("Waiting until ssh is available")
 	if err := cluster.WaitForSSH(sshRunner); err != nil {
@@ -555,7 +550,7 @@ func (*client) Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, er
 		if err != nil {
 			return statusError(statusConfig.Name, "Error getting ip", err)
 		}
-		sshRunner := crcssh.CreateRunnerWithPrivateKey(ip, constants.DefaultSSHPort, constants.GetPrivateKeyPath())
+		sshRunner := crcssh.CreateRunner(ip, constants.DefaultSSHPort, constants.GetPrivateKeyPath())
 		// check if all the clusteroperators are running
 		ocConfig := oc.UseOCWithSSH(sshRunner)
 		operatorsStatus, err := cluster.GetClusterOperatorsStatus(ocConfig)
@@ -701,8 +696,6 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	if err != nil {
 		return err
 	}
-	sshRunner.SetPrivateKeyPath(constants.GetPrivateKeyPath())
-
 	return err
 }
 

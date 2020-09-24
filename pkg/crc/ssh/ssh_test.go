@@ -51,7 +51,7 @@ func TestRunner(t *testing.T) {
 	for _, clientType := range []machinessh.ClientType{machinessh.External, machinessh.Native} {
 		machinessh.SetDefaultClient(clientType)
 		addr := listener.Addr().String()
-		runner := CreateRunnerWithPrivateKey(ipFor(addr), portFor(addr), clientKeyFile)
+		runner := CreateRunner(ipFor(addr), portFor(addr), clientKeyFile)
 
 		bin, err := runner.Run("echo hello")
 		assert.NoError(t, err)
