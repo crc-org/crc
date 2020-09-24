@@ -16,6 +16,7 @@ const (
 	DefaultMemory = 9216
 
 	DefaultSSHUser = "core"
+	DefaultSSHPort = 22
 
 	CrcEnvPrefix = "CRC"
 
