@@ -236,7 +236,11 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		return startError(startConfig.Name, "Error getting the state", err)
 	}
 
-	sshRunner := crcssh.CreateRunnerWithPrivateKey(host.Driver, privateKeyPath)
+	instanceIP, err := host.Driver.GetIP()
+	if err != nil {
+		return startError(startConfig.Name, "Error getting the IP", err)
+	}
+	sshRunner := crcssh.CreateRunnerWithPrivateKey(instanceIP, constants.DefaultSSHPort, privateKeyPath)
 
 	logging.Debug("Waiting until ssh is available")
 	if err := cluster.WaitForSSH(sshRunner); err != nil {
@@ -276,11 +280,6 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		if err = addNameServerToInstance(sshRunner, startConfig.NameServer); err != nil {
 			return startError(startConfig.Name, "Failed to add nameserver to the VM", err)
 		}
-	}
-
-	instanceIP, err := host.Driver.GetIP()
-	if err != nil {
-		return startError(startConfig.Name, "Error getting the IP", err)
 	}
 
 	proxyConfig, err := getProxyConfig(crcBundleMetadata.ClusterInfo.BaseDomain)
@@ -552,7 +551,11 @@ func (*client) Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, er
 		}
 		proxyConfig.ApplyToEnvironment()
 
-		sshRunner := crcssh.CreateRunner(host.Driver)
+		ip, err := host.Driver.GetIP()
+		if err != nil {
+			return statusError(statusConfig.Name, "Error getting ip", err)
+		}
+		sshRunner := crcssh.CreateRunnerWithPrivateKey(ip, constants.DefaultSSHPort, constants.GetPrivateKeyPath())
 		// check if all the clusteroperators are running
 		ocConfig := oc.UseOCWithSSH(sshRunner)
 		operatorsStatus, err := cluster.GetClusterOperatorsStatus(ocConfig)

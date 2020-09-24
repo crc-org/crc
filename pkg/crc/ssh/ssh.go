@@ -10,20 +10,21 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	crcos "github.com/code-ready/crc/pkg/os"
-	"github.com/code-ready/machine/libmachine/drivers"
+	"github.com/code-ready/machine/libmachine/ssh"
 )
 
 type Runner struct {
-	driver        drivers.Driver
+	ip            string
+	port          int
 	privateSSHKey string
 }
 
-func CreateRunner(driver drivers.Driver) *Runner {
-	return CreateRunnerWithPrivateKey(driver, constants.GetPrivateKeyPath())
-}
-
-func CreateRunnerWithPrivateKey(driver drivers.Driver, privateKey string) *Runner {
-	return &Runner{driver: driver, privateSSHKey: privateKey}
+func CreateRunnerWithPrivateKey(ip string, port int, privateKey string) *Runner {
+	return &Runner{
+		ip:            ip,
+		port:          port,
+		privateSSHKey: privateKey,
+	}
 }
 
 // Create a host using the driver's config
@@ -57,7 +58,9 @@ func (runner *Runner) CopyFile(srcFilename string, destFilename string, mode os.
 }
 
 func (runner *Runner) runSSHCommandFromDriver(command string, runPrivate bool) (string, error) {
-	client, err := drivers.GetSSHClientFromDriver(runner.driver, runner.privateSSHKey)
+	client, err := ssh.NewClient(constants.DefaultSSHUser, runner.ip, runner.port, &ssh.Auth{
+		Keys: []string{runner.privateSSHKey},
+	})
 	if err != nil {
 		return "", err
 	}

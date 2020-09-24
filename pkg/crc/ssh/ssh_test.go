@@ -15,7 +15,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/code-ready/machine/drivers/errdriver"
 	machinessh "github.com/code-ready/machine/libmachine/ssh"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -51,9 +50,8 @@ func TestRunner(t *testing.T) {
 
 	for _, clientType := range []machinessh.ClientType{machinessh.External, machinessh.Native} {
 		machinessh.SetDefaultClient(clientType)
-		runner := CreateRunnerWithPrivateKey(&mockDriver{
-			addr: listener.Addr().String(),
-		}, clientKeyFile)
+		addr := listener.Addr().String()
+		runner := CreateRunnerWithPrivateKey(ipFor(addr), portFor(addr), clientKeyFile)
 
 		bin, err := runner.Run("echo hello")
 		assert.NoError(t, err)
@@ -144,24 +142,11 @@ func writePrivateKey(t *testing.T, clientKeyFile string, clientKey *rsa.PrivateK
 	}))
 }
 
-type mockDriver struct {
-	addr string
-
-	errdriver.Driver
+func ipFor(addr string) string {
+	return strings.Split(addr, ":")[0]
 }
 
-func (d *mockDriver) GetSSHHostname() (string, error) {
-	return strings.Split(d.addr, ":")[0], nil
-}
-
-func (mockDriver) GetSSHKeyPath() string {
-	return ""
-}
-
-func (d *mockDriver) GetSSHPort() (int, error) {
-	return strconv.Atoi(strings.Split(d.addr, ":")[1])
-}
-
-func (mockDriver) GetSSHUsername() string {
-	return "core"
+func portFor(addr string) int {
+	port, _ := strconv.Atoi(strings.Split(addr, ":")[1])
+	return port
 }
