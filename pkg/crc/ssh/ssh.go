@@ -14,16 +14,16 @@ import (
 )
 
 type Runner struct {
-	ip            string
-	port          int
-	privateSSHKey string
+	ip             string
+	port           int
+	privateSSHKeys []string
 }
 
-func CreateRunnerWithPrivateKey(ip string, port int, privateKey string) *Runner {
+func CreateRunner(ip string, port int, privateKeys ...string) *Runner {
 	return &Runner{
-		ip:            ip,
-		port:          port,
-		privateSSHKey: privateKey,
+		ip:             ip,
+		port:           port,
+		privateSSHKeys: privateKeys,
 	}
 }
 
@@ -34,10 +34,6 @@ func (runner *Runner) Run(command string) (string, error) {
 
 func (runner *Runner) RunPrivate(command string) (string, error) {
 	return runner.runSSHCommandFromDriver(command, true)
-}
-
-func (runner *Runner) SetPrivateKeyPath(path string) {
-	runner.privateSSHKey = path
 }
 
 func (runner *Runner) CopyData(data []byte, destFilename string, mode os.FileMode) error {
@@ -58,8 +54,15 @@ func (runner *Runner) CopyFile(srcFilename string, destFilename string, mode os.
 }
 
 func (runner *Runner) runSSHCommandFromDriver(command string, runPrivate bool) (string, error) {
+	var availableKeys []string
+	for _, privateKey := range runner.privateSSHKeys {
+		if _, err := os.Stat(privateKey); err == nil {
+			availableKeys = append(availableKeys, privateKey)
+		}
+	}
+
 	client, err := ssh.NewClient(constants.DefaultSSHUser, runner.ip, runner.port, &ssh.Auth{
-		Keys: []string{runner.privateSSHKey},
+		Keys: availableKeys,
 	})
 	if err != nil {
 		return "", err
