@@ -12,3 +12,9 @@ func TestValidateProxyURL(t *testing.T) {
 	assert.EqualError(t, ValidateProxyURL("company.com:8080"), "Proxy URL 'company.com:8080' is not valid: url should start with http://")
 	assert.EqualError(t, ValidateProxyURL("https://company.com"), "Proxy URL 'https://company.com' is not valid: https is not supported")
 }
+
+func TestHidePassword(t *testing.T) {
+	url, err := URIStringForDisplay("https://user:secret@proxy.org:123")
+	assert.NoError(t, err)
+	assert.Equal(t, "https://user:xxx@proxy.org:123", url)
+}
