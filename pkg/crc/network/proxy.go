@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	DefaultProxy     ProxyConfig
+	globalProxy      ProxyConfig
 	defaultNoProxies = []string{"127.0.0.1", "localhost"}
 )
 
@@ -31,32 +31,32 @@ func SetProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) error 
 		return err
 	}
 
-	DefaultProxy = ProxyConfig{
+	globalProxy = ProxyConfig{
 		HTTPProxy:   httpProxy,
 		HTTPSProxy:  httpsProxy,
 		ProxyCAFile: proxyCAFile,
 		ProxyCACert: proxyCACert,
 	}
 
-	if DefaultProxy.HTTPProxy == "" {
-		DefaultProxy.HTTPProxy = getProxyFromEnv("http_proxy")
+	if globalProxy.HTTPProxy == "" {
+		globalProxy.HTTPProxy = getProxyFromEnv("http_proxy")
 	}
-	if DefaultProxy.HTTPSProxy == "" {
-		DefaultProxy.HTTPSProxy = getProxyFromEnv("https_proxy")
+	if globalProxy.HTTPSProxy == "" {
+		globalProxy.HTTPSProxy = getProxyFromEnv("https_proxy")
 	}
 
-	if err := ValidateProxyURL(DefaultProxy.HTTPProxy); err != nil {
+	if err := ValidateProxyURL(globalProxy.HTTPProxy); err != nil {
 		return err
 	}
 
-	if err := ValidateProxyURL(DefaultProxy.HTTPSProxy); err != nil {
+	if err := ValidateProxyURL(globalProxy.HTTPSProxy); err != nil {
 		return err
 	}
 
 	if noProxy == "" {
 		noProxy = getProxyFromEnv("no_proxy")
 	}
-	DefaultProxy.setNoProxyString(noProxy)
+	globalProxy.setNoProxyString(noProxy)
 
 	return nil
 }
@@ -64,17 +64,15 @@ func SetProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) error 
 // GetProxyConfig retrieve the proxy configuration previously set.
 func GetProxyConfig() *ProxyConfig {
 	config := ProxyConfig{
-		HTTPProxy:   DefaultProxy.HTTPProxy,
-		HTTPSProxy:  DefaultProxy.HTTPSProxy,
-		ProxyCAFile: DefaultProxy.ProxyCAFile,
-		ProxyCACert: DefaultProxy.ProxyCACert,
+		HTTPProxy:   globalProxy.HTTPProxy,
+		HTTPSProxy:  globalProxy.HTTPSProxy,
+		ProxyCAFile: globalProxy.ProxyCAFile,
+		ProxyCACert: globalProxy.ProxyCACert,
+		NoProxy:     defaultNoProxies,
 	}
-
-	config.NoProxy = defaultNoProxies
-	if len(DefaultProxy.NoProxy) != 0 {
-		config.AddNoProxy(DefaultProxy.NoProxy...)
+	if len(globalProxy.NoProxy) != 0 {
+		config.AddNoProxy(globalProxy.NoProxy...)
 	}
-
 	return &config
 }
 
