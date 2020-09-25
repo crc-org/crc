@@ -715,14 +715,10 @@ func updateSSHKeyAndCopyKubeconfig(sshRunner *crcssh.Runner, name string, crcBun
 }
 
 func getProxyConfig(baseDomainName string) (*network.ProxyConfig, error) {
-	proxy, err := network.NewProxyConfig()
-	if err != nil {
-		return nil, err
-	}
+	proxy := network.GetProxyConfig()
 	if proxy.IsEnabled() {
 		proxy.AddNoProxy(fmt.Sprintf(".%s", baseDomainName))
 	}
-
 	return proxy, nil
 }
 

@@ -23,10 +23,12 @@ type ProxyConfig struct {
 	ProxyCACert string
 }
 
-func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) (*ProxyConfig, error) {
+// SetProxyDefaults specifies proxy configuration. If an empty string is passed the corresponding environment variable
+// is checked.
+func SetProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) error {
 	proxyCACert, err := getProxyCAData(proxyCAFile)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	DefaultProxy = ProxyConfig{
@@ -44,11 +46,11 @@ func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) (*Prox
 	}
 
 	if err := ValidateProxyURL(DefaultProxy.HTTPProxy); err != nil {
-		return nil, err
+		return err
 	}
 
 	if err := ValidateProxyURL(DefaultProxy.HTTPSProxy); err != nil {
-		return nil, err
+		return err
 	}
 
 	if noProxy == "" {
@@ -56,12 +58,11 @@ func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) (*Prox
 	}
 	DefaultProxy.setNoProxyString(noProxy)
 
-	return NewProxyConfig()
+	return nil
 }
 
-// NewProxyConfig creates a proxy configuration with the specified parameters. If an empty string is passed
-// the corresponding environment variable is checked.
-func NewProxyConfig() (*ProxyConfig, error) {
+// GetProxyConfig retrieve the proxy configuration previously set.
+func GetProxyConfig() *ProxyConfig {
 	config := ProxyConfig{
 		HTTPProxy:   DefaultProxy.HTTPProxy,
 		HTTPSProxy:  DefaultProxy.HTTPSProxy,
@@ -74,7 +75,7 @@ func NewProxyConfig() (*ProxyConfig, error) {
 		config.AddNoProxy(DefaultProxy.NoProxy...)
 	}
 
-	return &config, nil
+	return &config
 }
 
 func getProxyCAData(proxyCAFile string) (string, error) {

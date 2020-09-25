@@ -95,11 +95,11 @@ func setProxyDefaults() {
 	noProxy := config.Get(cmdConfig.NoProxy).AsString()
 	proxyCAFile := config.Get(cmdConfig.ProxyCAFile).AsString()
 
-	proxyConfig, err := network.NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile)
-	if err != nil {
-		exit.WithMessage(1, err.Error())
+	if err := network.SetProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile); err != nil {
+		exit.WithMessage(1, fmt.Sprintf("Cannot set proxy configuration: %s", err.Error()))
 	}
 
+	proxyConfig := network.GetProxyConfig()
 	if proxyConfig.IsEnabled() {
 		logging.Debugf("Proxy configuration: %s", proxyConfig.String())
 		proxyConfig.ApplyToEnvironment()
