@@ -31,49 +31,45 @@ func SetProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) error 
 		return err
 	}
 
+	if httpProxy == "" {
+		httpProxy = getProxyFromEnv("http_proxy")
+	}
+	if httpsProxy == "" {
+		httpsProxy = getProxyFromEnv("https_proxy")
+	}
+	if noProxy == "" {
+		noProxy = getProxyFromEnv("no_proxy")
+	}
+
+	if err := ValidateProxyURL(httpProxy); err != nil {
+		return err
+	}
+
+	if err := ValidateProxyURL(httpsProxy); err != nil {
+		return err
+	}
+
 	globalProxy = ProxyConfig{
 		HTTPProxy:   httpProxy,
 		HTTPSProxy:  httpsProxy,
 		ProxyCAFile: proxyCAFile,
 		ProxyCACert: proxyCACert,
 	}
-
-	if globalProxy.HTTPProxy == "" {
-		globalProxy.HTTPProxy = getProxyFromEnv("http_proxy")
+	if noProxy != "" {
+		globalProxy.NoProxy = strings.Split(noProxy, ",")
 	}
-	if globalProxy.HTTPSProxy == "" {
-		globalProxy.HTTPSProxy = getProxyFromEnv("https_proxy")
-	}
-
-	if err := ValidateProxyURL(globalProxy.HTTPProxy); err != nil {
-		return err
-	}
-
-	if err := ValidateProxyURL(globalProxy.HTTPSProxy); err != nil {
-		return err
-	}
-
-	if noProxy == "" {
-		noProxy = getProxyFromEnv("no_proxy")
-	}
-	globalProxy.setNoProxyString(noProxy)
-
 	return nil
 }
 
 // GetProxyConfig retrieve the proxy configuration previously set.
 func GetProxyConfig() *ProxyConfig {
-	config := ProxyConfig{
+	return &ProxyConfig{
 		HTTPProxy:   globalProxy.HTTPProxy,
 		HTTPSProxy:  globalProxy.HTTPSProxy,
 		ProxyCAFile: globalProxy.ProxyCAFile,
 		ProxyCACert: globalProxy.ProxyCACert,
-		NoProxy:     defaultNoProxies,
+		NoProxy:     append(defaultNoProxies, globalProxy.NoProxy...),
 	}
-	if len(globalProxy.NoProxy) != 0 {
-		config.AddNoProxy(globalProxy.NoProxy...)
-	}
-	return &config
 }
 
 func getProxyCAData(proxyCAFile string) (string, error) {
@@ -110,13 +106,6 @@ func (p *ProxyConfig) String() string {
 // AddNoProxy appends the specified host to the list of no proxied hosts.
 func (p *ProxyConfig) AddNoProxy(host ...string) {
 	p.NoProxy = append(p.NoProxy, host...)
-}
-
-func (p *ProxyConfig) setNoProxyString(noProxies string) {
-	if noProxies == "" {
-		return
-	}
-	p.NoProxy = strings.Split(noProxies, ",")
 }
 
 func (p *ProxyConfig) GetNoProxyString() string {
