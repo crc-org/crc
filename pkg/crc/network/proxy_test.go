@@ -24,10 +24,10 @@ func TestMarshal(t *testing.T) {
 	bin, err := json.Marshal(&ProxyConfig{
 		HTTPProxy:   "http://proxy.org",
 		HTTPSProxy:  "http://proxy.org",
-		noProxy:     defaultNoProxies,
+		NoProxy:     defaultNoProxies,
 		ProxyCAFile: "/home/john/ca.crt",
 		ProxyCACert: "very long string",
 	})
 	assert.NoError(t, err)
-	assert.JSONEq(t, `{"HTTPProxy":"http://proxy.org", "HTTPSProxy":"http://proxy.org", "ProxyCACert":"very long string", "ProxyCAFile":"/home/john/ca.crt"}`, string(bin))
+	assert.JSONEq(t, `{"HTTPProxy":"http://proxy.org", "HTTPSProxy":"http://proxy.org", "NoProxy":["127.0.0.1", "localhost"], "ProxyCACert":"very long string", "ProxyCAFile":"/home/john/ca.crt"}`, string(bin))
 }
