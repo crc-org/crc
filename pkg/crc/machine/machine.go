@@ -310,7 +310,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 
 	// Check DNS lookup from host to VM
 	logging.Info("Check DNS query from host ...")
-	if err := network.CheckCRCLocalDNSReachableFromHost(crcBundleMetadata, instanceIP); err != nil {
+	if err := dns.CheckCRCLocalDNSReachableFromHost(crcBundleMetadata, instanceIP); err != nil {
 		return nil, errors.Wrap(err, "Failed to query DNS from host")
 	}
 
