@@ -102,16 +102,11 @@ func getProxyFromEnv(proxyScheme string) string {
 	return p
 }
 
-// HTTPProxy with hidden credentials
-func (p *ProxyConfig) HTTPProxyForDisplay() string {
-	httpProxy, _ := URIStringForDisplay(p.HTTPProxy)
-	return httpProxy
-}
-
-// HTTPSProxy with hidden credentials
-func (p *ProxyConfig) HTTPSProxyForDisplay() string {
-	httpsProxy, _ := URIStringForDisplay(p.HTTPSProxy)
-	return httpsProxy
+func (p *ProxyConfig) String() string {
+	httpProxy, _ := hidePassword(p.HTTPProxy)
+	httpsProxy, _ := hidePassword(p.HTTPSProxy)
+	return fmt.Sprintf("HTTPProxy: %s, HTTPSProxy: %s, NoProxy: %s, ProxyCAFile: %s",
+		httpProxy, httpsProxy, p.GetNoProxyString(), p.ProxyCAFile)
 }
 
 // AddNoProxy appends the specified host to the list of no proxied hosts.

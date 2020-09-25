@@ -15,7 +15,7 @@ func TestValidateProxyURL(t *testing.T) {
 }
 
 func TestHidePassword(t *testing.T) {
-	url, err := URIStringForDisplay("https://user:secret@proxy.org:123")
+	url, err := hidePassword("https://user:secret@proxy.org:123")
 	assert.NoError(t, err)
 	assert.Equal(t, "https://user:xxx@proxy.org:123", url)
 }

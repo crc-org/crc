@@ -5,7 +5,7 @@ import (
 	"net/url"
 )
 
-func URIStringForDisplay(uri string) (string, error) {
+func hidePassword(uri string) (string, error) {
 	u, err := url.Parse(uri)
 	if err != nil {
 		return "", err
