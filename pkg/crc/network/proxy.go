@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -18,13 +19,20 @@ type ProxyConfig struct {
 	HTTPProxy   string
 	HTTPSProxy  string
 	noProxy     []string
+	ProxyCAFile string
 	ProxyCACert string
 }
 
-func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCACert string) (*ProxyConfig, error) {
+func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) (*ProxyConfig, error) {
+	proxyCACert, err := getProxyCAData(proxyCAFile)
+	if err != nil {
+		return nil, err
+	}
+
 	DefaultProxy = ProxyConfig{
 		HTTPProxy:   httpProxy,
 		HTTPSProxy:  httpsProxy,
+		ProxyCAFile: proxyCAFile,
 		ProxyCACert: proxyCACert,
 	}
 
@@ -48,6 +56,7 @@ func NewProxyConfig() (*ProxyConfig, error) {
 	config := ProxyConfig{
 		HTTPProxy:   DefaultProxy.HTTPProxy,
 		HTTPSProxy:  DefaultProxy.HTTPSProxy,
+		ProxyCAFile: DefaultProxy.ProxyCAFile,
 		ProxyCACert: DefaultProxy.ProxyCACert,
 	}
 
@@ -67,6 +76,22 @@ func NewProxyConfig() (*ProxyConfig, error) {
 	}
 
 	return &config, nil
+}
+
+func getProxyCAData(proxyCAFile string) (string, error) {
+	if proxyCAFile == "" {
+		return "", nil
+	}
+	proxyCACert, err := ioutil.ReadFile(proxyCAFile)
+	if err != nil {
+		return "", err
+	}
+	// Before passing string back to caller function, remove the empty lines in the end
+	return trimTrailingEOL(string(proxyCACert)), nil
+}
+
+func trimTrailingEOL(s string) string {
+	return strings.TrimRight(s, "\n")
 }
 
 func getProxyFromEnv(proxyScheme string) string {

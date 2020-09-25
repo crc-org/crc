@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
-	"strings"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
@@ -97,12 +95,7 @@ func setProxyDefaults() {
 	noProxy := config.Get(cmdConfig.NoProxy).AsString()
 	proxyCAFile := config.Get(cmdConfig.ProxyCAFile).AsString()
 
-	proxyCAData, err := getProxyCAData(proxyCAFile)
-	if err != nil {
-		exit.WithMessage(1, fmt.Sprintf("not able to read proxyCAFile %s: %v", proxyCAFile, err.Error()))
-	}
-
-	proxyConfig, err := network.NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAData)
+	proxyConfig, err := network.NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile)
 	if err != nil {
 		exit.WithMessage(1, err.Error())
 	}
@@ -112,22 +105,6 @@ func setProxyDefaults() {
 			proxyConfig.HTTPSProxyForDisplay(), proxyConfig.GetNoProxyString(), proxyCAFile)
 		proxyConfig.ApplyToEnvironment()
 	}
-}
-
-func getProxyCAData(proxyCAFile string) (string, error) {
-	if proxyCAFile == "" {
-		return "", nil
-	}
-	proxyCACert, err := ioutil.ReadFile(proxyCAFile)
-	if err != nil {
-		return "", err
-	}
-	// Before passing string back to caller function, remove the empty lines in the end
-	return trimTrailingEOL(string(proxyCACert)), nil
-}
-
-func trimTrailingEOL(s string) string {
-	return strings.TrimRight(s, "\n")
 }
 
 func newViperConfig() (*crcConfig.Config, *crcConfig.ViperStorage, error) {
