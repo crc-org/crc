@@ -42,6 +42,15 @@ func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) (*Prox
 	if DefaultProxy.HTTPSProxy == "" {
 		DefaultProxy.HTTPSProxy = getProxyFromEnv("https_proxy")
 	}
+
+	if err := ValidateProxyURL(DefaultProxy.HTTPProxy); err != nil {
+		return nil, err
+	}
+
+	if err := ValidateProxyURL(DefaultProxy.HTTPSProxy); err != nil {
+		return nil, err
+	}
+
 	if noProxy == "" {
 		noProxy = getProxyFromEnv("no_proxy")
 	}
@@ -63,16 +72,6 @@ func NewProxyConfig() (*ProxyConfig, error) {
 	config.NoProxy = defaultNoProxies
 	if len(DefaultProxy.NoProxy) != 0 {
 		config.AddNoProxy(DefaultProxy.NoProxy...)
-	}
-
-	err := ValidateProxyURL(config.HTTPProxy)
-	if err != nil {
-		return nil, err
-	}
-
-	err = ValidateProxyURL(config.HTTPSProxy)
-	if err != nil {
-		return nil, err
 	}
 
 	return &config, nil
