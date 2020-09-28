@@ -97,6 +97,11 @@ func getProxyFromEnv(proxyScheme string) string {
 	return p
 }
 
+func setProxyEnv(key, value string) {
+	setEnv(strings.ToLower(key), value)
+	setEnv(strings.ToUpper(key), value)
+}
+
 func setEnv(key, value string) {
 	before := os.Getenv(key)
 	if before != value {
@@ -130,16 +135,13 @@ func (p *ProxyConfig) ApplyToEnvironment() {
 	}
 
 	if p.HTTPProxy != "" {
-		setEnv("HTTP_PROXY", p.HTTPProxy)
-		setEnv("http_proxy", p.HTTPProxy)
+		setProxyEnv("http_proxy", p.HTTPProxy)
 	}
 	if p.HTTPSProxy != "" {
-		setEnv("HTTPS_PROXY", p.HTTPSProxy)
-		setEnv("https_proxy", p.HTTPSProxy)
+		setProxyEnv("https_proxy", p.HTTPSProxy)
 	}
 	if len(p.NoProxy) != 0 {
-		setEnv("NO_PROXY", p.GetNoProxyString())
-		setEnv("no_proxy", p.GetNoProxyString())
+		setProxyEnv("no_proxy", p.GetNoProxyString())
 	}
 }
 
