@@ -270,8 +270,7 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 
 	// Create servicePostStartConfig for DNS checks and DNS start.
 	servicePostStartConfig := services.ServicePostStartConfig{
-		Name:       startConfig.Name,
-		DriverName: host.Driver.DriverName(),
+		Name: startConfig.Name,
 		// TODO: would prefer passing in a more generic type
 		SSHRunner: sshRunner,
 		IP:        instanceIP,
