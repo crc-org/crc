@@ -138,12 +138,7 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 			return startError(startConfig.Name, fmt.Sprintf("Invalid bundle disk image '%s'", crcBundleMetadata.GetDiskImagePath()), err)
 		}
 
-		openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
-		if openshiftVersion == "" {
-			logging.Info("Creating VM...")
-		} else {
-			logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", openshiftVersion)
-		}
+		logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
 
 		// Retrieve metadata info
 		diskPath := crcBundleMetadata.GetDiskImagePath()
@@ -183,12 +178,7 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 			return startError(startConfig.Name, "Error getting the machine state", err)
 		}
 		if vmState == state.Running {
-			openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
-			if openshiftVersion == "" {
-				logging.Info("A CodeReady Containers VM is already running")
-			} else {
-				logging.Infof("A CodeReady Containers VM for OpenShift %s is already running", openshiftVersion)
-			}
+			logging.Infof("A CodeReady Containers VM for OpenShift %s is already running", crcBundleMetadata.GetOpenshiftVersion())
 			clusterConfig, err := getClusterConfig(crcBundleMetadata)
 			if err != nil {
 				return startError(startConfig.Name, "Cannot create cluster configuration", err)
@@ -201,12 +191,7 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 			}, nil
 		}
 
-		openshiftVersion := crcBundleMetadata.GetOpenshiftVersion()
-		if openshiftVersion == "" {
-			logging.Info("Starting CodeReady Containers VM ...")
-		} else {
-			logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", openshiftVersion)
-		}
+		logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
 		if err := host.Driver.Start(); err != nil {
 			return startError(startConfig.Name, "Error starting stopped VM", err)
 		}
@@ -560,10 +545,7 @@ func (*client) Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, er
 		}
 		switch {
 		case operatorsStatus.Available:
-			openshiftVersion = "4.x"
-			if crcBundleMetadata.GetOpenshiftVersion() != "" {
-				openshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
-			}
+			openshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
 			openshiftStatus = "Running"
 		case operatorsStatus.Degraded:
 			openshiftStatus = "Degraded"
