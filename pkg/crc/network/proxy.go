@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
 var (
@@ -96,6 +97,16 @@ func getProxyFromEnv(proxyScheme string) string {
 	return p
 }
 
+func setEnv(key, value string) {
+	before := os.Getenv(key)
+	if before != value {
+		logging.Warnf("Overriding environment variable %s: previously %s, now %s", key, before, value)
+	}
+	if err := os.Setenv(key, value); err != nil {
+		logging.Errorf("Cannot set environment variable %s: %v", key, err)
+	}
+}
+
 func (p *ProxyConfig) String() string {
 	httpProxy, _ := hidePassword(p.HTTPProxy)
 	httpsProxy, _ := hidePassword(p.HTTPSProxy)
@@ -119,16 +130,16 @@ func (p *ProxyConfig) ApplyToEnvironment() {
 	}
 
 	if p.HTTPProxy != "" {
-		os.Setenv("HTTP_PROXY", p.HTTPProxy)
-		os.Setenv("http_proxy", p.HTTPProxy)
+		setEnv("HTTP_PROXY", p.HTTPProxy)
+		setEnv("http_proxy", p.HTTPProxy)
 	}
 	if p.HTTPSProxy != "" {
-		os.Setenv("HTTPS_PROXY", p.HTTPSProxy)
-		os.Setenv("https_proxy", p.HTTPSProxy)
+		setEnv("HTTPS_PROXY", p.HTTPSProxy)
+		setEnv("https_proxy", p.HTTPSProxy)
 	}
 	if len(p.NoProxy) != 0 {
-		os.Setenv("NO_PROXY", p.GetNoProxyString())
-		os.Setenv("no_proxy", p.GetNoProxyString())
+		setEnv("NO_PROXY", p.GetNoProxyString())
+		setEnv("no_proxy", p.GetNoProxyString())
 	}
 }
 
