@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+
+	"github.com/spf13/cast"
 )
 
 func RequiresRestartMsg(key string, _ interface{}) string {
@@ -11,5 +13,5 @@ func RequiresRestartMsg(key string, _ interface{}) string {
 }
 
 func SuccessfullyApplied(key string, value interface{}) string {
-	return fmt.Sprintf("Successfully configured %s to %s", key, value)
+	return fmt.Sprintf("Successfully configured %s to %s", key, cast.ToString(value))
 }
