@@ -48,6 +48,10 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	return NotLoadable{d.Name}
 }
 
+func (d* Driver) UpdateConfigRaw(rawData []byte) error {
+	return NotLoadable{d.Name}
+}
+
 func (d *Driver) GetURL() (string, error) {
 	return "", NotLoadable{d.Name}
 }

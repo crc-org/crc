@@ -71,6 +71,7 @@ func (api *Client) NewHost(driverName string, driverPath string, rawDriver []byt
 				ServerKeyPath:    filepath.Join(api.GetMachinesDir(), "server-key.pem"),
 			},
 		},
+		RawDriver: rawDriver,
 	}, nil
 }
 

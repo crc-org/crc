@@ -9,9 +9,9 @@ type Driver struct {
 
 	// Driver specific configuration
 	Network   string
-	DiskPath  string
 	CacheMode string
 	IOMode    string
+	VSock     bool
 }
 
 const (

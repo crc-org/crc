@@ -48,6 +48,10 @@ func (d *DriverNotSupported) SetConfigFromFlags(flags DriverOptions) error {
 	return NotSupported{d.DriverName()}
 }
 
+func (d *DriverNotSupported) UpdateConfigRaw(rawDriver []byte) error {
+	return NotSupported{d.DriverName()}
+}
+
 func (d *DriverNotSupported) GetURL() (string, error) {
 	return "", NotSupported{d.DriverName()}
 }

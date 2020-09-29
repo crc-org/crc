@@ -29,6 +29,10 @@ func (r *RawDataDriver) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (r *RawDataDriver) UpdateConfigRaw(rawData []byte) error {
+	return r.UnmarshalJSON(rawData)
+}
+
 func getMigratedHostMetadata(data []byte) (*Metadata, error) {
 	// HostMetadata is for a "first pass" so we can then load the driver
 	var (
