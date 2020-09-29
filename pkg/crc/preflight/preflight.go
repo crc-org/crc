@@ -178,3 +178,12 @@ func SetupHost(config config.Storage) error {
 func RegisterSettings(config config.Schema) {
 	doRegisterSettings(config, getPreflightChecks(true))
 }
+
+func CleanUpHost() error {
+	// A user can use setup with experiment flag
+	// and not use cleanup with same flag, to avoid
+	// any extra step/confusion we are just adding the checks
+	// which are behind the experiment flag. This way cleanup
+	// perform action in a sane way.
+	return doCleanUpPreflightChecks(getPreflightChecks(true))
+}
