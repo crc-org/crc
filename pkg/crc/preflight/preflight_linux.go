@@ -120,7 +120,3 @@ func getPreflightChecks(experimentalFeatures bool) []Check {
 
 	return checks
 }
-
-func CleanUpHost() error {
-	return doCleanUpPreflightChecks(getPreflightChecks(true))
-}
