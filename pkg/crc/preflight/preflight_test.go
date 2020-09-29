@@ -9,13 +9,27 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCount(t *testing.T) {
+func TestCountConfigurationOptions(t *testing.T) {
 	cfg := config.New(config.NewEmptyInMemoryStorage())
 	RegisterSettings(cfg)
 	assert.Len(t, cfg.AllConfigs(), map[string]int{
 		"darwin":  16,
 		"linux":   34,
 		"windows": 20,
+	}[runtime.GOOS])
+}
+
+func TestCountPreflights(t *testing.T) {
+	assert.Len(t, getPreflightChecks(false), map[string]int{
+		"darwin":  10,
+		"linux":   21,
+		"windows": 14,
+	}[runtime.GOOS])
+
+	assert.Len(t, getPreflightChecks(true), map[string]int{
+		"darwin":  16,
+		"linux":   21,
+		"windows": 16,
 	}[runtime.GOOS])
 }
 
