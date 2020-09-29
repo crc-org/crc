@@ -81,13 +81,13 @@ var traySetupChecks = [...]Check{
 	},
 }
 
-func getPreflightChecks() []Check {
+func getPreflightChecks(experimentalFeatures bool) []Check {
 	checks := []Check{}
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, hypervPreflightChecks[:]...)
 
 	// Experimental feature
-	if EnableExperimentalFeatures {
+	if experimentalFeatures {
 		checks = append(checks, traySetupChecks[:]...)
 	}
 
@@ -100,7 +100,5 @@ func CleanUpHost() error {
 	// any extra step/confusion we are just adding the checks
 	// which are behind the experiment flag. This way cleanup
 	// perform action in a sane way.
-	checks := getPreflightChecks()
-	checks = append(checks, traySetupChecks[:]...)
-	return doCleanUpPreflightChecks(checks)
+	return doCleanUpPreflightChecks(getPreflightChecks(true))
 }
