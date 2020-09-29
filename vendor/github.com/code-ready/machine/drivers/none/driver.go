@@ -104,6 +104,10 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	return nil
 }
 
+func (d* Driver) UpdateConfigRaw(rawData []byte) error {
+	return fmt.Errorf("hosts without a driver cannot be updated")
+}
+
 func (d *Driver) Start() error {
 	return fmt.Errorf("hosts without a driver cannot be started")
 }

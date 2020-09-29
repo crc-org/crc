@@ -8,14 +8,13 @@ import (
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/mcnflag"
+	"github.com/code-ready/machine/libmachine/mcnutils"
 	"github.com/code-ready/machine/libmachine/state"
 )
 
 type Driver struct {
 	*drivers.VMDriver
-	CrcDiskCopier        CRCDiskCopier
 	VirtualSwitch        string
-	DiskPath             string
 	MacAddress           string
 	DisableDynamicMemory bool
 }
@@ -29,7 +28,6 @@ const (
 // NewDriver creates a new Hyper-v driver with default settings.
 func NewDriver(hostName, storePath string) *Driver {
 	return &Driver{
-		CrcDiskCopier:        NewCRCDiskCopier(),
 		DisableDynamicMemory: defaultDisableDynamicMemory,
 		VMDriver: &drivers.VMDriver{
 			BaseDriver: &drivers.BaseDriver{
@@ -169,7 +167,8 @@ func (d *Driver) PreCreateCheck() error {
 }
 
 func (d *Driver) Create() error {
-	if err := d.CrcDiskCopier.CopyDiskToMachineDir(d.StorePath, d.MachineName, d.DiskPathURL); err != nil {
+	diskPath := d.ResolveStorePath(fmt.Sprintf("%s.%s", d.MachineName, d.ImageFormat))
+	if err := mcnutils.CopyFile(d.ImageSourcePath, diskPath); err != nil {
 		return err
 	}
 
@@ -214,7 +213,7 @@ func (d *Driver) Create() error {
 
 	if err := cmd("Hyper-V\\Add-VMHardDiskDrive",
 		"-VMName", d.MachineName,
-		"-Path", quote(d.DiskPath)); err != nil {
+		"-Path", quote(diskPath)); err != nil {
 		return err
 	}
 

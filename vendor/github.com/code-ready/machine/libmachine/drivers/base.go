@@ -25,9 +25,10 @@ type BaseDriver struct {
 
 type VMDriver struct {
 	*BaseDriver
-	DiskPathURL string
-	Memory      int
-	CPU         int
+	ImageSourcePath string
+	ImageFormat     string
+	Memory          int
+	CPU             int
 }
 
 // DriverName returns the name of the driver
@@ -94,4 +95,8 @@ func (d *BaseDriver) GetBundleName() (string, error) {
 		return "", errors.New("Bundle name is not set")
 	}
 	return d.BundleName, nil
+}
+
+func (d *BaseDriver) UpdateConfigRaw(rawData []byte) error {
+	return ErrNotImplemented
 }

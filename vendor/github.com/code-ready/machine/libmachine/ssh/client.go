@@ -125,6 +125,7 @@ func NewNativeClient(user, host string, port int, auth *Auth) (Client, error) {
 
 func NewNativeConfig(user string, auth *Auth) (ssh.ClientConfig, error) {
 	var (
+		privateKeys []ssh.Signer
 		authMethods []ssh.AuthMethod
 	)
 
@@ -139,7 +140,11 @@ func NewNativeConfig(user string, auth *Auth) (ssh.ClientConfig, error) {
 			return ssh.ClientConfig{}, err
 		}
 
-		authMethods = append(authMethods, ssh.PublicKeys(privateKey))
+		privateKeys = append(privateKeys, privateKey)
+	}
+
+	if len(privateKeys) > 0 {
+		authMethods = append(authMethods, ssh.PublicKeys(privateKeys...))
 	}
 
 	for _, p := range auth.Passwords {

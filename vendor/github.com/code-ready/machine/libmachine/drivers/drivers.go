@@ -68,6 +68,9 @@ type Driver interface {
 	// by RegisterCreateFlags
 	SetConfigFromFlags(opts DriverOptions) error
 
+	// UpdateConfigRaw allows to change the state (memory, ...) of an already created machine
+	UpdateConfigRaw(rawDriver []byte) error
+
 	// Start a host
 	Start() error
 
@@ -79,6 +82,7 @@ type Driver interface {
 }
 
 var ErrHostIsNotRunning = errors.New("Host is not running")
+var ErrNotImplemented = errors.New("Not Implemented")
 
 type DriverOptions interface {
 	String(key string) string

@@ -1,7 +1,9 @@
 package host
 
 import (
+	"errors"
 	"regexp"
+	"net/rpc"
 
 	"github.com/code-ready/machine/libmachine/auth"
 	"github.com/code-ready/machine/libmachine/drivers"
@@ -147,6 +149,20 @@ func (h *Host) Restart() error {
 			return err
 		}
 	}
+
+	return nil
+}
+
+func (h *Host) UpdateConfig(rawConfig []byte) error {
+	err := h.Driver.UpdateConfigRaw(rawConfig)
+	if err != nil {
+		var e rpc.ServerError
+		if errors.As(err, &e) && err.Error() == "Not Implemented" {
+			err = drivers.ErrNotImplemented
+		}
+		return err
+	}
+	h.RawDriver = rawConfig
 
 	return nil
 }

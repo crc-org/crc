@@ -64,6 +64,7 @@ const (
 	CloseMethod              = `.Close`
 	GetCreateFlagsMethod     = `.GetCreateFlags`
 	SetConfigRawMethod       = `.SetConfigRaw`
+	UpdateConfigRawMethod    = `.UpdateConfigRaw`
 	GetConfigRawMethod       = `.GetConfigRaw`
 	DriverNameMethod         = `.DriverName`
 	SetConfigFromFlagsMethod = `.SetConfigFromFlags`
@@ -247,6 +248,10 @@ func (c *RPCClientDriver) GetCreateFlags() []mcnflag.Flag {
 
 func (c *RPCClientDriver) SetConfigRaw(data []byte) error {
 	return c.Client.Call(SetConfigRawMethod, data, nil)
+}
+
+func (c *RPCClientDriver) UpdateConfigRaw(data []byte) error {
+	return c.Client.Call(UpdateConfigRawMethod, data, nil)
 }
 
 func (c *RPCClientDriver) GetConfigRaw() ([]byte, error) {

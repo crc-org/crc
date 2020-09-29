@@ -120,6 +120,10 @@ func (r *RPCServerDriver) GetCreateFlags(_ *struct{}, reply *[]mcnflag.Flag) err
 	return nil
 }
 
+func (r *RPCServerDriver) UpdateConfigRaw(data []byte, _ *struct{}) error {
+	return r.ActualDriver.UpdateConfigRaw(data)
+}
+
 func (r *RPCServerDriver) SetConfigRaw(data []byte, _ *struct{}) error {
 	return json.Unmarshal(data, &r.ActualDriver)
 }
