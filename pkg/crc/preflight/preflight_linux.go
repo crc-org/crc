@@ -112,7 +112,7 @@ var libvirtPreflightChecks = [...]Check{
 	},
 }
 
-func getPreflightChecks() []Check {
+func getPreflightChecks(experimentalFeatures bool) []Check {
 	checks := []Check{}
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, nonWinPreflightChecks[:]...)
@@ -122,5 +122,5 @@ func getPreflightChecks() []Check {
 }
 
 func CleanUpHost() error {
-	return doCleanUpPreflightChecks(getPreflightChecks())
+	return doCleanUpPreflightChecks(getPreflightChecks(true))
 }

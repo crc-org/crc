@@ -3,14 +3,12 @@ package preflight
 import (
 	"fmt"
 
+	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
 type Flags uint32
-
-// EnableExperimentalFeatures enables the use of experimental features
-var EnableExperimentalFeatures bool
 
 const (
 	// Indicates a PreflightCheck should only be run as part of "crc setup"
@@ -169,14 +167,14 @@ func doRegisterSettings(cfg config.Schema, checks []Check) {
 
 // StartPreflightChecks performs the preflight checks before starting the cluster
 func StartPreflightChecks(config config.Storage) error {
-	return doPreflightChecks(config, getPreflightChecks())
+	return doPreflightChecks(config, getPreflightChecks(config.Get(cmdConfig.ExperimentalFeatures).AsBool()))
 }
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
 func SetupHost(config config.Storage) error {
-	return doFixPreflightChecks(config, getPreflightChecks())
+	return doFixPreflightChecks(config, getPreflightChecks(config.Get(cmdConfig.ExperimentalFeatures).AsBool()))
 }
 
 func RegisterSettings(config config.Schema) {
-	doRegisterSettings(config, getPreflightChecks())
+	doRegisterSettings(config, getPreflightChecks(true))
 }
