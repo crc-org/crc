@@ -22,6 +22,14 @@ type Client struct {
 	Failing bool
 }
 
+var DummyClusterConfig = machine.ClusterConfig{
+	KubeConfig:    "/tmp/kubeconfig",
+	KubeAdminPass: "foobar",
+	ClusterAPI:    "https://foo.testing:6443",
+	WebConsoleURL: "https://console.foo.testing:6443",
+	ProxyConfig:   nil,
+}
+
 func (c *Client) Delete(deleteConfig machine.DeleteConfig) (machine.DeleteResult, error) {
 	if c.Failing {
 		return machine.DeleteResult{
@@ -37,7 +45,19 @@ func (c *Client) Delete(deleteConfig machine.DeleteConfig) (machine.DeleteResult
 }
 
 func (c *Client) GetConsoleURL(consoleConfig machine.ConsoleConfig) (machine.ConsoleResult, error) {
-	return machine.ConsoleResult{}, errors.New("not implemented")
+	if c.Failing {
+		return machine.ConsoleResult{
+			ClusterConfig: DummyClusterConfig,
+			Success:       false,
+			Error:         "console failed",
+			State:         state.Running,
+		}, errors.New("console failed")
+	}
+	return machine.ConsoleResult{
+		ClusterConfig: DummyClusterConfig,
+		Success:       true,
+		State:         state.Running,
+	}, nil
 }
 
 func (c *Client) GetProxyConfig(machineName string) (*network.ProxyConfig, error) {
