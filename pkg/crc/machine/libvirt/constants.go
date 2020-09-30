@@ -6,7 +6,8 @@ import "fmt"
 
 const (
 	// Defaults
-	DefaultNetwork = "crc"
+	DefaultNetwork     = "crc"
+	DefaultStoragePool = "crc"
 
 	// Static addresses
 	MACAddress = "52:fd:fc:07:21:82"
