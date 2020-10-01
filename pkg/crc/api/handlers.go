@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -31,20 +32,41 @@ func stopHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.RawM
 	return encodeStructToJSON(commandResult)
 }
 
-func startHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.RawMessage) string {
-	startConfig := machine.StartConfig{
-		Name:       constants.DefaultName,
-		BundlePath: crcConfig.Get(config.Bundle).AsString(),
-		Memory:     crcConfig.Get(config.Memory).AsInt(),
-		CPUs:       crcConfig.Get(config.CPUs).AsInt(),
-		NameServer: crcConfig.Get(config.NameServer).AsString(),
-		PullSecret: &cluster.PullSecret{
-			Getter: getPullSecretFileContent(crcConfig),
-		},
-		Debug: true,
+func startHandler(client machine.Client, crcConfig crcConfig.Storage, args json.RawMessage) string {
+	var parsedArgs startArgs
+	if args != nil {
+		dec := json.NewDecoder(bytes.NewReader(args))
+		dec.DisallowUnknownFields()
+		if err := dec.Decode(&parsedArgs); err != nil {
+			startErr := &machine.StartResult{
+				Name:  constants.DefaultName,
+				Error: fmt.Sprintf("Incorrect arguments given: %s", err.Error()),
+			}
+			return encodeStructToJSON(startErr)
+		}
 	}
+	startConfig := getStartConfig(crcConfig, parsedArgs)
 	status, _ := client.Start(startConfig)
 	return encodeStructToJSON(status)
+}
+
+func getStartConfig(cfg crcConfig.Storage, args startArgs) machine.StartConfig {
+	startConfig := machine.StartConfig{
+		Name:       constants.DefaultName,
+		BundlePath: cfg.Get(config.Bundle).AsString(),
+		Memory:     cfg.Get(config.Memory).AsInt(),
+		CPUs:       cfg.Get(config.CPUs).AsInt(),
+		NameServer: cfg.Get(config.NameServer).AsString(),
+		Debug:      true,
+	}
+	pullSecretFile := args.PullSecretFile
+	if pullSecretFile == "" {
+		pullSecretFile = cfg.Get(config.PullSecretFile).AsString()
+	}
+	startConfig.PullSecret = &cluster.PullSecret{
+		Getter: getPullSecretFileContent(pullSecretFile),
+	}
+	return startConfig
 }
 
 func versionHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.RawMessage) string {
@@ -57,9 +79,9 @@ func versionHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.R
 	return encodeStructToJSON(v)
 }
 
-func getPullSecretFileContent(cfg crcConfig.Storage) func() (string, error) {
+func getPullSecretFileContent(path string) func() (string, error) {
 	return func() (string, error) {
-		data, err := ioutil.ReadFile(cfg.Get(config.PullSecretFile).AsString())
+		data, err := ioutil.ReadFile(path)
 		if err != nil {
 			return "", err
 		}
