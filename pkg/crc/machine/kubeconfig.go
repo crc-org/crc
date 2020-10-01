@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	goerrors "errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -95,11 +94,7 @@ func WriteKubeconfig(ip string, clusterConfig *ClusterConfig) error {
 }
 
 func certificateAuthority(kubeconfigFile string) ([]byte, error) {
-	bin, err := ioutil.ReadFile(kubeconfigFile)
-	if err != nil {
-		return nil, err
-	}
-	builtin, err := clientcmd.Load(bin)
+	builtin, err := clientcmd.LoadFromFile(kubeconfigFile)
 	if err != nil {
 		return nil, err
 	}
