@@ -29,6 +29,7 @@ type StartConfig struct {
 }
 
 type ClusterConfig struct {
+	ClusterCACert string
 	KubeConfig    string
 	KubeAdminPass string
 	ClusterAPI    string

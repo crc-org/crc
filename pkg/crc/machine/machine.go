@@ -1,6 +1,7 @@
 package machine
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -53,7 +54,12 @@ func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*ClusterConfig, error) 
 	if err != nil {
 		return nil, err
 	}
+	clusterCACert, err := certificateAuthority(bundleInfo.GetKubeConfigPath())
+	if err != nil {
+		return nil, err
+	}
 	return &ClusterConfig{
+		ClusterCACert: base64.StdEncoding.EncodeToString(clusterCACert),
 		KubeConfig:    bundleInfo.GetKubeConfigPath(),
 		KubeAdminPass: kubeadminPassword,
 		WebConsoleURL: constants.DefaultWebConsoleURL,
