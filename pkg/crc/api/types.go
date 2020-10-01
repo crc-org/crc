@@ -47,3 +47,8 @@ type getConfigResult struct {
 	Error   string
 	Configs map[string]interface{}
 }
+
+// startArgs is used to get the pull secret file path as argument for start handler
+type startArgs struct {
+	PullSecretFile string `json:"pullSecretFile"`
+}
