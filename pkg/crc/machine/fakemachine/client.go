@@ -23,6 +23,7 @@ type Client struct {
 }
 
 var DummyClusterConfig = machine.ClusterConfig{
+	ClusterCACert: "MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ",
 	KubeConfig:    "/tmp/kubeconfig",
 	KubeAdminPass: "foobar",
 	ClusterAPI:    "https://foo.testing:6443",

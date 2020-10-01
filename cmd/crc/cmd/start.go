@@ -92,6 +92,7 @@ func toClusterConfig(result *machine.StartResult) *clusterConfig {
 		return nil
 	}
 	return &clusterConfig{
+		ClusterCACert: result.ClusterConfig.ClusterCACert,
 		WebConsoleURL: result.ClusterConfig.WebConsoleURL,
 		URL:           result.ClusterConfig.ClusterAPI,
 		AdminCredentials: credentials{
@@ -113,6 +114,7 @@ func errorMessage(err error) string {
 }
 
 type clusterConfig struct {
+	ClusterCACert        string      `json:"cacert"`
 	WebConsoleURL        string      `json:"webConsoleUrl"`
 	URL                  string      `json:"url"`
 	AdminCredentials     credentials `json:"adminCredentials"`

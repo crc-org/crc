@@ -64,6 +64,7 @@ func TestRenderActionJSONSuccess(t *testing.T) {
 	assert.Equal(t, `{
   "success": true,
   "clusterConfig": {
+    "cacert": "",
     "webConsoleUrl": "https://console-openshift-console.apps-crc.testing",
     "url": "https://api.crc.testing:6443",
     "adminCredentials": {

@@ -117,6 +117,7 @@ func toConsoleClusterConfig(result *machine.ConsoleResult) *clusterConfig {
 		return nil
 	}
 	return &clusterConfig{
+		ClusterCACert: result.ClusterConfig.ClusterCACert,
 		WebConsoleURL: result.ClusterConfig.WebConsoleURL,
 		URL:           result.ClusterConfig.ClusterAPI,
 		AdminCredentials: credentials{

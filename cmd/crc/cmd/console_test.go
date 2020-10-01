@@ -33,6 +33,7 @@ func TestConsoleJSONSuccess(t *testing.T) {
 	expectedJSONOut := fmt.Sprintf(`{
   "success": true,
   "clusterConfig": {
+	"cacert": "%s",
     "webConsoleUrl": "%s",
     "url": "%s",
     "adminCredentials": {
@@ -44,7 +45,7 @@ func TestConsoleJSONSuccess(t *testing.T) {
       "password": "developer"
     }
   }
-}`, fakemachine.DummyClusterConfig.WebConsoleURL, fakemachine.DummyClusterConfig.ClusterAPI, fakemachine.DummyClusterConfig.KubeAdminPass)
+}`, fakemachine.DummyClusterConfig.ClusterCACert, fakemachine.DummyClusterConfig.WebConsoleURL, fakemachine.DummyClusterConfig.ClusterAPI, fakemachine.DummyClusterConfig.KubeAdminPass)
 	out := new(bytes.Buffer)
 	assert.NoError(t, runConsole(out, fakemachine.NewClient(), false, false, jsonFormat))
 	assert.JSONEq(t, expectedJSONOut, out.String())
