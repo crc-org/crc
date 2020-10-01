@@ -62,7 +62,7 @@ func WriteKubeconfig(ip string, clusterConfig *ClusterConfig) error {
 	// Make sure .kube/config exist if not then this will create
 	_, _ = os.OpenFile(kubeconfig, os.O_RDONLY|os.O_CREATE, 0600)
 
-	ca, err := certificateAuthority(clusterConfig)
+	ca, err := certificateAuthority(clusterConfig.KubeConfig)
 	if err != nil {
 		return err
 	}
@@ -94,8 +94,8 @@ func WriteKubeconfig(ip string, clusterConfig *ClusterConfig) error {
 	return clientcmd.WriteToFile(*cfg, kubeconfig)
 }
 
-func certificateAuthority(clusterConfig *ClusterConfig) ([]byte, error) {
-	bin, err := ioutil.ReadFile(clusterConfig.KubeConfig)
+func certificateAuthority(kubeconfigFile string) ([]byte, error) {
+	bin, err := ioutil.ReadFile(kubeconfigFile)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func certificateAuthority(clusterConfig *ClusterConfig) ([]byte, error) {
 	}
 	cluster, ok := builtin.Clusters["crc"]
 	if !ok {
-		return nil, fmt.Errorf("crc cluster not found in kubeconfig %s", clusterConfig.KubeConfig)
+		return nil, fmt.Errorf("crc cluster not found in kubeconfig %s", kubeconfigFile)
 	}
 	return cluster.CertificateAuthorityData, nil
 }
