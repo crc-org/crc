@@ -38,4 +38,5 @@ PS> oc get clusterversion version -ojsonpath='{range .spec.overrides[*]}{.name}{
 [subs="+quotes"]
 ----
 $ oc patch clusterversion/version --type='json' -p '[{"op":"remove", "path":"/spec/overrides/_<unmanaged-operator-index>_"}]'
+clusterversion.config.openshift.io/version patched
 ----
