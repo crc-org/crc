@@ -36,6 +36,7 @@ func TestApi(t *testing.T) {
 	tt := []struct {
 		command       string
 		clientFailing bool
+		args          json.RawMessage
 		expected      map[string]interface{}
 	}{
 		{
@@ -74,6 +75,41 @@ func TestApi(t *testing.T) {
 				"Success":          false,
 			},
 		},
+		{
+			command:       "start",
+			clientFailing: true,
+			args:          json.RawMessage(`{"pull-secret":"/Users/fake/pull-secret"}`),
+			expected: map[string]interface{}{
+				"Name":           "crc",
+				"Status":         "",
+				"Error":          "Incorrect arguments given: json: unknown field \"pull-secret\"",
+				"KubeletStarted": false,
+				"ClusterConfig": map[string]interface{}{
+					"KubeConfig":    "",
+					"KubeAdminPass": "",
+					"ClusterAPI":    "",
+					"WebConsoleURL": "",
+					"ProxyConfig":   nil,
+				},
+			},
+		},
+		{
+			command: "start",
+			args:    json.RawMessage(`{"pullSecretFile":"/Users/fake/pull-secret"}`),
+			expected: map[string]interface{}{
+				"Name":           "crc",
+				"Status":         "",
+				"Error":          "",
+				"KubeletStarted": true,
+				"ClusterConfig": map[string]interface{}{
+					"KubeConfig":    "/tmp/kubeconfig",
+					"KubeAdminPass": "foobar",
+					"ClusterAPI":    "https://foo.testing:6443",
+					"WebConsoleURL": "https://console.foo.testing:6443",
+					"ProxyConfig":   nil,
+				},
+			},
+		},
 	}
 	for _, test := range tt {
 		client.Failing = test.clientFailing
@@ -82,6 +118,7 @@ func TestApi(t *testing.T) {
 
 		jsonReq, err := json.Marshal(commandRequest{
 			Command: test.command,
+			Args:    test.args,
 		})
 		assert.NoError(t, err)
 		_, err = client.Write(jsonReq)
