@@ -128,7 +128,7 @@ func waitForNetwork() error {
 		return nil
 	}
 
-	if err := errors.RetryAfter(10, getResolvValueFromHost, time.Second); err != nil {
+	if err := errors.RetryAfter(10*time.Second, getResolvValueFromHost, time.Second); err != nil {
 		return fmt.Errorf("Unable to read host resolv file (%v)", err)
 	}
 	// retry up to 5 times

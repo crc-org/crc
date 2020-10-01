@@ -32,7 +32,7 @@ const (
 )
 
 func eventuallyWriteKubeconfig(ocConfig oc.Config, ip string, clusterConfig *ClusterConfig) error {
-	if err := errors.RetryAfter(60, func() error {
+	if err := errors.RetryAfter(60*time.Second, func() error {
 		status, err := cluster.GetClusterOperatorStatus(ocConfig, "authentication")
 		if err != nil {
 			return &errors.RetriableError{Err: err}

@@ -2,14 +2,16 @@ package errors
 
 import (
 	"errors"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRetryAfter(t *testing.T) {
 	calls := 0
-	ret := RetryAfter(10, func() error {
+	ret := RetryAfter(time.Second, func() error {
 		calls++
 		return nil
 	}, 0)
@@ -19,7 +21,7 @@ func TestRetryAfter(t *testing.T) {
 
 func TestRetryAfterFailure(t *testing.T) {
 	calls := 0
-	ret := RetryAfter(10, func() error {
+	ret := RetryAfter(time.Second, func() error {
 		calls++
 		return errors.New("failed")
 	}, 0)
@@ -29,17 +31,17 @@ func TestRetryAfterFailure(t *testing.T) {
 
 func TestRetryAfterMaxAttempts(t *testing.T) {
 	calls := 0
-	ret := RetryAfter(3, func() error {
+	ret := RetryAfter(10*time.Millisecond, func() error {
 		calls++
 		return &RetriableError{Err: errors.New("failed")}
 	}, 0)
-	assert.EqualError(t, ret, "Temporary error: failed (x3)")
-	assert.Equal(t, 3, calls)
+	assert.EqualError(t, ret, fmt.Sprintf("Temporary error: failed (x%d)", calls))
+	assert.Greater(t, calls, 5)
 }
 
 func TestRetryAfterSuccessAfterFailures(t *testing.T) {
 	calls := 0
-	ret := RetryAfter(5, func() error {
+	ret := RetryAfter(time.Second, func() error {
 		calls++
 		if calls < 3 {
 			return &RetriableError{Err: errors.New("failed")}
