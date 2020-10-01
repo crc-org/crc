@@ -11,9 +11,7 @@ For more information about using the embedded [command]`oc` binary, see link:{cr
 
 .Procedure
 
-* To start {prod} behind a proxy:
-
-  . Define a proxy using the `http_proxy` and `https_proxy` environment variables or using the [command]`{bin} config set` command as follows:
+. Define a proxy using the `http_proxy` and `https_proxy` environment variables or using the [command]`{bin} config set` command as follows:
 +
 [subs="+quotes,attributes"]
 ----
@@ -21,16 +19,13 @@ $ {bin} config set http-proxy http://proxy.example.com:__<port>__
 $ {bin} config set https-proxy http://proxy.example.com:__<port>__
 $ {bin} config set no-proxy __<comma-separated-no-proxy-entries>__
 ----
-+
 
-. If proxy uses custom CA then use the `{bin} config set` command as follows:
+. If the proxy uses a custom CA certificate file, set it as follows:
 +
 [subs="+quotes,attributes"]
 ----
-$ {bin} config set proxy-ca-file __<Path to custom CA file>__
+$ {bin} config set proxy-ca-file __<path-to-custom-ca-file>__
 ----
-+
-
 
 The [command]`{bin}` binary will be able to use the defined proxy once set through environment variables or {prod} configuration.
 
