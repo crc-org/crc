@@ -29,7 +29,7 @@ func WaitForSSH(sshRunner *ssh.Runner) error {
 		return nil
 	}
 
-	return errors.RetryAfter(60, checkSSHConnectivity, time.Second)
+	return errors.RetryAfter(60*time.Second, checkSSHConnectivity, time.Second)
 }
 
 type CertExpiryState int
@@ -310,7 +310,7 @@ func WaitforRequestHeaderClientCaFile(ocConfig oc.Config) error {
 		logging.Debugf("Found .data.requestheader-client-ca-file: %s", stdout)
 		return nil
 	}
-	return errors.RetryAfter(90, lookupRequestHeaderClientCa, 2*time.Second)
+	return errors.RetryAfter(8*time.Minute, lookupRequestHeaderClientCa, 2*time.Second)
 }
 
 func DeleteOpenshiftAPIServerPods(ocConfig oc.Config) error {
@@ -327,7 +327,7 @@ func DeleteOpenshiftAPIServerPods(ocConfig oc.Config) error {
 		return nil
 	}
 
-	return errors.RetryAfter(60, deleteOpenshiftAPIServerPods, time.Second)
+	return errors.RetryAfter(60*time.Second, deleteOpenshiftAPIServerPods, time.Second)
 }
 
 func CheckProxySettingsForOperator(ocConfig oc.Config, proxy *network.ProxyConfig, deployment, namespace string) (bool, error) {

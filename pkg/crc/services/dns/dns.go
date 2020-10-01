@@ -97,7 +97,7 @@ func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (s
 		return nil
 	}
 
-	if err := errors.RetryAfter(30, checkLocalDNSReach, time.Second); err != nil {
+	if err := errors.RetryAfter(30*time.Second, checkLocalDNSReach, time.Second); err != nil {
 		return queryOutput, err
 	}
 	return queryOutput, err

@@ -60,17 +60,18 @@ func (r RetriableError) Error() string {
 	return "Temporary error: " + r.Err.Error()
 }
 
-// RetryAfter retries a number of attempts, after a delay
-func RetryAfter(attempts int, callback func() error, d time.Duration) error {
+// RetryAfter retries for a certain duration, after a delay
+func RetryAfter(limit time.Duration, callback func() error, d time.Duration) error {
 	m := MultiError{}
-	for i := 0; i < attempts; i++ {
-		if i > 0 {
-			logging.Debugf("retry loop: attempt %d out of %d", i, attempts)
-		}
+	timeLimit := time.Now().Add(limit)
+	attempt := 0
+	for time.Now().Before(timeLimit) {
+		logging.Debugf("retry loop: attempt %d", attempt)
 		err := callback()
 		if err == nil {
 			return nil
 		}
+		attempt++
 		m.Collect(err)
 		if _, ok := err.(*RetriableError); !ok {
 			logging.Debugf("non-retriable error: %v", err)
@@ -79,6 +80,6 @@ func RetryAfter(attempts int, callback func() error, d time.Duration) error {
 		logging.Debugf("error: %v - sleeping %s", err, d)
 		time.Sleep(d)
 	}
-	logging.Debugf("RetryAfter timeout after %d tries", attempts)
+	logging.Debugf("RetryAfter timeout after %d tries", attempt)
 	return m
 }

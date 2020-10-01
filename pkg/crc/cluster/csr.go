@@ -21,7 +21,7 @@ func WaitForOpenshiftResource(ocConfig oc.Config, resource string) error {
 		logging.Debug(stdout)
 		return nil
 	}
-	return errors.RetryAfter(80, waitForAPIServer, time.Second)
+	return errors.RetryAfter(80*time.Second, waitForAPIServer, time.Second)
 }
 
 // ApproveNodeCSR approves the certificate for the node.

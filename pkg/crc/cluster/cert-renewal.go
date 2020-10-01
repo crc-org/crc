@@ -28,7 +28,7 @@ func waitForPendingCsrs(ocConfig oc.Config) error {
 		return nil
 	}
 
-	return errors.RetryAfter(120, waitForPendingCsr, time.Second*5)
+	return errors.RetryAfter(8*time.Minute, waitForPendingCsr, time.Second*5)
 }
 
 func RegenerateCertificates(sshRunner *ssh.Runner, ocConfig oc.Config) error {
