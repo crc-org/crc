@@ -29,6 +29,20 @@ func TestRetryAfterFailure(t *testing.T) {
 	assert.Equal(t, 1, calls)
 }
 
+func TestRetryAfterSlowFailure(t *testing.T) {
+	calls := 0
+	ret := RetryAfter(time.Millisecond, func() error {
+		time.Sleep(50 * time.Millisecond)
+		calls++
+		if calls < 2 {
+			return &RetriableError{Err: errors.New("failed")}
+		}
+		return nil
+	}, 0)
+	assert.NoError(t, ret)
+	assert.Equal(t, 2, calls)
+}
+
 func TestRetryAfterMaxAttempts(t *testing.T) {
 	calls := 0
 	ret := RetryAfter(10*time.Millisecond, func() error {
