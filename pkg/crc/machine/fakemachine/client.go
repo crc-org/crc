@@ -83,7 +83,18 @@ func (c *Client) PowerOff(powerOff machine.PowerOffConfig) (machine.PowerOffResu
 }
 
 func (c *Client) Start(startConfig machine.StartConfig) (machine.StartResult, error) {
-	return machine.StartResult{}, errors.New("not implemented")
+	if c.Failing {
+		return machine.StartResult{
+			Name:           startConfig.Name,
+			Error:          "Failed to start",
+			KubeletStarted: false,
+		}, nil
+	}
+	return machine.StartResult{
+		Name:           startConfig.Name,
+		ClusterConfig:  DummyClusterConfig,
+		KubeletStarted: true,
+	}, nil
 }
 
 func (c *Client) Stop(stopConfig machine.StopConfig) (machine.StopResult, error) {
