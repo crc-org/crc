@@ -64,9 +64,15 @@ func checkBundleCached() error {
 }
 
 func fixBundleCached() error {
+	// Should be removed after 1.19 release
+	// This check will ensure correct mode for `~/.crc/cache` directory
+	// in case it exists.
+	if err := os.Chmod(constants.MachineCacheDir, 0775); err != nil {
+		logging.Debugf("Error changing %s permissions to 0775", constants.MachineCacheDir)
+	}
 	if constants.BundleEmbedded() {
 		bundleDir := filepath.Dir(constants.DefaultBundlePath)
-		err := os.MkdirAll(bundleDir, 0700)
+		err := os.MkdirAll(bundleDir, 0775)
 		if err != nil && !os.IsExist(err) {
 			return fmt.Errorf("Cannot create directory %s", bundleDir)
 		}
