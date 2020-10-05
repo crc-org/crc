@@ -3,8 +3,6 @@ package api
 import (
 	"fmt"
 
-	"github.com/code-ready/crc/pkg/crc/config"
-
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/debug"
@@ -15,12 +13,12 @@ var elog debug.Log
 
 type crcDaemonService struct {
 	socketPath string
-	config     config.Storage
+	newConfig  newConfigFunc
 }
 
 func (m *crcDaemonService) Execute(args []string, r <-chan svc.ChangeRequest, changes chan<- svc.Status) (ssec bool, errno uint32) {
 	const cmdsAccepted = svc.AcceptStop | svc.AcceptShutdown
-	crcAPIServer, err := CreateAPIServer(m.socketPath, m.config)
+	crcAPIServer, err := CreateAPIServer(m.socketPath, m.newConfig)
 	if err != nil {
 		elog.Error(1, fmt.Sprintf("Failed to start CRC daemon service: %v", err)) // nolint
 		return
@@ -53,7 +51,7 @@ func MainLoop(r <-chan svc.ChangeRequest, changes chan<- svc.Status) {
 	}
 }
 
-func RunCrcDaemonService(name string, isDebug bool, config config.Storage) {
+func RunCrcDaemonService(name string, isDebug bool, newConfig newConfigFunc) {
 	var err error
 	if isDebug {
 		elog = debug.New(name)
@@ -70,7 +68,7 @@ func RunCrcDaemonService(name string, isDebug bool, config config.Storage) {
 	if isDebug {
 		run = debug.Run
 	}
-	err = run(name, &crcDaemonService{socketPath: constants.DaemonSocketPath, config: config})
+	err = run(name, &crcDaemonService{socketPath: constants.DaemonSocketPath, newConfig: newConfig})
 	if err != nil {
 		elog.Error(1, fmt.Sprintf("%s service failed: %v", name, err)) // nolint
 		return

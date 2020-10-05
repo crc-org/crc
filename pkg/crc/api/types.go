@@ -11,13 +11,15 @@ import (
 
 type handlerFunc func(machine.Client, config.Storage, json.RawMessage) string
 
+type newConfigFunc func() (config.Storage, error)
+
 type commandError struct {
 	Err string
 }
 
 type CrcAPIServer struct {
 	client                 machine.Client
-	config                 config.Storage
+	newConfig              newConfigFunc
 	listener               net.Listener
 	clusterOpsRequestsChan chan clusterOpsRequest
 	handlers               map[string]handlerFunc // relates commands to handler func

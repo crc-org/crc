@@ -6,25 +6,24 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
-func CreateAPIServer(socketPath string, config config.Storage) (CrcAPIServer, error) {
+func CreateAPIServer(socketPath string, newConfig newConfigFunc) (CrcAPIServer, error) {
 	listener, err := net.Listen("unix", socketPath)
 	if err != nil {
 		logging.Error("Failed to create socket: ", err.Error())
 		return CrcAPIServer{}, err
 	}
-	return createAPIServerWithListener(listener, machine.NewClient(), config)
+	return createAPIServerWithListener(listener, machine.NewClient(), newConfig)
 }
 
-func createAPIServerWithListener(listener net.Listener, client machine.Client, config config.Storage) (CrcAPIServer, error) {
+func createAPIServerWithListener(listener net.Listener, client machine.Client, newConfig newConfigFunc) (CrcAPIServer, error) {
 	apiServer := CrcAPIServer{
 		client:                 client,
-		config:                 config,
 		listener:               listener,
+		newConfig:              newConfig,
 		clusterOpsRequestsChan: make(chan clusterOpsRequest, 10),
 		handlers: map[string]handlerFunc{
 			"start":         startHandler,
@@ -63,7 +62,12 @@ func (api CrcAPIServer) handleRequest(req commandRequest, conn net.Conn) {
 	defer conn.Close()
 	var result string
 	if handler, ok := api.handlers[req.Command]; ok {
-		result = handler(api.client, api.config, req.Args)
+		config, err := api.newConfig()
+		if err != nil {
+			result = encodeErrorToJSON(fmt.Sprintf("Failed to initialize new config store: %v", err))
+		} else {
+			result = handler(api.client, config, req.Args)
+		}
 	} else {
 		result = encodeErrorToJSON(fmt.Sprintf("Unknown command supplied: %s", req.Command))
 	}

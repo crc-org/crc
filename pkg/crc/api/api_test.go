@@ -12,8 +12,8 @@ import (
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
+	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,7 +29,7 @@ func TestApi(t *testing.T) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createAPIServerWithListener(listener, client, config.New(config.NewEmptyInMemoryStorage()))
+	api, err := createAPIServerWithListener(listener, client, setupNewInMemoryConfig)
 	require.NoError(t, err)
 	go api.Serve()
 
@@ -137,13 +137,6 @@ func TestApi(t *testing.T) {
 }
 
 func TestSetconfigApi(t *testing.T) {
-	// setup viper
-	err := constants.EnsureBaseDirExists()
-	assert.NoError(t, err)
-	config := config.New(config.NewEmptyInMemoryStorage())
-	assert.NoError(t, err)
-	cmdConfig.RegisterSettings(config)
-
 	socket, cleanup := setupAPIServer(t)
 	client, err := net.Dial("unix", socket)
 	require.NoError(t, err)
@@ -170,13 +163,6 @@ func TestSetconfigApi(t *testing.T) {
 }
 
 func TestGetconfigApi(t *testing.T) {
-	// setup viper
-	err := constants.EnsureBaseDirExists()
-	assert.NoError(t, err)
-	config := config.New(config.NewEmptyInMemoryStorage())
-	assert.NoError(t, err)
-	cmdConfig.RegisterSettings(config)
-
 	socket, cleanup := setupAPIServer(t)
 	client, err := net.Dial("unix", socket)
 	require.NoError(t, err)
@@ -206,6 +192,15 @@ func TestGetconfigApi(t *testing.T) {
 	}, getconfigRes)
 }
 
+func setupNewInMemoryConfig() (config.Storage, error) {
+	storage := config.NewEmptyInMemoryStorage()
+	cfg := config.New(storage)
+	cmdConfig.RegisterSettings(cfg)
+	preflight.RegisterSettings(cfg)
+
+	return cfg, nil
+}
+
 func setupAPIServer(t *testing.T) (string, func()) {
 	dir, err := ioutil.TempDir("", "api")
 	require.NoError(t, err)
@@ -215,10 +210,8 @@ func setupAPIServer(t *testing.T) (string, func()) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	cfg := config.New(config.NewEmptyInMemoryStorage())
-	cmdConfig.RegisterSettings(cfg)
 
-	api, err := createAPIServerWithListener(listener, client, cfg)
+	api, err := createAPIServerWithListener(listener, client, setupNewInMemoryConfig)
 	require.NoError(t, err)
 	go api.Serve()
 

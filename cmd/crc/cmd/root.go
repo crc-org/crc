@@ -44,14 +44,10 @@ func init() {
 		logging.Fatal(err.Error())
 	}
 	var err error
-	viper, err = crcConfig.NewViperStorage(constants.ConfigPath, constants.CrcEnvPrefix)
+	config, viper, err = newViperConfig()
 	if err != nil {
 		logging.Fatal(err.Error())
 	}
-	config = crcConfig.New(viper)
-	cmdConfig.RegisterSettings(config)
-
-	preflight.RegisterSettings(config)
 
 	// subcommands
 	rootCmd.AddCommand(cmdConfig.GetConfigCmd(config))
@@ -132,4 +128,15 @@ func getProxyCAData(proxyCAFile string) (string, error) {
 
 func trimTrailingEOL(s string) string {
 	return strings.TrimRight(s, "\n")
+}
+
+func newViperConfig() (*crcConfig.Config, *crcConfig.ViperStorage, error) {
+	viper, err := crcConfig.NewViperStorage(constants.ConfigPath, constants.CrcEnvPrefix)
+	if err != nil {
+		return nil, nil, err
+	}
+	cfg := crcConfig.New(viper)
+	cmdConfig.RegisterSettings(cfg)
+	preflight.RegisterSettings(cfg)
+	return cfg, viper, nil
 }

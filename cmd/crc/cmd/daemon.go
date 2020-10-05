@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/spf13/cobra"
@@ -20,6 +21,11 @@ var daemonCmd = &cobra.Command{
 		logging.CloseLogging()
 		logging.InitLogrus(logging.LogLevel, constants.DaemonLogFilePath)
 
-		runDaemon(config)
+		runDaemon()
 	},
+}
+
+func newConfig() (crcConfig.Storage, error) {
+	config, _, err := newViperConfig()
+	return config, err
 }

@@ -17,7 +17,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
-func statusHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.RawMessage) string {
+func statusHandler(client machine.Client, _ crcConfig.Storage, _ json.RawMessage) string {
 	statusConfig := machine.ClusterStatusConfig{Name: constants.DefaultName}
 	clusterStatus, _ := client.Status(statusConfig)
 	return encodeStructToJSON(clusterStatus)
