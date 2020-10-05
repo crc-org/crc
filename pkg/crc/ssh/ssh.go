@@ -67,7 +67,7 @@ func (runner *Runner) CopyFile(srcFilename string, destFilename string, mode os.
 
 func (runner *Runner) runSSHCommand(command string, runPrivate bool) (string, string, error) {
 	if runPrivate {
-		logging.Debugf("Running private SSH command")
+		logging.Debugf("Running SSH command: <hidden>")
 	} else {
 		logging.Debugf("Running SSH command: %s", command)
 	}
