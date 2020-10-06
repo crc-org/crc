@@ -33,7 +33,6 @@ func NewViperStorage(configFile, envPrefix string) (*ViperStorage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error reading configuration file '%s': %v", configFile, err)
 	}
-	v.WatchConfig()
 	return &ViperStorage{
 		viper:      v,
 		configFile: configFile,

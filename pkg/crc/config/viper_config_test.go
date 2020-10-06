@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
@@ -209,27 +208,6 @@ func TestViperConfigCastSet(t *testing.T) {
 	bin, err := ioutil.ReadFile(configFile)
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{"cpus": 5}`, string(bin))
-}
-
-func TestViperConfigWatch(t *testing.T) {
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
-	configFile := filepath.Join(dir, "crc.json")
-
-	config, err := newTestConfig(configFile, "CRC")
-	require.NoError(t, err)
-
-	assert.Equal(t, SettingValue{
-		Value:     4,
-		IsDefault: true,
-	}, config.Get(CPUs))
-
-	assert.NoError(t, ioutil.WriteFile(configFile, []byte("{\"cpus\": 5}"), 0600))
-
-	assert.Eventually(t, func() bool {
-		return config.Get(CPUs).Value == 5
-	}, time.Second, 10*time.Millisecond)
 }
 
 func TestCannotSetWithWrongType(t *testing.T) {
