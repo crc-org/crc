@@ -110,6 +110,8 @@ github.com/json-iterator/go
 github.com/kballard/go-shellquote
 # github.com/konsorten/go-windows-terminal-sequences v1.0.2
 github.com/konsorten/go-windows-terminal-sequences
+# github.com/libvirt/libvirt-go-xml v6.8.0+incompatible
+github.com/libvirt/libvirt-go-xml
 # github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
 # github.com/mattn/go-colorable v0.1.2

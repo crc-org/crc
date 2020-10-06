@@ -20,6 +20,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/systemd"
 	"github.com/code-ready/crc/pkg/crc/systemd/states"
 	crcos "github.com/code-ready/crc/pkg/os"
+	libvirtxml "github.com/libvirt/libvirt-go-xml"
 )
 
 const (
@@ -98,6 +99,20 @@ func fixKvmEnabled() error {
 	return nil
 }
 
+func getLibvirtCapabilities() (*libvirtxml.Caps, error) {
+	stdOut, _, err := crcos.RunWithDefaultLocale("virsh", "capabilities")
+	if err != nil {
+		return nil, fmt.Errorf("Failed to run 'virsh capabilities': %v", err)
+	}
+	caps := &libvirtxml.Caps{}
+	err = caps.Unmarshal(stdOut)
+	if err != nil {
+		return nil, fmt.Errorf("Error parsing 'virsh capabilities': %v", err)
+	}
+
+	return caps, nil
+}
+
 func checkLibvirtInstalled() error {
 	logging.Debug("Checking if 'virsh' is available")
 	path, err := exec.LookPath("virsh")
@@ -105,6 +120,25 @@ func checkLibvirtInstalled() error {
 		return fmt.Errorf("Libvirt cli virsh was not found in path")
 	}
 	logging.Debug("'virsh' was found in ", path)
+
+	logging.Debug("Checking 'virsh capabilities' for libvirtd/qemu availability")
+	caps, err := getLibvirtCapabilities()
+	if err != nil {
+		return err
+	}
+
+	foundHvm := false
+	for _, guest := range caps.Guests {
+		if guest.OSType == "hvm" && guest.Arch.Name == caps.Host.CPU.Arch {
+			logging.Debugf("Found %s hypervisor with 'hvm' capabilities", caps.Host.CPU.Arch)
+			foundHvm = true
+			break
+		}
+	}
+	if !foundHvm {
+		return fmt.Errorf("Could not find a %s hypervisor with 'hvm' capabilities", caps.Host.CPU.Arch)
+	}
+
 	return nil
 }
 

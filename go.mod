@@ -16,6 +16,7 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/h2non/filetype v1.1.0
 	github.com/imdario/mergo v0.3.9 // indirect
+	github.com/libvirt/libvirt-go-xml v6.8.0+incompatible
 	github.com/mattn/go-colorable v0.1.2
 	github.com/openshift/library-go v0.0.0-20200715125344-100bf3ff5a19 // indirect
 	github.com/openshift/oc v0.0.0-alpha.0.0.20200716022222-b66f2d3a6893
