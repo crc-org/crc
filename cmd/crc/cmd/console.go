@@ -81,8 +81,9 @@ func (s *consoleResult) prettyPrintTo(writer io.Writer) error {
 		return errors.New(s.Error)
 	}
 	if s.consolePrintURL {
-		_, err := fmt.Fprintln(writer, s.ClusterConfig.WebConsoleURL)
-		return err
+		if _, err := fmt.Fprintln(writer, s.ClusterConfig.WebConsoleURL); err != nil {
+			return err
+		}
 	}
 
 	if s.consolePrintCredentials {
@@ -90,9 +91,10 @@ func (s *consoleResult) prettyPrintTo(writer io.Writer) error {
 			s.ClusterConfig.DeveloperCredentials.Username, s.ClusterConfig.DeveloperCredentials.Password, s.ClusterConfig.URL); err != nil {
 			return err
 		}
-		_, err := fmt.Fprintf(writer, "To login as an admin, run 'oc login -u %s -p %s %s'\n",
-			s.ClusterConfig.AdminCredentials.Username, s.ClusterConfig.AdminCredentials.Password, s.ClusterConfig.URL)
-		return err
+		if _, err := fmt.Fprintf(writer, "To login as an admin, run 'oc login -u %s -p %s %s'\n",
+			s.ClusterConfig.AdminCredentials.Username, s.ClusterConfig.AdminCredentials.Password, s.ClusterConfig.URL); err != nil {
+			return err
+		}
 	}
 	if s.consolePrintURL || s.consolePrintCredentials {
 		return nil

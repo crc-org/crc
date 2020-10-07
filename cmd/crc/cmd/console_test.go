@@ -29,6 +29,16 @@ To login as an admin, run 'oc login -u kubeadmin -p %s %s'
 	assert.Equal(t, expectedOut, out.String())
 }
 
+func TestConsoleWithPrintCredentialsAndURLPlainSuccess(t *testing.T) {
+	expectedOut := fmt.Sprintf(`%s
+To login as a regular user, run 'oc login -u developer -p developer %s'.
+To login as an admin, run 'oc login -u kubeadmin -p %s %s'
+`, fakemachine.DummyClusterConfig.WebConsoleURL, fakemachine.DummyClusterConfig.ClusterAPI, fakemachine.DummyClusterConfig.KubeAdminPass, fakemachine.DummyClusterConfig.ClusterAPI)
+	out := new(bytes.Buffer)
+	assert.NoError(t, runConsole(out, fakemachine.NewClient(), true, true, ""))
+	assert.Equal(t, expectedOut, out.String())
+}
+
 func TestConsoleJSONSuccess(t *testing.T) {
 	expectedJSONOut := fmt.Sprintf(`{
   "success": true,
