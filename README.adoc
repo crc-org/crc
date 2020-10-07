@@ -13,11 +13,9 @@ image:https://ci.centos.org/buildStatus/icon?job=codeready-crc-master["CentOS CI
 [[intro-to-crc]]
 == Introduction
 
-This project is focused on bringing a minimal http://github.com/openshift/origin[OpenShift 4.0 or newer] cluster to your local laptop or desktop computer. 
+This project is focused on bringing a minimal http://github.com/openshift/origin[OpenShift 4.x] cluster to your local laptop or desktop computer.
 
 If you are looking for a solution for running OpenShift 3.x, you will need tools such as `oc cluster up`, http://github.com/minishift/minishift[Minishift] or https://developers.redhat.com/products/cdk/overview/[CDK].
-
-Check back for updates, we plan to have something available "soon".
 
 [[documentation]]
 == Documentation
