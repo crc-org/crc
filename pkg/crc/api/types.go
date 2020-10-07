@@ -5,11 +5,7 @@ import (
 	"net"
 
 	"github.com/code-ready/crc/pkg/crc/config"
-
-	"github.com/code-ready/crc/pkg/crc/machine"
 )
-
-type handlerFunc func(machine.Client, config.Storage, json.RawMessage) string
 
 type newConfigFunc func() (config.Storage, error)
 
@@ -18,11 +14,10 @@ type commandError struct {
 }
 
 type CrcAPIServer struct {
-	client                 machine.Client
 	newConfig              newConfigFunc
 	listener               net.Listener
 	clusterOpsRequestsChan chan clusterOpsRequest
-	handlers               map[string]handlerFunc // relates commands to handler func
+	handler                RequestHandler
 }
 
 type RequestHandler interface {

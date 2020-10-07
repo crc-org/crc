@@ -19,6 +19,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type fakeHandler struct {
+	*Handler
+}
+
+func newFakeHandler(client *fakemachine.Client) *fakeHandler {
+	return &fakeHandler{
+		&Handler{
+			MachineClient: client,
+		}}
+}
+
 func TestApi(t *testing.T) {
 	dir, err := ioutil.TempDir("", "api")
 	require.NoError(t, err)
@@ -29,7 +40,7 @@ func TestApi(t *testing.T) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createAPIServerWithListener(listener, client, setupNewInMemoryConfig)
+	api, err := createAPIServerWithListener(listener, setupNewInMemoryConfig, newFakeHandler(client))
 	require.NoError(t, err)
 	go api.Serve()
 
@@ -210,8 +221,7 @@ func setupAPIServer(t *testing.T) (string, func()) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-
-	api, err := createAPIServerWithListener(listener, client, setupNewInMemoryConfig)
+	api, err := createAPIServerWithListener(listener, setupNewInMemoryConfig, newFakeHandler(client))
 	require.NoError(t, err)
 	go api.Serve()
 
