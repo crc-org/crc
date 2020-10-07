@@ -281,7 +281,7 @@ func PackageAndUpload() error {
 			continue
 		}
 		filename := filepath.Base(file) // only take the filename without path
-		err := CreateGithubFile(file, "crc-data", filepath.Join(dataDir, filename), "Commit message")
+		err := CreateGithubFile(file, "crc-data", filepath.Join("data", dataDir, filename), "Commit message")
 		if err != nil {
 			fmt.Printf("Github upload failed: %s", err)
 			return err
