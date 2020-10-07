@@ -25,6 +25,18 @@ type CrcAPIServer struct {
 	handlers               map[string]handlerFunc // relates commands to handler func
 }
 
+type RequestHandler interface {
+	Start(config.Storage, json.RawMessage) string
+	Stop() string
+	Status() string
+	Delete() string
+	GetVersion() string
+	SetConfig(config.Storage, json.RawMessage) string
+	UnsetConfig(config.Storage, json.RawMessage) string
+	GetConfig(config.Storage, json.RawMessage) string
+	GetWebconsoleInfo() string
+}
+
 // clusterOpsRequest struct is used to store the command request and associated socket
 type clusterOpsRequest struct {
 	command commandRequest
