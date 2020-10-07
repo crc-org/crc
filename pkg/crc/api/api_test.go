@@ -90,6 +90,7 @@ func TestApi(t *testing.T) {
 					"ClusterAPI":    "",
 					"WebConsoleURL": "",
 					"ProxyConfig":   nil,
+					"ClusterCACert": "",
 				},
 			},
 		},
@@ -102,6 +103,7 @@ func TestApi(t *testing.T) {
 				"Error":          "",
 				"KubeletStarted": true,
 				"ClusterConfig": map[string]interface{}{
+					"ClusterCACert": "MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ",
 					"KubeConfig":    "/tmp/kubeconfig",
 					"KubeAdminPass": "foobar",
 					"ClusterAPI":    "https://foo.testing:6443",
