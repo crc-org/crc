@@ -17,22 +17,32 @@ import (
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
-func statusHandler(client machine.Client, _ crcConfig.Storage, _ json.RawMessage) string {
+type Handler struct {
+	MachineClient machine.Client
+}
+
+func newHandler() *Handler {
+	return &Handler{
+		MachineClient: machine.NewClient(),
+	}
+}
+
+func (h *Handler) Status() string {
 	statusConfig := machine.ClusterStatusConfig{Name: constants.DefaultName}
-	clusterStatus, _ := client.Status(statusConfig)
+	clusterStatus, _ := h.MachineClient.Status(statusConfig)
 	return encodeStructToJSON(clusterStatus)
 }
 
-func stopHandler(client machine.Client, _ crcConfig.Storage, _ json.RawMessage) string {
+func (h *Handler) Stop() string {
 	stopConfig := machine.StopConfig{
 		Name:  constants.DefaultName,
 		Debug: true,
 	}
-	commandResult, _ := client.Stop(stopConfig)
+	commandResult, _ := h.MachineClient.Stop(stopConfig)
 	return encodeStructToJSON(commandResult)
 }
 
-func startHandler(client machine.Client, crcConfig crcConfig.Storage, args json.RawMessage) string {
+func (h *Handler) Start(crcConfig crcConfig.Storage, args json.RawMessage) string {
 	var parsedArgs startArgs
 	if args != nil {
 		dec := json.NewDecoder(bytes.NewReader(args))
@@ -46,7 +56,7 @@ func startHandler(client machine.Client, crcConfig crcConfig.Storage, args json.
 		}
 	}
 	startConfig := getStartConfig(crcConfig, parsedArgs)
-	status, _ := client.Start(startConfig)
+	status, _ := h.MachineClient.Start(startConfig)
 	return encodeStructToJSON(status)
 }
 
@@ -69,7 +79,7 @@ func getStartConfig(cfg crcConfig.Storage, args startArgs) machine.StartConfig {
 	return startConfig
 }
 
-func versionHandler(client machine.Client, _ crcConfig.Storage, _ json.RawMessage) string {
+func (h *Handler) GetVersion() string {
 	v := &machine.VersionResult{
 		CrcVersion:       version.GetCRCVersion(),
 		CommitSha:        version.GetCommitSha(),
@@ -93,19 +103,19 @@ func getPullSecretFileContent(path string) func() (string, error) {
 	}
 }
 
-func deleteHandler(client machine.Client, _ crcConfig.Storage, _ json.RawMessage) string {
+func (h *Handler) Delete() string {
 	delConfig := machine.DeleteConfig{Name: constants.DefaultName}
-	r, _ := client.Delete(delConfig)
+	r, _ := h.MachineClient.Delete(delConfig)
 	return encodeStructToJSON(r)
 }
 
-func webconsoleURLHandler(client machine.Client, _ crcConfig.Storage, _ json.RawMessage) string {
+func (h *Handler) GetWebconsoleInfo() string {
 	consoleConfig := machine.ConsoleConfig{Name: constants.DefaultName}
-	r, _ := client.GetConsoleURL(consoleConfig)
+	r, _ := h.MachineClient.GetConsoleURL(consoleConfig)
 	return encodeStructToJSON(r)
 }
 
-func setConfigHandler(_ machine.Client, crcConfig crcConfig.Storage, args json.RawMessage) string {
+func (h *Handler) SetConfig(crcConfig crcConfig.Storage, args json.RawMessage) string {
 	setConfigResult := setOrUnsetConfigResult{}
 	if args == nil {
 		setConfigResult.Error = "No config keys provided"
@@ -143,7 +153,7 @@ func setConfigHandler(_ machine.Client, crcConfig crcConfig.Storage, args json.R
 	return encodeStructToJSON(setConfigResult)
 }
 
-func unsetConfigHandler(_ machine.Client, crcConfig crcConfig.Storage, args json.RawMessage) string {
+func (h *Handler) UnsetConfig(crcConfig crcConfig.Storage, args json.RawMessage) string {
 	unsetConfigResult := setOrUnsetConfigResult{}
 	if args == nil {
 		unsetConfigResult.Error = "No config keys provided"
@@ -178,7 +188,7 @@ func unsetConfigHandler(_ machine.Client, crcConfig crcConfig.Storage, args json
 	return encodeStructToJSON(unsetConfigResult)
 }
 
-func getConfigHandler(_ machine.Client, crcConfig crcConfig.Storage, args json.RawMessage) string {
+func (h *Handler) GetConfig(crcConfig crcConfig.Storage, args json.RawMessage) string {
 	configResult := getConfigResult{}
 	if args == nil {
 		allConfigs := crcConfig.AllConfigs()

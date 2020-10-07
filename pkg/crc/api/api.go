@@ -7,7 +7,6 @@ import (
 	"net"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
 func CreateAPIServer(socketPath string, newConfig newConfigFunc) (CrcAPIServer, error) {
@@ -16,26 +15,15 @@ func CreateAPIServer(socketPath string, newConfig newConfigFunc) (CrcAPIServer, 
 		logging.Error("Failed to create socket: ", err.Error())
 		return CrcAPIServer{}, err
 	}
-	return createAPIServerWithListener(listener, machine.NewClient(), newConfig)
+	return createAPIServerWithListener(listener, newConfig, newHandler())
 }
 
-func createAPIServerWithListener(listener net.Listener, client machine.Client, newConfig newConfigFunc) (CrcAPIServer, error) {
+func createAPIServerWithListener(listener net.Listener, newConfig newConfigFunc, handler RequestHandler) (CrcAPIServer, error) {
 	apiServer := CrcAPIServer{
-		client:                 client,
 		listener:               listener,
 		newConfig:              newConfig,
 		clusterOpsRequestsChan: make(chan clusterOpsRequest, 10),
-		handlers: map[string]handlerFunc{
-			"start":         startHandler,
-			"stop":          stopHandler,
-			"status":        statusHandler,
-			"delete":        deleteHandler,
-			"version":       versionHandler,
-			"setconfig":     setConfigHandler,
-			"unsetconfig":   unsetConfigHandler,
-			"getconfig":     getConfigHandler,
-			"webconsoleurl": webconsoleURLHandler,
-		},
+		handler:                handler,
 	}
 	return apiServer, nil
 }
@@ -61,14 +49,35 @@ func (api CrcAPIServer) handleClusterOperations() {
 func (api CrcAPIServer) handleRequest(req commandRequest, conn net.Conn) {
 	defer conn.Close()
 	var result string
-	if handler, ok := api.handlers[req.Command]; ok {
-		config, err := api.newConfig()
-		if err != nil {
-			result = encodeErrorToJSON(fmt.Sprintf("Failed to initialize new config store: %v", err))
-		} else {
-			result = handler(api.client, config, req.Args)
-		}
-	} else {
+
+	config, err := api.newConfig()
+	if err != nil {
+		logging.Error(err.Error())
+		result = encodeErrorToJSON(fmt.Sprintf("Failed to initialize new config store: %v", err))
+		writeStringToSocket(conn, result)
+		return
+	}
+
+	switch req.Command {
+	case "start":
+		result = api.handler.Start(config, req.Args)
+	case "stop":
+		result = api.handler.Stop()
+	case "status":
+		result = api.handler.Status()
+	case "delete":
+		result = api.handler.Delete()
+	case "version":
+		result = api.handler.GetVersion()
+	case "setconfig":
+		result = api.handler.SetConfig(config, req.Args)
+	case "unsetconfig":
+		result = api.handler.UnsetConfig(config, req.Args)
+	case "getconfig":
+		result = api.handler.GetConfig(config, req.Args)
+	case "webconsoleurl":
+		result = api.handler.GetWebconsoleInfo()
+	default:
 		result = encodeErrorToJSON(fmt.Sprintf("Unknown command supplied: %s", req.Command))
 	}
 	writeStringToSocket(conn, result)
@@ -91,21 +100,28 @@ func (api CrcAPIServer) handleConnections(conn net.Conn) {
 	// start, stop and delete are slow operations, and change the VM state so they have to run sequentially.
 	// We don't want other operations querying the status of the VM to be blocked by these,
 	// so they are treated by a dedicated go routine
-	if req.Command == "start" || req.Command == "stop" || req.Command == "delete" {
+
+	switch req.Command {
+	case "start", "stop", "delete":
 		// queue new request to channel
 		r := clusterOpsRequest{
 			command: req,
 			socket:  conn,
 		}
 		if !addRequestToChannel(r, api.clusterOpsRequestsChan) {
-			defer conn.Close()
 			logging.Error("Channel capacity reached, unable to add new request")
 			errMsg := encodeErrorToJSON("Sockets channel capacity reached, unable to add new request")
 			writeStringToSocket(conn, errMsg)
-			return
+			conn.Close()
 		}
-	} else {
+
+	case "status", "version", "setconfig", "getconfig", "unsetconfig", "webconsoleurl":
 		go api.handleRequest(req, conn)
+
+	default:
+		err := encodeErrorToJSON(fmt.Sprintf("Unknown command supplied: %s", req.Command))
+		writeStringToSocket(conn, err)
+		conn.Close()
 	}
 }
 
