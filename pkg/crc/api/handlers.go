@@ -23,7 +23,7 @@ func statusHandler(client machine.Client, _ crcConfig.Storage, _ json.RawMessage
 	return encodeStructToJSON(clusterStatus)
 }
 
-func stopHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.RawMessage) string {
+func stopHandler(client machine.Client, _ crcConfig.Storage, _ json.RawMessage) string {
 	stopConfig := machine.StopConfig{
 		Name:  constants.DefaultName,
 		Debug: true,
@@ -69,7 +69,7 @@ func getStartConfig(cfg crcConfig.Storage, args startArgs) machine.StartConfig {
 	return startConfig
 }
 
-func versionHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.RawMessage) string {
+func versionHandler(client machine.Client, _ crcConfig.Storage, _ json.RawMessage) string {
 	v := &machine.VersionResult{
 		CrcVersion:       version.GetCRCVersion(),
 		CommitSha:        version.GetCommitSha(),
@@ -93,13 +93,13 @@ func getPullSecretFileContent(path string) func() (string, error) {
 	}
 }
 
-func deleteHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.RawMessage) string {
+func deleteHandler(client machine.Client, _ crcConfig.Storage, _ json.RawMessage) string {
 	delConfig := machine.DeleteConfig{Name: constants.DefaultName}
 	r, _ := client.Delete(delConfig)
 	return encodeStructToJSON(r)
 }
 
-func webconsoleURLHandler(client machine.Client, crcConfig crcConfig.Storage, _ json.RawMessage) string {
+func webconsoleURLHandler(client machine.Client, _ crcConfig.Storage, _ json.RawMessage) string {
 	consoleConfig := machine.ConsoleConfig{Name: constants.DefaultName}
 	r, _ := client.GetConsoleURL(consoleConfig)
 	return encodeStructToJSON(r)
