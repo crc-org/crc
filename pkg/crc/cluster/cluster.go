@@ -32,9 +32,30 @@ func WaitForSSH(sshRunner *ssh.Runner) error {
 	return errors.RetryAfter(60*time.Second, checkSSHConnectivity, time.Second)
 }
 
-// CheckCertsValidity checks if the cluster certs have expired or going to expire in next 7 days
-func CheckCertsValidity(sshRunner *ssh.Runner) (bool, error) {
-	certExpiryDate, err := getcertExpiryDateFromVM(sshRunner)
+func CheckCertsValidity(sshRunner *ssh.Runner) (bool, bool, error) {
+	client, err := CheckKubeletClientCertValidity(sshRunner)
+	if err != nil {
+		return false, false, err
+	}
+	server, err := CheckKubeletServerCertValidity(sshRunner)
+	if err != nil {
+		return false, false, err
+	}
+	return client, server, nil
+}
+
+// CheckKubeletClientCertValidity checks if the kubelet server cert have expired
+func CheckKubeletServerCertValidity(sshRunner *ssh.Runner) (bool, error) {
+	return checkCertValidity(sshRunner, "/var/lib/kubelet/pki/kubelet-server-current.pem")
+}
+
+// CheckKubeletClientCertValidity checks if the kubelet client cert have expired
+func CheckKubeletClientCertValidity(sshRunner *ssh.Runner) (bool, error) {
+	return checkCertValidity(sshRunner, "/var/lib/kubelet/pki/kubelet-client-current.pem")
+}
+
+func checkCertValidity(sshRunner *ssh.Runner, cert string) (bool, error) {
+	certExpiryDate, err := getCertExpiryDateFromVM(sshRunner, cert)
 	if err != nil {
 		return false, err
 	}
@@ -45,9 +66,9 @@ func CheckCertsValidity(sshRunner *ssh.Runner) (bool, error) {
 	return false, nil
 }
 
-func getcertExpiryDateFromVM(sshRunner *ssh.Runner) (time.Time, error) {
+func getCertExpiryDateFromVM(sshRunner *ssh.Runner, cert string) (time.Time, error) {
 	certExpiryDate := time.Time{}
-	certExpiryDateCmd := `date --date="$(sudo openssl x509 -in /var/lib/kubelet/pki/kubelet-client-current.pem -noout -enddate | cut -d= -f 2)" --iso-8601=seconds`
+	certExpiryDateCmd := fmt.Sprintf(`date --date="$(sudo openssl x509 -in %s -noout -enddate | cut -d= -f 2)" --iso-8601=seconds`, cert)
 	output, err := sshRunner.Run(certExpiryDateCmd)
 	if err != nil {
 		return certExpiryDate, err

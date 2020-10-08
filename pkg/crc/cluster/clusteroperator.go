@@ -17,6 +17,9 @@ type k8sResource struct {
 		Metadata struct {
 			Name string `json:"name"`
 		} `json:"metadata"`
+		Spec struct {
+			SignerName string `json:"signerName"`
+		}
 		Status struct {
 			Conditions []struct {
 				LastTransitionTime time.Time `json:"lastTransitionTime"`
