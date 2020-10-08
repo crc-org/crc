@@ -4,6 +4,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/version"
@@ -28,6 +30,21 @@ func newFakeHandler(client *fakemachine.Client) *fakeHandler {
 		&Handler{
 			MachineClient: client,
 		}}
+}
+
+// fake Start handler with fake client and without the preflight checks
+func (f *fakeHandler) Start(crcConfig config.Storage, args json.RawMessage) string {
+	parsedArgs, err := parseStartArgs(args)
+	if err != nil {
+		startErr := &machine.StartResult{
+			Name:  "crc",
+			Error: fmt.Sprintf("Incorrect arguments given: %s", err.Error()),
+		}
+		return encodeStructToJSON(startErr)
+	}
+	startConfig := getStartConfig(crcConfig, parsedArgs)
+	status, _ := f.MachineClient.Start(startConfig)
+	return encodeStructToJSON(status)
 }
 
 func TestApi(t *testing.T) {

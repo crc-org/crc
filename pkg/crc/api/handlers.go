@@ -13,6 +13,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	"github.com/code-ready/crc/pkg/crc/version"
 )
@@ -44,10 +45,10 @@ func (h *Handler) Stop() string {
 
 func (h *Handler) Start(crcConfig crcConfig.Storage, args json.RawMessage) string {
 	var parsedArgs startArgs
+	var err error
 	if args != nil {
-		dec := json.NewDecoder(bytes.NewReader(args))
-		dec.DisallowUnknownFields()
-		if err := dec.Decode(&parsedArgs); err != nil {
+		parsedArgs, err = parseStartArgs(args)
+		if err != nil {
 			startErr := &machine.StartResult{
 				Name:  constants.DefaultName,
 				Error: fmt.Sprintf("Incorrect arguments given: %s", err.Error()),
@@ -55,9 +56,27 @@ func (h *Handler) Start(crcConfig crcConfig.Storage, args json.RawMessage) strin
 			return encodeStructToJSON(startErr)
 		}
 	}
+	if err := preflight.StartPreflightChecks(crcConfig); err != nil {
+		startErr := &machine.StartResult{
+			Name:  constants.DefaultName,
+			Error: err.Error(),
+		}
+		return encodeStructToJSON(startErr)
+	}
+
 	startConfig := getStartConfig(crcConfig, parsedArgs)
 	status, _ := h.MachineClient.Start(startConfig)
 	return encodeStructToJSON(status)
+}
+
+func parseStartArgs(args json.RawMessage) (startArgs, error) {
+	var parsedArgs startArgs
+	dec := json.NewDecoder(bytes.NewReader(args))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&parsedArgs); err != nil {
+		return startArgs{}, err
+	}
+	return parsedArgs, nil
 }
 
 func getStartConfig(cfg crcConfig.Storage, args startArgs) machine.StartConfig {
