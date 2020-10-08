@@ -272,12 +272,6 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		}
 	}
 
-	// Check the certs validity inside the vm
-	logging.Info("Verifying validity of the cluster certificates ...")
-	certsExpired, err := cluster.CheckCertsValidity(sshRunner)
-	if err != nil {
-		return startError(startConfig.Name, "Failed to check certificate validity", err)
-	}
 	// Add nameserver to VM if provided by User
 	if startConfig.NameServer != "" {
 		if err = addNameServerToInstance(sshRunner, startConfig.NameServer); err != nil {
@@ -326,6 +320,13 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		return startError(startConfig.Name, "Failed to update VM pull secret", err)
 	}
 
+	// Check the certs validity inside the vm
+	logging.Info("Verifying validity of the kubelet certificates ...")
+	clientExpired, serverExpired, err := cluster.CheckCertsValidity(sshRunner)
+	if err != nil {
+		return startError(startConfig.Name, "Failed to check certificate validity", err)
+	}
+
 	logging.Info("Starting OpenShift kubelet service")
 	sd := systemd.NewInstanceSystemdCommander(sshRunner)
 	if err := sd.Start("kubelet"); err != nil {
@@ -334,19 +335,9 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 
 	ocConfig := oc.UseOCWithSSH(sshRunner)
 
-	if certsExpired {
-		logging.Info("Cluster TLS certificates have expired, renewing them... [will take up to 5 minutes]")
-		if err := cluster.RegenerateCertificates(ocConfig); err != nil {
-			logging.Debugf("Failed to renew TLS certificates: %v", err)
-			if buildTime, err := crcBundleMetadata.GetBundleBuildTime(); err == nil {
-				bundleAgeDays := time.Since(buildTime).Hours() / 24
-				if bundleAgeDays >= 30 {
-					/* Initial bundle certificates are only valid for 30 days */
-					logging.Debugf("Bundle has been generated %d days ago", int(bundleAgeDays))
-				}
-			}
-			return startError(startConfig.Name, "Failed to renew TLS certificates: please check if a newer CodeReady Containers release is available", err)
-		}
+	if err := cluster.WaitAndApprovePendingCSRs(ocConfig, clientExpired, serverExpired); err != nil {
+		logBundleDate(crcBundleMetadata)
+		return startError(startConfig.Name, "Failed to renew TLS certificates: please check if a newer CodeReady Containers release is available", err)
 	}
 
 	if !exists {
@@ -806,5 +797,15 @@ func waitForProxyPropagation(ocConfig oc.Config, proxyConfig *network.ProxyConfi
 
 	if err := errors.RetryAfter(60*time.Second, checkProxySettingsForOperator, 2*time.Second); err != nil {
 		logging.Debug("Failed to propagate proxy settings to cluster")
+	}
+}
+
+func logBundleDate(crcBundleMetadata *bundle.CrcBundleInfo) {
+	if buildTime, err := crcBundleMetadata.GetBundleBuildTime(); err == nil {
+		bundleAgeDays := time.Since(buildTime).Hours() / 24
+		if bundleAgeDays >= 30 {
+			/* Initial bundle certificates are only valid for 30 days */
+			logging.Debugf("Bundle has been generated %d days ago", int(bundleAgeDays))
+		}
 	}
 }
