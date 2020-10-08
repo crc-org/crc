@@ -3,43 +3,38 @@
 
 Use the `cpus` and `memory` properties to configure the default number of vCPUs and amount of memory available to the {prod} virtual machine, respectively.
 
+Alternatively, the number of vCPUs and amount of memory can be assigned using the `--cpus` and `--memory` flags to the `{bin} start` command, respectively.
+
 [IMPORTANT]
 ====
-You cannot change the configuration of an existing {prod} virtual machine.
-To enable configuration changes, you must delete the existing virtual machine and create a new one.
-
-To create the new virtual machine, first delete the existing {prod} virtual machine, then start a new virtual machine with the configuration changes:
-
-[subs="+quotes,attributes"]
-----
-$ {bin} delete
-$ {bin} start
-----
-====
-
-[WARNING]
-====
-The [command]`{bin} delete` command results in the loss of data stored in the {prod} virtual machine.
-Save any desired information stored in the virtual machine before running this command.
+You cannot change the configuration of a running {prod} virtual machine.
+To enable configuration changes, you must stop the running virtual machine and start it again.
 ====
 
 .Procedure
 
-* To increase the number of vCPUs available to the virtual machine:
+* To configure the number of vCPUs available to the virtual machine:
 +
 [subs="+quotes,attributes"]
 ----
-$ {bin} config set cpus _<number>_
+$ {bin} config set cpus __<number>__
 ----
 +
 The default value for the `cpus` property is `4`.
 The number of vCPUs to assign must be greater than or equal to the default.
 
-* To increase the memory available to the virtual machine:
+* To start the virtual machine with the desired number of vCPUs:
 +
 [subs="+quotes,attributes"]
 ----
-$ {bin} config set memory _<number-in-mib>_
+$ {bin} start --cpus __<number>__
+----
+
+* To configure the memory available to the virtual machine:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} config set memory __<number-in-mib>__
 ----
 +
 [NOTE]
@@ -50,3 +45,10 @@ One gibibyte (GiB) of memory is equal to 1024 MiB.
 +
 The default value for the `memory` property is `9216`.
 The amount of memory to assign must be greater than or equal to the default.
+
+* To start the virtual machine with the desired amount of memory:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} start --memory __<number-in-mib>__
+----

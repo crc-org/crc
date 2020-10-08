@@ -33,3 +33,7 @@ $ {bin} start
 * The cluster takes a minimum of four minutes to start the necessary containers and Operators before serving a request.
 * If you see errors during [command]`{bin} start`, check the link:{crc-gsg-url}#troubleshooting-codeready-containers_gsg[Troubleshooting {prod}] section for potential solutions.
 ====
+
+.Additional resources
+
+* To change the default resources allocated to the virtual machine, see link:{crc-gsg-url}#configuring-the-virtual-machine_gsg[Configuring the virtual machine].
