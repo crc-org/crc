@@ -400,11 +400,6 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		log.Warnf("Cannot update kubeconfig: %v", err)
 	}
 
-	// Approve the node certificate.
-	if err := cluster.ApproveNodeCSR(ocConfig); err != nil {
-		return startError(startConfig.Name, "Error approving the node csr", err)
-	}
-
 	if proxyConfig.IsEnabled() {
 		logging.Info("Waiting for the proxy configuration to be applied ...")
 		waitForProxyPropagation(ocConfig, proxyConfig)
