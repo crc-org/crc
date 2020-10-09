@@ -8,7 +8,7 @@ type AdaptedClient interface {
 	Delete(deleteConfig machine.DeleteConfig) Result
 	GetConsoleURL(consoleConfig machine.ConsoleConfig) (machine.ConsoleResult, error)
 	Start(startConfig machine.StartConfig) StartResult
-	Status(statusConfig machine.ClusterStatusConfig) (machine.ClusterStatusResult, error)
+	Status(statusConfig machine.ClusterStatusConfig) ClusterStatusResult
 	Stop(stopConfig machine.StopConfig) Result
 }
 
@@ -24,6 +24,17 @@ type StartResult struct {
 	Error          string
 	ClusterConfig  machine.ClusterConfig
 	KubeletStarted bool
+}
+
+type ClusterStatusResult struct {
+	Name             string
+	CrcStatus        string
+	OpenshiftStatus  string
+	OpenshiftVersion string
+	DiskUse          int64
+	DiskSize         int64
+	Error            string
+	Success          bool
 }
 
 type Adapter struct {
@@ -65,8 +76,24 @@ func (a *Adapter) Start(startConfig machine.StartConfig) StartResult {
 	}
 }
 
-func (a *Adapter) Status(statusConfig machine.ClusterStatusConfig) (machine.ClusterStatusResult, error) {
-	return a.Underlying.Status(statusConfig)
+func (a *Adapter) Status(statusConfig machine.ClusterStatusConfig) ClusterStatusResult {
+	res, err := a.Underlying.Status(statusConfig)
+	if err != nil {
+		return ClusterStatusResult{
+			Name:    statusConfig.Name,
+			Error:   err.Error(),
+			Success: false,
+		}
+	}
+	return ClusterStatusResult{
+		Name:             statusConfig.Name,
+		CrcStatus:        res.CrcStatus,
+		OpenshiftStatus:  res.OpenshiftStatus,
+		OpenshiftVersion: res.OpenshiftVersion,
+		DiskUse:          res.DiskUse,
+		DiskSize:         res.DiskSize,
+		Success:          true,
+	}
 }
 
 func (a *Adapter) Stop(stopConfig machine.StopConfig) Result {

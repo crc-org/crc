@@ -30,7 +30,7 @@ func newHandler() *Handler {
 
 func (h *Handler) Status() string {
 	statusConfig := machine.ClusterStatusConfig{Name: constants.DefaultName}
-	clusterStatus, _ := h.MachineClient.Status(statusConfig)
+	clusterStatus := h.MachineClient.Status(statusConfig)
 	return encodeStructToJSON(clusterStatus)
 }
 

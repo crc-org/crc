@@ -9,7 +9,7 @@ type Client interface {
 	IP(ipConfig IPConfig) (string, error)
 	PowerOff(powerOff PowerOffConfig) error
 	Start(startConfig StartConfig) (*StartResult, error)
-	Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error)
+	Status(statusConfig ClusterStatusConfig) (*ClusterStatusResult, error)
 	Stop(stopConfig StopConfig) (state.State, error)
 }
 

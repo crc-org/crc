@@ -73,14 +73,11 @@ type ClusterStatusConfig struct {
 }
 
 type ClusterStatusResult struct {
-	Name             string
 	CrcStatus        string
 	OpenshiftStatus  string
 	OpenshiftVersion string
 	DiskUse          int64
 	DiskSize         int64
-	Error            string
-	Success          bool
 }
 
 type ConsoleConfig struct {
