@@ -1,6 +1,7 @@
 package hyperv
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"time"
@@ -87,6 +88,38 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	d.SSHUser = drivers.DefaultSSHUser
 	d.DisableDynamicMemory = flags.Bool("hyperv-disable-dynamic-memory")
 
+	return nil
+}
+
+func (d *Driver) UpdateConfigRaw(rawConfig []byte) error {
+	var newDriver Driver
+
+	err := json.Unmarshal(rawConfig, &newDriver)
+	if err != nil {
+		return err
+	}
+	if newDriver.Memory != d.Memory {
+		log.Debugf("Updating memory from %d MB to %d MB", d.Memory, newDriver.Memory)
+		err := cmd("Hyper-V\\Set-VMMemory",
+			"-VMName", d.MachineName,
+			"-StartupBytes", toMb(newDriver.Memory))
+		if err != nil {
+			log.Warnf("Failed to update memory to %d MB: %v", newDriver.Memory, err)
+			return err
+		}
+	}
+
+	if newDriver.CPU != d.CPU {
+		log.Debugf("Updating CPU count from %d to %d", d.CPU, newDriver.CPU)
+		err := cmd("Hyper-V\\Set-VMProcessor",
+			d.MachineName,
+			"-Count", fmt.Sprintf("%d", newDriver.CPU))
+		if err != nil {
+			log.Warnf("Failed to set CPU count to %d", newDriver.CPU)
+			return err
+		}
+	}
+	*d = newDriver
 	return nil
 }
 

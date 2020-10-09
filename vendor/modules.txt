@@ -24,7 +24,7 @@ github.com/cheggaaa/pb/v3/termutil
 # github.com/code-ready/clicumber v0.0.0-20200728062640-1203dda97f67
 github.com/code-ready/clicumber/testsuite
 github.com/code-ready/clicumber/util
-# github.com/code-ready/machine v0.0.0-20200928132629-d2fe955a85f9
+# github.com/code-ready/machine v0.0.0-20201008083613-1420a5d7f1e2
 github.com/code-ready/machine/drivers/errdriver
 github.com/code-ready/machine/drivers/hyperkit
 github.com/code-ready/machine/drivers/hyperv
