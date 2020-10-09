@@ -40,18 +40,13 @@ var consoleCmd = &cobra.Command{
 }
 
 func showConsole(client machine.Client) (*machine.ConsoleResult, error) {
-	consoleConfig := machine.ConsoleConfig{
-		Name: constants.DefaultName,
-	}
-
 	if err := checkIfMachineMissing(client); err != nil {
 		// In case of machine doesn't exist then consoleResult error
 		// should be updated so that when rendering the result it have
 		// error details also.
 		return nil, err
 	}
-
-	return client.GetConsoleURL(consoleConfig)
+	return client.GetConsoleURL(constants.DefaultName)
 }
 
 func runConsole(writer io.Writer, client machine.Client, consolePrintURL, consolePrintCredentials bool, outputFormat string) error {

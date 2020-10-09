@@ -3,14 +3,14 @@ package machine
 import "github.com/code-ready/machine/libmachine/state"
 
 type Client interface {
-	Delete(deleteConfig DeleteConfig) error
+	Delete(name string) error
 	Exists(name string) (bool, error)
-	GetConsoleURL(consoleConfig ConsoleConfig) (*ConsoleResult, error)
-	IP(ipConfig IPConfig) (string, error)
-	PowerOff(powerOff PowerOffConfig) error
+	GetConsoleURL(name string) (*ConsoleResult, error)
+	IP(name string) (string, error)
+	PowerOff(name string) error
 	Start(startConfig StartConfig) (*StartResult, error)
-	Status(statusConfig ClusterStatusConfig) (*ClusterStatusResult, error)
-	Stop(stopConfig StopConfig) (state.State, error)
+	Status(name string) (*ClusterStatusResult, error)
+	Stop(name string) (state.State, error)
 }
 
 type client struct {

@@ -5,7 +5,6 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
-	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/os/shell"
 	"github.com/spf13/cobra"
@@ -33,9 +32,7 @@ func runOcEnv(args []string) error {
 	}
 
 	client := newMachine()
-	consoleResult, err := client.GetConsoleURL(machine.ConsoleConfig{
-		Name: constants.DefaultName,
-	})
+	consoleResult, err := client.GetConsoleURL(constants.DefaultName)
 	if err != nil {
 		return err
 	}

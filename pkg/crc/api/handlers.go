@@ -29,16 +29,12 @@ func newHandler() *Handler {
 }
 
 func (h *Handler) Status() string {
-	statusConfig := machine.ClusterStatusConfig{Name: constants.DefaultName}
-	clusterStatus := h.MachineClient.Status(statusConfig)
+	clusterStatus := h.MachineClient.Status()
 	return encodeStructToJSON(clusterStatus)
 }
 
 func (h *Handler) Stop() string {
-	stopConfig := machine.StopConfig{
-		Name: constants.DefaultName,
-	}
-	commandResult := h.MachineClient.Stop(stopConfig)
+	commandResult := h.MachineClient.Stop()
 	return encodeStructToJSON(commandResult)
 }
 
@@ -121,14 +117,12 @@ func getPullSecretFileContent(path string) func() (string, error) {
 }
 
 func (h *Handler) Delete() string {
-	delConfig := machine.DeleteConfig{Name: constants.DefaultName}
-	r := h.MachineClient.Delete(delConfig)
+	r := h.MachineClient.Delete()
 	return encodeStructToJSON(r)
 }
 
 func (h *Handler) GetWebconsoleInfo() string {
-	consoleConfig := machine.ConsoleConfig{Name: constants.DefaultName}
-	r := h.MachineClient.GetConsoleURL(consoleConfig)
+	r := h.MachineClient.GetConsoleURL()
 	return encodeStructToJSON(r)
 }
 

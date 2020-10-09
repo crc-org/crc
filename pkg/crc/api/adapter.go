@@ -1,15 +1,16 @@
 package api
 
 import (
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
 type AdaptedClient interface {
-	Delete(deleteConfig machine.DeleteConfig) Result
-	GetConsoleURL(consoleConfig machine.ConsoleConfig) ConsoleResult
+	Delete() Result
+	GetConsoleURL() ConsoleResult
 	Start(startConfig machine.StartConfig) StartResult
-	Status(statusConfig machine.ClusterStatusConfig) ClusterStatusResult
-	Stop(stopConfig machine.StopConfig) Result
+	Status() ClusterStatusResult
+	Stop() Result
 }
 
 type Result struct {
@@ -47,23 +48,23 @@ type Adapter struct {
 	Underlying machine.Client
 }
 
-func (a *Adapter) Delete(deleteConfig machine.DeleteConfig) Result {
-	err := a.Underlying.Delete(deleteConfig)
+func (a *Adapter) Delete() Result {
+	err := a.Underlying.Delete(constants.DefaultName)
 	if err != nil {
 		return Result{
-			Name:    deleteConfig.Name,
+			Name:    constants.DefaultName,
 			Success: false,
 			Error:   err.Error(),
 		}
 	}
 	return Result{
-		Name:    deleteConfig.Name,
+		Name:    constants.DefaultName,
 		Success: true,
 	}
 }
 
-func (a *Adapter) GetConsoleURL(consoleConfig machine.ConsoleConfig) ConsoleResult {
-	res, err := a.Underlying.GetConsoleURL(consoleConfig)
+func (a *Adapter) GetConsoleURL() ConsoleResult {
+	res, err := a.Underlying.GetConsoleURL(constants.DefaultName)
 	if err != nil {
 		return ConsoleResult{
 			Success: false,
@@ -92,17 +93,17 @@ func (a *Adapter) Start(startConfig machine.StartConfig) StartResult {
 	}
 }
 
-func (a *Adapter) Status(statusConfig machine.ClusterStatusConfig) ClusterStatusResult {
-	res, err := a.Underlying.Status(statusConfig)
+func (a *Adapter) Status() ClusterStatusResult {
+	res, err := a.Underlying.Status(constants.DefaultName)
 	if err != nil {
 		return ClusterStatusResult{
-			Name:    statusConfig.Name,
+			Name:    constants.DefaultName,
 			Error:   err.Error(),
 			Success: false,
 		}
 	}
 	return ClusterStatusResult{
-		Name:             statusConfig.Name,
+		Name:             constants.DefaultName,
 		CrcStatus:        res.CrcStatus,
 		OpenshiftStatus:  res.OpenshiftStatus,
 		OpenshiftVersion: res.OpenshiftVersion,
@@ -112,17 +113,17 @@ func (a *Adapter) Status(statusConfig machine.ClusterStatusConfig) ClusterStatus
 	}
 }
 
-func (a *Adapter) Stop(stopConfig machine.StopConfig) Result {
-	_, err := a.Underlying.Stop(stopConfig)
+func (a *Adapter) Stop() Result {
+	_, err := a.Underlying.Stop(constants.DefaultName)
 	if err != nil {
 		return Result{
-			Name:    stopConfig.Name,
+			Name:    constants.DefaultName,
 			Success: false,
 			Error:   err.Error(),
 		}
 	}
 	return Result{
-		Name:    stopConfig.Name,
+		Name:    constants.DefaultName,
 		Success: true,
 	}
 }

@@ -31,14 +31,14 @@ var DummyClusterConfig = machine.ClusterConfig{
 	ProxyConfig:   nil,
 }
 
-func (c *Client) Delete(deleteConfig machine.DeleteConfig) error {
+func (c *Client) Delete(name string) error {
 	if c.Failing {
 		return errors.New("delete failed")
 	}
 	return nil
 }
 
-func (c *Client) GetConsoleURL(consoleConfig machine.ConsoleConfig) (*machine.ConsoleResult, error) {
+func (c *Client) GetConsoleURL(name string) (*machine.ConsoleResult, error) {
 	if c.Failing {
 		return nil, errors.New("console failed")
 	}
@@ -52,11 +52,11 @@ func (c *Client) GetProxyConfig(machineName string) (*network.ProxyConfig, error
 	return nil, errors.New("not implemented")
 }
 
-func (c *Client) IP(ipConfig machine.IPConfig) (string, error) {
+func (c *Client) IP(name string) (string, error) {
 	return "", errors.New("not implemented")
 }
 
-func (c *Client) PowerOff(powerOff machine.PowerOffConfig) error {
+func (c *Client) PowerOff(name string) error {
 	if c.Failing {
 		return errors.New("poweroff failed")
 	}
@@ -73,14 +73,14 @@ func (c *Client) Start(startConfig machine.StartConfig) (*machine.StartResult, e
 	}, nil
 }
 
-func (c *Client) Stop(stopConfig machine.StopConfig) (state.State, error) {
+func (c *Client) Stop(name string) (state.State, error) {
 	if c.Failing {
 		return state.Running, errors.New("stop failed")
 	}
 	return state.Stopped, nil
 }
 
-func (c *Client) Status(statusConfig machine.ClusterStatusConfig) (*machine.ClusterStatusResult, error) {
+func (c *Client) Status(name string) (*machine.ClusterStatusResult, error) {
 	if c.Failing {
 		return nil, errors.New("broken")
 	}

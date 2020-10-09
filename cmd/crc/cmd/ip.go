@@ -3,7 +3,6 @@ package cmd
 import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
-	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/spf13/cobra"
 )
@@ -24,16 +23,12 @@ var ipCmd = &cobra.Command{
 }
 
 func runIP(arguments []string) error {
-	ipConfig := machine.IPConfig{
-		Name: constants.DefaultName,
-	}
-
 	client := newMachine()
 	if err := checkIfMachineMissing(client); err != nil {
 		return err
 	}
 
-	ip, err := client.IP(ipConfig)
+	ip, err := client.IP(constants.DefaultName)
 	if err != nil {
 		return err
 	}
