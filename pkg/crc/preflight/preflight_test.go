@@ -13,9 +13,9 @@ func TestCountConfigurationOptions(t *testing.T) {
 	cfg := config.New(config.NewEmptyInMemoryStorage())
 	RegisterSettings(cfg)
 	assert.Len(t, cfg.AllConfigs(), map[string]int{
-		"darwin":  16,
-		"linux":   34,
-		"windows": 20,
+		"darwin":  20,
+		"linux":   40,
+		"windows": 24,
 	}[runtime.GOOS])
 }
 
