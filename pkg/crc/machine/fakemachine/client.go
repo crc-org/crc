@@ -86,21 +86,16 @@ func (c *Client) Stop(stopConfig machine.StopConfig) (state.State, error) {
 	return state.Stopped, nil
 }
 
-func (c *Client) Status(statusConfig machine.ClusterStatusConfig) (machine.ClusterStatusResult, error) {
+func (c *Client) Status(statusConfig machine.ClusterStatusConfig) (*machine.ClusterStatusResult, error) {
 	if c.Failing {
-		return machine.ClusterStatusResult{
-			Success: false,
-			Error:   "broken",
-		}, errors.New("broken")
+		return nil, errors.New("broken")
 	}
-	return machine.ClusterStatusResult{
-		Name:             "crc",
+	return &machine.ClusterStatusResult{
 		CrcStatus:        "Running",
 		OpenshiftStatus:  "Running",
 		OpenshiftVersion: "4.5.1",
 		DiskUse:          10_000_000_000,
 		DiskSize:         20_000_000_000,
-		Success:          true,
 	}, nil
 }
 

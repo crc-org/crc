@@ -6,15 +6,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
-func statusError(name string, description string, err error) (ClusterStatusResult, error) {
-	fullErr := logErrorf("%s: %v", description, err)
-	return ClusterStatusResult{
-		Name:    name,
-		Success: false,
-		Error:   fullErr.Error(),
-	}, fullErr
-}
-
 func consoleURLError(description string, err error) (ConsoleResult, error) {
 	fullErr := logErrorf("%s: %v", description, err)
 	return ConsoleResult{

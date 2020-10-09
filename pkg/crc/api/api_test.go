@@ -68,7 +68,7 @@ func TestApi(t *testing.T) {
 			command:       "status",
 			clientFailing: true,
 			expected: map[string]interface{}{
-				"Name":             "",
+				"Name":             "crc",
 				"CrcStatus":        "",
 				"OpenshiftStatus":  "",
 				"OpenshiftVersion": "",

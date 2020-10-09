@@ -494,16 +494,16 @@ func (*client) IP(ipConfig IPConfig) (string, error) {
 	return ip, nil
 }
 
-func (*client) Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
+func (*client) Status(statusConfig ClusterStatusConfig) (*ClusterStatusResult, error) {
 	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
 	defer cleanup()
 	if err != nil {
-		return statusError(statusConfig.Name, "Cannot initialize libmachine", err)
+		return nil, errors.Wrap(err, "Cannot initialize libmachine")
 	}
 
 	_, err = libMachineAPIClient.Exists(statusConfig.Name)
 	if err != nil {
-		return statusError(statusConfig.Name, "Cannot check if machine exists", err)
+		return nil, errors.Wrap(err, "Cannot check if machine exists")
 	}
 
 	openshiftStatus := "Stopped"
@@ -513,27 +513,27 @@ func (*client) Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, er
 
 	host, err := libMachineAPIClient.Load(statusConfig.Name)
 	if err != nil {
-		return statusError(statusConfig.Name, "Cannot load machine", err)
+		return nil, errors.Wrap(err, "Cannot load machine")
 	}
 	vmStatus, err := host.Driver.GetState()
 	if err != nil {
-		return statusError(statusConfig.Name, "Cannot get machine state", err)
+		return nil, errors.Wrap(err, "Cannot get machine state")
 	}
 
 	if vmStatus == state.Running {
 		_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
 		if err != nil {
-			return statusError(statusConfig.Name, "Error loading bundle metadata", err)
+			return nil, errors.Wrap(err, "Error loading bundle metadata")
 		}
 		proxyConfig, err := getProxyConfig(crcBundleMetadata.ClusterInfo.BaseDomain)
 		if err != nil {
-			return statusError(statusConfig.Name, "Error getting proxy configuration", err)
+			return nil, errors.Wrap(err, "Error getting proxy configuration")
 		}
 		proxyConfig.ApplyToEnvironment()
 
 		ip, err := host.Driver.GetIP()
 		if err != nil {
-			return statusError(statusConfig.Name, "Error getting ip", err)
+			return nil, errors.Wrap(err, "Error getting ip")
 		}
 		sshRunner := crcssh.CreateRunner(ip, constants.DefaultSSHPort, constants.GetPrivateKeyPath())
 		// check if all the clusteroperators are running
@@ -554,17 +554,15 @@ func (*client) Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, er
 		}
 		diskSize, diskUse, err = cluster.GetRootPartitionUsage(sshRunner)
 		if err != nil {
-			return statusError(statusConfig.Name, "Cannot get root partition usage", err)
+			return nil, errors.Wrap(err, "Cannot get root partition usage")
 		}
 	}
-	return ClusterStatusResult{
-		Name:             statusConfig.Name,
+	return &ClusterStatusResult{
 		CrcStatus:        vmStatus.String(),
 		OpenshiftStatus:  openshiftStatus,
 		OpenshiftVersion: openshiftVersion,
 		DiskUse:          diskUse,
 		DiskSize:         diskSize,
-		Success:          true,
 	}, nil
 }
 
