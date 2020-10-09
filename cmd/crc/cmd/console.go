@@ -39,7 +39,7 @@ var consoleCmd = &cobra.Command{
 	},
 }
 
-func showConsole(client machine.Client) (machine.ConsoleResult, error) {
+func showConsole(client machine.Client) (*machine.ConsoleResult, error) {
 	consoleConfig := machine.ConsoleConfig{
 		Name: constants.DefaultName,
 	}
@@ -48,19 +48,18 @@ func showConsole(client machine.Client) (machine.ConsoleResult, error) {
 		// In case of machine doesn't exist then consoleResult error
 		// should be updated so that when rendering the result it have
 		// error details also.
-		consoleResult := machine.ConsoleResult{}
-		consoleResult.Error = err.Error()
-		return consoleResult, err
+		return nil, err
 	}
 
 	return client.GetConsoleURL(consoleConfig)
 }
+
 func runConsole(writer io.Writer, client machine.Client, consolePrintURL, consolePrintCredentials bool, outputFormat string) error {
 	result, err := showConsole(client)
 	return render(&consoleResult{
 		Success:                 err == nil,
-		state:                   result.State,
-		ClusterConfig:           toConsoleClusterConfig(&result),
+		state:                   toState(result),
+		ClusterConfig:           toConsoleClusterConfig(result),
 		Error:                   errorMessage(err),
 		consolePrintURL:         consolePrintURL,
 		consolePrintCredentials: consolePrintCredentials,
@@ -114,8 +113,15 @@ func (s *consoleResult) prettyPrintTo(writer io.Writer) error {
 	return nil
 }
 
+func toState(result *machine.ConsoleResult) state.State {
+	if result == nil {
+		return state.Error
+	}
+	return result.State
+}
+
 func toConsoleClusterConfig(result *machine.ConsoleResult) *clusterConfig {
-	if result == nil || result.Error != "" {
+	if result == nil {
 		return nil
 	}
 	return &clusterConfig{

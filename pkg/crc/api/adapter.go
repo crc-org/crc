@@ -6,7 +6,7 @@ import (
 
 type AdaptedClient interface {
 	Delete(deleteConfig machine.DeleteConfig) Result
-	GetConsoleURL(consoleConfig machine.ConsoleConfig) (machine.ConsoleResult, error)
+	GetConsoleURL(consoleConfig machine.ConsoleConfig) ConsoleResult
 	Start(startConfig machine.StartConfig) StartResult
 	Status(statusConfig machine.ClusterStatusConfig) ClusterStatusResult
 	Stop(stopConfig machine.StopConfig) Result
@@ -37,6 +37,12 @@ type ClusterStatusResult struct {
 	Success          bool
 }
 
+type ConsoleResult struct {
+	ClusterConfig machine.ClusterConfig
+	Success       bool
+	Error         string
+}
+
 type Adapter struct {
 	Underlying machine.Client
 }
@@ -56,8 +62,18 @@ func (a *Adapter) Delete(deleteConfig machine.DeleteConfig) Result {
 	}
 }
 
-func (a *Adapter) GetConsoleURL(consoleConfig machine.ConsoleConfig) (machine.ConsoleResult, error) {
-	return a.Underlying.GetConsoleURL(consoleConfig)
+func (a *Adapter) GetConsoleURL(consoleConfig machine.ConsoleConfig) ConsoleResult {
+	res, err := a.Underlying.GetConsoleURL(consoleConfig)
+	if err != nil {
+		return ConsoleResult{
+			Success: false,
+			Error:   err.Error(),
+		}
+	}
+	return ConsoleResult{
+		ClusterConfig: res.ClusterConfig,
+		Success:       true,
+	}
 }
 
 func (a *Adapter) Start(startConfig machine.StartConfig) StartResult {
