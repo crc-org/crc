@@ -57,10 +57,3 @@ type ConsoleResult struct {
 	ClusterConfig ClusterConfig
 	State         state.State
 }
-
-type VersionResult struct {
-	CrcVersion       string
-	CommitSha        string
-	OpenshiftVersion string
-	Success          bool
-}

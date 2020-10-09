@@ -92,8 +92,15 @@ func getStartConfig(cfg crcConfig.Storage, args startArgs) machine.StartConfig {
 	return startConfig
 }
 
+type VersionResult struct {
+	CrcVersion       string
+	CommitSha        string
+	OpenshiftVersion string
+	Success          bool
+}
+
 func (h *Handler) GetVersion() string {
-	v := &machine.VersionResult{
+	v := &VersionResult{
 		CrcVersion:       version.GetCRCVersion(),
 		CommitSha:        version.GetCommitSha(),
 		OpenshiftVersion: version.GetBundleVersion(),
