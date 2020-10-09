@@ -58,8 +58,8 @@ func (c *Client) GetProxyConfig(machineName string) (*network.ProxyConfig, error
 	return nil, errors.New("not implemented")
 }
 
-func (c *Client) IP(ipConfig machine.IPConfig) (machine.IPResult, error) {
-	return machine.IPResult{}, errors.New("not implemented")
+func (c *Client) IP(ipConfig machine.IPConfig) (string, error) {
+	return "", errors.New("not implemented")
 }
 
 func (c *Client) PowerOff(powerOff machine.PowerOffConfig) (machine.PowerOffResult, error) {
