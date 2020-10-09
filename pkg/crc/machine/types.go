@@ -35,7 +35,7 @@ type ClusterConfig struct {
 }
 
 type StartResult struct {
-	Status         string
+	Status         state.State
 	ClusterConfig  ClusterConfig
 	KubeletStarted bool
 }
@@ -48,7 +48,7 @@ type StopResult struct {
 }
 
 type ClusterStatusResult struct {
-	CrcStatus        string
+	CrcStatus        state.State
 	OpenshiftStatus  string
 	OpenshiftVersion string
 	DiskUse          int64

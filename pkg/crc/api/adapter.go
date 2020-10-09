@@ -87,7 +87,7 @@ func (a *Adapter) Start(startConfig machine.StartConfig) StartResult {
 	}
 	return StartResult{
 		Name:           startConfig.Name,
-		Status:         res.Status,
+		Status:         res.Status.String(),
 		ClusterConfig:  res.ClusterConfig,
 		KubeletStarted: res.KubeletStarted,
 	}
@@ -104,7 +104,7 @@ func (a *Adapter) Status() ClusterStatusResult {
 	}
 	return ClusterStatusResult{
 		Name:             constants.DefaultName,
-		CrcStatus:        res.CrcStatus,
+		CrcStatus:        res.CrcStatus.String(),
 		OpenshiftStatus:  res.OpenshiftStatus,
 		OpenshiftVersion: res.OpenshiftVersion,
 		DiskUse:          res.DiskUse,

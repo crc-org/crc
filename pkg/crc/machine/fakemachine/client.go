@@ -85,7 +85,7 @@ func (c *Client) Status(name string) (*machine.ClusterStatusResult, error) {
 		return nil, errors.New("broken")
 	}
 	return &machine.ClusterStatusResult{
-		CrcStatus:        "Running",
+		CrcStatus:        state.Running,
 		OpenshiftStatus:  "Running",
 		OpenshiftVersion: "4.5.1",
 		DiskUse:          10_000_000_000,

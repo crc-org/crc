@@ -213,7 +213,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 				return nil, errors.Wrap(err, "Cannot create cluster configuration")
 			}
 			return &StartResult{
-				Status:         vmState.String(),
+				Status:         vmState,
 				ClusterConfig:  *clusterConfig,
 				KubeletStarted: true,
 			}, nil
@@ -398,7 +398,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	return &StartResult{
 		KubeletStarted: true,
 		ClusterConfig:  *clusterConfig,
-		Status:         vmState.String(),
+		Status:         vmState,
 	}, nil
 }
 
@@ -558,7 +558,7 @@ func (client *client) Status(name string) (*ClusterStatusResult, error) {
 		}
 	}
 	return &ClusterStatusResult{
-		CrcStatus:        vmStatus.String(),
+		CrcStatus:        vmStatus,
 		OpenshiftStatus:  openshiftStatus,
 		OpenshiftVersion: openshiftVersion,
 		DiskUse:          diskUse,
