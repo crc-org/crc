@@ -1,13 +1,15 @@
 package api
 
-import "github.com/code-ready/crc/pkg/crc/machine"
+import (
+	"github.com/code-ready/crc/pkg/crc/machine"
+)
 
 type AdaptedClient interface {
 	Delete(deleteConfig machine.DeleteConfig) Result
 	GetConsoleURL(consoleConfig machine.ConsoleConfig) (machine.ConsoleResult, error)
 	Start(startConfig machine.StartConfig) (machine.StartResult, error)
 	Status(statusConfig machine.ClusterStatusConfig) (machine.ClusterStatusResult, error)
-	Stop(stopConfig machine.StopConfig) (machine.StopResult, error)
+	Stop(stopConfig machine.StopConfig) Result
 }
 
 type Result struct {
@@ -47,6 +49,17 @@ func (a *Adapter) Status(statusConfig machine.ClusterStatusConfig) (machine.Clus
 	return a.Underlying.Status(statusConfig)
 }
 
-func (a *Adapter) Stop(stopConfig machine.StopConfig) (machine.StopResult, error) {
-	return a.Underlying.Stop(stopConfig)
+func (a *Adapter) Stop(stopConfig machine.StopConfig) Result {
+	_, err := a.Underlying.Stop(stopConfig)
+	if err != nil {
+		return Result{
+			Name:    stopConfig.Name,
+			Success: false,
+			Error:   err.Error(),
+		}
+	}
+	return Result{
+		Name:    stopConfig.Name,
+		Success: true,
+	}
 }

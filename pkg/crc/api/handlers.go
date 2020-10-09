@@ -39,7 +39,7 @@ func (h *Handler) Stop() string {
 		Name:  constants.DefaultName,
 		Debug: true,
 	}
-	commandResult, _ := h.MachineClient.Stop(stopConfig)
+	commandResult := h.MachineClient.Stop(stopConfig)
 	return encodeStructToJSON(commandResult)
 }
 

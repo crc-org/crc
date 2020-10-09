@@ -407,38 +407,33 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	}, err
 }
 
-func (*client) Stop(stopConfig StopConfig) (StopResult, error) {
+func (*client) Stop(stopConfig StopConfig) (state.State, error) {
 	defer unsetMachineLogging()
 
 	// Set libmachine logging
 	err := setMachineLogging(stopConfig.Debug)
 	if err != nil {
-		return stopError(stopConfig.Name, "Cannot initialize logging", err)
+		return state.None, errors.Wrap(err, "Cannot initialize logging")
 	}
 
 	libMachineAPIClient, cleanup, err := createLibMachineClient(stopConfig.Debug)
 	defer cleanup()
 	if err != nil {
-		return stopError(stopConfig.Name, "Cannot initialize libmachine", err)
+		return state.None, errors.Wrap(err, "Cannot initialize libmachine")
 	}
 	host, err := libMachineAPIClient.Load(stopConfig.Name)
 
 	if err != nil {
-		return stopError(stopConfig.Name, "Cannot load machine", err)
+		return state.None, errors.Wrap(err, "Cannot load machine")
 	}
 
-	state, _ := host.Driver.GetState()
-
+	// FIXME: Why is the state fetched before calling host.Stop() ? We will return state.Running most of the time instead of state.Stopped
+	vmState, _ := host.Driver.GetState()
 	logging.Info("Stopping the OpenShift cluster, this may take a few minutes...")
 	if err := host.Stop(); err != nil {
-		return stopError(stopConfig.Name, "Cannot stop machine", err)
+		return state.None, errors.Wrap(err, "Cannot stop machine")
 	}
-
-	return StopResult{
-		Name:    stopConfig.Name,
-		Success: true,
-		State:   state,
-	}, nil
+	return vmState, nil
 }
 
 func (*client) PowerOff(powerOff PowerOffConfig) error {

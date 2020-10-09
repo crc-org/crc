@@ -1,5 +1,7 @@
 package machine
 
+import "github.com/code-ready/machine/libmachine/state"
+
 type Client interface {
 	Delete(deleteConfig DeleteConfig) error
 	Exists(name string) (bool, error)
@@ -8,7 +10,7 @@ type Client interface {
 	PowerOff(powerOff PowerOffConfig) error
 	Start(startConfig StartConfig) (StartResult, error)
 	Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error)
-	Stop(stopConfig StopConfig) (StopResult, error)
+	Stop(stopConfig StopConfig) (state.State, error)
 }
 
 type client struct{}

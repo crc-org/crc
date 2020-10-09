@@ -84,20 +84,11 @@ func (c *Client) Start(startConfig machine.StartConfig) (machine.StartResult, er
 	}, nil
 }
 
-func (c *Client) Stop(stopConfig machine.StopConfig) (machine.StopResult, error) {
+func (c *Client) Stop(stopConfig machine.StopConfig) (state.State, error) {
 	if c.Failing {
-		return machine.StopResult{
-			Name:    "crc",
-			Success: false,
-			Error:   "stop failed",
-			State:   state.Running,
-		}, errors.New("stop failed")
+		return state.Running, errors.New("stop failed")
 	}
-	return machine.StopResult{
-		Name:    "crc",
-		Success: true,
-		State:   state.Stopped,
-	}, nil
+	return state.Stopped, nil
 }
 
 func (c *Client) Status(statusConfig machine.ClusterStatusConfig) (machine.ClusterStatusResult, error) {
