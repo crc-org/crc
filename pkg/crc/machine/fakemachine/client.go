@@ -62,18 +62,11 @@ func (c *Client) IP(ipConfig machine.IPConfig) (string, error) {
 	return "", errors.New("not implemented")
 }
 
-func (c *Client) PowerOff(powerOff machine.PowerOffConfig) (machine.PowerOffResult, error) {
+func (c *Client) PowerOff(powerOff machine.PowerOffConfig) error {
 	if c.Failing {
-		return machine.PowerOffResult{
-			Name:    "crc",
-			Success: false,
-			Error:   "poweroff failed",
-		}, errors.New("poweroff failed")
+		return errors.New("poweroff failed")
 	}
-	return machine.PowerOffResult{
-		Name:    "crc",
-		Success: true,
-	}, nil
+	return nil
 }
 
 func (c *Client) Start(startConfig machine.StartConfig) (machine.StartResult, error) {

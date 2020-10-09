@@ -51,7 +51,7 @@ func stopMachine(client machine.Client, interactive, force bool) (bool, error) {
 			// graceful time to cluster before kill it.
 			yes := input.PromptUserForYesOrNo("Do you want to force power off", force)
 			if yes {
-				_, err := client.PowerOff(machine.PowerOffConfig{
+				err := client.PowerOff(machine.PowerOffConfig{
 					Name: constants.DefaultName,
 				})
 				return true, err
