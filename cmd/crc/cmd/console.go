@@ -33,7 +33,7 @@ var consoleCmd = &cobra.Command{
 	Short:   "Open the OpenShift Web Console in the default browser",
 	Long:    `Open the OpenShift Web Console in the default browser or print its URL or credentials`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if renderErr := runConsole(os.Stdout, machine.NewClient(), consolePrintURL, consolePrintCredentials, outputFormat); renderErr != nil {
+		if renderErr := runConsole(os.Stdout, newMachine(), consolePrintURL, consolePrintCredentials, outputFormat); renderErr != nil {
 			exit.WithMessage(1, renderErr.Error())
 		}
 	},

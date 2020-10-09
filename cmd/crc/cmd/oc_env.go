@@ -32,7 +32,7 @@ func runOcEnv(args []string) error {
 		return fmt.Errorf("Error running the oc-env command: %s", err.Error())
 	}
 
-	client := machine.NewClient()
+	client := newMachine()
 	consoleResult, err := client.GetConsoleURL(machine.ConsoleConfig{
 		Name: constants.DefaultName,
 	})

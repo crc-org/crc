@@ -24,7 +24,7 @@ var stopCmd = &cobra.Command{
 	Short: "Stop the OpenShift cluster",
 	Long:  "Stop the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		if renderErr := runStop(os.Stdout, machine.NewClient(), outputFormat != jsonFormat, globalForce, outputFormat); renderErr != nil {
+		if renderErr := runStop(os.Stdout, newMachine(), outputFormat != jsonFormat, globalForce, outputFormat); renderErr != nil {
 			exit.WithMessage(1, renderErr.Error())
 		}
 	},
@@ -36,8 +36,7 @@ func stopMachine(client machine.Client, interactive, force bool) (bool, error) {
 	}
 
 	vmState, err := client.Stop(machine.StopConfig{
-		Name:  constants.DefaultName,
-		Debug: isDebugLog(),
+		Name: constants.DefaultName,
 	})
 	if err != nil {
 		if !interactive && !force {

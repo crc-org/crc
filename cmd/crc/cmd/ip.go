@@ -25,11 +25,10 @@ var ipCmd = &cobra.Command{
 
 func runIP(arguments []string) error {
 	ipConfig := machine.IPConfig{
-		Name:  constants.DefaultName,
-		Debug: isDebugLog(),
+		Name: constants.DefaultName,
 	}
 
-	client := machine.NewClient()
+	client := newMachine()
 	if err := checkIfMachineMissing(client); err != nil {
 		return err
 	}
