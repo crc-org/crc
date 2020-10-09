@@ -34,10 +34,10 @@ func runIP(arguments []string) error {
 		return err
 	}
 
-	result, err := client.IP(ipConfig)
+	ip, err := client.IP(ipConfig)
 	if err != nil {
 		return err
 	}
-	output.Outln(result.IP)
+	output.Outln(ip)
 	return nil
 }

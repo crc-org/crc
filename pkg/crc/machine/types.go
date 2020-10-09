@@ -76,13 +76,6 @@ type IPConfig struct {
 	Debug bool
 }
 
-type IPResult struct {
-	Name    string
-	IP      string
-	Success bool
-	Error   string
-}
-
 type ClusterStatusConfig struct {
 	Name string
 }

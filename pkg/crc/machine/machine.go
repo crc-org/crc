@@ -485,31 +485,27 @@ func (*client) Delete(deleteConfig DeleteConfig) error {
 	return nil
 }
 
-func (*client) IP(ipConfig IPConfig) (IPResult, error) {
+func (*client) IP(ipConfig IPConfig) (string, error) {
 	err := setMachineLogging(ipConfig.Debug)
 	if err != nil {
-		return ipError(ipConfig.Name, "Cannot initialize logging", err)
+		return "", errors.Wrap(err, "Cannot initialize logging")
 	}
 
 	libMachineAPIClient, cleanup, err := createLibMachineClient(ipConfig.Debug)
 	defer cleanup()
 	if err != nil {
-		return ipError(ipConfig.Name, "Cannot initialize libmachine", err)
+		return "", errors.Wrap(err, "Cannot initialize libmachine")
 	}
 	host, err := libMachineAPIClient.Load(ipConfig.Name)
 
 	if err != nil {
-		return ipError(ipConfig.Name, "Cannot load machine", err)
+		return "", errors.Wrap(err, "Cannot load machine")
 	}
 	ip, err := host.Driver.GetIP()
 	if err != nil {
-		return ipError(ipConfig.Name, "Cannot get IP", err)
+		return "", errors.Wrap(err, "Cannot get IP")
 	}
-	return IPResult{
-		Name:    ipConfig.Name,
-		Success: true,
-		IP:      ip,
-	}, nil
+	return ip, nil
 }
 
 func (*client) Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
