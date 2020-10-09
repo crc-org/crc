@@ -441,26 +441,22 @@ func (*client) Stop(stopConfig StopConfig) (StopResult, error) {
 	}, nil
 }
 
-func (*client) PowerOff(powerOff PowerOffConfig) (PowerOffResult, error) {
+func (*client) PowerOff(powerOff PowerOffConfig) error {
 	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
 	defer cleanup()
 	if err != nil {
-		return powerOffError(powerOff.Name, "Cannot initialize libmachine", err)
+		return errors.Wrap(err, "Cannot initialize libmachine")
 	}
-	host, err := libMachineAPIClient.Load(powerOff.Name)
 
+	host, err := libMachineAPIClient.Load(powerOff.Name)
 	if err != nil {
-		return powerOffError(powerOff.Name, "Cannot load machine", err)
+		return errors.Wrap(err, "Cannot load machine")
 	}
 
 	if err := host.Kill(); err != nil {
-		return powerOffError(powerOff.Name, "Cannot kill machine", err)
+		return errors.Wrap(err, "Cannot kill machine")
 	}
-
-	return PowerOffResult{
-		Name:    powerOff.Name,
-		Success: true,
-	}, nil
+	return nil
 }
 
 func (*client) Delete(deleteConfig DeleteConfig) error {

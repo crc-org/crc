@@ -61,12 +61,6 @@ type StopResult struct {
 	Error   string
 }
 
-type PowerOffResult struct {
-	Name    string
-	Success bool
-	Error   string
-}
-
 type DeleteConfig struct {
 	Name string
 }

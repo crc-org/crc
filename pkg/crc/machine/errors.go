@@ -23,15 +23,6 @@ func stopError(name string, description string, err error) (StopResult, error) {
 	}, fullErr
 }
 
-func powerOffError(name string, description string, err error) (PowerOffResult, error) {
-	fullErr := logErrorf("%s: %v", description, err)
-	return PowerOffResult{
-		Name:    name,
-		Success: false,
-		Error:   fullErr.Error(),
-	}, fullErr
-}
-
 func statusError(name string, description string, err error) (ClusterStatusResult, error) {
 	fullErr := logErrorf("%s: %v", description, err)
 	return ClusterStatusResult{
