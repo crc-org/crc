@@ -6,8 +6,6 @@ import (
 	"github.com/code-ready/machine/libmachine/state"
 )
 
-type GetPullSecretFunc func() (string, error)
-
 type StartConfig struct {
 	Name string
 
