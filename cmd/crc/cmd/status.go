@@ -60,7 +60,7 @@ func runStatus(writer io.Writer, client machine.Client, cacheDir, outputFormat s
 		return fmt.Errorf("Error finding size of cache: %s", err.Error())
 	}
 	status := &status{
-		CrcStatus:        clusterStatus.CrcStatus,
+		CrcStatus:        clusterStatus.CrcStatus.String(),
 		OpenShiftStatus:  clusterStatus.OpenshiftStatus,
 		OpenShiftVersion: clusterStatus.OpenshiftVersion,
 		DiskUsage:        clusterStatus.DiskUse,
