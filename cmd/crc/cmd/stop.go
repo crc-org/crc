@@ -35,9 +35,7 @@ func stopMachine(client machine.Client, interactive, force bool) (bool, error) {
 		return false, err
 	}
 
-	vmState, err := client.Stop(machine.StopConfig{
-		Name: constants.DefaultName,
-	})
+	vmState, err := client.Stop(constants.DefaultName)
 	if err != nil {
 		if !interactive && !force {
 			return false, err
@@ -50,9 +48,7 @@ func stopMachine(client machine.Client, interactive, force bool) (bool, error) {
 			// graceful time to cluster before kill it.
 			yes := input.PromptUserForYesOrNo("Do you want to force power off", force)
 			if yes {
-				err := client.PowerOff(machine.PowerOffConfig{
-					Name: constants.DefaultName,
-				})
+				err := client.PowerOff(constants.DefaultName)
 				return true, err
 			}
 		}

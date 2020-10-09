@@ -40,31 +40,11 @@ type StartResult struct {
 	KubeletStarted bool
 }
 
-type StopConfig struct {
-	Name string
-}
-
-type PowerOffConfig struct {
-	Name string
-}
-
 type StopResult struct {
 	Name    string
 	Success bool
 	State   state.State
 	Error   string
-}
-
-type DeleteConfig struct {
-	Name string
-}
-
-type IPConfig struct {
-	Name string
-}
-
-type ClusterStatusConfig struct {
-	Name string
 }
 
 type ClusterStatusResult struct {
@@ -73,10 +53,6 @@ type ClusterStatusResult struct {
 	OpenshiftVersion string
 	DiskUse          int64
 	DiskSize         int64
-}
-
-type ConsoleConfig struct {
-	Name string
 }
 
 type ConsoleResult struct {

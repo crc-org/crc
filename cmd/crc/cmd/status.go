@@ -41,13 +41,11 @@ type status struct {
 }
 
 func runStatus(writer io.Writer, client machine.Client, cacheDir, outputFormat string) error {
-	statusConfig := machine.ClusterStatusConfig{Name: constants.DefaultName}
-
 	if err := checkIfMachineMissing(client); err != nil {
 		return err
 	}
 
-	clusterStatus, err := client.Status(statusConfig)
+	clusterStatus, err := client.Status(constants.DefaultName)
 	if err != nil {
 		return err
 	}

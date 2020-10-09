@@ -5,7 +5,6 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
-	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/os/shell"
 	"github.com/spf13/cobra"
@@ -31,16 +30,12 @@ func runPodmanEnv(args []string) error {
 		return fmt.Errorf("Error running the podman-env command: %s", err.Error())
 	}
 
-	ipConfig := machine.IPConfig{
-		Name: constants.DefaultName,
-	}
-
 	client := newMachine()
 	if err := checkIfMachineMissing(client); err != nil {
 		return err
 	}
 
-	ip, err := client.IP(ipConfig)
+	ip, err := client.IP(constants.DefaultName)
 	if err != nil {
 		return err
 	}
