@@ -134,7 +134,7 @@ func (client *client) updateVMConfig(startConfig StartConfig, api libmachine.API
 func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	var crcBundleMetadata *bundle.CrcBundleInfo
 
-	libMachineAPIClient, cleanup, err := createLibMachineClient(startConfig.Debug)
+	libMachineAPIClient, cleanup, err := createLibMachineClient(client.debug)
 	defer cleanup()
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot initialize libmachine")
@@ -402,16 +402,16 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	}, nil
 }
 
-func (*client) Stop(stopConfig StopConfig) (state.State, error) {
+func (client *client) Stop(stopConfig StopConfig) (state.State, error) {
 	defer unsetMachineLogging()
 
 	// Set libmachine logging
-	err := setMachineLogging(stopConfig.Debug)
+	err := setMachineLogging(client.debug)
 	if err != nil {
 		return state.None, errors.Wrap(err, "Cannot initialize logging")
 	}
 
-	libMachineAPIClient, cleanup, err := createLibMachineClient(stopConfig.Debug)
+	libMachineAPIClient, cleanup, err := createLibMachineClient(client.debug)
 	defer cleanup()
 	if err != nil {
 		return state.None, errors.Wrap(err, "Cannot initialize libmachine")
@@ -431,8 +431,8 @@ func (*client) Stop(stopConfig StopConfig) (state.State, error) {
 	return vmState, nil
 }
 
-func (*client) PowerOff(powerOff PowerOffConfig) error {
-	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
+func (client *client) PowerOff(powerOff PowerOffConfig) error {
+	libMachineAPIClient, cleanup, err := createLibMachineClient(client.debug)
 	defer cleanup()
 	if err != nil {
 		return errors.Wrap(err, "Cannot initialize libmachine")
@@ -449,8 +449,8 @@ func (*client) PowerOff(powerOff PowerOffConfig) error {
 	return nil
 }
 
-func (*client) Delete(deleteConfig DeleteConfig) error {
-	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
+func (client *client) Delete(deleteConfig DeleteConfig) error {
+	libMachineAPIClient, cleanup, err := createLibMachineClient(client.debug)
 	defer cleanup()
 	if err != nil {
 		return errors.Wrap(err, "Cannot initialize libmachine")
@@ -471,13 +471,13 @@ func (*client) Delete(deleteConfig DeleteConfig) error {
 	return nil
 }
 
-func (*client) IP(ipConfig IPConfig) (string, error) {
-	err := setMachineLogging(ipConfig.Debug)
+func (client *client) IP(ipConfig IPConfig) (string, error) {
+	err := setMachineLogging(client.debug)
 	if err != nil {
 		return "", errors.Wrap(err, "Cannot initialize logging")
 	}
 
-	libMachineAPIClient, cleanup, err := createLibMachineClient(ipConfig.Debug)
+	libMachineAPIClient, cleanup, err := createLibMachineClient(client.debug)
 	defer cleanup()
 	if err != nil {
 		return "", errors.Wrap(err, "Cannot initialize libmachine")
@@ -494,8 +494,8 @@ func (*client) IP(ipConfig IPConfig) (string, error) {
 	return ip, nil
 }
 
-func (*client) Status(statusConfig ClusterStatusConfig) (*ClusterStatusResult, error) {
-	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
+func (client *client) Status(statusConfig ClusterStatusConfig) (*ClusterStatusResult, error) {
+	libMachineAPIClient, cleanup, err := createLibMachineClient(client.debug)
 	defer cleanup()
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot initialize libmachine")
@@ -566,8 +566,8 @@ func (*client) Status(statusConfig ClusterStatusConfig) (*ClusterStatusResult, e
 	}, nil
 }
 
-func (*client) Exists(name string) (bool, error) {
-	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
+func (client *client) Exists(name string) (bool, error) {
+	libMachineAPIClient, cleanup, err := createLibMachineClient(client.debug)
 	defer cleanup()
 	if err != nil {
 		return false, err
@@ -624,11 +624,11 @@ func addNameServerToInstance(sshRunner *crcssh.Runner, ns string) error {
 }
 
 // Return console URL if the VM is present.
-func (*client) GetConsoleURL(consoleConfig ConsoleConfig) (*ConsoleResult, error) {
+func (client *client) GetConsoleURL(consoleConfig ConsoleConfig) (*ConsoleResult, error) {
 	// Here we are only checking if the VM exist and not the status of the VM.
 	// We might need to improve and use crc status logic, only
 	// return if the Openshift is running as part of status.
-	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
+	libMachineAPIClient, cleanup, err := createLibMachineClient(client.debug)
 	defer cleanup()
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot initialize libmachine")

@@ -13,8 +13,12 @@ type Client interface {
 	Stop(stopConfig StopConfig) (state.State, error)
 }
 
-type client struct{}
+type client struct {
+	debug bool
+}
 
-func NewClient() Client {
-	return &client{}
+func NewClient(debug bool) Client {
+	return &client{
+		debug: debug,
+	}
 }

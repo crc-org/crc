@@ -21,9 +21,6 @@ type StartConfig struct {
 	// Nameserver
 	NameServer string
 
-	// Machine log output
-	Debug bool
-
 	// User Pull secret
 	PullSecret *cluster.PullSecret
 }
@@ -44,8 +41,7 @@ type StartResult struct {
 }
 
 type StopConfig struct {
-	Name  string
-	Debug bool
+	Name string
 }
 
 type PowerOffConfig struct {
@@ -64,8 +60,7 @@ type DeleteConfig struct {
 }
 
 type IPConfig struct {
-	Name  string
-	Debug bool
+	Name string
 }
 
 type ClusterStatusConfig struct {

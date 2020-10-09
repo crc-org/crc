@@ -27,7 +27,7 @@ var deleteCmd = &cobra.Command{
 	Short: "Delete the OpenShift cluster",
 	Long:  "Delete the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := runDelete(os.Stdout, machine.NewClient(), clearCache, constants.MachineCacheDir, outputFormat != jsonFormat, globalForce, outputFormat); err != nil {
+		if err := runDelete(os.Stdout, newMachine(), clearCache, constants.MachineCacheDir, outputFormat != jsonFormat, globalForce, outputFormat); err != nil {
 			exit.WithMessage(1, err.Error())
 		}
 	},

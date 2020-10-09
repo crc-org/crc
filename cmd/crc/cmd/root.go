@@ -140,3 +140,7 @@ func newViperConfig() (*crcConfig.Config, *crcConfig.ViperStorage, error) {
 	preflight.RegisterSettings(cfg)
 	return cfg, viper, nil
 }
+
+func newMachine() machine.Client {
+	return machine.NewClient(isDebugLog())
+}

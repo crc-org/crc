@@ -24,7 +24,7 @@ type Handler struct {
 
 func newHandler() *Handler {
 	return &Handler{
-		MachineClient: &Adapter{Underlying: machine.NewClient()},
+		MachineClient: &Adapter{Underlying: machine.NewClient(true)},
 	}
 }
 
@@ -36,8 +36,7 @@ func (h *Handler) Status() string {
 
 func (h *Handler) Stop() string {
 	stopConfig := machine.StopConfig{
-		Name:  constants.DefaultName,
-		Debug: true,
+		Name: constants.DefaultName,
 	}
 	commandResult := h.MachineClient.Stop(stopConfig)
 	return encodeStructToJSON(commandResult)
@@ -86,7 +85,6 @@ func getStartConfig(cfg crcConfig.Storage, args startArgs) machine.StartConfig {
 		Memory:     cfg.Get(config.Memory).AsInt(),
 		CPUs:       cfg.Get(config.CPUs).AsInt(),
 		NameServer: cfg.Get(config.NameServer).AsString(),
-		Debug:      true,
 	}
 	pullSecretFile := args.PullSecretFile
 	if pullSecretFile == "" {

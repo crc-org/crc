@@ -71,10 +71,9 @@ func runStart(arguments []string) (*machine.StartResult, error) {
 		PullSecret: &cluster.PullSecret{
 			Getter: getPullSecretFileContent,
 		},
-		Debug: isDebugLog(),
 	}
 
-	client := machine.NewClient()
+	client := newMachine()
 	return client.Start(startConfig)
 }
 
