@@ -38,18 +38,12 @@ func (c *Client) Delete(deleteConfig machine.DeleteConfig) error {
 	return nil
 }
 
-func (c *Client) GetConsoleURL(consoleConfig machine.ConsoleConfig) (machine.ConsoleResult, error) {
+func (c *Client) GetConsoleURL(consoleConfig machine.ConsoleConfig) (*machine.ConsoleResult, error) {
 	if c.Failing {
-		return machine.ConsoleResult{
-			ClusterConfig: DummyClusterConfig,
-			Success:       false,
-			Error:         "console failed",
-			State:         state.Running,
-		}, errors.New("console failed")
+		return nil, errors.New("console failed")
 	}
-	return machine.ConsoleResult{
+	return &machine.ConsoleResult{
 		ClusterConfig: DummyClusterConfig,
-		Success:       true,
 		State:         state.Running,
 	}, nil
 }

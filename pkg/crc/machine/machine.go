@@ -624,37 +624,36 @@ func addNameServerToInstance(sshRunner *crcssh.Runner, ns string) error {
 }
 
 // Return console URL if the VM is present.
-func (*client) GetConsoleURL(consoleConfig ConsoleConfig) (ConsoleResult, error) {
+func (*client) GetConsoleURL(consoleConfig ConsoleConfig) (*ConsoleResult, error) {
 	// Here we are only checking if the VM exist and not the status of the VM.
 	// We might need to improve and use crc status logic, only
 	// return if the Openshift is running as part of status.
 	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
 	defer cleanup()
 	if err != nil {
-		return consoleURLError("Cannot initialize libmachine", err)
+		return nil, errors.Wrap(err, "Cannot initialize libmachine")
 	}
 	host, err := libMachineAPIClient.Load(consoleConfig.Name)
 	if err != nil {
-		return consoleURLError("Cannot load machine", err)
+		return nil, errors.Wrap(err, "Cannot load machine")
 	}
 
 	vmState, err := host.Driver.GetState()
 	if err != nil {
-		return consoleURLError("Error getting the state for host", err)
+		return nil, errors.Wrap(err, "Error getting the state for host")
 	}
 
 	_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
 	if err != nil {
-		return consoleURLError("Error loading bundle metadata", err)
+		return nil, errors.Wrap(err, "Error loading bundle metadata")
 	}
 
 	clusterConfig, err := getClusterConfig(crcBundleMetadata)
 	if err != nil {
-		return consoleURLError("Error loading cluster configuration", err)
+		return nil, errors.Wrap(err, "Error loading cluster configuration")
 	}
 
-	return ConsoleResult{
-		Success:       true,
+	return &ConsoleResult{
 		ClusterConfig: *clusterConfig,
 		State:         vmState,
 	}, nil

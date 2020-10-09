@@ -130,7 +130,7 @@ func (h *Handler) Delete() string {
 
 func (h *Handler) GetWebconsoleInfo() string {
 	consoleConfig := machine.ConsoleConfig{Name: constants.DefaultName}
-	r, _ := h.MachineClient.GetConsoleURL(consoleConfig)
+	r := h.MachineClient.GetConsoleURL(consoleConfig)
 	return encodeStructToJSON(r)
 }
 
