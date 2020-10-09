@@ -16,6 +16,7 @@ import (
 
 var genericPreflightChecks = [...]Check{
 	{
+		configKeySuffix:  "check-oc-cached",
 		checkDescription: "Checking if oc binary is cached",
 		check:            checkOcBinaryCached,
 		fixDescription:   "Caching oc binary",
@@ -29,6 +30,7 @@ var genericPreflightChecks = [...]Check{
 		fix:              fixPodmanBinaryCached,
 	},
 	{
+		configKeySuffix:  "check-goodhosts-cached",
 		checkDescription: "Checking if goodhosts binary is cached",
 		check:            checkGoodhostsBinaryCached,
 		fixDescription:   "Caching goodhosts binary",

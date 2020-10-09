@@ -4,48 +4,21 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-type fakeHandler struct {
-	*Handler
-}
-
-func newFakeHandler(client *fakemachine.Client) *fakeHandler {
-	return &fakeHandler{
-		&Handler{
-			MachineClient: client,
-		}}
-}
-
-// fake Start handler with fake client and without the preflight checks
-func (f *fakeHandler) Start(crcConfig config.Storage, args json.RawMessage) string {
-	parsedArgs, err := parseStartArgs(args)
-	if err != nil {
-		startErr := &machine.StartResult{
-			Name:  "crc",
-			Error: fmt.Sprintf("Incorrect arguments given: %s", err.Error()),
-		}
-		return encodeStructToJSON(startErr)
-	}
-	startConfig := getStartConfig(crcConfig, parsedArgs)
-	status, _ := f.MachineClient.Start(startConfig)
-	return encodeStructToJSON(status)
-}
 
 func TestApi(t *testing.T) {
 	dir, err := ioutil.TempDir("", "api")
@@ -57,7 +30,9 @@ func TestApi(t *testing.T) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createAPIServerWithListener(listener, setupNewInMemoryConfig, newFakeHandler(client))
+	api, err := createAPIServerWithListener(listener, setupNewInMemoryConfig, &Handler{
+		MachineClient: client,
+	})
 	require.NoError(t, err)
 	go api.Serve()
 
@@ -222,7 +197,9 @@ func TestGetconfigApi(t *testing.T) {
 
 func setupNewInMemoryConfig() (config.Storage, error) {
 	storage := config.NewEmptyInMemoryStorage()
-	cfg := config.New(storage)
+	cfg := config.New(&skipPreflights{
+		storage: storage,
+	})
 	cmdConfig.RegisterSettings(cfg)
 	preflight.RegisterSettings(cfg)
 
@@ -238,9 +215,30 @@ func setupAPIServer(t *testing.T) (string, func()) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createAPIServerWithListener(listener, setupNewInMemoryConfig, newFakeHandler(client))
+	api, err := createAPIServerWithListener(listener, setupNewInMemoryConfig, &Handler{
+		MachineClient: client,
+	})
 	require.NoError(t, err)
 	go api.Serve()
 
 	return socket, func() { os.RemoveAll(dir) }
+}
+
+type skipPreflights struct {
+	storage config.RawStorage
+}
+
+func (s *skipPreflights) Get(key string) interface{} {
+	if strings.HasPrefix(key, "skip-") {
+		return "true"
+	}
+	return s.storage.Get(key)
+}
+
+func (s *skipPreflights) Set(key string, value interface{}) error {
+	return s.storage.Set(key, value)
+}
+
+func (s *skipPreflights) Unset(key string) error {
+	return s.storage.Unset(key)
 }
