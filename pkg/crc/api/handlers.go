@@ -49,7 +49,7 @@ func (h *Handler) Start(crcConfig crcConfig.Storage, args json.RawMessage) strin
 	if args != nil {
 		parsedArgs, err = parseStartArgs(args)
 		if err != nil {
-			startErr := &machine.StartResult{
+			startErr := &StartResult{
 				Name:  constants.DefaultName,
 				Error: fmt.Sprintf("Incorrect arguments given: %s", err.Error()),
 			}
@@ -57,7 +57,7 @@ func (h *Handler) Start(crcConfig crcConfig.Storage, args json.RawMessage) strin
 		}
 	}
 	if err := preflight.StartPreflightChecks(crcConfig); err != nil {
-		startErr := &machine.StartResult{
+		startErr := &StartResult{
 			Name:  constants.DefaultName,
 			Error: err.Error(),
 		}
@@ -65,7 +65,7 @@ func (h *Handler) Start(crcConfig crcConfig.Storage, args json.RawMessage) strin
 	}
 
 	startConfig := getStartConfig(crcConfig, parsedArgs)
-	status, _ := h.MachineClient.Start(startConfig)
+	status := h.MachineClient.Start(startConfig)
 	return encodeStructToJSON(status)
 }
 

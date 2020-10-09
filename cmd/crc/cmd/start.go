@@ -75,8 +75,7 @@ func runStart(arguments []string) (*machine.StartResult, error) {
 	}
 
 	client := machine.NewClient()
-	result, err := client.Start(startConfig)
-	return &result, err
+	return client.Start(startConfig)
 }
 
 func renderStartResult(result *machine.StartResult, err error) error {
@@ -88,7 +87,7 @@ func renderStartResult(result *machine.StartResult, err error) error {
 }
 
 func toClusterConfig(result *machine.StartResult) *clusterConfig {
-	if result == nil || result.Error != "" {
+	if result == nil {
 		return nil
 	}
 	return &clusterConfig{

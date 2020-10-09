@@ -69,16 +69,11 @@ func (c *Client) PowerOff(powerOff machine.PowerOffConfig) error {
 	return nil
 }
 
-func (c *Client) Start(startConfig machine.StartConfig) (machine.StartResult, error) {
+func (c *Client) Start(startConfig machine.StartConfig) (*machine.StartResult, error) {
 	if c.Failing {
-		return machine.StartResult{
-			Name:           startConfig.Name,
-			Error:          "Failed to start",
-			KubeletStarted: false,
-		}, nil
+		return nil, errors.New("Failed to start")
 	}
-	return machine.StartResult{
-		Name:           startConfig.Name,
+	return &machine.StartResult{
 		ClusterConfig:  DummyClusterConfig,
 		KubeletStarted: true,
 	}, nil
