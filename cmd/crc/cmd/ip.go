@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/spf13/cobra"
@@ -28,7 +27,7 @@ func runIP(arguments []string) error {
 		return err
 	}
 
-	ip, err := client.IP(constants.DefaultName)
+	ip, err := client.IP()
 	if err != nil {
 		return err
 	}

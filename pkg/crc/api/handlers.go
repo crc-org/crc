@@ -9,7 +9,6 @@ import (
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -22,9 +21,9 @@ type Handler struct {
 	MachineClient AdaptedClient
 }
 
-func newHandler() *Handler {
+func newHandler(client machine.Client) *Handler {
 	return &Handler{
-		MachineClient: &Adapter{Underlying: machine.NewClient(true)},
+		MachineClient: &Adapter{Underlying: client},
 	}
 }
 
@@ -45,7 +44,7 @@ func (h *Handler) Start(crcConfig crcConfig.Storage, args json.RawMessage) strin
 		parsedArgs, err = parseStartArgs(args)
 		if err != nil {
 			startErr := &StartResult{
-				Name:  constants.DefaultName,
+				Name:  h.MachineClient.GetName(),
 				Error: fmt.Sprintf("Incorrect arguments given: %s", err.Error()),
 			}
 			return encodeStructToJSON(startErr)
@@ -53,7 +52,7 @@ func (h *Handler) Start(crcConfig crcConfig.Storage, args json.RawMessage) strin
 	}
 	if err := preflight.StartPreflightChecks(crcConfig); err != nil {
 		startErr := &StartResult{
-			Name:  constants.DefaultName,
+			Name:  h.MachineClient.GetName(),
 			Error: err.Error(),
 		}
 		return encodeStructToJSON(startErr)
@@ -76,7 +75,6 @@ func parseStartArgs(args json.RawMessage) (startArgs, error) {
 
 func getStartConfig(cfg crcConfig.Storage, args startArgs) machine.StartConfig {
 	startConfig := machine.StartConfig{
-		Name:       constants.DefaultName,
 		BundlePath: cfg.Get(config.Bundle).AsString(),
 		Memory:     cfg.Get(config.Memory).AsInt(),
 		CPUs:       cfg.Get(config.CPUs).AsInt(),

@@ -45,7 +45,7 @@ func runStatus(writer io.Writer, client machine.Client, cacheDir, outputFormat s
 		return err
 	}
 
-	clusterStatus, err := client.Status(constants.DefaultName)
+	clusterStatus, err := client.Status()
 	if err != nil {
 		return err
 	}

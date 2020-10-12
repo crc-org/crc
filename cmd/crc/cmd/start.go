@@ -63,7 +63,6 @@ func runStart(arguments []string) (*machine.StartResult, error) {
 	}
 
 	startConfig := machine.StartConfig{
-		Name:       constants.DefaultName,
 		BundlePath: config.Get(cmdConfig.Bundle).AsString(),
 		Memory:     config.Get(cmdConfig.Memory).AsInt(),
 		CPUs:       config.Get(cmdConfig.CPUs).AsInt(),

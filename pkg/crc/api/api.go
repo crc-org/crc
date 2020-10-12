@@ -6,16 +6,18 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/code-ready/crc/pkg/crc/machine"
+
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
-func CreateAPIServer(socketPath string, newConfig newConfigFunc) (CrcAPIServer, error) {
+func CreateAPIServer(socketPath string, newConfig newConfigFunc, client machine.Client) (CrcAPIServer, error) {
 	listener, err := net.Listen("unix", socketPath)
 	if err != nil {
 		logging.Error("Failed to create socket: ", err.Error())
 		return CrcAPIServer{}, err
 	}
-	return createAPIServerWithListener(listener, newConfig, newHandler())
+	return createAPIServerWithListener(listener, newConfig, newHandler(client))
 }
 
 func createAPIServerWithListener(listener net.Listener, newConfig newConfigFunc, handler RequestHandler) (CrcAPIServer, error) {

@@ -5,22 +5,30 @@ import (
 )
 
 type Client interface {
-	Delete(name string) error
-	Exists(name string) (bool, error)
-	GetConsoleURL(name string) (*ConsoleResult, error)
-	IP(name string) (string, error)
-	PowerOff(name string) error
+	GetName() string
+
+	Delete() error
+	Exists() (bool, error)
+	GetConsoleURL() (*ConsoleResult, error)
+	IP() (string, error)
+	PowerOff() error
 	Start(startConfig StartConfig) (*StartResult, error)
-	Status(name string) (*ClusterStatusResult, error)
-	Stop(name string) (state.State, error)
+	Status() (*ClusterStatusResult, error)
+	Stop() (state.State, error)
 }
 
 type client struct {
+	name  string
 	debug bool
 }
 
-func NewClient(debug bool) Client {
+func NewClient(name string, debug bool) Client {
 	return &client{
+		name:  name,
 		debug: debug,
 	}
+}
+
+func (client *client) GetName() string {
+	return client.name
 }

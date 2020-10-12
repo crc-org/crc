@@ -1,12 +1,13 @@
 package api
 
 import (
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
 type AdaptedClient interface {
+	GetName() string
+
 	Delete() Result
 	GetConsoleURL() ConsoleResult
 	Start(startConfig machine.StartConfig) StartResult
@@ -49,24 +50,28 @@ type Adapter struct {
 	Underlying machine.Client
 }
 
+func (a *Adapter) GetName() string {
+	return a.Underlying.GetName()
+}
+
 func (a *Adapter) Delete() Result {
-	err := a.Underlying.Delete(constants.DefaultName)
+	err := a.Underlying.Delete()
 	if err != nil {
 		logging.Error(err)
 		return Result{
-			Name:    constants.DefaultName,
+			Name:    a.Underlying.GetName(),
 			Success: false,
 			Error:   err.Error(),
 		}
 	}
 	return Result{
-		Name:    constants.DefaultName,
+		Name:    a.Underlying.GetName(),
 		Success: true,
 	}
 }
 
 func (a *Adapter) GetConsoleURL() ConsoleResult {
-	res, err := a.Underlying.GetConsoleURL(constants.DefaultName)
+	res, err := a.Underlying.GetConsoleURL()
 	if err != nil {
 		logging.Error(err)
 		return ConsoleResult{
@@ -85,12 +90,12 @@ func (a *Adapter) Start(startConfig machine.StartConfig) StartResult {
 	if err != nil {
 		logging.Error(err)
 		return StartResult{
-			Name:  startConfig.Name,
+			Name:  a.Underlying.GetName(),
 			Error: err.Error(),
 		}
 	}
 	return StartResult{
-		Name:           startConfig.Name,
+		Name:           a.Underlying.GetName(),
 		Status:         res.Status.String(),
 		ClusterConfig:  res.ClusterConfig,
 		KubeletStarted: res.KubeletStarted,
@@ -98,17 +103,17 @@ func (a *Adapter) Start(startConfig machine.StartConfig) StartResult {
 }
 
 func (a *Adapter) Status() ClusterStatusResult {
-	res, err := a.Underlying.Status(constants.DefaultName)
+	res, err := a.Underlying.Status()
 	if err != nil {
 		logging.Error(err)
 		return ClusterStatusResult{
-			Name:    constants.DefaultName,
+			Name:    a.Underlying.GetName(),
 			Error:   err.Error(),
 			Success: false,
 		}
 	}
 	return ClusterStatusResult{
-		Name:             constants.DefaultName,
+		Name:             a.Underlying.GetName(),
 		CrcStatus:        res.CrcStatus.String(),
 		OpenshiftStatus:  res.OpenshiftStatus,
 		OpenshiftVersion: res.OpenshiftVersion,
@@ -119,17 +124,17 @@ func (a *Adapter) Status() ClusterStatusResult {
 }
 
 func (a *Adapter) Stop() Result {
-	_, err := a.Underlying.Stop(constants.DefaultName)
+	_, err := a.Underlying.Stop()
 	if err != nil {
 		logging.Error(err)
 		return Result{
-			Name:    constants.DefaultName,
+			Name:    a.Underlying.GetName(),
 			Success: false,
 			Error:   err.Error(),
 		}
 	}
 	return Result{
-		Name:    constants.DefaultName,
+		Name:    a.Underlying.GetName(),
 		Success: true,
 	}
 }
