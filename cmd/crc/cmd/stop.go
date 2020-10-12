@@ -31,7 +31,7 @@ var stopCmd = &cobra.Command{
 }
 
 func stopMachine(client machine.Client, interactive, force bool) (bool, error) {
-	if err := checkIfMachineMissing(client, constants.DefaultName); err != nil {
+	if err := checkIfMachineMissing(client); err != nil {
 		return false, err
 	}
 

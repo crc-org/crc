@@ -80,13 +80,13 @@ func Execute() {
 	}
 }
 
-func checkIfMachineMissing(client machine.Client, name string) error {
-	exists, err := client.Exists(name)
+func checkIfMachineMissing(client machine.Client) error {
+	exists, err := client.Exists(constants.DefaultName)
 	if err != nil {
 		return err
 	}
 	if !exists {
-		return fmt.Errorf("Machine '%s' does not exist. Use 'crc start' to create it", name)
+		return fmt.Errorf("Machine '%s' does not exist. Use 'crc start' to create it", constants.DefaultName)
 	}
 	return nil
 }

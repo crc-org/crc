@@ -44,7 +44,7 @@ func showConsole(client machine.Client) (machine.ConsoleResult, error) {
 		Name: constants.DefaultName,
 	}
 
-	if err := checkIfMachineMissing(client, consoleConfig.Name); err != nil {
+	if err := checkIfMachineMissing(client); err != nil {
 		// In case of machine doesn't exist then consoleResult error
 		// should be updated so that when rendering the result it have
 		// error details also.
