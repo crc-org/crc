@@ -1,7 +1,7 @@
 package machine
 
 type Client interface {
-	Delete(deleteConfig DeleteConfig) (DeleteResult, error)
+	Delete(deleteConfig DeleteConfig) error
 	Exists(name string) (bool, error)
 	GetConsoleURL(consoleConfig ConsoleConfig) (ConsoleResult, error)
 	IP(ipConfig IPConfig) (IPResult, error)

@@ -31,7 +31,7 @@ func TestApi(t *testing.T) {
 
 	client := fakemachine.NewClient()
 	api, err := createAPIServerWithListener(listener, setupNewInMemoryConfig, &Handler{
-		MachineClient: client,
+		MachineClient: &Adapter{Underlying: client},
 	})
 	require.NoError(t, err)
 	go api.Serve()
@@ -216,7 +216,7 @@ func setupAPIServer(t *testing.T) (string, func()) {
 
 	client := fakemachine.NewClient()
 	api, err := createAPIServerWithListener(listener, setupNewInMemoryConfig, &Handler{
-		MachineClient: client,
+		MachineClient: &Adapter{Underlying: client},
 	})
 	require.NoError(t, err)
 	go api.Serve()

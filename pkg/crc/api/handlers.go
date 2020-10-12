@@ -19,12 +19,12 @@ import (
 )
 
 type Handler struct {
-	MachineClient machine.Client
+	MachineClient AdaptedClient
 }
 
 func newHandler() *Handler {
 	return &Handler{
-		MachineClient: machine.NewClient(),
+		MachineClient: &Adapter{Underlying: machine.NewClient()},
 	}
 }
 
@@ -124,7 +124,7 @@ func getPullSecretFileContent(path string) func() (string, error) {
 
 func (h *Handler) Delete() string {
 	delConfig := machine.DeleteConfig{Name: constants.DefaultName}
-	r, _ := h.MachineClient.Delete(delConfig)
+	r := h.MachineClient.Delete(delConfig)
 	return encodeStructToJSON(r)
 }
 
