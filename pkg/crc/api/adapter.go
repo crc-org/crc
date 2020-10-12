@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
@@ -51,6 +52,7 @@ type Adapter struct {
 func (a *Adapter) Delete() Result {
 	err := a.Underlying.Delete(constants.DefaultName)
 	if err != nil {
+		logging.Error(err)
 		return Result{
 			Name:    constants.DefaultName,
 			Success: false,
@@ -66,6 +68,7 @@ func (a *Adapter) Delete() Result {
 func (a *Adapter) GetConsoleURL() ConsoleResult {
 	res, err := a.Underlying.GetConsoleURL(constants.DefaultName)
 	if err != nil {
+		logging.Error(err)
 		return ConsoleResult{
 			Success: false,
 			Error:   err.Error(),
@@ -80,6 +83,7 @@ func (a *Adapter) GetConsoleURL() ConsoleResult {
 func (a *Adapter) Start(startConfig machine.StartConfig) StartResult {
 	res, err := a.Underlying.Start(startConfig)
 	if err != nil {
+		logging.Error(err)
 		return StartResult{
 			Name:  startConfig.Name,
 			Error: err.Error(),
@@ -96,6 +100,7 @@ func (a *Adapter) Start(startConfig machine.StartConfig) StartResult {
 func (a *Adapter) Status() ClusterStatusResult {
 	res, err := a.Underlying.Status(constants.DefaultName)
 	if err != nil {
+		logging.Error(err)
 		return ClusterStatusResult{
 			Name:    constants.DefaultName,
 			Error:   err.Error(),
@@ -116,6 +121,7 @@ func (a *Adapter) Status() ClusterStatusResult {
 func (a *Adapter) Stop() Result {
 	_, err := a.Underlying.Stop(constants.DefaultName)
 	if err != nil {
+		logging.Error(err)
 		return Result{
 			Name:    constants.DefaultName,
 			Success: false,

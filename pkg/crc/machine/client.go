@@ -1,6 +1,8 @@
 package machine
 
-import "github.com/code-ready/machine/libmachine/state"
+import (
+	"github.com/code-ready/machine/libmachine/state"
+)
 
 type Client interface {
 	Delete(name string) error
