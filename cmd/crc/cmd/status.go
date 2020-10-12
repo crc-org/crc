@@ -43,7 +43,7 @@ type status struct {
 func runStatus(writer io.Writer, client machine.Client, cacheDir, outputFormat string) error {
 	statusConfig := machine.ClusterStatusConfig{Name: constants.DefaultName}
 
-	if err := checkIfMachineMissing(client, statusConfig.Name); err != nil {
+	if err := checkIfMachineMissing(client); err != nil {
 		return err
 	}
 

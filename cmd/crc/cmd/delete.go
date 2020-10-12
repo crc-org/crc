@@ -45,7 +45,7 @@ func deleteMachine(client machine.Client, clearCache bool, cacheDir string, inte
 		}
 	}
 
-	if err := checkIfMachineMissing(client, constants.DefaultName); err != nil {
+	if err := checkIfMachineMissing(client); err != nil {
 		return err
 	}
 
