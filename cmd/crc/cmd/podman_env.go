@@ -35,7 +35,7 @@ func runPodmanEnv(args []string) error {
 		return err
 	}
 
-	ip, err := client.IP(constants.DefaultName)
+	ip, err := client.IP()
 	if err != nil {
 		return err
 	}

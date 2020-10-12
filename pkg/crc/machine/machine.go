@@ -142,7 +142,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 
 	// Pre-VM start
 	var host *host.Host
-	exists, err := client.Exists(startConfig.Name)
+	exists, err := client.Exists()
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot determine if VM exists")
 	}
@@ -154,7 +154,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		}
 
 		machineConfig := config.MachineConfig{
-			Name:       startConfig.Name,
+			Name:       client.name,
 			BundleName: filepath.Base(startConfig.BundlePath),
 			CPUs:       startConfig.CPUs,
 			Memory:     startConfig.Memory,
@@ -185,7 +185,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 			return nil, errors.Wrap(err, "Error creating machine")
 		}
 	} else {
-		host, err = libMachineAPIClient.Load(startConfig.Name)
+		host, err = libMachineAPIClient.Load(client.name)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error loading machine")
 		}
@@ -258,7 +258,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 
 	// Post VM start immediately update SSH key and copy kubeconfig to instance
 	// dir and VM
-	if err := updateSSHKeyAndCopyKubeconfig(sshRunner, startConfig, crcBundleMetadata); err != nil {
+	if err := updateSSHKeyAndCopyKubeconfig(sshRunner, client.name, crcBundleMetadata); err != nil {
 		return nil, errors.Wrap(err, "Error updating public key")
 	}
 
@@ -285,7 +285,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 
 	// Create servicePostStartConfig for DNS checks and DNS start.
 	servicePostStartConfig := services.ServicePostStartConfig{
-		Name: startConfig.Name,
+		Name: client.name,
 		// TODO: would prefer passing in a more generic type
 		SSHRunner: sshRunner,
 		IP:        instanceIP,
@@ -402,7 +402,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	}, nil
 }
 
-func (client *client) Stop(name string) (state.State, error) {
+func (client *client) Stop() (state.State, error) {
 	defer unsetMachineLogging()
 
 	// Set libmachine logging
@@ -416,7 +416,7 @@ func (client *client) Stop(name string) (state.State, error) {
 	if err != nil {
 		return state.None, errors.Wrap(err, "Cannot initialize libmachine")
 	}
-	host, err := libMachineAPIClient.Load(name)
+	host, err := libMachineAPIClient.Load(client.name)
 
 	if err != nil {
 		return state.None, errors.Wrap(err, "Cannot load machine")
@@ -431,14 +431,14 @@ func (client *client) Stop(name string) (state.State, error) {
 	return vmState, nil
 }
 
-func (client *client) PowerOff(name string) error {
+func (client *client) PowerOff() error {
 	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
 	defer cleanup()
 	if err != nil {
 		return errors.Wrap(err, "Cannot initialize libmachine")
 	}
 
-	host, err := libMachineAPIClient.Load(name)
+	host, err := libMachineAPIClient.Load(client.name)
 	if err != nil {
 		return errors.Wrap(err, "Cannot load machine")
 	}
@@ -449,13 +449,13 @@ func (client *client) PowerOff(name string) error {
 	return nil
 }
 
-func (client *client) Delete(name string) error {
+func (client *client) Delete() error {
 	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
 	defer cleanup()
 	if err != nil {
 		return errors.Wrap(err, "Cannot initialize libmachine")
 	}
-	host, err := libMachineAPIClient.Load(name)
+	host, err := libMachineAPIClient.Load(client.name)
 
 	if err != nil {
 		return errors.Wrap(err, "Cannot load machine")
@@ -465,13 +465,13 @@ func (client *client) Delete(name string) error {
 		return errors.Wrap(err, "Driver cannot remove machine")
 	}
 
-	if err := libMachineAPIClient.Remove(name); err != nil {
+	if err := libMachineAPIClient.Remove(client.name); err != nil {
 		return errors.Wrap(err, "Cannot remove machine")
 	}
 	return nil
 }
 
-func (client *client) IP(name string) (string, error) {
+func (client *client) IP() (string, error) {
 	err := setMachineLogging(client.debug)
 	if err != nil {
 		return "", errors.Wrap(err, "Cannot initialize logging")
@@ -482,7 +482,7 @@ func (client *client) IP(name string) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "Cannot initialize libmachine")
 	}
-	host, err := libMachineAPIClient.Load(name)
+	host, err := libMachineAPIClient.Load(client.name)
 
 	if err != nil {
 		return "", errors.Wrap(err, "Cannot load machine")
@@ -494,14 +494,14 @@ func (client *client) IP(name string) (string, error) {
 	return ip, nil
 }
 
-func (client *client) Status(name string) (*ClusterStatusResult, error) {
+func (client *client) Status() (*ClusterStatusResult, error) {
 	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
 	defer cleanup()
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot initialize libmachine")
 	}
 
-	_, err = libMachineAPIClient.Exists(name)
+	_, err = libMachineAPIClient.Exists(client.name)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot check if machine exists")
 	}
@@ -511,7 +511,7 @@ func (client *client) Status(name string) (*ClusterStatusResult, error) {
 	var diskUse int64
 	var diskSize int64
 
-	host, err := libMachineAPIClient.Load(name)
+	host, err := libMachineAPIClient.Load(client.name)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot load machine")
 	}
@@ -566,13 +566,13 @@ func (client *client) Status(name string) (*ClusterStatusResult, error) {
 	}, nil
 }
 
-func (client *client) Exists(name string) (bool, error) {
+func (client *client) Exists() (bool, error) {
 	libMachineAPIClient, cleanup, err := createLibMachineClient(client.debug)
 	defer cleanup()
 	if err != nil {
 		return false, err
 	}
-	exists, err := libMachineAPIClient.Exists(name)
+	exists, err := libMachineAPIClient.Exists(client.name)
 	if err != nil {
 		return false, fmt.Errorf("Error checking if the host exists: %s", err)
 	}
@@ -624,7 +624,7 @@ func addNameServerToInstance(sshRunner *crcssh.Runner, ns string) error {
 }
 
 // Return console URL if the VM is present.
-func (client *client) GetConsoleURL(name string) (*ConsoleResult, error) {
+func (client *client) GetConsoleURL() (*ConsoleResult, error) {
 	// Here we are only checking if the VM exist and not the status of the VM.
 	// We might need to improve and use crc status logic, only
 	// return if the Openshift is running as part of status.
@@ -633,7 +633,7 @@ func (client *client) GetConsoleURL(name string) (*ConsoleResult, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot initialize libmachine")
 	}
-	host, err := libMachineAPIClient.Load(name)
+	host, err := libMachineAPIClient.Load(client.name)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot load machine")
 	}
@@ -692,12 +692,12 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	return err
 }
 
-func updateSSHKeyAndCopyKubeconfig(sshRunner *crcssh.Runner, startConfig StartConfig, crcBundleMetadata *bundle.CrcBundleInfo) error {
+func updateSSHKeyAndCopyKubeconfig(sshRunner *crcssh.Runner, name string, crcBundleMetadata *bundle.CrcBundleInfo) error {
 	if err := updateSSHKeyPair(sshRunner); err != nil {
 		return fmt.Errorf("Error updating SSH Keys: %v", err)
 	}
 
-	kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, startConfig.Name, "kubeconfig")
+	kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, name, "kubeconfig")
 	if _, err := os.Stat(kubeConfigFilePath); err == nil {
 		return nil
 	}

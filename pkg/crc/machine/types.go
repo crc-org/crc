@@ -7,8 +7,6 @@ import (
 )
 
 type StartConfig struct {
-	Name string
-
 	// CRC system bundle
 	BundlePath string
 

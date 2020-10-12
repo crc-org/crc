@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/machine/libmachine/state"
@@ -46,7 +45,7 @@ func showConsole(client machine.Client) (*machine.ConsoleResult, error) {
 		// error details also.
 		return nil, err
 	}
-	return client.GetConsoleURL(constants.DefaultName)
+	return client.GetConsoleURL()
 }
 
 func runConsole(writer io.Writer, client machine.Client, consolePrintURL, consolePrintCredentials bool, outputFormat string) error {

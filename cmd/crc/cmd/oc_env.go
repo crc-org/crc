@@ -32,7 +32,7 @@ func runOcEnv(args []string) error {
 	}
 
 	client := newMachine()
-	consoleResult, err := client.GetConsoleURL(constants.DefaultName)
+	consoleResult, err := client.GetConsoleURL()
 	if err != nil {
 		return err
 	}

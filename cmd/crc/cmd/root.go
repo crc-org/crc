@@ -81,12 +81,12 @@ func Execute() {
 }
 
 func checkIfMachineMissing(client machine.Client) error {
-	exists, err := client.Exists(constants.DefaultName)
+	exists, err := client.Exists()
 	if err != nil {
 		return err
 	}
 	if !exists {
-		return fmt.Errorf("Machine '%s' does not exist. Use 'crc start' to create it", constants.DefaultName)
+		return fmt.Errorf("Machine '%s' does not exist. Use 'crc start' to create it", client.GetName())
 	}
 	return nil
 }
@@ -142,5 +142,5 @@ func newViperConfig() (*crcConfig.Config, *crcConfig.ViperStorage, error) {
 }
 
 func newMachine() machine.Client {
-	return machine.NewClient(isDebugLog())
+	return machine.NewClient(constants.DefaultName, isDebugLog())
 }
