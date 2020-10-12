@@ -31,18 +31,11 @@ var DummyClusterConfig = machine.ClusterConfig{
 	ProxyConfig:   nil,
 }
 
-func (c *Client) Delete(deleteConfig machine.DeleteConfig) (machine.DeleteResult, error) {
+func (c *Client) Delete(deleteConfig machine.DeleteConfig) error {
 	if c.Failing {
-		return machine.DeleteResult{
-			Name:    "crc",
-			Success: false,
-			Error:   "delete failed",
-		}, errors.New("delete failed")
+		return errors.New("delete failed")
 	}
-	return machine.DeleteResult{
-		Name:    "crc",
-		Success: true,
-	}, nil
+	return nil
 }
 
 func (c *Client) GetConsoleURL(consoleConfig machine.ConsoleConfig) (machine.ConsoleResult, error) {

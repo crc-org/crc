@@ -51,10 +51,9 @@ func deleteMachine(client machine.Client, clearCache bool, cacheDir string, inte
 
 	yes := input.PromptUserForYesOrNo("Do you want to delete the OpenShift cluster", force)
 	if yes {
-		_, err := client.Delete(machine.DeleteConfig{
+		return client.Delete(machine.DeleteConfig{
 			Name: constants.DefaultName,
 		})
-		return err
 	}
 	return nil
 }

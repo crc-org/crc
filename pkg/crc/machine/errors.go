@@ -32,15 +32,6 @@ func powerOffError(name string, description string, err error) (PowerOffResult, 
 	}, fullErr
 }
 
-func deleteError(name string, description string, err error) (DeleteResult, error) {
-	fullErr := logErrorf("%s: %v", description, err)
-	return DeleteResult{
-		Name:    name,
-		Success: false,
-		Error:   fullErr.Error(),
-	}, fullErr
-}
-
 func ipError(name string, description string, err error) (IPResult, error) {
 	fullErr := logErrorf("%s: %v", description, err)
 	return IPResult{

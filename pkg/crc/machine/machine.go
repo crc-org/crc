@@ -11,9 +11,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/errors"
+	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
@@ -461,30 +463,26 @@ func (*client) PowerOff(powerOff PowerOffConfig) (PowerOffResult, error) {
 	}, nil
 }
 
-func (*client) Delete(deleteConfig DeleteConfig) (DeleteResult, error) {
+func (*client) Delete(deleteConfig DeleteConfig) error {
 	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
 	defer cleanup()
 	if err != nil {
-		return deleteError(deleteConfig.Name, "Cannot initialize libmachine", err)
+		return errors.Wrap(err, "Cannot initialize libmachine")
 	}
 	host, err := libMachineAPIClient.Load(deleteConfig.Name)
 
 	if err != nil {
-		return deleteError(deleteConfig.Name, "Cannot load machine", err)
+		return errors.Wrap(err, "Cannot load machine")
 	}
 
 	if err := host.Driver.Remove(); err != nil {
-		return deleteError(deleteConfig.Name, "Driver cannot remove machine", err)
+		return errors.Wrap(err, "Driver cannot remove machine")
 	}
 
 	if err := libMachineAPIClient.Remove(deleteConfig.Name); err != nil {
-		return deleteError(deleteConfig.Name, "Cannot remove machine", err)
+		return errors.Wrap(err, "Cannot remove machine")
 	}
-
-	return DeleteResult{
-		Name:    deleteConfig.Name,
-		Success: true,
-	}, nil
+	return nil
 }
 
 func (*client) IP(ipConfig IPConfig) (IPResult, error) {
@@ -786,16 +784,16 @@ func waitForProxyPropagation(ocConfig oc.Config, proxyConfig *network.ProxyConfi
 		proxySet, err := cluster.CheckProxySettingsForOperator(ocConfig, proxyConfig, "redhat-operators", "openshift-marketplace")
 		if err != nil {
 			logging.Debugf("Error getting proxy setting for openshift-marketplace operator %v", err)
-			return &errors.RetriableError{Err: err}
+			return &crcerrors.RetriableError{Err: err}
 		}
 		if !proxySet {
 			logging.Debug("Proxy changes for cluster in progress")
-			return &errors.RetriableError{Err: fmt.Errorf("")}
+			return &crcerrors.RetriableError{Err: fmt.Errorf("")}
 		}
 		return nil
 	}
 
-	if err := errors.RetryAfter(60*time.Second, checkProxySettingsForOperator, 2*time.Second); err != nil {
+	if err := crcerrors.RetryAfter(60*time.Second, checkProxySettingsForOperator, 2*time.Second); err != nil {
 		logging.Debug("Failed to propagate proxy settings to cluster")
 	}
 }

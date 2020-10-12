@@ -71,12 +71,6 @@ type DeleteConfig struct {
 	Name string
 }
 
-type DeleteResult struct {
-	Name    string
-	Success bool
-	Error   string
-}
-
 type IPConfig struct {
 	Name  string
 	Debug bool
