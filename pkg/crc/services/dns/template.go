@@ -13,11 +13,9 @@ port= {{ .Port }}
 bind-interfaces
 expand-hosts
 log-queries
-srv-host=_etcd-server-ssl._tcp.{{ .ClusterName}}.{{ .BaseDomain }},etcd-0.{{ .ClusterName}}.{{ .BaseDomain }},2380,10
 local=/{{ .ClusterName}}.{{ .BaseDomain }}/
 domain={{ .ClusterName}}.{{ .BaseDomain }}
 address=/{{ .AppsDomain }}/{{ .IP }}
-address=/etcd-0.{{ .ClusterName}}.{{ .BaseDomain }}/{{ .IP }}
 address=/api.{{ .ClusterName}}.{{ .BaseDomain }}/{{ .IP }}
 address=/api-int.{{ .ClusterName}}.{{ .BaseDomain }}/{{ .IP }}
 address=/{{ .Hostname }}.{{ .ClusterName}}.{{ .BaseDomain }}/{{ .InternalIP }}
