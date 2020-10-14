@@ -37,6 +37,8 @@ const (
 	kubeletClientCert = "/var/lib/kubelet/pki/kubelet-client-current.pem"
 
 	kubeletClientSignerName = "kubernetes.io/kube-apiserver-client-kubelet"
+
+	aggregatorClientCert = "/etc/kubernetes/static-pod-resources/kube-apiserver-certs/configmaps/aggregator-client-ca/ca-bundle.crt"
 )
 
 func CheckCertsValidity(sshRunner *ssh.Runner) (bool, bool, error) {
@@ -65,6 +67,10 @@ func checkCertValidity(sshRunner *ssh.Runner, cert string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+func CheckAggregatorClientCAValidity(sshRunner *ssh.Runner) (bool, error) {
+	return checkCertValidity(sshRunner, aggregatorClientCert)
 }
 
 // Return size of disk, used space in bytes and the mountpoint
