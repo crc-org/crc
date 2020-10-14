@@ -353,7 +353,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 
 	// Check the certs validity inside the vm
 	logging.Info("Verifying validity of the kubelet certificates ...")
-	clientExpired, serverExpired, err := cluster.CheckCertsValidity(sshRunner)
+	clientExpired, serverExpired, aggregatorClientExpired, err := cluster.CheckCertsValidity(sshRunner)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to check certificate validity")
 	}
@@ -404,11 +404,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	// A restart of the openshift-apiserver pod is enough to clear that error and get a working cluster.
 	// This is a work-around while the root cause is being identified.
 	// More info: https://bugzilla.redhat.com/show_bug.cgi?id=1795163
-	expired, err := cluster.CheckAggregatorClientCAValidity(sshRunner)
-	if err != nil {
-		return nil, errors.Wrap(err, "Cannot check expiry date of the aggregator client ca")
-	}
-	if expired {
+	if aggregatorClientExpired {
 		logging.Debug("Waiting for the renewal of the request header client ca...")
 		if err := cluster.WaitForRequestHeaderClientCaFile(sshRunner); err != nil {
 			return nil, errors.Wrap(err, "Failed to wait for aggregator client ca renewal")

@@ -41,16 +41,20 @@ const (
 	aggregatorClientCert = "/etc/kubernetes/static-pod-resources/kube-apiserver-certs/configmaps/aggregator-client-ca/ca-bundle.crt"
 )
 
-func CheckCertsValidity(sshRunner *ssh.Runner) (bool, bool, error) {
+func CheckCertsValidity(sshRunner *ssh.Runner) (bool, bool, bool, error) {
 	client, err := checkCertValidity(sshRunner, kubeletClientCert)
 	if err != nil {
-		return false, false, err
+		return false, false, false, err
 	}
 	server, err := checkCertValidity(sshRunner, kubeletServerCert)
 	if err != nil {
-		return false, false, err
+		return false, false, false, err
 	}
-	return client, server, nil
+	aggregatorClient, err := checkCertValidity(sshRunner, aggregatorClientCert)
+	if err != nil {
+		return false, false, false, err
+	}
+	return client, server, aggregatorClient, nil
 }
 
 func checkCertValidity(sshRunner *ssh.Runner, cert string) (bool, error) {
@@ -67,10 +71,6 @@ func checkCertValidity(sshRunner *ssh.Runner, cert string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
-}
-
-func CheckAggregatorClientCAValidity(sshRunner *ssh.Runner) (bool, error) {
-	return checkCertValidity(sshRunner, aggregatorClientCert)
 }
 
 // Return size of disk, used space in bytes and the mountpoint
@@ -299,7 +299,7 @@ func EnsurePullSecretPresentOnInstanceDisk(sshRunner *ssh.Runner, pullSecret *Pu
 
 func WaitForRequestHeaderClientCaFile(sshRunner *ssh.Runner) error {
 	lookupRequestHeaderClientCa := func() error {
-		expired, err := CheckAggregatorClientCAValidity(sshRunner)
+		expired, err := checkCertValidity(sshRunner, aggregatorClientCert)
 		if err != nil {
 			return fmt.Errorf("Failed to the expiry date: %v", err)
 		}
