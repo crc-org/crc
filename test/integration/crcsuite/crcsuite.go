@@ -68,7 +68,6 @@ func FeatureContext(s *godog.Suite) {
 		DeleteFileFromCRCHome)
 
 	s.BeforeSuite(func() {
-
 		usr, _ := user.Current()
 		CRCHome = filepath.Join(usr.HomeDir, ".crc")
 
@@ -124,6 +123,14 @@ func FeatureContext(s *godog.Suite) {
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
+		}
+	})
+
+	s.AfterScenario(func(pickle *messages.Pickle, err error) {
+		if err != nil {
+			if err := runDiagnose(filepath.Join("..", "test-results")); err != nil {
+				fmt.Printf("Failed to collect diagnostic: %v\n", err)
+			}
 		}
 	})
 
