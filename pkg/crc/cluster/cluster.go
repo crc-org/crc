@@ -297,23 +297,15 @@ func EnsurePullSecretPresentOnInstanceDisk(sshRunner *ssh.Runner, pullSecret *Pu
 	return sshRunner.CopyData([]byte(content), vmPullSecretPath, 0600)
 }
 
-func WaitforRequestHeaderClientCaFile(ocConfig oc.Config) error {
-	if err := WaitForOpenshiftResource(ocConfig, "configmaps"); err != nil {
-		return err
-	}
-
+func WaitForRequestHeaderClientCaFile(sshRunner *ssh.Runner) error {
 	lookupRequestHeaderClientCa := func() error {
-		cmdArgs := []string{"get", "configmaps/extension-apiserver-authentication", `-ojsonpath={.data.requestheader-client-ca-file}`,
-			"-n", "kube-system"}
-
-		stdout, stderr, err := ocConfig.RunOcCommand(cmdArgs...)
+		expired, err := CheckAggregatorClientCAValidity(sshRunner)
 		if err != nil {
-			return fmt.Errorf("Failed to get request header client ca file %v: %s", err, stderr)
+			return fmt.Errorf("Failed to the expiry date: %v", err)
 		}
-		if stdout == "" {
-			return &errors.RetriableError{Err: fmt.Errorf("missing .data.requestheader-client-ca-file")}
+		if expired {
+			return &errors.RetriableError{Err: fmt.Errorf("certificate still expired")}
 		}
-		logging.Debugf("Found .data.requestheader-client-ca-file: %s", stdout)
 		return nil
 	}
 	return errors.RetryAfter(8*time.Minute, lookupRequestHeaderClientCa, 2*time.Second)

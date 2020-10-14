@@ -414,7 +414,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	}
 	if expired {
 		logging.Debug("Waiting for the renewal of the request header client ca...")
-		if err := cluster.WaitforRequestHeaderClientCaFile(ocConfig); err != nil {
+		if err := cluster.WaitForRequestHeaderClientCaFile(sshRunner); err != nil {
 			return nil, errors.Wrap(err, "Failed to wait for aggregator client ca renewal")
 		}
 
