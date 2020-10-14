@@ -130,6 +130,8 @@ github.com/mitchellh/mapstructure
 github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.1
 github.com/modern-go/reflect2
+# github.com/openshift/api v0.0.0-20200701144905-de5b010b2b38
+github.com/openshift/api/config/v1
 # github.com/openshift/library-go v0.0.0-20200715125344-100bf3ff5a19
 github.com/openshift/library-go/pkg/oauth/oauthdiscovery
 # github.com/openshift/oc v0.0.0-alpha.0.0.20200716022222-b66f2d3a6893
@@ -230,6 +232,7 @@ gopkg.in/yaml.v3
 # howett.net/plist v0.0.0-20181124034731-591f970eefbb
 howett.net/plist
 # k8s.io/api v0.18.3 => k8s.io/api v0.18.2
+k8s.io/api/certificates/v1beta1
 k8s.io/api/core/v1
 # k8s.io/apimachinery v0.18.3 => github.com/openshift/kubernetes-apimachinery v0.0.0-20200427132717-228307e8b83c
 k8s.io/apimachinery/pkg/api/errors
