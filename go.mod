@@ -18,6 +18,7 @@ require (
 	github.com/imdario/mergo v0.3.9 // indirect
 	github.com/libvirt/libvirt-go-xml v6.8.0+incompatible
 	github.com/mattn/go-colorable v0.1.2
+	github.com/openshift/api v0.0.0-20200701144905-de5b010b2b38
 	github.com/openshift/library-go v0.0.0-20200715125344-100bf3ff5a19 // indirect
 	github.com/openshift/oc v0.0.0-alpha.0.0.20200716022222-b66f2d3a6893
 	github.com/pbnjay/memory v0.0.0-20190104145345-974d429e7ae4
@@ -38,6 +39,7 @@ require (
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	gopkg.in/AlecAivazis/survey.v1 v1.8.5
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb
+	k8s.io/api v0.18.3
 	k8s.io/client-go v8.0.0+incompatible
 )
 
