@@ -8,7 +8,6 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
-	crcos "github.com/code-ready/crc/pkg/os"
 )
 
 func URIStringForDisplay(uri string) (string, error) {
@@ -53,7 +52,7 @@ func CheckCRCLocalDNSReachableFromHost(bundle *bundle.CrcBundleInfo, expectedIP 
 		if err != nil {
 			// Right now goodhosts fallback is not implemented in windows so
 			// this checks should still return the error.
-			if crcos.CurrentOS() == crcos.WINDOWS {
+			if runtime.GOOS == "windows" {
 				return err
 			}
 			logging.Warnf("Wildcard DNS resolution for %s does not appear to be working", bundle.ClusterInfo.AppsDomain)

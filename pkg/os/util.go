@@ -7,35 +7,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
-
-const (
-	LINUX   OS = "linux"
-	DARWIN  OS = "darwin"
-	WINDOWS OS = "windows"
-)
-
-type OS string
-
-func (t OS) String() string {
-	return string(t)
-}
-
-func CurrentOS() OS {
-	switch runtime.GOOS {
-	case "windows":
-		return WINDOWS
-	case "darwin":
-		return DARWIN
-	case "linux":
-		return LINUX
-	}
-	panic("Unexpected OS type")
-}
 
 // ReplaceOrAddEnv changes the value of an environment variable if it exists otherwise add the new variable
 // It drops the existing value and appends the new value in-place
