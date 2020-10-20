@@ -294,7 +294,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	}
 
 	// Run the DNS server inside the VM
-	if _, err := dns.RunPostStart(servicePostStartConfig); err != nil {
+	if err := dns.RunPostStart(servicePostStartConfig); err != nil {
 		return nil, errors.Wrap(err, "Error running post start")
 	}
 

@@ -18,7 +18,7 @@ const (
 	AlternativeNetwork = "crc"
 )
 
-func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *services.ServicePostStartResult) (services.ServicePostStartResult, error) {
+func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
 	_, switchName := winnet.SelectSwitchByNameOrDefault(AlternativeNetwork)
 	networkInterface := fmt.Sprintf("vEthernet (%s)", switchName)
 
@@ -27,14 +27,9 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *se
 	time.Sleep(2 * time.Second)
 
 	if !contains(getInterfaceNameserverValues(networkInterface), serviceConfig.IP) {
-		err := errors.New("Nameserver not successfully set")
-		result.Success = false
-		result.Error = err.Error()
-		return *result, err
+		return errors.New("Nameserver not successfully set")
 	}
-
-	result.Success = true
-	return *result, nil
+	return nil
 }
 
 func getInterfaceNameserverValues(iface string) []string {
