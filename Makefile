@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-BUNDLE_VERSION = 4.6.0-rc.3
+BUNDLE_VERSION = 4.6.1
 # OC_VERSION and BUNDLE_VERSION are going to same for release artifacts but
 # different for nightly and CI bits where bundle version would be any random
 # string or dd-mm-yyyy format.
