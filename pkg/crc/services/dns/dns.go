@@ -20,14 +20,9 @@ const (
 func init() {
 }
 
-func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.ServicePostStartResult, error) {
-	result := &services.ServicePostStartResult{Name: serviceConfig.Name}
-
-	err := createDnsmasqDNSConfig(serviceConfig)
-	if err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, err
+func RunPostStart(serviceConfig services.ServicePostStartConfig) error {
+	if err := createDnsmasqDNSConfig(serviceConfig); err != nil {
+		return err
 	}
 
 	// Remove the dnsmasq container if it exists during the VM stop cycle
@@ -41,27 +36,19 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.Servi
 	// Start the dnsmasq container
 	dnsServerRunCmd := fmt.Sprintf("sudo podman run  --ip %s --name dnsmasq -v %s:/etc/dnsmasq.conf -p 53:%d/udp --privileged -d %s",
 		dnsContainerIP, dnsConfigFilePathInInstance, dnsServicePort, dnsContainerImage)
-	_, err = serviceConfig.SSHRunner.Run(dnsServerRunCmd)
-	if err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, err
+	if _, err := serviceConfig.SSHRunner.Run(dnsServerRunCmd); err != nil {
+		return err
 	}
 
 	// We need to restart the Host Network before updating
 	// the VM's /etc/resolv.conf file.
-	res, err := runPostStartForOS(serviceConfig, result)
-	if err != nil {
-		result.Success = res.Success
-		result.Error = err.Error()
-		return *result, err
+	if err := runPostStartForOS(serviceConfig); err != nil {
+		return err
 	}
 
 	orgResolvValues, err := network.GetResolvValuesFromInstance(serviceConfig.SSHRunner)
 	if err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, err
+		return err
 	}
 	// override resolv.conf file
 	searchdomain := network.SearchDomain{Domain: fmt.Sprintf("%s.%s", serviceConfig.Name, serviceConfig.BundleMetadata.ClusterInfo.BaseDomain)}
@@ -73,14 +60,7 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.Servi
 		SearchDomains: []network.SearchDomain{searchdomain},
 		NameServers:   nameservers}
 
-	if err := network.CreateResolvFileOnInstance(serviceConfig.SSHRunner, resolvFileValues); err != nil {
-		result.Success = false
-		result.Error = err.Error()
-		return *result, err
-	}
-
-	result.Success = true
-	return *result, nil
+	return network.CreateResolvFileOnInstance(serviceConfig.SSHRunner, resolvFileValues)
 }
 
 func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (string, error) {

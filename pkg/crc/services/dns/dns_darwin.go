@@ -8,12 +8,13 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/errors"
+	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/goodhosts"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/services"
 	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -30,29 +31,26 @@ type resolverFileValues struct {
 	SearchOrder int
 }
 
-func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *services.ServicePostStartResult) (services.ServicePostStartResult, error) {
+func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
 	// Update /etc/hosts file for host
 	if err := goodhosts.UpdateHostsFile(serviceConfig.IP, serviceConfig.BundleMetadata.GetAPIHostname(),
 		serviceConfig.BundleMetadata.GetAppHostname("oauth-openshift"),
 		serviceConfig.BundleMetadata.GetAppHostname("console-openshift-console"),
 		serviceConfig.BundleMetadata.GetAppHostname("default-route-openshift-image-registry")); err != nil {
-		result.Success = false
-		return *result, err
+		return err
 	}
 
 	// Write resolver config to host
 	needRestart, err := createResolverFile(serviceConfig.IP, serviceConfig.BundleMetadata.ClusterInfo.BaseDomain,
 		serviceConfig.BundleMetadata.ClusterInfo.BaseDomain)
 	if err != nil {
-		result.Success = false
-		return *result, err
+		return err
 	}
 	if needRestart {
 		// Restart the Network on mac
 		logging.Infof("Restarting the host network")
 		if err := restartNetwork(); err != nil {
-			result.Success = false
-			return *result, fmt.Errorf("Restarting the host network failed: %v", err)
+			return errors.Wrap(err, "Restarting the host network failed")
 		}
 		// Wait for the Network to come up but in the case of error, log it to error info.
 		// If we make it as fatal call then in offline use case for mac is
@@ -64,9 +62,7 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *se
 		logging.Infof("Network restart not needed")
 	}
 
-	// we pass the result and error on
-	result.Success = true
-	return *result, nil
+	return nil
 }
 
 func createResolverFile(instanceIP string, domain string, filename string) (bool, error) {
@@ -123,12 +119,12 @@ func waitForNetwork() error {
 		hostResolv, err = network.GetResolvValuesFromHost()
 		if err != nil {
 			logging.Debugf("Not able read file: %v", err)
-			return &errors.RetriableError{Err: err}
+			return &crcerrors.RetriableError{Err: err}
 		}
 		return nil
 	}
 
-	if err := errors.RetryAfter(10*time.Second, getResolvValueFromHost, time.Second); err != nil {
+	if err := crcerrors.RetryAfter(10*time.Second, getResolvValueFromHost, time.Second); err != nil {
 		return fmt.Errorf("Unable to read host resolv file (%v)", err)
 	}
 	// retry up to 5 times
