@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/docker/docker/pkg/term"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 // PromptForString takes an io.Reader and prompts for user input if it's a terminal, returning the result.

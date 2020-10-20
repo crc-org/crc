@@ -16,7 +16,7 @@ import (
 
 	"github.com/alexbrainman/sspi"
 	"github.com/alexbrainman/sspi/negotiate"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -296,7 +296,7 @@ func (s *sspiNegotiator) updateContext(challengeToken []byte) (outputToken []byt
 // logSSPI is the equivalent of klog.V(5).Infof(format, args) except it
 // includes error code information for any syscall.Errno contained in args
 func logSSPI(format string, args ...interface{}) {
-	if klog.V(5) {
+	if klog.V(5).Enabled() {
 		for i, arg := range args {
 			if errno, ok := arg.(syscall.Errno); ok {
 				args[i] = fmt.Sprintf("%v, code=%#v", errno, errno)
