@@ -2,7 +2,6 @@ package dns
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -27,7 +26,7 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
 	time.Sleep(2 * time.Second)
 
 	if !contains(getInterfaceNameserverValues(networkInterface), serviceConfig.IP) {
-		return errors.New("Nameserver not successfully set")
+		return fmt.Errorf("Nameserver %s not successfully set on interface %s", serviceConfig.IP, networkInterface)
 	}
 	return nil
 }
