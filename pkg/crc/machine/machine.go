@@ -42,7 +42,7 @@ import (
 
 func init() {
 	// Force using the golang SSH implementation for windows
-	if runtime.GOOS == crcos.WINDOWS.String() {
+	if runtime.GOOS == "windows" {
 		ssh.SetDefaultClient(ssh.Native)
 	}
 }
