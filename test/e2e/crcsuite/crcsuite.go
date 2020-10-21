@@ -219,9 +219,9 @@ func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string,
 // CheckCRCStatus checks that output of status command
 // matches given regex
 func CheckCRCStatus(state string) error {
-	expression := `.*Running \(v\d+\.\d+\.\d+.*\).*`
+	expression := `.*OpenShift: .*Running \(v\d+\.\d+\.\d+.*\).*`
 	if state == "stopped" {
-		expression = ".*Stopped.*"
+		expression = ".*OpenShift: .*Stopped.*"
 	}
 
 	err := clicumber.ExecuteCommand("crc status --log-level debug")
