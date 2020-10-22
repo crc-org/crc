@@ -3,10 +3,10 @@
 
 .Prerequisites
 
-* To use an existing [command]`oc` binary on your host machine, export the `.testing` domain as part of the `no_proxy` environment variable.
+* To use an existing [command]`oc` executable on your host machine, export the `.testing` domain as part of the `no_proxy` environment variable.
 
-* The embedded [command]`oc` binary does not require manual settings.
-For more information about using the embedded [command]`oc` binary, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the OpenShift cluster with `oc`].
+* The embedded [command]`oc` executable does not require manual settings.
+For more information about using the embedded [command]`oc` executable, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the OpenShift cluster with `oc`].
 
 
 .Procedure
@@ -27,7 +27,7 @@ $ {bin} config set no-proxy __<comma-separated-no-proxy-entries>__
 $ {bin} config set proxy-ca-file __<path-to-custom-ca-file>__
 ----
 
-The [command]`{bin}` binary will be able to use the defined proxy once set through environment variables or {prod} configuration.
+The [command]`{bin}` executable will be able to use the defined proxy once set through environment variables or {prod} configuration.
 
 [NOTE]
 ====

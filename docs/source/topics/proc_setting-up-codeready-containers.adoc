@@ -12,8 +12,8 @@ On {msw}, ensure that your user account can elevate to Administrator privileges.
 
 [NOTE]
 ====
-* Do not run the [command]`{bin}` binary as `root` (or Administrator).
-Always run the [command]`{bin}` binary with your user account.
+* Do not run the [command]`{bin}` executable as `root` (or Administrator).
+Always run the [command]`{bin}` executable with your user account.
 * If you are setting up a new version, capture any changes made to the virtual machine before setting up a new {prod} release.
 ====
 

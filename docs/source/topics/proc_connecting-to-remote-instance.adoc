@@ -16,7 +16,7 @@ Follow this procedure to connect a client machine to a remote server running a {
 For more information, see link:{crc-gsg-url}#setting-up-remote-server_gsg[Setting up {prod} on a remote server].
 * NetworkManager is installed and running.
 * You know the external IP address of the server.
-* You have the link:{oc-download-url}[latest OpenShift client binary ([command]`oc`)] in your `$PATH` on the client.
+* You have the link:{oc-download-url}[latest OpenShift client executable ([command]`oc`)] in your `$PATH` on the client.
 
 .Procedure
 

@@ -1,7 +1,7 @@
 [id="about-codeready-containers-configuration_{context}"]
 = About {prod} configuration
 
-Use the [command]`{bin} config` command to configure both the [command]`{bin}` binary and the {prod} virtual machine.
+Use the [command]`{bin} config` command to configure both the [command]`{bin}` executable and the {prod} virtual machine.
 The [command]`{bin} config` command requires a subcommand to act on the configuration.
 The available subcommands are `get`, `set,` `unset`, and `view`.
 The `get`, `set`, and `unset` subcommands operate on named configurable properties.
