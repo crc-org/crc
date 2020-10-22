@@ -10,7 +10,7 @@ For more information, see link:{crc-gsg-url}#starting-the-virtual-machine_gsg[St
 
 To access the OpenShift cluster through the [command]`oc` command, follow these steps:
 
-. Run the [command]`{bin} oc-env` command to print the command needed to add the cached [command]`oc` binary to your `_PATH_`:
+. Run the [command]`{bin} oc-env` command to print the command needed to add the cached [command]`oc` executable to your `_PATH_`:
 +
 [subs="+quotes,attributes"]
 ----

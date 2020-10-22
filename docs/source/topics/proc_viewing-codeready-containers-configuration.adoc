@@ -1,7 +1,7 @@
 [id="viewing-codeready-containers-configuration_{context}"]
 = Viewing {prod} configuration
 
-The {prod} binary provides commands to view configurable properties and the current {prod} configuration.
+The {prod} executable provides commands to view configurable properties and the current {prod} configuration.
 
 .Procedure
 
