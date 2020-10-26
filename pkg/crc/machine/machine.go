@@ -114,13 +114,17 @@ func (client *client) updateVMConfig(startConfig StartConfig, api libmachine.API
 	logging.Debugf("Updating CRC VM configuration")
 	if err := setMemory(host, startConfig.Memory); err != nil {
 		logging.Debugf("Failed to update CRC VM configuration: %v", err)
-		if err != drivers.ErrNotImplemented {
+		if err == drivers.ErrNotImplemented {
+			logging.Warn("Memory configuration change has been ignored as the machine driver does not support it")
+		} else {
 			return err
 		}
 	}
 	if err := setVcpus(host, startConfig.CPUs); err != nil {
 		logging.Debugf("Failed to update CRC VM configuration: %v", err)
-		if err != drivers.ErrNotImplemented {
+		if err == drivers.ErrNotImplemented {
+			logging.Warn("CPU configuration change has been ignored as the machine driver does not support it")
+		} else {
 			return err
 		}
 	}
@@ -132,7 +136,9 @@ func (client *client) updateVMConfig(startConfig StartConfig, api libmachine.API
 	if startConfig.DiskSize != constants.DefaultDiskSize {
 		if err := setDiskSize(host, startConfig.DiskSize); err != nil {
 			logging.Debugf("Failed to update CRC disk configuration: %v", err)
-			if err != drivers.ErrNotImplemented {
+			if err == drivers.ErrNotImplemented {
+				logging.Warn("Disk size configuration change has been ignored as the machine driver does not support it")
+			} else {
 				return err
 			}
 		}
