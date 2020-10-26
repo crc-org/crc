@@ -3,15 +3,15 @@ package constants
 import "path/filepath"
 
 const (
-	OcBinaryName        = "oc.exe"
-	PodmanBinaryName    = "podman.exe"
-	GoodhostsBinaryName = "goodhosts.exe"
-	TrayBinaryName      = "tray-windows.exe"
-	DaemonServiceName   = "CodeReady Containers"
-	TrayShortcutName    = "tray-windows.lnk"
+	OcExecutableName        = "oc.exe"
+	PodmanExecutableName    = "podman.exe"
+	GoodhostsExecutableName = "goodhosts.exe"
+	TrayExecutableName      = "tray-windows.exe"
+	DaemonServiceName       = "CodeReady Containers"
+	TrayShortcutName        = "tray-windows.lnk"
 )
 
 var (
-	TrayBinaryDir  = filepath.Join(CrcBinDir, "tray-windows")
-	TrayBinaryPath = filepath.Join(TrayBinaryDir, TrayBinaryName)
+	TrayExecutableDir  = filepath.Join(CrcBinDir, "tray-windows")
+	TrayExecutablePath = filepath.Join(TrayExecutableDir, TrayExecutableName)
 )

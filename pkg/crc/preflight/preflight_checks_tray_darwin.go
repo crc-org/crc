@@ -37,7 +37,7 @@ type TrayVersion struct {
 func checkIfDaemonPlistFileExists() error {
 	// crc setup can be ran from any location in the
 	// users computer, and we need to update the plist
-	// file with the path of the crc binary which was
+	// file with the path of the crc executable which was
 	// used to run setup, to force it this check needs
 	// to always fail so the fix routine is triggered
 
@@ -55,7 +55,7 @@ func fixDaemonPlistFileExists() error {
 	}
 	daemonConfig := launchd.AgentConfig{
 		Label:          daemonAgentLabel,
-		BinaryPath:     currentExecutablePath,
+		ExecutablePath: currentExecutablePath,
 		StdOutFilePath: stdOutFilePathDaemon,
 		Args:           []string{"daemon", "--log-level", "debug"},
 	}
@@ -76,7 +76,7 @@ func checkIfTrayPlistFileExists() error {
 func fixTrayPlistFileExists() error {
 	trayConfig := launchd.AgentConfig{
 		Label:          trayAgentLabel,
-		BinaryPath:     constants.TrayBinaryPath,
+		ExecutablePath: constants.TrayExecutablePath,
 		StdOutFilePath: stdOutFilePathTray,
 	}
 	return fixPlistFileExists(trayConfig)
@@ -157,14 +157,14 @@ func fixTrayVersion() error {
 	return launchd.RestartAgent(trayAgentLabel)
 }
 
-func checkTrayBinaryPresent() error {
-	if !os.FileExists(constants.TrayBinaryPath) {
+func checkTrayExecutablePresent() error {
+	if !os.FileExists(constants.TrayExecutablePath) {
 		return fmt.Errorf("Tray executable does not exist")
 	}
 	return nil
 }
 
-func fixTrayBinaryPresent() error {
+func fixTrayExecutablePresent() error {
 	logging.Debug("Downloading/extracting tray executable")
 	return downloadOrExtractTrayApp()
 }

@@ -25,12 +25,12 @@ func runExtract(args []string) {
 	if len(args) != 3 {
 		logging.Fatalf("extract takes exactly three arguments")
 	}
-	binaryPath := args[0]
+	executablePath := args[0]
 	embedName := args[1]
 	destFile := args[2]
-	err := embed.ExtractFromBinary(binaryPath, embedName, destFile)
+	err := embed.ExtractFromExecutable(executablePath, embedName, destFile)
 	if err != nil {
-		logging.Fatalf("Could not extract data embedded in %s: %v", binaryPath, err)
+		logging.Fatalf("Could not extract data embedded in %s: %v", executablePath, err)
 	}
-	output.Outf("Successfully copied embedded '%s' from %s to %s: %v", embedName, binaryPath, destFile, err)
+	output.Outf("Successfully copied embedded '%s' from %s to %s: %v", embedName, executablePath, destFile, err)
 }

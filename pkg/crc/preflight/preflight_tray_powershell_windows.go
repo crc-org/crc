@@ -10,8 +10,8 @@ var (
 		`$ErrorActionPreference = "Stop"`,
 		`$password = "%s"`,
 		`$tempDir = "%s"`,
-		`$crcBinaryPath = "%s"`,
-		`$trayBinaryPath = "%s"`,
+		`$crcExecutablePath = "%s"`,
+		`$trayExecutablePath = "%s"`,
 		`$traySymlinkName = "%s"`,
 		`$serviceName = "%s"`,
 		`$currentUserSid = (Get-LocalUser -Name "$env:USERNAME").Sid.Value`,
@@ -56,7 +56,7 @@ var (
 		`	$creds = New-Object pscredential ("$env:USERDOMAIN\$env:USERNAME", $secPass)`,
 		`	$params = @{`,
 		`		Name = "$serviceName"`,
-		`		BinaryPathName = "$crcBinaryPath daemon"`,
+		`		ExecutablePathName = "$crcExecutablePath daemon"`,
 		`		DisplayName = "$serviceName"`,
 		`		StartupType = "Automatic"`,
 		`		Description = "CodeReady Containers Daemon service for System Tray."`,
@@ -80,8 +80,8 @@ var (
 		`Remove-Item "$startUpFolder\$traySymlinkName"`,
 
 		`$ErrorActionPreference = "Stop"`,
-		`New-Item -ItemType SymbolicLink -Path "$startUpFolder" -Name "$traySymlinkName" -Value "$trayBinaryPath"`,
-		`Start-Process -FilePath "$trayBinaryPath"`,
+		`New-Item -ItemType SymbolicLink -Path "$startUpFolder" -Name "$traySymlinkName" -Value "$trayExecutablePath"`,
+		`Start-Process -FilePath "$trayExecutablePath"`,
 		`New-Item -ItemType File -Path "$tempDir" -Name "success"`,
 		`Set-Content -Path $tempDir\success "blah blah"`,
 	}
@@ -149,12 +149,12 @@ func getTrayRemovalScriptTemplate() string {
 	return strings.Join(trayRemovalScript, "\n")
 }
 
-func genTrayInstallScript(password, tempDirPath, daemonCmd, trayBinaryPath, traySymlinkName, daemonServiceName string) string {
+func genTrayInstallScript(password, tempDirPath, daemonCmd, trayExecutablePath, traySymlinkName, daemonServiceName string) string {
 	return fmt.Sprintf(getTrayInstallationScriptTemplate(),
 		password,
 		tempDirPath,
 		daemonCmd,
-		trayBinaryPath,
+		trayExecutablePath,
 		traySymlinkName,
 		daemonServiceName,
 	)

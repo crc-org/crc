@@ -42,7 +42,7 @@ func runEmbed(args []string) {
 	if len(args) != 1 {
 		logging.Fatal("embed takes exactly one argument")
 	}
-	binaryPath := args[0]
+	executablePath := args[0]
 	destDir, err := ioutil.TempDir("", "crc-embedder")
 	if err != nil {
 		logging.Fatalf("Failed to create temporary directory: %v", err)
@@ -55,20 +55,20 @@ func runEmbed(args []string) {
 
 	bundlePath := path.Join(bundleDir, constants.GetDefaultBundleForOs(goos))
 	downloadedFiles = append(downloadedFiles, bundlePath)
-	err = embedFiles(binaryPath, downloadedFiles)
+	err = embedFiles(executablePath, downloadedFiles)
 	if err != nil {
 		logging.Fatalf("Failed to embed data files: %v", err)
 	}
 }
 
-func embedFiles(binary string, filenames []string) error {
-	appender, err := binappend.MakeAppender(binary)
+func embedFiles(executablePath string, filenames []string) error {
+	appender, err := binappend.MakeAppender(executablePath)
 	if err != nil {
 		return err
 	}
 	defer appender.Close()
 	for _, filename := range filenames {
-		logging.Debugf("Embedding %s in %s", filename, binary)
+		logging.Debugf("Embedding %s in %s", filename, executablePath)
 		f, err := os.Open(filename) // #nosec G304
 		if err != nil {
 			return fmt.Errorf("Failed to open %s: %v", filename, err)
@@ -77,7 +77,7 @@ func embedFiles(binary string, filenames []string) error {
 
 		err = appender.AppendStreamReader(path.Base(filename), f, false)
 		if err != nil {
-			return fmt.Errorf("Failed to append %s to %s: %v", filename, binary, err)
+			return fmt.Errorf("Failed to append %s to %s: %v", filename, executablePath, err)
 		}
 	}
 

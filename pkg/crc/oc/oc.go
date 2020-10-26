@@ -9,21 +9,21 @@ import (
 )
 
 type Config struct {
-	Runner         crcos.CommandRunner
-	OcBinaryPath   string
-	KubeconfigPath string
-	Context        string
-	Cluster        string
+	Runner           crcos.CommandRunner
+	OcExecutablePath string
+	KubeconfigPath   string
+	Context          string
+	Cluster          string
 }
 
-// UseOcWithConfig return the oc binary along with valid kubeconfig
+// UseOcWithConfig return the oc executable along with valid kubeconfig
 func UseOCWithConfig(machineName string) Config {
 	return Config{
-		Runner:         crcos.NewLocalCommandRunner(),
-		OcBinaryPath:   filepath.Join(constants.CrcOcBinDir, constants.OcBinaryName),
-		KubeconfigPath: filepath.Join(constants.MachineInstanceDir, machineName, "kubeconfig"),
-		Context:        constants.DefaultContext,
-		Cluster:        constants.DefaultName,
+		Runner:           crcos.NewLocalCommandRunner(),
+		OcExecutablePath: filepath.Join(constants.CrcOcBinDir, constants.OcExecutableName),
+		KubeconfigPath:   filepath.Join(constants.MachineInstanceDir, machineName, "kubeconfig"),
+		Context:          constants.DefaultContext,
+		Cluster:          constants.DefaultName,
 	}
 }
 
@@ -39,10 +39,10 @@ func (oc Config) runCommand(isPrivate bool, args ...string) (string, string, err
 	}
 
 	if isPrivate {
-		return oc.Runner.RunPrivate(oc.OcBinaryPath, args...)
+		return oc.Runner.RunPrivate(oc.OcExecutablePath, args...)
 	}
 
-	return oc.Runner.Run(oc.OcBinaryPath, args...)
+	return oc.Runner.Run(oc.OcExecutablePath, args...)
 }
 
 func (oc Config) RunOcCommand(args ...string) (string, string, error) {
@@ -59,10 +59,10 @@ type SSHRunner struct {
 
 func UseOCWithSSH(sshRunner *ssh.Runner) Config {
 	return Config{
-		Runner:         ssh.NewRemoteCommandRunner(sshRunner),
-		OcBinaryPath:   "oc",
-		KubeconfigPath: "/opt/kubeconfig",
-		Context:        constants.DefaultContext,
-		Cluster:        constants.DefaultName,
+		Runner:           ssh.NewRemoteCommandRunner(sshRunner),
+		OcExecutablePath: "oc",
+		KubeconfigPath:   "/opt/kubeconfig",
+		Context:          constants.DefaultContext,
+		Cluster:          constants.DefaultName,
 	}
 }

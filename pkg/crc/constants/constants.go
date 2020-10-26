@@ -135,13 +135,13 @@ func EnsureBaseDirExists() error {
 	return nil
 }
 
-// IsBundleEmbedded returns true if the binary was compiled to contain the bundle
+// IsBundleEmbedded returns true if the executable was compiled to contain the bundle
 func BundleEmbedded() bool {
-	binaryPath, err := os.Executable()
+	executablePath, err := os.Executable()
 	if err != nil {
 		return false
 	}
-	extractor, err := binappend.MakeExtractor(binaryPath)
+	extractor, err := binappend.MakeExtractor(executablePath)
 	if err != nil {
 		return false
 	}

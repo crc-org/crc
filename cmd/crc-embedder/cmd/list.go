@@ -25,12 +25,12 @@ func runList(args []string) {
 	if len(args) != 1 {
 		logging.Fatalf("list takes exactly one argument")
 	}
-	binaryPath := args[0]
-	extractor, err := binappend.MakeExtractor(binaryPath)
+	executablePath := args[0]
+	extractor, err := binappend.MakeExtractor(executablePath)
 	if err != nil {
-		logging.Fatalf("Could not access data embedded in %s: %v", binaryPath, err)
+		logging.Fatalf("Could not access data embedded in %s: %v", executablePath, err)
 	}
-	output.Outf("Data files embedded in %s:\n", binaryPath)
+	output.Outf("Data files embedded in %s:\n", executablePath)
 	for _, name := range extractor.AvalibleData() {
 		output.Outln("\t", name)
 	}

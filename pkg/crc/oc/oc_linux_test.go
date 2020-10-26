@@ -10,11 +10,11 @@ import (
 
 func TestRunCommand(t *testing.T) {
 	ocConfig := Config{
-		Runner:         crcos.NewLocalCommandRunner(),
-		OcBinaryPath:   "/bin/echo",
-		KubeconfigPath: "kubeconfig-file",
-		Context:        "a-context",
-		Cluster:        "a-cluster",
+		Runner:           crcos.NewLocalCommandRunner(),
+		OcExecutablePath: "/bin/echo",
+		KubeconfigPath:   "kubeconfig-file",
+		Context:          "a-context",
+		Cluster:          "a-cluster",
 	}
 	stdout, _, err := ocConfig.RunOcCommand("a-command")
 	assert.NoError(t, err)
@@ -23,9 +23,9 @@ func TestRunCommand(t *testing.T) {
 
 func TestRunCommandWithoutContextAndCluster(t *testing.T) {
 	ocConfig := Config{
-		Runner:         crcos.NewLocalCommandRunner(),
-		OcBinaryPath:   "/bin/echo",
-		KubeconfigPath: "kubeconfig-file",
+		Runner:           crcos.NewLocalCommandRunner(),
+		OcExecutablePath: "/bin/echo",
+		KubeconfigPath:   "kubeconfig-file",
 	}
 	stdout, _, err := ocConfig.RunOcCommand("a-command")
 	assert.NoError(t, err)

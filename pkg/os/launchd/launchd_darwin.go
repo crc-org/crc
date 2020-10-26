@@ -24,7 +24,7 @@ const (
 			<string>{{ .Label }}</string>
 			<key>ProgramArguments</key>
 			<array>
-				<string>{{ .BinaryPath }}</string>
+				<string>{{ .ExecutablePath }}</string>
 			{{ range .Args }}
 				<string>{{ . }}</string>
 			{{ end }}
@@ -42,7 +42,7 @@ const (
 // AgentConfig is struct to contain configuration for agent plist file
 type AgentConfig struct {
 	Label          string
-	BinaryPath     string
+	ExecutablePath string
 	StdOutFilePath string
 	Args           []string
 }

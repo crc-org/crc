@@ -22,7 +22,7 @@ import (
 
 var (
 	CRCHome        string
-	CRCBinary      string
+	CRCExecutable  string
 	bundleEmbedded bool
 	bundleName     string
 	bundleURL      string
@@ -71,16 +71,16 @@ func FeatureContext(s *godog.Suite) {
 		usr, _ := user.Current()
 		CRCHome = filepath.Join(usr.HomeDir, ".crc")
 
-		// init CRCBinary if no location provided by user
-		if CRCBinary == "" {
+		// init CRCExecutable if no location provided by user
+		if CRCExecutable == "" {
 			fmt.Println("Expecting the CRC executable to be in $HOME/go/bin.")
 			usr, _ := user.Current()
-			CRCBinary = filepath.Join(usr.HomeDir, "go", "bin")
+			CRCExecutable = filepath.Join(usr.HomeDir, "go", "bin")
 		}
 
-		// put CRC binary location on top of PATH
+		// put CRC executable location on top of PATH
 		path := os.Getenv("PATH")
-		newPath := fmt.Sprintf("%s%c%s", CRCBinary, os.PathListSeparator, path)
+		newPath := fmt.Sprintf("%s%c%s", CRCExecutable, os.PathListSeparator, path)
 		err := os.Setenv("PATH", newPath)
 		if err != nil {
 			fmt.Println("Could not put CRC location on top of PATH")
