@@ -18,68 +18,68 @@ import (
 )
 
 type Cache struct {
-	binaryName string
-	archiveURL string
-	destDir    string
-	version    string
-	getVersion func(string) (string, error)
+	executableName string
+	archiveURL     string
+	destDir        string
+	version        string
+	getVersion     func(string) (string, error)
 }
 
 type VersionMismatchError struct {
-	BinaryName      string
+	ExecutableName  string
 	ExpectedVersion string
 	CurrentVersion  string
 }
 
 func (e *VersionMismatchError) Error() string {
-	return fmt.Sprintf("%s version mismatch: %s expected but %s found in the cache", e.BinaryName, e.ExpectedVersion, e.CurrentVersion)
+	return fmt.Sprintf("%s version mismatch: %s expected but %s found in the cache", e.ExecutableName, e.ExpectedVersion, e.CurrentVersion)
 }
 
-func New(binaryName string, archiveURL string, destDir string, version string, getVersion func(string) (string, error)) *Cache {
-	return &Cache{binaryName: binaryName, archiveURL: archiveURL, destDir: destDir, version: version, getVersion: getVersion}
+func New(executableName string, archiveURL string, destDir string, version string, getVersion func(string) (string, error)) *Cache {
+	return &Cache{executableName: executableName, archiveURL: archiveURL, destDir: destDir, version: version, getVersion: getVersion}
 }
 
-func getCurrentOcVersion(binaryPath string) (string, error) {
-	return getVersionGeneric(binaryPath, "version", "--client")
+func getCurrentOcVersion(executablePath string) (string, error) {
+	return getVersionGeneric(executablePath, "version", "--client")
 }
 
-func (c *Cache) GetBinaryPath() string {
-	return filepath.Join(c.destDir, c.binaryName)
+func (c *Cache) GetExecutablePath() string {
+	return filepath.Join(c.destDir, c.executableName)
 }
 
-func (c *Cache) GetBinaryName() string {
-	return c.binaryName
+func (c *Cache) GetExecutableName() string {
+	return c.executableName
 }
 
-/* getVersionGeneric runs the cached binary with 'args', and assumes the version string
+/* getVersionGeneric runs the cached executable with 'args', and assumes the version string
  * was output on stdout's first line with this format:
  * something: <version>
  *
  * It returns <version> as a string
  */
-func getVersionGeneric(binaryPath string, args ...string) (string, error) {
-	stdOut, _, err := crcos.RunWithDefaultLocale(binaryPath, args...)
+func getVersionGeneric(executablePath string, args ...string) (string, error) {
+	stdOut, _, err := crcos.RunWithDefaultLocale(executablePath, args...)
 	parsedOutput := strings.Split(stdOut, ":")
 	if len(parsedOutput) < 2 {
-		return "", fmt.Errorf("Unable to parse the version information of %s", binaryPath)
+		return "", fmt.Errorf("Unable to parse the version information of %s", executablePath)
 	}
 	return strings.TrimSpace(parsedOutput[1]), err
 }
 
 func NewOcCache() *Cache {
-	return New(constants.OcBinaryName, constants.GetOcURL(), constants.CrcOcBinDir, version.GetOcVersion(), getCurrentOcVersion)
+	return New(constants.OcExecutableName, constants.GetOcURL(), constants.CrcOcBinDir, version.GetOcVersion(), getCurrentOcVersion)
 }
 
 func NewPodmanCache() *Cache {
-	return New(constants.PodmanBinaryName, constants.GetPodmanURL(), constants.CrcBinDir, "", nil)
+	return New(constants.PodmanExecutableName, constants.GetPodmanURL(), constants.CrcBinDir, "", nil)
 }
 
 func NewGoodhostsCache() *Cache {
-	return New(constants.GoodhostsBinaryName, constants.GetGoodhostsURL(), constants.CrcBinDir, "", nil)
+	return New(constants.GoodhostsExecutableName, constants.GetGoodhostsURL(), constants.CrcBinDir, "", nil)
 }
 
 func (c *Cache) IsCached() bool {
-	if _, err := os.Stat(c.GetBinaryPath()); os.IsNotExist(err) {
+	if _, err := os.Stat(c.GetExecutablePath()); os.IsNotExist(err) {
 		return false
 	}
 	return true
@@ -87,7 +87,7 @@ func (c *Cache) IsCached() bool {
 
 func (c *Cache) EnsureIsCached() error {
 	if !c.IsCached() || c.CheckVersion() != nil {
-		err := c.CacheBinary()
+		err := c.CacheExecutable()
 		if err != nil {
 			return err
 		}
@@ -95,8 +95,8 @@ func (c *Cache) EnsureIsCached() error {
 	return nil
 }
 
-// CacheBinary downloads and caches the requested binary into the CRC directory
-func (c *Cache) CacheBinary() error {
+// CacheExecutable downloads and caches the requested executable into the CRC directory
+func (c *Cache) CacheExecutable() error {
 	if c.IsCached() && c.CheckVersion() == nil {
 		return nil
 	}
@@ -107,7 +107,7 @@ func (c *Cache) CacheBinary() error {
 		return err
 	}
 	defer os.RemoveAll(tmpDir)
-	assetTmpFile, err := c.getBinary(tmpDir)
+	assetTmpFile, err := c.getExecutable(tmpDir)
 	if err != nil {
 		return err
 	}
@@ -117,14 +117,14 @@ func (c *Cache) CacheBinary() error {
 	if IsTarball(assetTmpFile) {
 		// Extract the tarball and put it the cache directory.
 		extractedFiles, err = extract.UncompressWithFilter(assetTmpFile, tmpDir, false,
-			func(filename string) bool { return filepath.Base(filename) == c.binaryName })
+			func(filename string) bool { return filepath.Base(filename) == c.executableName })
 		if err != nil {
 			return errors.Wrapf(err, "Cannot uncompress '%s'", assetTmpFile)
 		}
 	} else {
 		extractedFiles = append(extractedFiles, assetTmpFile)
-		if filepath.Base(assetTmpFile) != c.binaryName {
-			logging.Warnf("Executable name is %s but extracted file name is %s", c.binaryName, filepath.Base(assetTmpFile))
+		if filepath.Base(assetTmpFile) != c.executableName {
+			logging.Warnf("Executable name is %s but extracted file name is %s", c.executableName, filepath.Base(assetTmpFile))
 		}
 	}
 
@@ -135,11 +135,11 @@ func (c *Cache) CacheBinary() error {
 	}
 
 	for _, extractedFilePath := range extractedFiles {
-		finalBinaryPath := filepath.Join(c.destDir, filepath.Base(extractedFilePath))
+		finalExecutablePath := filepath.Join(c.destDir, filepath.Base(extractedFilePath))
 		// If the file exists then remove it (ignore error) first before copy because with `0500` permission
 		// it is not possible to overwrite the file.
-		os.Remove(finalBinaryPath)
-		err = crcos.CopyFileContents(extractedFilePath, finalBinaryPath, 0500)
+		os.Remove(finalExecutablePath)
+		err = crcos.CopyFileContents(extractedFilePath, finalExecutablePath, 0500)
 		if err != nil {
 			return err
 		}
@@ -147,8 +147,8 @@ func (c *Cache) CacheBinary() error {
 	return nil
 }
 
-func (c *Cache) getBinary(destDir string) (string, error) {
-	logging.Debugf("Trying to extract %s from crc executable", c.binaryName)
+func (c *Cache) getExecutable(destDir string) (string, error) {
+	logging.Debugf("Trying to extract %s from crc executable", c.executableName)
 	archiveName := filepath.Base(c.archiveURL)
 	destPath := filepath.Join(destDir, archiveName)
 	err := embed.Extract(archiveName, destPath)
@@ -164,20 +164,20 @@ func (c *Cache) CheckVersion() error {
 	if c.version == "" {
 		return nil
 	}
-	currentVersion, err := c.getVersion(c.GetBinaryPath())
+	currentVersion, err := c.getVersion(c.GetExecutablePath())
 	if err != nil {
 		return err
 	}
 	if currentVersion != c.version {
 		err := &VersionMismatchError{
-			BinaryName:      c.binaryName,
+			ExecutableName:  c.executableName,
 			CurrentVersion:  currentVersion,
 			ExpectedVersion: c.version,
 		}
 		logging.Debugf("%s", err.Error())
 		return err
 	}
-	logging.Debugf("Found %s version %s", c.binaryName, c.version)
+	logging.Debugf("Found %s version %s", c.executableName, c.version)
 	return nil
 }
 

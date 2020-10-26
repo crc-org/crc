@@ -9,6 +9,6 @@ func NewMachineDriverLibvirtCache() *Cache {
 	return New(libvirt.MachineDriverCommand, libvirt.MachineDriverDownloadURL, constants.CrcBinDir, libvirt.MachineDriverVersion, getCurrentLibvirtDriverVersion)
 }
 
-func getCurrentLibvirtDriverVersion(binaryPath string) (string, error) {
-	return getVersionGeneric(binaryPath, "version")
+func getCurrentLibvirtDriverVersion(executablePath string) (string, error) {
+	return getVersionGeneric(executablePath, "version")
 }

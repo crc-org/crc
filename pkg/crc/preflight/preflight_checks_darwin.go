@@ -20,9 +20,9 @@ const (
 func checkHyperKitInstalled() error {
 	h := cache.NewHyperKitCache()
 	if !h.IsCached() {
-		return fmt.Errorf("%s executable is not cached", h.GetBinaryName())
+		return fmt.Errorf("%s executable is not cached", h.GetExecutableName())
 	}
-	hyperkitPath := h.GetBinaryPath()
+	hyperkitPath := h.GetExecutablePath()
 	err := unix.Access(hyperkitPath, unix.X_OK)
 	if err != nil {
 		return fmt.Errorf("%s not executable", hyperkitPath)
@@ -36,37 +36,37 @@ func checkHyperKitInstalled() error {
 func fixHyperKitInstallation() error {
 	h := cache.NewHyperKitCache()
 
-	logging.Debugf("Installing %s", h.GetBinaryName())
+	logging.Debugf("Installing %s", h.GetExecutableName())
 
 	if err := h.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download %s : %v", h.GetBinaryName(), err)
+		return fmt.Errorf("Unable to download %s : %v", h.GetExecutableName(), err)
 	}
-	return setSuid(h.GetBinaryPath())
+	return setSuid(h.GetExecutablePath())
 }
 
 func checkMachineDriverHyperKitInstalled() error {
 	hyperkitDriver := cache.NewMachineDriverHyperKitCache()
 
-	logging.Debugf("Checking if %s is installed", hyperkitDriver.GetBinaryName())
+	logging.Debugf("Checking if %s is installed", hyperkitDriver.GetExecutableName())
 	if !hyperkitDriver.IsCached() {
-		return fmt.Errorf("%s executable is not cached", hyperkitDriver.GetBinaryName())
+		return fmt.Errorf("%s executable is not cached", hyperkitDriver.GetExecutableName())
 	}
 
 	if err := hyperkitDriver.CheckVersion(); err != nil {
 		return err
 	}
-	return checkSuid(hyperkitDriver.GetBinaryPath())
+	return checkSuid(hyperkitDriver.GetExecutablePath())
 }
 
 func fixMachineDriverHyperKitInstalled() error {
 	hyperkitDriver := cache.NewMachineDriverHyperKitCache()
 
-	logging.Debugf("Installing %s", hyperkitDriver.GetBinaryName())
+	logging.Debugf("Installing %s", hyperkitDriver.GetExecutableName())
 
 	if err := hyperkitDriver.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download %s : %v", hyperkitDriver.GetBinaryName(), err)
+		return fmt.Errorf("Unable to download %s : %v", hyperkitDriver.GetExecutableName(), err)
 	}
-	return setSuid(hyperkitDriver.GetBinaryPath())
+	return setSuid(hyperkitDriver.GetExecutablePath())
 }
 
 func checkEtcHostsFilePermissions() error {

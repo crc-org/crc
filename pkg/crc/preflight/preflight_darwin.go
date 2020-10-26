@@ -44,9 +44,9 @@ var dnsPreflightChecks = [...]Check{
 var traySetupChecks = [...]Check{
 	{
 		checkDescription: "Checking if tray executable is installed",
-		check:            checkTrayBinaryPresent,
+		check:            checkTrayExecutablePresent,
 		fixDescription:   "Installing and setting up tray",
-		fix:              fixTrayBinaryPresent,
+		fix:              fixTrayExecutablePresent,
 		flags:            SetupOnly,
 	},
 	{

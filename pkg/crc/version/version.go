@@ -15,7 +15,7 @@ var (
 	// The current version of minishift
 	crcVersion = "0.0.0-unset"
 
-	// The SHA-1 of the commit this binary is build off
+	// The SHA-1 of the commit this executable is build off
 	commitSha = "sha-unset"
 
 	// Bundle version which used for the release.
@@ -27,7 +27,7 @@ var (
 
 const (
 	releaseInfoLink = "https://mirror.openshift.com/pub/openshift-v4/clients/crc/latest/release-info.json"
-	// Tray version to be embedded in binary
+	// Tray version to be embedded in executable
 	crcMacTrayVersion = "1.0.0-alpha.6"
 	// Windows forms application version type major.minor.buildnumber.revesion
 	crcWindowsTrayVersion = "0.2.0.0"

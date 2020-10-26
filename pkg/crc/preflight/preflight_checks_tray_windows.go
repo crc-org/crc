@@ -20,7 +20,7 @@ import (
 
 func checkIfTrayInstalled() error {
 	/* We want to force installation whenever setup is ran
-	 * as we want the service config to point to the binary
+	 * as we want the service config to point to the executable
 	 * with which the setup command was issued.
 	 */
 
@@ -66,7 +66,7 @@ func fixTrayInstalled() error {
 		password,
 		tempDir,
 		binPathWithArgs,
-		constants.TrayBinaryPath,
+		constants.TrayExecutablePath,
 		constants.TrayShortcutName,
 		constants.DaemonServiceName,
 	)
@@ -111,7 +111,7 @@ func escapeWindowsPassword(password string) string {
 }
 
 func removeTray() error {
-	trayProcessName := constants.TrayBinaryName[:len(constants.TrayBinaryName)-4]
+	trayProcessName := constants.TrayExecutableName[:len(constants.TrayExecutableName)-4]
 
 	tempDir, err := ioutil.TempDir("", "crc")
 	if err != nil {
@@ -145,14 +145,14 @@ func removeTray() error {
 	return nil
 }
 
-func checkTrayBinaryExists() error {
-	if os.FileExists(constants.TrayBinaryPath) {
+func checkTrayExecutableExists() error {
+	if os.FileExists(constants.TrayExecutablePath) {
 		return nil
 	}
 	return fmt.Errorf("Tray executable does not exists")
 }
 
-func fixTrayBinaryExists() error {
+func fixTrayExecutableExists() error {
 	tmpArchivePath, err := ioutil.TempDir("", "crc")
 	if err != nil {
 		logging.Error("Failed creating temporary directory for extracting tray")
@@ -173,7 +173,7 @@ func fixTrayBinaryExists() error {
 		}
 	}
 	archivePath := filepath.Join(tmpArchivePath, filepath.Base(constants.GetCRCWindowsTrayDownloadURL()))
-	_, err = extract.Uncompress(archivePath, constants.TrayBinaryDir, false)
+	_, err = extract.Uncompress(archivePath, constants.TrayExecutableDir, false)
 	if err != nil {
 		return fmt.Errorf("Cannot uncompress '%s': %v", archivePath, err)
 	}

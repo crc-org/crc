@@ -10,29 +10,29 @@ import (
 	"github.com/YourFin/binappend"
 )
 
-func openEmbeddedFile(binaryPath, embedName string) (*binappend.Reader, error) {
-	extractor, err := binappend.MakeExtractor(binaryPath)
+func openEmbeddedFile(executablePath, embedName string) (*binappend.Reader, error) {
+	extractor, err := binappend.MakeExtractor(executablePath)
 	if err != nil {
-		return nil, fmt.Errorf("Could not data embedded in %s: %v", binaryPath, err)
+		return nil, fmt.Errorf("Could not data embedded in %s: %v", executablePath, err)
 	}
 	reader, err := extractor.GetReader(embedName)
 	if err != nil {
-		return nil, fmt.Errorf("Could not open embedded '%s' in %s: %v", embedName, binaryPath, err)
+		return nil, fmt.Errorf("Could not open embedded '%s' in %s: %v", embedName, executablePath, err)
 	}
 	return reader, nil
 }
 
 func Extract(embedName, destFile string) error {
-	binaryPath, err := os.Executable()
+	executablePath, err := os.Executable()
 	if err != nil {
 		return err
 	}
-	return ExtractFromBinary(binaryPath, embedName, destFile)
+	return ExtractFromExecutable(executablePath, embedName, destFile)
 }
 
-func ExtractFromBinary(binaryPath, embedName, destFile string) error {
-	logging.Debugf("Extracting embedded '%s' from %s to %s", embedName, binaryPath, destFile)
-	reader, err := openEmbeddedFile(binaryPath, embedName)
+func ExtractFromExecutable(executablePath, embedName, destFile string) error {
+	logging.Debugf("Extracting embedded '%s' from %s to %s", embedName, executablePath, destFile)
+	reader, err := openEmbeddedFile(executablePath, embedName)
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func ExtractFromBinary(binaryPath, embedName, destFile string) error {
 
 	_, err = io.Copy(writer, reader)
 	if err != nil {
-		return fmt.Errorf("Failed to copy embedded '%s' from %s to %s: %v", embedName, binaryPath, destFile, err)
+		return fmt.Errorf("Failed to copy embedded '%s' from %s to %s: %v", embedName, executablePath, destFile, err)
 	}
 	return nil
 }

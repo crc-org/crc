@@ -19,15 +19,15 @@ func NewHyperKitCache() *Cache {
 	return New(hyperkit.HyperKitCommand, hyperkit.HyperKitDownloadURL, constants.CrcBinDir, hyperkit.HyperKitVersion, getHyperKitVersion)
 }
 
-func getHyperKitMachineDriverVersion(binaryPath string) (string, error) {
-	return getVersionGeneric(binaryPath, "version")
+func getHyperKitMachineDriverVersion(executablePath string) (string, error) {
+	return getVersionGeneric(executablePath, "version")
 }
 
 /* This is very similar to cache.getVersionGeneric, except that it's reading from stderr instead of
  * stdout, and it needs to deal with multiline output
  */
-func getHyperKitVersion(binaryPath string) (string, error) {
-	_, stderr, err := crcos.RunWithDefaultLocale(binaryPath, "-v")
+func getHyperKitVersion(executablePath string) (string, error) {
+	_, stderr, err := crcos.RunWithDefaultLocale(executablePath, "-v")
 	if err != nil {
 		return "", err
 	}
@@ -37,7 +37,7 @@ func getHyperKitVersion(binaryPath string) (string, error) {
 	}
 	parsedOutput := strings.Split(stderr, ":")
 	if len(parsedOutput) < 2 {
-		return "", fmt.Errorf("Unable to parse the version information of %s", binaryPath)
+		return "", fmt.Errorf("Unable to parse the version information of %s", executablePath)
 	}
 	return strings.TrimSpace(parsedOutput[1]), err
 }

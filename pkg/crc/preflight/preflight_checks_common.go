@@ -18,23 +18,23 @@ var genericPreflightChecks = [...]Check{
 	{
 		configKeySuffix:  "check-oc-cached",
 		checkDescription: "Checking if oc executable is cached",
-		check:            checkOcBinaryCached,
+		check:            checkOcExecutableCached,
 		fixDescription:   "Caching oc executable",
-		fix:              fixOcBinaryCached,
+		fix:              fixOcExecutableCached,
 	},
 	{
 		configKeySuffix:  "check-podman-cached",
 		checkDescription: "Checking if podman remote executable is cached",
-		check:            checkPodmanBinaryCached,
+		check:            checkPodmanExecutableCached,
 		fixDescription:   "Caching podman remote executable",
-		fix:              fixPodmanBinaryCached,
+		fix:              fixPodmanExecutableCached,
 	},
 	{
 		configKeySuffix:  "check-goodhosts-cached",
 		checkDescription: "Checking if goodhosts executable is cached",
-		check:            checkGoodhostsBinaryCached,
+		check:            checkGoodhostsExecutableCached,
 		fixDescription:   "Caching goodhosts executable",
-		fix:              fixGoodhostsBinaryCached,
+		fix:              fixGoodhostsExecutableCached,
 	},
 	{
 		configKeySuffix:  "check-bundle-cached",
@@ -84,9 +84,9 @@ func fixBundleCached() error {
 	return fmt.Errorf("CRC bundle is not embedded in the executable")
 }
 
-// Check if oc binary is cached or not
-func checkOcBinaryCached() error {
-	// Remove oc binary from older location and ignore the error
+// Check if oc executable is cached or not
+func checkOcExecutableCached() error {
+	// Remove oc executable from older location and ignore the error
 	// We should remove this code after 3-4 releases. (after 2020-07-10)
 	os.Remove(filepath.Join(constants.CrcBinDir, "oc"))
 
@@ -101,7 +101,7 @@ func checkOcBinaryCached() error {
 	return nil
 }
 
-func fixOcBinaryCached() error {
+func fixOcExecutableCached() error {
 	oc := cache.NewOcCache()
 	if err := oc.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download oc %v", err)
@@ -110,14 +110,14 @@ func fixOcBinaryCached() error {
 	return nil
 }
 
-// Check if podman binary is cached or not
-func checkPodmanBinaryCached() error {
+// Check if podman executable is cached or not
+func checkPodmanExecutableCached() error {
 	// Disable the podman cache until further notice
 	logging.Debug("Currently podman remote is not supported")
 	return nil
 }
 
-func fixPodmanBinaryCached() error {
+func fixPodmanExecutableCached() error {
 	podman := cache.NewPodmanCache()
 	if err := podman.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download podman remote executable %v", err)
@@ -126,21 +126,21 @@ func fixPodmanBinaryCached() error {
 	return nil
 }
 
-// Check if goodhost binary is cached or not
-func checkGoodhostsBinaryCached() error {
+// Check if goodhost executable is cached or not
+func checkGoodhostsExecutableCached() error {
 	goodhost := cache.NewGoodhostsCache()
 	if !goodhost.IsCached() {
 		return errors.New("goodhost executable is not cached")
 	}
 	logging.Debug("goodhost executable already cached")
-	return checkSuid(goodhost.GetBinaryPath())
+	return checkSuid(goodhost.GetExecutablePath())
 }
 
-func fixGoodhostsBinaryCached() error {
+func fixGoodhostsExecutableCached() error {
 	goodhost := cache.NewGoodhostsCache()
 	if err := goodhost.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download goodhost executable %v", err)
 	}
 	logging.Debug("goodhost executable cached")
-	return setSuid(goodhost.GetBinaryPath())
+	return setSuid(goodhost.GetExecutablePath())
 }
