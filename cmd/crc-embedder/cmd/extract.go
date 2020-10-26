@@ -14,8 +14,8 @@ func init() {
 
 var extractCmd = &cobra.Command{
 	Use:   "extract",
-	Short: "Extract data file embedded in the crc binary",
-	Long:  `Extract a data file which is embedded in the crc binary`,
+	Short: "Extract data file embedded in the crc executable",
+	Long:  `Extract a data file which is embedded in the crc executable`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runExtract(args)
 	},

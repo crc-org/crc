@@ -17,30 +17,30 @@ import (
 var genericPreflightChecks = [...]Check{
 	{
 		configKeySuffix:  "check-oc-cached",
-		checkDescription: "Checking if oc binary is cached",
+		checkDescription: "Checking if oc executable is cached",
 		check:            checkOcBinaryCached,
-		fixDescription:   "Caching oc binary",
+		fixDescription:   "Caching oc executable",
 		fix:              fixOcBinaryCached,
 	},
 	{
 		configKeySuffix:  "check-podman-cached",
-		checkDescription: "Checking if podman remote binary is cached",
+		checkDescription: "Checking if podman remote executable is cached",
 		check:            checkPodmanBinaryCached,
-		fixDescription:   "Caching podman remote binary",
+		fixDescription:   "Caching podman remote executable",
 		fix:              fixPodmanBinaryCached,
 	},
 	{
 		configKeySuffix:  "check-goodhosts-cached",
-		checkDescription: "Checking if goodhosts binary is cached",
+		checkDescription: "Checking if goodhosts executable is cached",
 		check:            checkGoodhostsBinaryCached,
-		fixDescription:   "Caching goodhosts binary",
+		fixDescription:   "Caching goodhosts executable",
 		fix:              fixGoodhostsBinaryCached,
 	},
 	{
 		configKeySuffix:  "check-bundle-cached",
 		checkDescription: "Checking if CRC bundle is cached in '$HOME/.crc'",
 		check:            checkBundleCached,
-		fixDescription:   "Unpacking bundle from the CRC binary",
+		fixDescription:   "Unpacking bundle from the CRC executable",
 		fix:              fixBundleCached,
 		flags:            SetupOnly,
 	},
@@ -81,7 +81,7 @@ func fixBundleCached() error {
 
 		return embed.Extract(filepath.Base(constants.DefaultBundlePath), constants.DefaultBundlePath)
 	}
-	return fmt.Errorf("CRC bundle is not embedded in the binary")
+	return fmt.Errorf("CRC bundle is not embedded in the executable")
 }
 
 // Check if oc binary is cached or not
@@ -92,12 +92,12 @@ func checkOcBinaryCached() error {
 
 	oc := cache.NewOcCache()
 	if !oc.IsCached() {
-		return errors.New("oc binary is not cached")
+		return errors.New("oc executable is not cached")
 	}
 	if err := oc.CheckVersion(); err != nil {
 		return err
 	}
-	logging.Debug("oc binary already cached")
+	logging.Debug("oc executable already cached")
 	return nil
 }
 
@@ -106,7 +106,7 @@ func fixOcBinaryCached() error {
 	if err := oc.EnsureIsCached(); err != nil {
 		return fmt.Errorf("Unable to download oc %v", err)
 	}
-	logging.Debug("oc binary cached")
+	logging.Debug("oc executable cached")
 	return nil
 }
 
@@ -120,9 +120,9 @@ func checkPodmanBinaryCached() error {
 func fixPodmanBinaryCached() error {
 	podman := cache.NewPodmanCache()
 	if err := podman.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download podman remote binary %v", err)
+		return fmt.Errorf("Unable to download podman remote executable %v", err)
 	}
-	logging.Debug("podman remote binary cached")
+	logging.Debug("podman remote executable cached")
 	return nil
 }
 
@@ -130,17 +130,17 @@ func fixPodmanBinaryCached() error {
 func checkGoodhostsBinaryCached() error {
 	goodhost := cache.NewGoodhostsCache()
 	if !goodhost.IsCached() {
-		return errors.New("goodhost binary is not cached")
+		return errors.New("goodhost executable is not cached")
 	}
-	logging.Debug("goodhost binary already cached")
+	logging.Debug("goodhost executable already cached")
 	return checkSuid(goodhost.GetBinaryPath())
 }
 
 func fixGoodhostsBinaryCached() error {
 	goodhost := cache.NewGoodhostsCache()
 	if err := goodhost.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download goodhost binary %v", err)
+		return fmt.Errorf("Unable to download goodhost executable %v", err)
 	}
-	logging.Debug("goodhost binary cached")
+	logging.Debug("goodhost executable cached")
 	return setSuid(goodhost.GetBinaryPath())
 }

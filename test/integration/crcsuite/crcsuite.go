@@ -73,7 +73,7 @@ func FeatureContext(s *godog.Suite) {
 
 		// init CRCBinary if no location provided by user
 		if CRCBinary == "" {
-			fmt.Println("Expecting the CRC binary to be in $HOME/go/bin.")
+			fmt.Println("Expecting the CRC executable to be in $HOME/go/bin.")
 			usr, _ := user.Current()
 			CRCBinary = filepath.Join(usr.HomeDir, "go", "bin")
 		}
@@ -88,7 +88,7 @@ func FeatureContext(s *godog.Suite) {
 		}
 
 		if bundleURL == "embedded" {
-			fmt.Println("Expecting the bundle to be embedded in the CRC binary.")
+			fmt.Println("Expecting the bundle to be embedded in the CRC executable.")
 			bundleEmbedded = true
 			if bundleVersion == "" {
 				fmt.Println("User must specify --bundle-version if bundle is embedded")

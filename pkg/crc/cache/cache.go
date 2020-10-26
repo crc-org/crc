@@ -124,7 +124,7 @@ func (c *Cache) CacheBinary() error {
 	} else {
 		extractedFiles = append(extractedFiles, assetTmpFile)
 		if filepath.Base(assetTmpFile) != c.binaryName {
-			logging.Warnf("Binary name is %s but extracted file name is %s", c.binaryName, filepath.Base(assetTmpFile))
+			logging.Warnf("Executable name is %s but extracted file name is %s", c.binaryName, filepath.Base(assetTmpFile))
 		}
 	}
 
@@ -148,7 +148,7 @@ func (c *Cache) CacheBinary() error {
 }
 
 func (c *Cache) getBinary(destDir string) (string, error) {
-	logging.Debugf("Trying to extract %s from crc binary", c.binaryName)
+	logging.Debugf("Trying to extract %s from crc executable", c.binaryName)
 	archiveName := filepath.Base(c.archiveURL)
 	destPath := filepath.Join(destDir, archiveName)
 	err := embed.Extract(archiveName, destPath)

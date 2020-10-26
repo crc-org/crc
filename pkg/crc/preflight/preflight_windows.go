@@ -64,9 +64,9 @@ var hypervPreflightChecks = [...]Check{
 
 var traySetupChecks = [...]Check{
 	{
-		checkDescription: "Checking if tray binary is present",
+		checkDescription: "Checking if tray executable is present",
 		check:            checkTrayBinaryExists,
-		fixDescription:   "Caching tray binary",
+		fixDescription:   "Caching tray executable",
 		fix:              fixTrayBinaryExists,
 		flags:            SetupOnly,
 	},

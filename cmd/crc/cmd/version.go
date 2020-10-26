@@ -63,6 +63,6 @@ func (v *version) lines() []string {
 	}
 	return []string{
 		fmt.Sprintf("CodeReady Containers version: %s+%s\n", v.Version, v.Commit),
-		fmt.Sprintf("OpenShift version: %s (%sembedded in binary)\n", v.OpenshiftVersion, embedded),
+		fmt.Sprintf("OpenShift version: %s (%sembedded in executable)\n", v.OpenshiftVersion, embedded),
 	}
 }

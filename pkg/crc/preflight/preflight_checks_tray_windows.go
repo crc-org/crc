@@ -149,7 +149,7 @@ func checkTrayBinaryExists() error {
 	if os.FileExists(constants.TrayBinaryPath) {
 		return nil
 	}
-	return fmt.Errorf("Tray binary does not exists")
+	return fmt.Errorf("Tray executable does not exists")
 }
 
 func fixTrayBinaryExists() error {
@@ -162,10 +162,10 @@ func fixTrayBinaryExists() error {
 		_ = goos.RemoveAll(tmpArchivePath)
 	}()
 
-	logging.Debug("Trying to extract tray from crc binary")
+	logging.Debug("Trying to extract tray from crc executable")
 	err = embed.Extract(filepath.Base(constants.GetCRCWindowsTrayDownloadURL()), tmpArchivePath)
 	if err != nil {
-		logging.Debug("Could not extract tray from crc binary", err)
+		logging.Debug("Could not extract tray from crc executable", err)
 		logging.Debug("Downloading crc tray")
 		_, err = dl.Download(constants.GetCRCWindowsTrayDownloadURL(), tmpArchivePath, 0600)
 		if err != nil {
