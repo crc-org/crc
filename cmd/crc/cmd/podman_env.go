@@ -13,7 +13,7 @@ import (
 var podmanEnvCmd = &cobra.Command{
 	Use:   "podman-env",
 	Short: "Setup podman environment",
-	Long:  `Setup environment for 'podman' binary to access podman on CRC VM`,
+	Long:  `Setup environment for 'podman' executable to access podman on CRC VM`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := runPodmanEnv(args); err != nil {
 			exit.WithMessage(1, err.Error())

@@ -256,7 +256,7 @@ func checkMachineDriverLibvirtInstalled() error {
 	logging.Debugf("Checking if %s is installed", machineDriverLibvirt.GetBinaryName())
 
 	if !machineDriverLibvirt.IsCached() {
-		return fmt.Errorf("%s binary is not cached", machineDriverLibvirt.GetBinaryName())
+		return fmt.Errorf("%s executable is not cached", machineDriverLibvirt.GetBinaryName())
 	}
 	if err := machineDriverLibvirt.CheckVersion(); err != nil {
 		return err
@@ -282,7 +282,7 @@ func checkOldMachineDriverLibvirtInstalled() error {
 	logging.Debugf("Checking if an older libvirt driver %s is installed", libvirt.MachineDriverCommand)
 	oldLibvirtDriverPath := filepath.Join("/usr/local/bin/", libvirt.MachineDriverCommand)
 	if _, err := os.Stat(oldLibvirtDriverPath); !os.IsNotExist(err) {
-		return fmt.Errorf("Found old system-wide crc-machine-driver binary")
+		return fmt.Errorf("Found old system-wide crc-machine-driver executable")
 	}
 	logging.Debugf("No older %s installation found", libvirt.MachineDriverCommand)
 

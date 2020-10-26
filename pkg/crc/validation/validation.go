@@ -67,7 +67,7 @@ func ValidateBundle(bundle string) error {
 			logging.Warnf("Using unsupported bundle %s", userProvidedBundleVersion)
 			return nil
 		}
-		return fmt.Errorf("%s bundle is not supported by this binary, please use %s", userProvidedBundleVersion, constants.GetDefaultBundle())
+		return fmt.Errorf("%s bundle is not supported by this crc executable, please use %s", userProvidedBundleVersion, constants.GetDefaultBundle())
 	}
 	return nil
 }

@@ -16,8 +16,8 @@ var (
 
 var ocEnvCmd = &cobra.Command{
 	Use:   "oc-env",
-	Short: "Add the 'oc' binary to PATH",
-	Long:  `Add the OpenShift client binary 'oc' to PATH`,
+	Short: "Add the 'oc' executable to PATH",
+	Long:  `Add the OpenShift client executable 'oc' to PATH`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := runOcEnv(args); err != nil {
 			exit.WithMessage(1, err.Error())

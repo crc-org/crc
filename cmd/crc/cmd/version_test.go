@@ -16,7 +16,7 @@ func TestPlainVersion(t *testing.T) {
 		Embedded:         false,
 	}, ""))
 	assert.Equal(t, `CodeReady Containers version: 1.13+aabbcc
-OpenShift version: 4.5.4 (not embedded in binary)
+OpenShift version: 4.5.4 (not embedded in executable)
 `, out.String())
 }
 

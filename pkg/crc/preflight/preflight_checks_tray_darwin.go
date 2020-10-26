@@ -148,7 +148,7 @@ func checkTrayVersion() error {
 }
 
 func fixTrayVersion() error {
-	logging.Debug("Downloading/extracting tray binary")
+	logging.Debug("Downloading/extracting tray executable")
 	// get the tray app
 	err := downloadOrExtractTrayApp()
 	if err != nil {
@@ -159,13 +159,13 @@ func fixTrayVersion() error {
 
 func checkTrayBinaryPresent() error {
 	if !os.FileExists(constants.TrayBinaryPath) {
-		return fmt.Errorf("Tray binary does not exist")
+		return fmt.Errorf("Tray executable does not exist")
 	}
 	return nil
 }
 
 func fixTrayBinaryPresent() error {
-	logging.Debug("Downloading/extracting tray binary")
+	logging.Debug("Downloading/extracting tray executable")
 	return downloadOrExtractTrayApp()
 }
 
@@ -194,10 +194,10 @@ func downloadOrExtractTrayApp() error {
 		_ = goos.RemoveAll(tmpArchivePath)
 	}()
 
-	logging.Debug("Trying to extract tray from crc binary")
+	logging.Debug("Trying to extract tray from crc executable")
 	err = embed.Extract(filepath.Base(constants.GetCRCMacTrayDownloadURL()), tmpArchivePath)
 	if err != nil {
-		logging.Debug("Could not extract tray from crc binary", err)
+		logging.Debug("Could not extract tray from crc executable", err)
 		logging.Debug("Downloading crc tray")
 		_, err = dl.Download(constants.GetCRCMacTrayDownloadURL(), tmpArchivePath, 0600)
 		if err != nil {

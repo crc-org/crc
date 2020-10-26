@@ -14,8 +14,8 @@ func init() {
 
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List data files embedded in the crc binary",
-	Long:  `List all the data files which were embedded in the crc binary`,
+	Short: "List data files embedded in the crc executable",
+	Long:  `List all the data files which were embedded in the crc executable`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runList(args)
 	},
