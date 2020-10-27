@@ -45,6 +45,7 @@ const (
 	RHEL   OsType = "rhel"
 	Fedora OsType = "fedora"
 	CentOS OsType = "centos"
+	Ubuntu OsType = "ubuntu"
 )
 
 func stripQuotes(val string) string {

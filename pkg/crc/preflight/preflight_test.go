@@ -2,36 +2,11 @@ package preflight
 
 import (
 	"errors"
-	"runtime"
 	"testing"
 
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestCountConfigurationOptions(t *testing.T) {
-	cfg := config.New(config.NewEmptyInMemoryStorage())
-	RegisterSettings(cfg)
-	assert.Len(t, cfg.AllConfigs(), map[string]int{
-		"darwin":  20,
-		"linux":   40,
-		"windows": 24,
-	}[runtime.GOOS])
-}
-
-func TestCountPreflights(t *testing.T) {
-	assert.Len(t, getPreflightChecks(false), map[string]int{
-		"darwin":  10,
-		"linux":   21,
-		"windows": 14,
-	}[runtime.GOOS])
-
-	assert.Len(t, getPreflightChecks(true), map[string]int{
-		"darwin":  16,
-		"linux":   21,
-		"windows": 16,
-	}[runtime.GOOS])
-}
 
 func TestCheckPreflight(t *testing.T) {
 	check, calls := sampleCheck(nil, nil)
