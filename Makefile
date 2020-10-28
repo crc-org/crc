@@ -6,7 +6,7 @@ BUNDLE_VERSION = 4.6.1
 # string or dd-mm-yyyy format.
 OC_VERSION ?= ${BUNDLE_VERSION}
 BUNDLE_EXTENSION = crcbundle
-CRC_VERSION = 1.17.0
+CRC_VERSION = 1.18.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 CONTAINER_RUNTIME ?= podman
 
