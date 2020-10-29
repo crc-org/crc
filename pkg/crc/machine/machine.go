@@ -171,6 +171,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 			BundleName:  filepath.Base(startConfig.BundlePath),
 			CPUs:        startConfig.CPUs,
 			Memory:      startConfig.Memory,
+			DiskSize:    startConfig.DiskSize,
 			NetworkMode: client.networkMode,
 		}
 

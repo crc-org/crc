@@ -10,6 +10,7 @@ type MachineConfig struct {
 	Name            string
 	Memory          int
 	CPUs            int
+	DiskSize        int
 	ImageSourcePath string
 	ImageFormat     string
 	SSHKeyPath      string

@@ -1,6 +1,7 @@
 package machine
 
 import (
+	"github.com/code-ready/crc/pkg/crc/machine/config"
 	libmachine "github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/host"
 )
@@ -33,13 +34,9 @@ func setVcpus(host *host.Host, vcpus int) error {
 	return updateDriverValue(host, vcpuSetter)
 }
 
-func convertGiBToBytes(gib int) uint64 {
-	return uint64(gib) * 1024 * 1024 * 1024
-}
-
 func setDiskSize(host *host.Host, diskSizeGiB int) error {
 	diskSizeSetter := func(driver *libmachine.VMDriver) {
-		driver.DiskCapacity = convertGiBToBytes(diskSizeGiB)
+		driver.DiskCapacity = config.ConvertGiBToBytes(diskSizeGiB)
 	}
 
 	return updateDriverValue(host, diskSizeSetter)
