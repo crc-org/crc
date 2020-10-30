@@ -91,10 +91,6 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	return nil
 }
 
-func toBytes(gibibytes uint) string {
-	return fmt.Sprintf("%d", gibibytes*1024*1024*1024)
-}
-
 func (d *Driver) UpdateConfigRaw(rawConfig []byte) error {
 	var newDriver Driver
 
@@ -124,8 +120,8 @@ func (d *Driver) UpdateConfigRaw(rawConfig []byte) error {
 		}
 	}
 	if newDriver.DiskCapacity != d.DiskCapacity {
-		log.Debugf("Resizing disk from %d GiB to %d GiB", d.DiskCapacity, newDriver.DiskCapacity)
-		err := cmd("Hyper-V\\Resize-VHD", "-Path", quote(d.getDiskPath()), "-SizeBytes", toBytes(uint(newDriver.DiskCapacity)))
+		log.Debugf("Resizing disk from %d bytes to %d bytes", d.DiskCapacity, newDriver.DiskCapacity)
+		err := cmd("Hyper-V\\Resize-VHD", "-Path", quote(d.getDiskPath()), "-SizeBytes", fmt.Sprintf("%d", newDriver.DiskCapacity))
 		if err != nil {
 			log.Warnf("Failed to set disk size to %d", newDriver.DiskCapacity)
 			return err
