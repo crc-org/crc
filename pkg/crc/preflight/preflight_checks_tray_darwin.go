@@ -57,7 +57,7 @@ func fixDaemonPlistFileExists() error {
 		Label:          daemonAgentLabel,
 		ExecutablePath: currentExecutablePath,
 		StdOutFilePath: stdOutFilePathDaemon,
-		Args:           []string{"daemon", "--log-level", "debug"},
+		Args:           []string{"daemon"},
 	}
 	return fixPlistFileExists(daemonConfig)
 }
