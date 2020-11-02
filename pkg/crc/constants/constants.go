@@ -37,20 +37,6 @@ const (
 	DefaultContext            = "admin"
 )
 
-var ocURLForOs = map[string]string{
-	"darwin":  fmt.Sprintf("%s/%s/%s", DefaultOcURLBase, version.GetOcVersion(), "openshift-client-mac.tar.gz"),
-	"linux":   fmt.Sprintf("%s/%s/%s", DefaultOcURLBase, version.GetOcVersion(), "openshift-client-linux.tar.gz"),
-	"windows": fmt.Sprintf("%s/%s/%s", DefaultOcURLBase, version.GetOcVersion(), "openshift-client-windows.zip"),
-}
-
-func GetOcURLForOs(os string) string {
-	return ocURLForOs[os]
-}
-
-func GetOcURL() string {
-	return GetOcURLForOs(runtime.GOOS)
-}
-
 var podmanURLForOs = map[string]string{
 	"darwin":  fmt.Sprintf("%s/%s", DefaultPodmanURLBase, "podman-remote-latest-master-darwin-amd64.zip"),
 	"linux":   fmt.Sprintf("%s/%s", DefaultPodmanURLBase, "podman-remote-latest-master-linux---amd64.zip"),
@@ -126,11 +112,15 @@ func GetHomeDir() string {
 	return os.Getenv("HOME")
 }
 
-// EnsureBaseDirExists create the ~/.crc dir if its not there
-func EnsureBaseDirExists() error {
-	_, err := os.Stat(CrcBaseDir)
-	if err != nil {
-		return os.Mkdir(CrcBaseDir, 0750)
+// EnsureBaseDirectoriesExist create the ~/.crc and ~/.crc/oc dirs if they are not present
+func EnsureBaseDirectoriesExist() error {
+	if _, err := os.Stat(CrcBaseDir); err != nil {
+		if !os.IsNotExist(err) {
+			return err
+		}
+		if err := os.Mkdir(CrcBaseDir, 0750); err != nil {
+			return err
+		}
 	}
 	return nil
 }

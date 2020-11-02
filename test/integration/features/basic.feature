@@ -37,7 +37,6 @@ Feature: Basic test
     @linux
     Scenario: CRC setup on Linux
         When executing "crc setup" succeeds
-        Then stderr should contain "Caching oc executable"
         And stderr should contain "Checking if CRC bundle is cached in '$HOME/.crc'"
         And stderr should contain "Checking if running as non-root"
         And stderr should contain "Checking if Virtualization is enabled"
@@ -67,7 +66,6 @@ Feature: Basic test
     @darwin
     Scenario: CRC setup on Mac
         When executing "crc setup" succeeds
-        Then stderr should contain "Caching oc executable"
         And stderr should contain "Checking if running as non-root"
         And stderr should contain "Checking if HyperKit is installed"
         And stderr should contain "Checking if crc-driver-hyperkit is installed"
@@ -79,7 +77,6 @@ Feature: Basic test
     @windows
     Scenario: CRC setup on Windows
         When executing "crc setup" succeeds
-        Then stderr should contain "Caching oc executable"
         Then stderr should contain "Unpacking bundle from the CRC executable" if bundle is embedded
         Then stderr should contain "Checking Windows 10 release"
         Then stderr should contain "Checking if Hyper-V is installed"
