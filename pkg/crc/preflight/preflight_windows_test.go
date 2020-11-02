@@ -10,10 +10,10 @@ import (
 func TestCountConfigurationOptions(t *testing.T) {
 	cfg := config.New(config.NewEmptyInMemoryStorage())
 	RegisterSettings(cfg)
-	assert.Len(t, cfg.AllConfigs(), 24)
+	assert.Len(t, cfg.AllConfigs(), 22)
 }
 
 func TestCountPreflights(t *testing.T) {
-	assert.Len(t, getPreflightChecks(false), 14)
-	assert.Len(t, getPreflightChecks(true), 16)
+	assert.Len(t, getPreflightChecks(false), 13)
+	assert.Len(t, getPreflightChecks(true), 15)
 }

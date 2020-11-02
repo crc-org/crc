@@ -12,16 +12,16 @@ func TestCountConfigurationOptions(t *testing.T) {
 	cfg := config.New(config.NewEmptyInMemoryStorage())
 	RegisterSettings(cfg)
 	options := len(cfg.AllConfigs())
-	assert.True(t, options == 40 || options == 32)
+	assert.True(t, options == 38 || options == 30)
 }
 
 func TestCountPreflights(t *testing.T) {
-	assert.Len(t, getPreflightChecksForDistro(crcos.RHEL, false), 21)
-	assert.Len(t, getPreflightChecksForDistro(crcos.RHEL, true), 21)
+	assert.Len(t, getPreflightChecksForDistro(crcos.RHEL, false), 20)
+	assert.Len(t, getPreflightChecksForDistro(crcos.RHEL, true), 20)
 
-	assert.Len(t, getPreflightChecksForDistro("unexpected", false), 21)
-	assert.Len(t, getPreflightChecksForDistro("unexpected", true), 21)
+	assert.Len(t, getPreflightChecksForDistro("unexpected", false), 20)
+	assert.Len(t, getPreflightChecksForDistro("unexpected", true), 20)
 
-	assert.Len(t, getPreflightChecksForDistro(crcos.Ubuntu, false), 17)
-	assert.Len(t, getPreflightChecksForDistro(crcos.Ubuntu, true), 17)
+	assert.Len(t, getPreflightChecksForDistro(crcos.Ubuntu, false), 16)
+	assert.Len(t, getPreflightChecksForDistro(crcos.Ubuntu, true), 16)
 }

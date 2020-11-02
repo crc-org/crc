@@ -6,12 +6,14 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/extract"
+	crcos "github.com/code-ready/crc/pkg/os"
 )
 
 // Metadata structure to unmarshal the crc-bundle-info.json file
@@ -87,7 +89,28 @@ func GetCachedBundleInfo(bundleName string) (*CrcBundleInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := bundleInfo.installSymlinkOrCopy(); err != nil {
+		return nil, err
+	}
 	return &bundleInfo, nil
+}
+
+func (bundle *CrcBundleInfo) installSymlinkOrCopy() error {
+	ocInBundle := filepath.Join(bundle.cachedPath, constants.OcExecutableName)
+	ocInBinDir := filepath.Join(constants.CrcOcBinDir, constants.OcExecutableName)
+	if _, err := os.Stat(constants.CrcOcBinDir); err != nil {
+		if !os.IsNotExist(err) {
+			return err
+		}
+		if err := os.MkdirAll(constants.CrcOcBinDir, 0750); err != nil {
+			return err
+		}
+	}
+	_ = os.Remove(ocInBinDir)
+	if runtime.GOOS == "windows" {
+		return crcos.CopyFileContents(ocInBundle, ocInBinDir, 0750)
+	}
+	return os.Symlink(ocInBundle, ocInBinDir)
 }
 
 func (bundle *CrcBundleInfo) resolvePath(filename string) string {

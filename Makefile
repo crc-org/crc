@@ -1,10 +1,6 @@
 SHELL := /bin/bash
 
 BUNDLE_VERSION = 4.6.1
-# OC_VERSION and BUNDLE_VERSION are going to same for release artifacts but
-# different for nightly and CI bits where bundle version would be any random
-# string or dd-mm-yyyy format.
-OC_VERSION ?= ${BUNDLE_VERSION}
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 1.18.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
@@ -49,7 +45,6 @@ __check_defined = \
 # Linker flags
 VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
     -X $(REPOPATH)/pkg/crc/version.bundleVersion=$(BUNDLE_VERSION) \
-    -X $(REPOPATH)/pkg/crc/version.ocVersion=$(OC_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.commitSha=$(COMMIT_SHA)
 
 # https://golang.org/cmd/link/

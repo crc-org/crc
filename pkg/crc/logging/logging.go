@@ -15,7 +15,7 @@ var (
 )
 
 func OpenLogFile(path string) (*os.File, error) {
-	err := constants.EnsureBaseDirExists()
+	err := constants.EnsureBaseDirectoriesExist()
 	if err != nil {
 		return nil, err
 	}

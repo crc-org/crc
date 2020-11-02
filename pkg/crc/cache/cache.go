@@ -9,7 +9,6 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/download"
 	"github.com/code-ready/crc/pkg/embed"
 	"github.com/code-ready/crc/pkg/extract"
@@ -39,10 +38,6 @@ func New(executableName string, archiveURL string, destDir string, version strin
 	return &Cache{executableName: executableName, archiveURL: archiveURL, destDir: destDir, version: version, getVersion: getVersion}
 }
 
-func getCurrentOcVersion(executablePath string) (string, error) {
-	return getVersionGeneric(executablePath, "version", "--client")
-}
-
 func (c *Cache) GetExecutablePath() string {
 	return filepath.Join(c.destDir, c.executableName)
 }
@@ -57,17 +52,13 @@ func (c *Cache) GetExecutableName() string {
  *
  * It returns <version> as a string
  */
-func getVersionGeneric(executablePath string, args ...string) (string, error) {
+func getVersionGeneric(executablePath string, args ...string) (string, error) { //nolint:deadcode,unused
 	stdOut, _, err := crcos.RunWithDefaultLocale(executablePath, args...)
 	parsedOutput := strings.Split(stdOut, ":")
 	if len(parsedOutput) < 2 {
 		return "", fmt.Errorf("Unable to parse the version information of %s", executablePath)
 	}
 	return strings.TrimSpace(parsedOutput[1]), err
-}
-
-func NewOcCache() *Cache {
-	return New(constants.OcExecutableName, constants.GetOcURL(), constants.CrcOcBinDir, version.GetOcVersion(), getCurrentOcVersion)
 }
 
 func NewPodmanCache() *Cache {

@@ -16,13 +16,6 @@ import (
 
 var genericPreflightChecks = [...]Check{
 	{
-		configKeySuffix:  "check-oc-cached",
-		checkDescription: "Checking if oc executable is cached",
-		check:            checkOcExecutableCached,
-		fixDescription:   "Caching oc executable",
-		fix:              fixOcExecutableCached,
-	},
-	{
 		configKeySuffix:  "check-podman-cached",
 		checkDescription: "Checking if podman remote executable is cached",
 		check:            checkPodmanExecutableCached,
@@ -82,32 +75,6 @@ func fixBundleCached() error {
 		return embed.Extract(filepath.Base(constants.DefaultBundlePath), constants.DefaultBundlePath)
 	}
 	return fmt.Errorf("CRC bundle is not embedded in the executable")
-}
-
-// Check if oc executable is cached or not
-func checkOcExecutableCached() error {
-	// Remove oc executable from older location and ignore the error
-	// We should remove this code after 3-4 releases. (after 2020-07-10)
-	os.Remove(filepath.Join(constants.CrcBinDir, "oc"))
-
-	oc := cache.NewOcCache()
-	if !oc.IsCached() {
-		return errors.New("oc executable is not cached")
-	}
-	if err := oc.CheckVersion(); err != nil {
-		return err
-	}
-	logging.Debug("oc executable already cached")
-	return nil
-}
-
-func fixOcExecutableCached() error {
-	oc := cache.NewOcCache()
-	if err := oc.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download oc %v", err)
-	}
-	logging.Debug("oc executable cached")
-	return nil
 }
 
 // Check if podman executable is cached or not

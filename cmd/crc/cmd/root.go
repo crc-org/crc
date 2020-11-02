@@ -40,7 +40,7 @@ var (
 )
 
 func init() {
-	if err := constants.EnsureBaseDirExists(); err != nil {
+	if err := constants.EnsureBaseDirectoriesExist(); err != nil {
 		logging.Fatal(err.Error())
 	}
 	var err error
