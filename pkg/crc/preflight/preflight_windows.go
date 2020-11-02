@@ -1,6 +1,13 @@
 package preflight
 
-import "github.com/code-ready/crc/pkg/crc/network"
+import (
+	"errors"
+	"fmt"
+	"strings"
+
+	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/os/windows/powershell"
+)
 
 var hypervPreflightChecks = [...]Check{
 	{
@@ -83,14 +90,56 @@ var traySetupChecks = [...]Check{
 	},
 }
 
-func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true, network.DefaultMode)
+var vsockChecks = [...]Check{
+	{
+		configKeySuffix:  "check-vsock",
+		checkDescription: "Checking if vsock is correctly configured",
+		check:            checkVsock,
+		fixDescription:   "Checking if vsock is correctly configured",
+		fix:              fixVsock,
+	},
 }
 
-func getPreflightChecks(experimentalFeatures bool, _ network.Mode) []Check {
+const (
+	// This key is required to activate the vsock communication
+	registryDirectory = `HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices`
+	// First part of the key is the vsock port. The rest is not used and just a placeholder.
+	registryKey   = "00000400-FACB-11E6-BD58-64006A7986D3"
+	registryValue = "gvisor-tap-vsock"
+)
+
+func checkVsock() error {
+	stdout, _, err := powershell.Execute(fmt.Sprintf(`Get-Item -Path "%s\%s"`, registryDirectory, registryKey))
+	if err != nil {
+		return err
+	}
+	if !strings.Contains(stdout, registryValue) {
+		return errors.New("VSock registry key not correctly configured")
+	}
+	return nil
+}
+
+func fixVsock() error {
+	cmds := []string{
+		fmt.Sprintf(`$service = New-Item -Path "%s" -Name "%s"`, registryDirectory, registryKey),
+		fmt.Sprintf(`$service.SetValue("ElementName", "%v")`, registryValue),
+	}
+	_, _, err := powershell.ExecuteAsAdmin("adding vsock registry key", strings.Join(cmds, ";"))
+	return err
+}
+
+func getAllPreflightChecks() []Check {
+	return getPreflightChecks(true, network.VSockMode)
+}
+
+func getPreflightChecks(experimentalFeatures bool, networkMode network.Mode) []Check {
 	checks := []Check{}
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, hypervPreflightChecks[:]...)
+
+	if networkMode == network.VSockMode {
+		checks = append(checks, vsockChecks[:]...)
+	}
 
 	// Experimental feature
 	if experimentalFeatures {
