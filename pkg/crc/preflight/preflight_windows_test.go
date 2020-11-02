@@ -11,10 +11,13 @@ import (
 func TestCountConfigurationOptions(t *testing.T) {
 	cfg := config.New(config.NewEmptyInMemoryStorage())
 	RegisterSettings(cfg)
-	assert.Len(t, cfg.AllConfigs(), 22)
+	assert.Len(t, cfg.AllConfigs(), 24)
 }
 
 func TestCountPreflights(t *testing.T) {
-	assert.Len(t, getPreflightChecks(false, network.DefaultMode), 14)
-	assert.Len(t, getPreflightChecks(true, network.DefaultMode), 16)
+	assert.Len(t, getPreflightChecks(false, network.DefaultMode), 13)
+	assert.Len(t, getPreflightChecks(true, network.DefaultMode), 15)
+
+	assert.Len(t, getPreflightChecks(false, network.VSockMode), 14)
+	assert.Len(t, getPreflightChecks(true, network.VSockMode), 16)
 }
