@@ -559,13 +559,14 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 			openshiftStatus = "Not Reachable"
 			logging.Debug(err.Error())
 		}
-		switch {
-		case operatorsStatus.Available:
+		if operatorsStatus.Available {
 			openshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
 			openshiftStatus = "Running"
-		case operatorsStatus.Degraded:
+		}
+		if operatorsStatus.Degraded {
 			openshiftStatus = "Degraded"
-		case operatorsStatus.Progressing:
+		}
+		if operatorsStatus.Progressing {
 			openshiftStatus = "Starting"
 		}
 		diskSize, diskUse, err = cluster.GetRootPartitionUsage(sshRunner)
