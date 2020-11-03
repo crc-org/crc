@@ -18,6 +18,7 @@ import (
 	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/ssh"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/crc/systemd"
 	"github.com/code-ready/crc/pkg/crc/systemd/states"
@@ -36,7 +37,6 @@ import (
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/host"
 	"github.com/code-ready/machine/libmachine/log"
-	"github.com/code-ready/machine/libmachine/ssh"
 	"github.com/code-ready/machine/libmachine/state"
 )
 
