@@ -559,7 +559,7 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 		return nil, errors.Wrap(err, "Cannot get root partition usage")
 	}
 	return &ClusterStatusResult{
-		CrcStatus:        vmStatus,
+		CrcStatus:        state.Running,
 		OpenshiftStatus:  getOpenShiftStatus(sshRunner),
 		OpenshiftVersion: crcBundleMetadata.GetOpenshiftVersion(),
 		DiskUse:          diskUse,
