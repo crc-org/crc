@@ -33,9 +33,9 @@ var deleteCmd = &cobra.Command{
 	},
 }
 
-func deleteMachine(client machine.Client, clearCache bool, cacheDir string, interactive, force bool) error {
+func deleteMachine(client machine.Client, clearCache bool, cacheDir string, interactive, force bool) (bool, error) {
 	if !interactive && !force {
-		return errors.New("non-interactive deletion requires --force")
+		return false, errors.New("non-interactive deletion requires --force")
 	}
 
 	if clearCache {
@@ -46,33 +46,38 @@ func deleteMachine(client machine.Client, clearCache bool, cacheDir string, inte
 	}
 
 	if err := checkIfMachineMissing(client); err != nil {
-		return err
+		return false, err
 	}
 
 	yes := input.PromptUserForYesOrNo("Do you want to delete the OpenShift cluster", force)
 	if yes {
-		return client.Delete()
+		return true, client.Delete()
 	}
-	return nil
+	return false, nil
 }
 
 func runDelete(writer io.Writer, client machine.Client, clearCache bool, cacheDir string, interactive, force bool, outputFormat string) error {
-	err := deleteMachine(client, clearCache, cacheDir, interactive, force)
+	machineDeleted, err := deleteMachine(client, clearCache, cacheDir, interactive, force)
 	return render(&deleteResult{
-		Success: err == nil,
-		Error:   errorMessage(err),
+		Success:        err == nil,
+		Error:          errorMessage(err),
+		machineDeleted: machineDeleted,
 	}, writer, outputFormat)
 }
 
 type deleteResult struct {
-	Success bool   `json:"success"`
-	Error   string `json:"error,omitempty"`
+	Success        bool   `json:"success"`
+	Error          string `json:"error,omitempty"`
+	machineDeleted bool
 }
 
 func (s *deleteResult) prettyPrintTo(writer io.Writer) error {
 	if s.Error != "" {
 		return errors.New(s.Error)
 	}
-	_, err := fmt.Fprintln(writer, "Deleted the OpenShift cluster")
+	var err error
+	if s.machineDeleted {
+		_, err = fmt.Fprintln(writer, "Deleted the OpenShift cluster")
+	}
 	return err
 }
