@@ -3,7 +3,6 @@ package cluster
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/oc"
@@ -34,9 +33,9 @@ func getStatus(ocConfig oc.Config, selector []string) (*Status, error) {
 		Available: true,
 	}
 
-	data, stderr, err := ocConfig.RunOcCommandPrivate("get", "co", "-ojson")
+	data, _, err := ocConfig.RunOcCommandPrivate("get", "co", "-ojson")
 	if err != nil {
-		return cs, fmt.Errorf("%s", stderr)
+		return cs, err
 	}
 
 	var co openshiftapi.ClusterOperatorList
