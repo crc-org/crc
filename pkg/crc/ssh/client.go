@@ -9,48 +9,29 @@ import (
 	"os/exec"
 	"runtime"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/code-ready/machine/libmachine/log"
 	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 type Client interface {
 	Output(command string) (string, error)
-	Shell(args ...string) error
-
-	// Start starts the specified command without waiting for it to finish. You
-	// have to call the Wait function for that.
-	//
-	// The first two io.ReadCloser are the standard output and the standard
-	// error of the executing command respectively. The returned error follows
-	// the same logic as in the exec.Cmd.Start function.
-	Start(command string) (io.ReadCloser, io.ReadCloser, error)
-
-	// Wait waits for the command started by the Start function to exit. The
-	// returned error follows the same logic as in the exec.Cmd.Wait function.
-	Wait() error
 }
 
 type ExternalClient struct {
 	BaseArgs   []string
 	BinaryPath string
-	cmd        *exec.Cmd
 }
 
 type NativeClient struct {
-	Config      ssh.ClientConfig
-	Hostname    string
-	Port        int
-	openSession *ssh.Session
-	openClient  *ssh.Client
+	Config   ssh.ClientConfig
+	Hostname string
+	Port     int
 }
 
 type Auth struct {
-	Passwords []string
-	Keys      []string
+	Keys []string
 }
 
 type ClientType string
@@ -147,10 +128,6 @@ func NewNativeConfig(user string, auth *Auth) (ssh.ClientConfig, error) {
 		authMethods = append(authMethods, ssh.PublicKeys(privateKeys...))
 	}
 
-	for _, p := range auth.Passwords {
-		authMethods = append(authMethods, ssh.Password(p))
-	}
-
 	return ssh.ClientConfig{
 		User: user,
 		Auth: authMethods,
@@ -186,144 +163,6 @@ func (client *NativeClient) Output(command string) (string, error) {
 		return "", err
 	}
 	return string(output), nil
-}
-
-func (client *NativeClient) OutputWithPty(command string) (string, error) {
-	conn, session, err := client.session()
-	if err != nil {
-		return "", err
-	}
-	defer closeConn(conn)
-	defer session.Close()
-
-	fd := int(os.Stdout.Fd())
-
-	termWidth, termHeight, err := terminal.GetSize(fd)
-	if err != nil {
-		return "", err
-	}
-
-	modes := ssh.TerminalModes{
-		ssh.ECHO:          0,
-		ssh.TTY_OP_ISPEED: 14400,
-		ssh.TTY_OP_OSPEED: 14400,
-	}
-
-	// request tty -- fixes error with hosts that use
-	// "Defaults requiretty" in /etc/sudoers - I'm looking at you RedHat
-	if err := session.RequestPty("xterm", termHeight, termWidth, modes); err != nil {
-		return "", err
-	}
-
-	output, err := session.CombinedOutput(command)
-
-	return string(output), err
-}
-
-func (client *NativeClient) Start(command string) (io.ReadCloser, io.ReadCloser, error) {
-	conn, session, err := client.session()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	stdout, err := session.StdoutPipe()
-	if err != nil {
-		return nil, nil, err
-	}
-	stderr, err := session.StderrPipe()
-	if err != nil {
-		return nil, nil, err
-	}
-	if err := session.Start(command); err != nil {
-		return nil, nil, err
-	}
-
-	client.openClient = conn
-	client.openSession = session
-	return ioutil.NopCloser(stdout), ioutil.NopCloser(stderr), nil
-}
-
-func (client *NativeClient) Wait() error {
-	err := client.openSession.Wait()
-	if err != nil {
-		return err
-	}
-
-	_ = client.openSession.Close()
-
-	err = client.openClient.Close()
-	if err != nil {
-		return err
-	}
-
-	client.openSession = nil
-	client.openClient = nil
-	return nil
-}
-
-func (client *NativeClient) Shell(args ...string) error {
-	var (
-		termWidth, termHeight int
-	)
-	conn, err := ssh.Dial("tcp", net.JoinHostPort(client.Hostname, strconv.Itoa(client.Port)), &client.Config)
-	if err != nil {
-		return err
-	}
-	defer closeConn(conn)
-
-	session, err := conn.NewSession()
-	if err != nil {
-		return err
-	}
-
-	defer session.Close()
-
-	session.Stdout = os.Stdout
-	session.Stderr = os.Stderr
-	session.Stdin = os.Stdin
-
-	modes := ssh.TerminalModes{
-		ssh.ECHO: 1,
-	}
-
-	fd := int(os.Stdin.Fd())
-
-	if terminal.IsTerminal(fd) {
-		oldState, err := terminal.MakeRaw(fd)
-		if err != nil {
-			return err
-		}
-
-		defer func() {
-			_ = terminal.Restore(fd, oldState)
-		}()
-
-		sizeWidth, sizeHeight, err := terminal.GetSize(fd)
-		if err != nil {
-			termWidth = 80
-			termHeight = 24
-		} else {
-			termWidth = int(sizeWidth)
-			termHeight = int(sizeHeight)
-		}
-	}
-
-	if err := session.RequestPty("xterm", termHeight, termWidth, modes); err != nil {
-		return err
-	}
-
-	if len(args) == 0 {
-		if err := session.Shell(); err != nil {
-			return err
-		}
-		if err := session.Wait(); err != nil {
-			return err
-		}
-	} else if err := session.Run(strings.Join(args, " ")); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func NewExternalClient(sshBinaryPath, user, host string, port int, auth *Auth) (*ExternalClient, error) {
@@ -381,56 +220,6 @@ func (client *ExternalClient) Output(command string) (string, error) {
 	cmd := getSSHCmd(client.BinaryPath, args...)
 	output, err := cmd.CombinedOutput()
 	return string(output), err
-}
-
-func (client *ExternalClient) Shell(args ...string) error {
-	args = append(client.BaseArgs, args...)
-	cmd := getSSHCmd(client.BinaryPath, args...)
-
-	log.Debug(cmd)
-
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	return cmd.Run()
-}
-
-func (client *ExternalClient) Start(command string) (io.ReadCloser, io.ReadCloser, error) {
-	args := append(client.BaseArgs, command)
-	cmd := getSSHCmd(client.BinaryPath, args...)
-
-	log.Debug(cmd)
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, nil, err
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		if closeErr := stdout.Close(); closeErr != nil {
-			return nil, nil, fmt.Errorf("%s, %s", err, closeErr)
-		}
-		return nil, nil, err
-	}
-	if err := cmd.Start(); err != nil {
-		stdOutCloseErr := stdout.Close()
-		stdErrCloseErr := stderr.Close()
-		if stdOutCloseErr != nil || stdErrCloseErr != nil {
-			return nil, nil, fmt.Errorf("%s, %s, %s",
-				err, stdOutCloseErr, stdErrCloseErr)
-		}
-		return nil, nil, err
-	}
-
-	client.cmd = cmd
-	return stdout, stderr, nil
-}
-
-func (client *ExternalClient) Wait() error {
-	err := client.cmd.Wait()
-	client.cmd = nil
-	return err
 }
 
 func closeConn(c io.Closer) {
