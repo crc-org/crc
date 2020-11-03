@@ -554,34 +554,35 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 	}
 	sshRunner := crcssh.CreateRunner(ip, constants.DefaultSSHPort, constants.GetPrivateKeyPath())
 	// check if all the clusteroperators are running
-	ocConfig := oc.UseOCWithSSH(sshRunner)
-
-	openshiftStatus := "Stopped"
-	operatorsStatus, err := cluster.GetClusterOperatorsStatus(ocConfig)
-	if err != nil {
-		openshiftStatus = "Not Reachable"
-		logging.Debug(err.Error())
-	}
-	if operatorsStatus.Available {
-		openshiftStatus = "Running"
-	}
-	if operatorsStatus.Degraded {
-		openshiftStatus = "Degraded"
-	}
-	if operatorsStatus.Progressing {
-		openshiftStatus = "Starting"
-	}
 	diskSize, diskUse, err := cluster.GetRootPartitionUsage(sshRunner)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot get root partition usage")
 	}
 	return &ClusterStatusResult{
 		CrcStatus:        vmStatus,
-		OpenshiftStatus:  openshiftStatus,
+		OpenshiftStatus:  getOpenShiftStatus(sshRunner),
 		OpenshiftVersion: crcBundleMetadata.GetOpenshiftVersion(),
 		DiskUse:          diskUse,
 		DiskSize:         diskSize,
 	}, nil
+}
+
+func getOpenShiftStatus(sshRunner *crcssh.Runner) string {
+	status, err := cluster.GetClusterOperatorsStatus(oc.UseOCWithSSH(sshRunner))
+	if err != nil {
+		logging.Debugf("cannot get OpenShift status: %v", err)
+		return "Not Reachable"
+	}
+	if status.Progressing {
+		return "Starting"
+	}
+	if status.Degraded {
+		return "Degraded"
+	}
+	if status.Available {
+		return "Running"
+	}
+	return "Stopped"
 }
 
 func (client *client) Exists() (bool, error) {
