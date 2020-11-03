@@ -557,14 +557,12 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 	ocConfig := oc.UseOCWithSSH(sshRunner)
 
 	openshiftStatus := "Stopped"
-	openshiftVersion := ""
 	operatorsStatus, err := cluster.GetClusterOperatorsStatus(ocConfig)
 	if err != nil {
 		openshiftStatus = "Not Reachable"
 		logging.Debug(err.Error())
 	}
 	if operatorsStatus.Available {
-		openshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
 		openshiftStatus = "Running"
 	}
 	if operatorsStatus.Degraded {
@@ -580,7 +578,7 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 	return &ClusterStatusResult{
 		CrcStatus:        vmStatus,
 		OpenshiftStatus:  openshiftStatus,
-		OpenshiftVersion: openshiftVersion,
+		OpenshiftVersion: crcBundleMetadata.GetOpenshiftVersion(),
 		DiskUse:          diskUse,
 		DiskSize:         diskSize,
 	}, nil
