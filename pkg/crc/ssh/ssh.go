@@ -10,7 +10,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	crcos "github.com/code-ready/crc/pkg/os"
-	"github.com/code-ready/machine/libmachine/ssh"
 )
 
 type Runner struct {
@@ -61,7 +60,7 @@ func (runner *Runner) runSSHCommandFromDriver(command string, runPrivate bool) (
 		}
 	}
 
-	client, err := ssh.NewClient(constants.DefaultSSHUser, runner.ip, runner.port, &ssh.Auth{
+	client, err := NewClient(constants.DefaultSSHUser, runner.ip, runner.port, &Auth{
 		Keys: availableKeys,
 	})
 	if err != nil {

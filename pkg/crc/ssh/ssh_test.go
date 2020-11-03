@@ -15,7 +15,6 @@ import (
 	"strings"
 	"testing"
 
-	machinessh "github.com/code-ready/machine/libmachine/ssh"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -48,8 +47,8 @@ func TestRunner(t *testing.T) {
 		return 1, fmt.Sprintf("unexpected command: %q", input)
 	})
 
-	for _, clientType := range []machinessh.ClientType{machinessh.External, machinessh.Native} {
-		machinessh.SetDefaultClient(clientType)
+	for _, clientType := range []ClientType{External, Native} {
+		SetDefaultClient(clientType)
 		addr := listener.Addr().String()
 		runner := CreateRunner(ipFor(addr), portFor(addr), clientKeyFile)
 
@@ -149,4 +148,24 @@ func ipFor(addr string) string {
 func portFor(addr string) int {
 	port, _ := strconv.Atoi(strings.Split(addr, ":")[1])
 	return port
+}
+
+func TestGenerateSSHKey(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "machine-test-")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	filename := filepath.Join(tmpDir, "sshkey")
+
+	if err := GenerateSSHKey(filename); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := os.Stat(filename); err != nil {
+		t.Fatalf("expected ssh key at %s", filename)
+	}
+
+	// cleanup
+	_ = os.RemoveAll(tmpDir)
 }
