@@ -522,11 +522,6 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 		return nil, errors.Wrap(err, "Cannot check if machine exists")
 	}
 
-	openshiftStatus := "Stopped"
-	openshiftVersion := ""
-	var diskUse int64
-	var diskSize int64
-
 	host, err := libMachineAPIClient.Load(client.name)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot load machine")
@@ -536,43 +531,51 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 		return nil, errors.Wrap(err, "Cannot get machine state")
 	}
 
-	if vmStatus == state.Running {
-		_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
-		if err != nil {
-			return nil, errors.Wrap(err, "Error loading bundle metadata")
-		}
-		proxyConfig, err := getProxyConfig(crcBundleMetadata.ClusterInfo.BaseDomain)
-		if err != nil {
-			return nil, errors.Wrap(err, "Error getting proxy configuration")
-		}
-		proxyConfig.ApplyToEnvironment()
+	if vmStatus != state.Running {
+		return &ClusterStatusResult{
+			CrcStatus:       vmStatus,
+			OpenshiftStatus: "Stopped",
+		}, nil
+	}
 
-		ip, err := host.Driver.GetIP()
-		if err != nil {
-			return nil, errors.Wrap(err, "Error getting ip")
-		}
-		sshRunner := crcssh.CreateRunner(ip, constants.DefaultSSHPort, constants.GetPrivateKeyPath())
-		// check if all the clusteroperators are running
-		ocConfig := oc.UseOCWithSSH(sshRunner)
-		operatorsStatus, err := cluster.GetClusterOperatorsStatus(ocConfig)
-		if err != nil {
-			openshiftStatus = "Not Reachable"
-			logging.Debug(err.Error())
-		}
-		if operatorsStatus.Available {
-			openshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
-			openshiftStatus = "Running"
-		}
-		if operatorsStatus.Degraded {
-			openshiftStatus = "Degraded"
-		}
-		if operatorsStatus.Progressing {
-			openshiftStatus = "Starting"
-		}
-		diskSize, diskUse, err = cluster.GetRootPartitionUsage(sshRunner)
-		if err != nil {
-			return nil, errors.Wrap(err, "Cannot get root partition usage")
-		}
+	_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error loading bundle metadata")
+	}
+	proxyConfig, err := getProxyConfig(crcBundleMetadata.ClusterInfo.BaseDomain)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting proxy configuration")
+	}
+	proxyConfig.ApplyToEnvironment()
+
+	ip, err := host.Driver.GetIP()
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting ip")
+	}
+	sshRunner := crcssh.CreateRunner(ip, constants.DefaultSSHPort, constants.GetPrivateKeyPath())
+	// check if all the clusteroperators are running
+	ocConfig := oc.UseOCWithSSH(sshRunner)
+
+	openshiftStatus := "Stopped"
+	openshiftVersion := ""
+	operatorsStatus, err := cluster.GetClusterOperatorsStatus(ocConfig)
+	if err != nil {
+		openshiftStatus = "Not Reachable"
+		logging.Debug(err.Error())
+	}
+	if operatorsStatus.Available {
+		openshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
+		openshiftStatus = "Running"
+	}
+	if operatorsStatus.Degraded {
+		openshiftStatus = "Degraded"
+	}
+	if operatorsStatus.Progressing {
+		openshiftStatus = "Starting"
+	}
+	diskSize, diskUse, err := cluster.GetRootPartitionUsage(sshRunner)
+	if err != nil {
+		return nil, errors.Wrap(err, "Cannot get root partition usage")
 	}
 	return &ClusterStatusResult{
 		CrcStatus:        vmStatus,
