@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -39,13 +38,6 @@ import (
 	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/state"
 )
-
-func init() {
-	// Force using the golang SSH implementation for windows
-	if runtime.GOOS == "windows" {
-		ssh.SetDefaultClient(ssh.Native)
-	}
-}
 
 func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*ClusterConfig, error) {
 	kubeadminPassword, err := bundleInfo.GetKubeadminPassword()

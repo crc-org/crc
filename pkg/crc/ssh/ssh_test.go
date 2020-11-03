@@ -47,22 +47,19 @@ func TestRunner(t *testing.T) {
 		return 1, fmt.Sprintf("unexpected command: %q", input)
 	})
 
-	for _, clientType := range []ClientType{External, Native} {
-		SetDefaultClient(clientType)
-		addr := listener.Addr().String()
-		runner := CreateRunner(ipFor(addr), portFor(addr), clientKeyFile)
+	addr := listener.Addr().String()
+	runner := CreateRunner(ipFor(addr), portFor(addr), clientKeyFile)
 
-		bin, err := runner.Run("echo hello")
-		assert.NoError(t, err)
-		assert.Equal(t, "hello", bin)
-		assert.NoError(t, runner.CopyData([]byte(`hello world`), "/hello", 0644))
+	bin, err := runner.Run("echo hello")
+	assert.NoError(t, err)
+	assert.Equal(t, "hello", bin)
+	assert.NoError(t, runner.CopyData([]byte(`hello world`), "/hello", 0644))
 
-		cmdRunner := NewRemoteCommandRunner(runner)
-		stdout, stderr, err := cmdRunner.Run("echo", "hello")
-		assert.NoError(t, err)
-		assert.Equal(t, "hello", stdout)
-		assert.Empty(t, stderr)
-	}
+	cmdRunner := NewRemoteCommandRunner(runner)
+	stdout, stderr, err := cmdRunner.Run("echo", "hello")
+	assert.NoError(t, err)
+	assert.Equal(t, "hello", stdout)
+	assert.Empty(t, stderr)
 }
 
 func createSSHServer(t *testing.T, listener net.Listener, clientKey *rsa.PrivateKey, fun func(string) (byte, string)) {
