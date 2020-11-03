@@ -69,6 +69,7 @@ func getCrcBundleInfo(bundlePath string) (*bundle.CrcBundleInfo, error) {
 		logging.Infof("Loading bundle: %s ...", bundleName)
 		return bundleInfo, nil
 	}
+	logging.Debugf("Failed to load bundle %s: %v", bundleName, err)
 	logging.Infof("Extracting bundle: %s ...", bundleName)
 	return bundle.Extract(bundlePath)
 }
