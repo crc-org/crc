@@ -24,6 +24,19 @@ func TestPlainDelete(t *testing.T) {
 	assert.True(t, os.IsNotExist(err))
 }
 
+func TestNonForceDelete(t *testing.T) {
+	cacheDir, err := ioutil.TempDir("", "cache")
+	require.NoError(t, err)
+	defer os.RemoveAll(cacheDir)
+
+	out := new(bytes.Buffer)
+	assert.NoError(t, runDelete(out, fakemachine.NewClient(), true, cacheDir, true, false, ""))
+	assert.Equal(t, "", out.String())
+
+	_, err = os.Stat(cacheDir)
+	assert.NoError(t, err)
+}
+
 func TestJSONDelete(t *testing.T) {
 	cacheDir, err := ioutil.TempDir("", "cache")
 	require.NoError(t, err)
