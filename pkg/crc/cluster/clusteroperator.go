@@ -83,7 +83,7 @@ func getStatus(ocConfig oc.Config, selector []string) (*Status, error) {
 		}
 	}
 	if !found {
-		return nil, errors.New("no cluster operator found")
+		return cs, errors.New("no cluster operator found")
 	}
 	return cs, nil
 }
