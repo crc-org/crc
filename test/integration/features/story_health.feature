@@ -7,6 +7,7 @@ Feature:
     @linux @darwin
     Scenario: Start CRC
         Given executing "crc setup" succeeds
+        When setting config property "memory" to value "12000" succeeds
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
         And executing "eval $(crc oc-env)" succeeds
@@ -16,6 +17,7 @@ Feature:
     @windows
     Scenario: Start CRC on Windows
         Given executing "crc setup" succeeds
+        When setting config property "memory" to value "12000" succeeds
         When starting CRC with default bundle and nameserver "10.75.5.25" succeeds
         Then stdout should contain "Started the OpenShift cluster"
         And executing "crc oc-env | Invoke-Expression" succeeds
