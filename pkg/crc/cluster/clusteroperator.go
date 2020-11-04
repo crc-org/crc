@@ -35,12 +35,12 @@ func getStatus(ocConfig oc.Config, selector []string) (*Status, error) {
 
 	data, _, err := ocConfig.RunOcCommandPrivate("get", "co", "-ojson")
 	if err != nil {
-		return cs, err
+		return nil, err
 	}
 
 	var co openshiftapi.ClusterOperatorList
 	if err := json.Unmarshal([]byte(data), &co); err != nil {
-		return cs, err
+		return nil, err
 	}
 
 	found := false
@@ -82,7 +82,7 @@ func getStatus(ocConfig oc.Config, selector []string) (*Status, error) {
 		}
 	}
 	if !found {
-		return cs, errors.New("no cluster operator found")
+		return nil, errors.New("no cluster operator found")
 	}
 	return cs, nil
 }
