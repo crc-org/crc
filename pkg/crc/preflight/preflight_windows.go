@@ -2,6 +2,7 @@ package preflight
 
 var hypervPreflightChecks = [...]Check{
 	{
+		order:            0,
 		configKeySuffix:  "check-administrator-user",
 		checkDescription: "Checking if running as normal user",
 		check:            checkIfRunningAsNormalUser,
@@ -9,6 +10,7 @@ var hypervPreflightChecks = [...]Check{
 		flags:            NoFix,
 	},
 	{
+		order:            10,
 		configKeySuffix:  "check-windows-version",
 		checkDescription: "Checking Windows 10 release",
 		check:            checkVersionOfWindowsUpdate,
@@ -16,6 +18,7 @@ var hypervPreflightChecks = [...]Check{
 		flags:            NoFix,
 	},
 	{
+		order:            11,
 		configKeySuffix:  "check-windows-edition",
 		checkDescription: "Checking Windows edition",
 		check:            checkWindowsEdition,
@@ -23,6 +26,7 @@ var hypervPreflightChecks = [...]Check{
 		flags:            NoFix,
 	},
 	{
+		order:            20,
 		configKeySuffix:  "check-hyperv-installed",
 		checkDescription: "Checking if Hyper-V is installed and operational",
 		check:            checkHyperVInstalled,
@@ -30,6 +34,7 @@ var hypervPreflightChecks = [...]Check{
 		fix:              fixHyperVInstalled,
 	},
 	{
+		order:            21,
 		configKeySuffix:  "check-user-in-hyperv-group",
 		checkDescription: "Checking if user is a member of the Hyper-V Administrators group",
 		check:            checkIfUserPartOfHyperVAdmins,
@@ -37,6 +42,7 @@ var hypervPreflightChecks = [...]Check{
 		fix:              fixUserPartOfHyperVAdmins,
 	},
 	{
+		order:            21,
 		configKeySuffix:  "check-hyperv-service-running",
 		checkDescription: "Checking if Hyper-V service is enabled",
 		check:            checkHyperVServiceRunning,
@@ -44,6 +50,7 @@ var hypervPreflightChecks = [...]Check{
 		fix:              fixHyperVServiceRunning,
 	},
 	{
+		order:            21,
 		configKeySuffix:  "check-hyperv-switch",
 		checkDescription: "Checking if the Hyper-V virtual switch exist",
 		check:            checkIfHyperVVirtualSwitchExists,
@@ -51,11 +58,13 @@ var hypervPreflightChecks = [...]Check{
 		flags:            NoFix,
 	},
 	{
+		order:              1000,
 		cleanupDescription: "Removing dns server from interface",
 		cleanup:            removeDNSServerAddress,
 		flags:              CleanUpOnly,
 	},
 	{
+		order:              1000,
 		cleanupDescription: "Removing the crc VM if exists",
 		cleanup:            removeCrcVM,
 		flags:              CleanUpOnly,
@@ -64,6 +73,7 @@ var hypervPreflightChecks = [...]Check{
 
 var traySetupChecks = [...]Check{
 	{
+		order:            200,
 		checkDescription: "Checking if tray executable is present",
 		check:            checkTrayExecutableExists,
 		fixDescription:   "Caching tray executable",
@@ -71,6 +81,7 @@ var traySetupChecks = [...]Check{
 		flags:            SetupOnly,
 	},
 	{
+		order:              200,
 		checkDescription:   "Checking if tray is installed",
 		check:              checkIfTrayInstalled,
 		fixDescription:     "Installing CodeReady Containers tray",
@@ -91,5 +102,6 @@ func getPreflightChecks(experimentalFeatures bool) []Check {
 		checks = append(checks, traySetupChecks[:]...)
 	}
 
+	sort(checks)
 	return checks
 }

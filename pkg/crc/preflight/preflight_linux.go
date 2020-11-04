@@ -2,6 +2,7 @@ package preflight
 
 var libvirtPreflightChecks = [...]Check{
 	{
+		order:            10,
 		configKeySuffix:  "check-virt-enabled",
 		checkDescription: "Checking if Virtualization is enabled",
 		check:            checkVirtualizationEnabled,
@@ -9,6 +10,7 @@ var libvirtPreflightChecks = [...]Check{
 		fix:              fixVirtualizationEnabled,
 	},
 	{
+		order:            11,
 		configKeySuffix:  "check-kvm-enabled",
 		checkDescription: "Checking if KVM is enabled",
 		check:            checkKvmEnabled,
@@ -16,6 +18,7 @@ var libvirtPreflightChecks = [...]Check{
 		fix:              fixKvmEnabled,
 	},
 	{
+		order:            20,
 		configKeySuffix:  "check-libvirt-installed",
 		checkDescription: "Checking if libvirt is installed",
 		check:            checkLibvirtInstalled,
@@ -23,6 +26,7 @@ var libvirtPreflightChecks = [...]Check{
 		fix:              fixLibvirtInstalled,
 	},
 	{
+		order:            21,
 		configKeySuffix:  "check-user-in-libvirt-group",
 		checkDescription: "Checking if user is part of libvirt group",
 		check:            checkUserPartOfLibvirtGroup,
@@ -30,6 +34,7 @@ var libvirtPreflightChecks = [...]Check{
 		fix:              fixUserPartOfLibvirtGroup,
 	},
 	{
+		order:            22,
 		configKeySuffix:  "check-libvirt-running",
 		checkDescription: "Checking if libvirt daemon is running",
 		check:            checkLibvirtServiceRunning,
@@ -37,6 +42,7 @@ var libvirtPreflightChecks = [...]Check{
 		fix:              fixLibvirtServiceRunning,
 	},
 	{
+		order:            23,
 		configKeySuffix:  "check-libvirt-version",
 		checkDescription: "Checking if a supported libvirt version is installed",
 		check:            checkLibvirtVersion,
@@ -44,6 +50,7 @@ var libvirtPreflightChecks = [...]Check{
 		fix:              fixLibvirtVersion,
 	},
 	{
+		order:            30,
 		configKeySuffix:  "check-libvirt-driver",
 		checkDescription: "Checking if crc-driver-libvirt is installed",
 		check:            checkMachineDriverLibvirtInstalled,
@@ -51,6 +58,7 @@ var libvirtPreflightChecks = [...]Check{
 		fix:              fixMachineDriverLibvirtInstalled,
 	},
 	{
+		order:            31,
 		configKeySuffix:  "check-obsolete-libvirt-driver",
 		checkDescription: "Checking for obsolete crc-driver-libvirt",
 		check:            checkOldMachineDriverLibvirtInstalled,
@@ -59,6 +67,7 @@ var libvirtPreflightChecks = [...]Check{
 		flags:            SetupOnly,
 	},
 	{
+		order:              24,
 		configKeySuffix:    "check-crc-network",
 		checkDescription:   "Checking if libvirt 'crc' network is available",
 		check:              checkLibvirtCrcNetworkAvailable,
@@ -68,6 +77,7 @@ var libvirtPreflightChecks = [...]Check{
 		cleanup:            removeLibvirtCrcNetwork,
 	},
 	{
+		order:            25,
 		configKeySuffix:  "check-crc-network-active",
 		checkDescription: "Checking if libvirt 'crc' network is active",
 		check:            checkLibvirtCrcNetworkActive,
@@ -75,6 +85,7 @@ var libvirtPreflightChecks = [...]Check{
 		fix:              fixLibvirtCrcNetworkActive,
 	},
 	{
+		order:            40,
 		configKeySuffix:  "check-network-manager-installed",
 		checkDescription: "Checking if NetworkManager is installed",
 		check:            checkNetworkManagerInstalled,
@@ -82,6 +93,7 @@ var libvirtPreflightChecks = [...]Check{
 		fix:              fixNetworkManagerInstalled,
 	},
 	{
+		order:            41,
 		configKeySuffix:  "check-network-manager-running",
 		checkDescription: "Checking if NetworkManager service is running",
 		check:            checkNetworkManagerIsRunning,
@@ -89,6 +101,7 @@ var libvirtPreflightChecks = [...]Check{
 		fix:              fixNetworkManagerIsRunning,
 	},
 	{
+		order:              42,
 		configKeySuffix:    "check-network-manager-config",
 		checkDescription:   "Checking if /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf exists",
 		check:              checkCrcNetworkManagerConfig,
@@ -98,6 +111,7 @@ var libvirtPreflightChecks = [...]Check{
 		cleanup:            removeCrcNetworkManagerConfig,
 	},
 	{
+		order:              43,
 		configKeySuffix:    "check-crc-dnsmasq-file",
 		checkDescription:   "Checking if /etc/NetworkManager/dnsmasq.d/crc.conf exists",
 		check:              checkCrcDnsmasqConfigFile,
@@ -107,6 +121,7 @@ var libvirtPreflightChecks = [...]Check{
 		cleanup:            removeCrcDnsmasqConfigFile,
 	},
 	{
+		order:              1000,
 		cleanupDescription: "Removing the crc VM if exists",
 		cleanup:            removeCrcVM,
 		flags:              CleanUpOnly,
@@ -119,5 +134,6 @@ func getPreflightChecks(experimentalFeatures bool) []Check {
 	checks = append(checks, nonWinPreflightChecks[:]...)
 	checks = append(checks, libvirtPreflightChecks[:]...)
 
+	sort(checks)
 	return checks
 }

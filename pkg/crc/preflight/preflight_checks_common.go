@@ -16,6 +16,7 @@ import (
 
 var genericPreflightChecks = [...]Check{
 	{
+		order:            100,
 		configKeySuffix:  "check-oc-cached",
 		checkDescription: "Checking if oc executable is cached",
 		check:            checkOcExecutableCached,
@@ -23,6 +24,7 @@ var genericPreflightChecks = [...]Check{
 		fix:              fixOcExecutableCached,
 	},
 	{
+		order:            100,
 		configKeySuffix:  "check-podman-cached",
 		checkDescription: "Checking if podman remote executable is cached",
 		check:            checkPodmanExecutableCached,
@@ -30,6 +32,7 @@ var genericPreflightChecks = [...]Check{
 		fix:              fixPodmanExecutableCached,
 	},
 	{
+		order:            100,
 		configKeySuffix:  "check-goodhosts-cached",
 		checkDescription: "Checking if goodhosts executable is cached",
 		check:            checkGoodhostsExecutableCached,
@@ -37,6 +40,7 @@ var genericPreflightChecks = [...]Check{
 		fix:              fixGoodhostsExecutableCached,
 	},
 	{
+		order:            100,
 		configKeySuffix:  "check-bundle-cached",
 		checkDescription: "Checking if CRC bundle is cached in '$HOME/.crc'",
 		check:            checkBundleCached,
@@ -45,6 +49,7 @@ var genericPreflightChecks = [...]Check{
 		flags:            SetupOnly,
 	},
 	{
+		order:            10,
 		configKeySuffix:  "check-ram",
 		checkDescription: "Checking minimum RAM requirements",
 		check: func() error {

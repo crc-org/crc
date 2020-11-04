@@ -2,6 +2,7 @@ package preflight
 
 import (
 	"fmt"
+	gosort "sort"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
@@ -24,6 +25,7 @@ type FixFunc func() error
 type CleanUpFunc func() error
 
 type Check struct {
+	order              int
 	configKeySuffix    string
 	checkDescription   string
 	check              CheckFunc
@@ -101,6 +103,18 @@ func (check *Check) doCleanUp() error {
 	logging.Infof("%s", check.cleanupDescription)
 
 	return check.cleanup()
+}
+
+func sort(checks []Check) {
+	gosort.Slice(checks, func(i, j int) bool {
+		if checks[i].order < checks[j].order {
+			return true
+		}
+		if checks[i].order > checks[j].order {
+			return false
+		}
+		return checks[i].configKeySuffix < checks[j].configKeySuffix
+	})
 }
 
 func doPreflightChecks(config config.Storage, checks []Check) error {

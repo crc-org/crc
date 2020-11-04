@@ -13,6 +13,7 @@ import (
 
 var nonWinPreflightChecks = [...]Check{
 	{
+		order:            0,
 		configKeySuffix:  "check-root-user",
 		checkDescription: "Checking if running as non-root",
 		check:            checkIfRunningAsNormalUser,
