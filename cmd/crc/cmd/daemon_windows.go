@@ -10,5 +10,5 @@ import (
 func runDaemon() {
 	// Remove if an old socket is present
 	os.Remove(constants.DaemonSocketPath)
-	api.RunCrcDaemonService("CodeReady Containers", false, newConfig, newMachine())
+	api.RunCrcDaemonService("CodeReady Containers", false, newConfig, newMachineWithConfig)
 }

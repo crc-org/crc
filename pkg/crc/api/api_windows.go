@@ -3,8 +3,6 @@ package api
 import (
 	"fmt"
 
-	"github.com/code-ready/crc/pkg/crc/machine"
-
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/debug"
@@ -16,7 +14,7 @@ var elog debug.Log
 type crcDaemonService struct {
 	socketPath    string
 	newConfig     newConfigFunc
-	machineClient machine.Client
+	machineClient newMachineFunc
 }
 
 func (m *crcDaemonService) Execute(args []string, r <-chan svc.ChangeRequest, changes chan<- svc.Status) (ssec bool, errno uint32) {
@@ -54,7 +52,7 @@ func MainLoop(r <-chan svc.ChangeRequest, changes chan<- svc.Status) {
 	}
 }
 
-func RunCrcDaemonService(name string, isDebug bool, newConfig newConfigFunc, machineClient machine.Client) {
+func RunCrcDaemonService(name string, isDebug bool, newConfig newConfigFunc, machineClient newMachineFunc) {
 	var err error
 	if isDebug {
 		elog = debug.New(name)
