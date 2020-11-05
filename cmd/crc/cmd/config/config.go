@@ -6,6 +6,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/spf13/cobra"
 )
 
@@ -18,6 +19,7 @@ const (
 	PullSecretFile       = "pull-secret-file"
 	DisableUpdateCheck   = "disable-update-check"
 	ExperimentalFeatures = "enable-experimental-features"
+	NetworkMode          = "network-mode"
 	HTTPProxy            = "http-proxy"
 	HTTPSProxy           = "https-proxy"
 	NoProxy              = "no-proxy"
@@ -34,6 +36,7 @@ func RegisterSettings(cfg *config.Config) {
 	cfg.AddSetting(PullSecretFile, "", config.ValidatePath, config.SuccessfullyApplied)
 	cfg.AddSetting(DisableUpdateCheck, false, config.ValidateBool, config.SuccessfullyApplied)
 	cfg.AddSetting(ExperimentalFeatures, false, config.ValidateBool, config.SuccessfullyApplied)
+	cfg.AddSetting(NetworkMode, string(network.DefaultMode), network.ValidateMode, network.SuccessfullyAppliedMode)
 	// Proxy Configuration
 	cfg.AddSetting(HTTPProxy, "", config.ValidateURI, config.SuccessfullyApplied)
 	cfg.AddSetting(HTTPSProxy, "", config.ValidateURI, config.SuccessfullyApplied)

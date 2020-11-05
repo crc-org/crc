@@ -1,6 +1,7 @@
 package machine
 
 import (
+	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/machine/libmachine/state"
 )
 
@@ -18,14 +19,16 @@ type Client interface {
 }
 
 type client struct {
-	name  string
-	debug bool
+	name        string
+	debug       bool
+	networkMode network.Mode
 }
 
-func NewClient(name string, debug bool) Client {
+func NewClient(name string, debug bool, networkMode network.Mode) Client {
 	return &client{
-		name:  name,
-		debug: debug,
+		name:        name,
+		debug:       debug,
+		networkMode: networkMode,
 	}
 }
 

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/goodhosts"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/services"
@@ -33,11 +32,12 @@ type resolverFileValues struct {
 
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
 	// Update /etc/hosts file for host
-	if err := goodhosts.UpdateHostsFile(serviceConfig.IP, serviceConfig.BundleMetadata.GetAPIHostname(),
-		serviceConfig.BundleMetadata.GetAppHostname("oauth-openshift"),
-		serviceConfig.BundleMetadata.GetAppHostname("console-openshift-console"),
-		serviceConfig.BundleMetadata.GetAppHostname("default-route-openshift-image-registry")); err != nil {
+	if err := addOpenShiftHosts(serviceConfig); err != nil {
 		return err
+	}
+
+	if serviceConfig.NetworkMode == network.VSockMode {
+		return nil
 	}
 
 	// Write resolver config to host

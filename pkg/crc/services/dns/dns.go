@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/goodhosts"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/services"
 )
@@ -21,6 +23,27 @@ func init() {
 }
 
 func RunPostStart(serviceConfig services.ServicePostStartConfig) error {
+	if err := setupDnsmasq(serviceConfig); err != nil {
+		return err
+	}
+
+	if err := runPostStartForOS(serviceConfig); err != nil {
+		return err
+	}
+
+	resolvFileValues, err := getResolvFileValues(serviceConfig)
+	if err != nil {
+		return err
+	}
+	// override resolv.conf file
+	return network.CreateResolvFileOnInstance(serviceConfig.SSHRunner, resolvFileValues)
+}
+
+func setupDnsmasq(serviceConfig services.ServicePostStartConfig) error {
+	if serviceConfig.NetworkMode == network.VSockMode {
+		return nil
+	}
+
 	if err := createDnsmasqDNSConfig(serviceConfig); err != nil {
 		return err
 	}
@@ -39,28 +62,37 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) error {
 	if _, err := serviceConfig.SSHRunner.Run(dnsServerRunCmd); err != nil {
 		return err
 	}
+	return nil
+}
 
-	// We need to restart the Host Network before updating
-	// the VM's /etc/resolv.conf file.
-	if err := runPostStartForOS(serviceConfig); err != nil {
-		return err
+func getResolvFileValues(serviceConfig services.ServicePostStartConfig) (network.ResolvFileValues, error) {
+	dnsServers, err := dnsServers(serviceConfig)
+	if err != nil {
+		return network.ResolvFileValues{}, err
 	}
+	return network.ResolvFileValues{
+		SearchDomains: []network.SearchDomain{
+			{
+				Domain: fmt.Sprintf("%s.%s", serviceConfig.Name, serviceConfig.BundleMetadata.ClusterInfo.BaseDomain),
+			},
+		},
+		NameServers: dnsServers,
+	}, nil
+}
 
+func dnsServers(serviceConfig services.ServicePostStartConfig) ([]network.NameServer, error) {
+	if serviceConfig.NetworkMode == network.VSockMode {
+		return []network.NameServer{
+			{
+				IPAddress: constants.VSockGateway,
+			},
+		}, nil
+	}
 	orgResolvValues, err := network.GetResolvValuesFromInstance(serviceConfig.SSHRunner)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	// override resolv.conf file
-	searchdomain := network.SearchDomain{Domain: fmt.Sprintf("%s.%s", serviceConfig.Name, serviceConfig.BundleMetadata.ClusterInfo.BaseDomain)}
-	nameserver := network.NameServer{IPAddress: dnsContainerIP}
-	nameservers := []network.NameServer{nameserver}
-	nameservers = append(nameservers, orgResolvValues.NameServers...)
-
-	resolvFileValues := network.ResolvFileValues{
-		SearchDomains: []network.SearchDomain{searchdomain},
-		NameServers:   nameservers}
-
-	return network.CreateResolvFileOnInstance(serviceConfig.SSHRunner, resolvFileValues)
+	return append([]network.NameServer{{IPAddress: dnsContainerIP}}, orgResolvValues.NameServers...), nil
 }
 
 func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (string, error) {
@@ -85,4 +117,11 @@ func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (s
 
 func CheckCRCPublicDNSReachable(serviceConfig services.ServicePostStartConfig) (string, error) {
 	return serviceConfig.SSHRunner.Run(fmt.Sprintf("host -R 3 %s", publicDNSQueryURI))
+}
+
+func addOpenShiftHosts(serviceConfig services.ServicePostStartConfig) error {
+	return goodhosts.UpdateHostsFile(serviceConfig.IP, serviceConfig.BundleMetadata.GetAPIHostname(),
+		serviceConfig.BundleMetadata.GetAppHostname("oauth-openshift"),
+		serviceConfig.BundleMetadata.GetAppHostname("console-openshift-console"),
+		serviceConfig.BundleMetadata.GetAppHostname("default-route-openshift-image-registry"))
 }
