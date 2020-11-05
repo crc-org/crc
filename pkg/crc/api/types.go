@@ -5,30 +5,32 @@ import (
 	"net"
 
 	"github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
+type newHandlerFunc func() (RequestHandler, error)
 type newConfigFunc func() (config.Storage, error)
+type newMachineFunc func(config.Storage) machine.Client
 
 type commandError struct {
 	Err string
 }
 
 type CrcAPIServer struct {
-	newConfig              newConfigFunc
+	handlerFactory         newHandlerFunc
 	listener               net.Listener
 	clusterOpsRequestsChan chan clusterOpsRequest
-	handler                RequestHandler
 }
 
 type RequestHandler interface {
-	Start(config.Storage, json.RawMessage) string
+	Start(json.RawMessage) string
 	Stop() string
 	Status() string
 	Delete() string
 	GetVersion() string
-	SetConfig(config.Storage, json.RawMessage) string
-	UnsetConfig(config.Storage, json.RawMessage) string
-	GetConfig(config.Storage, json.RawMessage) string
+	SetConfig(json.RawMessage) string
+	UnsetConfig(json.RawMessage) string
+	GetConfig(json.RawMessage) string
 	GetWebconsoleInfo() string
 }
 

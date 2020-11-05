@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/code-ready/crc/pkg/crc/machine"
+
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
@@ -30,8 +32,8 @@ func TestApi(t *testing.T) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createAPIServerWithListener(listener, setupNewInMemoryConfig, &Handler{
-		MachineClient: &Adapter{Underlying: client},
+	api, err := createAPIServerWithListener(listener, setupNewInMemoryConfig, func(_ config.Storage) machine.Client {
+		return client
 	})
 	require.NoError(t, err)
 	go api.Serve()
@@ -215,8 +217,8 @@ func setupAPIServer(t *testing.T) (string, func()) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createAPIServerWithListener(listener, setupNewInMemoryConfig, &Handler{
-		MachineClient: &Adapter{Underlying: client},
+	api, err := createAPIServerWithListener(listener, setupNewInMemoryConfig, func(_ config.Storage) machine.Client {
+		return client
 	})
 	require.NoError(t, err)
 	go api.Serve()

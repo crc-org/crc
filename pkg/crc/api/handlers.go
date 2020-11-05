@@ -19,12 +19,7 @@ import (
 
 type Handler struct {
 	MachineClient AdaptedClient
-}
-
-func newHandler(client machine.Client) *Handler {
-	return &Handler{
-		MachineClient: &Adapter{Underlying: client},
-	}
+	Config        crcConfig.Storage
 }
 
 func (h *Handler) Status() string {
@@ -37,7 +32,7 @@ func (h *Handler) Stop() string {
 	return encodeStructToJSON(commandResult)
 }
 
-func (h *Handler) Start(crcConfig crcConfig.Storage, args json.RawMessage) string {
+func (h *Handler) Start(args json.RawMessage) string {
 	var parsedArgs startArgs
 	var err error
 	if args != nil {
@@ -50,7 +45,7 @@ func (h *Handler) Start(crcConfig crcConfig.Storage, args json.RawMessage) strin
 			return encodeStructToJSON(startErr)
 		}
 	}
-	if err := preflight.StartPreflightChecks(crcConfig); err != nil {
+	if err := preflight.StartPreflightChecks(h.Config); err != nil {
 		startErr := &StartResult{
 			Name:  h.MachineClient.GetName(),
 			Error: err.Error(),
@@ -58,7 +53,7 @@ func (h *Handler) Start(crcConfig crcConfig.Storage, args json.RawMessage) strin
 		return encodeStructToJSON(startErr)
 	}
 
-	startConfig := getStartConfig(crcConfig, parsedArgs)
+	startConfig := getStartConfig(h.Config, parsedArgs)
 	status := h.MachineClient.Start(startConfig)
 	return encodeStructToJSON(status)
 }
@@ -131,7 +126,7 @@ func (h *Handler) GetWebconsoleInfo() string {
 	return encodeStructToJSON(r)
 }
 
-func (h *Handler) SetConfig(crcConfig crcConfig.Storage, args json.RawMessage) string {
+func (h *Handler) SetConfig(args json.RawMessage) string {
 	setConfigResult := setOrUnsetConfigResult{}
 	if args == nil {
 		setConfigResult.Error = "No config keys provided"
@@ -153,7 +148,7 @@ func (h *Handler) SetConfig(crcConfig crcConfig.Storage, args json.RawMessage) s
 	var successProps []string
 
 	for k, v := range configs {
-		_, err := crcConfig.Set(k, v)
+		_, err := h.Config.Set(k, v)
 		if err != nil {
 			multiError.Collect(err)
 			continue
@@ -169,7 +164,7 @@ func (h *Handler) SetConfig(crcConfig crcConfig.Storage, args json.RawMessage) s
 	return encodeStructToJSON(setConfigResult)
 }
 
-func (h *Handler) UnsetConfig(crcConfig crcConfig.Storage, args json.RawMessage) string {
+func (h *Handler) UnsetConfig(args json.RawMessage) string {
 	unsetConfigResult := setOrUnsetConfigResult{}
 	if args == nil {
 		unsetConfigResult.Error = "No config keys provided"
@@ -190,7 +185,7 @@ func (h *Handler) UnsetConfig(crcConfig crcConfig.Storage, args json.RawMessage)
 
 	keysToUnset := keys["properties"]
 	for _, key := range keysToUnset {
-		_, err := crcConfig.Unset(key)
+		_, err := h.Config.Unset(key)
 		if err != nil {
 			multiError.Collect(err)
 			continue
@@ -204,10 +199,10 @@ func (h *Handler) UnsetConfig(crcConfig crcConfig.Storage, args json.RawMessage)
 	return encodeStructToJSON(unsetConfigResult)
 }
 
-func (h *Handler) GetConfig(crcConfig crcConfig.Storage, args json.RawMessage) string {
+func (h *Handler) GetConfig(args json.RawMessage) string {
 	configResult := getConfigResult{}
 	if args == nil {
-		allConfigs := crcConfig.AllConfigs()
+		allConfigs := h.Config.AllConfigs()
 		configResult.Error = ""
 		configResult.Configs = make(map[string]interface{})
 		for k, v := range allConfigs {
@@ -229,7 +224,7 @@ func (h *Handler) GetConfig(crcConfig crcConfig.Storage, args json.RawMessage) s
 	var configs = make(map[string]interface{})
 
 	for _, key := range keys {
-		v := crcConfig.Get(key)
+		v := h.Config.Get(key)
 		if v.Invalid {
 			continue
 		}
