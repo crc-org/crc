@@ -1,5 +1,7 @@
 package preflight
 
+import "github.com/code-ready/crc/pkg/crc/network"
+
 var hypervPreflightChecks = [...]Check{
 	{
 		configKeySuffix:  "check-administrator-user",
@@ -81,7 +83,11 @@ var traySetupChecks = [...]Check{
 	},
 }
 
-func getPreflightChecks(experimentalFeatures bool) []Check {
+func getAllPreflightChecks() []Check {
+	return getPreflightChecks(true, network.DefaultMode)
+}
+
+func getPreflightChecks(experimentalFeatures bool, _ network.Mode) []Check {
 	checks := []Check{}
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, hypervPreflightChecks[:]...)

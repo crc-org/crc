@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,6 +15,6 @@ func TestCountConfigurationOptions(t *testing.T) {
 }
 
 func TestCountPreflights(t *testing.T) {
-	assert.Len(t, getPreflightChecks(false), 13)
-	assert.Len(t, getPreflightChecks(true), 15)
+	assert.Len(t, getPreflightChecks(false, network.DefaultMode), 14)
+	assert.Len(t, getPreflightChecks(true, network.DefaultMode), 16)
 }

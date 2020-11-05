@@ -1,5 +1,7 @@
 package config
 
+import "github.com/code-ready/crc/pkg/crc/network"
+
 type MachineConfig struct {
 	// CRC system bundle
 	BundleName string
@@ -16,4 +18,7 @@ type MachineConfig struct {
 	KernelCmdLine string
 	Initramfs     string
 	Kernel        string
+
+	// Experimental features
+	NetworkMode network.Mode
 }

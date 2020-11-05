@@ -35,6 +35,9 @@ const (
 	CRCMacTrayDownloadURL     = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
 	CRCWindowsTrayDownloadURL = "https://github.com/code-ready/tray-windows/releases/download/v%s/crc-tray-windows.zip"
 	DefaultContext            = "admin"
+
+	VSockGateway = "192.168.127.1"
+	VsockSSHPort = 2222
 )
 
 var podmanURLForOs = map[string]string{
@@ -92,6 +95,7 @@ var (
 	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
 	DefaultBundlePath  = filepath.Join(MachineCacheDir, GetDefaultBundle())
 	DaemonSocketPath   = filepath.Join(CrcBaseDir, "crc.sock")
+	NetworkSocketPath  = filepath.Join(CrcBaseDir, "network.sock")
 )
 
 // GetHomeDir returns the home directory for the current user

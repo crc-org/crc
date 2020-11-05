@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -166,10 +167,11 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		}
 
 		machineConfig := config.MachineConfig{
-			Name:       client.name,
-			BundleName: filepath.Base(startConfig.BundlePath),
-			CPUs:       startConfig.CPUs,
-			Memory:     startConfig.Memory,
+			Name:        client.name,
+			BundleName:  filepath.Base(startConfig.BundlePath),
+			CPUs:        startConfig.CPUs,
+			Memory:      startConfig.Memory,
+			NetworkMode: client.networkMode,
 		}
 
 		crcBundleMetadata, err = getCrcBundleInfo(startConfig.BundlePath)
@@ -242,6 +244,12 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		}
 	}
 
+	if runtime.GOOS == "darwin" {
+		if err := makeDaemonVisibleToHyperkit(client.name); err != nil {
+			return nil, err
+		}
+	}
+
 	clusterConfig, err := getClusterConfig(crcBundleMetadata)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot create cluster configuration")
@@ -256,11 +264,11 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		return nil, errors.Wrap(err, "CodeReady Containers VM is not running")
 	}
 
-	instanceIP, err := host.Driver.GetIP()
+	instanceIP, err := getIP(host, client.useVSock())
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting the IP")
 	}
-	sshRunner := crcssh.CreateRunner(instanceIP, constants.DefaultSSHPort, crcBundleMetadata.GetSSHKeyPath(), constants.GetPrivateKeyPath())
+	sshRunner := crcssh.CreateRunner(instanceIP, getSSHPort(client.useVSock()), crcBundleMetadata.GetSSHKeyPath(), constants.GetPrivateKeyPath())
 
 	logging.Debug("Waiting until ssh is available")
 	if err := cluster.WaitForSSH(sshRunner); err != nil {
@@ -308,6 +316,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		IP:        instanceIP,
 		// TODO: should be more finegrained
 		BundleMetadata: *crcBundleMetadata,
+		NetworkMode:    client.networkMode,
 	}
 
 	// Run the DNS server inside the VM
@@ -317,7 +326,10 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 
 	// Check DNS lookup before starting the kubelet
 	if queryOutput, err := dns.CheckCRCLocalDNSReachable(servicePostStartConfig); err != nil {
-		return nil, errors.Wrapf(err, "Failed internal DNS query: %s", queryOutput)
+		if !client.useVSock() {
+			return nil, errors.Wrapf(err, "Failed internal DNS query: %s", queryOutput)
+		}
+		logging.Warn(fmt.Sprintf("Failed internal DNS query: %s: %v", queryOutput, err))
 	}
 	logging.Info("Check internal and public DNS query ...")
 
@@ -328,7 +340,10 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	// Check DNS lookup from host to VM
 	logging.Info("Check DNS query from host ...")
 	if err := network.CheckCRCLocalDNSReachableFromHost(crcBundleMetadata, instanceIP); err != nil {
-		return nil, errors.Wrap(err, "Failed to query DNS from host")
+		if !client.useVSock() {
+			return nil, errors.Wrap(err, "Failed to query DNS from host")
+		}
+		logging.Warn(fmt.Sprintf("Failed to query DNS from host: %v", err))
 	}
 
 	if err := cluster.EnsurePullSecretPresentOnInstanceDisk(sshRunner, startConfig.PullSecret); err != nil {
@@ -419,6 +434,37 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	}, nil
 }
 
+// makeDaemonVisibleToHyperkit crc daemon is launched in background and doesn't know where hyperkit is running.
+// In order to vsock to work with hyperkit, we need to put the unix socket in the hyperkit working directory with a
+// special name. The name is the hex representation of the cid and the vsock port.
+// This function adds the unix socket in the hyperkit directory.
+func makeDaemonVisibleToHyperkit(name string) error {
+	dst := filepath.Join(constants.MachineInstanceDir, name, "00000002.00000400")
+	if _, err := os.Stat(dst); err != nil {
+		if !os.IsNotExist(err) {
+			return errors.Wrap(err, "VSock listener error")
+		}
+		if err := os.Symlink(constants.NetworkSocketPath, dst); err != nil {
+			return errors.Wrap(err, "VSock listener error")
+		}
+	}
+	return nil
+}
+
+func getSSHPort(vsockNetwork bool) int {
+	if vsockNetwork {
+		return constants.VsockSSHPort
+	}
+	return constants.DefaultSSHPort
+}
+
+func getIP(h *host.Host, vsockNetwork bool) (string, error) {
+	if vsockNetwork {
+		return "127.0.0.1", nil
+	}
+	return h.Driver.GetIP()
+}
+
 func (client *client) Stop() (state.State, error) {
 	defer unsetMachineLogging()
 
@@ -504,7 +550,7 @@ func (client *client) IP() (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "Cannot load machine")
 	}
-	ip, err := host.Driver.GetIP()
+	ip, err := getIP(host, client.useVSock())
 	if err != nil {
 		return "", errors.Wrap(err, "Cannot get IP")
 	}
@@ -549,11 +595,11 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 	}
 	proxyConfig.ApplyToEnvironment()
 
-	ip, err := host.Driver.GetIP()
+	ip, err := getIP(host, client.useVSock())
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting ip")
 	}
-	sshRunner := crcssh.CreateRunner(ip, constants.DefaultSSHPort, constants.GetPrivateKeyPath())
+	sshRunner := crcssh.CreateRunner(ip, getSSHPort(client.useVSock()), constants.GetPrivateKeyPath())
 	// check if all the clusteroperators are running
 	diskSize, diskUse, err := cluster.GetRootPartitionUsage(sshRunner)
 	if err != nil {
@@ -805,4 +851,8 @@ func logBundleDate(crcBundleMetadata *bundle.CrcBundleInfo) {
 			logging.Debugf("Bundle has been generated %d days ago", int(bundleAgeDays))
 		}
 	}
+}
+
+func (client *client) useVSock() bool {
+	return client.networkMode == network.VSockMode
 }

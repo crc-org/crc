@@ -16,6 +16,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/machine/libmachine/ssh"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/semaphore"
@@ -176,7 +177,7 @@ type VMCommandCollector struct {
 }
 
 func (collector *VMCommandCollector) Collect(w Writer) error {
-	client := machine.NewClient(constants.DefaultName, true)
+	client := machine.NewClient(constants.DefaultName, true, network.DefaultMode)
 	ip, err := client.IP()
 	if err != nil {
 		return err
@@ -199,7 +200,7 @@ type ContainerLogCollector struct {
 }
 
 func (collector *ContainerLogCollector) Collect(w Writer) error {
-	client := machine.NewClient(constants.DefaultName, true)
+	client := machine.NewClient(constants.DefaultName, true, network.DefaultMode)
 	ip, err := client.IP()
 	if err != nil {
 		return err

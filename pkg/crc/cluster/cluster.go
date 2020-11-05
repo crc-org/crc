@@ -29,7 +29,7 @@ func WaitForSSH(sshRunner *ssh.Runner) error {
 		return nil
 	}
 
-	return errors.RetryAfter(60*time.Second, checkSSHConnectivity, time.Second)
+	return errors.RetryAfter(300*time.Second, checkSSHConnectivity, time.Second)
 }
 
 const (

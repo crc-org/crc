@@ -6,6 +6,7 @@ import (
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/network"
 )
 
 type Flags uint32
@@ -167,16 +168,20 @@ func doRegisterSettings(cfg config.Schema, checks []Check) {
 
 // StartPreflightChecks performs the preflight checks before starting the cluster
 func StartPreflightChecks(config config.Storage) error {
-	return doPreflightChecks(config, getPreflightChecks(config.Get(cmdConfig.ExperimentalFeatures).AsBool()))
+	experimentalFeatures := config.Get(cmdConfig.ExperimentalFeatures).AsBool()
+	mode := network.ParseMode(config.Get(cmdConfig.NetworkMode).AsString())
+	return doPreflightChecks(config, getPreflightChecks(experimentalFeatures, mode))
 }
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
 func SetupHost(config config.Storage) error {
-	return doFixPreflightChecks(config, getPreflightChecks(config.Get(cmdConfig.ExperimentalFeatures).AsBool()))
+	experimentalFeatures := config.Get(cmdConfig.ExperimentalFeatures).AsBool()
+	mode := network.ParseMode(config.Get(cmdConfig.NetworkMode).AsString())
+	return doFixPreflightChecks(config, getPreflightChecks(experimentalFeatures, mode))
 }
 
 func RegisterSettings(config config.Schema) {
-	doRegisterSettings(config, getPreflightChecks(true))
+	doRegisterSettings(config, getAllPreflightChecks())
 }
 
 func CleanUpHost() error {
@@ -185,5 +190,5 @@ func CleanUpHost() error {
 	// any extra step/confusion we are just adding the checks
 	// which are behind the experiment flag. This way cleanup
 	// perform action in a sane way.
-	return doCleanUpPreflightChecks(getPreflightChecks(true))
+	return doCleanUpPreflightChecks(getAllPreflightChecks())
 }

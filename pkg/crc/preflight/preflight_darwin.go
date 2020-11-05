@@ -2,24 +2,28 @@ package preflight
 
 import (
 	"fmt"
+
+	"github.com/code-ready/crc/pkg/crc/network"
 )
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
-var hyperkitPreflightChecks = [...]Check{
-	{
-		configKeySuffix:  "check-hyperkit-installed",
-		checkDescription: "Checking if HyperKit is installed",
-		check:            checkHyperKitInstalled,
-		fixDescription:   "Setting up virtualization with HyperKit",
-		fix:              fixHyperKitInstallation,
-	},
-	{
-		configKeySuffix:  "check-hyperkit-driver",
-		checkDescription: "Checking if crc-driver-hyperkit is installed",
-		check:            checkMachineDriverHyperKitInstalled,
-		fixDescription:   "Installing crc-machine-hyperkit",
-		fix:              fixMachineDriverHyperKitInstalled,
-	},
+func hyperkitPreflightChecks(networkMode network.Mode) []Check {
+	return []Check{
+		{
+			configKeySuffix:  "check-hyperkit-installed",
+			checkDescription: "Checking if HyperKit is installed",
+			check:            checkHyperKitInstalled(networkMode),
+			fixDescription:   "Setting up virtualization with HyperKit",
+			fix:              fixHyperKitInstallation(networkMode),
+		},
+		{
+			configKeySuffix:  "check-hyperkit-driver",
+			checkDescription: "Checking if crc-driver-hyperkit is installed",
+			check:            checkMachineDriverHyperKitInstalled(networkMode),
+			fixDescription:   "Installing crc-machine-hyperkit",
+			fix:              fixMachineDriverHyperKitInstalled(networkMode),
+		},
+	}
 }
 
 var dnsPreflightChecks = [...]Check{
@@ -30,6 +34,9 @@ var dnsPreflightChecks = [...]Check{
 		fixDescription:   fmt.Sprintf("Setting file permissions for %s", hostsFile),
 		fix:              fixEtcHostsFilePermissions,
 	},
+}
+
+var resolverPreflightChecks = [...]Check{
 	{
 		configKeySuffix:    "check-resolver-file-permissions",
 		checkDescription:   fmt.Sprintf("Checking file permissions for %s", resolverFile),
@@ -94,14 +101,21 @@ var traySetupChecks = [...]Check{
 	},
 }
 
-func getPreflightChecks(experimentalFeatures bool) []Check {
+func getAllPreflightChecks() []Check {
+	return getPreflightChecks(true, network.DefaultMode)
+}
+
+func getPreflightChecks(experimentalFeatures bool, mode network.Mode) []Check {
 	checks := []Check{}
 
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, nonWinPreflightChecks[:]...)
-	checks = append(checks, hyperkitPreflightChecks[:]...)
+	checks = append(checks, hyperkitPreflightChecks(mode)...)
 	checks = append(checks, dnsPreflightChecks[:]...)
 
+	if mode == network.DefaultMode {
+		checks = append(checks, resolverPreflightChecks[:]...)
+	}
 	// Experimental feature
 	if experimentalFeatures {
 		checks = append(checks, traySetupChecks[:]...)

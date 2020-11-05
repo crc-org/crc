@@ -9,7 +9,8 @@ require (
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/cheggaaa/pb/v3 v3.0.4
 	github.com/code-ready/clicumber v0.0.0-20200728062640-1203dda97f67
-	github.com/code-ready/machine v0.0.0-20201030102243-22fcf8f5678a
+	github.com/code-ready/gvisor-tap-vsock v0.0.0-20201105131011-9258bacc7a6c
+	github.com/code-ready/machine v0.0.0-20201030135858-1ed3c999ccb7
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/docker v1.13.1 // indirect
@@ -32,10 +33,9 @@ require (
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.6.1
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
-	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
-	golang.org/x/sys v0.0.0-20200622214017-ed371f2e16b4
+	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
+	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
+	golang.org/x/sys v0.0.0-20201026133411-418715ba6fdd
 	golang.org/x/text v0.3.3
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	gopkg.in/AlecAivazis/survey.v1 v1.8.5
@@ -82,3 +82,5 @@ replace (
 )
 
 replace vbom.ml/util => github.com/fvbommel/util v0.0.2
+
+replace golang.org/x/sys => golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6

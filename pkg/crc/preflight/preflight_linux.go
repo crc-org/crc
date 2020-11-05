@@ -1,8 +1,17 @@
 package preflight
 
 import (
+	"errors"
+	"fmt"
+	"os"
+	"os/user"
+	"strings"
+	"syscall"
+
 	"github.com/code-ready/crc/pkg/crc/logging"
-	crcos "github.com/code-ready/crc/pkg/os/linux"
+	"github.com/code-ready/crc/pkg/crc/network"
+	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/code-ready/crc/pkg/os/linux"
 )
 
 var libvirtPreflightChecks = [...]Check{
@@ -86,30 +95,114 @@ var libvirtPreflightChecks = [...]Check{
 	},
 }
 
-func getPreflightChecks(experimentalFeatures bool) []Check {
-	return getPreflightChecksForDistro(distro(), experimentalFeatures)
+var vsockPreflightChecks = Check{
+	configKeySuffix:  "check-vsock",
+	checkDescription: "Checking if vsock is correctly configured",
+	check:            checkVsock,
+	fixDescription:   "Checking if vsock is correctly configured",
+	fix:              fixVsock,
 }
 
-func getPreflightChecksForDistro(distro crcos.OsType, experimentalFeatures bool) []Check {
-	var checks []Check
-	checks = append(checks, genericPreflightChecks[:]...)
-	checks = append(checks, nonWinPreflightChecks[:]...)
-	checks = append(checks, libvirtPreflightChecks[:]...)
+func checkVsock() error {
+	executable, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	getcap, _, err := crcos.RunWithDefaultLocale("getcap", executable)
+	if err != nil {
+		return err
+	}
+	if !strings.Contains(string(getcap), "cap_net_bind_service+eip") {
+		return fmt.Errorf("capabilities are not correct for %s", executable)
+	}
+	info, err := os.Stat("/dev/vsock")
+	if err != nil {
+		return err
+	}
+	if stat, ok := info.Sys().(*syscall.Stat_t); ok {
+		group, err := user.LookupGroupId(fmt.Sprint(stat.Gid))
+		if err != nil {
+			return err
+		}
+		if group.Name != "libvirt" {
+			return errors.New("/dev/vsock is not is the right group")
+		}
+	} else {
+		return errors.New("cannot cast info")
+	}
+	if info.Mode()&0060 == 0 {
+		return errors.New("/dev/vsock doesn't have the right permissions")
+	}
+	return nil
+}
+
+func fixVsock() error {
+	executable, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	_, _, err = crcos.RunWithPrivilege("setcap cap_net_bind_service=+eip", "setcap", "cap_net_bind_service=+eip", executable)
+	if err != nil {
+		return err
+	}
+	_, _, err = crcos.RunWithPrivilege("modprobe vhost_vsock", "modprobe", "vhost_vsock")
+	if err != nil {
+		return err
+	}
+	_, _, err = crcos.RunWithPrivilege("chown /dev/vsock", "chown", "root:libvirt", "/dev/vsock")
+	if err != nil {
+		return err
+	}
+	_, _, err = crcos.RunWithPrivilege("chmod /dev/vsock", "chmod", "g+rw", "/dev/vsock")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func getAllPreflightChecks() []Check {
+	checks := getPreflightChecksForDistro(distro(), network.DefaultMode)
+	checks = append(checks, vsockPreflightChecks)
+	return checks
+}
+
+func getPreflightChecks(_ bool, networkMode network.Mode) []Check {
+	return getPreflightChecksForDistro(distro(), networkMode)
+}
+
+func getPreflightChecksForDistro(distro linux.OsType, networkMode network.Mode) []Check {
+	checks := commonChecks()
+
+	if networkMode == network.VSockMode {
+		checks = append(checks, vsockPreflightChecks)
+	}
 
 	switch distro {
-	case crcos.Ubuntu:
-	case crcos.RHEL, crcos.CentOS, crcos.Fedora:
-		checks = append(checks, redhatPreflightChecks[:]...)
+	case linux.Ubuntu:
+	case linux.RHEL, linux.CentOS, linux.Fedora:
+		if networkMode == network.DefaultMode {
+			checks = append(checks, redhatPreflightChecks[:]...)
+		}
 	default:
 		logging.Warnf("distribution-specific preflight checks are not implemented for %s", distro)
-		checks = append(checks, redhatPreflightChecks[:]...)
+		if networkMode == network.DefaultMode {
+			checks = append(checks, redhatPreflightChecks[:]...)
+		}
 	}
 
 	return checks
 }
 
-func distro() crcos.OsType {
-	distro, err := crcos.GetOsRelease()
+func commonChecks() []Check {
+	var checks []Check
+	checks = append(checks, genericPreflightChecks[:]...)
+	checks = append(checks, nonWinPreflightChecks[:]...)
+	checks = append(checks, libvirtPreflightChecks[:]...)
+	return checks
+}
+
+func distro() linux.OsType {
+	distro, err := linux.GetOsRelease()
 	if err != nil {
 		logging.Warnf("cannot get distribution name: %v", err)
 		return "unknown"

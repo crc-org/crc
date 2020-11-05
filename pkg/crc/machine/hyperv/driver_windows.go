@@ -2,6 +2,7 @@ package hyperv
 
 import (
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/machine/drivers/hyperv"
 
 	"github.com/code-ready/crc/pkg/crc/machine/config"
@@ -16,8 +17,13 @@ func CreateHost(machineConfig config.MachineConfig) *hyperv.Driver {
 
 	hypervDriver.DisableDynamicMemory = true
 
-	_, switchName := winnet.SelectSwitchByNameOrDefault(AlternativeNetwork)
-	hypervDriver.VirtualSwitch = switchName
+	if machineConfig.NetworkMode == network.VSockMode {
+		hypervDriver.VirtualSwitch = ""
+	} else {
+		// Determine the Virtual Switch to be used
+		_, switchName := winnet.SelectSwitchByNameOrDefault(AlternativeNetwork)
+		hypervDriver.VirtualSwitch = switchName
+	}
 
 	return hypervDriver
 }

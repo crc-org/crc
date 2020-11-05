@@ -5,6 +5,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
+	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/machine/drivers/hyperkit"
 )
 
@@ -18,7 +19,8 @@ func CreateHost(machineConfig config.MachineConfig) *hyperkit.Driver {
 	hyperkitDriver.VmlinuzPath = machineConfig.Kernel
 	hyperkitDriver.InitrdPath = machineConfig.Initramfs
 	hyperkitDriver.HyperKitPath = filepath.Join(constants.CrcBinDir, "hyperkit")
-	hyperkitDriver.VMNet = true
+
+	hyperkitDriver.VMNet = machineConfig.NetworkMode == network.DefaultMode
 
 	return hyperkitDriver
 }
