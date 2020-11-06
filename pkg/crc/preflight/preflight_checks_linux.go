@@ -20,6 +20,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/systemd"
 	"github.com/code-ready/crc/pkg/crc/systemd/states"
 	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/code-ready/crc/pkg/os/linux"
 	libvirtxml "github.com/libvirt/libvirt-go-xml"
 )
 
@@ -129,14 +130,29 @@ func checkLibvirtInstalled() error {
 	return nil
 }
 
-func fixLibvirtInstalled() error {
-	logging.Debug("Trying to install libvirt")
-	stdOut, stdErr, err := crcos.RunWithPrivilege("install virtualization related packages", "yum", "install", "-y", "libvirt", "libvirt-daemon-kvm", "qemu-kvm")
-	if err != nil {
-		return fmt.Errorf("Could not install required packages: %s %v: %s", stdOut, err, stdErr)
+func fixLibvirtInstalled(distro *linux.OsRelease) func() error {
+	return func() error {
+		logging.Debug("Trying to install libvirt")
+		stdOut, stdErr, err := crcos.RunWithPrivilege("install virtualization related packages", "/bin/sh", "-c", installLibvirtCommand(distro))
+		if err != nil {
+			return fmt.Errorf("Could not install required packages: %s %v: %s", stdOut, err, stdErr)
+		}
+		logging.Debug("libvirt was successfully installed")
+		return nil
 	}
-	logging.Debug("libvirt was successfully installed")
-	return nil
+}
+
+func installLibvirtCommand(distro *linux.OsRelease) string {
+	yumCommand := "yum install -y libvirt libvirt-daemon-kvm qemu-kvm"
+	switch distroID(distro) {
+	case linux.Ubuntu:
+		return "apt-get update && apt-get install -y libvirt-daemon libvirt-daemon-system libvirt-clients"
+	case linux.RHEL, linux.CentOS, linux.Fedora:
+		return yumCommand
+	default:
+		logging.Warnf("unsupported distribution %s, trying to install libvirt with yum", distro)
+		return yumCommand
+	}
 }
 
 func fixLibvirtVersion() error {
