@@ -15,7 +15,7 @@ import (
 )
 
 func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
-	return []Check{
+	checks := []Check{
 		{
 			configKeySuffix:  "check-virt-enabled",
 			checkDescription: "Checking if Virtualization is enabled",
@@ -71,6 +71,10 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			flags:              CleanUpOnly,
 		},
 	}
+	if distroID(distro) == linux.Ubuntu {
+		checks = append(checks, ubuntuPreflightChecks...)
+	}
+	return checks
 }
 
 var libvirtNetworkPreflightChecks = [...]Check{
