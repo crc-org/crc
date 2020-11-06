@@ -14,61 +14,63 @@ import (
 	"github.com/code-ready/crc/pkg/os/linux"
 )
 
-var libvirtPreflightChecks = [...]Check{
-	{
-		configKeySuffix:  "check-virt-enabled",
-		checkDescription: "Checking if Virtualization is enabled",
-		check:            checkVirtualizationEnabled,
-		fixDescription:   "Setting up virtualization",
-		fix:              fixVirtualizationEnabled,
-	},
-	{
-		configKeySuffix:  "check-kvm-enabled",
-		checkDescription: "Checking if KVM is enabled",
-		check:            checkKvmEnabled,
-		fixDescription:   "Setting up KVM",
-		fix:              fixKvmEnabled,
-	},
-	{
-		configKeySuffix:  "check-libvirt-installed",
-		checkDescription: "Checking if libvirt is installed",
-		check:            checkLibvirtInstalled,
-		fixDescription:   "Installing libvirt service and dependencies",
-		fix:              fixLibvirtInstalled,
-	},
-	{
-		configKeySuffix:  "check-user-in-libvirt-group",
-		checkDescription: "Checking if user is part of libvirt group",
-		check:            checkUserPartOfLibvirtGroup,
-		fixDescription:   "Adding user to libvirt group",
-		fix:              fixUserPartOfLibvirtGroup,
-	},
-	{
-		configKeySuffix:  "check-libvirt-running",
-		checkDescription: "Checking if libvirt daemon is running",
-		check:            checkLibvirtServiceRunning,
-		fixDescription:   "Starting libvirt service",
-		fix:              fixLibvirtServiceRunning,
-	},
-	{
-		configKeySuffix:  "check-libvirt-version",
-		checkDescription: "Checking if a supported libvirt version is installed",
-		check:            checkLibvirtVersion,
-		fixDescription:   "Installing a supported libvirt version",
-		fix:              fixLibvirtVersion,
-	},
-	{
-		configKeySuffix:  "check-libvirt-driver",
-		checkDescription: "Checking if crc-driver-libvirt is installed",
-		check:            checkMachineDriverLibvirtInstalled,
-		fixDescription:   "Installing crc-driver-libvirt",
-		fix:              fixMachineDriverLibvirtInstalled,
-	},
-	{
-		cleanupDescription: "Removing the crc VM if exists",
-		cleanup:            removeCrcVM,
-		flags:              CleanUpOnly,
-	},
+func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
+	return []Check{
+		{
+			configKeySuffix:  "check-virt-enabled",
+			checkDescription: "Checking if Virtualization is enabled",
+			check:            checkVirtualizationEnabled,
+			fixDescription:   "Setting up virtualization",
+			fix:              fixVirtualizationEnabled,
+		},
+		{
+			configKeySuffix:  "check-kvm-enabled",
+			checkDescription: "Checking if KVM is enabled",
+			check:            checkKvmEnabled,
+			fixDescription:   "Setting up KVM",
+			fix:              fixKvmEnabled,
+		},
+		{
+			configKeySuffix:  "check-libvirt-installed",
+			checkDescription: "Checking if libvirt is installed",
+			check:            checkLibvirtInstalled,
+			fixDescription:   "Installing libvirt service and dependencies",
+			fix:              fixLibvirtInstalled(distro),
+		},
+		{
+			configKeySuffix:  "check-user-in-libvirt-group",
+			checkDescription: "Checking if user is part of libvirt group",
+			check:            checkUserPartOfLibvirtGroup,
+			fixDescription:   "Adding user to libvirt group",
+			fix:              fixUserPartOfLibvirtGroup,
+		},
+		{
+			configKeySuffix:  "check-libvirt-running",
+			checkDescription: "Checking if libvirt daemon is running",
+			check:            checkLibvirtServiceRunning,
+			fixDescription:   "Starting libvirt service",
+			fix:              fixLibvirtServiceRunning,
+		},
+		{
+			configKeySuffix:  "check-libvirt-version",
+			checkDescription: "Checking if a supported libvirt version is installed",
+			check:            checkLibvirtVersion,
+			fixDescription:   "Installing a supported libvirt version",
+			fix:              fixLibvirtVersion,
+		},
+		{
+			configKeySuffix:  "check-libvirt-driver",
+			checkDescription: "Checking if crc-driver-libvirt is installed",
+			check:            checkMachineDriverLibvirtInstalled,
+			fixDescription:   "Installing crc-driver-libvirt",
+			fix:              fixMachineDriverLibvirtInstalled,
+		},
+		{
+			cleanupDescription: "Removing the crc VM if exists",
+			cleanup:            removeCrcVM,
+			flags:              CleanUpOnly,
+		},
+	}
 }
 
 var libvirtNetworkPreflightChecks = [...]Check{
@@ -194,7 +196,7 @@ func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mo
 	var checks []Check
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, nonWinPreflightChecks[:]...)
-	checks = append(checks, libvirtPreflightChecks[:]...)
+	checks = append(checks, libvirtPreflightChecks(distro)...)
 	networkChecks := getNetworkChecksForDistro(distro, networkMode)
 	checks = append(checks, networkChecks...)
 	checks = append(checks, libvirtNetworkPreflightChecks[:]...)
