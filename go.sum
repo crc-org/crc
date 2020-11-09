@@ -138,8 +138,8 @@ github.com/code-ready/clicumber v0.0.0-20200728062640-1203dda97f67 h1:C+EVPWw8sj
 github.com/code-ready/clicumber v0.0.0-20200728062640-1203dda97f67/go.mod h1:ZPZUcYGpv/FQGnwakUuhiHP9x/IIcU2SKbn8xPe4ROc=
 github.com/code-ready/gvisor-tap-vsock v0.0.0-20201105131011-9258bacc7a6c h1:j8S82O8ovWK7nmNJAQf+dFH/RCtXCZneBi33nx2fMPo=
 github.com/code-ready/gvisor-tap-vsock v0.0.0-20201105131011-9258bacc7a6c/go.mod h1:tySPFyGlPN7nyc3u8RH2FAhRDC9JvbQVzJBOrlRJKgU=
-github.com/code-ready/machine v0.0.0-20201030135858-1ed3c999ccb7 h1:VwqXdK7T++DWLLkl1o6kSwcGSkGDKPI3i2G6FqbB/RQ=
-github.com/code-ready/machine v0.0.0-20201030135858-1ed3c999ccb7/go.mod h1:g30jKsf0FV9yJjsqZFAuFzVxwJE2h5cqDXSuMUV1G/U=
+github.com/code-ready/machine v0.0.0-20201109095558-3e6386d4f69e h1:QEEoDSu/IapbedlOIjfRzIDimmnEHKo+hFgdYDSzG00=
+github.com/code-ready/machine v0.0.0-20201109095558-3e6386d4f69e/go.mod h1:g30jKsf0FV9yJjsqZFAuFzVxwJE2h5cqDXSuMUV1G/U=
 github.com/codegangsta/negroni v1.0.0/go.mod h1:v0y3T5G7Y1UlFfyxFn/QLRU4a2EuNau2iZY63YTKWo0=
 github.com/container-storage-interface/spec v1.2.0/go.mod h1:6URME8mwIBbpVyZV93Ce5St17xBiQJQY67NDsuohiy4=
 github.com/containerd/cgroups v0.0.0-20181219155423-39b18af02c41/go.mod h1:X9rLEHIqSf/wfK8NsPqxJmeZgW4pcfzdXITDrUSJ6uI=

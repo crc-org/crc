@@ -2,8 +2,8 @@ package host
 
 import (
 	"errors"
-	"regexp"
 	"net/rpc"
+	"regexp"
 
 	"github.com/code-ready/machine/libmachine/auth"
 	"github.com/code-ready/machine/libmachine/drivers"
@@ -11,27 +11,13 @@ import (
 	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/mcnerror"
 	"github.com/code-ready/machine/libmachine/mcnutils"
-	"github.com/code-ready/machine/libmachine/ssh"
 	"github.com/code-ready/machine/libmachine/state"
 	"github.com/code-ready/machine/libmachine/swarm"
 )
 
 var (
-	validHostNamePattern                  = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9\-\.]*$`)
-	stdSSHClientCreator  SSHClientCreator = &StandardSSHClientCreator{}
+	validHostNamePattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9\-\.]*$`)
 )
-
-type SSHClientCreator interface {
-	CreateSSHClient(d drivers.Driver) (ssh.Client, error)
-}
-
-type StandardSSHClientCreator struct {
-	drivers.Driver
-}
-
-func SetSSHClientCreator(creator SSHClientCreator) {
-	stdSSHClientCreator = creator
-}
 
 type Host struct {
 	ConfigVersion int
@@ -60,33 +46,6 @@ type Metadata struct {
 
 func ValidateHostName(name string) bool {
 	return validHostNamePattern.MatchString(name)
-}
-
-func (h *Host) RunSSHCommand(command string, sshPrivateKeyPath string) (string, error) {
-	return drivers.RunSSHCommandFromDriver(h.Driver, sshPrivateKeyPath, command)
-}
-
-func (h *Host) CreateSSHClient() (ssh.Client, error) {
-	return stdSSHClientCreator.CreateSSHClient(h.Driver)
-}
-
-func (creator *StandardSSHClientCreator) CreateSSHClient(d drivers.Driver) (ssh.Client, error) {
-	addr, err := d.GetSSHHostname()
-	if err != nil {
-		return &ssh.ExternalClient{}, err
-	}
-
-	port, err := d.GetSSHPort()
-	if err != nil {
-		return &ssh.ExternalClient{}, err
-	}
-
-	auth := &ssh.Auth{}
-	if d.GetSSHKeyPath() != "" {
-		auth.Keys = []string{d.GetSSHKeyPath()}
-	}
-
-	return ssh.NewClient(d.GetSSHUsername(), addr, port, auth)
 }
 
 func (h *Host) runActionForState(action func() error, desiredState state.State) error {
