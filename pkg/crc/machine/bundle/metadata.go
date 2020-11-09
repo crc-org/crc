@@ -98,13 +98,8 @@ func GetCachedBundleInfo(bundleName string) (*CrcBundleInfo, error) {
 func (bundle *CrcBundleInfo) installSymlinkOrCopy() error {
 	ocInBundle := filepath.Join(bundle.cachedPath, constants.OcExecutableName)
 	ocInBinDir := filepath.Join(constants.CrcOcBinDir, constants.OcExecutableName)
-	if _, err := os.Stat(constants.CrcOcBinDir); err != nil {
-		if !os.IsNotExist(err) {
-			return err
-		}
-		if err := os.MkdirAll(constants.CrcOcBinDir, 0750); err != nil {
-			return err
-		}
+	if err := os.MkdirAll(constants.CrcOcBinDir, 0750); err != nil {
+		return err
 	}
 	_ = os.Remove(ocInBinDir)
 	if runtime.GOOS == "windows" {

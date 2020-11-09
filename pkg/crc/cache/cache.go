@@ -121,7 +121,7 @@ func (c *Cache) CacheExecutable() error {
 
 	// Copy the requested asset into its final destination
 	err = os.MkdirAll(c.destDir, 0750)
-	if err != nil && !os.IsExist(err) {
+	if err != nil {
 		return errors.Wrap(err, "Cannot create the target directory.")
 	}
 
