@@ -485,13 +485,11 @@ func (client *client) Stop() (state.State, error) {
 		return state.None, errors.Wrap(err, "Cannot load machine")
 	}
 
-	// FIXME: Why is the state fetched before calling host.Stop() ? We will return state.Running most of the time instead of state.Stopped
-	vmState, _ := host.Driver.GetState()
 	logging.Info("Stopping the OpenShift cluster, this may take a few minutes...")
 	if err := host.Stop(); err != nil {
 		return state.None, errors.Wrap(err, "Cannot stop machine")
 	}
-	return vmState, nil
+	return host.Driver.GetState()
 }
 
 func (client *client) PowerOff() error {
