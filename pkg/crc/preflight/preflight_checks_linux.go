@@ -204,19 +204,25 @@ func checkUserPartOfLibvirtGroup() error {
 	return fmt.Errorf("%s not part of libvirtd group", currentUser.Username)
 }
 
-func fixUserPartOfLibvirtGroup() error {
-	logging.Debug("Adding current user to the libvirt group")
-	currentUser, err := user.Current()
-	if err != nil {
-		logging.Debugf("user.Current() failed: %v", err)
-		return fmt.Errorf("Failed to get current user id")
+func fixUserPartOfLibvirtGroup(distro *linux.OsRelease) func() error {
+	return func() error {
+		logging.Debug("Adding current user to the libvirt group")
+		currentUser, err := user.Current()
+		if err != nil {
+			logging.Debugf("user.Current() failed: %v", err)
+			return fmt.Errorf("Failed to get current user id")
+		}
+		_, _, err = crcos.RunWithPrivilege("add user to libvirt group", "usermod", "-a", "-G", "libvirt", currentUser.Username)
+		if err != nil {
+			return fmt.Errorf("Failed to add user to libvirt group")
+		}
+		logging.Debug("Current user is in the libvirt group")
+
+		if distroIsLike(distro, linux.Ubuntu) {
+			return fmt.Errorf("Current user added to libvirt group. Please logout and login again")
+		}
+		return err
 	}
-	_, _, err = crcos.RunWithPrivilege("add user to libvirt group", "usermod", "-a", "-G", "libvirt", currentUser.Username)
-	if err != nil {
-		return fmt.Errorf("Failed to add user to libvirt group")
-	}
-	logging.Debug("Current user is in the libvirt group")
-	return nil
 }
 
 func checkLibvirtServiceRunning() error {

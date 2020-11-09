@@ -42,7 +42,7 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			checkDescription: "Checking if user is part of libvirt group",
 			check:            checkUserPartOfLibvirtGroup,
 			fixDescription:   "Adding user to libvirt group",
-			fix:              fixUserPartOfLibvirtGroup,
+			fix:              fixUserPartOfLibvirtGroup(distro),
 		},
 		{
 			configKeySuffix:  "check-libvirt-running",
