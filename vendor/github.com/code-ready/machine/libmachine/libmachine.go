@@ -1,12 +1,13 @@
 package libmachine
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"path/filepath"
 
-	"io"
-
 	"github.com/code-ready/machine/drivers/errdriver"
+	"github.com/code-ready/machine/drivers/hyperv"
 	"github.com/code-ready/machine/libmachine/auth"
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/drivers/plugin/localbinary"
@@ -16,7 +17,6 @@ import (
 	"github.com/code-ready/machine/libmachine/mcnerror"
 	"github.com/code-ready/machine/libmachine/mcnutils"
 	"github.com/code-ready/machine/libmachine/persist"
-	"github.com/code-ready/machine/libmachine/ssh"
 	"github.com/code-ready/machine/libmachine/state"
 	"github.com/code-ready/machine/libmachine/version"
 )
@@ -32,7 +32,6 @@ type API interface {
 type Client struct {
 	certsDir       string
 	IsDebug        bool
-	SSHClientType  ssh.ClientType
 	GithubAPIToken string
 	*persist.Filestore
 	clientDriverFactory rpcdriver.RPCClientDriverFactory
@@ -42,16 +41,24 @@ func NewClient(storePath, certsDir string) *Client {
 	return &Client{
 		certsDir:            certsDir,
 		IsDebug:             false,
-		SSHClientType:       ssh.External,
 		Filestore:           persist.NewFilestore(storePath, certsDir, certsDir),
 		clientDriverFactory: rpcdriver.NewRPCClientDriverFactory(),
 	}
 }
 
 func (api *Client) NewHost(driverName string, driverPath string, rawDriver []byte) (*host.Host, error) {
-	driver, err := api.clientDriverFactory.NewRPCClientDriver(driverName, driverPath, rawDriver)
-	if err != nil {
-		return nil, err
+	var driver drivers.Driver
+	if driverName == "hyperv" {
+		driver = hyperv.NewDriver("", "")
+		if err := json.Unmarshal(rawDriver, &driver); err != nil {
+			return nil, err
+		}
+	} else {
+		var err error
+		driver, err = api.clientDriverFactory.NewRPCClientDriver(driverName, driverPath, rawDriver)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &host.Host{
@@ -79,6 +86,15 @@ func (api *Client) Load(name string) (*host.Host, error) {
 	h, err := api.Filestore.Load(name)
 	if err != nil {
 		return nil, err
+	}
+
+	if h.DriverName == "hyperv" {
+		driver := hyperv.NewDriver("", "")
+		if err := json.Unmarshal(h.RawDriver, &driver); err != nil {
+			return nil, err
+		}
+		h.Driver = driver
+		return h, nil
 	}
 
 	d, err := api.clientDriverFactory.NewRPCClientDriver(h.DriverName, h.DriverPath, h.RawDriver)

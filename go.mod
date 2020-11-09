@@ -10,7 +10,7 @@ require (
 	github.com/cheggaaa/pb/v3 v3.0.4
 	github.com/code-ready/clicumber v0.0.0-20200728062640-1203dda97f67
 	github.com/code-ready/gvisor-tap-vsock v0.0.0-20201105131011-9258bacc7a6c
-	github.com/code-ready/machine v0.0.0-20201030135858-1ed3c999ccb7
+	github.com/code-ready/machine v0.0.0-20201109095558-3e6386d4f69e
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/docker v1.13.1 // indirect

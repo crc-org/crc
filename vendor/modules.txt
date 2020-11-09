@@ -33,7 +33,7 @@ github.com/code-ready/gvisor-tap-vsock/pkg/tap
 github.com/code-ready/gvisor-tap-vsock/pkg/transport
 github.com/code-ready/gvisor-tap-vsock/pkg/types
 github.com/code-ready/gvisor-tap-vsock/pkg/virtualnetwork
-# github.com/code-ready/machine v0.0.0-20201030135858-1ed3c999ccb7
+# github.com/code-ready/machine v0.0.0-20201109095558-3e6386d4f69e
 github.com/code-ready/machine/drivers/errdriver
 github.com/code-ready/machine/drivers/hyperkit
 github.com/code-ready/machine/drivers/hyperv
@@ -53,7 +53,6 @@ github.com/code-ready/machine/libmachine/mcnflag
 github.com/code-ready/machine/libmachine/mcnutils
 github.com/code-ready/machine/libmachine/persist
 github.com/code-ready/machine/libmachine/shell
-github.com/code-ready/machine/libmachine/ssh
 github.com/code-ready/machine/libmachine/state
 github.com/code-ready/machine/libmachine/swarm
 github.com/code-ready/machine/libmachine/version
