@@ -207,7 +207,7 @@ func downloadOrExtractTrayApp() error {
 	archivePath := filepath.Join(tmpArchivePath, filepath.Base(constants.GetCRCMacTrayDownloadURL()))
 	outputPath := constants.CrcBinDir
 	err = goos.MkdirAll(outputPath, 0750)
-	if err != nil && !goos.IsExist(err) {
+	if err != nil {
 		return errors.Wrap(err, "Cannot create the target directory.")
 	}
 	_, err = extract.Uncompress(archivePath, outputPath, false)

@@ -116,17 +116,9 @@ func GetHomeDir() string {
 	return os.Getenv("HOME")
 }
 
-// EnsureBaseDirectoriesExist create the ~/.crc and ~/.crc/oc dirs if they are not present
+// EnsureBaseDirectoryExists create the ~/.crc directory if it is not present
 func EnsureBaseDirectoriesExist() error {
-	if _, err := os.Stat(CrcBaseDir); err != nil {
-		if !os.IsNotExist(err) {
-			return err
-		}
-		if err := os.Mkdir(CrcBaseDir, 0750); err != nil {
-			return err
-		}
-	}
-	return nil
+	return os.MkdirAll(CrcBaseDir, 0750)
 }
 
 // IsBundleEmbedded returns true if the executable was compiled to contain the bundle

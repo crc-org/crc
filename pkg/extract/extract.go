@@ -115,10 +115,8 @@ func untar(reader io.Reader, targetDir string, fileFilter func(string) bool, sho
 
 		// if its a dir and it doesn't exist create it
 		case tar.TypeDir:
-			if _, err := os.Stat(path); err != nil {
-				if err := os.MkdirAll(path, header.FileInfo().Mode()); err != nil {
-					return nil, err
-				}
+			if err := os.MkdirAll(path, header.FileInfo().Mode()); err != nil {
+				return nil, err
 			}
 
 		// if it's a file create it
