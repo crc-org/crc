@@ -61,8 +61,10 @@ func fixTrayInstalled() error {
 
 	// sanitize password
 	password = escapeWindowsPassword(password)
+	username := goos.Getenv("USERNAME")
 
 	psScriptContent := genTrayInstallScript(
+		username,
 		password,
 		tempDir,
 		binPathWithArgs,
@@ -121,7 +123,9 @@ func removeTray() error {
 		_ = goos.RemoveAll(tempDir)
 	}()
 
+	username := goos.Getenv("USERNAME")
 	psScriptContent := genTrayRemovalScript(
+		username,
 		trayProcessName,
 		constants.TrayShortcutName,
 		constants.DaemonServiceName,

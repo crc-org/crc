@@ -8,14 +8,15 @@ import (
 var (
 	trayInstallationScript = []string{
 		`$ErrorActionPreference = "Stop"`,
+		`$username = "%s"`,
 		`$password = "%s"`,
 		`$tempDir = "%s"`,
 		`$crcExecutablePath = "%s"`,
 		`$trayExecutablePath = "%s"`,
 		`$traySymlinkName = "%s"`,
 		`$serviceName = "%s"`,
-		`$currentUserSid = (Get-LocalUser -Name "$env:USERNAME").Sid.Value`,
-		`$startUpFolder = "$Env:USERPROFILE\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"`,
+		`$currentUserSid = (Get-LocalUser -Name "$username").Sid.Value`,
+		`$startUpFolder = "$env:HOMEDRIVE\Users\$username\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"`,
 		`function AddServiceLogonRightForCurrentUser()`,
 		`{`,
 		`	$securityTemplate = @"`,
@@ -36,7 +37,7 @@ var (
 		`	$serviceLogonUserRight = ($userRights | select-string -Pattern "SeServiceLogonRight\s=\s.*")`,
 		`	$sidsInServiceLogonRight = ($serviceLogonUserRight -split "=")[1].Trim()`,
 		`	$sidsArray = $sidsInServiceLogonRight -split ","`,
-		`	if (!($sidsArray.Contains($env:USERNAME) -or $sidsArray.Contains("*"+$currentUserSid)))`,
+		`	if (!($sidsArray.Contains($username) -or $sidsArray.Contains("*"+$currentUserSid)))`,
 		`	{`,
 		`		Write-Output "User doesn't have logon as service right, adding sid of $env:Username"`,
 		`		$sidsInServiceLogonRight += ",*$currentUserSid"`,
@@ -53,7 +54,7 @@ var (
 		`function CreateDaemonService()`,
 		`{`,
 		`	$secPass = ConvertTo-SecureString $password -AsPlainText -Force`,
-		`	$creds = New-Object pscredential ("$env:USERDOMAIN\$env:USERNAME", $secPass)`,
+		`	$creds = New-Object pscredential ("$env:USERDOMAIN\$username", $secPass)`,
 		`	$params = @{`,
 		`		Name = "$serviceName"`,
 		`		BinaryPathName = "$crcExecutablePath daemon"`,
@@ -87,11 +88,12 @@ var (
 	}
 
 	trayRemovalScript = []string{
+		`$username = "%s"`,
 		`$tempDir = "%s"`,
 		`$trayProcessName = "%s"`,
 		`$traySymlinkName = "%s"`,
 		`$serviceName = "%s"`,
-		`$startUpFolder = "$Env:USERPROFILE\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"`,
+		`$startUpFolder = "$env:HOMEDRIVE\Users\$username\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"`,
 
 		`function RemoveUserFromServiceLogon`,
 		`{`,
@@ -115,7 +117,7 @@ var (
 
 		`	$sidsInServiceLogonRight = ($serviceLogonUserRight -split "=")[1].Trim()`,
 		`	$sidsArray = $sidsInServiceLogonRight -split ","`,
-		`	$newSids = $sidsArray | Where-Object {$_ -ne $env:USERNAME}`,
+		`	$newSids = $sidsArray | Where-Object {$_ -ne $username}`,
 		`	$newSids = $newSids -Join ","`,
 		`	$templateContent = $securityTemplate -f "$newSids"`,
 
@@ -149,8 +151,9 @@ func getTrayRemovalScriptTemplate() string {
 	return strings.Join(trayRemovalScript, "\n")
 }
 
-func genTrayInstallScript(password, tempDirPath, daemonCmd, trayExecutablePath, traySymlinkName, daemonServiceName string) string {
+func genTrayInstallScript(username, password, tempDirPath, daemonCmd, trayExecutablePath, traySymlinkName, daemonServiceName string) string {
 	return fmt.Sprintf(getTrayInstallationScriptTemplate(),
+		username,
 		password,
 		tempDirPath,
 		daemonCmd,
@@ -160,8 +163,9 @@ func genTrayInstallScript(password, tempDirPath, daemonCmd, trayExecutablePath, 
 	)
 }
 
-func genTrayRemovalScript(trayProcessName, traySymlinkName, daemonServiceName, tempDir string) string {
+func genTrayRemovalScript(username, trayProcessName, traySymlinkName, daemonServiceName, tempDir string) string {
 	return fmt.Sprintf(getTrayRemovalScriptTemplate(),
+		username,
 		tempDir,
 		trayProcessName,
 		traySymlinkName,
