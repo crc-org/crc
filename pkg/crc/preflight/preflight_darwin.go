@@ -23,6 +23,11 @@ func hyperkitPreflightChecks(networkMode network.Mode) []Check {
 			fixDescription:   "Installing crc-machine-hyperkit",
 			fix:              fixMachineDriverHyperKitInstalled(networkMode),
 		},
+		{
+			cleanupDescription: "Stopping CRC Hyperkit process",
+			cleanup:            stopCRCHyperkitProcess,
+			flags:              CleanUpOnly,
+		},
 	}
 }
 

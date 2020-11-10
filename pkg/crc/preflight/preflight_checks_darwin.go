@@ -3,9 +3,12 @@ package preflight
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"os/user"
+	"path/filepath"
 
 	"github.com/code-ready/crc/pkg/crc/cache"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
 	crcos "github.com/code-ready/crc/pkg/os"
@@ -180,5 +183,18 @@ func addFileWritePermissionToUser(filename string) error {
 	}
 	logging.Debugf("%s is readable/writable by current user", filename)
 
+	return nil
+}
+
+func stopCRCHyperkitProcess() error {
+	path, err := exec.LookPath("pkill")
+	if err != nil {
+		logging.Debugf("Could not find 'pkill'. %v", err)
+		return fmt.Errorf("Could not find 'pkill'. %w", err)
+	}
+	if _, _, err := crcos.RunWithDefaultLocale(path, "-f", filepath.Join(constants.CrcBinDir, "hyperkit")); err != nil {
+		logging.Debugf("Failed to kill 'hyperkit' process. %v", err)
+		return fmt.Errorf("Failed to kill 'hyperkit' process. %w", err)
+	}
 	return nil
 }
