@@ -115,8 +115,7 @@ func removeTray() error {
 
 	tempDir, err := ioutil.TempDir("", "crc")
 	if err != nil {
-		logging.Debug("Failed to create temporary directory for System Tray removal")
-		return nil
+		return err
 	}
 	defer func() {
 		_ = goos.RemoveAll(tempDir)
@@ -132,15 +131,14 @@ func removeTray() error {
 
 	// write script content to temporary file
 	if err = writePsScriptContentToFile(psScriptContent, psFilePath); err != nil {
-		logging.Debug(err)
-		return nil
+		return err
 	}
 
 	_, _, err = powershell.ExecuteAsAdmin("Uninstalling CodeReady Containers System Tray", psFilePath)
 	// wait for the script to finish executing
 	time.Sleep(2 * time.Second)
 	if err != nil {
-		logging.Debugf("Unable to execute System Tray uninstall script: %v", err)
+		return err
 	}
 	return nil
 }
