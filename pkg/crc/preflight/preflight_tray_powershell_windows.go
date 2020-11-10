@@ -56,7 +56,7 @@ var (
 		`	$creds = New-Object pscredential ("$env:USERDOMAIN\$env:USERNAME", $secPass)`,
 		`	$params = @{`,
 		`		Name = "$serviceName"`,
-		`		ExecutablePathName = "$crcExecutablePath daemon"`,
+		`		BinaryPathName = "$crcExecutablePath daemon"`,
 		`		DisplayName = "$serviceName"`,
 		`		StartupType = "Automatic"`,
 		`		Description = "CodeReady Containers Daemon service for System Tray."`,
