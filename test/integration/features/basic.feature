@@ -45,7 +45,6 @@ Feature: Basic test
         And stderr should contain "Checking if user is part of libvirt group"
         And stderr should contain "Checking if libvirt daemon is running"
         And stderr should contain "Checking if a supported libvirt version is installed"
-        And stderr should contain "Checking for obsolete crc-driver-libvirt"
         And stderr should contain "Checking if libvirt 'crc' network is available"
         And stderr should contain "Checking if libvirt 'crc' network is active"
         And stderr should contain "Checking if NetworkManager is installed"
