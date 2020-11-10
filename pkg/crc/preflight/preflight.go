@@ -5,6 +5,7 @@ import (
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
 )
@@ -143,6 +144,7 @@ func doFixPreflightChecks(config config.Storage, checks []Check) error {
 }
 
 func doCleanUpPreflightChecks(checks []Check) error {
+	var mErr errors.MultiError
 	// Do the cleanup in reverse order to avoid any dependency during cleanup
 	for i := len(checks) - 1; i >= 0; i-- {
 		check := checks[i]
@@ -151,10 +153,16 @@ func doCleanUpPreflightChecks(checks []Check) error {
 		}
 		err := check.doCleanUp()
 		if err != nil {
-			return err
+			// If an error occurs in a cleanup function
+			// we log/collect it and  move to the  next
+			logging.Debug(err)
+			mErr.Collect(err)
 		}
 	}
-	return nil
+	if len(mErr.Errors) == 0 {
+		return nil
+	}
+	return mErr
 }
 
 func doRegisterSettings(cfg config.Schema, checks []Check) {
