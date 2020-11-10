@@ -91,7 +91,10 @@ func fixTrayInstalled() error {
 	if _, err = goos.Stat(filepath.Join(tempDir, "success")); goos.IsNotExist(err) {
 		return fmt.Errorf("Installation script didn't execute successfully: %v", err)
 	}
-	return nil
+
+	// start the tray process
+	_, _, err = powershell.Execute("Start-Process", constants.TrayExecutablePath)
+	return err
 }
 
 func escapeWindowsPassword(password string) string {

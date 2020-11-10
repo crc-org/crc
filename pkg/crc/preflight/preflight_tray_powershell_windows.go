@@ -82,7 +82,6 @@ var (
 
 		`$ErrorActionPreference = "Stop"`,
 		`New-Item -ItemType SymbolicLink -Path "$startUpFolder" -Name "$traySymlinkName" -Value "$trayExecutablePath"`,
-		`Start-Process -FilePath "$trayExecutablePath"`,
 		`New-Item -ItemType File -Path "$tempDir" -Name "success"`,
 		`Set-Content -Path $tempDir\success "blah blah"`,
 	}
