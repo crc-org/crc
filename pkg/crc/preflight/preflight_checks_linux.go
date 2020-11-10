@@ -277,32 +277,6 @@ func fixMachineDriverLibvirtInstalled() error {
 	return nil
 }
 
-/* These 2 checks can be removed after a few releases */
-func checkOldMachineDriverLibvirtInstalled() error {
-	logging.Debugf("Checking if an older libvirt driver %s is installed", libvirt.MachineDriverCommand)
-	oldLibvirtDriverPath := filepath.Join("/usr/local/bin/", libvirt.MachineDriverCommand)
-	if _, err := os.Stat(oldLibvirtDriverPath); !os.IsNotExist(err) {
-		return fmt.Errorf("Found old system-wide crc-machine-driver executable")
-	}
-	logging.Debugf("No older %s installation found", libvirt.MachineDriverCommand)
-
-	return nil
-}
-
-func fixOldMachineDriverLibvirtInstalled() error {
-	oldLibvirtDriverPath := filepath.Join("/usr/local/bin/", libvirt.MachineDriverCommand)
-	logging.Debugf("Removing %s", oldLibvirtDriverPath)
-	_, _, err := crcos.RunWithPrivilege("remove old libvirt driver", "rm", "-f", oldLibvirtDriverPath)
-	if err != nil {
-		logging.Debugf("Removal of %s failed", oldLibvirtDriverPath)
-		/* Ignoring error, an obsolete file being still present is not a fatal error */
-	} else {
-		logging.Debugf("%s successfully removed", oldLibvirtDriverPath)
-	}
-
-	return nil
-}
-
 func checkLibvirtCrcNetworkAvailable() error {
 	logging.Debug("Checking if libvirt 'crc' network exists")
 	_, _, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-info", "crc")
