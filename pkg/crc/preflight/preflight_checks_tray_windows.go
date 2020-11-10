@@ -51,7 +51,6 @@ func fixTrayInstalled() error {
 	if err != nil {
 		return fmt.Errorf("Unable to find the current executables location: %v", err)
 	}
-	binPathWithArgs := fmt.Sprintf("%s daemon", strings.TrimSpace(binPath))
 
 	// get the password from user
 	password, err := input.PromptUserForSecret("Enter account login password for service installation", "This is the login password of your current account, needed to install the daemon service")
@@ -67,7 +66,7 @@ func fixTrayInstalled() error {
 		username,
 		password,
 		tempDir,
-		binPathWithArgs,
+		binPath,
 		constants.TrayExecutablePath,
 		constants.TrayShortcutName,
 		constants.DaemonServiceName,
