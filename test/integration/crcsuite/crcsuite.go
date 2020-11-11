@@ -69,6 +69,18 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`removing file "(.*)" from CRC home folder succeeds$`,
 		DeleteFileFromCRCHome)
 
+	// New
+	s.Step(`user checks that CRC is not running already$`,
+		CheckThatStatusFails)
+	s.Step(`user sets up their environment$`,
+		SetupEnvironment)
+	s.Step(`user observes a running cluster$`,
+		CheckIfClusterRunning)
+	s.Step(`user checks cluster IP$`,
+		CheckClusterIP)
+	s.Step(`user (stops|deletes|cleans up) the cluster$`,
+		DoStuffToCluster)
+
 	s.BeforeSuite(func() {
 		usr, _ := user.Current()
 		CRCHome = filepath.Join(usr.HomeDir, ".crc")
@@ -460,5 +472,52 @@ func UnsetConfigPropertySucceedsOrFails(property string, expected string) error 
 	cmd := "crc config unset " + property
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
+	return err
+}
+
+func CheckThatStatusFails() error {
+	// check that status fails
+	err := clicumber.ExecuteCommandSucceedsOrFails("crc status", "fails")
+	if err != nil {
+		return err
+	}
+	// check stdout after status
+	err = clicumber.CommandReturnShouldNotContain("stdout", "Machine 'crc' does not exist. Use 'crc start' to create it")
+	return err
+}
+
+func SetupEnvironment() error {
+	err := clicumber.ExecuteCommandSucceedsOrFails("crc setup", "succeeds")
+	return err
+}
+
+func CheckIfClusterRunning() error {
+	err := CheckOutputMatchWithRetry(15, "1m", "crc status --log-level debug", "should not match", "Stopped")
+	return err
+}
+
+func CheckClusterIP() error {
+
+	err := clicumber.ExecuteCommandSucceedsOrFails("crc ip", "succeeds")
+	if err != nil {
+		return err
+	}
+
+	err = clicumber.CommandReturnShouldMatch("stdout", `\d+\.\d+\.\d+\.\d+`)
+	return err
+
+}
+
+func DoStuffToCluster(does string) error {
+	var cmd string
+	switch does {
+	case "stops":
+		cmd = "crc stop -f"
+	case "deletes":
+		cmd = "crc delete -f"
+	case "cleans up":
+		cmd = "crc cleanup"
+	}
+	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, "succeeds")
 	return err
 }
