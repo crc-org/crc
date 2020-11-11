@@ -74,12 +74,22 @@ defaults
 
 frontend apps
     bind 0.0.0.0:80
-    bind 0.0.0.0:443
     option tcplog
     mode tcp
     default_backend apps
 
+frontend apps_ssl
+    bind 0.0.0.0:443
+    option tcplog
+    mode tcp
+    default_backend apps_ssl
+
 backend apps
+    mode tcp
+    balance roundrobin
+    server webserver1 $CRC_IP:80 check
+
+backend apps_ssl
     mode tcp
     balance roundrobin
     option ssl-hello-chk
