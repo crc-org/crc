@@ -13,14 +13,20 @@ import (
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
+	"github.com/code-ready/crc/pkg/crc/goodhosts"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/transport"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/types"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/virtualnetwork"
 	"github.com/docker/go-units"
+	v1 "github.com/openshift/api/route/v1"
+	routeclientset "github.com/openshift/client-go/route/clientset/versioned"
+	informers "github.com/openshift/client-go/route/informers/externalversions"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 func init() {
@@ -38,6 +44,34 @@ var daemonCmd = &cobra.Command{
 		logging.InitLogrus(logging.LogLevel, constants.DaemonLogFilePath)
 
 		go runDaemon()
+
+		go func() {
+			client := newMachine()
+			var ip string
+			for {
+				var err error
+				ip, err = client.IP()
+				if err == nil {
+					break
+				}
+				logging.Info("VM doesn't exist yet, waiting IP 2sec.")
+				time.Sleep(2 * time.Second)
+			}
+			logging.Infof("Found IP: %s", ip)
+			kubeconfig := filepath.Join(constants.MachineInstanceDir, constants.DefaultName, "kubeconfig")
+			for {
+				if _, err := os.Stat(kubeconfig); err == nil {
+					break
+				}
+				logging.Info("VM doesn't exist yet, waiting kubeconfig 2sec.")
+				time.Sleep(2 * time.Second)
+			}
+
+			stopper := make(chan struct{})
+			if err := routesController(stopper, kubeconfig, ip); err != nil {
+				logging.Fatal(err)
+			}
+		}()
 
 		var endpoints []string
 		if runtime.GOOS == "windows" {
@@ -137,4 +171,47 @@ func run(configuration *types.Configuration, endpoints []string) error {
 func newConfig() (crcConfig.Storage, error) {
 	config, _, err := newViperConfig()
 	return config, err
+}
+
+func routesController(stopCh chan struct{}, kubeconfig, ip string) error {
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		return err
+	}
+	clientset, err := routeclientset.NewForConfig(config)
+	if err != nil {
+		return err
+	}
+	factory := informers.NewSharedInformerFactory(clientset, 0)
+	informer := factory.Route().V1().Routes().Informer()
+	defer close(stopCh)
+	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			route := obj.(*v1.Route)
+			fmt.Printf("added: %s %s\n", route.GetName(), route.Spec.Host)
+			if err := goodhosts.AddToHostsFile(ip, route.Spec.Host); err != nil {
+				logging.Error(err)
+			}
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			old := oldObj.(*v1.Route)
+			route := newObj.(*v1.Route)
+			fmt.Printf("updated: %s (%s -> %s)\n", route.GetName(), old.Spec.Host, route.Spec.Host)
+			if err := goodhosts.RemoveFromHostsFile(ip, old.Spec.Host); err != nil {
+				logging.Error(err)
+			}
+			if err := goodhosts.AddToHostsFile(ip, route.Spec.Host); err != nil {
+				logging.Error(err)
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+			route := obj.(*v1.Route)
+			fmt.Printf("deleted: %s %s\n", route.GetName(), route.Spec.Host)
+			if err := goodhosts.RemoveFromHostsFile(ip, route.Spec.Host); err != nil {
+				logging.Error(err)
+			}
+		},
+	})
+	informer.Run(stopCh)
+	return nil
 }

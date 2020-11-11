@@ -21,6 +21,7 @@ require (
 	github.com/libvirt/libvirt-go-xml v6.8.0+incompatible
 	github.com/mattn/go-colorable v0.1.2
 	github.com/openshift/api v0.0.0-20200930075302-db52bc4ef99f
+	github.com/openshift/client-go v0.0.0-20200929181438-91d71ef2122c
 	github.com/openshift/oc v0.0.0-alpha.0.0.20201008041946-074039a0a9c1
 	github.com/pbnjay/memory v0.0.0-20190104145345-974d429e7ae4
 	github.com/pborman/uuid v1.2.0
