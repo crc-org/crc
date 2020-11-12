@@ -3,8 +3,6 @@ package shell
 import (
 	"fmt"
 	"strings"
-
-	"github.com/code-ready/machine/libmachine/shell"
 )
 
 type Config struct {
@@ -21,7 +19,7 @@ func GetShell(userShell string) (string, error) {
 		}
 		return userShell, nil
 	}
-	return shell.Detect()
+	return Detect()
 }
 
 func isSupportedShell(userShell string) bool {
