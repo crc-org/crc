@@ -175,7 +175,11 @@ func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mo
 		fallthrough
 	case linux.RHEL, linux.CentOS, linux.Fedora:
 		checks = append(checks, nmPreflightChecks[:]...)
-		checks = append(checks, dnsmasqPreflightChecks[:]...)
+		if usesSystemdResolved(distro) {
+			checks = append(checks, systemdResolvedPreflightChecks[:]...)
+		} else {
+			checks = append(checks, dnsmasqPreflightChecks[:]...)
+		}
 	case linux.Ubuntu:
 		break
 	}
@@ -189,6 +193,15 @@ func commonChecks() []Check {
 	checks = append(checks, nonWinPreflightChecks[:]...)
 	checks = append(checks, libvirtPreflightChecks[:]...)
 	return checks
+}
+
+func usesSystemdResolved(osRelease *linux.OsRelease) bool {
+	switch distroID(osRelease) {
+	case linux.Fedora:
+		return osRelease.VersionID >= "33"
+	default:
+		return false
+	}
 }
 
 func distroID(osRelease *linux.OsRelease) linux.OsType {
