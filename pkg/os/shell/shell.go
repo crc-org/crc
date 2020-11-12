@@ -19,7 +19,7 @@ func GetShell(userShell string) (string, error) {
 		}
 		return userShell, nil
 	}
-	return Detect()
+	return detect()
 }
 
 func isSupportedShell(userShell string) bool {

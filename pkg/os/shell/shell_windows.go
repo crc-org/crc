@@ -53,7 +53,7 @@ func getNameAndItsPpid(pid int) (exefile string, parentid int, err error) {
 	return name, int(pe.ParentProcessID), nil
 }
 
-func Detect() (string, error) {
+func detect() (string, error) {
 	shell := os.Getenv("SHELL")
 
 	if shell == "" {

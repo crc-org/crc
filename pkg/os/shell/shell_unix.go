@@ -13,8 +13,8 @@ var (
 	ErrUnknownShell = errors.New("Error: Unknown shell")
 )
 
-// Detect detects user's current shell.
-func Detect() (string, error) {
+// detect detects user's current shell.
+func detect() (string, error) {
 	shell := os.Getenv("SHELL")
 
 	if shell == "" {
