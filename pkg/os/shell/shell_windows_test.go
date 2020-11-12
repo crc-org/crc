@@ -13,7 +13,7 @@ func TestDetect(t *testing.T) {
 
 	shell, err := detect()
 
-	assert.Equal(t, "powershell", shell)
+	assert.Contains(t, supportedShell, shell)
 	assert.NoError(t, err)
 }
 
@@ -29,13 +29,5 @@ func TestGetNameAndItsPpidOfParent(t *testing.T) {
 	shell, _, err := getNameAndItsPpid(os.Getppid())
 
 	assert.Equal(t, "go.exe", shell)
-	assert.NoError(t, err)
-}
-
-func TestGetNameAndItsPpidOfGrandParent(t *testing.T) {
-	_, shellppid, _ := getNameAndItsPpid(os.Getppid())
-	shell, _, err := getNameAndItsPpid(shellppid)
-
-	assert.Equal(t, "powershell.exe", shell)
 	assert.NoError(t, err)
 }
