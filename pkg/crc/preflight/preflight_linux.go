@@ -162,21 +162,21 @@ func getPreflightChecks(_ bool, networkMode network.Mode) []Check {
 	return getPreflightChecksForDistro(distro(), networkMode)
 }
 
-func getPreflightChecksForDistro(distro linux.OsType, networkMode network.Mode) []Check {
+func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode) []Check {
 	checks := commonChecks()
 
 	if networkMode == network.VSockMode {
 		checks = append(checks, vsockPreflightChecks)
 	}
 
-	switch distro {
+	switch distroID(distro) {
 	case linux.Ubuntu:
 	case linux.RHEL, linux.CentOS, linux.Fedora:
 		if networkMode == network.DefaultMode {
 			checks = append(checks, redhatPreflightChecks[:]...)
 		}
 	default:
-		logging.Warnf("distribution-specific preflight checks are not implemented for %s", distro)
+		logging.Warnf("distribution-specific preflight checks are not implemented for %s", distroID(distro))
 		if networkMode == network.DefaultMode {
 			checks = append(checks, redhatPreflightChecks[:]...)
 		}
@@ -193,11 +193,19 @@ func commonChecks() []Check {
 	return checks
 }
 
-func distro() linux.OsType {
+func distroID(osRelease *linux.OsRelease) linux.OsType {
+	if osRelease == nil {
+		return "unknown"
+	}
+	// FIXME: should also use IDLike
+	return osRelease.ID
+}
+
+func distro() *linux.OsRelease {
 	distro, err := linux.GetOsRelease()
 	if err != nil {
 		logging.Warnf("cannot get distribution name: %v", err)
-		return "unknown"
+		return nil
 	}
-	return distro.ID
+	return distro
 }
