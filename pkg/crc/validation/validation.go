@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -35,6 +36,11 @@ func ValidateDiskSize(value int) error {
 	if value < constants.DefaultDiskSize {
 		return fmt.Errorf("requires disk size in GiB >= %d", constants.DefaultDiskSize)
 	}
+	// https://github.com/code-ready/machine-driver-hyperkit/issues/18
+	if runtime.GOOS == "darwin" && value > constants.DefaultDiskSize {
+		return fmt.Errorf("Disk resizing is not supported on macOS")
+	}
+
 	return nil
 }
 
