@@ -244,7 +244,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		}
 	}
 
-	if runtime.GOOS == "darwin" {
+	if runtime.GOOS == "darwin" && client.useVSock() {
 		if err := makeDaemonVisibleToHyperkit(client.name); err != nil {
 			return nil, err
 		}
