@@ -61,13 +61,29 @@ func CopyFileContents(src string, dst string, permission os.FileMode) error {
 	return nil
 }
 
+func FileContentMatches(path string, expectedContent []byte) error {
+	_, err := os.Stat(path)
+	if err != nil {
+		return fmt.Errorf("File not found: %s: %s", path, err.Error())
+	}
+	content, err := ioutil.ReadFile(filepath.Clean(path))
+	if err != nil {
+		return fmt.Errorf("Error opening file: %s: %s", path, err.Error())
+	}
+	if !bytes.Equal(content, expectedContent) {
+		return fmt.Errorf("File has unexpected content: %s", path)
+
+	}
+	return nil
+}
+
 func WriteFileIfContentChanged(path string, newContent []byte, perm os.FileMode) (bool, error) {
-	oldContent, err := ioutil.ReadFile(filepath.Clean(path))
-	if (err == nil) && (bytes.Equal(oldContent, newContent)) {
+	err := FileContentMatches(path, newContent)
+	if err == nil {
 		return false, nil
 	}
-	/* Intentionally ignore errors, just try to write the file if we can't read it */
 
+	/* Intentionally ignore errors, just try to write the file if we can't read it */
 	err = ioutil.WriteFile(path, newContent, perm)
 	if err != nil {
 		return false, err
