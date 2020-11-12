@@ -18,15 +18,15 @@ var nmPreflightChecks = [...]Check{
 		configKeySuffix:  "check-network-manager-installed",
 		checkDescription: "Checking if NetworkManager is installed",
 		check:            checkNetworkManagerInstalled,
-		fixDescription:   "Checking if NetworkManager is installed",
-		fix:              fixNetworkManagerInstalled,
+		fixDescription:   "NetworkManager is required and must be installed manually",
+		flags:            NoFix,
 	},
 	{
 		configKeySuffix:  "check-network-manager-running",
 		checkDescription: "Checking if NetworkManager service is running",
 		check:            checkNetworkManagerIsRunning,
-		fixDescription:   "Checking if NetworkManager service is running",
-		fix:              fixNetworkManagerIsRunning,
+		fixDescription:   "NetworkManager is required. Please make sure it is installed and running manually",
+		flags:            NoFix,
 	},
 }
 
@@ -154,10 +154,6 @@ func checkNetworkManagerInstalled() error {
 	return nil
 }
 
-func fixNetworkManagerInstalled() error {
-	return fmt.Errorf("NetworkManager is required and must be installed manually")
-}
-
 func checkNetworkManagerIsRunning() error {
 	logging.Debug("Checking if NetworkManager.service is running")
 	sd := systemd.NewHostSystemdCommander()
@@ -170,8 +166,4 @@ func checkNetworkManagerIsRunning() error {
 	}
 	logging.Debug("NetworkManager.service is already running")
 	return nil
-}
-
-func fixNetworkManagerIsRunning() error {
-	return fmt.Errorf("NetworkManager is required. Please make sure it is installed and running manually")
 }
