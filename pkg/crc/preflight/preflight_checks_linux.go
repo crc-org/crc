@@ -24,21 +24,8 @@ import (
 )
 
 const (
-	crcDnsmasqConfigFile        = "crc.conf"
-	crcNetworkManagerConfigFile = "crc-nm-dnsmasq.conf"
 	// This is defined in https://github.com/code-ready/machine-driver-libvirt/blob/master/go.mod#L5
 	minSupportedLibvirtVersion = "3.4.0"
-)
-
-var (
-	crcDnsmasqConfigPath = filepath.Join(string(filepath.Separator), "etc", "NetworkManager", "dnsmasq.d", crcDnsmasqConfigFile)
-	crcDnsmasqConfig     = `server=/apps-crc.testing/192.168.130.11
-server=/crc.testing/192.168.130.11
-`
-	crcNetworkManagerConfigPath = filepath.Join(string(filepath.Separator), "etc", "NetworkManager", "conf.d", crcNetworkManagerConfigFile)
-	crcNetworkManagerConfig     = `[main]
-dns=dnsmasq
-`
 )
 
 func checkVirtualizationEnabled() error {

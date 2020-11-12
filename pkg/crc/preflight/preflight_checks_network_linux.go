@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/systemd"
@@ -50,6 +51,20 @@ var dnsmasqPreflightChecks = [...]Check{
 		cleanup:            removeCrcDnsmasqConfigFile,
 	},
 }
+
+var (
+	crcNetworkManagerRootPath = filepath.Join(string(filepath.Separator), "etc", "NetworkManager")
+
+	crcDnsmasqConfigPath = filepath.Join(crcNetworkManagerRootPath, "dnsmasq.d", "crc.conf")
+	crcDnsmasqConfig     = `server=/apps-crc.testing/192.168.130.11
+server=/crc.testing/192.168.130.11
+`
+
+	crcNetworkManagerConfigPath = filepath.Join(crcNetworkManagerRootPath, "conf.d", "crc-nm-dnsmasq.conf")
+	crcNetworkManagerConfig     = `[main]
+dns=dnsmasq
+`
+)
 
 func fixNetworkManagerConfigFile(path string, content string, perms os.FileMode) error {
 	err := crcos.WriteToFileAsRoot(
