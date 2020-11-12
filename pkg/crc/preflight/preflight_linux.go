@@ -173,12 +173,14 @@ func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mo
 	case linux.Ubuntu:
 	case linux.RHEL, linux.CentOS, linux.Fedora:
 		if networkMode == network.DefaultMode {
-			checks = append(checks, redhatPreflightChecks[:]...)
+			checks = append(checks, nmPreflightChecks[:]...)
+			checks = append(checks, dnsmasqPreflightChecks[:]...)
 		}
 	default:
 		logging.Warnf("distribution-specific preflight checks are not implemented for %s", distroID(distro))
 		if networkMode == network.DefaultMode {
-			checks = append(checks, redhatPreflightChecks[:]...)
+			checks = append(checks, nmPreflightChecks[:]...)
+			checks = append(checks, dnsmasqPreflightChecks[:]...)
 		}
 	}
 

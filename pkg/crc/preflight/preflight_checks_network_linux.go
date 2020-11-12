@@ -16,7 +16,7 @@ import (
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
-var redhatPreflightChecks = [...]Check{
+var nmPreflightChecks = [...]Check{
 	{
 		configKeySuffix:  "check-network-manager-installed",
 		checkDescription: "Checking if NetworkManager is installed",
@@ -31,6 +31,9 @@ var redhatPreflightChecks = [...]Check{
 		fixDescription:   "Checking if NetworkManager service is running",
 		fix:              fixNetworkManagerIsRunning,
 	},
+}
+
+var dnsmasqPreflightChecks = [...]Check{
 	{
 		configKeySuffix:    "check-network-manager-config",
 		checkDescription:   "Checking if /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf exists",
