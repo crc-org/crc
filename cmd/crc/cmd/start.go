@@ -145,7 +145,6 @@ func (s *startResult) prettyPrintTo(writer io.Writer) error {
 		"To access the cluster, first set up your environment by following 'crc oc-env' instructions.",
 		fmt.Sprintf("Then you can access it by running 'oc login -u %s -p %s %s'.", s.ClusterConfig.DeveloperCredentials.Username, s.ClusterConfig.DeveloperCredentials.Password, s.ClusterConfig.URL),
 		fmt.Sprintf("To login as an admin, run 'oc login -u %s -p %s %s'.", s.ClusterConfig.AdminCredentials.Username, s.ClusterConfig.AdminCredentials.Password, s.ClusterConfig.URL),
-		"To access the cluster, first set up your environment by following 'crc oc-env' instructions.",
 		"",
 		"You can now run 'crc console' and use these credentials to access the OpenShift web console.",
 	}, "\n"))

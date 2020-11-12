@@ -29,7 +29,6 @@ func TestRenderActionPlainSuccess(t *testing.T) {
 To access the cluster, first set up your environment by following 'crc oc-env' instructions.
 Then you can access it by running 'oc login -u developer -p developer https://api.crc.testing:6443'.
 To login as an admin, run 'oc login -u kubeadmin -p secret https://api.crc.testing:6443'.
-To access the cluster, first set up your environment by following 'crc oc-env' instructions.
 
 You can now run 'crc console' and use these credentials to access the OpenShift web console.
 `, out.String())
