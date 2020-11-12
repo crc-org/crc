@@ -51,7 +51,6 @@ github.com/code-ready/machine/libmachine/mcnerror
 github.com/code-ready/machine/libmachine/mcnflag
 github.com/code-ready/machine/libmachine/mcnutils
 github.com/code-ready/machine/libmachine/persist
-github.com/code-ready/machine/libmachine/shell
 github.com/code-ready/machine/libmachine/state
 github.com/code-ready/machine/libmachine/swarm
 github.com/code-ready/machine/libmachine/version
