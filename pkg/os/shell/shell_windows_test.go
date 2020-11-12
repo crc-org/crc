@@ -11,7 +11,7 @@ func TestDetect(t *testing.T) {
 	defer func(shell string) { os.Setenv("SHELL", shell) }(os.Getenv("SHELL"))
 	os.Setenv("SHELL", "")
 
-	shell, err := Detect()
+	shell, err := detect()
 
 	assert.Equal(t, "powershell", shell)
 	assert.NoError(t, err)

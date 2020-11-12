@@ -13,7 +13,7 @@ func TestUnknownShell(t *testing.T) {
 	defer func(shell string) { os.Setenv("SHELL", shell) }(os.Getenv("SHELL"))
 	os.Setenv("SHELL", "")
 
-	shell, err := Detect()
+	shell, err := detect()
 
 	assert.Equal(t, err, ErrUnknownShell)
 	assert.Empty(t, shell)
