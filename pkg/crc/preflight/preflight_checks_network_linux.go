@@ -3,12 +3,9 @@
 package preflight
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/systemd"
@@ -54,19 +51,55 @@ var dnsmasqPreflightChecks = [...]Check{
 	},
 }
 
+func fixNetworkManagerConfigFile(path string, content string, perms os.FileMode) error {
+	err := crcos.WriteToFileAsRoot(
+		fmt.Sprintf("write NetworkManager configuration to %s", path),
+		content,
+		path,
+		perms,
+	)
+	if err != nil {
+		return fmt.Errorf("Failed to write config file: %s: %v", path, err)
+	}
+
+	logging.Debug("Reloading NetworkManager")
+	sd := systemd.NewHostSystemdCommander()
+	if err := sd.Reload("NetworkManager"); err != nil {
+		return fmt.Errorf("Failed to restart NetworkManager: %v", err)
+	}
+
+	return nil
+}
+
+func removeNetworkManagerConfigFile(path string) error {
+	if err := checkNetworkManagerInstalled(); err != nil {
+		// When NetworkManager is not installed, its config files won't exist
+		return nil
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		logging.Debugf("Removing NetworkManager configuration file: %s", path)
+		err := crcos.RemoveFileAsRoot(
+			fmt.Sprintf("removing NetworkManager configuration file in %s", path),
+			path,
+		)
+		if err != nil {
+			return fmt.Errorf("Failed to remove NetworkManager configuration file: %s: %v", path, err)
+		}
+
+		logging.Debug("Reloading NetworkManager")
+		sd := systemd.NewHostSystemdCommander()
+		if err := sd.Reload("NetworkManager"); err != nil {
+			return fmt.Errorf("Failed to restart NetworkManager: %v", err)
+		}
+	}
+	return nil
+}
+
 func checkCrcDnsmasqConfigFile() error {
 	logging.Debug("Checking dnsmasq configuration")
-	c := []byte(crcDnsmasqConfig)
-	_, err := os.Stat(crcDnsmasqConfigPath)
+	err := crcos.FileContentMatches(crcDnsmasqConfigPath, []byte(crcDnsmasqConfig))
 	if err != nil {
-		return fmt.Errorf("File not found: %s: %s", crcDnsmasqConfigPath, err.Error())
-	}
-	config, err := ioutil.ReadFile(filepath.Clean(crcDnsmasqConfigPath))
-	if err != nil {
-		return fmt.Errorf("Error opening file: %s: %s", crcDnsmasqConfigPath, err.Error())
-	}
-	if !bytes.Equal(config, c) {
-		return fmt.Errorf("Config file contains changes: %s", crcDnsmasqConfigPath)
+		return err
 	}
 	logging.Debug("dnsmasq configuration is good")
 	return nil
@@ -74,20 +107,9 @@ func checkCrcDnsmasqConfigFile() error {
 
 func fixCrcDnsmasqConfigFile() error {
 	logging.Debug("Fixing dnsmasq configuration")
-	err := crcos.WriteToFileAsRoot(
-		fmt.Sprintf("write dnsmasq configuration in %s", crcDnsmasqConfigPath),
-		crcDnsmasqConfig,
-		crcDnsmasqConfigPath,
-		0644,
-	)
+	err := fixNetworkManagerConfigFile(crcDnsmasqConfigPath, crcDnsmasqConfig, 0644)
 	if err != nil {
-		return fmt.Errorf("Failed to write dnsmasq config file: %s: %v", crcDnsmasqConfigPath, err)
-	}
-
-	logging.Debug("Reloading NetworkManager")
-	sd := systemd.NewHostSystemdCommander()
-	if err := sd.Reload("NetworkManager"); err != nil {
-		return fmt.Errorf("Failed to restart NetworkManager: %v", err)
+		return err
 	}
 
 	logging.Debug("dnsmasq configuration fixed")
@@ -95,44 +117,14 @@ func fixCrcDnsmasqConfigFile() error {
 }
 
 func removeCrcDnsmasqConfigFile() error {
-	if err := checkNetworkManagerInstalled(); err != nil {
-		// When NetworkManager is not installed, this file won't exist
-		return nil
-	}
-	// Delete the `crcDnsmasqConfigPath` file if exists,
-	// ignore all the os PathError except `IsNotExist` one.
-	if _, err := os.Stat(crcDnsmasqConfigPath); !os.IsNotExist(err) {
-		logging.Debug("Removing dnsmasq configuration")
-		err := crcos.RemoveFileAsRoot(
-			fmt.Sprintf("removing dnsmasq configuration in %s", crcDnsmasqConfigPath),
-			crcDnsmasqConfigPath,
-		)
-		if err != nil {
-			return fmt.Errorf("Failed to remove dnsmasq config file: %s: %v", crcDnsmasqConfigPath, err)
-		}
-
-		logging.Debug("Reloading NetworkManager")
-		sd := systemd.NewHostSystemdCommander()
-		if err := sd.Reload("NetworkManager"); err != nil {
-			return fmt.Errorf("Failed to restart NetworkManager: %v", err)
-		}
-	}
-	return nil
+	return removeNetworkManagerConfigFile(crcDnsmasqConfigPath)
 }
 
 func checkCrcNetworkManagerConfig() error {
 	logging.Debug("Checking NetworkManager configuration")
-	c := []byte(crcNetworkManagerConfig)
-	_, err := os.Stat(crcNetworkManagerConfigPath)
+	err := crcos.FileContentMatches(crcNetworkManagerConfigPath, []byte(crcNetworkManagerConfig))
 	if err != nil {
-		return fmt.Errorf("File not found: %s: %s", crcNetworkManagerConfigPath, err.Error())
-	}
-	config, err := ioutil.ReadFile(filepath.Clean(crcNetworkManagerConfigPath))
-	if err != nil {
-		return fmt.Errorf("Error opening file: %s: %s", crcNetworkManagerConfigPath, err.Error())
-	}
-	if !bytes.Equal(config, c) {
-		return fmt.Errorf("Config file contains changes: %s", crcNetworkManagerConfigPath)
+		return err
 	}
 	logging.Debug("NetworkManager configuration is good")
 	return nil
@@ -140,48 +132,16 @@ func checkCrcNetworkManagerConfig() error {
 
 func fixCrcNetworkManagerConfig() error {
 	logging.Debug("Fixing NetworkManager configuration")
-	err := crcos.WriteToFileAsRoot(
-		fmt.Sprintf("write NetworkManager config in %s", crcNetworkManagerConfigPath),
-		crcNetworkManagerConfig,
-		crcNetworkManagerConfigPath,
-		0644,
-	)
+	err := fixNetworkManagerConfigFile(crcNetworkManagerConfigPath, crcNetworkManagerConfig, 0644)
 	if err != nil {
-		return fmt.Errorf("Failed to write NetworkManager config file: %s: %v", crcNetworkManagerConfigPath, err)
+		return err
 	}
-
-	logging.Debug("Reloading NetworkManager")
-	sd := systemd.NewHostSystemdCommander()
-	if err := sd.Reload("NetworkManager"); err != nil {
-		return fmt.Errorf("Failed to restart NetworkManager: %v", err)
-	}
-
 	logging.Debug("NetworkManager configuration fixed")
 	return nil
 }
 
 func removeCrcNetworkManagerConfig() error {
-	if err := checkNetworkManagerInstalled(); err != nil {
-		// When NetworkManager is not installed, this file won't exist
-		return nil
-	}
-	if _, err := os.Stat(crcNetworkManagerConfigPath); !os.IsNotExist(err) {
-		logging.Debug("Removing NetworkManager configuration")
-		err := crcos.RemoveFileAsRoot(
-			fmt.Sprintf("Removing NetworkManager config in %s", crcNetworkManagerConfigPath),
-			crcNetworkManagerConfigPath,
-		)
-		if err != nil {
-			return fmt.Errorf("Failed to remove NetworkManager config file: %s: %v", crcNetworkManagerConfigPath, err)
-		}
-
-		logging.Debug("Reloading NetworkManager")
-		sd := systemd.NewHostSystemdCommander()
-		if err := sd.Reload("NetworkManager"); err != nil {
-			return fmt.Errorf("Failed to restart NetworkManager: %v", err)
-		}
-	}
-	return nil
+	return removeNetworkManagerConfigFile(crcNetworkManagerConfigPath)
 }
 
 func checkNetworkManagerInstalled() error {
