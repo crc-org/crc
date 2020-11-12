@@ -166,22 +166,18 @@ func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mo
 	checks := commonChecks()
 
 	if networkMode == network.VSockMode {
-		checks = append(checks, vsockPreflightChecks)
+		return append(checks, vsockPreflightChecks)
 	}
 
 	switch distroID(distro) {
-	case linux.Ubuntu:
-	case linux.RHEL, linux.CentOS, linux.Fedora:
-		if networkMode == network.DefaultMode {
-			checks = append(checks, nmPreflightChecks[:]...)
-			checks = append(checks, dnsmasqPreflightChecks[:]...)
-		}
 	default:
-		logging.Warnf("distribution-specific preflight checks are not implemented for %s", distroID(distro))
-		if networkMode == network.DefaultMode {
-			checks = append(checks, nmPreflightChecks[:]...)
-			checks = append(checks, dnsmasqPreflightChecks[:]...)
-		}
+		logging.Warnf("distribution-specific preflight checks are not implemented for '%s'", distroID(distro))
+		fallthrough
+	case linux.RHEL, linux.CentOS, linux.Fedora:
+		checks = append(checks, nmPreflightChecks[:]...)
+		checks = append(checks, dnsmasqPreflightChecks[:]...)
+	case linux.Ubuntu:
+		break
 	}
 
 	return checks
