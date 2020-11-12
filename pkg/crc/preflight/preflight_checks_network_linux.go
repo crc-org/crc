@@ -64,7 +64,46 @@ server=/crc.testing/192.168.130.11
 	crcNetworkManagerConfig     = `[main]
 dns=dnsmasq
 `
+
+	crcNetworkManagerDispatcherPath   = filepath.Join(crcNetworkManagerRootPath, "dispatcher.d", "pre-up.d", "99-crc.sh")
+	crcNetworkManagerDispatcherConfig = `#!/bin/sh
+# This is a NetworkManager dispatcher script to configure split DNS for
+# the 'crc' libvirt network.
+# The corresponding crc bridge is recreated each time the system reboots, so
+# it cannot be configured permanently through NetworkManager.
+# Changing DNS settings with nmcli requires the connection to go down/up,
+# so we directly make the change using resolvectl
+
+export LC_ALL=C
+
+if [ "$1" = crc ]; then
+        resolvectl domain "$1" ~testing
+        resolvectl dns "$1" 192.168.130.11
+        resolvectl default-route "$1" false
+fi
+
+exit 0
+`
 )
+
+var systemdResolvedPreflightChecks = [...]Check{
+	{
+		configKeySuffix:  "check-systemd-resolved-running",
+		checkDescription: "Checking if the systemd-resolved service is running",
+		check:            checkSystemdResolvedIsRunning,
+		fixDescription:   "systemd-resolved is required on this distribution. Please make sure it is installed and running manually",
+		flags:            NoFix,
+	},
+	{
+		configKeySuffix:    "check-crc-nm-dispatcher-file",
+		checkDescription:   fmt.Sprintf("Checking if %s exists", crcNetworkManagerDispatcherPath),
+		check:              checkCrcNetworkManagerDispatcherFile,
+		fixDescription:     "Writing NetworkManager dispatcher file for crc",
+		fix:                fixCrcNetworkManagerDispatcherFile,
+		cleanupDescription: fmt.Sprintf("Removing %s file", crcNetworkManagerDispatcherPath),
+		cleanup:            removeCrcNetworkManagerDispatcherFile,
+	},
+}
 
 func fixNetworkManagerConfigFile(path string, content string, perms os.FileMode) error {
 	err := crcos.WriteToFileAsRoot(
@@ -169,16 +208,49 @@ func checkNetworkManagerInstalled() error {
 	return nil
 }
 
-func checkNetworkManagerIsRunning() error {
-	logging.Debug("Checking if NetworkManager.service is running")
+func checkSystemdServiceRunning(service string) error {
+	logging.Debugf("Checking if %s is running", service)
 	sd := systemd.NewHostSystemdCommander()
-	status, err := sd.Status("NetworkManager")
+	status, err := sd.Status(service)
 	if err != nil {
 		return err
 	}
 	if status != states.Running {
-		return fmt.Errorf("NetworkManager.service is not running")
+		return fmt.Errorf("%s is not running", service)
 	}
-	logging.Debug("NetworkManager.service is already running")
+	logging.Debugf("%s is already running", service)
 	return nil
+}
+
+func checkNetworkManagerIsRunning() error {
+	return checkSystemdServiceRunning("NetworkManager.service")
+}
+
+func checkSystemdResolvedIsRunning() error {
+	return checkSystemdServiceRunning("systemd-resolved.service")
+}
+
+func checkCrcNetworkManagerDispatcherFile() error {
+	logging.Debug("Checking NetworkManager dispatcher file for crc network")
+	err := crcos.FileContentMatches(crcNetworkManagerDispatcherPath, []byte(crcNetworkManagerDispatcherConfig))
+	if err != nil {
+		return err
+	}
+	logging.Debug("Dispatcher file has the expected content")
+	return nil
+}
+
+func fixCrcNetworkManagerDispatcherFile() error {
+	logging.Debug("Fixing NetworkManager dispatcher configuration")
+	err := fixNetworkManagerConfigFile(crcNetworkManagerDispatcherPath, crcNetworkManagerDispatcherConfig, 0755)
+	if err != nil {
+		return err
+	}
+
+	logging.Debug("NetworkManager dispatcher configuration fixed")
+	return nil
+}
+
+func removeCrcNetworkManagerDispatcherFile() error {
+	return removeNetworkManagerConfigFile(crcNetworkManagerDispatcherPath)
 }
