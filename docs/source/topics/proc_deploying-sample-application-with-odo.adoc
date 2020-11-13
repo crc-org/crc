@@ -41,7 +41,7 @@ $ cd sample-app
 +
 [subs="+quotes,attributes"]
 ----
-$ odo create nodejs --git https://github.com/openshift/nodejs-ex
+$ odo create nodejs --s2i --git https://github.com/openshift/nodejs-ex
 ----
 +
 [NOTE]
