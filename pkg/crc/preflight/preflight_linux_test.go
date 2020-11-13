@@ -41,10 +41,10 @@ var (
 )
 
 func TestCountPreflights(t *testing.T) {
-	assert.Len(t, getPreflightChecksForDistro(&rhel, network.DefaultMode), 20)
+	assert.Len(t, getPreflightChecksForDistro(&rhel, network.DefaultMode), 21)
 	assert.Len(t, getPreflightChecksForDistro(&rhel, network.VSockMode), 17)
 
-	assert.Len(t, getPreflightChecksForDistro(&unexpected, network.DefaultMode), 20)
+	assert.Len(t, getPreflightChecksForDistro(&unexpected, network.DefaultMode), 21)
 	assert.Len(t, getPreflightChecksForDistro(&unexpected, network.VSockMode), 17)
 
 	assert.Len(t, getPreflightChecksForDistro(&ubuntu, network.DefaultMode), 16)
