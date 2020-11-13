@@ -30,13 +30,22 @@ $ oc get clusterversion version -ojsonpath='{range .spec.overrides[*]}{.name}{"\
 +
 [subs="+quotes"]
 ----
-PS> oc get clusterversion version -ojsonpath='{range .spec.overrides[*]}{.name}{"\n"}{end}' | % {$nl++;"`t$($nl-1) `t $_"};$nl=0
+PS> oc get clusterversion version -ojsonpath='{range .spec.overrides[*]}{.name}{\"\n\"}{end}' | % {$nl++;"`t$($nl-1) `t $_"};$nl=0
 ----
 
 . Start monitoring, alerting, and telemetry services using the identified numeric index for `cluster-monitoring-operator`:
+
+** On Linux or {mac}:
 +
 [subs="+quotes"]
 ----
-$ oc patch clusterversion/version --type='json' -p '[{"op":"remove", "path":"/spec/overrides/_<unmanaged-operator-index>_"}]'
+$ oc patch clusterversion/version --type='json' -p '[{"op":"remove", "path":"/spec/overrides/_<cluster-monitoring-operator-index>_"}]'
 clusterversion.config.openshift.io/version patched
+----
+
+** On {msw} using PowerShell:
++
+[subs="+quotes"]
+----
+PS> oc patch clusterversion/version --type='json' -p '[{\"op\":\"remove\", \"path\":\"/spec/overrides/_<cluster-monitoring-operator-index>_\"}]'
 ----
