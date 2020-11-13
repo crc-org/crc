@@ -16,6 +16,13 @@ import (
 
 var nmPreflightChecks = [...]Check{
 	{
+		configKeySuffix:  "check-systemd-networkd-running",
+		checkDescription: "Checking if systemd-networkd is running",
+		check:            checkSystemdNetworkdIsNotRunning,
+		fixDescription:   "network configuration with systemd-networkd is not supported",
+		flags:            NoFix,
+	},
+	{
 		configKeySuffix:  "check-network-manager-installed",
 		checkDescription: "Checking if NetworkManager is installed",
 		check:            checkNetworkManagerInstalled,
@@ -196,6 +203,16 @@ func fixCrcNetworkManagerConfig() error {
 
 func removeCrcNetworkManagerConfig() error {
 	return removeNetworkManagerConfigFile(crcNetworkManagerConfigPath)
+}
+
+func checkSystemdNetworkdIsNotRunning() error {
+	err := checkSystemdServiceRunning("systemd-networkd.service")
+	if err == nil {
+		return fmt.Errorf("systemd-networkd.service is running")
+	}
+
+	logging.Debugf("systemd-networkd.service is not running")
+	return nil
 }
 
 func checkNetworkManagerInstalled() error {
