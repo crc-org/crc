@@ -65,6 +65,14 @@ var libvirtPreflightChecks = [...]Check{
 		fix:              fixMachineDriverLibvirtInstalled,
 	},
 	{
+		cleanupDescription: "Removing the crc VM if exists",
+		cleanup:            removeCrcVM,
+		flags:              CleanUpOnly,
+	},
+}
+
+var libvirtNetworkPreflightChecks = [...]Check{
+	{
 		configKeySuffix:    "check-crc-network",
 		checkDescription:   "Checking if libvirt 'crc' network is available",
 		check:              checkLibvirtCrcNetworkAvailable,
@@ -79,11 +87,6 @@ var libvirtPreflightChecks = [...]Check{
 		check:            checkLibvirtCrcNetworkActive,
 		fixDescription:   "Starting libvirt 'crc' network",
 		fix:              fixLibvirtCrcNetworkActive,
-	},
-	{
-		cleanupDescription: "Removing the crc VM if exists",
-		cleanup:            removeCrcVM,
-		flags:              CleanUpOnly,
 	},
 }
 
@@ -162,8 +165,8 @@ func getPreflightChecks(_ bool, networkMode network.Mode) []Check {
 	return getPreflightChecksForDistro(distro(), networkMode)
 }
 
-func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode) []Check {
-	checks := commonChecks()
+func getNetworkChecksForDistro(distro *linux.OsRelease, networkMode network.Mode) []Check {
+	var checks []Check
 
 	if networkMode == network.VSockMode {
 		return append(checks, vsockPreflightChecks)
@@ -187,11 +190,14 @@ func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mo
 	return checks
 }
 
-func commonChecks() []Check {
+func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode) []Check {
 	var checks []Check
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, nonWinPreflightChecks[:]...)
 	checks = append(checks, libvirtPreflightChecks[:]...)
+	networkChecks := getNetworkChecksForDistro(distro, networkMode)
+	checks = append(checks, networkChecks...)
+	checks = append(checks, libvirtNetworkPreflightChecks[:]...)
 	return checks
 }
 
