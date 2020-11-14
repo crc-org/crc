@@ -178,18 +178,18 @@ func getNetworkChecksForDistro(distro *linux.OsRelease, networkMode network.Mode
 		return append(checks, vsockPreflightChecks)
 	}
 
-	switch distroID(distro) {
+	switch {
 	default:
 		logging.Warnf("distribution-specific preflight checks are not implemented for '%s'", distroID(distro))
 		fallthrough
-	case linux.RHEL, linux.CentOS, linux.Fedora:
+	case distroIsLike(distro, linux.Fedora):
 		checks = append(checks, nmPreflightChecks[:]...)
 		if usesSystemdResolved(distro) {
 			checks = append(checks, systemdResolvedPreflightChecks[:]...)
 		} else {
 			checks = append(checks, dnsmasqPreflightChecks[:]...)
 		}
-	case linux.Ubuntu:
+	case distroID(distro) == linux.Ubuntu:
 		break
 	}
 
@@ -222,6 +222,23 @@ func distroID(osRelease *linux.OsRelease) linux.OsType {
 	}
 	// FIXME: should also use IDLike
 	return osRelease.ID
+}
+
+func distroIsLike(osRelease *linux.OsRelease, osType linux.OsType) bool {
+	if osRelease == nil {
+		return false
+	}
+	if osRelease.ID == osType {
+		return true
+	}
+
+	for _, id := range osRelease.GetIDLike() {
+		if id == osType {
+			return true
+		}
+	}
+
+	return false
 }
 
 func distro() *linux.OsRelease {
