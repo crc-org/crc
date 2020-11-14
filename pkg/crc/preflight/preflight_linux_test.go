@@ -29,6 +29,7 @@ var (
 	rhel crcos.OsRelease = crcos.OsRelease{
 		ID:        crcos.RHEL,
 		VersionID: "8.2",
+		IDLike:    string(crcos.Fedora),
 	}
 
 	ubuntu crcos.OsRelease = crcos.OsRelease{

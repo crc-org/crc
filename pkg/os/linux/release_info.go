@@ -114,3 +114,17 @@ func GetOsRelease() (*OsRelease, error) {
 	}
 	return &osr, nil
 }
+
+func (osr *OsRelease) GetIDLike() []OsType {
+	var idLike []OsType
+
+	if osr == nil {
+		return idLike
+	}
+
+	for _, id := range strings.Split(osr.IDLike, " ") {
+		idLike = append(idLike, OsType(id))
+	}
+
+	return idLike
+}
