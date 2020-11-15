@@ -48,7 +48,8 @@ func TestRunner(t *testing.T) {
 	})
 
 	addr := listener.Addr().String()
-	runner := CreateRunner(ipFor(addr), portFor(addr), clientKeyFile)
+	runner, err := CreateRunner(ipFor(addr), portFor(addr), clientKeyFile)
+	assert.NoError(t, err)
 
 	bin, err := runner.Run("echo hello")
 	assert.NoError(t, err)

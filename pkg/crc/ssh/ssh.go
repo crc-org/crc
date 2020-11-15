@@ -13,17 +13,19 @@ import (
 )
 
 type Runner struct {
-	ip             string
-	port           int
-	privateSSHKeys []string
+	client Client
 }
 
-func CreateRunner(ip string, port int, privateKeys ...string) *Runner {
-	return &Runner{
-		ip:             ip,
-		port:           port,
-		privateSSHKeys: privateKeys,
+func CreateRunner(ip string, port int, privateKeys ...string) (*Runner, error) {
+	client, err := NewClient(constants.DefaultSSHUser, ip, port, &Auth{
+		Keys: privateKeys,
+	})
+	if err != nil {
+		return nil, err
 	}
+	return &Runner{
+		client: client,
+	}, nil
 }
 
 // Create a host using the driver's config
@@ -53,27 +55,13 @@ func (runner *Runner) CopyFile(srcFilename string, destFilename string, mode os.
 }
 
 func (runner *Runner) runSSHCommandFromDriver(command string, runPrivate bool) (string, error) {
-	var availableKeys []string
-	for _, privateKey := range runner.privateSSHKeys {
-		if _, err := os.Stat(privateKey); err == nil {
-			availableKeys = append(availableKeys, privateKey)
-		}
-	}
-
-	client, err := NewClient(constants.DefaultSSHUser, runner.ip, runner.port, &Auth{
-		Keys: availableKeys,
-	})
-	if err != nil {
-		return "", err
-	}
-
 	if runPrivate {
 		logging.Debugf("About to run SSH command with hidden output")
 	} else {
 		logging.Debugf("About to run SSH command:\n%s", command)
 	}
 
-	output, err := client.Output(command)
+	output, err := runner.client.Output(command)
 	if runPrivate {
 		if err != nil {
 			logging.Debugf("SSH command failed")

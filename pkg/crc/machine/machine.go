@@ -269,7 +269,10 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting the IP")
 	}
-	sshRunner := crcssh.CreateRunner(instanceIP, getSSHPort(client.useVSock()), crcBundleMetadata.GetSSHKeyPath(), constants.GetPrivateKeyPath())
+	sshRunner, err := crcssh.CreateRunner(instanceIP, getSSHPort(client.useVSock()), crcBundleMetadata.GetSSHKeyPath(), constants.GetPrivateKeyPath())
+	if err != nil {
+		return nil, errors.Wrap(err, "Error creating the ssh client")
+	}
 
 	logging.Debug("Waiting until ssh is available")
 	if err := cluster.WaitForSSH(sshRunner); err != nil {
@@ -602,7 +605,10 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting ip")
 	}
-	sshRunner := crcssh.CreateRunner(ip, getSSHPort(client.useVSock()), constants.GetPrivateKeyPath())
+	sshRunner, err := crcssh.CreateRunner(ip, getSSHPort(client.useVSock()), constants.GetPrivateKeyPath())
+	if err != nil {
+		return nil, errors.Wrap(err, "Error creating the ssh client")
+	}
 	// check if all the clusteroperators are running
 	diskSize, diskUse, err := cluster.GetRootPartitionUsage(sshRunner)
 	if err != nil {

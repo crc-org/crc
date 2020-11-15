@@ -17,9 +17,10 @@ type Client interface {
 }
 
 type NativeClient struct {
-	Config   ssh.ClientConfig
+	User     string
 	Hostname string
 	Port     int
+	Auth     *Auth
 }
 
 type Auth struct {
@@ -27,15 +28,11 @@ type Auth struct {
 }
 
 func NewClient(user string, host string, port int, auth *Auth) (Client, error) {
-	config, err := NewNativeConfig(user, auth)
-	if err != nil {
-		return nil, fmt.Errorf("Error getting config for native Go SSH: %s", err)
-	}
-
 	return &NativeClient{
-		Config:   config,
+		User:     user,
 		Hostname: host,
 		Port:     port,
+		Auth:     auth,
 	}, nil
 }
 
@@ -48,7 +45,8 @@ func NewNativeConfig(user string, auth *Auth) (ssh.ClientConfig, error) {
 	for _, k := range auth.Keys {
 		key, err := ioutil.ReadFile(k)
 		if err != nil {
-			return ssh.ClientConfig{}, err
+			log.Debugf("Cannot read private ssh key %s", k)
+			continue
 		}
 
 		privateKey, err := ssh.ParsePrivateKey(key)
@@ -73,7 +71,11 @@ func NewNativeConfig(user string, auth *Auth) (ssh.ClientConfig, error) {
 }
 
 func (client *NativeClient) session() (*ssh.Client, *ssh.Session, error) {
-	conn, err := ssh.Dial("tcp", net.JoinHostPort(client.Hostname, strconv.Itoa(client.Port)), &client.Config)
+	config, err := NewNativeConfig(client.User, client.Auth)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Error getting config for native Go SSH: %s", err)
+	}
+	conn, err := ssh.Dial("tcp", net.JoinHostPort(client.Hostname, strconv.Itoa(client.Port)), &config)
 	if err != nil {
 		return nil, nil, err
 	}
