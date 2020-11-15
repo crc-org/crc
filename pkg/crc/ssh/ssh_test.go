@@ -36,7 +36,7 @@ func TestRunner(t *testing.T) {
 	require.NoError(t, err)
 	defer listener.Close()
 
-	createSSHServer(t, listener, clientKey, func(input string) (byte, string) {
+	totalConn := createSSHServer(t, listener, clientKey, func(input string) (byte, string) {
 		escaped := fmt.Sprintf("%q", input)
 		if escaped == `"echo hello"` {
 			return 0, "hello"
@@ -50,6 +50,7 @@ func TestRunner(t *testing.T) {
 	addr := listener.Addr().String()
 	runner, err := CreateRunner(ipFor(addr), portFor(addr), clientKeyFile)
 	assert.NoError(t, err)
+	defer runner.Close()
 
 	bin, err := runner.Run("echo hello")
 	assert.NoError(t, err)
@@ -61,9 +62,12 @@ func TestRunner(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "hello", stdout)
 	assert.Empty(t, stderr)
+
+	assert.Equal(t, 1, *totalConn)
 }
 
-func createSSHServer(t *testing.T, listener net.Listener, clientKey *rsa.PrivateKey, fun func(string) (byte, string)) {
+func createSSHServer(t *testing.T, listener net.Listener, clientKey *rsa.PrivateKey, fun func(string) (byte, string)) *int {
+	totalConn := 0
 	config := &ssh.ServerConfig{
 		PublicKeyCallback: func(c ssh.ConnMetadata, pubKey ssh.PublicKey) (*ssh.Permissions, error) {
 			pub, err := ssh.NewPublicKey(&clientKey.PublicKey)
@@ -94,6 +98,7 @@ func createSSHServer(t *testing.T, listener net.Listener, clientKey *rsa.Private
 				logrus.Debugf("cannot accept connection: %v", err)
 				return
 			}
+			totalConn++
 
 			conn, chans, reqs, err := ssh.NewServerConn(nConn, config)
 			require.NoError(t, err)
@@ -127,6 +132,7 @@ func createSSHServer(t *testing.T, listener net.Listener, clientKey *rsa.Private
 			}
 		}
 	}()
+	return &totalConn
 }
 
 func writePrivateKey(t *testing.T, clientKeyFile string, clientKey *rsa.PrivateKey) {

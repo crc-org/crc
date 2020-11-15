@@ -28,6 +28,10 @@ func CreateRunner(ip string, port int, privateKeys ...string) (*Runner, error) {
 	}, nil
 }
 
+func (runner *Runner) Close() {
+	runner.client.Close()
+}
+
 // Create a host using the driver's config
 func (runner *Runner) Run(command string) (string, error) {
 	return runner.runSSHCommandFromDriver(command, false)

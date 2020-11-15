@@ -273,6 +273,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating the ssh client")
 	}
+	defer sshRunner.Close()
 
 	logging.Debug("Waiting until ssh is available")
 	if err := cluster.WaitForSSH(sshRunner); err != nil {
@@ -609,6 +610,7 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating the ssh client")
 	}
+	defer sshRunner.Close()
 	// check if all the clusteroperators are running
 	diskSize, diskUse, err := cluster.GetRootPartitionUsage(sshRunner)
 	if err != nil {

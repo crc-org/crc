@@ -2,7 +2,6 @@ package ssh
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net"
 	"strconv"
@@ -14,6 +13,7 @@ import (
 
 type Client interface {
 	Output(command string) (string, error)
+	Close()
 }
 
 type NativeClient struct {
@@ -21,6 +21,8 @@ type NativeClient struct {
 	Hostname string
 	Port     int
 	Auth     *Auth
+
+	conn *ssh.Client
 }
 
 type Auth struct {
@@ -70,29 +72,30 @@ func NewNativeConfig(user string, auth *Auth) (ssh.ClientConfig, error) {
 	}, nil
 }
 
-func (client *NativeClient) session() (*ssh.Client, *ssh.Session, error) {
-	config, err := NewNativeConfig(client.User, client.Auth)
-	if err != nil {
-		return nil, nil, fmt.Errorf("Error getting config for native Go SSH: %s", err)
+func (client *NativeClient) session() (*ssh.Session, error) {
+	if client.conn == nil {
+		var err error
+		config, err := NewNativeConfig(client.User, client.Auth)
+		if err != nil {
+			return nil, fmt.Errorf("Error getting config for native Go SSH: %s", err)
+		}
+		client.conn, err = ssh.Dial("tcp", net.JoinHostPort(client.Hostname, strconv.Itoa(client.Port)), &config)
+		if err != nil {
+			return nil, err
+		}
 	}
-	conn, err := ssh.Dial("tcp", net.JoinHostPort(client.Hostname, strconv.Itoa(client.Port)), &config)
+	session, err := client.conn.NewSession()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	session, err := conn.NewSession()
-	if err != nil {
-		_ = conn.Close()
-		return nil, nil, err
-	}
-	return conn, session, err
+	return session, err
 }
 
 func (client *NativeClient) Output(command string) (string, error) {
-	conn, session, err := client.session()
+	session, err := client.session()
 	if err != nil {
 		return "", err
 	}
-	defer closeConn(conn)
 	defer session.Close()
 
 	output, err := session.CombinedOutput(command)
@@ -102,8 +105,11 @@ func (client *NativeClient) Output(command string) (string, error) {
 	return string(output), nil
 }
 
-func closeConn(c io.Closer) {
-	err := c.Close()
+func (client *NativeClient) Close() {
+	if client.conn == nil {
+		return
+	}
+	err := client.conn.Close()
 	if err != nil {
 		log.Debugf("Error closing SSH Client: %s", err)
 	}
