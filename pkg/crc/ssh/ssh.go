@@ -17,9 +17,7 @@ type Runner struct {
 }
 
 func CreateRunner(ip string, port int, privateKeys ...string) (*Runner, error) {
-	client, err := NewClient(constants.DefaultSSHUser, ip, port, &Auth{
-		Keys: privateKeys,
-	})
+	client, err := NewClient(constants.DefaultSSHUser, ip, port, privateKeys...)
 	if err != nil {
 		return nil, err
 	}
