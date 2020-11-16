@@ -47,6 +47,11 @@ var genericPreflightChecks = [...]Check{
 		fixDescription: fmt.Sprintf("crc requires at least %s to run", units.HumanSize(float64(constants.DefaultMemory*1024*1024))),
 		flags:          NoFix,
 	},
+	{
+		cleanupDescription: "Removing CRC Machine Instance directory",
+		cleanup:            removeCRCMachinesDir,
+		flags:              CleanUpOnly,
+	},
 }
 
 func checkBundleExtracted() error {
@@ -114,4 +119,12 @@ func fixGoodhostsExecutableCached() error {
 	}
 	logging.Debug("goodhost executable cached")
 	return setSuid(goodhost.GetExecutablePath())
+}
+
+func removeCRCMachinesDir() error {
+	logging.Debug("Deleting machines directory")
+	if err := os.RemoveAll(constants.MachineInstanceDir); err != nil {
+		return fmt.Errorf("Failed to delete crc machines directory: %w", err)
+	}
+	return nil
 }
