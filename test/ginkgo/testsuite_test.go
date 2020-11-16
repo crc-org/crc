@@ -39,10 +39,12 @@ type StatusAnswer struct {
 	CacheDir         string `json:"cacheDir"`
 }
 
-var versionInfo VersionAnswer
+var credPath string
 var userHome string
-var pullSecretLocation string
+var versionInfo VersionAnswer
+
 var bundleLocation string
+var pullSecretLocation string
 
 func TestTest(t *testing.T) {
 
@@ -65,6 +67,9 @@ var _ = BeforeSuite(func() {
 	}
 	userHome = usr.HomeDir
 
+	// set credPath
+	credPath = filepath.Join(userHome, ".crc", "machines", "crc", "id_rsa")
+
 	// find out if bundle embedded in the binary
 	raw := RunCRCExpectSuccess("version", "-o", "json")
 	err = json.Unmarshal([]byte(raw), &versionInfo)
@@ -74,7 +79,7 @@ var _ = BeforeSuite(func() {
 	// bundle location
 	if !versionInfo.Embedded {
 		bundleLocation = os.Getenv("BUNDLE_LOCATION") // this env var should contain location of bundle
-		if err != nil {
+		if bundleLocation == "" {
 			logrus.Infof("Error: You need to set BUNDLE_LOCATION because your binary does not contain a bundle.")
 			logrus.Infof("%s", err)
 			os.Exit(1)
