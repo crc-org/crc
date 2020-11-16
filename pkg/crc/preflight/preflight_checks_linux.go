@@ -385,13 +385,6 @@ func removeLibvirtCrcNetwork() error {
 }
 
 func removeCrcVM() error {
-	logging.Debug("Removing 'crc' VM")
-
-	if err := os.RemoveAll(constants.MachineInstanceDir); err != nil {
-		logging.Debugf("Error removing %s dir: %v", constants.MachineInstanceDir, err)
-		return fmt.Errorf("Error removing %s dir", constants.MachineInstanceDir)
-	}
-
 	stdout, _, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "domstate", constants.DefaultName)
 	if err != nil {
 		//  User may have run `crc delete` before `crc cleanup`

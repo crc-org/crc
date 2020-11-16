@@ -16,9 +16,9 @@ func TestCountConfigurationOptions(t *testing.T) {
 }
 
 func TestCountPreflights(t *testing.T) {
-	assert.Len(t, getPreflightChecks(false, network.DefaultMode), 9)
-	assert.Len(t, getPreflightChecks(true, network.DefaultMode), 15)
+	assert.Len(t, getPreflightChecks(false, network.DefaultMode), 10)
+	assert.Len(t, getPreflightChecks(true, network.DefaultMode), 16)
 
-	assert.Len(t, getPreflightChecks(false, network.VSockMode), 8)
-	assert.Len(t, getPreflightChecks(true, network.VSockMode), 14)
+	assert.Len(t, getPreflightChecks(false, network.VSockMode), 9)
+	assert.Len(t, getPreflightChecks(true, network.VSockMode), 15)
 }

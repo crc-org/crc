@@ -199,12 +199,6 @@ func removeDNSServerAddress() error {
 }
 
 func removeCrcVM() (err error) {
-	defer func() {
-		if ferr := os.RemoveAll(constants.MachineInstanceDir); ferr != nil {
-			logging.Debugf("Error removing %s dir: %v", constants.MachineInstanceDir, err)
-			err = fmt.Errorf("Error removing %s dir", constants.MachineInstanceDir)
-		}
-	}()
 	if _, _, err := powershell.Execute("Get-VM -Name crc"); err != nil {
 		// This means that there is no crc VM exist
 		return nil
