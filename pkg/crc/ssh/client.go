@@ -20,31 +20,27 @@ type NativeClient struct {
 	User     string
 	Hostname string
 	Port     int
-	Auth     *Auth
+	Keys     []string
 
 	conn *ssh.Client
 }
 
-type Auth struct {
-	Keys []string
-}
-
-func NewClient(user string, host string, port int, auth *Auth) (Client, error) {
+func NewClient(user string, host string, port int, keys ...string) (Client, error) {
 	return &NativeClient{
 		User:     user,
 		Hostname: host,
 		Port:     port,
-		Auth:     auth,
+		Keys:     keys,
 	}, nil
 }
 
-func NewNativeConfig(user string, auth *Auth) (ssh.ClientConfig, error) {
+func clientConfig(user string, keys []string) (*ssh.ClientConfig, error) {
 	var (
 		privateKeys []ssh.Signer
 		authMethods []ssh.AuthMethod
 	)
 
-	for _, k := range auth.Keys {
+	for _, k := range keys {
 		key, err := ioutil.ReadFile(k)
 		if err != nil {
 			log.Debugf("Cannot read private ssh key %s", k)
@@ -53,7 +49,7 @@ func NewNativeConfig(user string, auth *Auth) (ssh.ClientConfig, error) {
 
 		privateKey, err := ssh.ParsePrivateKey(key)
 		if err != nil {
-			return ssh.ClientConfig{}, err
+			return nil, err
 		}
 
 		privateKeys = append(privateKeys, privateKey)
@@ -63,7 +59,7 @@ func NewNativeConfig(user string, auth *Auth) (ssh.ClientConfig, error) {
 		authMethods = append(authMethods, ssh.PublicKeys(privateKeys...))
 	}
 
-	return ssh.ClientConfig{
+	return &ssh.ClientConfig{
 		User: user,
 		Auth: authMethods,
 		// #nosec G106
@@ -75,11 +71,11 @@ func NewNativeConfig(user string, auth *Auth) (ssh.ClientConfig, error) {
 func (client *NativeClient) session() (*ssh.Session, error) {
 	if client.conn == nil {
 		var err error
-		config, err := NewNativeConfig(client.User, client.Auth)
+		config, err := clientConfig(client.User, client.Keys)
 		if err != nil {
 			return nil, fmt.Errorf("Error getting config for native Go SSH: %s", err)
 		}
-		client.conn, err = ssh.Dial("tcp", net.JoinHostPort(client.Hostname, strconv.Itoa(client.Port)), &config)
+		client.conn, err = ssh.Dial("tcp", net.JoinHostPort(client.Hostname, strconv.Itoa(client.Port)), config)
 		if err != nil {
 			return nil, err
 		}

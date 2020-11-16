@@ -182,9 +182,7 @@ func (collector *VMCommandCollector) Collect(w Writer) error {
 	if err != nil {
 		return err
 	}
-	ssh, err := ssh.NewClient(constants.DefaultSSHUser, ip, 22, &ssh.Auth{
-		Keys: []string{constants.GetPrivateKeyPath()},
-	})
+	ssh, err := ssh.NewClient(constants.DefaultSSHUser, ip, 22, constants.GetPrivateKeyPath())
 	if err != nil {
 		return err
 	}
@@ -205,9 +203,7 @@ func (collector *ContainerLogCollector) Collect(w Writer) error {
 	if err != nil {
 		return err
 	}
-	ssh, err := ssh.NewClient(constants.DefaultSSHUser, ip, 22, &ssh.Auth{
-		Keys: []string{constants.GetPrivateKeyPath()},
-	})
+	ssh, err := ssh.NewClient(constants.DefaultSSHUser, ip, 22, constants.GetPrivateKeyPath())
 	if err != nil {
 		return err
 	}
