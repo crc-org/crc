@@ -19,39 +19,56 @@ import (
 // Metadata structure to unmarshal the crc-bundle-info.json file
 
 type CrcBundleInfo struct {
-	Version   string `json:"version"`
-	Type      string `json:"type"`
-	BuildInfo struct {
-		BuildTime                 string `json:"buildTime"`
-		OpenshiftInstallerVersion string `json:"openshiftInstallerVersion"`
-		SncVersion                string `json:"sncVersion"`
-	} `json:"buildInfo"`
-	ClusterInfo struct {
-		OpenShiftVersion      string `json:"openshiftVersion"`
-		ClusterName           string `json:"clusterName"`
-		BaseDomain            string `json:"baseDomain"`
-		AppsDomain            string `json:"appsDomain"`
-		SSHPrivateKeyFile     string `json:"sshPrivateKeyFile"`
-		KubeConfig            string `json:"kubeConfig"`
-		KubeadminPasswordFile string `json:"kubeadminPasswordFile"`
-	} `json:"clusterInfo"`
-	Nodes []struct {
-		Kind          []string `json:"kind"`
-		Hostname      string   `json:"hostname"`
-		DiskImage     string   `json:"diskImage"`
-		KernelCmdLine string   `json:"kernelCmdLine"`
-		Initramfs     string   `json:"initramfs"`
-		Kernel        string   `json:"kernel"`
-		InternalIP    string   `json:"internalIP"`
-	} `json:"nodes"`
-	Storage struct {
-		DiskImages []struct {
-			Name   string `json:"name"`
-			Format string `json:"format"`
-			Size   string `json:"size"`
-		} `json:"diskImages"`
-	} `json:"storage"`
-	cachedPath string
+	Version     string      `json:"version"`
+	Type        string      `json:"type"`
+	BuildInfo   BuildInfo   `json:"buildInfo"`
+	ClusterInfo ClusterInfo `json:"clusterInfo"`
+	Nodes       []Node      `json:"nodes"`
+	Storage     Storage     `json:"storage"`
+	DriverInfo  DriverInfo  `json:"driverInfo"`
+	cachedPath  string
+}
+
+type BuildInfo struct {
+	BuildTime                 string `json:"buildTime"`
+	OpenshiftInstallerVersion string `json:"openshiftInstallerVersion"`
+	SncVersion                string `json:"sncVersion"`
+}
+
+type ClusterInfo struct {
+	OpenShiftVersion      string `json:"openshiftVersion"`
+	ClusterName           string `json:"clusterName"`
+	BaseDomain            string `json:"baseDomain"`
+	AppsDomain            string `json:"appsDomain"`
+	SSHPrivateKeyFile     string `json:"sshPrivateKeyFile"`
+	KubeConfig            string `json:"kubeConfig"`
+	KubeadminPasswordFile string `json:"kubeadminPasswordFile"`
+	OpenshiftPullSecret   string `json:"openshiftPullSecret,omitempty"`
+}
+
+type Node struct {
+	Kind          []string `json:"kind"`
+	Hostname      string   `json:"hostname"`
+	DiskImage     string   `json:"diskImage"`
+	KernelCmdLine string   `json:"kernelCmdLine,omitempty"`
+	Initramfs     string   `json:"initramfs,omitempty"`
+	Kernel        string   `json:"kernel,omitempty"`
+	InternalIP    string   `json:"internalIP"`
+}
+
+type Storage struct {
+	DiskImages []DiskImage `json:"diskImages"`
+}
+
+type DiskImage struct {
+	Name     string `json:"name"`
+	Format   string `json:"format"`
+	Size     string `json:"size"`
+	Checksum string `json:"sha256sum"`
+}
+
+type DriverInfo struct {
+	Name string `json:"name"`
 }
 
 func getCachedBundlePath(bundleName string) string {
