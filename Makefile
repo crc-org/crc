@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 BUNDLE_VERSION = 4.6.3
 BUNDLE_EXTENSION = crcbundle
-CRC_VERSION = 1.18.0
+CRC_VERSION = 1.19.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 CONTAINER_RUNTIME ?= podman
 
