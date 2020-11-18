@@ -9,6 +9,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/cache"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	"github.com/code-ready/crc/pkg/embed"
 	"github.com/docker/go-units"
@@ -30,11 +31,11 @@ var genericPreflightChecks = [...]Check{
 		fix:              fixGoodhostsExecutableCached,
 	},
 	{
-		configKeySuffix:  "check-bundle-cached",
-		checkDescription: "Checking if CRC bundle is cached in '$HOME/.crc'",
-		check:            checkBundleCached,
-		fixDescription:   "Unpacking bundle from the CRC executable",
-		fix:              fixBundleCached,
+		configKeySuffix:  "check-bundle-extracted",
+		checkDescription: "Checking if CRC bundle is extracted in '$HOME/.crc'",
+		check:            checkBundleExtracted,
+		fixDescription:   "Extracting bundle from the CRC executable",
+		fix:              fixBundleExtracted,
 		flags:            SetupOnly,
 	},
 	{
@@ -48,7 +49,7 @@ var genericPreflightChecks = [...]Check{
 	},
 }
 
-func checkBundleCached() error {
+func checkBundleExtracted() error {
 	if !constants.BundleEmbedded() {
 		return nil
 	}
@@ -58,7 +59,7 @@ func checkBundleCached() error {
 	return nil
 }
 
-func fixBundleCached() error {
+func fixBundleExtracted() error {
 	// Should be removed after 1.19 release
 	// This check will ensure correct mode for `~/.crc/cache` directory
 	// in case it exists.
@@ -67,12 +68,15 @@ func fixBundleCached() error {
 	}
 	if constants.BundleEmbedded() {
 		bundleDir := filepath.Dir(constants.DefaultBundlePath)
-		err := os.MkdirAll(bundleDir, 0775)
-		if err != nil && !os.IsExist(err) {
-			return fmt.Errorf("Cannot create directory %s", bundleDir)
+		if err := os.MkdirAll(bundleDir, 0775); err != nil {
+			return fmt.Errorf("Cannot create directory %s: %v", bundleDir, err)
 		}
 
-		return embed.Extract(filepath.Base(constants.DefaultBundlePath), constants.DefaultBundlePath)
+		if err := embed.Extract(filepath.Base(constants.DefaultBundlePath), constants.DefaultBundlePath); err != nil {
+			return err
+		}
+		_, err := bundle.Extract(constants.DefaultBundlePath)
+		return err
 	}
 	return fmt.Errorf("CRC bundle is not embedded in the executable")
 }
