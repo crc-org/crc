@@ -1,6 +1,7 @@
 package ssh
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -12,7 +13,7 @@ import (
 )
 
 type Client interface {
-	Output(command string) (string, error)
+	Run(command string) ([]byte, []byte, error)
 	Close()
 }
 
@@ -87,18 +88,23 @@ func (client *NativeClient) session() (*ssh.Session, error) {
 	return session, err
 }
 
-func (client *NativeClient) Output(command string) (string, error) {
+func (client *NativeClient) Run(command string) ([]byte, []byte, error) {
 	session, err := client.session()
 	if err != nil {
-		return "", err
+		return nil, nil, err
 	}
 	defer session.Close()
 
-	output, err := session.CombinedOutput(command)
-	if err != nil {
-		return "", err
-	}
-	return string(output), nil
+	var (
+		stdout bytes.Buffer
+		stderr bytes.Buffer
+	)
+	session.Stdout = &stdout
+	session.Stderr = &stderr
+
+	err = session.Run(command)
+
+	return stdout.Bytes(), stderr.Bytes(), err
 }
 
 func (client *NativeClient) Close() {
