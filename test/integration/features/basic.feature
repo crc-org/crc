@@ -37,7 +37,7 @@ Feature: Basic test
     @linux
     Scenario: CRC setup on Linux
         When executing "crc setup" succeeds
-        And stderr should contain "Checking if CRC bundle is cached in '$HOME/.crc'"
+        And stderr should contain "Checking if CRC bundle is extracted in '$HOME/.crc'"
         And stderr should contain "Checking if running as non-root"
         And stderr should contain "Checking if Virtualization is enabled"
         And stderr should contain "Checking if KVM is enabled"

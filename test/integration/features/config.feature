@@ -67,7 +67,7 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
         @darwin
         Examples: Config warnings on Mac
             | property                             | value1 | value2 |
-            | warn-check-bundle-cached             | true   | false  |
+            | warn-check-bundle-extracted          | true   | false  |
             | warn-check-hosts-file-permissions    | true   | false  |
             | warn-check-hyperkit-driver           | true   | false  |
             | warn-check-hyperkit-installed        | true   | false  |
@@ -77,7 +77,7 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
         @linux
         Examples: Config warnings on Linux
             | property                             | value1 | value2 |
-            | warn-check-bundle-cached             | true   | false  |
+            | warn-check-bundle-extracted          | true   | false  |
             | warn-check-crc-dnsmasq-file          | true   | false  |
             | warn-check-crc-network               | true   | false  |
             | warn-check-crc-network-active        | true   | false  |
@@ -97,7 +97,7 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
         Examples: Config warnings on Windows
             | property                        | value1 | value2 |
             | warn-check-administrator-user   | true   | false  |
-            | warn-check-bundle-cached        | true   | false  |
+            | warn-check-bundle-extracted     | true   | false  |
             | warn-check-hyperv-installed     | true   | false  |
             | warn-check-hyperv-switch        | true   | false  |
             | warn-check-user-in-hyperv-group | true   | false  |
@@ -120,7 +120,7 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
         @darwin
         Examples:
             | property                             | value1 | value2 |
-            | skip-check-bundle-cached             | true   | false  |
+            | skip-check-bundle-extracted          | true   | false  |
             | skip-check-hosts-file-permissions    | true   | false  |
             | skip-check-hyperkit-driver           | true   | false  |
             | skip-check-hyperkit-installed        | true   | false  |
@@ -130,7 +130,7 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
         @linux
         Examples:
             | property                             | value1 | value2 |
-            | skip-check-bundle-cached             | true   | false  |
+            | skip-check-bundle-extracted          | true   | false  |
             | skip-check-crc-dnsmasq-file          | true   | false  |
             | skip-check-crc-network               | true   | false  |
             | skip-check-crc-network-active        | true   | false  |
@@ -150,7 +150,7 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
         Examples:
             | property                        | value1 | value2 |
             | skip-check-administrator-user   | true   | false  |
-            | skip-check-bundle-cached        | true   | false  |
+            | skip-check-bundle-extracted     | true   | false  |
             | skip-check-hyperv-installed     | true   | false  |
             | skip-check-hyperv-switch        | true   | false  |
             | skip-check-user-in-hyperv-group | true   | false  |
