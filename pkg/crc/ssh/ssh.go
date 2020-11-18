@@ -32,11 +32,13 @@ func (runner *Runner) Close() {
 
 // Create a host using the driver's config
 func (runner *Runner) Run(command string) (string, error) {
-	return runner.runSSHCommandFromDriver(command, false)
+	stdout, _, err := runner.runSSHCommand(command, false)
+	return stdout, err
 }
 
 func (runner *Runner) RunPrivate(command string) (string, error) {
-	return runner.runSSHCommandFromDriver(command, true)
+	stdout, _, err := runner.runSSHCommand(command, true)
+	return stdout, err
 }
 
 func (runner *Runner) CopyData(data []byte, destFilename string, mode os.FileMode) error {
@@ -56,14 +58,14 @@ func (runner *Runner) CopyFile(srcFilename string, destFilename string, mode os.
 	return runner.CopyData(data, destFilename, mode)
 }
 
-func (runner *Runner) runSSHCommandFromDriver(command string, runPrivate bool) (string, error) {
+func (runner *Runner) runSSHCommand(command string, runPrivate bool) (string, string, error) {
 	if runPrivate {
 		logging.Debugf("About to run SSH command with hidden output")
 	} else {
 		logging.Debugf("About to run SSH command:\n%s", command)
 	}
 
-	output, err := runner.client.Output(command)
+	stdout, stderr, err := runner.client.Run(command)
 	if runPrivate {
 		if err != nil {
 			logging.Debugf("SSH command failed")
@@ -71,17 +73,17 @@ func (runner *Runner) runSSHCommandFromDriver(command string, runPrivate bool) (
 			logging.Debugf("SSH command succeeded")
 		}
 	} else {
-		logging.Debugf("SSH command results: err: %v, output: %s", err, output)
+		logging.Debugf("SSH command results: err: %v, output: %s", err, string(stdout))
 	}
 
 	if err != nil {
-		return "", fmt.Errorf(`ssh command error:
+		return "", "", fmt.Errorf(`ssh command error:
 command : %s
 err     : %v
-output  : %s`, command, err, output)
+output  : %s`, command, err, string(stdout))
 	}
 
-	return output, nil
+	return string(stdout), string(stderr), nil
 }
 
 type remoteCommandRunner struct {
