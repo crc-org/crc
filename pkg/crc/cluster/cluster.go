@@ -22,7 +22,7 @@ const vmPullSecretPath = "/var/lib/kubelet/config.json"
 
 func WaitForSSH(sshRunner *ssh.Runner) error {
 	checkSSHConnectivity := func() error {
-		_, err := sshRunner.Run("exit 0")
+		_, _, err := sshRunner.Run("exit 0")
 		if err != nil {
 			return &errors.RetriableError{Err: err}
 		}
@@ -52,7 +52,7 @@ func CheckCertsValidity(sshRunner *ssh.Runner) (bool, bool, error) {
 }
 
 func checkCertValidity(sshRunner *ssh.Runner, cert string) (bool, error) {
-	output, err := sshRunner.Run(fmt.Sprintf(`date --date="$(sudo openssl x509 -in %s -noout -enddate | cut -d= -f 2)" --iso-8601=seconds`, cert))
+	output, _, err := sshRunner.Run(fmt.Sprintf(`date --date="$(sudo openssl x509 -in %s -noout -enddate | cut -d= -f 2)" --iso-8601=seconds`, cert))
 	if err != nil {
 		return false, err
 	}
@@ -71,7 +71,7 @@ func checkCertValidity(sshRunner *ssh.Runner, cert string) (bool, error) {
 func GetRootPartitionUsage(sshRunner *ssh.Runner) (int64, int64, error) {
 	cmd := "df -B1 --output=size,used,target /sysroot | tail -1"
 
-	out, err := sshRunner.Run(cmd)
+	out, _, err := sshRunner.Run(cmd)
 
 	if err != nil {
 		return 0, 0, err
@@ -257,7 +257,7 @@ func addProxyCACertToInstance(sshRunner *ssh.Runner, proxy *network.ProxyConfig)
 	if err := sshRunner.CopyData([]byte(proxy.ProxyCACert), "/etc/pki/ca-trust/source/anchors/openshift-config-user-ca-bundle.crt", 0600); err != nil {
 		return err
 	}
-	if _, err := sshRunner.Run("sudo update-ca-trust"); err != nil {
+	if _, _, err := sshRunner.Run("sudo update-ca-trust"); err != nil {
 		return err
 	}
 	return nil
@@ -280,7 +280,7 @@ func (p *PullSecret) Value() (string, error) {
 }
 
 func EnsurePullSecretPresentOnInstanceDisk(sshRunner *ssh.Runner, pullSecret *PullSecret) error {
-	if _, err := sshRunner.Run(fmt.Sprintf("test -e %s", vmPullSecretPath)); err == nil {
+	if _, _, err := sshRunner.Run(fmt.Sprintf("test -e %s", vmPullSecretPath)); err == nil {
 		return nil
 	}
 	logging.Info("Adding user's pull secret to instance disk...")

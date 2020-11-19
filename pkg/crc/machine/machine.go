@@ -288,14 +288,14 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	}
 
 	// Trigger disk resize, this will be a no-op if no disk size change is needed
-	if _, err = sshRunner.Run("sudo xfs_growfs / >/dev/null"); err != nil {
+	if _, _, err = sshRunner.Run("sudo xfs_growfs / >/dev/null"); err != nil {
 		return nil, errors.Wrap(err, "Error updating filesystem size")
 	}
 
 	// Start network time synchronization if `CRC_DEBUG_ENABLE_STOP_NTP` is not set
 	if stopNtp, _ := strconv.ParseBool(os.Getenv("CRC_DEBUG_ENABLE_STOP_NTP")); !stopNtp {
 		logging.Info("Starting network time synchronization in CodeReady Containers VM")
-		if _, err := sshRunner.Run("sudo timedatectl set-ntp on"); err != nil {
+		if _, _, err := sshRunner.Run("sudo timedatectl set-ntp on"); err != nil {
 			return nil, errors.Wrap(err, "Failed to start network time synchronization")
 		}
 	}
@@ -755,14 +755,14 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 		return err
 	}
 
-	authorizedKeys, err := sshRunner.Run("cat /home/core/.ssh/authorized_keys")
+	authorizedKeys, _, err := sshRunner.Run("cat /home/core/.ssh/authorized_keys")
 	if err == nil && strings.TrimSpace(authorizedKeys) == strings.TrimSpace(string(publicKey)) {
 		return nil
 	}
 
 	logging.Info("Updating authorized keys ...")
 	cmd := fmt.Sprintf("echo '%s' > /home/core/.ssh/authorized_keys; chmod 644 /home/core/.ssh/authorized_keys", publicKey)
-	_, err = sshRunner.Run(cmd)
+	_, _, err = sshRunner.Run(cmd)
 	if err != nil {
 		return err
 	}
