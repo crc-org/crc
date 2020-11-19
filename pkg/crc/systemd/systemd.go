@@ -78,6 +78,15 @@ func (c Commander) service(name string, action actions.Action) (states.State, er
 	}
 
 	if err != nil {
+		state := states.Compare(stdOut)
+		if state != states.Unknown {
+			return state, nil
+		}
+		state = states.Compare(stdErr)
+		if state == states.NotFound {
+			return state, nil
+		}
+
 		return states.Error, fmt.Errorf("Executing systemctl action failed: %s %v: %s", stdOut, err, stdErr)
 	}
 
