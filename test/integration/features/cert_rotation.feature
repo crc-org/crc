@@ -18,7 +18,8 @@ Feature: Check the cert is rotation happen after it expire
       Then login to the oc cluster succeeds
 
     Scenario: Set clock back to original time
-      Given executing "sudo timedatectl set-ntp on" succeeds
+      When executing "sudo date -s '-3 month'" succeeds
+      And executing "sudo timedatectl set-ntp on" succeeds
 
     Scenario: CRC delete and cleanup
       When executing "crc delete -f" succeeds
