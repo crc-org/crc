@@ -9,7 +9,6 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	crcos "github.com/code-ready/crc/pkg/os"
 )
 
 type Runner struct {
@@ -30,22 +29,30 @@ func (runner *Runner) Close() {
 	runner.client.Close()
 }
 
-// Create a host using the driver's config
-func (runner *Runner) Run(command string) (string, error) {
-	stdout, _, err := runner.runSSHCommand(command, false)
-	return stdout, err
+func (runner *Runner) Run(cmd string, args ...string) (string, string, error) {
+	if len(args) != 0 {
+		cmd = fmt.Sprintf("%s %s", cmd, strings.Join(args, " "))
+	}
+	return runner.runSSHCommand(cmd, false)
 }
 
-func (runner *Runner) RunPrivate(command string) (string, error) {
-	stdout, _, err := runner.runSSHCommand(command, true)
-	return stdout, err
+func (runner *Runner) RunPrivate(cmd string, args ...string) (string, string, error) {
+	if len(args) != 0 {
+		cmd = fmt.Sprintf("%s %s", cmd, strings.Join(args, " "))
+	}
+	return runner.runSSHCommand(cmd, true)
+}
+
+func (runner *Runner) RunPrivileged(reason string, cmdAndArgs ...string) (string, string, error) {
+	commandline := fmt.Sprintf("sudo %s", strings.Join(cmdAndArgs, " "))
+	return runner.runSSHCommand(commandline, false)
 }
 
 func (runner *Runner) CopyData(data []byte, destFilename string, mode os.FileMode) error {
 	logging.Debugf("Creating %s with permissions 0%o in the CRC VM", destFilename, mode)
 	base64Data := base64.StdEncoding.EncodeToString(data)
 	command := fmt.Sprintf("sudo install -m 0%o /dev/null %s && cat <<EOF | base64 --decode | sudo tee %s\n%s\nEOF", mode, destFilename, destFilename, base64Data)
-	_, err := runner.RunPrivate(command)
+	_, _, err := runner.RunPrivate(command)
 
 	return err
 }
@@ -84,34 +91,4 @@ output  : %s`, command, err, string(stdout))
 	}
 
 	return string(stdout), string(stderr), nil
-}
-
-type remoteCommandRunner struct {
-	sshRunner *Runner
-}
-
-func (cmdRunner *remoteCommandRunner) Run(cmd string, args ...string) (string, string, error) {
-	commandline := fmt.Sprintf("%s %s", cmd, strings.Join(args, " "))
-	out, err := cmdRunner.sshRunner.Run(commandline)
-	return out, "", err
-}
-
-func (cmdRunner *remoteCommandRunner) RunPrivate(cmd string, args ...string) (string, string, error) {
-	commandline := fmt.Sprintf("%s %s", cmd, strings.Join(args, " "))
-	out, err := cmdRunner.sshRunner.RunPrivate(commandline)
-	return out, "", err
-}
-
-func (cmdRunner *remoteCommandRunner) RunPrivileged(reason string, cmdAndArgs ...string) (string, string, error) {
-	commandline := fmt.Sprintf("sudo %s", strings.Join(cmdAndArgs, " "))
-
-	out, err := cmdRunner.sshRunner.Run(commandline)
-
-	return out, "", err
-}
-
-func NewRemoteCommandRunner(runner *Runner) crcos.CommandRunner {
-	return &remoteCommandRunner{
-		sshRunner: runner,
-	}
 }

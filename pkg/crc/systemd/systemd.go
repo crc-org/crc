@@ -15,7 +15,7 @@ type Commander struct {
 
 func NewInstanceSystemdCommander(sshRunner *ssh.Runner) *Commander {
 	return &Commander{
-		commandRunner: ssh.NewRemoteCommandRunner(sshRunner),
+		commandRunner: sshRunner,
 	}
 }
 

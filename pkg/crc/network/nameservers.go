@@ -11,7 +11,7 @@ import (
 // HasGivenNameserversConfigured returns true if the instance uses a provided nameserver.
 func HasGivenNameserversConfigured(sshRunner *ssh.Runner, nameserver NameServer) (bool, error) {
 	cmd := "cat /etc/resolv.conf"
-	out, err := sshRunner.Run(cmd)
+	out, _, err := sshRunner.Run(cmd)
 
 	if err != nil {
 		return false, err
@@ -22,7 +22,7 @@ func HasGivenNameserversConfigured(sshRunner *ssh.Runner, nameserver NameServer)
 
 func GetResolvValuesFromInstance(sshRunner *ssh.Runner) (*ResolvFileValues, error) {
 	cmd := "cat /etc/resolv.conf"
-	out, err := sshRunner.Run(cmd)
+	out, _, err := sshRunner.Run(cmd)
 
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func AddNameserversToInstance(sshRunner *ssh.Runner, nameservers []NameServer) e
 
 // writes nameserver to the /etc/resolv.conf inside the instance
 func addNameserverToInstance(sshRunner *ssh.Runner, nameserver NameServer) error {
-	_, err := sshRunner.Run(fmt.Sprintf("NS=%s; cat /etc/resolv.conf |grep -i \"^nameserver $NS\" || echo \"nameserver $NS\" | sudo tee -a /etc/resolv.conf", nameserver.IPAddress))
+	_, _, err := sshRunner.Run(fmt.Sprintf("NS=%s; cat /etc/resolv.conf |grep -i \"^nameserver $NS\" || echo \"nameserver $NS\" | sudo tee -a /etc/resolv.conf", nameserver.IPAddress))
 	if err != nil {
 		return fmt.Errorf("%s: %s", "Error adding nameserver", err.Error())
 	}

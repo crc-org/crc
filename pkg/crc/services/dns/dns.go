@@ -49,17 +49,17 @@ func setupDnsmasq(serviceConfig services.ServicePostStartConfig) error {
 	}
 
 	// Remove the dnsmasq container if it exists during the VM stop cycle
-	_, _ = serviceConfig.SSHRunner.Run("sudo podman rm -f dnsmasq")
+	_, _, _ = serviceConfig.SSHRunner.Run("sudo podman rm -f dnsmasq")
 
 	// Remove the CNI network definition forcefully
 	// https://github.com/containers/libpod/issues/2767
 	// TODO: We need to revisit it once podman update the CNI plugins.
-	_, _ = serviceConfig.SSHRunner.Run(fmt.Sprintf("sudo rm -f /var/lib/cni/networks/podman/%s", dnsContainerIP))
+	_, _, _ = serviceConfig.SSHRunner.Run(fmt.Sprintf("sudo rm -f /var/lib/cni/networks/podman/%s", dnsContainerIP))
 
 	// Start the dnsmasq container
 	dnsServerRunCmd := fmt.Sprintf("sudo podman run  --ip %s --name dnsmasq -v %s:/etc/dnsmasq.conf -p 53:%d/udp --privileged -d %s",
 		dnsContainerIP, dnsConfigFilePathInInstance, dnsServicePort, dnsContainerImage)
-	if _, err := serviceConfig.SSHRunner.Run(dnsServerRunCmd); err != nil {
+	if _, _, err := serviceConfig.SSHRunner.Run(dnsServerRunCmd); err != nil {
 		return err
 	}
 	return nil
@@ -102,7 +102,7 @@ func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (s
 	var queryOutput string
 	var err error
 	checkLocalDNSReach := func() error {
-		queryOutput, err = serviceConfig.SSHRunner.Run(fmt.Sprintf("host -R 3 %s", appsURI))
+		queryOutput, _, err = serviceConfig.SSHRunner.Run(fmt.Sprintf("host -R 3 %s", appsURI))
 		if err != nil {
 			return &errors.RetriableError{Err: err}
 		}
@@ -116,7 +116,8 @@ func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (s
 }
 
 func CheckCRCPublicDNSReachable(serviceConfig services.ServicePostStartConfig) (string, error) {
-	return serviceConfig.SSHRunner.Run(fmt.Sprintf("host -R 3 %s", publicDNSQueryURI))
+	stdout, _, err := serviceConfig.SSHRunner.Run(fmt.Sprintf("host -R 3 %s", publicDNSQueryURI))
+	return stdout, err
 }
 
 func addOpenShiftHosts(serviceConfig services.ServicePostStartConfig) error {

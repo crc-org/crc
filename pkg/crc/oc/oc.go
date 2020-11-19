@@ -59,7 +59,7 @@ type SSHRunner struct {
 
 func UseOCWithSSH(sshRunner *ssh.Runner) Config {
 	return Config{
-		Runner:           ssh.NewRemoteCommandRunner(sshRunner),
+		Runner:           sshRunner,
 		OcExecutablePath: "oc",
 		KubeconfigPath:   "/opt/kubeconfig",
 		Context:          constants.DefaultContext,
