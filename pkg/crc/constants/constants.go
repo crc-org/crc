@@ -21,15 +21,13 @@ const (
 
 	CrcEnvPrefix = "CRC"
 
-	DefaultWebConsoleURL = "https://console-openshift-console.apps-crc.testing"
-	DefaultAPIURL        = "https://api.crc.testing:6443"
-	DefaultLogLevel      = "info"
-	ConfigFile           = "crc.json"
-	LogFile              = "crc.log"
-	DaemonLogFile        = "crcd.log"
-	CrcLandingPageURL    = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
-
-	DefaultOcURLBase          = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp"
+	DefaultWebConsoleURL      = "https://console-openshift-console.apps-crc.testing"
+	DefaultAPIURL             = "https://api.crc.testing:6443"
+	DefaultLogLevel           = "info"
+	ConfigFile                = "crc.json"
+	LogFile                   = "crc.log"
+	DaemonLogFile             = "crcd.log"
+	CrcLandingPageURL         = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
 	DefaultPodmanURLBase      = "https://storage.googleapis.com/libpod-master-releases"
 	DefaultGoodhostsCliBase   = "https://github.com/code-ready/goodhosts-cli/releases/download/v1.0.0"
 	CRCMacTrayDownloadURL     = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
@@ -38,6 +36,8 @@ const (
 
 	VSockGateway = "192.168.127.1"
 	VsockSSHPort = 2222
+
+	OkdPullSecret = `{"auths":{"fake":{"auth": "Zm9vOmJhcgo="}}}` // #nosec G101
 )
 
 var podmanURLForOs = map[string]string{

@@ -140,14 +140,23 @@ func (s *startResult) prettyPrintTo(writer io.Writer) error {
 	}
 
 	_, err := fmt.Fprintln(writer, strings.Join([]string{
+		"\n",
 		"Started the OpenShift cluster",
 		"",
-		"To access the cluster, first set up your environment by following 'crc oc-env' instructions.",
-		fmt.Sprintf("Then you can access it by running 'oc login -u %s -p %s %s'.", s.ClusterConfig.DeveloperCredentials.Username, s.ClusterConfig.DeveloperCredentials.Password, s.ClusterConfig.URL),
-		fmt.Sprintf("To login as an admin, run 'oc login -u %s -p %s %s'.", s.ClusterConfig.AdminCredentials.Username, s.ClusterConfig.AdminCredentials.Password, s.ClusterConfig.URL),
+		"To access the cluster, first set up your environment by following the instructions returned by executing 'crc oc-env'.",
+		fmt.Sprintf("Then you can access your cluster by running 'oc login -u %s -p %s %s'.", s.ClusterConfig.DeveloperCredentials.Username, s.ClusterConfig.DeveloperCredentials.Password, s.ClusterConfig.URL),
+		fmt.Sprintf("To login as a cluster admin, run 'oc login -u %s -p %s %s'.", s.ClusterConfig.AdminCredentials.Username, s.ClusterConfig.AdminCredentials.Password, s.ClusterConfig.URL),
 		"",
-		"You can now run 'crc console' and use these credentials to access the OpenShift web console.",
+		"You can also run 'crc console' and use the above credentials to access the OpenShift web console.",
+		"The console will open in your default browser.",
 	}, "\n"))
+	if crcversion.IsOkdBuild() {
+		fmt.Fprintln(writer, strings.Join([]string{
+			"\n",
+			"NOTE:",
+			"This cluster was built from OKD - The Community Distribution of Kubernetes that powers Red Hat OpenShift.",
+			"If you find an issue, please report it at https://github.com/openshift/okd"}, "\n"))
+	}
 	return err
 }
 
@@ -182,6 +191,11 @@ func getPullSecretFileContent() (string, error) {
 		err        error
 	)
 
+	// If crc is built from an OKD bundle, then use the fake pull secret in contants.
+	if crcversion.IsOkdBuild() {
+		pullsecret = constants.OkdPullSecret
+		return pullsecret, nil
+	}
 	// In case user doesn't provide a file in start command or in config then ask for it.
 	if config.Get(cmdConfig.PullSecretFile).AsString() == "" {
 		pullsecret, err = input.PromptUserForSecret("Image pull secret", fmt.Sprintf("Copy it from %s", constants.CrcLandingPageURL))

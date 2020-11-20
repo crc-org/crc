@@ -24,13 +24,16 @@ func TestRenderActionPlainSuccess(t *testing.T) {
 			},
 		},
 	}, out, ""))
-	assert.Equal(t, `Started the OpenShift cluster
+	assert.Equal(t, `
 
-To access the cluster, first set up your environment by following 'crc oc-env' instructions.
-Then you can access it by running 'oc login -u developer -p developer https://api.crc.testing:6443'.
-To login as an admin, run 'oc login -u kubeadmin -p secret https://api.crc.testing:6443'.
+Started the OpenShift cluster
 
-You can now run 'crc console' and use these credentials to access the OpenShift web console.
+To access the cluster, first set up your environment by following the instructions returned by executing 'crc oc-env'.
+Then you can access your cluster by running 'oc login -u developer -p developer https://api.crc.testing:6443'.
+To login as a cluster admin, run 'oc login -u kubeadmin -p secret https://api.crc.testing:6443'.
+
+You can also run 'crc console' and use the above credentials to access the OpenShift web console.
+The console will open in your default browser.
 `, out.String())
 }
 
