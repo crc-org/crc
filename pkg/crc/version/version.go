@@ -20,6 +20,8 @@ var (
 
 	// Bundle version which used for the release.
 	bundleVersion = "0.0.0-unset"
+
+	okdBuild = "false"
 )
 
 const (
@@ -46,6 +48,10 @@ func GetCommitSha() string {
 
 func GetBundleVersion() string {
 	return bundleVersion
+}
+
+func IsOkdBuild() bool {
+	return okdBuild == "true"
 }
 
 func GetCRCMacTrayVersion() string {
