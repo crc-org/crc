@@ -47,7 +47,6 @@ var bundleExtractionCheck = Check{
 	check:            checkBundleExtracted,
 	fixDescription:   "Extracting bundle from the CRC executable",
 	fix:              fixBundleExtracted,
-	flags:            SetupOnly,
 }
 
 func checkBundleExtracted() error {
