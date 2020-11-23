@@ -56,7 +56,7 @@ func checkBundleExtracted() error {
 	if err != nil {
 		return err
 	}
-	return found.CheckDiskImageSize()
+	return found.Verify()
 }
 
 func fixBundleExtracted() error {

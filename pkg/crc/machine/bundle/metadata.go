@@ -119,7 +119,9 @@ func (bundle *CrcBundleInfo) resolvePath(filename string) string {
 }
 
 func ExtractFromExecutable(sourcepath string) (*CrcBundleInfo, error) {
-	reader, err := embed.Open(filepath.Base(constants.DefaultBundlePath))
+	bundleName := filepath.Base(sourcepath)
+
+	reader, err := embed.Open(bundleName)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +130,10 @@ func ExtractFromExecutable(sourcepath string) (*CrcBundleInfo, error) {
 		return nil, err
 	}
 
-	return GetCachedBundleInfo(filepath.Base(sourcepath))
+	if err := writeExtractionDone(bundleName); err != nil {
+		return nil, err
+	}
+	return GetCachedBundleInfo(bundleName)
 }
 
 func Extract(sourcepath string) (*CrcBundleInfo, error) {
@@ -137,7 +142,15 @@ func Extract(sourcepath string) (*CrcBundleInfo, error) {
 		return nil, err
 	}
 
-	return GetCachedBundleInfo(filepath.Base(sourcepath))
+	bundleName := filepath.Base(sourcepath)
+	if err := writeExtractionDone(bundleName); err != nil {
+		return nil, err
+	}
+	return GetCachedBundleInfo(bundleName)
+}
+
+func writeExtractionDone(bundleName string) error {
+	return ioutil.WriteFile(filepath.Join(getCachedBundlePath(bundleName), ".done"), []byte(``), 0644)
 }
 
 func (bundle *CrcBundleInfo) GetAPIHostname() string {
@@ -200,6 +213,13 @@ func (bundle *CrcBundleInfo) GetDiskSize() (int64, error) {
 		return 0, err
 	}
 	return size, nil
+}
+
+func (bundle *CrcBundleInfo) Verify() error {
+	if _, err := os.Stat(bundle.resolvePath(".done")); err != nil {
+		return err
+	}
+	return bundle.CheckDiskImageSize()
 }
 
 func (bundle *CrcBundleInfo) CheckDiskImageSize() error {
