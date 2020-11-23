@@ -25,7 +25,7 @@ func UncompressWithFilter(tarball, targetDir string, showProgress bool, fileFilt
 }
 
 func Uncompress(tarball, targetDir string, showProgress bool) ([]string, error) {
-	return uncompress(tarball, targetDir, nil, showProgress && terminal.IsTerminal(int(os.Stdout.Fd())))
+	return UncompressWithFilter(tarball, targetDir, showProgress, nil)
 }
 
 func uncompress(tarball, targetDir string, fileFilter func(string) bool, showProgress bool) ([]string, error) {
