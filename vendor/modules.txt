@@ -7,7 +7,7 @@ github.com/Masterminds/semver
 github.com/RangelReale/osincli
 # github.com/VividCortex/ewma v1.1.1
 github.com/VividCortex/ewma
-# github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
+# github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad => github.com/guillaumerose/binappend v0.0.0-20201123104445-14e342367bb5
 github.com/YourFin/binappend
 # github.com/alexbrainman/sspi v0.0.0-20180613141037-e580b900e9f5
 github.com/alexbrainman/sspi

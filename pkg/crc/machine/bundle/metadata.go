@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/embed"
 	"github.com/code-ready/crc/pkg/extract"
 	crcos "github.com/code-ready/crc/pkg/os"
 )
@@ -115,6 +116,19 @@ func (bundle *CrcBundleInfo) installSymlinkOrCopy() error {
 
 func (bundle *CrcBundleInfo) resolvePath(filename string) string {
 	return filepath.Join(bundle.cachedPath, filename)
+}
+
+func ExtractFromExecutable(sourcepath string) (*CrcBundleInfo, error) {
+	reader, err := embed.Open(filepath.Base(constants.DefaultBundlePath))
+	if err != nil {
+		return nil, err
+	}
+	_, err = extract.UncompressReader(reader, reader.Size(), constants.MachineCacheDir, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetCachedBundleInfo(filepath.Base(sourcepath))
 }
 
 func Extract(sourcepath string) (*CrcBundleInfo, error) {

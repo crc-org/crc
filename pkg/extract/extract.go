@@ -36,6 +36,10 @@ func UncompressWithFilter(tarball, targetDir string, showProgress bool, fileFilt
 	return uncompress(file, stat.Size(), targetDir, fileFilter, showProgress && terminal.IsTerminal(int(os.Stdout.Fd())))
 }
 
+func UncompressReader(tarball io.ReaderAt, size int64, targetDir string, showProgress bool) ([]string, error) {
+	return uncompress(tarball, size, targetDir, nil, showProgress)
+}
+
 func Uncompress(tarball, targetDir string, showProgress bool) ([]string, error) {
 	return UncompressWithFilter(tarball, targetDir, showProgress, nil)
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/YourFin/binappend"
 )
 
-func openEmbeddedFile(executablePath, embedName string) (*binappend.Reader, error) {
+func openFromExecutable(executablePath, embedName string) (*binappend.Reader, error) {
 	extractor, err := binappend.MakeExtractor(executablePath)
 	if err != nil {
 		return nil, fmt.Errorf("Could not data embedded in %s: %v", executablePath, err)
@@ -20,6 +20,14 @@ func openEmbeddedFile(executablePath, embedName string) (*binappend.Reader, erro
 		return nil, fmt.Errorf("Could not open embedded '%s' in %s: %v", embedName, executablePath, err)
 	}
 	return reader, nil
+}
+
+func Open(embedName string) (*binappend.Reader, error) {
+	executablePath, err := os.Executable()
+	if err != nil {
+		return nil, err
+	}
+	return openFromExecutable(executablePath, embedName)
 }
 
 func Extract(embedName, destFile string) error {
@@ -32,7 +40,7 @@ func Extract(embedName, destFile string) error {
 
 func ExtractFromExecutable(executablePath, embedName, destFile string) error {
 	logging.Debugf("Extracting embedded '%s' from %s to %s", embedName, executablePath, destFile)
-	reader, err := openEmbeddedFile(executablePath, embedName)
+	reader, err := openFromExecutable(executablePath, embedName)
 	if err != nil {
 		return err
 	}

@@ -11,7 +11,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/validation"
-	"github.com/code-ready/crc/pkg/embed"
 	"github.com/docker/go-units"
 )
 
@@ -53,10 +52,11 @@ func checkBundleExtracted() error {
 	if !constants.BundleEmbedded() {
 		return nil
 	}
-	if _, err := os.Stat(constants.DefaultBundlePath); os.IsNotExist(err) {
+	found, err := bundle.GetCachedBundleInfo(filepath.Base(constants.DefaultBundlePath))
+	if err != nil {
 		return err
 	}
-	return nil
+	return found.CheckDiskImageSize()
 }
 
 func fixBundleExtracted() error {
@@ -72,10 +72,7 @@ func fixBundleExtracted() error {
 			return fmt.Errorf("Cannot create directory %s: %v", bundleDir, err)
 		}
 
-		if err := embed.Extract(filepath.Base(constants.DefaultBundlePath), constants.DefaultBundlePath); err != nil {
-			return err
-		}
-		_, err := bundle.Extract(constants.DefaultBundlePath)
+		_, err := bundle.ExtractFromExecutable(filepath.Base(constants.DefaultBundlePath))
 		return err
 	}
 	return fmt.Errorf("CRC bundle is not embedded in the executable")

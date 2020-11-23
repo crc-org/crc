@@ -84,3 +84,5 @@ replace (
 replace vbom.ml/util => github.com/fvbommel/util v0.0.2
 
 replace golang.org/x/sys => golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6
+
+replace github.com/YourFin/binappend => github.com/guillaumerose/binappend v0.0.0-20201123104445-14e342367bb5

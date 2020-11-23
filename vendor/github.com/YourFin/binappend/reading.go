@@ -21,12 +21,12 @@
 package binappend
 
 import (
-	"os"
+	"compress/gzip"
+	"encoding/binary"
+	"encoding/json"
 	"io"
 	"io/ioutil"
-	"encoding/json"
-	"encoding/binary"
-	"compress/gzip"
+	"os"
 
 	"github.com/pkg/errors"
 )
@@ -132,30 +132,34 @@ func MakeExtractor(filename string) (reader *Extractor, err error) {
 //   - When any filesystem errors in opening and seeking in the underlying binary
 //   - When $dataName does not match any names in the file
 func (extractor *Extractor) GetReader(dataName string) (reader *Reader, err error) {
-	if _, exists := extractor.metadata.Data[dataName]; !exists {
+	metadata, exists := extractor.metadata.Data[dataName]
+	if !exists {
 		return nil, errors.Errorf("Could not find name %s", dataName)
 	}
-	reader = &Reader{}
-	reader.fileHandle, err = os.Open(extractor.filename)
+
+	fh, err := os.Open(extractor.filename)
 	if err != nil {
 		return nil, errors.Wrap(err, "opening reader filehandle")
 	}
-	_, err = reader.fileHandle.Seek(extractor.metadata.Data[dataName].StartFilePtr, io.SeekStart)
-	if err != nil {
-		_ = reader.fileHandle.Close()
-		return nil, errors.Wrap(err, "seeking in file")
-	}
-	limitReader := io.LimitReader(reader.fileHandle, extractor.metadata.Data[dataName].BlockSize)
-	if extractor.metadata.Data[dataName].Zipped {
-		reader.reader, err = gzip.NewReader(limitReader)
+
+	limitReader := io.NewSectionReader(fh, metadata.StartFilePtr, metadata.BlockSize)
+
+	var zipReader io.Reader
+	if metadata.Zipped {
+		zipReader, err = gzip.NewReader(limitReader)
 		if err != nil {
-			_ = reader.fileHandle.Close()
+			_ = fh.Close()
 			return nil, errors.Wrap(err, "creating gzip reader")
 		}
-	} else {
-		reader.reader = limitReader
 	}
-	return reader, nil
+
+	return &Reader{
+		Name:       dataName,
+		fileHandle: fh,
+		metadata:   metadata,
+		gzipReader: zipReader,
+		reader:     limitReader,
+	}, nil
 }
 
 // Procedure:
@@ -223,16 +227,21 @@ func (extractor *Extractor) AvalibleData() []string {
 //  io.Reader
 //  io.Closer
 //  io.ReadCloser
+//  io.ReaderAt
+//  io.Seeker
 // Postconditions:
 //  Must be closed so the underlying *os.File can be freed
 type Reader struct {
 	//The name of the data as inputed by the Writer
 	Name string
 
+	metadata appendedData
+
 	// reader wraps the limitReader which wraps the underlying fileHandle
 
 	fileHandle *os.File
-	reader io.Reader
+	gzipReader io.Reader
+	reader     *io.SectionReader
 }
 
 // Procedure:
@@ -250,6 +259,9 @@ type Reader struct {
 // Postconditions:
 //  See the documentation for io.Reader
 func (reader *Reader) Read(p []byte) (n int, err error) {
+	if reader.metadata.Zipped {
+		return reader.gzipReader.Read(p)
+	}
 	return reader.reader.Read(p)
 }
 
@@ -268,4 +280,65 @@ func (reader *Reader) Read(p []byte) (n int, err error) {
 //  All resources for the Reader have been closed
 func (reader *Reader) Close() error {
 	return reader.fileHandle.Close()
+}
+
+// Procedure:
+//  *Reader.Seek
+// Purpose:
+//  To set the offset of the next read
+// Parameters:
+//  The *Reader being acted upon: reader
+//  The offset: offset int64
+//  The whence, position to start counting the offset: whence int
+// Produces:
+//  The new offset: n int
+//  Any errors in reading: err error
+// Preconditions:
+//  No additional
+// Postconditions:
+//  See the documentation for io.Reader
+func (reader *Reader) Seek(offset int64, whence int) (int64, error) {
+	if reader.metadata.Zipped {
+		return 0, errors.New("unavailable for gzipped file")
+	}
+	return reader.reader.Seek(offset, whence)
+}
+
+// Procedure:
+//  *Reader.ReadAt
+// Purpose:
+//  To read bytes out of a Reader at a specific offset.
+//  Only available for non-zipped file.
+// Parameters:
+//  The *Reader being acted upon: reader
+//  The byte array to place read bytes into: p []byte
+//  The offset where to start to read: off int64
+// Produces:
+//  The number of bytes read: n int
+//  Any errors in reading: err error
+// Preconditions:
+//  No additional
+// Postconditions:
+//  See the documentation for io.Reader
+func (reader *Reader) ReadAt(p []byte, off int64) (int, error) {
+	if reader.metadata.Zipped {
+		return 0, errors.New("unavailable for gzipped file")
+	}
+	return reader.reader.ReadAt(p, off)
+}
+
+// Procedure:
+//  *Reader.Size
+// Purpose:
+//  To get the size of the Reader
+// Parameters:
+//  The *Reader being acted upon: reader
+// Produces:
+//  The total number of bytes
+// Preconditions:
+//  No additional
+// Postconditions:
+//  See the documentation for io.Reader
+func (reader *Reader) Size() int64 {
+	return reader.reader.Size()
 }
