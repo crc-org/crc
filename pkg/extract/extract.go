@@ -21,19 +21,7 @@ import (
 const minSizeForProgressBar = 100_000_000
 
 func UncompressWithFilter(tarball, targetDir string, showProgress bool, fileFilter func(string) bool) ([]string, error) {
-	return uncompress(tarball, targetDir, fileFilter, showProgress && terminal.IsTerminal(int(os.Stdout.Fd())))
-}
-
-func Uncompress(tarball, targetDir string, showProgress bool) ([]string, error) {
-	return UncompressWithFilter(tarball, targetDir, showProgress, nil)
-}
-
-func uncompress(tarball, targetDir string, fileFilter func(string) bool, showProgress bool) ([]string, error) {
 	logging.Debugf("Uncompressing %s to %s", tarball, targetDir)
-
-	if strings.HasSuffix(tarball, ".zip") {
-		return unzip(tarball, targetDir, fileFilter, showProgress)
-	}
 
 	file, err := os.Open(filepath.Clean(tarball))
 	if err != nil {
@@ -45,34 +33,44 @@ func uncompress(tarball, targetDir string, fileFilter func(string) bool, showPro
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot read file information")
 	}
-	header := make([]byte, min(262, stat.Size()))
-	if _, err := io.ReadFull(file, header); err != nil {
+	return uncompress(file, stat.Size(), targetDir, fileFilter, showProgress && terminal.IsTerminal(int(os.Stdout.Fd())))
+}
+
+func Uncompress(tarball, targetDir string, showProgress bool) ([]string, error) {
+	return UncompressWithFilter(tarball, targetDir, showProgress, nil)
+}
+
+func uncompress(tarball io.ReaderAt, size int64, targetDir string, fileFilter func(string) bool, showProgress bool) ([]string, error) {
+	reader := io.NewSectionReader(tarball, 0, size)
+
+	header := make([]byte, min(262, size))
+	if _, err := io.ReadFull(reader, header); err != nil {
 		return nil, errors.Wrap(err, "cannot determine type by reading file header")
 	}
-	if _, err := file.Seek(0, 0); err != nil {
+	if _, err := reader.Seek(0, 0); err != nil {
 		return nil, errors.Wrap(err, "cannot seek file")
 	}
 
 	switch {
 	case filetype.Is(header, "xz"):
-		reader, err := xz.NewReader(file, 0)
+		reader, err := xz.NewReader(reader, 0)
 		if err != nil {
 			return nil, err
 		}
 		return untar(reader, targetDir, fileFilter, showProgress)
 	case filetype.Is(header, "gz"):
-		reader, err := gzip.NewReader(file)
+		reader, err := gzip.NewReader(reader)
 		if err != nil {
 			return nil, err
 		}
 		defer reader.Close()
 		return untar(io.Reader(reader), targetDir, fileFilter, showProgress)
 	case filetype.Is(header, "zip"):
-		return unzip(tarball, targetDir, fileFilter, showProgress)
+		return unzip(reader, size, targetDir, fileFilter, showProgress)
 	case filetype.Is(header, "tar"):
-		return untar(file, targetDir, fileFilter, showProgress)
+		return untar(reader, targetDir, fileFilter, showProgress)
 	default:
-		return nil, fmt.Errorf("Unknown file format when trying to uncompress %s", tarball)
+		return nil, fmt.Errorf("Unknown file format when trying to uncompress to %s", targetDir)
 	}
 }
 
@@ -152,9 +150,9 @@ func untarFile(tarReader *tar.Reader, header *tar.Header, path string, showProgr
 	return err
 }
 
-func unzip(archive, target string, fileFilter func(string) bool, showProgress bool) ([]string, error) {
+func unzip(archive io.ReaderAt, size int64, target string, fileFilter func(string) bool, showProgress bool) ([]string, error) {
 	var extractedFiles []string
-	reader, err := zip.OpenReader(archive)
+	reader, err := zip.NewReader(archive, size)
 	if err != nil {
 		return nil, err
 	}
