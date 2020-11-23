@@ -116,6 +116,9 @@ func getPreflightChecks(experimentalFeatures bool, mode network.Mode) []Check {
 	if mode == network.DefaultMode {
 		checks = append(checks, resolverPreflightChecks[:]...)
 	}
+
+	checks = append(checks, bundleExtractionCheck)
+
 	// Experimental feature
 	if experimentalFeatures {
 		checks = append(checks, traySetupChecks[:]...)

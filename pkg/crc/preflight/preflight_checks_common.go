@@ -31,14 +31,6 @@ var genericPreflightChecks = [...]Check{
 		fix:              fixGoodhostsExecutableCached,
 	},
 	{
-		configKeySuffix:  "check-bundle-extracted",
-		checkDescription: "Checking if CRC bundle is extracted in '$HOME/.crc'",
-		check:            checkBundleExtracted,
-		fixDescription:   "Extracting bundle from the CRC executable",
-		fix:              fixBundleExtracted,
-		flags:            SetupOnly,
-	},
-	{
 		configKeySuffix:  "check-ram",
 		checkDescription: "Checking minimum RAM requirements",
 		check: func() error {
@@ -47,6 +39,15 @@ var genericPreflightChecks = [...]Check{
 		fixDescription: fmt.Sprintf("crc requires at least %s to run", units.HumanSize(float64(constants.DefaultMemory*1024*1024))),
 		flags:          NoFix,
 	},
+}
+
+var bundleExtractionCheck = Check{
+	configKeySuffix:  "check-bundle-extracted",
+	checkDescription: "Checking if CRC bundle is extracted in '$HOME/.crc'",
+	check:            checkBundleExtracted,
+	fixDescription:   "Extracting bundle from the CRC executable",
+	fix:              fixBundleExtracted,
+	flags:            SetupOnly,
 }
 
 func checkBundleExtracted() error {

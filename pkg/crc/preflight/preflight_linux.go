@@ -190,7 +190,7 @@ func getPreflightChecksForDistro(distro linux.OsType, networkMode network.Mode) 
 		}
 	}
 
-	return checks
+	return append(checks, bundleExtractionCheck)
 }
 
 func commonChecks() []Check {
