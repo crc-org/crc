@@ -196,7 +196,6 @@ func getPreflightChecksForDistro(distro linux.OsType, networkMode network.Mode) 
 func commonChecks() []Check {
 	var checks []Check
 	checks = append(checks, genericPreflightChecks[:]...)
-	checks = append(checks, nonWinPreflightChecks[:]...)
 	checks = append(checks, libvirtPreflightChecks[:]...)
 	return checks
 }

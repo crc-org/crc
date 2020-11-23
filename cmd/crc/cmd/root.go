@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
@@ -40,6 +41,9 @@ var (
 )
 
 func init() {
+	if err := checkIfRunningAsNormalUser(); err != nil {
+		logging.Fatal(err.Error())
+	}
 	if err := constants.EnsureBaseDirectoriesExist(); err != nil {
 		logging.Fatal(err.Error())
 	}
@@ -147,4 +151,12 @@ func newMachine() machine.Client {
 
 func newMachineWithConfig(config crcConfig.Storage) machine.Client {
 	return machine.NewClient(constants.DefaultName, isDebugLog(), network.ParseMode(config.Get(cmdConfig.NetworkMode).AsString()))
+}
+
+func checkIfRunningAsNormalUser() error {
+	if os.Geteuid() != 0 {
+		return nil
+	}
+	logging.Debug("Ran as root")
+	return fmt.Errorf("crc should be ran as a normal user")
 }

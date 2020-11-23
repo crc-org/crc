@@ -72,7 +72,6 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
             | warn-check-hyperkit-driver           | true   | false  |
             | warn-check-hyperkit-installed        | true   | false  |
             | warn-check-resolver-file-permissions | true   | false  |
-            | warn-check-root-user                 | true   | false  |
 
         @linux
         Examples: Config warnings on Linux
@@ -89,7 +88,6 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
             | warn-check-network-manager-config    | true   | false  |
             | warn-check-network-manager-installed | true   | false  |
             | warn-check-network-manager-running   | true   | false  |
-            | warn-check-root-user                 | true   | false  |
             | warn-check-user-in-libvirt-group     | true   | false  |
             | warn-check-virt-enabled              | true   | false  |
 
@@ -125,7 +123,6 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
             | skip-check-hyperkit-driver           | true   | false  |
             | skip-check-hyperkit-installed        | true   | false  |
             | skip-check-resolver-file-permissions | true   | false  |
-            | skip-check-root-user                 | true   | false  |
 
         @linux
         Examples:
@@ -142,7 +139,6 @@ Checks whether CRC `config set` command works as expected in conjunction with `c
             | skip-check-network-manager-config    | true   | false  |
             | skip-check-network-manager-installed | true   | false  |
             | skip-check-network-manager-running   | true   | false  |
-            | skip-check-root-user                 | true   | false  |
             | skip-check-user-in-libvirt-group     | true   | false  |
             | skip-check-virt-enabled              | true   | false  |
 
