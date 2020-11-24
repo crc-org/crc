@@ -1,17 +1,11 @@
 package test_test
 
-import (
-	"encoding/json"
-	"os"
-	"path/filepath"
-	"runtime"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-)
+//. "github.com/onsi/ginkgo"
+//. "github.com/onsi/gomega"
 
 var statusInfo StatusAnswer
 
+/*
 var _ = Describe("basic commands", func() {
 
 	Describe("version", func() {
@@ -337,3 +331,4 @@ var _ = Describe("basic commands", func() {
 		})
 	})
 })
+*/

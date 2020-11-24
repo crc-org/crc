@@ -9,7 +9,6 @@ package test_test
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -47,8 +46,6 @@ var bundleLocation string
 var pullSecretLocation string
 
 func TestTest(t *testing.T) {
-
-	rand.Seed(time.Now().UTC().UnixNano()) // what's this for?
 
 	RegisterFailHandler(Fail)
 

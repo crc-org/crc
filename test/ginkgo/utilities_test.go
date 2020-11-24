@@ -9,7 +9,10 @@ import (
 	"syscall"
 	"time"
 
-	//. "github.com/onsi/ginkgo"
+	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/ssh"
 	. "github.com/onsi/gomega"
 	"github.com/sirupsen/logrus"
 )
@@ -171,6 +174,26 @@ func RunOnHostWithPrivilege(args ...string) (string, error) {
 		return "", err
 	}
 	return string(out), nil
+}
+
+// Send command to CRC VM via SSH
+func SendCommandToVM(cmd string) (string, error) {
+	client := machine.NewClient(constants.DefaultName, true, network.DefaultMode)
+	ip, err := client.IP()
+	if err != nil {
+		return "", err
+	}
+	ssh, err := ssh.NewClient(constants.DefaultSSHUser, ip, 22, &ssh.Auth{
+		Keys: []string{constants.GetPrivateKeyPath()},
+	})
+	if err != nil {
+		return "", err
+	}
+	out, err := ssh.Output(cmd)
+	if err != nil {
+		return "", err
+	}
+	return out, nil
 }
 
 // ExitError is an interface that presents an API similar to os.ProcessState, which is

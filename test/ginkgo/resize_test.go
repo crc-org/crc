@@ -19,30 +19,34 @@ var _ = Describe("start flags", func() {
 			Expect(RunCRCExpectSuccess("start", "-b", bundleLocation, "-p", pullSecretLocation, "--memory", "12000", "--cpus", "6", "--disk-size", "40")).To(ContainSubstring("Started the OpenShift cluster"))
 		})
 
-		switch os := runtime.GOOS; os {
-		case "linux":
+		It("check memory size", func() {
+			out, err := SendCommandToVM("cat /proc/meminfo")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*11\d{6}`))
+		})
 
-			It("check memory size", func() {
-				out, err := RunOnHost("ssh", "-i", credPath, "core@192.168.130.11", "cat", "/proc/meminfo")
-				Expect(err).ToNot(HaveOccurred())
-				Expect(out).Should(MatchRegexp(`MemTotal:[\s]*11\d{6}`))
-			})
+		It("check number of cpus", func() {
+			out, err := SendCommandToVM("cat /proc/cpuinfo")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(out).Should(MatchRegexp(`processor[\s]*\:[\s]*5`))
+		})
 
-			It("check number of cpus", func() {
-				out, err := RunOnHost("ssh", "-i", credPath, "core@192.168.130.11", "cat", "/proc/cpuinfo")
-				Expect(err).ToNot(HaveOccurred())
-				Expect(out).Should(MatchRegexp(`processor[\s]*\:[\s]*5`))
-			})
+		// only check disk size on linux and windows
+		if os := runtime.GOOS; os == "linux" || os == "windows" {
+
 			It("check size of VM disk", func() {
-				out, err := RunOnHostWithPrivilege("virsh", "vol-info", "crc.qcow2", "crc")
-				Expect(err).ToNot(HaveOccurred())
-				Expect(out).Should(MatchRegexp(`Capacity:[\s]*40\.00`))
+				out, err := SendCommandToVM("df -h")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(out).Should(MatchRegexp(`.*coreos-luks-root-nocrypt[\s]*40G`))
 			})
-		case "windows":
-			// testcase not designed
-		case "darwin":
-			// feature not implemented
+		} else { // darwin
+			It("check size of VM disk", func() {
+				out, err := SendCommandToVM("df -h")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(out).Should(MatchRegexp(`.*coreos-luks-root-nocrypt[\s]*31G`)) // default
+			})
 		}
+
 		It("stop CRC", func() {
 			Expect(RunCRCExpectSuccess("stop", "-f")).To(ContainSubstring("Stopped the OpenShift cluster"))
 		})
@@ -55,10 +59,10 @@ var _ = Describe("start flags", func() {
 			Expect(RunCRCExpectFail("start", "--cpus", "3")).To(ContainSubstring("")) // TODO
 		})
 		It("start CRC and shrink disk", func() { // bigger than default && smaller than current
-			Expect(RunCRCExpectFail("start", "--disk-size", "35")).To(ContainSubstring("")) // TODO
+			Expect(RunCRCExpectFail("start", "--disk-size", "35")).To(ContainSubstring("")) // TODO: diff between darwin & the rest
 		})
 		It("start CRC and shrink disk", func() { // smaller than min = default = 31GiB
-			Expect(RunCRCExpectFail("start", "--disk-size", "30")).To(ContainSubstring("")) // TODO
+			Expect(RunCRCExpectFail("start", "--disk-size", "30")).To(ContainSubstring("")) // TODO: diff between darwin & the rest
 		})
 
 		// start with default specs
@@ -66,29 +70,26 @@ var _ = Describe("start flags", func() {
 			Expect(RunCRCExpectSuccess("start", "-b", bundleLocation, "--memory", "9216", "--cpus", "4")).To(ContainSubstring("Started the OpenShift cluster"))
 		})
 
-		switch os := runtime.GOOS; os {
-		case "linux":
-			It("check memory size", func() {
-				Expect(RunOnHost("ssh", "-i", credPath, "core@192.168.130.11", "cat", "/proc/meminfo")).Should(MatchRegexp(`MemTotal\:[\s]*8\d{5}`))
-			})
-			It("check number of cpus", func() {
-				stdout, err := RunOnHost("ssh", "-i", credPath, "core@192.168.130.11", "cat", "/proc/cpuinfo")
+		It("check memory size", func() {
+			out, err := SendCommandToVM("cat /proc/meminfo")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*8\d{6}`))
+		})
+
+		It("check number of cpus", func() {
+			out, err := SendCommandToVM("cat /proc/cpuinfo")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(out).Should(MatchRegexp(`processor[\s]*\:[\s]*3`))
+			Expect(out).ShouldNot(MatchRegexp(`processor[\s]*\:[\s]*4`))
+		})
+
+		// only check disk size on linux and windows
+		if os := runtime.GOOS; os == "linux" || os == "windows" {
+			It("check size of VM disk", func() {
+				out, err := SendCommandToVM("df -h")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(stdout).Should(MatchRegexp(`processor[\s]\:[\s]3`))
-				Expect(stdout).ShouldNot(MatchRegexp(`processor[\s]\:[\s]4`))
+				Expect(out).Should(MatchRegexp(`.*coreos-luks-root-nocrypt[\s]*40G`)) // no change
 			})
-		case "darwin":
-			It("check memory size", func() {
-				Expect(RunOnHost("ssh", "-i", credPath, "core@192.168.130.11", "cat", "/proc/meminfo")).Should(MatchRegexp(`MemTotal\:[\s]*8\d{5}`))
-			})
-			It("check number of cpus", func() {
-				stdout, err := RunOnHost("-i", credPath, "core@192.168.130.11", "cat", "/proc/cpuinfo")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(stdout).Should(MatchRegexp(`processor[\s]*\:[\s]*3`))
-				Expect(stdout).ShouldNot(MatchRegexp(`processor[\s]*\:[\s]*4`))
-			})
-		case "windows":
-			// case not designed
 		}
 
 		It("clean up", func() {

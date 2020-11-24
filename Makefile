@@ -133,11 +133,22 @@ build_integration: $(SOURCES)
 	GOOS=windows go test ./test/integration/ -c -o $(BUILD_DIR)/windows-amd64/integration.test.exe
 	GOOS=darwin  go test ./test/integration/ -c -o $(BUILD_DIR)/macos-amd64/integration.test
 
-.PHONY: integration ## Run integration tests
+.PHONY: gintegration ## Run integration tests in Ginkgo
+gintegration:
+ifndef PULL_SECRET_FILE
+PULL_SECRET_FILE = $(HOME)/Downloads/crc-pull-secret
+endif
+ifndef BUNDLE_LOCATION
+BUNDLE_LOCATION = $(HOME)/Downloads/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+endif
+gintegration:
+	@go test -timeout=60m $(REPOPATH)/test/ginkgo -v
+
+.PHONY: integration ## Run integration tests in Cucumber
 integration:
 GODOG_OPTS = --godog.tags=$(GOOS)
 ifndef PULL_SECRET_FILE
-	PULL_SECRET_LOCATION = --pull-secret-file=$(HOME)/Downloads/crc-pull-secret
+	PULL_SECRET_FILE = --pull-secret-file=$(HOME)/Downloads/crc-pull-secret
 endif
 ifndef BUNDLE_LOCATION
 	BUNDLE_LOCATION = --bundle-location=$(HOME)/Downloads/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
@@ -146,7 +157,8 @@ ifndef CRC_BINARY
 	CRC_BINARY = --crc-binary=$(GOPATH)/bin
 endif
 integration:
-	@go test --timeout=180m $(REPOPATH)/test/integration -v $(PULL_SECRET_LOCATION) $(BUNDLE_LOCATION) $(CRC_BINARY) --bundle-version=$(BUNDLE_VERSION) $(GODOG_OPTS)
+	@go test --timeout=180m $(REPOPATH)/test/integration -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --bundle-version=$(BUNDLE_VERSION) $(GODOG_OPTS)
+
 
 .PHONY: fmt
 fmt:
