@@ -3,12 +3,12 @@ package constants
 import "path/filepath"
 
 const (
-	OcExecutableName        = "oc.exe"
-	PodmanExecutableName    = "podman.exe"
-	GoodhostsExecutableName = "goodhosts.exe"
-	TrayExecutableName      = "tray-windows.exe"
-	DaemonServiceName       = "CodeReady Containers"
-	TrayShortcutName        = "tray-windows.lnk"
+	OcExecutableName          = "oc.exe"
+	PodmanExecutableName      = "podman.exe"
+	AdminHelperExecutableName = "admin-helper.exe"
+	TrayExecutableName        = "tray-windows.exe"
+	DaemonServiceName         = "CodeReady Containers"
+	TrayShortcutName          = "tray-windows.lnk"
 )
 
 var (

@@ -1,7 +1,6 @@
 package preflight
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,6 +12,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/validation"
 	"github.com/code-ready/crc/pkg/embed"
 	"github.com/docker/go-units"
+	"github.com/pkg/errors"
 )
 
 var genericPreflightChecks = [...]Check{
@@ -24,11 +24,11 @@ var genericPreflightChecks = [...]Check{
 		fix:              fixPodmanExecutableCached,
 	},
 	{
-		configKeySuffix:  "check-goodhosts-cached",
-		checkDescription: "Checking if goodhosts executable is cached",
-		check:            checkGoodhostsExecutableCached,
-		fixDescription:   "Caching goodhosts executable",
-		fix:              fixGoodhostsExecutableCached,
+		configKeySuffix:  "check-admin-helper-cached",
+		checkDescription: "Checking if admin-helper executable is cached",
+		check:            checkAdminHelperExecutableCached,
+		fixDescription:   "Caching admin-helper executable",
+		fix:              fixAdminHelperExecutableCached,
 	},
 	{
 		configKeySuffix:  "check-bundle-extracted",
@@ -102,23 +102,26 @@ func fixPodmanExecutableCached() error {
 	return nil
 }
 
-// Check if goodhost executable is cached or not
-func checkGoodhostsExecutableCached() error {
-	goodhost := cache.NewGoodhostsCache()
-	if !goodhost.IsCached() {
-		return errors.New("goodhost executable is not cached")
+// Check if helper executable is cached or not
+func checkAdminHelperExecutableCached() error {
+	helper := cache.NewAdminHelperCache()
+	if !helper.IsCached() {
+		return errors.New("admin-helper executable is not cached")
 	}
-	logging.Debug("goodhost executable already cached")
-	return checkSuid(goodhost.GetExecutablePath())
+	if err := helper.CheckVersion(); err != nil {
+		return errors.Wrap(err, "unexpected version of the admin-helper executable")
+	}
+	logging.Debug("admin-helper executable already cached")
+	return checkSuid(helper.GetExecutablePath())
 }
 
-func fixGoodhostsExecutableCached() error {
-	goodhost := cache.NewGoodhostsCache()
-	if err := goodhost.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download goodhost executable %v", err)
+func fixAdminHelperExecutableCached() error {
+	helper := cache.NewAdminHelperCache()
+	if err := helper.EnsureIsCached(); err != nil {
+		return errors.Wrap(err, "Unable to download admin-helper executable")
 	}
-	logging.Debug("goodhost executable cached")
-	return setSuid(goodhost.GetExecutablePath())
+	logging.Debug("admin-helper executable cached")
+	return setSuid(helper.GetExecutablePath())
 }
 
 func removeCRCMachinesDir() error {

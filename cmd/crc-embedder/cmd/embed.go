@@ -90,14 +90,14 @@ var (
 			hyperkit.MachineDriverDownloadURL,
 			hyperkit.HyperKitDownloadURL,
 			constants.GetCRCMacTrayDownloadURL(),
-			constants.GetGoodhostsURLForOs("darwin"),
+			constants.GetAdminHelperURLForOs("darwin"),
 		},
 		"linux": {
 			libvirt.MachineDriverDownloadURL,
-			constants.GetGoodhostsURLForOs("linux"),
+			constants.GetAdminHelperURLForOs("linux"),
 		},
 		"windows": {
-			constants.GetGoodhostsURLForOs("windows"),
+			constants.GetAdminHelperURLForOs("windows"),
 			constants.GetCRCWindowsTrayDownloadURL(),
 		},
 	}

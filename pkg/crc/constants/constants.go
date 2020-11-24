@@ -29,7 +29,7 @@ const (
 	DaemonLogFile             = "crcd.log"
 	CrcLandingPageURL         = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
 	DefaultPodmanURLBase      = "https://storage.googleapis.com/libpod-master-releases"
-	DefaultGoodhostsCliBase   = "https://github.com/code-ready/goodhosts-cli/releases/download/v1.0.0"
+	DefaultAdminHelperCliBase = "https://github.com/code-ready/admin-helper/releases/download/0.0.1"
 	CRCMacTrayDownloadURL     = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
 	CRCWindowsTrayDownloadURL = "https://github.com/code-ready/tray-windows/releases/download/v%s/crc-tray-windows.zip"
 	DefaultContext            = "admin"
@@ -54,18 +54,18 @@ func GetPodmanURL() string {
 	return podmanURLForOs[runtime.GOOS]
 }
 
-var goodhostsURLForOs = map[string]string{
-	"darwin":  fmt.Sprintf("%s/%s", DefaultGoodhostsCliBase, "goodhosts-cli-macos-amd64.tar.xz"),
-	"linux":   fmt.Sprintf("%s/%s", DefaultGoodhostsCliBase, "goodhosts-cli-linux-amd64.tar.xz"),
-	"windows": fmt.Sprintf("%s/%s", DefaultGoodhostsCliBase, "goodhosts-cli-windows-amd64.tar.xz"),
+var adminHelperURLForOs = map[string]string{
+	"darwin":  fmt.Sprintf("%s/%s", DefaultAdminHelperCliBase, "admin-helper-macos-amd64.tar.xz"),
+	"linux":   fmt.Sprintf("%s/%s", DefaultAdminHelperCliBase, "admin-helper-linux-amd64.tar.xz"),
+	"windows": fmt.Sprintf("%s/%s", DefaultAdminHelperCliBase, "admin-helper-windows-amd64.tar.xz"),
 }
 
-func GetGoodhostsURLForOs(os string) string {
-	return goodhostsURLForOs[os]
+func GetAdminHelperURLForOs(os string) string {
+	return adminHelperURLForOs[os]
 }
 
-func GetGoodhostsURL() string {
-	return goodhostsURLForOs[runtime.GOOS]
+func GetAdminHelperURL() string {
+	return adminHelperURLForOs[runtime.GOOS]
 }
 
 var defaultBundleForOs = map[string]string{

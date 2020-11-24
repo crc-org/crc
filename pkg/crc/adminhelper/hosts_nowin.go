@@ -1,6 +1,6 @@
 // +build !windows
 
-package goodhosts
+package adminhelper
 
 import (
 	crcos "github.com/code-ready/crc/pkg/os"
