@@ -32,3 +32,7 @@ func RemoveFromHostsFile(instanceIP string, hostnames ...string) error {
 	}
 	return execute(append([]string{"rm"}, hostnames...)...)
 }
+
+func CleanHostsFile() error {
+	return execute([]string{"clean", constants.ClusterDomain, constants.AppsDomain}...)
+}

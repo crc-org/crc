@@ -5,6 +5,8 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/code-ready/crc/pkg/crc/adminhelper"
+
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/network"
 	crcos "github.com/code-ready/crc/pkg/os/linux"
@@ -60,11 +62,12 @@ var checkListForDistros = []checkListForDistro{
 		networkMode: network.DefaultMode,
 		checks: []Check{
 			{check: checkPodmanExecutableCached},
-			{check: checkGoodhostsExecutableCached},
+			{check: checkAdminHelperExecutableCached},
 			{check: checkBundleExtracted},
 			{configKeySuffix: "check-ram"},
 			{cleanup: removeCRCMachinesDir},
 			{check: checkIfRunningAsNormalUser},
+			{cleanup: adminhelper.CleanHostsFile},
 			{check: checkVirtualizationEnabled},
 			{check: checkKvmEnabled},
 			{check: checkLibvirtInstalled},
@@ -88,11 +91,12 @@ var checkListForDistros = []checkListForDistro{
 		networkMode: network.VSockMode,
 		checks: []Check{
 			{check: checkPodmanExecutableCached},
-			{check: checkGoodhostsExecutableCached},
+			{check: checkAdminHelperExecutableCached},
 			{check: checkBundleExtracted},
 			{configKeySuffix: "check-ram"},
 			{cleanup: removeCRCMachinesDir},
 			{check: checkIfRunningAsNormalUser},
+			{cleanup: adminhelper.CleanHostsFile},
 			{check: checkVirtualizationEnabled},
 			{check: checkKvmEnabled},
 			{check: checkLibvirtInstalled},
@@ -109,11 +113,12 @@ var checkListForDistros = []checkListForDistro{
 		networkMode: network.DefaultMode,
 		checks: []Check{
 			{check: checkPodmanExecutableCached},
-			{check: checkGoodhostsExecutableCached},
+			{check: checkAdminHelperExecutableCached},
 			{check: checkBundleExtracted},
 			{configKeySuffix: "check-ram"},
 			{cleanup: removeCRCMachinesDir},
 			{check: checkIfRunningAsNormalUser},
+			{cleanup: adminhelper.CleanHostsFile},
 			{check: checkVirtualizationEnabled},
 			{check: checkKvmEnabled},
 			{check: checkLibvirtInstalled},
@@ -136,11 +141,12 @@ var checkListForDistros = []checkListForDistro{
 		networkMode: network.VSockMode,
 		checks: []Check{
 			{check: checkPodmanExecutableCached},
-			{check: checkGoodhostsExecutableCached},
+			{check: checkAdminHelperExecutableCached},
 			{check: checkBundleExtracted},
 			{configKeySuffix: "check-ram"},
 			{cleanup: removeCRCMachinesDir},
 			{check: checkIfRunningAsNormalUser},
+			{cleanup: adminhelper.CleanHostsFile},
 			{check: checkVirtualizationEnabled},
 			{check: checkKvmEnabled},
 			{check: checkLibvirtInstalled},
@@ -157,11 +163,12 @@ var checkListForDistros = []checkListForDistro{
 		networkMode: network.DefaultMode,
 		checks: []Check{
 			{check: checkPodmanExecutableCached},
-			{check: checkGoodhostsExecutableCached},
+			{check: checkAdminHelperExecutableCached},
 			{check: checkBundleExtracted},
 			{configKeySuffix: "check-ram"},
 			{cleanup: removeCRCMachinesDir},
 			{check: checkIfRunningAsNormalUser},
+			{cleanup: adminhelper.CleanHostsFile},
 			{check: checkVirtualizationEnabled},
 			{check: checkKvmEnabled},
 			{check: checkLibvirtInstalled},
@@ -184,11 +191,12 @@ var checkListForDistros = []checkListForDistro{
 		networkMode: network.VSockMode,
 		checks: []Check{
 			{check: checkPodmanExecutableCached},
-			{check: checkGoodhostsExecutableCached},
+			{check: checkAdminHelperExecutableCached},
 			{check: checkBundleExtracted},
 			{configKeySuffix: "check-ram"},
 			{cleanup: removeCRCMachinesDir},
 			{check: checkIfRunningAsNormalUser},
+			{cleanup: adminhelper.CleanHostsFile},
 			{check: checkVirtualizationEnabled},
 			{check: checkKvmEnabled},
 			{check: checkLibvirtInstalled},
@@ -205,11 +213,12 @@ var checkListForDistros = []checkListForDistro{
 		networkMode: network.DefaultMode,
 		checks: []Check{
 			{check: checkPodmanExecutableCached},
-			{check: checkGoodhostsExecutableCached},
+			{check: checkAdminHelperExecutableCached},
 			{check: checkBundleExtracted},
 			{configKeySuffix: "check-ram"},
 			{cleanup: removeCRCMachinesDir},
 			{check: checkIfRunningAsNormalUser},
+			{cleanup: adminhelper.CleanHostsFile},
 			{check: checkVirtualizationEnabled},
 			{check: checkKvmEnabled},
 			{check: checkLibvirtInstalled},
@@ -234,11 +243,12 @@ var checkListForDistros = []checkListForDistro{
 		networkMode: network.VSockMode,
 		checks: []Check{
 			{check: checkPodmanExecutableCached},
-			{check: checkGoodhostsExecutableCached},
+			{check: checkAdminHelperExecutableCached},
 			{check: checkBundleExtracted},
 			{configKeySuffix: "check-ram"},
 			{cleanup: removeCRCMachinesDir},
 			{check: checkIfRunningAsNormalUser},
+			{cleanup: adminhelper.CleanHostsFile},
 			{check: checkVirtualizationEnabled},
 			{check: checkKvmEnabled},
 			{check: checkLibvirtInstalled},
