@@ -1,4 +1,4 @@
-package goodhosts
+package adminhelper
 
 import (
 	"strings"

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -68,8 +69,22 @@ func NewPodmanCache() *Cache {
 	return New(constants.PodmanExecutableName, constants.GetPodmanURL(), constants.CrcBinDir, "", nil)
 }
 
-func NewGoodhostsCache() *Cache {
-	return New(constants.GoodhostsExecutableName, constants.GetGoodhostsURL(), constants.CrcBinDir, "", nil)
+func NewAdminHelperCache() *Cache {
+	url := constants.GetAdminHelperURL()
+	version := path.Base(path.Dir(url))
+	return New(constants.AdminHelperExecutableName,
+		url,
+		constants.CrcBinDir,
+		version,
+		func(executable string) (string, error) {
+			out, _, err := crcos.RunWithDefaultLocale(executable, "--version")
+			if err != nil {
+				return "", err
+			}
+			split := strings.Split(out, " ")
+			return strings.TrimSpace(split[len(split)-1]), nil
+		},
+	)
 }
 
 func (c *Cache) IsCached() bool {
@@ -81,10 +96,7 @@ func (c *Cache) IsCached() bool {
 
 func (c *Cache) EnsureIsCached() error {
 	if !c.IsCached() || c.CheckVersion() != nil {
-		err := c.CacheExecutable()
-		if err != nil {
-			return err
-		}
+		return c.CacheExecutable()
 	}
 	return nil
 }

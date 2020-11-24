@@ -1,7 +1,7 @@
 package constants
 
 const (
-	OcExecutableName        = "oc"
-	PodmanExecutableName    = "podman"
-	GoodhostsExecutableName = "goodhosts"
+	OcExecutableName          = "oc"
+	PodmanExecutableName      = "podman"
+	AdminHelperExecutableName = "admin-helper"
 )

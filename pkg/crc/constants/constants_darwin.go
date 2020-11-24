@@ -3,10 +3,10 @@ package constants
 import "path/filepath"
 
 const (
-	OcExecutableName        = "oc"
-	PodmanExecutableName    = "podman"
-	TrayExecutableName      = "CodeReady Containers.app"
-	GoodhostsExecutableName = "goodhosts"
+	OcExecutableName          = "oc"
+	PodmanExecutableName      = "podman"
+	TrayExecutableName        = "CodeReady Containers.app"
+	AdminHelperExecutableName = "admin-helper"
 )
 
 var (
