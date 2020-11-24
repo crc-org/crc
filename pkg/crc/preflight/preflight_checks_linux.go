@@ -223,12 +223,19 @@ func checkLibvirtServiceRunning() error {
 	libvirtSystemdUnits := []string{"virtqemud.socket", "libvirtd.socket", "virtqemud.service", "libvirtd.service"}
 	for _, unit := range libvirtSystemdUnits {
 		status, err := sd.Status(unit)
-		if err == nil && status == states.Running {
-			logging.Debugf("%s is running", unit)
-			return nil
+		if err == nil {
+			switch status {
+			case states.Running:
+				logging.Debugf("%s is running", unit)
+				return nil
+			case states.Listening:
+				logging.Debugf("%s is listening", unit)
+				return nil
+			default:
+				logging.Debugf("%s is neither running nor listening", unit)
+			}
 		}
 
-		logging.Debugf("%s is not running", unit)
 	}
 
 	logging.Warnf("No active (running) libvirtd systemd unit could be found - make sure one of libvirt systemd units is enabled so that it's autostarted at boot time.")
