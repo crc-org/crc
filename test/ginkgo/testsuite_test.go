@@ -1,5 +1,5 @@
 // Before you run integration tests, you need to set
-// PULL_SECRET_LOCATION environment variable to point to your
+// PULL_SECRET_FILE environment variable to point to your
 // pull-secret file. In case you are running a non-release binary
 // (with standalone bundle), you also need to set BUNDLE_LOCATION
 // variable to point to the location of the bundle you are using.
@@ -35,7 +35,7 @@ type StatusAnswer struct {
 	OpenshiftVersion string `json:"openshiftVersion"`
 	DiskUsage        int    `json:"diskUsage"`
 	DiskSize         int    `json:"diskSize"`
-	CacheUsage       int    `json:"diskSize"`
+	CacheUsage       int    `json:"cacheUsage"`
 	CacheDir         string `json:"cacheDir"`
 }
 
@@ -63,7 +63,7 @@ var _ = BeforeSuite(func() {
 	// set userHome
 	usr, err := user.Current()
 	if err != nil {
-		os.Exit(1)
+		Expect(err).NotTo(HaveOccurred())
 	}
 	userHome = usr.HomeDir
 
@@ -82,7 +82,7 @@ var _ = BeforeSuite(func() {
 		if bundleLocation == "" {
 			logrus.Infof("Error: You need to set BUNDLE_LOCATION because your binary does not contain a bundle.")
 			logrus.Infof("%s", err)
-			os.Exit(1)
+			Expect(err).NotTo(HaveOccurred())
 		}
 		Expect(bundleLocation).To(BeAnExistingFile()) // not checking if it's an actual bundle
 	} else {
@@ -90,11 +90,11 @@ var _ = BeforeSuite(func() {
 	}
 
 	// pull-secret location
-	pullSecretLocation = os.Getenv("PULL_SECRET_LOCATION") // this env var should contain location of pull-secret file
+	pullSecretLocation = os.Getenv("PULL_SECRET_FILE") // this env var should contain location of pull-secret file
 	if err != nil {
-		logrus.Infof("Error: You need to set PULL_SECRET_LOCATION to find CRC useful.")
+		logrus.Infof("Error: You need to set PULL_SECRET_FILE to find CRC useful.")
 		logrus.Infof("%s", err)
-		os.Exit(1)
+		Expect(err).NotTo(HaveOccurred())
 	}
 	Expect(pullSecretLocation).To(BeAnExistingFile()) // not checking if it's a valid pull secret file
 

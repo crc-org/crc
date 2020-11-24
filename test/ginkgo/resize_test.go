@@ -1,22 +1,10 @@
 package test_test
 
 import (
-	//"bytes"
-	//"encoding/json"
-	//"fmt"
-	//"io"
-	//"os"
-	//"os/exec"
-	//"os/user"
-	//"path/filepath"
 	"runtime"
-	//"strings"
-	//"syscall"
-	//"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	//"github.com/sirupsen/logrus"
 )
 
 var _ = Describe("start flags", func() {

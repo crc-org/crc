@@ -2,14 +2,9 @@ package test_test
 
 import (
 	"bytes"
-	//"encoding/json"
 	"fmt"
 	"io"
-	//"os"
 	"os/exec"
-	//"os/user"
-	//"path/filepath"
-	//"runtime"
 	"strings"
 	"syscall"
 	"time"
