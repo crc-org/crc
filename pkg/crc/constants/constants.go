@@ -38,6 +38,9 @@ const (
 	VsockSSHPort = 2222
 
 	OkdPullSecret = `{"auths":{"fake":{"auth": "Zm9vOmJhcgo="}}}` // #nosec G101
+
+	ClusterDomain = ".crc.testing"
+	AppsDomain    = ".apps-crc.testing"
 )
 
 var podmanURLForOs = map[string]string{

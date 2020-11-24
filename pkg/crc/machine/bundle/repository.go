@@ -68,6 +68,12 @@ func (repo *Repository) Use(bundleName string) (*CrcBundleInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	if fmt.Sprintf(".%s", bundleInfo.ClusterInfo.AppsDomain) != constants.AppsDomain {
+		return nil, fmt.Errorf("unexpected bundle, it must have %s apps domain", constants.AppsDomain)
+	}
+	if bundleInfo.GetAPIHostname() != fmt.Sprintf("api%s", constants.ClusterDomain) {
+		return nil, fmt.Errorf("unexpected bundle, it must have %s base domain", constants.ClusterDomain)
+	}
 	if err := bundleInfo.createSymlinkOrCopyOpenShiftClient(repo.OcBinDir); err != nil {
 		return nil, err
 	}
