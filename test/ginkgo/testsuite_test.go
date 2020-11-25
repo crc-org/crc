@@ -1,7 +1,7 @@
 // Before you run integration tests, you need to set
-// PULL_SECRET_FILE environment variable to point to your
+// PULL_SECRET environment variable to point to your
 // pull-secret file. In case you are running a non-release binary
-// (with standalone bundle), you also need to set BUNDLE_LOCATION
+// (with standalone bundle), you also need to set BUNDLE
 // variable to point to the location of the bundle you are using.
 
 package test_test
@@ -75,9 +75,9 @@ var _ = BeforeSuite(func() {
 
 	// bundle location
 	if !versionInfo.Embedded {
-		bundleLocation = os.Getenv("BUNDLE_LOCATION") // this env var should contain location of bundle
+		bundleLocation = os.Getenv("BUNDLE") // this env var should contain location of bundle
 		if bundleLocation == "" {
-			logrus.Infof("Error: You need to set BUNDLE_LOCATION because your binary does not contain a bundle.")
+			logrus.Infof("Error: You need to set BUNDLE because your binary does not contain a bundle.")
 			logrus.Infof("%s", err)
 			Expect(err).NotTo(HaveOccurred())
 		}
@@ -87,9 +87,9 @@ var _ = BeforeSuite(func() {
 	}
 
 	// pull-secret location
-	pullSecretLocation = os.Getenv("PULL_SECRET_FILE") // this env var should contain location of pull-secret file
+	pullSecretLocation = os.Getenv("PULL_SECRET") // this env var should contain location of pull-secret file
 	if err != nil {
-		logrus.Infof("Error: You need to set PULL_SECRET_FILE to find CRC useful.")
+		logrus.Infof("Error: You need to set PULL_SECRET to find CRC useful.")
 		logrus.Infof("%s", err)
 		Expect(err).NotTo(HaveOccurred())
 	}
