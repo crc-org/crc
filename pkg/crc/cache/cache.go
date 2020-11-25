@@ -54,11 +54,14 @@ func (c *Cache) GetExecutableName() string {
  */
 func getVersionGeneric(executablePath string, args ...string) (string, error) { //nolint:deadcode,unused
 	stdOut, _, err := crcos.RunWithDefaultLocale(executablePath, args...)
+	if err != nil {
+		return "", err
+	}
 	parsedOutput := strings.Split(stdOut, ":")
 	if len(parsedOutput) < 2 {
 		return "", fmt.Errorf("Unable to parse the version information of %s", executablePath)
 	}
-	return strings.TrimSpace(parsedOutput[1]), err
+	return strings.TrimSpace(parsedOutput[1]), nil
 }
 
 func NewPodmanCache() *Cache {
