@@ -38,7 +38,7 @@ func ApproveCSRAndWaitForCertsRenewal(sshRunner *ssh.Runner, ocConfig oc.Config,
 			logging.Debugf("Error approving pending kube-apiserver-client-kubelet CSR: %v", err)
 			return err
 		}
-		if err := crcerrors.RetryAfter(5*time.Minute, waitForCertRenewal(sshRunner, kubeletClientCert), time.Second*5); err != nil {
+		if err := crcerrors.RetryAfter(5*time.Minute, waitForCertRenewal(sshRunner, KubeletClientCert), time.Second*5); err != nil {
 			logging.Debugf("Error approving pending kube-apiserver-client-kubelet CSR: %v", err)
 			return err
 		}
@@ -49,7 +49,7 @@ func ApproveCSRAndWaitForCertsRenewal(sshRunner *ssh.Runner, ocConfig oc.Config,
 	// This CSR is automatically approved by the cluster-machine-approver. The k8s controller manager issues the cert and kubelet fetches it.
 	if server {
 		logging.Info("Kubelet serving certificate has expired, waiting for automatic renewal... [will take up to 8 minutes]")
-		return crcerrors.RetryAfter(5*time.Minute, waitForCertRenewal(sshRunner, kubeletServerCert), time.Second*5)
+		return crcerrors.RetryAfter(5*time.Minute, waitForCertRenewal(sshRunner, KubeletServerCert), time.Second*5)
 	}
 	return nil
 }
