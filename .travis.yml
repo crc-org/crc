@@ -12,10 +12,5 @@ before_script:
   - sudo apt-get -qq -y install podman
 
 script:
-- make
-- make vendorcheck
-- make cross-lint
-- make cross
-- make test
-- make build_integration
+- make check
 - make BUNDLE_DIR=/tmp MOCK_BUNDLE=true release

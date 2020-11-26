@@ -74,6 +74,9 @@ vendor:
 vendorcheck:
 	./verify-vendor.sh
 
+.PHONY: check
+check: cross build_integration $(HOST_BUILD_DIR)/crc-embedder test cross-lint vendorcheck
+
 # Start of the actual build targets
 
 .PHONY: install
