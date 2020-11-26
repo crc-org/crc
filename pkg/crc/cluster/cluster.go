@@ -33,28 +33,24 @@ func WaitForSSH(sshRunner *ssh.Runner) error {
 }
 
 const (
-	kubeletServerCert = "/var/lib/kubelet/pki/kubelet-server-current.pem"
-	kubeletClientCert = "/var/lib/kubelet/pki/kubelet-client-current.pem"
+	KubeletServerCert = "/var/lib/kubelet/pki/kubelet-server-current.pem"
+	KubeletClientCert = "/var/lib/kubelet/pki/kubelet-client-current.pem"
 
 	kubeletClientSignerName = "kubernetes.io/kube-apiserver-client-kubelet"
 
-	aggregatorClientCert = "/etc/kubernetes/static-pod-resources/kube-apiserver-certs/configmaps/aggregator-client-ca/ca-bundle.crt"
+	AggregatorClientCert = "/etc/kubernetes/static-pod-resources/kube-apiserver-certs/configmaps/aggregator-client-ca/ca-bundle.crt"
 )
 
-func CheckCertsValidity(sshRunner *ssh.Runner) (bool, bool, bool, error) {
-	client, err := checkCertValidity(sshRunner, kubeletClientCert)
-	if err != nil {
-		return false, false, false, err
+func CheckCertsValidity(sshRunner *ssh.Runner) (map[string]bool, error) {
+	statuses := make(map[string]bool)
+	for _, cert := range []string{KubeletClientCert, KubeletServerCert, AggregatorClientCert} {
+		expired, err := checkCertValidity(sshRunner, cert)
+		if err != nil {
+			return nil, err
+		}
+		statuses[cert] = expired
 	}
-	server, err := checkCertValidity(sshRunner, kubeletServerCert)
-	if err != nil {
-		return false, false, false, err
-	}
-	aggregatorClient, err := checkCertValidity(sshRunner, aggregatorClientCert)
-	if err != nil {
-		return false, false, false, err
-	}
-	return client, server, aggregatorClient, nil
+	return statuses, nil
 }
 
 func checkCertValidity(sshRunner *ssh.Runner, cert string) (bool, error) {
@@ -299,7 +295,7 @@ func EnsurePullSecretPresentOnInstanceDisk(sshRunner *ssh.Runner, pullSecret *Pu
 
 func WaitForRequestHeaderClientCaFile(sshRunner *ssh.Runner) error {
 	lookupRequestHeaderClientCa := func() error {
-		expired, err := checkCertValidity(sshRunner, aggregatorClientCert)
+		expired, err := checkCertValidity(sshRunner, AggregatorClientCert)
 		if err != nil {
 			return fmt.Errorf("Failed to the expiry date: %v", err)
 		}
