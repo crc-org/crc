@@ -1,11 +1,17 @@
 package test_test
 
-//. "github.com/onsi/ginkgo"
-//. "github.com/onsi/gomega"
+import (
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"runtime"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
 
 var statusInfo StatusAnswer
 
-/*
 var _ = Describe("basic commands", func() {
 
 	Describe("version", func() {
@@ -140,7 +146,7 @@ var _ = Describe("basic commands", func() {
 			It("should do these steps on Windows", func() {
 				Expect(stderr).To(ContainSubstring("Checking if oc binary is cached"))
 				Expect(stderr).To(ContainSubstring("Checking if podman remote binary is cached"))
-				//Expect(stderr).To(ContainSubstring("Checking if CRC bundle is cached")) would probably fail under different start conditions
+				// Expect(stderr).To(ContainSubstring("Checking if CRC bundle is cached")) would probably fail under different start conditions
 				Expect(stderr).To(ContainSubstring("Checking minimum RAM requirements"))
 				Expect(stderr).To(ContainSubstring("Checking if running as normal user"))
 				Expect(stderr).To(ContainSubstring("Checking Windows 10 release"))
@@ -202,14 +208,14 @@ var _ = Describe("basic commands", func() {
 					Expect(stderr).To(ContainSubstring("Checking if libvirt daemon is running"))
 					Expect(stderr).To(ContainSubstring("Checking if a supported libvirt version is installed"))
 					Expect(stderr).To(ContainSubstring("Checking if crc-driver-libvirt is installed"))
-					//Expect(stderr).To(ContainSubstring("Checking for obsolete crc-driver-libvirt"))
+					// Expect(stderr).To(ContainSubstring("Checking for obsolete crc-driver-libvirt"))
 					Expect(stderr).To(ContainSubstring("Checking if libvirt 'crc' network is available"))
 					Expect(stderr).To(ContainSubstring("Checking if libvirt 'crc' network is active"))
 					Expect(stderr).To(ContainSubstring("Checking if NetworkManager is installed"))
 					Expect(stderr).To(ContainSubstring("Checking if NetworkManager service is running"))
 					Expect(stderr).To(ContainSubstring("Checking if /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf exists"))
 					Expect(stderr).To(ContainSubstring("Checking if /etc/NetworkManager/dnsmasq.d/crc.conf exists"))
-					//Expect(stderr).To(ContainSubstring("Loading bundle")) // this will fail if bundle not extracted yet
+					// Expect(stderr).To(ContainSubstring("Loading bundle")) // this will fail if bundle not extracted yet
 					Expect(stderr).To(ContainSubstring("Checking size of the disk image"))
 					Expect(stderr).To(ContainSubstring("Creating CodeReady Containers VM for OpenShift"))
 					Expect(stderr).To(ContainSubstring("CodeReady Containers VM is running"))
@@ -262,7 +268,7 @@ var _ = Describe("basic commands", func() {
 				It("should do these steps on Windows", func() {
 					Expect(stderr).To(ContainSubstring("Checking if oc binary is cached"))
 					Expect(stderr).To(ContainSubstring("Checking if podman remote binary is cached"))
-					//Expect(stderr).To(ContainSubstring("Checking if CRC bundle is cached")) // would probably fail under different start conditions
+					// Expect(stderr).To(ContainSubstring("Checking if CRC bundle is cached")) // would probably fail under different start conditions
 					Expect(stderr).To(ContainSubstring("Checking minimum RAM requirements"))
 					Expect(stderr).To(ContainSubstring("Checking if running as normal user"))
 					Expect(stderr).To(ContainSubstring("Checking Windows 10 release"))
@@ -331,4 +337,3 @@ var _ = Describe("basic commands", func() {
 		})
 	})
 })
-*/

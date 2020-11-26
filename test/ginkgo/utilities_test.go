@@ -106,7 +106,7 @@ func Exec(cmd *exec.Cmd, timeout <-chan time.Time) (string, string, error) {
 			}
 		}
 	case <-timeout:
-		cmd.Process.Kill()
+		_ = cmd.Process.Kill()
 		return "", "", fmt.Errorf("timed out waiting for command %v:\nCommand stdout:\n%v\nstderr:\n%v", cmd, cmd.Stdout, cmd.Stderr)
 	}
 	logrus.Infof("stderr: %q", stderr.String())
@@ -138,6 +138,7 @@ func RunCRCExpectFail(args ...string) (string, error) {
 	return stderr, nil
 }
 
+/*
 // RunOCExpectSuccess is a convenience wrapper over CRCBuilder
 func RunOCExpectSuccess(args ...string) string {
 	stdout, _, err := Exec(exec.Command("oc", args...), nil)
@@ -157,6 +158,7 @@ func RunOCExpectFail(args ...string) (string, error) {
 
 	return stderr, nil
 }
+*/
 
 // Run command in the shell on the host (assuming linux bash)
 func RunOnHost(cmd string, args ...string) (string, error) {
@@ -183,9 +185,7 @@ func SendCommandToVM(cmd string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	ssh, err := ssh.NewClient(constants.DefaultSSHUser, ip, 22, &ssh.Auth{
-		Keys: []string{constants.GetPrivateKeyPath()},
-	})
+	ssh, err := ssh.NewClient(constants.DefaultSSHUser, ip, 22, constants.GetPrivateKeyPath())
 	if err != nil {
 		return "", err
 	}

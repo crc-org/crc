@@ -52,7 +52,7 @@ func TestTest(t *testing.T) {
 	junitfile := fmt.Sprintf("junit_%s.xml", time.Now().Format("2006-01-02 3:4:5"))
 	junitReporter := reporters.NewJUnitReporter(filepath.Join("results", junitfile))
 	RunSpecsWithDefaultAndCustomReporters(t, "Test Suite", []Reporter{junitReporter})
-	//RunSpecs(t, "Test Suite")
+	// RunSpecs(t, "Test Suite")
 }
 
 var _ = BeforeSuite(func() {

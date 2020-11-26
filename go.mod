@@ -62,7 +62,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	howett.net/plist v0.0.0-20201203080718-1454fab16a06
 	k8s.io/api v0.19.0
-	k8s.io/client-go v8.0.0+incompatible
+	k8s.io/client-go v0.19.0
 )
 
 replace (

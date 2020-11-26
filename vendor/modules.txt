@@ -486,7 +486,7 @@ k8s.io/apimachinery/pkg/version
 k8s.io/apimachinery/pkg/watch
 k8s.io/apimachinery/third_party/forked/golang/netutil
 k8s.io/apimachinery/third_party/forked/golang/reflect
-# k8s.io/client-go v8.0.0+incompatible => github.com/openshift/kubernetes-client-go v0.0.0-20200908071752-9409de4c95e0
+# k8s.io/client-go v0.19.0 => github.com/openshift/kubernetes-client-go v0.0.0-20200908071752-9409de4c95e0
 ## explicit
 k8s.io/client-go/pkg/apis/clientauthentication
 k8s.io/client-go/pkg/apis/clientauthentication/v1alpha1
