@@ -13,7 +13,14 @@ func TestCountConfigurationOptions(t *testing.T) {
 	cfg := config.New(config.NewEmptyInMemoryStorage())
 	RegisterSettings(cfg)
 	options := len(cfg.AllConfigs())
-	assert.True(t, options == 38 || options == 30)
+
+	var preflightChecksCount int
+	for _, check := range getAllPreflightChecks() {
+		if check.configKeySuffix != "" {
+			preflightChecksCount += 2
+		}
+	}
+	assert.True(t, options == preflightChecksCount, "Unexpected number of preflight configuration flags, got %d, expected %d", options, preflightChecksCount)
 }
 
 var (
