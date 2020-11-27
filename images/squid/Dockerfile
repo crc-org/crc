@@ -1,4 +1,4 @@
-FROM centos:centos8
+FROM registry.centos.org/centos/centos:centos8
 MAINTAINER CodeReady Container <devtools-cdk@redhat.com>
 
 ENV SQUID_CACHE_DIR=/var/spool/squid \
