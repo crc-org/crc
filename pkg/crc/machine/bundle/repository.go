@@ -12,16 +12,12 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/extract"
 	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/pkg/errors"
 )
 
 func getCachedBundlePath(cacheDir, bundleName string) string {
 	path := strings.TrimSuffix(bundleName, ".crcbundle")
 	return filepath.Join(cacheDir, path)
-}
-
-func (bundle *CrcBundleInfo) isCached() bool {
-	_, err := os.Stat(bundle.cachedPath)
-	return err == nil
 }
 
 func (bundle *CrcBundleInfo) readBundleInfo() error {
@@ -45,13 +41,13 @@ type Repository struct {
 }
 
 func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
-	var bundleInfo CrcBundleInfo
-	bundleInfo.cachedPath = getCachedBundlePath(repo.CacheDir, bundleName)
-	if !bundleInfo.isCached() {
-		return nil, fmt.Errorf("could not find cached bundle info in %s", bundleInfo.cachedPath)
+	path := getCachedBundlePath(repo.CacheDir, bundleName)
+	if _, err := os.Stat(path); err != nil {
+		return nil, errors.Wrapf(err, "could not find cached bundle info in %s", path)
 	}
-	err := bundleInfo.readBundleInfo()
-	if err != nil {
+	var bundleInfo CrcBundleInfo
+	bundleInfo.cachedPath = path
+	if err := bundleInfo.readBundleInfo(); err != nil {
 		return nil, err
 	}
 	return &bundleInfo, nil
