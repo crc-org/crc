@@ -37,3 +37,24 @@ func TestUse(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "openshift-client", string(bin))
 }
+
+func TestExtract(t *testing.T) {
+	dir, err := ioutil.TempDir("", "repo")
+	assert.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	ocBinDir, err := ioutil.TempDir("", "oc-bin-dir")
+	assert.NoError(t, err)
+	defer os.RemoveAll(ocBinDir)
+
+	repo := &Repository{
+		CacheDir: dir,
+		OcBinDir: ocBinDir,
+	}
+
+	assert.NoError(t, repo.Extract(filepath.Join("testdata", "crc_libvirt_4.6.1.crcbundle")))
+
+	bundle, err := repo.Get("crc_libvirt_4.6.1.crcbundle")
+	assert.NoError(t, err)
+	assert.Equal(t, "4.6.1", bundle.ClusterInfo.OpenShiftVersion)
+}
