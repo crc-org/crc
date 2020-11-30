@@ -68,14 +68,6 @@ func (repo *Repository) Use(bundleName string) (*CrcBundleInfo, error) {
 	return bundleInfo, nil
 }
 
-func GetCachedBundleInfo(bundleName string) (*CrcBundleInfo, error) {
-	repo := &Repository{
-		CacheDir: constants.MachineCacheDir,
-		OcBinDir: constants.CrcOcBinDir,
-	}
-	return repo.Use(bundleName)
-}
-
 func (bundle *CrcBundleInfo) createSymlinkOrCopyOpenShiftClient(ocBinDir string) error {
 	ocInBundle := filepath.Join(bundle.cachedPath, constants.OcExecutableName)
 	ocInBinDir := filepath.Join(ocBinDir, constants.OcExecutableName)
@@ -89,11 +81,23 @@ func (bundle *CrcBundleInfo) createSymlinkOrCopyOpenShiftClient(ocBinDir string)
 	return os.Symlink(ocInBundle, ocInBinDir)
 }
 
-func Extract(sourcepath string) (*CrcBundleInfo, error) {
-	_, err := extract.Uncompress(sourcepath, constants.MachineCacheDir, true)
-	if err != nil {
+func (repo *Repository) Extract(path string) error {
+	_, err := extract.Uncompress(path, repo.CacheDir, true)
+	return err
+}
+
+var defaultRepo = &Repository{
+	CacheDir: constants.MachineCacheDir,
+	OcBinDir: constants.CrcOcBinDir,
+}
+
+func GetCachedBundleInfo(bundleName string) (*CrcBundleInfo, error) {
+	return defaultRepo.Use(bundleName)
+}
+
+func Extract(path string) (*CrcBundleInfo, error) {
+	if err := defaultRepo.Extract(path); err != nil {
 		return nil, err
 	}
-
-	return GetCachedBundleInfo(filepath.Base(sourcepath))
+	return defaultRepo.Use(filepath.Base(path))
 }
