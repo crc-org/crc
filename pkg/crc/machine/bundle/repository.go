@@ -2,7 +2,6 @@ package bundle
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -15,25 +14,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-func getCachedBundlePath(cacheDir, bundleName string) string {
-	path := strings.TrimSuffix(bundleName, ".crcbundle")
-	return filepath.Join(cacheDir, path)
-}
-
-func (bundle *CrcBundleInfo) readBundleInfo() error {
-	bundleInfoPath := bundle.resolvePath("crc-bundle-info.json")
-	f, err := ioutil.ReadFile(filepath.Clean(bundleInfoPath))
-	if err != nil {
-		return fmt.Errorf("Error reading %s file : %+v", bundleInfoPath, err)
-	}
-
-	err = json.Unmarshal(f, bundle)
-	if err != nil {
-		return fmt.Errorf("Error Unmarshal the data: %+v", err)
-	}
-
-	return nil
-}
+const (
+	bundleExtension  = ".crcbundle"
+	metadataFilename = "crc-bundle-info.json"
+)
 
 type Repository struct {
 	CacheDir string
@@ -41,15 +25,20 @@ type Repository struct {
 }
 
 func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
-	path := getCachedBundlePath(repo.CacheDir, bundleName)
+	path := filepath.Join(repo.CacheDir, strings.TrimSuffix(bundleName, bundleExtension))
 	if _, err := os.Stat(path); err != nil {
 		return nil, errors.Wrapf(err, "could not find cached bundle info in %s", path)
 	}
-	var bundleInfo CrcBundleInfo
-	bundleInfo.cachedPath = path
-	if err := bundleInfo.readBundleInfo(); err != nil {
-		return nil, err
+	jsonFilepath := filepath.Join(path, metadataFilename)
+	content, err := ioutil.ReadFile(jsonFilepath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error reading %s file", jsonFilepath)
 	}
+	var bundleInfo CrcBundleInfo
+	if err := json.Unmarshal(content, &bundleInfo); err != nil {
+		return nil, errors.Wrap(err, "error Unmarshal the data")
+	}
+	bundleInfo.cachedPath = path
 	return &bundleInfo, nil
 }
 

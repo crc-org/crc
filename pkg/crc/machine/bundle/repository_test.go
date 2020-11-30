@@ -21,7 +21,7 @@ func TestUse(t *testing.T) {
 	defer os.RemoveAll(ocBinDir)
 
 	assert.NoError(t, os.Mkdir(filepath.Join(dir, "crc_libvirt_4.6.1"), 0755))
-	assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, "crc_libvirt_4.6.1", "crc-bundle-info.json"), []byte(reference), 0600))
+	assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, "crc_libvirt_4.6.1", metadataFilename), []byte(reference), 0600))
 	assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, "crc_libvirt_4.6.1", constants.OcExecutableName), []byte("openshift-client"), 0600))
 
 	repo := &Repository{
