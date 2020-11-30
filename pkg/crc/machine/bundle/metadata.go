@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/code-ready/crc/pkg/crc/constants"
 )
 
 // Metadata structure to unmarshal the crc-bundle-info.json file
@@ -116,19 +118,44 @@ func (bundle *CrcBundleInfo) GetOpenshiftVersion() string {
 	return bundle.ClusterInfo.OpenShiftVersion
 }
 
-func (bundle *CrcBundleInfo) CheckDiskImageSize() error {
+func (bundle *CrcBundleInfo) Verify() error {
+	files := []string{
+		bundle.resolvePath(constants.OcExecutableName),
+		bundle.resolvePath(bundle.ClusterInfo.KubeadminPasswordFile),
+		bundle.GetKubeConfigPath(),
+		bundle.GetSSHKeyPath(),
+		bundle.GetDiskImagePath(),
+		bundle.GetKernelPath(),
+		bundle.GetInitramfsPath(),
+	}
+
+	for _, file := range files {
+		if file == "" {
+			continue
+		}
+		if _, err := os.Stat(file); err != nil {
+			if os.IsNotExist(err) {
+				return fmt.Errorf("%s not found in bundle", filepath.Base(file))
+			}
+			return err
+		}
+	}
+	return bundle.checkDiskImageSize()
+}
+
+func (bundle *CrcBundleInfo) checkDiskImageSize() error {
 	diskImagePath := bundle.GetDiskImagePath()
 	expectedSize, err := strconv.ParseInt(bundle.Storage.DiskImages[0].Size, 10, 64)
 	if err != nil {
 		return err
 	}
-	f, err := os.Stat(diskImagePath)
+	stat, err := os.Stat(diskImagePath)
 	if err != nil {
 		return err
 	}
-	gotSize := f.Size()
+	gotSize := stat.Size()
 	if expectedSize != gotSize {
-		return fmt.Errorf("Expected size %d Got %d", expectedSize, gotSize)
+		return fmt.Errorf("unexpected disk image size: got %d instead of %d", gotSize, expectedSize)
 	}
 	return nil
 }
