@@ -14,9 +14,9 @@ import (
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
-func getCachedBundlePath(bundleName string) string {
+func getCachedBundlePath(cacheDir, bundleName string) string {
 	path := strings.TrimSuffix(bundleName, ".crcbundle")
-	return filepath.Join(constants.MachineCacheDir, path)
+	return filepath.Join(cacheDir, path)
 }
 
 func (bundle *CrcBundleInfo) isCached() bool {
@@ -39,26 +39,47 @@ func (bundle *CrcBundleInfo) readBundleInfo() error {
 	return nil
 }
 
-func GetCachedBundleInfo(bundleName string) (*CrcBundleInfo, error) {
+type Repository struct {
+	CacheDir string
+	OcBinDir string
+}
+
+func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
 	var bundleInfo CrcBundleInfo
-	bundleInfo.cachedPath = getCachedBundlePath(bundleName)
+	bundleInfo.cachedPath = getCachedBundlePath(repo.CacheDir, bundleName)
 	if !bundleInfo.isCached() {
-		return nil, fmt.Errorf("Could not find cached bundle info")
+		return nil, fmt.Errorf("could not find cached bundle info in %s", bundleInfo.cachedPath)
 	}
 	err := bundleInfo.readBundleInfo()
 	if err != nil {
 		return nil, err
 	}
-	if err := bundleInfo.createSymlinkOrCopyOpenShiftClient(); err != nil {
-		return nil, err
-	}
 	return &bundleInfo, nil
 }
 
-func (bundle *CrcBundleInfo) createSymlinkOrCopyOpenShiftClient() error {
+func (repo *Repository) Use(bundleName string) (*CrcBundleInfo, error) {
+	bundleInfo, err := repo.Get(bundleName)
+	if err != nil {
+		return nil, err
+	}
+	if err := bundleInfo.createSymlinkOrCopyOpenShiftClient(repo.OcBinDir); err != nil {
+		return nil, err
+	}
+	return bundleInfo, nil
+}
+
+func GetCachedBundleInfo(bundleName string) (*CrcBundleInfo, error) {
+	repo := &Repository{
+		CacheDir: constants.MachineCacheDir,
+		OcBinDir: constants.CrcOcBinDir,
+	}
+	return repo.Use(bundleName)
+}
+
+func (bundle *CrcBundleInfo) createSymlinkOrCopyOpenShiftClient(ocBinDir string) error {
 	ocInBundle := filepath.Join(bundle.cachedPath, constants.OcExecutableName)
-	ocInBinDir := filepath.Join(constants.CrcOcBinDir, constants.OcExecutableName)
-	if err := os.MkdirAll(constants.CrcOcBinDir, 0750); err != nil {
+	ocInBinDir := filepath.Join(ocBinDir, constants.OcExecutableName)
+	if err := os.MkdirAll(ocBinDir, 0750); err != nil {
 		return err
 	}
 	_ = os.Remove(ocInBinDir)
