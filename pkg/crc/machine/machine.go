@@ -180,9 +180,9 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 			return nil, errors.Wrap(err, "Error getting bundle metadata")
 		}
 
-		logging.Infof("Checking size of the disk image %s ...", crcBundleMetadata.GetDiskImagePath())
-		if err := crcBundleMetadata.CheckDiskImageSize(); err != nil {
-			return nil, errors.Wrapf(err, "Invalid bundle disk image '%s'", crcBundleMetadata.GetDiskImagePath())
+		logging.Infof("Verifying bundle %s ...", filepath.Base(startConfig.BundlePath))
+		if err := crcBundleMetadata.Verify(); err != nil {
+			return nil, errors.Wrapf(err, "Invalid bundle %s", filepath.Base(startConfig.BundlePath))
 		}
 
 		logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())

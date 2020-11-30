@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -52,9 +53,27 @@ func TestExtract(t *testing.T) {
 		OcBinDir: ocBinDir,
 	}
 
-	assert.NoError(t, repo.Extract(filepath.Join("testdata", "crc_libvirt_4.6.1.crcbundle")))
+	assert.NoError(t, repo.Extract(filepath.Join("testdata", testBundle(t))))
 
-	bundle, err := repo.Get("crc_libvirt_4.6.1.crcbundle")
+	bundle, err := repo.Get(testBundle(t))
 	assert.NoError(t, err)
 	assert.Equal(t, "4.6.1", bundle.ClusterInfo.OpenShiftVersion)
+
+	assert.NoError(t, bundle.Verify())
+	_ = os.Remove(bundle.GetKubeConfigPath())
+	assert.EqualError(t, bundle.Verify(), "kubeconfig not found in bundle")
+}
+
+func testBundle(t *testing.T) string {
+	switch runtime.GOOS {
+	case "darwin":
+		return "crc_hyperkit_4.6.1.crcbundle"
+	case "windows":
+		return "crc_hyperv_4.6.1.crcbundle"
+	case "linux":
+		return "crc_libvirt_4.6.1.crcbundle"
+	default:
+		t.Fatal("unexpected GOOS")
+		return ""
+	}
 }
