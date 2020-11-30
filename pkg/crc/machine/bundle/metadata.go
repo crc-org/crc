@@ -103,13 +103,6 @@ func (bundle *CrcBundleInfo) GetInitramfsPath() string {
 	return bundle.resolvePath(bundle.Nodes[0].Initramfs)
 }
 
-func (bundle *CrcBundleInfo) GetInternalIP() string {
-	if bundle.Nodes[0].InternalIP == "" {
-		return ""
-	}
-	return bundle.resolvePath(bundle.Nodes[0].InternalIP)
-}
-
 func (bundle *CrcBundleInfo) GetKubeadminPassword() (string, error) {
 	rawData, err := ioutil.ReadFile(bundle.resolvePath(bundle.ClusterInfo.KubeadminPasswordFile))
 	return string(rawData), err
