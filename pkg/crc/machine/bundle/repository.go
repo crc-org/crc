@@ -49,13 +49,13 @@ func GetCachedBundleInfo(bundleName string) (*CrcBundleInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := bundleInfo.installSymlinkOrCopy(); err != nil {
+	if err := bundleInfo.createSymlinkOrCopyOpenShiftClient(); err != nil {
 		return nil, err
 	}
 	return &bundleInfo, nil
 }
 
-func (bundle *CrcBundleInfo) installSymlinkOrCopy() error {
+func (bundle *CrcBundleInfo) createSymlinkOrCopyOpenShiftClient() error {
 	ocInBundle := filepath.Join(bundle.cachedPath, constants.OcExecutableName)
 	ocInBinDir := filepath.Join(constants.CrcOcBinDir, constants.OcExecutableName)
 	if err := os.MkdirAll(constants.CrcOcBinDir, 0750); err != nil {
