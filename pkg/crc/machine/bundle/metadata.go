@@ -116,17 +116,9 @@ func (bundle *CrcBundleInfo) GetOpenshiftVersion() string {
 	return bundle.ClusterInfo.OpenShiftVersion
 }
 
-func (bundle *CrcBundleInfo) GetDiskSize() (int64, error) {
-	size, err := strconv.ParseInt(bundle.Storage.DiskImages[0].Size, 10, 64)
-	if err != nil {
-		return 0, err
-	}
-	return size, nil
-}
-
 func (bundle *CrcBundleInfo) CheckDiskImageSize() error {
 	diskImagePath := bundle.GetDiskImagePath()
-	expectedSize, err := bundle.GetDiskSize()
+	expectedSize, err := strconv.ParseInt(bundle.Storage.DiskImages[0].Size, 10, 64)
 	if err != nil {
 		return err
 	}
