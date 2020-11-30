@@ -63,4 +63,4 @@ $ sudo systemctl reload NetworkManager
 $ oc login -u developer -p developer https://api.crc.testing:6443
 ----
 +
-The remote OpenShift Web Console is available at https://console-openshift-console.apps-crc.testing.
+The remote OpenShift Web Console is available at \https://console-openshift-console.apps-crc.testing.
