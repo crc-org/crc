@@ -8,7 +8,7 @@ import (
 	clicumber "github.com/code-ready/clicumber/testsuite"
 )
 
-// Delete CRC instance
+// DeleteCRC deletes CRC instance
 func DeleteCRC() error {
 
 	command := "crc delete"
@@ -18,7 +18,7 @@ func DeleteCRC() error {
 	return nil
 }
 
-// Remove CRC home folder ~/.crc
+// RemoveCRCHome removes CRC home folder ~/.crc
 func RemoveCRCHome() error {
 
 	keepFile := filepath.Join(CRCHome, ".keep")

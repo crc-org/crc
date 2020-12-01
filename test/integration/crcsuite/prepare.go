@@ -13,7 +13,7 @@ import (
 	"github.com/code-ready/crc/pkg/download"
 )
 
-// Download bundle for testing
+// DownloadBundle retrieves the bundle for testing
 func DownloadBundle(bundleLocation string, bundleDestination string) (string, error) {
 
 	if bundleLocation[:4] != "http" {
@@ -57,6 +57,7 @@ func DownloadBundle(bundleLocation string, bundleDestination string) (string, er
 	return filename, nil
 }
 
+// CopyFilesToTestDir moves files required by tests to test folder
 func CopyFilesToTestDir() error {
 
 	cwd, err := os.Getwd()
@@ -118,6 +119,7 @@ func CopyFilesToTestDir() error {
 	return nil
 }
 
+// ParseFlags accepts command line arguments to godog
 func ParseFlags() {
 
 	flag.StringVar(&bundleURL, "bundle-location", "embedded", "Path to the bundle to be used in tests")

@@ -1,8 +1,9 @@
 @story_health
-Feature: 
+Feature:
     End-to-end health check. Set-up and start CRC. Then create a
     project and deploy an app. Check on the app and delete the
-    project. Stop and delete CRC.
+    project. User also enables the monitoring operator. Then stops
+    and deletes CRC.
 
     @linux @darwin
     Scenario: Start CRC
@@ -24,12 +25,12 @@ Feature:
         When with up to "4" retries with wait period of "2m" command "crc status --log-level debug" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
         Then login to the oc cluster succeeds
 
-    @linux @darwin @windows    
+    @linux @darwin @windows
     Scenario: Check cluster health
         Given executing "crc status" succeeds
         And stdout should match ".*Running \(v\d+\.\d+\.\d+.*\).*"
         When executing "oc get nodes"
-        Then stdout contains "Ready" 
+        Then stdout contains "Ready"
         And stdout does not contain "Not ready"
         # next line checks similar things as `crc status` except gives more informative output
         And with up to "5" retries with wait period of "1m" all cluster operators are running
@@ -62,11 +63,17 @@ Feature:
         When starting CRC with default bundle succeeds
         Then with up to "4" retries with wait period of "2m" command "crc status" output should match ".*Running \(v\d+\.\d+\.\d+.*\).*"
         And with up to "2" retries with wait period of "60s" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
+        And execurint "oc delete project testproj" succeeds
 
+    # Enable monitoring operator
+    @darwin @linux @windows
+    Scenario: Enable cluster-monitoring-operator
+        Given with up to "4" retries with wait period of "2m" command "crc status --log-level debug" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
+        When starting cluster-monitoring-operator succeeds
+        Then with up to "20" retries with wait period of "30s" command "oc get pods -n openshift-monitoring" output should match "cluster-monitoring-operator.*Running.*"
 
     @darwin @linux @windows
     Scenario: Switch off CRC
-        When executing "oc delete project testproj" succeeds
         Then executing "crc stop -f" succeeds
         And executing "crc delete -f" succeeds
         And executing "crc cleanup" succeeds

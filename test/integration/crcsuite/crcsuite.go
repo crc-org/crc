@@ -9,6 +9,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,7 +22,9 @@ import (
 )
 
 var (
-	CRCHome        string
+	// CRCHome is a path to ~/.crc
+	CRCHome string
+	// CRCExecutable is a path to the crc binary to be tested
 	CRCExecutable  string
 	bundleEmbedded bool
 	bundleName     string
@@ -66,6 +69,9 @@ func FeatureContext(s *godog.Suite) {
 		ConfigFileInCRCHomeContainsKey)
 	s.Step(`removing file "(.*)" from CRC home folder succeeds$`,
 		DeleteFileFromCRCHome)
+
+	s.Step(`starting cluster-monitoring-operator succeeds`,
+		StartingMonitoringOperatorSucceeds)
 
 	s.BeforeSuite(func() {
 		usr, _ := user.Current()
@@ -170,6 +176,8 @@ func FeatureContext(s *godog.Suite) {
 	})
 }
 
+// CheckClusterOperatorsWithRetry checks if all cluster operators that need
+// to run are running
 func CheckClusterOperatorsWithRetry(retryCount int, retryWait string) error {
 
 	retryDuration, err := time.ParseDuration(retryWait)
@@ -192,6 +200,7 @@ func CheckClusterOperatorsWithRetry(retryCount int, retryWait string) error {
 	return fmt.Errorf("Some cluster operators are still not running")
 }
 
+// CheckHTTPResponseWithRetry does what it says
 func CheckHTTPResponseWithRetry(retryCount int, retryWait string, address string, expectedStatusCode int) error {
 
 	retryDuration, err := time.ParseDuration(retryWait)
@@ -220,6 +229,7 @@ func CheckHTTPResponseWithRetry(retryCount int, retryWait string, address string
 	return fmt.Errorf("Got %d as Status Code instead of expected %d", resp.StatusCode, expectedStatusCode)
 }
 
+// CheckOutputMatchWithRetry checks if stdout matches the regex pattern
 func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string, expected string, expectedOutput string) error {
 
 	retryDuration, err := time.ParseDuration(retryTime)
@@ -247,6 +257,7 @@ func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string,
 	return matchErr
 }
 
+// DeleteFileFromCRCHome deletes filename from CRCHome
 func DeleteFileFromCRCHome(fileName string) error {
 
 	theFile := filepath.Join(CRCHome, fileName)
@@ -261,6 +272,7 @@ func DeleteFileFromCRCHome(fileName string) error {
 	return nil
 }
 
+// FileExistsInCRCHome verifies that filename exists in CRCHome
 func FileExistsInCRCHome(fileName string) error {
 
 	theFile := filepath.Join(CRCHome, fileName)
@@ -273,6 +285,7 @@ func FileExistsInCRCHome(fileName string) error {
 	return err
 }
 
+// ConfigFileInCRCHomeContainsKeyMatchingValue does what it says
 func ConfigFileInCRCHomeContainsKeyMatchingValue(format string, configFile string, condition string, keyPath string, expectedValue string) error {
 
 	if expectedValue == "current bundle" {
@@ -302,6 +315,7 @@ func ConfigFileInCRCHomeContainsKeyMatchingValue(format string, configFile strin
 	return nil
 }
 
+// ConfigFileInCRCHomeContainsKey checks for key's presence; no care about value
 func ConfigFileInCRCHomeContainsKey(format string, configFile string, condition string, keyPath string) error {
 
 	configPath := filepath.Join(CRCHome, configFile)
@@ -325,6 +339,7 @@ func ConfigFileInCRCHomeContainsKey(format string, configFile string, condition 
 	return nil
 }
 
+// LoginToOcClusterSucceedsOrFails checks if oc login does the expected
 func LoginToOcClusterSucceedsOrFails(expected string) error {
 
 	bundle := strings.Split(bundleName, ".crcbundle")[0]
@@ -342,6 +357,7 @@ func LoginToOcClusterSucceedsOrFails(expected string) error {
 	return err
 }
 
+// StartCRCWithDefaultBundleSucceedsOrFails does what it says
 func StartCRCWithDefaultBundleSucceedsOrFails(expected string) error {
 
 	var cmd string
@@ -356,6 +372,7 @@ func StartCRCWithDefaultBundleSucceedsOrFails(expected string) error {
 	return err
 }
 
+// StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails says it all
 func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(expected string) error {
 
 	var cmd string
@@ -370,6 +387,7 @@ func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(
 	return err
 }
 
+// StartCRCWithDefaultBundleAndNameServerSucceedsOrFails start CRC with specified nameserver
 func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, expected string) error {
 
 	var extraBundleArgs string
@@ -381,6 +399,7 @@ func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, ex
 	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
 
+// StdoutContainsIfBundleEmbeddedOrNot checks stdout for signs of bundle
 func StdoutContainsIfBundleEmbeddedOrNot(value string, expected string) error {
 	if expected == "is" { // expect embedded
 		if bundleEmbedded { // really embedded
@@ -395,6 +414,7 @@ func StdoutContainsIfBundleEmbeddedOrNot(value string, expected string) error {
 	return clicumber.CommandReturnShouldNotContain("stdout", value)
 }
 
+// SetConfigPropertyToValueSucceedsOrFails does what it says
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
 
 	if value == "current bundle" {
@@ -412,10 +432,83 @@ func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expe
 	return err
 }
 
+// UnsetConfigPropertySucceedsOrFails does what it says
 func UnsetConfigPropertySucceedsOrFails(property string, expected string) error {
 
 	cmd := "crc config unset " + property
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
+}
+
+// StartingMonitoringOperatorSucceeds does all steps needed to
+// enable cluster-monitoring-operator
+func StartingMonitoringOperatorSucceeds() error {
+
+	// scale etcd operator
+	cmd0 := fmt.Sprintf("oc scale --replicas=1 deployment etcd-quorum-guard -n openshift-etcd")
+	err := clicumber.ExecuteCommandSucceedsOrFails(cmd0, "succeeds")
+	if err != nil {
+		return err
+	}
+	// another cmd
+	cmd1 := fmt.Sprintf("oc delete validatingwebhookconfigurations prometheusrules.openshift.io")
+	err = clicumber.ExecuteCommandSucceedsOrFails(cmd1, "succeeds")
+	if err != nil {
+		return err
+	}
+
+	opersys := runtime.GOOS
+
+	switch opersys {
+	case "darwin", "linux":
+
+		cmd2 := fmt.Sprintf("oc get clusterversion/version -ojsonpath='{range .spec.overrides[*]}{.name}{\"\\n\"}{end}' | nl -v 0 | grep cluster-monitoring-operator > hmm.txt")
+		err = clicumber.ExecuteCommandSucceedsOrFails(cmd2, "succeeds")
+		if err != nil {
+			return err
+		}
+
+	case "windows":
+		cmd2 := "oc get clusterversion/version -ojsonpath='{range .spec.overrides[*]}{.name}{\"\\n\"}{end}' | % {$nl++;\"`t$($nl-1) `t $_\"};$nl=0 > hmm.txt"
+		err := clicumber.ExecuteCommandSucceedsOrFails(cmd2, "succeeds")
+		if err != nil {
+			return err
+		}
+	}
+
+	file, err := os.Open("hmm.txt")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	strng, err := ioutil.ReadAll(file) // small file
+	if err != nil {
+		return err
+	}
+
+	lst := strings.Fields(string(strng))
+	opNumIndex, err := strconv.Atoi(lst[0])
+	if err != nil {
+		return err
+	}
+
+	switch opersys {
+	case "darwin", "linux":
+		cmd3 := fmt.Sprintf("oc patch clusterversion/version --type='json' -p '[{\"op\":\"remove\", \"path\":\"/spec/overrides/%d\"}]'", opNumIndex)
+		err = clicumber.ExecuteCommandSucceedsOrFails(cmd3, "succeeds")
+		if err != nil {
+			return err
+		}
+
+	case "windows":
+		cmd3 := fmt.Sprintf("oc patch clusterversion/version --type='json' -p '[{\"op\":\"remove\", \"path\":\"/spec/overrides/%d\"}]'", opNumIndex)
+		err = clicumber.ExecuteCommandSucceedsOrFails(cmd3, "succeeds")
+		if err != nil {
+			return err
+		}
+
+	}
+	return nil
 }
