@@ -22,7 +22,7 @@ func TestUse(t *testing.T) {
 	defer os.RemoveAll(ocBinDir)
 
 	assert.NoError(t, os.Mkdir(filepath.Join(dir, "crc_libvirt_4.6.1"), 0755))
-	assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, "crc_libvirt_4.6.1", metadataFilename), []byte(reference), 0600))
+	writeMetadata(t, filepath.Join(dir, "crc_libvirt_4.6.1"), reference)
 	assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, "crc_libvirt_4.6.1", constants.OcExecutableName), []byte("openshift-client"), 0600))
 
 	repo := &Repository{
@@ -76,4 +76,32 @@ func testBundle(t *testing.T) string {
 		t.Fatal("unexpected GOOS")
 		return ""
 	}
+}
+
+func TestVersionCheck(t *testing.T) {
+	dir, err := ioutil.TempDir("", "repo")
+	assert.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	repo := &Repository{
+		CacheDir: dir,
+	}
+
+	assert.NoError(t, os.Mkdir(filepath.Join(dir, "crc_libvirt_4.6.1"), 0755))
+
+	writeMetadata(t, filepath.Join(dir, "crc_libvirt_4.6.1"), `{"version":"0.9"}`)
+	_, err = repo.Get("crc_libvirt_4.6.1.crcbundle")
+	assert.EqualError(t, err, "cannot use bundle with version 0.9, bundle version must satisfy ^1.0 constraint")
+
+	writeMetadata(t, filepath.Join(dir, "crc_libvirt_4.6.1"), `{"version":"1.1"}`)
+	_, err = repo.Get("crc_libvirt_4.6.1.crcbundle")
+	assert.NoError(t, err)
+
+	writeMetadata(t, filepath.Join(dir, "crc_libvirt_4.6.1"), `{"version":"2.0"}`)
+	_, err = repo.Get("crc_libvirt_4.6.1.crcbundle")
+	assert.EqualError(t, err, "cannot use bundle with version 2.0, bundle version must satisfy ^1.0 constraint")
+}
+
+func writeMetadata(t *testing.T, dir string, s string) bool {
+	return assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, metadataFilename), []byte(s), 0600))
 }

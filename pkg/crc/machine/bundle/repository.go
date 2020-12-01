@@ -2,12 +2,14 @@ package bundle
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
+	"github.com/Masterminds/semver"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/extract"
 	crcos "github.com/code-ready/crc/pkg/os"
@@ -15,6 +17,7 @@ import (
 )
 
 const (
+	supportedVersion = "^1.0"
 	bundleExtension  = ".crcbundle"
 	metadataFilename = "crc-bundle-info.json"
 )
@@ -38,8 +41,26 @@ func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
 	if err := json.Unmarshal(content, &bundleInfo); err != nil {
 		return nil, errors.Wrap(err, "error Unmarshal the data")
 	}
+	if err := checkVersion(bundleInfo); err != nil {
+		return nil, err
+	}
 	bundleInfo.cachedPath = path
 	return &bundleInfo, nil
+}
+
+func checkVersion(bundleInfo CrcBundleInfo) error {
+	version, err := semver.NewVersion(bundleInfo.Version)
+	if err != nil {
+		return errors.Wrap(err, "cannot parse bundle version")
+	}
+	constraint, err := semver.NewConstraint(supportedVersion)
+	if err != nil {
+		return errors.Wrap(err, "cannot parse version constraint")
+	}
+	if !constraint.Check(version) {
+		return fmt.Errorf("cannot use bundle with version %s, bundle version must satisfy %s constraint", bundleInfo.Version, supportedVersion)
+	}
+	return nil
 }
 
 func (repo *Repository) Use(bundleName string) (*CrcBundleInfo, error) {
