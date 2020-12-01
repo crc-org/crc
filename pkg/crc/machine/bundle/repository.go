@@ -54,7 +54,7 @@ func (repo *Repository) Use(bundleName string) (*CrcBundleInfo, error) {
 }
 
 func (bundle *CrcBundleInfo) createSymlinkOrCopyOpenShiftClient(ocBinDir string) error {
-	ocInBundle := filepath.Join(bundle.cachedPath, constants.OcExecutableName)
+	ocInBundle := bundle.resolvePath(constants.OcExecutableName)
 	ocInBinDir := filepath.Join(ocBinDir, constants.OcExecutableName)
 	if err := os.MkdirAll(ocBinDir, 0750); err != nil {
 		return err
