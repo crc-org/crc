@@ -30,7 +30,7 @@ func init() {
 	flagSet.StringP(cmdConfig.Bundle, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster")
 	flagSet.StringP(cmdConfig.PullSecretFile, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
 	flagSet.IntP(cmdConfig.CPUs, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the OpenShift cluster")
-	flagSet.IntP(cmdConfig.Memory, "m", constants.DefaultMemory, "MiB of memory to allocate to the OpenShift cluster")
+	flagSet.IntP(cmdConfig.Memory, "m", constants.DefaultMemory, "MB of memory to allocate to the OpenShift cluster")
 	flagSet.UintP(cmdConfig.DiskSize, "d", constants.DefaultDiskSize, "Total size in GiB of the disk used by the OpenShift cluster")
 	flagSet.StringP(cmdConfig.NameServer, "n", "", "IPv4 address of nameserver to use for the OpenShift cluster")
 	flagSet.Bool(cmdConfig.DisableUpdateCheck, false, "Don't check for update")

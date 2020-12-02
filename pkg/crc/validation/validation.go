@@ -27,7 +27,7 @@ func ValidateCPUs(value int) error {
 // ValidateMemory checks if provided Memory count is valid
 func ValidateMemory(value int) error {
 	if value < constants.DefaultMemory {
-		return fmt.Errorf("requires memory in MiB >= %d", constants.DefaultMemory)
+		return fmt.Errorf("requires memory in MB >= %d", constants.DefaultMemory)
 	}
 	return ValidateEnoughMemory(value)
 }
@@ -48,7 +48,7 @@ func ValidateDiskSize(value int) error {
 func ValidateEnoughMemory(value int) error {
 	totalMemory := memory.TotalMemory()
 	logging.Debugf("Total memory of system is %d bytes", totalMemory)
-	valueBytes := value * 1024 * 1024
+	valueBytes := value * 1000 * 1000
 	if totalMemory < uint64(valueBytes) {
 		return fmt.Errorf("only %s of memory found (%s required)",
 			units.HumanSize(float64(totalMemory)),
