@@ -26,18 +26,23 @@ func TestCountConfigurationOptions(t *testing.T) {
 }
 
 var (
-	rhel crcos.OsRelease = crcos.OsRelease{
+	fedora = crcos.OsRelease{
+		ID:        crcos.Fedora,
+		VersionID: "35",
+	}
+
+	rhel = crcos.OsRelease{
 		ID:        crcos.RHEL,
 		VersionID: "8.2",
 		IDLike:    string(crcos.Fedora),
 	}
 
-	ubuntu crcos.OsRelease = crcos.OsRelease{
+	ubuntu = crcos.OsRelease{
 		ID:        crcos.Ubuntu,
 		VersionID: "20.04",
 	}
 
-	unexpected crcos.OsRelease = crcos.OsRelease{
+	unexpected = crcos.OsRelease{
 		ID:        "unexpected",
 		VersionID: "1234",
 	}
@@ -49,7 +54,58 @@ type checkListForDistro struct {
 	checks      []Check
 }
 
-var checkListForDistros []checkListForDistro = []checkListForDistro{
+var checkListForDistros = []checkListForDistro{
+	{
+		distro:      &fedora,
+		networkMode: network.DefaultMode,
+		checks: []Check{
+			{check: checkPodmanExecutableCached},
+			{check: checkGoodhostsExecutableCached},
+			{check: checkBundleExtracted},
+			{configKeySuffix: "check-ram"},
+			{cleanup: removeCRCMachinesDir},
+			{check: checkIfRunningAsNormalUser},
+			{check: checkVirtualizationEnabled},
+			{check: checkKvmEnabled},
+			{check: checkLibvirtInstalled},
+			{check: checkUserPartOfLibvirtGroup},
+			{check: checkLibvirtServiceRunning},
+			{check: checkLibvirtVersion},
+			{check: checkMachineDriverLibvirtInstalled},
+			{cleanup: removeCrcVM},
+			{check: checkSystemdNetworkdIsNotRunning},
+			{check: checkNetworkManagerInstalled},
+			{check: checkNetworkManagerIsRunning},
+			{check: checkCrcDnsmasqAndNetworkManagerConfigFile},
+			{check: checkSystemdResolvedIsRunning},
+			{check: checkCrcNetworkManagerDispatcherFile},
+			{check: checkLibvirtCrcNetworkAvailable},
+			{check: checkLibvirtCrcNetworkActive},
+		},
+	},
+	{
+		distro:      &fedora,
+		networkMode: network.VSockMode,
+		checks: []Check{
+			{check: checkPodmanExecutableCached},
+			{check: checkGoodhostsExecutableCached},
+			{check: checkBundleExtracted},
+			{configKeySuffix: "check-ram"},
+			{cleanup: removeCRCMachinesDir},
+			{check: checkIfRunningAsNormalUser},
+			{check: checkVirtualizationEnabled},
+			{check: checkKvmEnabled},
+			{check: checkLibvirtInstalled},
+			{check: checkUserPartOfLibvirtGroup},
+			{check: checkLibvirtServiceRunning},
+			{check: checkLibvirtVersion},
+			{check: checkMachineDriverLibvirtInstalled},
+			{cleanup: removeCrcVM},
+			{check: checkVsock},
+			{check: checkLibvirtCrcNetworkAvailable},
+			{check: checkLibvirtCrcNetworkActive},
+		},
+	},
 	{
 		distro:      &rhel,
 		networkMode: network.DefaultMode,
@@ -242,6 +298,9 @@ func assertExpectedPreflights(t *testing.T, distro *crcos.OsRelease, networkMode
 }
 
 func TestCountPreflights(t *testing.T) {
+	assertExpectedPreflights(t, &fedora, network.DefaultMode)
+	assertExpectedPreflights(t, &fedora, network.VSockMode)
+
 	assertExpectedPreflights(t, &rhel, network.DefaultMode)
 	assertExpectedPreflights(t, &rhel, network.VSockMode)
 
