@@ -6,3 +6,5 @@ Access the OpenShift cluster running in the {prod} virtual machine through the O
 include::proc_accessing-the-openshift-web-console.adoc[leveloffset=+1]
 
 include::proc_accessing-the-openshift-cluster-with-oc.adoc[leveloffset=+1]
+
+include::proc_accessing-the-internal-openshift-registry.adoc[leveloffset=+1]
