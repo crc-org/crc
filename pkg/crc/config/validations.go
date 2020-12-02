@@ -48,7 +48,7 @@ func ValidateCPUs(value interface{}) (bool, string) {
 func ValidateMemory(value interface{}) (bool, string) {
 	v, err := cast.ToIntE(value)
 	if err != nil {
-		return false, fmt.Sprintf("requires integer value in MiB >= %d", constants.DefaultMemory)
+		return false, fmt.Sprintf("requires integer value in MB >= %d", constants.DefaultMemory)
 	}
 	if err := validation.ValidateMemory(v); err != nil {
 		return false, err.Error()

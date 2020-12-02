@@ -39,8 +39,8 @@ $ {bin} config set memory __<number-in-mib>__
 +
 [NOTE]
 ====
-Values for available memory are set in mebibytes (MiB).
-One gibibyte (GiB) of memory is equal to 1024 MiB.
+Values for available memory are set in megabytes (MB).
+One gigabyte (GB) of memory is equal to 1000 MB.
 ====
 +
 The default value for the `memory` property is `9216`.
