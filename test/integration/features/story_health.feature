@@ -11,7 +11,7 @@ Feature:
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
         And executing "eval $(crc oc-env)" succeeds
-        When with up to "4" retries with wait period of "2m" command "crc status --log-level debug" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
+        When checking that CRC is running
         Then login to the oc cluster succeeds
 
     @windows
@@ -21,13 +21,11 @@ Feature:
         When starting CRC with default bundle and nameserver "10.75.5.25" succeeds
         Then stdout should contain "Started the OpenShift cluster"
         And executing "crc oc-env | Invoke-Expression" succeeds
-        When with up to "4" retries with wait period of "2m" command "crc status --log-level debug" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
+        When checking that CRC is running
         Then login to the oc cluster succeeds
 
     @linux @darwin @windows    
     Scenario: Check cluster health
-        Given executing "crc status" succeeds
-        And stdout should match ".*Running \(v\d+\.\d+\.\d+.*\).*"
         When executing "oc get nodes"
         Then stdout contains "Ready" 
         And stdout does not contain "Not ready"
@@ -58,10 +56,10 @@ Feature:
     Scenario: Stop and start CRC, then check app still runs
         Given with up to "2" retries with wait period of "60s" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
         When executing "crc stop -f" succeeds
-        Then with up to "4" retries with wait period of "2m" command "crc status" output should contain "Stopped"
+        Then checking that CRC is stopped
         When starting CRC with default bundle succeeds
-        Then with up to "4" retries with wait period of "2m" command "crc status" output should match ".*Running \(v\d+\.\d+\.\d+.*\).*"
-        And with up to "2" retries with wait period of "60s" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
+        Then checking that CRC is running
+        And with up to "2" retries with wait period of "1m" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
 
 
     @darwin @linux @windows

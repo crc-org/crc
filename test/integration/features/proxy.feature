@@ -15,7 +15,7 @@ Feature: Test the proxy
     When starting CRC with default bundle succeeds
     Then stdout should contain "Started the OpenShift cluster"
     And executing "eval $(crc oc-env)" succeeds
-    When with up to "4" retries with wait period of "2m" command "crc status --log-level debug" output matches ".*Running \(v\d+\.\d+\.\d+.*\).*"
+    When checking that CRC is running
     Then login to the oc cluster succeeds
 
   Scenario: Remove the proxy container and host proxy env (which set because of oc-env)

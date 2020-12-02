@@ -54,6 +54,8 @@ func FeatureContext(s *godog.Suite) {
 		CheckHTTPResponseWithRetry)
 	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" command "(.*)" output (should match|matches|should not match|does not match) "(.*)"$`,
 		CheckOutputMatchWithRetry)
+	s.Step(`^checking that CRC is (running|stopped)$`,
+		CheckCRCStatus)
 	s.Step(`stdout (?:should contain|contains) "(.*)" if bundle (is|is not) embedded$`,
 		StdoutContainsIfBundleEmbeddedOrNot)
 
@@ -245,6 +247,47 @@ func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string,
 	}
 
 	return matchErr
+}
+
+// CheckCRCStatus checks that output of status command
+// matches given regex number of consecutive times
+func CheckCRCStatus(state string) error {
+	retryDuration := 1 * time.Minute
+	retryCount := 15
+	cmd := "crc status --log-level debug"
+	expression := ""
+	var numConsecutive int
+
+	if state == "stopped" {
+		numConsecutive = 1
+		expression = ".*Stopped.*"
+	} else {
+		numConsecutive = 3
+		expression = `.*Running \(v\d+\.\d+\.\d+.*\).*`
+	}
+
+	var matchErr error
+	var count int // holds num of consecutive matches
+
+	for i := 0; i < retryCount; i++ {
+		execErr := clicumber.ExecuteCommand(cmd)
+		if execErr == nil {
+			matchErr = clicumber.CommandReturnShouldMatch("stdout", expression)
+			// update counter for consecutive matches
+			if matchErr == nil {
+				count++
+			} else {
+				count = 0
+			}
+			// break if done
+			if count == numConsecutive {
+				return nil
+			}
+		}
+		time.Sleep(retryDuration)
+	}
+
+	return fmt.Errorf("did not get enough consecutive matches: have %d but need %d", count, numConsecutive)
 }
 
 func DeleteFileFromCRCHome(fileName string) error {

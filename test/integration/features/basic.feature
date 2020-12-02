@@ -92,8 +92,7 @@ Feature: Basic test
 
     @darwin @linux @windows
     Scenario: CRC status and disk space check
-        When with up to "15" retries with wait period of "1m" command "crc status --log-level debug" output should not contain "Stopped"
-        And stdout should contain "Running"
+        When checking that CRC is running
         And stdout should match ".*Disk Usage: *\d+\.\d+GB of 32.\d+GB.*"
 
     @darwin @linux @windows
@@ -119,13 +118,11 @@ Feature: Basic test
 
     @darwin @linux @windows
     Scenario: CRC status check
-        When with up to "2" retries with wait period of "1m" command "crc status --log-level debug" output should not contain "Running"
-        And stdout should contain "Stopped"
+        When checking that CRC is stopped
+        And stdout should not contain "Running"
 
     @darwin @linux @windows
     Scenario: CRC console check
-        Given executing "crc status" succeeds
-        And stdout contains "Stopped"
         When executing "crc console"
         Then stderr should contain "The OpenShift cluster is not running, cannot open the OpenShift Web Console"
 
