@@ -1,0 +1,88 @@
+[id="accessing-the-internal-openshift-registry_{context}"]
+= Accessing the internal OpenShift registry
+
+The OpenShift cluster running in the {prod} virtual machine includes an internal container image registry by default.
+This internal container image registry can be used as a publication target for locally developed container images.
+To access the internal OpenShift registry, follow these steps.
+
+.Prerequisites
+
+* A running {prod} virtual machine.
+For more information, see link:{crc-gsg-url}#starting-the-virtual-machine_gsg[Starting the virtual machine].
+* A working [command]`oc` command.
+For more information, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the OpenShift cluster with `oc`].
+* An installation of [command]`podman` or [command]`docker`.
+** For Docker, add `default-route-openshift-image-registry.apps-crc.testing` as an insecure registry.
+For more information, see link:https://docs.docker.com/registry/insecure/[the Docker documentation].
+
+.Procedure
+
+. Check which user is logged in to the cluster:
++
+[subs="+quotes,attributes"]
+----
+$ oc whoami
+----
++
+[NOTE]
+====
+For demonstration purposes, the current user is assumed to be `kube:admin`.
+====
+
+. Log in to the registry as that user with its token:
++
+[subs="+quotes,attributes"]
+----
+$ podman login -u kubeadmin -p $(oc whoami -t) default-route-openshift-image-registry.apps-crc.testing --tls-verify=false
+----
+
+. Create a new project:
++
+[subs="+quotes,attributes"]
+----
+$ oc new-project demo
+----
+
+. Pull an example container image:
++
+[subs="+quotes,attributes"]
+----
+$ podman pull quay.io/libpod/alpine
+----
+
+. Tag the image, including namespace details:
++
+[subs="+quotes,attributes"]
+----
+$ podman tag alpine:latest default-route-openshift-image-registry.apps-crc.testing/demo/alpine:latest
+----
+
+. Push the container image to the internal registry:
++
+[subs="+quotes,attributes"]
+----
+$ podman push default-route-openshift-image-registry.apps-crc.testing/demo/alpine:latest --tls-verify=false
+----
+
+. Get imagestreams and verify that the pushed image is listed:
++
+[subs="+quotes,attributes"]
+----
+$ oc get is
+----
+
+. Enable image lookup for all tags in the imagestream:
++
+[subs="+quotes,attributes"]
+----
+$ oc set image-lookup
+----
++
+This setting allows the imagestream to be the source of images without having to provide the full URL to the internal registry.
+
+. Create a pod using the recently pushed image:
++
+[subs="+quotes,attributes"]
+----
+$ oc run demo --image=alpine --command -- sleep 600s
+----
