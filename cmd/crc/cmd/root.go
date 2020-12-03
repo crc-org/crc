@@ -14,6 +14,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/preflight"
+	"github.com/code-ready/crc/pkg/crc/segment"
 	"github.com/spf13/cobra"
 )
 
@@ -34,9 +35,10 @@ var rootCmd = &cobra.Command{
 }
 
 var (
-	globalForce bool
-	viper       *crcConfig.ViperStorage
-	config      *crcConfig.Config
+	globalForce   bool
+	viper         *crcConfig.ViperStorage
+	config        *crcConfig.Config
+	segmentClient *segment.Client
 )
 
 func init() {
@@ -46,6 +48,10 @@ func init() {
 	var err error
 	config, viper, err = newViperConfig()
 	if err != nil {
+		logging.Fatal(err.Error())
+	}
+	// Initiate segment client
+	if segmentClient, err = segment.NewClient(config); err != nil {
 		logging.Fatal(err.Error())
 	}
 
