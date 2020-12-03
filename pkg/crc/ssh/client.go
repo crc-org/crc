@@ -113,6 +113,6 @@ func (client *NativeClient) Close() {
 	}
 	err := client.conn.Close()
 	if err != nil {
-		log.Debugf("Error closing SSH Client: %s", err)
+		log.Debugf("Error closing SSH segmentClient: %s", err)
 	}
 }

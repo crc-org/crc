@@ -25,6 +25,7 @@ const (
 	NoProxy              = "no-proxy"
 	ProxyCAFile          = "proxy-ca-file"
 	EnableMonitoring     = "enable-monitoring"
+	ConsentTelemetry     = "consent-telemetry"
 )
 
 func RegisterSettings(cfg *config.Config) {
@@ -45,6 +46,9 @@ func RegisterSettings(cfg *config.Config) {
 	cfg.AddSetting(ProxyCAFile, "", config.ValidatePath, config.SuccessfullyApplied)
 
 	cfg.AddSetting(EnableMonitoring, false, config.ValidateBool, config.SuccessfullyApplied)
+
+	// Telemeter Configuration
+	cfg.AddSetting(ConsentTelemetry, false, config.ValidateBool, config.SuccessfullyApplied)
 }
 
 func isPreflightKey(key string) bool {
