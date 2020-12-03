@@ -102,7 +102,7 @@ var systemdResolvedPreflightChecks = [...]Check{
 		flags:            NoFix,
 	},
 	{
-		configKeySuffix:    "check-crc-nm-dispatcher-file",
+		configKeySuffix:    "check-network-manager-dispatcher-file",
 		checkDescription:   fmt.Sprintf("Checking if %s exists", crcNetworkManagerDispatcherPath),
 		check:              checkCrcNetworkManagerDispatcherFile,
 		fixDescription:     "Writing NetworkManager dispatcher file for crc",
