@@ -95,6 +95,13 @@ exit 0
 
 var systemdResolvedPreflightChecks = [...]Check{
 	{
+		configKeySuffix:  "check-dnsmasq-network-manager-config",
+		checkDescription: "Checking if dnsmasq configurations file exist for NetworkManager",
+		check:            checkCrcDnsmasqAndNetworkManagerConfigFile,
+		fixDescription:   "Removing dnsmasq configuration file for NetworkManager",
+		fix:              fixCrcDnsmasqAndNetworkManagerConfigFile,
+	},
+	{
 		configKeySuffix:  "check-systemd-resolved-running",
 		checkDescription: "Checking if the systemd-resolved service is running",
 		check:            checkSystemdResolvedIsRunning,
@@ -270,4 +277,27 @@ func fixCrcNetworkManagerDispatcherFile() error {
 
 func removeCrcNetworkManagerDispatcherFile() error {
 	return removeNetworkManagerConfigFile(crcNetworkManagerDispatcherPath)
+}
+
+func checkCrcDnsmasqAndNetworkManagerConfigFile() error {
+	// IF check return nil, which means file
+	if _, err := os.Stat(crcDnsmasqConfigPath); !os.IsNotExist(err) {
+		return fmt.Errorf("%s file exists", crcDnsmasqConfigPath)
+	}
+	if _, err := os.Stat(crcNetworkManagerConfigPath); !os.IsNotExist(err) {
+		return fmt.Errorf("%s file exists", crcNetworkManagerConfigPath)
+	}
+	return nil
+}
+
+func fixCrcDnsmasqAndNetworkManagerConfigFile() error {
+	// In case user upgrades from f-32 to f-33 the dnsmasq config for NM still
+	// exists and needs to be removed.
+	if err := removeCrcNetworkManagerConfig(); err != nil {
+		logging.Debugf("%s: not present.", crcNetworkManagerConfigPath)
+	}
+	if err := removeCrcDnsmasqConfigFile(); err != nil {
+		logging.Debugf("%s: not present.", crcDnsmasqConfigPath)
+	}
+	return nil
 }
