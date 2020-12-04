@@ -8,10 +8,8 @@ import (
 
 	"io"
 
-	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/drivers/plugin/localbinary"
 	"github.com/code-ready/machine/libmachine/log"
-	"github.com/code-ready/machine/libmachine/mcnflag"
 	"github.com/code-ready/machine/libmachine/state"
 	"github.com/code-ready/machine/libmachine/version"
 )
@@ -59,32 +57,23 @@ const (
 	RPCServiceNameV0 = `RpcServerDriver`
 	RPCServiceNameV1 = `RPCServerDriver`
 
-	HeartbeatMethod          = `.Heartbeat`
-	GetVersionMethod         = `.GetVersion`
-	CloseMethod              = `.Close`
-	GetCreateFlagsMethod     = `.GetCreateFlags`
-	SetConfigRawMethod       = `.SetConfigRaw`
-	UpdateConfigRawMethod    = `.UpdateConfigRaw`
-	GetConfigRawMethod       = `.GetConfigRaw`
-	DriverNameMethod         = `.DriverName`
-	SetConfigFromFlagsMethod = `.SetConfigFromFlags`
-	GetURLMethod             = `.GetURL`
-	GetMachineNameMethod     = `.GetMachineName`
-	GetIPMethod              = `.GetIP`
-	GetSSHHostnameMethod     = `.GetSSHHostname`
-	GetSSHKeyPathMethod      = `.GetSSHKeyPath`
-	GetSSHPortMethod         = `.GetSSHPort`
-	GetSSHUsernameMethod     = `.GetSSHUsername`
-	GetBundleNameMethod      = `.GetBundleName`
-	GetStateMethod           = `.GetState`
-	PreCreateCheckMethod     = `.PreCreateCheck`
-	CreateMethod             = `.Create`
-	RemoveMethod             = `.Remove`
-	StartMethod              = `.Start`
-	StopMethod               = `.Stop`
-	RestartMethod            = `.Restart`
-	KillMethod               = `.Kill`
-	UpgradeMethod            = `.Upgrade`
+	HeartbeatMethod       = `.Heartbeat`
+	GetVersionMethod      = `.GetVersion`
+	CloseMethod           = `.Close`
+	SetConfigRawMethod    = `.SetConfigRaw`
+	UpdateConfigRawMethod = `.UpdateConfigRaw`
+	GetConfigRawMethod    = `.GetConfigRaw`
+	DriverNameMethod      = `.DriverName`
+	GetMachineNameMethod  = `.GetMachineName`
+	GetIPMethod           = `.GetIP`
+	GetBundleNameMethod   = `.GetBundleName`
+	GetStateMethod        = `.GetState`
+	PreCreateCheckMethod  = `.PreCreateCheck`
+	CreateMethod          = `.Create`
+	RemoveMethod          = `.Remove`
+	StartMethod           = `.Start`
+	StopMethod            = `.Stop`
+	KillMethod            = `.Kill`
 )
 
 func (ic *InternalClient) Call(serviceMethod string, args interface{}, reply interface{}) error {
@@ -120,8 +109,6 @@ func (f *DefaultRPCClientDriverFactory) Close() error {
 }
 
 func (f *DefaultRPCClientDriverFactory) NewRPCClientDriver(driverName string, driverPath string, rawDriver []byte) (*RPCClientDriver, error) {
-	mcnName := ""
-
 	p, err := localbinary.NewPlugin(driverName, driverPath)
 	if err != nil {
 		return nil, err
@@ -191,7 +178,7 @@ func (f *DefaultRPCClientDriverFactory) NewRPCClientDriver(driverName string, dr
 		return nil, err
 	}
 
-	mcnName = c.GetMachineName()
+	mcnName := c.GetMachineName()
 	p.MachineName = mcnName
 	c.Client.MachineName = mcnName
 	c.plugin = p
@@ -236,16 +223,6 @@ func (c *RPCClientDriver) rpcStringCall(method string) (string, error) {
 	return info, nil
 }
 
-func (c *RPCClientDriver) GetCreateFlags() []mcnflag.Flag {
-	var flags []mcnflag.Flag
-
-	if err := c.Client.Call(GetCreateFlagsMethod, struct{}{}, &flags); err != nil {
-		log.Warnf("Error attempting call to get create flags: %s", err)
-	}
-
-	return flags
-}
-
 func (c *RPCClientDriver) SetConfigRaw(data []byte) error {
 	return c.Client.Call(SetConfigRawMethod, data, nil)
 }
@@ -284,14 +261,6 @@ func (c *RPCClientDriver) DriverVersion() string {
 	return driverVersion
 }
 
-func (c *RPCClientDriver) SetConfigFromFlags(flags drivers.DriverOptions) error {
-	return c.Client.Call(SetConfigFromFlagsMethod, &flags, nil)
-}
-
-func (c *RPCClientDriver) GetURL() (string, error) {
-	return c.rpcStringCall(GetURLMethod)
-}
-
 func (c *RPCClientDriver) GetMachineName() string {
 	name, err := c.rpcStringCall(GetMachineNameMethod)
 	if err != nil {
@@ -303,40 +272,6 @@ func (c *RPCClientDriver) GetMachineName() string {
 
 func (c *RPCClientDriver) GetIP() (string, error) {
 	return c.rpcStringCall(GetIPMethod)
-}
-
-func (c *RPCClientDriver) GetSSHHostname() (string, error) {
-	return c.rpcStringCall(GetSSHHostnameMethod)
-}
-
-// GetSSHKeyPath returns the key path
-// TODO:  This method doesn't even make sense to have with RPC.
-func (c *RPCClientDriver) GetSSHKeyPath() string {
-	path, err := c.rpcStringCall(GetSSHKeyPathMethod)
-	if err != nil {
-		log.Warnf("Error attempting call to get SSH key path: %s", err)
-	}
-
-	return path
-}
-
-func (c *RPCClientDriver) GetSSHPort() (int, error) {
-	var port int
-
-	if err := c.Client.Call(GetSSHPortMethod, struct{}{}, &port); err != nil {
-		return 0, err
-	}
-
-	return port, nil
-}
-
-func (c *RPCClientDriver) GetSSHUsername() string {
-	username, err := c.rpcStringCall(GetSSHUsernameMethod)
-	if err != nil {
-		log.Warnf("Error attempting call to get SSH username: %s", err)
-	}
-
-	return username
 }
 
 func (c *RPCClientDriver) GetBundleName() (string, error) {
@@ -373,14 +308,6 @@ func (c *RPCClientDriver) Stop() error {
 	return c.Client.Call(StopMethod, struct{}{}, nil)
 }
 
-func (c *RPCClientDriver) Restart() error {
-	return c.Client.Call(RestartMethod, struct{}{}, nil)
-}
-
 func (c *RPCClientDriver) Kill() error {
 	return c.Client.Call(KillMethod, struct{}{}, nil)
-}
-
-func (c *RPCClientDriver) Upgrade() error {
-	return c.Client.Call(UpgradeMethod, struct{}{}, nil)
 }

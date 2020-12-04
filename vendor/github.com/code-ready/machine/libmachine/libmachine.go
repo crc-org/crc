@@ -4,13 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"path/filepath"
 
-	"github.com/code-ready/machine/drivers/errdriver"
 	"github.com/code-ready/machine/drivers/hyperv"
-	"github.com/code-ready/machine/libmachine/auth"
 	"github.com/code-ready/machine/libmachine/drivers"
-	"github.com/code-ready/machine/libmachine/drivers/plugin/localbinary"
 	rpcdriver "github.com/code-ready/machine/libmachine/drivers/rpc"
 	"github.com/code-ready/machine/libmachine/host"
 	"github.com/code-ready/machine/libmachine/log"
@@ -30,18 +26,13 @@ type API interface {
 }
 
 type Client struct {
-	certsDir       string
-	IsDebug        bool
-	GithubAPIToken string
 	*persist.Filestore
 	clientDriverFactory rpcdriver.RPCClientDriverFactory
 }
 
-func NewClient(storePath, certsDir string) *Client {
+func NewClient(storePath string) *Client {
 	return &Client{
-		certsDir:            certsDir,
-		IsDebug:             false,
-		Filestore:           persist.NewFilestore(storePath, certsDir, certsDir),
+		Filestore:           persist.NewFilestore(storePath),
 		clientDriverFactory: rpcdriver.NewRPCClientDriverFactory(),
 	}
 }
@@ -67,18 +58,7 @@ func (api *Client) NewHost(driverName string, driverPath string, rawDriver []byt
 		Driver:        driver,
 		DriverName:    driver.DriverName(),
 		DriverPath:    driverPath,
-		HostOptions: &host.Options{
-			AuthOptions: &auth.Options{
-				CertDir:          api.certsDir,
-				CaCertPath:       filepath.Join(api.certsDir, "ca.pem"),
-				CaPrivateKeyPath: filepath.Join(api.certsDir, "ca-key.pem"),
-				ClientCertPath:   filepath.Join(api.certsDir, "cert.pem"),
-				ClientKeyPath:    filepath.Join(api.certsDir, "key.pem"),
-				ServerCertPath:   filepath.Join(api.GetMachinesDir(), "server.pem"),
-				ServerKeyPath:    filepath.Join(api.GetMachinesDir(), "server-key.pem"),
-			},
-		},
-		RawDriver: rawDriver,
+		RawDriver:     rawDriver,
 	}, nil
 }
 
@@ -99,16 +79,9 @@ func (api *Client) Load(name string) (*host.Host, error) {
 
 	d, err := api.clientDriverFactory.NewRPCClientDriver(h.DriverName, h.DriverPath, h.RawDriver)
 	if err != nil {
-		// Not being able to find a driver binary is a "known error"
-		if _, ok := err.(localbinary.ErrPluginBinaryNotFound); ok {
-			h.Driver = errdriver.NewDriver(h.DriverName)
-			return h, nil
-		}
 		return nil, err
 	}
-
 	h.Driver = d
-
 	return h, nil
 }
 

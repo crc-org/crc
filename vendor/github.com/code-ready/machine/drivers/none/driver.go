@@ -2,10 +2,8 @@ package none
 
 import (
 	"fmt"
-	neturl "net/url"
 
 	"github.com/code-ready/machine/libmachine/drivers"
-	"github.com/code-ready/machine/libmachine/mcnflag"
 	"github.com/code-ready/machine/libmachine/state"
 )
 
@@ -16,7 +14,6 @@ const driverName = "none"
 // an option.
 type Driver struct {
 	*drivers.BaseDriver
-	URL string
 }
 
 func NewDriver(hostName, storePath string) *Driver {
@@ -24,16 +21,6 @@ func NewDriver(hostName, storePath string) *Driver {
 		BaseDriver: &drivers.BaseDriver{
 			MachineName: hostName,
 			StorePath:   storePath,
-		},
-	}
-}
-
-func (d *Driver) GetCreateFlags() []mcnflag.Flag {
-	return []mcnflag.Flag{
-		mcnflag.StringFlag{
-			Name:  "url",
-			Usage: "URL of host when no driver is selected",
-			Value: "",
 		},
 	}
 }
@@ -51,26 +38,6 @@ func (d *Driver) GetIP() (string, error) {
 	return d.IPAddress, nil
 }
 
-func (d *Driver) GetSSHHostname() (string, error) {
-	return "", nil
-}
-
-func (d *Driver) GetSSHKeyPath() string {
-	return ""
-}
-
-func (d *Driver) GetSSHPort() (int, error) {
-	return 0, nil
-}
-
-func (d *Driver) GetSSHUsername() string {
-	return ""
-}
-
-func (d *Driver) GetURL() (string, error) {
-	return d.URL, nil
-}
-
 func (d *Driver) GetState() (state.State, error) {
 	return state.Running, nil
 }
@@ -83,28 +50,7 @@ func (d *Driver) Remove() error {
 	return nil
 }
 
-func (d *Driver) Restart() error {
-	return fmt.Errorf("hosts without a driver cannot be restarted")
-}
-
-func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
-	url := flags.String("url")
-
-	if url == "" {
-		return fmt.Errorf("--url option is required when no driver is selected")
-	}
-
-	d.URL = url
-	u, err := neturl.Parse(url)
-	if err != nil {
-		return err
-	}
-
-	d.IPAddress = u.Host
-	return nil
-}
-
-func (d* Driver) UpdateConfigRaw(rawData []byte) error {
+func (d *Driver) UpdateConfigRaw(rawData []byte) error {
 	return fmt.Errorf("hosts without a driver cannot be updated")
 }
 

@@ -5,20 +5,11 @@ import (
 	"path/filepath"
 )
 
-const (
-	DefaultSSHUser    = "core"
-	DefaultSSHPort    = 22
-	DefaultPrivateKey = "id_rsa_rsc"
-)
-
 // BaseDriver - Embed this struct into drivers to provide the common set
 // of fields and functions.
 type BaseDriver struct {
 	IPAddress   string
 	MachineName string
-	SSHUser     string
-	SSHPort     int
-	SSHKeyPath  string
 	StorePath   string
 	BundleName  string
 }
@@ -53,31 +44,6 @@ func (d *BaseDriver) GetIP() (string, error) {
 		return "", errors.New("IP address is not set")
 	}
 	return d.IPAddress, nil
-}
-
-// GetSSHKeyPath returns the ssh key path
-func (d *BaseDriver) GetSSHKeyPath() string {
-	if d.SSHKeyPath == "" {
-		d.SSHKeyPath = d.ResolveStorePath(DefaultPrivateKey)
-	}
-	return d.SSHKeyPath
-}
-
-// GetSSHPort returns the ssh port, 22 if not specified
-func (d *BaseDriver) GetSSHPort() (int, error) {
-	if d.SSHPort == 0 {
-		d.SSHPort = DefaultSSHPort
-	}
-
-	return d.SSHPort, nil
-}
-
-// GetSSHUsername returns the ssh user name, root if not specified
-func (d *BaseDriver) GetSSHUsername() string {
-	if d.SSHUser == "" {
-		d.SSHUser = DefaultSSHUser
-	}
-	return d.SSHUser
 }
 
 // PreCreateCheck is called to enforce pre-creation steps

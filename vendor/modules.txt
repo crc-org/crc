@@ -33,26 +33,21 @@ github.com/code-ready/gvisor-tap-vsock/pkg/tap
 github.com/code-ready/gvisor-tap-vsock/pkg/transport
 github.com/code-ready/gvisor-tap-vsock/pkg/types
 github.com/code-ready/gvisor-tap-vsock/pkg/virtualnetwork
-# github.com/code-ready/machine v0.0.0-20201109095558-3e6386d4f69e
-github.com/code-ready/machine/drivers/errdriver
+# github.com/code-ready/machine v0.0.0-20201202090222-9558ae8c05b9
 github.com/code-ready/machine/drivers/hyperkit
 github.com/code-ready/machine/drivers/hyperv
 github.com/code-ready/machine/drivers/libvirt
 github.com/code-ready/machine/drivers/none
 github.com/code-ready/machine/libmachine
-github.com/code-ready/machine/libmachine/auth
 github.com/code-ready/machine/libmachine/drivers
 github.com/code-ready/machine/libmachine/drivers/plugin/localbinary
 github.com/code-ready/machine/libmachine/drivers/rpc
-github.com/code-ready/machine/libmachine/engine
 github.com/code-ready/machine/libmachine/host
 github.com/code-ready/machine/libmachine/log
 github.com/code-ready/machine/libmachine/mcnerror
-github.com/code-ready/machine/libmachine/mcnflag
 github.com/code-ready/machine/libmachine/mcnutils
 github.com/code-ready/machine/libmachine/persist
 github.com/code-ready/machine/libmachine/state
-github.com/code-ready/machine/libmachine/swarm
 github.com/code-ready/machine/libmachine/version
 # github.com/cucumber/gherkin-go/v11 v11.0.0
 github.com/cucumber/gherkin-go/v11

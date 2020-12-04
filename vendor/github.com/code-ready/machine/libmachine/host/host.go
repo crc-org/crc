@@ -5,14 +5,11 @@ import (
 	"net/rpc"
 	"regexp"
 
-	"github.com/code-ready/machine/libmachine/auth"
 	"github.com/code-ready/machine/libmachine/drivers"
-	"github.com/code-ready/machine/libmachine/engine"
 	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/mcnerror"
 	"github.com/code-ready/machine/libmachine/mcnutils"
 	"github.com/code-ready/machine/libmachine/state"
-	"github.com/code-ready/machine/libmachine/swarm"
 )
 
 var (
@@ -24,24 +21,12 @@ type Host struct {
 	Driver        drivers.Driver
 	DriverName    string
 	DriverPath    string
-	HostOptions   *Options
 	Name          string
 	RawDriver     []byte `json:"-"`
 }
 
-type Options struct {
-	Driver        string
-	Memory        int
-	Disk          int
-	EngineOptions *engine.Options
-	SwarmOptions  *swarm.Options
-	AuthOptions   *auth.Options
-}
-
 type Metadata struct {
 	ConfigVersion int
-	DriverName    string
-	HostOptions   Options
 }
 
 func ValidateHostName(name string) bool {
@@ -94,24 +79,6 @@ func (h *Host) Kill() error {
 	return nil
 }
 
-func (h *Host) Restart() error {
-	log.Infof("Restarting %q...", h.Name)
-	if drivers.MachineInState(h.Driver, state.Stopped)() {
-		if err := h.Start(); err != nil {
-			return err
-		}
-	} else if drivers.MachineInState(h.Driver, state.Running)() {
-		if err := h.Driver.Restart(); err != nil {
-			return err
-		}
-		if err := mcnutils.WaitFor(drivers.MachineInState(h.Driver, state.Running)); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (h *Host) UpdateConfig(rawConfig []byte) error {
 	err := h.Driver.UpdateConfigRaw(rawConfig)
 	if err != nil {
@@ -124,8 +91,4 @@ func (h *Host) UpdateConfig(rawConfig []byte) error {
 	h.RawDriver = rawConfig
 
 	return nil
-}
-
-func (h *Host) URL() (string, error) {
-	return h.Driver.GetURL()
 }

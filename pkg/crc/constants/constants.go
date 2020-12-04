@@ -93,7 +93,6 @@ var (
 	LogFilePath        = filepath.Join(CrcBaseDir, LogFile)
 	DaemonLogFilePath  = filepath.Join(CrcBaseDir, DaemonLogFile)
 	MachineBaseDir     = CrcBaseDir
-	MachineCertsDir    = filepath.Join(MachineBaseDir, "certs")
 	MachineCacheDir    = filepath.Join(MachineBaseDir, "cache")
 	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
 	DefaultBundlePath  = filepath.Join(MachineCacheDir, GetDefaultBundle())
