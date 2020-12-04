@@ -201,7 +201,9 @@ func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mo
 	checks = append(checks, libvirtPreflightChecks(distro)...)
 	networkChecks := getNetworkChecksForDistro(distro, networkMode)
 	checks = append(checks, networkChecks...)
-	checks = append(checks, libvirtNetworkPreflightChecks[:]...)
+	if networkMode == network.DefaultMode {
+		checks = append(checks, libvirtNetworkPreflightChecks[:]...)
+	}
 	return checks
 }
 
