@@ -189,11 +189,9 @@ func addFileWritePermissionToUser(filename string) error {
 func stopCRCHyperkitProcess() error {
 	path, err := exec.LookPath("pkill")
 	if err != nil {
-		logging.Debugf("Could not find 'pkill'. %v", err)
 		return fmt.Errorf("Could not find 'pkill'. %w", err)
 	}
 	if _, _, err := crcos.RunWithDefaultLocale(path, "-f", filepath.Join(constants.CrcBinDir, "hyperkit")); err != nil {
-		logging.Debugf("Failed to kill 'hyperkit' process. %v", err)
 		return fmt.Errorf("Failed to kill 'hyperkit' process. %w", err)
 	}
 	return nil
