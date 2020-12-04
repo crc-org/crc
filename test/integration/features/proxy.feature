@@ -1,9 +1,8 @@
 @proxy @linux
-Feature: Test the proxy
+Feature: Behind proxy test
 
-  The user tries to use crc behind proxy. he/she expects the
-  crc start happen successfully and able to deploy the app and check its
-  accessibility.
+    User starts CRC behind a proxy. They expect a successful start 
+    and to be able to deploy an app and check its accessibility.
 
   Scenario: Setup the proxy container using podman
     Given executing "sudo podman run --name squid -d -p 3128:3128 quay.io/crcont/squid" succeeds
