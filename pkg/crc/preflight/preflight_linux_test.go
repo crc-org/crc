@@ -102,8 +102,6 @@ var checkListForDistros = []checkListForDistro{
 			{check: checkMachineDriverLibvirtInstalled},
 			{cleanup: removeCrcVM},
 			{check: checkVsock},
-			{check: checkLibvirtCrcNetworkAvailable},
-			{check: checkLibvirtCrcNetworkActive},
 		},
 	},
 	{
@@ -152,8 +150,6 @@ var checkListForDistros = []checkListForDistro{
 			{check: checkMachineDriverLibvirtInstalled},
 			{cleanup: removeCrcVM},
 			{check: checkVsock},
-			{check: checkLibvirtCrcNetworkAvailable},
-			{check: checkLibvirtCrcNetworkActive},
 		},
 	},
 	{
@@ -202,8 +198,6 @@ var checkListForDistros = []checkListForDistro{
 			{check: checkMachineDriverLibvirtInstalled},
 			{cleanup: removeCrcVM},
 			{check: checkVsock},
-			{check: checkLibvirtCrcNetworkAvailable},
-			{check: checkLibvirtCrcNetworkActive},
 		},
 	},
 	{
@@ -255,8 +249,6 @@ var checkListForDistros = []checkListForDistro{
 			{cleanup: removeCrcVM},
 			{configKeySuffix: "check-apparmor-profile-setup"},
 			{check: checkVsock},
-			{check: checkLibvirtCrcNetworkAvailable},
-			{check: checkLibvirtCrcNetworkActive},
 		},
 	},
 }
