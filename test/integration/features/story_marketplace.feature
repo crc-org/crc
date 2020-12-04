@@ -4,7 +4,6 @@ Feature: Operator from marketplace
     User installs an OpenShift operator from OperatorHub and uses
     it to manage admin tasks.
 
-
     @linux @darwin
     Scenario: Start CRC and login to cluster
         Given executing "crc setup" succeeds

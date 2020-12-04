@@ -4,7 +4,7 @@ Feature: Test configuration settings
     User checks whether CRC `config set` command works as expected 
     in conjunction with `crc setup` and `crc start` commands.
 
-# SETTINGS
+    # SETTINGS
 
     Scenario Outline: CRC config checks (settings)
         When setting config property "<property>" to value "<value1>" succeeds
@@ -56,7 +56,7 @@ Feature: Test configuration settings
         When unsetting config property "disable-update-check" succeeds
         Then "JSON" config file "crc.json" in CRC home folder does not contain key "disable-update-check"
 
-# WARNINGS
+    # WARNINGS
 
     Scenario Outline: CRC config checks (warnings)
         When setting config property "<property>" to value "<value1>" succeeds
@@ -105,7 +105,7 @@ Feature: Test configuration settings
             | warn-check-user-in-hyperv-group | true   | false  |
             | warn-check-windows-version      | true   | false  |
 
-# SKIP
+    # SKIP
 
     Scenario Outline: CRC config checks (skips)
         When setting config property "<property>" to value "<value1>" succeeds
@@ -158,44 +158,44 @@ Feature: Test configuration settings
             | skip-check-user-in-hyperv-group | true   | false  |
             | skip-check-windows-version      | true   | false  |
 
-# --------------------------------------
-# Linux-specific Scenarios
+    # --------------------------------------
+    # Linux-specific Scenarios
 
-   @linux
-   Scenario: Check network setup and destroy it, then check again
-       When removing file "crc.json" from CRC home folder succeeds
-       And executing "crc setup" succeeds
-       And executing "sudo virsh net-list --name" succeeds
-       Then stdout contains "crc"
-       When executing "sudo virsh net-undefine crc && sudo virsh net-destroy crc" succeeds
-       And executing "sudo virsh net-list --name" succeeds
-       Then stdout should not contain "crc"
+    @linux
+    Scenario: Check network setup and destroy it, then check again
+        When removing file "crc.json" from CRC home folder succeeds
+        And executing "crc setup" succeeds
+        And executing "sudo virsh net-list --name" succeeds
+        Then stdout contains "crc"
+        When executing "sudo virsh net-undefine crc && sudo virsh net-destroy crc" succeeds
+        And executing "sudo virsh net-list --name" succeeds
+        Then stdout should not contain "crc"
 
-   @linux
-   Scenario: Running `crc setup` with checks enabled restores destroyed network
-       When executing "crc config set skip-check-crc-network false" succeeds
-       And executing "crc config set skip-check-crc-network-active false" succeeds
-       Then executing "crc setup" succeeds
-       And executing "sudo virsh net-list --name" succeeds
-       And stdout contains "crc"
+    @linux
+    Scenario: Running `crc setup` with checks enabled restores destroyed network
+        When executing "crc config set skip-check-crc-network false" succeeds
+        And executing "crc config set skip-check-crc-network-active false" succeeds
+        Then executing "crc setup" succeeds
+        And executing "sudo virsh net-list --name" succeeds
+        And stdout contains "crc"
 
-   @linux
-   Scenario: Running `crc start` without `crc setup` and with checks disabled fails when network destroyed
-       # Destroy network again
-       When executing "sudo virsh net-undefine crc && sudo virsh net-destroy crc" succeeds
-       And executing "sudo virsh net-list --name" succeeds
-       Then stdout should not contain "crc"
-       # Disable checks
-       When executing "crc config set skip-check-crc-network true" succeeds
-       And executing "crc config set skip-check-crc-network-active true" succeeds
-       # Start CRC
-       Then starting CRC with default bundle fails
-       And stderr contains "Network not found: no network with matching name 'crc'"
+    @linux
+    Scenario: Running `crc start` without `crc setup` and with checks disabled fails when network destroyed
+        # Destroy network again
+        When executing "sudo virsh net-undefine crc && sudo virsh net-destroy crc" succeeds
+        And executing "sudo virsh net-list --name" succeeds
+        Then stdout should not contain "crc"
+        # Disable checks
+        When executing "crc config set skip-check-crc-network true" succeeds
+        And executing "crc config set skip-check-crc-network-active true" succeeds
+        # Start CRC
+        Then starting CRC with default bundle fails
+        And stderr contains "Network not found: no network with matching name 'crc'"
 
-   @linux
-   Scenario: Clean-up
-       # Remove the config file
-       When removing file "crc.json" from CRC home folder succeeds
-       And executing "crc setup" succeeds
-       Then stderr should not contain "Skipping above check"
+    @linux
+    Scenario: Clean-up
+        # Remove the config file
+        When removing file "crc.json" from CRC home folder succeeds
+        And executing "crc setup" succeeds
+        Then stderr should not contain "Skipping above check"
        
