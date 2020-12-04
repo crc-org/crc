@@ -16,9 +16,7 @@ import (
 var (
 	// Timeout where we will bail if we're not able to properly contact the
 	// plugin server.
-	defaultTimeout            = 10 * time.Second
-	CurrentBinaryIsCRCMachine = false
-	CoreDrivers               = []string{"generic", "hyperv", "none", "virtualbox"}
+	defaultTimeout = 10 * time.Second
 )
 
 const (
@@ -81,35 +79,13 @@ type Executor struct {
 	binaryPath                 string
 }
 
-type ErrPluginBinaryNotFound struct {
-	driverName string
-	driverPath string
-}
-
-func (e ErrPluginBinaryNotFound) Error() string {
-	return fmt.Sprintf("Driver %q not found. Do you have the plugin binary %q accessible in your PATH?", e.driverName, e.driverPath)
-}
-
-// driverPath finds the path of a driver binary by its name.
-//  + If the driver is a core driver, there is no separate driver binary. We reuse current binary if it's `crc`
-// or we assume `crc` is in the PATH.
-//  + If the driver is NOT a core driver, then the separate binary must be in the PATH and its name must be
+// driverPath finds the path of a driver binary by its name. The separate binary must be in the PATH and its name must be
 // `crc-machine-driverName`
 func driverPath(driverName string, binaryPath string) string {
-	for _, coreDriver := range CoreDrivers {
-		if coreDriver == driverName {
-			if CurrentBinaryIsCRCMachine {
-				return os.Args[0]
-			}
-			return "crc-machine"
-		}
-	}
-
 	driverName = fmt.Sprintf("crc-driver-%s", driverName)
 	if binaryPath != "" {
 		return filepath.Join(binaryPath, driverName)
 	}
-
 	return driverName
 }
 
@@ -117,7 +93,7 @@ func NewPlugin(driverName string, binaryPath string) (*Plugin, error) {
 	driverPath := driverPath(driverName, binaryPath)
 	binaryPath, err := exec.LookPath(driverPath)
 	if err != nil {
-		return nil, ErrPluginBinaryNotFound{driverName, driverPath}
+		return nil, err
 	}
 
 	log.Debugf("Found binary path at %s", binaryPath)

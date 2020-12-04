@@ -4,12 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 	"time"
 
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/log"
-	"github.com/code-ready/machine/libmachine/mcnflag"
 	"github.com/code-ready/machine/libmachine/mcnutils"
 	"github.com/code-ready/machine/libmachine/state"
 )
@@ -40,56 +38,6 @@ func NewDriver(hostName, storePath string) *Driver {
 			CPU:    defaultCPU,
 		},
 	}
-}
-
-// GetCreateFlags registers the flags this driver adds to
-// "docker hosts create"
-func (d *Driver) GetCreateFlags() []mcnflag.Flag {
-	return []mcnflag.Flag{
-		mcnflag.StringFlag{
-			Name:   "hyperv-bundlepath-url",
-			Usage:  "URL of the crc bundlepath. Defaults to the latest available version.",
-			EnvVar: "HYPERV_BUNDLEPATH_URL",
-		},
-		mcnflag.StringFlag{
-			Name:   "hyperv-virtual-switch",
-			Usage:  "Virtual switch name. Defaults to first found.",
-			EnvVar: "HYPERV_VIRTUAL_SWITCH",
-		},
-		mcnflag.IntFlag{
-			Name:   "hyperv-memory",
-			Usage:  "Memory size for host in MB.",
-			Value:  defaultMemory,
-			EnvVar: "HYPERV_MEMORY",
-		},
-		mcnflag.IntFlag{
-			Name:   "hyperv-cpu-count",
-			Usage:  "number of CPUs for the machine",
-			Value:  defaultCPU,
-			EnvVar: "HYPERV_CPU_COUNT",
-		},
-		mcnflag.StringFlag{
-			Name:   "hyperv-static-macaddress",
-			Usage:  "Hyper-V network adapter's static MAC address.",
-			EnvVar: "HYPERV_STATIC_MACADDRESS",
-		},
-		mcnflag.BoolFlag{
-			Name:   "hyperv-disable-dynamic-memory",
-			Usage:  "Disable dynamic memory management setting",
-			EnvVar: "HYPERV_DISABLE_DYNAMIC_MEMORY",
-		},
-	}
-}
-
-func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
-	d.VirtualSwitch = flags.String("hyperv-virtual-switch")
-	d.Memory = flags.Int("hyperv-memory")
-	d.CPU = flags.Int("hyperv-cpu-count")
-	d.MacAddress = flags.String("hyperv-static-macaddress")
-	d.SSHUser = drivers.DefaultSSHUser
-	d.DisableDynamicMemory = flags.Bool("hyperv-disable-dynamic-memory")
-
-	return nil
 }
 
 func (d *Driver) UpdateConfigRaw(rawConfig []byte) error {
@@ -132,30 +80,9 @@ func (d *Driver) UpdateConfigRaw(rawConfig []byte) error {
 	return nil
 }
 
-func (d *Driver) GetSSHHostname() (string, error) {
-	return d.GetIP()
-}
-
-func (d *Driver) GetSSHKeyPath() string {
-	return d.SSHKeyPath
-}
-
 // DriverName returns the name of the driver
 func (d *Driver) DriverName() string {
 	return "hyperv"
-}
-
-func (d *Driver) GetURL() (string, error) {
-	ip, err := d.GetIP()
-	if err != nil {
-		return "", err
-	}
-
-	if ip == "" {
-		return "", nil
-	}
-
-	return fmt.Sprintf("tcp://%s", net.JoinHostPort(ip, "2376")), nil
 }
 
 func (d *Driver) GetState() (state.State, error) {
@@ -393,16 +320,6 @@ func (d *Driver) Remove() error {
 	}
 
 	return cmd("Hyper-V\\Remove-VM", d.MachineName, "-Force")
-}
-
-// Restart stops and starts an host
-func (d *Driver) Restart() error {
-	err := d.Stop()
-	if err != nil {
-		return err
-	}
-
-	return d.Start()
 }
 
 // Kill force stops an host

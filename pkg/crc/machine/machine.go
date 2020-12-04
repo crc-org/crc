@@ -96,7 +96,7 @@ func createLibMachineClient(debug bool) (*libmachine.Client, func(), error) {
 			unsetMachineLogging()
 		}, err
 	}
-	client := libmachine.NewClient(constants.MachineBaseDir, constants.MachineCertsDir)
+	client := libmachine.NewClient(constants.MachineBaseDir)
 	return client, func() {
 		client.Close()
 		unsetMachineLogging()

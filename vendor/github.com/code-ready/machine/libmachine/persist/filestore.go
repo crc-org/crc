@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/code-ready/machine/libmachine/host"
 	"github.com/code-ready/machine/libmachine/log"
@@ -14,16 +13,12 @@ import (
 )
 
 type Filestore struct {
-	Path             string
-	CaCertPath       string
-	CaPrivateKeyPath string
+	Path string
 }
 
-func NewFilestore(path, caCertPath, caPrivateKeyPath string) *Filestore {
+func NewFilestore(path string) *Filestore {
 	return &Filestore{
-		Path:             path,
-		CaCertPath:       caCertPath,
-		CaPrivateKeyPath: caPrivateKeyPath,
+		Path: path,
 	}
 }
 
@@ -79,23 +74,6 @@ func (s Filestore) Remove(name string) error {
 	return os.RemoveAll(hostPath)
 }
 
-func (s Filestore) List() ([]string, error) {
-	dir, err := ioutil.ReadDir(s.GetMachinesDir())
-	if err != nil && !os.IsNotExist(err) {
-		return nil, err
-	}
-
-	hostNames := []string{}
-
-	for _, file := range dir {
-		if file.IsDir() && !strings.HasPrefix(file.Name(), ".") {
-			hostNames = append(hostNames, file.Name())
-		}
-	}
-
-	return hostNames, nil
-}
-
 func (s Filestore) SetExists(name string) error {
 	filename := filepath.Join(s.GetMachinesDir(), name, fmt.Sprintf(".%s-exist", name))
 	file, err := os.OpenFile(filename, os.O_RDONLY|os.O_CREATE, 0666)
@@ -122,39 +100,6 @@ func (s Filestore) Exists(name string) (bool, error) {
 	return false, err
 }
 
-func (s Filestore) loadConfig(h *host.Host) error {
-	data, err := ioutil.ReadFile(filepath.Join(s.GetMachinesDir(), h.Name, "config.json"))
-	if err != nil {
-		return err
-	}
-
-	// Remember the machine name so we don't have to pass it through each
-	// struct in the migration.
-	name := h.Name
-
-	migratedHost, migrationPerformed, err := host.MigrateHost(h, data)
-	if err != nil {
-		return fmt.Errorf("Error getting migrated host: %s", err)
-	}
-
-	*h = *migratedHost
-
-	h.Name = name
-
-	// If we end up performing a migration, we should save afterwards so we don't have to do it again on subsequent invocations.
-	if migrationPerformed {
-		if err := s.saveToFile(data, filepath.Join(s.GetMachinesDir(), h.Name, "config.json.bak")); err != nil {
-			return fmt.Errorf("Error attempting to save backup after migration: %s", err)
-		}
-
-		if err := s.Save(h); err != nil {
-			return fmt.Errorf("Error saving config after migration was performed: %s", err)
-		}
-	}
-
-	return nil
-}
-
 func (s Filestore) Load(name string) (*host.Host, error) {
 	hostPath := filepath.Join(s.GetMachinesDir(), name)
 
@@ -163,14 +108,9 @@ func (s Filestore) Load(name string) (*host.Host, error) {
 			Name: name,
 		}
 	}
-
-	host := &host.Host{
-		Name: name,
-	}
-
-	if err := s.loadConfig(host); err != nil {
+	data, err := ioutil.ReadFile(filepath.Join(s.GetMachinesDir(), name, "config.json"))
+	if err != nil {
 		return nil, err
 	}
-
-	return host, nil
+	return host.MigrateHost(name, data)
 }
