@@ -1,7 +1,9 @@
 @story_marketplace
-Feature: 
-    Install OpenShift operator from OperatorHub and use it to manage
-    admin tasks.
+Feature: Operator from marketplace
+
+    User installs an OpenShift operator from OperatorHub and uses
+    it to manage admin tasks.
+
 
     @linux @darwin
     Scenario: Start CRC and login to cluster

@@ -1,6 +1,8 @@
 @basic
 Feature: Basic test
-    Checks whether CRC top-level commands behave correctly.
+
+    User explores some of the top-level CRC commands while going
+    through the lifecycle of CRC.
 
     @darwin @linux @windows
     Scenario: CRC version

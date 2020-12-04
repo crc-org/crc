@@ -1,8 +1,10 @@
 @story_health
-Feature: 
-    End-to-end health check. Set-up and start CRC. Then create a
-    project and deploy an app. Check on the app and delete the
-    project. Stop and delete CRC.
+Feature: End-to-end health check
+
+    User goes through a "day in the life of" CRC. They set up
+    and start CRC. They then create a project and deploy an app.
+    They check on the app and delete the project. They stop CRC
+    and delete the CRC VM.
 
     @linux @darwin
     Scenario: Start CRC
