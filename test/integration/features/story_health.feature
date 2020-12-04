@@ -26,10 +26,10 @@ Feature: End-to-end health check
         When checking that CRC is running
         Then login to the oc cluster succeeds
 
-    @linux @darwin @windows    
+    @linux @darwin @windows
     Scenario: Check cluster health
         When executing "oc get nodes"
-        Then stdout contains "Ready" 
+        Then stdout contains "Ready"
         And stdout does not contain "Not ready"
         # next line checks similar things as `crc status` except gives more informative output
         And with up to "5" retries with wait period of "1m" all cluster operators are running
@@ -62,7 +62,6 @@ Feature: End-to-end health check
         When starting CRC with default bundle succeeds
         Then checking that CRC is running
         And with up to "2" retries with wait period of "1m" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
-
 
     @darwin @linux @windows
     Scenario: Switch off CRC

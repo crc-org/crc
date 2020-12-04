@@ -23,7 +23,7 @@ Feature: Basic test
         And stdout should contain "delete"
         And stdout should contain "status"
         And stdout should contain "Flags:"
-        And stdout should contain 
+        And stdout should contain
             """
             Use "crc [command] --help" for more information about a command.
             """
@@ -31,10 +31,10 @@ Feature: Basic test
     @darwin @linux @windows
     Scenario: CRC status
         When executing "crc status" fails
-        Then stderr should contain 
-        """
-        Machine 'crc' does not exist. Use 'crc start' to create it
-        """
+        Then stderr should contain
+            """
+            Machine 'crc' does not exist. Use 'crc start' to create it
+            """
 
     @linux
     Scenario: CRC setup on Linux
@@ -57,8 +57,8 @@ Feature: Basic test
         And stderr should contain "Will use root access: executing systemctl daemon-reload command"
         And stderr should contain "Will use root access: executing systemctl reload NetworkManager"
         And stderr should contain "Checking if /etc/NetworkManager/dnsmasq.d/crc.conf exists"
-	And stderr should contain "Writing dnsmasq config for crc"
-	And stderr should contain "Will use root access: write NetworkManager configuration to /etc/NetworkManager/dnsmasq.d/crc.conf"
+        And stderr should contain "Writing dnsmasq config for crc"
+        And stderr should contain "Will use root access: write NetworkManager configuration to /etc/NetworkManager/dnsmasq.d/crc.conf"
         And stderr should contain "Will use root access: executing systemctl daemon-reload command"
         And stderr should contain "Will use root access: executing systemctl reload NetworkManager"
         And stdout should contain "Setup is complete, you can now run 'crc start -b $bundlename' to start the OpenShift cluster" if bundle is not embedded
@@ -149,7 +149,7 @@ Feature: Basic test
         When executing "crc cleanup" succeeds
         Then stderr should contain "Removing the crc VM if exists"
         And stderr should contain "Removing /etc/NetworkManager/dnsmasq.d/crc.conf file"
-	And stderr should contain "Will use root access: removing NetworkManager configuration file in /etc/NetworkManager/dnsmasq.d/crc.conf"
+        And stderr should contain "Will use root access: removing NetworkManager configuration file in /etc/NetworkManager/dnsmasq.d/crc.conf"
         And stderr should contain "Will use root access: executing systemctl daemon-reload command"
         And stderr should contain "Will use root access: executing systemctl reload NetworkManager"
         And stderr should contain "Removing /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf file"
