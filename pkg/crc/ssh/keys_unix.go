@@ -16,7 +16,7 @@ func (kp *KeyPair) WriteToFile(privateKeyPath string, publicKeyPath string) erro
 	}{
 		{
 			File:  privateKeyPath,
-			Value: pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Headers: nil, Bytes: kp.PrivateKey}),
+			Value: pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Headers: nil, Bytes: kp.PrivateKey}),
 		},
 		{
 			File:  publicKeyPath,
