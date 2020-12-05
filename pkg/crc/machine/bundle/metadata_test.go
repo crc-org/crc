@@ -20,7 +20,7 @@ const reference = `{
     "clusterName": "crc",
     "baseDomain": "testing",
     "appsDomain": "apps-crc.testing",
-    "sshPrivateKeyFile": "id_rsa_crc",
+    "sshPrivateKeyFile": "id_ecdsa_crc",
     "kubeConfig": "kubeconfig",
     "kubeadminPasswordFile": "kubeadmin-password"
   },
@@ -66,7 +66,7 @@ func TestUnmarshalMarshal(t *testing.T) {
 			ClusterName:           "crc",
 			BaseDomain:            "testing",
 			AppsDomain:            "apps-crc.testing",
-			SSHPrivateKeyFile:     "id_rsa_crc",
+			SSHPrivateKeyFile:     "id_ecdsa_crc",
 			KubeConfig:            "kubeconfig",
 			KubeadminPasswordFile: "kubeadmin-password",
 		}, Nodes: []Node{

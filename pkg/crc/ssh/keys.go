@@ -1,8 +1,9 @@
 package ssh
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/x509"
 	"errors"
 	"fmt"
@@ -13,7 +14,7 @@ import (
 
 var (
 	ErrKeyGeneration     = errors.New("Unable to generate key")
-	ErrValidation        = errors.New("Unable to validate key")
+	ErrPrivateKey        = errors.New("Unable to marshal private key")
 	ErrPublicKey         = errors.New("Unable to convert public key")
 	ErrUnableToWriteFile = errors.New("Unable to write file")
 )
@@ -26,16 +27,16 @@ type KeyPair struct {
 // NewKeyPair generates a new SSH keypair
 // This will return a private & public key encoded as DER.
 func NewKeyPair() (keyPair *KeyPair, err error) {
-	priv, err := rsa.GenerateKey(rand.Reader, 2048)
+
+	priv, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	if err != nil {
 		return nil, ErrKeyGeneration
 	}
 
-	if err := priv.Validate(); err != nil {
-		return nil, ErrValidation
+	privDer, err := x509.MarshalPKCS8PrivateKey(priv)
+	if err != nil {
+		return nil, ErrPrivateKey
 	}
-
-	privDer := x509.MarshalPKCS1PrivateKey(priv)
 
 	pubSSH, err := gossh.NewPublicKey(&priv.PublicKey)
 	if err != nil {

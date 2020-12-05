@@ -144,11 +144,11 @@ func contains(arr []string, str string) bool {
 }
 
 func GetPublicKeyPath() string {
-	return filepath.Join(MachineInstanceDir, DefaultName, "id_rsa.pub")
+	return filepath.Join(MachineInstanceDir, DefaultName, "id_ecdsa.pub")
 }
 
 func GetPrivateKeyPath() string {
-	return filepath.Join(MachineInstanceDir, DefaultName, "id_rsa")
+	return filepath.Join(MachineInstanceDir, DefaultName, "id_ecdsa")
 }
 
 // TODO: follow the same pattern as oc and podman above

@@ -2,8 +2,9 @@ package ssh
 
 import (
 	"bytes"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -26,7 +27,7 @@ func TestRunner(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(dir)
 
-	clientKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	clientKey, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	require.NoError(t, err)
 
 	clientKeyFile := filepath.Join(dir, "private.key")
@@ -60,7 +61,7 @@ func TestRunner(t *testing.T) {
 	assert.Equal(t, 1, *totalConn)
 }
 
-func createSSHServer(t *testing.T, listener net.Listener, clientKey *rsa.PrivateKey, fun func(string) (byte, string)) *int {
+func createSSHServer(t *testing.T, listener net.Listener, clientKey *ecdsa.PrivateKey, fun func(string) (byte, string)) *int {
 	totalConn := 0
 	config := &ssh.ServerConfig{
 		PublicKeyCallback: func(c ssh.ConnMetadata, pubKey ssh.PublicKey) (*ssh.Permissions, error) {
@@ -79,7 +80,7 @@ func createSSHServer(t *testing.T, listener net.Listener, clientKey *rsa.Private
 		},
 	}
 
-	serverKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	serverKey, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	require.NoError(t, err)
 	signer, err := ssh.NewSignerFromKey(serverKey)
 	require.NoError(t, err)
@@ -129,13 +130,14 @@ func createSSHServer(t *testing.T, listener net.Listener, clientKey *rsa.Private
 	return &totalConn
 }
 
-func writePrivateKey(t *testing.T, clientKeyFile string, clientKey *rsa.PrivateKey) {
+func writePrivateKey(t *testing.T, clientKeyFile string, clientKey *ecdsa.PrivateKey) {
 	privateKeyFile, err := os.OpenFile(clientKeyFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	require.NoError(t, err)
 	defer privateKeyFile.Close()
+	bytes, _ := x509.MarshalPKCS8PrivateKey(clientKey)
 	require.NoError(t, pem.Encode(privateKeyFile, &pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(clientKey),
+		Type:  "PRIVATE KEY",
+		Bytes: bytes,
 	}))
 }
 
