@@ -1,6 +1,12 @@
+// Parser for text plist formats.
+// @see https://github.com/apple/swift-corelibs-foundation/blob/master/CoreFoundation/Parsing.subproj/CFOldStylePList.c
+// @see https://github.com/gnustep/libs-base/blob/master/Source/NSPropertyList.m
+// This parser also handles strings files.
+
 package plist
 
 import (
+	"encoding/base64"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -90,6 +96,8 @@ func (p *textPlistParser) parseDocument() (pval cfValue, parseError error) {
 			p.error("garbage after end of document")
 		}
 
+		// Try parsing as .strings.
+		// See -[NSDictionary propertyListFromStringsFileFormat:].
 		p.start = 0
 		p.pos = 0
 		val = p.parseDictionary(true)
@@ -257,9 +265,9 @@ func (p *textPlistParser) parseEscape() string {
 		s = `\`
 	case '"':
 		s = `"`
-	case 'x':
+	case 'x': // This is our extension.
 		s = string(rune(p.parseHexDigits(2)))
-	case 'u', 'U':
+	case 'u', 'U': // 'u' is a GNUstep extension.
 		s = string(rune(p.parseHexDigits(4)))
 	case '0', '1', '2', '3', '4', '5', '6', '7':
 		p.backup() // we've already consumed one of the digits
@@ -312,7 +320,7 @@ func (p *textPlistParser) parseUnquotedString() cfString {
 }
 
 // the { has already been consumed
-func (p *textPlistParser) parseDictionary(ignoreEof bool) *cfDictionary {
+func (p *textPlistParser) parseDictionary(ignoreEof bool) cfValue {
 	//p.ignore() // ignore the {
 	var keypv cfValue
 	keys := make([]string, 0, 32)
@@ -344,6 +352,9 @@ outer:
 		var val cfValue
 		n := p.next()
 		if n == ';' {
+			// This is supposed to be .strings-specific.
+			// GNUstep parses this as an empty string.
+			// Apple copies the key like we do.
 			val = keypv
 		} else if n == '=' {
 			// whitespace is consumed within
@@ -362,7 +373,8 @@ outer:
 		values = append(values, val)
 	}
 
-	return &cfDictionary{keys: keys, values: values}
+	dict := &cfDictionary{keys: keys, values: values}
+	return dict.maybeUID(p.format == OpenStepFormat)
 }
 
 // the ( has already been consumed
@@ -398,15 +410,39 @@ outer:
 // the <* have already been consumed
 func (p *textPlistParser) parseGNUStepValue() cfValue {
 	typ := p.next()
+
+	if typ == '>' || typ == eof { // <*>, <*EOF
+		p.error("invalid GNUStep extended value")
+	}
+
+	if typ != 'I' && typ != 'R' && typ != 'B' && typ != 'D' {
+		// early out: no need to collect the value if we'll fail to understand it
+		p.error("unknown GNUStep extended value type `" + string(typ) + "'")
+	}
+
+	if p.peek() == '"' { // <*x"
+		p.next()
+	}
+
 	p.ignore()
 	p.scanUntil('>')
 
-	if typ == eof || typ == '>' || p.empty() || p.peek() == eof {
-		p.error("invalid GNUStep extended value")
+	if p.peek() == eof { // <*xEOF or <*x"EOF
+		p.error("unterminated GNUStep extended value")
+	}
+
+	if p.empty() { // <*x>, <*x"">
+		p.error("empty GNUStep extended value")
 	}
 
 	v := p.emit()
 	p.next() // consume the >
+
+	if v[len(v)-1] == '"' {
+		// GNUStep tolerates malformed quoted values, as in <*I5"> and <*I"5>
+		// It purportedly does so by stripping the trailing quote
+		v = v[:len(v)-1]
+	}
 
 	switch typ {
 	case 'I':
@@ -431,8 +467,31 @@ func (p *textPlistParser) parseGNUStepValue() cfValue {
 
 		return cfDate(t.In(time.UTC))
 	}
-	p.error("invalid GNUStep type " + string(typ))
+	// We should never get here; we checked the type above
 	return nil
+}
+
+// the <[ have already been consumed
+func (p *textPlistParser) parseGNUStepBase64() cfData {
+	p.ignore()
+	p.scanUntil(']')
+	v := p.emit()
+
+	if p.next() != ']' {
+		p.error("invalid GNUStep base64 data (expected ']')")
+	}
+
+	if p.next() != '>' {
+		p.error("invalid GNUStep base64 data (expected '>')")
+	}
+
+	// Emulate NSDataBase64DecodingIgnoreUnknownCharacters
+	filtered := strings.Map(base64ValidChars.Map, v)
+	data, err := base64.StdEncoding.DecodeString(filtered)
+	if err != nil {
+		p.error("invalid GNUStep base64 data: " + err.Error())
+	}
+	return cfData(data)
 }
 
 // The < has already been consumed
@@ -452,7 +511,9 @@ func (p *textPlistParser) parseHexData() cfData {
 			}
 			p.ignore()
 			return cfData(buf[:i])
-		case ' ', '\t', '\n', '\r', '\u2028', '\u2029': // more lax than apple here: skip spaces
+		// Apple and GNUstep both want these in pairs. We are a bit more lax.
+		// GS accepts comments too, but that seems like a lot of work.
+		case ' ', '\t', '\n', '\r', '\u2028', '\u2029':
 			continue
 		}
 
@@ -487,13 +548,17 @@ func (p *textPlistParser) parsePlistValue() cfValue {
 		case eof:
 			return &cfDictionary{}
 		case '<':
-			if p.next() == '*' {
+			switch p.next() {
+			case '*':
 				p.format = GNUStepFormat
 				return p.parseGNUStepValue()
+			case '[':
+				p.format = GNUStepFormat
+				return p.parseGNUStepBase64()
+			default:
+				p.backup()
+				return p.parseHexData()
 			}
-
-			p.backup()
-			return p.parseHexData()
 		case '"':
 			return p.parseQuotedString()
 		case '{':

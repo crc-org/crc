@@ -22,11 +22,12 @@ fmt.Printf("Total system memory: %d\n", memory.TotalMemory())
 ## Testing
 
 Tested/working on:
- - macOS 10.12.6 (16G29)
+ - macOS 10.12.6 (16G29), 10.15.7 (19H2)
  - Windows 10 1511 (10586.1045)
  - Linux RHEL (3.10.0-327.3.1.el7.x86_64)
  - Raspberry Pi 3 (ARMv8) on Raspbian, ODROID-C1+ (ARMv7) on Ubuntu, C.H.I.P
    (ARMv7).
+ - Amazon Linux 2 aarch64 (m6a.large, 4.14.203-156.332.amzn2.aarch64)
 
 Tested on virtual machines:
  - Windows 7 SP1 386
@@ -36,5 +37,4 @@ Tested on virtual machines:
  - FreeBSD 11.1 amd64 + 386
  - DragonFly BSD 4.8.1 amd64
 
-If you have access to untested systems (notably arm) please
-test and file bugs if necessary.
+If you have access to untested systems please test and report success/bugs.

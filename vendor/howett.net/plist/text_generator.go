@@ -197,6 +197,8 @@ func (p *textPlistGenerator) writePlistValue(pval cfValue) {
 		} else {
 			io.WriteString(p.writer, p.plistQuotedString(time.Time(pval).In(time.UTC).Format(textPlistTimeLayout)))
 		}
+	case cfUID:
+		p.writePlistValue(pval.toDict())
 	}
 }
 

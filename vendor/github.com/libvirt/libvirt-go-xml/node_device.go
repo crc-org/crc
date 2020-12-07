@@ -131,10 +131,10 @@ type NodeDevicePCIPhysFunctionCapability struct {
 }
 
 type NodeDevicePCIMDevTypesCapability struct {
-	Types []NodeDevicePCIMDevType `xml:"type"`
+	Types []NodeDeviceMDevType `xml:"type"`
 }
 
-type NodeDevicePCIMDevType struct {
+type NodeDeviceMDevType struct {
 	ID                 string `xml:"id,attr"`
 	Name               string `xml:"name"`
 	DeviceAPI          string `xml:"deviceAPI"`
@@ -301,9 +301,18 @@ type NodeDeviceMDevCapabilityAttrs struct {
 }
 
 type NodeDeviceCSSCapability struct {
-	CSSID *uint `xml:"cssid"`
-	SSID  *uint `xml:"ssid"`
-	DevNo *uint `xml:"devno"`
+	CSSID        *uint                        `xml:"cssid"`
+	SSID         *uint                        `xml:"ssid"`
+	DevNo        *uint                        `xml:"devno"`
+	Capabilities []NodeDeviceCSSSubCapability `xml:"capability"`
+}
+
+type NodeDeviceCSSSubCapability struct {
+	MDevTypes *NodeDeviceCSSMDevTypesCapability
+}
+
+type NodeDeviceCSSMDevTypesCapability struct {
+	Types []NodeDeviceMDevType `xml:"type"`
 }
 
 func (a *NodeDevicePCIAddress) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
@@ -337,6 +346,34 @@ func (a *NodeDevicePCIAddress) UnmarshalXML(d *xml.Decoder, start xml.StartEleme
 		}
 	}
 	d.Skip()
+	return nil
+}
+
+func (c *NodeDeviceCSSSubCapability) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	typ, ok := getAttr(start.Attr, "type")
+	if !ok {
+		return fmt.Errorf("Missing node device capability type")
+	}
+
+	switch typ {
+	case "mdev_types":
+		var mdevTypesCaps NodeDeviceCSSMDevTypesCapability
+		if err := d.DecodeElement(&mdevTypesCaps, &start); err != nil {
+			return err
+		}
+		c.MDevTypes = &mdevTypesCaps
+	}
+	d.Skip()
+	return nil
+}
+
+func (c *NodeDeviceCSSSubCapability) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if c.MDevTypes != nil {
+		start.Attr = append(start.Attr, xml.Attr{
+			xml.Name{Local: "type"}, "mdev_types",
+		})
+		return e.EncodeElement(c.MDevTypes, start)
+	}
 	return nil
 }
 
@@ -443,6 +480,14 @@ func (c *NodeDeviceCSSCapability) MarshalXML(e *xml.Encoder, start xml.StartElem
 		e.EncodeToken(xml.CharData(fmt.Sprintf("0x%04x", *c.DevNo)))
 		e.EncodeToken(devno.End())
 	}
+	if c.Capabilities != nil {
+		for _, subcap := range c.Capabilities {
+			start := xml.StartElement{
+				Name: xml.Name{Local: "capability"},
+			}
+			e.EncodeElement(&subcap, start)
+		}
+	}
 	e.EncodeToken(start.End())
 	return nil
 }
@@ -462,6 +507,16 @@ func (c *NodeDeviceCSSCapability) UnmarshalXML(d *xml.Decoder, start xml.StartEl
 			cdata, err := d.Token()
 			if err != nil {
 				return err
+			}
+
+			if tok.Name.Local == "capability" {
+				subcap := &NodeDeviceCSSSubCapability{}
+				err := d.DecodeElement(subcap, &tok)
+				if err != nil {
+					return err
+				}
+				c.Capabilities = append(c.Capabilities, *subcap)
+				continue
 			}
 
 			if tok.Name.Local != "cssid" &&
