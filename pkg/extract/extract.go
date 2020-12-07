@@ -104,7 +104,11 @@ func untar(reader io.Reader, targetDir string, fileFilter func(string) bool, sho
 		}
 
 		// the target location where the dir/file should be created
-		path := filepath.Join(targetDir, header.Name)
+		path, err := buildPath(targetDir, header.Name)
+		if err != nil {
+			return nil, err
+		}
+
 		if fileFilter != nil && !fileFilter(path) {
 			logging.Debugf("untar: Skipping %s", path)
 			continue
@@ -150,6 +154,16 @@ func untarFile(tarReader *tar.Reader, header *tar.Header, path string, showProgr
 	return err
 }
 
+func buildPath(baseDir, filename string) (string, error) {
+	path := filepath.Join(baseDir, filename) // #nosec G305
+
+	// Check for ZipSlip. More Info: https://snyk.io/research/zip-slip-vulnerability
+	if !strings.HasPrefix(path, filepath.Clean(baseDir)+string(os.PathSeparator)) {
+		return "", fmt.Errorf("%s: illegal file path", path)
+	}
+
+	return path, nil
+}
 func unzip(archive, target string, fileFilter func(string) bool, showProgress bool) ([]string, error) {
 	var extractedFiles []string
 	reader, err := zip.OpenReader(archive)
@@ -162,11 +176,9 @@ func unzip(archive, target string, fileFilter func(string) bool, showProgress bo
 	}
 
 	for _, file := range reader.File {
-		path := filepath.Join(target, file.Name) // #nosec G305
-
-		// Check for ZipSlip. More Info: https://snyk.io/research/zip-slip-vulnerability
-		if !strings.HasPrefix(path, filepath.Clean(target)+string(os.PathSeparator)) {
-			return nil, fmt.Errorf("%s: illegal file path", path)
+		path, err := buildPath(target, file.Name)
+		if err != nil {
+			return nil, err
 		}
 
 		if fileFilter != nil && !fileFilter(path) {
