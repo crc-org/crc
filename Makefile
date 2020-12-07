@@ -153,7 +153,7 @@ fmt:
 	@gofmt -l -w $(SOURCE_DIRS)
 
 $(GOPATH)/bin/golangci-lint:
-	pushd /tmp && GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.31.0 && popd
+	pushd /tmp && GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.33.0 && popd
 
 # Run golangci-lint against code
 .PHONY: lint cross-lint
