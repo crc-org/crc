@@ -95,7 +95,7 @@ Feature: Basic test
     @darwin @linux @windows
     Scenario: CRC status and disk space check
         When checking that CRC is running
-        And stdout should match ".*Disk Usage: *\d+\.\d+GB of 32.\d+GB.*"
+        And stdout should match ".*Disk Usage: *\d+[\.\d]*GB of 32.\d+GB.*"
 
     @darwin @linux @windows
     Scenario: CRC IP check
