@@ -15,7 +15,7 @@ import (
 	"github.com/h2non/filetype"
 	"github.com/pkg/errors"
 	"github.com/xi2/xz"
-	"golang.org/x/crypto/ssh/terminal"
+	terminal "golang.org/x/term"
 )
 
 const minSizeForProgressBar = 100_000_000
