@@ -62,8 +62,6 @@ func (e plistParseError) Error() string {
 
 // A UID represents a unique object identifier. UIDs are serialized in a manner distinct from
 // that of integers.
-//
-// UIDs cannot be serialized in OpenStepFormat or GNUStepFormat property lists.
 type UID uint64
 
 // Marshaler is the interface implemented by types that can marshal themselves into valid

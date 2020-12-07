@@ -4,7 +4,12 @@ import (
 	"hash/crc32"
 	"sort"
 	"time"
+	"strconv"
 )
+
+// magic value used in the non-binary encoding of UIDs
+// (stored as a dictionary mapping CF$UID->integer)
+const cfUIDMagic = "CF$UID"
 
 type cfValue interface {
 	typeName() string
@@ -39,6 +44,24 @@ func (p *cfDictionary) Swap(i, j int) {
 
 func (p *cfDictionary) sort() {
 	sort.Sort(p)
+}
+
+func (p *cfDictionary) maybeUID(lax bool) cfValue {
+	if len(p.keys) == 1 && p.keys[0] == "CF$UID" && len(p.values) == 1 {
+		pval := p.values[0]
+		if integer, ok := pval.(*cfNumber); ok {
+			return cfUID(integer.value)
+		}
+		// Openstep only has cfString. Act like the unmarshaller a bit.
+		if lax {
+			if str, ok := pval.(cfString); ok {
+				if i, err := strconv.ParseUint(string(str), 10, 64); err == nil {
+					return cfUID(i)
+				}
+			}
+		}
+	}
+	return p
 }
 
 type cfArray struct {
@@ -113,6 +136,16 @@ func (cfUID) typeName() string {
 
 func (p cfUID) hash() interface{} {
 	return p
+}
+
+func (p cfUID) toDict() *cfDictionary {
+	return &cfDictionary{
+		keys: []string{cfUIDMagic},
+		values: []cfValue{&cfNumber{
+			signed: false,
+			value:  uint64(p),
+		}},
+	}
 }
 
 type cfData []byte

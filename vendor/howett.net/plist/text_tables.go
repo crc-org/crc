@@ -2,6 +2,14 @@ package plist
 
 type characterSet [4]uint64
 
+func (s *characterSet) Map(ch rune) rune {
+	if s.Contains(ch) {
+		return ch
+	} else {
+		return -1
+	}
+}
+
 func (s *characterSet) Contains(ch rune) bool {
 	return ch >= 0 && ch <= 255 && s.ContainsByte(byte(ch))
 }
@@ -21,8 +29,9 @@ var gsQuotable = characterSet{
 }
 
 // 7f instead of 3f in the top line: CFOldStylePlist.c says . is valid, but they quote it.
+// ef instead og 6f in the top line: ' will be quoted
 var osQuotable = characterSet{
-	0xf4007f6fffffffff,
+	0xf4007fefffffffff,
 	0xf8000001f8000001,
 	0xffffffffffffffff,
 	0xffffffffffffffff,
@@ -38,6 +47,15 @@ var whitespace = characterSet{
 var newlineCharacterSet = characterSet{
 	0x0000000000002400,
 	0x0000000000000000,
+	0x0000000000000000,
+	0x0000000000000000,
+}
+
+// Bitmap of characters that are valid in base64-encoded strings.
+// Used to filter out non-b64 characters to emulate NSDataBase64DecodingIgnoreUnknownCharacters
+var base64ValidChars = characterSet{
+	0x23ff880000000000,
+	0x07fffffe07fffffe,
 	0x0000000000000000,
 	0x0000000000000000,
 }

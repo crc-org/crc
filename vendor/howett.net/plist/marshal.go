@@ -147,7 +147,8 @@ func (p *Encoder) marshal(val reflect.Value) cfValue {
 	case reflect.Slice, reflect.Array:
 		if typ.Elem().Kind() == reflect.Uint8 {
 			bytes := []byte(nil)
-			if val.CanAddr() {
+			if val.CanAddr() && val.Kind() == reflect.Slice {
+				// arrays are may be addressable but do not support .Bytes
 				bytes = val.Bytes()
 			} else {
 				bytes = make([]byte, val.Len())

@@ -1,7 +1,11 @@
 language: go
 
+go:
+  - 1.12
+
 os:
   - linux
+  - linux-ppc64le
   - osx
   - windows
 
