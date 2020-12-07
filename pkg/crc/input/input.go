@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/output"
-	"golang.org/x/crypto/ssh/terminal"
+	terminal "golang.org/x/term"
 	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 
