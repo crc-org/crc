@@ -1,7 +1,9 @@
 package logging
 
 import (
+	"fmt"
 	"os"
+	"time"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/sirupsen/logrus"
@@ -33,6 +35,10 @@ func CloseLogFile() {
 func CloseLogging() {
 	CloseLogFile()
 	logrus.StandardLogger().ReplaceHooks(make(logrus.LevelHooks))
+}
+
+func BackupLogFile() {
+	os.Rename(logfile.Name(), fmt.Sprintf("%s_%s", logfile.Name(), time.Now().Format("20060102150405"))) // nolint
 }
 
 func InitLogrus(logLevel, logFilePath string) {
