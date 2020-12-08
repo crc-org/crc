@@ -151,6 +151,11 @@ func GetPrivateKeyPath() string {
 	return filepath.Join(MachineInstanceDir, DefaultName, "id_ecdsa")
 }
 
+// For backward compatibility to v 1.20.0
+func GetRsaPrivateKeyPath() string {
+	return filepath.Join(MachineInstanceDir, DefaultName, "id_rsa")
+}
+
 // TODO: follow the same pattern as oc and podman above
 func GetCRCMacTrayDownloadURL() string {
 	return fmt.Sprintf(CRCMacTrayDownloadURL, version.GetCRCMacTrayVersion())
