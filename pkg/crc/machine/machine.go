@@ -269,7 +269,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting the IP")
 	}
-	sshRunner, err := crcssh.CreateRunner(instanceIP, getSSHPort(client.useVSock()), crcBundleMetadata.GetSSHKeyPath(), constants.GetPrivateKeyPath())
+	sshRunner, err := crcssh.CreateRunner(instanceIP, getSSHPort(client.useVSock()), crcBundleMetadata.GetSSHKeyPath(), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath())
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating the ssh client")
 	}
@@ -608,7 +608,7 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting ip")
 	}
-	sshRunner, err := crcssh.CreateRunner(ip, getSSHPort(client.useVSock()), constants.GetPrivateKeyPath())
+	sshRunner, err := crcssh.CreateRunner(ip, getSSHPort(client.useVSock()), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath())
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating the ssh client")
 	}
