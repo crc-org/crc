@@ -206,3 +206,11 @@ embed_bundle: clean cross $(HOST_BUILD_DIR)/crc-embedder check_bundledir $(HYPER
 	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=darwin --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/macos-amd64/crc
 	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=linux --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/linux-amd64/crc
 	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=windows --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/windows-amd64/crc.exe
+
+.PHONY: update-go-version
+update-go-version:
+	./update-go-version.sh 1.14
+
+.PHONY: goversioncheck
+goversioncheck:
+	./verify-go-version.sh
