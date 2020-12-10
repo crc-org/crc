@@ -54,7 +54,6 @@ function install_required_packages() {
 		 libcurl-devel \
 		 glib2-devel \
 		 openssl-devel \
-		 asciidoc \
 		 unzip \
 		 podman
 
