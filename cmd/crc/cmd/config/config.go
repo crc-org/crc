@@ -11,19 +11,21 @@ import (
 )
 
 const (
-	Bundle               = "bundle"
-	CPUs                 = "cpus"
-	Memory               = "memory"
-	DiskSize             = "disk-size"
-	NameServer           = "nameserver"
-	PullSecretFile       = "pull-secret-file"
-	DisableUpdateCheck   = "disable-update-check"
-	ExperimentalFeatures = "enable-experimental-features"
-	NetworkMode          = "network-mode"
-	HTTPProxy            = "http-proxy"
-	HTTPSProxy           = "https-proxy"
-	NoProxy              = "no-proxy"
-	ProxyCAFile          = "proxy-ca-file"
+	Bundle                   = "bundle"
+	CPUs                     = "cpus"
+	Memory                   = "memory"
+	DiskSize                 = "disk-size"
+	NameServer               = "nameserver"
+	PullSecretFile           = "pull-secret-file"
+	DisableUpdateCheck       = "disable-update-check"
+	ExperimentalFeatures     = "enable-experimental-features"
+	NetworkMode              = "network-mode"
+	HTTPProxy                = "http-proxy"
+	HTTPSProxy               = "https-proxy"
+	NoProxy                  = "no-proxy"
+	ProxyCAFile              = "proxy-ca-file"
+	DisableOLM               = "disable-olm"
+	DisableClusterMonitoring = "disable-cluster-monitoring"
 )
 
 func RegisterSettings(cfg *config.Config) {
@@ -42,6 +44,10 @@ func RegisterSettings(cfg *config.Config) {
 	cfg.AddSetting(HTTPSProxy, "", config.ValidateURI, config.SuccessfullyApplied)
 	cfg.AddSetting(NoProxy, "", config.ValidateNoProxy, config.SuccessfullyApplied)
 	cfg.AddSetting(ProxyCAFile, "", config.ValidatePath, config.SuccessfullyApplied)
+
+	// Users can disable either OLM / cluster monitoring
+	cfg.AddSetting(DisableOLM, false, config.ValidateBool, config.RequiresRestartMsg)
+	cfg.AddSetting(DisableClusterMonitoring, false, config.ValidateBool, config.RequiresRestartMsg)
 }
 
 func isPreflightKey(key string) bool {

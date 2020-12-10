@@ -72,6 +72,8 @@ func runStart(arguments []string) (*machine.StartResult, error) {
 		PullSecret: &cluster.PullSecret{
 			Getter: getPullSecretFileContent,
 		},
+		DisableOLM:               config.Get(cmdConfig.DisableOLM).AsBool(),
+		DisableClusterMonitoring: config.Get(cmdConfig.DisableClusterMonitoring).AsBool(),
 	}
 
 	client := newMachine()

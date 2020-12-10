@@ -20,6 +20,12 @@ type StartConfig struct {
 
 	// User Pull secret
 	PullSecret *cluster.PullSecret
+
+	// Disable flag for OLM, Marketplace
+	DisableOLM bool
+
+	// Disable flag for cluster monitoring
+	DisableClusterMonitoring bool
 }
 
 type ClusterConfig struct {
