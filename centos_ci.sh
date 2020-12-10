@@ -51,9 +51,6 @@ function install_required_packages() {
                  libvirt-devel \
                  jq \
                  gcc \
-		 libcurl-devel \
-		 glib2-devel \
-		 openssl-devel \
 		 unzip \
 		 podman
 
