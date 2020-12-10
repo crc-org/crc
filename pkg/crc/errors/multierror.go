@@ -65,7 +65,7 @@ func RetryAfter(limit time.Duration, callback func() error, d time.Duration) err
 	m := MultiError{}
 	timeLimit := time.Now().Add(limit)
 	attempt := 0
-	for time.Now().Before(timeLimit) || attempt < 2 {
+	for time.Now().Before(timeLimit) || attempt < 20 {
 		logging.Debugf("retry loop: attempt %d", attempt)
 		err := callback()
 		if err == nil {
