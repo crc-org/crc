@@ -159,8 +159,6 @@ github.com/openshift/library-go/pkg/oauth/oauthdiscovery
 # github.com/openshift/oc v0.0.0-alpha.0.0.20201126035554-299b6af535d1
 github.com/openshift/oc/pkg/helpers/term
 github.com/openshift/oc/pkg/helpers/tokencmd
-# github.com/pbnjay/memory v0.0.0-20201129165224-b12e5d931931
-github.com/pbnjay/memory
 # github.com/pborman/uuid v1.2.1
 github.com/pborman/uuid
 # github.com/pelletier/go-toml v1.8.1

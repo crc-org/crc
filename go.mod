@@ -30,7 +30,6 @@ require (
 	github.com/mitchellh/mapstructure v1.4.0 // indirect
 	github.com/openshift/api v0.0.0-20200930075302-db52bc4ef99f
 	github.com/openshift/oc v0.0.0-alpha.0.0.20201126035554-299b6af535d1
-	github.com/pbnjay/memory v0.0.0-20201129165224-b12e5d931931
 	github.com/pborman/uuid v1.2.1
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/browser v0.0.0-20201207095918-0426ae3fba23

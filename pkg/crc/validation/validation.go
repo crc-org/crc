@@ -18,10 +18,11 @@ import (
 func ValidateCPUs(value int) error {
 
 	// Remove resource checks for the slim-snc POC
-
-	//	if value < constants.DefaultCPUs {
-	//		return fmt.Errorf("requires CPUs >= %d", constants.DefaultCPUs)
-	//	}
+	/*
+		if value < constants.DefaultCPUs {
+			return fmt.Errorf("requires CPUs >= %d", constants.DefaultCPUs)
+		}
+	*/
 	return nil
 }
 
@@ -29,10 +30,11 @@ func ValidateCPUs(value int) error {
 func ValidateMemory(value int) error {
 
 	// Remove resource checks for the slim-snc POC
-
-	//if value < constants.DefaultMemory {
-	//	return fmt.Errorf("requires memory in MiB >= %d", constants.DefaultMemory)
-	//}
+	/*
+		if value < constants.DefaultMemory {
+			return fmt.Errorf("requires memory in MiB >= %d", constants.DefaultMemory)
+		}
+	*/
 	return ValidateEnoughMemory(value)
 }
 
