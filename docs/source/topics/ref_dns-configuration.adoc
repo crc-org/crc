@@ -17,7 +17,28 @@ Additional checks are done to verify DNS is properly configured when running [co
 [id="dns-configuration-linux_{context}"]
 == Linux
 
-On Linux, {prod} expects the following DNS configuration:
+On Linux, depending on your distribution, {prod} expects the following DNS configuration:
+
+=== NetworkManager + systemd-resolved
+
+This configuration is used on Fedora 33 or newer, and on Ubuntu Desktop editions.
+
+* {prod} expects NetworkManager to manage networking.
+* {prod} configures `systemd-resolved` to forward requests for the `testing` domain to the `192.168.130.11` DNS server.
+`192.168.130.11` is the IP of the {prod} virtual machine.
+* `systemd-resolved` configuration is done through a NetworkManager dispatcher script in `/etc/NetworkManager/dispatcher.d/99-crc.sh`:
++
+----
+resolvectl domain crc ~testing
+resolvectl dns crc 192.168.130.11
+resolvectl default-route crc false
+
+exit 0
+----
+
+=== NetworkManager + dnsmasq
+
+This configuration is used on Fedora 32 or older, on {rhel}, and on {centos}.
 
 * {prod} expects NetworkManager to manage networking.
 * NetworkManager uses `dnsmasq` through the [filename]`/etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf` configuration file.
