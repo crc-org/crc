@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/docker/go-units"
 	"github.com/pkg/errors"
 
 	"github.com/code-ready/crc/pkg/crc/cluster"
@@ -39,6 +40,8 @@ import (
 	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/state"
 )
+
+const minimumMemoryForMonitoring = 14336
 
 func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*ClusterConfig, error) {
 	kubeadminPassword, err := bundleInfo.GetKubeadminPassword()
@@ -145,6 +148,10 @@ func (client *client) updateVMConfig(startConfig StartConfig, api libmachine.API
 }
 
 func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
+	if err := validateStartConfig(startConfig); err != nil {
+		return nil, err
+	}
+
 	var crcBundleMetadata *bundle.CrcBundleInfo
 
 	libMachineAPIClient, cleanup, err := createLibMachineClient(client.debug)
@@ -428,6 +435,13 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		log.Warnf("Cannot update kubeconfig: %v", err)
 	}
 
+	if startConfig.EnableMonitoring {
+		logging.Info("Enabling cluster monitoring operator...")
+		if err := cluster.StartMonitoring(ocConfig); err != nil {
+			return nil, errors.Wrap(err, "Cannot start monitoring stack")
+		}
+	}
+
 	if proxyConfig.IsEnabled() {
 		logging.Info("Waiting for the proxy configuration to be applied ...")
 		waitForProxyPropagation(ocConfig, proxyConfig)
@@ -439,6 +453,15 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		ClusterConfig:  *clusterConfig,
 		Status:         vmState,
 	}, nil
+}
+
+func validateStartConfig(startConfig StartConfig) error {
+	if startConfig.EnableMonitoring && startConfig.Memory < minimumMemoryForMonitoring {
+		return fmt.Errorf("Too little memory (%s) allocated to the virtual machine to start the monitoring stack, %s is the minimum",
+			units.BytesSize(float64(startConfig.Memory)*1024*1024),
+			units.BytesSize(minimumMemoryForMonitoring*1024*1024))
+	}
+	return nil
 }
 
 // makeDaemonVisibleToHyperkit crc daemon is launched in background and doesn't know where hyperkit is running.
