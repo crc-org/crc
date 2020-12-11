@@ -24,6 +24,7 @@ const (
 	HTTPSProxy           = "https-proxy"
 	NoProxy              = "no-proxy"
 	ProxyCAFile          = "proxy-ca-file"
+	EnableMonitoring     = "enable-monitoring"
 )
 
 func RegisterSettings(cfg *config.Config) {
@@ -42,6 +43,8 @@ func RegisterSettings(cfg *config.Config) {
 	cfg.AddSetting(HTTPSProxy, "", config.ValidateURI, config.SuccessfullyApplied)
 	cfg.AddSetting(NoProxy, "", config.ValidateNoProxy, config.SuccessfullyApplied)
 	cfg.AddSetting(ProxyCAFile, "", config.ValidatePath, config.SuccessfullyApplied)
+
+	cfg.AddSetting(EnableMonitoring, false, config.ValidateBool, config.SuccessfullyApplied)
 }
 
 func isPreflightKey(key string) bool {
