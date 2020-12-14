@@ -3,45 +3,43 @@ package logging
 import (
 	"os"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/sirupsen/logrus"
 	terminal "golang.org/x/term"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var (
-	logfile       *os.File
+	lumberLogger  = &lumberjack.Logger{}
 	LogLevel      string
 	originalHooks = logrus.LevelHooks{}
 )
 
-func OpenLogFile(path string) (*os.File, error) {
-	err := constants.EnsureBaseDirectoriesExist()
-	if err != nil {
-		return nil, err
+func InitLumberLogger(path string) *lumberjack.Logger {
+	if lumberLogger.Filename == "" {
+		lumberLogger = &lumberjack.Logger{
+			Filename:   path,
+			MaxSize:    1, // megabytes
+			MaxBackups: 1,
+			MaxAge:     10, // days
+		}
 	}
-	l, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
-	if err != nil {
-		return nil, err
-	}
-	return l, nil
+	return lumberLogger
 }
 
-func CloseLogFile() {
-	logfile.Close()
+func CloseLumberLogger() {
+	lumberLogger.Close()
 }
 
 func CloseLogging() {
-	CloseLogFile()
+	CloseLumberLogger()
 	logrus.StandardLogger().ReplaceHooks(make(logrus.LevelHooks))
 }
 
 func InitLogrus(logLevel, logFilePath string) {
-	logFile, err := OpenLogFile(logFilePath)
-	if err != nil {
-		logrus.Fatal("Unable to open log file: ", err)
-	}
+	InitLumberLogger(logFilePath)
+
 	// send logs to file
-	logrus.SetOutput(logFile)
+	logrus.SetOutput(lumberLogger)
 
 	logrus.SetLevel(logrus.TraceLevel)
 

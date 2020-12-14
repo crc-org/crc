@@ -672,10 +672,7 @@ func createHost(api libmachine.API, machineConfig config.MachineConfig) (*host.H
 func setMachineLogging(logs bool) error {
 	if !logs {
 		log.SetDebug(true)
-		logfile, err := logging.OpenLogFile(constants.LogFilePath)
-		if err != nil {
-			return err
-		}
+		logfile := logging.InitLumberLogger(constants.LogFilePath)
 		log.SetOutWriter(logfile)
 		log.SetErrWriter(logfile)
 	} else {
@@ -685,7 +682,7 @@ func setMachineLogging(logs bool) error {
 }
 
 func unsetMachineLogging() {
-	logging.CloseLogFile()
+	logging.CloseLumberLogger()
 }
 
 func addNameServerToInstance(sshRunner *crcssh.Runner, ns string) error {
