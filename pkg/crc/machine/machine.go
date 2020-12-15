@@ -375,6 +375,10 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		return nil, errors.Wrap(err, "Failed to renew TLS certificates: please check if a newer CodeReady Containers release is available")
 	}
 
+	if err := cluster.WaitForAPIServer(ocConfig); err != nil {
+		return nil, errors.Wrap(err, "Error waiting for apiserver")
+	}
+
 	if !exists {
 		logging.Info("Configuring cluster for first start")
 		if err := configProxyForCluster(ocConfig, sshRunner, sd, proxyConfig, instanceIP); err != nil {

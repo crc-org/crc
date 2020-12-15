@@ -307,6 +307,20 @@ func WaitForRequestHeaderClientCaFile(sshRunner *ssh.Runner) error {
 	return errors.RetryAfter(8*time.Minute, lookupRequestHeaderClientCa, 2*time.Second)
 }
 
+func WaitForAPIServer(ocConfig oc.Config) error {
+	logging.Debugf("Waiting for apiserver availability")
+	waitForAPIServer := func() error {
+		stdout, stderr, err := ocConfig.RunOcCommand("get", "nodes")
+		if err != nil {
+			logging.Debug(stderr)
+			return &errors.RetriableError{Err: err}
+		}
+		logging.Debug(stdout)
+		return nil
+	}
+	return errors.RetryAfter(2*time.Minute, waitForAPIServer, time.Second)
+}
+
 func DeleteOpenshiftAPIServerPods(ocConfig oc.Config) error {
 	if err := WaitForOpenshiftResource(ocConfig, "pod"); err != nil {
 		return err
