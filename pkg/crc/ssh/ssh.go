@@ -84,10 +84,9 @@ func (runner *Runner) runSSHCommand(command string, runPrivate bool) (string, st
 	}
 
 	if err != nil {
-		return "", "", fmt.Errorf(`ssh command error:
+		return string(stdout), string(stderr), fmt.Errorf(`ssh command error:
 command : %s
-err     : %v
-output  : %s`, command, err, string(stdout))
+err     : %v\n`, command, err)
 	}
 
 	return string(stdout), string(stderr), nil
