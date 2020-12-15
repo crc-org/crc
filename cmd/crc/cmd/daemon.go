@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/code-ready/crc/pkg/crc/api"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -135,4 +136,14 @@ func run(configuration *types.Configuration, endpoints []string) error {
 func newConfig() (crcConfig.Storage, error) {
 	config, _, err := newViperConfig()
 	return config, err
+}
+
+func runDaemon() {
+	// Remove if an old socket is present
+	os.Remove(constants.DaemonSocketPath)
+	crcAPIServer, err := api.CreateAPIServer(constants.DaemonSocketPath, newConfig, newMachineWithConfig)
+	if err != nil {
+		logging.Fatal("Failed to launch daemon", err)
+	}
+	crcAPIServer.Serve()
 }
