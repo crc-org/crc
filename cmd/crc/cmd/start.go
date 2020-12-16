@@ -34,7 +34,6 @@ func init() {
 	flagSet.UintP(cmdConfig.DiskSize, "d", constants.DefaultDiskSize, "Total size in GiB of the disk used by the OpenShift cluster")
 	flagSet.StringP(cmdConfig.NameServer, "n", "", "IPv4 address of nameserver to use for the OpenShift cluster")
 	flagSet.Bool(cmdConfig.DisableUpdateCheck, false, "Don't check for update")
-	flagSet.Bool(cmdConfig.EnableMonitoring, false, "Enable monitoring stack")
 
 	startCmd.Flags().AddFlagSet(flagSet)
 }
