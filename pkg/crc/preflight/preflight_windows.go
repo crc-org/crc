@@ -80,6 +80,15 @@ var traySetupChecks = [...]Check{
 		flags:            SetupOnly,
 	},
 	{
+		checkDescription:   "Checking if CodeReady Containers daemon is installed",
+		check:              checkIfDaemonInstalled,
+		fixDescription:     "Installing CodeReady Containers daemon",
+		fix:                fixDaemonInstalled,
+		cleanupDescription: "Uninstalling daemon if installed",
+		cleanup:            removeDaemon,
+		flags:              SetupOnly,
+	},
+	{
 		checkDescription:   "Checking if tray is installed",
 		check:              checkIfTrayInstalled,
 		fixDescription:     "Installing CodeReady Containers tray",
@@ -87,6 +96,11 @@ var traySetupChecks = [...]Check{
 		cleanupDescription: "Uninstalling tray if installed",
 		cleanup:            removeTray,
 		flags:              SetupOnly,
+	},
+	{
+		cleanupDescription: "Stopping crc tray if running",
+		cleanup:            stopTray,
+		flags:              CleanUpOnly,
 	},
 }
 
