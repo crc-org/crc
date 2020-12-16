@@ -11,21 +11,21 @@ import (
 )
 
 const (
-	Bundle               = "bundle"
-	CPUs                 = "cpus"
-	Memory               = "memory"
-	DiskSize             = "disk-size"
-	NameServer           = "nameserver"
-	PullSecretFile       = "pull-secret-file"
-	DisableUpdateCheck   = "disable-update-check"
-	ExperimentalFeatures = "enable-experimental-features"
-	NetworkMode          = "network-mode"
-	HTTPProxy            = "http-proxy"
-	HTTPSProxy           = "https-proxy"
-	NoProxy              = "no-proxy"
-	ProxyCAFile          = "proxy-ca-file"
-	EnableMonitoring     = "enable-monitoring"
-	ConsentTelemetry     = "consent-telemetry"
+	Bundle                  = "bundle"
+	CPUs                    = "cpus"
+	Memory                  = "memory"
+	DiskSize                = "disk-size"
+	NameServer              = "nameserver"
+	PullSecretFile          = "pull-secret-file"
+	DisableUpdateCheck      = "disable-update-check"
+	ExperimentalFeatures    = "enable-experimental-features"
+	NetworkMode             = "network-mode"
+	HTTPProxy               = "http-proxy"
+	HTTPSProxy              = "https-proxy"
+	NoProxy                 = "no-proxy"
+	ProxyCAFile             = "proxy-ca-file"
+	ConsentTelemetry        = "consent-telemetry"
+	EnableClusterMonitoring = "enable-cluster-monitoring"
 )
 
 func RegisterSettings(cfg *config.Config) {
@@ -45,7 +45,7 @@ func RegisterSettings(cfg *config.Config) {
 	cfg.AddSetting(NoProxy, "", config.ValidateNoProxy, config.SuccessfullyApplied)
 	cfg.AddSetting(ProxyCAFile, "", config.ValidatePath, config.SuccessfullyApplied)
 
-	cfg.AddSetting(EnableMonitoring, false, config.ValidateBool, config.SuccessfullyApplied)
+	cfg.AddSetting(EnableClusterMonitoring, false, config.ValidateBool, config.SuccessfullyApplied)
 
 	// Telemeter Configuration
 	cfg.AddSetting(ConsentTelemetry, false, config.ValidateBool, config.SuccessfullyApplied)
