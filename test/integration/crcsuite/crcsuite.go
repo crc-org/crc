@@ -181,7 +181,7 @@ func CheckClusterOperatorsWithRetry(retryCount int, retryWait string) error {
 
 	ocConfig := oc.UseOCWithConfig("crc")
 	for i := 0; i < retryCount; i++ {
-		s, err := cluster.GetClusterOperatorsStatus(ocConfig)
+		s, err := cluster.GetClusterOperatorsStatus(ocConfig, false)
 		if err != nil {
 			return err
 		}
