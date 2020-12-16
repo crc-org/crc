@@ -160,7 +160,12 @@ func newMachine() machine.Client {
 }
 
 func newMachineWithConfig(config crcConfig.Storage) machine.Client {
-	return machine.NewClient(constants.DefaultName, isDebugLog(), network.ParseMode(config.Get(cmdConfig.NetworkMode).AsString()))
+	return machine.NewClient(
+		constants.DefaultName,
+		isDebugLog(),
+		network.ParseMode(config.Get(cmdConfig.NetworkMode).AsString()),
+		config.Get(cmdConfig.EnableClusterMonitoring).AsBool(),
+	)
 }
 
 func addForceFlag(cmd *cobra.Command) {

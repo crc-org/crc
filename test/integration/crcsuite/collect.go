@@ -177,7 +177,7 @@ type VMCommandCollector struct {
 }
 
 func (collector *VMCommandCollector) Collect(w Writer) error {
-	client := machine.NewClient(constants.DefaultName, true, network.DefaultMode)
+	client := machine.NewClient(constants.DefaultName, true, network.DefaultMode, false)
 	ip, err := client.IP()
 	if err != nil {
 		return err
@@ -198,7 +198,7 @@ type ContainerLogCollector struct {
 }
 
 func (collector *ContainerLogCollector) Collect(w Writer) error {
-	client := machine.NewClient(constants.DefaultName, true, network.DefaultMode)
+	client := machine.NewClient(constants.DefaultName, true, network.DefaultMode, false)
 	ip, err := client.IP()
 	if err != nil {
 		return err

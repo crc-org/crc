@@ -20,8 +20,6 @@ type StartConfig struct {
 
 	// User Pull secret
 	PullSecret *cluster.PullSecret
-
-	EnableMonitoring bool
 }
 
 type ClusterConfig struct {

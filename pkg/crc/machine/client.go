@@ -19,16 +19,18 @@ type Client interface {
 }
 
 type client struct {
-	name        string
-	debug       bool
-	networkMode network.Mode
+	name              string
+	debug             bool
+	networkMode       network.Mode
+	monitoringEnabled bool
 }
 
-func NewClient(name string, debug bool, networkMode network.Mode) Client {
+func NewClient(name string, debug bool, networkMode network.Mode, monitoringEnabled bool) Client {
 	return &client{
-		name:        name,
-		debug:       debug,
-		networkMode: networkMode,
+		name:              name,
+		debug:             debug,
+		networkMode:       networkMode,
+		monitoringEnabled: monitoringEnabled,
 	}
 }
 
