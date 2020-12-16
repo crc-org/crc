@@ -90,7 +90,7 @@ func (client *client) updateVMConfig(startConfig StartConfig, api libmachine.API
 }
 
 func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
-	if err := validateStartConfig(startConfig); err != nil {
+	if err := client.validateStartConfig(startConfig); err != nil {
 		return nil, err
 	}
 
@@ -381,7 +381,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		log.Warnf("Cannot update kubeconfig: %v", err)
 	}
 
-	if startConfig.EnableMonitoring {
+	if client.monitoringEnabled {
 		logging.Info("Enabling cluster monitoring operator...")
 		if err := cluster.StartMonitoring(ocConfig); err != nil {
 			return nil, errors.Wrap(err, "Cannot start monitoring stack")
@@ -401,8 +401,8 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	}, nil
 }
 
-func validateStartConfig(startConfig StartConfig) error {
-	if startConfig.EnableMonitoring && startConfig.Memory < minimumMemoryForMonitoring {
+func (client *client) validateStartConfig(startConfig StartConfig) error {
+	if client.monitoringEnabled && startConfig.Memory < minimumMemoryForMonitoring {
 		return fmt.Errorf("Too little memory (%s) allocated to the virtual machine to start the monitoring stack, %s is the minimum",
 			units.BytesSize(float64(startConfig.Memory)*1024*1024),
 			units.BytesSize(minimumMemoryForMonitoring*1024*1024))
