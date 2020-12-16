@@ -343,6 +343,13 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		return nil, errors.Wrap(err, "Failed to update cluster ID")
 	}
 
+	if client.monitoringEnabled {
+		logging.Info("Enabling cluster monitoring operator...")
+		if err := cluster.StartMonitoring(ocConfig); err != nil {
+			return nil, errors.Wrap(err, "Cannot start monitoring stack")
+		}
+	}
+
 	// Check if kubelet service is running inside the VM
 	kubeletStatus, err := sd.Status("kubelet")
 	if err != nil || kubeletStatus != states.Running {
@@ -379,13 +386,6 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	logging.Info("Updating kubeconfig")
 	if err := eventuallyWriteKubeconfig(ocConfig, instanceIP, clusterConfig); err != nil {
 		log.Warnf("Cannot update kubeconfig: %v", err)
-	}
-
-	if client.monitoringEnabled {
-		logging.Info("Enabling cluster monitoring operator...")
-		if err := cluster.StartMonitoring(ocConfig); err != nil {
-			return nil, errors.Wrap(err, "Cannot start monitoring stack")
-		}
 	}
 
 	if proxyConfig.IsEnabled() {
