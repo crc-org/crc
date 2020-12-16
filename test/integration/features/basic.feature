@@ -85,6 +85,14 @@ Feature: Basic test
         Then stderr should contain "Checking if the Hyper-V virtual switch exist"
 
     @darwin @linux @windows
+    Scenario: Request start with monitoring stack
+        When setting config property "enable-cluster-monitoring" to value "true" succeeds
+        And setting config property "memory" to value "14000" succeeds
+        Then starting CRC with default bundle fails
+        And stderr should contain "Too little memory"
+        And setting config property "memory" to value "16000" succeeds
+
+    @darwin @linux @windows
     Scenario: CRC start
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
@@ -112,6 +120,16 @@ Feature: Basic test
         When executing "crc console --credentials" succeeds
         Then stdout should contain "To login as a regular user, run 'oc login -u developer -p developer"
         And stdout should contain "To login as an admin, run 'oc login -u kubeadmin -p "
+
+    @darwin @linux @windows
+    Scenario: Monitoring stack check
+        Given checking that CRC is running
+        When executing "eval $(crc oc-env)" succeeds
+        And login to the oc cluster succeeds
+        And executing "oc get pods -n openshift-monitoring" succeeds
+        Then stdout matches ".*cluster-monitoring-operator-\w+-\w+\ *2/2\ *Running.*"
+        And unsetting config property "enable-cluster-monitoring" succeeds
+        And unsetting config property "memory" succeeds
 
     @darwin @linux @windows
     Scenario: CRC forcible stop
