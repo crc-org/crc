@@ -8,3 +8,5 @@ metadata:
 spec:
   size: 5
   version: 3.2.13
+  pod:
+    busyboxImage: quay.io/libpod/alpine:3.10.2
