@@ -10,7 +10,7 @@ import (
 	openshiftapi "github.com/openshift/api/config/v1"
 )
 
-var ignoreClusterOperators = []string{"monitoring", "machine-config", "marketplace", "insights"}
+var defaultIgnoredClusterOperators = []string{"machine-config", "marketplace", "insights"}
 
 // https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusteroperator.md#what-should-an-operator-report-with-clusteroperator-custom-resource
 type Status struct {
@@ -21,14 +21,18 @@ type Status struct {
 }
 
 func GetClusterOperatorStatus(ocConfig oc.Config, operator string) (*Status, error) {
-	return getStatus(ocConfig, []string{operator})
+	return getStatus(ocConfig, defaultIgnoredClusterOperators, []string{operator})
 }
 
-func GetClusterOperatorsStatus(ocConfig oc.Config) (*Status, error) {
-	return getStatus(ocConfig, []string{})
+func GetClusterOperatorsStatus(ocConfig oc.Config, monitoringEnabled bool) (*Status, error) {
+	ignoredOperators := defaultIgnoredClusterOperators
+	if !monitoringEnabled {
+		ignoredOperators = append(ignoredOperators, "monitoring")
+	}
+	return getStatus(ocConfig, ignoredOperators, []string{})
 }
 
-func getStatus(ocConfig oc.Config, selector []string) (*Status, error) {
+func getStatus(ocConfig oc.Config, ignoreClusterOperators, selector []string) (*Status, error) {
 	cs := &Status{
 		Available: true,
 	}
