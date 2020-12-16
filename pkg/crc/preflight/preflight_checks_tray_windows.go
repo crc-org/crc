@@ -10,6 +10,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/version"
 	dl "github.com/code-ready/crc/pkg/download"
 	"github.com/code-ready/crc/pkg/embed"
 	"github.com/code-ready/crc/pkg/extract"
@@ -18,7 +19,7 @@ import (
 )
 
 func checkIfTrayInstalled() error {
-	if os.FileExists(filepath.Join(constants.StartupFolder, constants.TrayShortcutName)) {
+	if os.FileExists(filepath.Join(constants.StartupFolder, constants.TrayShortcutName)) && checkTrayVersion() {
 		return nil
 	}
 	return fmt.Errorf("CodeReady Containers tray is not Installed")
@@ -190,4 +191,15 @@ func fixTrayExecutableExists() error {
 	}
 
 	return nil
+}
+
+func checkTrayVersion() bool {
+	cmd := fmt.Sprintf(`(Get-Item %s).VersionInfo.FileVersion`, constants.TrayExecutablePath)
+	stdOut, _, err := powershell.Execute(cmd)
+	if err != nil {
+		logging.Debugf("Failed to get the version of tray: %v", err)
+		return false
+	}
+	logging.Debugf("Got tray version: %s", strings.TrimSpace(stdOut))
+	return strings.TrimSpace(stdOut) == version.GetCRCWindowsTrayVersion()
 }
