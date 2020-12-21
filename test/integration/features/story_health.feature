@@ -45,14 +45,14 @@ Feature: End-to-end health check
 
     @darwin @linux @windows
     Scenario: Create and test app
-        When executing "oc new-app httpd-example" succeeds
-        Then stdout should contain "Creating resources"
-        And stdout should contain
-            """
-            service "httpd-example" created
-            """
-        When executing "oc rollout status dc/httpd-example || oc rollout status deployment httpd-example" succeeds
+        When executing "oc create deployment httpd-example --image=quay.io/bitnami/nginx --port=8080" succeeds
+        Then stdout should contain "deployment.apps/httpd-example created"
+        When executing "oc rollout status deployment httpd-example" succeeds
         Then stdout should contain "successfully rolled out"
+        When executing "oc expose deployment httpd-example --port 8080" succeeds
+        Then stdout should contain "httpd-example exposed"
+        When executing "oc expose svc httpd-example" succeeds
+        Then stdout should contain "httpd-example exposed"
 
     @darwin @linux @windows
     Scenario: Stop and start CRC, then check app still runs
