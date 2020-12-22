@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/os/shell"
 	"github.com/spf13/cobra"
@@ -14,17 +14,13 @@ var podmanEnvCmd = &cobra.Command{
 	Use:   "podman-env",
 	Short: "Setup podman environment",
 	Long:  `Setup environment for 'podman' executable to access podman on CRC VM`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := runPodmanEnv(args); err != nil {
-			exit.WithMessage(1, err.Error())
-		}
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// See issue #961; Currently does not work on Windows in combination with the CRC vm.
+		return errors.New("currently not supported")
 	},
 }
 
-func runPodmanEnv(args []string) error {
-	// See issue #961; Currently does not work on Windows in combination with the CRC vm.
-	exit.WithMessage(1, "Currently not supported.")
-
+func RunPodmanEnv(args []string) error {
 	userShell, err := shell.GetShell(forceShell)
 	if err != nil {
 		return fmt.Errorf("Error running the podman-env command: %s", err.Error())

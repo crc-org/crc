@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/exit"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
 	"github.com/spf13/cobra"
 )
@@ -20,10 +19,8 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version information",
 	Long:  "Print version information",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := runPrintVersion(os.Stdout, defaultVersion(), outputFormat); err != nil {
-			exit.WithMessage(1, err.Error())
-		}
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runPrintVersion(os.Stdout, defaultVersion(), outputFormat)
 	},
 }
 

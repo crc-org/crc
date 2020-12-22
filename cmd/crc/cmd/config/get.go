@@ -1,10 +1,10 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/spf13/cobra"
 )
@@ -14,20 +14,21 @@ func configGetCmd(config config.Storage) *cobra.Command {
 		Use:   "get CONFIG-KEY",
 		Short: "Get a crc configuration property",
 		Long:  `Gets a crc configuration property.`,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
-				exit.WithMessage(1, "Please provide a configuration property to get")
+				return errors.New("Please provide a configuration property to get")
 			}
 			key := args[0]
 			v := config.Get(key)
 			switch {
 			case v.Invalid:
-				exit.WithMessage(1, fmt.Sprintf("Configuration property '%s' does not exist", key))
+				return fmt.Errorf("Configuration property '%s' does not exist", key)
 			case v.IsDefault:
-				exit.WithMessage(1, fmt.Sprintf("Configuration property '%s' is not set. Default value is '%s'", key, v.AsString()))
+				return fmt.Errorf("Configuration property '%s' is not set. Default value is '%s'", key, v.AsString())
 			default:
 				output.Outln(key, ":", v.AsString())
 			}
+			return nil
 		},
 	}
 }

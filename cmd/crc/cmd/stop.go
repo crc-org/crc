@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/machine/libmachine/state"
@@ -23,10 +22,8 @@ var stopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop the OpenShift cluster",
 	Long:  "Stop the OpenShift cluster",
-	Run: func(cmd *cobra.Command, args []string) {
-		if renderErr := runStop(os.Stdout, newMachine(), outputFormat != jsonFormat, globalForce, outputFormat); renderErr != nil {
-			exit.WithMessage(1, renderErr.Error())
-		}
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runStop(os.Stdout, newMachine(), outputFormat != jsonFormat, globalForce, outputFormat)
 	},
 }
 
