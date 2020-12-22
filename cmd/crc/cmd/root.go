@@ -75,6 +75,7 @@ func runPrerun() error {
 
 func runPostrun() {
 	logging.CloseLogging()
+	segmentClient.Close()
 }
 
 func runRoot() {
