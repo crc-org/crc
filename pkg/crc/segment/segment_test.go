@@ -1,10 +1,8 @@
 package segment
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,10 +10,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/code-ready/crc/pkg/crc/version"
-
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/stretchr/testify/require"
 )
 
@@ -45,21 +43,13 @@ func mockServer() (chan []byte, *httptest.Server) {
 	done := make(chan []byte, 1)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		buf := bytes.NewBuffer(nil)
-		io.Copy(buf, r.Body) // nolint
-
-		var v interface{}
-		err := json.Unmarshal(buf.Bytes(), &v)
+		defer r.Body.Close()
+		bin, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			panic(err)
+			logging.Error(err)
+			return
 		}
-
-		b, err := json.MarshalIndent(v, "", "  ")
-		if err != nil {
-			panic(err)
-		}
-
-		done <- b
+		done <- bin
 	}))
 
 	return done, server
@@ -94,18 +84,16 @@ func TestClientUploadWithConsent(t *testing.T) {
 	require.NoError(t, c.Upload(errors.New("an error occurred")))
 	require.NoError(t, c.Close())
 
-	s := segmentResponse{}
 	select {
-	case x, ok := <-body:
-		if ok {
-			err = json.Unmarshal(x, &s)
-			require.NoError(t, err)
-		}
+	case x := <-body:
+		s := segmentResponse{}
+		require.NoError(t, json.Unmarshal(x, &s))
+		require.Equal(t, s.Batch[0].Traits.Error, "an error occurred")
+		require.Equal(t, s.Context.App.Name, "crc")
+		require.Equal(t, s.Context.App.Version, version.GetCRCVersion())
 	default:
+		require.Fail(t, "server should receive data")
 	}
-	require.Equal(t, s.Batch[0].Traits.Error, "an error occurred")
-	require.Equal(t, s.Context.App.Name, "crc")
-	require.Equal(t, s.Context.App.Version, version.GetCRCVersion())
 }
 
 func TestClientUploadWithOutConsent(t *testing.T) {
@@ -126,15 +114,9 @@ func TestClientUploadWithOutConsent(t *testing.T) {
 	require.NoError(t, c.Upload(errors.New("an error occurred")))
 	require.NoError(t, c.Close())
 
-	s := segmentResponse{}
 	select {
-	case x, ok := <-body:
-		if ok {
-			err = json.Unmarshal(x, &s)
-			require.NoError(t, err)
-		}
+	case <-body:
+		require.Fail(t, "server should not receive data")
 	default:
 	}
-
-	require.Len(t, s.Batch, 0)
 }
