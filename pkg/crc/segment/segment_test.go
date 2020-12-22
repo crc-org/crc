@@ -12,9 +12,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/code-ready/crc/pkg/crc/version"
+
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
-	"github.com/segmentio/analytics-go"
 	"github.com/stretchr/testify/require"
 )
 
@@ -80,17 +81,6 @@ func TestClientUploadWithConsent(t *testing.T) {
 	defer server.Close()
 	defer close(body)
 
-	client, err := analytics.NewWithConfig("dummykey", analytics.Config{
-		DefaultContext: &analytics.Context{
-			App: analytics.AppInfo{
-				Name:    "crc",
-				Version: "1.20.0",
-			},
-		},
-		Endpoint: server.URL,
-	})
-	require.NoError(t, err)
-
 	dir, err := ioutil.TempDir("", "cfg")
 	require.NoError(t, err)
 	defer os.RemoveAll(dir)
@@ -98,7 +88,8 @@ func TestClientUploadWithConsent(t *testing.T) {
 	config, err := newTestConfig(true)
 	require.NoError(t, err)
 
-	c := &Client{segmentClient: client, config: config, telemetryFilePath: filepath.Join(dir, "telemetry")}
+	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
+	require.NoError(t, err)
 
 	require.NoError(t, c.Upload(errors.New("an error occurred")))
 
@@ -113,24 +104,13 @@ func TestClientUploadWithConsent(t *testing.T) {
 	}
 	require.Equal(t, s.Batch[0].Traits.Error, "an error occurred")
 	require.Equal(t, s.Context.App.Name, "crc")
-	require.Equal(t, s.Context.App.Version, "1.20.0")
+	require.Equal(t, s.Context.App.Version, version.GetCRCVersion())
 }
 
 func TestClientUploadWithOutConsent(t *testing.T) {
 	body, server := mockServer()
 	defer server.Close()
 	defer close(body)
-
-	client, err := analytics.NewWithConfig("dummykey", analytics.Config{
-		DefaultContext: &analytics.Context{
-			App: analytics.AppInfo{
-				Name:    "crc",
-				Version: "1.20.0",
-			},
-		},
-		Endpoint: server.URL,
-	})
-	require.NoError(t, err)
 
 	dir, err := ioutil.TempDir("", "cfg")
 	require.NoError(t, err)
@@ -139,7 +119,8 @@ func TestClientUploadWithOutConsent(t *testing.T) {
 	config, err := newTestConfig(false)
 	require.NoError(t, err)
 
-	c := &Client{segmentClient: client, config: config, telemetryFilePath: filepath.Join(dir, "telemetry")}
+	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
+	require.NoError(t, err)
 
 	require.NoError(t, c.Upload(errors.New("an error occurred")))
 
