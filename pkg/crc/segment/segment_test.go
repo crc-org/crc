@@ -92,6 +92,7 @@ func TestClientUploadWithConsent(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NoError(t, c.Upload(errors.New("an error occurred")))
+	require.NoError(t, c.Close())
 
 	s := segmentResponse{}
 	select {
@@ -123,6 +124,7 @@ func TestClientUploadWithOutConsent(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NoError(t, c.Upload(errors.New("an error occurred")))
+	require.NoError(t, c.Close())
 
 	s := segmentResponse{}
 	select {

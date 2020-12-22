@@ -48,8 +48,11 @@ func newCustomClient(config *crcConfig.Config, telemetryFilePath, segmentEndpoin
 	}, nil
 }
 
+func (c *Client) Close() error {
+	return c.segmentClient.Close()
+}
+
 func (c *Client) Upload(err error) error {
-	defer c.segmentClient.Close()
 	if !c.config.Get(config.ConsentTelemetry).AsBool() {
 		return nil
 	}
