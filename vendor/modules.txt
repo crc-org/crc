@@ -455,6 +455,7 @@ gvisor.dev/gvisor/pkg/waiter
 k8s.io/api/certificates/v1beta1
 k8s.io/api/core/v1
 # k8s.io/apimachinery v0.20.1 => github.com/openshift/kubernetes-apimachinery v0.0.0-20210108114224-194a87c5b03a
+## explicit
 k8s.io/apimachinery/pkg/api/errors
 k8s.io/apimachinery/pkg/api/resource
 k8s.io/apimachinery/pkg/apis/meta/v1
