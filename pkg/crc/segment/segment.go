@@ -22,8 +22,12 @@ type Client struct {
 }
 
 func NewClient(config *crcConfig.Config) (*Client, error) {
-	telemetryFilePath := filepath.Join(constants.GetHomeDir(), ".redhat", "anonymousId")
+	return newCustomClient(config,
+		filepath.Join(constants.GetHomeDir(), ".redhat", "anonymousId"),
+		analytics.DefaultEndpoint)
+}
 
+func newCustomClient(config *crcConfig.Config, telemetryFilePath, segmentEndpoint string) (*Client, error) {
 	client, err := analytics.NewWithConfig("cvpHsNcmGCJqVzf6YxrSnVlwFSAZaYtp", analytics.Config{
 		DefaultContext: &analytics.Context{
 			App: analytics.AppInfo{
@@ -31,12 +35,17 @@ func NewClient(config *crcConfig.Config) (*Client, error) {
 				Version: version.GetCRCVersion(),
 			},
 		},
+		Endpoint: segmentEndpoint,
 	})
 	if err != nil {
-		return &Client{}, err
+		return nil, err
 	}
 
-	return &Client{segmentClient: client, config: config, telemetryFilePath: telemetryFilePath}, nil
+	return &Client{
+		segmentClient:     client,
+		config:            config,
+		telemetryFilePath: telemetryFilePath,
+	}, nil
 }
 
 func (c *Client) Upload(err error) error {
