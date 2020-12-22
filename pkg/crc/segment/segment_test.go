@@ -12,13 +12,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/segmentio/analytics-go"
 	"github.com/stretchr/testify/require"
-)
-
-const (
-	ConsentTelemetry = "consent-telemetry"
 )
 
 type segmentResponse struct {
@@ -70,7 +67,11 @@ func mockServer() (chan []byte, *httptest.Server) {
 func newTestConfig(value bool) (*crcConfig.Config, error) {
 	storage := crcConfig.NewEmptyInMemoryStorage()
 	config := crcConfig.New(storage)
-	config.AddSetting(ConsentTelemetry, value, crcConfig.ValidateBool, crcConfig.SuccessfullyApplied)
+	cmdConfig.RegisterSettings(config)
+
+	if _, err := config.Set(cmdConfig.ConsentTelemetry, value); err != nil {
+		return nil, err
+	}
 	return config, nil
 }
 
