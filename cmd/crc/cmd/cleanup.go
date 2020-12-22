@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/spf13/cobra"
 )
@@ -20,10 +19,8 @@ var cleanupCmd = &cobra.Command{
 	Use:   "cleanup",
 	Short: "Undo config changes",
 	Long:  "Undo all the configuration changes done by 'crc setup' command",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := runCleanup(); err != nil {
-			exit.WithMessage(1, err.Error())
-		}
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runCleanup()
 	},
 }
 

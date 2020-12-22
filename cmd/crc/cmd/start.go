@@ -11,7 +11,6 @@ import (
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -43,16 +42,17 @@ var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start the OpenShift cluster",
 	Long:  "Start the OpenShift cluster",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if err := viper.BindFlagSet(cmd.Flags()); err != nil {
-			exit.WithMessage(1, err.Error())
+			return err
 		}
 		if err := renderStartResult(runStart(args)); err != nil {
 			if serr := segmentClient.Upload(err); serr != nil {
 				fmt.Println(serr.Error())
 			}
-			exit.WithMessage(1, err.Error())
+			return err
 		}
+		return nil
 	},
 }
 

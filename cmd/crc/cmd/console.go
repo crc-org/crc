@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/machine/libmachine/state"
 	"github.com/pkg/browser"
@@ -31,10 +30,8 @@ var consoleCmd = &cobra.Command{
 	Aliases: []string{"dashboard"},
 	Short:   "Open the OpenShift Web Console in the default browser",
 	Long:    `Open the OpenShift Web Console in the default browser or print its URL or credentials`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if renderErr := runConsole(os.Stdout, newMachine(), consolePrintURL, consolePrintCredentials, outputFormat); renderErr != nil {
-			exit.WithMessage(1, renderErr.Error())
-		}
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runConsole(os.Stdout, newMachine(), consolePrintURL, consolePrintCredentials, outputFormat)
 	},
 }
 

@@ -8,7 +8,6 @@ import (
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/spf13/cobra"
 )
@@ -23,13 +22,11 @@ var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Set up prerequisites for the OpenShift cluster",
 	Long:  "Set up local virtualization and networking infrastructure for the OpenShift cluster",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if err := viper.BindFlagSet(cmd.Flags()); err != nil {
-			exit.WithMessage(1, err.Error())
+			return err
 		}
-		if err := runSetup(args); err != nil {
-			exit.WithMessage(1, err.Error())
-		}
+		return runSetup(args)
 	},
 }
 

@@ -12,7 +12,6 @@ import (
 
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/transport"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/types"
@@ -32,7 +31,7 @@ var daemonCmd = &cobra.Command{
 	Short:  "Run the crc daemon",
 	Long:   "Run the crc daemon",
 	Hidden: true,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		// setup separate logging for daemon
 		logging.CloseLogging()
 		logging.InitLogrus(logging.LogLevel, constants.DaemonLogFilePath)
@@ -50,7 +49,7 @@ var daemonCmd = &cobra.Command{
 			}
 		}
 
-		if err := run(&types.Configuration{
+		err := run(&types.Configuration{
 			Debug:             false, // never log packets
 			CaptureFile:       captureFile(),
 			MTU:               4000, // Large packets slightly improve the performance. Less small packets.
@@ -89,9 +88,8 @@ var daemonCmd = &cobra.Command{
 				":6443": "192.168.127.2:6443",
 				":443":  "192.168.127.2:443",
 			},
-		}, endpoints); err != nil {
-			exit.WithMessage(1, err.Error())
-		}
+		}, endpoints)
+		return err
 	},
 }
 

@@ -3,12 +3,12 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/network"
@@ -22,16 +22,15 @@ var rootCmd = &cobra.Command{
 	Use:   commandName,
 	Short: descriptionShort,
 	Long:  descriptionLong,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		runPrerun()
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		return runPrerun()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		runRoot()
 		_ = cmd.Help()
 	},
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		runPostrun()
-	},
+	SilenceUsage:  true,
+	SilenceErrors: true,
 }
 
 var (
@@ -61,14 +60,17 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&logging.LogLevel, "log-level", constants.DefaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
 }
 
-func runPrerun() {
+func runPrerun() error {
 	// Setting up logrus
 	logging.InitLogrus(logging.LogLevel, constants.LogFilePath)
-	setProxyDefaults()
+	if err := setProxyDefaults(); err != nil {
+		return err
+	}
 
 	for _, str := range defaultVersion().lines() {
 		logging.Debugf(str)
 	}
+	return nil
 }
 
 func runPostrun() {
@@ -81,8 +83,11 @@ func runRoot() {
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		logging.Fatal(err)
+		runPostrun()
+		_, _ = fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
 	}
+	runPostrun()
 }
 
 func checkIfMachineMissing(client machine.Client) error {
@@ -96,7 +101,7 @@ func checkIfMachineMissing(client machine.Client) error {
 	return nil
 }
 
-func setProxyDefaults() {
+func setProxyDefaults() error {
 	httpProxy := config.Get(cmdConfig.HTTPProxy).AsString()
 	httpsProxy := config.Get(cmdConfig.HTTPSProxy).AsString()
 	noProxy := config.Get(cmdConfig.NoProxy).AsString()
@@ -104,12 +109,12 @@ func setProxyDefaults() {
 
 	proxyCAData, err := getProxyCAData(proxyCAFile)
 	if err != nil {
-		exit.WithMessage(1, fmt.Sprintf("not able to read proxyCAFile %s: %v", proxyCAFile, err.Error()))
+		return fmt.Errorf("not able to read proxyCAFile %s: %v", proxyCAFile, err.Error())
 	}
 
 	proxyConfig, err := network.NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAData)
 	if err != nil {
-		exit.WithMessage(1, err.Error())
+		return err
 	}
 
 	if proxyConfig.IsEnabled() {
@@ -117,6 +122,7 @@ func setProxyDefaults() {
 			proxyConfig.HTTPSProxyForDisplay(), proxyConfig.GetNoProxyString(), proxyCAFile)
 		proxyConfig.ApplyToEnvironment()
 	}
+	return nil
 }
 
 func getProxyCAData(proxyCAFile string) (string, error) {

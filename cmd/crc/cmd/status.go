@@ -8,7 +8,6 @@ import (
 	"text/tabwriter"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/docker/go-units"
 	"github.com/spf13/cobra"
@@ -23,10 +22,8 @@ var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Display status of the OpenShift cluster",
 	Long:  "Show details about the OpenShift cluster",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := runStatus(os.Stdout, newMachine(), constants.MachineCacheDir, outputFormat); err != nil {
-			exit.WithMessage(1, err.Error())
-		}
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runStatus(os.Stdout, newMachine(), constants.MachineCacheDir, outputFormat)
 	},
 }
 

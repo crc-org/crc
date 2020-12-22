@@ -9,7 +9,6 @@ import (
 	"text/template"
 
 	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/spf13/cobra"
 )
 
@@ -29,14 +28,12 @@ func configViewCmd(config config.Storage) *cobra.Command {
 		Use:   "view",
 		Short: "Display all assigned crc configuration properties",
 		Long:  `Displays all assigned crc configuration properties and their values.`,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			tmpl, err := determineTemplate(configViewFormat)
 			if err != nil {
-				logging.Fatal(err)
+				return err
 			}
-			if err := runConfigView(config.AllConfigs(), tmpl, os.Stdout); err != nil {
-				logging.Fatal(err)
-			}
+			return runConfigView(config.AllConfigs(), tmpl, os.Stdout)
 		},
 	}
 	configViewCmd.Flags().StringVar(&configViewFormat, "format", DefaultConfigViewFormat,
