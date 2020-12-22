@@ -56,7 +56,7 @@ func (c *Client) Upload(action string, err error) error {
 	if !c.config.Get(config.ConsentTelemetry).AsBool() {
 		return nil
 	}
-	logging.Info("Uploading the error to segment")
+	logging.Debug("Uploading the error to segment")
 
 	anonymousID, uerr := getUserIdentity(c.telemetryFilePath)
 	if uerr != nil {
