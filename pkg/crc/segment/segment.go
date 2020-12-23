@@ -63,8 +63,8 @@ func (c *Client) Upload(err error) error {
 		return uerr
 	}
 
-	t := analytics.NewTraits()
-	t = setError(t, err)
+	t := analytics.NewTraits().
+		Set("error", err.Error())
 
 	return c.segmentClient.Enqueue(analytics.Identify{
 		AnonymousId: anonymousID,
@@ -90,8 +90,4 @@ func getUserIdentity(telemetryFilePath string) (string, error) {
 		}
 	}
 	return strings.TrimSpace(string(id)), nil
-}
-
-func setError(t analytics.Traits, err error) analytics.Traits {
-	return t.Set("error", err.Error())
 }

@@ -47,9 +47,6 @@ var startCmd = &cobra.Command{
 			return err
 		}
 		if err := renderStartResult(runStart(args)); err != nil {
-			if serr := segmentClient.Upload(err); serr != nil {
-				fmt.Println(serr.Error())
-			}
 			return err
 		}
 		return nil
