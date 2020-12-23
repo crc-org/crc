@@ -128,11 +128,21 @@ function upload_logs() {
 
 function run_tests() {
   set +e
+
   # In Jenkins slave we have pull secret file in the $HOME/payload/crc_pull_secret
   # this is copied over using https://github.com/minishift/minishift-ci-jobs/blob/master/minishift-ci-index.yaml#L99
-  export PULL_SECRET_FILE=--pull-secret-file=$HOME/payload/crc_pull_secret
-  export BUNDLE_LOCATION=--bundle-location=$HOME/Downloads/$BUNDLE 
-  make integration 
+
+  export PULL_SECRET=$HOME/payload/crc_pull_secret
+  export BUNDLE=$HOME/Downloads/$BUNDLE
+  make gintegration
+  if [[ $? -ne 0 ]]; then
+    upload_logs $1
+    exit 1
+  fi
+
+  export PULL_SECRET_FILE=--pull-secret-file=$PULL_SECRET
+  export BUNDLE_LOCATION=--bundle-location=$BUNDLE
+  make integration
   if [[ $? -ne 0 ]]; then
     upload_logs $1
     exit 1
