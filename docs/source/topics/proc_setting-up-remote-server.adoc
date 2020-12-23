@@ -69,8 +69,8 @@ defaults
     log global
     mode http
     timeout connect 5000
-    timeout client 5000
-    timeout server 5000
+    timeout client 500000
+    timeout server 500000
 
 frontend apps
     bind 0.0.0.0:80
