@@ -15,6 +15,7 @@ import (
 
 func init() {
 	addOutputFormatFlag(stopCmd)
+	addForceFlag(stopCmd)
 	rootCmd.AddCommand(stopCmd)
 }
 

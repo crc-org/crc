@@ -59,7 +59,6 @@ func init() {
 	rootCmd.AddCommand(cmdConfig.GetConfigCmd(config))
 
 	rootCmd.PersistentFlags().StringVar(&logging.LogLevel, "log-level", constants.DefaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
-	rootCmd.PersistentFlags().BoolVarP(&globalForce, "force", "f", false, "Forcefully perform an action")
 }
 
 func runPrerun() {
@@ -153,4 +152,8 @@ func newMachine() machine.Client {
 
 func newMachineWithConfig(config crcConfig.Storage) machine.Client {
 	return machine.NewClient(constants.DefaultName, isDebugLog(), network.ParseMode(config.Get(cmdConfig.NetworkMode).AsString()))
+}
+
+func addForceFlag(cmd *cobra.Command) {
+	cmd.PersistentFlags().BoolVarP(&globalForce, "force", "f", false, "Forcefully perform this action")
 }
