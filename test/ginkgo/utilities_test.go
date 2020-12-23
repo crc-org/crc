@@ -189,11 +189,11 @@ func SendCommandToVM(cmd string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	out, err := ssh.Output(cmd)
+	out, _, err := ssh.Run(cmd)
 	if err != nil {
 		return "", err
 	}
-	return out, nil
+	return string(out), nil
 }
 
 // ExitError is an interface that presents an API similar to os.ProcessState, which is
