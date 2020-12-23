@@ -52,7 +52,7 @@ func (c *Client) Close() error {
 	return c.segmentClient.Close()
 }
 
-func (c *Client) Upload(err error) error {
+func (c *Client) Upload(action string, err error) error {
 	if !c.config.Get(config.ConsentTelemetry).AsBool() {
 		return nil
 	}
@@ -64,6 +64,7 @@ func (c *Client) Upload(err error) error {
 	}
 
 	t := analytics.NewTraits().
+		Set("action", action).
 		Set("error", err.Error())
 
 	return c.segmentClient.Enqueue(analytics.Identify{

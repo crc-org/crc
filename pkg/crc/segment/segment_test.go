@@ -81,7 +81,7 @@ func TestClientUploadWithConsent(t *testing.T) {
 	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
 	require.NoError(t, err)
 
-	require.NoError(t, c.Upload(errors.New("an error occurred")))
+	require.NoError(t, c.Upload("start", errors.New("an error occurred")))
 	require.NoError(t, c.Close())
 
 	select {
@@ -111,7 +111,7 @@ func TestClientUploadWithOutConsent(t *testing.T) {
 	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
 	require.NoError(t, err)
 
-	require.NoError(t, c.Upload(errors.New("an error occurred")))
+	require.NoError(t, c.Upload("start", errors.New("an error occurred")))
 	require.NoError(t, c.Close())
 
 	select {
