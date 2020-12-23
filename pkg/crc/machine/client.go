@@ -35,3 +35,7 @@ func NewClient(name string, debug bool, networkMode network.Mode) Client {
 func (client *client) GetName() string {
 	return client.name
 }
+
+func (client *client) useVSock() bool {
+	return client.networkMode == network.VSockMode
+}
