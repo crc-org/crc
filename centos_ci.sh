@@ -41,18 +41,18 @@ function load_jenkins_vars() {
 
 function install_required_packages() {
   # Install EPEL repo
-  yum -y install epel-release
+  yum -q -y install epel-release
   # Get all the deps in
-  yum -y install make \
-                 git \
-                 curl \
-                 qemu-kvm \
-                 libvirt \
-                 libvirt-devel \
-                 jq \
-                 gcc \
-		 unzip \
-		 podman
+  yum -q -y install make \
+    git \
+    curl \
+    qemu-kvm \
+    libvirt \
+    libvirt-devel \
+    jq \
+    gcc \
+    unzip \
+    podman
 
   # Install the required version of golang
   curl -L -O https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz
