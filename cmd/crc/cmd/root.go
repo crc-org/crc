@@ -83,6 +83,8 @@ func runRoot() {
 }
 
 func Execute() {
+	attachMiddleware([]string{}, rootCmd)
+
 	if err := rootCmd.Execute(); err != nil {
 		runPostrun()
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
@@ -163,4 +165,27 @@ func newMachineWithConfig(config crcConfig.Storage) machine.Client {
 
 func addForceFlag(cmd *cobra.Command) {
 	cmd.PersistentFlags().BoolVarP(&globalForce, "force", "f", false, "Forcefully perform this action")
+}
+
+func executeWithLogging(input func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		if err := input(cmd, args); err != nil {
+			if serr := segmentClient.Upload(err); serr != nil {
+				fmt.Println(serr.Error())
+			}
+			return err
+		}
+		return nil
+	}
+}
+
+func attachMiddleware(names []string, cmd *cobra.Command) {
+	if cmd.HasSubCommands() {
+		for _, command := range cmd.Commands() {
+			attachMiddleware(append(names, cmd.Name()), command)
+		}
+	} else if cmd.RunE != nil {
+		src := cmd.RunE
+		cmd.RunE = executeWithLogging(src)
+	}
 }
