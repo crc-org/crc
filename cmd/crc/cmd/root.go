@@ -167,10 +167,10 @@ func addForceFlag(cmd *cobra.Command) {
 	cmd.PersistentFlags().BoolVarP(&globalForce, "force", "f", false, "Forcefully perform this action")
 }
 
-func executeWithLogging(input func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
+func executeWithLogging(fullCmd string, input func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := input(cmd, args); err != nil {
-			if serr := segmentClient.Upload(err); serr != nil {
+			if serr := segmentClient.Upload(fullCmd, err); serr != nil {
 				fmt.Println(serr.Error())
 			}
 			return err
@@ -185,7 +185,8 @@ func attachMiddleware(names []string, cmd *cobra.Command) {
 			attachMiddleware(append(names, cmd.Name()), command)
 		}
 	} else if cmd.RunE != nil {
+		fullCmd := strings.Join(append(names, cmd.Name()), " ")
 		src := cmd.RunE
-		cmd.RunE = executeWithLogging(src)
+		cmd.RunE = executeWithLogging(fullCmd, src)
 	}
 }
