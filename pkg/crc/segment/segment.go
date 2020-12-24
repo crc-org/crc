@@ -36,6 +36,7 @@ func newCustomClient(config *crcConfig.Config, telemetryFilePath, segmentEndpoin
 			},
 		},
 		Endpoint: segmentEndpoint,
+		Logger:   &loggingAdapter{},
 	})
 	if err != nil {
 		return nil, err
@@ -91,4 +92,14 @@ func getUserIdentity(telemetryFilePath string) (string, error) {
 		}
 	}
 	return strings.TrimSpace(string(id)), nil
+}
+
+type loggingAdapter struct{}
+
+func (l *loggingAdapter) Logf(format string, args ...interface{}) {
+	logging.Infof(format, args...)
+}
+
+func (l *loggingAdapter) Errorf(format string, args ...interface{}) {
+	logging.Errorf(format, args...)
 }
