@@ -7,9 +7,9 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
+	"github.com/code-ready/crc/pkg/libmachine"
+	"github.com/code-ready/crc/pkg/libmachine/host"
 	machineHyperkit "github.com/code-ready/machine/drivers/hyperkit"
-	"github.com/code-ready/machine/libmachine"
-	"github.com/code-ready/machine/libmachine/host"
 )
 
 func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {

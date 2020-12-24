@@ -9,9 +9,9 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/machine/libmachine"
+	"github.com/code-ready/crc/pkg/libmachine"
+	"github.com/code-ready/crc/pkg/libmachine/host"
 	"github.com/code-ready/machine/libmachine/drivers"
-	"github.com/code-ready/machine/libmachine/host"
 	"github.com/code-ready/machine/libmachine/log"
 )
 
