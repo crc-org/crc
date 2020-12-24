@@ -104,6 +104,8 @@ var vsockPreflightChecks = Check{
 	fix:              fixVsock,
 }
 
+const vsockUdevRulesPath = "/usr/lib/udev/rules.d/99-crc-vsock.rules"
+
 func checkVsock() error {
 	executable, err := os.Executable()
 	if err != nil {
@@ -126,7 +128,7 @@ func checkVsock() error {
 			return err
 		}
 		if group.Name != "libvirt" {
-			return errors.New("/dev/vsock is not is the right group")
+			return errors.New("/dev/vsock is not in the right group")
 		}
 	} else {
 		return errors.New("cannot cast info")
@@ -146,15 +148,13 @@ func fixVsock() error {
 	if err != nil {
 		return err
 	}
+
+	udevRule := `KERNEL=="vsock", MODE="0660", OWNER="root", GROUP="libvirt"`
+	err = crcos.WriteToFileAsRoot("Create udev rule for /dev/vsock", udevRule, vsockUdevRulesPath, 0644)
+	if err != nil {
+		return err
+	}
 	_, _, err = crcos.RunWithPrivilege("modprobe vhost_vsock", "modprobe", "vhost_vsock")
-	if err != nil {
-		return err
-	}
-	_, _, err = crcos.RunWithPrivilege("chown /dev/vsock", "chown", "root:libvirt", "/dev/vsock")
-	if err != nil {
-		return err
-	}
-	_, _, err = crcos.RunWithPrivilege("chmod /dev/vsock", "chmod", "g+rw", "/dev/vsock")
 	if err != nil {
 		return err
 	}
