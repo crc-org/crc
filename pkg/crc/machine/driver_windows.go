@@ -6,9 +6,9 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"github.com/code-ready/crc/pkg/crc/machine/hyperv"
-	machineHyperv "github.com/code-ready/machine/drivers/hyperv"
-	"github.com/code-ready/machine/libmachine"
-	"github.com/code-ready/machine/libmachine/host"
+	machineHyperv "github.com/code-ready/crc/pkg/drivers/hyperv"
+	"github.com/code-ready/crc/pkg/libmachine"
+	"github.com/code-ready/crc/pkg/libmachine/host"
 )
 
 func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {
