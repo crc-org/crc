@@ -45,7 +45,7 @@ func (h *Handler) Start(args json.RawMessage) string {
 			return encodeStructToJSON(startErr)
 		}
 	}
-	if err := preflight.StartPreflightChecks(h.Config); err != nil {
+	if err := preflight.RunOrSkipPreflightChecks(h.Config); err != nil {
 		startErr := &StartResult{
 			Name:  h.MachineClient.GetName(),
 			Error: err.Error(),

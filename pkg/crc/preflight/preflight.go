@@ -200,3 +200,13 @@ func CleanUpHost() error {
 	// perform action in a sane way.
 	return doCleanUpPreflightChecks(getAllPreflightChecks())
 }
+
+// RunOrSkipPreflightChecks skips the preflight checks if
+// skip-all-preflight-checks config key is true
+func RunOrSkipPreflightChecks(cfg config.Storage) error {
+	if cfg.Get(cmdConfig.SkipAllPreflightChecks).AsBool() {
+		logging.Info("All preflight checks are skipped")
+		return nil
+	}
+	return StartPreflightChecks(cfg)
+}

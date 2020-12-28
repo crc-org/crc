@@ -59,7 +59,7 @@ func runStart(arguments []string) (*machine.StartResult, error) {
 
 	checkIfNewVersionAvailable(config.Get(cmdConfig.DisableUpdateCheck).AsBool())
 
-	if err := preflight.StartPreflightChecks(config); err != nil {
+	if err := preflight.RunOrSkipPreflightChecks(config); err != nil {
 		return nil, err
 	}
 
