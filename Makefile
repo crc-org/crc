@@ -123,6 +123,7 @@ clean: clean_docs
 	rm -rf $(BUILD_DIR)
 	rm -f $(GOPATH)/bin/crc
 	rm -rf $(RELEASE_DIR)
+	rm -rf pkg/embed/blob*
 
 .PHONY: build_integration
 build_integration: $(SOURCES)
@@ -169,23 +170,23 @@ gen_release_info:
 	@sed -i s/@OPENSHIFT_VERSION@/\"$(BUNDLE_VERSION)\"/ $(RELEASE_INFO)
 
 .PHONY: release
-release: cross-lint build_docs_pdf gen_release_info
+release: check_bundledir cross-lint generate cross build_docs_pdf gen_release_info
 	mkdir $(RELEASE_DIR)
-	
+
 	@mkdir -p $(BUILD_DIR)/crc-macos-$(CRC_VERSION)-amd64
-	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/crc-macos-$(CRC_VERSION)-amd64
+	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/macos-amd64/crc $(HYPERKIT_BUNDLENAME) $(BUILD_DIR)/crc-macos-$(CRC_VERSION)-amd64
 	tar cJSf $(RELEASE_DIR)/crc-macos-amd64.tar.xz -C $(BUILD_DIR) crc-macos-$(CRC_VERSION)-amd64 --owner=0 --group=0
 
 	@mkdir -p $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
-	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
+	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/linux-amd64/crc $(LIBVIRT_BUNDLENAME) $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
 	tar cJSf $(RELEASE_DIR)/crc-linux-amd64.tar.xz -C $(BUILD_DIR) crc-linux-$(CRC_VERSION)-amd64 --owner=0 --group=0
-	
+
 	@mkdir -p $(BUILD_DIR)/crc-windows-$(CRC_VERSION)-amd64
-	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/windows-amd64/crc.exe $(BUILD_DIR)/crc-windows-$(CRC_VERSION)-amd64
+	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/windows-amd64/crc.exe $(HYPERV_BUNDLENAME) $(BUILD_DIR)/crc-windows-$(CRC_VERSION)-amd64
 	cd $(BUILD_DIR) && zip -r $(CURDIR)/$(RELEASE_DIR)/crc-windows-amd64.zip crc-windows-$(CRC_VERSION)-amd64
 
 	@mv $(RELEASE_INFO) $(RELEASE_DIR)/$(RELEASE_INFO)
-	
+
 	pushd $(RELEASE_DIR) && sha256sum * > sha256sum.txt && popd
 
 HYPERKIT_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
@@ -197,7 +198,13 @@ check_bundledir:
 ifeq ($(MOCK_BUNDLE),true)
 	touch $(HYPERKIT_BUNDLENAME) $(HYPERV_BUNDLENAME) $(LIBVIRT_BUNDLENAME)
 endif
-	@$(call check_defined, BUNDLE_DIR, "Embedding bundle requires BUNDLE_DIR set to a directory containing CRC bundles for all hypervisors")
+	@$(call check_defined, BUNDLE_DIR, "Release target requires BUNDLE_DIR set to a directory containing CRC bundles for all hypervisors")
+
+.PHONY: generate
+generate:
+	TARGET_OS=linux go generate ./...
+	TARGET_OS=darwin go generate ./...
+	TARGET_OS=windows go generate ./...
 
 .PHONY: update-go-version
 update-go-version:

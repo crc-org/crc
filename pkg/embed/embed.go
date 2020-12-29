@@ -2,24 +2,47 @@ package embed
 
 import (
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
-
-	"github.com/YourFin/binappend"
 )
 
-func openEmbeddedFile(executablePath, embedName string) (*binappend.Reader, error) {
-	extractor, err := binappend.MakeExtractor(executablePath)
-	if err != nil {
-		return nil, fmt.Errorf("Could not data embedded in %s: %v", executablePath, err)
+//go:generate go run -tags=build generator.go
+
+type embedFiles struct {
+	storage map[string][]byte
+}
+
+// Create new box for embed files
+func newEmbedBox() *embedFiles {
+	return &embedFiles{storage: make(map[string][]byte)}
+}
+
+// Add a file to box
+func (e *embedFiles) Add(file string, content []byte) {
+	e.storage[file] = content
+}
+
+// Get file's content
+func (e *embedFiles) Get(file string) []byte {
+	if f, ok := e.storage[file]; ok {
+		return f
 	}
-	reader, err := extractor.GetReader(embedName)
-	if err != nil {
-		return nil, fmt.Errorf("Could not open embedded '%s' in %s: %v", embedName, executablePath, err)
-	}
-	return reader, nil
+	return nil
+}
+
+// Embed box expose
+var box = newEmbedBox()
+
+// Add a file content to box
+func Add(file string, content []byte) {
+	box.Add(file, content)
+}
+
+// Get a file from box
+func Get(file string) []byte {
+	return box.Get(file)
 }
 
 func Extract(embedName, destFile string) error {
@@ -32,20 +55,12 @@ func Extract(embedName, destFile string) error {
 
 func ExtractFromExecutable(executablePath, embedName, destFile string) error {
 	logging.Debugf("Extracting embedded '%s' from %s to %s", embedName, executablePath, destFile)
-	reader, err := openEmbeddedFile(executablePath, embedName)
-	if err != nil {
-		return err
+	content := Get(embedName)
+	if content == nil {
+		return fmt.Errorf("Not embed in %s", embedName)
 	}
 
-	defer reader.Close()
-	writer, err := os.Create(destFile)
-	if err != nil {
-		return fmt.Errorf("Could not create '%s': %v", destFile, err)
-	}
-	defer writer.Close()
-
-	_, err = io.Copy(writer, reader)
-	if err != nil {
+	if err := ioutil.WriteFile(destFile, content, 0600); err != nil {
 		return fmt.Errorf("Failed to copy embedded '%s' from %s to %s: %v", embedName, executablePath, destFile, err)
 	}
 	return nil

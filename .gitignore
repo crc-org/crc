@@ -1,3 +1,4 @@
 out/
 docs/build/
 release/
+pkg/embed/blob*
