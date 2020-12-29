@@ -74,7 +74,7 @@ vendorcheck:
 	./verify-vendor.sh
 
 .PHONY: check
-check: cross build_integration $(HOST_BUILD_DIR)/crc-embedder test cross-lint vendorcheck
+check: cross build_integration test cross-lint vendorcheck
 
 # Start of the actual build targets
 
@@ -90,9 +90,6 @@ $(BUILD_DIR)/linux-amd64/crc: $(SOURCES)
 
 $(BUILD_DIR)/windows-amd64/crc.exe: $(SOURCES)
 	GOARCH=amd64 GOOS=windows go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/windows-amd64/crc.exe ./cmd/crc
-
-$(HOST_BUILD_DIR)/crc-embedder: $(SOURCES)
-	go build --tags="build" -ldflags="$(LDFLAGS)" -o $(HOST_BUILD_DIR)/crc-embedder ./cmd/crc-embedder
 
 .PHONY: cross ## Cross compiles all binaries
 cross: $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/windows-amd64/crc.exe
@@ -172,7 +169,7 @@ gen_release_info:
 	@sed -i s/@OPENSHIFT_VERSION@/\"$(BUNDLE_VERSION)\"/ $(RELEASE_INFO)
 
 .PHONY: release
-release: cross-lint embed_bundle build_docs_pdf gen_release_info
+release: cross-lint build_docs_pdf gen_release_info
 	mkdir $(RELEASE_DIR)
 	
 	@mkdir -p $(BUILD_DIR)/crc-macos-$(CRC_VERSION)-amd64
@@ -195,17 +192,12 @@ HYPERKIT_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTE
 HYPERV_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
 LIBVIRT_BUNDLENAME = $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
 
-.PHONY: embed_bundle check_bundledir
+.PHONY: check_bundledir
 check_bundledir:
 ifeq ($(MOCK_BUNDLE),true)
 	touch $(HYPERKIT_BUNDLENAME) $(HYPERV_BUNDLENAME) $(LIBVIRT_BUNDLENAME)
 endif
 	@$(call check_defined, BUNDLE_DIR, "Embedding bundle requires BUNDLE_DIR set to a directory containing CRC bundles for all hypervisors")
-
-embed_bundle: clean cross $(HOST_BUILD_DIR)/crc-embedder check_bundledir $(HYPERKIT_BUNDLENAME) $(HYPERV_BUNDLENAME) $(LIBVIRT_BUNDLENAME)
-	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=darwin --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/macos-amd64/crc
-	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=linux --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/linux-amd64/crc
-	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=windows --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/windows-amd64/crc.exe
 
 .PHONY: update-go-version
 update-go-version:
