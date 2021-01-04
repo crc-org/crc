@@ -38,8 +38,6 @@ Feature: Local image to image-registry
         When stdout contains "localhost/hello"
         Then executing "sudo podman image rm localhost/hello:test" succeeds
         And executing "oc delete project testproj-img" succeeds
-        When executing "crc stop -f" succeeds
-        Then stdout should match "(.*)[Ss]topped the OpenShift cluster"
         And executing "crc delete -f" succeeds
         Then stdout should contain "Deleted the OpenShift cluster"
         When executing "crc cleanup" succeeds
