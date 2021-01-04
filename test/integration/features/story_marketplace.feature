@@ -72,8 +72,6 @@ Feature: Operator from marketplace
         
     @darwin @linux @windows
     Scenario: Clean up
-        When executing "crc stop -f" succeeds
-        Then stdout should match "(.*)[Ss]topped the OpenShift cluster"
         When executing "crc delete -f" succeeds
         Then stdout should contain "Deleted the OpenShift cluster"
         When executing "crc cleanup" succeeds

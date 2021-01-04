@@ -66,6 +66,5 @@ Feature: End-to-end health check
     @darwin @linux @windows
     Scenario: Switch off CRC
         When executing "oc delete project testproj" succeeds
-        Then executing "crc stop -f" succeeds
         And executing "crc delete -f" succeeds
         And executing "crc cleanup" succeeds
