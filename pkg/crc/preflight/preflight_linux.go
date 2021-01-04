@@ -207,12 +207,12 @@ func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mo
 	return checks
 }
 
-func usesSystemdResolved(osRelease *linux.OsRelease) bool {
-	switch distroID(osRelease) {
-	case linux.Ubuntu:
+func usesSystemdResolved(distro *linux.OsRelease) bool {
+	switch {
+	case distroIsLike(distro, linux.Ubuntu):
 		return true
-	case linux.Fedora:
-		return osRelease.VersionID >= "33"
+	case distro.ID == linux.Fedora:
+		return distro.VersionID >= "33"
 	default:
 		return false
 	}
