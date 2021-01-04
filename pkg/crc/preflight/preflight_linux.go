@@ -71,7 +71,7 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			flags:              CleanUpOnly,
 		},
 	}
-	if distroID(distro) == linux.Ubuntu {
+	if distroIsLike(distro, linux.Ubuntu) {
 		checks = append(checks, ubuntuPreflightChecks...)
 	}
 	return checks
