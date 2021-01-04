@@ -8,6 +8,7 @@ import (
 	"strings"
 	"syscall"
 
+	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
 	crcos "github.com/code-ready/crc/pkg/os"
@@ -103,10 +104,13 @@ var vsockPreflightChecks = Check{
 	fixDescription:     "Checking if vsock is correctly configured",
 	fix:                fixVsock,
 	cleanupDescription: "Removing vsock configuration",
-	cleanup:            removeVsockUdevRule,
+	cleanup:            removeVsockCrcSettings,
 }
 
-const vsockUdevRulesPath = "/usr/lib/udev/rules.d/99-crc-vsock.rules"
+const (
+	vsockUdevRulesPath          = "/usr/lib/udev/rules.d/99-crc-vsock.rules"
+	vsockModuleAutoLoadConfPath = "/etc/modules-load.d/vhost_vsock.conf"
+)
 
 func checkVsock() error {
 	executable, err := os.Executable()
@@ -156,6 +160,10 @@ func fixVsock() error {
 	if err != nil {
 		return err
 	}
+	err = crcos.WriteToFileAsRoot(fmt.Sprintf("Create file %s", vsockModuleAutoLoadConfPath), "vhost_vsock", vsockModuleAutoLoadConfPath, 0644)
+	if err != nil {
+		return err
+	}
 	_, _, err = crcos.RunWithPrivilege("modprobe vhost_vsock", "modprobe", "vhost_vsock")
 	if err != nil {
 		return err
@@ -163,9 +171,20 @@ func fixVsock() error {
 	return nil
 }
 
-func removeVsockUdevRule() error {
+func removeVsockCrcSettings() error {
+	var mErr crcErrors.MultiError
 	_, _, err := crcos.RunWithPrivilege(fmt.Sprintf("rm %s", vsockUdevRulesPath), "rm", "-f", vsockUdevRulesPath)
-	return err
+	if err != nil {
+		mErr.Collect(err)
+	}
+	_, _, err = crcos.RunWithPrivilege(fmt.Sprintf("rm %s", vsockModuleAutoLoadConfPath), "rm", "-f", vsockModuleAutoLoadConfPath)
+	if err != nil {
+		mErr.Collect(err)
+	}
+	if len(mErr.Errors) == 0 {
+		return nil
+	}
+	return mErr
 }
 
 func getAllPreflightChecks() []Check {
