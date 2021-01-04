@@ -180,7 +180,7 @@ func getNetworkChecksForDistro(distro *linux.OsRelease, networkMode network.Mode
 
 	switch {
 	default:
-		logging.Warnf("distribution-specific preflight checks are not implemented for '%s'", distroID(distro))
+		logging.Warnf("distribution-specific preflight checks are not implemented for '%s'", distro.ID)
 		fallthrough
 	case distroIsLike(distro, linux.Ubuntu), distroIsLike(distro, linux.Fedora):
 		checks = append(checks, nmPreflightChecks[:]...)
@@ -216,14 +216,6 @@ func usesSystemdResolved(distro *linux.OsRelease) bool {
 	default:
 		return false
 	}
-}
-
-func distroID(osRelease *linux.OsRelease) linux.OsType {
-	if osRelease == nil {
-		return "unknown"
-	}
-	// FIXME: should also use IDLike
-	return osRelease.ID
 }
 
 func distroIsLike(osRelease *linux.OsRelease, osType linux.OsType) bool {
