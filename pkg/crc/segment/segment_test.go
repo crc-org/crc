@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
@@ -22,8 +23,11 @@ type segmentResponse struct {
 		AnonymousID string `json:"anonymousId"`
 		MessageID   string `json:"messageId"`
 		Traits      struct {
-			Error string `json:"error"`
+			OS string `json:"os"`
 		} `json:"traits"`
+		Properties struct {
+			Error string `json:"error"`
+		} `json:"properties"`
 		Type string `json:"type"`
 	} `json:"batch"`
 	Context struct {
@@ -88,7 +92,10 @@ func TestClientUploadWithConsent(t *testing.T) {
 	case x := <-body:
 		s := segmentResponse{}
 		require.NoError(t, json.Unmarshal(x, &s))
-		require.Equal(t, s.Batch[0].Traits.Error, "an error occurred")
+		require.Equal(t, s.Batch[0].Type, "identify")
+		require.Equal(t, s.Batch[0].Traits.OS, runtime.GOOS)
+		require.Equal(t, s.Batch[1].Type, "track")
+		require.Equal(t, s.Batch[1].Properties.Error, "an error occurred")
 		require.Equal(t, s.Context.App.Name, "crc")
 		require.Equal(t, s.Context.App.Version, version.GetCRCVersion())
 	default:
