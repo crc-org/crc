@@ -59,7 +59,7 @@ Feature: End-to-end health check
         Given with up to "2" retries with wait period of "60s" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
         When executing "crc stop -f" succeeds
         Then checking that CRC is stopped
-        When starting CRC with default bundle succeeds
+        When starting CRC with default bundle and nameserver "10.75.5.25" succeeds
         Then checking that CRC is running
         And with up to "2" retries with wait period of "1m" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
 
