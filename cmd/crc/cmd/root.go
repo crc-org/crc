@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
@@ -175,8 +176,9 @@ func addForceFlag(cmd *cobra.Command) {
 func executeWithLogging(fullCmd string, input func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		logging.Debugf("Running '%s'", fullCmd)
+		startTime := time.Now()
 		err := input(cmd, args)
-		if serr := segmentClient.Upload(fullCmd, err); serr != nil {
+		if serr := segmentClient.Upload(fullCmd, time.Since(startTime), err); serr != nil {
 			logging.Debugf("Cannot send data to telemetry: %v", serr)
 		}
 		return err

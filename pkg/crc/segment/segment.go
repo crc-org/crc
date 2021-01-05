@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
@@ -54,7 +55,7 @@ func (c *Client) Close() error {
 	return c.segmentClient.Close()
 }
 
-func (c *Client) Upload(action string, err error) error {
+func (c *Client) Upload(action string, duration time.Duration, err error) error {
 	if !c.config.Get(config.ConsentTelemetry).AsBool() {
 		return nil
 	}
@@ -74,7 +75,8 @@ func (c *Client) Upload(action string, err error) error {
 	}
 
 	properties := analytics.NewProperties().
-		Set("success", err == nil)
+		Set("success", err == nil).
+		Set("duration", duration.Milliseconds())
 	if err != nil {
 		properties = properties.Set("error", err.Error())
 	}

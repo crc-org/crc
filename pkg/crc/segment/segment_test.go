@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+	"time"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
@@ -85,7 +86,7 @@ func TestClientUploadWithConsent(t *testing.T) {
 	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
 	require.NoError(t, err)
 
-	require.NoError(t, c.Upload("start", errors.New("an error occurred")))
+	require.NoError(t, c.Upload("start", time.Minute, errors.New("an error occurred")))
 	require.NoError(t, c.Close())
 
 	select {
@@ -118,7 +119,7 @@ func TestClientUploadWithOutConsent(t *testing.T) {
 	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
 	require.NoError(t, err)
 
-	require.NoError(t, c.Upload("start", errors.New("an error occurred")))
+	require.NoError(t, c.Upload("start", time.Second, errors.New("an error occurred")))
 	require.NoError(t, c.Close())
 
 	select {
