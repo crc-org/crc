@@ -10,7 +10,7 @@ Feature: End-to-end health check
     Scenario: Start CRC
         Given executing "crc setup" succeeds
         When setting config property "memory" to value "12000" succeeds
-        When starting CRC with default bundle succeeds
+        When starting CRC with default bundle and nameserver "10.75.5.25" succeeds
         Then stdout should contain "Started the OpenShift cluster"
         And executing "eval $(crc oc-env)" succeeds
         When checking that CRC is running
