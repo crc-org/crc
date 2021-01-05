@@ -246,8 +246,10 @@ func distroIsLike(osRelease *linux.OsRelease, osType linux.OsType) bool {
 func distro() *linux.OsRelease {
 	distro, err := linux.GetOsRelease()
 	if err != nil {
-		logging.Warnf("cannot get distribution name: %v", err)
-		return nil
+		logging.Errorf("cannot get distribution name: %v", err)
+		return &linux.OsRelease{
+			ID: "unknown",
+		}
 	}
 	return distro
 }
