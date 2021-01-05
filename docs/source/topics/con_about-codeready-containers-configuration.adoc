@@ -9,4 +9,4 @@ Run the [command]`{bin} config --help` command to list the available properties.
 
 You can also use the [command]`{bin} config` command to configure the behavior of the startup checks for the [command]`{bin} start` and [command]`{bin} setup` commands.
 By default, startup checks report an error and stop execution when their conditions are not met.
-Set the value of a property starting with `skip-check` or `warn-check` to `true` to skip the check or report a warning rather than an error, respectively.
+Set the value of a property starting with `skip-check` to `true` to skip the check.

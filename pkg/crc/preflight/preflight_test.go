@@ -39,18 +39,6 @@ func TestFixPreflight(t *testing.T) {
 	assert.True(t, calls.fixed)
 }
 
-func TestWarnPreflight(t *testing.T) {
-	check, calls := sampleCheck(errors.New("check failed"), errors.New("fix failed"))
-	cfg := config.New(config.NewEmptyInMemoryStorage())
-	doRegisterSettings(cfg, []Check{*check})
-	_, err := cfg.Set("warn-sample", true)
-	assert.NoError(t, err)
-
-	assert.NoError(t, doFixPreflightChecks(cfg, []Check{*check}))
-	assert.True(t, calls.checked)
-	assert.True(t, calls.fixed)
-}
-
 func sampleCheck(checkErr, fixErr error) (*Check, *status) {
 	status := &status{}
 	return &Check{

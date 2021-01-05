@@ -21,7 +21,7 @@ func TestCountConfigurationOptions(t *testing.T) {
 	var preflightChecksCount int
 	for _, check := range getAllPreflightChecks() {
 		if check.configKeySuffix != "" {
-			preflightChecksCount += 2
+			preflightChecksCount++
 		}
 	}
 	assert.True(t, options == preflightChecksCount, "Unexpected number of preflight configuration flags, got %d, expected %d", options, preflightChecksCount)

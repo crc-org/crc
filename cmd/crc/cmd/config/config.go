@@ -52,22 +52,15 @@ func RegisterSettings(cfg *config.Config) {
 }
 
 func isPreflightKey(key string) bool {
-	return strings.HasPrefix(key, "skip-") || strings.HasPrefix(key, "warn-")
+	return strings.HasPrefix(key, "skip-")
 }
 
 // less is used to sort the config keys. We want to sort first the regular keys, and
-// then the keys related to preflight starting with a skip- or warn- prefix. We want
-// these preflight keys to be grouped by pair: 'skip-bar', 'warn-bar', 'skip-foo', 'warn-foo'
-// would be sorted in that order.
+// then the keys related to preflight starting with a skip- prefix.
 func less(lhsKey, rhsKey string) bool {
 	if isPreflightKey(lhsKey) {
 		if isPreflightKey(rhsKey) {
-			// lhs is preflight, rhs is preflight
-			if lhsKey[4:] == rhsKey[4:] {
-				// we want skip-foo before warn-foo
-				return lhsKey < rhsKey
-			}
-			// ignore skip-/warn- prefix
+			// ignore skip prefix
 			return lhsKey[4:] < rhsKey[4:]
 		}
 		// lhs is preflight, rhs is not preflight
