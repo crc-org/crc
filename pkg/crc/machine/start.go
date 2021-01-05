@@ -23,7 +23,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/ssh"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/crc/systemd"
-	"github.com/code-ready/crc/pkg/crc/systemd/states"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/machine/libmachine"
 	"github.com/code-ready/machine/libmachine/drivers"
@@ -348,12 +347,6 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		if err := cluster.StartMonitoring(ocConfig); err != nil {
 			return nil, errors.Wrap(err, "Cannot start monitoring stack")
 		}
-	}
-
-	// Check if kubelet service is running inside the VM
-	kubeletStatus, err := sd.Status("kubelet")
-	if err != nil || kubeletStatus != states.Running {
-		return nil, errors.Wrap(err, "kubelet service is not running")
 	}
 
 	// In Openshift 4.3, when cluster comes up, the following happens
