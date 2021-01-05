@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
@@ -64,13 +65,18 @@ func (c *Client) Upload(action string, err error) error {
 		return uerr
 	}
 
-	t := analytics.NewTraits().
-		Set("action", action).
-		Set("error", err.Error())
-
-	return c.segmentClient.Enqueue(analytics.Identify{
+	if err := c.segmentClient.Enqueue(analytics.Identify{
 		AnonymousId: anonymousID,
-		Traits:      t,
+		Traits: analytics.NewTraits().
+			Set("os", runtime.GOOS),
+	}); err != nil {
+		return err
+	}
+	return c.segmentClient.Enqueue(analytics.Track{
+		AnonymousId: anonymousID,
+		Event:       action,
+		Properties: analytics.NewProperties().
+			Set("error", err.Error()),
 	})
 }
 
