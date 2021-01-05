@@ -102,7 +102,7 @@ func UnmarshalOsRelease(osReleaseContents []byte, release *OsRelease) error {
 func GetOsRelease() (*OsRelease, error) {
 	// Check if release file exist
 	if _, err := os.Stat(releaseFile); os.IsNotExist(err) {
-		return nil, fmt.Errorf("%s not exist", releaseFile)
+		return nil, fmt.Errorf("%s doesn't exist", releaseFile)
 	}
 	content, err := ioutil.ReadFile(releaseFile)
 	if err != nil {
