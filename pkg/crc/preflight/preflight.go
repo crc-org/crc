@@ -50,20 +50,6 @@ func (check *Check) shouldSkip(config config.Storage) bool {
 	return config.Get(check.getSkipConfigName()).AsBool()
 }
 
-func (check *Check) getWarnConfigName() string {
-	if check.configKeySuffix == "" {
-		return ""
-	}
-	return "warn-" + check.configKeySuffix
-}
-
-func (check *Check) shouldWarn(config config.Storage) bool {
-	if check.configKeySuffix == "" {
-		return false
-	}
-	return config.Get(check.getWarnConfigName()).AsBool()
-}
-
 func (check *Check) doCheck(config config.Storage) error {
 	if check.checkDescription == "" {
 		panic(fmt.Sprintf("Should not happen, empty description for check '%s'", check.configKeySuffix))
@@ -110,13 +96,8 @@ func doPreflightChecks(config config.Storage, checks []Check) error {
 		if check.flags&SetupOnly == SetupOnly || check.flags&CleanUpOnly == CleanUpOnly {
 			continue
 		}
-		err := check.doCheck(config)
-		if err != nil {
-			if check.shouldWarn(config) {
-				logging.Warn(err.Error())
-			} else {
-				return err
-			}
+		if err := check.doCheck(config); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -131,13 +112,8 @@ func doFixPreflightChecks(config config.Storage, checks []Check) error {
 		if err == nil {
 			continue
 		}
-		err = check.doFix()
-		if err != nil {
-			if check.shouldWarn(config) {
-				logging.Warn(err.Error())
-			} else {
-				return err
-			}
+		if err = check.doFix(); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -169,7 +145,6 @@ func doRegisterSettings(cfg config.Schema, checks []Check) {
 	for _, check := range checks {
 		if check.configKeySuffix != "" {
 			cfg.AddSetting(check.getSkipConfigName(), false, config.ValidateBool, config.SuccessfullyApplied)
-			cfg.AddSetting(check.getWarnConfigName(), false, config.ValidateBool, config.SuccessfullyApplied)
 		}
 	}
 }

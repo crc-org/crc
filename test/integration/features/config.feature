@@ -56,55 +56,6 @@ Feature: Test configuration settings
         When unsetting config property "disable-update-check" succeeds
         Then "JSON" config file "crc.json" in CRC home folder does not contain key "disable-update-check"
 
-    # WARNINGS
-
-    Scenario Outline: CRC config checks (warnings)
-        When setting config property "<property>" to value "<value1>" succeeds
-        Then "JSON" config file "crc.json" in CRC home folder contains key "<property>" with value matching "<value1>"
-        When setting config property "<property>" to value "<value2>" succeeds
-        Then "JSON" config file "crc.json" in CRC home folder contains key "<property>" with value matching "<value2>"
-        When unsetting config property "<property>" succeeds
-        Then "JSON" config file "crc.json" in CRC home folder does not contain key "<property>"
-
-        @darwin
-        Examples: Config warnings on Mac
-            | property                             | value1 | value2 |
-            | warn-check-bundle-extracted          | true   | false  |
-            | warn-check-hosts-file-permissions    | true   | false  |
-            | warn-check-hyperkit-driver           | true   | false  |
-            | warn-check-hyperkit-installed        | true   | false  |
-            | warn-check-resolver-file-permissions | true   | false  |
-            | warn-check-root-user                 | true   | false  |
-
-        @linux
-        Examples: Config warnings on Linux
-            | property                             | value1 | value2 |
-            | warn-check-bundle-extracted          | true   | false  |
-            | warn-check-crc-dnsmasq-file          | true   | false  |
-            | warn-check-crc-network               | true   | false  |
-            | warn-check-crc-network-active        | true   | false  |
-            | warn-check-kvm-enabled               | true   | false  |
-            | warn-check-libvirt-driver            | true   | false  |
-            | warn-check-libvirt-installed         | true   | false  |
-            | warn-check-libvirt-running           | true   | false  |
-            | warn-check-libvirt-version           | true   | false  |
-            | warn-check-network-manager-config    | true   | false  |
-            | warn-check-network-manager-installed | true   | false  |
-            | warn-check-network-manager-running   | true   | false  |
-            | warn-check-root-user                 | true   | false  |
-            | warn-check-user-in-libvirt-group     | true   | false  |
-            | warn-check-virt-enabled              | true   | false  |
-
-        @windows
-        Examples: Config warnings on Windows
-            | property                        | value1 | value2 |
-            | warn-check-administrator-user   | true   | false  |
-            | warn-check-bundle-extracted     | true   | false  |
-            | warn-check-hyperv-installed     | true   | false  |
-            | warn-check-hyperv-switch        | true   | false  |
-            | warn-check-user-in-hyperv-group | true   | false  |
-            | warn-check-windows-version      | true   | false  |
-
     # SKIP
 
     Scenario Outline: CRC config checks (skips)
