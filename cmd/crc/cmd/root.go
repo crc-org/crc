@@ -175,13 +175,11 @@ func addForceFlag(cmd *cobra.Command) {
 func executeWithLogging(fullCmd string, input func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		logging.Debugf("Running '%s'", fullCmd)
-		if err := input(cmd, args); err != nil {
-			if serr := segmentClient.Upload(fullCmd, err); serr != nil {
-				logging.Debugf("Cannot send data to telemetry: %v", serr)
-			}
-			return err
+		err := input(cmd, args)
+		if serr := segmentClient.Upload(fullCmd, err); serr != nil {
+			logging.Debugf("Cannot send data to telemetry: %v", serr)
 		}
-		return nil
+		return err
 	}
 }
 

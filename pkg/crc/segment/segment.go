@@ -72,11 +72,17 @@ func (c *Client) Upload(action string, err error) error {
 	}); err != nil {
 		return err
 	}
+
+	properties := analytics.NewProperties().
+		Set("success", err == nil)
+	if err != nil {
+		properties = properties.Set("error", err.Error())
+	}
+
 	return c.segmentClient.Enqueue(analytics.Track{
 		AnonymousId: anonymousID,
 		Event:       action,
-		Properties: analytics.NewProperties().
-			Set("error", err.Error()),
+		Properties:  properties,
 	})
 }
 
