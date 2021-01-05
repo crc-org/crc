@@ -97,11 +97,13 @@ var libvirtNetworkPreflightChecks = [...]Check{
 }
 
 var vsockPreflightChecks = Check{
-	configKeySuffix:  "check-vsock",
-	checkDescription: "Checking if vsock is correctly configured",
-	check:            checkVsock,
-	fixDescription:   "Checking if vsock is correctly configured",
-	fix:              fixVsock,
+	configKeySuffix:    "check-vsock",
+	checkDescription:   "Checking if vsock is correctly configured",
+	check:              checkVsock,
+	fixDescription:     "Checking if vsock is correctly configured",
+	fix:                fixVsock,
+	cleanupDescription: "Removing vsock configuration",
+	cleanup:            removeVsockUdevRule,
 }
 
 const vsockUdevRulesPath = "/usr/lib/udev/rules.d/99-crc-vsock.rules"
@@ -159,6 +161,11 @@ func fixVsock() error {
 		return err
 	}
 	return nil
+}
+
+func removeVsockUdevRule() error {
+	_, _, err := crcos.RunWithPrivilege(fmt.Sprintf("rm %s", vsockUdevRulesPath), "rm", "-f", vsockUdevRulesPath)
+	return err
 }
 
 func getAllPreflightChecks() []Check {
