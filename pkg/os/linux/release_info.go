@@ -92,9 +92,7 @@ func UnmarshalOsRelease(osReleaseContents []byte, release *OsRelease) error {
 			logging.Warnf("Warning: got an invalid line error parsing /etc/os-release: %s", err)
 			continue
 		}
-		if err := release.setIfPossible(key, val); err != nil {
-			logging.Debug(err)
-		}
+		_ = release.setIfPossible(key, val)
 	}
 	return nil
 }
