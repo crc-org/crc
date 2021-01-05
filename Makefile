@@ -108,7 +108,7 @@ build_docs_pdf:
 
 .PHONY: docs_serve
 docs_serve: build_docs
-	${CONTAINER_RUNTIME} run -it -v $(CURDIR)/docs:/docs:Z --rm -p 8088:8088/tcp $(DOCS_BUILD_CONTAINER) docs_serve 
+	${CONTAINER_RUNTIME} run -it -v $(CURDIR)/docs:/docs:Z --rm -p 8088:8088/tcp $(DOCS_BUILD_CONTAINER) docs_serve
 
 .PHONY: docs_check_links
 docs_check_links:
