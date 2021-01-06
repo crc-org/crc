@@ -534,7 +534,7 @@ func configProxyForCluster(ocConfig oc.Config, sshRunner *crcssh.Runner, sd *sys
 
 func waitForProxyPropagation(ocConfig oc.Config, proxyConfig *network.ProxyConfig) {
 	checkProxySettingsForOperator := func() error {
-		proxySet, err := cluster.CheckProxySettingsForOperator(ocConfig, proxyConfig, "redhat-operators", "openshift-marketplace")
+		proxySet, err := cluster.CheckProxySettingsForOperator(ocConfig, proxyConfig, "marketplace-operator", "openshift-marketplace")
 		if err != nil {
 			logging.Debugf("Error getting proxy setting for openshift-marketplace operator %v", err)
 			return &crcerrors.RetriableError{Err: err}
