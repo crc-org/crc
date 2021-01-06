@@ -546,7 +546,7 @@ func waitForProxyPropagation(ocConfig oc.Config, proxyConfig *network.ProxyConfi
 		return nil
 	}
 
-	if err := crcerrors.RetryAfter(60*time.Second, checkProxySettingsForOperator, 2*time.Second); err != nil {
+	if err := crcerrors.RetryAfter(300*time.Second, checkProxySettingsForOperator, 2*time.Second); err != nil {
 		logging.Debug("Failed to propagate proxy settings to cluster")
 	}
 }
