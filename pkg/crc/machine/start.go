@@ -27,7 +27,6 @@ import (
 	"github.com/code-ready/machine/libmachine"
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/host"
-	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/state"
 	"github.com/docker/go-units"
 	"github.com/pkg/errors"
@@ -382,7 +381,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 
 	logging.Info("Updating kubeconfig")
 	if err := eventuallyWriteKubeconfig(ocConfig, instanceIP, clusterConfig); err != nil {
-		log.Warnf("Cannot update kubeconfig: %v", err)
+		logging.Warnf("Cannot update kubeconfig: %v", err)
 	}
 
 	logging.Warn("The cluster might report a degraded or error state. This is expected since several operators have been disabled to lower the resource usage. For more information, please consult the documentation")
