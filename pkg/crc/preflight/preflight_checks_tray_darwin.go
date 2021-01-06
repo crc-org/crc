@@ -195,7 +195,9 @@ func downloadOrExtractTrayApp() error {
 	}()
 
 	logging.Debug("Trying to extract tray from crc executable")
-	err = embed.Extract(filepath.Base(constants.GetCRCMacTrayDownloadURL()), tmpArchivePath)
+	trayFileName := filepath.Base(constants.GetCRCMacTrayDownloadURL())
+	trayDestFileName := filepath.Join(tmpArchivePath, trayFileName)
+	err = embed.Extract(trayFileName, trayDestFileName)
 	if err != nil {
 		logging.Debug("Could not extract tray from crc executable", err)
 		logging.Debug("Downloading crc tray")
@@ -204,15 +206,14 @@ func downloadOrExtractTrayApp() error {
 			return err
 		}
 	}
-	archivePath := filepath.Join(tmpArchivePath, filepath.Base(constants.GetCRCMacTrayDownloadURL()))
 	outputPath := constants.CrcBinDir
 	err = goos.MkdirAll(outputPath, 0750)
 	if err != nil {
 		return errors.Wrap(err, "Cannot create the target directory.")
 	}
-	_, err = extract.Uncompress(archivePath, outputPath, false)
+	_, err = extract.Uncompress(trayDestFileName, outputPath, false)
 	if err != nil {
-		return errors.Wrapf(err, "Cannot uncompress '%s'", archivePath)
+		return errors.Wrapf(err, "Cannot uncompress '%s'", trayDestFileName)
 	}
 	return nil
 }

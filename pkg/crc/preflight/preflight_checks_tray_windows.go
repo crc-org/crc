@@ -161,7 +161,9 @@ func fixTrayExecutableExists() error {
 	}()
 
 	logging.Debug("Trying to extract tray from crc executable")
-	err = embed.Extract(filepath.Base(constants.GetCRCWindowsTrayDownloadURL()), tmpArchivePath)
+	trayFileName := filepath.Base(constants.GetCRCWindowsTrayDownloadURL())
+	trayDestFileName := filepath.Join(tmpArchivePath, trayFileName)
+	err = embed.Extract(trayFileName, trayDestFileName)
 	if err != nil {
 		logging.Debug("Could not extract tray from crc executable", err)
 		logging.Debug("Downloading crc tray")
@@ -170,10 +172,9 @@ func fixTrayExecutableExists() error {
 			return err
 		}
 	}
-	archivePath := filepath.Join(tmpArchivePath, filepath.Base(constants.GetCRCWindowsTrayDownloadURL()))
-	_, err = extract.Uncompress(archivePath, constants.TrayExecutableDir, false)
+	_, err = extract.Uncompress(trayDestFileName, constants.TrayExecutableDir, false)
 	if err != nil {
-		return fmt.Errorf("Cannot uncompress '%s': %v", archivePath, err)
+		return fmt.Errorf("Cannot uncompress '%s': %v", trayDestFileName, err)
 	}
 
 	return nil
