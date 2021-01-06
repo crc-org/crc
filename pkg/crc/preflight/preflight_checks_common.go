@@ -52,6 +52,11 @@ var genericPreflightChecks = [...]Check{
 		cleanup:            removeCRCMachinesDir,
 		flags:              CleanUpOnly,
 	},
+	{
+		cleanupDescription: "Removing older logs",
+		cleanup:            removeOldLogs,
+		flags:              CleanUpOnly,
+	},
 }
 
 func checkBundleExtracted() error {
@@ -128,6 +133,20 @@ func removeCRCMachinesDir() error {
 	logging.Debug("Deleting machines directory")
 	if err := os.RemoveAll(constants.MachineInstanceDir); err != nil {
 		return fmt.Errorf("Failed to delete crc machines directory: %w", err)
+	}
+	return nil
+}
+
+func removeOldLogs() error {
+	logFiles, err := filepath.Glob(filepath.Join(constants.CrcBaseDir, "*.log_*"))
+	if err != nil {
+		return fmt.Errorf("Failed to get old logs: %w", err)
+	}
+	for _, f := range logFiles {
+		logging.Debugf("Deleting %s log file", f)
+		if err := os.RemoveAll(f); err != nil {
+			return fmt.Errorf("Failed to delete %s: %w", f, err)
+		}
 	}
 	return nil
 }
