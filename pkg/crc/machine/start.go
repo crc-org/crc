@@ -260,6 +260,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		return nil, errors.Wrap(err, "Error getting proxy configuration")
 	}
 	proxyConfig.ApplyToEnvironment()
+	proxyConfig.AddNoProxy(instanceIP)
 
 	// Create servicePostStartConfig for DNS checks and DNS start.
 	servicePostStartConfig := services.ServicePostStartConfig{
@@ -303,6 +304,10 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		return nil, errors.Wrap(err, "Failed to update VM pull secret")
 	}
 
+	if err := ensureKubeletAndCRIOAreConfiguredForProxy(sshRunner, proxyConfig, instanceIP); err != nil {
+		return nil, errors.Wrap(err, "Failed to update proxy configuration of kubelet and crio")
+	}
+
 	// Check the certs validity inside the vm
 	logging.Info("Verifying validity of the kubelet certificates ...")
 	certsExpired, err := cluster.CheckCertsValidity(sshRunner)
@@ -327,11 +332,8 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		return nil, errors.Wrap(err, "Error waiting for apiserver")
 	}
 
-	if !exists {
-		logging.Info("Configuring cluster for first start")
-		if err := configProxyForCluster(ocConfig, sshRunner, sd, proxyConfig, instanceIP); err != nil {
-			return nil, errors.Wrap(err, "Error Setting cluster config")
-		}
+	if err := ensureProxyIsConfiguredInOpenShift(ocConfig, sshRunner, proxyConfig, instanceIP); err != nil {
+		return nil, errors.Wrap(err, "Failed to update cluster proxy configuration")
 	}
 
 	if err := cluster.EnsurePullSecretPresentInTheCluster(ocConfig, startConfig.PullSecret); err != nil {
@@ -381,10 +383,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		log.Warnf("Cannot update kubeconfig: %v", err)
 	}
 
-	if proxyConfig.IsEnabled() {
-		logging.Info("Waiting for the proxy configuration to be applied ...")
-		waitForProxyPropagation(ocConfig, proxyConfig)
-	}
+	waitForProxyPropagation(ocConfig, proxyConfig)
 
 	logging.Warn("The cluster might report a degraded or error state. This is expected since several operators have been disabled to lower the resource usage. For more information, please consult the documentation")
 	return &StartResult{
@@ -500,39 +499,27 @@ func updateSSHKeyAndCopyKubeconfig(sshRunner *crcssh.Runner, name string, crcBun
 	return nil
 }
 
-func configProxyForCluster(ocConfig oc.Config, sshRunner *crcssh.Runner, sd *systemd.Commander, proxy *network.ProxyConfig, instanceIP string) (err error) {
+func ensureKubeletAndCRIOAreConfiguredForProxy(sshRunner *crcssh.Runner, proxy *network.ProxyConfig, instanceIP string) (err error) {
 	if !proxy.IsEnabled() {
 		return nil
 	}
-	defer func() {
-		// Restart the crio service
-		if proxy.IsEnabled() {
-			// Restart reload the daemon and then restart the service
-			// So no need to explicit reload the daemon.
-			if ferr := sd.Restart("crio"); ferr != nil {
-				err = ferr
-			}
-			if ferr := sd.Restart("kubelet"); ferr != nil {
-				err = ferr
-			}
-		}
-	}()
-
-	logging.Info("Adding proxy configuration to the cluster ...")
-	proxy.AddNoProxy(instanceIP)
-	if err := cluster.AddProxyConfigToCluster(sshRunner, ocConfig, proxy); err != nil {
-		return err
-	}
-
 	logging.Info("Adding proxy configuration to kubelet and crio service ...")
-	if err := cluster.AddProxyToKubeletAndCriO(sshRunner, proxy); err != nil {
-		return err
-	}
+	return cluster.AddProxyToKubeletAndCriO(sshRunner, proxy)
+}
 
-	return nil
+func ensureProxyIsConfiguredInOpenShift(ocConfig oc.Config, sshRunner *crcssh.Runner, proxy *network.ProxyConfig, instanceIP string) (err error) {
+	if !proxy.IsEnabled() {
+		return nil
+	}
+	logging.Info("Adding proxy configuration to the cluster ...")
+	return cluster.AddProxyConfigToCluster(sshRunner, ocConfig, proxy)
 }
 
 func waitForProxyPropagation(ocConfig oc.Config, proxyConfig *network.ProxyConfig) {
+	if !proxyConfig.IsEnabled() {
+		return
+	}
+	logging.Info("Waiting for the proxy configuration to be applied ...")
 	checkProxySettingsForOperator := func() error {
 		proxySet, err := cluster.CheckProxySettingsForOperator(ocConfig, proxyConfig, "marketplace-operator", "openshift-marketplace")
 		if err != nil {
