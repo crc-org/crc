@@ -378,12 +378,12 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 
 	time.Sleep(time.Minute * 3)
 
+	waitForProxyPropagation(ocConfig, proxyConfig)
+
 	logging.Info("Updating kubeconfig")
 	if err := eventuallyWriteKubeconfig(ocConfig, instanceIP, clusterConfig); err != nil {
 		log.Warnf("Cannot update kubeconfig: %v", err)
 	}
-
-	waitForProxyPropagation(ocConfig, proxyConfig)
 
 	logging.Warn("The cluster might report a degraded or error state. This is expected since several operators have been disabled to lower the resource usage. For more information, please consult the documentation")
 	return &StartResult{
