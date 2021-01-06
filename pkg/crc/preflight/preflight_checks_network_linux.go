@@ -72,22 +72,27 @@ server=/crc.testing/192.168.130.11
 dns=dnsmasq
 `
 
-	crcNetworkManagerDispatcherPath   = filepath.Join(crcNetworkManagerRootPath, "dispatcher.d", "pre-up.d", "99-crc.sh")
-	crcNetworkManagerDispatcherConfig = `#!/bin/sh
+	crcNetworkManagerOldDispatcherPath = filepath.Join(crcNetworkManagerRootPath, "dispatcher.d", "pre-up.d", "99-crc.sh")
+	crcNetworkManagerDispatcherPath    = filepath.Join(crcNetworkManagerRootPath, "dispatcher.d", "99-crc.sh")
+	crcNetworkManagerDispatcherConfig  = `#!/bin/sh
 # This is a NetworkManager dispatcher script to configure split DNS for
 # the 'crc' libvirt network.
-# The corresponding crc bridge is recreated each time the system reboots, so
-# it cannot be configured permanently through NetworkManager.
-# Changing DNS settings with nmcli requires the connection to go down/up,
-# so we directly make the change using resolvectl
+#
+# The corresponding crc bridge is not created through NetworkManager, so
+# it cannot be configured permanently through NetworkManager. We make the
+# change directly using resolvectl instead.
+#
+# NetworkManager will overwrite this resolvectl configuration every time a
+# network connection goes up/down, so we run this script on each of these events
+# to restore our settings. This is a NetworkManager bug which is fixed in
+# version 1.26.6 by this commit:
+# https://cgit.freedesktop.org/NetworkManager/NetworkManager/commit/?id=ee4e679bc7479de42780ebd8e3a4d74afa2b2ebe
 
 export LC_ALL=C
 
-if [ "$1" = crc ]; then
-        resolvectl domain "$1" ~testing
-        resolvectl dns "$1" 192.168.130.11
-        resolvectl default-route "$1" false
-fi
+resolvectl domain crc ~testing
+resolvectl dns crc 192.168.130.11
+resolvectl default-route crc false
 
 exit 0
 `
@@ -266,6 +271,10 @@ func checkCrcNetworkManagerDispatcherFile() error {
 
 func fixCrcNetworkManagerDispatcherFile() error {
 	logging.Debug("Fixing NetworkManager dispatcher configuration")
+
+	// Remove dispatcher script which was used in crc 1.20 - it's been moved to a new location
+	_ = removeNetworkManagerConfigFile(crcNetworkManagerOldDispatcherPath)
+
 	err := fixNetworkManagerConfigFile(crcNetworkManagerDispatcherPath, crcNetworkManagerDispatcherConfig, 0755)
 	if err != nil {
 		return err
@@ -276,6 +285,9 @@ func fixCrcNetworkManagerDispatcherFile() error {
 }
 
 func removeCrcNetworkManagerDispatcherFile() error {
+	// Remove dispatcher script which was used in crc 1.20 - it's been moved to a new location
+	_ = removeNetworkManagerConfigFile(crcNetworkManagerOldDispatcherPath)
+
 	return removeNetworkManagerConfigFile(crcNetworkManagerDispatcherPath)
 }
 
