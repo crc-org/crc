@@ -52,7 +52,8 @@ function install_required_packages() {
     jq \
     gcc \
     unzip \
-    podman
+    podman \
+    zip
 
   # Install the required version of golang
   curl -L -O https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz
@@ -156,6 +157,7 @@ else
 	cd payload
 	make
 	make check
+	make BUNDLE_DIR=/tmp MOCK_BUNDLE=true release
 	
 	# Retrieve password for rsync and run integration tests
 	CICO_PASS=$(echo $CICO_API_KEY | cut -d'-' -f1-2)
