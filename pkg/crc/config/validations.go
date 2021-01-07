@@ -95,3 +95,10 @@ func ValidateNoProxy(value interface{}) (bool, string) {
 	}
 	return true, ""
 }
+
+func ValidateYesNo(value interface{}) (bool, string) {
+	if cast.ToString(value) == "yes" || cast.ToString(value) == "no" {
+		return true, ""
+	}
+	return false, "must be yes or no"
+}

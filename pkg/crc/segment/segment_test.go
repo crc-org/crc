@@ -60,7 +60,7 @@ func mockServer() (chan []byte, *httptest.Server) {
 	return done, server
 }
 
-func newTestConfig(value bool) (*crcConfig.Config, error) {
+func newTestConfig(value string) (*crcConfig.Config, error) {
 	storage := crcConfig.NewEmptyInMemoryStorage()
 	config := crcConfig.New(storage)
 	cmdConfig.RegisterSettings(config)
@@ -80,7 +80,7 @@ func TestClientUploadWithConsent(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(dir)
 
-	config, err := newTestConfig(true)
+	config, err := newTestConfig("yes")
 	require.NoError(t, err)
 
 	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
@@ -113,7 +113,7 @@ func TestClientUploadWithOutConsent(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(dir)
 
-	config, err := newTestConfig(false)
+	config, err := newTestConfig("no")
 	require.NoError(t, err)
 
 	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
