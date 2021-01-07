@@ -170,7 +170,7 @@ gen_release_info:
 	@sed -i s/@OPENSHIFT_VERSION@/\"$(BUNDLE_VERSION)\"/ $(RELEASE_INFO)
 
 .PHONY: release
-release: check_bundledir cross-lint generate cross build_docs_pdf gen_release_info
+release: clean check_bundledir cross-lint generate cross build_docs_pdf gen_release_info
 	mkdir $(RELEASE_DIR)
 
 	@mkdir -p $(BUILD_DIR)/crc-macos-$(CRC_VERSION)-amd64
