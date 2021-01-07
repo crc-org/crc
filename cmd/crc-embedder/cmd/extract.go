@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/output"
-	"github.com/code-ready/crc/pkg/embed"
+	"fmt"
 
+	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/embed"
 	"github.com/spf13/cobra"
 )
 
@@ -32,5 +32,5 @@ func runExtract(args []string) {
 	if err != nil {
 		logging.Fatalf("Could not extract data embedded in %s: %v", executablePath, err)
 	}
-	output.Outf("Successfully copied embedded '%s' from %s to %s: %v", embedName, executablePath, destFile, err)
+	fmt.Printf("Successfully copied embedded '%s' from %s to %s: %v", embedName, executablePath, destFile, err)
 }

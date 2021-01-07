@@ -13,7 +13,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/segment"
 	"github.com/spf13/cobra"
@@ -80,7 +79,7 @@ func runPostrun() {
 }
 
 func runRoot() {
-	output.Outln("No command given")
+	fmt.Println("No command given")
 }
 
 func Execute() {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/os/shell"
 	"github.com/spf13/cobra"
 )
@@ -34,13 +33,13 @@ func runOcEnv(args []string) error {
 		return err
 	}
 	proxyConfig := consoleResult.ClusterConfig.ProxyConfig
-	output.Outln(shell.GetPathEnvString(userShell, constants.CrcOcBinDir))
+	fmt.Println(shell.GetPathEnvString(userShell, constants.CrcOcBinDir))
 	if proxyConfig.IsEnabled() {
-		output.Outln(shell.GetEnvString(userShell, "HTTP_PROXY", proxyConfig.HTTPProxy))
-		output.Outln(shell.GetEnvString(userShell, "HTTPS_PROXY", proxyConfig.HTTPSProxy))
-		output.Outln(shell.GetEnvString(userShell, "NO_PROXY", proxyConfig.GetNoProxyString()))
+		fmt.Println(shell.GetEnvString(userShell, "HTTP_PROXY", proxyConfig.HTTPProxy))
+		fmt.Println(shell.GetEnvString(userShell, "HTTPS_PROXY", proxyConfig.HTTPSProxy))
+		fmt.Println(shell.GetEnvString(userShell, "NO_PROXY", proxyConfig.GetNoProxyString()))
 	}
-	output.Outln(shell.GenerateUsageHint(userShell, "crc oc-env"))
+	fmt.Println(shell.GenerateUsageHint(userShell, "crc oc-env"))
 	return nil
 }
 

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/code-ready/crc/pkg/os/shell"
 	"github.com/spf13/cobra"
 )
@@ -36,12 +35,12 @@ func RunPodmanEnv(args []string) error {
 		return err
 	}
 
-	output.Outln(shell.GetPathEnvString(userShell, constants.CrcBinDir))
-	output.Outln(shell.GetEnvString(userShell, "PODMAN_USER", constants.DefaultSSHUser))
-	output.Outln(shell.GetEnvString(userShell, "PODMAN_HOST", ip))
-	output.Outln(shell.GetEnvString(userShell, "PODMAN_IDENTITY_FILE", constants.GetPrivateKeyPath()))
-	output.Outln(shell.GetEnvString(userShell, "PODMAN_IGNORE_HOSTS", "1"))
-	output.Outln(shell.GenerateUsageHint(userShell, "crc podman-env"))
+	fmt.Println(shell.GetPathEnvString(userShell, constants.CrcBinDir))
+	fmt.Println(shell.GetEnvString(userShell, "PODMAN_USER", constants.DefaultSSHUser))
+	fmt.Println(shell.GetEnvString(userShell, "PODMAN_HOST", ip))
+	fmt.Println(shell.GetEnvString(userShell, "PODMAN_IDENTITY_FILE", constants.GetPrivateKeyPath()))
+	fmt.Println(shell.GetEnvString(userShell, "PODMAN_IGNORE_HOSTS", "1"))
+	fmt.Println(shell.GenerateUsageHint(userShell, "crc podman-env"))
 	return nil
 }
 
