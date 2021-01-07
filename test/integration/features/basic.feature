@@ -61,8 +61,8 @@ Feature: Basic test
         And stderr should contain "Will use root access: write NetworkManager configuration to /etc/NetworkManager/dnsmasq.d/crc.conf"
         And stderr should contain "Will use root access: executing systemctl daemon-reload command"
         And stderr should contain "Will use root access: executing systemctl reload NetworkManager"
-        And stdout should contain "Setup is complete, you can now run 'crc start -b $bundlename' to start the OpenShift cluster" if bundle is not embedded
-        And stdout should contain "Setup is complete, you can now run 'crc start' to start the OpenShift cluster" if bundle is embedded
+        And stdout should contain "Setup is complete, you can now run 'crc start -b $bundlename' to start the OpenShift cluster" if bundle is not present in crc executable or cache directory
+        And stdout should contain "Setup is complete, you can now run 'crc start' to start the OpenShift cluster" if bundle is present in crc executable or cache directory
 
     @darwin
     Scenario: CRC setup on Mac

@@ -60,8 +60,11 @@ func ValidateEnoughMemory(value int) error {
 // ValidateBundle checks if provided bundle path exist
 func ValidateBundle(bundle string) error {
 	if err := ValidatePath(bundle); err != nil {
-		if constants.BundleEmbedded() {
-			return fmt.Errorf("Run 'crc setup' to unpack the bundle to disk")
+		if present, _ := constants.BundlePresent(); present {
+			if err := ValidatePath(strings.TrimSuffix(constants.DefaultBundlePath, ".crcbundle")); err != nil {
+				return fmt.Errorf("Run 'crc setup' to unpack the bundle to disk")
+			}
+			return nil
 		}
 		return fmt.Errorf("Please provide the path to a valid bundle using the -b option")
 	}
@@ -69,11 +72,7 @@ func ValidateBundle(bundle string) error {
 	releaseBundleVersion := version.GetBundleVersion()
 	userProvidedBundleVersion := filepath.Base(bundle)
 	if !strings.Contains(userProvidedBundleVersion, fmt.Sprintf("%s.crcbundle", releaseBundleVersion)) {
-		if !constants.BundleEmbedded() {
-			logging.Warnf("Using unsupported bundle %s", userProvidedBundleVersion)
-			return nil
-		}
-		return fmt.Errorf("%s bundle is not supported by this crc executable, please use %s", userProvidedBundleVersion, constants.GetDefaultBundle())
+		logging.Warnf("%s bundle is not supported by this crc executable, please use %s", userProvidedBundleVersion, constants.GetDefaultBundle())
 	}
 	return nil
 }

@@ -3,14 +3,13 @@ package preflight
 import (
 	"fmt"
 	"os"
-	"path/filepath"
+	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/cache"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/validation"
-	"github.com/code-ready/crc/pkg/embed"
 	"github.com/docker/go-units"
 	"github.com/pkg/errors"
 )
@@ -34,7 +33,7 @@ var genericPreflightChecks = [...]Check{
 		configKeySuffix:  "check-bundle-extracted",
 		checkDescription: "Checking if CRC bundle is extracted in '$HOME/.crc'",
 		check:            checkBundleExtracted,
-		fixDescription:   "Extracting bundle from the CRC executable",
+		fixDescription:   "Extracting CodeReady Containers bundle",
 		fix:              fixBundleExtracted,
 		flags:            SetupOnly,
 	},
@@ -55,35 +54,22 @@ var genericPreflightChecks = [...]Check{
 }
 
 func checkBundleExtracted() error {
-	if !constants.BundleEmbedded() {
+	if present, _ := constants.BundlePresent(); !present {
+		logging.Debug("Bundle is neither found in ~/.crc/cache nor in the same directory as the crc executable")
 		return nil
 	}
-	if _, err := os.Stat(constants.DefaultBundlePath); os.IsNotExist(err) {
+	if _, err := os.Stat(strings.TrimSuffix(constants.DefaultBundlePath, ".crcbundle")); os.IsNotExist(err) {
 		return err
 	}
 	return nil
 }
 
 func fixBundleExtracted() error {
-	// Should be removed after 1.19 release
-	// This check will ensure correct mode for `~/.crc/cache` directory
-	// in case it exists.
-	if err := os.Chmod(constants.MachineCacheDir, 0775); err != nil {
-		logging.Debugf("Error changing %s permissions to 0775", constants.MachineCacheDir)
-	}
-	if constants.BundleEmbedded() {
-		bundleDir := filepath.Dir(constants.DefaultBundlePath)
-		if err := os.MkdirAll(bundleDir, 0775); err != nil {
-			return fmt.Errorf("Cannot create directory %s: %v", bundleDir, err)
-		}
-
-		if err := embed.Extract(filepath.Base(constants.DefaultBundlePath), constants.DefaultBundlePath); err != nil {
-			return err
-		}
-		_, err := bundle.Extract(constants.DefaultBundlePath)
+	if present, bundlePath := constants.BundlePresent(); present {
+		_, err := bundle.Extract(bundlePath)
 		return err
 	}
-	return fmt.Errorf("CRC bundle is not embedded in the executable")
+	return fmt.Errorf("CRC bundle is not found in '$HOME' directories")
 }
 
 // Check if podman executable is cached or not

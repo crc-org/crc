@@ -68,7 +68,7 @@ func (s *setupResult) prettyPrintTo(writer io.Writer) error {
 
 func extraArguments() string {
 	var bundle string
-	if !constants.BundleEmbedded() {
+	if present, _ := constants.BundlePresent(); !present {
 		bundle = " -b $bundlename"
 	}
 	return bundle

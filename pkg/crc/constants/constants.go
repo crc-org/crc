@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/YourFin/binappend"
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
@@ -129,26 +128,23 @@ func EnsureBaseDirectoriesExist() error {
 	return os.MkdirAll(CrcBaseDir, 0750)
 }
 
-// IsBundleEmbedded returns true if the executable was compiled to contain the bundle
-func BundleEmbedded() bool {
+// BundlePresent returns true and path of the bundle
+// if bundle is available in same directory as crc executable or
+// in the crc cache directory.
+func BundlePresent() (bool, string) {
 	executablePath, err := os.Executable()
 	if err != nil {
-		return false
+		return false, ""
 	}
-	extractor, err := binappend.MakeExtractor(executablePath)
-	if err != nil {
-		return false
-	}
-	return contains(extractor.AvalibleData(), GetDefaultBundle())
-}
-
-func contains(arr []string, str string) bool {
-	for _, a := range arr {
-		if a == str {
-			return true
+	executableDir, _ := filepath.Split(executablePath)
+	bundlePath := filepath.Join(executableDir, GetDefaultBundle())
+	if _, err := os.Stat(bundlePath); os.IsNotExist(err) {
+		bundlePath = filepath.Join(MachineCacheDir, GetDefaultBundle())
+		if _, err := os.Stat(bundlePath); os.IsNotExist(err) {
+			return false, ""
 		}
 	}
-	return false
+	return true, bundlePath
 }
 
 func GetPublicKeyPath() string {

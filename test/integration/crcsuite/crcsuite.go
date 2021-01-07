@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
@@ -24,7 +23,7 @@ import (
 var (
 	CRCHome        string
 	CRCExecutable  string
-	bundleEmbedded bool
+	bundlePresent  bool
 	bundleName     string
 	bundleLocation string
 	bundleVersion  string
@@ -57,8 +56,8 @@ func FeatureContext(s *godog.Suite) {
 		CheckOutputMatchWithRetry)
 	s.Step(`^checking that CRC is (running|stopped)$`,
 		CheckCRCStatus)
-	s.Step(`stdout (?:should contain|contains) "(.*)" if bundle (is|is not) embedded$`,
-		StdoutContainsIfBundleEmbeddedOrNot)
+	s.Step(`stdout (?:should contain|contains) "(.*)" if bundle (is|is not) present in crc executable or cache directory$`,
+		StdoutContainsIfBundlePresentOrNot)
 
 	// CRC file operations
 	s.Step(`^file "([^"]*)" exists in CRC home folder$`,
@@ -91,15 +90,15 @@ func FeatureContext(s *godog.Suite) {
 		}
 
 		if bundleLocation == "" {
-			fmt.Println("Expecting the bundle to be embedded in the CRC executable.")
-			bundleEmbedded = true
-			if bundleVersion == "" {
-				fmt.Println("User must specify --bundle-version if bundle is embedded")
-				os.Exit(1)
-			}
-			bundleName = constants.GetBundleFosOs(runtime.GOOS, bundleVersion)
+			fmt.Println("User must specify --bundle-location")
+			os.Exit(1)
+		}
+
+		var bundlePath string
+		bundlePresent, bundlePath = constants.BundlePresent()
+		if bundlePresent {
+			bundleName = filepath.Base(bundlePath)
 		} else {
-			bundleEmbedded = false
 			_, bundleName = filepath.Split(bundleLocation)
 		}
 
@@ -139,7 +138,7 @@ func FeatureContext(s *godog.Suite) {
 			os.Exit(1)
 		}
 
-		if !bundleEmbedded {
+		if !bundlePresent {
 			if _, err := os.Stat(bundleName); err != nil {
 				if !os.IsNotExist(err) {
 					fmt.Printf("Unexpected error obtaining the bundle %v.\n", bundleName)
@@ -378,7 +377,7 @@ func StartCRCWithDefaultBundleSucceedsOrFails(expected string) error {
 	var cmd string
 	var extraBundleArgs string
 
-	if !bundleEmbedded {
+	if !bundlePresent {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
 	}
 	cmd = fmt.Sprintf("crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
@@ -392,7 +391,7 @@ func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(
 	var cmd string
 	var extraBundleArgs string
 
-	if !bundleEmbedded {
+	if !bundlePresent {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
 	}
 	cmd = fmt.Sprintf("CRC_DEBUG_ENABLE_STOP_NTP=true crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
@@ -404,7 +403,7 @@ func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(
 func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, expected string) error {
 
 	var extraBundleArgs string
-	if !bundleEmbedded {
+	if !bundlePresent {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
 	}
 
@@ -412,15 +411,15 @@ func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, ex
 	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
 
-func StdoutContainsIfBundleEmbeddedOrNot(value string, expected string) error {
-	if expected == "is" { // expect embedded
-		if bundleEmbedded { // really embedded
+func StdoutContainsIfBundlePresentOrNot(value string, expected string) error {
+	if expected == "is" { // expect present
+		if bundlePresent {
 			return clicumber.CommandReturnShouldContain("stdout", value)
 		}
 		return clicumber.CommandReturnShouldNotContain("stdout", value)
 	}
-	// expect not embedded
-	if !bundleEmbedded { // really not embedded
+	// expect not present in current or cache directory
+	if !bundlePresent {
 		return clicumber.CommandReturnShouldContain("stdout", value)
 	}
 	return clicumber.CommandReturnShouldNotContain("stdout", value)
@@ -429,8 +428,7 @@ func StdoutContainsIfBundleEmbeddedOrNot(value string, expected string) error {
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
 
 	if value == "current bundle" {
-
-		if bundleEmbedded {
+		if bundlePresent {
 			value = filepath.Join(CRCHome, "cache", bundleName)
 		} else {
 			value = bundleName
