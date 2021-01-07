@@ -39,8 +39,6 @@ var daemonCmd = &cobra.Command{
 		logging.CloseLogging()
 		logging.InitLogrus(logging.LogLevel, constants.DaemonLogFilePath)
 
-		go runDaemon()
-
 		var endpoints []string
 		if runtime.GOOS == "windows" {
 			endpoints = append(endpoints, transport.DefaultURL)
@@ -133,6 +131,12 @@ func run(configuration *types.Configuration, endpoints []string) error {
 		}()
 	}
 
+	go func() {
+		if err := runDaemon(); err != nil {
+			errCh <- err
+		}
+	}()
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	select {
@@ -148,12 +152,12 @@ func newConfig() (crcConfig.Storage, error) {
 	return config, err
 }
 
-func runDaemon() {
+func runDaemon() error {
 	// Remove if an old socket is present
 	os.Remove(constants.DaemonSocketPath)
 	apiServer, err := api.CreateServer(constants.DaemonSocketPath, newConfig, newMachineWithConfig)
 	if err != nil {
-		logging.Fatal("Failed to launch daemon", err)
+		return err
 	}
-	apiServer.Serve()
+	return apiServer.Serve()
 }

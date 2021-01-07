@@ -36,7 +36,7 @@ func createServerWithListener(listener net.Listener, config newConfigFunc, machi
 	return apiServer, nil
 }
 
-func (api Server) Serve() {
+func (api Server) Serve() error {
 	go api.handleClusterOperations() // go routine that handles start, stop and delete calls
 	for {
 		conn, err := api.listener.Accept()

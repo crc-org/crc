@@ -11,13 +11,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/code-ready/crc/pkg/crc/machine"
-
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/version"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -36,7 +36,11 @@ func TestApi(t *testing.T) {
 		return client
 	})
 	require.NoError(t, err)
-	go api.Serve()
+	go func() {
+		if err := api.Serve(); err != nil {
+			log.Error(err)
+		}
+	}()
 
 	tt := []struct {
 		command       string
@@ -221,7 +225,11 @@ func setupAPIServer(t *testing.T) (string, func()) {
 		return client
 	})
 	require.NoError(t, err)
-	go api.Serve()
+	go func() {
+		if err := api.Serve(); err != nil {
+			log.Error(err)
+		}
+	}()
 
 	return socket, func() { os.RemoveAll(dir) }
 }
