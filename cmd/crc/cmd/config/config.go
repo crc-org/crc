@@ -48,7 +48,7 @@ func RegisterSettings(cfg *config.Config) {
 	cfg.AddSetting(EnableClusterMonitoring, false, config.ValidateBool, config.SuccessfullyApplied)
 
 	// Telemeter Configuration
-	cfg.AddSetting(ConsentTelemetry, false, config.ValidateBool, config.SuccessfullyApplied)
+	cfg.AddSetting(ConsentTelemetry, "", config.ValidateYesNo, config.SuccessfullyApplied)
 }
 
 func isPreflightKey(key string) bool {

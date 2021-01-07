@@ -8,6 +8,7 @@ import (
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/spf13/cobra"
 )
@@ -31,6 +32,20 @@ var setupCmd = &cobra.Command{
 }
 
 func runSetup(arguments []string) error {
+	if config.Get(cmdConfig.ConsentTelemetry).AsString() == "" {
+		fmt.Println("CodeReady Containers is constantly improving and we would like to know more about usage!")
+		if input.PromptUserForYesOrNo("Would you like to contribute anonymous usage statistics (more details at https://developers.redhat.com/article/tool-data-collection)", false) {
+			if _, err := config.Set(cmdConfig.ConsentTelemetry, "yes"); err != nil {
+				return err
+			}
+			fmt.Printf("Thanks for helping us! You can disable telemetry with the command 'crc config set %s no'.\n", cmdConfig.ConsentTelemetry)
+		} else {
+			if _, err := config.Set(cmdConfig.ConsentTelemetry, "no"); err != nil {
+				return err
+			}
+			fmt.Printf("No worry, you can still enable telemetry manually with the command 'crc config set %s yes'.\n", cmdConfig.ConsentTelemetry)
+		}
+	}
 	err := preflight.SetupHost(config)
 	return render(&setupResult{
 		Success: err == nil,
