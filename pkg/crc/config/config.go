@@ -9,7 +9,7 @@ import (
 
 const (
 	configPropDoesntExistMsg = "Configuration property '%s' does not exist"
-	invalidProp              = "Value '%s' for configuration property '%s' is invalid, reason: %s"
+	invalidProp              = "Value '%v' for configuration property '%s' is invalid, reason: %s"
 )
 
 type Config struct {
