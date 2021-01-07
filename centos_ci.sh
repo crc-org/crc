@@ -132,7 +132,8 @@ function run_tests() {
   # In Jenkins slave we have pull secret file in the $HOME/payload/crc_pull_secret
   # this is copied over using https://github.com/minishift/minishift-ci-jobs/blob/master/minishift-ci-index.yaml#L99
   export PULL_SECRET_FILE=--pull-secret-file=$HOME/payload/crc_pull_secret
-  export BUNDLE_LOCATION=--bundle-location=$HOME/Downloads/$BUNDLE 
+  export BUNDLE_LOCATION=--bundle-location=$HOME/Downloads/$BUNDLE
+  export CRC_BINARY=--crc-binary=$(pwd)/out/linux-amd64/
   make integration GODOG_OPTS="--godog.tags='@basic && @linux'"
   if [[ $? -ne 0 ]]; then
     upload_logs $1
