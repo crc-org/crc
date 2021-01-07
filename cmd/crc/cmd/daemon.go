@@ -5,9 +5,11 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"syscall"
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/api"
@@ -130,7 +132,15 @@ func run(configuration *types.Configuration, endpoints []string) error {
 			}
 		}()
 	}
-	return <-errCh
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	select {
+	case <-c:
+		return nil
+	case err := <-errCh:
+		return err
+	}
 }
 
 func newConfig() (crcConfig.Storage, error) {
