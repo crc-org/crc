@@ -13,10 +13,9 @@ func TestPlainVersion(t *testing.T) {
 		Version:          "1.13",
 		Commit:           "aabbcc",
 		OpenshiftVersion: "4.5.4",
-		Embedded:         false,
 	}, ""))
 	assert.Equal(t, `CodeReady Containers version: 1.13+aabbcc
-OpenShift version: 4.5.4 (not embedded in executable)
+OpenShift version: 4.5.4
 `, out.String())
 }
 
@@ -26,9 +25,8 @@ func TestJsonVersion(t *testing.T) {
 		Version:          "1.13",
 		Commit:           "aabbcc",
 		OpenshiftVersion: "4.5.4",
-		Embedded:         false,
 	}, "json"))
 
-	expected := `{"version": "1.13", "commit": "aabbcc", "openshiftVersion": "4.5.4", "embedded": false}`
+	expected := `{"version": "1.13", "commit": "aabbcc", "openshiftVersion": "4.5.4"}`
 	assert.JSONEq(t, expected, out.String())
 }
