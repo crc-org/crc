@@ -37,37 +37,6 @@ jobs:
         path: ~/project/out
         destination: crc
 
-  build_mock_release:
-    machine:
-      image: ubuntu-1604:202007-01
-    environment:
-      GOVERSION: "1.14.13"
-      CONTAINER_RUNTIME: "docker"
-    steps:
-      - checkout
-      - run:
-          name: Configure GOPATH
-          command: echo 'export GOPATH=$HOME/go' >> $BASH_ENV
-      - run:
-          name: Configure Path
-          command: echo 'export PATH=$GOPATH/bin:/usr/local/go/bin/:$PATH' >> $BASH_ENV
-      - run:
-          name: Cleanup GOROOT
-          command: sudo rm -rf /usr/local/go
-      - run:
-          name: Install go
-          command: curl https://dl.google.com/go/go${GOVERSION}.linux-amd64.tar.gz | sudo tar -C /usr/local -xz
-      - run:
-          name: List go version
-          command: go version
-      - run:
-          name: List go environment
-          command: go env
-      - run:
-          name: mock make release
-          command: make BUNDLE_DIR=/tmp MOCK_BUNDLE=true release
- 
-
   build_docs:
     machine:
       image: ubuntu-1604:201903-01
@@ -131,7 +100,6 @@ workflows:
   build:
     jobs:
       - build
-      - build_mock_release
       - build_docs
       - docs_deploy:
           requires:

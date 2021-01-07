@@ -9,4 +9,3 @@ before_script:
   - sudo apt-get -qq -y install podman
 script:
   - make check
-  - make BUNDLE_DIR=/tmp MOCK_BUNDLE=true release
