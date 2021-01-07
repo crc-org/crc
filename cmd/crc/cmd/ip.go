@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"github.com/code-ready/crc/pkg/crc/output"
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -28,6 +29,6 @@ func runIP(arguments []string) error {
 	if err != nil {
 		return err
 	}
-	output.Outln(ip)
+	fmt.Println(ip)
 	return nil
 }

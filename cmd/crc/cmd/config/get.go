@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +25,7 @@ func configGetCmd(config config.Storage) *cobra.Command {
 			case v.IsDefault:
 				return fmt.Errorf("Configuration property '%s' is not set. Default value is '%s'", key, v.AsString())
 			default:
-				output.Outln(key, ":", v.AsString())
+				fmt.Println(key, ":", v.AsString())
 			}
 			return nil
 		},

@@ -2,9 +2,9 @@ package config
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/output"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,7 @@ func configSetCmd(config config.Storage) *cobra.Command {
 			}
 
 			if setMessage != "" {
-				output.Outln(setMessage)
+				fmt.Println(setMessage)
 			}
 			return nil
 		},

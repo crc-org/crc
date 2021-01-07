@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/output"
-
 	"github.com/spf13/cobra"
 )
 
@@ -41,8 +41,8 @@ func runPrerun() {
 }
 
 func runRoot() {
-	output.Outln("No command given")
-	output.Outln("")
+	fmt.Println("No command given")
+	fmt.Println("")
 }
 
 func runPostrun() {

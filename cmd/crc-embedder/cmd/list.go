@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/output"
+	"fmt"
 
 	"github.com/YourFin/binappend"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/spf13/cobra"
 )
 
@@ -30,8 +30,8 @@ func runList(args []string) {
 	if err != nil {
 		logging.Fatalf("Could not access data embedded in %s: %v", executablePath, err)
 	}
-	output.Outf("Data files embedded in %s:\n", executablePath)
+	fmt.Printf("Data files embedded in %s:\n", executablePath)
 	for _, name := range extractor.AvalibleData() {
-		output.Outln("\t", name)
+		fmt.Println("\t", name)
 	}
 }

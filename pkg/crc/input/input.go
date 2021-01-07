@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/output"
 	terminal "golang.org/x/term"
 	survey "gopkg.in/AlecAivazis/survey.v1"
 )
@@ -19,7 +18,7 @@ func PromptUserForYesOrNo(message string, force bool) bool {
 		return false
 	}
 	var response string
-	output.Outf(message + "? [y/N]: ")
+	fmt.Printf(message + "? [y/N]: ")
 	fmt.Scanf("%s", &response)
 
 	return strings.ToLower(response) == "y"
