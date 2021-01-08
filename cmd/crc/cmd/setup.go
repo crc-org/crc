@@ -16,7 +16,10 @@ import (
 func init() {
 	setupCmd.Flags().Bool(cmdConfig.ExperimentalFeatures, false, "Allow the use of experimental features")
 	addOutputFormatFlag(setupCmd)
-	rootCmd.AddCommand(setupCmd)
+
+	if os.Getenv("CRC_PACKAGE") == "" {
+		rootCmd.AddCommand(setupCmd)
+	}
 }
 
 var setupCmd = &cobra.Command{

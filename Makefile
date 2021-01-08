@@ -214,3 +214,23 @@ update-go-version:
 .PHONY: goversioncheck
 goversioncheck:
 	./verify-go-version.sh
+
+package: check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
+	sed -i '' -e 's/__VERSION__/'$(CRC_VERSION)'/g' packaging/darwin/Distribution
+	sed -i '' -e 's/__VERSION__/'$(CRC_VERSION)'/g' packaging/darwin/Resources/welcome.html
+	sed -i '' -e 's/__VERSION__/'$(CRC_VERSION)'/g' packaging/darwin/scripts/postinstall
+	rm -rf packaging/root/
+	mkdir -p packaging/root/Library/crc/$(CRC_VERSION)/
+	$(HOST_BUILD_DIR)/crc-embedder download packaging/root/Library/crc/$(CRC_VERSION)/
+	cp $(HYPERKIT_BUNDLENAME) packaging/root/Library/crc/$(CRC_VERSION)/
+	cp $(BUILD_DIR)/macos-amd64/crc packaging/root/Library/crc/$(CRC_VERSION)/
+	cp LICENSE packaging/darwin/Resources/LICENSE.txt
+	pkgbuild --identifier com.redhat.crc.$(CRC_VERSION) --version $(CRC_VERSION) \
+		--scripts packaging/darwin/scripts \
+		--root packaging/root \
+		$(BUILD_DIR)/macos-amd64/crc.pkg
+	productbuild --distribution packaging/darwin/Distribution \
+		--resources packaging/darwin/Resources \
+		--package-path $(BUILD_DIR)/macos-amd64 \
+		$(BUILD_DIR)/macos-amd64/crc-installer.pkg
+	rm $(BUILD_DIR)/macos-amd64/crc.pkg

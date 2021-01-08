@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/os/shell"
@@ -44,6 +45,8 @@ func runOcEnv(args []string) error {
 }
 
 func init() {
-	rootCmd.AddCommand(ocEnvCmd)
+	if os.Getenv("CRC_PACKAGE") == "" {
+		rootCmd.AddCommand(ocEnvCmd)
+	}
 	ocEnvCmd.Flags().StringVar(&forceShell, "shell", "", "Set the environment for the specified shell: [fish, cmd, powershell, tcsh, bash, zsh]. Default is auto-detect.")
 }

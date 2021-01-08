@@ -1,0 +1,35 @@
+#!/bin/bash
+set -e
+
+chmod 755 /Library/crc/__VERSION__/crc
+
+chmod 555 /Library/crc/__VERSION__/crc-driver-hyperkit
+chmod u+s /Library/crc/__VERSION__/crc-driver-hyperkit
+
+(cd /Library/crc/__VERSION__/ && tar --uid=0 --gid=0 -xzvf admin-helper-macos-amd64.tar.xz && rm admin-helper-macos-amd64.tar.xz)
+chmod 555 /Library/crc/__VERSION__/admin-helper
+chmod u+s /Library/crc/__VERSION__/admin-helper
+
+chmod 555 /Library/crc/__VERSION__/hyperkit
+chmod u+s /Library/crc/__VERSION__/hyperkit
+
+mkdir -p /etc/resolver
+touch /etc/resolver/testing
+chown root:staff /etc/resolver/testing
+chmod 660 /etc/resolver/testing
+
+(cd /Library/crc/__VERSION__/ && tar --uid=0 --gid=0 -xzvf crc-tray-macos.tar.gz && rm crc-tray-macos.tar.gz)
+
+(cd /Library/crc/__VERSION__/ && tar --uid=0 --gid=0 -xzvf *.crcbundle)
+chmod 555 /Library/crc/__VERSION__/crc_hyperkit_*/*
+
+[ -d /usr/local/bin ] || mkdir /usr/local/bin
+
+rm -f /usr/local/bin/crc
+rm -f /usr/local/bin/oc
+
+echo "#!/bin/sh"> /usr/local/bin/crc
+echo "CRC_PACKAGE=/Library/crc/__VERSION__ /Library/crc/__VERSION__/crc \$*" >> /usr/local/bin/crc
+chmod +x  /usr/local/bin/crc
+
+ln -s /Library/crc/__VERSION__/crc_hyperkit_*/oc /usr/local/bin/oc

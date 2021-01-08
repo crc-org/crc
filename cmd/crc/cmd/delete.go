@@ -15,8 +15,10 @@ import (
 var clearCache bool
 
 func init() {
-	deleteCmd.Flags().BoolVarP(&clearCache, "clear-cache", "", false,
-		fmt.Sprintf("Clear the OpenShift cluster cache at: %s", constants.MachineCacheDir))
+	if os.Getenv("CRC_PACKAGE") == "" {
+		deleteCmd.Flags().BoolVarP(&clearCache, "clear-cache", "", false,
+			fmt.Sprintf("Clear the OpenShift cluster cache at: %s", constants.MachineCacheDir))
+	}
 	addOutputFormatFlag(deleteCmd)
 	addForceFlag(deleteCmd)
 	rootCmd.AddCommand(deleteCmd)

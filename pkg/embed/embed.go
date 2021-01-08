@@ -4,13 +4,21 @@ import (
 	"fmt"
 	"io"
 	"os"
-
-	"github.com/code-ready/crc/pkg/crc/logging"
+	"path/filepath"
 
 	"github.com/YourFin/binappend"
+	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
-func openEmbeddedFile(executablePath, embedName string) (*binappend.Reader, error) {
+func openEmbeddedFile(executablePath, embedName string) (io.ReadCloser, error) {
+	pkgLocation := os.Getenv("CRC_PACKAGE")
+	if pkgLocation != "" {
+		path := filepath.Join(pkgLocation, embedName)
+		if _, err := os.Stat(path); err == nil {
+			return os.Open(path)
+		}
+	}
+
 	extractor, err := binappend.MakeExtractor(executablePath)
 	if err != nil {
 		return nil, fmt.Errorf("Could not data embedded in %s: %v", executablePath, err)

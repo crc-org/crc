@@ -12,7 +12,10 @@ import (
 
 func init() {
 	addOutputFormatFlag(cleanupCmd)
-	rootCmd.AddCommand(cleanupCmd)
+
+	if os.Getenv("CRC_PACKAGE") == "" {
+		rootCmd.AddCommand(cleanupCmd)
+	}
 }
 
 var cleanupCmd = &cobra.Command{

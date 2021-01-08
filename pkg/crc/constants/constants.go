@@ -106,6 +106,15 @@ var (
 	NetworkSocketPath  = filepath.Join(CrcBaseDir, "network.sock")
 )
 
+func init() {
+	pkgLocation := os.Getenv("CRC_PACKAGE")
+	if pkgLocation != "" {
+		DefaultBundlePath = filepath.Join(pkgLocation, GetDefaultBundle())
+		CrcBinDir = pkgLocation
+		MachineCacheDir = pkgLocation
+	}
+}
+
 // GetHomeDir returns the home directory for the current user
 func GetHomeDir() string {
 	if runtime.GOOS == "windows" {
