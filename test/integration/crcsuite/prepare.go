@@ -120,7 +120,7 @@ func CopyFilesToTestDir() error {
 
 func ParseFlags() {
 
-	flag.StringVar(&bundleLocation, "bundle-location", "embedded", "Path to the bundle to be used in tests")
+	flag.StringVar(&bundleLocation, "bundle-location", "", "Path to the bundle to be used in tests")
 	flag.StringVar(&pullSecretFile, "pull-secret-file", "", "Path to the file containing pull secret")
 	flag.StringVar(&CRCExecutable, "crc-binary", "", "Path to the CRC executable to be tested")
 	flag.StringVar(&bundleVersion, "bundle-version", "", "Version of the bundle used in tests")

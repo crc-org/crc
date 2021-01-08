@@ -90,7 +90,7 @@ func FeatureContext(s *godog.Suite) {
 			os.Exit(1)
 		}
 
-		if bundleLocation == "embedded" {
+		if bundleLocation == "" {
 			fmt.Println("Expecting the bundle to be embedded in the CRC executable.")
 			bundleEmbedded = true
 			if bundleVersion == "" {
