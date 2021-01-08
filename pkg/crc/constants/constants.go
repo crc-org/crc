@@ -71,14 +71,20 @@ func GetAdminHelperURL() string {
 	return adminHelperURLForOs[runtime.GOOS]
 }
 
-var defaultBundleForOs = map[string]string{
-	"darwin":  fmt.Sprintf("crc_hyperkit_%s.crcbundle", version.GetBundleVersion()),
-	"linux":   fmt.Sprintf("crc_libvirt_%s.crcbundle", version.GetBundleVersion()),
-	"windows": fmt.Sprintf("crc_hyperv_%s.crcbundle", version.GetBundleVersion()),
+func defaultBundleForOs(bundleVersion string) map[string]string {
+	return map[string]string{
+		"darwin":  fmt.Sprintf("crc_hyperkit_%s.crcbundle", bundleVersion),
+		"linux":   fmt.Sprintf("crc_libvirt_%s.crcbundle", bundleVersion),
+		"windows": fmt.Sprintf("crc_hyperv_%s.crcbundle", bundleVersion),
+	}
 }
 
 func GetDefaultBundleForOs(os string) string {
-	return defaultBundleForOs[os]
+	return GetBundleFosOs(os, version.GetBundleVersion())
+}
+
+func GetBundleFosOs(os, bundleVersion string) string {
+	return defaultBundleForOs(bundleVersion)[os]
 }
 
 func GetDefaultBundle() string {
