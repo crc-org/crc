@@ -25,7 +25,7 @@ var (
 	CRCExecutable  string
 	bundleEmbedded bool
 	bundleName     string
-	bundleURL      string
+	bundleLocation string
 	bundleVersion  string
 	pullSecretFile string
 )
@@ -89,7 +89,7 @@ func FeatureContext(s *godog.Suite) {
 			os.Exit(1)
 		}
 
-		if bundleURL == "embedded" {
+		if bundleLocation == "embedded" {
 			fmt.Println("Expecting the bundle to be embedded in the CRC executable.")
 			bundleEmbedded = true
 			if bundleVersion == "" {
@@ -112,7 +112,7 @@ func FeatureContext(s *godog.Suite) {
 			bundleName = fmt.Sprintf("crc_%s_%s.crcbundle", hypervisor, bundleVersion)
 		} else {
 			bundleEmbedded = false
-			_, bundleName = filepath.Split(bundleURL)
+			_, bundleName = filepath.Split(bundleLocation)
 		}
 
 		if pullSecretFile == "" {
@@ -159,7 +159,7 @@ func FeatureContext(s *godog.Suite) {
 				}
 				// Obtain the bundle to current dir
 				fmt.Println("Obtaining bundle...")
-				bundle, err := DownloadBundle(bundleURL, ".")
+				bundle, err := DownloadBundle(bundleLocation, ".")
 				if err != nil {
 					fmt.Printf("Failed to obtain CRC bundle, %v\n", err)
 					os.Exit(1)
