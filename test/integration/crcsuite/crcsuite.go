@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/cluster"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
 
@@ -96,20 +97,7 @@ func FeatureContext(s *godog.Suite) {
 				fmt.Println("User must specify --bundle-version if bundle is embedded")
 				os.Exit(1)
 			}
-			// assume default hypervisor
-			var hypervisor string
-			switch platform := runtime.GOOS; platform {
-			case "darwin":
-				hypervisor = "hyperkit"
-			case "linux":
-				hypervisor = "libvirt"
-			case "windows":
-				hypervisor = "hyperv"
-			default:
-				fmt.Printf("Unsupported OS: %s", platform)
-				os.Exit(1)
-			}
-			bundleName = fmt.Sprintf("crc_%s_%s.crcbundle", hypervisor, bundleVersion)
+			bundleName = constants.GetBundleFosOs(runtime.GOOS, bundleVersion)
 		} else {
 			bundleEmbedded = false
 			_, bundleName = filepath.Split(bundleLocation)
