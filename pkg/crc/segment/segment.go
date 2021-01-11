@@ -16,6 +16,8 @@ import (
 	"github.com/segmentio/analytics-go"
 )
 
+var WriteKey = "R7jGNYYO5gH0Nl5gDlMEuZ3gPlDJKQak" // test
+
 type Client struct {
 	segmentClient     analytics.Client
 	config            *crcConfig.Config
@@ -29,7 +31,7 @@ func NewClient(config *crcConfig.Config) (*Client, error) {
 }
 
 func newCustomClient(config *crcConfig.Config, telemetryFilePath, segmentEndpoint string) (*Client, error) {
-	client, err := analytics.NewWithConfig("cvpHsNcmGCJqVzf6YxrSnVlwFSAZaYtp", analytics.Config{
+	client, err := analytics.NewWithConfig(WriteKey, analytics.Config{
 		Endpoint: segmentEndpoint,
 		Logger:   &loggingAdapter{},
 	})
