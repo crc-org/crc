@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
@@ -67,8 +66,7 @@ func (c *Client) Upload(action string, duration time.Duration, err error) error 
 
 	if err := c.segmentClient.Enqueue(analytics.Identify{
 		AnonymousId: anonymousID,
-		Traits: analytics.NewTraits().
-			Set("os", runtime.GOOS),
+		Traits:      traits(),
 	}); err != nil {
 		return err
 	}
