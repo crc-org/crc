@@ -172,6 +172,7 @@ gen_release_info:
 	@sed -i s/@OPENSHIFT_VERSION@/\"$(BUNDLE_VERSION)\"/ $(RELEASE_INFO)
 
 .PHONY: release
+release: LDFLAGS := $(LDFLAGS) -X $(REPOPATH)/pkg/crc/segment.WriteKey=cvpHsNcmGCJqVzf6YxrSnVlwFSAZaYtp
 release: cross-lint embed_bundle build_docs_pdf gen_release_info
 	mkdir $(RELEASE_DIR)
 	
