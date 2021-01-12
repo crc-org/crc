@@ -27,20 +27,11 @@ type segmentResponse struct {
 			OS string `json:"os"`
 		} `json:"traits"`
 		Properties struct {
-			Error string `json:"error"`
+			Error   string `json:"error"`
+			Version string `json:"version"`
 		} `json:"properties"`
 		Type string `json:"type"`
 	} `json:"batch"`
-	Context struct {
-		App struct {
-			Name    string `json:"name"`
-			Version string `json:"version"`
-		} `json:"app"`
-		Library struct {
-			Name    string `json:"name"`
-			Version string `json:"version"`
-		} `json:"library"`
-	} `json:"context"`
 	MessageID string `json:"messageId"`
 }
 
@@ -97,8 +88,7 @@ func TestClientUploadWithConsent(t *testing.T) {
 		require.Equal(t, s.Batch[0].Traits.OS, runtime.GOOS)
 		require.Equal(t, s.Batch[1].Type, "track")
 		require.Equal(t, s.Batch[1].Properties.Error, "an error occurred")
-		require.Equal(t, s.Context.App.Name, "crc")
-		require.Equal(t, s.Context.App.Version, version.GetCRCVersion())
+		require.Equal(t, s.Batch[1].Properties.Version, version.GetCRCVersion())
 	default:
 		require.Fail(t, "server should receive data")
 	}

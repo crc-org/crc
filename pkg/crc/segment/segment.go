@@ -30,12 +30,6 @@ func NewClient(config *crcConfig.Config) (*Client, error) {
 
 func newCustomClient(config *crcConfig.Config, telemetryFilePath, segmentEndpoint string) (*Client, error) {
 	client, err := analytics.NewWithConfig("cvpHsNcmGCJqVzf6YxrSnVlwFSAZaYtp", analytics.Config{
-		DefaultContext: &analytics.Context{
-			App: analytics.AppInfo{
-				Name:    constants.DefaultName,
-				Version: version.GetCRCVersion(),
-			},
-		},
 		Endpoint: segmentEndpoint,
 		Logger:   &loggingAdapter{},
 	})
@@ -72,6 +66,7 @@ func (c *Client) Upload(action string, duration time.Duration, err error) error 
 	}
 
 	properties := analytics.NewProperties().
+		Set("version", version.GetCRCVersion()).
 		Set("success", err == nil).
 		Set("duration", duration.Milliseconds())
 	if err != nil {
