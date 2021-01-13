@@ -122,21 +122,21 @@ func FeatureContext(s *godog.Suite) {
 		}
 
 		if !bundleEmbedded {
-			if _, err := os.Stat(bundleName); err != nil {
+			if _, err := os.Stat(bundleLocation); err != nil {
 				if !os.IsNotExist(err) {
-					fmt.Printf("Unexpected error obtaining the bundle %v.\n", bundleName)
+					fmt.Printf("Unexpected error obtaining the bundle %v.\n", bundleLocation)
 					os.Exit(1)
 				}
 				// Obtain the bundle to current dir
 				fmt.Println("Obtaining bundle...")
-				bundle, err := DownloadBundle(bundleLocation, ".")
+				bundleLocation, err = DownloadBundle(bundleLocation, ".")
 				if err != nil {
 					fmt.Printf("Failed to obtain CRC bundle, %v\n", err)
 					os.Exit(1)
 				}
-				fmt.Println("Using bundle:", bundle)
+				fmt.Println("Using bundle:", bundleLocation)
 			} else {
-				fmt.Println("Using existing bundle:", bundleName)
+				fmt.Println("Using existing bundle:", bundleLocation)
 			}
 		}
 	})
@@ -376,7 +376,7 @@ func StartCRCWithDefaultBundleSucceedsOrFails(expected string) error {
 	var extraBundleArgs string
 
 	if !bundleEmbedded {
-		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
+		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
 	cmd = fmt.Sprintf("crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
@@ -390,7 +390,7 @@ func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(
 	var extraBundleArgs string
 
 	if !bundleEmbedded {
-		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
+		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
 	cmd = fmt.Sprintf("CRC_DEBUG_ENABLE_STOP_NTP=true crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
@@ -402,7 +402,7 @@ func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, ex
 
 	var extraBundleArgs string
 	if !bundleEmbedded {
-		extraBundleArgs = fmt.Sprintf("-b %s", bundleName)
+		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
 
 	cmd := fmt.Sprintf("crc start -n %s -p '%s' %s --log-level debug", nameserver, pullSecretFile, extraBundleArgs)
@@ -430,7 +430,7 @@ func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expe
 		if bundleEmbedded {
 			value = filepath.Join(CRCHome, "cache", bundleName)
 		} else {
-			value = bundleName
+			value = bundleLocation
 		}
 	}
 
