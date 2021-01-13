@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+
+chmod 755 /Library/crc/__VERSION__/crc
+
+[ -d /usr/local/bin ] || mkdir /usr/local/bin
+
+rm -f /usr/local/bin/crc
+
+ln -s /Library/crc/__VERSION__/crc /usr/local/bin/crc

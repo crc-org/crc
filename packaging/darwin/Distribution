@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<installer-script minSpecVersion="1.000000">
+    <title>CodeReady Containers</title>
+    <background mime-type="image/png" file="banner.png" scaling="proportional"/>
+    <welcome file="welcome.html" mime-type="text/html" />
+    <conclusion file="conclusion.html" mime-type="text/html" />
+    <license file="LICENSE.txt"/>
+    <options customize="never" allow-external-scripts="no"/>
+    <domains enable_localSystem="true" />
+    <installation-check script="installCheck();"/>
+    <script>
+function installCheck() {
+    if(!(system.compareVersions(system.version.ProductVersion, '10.12.0') >= 0)) {
+        my.result.title = 'Unable to install';
+        my.result.message = 'CodeReady Containers requires macOS 10.12 or later.';
+        my.result.type = 'Fatal';
+        return false;
+    }
+    return true;
+}
+    </script>
+    <choices-outline>
+        <line choice="crc"/>
+    </choices-outline>
+    <choice id="crc" title="crc">
+        <pkg-ref id="crc.pkg"/>
+    </choice>
+    <pkg-ref id="crc.pkg" auth="Root">crc.pkg</pkg-ref>
+</installer-script>

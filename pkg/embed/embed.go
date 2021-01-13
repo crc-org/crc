@@ -4,13 +4,22 @@ import (
 	"fmt"
 	"io"
 	"os"
-
-	"github.com/code-ready/crc/pkg/crc/logging"
+	"path/filepath"
+	"runtime"
 
 	"github.com/YourFin/binappend"
+	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/version"
 )
 
-func openEmbeddedFile(executablePath, embedName string) (*binappend.Reader, error) {
+func openEmbeddedFile(executablePath, embedName string) (io.ReadCloser, error) {
+	if runtime.GOOS == "darwin" {
+		path := filepath.Join("/Library/crc", version.GetCRCVersion(), embedName)
+		if _, err := os.Stat(path); err == nil {
+			return os.Open(path)
+		}
+	}
+
 	extractor, err := binappend.MakeExtractor(executablePath)
 	if err != nil {
 		return nil, fmt.Errorf("Could not data embedded in %s: %v", executablePath, err)
