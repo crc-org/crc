@@ -113,8 +113,8 @@ func getAllPreflightChecks() []Check {
 func getPreflightChecks(experimentalFeatures bool, mode network.Mode) []Check {
 	checks := []Check{}
 
-	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, nonWinPreflightChecks[:]...)
+	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, hyperkitPreflightChecks(mode)...)
 	checks = append(checks, dnsPreflightChecks[:]...)
 
