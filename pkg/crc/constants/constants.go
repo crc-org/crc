@@ -101,10 +101,20 @@ var (
 	MachineBaseDir     = CrcBaseDir
 	MachineCacheDir    = filepath.Join(MachineBaseDir, "cache")
 	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
-	DefaultBundlePath  = filepath.Join(MachineCacheDir, GetDefaultBundle())
+	DefaultBundlePath  = defaultBundlePath()
 	DaemonSocketPath   = filepath.Join(CrcBaseDir, "crc.sock")
 	NetworkSocketPath  = filepath.Join(CrcBaseDir, "network.sock")
 )
+
+func defaultBundlePath() string {
+	if runtime.GOOS == "darwin" {
+		path := filepath.Join("/Library/crc", version.GetCRCVersion(), GetDefaultBundle())
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+	return filepath.Join(MachineCacheDir, GetDefaultBundle())
+}
 
 // GetHomeDir returns the home directory for the current user
 func GetHomeDir() string {

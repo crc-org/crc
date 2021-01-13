@@ -33,6 +33,9 @@ jobs:
     - run:
         name: Make
         command: make check
+    - run:
+        name: mock make package
+        command: make BUNDLE_DIR=/tmp MOCK_BUNDLE=true package
     - store_artifacts:
         path: ~/project/out
         destination: crc
@@ -66,7 +69,6 @@ jobs:
       - run:
           name: mock make release
           command: make BUNDLE_DIR=/tmp MOCK_BUNDLE=true release
- 
 
   build_docs:
     machine:
