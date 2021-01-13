@@ -12,7 +12,7 @@ var (
 
 // UpdateHostsFile updates the host's /etc/hosts file with Instance IP.
 func UpdateHostsFile(instanceIP string, hostnames ...string) error {
-	if err := RemoveFromHostsFile(instanceIP, hostnames...); err != nil {
+	if err := RemoveFromHostsFile(hostnames...); err != nil {
 		return err
 	}
 	if err := AddToHostsFile(instanceIP, hostnames...); err != nil {
@@ -25,11 +25,7 @@ func AddToHostsFile(instanceIP string, hostnames ...string) error {
 	return execute(append([]string{"add", instanceIP}, hostnames...)...)
 }
 
-func RemoveFromHostsFile(instanceIP string, hostnames ...string) error {
-	// If only instanceIP provided then remove all the entry from that instance IP
-	if len(hostnames) == 0 {
-		return execute("rm", instanceIP)
-	}
+func RemoveFromHostsFile(hostnames ...string) error {
 	return execute(append([]string{"rm"}, hostnames...)...)
 }
 
