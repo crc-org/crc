@@ -19,11 +19,11 @@ func OpenLogFile(path string) (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	l, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
+	logfile, err = os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, err
 	}
-	return l, nil
+	return logfile, nil
 }
 
 func CloseLogFile() {
@@ -36,12 +36,13 @@ func CloseLogging() {
 }
 
 func InitLogrus(logLevel, logFilePath string) {
-	logFile, err := OpenLogFile(logFilePath)
+	var err error
+	logfile, err = OpenLogFile(logFilePath)
 	if err != nil {
 		logrus.Fatal("Unable to open log file: ", err)
 	}
 	// send logs to file
-	logrus.SetOutput(logFile)
+	logrus.SetOutput(logfile)
 
 	logrus.SetLevel(logrus.TraceLevel)
 
