@@ -114,27 +114,9 @@ func FeatureContext(s *godog.Suite) {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-	})
 
-	s.AfterScenario(func(pickle *messages.Pickle, err error) {
-		if err != nil {
-			if err := runDiagnose(filepath.Join("..", "test-results")); err != nil {
-				fmt.Printf("Failed to collect diagnostic: %v\n", err)
-			}
-		}
-	})
-
-	s.AfterSuite(func() {
-		err := DeleteCRC()
-		if err != nil {
-			fmt.Printf("Could not delete CRC VM: %s.", err)
-		}
-	})
-
-	// nolint:staticcheck
-	s.BeforeFeature(func(this *messages.GherkinDocument) {
 		// copy data/config files to test dir
-		err := CopyFilesToTestDir()
+		err = CopyFilesToTestDir()
 		if err != nil {
 			os.Exit(1)
 		}
@@ -156,6 +138,21 @@ func FeatureContext(s *godog.Suite) {
 			} else {
 				fmt.Println("Using existing bundle:", bundleName)
 			}
+		}
+	})
+
+	s.AfterScenario(func(pickle *messages.Pickle, err error) {
+		if err != nil {
+			if err := runDiagnose(filepath.Join("..", "test-results")); err != nil {
+				fmt.Printf("Failed to collect diagnostic: %v\n", err)
+			}
+		}
+	})
+
+	s.AfterSuite(func() {
+		err := DeleteCRC()
+		if err != nil {
+			fmt.Printf("Could not delete CRC VM: %s.", err)
 		}
 	})
 }
