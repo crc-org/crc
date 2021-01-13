@@ -29,7 +29,7 @@ const (
 	DaemonLogFile             = "crcd.log"
 	CrcLandingPageURL         = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
 	DefaultPodmanURLBase      = "https://storage.googleapis.com/libpod-master-releases"
-	DefaultAdminHelperCliBase = "https://github.com/code-ready/admin-helper/releases/download/0.0.1"
+	DefaultAdminHelperCliBase = "https://github.com/code-ready/admin-helper/releases/download/0.0.2"
 	CRCMacTrayDownloadURL     = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
 	CRCWindowsTrayDownloadURL = "https://github.com/code-ready/tray-windows/releases/download/v%s/crc-tray-windows.zip"
 	DefaultContext            = "admin"
@@ -58,9 +58,9 @@ func GetPodmanURL() string {
 }
 
 var adminHelperURLForOs = map[string]string{
-	"darwin":  fmt.Sprintf("%s/%s", DefaultAdminHelperCliBase, "admin-helper-macos-amd64.tar.xz"),
-	"linux":   fmt.Sprintf("%s/%s", DefaultAdminHelperCliBase, "admin-helper-linux-amd64.tar.xz"),
-	"windows": fmt.Sprintf("%s/%s", DefaultAdminHelperCliBase, "admin-helper-windows-amd64.tar.xz"),
+	"darwin":  fmt.Sprintf("%s/%s", DefaultAdminHelperCliBase, "admin-helper-darwin"),
+	"linux":   fmt.Sprintf("%s/%s", DefaultAdminHelperCliBase, "admin-helper-linux"),
+	"windows": fmt.Sprintf("%s/%s", DefaultAdminHelperCliBase, "admin-helper-windows.exe"),
 }
 
 func GetAdminHelperURLForOs(os string) string {

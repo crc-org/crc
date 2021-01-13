@@ -6,7 +6,7 @@ const (
 	OcExecutableName          = "oc"
 	PodmanExecutableName      = "podman"
 	TrayExecutableName        = "CodeReady Containers.app"
-	AdminHelperExecutableName = "admin-helper"
+	AdminHelperExecutableName = "admin-helper-darwin"
 )
 
 var (
