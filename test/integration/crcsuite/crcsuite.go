@@ -115,12 +115,6 @@ func FeatureContext(s *godog.Suite) {
 			os.Exit(1)
 		}
 
-		// copy data/config files to test dir
-		err = CopyFilesToTestDir()
-		if err != nil {
-			os.Exit(1)
-		}
-
 		if !bundleEmbedded {
 			if _, err := os.Stat(bundleLocation); err != nil {
 				if !os.IsNotExist(err) {
@@ -138,6 +132,14 @@ func FeatureContext(s *godog.Suite) {
 			} else {
 				fmt.Println("Using existing bundle:", bundleLocation)
 			}
+		}
+	})
+
+	s.BeforeScenario(func(pickle *messages.Pickle) {
+		// copy data/config files to test dir
+		err := CopyFilesToTestDir()
+		if err != nil {
+			os.Exit(1)
 		}
 	})
 
