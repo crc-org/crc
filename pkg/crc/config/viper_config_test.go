@@ -235,3 +235,87 @@ func TestCannotGetWithWrongType(t *testing.T) {
 
 	assert.True(t, config.Get(CPUs).Invalid)
 }
+
+func TestTwoInstancesSharingSameConfiguration(t *testing.T) {
+	dir, err := ioutil.TempDir("", "cfg")
+	require.NoError(t, err)
+	defer os.RemoveAll(dir)
+	configFile := filepath.Join(dir, "crc.json")
+
+	config1, err := newTestConfig(configFile, "CRC")
+	require.NoError(t, err)
+
+	config2, err := newTestConfig(configFile, "CRC")
+	require.NoError(t, err)
+
+	_, err = config1.Set(CPUs, 5)
+	require.NoError(t, err)
+
+	bin, err := ioutil.ReadFile(configFile)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `{"cpus":5}`, string(bin))
+
+	assert.Equal(t, SettingValue{
+		Value:     4, // wrong
+		IsDefault: true,
+	}, config2.Get(CPUs))
+	assert.Equal(t, SettingValue{
+		Value:     5,
+		IsDefault: false,
+	}, config1.Get(CPUs))
+}
+
+func TestTwoInstancesWriteSameConfiguration(t *testing.T) {
+	dir, err := ioutil.TempDir("", "cfg")
+	require.NoError(t, err)
+	defer os.RemoveAll(dir)
+	configFile := filepath.Join(dir, "crc.json")
+
+	config1, err := newTestConfig(configFile, "CRC")
+	require.NoError(t, err)
+
+	config2, err := newTestConfig(configFile, "CRC")
+	require.NoError(t, err)
+
+	_, err = config1.Set(CPUs, 5)
+	require.NoError(t, err)
+
+	_, err = config2.Set(NameServer, "1.1.1.1")
+	require.NoError(t, err)
+
+	bin, err := ioutil.ReadFile(configFile)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `{"nameservers":"1.1.1.1"}`, string(bin)) // cpus missing
+
+	assert.Equal(t, 4, config2.Get(CPUs).Value) // wrong
+	assert.Equal(t, 5, config1.Get(CPUs).Value)
+
+	assert.Equal(t, "1.1.1.1", config2.Get(NameServer).Value)
+	assert.Equal(t, "", config1.Get(NameServer).Value) // wrong
+}
+
+func TestTwoInstancesSetAndUnsetSameConfiguration(t *testing.T) {
+	dir, err := ioutil.TempDir("", "cfg")
+	require.NoError(t, err)
+	defer os.RemoveAll(dir)
+	configFile := filepath.Join(dir, "crc.json")
+
+	config1, err := newTestConfig(configFile, "CRC")
+	require.NoError(t, err)
+
+	config2, err := newTestConfig(configFile, "CRC")
+	require.NoError(t, err)
+
+	_, err = config1.Set(CPUs, 5)
+	require.NoError(t, err)
+
+	_, err = config2.Unset(CPUs)
+	require.NoError(t, err)
+
+	bin, err := ioutil.ReadFile(configFile)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `{}`, string(bin))
+
+	assert.Equal(t, 4, config2.Get(CPUs).Value)
+	assert.Equal(t, 5, config1.Get(CPUs).Value) // wrong
+}
