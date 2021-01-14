@@ -94,7 +94,7 @@ func (s *consoleResult) prettyPrintTo(writer io.Writer) error {
 		return errors.New("The OpenShift cluster is not running, cannot open the OpenShift Web Console")
 	}
 
-	if _, err := fmt.Fprint(writer, "Opening the OpenShift Web Console in the default browser..."); err != nil {
+	if _, err := fmt.Fprintln(writer, "Opening the OpenShift Web Console in the default browser..."); err != nil {
 		return err
 	}
 	if err := browser.OpenURL(s.ClusterConfig.WebConsoleURL); err != nil {
