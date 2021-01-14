@@ -77,7 +77,7 @@ vendorcheck:
 	./verify-vendor.sh
 
 .PHONY: check
-check: cross build_integration $(HOST_BUILD_DIR)/crc-embedder test cross-lint vendorcheck
+check: cross build_e2e $(HOST_BUILD_DIR)/crc-embedder test cross-lint vendorcheck
 
 # Start of the actual build targets
 
@@ -136,14 +136,14 @@ clean: clean_docs clean_macos_package
 	rm -f $(GOPATH)/bin/crc
 	rm -rf $(RELEASE_DIR)
 
-.PHONY: build_integration
-build_integration: $(SOURCES)
-	GOOS=linux   go test ./test/integration/ -c -o $(BUILD_DIR)/linux-amd64/integration.test
-	GOOS=windows go test ./test/integration/ -c -o $(BUILD_DIR)/windows-amd64/integration.test.exe
-	GOOS=darwin  go test ./test/integration/ -c -o $(BUILD_DIR)/macos-amd64/integration.test
+.PHONY: build_e2e
+build_e2e: $(SOURCES)
+	GOOS=linux   go test ./test/e2e/ -c -o $(BUILD_DIR)/linux-amd64/e2e.test
+	GOOS=windows go test ./test/e2e/ -c -o $(BUILD_DIR)/windows-amd64/e2e.test.exe
+	GOOS=darwin  go test ./test/e2e/ -c -o $(BUILD_DIR)/macos-amd64/e2e.test
 
-.PHONY: integration ## Run integration tests
-integration:
+.PHONY: e2e ## Run e2e tests
+e2e:
 GODOG_OPTS = --godog.tags=$(GOOS)
 ifndef PULL_SECRET_FILE
 	PULL_SECRET_FILE = --pull-secret-file=$(HOME)/Downloads/crc-pull-secret
@@ -154,8 +154,8 @@ endif
 ifndef CRC_BINARY
 	CRC_BINARY = --crc-binary=$(GOPATH)/bin
 endif
-integration:
-	@go test --timeout=180m $(REPOPATH)/test/integration -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --bundle-version=$(BUNDLE_VERSION) $(GODOG_OPTS)
+e2e:
+	@go test --timeout=180m $(REPOPATH)/test/e2e -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --bundle-version=$(BUNDLE_VERSION) $(GODOG_OPTS)
 
 .PHONY: fmt
 fmt:

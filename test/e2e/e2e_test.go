@@ -1,4 +1,4 @@
-package integration
+package e2e
 
 import (
 	"os"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/code-ready/clicumber/testsuite"
-	"github.com/code-ready/crc/test/integration/crcsuite"
+	"github.com/code-ready/crc/test/e2e/crcsuite"
 	"github.com/cucumber/godog"
 )
 

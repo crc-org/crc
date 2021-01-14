@@ -118,7 +118,7 @@ function upload_logs() {
 
   # http://stackoverflow.com/a/22908437/1120530; Using --relative as --rsync-path not working
   mkdir -p pr/$ghprbPullId/
-  cp -R test/integration/out/test-results/* pr/$ghprbPullId/
+  cp -R test/e2e/out/test-results/* pr/$ghprbPullId/
   # Change the file permission to 0644 so after rsync it can be readable by other user.
   chmod 0644 $HOME/.crc/crc.log
   cp $HOME/.crc/crc.log pr/$ghprbPullId/crc_$(date '+%Y_%m_%d_%H_%M_%S').log
@@ -132,7 +132,7 @@ function run_tests() {
   # this is copied over using https://github.com/minishift/minishift-ci-jobs/blob/master/minishift-ci-index.yaml#L99
   export PULL_SECRET_FILE=--pull-secret-file=$HOME/payload/crc_pull_secret
   export BUNDLE_LOCATION=--bundle-location=$HOME/Downloads/$BUNDLE 
-  make integration 
+  make e2e 
   if [[ $? -ne 0 ]]; then
     upload_logs $1
     exit 1
@@ -152,12 +152,12 @@ else
 	get_bundle
 	setup_golang
 
-	# setup to run integration tests
+	# setup to run e2e tests
 	cd payload
 	make
 	make check
 	
-	# Retrieve password for rsync and run integration tests
+	# Retrieve password for rsync and run e2e tests
 	CICO_PASS=$(echo $CICO_API_KEY | cut -d'-' -f1-2)
 	run_tests $CICO_PASS
 	perform_artifacts_upload $CICO_PASS
