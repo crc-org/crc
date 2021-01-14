@@ -46,40 +46,40 @@ For more information, see the following:
 . link:https://github.com/golang/go/wiki/Modules[Introduction to Go modules]
 . link:https://blog.golang.org/using-go-modules[Using Go modules]
 
-[[running-integration-tests]]
-== Running integration tests
+[[running-e2e-tests]]
+== Running e2e tests
 
-We have automated integration tests which keep CodeReady Containers in shape.
+We have automated e2e tests which keep CodeReady Containers in shape.
 
-[[intro-to-integration-testing]]
+[[intro-to-e2e-testing]]
 === Introduction
-Integration tests use the link:http://github.com/code-ready/clicumber[Clicumber] package to provide basic functionality for testing CLI binaries.
+End-to-end (e2e) tests use the link:http://github.com/code-ready/clicumber[Clicumber] package to provide basic functionality for testing CLI binaries.
 
 Clicumber allows running commands in a persistent shell instance (`bash`, `tcsh`, `zsh`, Command Prompt, or PowerShell), assert its outputs (standard output, standard error, or exit code), check configuration files, and so on. The general functionality of Clicumber is then extended by CodeReady Containers specific test code to cover the whole functionality of CodeReady Containers.
 
-[[how-to-run-integration-tests]]
+[[how-to-run-e2e-tests]]
 === How to run
 
-First, one needs to set the following flags in `Makefile`, under `integration` target:
+First, one needs to set the following flags in `Makefile`, under `e2e` target:
 
 - `--pull-secret-file`: absolute path to your OpenShift pull secret.
 - `--bundle-location`: if bundle is embedded, this flag should be set to `--bundle-location=embedded` or not passed at all; if bundle is not embedded, then absolute path to the bundle should be passed.
 - `--crc-binary`: if `crc` binary resides in `$GOPATH/bin`, then this flag needs not be passed; otherwise absolute path to the `crc` binary should be passed.
 
-To start integration tests, run:
+To start e2e tests, run:
 ```bash
-$ make integration
+$ make e2e
 ```
 
-===== How to run only a subset of all integration tests
+===== How to run only a subset of all e2e tests
 
-Implicitly, all integration tests for your operating system are executed. If you want to run only tests from one feature file, you have to override `GODOG_OPTS` environment variable. For example:
+Implicitly, all e2e tests for your operating system are executed. If you want to run only tests from one feature file, you have to override `GODOG_OPTS` environment variable. For example:
 
 ```bash
-make integration GODOG_OPTS="--godog.tags='@basic && @windows'" BUNDLE_LOCATION=<bundle location> PULL_SECRET_FILE=<pull secret path>
+make e2e GODOG_OPTS="--godog.tags='@basic && @windows'" BUNDLE_LOCATION=<bundle location> PULL_SECRET_FILE=<pull secret path>
 ```
 
-Please notice `@basic && @windows`, where `@basic` tag stands for `basic.feature` file and `@windows` tag for integration tests designed for Windows.
+Please notice `@basic && @windows`, where `@basic` tag stands for `basic.feature` file and `@windows` tag for e2e tests designed for Windows.
 
 [[how-to-test-cert-rotation]]
 === How to test cert rotation
@@ -100,7 +100,7 @@ $ CRC_DEBUG_ENABLE_STOP_NTP=true crc start
 ```
 
 
-[[integration-test-logs]]
+[[e2e-test-logs]]
 === Logs
 
-Test logs can be found in [filename]`test/integration/out/test-results`.
+Test logs can be found in [filename]`test/e2e/out/test-results`.
