@@ -3,11 +3,6 @@ package machine
 import "github.com/pkg/errors"
 
 func (client *client) IP() (string, error) {
-	err := setMachineLogging(client.debug)
-	if err != nil {
-		return "", errors.Wrap(err, "Cannot initialize logging")
-	}
-
 	libMachineAPIClient, cleanup, err := createLibMachineClient(client.debug)
 	defer cleanup()
 	if err != nil {
