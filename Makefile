@@ -229,7 +229,6 @@ package: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/cr
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/postinstall.in >packaging/darwin/scripts/postinstall
 	chmod 755 packaging/darwin/scripts/postinstall
-	rm -rf packaging/root/
 	mkdir -p packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
 	$(HOST_BUILD_DIR)/crc-embedder download packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
 	cp $(HYPERKIT_BUNDLENAME) packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
