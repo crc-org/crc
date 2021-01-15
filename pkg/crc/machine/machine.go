@@ -3,6 +3,7 @@ package machine
 import (
 	"encoding/base64"
 	"fmt"
+	"os"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -52,16 +53,16 @@ func getBundleMetadataFromDriver(driver drivers.Driver) (string, *bundle.CrcBund
 }
 
 func createLibMachineClient(debug bool) (*libmachine.Client, func(), error) {
-	err := setMachineLogging(debug)
+	logfile, err := setMachineLogging(debug)
 	if err != nil {
-		return nil, func() {
-			unsetMachineLogging()
-		}, err
+		return nil, func() {}, err
 	}
 	client := libmachine.NewClient(constants.MachineBaseDir)
 	return client, func() {
 		client.Close()
-		unsetMachineLogging()
+		if logfile != nil {
+			logfile.Close()
+		}
 	}, nil
 }
 
@@ -79,23 +80,19 @@ func getIP(h *host.Host, vsockNetwork bool) (string, error) {
 	return h.Driver.GetIP()
 }
 
-func setMachineLogging(logs bool) error {
+func setMachineLogging(logs bool) (*os.File, error) {
 	if !logs {
 		log.SetDebug(true)
 		logfile, err := logging.OpenLogFile(constants.LogFilePath)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		log.SetOutWriter(logfile)
 		log.SetErrWriter(logfile)
-	} else {
-		log.SetDebug(true)
+		return logfile, nil
 	}
-	return nil
-}
-
-func unsetMachineLogging() {
-	logging.CloseLogFile()
+	log.SetDebug(true)
+	return nil, nil
 }
 
 func getProxyConfig(baseDomainName string) (*network.ProxyConfig, error) {
