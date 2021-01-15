@@ -102,7 +102,7 @@ cross: $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/wi
 
 .PHONY: test
 test:
-	go test --tags build -v -ldflags="$(VERSION_VARIABLES)" ./pkg/... ./cmd/...
+	go test -race --tags build -v -ldflags="$(VERSION_VARIABLES)" ./pkg/... ./cmd/...
 
 .PHONY: build_docs
 build_docs:
