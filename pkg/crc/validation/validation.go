@@ -69,7 +69,7 @@ func ValidateBundle(bundle string) error {
 	releaseBundleVersion := version.GetBundleVersion()
 	userProvidedBundleVersion := filepath.Base(bundle)
 	if !strings.Contains(userProvidedBundleVersion, fmt.Sprintf("%s.crcbundle", releaseBundleVersion)) {
-		if !constants.BundleEmbedded() {
+		if !version.IsRelease() {
 			logging.Warnf("Using unsupported bundle %s", userProvidedBundleVersion)
 			return nil
 		}

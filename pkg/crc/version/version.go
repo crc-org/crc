@@ -24,6 +24,8 @@ var (
 	okdBuild = "false"
 
 	macosInstallPath = "/unset"
+
+	isRelease = "false"
 )
 
 const (
@@ -54,6 +56,10 @@ func GetBundleVersion() string {
 
 func IsOkdBuild() bool {
 	return okdBuild == "true"
+}
+
+func IsRelease() bool {
+	return isRelease == "true"
 }
 
 func GetCRCMacTrayVersion() string {
