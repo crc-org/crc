@@ -118,12 +118,18 @@ docs_serve: build_docs
 docs_check_links:
 	${CONTAINER_RUNTIME} run -it -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) docs_check_links
 
-.PHONY: clean_docs
+.PHONY: clean_docs clean_macos_package
 clean_docs:
 	rm -rf $(CURDIR)/docs/build
 
+clean_macos_package:
+	rm -f packaging/darwin/Distribution
+	rm -f packaging/darwin/Resources/welcome.html
+	rm -f packaging/darwin/scripts/postinstall
+	rm -rf packaging/root/
+
 .PHONY: clean ## Remove all build artifacts
-clean: clean_docs
+clean: clean_docs clean_macos_package
 	rm -rf $(BUILD_DIR)
 	rm -f $(GOPATH)/bin/crc
 	rm -rf $(RELEASE_DIR)
@@ -219,9 +225,10 @@ goversioncheck:
 
 package: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.macosInstallPath=$(MACOS_INSTALL_PATH)'
 package: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
-	sed -i '' -e 's/__VERSION__/'$(CRC_VERSION)'/g' packaging/darwin/Distribution
-	sed -i '' -e 's/__VERSION__/'$(CRC_VERSION)'/g' packaging/darwin/Resources/welcome.html
-	sed -i '' -e 's/__VERSION__/'$(CRC_VERSION)'/g' packaging/darwin/scripts/postinstall
+	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
+	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
+	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' packaging/darwin/postinstall.in >packaging/darwin/scripts/postinstall
+	chmod 755 packaging/darwin/scripts/postinstall
 	rm -rf packaging/root/
 	mkdir -p packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
 	$(HOST_BUILD_DIR)/crc-embedder download packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
