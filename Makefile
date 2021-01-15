@@ -49,7 +49,7 @@ __check_defined = \
 
 # Linker flags
 VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
-    -X $(REPOPATH)/pkg/crc/version.bundleVersion=$(BUNDLE_VERSION) \
+	-X $(REPOPATH)/pkg/crc/version.bundleVersion=$(BUNDLE_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.commitSha=$(COMMIT_SHA)
 
 ifdef OKD_VERSION
@@ -172,7 +172,7 @@ gen_release_info:
 	@sed -i s/@OPENSHIFT_VERSION@/\"$(BUNDLE_VERSION)\"/ $(RELEASE_INFO)
 
 .PHONY: release
-release: LDFLAGS := $(LDFLAGS) -X $(REPOPATH)/pkg/crc/segment.WriteKey=cvpHsNcmGCJqVzf6YxrSnVlwFSAZaYtp
+release: LDFLAGS += -X $(REPOPATH)/pkg/crc/segment.WriteKey=cvpHsNcmGCJqVzf6YxrSnVlwFSAZaYtp
 release: cross-lint embed_bundle build_docs_pdf gen_release_info
 	mkdir $(RELEASE_DIR)
 	
