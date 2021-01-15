@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 BUNDLE_VERSION = 4.6.9
 BUNDLE_EXTENSION = crcbundle
-CRC_VERSION = 1.20.0
+CRC_VERSION = 1.21.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 MACOS_INSTALL_PATH = /Library/CodeReady Containers
 CONTAINER_RUNTIME ?= podman
