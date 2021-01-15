@@ -4,6 +4,7 @@ BUNDLE_VERSION = 4.6.9
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 1.20.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
+MACOS_INSTALL_PATH = /Library/crc
 CONTAINER_RUNTIME ?= podman
 
 ifdef OKD_VERSION
@@ -216,15 +217,16 @@ update-go-version:
 goversioncheck:
 	./verify-go-version.sh
 
+package: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.macosInstallPath=$(MACOS_INSTALL_PATH)'
 package: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
 	sed -i '' -e 's/__VERSION__/'$(CRC_VERSION)'/g' packaging/darwin/Distribution
 	sed -i '' -e 's/__VERSION__/'$(CRC_VERSION)'/g' packaging/darwin/Resources/welcome.html
 	sed -i '' -e 's/__VERSION__/'$(CRC_VERSION)'/g' packaging/darwin/scripts/postinstall
 	rm -rf packaging/root/
-	mkdir -p packaging/root/Library/crc/$(CRC_VERSION)/
-	$(HOST_BUILD_DIR)/crc-embedder download packaging/root/Library/crc/$(CRC_VERSION)/
-	cp $(HYPERKIT_BUNDLENAME) packaging/root/Library/crc/$(CRC_VERSION)/
-	cp $(BUILD_DIR)/macos-amd64/crc packaging/root/Library/crc/$(CRC_VERSION)/
+	mkdir -p packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
+	$(HOST_BUILD_DIR)/crc-embedder download packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
+	cp $(HYPERKIT_BUNDLENAME) packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
+	cp $(BUILD_DIR)/macos-amd64/crc packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
 	cp LICENSE packaging/darwin/Resources/LICENSE.txt
 	pkgbuild --identifier com.redhat.crc.$(CRC_VERSION) --version $(CRC_VERSION) \
 		--scripts packaging/darwin/scripts \
