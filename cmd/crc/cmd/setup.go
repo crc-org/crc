@@ -7,9 +7,9 @@ import (
 	"os"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/preflight"
+	pkgversion "github.com/code-ready/crc/pkg/crc/version"
 	"github.com/spf13/cobra"
 )
 
@@ -68,7 +68,7 @@ func (s *setupResult) prettyPrintTo(writer io.Writer) error {
 
 func extraArguments() string {
 	var bundle string
-	if !constants.BundleEmbedded() {
+	if !pkgversion.IsRelease() {
 		bundle = " -b $bundlename"
 	}
 	return bundle

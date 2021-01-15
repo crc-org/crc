@@ -35,8 +35,6 @@ RELEASE_INFO := release-info.json
 
 MOCK_BUNDLE ?= false
 
-SEGMENT_WRITE_KEY := "cvpHsNcmGCJqVzf6YxrSnVlwFSAZaYtp"
-
 # Check that given variables are set and all have non-empty values,
 # die with an error otherwise.
 #
@@ -54,6 +52,8 @@ __check_defined = \
 VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.bundleVersion=$(BUNDLE_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.commitSha=$(COMMIT_SHA)
+RELEASE_VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/segment.WriteKey=cvpHsNcmGCJqVzf6YxrSnVlwFSAZaYtp \
+	-X $(REPOPATH)/pkg/crc/version.isRelease=true
 
 ifdef OKD_VERSION
 	VERSION_VARIABLES := $(VERSION_VARIABLES) -X $(REPOPATH)/pkg/crc/version.okdBuild=true
@@ -181,7 +181,7 @@ gen_release_info:
 	@sed -i s/@OPENSHIFT_VERSION@/\"$(BUNDLE_VERSION)\"/ $(RELEASE_INFO)
 
 .PHONY: release
-release: LDFLAGS += -X $(REPOPATH)/pkg/crc/segment.WriteKey=$(SEGMENT_WRITE_KEY)
+release: LDFLAGS += $(RELEASE_VERSION_VARIABLES)
 release: cross-lint embed_bundle build_docs_pdf gen_release_info
 	mkdir $(RELEASE_DIR)
 	
@@ -225,7 +225,7 @@ update-go-version:
 goversioncheck:
 	./verify-go-version.sh
 
-package: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.macosInstallPath=$(MACOS_INSTALL_PATH)' -X $(REPOPATH)/pkg/crc/segment.WriteKey=$(SEGMENT_WRITE_KEY)
+package: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.macosInstallPath=$(MACOS_INSTALL_PATH)' $(RELEASE_VERSION_VARIABLES)
 package: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
