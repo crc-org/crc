@@ -4,6 +4,7 @@ environment:
   GOPATH: c:\gopath
 stack: go 1.14
 before_test:
+  - choco install mingw
   - choco install make
   - make cross
 test_script:
