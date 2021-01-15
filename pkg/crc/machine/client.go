@@ -1,6 +1,8 @@
 package machine
 
 import (
+	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
+	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/machine/libmachine/state"
 )
@@ -20,16 +22,16 @@ type Client interface {
 }
 
 type client struct {
-	name              string
-	networkMode       network.Mode
-	monitoringEnabled bool
+	name   string
+	debug  bool
+	config crcConfig.Storage
 }
 
-func NewClient(name string, networkMode network.Mode, monitoringEnabled bool) Client {
+func NewClient(name string, debug bool, config crcConfig.Storage) Client {
 	return &client{
-		name:              name,
-		networkMode:       networkMode,
-		monitoringEnabled: monitoringEnabled,
+		name:   name,
+		debug:  debug,
+		config: config,
 	}
 }
 
@@ -38,5 +40,13 @@ func (client *client) GetName() string {
 }
 
 func (client *client) useVSock() bool {
-	return client.networkMode == network.VSockMode
+	return client.networkMode() == network.VSockMode
+}
+
+func (client *client) networkMode() network.Mode {
+	return network.ParseMode(client.config.Get(cmdConfig.NetworkMode).AsString())
+}
+
+func (client *client) monitoringEnabled() bool {
+	return client.config.Get(cmdConfig.EnableClusterMonitoring).AsBool()
 }

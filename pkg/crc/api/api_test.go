@@ -13,7 +13,6 @@ import (
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/version"
@@ -32,9 +31,7 @@ func TestApi(t *testing.T) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createServerWithListener(listener, setupNewInMemoryConfig, func(_ config.Storage) machine.Client {
-		return client
-	})
+	api, err := createServerWithListener(listener, setupNewInMemoryConfig(), client)
 	require.NoError(t, err)
 	go func() {
 		if err := api.Serve(); err != nil {
@@ -201,7 +198,7 @@ func TestGetconfigApi(t *testing.T) {
 	}, getconfigRes)
 }
 
-func setupNewInMemoryConfig() (config.Storage, error) {
+func setupNewInMemoryConfig() config.Storage {
 	storage := config.NewEmptyInMemoryStorage()
 	cfg := config.New(&skipPreflights{
 		storage: storage,
@@ -209,7 +206,7 @@ func setupNewInMemoryConfig() (config.Storage, error) {
 	cmdConfig.RegisterSettings(cfg)
 	preflight.RegisterSettings(cfg)
 
-	return cfg, nil
+	return cfg
 }
 
 func setupAPIServer(t *testing.T) (string, func()) {
@@ -221,9 +218,7 @@ func setupAPIServer(t *testing.T) (string, func()) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createServerWithListener(listener, setupNewInMemoryConfig, func(_ config.Storage) machine.Client {
-		return client
-	})
+	api, err := createServerWithListener(listener, setupNewInMemoryConfig(), client)
 	require.NoError(t, err)
 	go func() {
 		if err := api.Serve(); err != nil {

@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/api"
-	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/transport"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/types"
@@ -142,15 +141,10 @@ func run(configuration *types.Configuration, endpoints []string) error {
 	}
 }
 
-func newConfig() (crcConfig.Storage, error) {
-	config, _, err := newViperConfig()
-	return config, err
-}
-
 func runDaemon() error {
 	// Remove if an old socket is present
 	os.Remove(constants.DaemonSocketPath)
-	apiServer, err := api.CreateServer(constants.DaemonSocketPath, newConfig, newMachineWithConfig)
+	apiServer, err := api.CreateServer(constants.DaemonSocketPath, config, newMachine())
 	if err != nil {
 		return err
 	}
