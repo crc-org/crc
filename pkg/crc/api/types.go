@@ -3,21 +3,14 @@ package api
 import (
 	"encoding/json"
 	"net"
-
-	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/machine"
 )
-
-type newHandlerFunc func() (RequestHandler, error)
-type newConfigFunc func() (config.Storage, error)
-type newMachineFunc func(config.Storage) machine.Client
 
 type commandError struct {
 	Err string
 }
 
 type Server struct {
-	handlerFactory         newHandlerFunc
+	handler                RequestHandler
 	listener               net.Listener
 	clusterOpsRequestsChan chan clusterOpsRequest
 }

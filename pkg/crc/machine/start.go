@@ -116,7 +116,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 			CPUs:        startConfig.CPUs,
 			Memory:      startConfig.Memory,
 			DiskSize:    startConfig.DiskSize,
-			NetworkMode: client.networkMode,
+			NetworkMode: client.networkMode(),
 		}
 
 		crcBundleMetadata, err = getCrcBundleInfo(startConfig.BundlePath)
@@ -261,7 +261,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		IP:        instanceIP,
 		// TODO: should be more finegrained
 		BundleMetadata: *crcBundleMetadata,
-		NetworkMode:    client.networkMode,
+		NetworkMode:    client.networkMode(),
 	}
 
 	// Run the DNS server inside the VM
@@ -335,7 +335,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		return nil, errors.Wrap(err, "Failed to update cluster ID")
 	}
 
-	if client.monitoringEnabled {
+	if client.monitoringEnabled() {
 		logging.Info("Enabling cluster monitoring operator...")
 		if err := cluster.StartMonitoring(ocConfig); err != nil {
 			return nil, errors.Wrap(err, "Cannot start monitoring stack")
@@ -406,7 +406,7 @@ func (client *client) IsRunning() (bool, error) {
 }
 
 func (client *client) validateStartConfig(startConfig StartConfig) error {
-	if client.monitoringEnabled && startConfig.Memory < minimumMemoryForMonitoring {
+	if client.monitoringEnabled() && startConfig.Memory < minimumMemoryForMonitoring {
 		return fmt.Errorf("Too little memory (%s) allocated to the virtual machine to start the monitoring stack, %s is the minimum",
 			units.BytesSize(float64(startConfig.Memory)*1024*1024),
 			units.BytesSize(minimumMemoryForMonitoring*1024*1024))

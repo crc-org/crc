@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"net"
 
+	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
-func CreateServer(socketPath string, config newConfigFunc, machine newMachineFunc) (Server, error) {
+func CreateServer(socketPath string, config crcConfig.Storage, machine machine.Client) (Server, error) {
 	listener, err := net.Listen("unix", socketPath)
 	if err != nil {
 		logging.Error("Failed to create socket: ", err.Error())
@@ -18,19 +20,13 @@ func CreateServer(socketPath string, config newConfigFunc, machine newMachineFun
 	return createServerWithListener(listener, config, machine)
 }
 
-func createServerWithListener(listener net.Listener, config newConfigFunc, machine newMachineFunc) (Server, error) {
+func createServerWithListener(listener net.Listener, config crcConfig.Storage, machine machine.Client) (Server, error) {
 	apiServer := Server{
 		listener:               listener,
 		clusterOpsRequestsChan: make(chan clusterOpsRequest, 10),
-		handlerFactory: func() (RequestHandler, error) {
-			cfg, err := config()
-			if err != nil {
-				return nil, err
-			}
-			return &Handler{
-				Config:        cfg,
-				MachineClient: &Adapter{Underlying: machine(cfg)},
-			}, nil
+		handler: &Handler{
+			Config:        config,
+			MachineClient: &Adapter{Underlying: machine},
 		},
 	}
 	return apiServer, nil
@@ -61,33 +57,25 @@ func (api Server) handleRequest(req commandRequest, conn net.Conn) {
 	defer conn.Close()
 	var result string
 
-	handler, err := api.handlerFactory()
-	if err != nil {
-		logging.Error(err.Error())
-		result = encodeErrorToJSON(fmt.Sprintf("Failed to initialize new config store: %v", err))
-		writeStringToSocket(conn, result)
-		return
-	}
-
 	switch req.Command {
 	case "start":
-		result = handler.Start(req.Args)
+		result = api.handler.Start(req.Args)
 	case "stop":
-		result = handler.Stop()
+		result = api.handler.Stop()
 	case "status":
-		result = handler.Status()
+		result = api.handler.Status()
 	case "delete":
-		result = handler.Delete()
+		result = api.handler.Delete()
 	case "version":
-		result = handler.GetVersion()
+		result = api.handler.GetVersion()
 	case "setconfig":
-		result = handler.SetConfig(req.Args)
+		result = api.handler.SetConfig(req.Args)
 	case "unsetconfig":
-		result = handler.UnsetConfig(req.Args)
+		result = api.handler.UnsetConfig(req.Args)
 	case "getconfig":
-		result = handler.GetConfig(req.Args)
+		result = api.handler.GetConfig(req.Args)
 	case "webconsoleurl":
-		result = handler.GetWebconsoleInfo()
+		result = api.handler.GetWebconsoleInfo()
 	default:
 		result = encodeErrorToJSON(fmt.Sprintf("Unknown command supplied: %s", req.Command))
 	}

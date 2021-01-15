@@ -61,7 +61,7 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 	}
 	return &ClusterStatusResult{
 		CrcStatus:        state.Running,
-		OpenshiftStatus:  getOpenShiftStatus(sshRunner, client.monitoringEnabled),
+		OpenshiftStatus:  getOpenShiftStatus(sshRunner, client.monitoringEnabled()),
 		OpenshiftVersion: crcBundleMetadata.GetOpenshiftVersion(),
 		DiskUse:          diskUse,
 		DiskSize:         diskSize,
