@@ -107,8 +107,8 @@ var (
 )
 
 func defaultBundlePath() string {
-	if runtime.GOOS == "darwin" {
-		path := filepath.Join("/Library/crc", version.GetCRCVersion(), GetDefaultBundle())
+	if runtime.GOOS == "darwin" && version.IsMacosInstallPathSet() {
+		path := filepath.Join(version.GetMacosInstallPath(), version.GetCRCVersion(), GetDefaultBundle())
 		if _, err := os.Stat(path); err == nil {
 			return path
 		}

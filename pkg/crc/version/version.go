@@ -22,6 +22,8 @@ var (
 	bundleVersion = "0.0.0-unset"
 
 	okdBuild = "false"
+
+	macosInstallPath = "/unset"
 )
 
 const (
@@ -60,6 +62,14 @@ func GetCRCMacTrayVersion() string {
 
 func GetCRCWindowsTrayVersion() string {
 	return crcWindowsTrayVersion
+}
+
+func GetMacosInstallPath() string {
+	return macosInstallPath
+}
+
+func IsMacosInstallPathSet() bool {
+	return macosInstallPath != "/unset"
 }
 
 func getCRCLatestVersionFromMirror() (*semver.Version, error) {
