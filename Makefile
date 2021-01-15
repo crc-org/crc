@@ -225,9 +225,9 @@ goversioncheck:
 
 package: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.macosInstallPath=$(MACOS_INSTALL_PATH)'
 package: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
-	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
-	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
-	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' packaging/darwin/postinstall.in >packaging/darwin/scripts/postinstall
+	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
+	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
+	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/postinstall.in >packaging/darwin/scripts/postinstall
 	chmod 755 packaging/darwin/scripts/postinstall
 	rm -rf packaging/root/
 	mkdir -p packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
