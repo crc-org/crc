@@ -7,9 +7,6 @@ Telemetry functionality is responsible for listing your cluster in the link:http
 
 .Prerequisites
 
-* A running {prod} virtual machine and a working [command]`oc` command.
-For more information, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the OpenShift cluster with `oc`].
-* You must log in through [command]`oc` as the `kubeadmin` user.
 * You must assign additional memory to the {prod} virtual machine.
 At least 14 GiB of memory (a value of `14336`) is recommended for core functionality. 
 Increased workloads will require more memory.
@@ -17,35 +14,22 @@ For more information, see link:{crc-gsg-url}#configuring-the-virtual-machine_gsg
 
 .Procedure
 
-. List unmanaged Operators and note the numeric index for `cluster-monitoring-operator`:
-
-** On Linux or {mac}:
+. Set the `enable-cluster-monitoring` configurable property to `true`:
 +
-[subs="+quotes"]
+[subs="+quotes,attributes"]
 ----
-$ oc get clusterversion version -ojsonpath='{range .spec.overrides[*]}{.name}{"\n"}{end}' | nl -v 0
+$ {bin} config set enable-cluster-monitoring true
 ----
 
-** On {msw} using PowerShell:
+. Start the virtual machine:
 +
-[subs="+quotes"]
+[subs="+quotes,attributes"]
 ----
-PS> oc get clusterversion version -ojsonpath='{range .spec.overrides[*]}{.name}{\"\n\"}{end}' | % {$nl++;"`t$($nl-1) `t $_"};$nl=0
+$ {bin} start
 ----
-
-. Start monitoring, alerting, and telemetry services using the identified numeric index for `cluster-monitoring-operator`:
-
-** On Linux or {mac}:
 +
-[subs="+quotes"]
-----
-$ oc patch clusterversion/version --type='json' -p '[{"op":"remove", "path":"/spec/overrides/_<cluster-monitoring-operator-index>_"}]'
-clusterversion.config.openshift.io/version patched
-----
-
-** On {msw} using PowerShell:
-+
-[subs="+quotes"]
-----
-PS> oc patch clusterversion/version --type='json' -p '[{\"op\":\"remove\", \"path\":\"/spec/overrides/_<cluster-monitoring-operator-index>_\"}]'
-----
+[WARNING]
+====
+Cluster monitoring cannot be disabled.
+To remove monitoring, alerting, and telemetry, set the `enable-cluster-monitoring` configurable property to `false` and delete the existing {prod} virtual machine.
+====
