@@ -25,3 +25,24 @@ Always run the [command]`{bin}` executable with your user account.
 ----
 $ {bin} setup
 ----
+
+.Consent for telemetry data collection
+
+The `{bin} setup` command prompts you for optional, anonymous usage data collection to assist with development.
+No personally identifiable information is collected.
+
+* To manually enable telemetry, run the following command:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} config set consent-telemetry yes
+----
+
+* To manually disable telemetry, run the following command:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} config set consent-telemetry no
+----
+
+For more information about collected data, see the Red{nbsp}Hat link:https://developers.redhat.com/article/tool-data-collection[Telemetry data collection notice].
