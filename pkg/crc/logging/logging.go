@@ -21,19 +21,15 @@ func OpenLogFile(path string) (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	logfile, err = os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
+	logFile, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, err
 	}
-	return logfile, nil
-}
-
-func CloseLogFile() {
-	logfile.Close()
+	return logFile, nil
 }
 
 func CloseLogging() {
-	CloseLogFile()
+	logfile.Close()
 	logrus.StandardLogger().ReplaceHooks(make(logrus.LevelHooks))
 }
 
