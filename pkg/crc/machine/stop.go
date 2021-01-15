@@ -7,14 +7,6 @@ import (
 )
 
 func (client *client) Stop() (state.State, error) {
-	defer unsetMachineLogging()
-
-	// Set libmachine logging
-	err := setMachineLogging(client.debug)
-	if err != nil {
-		return state.None, errors.Wrap(err, "Cannot initialize logging")
-	}
-
 	libMachineAPIClient, cleanup, err := createLibMachineClient(client.debug)
 	defer cleanup()
 	if err != nil {
