@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/code-ready/crc/pkg/drivers/none"
-	"github.com/code-ready/crc/pkg/libmachine/version"
 )
 
 var (
@@ -37,7 +36,7 @@ func MigrateHost(name string, data []byte) (*Host, error) {
 		return nil, err
 	}
 
-	if hostMetadata.ConfigVersion != version.ConfigVersion {
+	if hostMetadata.ConfigVersion != Version {
 		return nil, errUnexpectedConfigVersion
 	}
 

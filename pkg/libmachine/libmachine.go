@@ -10,7 +10,6 @@ import (
 	"github.com/code-ready/crc/pkg/libmachine/host"
 	"github.com/code-ready/crc/pkg/libmachine/mcnutils"
 	"github.com/code-ready/crc/pkg/libmachine/persist"
-	"github.com/code-ready/crc/pkg/libmachine/version"
 	"github.com/code-ready/machine/libmachine/drivers"
 	rpcdriver "github.com/code-ready/machine/libmachine/drivers/rpc"
 	"github.com/code-ready/machine/libmachine/state"
@@ -52,7 +51,7 @@ func (api *Client) NewHost(driverName string, driverPath string, rawDriver []byt
 	}
 
 	return &host.Host{
-		ConfigVersion: version.ConfigVersion,
+		ConfigVersion: host.Version,
 		Name:          driver.GetMachineName(),
 		Driver:        driver,
 		DriverName:    driver.DriverName(),

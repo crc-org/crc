@@ -9,7 +9,6 @@ import (
 
 	"github.com/code-ready/crc/pkg/drivers/none"
 	"github.com/code-ready/crc/pkg/libmachine/host"
-	"github.com/code-ready/crc/pkg/libmachine/version"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -125,7 +124,7 @@ func TestStoreLoad(t *testing.T) {
 
 func testHost() *host.Host {
 	return &host.Host{
-		ConfigVersion: version.ConfigVersion,
+		ConfigVersion: host.Version,
 		Name:          "test-host",
 		Driver:        none.NewDriver("test-host", "/tmp/artifacts"),
 		DriverName:    "none",

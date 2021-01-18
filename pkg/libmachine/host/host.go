@@ -12,6 +12,11 @@ import (
 	"github.com/code-ready/machine/libmachine/state"
 )
 
+// ConfigVersion dictates which version of the config.json format is
+// used. It needs to be bumped if there is a breaking change, and
+// therefore migration, introduced to the config file format.
+const Version = 3
+
 type Host struct {
 	ConfigVersion int
 	Driver        drivers.Driver
