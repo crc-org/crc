@@ -10,18 +10,6 @@ import (
 	"time"
 )
 
-type MultiError struct {
-	Errs []error
-}
-
-func (e MultiError) Error() string {
-	aggregate := ""
-	for _, err := range e.Errs {
-		aggregate += err.Error() + "\n"
-	}
-	return aggregate
-}
-
 func CopyFile(src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {
