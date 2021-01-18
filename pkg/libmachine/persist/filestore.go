@@ -9,7 +9,6 @@ import (
 
 	log "github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/libmachine/host"
-	"github.com/code-ready/crc/pkg/libmachine/mcnerror"
 )
 
 type Filestore struct {
@@ -104,9 +103,7 @@ func (s Filestore) Load(name string) (*host.Host, error) {
 	hostPath := filepath.Join(s.GetMachinesDir(), name)
 
 	if _, err := os.Stat(hostPath); os.IsNotExist(err) {
-		return nil, mcnerror.ErrHostDoesNotExist{
-			Name: name,
-		}
+		return nil, fmt.Errorf("machine %s does not exist", name)
 	}
 	data, err := ioutil.ReadFile(filepath.Join(s.GetMachinesDir(), name, "config.json"))
 	if err != nil {

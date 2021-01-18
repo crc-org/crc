@@ -2,11 +2,12 @@ package host
 
 import (
 	"errors"
+	"fmt"
 	"net/rpc"
 	"regexp"
+	"strings"
 
 	log "github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/libmachine/mcnerror"
 	"github.com/code-ready/crc/pkg/libmachine/mcnutils"
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/state"
@@ -35,10 +36,7 @@ func ValidateHostName(name string) bool {
 
 func (h *Host) runActionForState(action func() error, desiredState state.State) error {
 	if drivers.MachineInState(h.Driver, desiredState)() {
-		return mcnerror.ErrHostAlreadyInState{
-			Name:  h.Name,
-			State: desiredState,
-		}
+		return fmt.Errorf("machine %q is already %s", h.Name, strings.ToLower(desiredState.String()))
 	}
 
 	if err := action(); err != nil {
