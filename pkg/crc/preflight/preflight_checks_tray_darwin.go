@@ -11,12 +11,8 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/version"
-	dl "github.com/code-ready/crc/pkg/download"
-	"github.com/code-ready/crc/pkg/embed"
-	"github.com/code-ready/crc/pkg/extract"
 	"github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/launchd"
-	"github.com/pkg/errors"
 	"howett.net/plist"
 )
 
@@ -148,9 +144,8 @@ func checkTrayVersion() error {
 }
 
 func fixTrayVersion() error {
-	logging.Debug("Downloading/extracting tray executable")
 	// get the tray app
-	err := downloadOrExtractTrayApp()
+	err := downloadOrExtractTrayApp(constants.GetCRCMacTrayDownloadURL(), constants.CrcBinDir)
 	if err != nil {
 		return err
 	}
@@ -165,8 +160,7 @@ func checkTrayExecutablePresent() error {
 }
 
 func fixTrayExecutablePresent() error {
-	logging.Debug("Downloading/extracting tray executable")
-	return downloadOrExtractTrayApp()
+	return downloadOrExtractTrayApp(constants.GetCRCMacTrayDownloadURL(), constants.CrcBinDir)
 }
 
 func fixPlistFileExists(agentConfig launchd.AgentConfig) error {
@@ -179,41 +173,6 @@ func fixPlistFileExists(agentConfig launchd.AgentConfig) error {
 	if err := launchd.LoadPlist(agentConfig.Label); err != nil {
 		logging.Debug("failed while creating plist:", err.Error())
 		return err
-	}
-	return nil
-}
-
-func downloadOrExtractTrayApp() error {
-	// Extract the tray and put it in the bin directory.
-	tmpArchivePath, err := ioutil.TempDir("", "crc")
-	if err != nil {
-		logging.Error("Failed creating temporary directory for extracting tray")
-		return err
-	}
-	defer func() {
-		_ = goos.RemoveAll(tmpArchivePath)
-	}()
-
-	logging.Debug("Trying to extract tray from crc executable")
-	trayFileName := filepath.Base(constants.GetCRCMacTrayDownloadURL())
-	trayDestFileName := filepath.Join(tmpArchivePath, trayFileName)
-	err = embed.Extract(trayFileName, trayDestFileName)
-	if err != nil {
-		logging.Debug("Could not extract tray from crc executable", err)
-		logging.Debug("Downloading crc tray")
-		_, err = dl.Download(constants.GetCRCMacTrayDownloadURL(), tmpArchivePath, 0600)
-		if err != nil {
-			return err
-		}
-	}
-	outputPath := constants.CrcBinDir
-	err = goos.MkdirAll(outputPath, 0750)
-	if err != nil {
-		return errors.Wrap(err, "Cannot create the target directory.")
-	}
-	_, err = extract.Uncompress(trayDestFileName, outputPath, false)
-	if err != nil {
-		return errors.Wrapf(err, "Cannot uncompress '%s'", trayDestFileName)
 	}
 	return nil
 }

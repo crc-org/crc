@@ -11,9 +11,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/version"
-	dl "github.com/code-ready/crc/pkg/download"
-	"github.com/code-ready/crc/pkg/embed"
-	"github.com/code-ready/crc/pkg/extract"
 	"github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 )
@@ -164,33 +161,7 @@ func checkTrayExecutableExists() error {
 }
 
 func fixTrayExecutableExists() error {
-	tmpArchivePath, err := ioutil.TempDir("", "crc")
-	if err != nil {
-		logging.Error("Failed creating temporary directory for extracting tray")
-		return err
-	}
-	defer func() {
-		_ = goos.RemoveAll(tmpArchivePath)
-	}()
-
-	logging.Debug("Trying to extract tray from crc executable")
-	trayFileName := filepath.Base(constants.GetCRCWindowsTrayDownloadURL())
-	trayDestFileName := filepath.Join(tmpArchivePath, trayFileName)
-	err = embed.Extract(trayFileName, trayDestFileName)
-	if err != nil {
-		logging.Debug("Could not extract tray from crc executable", err)
-		logging.Debug("Downloading crc tray")
-		_, err = dl.Download(constants.GetCRCWindowsTrayDownloadURL(), tmpArchivePath, 0600)
-		if err != nil {
-			return err
-		}
-	}
-	_, err = extract.Uncompress(trayDestFileName, constants.TrayExecutableDir, false)
-	if err != nil {
-		return fmt.Errorf("Cannot uncompress '%s': %v", trayDestFileName, err)
-	}
-
-	return nil
+	return downloadOrExtractTrayApp(constants.GetCRCWindowsTrayDownloadURL(), constants.TrayExecutableDir)
 }
 
 func checkTrayVersion() bool {
