@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
 	"testing"
 
 	"github.com/code-ready/crc/pkg/drivers/none"
@@ -22,7 +21,7 @@ func getTestStore() (Filestore, func(), error) {
 	return Filestore{
 			MachinesDir: tmpDir,
 		}, func() {
-			_ = os.RemoveAll(tmpDir)
+			os.RemoveAll(tmpDir)
 		}, nil
 }
 
@@ -33,22 +32,10 @@ func TestStoreSave(t *testing.T) {
 
 	h := testHost()
 
-	if err := store.Save(h); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, store.Save(h))
 
 	path := filepath.Join(store.MachinesDir, h.Name)
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		t.Fatalf("Host path doesn't exist: %s", path)
-	}
-
-	files, _ := ioutil.ReadDir(path)
-	for _, f := range files {
-		r := regexp.MustCompile("config.json.tmp*")
-		if r.MatchString(f.Name()) {
-			t.Fatalf("Failed to remove temp filestore:%s", f.Name())
-		}
-	}
+	assert.DirExists(t, path)
 }
 
 func TestStoreSaveOmitRawDriver(t *testing.T) {
@@ -58,32 +45,19 @@ func TestStoreSaveOmitRawDriver(t *testing.T) {
 
 	h := testHost()
 
-	if err := store.Save(h); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, store.Save(h))
 
 	configJSONPath := filepath.Join(store.MachinesDir, h.Name, "config.json")
 
-	f, err := os.Open(configJSONPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	configData, err := ioutil.ReadAll(f)
-	if err != nil {
-		t.Fatal(err)
-	}
+	configData, err := ioutil.ReadFile(configJSONPath)
+	assert.NoError(t, err)
 
 	fakeHost := make(map[string]interface{})
 
-	if err := json.Unmarshal(configData, &fakeHost); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, json.Unmarshal(configData, &fakeHost))
 
-	if rawDriver, ok := fakeHost["RawDriver"]; ok {
-		t.Fatal("Should not have gotten a value for RawDriver reading host from disk but got one: ", rawDriver)
-	}
-
+	_, ok := fakeHost["RawDriver"]
+	assert.False(t, ok)
 }
 
 func TestStoreRemove(t *testing.T) {
@@ -93,23 +67,15 @@ func TestStoreRemove(t *testing.T) {
 
 	h := testHost()
 
-	if err := store.Save(h); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, store.Save(h))
 
 	path := filepath.Join(store.MachinesDir, h.Name)
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		t.Fatalf("Host path doesn't exist: %s", path)
-	}
+	assert.DirExists(t, path)
 
 	err = store.Remove(h.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
 
-	if _, err := os.Stat(path); err == nil {
-		t.Fatalf("Host path still exists after remove: %s", path)
-	}
+	assert.NoDirExists(t, path)
 }
 
 func TestStoreExists(t *testing.T) {
@@ -120,42 +86,22 @@ func TestStoreExists(t *testing.T) {
 	h := testHost()
 
 	exists, err := store.Exists(h.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if exists {
-		t.Fatal("Host should not exist before saving")
-	}
+	assert.NoError(t, err)
+	assert.False(t, exists)
 
-	if err := store.Save(h); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, store.Save(h))
 
-	if err := store.SetExists(h.Name); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, store.SetExists(h.Name))
 
 	exists, err = store.Exists(h.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
+	assert.True(t, exists)
 
-	if !exists {
-		t.Fatal("Host should exist after saving")
-	}
-
-	if err := store.Remove(h.Name); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, store.Remove(h.Name))
 
 	exists, err = store.Exists(h.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if exists {
-		t.Fatal("Host should not exist after removing")
-	}
+	assert.NoError(t, err)
+	assert.False(t, exists)
 }
 
 func TestStoreLoad(t *testing.T) {
@@ -165,25 +111,16 @@ func TestStoreLoad(t *testing.T) {
 
 	h := testHost()
 
-	if err := store.Save(h); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, store.Save(h))
 
 	h, err = store.Load(h.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	rawDataDriver, ok := h.Driver.(*host.RawDataDriver)
-	if !ok {
-		t.Fatal("Expected driver loaded from store to be of type *host.RawDataDriver and it was not")
-	}
+	assert.True(t, ok)
 
 	realDriver := none.NewDriver(h.Name, store.MachinesDir)
-
-	if err := json.Unmarshal(rawDataDriver.Data, &realDriver); err != nil {
-		t.Fatalf("Error unmarshaling rawDataDriver data into concrete 'none' driver: %s", err)
-	}
+	assert.NoError(t, json.Unmarshal(rawDataDriver.Data, &realDriver))
 }
 
 func testHost() *host.Host {
