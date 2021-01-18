@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/code-ready/clicumber/util"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
-	"github.com/code-ready/clicumber/util"
 )
 
 var (
@@ -148,7 +148,7 @@ func FeatureContext(s *godog.Suite) {
 
 	s.BeforeFeature(func(this *messages.GherkinDocument) {
 		util.LogMessage("info", fmt.Sprintf("----- Feature: %s -----", this.String()))
-		StartHostShellInstance(testWithShell)
+		SetUpHostShellInstance(testWithShell)
 		util.ClearScenarioVariables()
 		err := CleanTestRunDir()
 		if err != nil {
@@ -171,7 +171,6 @@ func FeatureContext(s *godog.Suite) {
 
 	s.AfterFeature(func(*messages.GherkinDocument) {
 		util.LogMessage("info", "----- Cleaning after feature -----")
-		CloseHostShellInstance()
 	})
 
 	s.AfterSuite(func() {

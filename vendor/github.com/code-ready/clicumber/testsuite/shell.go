@@ -17,58 +17,34 @@ limitations under the License.
 package testsuite
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
+	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/cucumber/messages-go/v10"
 	"github.com/code-ready/clicumber/util"
-)
-
-const (
-	exitCodeIdentifier = "exitCodeOfLastCommandInShell="
-
-	bashExitCodeCheck       = "echo %v$?"
-	fishExitCodeCheck       = "echo %v$status"
-	tcshExitCodeCheck       = "echo %v$?"
-	zshExitCodeCheck        = "echo %v$?"
-	cmdExitCodeCheck        = "echo %v%%errorlevel%%"
-	powershellExitCodeCheck = "echo %v$lastexitcode"
+	"github.com/cucumber/messages-go/v10"
 )
 
 var (
-	shell ShellInstance
+	shell = &ShellInstance{}
 )
 
 type ShellInstance struct {
-	startArgument    []string
-	name             string
-	checkExitCodeCmd string
+	startArgument []string
+	name          string
+	exitCode      int
 
-	instance *exec.Cmd
-	outbuf   bytes.Buffer
-	errbuf   bytes.Buffer
-	excbuf   bytes.Buffer
-
-	outPipe io.ReadCloser
-	errPipe io.ReadCloser
-	inPipe  io.WriteCloser
-
-	outScanner *bufio.Scanner
-	errScanner *bufio.Scanner
-
-	stdoutChannel   chan string
-	stderrChannel   chan string
-	exitCodeChannel chan string
+	outbuf bytes.Buffer
+	errbuf bytes.Buffer
 }
 
-func (shell ShellInstance) GetLastCmdOutput(stdType string) string {
+func (shell *ShellInstance) GetLastCmdOutput(stdType string) string {
 	var returnValue string
 	switch stdType {
 	case "stdout":
@@ -76,7 +52,7 @@ func (shell ShellInstance) GetLastCmdOutput(stdType string) string {
 	case "stderr":
 		returnValue = shell.errbuf.String()
 	case "exitcode":
-		returnValue = shell.excbuf.String()
+		returnValue = strconv.Itoa(shell.exitCode)
 	default:
 		fmt.Printf("Field '%s' of shell's output is not supported. Only 'stdout', 'stderr' and 'exitcode' are supported.", stdType)
 	}
@@ -86,40 +62,19 @@ func (shell ShellInstance) GetLastCmdOutput(stdType string) string {
 	return returnValue
 }
 
-func (shell *ShellInstance) ScanPipe(scanner *bufio.Scanner, buffer *bytes.Buffer, stdType string, channel chan string) {
-	for scanner.Scan() {
-		str := scanner.Text()
-		util.LogMessage(stdType, str)
-
-		if strings.Contains(str, exitCodeIdentifier) && !strings.Contains(str, shell.checkExitCodeCmd) {
-			exitCode := strings.Split(str, "=")[1]
-			shell.exitCodeChannel <- exitCode
-		} else {
-			buffer.WriteString(str + "\n")
-		}
-	}
-
-	return
-}
-
 func (shell *ShellInstance) ConfigureTypeOfShell(shellName string) {
 	switch shellName {
 	case "bash":
 		shell.name = shellName
-		shell.checkExitCodeCmd = fmt.Sprintf(bashExitCodeCheck, exitCodeIdentifier)
 	case "tcsh":
 		shell.name = shellName
-		shell.checkExitCodeCmd = fmt.Sprintf(tcshExitCodeCheck, exitCodeIdentifier)
 	case "zsh":
 		shell.name = shellName
-		shell.checkExitCodeCmd = fmt.Sprintf(zshExitCodeCheck, exitCodeIdentifier)
 	case "cmd":
 		shell.name = shellName
-		shell.checkExitCodeCmd = fmt.Sprintf(cmdExitCodeCheck, exitCodeIdentifier)
 	case "powershell":
 		shell.name = shellName
 		shell.startArgument = []string{"-Command", "-"}
-		shell.checkExitCodeCmd = fmt.Sprintf(powershellExitCodeCheck, exitCodeIdentifier)
 	case "fish":
 		fmt.Println("Fish shell is currently not supported by integration tests. Default shell for the OS will be used.")
 		fallthrough
@@ -130,105 +85,57 @@ func (shell *ShellInstance) ConfigureTypeOfShell(shellName string) {
 		switch runtime.GOOS {
 		case "darwin", "linux":
 			shell.name = "bash"
-			shell.checkExitCodeCmd = fmt.Sprintf(bashExitCodeCheck, exitCodeIdentifier)
 		case "windows":
 			shell.name = "powershell"
 			shell.startArgument = []string{"-Command", "-"}
-			shell.checkExitCodeCmd = fmt.Sprintf(powershellExitCodeCheck, exitCodeIdentifier)
 		}
 	}
-
 	return
 }
 
-func StartHostShellInstance(shellName string) error {
-	return shell.Start(shellName)
+func SetUpHostShellInstance(shellName string) error {
+	return shell.Setup(shellName)
 }
 
-func (shell *ShellInstance) Start(shellName string) error {
-	var err error
-
+func (shell *ShellInstance) Setup(shellName string) error {
 	if shell.name == "" {
 		shell.ConfigureTypeOfShell(shellName)
 	}
-	shell.stdoutChannel = make(chan string)
-	shell.stderrChannel = make(chan string)
-	shell.exitCodeChannel = make(chan string)
 
-	shell.instance = exec.Command(shell.name, shell.startArgument...)
-
-	shell.outPipe, err = shell.instance.StdoutPipe()
-	if err != nil {
-		return err
-	}
-
-	shell.errPipe, err = shell.instance.StderrPipe()
-	if err != nil {
-		return err
-	}
-
-	shell.inPipe, err = shell.instance.StdinPipe()
-	if err != nil {
-		return err
-	}
-
-	shell.outScanner = bufio.NewScanner(shell.outPipe)
-	shell.errScanner = bufio.NewScanner(shell.errPipe)
-
-	go shell.ScanPipe(shell.outScanner, &shell.outbuf, "stdout", shell.stdoutChannel)
-	go shell.ScanPipe(shell.errScanner, &shell.errbuf, "stderr", shell.stderrChannel)
-
-	err = shell.instance.Start()
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("The %v instance has been started and will be used for testing.\n", shell.name)
-	return err
-}
-
-func CloseHostShellInstance() error {
-	return shell.Close()
-}
-
-func (shell *ShellInstance) Close() error {
-	closingCmd := "exit\n"
-	io.WriteString(shell.inPipe, closingCmd)
-	err := shell.instance.Wait()
-	if err != nil {
-		fmt.Println("error closing shell instance:", err)
-	}
-
-	shell.instance = nil
-
-	return err
+	fmt.Printf("The %v shell will be used for testing.\n", shell.name)
+	return nil
 }
 
 func ExecuteCommand(command string) error {
-	if shell.instance == nil {
-		return errors.New("shell instance is not started")
+	if shell.name == "" {
+		return errors.New("shell instance is not initialized")
 	}
-
+	var (
+		exitError *exec.ExitError
+		pathError *os.PathError
+	)
+	shell.exitCode = 0
 	shell.outbuf.Reset()
 	shell.errbuf.Reset()
-	shell.excbuf.Reset()
 
 	util.LogMessage(shell.name, command)
 
-	_, err := io.WriteString(shell.inPipe, command+"\n")
-	if err != nil {
-		return err
+	cmd := exec.Command(shell.name, shell.startArgument...)
+	cmd.Stderr = &shell.errbuf
+	cmd.Stdout = &shell.outbuf
+	cmd.Stdin = strings.NewReader(command + "\n")
+
+	if err := cmd.Run(); err != nil {
+		switch {
+		case errors.As(err, &exitError):
+			shell.exitCode = exitError.ExitCode()
+		case errors.As(err, &pathError):
+			return fmt.Errorf("os.PathError: %w", err)
+		default:
+			return fmt.Errorf("something went wrong with %s command: %w", command, err)
+		}
 	}
-
-	_, err = shell.inPipe.Write([]byte(shell.checkExitCodeCmd + "\n"))
-	if err != nil {
-		return err
-	}
-
-	exitCode := <-shell.exitCodeChannel
-	shell.excbuf.WriteString(exitCode)
-
-	return err
+	return nil
 }
 
 func ExecuteCommandSucceedsOrFails(command string, expectedResult string) error {
@@ -237,7 +144,7 @@ func ExecuteCommandSucceedsOrFails(command string, expectedResult string) error 
 		return err
 	}
 
-	exitCode := shell.excbuf.String()
+	exitCode := strconv.Itoa(shell.exitCode)
 
 	if expectedResult == "succeeds" && exitCode != "0" {
 		err = fmt.Errorf("command '%s', expected to succeed, exited with exit code: %s\nCommand stdout: %s\nCommand stderr: %s", command, exitCode, shell.outbuf.String(), shell.errbuf.String())
@@ -258,7 +165,7 @@ func ExecuteCommandWithRetry(retryCount int, retryTime string, command string, c
 
 	for i := 0; i < retryCount; i++ {
 		err := ExecuteCommand(command)
-		exitCode, stdout := shell.excbuf.String(), shell.outbuf.String()
+		exitCode, stdout := strconv.Itoa(shell.exitCode), shell.outbuf.String()
 		if strings.Contains(containsOrNot, " not ") {
 			if err == nil && exitCode == "0" && !strings.Contains(stdout, expected) {
 				return nil
@@ -279,9 +186,7 @@ func ExecuteStdoutLineByLine() error {
 	stdout := shell.GetLastCmdOutput("stdout")
 	commandArray := strings.Split(stdout, "\n")
 	for index := range commandArray {
-		if !strings.Contains(commandArray[index], exitCodeIdentifier) {
-			err = ExecuteCommand(commandArray[index])
-		}
+		err = ExecuteCommand(commandArray[index])
 	}
 
 	return err

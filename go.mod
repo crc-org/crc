@@ -8,7 +8,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/cheggaaa/pb/v3 v3.0.5
-	github.com/code-ready/clicumber v0.0.0-20200728062640-1203dda97f67
+	github.com/code-ready/clicumber v0.0.0-20210121134856-ceba883a96ec
 	github.com/code-ready/gvisor-tap-vsock v0.0.0-20201105131011-9258bacc7a6c
 	github.com/code-ready/machine v0.0.0-20201202090222-9558ae8c05b9
 	github.com/cucumber/godog v0.9.0
