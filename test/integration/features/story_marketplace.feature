@@ -22,13 +22,13 @@ Feature: Operator from marketplace
         When checking that CRC is running
         Then login to the oc cluster succeeds
 
-    @darwin @linux @windows
+    @darwin @linux @windows @testdata
     Scenario: Install new operator
         When executing "oc apply -f etcdop-sub.yaml" succeeds
         # check if cluster operator is running
         Then with up to "20" retries with wait period of "30s" command "oc get csv" output matches ".*etcdoperator\.(.*)Succeeded$"
         
-    @darwin @linux @windows
+    @darwin @linux @windows @testdata
     Scenario: Scale up
         # start cluster with 3 pods
         When executing "oc apply -f etcd-cluster3.yaml" succeeds
@@ -63,7 +63,7 @@ Feature: Operator from marketplace
         But executing "oc get pods $Env:POD" fails
         And stderr matches "(.*)pods (.*) not found$"
 
-    @darwin @linux @windows
+    @darwin @linux @windows @testdata
     Scenario: Scale down
         # scale back down to 3 pods
         When executing "oc apply -f etcd-cluster3.yaml" succeeds
