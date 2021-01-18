@@ -63,7 +63,7 @@ func ValidateBundle(bundle string) error {
 		if constants.BundleEmbedded() {
 			return fmt.Errorf("Run 'crc setup' to unpack the bundle to disk")
 		}
-		return fmt.Errorf("Please provide the path to a valid bundle using the -b option")
+		return fmt.Errorf("%s not found, please provide the path to a valid bundle using the -b option", bundle)
 	}
 	// Check if the version of the bundle provided by user is same as what is released with crc.
 	releaseBundleVersion := version.GetBundleVersion()
@@ -73,7 +73,7 @@ func ValidateBundle(bundle string) error {
 			logging.Warnf("Using unsupported bundle %s", userProvidedBundleVersion)
 			return nil
 		}
-		return fmt.Errorf("%s bundle is not supported by this crc executable, please use %s", userProvidedBundleVersion, constants.GetDefaultBundle())
+		return fmt.Errorf("%s is not supported by this crc executable, please use %s", userProvidedBundleVersion, constants.GetDefaultBundle())
 	}
 	return nil
 }
