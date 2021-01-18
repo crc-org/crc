@@ -14,15 +14,15 @@ Feature: Local image to image-registry
         And login to the oc cluster succeeds
 
     Scenario: Create local image
-        Given executing "sudo podman build -t hello:test -f Dockerfile" succeeds
-        When executing "sudo podman images" succeeds
+        Given executing "podman build -t hello:test -f Dockerfile" succeeds
+        When executing "podman images" succeeds
         Then stdout should contain "localhost/hello"
         
     Scenario: Push local image to OpenShift image registry
         Given executing "oc new-project testproj-img" succeeds
-        When executing "sudo podman login -u kubeadmin -p $(oc whoami -t) default-route-openshift-image-registry.apps-crc.testing --tls-verify=false" succeeds
+        When executing "podman login -u kubeadmin -p $(oc whoami -t) default-route-openshift-image-registry.apps-crc.testing --tls-verify=false" succeeds
         Then stdout should contain "Login Succeeded!"
-        When executing "sudo podman push hello:test default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test --tls-verify=false" succeeds
+        When executing "podman push hello:test default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test --tls-verify=false" succeeds
 
     Scenario: Deploy the image
         Given executing "oc new-app testproj-img/hello:test" succeeds
@@ -34,9 +34,9 @@ Feature: Local image to image-registry
         Then stdout should contain "Hello, it works!"
 
     Scenario: Clean up
-        Given executing "sudo podman images" succeeds
+        Given executing "podman images" succeeds
         When stdout contains "localhost/hello"
-        Then executing "sudo podman image rm localhost/hello:test" succeeds
+        Then executing "podman image rm localhost/hello:test" succeeds
         And executing "oc delete project testproj-img" succeeds
         And executing "crc delete -f" succeeds
         Then stdout should contain "Deleted the OpenShift cluster"
