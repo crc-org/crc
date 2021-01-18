@@ -26,7 +26,7 @@ func getTestStore() Filestore {
 	}
 
 	return Filestore{
-		Path: tmpDir,
+		MachinesDir: tmpDir,
 	}
 }
 
@@ -44,7 +44,7 @@ func TestStoreSave(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	path := filepath.Join(store.GetMachinesDir(), h.Name)
+	path := filepath.Join(store.MachinesDir, h.Name)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		t.Fatalf("Host path doesn't exist: %s", path)
 	}
@@ -72,7 +72,7 @@ func TestStoreSaveOmitRawDriver(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	configJSONPath := filepath.Join(store.GetMachinesDir(), h.Name, "config.json")
+	configJSONPath := filepath.Join(store.MachinesDir, h.Name, "config.json")
 
 	f, err := os.Open(configJSONPath)
 	if err != nil {
@@ -110,7 +110,7 @@ func TestStoreRemove(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	path := filepath.Join(store.GetMachinesDir(), h.Name)
+	path := filepath.Join(store.MachinesDir, h.Name)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		t.Fatalf("Host path doesn't exist: %s", path)
 	}
@@ -197,7 +197,7 @@ func TestStoreLoad(t *testing.T) {
 		t.Fatal("Expected driver loaded from store to be of type *host.RawDataDriver and it was not")
 	}
 
-	realDriver := none.NewDriver(h.Name, store.Path)
+	realDriver := none.NewDriver(h.Name, store.MachinesDir)
 
 	if err := json.Unmarshal(rawDataDriver.Data, &realDriver); err != nil {
 		t.Fatalf("Error unmarshaling rawDataDriver data into concrete 'none' driver: %s", err)

@@ -12,17 +12,13 @@ import (
 )
 
 type Filestore struct {
-	Path string
+	MachinesDir string
 }
 
 func NewFilestore(path string) *Filestore {
 	return &Filestore{
-		Path: path,
+		MachinesDir: filepath.Join(path, "machines"),
 	}
-}
-
-func (s Filestore) GetMachinesDir() string {
-	return filepath.Join(s.Path, "machines")
 }
 
 func (s Filestore) saveToFile(data []byte, file string) error {
@@ -58,7 +54,7 @@ func (s Filestore) Save(host *host.Host) error {
 		return err
 	}
 
-	hostPath := filepath.Join(s.GetMachinesDir(), host.Name)
+	hostPath := filepath.Join(s.MachinesDir, host.Name)
 
 	// Ensure that the directory we want to save to exists.
 	if err := os.MkdirAll(hostPath, 0700); err != nil {
@@ -69,12 +65,12 @@ func (s Filestore) Save(host *host.Host) error {
 }
 
 func (s Filestore) Remove(name string) error {
-	hostPath := filepath.Join(s.GetMachinesDir(), name)
+	hostPath := filepath.Join(s.MachinesDir, name)
 	return os.RemoveAll(hostPath)
 }
 
 func (s Filestore) SetExists(name string) error {
-	filename := filepath.Join(s.GetMachinesDir(), name, fmt.Sprintf(".%s-exist", name))
+	filename := filepath.Join(s.MachinesDir, name, fmt.Sprintf(".%s-exist", name))
 	file, err := os.OpenFile(filename, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
 		return err
@@ -86,7 +82,7 @@ func (s Filestore) SetExists(name string) error {
 }
 
 func (s Filestore) Exists(name string) (bool, error) {
-	filename := filepath.Join(s.GetMachinesDir(), name, fmt.Sprintf(".%s-exist", name))
+	filename := filepath.Join(s.MachinesDir, name, fmt.Sprintf(".%s-exist", name))
 	_, err := os.Stat(filename)
 	log.Debugf("Checking file: %s", filename)
 
@@ -100,12 +96,12 @@ func (s Filestore) Exists(name string) (bool, error) {
 }
 
 func (s Filestore) Load(name string) (*host.Host, error) {
-	hostPath := filepath.Join(s.GetMachinesDir(), name)
+	hostPath := filepath.Join(s.MachinesDir, name)
 
 	if _, err := os.Stat(hostPath); os.IsNotExist(err) {
 		return nil, fmt.Errorf("machine %s does not exist", name)
 	}
-	data, err := ioutil.ReadFile(filepath.Join(s.GetMachinesDir(), name, "config.json"))
+	data, err := ioutil.ReadFile(filepath.Join(s.MachinesDir, name, "config.json"))
 	if err != nil {
 		return nil, err
 	}

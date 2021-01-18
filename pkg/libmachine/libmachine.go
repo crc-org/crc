@@ -22,7 +22,6 @@ type API interface {
 	NewHost(driverName string, driverPath string, rawDriver []byte) (*host.Host, error)
 	Create(h *host.Host) error
 	persist.Store
-	GetMachinesDir() string
 }
 
 type Client struct {
