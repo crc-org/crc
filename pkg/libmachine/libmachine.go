@@ -8,13 +8,13 @@ import (
 	log "github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/drivers/hyperv"
 	"github.com/code-ready/crc/pkg/libmachine/host"
-	"github.com/code-ready/crc/pkg/libmachine/mcnerror"
 	"github.com/code-ready/crc/pkg/libmachine/mcnutils"
 	"github.com/code-ready/crc/pkg/libmachine/persist"
 	"github.com/code-ready/crc/pkg/libmachine/version"
 	"github.com/code-ready/machine/libmachine/drivers"
 	rpcdriver "github.com/code-ready/machine/libmachine/drivers/rpc"
 	"github.com/code-ready/machine/libmachine/state"
+	"github.com/pkg/errors"
 )
 
 type API interface {
@@ -91,9 +91,7 @@ func (api *Client) Create(h *host.Host) error {
 	log.Info("Running pre-create checks...")
 
 	if err := h.Driver.PreCreateCheck(); err != nil {
-		return mcnerror.ErrDuringPreCreate{
-			Cause: err,
-		}
+		return errors.Wrap(err, "error with pre-create check")
 	}
 
 	if err := api.Save(h); err != nil {
