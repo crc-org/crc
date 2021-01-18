@@ -137,9 +137,13 @@ func FeatureContext(s *godog.Suite) {
 
 	s.BeforeScenario(func(pickle *messages.Pickle) {
 		// copy data/config files to test dir
-		err := CopyFilesToTestDir()
-		if err != nil {
-			os.Exit(1)
+		for _, tag := range pickle.GetTags() {
+			if tag.Name == "@testdata" {
+				err := CopyFilesToTestDir()
+				if err != nil {
+					os.Exit(1)
+				}
+			}
 		}
 	})
 

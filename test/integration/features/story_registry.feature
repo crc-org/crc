@@ -13,6 +13,7 @@ Feature: Local image to image-registry
         Then executing "eval $(crc oc-env)" succeeds
         And login to the oc cluster succeeds
 
+    @testdata
     Scenario: Create local image
         Given executing "podman build -t hello:test -f Dockerfile" succeeds
         When executing "podman images" succeeds
