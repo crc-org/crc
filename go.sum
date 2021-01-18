@@ -160,8 +160,8 @@ github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGX
 github.com/cockroachdb/apd v1.1.0/go.mod h1:8Sl8LxpKi29FqWXR16WEFZRNSz3SoPzUzeMeY4+DwBQ=
 github.com/cockroachdb/cockroach-go v0.0.0-20181001143604-e0a95dfd547c/go.mod h1:XGLbWH/ujMcbPbhZq52Nv6UrCghb1yGn//133kEsvDk=
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
-github.com/code-ready/clicumber v0.0.0-20200728062640-1203dda97f67 h1:C+EVPWw8sjASF/529T8BMddoACTb+ruHB8yrZoYscek=
-github.com/code-ready/clicumber v0.0.0-20200728062640-1203dda97f67/go.mod h1:ZPZUcYGpv/FQGnwakUuhiHP9x/IIcU2SKbn8xPe4ROc=
+github.com/code-ready/clicumber v0.0.0-20210118111244-ef8161a5edbf h1:r9KqiammAS+IPD1oHlt9XFoOwG5kc8TdlS0LxDVURZY=
+github.com/code-ready/clicumber v0.0.0-20210118111244-ef8161a5edbf/go.mod h1:ZPZUcYGpv/FQGnwakUuhiHP9x/IIcU2SKbn8xPe4ROc=
 github.com/code-ready/gvisor-tap-vsock v0.0.0-20201105131011-9258bacc7a6c h1:j8S82O8ovWK7nmNJAQf+dFH/RCtXCZneBi33nx2fMPo=
 github.com/code-ready/gvisor-tap-vsock v0.0.0-20201105131011-9258bacc7a6c/go.mod h1:tySPFyGlPN7nyc3u8RH2FAhRDC9JvbQVzJBOrlRJKgU=
 github.com/code-ready/machine v0.0.0-20201202090222-9558ae8c05b9 h1:fUAQ1rYNefX/QPuU0HL7qxc1bURY3qDq/gca+NxiXt8=

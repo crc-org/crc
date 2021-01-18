@@ -63,12 +63,10 @@ type ShellInstance struct {
 	outScanner *bufio.Scanner
 	errScanner *bufio.Scanner
 
-	stdoutChannel   chan string
-	stderrChannel   chan string
 	exitCodeChannel chan string
 }
 
-func (shell ShellInstance) GetLastCmdOutput(stdType string) string {
+func (shell *ShellInstance) GetLastCmdOutput(stdType string) string {
 	var returnValue string
 	switch stdType {
 	case "stdout":
@@ -86,7 +84,7 @@ func (shell ShellInstance) GetLastCmdOutput(stdType string) string {
 	return returnValue
 }
 
-func (shell *ShellInstance) ScanPipe(scanner *bufio.Scanner, buffer *bytes.Buffer, stdType string, channel chan string) {
+func (shell *ShellInstance) ScanPipe(scanner *bufio.Scanner, buffer *bytes.Buffer, stdType string) {
 	for scanner.Scan() {
 		str := scanner.Text()
 		util.LogMessage(stdType, str)
@@ -151,8 +149,6 @@ func (shell *ShellInstance) Start(shellName string) error {
 	if shell.name == "" {
 		shell.ConfigureTypeOfShell(shellName)
 	}
-	shell.stdoutChannel = make(chan string)
-	shell.stderrChannel = make(chan string)
 	shell.exitCodeChannel = make(chan string)
 
 	shell.instance = exec.Command(shell.name, shell.startArgument...)
@@ -175,8 +171,8 @@ func (shell *ShellInstance) Start(shellName string) error {
 	shell.outScanner = bufio.NewScanner(shell.outPipe)
 	shell.errScanner = bufio.NewScanner(shell.errPipe)
 
-	go shell.ScanPipe(shell.outScanner, &shell.outbuf, "stdout", shell.stdoutChannel)
-	go shell.ScanPipe(shell.errScanner, &shell.errbuf, "stderr", shell.stderrChannel)
+	go shell.ScanPipe(shell.outScanner, &shell.outbuf, "stdout")
+	go shell.ScanPipe(shell.errScanner, &shell.errbuf, "stderr")
 
 	err = shell.instance.Start()
 	if err != nil {
