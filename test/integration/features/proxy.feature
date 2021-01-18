@@ -5,7 +5,7 @@ Feature: Behind proxy test
     and to be able to deploy an app and check its accessibility.
 
     Scenario: Setup the proxy container using podman
-        Given executing "sudo podman run --name squid -d -p 3128:3128 quay.io/crcont/squid" succeeds
+        Given executing "podman run --name squid -d -p 3128:3128 quay.io/crcont/squid" succeeds
 
     Scenario: Start CRC
         Given executing "crc setup" succeeds
@@ -18,8 +18,8 @@ Feature: Behind proxy test
         Then login to the oc cluster succeeds
 
     Scenario: Remove the proxy container and host proxy env (which set because of oc-env)
-        Given executing "sudo podman stop squid" succeeds
-        And executing "sudo podman rm squid" succeeds
+        Given executing "podman stop squid" succeeds
+        And executing "podman rm squid" succeeds
         And executing "unset HTTP_PROXY HTTPS_PROXY NO_PROXY" succeeds
 
     Scenario: CRC delete and remove proxy settings from config
