@@ -132,7 +132,7 @@ function run_tests() {
   # this is copied over using https://github.com/minishift/minishift-ci-jobs/blob/master/minishift-ci-index.yaml#L99
   export PULL_SECRET_FILE=--pull-secret-file=$HOME/payload/crc_pull_secret
   export BUNDLE_LOCATION=--bundle-location=$HOME/Downloads/$BUNDLE 
-  make integration 
+  make integration GODOG_OPTS="--godog.tags='@story_registry && @linux'"
   if [[ $? -ne 0 ]]; then
     upload_logs $1
     exit 1
