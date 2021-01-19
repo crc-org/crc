@@ -162,6 +162,17 @@ func fixVsock() error {
 	if err != nil {
 		return err
 	}
+	_, _, err = crcos.RunWithPrivilege("reloading udev rules database", "udevadm", "control", "--reload")
+	if err != nil {
+		return err
+	}
+	if crcos.FileExists("/dev/vsock") {
+		_, _, err = crcos.RunWithPrivilege("applying udev rule to /dev/vsock", "udevadm", "trigger", "/dev/vsock")
+		if err != nil {
+			return err
+		}
+	}
+
 	err = crcos.WriteToFileAsRoot(fmt.Sprintf("Create file %s", vsockModuleAutoLoadConfPath), "vhost_vsock", vsockModuleAutoLoadConfPath, 0644)
 	if err != nil {
 		return err
