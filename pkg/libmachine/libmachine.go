@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"time"
 
+	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	log "github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/drivers/hyperv"
 	"github.com/code-ready/crc/pkg/libmachine/host"
-	"github.com/code-ready/crc/pkg/libmachine/mcnutils"
 	"github.com/code-ready/crc/pkg/libmachine/persist"
 	"github.com/code-ready/machine/libmachine/drivers"
 	rpcdriver "github.com/code-ready/machine/libmachine/drivers/rpc"
@@ -125,7 +126,7 @@ func (api *Client) performCreate(h *host.Host) error {
 	}
 
 	log.Info("Waiting for machine to be running, this may take a few minutes...")
-	if err := mcnutils.WaitFor(drivers.MachineInState(h.Driver, state.Running)); err != nil {
+	if err := crcerrors.RetryAfter(3*time.Minute, host.MachineInState(h.Driver, state.Running), 3*time.Second); err != nil {
 		return fmt.Errorf("Error waiting for machine to be running: %s", err)
 	}
 
