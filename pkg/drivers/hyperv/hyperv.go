@@ -7,7 +7,6 @@ import (
 	"time"
 
 	log "github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/libmachine/mcnutils"
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/state"
 )
@@ -144,7 +143,7 @@ func (d *Driver) getDiskPath() string {
 }
 
 func (d *Driver) Create() error {
-	if err := mcnutils.CopyFile(d.ImageSourcePath, d.getDiskPath()); err != nil {
+	if err := copyFile(d.ImageSourcePath, d.getDiskPath()); err != nil {
 		return err
 	}
 
