@@ -87,7 +87,7 @@ func (api *Client) Load(name string) (*host.Host, error) {
 // Create is the wrapper method which covers all of the boilerplate around
 // actually creating, provisioning, and persisting an instance in the store.
 func (api *Client) Create(h *host.Host) error {
-	log.Info("Running pre-create checks...")
+	log.Debug("Running pre-create checks...")
 
 	if err := h.Driver.PreCreateCheck(); err != nil {
 		return errors.Wrap(err, "error with pre-create check")
@@ -97,7 +97,7 @@ func (api *Client) Create(h *host.Host) error {
 		return fmt.Errorf("Error saving host to store before attempting creation: %s", err)
 	}
 
-	log.Info("Creating machine...")
+	log.Debug("Creating machine...")
 
 	if err := api.performCreate(h); err != nil {
 		return fmt.Errorf("Error creating machine: %s", err)
@@ -125,12 +125,12 @@ func (api *Client) performCreate(h *host.Host) error {
 		return nil
 	}
 
-	log.Info("Waiting for machine to be running, this may take a few minutes...")
+	log.Debug("Waiting for machine to be running, this may take a few minutes...")
 	if err := crcerrors.RetryAfter(3*time.Minute, host.MachineInState(h.Driver, state.Running), 3*time.Second); err != nil {
 		return fmt.Errorf("Error waiting for machine to be running: %s", err)
 	}
 
-	log.Info("Machine is up and running!")
+	log.Debug("Machine is up and running!")
 	return nil
 }
 

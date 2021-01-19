@@ -158,11 +158,11 @@ func (d *Driver) Create() error {
 		if err != nil {
 			return err
 		}
-		log.Infof("Using switch %q", virtualSwitch)
+		log.Debugf("Using switch %q", virtualSwitch)
 		args = append(args, "-SwitchName", quote(virtualSwitch))
 	}
 
-	log.Infof("Creating VM...")
+	log.Debugf("Creating VM...")
 	if err := cmd(args...); err != nil {
 		return err
 	}
@@ -203,7 +203,7 @@ func (d *Driver) Create() error {
 		return err
 	}
 
-	log.Infof("Starting VM...")
+	log.Debugf("Starting VM...")
 	return d.Start()
 }
 
@@ -240,7 +240,7 @@ func (d *Driver) waitForIP() (string, error) {
 		return "", errors.New("no virtual switch given")
 	}
 
-	log.Infof("Waiting for host to start...")
+	log.Debugf("Waiting for host to start...")
 
 	for {
 		ip, _ := d.GetIP()
@@ -254,7 +254,7 @@ func (d *Driver) waitForIP() (string, error) {
 
 // waitStopped waits until the host is stopped
 func (d *Driver) waitStopped() error {
-	log.Infof("Waiting for host to stop...")
+	log.Debugf("Waiting for host to stop...")
 
 	for {
 		s, err := d.GetState()

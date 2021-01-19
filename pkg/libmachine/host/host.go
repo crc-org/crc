@@ -44,33 +44,33 @@ func (h *Host) runActionForState(action func() error, desiredState state.State) 
 }
 
 func (h *Host) Start() error {
-	log.Infof("Starting %q...", h.Name)
+	log.Debugf("Starting %q...", h.Name)
 	if err := h.runActionForState(h.Driver.Start, state.Running); err != nil {
 		return err
 	}
 
-	log.Infof("Machine %q was started.", h.Name)
+	log.Debugf("Machine %q was started.", h.Name)
 
 	return nil
 }
 
 func (h *Host) Stop() error {
-	log.Infof("Stopping %q...", h.Name)
+	log.Debugf("Stopping %q...", h.Name)
 	if err := h.runActionForState(h.Driver.Stop, state.Stopped); err != nil {
 		return err
 	}
 
-	log.Infof("Machine %q was stopped.", h.Name)
+	log.Debugf("Machine %q was stopped.", h.Name)
 	return nil
 }
 
 func (h *Host) Kill() error {
-	log.Infof("Killing %q...", h.Name)
+	log.Debugf("Killing %q...", h.Name)
 	if err := h.runActionForState(h.Driver.Kill, state.Stopped); err != nil {
 		return err
 	}
 
-	log.Infof("Machine %q was killed.", h.Name)
+	log.Debugf("Machine %q was killed.", h.Name)
 	return nil
 }
 
