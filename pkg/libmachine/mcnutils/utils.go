@@ -1,12 +1,9 @@
 package mcnutils
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -59,34 +56,4 @@ func WaitForSpecific(f func() bool, maxAttempts int, waitInterval time.Duration)
 
 func WaitFor(f func() bool) error {
 	return WaitForSpecific(f, 60, 3*time.Second)
-}
-
-// TruncateID returns a shorten id
-// Following two functions are from github.com/docker/docker/utils module. It
-// was way overkill to include the whole module, so we just have these bits
-// that we're using here.
-func TruncateID(id string) string {
-	shortLen := 12
-	if len(id) < shortLen {
-		shortLen = len(id)
-	}
-	return id[:shortLen]
-}
-
-// GenerateRandomID returns an unique id
-func GenerateRandomID() string {
-	for {
-		id := make([]byte, 32)
-		if _, err := io.ReadFull(rand.Reader, id); err != nil {
-			panic(err) // This shouldn't happen
-		}
-		value := hex.EncodeToString(id)
-		// if we try to parse the truncated for as an int and we don't have
-		// an error then the value is all numeric and causes issues when
-		// used as a hostname. ref #3869
-		if _, err := strconv.ParseInt(TruncateID(value), 10, 64); err == nil {
-			continue
-		}
-		return value
-	}
 }
