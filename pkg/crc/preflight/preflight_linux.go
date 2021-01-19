@@ -108,8 +108,9 @@ var vsockPreflightChecks = Check{
 }
 
 const (
-	vsockUdevRulesPath          = "/usr/lib/udev/rules.d/99-crc-vsock.rules"
-	vsockModuleAutoLoadConfPath = "/etc/modules-load.d/vhost_vsock.conf"
+	vsockUdevSystemRulesPath     = "/usr/lib/udev/rules.d/99-crc-vsock.rules"
+	vsockUdevLocalAdminRulesPath = "/etc/udev/rules.d/99-crc-vsock.rules"
+	vsockModuleAutoLoadConfPath  = "/etc/modules-load.d/vhost_vsock.conf"
 )
 
 func checkVsock() error {
@@ -124,6 +125,13 @@ func checkVsock() error {
 	if !strings.Contains(getcap, "cap_net_bind_service+eip") {
 		return fmt.Errorf("capabilities are not correct for %s", executable)
 	}
+
+	// This test is needed in order to trigger the move of the udev rule to its new location.
+	// The old location was used in the 1.21 release.
+	if !crcos.FileExists(vsockUdevLocalAdminRulesPath) {
+		return errors.New("vsock udev rule does not exist")
+	}
+
 	info, err := os.Stat("/dev/vsock")
 	if err != nil {
 		return err
@@ -155,8 +163,16 @@ func fixVsock() error {
 		return err
 	}
 
+	// Remove udev rule which was used in crc 1.21 - it's been moved to a new location
+	err = crcos.RemoveFileAsRoot(
+		fmt.Sprintf("removing udev rule in %s", vsockUdevSystemRulesPath),
+		vsockUdevSystemRulesPath,
+	)
+	if err != nil {
+		return err
+	}
 	udevRule := `KERNEL=="vsock", MODE="0660", OWNER="root", GROUP="libvirt"`
-	err = crcos.WriteToFileAsRoot("Create udev rule for /dev/vsock", udevRule, vsockUdevRulesPath, 0644)
+	err = crcos.WriteToFileAsRoot("Create udev rule for /dev/vsock", udevRule, vsockUdevLocalAdminRulesPath, 0644)
 	if err != nil {
 		return err
 	}
@@ -173,7 +189,11 @@ func fixVsock() error {
 
 func removeVsockCrcSettings() error {
 	var mErr crcErrors.MultiError
-	err := crcos.RemoveFileAsRoot(fmt.Sprintf("removing udev rule in %s", vsockUdevRulesPath), vsockUdevRulesPath)
+	err := crcos.RemoveFileAsRoot(fmt.Sprintf("removing udev rule in %s", vsockUdevSystemRulesPath), vsockUdevSystemRulesPath)
+	if err != nil {
+		mErr.Collect(err)
+	}
+	err = crcos.RemoveFileAsRoot(fmt.Sprintf("removing udev rule in %s", vsockUdevLocalAdminRulesPath), vsockUdevLocalAdminRulesPath)
 	if err != nil {
 		mErr.Collect(err)
 	}
