@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"net/rpc"
 	"strings"
+	"time"
 
+	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	log "github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/libmachine/mcnutils"
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/state"
 )
@@ -31,15 +32,15 @@ type Metadata struct {
 }
 
 func (h *Host) runActionForState(action func() error, desiredState state.State) error {
-	if drivers.MachineInState(h.Driver, desiredState)() {
-		return fmt.Errorf("machine %q is already %s", h.Name, strings.ToLower(desiredState.String()))
+	if err := MachineInState(h.Driver, desiredState)(); err == nil {
+		return fmt.Errorf("machine is already %s", strings.ToLower(desiredState.String()))
 	}
 
 	if err := action(); err != nil {
 		return err
 	}
 
-	return mcnutils.WaitFor(drivers.MachineInState(h.Driver, desiredState))
+	return crcerrors.RetryAfter(3*time.Minute, MachineInState(h.Driver, desiredState), 3*time.Second)
 }
 
 func (h *Host) Start() error {
@@ -85,4 +86,19 @@ func (h *Host) UpdateConfig(rawConfig []byte) error {
 	h.RawDriver = rawConfig
 
 	return nil
+}
+
+func MachineInState(d drivers.Driver, desiredState state.State) func() error {
+	return func() error {
+		currentState, err := d.GetState()
+		if err != nil {
+			return err
+		}
+		if currentState == desiredState {
+			return nil
+		}
+		return crcerrors.RetriableError{
+			Err: fmt.Errorf("expected machine state %s, got %s", desiredState.String(), currentState.String()),
+		}
+	}
 }
