@@ -120,11 +120,6 @@ func (api *Client) performCreate(h *host.Host) error {
 		return fmt.Errorf("Error saving host to store after attempting creation: %s", err)
 	}
 
-	// TODO: Not really a fan of just checking "none" or "ci-test" here.
-	if h.Driver.DriverName() == "none" || h.Driver.DriverName() == "ci-test" {
-		return nil
-	}
-
 	log.Debug("Waiting for machine to be running, this may take a few minutes...")
 	if err := crcerrors.RetryAfter(3*time.Minute, host.MachineInState(h.Driver, state.Running), 3*time.Second); err != nil {
 		return fmt.Errorf("Error waiting for machine to be running: %s", err)
