@@ -173,11 +173,11 @@ func fixVsock() error {
 
 func removeVsockCrcSettings() error {
 	var mErr crcErrors.MultiError
-	_, _, err := crcos.RunWithPrivilege(fmt.Sprintf("rm %s", vsockUdevRulesPath), "rm", "-f", vsockUdevRulesPath)
+	err := crcos.RemoveFileAsRoot(fmt.Sprintf("removing udev rule in %s", vsockUdevRulesPath), vsockUdevRulesPath)
 	if err != nil {
 		mErr.Collect(err)
 	}
-	_, _, err = crcos.RunWithPrivilege(fmt.Sprintf("rm %s", vsockModuleAutoLoadConfPath), "rm", "-f", vsockModuleAutoLoadConfPath)
+	err = crcos.RemoveFileAsRoot(fmt.Sprintf("removing vsock module autoload file %s", vsockModuleAutoLoadConfPath), vsockModuleAutoLoadConfPath)
 	if err != nil {
 		mErr.Collect(err)
 	}
