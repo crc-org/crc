@@ -4,15 +4,15 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/user"
 	"strings"
-	"syscall"
 
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/linux"
+
+	"golang.org/x/sys/unix"
 )
 
 func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
@@ -132,23 +132,9 @@ func checkVsock() error {
 		return errors.New("vsock udev rule does not exist")
 	}
 
-	info, err := os.Stat("/dev/vsock")
+	err = unix.Access("/dev/vsock", unix.R_OK|unix.W_OK)
 	if err != nil {
-		return err
-	}
-	if stat, ok := info.Sys().(*syscall.Stat_t); ok {
-		group, err := user.LookupGroupId(fmt.Sprint(stat.Gid))
-		if err != nil {
-			return err
-		}
-		if group.Name != "libvirt" {
-			return errors.New("/dev/vsock is not in the right group")
-		}
-	} else {
-		return errors.New("cannot cast info")
-	}
-	if info.Mode()&0060 == 0 {
-		return errors.New("/dev/vsock doesn't have the right permissions")
+		return errors.New("/dev/vsock is not readable by the current user")
 	}
 	return nil
 }
