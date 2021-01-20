@@ -31,7 +31,7 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
 	time.Sleep(2 * time.Second)
 
 	if !contains(getInterfaceNameserverValues(networkInterface), serviceConfig.IP) {
-		return fmt.Errorf("Nameserver %s not successfully set on interface %s", serviceConfig.IP, networkInterface)
+		return fmt.Errorf("Nameserver %s not successfully set on interface %s. Perhaps you can try this new network mode: https://github.com/code-ready/crc/wiki/VPN-support--with-an--userland-network-stack", serviceConfig.IP, networkInterface)
 	}
 	return nil
 }
