@@ -30,6 +30,9 @@ func WriteToFileAsRoot(reason, content, filepath string, mode os.FileMode) error
 }
 
 func RemoveFileAsRoot(reason, filepath string) error {
+	if !FileExists(filepath) {
+		return nil
+	}
 	_, _, err := RunWithPrivilege(reason, "rm", "-fr", filepath)
 	return err
 }
