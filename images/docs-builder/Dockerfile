@@ -1,4 +1,4 @@
-FROM registry.redhat.io/ubi8
+FROM registry.access.redhat.com/ubi8/ubi
 MAINTAINER CodeReady Containers <devtools-cdk@redhat.com>
 
 RUN yum update -y && \
