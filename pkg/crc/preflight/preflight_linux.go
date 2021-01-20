@@ -158,28 +158,33 @@ func fixVsock() error {
 		return err
 	}
 	udevRule := `KERNEL=="vsock", MODE="0660", OWNER="root", GROUP="libvirt"`
-	err = crcos.WriteToFileAsRoot("Create udev rule for /dev/vsock", udevRule, vsockUdevLocalAdminRulesPath, 0644)
-	if err != nil {
-		return err
+	if crcos.FileContentMatches(vsockUdevLocalAdminRulesPath, []byte(udevRule)) != nil {
+		err = crcos.WriteToFileAsRoot("Create udev rule for /dev/vsock", udevRule, vsockUdevLocalAdminRulesPath, 0644)
+		if err != nil {
+			return err
+		}
+		_, _, err = crcos.RunWithPrivilege("reloading udev rules database", "udevadm", "control", "--reload")
+		if err != nil {
+			return err
+		}
 	}
-	_, _, err = crcos.RunWithPrivilege("reloading udev rules database", "udevadm", "control", "--reload")
-	if err != nil {
-		return err
-	}
-	if crcos.FileExists("/dev/vsock") {
+	if crcos.FileExists("/dev/vsock") && unix.Access("/dev/vsock", unix.R_OK|unix.W_OK) != nil {
 		_, _, err = crcos.RunWithPrivilege("applying udev rule to /dev/vsock", "udevadm", "trigger", "/dev/vsock")
+		if err != nil {
+			return err
+		}
+	} else {
+		_, _, err = crcos.RunWithPrivilege("modprobe vhost_vsock", "modprobe", "vhost_vsock")
 		if err != nil {
 			return err
 		}
 	}
 
-	err = crcos.WriteToFileAsRoot(fmt.Sprintf("Create file %s", vsockModuleAutoLoadConfPath), "vhost_vsock", vsockModuleAutoLoadConfPath, 0644)
-	if err != nil {
-		return err
-	}
-	_, _, err = crcos.RunWithPrivilege("modprobe vhost_vsock", "modprobe", "vhost_vsock")
-	if err != nil {
-		return err
+	if crcos.FileContentMatches(vsockModuleAutoLoadConfPath, []byte("vhost_vsock")) != nil {
+		err = crcos.WriteToFileAsRoot(fmt.Sprintf("Create file %s", vsockModuleAutoLoadConfPath), "vhost_vsock", vsockModuleAutoLoadConfPath, 0644)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
