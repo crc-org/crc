@@ -1,6 +1,11 @@
 package constants
 
-import "path/filepath"
+import (
+	"os"
+	"path/filepath"
+
+	"github.com/code-ready/crc/pkg/crc/version"
+)
 
 const (
 	OcExecutableName          = "oc"
@@ -10,6 +15,16 @@ const (
 )
 
 var (
-	TrayAppBundlePath  = filepath.Join(CrcBinDir, TrayExecutableName)
+	TrayAppBundlePath  = trayAppBundlePath()
 	TrayExecutablePath = filepath.Join(TrayAppBundlePath, "Contents", "MacOS", "CodeReady Containers")
 )
+
+func trayAppBundlePath() string {
+	if version.IsMacosInstallPathSet() {
+		path := filepath.Join(version.GetMacosInstallPath(), version.GetCRCVersion(), TrayExecutableName)
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+	return filepath.Join(CrcBinDir, TrayExecutableName)
+}

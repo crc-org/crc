@@ -233,12 +233,20 @@ package: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/cr
 	chmod 755 packaging/darwin/scripts/postinstall
 	mkdir -p packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
 	$(HOST_BUILD_DIR)/crc-embedder download packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
+
+	tar -C packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/ -xvzf packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/crc-tray-macos.tar.gz
+	rm packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/crc-tray-macos.tar.gz
+
 	cp $(HYPERKIT_BUNDLENAME) packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
 	cp $(BUILD_DIR)/macos-amd64/crc packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
 	cp LICENSE packaging/darwin/Resources/LICENSE.txt
+	pkgbuild --analyze --root packaging/root packaging/components.plist
+	plutil -replace BundleIsRelocatable -bool NO packaging/components.plist
 	pkgbuild --identifier com.redhat.crc.$(CRC_VERSION) --version $(CRC_VERSION) \
 		--scripts packaging/darwin/scripts \
 		--root packaging/root \
+		--install-location / \
+		--component-plist packaging/components.plist \
 		$(BUILD_DIR)/macos-amd64/crc.pkg
 	productbuild --distribution packaging/darwin/Distribution \
 		--resources packaging/darwin/Resources \
