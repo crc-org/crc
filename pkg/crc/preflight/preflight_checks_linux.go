@@ -219,7 +219,7 @@ func fixUserPartOfLibvirtGroup(distro *linux.OsRelease) func() error {
 		logging.Debug("Current user is in the libvirt group")
 
 		if distroIsLike(distro, linux.Ubuntu) {
-			return fmt.Errorf("Current user added to libvirt group. Please logout and login again")
+			return fmt.Errorf("Current user added to libvirt group. Please logout, login again, and run crc setup again")
 		}
 		return err
 	}
