@@ -1,2 +1,6 @@
 root/
 /components.plist
+/darwin/Distribution
+/darwin/Resources/LICENSE.txt
+/darwin/Resources/welcome.html
+/darwin/scripts/postinstall
