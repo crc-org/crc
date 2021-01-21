@@ -22,7 +22,7 @@ func WriteToFileAsRoot(reason, content, filepath string, mode os.FileMode) error
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("Failed writing to file as root: %s: %s: %v", filepath, buf.String(), err)
 	}
-	if _, _, err := RunWithPrivilege(fmt.Sprintf("Changing permissions for %s to %o ", filepath, mode),
+	if _, _, err := RunPrivileged(fmt.Sprintf("Changing permissions for %s to %o ", filepath, mode),
 		"chmod", strconv.FormatUint(uint64(mode), 8), filepath); err != nil {
 		return err
 	}
@@ -33,6 +33,6 @@ func RemoveFileAsRoot(reason, filepath string) error {
 	if !FileExists(filepath) {
 		return nil
 	}
-	_, _, err := RunWithPrivilege(reason, "rm", "-fr", filepath)
+	_, _, err := RunPrivileged(reason, "rm", "-fr", filepath)
 	return err
 }
