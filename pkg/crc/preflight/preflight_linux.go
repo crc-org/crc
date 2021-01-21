@@ -144,14 +144,14 @@ func fixVsock() error {
 	if err != nil {
 		return err
 	}
-	_, _, err = crcos.RunWithPrivilege("setcap cap_net_bind_service=+eip", "setcap", "cap_net_bind_service=+eip", executable)
+	_, _, err = crcos.RunWithPrivilege(fmt.Sprintf("Setting CAP_NET_BIND_SERVICE capability for %s executable", executable), "setcap", "cap_net_bind_service=+eip", executable)
 	if err != nil {
 		return err
 	}
 
 	// Remove udev rule which was used in crc 1.21 - it's been moved to a new location
 	err = crcos.RemoveFileAsRoot(
-		fmt.Sprintf("removing udev rule in %s", vsockUdevSystemRulesPath),
+		fmt.Sprintf("Removing udev rule in %s", vsockUdevSystemRulesPath),
 		vsockUdevSystemRulesPath,
 	)
 	if err != nil {
@@ -159,29 +159,29 @@ func fixVsock() error {
 	}
 	udevRule := `KERNEL=="vsock", MODE="0660", OWNER="root", GROUP="libvirt"`
 	if crcos.FileContentMatches(vsockUdevLocalAdminRulesPath, []byte(udevRule)) != nil {
-		err = crcos.WriteToFileAsRoot("Create udev rule for /dev/vsock", udevRule, vsockUdevLocalAdminRulesPath, 0644)
+		err = crcos.WriteToFileAsRoot("Creating udev rule for /dev/vsock", udevRule, vsockUdevLocalAdminRulesPath, 0644)
 		if err != nil {
 			return err
 		}
-		_, _, err = crcos.RunWithPrivilege("reloading udev rules database", "udevadm", "control", "--reload")
+		_, _, err = crcos.RunWithPrivilege("Reloading udev rules database", "udevadm", "control", "--reload")
 		if err != nil {
 			return err
 		}
 	}
 	if crcos.FileExists("/dev/vsock") && unix.Access("/dev/vsock", unix.R_OK|unix.W_OK) != nil {
-		_, _, err = crcos.RunWithPrivilege("applying udev rule to /dev/vsock", "udevadm", "trigger", "/dev/vsock")
+		_, _, err = crcos.RunWithPrivilege("Applying udev rule to /dev/vsock", "udevadm", "trigger", "/dev/vsock")
 		if err != nil {
 			return err
 		}
 	} else {
-		_, _, err = crcos.RunWithPrivilege("modprobe vhost_vsock", "modprobe", "vhost_vsock")
+		_, _, err = crcos.RunWithPrivilege("Loading vhost_vsock kernel module", "modprobe", "vhost_vsock")
 		if err != nil {
 			return err
 		}
 	}
 
 	if crcos.FileContentMatches(vsockModuleAutoLoadConfPath, []byte("vhost_vsock")) != nil {
-		err = crcos.WriteToFileAsRoot(fmt.Sprintf("Create file %s", vsockModuleAutoLoadConfPath), "vhost_vsock", vsockModuleAutoLoadConfPath, 0644)
+		err = crcos.WriteToFileAsRoot(fmt.Sprintf("Creating file %s", vsockModuleAutoLoadConfPath), "vhost_vsock", vsockModuleAutoLoadConfPath, 0644)
 		if err != nil {
 			return err
 		}
@@ -191,15 +191,15 @@ func fixVsock() error {
 
 func removeVsockCrcSettings() error {
 	var mErr crcErrors.MultiError
-	err := crcos.RemoveFileAsRoot(fmt.Sprintf("removing udev rule in %s", vsockUdevSystemRulesPath), vsockUdevSystemRulesPath)
+	err := crcos.RemoveFileAsRoot(fmt.Sprintf("Removing udev rule in %s", vsockUdevSystemRulesPath), vsockUdevSystemRulesPath)
 	if err != nil {
 		mErr.Collect(err)
 	}
-	err = crcos.RemoveFileAsRoot(fmt.Sprintf("removing udev rule in %s", vsockUdevLocalAdminRulesPath), vsockUdevLocalAdminRulesPath)
+	err = crcos.RemoveFileAsRoot(fmt.Sprintf("Removing udev rule in %s", vsockUdevLocalAdminRulesPath), vsockUdevLocalAdminRulesPath)
 	if err != nil {
 		mErr.Collect(err)
 	}
-	err = crcos.RemoveFileAsRoot(fmt.Sprintf("removing vsock module autoload file %s", vsockModuleAutoLoadConfPath), vsockModuleAutoLoadConfPath)
+	err = crcos.RemoveFileAsRoot(fmt.Sprintf("Removing vsock module autoload file %s", vsockModuleAutoLoadConfPath), vsockModuleAutoLoadConfPath)
 	if err != nil {
 		mErr.Collect(err)
 	}

@@ -110,12 +110,12 @@ func checkEtcHostsFilePermissions() error {
 }
 
 func fixEtcHostsFilePermissions() error {
-	stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("change ownership of %s", hostsFile), "chown", "root:wheel", hostsFile)
+	stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("Changing ownership of %s", hostsFile), "chown", "root:wheel", hostsFile)
 	if err != nil {
 		return fmt.Errorf("Unable to change ownership of %s: %s %v: %s", hostsFile, stdOut, err, stdErr)
 	}
 
-	stdOut, stdErr, err = crcos.RunWithPrivilege(fmt.Sprintf("change permissions of %s", hostsFile), "chmod", "644", hostsFile)
+	stdOut, stdErr, err = crcos.RunWithPrivilege(fmt.Sprintf("Changing permissions of %s", hostsFile), "chmod", "644", hostsFile)
 	if err != nil {
 		return fmt.Errorf("Unable to change permissions of %s to 0644: %s %v: %s", hostsFile, stdOut, err, stdErr)
 	}
@@ -131,13 +131,13 @@ func fixResolverFilePermissions() error {
 	// Check if resolver directory available or not
 	if _, err := os.Stat(resolverDir); os.IsNotExist(err) {
 		logging.Debugf("Creating %s directory", resolverDir)
-		stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("create dir %s", resolverDir), "mkdir", resolverDir)
+		stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("Creating dir %s", resolverDir), "mkdir", resolverDir)
 		if err != nil {
 			return fmt.Errorf("Unable to create the resolver Dir: %s %v: %s", stdOut, err, stdErr)
 		}
 	}
 	logging.Debugf("Making %s readable/writable by the current user", resolverFile)
-	stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("create file %s", resolverFile), "touch", resolverFile)
+	stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("Creating file %s", resolverFile), "touch", resolverFile)
 	if err != nil {
 		return fmt.Errorf("Unable to create the resolver file: %s %v: %s", stdOut, err, stdErr)
 	}
@@ -149,7 +149,7 @@ func removeResolverFile() error {
 	// Check if the resolver file exist or not
 	if _, err := os.Stat(resolverFile); !os.IsNotExist(err) {
 		logging.Debugf("Removing %s file", resolverFile)
-		err := crcos.RemoveFileAsRoot(fmt.Sprintf("Remove file %s", resolverFile), resolverFile)
+		err := crcos.RemoveFileAsRoot(fmt.Sprintf("Removing file %s", resolverFile), resolverFile)
 		if err != nil {
 			return fmt.Errorf("Unable to delete the resolver File: %s %v", resolverFile, err)
 		}
@@ -173,7 +173,7 @@ func addFileWritePermissionToUser(filename string) error {
 		return fmt.Errorf("Failed to get current user id")
 	}
 
-	stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("change ownership of %s", filename), "chown", currentUser.Username, filename)
+	stdOut, stdErr, err := crcos.RunWithPrivilege(fmt.Sprintf("Changing ownership of %s", filename), "chown", currentUser.Username, filename)
 	if err != nil {
 		return fmt.Errorf("Unable to change ownership of the filename: %s %v: %s", stdOut, err, stdErr)
 	}
