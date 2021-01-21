@@ -101,7 +101,7 @@ var vsockPreflightChecks = Check{
 	configKeySuffix:    "check-vsock",
 	checkDescription:   "Checking if vsock is correctly configured",
 	check:              checkVsock,
-	fixDescription:     "Checking if vsock is correctly configured",
+	fixDescription:     "Setting up vsock support",
 	fix:                fixVsock,
 	cleanupDescription: "Removing vsock configuration",
 	cleanup:            removeVsockCrcSettings,
