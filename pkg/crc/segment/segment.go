@@ -1,6 +1,7 @@
 package segment
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -70,7 +71,7 @@ func (c *Client) Upload(action string, duration time.Duration, err error) error 
 	properties := analytics.NewProperties().
 		Set("version", version.GetCRCVersion()).
 		Set("success", err == nil).
-		Set("duration", duration.Milliseconds())
+		Set("duration", fmt.Sprintf("%.5fsec", duration.Seconds()))
 	if err != nil {
 		properties = properties.Set("error", err.Error())
 	}
