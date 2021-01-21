@@ -33,8 +33,9 @@ var setupCmd = &cobra.Command{
 
 func runSetup(arguments []string) error {
 	if config.Get(cmdConfig.ConsentTelemetry).AsString() == "" {
-		fmt.Println("CodeReady Containers is constantly improving and we would like to know more about usage!")
-		if input.PromptUserForYesOrNo("Would you like to contribute anonymous usage statistics (more details at https://developers.redhat.com/article/tool-data-collection)", false) {
+		fmt.Println("CodeReady Containers is constantly improving and we would like to know more about usage (more details at https://developers.redhat.com/article/tool-data-collection)")
+		fmt.Println("Your preference can be changed manually if desired using 'crc config set consent-telemetry <yes/no>'")
+		if input.PromptUserForYesOrNo("Would you like to contribute anonymous usage statistics", false) {
 			if _, err := config.Set(cmdConfig.ConsentTelemetry, "yes"); err != nil {
 				return err
 			}
