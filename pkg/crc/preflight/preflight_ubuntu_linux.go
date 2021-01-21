@@ -69,7 +69,7 @@ func replaceInAppArmorTemplate(reader reader, writer writer, before string, afte
 			return fmt.Errorf("unexpected AppArmor template file %s, cannot configure it automatically", appArmorTemplate)
 		}
 		content := strings.Replace(string(template), before, after, 1)
-		return writer("updating AppArmor configuration", content, appArmorTemplate, 0644)
+		return writer("Updating AppArmor configuration", content, appArmorTemplate, 0644)
 	}
 }
 

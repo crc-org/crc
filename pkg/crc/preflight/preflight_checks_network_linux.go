@@ -126,7 +126,7 @@ var systemdResolvedPreflightChecks = [...]Check{
 
 func fixNetworkManagerConfigFile(path string, content string, perms os.FileMode) error {
 	err := crcos.WriteToFileAsRoot(
-		fmt.Sprintf("write NetworkManager configuration to %s", path),
+		fmt.Sprintf("Writing NetworkManager configuration to %s", path),
 		content,
 		path,
 		perms,
@@ -152,7 +152,7 @@ func removeNetworkManagerConfigFile(path string) error {
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		logging.Debugf("Removing NetworkManager configuration file: %s", path)
 		err := crcos.RemoveFileAsRoot(
-			fmt.Sprintf("removing NetworkManager configuration file in %s", path),
+			fmt.Sprintf("Removing NetworkManager configuration file in %s", path),
 			path,
 		)
 		if err != nil {
