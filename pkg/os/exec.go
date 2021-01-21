@@ -4,14 +4,13 @@ import (
 	"bytes"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
 func runCmd(command string, args []string, env map[string]string) (string, string, error) {
 	cmd := exec.Command(command, args...) // #nosec G204
-	logging.Debugf("Running '%s %s'", command, strings.Join(args, " "))
+	logging.Debugf("Running '%s'", cmd.String())
 	if len(env) != 0 {
 		cmd.Env = os.Environ()
 		for key, value := range env {
