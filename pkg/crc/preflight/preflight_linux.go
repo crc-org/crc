@@ -144,7 +144,7 @@ func fixVsock() error {
 	if err != nil {
 		return err
 	}
-	_, _, err = crcos.RunWithPrivilege(fmt.Sprintf("Setting CAP_NET_BIND_SERVICE capability for %s executable", executable), "setcap", "cap_net_bind_service=+eip", executable)
+	_, _, err = crcos.RunPrivileged(fmt.Sprintf("Setting CAP_NET_BIND_SERVICE capability for %s executable", executable), "setcap", "cap_net_bind_service=+eip", executable)
 	if err != nil {
 		return err
 	}
@@ -163,18 +163,18 @@ func fixVsock() error {
 		if err != nil {
 			return err
 		}
-		_, _, err = crcos.RunWithPrivilege("Reloading udev rules database", "udevadm", "control", "--reload")
+		_, _, err = crcos.RunPrivileged("Reloading udev rules database", "udevadm", "control", "--reload")
 		if err != nil {
 			return err
 		}
 	}
 	if crcos.FileExists("/dev/vsock") && unix.Access("/dev/vsock", unix.R_OK|unix.W_OK) != nil {
-		_, _, err = crcos.RunWithPrivilege("Applying udev rule to /dev/vsock", "udevadm", "trigger", "/dev/vsock")
+		_, _, err = crcos.RunPrivileged("Applying udev rule to /dev/vsock", "udevadm", "trigger", "/dev/vsock")
 		if err != nil {
 			return err
 		}
 	} else {
-		_, _, err = crcos.RunWithPrivilege("Loading vhost_vsock kernel module", "modprobe", "vhost_vsock")
+		_, _, err = crcos.RunPrivileged("Loading vhost_vsock kernel module", "modprobe", "vhost_vsock")
 		if err != nil {
 			return err
 		}

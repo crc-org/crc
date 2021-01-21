@@ -70,12 +70,12 @@ func fixKvmEnabled() error {
 
 	switch {
 	case strings.Contains(flags, "vmx"):
-		stdOut, stdErr, err := crcos.RunWithPrivilege("Loading kvm_intel kernel module", "modprobe", "kvm_intel")
+		stdOut, stdErr, err := crcos.RunPrivileged("Loading kvm_intel kernel module", "modprobe", "kvm_intel")
 		if err != nil {
 			return fmt.Errorf("Failed to load kvm intel module: %s %v: %s", stdOut, err, stdErr)
 		}
 	case strings.Contains(flags, "svm"):
-		stdOut, stdErr, err := crcos.RunWithPrivilege("Loading kvm_amd kernel module", "modprobe", "kvm_amd")
+		stdOut, stdErr, err := crcos.RunPrivileged("Loading kvm_amd kernel module", "modprobe", "kvm_amd")
 		if err != nil {
 			return fmt.Errorf("Failed to load kvm amd module: %s %v: %s", stdOut, err, stdErr)
 		}
@@ -133,7 +133,7 @@ func checkLibvirtInstalled() error {
 func fixLibvirtInstalled(distro *linux.OsRelease) func() error {
 	return func() error {
 		logging.Debug("Trying to install libvirt")
-		stdOut, stdErr, err := crcos.RunWithPrivilege("Installing virtualization packages", "/bin/sh", "-c", installLibvirtCommand(distro))
+		stdOut, stdErr, err := crcos.RunPrivileged("Installing virtualization packages", "/bin/sh", "-c", installLibvirtCommand(distro))
 		if err != nil {
 			return fmt.Errorf("Could not install required packages: %s %v: %s", stdOut, err, stdErr)
 		}
@@ -212,7 +212,7 @@ func fixUserPartOfLibvirtGroup(distro *linux.OsRelease) func() error {
 			logging.Debugf("user.Current() failed: %v", err)
 			return fmt.Errorf("Failed to get current user id")
 		}
-		_, _, err = crcos.RunWithPrivilege("Adding user to the libvirt group", "usermod", "-a", "-G", "libvirt", currentUser.Username)
+		_, _, err = crcos.RunPrivileged("Adding user to the libvirt group", "usermod", "-a", "-G", "libvirt", currentUser.Username)
 		if err != nil {
 			return fmt.Errorf("Failed to add user to libvirt group")
 		}
