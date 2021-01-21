@@ -21,9 +21,7 @@ func TestUse(t *testing.T) {
 	assert.NoError(t, err)
 	defer os.RemoveAll(ocBinDir)
 
-	assert.NoError(t, os.Mkdir(filepath.Join(dir, "crc_libvirt_4.6.1"), 0755))
-	writeMetadata(t, filepath.Join(dir, "crc_libvirt_4.6.1"), reference)
-	assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, "crc_libvirt_4.6.1", constants.OcExecutableName), []byte("openshift-client"), 0600))
+	addBundle(t, dir, "crc_libvirt_4.6.1")
 
 	repo := &Repository{
 		CacheDir: dir,
@@ -37,6 +35,27 @@ func TestUse(t *testing.T) {
 	bin, err := ioutil.ReadFile(filepath.Join(ocBinDir, constants.OcExecutableName))
 	assert.NoError(t, err)
 	assert.Equal(t, "openshift-client", string(bin))
+}
+
+func TestUseWithOCFile(t *testing.T) {
+	dir, err := ioutil.TempDir("", "repo")
+	assert.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	fd, err := ioutil.TempFile("", "oc-bin-dir")
+	assert.NoError(t, err)
+	fd.Close()
+	defer os.RemoveAll(fd.Name())
+
+	addBundle(t, dir, "crc_libvirt_4.6.1")
+
+	repo := &Repository{
+		CacheDir: dir,
+		OcBinDir: fd.Name(),
+	}
+
+	_, err = repo.Use("crc_libvirt_4.6.1.crcbundle")
+	assert.NoError(t, err)
 }
 
 func TestExtract(t *testing.T) {
@@ -104,4 +123,10 @@ func TestVersionCheck(t *testing.T) {
 
 func writeMetadata(t *testing.T, dir string, s string) bool {
 	return assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, metadataFilename), []byte(s), 0600))
+}
+
+func addBundle(t *testing.T, dir, name string) {
+	assert.NoError(t, os.Mkdir(filepath.Join(dir, name), 0755))
+	writeMetadata(t, filepath.Join(dir, name), reference)
+	assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, name, constants.OcExecutableName), []byte("openshift-client"), 0600))
 }
