@@ -53,14 +53,14 @@ Feature: Basic test
         And stderr should contain "Checking if NetworkManager service is running"
         And stderr should contain "Checking if /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf exists"
         And stderr should contain "Writing Network Manager config for crc"
-        And stderr should contain "Will use root access: Writing NetworkManager configuration to /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf"
-        And stderr should contain "Will use root access: Executing systemctl daemon-reload command"
-        And stderr should contain "Will use root access: Executing systemctl reload NetworkManager"
+        And stderr should contain "Using root access: Writing NetworkManager configuration to /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf"
+        And stderr should contain "Using root access: Executing systemctl daemon-reload command"
+        And stderr should contain "Using root access: Executing systemctl reload NetworkManager"
         And stderr should contain "Checking if /etc/NetworkManager/dnsmasq.d/crc.conf exists"
         And stderr should contain "Writing dnsmasq config for crc"
-        And stderr should contain "Will use root access: Writing NetworkManager configuration to /etc/NetworkManager/dnsmasq.d/crc.conf"
-        And stderr should contain "Will use root access: Executing systemctl daemon-reload command"
-        And stderr should contain "Will use root access: Executing systemctl reload NetworkManager"
+        And stderr should contain "Using root access: Writing NetworkManager configuration to /etc/NetworkManager/dnsmasq.d/crc.conf"
+        And stderr should contain "Using root access: Executing systemctl daemon-reload command"
+        And stderr should contain "Using root access: Executing systemctl reload NetworkManager"
         And stdout should contain "Setup is complete, you can now run 'crc start -b $bundlename' to start the OpenShift cluster" if bundle is not embedded
         And stdout should contain "Setup is complete, you can now run 'crc start' to start the OpenShift cluster" if bundle is embedded
 
@@ -71,8 +71,8 @@ Feature: Basic test
         And stderr should contain "Checking if HyperKit is installed"
         And stderr should contain "Checking if crc-driver-hyperkit is installed"
         And stderr should contain "Installing crc-machine-hyperkit"
-        And stderr should contain "Will use root access: Changing ownership"
-        And stderr should contain "Will use root access: Setting suid"
+        And stderr should contain "Using root access: Changing ownership"
+        And stderr should contain "Using root access: Setting suid"
         And stderr should contain "Checking file permissions"
 
     @windows
@@ -159,7 +159,7 @@ Feature: Basic test
         And stderr should contain "Removing launchd configuration for tray"
         And stderr should contain "Removing launchd configuration for daemon"
         And stderr should contain "Removing /etc/resolver/testing file"
-        And stderr should contain "Will use root access: Removing file /etc/resolver/testing"
+        And stderr should contain "Using root access: Removing file /etc/resolver/testing"
         And stdout should contain "Cleanup finished"
 
     @linux
@@ -167,13 +167,13 @@ Feature: Basic test
         When executing "crc cleanup" succeeds
         Then stderr should contain "Removing the crc VM if exists"
         And stderr should contain "Removing /etc/NetworkManager/dnsmasq.d/crc.conf file"
-        And stderr should contain "Will use root access: Removing NetworkManager configuration file in /etc/NetworkManager/dnsmasq.d/crc.conf"
-        And stderr should contain "Will use root access: Executing systemctl daemon-reload command"
-        And stderr should contain "Will use root access: Executing systemctl reload NetworkManager"
+        And stderr should contain "Using root access: Removing NetworkManager configuration file in /etc/NetworkManager/dnsmasq.d/crc.conf"
+        And stderr should contain "Using root access: Executing systemctl daemon-reload command"
+        And stderr should contain "Using root access: Executing systemctl reload NetworkManager"
         And stderr should contain "Removing /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf file"
-        And stderr should contain "Will use root access: Removing NetworkManager configuration file in /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf"
-        And stderr should contain "Will use root access: Executing systemctl daemon-reload command"
-        And stderr should contain "Will use root access: Executing systemctl reload NetworkManager"
+        And stderr should contain "Using root access: Removing NetworkManager configuration file in /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf"
+        And stderr should contain "Using root access: Executing systemctl daemon-reload command"
+        And stderr should contain "Using root access: Executing systemctl reload NetworkManager"
         And stderr should contain "Removing 'crc' network from libvirt"
         And stdout should contain "Cleanup finished"
 

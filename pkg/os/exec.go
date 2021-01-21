@@ -47,7 +47,7 @@ func RunWithPrivilege(reason string, cmdAndArgs ...string) (string, string, erro
 	if err != nil {
 		return "", "", err
 	}
-	logging.Infof("Will use root access: %s", reason)
+	logging.Infof("Using root access: %s", reason)
 	return run(sudo, cmdAndArgs, map[string]string{})
 }
 
