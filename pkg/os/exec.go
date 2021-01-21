@@ -11,6 +11,7 @@ import (
 
 func runCmd(command string, args []string, env map[string]string) (string, string, error) {
 	cmd := exec.Command(command, args...) // #nosec G204
+	logging.Debugf("Running '%s %s'", command, strings.Join(args, " "))
 	if len(env) != 0 {
 		cmd.Env = os.Environ()
 		for key, value := range env {
@@ -30,11 +31,6 @@ func runCmd(command string, args []string, env map[string]string) (string, strin
 	return stdOut.String(), stdErr.String(), err
 }
 
-func run(command string, args []string, env map[string]string) (string, string, error) {
-	logging.Debugf("Running '%s %s'", command, strings.Join(args, " "))
-	return runCmd(command, args, env)
-}
-
 func runPrivate(command string, args []string, env map[string]string) (string, string, error) {
 	logging.Debugf("About to run a hidden command")
 	return runCmd(command, args, env)
@@ -48,13 +44,13 @@ func RunWithPrivilege(reason string, cmdAndArgs ...string) (string, string, erro
 		return "", "", err
 	}
 	logging.Infof("Will use root access: %s", reason)
-	return run(sudo, cmdAndArgs, map[string]string{})
+	return runCmd(sudo, cmdAndArgs, map[string]string{})
 }
 
 var defaultLocaleEnv = map[string]string{"LC_ALL": "C", "LANG": "C"}
 
 func RunWithDefaultLocale(command string, args ...string) (string, string, error) {
-	return run(command, args, defaultLocaleEnv)
+	return runCmd(command, args, defaultLocaleEnv)
 }
 
 func RunWithDefaultLocalePrivate(command string, args ...string) (string, string, error) {
