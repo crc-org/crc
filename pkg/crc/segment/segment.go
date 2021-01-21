@@ -2,6 +2,7 @@ package segment
 
 import (
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -34,6 +35,9 @@ func newCustomClient(config *crcConfig.Config, telemetryFilePath, segmentEndpoin
 	client, err := analytics.NewWithConfig(WriteKey, analytics.Config{
 		Endpoint: segmentEndpoint,
 		Logger:   &loggingAdapter{},
+		DefaultContext: &analytics.Context{
+			IP: net.IPv4(0, 0, 0, 0),
+		},
 	})
 	if err != nil {
 		return nil, err
