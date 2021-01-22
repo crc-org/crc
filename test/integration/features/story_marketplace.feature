@@ -41,7 +41,6 @@ Feature: Operator from marketplace
     Scenario: Failover
         # simulate failure of 1 pod, check that it was replaced
         When executing "POD=$(oc get pod -o jsonpath="{.items[0].metadata.name}")" succeeds
-        And executing "echo $POD" succeeds
         And executing "oc delete pod $POD --now" succeeds
         Then stdout should match "^pod(.*)deleted$"
         # after a while 5 pods should be up & running again
@@ -51,7 +50,6 @@ Feature: Operator from marketplace
     Scenario: Failover
         # simulate failure of 1 pod, check that it was replaced
         When executing "$Env:POD = $(oc get pod -o jsonpath="{.items[0].metadata.name}")" succeeds
-        And executing "echo $Env:POD" succeeds
         And executing "oc delete pod $Env:POD --now" succeeds
         Then stdout should match "^pod(.*)deleted$"
         # after a while 5 pods should be up & running again
