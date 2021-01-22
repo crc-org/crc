@@ -251,5 +251,5 @@ package: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/cr
 	productbuild --distribution packaging/darwin/Distribution \
 		--resources packaging/darwin/Resources \
 		--package-path $(BUILD_DIR)/macos-amd64 \
-		$(BUILD_DIR)/macos-amd64/crc-installer.pkg
+		$(BUILD_DIR)/macos-amd64/crc-installer-macos-amd64.pkg
 	rm $(BUILD_DIR)/macos-amd64/crc.pkg
