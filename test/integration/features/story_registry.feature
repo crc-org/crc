@@ -14,15 +14,16 @@ Feature: Local image to image-registry
         And login to the oc cluster succeeds
 
     Scenario: Create local image
-        Given executing "podman build -t hello:test -f Dockerfile" succeeds
+        Given executing "podman pull quay.io/bitnami/nginx" succeeds
         When executing "podman images" succeeds
-        Then stdout should contain "localhost/hello"
+        Then stdout should contain "quay.io/bitnami/nginx"
         
     Scenario: Push local image to OpenShift image registry
         Given executing "oc new-project testproj-img" succeeds
         When executing "podman login -u kubeadmin -p $(oc whoami -t) default-route-openshift-image-registry.apps-crc.testing --tls-verify=false" succeeds
         Then stdout should contain "Login Succeeded!"
-        When executing "podman push hello:test default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test --tls-verify=false" succeeds
+         And executing "podman tag quay.io/bitnami/nginx:latest default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test" succeeds
+        When executing "podman push default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test --tls-verify=false" succeeds
 
     Scenario: Deploy the image
         Given executing "oc new-app testproj-img/hello:test" succeeds
@@ -31,12 +32,12 @@ Feature: Local image to image-registry
         When executing "oc get pods" succeeds
         Then stdout should contain "Running"
         When executing "oc logs deployment/hello" succeeds
-        Then stdout should contain "Hello, it works!"
+        Then stdout should contain "Starting NGINX"
 
     Scenario: Clean up
         Given executing "podman images" succeeds
-        When stdout contains "localhost/hello"
-        Then executing "podman image rm localhost/hello:test" succeeds
+        When stdout contains "quay.io/bitnami/nginx"
+        Then executing "podman image rm quay.io/bitnami/nginx" succeeds
         And executing "oc delete project testproj-img" succeeds
         And executing "crc delete -f" succeeds
         Then stdout should contain "Deleted the OpenShift cluster"
