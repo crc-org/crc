@@ -232,8 +232,8 @@ update-go-version:
 goversioncheck:
 	./verify-go-version.sh
 
-package: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.macosInstallPath=$(MACOS_INSTALL_PATH)' $(RELEASE_VERSION_VARIABLES)
-package: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
+packagedir: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.macosInstallPath=$(MACOS_INSTALL_PATH)' $(RELEASE_VERSION_VARIABLES)
+packagedir: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/postinstall.in >packaging/darwin/scripts/postinstall
@@ -249,14 +249,9 @@ package: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/cr
 	cp LICENSE packaging/darwin/Resources/LICENSE.txt
 	pkgbuild --analyze --root packaging/root packaging/components.plist
 	plutil -replace BundleIsRelocatable -bool NO packaging/components.plist
-	pkgbuild --identifier com.redhat.crc.$(CRC_VERSION) --version $(CRC_VERSION) \
-		--scripts packaging/darwin/scripts \
-		--root packaging/root \
-		--install-location / \
-		--component-plist packaging/components.plist \
-		$(BUILD_DIR)/macos-amd64/crc.pkg
-	productbuild --distribution packaging/darwin/Distribution \
-		--resources packaging/darwin/Resources \
-		--package-path $(BUILD_DIR)/macos-amd64 \
-		$(BUILD_DIR)/macos-amd64/crc-installer-macos-amd64.pkg
-	rm $(BUILD_DIR)/macos-amd64/crc.pkg
+
+$(BUILD_DIR)/macos-amd64/crc-macos-amd64.pkg: packagedir
+	./packaging/package.sh $(BUILD_DIR)/macos-amd64
+
+$(BUILD_DIR)/macos-amd64/crc-installer.tar: packagedir
+	tar -cvf $(BUILD_DIR)/macos-amd64/crc-installer.tar ./packaging
