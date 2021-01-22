@@ -80,10 +80,11 @@ func FeatureContext(s *godog.Suite) {
 			usr, _ := user.Current()
 			CRCExecutable = filepath.Join(usr.HomeDir, "go", "bin")
 		}
+		OCExecutable := filepath.Join(CRCHome, "bin", "oc")
 
 		// put CRC executable location on top of PATH
 		path := os.Getenv("PATH")
-		newPath := fmt.Sprintf("%s%c%s", CRCExecutable, os.PathListSeparator, path)
+		newPath := fmt.Sprintf("%s%c%s%c%s", CRCExecutable, os.PathListSeparator, OCExecutable, os.PathListSeparator, path)
 		err := os.Setenv("PATH", newPath)
 		if err != nil {
 			fmt.Println("Could not put CRC location on top of PATH")
