@@ -46,9 +46,6 @@ Feature: Operator from marketplace
         Then stdout should match "^pod(.*)deleted$"
         # after a while 5 pods should be up & running again
         And with up to "10" retries with wait period of "30s" command "oc get pods" output matches "(?s)(.*example-[a-z0-9]* *1/1 *Running.*){5}"
-        # but the deleted pod should not be up, it was replaced
-        But executing "oc get pods $POD" fails
-        And stderr matches "(.*)pods (.*) not found$"
 
     @windows
     Scenario: Failover
@@ -59,9 +56,6 @@ Feature: Operator from marketplace
         Then stdout should match "^pod(.*)deleted$"
         # after a while 5 pods should be up & running again
         And with up to "10" retries with wait period of "30s" command "oc get pods" output matches "(?s)(.*example-[a-z0-9]* *1/1 *Running.*){5}"
-        # but the deleted pod should not be up, it was replaced
-        But executing "oc get pods $Env:POD" fails
-        And stderr matches "(.*)pods (.*) not found$"
 
     @darwin @linux @windows @testdata
     Scenario: Scale down
