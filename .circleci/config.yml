@@ -34,8 +34,8 @@ jobs:
         name: Make
         command: make check
     - run:
-        name: mock make package
-        command: make BUNDLE_DIR=/tmp MOCK_BUNDLE=true package
+        name: mock make out/macos-amd64/crc-macos-amd64.pkg
+        command: make NO_CODESIGN=1 BUNDLE_DIR=/tmp MOCK_BUNDLE=true out/macos-amd64/crc-macos-amd64.pkg
     - store_artifacts:
         path: ~/project/out
         destination: crc
