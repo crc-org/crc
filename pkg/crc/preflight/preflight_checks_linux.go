@@ -183,25 +183,29 @@ func checkLibvirtVersion() error {
 
 func checkUserPartOfLibvirtGroup() error {
 	logging.Debug("Checking if current user is part of the libvirt group")
-	// check if user is part of libvirt group
+
 	currentUser, err := user.Current()
 	if err != nil {
 		logging.Debugf("user.Current() failed: %v", err)
 		return fmt.Errorf("Failed to get current user id")
 	}
-	path, err := exec.LookPath("groups")
+	gids, err := currentUser.GroupIds()
 	if err != nil {
-		return fmt.Errorf("Failed to locate 'groups' command")
+		return fmt.Errorf("Failed to get the groups user '%s' belongs to", currentUser.Username)
 	}
-	stdOut, _, err := crcos.RunWithDefaultLocale(path, currentUser.Username)
-	if err != nil {
-		return fmt.Errorf("Failed to look up current user's groups")
+	for _, gid := range gids {
+		group, err := user.LookupGroupId(gid)
+		if err != nil {
+			logging.Debugf("Failed to lookup group id %s: %v", gid, err)
+			continue
+		}
+		if group.Name == "libvirt" {
+			logging.Debug("Current user is already in the libvirt group")
+			return nil
+		}
 	}
-	if strings.Contains(stdOut, "libvirt") {
-		logging.Debug("Current user is already in the libvirt group")
-		return nil
-	}
-	return fmt.Errorf("%s not part of libvirtd group", currentUser.Username)
+
+	return fmt.Errorf("%s is not part of the libvirt group", currentUser.Username)
 }
 
 func fixUserPartOfLibvirtGroup(distro *linux.OsRelease) func() error {
