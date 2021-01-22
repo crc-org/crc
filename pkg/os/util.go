@@ -91,10 +91,14 @@ func WriteFileIfContentChanged(path string, newContent []byte, perm os.FileMode)
 	return true, nil
 }
 
+// FileExists returns true if the file at path exists.
+// It returns false if it does not exist, or if there was an error when checking for its existence.
+// This means there can be false negatives if Lstat fails because of permission issues (file exists,
+// but is not reachable by the current user)
 func FileExists(path string) bool {
-	_, err := os.Stat(path)
-	if err != nil && os.IsNotExist(err) {
+	info, err := os.Lstat(path)
+	if err != nil {
 		return false
 	}
-	return true
+	return !info.IsDir()
 }

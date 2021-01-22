@@ -53,3 +53,32 @@ func TestFileContentFuncs(t *testing.T) {
 	assert.Error(t, FileContentMatches(filename, []byte("aaaa")))
 	assert.NoError(t, FileContentMatches(filename, []byte("aaaaa")))
 }
+
+func TestFileExists(t *testing.T) {
+	dir, err := ioutil.TempDir("", "fileexists")
+	assert.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	filename := filepath.Join(dir, "testfile1")
+	_, err = WriteFileIfContentChanged(filename, []byte("content"), 0644)
+	assert.NoError(t, err)
+	assert.True(t, FileExists(filename))
+
+	_, err = WriteFileIfContentChanged(filename, []byte("newcontent"), 0000)
+	assert.NoError(t, err)
+	assert.True(t, FileExists(filename))
+
+	dirname := filepath.Join(dir, "testdir")
+	err = os.MkdirAll(dirname, 0700)
+	assert.NoError(t, err)
+	filename = filepath.Join(dirname, "testfile2")
+	_, err = WriteFileIfContentChanged(filename, []byte("content"), 0644)
+	assert.NoError(t, err)
+	assert.True(t, FileExists(filename))
+
+	err = os.Chmod(dirname, 0000)
+	assert.NoError(t, err)
+	assert.False(t, FileExists(filename))
+	filename = filepath.Join(dirname, "nonexistent")
+	assert.False(t, FileExists(filename))
+}
