@@ -16,6 +16,18 @@ func (v vmNotExist) Error() string {
 
 const VMNotExist vmNotExist = "Machine does not exist. Use 'crc start' to create it"
 
+type PreflightError struct {
+	Err error
+}
+
+func (p *PreflightError) Error() string {
+	return p.Err.Error()
+}
+
+func (p *PreflightError) Unwrap() error {
+	return p.Err
+}
+
 type MultiError struct {
 	Errors []error
 }

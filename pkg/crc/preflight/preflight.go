@@ -153,7 +153,10 @@ func doRegisterSettings(cfg config.Schema, checks []Check) {
 func StartPreflightChecks(config config.Storage) error {
 	experimentalFeatures := config.Get(cmdConfig.ExperimentalFeatures).AsBool()
 	mode := network.ParseMode(config.Get(cmdConfig.NetworkMode).AsString())
-	return doPreflightChecks(config, getPreflightChecks(experimentalFeatures, mode))
+	if err := doPreflightChecks(config, getPreflightChecks(experimentalFeatures, mode)); err != nil {
+		return &errors.PreflightError{Err: err}
+	}
+	return nil
 }
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
