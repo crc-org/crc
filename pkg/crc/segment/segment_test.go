@@ -26,7 +26,8 @@ type segmentResponse struct {
 		AnonymousID string `json:"anonymousId"`
 		MessageID   string `json:"messageId"`
 		Traits      struct {
-			OS string `json:"os"`
+			OS                   string `json:"os"`
+			ExperimentalFeatures bool   `json:"enable-experimental-features"`
 		} `json:"traits"`
 		Properties struct {
 			Error   string `json:"error"`
@@ -62,6 +63,9 @@ func newTestConfig(value string) (*crcConfig.Config, error) {
 	if _, err := config.Set(cmdConfig.ConsentTelemetry, value); err != nil {
 		return nil, err
 	}
+	if _, err := config.Set(cmdConfig.ExperimentalFeatures, true); err != nil {
+		return nil, err
+	}
 	return config, nil
 }
 
@@ -89,6 +93,7 @@ func TestClientUploadWithConsent(t *testing.T) {
 		require.NoError(t, json.Unmarshal(x, &s))
 		require.Equal(t, s.Batch[0].Type, "identify")
 		require.Equal(t, s.Batch[0].Traits.OS, runtime.GOOS)
+		require.Equal(t, s.Batch[0].Traits.ExperimentalFeatures, true)
 		require.Equal(t, s.Batch[1].Type, "track")
 		require.Equal(t, s.Batch[1].Properties.Error, "an error occurred")
 		require.Equal(t, s.Batch[1].Properties.Version, version.GetCRCVersion())
