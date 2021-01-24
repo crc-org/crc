@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -16,6 +17,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/preflight"
+	"github.com/code-ready/crc/pkg/crc/telemetry"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
 	"github.com/spf13/cobra"
@@ -46,14 +48,14 @@ var startCmd = &cobra.Command{
 		if err := viper.BindFlagSet(cmd.Flags()); err != nil {
 			return err
 		}
-		if err := renderStartResult(runStart(args)); err != nil {
+		if err := renderStartResult(runStart(cmd.Context())); err != nil {
 			return err
 		}
 		return nil
 	},
 }
 
-func runStart(arguments []string) (*machine.StartResult, error) {
+func runStart(ctx context.Context) (*machine.StartResult, error) {
 	if err := validateStartFlags(); err != nil {
 		return nil, err
 	}
@@ -62,6 +64,10 @@ func runStart(arguments []string) (*machine.StartResult, error) {
 
 	if err := preflight.StartPreflightChecks(config); err != nil {
 		return nil, err
+	}
+
+	for _, key := range []string{cmdConfig.CPUs, cmdConfig.Memory, cmdConfig.DiskSize} {
+		telemetry.SetContextProperty(ctx, key, config.Get(key).AsInt())
 	}
 
 	startConfig := machine.StartConfig{
