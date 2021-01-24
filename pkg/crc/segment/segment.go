@@ -68,7 +68,7 @@ func (c *Client) Upload(ctx context.Context, action string, duration time.Durati
 
 	if err := c.segmentClient.Enqueue(analytics.Identify{
 		AnonymousId: anonymousID,
-		Traits:      traits(),
+		Traits:      addConfigTraits(c.config, traits()),
 	}); err != nil {
 		return err
 	}
@@ -90,6 +90,18 @@ func (c *Client) Upload(ctx context.Context, action string, duration time.Durati
 		Event:       action,
 		Properties:  properties,
 	})
+}
+
+func addConfigTraits(c *crcConfig.Config, in analytics.Traits) analytics.Traits {
+	return in.
+		Set("proxy", isProxyUsed(c)).
+		Set(config.NetworkMode, c.Get(config.NetworkMode).AsString()).
+		Set(config.EnableClusterMonitoring, c.Get(config.EnableClusterMonitoring).AsBool()).
+		Set(config.ExperimentalFeatures, c.Get(config.ExperimentalFeatures).AsBool())
+}
+
+func isProxyUsed(c *crcConfig.Config) bool {
+	return c.Get(config.HTTPProxy).AsString() != "" || c.Get(config.HTTPSProxy).AsString() != ""
 }
 
 func getUserIdentity(telemetryFilePath string) (string, error) {
