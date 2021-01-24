@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/telemetry"
 	"github.com/spf13/cobra"
 )
 
@@ -18,15 +19,19 @@ func configGetCmd(config config.Storage) *cobra.Command {
 				return errors.New("Please provide a configuration property to get")
 			}
 			key := args[0]
+
 			v := config.Get(key)
-			switch {
-			case v.Invalid:
+			if v.Invalid {
 				return fmt.Errorf("Configuration property '%s' does not exist", key)
-			case v.IsDefault:
-				return fmt.Errorf("Configuration property '%s' is not set. Default value is '%s'", key, v.AsString())
-			default:
-				fmt.Println(key, ":", v.AsString())
 			}
+
+			telemetry.SetContextProperty(cmd.Context(), "key", args[0])
+
+			if v.IsDefault {
+				return fmt.Errorf("Configuration property '%s' is not set. Default value is '%s'", key, v.AsString())
+
+			}
+			fmt.Println(key, ":", v.AsString())
 			return nil
 		},
 	}
