@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/telemetry"
 	"github.com/spf13/cobra"
 )
 
@@ -21,6 +22,8 @@ func configSetCmd(config config.Storage) *cobra.Command {
 			if err != nil {
 				return err
 			}
+
+			telemetry.SetContextProperty(cmd.Context(), "key", args[0])
 
 			if setMessage != "" {
 				fmt.Println(setMessage)

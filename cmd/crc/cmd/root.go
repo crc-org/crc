@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/code-ready/crc/pkg/crc/telemetry"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
@@ -85,7 +88,7 @@ func runRoot() {
 func Execute() {
 	attachMiddleware([]string{}, rootCmd)
 
-	if err := rootCmd.Execute(); err != nil {
+	if err := rootCmd.ExecuteContext(telemetry.NewContext(context.Background())); err != nil {
 		runPostrun()
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
@@ -174,7 +177,7 @@ func executeWithLogging(fullCmd string, input func(cmd *cobra.Command, args []st
 		logging.Debugf("Running '%s'", fullCmd)
 		startTime := time.Now()
 		err := input(cmd, args)
-		if serr := segmentClient.Upload(fullCmd, time.Since(startTime), err); serr != nil {
+		if serr := segmentClient.Upload(cmd.Context(), fullCmd, time.Since(startTime), err); serr != nil {
 			logging.Debugf("Cannot send data to telemetry: %v", serr)
 		}
 		return err

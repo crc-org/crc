@@ -1,6 +1,7 @@
 package segment
 
 import (
+	"context"
 	"io/ioutil"
 	"net"
 	"os"
@@ -12,6 +13,7 @@ import (
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/telemetry"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/pborman/uuid"
 	"github.com/segmentio/analytics-go"
@@ -54,7 +56,7 @@ func (c *Client) Close() error {
 	return c.segmentClient.Close()
 }
 
-func (c *Client) Upload(action string, duration time.Duration, err error) error {
+func (c *Client) Upload(ctx context.Context, action string, duration time.Duration, err error) error {
 	if c.config.Get(config.ConsentTelemetry).AsString() != "yes" {
 		return nil
 	}
@@ -71,8 +73,12 @@ func (c *Client) Upload(action string, duration time.Duration, err error) error 
 		return err
 	}
 
-	properties := analytics.NewProperties().
-		Set("version", version.GetCRCVersion()).
+	properties := analytics.NewProperties()
+	for k, v := range telemetry.GetContextProperties(ctx) {
+		properties = properties.Set(k, v)
+	}
+
+	properties = properties.Set("version", version.GetCRCVersion()).
 		Set("success", err == nil).
 		Set("duration", duration.Milliseconds())
 	if err != nil {

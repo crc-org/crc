@@ -1,6 +1,7 @@
 package segment
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -15,6 +16,7 @@ import (
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/telemetry"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/stretchr/testify/require"
 )
@@ -29,6 +31,7 @@ type segmentResponse struct {
 		Properties struct {
 			Error   string `json:"error"`
 			Version string `json:"version"`
+			CPUs    int    `json:"cpus"`
 		} `json:"properties"`
 		Type string `json:"type"`
 	} `json:"batch"`
@@ -77,7 +80,7 @@ func TestClientUploadWithConsent(t *testing.T) {
 	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
 	require.NoError(t, err)
 
-	require.NoError(t, c.Upload("start", time.Minute, errors.New("an error occurred")))
+	require.NoError(t, c.Upload(context.Background(), "start", time.Minute, errors.New("an error occurred")))
 	require.NoError(t, c.Close())
 
 	select {
@@ -89,6 +92,36 @@ func TestClientUploadWithConsent(t *testing.T) {
 		require.Equal(t, s.Batch[1].Type, "track")
 		require.Equal(t, s.Batch[1].Properties.Error, "an error occurred")
 		require.Equal(t, s.Batch[1].Properties.Version, version.GetCRCVersion())
+	default:
+		require.Fail(t, "server should receive data")
+	}
+}
+
+func TestClientUploadWithContext(t *testing.T) {
+	body, server := mockServer()
+	defer server.Close()
+	defer close(body)
+
+	dir, err := ioutil.TempDir("", "cfg")
+	require.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	config, err := newTestConfig("yes")
+	require.NoError(t, err)
+
+	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
+	require.NoError(t, err)
+
+	ctx := telemetry.NewContext(context.Background())
+	telemetry.SetContextProperty(ctx, "cpus", 6)
+	require.NoError(t, c.Upload(ctx, "start", time.Minute, nil))
+	require.NoError(t, c.Close())
+
+	select {
+	case x := <-body:
+		s := segmentResponse{}
+		require.NoError(t, json.Unmarshal(x, &s))
+		require.Equal(t, s.Batch[1].Properties.CPUs, 6)
 	default:
 		require.Fail(t, "server should receive data")
 	}
@@ -109,7 +142,7 @@ func TestClientUploadWithOutConsent(t *testing.T) {
 	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
 	require.NoError(t, err)
 
-	require.NoError(t, c.Upload("start", time.Second, errors.New("an error occurred")))
+	require.NoError(t, c.Upload(context.Background(), "start", time.Second, errors.New("an error occurred")))
 	require.NoError(t, c.Close())
 
 	select {
