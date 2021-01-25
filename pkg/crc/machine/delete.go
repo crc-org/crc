@@ -6,12 +6,9 @@ import (
 )
 
 func (client *client) Delete() error {
-	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
+	libMachineAPIClient, cleanup := createLibMachineClient()
 	defer logging.BackupLogFile()
 	defer cleanup()
-	if err != nil {
-		return errors.Wrap(err, "Cannot initialize libmachine")
-	}
 	host, err := libMachineAPIClient.Load(client.name)
 
 	if err != nil {

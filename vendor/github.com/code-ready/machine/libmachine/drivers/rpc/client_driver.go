@@ -2,16 +2,15 @@ package rpcdriver
 
 import (
 	"fmt"
+	"io"
 	"net/rpc"
 	"sync"
 	"time"
 
-	"io"
-
 	"github.com/code-ready/machine/libmachine/drivers/plugin/localbinary"
-	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/state"
 	"github.com/code-ready/machine/libmachine/version"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -36,7 +35,7 @@ func NewRPCClientDriverFactory() RPCClientDriverFactory {
 }
 
 type RPCClientDriver struct {
-	plugin          localbinary.DriverPlugin
+	plugin          io.Closer
 	heartbeatDoneCh chan bool
 	Client          *InternalClient
 }
@@ -117,7 +116,7 @@ func (f *DefaultRPCClientDriverFactory) NewRPCClientDriver(driverName string, dr
 	go func() {
 		if err := p.Serve(); err != nil {
 			// TODO: Is this best approach?
-			log.Warn(err)
+			log.Warnf(err.Error())
 			return
 		}
 	}()
@@ -156,7 +155,7 @@ func (f *DefaultRPCClientDriverFactory) NewRPCClientDriver(driverName string, dr
 	if serverVersion != version.APIVersion {
 		return nil, fmt.Errorf("Driver binary uses an incompatible API version (%d)", serverVersion)
 	}
-	log.Debug("Using API Version ", serverVersion)
+	log.Debugf("Using API Version %d", serverVersion)
 
 	go func(c *RPCClientDriver) {
 		for {
@@ -167,7 +166,7 @@ func (f *DefaultRPCClientDriverFactory) NewRPCClientDriver(driverName string, dr
 				if err := c.Client.Call(HeartbeatMethod, struct{}{}, nil); err != nil {
 					log.Warnf("Wrapper Docker Machine process exiting due to closed plugin server (%s)", err)
 					if err := c.close(); err != nil {
-						log.Warn(err)
+						log.Warnf(err.Error())
 					}
 				}
 			}
@@ -198,15 +197,15 @@ func (c *RPCClientDriver) close() error {
 	c.heartbeatDoneCh <- true
 	close(c.heartbeatDoneCh)
 
-	log.Debug("Making call to close driver server")
+	log.Debugf("Making call to close driver server")
 
 	if err := c.Client.Call(CloseMethod, struct{}{}, nil); err != nil {
 		log.Debugf("Failed to make call to close driver server: %s", err)
 	} else {
-		log.Debug("Successfully made call to close driver server")
+		log.Debugf("Successfully made call to close driver server")
 	}
 
-	log.Debug("Making call to close connection to plugin binary")
+	log.Debugf("Making call to close connection to plugin binary")
 
 	return c.plugin.Close()
 }

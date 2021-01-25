@@ -94,11 +94,8 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 
 	var crcBundleMetadata *bundle.CrcBundleInfo
 
-	libMachineAPIClient, cleanup, err := createLibMachineClient(client.debug)
+	libMachineAPIClient, cleanup := createLibMachineClient()
 	defer cleanup()
-	if err != nil {
-		return nil, errors.Wrap(err, "Cannot initialize libmachine")
-	}
 
 	// Pre-VM start
 	var host *host.Host

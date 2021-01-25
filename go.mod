@@ -10,7 +10,7 @@ require (
 	github.com/cheggaaa/pb/v3 v3.0.5
 	github.com/code-ready/clicumber v0.0.0-20200728062640-1203dda97f67
 	github.com/code-ready/gvisor-tap-vsock v0.0.0-20201105131011-9258bacc7a6c
-	github.com/code-ready/machine v0.0.0-20201202090222-9558ae8c05b9
+	github.com/code-ready/machine v0.0.0-20210122113819-281ccfbb4566
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/docker v1.13.1 // indirect
@@ -43,7 +43,7 @@ require (
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	golang.org/x/crypto v0.0.0-20201203163018-be400aefbc4c

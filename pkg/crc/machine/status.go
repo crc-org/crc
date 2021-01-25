@@ -11,13 +11,10 @@ import (
 )
 
 func (client *client) Status() (*ClusterStatusResult, error) {
-	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
+	libMachineAPIClient, cleanup := createLibMachineClient()
 	defer cleanup()
-	if err != nil {
-		return nil, errors.Wrap(err, "Cannot initialize libmachine")
-	}
 
-	_, err = libMachineAPIClient.Exists(client.name)
+	_, err := libMachineAPIClient.Exists(client.name)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot check if machine exists")
 	}
