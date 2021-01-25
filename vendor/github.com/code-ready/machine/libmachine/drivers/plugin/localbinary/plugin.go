@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/code-ready/machine/libmachine/log"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -27,26 +27,6 @@ const (
 	PluginEnvDriverName = "MACHINE_PLUGIN_DRIVER_NAME"
 )
 
-type PluginStreamer interface {
-	// Return a channel for receiving the output of the stream line by
-	// line.
-	//
-	// It happens to be the case that we do this all inside of the main
-	// plugin struct today, but that may not be the case forever.
-	AttachStream(*bufio.Scanner) <-chan string
-}
-
-type PluginServer interface {
-	// Get the address where the plugin server is listening.
-	Address() (string, error)
-
-	// Serve kicks off the plugin server.
-	Serve() error
-
-	// Close shuts down the initialized server.
-	Close() error
-}
-
 type McnBinaryExecutor interface {
 	// Execute the driver plugin.  Returns scanners for plugin binary
 	// stdout and stderr.
@@ -54,13 +34,6 @@ type McnBinaryExecutor interface {
 
 	// Stop reading from the plugins in question.
 	Close() error
-}
-
-// DriverPlugin interface wraps the underlying mechanics of starting a driver
-// plugin server and then figuring out where it can be dialed.
-type DriverPlugin interface {
-	PluginServer
-	PluginStreamer
 }
 
 type Plugin struct {

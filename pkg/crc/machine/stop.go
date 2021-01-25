@@ -7,11 +7,8 @@ import (
 )
 
 func (client *client) Stop() (state.State, error) {
-	libMachineAPIClient, cleanup, err := createLibMachineClient(client.debug)
+	libMachineAPIClient, cleanup := createLibMachineClient()
 	defer cleanup()
-	if err != nil {
-		return state.None, errors.Wrap(err, "Cannot initialize libmachine")
-	}
 	host, err := libMachineAPIClient.Load(client.name)
 
 	if err != nil {

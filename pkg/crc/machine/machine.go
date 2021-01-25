@@ -3,16 +3,13 @@ package machine
 import (
 	"encoding/base64"
 	"fmt"
-	"os"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/libmachine"
 	"github.com/code-ready/crc/pkg/libmachine/host"
 	"github.com/code-ready/machine/libmachine/drivers"
-	"github.com/code-ready/machine/libmachine/log"
 )
 
 func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*ClusterConfig, error) {
@@ -52,18 +49,11 @@ func getBundleMetadataFromDriver(driver drivers.Driver) (string, *bundle.CrcBund
 	return bundleName, metadata, err
 }
 
-func createLibMachineClient(debug bool) (*libmachine.Client, func(), error) {
-	logfile, err := setMachineLogging(debug)
-	if err != nil {
-		return nil, func() {}, err
-	}
+func createLibMachineClient() (*libmachine.Client, func()) {
 	client := libmachine.NewClient(constants.MachineBaseDir)
 	return client, func() {
 		client.Close()
-		if logfile != nil {
-			logfile.Close()
-		}
-	}, nil
+	}
 }
 
 func getSSHPort(vsockNetwork bool) int {
@@ -78,21 +68,6 @@ func getIP(h *host.Host, vsockNetwork bool) (string, error) {
 		return "127.0.0.1", nil
 	}
 	return h.Driver.GetIP()
-}
-
-func setMachineLogging(logs bool) (*os.File, error) {
-	if !logs {
-		log.SetDebug(true)
-		logfile, err := logging.OpenLogFile(constants.LogFilePath)
-		if err != nil {
-			return nil, err
-		}
-		log.SetOutWriter(logfile)
-		log.SetErrWriter(logfile)
-		return logfile, nil
-	}
-	log.SetDebug(true)
-	return nil, nil
 }
 
 func getProxyConfig(baseDomainName string) (*network.ProxyConfig, error) {

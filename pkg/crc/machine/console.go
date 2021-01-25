@@ -7,11 +7,8 @@ func (client *client) GetConsoleURL() (*ConsoleResult, error) {
 	// Here we are only checking if the VM exist and not the status of the VM.
 	// We might need to improve and use crc status logic, only
 	// return if the Openshift is running as part of status.
-	libMachineAPIClient, cleanup, err := createLibMachineClient(client.debug)
+	libMachineAPIClient, cleanup := createLibMachineClient()
 	defer cleanup()
-	if err != nil {
-		return nil, errors.Wrap(err, "Cannot initialize libmachine")
-	}
 	host, err := libMachineAPIClient.Load(client.name)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot load machine")

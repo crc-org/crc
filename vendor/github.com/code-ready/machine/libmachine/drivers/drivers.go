@@ -3,8 +3,8 @@ package drivers
 import (
 	"errors"
 
-	"github.com/code-ready/machine/libmachine/log"
 	"github.com/code-ready/machine/libmachine/state"
+	log "github.com/sirupsen/logrus"
 )
 
 // Driver defines how a host is created and controlled. Different types of
