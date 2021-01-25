@@ -2,13 +2,14 @@ package ssh
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"strconv"
 	"time"
 
-	"github.com/code-ready/machine/libmachine/log"
+	log "github.com/code-ready/crc/pkg/crc/logging"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -38,13 +39,12 @@ func NewClient(user string, host string, port int, keys ...string) (Client, erro
 func clientConfig(user string, keys []string) (*ssh.ClientConfig, error) {
 	var (
 		privateKeys []ssh.Signer
-		authMethods []ssh.AuthMethod
+		keyPaths    []string
 	)
 
 	for _, k := range keys {
 		key, err := ioutil.ReadFile(k)
 		if err != nil {
-			log.Debugf("Cannot read private ssh key %s", k)
 			continue
 		}
 
@@ -54,15 +54,17 @@ func clientConfig(user string, keys []string) (*ssh.ClientConfig, error) {
 		}
 
 		privateKeys = append(privateKeys, privateKey)
+		keyPaths = append(keyPaths, k)
 	}
 
-	if len(privateKeys) > 0 {
-		authMethods = append(authMethods, ssh.PublicKeys(privateKeys...))
+	if len(privateKeys) == 0 {
+		return nil, errors.New("no ssh private keys available")
 	}
+	log.Debugf("Using ssh private keys: %v", keyPaths)
 
 	return &ssh.ClientConfig{
 		User: user,
-		Auth: authMethods,
+		Auth: []ssh.AuthMethod{ssh.PublicKeys(privateKeys...)},
 		// #nosec G106
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		Timeout:         time.Minute,
@@ -113,6 +115,6 @@ func (client *NativeClient) Close() {
 	}
 	err := client.conn.Close()
 	if err != nil {
-		log.Debugf("Error closing SSH segmentClient: %s", err)
+		log.Debugf("Error closing ssh client: %s", err)
 	}
 }
