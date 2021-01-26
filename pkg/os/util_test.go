@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -78,7 +79,12 @@ func TestFileExists(t *testing.T) {
 
 	err = os.Chmod(dirname, 0000)
 	assert.NoError(t, err)
-	assert.False(t, FileExists(filename))
+	if runtime.GOOS == "windows" {
+		assert.True(t, FileExists(filename))
+	} else {
+		assert.False(t, FileExists(filename))
+	}
+
 	filename = filepath.Join(dirname, "nonexistent")
 	assert.False(t, FileExists(filename))
 }
