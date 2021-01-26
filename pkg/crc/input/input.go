@@ -1,13 +1,11 @@
 package input
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
 
 	terminal "golang.org/x/term"
-	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 
 func PromptUserForYesOrNo(message string, force bool) bool {
@@ -22,22 +20,4 @@ func PromptUserForYesOrNo(message string, force bool) bool {
 	fmt.Scanf("%s", &response)
 
 	return strings.ToLower(response) == "y"
-}
-
-// PromptUserForSecret can be used for any kind of secret like image pull
-// secret or for password.
-func PromptUserForSecret(message string, help string) (string, error) {
-	if !terminal.IsTerminal(int(os.Stdin.Fd())) {
-		return "", errors.New("cannot ask for secret, crc not launched by a terminal")
-	}
-
-	var secret string
-	prompt := &survey.Password{
-		Message: message,
-		Help:    help,
-	}
-	if err := survey.AskOne(prompt, &secret, nil); err != nil {
-		return "", err
-	}
-	return secret, nil
 }
