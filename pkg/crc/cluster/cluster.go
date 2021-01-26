@@ -90,7 +90,7 @@ func GetRootPartitionUsage(sshRunner *ssh.Runner) (int64, int64, error) {
 	return diskSize, diskUsage, nil
 }
 
-func EnsurePullSecretPresentInTheCluster(ocConfig oc.Config, pullSec *PullSecret) error {
+func EnsurePullSecretPresentInTheCluster(ocConfig oc.Config, pullSec PullSecretLoader) error {
 	if err := WaitForOpenshiftResource(ocConfig, "secret"); err != nil {
 		return err
 	}
@@ -265,23 +265,23 @@ func addProxyCACertToInstance(sshRunner *ssh.Runner, proxy *network.ProxyConfig)
 	return nil
 }
 
-type PullSecret struct {
+type PullSecretMemoizer struct {
 	value  string
-	Getter func() (string, error)
+	Getter PullSecretLoader
 }
 
-func (p *PullSecret) Value() (string, error) {
+func (p *PullSecretMemoizer) Value() (string, error) {
 	if p.value != "" {
 		return p.value, nil
 	}
-	val, err := p.Getter()
+	val, err := p.Getter.Value()
 	if err == nil {
 		p.value = val
 	}
 	return val, err
 }
 
-func EnsurePullSecretPresentOnInstanceDisk(sshRunner *ssh.Runner, pullSecret *PullSecret) error {
+func EnsurePullSecretPresentOnInstanceDisk(sshRunner *ssh.Runner, pullSecret PullSecretLoader) error {
 	if _, _, err := sshRunner.Run(fmt.Sprintf("test -e %s", vmPullSecretPath)); err == nil {
 		return nil
 	}

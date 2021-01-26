@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/preflight"
@@ -76,9 +74,7 @@ func runStart(ctx context.Context) (*machine.StartResult, error) {
 		DiskSize:   config.Get(cmdConfig.DiskSize).AsInt(),
 		CPUs:       config.Get(cmdConfig.CPUs).AsInt(),
 		NameServer: config.Get(cmdConfig.NameServer).AsString(),
-		PullSecret: &cluster.PullSecret{
-			Getter: getPullSecretFileContent,
-		},
+		PullSecret: cluster.NewInteractivePullSecretLoader(config),
 	}
 
 	client := newMachine()
@@ -182,40 +178,6 @@ func validateStartFlags() error {
 		}
 	}
 	return nil
-}
-
-func getPullSecretFileContent() (string, error) {
-	var (
-		pullsecret string
-		err        error
-	)
-
-	// If crc is built from an OKD bundle, then use the fake pull secret in contants.
-	if crcversion.IsOkdBuild() {
-		pullsecret = constants.OkdPullSecret
-		return pullsecret, nil
-	}
-	// In case user doesn't provide a file in start command or in config then ask for it.
-	if config.Get(cmdConfig.PullSecretFile).AsString() == "" {
-		pullsecret, err = input.PromptUserForSecret("Image pull secret", fmt.Sprintf("Copy it from %s", constants.CrcLandingPageURL))
-		// This is just to provide a new line after user enter the pull secret.
-		fmt.Println()
-		if err != nil {
-			return "", errors.New(err.Error())
-		}
-	} else {
-		// Read the file content
-		data, err := ioutil.ReadFile(config.Get(cmdConfig.PullSecretFile).AsString())
-		if err != nil {
-			return "", errors.New(err.Error())
-		}
-		pullsecret = string(data)
-	}
-	if err := validation.ImagePullSecret(pullsecret); err != nil {
-		return "", errors.New(err.Error())
-	}
-
-	return pullsecret, nil
 }
 
 func checkIfNewVersionAvailable(noUpdateCheck bool) {

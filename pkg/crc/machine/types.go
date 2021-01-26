@@ -19,7 +19,7 @@ type StartConfig struct {
 	NameServer string
 
 	// User Pull secret
-	PullSecret *cluster.PullSecret
+	PullSecret cluster.PullSecretLoader
 }
 
 type ClusterConfig struct {
