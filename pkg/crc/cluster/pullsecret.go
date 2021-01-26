@@ -36,8 +36,7 @@ func (loader *interactivePullSecretLoader) Value() (string, error) {
 
 	// If crc is built from an OKD bundle, then use the fake pull secret in contants.
 	if crcversion.IsOkdBuild() {
-		pullsecret = constants.OkdPullSecret
-		return pullsecret, nil
+		return constants.OkdPullSecret, nil
 	}
 	// In case user doesn't provide a file in start command or in config then ask for it.
 	if loader.config.Get(cmdConfig.PullSecretFile).AsString() == "" {
@@ -75,6 +74,11 @@ func NewNonInteractivePullSecretLoader(path string) PullSecretLoader {
 }
 
 func (loader *nonInteractivePullSecretLoader) Value() (string, error) {
+	// If crc is built from an OKD bundle, then use the fake pull secret in contants.
+	if crcversion.IsOkdBuild() {
+		return constants.OkdPullSecret, nil
+	}
+
 	data, err := ioutil.ReadFile(loader.path)
 	if err != nil {
 		return "", err
