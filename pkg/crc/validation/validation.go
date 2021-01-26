@@ -2,6 +2,7 @@ package validation
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -101,6 +102,9 @@ type imagePullSecret struct {
 
 // ImagePullSecret checks if the given string is a valid image pull secret and returns an error if not.
 func ImagePullSecret(secret string) error {
+	if secret == "" {
+		return errors.New("empty pull secret")
+	}
 	var s imagePullSecret
 	err := json.Unmarshal([]byte(secret), &s)
 	if err != nil {
