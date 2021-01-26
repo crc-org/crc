@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/code-ready/crc/pkg/crc/cache"
+	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
@@ -56,6 +57,11 @@ var genericPreflightChecks = [...]Check{
 	{
 		cleanupDescription: "Removing older logs",
 		cleanup:            removeOldLogs,
+		flags:              CleanUpOnly,
+	},
+	{
+		cleanupDescription: "Removing pull secret from the keyring",
+		cleanup:            cluster.ForgetPullSecret,
 		flags:              CleanUpOnly,
 	},
 }

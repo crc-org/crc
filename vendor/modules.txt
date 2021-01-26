@@ -58,6 +58,8 @@ github.com/cucumber/godog/colors
 # github.com/cucumber/messages-go/v10 v10.0.3
 ## explicit
 github.com/cucumber/messages-go/v10
+# github.com/danieljoos/wincred v1.1.0
+github.com/danieljoos/wincred
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/docker/docker v1.13.1 => github.com/docker/docker v1.4.2-0.20191121165722-d1d5f6476656
@@ -77,6 +79,8 @@ github.com/fatih/color
 github.com/fsnotify/fsnotify
 # github.com/go-logr/logr v0.2.0
 github.com/go-logr/logr
+# github.com/godbus/dbus/v5 v5.0.3
+github.com/godbus/dbus/v5
 # github.com/gofrs/uuid v3.2.0+incompatible
 github.com/gofrs/uuid
 # github.com/gogo/protobuf v1.3.1
@@ -237,6 +241,10 @@ github.com/xi2/xz
 # github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
 ## explicit
 github.com/xtgo/uuid
+# github.com/zalando/go-keyring v0.1.1
+## explicit
+github.com/zalando/go-keyring
+github.com/zalando/go-keyring/secret_service
 # golang.org/x/crypto v0.0.0-20201203163018-be400aefbc4c
 ## explicit
 golang.org/x/crypto/blowfish
