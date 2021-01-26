@@ -67,18 +67,13 @@ func parseStartArgs(args json.RawMessage) (startArgs, error) {
 }
 
 func getStartConfig(cfg crcConfig.Storage, args startArgs) machine.StartConfig {
-	startConfig := machine.StartConfig{
+	return machine.StartConfig{
 		BundlePath: cfg.Get(config.Bundle).AsString(),
 		Memory:     cfg.Get(config.Memory).AsInt(),
 		CPUs:       cfg.Get(config.CPUs).AsInt(),
 		NameServer: cfg.Get(config.NameServer).AsString(),
+		PullSecret: cluster.NewNonInteractivePullSecretLoader(cfg, args.PullSecretFile),
 	}
-	pullSecretFile := args.PullSecretFile
-	if pullSecretFile == "" {
-		pullSecretFile = cfg.Get(config.PullSecretFile).AsString()
-	}
-	startConfig.PullSecret = cluster.NewNonInteractivePullSecretLoader(pullSecretFile)
-	return startConfig
 }
 
 type VersionResult struct {
