@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/cluster"
@@ -13,7 +12,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/preflight"
-	"github.com/code-ready/crc/pkg/crc/validation"
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
@@ -79,9 +77,7 @@ func getStartConfig(cfg crcConfig.Storage, args startArgs) machine.StartConfig {
 	if pullSecretFile == "" {
 		pullSecretFile = cfg.Get(config.PullSecretFile).AsString()
 	}
-	startConfig.PullSecret = &cluster.PullSecret{
-		Getter: getPullSecretFileContent(pullSecretFile),
-	}
+	startConfig.PullSecret = cluster.NewNonInteractivePullSecretLoader(pullSecretFile)
 	return startConfig
 }
 
@@ -100,20 +96,6 @@ func (h *Handler) GetVersion() string {
 		Success:          true,
 	}
 	return encodeStructToJSON(v)
-}
-
-func getPullSecretFileContent(path string) func() (string, error) {
-	return func() (string, error) {
-		data, err := ioutil.ReadFile(path)
-		if err != nil {
-			return "", err
-		}
-		pullsecret := string(data)
-		if err := validation.ImagePullSecret(pullsecret); err != nil {
-			return "", err
-		}
-		return pullsecret, nil
-	}
 }
 
 func (h *Handler) Delete() string {
