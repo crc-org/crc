@@ -4,15 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
+	terminal "golang.org/x/term"
+	"gopkg.in/AlecAivazis/survey.v1"
 )
 
 type PullSecretLoader interface {
@@ -39,7 +41,7 @@ func (loader *interactivePullSecretLoader) Value() (string, error) {
 		return fromNonInteractive, nil
 	}
 
-	fromUser, err := input.PromptUserForSecret("Image pull secret", fmt.Sprintf("Copy it from %s", constants.CrcLandingPageURL))
+	fromUser, err := promptUserForSecret("Image pull secret", fmt.Sprintf("Copy it from %s", constants.CrcLandingPageURL))
 	// This is just to provide a new line after user enter the pull secret.
 	fmt.Println()
 	if err != nil {
@@ -96,4 +98,22 @@ func loadFile(path string) (string, error) {
 	}
 	pullsecret := strings.TrimSpace(string(data))
 	return pullsecret, validation.ImagePullSecret(pullsecret)
+}
+
+// promptUserForSecret can be used for any kind of secret like image pull
+// secret or for password.
+func promptUserForSecret(message string, help string) (string, error) {
+	if !terminal.IsTerminal(int(os.Stdin.Fd())) {
+		return "", errors.New("cannot ask for secret, crc not launched by a terminal")
+	}
+
+	var secret string
+	prompt := &survey.Password{
+		Message: message,
+		Help:    help,
+	}
+	if err := survey.AskOne(prompt, &secret, nil); err != nil {
+		return "", err
+	}
+	return secret, nil
 }
