@@ -1,8 +1,12 @@
 package cluster
 
 import (
+	"bytes"
+	"compress/gzip"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"strings"
 
@@ -13,7 +17,13 @@ import (
 	"github.com/code-ready/crc/pkg/crc/validation"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
 	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/zalando/go-keyring"
 	"gopkg.in/AlecAivazis/survey.v1"
+)
+
+const (
+	keyringService = "crc"
+	keyringUser    = "compressed-pull-secret"
 )
 
 type PullSecretLoader interface {
@@ -40,7 +50,15 @@ func (loader *interactivePullSecretLoader) Value() (string, error) {
 		return fromNonInteractive, nil
 	}
 
-	return promptUserForSecret()
+	pullSecret, err := promptUserForSecret()
+	if err != nil {
+		return "", err
+	}
+
+	if err := storeInKeyring(pullSecret); err != nil {
+		logging.Warnf("Cannot add pull secret to keyring: %v", err)
+	}
+	return pullSecret, nil
 }
 
 type nonInteractivePullSecretLoader struct {
@@ -66,16 +84,67 @@ func (loader *nonInteractivePullSecretLoader) Value() (string, error) {
 	if loader.path != "" {
 		fromPath, err := loadFile(loader.path)
 		if err == nil {
+			logging.Debugf("Using secret from path %q", loader.path)
 			return fromPath, nil
 		}
 		logging.Debugf("Cannot load secret from path %q: %v", loader.path, err)
 	}
 	fromConfig, err := loadFile(loader.config.Get(cmdConfig.PullSecretFile).AsString())
 	if err == nil {
+		logging.Debugf("Using secret from configuration")
 		return fromConfig, nil
 	}
 	logging.Debugf("Cannot load secret from configuration: %v", err)
+
+	fromKeyring, err := loadFromKeyring()
+	if err == nil {
+		logging.Debugf("Using secret from keyring")
+		return fromKeyring, nil
+	}
+	logging.Debugf("Cannot load secret from keyring: %v", err)
+
 	return "", fmt.Errorf("unable to load pull secret from path %q or from configuration", loader.path)
+}
+
+func loadFromKeyring() (string, error) {
+	pullsecret, err := keyring.Get(keyringService, keyringUser)
+	if err != nil {
+		return "", err
+	}
+	decoded, err := base64.StdEncoding.DecodeString(pullsecret)
+	if err != nil {
+		return "", err
+	}
+	decompressor, err := gzip.NewReader(bytes.NewReader(decoded))
+	if err != nil {
+		return "", err
+	}
+	var b bytes.Buffer
+	// #nosec G110
+	if _, err := io.Copy(&b, decompressor); err != nil {
+		return "", err
+	}
+	if err := decompressor.Close(); err != nil {
+		return "", err
+	}
+	return b.String(), validation.ImagePullSecret(b.String())
+}
+
+func storeInKeyring(pullSecret string) error {
+	var b bytes.Buffer
+	compressor := gzip.NewWriter(&b)
+	if _, err := compressor.Write([]byte(pullSecret)); err != nil {
+		return err
+	}
+	if err := compressor.Close(); err != nil {
+		return err
+	}
+	return keyring.Set(keyringService, keyringUser, base64.StdEncoding.EncodeToString(b.Bytes()))
+}
+
+func ForgetPullSecret() error {
+	_ = keyring.Delete(keyringService, keyringUser)
+	return nil
 }
 
 func loadFile(path string) (string, error) {

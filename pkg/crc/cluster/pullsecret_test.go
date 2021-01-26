@@ -9,14 +9,18 @@ import (
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/zalando/go-keyring"
 )
 
 const (
 	secret1 = `{"auths":{"quay.io":{"auth":"secret1"}}}` // #nosec G101
 	secret2 = `{"auths":{"quay.io":{"auth":"secret2"}}}` // #nosec G101
+	secret3 = `{"auths":{"quay.io":{"auth":"secret3"}}}` // #nosec G101
 )
 
 func TestLoadPullSecret(t *testing.T) {
+	keyring.MockInit()
+
 	dir, err := ioutil.TempDir("", "pull-secret")
 	assert.NoError(t, err)
 	defer os.RemoveAll(dir)
@@ -32,11 +36,17 @@ func TestLoadPullSecret(t *testing.T) {
 	_, err = loader.Value()
 	assert.Error(t, err)
 
+	assert.NoError(t, storeInKeyring(secret3))
+
+	val, err := loader.Value()
+	assert.NoError(t, err)
+	assert.Equal(t, secret3, val)
+
 	assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, "file2"), []byte(secret2), 0600))
 	_, err = cfg.Set(cmdConfig.PullSecretFile, filepath.Join(dir, "file2"))
 	assert.NoError(t, err)
 
-	val, err := loader.Value()
+	val, err = loader.Value()
 	assert.NoError(t, err)
 	assert.Equal(t, secret2, val)
 

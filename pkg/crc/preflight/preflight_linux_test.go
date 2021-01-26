@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/code-ready/crc/pkg/crc/adminhelper"
-
+	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/network"
 	crcos "github.com/code-ready/crc/pkg/os/linux"
@@ -69,6 +69,7 @@ var checkListForDistros = []checkListForDistro{
 			{configKeySuffix: "check-ram"},
 			{cleanup: removeCRCMachinesDir},
 			{cleanup: removeOldLogs},
+			{cleanup: cluster.ForgetPullSecret},
 			{check: checkVirtualizationEnabled},
 			{check: checkKvmEnabled},
 			{check: checkLibvirtInstalled},
@@ -99,6 +100,7 @@ var checkListForDistros = []checkListForDistro{
 			{configKeySuffix: "check-ram"},
 			{cleanup: removeCRCMachinesDir},
 			{cleanup: removeOldLogs},
+			{cleanup: cluster.ForgetPullSecret},
 			{check: checkVirtualizationEnabled},
 			{check: checkKvmEnabled},
 			{check: checkLibvirtInstalled},
@@ -122,6 +124,7 @@ var checkListForDistros = []checkListForDistro{
 			{configKeySuffix: "check-ram"},
 			{cleanup: removeCRCMachinesDir},
 			{cleanup: removeOldLogs},
+			{cleanup: cluster.ForgetPullSecret},
 			{check: checkVirtualizationEnabled},
 			{check: checkKvmEnabled},
 			{check: checkLibvirtInstalled},
@@ -151,6 +154,7 @@ var checkListForDistros = []checkListForDistro{
 			{configKeySuffix: "check-ram"},
 			{cleanup: removeCRCMachinesDir},
 			{cleanup: removeOldLogs},
+			{cleanup: cluster.ForgetPullSecret},
 			{check: checkVirtualizationEnabled},
 			{check: checkKvmEnabled},
 			{check: checkLibvirtInstalled},
@@ -174,6 +178,7 @@ var checkListForDistros = []checkListForDistro{
 			{configKeySuffix: "check-ram"},
 			{cleanup: removeCRCMachinesDir},
 			{cleanup: removeOldLogs},
+			{cleanup: cluster.ForgetPullSecret},
 			{check: checkVirtualizationEnabled},
 			{check: checkKvmEnabled},
 			{check: checkLibvirtInstalled},
@@ -203,6 +208,7 @@ var checkListForDistros = []checkListForDistro{
 			{configKeySuffix: "check-ram"},
 			{cleanup: removeCRCMachinesDir},
 			{cleanup: removeOldLogs},
+			{cleanup: cluster.ForgetPullSecret},
 			{check: checkVirtualizationEnabled},
 			{check: checkKvmEnabled},
 			{check: checkLibvirtInstalled},
@@ -226,6 +232,7 @@ var checkListForDistros = []checkListForDistro{
 			{configKeySuffix: "check-ram"},
 			{cleanup: removeCRCMachinesDir},
 			{cleanup: removeOldLogs},
+			{cleanup: cluster.ForgetPullSecret},
 			{check: checkVirtualizationEnabled},
 			{check: checkKvmEnabled},
 			{check: checkLibvirtInstalled},
@@ -257,6 +264,7 @@ var checkListForDistros = []checkListForDistro{
 			{configKeySuffix: "check-ram"},
 			{cleanup: removeCRCMachinesDir},
 			{cleanup: removeOldLogs},
+			{cleanup: cluster.ForgetPullSecret},
 			{check: checkVirtualizationEnabled},
 			{check: checkKvmEnabled},
 			{check: checkLibvirtInstalled},
