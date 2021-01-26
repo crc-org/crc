@@ -41,16 +41,7 @@ func (loader *interactivePullSecretLoader) Value() (string, error) {
 		return fromNonInteractive, nil
 	}
 
-	fromUser, err := promptUserForSecret("Image pull secret", fmt.Sprintf("Copy it from %s", constants.CrcLandingPageURL))
-	// This is just to provide a new line after user enter the pull secret.
-	fmt.Println()
-	if err != nil {
-		return "", err
-	}
-	if err := validation.ImagePullSecret(fromUser); err != nil {
-		return "", err
-	}
-	return fromUser, nil
+	return promptUserForSecret("Image pull secret", fmt.Sprintf("Copy it from %s", constants.CrcLandingPageURL))
 }
 
 type nonInteractivePullSecretLoader struct {
@@ -112,7 +103,9 @@ func promptUserForSecret(message string, help string) (string, error) {
 		Message: message,
 		Help:    help,
 	}
-	if err := survey.AskOne(prompt, &secret, nil); err != nil {
+	if err := survey.AskOne(prompt, &secret, func(ans interface{}) error {
+		return validation.ImagePullSecret(ans.(string))
+	}); err != nil {
 		return "", err
 	}
 	return secret, nil
