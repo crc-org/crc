@@ -41,7 +41,7 @@ func (loader *interactivePullSecretLoader) Value() (string, error) {
 		return fromNonInteractive, nil
 	}
 
-	return promptUserForSecret("Image pull secret", fmt.Sprintf("Copy it from %s", constants.CrcLandingPageURL))
+	return promptUserForSecret()
 }
 
 type nonInteractivePullSecretLoader struct {
@@ -91,17 +91,21 @@ func loadFile(path string) (string, error) {
 	return pullsecret, validation.ImagePullSecret(pullsecret)
 }
 
+const helpMessage = `CodeReady Containers requires a pull secret to download content from Red Hat.
+You can copy it from the Pull Secret section of %s.
+`
+
 // promptUserForSecret can be used for any kind of secret like image pull
 // secret or for password.
-func promptUserForSecret(message string, help string) (string, error) {
+func promptUserForSecret() (string, error) {
 	if !terminal.IsTerminal(int(os.Stdin.Fd())) {
 		return "", errors.New("cannot ask for secret, crc not launched by a terminal")
 	}
 
+	fmt.Printf(helpMessage, constants.CrcLandingPageURL)
 	var secret string
 	prompt := &survey.Password{
-		Message: message,
-		Help:    help,
+		Message: "Please enter the pull secret",
 	}
 	if err := survey.AskOne(prompt, &secret, func(ans interface{}) error {
 		return validation.ImagePullSecret(ans.(string))
