@@ -236,7 +236,7 @@ func AddProxyToKubeletAndCriO(sshRunner *ssh.Runner, proxy *network.ProxyConfig)
 	proxyTemplate := `[Service]
 Environment=HTTP_PROXY=%s
 Environment=HTTPS_PROXY=%s
-Environment=NO_PROXY=.cluster.local,.svc,10.116.0.0/14,172.25.0.0/16,192.168.126.0/24,%s`
+Environment=NO_PROXY=.cluster.local,.svc,10.217.0.0/22,10.217.4.0/23,192.168.126.0/24,%s`
 	p := fmt.Sprintf(proxyTemplate, proxy.HTTPProxy, proxy.HTTPSProxy, proxy.GetNoProxyString())
 	// This will create a systemd drop-in configuration for proxy (both for kubelet and crio services) on the VM.
 	err := sshRunner.CopyData([]byte(p), "/etc/systemd/system/crio.service.d/10-default-env.conf", 0644)
