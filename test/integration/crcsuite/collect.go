@@ -221,7 +221,7 @@ func (collector *ContainerLogCollector) Collect(w Writer) error {
 			logging.Errorf("error while inspecting %s: %v", id, err)
 			continue
 		}
-		logs, _, err := ssh.Run(fmt.Sprintf("sudo %s logs --tail 200 %s", collector.Process, id))
+		logs, _, err := ssh.Run(fmt.Sprintf("sudo %s logs --tail 200 %s 2>&1", collector.Process, id))
 		if err != nil {
 			logging.Errorf("error while getting logs %s: %v", id, err)
 			continue
