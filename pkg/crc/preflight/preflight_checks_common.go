@@ -10,7 +10,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/validation"
-	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/embed"
 	"github.com/docker/go-units"
 	"github.com/pkg/errors"
@@ -61,7 +60,7 @@ var genericPreflightChecks = [...]Check{
 }
 
 func checkBundleExtracted() error {
-	if !version.IsRelease() {
+	if !constants.IsRelease() {
 		return nil
 	}
 	if _, err := os.Stat(constants.DefaultBundlePath); os.IsNotExist(err) {
@@ -77,7 +76,7 @@ func fixBundleExtracted() error {
 	if err := os.Chmod(constants.MachineCacheDir, 0775); err != nil {
 		logging.Debugf("Error changing %s permissions to 0775", constants.MachineCacheDir)
 	}
-	if version.IsRelease() {
+	if constants.IsRelease() {
 		bundleDir := filepath.Dir(constants.DefaultBundlePath)
 		if err := os.MkdirAll(bundleDir, 0775); err != nil {
 			return fmt.Errorf("Cannot create directory %s: %v", bundleDir, err)

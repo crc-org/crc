@@ -139,7 +139,7 @@ func EnsureBaseDirectoriesExist() error {
 	return os.MkdirAll(CrcBaseDir, 0750)
 }
 
-// IsBundleEmbedded returns true if the executable was compiled to contain the bundle
+// BundleEmbedded returns true if the executable was compiled to contain the bundle
 func BundleEmbedded() bool {
 	executablePath, err := os.Executable()
 	if err != nil {
@@ -150,6 +150,10 @@ func BundleEmbedded() bool {
 		return false
 	}
 	return contains(extractor.AvalibleData(), GetDefaultBundle())
+}
+
+func IsRelease() bool {
+	return BundleEmbedded() || version.IsMacosInstallPathSet()
 }
 
 func contains(arr []string, str string) bool {
