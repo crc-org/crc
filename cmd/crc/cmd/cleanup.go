@@ -1,11 +1,11 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
 
+	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/spf13/cobra"
 )
@@ -28,18 +28,18 @@ func runCleanup() error {
 	err := preflight.CleanUpHost()
 	return render(&cleanupResult{
 		Success: err == nil,
-		Error:   errorMessage(err),
+		Error:   crcErrors.ToSerializableError(err),
 	}, os.Stdout, outputFormat)
 }
 
 type cleanupResult struct {
-	Success bool   `json:"success"`
-	Error   string `json:"error,omitempty"`
+	Success bool                         `json:"success"`
+	Error   *crcErrors.SerializableError `json:"error,omitempty"`
 }
 
 func (s *cleanupResult) prettyPrintTo(writer io.Writer) error {
-	if s.Error != "" {
-		return errors.New(s.Error)
+	if s.Error != nil {
+		return s.Error
 	}
 	_, err := fmt.Fprintln(writer, "Cleanup finished")
 	return err

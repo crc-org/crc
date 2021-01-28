@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -39,9 +41,10 @@ The console will open in your default browser.
 
 func TestRenderActionPlainFailure(t *testing.T) {
 	out := new(bytes.Buffer)
+	err := errors.New("broken")
 	assert.EqualError(t, render(&startResult{
 		Success: false,
-		Error:   "broken",
+		Error:   crcErrors.ToSerializableError(err),
 	}, out, ""), "broken")
 	assert.Equal(t, "", out.String())
 }
@@ -86,7 +89,7 @@ func TestRenderActionJSONFailure(t *testing.T) {
 	out := new(bytes.Buffer)
 	assert.NoError(t, render(&startResult{
 		Success: false,
-		Error:   "broken",
+		Error:   crcErrors.ToSerializableError(errors.New("broken")),
 	}, out, jsonFormat))
 	assert.JSONEq(t, `{"success": false, "error": "broken"}`, out.String())
 }

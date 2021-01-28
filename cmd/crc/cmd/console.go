@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/machine/libmachine/state"
 	"github.com/pkg/browser"
@@ -51,7 +52,7 @@ func runConsole(writer io.Writer, client machine.Client, consolePrintURL, consol
 		Success:                 err == nil,
 		state:                   toState(result),
 		ClusterConfig:           toConsoleClusterConfig(result),
-		Error:                   errorMessage(err),
+		Error:                   crcErrors.ToSerializableError(err),
 		consolePrintURL:         consolePrintURL,
 		consolePrintCredentials: consolePrintCredentials,
 	}, writer, outputFormat)
@@ -60,15 +61,15 @@ func runConsole(writer io.Writer, client machine.Client, consolePrintURL, consol
 type consoleResult struct {
 	Success                 bool `json:"success"`
 	state                   state.State
-	Error                   string         `json:"error,omitempty"`
-	ClusterConfig           *clusterConfig `json:"clusterConfig,omitempty"`
+	Error                   *crcErrors.SerializableError `json:"error,omitempty"`
+	ClusterConfig           *clusterConfig               `json:"clusterConfig,omitempty"`
 	consolePrintURL         bool
 	consolePrintCredentials bool
 }
 
 func (s *consoleResult) prettyPrintTo(writer io.Writer) error {
-	if s.Error != "" {
-		return errors.New(s.Error)
+	if s.Error != nil {
+		return s.Error
 	}
 	if s.consolePrintURL {
 		if _, err := fmt.Fprintln(writer, s.ClusterConfig.WebConsoleURL); err != nil {

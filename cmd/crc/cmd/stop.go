@@ -1,11 +1,11 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
 
+	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/machine/libmachine/state"
@@ -59,19 +59,19 @@ func runStop(writer io.Writer, client machine.Client, interactive, force bool, o
 	return render(&stopResult{
 		Success: err == nil,
 		Forced:  forced,
-		Error:   errorMessage(err),
+		Error:   crcErrors.ToSerializableError(err),
 	}, writer, outputFormat)
 }
 
 type stopResult struct {
-	Success bool   `json:"success"`
-	Forced  bool   `json:"forced"`
-	Error   string `json:"error,omitempty"`
+	Success bool                         `json:"success"`
+	Forced  bool                         `json:"forced"`
+	Error   *crcErrors.SerializableError `json:"error,omitempty"`
 }
 
 func (s *stopResult) prettyPrintTo(writer io.Writer) error {
-	if s.Error != "" {
-		return errors.New(s.Error)
+	if s.Error != nil {
+		return s.Error
 	}
 	if s.Forced {
 		_, err := fmt.Fprintln(writer, "Forcibly stopped the OpenShift cluster")
