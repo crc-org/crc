@@ -11,6 +11,7 @@ import (
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -81,7 +82,7 @@ func runStart(arguments []string) (*machine.StartResult, error) {
 func renderStartResult(result *machine.StartResult, err error) error {
 	return render(&startResult{
 		Success:       err == nil,
-		Error:         errorMessage(err),
+		Error:         crcErrors.ToSerializableError(err),
 		ClusterConfig: toClusterConfig(result),
 	}, os.Stdout, outputFormat)
 }
@@ -126,14 +127,14 @@ type credentials struct {
 }
 
 type startResult struct {
-	Success       bool           `json:"success"`
-	Error         string         `json:"error,omitempty"`
-	ClusterConfig *clusterConfig `json:"clusterConfig,omitempty"`
+	Success       bool                         `json:"success"`
+	Error         *crcErrors.SerializableError `json:"error,omitempty"`
+	ClusterConfig *clusterConfig               `json:"clusterConfig,omitempty"`
 }
 
 func (s *startResult) prettyPrintTo(writer io.Writer) error {
-	if s.Error != "" {
-		return errors.New(s.Error)
+	if s.Error != nil {
+		return s.Error
 	}
 	if s.ClusterConfig == nil {
 		return errors.New("either Error or ClusterConfig are needed")

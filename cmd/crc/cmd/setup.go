@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
+	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	pkgversion "github.com/code-ready/crc/pkg/crc/version"
@@ -50,18 +50,18 @@ func runSetup(arguments []string) error {
 	err := preflight.SetupHost(config)
 	return render(&setupResult{
 		Success: err == nil,
-		Error:   errorMessage(err),
+		Error:   crcErrors.ToSerializableError(err),
 	}, os.Stdout, outputFormat)
 }
 
 type setupResult struct {
-	Success bool   `json:"success"`
-	Error   string `json:"error,omitempty"`
+	Success bool                         `json:"success"`
+	Error   *crcErrors.SerializableError `json:"error,omitempty"`
 }
 
 func (s *setupResult) prettyPrintTo(writer io.Writer) error {
-	if s.Error != "" {
-		return errors.New(s.Error)
+	if s.Error != nil {
+		return s.Error
 	}
 	_, err := fmt.Fprintf(writer, "Setup is complete, you can now run 'crc start%s' to start the OpenShift cluster\n", extraArguments())
 	return err

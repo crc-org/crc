@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/spf13/cobra"
@@ -58,24 +59,25 @@ func runDelete(writer io.Writer, client machine.Client, clearCache bool, cacheDi
 	machineDeleted, err := deleteMachine(client, clearCache, cacheDir, interactive, force)
 	return render(&deleteResult{
 		Success:        err == nil,
-		Error:          errorMessage(err),
+		Error:          crcErrors.ToSerializableError(err),
 		machineDeleted: machineDeleted,
 	}, writer, outputFormat)
 }
 
 type deleteResult struct {
-	Success        bool   `json:"success"`
-	Error          string `json:"error,omitempty"`
+	Success        bool                         `json:"success"`
+	Error          *crcErrors.SerializableError `json:"error,omitempty"`
 	machineDeleted bool
 }
 
 func (s *deleteResult) prettyPrintTo(writer io.Writer) error {
-	if s.Error != "" {
-		return errors.New(s.Error)
+	if s.Error != nil {
+		return s.Error
 	}
-	var err error
 	if s.machineDeleted {
-		_, err = fmt.Fprintln(writer, "Deleted the OpenShift cluster")
+		if _, err := fmt.Fprintln(writer, "Deleted the OpenShift cluster"); err != nil {
+			return err
+		}
 	}
-	return err
+	return nil
 }
