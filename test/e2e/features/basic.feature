@@ -33,7 +33,7 @@ Feature: Basic test
         When executing "crc status" fails
         Then stderr should contain
             """
-            Machine 'crc' does not exist. Use 'crc start' to create it
+            Machine does not exist. Use 'crc start' to create it
             """
 
     @linux
