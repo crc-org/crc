@@ -1,6 +1,7 @@
 package bundle
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -78,9 +79,10 @@ func TestExtract(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "4.6.1", bundle.ClusterInfo.OpenShiftVersion)
 
-	assert.NoError(t, bundle.Verify())
 	_ = os.Remove(bundle.GetKubeConfigPath())
-	assert.EqualError(t, bundle.Verify(), "kubeconfig not found in bundle")
+	bundle, err = repo.Get(testBundle(t))
+	assert.Nil(t, bundle)
+	assert.EqualError(t, err, "kubeconfig not found in bundle")
 }
 
 func testBundle(t *testing.T) string {
@@ -108,17 +110,27 @@ func TestVersionCheck(t *testing.T) {
 
 	assert.NoError(t, os.Mkdir(filepath.Join(dir, "crc_libvirt_4.6.1"), 0755))
 
-	writeMetadata(t, filepath.Join(dir, "crc_libvirt_4.6.1"), `{"version":"0.9"}`)
+	addVersionedBundle(t, filepath.Join(dir, "crc_libvirt_4.6.1"), "0.9")
 	_, err = repo.Get("crc_libvirt_4.6.1.crcbundle")
 	assert.EqualError(t, err, "cannot use bundle with version 0.9, bundle version must satisfy ^1.0 constraint")
 
-	writeMetadata(t, filepath.Join(dir, "crc_libvirt_4.6.1"), `{"version":"1.1"}`)
+	addVersionedBundle(t, filepath.Join(dir, "crc_libvirt_4.6.1"), "1.1")
 	_, err = repo.Get("crc_libvirt_4.6.1.crcbundle")
 	assert.NoError(t, err)
 
-	writeMetadata(t, filepath.Join(dir, "crc_libvirt_4.6.1"), `{"version":"2.0"}`)
+	addVersionedBundle(t, filepath.Join(dir, "crc_libvirt_4.6.1"), "2.0")
 	_, err = repo.Get("crc_libvirt_4.6.1.crcbundle")
 	assert.EqualError(t, err, "cannot use bundle with version 2.0, bundle version must satisfy ^1.0 constraint")
+}
+
+func addVersionedBundle(t *testing.T, dir string, version string) {
+	oldVersion := parsedReference.Version
+	parsedReference.Version = version
+	metadataStr, err := json.Marshal(parsedReference)
+	assert.NoError(t, err)
+	parsedReference.Version = oldVersion
+	writeMetadata(t, dir, string(metadataStr))
+	createDummyBundleContent(t, dir)
 }
 
 func writeMetadata(t *testing.T, dir string, s string) bool {
@@ -126,7 +138,15 @@ func writeMetadata(t *testing.T, dir string, s string) bool {
 }
 
 func addBundle(t *testing.T, dir, name string) {
-	assert.NoError(t, os.Mkdir(filepath.Join(dir, name), 0755))
-	writeMetadata(t, filepath.Join(dir, name), reference)
-	assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, name, constants.OcExecutableName), []byte("openshift-client"), 0600))
+	bundlePath := filepath.Join(dir, name)
+	assert.NoError(t, os.Mkdir(bundlePath, 0755))
+	writeMetadata(t, bundlePath, reference)
+	createDummyBundleContent(t, bundlePath)
+}
+func createDummyBundleContent(t *testing.T, bundlePath string) {
+	assert.NoError(t, ioutil.WriteFile(filepath.Join(bundlePath, constants.OcExecutableName), []byte("openshift-client"), 0600))
+	assert.NoError(t, ioutil.WriteFile(filepath.Join(bundlePath, "kubeadmin-password"), []byte("kubeadmin-password"), 0600))
+	assert.NoError(t, ioutil.WriteFile(filepath.Join(bundlePath, "kubeconfig"), []byte("kubeconfig"), 0600))
+	assert.NoError(t, ioutil.WriteFile(filepath.Join(bundlePath, "id_ecdsa_crc"), []byte("id_ecdsa_crc"), 0600))
+	assert.NoError(t, ioutil.WriteFile(filepath.Join(bundlePath, "crc.qcow2"), []byte("crc.qcow2"), 0600))
 }

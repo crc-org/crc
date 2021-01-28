@@ -124,11 +124,6 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 			return nil, errors.Wrap(err, "Error getting bundle metadata")
 		}
 
-		logging.Infof("Verifying bundle %s ...", filepath.Base(startConfig.BundlePath))
-		if err := crcBundleMetadata.Verify(); err != nil {
-			return nil, errors.Wrapf(err, "Invalid bundle %s", filepath.Base(startConfig.BundlePath))
-		}
-
 		logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
 
 		// Retrieve metadata info
