@@ -13,6 +13,7 @@ import (
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	crcErr "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/network"
@@ -102,7 +103,7 @@ func checkIfMachineMissing(client machine.Client) error {
 		return err
 	}
 	if !exists {
-		return fmt.Errorf("Machine '%s' does not exist. Use 'crc start' to create it", client.GetName())
+		return crcErr.VMNotExist
 	}
 	return nil
 }

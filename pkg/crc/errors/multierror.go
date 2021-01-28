@@ -8,6 +8,14 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
+type vmNotExist string
+
+func (v vmNotExist) Error() string {
+	return string(v)
+}
+
+const VMNotExist vmNotExist = "Machine does not exist. Use 'crc start' to create it"
+
 type MultiError struct {
 	Errors []error
 }
