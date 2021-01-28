@@ -118,7 +118,7 @@ func (bundle *CrcBundleInfo) GetOpenshiftVersion() string {
 	return bundle.ClusterInfo.OpenShiftVersion
 }
 
-func (bundle *CrcBundleInfo) Verify() error {
+func (bundle *CrcBundleInfo) verify() error {
 	files := []string{
 		bundle.resolvePath(constants.OcExecutableName),
 		bundle.resolvePath(bundle.ClusterInfo.KubeadminPasswordFile),
