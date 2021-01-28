@@ -13,6 +13,7 @@ import (
 	"github.com/cheggaaa/pb/v3"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/h2non/filetype"
+	"github.com/klauspost/compress/zstd"
 	"github.com/pkg/errors"
 	"github.com/xi2/xz"
 	terminal "golang.org/x/term"
@@ -56,6 +57,12 @@ func uncompress(tarball, targetDir string, fileFilter func(string) bool, showPro
 	switch {
 	case filetype.Is(header, "xz"):
 		reader, err := xz.NewReader(file, 0)
+		if err != nil {
+			return nil, err
+		}
+		return untar(reader, targetDir, fileFilter, showProgress)
+	case filetype.Is(header, "zst"):
+		reader, err := zstd.NewReader(file)
 		if err != nil {
 			return nil, err
 		}

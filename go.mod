@@ -22,6 +22,7 @@ require (
 	github.com/h2non/filetype v1.1.2-0.20210202002709-95e28344e08c
 	github.com/hectane/go-acl v0.0.0-20190604041725-da78bae5fc95
 	github.com/imdario/mergo v0.3.11 // indirect
+	github.com/klauspost/compress v1.11.7
 	github.com/libvirt/libvirt-go-xml v6.10.0+incompatible
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mattn/go-colorable v0.1.8
