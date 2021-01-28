@@ -8,11 +8,9 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/docker/go-units"
 	"github.com/pbnjay/memory"
 )
@@ -58,7 +56,7 @@ func ValidateEnoughMemory(value int) error {
 	return nil
 }
 
-// ValidateBundle checks if provided bundle path exist
+// ValidateBundle checks if the provided bundle path exist
 func ValidateBundle(bundle string) error {
 	if err := ValidatePath(bundle); err != nil {
 		if constants.BundleEmbedded() {
@@ -66,15 +64,14 @@ func ValidateBundle(bundle string) error {
 		}
 		return fmt.Errorf("%s not found, please provide the path to a valid bundle using the -b option", bundle)
 	}
-	// Check if the version of the bundle provided by user is same as what is released with crc.
-	releaseBundleVersion := version.GetBundleVersion()
-	userProvidedBundleVersion := filepath.Base(bundle)
-	if !strings.Contains(userProvidedBundleVersion, fmt.Sprintf("%s.crcbundle", releaseBundleVersion)) {
+
+	userProvidedBundle := filepath.Base(bundle)
+	if userProvidedBundle != constants.GetDefaultBundle() {
 		if !constants.IsRelease() {
-			logging.Warnf("Using unsupported bundle %s", userProvidedBundleVersion)
+			logging.Warnf("Using unsupported bundle %s", userProvidedBundle)
 			return nil
 		}
-		return fmt.Errorf("%s is not supported by this crc executable, please use %s", userProvidedBundleVersion, constants.GetDefaultBundle())
+		return fmt.Errorf("%s is not supported by this crc executable, please use %s", userProvidedBundle, constants.GetDefaultBundle())
 	}
 	return nil
 }
