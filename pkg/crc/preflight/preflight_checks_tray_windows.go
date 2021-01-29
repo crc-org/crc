@@ -100,8 +100,9 @@ func fixTrayInstalled() error {
 }
 
 func removeTray() error {
+	trayShortcutPath := filepath.Join(constants.StartupFolder, constants.TrayShortcutName)
 	_ = stopTray()
-	return goos.Remove(filepath.Join(constants.StartupFolder, constants.TrayShortcutName))
+	return os.RemoveFileIfExists(trayShortcutPath)
 }
 
 func stopTray() error {
@@ -116,10 +117,10 @@ func stopTray() error {
 func removeDaemon() error {
 	_ = stopDaemon()
 	var mErr errors.MultiError
-	if err := goos.Remove(constants.DaemonBatchFilePath); err != nil {
+	if err := os.RemoveFileIfExists(constants.DaemonBatchFilePath); err != nil {
 		mErr.Collect(err)
 	}
-	if err := goos.Remove(constants.DaemonPSScriptPath); err != nil {
+	if err := os.RemoveFileIfExists(constants.DaemonPSScriptPath); err != nil {
 		mErr.Collect(err)
 	}
 	if len(mErr.Errors) == 0 {
