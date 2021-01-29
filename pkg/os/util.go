@@ -102,3 +102,10 @@ func FileExists(path string) bool {
 	}
 	return !info.IsDir()
 }
+
+func RemoveFileIfExists(path string) error {
+	if FileExists(path) {
+		return os.Remove(path)
+	}
+	return nil
+}
