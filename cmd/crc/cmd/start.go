@@ -106,13 +106,6 @@ func toClusterConfig(result *machine.StartResult) *clusterConfig {
 	}
 }
 
-func errorMessage(err error) string {
-	if err != nil {
-		return err.Error()
-	}
-	return ""
-}
-
 type clusterConfig struct {
 	ClusterCACert        string      `json:"cacert"`
 	WebConsoleURL        string      `json:"webConsoleUrl"`
