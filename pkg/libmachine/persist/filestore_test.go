@@ -2,7 +2,6 @@ package persist
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -12,22 +11,25 @@ import (
 	"github.com/code-ready/crc/pkg/drivers/none"
 	"github.com/code-ready/crc/pkg/libmachine/host"
 	"github.com/code-ready/crc/pkg/libmachine/version"
+	"github.com/stretchr/testify/assert"
 )
 
-func getTestStore() Filestore {
+func getTestStore() (Filestore, func(), error) {
 	tmpDir, err := ioutil.TempDir("", "machine-test-")
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return Filestore{}, nil, err
 	}
-
 	return Filestore{
-		MachinesDir: tmpDir,
-	}
+			MachinesDir: tmpDir,
+		}, func() {
+			_ = os.RemoveAll(tmpDir)
+		}, nil
 }
 
 func TestStoreSave(t *testing.T) {
-	store := getTestStore()
+	store, cleanup, err := getTestStore()
+	assert.NoError(t, err)
+	defer cleanup()
 
 	h := testHost()
 
@@ -50,7 +52,9 @@ func TestStoreSave(t *testing.T) {
 }
 
 func TestStoreSaveOmitRawDriver(t *testing.T) {
-	store := getTestStore()
+	store, cleanup, err := getTestStore()
+	assert.NoError(t, err)
+	defer cleanup()
 
 	h := testHost()
 
@@ -83,7 +87,9 @@ func TestStoreSaveOmitRawDriver(t *testing.T) {
 }
 
 func TestStoreRemove(t *testing.T) {
-	store := getTestStore()
+	store, cleanup, err := getTestStore()
+	assert.NoError(t, err)
+	defer cleanup()
 
 	h := testHost()
 
@@ -96,7 +102,7 @@ func TestStoreRemove(t *testing.T) {
 		t.Fatalf("Host path doesn't exist: %s", path)
 	}
 
-	err := store.Remove(h.Name)
+	err = store.Remove(h.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +113,9 @@ func TestStoreRemove(t *testing.T) {
 }
 
 func TestStoreExists(t *testing.T) {
-	store := getTestStore()
+	store, cleanup, err := getTestStore()
+	assert.NoError(t, err)
+	defer cleanup()
 
 	h := testHost()
 
@@ -151,7 +159,9 @@ func TestStoreExists(t *testing.T) {
 }
 
 func TestStoreLoad(t *testing.T) {
-	store := getTestStore()
+	store, cleanup, err := getTestStore()
+	assert.NoError(t, err)
+	defer cleanup()
 
 	h := testHost()
 
@@ -159,7 +169,7 @@ func TestStoreLoad(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h, err := store.Load(h.Name)
+	h, err = store.Load(h.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
