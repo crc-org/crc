@@ -97,7 +97,7 @@ func GetConfigCmd(config *config.Config) *cobra.Command {
 		Use:   "config SUBCOMMAND [flags]",
 		Short: "Modify crc configuration",
 		Long: `Modifies crc configuration properties.
-Configurable properties (enter as SUBCOMMAND): ` + "\n\n" + configurableFields(config),
+Properties: ` + "\n\n" + configurableFields(config),
 		Run: func(cmd *cobra.Command, args []string) {
 			_ = cmd.Help()
 		},
