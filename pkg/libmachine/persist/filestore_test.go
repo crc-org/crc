@@ -11,7 +11,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/drivers/none"
 	"github.com/code-ready/crc/pkg/libmachine/host"
-	"github.com/code-ready/crc/pkg/libmachine/hosttest"
+	"github.com/code-ready/crc/pkg/libmachine/version"
 )
 
 func cleanup() {
@@ -35,10 +35,7 @@ func TestStoreSave(t *testing.T) {
 
 	store := getTestStore()
 
-	h, err := hosttest.GetDefaultTestHost()
-	if err != nil {
-		t.Fatal(err)
-	}
+	h := testHost()
 
 	if err := store.Save(h); err != nil {
 		t.Fatal(err)
@@ -63,10 +60,7 @@ func TestStoreSaveOmitRawDriver(t *testing.T) {
 
 	store := getTestStore()
 
-	h, err := hosttest.GetDefaultTestHost()
-	if err != nil {
-		t.Fatal(err)
-	}
+	h := testHost()
 
 	if err := store.Save(h); err != nil {
 		t.Fatal(err)
@@ -101,10 +95,7 @@ func TestStoreRemove(t *testing.T) {
 
 	store := getTestStore()
 
-	h, err := hosttest.GetDefaultTestHost()
-	if err != nil {
-		t.Fatal(err)
-	}
+	h := testHost()
 
 	if err := store.Save(h); err != nil {
 		t.Fatal(err)
@@ -115,7 +106,7 @@ func TestStoreRemove(t *testing.T) {
 		t.Fatalf("Host path doesn't exist: %s", path)
 	}
 
-	err = store.Remove(h.Name)
+	err := store.Remove(h.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,10 +120,7 @@ func TestStoreExists(t *testing.T) {
 	defer cleanup()
 	store := getTestStore()
 
-	h, err := hosttest.GetDefaultTestHost()
-	if err != nil {
-		t.Fatal(err)
-	}
+	h := testHost()
 
 	exists, err := store.Exists(h.Name)
 	if err != nil {
@@ -178,16 +166,13 @@ func TestStoreLoad(t *testing.T) {
 
 	store := getTestStore()
 
-	h, err := hosttest.GetDefaultTestHost()
-	if err != nil {
-		t.Fatal(err)
-	}
+	h := testHost()
 
 	if err := store.Save(h); err != nil {
 		t.Fatal(err)
 	}
 
-	h, err = store.Load(h.Name)
+	h, err := store.Load(h.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -201,5 +186,14 @@ func TestStoreLoad(t *testing.T) {
 
 	if err := json.Unmarshal(rawDataDriver.Data, &realDriver); err != nil {
 		t.Fatalf("Error unmarshaling rawDataDriver data into concrete 'none' driver: %s", err)
+	}
+}
+
+func testHost() *host.Host {
+	return &host.Host{
+		ConfigVersion: version.ConfigVersion,
+		Name:          "test-host",
+		Driver:        none.NewDriver("test-host", "/tmp/artifacts"),
+		DriverName:    "none",
 	}
 }
