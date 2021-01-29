@@ -9,17 +9,17 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
-func CreateAPIServer(socketPath string, config newConfigFunc, machine newMachineFunc) (CrcAPIServer, error) {
+func CreateServer(socketPath string, config newConfigFunc, machine newMachineFunc) (Server, error) {
 	listener, err := net.Listen("unix", socketPath)
 	if err != nil {
 		logging.Error("Failed to create socket: ", err.Error())
-		return CrcAPIServer{}, err
+		return Server{}, err
 	}
-	return createAPIServerWithListener(listener, config, machine)
+	return createServerWithListener(listener, config, machine)
 }
 
-func createAPIServerWithListener(listener net.Listener, config newConfigFunc, machine newMachineFunc) (CrcAPIServer, error) {
-	apiServer := CrcAPIServer{
+func createServerWithListener(listener net.Listener, config newConfigFunc, machine newMachineFunc) (Server, error) {
+	apiServer := Server{
 		listener:               listener,
 		clusterOpsRequestsChan: make(chan clusterOpsRequest, 10),
 		handlerFactory: func() (RequestHandler, error) {
@@ -36,7 +36,7 @@ func createAPIServerWithListener(listener net.Listener, config newConfigFunc, ma
 	return apiServer, nil
 }
 
-func (api CrcAPIServer) Serve() {
+func (api Server) Serve() {
 	go api.handleClusterOperations() // go routine that handles start, stop and delete calls
 	for {
 		conn, err := api.listener.Accept()
@@ -48,13 +48,13 @@ func (api CrcAPIServer) Serve() {
 	}
 }
 
-func (api CrcAPIServer) handleClusterOperations() {
+func (api Server) handleClusterOperations() {
 	for req := range api.clusterOpsRequestsChan {
 		api.handleRequest(req.command, req.socket)
 	}
 }
 
-func (api CrcAPIServer) handleRequest(req commandRequest, conn net.Conn) {
+func (api Server) handleRequest(req commandRequest, conn net.Conn) {
 	defer conn.Close()
 	var result string
 
@@ -91,7 +91,7 @@ func (api CrcAPIServer) handleRequest(req commandRequest, conn net.Conn) {
 	writeStringToSocket(conn, result)
 }
 
-func (api CrcAPIServer) handleConnections(conn net.Conn) {
+func (api Server) handleConnections(conn net.Conn) {
 	inBuffer := make([]byte, 1024)
 	var req commandRequest
 	numBytes, err := conn.Read(inBuffer)

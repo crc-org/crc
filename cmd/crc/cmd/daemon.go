@@ -151,9 +151,9 @@ func newConfig() (crcConfig.Storage, error) {
 func runDaemon() {
 	// Remove if an old socket is present
 	os.Remove(constants.DaemonSocketPath)
-	crcAPIServer, err := api.CreateAPIServer(constants.DaemonSocketPath, newConfig, newMachineWithConfig)
+	apiServer, err := api.CreateServer(constants.DaemonSocketPath, newConfig, newMachineWithConfig)
 	if err != nil {
 		logging.Fatal("Failed to launch daemon", err)
 	}
-	crcAPIServer.Serve()
+	apiServer.Serve()
 }

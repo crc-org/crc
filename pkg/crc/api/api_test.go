@@ -32,7 +32,7 @@ func TestApi(t *testing.T) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createAPIServerWithListener(listener, setupNewInMemoryConfig, func(_ config.Storage) machine.Client {
+	api, err := createServerWithListener(listener, setupNewInMemoryConfig, func(_ config.Storage) machine.Client {
 		return client
 	})
 	require.NoError(t, err)
@@ -217,7 +217,7 @@ func setupAPIServer(t *testing.T) (string, func()) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createAPIServerWithListener(listener, setupNewInMemoryConfig, func(_ config.Storage) machine.Client {
+	api, err := createServerWithListener(listener, setupNewInMemoryConfig, func(_ config.Storage) machine.Client {
 		return client
 	})
 	require.NoError(t, err)

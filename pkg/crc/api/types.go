@@ -16,7 +16,7 @@ type commandError struct {
 	Err string
 }
 
-type CrcAPIServer struct {
+type Server struct {
 	handlerFactory         newHandlerFunc
 	listener               net.Listener
 	clusterOpsRequestsChan chan clusterOpsRequest
