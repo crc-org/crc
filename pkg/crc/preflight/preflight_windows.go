@@ -97,11 +97,6 @@ var traySetupChecks = [...]Check{
 		cleanup:            removeTray,
 		flags:              SetupOnly,
 	},
-	{
-		cleanupDescription: "Stopping crc tray if running",
-		cleanup:            stopTray,
-		flags:              CleanUpOnly,
-	},
 }
 
 var vsockChecks = [...]Check{
