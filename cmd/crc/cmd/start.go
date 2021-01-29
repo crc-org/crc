@@ -169,7 +169,7 @@ func validateStartFlags() error {
 	if err := validation.ValidateDiskSize(config.Get(cmdConfig.DiskSize).AsInt()); err != nil {
 		return err
 	}
-	if err := validation.ValidateBundle(config.Get(cmdConfig.Bundle).AsString()); err != nil {
+	if err := validation.ValidateBundlePath(config.Get(cmdConfig.Bundle).AsString()); err != nil {
 		return err
 	}
 	if config.Get(cmdConfig.NameServer).AsString() != "" {
