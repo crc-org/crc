@@ -14,10 +14,6 @@ import (
 	"github.com/code-ready/crc/pkg/libmachine/version"
 )
 
-func cleanup() {
-	os.RemoveAll(os.Getenv("MACHINE_STORAGE_PATH"))
-}
-
 func getTestStore() Filestore {
 	tmpDir, err := ioutil.TempDir("", "machine-test-")
 	if err != nil {
@@ -31,8 +27,6 @@ func getTestStore() Filestore {
 }
 
 func TestStoreSave(t *testing.T) {
-	defer cleanup()
-
 	store := getTestStore()
 
 	h := testHost()
@@ -56,8 +50,6 @@ func TestStoreSave(t *testing.T) {
 }
 
 func TestStoreSaveOmitRawDriver(t *testing.T) {
-	defer cleanup()
-
 	store := getTestStore()
 
 	h := testHost()
@@ -91,8 +83,6 @@ func TestStoreSaveOmitRawDriver(t *testing.T) {
 }
 
 func TestStoreRemove(t *testing.T) {
-	defer cleanup()
-
 	store := getTestStore()
 
 	h := testHost()
@@ -117,7 +107,6 @@ func TestStoreRemove(t *testing.T) {
 }
 
 func TestStoreExists(t *testing.T) {
-	defer cleanup()
 	store := getTestStore()
 
 	h := testHost()
@@ -162,8 +151,6 @@ func TestStoreExists(t *testing.T) {
 }
 
 func TestStoreLoad(t *testing.T) {
-	defer cleanup()
-
 	store := getTestStore()
 
 	h := testHost()
