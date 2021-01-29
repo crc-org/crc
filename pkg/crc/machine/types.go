@@ -20,6 +20,9 @@ type StartConfig struct {
 
 	// User Pull secret
 	PullSecret *cluster.PullSecret
+
+	// Change startup behaviour
+	StartOpenShift bool
 }
 
 type ClusterConfig struct {

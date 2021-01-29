@@ -33,6 +33,7 @@ func init() {
 	flagSet.UintP(cmdConfig.DiskSize, "d", constants.DefaultDiskSize, "Total size in GiB of the disk used by the OpenShift cluster")
 	flagSet.StringP(cmdConfig.NameServer, "n", "", "IPv4 address of nameserver to use for the OpenShift cluster")
 	flagSet.Bool(cmdConfig.DisableUpdateCheck, false, "Don't check for update")
+	flagSet.Bool(cmdConfig.StartOpenShift, true, "Toggle to prevent starting the OpenShift cluster")
 
 	startCmd.Flags().AddFlagSet(flagSet)
 }
@@ -72,6 +73,7 @@ func runStart(arguments []string) (*machine.StartResult, error) {
 		PullSecret: &cluster.PullSecret{
 			Getter: getPullSecretFileContent,
 		},
+		StartOpenShift: config.Get(cmdConfig.StartOpenShift).AsBool(),
 	}
 
 	client := newMachine()
@@ -80,14 +82,15 @@ func runStart(arguments []string) (*machine.StartResult, error) {
 
 func renderStartResult(result *machine.StartResult, err error) error {
 	return render(&startResult{
-		Success:       err == nil,
-		Error:         errorMessage(err),
-		ClusterConfig: toClusterConfig(result),
+		Success:          err == nil,
+		Error:            errorMessage(err),
+		ClusterConfig:    toClusterConfig(result),
+		OpenShiftStarted: result.KubeletStarted,
 	}, os.Stdout, outputFormat)
 }
 
 func toClusterConfig(result *machine.StartResult) *clusterConfig {
-	if result == nil {
+	if result == nil || result.KubeletStarted == false {
 		return nil
 	}
 	return &clusterConfig{
@@ -126,9 +129,10 @@ type credentials struct {
 }
 
 type startResult struct {
-	Success       bool           `json:"success"`
-	Error         string         `json:"error,omitempty"`
-	ClusterConfig *clusterConfig `json:"clusterConfig,omitempty"`
+	Success          bool           `json:"success"`
+	Error            string         `json:"error,omitempty"`
+	ClusterConfig    *clusterConfig `json:"clusterConfig,omitempty"`
+	OpenShiftStarted bool           `json:"openshiftStarted,omitempty"`
 }
 
 func (s *startResult) prettyPrintTo(writer io.Writer) error {
@@ -137,6 +141,15 @@ func (s *startResult) prettyPrintTo(writer io.Writer) error {
 	}
 	if s.ClusterConfig == nil {
 		return errors.New("either Error or ClusterConfig are needed")
+	}
+
+	if s.OpenShiftStarted == false {
+		fmt.Fprintln(writer, strings.Join([]string{
+			"\n",
+			"The OpenShift cluster wasn't started",
+			"",
+			"To use Podman, first setup your environment by following the instructions returned by executing 'crc podman-env'."}, "\n"))
+		return nil
 	}
 
 	_, err := fmt.Fprintln(writer, strings.Join([]string{

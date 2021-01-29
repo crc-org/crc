@@ -22,4 +22,7 @@ type MachineConfig struct {
 
 	// Experimental features
 	NetworkMode network.Mode
+
+	// Changes start behaviour of the cluster
+	StartOpenShift bool
 }

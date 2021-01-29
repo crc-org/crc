@@ -132,7 +132,11 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 			return nil, errors.Wrapf(err, "Invalid bundle %s", filepath.Base(startConfig.BundlePath))
 		}
 
-		logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
+		if startConfig.StartOpenShift == false {
+			logging.Info("Creating CodeReady Containers VM (not starting OpenShift cluster)...")
+		} else {
+			logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
+		}
 
 		// Retrieve metadata info
 		machineConfig.ImageSourcePath = crcBundleMetadata.GetDiskImagePath()
@@ -177,11 +181,12 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 			return &StartResult{
 				Status:         vmState,
 				ClusterConfig:  *clusterConfig,
-				KubeletStarted: true,
+				KubeletStarted: true, // TODO: needs to be determine
 			}, nil
 		}
 
-		logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
+		//logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
+		logging.Infof("Starting CodeReady Containers VM...", crcBundleMetadata.GetOpenshiftVersion())
 
 		if err := client.updateVMConfig(startConfig, libMachineAPIClient, host); err != nil {
 			return nil, errors.Wrap(err, "Could not update CRC VM configuration")
@@ -275,6 +280,16 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	// Run the DNS server inside the VM
 	if err := dns.RunPostStart(servicePostStartConfig); err != nil {
 		return nil, errors.Wrap(err, "Error running post start")
+	}
+
+	if startConfig.StartOpenShift == false {
+		logging.Info("Not starting the OpenShift cluster")
+		// bailout
+
+		return &StartResult{
+			KubeletStarted: false,
+			Status:         vmState,
+		}, nil
 	}
 
 	// Check DNS lookup before starting the kubelet

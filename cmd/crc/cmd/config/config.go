@@ -26,6 +26,7 @@ const (
 	ProxyCAFile             = "proxy-ca-file"
 	ConsentTelemetry        = "consent-telemetry"
 	EnableClusterMonitoring = "enable-cluster-monitoring"
+	StartOpenShift          = "start-openshift"
 )
 
 func RegisterSettings(cfg *config.Config) {
@@ -49,6 +50,9 @@ func RegisterSettings(cfg *config.Config) {
 
 	// Telemeter Configuration
 	cfg.AddSetting(ConsentTelemetry, "", config.ValidateYesNo, config.SuccessfullyApplied)
+
+	// Change startup behaviour
+	cfg.AddSetting(StartOpenShift, true, config.ValidateYesNo, config.SuccessfullyApplied)
 }
 
 func isPreflightKey(key string) bool {
