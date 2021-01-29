@@ -56,8 +56,8 @@ func ValidateEnoughMemory(value int) error {
 	return nil
 }
 
-// ValidateBundle checks if the provided bundle path exist
-func ValidateBundle(bundle string) error {
+// ValidateBundlePath checks if the provided bundle path exist
+func ValidateBundlePath(bundle string) error {
 	if err := ValidatePath(bundle); err != nil {
 		if constants.BundleEmbedded() {
 			return fmt.Errorf("Run 'crc setup' to unpack the bundle to disk")

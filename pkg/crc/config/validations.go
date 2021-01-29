@@ -56,9 +56,9 @@ func ValidateMemory(value interface{}) (bool, string) {
 	return true, ""
 }
 
-// ValidateBundle checks if provided bundle path is valid
-func ValidateBundle(value interface{}) (bool, string) {
-	if err := validation.ValidateBundle(cast.ToString(value)); err != nil {
+// ValidateBundlePath checks if the provided bundle path is valid
+func ValidateBundlePath(value interface{}) (bool, string) {
+	if err := validation.ValidateBundlePath(cast.ToString(value)); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
