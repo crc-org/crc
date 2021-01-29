@@ -11,6 +11,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/docker/go-units"
 	"github.com/pbnjay/memory"
 )
@@ -73,6 +74,16 @@ func ValidateBundlePath(bundle string) error {
 		}
 		return fmt.Errorf("%s is not supported by this crc executable, please use %s", userProvidedBundle, constants.GetDefaultBundle())
 	}
+	return nil
+}
+
+func ValidateBundle(bundlePath string) error {
+	bundleName := filepath.Base(bundlePath)
+	_, err := bundle.GetCachedBundleInfo(bundleName)
+	if err != nil {
+		return ValidateBundlePath(bundlePath)
+	}
+	/* 'bundle' is already unpacked in ~/.crc/cache */
 	return nil
 }
 
