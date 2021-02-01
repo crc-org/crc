@@ -55,6 +55,11 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 		return "", fmt.Errorf(configPropDoesntExistMsg, key)
 	}
 
+	ok, expectedValue := c.settingsByName[key].validationFn(value)
+	if !ok {
+		return "", fmt.Errorf(invalidProp, value, key, expectedValue)
+	}
+
 	var castValue interface{}
 	var err error
 	switch setting.defaultValue.(type) {
@@ -70,11 +75,6 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf(invalidProp, value, key, err)
 		}
-	}
-
-	ok, expectedValue := c.settingsByName[key].validationFn(castValue)
-	if !ok {
-		return "", fmt.Errorf(invalidProp, value, key, expectedValue)
 	}
 
 	if err := c.storage.Set(key, castValue); err != nil {

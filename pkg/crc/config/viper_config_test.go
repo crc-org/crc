@@ -220,7 +220,7 @@ func TestCannotSetWithWrongType(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = config.Set(CPUs, "helloworld")
-	assert.EqualError(t, err, "Value 'helloworld' for configuration property 'cpus' is invalid, reason: unable to cast \"helloworld\" of type string to int")
+	assert.EqualError(t, err, "Value 'helloworld' for configuration property 'cpus' is invalid, reason: requires integer value >= 4")
 }
 
 func TestCannotGetWithWrongType(t *testing.T) {
