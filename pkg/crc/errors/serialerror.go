@@ -17,6 +17,6 @@ func (e *SerializableError) MarshalJSON() ([]byte, error) {
 	return json.Marshal(e.Error())
 }
 
-func (e *SerializableError) UnWrap() error {
+func (e *SerializableError) Unwrap() error {
 	return e.error
 }
