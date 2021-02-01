@@ -72,7 +72,7 @@ func getOpenShiftStatus(sshRunner *crcssh.Runner, monitoringEnabled bool) string
 	status, err := cluster.GetClusterOperatorsStatus(oc.UseOCWithSSH(sshRunner), monitoringEnabled)
 	if err != nil {
 		logging.Debugf("cannot get OpenShift status: %v", err)
-		return "Not Reachable"
+		return "Unreachable"
 	}
 	switch {
 	case status.Progressing:
