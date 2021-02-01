@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
@@ -78,11 +79,7 @@ func less(lhsKey, rhsKey string) bool {
 
 func configurableFields(config *config.Config) string {
 	var fields []string
-	var keys []string
-
-	for key := range config.AllConfigs() {
-		keys = append(keys, key)
-	}
+	keys := keysAndValueType(config)
 	sort.Slice(keys, func(i, j int) bool {
 		return less(keys[i], keys[j])
 	})
@@ -90,6 +87,25 @@ func configurableFields(config *config.Config) string {
 		fields = append(fields, " * "+key)
 	}
 	return strings.Join(fields, "\n")
+}
+
+func keysAndValueType(config *config.Config) []string {
+	var keyAndValueType []string
+	for key, value := range config.AllConfigs() {
+		var valueType string
+		switch value.Value.(type) {
+		case int:
+			valueType = "Number"
+		case string:
+			valueType = "String"
+		case bool:
+			valueType = "true/false"
+		default:
+			valueType = fmt.Sprintf("%T", value.Value)
+		}
+		keyAndValueType = append(keyAndValueType, fmt.Sprintf("%s\t%s", key, valueType))
+	}
+	return keyAndValueType
 }
 
 func GetConfigCmd(config *config.Config) *cobra.Command {
