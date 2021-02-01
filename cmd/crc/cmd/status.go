@@ -8,6 +8,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/docker/go-units"
 	"github.com/spf13/cobra"
@@ -28,23 +29,30 @@ var statusCmd = &cobra.Command{
 }
 
 type status struct {
-	CrcStatus        string `json:"crcStatus"`
-	OpenShiftStatus  string `json:"openshiftStatus"`
-	OpenShiftVersion string `json:"openshiftVersion"`
-	DiskUsage        int64  `json:"diskUsage"`
-	DiskSize         int64  `json:"diskSize"`
-	CacheUsage       int64  `json:"cacheUsage"`
-	CacheDir         string `json:"cacheDir"`
+	Success          bool                         `json:"success"`
+	Error            *crcErrors.SerializableError `json:"error,omitempty"`
+	CrcStatus        string                       `json:"crcStatus,omitempty"`
+	OpenShiftStatus  string                       `json:"openshiftStatus,omitempty"`
+	OpenShiftVersion string                       `json:"openshiftVersion,omitempty"`
+	DiskUsage        int64                        `json:"diskUsage,omitempty"`
+	DiskSize         int64                        `json:"diskSize,omitempty"`
+	CacheUsage       int64                        `json:"cacheUsage,omitempty"`
+	CacheDir         string                       `json:"cacheDir,omitempty"`
 }
 
 func runStatus(writer io.Writer, client machine.Client, cacheDir, outputFormat string) error {
+	status := getStatus(client, cacheDir)
+	return render(status, writer, outputFormat)
+}
+
+func getStatus(client machine.Client, cacheDir string) *status {
 	if err := checkIfMachineMissing(client); err != nil {
-		return err
+		return &status{Success: false, Error: crcErrors.ToSerializableError(err)}
 	}
 
 	clusterStatus, err := client.Status()
 	if err != nil {
-		return err
+		return &status{Success: false, Error: crcErrors.ToSerializableError(err)}
 	}
 	var size int64
 	err = filepath.Walk(cacheDir, func(_ string, info os.FileInfo, err error) error {
@@ -54,9 +62,11 @@ func runStatus(writer io.Writer, client machine.Client, cacheDir, outputFormat s
 		return err
 	})
 	if err != nil {
-		return fmt.Errorf("Error finding size of cache: %s", err.Error())
+		return &status{Success: false, Error: crcErrors.ToSerializableError(err)}
 	}
-	status := &status{
+
+	return &status{
+		Success:          true,
 		CrcStatus:        clusterStatus.CrcStatus.String(),
 		OpenShiftStatus:  clusterStatus.OpenshiftStatus,
 		OpenShiftVersion: clusterStatus.OpenshiftVersion,
@@ -65,10 +75,12 @@ func runStatus(writer io.Writer, client machine.Client, cacheDir, outputFormat s
 		CacheUsage:       size,
 		CacheDir:         cacheDir,
 	}
-	return render(status, writer, outputFormat)
 }
 
 func (s *status) prettyPrintTo(writer io.Writer) error {
+	if s.Error != nil {
+		return s.Error
+	}
 	w := tabwriter.NewWriter(writer, 0, 0, 1, ' ', 0)
 
 	lines := []struct {
