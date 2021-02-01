@@ -41,8 +41,11 @@ func (api Server) Serve() error {
 	for {
 		conn, err := api.listener.Accept()
 		if err != nil {
-			logging.Error("Error establishing communication: ", err.Error())
-			continue
+			if neterr, ok := err.(net.Error); ok && neterr.Temporary() {
+				logging.Errorf("accept temporary error: %v", err)
+				continue
+			}
+			return err
 		}
 		api.handleConnections(conn) // handle version, status, webconsole, etc. requests
 	}
