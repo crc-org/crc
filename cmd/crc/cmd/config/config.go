@@ -1,9 +1,11 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"sort"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -79,16 +81,24 @@ func less(lhsKey, rhsKey string) bool {
 
 func configurableFields(config *config.Config) string {
 	var fields []string
-	keys := keysAndValueType(config)
+	var buf bytes.Buffer
+	writer := tabwriter.NewWriter(&buf, 0, 8, 1, ' ', tabwriter.TabIndent)
+	for _, keyAndValueType := range keysAndValueType(config) {
+		fmt.Fprintln(writer, keyAndValueType)
+	}
+	writer.Flush()
+	keys := strings.Split(buf.String(), "\n")
 	sort.Slice(keys, func(i, j int) bool {
 		return less(keys[i], keys[j])
 	})
 	for _, key := range keys {
+		if key == "" {
+			continue
+		}
 		fields = append(fields, " * "+key)
 	}
 	return strings.Join(fields, "\n")
 }
-
 func keysAndValueType(config *config.Config) []string {
 	var keyAndValueType []string
 	for key, value := range config.AllConfigs() {
