@@ -33,11 +33,10 @@ var deleteCmd = &cobra.Command{
 }
 
 func deleteMachine(client machine.Client, clearCache bool, cacheDir string, interactive, force bool) (bool, error) {
-	if !interactive && !force {
-		return false, errors.New("non-interactive deletion requires --force")
-	}
-
 	if clearCache {
+		if !interactive && !force {
+			return false, errors.New("non-interactive deletion requires --force")
+		}
 		yes := input.PromptUserForYesOrNo("Do you want to delete the OpenShift cluster cache", force)
 		if yes {
 			_ = os.RemoveAll(cacheDir)
@@ -46,6 +45,10 @@ func deleteMachine(client machine.Client, clearCache bool, cacheDir string, inte
 
 	if err := checkIfMachineMissing(client); err != nil {
 		return false, err
+	}
+
+	if !interactive && !force {
+		return false, errors.New("non-interactive deletion requires --force")
 	}
 
 	yes := input.PromptUserForYesOrNo("Do you want to delete the OpenShift cluster", force)
