@@ -7,43 +7,67 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 type ViperStorage struct {
-	viper      *viper.Viper
+	storeLock *sync.Mutex
+
+	// store flag values
+	flagSet *pflag.FlagSet
+
 	configFile string
+	envPrefix  string
 }
 
 func NewViperStorage(configFile, envPrefix string) (*ViperStorage, error) {
-	if err := ensureConfigFileExists(configFile); err != nil {
+	return &ViperStorage{
+		storeLock:  &sync.Mutex{},
+		configFile: configFile,
+		envPrefix:  envPrefix,
+	}, nil
+}
+
+func (c *ViperStorage) viperInstance() (*viper.Viper, error) {
+	if err := ensureConfigFileExists(c.configFile); err != nil {
 		return nil, err
 	}
 	v := viper.New()
-	v.SetConfigFile(configFile)
+	v.SetConfigFile(c.configFile)
 	v.SetConfigType("json")
-	v.SetEnvPrefix(envPrefix)
+	v.SetEnvPrefix(c.envPrefix)
 	// Replaces '-' in flags with '_' in env variables
 	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	v.AutomaticEnv()
 	v.SetTypeByDefaultValue(true)
-	err := v.ReadInConfig()
-	if err != nil {
-		return nil, fmt.Errorf("error reading configuration file '%s': %v", configFile, err)
+	if err := v.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("error reading configuration file '%s': %v", c.configFile, err)
 	}
-	return &ViperStorage{
-		viper:      v,
-		configFile: configFile,
-	}, nil
+	if c.flagSet == nil {
+		return v, nil
+	}
+	return v, v.BindPFlags(c.flagSet)
 }
 
 func (c *ViperStorage) Get(key string) interface{} {
-	return c.viper.Get(key)
+	c.storeLock.Lock()
+	defer c.storeLock.Unlock()
+	viperInstance, err := c.viperInstance()
+	if err != nil {
+		return nil
+	}
+	return viperInstance.Get(key)
 }
 
 func (c *ViperStorage) Set(key string, value interface{}) error {
+	c.storeLock.Lock()
+	defer c.storeLock.Unlock()
+	if err := ensureConfigFileExists(c.configFile); err != nil {
+		return err
+	}
 	in, err := ioutil.ReadFile(c.configFile)
 	if err != nil {
 		return err
@@ -57,13 +81,15 @@ func (c *ViperStorage) Set(key string, value interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := atomicWrite(bin, c.configFile); err != nil {
-		return err
-	}
-	return c.viper.ReadInConfig()
+	return atomicWrite(bin, c.configFile)
 }
 
 func (c *ViperStorage) Unset(key string) error {
+	c.storeLock.Lock()
+	defer c.storeLock.Unlock()
+	if err := ensureConfigFileExists(c.configFile); err != nil {
+		return err
+	}
 	in, err := ioutil.ReadFile(c.configFile)
 	if err != nil {
 		return err
@@ -77,15 +103,15 @@ func (c *ViperStorage) Unset(key string) error {
 	if err != nil {
 		return err
 	}
-	if err := atomicWrite(bin, c.configFile); err != nil {
-		return err
-	}
-	return c.viper.ReadInConfig()
+	return atomicWrite(bin, c.configFile)
 }
 
 // BindFlagset binds a flagset to their respective config properties
 func (c *ViperStorage) BindFlagSet(flagSet *pflag.FlagSet) error {
-	return c.viper.BindPFlags(flagSet)
+	c.storeLock.Lock()
+	defer c.storeLock.Unlock()
+	c.flagSet = flagSet
+	return nil
 }
 
 // ensureConfigFileExists creates the viper config file if it does not exists

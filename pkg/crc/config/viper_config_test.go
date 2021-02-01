@@ -256,8 +256,8 @@ func TestTwoInstancesSharingSameConfiguration(t *testing.T) {
 	assert.JSONEq(t, `{"cpus":5}`, string(bin))
 
 	assert.Equal(t, SettingValue{
-		Value:     4, // wrong
-		IsDefault: true,
+		Value:     5,
+		IsDefault: false,
 	}, config2.Get(CPUs))
 	assert.Equal(t, SettingValue{
 		Value:     5,
@@ -285,13 +285,13 @@ func TestTwoInstancesWriteSameConfiguration(t *testing.T) {
 
 	bin, err := ioutil.ReadFile(configFile)
 	assert.NoError(t, err)
-	assert.JSONEq(t, `{"nameservers":"1.1.1.1"}`, string(bin)) // cpus missing
+	assert.JSONEq(t, `{"cpus":5, "nameservers":"1.1.1.1"}`, string(bin))
 
-	assert.Equal(t, 4, config2.Get(CPUs).Value) // wrong
+	assert.Equal(t, 5, config2.Get(CPUs).Value)
 	assert.Equal(t, 5, config1.Get(CPUs).Value)
 
 	assert.Equal(t, "1.1.1.1", config2.Get(NameServer).Value)
-	assert.Equal(t, "", config1.Get(NameServer).Value) // wrong
+	assert.Equal(t, "1.1.1.1", config1.Get(NameServer).Value)
 }
 
 func TestTwoInstancesSetAndUnsetSameConfiguration(t *testing.T) {
@@ -317,5 +317,5 @@ func TestTwoInstancesSetAndUnsetSameConfiguration(t *testing.T) {
 	assert.JSONEq(t, `{}`, string(bin))
 
 	assert.Equal(t, 4, config2.Get(CPUs).Value)
-	assert.Equal(t, 5, config1.Get(CPUs).Value) // wrong
+	assert.Equal(t, 4, config1.Get(CPUs).Value)
 }
