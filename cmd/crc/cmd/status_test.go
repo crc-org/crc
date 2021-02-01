@@ -45,6 +45,7 @@ func TestJsonStatus(t *testing.T) {
 	assert.NoError(t, runStatus(out, fakemachine.NewClient(), cacheDir, jsonFormat))
 
 	expected := `{
+  "success": true,
   "crcStatus": "Running",
   "openshiftStatus": "Running",
   "openshiftVersion": "4.5.1",
@@ -55,4 +56,34 @@ func TestJsonStatus(t *testing.T) {
 }
 `
 	assert.Equal(t, fmt.Sprintf(expected, strings.ReplaceAll(cacheDir, `\`, `\\`)), out.String())
+}
+
+func TestPlainStatusWithError(t *testing.T) {
+	cacheDir, err := ioutil.TempDir("", "cache")
+	require.NoError(t, err)
+	defer os.RemoveAll(cacheDir)
+
+	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
+
+	out := new(bytes.Buffer)
+	assert.EqualError(t, runStatus(out, fakemachine.NewFailingClient(), cacheDir, ""), "broken")
+	assert.Equal(t, "", out.String())
+}
+
+func TestJsonStatusWithError(t *testing.T) {
+	cacheDir, err := ioutil.TempDir("", "cache")
+	require.NoError(t, err)
+	defer os.RemoveAll(cacheDir)
+
+	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
+
+	out := new(bytes.Buffer)
+	assert.NoError(t, runStatus(out, fakemachine.NewFailingClient(), cacheDir, jsonFormat))
+
+	expected := `{
+  "success": false,
+  "error": "broken"
+}
+`
+	assert.Equal(t, expected, out.String())
 }
