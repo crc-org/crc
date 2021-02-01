@@ -74,13 +74,12 @@ func getOpenShiftStatus(sshRunner *crcssh.Runner, monitoringEnabled bool) string
 		logging.Debugf("cannot get OpenShift status: %v", err)
 		return "Not Reachable"
 	}
-	if status.Progressing {
+	switch {
+	case status.Progressing:
 		return "Starting"
-	}
-	if status.Degraded {
+	case status.Degraded:
 		return "Degraded"
-	}
-	if status.Available {
+	case status.Available:
 		return "Running"
 	}
 	return "Stopped"
