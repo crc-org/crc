@@ -13,6 +13,7 @@ import (
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/telemetry"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/pborman/uuid"
@@ -101,7 +102,11 @@ func addConfigTraits(c *crcConfig.Config, in analytics.Traits) analytics.Traits 
 }
 
 func isProxyUsed(c *crcConfig.Config) bool {
-	return c.Get(config.HTTPProxy).AsString() != "" || c.Get(config.HTTPSProxy).AsString() != ""
+	proxyConfig, err := network.NewProxyConfig()
+	if err != nil {
+		return false
+	}
+	return proxyConfig.IsEnabled()
 }
 
 func getUserIdentity(telemetryFilePath string) (string, error) {
