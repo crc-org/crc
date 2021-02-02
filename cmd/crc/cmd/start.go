@@ -66,9 +66,9 @@ func runStart(ctx context.Context) (*machine.StartResult, error) {
 		return nil, err
 	}
 
-	for _, key := range []string{cmdConfig.CPUs, cmdConfig.Memory, cmdConfig.DiskSize} {
-		telemetry.SetContextProperty(ctx, key, config.Get(key).AsInt())
-	}
+	telemetry.SetContextProperty(ctx, cmdConfig.CPUs, config.Get(cmdConfig.CPUs).AsInt())
+	telemetry.SetContextProperty(ctx, cmdConfig.Memory, uint64(config.Get(cmdConfig.Memory).AsInt())*1024*1024)
+	telemetry.SetContextProperty(ctx, cmdConfig.DiskSize, uint64(config.Get(cmdConfig.DiskSize).AsInt())*1024*1024*1024)
 
 	startConfig := machine.StartConfig{
 		BundlePath: config.Get(cmdConfig.Bundle).AsString(),
