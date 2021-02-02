@@ -140,7 +140,6 @@ func (s *startResult) prettyPrintTo(writer io.Writer) error {
 	}
 
 	_, err := fmt.Fprintln(writer, strings.Join([]string{
-		"\n",
 		"Started the OpenShift cluster",
 		"",
 		"To access the cluster, first set up your environment by following the instructions returned by executing 'crc oc-env'.",
