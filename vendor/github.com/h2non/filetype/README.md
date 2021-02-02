@@ -232,6 +232,7 @@ func main() {
 - **bz2** - `application/x-bzip2`
 - **7z** - `application/x-7z-compressed`
 - **xz** - `application/x-xz`
+- **zstd** - `application/zstd`
 - **pdf** - `application/pdf`
 - **exe** - `application/vnd.microsoft.portable-executable`
 - **swf** - `application/x-shockwave-flash`
@@ -270,6 +271,8 @@ func main() {
 #### Application
 
 - **wasm** - `application/wasm`
+- **dex** - `application/vnd.android.dex`
+- **dey** - `application/vnd.android.dey`
 
 ## Benchmarks
 

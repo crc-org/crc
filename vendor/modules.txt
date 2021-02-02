@@ -100,7 +100,7 @@ github.com/google/tcpproxy
 # github.com/google/uuid v1.1.2
 ## explicit
 github.com/google/uuid
-# github.com/h2non/filetype v1.1.0
+# github.com/h2non/filetype v1.1.2-0.20210202002709-95e28344e08c
 ## explicit
 github.com/h2non/filetype
 github.com/h2non/filetype/matchers
