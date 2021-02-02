@@ -1,16 +1,13 @@
 package virtualnetwork
 
 import (
-	"context"
 	"net"
 	"net/http"
-	"strconv"
-	"strings"
+	"sync"
 
 	"github.com/code-ready/gvisor-tap-vsock/pkg/services/dns"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/services/forwarder"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/types"
-	"github.com/google/tcpproxy"
 	log "github.com/sirupsen/logrus"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
@@ -20,23 +17,34 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/transport/udp"
 )
 
-func addServices(configuration *types.Configuration, s *stack.Stack) error {
-	tcpForwarder := forwarder.TCP(s)
+func addServices(configuration *types.Configuration, s *stack.Stack) (http.Handler, error) {
+	var natLock sync.Mutex
+	translation := parseNATTable(configuration)
+
+	tcpForwarder := forwarder.TCP(s, translation, &natLock)
 	s.SetTransportProtocolHandler(tcp.ProtocolNumber, tcpForwarder.HandlePacket)
-	udpForwarder := forwarder.UDP(s)
+	udpForwarder := forwarder.UDP(s, translation, &natLock)
 	s.SetTransportProtocolHandler(udp.ProtocolNumber, udpForwarder.HandlePacket)
 
-	go func() {
-		if err := dnsServer(configuration, s); err != nil {
-			log.Error(err)
-		}
-	}()
-	go func() {
-		if err := forwardHostVM(configuration, s); err != nil {
-			log.Error(err)
-		}
-	}()
-	return sampleHTTPServer(configuration, s)
+	if err := dnsServer(configuration, s); err != nil {
+		return nil, err
+	}
+
+	forwarderMux, err := forwardHostVM(configuration, s)
+	if err != nil {
+		return nil, err
+	}
+	mux := http.NewServeMux()
+	mux.Handle("/forwarder/", http.StripPrefix("/forwarder", forwarderMux))
+	return mux, nil
+}
+
+func parseNATTable(configuration *types.Configuration) map[tcpip.Address]tcpip.Address {
+	translation := make(map[tcpip.Address]tcpip.Address)
+	for source, destination := range configuration.NAT {
+		translation[tcpip.Address(net.ParseIP(source).To4())] = tcpip.Address(net.ParseIP(destination).To4())
+	}
+	return translation
 }
 
 func dnsServer(configuration *types.Configuration, s *stack.Stack) error {
@@ -49,56 +57,20 @@ func dnsServer(configuration *types.Configuration, s *stack.Stack) error {
 		return err
 	}
 
-	return dns.Serve(udpConn, configuration.DNS)
-}
-
-func forwardHostVM(configuration *types.Configuration, s *stack.Stack) error {
-	for dst, src := range configuration.Forwards {
-		split := strings.Split(src, ":")
-		port, err := strconv.Atoi(split[1])
-		if err != nil {
-			return err
-		}
-		var p tcpproxy.Proxy
-		p.AddRoute(dst, &tcpproxy.DialProxy{
-			Addr: src,
-			DialContext: func(ctx context.Context, network, addr string) (conn net.Conn, e error) {
-				return gonet.DialTCP(s, tcpip.FullAddress{
-					NIC:  1,
-					Addr: tcpip.Address(net.ParseIP(split[0]).To4()),
-					Port: uint16(port),
-				}, ipv4.ProtocolNumber)
-			},
-		})
-		go func() {
-			if err := p.Run(); err != nil {
-				log.Error(err)
-			}
-		}()
-	}
-	return nil
-}
-
-func sampleHTTPServer(configuration *types.Configuration, s *stack.Stack) error {
-	ln, err := gonet.ListenTCP(s, tcpip.FullAddress{
-		NIC:  1,
-		Addr: tcpip.Address(net.ParseIP(configuration.GatewayIP).To4()),
-		Port: uint16(80),
-	}, ipv4.ProtocolNumber)
-	if err != nil {
-		return err
-	}
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if _, err := w.Write([]byte(`Hello world`)); err != nil {
-			log.Error(err)
-		}
-	})
 	go func() {
-		if err := http.Serve(ln, mux); err != nil {
+		if err := dns.Serve(udpConn, configuration.DNS); err != nil {
 			log.Error(err)
 		}
 	}()
 	return nil
+}
+
+func forwardHostVM(configuration *types.Configuration, s *stack.Stack) (http.Handler, error) {
+	fw := forwarder.NewPortsForwarder(s)
+	for local, remote := range configuration.Forwards {
+		if err := fw.Expose(local, remote); err != nil {
+			return nil, err
+		}
+	}
+	return fw.Mux(), nil
 }

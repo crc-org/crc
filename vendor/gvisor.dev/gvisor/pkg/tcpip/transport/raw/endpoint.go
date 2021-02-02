@@ -58,12 +58,13 @@ type rawPacket struct {
 // +stateify savable
 type endpoint struct {
 	stack.TransportEndpointInfo
+	tcpip.DefaultSocketOptionsHandler
+
 	// The following fields are initialized at creation time and are
 	// immutable.
 	stack       *stack.Stack `state:"manual"`
 	waiterQueue *waiter.Queue
 	associated  bool
-	hdrIncluded bool
 
 	// The following fields are used to manage the receive queue and are
 	// protected by rcvMu.
@@ -82,13 +83,14 @@ type endpoint struct {
 	bound         bool
 	// route is the route to a remote network endpoint. It is set via
 	// Connect(), and is valid only when conneted is true.
-	route stack.Route                  `state:"manual"`
+	route *stack.Route                 `state:"manual"`
 	stats tcpip.TransportEndpointStats `state:"nosave"`
-	// linger is used for SO_LINGER socket option.
-	linger tcpip.LingerOption
 
 	// owner is used to get uid and gid of the packet.
 	owner tcpip.PacketOwner
+
+	// ops is used to get socket level options.
+	ops tcpip.SocketOptions
 }
 
 // NewEndpoint returns a raw  endpoint for the given protocols.
@@ -111,8 +113,9 @@ func newEndpoint(s *stack.Stack, netProto tcpip.NetworkProtocolNumber, transProt
 		rcvBufSizeMax: 32 * 1024,
 		sndBufSizeMax: 32 * 1024,
 		associated:    associated,
-		hdrIncluded:   !associated,
 	}
+	e.ops.InitHandler(e)
+	e.ops.SetHeaderIncluded(!associated)
 
 	// Override with stack defaults.
 	var ss stack.SendBufferSizeOption
@@ -167,9 +170,11 @@ func (e *endpoint) Close() {
 		e.rcvList.Remove(e.rcvList.Front())
 	}
 
-	if e.connected {
+	e.connected = false
+
+	if e.route != nil {
 		e.route.Release()
-		e.connected = false
+		e.route = nil
 	}
 
 	e.closed = true
@@ -220,6 +225,13 @@ func (e *endpoint) Write(p tcpip.Payloader, opts tcpip.WriteOptions) (int64, <-c
 		return 0, nil, tcpip.ErrInvalidOptionValue
 	}
 
+	if opts.To != nil {
+		// Raw sockets do not support sending to a IPv4 address on a IPv6 endpoint.
+		if e.TransportEndpointInfo.NetProto == header.IPv6ProtocolNumber && len(opts.To.Addr) != header.IPv6AddressSize {
+			return 0, nil, tcpip.ErrInvalidOptionValue
+		}
+	}
+
 	n, ch, err := e.write(p, opts)
 	switch err {
 	case nil:
@@ -249,24 +261,22 @@ func (e *endpoint) write(p tcpip.Payloader, opts tcpip.WriteOptions) (int64, <-c
 	}
 
 	e.mu.RLock()
+	defer e.mu.RUnlock()
 
 	if e.closed {
-		e.mu.RUnlock()
 		return 0, nil, tcpip.ErrInvalidEndpointState
 	}
 
 	payloadBytes, err := p.FullPayload()
 	if err != nil {
-		e.mu.RUnlock()
 		return 0, nil, err
 	}
 
 	// If this is an unassociated socket and callee provided a nonzero
 	// destination address, route using that address.
-	if e.hdrIncluded {
+	if e.ops.GetHeaderIncluded() {
 		ip := header.IPv4(payloadBytes)
 		if !ip.IsValid(len(payloadBytes)) {
-			e.mu.RUnlock()
 			return 0, nil, tcpip.ErrInvalidOptionValue
 		}
 		dstAddr := ip.DestinationAddress()
@@ -288,39 +298,16 @@ func (e *endpoint) write(p tcpip.Payloader, opts tcpip.WriteOptions) (int64, <-c
 		// If the user doesn't specify a destination, they should have
 		// connected to another address.
 		if !e.connected {
-			e.mu.RUnlock()
 			return 0, nil, tcpip.ErrDestinationRequired
 		}
 
-		if e.route.IsResolutionRequired() {
-			savedRoute := &e.route
-			// Promote lock to exclusive if using a shared route,
-			// given that it may need to change in finishWrite.
-			e.mu.RUnlock()
-			e.mu.Lock()
-
-			// Make sure that the route didn't change during the
-			// time we didn't hold the lock.
-			if !e.connected || savedRoute != &e.route {
-				e.mu.Unlock()
-				return 0, nil, tcpip.ErrInvalidEndpointState
-			}
-
-			n, ch, err := e.finishWrite(payloadBytes, savedRoute)
-			e.mu.Unlock()
-			return n, ch, err
-		}
-
-		n, ch, err := e.finishWrite(payloadBytes, &e.route)
-		e.mu.RUnlock()
-		return n, ch, err
+		return e.finishWrite(payloadBytes, e.route)
 	}
 
 	// The caller provided a destination. Reject destination address if it
 	// goes through a different NIC than the endpoint was bound to.
 	nic := opts.To.NIC
 	if e.bound && nic != 0 && nic != e.BindNICID {
-		e.mu.RUnlock()
 		return 0, nil, tcpip.ErrNoRoute
 	}
 
@@ -328,13 +315,11 @@ func (e *endpoint) write(p tcpip.Payloader, opts tcpip.WriteOptions) (int64, <-c
 	// FindRoute will choose an appropriate source address.
 	route, err := e.stack.FindRoute(nic, e.BindAddr, opts.To.Addr, e.NetProto, false)
 	if err != nil {
-		e.mu.RUnlock()
 		return 0, nil, err
 	}
 
-	n, ch, err := e.finishWrite(payloadBytes, &route)
+	n, ch, err := e.finishWrite(payloadBytes, route)
 	route.Release()
-	e.mu.RUnlock()
 	return n, ch, err
 }
 
@@ -353,7 +338,7 @@ func (e *endpoint) finishWrite(payloadBytes []byte, route *stack.Route) (int64, 
 		}
 	}
 
-	if e.hdrIncluded {
+	if e.ops.GetHeaderIncluded() {
 		pkt := stack.NewPacketBuffer(stack.PacketBufferOptions{
 			Data: buffer.View(payloadBytes).ToVectorisedView(),
 		})
@@ -379,8 +364,8 @@ func (e *endpoint) finishWrite(payloadBytes []byte, route *stack.Route) (int64, 
 }
 
 // Peek implements tcpip.Endpoint.Peek.
-func (e *endpoint) Peek([][]byte) (int64, tcpip.ControlMessages, *tcpip.Error) {
-	return 0, tcpip.ControlMessages{}, nil
+func (e *endpoint) Peek([][]byte) (int64, *tcpip.Error) {
+	return 0, nil
 }
 
 // Disconnect implements tcpip.Endpoint.Disconnect.
@@ -390,6 +375,11 @@ func (*endpoint) Disconnect() *tcpip.Error {
 
 // Connect implements tcpip.Endpoint.Connect.
 func (e *endpoint) Connect(addr tcpip.FullAddress) *tcpip.Error {
+	// Raw sockets do not support connecting to a IPv4 address on a IPv6 endpoint.
+	if e.TransportEndpointInfo.NetProto == header.IPv6ProtocolNumber && len(addr.Addr) != header.IPv6AddressSize {
+		return tcpip.ErrAddressFamilyNotSupported
+	}
+
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
@@ -418,11 +408,11 @@ func (e *endpoint) Connect(addr tcpip.FullAddress) *tcpip.Error {
 	if err != nil {
 		return err
 	}
-	defer route.Release()
 
 	if e.associated {
 		// Re-register the endpoint with the appropriate NIC.
 		if err := e.stack.RegisterRawTransportEndpoint(addr.NIC, e.NetProto, e.TransProto, e); err != nil {
+			route.Release()
 			return err
 		}
 		e.stack.UnregisterRawTransportEndpoint(e.RegisterNICID, e.NetProto, e.TransProto, e)
@@ -430,7 +420,7 @@ func (e *endpoint) Connect(addr tcpip.FullAddress) *tcpip.Error {
 	}
 
 	// Save the route we've connected via.
-	e.route = route.Clone()
+	e.route = route
 	e.connected = true
 
 	return nil
@@ -513,31 +503,13 @@ func (e *endpoint) Readiness(mask waiter.EventMask) waiter.EventMask {
 
 // SetSockOpt implements tcpip.Endpoint.SetSockOpt.
 func (e *endpoint) SetSockOpt(opt tcpip.SettableSocketOption) *tcpip.Error {
-	switch v := opt.(type) {
+	switch opt.(type) {
 	case *tcpip.SocketDetachFilterOption:
-		return nil
-
-	case *tcpip.LingerOption:
-		e.mu.Lock()
-		e.linger = *v
-		e.mu.Unlock()
 		return nil
 
 	default:
 		return tcpip.ErrUnknownProtocolOption
 	}
-}
-
-// SetSockOptBool implements tcpip.Endpoint.SetSockOptBool.
-func (e *endpoint) SetSockOptBool(opt tcpip.SockOptBool, v bool) *tcpip.Error {
-	switch opt {
-	case tcpip.IPHdrIncludedOption:
-		e.mu.Lock()
-		e.hdrIncluded = v
-		e.mu.Unlock()
-		return nil
-	}
-	return tcpip.ErrUnknownProtocolOption
 }
 
 // SetSockOptInt implements tcpip.Endpoint.SetSockOptInt.
@@ -586,33 +558,7 @@ func (e *endpoint) SetSockOptInt(opt tcpip.SockOptInt, v int) *tcpip.Error {
 
 // GetSockOpt implements tcpip.Endpoint.GetSockOpt.
 func (e *endpoint) GetSockOpt(opt tcpip.GettableSocketOption) *tcpip.Error {
-	switch o := opt.(type) {
-	case *tcpip.LingerOption:
-		e.mu.Lock()
-		*o = e.linger
-		e.mu.Unlock()
-		return nil
-
-	default:
-		return tcpip.ErrUnknownProtocolOption
-	}
-}
-
-// GetSockOptBool implements tcpip.Endpoint.GetSockOptBool.
-func (e *endpoint) GetSockOptBool(opt tcpip.SockOptBool) (bool, *tcpip.Error) {
-	switch opt {
-	case tcpip.KeepaliveEnabledOption, tcpip.AcceptConnOption:
-		return false, nil
-
-	case tcpip.IPHdrIncludedOption:
-		e.mu.Lock()
-		v := e.hdrIncluded
-		e.mu.Unlock()
-		return v, nil
-
-	default:
-		return false, tcpip.ErrUnknownProtocolOption
-	}
+	return tcpip.ErrUnknownProtocolOption
 }
 
 // GetSockOptInt implements tcpip.Endpoint.GetSockOptInt.
@@ -646,7 +592,8 @@ func (e *endpoint) GetSockOptInt(opt tcpip.SockOptInt) (int, *tcpip.Error) {
 }
 
 // HandlePacket implements stack.RawTransportEndpoint.HandlePacket.
-func (e *endpoint) HandlePacket(route *stack.Route, pkt *stack.PacketBuffer) {
+func (e *endpoint) HandlePacket(pkt *stack.PacketBuffer) {
+	e.mu.RLock()
 	e.rcvMu.Lock()
 
 	// Drop the packet if our buffer is currently full or if this is an unassociated
@@ -659,6 +606,7 @@ func (e *endpoint) HandlePacket(route *stack.Route, pkt *stack.PacketBuffer) {
 	//    sockets.
 	if e.rcvClosed || !e.associated {
 		e.rcvMu.Unlock()
+		e.mu.RUnlock()
 		e.stack.Stats().DroppedPackets.Increment()
 		e.stats.ReceiveErrors.ClosedReceiver.Increment()
 		return
@@ -666,28 +614,34 @@ func (e *endpoint) HandlePacket(route *stack.Route, pkt *stack.PacketBuffer) {
 
 	if e.rcvBufSize >= e.rcvBufSizeMax {
 		e.rcvMu.Unlock()
+		e.mu.RUnlock()
 		e.stack.Stats().DroppedPackets.Increment()
 		e.stats.ReceiveErrors.ReceiveBufferOverflow.Increment()
 		return
 	}
 
+	remoteAddr := pkt.Network().SourceAddress()
+
 	if e.bound {
 		// If bound to a NIC, only accept data for that NIC.
-		if e.BindNICID != 0 && e.BindNICID != route.NICID() {
+		if e.BindNICID != 0 && e.BindNICID != pkt.NICID {
 			e.rcvMu.Unlock()
+			e.mu.RUnlock()
 			return
 		}
 		// If bound to an address, only accept data for that address.
-		if e.BindAddr != "" && e.BindAddr != route.RemoteAddress {
+		if e.BindAddr != "" && e.BindAddr != remoteAddr {
 			e.rcvMu.Unlock()
+			e.mu.RUnlock()
 			return
 		}
 	}
 
 	// If connected, only accept packets from the remote address we
 	// connected to.
-	if e.connected && e.route.RemoteAddress != route.RemoteAddress {
+	if e.connected && e.route.RemoteAddress != remoteAddr {
 		e.rcvMu.Unlock()
+		e.mu.RUnlock()
 		return
 	}
 
@@ -696,8 +650,8 @@ func (e *endpoint) HandlePacket(route *stack.Route, pkt *stack.PacketBuffer) {
 	// Push new packet into receive list and increment the buffer size.
 	packet := &rawPacket{
 		senderAddr: tcpip.FullAddress{
-			NIC:  route.NICID(),
-			Addr: route.RemoteAddress,
+			NIC:  pkt.NICID,
+			Addr: remoteAddr,
 		},
 	}
 
@@ -722,6 +676,7 @@ func (e *endpoint) HandlePacket(route *stack.Route, pkt *stack.PacketBuffer) {
 	e.rcvList.PushBack(packet)
 	e.rcvBufSize += packet.data.Size()
 	e.rcvMu.Unlock()
+	e.mu.RUnlock()
 	e.stats.PacketsReceived.Increment()
 	// Notify waiters that there's data to be read.
 	if wasEmpty {
@@ -751,6 +706,12 @@ func (e *endpoint) Stats() tcpip.EndpointStats {
 // Wait implements stack.TransportEndpoint.Wait.
 func (*endpoint) Wait() {}
 
+// LastError implements tcpip.Endpoint.LastError.
 func (*endpoint) LastError() *tcpip.Error {
 	return nil
+}
+
+// SocketOptions implements tcpip.Endpoint.SocketOptions.
+func (e *endpoint) SocketOptions() *tcpip.SocketOptions {
+	return &e.ops
 }

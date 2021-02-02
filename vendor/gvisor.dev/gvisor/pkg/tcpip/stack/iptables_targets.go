@@ -15,6 +15,8 @@
 package stack
 
 import (
+	"fmt"
+
 	"gvisor.dev/gvisor/pkg/log"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
@@ -24,13 +26,6 @@ import (
 type AcceptTarget struct {
 	// NetworkProtocol is the network protocol the target is used with.
 	NetworkProtocol tcpip.NetworkProtocolNumber
-}
-
-// ID implements Target.ID.
-func (at *AcceptTarget) ID() TargetID {
-	return TargetID{
-		NetworkProtocol: at.NetworkProtocol,
-	}
 }
 
 // Action implements Target.Action.
@@ -44,35 +39,16 @@ type DropTarget struct {
 	NetworkProtocol tcpip.NetworkProtocolNumber
 }
 
-// ID implements Target.ID.
-func (dt *DropTarget) ID() TargetID {
-	return TargetID{
-		NetworkProtocol: dt.NetworkProtocol,
-	}
-}
-
 // Action implements Target.Action.
 func (*DropTarget) Action(*PacketBuffer, *ConnTrack, Hook, *GSO, *Route, tcpip.Address) (RuleVerdict, int) {
 	return RuleDrop, 0
 }
-
-// ErrorTargetName is used to mark targets as error targets. Error targets
-// shouldn't be reached - an error has occurred if we fall through to one.
-const ErrorTargetName = "ERROR"
 
 // ErrorTarget logs an error and drops the packet. It represents a target that
 // should be unreachable.
 type ErrorTarget struct {
 	// NetworkProtocol is the network protocol the target is used with.
 	NetworkProtocol tcpip.NetworkProtocolNumber
-}
-
-// ID implements Target.ID.
-func (et *ErrorTarget) ID() TargetID {
-	return TargetID{
-		Name:            ErrorTargetName,
-		NetworkProtocol: et.NetworkProtocol,
-	}
 }
 
 // Action implements Target.Action.
@@ -90,14 +66,6 @@ type UserChainTarget struct {
 	NetworkProtocol tcpip.NetworkProtocolNumber
 }
 
-// ID implements Target.ID.
-func (uc *UserChainTarget) ID() TargetID {
-	return TargetID{
-		Name:            ErrorTargetName,
-		NetworkProtocol: uc.NetworkProtocol,
-	}
-}
-
 // Action implements Target.Action.
 func (*UserChainTarget) Action(*PacketBuffer, *ConnTrack, Hook, *GSO, *Route, tcpip.Address) (RuleVerdict, int) {
 	panic("UserChainTarget should never be called.")
@@ -110,50 +78,39 @@ type ReturnTarget struct {
 	NetworkProtocol tcpip.NetworkProtocolNumber
 }
 
-// ID implements Target.ID.
-func (rt *ReturnTarget) ID() TargetID {
-	return TargetID{
-		NetworkProtocol: rt.NetworkProtocol,
-	}
-}
-
 // Action implements Target.Action.
 func (*ReturnTarget) Action(*PacketBuffer, *ConnTrack, Hook, *GSO, *Route, tcpip.Address) (RuleVerdict, int) {
 	return RuleReturn, 0
 }
 
-// RedirectTargetName is used to mark targets as redirect targets. Redirect
-// targets should be reached for only NAT and Mangle tables. These targets will
-// change the destination port/destination IP for packets.
-const RedirectTargetName = "REDIRECT"
-
-// RedirectTarget redirects the packet by modifying the destination port/IP.
+// RedirectTarget redirects the packet to this machine by modifying the
+// destination port/IP. Outgoing packets are redirected to the loopback device,
+// and incoming packets are redirected to the incoming interface (rather than
+// forwarded).
+//
 // TODO(gvisor.dev/issue/170): Other flags need to be added after we support
 // them.
 type RedirectTarget struct {
-	// Addr indicates address used to redirect.
-	Addr tcpip.Address
-
-	// Port indicates port used to redirect.
+	// Port indicates port used to redirect. It is immutable.
 	Port uint16
 
-	// NetworkProtocol is the network protocol the target is used with.
+	// NetworkProtocol is the network protocol the target is used with. It
+	// is immutable.
 	NetworkProtocol tcpip.NetworkProtocolNumber
-}
-
-// ID implements Target.ID.
-func (rt *RedirectTarget) ID() TargetID {
-	return TargetID{
-		Name:            RedirectTargetName,
-		NetworkProtocol: rt.NetworkProtocol,
-	}
 }
 
 // Action implements Target.Action.
 // TODO(gvisor.dev/issue/170): Parse headers without copying. The current
-// implementation only works for PREROUTING and calls pkt.Clone(), neither
+// implementation only works for Prerouting and calls pkt.Clone(), neither
 // of which should be the case.
 func (rt *RedirectTarget) Action(pkt *PacketBuffer, ct *ConnTrack, hook Hook, gso *GSO, r *Route, address tcpip.Address) (RuleVerdict, int) {
+	// Sanity check.
+	if rt.NetworkProtocol != pkt.NetworkProtocolNumber {
+		panic(fmt.Sprintf(
+			"RedirectTarget.Action with NetworkProtocol %d called on packet with NetworkProtocolNumber %d",
+			rt.NetworkProtocol, pkt.NetworkProtocolNumber))
+	}
+
 	// Packet is already manipulated.
 	if pkt.NatDone {
 		return RuleAccept, 0
@@ -164,17 +121,17 @@ func (rt *RedirectTarget) Action(pkt *PacketBuffer, ct *ConnTrack, hook Hook, gs
 		return RuleDrop, 0
 	}
 
-	// Change the address to localhost (127.0.0.1 or ::1) in Output and to
+	// Change the address to loopback (127.0.0.1 or ::1) in Output and to
 	// the primary address of the incoming interface in Prerouting.
 	switch hook {
 	case Output:
 		if pkt.NetworkProtocolNumber == header.IPv4ProtocolNumber {
-			rt.Addr = tcpip.Address([]byte{127, 0, 0, 1})
+			address = tcpip.Address([]byte{127, 0, 0, 1})
 		} else {
-			rt.Addr = header.IPv6Loopback
+			address = header.IPv6Loopback
 		}
 	case Prerouting:
-		rt.Addr = address
+		// No-op, as address is already set correctly.
 	default:
 		panic("redirect target is supported only on output and prerouting hooks")
 	}
@@ -189,20 +146,17 @@ func (rt *RedirectTarget) Action(pkt *PacketBuffer, ct *ConnTrack, hook Hook, gs
 		// Calculate UDP checksum and set it.
 		if hook == Output {
 			udpHeader.SetChecksum(0)
+			netHeader := pkt.Network()
+			netHeader.SetDestinationAddress(address)
 
 			// Only calculate the checksum if offloading isn't supported.
-			if r.Capabilities()&CapabilityTXChecksumOffload == 0 {
+			if r.RequiresTXTransportChecksum() {
 				length := uint16(pkt.Size()) - uint16(len(pkt.NetworkHeader().View()))
-				xsum := r.PseudoHeaderChecksum(protocol, length)
-				for _, v := range pkt.Data.Views() {
-					xsum = header.Checksum(v, xsum)
-				}
-				udpHeader.SetChecksum(0)
+				xsum := header.PseudoHeaderChecksum(protocol, netHeader.SourceAddress(), netHeader.DestinationAddress(), length)
+				xsum = header.ChecksumVV(pkt.Data, xsum)
 				udpHeader.SetChecksum(^udpHeader.CalculateChecksum(xsum))
 			}
 		}
-
-		pkt.Network().SetDestinationAddress(rt.Addr)
 
 		// After modification, IPv4 packets need a valid checksum.
 		if pkt.NetworkProtocolNumber == header.IPv4ProtocolNumber {
@@ -219,7 +173,7 @@ func (rt *RedirectTarget) Action(pkt *PacketBuffer, ct *ConnTrack, hook Hook, gs
 		// Set up conection for matching NAT rule. Only the first
 		// packet of the connection comes here. Other packets will be
 		// manipulated in connection tracking.
-		if conn := ct.insertRedirectConn(pkt, hook, rt); conn != nil {
+		if conn := ct.insertRedirectConn(pkt, hook, rt.Port, address); conn != nil {
 			ct.handlePacket(pkt, hook, gso, r)
 		}
 	default:

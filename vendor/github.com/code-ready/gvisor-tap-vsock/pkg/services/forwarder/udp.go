@@ -3,18 +3,31 @@ package forwarder
 import (
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/udp"
 	"gvisor.dev/gvisor/pkg/waiter"
 )
 
-func UDP(s *stack.Stack) *udp.Forwarder {
+func UDP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mutex) *udp.Forwarder {
 	return udp.NewForwarder(s, func(r *udp.ForwarderRequest) {
-		outbound, err := net.Dial("udp", fmt.Sprintf("%s:%d", r.ID().LocalAddress, r.ID().LocalPort))
+		localAddress := r.ID().LocalAddress
+
+		if linkLocal().Contains(localAddress) {
+			return
+		}
+
+		natLock.Lock()
+		if replaced, ok := nat[localAddress]; ok {
+			localAddress = replaced
+		}
+		natLock.Unlock()
+		outbound, err := net.Dial("udp", fmt.Sprintf("%s:%d", localAddress, r.ID().LocalPort))
 		if err != nil {
 			log.Errorf("net.Dial() = %v", err)
 			return

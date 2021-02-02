@@ -269,7 +269,7 @@ func (ct *ConnTrack) connForTID(tid tupleID) (*conn, direction) {
 	return nil, dirOriginal
 }
 
-func (ct *ConnTrack) insertRedirectConn(pkt *PacketBuffer, hook Hook, rt *RedirectTarget) *conn {
+func (ct *ConnTrack) insertRedirectConn(pkt *PacketBuffer, hook Hook, port uint16, address tcpip.Address) *conn {
 	tid, err := packetToTupleID(pkt)
 	if err != nil {
 		return nil
@@ -282,8 +282,8 @@ func (ct *ConnTrack) insertRedirectConn(pkt *PacketBuffer, hook Hook, rt *Redire
 	// rule. This tuple will be used to manipulate the packet in
 	// handlePacket.
 	replyTID := tid.reply()
-	replyTID.srcAddr = rt.Addr
-	replyTID.srcPort = rt.Port
+	replyTID.srcAddr = address
+	replyTID.srcPort = port
 	var manip manipType
 	switch hook {
 	case Prerouting:
@@ -401,12 +401,12 @@ func handlePacketOutput(pkt *PacketBuffer, conn *conn, gso *GSO, r *Route, dir d
 
 	// Calculate the TCP checksum and set it.
 	tcpHeader.SetChecksum(0)
-	length := uint16(pkt.Size()) - uint16(len(pkt.NetworkHeader().View()))
-	xsum := r.PseudoHeaderChecksum(header.TCPProtocolNumber, length)
+	length := uint16(len(tcpHeader) + pkt.Data.Size())
+	xsum := header.PseudoHeaderChecksum(header.TCPProtocolNumber, netHeader.SourceAddress(), netHeader.DestinationAddress(), length)
 	if gso != nil && gso.NeedsCsum {
 		tcpHeader.SetChecksum(xsum)
-	} else if r.Capabilities()&CapabilityTXChecksumOffload == 0 {
-		xsum = header.ChecksumVVWithOffset(pkt.Data, xsum, int(tcpHeader.DataOffset()), pkt.Data.Size())
+	} else if r.RequiresTXTransportChecksum() {
+		xsum = header.ChecksumVV(pkt.Data, xsum)
 		tcpHeader.SetChecksum(^tcpHeader.CalculateChecksum(xsum))
 	}
 

@@ -115,6 +115,12 @@ const (
 	ICMPv6NeighborSolicit ICMPv6Type = 135
 	ICMPv6NeighborAdvert  ICMPv6Type = 136
 	ICMPv6RedirectMsg     ICMPv6Type = 137
+
+	// Multicast Listener Discovery (MLD) messages, see RFC 2710.
+
+	ICMPv6MulticastListenerQuery  ICMPv6Type = 130
+	ICMPv6MulticastListenerReport ICMPv6Type = 131
+	ICMPv6MulticastListenerDone   ICMPv6Type = 132
 )
 
 // IsErrorType returns true if the receiver is an ICMP error type.
@@ -245,10 +251,9 @@ func (b ICMPv6) SetSequence(sequence uint16) {
 	binary.BigEndian.PutUint16(b[icmpv6SequenceOffset:], sequence)
 }
 
-// NDPPayload returns the NDP payload buffer. That is, it returns the ICMPv6
-// packet's message body as defined by RFC 4443 section 2.1; the portion of the
-// ICMPv6 buffer after the first ICMPv6HeaderSize bytes.
-func (b ICMPv6) NDPPayload() []byte {
+// MessageBody returns the message body as defined by RFC 4443 section 2.1; the
+// portion of the ICMPv6 buffer after the first ICMPv6HeaderSize bytes.
+func (b ICMPv6) MessageBody() []byte {
 	return b[ICMPv6HeaderSize:]
 }
 
@@ -260,22 +265,13 @@ func (b ICMPv6) Payload() []byte {
 // ICMPv6Checksum calculates the ICMP checksum over the provided ICMPv6 header,
 // IPv6 src/dst addresses and the payload.
 func ICMPv6Checksum(h ICMPv6, src, dst tcpip.Address, vv buffer.VectorisedView) uint16 {
-	// Calculate the IPv6 pseudo-header upper-layer checksum.
-	xsum := Checksum([]byte(src), 0)
-	xsum = Checksum([]byte(dst), xsum)
-	var upperLayerLength [4]byte
-	binary.BigEndian.PutUint32(upperLayerLength[:], uint32(len(h)+vv.Size()))
-	xsum = Checksum(upperLayerLength[:], xsum)
-	xsum = Checksum([]byte{0, 0, 0, uint8(ICMPv6ProtocolNumber)}, xsum)
-	for _, v := range vv.Views() {
-		xsum = Checksum(v, xsum)
-	}
+	xsum := PseudoHeaderChecksum(ICMPv6ProtocolNumber, src, dst, uint16(len(h)+vv.Size()))
 
-	// h[2:4] is the checksum itself, set it aside to avoid checksumming the checksum.
-	h2, h3 := h[2], h[3]
-	h[2], h[3] = 0, 0
-	xsum = ^Checksum(h, xsum)
-	h[2], h[3] = h2, h3
+	xsum = ChecksumVV(vv, xsum)
 
-	return xsum
+	// h[2:4] is the checksum itself, skip it to avoid checksumming the checksum.
+	xsum = Checksum(h[:2], xsum)
+	xsum = Checksum(h[4:], xsum)
+
+	return ^xsum
 }

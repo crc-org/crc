@@ -109,14 +109,6 @@ const (
 	//
 	// Default taken from MAX_NEIGHBOR_ADVERTISEMENT of RFC 4861 section 10.
 	defaultMaxReachbilityConfirmations = 3
-
-	// defaultUnreachableTime is the default duration for how long an entry will
-	// remain in the FAILED state before being removed from the neighbor cache.
-	//
-	// Note, there is no equivalent protocol constant defined in RFC 4861. It
-	// leaves the specifics of any garbage collection mechanism up to the
-	// implementation.
-	defaultUnreachableTime = 5 * time.Second
 )
 
 // NUDDispatcher is the interface integrators of netstack must implement to
@@ -129,7 +121,7 @@ type NUDDispatcher interface {
 	// the stack's operation.
 	//
 	// May be called concurrently.
-	OnNeighborAdded(nicID tcpip.NICID, ipAddr tcpip.Address, linkAddr tcpip.LinkAddress, state NeighborState, updatedAt time.Time)
+	OnNeighborAdded(tcpip.NICID, NeighborEntry)
 
 	// OnNeighborChanged will be called when an entry in a NIC's (with ID nicID)
 	// neighbor table changes state and/or link address.
@@ -138,7 +130,7 @@ type NUDDispatcher interface {
 	// the stack's operation.
 	//
 	// May be called concurrently.
-	OnNeighborChanged(nicID tcpip.NICID, ipAddr tcpip.Address, linkAddr tcpip.LinkAddress, state NeighborState, updatedAt time.Time)
+	OnNeighborChanged(tcpip.NICID, NeighborEntry)
 
 	// OnNeighborRemoved will be called when an entry is removed from a NIC's
 	// (with ID nicID) neighbor table.
@@ -147,7 +139,7 @@ type NUDDispatcher interface {
 	// the stack's operation.
 	//
 	// May be called concurrently.
-	OnNeighborRemoved(nicID tcpip.NICID, ipAddr tcpip.Address, linkAddr tcpip.LinkAddress, state NeighborState, updatedAt time.Time)
+	OnNeighborRemoved(tcpip.NICID, NeighborEntry)
 }
 
 // ReachabilityConfirmationFlags describes the flags used within a reachability
@@ -278,10 +270,6 @@ type NUDConfigurations struct {
 	// TODO(gvisor.dev/issue/2246): Discuss if implementation of this NUD
 	// configuration option is necessary.
 	MaxReachabilityConfirmations uint32
-
-	// UnreachableTime describes how long an entry will remain in the FAILED
-	// state before being removed from the neighbor cache.
-	UnreachableTime time.Duration
 }
 
 // DefaultNUDConfigurations returns a NUDConfigurations populated with default
@@ -299,7 +287,6 @@ func DefaultNUDConfigurations() NUDConfigurations {
 		MaxUnicastProbes:             defaultMaxUnicastProbes,
 		MaxAnycastDelayTime:          defaultMaxAnycastDelayTime,
 		MaxReachabilityConfirmations: defaultMaxReachbilityConfirmations,
-		UnreachableTime:              defaultUnreachableTime,
 	}
 }
 
@@ -328,9 +315,6 @@ func (c *NUDConfigurations) resetInvalidFields() {
 	}
 	if c.MaxUnicastProbes == 0 {
 		c.MaxUnicastProbes = defaultMaxUnicastProbes
-	}
-	if c.UnreachableTime == 0 {
-		c.UnreachableTime = defaultUnreachableTime
 	}
 }
 
@@ -416,7 +400,7 @@ func (s *NUDState) ReachableTime() time.Duration {
 		s.config.BaseReachableTime != s.prevBaseReachableTime ||
 		s.config.MinRandomFactor != s.prevMinRandomFactor ||
 		s.config.MaxRandomFactor != s.prevMaxRandomFactor {
-		return s.recomputeReachableTimeLocked()
+		s.recomputeReachableTimeLocked()
 	}
 	return s.reachableTime
 }
@@ -442,7 +426,7 @@ func (s *NUDState) ReachableTime() time.Duration {
 //    random value gets re-computed at least once every few hours.
 //
 // s.mu MUST be locked for writing.
-func (s *NUDState) recomputeReachableTimeLocked() time.Duration {
+func (s *NUDState) recomputeReachableTimeLocked() {
 	s.prevBaseReachableTime = s.config.BaseReachableTime
 	s.prevMinRandomFactor = s.config.MinRandomFactor
 	s.prevMaxRandomFactor = s.config.MaxRandomFactor
@@ -462,5 +446,4 @@ func (s *NUDState) recomputeReachableTimeLocked() time.Duration {
 	}
 
 	s.expiration = time.Now().Add(2 * time.Hour)
-	return s.reachableTime
 }

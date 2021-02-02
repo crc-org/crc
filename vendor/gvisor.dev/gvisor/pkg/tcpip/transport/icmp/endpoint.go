@@ -49,6 +49,7 @@ const (
 // +stateify savable
 type endpoint struct {
 	stack.TransportEndpointInfo
+	tcpip.DefaultSocketOptionsHandler
 
 	// The following fields are initialized at creation time and are
 	// immutable.
@@ -71,18 +72,19 @@ type endpoint struct {
 	// shutdownFlags represent the current shutdown state of the endpoint.
 	shutdownFlags tcpip.ShutdownFlags
 	state         endpointState
-	route         stack.Route `state:"manual"`
+	route         *stack.Route `state:"manual"`
 	ttl           uint8
 	stats         tcpip.TransportEndpointStats `state:"nosave"`
-	// linger is used for SO_LINGER socket option.
-	linger tcpip.LingerOption
 
 	// owner is used to get uid and gid of the packet.
 	owner tcpip.PacketOwner
+
+	// ops is used to get socket level options.
+	ops tcpip.SocketOptions
 }
 
 func newEndpoint(s *stack.Stack, netProto tcpip.NetworkProtocolNumber, transProto tcpip.TransportProtocolNumber, waiterQueue *waiter.Queue) (tcpip.Endpoint, *tcpip.Error) {
-	return &endpoint{
+	ep := &endpoint{
 		stack: s,
 		TransportEndpointInfo: stack.TransportEndpointInfo{
 			NetProto:   netProto,
@@ -93,7 +95,9 @@ func newEndpoint(s *stack.Stack, netProto tcpip.NetworkProtocolNumber, transProt
 		sndBufSize:    32 * 1024,
 		state:         stateInitial,
 		uniqueID:      s.UniqueID(),
-	}, nil
+	}
+	ep.ops.InitHandler(ep)
+	return ep, nil
 }
 
 // UniqueID implements stack.TransportEndpoint.UniqueID.
@@ -126,7 +130,10 @@ func (e *endpoint) Close() {
 	}
 	e.rcvMu.Unlock()
 
-	e.route.Release()
+	if e.route != nil {
+		e.route.Release()
+		e.route = nil
+	}
 
 	// Update the state.
 	e.state = stateClosed
@@ -139,6 +146,7 @@ func (e *endpoint) Close() {
 // ModerateRecvBuf implements tcpip.Endpoint.ModerateRecvBuf.
 func (e *endpoint) ModerateRecvBuf(copied int) {}
 
+// SetOwner implements tcpip.Endpoint.SetOwner.
 func (e *endpoint) SetOwner(owner tcpip.PacketOwner) {
 	e.owner = owner
 }
@@ -264,26 +272,8 @@ func (e *endpoint) write(p tcpip.Payloader, opts tcpip.WriteOptions) (int64, <-c
 		}
 	}
 
-	var route *stack.Route
-	if to == nil {
-		route = &e.route
-
-		if route.IsResolutionRequired() {
-			// Promote lock to exclusive if using a shared route,
-			// given that it may need to change in Route.Resolve()
-			// call below.
-			e.mu.RUnlock()
-			defer e.mu.RLock()
-
-			e.mu.Lock()
-			defer e.mu.Unlock()
-
-			// Recheck state after lock was re-acquired.
-			if e.state != stateConnected {
-				return 0, nil, tcpip.ErrInvalidEndpointState
-			}
-		}
-	} else {
+	route := e.route
+	if to != nil {
 		// Reject destination address if it goes through a different
 		// NIC than the endpoint was bound to.
 		nicID := to.NIC
@@ -307,7 +297,7 @@ func (e *endpoint) write(p tcpip.Payloader, opts tcpip.WriteOptions) (int64, <-c
 		}
 		defer r.Release()
 
-		route = &r
+		route = r
 	}
 
 	if route.IsResolutionRequired() {
@@ -340,26 +330,12 @@ func (e *endpoint) write(p tcpip.Payloader, opts tcpip.WriteOptions) (int64, <-c
 }
 
 // Peek only returns data from a single datagram, so do nothing here.
-func (e *endpoint) Peek([][]byte) (int64, tcpip.ControlMessages, *tcpip.Error) {
-	return 0, tcpip.ControlMessages{}, nil
+func (e *endpoint) Peek([][]byte) (int64, *tcpip.Error) {
+	return 0, nil
 }
 
 // SetSockOpt sets a socket option.
 func (e *endpoint) SetSockOpt(opt tcpip.SettableSocketOption) *tcpip.Error {
-	switch v := opt.(type) {
-	case *tcpip.SocketDetachFilterOption:
-		return nil
-
-	case *tcpip.LingerOption:
-		e.mu.Lock()
-		e.linger = *v
-		e.mu.Unlock()
-	}
-	return nil
-}
-
-// SetSockOptBool sets a socket option. Currently not supported.
-func (e *endpoint) SetSockOptBool(opt tcpip.SockOptBool, v bool) *tcpip.Error {
 	return nil
 }
 
@@ -373,17 +349,6 @@ func (e *endpoint) SetSockOptInt(opt tcpip.SockOptInt, v int) *tcpip.Error {
 
 	}
 	return nil
-}
-
-// GetSockOptBool implements tcpip.Endpoint.GetSockOptBool.
-func (e *endpoint) GetSockOptBool(opt tcpip.SockOptBool) (bool, *tcpip.Error) {
-	switch opt {
-	case tcpip.KeepaliveEnabledOption, tcpip.AcceptConnOption:
-		return false, nil
-
-	default:
-		return false, tcpip.ErrUnknownProtocolOption
-	}
 }
 
 // GetSockOptInt implements tcpip.Endpoint.GetSockOptInt.
@@ -423,16 +388,7 @@ func (e *endpoint) GetSockOptInt(opt tcpip.SockOptInt) (int, *tcpip.Error) {
 
 // GetSockOpt implements tcpip.Endpoint.GetSockOpt.
 func (e *endpoint) GetSockOpt(opt tcpip.GettableSocketOption) *tcpip.Error {
-	switch o := opt.(type) {
-	case *tcpip.LingerOption:
-		e.mu.Lock()
-		*o = e.linger
-		e.mu.Unlock()
-		return nil
-
-	default:
-		return tcpip.ErrUnknownProtocolOption
-	}
+	return tcpip.ErrUnknownProtocolOption
 }
 
 func send4(r *stack.Route, ident uint16, data buffer.View, ttl uint8, owner tcpip.PacketOwner) *tcpip.Error {
@@ -548,7 +504,6 @@ func (e *endpoint) Connect(addr tcpip.FullAddress) *tcpip.Error {
 	if err != nil {
 		return err
 	}
-	defer r.Release()
 
 	id := stack.TransportEndpointID{
 		LocalAddress:  r.LocalAddress,
@@ -563,11 +518,12 @@ func (e *endpoint) Connect(addr tcpip.FullAddress) *tcpip.Error {
 
 	id, err = e.registerWithStack(nicID, netProtos, id)
 	if err != nil {
+		r.Release()
 		return err
 	}
 
 	e.ID = id
-	e.route = r.Clone()
+	e.route = r
 	e.RegisterNICID = nicID
 
 	e.state = stateConnected
@@ -755,7 +711,7 @@ func (e *endpoint) Readiness(mask waiter.EventMask) waiter.EventMask {
 
 // HandlePacket is called by the stack when new packets arrive to this transport
 // endpoint.
-func (e *endpoint) HandlePacket(r *stack.Route, id stack.TransportEndpointID, pkt *stack.PacketBuffer) {
+func (e *endpoint) HandlePacket(id stack.TransportEndpointID, pkt *stack.PacketBuffer) {
 	// Only accept echo replies.
 	switch e.NetProto {
 	case header.IPv4ProtocolNumber:
@@ -800,7 +756,7 @@ func (e *endpoint) HandlePacket(r *stack.Route, id stack.TransportEndpointID, pk
 	// Push new packet into receive list and increment the buffer size.
 	packet := &icmpPacket{
 		senderAddress: tcpip.FullAddress{
-			NIC:  r.NICID(),
+			NIC:  pkt.NICID,
 			Addr: id.RemoteAddress,
 		},
 	}
@@ -852,4 +808,9 @@ func (*endpoint) Wait() {}
 // LastError implements tcpip.Endpoint.LastError.
 func (*endpoint) LastError() *tcpip.Error {
 	return nil
+}
+
+// SocketOptions implements tcpip.Endpoint.SocketOptions.
+func (e *endpoint) SocketOptions() *tcpip.SocketOptions {
+	return &e.ops
 }

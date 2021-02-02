@@ -1,4 +1,4 @@
-// Copyright 2019 The gVisor Authors.
+// Copyright 2020 The gVisor Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,25 +14,8 @@
 
 #include "textflag.h"
 
-#define preparingG 1
-
-// See commit_noasm.go for a description of commitSleep.
-//
-// func commitSleep(g uintptr, waitingG *uintptr) bool
-TEXT ·commitSleep(SB),NOSPLIT,$0-24
-	MOVD waitingG+8(FP), R0
-	MOVD $preparingG, R1
-	MOVD G+0(FP), R2
-
-	// Store the G in waitingG if it's still preparingG. If it's anything
-	// else it means a waker has aborted the sleep.
-again:
-        LDAXR   (R0), R3
-        CMP     R1, R3
-        BNE     ok
-        STLXR   R2, (R0), R3
-        CBNZ    R3, again
-ok:
-        CSET    EQ, R0
-        MOVB    R0, ret+16(FP)
+// func getg() *g
+TEXT ·getg(SB),NOSPLIT,$0-8
+        MOVD g, R0      // g
+        MOVD R0, ret+0(FP)
         RET
