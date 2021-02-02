@@ -102,8 +102,20 @@ func (bundle *CrcBundleInfo) createSymlinkOrCopyOpenShiftClient(ocBinDir string)
 }
 
 func (repo *Repository) Extract(path string) error {
-	_, err := extract.Uncompress(path, repo.CacheDir, true)
-	return err
+	bundleName := filepath.Base(path)
+
+	tmpDir := filepath.Join(repo.CacheDir, "tmp-extract")
+	_ = os.RemoveAll(tmpDir) // clean up before using it
+	defer func() {
+		_ = os.RemoveAll(tmpDir) // clean up after using it
+	}()
+
+	if _, err := extract.Uncompress(path, tmpDir, true); err != nil {
+		return err
+	}
+
+	bundleDir := strings.TrimSuffix(bundleName, bundleExtension)
+	return os.Rename(filepath.Join(tmpDir, bundleDir), filepath.Join(repo.CacheDir, bundleDir))
 }
 
 var defaultRepo = &Repository{
