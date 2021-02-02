@@ -223,7 +223,8 @@ func getNetworkChecksForDistro(distro *linux.OsRelease, networkMode network.Mode
 	var checks []Check
 
 	if networkMode == network.VSockMode {
-		return append(checks, vsockPreflightChecks)
+		checks = append(checks, vsockPreflightChecks)
+		return append(checks, daemonRunningChecks)
 	}
 
 	switch {
