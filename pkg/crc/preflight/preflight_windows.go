@@ -148,6 +148,7 @@ func getPreflightChecks(experimentalFeatures bool, _ bool, networkMode network.M
 
 	if networkMode == network.VSockMode {
 		checks = append(checks, vsockChecks[:]...)
+		checks = append(checks, daemonRunningChecks)
 	}
 
 	// Experimental feature
