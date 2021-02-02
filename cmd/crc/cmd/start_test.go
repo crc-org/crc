@@ -26,9 +26,7 @@ func TestRenderActionPlainSuccess(t *testing.T) {
 			},
 		},
 	}, out, ""))
-	assert.Equal(t, `
-
-Started the OpenShift cluster
+	assert.Equal(t, `Started the OpenShift cluster
 
 To access the cluster, first set up your environment by following the instructions returned by executing 'crc oc-env'.
 Then you can access your cluster by running 'oc login -u developer -p developer https://api.crc.testing:6443'.
