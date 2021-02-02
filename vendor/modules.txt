@@ -32,7 +32,7 @@ github.com/cheggaaa/pb/v3/termutil
 ## explicit
 github.com/code-ready/clicumber/testsuite
 github.com/code-ready/clicumber/util
-# github.com/code-ready/gvisor-tap-vsock v0.0.0-20201105131011-9258bacc7a6c
+# github.com/code-ready/gvisor-tap-vsock v0.0.0-20210128145517-e5f886c34c9f
 ## explicit
 github.com/code-ready/gvisor-tap-vsock/pkg/services/dns
 github.com/code-ready/gvisor-tap-vsock/pkg/services/forwarder
@@ -303,7 +303,7 @@ google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/remote_api
 google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/urlfetch
-# google.golang.org/protobuf v1.25.1-0.20200808011614-a180de9f97d9
+# google.golang.org/protobuf v1.25.1-0.20201020201750-d3470999428b
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
 google.golang.org/protobuf/internal/descfmt
@@ -344,8 +344,9 @@ gopkg.in/ini.v1
 gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 gopkg.in/yaml.v3
-# gvisor.dev/gvisor v0.0.0-20201024190640-a58d741adc72
+# gvisor.dev/gvisor v0.0.0-20210106030213-99534ddb4e66
 gvisor.dev/gvisor/pkg/gohacks
+gvisor.dev/gvisor/pkg/goid
 gvisor.dev/gvisor/pkg/linewriter
 gvisor.dev/gvisor/pkg/log
 gvisor.dev/gvisor/pkg/rand
@@ -364,6 +365,7 @@ gvisor.dev/gvisor/pkg/tcpip/link/sniffer
 gvisor.dev/gvisor/pkg/tcpip/network/arp
 gvisor.dev/gvisor/pkg/tcpip/network/fragmentation
 gvisor.dev/gvisor/pkg/tcpip/network/hash
+gvisor.dev/gvisor/pkg/tcpip/network/ip
 gvisor.dev/gvisor/pkg/tcpip/network/ipv4
 gvisor.dev/gvisor/pkg/tcpip/ports
 gvisor.dev/gvisor/pkg/tcpip/seqnum

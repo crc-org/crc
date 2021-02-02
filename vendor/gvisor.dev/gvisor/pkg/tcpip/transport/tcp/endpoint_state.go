@@ -53,8 +53,8 @@ func (e *endpoint) beforeSave() {
 	switch {
 	case epState == StateInitial || epState == StateBound:
 	case epState.connected() || epState.handshake():
-		if e.route.Capabilities()&stack.CapabilitySaveRestore == 0 {
-			if e.route.Capabilities()&stack.CapabilityDisconnectOk == 0 {
+		if !e.route.HasSaveRestoreCapability() {
+			if !e.route.HasDisconncetOkCapability() {
 				panic(tcpip.ErrSaveRejection{fmt.Errorf("endpoint cannot be saved in connected state: local %v:%d, remote %v:%d", e.ID.LocalAddress, e.ID.LocalPort, e.ID.RemoteAddress, e.ID.RemotePort)})
 			}
 			e.resetConnectionLocked(tcpip.ErrConnectionAborted)
@@ -172,6 +172,7 @@ func (e *endpoint) afterLoad() {
 	// Condition variables and mutexs are not S/R'ed so reinitialize
 	// acceptCond with e.acceptMu.
 	e.acceptCond = sync.NewCond(&e.acceptMu)
+	e.keepalive.timer.init(&e.keepalive.waker)
 	stack.StackFromEnv.RegisterRestoredEndpoint(e)
 }
 
@@ -320,21 +321,21 @@ func (e *endpoint) loadRecentTSTime(unix unixTime) {
 }
 
 // saveHardError is invoked by stateify.
-func (e *EndpointInfo) saveHardError() string {
-	if e.HardError == nil {
+func (e *endpoint) saveHardError() string {
+	if e.hardError == nil {
 		return ""
 	}
 
-	return e.HardError.String()
+	return e.hardError.String()
 }
 
 // loadHardError is invoked by stateify.
-func (e *EndpointInfo) loadHardError(s string) {
+func (e *endpoint) loadHardError(s string) {
 	if s == "" {
 		return
 	}
 
-	e.HardError = tcpip.StringToError(s)
+	e.hardError = tcpip.StringToError(s)
 }
 
 // saveMeasureTime is invoked by stateify.

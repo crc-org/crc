@@ -98,7 +98,8 @@ func (e *endpoint) Resume(s *stack.Stack) {
 		}
 	}
 
-	if e.state != StateBound && e.state != StateConnected {
+	state := e.EndpointState()
+	if state != StateBound && state != StateConnected {
 		return
 	}
 
@@ -113,12 +114,12 @@ func (e *endpoint) Resume(s *stack.Stack) {
 	}
 
 	var err *tcpip.Error
-	if e.state == StateConnected {
-		e.route, err = e.stack.FindRoute(e.RegisterNICID, e.ID.LocalAddress, e.ID.RemoteAddress, netProto, e.multicastLoop)
+	if state == StateConnected {
+		e.route, err = e.stack.FindRoute(e.RegisterNICID, e.ID.LocalAddress, e.ID.RemoteAddress, netProto, e.ops.GetMulticastLoop())
 		if err != nil {
 			panic(err)
 		}
-	} else if len(e.ID.LocalAddress) != 0 && !isBroadcastOrMulticast(e.ID.LocalAddress) { // stateBound
+	} else if len(e.ID.LocalAddress) != 0 && !e.isBroadcastOrMulticast(e.RegisterNICID, netProto, e.ID.LocalAddress) { // stateBound
 		// A local unicast address is specified, verify that it's valid.
 		if e.stack.CheckLocalAddress(e.RegisterNICID, netProto, e.ID.LocalAddress) == 0 {
 			panic(tcpip.ErrBadLocalAddress)

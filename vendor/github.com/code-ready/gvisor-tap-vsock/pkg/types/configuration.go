@@ -18,6 +18,8 @@ type Configuration struct {
 	DNS []Zone
 
 	Forwards map[string]string
+
+	NAT map[string]string
 }
 
 type Zone struct {

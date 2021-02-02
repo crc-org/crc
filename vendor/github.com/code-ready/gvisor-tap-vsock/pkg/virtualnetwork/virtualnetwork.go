@@ -1,7 +1,6 @@
 package virtualnetwork
 
 import (
-	"encoding/json"
 	"math"
 	"net"
 	"net/http"
@@ -24,6 +23,7 @@ type VirtualNetwork struct {
 	configuration *types.Configuration
 	stack         *stack.Stack
 	networkSwitch *tap.Switch
+	servicesMux   http.Handler
 }
 
 func New(configuration *types.Configuration) (*VirtualNetwork, error) {
@@ -34,7 +34,7 @@ func New(configuration *types.Configuration) (*VirtualNetwork, error) {
 
 	var endpoint stack.LinkEndpoint
 
-	tapEndpoint := tap.NewLinkEndpoint(configuration.Debug, configuration.GatewayMacAddress)
+	tapEndpoint := tap.NewLinkEndpoint(configuration.Debug, configuration.MTU, configuration.GatewayMacAddress)
 	networkSwitch := tap.NewSwitch(configuration.Debug, configuration.MTU, tap.NewIPPool(subnet))
 	tapEndpoint.Connect(networkSwitch)
 	networkSwitch.Connect(configuration.GatewayIP, tapEndpoint)
@@ -58,7 +58,8 @@ func New(configuration *types.Configuration) (*VirtualNetwork, error) {
 		return nil, errors.Wrap(err, "cannot create network stack")
 	}
 
-	if err := addServices(configuration, stack); err != nil {
+	mux, err := addServices(configuration, stack)
+	if err != nil {
 		return nil, errors.Wrap(err, "cannot add network services")
 	}
 
@@ -66,6 +67,7 @@ func New(configuration *types.Configuration) (*VirtualNetwork, error) {
 		configuration: configuration,
 		stack:         stack,
 		networkSwitch: networkSwitch,
+		servicesMux:   mux,
 	}, nil
 }
 
@@ -81,34 +83,6 @@ func (n *VirtualNetwork) BytesReceived() uint64 {
 		return 0
 	}
 	return n.networkSwitch.Received
-}
-
-func (n *VirtualNetwork) Mux() http.Handler {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode([]uint64{n.networkSwitch.Sent, n.networkSwitch.Received})
-	})
-	mux.HandleFunc("/cam", func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(n.networkSwitch.CAM())
-	})
-	mux.HandleFunc("/leases", func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(n.networkSwitch.IPs.Leases())
-	})
-	mux.HandleFunc("/connect", func(w http.ResponseWriter, r *http.Request) {
-		hj, ok := w.(http.Hijacker)
-		if !ok {
-			http.Error(w, "webserver doesn't support hijacking", http.StatusInternalServerError)
-			return
-		}
-		conn, _, err := hj.Hijack()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		n.networkSwitch.Accept(conn)
-	})
-	return mux
 }
 
 func createStack(configuration *types.Configuration, endpoint stack.LinkEndpoint) (*stack.Stack, error) {
@@ -129,14 +103,11 @@ func createStack(configuration *types.Configuration, endpoint stack.LinkEndpoint
 		return nil, errors.New(err.String())
 	}
 
-	if err := s.AddAddress(1, arp.ProtocolNumber, "arp"); err != nil {
-		return nil, errors.New(err.String())
-	}
-
 	if err := s.AddAddress(1, ipv4.ProtocolNumber, tcpip.Address(net.ParseIP(configuration.GatewayIP).To4())); err != nil {
 		return nil, errors.New(err.String())
 	}
 
+	s.SetSpoofing(1, true)
 	s.SetPromiscuousMode(1, true)
 
 	_, parsedSubnet, err := net.ParseCIDR(configuration.Subnet)

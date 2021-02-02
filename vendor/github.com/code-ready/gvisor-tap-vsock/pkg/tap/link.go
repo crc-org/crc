@@ -12,15 +12,17 @@ import (
 
 type LinkEndpoint struct {
 	debug bool
+	mtu   int
 	mac   tcpip.LinkAddress
 
 	dispatcher    stack.NetworkDispatcher
 	networkSwitch NetworkSwitch
 }
 
-func NewLinkEndpoint(debug bool, macAddress string) *LinkEndpoint {
+func NewLinkEndpoint(debug bool, mtu int, macAddress string) *LinkEndpoint {
 	return &LinkEndpoint{
 		debug: debug,
+		mtu:   mtu,
 		mac:   tcpip.LinkAddress(macAddress),
 	}
 }
@@ -61,7 +63,7 @@ func (e *LinkEndpoint) MaxHeaderLength() uint16 {
 }
 
 func (e *LinkEndpoint) MTU() uint32 {
-	return e.networkSwitch.MTU()
+	return uint32(e.mtu)
 }
 
 func (e *LinkEndpoint) Wait() {
@@ -81,7 +83,7 @@ func (e *LinkEndpoint) WritePacket(r *stack.Route, gso *stack.GSO, protocol tcpi
 	eth.Encode(&header.EthernetFields{
 		Type:    protocol,
 		SrcAddr: srcAddr,
-		DstAddr: r.RemoteLinkAddress,
+		DstAddr: r.RemoteLinkAddress(),
 	})
 
 	if e.debug {
@@ -90,7 +92,7 @@ func (e *LinkEndpoint) WritePacket(r *stack.Route, gso *stack.GSO, protocol tcpi
 		log.Info(packet.String())
 	}
 
-	e.networkSwitch.DeliverNetworkPacket(r.RemoteLinkAddress, srcAddr, protocol, pkt)
+	e.networkSwitch.DeliverNetworkPacket(r.RemoteLinkAddress(), srcAddr, protocol, pkt)
 	return nil
 }
 

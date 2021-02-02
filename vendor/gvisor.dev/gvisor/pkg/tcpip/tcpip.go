@@ -49,8 +49,9 @@ const ipv4AddressSize = 4
 // Error represents an error in the netstack error space. Using a special type
 // ensures that errors outside of this space are not accidentally introduced.
 //
-// Note: to support save / restore, it is important that all tcpip errors have
-// distinct error messages.
+// All errors must have unique msg strings.
+//
+// +stateify savable
 type Error struct {
 	msg string
 
@@ -247,6 +248,54 @@ func (a Address) WithPrefix() AddressWithPrefix {
 	}
 }
 
+// Unspecified returns true if the address is unspecified.
+func (a Address) Unspecified() bool {
+	for _, b := range a {
+		if b != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// MatchingPrefix returns the matching prefix length in bits.
+//
+// Panics if b and a have different lengths.
+func (a Address) MatchingPrefix(b Address) uint8 {
+	const bitsInAByte = 8
+
+	if len(a) != len(b) {
+		panic(fmt.Sprintf("addresses %s and %s do not have the same length", a, b))
+	}
+
+	var prefix uint8
+	for i := range a {
+		aByte := a[i]
+		bByte := b[i]
+
+		if aByte == bByte {
+			prefix += bitsInAByte
+			continue
+		}
+
+		// Count the remaining matching bits in the byte from MSbit to LSBbit.
+		mask := uint8(1) << (bitsInAByte - 1)
+		for {
+			if aByte&mask == bByte&mask {
+				prefix++
+				mask >>= 1
+				continue
+			}
+
+			break
+		}
+
+		break
+	}
+
+	return prefix
+}
+
 // AddressMask is a bitmask for an address.
 type AddressMask string
 
@@ -356,10 +405,9 @@ func (s *Subnet) IsBroadcast(address Address) bool {
 	return s.Prefix() <= 30 && s.Broadcast() == address
 }
 
-// Equal returns true if s equals o.
-//
-// Needed to use cmp.Equal on Subnet as its fields are unexported.
+// Equal returns true if this Subnet is equal to the given Subnet.
 func (s Subnet) Equal(o Subnet) bool {
+	// If this changes, update Route.Equal accordingly.
 	return s == o
 }
 
@@ -482,6 +530,17 @@ type ControlMessages struct {
 
 	// PacketInfo holds interface and address data on an incoming packet.
 	PacketInfo IPPacketInfo
+
+	// HasOriginalDestinationAddress indicates whether OriginalDstAddress is
+	// set.
+	HasOriginalDstAddress bool
+
+	// OriginalDestinationAddress holds the original destination address
+	// and port of the incoming packet.
+	OriginalDstAddress FullAddress
+
+	// SockErr is the dequeued socket error on recvmsg(MSG_ERRQUEUE).
+	SockErr *SockError
 }
 
 // PacketOwner is used to get UID and GID of the packet.
@@ -536,7 +595,7 @@ type Endpoint interface {
 	// Peek reads data without consuming it from the endpoint.
 	//
 	// This method does not block if there is no data pending.
-	Peek([][]byte) (int64, ControlMessages, *Error)
+	Peek([][]byte) (int64, *Error)
 
 	// Connect connects the endpoint to its peer. Specifying a NIC is
 	// optional.
@@ -594,20 +653,12 @@ type Endpoint interface {
 	// SetSockOpt sets a socket option.
 	SetSockOpt(opt SettableSocketOption) *Error
 
-	// SetSockOptBool sets a socket option, for simple cases where a value
-	// has the bool type.
-	SetSockOptBool(opt SockOptBool, v bool) *Error
-
 	// SetSockOptInt sets a socket option, for simple cases where a value
 	// has the int type.
 	SetSockOptInt(opt SockOptInt, v int) *Error
 
 	// GetSockOpt gets a socket option.
 	GetSockOpt(opt GettableSocketOption) *Error
-
-	// GetSockOptBool gets a socket option for simple cases where a return
-	// value has the bool type.
-	GetSockOptBool(SockOptBool) (bool, *Error)
 
 	// GetSockOptInt gets a socket option for simple cases where a return
 	// value has the int type.
@@ -635,6 +686,10 @@ type Endpoint interface {
 
 	// LastError clears and returns the last error reported by the endpoint.
 	LastError() *Error
+
+	// SocketOptions returns the structure which contains all the socket
+	// level options.
+	SocketOptions() *SocketOptions
 }
 
 // LinkPacketInfo holds Link layer information for a received packet.
@@ -690,84 +745,6 @@ type WriteOptions struct {
 	// discarded if available endpoint buffer space is unsufficient.
 	Atomic bool
 }
-
-// SockOptBool represents socket options which values have the bool type.
-type SockOptBool int
-
-const (
-	// BroadcastOption is used by SetSockOptBool/GetSockOptBool to specify
-	// whether datagram sockets are allowed to send packets to a broadcast
-	// address.
-	BroadcastOption SockOptBool = iota
-
-	// CorkOption is used by SetSockOptBool/GetSockOptBool to specify if
-	// data should be held until segments are full by the TCP transport
-	// protocol.
-	CorkOption
-
-	// DelayOption is used by SetSockOptBool/GetSockOptBool to specify if
-	// data should be sent out immediately by the transport protocol. For
-	// TCP, it determines if the Nagle algorithm is on or off.
-	DelayOption
-
-	// KeepaliveEnabledOption is used by SetSockOptBool/GetSockOptBool to
-	// specify whether TCP keepalive is enabled for this socket.
-	KeepaliveEnabledOption
-
-	// MulticastLoopOption is used by SetSockOptBool/GetSockOptBool to
-	// specify whether multicast packets sent over a non-loopback interface
-	// will be looped back.
-	MulticastLoopOption
-
-	// NoChecksumOption is used by SetSockOptBool/GetSockOptBool to specify
-	// whether UDP checksum is disabled for this socket.
-	NoChecksumOption
-
-	// PasscredOption is used by SetSockOptBool/GetSockOptBool to specify
-	// whether SCM_CREDENTIALS socket control messages are enabled.
-	//
-	// Only supported on Unix sockets.
-	PasscredOption
-
-	// QuickAckOption is stubbed out in SetSockOptBool/GetSockOptBool.
-	QuickAckOption
-
-	// ReceiveTClassOption is used by SetSockOptBool/GetSockOptBool to
-	// specify if the IPV6_TCLASS ancillary message is passed with incoming
-	// packets.
-	ReceiveTClassOption
-
-	// ReceiveTOSOption is used by SetSockOptBool/GetSockOptBool to specify
-	// if the TOS ancillary message is passed with incoming packets.
-	ReceiveTOSOption
-
-	// ReceiveIPPacketInfoOption is used by SetSockOptBool/GetSockOptBool to
-	// specify if more inforamtion is provided with incoming packets such as
-	// interface index and address.
-	ReceiveIPPacketInfoOption
-
-	// ReuseAddressOption is used by SetSockOptBool/GetSockOptBool to
-	// specify whether Bind() should allow reuse of local address.
-	ReuseAddressOption
-
-	// ReusePortOption is used by SetSockOptBool/GetSockOptBool to permit
-	// multiple sockets to be bound to an identical socket address.
-	ReusePortOption
-
-	// V6OnlyOption is used by SetSockOptBool/GetSockOptBool to specify
-	// whether an IPv6 socket is to be restricted to sending and receiving
-	// IPv6 packets only.
-	V6OnlyOption
-
-	// IPHdrIncludedOption is used by SetSockOpt to indicate for a raw
-	// endpoint that all packets being written have an IP header and the
-	// endpoint should not attach an IP header.
-	IPHdrIncludedOption
-
-	// AcceptConnOption is used by GetSockOptBool to indicate if the
-	// socket is a listening socket.
-	AcceptConnOption
-)
 
 // SockOptInt represents socket options which values have the int type.
 type SockOptInt int
@@ -978,14 +955,6 @@ type SettableSocketOption interface {
 	isSettableSocketOption()
 }
 
-// BindToDeviceOption is used by SetSockOpt/GetSockOpt to specify that sockets
-// should bind only on a specific NIC.
-type BindToDeviceOption NICID
-
-func (*BindToDeviceOption) isGettableSocketOption() {}
-
-func (*BindToDeviceOption) isSettableSocketOption() {}
-
 // TCPInfoOption is used by GetSockOpt to expose TCP statistics.
 //
 // TODO(b/64800844): Add and populate stat fields.
@@ -1160,14 +1129,6 @@ type RemoveMembershipOption MembershipOption
 
 func (*RemoveMembershipOption) isSettableSocketOption() {}
 
-// OutOfBandInlineOption is used by SetSockOpt/GetSockOpt to specify whether
-// TCP out-of-band data is delivered along with the normal in-band data.
-type OutOfBandInlineOption int
-
-func (*OutOfBandInlineOption) isGettableSocketOption() {}
-
-func (*OutOfBandInlineOption) isSettableSocketOption() {}
-
 // SocketDetachFilterOption is used by SetSockOpt to detach a previously attached
 // classic BPF filter on a given endpoint.
 type SocketDetachFilterOption int
@@ -1217,10 +1178,6 @@ type LingerOption struct {
 	Timeout time.Duration
 }
 
-func (*LingerOption) isGettableSocketOption() {}
-
-func (*LingerOption) isSettableSocketOption() {}
-
 // IPPacketInfo is the message structure for IP_PKTINFO.
 //
 // +stateify savable
@@ -1258,6 +1215,12 @@ func (r Route) String() string {
 	}
 	fmt.Fprintf(&out, " nic %d", r.NIC)
 	return out.String()
+}
+
+// Equal returns true if the given Route is equal to this Route.
+func (r Route) Equal(to Route) bool {
+	// NOTE: This relies on the fact that r.Destination == to.Destination
+	return r == to
 }
 
 // TransportProtocolNumber is the number of a transport protocol.
@@ -1385,6 +1348,18 @@ type ICMPv6PacketStats struct {
 	// RedirectMsg is the total number of ICMPv6 redirect message packets
 	// counted.
 	RedirectMsg *StatCounter
+
+	// MulticastListenerQuery is the total number of Multicast Listener Query
+	// messages counted.
+	MulticastListenerQuery *StatCounter
+
+	// MulticastListenerReport is the total number of Multicast Listener Report
+	// messages counted.
+	MulticastListenerReport *StatCounter
+
+	// MulticastListenerDone is the total number of Multicast Listener Done
+	// messages counted.
+	MulticastListenerDone *StatCounter
 }
 
 // ICMPv4SentPacketStats collects outbound ICMPv4-specific stats.
@@ -1426,6 +1401,10 @@ type ICMPv6SentPacketStats struct {
 type ICMPv6ReceivedPacketStats struct {
 	ICMPv6PacketStats
 
+	// Unrecognized is the total number of ICMPv6 packets received that the
+	// transport layer does not know how to parse.
+	Unrecognized *StatCounter
+
 	// Invalid is the total number of ICMPv6 packets received that the
 	// transport layer could not parse.
 	Invalid *StatCounter
@@ -1435,32 +1414,101 @@ type ICMPv6ReceivedPacketStats struct {
 	RouterOnlyPacketsDroppedByHost *StatCounter
 }
 
-// ICMPStats collects ICMP-specific stats (both v4 and v6).
-type ICMPStats struct {
+// ICMPv4Stats collects ICMPv4-specific stats.
+type ICMPv4Stats struct {
 	// ICMPv4SentPacketStats contains counts of sent packets by ICMPv4 packet type
 	// and a single count of packets which failed to write to the link
 	// layer.
-	V4PacketsSent ICMPv4SentPacketStats
+	PacketsSent ICMPv4SentPacketStats
 
 	// ICMPv4ReceivedPacketStats contains counts of received packets by ICMPv4
 	// packet type and a single count of invalid packets received.
-	V4PacketsReceived ICMPv4ReceivedPacketStats
+	PacketsReceived ICMPv4ReceivedPacketStats
+}
 
+// ICMPv6Stats collects ICMPv6-specific stats.
+type ICMPv6Stats struct {
 	// ICMPv6SentPacketStats contains counts of sent packets by ICMPv6 packet type
 	// and a single count of packets which failed to write to the link
 	// layer.
-	V6PacketsSent ICMPv6SentPacketStats
+	PacketsSent ICMPv6SentPacketStats
 
 	// ICMPv6ReceivedPacketStats contains counts of received packets by ICMPv6
 	// packet type and a single count of invalid packets received.
-	V6PacketsReceived ICMPv6ReceivedPacketStats
+	PacketsReceived ICMPv6ReceivedPacketStats
+}
+
+// ICMPStats collects ICMP-specific stats (both v4 and v6).
+type ICMPStats struct {
+	// V4 contains the ICMPv4-specifics stats.
+	V4 ICMPv4Stats
+
+	// V6 contains the ICMPv4-specifics stats.
+	V6 ICMPv6Stats
+}
+
+// IGMPPacketStats enumerates counts for all IGMP packet types.
+type IGMPPacketStats struct {
+	// MembershipQuery is the total number of Membership Query messages counted.
+	MembershipQuery *StatCounter
+
+	// V1MembershipReport is the total number of Version 1 Membership Report
+	// messages counted.
+	V1MembershipReport *StatCounter
+
+	// V2MembershipReport is the total number of Version 2 Membership Report
+	// messages counted.
+	V2MembershipReport *StatCounter
+
+	// LeaveGroup is the total number of Leave Group messages counted.
+	LeaveGroup *StatCounter
+}
+
+// IGMPSentPacketStats collects outbound IGMP-specific stats.
+type IGMPSentPacketStats struct {
+	IGMPPacketStats
+
+	// Dropped is the total number of IGMP packets dropped.
+	Dropped *StatCounter
+}
+
+// IGMPReceivedPacketStats collects inbound IGMP-specific stats.
+type IGMPReceivedPacketStats struct {
+	IGMPPacketStats
+
+	// Invalid is the total number of IGMP packets received that IGMP could not
+	// parse.
+	Invalid *StatCounter
+
+	// ChecksumErrors is the total number of IGMP packets dropped due to bad
+	// checksums.
+	ChecksumErrors *StatCounter
+
+	// Unrecognized is the total number of unrecognized messages counted, these
+	// are silently ignored for forward-compatibilty.
+	Unrecognized *StatCounter
+}
+
+// IGMPStats colelcts IGMP-specific stats.
+type IGMPStats struct {
+	// IGMPSentPacketStats contains counts of sent packets by IGMP packet type
+	// and a single count of invalid packets received.
+	PacketsSent IGMPSentPacketStats
+
+	// IGMPReceivedPacketStats contains counts of received packets by IGMP packet
+	// type and a single count of invalid packets received.
+	PacketsReceived IGMPReceivedPacketStats
 }
 
 // IPStats collects IP-specific stats (both v4 and v6).
 type IPStats struct {
 	// PacketsReceived is the total number of IP packets received from the
-	// link layer in nic.DeliverNetworkPacket.
+	// link layer.
 	PacketsReceived *StatCounter
+
+	// DisabledPacketsReceived is the total number of IP packets received from the
+	// link layer when the IP layer is disabled.
+	DisabledPacketsReceived *StatCounter
 
 	// InvalidDestinationAddressesReceived is the total number of IP packets
 	// received with an unknown or invalid destination address.
@@ -1500,6 +1548,15 @@ type IPStats struct {
 	// IPTablesOutputDropped is the total number of IP packets dropped in
 	// the Output chain.
 	IPTablesOutputDropped *StatCounter
+
+	// OptionTSReceived is the number of Timestamp options seen.
+	OptionTSReceived *StatCounter
+
+	// OptionRRReceived is the number of Record Route options seen.
+	OptionRRReceived *StatCounter
+
+	// OptionUnknownReceived is the number of unknown IP options seen.
+	OptionUnknownReceived *StatCounter
 }
 
 // TCPStats collects TCP-specific stats.
@@ -1647,6 +1704,9 @@ type Stats struct {
 
 	// ICMP breaks out ICMP-specific stats (both v4 and v6).
 	ICMP ICMPStats
+
+	// IGMP breaks out IGMP-specific stats.
+	IGMP IGMPStats
 
 	// IP breaks out IP-specific stats (both v4 and v6).
 	IP IPStats

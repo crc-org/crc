@@ -26,7 +26,6 @@ type VirtualDevice interface {
 }
 
 type NetworkSwitch interface {
-	MTU() uint32
 	DeliverNetworkPacket(remote, local tcpip.LinkAddress, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer)
 }
 
@@ -78,18 +77,14 @@ func (e *Switch) Connect(ip string, ep VirtualDevice) {
 	e.gateway = ep
 }
 
-func (e *Switch) MTU() uint32 {
-	return uint32(e.maxTransmissionUnit)
-}
-
 func (e *Switch) DeliverNetworkPacket(remote, local tcpip.LinkAddress, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
-	if err := e.tx(remote, local, pkt); err != nil {
+	if err := e.tx(local, remote, pkt); err != nil {
 		log.Error(err)
 	}
 }
 
 func (e *Switch) Accept(conn net.Conn) {
-	log.Infof("new connection from %s", conn.LocalAddr().String())
+	log.Infof("new connection from %s to %s", conn.RemoteAddr().String(), conn.LocalAddr().String())
 	id, failed := e.connect(conn)
 	if failed {
 		log.Error("connection failed")
@@ -103,7 +98,7 @@ func (e *Switch) Accept(conn net.Conn) {
 		e.disconnect(id, conn)
 	}()
 	if err := e.rx(id, conn); err != nil {
-		log.Error(errors.Wrapf(err, "cannot receive packets from %s, disconnecting", conn.LocalAddr().String()))
+		log.Error(errors.Wrapf(err, "cannot receive packets from %s, disconnecting", conn.RemoteAddr().String()))
 		return
 	}
 }
@@ -121,7 +116,7 @@ func (e *Switch) connect(conn net.Conn) (int, bool) {
 		return 0, true
 	}
 	if err := e.handshake(conn, fmt.Sprintf("%s/%d", ip, e.IPs.Mask())); err != nil {
-		log.Error(errors.Wrapf(err, "cannot handshake with %s", conn.LocalAddr().String()))
+		log.Error(errors.Wrapf(err, "cannot handshake with %s", conn.RemoteAddr().String()))
 		return 0, true
 	}
 
@@ -130,7 +125,7 @@ func (e *Switch) connect(conn net.Conn) (int, bool) {
 }
 
 func (e *Switch) handshake(conn net.Conn, vm string) error {
-	log.Infof("assigning %s to %s", vm, conn.LocalAddr().String())
+	log.Infof("assigning %s to %s", vm, conn.RemoteAddr().String())
 	bin, err := json.Marshal(&types.Handshake{
 		MTU:     e.maxTransmissionUnit,
 		Gateway: e.gatewayIP,
@@ -150,7 +145,7 @@ func (e *Switch) handshake(conn net.Conn, vm string) error {
 	return nil
 }
 
-func (e *Switch) tx(dst, src tcpip.LinkAddress, pkt *stack.PacketBuffer) error {
+func (e *Switch) tx(src, dst tcpip.LinkAddress, pkt *stack.PacketBuffer) error {
 	size := make([]byte, 2)
 	binary.LittleEndian.PutUint16(size, uint16(pkt.Size()))
 
@@ -235,8 +230,8 @@ func (e *Switch) rx(id int, conn net.Conn) error {
 		}
 		size := int(binary.LittleEndian.Uint16(sizeBuf[0:2]))
 
-		buf := make([]byte, e.maxTransmissionUnit+header.EthernetMinimumSize)
-		n, err = io.ReadFull(conn, buf[:size])
+		buf := make([]byte, size)
+		n, err = io.ReadFull(conn, buf)
 		if err != nil {
 			return errors.Wrap(err, "cannot read packet from socket")
 		}
@@ -245,11 +240,11 @@ func (e *Switch) rx(id int, conn net.Conn) error {
 		}
 
 		if e.debug {
-			packet := gopacket.NewPacket(buf[:size], layers.LayerTypeEthernet, gopacket.Default)
+			packet := gopacket.NewPacket(buf, layers.LayerTypeEthernet, gopacket.Default)
 			log.Info(packet.String())
 		}
 
-		view := buffer.View(buf[:size])
+		view := buffer.View(buf)
 		eth := header.Ethernet(view)
 		vv := buffer.NewVectorisedView(len(view), []buffer.View{view})
 
@@ -258,7 +253,7 @@ func (e *Switch) rx(id int, conn net.Conn) error {
 		e.camLock.Unlock()
 
 		if eth.DestinationAddress() != e.gateway.LinkAddress() {
-			if err := e.tx(eth.DestinationAddress(), eth.SourceAddress(), &stack.PacketBuffer{
+			if err := e.tx(eth.SourceAddress(), eth.DestinationAddress(), &stack.PacketBuffer{
 				Data: vv,
 			}); err != nil {
 				log.Error(err)

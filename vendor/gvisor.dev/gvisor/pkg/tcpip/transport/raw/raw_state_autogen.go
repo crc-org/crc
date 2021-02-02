@@ -47,9 +47,9 @@ func (e *endpoint) StateTypeName() string {
 func (e *endpoint) StateFields() []string {
 	return []string{
 		"TransportEndpointInfo",
+		"DefaultSocketOptionsHandler",
 		"waiterQueue",
 		"associated",
-		"hdrIncluded",
 		"rcvList",
 		"rcvBufSize",
 		"rcvBufSizeMax",
@@ -59,8 +59,8 @@ func (e *endpoint) StateFields() []string {
 		"closed",
 		"connected",
 		"bound",
-		"linger",
 		"owner",
+		"ops",
 	}
 }
 
@@ -69,9 +69,9 @@ func (e *endpoint) StateSave(stateSinkObject state.Sink) {
 	var rcvBufSizeMaxValue int = e.saveRcvBufSizeMax()
 	stateSinkObject.SaveValue(6, rcvBufSizeMaxValue)
 	stateSinkObject.Save(0, &e.TransportEndpointInfo)
-	stateSinkObject.Save(1, &e.waiterQueue)
-	stateSinkObject.Save(2, &e.associated)
-	stateSinkObject.Save(3, &e.hdrIncluded)
+	stateSinkObject.Save(1, &e.DefaultSocketOptionsHandler)
+	stateSinkObject.Save(2, &e.waiterQueue)
+	stateSinkObject.Save(3, &e.associated)
 	stateSinkObject.Save(4, &e.rcvList)
 	stateSinkObject.Save(5, &e.rcvBufSize)
 	stateSinkObject.Save(7, &e.rcvClosed)
@@ -80,15 +80,15 @@ func (e *endpoint) StateSave(stateSinkObject state.Sink) {
 	stateSinkObject.Save(10, &e.closed)
 	stateSinkObject.Save(11, &e.connected)
 	stateSinkObject.Save(12, &e.bound)
-	stateSinkObject.Save(13, &e.linger)
-	stateSinkObject.Save(14, &e.owner)
+	stateSinkObject.Save(13, &e.owner)
+	stateSinkObject.Save(14, &e.ops)
 }
 
 func (e *endpoint) StateLoad(stateSourceObject state.Source) {
 	stateSourceObject.Load(0, &e.TransportEndpointInfo)
-	stateSourceObject.Load(1, &e.waiterQueue)
-	stateSourceObject.Load(2, &e.associated)
-	stateSourceObject.Load(3, &e.hdrIncluded)
+	stateSourceObject.Load(1, &e.DefaultSocketOptionsHandler)
+	stateSourceObject.Load(2, &e.waiterQueue)
+	stateSourceObject.Load(3, &e.associated)
 	stateSourceObject.Load(4, &e.rcvList)
 	stateSourceObject.Load(5, &e.rcvBufSize)
 	stateSourceObject.Load(7, &e.rcvClosed)
@@ -97,8 +97,8 @@ func (e *endpoint) StateLoad(stateSourceObject state.Source) {
 	stateSourceObject.Load(10, &e.closed)
 	stateSourceObject.Load(11, &e.connected)
 	stateSourceObject.Load(12, &e.bound)
-	stateSourceObject.Load(13, &e.linger)
-	stateSourceObject.Load(14, &e.owner)
+	stateSourceObject.Load(13, &e.owner)
+	stateSourceObject.Load(14, &e.ops)
 	stateSourceObject.LoadValue(6, new(int), func(y interface{}) { e.loadRcvBufSizeMax(y.(int)) })
 	stateSourceObject.AfterLoad(e.afterLoad)
 }

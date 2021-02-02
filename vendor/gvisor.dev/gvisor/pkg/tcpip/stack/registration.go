@@ -17,7 +17,6 @@ package stack
 import (
 	"fmt"
 
-	"gvisor.dev/gvisor/pkg/sleep"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
@@ -63,17 +62,24 @@ const (
 	ControlUnknown
 )
 
+// NetworkPacketInfo holds information about a network layer packet.
+type NetworkPacketInfo struct {
+	// LocalAddressBroadcast is true if the packet's local address is a broadcast
+	// address.
+	LocalAddressBroadcast bool
+}
+
 // TransportEndpoint is the interface that needs to be implemented by transport
 // protocol (e.g., tcp, udp) endpoints that can handle packets.
 type TransportEndpoint interface {
 	// UniqueID returns an unique ID for this transport endpoint.
 	UniqueID() uint64
 
-	// HandlePacket is called by the stack when new packets arrive to
-	// this transport endpoint. It sets pkt.TransportHeader.
+	// HandlePacket is called by the stack when new packets arrive to this
+	// transport endpoint. It sets the packet buffer's transport header.
 	//
-	// HandlePacket takes ownership of pkt.
-	HandlePacket(r *Route, id TransportEndpointID, pkt *PacketBuffer)
+	// HandlePacket takes ownership of the packet.
+	HandlePacket(TransportEndpointID, *PacketBuffer)
 
 	// HandleControlPacket is called by the stack when new control (e.g.
 	// ICMP) packets arrive to this transport endpoint.
@@ -105,8 +111,8 @@ type RawTransportEndpoint interface {
 	// this transport endpoint. The packet contains all data from the link
 	// layer up.
 	//
-	// HandlePacket takes ownership of pkt.
-	HandlePacket(r *Route, pkt *PacketBuffer)
+	// HandlePacket takes ownership of the packet.
+	HandlePacket(*PacketBuffer)
 }
 
 // PacketEndpoint is the interface that needs to be implemented by packet
@@ -127,7 +133,7 @@ type PacketEndpoint interface {
 	HandlePacket(nicID tcpip.NICID, addr tcpip.LinkAddress, netProto tcpip.NetworkProtocolNumber, pkt *PacketBuffer)
 }
 
-// UnknownDestinationPacketDisposition enumerates the possible return vaues from
+// UnknownDestinationPacketDisposition enumerates the possible return values from
 // HandleUnknownDestinationPacket().
 type UnknownDestinationPacketDisposition int
 
@@ -172,9 +178,9 @@ type TransportProtocol interface {
 	// protocol that don't match any existing endpoint. For example,
 	// it is targeted at a port that has no listeners.
 	//
-	// HandleUnknownDestinationPacket takes ownership of pkt if it handles
+	// HandleUnknownDestinationPacket takes ownership of the packet if it handles
 	// the issue.
-	HandleUnknownDestinationPacket(r *Route, id TransportEndpointID, pkt *PacketBuffer) UnknownDestinationPacketDisposition
+	HandleUnknownDestinationPacket(TransportEndpointID, *PacketBuffer) UnknownDestinationPacketDisposition
 
 	// SetOption allows enabling/disabling protocol specific features.
 	// SetOption returns an error if the option is not supported or the
@@ -227,8 +233,8 @@ type TransportDispatcher interface {
 	//
 	// pkt.NetworkHeader must be set before calling DeliverTransportPacket.
 	//
-	// DeliverTransportPacket takes ownership of pkt.
-	DeliverTransportPacket(r *Route, protocol tcpip.TransportProtocolNumber, pkt *PacketBuffer) TransportPacketDisposition
+	// DeliverTransportPacket takes ownership of the packet.
+	DeliverTransportPacket(tcpip.TransportProtocolNumber, *PacketBuffer) TransportPacketDisposition
 
 	// DeliverTransportControlPacket delivers control packets to the
 	// appropriate transport protocol endpoint.
@@ -270,15 +276,11 @@ type NetworkHeaderParams struct {
 // An endpoint is considered to support group addressing when one or more
 // endpoints may associate themselves with the same identifier (group address).
 type GroupAddressableEndpoint interface {
-	// JoinGroup joins the spcified group.
-	//
-	// Returns true if the group was newly joined.
-	JoinGroup(group tcpip.Address) (bool, *tcpip.Error)
+	// JoinGroup joins the specified group.
+	JoinGroup(group tcpip.Address) *tcpip.Error
 
 	// LeaveGroup attempts to leave the specified group.
-	//
-	// Returns tcpip.ErrBadLocalAddress if the endpoint has not joined the group.
-	LeaveGroup(group tcpip.Address) (bool, *tcpip.Error)
+	LeaveGroup(group tcpip.Address) *tcpip.Error
 
 	// IsInGroup returns true if the endpoint is a member of the specified group.
 	IsInGroup(group tcpip.Address) bool
@@ -329,6 +331,9 @@ type AssignableAddressEndpoint interface {
 	// AddressWithPrefix returns the endpoint's address.
 	AddressWithPrefix() tcpip.AddressWithPrefix
 
+	// Subnet returns the subnet of the endpoint's address.
+	Subnet() tcpip.Subnet
+
 	// IsAssigned returns whether or not the endpoint is considered bound
 	// to its NetworkEndpoint.
 	IsAssigned(allowExpired bool) bool
@@ -364,7 +369,7 @@ type AddressEndpoint interface {
 	SetDeprecated(bool)
 }
 
-// AddressKind is the kind of of an address.
+// AddressKind is the kind of an address.
 //
 // See the values of AddressKind for more details.
 type AddressKind int
@@ -491,6 +496,9 @@ type NetworkInterface interface {
 	// Enabled returns true if the interface is enabled.
 	Enabled() bool
 
+	// Promiscuous returns true if the interface is in promiscuous mode.
+	Promiscuous() bool
+
 	// WritePacketToRemote writes the packet to the given remote link address.
 	WritePacketToRemote(tcpip.LinkAddress, *GSO, tcpip.NetworkProtocolNumber, *PacketBuffer) *tcpip.Error
 }
@@ -498,8 +506,6 @@ type NetworkInterface interface {
 // NetworkEndpoint is the interface that needs to be implemented by endpoints
 // of network layer protocols (e.g., ipv4, ipv6).
 type NetworkEndpoint interface {
-	AddressableEndpoint
-
 	// Enable enables the endpoint.
 	//
 	// Must only be called when the stack is in a state that allows the endpoint
@@ -547,7 +553,7 @@ type NetworkEndpoint interface {
 	// this network endpoint. It sets pkt.NetworkHeader.
 	//
 	// HandlePacket takes ownership of pkt.
-	HandlePacket(r *Route, pkt *PacketBuffer)
+	HandlePacket(pkt *PacketBuffer)
 
 	// Close is called when the endpoint is reomved from a stack.
 	Close()
@@ -715,10 +721,6 @@ type LinkEndpoint interface {
 	// endpoint.
 	Capabilities() LinkEndpointCapabilities
 
-	// WriteRawPacket writes a packet directly to the link. The packet
-	// should already have an ethernet header. It takes ownership of vv.
-	WriteRawPacket(vv buffer.VectorisedView) *tcpip.Error
-
 	// Attach attaches the data link layer endpoint to the network-layer
 	// dispatcher of the stack.
 	//
@@ -796,19 +798,26 @@ type LinkAddressCache interface {
 	// AddLinkAddress adds a link address to the cache.
 	AddLinkAddress(nicID tcpip.NICID, addr tcpip.Address, linkAddr tcpip.LinkAddress)
 
-	// GetLinkAddress looks up the cache to translate address to link address (e.g. IP -> MAC).
-	// If the LinkEndpoint requests address resolution and there is a LinkAddressResolver
-	// registered with the network protocol, the cache attempts to resolve the address
-	// and returns ErrWouldBlock. Waker is notified when address resolution is
-	// complete (success or not).
+	// GetLinkAddress finds the link address corresponding to the remote address
+	// (e.g. IP -> MAC).
 	//
-	// If address resolution is required, ErrNoLinkAddress and a notification channel is
-	// returned for the top level caller to block. Channel is closed once address resolution
-	// is complete (success or not).
-	GetLinkAddress(nicID tcpip.NICID, addr, localAddr tcpip.Address, protocol tcpip.NetworkProtocolNumber, w *sleep.Waker) (tcpip.LinkAddress, <-chan struct{}, *tcpip.Error)
-
-	// RemoveWaker removes a waker that has been added in GetLinkAddress().
-	RemoveWaker(nicID tcpip.NICID, addr tcpip.Address, waker *sleep.Waker)
+	// Returns a link address for the remote address, if readily available.
+	//
+	// Returns ErrWouldBlock if the link address is not readily available, along
+	// with a notification channel for the caller to block on. Triggers address
+	// resolution asynchronously.
+	//
+	// If onResolve is provided, it will be called either immediately, if
+	// resolution is not required, or when address resolution is complete, with
+	// the resolved link address and whether resolution succeeded. After any
+	// callbacks have been called, the returned notification channel is closed.
+	//
+	// If specified, the local address must be an address local to the interface
+	// the neighbor cache belongs to. The local address is the source address of
+	// a packet prompting NUD/link address resolution.
+	//
+	// TODO(gvisor.dev/issue/5151): Don't return the link address.
+	GetLinkAddress(nicID tcpip.NICID, addr, localAddr tcpip.Address, protocol tcpip.NetworkProtocolNumber, onResolve func(tcpip.LinkAddress, bool)) (tcpip.LinkAddress, <-chan struct{}, *tcpip.Error)
 }
 
 // RawFactory produces endpoints for writing various types of raw packets.

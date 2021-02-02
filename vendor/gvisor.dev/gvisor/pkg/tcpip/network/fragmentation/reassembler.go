@@ -15,19 +15,21 @@
 package fragmentation
 
 import (
-	"container/heap"
-	"fmt"
 	"math"
+	"sort"
 
 	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/buffer"
+	"gvisor.dev/gvisor/pkg/tcpip/stack"
 )
 
 type hole struct {
-	first   uint16
-	last    uint16
-	deleted bool
+	first  uint16
+	last   uint16
+	filled bool
+	final  bool
+	data   buffer.View
 }
 
 type reassembler struct {
@@ -37,84 +39,139 @@ type reassembler struct {
 	proto        uint8
 	mu           sync.Mutex
 	holes        []hole
-	deleted      int
-	heap         fragHeap
+	filled       int
 	done         bool
 	creationTime int64
-	callback     func(bool)
+	pkt          *stack.PacketBuffer
 }
 
 func newReassembler(id FragmentID, clock tcpip.Clock) *reassembler {
 	r := &reassembler{
 		id:           id,
-		holes:        make([]hole, 0, 16),
-		heap:         make(fragHeap, 0, 8),
 		creationTime: clock.NowMonotonic(),
 	}
 	r.holes = append(r.holes, hole{
-		first:   0,
-		last:    math.MaxUint16,
-		deleted: false})
+		first:  0,
+		last:   math.MaxUint16,
+		filled: false,
+		final:  true,
+	})
 	return r
 }
 
-// updateHoles updates the list of holes for an incoming fragment and
-// returns true iff the fragment filled at least part of an existing hole.
-func (r *reassembler) updateHoles(first, last uint16, more bool) bool {
-	used := false
-	for i := range r.holes {
-		if r.holes[i].deleted || first > r.holes[i].last || last < r.holes[i].first {
-			continue
-		}
-		used = true
-		r.deleted++
-		r.holes[i].deleted = true
-		if first > r.holes[i].first {
-			r.holes = append(r.holes, hole{r.holes[i].first, first - 1, false})
-		}
-		if last < r.holes[i].last && more {
-			r.holes = append(r.holes, hole{last + 1, r.holes[i].last, false})
-		}
-	}
-	return used
-}
-
-func (r *reassembler) process(first, last uint16, more bool, proto uint8, vv buffer.VectorisedView) (buffer.VectorisedView, uint8, bool, int, error) {
+func (r *reassembler) process(first, last uint16, more bool, proto uint8, pkt *stack.PacketBuffer) (buffer.VectorisedView, uint8, bool, int, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	consumed := 0
 	if r.done {
 		// A concurrent goroutine might have already reassembled
 		// the packet and emptied the heap while this goroutine
 		// was waiting on the mutex. We don't have to do anything in this case.
-		return buffer.VectorisedView{}, 0, false, consumed, nil
+		return buffer.VectorisedView{}, 0, false, 0, nil
 	}
-	// For IPv6, it is possible to have different Protocol values between
-	// fragments of a packet (because, unlike IPv4, the Protocol is not used to
-	// identify a fragment). In this case, only the Protocol of the first
-	// fragment must be used as per RFC 8200 Section 4.5.
-	//
-	// TODO(gvisor.dev/issue/3648): The entire first IP header should be recorded
-	// here (instead of just the protocol) because most IP options should be
-	// derived from the first fragment.
-	if first == 0 {
-		r.proto = proto
-	}
-	if r.updateHoles(first, last, more) {
-		// We store the incoming packet only if it filled some holes.
-		heap.Push(&r.heap, fragment{offset: first, vv: vv.Clone(nil)})
-		consumed = vv.Size()
+
+	var holeFound bool
+	var consumed int
+	for i := range r.holes {
+		currentHole := &r.holes[i]
+
+		if last < currentHole.first || currentHole.last < first {
+			continue
+		}
+		// For IPv6, overlaps with an existing fragment are explicitly forbidden by
+		// RFC 8200 section 4.5:
+		//   If any of the fragments being reassembled overlap with any other
+		//   fragments being reassembled for the same packet, reassembly of that
+		//   packet must be abandoned and all the fragments that have been received
+		//   for that packet must be discarded, and no ICMP error messages should be
+		//   sent.
+		//
+		// It is not explicitly forbidden for IPv4, but to keep parity with Linux we
+		// disallow it as well:
+		// https://github.com/torvalds/linux/blob/38525c6/net/ipv4/inet_fragment.c#L349
+		if first < currentHole.first || currentHole.last < last {
+			// Incoming fragment only partially fits in the free hole.
+			return buffer.VectorisedView{}, 0, false, 0, ErrFragmentOverlap
+		}
+		if !more {
+			if !currentHole.final || currentHole.filled && currentHole.last != last {
+				// We have another final fragment, which does not perfectly overlap.
+				return buffer.VectorisedView{}, 0, false, 0, ErrFragmentConflict
+			}
+		}
+
+		holeFound = true
+		if currentHole.filled {
+			// Incoming fragment is a duplicate.
+			continue
+		}
+
+		// We are populating the current hole with the payload and creating a new
+		// hole for any unfilled ranges on either end.
+		if first > currentHole.first {
+			r.holes = append(r.holes, hole{
+				first:  currentHole.first,
+				last:   first - 1,
+				filled: false,
+				final:  false,
+			})
+		}
+		if last < currentHole.last && more {
+			r.holes = append(r.holes, hole{
+				first:  last + 1,
+				last:   currentHole.last,
+				filled: false,
+				final:  currentHole.final,
+			})
+			currentHole.final = false
+		}
+		v := pkt.Data.ToOwnedView()
+		consumed = v.Size()
 		r.size += consumed
+		// Update the current hole to precisely match the incoming fragment.
+		r.holes[i] = hole{
+			first:  first,
+			last:   last,
+			filled: true,
+			final:  currentHole.final,
+			data:   v,
+		}
+		r.filled++
+		// For IPv6, it is possible to have different Protocol values between
+		// fragments of a packet (because, unlike IPv4, the Protocol is not used to
+		// identify a fragment). In this case, only the Protocol of the first
+		// fragment must be used as per RFC 8200 Section 4.5.
+		//
+		// TODO(gvisor.dev/issue/3648): During reassembly of an IPv6 packet, IP
+		// options received in the first fragment should be used - and they should
+		// override options from following fragments.
+		if first == 0 {
+			r.pkt = pkt
+			r.proto = proto
+		}
+
+		break
 	}
-	// Check if all the holes have been deleted and we are ready to reassamble.
-	if r.deleted < len(r.holes) {
+	if !holeFound {
+		// Incoming fragment is beyond end.
+		return buffer.VectorisedView{}, 0, false, 0, ErrFragmentConflict
+	}
+
+	// Check if all the holes have been filled and we are ready to reassemble.
+	if r.filled < len(r.holes) {
 		return buffer.VectorisedView{}, 0, false, consumed, nil
 	}
-	res, err := r.heap.reassemble()
-	if err != nil {
-		return buffer.VectorisedView{}, 0, false, consumed, fmt.Errorf("fragment reassembly failed: %w", err)
+
+	sort.Slice(r.holes, func(i, j int) bool {
+		return r.holes[i].first < r.holes[j].first
+	})
+
+	var size int
+	views := make([]buffer.View, 0, len(r.holes))
+	for _, hole := range r.holes {
+		views = append(views, hole.data)
+		size += hole.data.Size()
 	}
-	return res, r.proto, true, consumed, nil
+	return buffer.NewVectorisedView(size, views), r.proto, true, consumed, nil
 }
 
 func (r *reassembler) checkDoneOrMark() bool {
@@ -123,25 +180,4 @@ func (r *reassembler) checkDoneOrMark() bool {
 	r.done = true
 	r.mu.Unlock()
 	return prev
-}
-
-func (r *reassembler) setCallback(c func(bool)) bool {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	if r.callback != nil {
-		return false
-	}
-	r.callback = c
-	return true
-}
-
-func (r *reassembler) release(timedOut bool) {
-	r.mu.Lock()
-	callback := r.callback
-	r.callback = nil
-	r.mu.Unlock()
-
-	if callback != nil {
-		callback(timedOut)
-	}
 }

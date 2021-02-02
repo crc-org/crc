@@ -60,6 +60,8 @@ type packet struct {
 // +stateify savable
 type endpoint struct {
 	stack.TransportEndpointInfo
+	tcpip.DefaultSocketOptionsHandler
+
 	// The following fields are initialized at creation time and are
 	// immutable.
 	stack       *stack.Stack `state:"manual"`
@@ -83,12 +85,13 @@ type endpoint struct {
 	stats         tcpip.TransportEndpointStats `state:"nosave"`
 	bound         bool
 	boundNIC      tcpip.NICID
-	// linger is used for SO_LINGER socket option.
-	linger tcpip.LingerOption
 
 	// lastErrorMu protects lastError.
 	lastErrorMu sync.Mutex   `state:"nosave"`
 	lastError   *tcpip.Error `state:".(string)"`
+
+	// ops is used to get socket level options.
+	ops tcpip.SocketOptions
 }
 
 // NewEndpoint returns a new packet endpoint.
@@ -104,6 +107,7 @@ func NewEndpoint(s *stack.Stack, cooked bool, netProto tcpip.NetworkProtocolNumb
 		rcvBufSizeMax: 32 * 1024,
 		sndBufSize:    32 * 1024,
 	}
+	ep.ops.InitHandler(ep)
 
 	// Override with stack defaults.
 	var ss stack.SendBufferSizeOption
@@ -200,8 +204,8 @@ func (*endpoint) Write(p tcpip.Payloader, opts tcpip.WriteOptions) (int64, <-cha
 }
 
 // Peek implements tcpip.Endpoint.Peek.
-func (*endpoint) Peek([][]byte) (int64, tcpip.ControlMessages, *tcpip.Error) {
-	return 0, tcpip.ControlMessages{}, nil
+func (*endpoint) Peek([][]byte) (int64, *tcpip.Error) {
+	return 0, nil
 }
 
 // Disconnect implements tcpip.Endpoint.Disconnect. Packet sockets cannot be
@@ -300,24 +304,13 @@ func (ep *endpoint) Readiness(mask waiter.EventMask) waiter.EventMask {
 // used with SetSockOpt, and this function always returns
 // tcpip.ErrNotSupported.
 func (ep *endpoint) SetSockOpt(opt tcpip.SettableSocketOption) *tcpip.Error {
-	switch v := opt.(type) {
+	switch opt.(type) {
 	case *tcpip.SocketDetachFilterOption:
-		return nil
-
-	case *tcpip.LingerOption:
-		ep.mu.Lock()
-		ep.linger = *v
-		ep.mu.Unlock()
 		return nil
 
 	default:
 		return tcpip.ErrUnknownProtocolOption
 	}
-}
-
-// SetSockOptBool implements tcpip.Endpoint.SetSockOptBool.
-func (ep *endpoint) SetSockOptBool(opt tcpip.SockOptBool, v bool) *tcpip.Error {
-	return tcpip.ErrUnknownProtocolOption
 }
 
 // SetSockOptInt implements tcpip.Endpoint.SetSockOptInt.
@@ -373,28 +366,16 @@ func (ep *endpoint) LastError() *tcpip.Error {
 	return err
 }
 
-// GetSockOpt implements tcpip.Endpoint.GetSockOpt.
-func (ep *endpoint) GetSockOpt(opt tcpip.GettableSocketOption) *tcpip.Error {
-	switch o := opt.(type) {
-	case *tcpip.LingerOption:
-		ep.mu.Lock()
-		*o = ep.linger
-		ep.mu.Unlock()
-		return nil
-
-	default:
-		return tcpip.ErrNotSupported
-	}
+// UpdateLastError implements tcpip.SocketOptionsHandler.UpdateLastError.
+func (ep *endpoint) UpdateLastError(err *tcpip.Error) {
+	ep.lastErrorMu.Lock()
+	ep.lastError = err
+	ep.lastErrorMu.Unlock()
 }
 
-// GetSockOptBool implements tcpip.Endpoint.GetSockOptBool.
-func (*endpoint) GetSockOptBool(opt tcpip.SockOptBool) (bool, *tcpip.Error) {
-	switch opt {
-	case tcpip.AcceptConnOption:
-		return false, nil
-	default:
-		return false, tcpip.ErrNotSupported
-	}
+// GetSockOpt implements tcpip.Endpoint.GetSockOpt.
+func (ep *endpoint) GetSockOpt(opt tcpip.GettableSocketOption) *tcpip.Error {
+	return tcpip.ErrNotSupported
 }
 
 // GetSockOptInt implements tcpip.Endpoint.GetSockOptInt.
@@ -548,4 +529,10 @@ func (ep *endpoint) Stats() tcpip.EndpointStats {
 	return &ep.stats
 }
 
+// SetOwner implements tcpip.Endpoint.SetOwner.
 func (ep *endpoint) SetOwner(owner tcpip.PacketOwner) {}
+
+// SocketOptions implements tcpip.Endpoint.SocketOptions.
+func (ep *endpoint) SocketOptions() *tcpip.SocketOptions {
+	return &ep.ops
+}
