@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
@@ -13,7 +12,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
-	terminal "golang.org/x/term"
+	crcos "github.com/code-ready/crc/pkg/os"
 	"gopkg.in/AlecAivazis/survey.v1"
 )
 
@@ -98,7 +97,7 @@ You can copy it from the Pull Secret section of %s.
 // promptUserForSecret can be used for any kind of secret like image pull
 // secret or for password.
 func promptUserForSecret() (string, error) {
-	if !terminal.IsTerminal(int(os.Stdin.Fd())) {
+	if !crcos.RunningInTerminal() {
 		return "", errors.New("cannot ask for secret, crc not launched by a terminal")
 	}
 
