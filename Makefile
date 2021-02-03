@@ -99,6 +99,14 @@ $(HOST_BUILD_DIR)/crc-embedder: $(SOURCES)
 .PHONY: cross ## Cross compiles all binaries
 cross: $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/windows-amd64/crc.exe
 
+.PHONY: containerized ## Cross compile from container
+containerized: clean
+	${CONTAINER_RUNTIME} build -t crc-build -f images/build .
+	${CONTAINER_RUNTIME} run --name crc-cross crc-build make cross
+	${CONTAINER_RUNTIME} cp crc-cross:/opt/app-root/src/out ./
+	${CONTAINER_RUNTIME} rm crc-cross
+	${CONTAINER_RUNTIME} rmi crc-build
+
 .PHONY: test
 test:
 	go test -race --tags build -v -ldflags="$(VERSION_VARIABLES)" ./pkg/... ./cmd/...
