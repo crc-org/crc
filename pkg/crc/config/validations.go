@@ -13,10 +13,11 @@ import (
 // ValidateBool is a fail safe in the case user
 // makes a typo for boolean config values
 func ValidateBool(value interface{}) (bool, string) {
-	if cast.ToString(value) == "true" || cast.ToString(value) == "false" {
-		return true, ""
+	if _, err := cast.ToBoolE(value); err != nil {
+		return false, "must be true or false"
 	}
-	return false, "must be true or false"
+
+	return true, ""
 }
 
 // ValidateDiskSize checks if provided disk size is valid in the config
