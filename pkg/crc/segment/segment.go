@@ -18,6 +18,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/pborman/uuid"
 	"github.com/segmentio/analytics-go"
+	terminal "golang.org/x/term"
 )
 
 var WriteKey = "R7jGNYYO5gH0Nl5gDlMEuZ3gPlDJKQak" // test
@@ -81,7 +82,8 @@ func (c *Client) Upload(ctx context.Context, action string, duration time.Durati
 
 	properties = properties.Set("version", version.GetCRCVersion()).
 		Set("success", err == nil).
-		Set("duration", duration.Milliseconds())
+		Set("duration", duration.Milliseconds()).
+		Set("tty", terminal.IsTerminal(int(os.Stdin.Fd())))
 	if err != nil {
 		properties = properties.Set("error", err.Error())
 	}
