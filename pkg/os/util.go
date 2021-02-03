@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
+
+	terminal "golang.org/x/term"
 )
 
 // ReplaceOrAddEnv changes the value of an environment variable if it exists otherwise add the new variable
@@ -108,4 +110,8 @@ func RemoveFileIfExists(path string) error {
 		return os.Remove(path)
 	}
 	return nil
+}
+
+func RunningInTerminal() bool {
+	return terminal.IsTerminal(int(os.Stdin.Fd()))
 }

@@ -2,17 +2,16 @@ package input
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
-	terminal "golang.org/x/term"
+	crcos "github.com/code-ready/crc/pkg/os"
 )
 
 func PromptUserForYesOrNo(message string, force bool) bool {
 	if force {
 		return true
 	}
-	if !terminal.IsTerminal(int(os.Stdin.Fd())) {
+	if !crcos.RunningInTerminal() {
 		return false
 	}
 	var response string
