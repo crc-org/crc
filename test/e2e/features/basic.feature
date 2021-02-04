@@ -191,6 +191,7 @@ Feature: Basic test
     Scenario Outline: CRC clean-up
         When executing "crc cleanup" succeeds
         Then stderr should contain "Uninstalling tray if installed"
+        Then stderr should contain "Uninstalling daemon if installed"
         And stderr should contain "Removing the crc VM if exists"
         And stderr should contain "Removing dns server from interface"
         And stderr should contain "Will run as admin: Remove dns entry for default switch"
