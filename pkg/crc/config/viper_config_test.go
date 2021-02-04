@@ -157,6 +157,7 @@ func TestViperConfigBindFlagSet(t *testing.T) {
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
 	flagSet.IntP(CPUs, "c", 4, "")
 	flagSet.StringP(NameServer, "n", "", "")
+	flagSet.StringP("extra", "e", "", "")
 
 	_ = storage.BindFlagSet(flagSet)
 
@@ -183,6 +184,10 @@ func TestViperConfigBindFlagSet(t *testing.T) {
 		Value:     6,
 		IsDefault: false,
 	}, config.Get(CPUs))
+
+	bin, err := ioutil.ReadFile(configFile)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `{"cpus":6,"extra":"","nameservers":""}`, string(bin))
 }
 
 func TestViperConfigCastSet(t *testing.T) {
