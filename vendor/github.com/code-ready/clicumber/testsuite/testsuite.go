@@ -139,7 +139,7 @@ func FeatureContext(s *godog.Suite) {
 		ConfigFileContainsKey)
 
 	s.BeforeSuite(func() {
-		err := PrepareForIntegrationTest()
+		err := PrepareForE2eTest()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

@@ -32,18 +32,18 @@ const (
 )
 
 var (
-	IntegrationLog *log.Logger
-	logFile        *os.File
+	E2eLog  *log.Logger
+	logFile *os.File
 )
 
 func init() {
 	// Make sure there is a log, even before StartLog is called
-	IntegrationLog = log.New(ioutil.Discard, "", 0)
+	E2eLog = log.New(ioutil.Discard, "", 0)
 }
 
 func StartLog(logPath string) error {
 	t := time.Now()
-	logFileName := fmt.Sprintf("integration_%d-%d-%d_%02d-%02d-%02d.log", t.Year(), t.Month(),
+	logFileName := fmt.Sprintf("e2e_%d-%d-%d_%02d-%02d-%02d.log", t.Year(), t.Month(),
 		t.Day(), t.Hour(), t.Minute(), t.Second())
 	logPath = path.Join(logPath, logFileName)
 
@@ -53,7 +53,7 @@ func StartLog(logPath string) error {
 		return err
 	}
 
-	IntegrationLog = log.New(logFile, "", log.Ltime|log.Lmicroseconds)
+	E2eLog = log.New(logFile, "", log.Ltime|log.Lmicroseconds)
 	LogMessage("info", "Log Initiated")
 	fmt.Println("Log successfully started, logging into:", logPath)
 
@@ -67,7 +67,7 @@ func CloseLog() error {
 func LogMessage(messageInfo, message string) error {
 	messageInfo = formatMessageInfo(messageInfo)
 	message = formatMessage(message)
-	IntegrationLog.Print(messageInfo + message)
+	E2eLog.Print(messageInfo + message)
 
 	return nil
 }
