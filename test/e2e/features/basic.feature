@@ -121,10 +121,20 @@ Feature: Basic test
         Then stdout should contain "To login as a regular user, run 'oc login -u developer -p developer"
         And stdout should contain "To login as an admin, run 'oc login -u kubeadmin -p "
 
-    @darwin @linux @windows
+    @darwin @linux
     Scenario: Monitoring stack check
         Given checking that CRC is running
         When executing "eval $(crc oc-env)" succeeds
+        And login to the oc cluster succeeds
+        And executing "oc get pods -n openshift-monitoring" succeeds
+        Then stdout matches ".*cluster-monitoring-operator-\w+-\w+\ *2/2\ *Running.*"
+        And unsetting config property "enable-cluster-monitoring" succeeds
+        And unsetting config property "memory" succeeds
+
+    @windows
+    Scenario: Monitoring stack check
+        Given checking that CRC is running
+        And executing "crc oc-env | Invoke-Expression" succeeds
         And login to the oc cluster succeeds
         And executing "oc get pods -n openshift-monitoring" succeeds
         Then stdout matches ".*cluster-monitoring-operator-\w+-\w+\ *2/2\ *Running.*"
