@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/pflag"
@@ -45,7 +46,7 @@ func (c *ViperStorage) Get(key string) interface{} {
 
 func (c *ViperStorage) Set(key string, value interface{}) error {
 	c.viper.Set(key, value)
-	return c.viper.WriteConfigAs(c.configFile)
+	return atomicWrite(c.viper, c.configFile)
 }
 
 func (c *ViperStorage) Unset(key string) error {
@@ -58,8 +59,7 @@ func (c *ViperStorage) Unset(key string) error {
 	if err = c.viper.ReadConfig(bytes.NewReader(bin)); err != nil {
 		return err
 	}
-
-	return c.viper.WriteConfigAs(c.configFile)
+	return atomicWrite(c.viper, c.configFile)
 }
 
 // BindFlagset binds a flagset to their respective config properties
@@ -74,4 +74,23 @@ func ensureConfigFileExists(file string) error {
 		return ioutil.WriteFile(file, []byte("{}\n"), 0600)
 	}
 	return err
+}
+
+func atomicWrite(viper *viper.Viper, configFile string) error {
+	ext := filepath.Ext(configFile)
+	pattern := fmt.Sprintf("%s*%s", strings.TrimSuffix(filepath.Base(configFile), ext), ext)
+	tmpFile, err := ioutil.TempFile(filepath.Dir(configFile), pattern)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+	}()
+	if err := tmpFile.Close(); err != nil {
+		return err
+	}
+	if err := viper.WriteConfigAs(tmpFile.Name()); err != nil {
+		return err
+	}
+	return os.Rename(tmpFile.Name(), configFile)
 }
