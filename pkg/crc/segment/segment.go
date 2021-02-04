@@ -97,13 +97,13 @@ func (c *Client) Upload(ctx context.Context, action string, duration time.Durati
 
 func addConfigTraits(c *crcConfig.Config, in analytics.Traits) analytics.Traits {
 	return in.
-		Set("proxy", isProxyUsed(c)).
+		Set("proxy", isProxyUsed()).
 		Set(config.NetworkMode, c.Get(config.NetworkMode).AsString()).
 		Set(config.EnableClusterMonitoring, c.Get(config.EnableClusterMonitoring).AsBool()).
 		Set(config.ExperimentalFeatures, c.Get(config.ExperimentalFeatures).AsBool())
 }
 
-func isProxyUsed(c *crcConfig.Config) bool {
+func isProxyUsed() bool {
 	proxyConfig, err := network.NewProxyConfig()
 	if err != nil {
 		return false
