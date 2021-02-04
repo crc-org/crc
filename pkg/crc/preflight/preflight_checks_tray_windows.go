@@ -155,7 +155,7 @@ func stopDaemon() error {
 }
 
 func checkTrayExecutableExists() error {
-	if os.FileExists(constants.TrayExecutablePath) {
+	if os.FileExists(constants.TrayExecutablePath) && checkTrayVersion() {
 		return nil
 	}
 	return fmt.Errorf("Tray executable does not exists")
