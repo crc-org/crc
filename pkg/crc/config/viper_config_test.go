@@ -180,14 +180,9 @@ func TestViperConfigBindFlagSet(t *testing.T) {
 	_, err = config.Set(CPUs, "6")
 	assert.NoError(t, err)
 
-	assert.Equal(t, SettingValue{
-		Value:     6,
-		IsDefault: false,
-	}, config.Get(CPUs))
-
 	bin, err := ioutil.ReadFile(configFile)
 	assert.NoError(t, err)
-	assert.JSONEq(t, `{"cpus":6,"extra":"","nameservers":""}`, string(bin))
+	assert.JSONEq(t, `{"cpus":6}`, string(bin))
 }
 
 func TestViperConfigCastSet(t *testing.T) {
