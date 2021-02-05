@@ -15,7 +15,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/api"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/transport"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/types"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/virtualnetwork"
@@ -35,10 +34,6 @@ var daemonCmd = &cobra.Command{
 	Long:   "Run the crc daemon",
 	Hidden: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// setup separate logging for daemon
-		logging.CloseLogging()
-		logging.InitLogrus(logging.LogLevel, constants.DaemonLogFilePath)
-
 		var endpoints []string
 		if runtime.GOOS == "windows" {
 			endpoints = append(endpoints, transport.DefaultURL)

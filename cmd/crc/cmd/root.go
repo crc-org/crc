@@ -27,7 +27,7 @@ var rootCmd = &cobra.Command{
 	Short: descriptionShort,
 	Long:  descriptionLong,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		return runPrerun()
+		return runPrerun(cmd)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		runRoot()
@@ -64,9 +64,13 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&logging.LogLevel, "log-level", constants.DefaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
 }
 
-func runPrerun() error {
+func runPrerun(cmd *cobra.Command) error {
 	// Setting up logrus
-	logging.InitLogrus(logging.LogLevel, constants.LogFilePath)
+	logFile := constants.LogFilePath
+	if cmd == daemonCmd {
+		logFile = constants.DaemonLogFilePath
+	}
+	logging.InitLogrus(logging.LogLevel, logFile)
 	if err := setProxyDefaults(); err != nil {
 		return err
 	}
