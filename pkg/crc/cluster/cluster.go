@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -214,8 +215,9 @@ func addProxyCACertToCluster(sshRunner *ssh.Runner, ocConfig oc.Config, proxy *n
   }
 }
 `
-	// Replace the carriage return with `\n` char
-	p := fmt.Sprintf(proxyCABundleTemplate, strings.ReplaceAll(proxy.ProxyCACert, "\n", `\n`), trustedCAName)
+	// Replace the carriage return ("\n" or "\r\n") with literal `\n` string
+	re := regexp.MustCompile(`\r?\n`)
+	p := fmt.Sprintf(proxyCABundleTemplate, re.ReplaceAllString(proxy.ProxyCACert, `\n`), trustedCAName)
 	err := sshRunner.CopyData([]byte(p), proxyConfigMapFileName, 0644)
 	if err != nil {
 		return err
