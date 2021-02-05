@@ -129,6 +129,10 @@ type startResult struct {
 
 func (s *startResult) prettyPrintTo(writer io.Writer) error {
 	if s.Error != nil {
+		var e *crcErrors.PreflightError
+		if errors.As(s.Error, &e) {
+			logging.Warn("Preflight checks failed during `crc start`, please try to run `crc setup` first in case you haven't done so yet")
+		}
 		return s.Error
 	}
 	if s.ClusterConfig == nil {
