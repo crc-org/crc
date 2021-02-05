@@ -78,8 +78,8 @@ func runPrerun() error {
 }
 
 func runPostrun() {
-	logging.CloseLogging()
 	segmentClient.Close()
+	logging.CloseLogging()
 }
 
 func runRoot() {
