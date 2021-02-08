@@ -1,0 +1,19 @@
+stages:
+  - build
+
+containerized-cross-build:
+  image: registry.fedoraproject.org/fedora:latest
+  stage: build
+  script:
+    # setup base image to allow Makefile to run
+    - dnf install -y make git-core golang podman
+    # The following changes are needed to allow podman to run in podman/docker
+    - cp /usr/share/containers/containers.conf /etc/containers/containers.conf 
+    - sed -i '/^# cgroup_manager = "systemd"/ a cgroup_manager = "cgroupfs"' /etc/containers/containers.conf
+    - sed -i '/^# events_logger = "journald"/ a events_logger = "file"' /etc/containers/containers.conf
+    - sed -i '/^driver = "overlay"/ c\driver = "vfs"' /etc/containers/storage.conf
+    # run the actual containerized build
+    - make containerized
+  artifacts:
+    paths:
+      - out
