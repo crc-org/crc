@@ -22,8 +22,8 @@ func newTestConfig(configFile, envPrefix string) (*Config, error) {
 		return nil, err
 	}
 	config := New(storage)
-	config.AddSetting(CPUs, 4, ValidateCPUs, RequiresRestartMsg)
-	config.AddSetting(NameServer, "", ValidateIPAddress, SuccessfullyApplied)
+	config.AddSetting(CPUs, 4, ValidateCPUs, RequiresRestartMsg, "")
+	config.AddSetting(NameServer, "", ValidateIPAddress, SuccessfullyApplied, "")
 	return config, nil
 }
 
@@ -151,8 +151,8 @@ func TestViperConfigBindFlagSet(t *testing.T) {
 	storage, err := NewViperStorage(configFile, "CRC")
 	require.NoError(t, err)
 	config := New(storage)
-	config.AddSetting(CPUs, 4, ValidateCPUs, RequiresRestartMsg)
-	config.AddSetting(NameServer, "", ValidateIPAddress, SuccessfullyApplied)
+	config.AddSetting(CPUs, 4, ValidateCPUs, RequiresRestartMsg, "")
+	config.AddSetting(NameServer, "", ValidateIPAddress, SuccessfullyApplied, "")
 
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
 	flagSet.IntP(CPUs, "c", 4, "")
