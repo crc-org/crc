@@ -13,7 +13,8 @@ func configSetCmd(config *config.Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "set CONFIG-KEY VALUE",
 		Short: "Set a crc configuration property",
-		Long:  `Sets a crc configuration property.`,
+		Long: `Sets a crc configuration property.
+CONFIG-KEYS: ` + "\n\n" + configurableFields(config),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 2 {
 				return errors.New("Please provide a configuration property and its value as in 'crc config set KEY VALUE'")
