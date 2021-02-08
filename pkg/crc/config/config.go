@@ -37,6 +37,14 @@ func (c *Config) AllConfigs() map[string]SettingValue {
 	return allConfigs
 }
 
+func (c *Config) AllSettings() []Setting {
+	var settings []Setting
+	for _, setting := range c.settingsByName {
+		settings = append(settings, setting)
+	}
+	return settings
+}
+
 // AddSetting returns a filled struct of ConfigSetting
 // takes the config name and default value as arguments
 func (c *Config) AddSetting(name string, defValue interface{}, validationFn ValidationFnType, callbackFn SetFn, help string) {
