@@ -95,42 +95,19 @@ func less(lhsKey, rhsKey string) bool {
 }
 
 func configurableFields(config *config.Config) string {
-	var fields []string
+	settings := config.AllSettings()
+	sort.Slice(settings, func(i, j int) bool {
+		return less(settings[i].Name, settings[j].Name)
+	})
+
 	var buf bytes.Buffer
 	writer := tabwriter.NewWriter(&buf, 0, 8, 1, ' ', tabwriter.TabIndent)
-	for _, keyAndValueType := range keysAndValueType(config) {
-		fmt.Fprintln(writer, keyAndValueType)
+	for _, cfg := range settings {
+		fmt.Fprintf(writer, "* %s\t%s\n", cfg.Name, cfg.Help)
 	}
 	writer.Flush()
-	keys := strings.Split(buf.String(), "\n")
-	sort.Slice(keys, func(i, j int) bool {
-		return less(keys[i], keys[j])
-	})
-	for _, key := range keys {
-		if key == "" {
-			continue
-		}
-		fields = append(fields, " * "+key)
-	}
-	return strings.Join(fields, "\n")
-}
-func keysAndValueType(config *config.Config) []string {
-	var keyAndValueType []string
-	for key, value := range config.AllConfigs() {
-		var valueType string
-		switch value.Value.(type) {
-		case int:
-			valueType = "Number"
-		case string:
-			valueType = "String"
-		case bool:
-			valueType = "true/false"
-		default:
-			valueType = fmt.Sprintf("%T", value.Value)
-		}
-		keyAndValueType = append(keyAndValueType, fmt.Sprintf("%s\t%s", key, valueType))
-	}
-	return keyAndValueType
+
+	return buf.String()
 }
 
 func GetConfigCmd(config *config.Config) *cobra.Command {
