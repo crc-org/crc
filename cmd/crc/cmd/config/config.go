@@ -29,6 +29,7 @@ const (
 	ProxyCAFile             = "proxy-ca-file"
 	ConsentTelemetry        = "consent-telemetry"
 	EnableClusterMonitoring = "enable-cluster-monitoring"
+	AutoLoginAs             = "login-as"
 )
 
 func RegisterSettings(cfg *config.Config) {
@@ -52,6 +53,8 @@ func RegisterSettings(cfg *config.Config) {
 
 	// Telemeter Configuration
 	cfg.AddSetting(ConsentTelemetry, "", config.ValidateYesNo, config.SuccessfullyApplied)
+
+	cfg.AddSetting(AutoLoginAs, "", config.ValidateAdminOrDeveloper, config.SuccessfullyApplied)
 }
 
 func isPreflightKey(key string) bool {

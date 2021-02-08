@@ -103,3 +103,10 @@ func ValidateYesNo(value interface{}) (bool, string) {
 	}
 	return false, "must be yes or no"
 }
+
+func ValidateAdminOrDeveloper(value interface{}) (bool, string) {
+	if cast.ToString(value) == "admin" || cast.ToString(value) == "developer" {
+		return true, ""
+	}
+	return false, "must be admin or developer"
+}

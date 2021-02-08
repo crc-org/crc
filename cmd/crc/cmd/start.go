@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"strings"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
@@ -34,6 +35,7 @@ func init() {
 	flagSet.UintP(cmdConfig.DiskSize, "d", constants.DefaultDiskSize, "Total size in GiB of the disk used by the OpenShift cluster")
 	flagSet.StringP(cmdConfig.NameServer, "n", "", "IPv4 address of nameserver to use for the OpenShift cluster")
 	flagSet.Bool(cmdConfig.DisableUpdateCheck, false, "Don't check for update")
+	flagSet.String(cmdConfig.AutoLoginAs, "", "Automatically run the login command when the cluster is up; Can be developer or admin")
 
 	startCmd.Flags().AddFlagSet(flagSet)
 }
@@ -156,7 +158,28 @@ func (s *startResult) prettyPrintTo(writer io.Writer) error {
 			"This cluster was built from OKD - The Community Distribution of Kubernetes that powers Red Hat OpenShift.",
 			"If you find an issue, please report it at https://github.com/openshift/okd"}, "\n"))
 	}
-	return err
+	if err != nil {
+		return err
+	}
+
+	if userType := config.Get(cmdConfig.AutoLoginAs).AsString(); len(userType) > 0 {
+		return s.runLoginCommandFor(userType)
+	}
+
+	return nil
+}
+
+func (s *startResult) runLoginCommandFor(userType string) error {
+	username := s.ClusterConfig.DeveloperCredentials.Username
+	password := s.ClusterConfig.DeveloperCredentials.Password
+	if userType == "admin" {
+		username = s.ClusterConfig.AdminCredentials.Username
+		password = s.ClusterConfig.AdminCredentials.Password
+	}
+	cmd := exec.Command("oc", "login", "-u", username, "-p", password, s.ClusterConfig.URL)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	return cmd.Run()
 }
 
 func isDebugLog() bool {
