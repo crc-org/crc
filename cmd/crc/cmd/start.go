@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"strings"
+	"text/template"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/cluster"
@@ -18,6 +20,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/telemetry"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
+	"github.com/code-ready/crc/pkg/os/shell"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -143,24 +146,18 @@ func (s *startResult) prettyPrintTo(writer io.Writer) error {
 		return errors.New("either Error or ClusterConfig are needed")
 	}
 
-	_, err := fmt.Fprintln(writer, strings.Join([]string{
-		"Started the OpenShift cluster",
-		"",
-		"To access the cluster, first set up your environment by following the instructions returned by executing 'crc oc-env'.",
-		fmt.Sprintf("Then you can access your cluster by running 'oc login -u %s -p %s %s'.", s.ClusterConfig.DeveloperCredentials.Username, s.ClusterConfig.DeveloperCredentials.Password, s.ClusterConfig.URL),
-		fmt.Sprintf("To login as a cluster admin, run 'oc login -u %s -p %s %s'.", s.ClusterConfig.AdminCredentials.Username, s.ClusterConfig.AdminCredentials.Password, s.ClusterConfig.URL),
-		"",
-		"You can also run 'crc console' and use the above credentials to access the OpenShift web console.",
-		"The console will open in your default browser.",
-	}, "\n"))
+	if err := writeTemplatedMessage(writer, s); err != nil {
+		return err
+	}
 	if crcversion.IsOkdBuild() {
-		fmt.Fprintln(writer, strings.Join([]string{
-			"\n",
+		_, err := fmt.Fprintln(writer, strings.Join([]string{
+			"",
 			"NOTE:",
 			"This cluster was built from OKD - The Community Distribution of Kubernetes that powers Red Hat OpenShift.",
 			"If you find an issue, please report it at https://github.com/openshift/okd"}, "\n"))
+		return err
 	}
-	return err
+	return nil
 }
 
 func isDebugLog() bool {
@@ -202,4 +199,55 @@ func checkIfNewVersionAvailable(noUpdateCheck bool) {
 		return
 	}
 	logging.Debugf("No new version available. The latest version is %s", newVersion)
+}
+
+const startTemplate = `Started the OpenShift cluster.
+
+The server is accessible via web console at:
+  {{ .ClusterConfig.WebConsoleURL }}
+
+Log in as administrator:
+  Username: {{ .ClusterConfig.AdminCredentials.Username }}
+  Password: {{ .ClusterConfig.AdminCredentials.Password }}
+
+Log in as user:
+  Username: {{ .ClusterConfig.DeveloperCredentials.Username }}
+  Password: {{ .ClusterConfig.DeveloperCredentials.Password }}
+
+Use the 'oc' command line interface:
+  {{ .CommandLinePrefix }} {{ .EvalCommandLine }}
+  {{ .CommandLinePrefix }} oc login {{ .ClusterConfig.URL }}
+`
+
+type templateVariables struct {
+	ClusterConfig     *clusterConfig
+	EvalCommandLine   string
+	CommandLinePrefix string
+}
+
+func writeTemplatedMessage(writer io.Writer, s *startResult) error {
+	parsed, err := template.New("template").Parse(startTemplate)
+	if err != nil {
+		return err
+	}
+
+	userShell, err := shell.GetShell("")
+	if err != nil {
+		userShell = ""
+	}
+	return parsed.Execute(writer, &templateVariables{
+		ClusterConfig:     s.ClusterConfig,
+		EvalCommandLine:   shell.GenerateUsageHint(userShell, "crc oc-env"),
+		CommandLinePrefix: commandLinePrefix(userShell),
+	})
+}
+
+func commandLinePrefix(shell string) string {
+	if runtime.GOOS == "windows" {
+		if shell == "powershell" {
+			return "PS>"
+		}
+		return ">"
+	}
+	return "$"
 }

@@ -40,7 +40,7 @@ func RunPodmanEnv(args []string) error {
 	fmt.Println(shell.GetEnvString(userShell, "PODMAN_HOST", ip))
 	fmt.Println(shell.GetEnvString(userShell, "PODMAN_IDENTITY_FILE", constants.GetPrivateKeyPath()))
 	fmt.Println(shell.GetEnvString(userShell, "PODMAN_IGNORE_HOSTS", "1"))
-	fmt.Println(shell.GenerateUsageHint(userShell, "crc podman-env"))
+	fmt.Println(shell.GenerateUsageHintWithComment(userShell, "crc podman-env"))
 	return nil
 }
 

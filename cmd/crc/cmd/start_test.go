@@ -3,10 +3,12 @@ package cmd
 import (
 	"bytes"
 	"errors"
+	"runtime"
 	"testing"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/os/shell"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +17,8 @@ func TestRenderActionPlainSuccess(t *testing.T) {
 	assert.NoError(t, render(&startResult{
 		Success: true,
 		ClusterConfig: &clusterConfig{
-			URL: constants.DefaultAPIURL,
+			URL:           constants.DefaultAPIURL,
+			WebConsoleURL: constants.DefaultWebConsoleURL,
 			AdminCredentials: credentials{
 				Username: "kubeadmin",
 				Password: "secret",
@@ -26,15 +29,10 @@ func TestRenderActionPlainSuccess(t *testing.T) {
 			},
 		},
 	}, out, ""))
-	assert.Equal(t, `Started the OpenShift cluster
 
-To access the cluster, first set up your environment by following the instructions returned by executing 'crc oc-env'.
-Then you can access your cluster by running 'oc login -u developer -p developer https://api.crc.testing:6443'.
-To login as a cluster admin, run 'oc login -u kubeadmin -p secret https://api.crc.testing:6443'.
-
-You can also run 'crc console' and use the above credentials to access the OpenShift web console.
-The console will open in your default browser.
-`, out.String())
+	userShell, err := shell.GetShell("")
+	assert.NoError(t, err)
+	assert.Equal(t, expectedTemplate(userShell), out.String())
 }
 
 func TestRenderActionPlainFailure(t *testing.T) {
@@ -90,4 +88,68 @@ func TestRenderActionJSONFailure(t *testing.T) {
 		Error:   crcErrors.ToSerializableError(errors.New("broken")),
 	}, out, jsonFormat))
 	assert.JSONEq(t, `{"success": false, "error": "broken"}`, out.String())
+}
+
+const unixTemplate = `Started the OpenShift cluster.
+
+The server is accessible via web console at:
+  https://console-openshift-console.apps-crc.testing
+
+Log in as administrator:
+  Username: kubeadmin
+  Password: secret
+
+Log in as user:
+  Username: developer
+  Password: developer
+
+Use the 'oc' command line interface:
+  $ eval $(crc oc-env)
+  $ oc login https://api.crc.testing:6443
+`
+
+const powershellTemplate = `Started the OpenShift cluster.
+
+The server is accessible via web console at:
+  https://console-openshift-console.apps-crc.testing
+
+Log in as administrator:
+  Username: kubeadmin
+  Password: secret
+
+Log in as user:
+  Username: developer
+  Password: developer
+
+Use the 'oc' command line interface:
+  PS> & crc oc-env | Invoke-Expression
+  PS> oc login https://api.crc.testing:6443
+`
+
+const cmdTemplate = `Started the OpenShift cluster.
+
+The server is accessible via web console at:
+  https://console-openshift-console.apps-crc.testing
+
+Log in as administrator:
+  Username: kubeadmin
+  Password: secret
+
+Log in as user:
+  Username: developer
+  Password: developer
+
+Use the 'oc' command line interface:
+  > @FOR /f "tokens=*" %i IN ('crc oc-env') DO @call %i
+  > oc login https://api.crc.testing:6443
+`
+
+func expectedTemplate(shell string) string {
+	if runtime.GOOS == "windows" {
+		if shell == "powershell" {
+			return powershellTemplate
+		}
+		return cmdTemplate
+	}
+	return unixTemplate
 }

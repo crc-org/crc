@@ -39,7 +39,7 @@ func runOcEnv(args []string) error {
 		fmt.Println(shell.GetEnvString(userShell, "HTTPS_PROXY", proxyConfig.HTTPSProxy))
 		fmt.Println(shell.GetEnvString(userShell, "NO_PROXY", proxyConfig.GetNoProxyString()))
 	}
-	fmt.Println(shell.GenerateUsageHint(userShell, "crc oc-env"))
+	fmt.Println(shell.GenerateUsageHintWithComment(userShell, "crc oc-env"))
 	return nil
 }
 
