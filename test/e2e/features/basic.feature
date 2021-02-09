@@ -145,6 +145,7 @@ Feature: Basic test
     Scenario: CRC forcible stop
         When executing "crc stop -f"
         Then stdout should match "(.*)[Ss]topped the OpenShift cluster"
+        And executing "oc whoami" fails
 
     @darwin @linux @windows
     Scenario: CRC status check
