@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func configSetCmd(config config.Storage) *cobra.Command {
+func configSetCmd(config *config.Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "set CONFIG-KEY VALUE",
 		Short: "Set a crc configuration property",
