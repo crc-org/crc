@@ -49,6 +49,8 @@ func FeatureContext(s *godog.Suite) {
 		UnsetConfigPropertySucceedsOrFails)
 	s.Step(`^login to the oc cluster (succeeds|fails)$`,
 		LoginToOcClusterSucceedsOrFails)
+	s.Step(`^setting kubeconfig context to "(.*)" (succeeds|fails)$`,
+		SetKubeConfigContextSucceedsOrFails)
 	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" all cluster operators are running$`,
 		CheckClusterOperatorsWithRetry)
 	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" http response from "(.*)" has status code "(\d+)"$`,
@@ -374,6 +376,11 @@ func LoginToOcClusterSucceedsOrFails(expected string) error {
 	err = clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
+}
+
+func SetKubeConfigContextSucceedsOrFails(context, expected string) error {
+	cmd := fmt.Sprintf("oc config use-context %s", context)
+	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
 
 func StartCRCWithDefaultBundleSucceedsOrFails(expected string) error {
