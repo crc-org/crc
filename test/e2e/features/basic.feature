@@ -97,8 +97,8 @@ Feature: Basic test
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
         # Check if user can copy-paste login details for developer and kubeadmin users
-        And stdout should match "(?s)(.*)oc login -u developer -p developer https:\/\/api\.crc\.testing:6443(.*)$"
-        And stdout should match "(?s)(.*)oc login -u kubeadmin -p ([a-zA-Z0-9]{5}-){3}[a-zA-Z0-9]{5} https:\/\/api\.crc\.testing:6443(.*)$"
+        And stdout should match "(?s)(.*)oc login https:\/\/api\.crc\.testing:6443(.*)$"
+        And stdout should match "(?s)(.*)https:\/\/console-openshift-console\.apps-crc\.testing(.*)$"
 
     @darwin @linux @windows
     Scenario: CRC status and disk space check

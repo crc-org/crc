@@ -31,23 +31,31 @@ func isSupportedShell(userShell string) bool {
 	return false
 }
 
-func GenerateUsageHint(userShell, cmdLine string) string {
-	cmd := ""
-	comment := "#"
+func GenerateUsageHintWithComment(userShell, cmdLine string) string {
+	return fmt.Sprintf("%s Run this command to configure your shell:\n%s %s",
+		comment(userShell),
+		comment(userShell),
+		GenerateUsageHint(userShell, cmdLine))
+}
 
+func comment(userShell string) string {
+	if userShell == "cmd" {
+		return "REM"
+	}
+	return "#"
+}
+
+func GenerateUsageHint(userShell, cmdLine string) string {
 	switch userShell {
 	case "fish":
-		cmd = fmt.Sprintf("eval (%s)", cmdLine)
+		return fmt.Sprintf("eval (%s)", cmdLine)
 	case "powershell":
-		cmd = fmt.Sprintf("& %s | Invoke-Expression", cmdLine)
+		return fmt.Sprintf("& %s | Invoke-Expression", cmdLine)
 	case "cmd":
-		cmd = fmt.Sprintf("\t@FOR /f \"tokens=*\" %%i IN ('%s') DO @call %%i", cmdLine)
-		comment = "REM"
+		return fmt.Sprintf("@FOR /f \"tokens=*\" %%i IN ('%s') DO @call %%i", cmdLine)
 	default:
-		cmd = fmt.Sprintf("eval $(%s)", cmdLine)
+		return fmt.Sprintf("eval $(%s)", cmdLine)
 	}
-
-	return fmt.Sprintf("%s Run this command to configure your shell:\n%s %s", comment, comment, cmd)
 }
 
 func GetEnvString(userShell string, envName string, envValue string) string {
