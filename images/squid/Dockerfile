@@ -1,5 +1,5 @@
 FROM registry.centos.org/centos/centos:centos8
-MAINTAINER CodeReady Container <devtools-cdk@redhat.com>
+MAINTAINER CodeReady Containers <devtools-cdk@redhat.com>
 
 ENV SQUID_CACHE_DIR=/var/spool/squid \
     SQUID_LOG_DIR=/var/log/squid \
