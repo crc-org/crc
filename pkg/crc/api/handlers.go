@@ -33,6 +33,15 @@ func (h *Handler) Logs() string {
 	})
 }
 
+func NewHandler(config crcConfig.Storage, machine machine.Client) *Handler {
+	return &Handler{
+		MachineClient: &Adapter{
+			Underlying: machine,
+		},
+		Config: config,
+	}
+}
+
 func (h *Handler) Status() string {
 	clusterStatus := h.MachineClient.Status()
 	return encodeStructToJSON(clusterStatus)

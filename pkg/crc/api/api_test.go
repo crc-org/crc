@@ -8,13 +8,9 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
-	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
-	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
-	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/version"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -205,17 +201,6 @@ func TestGetconfigApi(t *testing.T) {
 	}, getconfigRes)
 }
 
-func setupNewInMemoryConfig() config.Storage {
-	storage := config.NewEmptyInMemoryStorage()
-	cfg := config.New(&skipPreflights{
-		storage: storage,
-	})
-	cmdConfig.RegisterSettings(cfg)
-	preflight.RegisterSettings(cfg)
-
-	return cfg
-}
-
 func setupAPIServer(t *testing.T) (string, func()) {
 	dir, err := ioutil.TempDir("", "api")
 	require.NoError(t, err)
@@ -234,25 +219,6 @@ func setupAPIServer(t *testing.T) (string, func()) {
 	}()
 
 	return socket, func() { os.RemoveAll(dir) }
-}
-
-type skipPreflights struct {
-	storage config.RawStorage
-}
-
-func (s *skipPreflights) Get(key string) interface{} {
-	if strings.HasPrefix(key, "skip-") {
-		return "true"
-	}
-	return s.storage.Get(key)
-}
-
-func (s *skipPreflights) Set(key string, value interface{}) error {
-	return s.storage.Set(key, value)
-}
-
-func (s *skipPreflights) Unset(key string) error {
-	return s.storage.Unset(key)
 }
 
 type mockLogger struct {
