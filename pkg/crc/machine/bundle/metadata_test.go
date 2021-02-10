@@ -10,6 +10,7 @@ import (
 const reference = `{
   "version": "1.0",
   "type": "snc",
+  "name": "crc_libvirt_4.6.1",
   "buildInfo": {
     "buildTime": "2020-10-26T04:48:26+00:00",
     "openshiftInstallerVersion": "./openshift-install v4.6.0\nbuilt from commit ebdbda57fc18d3b73e69f0f2cc499ddfca7e6593\nrelease image registry.svc.ci.openshift.org/origin/release:4.5",
@@ -53,6 +54,7 @@ const reference = `{
 var parsedReference = CrcBundleInfo{
 	Version: "1.0",
 	Type:    "snc",
+	Name:    "crc_libvirt_4.6.1",
 	BuildInfo: BuildInfo{
 		BuildTime:                 "2020-10-26T04:48:26+00:00",
 		OpenshiftInstallerVersion: "./openshift-install v4.6.0\nbuilt from commit ebdbda57fc18d3b73e69f0f2cc499ddfca7e6593\nrelease image registry.svc.ci.openshift.org/origin/release:4.5",

@@ -17,6 +17,7 @@ import (
 type CrcBundleInfo struct {
 	Version     string      `json:"version"`
 	Type        string      `json:"type"`
+	Name        string      `json:"name"`
 	BuildInfo   BuildInfo   `json:"buildInfo"`
 	ClusterInfo ClusterInfo `json:"clusterInfo"`
 	Nodes       []Node      `json:"nodes"`
