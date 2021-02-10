@@ -7,11 +7,13 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"time"
 
 	"github.com/Masterminds/semver"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/extract"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/pkg/errors"
@@ -160,6 +162,29 @@ func (repo *Repository) Extract(path string) error {
 	}, 5*time.Second)
 }
 
+func (repo *Repository) List() ([]CrcBundleInfo, error) {
+	files, err := ioutil.ReadDir(repo.CacheDir)
+	if err != nil {
+		return nil, err
+	}
+	var ret []CrcBundleInfo
+	for _, file := range files {
+		if !file.IsDir() {
+			continue
+		}
+		bundle, err := repo.Get(file.Name())
+		if err != nil {
+			logging.Errorf("cannot load bundle %s: %v", file.Name(), err)
+			continue
+		}
+		ret = append(ret, *bundle)
+	}
+	sort.Slice(ret, func(i, j int) bool {
+		return ret[i].ClusterInfo.OpenShiftVersion.GreaterThan(ret[j].ClusterInfo.OpenShiftVersion)
+	})
+	return ret, nil
+}
+
 var defaultRepo = &Repository{
 	CacheDir: constants.MachineCacheDir,
 	OcBinDir: constants.CrcOcBinDir,
@@ -178,4 +203,8 @@ func Extract(path string) (*CrcBundleInfo, error) {
 		return nil, err
 	}
 	return defaultRepo.Get(filepath.Base(path))
+}
+
+func List() ([]CrcBundleInfo, error) {
+	return defaultRepo.List()
 }

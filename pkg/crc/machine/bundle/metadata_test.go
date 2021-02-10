@@ -2,6 +2,7 @@ package bundle
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 	"unicode"
@@ -9,12 +10,18 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 
+	"github.com/Masterminds/semver"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-const reference = `{
-  "version": "1.0",
+func jsonForBundle(name string) string {
+	return jsonForBundleWithVersion("1.0", name)
+}
+
+func jsonForBundleWithVersion(version, name string) string {
+	return fmt.Sprintf(`{
+  "version": "%s",
   "type": "snc",
   "buildInfo": {
     "buildTime": "2020-10-26T04:48:26+00:00",
@@ -22,7 +29,7 @@ const reference = `{
     "sncVersion": "git4.1.14-137-g14e7"
   },
   "clusterInfo": {
-    "openshiftVersion": "4.6.1",
+    "openshiftVersion": "%s",
     "clusterName": "crc",
     "baseDomain": "testing",
     "appsDomain": "apps-crc.testing",
@@ -51,7 +58,7 @@ const reference = `{
     ],
     "fileList": [
       {
-        "name": "oc",
+        "name": "%s",
         "type": "oc-executable",
         "size": "72728632",
         "sha256sum": "983f0883a6dffd601afa663d10161bfd8033fd6d45cf587a9cb22e9a681d6047"
@@ -61,7 +68,13 @@ const reference = `{
   "driverInfo": {
     "name": "libvirt"
   }
-}`
+}`, version, openshiftVersion(name), constants.OcExecutableName)
+}
+
+func openshiftVersion(name string) string {
+	split := strings.Split(name, "_")
+	return split[len(split)-1]
+}
 
 var parsedReference = CrcBundleInfo{
 	Version: "1.0",
@@ -72,7 +85,7 @@ var parsedReference = CrcBundleInfo{
 		SncVersion:                "git4.1.14-137-g14e7",
 	},
 	ClusterInfo: ClusterInfo{
-		OpenShiftVersion:  "4.6.1",
+		OpenShiftVersion:  semver.MustParse("4.6.1"),
 		ClusterName:       "crc",
 		BaseDomain:        "testing",
 		AppsDomain:        "apps-crc.testing",
@@ -100,7 +113,7 @@ var parsedReference = CrcBundleInfo{
 		Files: []FileListItem{
 			{
 				File: File{
-					Name:     "oc",
+					Name:     constants.OcExecutableName,
 					Size:     "72728632",
 					Checksum: "983f0883a6dffd601afa663d10161bfd8033fd6d45cf587a9cb22e9a681d6047",
 				},
@@ -116,11 +129,11 @@ var parsedReference = CrcBundleInfo{
 
 func TestUnmarshalMarshal(t *testing.T) {
 	var bundle CrcBundleInfo
-	assert.NoError(t, json.Unmarshal([]byte(reference), &bundle))
+	assert.NoError(t, json.Unmarshal([]byte(jsonForBundle("crc_libvirt_4.6.1")), &bundle))
 	assert.Equal(t, parsedReference, bundle)
 	bin, err := json.Marshal(bundle)
 	assert.NoError(t, err)
-	assert.JSONEq(t, string(bin), reference)
+	assert.JSONEq(t, string(bin), jsonForBundle("crc_libvirt_4.6.1"))
 }
 
 // check that the bundle name has the form "crc_libvirt_4.7.8.crcbundle" or "crc_libvirt_4.7.8_123456.crcbundle"
