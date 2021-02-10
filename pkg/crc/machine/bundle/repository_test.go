@@ -123,6 +123,33 @@ func TestVersionCheck(t *testing.T) {
 	assert.EqualError(t, err, "cannot use bundle with version 2.0, bundle version must satisfy ^1.0 constraint")
 }
 
+func TestListBundles(t *testing.T) {
+	dir, err := ioutil.TempDir("", "repo")
+	assert.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	ocBinDir, err := ioutil.TempDir("", "oc-bin-dir")
+	assert.NoError(t, err)
+	defer os.RemoveAll(ocBinDir)
+
+	addBundle(t, dir, "crc_libvirt_4.6.15")
+	addBundle(t, dir, "crc_libvirt_4.7.0")
+	addBundle(t, dir, "crc_libvirt_4.10.0")
+
+	repo := &Repository{
+		CacheDir: dir,
+		OcBinDir: ocBinDir,
+	}
+
+	bundles, err := repo.List()
+	assert.NoError(t, err)
+	var names []string
+	for _, bundle := range bundles {
+		names = append(names, bundle.Name)
+	}
+	assert.Equal(t, []string{"crc_libvirt_4.10.0", "crc_libvirt_4.6.15", "crc_libvirt_4.7.0"}, names)
+}
+
 func addVersionedBundle(t *testing.T, dir string, version string) {
 	oldVersion := parsedReference.Version
 	parsedReference.Version = version
@@ -140,7 +167,7 @@ func writeMetadata(t *testing.T, dir string, s string) bool {
 func addBundle(t *testing.T, dir, name string) {
 	bundlePath := filepath.Join(dir, name)
 	assert.NoError(t, os.Mkdir(bundlePath, 0755))
-	writeMetadata(t, bundlePath, reference)
+	writeMetadata(t, bundlePath, jsonForBundle(name))
 	createDummyBundleContent(t, bundlePath)
 }
 func createDummyBundleContent(t *testing.T, bundlePath string) {
