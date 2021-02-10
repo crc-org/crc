@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Masterminds/semver"
 )
 
 // Metadata structure to unmarshal the crc-bundle-info.json file
@@ -31,13 +33,13 @@ type BuildInfo struct {
 }
 
 type ClusterInfo struct {
-	OpenShiftVersion    string `json:"openshiftVersion"`
-	ClusterName         string `json:"clusterName"`
-	BaseDomain          string `json:"baseDomain"`
-	AppsDomain          string `json:"appsDomain"`
-	SSHPrivateKeyFile   string `json:"sshPrivateKeyFile"`
-	KubeConfig          string `json:"kubeConfig"`
-	OpenshiftPullSecret string `json:"openshiftPullSecret,omitempty"`
+	OpenShiftVersion    *semver.Version `json:"openshiftVersion"`
+	ClusterName         string          `json:"clusterName"`
+	BaseDomain          string          `json:"baseDomain"`
+	AppsDomain          string          `json:"appsDomain"`
+	SSHPrivateKeyFile   string          `json:"sshPrivateKeyFile"`
+	KubeConfig          string          `json:"kubeConfig"`
+	OpenshiftPullSecret string          `json:"openshiftPullSecret,omitempty"`
 }
 
 type Node struct {
@@ -157,7 +159,7 @@ func (bundle *CrcBundleInfo) GetBundleBuildTime() (time.Time, error) {
 }
 
 func (bundle *CrcBundleInfo) GetOpenshiftVersion() string {
-	return bundle.ClusterInfo.OpenShiftVersion
+	return bundle.ClusterInfo.OpenShiftVersion.String()
 }
 
 func (bundle *CrcBundleInfo) GetBundleNameWithoutExtension() string {

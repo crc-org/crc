@@ -15,7 +15,7 @@ import (
 
 func TestGenerateBundle(t *testing.T) {
 	var b CrcBundleInfo
-	assert.NoError(t, json.Unmarshal([]byte(reference), &b))
+	assert.NoError(t, json.Unmarshal([]byte(jsonForBundle("crc_4.7.1")), &b))
 	b.bundleName = "crc_4.7.1"
 	b.Storage.Files[0].Name = constants.OcExecutableName
 
