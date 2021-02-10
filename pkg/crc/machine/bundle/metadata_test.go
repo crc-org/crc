@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Masterminds/semver"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -70,7 +71,7 @@ var parsedReference = CrcBundleInfo{
 		SncVersion:                "git4.1.14-137-g14e7",
 	},
 	ClusterInfo: ClusterInfo{
-		OpenShiftVersion:      "4.6.1",
+		OpenShiftVersion:      semver.MustParse("4.6.1"),
 		ClusterName:           "crc",
 		BaseDomain:            "testing",
 		AppsDomain:            "apps-crc.testing",

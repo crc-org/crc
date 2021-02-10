@@ -150,7 +150,7 @@ func (repo *Repository) List() ([]CrcBundleInfo, error) {
 		ret = append(ret, *bundle)
 	}
 	sort.Slice(ret, func(i, j int) bool {
-		return ret[i].Name < ret[j].Name
+		return ret[i].ClusterInfo.OpenShiftVersion.GreaterThan(ret[j].ClusterInfo.OpenShiftVersion)
 	})
 	return ret, nil
 }

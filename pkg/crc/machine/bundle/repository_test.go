@@ -31,7 +31,7 @@ func TestUse(t *testing.T) {
 
 	bundle, err := repo.Use("crc_libvirt_4.6.1.crcbundle")
 	assert.NoError(t, err)
-	assert.Equal(t, "4.6.1", bundle.ClusterInfo.OpenShiftVersion)
+	assert.Equal(t, "4.6.1", bundle.GetOpenshiftVersion())
 
 	bin, err := ioutil.ReadFile(filepath.Join(ocBinDir, constants.OcExecutableName))
 	assert.NoError(t, err)
@@ -77,7 +77,7 @@ func TestExtract(t *testing.T) {
 
 	bundle, err := repo.Get(testBundle(t))
 	assert.NoError(t, err)
-	assert.Equal(t, "4.6.1", bundle.ClusterInfo.OpenShiftVersion)
+	assert.Equal(t, "4.6.1", bundle.GetOpenshiftVersion())
 
 	_ = os.Remove(bundle.GetKubeConfigPath())
 	bundle, err = repo.Get(testBundle(t))
@@ -147,7 +147,7 @@ func TestListBundles(t *testing.T) {
 	for _, bundle := range bundles {
 		names = append(names, bundle.Name)
 	}
-	assert.Equal(t, []string{"crc_libvirt_4.10.0", "crc_libvirt_4.6.15", "crc_libvirt_4.7.0"}, names)
+	assert.Equal(t, []string{"crc_libvirt_4.10.0", "crc_libvirt_4.7.0", "crc_libvirt_4.6.15"}, names)
 }
 
 func addVersionedBundle(t *testing.T, dir string, version string) {

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Masterminds/semver"
 	"github.com/code-ready/crc/pkg/crc/constants"
 )
 
@@ -34,14 +35,14 @@ type BuildInfo struct {
 }
 
 type ClusterInfo struct {
-	OpenShiftVersion      string `json:"openshiftVersion"`
-	ClusterName           string `json:"clusterName"`
-	BaseDomain            string `json:"baseDomain"`
-	AppsDomain            string `json:"appsDomain"`
-	SSHPrivateKeyFile     string `json:"sshPrivateKeyFile"`
-	KubeConfig            string `json:"kubeConfig"`
-	KubeadminPasswordFile string `json:"kubeadminPasswordFile"`
-	OpenshiftPullSecret   string `json:"openshiftPullSecret,omitempty"`
+	OpenShiftVersion      *semver.Version `json:"openshiftVersion"`
+	ClusterName           string          `json:"clusterName"`
+	BaseDomain            string          `json:"baseDomain"`
+	AppsDomain            string          `json:"appsDomain"`
+	SSHPrivateKeyFile     string          `json:"sshPrivateKeyFile"`
+	KubeConfig            string          `json:"kubeConfig"`
+	KubeadminPasswordFile string          `json:"kubeadminPasswordFile"`
+	OpenshiftPullSecret   string          `json:"openshiftPullSecret,omitempty"`
 }
 
 type Node struct {
@@ -138,7 +139,7 @@ func (bundle *CrcBundleInfo) GetBundleBuildTime() (time.Time, error) {
 }
 
 func (bundle *CrcBundleInfo) GetOpenshiftVersion() string {
-	return bundle.ClusterInfo.OpenShiftVersion
+	return bundle.ClusterInfo.OpenShiftVersion.String()
 }
 
 func (bundle *CrcBundleInfo) verify() error {
