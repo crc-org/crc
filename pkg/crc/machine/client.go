@@ -16,6 +16,7 @@ type Client interface {
 	Start(startConfig StartConfig) (*StartResult, error)
 	Status() (*ClusterStatusResult, error)
 	Stop() (state.State, error)
+	IsRunning() (bool, error)
 }
 
 type client struct {

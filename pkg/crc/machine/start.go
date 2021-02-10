@@ -138,7 +138,7 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "Error creating machine")
 		}
-	} else {
+	} else { // exists
 		host, err = libMachineAPIClient.Load(client.name)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error loading machine")
@@ -382,6 +382,27 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		ClusterConfig:  *clusterConfig,
 		Status:         vmState,
 	}, nil
+}
+
+func (client *client) IsRunning() (bool, error) {
+	libMachineAPIClient, cleanup := createLibMachineClient()
+	defer cleanup()
+	host, err := libMachineAPIClient.Load(client.name)
+
+	if err != nil {
+		return false, errors.Wrap(err, "Cannot load machine")
+	}
+
+	// get the actual state
+	vmState, err := host.Driver.GetState()
+	if err != nil {
+		// but reports not started on error
+		return false, errors.Wrap(err, "Error getting the state")
+	}
+	if vmState != state.Running {
+		return false, nil
+	}
+	return true, nil
 }
 
 func (client *client) validateStartConfig(startConfig StartConfig) error {
