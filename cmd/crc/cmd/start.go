@@ -60,10 +60,6 @@ func runStart(ctx context.Context) (*machine.StartResult, error) {
 
 	checkIfNewVersionAvailable(config.Get(cmdConfig.DisableUpdateCheck).AsBool())
 
-	if err := preflight.StartPreflightChecks(config); err != nil {
-		return nil, err
-	}
-
 	telemetry.SetContextProperty(ctx, cmdConfig.CPUs, config.Get(cmdConfig.CPUs).AsInt())
 	telemetry.SetContextProperty(ctx, cmdConfig.Memory, uint64(config.Get(cmdConfig.Memory).AsInt())*1024*1024)
 	telemetry.SetContextProperty(ctx, cmdConfig.DiskSize, uint64(config.Get(cmdConfig.DiskSize).AsInt())*1024*1024*1024)
@@ -78,6 +74,14 @@ func runStart(ctx context.Context) (*machine.StartResult, error) {
 	}
 
 	client := newMachine()
+	isRunning, _ := client.IsRunning()
+
+	if !isRunning {
+		if err := preflight.StartPreflightChecks(config); err != nil {
+			return nil, err
+		}
+	}
+
 	return client.Start(startConfig)
 }
 

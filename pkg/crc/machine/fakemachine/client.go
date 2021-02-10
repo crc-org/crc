@@ -100,3 +100,7 @@ func (c *Client) Status() (*machine.ClusterStatusResult, error) {
 func (c *Client) Exists() (bool, error) {
 	return true, nil
 }
+
+func (c *Client) IsRunning() (bool, error) {
+	return true, nil
+}
