@@ -27,6 +27,8 @@ func init() {
 	rootCmd.AddCommand(daemonCmd)
 }
 
+const hostVirtualIP = "192.168.127.254"
+
 var daemonCmd = &cobra.Command{
 	Use:    "daemon",
 	Short:  "Run the crc daemon",
@@ -75,6 +77,10 @@ var daemonCmd = &cobra.Command{
 							Regexp: regexp.MustCompile("crc-(.*?)-master-0"),
 							IP:     net.ParseIP("192.168.126.11"),
 						},
+						{
+							Name: "host",
+							IP:   net.ParseIP(hostVirtualIP),
+						},
 					},
 				},
 			},
@@ -82,6 +88,9 @@ var daemonCmd = &cobra.Command{
 				fmt.Sprintf(":%d", constants.VsockSSHPort): "192.168.127.2:22",
 				":6443": "192.168.127.2:6443",
 				":443":  "192.168.127.2:443",
+			},
+			NAT: map[string]string{
+				hostVirtualIP: "127.0.0.1",
 			},
 		}, endpoints)
 		return err
