@@ -22,7 +22,7 @@ If you are looking for a solution for running OpenShift 3.x, you will need tools
 
 === Getting CodeReady Containers
 
-CodeReady Containers binaries with an embedded OpenShift disk image can be downloaded from link:https://cloud.redhat.com/openshift/install/crc/installer-provisioned[this page].
+CodeReady Containers binaries with an embedded OpenShift disk image can be downloaded from link:https://cloud.redhat.com/openshift/create/local[this page].
 
 === Using CodeReady Containers
 
