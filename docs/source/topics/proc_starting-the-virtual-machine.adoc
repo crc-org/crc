@@ -10,7 +10,7 @@ The [command]`{bin} start` command starts the {prod} virtual machine and OpenShi
 For more information, see link:{crc-gsg-url}#setting-up-codeready-containers_gsg[Setting up {prod}].
 * On {msw}, ensure that your user account can elevate to Administrator privileges.
 * You have a valid OpenShift user pull secret.
-Copy or download the pull secret from the Pull Secret section of the link:https://cloud.redhat.com/openshift/install/crc/installer-provisioned[Install on Laptop: {rh-prod}] page on cloud.redhat.com.
+Copy or download the pull secret from the Pull Secret section of the link:https://cloud.redhat.com/openshift/create/local[Install on Laptop: {rh-prod}] page on cloud.redhat.com.
 +
 [NOTE]
 ====
