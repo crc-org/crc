@@ -15,6 +15,7 @@ import (
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
+	crcErr "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/telemetry"
 	"github.com/code-ready/crc/pkg/crc/version"
@@ -30,9 +31,10 @@ type segmentResponse struct {
 			ExperimentalFeatures bool   `json:"enable-experimental-features"`
 		} `json:"traits"`
 		Properties struct {
-			Error   string `json:"error"`
-			Version string `json:"version"`
-			CPUs    int    `json:"cpus"`
+			Error     string `json:"error"`
+			ErrorType string `json:"error-type"`
+			Version   string `json:"version"`
+			CPUs      int    `json:"cpus"`
 		} `json:"properties"`
 		Type string `json:"type"`
 	} `json:"batch"`
@@ -69,7 +71,41 @@ func newTestConfig(value string) (*crcConfig.Config, error) {
 	return config, nil
 }
 
-func TestClientUploadWithConsent(t *testing.T) {
+func TestClientUploadWithConsentAndWithSerializableError(t *testing.T) {
+	body, server := mockServer()
+	defer server.Close()
+	defer close(body)
+
+	dir, err := ioutil.TempDir("", "cfg")
+	require.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	config, err := newTestConfig("yes")
+	require.NoError(t, err)
+
+	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
+	require.NoError(t, err)
+
+	require.NoError(t, c.Upload(context.Background(), "start", time.Minute, crcErr.ToSerializableError(crcErr.VMNotExist)))
+	require.NoError(t, c.Close())
+
+	select {
+	case x := <-body:
+		s := segmentResponse{}
+		require.NoError(t, json.Unmarshal(x, &s))
+		require.Equal(t, s.Batch[0].Type, "identify")
+		require.Equal(t, s.Batch[0].Traits.OS, runtime.GOOS)
+		require.Equal(t, s.Batch[0].Traits.ExperimentalFeatures, true)
+		require.Equal(t, s.Batch[1].Type, "track")
+		require.Equal(t, s.Batch[1].Properties.Error, crcErr.VMNotExist.Error())
+		require.Equal(t, s.Batch[1].Properties.ErrorType, "errors.vmNotExist")
+		require.Equal(t, s.Batch[1].Properties.Version, version.GetCRCVersion())
+	default:
+		require.Fail(t, "server should receive data")
+	}
+}
+
+func TestClientUploadWithConsentAndWithoutSerializableError(t *testing.T) {
 	body, server := mockServer()
 	defer server.Close()
 	defer close(body)
@@ -96,6 +132,7 @@ func TestClientUploadWithConsent(t *testing.T) {
 		require.Equal(t, s.Batch[0].Traits.ExperimentalFeatures, true)
 		require.Equal(t, s.Batch[1].Type, "track")
 		require.Equal(t, s.Batch[1].Properties.Error, "an error occurred")
+		require.Equal(t, s.Batch[1].Properties.ErrorType, "*errors.errorString")
 		require.Equal(t, s.Batch[1].Properties.Version, version.GetCRCVersion())
 	default:
 		require.Fail(t, "server should receive data")
