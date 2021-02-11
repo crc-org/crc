@@ -2,6 +2,8 @@ package segment
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
@@ -85,7 +87,8 @@ func (c *Client) Upload(ctx context.Context, action string, duration time.Durati
 		Set("duration", duration.Milliseconds()).
 		Set("tty", crcos.RunningInTerminal())
 	if err != nil {
-		properties = properties.Set("error", err.Error())
+		properties = properties.Set("error", err.Error()).
+			Set("error-type", errorType(err))
 	}
 
 	return c.segmentClient.Enqueue(analytics.Track{
@@ -139,4 +142,12 @@ func (l *loggingAdapter) Logf(format string, args ...interface{}) {
 
 func (l *loggingAdapter) Errorf(format string, args ...interface{}) {
 	logging.Errorf(format, args...)
+}
+
+func errorType(err error) string {
+	wrappedErr := errors.Unwrap(err)
+	if wrappedErr != nil {
+		return fmt.Sprintf("%T", wrappedErr)
+	}
+	return fmt.Sprintf("%T", err)
 }
