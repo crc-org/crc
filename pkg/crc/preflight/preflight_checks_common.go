@@ -17,6 +17,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+var bundleCheck = Check{
+	configKeySuffix:  "check-bundle-extracted",
+	checkDescription: "Checking if CRC bundle is extracted in '$HOME/.crc'",
+	check:            checkBundleExtracted,
+	fixDescription:   "Extracting bundle from the CRC executable",
+	fix:              fixBundleExtracted,
+	flags:            SetupOnly,
+}
+
 var genericPreflightChecks = [...]Check{
 	{
 		configKeySuffix:  "check-podman-cached",
@@ -31,14 +40,6 @@ var genericPreflightChecks = [...]Check{
 		check:            checkAdminHelperExecutableCached,
 		fixDescription:   "Caching admin-helper executable",
 		fix:              fixAdminHelperExecutableCached,
-	},
-	{
-		configKeySuffix:  "check-bundle-extracted",
-		checkDescription: "Checking if CRC bundle is extracted in '$HOME/.crc'",
-		check:            checkBundleExtracted,
-		fixDescription:   "Extracting bundle from the CRC executable",
-		fix:              fixBundleExtracted,
-		flags:            SetupOnly,
 	},
 	{
 		configKeySuffix:  "check-ram",
