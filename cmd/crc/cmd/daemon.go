@@ -67,11 +67,6 @@ var daemonCmd = &cobra.Command{
 					},
 				},
 			},
-			Forwards: map[string]string{
-				fmt.Sprintf(":%d", constants.VsockSSHPort): "192.168.127.2:22",
-				":6443": "192.168.127.2:6443",
-				":443":  "192.168.127.2:443",
-			},
 		}
 		if config.Get(cmdConfig.HostNetworkAccess).AsBool() {
 			log.Debugf("Enabling host network access")

@@ -133,6 +133,12 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 			return nil, errors.Wrap(err, "Error getting bundle metadata")
 		}
 
+		if client.useVSock() {
+			if err := exposePorts(); err != nil {
+				return nil, err
+			}
+		}
+
 		logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
 
 		// Retrieve metadata info
@@ -182,6 +188,12 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 				ClusterConfig:  *clusterConfig,
 				KubeletStarted: true,
 			}, nil
+		}
+
+		if client.useVSock() {
+			if err := exposePorts(); err != nil {
+				return nil, err
+			}
 		}
 
 		telemetry.SetStartType(ctx, telemetry.StartStartType)
