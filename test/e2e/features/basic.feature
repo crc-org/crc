@@ -125,7 +125,7 @@ Feature: Basic test
     Scenario: Monitoring stack check
         Given checking that CRC is running
         When executing "eval $(crc oc-env)" succeeds
-        And setting kubeconfig context to "crc-admin" succeeds
+        And login to the oc cluster succeeds
         And executing "oc get pods -n openshift-monitoring" succeeds
         Then stdout matches ".*cluster-monitoring-operator-\w+-\w+\ *2/2\ *Running.*"
         And unsetting config property "enable-cluster-monitoring" succeeds
@@ -135,7 +135,7 @@ Feature: Basic test
     Scenario: Monitoring stack check
         Given checking that CRC is running
         And executing "crc oc-env | Invoke-Expression" succeeds
-        And setting kubeconfig context to "crc-admin" succeeds
+        And login to the oc cluster succeeds
         And executing "oc get pods -n openshift-monitoring" succeeds
         Then stdout matches ".*cluster-monitoring-operator-\w+-\w+\ *2/2\ *Running.*"
         And unsetting config property "enable-cluster-monitoring" succeeds
