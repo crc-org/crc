@@ -28,7 +28,7 @@
 :crc-gsg: {rh-prod} Getting Started Guide
 
 // URLs
-:crc-download-url: https://cloud.redhat.com/openshift/install/crc/installer-provisioned
+:crc-download-url: https://cloud.redhat.com/openshift/create/local
 :crc-gsg-url: https://code-ready.github.io/crc/
 
 :oc-download-url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/
