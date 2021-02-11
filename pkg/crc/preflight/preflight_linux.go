@@ -252,6 +252,7 @@ func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mo
 	if networkMode == network.DefaultMode {
 		checks = append(checks, libvirtNetworkPreflightChecks[:]...)
 	}
+	checks = append(checks, bundleCheck)
 	return checks
 }
 
