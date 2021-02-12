@@ -39,11 +39,6 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Error loading bundle metadata")
 	}
-	proxyConfig, err := getProxyConfig(crcBundleMetadata.ClusterInfo.BaseDomain)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error getting proxy configuration")
-	}
-	proxyConfig.ApplyToEnvironment()
 
 	ip, err := getIP(host, client.useVSock())
 	if err != nil {
