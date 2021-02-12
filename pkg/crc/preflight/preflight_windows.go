@@ -12,9 +12,9 @@ import (
 var hypervPreflightChecks = [...]Check{
 	{
 		configKeySuffix:  "check-administrator-user",
-		checkDescription: "Checking if running as normal user",
+		checkDescription: "Checking if running in a shell with administrator rights",
 		check:            checkIfRunningAsNormalUser,
-		fixDescription:   "crc should be ran as a normal user",
+		fixDescription:   "crc should be ran in a shell without administrator rights",
 		flags:            NoFix,
 	},
 	{
