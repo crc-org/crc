@@ -149,6 +149,17 @@ build_e2e: $(SOURCES)
 	GOOS=windows go test ./test/e2e/ -c -o $(BUILD_DIR)/windows-amd64/e2e.test.exe
 	GOOS=darwin  go test ./test/e2e/ -c -o $(BUILD_DIR)/macos-amd64/e2e.test
 
+.PHONY: integration ## Run integration tests in Ginkgo
+integration:
+ifndef PULL_SECRET_PATH
+export PULL_SECRET_PATH = $(HOME)/Downloads/crc-pull-secret
+endif
+ifndef BUNDLE_PATH
+export BUNDLE_PATH = $(HOME)/Downloads/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+endif
+integration:
+	@go test -timeout=60m $(REPOPATH)/test/integration -v
+
 .PHONY: e2e ## Run e2e tests
 e2e:
 GODOG_OPTS = --godog.tags=$(GOOS)
