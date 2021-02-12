@@ -184,7 +184,7 @@ func checkIfRunningAsNormalUser() error {
 		return nil
 	}
 	logging.Debug("Ran as administrator")
-	return fmt.Errorf("crc should be ran as a normal user")
+	return fmt.Errorf("crc should be ran in a shell without administrator rights")
 }
 
 func removeDNSServerAddress() error {
