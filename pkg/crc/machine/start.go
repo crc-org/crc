@@ -24,6 +24,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/ssh"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/crc/systemd"
+	"github.com/code-ready/crc/pkg/crc/telemetry"
 	"github.com/code-ready/crc/pkg/libmachine"
 	"github.com/code-ready/crc/pkg/libmachine/host"
 	crcos "github.com/code-ready/crc/pkg/os"
@@ -104,7 +105,10 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot determine if VM exists")
 	}
+
 	if !exists {
+		telemetry.SetStartType(ctx, telemetry.CreationStartType)
+
 		// Ask early for pull secret if it hasn't been requested yet
 		_, err = startConfig.PullSecret.Value()
 		if err != nil {
@@ -167,12 +171,16 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 			if err != nil {
 				return nil, errors.Wrap(err, "Cannot create cluster configuration")
 			}
+
+			telemetry.SetStartType(ctx, telemetry.AlreadyRunningStartType)
 			return &StartResult{
 				Status:         vmState,
 				ClusterConfig:  *clusterConfig,
 				KubeletStarted: true,
 			}, nil
 		}
+
+		telemetry.SetStartType(ctx, telemetry.StartStartType)
 
 		logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
 
