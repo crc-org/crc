@@ -85,7 +85,7 @@ func runStart(ctx context.Context) (*machine.StartResult, error) {
 		}
 	}
 
-	return client.Start(startConfig)
+	return client.Start(ctx, startConfig)
 }
 
 func renderStartResult(result *machine.StartResult, err error) error {

@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 )
@@ -86,7 +88,7 @@ func (a *Adapter) GetConsoleURL() ConsoleResult {
 }
 
 func (a *Adapter) Start(startConfig machine.StartConfig) StartResult {
-	res, err := a.Underlying.Start(startConfig)
+	res, err := a.Underlying.Start(context.Background(), startConfig)
 	if err != nil {
 		logging.Error(err)
 		return StartResult{
