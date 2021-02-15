@@ -3,6 +3,8 @@
 
 include::ref_dns-configuration.adoc[leveloffset=+1]
 
+include::ref_reserved-ip-subnets.adoc[leveloffset=+1]
+
 include::proc_starting-codeready-containers-behind-proxy.adoc[leveloffset=+1]
 
 include::proc_setting-up-remote-server.adoc[leveloffset=+1]
