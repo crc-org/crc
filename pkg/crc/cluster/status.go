@@ -24,7 +24,13 @@ func WaitForClusterStable(ocConfig oc.Config, monitoringEnabled bool) error {
 			// update counter for consecutive matches
 			if status.IsReady() {
 				count++
+				if count == 1 {
+					logging.Info("All operators are available. Ensuring stability ...")
+				} else {
+					logging.Infof("Operators are stable (%d/%d) ...", count, numConsecutive)
+				}
 			} else {
+				logging.Info(status.String())
 				count = 0
 			}
 			// break if done

@@ -16,6 +16,7 @@ var (
 	progressing = &Status{
 		Available:   true,
 		Progressing: true,
+		progressing: []string{"authentication"},
 	}
 )
 
