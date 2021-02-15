@@ -1,6 +1,7 @@
 package machine
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -87,7 +88,7 @@ func (client *client) updateVMConfig(startConfig StartConfig, api libmachine.API
 	return nil
 }
 
-func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
+func (client *client) Start(ctx context.Context, startConfig StartConfig) (*StartResult, error) {
 	if err := client.validateStartConfig(startConfig); err != nil {
 		return nil, err
 	}

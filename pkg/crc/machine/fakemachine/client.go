@@ -1,6 +1,7 @@
 package fakemachine
 
 import (
+	"context"
 	"errors"
 
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -67,7 +68,7 @@ func (c *Client) PowerOff() error {
 	return nil
 }
 
-func (c *Client) Start(startConfig machine.StartConfig) (*machine.StartResult, error) {
+func (c *Client) Start(ctx context.Context, startConfig machine.StartConfig) (*machine.StartResult, error) {
 	if c.Failing {
 		return nil, errors.New("Failed to start")
 	}

@@ -1,6 +1,8 @@
 package machine
 
 import (
+	"context"
+
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/network"
@@ -15,7 +17,7 @@ type Client interface {
 	GetConsoleURL() (*ConsoleResult, error)
 	IP() (string, error)
 	PowerOff() error
-	Start(startConfig StartConfig) (*StartResult, error)
+	Start(ctx context.Context, startConfig StartConfig) (*StartResult, error)
 	Status() (*ClusterStatusResult, error)
 	Stop() (state.State, error)
 	IsRunning() (bool, error)
