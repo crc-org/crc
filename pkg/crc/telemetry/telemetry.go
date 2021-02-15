@@ -72,3 +72,15 @@ func SetDiskSize(ctx context.Context, value uint64) {
 func SetConfigurationKey(ctx context.Context, value string) {
 	setContextProperty(ctx, "key", value)
 }
+
+func SetStartType(ctx context.Context, value StartType) {
+	setContextProperty(ctx, "start-type", value)
+}
+
+type StartType string
+
+const (
+	AlreadyRunningStartType StartType = "already-running"
+	CreationStartType       StartType = "creation"
+	StartStartType          StartType = "start"
+)
