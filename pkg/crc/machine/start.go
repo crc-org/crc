@@ -378,9 +378,11 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 		}
 	}
 
-	logging.Info("Starting OpenShift cluster ... [waiting 3m]")
+	logging.Info("Starting OpenShift cluster ... [waiting for the cluster to stabilize]")
 
-	time.Sleep(time.Minute * 3)
+	if err := cluster.WaitForClusterStable(ocConfig, client.monitoringEnabled()); err != nil {
+		logging.Errorf("Cluster is not ready: %v", err)
+	}
 
 	waitForProxyPropagation(ocConfig, proxyConfig)
 

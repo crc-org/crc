@@ -20,6 +20,10 @@ type Status struct {
 	Disabled    bool
 }
 
+func (status *Status) IsReady() bool {
+	return status.Available && !status.Progressing && !status.Degraded && !status.Disabled
+}
+
 func GetClusterOperatorStatus(ocConfig oc.Config, operator string) (*Status, error) {
 	return getStatus(ocConfig, defaultIgnoredClusterOperators, []string{operator})
 }

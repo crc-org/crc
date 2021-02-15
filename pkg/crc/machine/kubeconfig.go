@@ -36,7 +36,7 @@ func eventuallyWriteKubeconfig(ocConfig oc.Config, ip string, clusterConfig *Clu
 		if err != nil {
 			return &errors.RetriableError{Err: err}
 		}
-		if isReady(status) {
+		if status.IsReady() {
 			return nil
 		}
 		return &errors.RetriableError{Err: goerrors.New("cluster operator authentication not ready")}
@@ -46,10 +46,6 @@ func eventuallyWriteKubeconfig(ocConfig oc.Config, ip string, clusterConfig *Clu
 		return err
 	}
 	return nil
-}
-
-func isReady(status *cluster.Status) bool {
-	return status.Available && !status.Progressing && !status.Degraded && !status.Disabled
 }
 
 func WriteKubeconfig(ip string, clusterConfig *ClusterConfig) error {
