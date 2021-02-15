@@ -3,10 +3,11 @@ package cluster
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/oc"
-
 	openshiftapi "github.com/openshift/api/config/v1"
 )
 
@@ -18,6 +19,35 @@ type Status struct {
 	Degraded    bool
 	Progressing bool
 	Disabled    bool
+
+	progressing []string
+	degraded    []string
+	unavailable []string
+}
+
+func (status *Status) String() string {
+	if len(status.progressing) == 1 {
+		return fmt.Sprintf("Operator %s is progressing", status.progressing[0])
+	} else if len(status.progressing) > 1 {
+		return fmt.Sprintf("%d operators are progressing: %s", len(status.progressing), strings.Join(status.progressing, ", "))
+	}
+
+	if len(status.degraded) == 1 {
+		return fmt.Sprintf("Operator %s is degraded", status.degraded[0])
+	} else if len(status.degraded) > 0 {
+		return fmt.Sprintf("%d operators are degraded: %s", len(status.degraded), strings.Join(status.degraded, ", "))
+	}
+
+	if len(status.unavailable) == 1 {
+		return fmt.Sprintf("Operator %s is not yet available", status.unavailable[0])
+	} else if len(status.unavailable) > 0 {
+		return fmt.Sprintf("%d operators are not available: %s", len(status.unavailable), strings.Join(status.unavailable, ", "))
+	}
+
+	if status.IsReady() {
+		return "All operators are ready"
+	}
+	return "Operators are not ready yet"
 }
 
 func (status *Status) IsReady() bool {
@@ -65,16 +95,19 @@ func getStatus(ocConfig oc.Config, ignoreClusterOperators, selector []string) (*
 			case "Available":
 				if con.Status != "True" {
 					logging.Debug(c.ObjectMeta.Name, " operator not available, Reason: ", con.Reason)
+					cs.unavailable = append(cs.unavailable, c.ObjectMeta.Name)
 					cs.Available = false
 				}
 			case "Degraded":
 				if con.Status == "True" {
 					logging.Debug(c.ObjectMeta.Name, " operator is degraded, Reason: ", con.Reason)
+					cs.degraded = append(cs.degraded, c.ObjectMeta.Name)
 					cs.Degraded = true
 				}
 			case "Progressing":
 				if con.Status == "True" {
 					logging.Debug(c.ObjectMeta.Name, " operator is still progressing, Reason: ", con.Reason)
+					cs.progressing = append(cs.progressing, c.ObjectMeta.Name)
 					cs.Progressing = true
 				}
 			case "Upgradeable":
