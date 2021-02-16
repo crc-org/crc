@@ -17,7 +17,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/preflight"
-	"github.com/code-ready/crc/pkg/crc/telemetry"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/os/shell"
@@ -62,10 +61,6 @@ func runStart(ctx context.Context) (*machine.StartResult, error) {
 	}
 
 	checkIfNewVersionAvailable(config.Get(cmdConfig.DisableUpdateCheck).AsBool())
-
-	telemetry.SetCPUs(ctx, config.Get(cmdConfig.CPUs).AsInt())
-	telemetry.SetMemory(ctx, uint64(config.Get(cmdConfig.Memory).AsInt())*1024*1024)
-	telemetry.SetDiskSize(ctx, uint64(config.Get(cmdConfig.DiskSize).AsInt())*1024*1024*1024)
 
 	startConfig := machine.StartConfig{
 		BundlePath: config.Get(cmdConfig.Bundle).AsString(),
