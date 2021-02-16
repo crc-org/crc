@@ -24,7 +24,7 @@ CONFIG-KEYS: ` + "\n\n" + configurableFields(config),
 				return err
 			}
 
-			telemetry.SetContextProperty(cmd.Context(), "key", args[0])
+			telemetry.SetConfigurationKey(cmd.Context(), args[0])
 
 			if setMessage != "" {
 				fmt.Println(setMessage)
