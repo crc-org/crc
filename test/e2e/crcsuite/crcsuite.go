@@ -217,44 +217,18 @@ func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string,
 }
 
 // CheckCRCStatus checks that output of status command
-// matches given regex number of consecutive times
+// matches given regex
 func CheckCRCStatus(state string) error {
-	retryDuration := 1 * time.Minute
-	retryCount := 15
-	cmd := "crc status --log-level debug"
-	expression := ""
-	var numConsecutive int
-
+	expression := `.*Running \(v\d+\.\d+\.\d+.*\).*`
 	if state == "stopped" {
-		numConsecutive = 1
 		expression = ".*Stopped.*"
-	} else {
-		numConsecutive = 3
-		expression = `.*Running \(v\d+\.\d+\.\d+.*\).*`
 	}
 
-	var matchErr error
-	var count int // holds num of consecutive matches
-
-	for i := 0; i < retryCount; i++ {
-		execErr := clicumber.ExecuteCommand(cmd)
-		if execErr == nil {
-			matchErr = clicumber.CommandReturnShouldMatch("stdout", expression)
-			// update counter for consecutive matches
-			if matchErr == nil {
-				count++
-			} else {
-				count = 0
-			}
-			// break if done
-			if count == numConsecutive {
-				return nil
-			}
-		}
-		time.Sleep(retryDuration)
+	err := clicumber.ExecuteCommand("crc status --log-level debug")
+	if err != nil {
+		return err
 	}
-
-	return fmt.Errorf("did not get enough consecutive matches: have %d but need %d", count, numConsecutive)
+	return clicumber.CommandReturnShouldMatch("stdout", expression)
 }
 
 func DeleteFileFromCRCHome(fileName string) error {
