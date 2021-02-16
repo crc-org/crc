@@ -59,7 +59,7 @@ ifdef OKD_VERSION
 endif
 
 # https://golang.org/cmd/link/
-LDFLAGS := $(VERSION_VARIABLES) -extldflags='-static' -s -w
+LDFLAGS := $(VERSION_VARIABLES) -extldflags='-static' -s -w ${GO_EXTRA_LDFLAGS}
 
 # Add default target
 .PHONY: default
@@ -82,19 +82,19 @@ check: cross build_e2e $(HOST_BUILD_DIR)/crc-embedder test cross-lint vendorchec
 
 .PHONY: install
 install: $(SOURCES)
-	go install -ldflags="$(LDFLAGS)" ./cmd/crc
+	go install -ldflags="$(LDFLAGS)" $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
 $(BUILD_DIR)/macos-amd64/crc: $(SOURCES)
-	GOARCH=amd64 GOOS=darwin go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/macos-amd64/crc ./cmd/crc
+	GOARCH=amd64 GOOS=darwin go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/macos-amd64/crc $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
 $(BUILD_DIR)/linux-amd64/crc: $(SOURCES)
-	GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/linux-amd64/crc ./cmd/crc
+	GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/linux-amd64/crc $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
 $(BUILD_DIR)/windows-amd64/crc.exe: $(SOURCES)
-	GOARCH=amd64 GOOS=windows go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/windows-amd64/crc.exe ./cmd/crc
+	GOARCH=amd64 GOOS=windows go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/windows-amd64/crc.exe $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
 $(HOST_BUILD_DIR)/crc-embedder: $(SOURCES)
-	go build --tags="build" -ldflags="$(LDFLAGS)" -o $(HOST_BUILD_DIR)/crc-embedder ./cmd/crc-embedder
+	go build --tags="build" -ldflags="$(LDFLAGS)" -o $(HOST_BUILD_DIR)/crc-embedder $(GO_EXTRA_BUILDFLAGS) ./cmd/crc-embedder
 
 .PHONY: cross ## Cross compiles all binaries
 cross: $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/windows-amd64/crc.exe
