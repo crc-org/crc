@@ -90,6 +90,10 @@ func (client *client) updateVMConfig(startConfig StartConfig, api libmachine.API
 }
 
 func (client *client) Start(ctx context.Context, startConfig StartConfig) (*StartResult, error) {
+	telemetry.SetCPUs(ctx, startConfig.CPUs)
+	telemetry.SetMemory(ctx, uint64(startConfig.Memory)*1024*1024)
+	telemetry.SetDiskSize(ctx, uint64(startConfig.DiskSize)*1024*1024*1024)
+
 	if err := client.validateStartConfig(startConfig); err != nil {
 		return nil, err
 	}
