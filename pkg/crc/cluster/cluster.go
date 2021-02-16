@@ -320,7 +320,7 @@ func WaitForAPIServer(ocConfig oc.Config) error {
 		logging.Debug(stdout)
 		return nil
 	}
-	return errors.RetryAfter(3*time.Minute, waitForAPIServer, time.Second)
+	return errors.RetryAfter(4*time.Minute, waitForAPIServer, time.Second)
 }
 
 func DeleteOpenshiftAPIServerPods(ocConfig oc.Config) error {
