@@ -50,9 +50,25 @@ func GetContextProperties(ctx context.Context) map[string]interface{} {
 	return properties.values()
 }
 
-func SetContextProperty(ctx context.Context, key string, value interface{}) {
+func setContextProperty(ctx context.Context, key string, value interface{}) {
 	properties := propertiesFromContext(ctx)
 	if properties != nil {
 		properties.set(key, value)
 	}
+}
+
+func SetCPUs(ctx context.Context, value int) {
+	setContextProperty(ctx, "cpus", value)
+}
+
+func SetMemory(ctx context.Context, value uint64) {
+	setContextProperty(ctx, "memory", value)
+}
+
+func SetDiskSize(ctx context.Context, value uint64) {
+	setContextProperty(ctx, "disk-size", value)
+}
+
+func SetConfigurationKey(ctx context.Context, value string) {
+	setContextProperty(ctx, "key", value)
 }

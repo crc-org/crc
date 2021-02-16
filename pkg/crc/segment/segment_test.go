@@ -155,7 +155,7 @@ func TestClientUploadWithContext(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := telemetry.NewContext(context.Background())
-	telemetry.SetContextProperty(ctx, "cpus", 6)
+	telemetry.SetCPUs(ctx, 6)
 	require.NoError(t, c.Upload(ctx, "start", time.Minute, nil))
 	require.NoError(t, c.Close())
 

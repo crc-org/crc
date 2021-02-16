@@ -23,7 +23,7 @@ func configUnsetCmd(config config.Storage) *cobra.Command {
 				return err
 			}
 
-			telemetry.SetContextProperty(cmd.Context(), "key", args[0])
+			telemetry.SetConfigurationKey(cmd.Context(), args[0])
 
 			if unsetMessage != "" {
 				fmt.Println(unsetMessage)
