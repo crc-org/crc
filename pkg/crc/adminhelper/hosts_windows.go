@@ -1,12 +1,22 @@
 package adminhelper
 
 import (
-	"strings"
+	"context"
+	"net"
+	"net/http"
+	"time"
 
-	"github.com/code-ready/crc/pkg/os/windows/powershell"
+	"github.com/Microsoft/go-winio"
+	"github.com/code-ready/admin-helper/pkg/client"
 )
 
-func execute(args ...string) error {
-	_, _, err := powershell.ExecuteAsAdmin("modifying hosts file", strings.Join(append([]string{adminHelperPath}, args...), " "))
-	return err
+func instance() helper {
+	return client.New(&http.Client{
+		Transport: &http.Transport{
+			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				return winio.DialPipeContext(ctx, `\\.\pipe\crc-admin-helper`)
+			},
+		},
+		Timeout: 3 * time.Second,
+	}, "http://unix")
 }
