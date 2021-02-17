@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/code-ready/admin-helper/pkg/hosts"
+	"github.com/code-ready/admin-helper/pkg/types"
 	"github.com/code-ready/crc/pkg/crc/constants"
 )
 
@@ -36,13 +37,27 @@ func AddToHostsFile(instanceIP string, hostnames ...string) error {
 	if len(filtered) == 0 {
 		return nil
 	}
-	return execute(append([]string{"add", instanceIP}, hostnames...)...)
+
+	return instance().Add(&types.AddRequest{
+		IP:    instanceIP,
+		Hosts: filtered,
+	})
 }
 
 func RemoveFromHostsFile(hostnames ...string) error {
-	return execute(append([]string{"rm"}, hostnames...)...)
+	return instance().Remove(&types.RemoveRequest{
+		Hosts: hostnames,
+	})
 }
 
 func CleanHostsFile() error {
-	return execute("clean", constants.ClusterDomain, constants.AppsDomain)
+	return instance().Clean(&types.CleanRequest{
+		Domains: []string{constants.ClusterDomain, constants.AppsDomain},
+	})
+}
+
+type helper interface {
+	Add(req *types.AddRequest) error
+	Remove(req *types.RemoveRequest) error
+	Clean(req *types.CleanRequest) error
 }
