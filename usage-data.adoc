@@ -1,0 +1,25 @@
+= Usage data
+
+Overview of the data CodeReady Containers collect provided the user consented (see README).
+
+.Data points
+|===
+|Occasion          | Data                        | Type 
+
+|*Install*         |Host OS                      |
+|                  |Host OS version              |
+|                  |CodeReady Containers version |
+
+|*Setup*           | Error message               |
+|*Cluster startup* | Error message               |
+|                  | Proxy                       | true/false
+|                  | Network mode                | vsock/default
+|                  | Cluster monitoring          | true/false
+|                  | Experimental features       | true/false
+|                  | tty                         | true/false
+|                  | duration                    |
+
+|*Config*          | Num of CPUs                 | 
+|                  | Memory size                 |
+|                  | Disk size                   |
+|===
