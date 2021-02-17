@@ -1,0 +1,10 @@
+FROM registry.centos.org/centos
+WORKDIR $APP_ROOT/src
+RUN yum -y install git-core rpm-build dnf-plugins-core 'dnf-command(builddep)'
+COPY . .
+RUN mkdir -p ~/rpmbuild/SOURCES/ && \
+    export VERSION=$(rpmspec  -q --qf %{Version} --srpm packaging/rpm/crc.spec) && \
+    git archive --format=tar --prefix=crc-${VERSION}-4.6.15/ HEAD | gzip >~/rpmbuild/SOURCES/crc-${VERSION}.tar.gz
+RUN yum config-manager --set-enabled powertools && \
+    yum -y builddep packaging/rpm/crc.spec && \
+    rpmbuild -bb -v packaging/rpm/crc.spec
