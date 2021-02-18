@@ -2,6 +2,8 @@ package telemetry
 
 import (
 	"context"
+	"os/user"
+	"strings"
 	"sync"
 )
 
@@ -84,3 +86,12 @@ const (
 	CreationStartType       StartType = "creation"
 	StartStartType          StartType = "start"
 )
+
+func SetError(err error) string {
+	// Mask username if present in the error string
+	user, err1 := user.Current()
+	if err1 != nil {
+		return err1.Error()
+	}
+	return strings.ReplaceAll(err.Error(), user.Username, "XXXXX")
+}
