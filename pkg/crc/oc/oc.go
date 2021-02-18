@@ -8,6 +8,8 @@ import (
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
+const timeout = "5s"
+
 type Config struct {
 	Runner           crcos.CommandRunner
 	OcExecutablePath string
@@ -39,10 +41,10 @@ func (oc Config) runCommand(isPrivate bool, args ...string) (string, string, err
 	}
 
 	if isPrivate {
-		return oc.Runner.RunPrivate(oc.OcExecutablePath, args...)
+		return oc.Runner.RunPrivate("timeout", append([]string{timeout, oc.OcExecutablePath}, args...)...)
 	}
 
-	return oc.Runner.Run(oc.OcExecutablePath, args...)
+	return oc.Runner.Run("timeout", append([]string{timeout, oc.OcExecutablePath}, args...)...)
 }
 
 func (oc Config) RunOcCommand(args ...string) (string, string, error) {
