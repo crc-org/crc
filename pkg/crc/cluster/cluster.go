@@ -195,7 +195,7 @@ func AddProxyConfigToCluster(sshRunner *ssh.Runner, ocConfig oc.Config, proxy *n
 	logging.Debugf("Patch string %s", string(patchEncode))
 
 	cmdArgs := []string{"patch", "proxy", "cluster", "-p", fmt.Sprintf("'%s'", string(patchEncode)), "-n", "openshift-config", "--type", "merge"}
-	if _, stderr, err := ocConfig.RunOcCommand(cmdArgs...); err != nil {
+	if _, stderr, err := ocConfig.RunOcCommandPrivate(cmdArgs...); err != nil {
 		return fmt.Errorf("Failed to add proxy details %v: %s", err, stderr)
 	}
 	return nil
@@ -223,7 +223,7 @@ func addProxyCACertToCluster(sshRunner *ssh.Runner, ocConfig oc.Config, proxy *n
 		return err
 	}
 	cmdArgs := []string{"apply", "-f", proxyConfigMapFileName}
-	if _, stderr, err := ocConfig.RunOcCommand(cmdArgs...); err != nil {
+	if _, stderr, err := ocConfig.RunOcCommandPrivate(cmdArgs...); err != nil {
 		return fmt.Errorf("Failed to add proxy cert details %v: %s", err, stderr)
 	}
 	return nil
@@ -346,7 +346,7 @@ func CheckProxySettingsForOperator(ocConfig oc.Config, proxy *network.ProxyConfi
 		return true, nil
 	}
 	cmdArgs := []string{"set", "env", "deployment", deployment, "--list", "-n", namespace}
-	out, _, err := ocConfig.RunOcCommand(cmdArgs...)
+	out, _, err := ocConfig.RunOcCommandPrivate(cmdArgs...)
 	if err != nil {
 		return false, err
 	}
