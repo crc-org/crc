@@ -28,7 +28,7 @@ func WaitForOpenshiftResource(ocConfig oc.Config, resource string) error {
 // approveNodeCSR approves the certificate for the node.
 func approveNodeCSR(ocConfig oc.Config, expectedSignerName string) error {
 	logging.Debug("Approving pending CSRs")
-	output, stderr, err := ocConfig.RunOcCommandPrivate("get", "csr", "-ojson")
+	output, stderr, err := ocConfig.RunOcCommand("get", "csr", "-ojson")
 	if err != nil {
 		return fmt.Errorf("Failed to get all certificate signing requests: %v %s", err, stderr)
 	}
