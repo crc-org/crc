@@ -87,7 +87,7 @@ func (c *Client) Upload(ctx context.Context, action string, duration time.Durati
 		Set("duration", duration.Milliseconds()).
 		Set("tty", crcos.RunningInTerminal())
 	if err != nil {
-		properties = properties.Set("error", err.Error()).
+		properties = properties.Set("error", telemetry.SetError(err)).
 			Set("error-type", errorType(err))
 	}
 
