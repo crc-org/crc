@@ -34,7 +34,15 @@ func TestRenderActionPlainSuccess(t *testing.T) {
 		},
 	}, out, ""))
 
+	var userShell string
 	userShell, err := shell.GetShell("")
+	if err != nil {
+		if runtime.GOOS == "windows" {
+			userShell, err = shell.GetShell("cmd")
+		} else {
+			userShell, err = shell.GetShell("bash")
+		}
+	}
 	assert.NoError(t, err)
 	assert.Equal(t, expectedTemplate(userShell), out.String())
 }
