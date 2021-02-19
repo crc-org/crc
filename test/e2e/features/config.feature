@@ -84,7 +84,6 @@ Feature: Test configuration settings
         Examples:
             | property                             | value1 | value2 |
             | skip-check-bundle-extracted          | true   | false  |
-            | skip-check-crc-dnsmasq-file          | true   | false  |
             | skip-check-crc-network               | true   | false  |
             | skip-check-crc-network-active        | true   | false  |
             | skip-check-kvm-enabled               | true   | false  |
@@ -92,7 +91,6 @@ Feature: Test configuration settings
             | skip-check-libvirt-installed         | true   | false  |
             | skip-check-libvirt-running           | true   | false  |
             | skip-check-libvirt-version           | true   | false  |
-            | skip-check-network-manager-config    | true   | false  |
             | skip-check-network-manager-installed | true   | false  |
             | skip-check-network-manager-running   | true   | false  |
             | skip-check-root-user                 | true   | false  |
