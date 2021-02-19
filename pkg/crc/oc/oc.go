@@ -8,7 +8,10 @@ import (
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
-const timeout = "5s"
+const (
+	defaultTimeout = "30s"
+	fastTimeout    = "5s"
+)
 
 type Config struct {
 	Runner           crcos.CommandRunner
@@ -16,6 +19,7 @@ type Config struct {
 	KubeconfigPath   string
 	Context          string
 	Cluster          string
+	Timeout          string
 }
 
 // UseOcWithConfig return the oc executable along with valid kubeconfig
@@ -26,6 +30,18 @@ func UseOCWithConfig(machineName string) Config {
 		KubeconfigPath:   filepath.Join(constants.MachineInstanceDir, machineName, "kubeconfig"),
 		Context:          constants.DefaultContext,
 		Cluster:          constants.DefaultName,
+		Timeout:          defaultTimeout,
+	}
+}
+
+func (oc Config) WithFailFast() Config {
+	return Config{
+		Runner:           oc.Runner,
+		OcExecutablePath: oc.OcExecutablePath,
+		KubeconfigPath:   oc.KubeconfigPath,
+		Context:          oc.Context,
+		Cluster:          oc.Cluster,
+		Timeout:          fastTimeout,
 	}
 }
 
@@ -41,10 +57,10 @@ func (oc Config) runCommand(isPrivate bool, args ...string) (string, string, err
 	}
 
 	if isPrivate {
-		return oc.Runner.RunPrivate("timeout", append([]string{timeout, oc.OcExecutablePath}, args...)...)
+		return oc.Runner.RunPrivate("timeout", append([]string{oc.Timeout, oc.OcExecutablePath}, args...)...)
 	}
 
-	return oc.Runner.Run("timeout", append([]string{timeout, oc.OcExecutablePath}, args...)...)
+	return oc.Runner.Run("timeout", append([]string{oc.Timeout, oc.OcExecutablePath}, args...)...)
 }
 
 func (oc Config) RunOcCommand(args ...string) (string, string, error) {
@@ -66,5 +82,6 @@ func UseOCWithSSH(sshRunner *ssh.Runner) Config {
 		KubeconfigPath:   "/opt/kubeconfig",
 		Context:          constants.DefaultContext,
 		Cluster:          constants.DefaultName,
+		Timeout:          defaultTimeout,
 	}
 }

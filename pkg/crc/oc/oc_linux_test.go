@@ -15,6 +15,7 @@ func TestRunCommand(t *testing.T) {
 		KubeconfigPath:   "kubeconfig-file",
 		Context:          "a-context",
 		Cluster:          "a-cluster",
+		Timeout:          defaultTimeout,
 	}
 	stdout, _, err := ocConfig.RunOcCommand("a-command")
 	assert.NoError(t, err)
@@ -26,6 +27,7 @@ func TestRunCommandWithoutContextAndCluster(t *testing.T) {
 		Runner:           crcos.NewLocalCommandRunner(),
 		OcExecutablePath: "/bin/echo",
 		KubeconfigPath:   "kubeconfig-file",
+		Timeout:          defaultTimeout,
 	}
 	stdout, _, err := ocConfig.RunOcCommand("a-command")
 	assert.NoError(t, err)
