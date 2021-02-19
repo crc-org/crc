@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"testing"
 
+	"os/user"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -82,7 +84,13 @@ func TestFileExists(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		assert.True(t, FileExists(filename))
 	} else {
-		assert.False(t, FileExists(filename))
+		user, _ := user.Current()
+		if user != nil && user.Uid != "0" {
+			assert.False(t, FileExists(filename))
+		} else {
+			/* If the user is root, chmod 000 $dir won't block file existence checks */
+			assert.True(t, FileExists(filename))
+		}
 	}
 
 	filename = filepath.Join(dirname, "nonexistent")
