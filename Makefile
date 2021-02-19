@@ -111,6 +111,10 @@ containerized: clean
 test:
 	go test -race --tags build -v -ldflags="$(VERSION_VARIABLES)" ./pkg/... ./cmd/...
 
+.PHONY: test-rpmbuild
+test-rpmbuild:
+	${CONTAINER_RUNTIME} build -f images/rpmbuild/Containerfile .
+
 .PHONY: build_docs
 build_docs:
 	${CONTAINER_RUNTIME} run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) build_docs -b html5 -D /$(DOCS_BUILD_DIR) -o index.html $(DOCS_BUILD_TARGET)
