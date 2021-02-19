@@ -14,7 +14,7 @@ import (
 func WaitForOpenshiftResource(ocConfig oc.Config, resource string) error {
 	logging.Debugf("Waiting for availability of resource type '%s'", resource)
 	waitForAPIServer := func() error {
-		stdout, stderr, err := ocConfig.RunOcCommand("get", resource)
+		stdout, stderr, err := ocConfig.WithFailFast().RunOcCommand("get", resource)
 		if err != nil {
 			logging.Debug(stderr)
 			return &crcerrors.RetriableError{Err: err}

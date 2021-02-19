@@ -312,7 +312,7 @@ func WaitForRequestHeaderClientCaFile(sshRunner *ssh.Runner) error {
 func WaitForAPIServer(ocConfig oc.Config) error {
 	logging.Debugf("Waiting for apiserver availability")
 	waitForAPIServer := func() error {
-		stdout, stderr, err := ocConfig.RunOcCommand("get", "nodes")
+		stdout, stderr, err := ocConfig.WithFailFast().RunOcCommand("get", "nodes")
 		if err != nil {
 			logging.Debug(stderr)
 			return &errors.RetriableError{Err: err}
@@ -330,7 +330,7 @@ func DeleteOpenshiftAPIServerPods(ocConfig oc.Config) error {
 
 	deleteOpenshiftAPIServerPods := func() error {
 		cmdArgs := []string{"delete", "pod", "--all", "-n", "openshift-apiserver"}
-		_, _, err := ocConfig.RunOcCommand(cmdArgs...)
+		_, _, err := ocConfig.WithFailFast().RunOcCommand(cmdArgs...)
 		if err != nil {
 			return &errors.RetriableError{Err: err}
 		}

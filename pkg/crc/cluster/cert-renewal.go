@@ -13,7 +13,7 @@ import (
 
 func waitForPendingCSRs(ocConfig oc.Config, signerName string) error {
 	return crcerrors.RetryAfter(8*time.Minute, func() error {
-		output, _, err := ocConfig.RunOcCommand("get", "csr")
+		output, _, err := ocConfig.WithFailFast().RunOcCommand("get", "csr")
 		if err != nil {
 			return &crcerrors.RetriableError{Err: err}
 		}
