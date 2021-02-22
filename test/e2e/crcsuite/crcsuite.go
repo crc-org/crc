@@ -12,13 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
-	"github.com/code-ready/crc/pkg/crc/oc"
 )
 
 var (
@@ -51,8 +49,6 @@ func FeatureContext(s *godog.Suite) {
 		LoginToOcClusterSucceedsOrFails)
 	s.Step(`^setting kubeconfig context to "(.*)" (succeeds|fails)$`,
 		SetKubeConfigContextSucceedsOrFails)
-	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" all cluster operators are running$`,
-		CheckClusterOperatorsWithRetry)
 	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" http response from "(.*)" has status code "(\d+)"$`,
 		CheckHTTPResponseWithRetry)
 	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" command "(.*)" output (should match|matches|should not match|does not match) "(.*)"$`,
@@ -163,28 +159,6 @@ func FeatureContext(s *godog.Suite) {
 			fmt.Printf("Could not delete CRC VM: %s.", err)
 		}
 	})
-}
-
-func CheckClusterOperatorsWithRetry(retryCount int, retryWait string) error {
-
-	retryDuration, err := time.ParseDuration(retryWait)
-	if err != nil {
-		return err
-	}
-
-	ocConfig := oc.UseOCWithConfig("crc")
-	for i := 0; i < retryCount; i++ {
-		s, err := cluster.GetClusterOperatorsStatus(ocConfig, false)
-		if err != nil {
-			return err
-		}
-		if s.Available {
-			return nil
-		}
-		time.Sleep(retryDuration)
-	}
-
-	return fmt.Errorf("Some cluster operators are still not running")
 }
 
 func CheckHTTPResponseWithRetry(retryCount int, retryWait string, address string, expectedStatusCode int) error {
