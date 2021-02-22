@@ -111,8 +111,12 @@ containerized: clean
 test:
 	go test -race --tags build -v -ldflags="$(VERSION_VARIABLES)" ./pkg/... ./cmd/...
 
-.PHONY: test-rpmbuild
-test-rpmbuild:
+.PHONY: spec test-rpmbuild
+
+GENERATED_RPM_FILES=packaging/rpm/crc.spec images/rpmbuild/Containerfile
+spec: $(GENERATED_RPM_FILES)
+	
+test-rpmbuild: spec
 	${CONTAINER_RUNTIME} build -f images/rpmbuild/Containerfile .
 
 .PHONY: build_docs
@@ -136,11 +140,14 @@ clean_docs:
 	rm -rf $(CURDIR)/docs/build
 
 clean_macos_package:
-	rm -f $(GENERATED_MACOS_FILES)
+	rm -f packaging/darwin/Distribution
+	rm -f packaging/darwin/Resources/welcome.html
+	rm -f packaging/darwin/scripts/postinstall
 	rm -rf packaging/root/
 
 .PHONY: clean ## Remove all build artifacts
 clean: clean_docs clean_macos_package
+	rm -f $(GENERATED_RPM_FILES)
 	rm -rf $(BUILD_DIR)
 	rm -f $(GOPATH)/bin/crc
 	rm -rf $(RELEASE_DIR)
@@ -245,9 +252,11 @@ update-go-version:
 goversioncheck:
 	./verify-go-version.sh
 
-GENERATED_MACOS_FILES=packaging/darwin/Distribution packaging/darwin/Resources/welcome.html packaging/darwin/scripts/postinstall
 packagedir: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.macosInstallPath=$(MACOS_INSTALL_PATH)' $(RELEASE_VERSION_VARIABLES)
-packagedir: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/crc-embedder $(GENERATED_MACOS_FILES)
+packagedir: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
+	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
+	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
+	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/postinstall.in >packaging/darwin/scripts/postinstall
 	chmod 755 packaging/darwin/scripts/postinstall
 	mkdir -p packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
 	$(HOST_BUILD_DIR)/crc-embedder download packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
@@ -279,6 +288,5 @@ $(GOPATH)/bin/gomod2rpmdeps:
 
 %: %.in
 	@sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' \
-	    -e 's/__OPENSHIFT_VERSION__/'$(BUNDLE_VERSION)'/g' \
-	    -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' \
-	    $< >$@
+	     -e 's/__OPENSHIFT_VERSION__/'$(BUNDLE_VERSION)'/g' \
+	     $< >$@
