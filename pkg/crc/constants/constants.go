@@ -79,16 +79,12 @@ func defaultBundleForOs(bundleVersion string) map[string]string {
 	}
 }
 
-func GetDefaultBundleForOs(os string) string {
-	return GetBundleFosOs(os, version.GetBundleVersion())
-}
-
 func GetBundleFosOs(os, bundleVersion string) string {
 	return defaultBundleForOs(bundleVersion)[os]
 }
 
 func GetDefaultBundle() string {
-	return GetDefaultBundleForOs(runtime.GOOS)
+	return GetBundleFosOs(runtime.GOOS, version.GetBundleVersion())
 }
 
 var (

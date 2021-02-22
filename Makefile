@@ -231,9 +231,9 @@ endif
 	@$(call check_defined, BUNDLE_DIR, "Embedding bundle requires BUNDLE_DIR set to a directory containing CRC bundles for all hypervisors")
 
 embed_bundle: clean cross $(HOST_BUILD_DIR)/crc-embedder check_bundledir $(HYPERKIT_BUNDLENAME) $(HYPERV_BUNDLENAME) $(LIBVIRT_BUNDLENAME)
-	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=darwin --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/macos-amd64/crc
-	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=linux --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/linux-amd64/crc
-	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=windows --bundle-dir=$(BUNDLE_DIR) $(BUILD_DIR)/windows-amd64/crc.exe
+	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=darwin --bundle=$(HYPERKIT_BUNDLENAME) $(BUILD_DIR)/macos-amd64/crc
+	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=linux --bundle=$(LIBVIRT_BUNDLENAME) $(BUILD_DIR)/linux-amd64/crc
+	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=windows --bundle=$(HYPERV_BUNDLENAME) $(BUILD_DIR)/windows-amd64/crc.exe
 
 .PHONY: update-go-version
 update-go-version:
