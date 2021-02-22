@@ -111,8 +111,12 @@ containerized: clean
 test:
 	go test -race --tags build -v -ldflags="$(VERSION_VARIABLES)" ./pkg/... ./cmd/...
 
-.PHONY: test-rpmbuild
-test-rpmbuild:
+.PHONY: spec test-rpmbuild
+
+GENERATED_RPM_FILES=packaging/rpm/crc.spec images/rpmbuild/Containerfile
+spec: $(GENERATED_RPM_FILES)
+	
+test-rpmbuild: spec
 	${CONTAINER_RUNTIME} build -f images/rpmbuild/Containerfile .
 
 .PHONY: build_docs
@@ -143,6 +147,7 @@ clean_macos_package:
 
 .PHONY: clean ## Remove all build artifacts
 clean: clean_docs clean_macos_package
+	rm -f $(GENERATED_RPM_FILES)
 	rm -rf $(BUILD_DIR)
 	rm -f $(GOPATH)/bin/crc
 	rm -rf $(RELEASE_DIR)
@@ -270,3 +275,8 @@ $(BUILD_DIR)/macos-amd64/crc-macos-amd64.pkg: packagedir
 
 $(BUILD_DIR)/macos-amd64/crc-installer.tar: packagedir
 	tar -cvf $(BUILD_DIR)/macos-amd64/crc-installer.tar ./packaging
+
+%: %.in
+	@sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' \
+	     -e 's/__OPENSHIFT_VERSION__/'$(BUNDLE_VERSION)'/g' \
+	     $< >$@
