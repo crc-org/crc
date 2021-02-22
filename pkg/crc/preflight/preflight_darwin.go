@@ -117,13 +117,10 @@ func getPreflightChecks(experimentalFeatures bool, mode network.Mode) []Check {
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, hyperkitPreflightChecks(mode)...)
 	checks = append(checks, dnsPreflightChecks[:]...)
+	checks = append(checks, traySetupChecks[:]...)
 
 	if mode == network.DefaultMode {
 		checks = append(checks, resolverPreflightChecks[:]...)
-	}
-	// Experimental feature
-	if experimentalFeatures {
-		checks = append(checks, traySetupChecks[:]...)
 	}
 
 	checks = append(checks, bundleCheck)
