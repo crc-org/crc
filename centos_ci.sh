@@ -95,9 +95,9 @@ function perform_artifacts_upload() {
   if [[ "$GIT_BRANCH" = "origin/master" ]]; then
     # http://stackoverflow.com/a/22908437/1120530; Using --relative as --rsync-path not working
     mkdir -p crc/master/$BUILD_NUMBER/
-    cp out/* crc/master/$BUILD_NUMBER/
+    cp -R out/* crc/master/$BUILD_NUMBER/
     RSYNC_PASSWORD=$1 rsync -a --relative crc/master/$BUILD_NUMBER/ minishift@artifacts.ci.centos.org::minishift/crc/
-    echo "Find Artifacts here http://artifacts.ci.centos.org/${REPO_OWNER}/${REPO_NAME}/master/$BUILD_NUMBER ."
+    echo "Find Artifacts here http://artifacts.ci.centos.org/minishift/crc/master/$BUILD_NUMBER ."
   else
     # http://stackoverflow.com/a/22908437/1120530; Using --relative as --rsync-path not working
     mkdir -p pr/$ghprbPullId/
