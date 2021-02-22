@@ -1,7 +1,7 @@
 # https://github.com/code-ready/admin-helper
 %global goipath         github.com/code-ready/crc
-Version:                1.22.0
-%global 	 	openshift_suffix -4.6.15
+Version:                __VERSION__
+%global 	 	openshift_suffix -__OPENSHIFT_VERSION__
 
 %gometa
 
