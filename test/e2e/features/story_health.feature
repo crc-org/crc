@@ -26,14 +26,6 @@ Feature: End-to-end health check
         When checking that CRC is running
         Then login to the oc cluster succeeds
 
-    @linux @darwin @windows
-    Scenario: Check cluster health
-        When executing "oc get nodes"
-        Then stdout contains "Ready"
-        And stdout does not contain "Not ready"
-        # next line checks similar things as `crc status` except gives more informative output
-        And with up to "5" retries with wait period of "1m" all cluster operators are running
-
     @darwin @linux @windows
     Scenario: Create project
         When executing "oc new-project testproj" succeeds
