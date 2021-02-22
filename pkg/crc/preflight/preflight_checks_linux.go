@@ -349,7 +349,7 @@ func fixLibvirtCrcNetworkAvailable() error {
 	err = cmd.Run()
 	if err != nil {
 		logging.Debugf("%v : %s", err, buf.String())
-		return fmt.Errorf("Failed to create libvirt 'crc' network")
+		return fmt.Errorf("Failed to create libvirt 'crc' network: %v - %s", err, buf.String())
 	}
 	logging.Debug("libvirt 'crc' network created")
 	return nil
