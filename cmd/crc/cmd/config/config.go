@@ -23,6 +23,7 @@ const (
 	DisableUpdateCheck      = "disable-update-check"
 	ExperimentalFeatures    = "enable-experimental-features"
 	NetworkMode             = "network-mode"
+	HostNetworkAccess       = "host-network-access"
 	HTTPProxy               = "http-proxy"
 	HTTPSProxy              = "https-proxy"
 	NoProxy                 = "no-proxy"
@@ -32,6 +33,15 @@ const (
 )
 
 func RegisterSettings(cfg *config.Config) {
+	validateHostNetworkAccess := func(value interface{}) (bool, string) {
+		mode := network.ParseMode(cfg.Get(NetworkMode).AsString())
+		if mode != network.VSockMode {
+			return false, fmt.Sprintf("%s can only be used with %s set to '%s'",
+				HostNetworkAccess, NetworkMode, network.VSockMode)
+		}
+		return config.ValidateBool(value)
+	}
+
 	// Start command settings in config
 	cfg.AddSetting(Bundle, constants.DefaultBundlePath, config.ValidateBundlePath, config.SuccessfullyApplied,
 		fmt.Sprintf("Bundle path (string, default '%s')", constants.DefaultBundlePath))
@@ -51,6 +61,8 @@ func RegisterSettings(cfg *config.Config) {
 		"Enable experimental features (true/false, default: false)")
 	cfg.AddSetting(NetworkMode, string(network.DefaultMode), network.ValidateMode, network.SuccessfullyAppliedMode,
 		"Network mode (default or vsock)")
+	cfg.AddSetting(HostNetworkAccess, false, validateHostNetworkAccess, config.SuccessfullyApplied,
+		"Allow TCP/IP connections from the CodeReday Containers VM to services running on the host (true/false, default: false)")
 	// Proxy Configuration
 	cfg.AddSetting(HTTPProxy, "", config.ValidateURI, config.SuccessfullyApplied,
 		"HTTP proxy URL (string, like 'http://my-proxy.com:8443')")
