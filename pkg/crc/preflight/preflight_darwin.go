@@ -107,17 +107,20 @@ var traySetupChecks = [...]Check{
 }
 
 func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true, network.DefaultMode)
+	return getPreflightChecks(true, true, network.DefaultMode)
 }
 
-func getPreflightChecks(experimentalFeatures bool, mode network.Mode) []Check {
+func getPreflightChecks(_ bool, trayAutostart bool, mode network.Mode) []Check {
 	checks := []Check{}
 
 	checks = append(checks, nonWinPreflightChecks[:]...)
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, hyperkitPreflightChecks(mode)...)
 	checks = append(checks, dnsPreflightChecks[:]...)
-	checks = append(checks, traySetupChecks[:]...)
+
+	if trayAutostart {
+		checks = append(checks, traySetupChecks[:]...)
+	}
 
 	if mode == network.DefaultMode {
 		checks = append(checks, resolverPreflightChecks[:]...)

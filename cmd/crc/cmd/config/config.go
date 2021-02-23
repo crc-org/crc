@@ -10,6 +10,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/tray"
 	"github.com/spf13/cobra"
 )
 
@@ -30,6 +31,7 @@ const (
 	ProxyCAFile             = "proxy-ca-file"
 	ConsentTelemetry        = "consent-telemetry"
 	EnableClusterMonitoring = "enable-cluster-monitoring"
+	AutostartTray           = "autostart-tray"
 )
 
 func RegisterSettings(cfg *config.Config) {
@@ -63,6 +65,9 @@ func RegisterSettings(cfg *config.Config) {
 		"Network mode (default or vsock)")
 	cfg.AddSetting(HostNetworkAccess, false, validateHostNetworkAccess, config.SuccessfullyApplied,
 		"Allow TCP/IP connections from the CodeReday Containers VM to services running on the host (true/false, default: false)")
+	// System tray auto-start config
+	cfg.AddSetting(AutostartTray, true, tray.ValidateTrayAutostart, tray.DisableEnableTrayAutostart,
+		"Automatically start the tray (true/false, default: true)")
 	// Proxy Configuration
 	cfg.AddSetting(HTTPProxy, "", config.ValidateURI, config.SuccessfullyApplied,
 		"HTTP proxy URL (string, like 'http://my-proxy.com:8443')")
