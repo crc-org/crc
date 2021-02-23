@@ -21,6 +21,9 @@ var (
 	// Bundle version which used for the release.
 	bundleVersion = "0.0.0-unset"
 
+	// Bundle which used for the release.
+	bundle = ""
+
 	okdBuild = "false"
 
 	macosInstallPath = "/unset"
@@ -46,6 +49,10 @@ func GetCRCVersion() string {
 
 func GetCommitSha() string {
 	return commitSha
+}
+
+func GetBundle() string {
+	return bundle
 }
 
 func GetBundleVersion() string {

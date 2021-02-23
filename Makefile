@@ -69,6 +69,12 @@ endif
 # https://golang.org/cmd/link/
 LDFLAGS := $(VERSION_VARIABLES) -extldflags='-static' -s -w
 
+LINUX_LDFLAGS += $(LDFLAGS) -X $(REPOPATH)/pkg/crc/version.bundle=$(LIBVIRT_BUNDLENAME)
+DARWIN_LDFLAGS += $(LDFLAGS) -X $(REPOPATH)/pkg/crc/version.bundle=$(HYPERKIT_BUNDLENAME)
+WINDOWS_LDFLAGS += $(LDFLAGS) -X $(REPOPATH)/pkg/crc/version.bundle=$(HYPERV_BUNDLENAME)
+
+GOOS_LDFLAGS := $(GOOS)_LDFLAGS
+
 # Add default target
 .PHONY: default
 default: install
@@ -90,16 +96,16 @@ check: cross build_e2e $(HOST_BUILD_DIR)/crc-embedder test cross-lint vendorchec
 
 .PHONY: install
 install: $(SOURCES)
-	go install -ldflags="$(LDFLAGS)" ./cmd/crc
+	go install -ldflags="$($(GOOS_LDFLAGS))" ./cmd/crc
 
 $(BUILD_DIR)/macos-amd64/crc: $(SOURCES)
-	GOARCH=amd64 GOOS=darwin go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/macos-amd64/crc ./cmd/crc
+	GOARCH=amd64 GOOS=darwin go build -ldflags="$(DARWIN_LDFLAGS)" -o $(BUILD_DIR)/macos-amd64/crc ./cmd/crc
 
 $(BUILD_DIR)/linux-amd64/crc: $(SOURCES)
-	GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/linux-amd64/crc ./cmd/crc
+	GOOS=linux GOARCH=amd64 go build -ldflags="$(LINUX_LDFLAGS)" -o $(BUILD_DIR)/linux-amd64/crc ./cmd/crc
 
 $(BUILD_DIR)/windows-amd64/crc.exe: $(SOURCES)
-	GOARCH=amd64 GOOS=windows go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/windows-amd64/crc.exe ./cmd/crc
+	GOARCH=amd64 GOOS=windows go build -ldflags="$(WINDOWS_LDFLAGS)" -o $(BUILD_DIR)/windows-amd64/crc.exe ./cmd/crc
 
 $(HOST_BUILD_DIR)/crc-embedder: $(SOURCES)
 	go build --tags="build" -ldflags="$(LDFLAGS)" -o $(HOST_BUILD_DIR)/crc-embedder ./cmd/crc-embedder

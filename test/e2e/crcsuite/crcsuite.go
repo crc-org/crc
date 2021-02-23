@@ -12,11 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
+	clicumber "github.com/code-ready/clicumber/testsuite"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
-
-	clicumber "github.com/code-ready/clicumber/testsuite"
 )
 
 var (
@@ -95,7 +93,7 @@ func FeatureContext(s *godog.Suite) {
 				fmt.Println("User must specify --bundle-version if bundle is embedded")
 				os.Exit(1)
 			}
-			bundleName = constants.GetBundleFosOs(runtime.GOOS, bundleVersion)
+			bundleName = getBundleFosOs(runtime.GOOS, bundleVersion)
 		} else {
 			bundleEmbedded = false
 			_, bundleName = filepath.Split(bundleLocation)
@@ -159,6 +157,18 @@ func FeatureContext(s *godog.Suite) {
 			fmt.Printf("Could not delete CRC VM: %s.", err)
 		}
 	})
+}
+
+func defaultBundleForOs(bundleVersion string) map[string]string {
+	return map[string]string{
+		"darwin":  fmt.Sprintf("crc_hyperkit_%s.crcbundle", bundleVersion),
+		"linux":   fmt.Sprintf("crc_libvirt_%s.crcbundle", bundleVersion),
+		"windows": fmt.Sprintf("crc_hyperv_%s.crcbundle", bundleVersion),
+	}
+}
+
+func getBundleFosOs(os, bundleVersion string) string {
+	return defaultBundleForOs(bundleVersion)[os]
 }
 
 func CheckHTTPResponseWithRetry(retryCount int, retryWait string, address string, expectedStatusCode int) error {
