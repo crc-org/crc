@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/api"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/transport"
@@ -45,8 +46,7 @@ var daemonCmd = &cobra.Command{
 				endpoints = append(endpoints, transport.DefaultURL)
 			}
 		}
-
-		err := run(&types.Configuration{
+		virtualNetworkConfig := types.Configuration{
 			Debug:             false, // never log packets
 			CaptureFile:       captureFile(),
 			MTU:               4000, // Large packets slightly improve the performance. Less small packets.
@@ -77,10 +77,6 @@ var daemonCmd = &cobra.Command{
 							Regexp: regexp.MustCompile("crc-(.*?)-master-0"),
 							IP:     net.ParseIP("192.168.126.11"),
 						},
-						{
-							Name: "host",
-							IP:   net.ParseIP(hostVirtualIP),
-						},
 					},
 				},
 			},
@@ -89,10 +85,25 @@ var daemonCmd = &cobra.Command{
 				":6443": "192.168.127.2:6443",
 				":443":  "192.168.127.2:443",
 			},
-			NAT: map[string]string{
-				hostVirtualIP: "127.0.0.1",
-			},
-		}, endpoints)
+		}
+		if config.Get(cmdConfig.HostNetworkAccess).AsBool() {
+			log.Debugf("Enabling host network access")
+			for i := range virtualNetworkConfig.DNS {
+				zone := &virtualNetworkConfig.DNS[i]
+				if zone.Name != "crc.testing." {
+					continue
+				}
+				log.Debugf("Adding \"host\" -> %s DNS record to crc.testing. zone", hostVirtualIP)
+
+				zone.Records = append(zone.Records, types.Record{Name: "host", IP: net.ParseIP(hostVirtualIP)})
+			}
+
+			if virtualNetworkConfig.NAT == nil {
+				virtualNetworkConfig.NAT = make(map[string]string)
+			}
+			virtualNetworkConfig.NAT[hostVirtualIP] = "127.0.0.1"
+		}
+		err := run(&virtualNetworkConfig, endpoints)
 		return err
 	},
 }
