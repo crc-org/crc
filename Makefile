@@ -35,6 +35,14 @@ RELEASE_INFO := release-info.json
 
 MOCK_BUNDLE ?= false
 
+HYPERKIT_BUNDLENAME = crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+HYPERV_BUNDLENAME = crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+LIBVIRT_BUNDLENAME = crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+
+HYPERKIT_BUNDLEPATH = $(BUNDLE_DIR)/$(HYPERKIT_BUNDLENAME)
+HYPERV_BUNDLEPATH = $(BUNDLE_DIR)/$(HYPERV_BUNDLENAME)
+LIBVIRT_BUNDLEPATH = $(BUNDLE_DIR)/$(LIBVIRT_BUNDLENAME)
+
 # Check that given variables are set and all have non-empty values,
 # die with an error otherwise.
 #
@@ -219,21 +227,17 @@ release: cross-lint embed_bundle build_docs_pdf gen_release_info
 	
 	pushd $(RELEASE_DIR) && sha256sum * > sha256sum.txt && popd
 
-HYPERKIT_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
-HYPERV_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
-LIBVIRT_BUNDLENAME = $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
-
 .PHONY: embed_bundle check_bundledir
 check_bundledir:
 ifeq ($(MOCK_BUNDLE),true)
-	touch $(HYPERKIT_BUNDLENAME) $(HYPERV_BUNDLENAME) $(LIBVIRT_BUNDLENAME)
+	touch $(HYPERKIT_BUNDLEPATH) $(HYPERV_BUNDLEPATH) $(LIBVIRT_BUNDLEPATH)
 endif
 	@$(call check_defined, BUNDLE_DIR, "Embedding bundle requires BUNDLE_DIR set to a directory containing CRC bundles for all hypervisors")
 
-embed_bundle: clean cross $(HOST_BUILD_DIR)/crc-embedder check_bundledir $(HYPERKIT_BUNDLENAME) $(HYPERV_BUNDLENAME) $(LIBVIRT_BUNDLENAME)
-	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=darwin --bundle=$(HYPERKIT_BUNDLENAME) $(BUILD_DIR)/macos-amd64/crc
-	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=linux --bundle=$(LIBVIRT_BUNDLENAME) $(BUILD_DIR)/linux-amd64/crc
-	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=windows --bundle=$(HYPERV_BUNDLENAME) $(BUILD_DIR)/windows-amd64/crc.exe
+embed_bundle: clean cross $(HOST_BUILD_DIR)/crc-embedder check_bundledir $(HYPERKIT_BUNDLEPATH) $(HYPERV_BUNDLEPATH) $(LIBVIRT_BUNDLEPATH)
+	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=darwin --bundle=$(HYPERKIT_BUNDLEPATH) $(BUILD_DIR)/macos-amd64/crc
+	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=linux --bundle=$(LIBVIRT_BUNDLEPATH) $(BUILD_DIR)/linux-amd64/crc
+	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=windows --bundle=$(HYPERV_BUNDLEPATH) $(BUILD_DIR)/windows-amd64/crc.exe
 
 .PHONY: update-go-version
 update-go-version:
@@ -255,7 +259,7 @@ packagedir: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)
 	tar -C packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/ -xvzf packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/crc-tray-macos.tar.gz
 	rm packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/crc-tray-macos.tar.gz
 
-	cp $(HYPERKIT_BUNDLENAME) packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
+	cp $(HYPERKIT_BUNDLEPATH) packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
 	cp $(BUILD_DIR)/macos-amd64/crc packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
 	cp LICENSE packaging/darwin/Resources/LICENSE.txt
 	pkgbuild --analyze --root packaging/root packaging/components.plist
