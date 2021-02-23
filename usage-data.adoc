@@ -1,6 +1,6 @@
 = Usage data
 
-Overview of the data CodeReady Containers collect provided the user consented (see README).
+The following table describes the opt-in usage data collected by CodeReady Containers.
 
 .Data points
 |===
@@ -11,6 +11,8 @@ Overview of the data CodeReady Containers collect provided the user consented (s
 |                  |CodeReady Containers version |
 
 |*Setup*           | Error message               |
+|                  | Error type                  |
+|                  | First time run              | true/false
 |*Cluster startup* | Error message               |
 |                  | Proxy                       | true/false
 |                  | Network mode                | vsock/default

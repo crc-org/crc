@@ -20,15 +20,11 @@ If you are looking for a solution for running OpenShift 3.x, you will need tools
 [[usage-data]]
 == Usage data
 
-With your approval, CodeReady Containers collect usage data and send it pseudonymized to Red Hat servers to help improve our products and services. Read our https://developers.redhat.com/article/tool-data-collection[privacy statement] to learn more about it. To know the specific data points being collected, see xref:usage-data.adoc#data-table[usage-data.adoc].
+The first time CodeReady Containers is run, you will be asked to opt-in to Red Hat's telemetry collection program.
 
-The first time a version of CodeReady Containers is run, you will be asked to opt-in to Red Hat's telemetry collection program:
+With your approval, CodeReady Containers collects pseudonymized usage data and sends it to Red Hat servers to help improve our products and services. Read our https://developers.redhat.com/article/tool-data-collection[privacy statement] to learn more about it. For the specific data points being collected, see xref:usage-data.adoc#data-table[Usage data].
 
-```bash
-Would you like to contribute anonymous usage statistics? [y/N]:
-```
-
-=== Disable usage data collection
+=== Manually configuring usage data collection
 
 You can manually change your preference about usage data collection by running `crc config set consent-telemetry <yes/no>` before the next `crc start`. 
 
