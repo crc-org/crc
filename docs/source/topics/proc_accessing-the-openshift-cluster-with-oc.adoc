@@ -33,11 +33,11 @@ You can also view it by running the [command]`{bin} console --credentials` comma
 ====
 
 . You can now use [command]`oc` to interact with your OpenShift cluster.
-For example, to verify that the OpenShift cluster Operators are available:
+For example, to verify that the OpenShift cluster Operators are available, run the following command with administrator privileges:
 +
 [subs="+quotes,attributes",options="nowrap"]
 ----
-$ oc get co
+$ oc get co --as system:admin
 ----
 +
 [NOTE]
