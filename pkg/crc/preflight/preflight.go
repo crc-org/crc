@@ -154,7 +154,8 @@ func doRegisterSettings(cfg config.Schema, checks []Check) {
 func StartPreflightChecks(config config.Storage) error {
 	experimentalFeatures := config.Get(cmdConfig.ExperimentalFeatures).AsBool()
 	mode := network.ParseMode(config.Get(cmdConfig.NetworkMode).AsString())
-	if err := doPreflightChecks(config, getPreflightChecks(experimentalFeatures, mode)); err != nil {
+	trayAutostart := config.Get(cmdConfig.AutostartTray).AsBool()
+	if err := doPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode)); err != nil {
 		return &errors.PreflightError{Err: err}
 	}
 	return nil
@@ -164,7 +165,8 @@ func StartPreflightChecks(config config.Storage) error {
 func SetupHost(config config.Storage) error {
 	experimentalFeatures := config.Get(cmdConfig.ExperimentalFeatures).AsBool()
 	mode := network.ParseMode(config.Get(cmdConfig.NetworkMode).AsString())
-	return doFixPreflightChecks(config, getPreflightChecks(experimentalFeatures, mode))
+	trayAutostart := config.Get(cmdConfig.AutostartTray).AsBool()
+	return doFixPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode))
 }
 
 func RegisterSettings(config config.Schema) {
