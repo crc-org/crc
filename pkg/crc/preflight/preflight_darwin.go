@@ -53,14 +53,7 @@ var resolverPreflightChecks = [...]Check{
 	},
 }
 
-var traySetupChecks = [...]Check{
-	{
-		checkDescription: "Checking if tray executable is installed",
-		check:            checkTrayExecutablePresent,
-		fixDescription:   "Installing and setting up tray",
-		fix:              fixTrayExecutablePresent,
-		flags:            SetupOnly,
-	},
+var daemonSetupChecks = [...]Check{
 	{
 		checkDescription:   "Checking if launchd configuration for daemon exists",
 		check:              checkIfDaemonPlistFileExists,
@@ -71,13 +64,23 @@ var traySetupChecks = [...]Check{
 		cleanup:            removeDaemonPlistFile,
 	},
 	{
-		checkDescription:   "Checking if launchd configuration for tray exists",
-		check:              checkIfTrayPlistFileExists,
-		fixDescription:     "Creating launchd configuration for tray",
-		fix:                fixTrayPlistFileExists,
+		checkDescription:   "Checking if CodeReady Containers daemon is running",
+		check:              checkIfDaemonAgentRunning,
+		fixDescription:     "Starting CodeReady Containers daemon",
+		fix:                fixDaemonAgentRunning,
 		flags:              SetupOnly,
-		cleanupDescription: "Removing launchd configuration for tray",
-		cleanup:            removeTrayPlistFile,
+		cleanupDescription: "Unload CodeReady Containers daemon",
+		cleanup:            unLoadDaemonAgent,
+	},
+}
+
+var traySetupChecks = [...]Check{
+	{
+		checkDescription: "Checking if tray executable is installed",
+		check:            checkTrayExecutablePresent,
+		fixDescription:   "Installing and setting up tray",
+		fix:              fixTrayExecutablePresent,
+		flags:            SetupOnly,
 	},
 	{
 		checkDescription: "Checking installed tray version",
@@ -87,13 +90,13 @@ var traySetupChecks = [...]Check{
 		flags:            SetupOnly,
 	},
 	{
-		checkDescription:   "Checking if CodeReady Containers daemon is running",
-		check:              checkIfDaemonAgentRunning,
-		fixDescription:     "Starting CodeReady Containers daemon",
-		fix:                fixDaemonAgentRunning,
+		checkDescription:   "Checking if launchd configuration for tray exists",
+		check:              checkIfTrayPlistFileExists,
+		fixDescription:     "Creating launchd configuration for tray",
+		fix:                fixTrayPlistFileExists,
 		flags:              SetupOnly,
-		cleanupDescription: "Unload CodeReady Containers daemon",
-		cleanup:            unLoadDaemonAgent,
+		cleanupDescription: "Removing launchd configuration for tray",
+		cleanup:            removeTrayPlistFile,
 	},
 	{
 		checkDescription:   "Check if CodeReady Containers tray is running",
@@ -117,6 +120,10 @@ func getPreflightChecks(_ bool, trayAutostart bool, mode network.Mode) []Check {
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, hyperkitPreflightChecks(mode)...)
 	checks = append(checks, dnsPreflightChecks[:]...)
+
+	if trayAutostart || mode == network.VSockMode {
+		checks = append(checks, daemonSetupChecks[:]...)
+	}
 
 	if trayAutostart {
 		checks = append(checks, traySetupChecks[:]...)
