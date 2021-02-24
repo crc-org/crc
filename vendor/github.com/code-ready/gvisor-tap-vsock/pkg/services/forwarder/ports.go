@@ -95,7 +95,7 @@ func (f *PortsForwarder) Unexpose(local string) error {
 func (f *PortsForwarder) Mux() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/all", func(w http.ResponseWriter, r *http.Request) {
-		var ret []proxy
+		ret := make([]proxy, 0)
 		for _, proxy := range f.proxies {
 			ret = append(ret, proxy)
 		}

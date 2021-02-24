@@ -32,7 +32,7 @@ github.com/cheggaaa/pb/v3/termutil
 ## explicit
 github.com/code-ready/clicumber/testsuite
 github.com/code-ready/clicumber/util
-# github.com/code-ready/gvisor-tap-vsock v0.0.0-20210128145517-e5f886c34c9f
+# github.com/code-ready/gvisor-tap-vsock v0.0.0-20210216090540-914d522b9c38
 ## explicit
 github.com/code-ready/gvisor-tap-vsock/pkg/services/dns
 github.com/code-ready/gvisor-tap-vsock/pkg/services/forwarder

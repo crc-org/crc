@@ -439,7 +439,7 @@ func makeDaemonVisibleToHyperkit(name string) error {
 		if !os.IsNotExist(err) {
 			return errors.Wrap(err, "VSock listener error")
 		}
-		if err := os.Symlink(constants.NetworkSocketPath, dst); err != nil {
+		if err := os.Symlink(constants.TapSocketPath, dst); err != nil {
 			return errors.Wrap(err, "VSock listener error")
 		}
 	}

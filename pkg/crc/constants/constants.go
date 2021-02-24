@@ -103,7 +103,6 @@ var (
 	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
 	DefaultBundlePath  = defaultBundlePath()
 	DaemonSocketPath   = filepath.Join(CrcBaseDir, "crc.sock")
-	NetworkSocketPath  = filepath.Join(CrcBaseDir, "network.sock")
 )
 
 func defaultBundlePath() string {
