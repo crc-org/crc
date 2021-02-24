@@ -4,6 +4,10 @@ github.com/Azure/go-ansiterm/winterm
 # github.com/Masterminds/semver v1.5.0
 ## explicit
 github.com/Masterminds/semver
+# github.com/Microsoft/go-winio v0.4.15-0.20200908182639-5b44b70ab3ab
+## explicit
+github.com/Microsoft/go-winio
+github.com/Microsoft/go-winio/pkg/guid
 # github.com/RangelReale/osincli v0.0.0-20160924135400-fababb0555f2
 github.com/RangelReale/osincli
 # github.com/VividCortex/ewma v1.1.1

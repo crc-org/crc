@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/Masterminds/semver v1.5.0
+	github.com/Microsoft/go-winio v0.4.15-0.20200908182639-5b44b70ab3ab
 	github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/cavaliercoder/grab v2.0.0+incompatible
