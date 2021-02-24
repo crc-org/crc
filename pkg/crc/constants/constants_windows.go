@@ -14,6 +14,7 @@ const (
 	DaemonBatchFileName         = "crc-daemon-autostart.bat"
 	DaemonPSScriptName          = "launch-crc-daemon.ps1"
 	DaemonBatchFileShortcutName = "crc-daemmon-autostart.bat.lnk"
+	TapSocketPath               = ""
 )
 
 var (

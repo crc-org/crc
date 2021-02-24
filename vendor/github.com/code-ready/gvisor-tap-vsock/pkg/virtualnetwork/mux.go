@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/code-ready/gvisor-tap-vsock/pkg/types"
 	"github.com/google/tcpproxy"
 	"github.com/sirupsen/logrus"
 	"gvisor.dev/gvisor/pkg/tcpip"
@@ -26,7 +27,7 @@ func (n *VirtualNetwork) Mux() http.Handler {
 	mux.HandleFunc("/leases", func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(n.networkSwitch.IPs.Leases())
 	})
-	mux.HandleFunc("/connect", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(types.ConnectPath, func(w http.ResponseWriter, r *http.Request) {
 		hj, ok := w.(http.Hijacker)
 		if !ok {
 			http.Error(w, "webserver doesn't support hijacking", http.StatusInternalServerError)

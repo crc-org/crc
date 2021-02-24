@@ -15,8 +15,10 @@ const (
 )
 
 var (
-	TrayAppBundlePath  = trayAppBundlePath()
-	TrayExecutablePath = filepath.Join(TrayAppBundlePath, "Contents", "MacOS", "CodeReady Containers")
+	TrayAppBundlePath    = trayAppBundlePath()
+	TrayExecutablePath   = filepath.Join(TrayAppBundlePath, "Contents", "MacOS", "CodeReady Containers")
+	TapSocketPath        = filepath.Join(CrcBaseDir, "tap.sock")
+	DaemonHTTPSocketPath = filepath.Join(CrcBaseDir, "crc-http.sock")
 )
 
 func trayAppBundlePath() string {
