@@ -276,6 +276,16 @@ $(BUILD_DIR)/macos-amd64/crc-macos-amd64.pkg: packagedir
 $(BUILD_DIR)/macos-amd64/crc-installer.tar: packagedir
 	tar -cvf $(BUILD_DIR)/macos-amd64/crc-installer.tar ./packaging
 
+$(GOPATH)/bin/gomod2rpmdeps:
+	pushd /tmp && GO111MODULE=on go get github.com/cfergeau/gomod2rpmdeps/cmd/gomod2rpmdeps && popd
+
+%.spec: %.spec.in $(GOPATH)/bin/gomod2rpmdeps
+	@$(GOPATH)/bin/gomod2rpmdeps | sed -e '/__BUNDLED_REQUIRES__/r /dev/stdin' \
+					   -e '/__BUNDLED_REQUIRES__/d' \
+					   -e 's/__VERSION__/'$(CRC_VERSION)'/g' \
+					   -e 's/__OPENSHIFT_VERSION__/'$(BUNDLE_VERSION)'/g' \
+				       $< >$@
+
 %: %.in
 	@sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' \
 	     -e 's/__OPENSHIFT_VERSION__/'$(BUNDLE_VERSION)'/g' \
