@@ -15,6 +15,7 @@ const (
 	DaemonPSScriptName          = "launch-crc-daemon.ps1"
 	DaemonBatchFileShortcutName = "crc-daemmon-autostart.bat.lnk"
 	TapSocketPath               = ""
+	DaemonHTTPNamedPipe         = `\\.\pipe\crc-http`
 )
 
 var (
