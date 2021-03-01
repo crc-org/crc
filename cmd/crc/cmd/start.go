@@ -211,7 +211,7 @@ Log in as user:
 
 Use the 'oc' command line interface:
   {{ .CommandLinePrefix }} {{ .EvalCommandLine }}
-  {{ .CommandLinePrefix }} oc login {{ .ClusterConfig.URL }}
+  {{ .CommandLinePrefix }} oc login -u {{ .ClusterConfig.DeveloperCredentials.Username }} {{ .ClusterConfig.URL }}
 `
 
 type templateVariables struct {
