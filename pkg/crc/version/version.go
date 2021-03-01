@@ -29,7 +29,7 @@ var (
 const (
 	releaseInfoLink = "https://mirror.openshift.com/pub/openshift-v4/clients/crc/latest/release-info.json"
 	// Tray version to be embedded in executable
-	crcMacTrayVersion = "1.0.0-beta.1"
+	crcMacTrayVersion = "1.0.1"
 	// Windows forms application version type major.minor.buildnumber.revesion
 	crcWindowsTrayVersion = "0.3.0.0"
 )
