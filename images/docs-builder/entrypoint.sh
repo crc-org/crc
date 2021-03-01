@@ -18,7 +18,7 @@ case $1 in
 		;;
 	docs_check_links)
 		echo "Checking if all links are alive in docs source"
-		find . -name \*.adoc | xargs -n1 asciidoc-link-check -c /links_whitelist.json -q
+		find . -name \*.adoc | xargs -n1 asciidoc-link-check -c /links_ignorelist.json -q
 		;;
 	docs_serve)
 		cd build

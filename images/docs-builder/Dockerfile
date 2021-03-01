@@ -12,7 +12,7 @@ RUN gem install asciidoctor asciidoctor-pdf --pre && \
 
 COPY entrypoint.sh /sbin/entrypoint.sh
 RUN chmod 755 /sbin/entrypoint.sh
-COPY links_whitelist.json /links_whitelist.json
+COPY links_ignorelist.json /links_ignorelist.json
 
 VOLUME /docs
 WORKDIR /docs
