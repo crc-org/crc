@@ -20,20 +20,28 @@ func StartMonitoring(ocConfig oc.Config) error {
 		return err
 	}
 
+	indexForClusterMonitoringDeploymentKind := getIndexInOverridesForObjectName(cv, "cluster-monitoring-operator")
+	indexForClusterMonitoringCVOKind := getIndexInOverridesForObjectName(cv, "monitoring")
+
+	if indexForClusterMonitoringDeploymentKind != -1 && indexForClusterMonitoringCVOKind != -1 {
+		_, _, err = ocConfig.RunOcCommand("patch", "clusterversion/version",
+			"--type", "json",
+			"--patch", fmt.Sprintf(`'[{"op":"remove", "path":"/spec/overrides/%d"},{"op":"remove", "path":"/spec/overrides/%d"}]'`,
+				indexForClusterMonitoringDeploymentKind, indexForClusterMonitoringCVOKind-1))
+	}
+	return err
+}
+
+func getIndexInOverridesForObjectName(cv v1.ClusterVersion, objectName string) int {
 	pos := -1
 	for i, override := range cv.Spec.Overrides {
-		if override.Name == "cluster-monitoring-operator" {
+		if override.Name == objectName {
 			pos = i
 			break
 		}
 	}
 	if pos == -1 {
-		log.Debug("monitoring operator not found in cluster version overrides")
-		return nil
+		log.Debugf("%s not found in cluster version overrides", objectName)
 	}
-
-	_, _, err = ocConfig.RunOcCommand("patch", "clusterversion/version",
-		"--type", "json",
-		"--patch", fmt.Sprintf(`'[{"op":"remove", "path":"/spec/overrides/%d"}]'`, pos))
-	return err
+	return pos
 }
