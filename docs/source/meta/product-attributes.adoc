@@ -35,4 +35,4 @@
 
 :odo-docs-url: https://docs.openshift.com/container-platform/latest/cli_reference/developer_cli_odo/understanding-odo.html
 :odo-docs-url-installing: https://docs.openshift.com/container-platform/latest/cli_reference/developer_cli_odo/installing-odo.html
-:odo-docs-url-single-component: https://docs.openshift.com/container-platform/latest/cli_reference/developer_cli_odo/creating-a-single-component-application-with-odo.html
+:odo-docs-url-single-component: https://docs.openshift.com/container-platform/latest/cli_reference/developer_cli_odo/creating_and_deploying_applications_with_odo/creating-a-single-component-application-with-odo.html
