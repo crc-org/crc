@@ -105,7 +105,7 @@ Log in as user:
 
 Use the 'oc' command line interface:
   $ eval $(crc oc-env)
-  $ oc login https://api.crc.testing:6443
+  $ oc login -u developer https://api.crc.testing:6443
 `
 
 const powershellTemplate = `Started the OpenShift cluster.
@@ -123,7 +123,7 @@ Log in as user:
 
 Use the 'oc' command line interface:
   PS> & crc oc-env | Invoke-Expression
-  PS> oc login https://api.crc.testing:6443
+  PS> oc login -u developer https://api.crc.testing:6443
 `
 
 const cmdTemplate = `Started the OpenShift cluster.
@@ -141,7 +141,7 @@ Log in as user:
 
 Use the 'oc' command line interface:
   > @FOR /f "tokens=*" %i IN ('crc oc-env') DO @call %i
-  > oc login https://api.crc.testing:6443
+  > oc login -u developer https://api.crc.testing:6443
 `
 
 func expectedTemplate(shell string) string {
