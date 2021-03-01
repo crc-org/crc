@@ -42,7 +42,7 @@ jobs:
 
   build_mock_release:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202101-01
     environment:
       GOVERSION: "1.14.13"
       CONTAINER_RUNTIME: "docker"
@@ -72,7 +72,7 @@ jobs:
 
   build_docs:
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202101-01
     steps:
     - checkout
     - run:
@@ -80,13 +80,13 @@ jobs:
         command: sudo rm -f /etc/apt/sources.list.d/google-chrome.list
     - run:
         name: Add podman ppa and update repo
-        command: sudo add-apt-repository -y ppa:projectatomic/ppa && sudo apt -y update
+        command: |
+          echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /' | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+          curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_20.04/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/devel_kubic_libcontainers_stable.gpg > /dev/null
+          sudo apt update
     - run:
         name: Install podman
         command: sudo apt -y install podman
-    - run:
-        name: Install slirp4netns
-        command: sudo apt -y install slirp4netns
     - run:
         name: Check podman
         command: podman info
@@ -104,7 +104,7 @@ jobs:
 
   docs_deploy:
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202101-01
     steps:
     - attach_workspace:
         at: docs/build
