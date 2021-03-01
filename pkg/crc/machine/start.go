@@ -399,7 +399,7 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 	waitForProxyPropagation(ocConfig, proxyConfig)
 
 	logging.Info("Updating kubeconfig")
-	if err := eventuallyWriteKubeconfig(ocConfig, instanceIP, clusterConfig); err != nil {
+	if err := writeKubeconfig(instanceIP, clusterConfig); err != nil {
 		logging.Warnf("Cannot update kubeconfig: %v", err)
 	}
 

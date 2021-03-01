@@ -4,7 +4,6 @@ import (
 	gocontext "context"
 	"crypto/tls"
 	"crypto/x509"
-	goerrors "errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -14,11 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/oc"
 	"github.com/openshift/oc/pkg/helpers/tokencmd"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -30,25 +25,7 @@ const (
 	developerContext = "crc-developer"
 )
 
-func eventuallyWriteKubeconfig(ocConfig oc.Config, ip string, clusterConfig *ClusterConfig) error {
-	if err := errors.RetryAfter(60*time.Second, func() error {
-		status, err := cluster.GetClusterOperatorStatus(ocConfig, "authentication")
-		if err != nil {
-			return &errors.RetriableError{Err: err}
-		}
-		if status.IsReady() {
-			return nil
-		}
-		return &errors.RetriableError{Err: goerrors.New("cluster operator authentication not ready")}
-	}, 2*time.Second); err != nil {
-		logging.Warn("Skipping the kubeconfig update. Cluster operator authentication still not ready after 2min.")
-	} else if err := WriteKubeconfig(ip, clusterConfig); err != nil {
-		return err
-	}
-	return nil
-}
-
-func WriteKubeconfig(ip string, clusterConfig *ClusterConfig) error {
+func writeKubeconfig(ip string, clusterConfig *ClusterConfig) error {
 	kubeconfig := getGlobalKubeConfigPath()
 	dir := filepath.Dir(kubeconfig)
 	if err := os.MkdirAll(dir, 0755); err != nil {
