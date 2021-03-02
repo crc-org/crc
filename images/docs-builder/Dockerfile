@@ -4,7 +4,7 @@ MAINTAINER CodeReady Containers <devtools-cdk@redhat.com>
 RUN yum update -y && \
     yum install --setopt=tsflags=nodocs -y \
     ruby rubygems python38 && \
-    yum module install nodejs:12 -y && \
+    yum module install nodejs:14 -y && \
     yum clean all && rm -rf /var/cache/yum/*
 
 RUN gem install asciidoctor asciidoctor-pdf --pre && \
