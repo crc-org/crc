@@ -107,7 +107,10 @@ func (bundle *CrcBundleInfo) GetInitramfsPath() string {
 
 func (bundle *CrcBundleInfo) GetKubeadminPassword() (string, error) {
 	rawData, err := ioutil.ReadFile(bundle.resolvePath(bundle.ClusterInfo.KubeadminPasswordFile))
-	return string(rawData), err
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(rawData)), nil
 }
 
 func (bundle *CrcBundleInfo) GetBundleBuildTime() (time.Time, error) {
