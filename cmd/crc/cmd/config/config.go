@@ -9,7 +9,6 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/tray"
 	"github.com/spf13/cobra"
@@ -45,23 +44,6 @@ func RegisterSettings(cfg *config.Config) {
 		return config.ValidateBool(value)
 	}
 
-	disableEnableTrayAutostart := func(key string, value interface{}) string {
-		mode := network.ParseMode(cfg.Get(NetworkMode).AsString())
-		var mErr = errors.MultiError{}
-		if err := tray.DisableTrayAutostart(); err != nil {
-			mErr.Collect(err)
-		}
-		if mode == network.DefaultMode {
-			if err := tray.DisableDaemonAutostart(); err != nil {
-				mErr.Collect(err)
-			}
-		}
-		if len(mErr.Errors) > 0 {
-			return fmt.Sprintf("Error occurred on disabling tray autostart: %s", mErr.Error())
-		}
-		return "Successfully disabled autostart of tray at login."
-	}
-
 	// Start command settings in config
 	cfg.AddSetting(Bundle, constants.DefaultBundlePath, config.ValidateBundlePath, config.SuccessfullyApplied,
 		fmt.Sprintf("Bundle path (string, default '%s')", constants.DefaultBundlePath))
@@ -84,7 +66,7 @@ func RegisterSettings(cfg *config.Config) {
 	cfg.AddSetting(HostNetworkAccess, false, validateHostNetworkAccess, config.SuccessfullyApplied,
 		"Allow TCP/IP connections from the CodeReday Containers VM to services running on the host (true/false, default: false)")
 	// System tray auto-start config
-	cfg.AddSetting(AutostartTray, true, tray.ValidateTrayAutostart, disableEnableTrayAutostart,
+	cfg.AddSetting(AutostartTray, true, tray.ValidateTrayAutostart, tray.DisableEnableTrayAutostart,
 		"Automatically start the tray (true/false, default: true)")
 	// Proxy Configuration
 	cfg.AddSetting(HTTPProxy, "", config.ValidateURI, config.SuccessfullyApplied,

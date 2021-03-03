@@ -1,13 +1,8 @@
 package tray
 
-func DisableTrayAutostart() error {
+func DisableEnableTrayAutostart(key string, value interface{}) string {
 	// noop
-	return nil
-}
-
-func DisableDaemonAutostart() error {
-	// noop
-	return nil
+	return ""
 }
 
 // ValidateTrayAutostart checks tray-auto-start is used in macOS and its a bool
