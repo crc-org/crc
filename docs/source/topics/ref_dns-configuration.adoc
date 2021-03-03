@@ -39,13 +39,16 @@ exit 0
 
 [NOTE]
 ====
-`systemd-resolved` is also available as a Tech Preview on {rhel} and {centos} 8.3. After configuring the host to use systemd-resolved, any CRC dnsmasq configurations need to be removed and the above script needs to be created with executable permissions.
+:rhel-resolved-docs: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/configuring_and_managing_networking/using-different-dns-servers-for-different-domains_configuring-and-managing-networking
 
-The crc virtual machine presently needs to be configured to skip certain checks during startup:
+`systemd-resolved` is also available as an unsupported Technology Preview on {rhel} and {centos} 8.3. After {rhel-resolved-docs}[configuring the host] to use `systemd-resolved`, any {prod} `dnsmasq` configurations need to be removed and the above script needs to be created with executable permissions.
 
+Configure the {prod} binary to skip startup checks for `dnsmasq` and NetworkManager configuration:
+
+[subs="+quotes,attributes"]
 ----
-$ crc config set skip-check-crc-dnsmasq-file true
-$ crc config set skip-check-network-manager-config true
+$ {bin} config set skip-check-crc-dnsmasq-file true
+$ {bin} config set skip-check-network-manager-config true
 ----
 ====
 
