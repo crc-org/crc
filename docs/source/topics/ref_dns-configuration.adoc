@@ -29,12 +29,25 @@ This configuration is used on Fedora 33 or newer, and on Ubuntu Desktop editions
 * `systemd-resolved` configuration is done through a NetworkManager dispatcher script in `/etc/NetworkManager/dispatcher.d/99-crc.sh`:
 +
 ----
+#!/bin/sh
 resolvectl domain crc ~testing
 resolvectl dns crc 192.168.130.11
 resolvectl default-route crc false
 
 exit 0
 ----
+
+[NOTE]
+====
+`systemd-resolved` is also available as a Tech Preview on {rhel} and {centos} 8.3. After configuring the host to use systemd-resolved, any CRC dnsmasq configurations need to be removed and the above script needs to be created with executable permissions.
+
+The crc virtual machine presently needs to be configured to skip certain checks during startup:
+
+----
+$ crc config set skip-check-crc-dnsmasq-file true
+$ crc config set skip-check-network-manager-config true
+----
+====
 
 === NetworkManager + dnsmasq
 
