@@ -113,7 +113,7 @@ func getAllPreflightChecks() []Check {
 	return getPreflightChecks(true, true, network.DefaultMode)
 }
 
-func getPreflightChecks(_ bool, trayAutostart bool, mode network.Mode) []Check {
+func getPreflightChecks(experimentalFeatures bool, trayAutostart bool, mode network.Mode) []Check {
 	checks := []Check{}
 
 	checks = append(checks, nonWinPreflightChecks[:]...)
@@ -121,16 +121,18 @@ func getPreflightChecks(_ bool, trayAutostart bool, mode network.Mode) []Check {
 	checks = append(checks, hyperkitPreflightChecks(mode)...)
 	checks = append(checks, dnsPreflightChecks[:]...)
 
-	if trayAutostart || mode == network.VSockMode {
+	switch mode {
+	case network.DefaultMode:
+		checks = append(checks, resolverPreflightChecks[:]...)
+	case network.VSockMode:
 		checks = append(checks, daemonSetupChecks[:]...)
 	}
 
-	if trayAutostart {
+	if experimentalFeatures && trayAutostart {
+		if mode != network.VSockMode {
+			checks = append(checks, daemonSetupChecks[:]...)
+		}
 		checks = append(checks, traySetupChecks[:]...)
-	}
-
-	if mode == network.DefaultMode {
-		checks = append(checks, resolverPreflightChecks[:]...)
 	}
 
 	checks = append(checks, bundleCheck)
