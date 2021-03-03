@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"runtime"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -36,6 +37,16 @@ const (
 )
 
 func RegisterSettings(cfg *config.Config) {
+	validateTrayAutostart := func(value interface{}) (bool, string) {
+		if runtime.GOOS != "darwin" {
+			return false, "Tray autostart is only supported on macOS"
+		}
+		if !cfg.Get(ExperimentalFeatures).AsBool() {
+			return false, fmt.Sprintf("'%s' must be enabled in order to use the tray", ExperimentalFeatures)
+		}
+		return config.ValidateBool(value)
+	}
+
 	validateHostNetworkAccess := func(value interface{}) (bool, string) {
 		mode := network.ParseMode(cfg.Get(NetworkMode).AsString())
 		if mode != network.VSockMode {
@@ -84,7 +95,7 @@ func RegisterSettings(cfg *config.Config) {
 	cfg.AddSetting(HostNetworkAccess, false, validateHostNetworkAccess, config.SuccessfullyApplied,
 		"Allow TCP/IP connections from the CodeReady Containers VM to services running on the host (true/false, default: false)")
 	// System tray auto-start config
-	cfg.AddSetting(AutostartTray, true, tray.ValidateTrayAutostart, disableEnableTrayAutostart,
+	cfg.AddSetting(AutostartTray, true, validateTrayAutostart, disableEnableTrayAutostart,
 		"Automatically start the tray (true/false, default: true)")
 	// Proxy Configuration
 	cfg.AddSetting(HTTPProxy, "", config.ValidateURI, config.SuccessfullyApplied,
