@@ -310,7 +310,7 @@ func WaitForRequestHeaderClientCaFile(sshRunner *ssh.Runner) error {
 }
 
 func WaitForAPIServer(ocConfig oc.Config) error {
-	logging.Debugf("Waiting for apiserver availability")
+	logging.Info("Waiting for kube-apiserver availability... [takes around 2min]")
 	waitForAPIServer := func() error {
 		stdout, stderr, err := ocConfig.WithFailFast().RunOcCommand("get", "nodes")
 		if err != nil {
