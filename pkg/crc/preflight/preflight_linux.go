@@ -215,7 +215,7 @@ func getAllPreflightChecks() []Check {
 	return checks
 }
 
-func getPreflightChecks(_ bool, _ bool, networkMode network.Mode) []Check {
+func getPreflightChecks(_ bool, networkMode network.Mode) []Check {
 	return getPreflightChecksForDistro(distro(), networkMode)
 }
 
