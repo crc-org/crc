@@ -90,7 +90,7 @@ func (api Server) handleConnections(conn net.Conn) {
 		logging.Error("Error reading from socket")
 		return
 	}
-	logging.Debug("Received Request:", string(inBuffer[0:numBytes]))
+	logging.Debugf("rpc:%p: Received request: %s", conn, string(inBuffer[0:numBytes]))
 	err = json.Unmarshal(inBuffer[0:numBytes], &req)
 	if err != nil {
 		logging.Error("Error decoding request: ", err.Error())
@@ -125,6 +125,8 @@ func (api Server) handleConnections(conn net.Conn) {
 }
 
 func writeStringToSocket(socket net.Conn, msg string) {
+	logging.Debugf("rpc:%p: Sending answer: %s", socket, msg)
+
 	var outBuffer bytes.Buffer
 	_, err := outBuffer.WriteString(msg)
 	if err != nil {
