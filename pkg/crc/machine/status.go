@@ -52,7 +52,7 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 	// check if all the clusteroperators are running
 	diskSize, diskUse, err := cluster.GetRootPartitionUsage(sshRunner)
 	if err != nil {
-		return nil, errors.Wrap(err, "Cannot get root partition usage")
+		logging.Debugf("Cannot get root partition usage: %v", err)
 	}
 	return &ClusterStatusResult{
 		CrcStatus:        state.Running,
