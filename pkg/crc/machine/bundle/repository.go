@@ -48,6 +48,12 @@ func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
 	if err := bundleInfo.verify(); err != nil {
 		return nil, err
 	}
+	if fmt.Sprintf(".%s", bundleInfo.ClusterInfo.AppsDomain) != constants.AppsDomain {
+		return nil, fmt.Errorf("unexpected bundle, it must have %s apps domain", constants.AppsDomain)
+	}
+	if bundleInfo.GetAPIHostname() != fmt.Sprintf("api%s", constants.ClusterDomain) {
+		return nil, fmt.Errorf("unexpected bundle, it must have %s base domain", constants.ClusterDomain)
+	}
 	return &bundleInfo, nil
 }
 
@@ -70,12 +76,6 @@ func (repo *Repository) Use(bundleName string) (*CrcBundleInfo, error) {
 	bundleInfo, err := repo.Get(bundleName)
 	if err != nil {
 		return nil, err
-	}
-	if fmt.Sprintf(".%s", bundleInfo.ClusterInfo.AppsDomain) != constants.AppsDomain {
-		return nil, fmt.Errorf("unexpected bundle, it must have %s apps domain", constants.AppsDomain)
-	}
-	if bundleInfo.GetAPIHostname() != fmt.Sprintf("api%s", constants.ClusterDomain) {
-		return nil, fmt.Errorf("unexpected bundle, it must have %s base domain", constants.ClusterDomain)
 	}
 	if err := bundleInfo.createSymlinkOrCopyOpenShiftClient(repo.OcBinDir); err != nil {
 		return nil, err
@@ -127,6 +127,10 @@ var defaultRepo = &Repository{
 }
 
 func Get(bundleName string) (*CrcBundleInfo, error) {
+	return defaultRepo.Get(bundleName)
+}
+
+func Use(bundleName string) (*CrcBundleInfo, error) {
 	return defaultRepo.Use(bundleName)
 }
 
@@ -134,5 +138,5 @@ func Extract(path string) (*CrcBundleInfo, error) {
 	if err := defaultRepo.Extract(path); err != nil {
 		return nil, err
 	}
-	return defaultRepo.Use(filepath.Base(path))
+	return defaultRepo.Get(filepath.Base(path))
 }

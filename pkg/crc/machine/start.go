@@ -38,14 +38,17 @@ const minimumMemoryForMonitoring = 14336
 
 func getCrcBundleInfo(bundlePath string) (*bundle.CrcBundleInfo, error) {
 	bundleName := filepath.Base(bundlePath)
-	bundleInfo, err := bundle.Get(bundleName)
+	bundleInfo, err := bundle.Use(bundleName)
 	if err == nil {
 		logging.Infof("Loading bundle: %s ...", bundleName)
 		return bundleInfo, nil
 	}
 	logging.Debugf("Failed to load bundle %s: %v", bundleName, err)
 	logging.Infof("Extracting bundle: %s ...", bundleName)
-	return bundle.Extract(bundlePath)
+	if _, err := bundle.Extract(bundlePath); err != nil {
+		return nil, err
+	}
+	return bundle.Use(bundleName)
 }
 
 func (client *client) updateVMConfig(startConfig StartConfig, api libmachine.API, host *host.Host) error {
@@ -188,6 +191,10 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 				ClusterConfig:  *clusterConfig,
 				KubeletStarted: true,
 			}, nil
+		}
+
+		if _, err := bundle.Use(bundleName); err != nil {
+			return nil, err
 		}
 
 		if client.useVSock() {
