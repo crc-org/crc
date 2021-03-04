@@ -10,9 +10,9 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/tray"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )
 
@@ -57,20 +57,16 @@ func RegisterSettings(cfg *config.Config) {
 	}
 
 	disableEnableTrayAutostart := func(key string, value interface{}) string {
-		mode := network.ParseMode(cfg.Get(NetworkMode).AsString())
-		var mErr = errors.MultiError{}
-		if err := tray.DisableTrayAutostart(); err != nil {
-			mErr.Collect(err)
+		if cast.ToBool(value) {
+			return fmt.Sprintf(
+				"Successfully configured '%s' to '%s'. Run 'crc setup' for it to take effect.",
+				key, cast.ToString(value),
+			)
 		}
-		if mode == network.DefaultMode {
-			if err := tray.DisableDaemonAutostart(); err != nil {
-				mErr.Collect(err)
-			}
-		}
-		if len(mErr.Errors) > 0 {
-			return fmt.Sprintf("Error occurred on disabling tray autostart: %s", mErr.Error())
-		}
-		return "Successfully disabled autostart of tray at login."
+		return fmt.Sprintf(
+			"Successfully configured '%s' to '%s'. Run 'crc cleanup' and then 'crc setup' for it to take effect.",
+			key, cast.ToString(value),
+		)
 	}
 
 	// Start command settings in config
