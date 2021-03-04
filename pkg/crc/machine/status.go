@@ -44,7 +44,7 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting ip")
 	}
-	sshRunner, err := crcssh.CreateRunner(ip, getSSHPort(client.useVSock()), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath())
+	sshRunner, err := crcssh.CreateRunner(ip, getSSHPort(client.useVSock()), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath(), crcBundleMetadata.GetSSHKeyPath())
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating the ssh client")
 	}
