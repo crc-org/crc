@@ -79,7 +79,7 @@ func ValidateBundlePath(bundle string) error {
 
 func ValidateBundle(bundlePath string) error {
 	bundleName := filepath.Base(bundlePath)
-	_, err := bundle.GetCachedBundleInfo(bundleName)
+	_, err := bundle.Get(bundleName)
 	if err != nil {
 		return ValidateBundlePath(bundlePath)
 	}

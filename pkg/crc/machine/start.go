@@ -38,7 +38,7 @@ const minimumMemoryForMonitoring = 14336
 
 func getCrcBundleInfo(bundlePath string) (*bundle.CrcBundleInfo, error) {
 	bundleName := filepath.Base(bundlePath)
-	bundleInfo, err := bundle.GetCachedBundleInfo(bundleName)
+	bundleInfo, err := bundle.Get(bundleName)
 	if err == nil {
 		logging.Infof("Loading bundle: %s ...", bundleName)
 		return bundleInfo, nil

@@ -73,7 +73,7 @@ func checkBundleExtracted() error {
 		return nil
 	}
 	logging.Infof("Checking if %s exists", constants.DefaultBundlePath)
-	if _, err := bundle.GetCachedBundleInfo(constants.GetDefaultBundle()); err != nil {
+	if _, err := bundle.Get(constants.GetDefaultBundle()); err != nil {
 		logging.Debugf("error getting bundle info for %s: %v", constants.GetDefaultBundle(), err)
 		return err
 	}
@@ -106,7 +106,7 @@ func fixBundleExtracted() error {
 		}
 	}
 
-	_, err := bundle.GetCachedBundleInfo(constants.GetDefaultBundle())
+	_, err := bundle.Get(constants.GetDefaultBundle())
 	if err != nil {
 		logging.Infof("Uncompressing %s", constants.GetDefaultBundle())
 		_, err := bundle.Extract(constants.DefaultBundlePath)
