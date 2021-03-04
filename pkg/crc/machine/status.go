@@ -28,16 +28,17 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 		return nil, errors.Wrap(err, "Cannot get machine state")
 	}
 
-	if vmStatus != state.Running {
-		return &ClusterStatusResult{
-			CrcStatus:       vmStatus,
-			OpenshiftStatus: "Stopped",
-		}, nil
-	}
-
 	_, crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error loading bundle metadata")
+	}
+
+	if vmStatus != state.Running {
+		return &ClusterStatusResult{
+			CrcStatus:        vmStatus,
+			OpenshiftStatus:  "Stopped",
+			OpenshiftVersion: crcBundleMetadata.GetOpenshiftVersion(),
+		}, nil
 	}
 
 	ip, err := getIP(host, client.useVSock())
