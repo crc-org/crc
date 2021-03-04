@@ -126,7 +126,7 @@ var defaultRepo = &Repository{
 	OcBinDir: constants.CrcOcBinDir,
 }
 
-func GetCachedBundleInfo(bundleName string) (*CrcBundleInfo, error) {
+func Get(bundleName string) (*CrcBundleInfo, error) {
 	return defaultRepo.Use(bundleName)
 }
 

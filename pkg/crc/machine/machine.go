@@ -41,7 +41,7 @@ func getBundleMetadataFromDriver(driver drivers.Driver) (string, *bundle.CrcBund
 		err := fmt.Errorf("Error getting bundle name from CodeReady Containers instance, make sure you ran 'crc setup' and are using the latest bundle")
 		return "", nil, err
 	}
-	metadata, err := bundle.GetCachedBundleInfo(bundleName)
+	metadata, err := bundle.Get(bundleName)
 	if err != nil {
 		return "", nil, err
 	}
