@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -30,25 +31,42 @@ func (status *Status) String() string {
 	if len(status.progressing) == 1 {
 		return fmt.Sprintf("Operator %s is progressing", status.progressing[0])
 	} else if len(status.progressing) > 1 {
-		return fmt.Sprintf("%d operators are progressing: %s", len(status.progressing), strings.Join(status.progressing, ", "))
+		return fmt.Sprintf("%d operators are progressing: %s", len(status.progressing), joinWithLimit(status.progressing))
 	}
 
 	if len(status.degraded) == 1 {
 		return fmt.Sprintf("Operator %s is degraded", status.degraded[0])
 	} else if len(status.degraded) > 0 {
-		return fmt.Sprintf("%d operators are degraded: %s", len(status.degraded), strings.Join(status.degraded, ", "))
+		return fmt.Sprintf("%d operators are degraded: %s", len(status.degraded), joinWithLimit(status.degraded))
 	}
 
 	if len(status.unavailable) == 1 {
 		return fmt.Sprintf("Operator %s is not yet available", status.unavailable[0])
 	} else if len(status.unavailable) > 0 {
-		return fmt.Sprintf("%d operators are not available: %s", len(status.unavailable), strings.Join(status.unavailable, ", "))
+		return fmt.Sprintf("%d operators are not available: %s", len(status.unavailable), joinWithLimit(status.unavailable))
 	}
 
 	if status.IsReady() {
 		return "All operators are ready"
 	}
 	return "Operators are not ready yet"
+}
+
+func joinWithLimit(names []string) string {
+	const maxNames = 5
+	sort.Strings(names)
+	ret := strings.Join(names[0:min(len(names), maxNames)], ", ")
+	if len(names) > maxNames {
+		ret += "..."
+	}
+	return ret
+}
+
+func min(a, b int) int {
+	if a > b {
+		return b
+	}
+	return a
 }
 
 func (status *Status) IsReady() bool {
