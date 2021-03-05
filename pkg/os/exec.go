@@ -66,6 +66,7 @@ type CommandRunner interface {
 	RunPrivate(command string, args ...string) (string, string, error)
 	RunPrivileged(reason string, cmdAndArgs ...string) (string, string, error)
 }
+
 type localRunner struct{}
 
 func (r *localRunner) Run(command string, args ...string) (string, string, error) {

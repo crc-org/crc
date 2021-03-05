@@ -392,7 +392,7 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 
 	logging.Info("Starting OpenShift cluster ... [waiting for the cluster to stabilize]")
 
-	if err := cluster.WaitForClusterStable(ocConfig, client.monitoringEnabled()); err != nil {
+	if err := cluster.WaitForClusterStable(sshRunner, client.monitoringEnabled()); err != nil {
 		logging.Errorf("Cluster is not ready: %v", err)
 	}
 

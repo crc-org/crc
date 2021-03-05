@@ -4,7 +4,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/oc"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/machine/libmachine/state"
 	"github.com/pkg/errors"
@@ -64,7 +63,7 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 }
 
 func getOpenShiftStatus(sshRunner *crcssh.Runner, monitoringEnabled bool) string {
-	status, err := cluster.GetClusterOperatorsStatus(oc.UseOCWithSSH(sshRunner), monitoringEnabled)
+	status, err := cluster.GetClusterOperatorsStatus(sshRunner, monitoringEnabled)
 	if err != nil {
 		logging.Debugf("cannot get OpenShift status: %v", err)
 		return "Unreachable"

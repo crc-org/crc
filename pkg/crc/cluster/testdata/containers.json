@@ -1,0 +1,697 @@
+{
+  "containers": [
+    {
+      "metadata": {
+        "name": "registry-server"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-marketplace"
+      }
+    },
+    {
+      "metadata": {
+        "name": "registry-server"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-marketplace"
+      }
+    },
+    {
+      "metadata": {
+        "name": "registry-server"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-marketplace"
+      }
+    },
+    {
+      "metadata": {
+        "name": "registry-server"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-marketplace"
+      }
+    },
+    {
+      "metadata": {
+        "name": "ingress-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-ingress-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "router"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-ingress"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-rbac-proxy"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-multus"
+      }
+    },
+    {
+      "metadata": {
+        "name": "authentication-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-authentication-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "catalog-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-operator-lifecycle-manager"
+      }
+    },
+    {
+      "metadata": {
+        "name": "marketplace-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-marketplace"
+      }
+    },
+    {
+      "metadata": {
+        "name": "oauth-openshift"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-authentication"
+      }
+    },
+    {
+      "metadata": {
+        "name": "olm-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-operator-lifecycle-manager"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-scheduler-operator-container"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-kube-scheduler-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "packageserver"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-operator-lifecycle-manager"
+      }
+    },
+    {
+      "metadata": {
+        "name": "etcd-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-etcd-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "multus-admission-controller"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-multus"
+      }
+    },
+    {
+      "metadata": {
+        "name": "check-endpoints"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-network-diagnostics"
+      }
+    },
+    {
+      "metadata": {
+        "name": "openshift-apiserver-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-apiserver-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "cluster-node-tuning-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-cluster-node-tuning-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "openshift-config-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-config-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "hello-openshift-canary"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-ingress-canary"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-controller-manager-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-kube-controller-manager-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "cluster-samples-operator-watch"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-cluster-samples-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "console"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-console"
+      }
+    },
+    {
+      "metadata": {
+        "name": "download-server"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-console"
+      }
+    },
+    {
+      "metadata": {
+        "name": "service-ca-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-service-ca-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "cluster-samples-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-cluster-samples-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "controller-manager"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-controller-manager"
+      }
+    },
+    {
+      "metadata": {
+        "name": "console-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-console-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-rbac-proxy"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-dns-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "packageserver"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-operator-lifecycle-manager"
+      }
+    },
+    {
+      "metadata": {
+        "name": "openshift-controller-manager-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-controller-manager-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-multus"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-multus"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-rbac-proxy"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-multus"
+      }
+    },
+    {
+      "metadata": {
+        "name": "dns-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-dns-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "console"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-console"
+      }
+    },
+    {
+      "metadata": {
+        "name": "download-server"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-console"
+      }
+    },
+    {
+      "metadata": {
+        "name": "dns-node-resolver"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-dns"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-apiserver-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-kube-apiserver-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "network-metrics-daemon"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-multus"
+      }
+    },
+    {
+      "metadata": {
+        "name": "oauth-apiserver"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-oauth-apiserver"
+      }
+    },
+    {
+      "metadata": {
+        "name": "openshift-apiserver-check-endpoints"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-apiserver"
+      }
+    },
+    {
+      "metadata": {
+        "name": "registry"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-image-registry"
+      }
+    },
+    {
+      "metadata": {
+        "name": "service-ca-controller"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-service-ca"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-rbac-proxy"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-ingress-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-rbac-proxy"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-dns"
+      }
+    },
+    {
+      "metadata": {
+        "name": "openshift-apiserver"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-apiserver"
+      }
+    },
+    {
+      "metadata": {
+        "name": "network-check-target-container"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-network-diagnostics"
+      }
+    },
+    {
+      "metadata": {
+        "name": "dns"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-dns"
+      }
+    },
+    {
+      "metadata": {
+        "name": "cluster-image-registry-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-image-registry"
+      }
+    },
+    {
+      "metadata": {
+        "name": "oauth-openshift"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-authentication"
+      }
+    },
+    {
+      "metadata": {
+        "name": "openvswitch"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-sdn"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-rbac-proxy"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-sdn"
+      }
+    },
+    {
+      "metadata": {
+        "name": "sdn"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-sdn"
+      }
+    },
+    {
+      "metadata": {
+        "name": "network-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-network-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "tuned"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-cluster-node-tuning-operator"
+      }
+    },
+    {
+      "metadata": {
+        "name": "node-ca"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-image-registry"
+      }
+    },
+    {
+      "metadata": {
+        "name": "machine-approver-controller"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-cluster-machine-approver"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-rbac-proxy"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-cluster-machine-approver"
+      }
+    },
+    {
+      "metadata": {
+        "name": "cluster-version-operator"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-cluster-version"
+      }
+    },
+    {
+      "metadata": {
+        "name": "guard"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-etcd"
+      }
+    },
+    {
+      "metadata": {
+        "name": "sdn-controller"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-sdn"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-apiserver-check-endpoints"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-kube-apiserver"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-apiserver"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-kube-apiserver"
+      }
+    },
+    {
+      "metadata": {
+        "name": "etcd-metrics"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-etcd"
+      }
+    },
+    {
+      "metadata": {
+        "name": "etcd"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-etcd"
+      }
+    },
+    {
+      "metadata": {
+        "name": "etcdctl"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-etcd"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-apiserver-insecure-readyz"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-kube-apiserver"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-apiserver-cert-regeneration-controller"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-kube-apiserver"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-scheduler-recovery-controller"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-kube-scheduler"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-apiserver-cert-syncer"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-kube-apiserver"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-scheduler-cert-syncer"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-kube-scheduler"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-scheduler"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-kube-scheduler"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-controller-manager-recovery-controller"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-kube-controller-manager"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-controller-manager-cert-syncer"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-kube-controller-manager"
+      }
+    },
+    {
+      "metadata": {
+        "name": "cluster-policy-controller"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-kube-controller-manager"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-controller-manager"
+      },
+      "state": "CONTAINER_RUNNING",
+      "labels": {
+        "io.kubernetes.pod.namespace": "openshift-kube-controller-manager"
+      }
+    }
+  ]
+}

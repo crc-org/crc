@@ -75,7 +75,7 @@ type SSHRunner struct {
 	Runner *ssh.Runner
 }
 
-func UseOCWithSSH(sshRunner *ssh.Runner) Config {
+func UseOCWithSSH(sshRunner crcos.CommandRunner) Config {
 	return Config{
 		Runner:           sshRunner,
 		OcExecutablePath: "oc",

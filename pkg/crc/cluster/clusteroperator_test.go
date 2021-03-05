@@ -1,78 +1,84 @@
 package cluster
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 	"testing"
 
-	"github.com/code-ready/crc/pkg/crc/oc"
+	"github.com/code-ready/crc/pkg/os"
+
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	available = &Status{
-		Available: true,
-	}
-	progressing = &Status{
-		Available:   true,
-		Progressing: true,
-		progressing: []string{"authentication"},
-	}
-)
-
 func TestGetClusterOperatorsStatus(t *testing.T) {
-	status, err := GetClusterOperatorsStatus(ocConfig("co.json"), false)
+	status, err := GetClusterOperatorsStatus(ocConfig("co.json", "containers.json"), false)
 	assert.NoError(t, err)
-	assert.Equal(t, available, status)
+	assert.Equal(t, &Status{
+		Available: true,
+	}, status)
 }
 
 func TestGetClusterOperatorsStatusProgressing(t *testing.T) {
-	status, err := GetClusterOperatorsStatus(ocConfig("co-progressing.json"), false)
+	status, err := GetClusterOperatorsStatus(ocConfig("co-progressing.json", "containers.json"), false)
 	assert.NoError(t, err)
-	assert.Equal(t, progressing, status)
+	assert.Equal(t, &Status{
+		Available:   true,
+		Progressing: true,
+		progressing: []string{"authentication"},
+	}, status)
 }
 
-func TestGetClusterOperatorStatus(t *testing.T) {
-	status, err := GetClusterOperatorStatus(ocConfig("co.json"), "authentication")
+func TestGetClusterOperatorsStatusWithoutContainersRunning(t *testing.T) {
+	status, err := GetClusterOperatorsStatus(ocConfig("co.json", "containers-missing.json"), false)
 	assert.NoError(t, err)
-	assert.Equal(t, available, status)
-
-	status, err = GetClusterOperatorStatus(ocConfig("co-progressing.json"), "authentication")
-	assert.NoError(t, err)
-	assert.Equal(t, progressing, status)
-
-	status, err = GetClusterOperatorStatus(ocConfig("co-progressing.json"), "cloud-credential")
-	assert.NoError(t, err)
-	assert.Equal(t, available, status)
+	assert.Equal(t, &Status{
+		Available:   false,
+		unavailable: []string{"openshift-apiserver"},
+	}, status)
 }
 
-func TestGetClusterOperatorStatusNotFound(t *testing.T) {
-	_, err := GetClusterOperatorStatus(ocConfig("co-progressing.json"), "not-found")
-	assert.EqualError(t, err, "no cluster operator found")
-}
-
-func ocConfig(s string) oc.Config {
-	return oc.Config{
-		Runner: &mockRunner{file: filepath.Join("testdata", s)},
+func ocConfig(operators, containers string) os.CommandRunner {
+	return &mockRunner{
+		files: map[string]string{
+			"timeout 5s oc get co -ojson --context admin --cluster crc --kubeconfig /opt/kubeconfig": filepath.Join("testdata", operators),
+			"timeout 5s crictl ps -o json": filepath.Join("testdata", containers),
+		},
 	}
 }
 
 type mockRunner struct {
-	file string
+	files map[string]string
 }
 
 func (r *mockRunner) Run(executablePath string, args ...string) (string, string, error) {
-	bin, err := ioutil.ReadFile(r.file)
+	cmd := strings.Join(append([]string{executablePath}, args...), " ")
+	filename, ok := r.files[cmd]
+	if !ok {
+		return "", "", fmt.Errorf("unexpected command %s", cmd)
+	}
+	bin, err := ioutil.ReadFile(filename)
 	return string(bin), "", err
 }
 
 func (r *mockRunner) RunPrivate(executablePath string, args ...string) (string, string, error) {
-	bin, err := ioutil.ReadFile(r.file)
+	cmd := strings.Join(append([]string{executablePath}, args...), " ")
+	filename, ok := r.files[cmd]
+	if !ok {
+		return "", "", fmt.Errorf("unexpected command %s", cmd)
+	}
+	bin, err := ioutil.ReadFile(filename)
 	return string(bin), "", err
 }
 
 func (r *mockRunner) RunPrivileged(reason string, args ...string) (string, string, error) {
-	bin, err := ioutil.ReadFile(r.file)
+	cmd := strings.Join(args, " ")
+	filename, ok := r.files[cmd]
+	if !ok {
+		return "", "", fmt.Errorf("unexpected command %s", cmd)
+	}
+	bin, err := ioutil.ReadFile(filename)
 	return string(bin), "", err
 }
 

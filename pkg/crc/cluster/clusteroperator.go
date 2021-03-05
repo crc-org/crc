@@ -8,6 +8,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/oc"
+	"github.com/code-ready/crc/pkg/os"
 	openshiftapi "github.com/openshift/api/config/v1"
 )
 
@@ -54,24 +55,20 @@ func (status *Status) IsReady() bool {
 	return status.Available && !status.Progressing && !status.Degraded && !status.Disabled
 }
 
-func GetClusterOperatorStatus(ocConfig oc.Config, operator string) (*Status, error) {
-	return getStatus(ocConfig, defaultIgnoredClusterOperators, []string{operator})
-}
-
-func GetClusterOperatorsStatus(ocConfig oc.Config, monitoringEnabled bool) (*Status, error) {
+func GetClusterOperatorsStatus(ssh os.CommandRunner, monitoringEnabled bool) (*Status, error) {
 	ignoredOperators := defaultIgnoredClusterOperators
 	if !monitoringEnabled {
 		ignoredOperators = append(ignoredOperators, "monitoring")
 	}
-	return getStatus(ocConfig, ignoredOperators, []string{})
+	return getStatus(ssh, ignoredOperators, []string{})
 }
 
-func getStatus(ocConfig oc.Config, ignoreClusterOperators, selector []string) (*Status, error) {
+func getStatus(ssh os.CommandRunner, ignoreClusterOperators, selector []string) (*Status, error) {
 	cs := &Status{
 		Available: true,
 	}
 
-	data, _, err := ocConfig.WithFailFast().RunOcCommandPrivate("get", "co", "-ojson")
+	data, _, err := oc.UseOCWithSSH(ssh).WithFailFast().RunOcCommandPrivate("get", "co", "-ojson")
 	if err != nil {
 		return nil, err
 	}
@@ -124,6 +121,9 @@ func getStatus(ocConfig oc.Config, ignoreClusterOperators, selector []string) (*
 	}
 	if !found {
 		return nil, errors.New("no cluster operator found")
+	}
+	if err := VerifyOperatorContainersAreRunning(ssh, cs); err != nil {
+		return nil, err
 	}
 	return cs, nil
 }
