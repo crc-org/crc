@@ -217,16 +217,18 @@ func removeVsockCrcSettings() error {
 }
 
 func getAllPreflightChecks() []Check {
-	checks := getPreflightChecksForDistro(distro(), network.DefaultMode)
+	usingSystemdResolved := checkSystemdResolvedIsRunning()
+	checks := getPreflightChecksForDistro(distro(), network.DefaultMode, usingSystemdResolved == nil)
 	checks = append(checks, vsockPreflightChecks)
 	return checks
 }
 
 func getPreflightChecks(_ bool, _ bool, networkMode network.Mode) []Check {
-	return getPreflightChecksForDistro(distro(), networkMode)
+	usingSystemdResolved := checkSystemdResolvedIsRunning()
+	return getPreflightChecksForDistro(distro(), networkMode, usingSystemdResolved == nil)
 }
 
-func getNetworkChecksForDistro(distro *linux.OsRelease, networkMode network.Mode) []Check {
+func getNetworkChecksForDistro(networkMode network.Mode, systemdResolved bool) []Check {
 	var checks []Check
 
 	if networkMode == network.VSockMode {
@@ -234,45 +236,28 @@ func getNetworkChecksForDistro(distro *linux.OsRelease, networkMode network.Mode
 		return append(checks, daemonRunningChecks)
 	}
 
-	switch {
-	default:
-		logging.Warnf("distribution-specific preflight checks are not implemented for '%s'", distro.ID)
-		fallthrough
-	case distroIsLike(distro, linux.Ubuntu), distroIsLike(distro, linux.Fedora):
-		checks = append(checks, nmPreflightChecks[:]...)
-		if usesSystemdResolved(distro) {
-			checks = append(checks, systemdResolvedPreflightChecks[:]...)
-		} else {
-			checks = append(checks, dnsmasqPreflightChecks[:]...)
-		}
+	checks = append(checks, nmPreflightChecks[:]...)
+	if systemdResolved {
+		checks = append(checks, systemdResolvedPreflightChecks[:]...)
+	} else {
+		checks = append(checks, dnsmasqPreflightChecks[:]...)
 	}
 
 	return checks
 }
 
-func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode) []Check {
+func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode, systemdResolved bool) []Check {
 	var checks []Check
 	checks = append(checks, nonWinPreflightChecks[:]...)
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, libvirtPreflightChecks(distro)...)
-	networkChecks := getNetworkChecksForDistro(distro, networkMode)
+	networkChecks := getNetworkChecksForDistro(networkMode, systemdResolved)
 	checks = append(checks, networkChecks...)
 	if networkMode == network.DefaultMode {
 		checks = append(checks, libvirtNetworkPreflightChecks[:]...)
 	}
 	checks = append(checks, bundleCheck)
 	return checks
-}
-
-func usesSystemdResolved(distro *linux.OsRelease) bool {
-	switch {
-	case distroIsLike(distro, linux.Ubuntu):
-		return true
-	case distro.ID == linux.Fedora:
-		return distro.VersionID >= "33"
-	default:
-		return false
-	}
 }
 
 func distroIsLike(osRelease *linux.OsRelease, osType linux.OsType) bool {
