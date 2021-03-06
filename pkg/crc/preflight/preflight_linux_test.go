@@ -35,7 +35,7 @@ var (
 
 	rhel = crcos.OsRelease{
 		ID:        crcos.RHEL,
-		VersionID: "8.2",
+		VersionID: "8.3",
 		IDLike:    string(crcos.Fedora),
 	}
 
@@ -51,15 +51,17 @@ var (
 )
 
 type checkListForDistro struct {
-	distro      *crcos.OsRelease
-	networkMode network.Mode
-	checks      []Check
+	distro          *crcos.OsRelease
+	networkMode     network.Mode
+	systemdResolved bool
+	checks          []Check
 }
 
 var checkListForDistros = []checkListForDistro{
 	{
-		distro:      &fedora,
-		networkMode: network.DefaultMode,
+		distro:          &fedora,
+		networkMode:     network.DefaultMode,
+		systemdResolved: true,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
 			{cleanup: adminhelper.CleanHostsFile},
@@ -90,34 +92,9 @@ var checkListForDistros = []checkListForDistro{
 		},
 	},
 	{
-		distro:      &fedora,
-		networkMode: network.VSockMode,
-		checks: []Check{
-			{check: checkIfRunningAsNormalUser},
-			{cleanup: adminhelper.CleanHostsFile},
-			{check: checkPodmanExecutableCached},
-			{check: checkAdminHelperExecutableCached},
-			{configKeySuffix: "check-ram"},
-			{cleanup: removeCRCMachinesDir},
-			{cleanup: removeOldLogs},
-			{cleanup: cluster.ForgetPullSecret},
-			{check: checkVirtualizationEnabled},
-			{check: checkKvmEnabled},
-			{check: checkLibvirtInstalled},
-			{check: checkUserPartOfLibvirtGroup},
-			{configKeySuffix: "check-libvirt-group-active"},
-			{check: checkLibvirtServiceRunning},
-			{check: checkLibvirtVersion},
-			{check: checkMachineDriverLibvirtInstalled},
-			{cleanup: removeCrcVM},
-			{check: checkVsock},
-			{check: checkIfCRCDaemonRunning},
-			{check: checkBundleExtracted},
-		},
-	},
-	{
-		distro:      &rhel,
-		networkMode: network.DefaultMode,
+		distro:          &fedora,
+		networkMode:     network.DefaultMode,
+		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
 			{cleanup: adminhelper.CleanHostsFile},
@@ -147,8 +124,9 @@ var checkListForDistros = []checkListForDistro{
 		},
 	},
 	{
-		distro:      &rhel,
-		networkMode: network.VSockMode,
+		distro:          &fedora,
+		networkMode:     network.VSockMode,
+		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
 			{cleanup: adminhelper.CleanHostsFile},
@@ -173,8 +151,42 @@ var checkListForDistros = []checkListForDistro{
 		},
 	},
 	{
-		distro:      &unexpected,
-		networkMode: network.DefaultMode,
+		distro:          &rhel,
+		networkMode:     network.DefaultMode,
+		systemdResolved: true,
+		checks: []Check{
+			{check: checkIfRunningAsNormalUser},
+			{cleanup: adminhelper.CleanHostsFile},
+			{check: checkPodmanExecutableCached},
+			{check: checkAdminHelperExecutableCached},
+			{configKeySuffix: "check-ram"},
+			{cleanup: removeCRCMachinesDir},
+			{cleanup: removeOldLogs},
+			{cleanup: cluster.ForgetPullSecret},
+			{check: checkVirtualizationEnabled},
+			{check: checkKvmEnabled},
+			{check: checkLibvirtInstalled},
+			{check: checkUserPartOfLibvirtGroup},
+			{configKeySuffix: "check-libvirt-group-active"},
+			{check: checkLibvirtServiceRunning},
+			{check: checkLibvirtVersion},
+			{check: checkMachineDriverLibvirtInstalled},
+			{cleanup: removeCrcVM},
+			{check: checkSystemdNetworkdIsNotRunning},
+			{check: checkNetworkManagerInstalled},
+			{check: checkNetworkManagerIsRunning},
+			{check: checkCrcDnsmasqAndNetworkManagerConfigFile},
+			{check: checkSystemdResolvedIsRunning},
+			{check: checkCrcNetworkManagerDispatcherFile},
+			{check: checkLibvirtCrcNetworkAvailable},
+			{check: checkLibvirtCrcNetworkActive},
+			{check: checkBundleExtracted},
+		},
+	},
+	{
+		distro:          &rhel,
+		networkMode:     network.DefaultMode,
+		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
 			{cleanup: adminhelper.CleanHostsFile},
@@ -204,8 +216,9 @@ var checkListForDistros = []checkListForDistro{
 		},
 	},
 	{
-		distro:      &unexpected,
-		networkMode: network.VSockMode,
+		distro:          &rhel,
+		networkMode:     network.VSockMode,
+		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
 			{cleanup: adminhelper.CleanHostsFile},
@@ -230,8 +243,101 @@ var checkListForDistros = []checkListForDistro{
 		},
 	},
 	{
-		distro:      &ubuntu,
-		networkMode: network.DefaultMode,
+		distro:          &unexpected,
+		networkMode:     network.DefaultMode,
+		systemdResolved: true,
+		checks: []Check{
+			{check: checkIfRunningAsNormalUser},
+			{cleanup: adminhelper.CleanHostsFile},
+			{check: checkPodmanExecutableCached},
+			{check: checkAdminHelperExecutableCached},
+			{configKeySuffix: "check-ram"},
+			{cleanup: removeCRCMachinesDir},
+			{cleanup: removeOldLogs},
+			{cleanup: cluster.ForgetPullSecret},
+			{check: checkVirtualizationEnabled},
+			{check: checkKvmEnabled},
+			{check: checkLibvirtInstalled},
+			{check: checkUserPartOfLibvirtGroup},
+			{configKeySuffix: "check-libvirt-group-active"},
+			{check: checkLibvirtServiceRunning},
+			{check: checkLibvirtVersion},
+			{check: checkMachineDriverLibvirtInstalled},
+			{cleanup: removeCrcVM},
+			{check: checkSystemdNetworkdIsNotRunning},
+			{check: checkNetworkManagerInstalled},
+			{check: checkNetworkManagerIsRunning},
+			{check: checkCrcDnsmasqAndNetworkManagerConfigFile},
+			{check: checkSystemdResolvedIsRunning},
+			{check: checkCrcNetworkManagerDispatcherFile},
+			{check: checkLibvirtCrcNetworkAvailable},
+			{check: checkLibvirtCrcNetworkActive},
+			{check: checkBundleExtracted},
+		},
+	},
+	{
+		distro:          &unexpected,
+		networkMode:     network.DefaultMode,
+		systemdResolved: false,
+		checks: []Check{
+			{check: checkIfRunningAsNormalUser},
+			{cleanup: adminhelper.CleanHostsFile},
+			{check: checkPodmanExecutableCached},
+			{check: checkAdminHelperExecutableCached},
+			{configKeySuffix: "check-ram"},
+			{cleanup: removeCRCMachinesDir},
+			{cleanup: removeOldLogs},
+			{cleanup: cluster.ForgetPullSecret},
+			{check: checkVirtualizationEnabled},
+			{check: checkKvmEnabled},
+			{check: checkLibvirtInstalled},
+			{check: checkUserPartOfLibvirtGroup},
+			{configKeySuffix: "check-libvirt-group-active"},
+			{check: checkLibvirtServiceRunning},
+			{check: checkLibvirtVersion},
+			{check: checkMachineDriverLibvirtInstalled},
+			{cleanup: removeCrcVM},
+			{check: checkSystemdNetworkdIsNotRunning},
+			{check: checkNetworkManagerInstalled},
+			{check: checkNetworkManagerIsRunning},
+			{check: checkCrcNetworkManagerConfig},
+			{check: checkCrcDnsmasqConfigFile},
+			{check: checkLibvirtCrcNetworkAvailable},
+			{check: checkLibvirtCrcNetworkActive},
+			{check: checkBundleExtracted},
+		},
+	},
+	{
+		distro:          &unexpected,
+		networkMode:     network.VSockMode,
+		systemdResolved: false,
+		checks: []Check{
+			{check: checkIfRunningAsNormalUser},
+			{cleanup: adminhelper.CleanHostsFile},
+			{check: checkPodmanExecutableCached},
+			{check: checkAdminHelperExecutableCached},
+			{configKeySuffix: "check-ram"},
+			{cleanup: removeCRCMachinesDir},
+			{cleanup: removeOldLogs},
+			{cleanup: cluster.ForgetPullSecret},
+			{check: checkVirtualizationEnabled},
+			{check: checkKvmEnabled},
+			{check: checkLibvirtInstalled},
+			{check: checkUserPartOfLibvirtGroup},
+			{configKeySuffix: "check-libvirt-group-active"},
+			{check: checkLibvirtServiceRunning},
+			{check: checkLibvirtVersion},
+			{check: checkMachineDriverLibvirtInstalled},
+			{cleanup: removeCrcVM},
+			{check: checkVsock},
+			{check: checkIfCRCDaemonRunning},
+			{check: checkBundleExtracted},
+		},
+	},
+	{
+		distro:          &ubuntu,
+		networkMode:     network.DefaultMode,
+		systemdResolved: true,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
 			{cleanup: adminhelper.CleanHostsFile},
@@ -263,8 +369,42 @@ var checkListForDistros = []checkListForDistro{
 		},
 	},
 	{
-		distro:      &ubuntu,
-		networkMode: network.VSockMode,
+		distro:          &ubuntu,
+		networkMode:     network.DefaultMode,
+		systemdResolved: false,
+		checks: []Check{
+			{check: checkIfRunningAsNormalUser},
+			{cleanup: adminhelper.CleanHostsFile},
+			{check: checkPodmanExecutableCached},
+			{check: checkAdminHelperExecutableCached},
+			{configKeySuffix: "check-ram"},
+			{cleanup: removeCRCMachinesDir},
+			{cleanup: removeOldLogs},
+			{cleanup: cluster.ForgetPullSecret},
+			{check: checkVirtualizationEnabled},
+			{check: checkKvmEnabled},
+			{check: checkLibvirtInstalled},
+			{check: checkUserPartOfLibvirtGroup},
+			{configKeySuffix: "check-libvirt-group-active"},
+			{check: checkLibvirtServiceRunning},
+			{check: checkLibvirtVersion},
+			{check: checkMachineDriverLibvirtInstalled},
+			{cleanup: removeCrcVM},
+			{configKeySuffix: "check-apparmor-profile-setup"},
+			{check: checkSystemdNetworkdIsNotRunning},
+			{check: checkNetworkManagerInstalled},
+			{check: checkNetworkManagerIsRunning},
+			{check: checkCrcNetworkManagerConfig},
+			{check: checkCrcDnsmasqConfigFile},
+			{check: checkLibvirtCrcNetworkAvailable},
+			{check: checkLibvirtCrcNetworkActive},
+			{check: checkBundleExtracted},
+		},
+	},
+	{
+		distro:          &ubuntu,
+		networkMode:     network.VSockMode,
+		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
 			{cleanup: adminhelper.CleanHostsFile},
@@ -299,11 +439,11 @@ func assertFuncEqual(t *testing.T, func1 interface{}, func2 interface{}) {
 	assert.Equal(t, reflect.ValueOf(func1).Pointer(), reflect.ValueOf(func2).Pointer(), "%s != %s", funcToString(func1), funcToString(func2))
 }
 
-func assertExpectedPreflights(t *testing.T, distro *crcos.OsRelease, networkMode network.Mode) {
-	preflights := getPreflightChecksForDistro(distro, networkMode)
+func assertExpectedPreflights(t *testing.T, distro *crcos.OsRelease, networkMode network.Mode, systemdResolved bool) {
+	preflights := getPreflightChecksForDistro(distro, networkMode, systemdResolved)
 	var expected checkListForDistro
 	for _, expected = range checkListForDistros {
-		if expected.distro == distro && expected.networkMode == networkMode {
+		if expected.distro == distro && expected.networkMode == networkMode && expected.systemdResolved == systemdResolved {
 			break
 		}
 	}
@@ -328,15 +468,19 @@ func assertExpectedPreflights(t *testing.T, distro *crcos.OsRelease, networkMode
 }
 
 func TestCountPreflights(t *testing.T) {
-	assertExpectedPreflights(t, &fedora, network.DefaultMode)
-	assertExpectedPreflights(t, &fedora, network.VSockMode)
+	assertExpectedPreflights(t, &fedora, network.DefaultMode, true)
+	assertExpectedPreflights(t, &fedora, network.DefaultMode, false)
+	assertExpectedPreflights(t, &fedora, network.VSockMode, false)
 
-	assertExpectedPreflights(t, &rhel, network.DefaultMode)
-	assertExpectedPreflights(t, &rhel, network.VSockMode)
+	assertExpectedPreflights(t, &rhel, network.DefaultMode, true)
+	assertExpectedPreflights(t, &rhel, network.DefaultMode, false)
+	assertExpectedPreflights(t, &rhel, network.VSockMode, false)
 
-	assertExpectedPreflights(t, &unexpected, network.DefaultMode)
-	assertExpectedPreflights(t, &unexpected, network.VSockMode)
+	assertExpectedPreflights(t, &unexpected, network.DefaultMode, true)
+	assertExpectedPreflights(t, &unexpected, network.DefaultMode, false)
+	assertExpectedPreflights(t, &unexpected, network.VSockMode, false)
 
-	assertExpectedPreflights(t, &ubuntu, network.DefaultMode)
-	assertExpectedPreflights(t, &ubuntu, network.VSockMode)
+	assertExpectedPreflights(t, &ubuntu, network.DefaultMode, true)
+	assertExpectedPreflights(t, &ubuntu, network.DefaultMode, false)
+	assertExpectedPreflights(t, &ubuntu, network.VSockMode, false)
 }
