@@ -32,7 +32,7 @@ To assign more resources to the {prod} virtual machine, see link:{crc-gsg-url}#c
 
 === {mac}
 
-* On {mac}, {prod} requires macOS 10.12 Sierra or newer.
+* On {mac}, {prod} requires macOS 10.14 Mojave or newer.
 {prod} does not work on earlier versions of {mac}.
 
 === Linux
