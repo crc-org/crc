@@ -290,8 +290,9 @@ github.com/xtgo/uuid
 ## explicit
 github.com/zalando/go-keyring
 github.com/zalando/go-keyring/secret_service
-# golang.org/x/crypto v0.0.0-20201203163018-be400aefbc4c
+# golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
 ## explicit
+golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/chacha20
 golang.org/x/crypto/curve25519

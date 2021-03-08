@@ -12,10 +12,13 @@ import (
 	"github.com/code-ready/machine/libmachine/drivers"
 )
 
-func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*ClusterConfig, error) {
+func getClusterConfig(bundleInfo *bundle.CrcBundleInfo, generatedKubeadminPassword string) (*ClusterConfig, error) {
 	kubeadminPassword, err := bundleInfo.GetKubeadminPassword()
 	if err != nil {
 		return nil, fmt.Errorf("Error reading kubeadmin password from bundle %v", err)
+	}
+	if generatedKubeadminPassword != "" {
+		kubeadminPassword = generatedKubeadminPassword
 	}
 	proxyConfig, err := getProxyConfig(bundleInfo.ClusterInfo.BaseDomain)
 	if err != nil {
