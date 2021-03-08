@@ -108,6 +108,7 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 
 	// Pre-VM start
 	var host *host.Host
+	var kubeAdminUserPassword string
 	exists, err := client.Exists()
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot determine if VM exists")
@@ -129,6 +130,11 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 			Memory:      startConfig.Memory,
 			DiskSize:    startConfig.DiskSize,
 			NetworkMode: client.networkMode(),
+		}
+
+		kubeAdminUserPassword, err = cluster.GenerateRandomPasswordHash(23)
+		if err != nil {
+			return nil, errors.Wrap(err, "Cannot generate the kubeadmin user password")
 		}
 
 		crcBundleMetadata, err = getCrcBundleInfo(startConfig.BundlePath)
@@ -180,7 +186,7 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 		}
 		if vmState == state.Running {
 			logging.Infof("A CodeReady Containers VM for OpenShift %s is already running", crcBundleMetadata.GetOpenshiftVersion())
-			clusterConfig, err := getClusterConfig(crcBundleMetadata)
+			clusterConfig, err := getClusterConfig(crcBundleMetadata, kubeAdminUserPassword)
 			if err != nil {
 				return nil, errors.Wrap(err, "Cannot create cluster configuration")
 			}
@@ -222,7 +228,7 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 		}
 	}
 
-	clusterConfig, err := getClusterConfig(crcBundleMetadata)
+	clusterConfig, err := getClusterConfig(crcBundleMetadata, kubeAdminUserPassword)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot create cluster configuration")
 	}
@@ -364,6 +370,10 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 
 	if err := cluster.EnsurePullSecretPresentInTheCluster(ocConfig, startConfig.PullSecret); err != nil {
 		return nil, errors.Wrap(err, "Failed to update cluster pull secret")
+	}
+
+	if err := cluster.UpdateKubeAdminUserPassword(kubeAdminUserPassword, ocConfig, crcBundleMetadata); err != nil {
+		return nil, errors.Wrap(err, "Failed to update kubeadmin user password")
 	}
 
 	if err := cluster.EnsureClusterIDIsNotEmpty(ocConfig); err != nil {
