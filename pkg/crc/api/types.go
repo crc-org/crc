@@ -5,10 +5,6 @@ import (
 	"net"
 )
 
-type commandError struct {
-	Err string
-}
-
 type Server struct {
 	handler                RequestHandler
 	listener               net.Listener
