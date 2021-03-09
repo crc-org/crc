@@ -82,7 +82,7 @@ func RegisterSettings(cfg *config.Config) {
 	cfg.AddSetting(NetworkMode, string(network.DefaultMode), network.ValidateMode, network.SuccessfullyAppliedMode,
 		"Network mode (default or vsock)")
 	cfg.AddSetting(HostNetworkAccess, false, validateHostNetworkAccess, config.SuccessfullyApplied,
-		"Allow TCP/IP connections from the CodeReday Containers VM to services running on the host (true/false, default: false)")
+		"Allow TCP/IP connections from the CodeReady Containers VM to services running on the host (true/false, default: false)")
 	// System tray auto-start config
 	cfg.AddSetting(AutostartTray, true, tray.ValidateTrayAutostart, disableEnableTrayAutostart,
 		"Automatically start the tray (true/false, default: true)")
