@@ -17,9 +17,9 @@ func (client *client) Stop() (state.State, error) {
 
 	logging.Info("Stopping the OpenShift cluster, this may take a few minutes...")
 	if err := host.Stop(); err != nil {
-		status, err := host.Driver.GetState()
-		if err != nil {
-			logging.Debugf("Cannot get VM status after stopping it: %v", err)
+		status, stateErr := host.Driver.GetState()
+		if stateErr != nil {
+			logging.Debugf("Cannot get VM status after stopping it: %v", stateErr)
 		}
 		return status, errors.Wrap(err, "Cannot stop machine")
 	}
