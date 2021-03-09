@@ -3,7 +3,6 @@ package crcsuite
 import (
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/user"
@@ -310,20 +309,8 @@ func ConfigFileInCRCHomeContainsKey(format string, configFile string, condition 
 }
 
 func LoginToOcClusterSucceedsOrFails(expected string) error {
-
-	bundle := strings.Split(bundleName, ".crcbundle")[0]
-	pswdLocation := filepath.Join(CRCHome, "cache", bundle, "kubeadmin-password")
-
-	pswd, err := ioutil.ReadFile(pswdLocation)
-
-	if err != nil {
-		return err
-	}
-
-	cmd := fmt.Sprintf("oc login --insecure-skip-tls-verify -u kubeadmin -p %s https://api.crc.testing:6443", pswd)
-	err = clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
-
-	return err
+	cmd := "oc config use-context crc-admin"
+	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
 
 func SetKubeConfigContextSucceedsOrFails(context, expected string) error {
