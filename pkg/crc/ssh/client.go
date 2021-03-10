@@ -67,7 +67,7 @@ func clientConfig(user string, keys []string) (*ssh.ClientConfig, error) {
 		Auth: []ssh.AuthMethod{ssh.PublicKeys(privateKeys...)},
 		// #nosec G106
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         time.Minute,
+		Timeout:         10 * time.Second,
 	}, nil
 }
 
