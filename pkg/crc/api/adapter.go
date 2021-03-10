@@ -12,7 +12,7 @@ type AdaptedClient interface {
 
 	Delete() Result
 	GetConsoleURL() ConsoleResult
-	Start(startConfig machine.StartConfig) StartResult
+	Start(ctx context.Context, startConfig machine.StartConfig) StartResult
 	Status() ClusterStatusResult
 	Stop() Result
 }
@@ -87,8 +87,8 @@ func (a *Adapter) GetConsoleURL() ConsoleResult {
 	}
 }
 
-func (a *Adapter) Start(startConfig machine.StartConfig) StartResult {
-	res, err := a.Underlying.Start(context.Background(), startConfig)
+func (a *Adapter) Start(ctx context.Context, startConfig machine.StartConfig) StartResult {
+	res, err := a.Underlying.Start(ctx, startConfig)
 	if err != nil {
 		logging.Error(err)
 		return StartResult{
