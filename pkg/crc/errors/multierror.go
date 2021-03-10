@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -80,8 +81,12 @@ func (r RetriableError) Error() string {
 	return "Temporary error: " + r.Err.Error()
 }
 
-// RetryAfter retries for a certain duration, after a delay
-func RetryAfter(limit time.Duration, callback func() error, d time.Duration) error {
+// RetryAfterWithContext retries for a certain duration, after a delay
+func RetryAfterWithContext(ctx context.Context, limit time.Duration, callback func() error, d time.Duration) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
 	m := MultiError{}
 	timeLimit := time.Now().Add(limit)
 	attempt := 0
@@ -98,8 +103,17 @@ func RetryAfter(limit time.Duration, callback func() error, d time.Duration) err
 			return m
 		}
 		logging.Debugf("error: %v - sleeping %s", err, d)
-		time.Sleep(d)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(d):
+		}
 	}
 	logging.Debugf("RetryAfter timeout after %d tries", attempt)
 	return m
+}
+
+// RetryAfter retries for a certain duration, after a delay
+func RetryAfter(limit time.Duration, callback func() error, d time.Duration) error {
+	return RetryAfterWithContext(context.Background(), limit, callback, d)
 }

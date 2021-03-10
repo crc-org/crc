@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -9,7 +10,11 @@ import (
 )
 
 // WaitForClusterStable checks that the cluster is running a number of consecutive times
-func WaitForClusterStable(ocConfig oc.Config, monitoringEnabled bool) error {
+func WaitForClusterStable(ctx context.Context, ocConfig oc.Config, monitoringEnabled bool) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
 	startTime := time.Now()
 
 	retryDuration := 30 * time.Second
@@ -41,7 +46,11 @@ func WaitForClusterStable(ocConfig oc.Config, monitoringEnabled bool) error {
 		} else {
 			count = 0
 		}
-		time.Sleep(retryDuration)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(retryDuration):
+		}
 	}
 
 	return fmt.Errorf("cluster operators are still not stable after %s", time.Since(startTime))

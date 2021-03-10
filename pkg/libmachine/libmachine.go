@@ -1,6 +1,7 @@
 package libmachine
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -20,7 +21,7 @@ import (
 type API interface {
 	io.Closer
 	NewHost(driverName string, driverPath string, rawDriver []byte) (*host.Host, error)
-	Create(h *host.Host) error
+	Create(ctx context.Context, h *host.Host) error
 	persist.Store
 }
 
@@ -86,7 +87,7 @@ func (api *Client) Load(name string) (*host.Host, error) {
 
 // Create is the wrapper method which covers all of the boilerplate around
 // actually creating, provisioning, and persisting an instance in the store.
-func (api *Client) Create(h *host.Host) error {
+func (api *Client) Create(ctx context.Context, h *host.Host) error {
 	log.Debug("Running pre-create checks...")
 
 	if err := h.Driver.PreCreateCheck(); err != nil {
@@ -99,7 +100,7 @@ func (api *Client) Create(h *host.Host) error {
 
 	log.Debug("Creating machine...")
 
-	if err := api.performCreate(h); err != nil {
+	if err := api.performCreate(ctx, h); err != nil {
 		return fmt.Errorf("Error creating machine: %s", err)
 	}
 
@@ -111,7 +112,7 @@ func (api *Client) Create(h *host.Host) error {
 	return nil
 }
 
-func (api *Client) performCreate(h *host.Host) error {
+func (api *Client) performCreate(ctx context.Context, h *host.Host) error {
 	if err := h.Driver.Create(); err != nil {
 		return fmt.Errorf("Error in driver during machine creation: %s", err)
 	}
@@ -121,7 +122,7 @@ func (api *Client) performCreate(h *host.Host) error {
 	}
 
 	log.Debug("Waiting for machine to be running, this may take a few minutes...")
-	if err := crcerrors.RetryAfter(3*time.Minute, host.MachineInState(h.Driver, state.Running), 3*time.Second); err != nil {
+	if err := crcerrors.RetryAfterWithContext(ctx, 3*time.Minute, host.MachineInState(h.Driver, state.Running), 3*time.Second); err != nil {
 		return fmt.Errorf("Error waiting for machine to be running: %s", err)
 	}
 

@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -21,7 +22,7 @@ import (
 // #nosec G101
 const vmPullSecretPath = "/var/lib/kubelet/config.json"
 
-func WaitForSSH(sshRunner *ssh.Runner) error {
+func WaitForSSH(ctx context.Context, sshRunner *ssh.Runner) error {
 	checkSSHConnectivity := func() error {
 		_, _, err := sshRunner.Run("exit 0")
 		if err != nil {
@@ -30,7 +31,7 @@ func WaitForSSH(sshRunner *ssh.Runner) error {
 		return nil
 	}
 
-	return errors.RetryAfter(300*time.Second, checkSSHConnectivity, time.Second)
+	return errors.RetryAfterWithContext(ctx, 300*time.Second, checkSSHConnectivity, time.Second)
 }
 
 const (
@@ -309,7 +310,7 @@ func WaitForRequestHeaderClientCaFile(sshRunner *ssh.Runner) error {
 	return errors.RetryAfter(8*time.Minute, lookupRequestHeaderClientCa, 2*time.Second)
 }
 
-func WaitForAPIServer(ocConfig oc.Config) error {
+func WaitForAPIServer(ctx context.Context, ocConfig oc.Config) error {
 	logging.Info("Waiting for kube-apiserver availability... [takes around 2min]")
 	waitForAPIServer := func() error {
 		stdout, stderr, err := ocConfig.WithFailFast().RunOcCommand("get", "nodes")
@@ -320,7 +321,7 @@ func WaitForAPIServer(ocConfig oc.Config) error {
 		logging.Debug(stdout)
 		return nil
 	}
-	return errors.RetryAfter(4*time.Minute, waitForAPIServer, time.Second)
+	return errors.RetryAfterWithContext(ctx, 4*time.Minute, waitForAPIServer, time.Second)
 }
 
 func DeleteOpenshiftAPIServerPods(ocConfig oc.Config) error {

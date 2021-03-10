@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -52,7 +53,7 @@ func (h *Handler) Start(args json.RawMessage) string {
 	}
 
 	startConfig := getStartConfig(h.Config, parsedArgs)
-	status := h.MachineClient.Start(startConfig)
+	status := h.MachineClient.Start(context.Background(), startConfig)
 	return encodeStructToJSON(status)
 }
 

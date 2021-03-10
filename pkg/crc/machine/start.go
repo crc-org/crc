@@ -152,7 +152,7 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 		machineConfig.Initramfs = crcBundleMetadata.GetInitramfsPath()
 		machineConfig.Kernel = crcBundleMetadata.GetKernelPath()
 
-		host, err = createHost(libMachineAPIClient, machineConfig)
+		host, err = createHost(ctx, libMachineAPIClient, machineConfig)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error creating machine")
 		}
@@ -247,7 +247,7 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 	defer sshRunner.Close()
 
 	logging.Debug("Waiting until ssh is available")
-	if err := cluster.WaitForSSH(sshRunner); err != nil {
+	if err := cluster.WaitForSSH(ctx, sshRunner); err != nil {
 		return nil, errors.Wrap(err, "Failed to connect to the CRC VM with SSH -- host might be unreachable")
 	}
 	logging.Info("CodeReady Containers VM is running")
@@ -354,7 +354,7 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 		return nil, errors.Wrap(err, "Failed to renew TLS certificates: please check if a newer CodeReady Containers release is available")
 	}
 
-	if err := cluster.WaitForAPIServer(ocConfig); err != nil {
+	if err := cluster.WaitForAPIServer(ctx, ocConfig); err != nil {
 		return nil, errors.Wrap(err, "Error waiting for apiserver")
 	}
 
@@ -402,11 +402,11 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 
 	logging.Info("Starting OpenShift cluster ... [waiting for the cluster to stabilize]")
 
-	if err := cluster.WaitForClusterStable(ocConfig, client.monitoringEnabled()); err != nil {
+	if err := cluster.WaitForClusterStable(ctx, ocConfig, client.monitoringEnabled()); err != nil {
 		logging.Errorf("Cluster is not ready: %v", err)
 	}
 
-	waitForProxyPropagation(ocConfig, proxyConfig)
+	waitForProxyPropagation(ctx, ocConfig, proxyConfig)
 
 	logging.Info("Adding crc-admin and crc-developer contexts to kubeconfig...")
 	if err := writeKubeconfig(instanceIP, clusterConfig); err != nil {
@@ -468,12 +468,12 @@ func makeDaemonVisibleToHyperkit(name string) error {
 	return nil
 }
 
-func createHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {
+func createHost(ctx context.Context, api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {
 	vm, err := newHost(api, machineConfig)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating new host: %s", err)
 	}
-	if err := api.Create(vm); err != nil {
+	if err := api.Create(ctx, vm); err != nil {
 		return nil, fmt.Errorf("Error creating the VM: %s", err)
 	}
 	return vm, nil
@@ -560,7 +560,7 @@ func ensureProxyIsConfiguredInOpenShift(ocConfig oc.Config, sshRunner *crcssh.Ru
 	return cluster.AddProxyConfigToCluster(sshRunner, ocConfig, proxy)
 }
 
-func waitForProxyPropagation(ocConfig oc.Config, proxyConfig *network.ProxyConfig) {
+func waitForProxyPropagation(ctx context.Context, ocConfig oc.Config, proxyConfig *network.ProxyConfig) {
 	if !proxyConfig.IsEnabled() {
 		return
 	}
@@ -578,7 +578,7 @@ func waitForProxyPropagation(ocConfig oc.Config, proxyConfig *network.ProxyConfi
 		return nil
 	}
 
-	if err := crcerrors.RetryAfter(300*time.Second, checkProxySettingsForOperator, 2*time.Second); err != nil {
+	if err := crcerrors.RetryAfterWithContext(ctx, 300*time.Second, checkProxySettingsForOperator, 2*time.Second); err != nil {
 		logging.Debug("Failed to propagate proxy settings to cluster")
 	}
 }
