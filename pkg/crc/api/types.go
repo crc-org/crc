@@ -6,9 +6,8 @@ import (
 )
 
 type Server struct {
-	handler                RequestHandler
-	listener               net.Listener
-	clusterOpsRequestsChan chan clusterOpsRequest
+	handler  RequestHandler
+	listener net.Listener
 }
 
 type RequestHandler interface {
@@ -22,12 +21,6 @@ type RequestHandler interface {
 	GetConfig(json.RawMessage) string
 	GetWebconsoleInfo() string
 	Logs() string
-}
-
-// clusterOpsRequest struct is used to store the command request and associated socket
-type clusterOpsRequest struct {
-	command commandRequest
-	socket  net.Conn
 }
 
 // commandRequest struct is used to decode the json request from tray
