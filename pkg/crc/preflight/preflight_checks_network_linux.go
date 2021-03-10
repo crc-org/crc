@@ -80,9 +80,13 @@ dns=dnsmasq
 #
 # The corresponding crc bridge is not created through NetworkManager, so
 # it cannot be configured permanently through NetworkManager. We make the
-# change directly using resolvectl instead.
+# change directly using systemd-resolve instead.
 #
-# NetworkManager will overwrite this resolvectl configuration every time a
+# systemd-resolve is used instead of resolvectl due to distributions shipping
+# systemd releases older than 239 not having the newer renamed tool. resolvectl
+# supports being called as systemd-resolve, correctly handling the old CLI.
+#
+# NetworkManager will overwrite this systemd-resolve configuration every time a
 # network connection goes up/down, so we run this script on each of these events
 # to restore our settings. This is a NetworkManager bug which is fixed in
 # version 1.26.6 by this commit:
@@ -90,9 +94,7 @@ dns=dnsmasq
 
 export LC_ALL=C
 
-resolvectl domain crc ~testing
-resolvectl dns crc 192.168.130.11
-resolvectl default-route crc false
+systemd-resolve --interface crc --set-dns 192.168.130.11 --set-domain ~testing
 
 exit 0
 `
