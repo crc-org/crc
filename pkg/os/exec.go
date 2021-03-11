@@ -2,6 +2,7 @@ package os
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"os/exec"
 	"strings"
@@ -45,7 +46,7 @@ func runPrivate(command string, args []string, env map[string]string) (string, s
 func RunPrivileged(reason string, cmdAndArgs ...string) (string, string, error) {
 	sudo, err := exec.LookPath("sudo")
 	if err != nil {
-		return "", "", err
+		return "", "", errors.New("sudo executable not found")
 	}
 	logging.Infof("Using root access: %s", reason)
 	return run(sudo, cmdAndArgs, map[string]string{})
