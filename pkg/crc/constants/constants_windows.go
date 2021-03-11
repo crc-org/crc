@@ -8,8 +8,8 @@ import (
 const (
 	OcExecutableName            = "oc.exe"
 	AdminHelperExecutableName   = "admin-helper-windows.exe"
-	TrayExecutableName          = "tray-windows.exe"
-	TrayShortcutName            = "tray-windows.lnk"
+	TrayExecutableName          = "crc-tray.exe"
+	TrayShortcutName            = "crc-tray.lnk"
 	DaemonBatchFileName         = "crc-daemon-autostart.bat"
 	DaemonPSScriptName          = "launch-crc-daemon.ps1"
 	DaemonBatchFileShortcutName = "crc-daemmon-autostart.bat.lnk"
