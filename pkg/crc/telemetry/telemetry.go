@@ -5,6 +5,8 @@ import (
 	"os/user"
 	"strings"
 	"sync"
+
+	"github.com/code-ready/crc/pkg/crc/constants"
 )
 
 type contextKey struct{}
@@ -93,5 +95,6 @@ func SetError(err error) string {
 	if err1 != nil {
 		return err1.Error()
 	}
-	return strings.ReplaceAll(err.Error(), user.Username, "XXXXX")
+	withoutHomeDir := strings.ReplaceAll(err.Error(), constants.GetHomeDir(), "$HOME")
+	return strings.ReplaceAll(withoutHomeDir, user.Username, "$USERNAME")
 }
