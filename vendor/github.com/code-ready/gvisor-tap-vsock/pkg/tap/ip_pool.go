@@ -24,7 +24,13 @@ func NewIPPool(base *net.IPNet) *IPPool {
 }
 
 func (p *IPPool) Leases() map[string]int {
-	return p.leases
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	leases := map[string]int{}
+	for key, value := range p.leases {
+		leases[key] = value
+	}
+	return leases
 }
 
 func (p *IPPool) Mask() int {
