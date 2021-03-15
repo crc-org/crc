@@ -5,6 +5,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/machine/libmachine/state"
 )
 
 type AdaptedClient interface {
@@ -126,13 +127,19 @@ func (a *Adapter) Status() ClusterStatusResult {
 }
 
 func (a *Adapter) Stop() Result {
-	_, err := a.Underlying.Stop()
+	vmState, err := a.Underlying.Stop()
 	if err != nil {
 		logging.Error(err)
-		return Result{
-			Name:    a.Underlying.GetName(),
-			Success: false,
-			Error:   err.Error(),
+		if vmState == state.Running {
+			err := a.Underlying.PowerOff()
+			if err != nil {
+				logging.Error(err)
+				return Result{
+					Name:    a.Underlying.GetName(),
+					Success: false,
+					Error:   err.Error(),
+				}
+			}
 		}
 	}
 	return Result{
