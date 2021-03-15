@@ -31,7 +31,7 @@ func TestApi(t *testing.T) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createServerWithListener(listener, setupNewInMemoryConfig(), client)
+	api, err := createServerWithListener(listener, setupNewInMemoryConfig(), client, &mockLogger{})
 	require.NoError(t, err)
 	go func() {
 		if err := api.Serve(); err != nil {
@@ -116,6 +116,13 @@ func TestApi(t *testing.T) {
 					"WebConsoleURL": "https://console.foo.testing:6443",
 					"ProxyConfig":   nil,
 				},
+			},
+		},
+		{
+			command: "logs",
+			expected: map[string]interface{}{
+				"Messages": []interface{}{"message 1", "message 2", "message 3"},
+				"Success":  true,
 			},
 		},
 	}
@@ -218,7 +225,7 @@ func setupAPIServer(t *testing.T) (string, func()) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createServerWithListener(listener, setupNewInMemoryConfig(), client)
+	api, err := createServerWithListener(listener, setupNewInMemoryConfig(), client, &mockLogger{})
 	require.NoError(t, err)
 	go func() {
 		if err := api.Serve(); err != nil {
@@ -246,4 +253,11 @@ func (s *skipPreflights) Set(key string, value interface{}) error {
 
 func (s *skipPreflights) Unset(key string) error {
 	return s.storage.Unset(key)
+}
+
+type mockLogger struct {
+}
+
+func (*mockLogger) Messages() []string {
+	return []string{"message 1", "message 2", "message 3"}
 }

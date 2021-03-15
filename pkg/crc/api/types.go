@@ -21,6 +21,7 @@ type RequestHandler interface {
 	UnsetConfig(json.RawMessage) string
 	GetConfig(json.RawMessage) string
 	GetWebconsoleInfo() string
+	Logs() string
 }
 
 // clusterOpsRequest struct is used to store the command request and associated socket
@@ -51,4 +52,9 @@ type getConfigResult struct {
 // startArgs is used to get the pull secret file path as argument for start handler
 type startArgs struct {
 	PullSecretFile string `json:"pullSecretFile"`
+}
+
+type loggerResult struct {
+	Success  bool
+	Messages []string
 }

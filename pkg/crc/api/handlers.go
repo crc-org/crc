@@ -17,8 +17,20 @@ import (
 )
 
 type Handler struct {
+	Logger        Logger
 	MachineClient AdaptedClient
 	Config        crcConfig.Storage
+}
+
+type Logger interface {
+	Messages() []string
+}
+
+func (h *Handler) Logs() string {
+	return encodeStructToJSON(&loggerResult{
+		Success:  true,
+		Messages: h.Logger.Messages(),
+	})
 }
 
 func (h *Handler) Status() string {

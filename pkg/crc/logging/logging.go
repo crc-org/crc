@@ -14,6 +14,7 @@ var (
 	logfile       *os.File
 	LogLevel      string
 	originalHooks = logrus.LevelHooks{}
+	Memory        = newInMemoryHook(100)
 )
 
 func OpenLogFile(path string) (*os.File, error) {
@@ -52,6 +53,8 @@ func InitLogrus(logLevel, logFilePath string) {
 	if err != nil {
 		level = logrus.InfoLevel
 	}
+
+	logrus.AddHook(Memory)
 
 	// Add hook to send error/fatal to stderr
 	logrus.AddHook(newstdErrHook(level, &logrus.TextFormatter{

@@ -14,6 +14,7 @@ import (
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/api"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/types"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/virtualnetwork"
 	"github.com/docker/go-units"
@@ -162,7 +163,7 @@ func run(configuration *types.Configuration) error {
 func runDaemon() error {
 	// Remove if an old socket is present
 	os.Remove(constants.DaemonSocketPath)
-	apiServer, err := api.CreateServer(constants.DaemonSocketPath, config, newMachine())
+	apiServer, err := api.CreateServer(constants.DaemonSocketPath, config, newMachine(), logging.Memory)
 	if err != nil {
 		return err
 	}
