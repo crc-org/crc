@@ -133,7 +133,7 @@ func AgentRunning(label string) bool {
 	// output if the agent is not loaded in launchd
 	launchctlListCommand := `launchctl list | grep %s | awk '{print $1}'`
 	cmd := fmt.Sprintf(launchctlListCommand, label)
-	out, err := exec.Command("bash", "-c", cmd).Output() // #nosec G204
+	out, _, err := os.RunWithDefaultLocale("bash", "-c", cmd)
 	if err != nil {
 		return false
 	}
