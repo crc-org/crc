@@ -11,22 +11,23 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
-func CreateServer(socketPath string, config crcConfig.Storage, machine machine.Client) (Server, error) {
+func CreateServer(socketPath string, config crcConfig.Storage, machine machine.Client, logger Logger) (Server, error) {
 	listener, err := net.Listen("unix", socketPath)
 	if err != nil {
 		logging.Error("Failed to create socket: ", err.Error())
 		return Server{}, err
 	}
-	return createServerWithListener(listener, config, machine)
+	return createServerWithListener(listener, config, machine, logger)
 }
 
-func createServerWithListener(listener net.Listener, config crcConfig.Storage, machine machine.Client) (Server, error) {
+func createServerWithListener(listener net.Listener, config crcConfig.Storage, machine machine.Client, logger Logger) (Server, error) {
 	apiServer := Server{
 		listener:               listener,
 		clusterOpsRequestsChan: make(chan clusterOpsRequest, 10),
 		handler: &Handler{
 			Config:        config,
 			MachineClient: &Adapter{Underlying: machine},
+			Logger:        logger,
 		},
 	}
 	return apiServer, nil
@@ -76,6 +77,8 @@ func (api Server) handleRequest(req commandRequest, conn net.Conn) {
 		result = api.handler.GetConfig(req.Args)
 	case "webconsoleurl":
 		result = api.handler.GetWebconsoleInfo()
+	case "logs":
+		result = api.handler.Logs()
 	default:
 		result = encodeErrorToJSON(fmt.Sprintf("Unknown command supplied: %s", req.Command))
 	}
@@ -114,7 +117,7 @@ func (api Server) handleConnections(conn net.Conn) {
 			conn.Close()
 		}
 
-	case "status", "version", "setconfig", "getconfig", "unsetconfig", "webconsoleurl":
+	case "status", "version", "setconfig", "getconfig", "unsetconfig", "webconsoleurl", "logs":
 		go api.handleRequest(req, conn)
 
 	default:
