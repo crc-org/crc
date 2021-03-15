@@ -54,8 +54,10 @@ func deleteMachine(client machine.Client, clearCache bool, cacheDir string, inte
 
 	yes := input.PromptUserForYesOrNo("Do you want to delete the OpenShift cluster", force)
 	if yes {
-		defer logging.BackupLogFile()
-		return true, client.Delete()
+		if err := client.Delete(); err != nil {
+			return true, err
+		}
+		return true, logging.BackupLogFile()
 	}
 	return false, nil
 }
