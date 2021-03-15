@@ -1,13 +1,11 @@
 package machine
 
 import (
-	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/pkg/errors"
 )
 
 func (client *client) Delete() error {
 	libMachineAPIClient, cleanup := createLibMachineClient()
-	defer logging.BackupLogFile()
 	defer cleanup()
 	host, err := libMachineAPIClient.Load(client.name)
 

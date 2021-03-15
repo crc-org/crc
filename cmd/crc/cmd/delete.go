@@ -9,6 +9,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/input"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/spf13/cobra"
 )
@@ -53,6 +54,7 @@ func deleteMachine(client machine.Client, clearCache bool, cacheDir string, inte
 
 	yes := input.PromptUserForYesOrNo("Do you want to delete the OpenShift cluster", force)
 	if yes {
+		defer logging.BackupLogFile()
 		return true, client.Delete()
 	}
 	return false, nil
