@@ -21,33 +21,35 @@ const (
 	trayAgentLabel   = "crc.tray"
 )
 
-var (
-	stdOutFilePathDaemon = filepath.Join(constants.CrcBaseDir, ".crcd-agent.log")
-	stdOutFilePathTray   = filepath.Join(constants.CrcBaseDir, ".crct-agent.log")
-)
-
 type TrayVersion struct {
 	ShortVersion string `plist:"CFBundleShortVersionString"`
 }
 
 func checkIfDaemonPlistFileExists() error {
-	// crc setup can be ran from any location in the
-	// users computer, and we need to update the plist
-	// file with the path of the crc executable which was
-	// used to run setup, to force it this check needs
-	// to always fail so the fix routine is triggered
+	// we have no way of detecting if a running crc daemon instance uses
+	// the same binary as the one running 'crc setup'
+	// Safer for now to keep the previous behaviour of always
+	// recreating the plist/restarting the daemon
+	// When we have a way of checking the version of the running
+	// daemon instance, we can recreate the plist less often.
 
-	return fmt.Errorf("Ignoring this check and triggering creation of daemon plist")
+	return fmt.Errorf("Ignoring this check and triggering re-creation of daemon plist")
+
+	/*
+		daemonConfig, err := getDaemonConfig()
+		if err != nil {
+			return err
+		}
+		return launchd.CheckPlist(*daemonConfig)
+	*/
 }
 
-func fixDaemonPlistFileExists() error {
-	// Try to remove the daemon agent from launchd
-	// and recreate its plist
-	_ = launchd.Remove(daemonAgentLabel)
+func getDaemonConfig() (*launchd.AgentConfig, error) {
+	stdOutFilePathDaemon := filepath.Join(constants.CrcBaseDir, ".crcd-agent.log")
 
 	currentExecutablePath, err := goos.Executable()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	daemonConfig := launchd.AgentConfig{
 		Label:          daemonAgentLabel,
@@ -55,7 +57,33 @@ func fixDaemonPlistFileExists() error {
 		StdOutFilePath: stdOutFilePathDaemon,
 		Args:           []string{"daemon"},
 	}
-	return fixPlistFileExists(daemonConfig)
+
+	return &daemonConfig, nil
+}
+
+func getTrayConfig() (*launchd.AgentConfig, error) {
+	stdOutFilePathTray := filepath.Join(constants.CrcBaseDir, ".crct-agent.log")
+
+	trayConfig := launchd.AgentConfig{
+		Label:          trayAgentLabel,
+		ExecutablePath: constants.TrayExecutablePath,
+		StdOutFilePath: stdOutFilePathTray,
+	}
+
+	return &trayConfig, nil
+}
+
+func fixDaemonPlistFileExists() error {
+	// Try to remove the daemon agent from launchd
+	// and recreate its plist
+	_ = launchd.Remove(daemonAgentLabel)
+
+	daemonConfig, err := getDaemonConfig()
+	if err != nil {
+		return nil
+	}
+
+	return fixPlistFileExists(*daemonConfig)
 }
 
 func removeDaemonPlistFile() error {
@@ -63,19 +91,19 @@ func removeDaemonPlistFile() error {
 }
 
 func checkIfTrayPlistFileExists() error {
-	if !launchd.PlistExists(trayAgentLabel) {
-		return fmt.Errorf("Tray plist file does not exist")
+	trayConfig, err := getTrayConfig()
+	if err != nil {
+		return err
 	}
-	return nil
+	return launchd.CheckPlist(*trayConfig)
 }
 
 func fixTrayPlistFileExists() error {
-	trayConfig := launchd.AgentConfig{
-		Label:          trayAgentLabel,
-		ExecutablePath: constants.TrayExecutablePath,
-		StdOutFilePath: stdOutFilePathTray,
+	trayConfig, err := getTrayConfig()
+	if err != nil {
+		return err
 	}
-	return fixPlistFileExists(trayConfig)
+	return fixPlistFileExists(*trayConfig)
 }
 
 func removeTrayPlistFile() error {

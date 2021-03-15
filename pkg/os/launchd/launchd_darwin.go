@@ -65,28 +65,44 @@ func getPlistPath(label string) string {
 	return filepath.Join(launchAgentsDir, plistName)
 }
 
+func generatePlistContent(config AgentConfig) ([]byte, error) {
+	var plistContent bytes.Buffer
+	t, err := template.New("plist").Parse(plistTemplate)
+	if err != nil {
+		return nil, err
+	}
+	err = t.Execute(&plistContent, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return plistContent.Bytes(), nil
+}
+
 // CreatePlist creates a launchd agent plist config file
 func CreatePlist(config AgentConfig) error {
 	if err := ensureLaunchAgentsDirExists(); err != nil {
 		return err
 	}
 
-	var plistContent bytes.Buffer
-	t, err := template.New("plist").Parse(plistTemplate)
+	plist, err := generatePlistContent(config)
 	if err != nil {
 		return err
 	}
-	err = t.Execute(&plistContent, config)
-	if err != nil {
-		return err
-	}
-	// #nosec G306
-	err = ioutil.WriteFile(getPlistPath(config.Label), plistContent.Bytes(), 0644)
+	err = ioutil.WriteFile(getPlistPath(config.Label), plist, 0600)
 	return err
 }
 
 func PlistExists(label string) bool {
 	return os.FileExists(getPlistPath(label))
+}
+
+func CheckPlist(config AgentConfig) error {
+	plist, err := generatePlistContent(config)
+	if err != nil {
+		return err
+	}
+	return os.FileContentMatches(getPlistPath(config.Label), plist)
 }
 
 // LoadPlist loads a launchd agents' plist file
