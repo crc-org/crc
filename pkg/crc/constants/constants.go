@@ -31,6 +31,7 @@ const (
 	CRCMacTrayDownloadURL     = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
 	CRCWindowsTrayDownloadURL = "https://github.com/code-ready/tray-windows/releases/download/v%s/crc-tray-windows.zip"
 	DefaultContext            = "admin"
+	DaemonHTTPEndpoint        = "http://unix/api"
 
 	VSockGateway = "192.168.127.1"
 	VsockSSHPort = 2222
