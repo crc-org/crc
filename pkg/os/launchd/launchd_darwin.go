@@ -2,6 +2,7 @@ package launchd
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	goos "os"
@@ -90,12 +91,12 @@ func PlistExists(label string) bool {
 
 // LoadPlist loads a launchd agents' plist file
 func LoadPlist(label string) error {
-	return exec.Command("launchctl", "load", getPlistPath(label)).Run() // #nosec G204
+	return runLaunchCtl("load", getPlistPath(label))
 }
 
 // UnloadPlist Unloads a launchd agent's service
 func UnloadPlist(label string) error {
-	return exec.Command("launchctl", "unload", getPlistPath(label)).Run() // #nosec G204
+	return runLaunchCtl("unload", getPlistPath(label))
 }
 
 // RemovePlist removes a launchd agent plist config file
@@ -108,12 +109,12 @@ func RemovePlist(label string) error {
 
 // StartAgent starts a launchd agent
 func StartAgent(label string) error {
-	return exec.Command("launchctl", "start", label).Run() // #nosec G204
+	return runLaunchCtl("start", label)
 }
 
 // StopAgent stops a launchd agent
 func StopAgent(label string) error {
-	return exec.Command("launchctl", "stop", label).Run() // #nosec G204
+	return runLaunchCtl("stop", label)
 }
 
 // RestartAgent restarts a launchd agent
@@ -145,5 +146,24 @@ func AgentRunning(label string) bool {
 
 // Remove removes the agent from launchd
 func Remove(label string) error {
-	return exec.Command("launchctl", "remove", label).Run() // #nosec G204
+	return runLaunchCtl("remove", label)
+}
+
+func runLaunchCtl(args ...string) error {
+	_, _, err := os.RunWithDefaultLocale("launchctl", args...)
+	return exitCodeToError(err)
+}
+
+func exitCodeToError(err error) error {
+	var exitErr *exec.ExitError
+	if !errors.As(err, &exitErr) {
+		return err
+	}
+
+	stdout, _, localErr := os.RunWithDefaultLocale("launchctl", "error", fmt.Sprintf("%d", exitErr.ExitCode()))
+	if localErr != nil {
+		return err
+	}
+
+	return errors.New(stdout)
 }
