@@ -36,6 +36,8 @@ const (
 			<false/>
 			<key>RunAtLoad</key>
 			<true/>
+			<key>ProcessType</key>
+			<string>Interactive</string>
 		</dict>
 	</plist>`
 )
