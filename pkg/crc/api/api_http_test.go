@@ -1,71 +1,125 @@
 package api
 
 import (
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
-	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
-	"github.com/code-ready/crc/pkg/crc/config"
+	apiClient "github.com/code-ready/crc/pkg/crc/api/client"
+	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
-	"github.com/code-ready/crc/pkg/crc/preflight"
+	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestHTTPApi(t *testing.T) {
-	machine := fakemachine.NewClient()
+	fakeMachine := fakemachine.NewClient()
 	config := setupNewInMemoryConfig()
 
-	ts := httptest.NewServer(NewMux(config, machine))
+	ts := httptest.NewServer(NewMux(config, fakeMachine))
+	defer ts.Close()
 
-	client := http.DefaultClient
-	res, err := client.Get(fmt.Sprintf("%s%s", ts.URL, "/version"))
+	client := apiClient.New(http.DefaultClient, ts.URL)
+	vr, err := client.Version()
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Equal(
+		t,
+		apiClient.VersionResult{
+			CrcVersion:       version.GetCRCVersion(),
+			OpenshiftVersion: version.GetBundleVersion(),
+			CommitSha:        version.GetCommitSha(),
+			Success:          true,
+		},
+		vr,
+	)
 
-	res, err = client.Post(fmt.Sprintf("%s%s", ts.URL, "/status"), "application/json", strings.NewReader("test"))
+	statusResult, err := client.Status()
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusMethodNotAllowed, res.StatusCode)
+	assert.Equal(
+		t,
+		apiClient.ClusterStatusResult{
+			Name:             "crc",
+			CrcStatus:        "Running",
+			OpenshiftStatus:  "Running",
+			OpenshiftVersion: "4.5.1",
+			DiskUse:          int64(10000000000),
+			DiskSize:         int64(20000000000),
+			Success:          true,
+		},
+		statusResult,
+	)
 
-	res, err = client.Post(fmt.Sprintf("%s%s", ts.URL, "/config/get"), "application/json", strings.NewReader("{\"properties\":[\"cpus\"]}"))
+	var startConfig = apiClient.StartConfig{}
+	startResult, err := client.Start(startConfig)
 	assert.NoError(t, err)
-	body, err := ioutil.ReadAll(res.Body)
+	assert.Equal(
+		t,
+		apiClient.StartResult{
+			Name:           "crc",
+			Status:         "",
+			Error:          "",
+			KubeletStarted: true,
+			ClusterConfig: machine.ClusterConfig{
+				ClusterCACert: "MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ",
+				KubeConfig:    "/tmp/kubeconfig",
+				KubeAdminPass: "foobar",
+				ClusterAPI:    "https://foo.testing:6443",
+				WebConsoleURL: "https://console.foo.testing:6443",
+				ProxyConfig:   nil,
+			},
+		},
+		startResult,
+	)
+
+	stopResult, err := client.Stop()
 	assert.NoError(t, err)
-	assert.Equal(t, "{\"Error\":\"\",\"Configs\":{\"cpus\":4}}", string(body))
+	assert.Equal(
+		t,
+		apiClient.Result{
+			Name:    "crc",
+			Success: true,
+			Error:   "",
+		},
+		stopResult,
+	)
 
-	res, _ = client.Get(fmt.Sprintf("%s%s", ts.URL, "/config/get"))
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-}
+	deleteResult, err := client.Delete()
+	assert.NoError(t, err)
+	assert.Equal(
+		t,
+		apiClient.Result{
+			Name:    "crc",
+			Success: true,
+			Error:   "",
+		},
+		deleteResult,
+	)
 
-func setupNewInMemoryConfig() config.Storage {
-	storage := config.NewEmptyInMemoryStorage()
-	cfg := config.New(&skipPreflights{
-		storage: storage,
+	configGetResult, err := client.GetConfig([]string{"cpus"})
+	assert.NoError(t, err)
+	assert.Equal(
+		t,
+		apiClient.GetConfigResult{
+			Error: "",
+			Configs: map[string]interface{}{
+				"cpus": float64(4),
+			},
+		},
+		configGetResult,
+	)
+
+	configSetResult, err := client.SetConfig(apiClient.SetConfigRequest{
+		Properties: map[string]interface{}{
+			"cpus": float64(5),
+		},
 	})
-	cmdConfig.RegisterSettings(cfg)
-	preflight.RegisterSettings(cfg)
-
-	return cfg
-}
-
-type skipPreflights struct {
-	storage config.RawStorage
-}
-
-func (s *skipPreflights) Get(key string) interface{} {
-	if strings.HasPrefix(key, "skip-") {
-		return "true"
-	}
-	return s.storage.Get(key)
-}
-
-func (s *skipPreflights) Set(key string, value interface{}) error {
-	return s.storage.Set(key, value)
-}
-
-func (s *skipPreflights) Unset(key string) error {
-	return s.storage.Unset(key)
+	assert.NoError(t, err)
+	assert.Equal(
+		t,
+		apiClient.SetOrUnsetConfigResult{
+			Error:      "",
+			Properties: []string{"cpus"},
+		},
+		configSetResult,
+	)
 }

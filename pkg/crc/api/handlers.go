@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
+	"github.com/code-ready/crc/pkg/crc/api/client"
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/errors"
@@ -58,7 +59,7 @@ func (h *Handler) Start(args json.RawMessage) string {
 	if args != nil {
 		parsedArgs, err = parseStartArgs(args)
 		if err != nil {
-			startErr := &StartResult{
+			startErr := &client.StartResult{
 				Name:  h.MachineClient.GetName(),
 				Error: fmt.Sprintf("Incorrect arguments given: %s", err.Error()),
 			}
@@ -66,7 +67,7 @@ func (h *Handler) Start(args json.RawMessage) string {
 		}
 	}
 	if err := preflight.StartPreflightChecks(h.Config); err != nil {
-		startErr := &StartResult{
+		startErr := &client.StartResult{
 			Name:  h.MachineClient.GetName(),
 			Error: err.Error(),
 		}
@@ -98,15 +99,8 @@ func getStartConfig(cfg crcConfig.Storage, args startArgs) machine.StartConfig {
 	}
 }
 
-type VersionResult struct {
-	CrcVersion       string
-	CommitSha        string
-	OpenshiftVersion string
-	Success          bool
-}
-
 func (h *Handler) GetVersion() string {
-	v := &VersionResult{
+	v := &client.VersionResult{
 		CrcVersion:       version.GetCRCVersion(),
 		CommitSha:        version.GetCommitSha(),
 		OpenshiftVersion: version.GetBundleVersion(),
@@ -126,7 +120,7 @@ func (h *Handler) GetWebconsoleInfo() string {
 }
 
 func (h *Handler) SetConfig(args json.RawMessage) string {
-	setConfigResult := setOrUnsetConfigResult{}
+	setConfigResult := client.SetOrUnsetConfigResult{}
 	if args == nil {
 		setConfigResult.Error = "No config keys provided"
 		return encodeStructToJSON(setConfigResult)
@@ -164,7 +158,7 @@ func (h *Handler) SetConfig(args json.RawMessage) string {
 }
 
 func (h *Handler) UnsetConfig(args json.RawMessage) string {
-	unsetConfigResult := setOrUnsetConfigResult{}
+	unsetConfigResult := client.SetOrUnsetConfigResult{}
 	if args == nil {
 		unsetConfigResult.Error = "No config keys provided"
 		return encodeStructToJSON(unsetConfigResult)
@@ -199,7 +193,7 @@ func (h *Handler) UnsetConfig(args json.RawMessage) string {
 }
 
 func (h *Handler) GetConfig(args json.RawMessage) string {
-	configResult := getConfigResult{}
+	configResult := client.GetConfigResult{}
 	if args == nil {
 		allConfigs := h.Config.AllConfigs()
 		configResult.Error = ""
@@ -243,7 +237,7 @@ func encodeStructToJSON(v interface{}) string {
 	s, err := json.Marshal(v)
 	if err != nil {
 		logging.Error(err.Error())
-		err := Result{
+		err := client.Result{
 			Success: false,
 			Error:   "Failed while encoding JSON to string",
 		}
@@ -254,7 +248,7 @@ func encodeStructToJSON(v interface{}) string {
 }
 
 func encodeErrorToJSON(errMsg string) string {
-	err := Result{
+	err := client.Result{
 		Success: false,
 		Error:   errMsg,
 	}

@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 
+	"github.com/code-ready/crc/pkg/crc/api/client"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/machine/libmachine/state"
@@ -10,43 +11,11 @@ import (
 
 type AdaptedClient interface {
 	GetName() string
-
-	Delete() Result
-	GetConsoleURL() ConsoleResult
-	Start(ctx context.Context, startConfig machine.StartConfig) StartResult
-	Status() ClusterStatusResult
-	Stop() Result
-}
-
-type Result struct {
-	Name    string
-	Success bool
-	Error   string
-}
-
-type StartResult struct {
-	Name           string
-	Status         string
-	Error          string
-	ClusterConfig  machine.ClusterConfig
-	KubeletStarted bool
-}
-
-type ClusterStatusResult struct {
-	Name             string
-	CrcStatus        string
-	OpenshiftStatus  string
-	OpenshiftVersion string
-	DiskUse          int64
-	DiskSize         int64
-	Error            string
-	Success          bool
-}
-
-type ConsoleResult struct {
-	ClusterConfig machine.ClusterConfig
-	Success       bool
-	Error         string
+	Delete() client.Result
+	GetConsoleURL() client.ConsoleResult
+	Start(ctx context.Context, startConfig machine.StartConfig) client.StartResult
+	Status() client.ClusterStatusResult
+	Stop() client.Result
 }
 
 type Adapter struct {
@@ -57,47 +26,47 @@ func (a *Adapter) GetName() string {
 	return a.Underlying.GetName()
 }
 
-func (a *Adapter) Delete() Result {
+func (a *Adapter) Delete() client.Result {
 	err := a.Underlying.Delete()
 	if err != nil {
 		logging.Error(err)
-		return Result{
+		return client.Result{
 			Name:    a.Underlying.GetName(),
 			Success: false,
 			Error:   err.Error(),
 		}
 	}
-	return Result{
+	return client.Result{
 		Name:    a.Underlying.GetName(),
 		Success: true,
 	}
 }
 
-func (a *Adapter) GetConsoleURL() ConsoleResult {
+func (a *Adapter) GetConsoleURL() client.ConsoleResult {
 	res, err := a.Underlying.GetConsoleURL()
 	if err != nil {
 		logging.Error(err)
-		return ConsoleResult{
+		return client.ConsoleResult{
 			Success: false,
 			Error:   err.Error(),
 		}
 	}
-	return ConsoleResult{
+	return client.ConsoleResult{
 		ClusterConfig: res.ClusterConfig,
 		Success:       true,
 	}
 }
 
-func (a *Adapter) Start(ctx context.Context, startConfig machine.StartConfig) StartResult {
+func (a *Adapter) Start(ctx context.Context, startConfig machine.StartConfig) client.StartResult {
 	res, err := a.Underlying.Start(ctx, startConfig)
 	if err != nil {
 		logging.Error(err)
-		return StartResult{
+		return client.StartResult{
 			Name:  a.Underlying.GetName(),
 			Error: err.Error(),
 		}
 	}
-	return StartResult{
+	return client.StartResult{
 		Name:           a.Underlying.GetName(),
 		Status:         res.Status.String(),
 		ClusterConfig:  res.ClusterConfig,
@@ -105,17 +74,17 @@ func (a *Adapter) Start(ctx context.Context, startConfig machine.StartConfig) St
 	}
 }
 
-func (a *Adapter) Status() ClusterStatusResult {
+func (a *Adapter) Status() client.ClusterStatusResult {
 	res, err := a.Underlying.Status()
 	if err != nil {
 		logging.Error(err)
-		return ClusterStatusResult{
+		return client.ClusterStatusResult{
 			Name:    a.Underlying.GetName(),
 			Error:   err.Error(),
 			Success: false,
 		}
 	}
-	return ClusterStatusResult{
+	return client.ClusterStatusResult{
 		Name:             a.Underlying.GetName(),
 		CrcStatus:        res.CrcStatus.String(),
 		OpenshiftStatus:  res.OpenshiftStatus,
@@ -126,7 +95,7 @@ func (a *Adapter) Status() ClusterStatusResult {
 	}
 }
 
-func (a *Adapter) Stop() Result {
+func (a *Adapter) Stop() client.Result {
 	vmState, err := a.Underlying.Stop()
 	if err != nil {
 		logging.Error(err)
@@ -134,7 +103,7 @@ func (a *Adapter) Stop() Result {
 			err := a.Underlying.PowerOff()
 			if err != nil {
 				logging.Error(err)
-				return Result{
+				return client.Result{
 					Name:    a.Underlying.GetName(),
 					Success: false,
 					Error:   err.Error(),
@@ -142,7 +111,7 @@ func (a *Adapter) Stop() Result {
 			}
 		}
 	}
-	return Result{
+	return client.Result{
 		Name:    a.Underlying.GetName(),
 		Success: true,
 	}

@@ -36,19 +36,6 @@ type commandRequest struct {
 	Args    json.RawMessage `json:"args,omitempty"`
 }
 
-// setOrUnsetConfigResult struct is used to return the result of
-// setconfig/unsetconfig command
-type setOrUnsetConfigResult struct {
-	Error      string
-	Properties []string
-}
-
-// getConfigResult struct is used to return the result of getconfig command
-type getConfigResult struct {
-	Error   string
-	Configs map[string]interface{}
-}
-
 // startArgs is used to get the pull secret file path as argument for start handler
 type startArgs struct {
 	PullSecretFile string `json:"pullSecretFile"`

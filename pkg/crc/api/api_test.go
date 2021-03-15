@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	apiClient "github.com/code-ready/crc/pkg/crc/api/client"
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
 	"github.com/code-ready/crc/pkg/crc/version"
 	log "github.com/sirupsen/logrus"
@@ -163,9 +164,9 @@ func TestSetconfigApi(t *testing.T) {
 	n, err := client.Read(payload)
 	assert.NoError(t, err)
 
-	var setconfigRes setOrUnsetConfigResult
+	var setconfigRes apiClient.SetOrUnsetConfigResult
 	assert.NoError(t, json.Unmarshal(payload[:n], &setconfigRes))
-	assert.Equal(t, setOrUnsetConfigResult{
+	assert.Equal(t, apiClient.SetOrUnsetConfigResult{
 		Error:      "",
 		Properties: []string{"cpus"},
 	}, setconfigRes)
@@ -189,13 +190,13 @@ func TestGetconfigApi(t *testing.T) {
 	n, err := client.Read(payload)
 	assert.NoError(t, err)
 
-	var getconfigRes getConfigResult
+	var getconfigRes apiClient.GetConfigResult
 	assert.NoError(t, json.Unmarshal(payload[:n], &getconfigRes))
 
 	configs := make(map[string]interface{})
 	configs["cpus"] = 4.0
 
-	assert.Equal(t, getConfigResult{
+	assert.Equal(t, apiClient.GetConfigResult{
 		Error:   "",
 		Configs: configs,
 	}, getconfigRes)
