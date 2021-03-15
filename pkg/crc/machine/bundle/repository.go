@@ -8,9 +8,11 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/Masterminds/semver"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/extract"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/pkg/errors"
@@ -120,7 +122,12 @@ func (repo *Repository) Extract(path string) error {
 	}
 
 	bundleDir := strings.TrimSuffix(bundleName, bundleExtension)
-	return os.Rename(filepath.Join(tmpDir, bundleDir), filepath.Join(repo.CacheDir, bundleDir))
+	return crcerrors.RetryAfter(time.Minute, func() error {
+		if err := os.Rename(filepath.Join(tmpDir, bundleDir), filepath.Join(repo.CacheDir, bundleDir)); err != nil {
+			return crcerrors.RetriableError{Err: err}
+		}
+		return nil
+	}, 5*time.Second)
 }
 
 var defaultRepo = &Repository{
