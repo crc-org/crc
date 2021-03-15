@@ -27,8 +27,6 @@ func (h *dnsHandler) handle(w dns.ResponseWriter, r *dns.Msg) {
 
 func (h *dnsHandler) addAnswers(m *dns.Msg) {
 	for _, q := range m.Question {
-		log.Debugf("DNS query for %s", q.String())
-
 		for _, zone := range h.zones {
 			zoneSuffix := fmt.Sprintf(".%s", zone.Name)
 			if strings.HasSuffix(q.Name, zoneSuffix) {

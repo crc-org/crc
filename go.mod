@@ -10,7 +10,7 @@ require (
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/cheggaaa/pb/v3 v3.0.5
 	github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a
-	github.com/code-ready/gvisor-tap-vsock v0.0.0-20210216090540-914d522b9c38
+	github.com/code-ready/gvisor-tap-vsock v0.0.0-20210308122700-d61f9aac135c
 	github.com/code-ready/machine v0.0.0-20210122113819-281ccfbb4566
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3

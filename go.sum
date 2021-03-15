@@ -163,8 +163,8 @@ github.com/cockroachdb/cockroach-go v0.0.0-20181001143604-e0a95dfd547c/go.mod h1
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a h1:VOQmCj9Y8pAPU4C0rIvF2ByUBuuqnaR9JSvb9C8uBQE=
 github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a/go.mod h1:ZPZUcYGpv/FQGnwakUuhiHP9x/IIcU2SKbn8xPe4ROc=
-github.com/code-ready/gvisor-tap-vsock v0.0.0-20210216090540-914d522b9c38 h1:vo1A+Tvie+BVZoSyYOzShDH6ieQkD1Q9l4JeeC0jCxA=
-github.com/code-ready/gvisor-tap-vsock v0.0.0-20210216090540-914d522b9c38/go.mod h1:DsNrkk0GUSTqt0E/4/GMvjqsP7ns++O/6YaJn/TDBVM=
+github.com/code-ready/gvisor-tap-vsock v0.0.0-20210308122700-d61f9aac135c h1:UOg6w7Uv5hWvFVABjJpawCEmAK99vG96SozUaulqVCk=
+github.com/code-ready/gvisor-tap-vsock v0.0.0-20210308122700-d61f9aac135c/go.mod h1:DsNrkk0GUSTqt0E/4/GMvjqsP7ns++O/6YaJn/TDBVM=
 github.com/code-ready/machine v0.0.0-20210122113819-281ccfbb4566 h1:zBDinebc2kFq99UNTmLmTRfgxcxC6YieKQuXDRCljzw=
 github.com/code-ready/machine v0.0.0-20210122113819-281ccfbb4566/go.mod h1:4JgMqho7KuxFifYCIi7cKVmh4yA2l0QHOPftv9f5PNc=
 github.com/codegangsta/negroni v1.0.0/go.mod h1:v0y3T5G7Y1UlFfyxFn/QLRU4a2EuNau2iZY63YTKWo0=
