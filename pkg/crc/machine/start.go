@@ -31,6 +31,8 @@ import (
 	"github.com/code-ready/machine/libmachine/state"
 	"github.com/docker/go-units"
 	"github.com/pkg/errors"
+
+	"golang.org/x/crypto/ssh"
 )
 
 const minimumMemoryForMonitoring = 14336
@@ -91,6 +93,21 @@ func (client *client) updateVMConfig(startConfig StartConfig, api libmachine.API
 	return nil
 }
 
+func growRootFileSystem(sshRunner *crcssh.Runner) error {
+	// With 4.7, this is quite a manual process until https://github.com/openshift/installer/pull/4746 gets fixed
+	// See https://github.com/code-ready/crc/issues/2104 for details
+	if _, _, err := sshRunner.Run("sudo /usr/bin/growpart /dev/vda 4"); err != nil {
+		var sshErr *ssh.ExitError
+		if errors.As(err, &sshErr) {
+			logging.Debugf("/dev/vda4 already has the expected size, nothing to do")
+			return nil
+		}
+
+		return err
+	}
+	_, _, err := sshRunner.Run("sudo mount -o remount,rw /sysroot && sudo xfs_growfs /dev/vda4")
+	return err
+}
 func (client *client) Start(ctx context.Context, startConfig StartConfig) (*StartResult, error) {
 	telemetry.SetCPUs(ctx, startConfig.CPUs)
 	telemetry.SetMemory(ctx, uint64(startConfig.Memory)*1024*1024)
@@ -267,7 +284,7 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 	}
 
 	// Trigger disk resize, this will be a no-op if no disk size change is needed
-	if _, _, err = sshRunner.Run("sudo xfs_growfs / >/dev/null"); err != nil {
+	if err := growRootFileSystem(sshRunner); err != nil {
 		return nil, errors.Wrap(err, "Error updating filesystem size")
 	}
 
