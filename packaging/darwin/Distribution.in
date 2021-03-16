@@ -10,9 +10,9 @@
     <installation-check script="installCheck();"/>
     <script>
 function installCheck() {
-    if(!(system.compareVersions(system.version.ProductVersion, '10.12.0') >= 0)) {
+    if(!(system.compareVersions(system.version.ProductVersion, '10.14.0') >= 0)) {
         my.result.title = 'Unable to install';
-        my.result.message = 'CodeReady Containers requires macOS 10.12 or later.';
+        my.result.message = 'CodeReady Containers requires macOS 10.14 or later.';
         my.result.type = 'Fatal';
         return false;
     }
