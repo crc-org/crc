@@ -21,7 +21,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/oc"
 	"github.com/code-ready/crc/pkg/crc/services"
 	"github.com/code-ready/crc/pkg/crc/services/dns"
-	"github.com/code-ready/crc/pkg/crc/ssh"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/crc/systemd"
 	"github.com/code-ready/crc/pkg/crc/telemetry"
@@ -510,7 +509,7 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 
 		// Generate ssh key pair
 		logging.Info("Generating new SSH Key pair ...")
-		if err := ssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
+		if err := crcssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
 			return fmt.Errorf("Error generating ssh key pair: %v", err)
 		}
 	}
