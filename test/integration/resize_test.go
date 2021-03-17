@@ -33,16 +33,9 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 		})
 
 		It("check VM's disk size", func() {
-			switch runtime.GOOS {
-			case "linux":
-				out, err := RunOnHostWithPrivilege("virsh", "vol-info", "crc.qcow2", "--pool", "crc")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(out).Should(MatchRegexp(`Capacity:[\s]*31.00 GiB`))
-			case "windows":
-				out, err := RunOnHost("powershell", "Get-VHD", "-Path", "C:/Users/crcqe/.crc/machines/crc/crc.vhdx")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(out).Should(MatchRegexp(`Size[\s]*:[\s]*3328\d{7}`)) // 31GiB = 33285996544B
-			}
+			out, err := SendCommandToVM("df -h | grep sysroot")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(out).Should(MatchRegexp(`.*31G[\s].*[\s]/sysroot`))
 		})
 
 		It("stop CRC", func() {
@@ -76,16 +69,9 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 		})
 
 		It("check VM's disk size", func() {
-			switch runtime.GOOS {
-			case "linux":
-				out, err := RunOnHostWithPrivilege("virsh", "vol-info", "crc.qcow2", "--pool", "crc")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(out).Should(MatchRegexp(`Capacity:[\s]*40.00 GiB`))
-			case "windows":
-				out, err := RunOnHost("powershell", "Get-VHD", "-Path", "C:/Users/crcqe/.crc/machines/crc/crc.vhdx")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(out).Should(MatchRegexp(`Size[\s]*:[\s]*4294\d{7}`)) // 40GiB = 42949672960B
-			}
+			out, err := SendCommandToVM("df -h | grep sysroot")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(out).Should(MatchRegexp(`.*40G[\s].*[\s]/sysroot`))
 		})
 
 		It("stop CRC", func() {
@@ -135,18 +121,13 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 			Expect(out).ShouldNot(MatchRegexp(`processor[\s]*\:[\s]*4`))
 		})
 
-		It("check VM's disk size", func() {
-			switch runtime.GOOS {
-			case "linux":
-				out, err := RunOnHostWithPrivilege("virsh", "vol-info", "crc.qcow2", "--pool", "crc")
+		if runtime.GOOS != "darwin" {
+			It("check VM's disk size", func() {
+				out, err := SendCommandToVM("df -h | grep sysroot")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(out).Should(MatchRegexp(`Capacity:[\s]*40.00 GiB`)) // cannot shrink
-			case "windows":
-				out, err := RunOnHost("powershell", "Get-VHD", "-Path", "C:/Users/crcqe/.crc/machines/crc/crc.vhdx")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(out).Should(MatchRegexp(`Size[\s]*:[\s]*4294\d{7}`)) // 40GiB = 42949672960B; cannot shrink
-			}
-		})
+				Expect(out).Should(MatchRegexp(`.*40G[\s].*[\s]/sysroot`))
+			})
+		}
 
 		It("clean up", func() {
 			RunCRCExpectSuccess("stop", "-f")
