@@ -26,7 +26,7 @@ $ oc whoami
 +
 [NOTE]
 ====
-For demonstration purposes, the current user is assumed to be `kube:admin`.
+For demonstration purposes, the current user is assumed to be `kubeadmin`.
 ====
 
 . Log in to the registry as that user with its token:
