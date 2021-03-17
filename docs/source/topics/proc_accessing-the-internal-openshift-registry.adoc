@@ -71,11 +71,11 @@ $ podman push default-route-openshift-image-registry.apps-crc.testing/demo/alpin
 $ oc get is
 ----
 
-. Enable image lookup for all tags in the imagestream:
+. Enable image lookup in the imagestream:
 +
 [subs="+quotes,attributes"]
 ----
-$ oc set image-lookup
+$ oc set image-lookup alpine
 ----
 +
 This setting allows the imagestream to be the source of images without having to provide the full URL to the internal registry.
