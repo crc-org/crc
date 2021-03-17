@@ -133,24 +133,6 @@ func RunCRCExpectFail(args ...string) (string, error) {
 	return stderr, nil
 }
 
-// Run command in the shell on the host (assuming linux bash)
-func RunOnHost(cmd string, args ...string) (string, error) {
-	out, err := exec.Command(cmd, args...).Output()
-	if err != nil {
-		return "", err
-	}
-	return string(out), nil
-}
-
-// Run command in the shell on the host (assuming linux bash)
-func RunOnHostWithPrivilege(args ...string) (string, error) {
-	out, err := exec.Command("sudo", args...).Output()
-	if err != nil {
-		return "", err
-	}
-	return string(out), nil
-}
-
 // Send command to CRC VM via SSH
 func SendCommandToVM(cmd string) (string, error) {
 	client := machine.NewClient(constants.DefaultName, false, crcConfig.New(crcConfig.NewEmptyInMemoryStorage()))
