@@ -48,8 +48,8 @@ func RunPrivileged(reason string, cmdAndArgs ...string) (string, string, error) 
 	if err != nil {
 		return "", "", errors.New("sudo executable not found")
 	}
-	if _, _, err := run(sudo, []string{"--validate"}, map[string]string{}); err != nil {
-		return "", "", errors.New("user is not allowed to use the 'sudo' command")
+	if stdout, stderr, err := run(sudo, []string{"--validate"}, map[string]string{}); err != nil {
+		return stdout, stderr, errors.New("user is not allowed to use the 'sudo' command")
 	}
 	logging.Infof("Using root access: %s", reason)
 	return run(sudo, cmdAndArgs, map[string]string{})
