@@ -11,7 +11,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/tray"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )
