@@ -2,12 +2,10 @@ package test_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
 	"testing"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/reporters"
@@ -33,10 +31,9 @@ func TestTest(t *testing.T) {
 
 	RegisterFailHandler(Fail)
 
-	junitfile := fmt.Sprintf("integration_%s.xml", time.Now().Format("20060102150405"))
-	junitReporter := reporters.NewJUnitReporter(filepath.Join("out", junitfile))
+	junitReporter := reporters.NewJUnitReporter(filepath.Join("out", "integration.xml"))
 	RunSpecsWithDefaultAndCustomReporters(t, "Test Suite", []Reporter{junitReporter})
-	// RunSpecs(t, "Test Suite")
+
 }
 
 var _ = BeforeSuite(func() {
