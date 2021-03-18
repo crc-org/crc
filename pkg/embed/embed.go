@@ -14,7 +14,7 @@ import (
 
 func openEmbeddedFile(executablePath, embedName string) (io.ReadCloser, error) {
 	if runtime.GOOS == "darwin" && version.IsMacosInstallPathSet() {
-		path := filepath.Join(version.GetMacosInstallPath(), version.GetCRCVersion(), embedName)
+		path := filepath.Join(version.GetMacosInstallPath(), embedName)
 		if _, err := os.Stat(path); err == nil {
 			return os.Open(path)
 		}

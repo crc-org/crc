@@ -4,7 +4,7 @@ BUNDLE_VERSION = 4.7.4
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 1.24.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
-MACOS_INSTALL_PATH = /Library/CodeReady Containers
+MACOS_INSTALL_PATH = /Applications/CodeReady Containers.app/Contents/Resources/
 CONTAINER_RUNTIME ?= podman
 
 ifdef OKD_VERSION
@@ -252,20 +252,26 @@ update-go-version:
 goversioncheck:
 	./verify-go-version.sh
 
+TRAY_RELEASE ?= packaging/tmp/crc-tray-macos.tar.gz
+
 packagedir: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.macosInstallPath=$(MACOS_INSTALL_PATH)' $(RELEASE_VERSION_VARIABLES)
 packagedir: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
+	echo -n $(CRC_VERSION) > packaging/VERSION
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/postinstall.in >packaging/darwin/scripts/postinstall
 	chmod 755 packaging/darwin/scripts/postinstall
-	mkdir -p packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
-	$(HOST_BUILD_DIR)/crc-embedder download packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
+	mkdir -p packaging/tmp/
+	$(HOST_BUILD_DIR)/crc-embedder download packaging/tmp/
 
-	tar -C packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/ -xvzf packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/crc-tray-macos.tar.gz
-	rm packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/crc-tray-macos.tar.gz
+	mkdir -p packaging/root/Applications
+	tar -C packaging/root/Applications -xvzf $(TRAY_RELEASE)
+	rm packaging/tmp/crc-tray-macos.tar.gz
 
-	cp $(HYPERKIT_BUNDLENAME) packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
-	cp $(BUILD_DIR)/macos-amd64/crc packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
+	mv packaging/tmp/* packaging/root/"$(MACOS_INSTALL_PATH)"
+
+	cp $(HYPERKIT_BUNDLENAME) packaging/root/"$(MACOS_INSTALL_PATH)"
+	cp $(BUILD_DIR)/macos-amd64/crc packaging/root/"$(MACOS_INSTALL_PATH)"
 	cp LICENSE packaging/darwin/Resources/LICENSE.txt
 	pkgbuild --analyze --root packaging/root packaging/components.plist
 	plutil -replace BundleIsRelocatable -bool NO packaging/components.plist

@@ -23,7 +23,7 @@ var (
 
 func trayAppBundlePath() string {
 	if version.IsMacosInstallPathSet() {
-		path := filepath.Join(version.GetMacosInstallPath(), version.GetCRCVersion(), TrayExecutableName)
+		path := filepath.Join(filepath.Dir(filepath.Dir(version.GetMacosInstallPath())), TrayExecutableName)
 		if _, err := os.Stat(path); err == nil {
 			return path
 		}

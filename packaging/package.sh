@@ -19,17 +19,19 @@ function sign() {
   codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime --force ${opts} "$1"
 }
 
-version=$(ls "${BASEDIR}/root/Library/CodeReady Containers/")
+binDir="${BASEDIR}/root/Applications/CodeReady Containers.app/Contents/Resources"
 
-binDir="${BASEDIR}/root/Library/CodeReady Containers/${version}"
+version=$(cat "${BASEDIR}/VERSION")
+
 sign "${binDir}/crc"
 sign "${binDir}/admin-helper-darwin"
 sign "${binDir}/crc-driver-hyperkit"
-sign "${binDir}/CodeReady Containers.app"
+
+sign "${BASEDIR}/root/Applications/CodeReady Containers.app"
 
 codesign --verify --verbose "${binDir}/hyperkit"
 
-pkgbuild --identifier com.redhat.crc.${version} --version ${version} \
+pkgbuild --identifier com.redhat.crc --version ${version} \
   --scripts "${BASEDIR}/darwin/scripts" \
   --root "${BASEDIR}/root" \
   --install-location / \
