@@ -3,6 +3,7 @@
 package preflight
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"syscall"
@@ -17,7 +18,7 @@ var nonWinPreflightChecks = [...]Check{
 		configKeySuffix:  "check-root-user",
 		checkDescription: "Checking if running as non-root",
 		check:            checkIfRunningAsNormalUser,
-		fixDescription:   "crc should be ran as a normal user",
+		fixDescription:   "crc should not be run as root",
 		flags:            NoFix,
 	},
 	{
@@ -32,7 +33,7 @@ func checkIfRunningAsNormalUser() error {
 		return nil
 	}
 	logging.Debug("Ran as root")
-	return fmt.Errorf("crc should be ran as a normal user")
+	return errors.New("crc should not be run as root")
 }
 
 func setSuid(path string) error {
