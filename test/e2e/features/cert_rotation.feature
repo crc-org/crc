@@ -5,12 +5,15 @@ Feature: Certificate rotation test
     certificate rotation to happen successfully and to be able to deploy
     an app and check its accessibility.
 
+    Scenario: Setup CRC
+        Given executing "crc setup" succeeds
+
     Scenario: Set clock to 3 months ahead on the host
         Given executing "sudo timedatectl set-ntp off" succeeds
         Then executing "sudo date -s '3 month'" succeeds
+        And with up to "10" retries with wait period of "1s" command "virsh --readonly -c qemu:///system capabilities" output matches "^<capabilities>"
 
     Scenario: Start CRC
-        Given executing "crc setup" succeeds
         When starting CRC with default bundle along with stopped network time synchronization succeeds
         Then stdout should contain "Started the OpenShift cluster"
         And executing "eval $(crc oc-env)" succeeds
