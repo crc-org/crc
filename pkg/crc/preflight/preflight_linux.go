@@ -43,7 +43,14 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			checkDescription: "Checking if user is part of libvirt group",
 			check:            checkUserPartOfLibvirtGroup,
 			fixDescription:   "Adding user to libvirt group",
-			fix:              fixUserPartOfLibvirtGroup(distro),
+			fix:              fixUserPartOfLibvirtGroup,
+		},
+		{
+			configKeySuffix:  "check-libvirt-group-active",
+			checkDescription: "Checking if active user/process is currently part of the libvirt group",
+			check:            checkCurrentGroups(distro),
+			fixDescription:   "You need to logout, re-login, and run crc setup again before the user is effectively a member of the 'libvirt' group.",
+			flags:            NoFix,
 		},
 		{
 			configKeySuffix:  "check-libvirt-running",
