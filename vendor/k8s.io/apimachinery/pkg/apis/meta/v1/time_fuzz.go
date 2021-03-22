@@ -1,5 +1,7 @@
+// +build !notest
+
 /*
-Copyright 2018 The Kubernetes Authors.
+Copyright 2020 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,15 +16,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1beta1
+package v1
 
 import (
-	"k8s.io/apimachinery/pkg/conversion"
-	"k8s.io/client-go/pkg/apis/clientauthentication"
+	"time"
+
+	fuzz "github.com/google/gofuzz"
 )
 
-func Convert_clientauthentication_ExecCredentialSpec_To_v1beta1_ExecCredentialSpec(in *clientauthentication.ExecCredentialSpec, out *ExecCredentialSpec, s conversion.Scope) error {
-	// This conversion intentionally omits the Response and Interactive fields, which were only
-	// supported in v1alpha1.
-	return autoConvert_clientauthentication_ExecCredentialSpec_To_v1beta1_ExecCredentialSpec(in, out, s)
+// Fuzz satisfies fuzz.Interface.
+func (t *Time) Fuzz(c fuzz.Continue) {
+	if t == nil {
+		return
+	}
+	// Allow for about 1000 years of randomness.  Leave off nanoseconds
+	// because JSON doesn't represent them so they can't round-trip
+	// properly.
+	t.Time = time.Unix(c.Rand.Int63n(1000*365*24*60*60), 0)
 }
+
+// ensure Time implements fuzz.Interface
+var _ fuzz.Interface = &Time{}

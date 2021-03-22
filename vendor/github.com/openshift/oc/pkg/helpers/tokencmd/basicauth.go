@@ -14,6 +14,19 @@ import (
 	"github.com/openshift/oc/pkg/helpers/term"
 )
 
+// BasicAuthNoUsernameError is an error that means that basic authentication challenge handling was attempted
+// but the required username was not provided from the command line options
+type BasicAuthNoUsernameError struct{}
+
+func (e *BasicAuthNoUsernameError) Error() string {
+	return "did not receive username - print token url instead of basic prompt"
+}
+
+// NewBasicAuthNoUsernameError returns an error for a basic challenge without a username
+func NewBasicAuthNoUsernameError() error {
+	return &BasicAuthNoUsernameError{}
+}
+
 type BasicChallengeHandler struct {
 	// Host is the server being authenticated to. Used only for displaying messages when prompting for username/password
 	Host string
@@ -54,7 +67,15 @@ func (c *BasicChallengeHandler) HandleChallenge(requestURL string, headers http.
 	missingUsername := len(username) == 0
 	missingPassword := len(password) == 0
 
-	if (missingUsername || missingPassword) && c.Reader != nil {
+	if missingUsername {
+		return nil, false, NewBasicAuthNoUsernameError()
+	}
+	// Basic auth does not support usernames containing colons
+	// http://tools.ietf.org/html/rfc2617#section-2
+	if strings.Contains(username, ":") {
+		return nil, false, fmt.Errorf("username %s is invalid for basic auth", username)
+	}
+	if missingPassword && c.Reader != nil {
 		w := c.Writer
 		if w == nil {
 			w = os.Stdout
@@ -65,11 +86,7 @@ func (c *BasicChallengeHandler) HandleChallenge(requestURL string, headers http.
 		} else {
 			fmt.Fprintf(w, "Authentication required for %s\n", c.Host)
 		}
-		if missingUsername {
-			username = term.PromptForString(c.Reader, w, "Username: ")
-		} else {
-			fmt.Fprintf(w, "Username: %s\n", username)
-		}
+		fmt.Fprintf(w, "Username: %s\n", username)
 		if missingPassword {
 			password = term.PromptForPasswordString(c.Reader, w, "Password: ")
 		}
@@ -77,21 +94,11 @@ func (c *BasicChallengeHandler) HandleChallenge(requestURL string, headers http.
 		c.prompted = true
 	}
 
-	if len(username) > 0 || len(password) > 0 {
-		// Basic auth does not support usernames containing colons
-		// http://tools.ietf.org/html/rfc2617#section-2
-		if strings.Contains(username, ":") {
-			return nil, false, fmt.Errorf("username %s is invalid for basic auth", username)
-		}
-		responseHeaders := http.Header{}
-		responseHeaders.Set("Authorization", getBasicHeader(username, password))
-		// remember so we don't re-handle non-interactively
-		c.handled = true
-		return responseHeaders, true, nil
-	}
-
-	klog.V(2).Info("no username or password available")
-	return nil, false, nil
+	responseHeaders := http.Header{}
+	responseHeaders.Set("Authorization", getBasicHeader(username, password))
+	// remember so we don't re-handle non-interactively
+	c.handled = true
+	return responseHeaders, true, nil
 }
 func (c *BasicChallengeHandler) CompleteChallenge(requestURL string, headers http.Header) error {
 	return nil
@@ -112,6 +119,8 @@ var basicRegexes = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)^\s*basic(?:\s+|$)`),
 }
 
+// basicRealm returns true if a header indicates a basic auth challenge,
+// and the realm if one exists.
 func basicRealm(headers http.Header) (bool, string) {
 	for _, challengeHeader := range headers[http.CanonicalHeaderKey("WWW-Authenticate")] {
 		for _, r := range basicRegexes {
