@@ -67,8 +67,7 @@ github.com/cucumber/messages-go/v10
 github.com/danieljoos/wincred
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/docker/docker v1.13.1 => github.com/docker/docker v1.4.2-0.20191121165722-d1d5f6476656
-## explicit
+# github.com/docker/docker v17.12.0-ce-rc1.0.20200916142827-bd33bbf0497b+incompatible => github.com/docker/docker v1.4.2-0.20191121165722-d1d5f6476656
 github.com/docker/docker/pkg/term
 github.com/docker/docker/pkg/term/windows
 # github.com/docker/go-units v0.4.0
@@ -93,7 +92,6 @@ github.com/gogo/protobuf/io
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/sortkeys
 # github.com/golang/protobuf v1.4.3
-## explicit
 github.com/golang/protobuf/proto
 # github.com/google/btree v1.0.0
 github.com/google/btree
@@ -107,7 +105,6 @@ github.com/google/gopacket/layers
 # github.com/google/tcpproxy v0.0.0-20200125044825-b6bb9b5b8252
 github.com/google/tcpproxy
 # github.com/google/uuid v1.1.2
-## explicit
 github.com/google/uuid
 # github.com/h2non/filetype v1.1.2-0.20210202002709-95e28344e08c
 ## explicit
@@ -221,12 +218,12 @@ github.com/onsi/gomega/matchers/support/goraph/edge
 github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
 github.com/onsi/gomega/types
-# github.com/openshift/api v0.0.0-20200930075302-db52bc4ef99f
+# github.com/openshift/api v0.0.0-20201216151826-78a19e96f9eb
 ## explicit
 github.com/openshift/api/config/v1
-# github.com/openshift/library-go v0.0.0-20201007105531-fcceeb075980
+# github.com/openshift/library-go v0.0.0-20210106214821-c4d0b9c8d55f
 github.com/openshift/library-go/pkg/oauth/oauthdiscovery
-# github.com/openshift/oc v0.0.0-alpha.0.0.20201126035554-299b6af535d1
+# github.com/openshift/oc v0.0.0-alpha.0.0.20210319134016-c8d1f56fb3e2
 ## explicit
 github.com/openshift/oc/pkg/helpers/term
 github.com/openshift/oc/pkg/helpers/tokencmd
@@ -266,7 +263,7 @@ github.com/spf13/cast
 # github.com/spf13/cobra v1.1.1
 ## explicit
 github.com/spf13/cobra
-# github.com/spf13/jwalterweatherman v1.1.0
+# github.com/spf13/jwalterweatherman v1.0.0
 github.com/spf13/jwalterweatherman
 # github.com/spf13/pflag v1.0.5
 ## explicit
@@ -359,7 +356,6 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 # golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
-## explicit
 golang.org/x/time/rate
 # golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 golang.org/x/xerrors
@@ -454,11 +450,11 @@ gvisor.dev/gvisor/pkg/waiter
 # howett.net/plist v0.0.0-20201203080718-1454fab16a06
 ## explicit
 howett.net/plist
-# k8s.io/api v0.19.0 => k8s.io/api v0.19.0
+# k8s.io/api v0.20.1
 ## explicit
 k8s.io/api/certificates/v1beta1
 k8s.io/api/core/v1
-# k8s.io/apimachinery v0.19.0 => github.com/openshift/kubernetes-apimachinery v0.0.0-20200831185207-c0eb43ac4a3e
+# k8s.io/apimachinery v0.20.1 => github.com/openshift/kubernetes-apimachinery v0.0.0-20210108114224-194a87c5b03a
 k8s.io/apimachinery/pkg/api/errors
 k8s.io/apimachinery/pkg/api/resource
 k8s.io/apimachinery/pkg/apis/meta/v1
@@ -497,7 +493,7 @@ k8s.io/apimachinery/pkg/version
 k8s.io/apimachinery/pkg/watch
 k8s.io/apimachinery/third_party/forked/golang/netutil
 k8s.io/apimachinery/third_party/forked/golang/reflect
-# k8s.io/client-go v0.19.0 => github.com/openshift/kubernetes-client-go v0.0.0-20200908071752-9409de4c95e0
+# k8s.io/client-go v0.20.1 => github.com/openshift/kubernetes-client-go v0.0.0-20210108114446-0829bdd68114
 ## explicit
 k8s.io/client-go/pkg/apis/clientauthentication
 k8s.io/client-go/pkg/apis/clientauthentication/v1alpha1
@@ -522,43 +518,20 @@ k8s.io/client-go/util/flowcontrol
 k8s.io/client-go/util/homedir
 k8s.io/client-go/util/keyutil
 k8s.io/client-go/util/workqueue
-# k8s.io/klog/v2 v2.3.0
+# k8s.io/klog/v2 v2.4.0
 k8s.io/klog/v2
-# k8s.io/kubectl v0.19.0 => github.com/openshift/kubernetes-kubectl v0.0.0-20200922135455-1f5b2cd472a9
+# k8s.io/kubectl v0.20.1 => github.com/openshift/kubernetes-kubectl v0.0.0-20210108115031-c0d78c0aeda3
 k8s.io/kubectl/pkg/util/interrupt
 k8s.io/kubectl/pkg/util/term
-# k8s.io/utils v0.0.0-20200729134348-d5654de09c73
+# k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 k8s.io/utils/integer
-# sigs.k8s.io/structured-merge-diff/v4 v4.0.1
+# sigs.k8s.io/structured-merge-diff/v4 v4.0.2
 sigs.k8s.io/structured-merge-diff/v4/value
 # sigs.k8s.io/yaml v1.2.0
 sigs.k8s.io/yaml
-# github.com/Microsoft/hcsshim => github.com/Microsoft/hcsshim v0.8.10
 # github.com/apcera/gssapi => github.com/openshift/gssapi v0.0.0-20161010215902-5fb4217df13b
 # github.com/containers/image => github.com/openshift/containers-image v0.0.0-20190130162819-76de87591e9d
 # github.com/docker/docker => github.com/docker/docker v1.4.2-0.20191121165722-d1d5f6476656
-# k8s.io/api => k8s.io/api v0.19.0
-# k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.19.0
-# k8s.io/apimachinery => github.com/openshift/kubernetes-apimachinery v0.0.0-20200831185207-c0eb43ac4a3e
-# k8s.io/apiserver => k8s.io/apiserver v0.19.0
-# k8s.io/cli-runtime => github.com/openshift/kubernetes-cli-runtime v0.0.0-20200831185531-852eec47b608
-# k8s.io/client-go => github.com/openshift/kubernetes-client-go v0.0.0-20200908071752-9409de4c95e0
-# k8s.io/cloud-provider => k8s.io/cloud-provider v0.19.0
-# k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.19.0
-# k8s.io/code-generator => k8s.io/code-generator v0.19.0
-# k8s.io/component-base => k8s.io/component-base v0.19.0
-# k8s.io/cri-api => k8s.io/cri-api v0.19.0
-# k8s.io/csi-translation-lib => k8s.io/csi-translation-lib v0.19.0
-# k8s.io/kube-aggregator => k8s.io/kube-aggregator v0.19.0
-# k8s.io/kube-controller-manager => k8s.io/kube-controller-manager v0.19.0
-# k8s.io/kube-proxy => k8s.io/kube-proxy v0.19.0
-# k8s.io/kube-scheduler => k8s.io/kube-scheduler v0.19.0
-# k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20200922135455-1f5b2cd472a9
-# k8s.io/kubelet => k8s.io/kubelet v0.19.0
-# k8s.io/kubernetes => github.com/openshift/kubernetes v1.20.0-alpha.0.0.20200922142336-4700daee7399
-# k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.19.0
-# k8s.io/metrics => k8s.io/metrics v0.19.0
-# k8s.io/node-api => k8s.io/node-api v0.19.0
-# k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.19.0
-# k8s.io/sample-cli-plugin => k8s.io/sample-cli-plugin v0.19.0
-# k8s.io/sample-controller => k8s.io/sample-controller v0.19.0
+# k8s.io/apimachinery => github.com/openshift/kubernetes-apimachinery v0.0.0-20210108114224-194a87c5b03a
+# k8s.io/client-go => github.com/openshift/kubernetes-client-go v0.0.0-20210108114446-0829bdd68114
+# k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20210108115031-c0d78c0aeda3

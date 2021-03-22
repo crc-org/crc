@@ -43,6 +43,9 @@ const (
 
 	// token fakes the missing osin.TOKEN const
 	token osincli.AuthorizeRequestType = "token"
+
+	// BasicAuthNoUsernameMessage will differentiate unauthorized errors from basic login with no username
+	BasicAuthNoUsernameMessage = "BasicChallengeNoUsername"
 )
 
 // ChallengeHandler handles responses to WWW-Authenticate challenges.
@@ -225,13 +228,23 @@ func (o *RequestTokenOptions) RequestToken() (string, error) {
 		defer resp.Body.Close()
 
 		if resp.StatusCode == http.StatusUnauthorized {
-			if resp.Header.Get("WWW-Authenticate") != "" {
+			if len(resp.Header.Get("WWW-Authenticate")) > 0 {
 				if !o.Handler.CanHandle(resp.Header) {
 					return "", apierrs.NewUnauthorized("unhandled challenge")
 				}
 				// Handle the challenge
 				newRequestHeaders, shouldRetry, err := o.Handler.HandleChallenge(requestURL, resp.Header)
 				if err != nil {
+					if _, ok := err.(*BasicAuthNoUsernameError); ok {
+						tokenPromptErr := apierrs.NewUnauthorized(BasicAuthNoUsernameMessage)
+						klog.V(4).Infof("%v", err)
+						tokenPromptErr.ErrStatus.Details = &metav1.StatusDetails{
+							Causes: []metav1.StatusCause{
+								{Message: fmt.Sprintf("You must obtain an API token by visiting %s/request", o.OsinConfig.TokenUrl)},
+							},
+						}
+						return "", tokenPromptErr
+					}
 					return "", err
 				}
 				if !shouldRetry {
