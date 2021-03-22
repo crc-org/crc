@@ -34,11 +34,11 @@ func CloseLogging() {
 	logrus.StandardLogger().ReplaceHooks(make(logrus.LevelHooks))
 }
 
-func BackupLogFile() error {
+func BackupLogFile() {
 	if logfile == nil {
-		return nil
+		return
 	}
-	return os.Rename(logfile.Name(), fmt.Sprintf("%s_%s", logfile.Name(), time.Now().Format("20060102150405")))
+	os.Rename(logfile.Name(), fmt.Sprintf("%s_%s", logfile.Name(), time.Now().Format("20060102150405"))) // nolint
 }
 
 func InitLogrus(logLevel, logFilePath string) {
