@@ -24,9 +24,9 @@ import (
 
 type segmentResponse struct {
 	Batch []struct {
-		AnonymousID string `json:"anonymousId"`
-		MessageID   string `json:"messageId"`
-		Traits      struct {
+		UserID    string `json:"userId"`
+		MessageID string `json:"messageId"`
+		Traits    struct {
 			OS                   string `json:"os"`
 			ExperimentalFeatures bool   `json:"enable-experimental-features"`
 		} `json:"traits"`
@@ -83,20 +83,27 @@ func TestClientUploadWithConsentAndWithSerializableError(t *testing.T) {
 	config, err := newTestConfig("yes")
 	require.NoError(t, err)
 
-	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
+	uuidFile := filepath.Join(dir, "telemetry")
+
+	c, err := newCustomClient(config, uuidFile, server.URL)
 	require.NoError(t, err)
 
 	require.NoError(t, c.Upload(context.Background(), "start", time.Minute, crcErr.ToSerializableError(crcErr.VMNotExist)))
 	require.NoError(t, c.Close())
+
+	uuid, err := ioutil.ReadFile(uuidFile)
+	require.NoError(t, err)
 
 	select {
 	case x := <-body:
 		s := segmentResponse{}
 		require.NoError(t, json.Unmarshal(x, &s))
 		require.Equal(t, s.Batch[0].Type, "identify")
+		require.Equal(t, s.Batch[0].UserID, string(uuid))
 		require.Equal(t, s.Batch[0].Traits.OS, runtime.GOOS)
 		require.Equal(t, s.Batch[0].Traits.ExperimentalFeatures, true)
 		require.Equal(t, s.Batch[1].Type, "track")
+		require.Equal(t, s.Batch[1].UserID, string(uuid))
 		require.Equal(t, s.Batch[1].Properties.Error, crcErr.VMNotExist.Error())
 		require.Equal(t, s.Batch[1].Properties.ErrorType, "errors.vmNotExist")
 		require.Equal(t, s.Batch[1].Properties.Version, version.GetCRCVersion())
