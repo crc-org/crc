@@ -55,16 +55,12 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	// bundle location
+	bundlePath = "embedded"
 	if !versionInfo.Embedded {
-		bundlePath = os.Getenv("BUNDLE_PATH") // this env var should contain location of bundle
-		if bundlePath == "" {
-			logrus.Infof("Error: You need to set BUNDLE_PATH because your binary does not contain a bundle.")
-			logrus.Infof("%v", err)
-			Expect(err).NotTo(HaveOccurred())
+		bundlePath = os.Getenv("BUNDLE_PATH") // this env var should contain location of bundle or string "embedded"
+		if bundlePath != "embedded" {         // if real bundle
+			Expect(bundlePath).To(BeAnExistingFile())
 		}
-		Expect(bundlePath).To(BeAnExistingFile()) // not checking if it's an actual bundle
-	} else {
-		bundlePath = "embedded"
 	}
 
 	// pull-secret location
