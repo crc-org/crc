@@ -96,17 +96,29 @@ func (client *client) updateVMConfig(startConfig StartConfig, api libmachine.API
 func growRootFileSystem(sshRunner *crcssh.Runner) error {
 	// With 4.7, this is quite a manual process until https://github.com/openshift/installer/pull/4746 gets fixed
 	// See https://github.com/code-ready/crc/issues/2104 for details
-	if _, _, err := sshRunner.Run("sudo /usr/bin/growpart /dev/vda 4"); err != nil {
-		var sshErr *ssh.ExitError
-		if errors.As(err, &sshErr) {
-			logging.Debugf("/dev/vda4 already has the expected size, nothing to do")
-			return nil
+	if _, _, err := sshRunner.RunPrivileged("Growing /dev/vda4 partition", "/usr/bin/growpart", "/dev/vda", "4"); err != nil {
+		var exitErr *ssh.ExitError
+		if !errors.As(err, &exitErr) {
+			return err
+		}
+		if exitErr.ExitStatus() != 1 {
+			return err
 		}
 
+		logging.Debugf("No free space after /dev/vda4, nothing to do")
+		return nil
+	}
+
+	logging.Infof("Resizing /dev/vda4 filesystem")
+	if _, _, err := sshRunner.RunPrivileged("Remounting /sysroot read/write", "mount -o remount,rw /sysroot"); err != nil {
 		return err
 	}
-	_, _, err := sshRunner.Run("sudo mount -o remount,rw /sysroot && sudo xfs_growfs /dev/vda4")
-	return err
+
+	if _, _, err := sshRunner.RunPrivileged("Growing /dev/vda4 filesystem", "xfs_growfs", "/dev/vda4"); err != nil {
+		return err
+	}
+
+	return nil
 }
 func (client *client) Start(ctx context.Context, startConfig StartConfig) (*StartResult, error) {
 	telemetry.SetCPUs(ctx, startConfig.CPUs)
