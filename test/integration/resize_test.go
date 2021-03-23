@@ -76,7 +76,11 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 		It("check VM's disk size", func() {
 			out, err := SendCommandToVM("df -h | grep sysroot")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(out).Should(MatchRegexp(`.*40G[\s].*[\s]/sysroot`))
+			if runtime.GOOS == "darwin" { // darwin does not support resize
+				Expect(out).Should(MatchRegexp(`.*31G[\s].*[\s]/sysroot`))
+			} else {
+				Expect(out).Should(MatchRegexp(`.*40G[\s].*[\s]/sysroot`))
+			}
 		})
 
 		It("stop CRC", func() {
