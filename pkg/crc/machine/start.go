@@ -96,7 +96,16 @@ func (client *client) updateVMConfig(startConfig StartConfig, api libmachine.API
 func growRootFileSystem(sshRunner *crcssh.Runner) error {
 	// With 4.7, this is quite a manual process until https://github.com/openshift/installer/pull/4746 gets fixed
 	// See https://github.com/code-ready/crc/issues/2104 for details
-	if _, _, err := sshRunner.RunPrivileged("Growing /dev/vda4 partition", "/usr/bin/growpart", "/dev/vda", "4"); err != nil {
+	rootPart, _, err := sshRunner.Run("realpath", "/dev/disk/by-label/root")
+	if err != nil {
+		return err
+	}
+	rootPart = strings.TrimSpace(rootPart)
+	if !strings.HasPrefix(rootPart, "/dev/vda") && !strings.HasPrefix(rootPart, "/dev/sda") {
+		return fmt.Errorf("Unexpected root device: %s", rootPart)
+	}
+	// with '/dev/[sv]da4' as input, run 'growpart /dev/[sv]da 4'
+	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Growing %s partition", rootPart), "/usr/bin/growpart", rootPart[:len("/dev/.da")], rootPart[len(rootPart)-1:]); err != nil {
 		var exitErr *ssh.ExitError
 		if !errors.As(err, &exitErr) {
 			return err
@@ -105,16 +114,15 @@ func growRootFileSystem(sshRunner *crcssh.Runner) error {
 			return err
 		}
 
-		logging.Debugf("No free space after /dev/vda4, nothing to do")
+		logging.Debugf("No free space after %s, nothing to do", rootPart)
 		return nil
 	}
 
-	logging.Infof("Resizing /dev/vda4 filesystem")
+	logging.Infof("Resizing %s filesystem", rootPart)
 	if _, _, err := sshRunner.RunPrivileged("Remounting /sysroot read/write", "mount -o remount,rw /sysroot"); err != nil {
 		return err
 	}
-
-	if _, _, err := sshRunner.RunPrivileged("Growing /dev/vda4 filesystem", "xfs_growfs", "/dev/vda4"); err != nil {
+	if _, _, err = sshRunner.RunPrivileged(fmt.Sprintf("Growing %s filesystem", rootPart), "xfs_growfs", rootPart); err != nil {
 		return err
 	}
 
