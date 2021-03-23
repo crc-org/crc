@@ -65,14 +65,14 @@ func (c *Client) Upload(ctx context.Context, action string, duration time.Durati
 		return nil
 	}
 
-	anonymousID, uerr := getUserIdentity(c.telemetryFilePath)
+	userID, uerr := getUserIdentity(c.telemetryFilePath)
 	if uerr != nil {
 		return uerr
 	}
 
 	if err := c.segmentClient.Enqueue(analytics.Identify{
-		AnonymousId: anonymousID,
-		Traits:      addConfigTraits(c.config, traits()),
+		UserId: userID,
+		Traits: addConfigTraits(c.config, traits()),
 	}); err != nil {
 		return err
 	}
@@ -92,9 +92,9 @@ func (c *Client) Upload(ctx context.Context, action string, duration time.Durati
 	}
 
 	return c.segmentClient.Enqueue(analytics.Track{
-		AnonymousId: anonymousID,
-		Event:       action,
-		Properties:  properties,
+		UserId:     userID,
+		Event:      action,
+		Properties: properties,
 	})
 }
 
