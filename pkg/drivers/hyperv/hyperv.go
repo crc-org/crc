@@ -203,8 +203,7 @@ func (d *Driver) Create() error {
 		return err
 	}
 
-	log.Debugf("Starting VM...")
-	return d.Start()
+	return nil
 }
 
 func (d *Driver) chooseVirtualSwitch() (string, error) {

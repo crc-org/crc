@@ -117,6 +117,10 @@ func (api *Client) performCreate(ctx context.Context, h *host.Host) error {
 		return fmt.Errorf("Error in driver during machine creation: %s", err)
 	}
 
+	if err := h.Driver.Start(); err != nil {
+		return fmt.Errorf("Error in driver during machine start: %s", err)
+	}
+
 	if err := api.Save(h); err != nil {
 		return fmt.Errorf("Error saving host to store after attempting creation: %s", err)
 	}
