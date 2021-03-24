@@ -53,7 +53,7 @@ Feature: End-to-end health check
         Then checking that CRC is stopped
         When starting CRC with default bundle succeeds
         Then checking that CRC is running
-        And with up to "2" retries with wait period of "1m" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
+        And with up to "4" retries with wait period of "1m" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
 
     @darwin @linux @windows
     Scenario: Switch off CRC
