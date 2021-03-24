@@ -97,7 +97,7 @@ func MachineInState(d drivers.Driver, desiredState state.State) func() error {
 		if currentState == desiredState {
 			return nil
 		}
-		return crcerrors.RetriableError{
+		return &crcerrors.RetriableError{
 			Err: fmt.Errorf("expected machine state %s, got %s", desiredState.String(), currentState.String()),
 		}
 	}
