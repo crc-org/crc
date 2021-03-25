@@ -68,6 +68,10 @@ func (c *Client) PowerOff() error {
 	return nil
 }
 
+func (c *Client) GenerateBundle() error {
+	return nil
+}
+
 func (c *Client) Start(ctx context.Context, startConfig types.StartConfig) (*types.StartResult, error) {
 	if c.Failing {
 		return nil, errors.New("Failed to start")

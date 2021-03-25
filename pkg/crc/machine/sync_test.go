@@ -165,3 +165,7 @@ func (m *waitingMachine) Stop() (state.State, error) {
 	<-m.stopCompleteCh
 	return state.Stopped, nil
 }
+
+func (m *waitingMachine) GenerateBundle() error {
+	return errors.New("not implemented")
+}

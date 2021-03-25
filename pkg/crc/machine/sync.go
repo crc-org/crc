@@ -169,3 +169,7 @@ func (s *Synchronized) Status() (*types.ClusterStatusResult, error) {
 func (s *Synchronized) IsRunning() (bool, error) {
 	return s.underlying.IsRunning()
 }
+
+func (s *Synchronized) GenerateBundle() error {
+	return s.underlying.GenerateBundle()
+}
