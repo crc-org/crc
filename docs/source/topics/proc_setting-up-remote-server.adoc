@@ -31,7 +31,7 @@ Ensure that the cluster remains running throughout this procedure.
 . Install the [package]`haproxy` package and other utilities:
 +
 ----
-$ sudo dnf install haproxy policycoreutils-python-utils jq
+$ sudo dnf install haproxy policycoreutils-python-utils
 ----
 
 . Modify the firewall to allow communication with the cluster:
@@ -63,49 +63,28 @@ $ sudo cp /etc/haproxy/haproxy.cfg{,.bak}
 $ export CRC_IP=$({bin} ip)
 $ sudo tee /etc/haproxy/haproxy.cfg &>/dev/null <<EOF
 global
-    debug
+    log /dev/log local0
 
 defaults
+    balance roundrobin
     log global
-    mode http
-    timeout connect 5000
-    timeout client 500000
-    timeout server 500000
+    maxconn 100
+    mode tcp
+    timeout connect 5s
+    timeout client 500s
+    timeout server 500s
 
-frontend apps
+listen apps
     bind 0.0.0.0:80
-    option tcplog
-    mode tcp
-    default_backend apps
+    server crcvm $CRC_IP:80 check
 
-frontend apps_ssl
+listen apps_ssl
     bind 0.0.0.0:443
-    option tcplog
-    mode tcp
-    default_backend apps_ssl
+    server crcvm $CRC_IP:443 check
 
-backend apps
-    mode tcp
-    balance roundrobin
-    server webserver1 $CRC_IP:80 check
-
-backend apps_ssl
-    mode tcp
-    balance roundrobin
-    option ssl-hello-chk
-    server webserver1 $CRC_IP:443 check
-
-frontend api
+listen api
     bind 0.0.0.0:6443
-    option tcplog
-    mode tcp
-    default_backend api
-
-backend api
-    mode tcp
-    balance roundrobin
-    option ssl-hello-chk
-    server webserver1 $CRC_IP:6443 check
+    server crcvm $CRC_IP:6443 check
 EOF
 ----
 
