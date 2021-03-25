@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	cmdBundle "github.com/code-ready/crc/cmd/crc/cmd/bundle"
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -61,6 +62,7 @@ func init() {
 
 	// subcommands
 	rootCmd.AddCommand(cmdConfig.GetConfigCmd(config))
+	rootCmd.AddCommand(cmdBundle.GetBundleCmd(config))
 
 	rootCmd.PersistentFlags().StringVar(&logging.LogLevel, "log-level", constants.DefaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
 }

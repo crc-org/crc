@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -58,16 +59,24 @@ func ValidateEnoughMemory(value int) error {
 }
 
 // ValidateBundlePath checks if the provided bundle path exist
-func ValidateBundlePath(bundle string) error {
-	if err := ValidatePath(bundle); err != nil {
+func ValidateBundlePath(bundlePath string) error {
+	if err := ValidatePath(bundlePath); err != nil {
 		if constants.BundleEmbedded() {
 			return fmt.Errorf("Run 'crc setup' to unpack the bundle to disk")
 		}
-		return fmt.Errorf("%s not found, please provide the path to a valid bundle using the -b option", bundle)
+		return fmt.Errorf("%s not found, please provide the path to a valid bundle using the -b option", bundlePath)
 	}
 
-	userProvidedBundle := filepath.Base(bundle)
+	userProvidedBundle := filepath.Base(bundlePath)
 	if userProvidedBundle != constants.GetDefaultBundle() {
+		// Should append underscore (_) here, as we don't want crc_libvirt_4.7.15.crcbundle
+		// to be detected as a custom bundle for crc_libvirt_4.7.1.crcbundle
+		usingCustomBundle := strings.HasPrefix(bundle.GetBundleNameWithoutExtension(userProvidedBundle),
+			fmt.Sprintf("%s_", bundle.GetBundleNameWithoutExtension(constants.GetDefaultBundle())))
+		if usingCustomBundle {
+			logging.Warnf("Using custom bundle %s", userProvidedBundle)
+			return nil
+		}
 		if !constants.IsRelease() {
 			logging.Warnf("Using unsupported bundle %s", userProvidedBundle)
 			return nil
