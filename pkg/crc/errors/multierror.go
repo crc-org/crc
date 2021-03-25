@@ -77,7 +77,7 @@ type RetriableError struct {
 	Err error
 }
 
-func (r RetriableError) Error() string {
+func (r *RetriableError) Error() string {
 	return "Temporary error: " + r.Err.Error()
 }
 
