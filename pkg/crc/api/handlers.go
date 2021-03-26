@@ -13,6 +13,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/version"
 )
@@ -89,8 +90,8 @@ func parseStartArgs(args json.RawMessage) (startArgs, error) {
 	return parsedArgs, nil
 }
 
-func getStartConfig(cfg crcConfig.Storage, args startArgs) machine.StartConfig {
-	return machine.StartConfig{
+func getStartConfig(cfg crcConfig.Storage, args startArgs) types.StartConfig {
+	return types.StartConfig{
 		BundlePath: cfg.Get(config.Bundle).AsString(),
 		Memory:     cfg.Get(config.Memory).AsInt(),
 		CPUs:       cfg.Get(config.CPUs).AsInt(),

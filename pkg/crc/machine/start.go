@@ -17,6 +17,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
+	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/oc"
 	"github.com/code-ready/crc/pkg/crc/services"
@@ -52,7 +53,7 @@ func getCrcBundleInfo(bundlePath string) (*bundle.CrcBundleInfo, error) {
 	return bundle.Use(bundleName)
 }
 
-func (client *client) updateVMConfig(startConfig StartConfig, api libmachine.API, host *host.Host) error {
+func (client *client) updateVMConfig(startConfig types.StartConfig, api libmachine.API, host *host.Host) error {
 	/* Memory */
 	logging.Debugf("Updating CRC VM configuration")
 	if err := setMemory(host, startConfig.Memory); err != nil {
@@ -128,7 +129,7 @@ func growRootFileSystem(sshRunner *crcssh.Runner) error {
 
 	return nil
 }
-func (client *client) Start(ctx context.Context, startConfig StartConfig) (*StartResult, error) {
+func (client *client) Start(ctx context.Context, startConfig types.StartConfig) (*types.StartResult, error) {
 	telemetry.SetCPUs(ctx, startConfig.CPUs)
 	telemetry.SetMemory(ctx, uint64(startConfig.Memory)*1024*1024)
 	telemetry.SetDiskSize(ctx, uint64(startConfig.DiskSize)*1024*1024*1024)
@@ -228,7 +229,7 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 			}
 
 			telemetry.SetStartType(ctx, telemetry.AlreadyRunningStartType)
-			return &StartResult{
+			return &types.StartResult{
 				Status:         vmState,
 				ClusterConfig:  *clusterConfig,
 				KubeletStarted: true,
@@ -459,7 +460,7 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 		logging.Errorf("Cannot update kubeconfig: %v", err)
 	}
 
-	return &StartResult{
+	return &types.StartResult{
 		KubeletStarted: true,
 		ClusterConfig:  *clusterConfig,
 		Status:         vmState,
@@ -487,7 +488,7 @@ func (client *client) IsRunning() (bool, error) {
 	return true, nil
 }
 
-func (client *client) validateStartConfig(startConfig StartConfig) error {
+func (client *client) validateStartConfig(startConfig types.StartConfig) error {
 	if client.monitoringEnabled() && startConfig.Memory < minimumMemoryForMonitoring {
 		return fmt.Errorf("Too little memory (%s) allocated to the virtual machine to start the monitoring stack, %s is the minimum",
 			units.BytesSize(float64(startConfig.Memory)*1024*1024),

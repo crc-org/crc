@@ -5,6 +5,7 @@ import (
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/machine/libmachine/state"
 )
@@ -14,11 +15,11 @@ type Client interface {
 
 	Delete() error
 	Exists() (bool, error)
-	GetConsoleURL() (*ConsoleResult, error)
+	GetConsoleURL() (*types.ConsoleResult, error)
 	IP() (string, error)
 	PowerOff() error
-	Start(ctx context.Context, startConfig StartConfig) (*StartResult, error)
-	Status() (*ClusterStatusResult, error)
+	Start(ctx context.Context, startConfig types.StartConfig) (*types.StartResult, error)
+	Status() (*types.ClusterStatusResult, error)
 	Stop() (state.State, error)
 	IsRunning() (bool, error)
 }

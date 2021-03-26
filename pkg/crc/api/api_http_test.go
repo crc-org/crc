@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	apiClient "github.com/code-ready/crc/pkg/crc/api/client"
-	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
+	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/stretchr/testify/assert"
 )
@@ -59,7 +59,7 @@ func TestHTTPApi(t *testing.T) {
 			Status:         "",
 			Error:          "",
 			KubeletStarted: true,
-			ClusterConfig: machine.ClusterConfig{
+			ClusterConfig: types.ClusterConfig{
 				ClusterCACert: "MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ",
 				KubeConfig:    "/tmp/kubeconfig",
 				KubeAdminPass: "foobar",

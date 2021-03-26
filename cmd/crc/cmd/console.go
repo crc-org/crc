@@ -8,6 +8,7 @@ import (
 
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/machine/libmachine/state"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
@@ -36,7 +37,7 @@ var consoleCmd = &cobra.Command{
 	},
 }
 
-func showConsole(client machine.Client) (*machine.ConsoleResult, error) {
+func showConsole(client machine.Client) (*types.ConsoleResult, error) {
 	if err := checkIfMachineMissing(client); err != nil {
 		// In case of machine doesn't exist then consoleResult error
 		// should be updated so that when rendering the result it have
@@ -105,14 +106,14 @@ func (s *consoleResult) prettyPrintTo(writer io.Writer) error {
 	return nil
 }
 
-func toState(result *machine.ConsoleResult) state.State {
+func toState(result *types.ConsoleResult) state.State {
 	if result == nil {
 		return state.Error
 	}
 	return result.State
 }
 
-func toConsoleClusterConfig(result *machine.ConsoleResult) *clusterConfig {
+func toConsoleClusterConfig(result *types.ConsoleResult) *clusterConfig {
 	if result == nil {
 		return nil
 	}

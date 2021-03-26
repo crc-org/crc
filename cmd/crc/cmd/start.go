@@ -15,7 +15,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
@@ -55,14 +55,14 @@ var startCmd = &cobra.Command{
 	},
 }
 
-func runStart(ctx context.Context) (*machine.StartResult, error) {
+func runStart(ctx context.Context) (*types.StartResult, error) {
 	if err := validateStartFlags(); err != nil {
 		return nil, err
 	}
 
 	checkIfNewVersionAvailable(config.Get(cmdConfig.DisableUpdateCheck).AsBool())
 
-	startConfig := machine.StartConfig{
+	startConfig := types.StartConfig{
 		BundlePath: config.Get(cmdConfig.Bundle).AsString(),
 		Memory:     config.Get(cmdConfig.Memory).AsInt(),
 		DiskSize:   config.Get(cmdConfig.DiskSize).AsInt(),
@@ -83,7 +83,7 @@ func runStart(ctx context.Context) (*machine.StartResult, error) {
 	return client.Start(ctx, startConfig)
 }
 
-func renderStartResult(result *machine.StartResult, err error) error {
+func renderStartResult(result *types.StartResult, err error) error {
 	return render(&startResult{
 		Success:       err == nil,
 		Error:         crcErrors.ToSerializableError(err),
@@ -91,7 +91,7 @@ func renderStartResult(result *machine.StartResult, err error) error {
 	}, os.Stdout, outputFormat)
 }
 
-func toClusterConfig(result *machine.StartResult) *clusterConfig {
+func toClusterConfig(result *types.StartResult) *clusterConfig {
 	if result == nil {
 		return nil
 	}

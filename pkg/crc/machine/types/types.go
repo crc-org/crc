@@ -1,4 +1,4 @@
-package machine
+package types
 
 import (
 	"github.com/code-ready/crc/pkg/crc/cluster"
