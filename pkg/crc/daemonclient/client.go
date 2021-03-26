@@ -7,12 +7,12 @@ import (
 )
 
 type Client struct {
-	*networkclient.Client
+	NetworkClient *networkclient.Client
 }
 
 func New() *Client {
 	return &Client{
-		Client: networkclient.New(&http.Client{
+		NetworkClient: networkclient.New(&http.Client{
 			Transport: transport(),
 		}, "http://unix/network"),
 	}
