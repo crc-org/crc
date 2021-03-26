@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/api"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/daemonclient"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/types"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/virtualnetwork"
@@ -34,6 +36,10 @@ var daemonCmd = &cobra.Command{
 	Long:   "Run the crc daemon",
 	Hidden: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if _, err := daemonclient.New().APIClient.Version(); err == nil {
+			return errors.New("daemon is already running")
+		}
+
 		virtualNetworkConfig := types.Configuration{
 			Debug:             false, // never log packets
 			CaptureFile:       captureFile(),
