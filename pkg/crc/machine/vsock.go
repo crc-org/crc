@@ -12,7 +12,7 @@ import (
 func exposePorts() error {
 	daemonClient := daemonclient.New()
 	portsToExpose := vsockPorts()
-	alreadyOpenedPorts, err := daemonClient.List()
+	alreadyOpenedPorts, err := daemonClient.NetworkClient.List()
 	if err != nil {
 		return err
 	}
@@ -24,7 +24,7 @@ func exposePorts() error {
 	}
 	for i := range missingPorts {
 		port := &missingPorts[i]
-		if err := daemonClient.Expose(port); err != nil {
+		if err := daemonClient.NetworkClient.Expose(port); err != nil {
 			return errors.Wrapf(err, "failed to expose port %s -> %s", port.Local, port.Remote)
 		}
 	}
