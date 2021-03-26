@@ -7,8 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
 type Client struct {
@@ -27,12 +25,10 @@ func (c *Client) Version() (VersionResult, error) {
 	var vr = VersionResult{}
 	body, err := c.sendGetRequest("/version")
 	if err != nil {
-		logging.Error(err)
 		return vr, err
 	}
 	err = json.Unmarshal(body, &vr)
 	if err != nil {
-		logging.Error(err)
 		return vr, err
 	}
 	return vr, nil
@@ -42,12 +38,10 @@ func (c *Client) Status() (ClusterStatusResult, error) {
 	var sr = ClusterStatusResult{}
 	body, err := c.sendGetRequest("/status")
 	if err != nil {
-		logging.Error(err)
 		return sr, err
 	}
 	err = json.Unmarshal(body, &sr)
 	if err != nil {
-		logging.Error(err)
 		return sr, err
 	}
 	return sr, nil
@@ -64,12 +58,10 @@ func (c *Client) Start(config StartConfig) (StartResult, error) {
 	}
 	body, err := c.sendPostRequest("/start", data)
 	if err != nil {
-		logging.Error(err)
 		return sr, err
 	}
 	err = json.Unmarshal(body, &sr)
 	if err != nil {
-		logging.Error(err)
 		return sr, err
 	}
 	return sr, nil
@@ -79,12 +71,10 @@ func (c *Client) Stop() (Result, error) {
 	var sr = Result{}
 	body, err := c.sendGetRequest("/stop")
 	if err != nil {
-		logging.Error(err)
 		return sr, err
 	}
 	err = json.Unmarshal(body, &sr)
 	if err != nil {
-		logging.Error(err)
 		return sr, err
 	}
 	return sr, nil
@@ -94,12 +84,10 @@ func (c *Client) Delete() (Result, error) {
 	var dr = Result{}
 	body, err := c.sendGetRequest("/delete")
 	if err != nil {
-		logging.Error(err)
 		return dr, err
 	}
 	err = json.Unmarshal(body, &dr)
 	if err != nil {
-		logging.Error(err)
 		return dr, err
 	}
 	return dr, nil
@@ -109,12 +97,10 @@ func (c *Client) WebconsoleURL() (ConsoleResult, error) {
 	var cr = ConsoleResult{}
 	body, err := c.sendGetRequest("/webconsoleurl")
 	if err != nil {
-		logging.Error(err)
 		return cr, err
 	}
 	err = json.Unmarshal(body, &cr)
 	if err != nil {
-		logging.Error(err)
 		return cr, err
 	}
 	return cr, nil
@@ -134,12 +120,10 @@ func (c *Client) GetConfig(configs []string) (GetConfigResult, error) {
 	}
 	body, err := c.sendPostRequest("/config/get", data)
 	if err != nil {
-		logging.Error(err)
 		return gcr, err
 	}
 	err = json.Unmarshal(body, &gcr)
 	if err != nil {
-		logging.Error(err)
 		return gcr, err
 	}
 	return gcr, nil
@@ -159,7 +143,6 @@ func (c *Client) SetConfig(configs SetConfigRequest) (SetOrUnsetConfigResult, er
 
 	body, err := c.sendPostRequest("/config/set", data)
 	if err != nil {
-		logging.Error(err)
 		return scr, err
 	}
 
@@ -182,12 +165,10 @@ func (c *Client) UnsetConfig(configs []string) (SetOrUnsetConfigResult, error) {
 	}
 	body, err := c.sendPostRequest("/config/unset", data)
 	if err != nil {
-		logging.Error(err)
 		return ucr, err
 	}
 	err = json.Unmarshal(body, &ucr)
 	if err != nil {
-		logging.Error(err)
 		return ucr, err
 	}
 	return ucr, nil
@@ -196,7 +177,6 @@ func (c *Client) UnsetConfig(configs []string) (SetOrUnsetConfigResult, error) {
 func (c *Client) sendGetRequest(url string) ([]byte, error) {
 	res, err := c.client.Get(fmt.Sprintf("%s%s", c.base, url))
 	if err != nil {
-		logging.Error(err)
 		return nil, err
 	}
 	if res.StatusCode != http.StatusOK {
@@ -219,7 +199,6 @@ func (c *Client) sendPostRequest(url string, data io.Reader) ([]byte, error) {
 
 	res, err := c.client.Do(req)
 	if err != nil {
-		logging.Error(err)
 		return nil, err
 	}
 	if res.StatusCode != http.StatusOK {
