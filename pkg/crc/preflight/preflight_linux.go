@@ -228,7 +228,7 @@ func getPreflightChecks(_ bool, _ bool, networkMode network.Mode) []Check {
 	return getPreflightChecksForDistro(distro(), networkMode, usingSystemdResolved == nil)
 }
 
-func getNetworkChecksForDistro(networkMode network.Mode, systemdResolved bool) []Check {
+func getNetworkChecks(networkMode network.Mode, systemdResolved bool) []Check {
 	var checks []Check
 
 	if networkMode == network.VSockMode {
@@ -251,7 +251,7 @@ func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mo
 	checks = append(checks, nonWinPreflightChecks[:]...)
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, libvirtPreflightChecks(distro)...)
-	networkChecks := getNetworkChecksForDistro(networkMode, systemdResolved)
+	networkChecks := getNetworkChecks(networkMode, systemdResolved)
 	checks = append(checks, networkChecks...)
 	if networkMode == network.DefaultMode {
 		checks = append(checks, libvirtNetworkPreflightChecks[:]...)
