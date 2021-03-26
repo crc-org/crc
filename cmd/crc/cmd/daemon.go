@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -24,7 +25,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var watchdog bool
+
 func init() {
+	daemonCmd.Flags().BoolVar(&watchdog, "watchdog", false, "Monitor stdin and shutdown the daemon if stdin is closed")
 	rootCmd.AddCommand(daemonCmd)
 }
 
@@ -158,6 +162,17 @@ func run(configuration *types.Configuration) error {
 	}()
 
 	c := make(chan os.Signal, 1)
+
+	if watchdog {
+		go func() {
+			if _, err := ioutil.ReadAll(os.Stdin); err != nil {
+				logging.Errorf("unexpected error while reading stdin: %v", err)
+			}
+			logging.Error("stdin is closed, shutdown...")
+			c <- syscall.SIGTERM
+		}()
+	}
+
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	select {
 	case <-c:
