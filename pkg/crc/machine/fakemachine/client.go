@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/machine/libmachine/state"
 )
@@ -23,7 +23,7 @@ type Client struct {
 	Failing bool
 }
 
-var DummyClusterConfig = machine.ClusterConfig{
+var DummyClusterConfig = types.ClusterConfig{
 	ClusterCACert: "MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ",
 	KubeConfig:    "/tmp/kubeconfig",
 	KubeAdminPass: "foobar",
@@ -43,11 +43,11 @@ func (c *Client) Delete() error {
 	return nil
 }
 
-func (c *Client) GetConsoleURL() (*machine.ConsoleResult, error) {
+func (c *Client) GetConsoleURL() (*types.ConsoleResult, error) {
 	if c.Failing {
 		return nil, errors.New("console failed")
 	}
-	return &machine.ConsoleResult{
+	return &types.ConsoleResult{
 		ClusterConfig: DummyClusterConfig,
 		State:         state.Running,
 	}, nil
@@ -68,11 +68,11 @@ func (c *Client) PowerOff() error {
 	return nil
 }
 
-func (c *Client) Start(ctx context.Context, startConfig machine.StartConfig) (*machine.StartResult, error) {
+func (c *Client) Start(ctx context.Context, startConfig types.StartConfig) (*types.StartResult, error) {
 	if c.Failing {
 		return nil, errors.New("Failed to start")
 	}
-	return &machine.StartResult{
+	return &types.StartResult{
 		ClusterConfig:  DummyClusterConfig,
 		KubeletStarted: true,
 	}, nil
@@ -85,11 +85,11 @@ func (c *Client) Stop() (state.State, error) {
 	return state.Stopped, nil
 }
 
-func (c *Client) Status() (*machine.ClusterStatusResult, error) {
+func (c *Client) Status() (*types.ClusterStatusResult, error) {
 	if c.Failing {
 		return nil, errors.New("broken")
 	}
-	return &machine.ClusterStatusResult{
+	return &types.ClusterStatusResult{
 		CrcStatus:        state.Running,
 		OpenshiftStatus:  "Running",
 		OpenshiftVersion: "4.5.1",

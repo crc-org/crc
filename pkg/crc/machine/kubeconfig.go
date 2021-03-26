@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/openshift/oc/pkg/helpers/tokencmd"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -25,7 +26,7 @@ const (
 	developerContext = "crc-developer"
 )
 
-func writeKubeconfig(ip string, clusterConfig *ClusterConfig) error {
+func writeKubeconfig(ip string, clusterConfig *types.ClusterConfig) error {
 	kubeconfig := getGlobalKubeConfigPath()
 	dir := filepath.Dir(kubeconfig)
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -86,7 +87,7 @@ func hostname(clusterAPI string) (string, error) {
 	return p.Host, nil
 }
 
-func addContext(cfg *api.Config, ip string, clusterConfig *ClusterConfig, ca []byte, context, username, password string) error {
+func addContext(cfg *api.Config, ip string, clusterConfig *types.ClusterConfig, ca []byte, context, username, password string) error {
 	host, err := hostname(clusterConfig.ClusterAPI)
 	if err != nil {
 		return err

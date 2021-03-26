@@ -4,13 +4,14 @@ import (
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/oc"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/machine/libmachine/state"
 	"github.com/pkg/errors"
 )
 
-func (client *client) Status() (*ClusterStatusResult, error) {
+func (client *client) Status() (*types.ClusterStatusResult, error) {
 	libMachineAPIClient, cleanup := createLibMachineClient()
 	defer cleanup()
 
@@ -34,7 +35,7 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 	}
 
 	if vmStatus != state.Running {
-		return &ClusterStatusResult{
+		return &types.ClusterStatusResult{
 			CrcStatus:        vmStatus,
 			OpenshiftStatus:  "Stopped",
 			OpenshiftVersion: crcBundleMetadata.GetOpenshiftVersion(),
@@ -55,7 +56,7 @@ func (client *client) Status() (*ClusterStatusResult, error) {
 	if err != nil {
 		logging.Debugf("Cannot get root partition usage: %v", err)
 	}
-	return &ClusterStatusResult{
+	return &types.ClusterStatusResult{
 		CrcStatus:        state.Running,
 		OpenshiftStatus:  getOpenShiftStatus(sshRunner, client.monitoringEnabled()),
 		OpenshiftVersion: crcBundleMetadata.GetOpenshiftVersion(),

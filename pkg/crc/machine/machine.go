@@ -6,13 +6,14 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
+	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/libmachine"
 	"github.com/code-ready/crc/pkg/libmachine/host"
 	"github.com/code-ready/machine/libmachine/drivers"
 )
 
-func getClusterConfig(bundleInfo *bundle.CrcBundleInfo, generatedKubeadminPassword string) (*ClusterConfig, error) {
+func getClusterConfig(bundleInfo *bundle.CrcBundleInfo, generatedKubeadminPassword string) (*types.ClusterConfig, error) {
 	kubeadminPassword, err := bundleInfo.GetKubeadminPassword()
 	if err != nil {
 		return nil, fmt.Errorf("Error reading kubeadmin password from bundle %v", err)
@@ -28,7 +29,7 @@ func getClusterConfig(bundleInfo *bundle.CrcBundleInfo, generatedKubeadminPasswo
 	if err != nil {
 		return nil, err
 	}
-	return &ClusterConfig{
+	return &types.ClusterConfig{
 		ClusterCACert: base64.StdEncoding.EncodeToString(clusterCACert),
 		KubeConfig:    bundleInfo.GetKubeConfigPath(),
 		KubeAdminPass: kubeadminPassword,

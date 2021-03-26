@@ -6,6 +6,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/api/client"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/machine/libmachine/state"
 )
 
@@ -13,7 +14,7 @@ type AdaptedClient interface {
 	GetName() string
 	Delete() client.Result
 	GetConsoleURL() client.ConsoleResult
-	Start(ctx context.Context, startConfig machine.StartConfig) client.StartResult
+	Start(ctx context.Context, startConfig types.StartConfig) client.StartResult
 	Status() client.ClusterStatusResult
 	Stop() client.Result
 }
@@ -57,7 +58,7 @@ func (a *Adapter) GetConsoleURL() client.ConsoleResult {
 	}
 }
 
-func (a *Adapter) Start(ctx context.Context, startConfig machine.StartConfig) client.StartResult {
+func (a *Adapter) Start(ctx context.Context, startConfig types.StartConfig) client.StartResult {
 	res, err := a.Underlying.Start(ctx, startConfig)
 	if err != nil {
 		logging.Error(err)

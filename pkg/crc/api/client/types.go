@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/machine/types"
 )
 
 type VersionResult struct {
@@ -21,7 +21,7 @@ type StartResult struct {
 	Name           string
 	Status         string
 	Error          string
-	ClusterConfig  machine.ClusterConfig
+	ClusterConfig  types.ClusterConfig
 	KubeletStarted bool
 }
 
@@ -37,7 +37,7 @@ type ClusterStatusResult struct {
 }
 
 type ConsoleResult struct {
-	ClusterConfig machine.ClusterConfig
+	ClusterConfig types.ClusterConfig
 	Success       bool
 	Error         string
 }
