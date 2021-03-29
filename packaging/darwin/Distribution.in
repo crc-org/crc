@@ -10,6 +10,14 @@
     <installation-check script="installCheck();"/>
     <script>
 function installCheck() {
+	var apps = system.applications.fromIdentifier('com.redhat.codeready.containers');
+	if(apps) {
+        my.result.title = 'Update failed';
+        my.result.message = 'CodeReady Containers is running. Please stop the application before updating.';
+        my.result.type = 'Fatal';
+        return false;
+	}
+
     if(!(system.compareVersions(system.version.ProductVersion, '10.14.0') >= 0)) {
         my.result.title = 'Unable to install';
         my.result.message = 'CodeReady Containers requires macOS 10.14 or later.';
