@@ -15,8 +15,6 @@ type Flags uint32
 const (
 	// Indicates a PreflightCheck should only be run as part of "crc setup"
 	SetupOnly Flags = 1 << iota
-	// Indicates a PreflightCheck should only be run as part of "crc start"
-	StartOnly
 	NoFix
 	CleanUpOnly
 )
@@ -105,7 +103,7 @@ func doPreflightChecks(config config.Storage, checks []Check) error {
 
 func doFixPreflightChecks(config config.Storage, checks []Check) error {
 	for _, check := range checks {
-		if check.flags&StartOnly == StartOnly || check.flags&CleanUpOnly == CleanUpOnly {
+		if check.flags&CleanUpOnly == CleanUpOnly {
 			continue
 		}
 		err := check.doCheck(config)
