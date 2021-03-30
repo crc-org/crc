@@ -28,6 +28,7 @@ HOST_BUILD_DIR=$(BUILD_DIR)/$(GOOS)-$(GOARCH)
 GOPATH ?= $(shell go env GOPATH)
 ORG := github.com/code-ready
 REPOPATH ?= $(ORG)/crc
+PACKAGE_DIR := packaging/$(GOOS)
 
 SOURCES := $(shell git ls-files  *.go ":^vendor")
 
@@ -145,8 +146,12 @@ clean_macos_package:
 	rm -f packaging/darwin/scripts/postinstall
 	rm -rf packaging/root/
 
+clean_windows_msi:
+	rm -rf packaging/windows/msi
+	rm -f $(HOST_BUILD_DIR)/split
+
 .PHONY: clean ## Remove all build artifacts
-clean: clean_docs clean_macos_package
+clean: clean_docs clean_macos_package clean_windows_msi
 	rm -f $(GENERATED_RPM_FILES)
 	rm -rf $(BUILD_DIR)
 	rm -f $(GOPATH)/bin/crc
@@ -296,3 +301,34 @@ $(GOPATH)/bin/gomod2rpmdeps:
 	@sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' \
 	     -e 's/__OPENSHIFT_VERSION__/'$(BUNDLE_VERSION)'/g' \
 	     $< >$@
+
+$(HOST_BUILD_DIR)/split: packaging/windows/split.go
+	go build -o $(HOST_BUILD_DIR)/split packaging/windows/split.go
+
+.PHONY: msidir
+msidir: CRC_EXE = crc.exe
+msidir: clean $(HOST_BUILD_DIR)/crc-embedder $(HOST_BUILD_DIR)/split $(BUILD_DIR)/windows-amd64/crc.exe check_bundledir $(PACKAGE_DIR)/product.wxs
+	mkdir -p $(PACKAGE_DIR)/msi
+	$(HOST_BUILD_DIR)/crc-embedder embed --goos windows --log-level debug --bundle-dir $(BUNDLE_DIR) $(BUILD_DIR)/windows-amd64/crc.exe
+	cp $(HOST_BUILD_DIR)/crc.exe $(PACKAGE_DIR)/msi/$(CRC_EXE)
+ifeq ($(MOCK_BUNDLE),true)
+	mv $(PACKAGE_DIR)/msi/$(CRC_EXE) $(PACKAGE_DIR)/msi/$(CRC_EXE).0
+	touch $(PACKAGE_DIR)/msi/$(CRC_EXE).1 $(PACKAGE_DIR)/msi/$(CRC_EXE).2
+else
+	$(HOST_BUILD_DIR)/split $(PACKAGE_DIR)/msi/$(CRC_EXE)
+	rm $(PACKAGE_DIR)/msi/$(CRC_EXE)
+endif
+	cp -r $(PACKAGE_DIR)/Resources $(PACKAGE_DIR)/msi/
+	cp $(PACKAGE_DIR)/*.wxs $(PACKAGE_DIR)/msi
+	rm $(PACKAGE_DIR)/product.wxs
+
+$(BUILD_DIR)/windows-amd64/crc-windows-amd64.msi: msidir
+	candle.exe -arch x64 -o $(PACKAGE_DIR)/msi/ $(PACKAGE_DIR)/msi/*.wxs
+	cd $(PACKAGE_DIR)/msi && light.exe -ext WixUIExtension -ext WixUtilExtension -sacl -spdb -sice:ICE61 -out ../../../$@ *.wixobj
+
+CABS_MSI = "cab1.cab,cab2.cab,cab3.cab,crc-windows-amd64.msi"
+$(BUILD_DIR)/windows-amd64/crc-installer.zip: $(BUILD_DIR)/windows-amd64/crc-windows-amd64.msi
+	rm -f $(HOST_BUILD_DIR)/crc.exe
+	rm -f $(HOST_BUILD_DIR)/crc-embedder
+	rm -f $(HOST_BUILD_DIR)/split
+	pwsh -NoProfile -Command "cd $(HOST_BUILD_DIR); Compress-Archive -LiteralPath $(CABS_MSI) -DestinationPath crc-installer.zip"

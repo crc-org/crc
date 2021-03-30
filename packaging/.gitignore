@@ -5,3 +5,5 @@ root/
 /darwin/Resources/welcome.html
 /darwin/scripts/postinstall
 /VERSION
+/windows/msi/
+packaging/windows/product.wxs
