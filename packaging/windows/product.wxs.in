@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+
+<?define crcPart0="crc.exe.0"?>
+<?define crcPart1="crc.exe.1"?>
+<?define crcPart2="crc.exe.2"?>
+<?define crcExeName="crc.exe"?>
+
+<Wix
+	xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="*" UpgradeCode="53DE5BFA-0E53-44E7-8D4F-07E37E59A9AB"
+            Name="CodeReady Containers"
+            Version="__VERSION__"
+            Manufacturer="Red Hat Inc."
+            Language="1033">
+		<Package Id ="*" InstallerVersion="300" 
+			Compressed="yes" 
+			Description="CodeReady Containers __VERSION__"
+            Comments="This installs CodeReady Containers __VERSION__" 
+			InstallScope="perMachine" />
+		
+		<Media Id="1" EmbedCab="no" Cabinet="cab1.cab" />
+		<Media Id="2" EmbedCab="no" Cabinet="cab2.cab" />
+		<Media Id="3" EmbedCab="no" Cabinet="cab3.cab" />
+
+		<MajorUpgrade AllowDowngrades="yes" />
+		<WixVariable Id="WixUIBannerBmp" Value=".\Resources\banner.png"/>
+		<WixVariable Id="WixUIDialogBmp" Value=".\Resources\background.png"/>
+		<Icon Id="crcicon.ico" SourceFile=".\Resources\icon.ico"/>
+		<Property Id="ARPPRODUCTICON" Value="crcicon.ico"/>
+		<Property Id="CURRENTBUILD">
+			<RegistrySearch Id="CURRENTBUILDSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+             Name="CurrentBuild"  Type="raw"/>
+		</Property>
+		<Property Id="MINIMUMBUILD" Value="1709" Secure="yes"></Property>
+		<Condition Message="CodeReady Containers requires the Windows 10 Fall Creators Update (version 1709) or newer.">
+			<![CDATA[Installed OR (CURRENTBUILD > MINIMUMBUILD)]]>
+		</Condition>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFiles64Folder">
+				<Directory Id="INSTALLDIR" Name="CodeReady Containers">
+                    <Component Id="CrcExePart1" Guid="*">
+                        <File Id="CrcExePart1" Source="$(var.crcPart0)" KeyPath="yes" DiskId="1" />
+                    </Component>
+                    <Component Id="CrcExePart2" Guid="*">
+                        <File Id="CrcExePart2" Source="$(var.crcPart1)" KeyPath="yes" DiskId="2" />
+                    </Component>
+                    <Component Id="CrcExePart3" Guid="*">
+                        <File Id="CrcExePart3" Source="$(var.crcPart2)" KeyPath="yes" DiskId="3" />
+                    </Component>
+                    <Component Id="AddToPath" Guid="09C1E713-44DE-44C3-BDAD-72BE10C10542">
+                        <CreateFolder />
+                        <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" />
+                    </Component>
+				</Directory>
+			</Directory>
+		</Directory>
+		
+		<SetProperty Action="CAJoinCrc"  Id="JoinCrc"  Value='"[WindowsFolder]\System32\cmd.exe" /c cd "[INSTALLDIR]" &amp;&amp; copy /b $(var.crcPart0)+$(var.crcPart1)+$(var.crcPart2) $(var.crcExeName)' Before="JoinCrc" Sequence="execute"/>
+		<CustomAction Id="JoinCrc" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
+
+		<SetProperty Action="CARemoveParts"  Id="RemoveParts"  Value='"[WindowsFolder]\System32\cmd.exe" /c cd "[INSTALLDIR]" &amp;&amp; del /f /q $(var.crcPart0) $(var.crcPart1) $(var.crcPart2)' Before="RemoveParts" Sequence="execute"/>
+		<CustomAction Id="RemoveParts" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
+
+		<SetProperty Action="CAUninstall"  Id="Uninstall"  Value='"[WindowsFolder]\System32\cmd.exe" /c rmdir /S /Q "[INSTALLDIR]"' Before="Uninstall" Sequence="execute"/>
+		<CustomAction Id="Uninstall" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
+
+		<InstallExecuteSequence>
+			<Custom Action="JoinCrc"  After="InstallFiles" >NOT Installed AND NOT PATCH</Custom>
+			<Custom Action="RemoveParts"  After="JoinCrc" >NOT Installed AND NOT PATCH</Custom>
+			<Custom Action="Uninstall"  After="RemoveFolders" >REMOVE~="ALL"</Custom>
+		</InstallExecuteSequence>
+		
+		<Feature Id="DefaultFeature" Level="1">
+			<ComponentRef Id="CrcExePart1"/>
+            <ComponentRef Id="CrcExePart2"/>
+            <ComponentRef Id="CrcExePart3"/>
+            <ComponentRef Id="AddToPath"/>
+		</Feature>
+		<UI>
+			<UIRef Id="WixUI_ErrorProgressText"/>
+			<!-- Define the installer UI -->
+			<UIRef Id="WixUI_HK"/>
+		</UI>
+		<Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+		<!-- this should help to propagate env var changes -->
+		<CustomActionRef Id="WixBroadcastEnvironmentChange" />
+	</Product>
+</Wix>
