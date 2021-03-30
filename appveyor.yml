@@ -8,8 +8,21 @@ before_test:
   - choco install make
   - choco install wixtoolset
   - set PATH=%PATH%;"C:\Program Files (x86)\WiX Toolset v3.11\bin"
-  - refreshenv
   - make MOCK_BUNDLE=true BUNDLE_DIR=./ out/windows-amd64/crc-installer.zip
   - make cross
 test_script:
   - make test
+
+artifacts:
+  - path: out\linux-amd64\crc
+    name: crc linux executable
+    type: File
+  - path: out\macos-amd64\crc
+    name: crc darwin
+    type: File
+  - path: out\windows-amd64\crc.exe
+    name: crc windows executable
+    type: File
+  - path: out\windows-amd64\crc-installer.zip
+    name: crc windows installer
+    type: Zip
