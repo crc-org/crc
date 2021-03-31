@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/machine/libmachine/state"
 )
 
@@ -82,7 +83,7 @@ func (s *Synchronized) prepareStart(startCancel context.CancelFunc) error {
 	return nil
 }
 
-func (s *Synchronized) Start(ctx context.Context, startConfig StartConfig) (*StartResult, error) {
+func (s *Synchronized) Start(ctx context.Context, startConfig types.StartConfig) (*types.StartResult, error) {
 	ctx, startCancel := context.WithCancel(ctx)
 	if err := s.prepareStart(startCancel); err != nil {
 		return nil, err
@@ -149,7 +150,7 @@ func (s *Synchronized) Exists() (bool, error) {
 	return s.underlying.Exists()
 }
 
-func (s *Synchronized) GetConsoleURL() (*ConsoleResult, error) {
+func (s *Synchronized) GetConsoleURL() (*types.ConsoleResult, error) {
 	return s.underlying.GetConsoleURL()
 }
 
@@ -161,7 +162,7 @@ func (s *Synchronized) PowerOff() error {
 	return s.underlying.PowerOff()
 }
 
-func (s *Synchronized) Status() (*ClusterStatusResult, error) {
+func (s *Synchronized) Status() (*types.ClusterStatusResult, error) {
 	return s.underlying.Status()
 }
 
