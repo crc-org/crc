@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
@@ -14,7 +15,7 @@ import (
 )
 
 func getClusterConfig(bundleInfo *bundle.CrcBundleInfo, generatedKubeadminPassword string) (*types.ClusterConfig, error) {
-	kubeadminPassword, err := bundleInfo.GetKubeadminPassword()
+	kubeadminPassword, err := cluster.GetKubeadminPassword(bundleInfo)
 	if err != nil {
 		return nil, fmt.Errorf("Error reading kubeadmin password from bundle %v", err)
 	}

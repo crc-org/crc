@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/code-ready/crc/pkg/crc/constants"
 )
 
 // Metadata structure to unmarshal the crc-bundle-info.json file
@@ -131,25 +129,11 @@ func (bundle *CrcBundleInfo) GetInitramfsPath() string {
 }
 
 func (bundle *CrcBundleInfo) GetKubeadminPassword() (string, error) {
-	// First check if ~/.crc/machine/crc/kubeadmin-password file exist and read password from there
-	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath()
-	if _, err := os.Stat(kubeAdminPasswordFile); err != nil {
-		kubeAdminPasswordFile = bundle.resolvePath(bundle.ClusterInfo.KubeadminPasswordFile)
-	}
-	rawData, err := ioutil.ReadFile(kubeAdminPasswordFile)
+	rawData, err := ioutil.ReadFile(bundle.resolvePath(bundle.ClusterInfo.KubeadminPasswordFile))
 	if err != nil {
 		return "", err
 	}
 	return strings.TrimSpace(string(rawData)), nil
-}
-
-func (bundle *CrcBundleInfo) UpdateKubeadminPassword(kubeadminPassword string) error {
-	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath()
-	err := ioutil.WriteFile(kubeAdminPasswordFile, []byte(kubeadminPassword), 0600)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (bundle *CrcBundleInfo) GetBundleBuildTime() (time.Time, error) {
