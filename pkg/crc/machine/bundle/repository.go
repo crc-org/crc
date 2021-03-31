@@ -130,9 +130,11 @@ func (repo *Repository) Extract(path string) error {
 		return err
 	}
 
-	bundleDir := strings.TrimSuffix(bundleName, bundleExtension)
+	bundleBaseDir := strings.TrimSuffix(bundleName, bundleExtension)
+	bundleDir := filepath.Join(repo.CacheDir, bundleBaseDir)
+	_ = os.RemoveAll(bundleDir)
 	return crcerrors.RetryAfter(time.Minute, func() error {
-		if err := os.Rename(filepath.Join(tmpDir, bundleDir), filepath.Join(repo.CacheDir, bundleDir)); err != nil {
+		if err := os.Rename(filepath.Join(tmpDir, bundleBaseDir), bundleDir); err != nil {
 			return &crcerrors.RetriableError{Err: err}
 		}
 		return nil
