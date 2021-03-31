@@ -27,7 +27,7 @@ func (client *client) GetConsoleURL() (*types.ConsoleResult, error) {
 		return nil, errors.Wrap(err, "Error loading bundle metadata")
 	}
 
-	clusterConfig, err := getClusterConfig(crcBundleMetadata, "")
+	clusterConfig, err := getClusterConfig(crcBundleMetadata)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error loading cluster configuration")
 	}

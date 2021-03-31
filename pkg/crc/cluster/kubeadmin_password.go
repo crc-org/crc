@@ -11,28 +11,38 @@ import (
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/oc"
-
+	crcos "github.com/code-ready/crc/pkg/os"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // UpdateKubeAdminUserPassword does following
 // - Create and put updated kubeadmin password to ~/.crc/machine/crc/kubeadmin-password
 // - Update the htpasswd secret
-func UpdateKubeAdminUserPassword(kubeAdminPassword string, ocConfig oc.Config, bundle *bundle.CrcBundleInfo) error {
-	// In case of cluster started from stopped state.
-	if kubeAdminPassword == "" {
-		return nil
+func UpdateKubeAdminUserPassword(ocConfig oc.Config) (string, error) {
+	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath()
+	if crcos.FileExists(kubeAdminPasswordFile) {
+		logging.Debugf("kubeadmin password has already been updated")
+		return "", nil
 	}
+
+	logging.Infof("Generating new password for the kubeadmin user")
+
+	kubeAdminPassword, err := GenerateRandomPasswordHash(23)
+	if err != nil {
+		return "", fmt.Errorf("Cannot generate the kubeadmin user password: %w", err)
+	}
+
 	hashDeveloperPasswd, err := hashBcrypt("developer")
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	hashKubeAdminPasswd, err := hashBcrypt(kubeAdminPassword)
 	if err != nil {
-		return err
+		return "", err
 	}
 	base64Data := getBase64(hashDeveloperPasswd, hashKubeAdminPasswd)
 
@@ -41,13 +51,10 @@ func UpdateKubeAdminUserPassword(kubeAdminPassword string, ocConfig oc.Config, b
 		"-n", "openshift-config", "--type", "merge"}
 	_, stderr, err := ocConfig.RunOcCommandPrivate(cmdArgs...)
 	if err != nil {
-		return fmt.Errorf("Failed to update kubeadmin password %v: %s", err, stderr)
+		return "", fmt.Errorf("Failed to update kubeadmin password %v: %s", err, stderr)
 	}
-	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath()
-	if err = ioutil.WriteFile(kubeAdminPasswordFile, []byte(kubeAdminPassword), 0600); err != nil {
-		return err
-	}
-	return nil
+
+	return kubeAdminPassword, ioutil.WriteFile(kubeAdminPasswordFile, []byte(kubeAdminPassword), 0600)
 }
 
 func GetKubeadminPassword(bundle *bundle.CrcBundleInfo) (string, error) {
