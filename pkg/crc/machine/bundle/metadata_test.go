@@ -43,6 +43,14 @@ const reference = `{
 	"size": "9",
         "sha256sum": "245a0e5acd4f09000a9a5f37d731082ed1cf3fdcad1b5320cbe9b153c9fd82a4"
       }
+    ],
+    "fileList": [
+      {
+        "name": "oc",
+        "type": "oc-executable",
+        "size": "72728632",
+        "sha256sum": "983f0883a6dffd601afa663d10161bfd8033fd6d45cf587a9cb22e9a681d6047"
+      }
     ]
   },
   "driverInfo": {
@@ -77,10 +85,22 @@ var parsedReference = CrcBundleInfo{
 	Storage: Storage{
 		DiskImages: []DiskImage{
 			{
-				Name:     "crc.qcow2",
-				Format:   "qcow2",
-				Size:     "9",
-				Checksum: "245a0e5acd4f09000a9a5f37d731082ed1cf3fdcad1b5320cbe9b153c9fd82a4",
+				File: File{
+					Name:     "crc.qcow2",
+					Size:     "9",
+					Checksum: "245a0e5acd4f09000a9a5f37d731082ed1cf3fdcad1b5320cbe9b153c9fd82a4",
+				},
+				Format: "qcow2",
+			},
+		},
+		Files: []FileListItem{
+			{
+				File: File{
+					Name:     "oc",
+					Size:     "72728632",
+					Checksum: "983f0883a6dffd601afa663d10161bfd8033fd6d45cf587a9cb22e9a681d6047",
+				},
+				Type: "oc-executable",
 			},
 		},
 	},

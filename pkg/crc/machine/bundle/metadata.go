@@ -54,14 +54,24 @@ type Node struct {
 }
 
 type Storage struct {
-	DiskImages []DiskImage `json:"diskImages"`
+	DiskImages []DiskImage    `json:"diskImages"`
+	Files      []FileListItem `json:"fileList"`
+}
+
+type File struct {
+	Name     string `json:"name"`
+	Size     string `json:"size"`
+	Checksum string `json:"sha256sum"`
 }
 
 type DiskImage struct {
-	Name     string `json:"name"`
-	Format   string `json:"format"`
-	Size     string `json:"size"`
-	Checksum string `json:"sha256sum"`
+	File
+	Format string `json:"format"`
+}
+
+type FileListItem struct {
+	File
+	Type string `json:"type"`
 }
 
 type DriverInfo struct {
