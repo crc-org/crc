@@ -102,6 +102,16 @@ func (bundle *CrcBundleInfo) GetKubeConfigPath() string {
 	return bundle.resolvePath(bundle.ClusterInfo.KubeConfig)
 }
 
+func (bundle *CrcBundleInfo) GetOcPath() string {
+	for _, file := range bundle.Storage.Files {
+		if file.Type == "oc-executable" {
+			return bundle.resolvePath(file.Name)
+		}
+	}
+
+	return ""
+}
+
 func (bundle *CrcBundleInfo) GetSSHKeyPath() string {
 	return bundle.resolvePath(bundle.ClusterInfo.SSHPrivateKeyFile)
 }
@@ -152,7 +162,7 @@ func (bundle *CrcBundleInfo) GetOpenshiftVersion() string {
 
 func (bundle *CrcBundleInfo) verify() error {
 	files := []string{
-		bundle.resolvePath(constants.OcExecutableName),
+		bundle.GetOcPath(),
 		bundle.resolvePath(bundle.ClusterInfo.KubeadminPasswordFile),
 		bundle.GetKubeConfigPath(),
 		bundle.GetSSHKeyPath(),
