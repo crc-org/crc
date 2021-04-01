@@ -10,6 +10,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 
+	"github.com/jinzhu/copier"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,7 +23,7 @@ func TestUse(t *testing.T) {
 	assert.NoError(t, err)
 	defer os.RemoveAll(ocBinDir)
 
-	addBundle(t, dir, "crc_libvirt_4.6.1")
+	createDummyBundleContent(t, filepath.Join(dir, "crc_libvirt_4.6.1"), "")
 
 	repo := &Repository{
 		CacheDir: dir,
@@ -48,7 +49,7 @@ func TestUseWithOCFile(t *testing.T) {
 	fd.Close()
 	defer os.RemoveAll(fd.Name())
 
-	addBundle(t, dir, "crc_libvirt_4.6.1")
+	createDummyBundleContent(t, filepath.Join(dir, "crc_libvirt_4.6.1"), "")
 
 	repo := &Repository{
 		CacheDir: dir,
@@ -108,42 +109,39 @@ func TestVersionCheck(t *testing.T) {
 		CacheDir: dir,
 	}
 
-	assert.NoError(t, os.Mkdir(filepath.Join(dir, "crc_libvirt_4.6.1"), 0755))
-
-	addVersionedBundle(t, filepath.Join(dir, "crc_libvirt_4.6.1"), "0.9")
+	bundlePath := filepath.Join(dir, "crc_libvirt_4.6.1")
+	createDummyBundleContent(t, bundlePath, "0.9")
 	_, err = repo.Get("crc_libvirt_4.6.1.crcbundle")
 	assert.EqualError(t, err, "cannot use bundle with version 0.9, bundle version must satisfy ^1.0 constraint")
+	os.RemoveAll(bundlePath)
 
-	addVersionedBundle(t, filepath.Join(dir, "crc_libvirt_4.6.1"), "1.1")
+	createDummyBundleContent(t, bundlePath, "1.1")
 	_, err = repo.Get("crc_libvirt_4.6.1.crcbundle")
 	assert.NoError(t, err)
+	os.RemoveAll(bundlePath)
 
-	addVersionedBundle(t, filepath.Join(dir, "crc_libvirt_4.6.1"), "2.0")
+	createDummyBundleContent(t, bundlePath, "2.0")
 	_, err = repo.Get("crc_libvirt_4.6.1.crcbundle")
 	assert.EqualError(t, err, "cannot use bundle with version 2.0, bundle version must satisfy ^1.0 constraint")
+	os.RemoveAll(bundlePath)
 }
 
-func addVersionedBundle(t *testing.T, dir string, version string) {
-	oldVersion := parsedReference.Version
-	parsedReference.Version = version
-	metadataStr, err := json.Marshal(parsedReference)
+func writeMetadata(t *testing.T, dir string, bundleInfo *CrcBundleInfo) bool {
+	metadataStr, err := json.Marshal(bundleInfo)
 	assert.NoError(t, err)
-	parsedReference.Version = oldVersion
-	writeMetadata(t, dir, string(metadataStr))
-	createDummyBundleContent(t, dir)
+	return assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, metadataFilename), []byte(metadataStr), 0600))
 }
 
-func writeMetadata(t *testing.T, dir string, s string) bool {
-	return assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, metadataFilename), []byte(s), 0600))
-}
-
-func addBundle(t *testing.T, dir, name string) {
-	bundlePath := filepath.Join(dir, name)
+func createDummyBundleContent(t *testing.T, bundlePath string, version string) {
 	assert.NoError(t, os.Mkdir(bundlePath, 0755))
-	writeMetadata(t, bundlePath, reference)
-	createDummyBundleContent(t, bundlePath)
-}
-func createDummyBundleContent(t *testing.T, bundlePath string) {
+
+	var bundleInfo CrcBundleInfo
+	assert.NoError(t, copier.Copy(&bundleInfo, &parsedReference))
+	if version != "" {
+		bundleInfo.Version = version
+	}
+	writeMetadata(t, bundlePath, &bundleInfo)
+
 	assert.NoError(t, ioutil.WriteFile(filepath.Join(bundlePath, constants.OcExecutableName), []byte("openshift-client"), 0600))
 	assert.NoError(t, ioutil.WriteFile(filepath.Join(bundlePath, "kubeadmin-password"), []byte("kubeadmin-password"), 0600))
 	assert.NoError(t, ioutil.WriteFile(filepath.Join(bundlePath, "kubeconfig"), []byte("kubeconfig"), 0600))
