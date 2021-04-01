@@ -138,6 +138,9 @@ github.com/hpcloud/tail/winfile
 github.com/imdario/mergo
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
+# github.com/jinzhu/copier v0.2.8
+## explicit
+github.com/jinzhu/copier
 # github.com/json-iterator/go v1.1.10
 github.com/json-iterator/go
 # github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
