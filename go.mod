@@ -60,7 +60,6 @@ require (
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	howett.net/plist v0.0.0-20201203080718-1454fab16a06
 	k8s.io/api v0.20.1
 	k8s.io/client-go v0.20.1
 )

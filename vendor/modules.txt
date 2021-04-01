@@ -450,9 +450,6 @@ gvisor.dev/gvisor/pkg/tcpip/transport/tcp
 gvisor.dev/gvisor/pkg/tcpip/transport/tcpconntrack
 gvisor.dev/gvisor/pkg/tcpip/transport/udp
 gvisor.dev/gvisor/pkg/waiter
-# howett.net/plist v0.0.0-20201203080718-1454fab16a06
-## explicit
-howett.net/plist
 # k8s.io/api v0.20.1
 ## explicit
 k8s.io/api/certificates/v1beta1
