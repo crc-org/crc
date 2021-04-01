@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/version"
 )
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
@@ -55,19 +56,10 @@ var resolverPreflightChecks = [...]Check{
 
 var daemonSetupChecks = [...]Check{
 	{
-		checkDescription:   "Checking if launchd configuration for daemon exists",
-		check:              checkIfDaemonPlistFileExists,
-		fixDescription:     "Creating launchd configuration for daemon",
-		fix:                fixDaemonPlistFileExists,
-		flags:              SetupOnly,
-		cleanupDescription: "Removing launchd configuration for daemon",
-		cleanup:            removeDaemonPlistFile,
-	},
-	{
 		checkDescription:   "Checking if CodeReady Containers daemon is running",
 		check:              checkIfDaemonAgentRunning,
-		fixDescription:     "Starting CodeReady Containers daemon",
-		fix:                fixDaemonAgentRunning,
+		fixDescription:     "Unloading CodeReady Containers daemon",
+		fix:                unLoadDaemonAgent,
 		flags:              SetupOnly,
 		cleanupDescription: "Unload CodeReady Containers daemon",
 		cleanup:            unLoadDaemonAgent,
@@ -75,20 +67,6 @@ var daemonSetupChecks = [...]Check{
 }
 
 var traySetupChecks = [...]Check{
-	{
-		checkDescription: "Checking if tray executable is installed",
-		check:            checkTrayExecutablePresent,
-		fixDescription:   "Installing and setting up tray",
-		fix:              fixTrayExecutablePresent,
-		flags:            SetupOnly,
-	},
-	{
-		checkDescription: "Checking installed tray version",
-		check:            checkTrayVersion,
-		fixDescription:   "Installing and setting up tray app",
-		fix:              fixTrayVersion,
-		flags:            SetupOnly,
-	},
 	{
 		checkDescription:   "Checking if launchd configuration for tray exists",
 		check:              checkIfTrayPlistFileExists,
@@ -120,18 +98,13 @@ func getPreflightChecks(experimentalFeatures bool, trayAutostart bool, mode netw
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, hyperkitPreflightChecks(mode)...)
 	checks = append(checks, dnsPreflightChecks[:]...)
+	checks = append(checks, daemonSetupChecks[:]...)
 
-	switch mode {
-	case network.DefaultMode:
+	if mode == network.DefaultMode {
 		checks = append(checks, resolverPreflightChecks[:]...)
-	case network.VSockMode:
-		checks = append(checks, daemonSetupChecks[:]...)
 	}
 
-	if experimentalFeatures && trayAutostart {
-		if mode != network.VSockMode {
-			checks = append(checks, daemonSetupChecks[:]...)
-		}
+	if version.IsMacosInstallPathSet() && experimentalFeatures && trayAutostart {
 		checks = append(checks, traySetupChecks[:]...)
 	}
 
