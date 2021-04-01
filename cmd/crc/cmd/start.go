@@ -22,6 +22,7 @@ import (
 	"github.com/code-ready/crc/pkg/os/shell"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"k8s.io/client-go/util/exec"
 )
 
 func init() {
@@ -76,7 +77,10 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 
 	if !isRunning {
 		if err := preflight.StartPreflightChecks(config); err != nil {
-			return nil, err
+			return nil, exec.CodeExitError{
+				Err:  err,
+				Code: preflightFailedExitCode,
+			}
 		}
 	}
 
