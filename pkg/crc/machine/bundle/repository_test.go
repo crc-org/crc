@@ -137,6 +137,7 @@ func createDummyBundleContent(t *testing.T, bundlePath string, version string) {
 
 	var bundleInfo CrcBundleInfo
 	assert.NoError(t, copier.Copy(&bundleInfo, &parsedReference))
+	bundleInfo.Storage.Files[0].Name = constants.OcExecutableName
 	if version != "" {
 		bundleInfo.Version = version
 	}
