@@ -176,6 +176,10 @@ func GetRsaPrivateKeyPath() string {
 	return filepath.Join(MachineInstanceDir, DefaultName, "id_rsa")
 }
 
+func GetKubeAdminPasswordPath() string {
+	return filepath.Join(MachineInstanceDir, DefaultName, "kubeadmin-password")
+}
+
 // TODO: follow the same pattern as oc and podman above
 func GetCRCMacTrayDownloadURL() string {
 	return fmt.Sprintf(CRCMacTrayDownloadURL, version.GetCRCMacTrayVersion())

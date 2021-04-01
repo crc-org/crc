@@ -132,7 +132,7 @@ func (bundle *CrcBundleInfo) GetInitramfsPath() string {
 
 func (bundle *CrcBundleInfo) GetKubeadminPassword() (string, error) {
 	// First check if ~/.crc/machine/crc/kubeadmin-password file exist and read password from there
-	kubeAdminPasswordFile := filepath.Join(constants.MachineInstanceDir, constants.DefaultName, bundle.ClusterInfo.KubeadminPasswordFile)
+	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath()
 	if _, err := os.Stat(kubeAdminPasswordFile); err != nil {
 		kubeAdminPasswordFile = bundle.resolvePath(bundle.ClusterInfo.KubeadminPasswordFile)
 	}
@@ -144,7 +144,7 @@ func (bundle *CrcBundleInfo) GetKubeadminPassword() (string, error) {
 }
 
 func (bundle *CrcBundleInfo) UpdateKubeadminPassword(kubeadminPassword string) error {
-	kubeAdminPasswordFile := filepath.Join(constants.MachineInstanceDir, constants.DefaultName, bundle.ClusterInfo.KubeadminPasswordFile)
+	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath()
 	err := ioutil.WriteFile(kubeAdminPasswordFile, []byte(kubeadminPassword), 0600)
 	if err != nil {
 		return err
