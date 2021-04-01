@@ -104,7 +104,7 @@ func getPreflightChecks(experimentalFeatures bool, trayAutostart bool, mode netw
 		checks = append(checks, resolverPreflightChecks[:]...)
 	}
 
-	if version.IsMacosInstallPathSet() && experimentalFeatures && trayAutostart {
+	if version.IsMacosInstallPathSet() && trayAutostart {
 		checks = append(checks, traySetupChecks[:]...)
 	}
 

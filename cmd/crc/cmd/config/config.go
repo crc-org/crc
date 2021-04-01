@@ -40,9 +40,6 @@ func RegisterSettings(cfg *config.Config) {
 		if runtime.GOOS != "darwin" {
 			return false, "Tray autostart is only supported on macOS"
 		}
-		if !cfg.Get(ExperimentalFeatures).AsBool() {
-			return false, fmt.Sprintf("'%s' must be enabled in order to use the tray", ExperimentalFeatures)
-		}
 		return config.ValidateBool(value)
 	}
 
