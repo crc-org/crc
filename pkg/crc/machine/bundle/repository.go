@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/Masterminds/semver"
@@ -30,7 +29,7 @@ type Repository struct {
 }
 
 func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
-	path := filepath.Join(repo.CacheDir, strings.TrimSuffix(bundleName, bundleExtension))
+	path := filepath.Join(repo.CacheDir, GetBundleNameWithoutExtension(bundleName))
 	if _, err := os.Stat(path); err != nil {
 		return nil, errors.Wrapf(err, "could not find cached bundle info in %s", path)
 	}
@@ -150,7 +149,7 @@ func (repo *Repository) Extract(path string) error {
 		return err
 	}
 
-	bundleBaseDir := strings.TrimSuffix(bundleName, bundleExtension)
+	bundleBaseDir := GetBundleNameWithoutExtension(bundleName)
 	bundleDir := filepath.Join(repo.CacheDir, bundleBaseDir)
 	_ = os.RemoveAll(bundleDir)
 	return crcerrors.RetryAfter(time.Minute, func() error {
