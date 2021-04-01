@@ -2,13 +2,12 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
 	"time"
-
-	"github.com/code-ready/crc/pkg/crc/telemetry"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
@@ -19,7 +18,9 @@ import (
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/segment"
+	"github.com/code-ready/crc/pkg/crc/telemetry"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/util/exec"
 )
 
 var rootCmd = &cobra.Command{
@@ -90,13 +91,23 @@ func runRoot() {
 	fmt.Println("No command given")
 }
 
+const (
+	defaultErrorExitCode    = 1
+	preflightFailedExitCode = 2
+)
+
 func Execute() {
 	attachMiddleware([]string{}, rootCmd)
 
 	if err := rootCmd.ExecuteContext(telemetry.NewContext(context.Background())); err != nil {
 		runPostrun()
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
+		var e exec.CodeExitError
+		if errors.As(err, &e) {
+			os.Exit(e.ExitStatus())
+		} else {
+			os.Exit(defaultErrorExitCode)
+		}
 	}
 	runPostrun()
 }
