@@ -161,6 +161,10 @@ func (bundle *CrcBundleInfo) GetOpenshiftVersion() string {
 	return bundle.ClusterInfo.OpenShiftVersion
 }
 
+func (bundle *CrcBundleInfo) GetBundleNameWithoutExtension() string {
+	return GetBundleNameWithoutExtension(bundle.GetBundleName())
+}
+
 func (bundle *CrcBundleInfo) verify() error {
 	files := []string{
 		bundle.GetOcPath(),
@@ -201,4 +205,8 @@ func (bundle *CrcBundleInfo) checkDiskImageSize() error {
 		return fmt.Errorf("unexpected disk image size: got %d instead of %d", gotSize, expectedSize)
 	}
 	return nil
+}
+
+func GetBundleNameWithoutExtension(bundleName string) string {
+	return strings.TrimSuffix(bundleName, bundleExtension)
 }
