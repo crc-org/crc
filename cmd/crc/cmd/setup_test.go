@@ -14,7 +14,7 @@ func TestSetupRenderActionPlainSuccess(t *testing.T) {
 	assert.NoError(t, render(&setupResult{
 		Success: true,
 	}, out, ""))
-	assert.Equal(t, "Setup is complete, you can now run 'crc start -b $bundlename' to start the OpenShift cluster\n", out.String())
+	assert.Equal(t, "Your system is correctly setup for using CodeReady Containers, you can now run 'crc start -b $bundlename' to start the OpenShift cluster\n", out.String())
 }
 
 func TestSetupRenderActionPlainFailure(t *testing.T) {
