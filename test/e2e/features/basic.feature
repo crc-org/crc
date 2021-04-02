@@ -38,7 +38,8 @@ Feature: Basic test
 
     @linux
     Scenario: CRC setup on Linux
-        When executing "crc setup" succeeds
+        When executing "crc setup --check-only" fails
+        And executing "crc setup" succeeds
         And stderr should contain "Checking if CRC bundle is extracted in '$HOME/.crc'"
         And stderr should contain "Checking if running as non-root"
         And stderr should contain "Checking if Virtualization is enabled"
@@ -53,12 +54,13 @@ Feature: Basic test
         And stderr should contain "Checking if NetworkManager service is running"
         And stderr should contain "Using root access: Executing systemctl daemon-reload command"
         And stderr should contain "Using root access: Executing systemctl reload NetworkManager"
-        And stdout should contain "Setup is complete, you can now run 'crc start -b $bundlename' to start the OpenShift cluster" if bundle is not embedded
-        And stdout should contain "Setup is complete, you can now run 'crc start' to start the OpenShift cluster" if bundle is embedded
+        And stdout should contain "Your system is correctly setup for using CodeReady Containers, you can now run 'crc start -b $bundlename' to start the OpenShift cluster" if bundle is not embedded
+        And stdout should contain "Your system is correctly setup for using CodeReady Containers, you can now run 'crc start' to start the OpenShift cluster" if bundle is embedded
 
     @darwin
     Scenario: CRC setup on Mac
-        When executing "crc setup" succeeds
+        When executing "crc setup --check-only" fails
+        And executing "crc setup" succeeds
         And stderr should contain "Checking if running as non-root"
         And stderr should contain "Checking if HyperKit is installed"
         And stderr should contain "Checking if crc-driver-hyperkit is installed"

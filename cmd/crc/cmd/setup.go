@@ -10,11 +10,18 @@ import (
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/preflight"
+
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/util/exec"
+)
+
+var (
+	checkOnly bool
 )
 
 func init() {
 	setupCmd.Flags().Bool(cmdConfig.ExperimentalFeatures, false, "Allow the use of experimental features")
+	setupCmd.Flags().BoolVar(&checkOnly, "check-only", false, "Only run the preflight checks, don't try to fix any misconfiguration")
 	addOutputFormatFlag(setupCmd)
 	rootCmd.AddCommand(setupCmd)
 }
@@ -47,7 +54,19 @@ func runSetup(arguments []string) error {
 			fmt.Printf("No worry, you can still enable telemetry manually with the command 'crc config set %s yes'.\n", cmdConfig.ConsentTelemetry)
 		}
 	}
-	err := preflight.SetupHost(config)
+	var err error
+	if checkOnly {
+		err = preflight.StartPreflightChecks(config)
+		if err != nil {
+			err = exec.CodeExitError{
+				Err:  err,
+				Code: preflightFailedExitCode,
+			}
+		}
+	} else {
+		err = preflight.SetupHost(config)
+	}
+
 	return render(&setupResult{
 		Success: err == nil,
 		Error:   crcErrors.ToSerializableError(err),
@@ -63,7 +82,7 @@ func (s *setupResult) prettyPrintTo(writer io.Writer) error {
 	if s.Error != nil {
 		return s.Error
 	}
-	_, err := fmt.Fprintf(writer, "Setup is complete, you can now run 'crc start%s' to start the OpenShift cluster\n", extraArguments())
+	_, err := fmt.Fprintf(writer, "Your system is correctly setup for using CodeReady Containers, you can now run 'crc start%s' to start the OpenShift cluster\n", extraArguments())
 	return err
 }
 

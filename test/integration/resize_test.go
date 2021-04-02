@@ -12,7 +12,7 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 	Describe("use default values", func() {
 
 		It("setup CRC", func() {
-			Expect(RunCRCExpectSuccess("setup")).To(ContainSubstring("Setup is complete"))
+			Expect(RunCRCExpectSuccess("setup")).To(ContainSubstring("Your system is correctly setup for using CodeReady Containers"))
 		})
 
 		It("start CRC", func() {
