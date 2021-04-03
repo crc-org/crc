@@ -186,9 +186,9 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 		// Retrieve metadata info
 		machineConfig.ImageSourcePath = crcBundleMetadata.GetDiskImagePath()
-		machineConfig.ImageFormat = crcBundleMetadata.Storage.DiskImages[0].Format
+		machineConfig.ImageFormat = crcBundleMetadata.GetDiskImageFormat()
 		machineConfig.SSHKeyPath = crcBundleMetadata.GetSSHKeyPath()
-		machineConfig.KernelCmdLine = crcBundleMetadata.Nodes[0].KernelCmdLine
+		machineConfig.KernelCmdLine = crcBundleMetadata.GetKernelCommandLine()
 		machineConfig.Initramfs = crcBundleMetadata.GetInitramfsPath()
 		machineConfig.Kernel = crcBundleMetadata.GetKernelPath()
 
