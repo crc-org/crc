@@ -103,6 +103,10 @@ func (bundle *CrcBundleInfo) GetDiskImagePath() string {
 	return bundle.resolvePath(bundle.Storage.DiskImages[0].Name)
 }
 
+func (bundle *CrcBundleInfo) GetDiskImageFormat() string {
+	return bundle.Storage.DiskImages[0].Format
+}
+
 func (bundle *CrcBundleInfo) GetKubeConfigPath() string {
 	return bundle.resolvePath(bundle.ClusterInfo.KubeConfig)
 }
@@ -143,6 +147,10 @@ func (bundle *CrcBundleInfo) GetInitramfsPath() string {
 		return ""
 	}
 	return bundle.resolvePath(bundle.Nodes[0].Initramfs)
+}
+
+func (bundle *CrcBundleInfo) GetKernelCommandLine() string {
+	return bundle.Nodes[0].KernelCmdLine
 }
 
 func (bundle *CrcBundleInfo) GetKubeadminPassword() (string, error) {
