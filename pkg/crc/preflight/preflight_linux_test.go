@@ -5,7 +5,6 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/code-ready/crc/pkg/crc/adminhelper"
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/network"
@@ -64,7 +63,7 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: true,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{cleanup: adminhelper.CleanHostsFile},
+			{cleanup: removeHostsFileEntry},
 			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{configKeySuffix: "check-ram"},
@@ -97,7 +96,7 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{cleanup: adminhelper.CleanHostsFile},
+			{cleanup: removeHostsFileEntry},
 			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{configKeySuffix: "check-ram"},
@@ -129,7 +128,7 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{cleanup: adminhelper.CleanHostsFile},
+			{cleanup: removeHostsFileEntry},
 			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{configKeySuffix: "check-ram"},
@@ -156,7 +155,7 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: true,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{cleanup: adminhelper.CleanHostsFile},
+			{cleanup: removeHostsFileEntry},
 			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{configKeySuffix: "check-ram"},
@@ -189,7 +188,7 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{cleanup: adminhelper.CleanHostsFile},
+			{cleanup: removeHostsFileEntry},
 			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{configKeySuffix: "check-ram"},
@@ -221,7 +220,7 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{cleanup: adminhelper.CleanHostsFile},
+			{cleanup: removeHostsFileEntry},
 			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{configKeySuffix: "check-ram"},
@@ -248,7 +247,7 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: true,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{cleanup: adminhelper.CleanHostsFile},
+			{cleanup: removeHostsFileEntry},
 			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{configKeySuffix: "check-ram"},
@@ -281,7 +280,7 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{cleanup: adminhelper.CleanHostsFile},
+			{cleanup: removeHostsFileEntry},
 			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{configKeySuffix: "check-ram"},
@@ -313,7 +312,7 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{cleanup: adminhelper.CleanHostsFile},
+			{cleanup: removeHostsFileEntry},
 			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{configKeySuffix: "check-ram"},
@@ -340,7 +339,7 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: true,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{cleanup: adminhelper.CleanHostsFile},
+			{cleanup: removeHostsFileEntry},
 			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{configKeySuffix: "check-ram"},
@@ -374,7 +373,7 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{cleanup: adminhelper.CleanHostsFile},
+			{cleanup: removeHostsFileEntry},
 			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{configKeySuffix: "check-ram"},
@@ -407,7 +406,7 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{cleanup: adminhelper.CleanHostsFile},
+			{cleanup: removeHostsFileEntry},
 			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{configKeySuffix: "check-ram"},

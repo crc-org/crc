@@ -23,7 +23,7 @@ var nonWinPreflightChecks = [...]Check{
 	},
 	{
 		cleanupDescription: "Removing hosts file records added by CRC",
-		cleanup:            adminhelper.CleanHostsFile,
+		cleanup:            removeHostsFileEntry,
 		flags:              CleanUpOnly,
 	},
 }
@@ -66,4 +66,12 @@ func checkSuid(path string) error {
 	}
 
 	return nil
+}
+
+func removeHostsFileEntry() error {
+	err := adminhelper.CleanHostsFile()
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	return err
 }
