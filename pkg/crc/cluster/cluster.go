@@ -126,6 +126,35 @@ func EnsurePullSecretPresentInTheCluster(ocConfig oc.Config, pullSec PullSecretL
 	return nil
 }
 
+func RemovePullSecretFromCluster(ocConfig oc.Config, sshRunner *ssh.Runner) error {
+	logging.Info("Removing user's pull secret from instance disk and from cluster secret...")
+	if _, _, err := sshRunner.RunPrivileged("Removing user's pull secret", "rm", "-fr", vmPullSecretPath); err != nil {
+		return err
+	}
+	cmdArgs := []string{"patch", "secret", "pull-secret", "-p",
+		`'{"data":{".dockerconfigjson":"e30K"}}'`,
+		"-n", "openshift-config", "--type", "merge"}
+
+	_, stderr, err := ocConfig.RunOcCommand(cmdArgs...)
+	if err != nil {
+		return fmt.Errorf("Failed to remove Pull secret %w: %s", err, stderr)
+	}
+
+	cmdArgs = []string{"delete", "machineconfigs", "--all"}
+	_, stderr, err = ocConfig.RunOcCommand(cmdArgs...)
+	if err != nil {
+		return fmt.Errorf("Failed to remove machineconfigs %w: %s", err, stderr)
+	}
+
+	cmdArgs = []string{"delete", "machineconfigpools", "--all"}
+	_, stderr, err = ocConfig.RunOcCommand(cmdArgs...)
+	if err != nil {
+		return fmt.Errorf("Failed to remove machineconfigpools %w: %s", err, stderr)
+	}
+
+	return nil
+}
+
 func EnsureClusterIDIsNotEmpty(ocConfig oc.Config) error {
 	if err := WaitForOpenshiftResource(ocConfig, "clusterversion"); err != nil {
 		return err
