@@ -159,13 +159,11 @@ Feature: Basic test
     @darwin
     Scenario Outline: CRC clean-up
         When executing "crc cleanup" succeeds
-        Then stderr should contain "Unload CodeReady Containers tray"
+        Then stderr should contain "Removing /etc/resolver/testing file"
         And stderr should contain "Unload CodeReady Containers daemon"
-        And stderr should contain "Removing launchd configuration for tray"
-        And stderr should contain "Removing launchd configuration for daemon"
-        And stderr should contain "Removing /etc/resolver/testing file"
-        And stderr should contain "Using root access: Removing file /etc/resolver/testing"
+        And stderr should contain "Removing pull secret from the keyring"
         And stdout should contain "Cleanup finished"
+
 
     @linux
     Scenario Outline: CRC clean-up
