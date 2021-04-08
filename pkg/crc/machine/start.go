@@ -407,7 +407,9 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to update kubeadmin user password")
 	}
-	clusterConfig.KubeAdminPass = kubeAdminPassword
+	if kubeAdminPassword != "" {
+		clusterConfig.KubeAdminPass = kubeAdminPassword
+	}
 
 	if err := cluster.EnsureClusterIDIsNotEmpty(ocConfig); err != nil {
 		return nil, errors.Wrap(err, "Failed to update cluster ID")
