@@ -110,31 +110,36 @@ func restartNetwork() error {
 	return nil
 }
 
+func checkNetworkConnectivity() error {
+	hostResolv, err := network.GetResolvValuesFromHost()
+	if err != nil {
+		logging.Debugf("Unable to read resolv.conf: %v", err)
+		return err
+	}
+
+	for _, ns := range hostResolv.NameServers {
+		_, _, err := crcos.RunWithDefaultLocale("ping", "-c4", ns.IPAddress)
+		if err != nil {
+			continue
+		}
+		logging.Debugf("Successfully pinged %s, network is up", ns.IPAddress)
+		return nil
+	}
+	return fmt.Errorf("Could not ping any nameservers")
+}
+
 // Wait for Network wait till the network is up, since it is required to resolve external dnsquery
 func waitForNetwork() error {
-	var hostResolv *network.ResolvFileValues
-	var err error
-
-	getResolvValueFromHost := func() error {
-		hostResolv, err = network.GetResolvValuesFromHost()
+	retriableConnectivityCheck := func() error {
+		err := checkNetworkConnectivity()
 		if err != nil {
-			logging.Debugf("Not able read file: %v", err)
 			return &crcerrors.RetriableError{Err: err}
 		}
 		return nil
 	}
+	if err := crcerrors.RetryAfter(15*time.Second, retriableConnectivityCheck, time.Second); err != nil {
+		return fmt.Errorf("Host is not connected to internet")
+	}
 
-	if err := crcerrors.RetryAfter(10*time.Second, getResolvValueFromHost, time.Second); err != nil {
-		return fmt.Errorf("Unable to read host resolv file (%v)", err)
-	}
-	// retry up to 5 times
-	for i := 0; i < 5; i++ {
-		for _, ns := range hostResolv.NameServers {
-			_, _, err := crcos.RunWithDefaultLocale("ping", "-c4", ns.IPAddress)
-			if err == nil {
-				return nil
-			}
-		}
-	}
-	return fmt.Errorf("Host is not connected to internet")
+	return nil
 }
