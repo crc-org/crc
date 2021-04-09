@@ -403,11 +403,13 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to update cluster pull secret")
 	}
 
-	kubeAdminPassword, err := cluster.UpdateKubeAdminUserPassword(ocConfig)
-	if err != nil {
+	if err := cluster.UpdateKubeAdminUserPassword(ocConfig); err != nil {
 		return nil, errors.Wrap(err, "Failed to update kubeadmin user password")
 	}
-	clusterConfig.KubeAdminPass = kubeAdminPassword
+	clusterConfig.KubeAdminPass, err = cluster.GetKubeadminPassword(crcBundleMetadata)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to get kubeadmin user password")
+	}
 
 	if err := cluster.EnsureClusterIDIsNotEmpty(ocConfig); err != nil {
 		return nil, errors.Wrap(err, "Failed to update cluster ID")
