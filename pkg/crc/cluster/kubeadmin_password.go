@@ -21,28 +21,28 @@ import (
 // UpdateKubeAdminUserPassword does following
 // - Create and put updated kubeadmin password to ~/.crc/machine/crc/kubeadmin-password
 // - Update the htpasswd secret
-func UpdateKubeAdminUserPassword(ocConfig oc.Config) (string, error) {
+func UpdateKubeAdminUserPassword(ocConfig oc.Config) error {
 	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath()
 	if crcos.FileExists(kubeAdminPasswordFile) {
 		logging.Debugf("kubeadmin password has already been updated")
-		return "", nil
+		return nil
 	}
 
 	logging.Infof("Generating new password for the kubeadmin user")
 
 	kubeAdminPassword, err := GenerateRandomPasswordHash(23)
 	if err != nil {
-		return "", fmt.Errorf("Cannot generate the kubeadmin user password: %w", err)
+		return fmt.Errorf("Cannot generate the kubeadmin user password: %w", err)
 	}
 
 	hashDeveloperPasswd, err := hashBcrypt("developer")
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	hashKubeAdminPasswd, err := hashBcrypt(kubeAdminPassword)
 	if err != nil {
-		return "", err
+		return err
 	}
 	base64Data := getBase64(hashDeveloperPasswd, hashKubeAdminPasswd)
 
@@ -51,10 +51,10 @@ func UpdateKubeAdminUserPassword(ocConfig oc.Config) (string, error) {
 		"-n", "openshift-config", "--type", "merge"}
 	_, stderr, err := ocConfig.RunOcCommandPrivate(cmdArgs...)
 	if err != nil {
-		return "", fmt.Errorf("Failed to update kubeadmin password %v: %s", err, stderr)
+		return fmt.Errorf("Failed to update kubeadmin password %v: %s", err, stderr)
 	}
 
-	return kubeAdminPassword, ioutil.WriteFile(kubeAdminPasswordFile, []byte(kubeAdminPassword), 0600)
+	return ioutil.WriteFile(kubeAdminPasswordFile, []byte(kubeAdminPassword), 0600)
 }
 
 func GetKubeadminPassword(bundle *bundle.CrcBundleInfo) (string, error) {
