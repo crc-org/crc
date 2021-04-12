@@ -115,3 +115,7 @@ func RemoveFileIfExists(path string) error {
 func RunningInTerminal() bool {
 	return terminal.IsTerminal(int(os.Stdin.Fd()))
 }
+
+func RunningUsingSSH() bool {
+	return os.Getenv("SSH_TTY") != ""
+}
