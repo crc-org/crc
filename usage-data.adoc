@@ -20,6 +20,7 @@ The following table describes the opt-in usage data collected by CodeReady Conta
 |                  | Experimental features       | true/false
 |                  | tty                         | true/false
 |                  | duration                    |
+|                  | remotely connected with SSH | true/false
 
 |*Config*          | Num of CPUs                 | 
 |                  | Memory size                 |

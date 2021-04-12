@@ -35,6 +35,7 @@ type segmentResponse struct {
 			ErrorType string `json:"error-type"`
 			Version   string `json:"version"`
 			CPUs      int    `json:"cpus"`
+			Remote    bool   `json:"remote"`
 		} `json:"properties"`
 		Type string `json:"type"`
 	} `json:"batch"`
@@ -76,6 +77,9 @@ func TestClientUploadWithConsentAndWithSerializableError(t *testing.T) {
 	defer server.Close()
 	defer close(body)
 
+	require.NoError(t, os.Setenv("SSH_TTY", "test"))
+	defer os.Unsetenv("SSH_TTY")
+
 	dir, err := ioutil.TempDir("", "cfg")
 	require.NoError(t, err)
 	defer os.RemoveAll(dir)
@@ -107,6 +111,7 @@ func TestClientUploadWithConsentAndWithSerializableError(t *testing.T) {
 		require.Equal(t, s.Batch[1].Properties.Error, crcErr.VMNotExist.Error())
 		require.Equal(t, s.Batch[1].Properties.ErrorType, "errors.vmNotExist")
 		require.Equal(t, s.Batch[1].Properties.Version, version.GetCRCVersion())
+		require.Equal(t, s.Batch[1].Properties.Remote, true)
 	default:
 		require.Fail(t, "server should receive data")
 	}
@@ -141,6 +146,7 @@ func TestClientUploadWithConsentAndWithoutSerializableError(t *testing.T) {
 		require.Equal(t, s.Batch[1].Properties.Error, "an error occurred")
 		require.Equal(t, s.Batch[1].Properties.ErrorType, "*errors.errorString")
 		require.Equal(t, s.Batch[1].Properties.Version, version.GetCRCVersion())
+		require.Equal(t, s.Batch[1].Properties.Remote, false)
 	default:
 		require.Fail(t, "server should receive data")
 	}
