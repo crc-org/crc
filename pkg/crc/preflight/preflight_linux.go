@@ -232,8 +232,7 @@ func getNetworkChecks(networkMode network.Mode, systemdResolved bool) []Check {
 	var checks []Check
 
 	if networkMode == network.VSockMode {
-		checks = append(checks, vsockPreflightChecks)
-		return append(checks, daemonRunningChecks)
+		return append(checks, vsockPreflightChecks)
 	}
 
 	checks = append(checks, nmPreflightChecks[:]...)

@@ -5,6 +5,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/daemonclient"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/types"
 	"github.com/pkg/errors"
 )
@@ -14,6 +15,7 @@ func exposePorts() error {
 	portsToExpose := vsockPorts()
 	alreadyOpenedPorts, err := daemonClient.NetworkClient.List()
 	if err != nil {
+		logging.Error("Is 'crc daemon' running? Network mode 'vsock' requires 'crc daemon' to be running, run it manually on different terminal/tab")
 		return err
 	}
 	var missingPorts []types.ExposeRequest
