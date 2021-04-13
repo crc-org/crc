@@ -11,7 +11,6 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 	BeforeAll(cleanUp())
 
 	Describe("use default values", func() {
-
 		It("setup CRC", func() {
 			Expect(RunCRCExpectSuccess("setup")).To(ContainSubstring("Your system is correctly setup for using CodeReady Containers"))
 		})
@@ -47,11 +46,9 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 		It("stop CRC", func() {
 			Expect(RunCRCExpectSuccess("stop", "-f")).To(ContainSubstring("Stopped the OpenShift cluster"))
 		})
-
 	})
 
 	Describe("use custom values", func() {
-
 		It("start CRC", func() {
 			if runtime.GOOS == "darwin" {
 				Expect(RunCRCExpectFail("start", "--memory", "12000", "--cpus", "6", "--disk-size", "40")).To(ContainSubstring("Disk resizing is not supported on macOS"))
@@ -90,13 +87,14 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 	})
 
 	Describe("use flawed values", func() {
-
 		It("start CRC with sub-minimum memory", func() { // less than min = 9216
 			Expect(RunCRCExpectFail("start", "--memory", "9000")).To(ContainSubstring("requires memory in MiB >= 9216"))
 		})
+
 		It("start CRC with sub-minimum cpus", func() { // fewer than min
 			Expect(RunCRCExpectFail("start", "--cpus", "3")).To(ContainSubstring("requires CPUs >= 4"))
 		})
+
 		It("start CRC with smaller disk", func() { // bigger than default && smaller than current
 			switch runtime.GOOS {
 			case "darwin":
@@ -107,13 +105,13 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 				Expect(RunCRCExpectFail("start", "--disk-size", "35")).To(ContainSubstring("Failed to set disk size to"))
 			}
 		})
+
 		It("start CRC with sub-minimum disk", func() { // smaller than min = default = 31GiB
 			Expect(RunCRCExpectFail("start", "--disk-size", "30")).To(ContainSubstring("requires disk size in GiB >= 31")) // TODO: message should be different on macOS!
 		})
 	})
 
 	Describe("use default values again", func() {
-
 		It("start CRC", func() {
 			Expect(RunCRCExpectSuccess("start")).To(ContainSubstring("Started the OpenShift cluster")) // default values: "--memory", "9216", "--cpus", "4", "disk-size", "31"
 		})
