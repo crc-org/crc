@@ -10,68 +10,48 @@ import (
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/reporters"
 	. "github.com/onsi/gomega"
-	"github.com/sirupsen/logrus"
 )
 
-type VersionAnswer struct {
-	Version          string `json:"version"`
-	Commit           string `json:"commit"`
-	OpenshiftVersion string `json:"openshiftVersion"`
-	Embedded         bool   `json:"embedded"`
+type versionAnswer struct {
+	Embedded bool `json:"embedded"`
 }
 
-var credPath string
-var userHome string
-var versionInfo VersionAnswer
-
-var bundlePath string
-var pullSecretPath string
+var (
+	userHome       string
+	bundlePath     string
+	pullSecretPath string
+)
 
 func TestTest(t *testing.T) {
-
 	RegisterFailHandler(Fail)
 
 	junitReporter := reporters.NewJUnitReporter(filepath.Join("out", "integration.xml"))
 	RunSpecsWithDefaultAndCustomReporters(t, "Test Suite", []Reporter{junitReporter})
-
 }
 
 var _ = BeforeSuite(func() {
-
-	// set userHome
 	usr, err := user.Current()
-	if err != nil {
-		Expect(err).NotTo(HaveOccurred())
-	}
+	Expect(err).NotTo(HaveOccurred())
 	userHome = usr.HomeDir
-
-	// set credPath
-	credPath = filepath.Join(userHome, ".crc", "machines", "crc", "id_rsa")
 
 	// find out if bundle embedded in the binary
 	raw := RunCRCExpectSuccess("version", "-o", "json")
-	err = json.Unmarshal([]byte(raw), &versionInfo)
 
-	Expect(err).NotTo(HaveOccurred())
+	var versionInfo versionAnswer
+	Expect(json.Unmarshal([]byte(raw), &versionInfo)).NotTo(HaveOccurred())
 
 	// bundle location
 	bundlePath = "embedded"
 	if !versionInfo.Embedded {
-		bundlePath = os.Getenv("BUNDLE_PATH") // this env var should contain location of bundle or string "embedded"
-		if bundlePath != "embedded" {         // if real bundle
-			Expect(bundlePath).To(BeAnExistingFile())
+		bundlePath = os.Getenv("BUNDLE_PATH")
+		if bundlePath != "embedded" {
+			Expect(bundlePath).To(BeAnExistingFile(), "$BUNDLE_PATH should be a valid .crcbundle file")
 		}
 	}
 
 	// pull-secret location
-	pullSecretPath = os.Getenv("PULL_SECRET_PATH") // this env var should contain location of pull-secret file
-	if err != nil {
-		logrus.Infof("Error: You need to set PULL_SECRET_PATH to find CRC useful.")
-		logrus.Infof("%v", err)
-		Expect(err).NotTo(HaveOccurred())
-	}
-	Expect(pullSecretPath).To(BeAnExistingFile()) // not checking if it's a valid pull secret file
-
+	pullSecretPath = os.Getenv("PULL_SECRET_PATH")
+	Expect(pullSecretPath).To(BeAnExistingFile(), "$PULL_SECRET_PATH should be a pull secret file")
 })
 
 func BeforeAll(fn func()) {
