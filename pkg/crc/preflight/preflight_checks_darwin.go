@@ -209,7 +209,7 @@ func stopCRCHyperkitProcess() error {
 	if err != nil {
 		return fmt.Errorf("Could not find 'pkill'. %w", err)
 	}
-	if _, _, err := crcos.RunWithDefaultLocale(pkillPath, "-f", filepath.Join(constants.CrcBinDir, "hyperkit")); err != nil {
+	if _, _, err := crcos.RunWithDefaultLocale(pkillPath, "-SIGKILL", "-f", filepath.Join(constants.CrcBinDir, "hyperkit")); err != nil {
 		return fmt.Errorf("Failed to kill 'hyperkit' process. %w", err)
 	}
 	return nil
