@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -39,6 +40,8 @@ var _ = BeforeSuite(func() {
 
 	var versionInfo versionAnswer
 	Expect(json.Unmarshal([]byte(raw), &versionInfo)).NotTo(HaveOccurred())
+
+	Expect(ioutil.WriteFile(filepath.Join("out", "crc-version.json"), []byte(raw), 0600)).To(Succeed())
 
 	// bundle location
 	bundlePath = "embedded"
