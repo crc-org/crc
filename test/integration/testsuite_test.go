@@ -73,3 +73,21 @@ var _ = BeforeSuite(func() {
 	Expect(pullSecretPath).To(BeAnExistingFile()) // not checking if it's a valid pull secret file
 
 })
+
+func BeforeAll(fn func()) {
+	first := true
+	BeforeEach(func() {
+		if first {
+			fn()
+			first = false
+		}
+	})
+}
+
+func cleanUp() func() {
+	return func() {
+		_, _ = NewCRCCommand("delete", "-f").Exec()
+		_, _ = NewCRCCommand("cleanup").Exec()
+		_ = os.Remove(filepath.Join(userHome, ".crc", "crc.json"))
+	}
+}

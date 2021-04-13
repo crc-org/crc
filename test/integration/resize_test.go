@@ -8,6 +8,7 @@ import (
 )
 
 var _ = Describe("vary VM parameters: memory cpus, disk", func() {
+	BeforeAll(cleanUp())
 
 	Describe("use default values", func() {
 
@@ -137,12 +138,5 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 				Expect(out).Should(MatchRegexp(`.*40G[\s].*[\s]/sysroot`))
 			})
 		}
-
-		It("clean up", func() {
-			RunCRCExpectSuccess("stop", "-f")
-			RunCRCExpectSuccess("delete", "-f")
-			RunCRCExpectSuccess("cleanup")
-
-		})
 	})
 })
