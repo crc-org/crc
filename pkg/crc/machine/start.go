@@ -277,6 +277,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting the IP")
 	}
+	logging.Infof("CodeReady Containers instance is running with IP %s", instanceIP)
 	sshRunner, err := crcssh.CreateRunner(instanceIP, getSSHPort(client.useVSock()), crcBundleMetadata.GetSSHKeyPath(), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath())
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating the ssh client")
