@@ -15,6 +15,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/ssh"
 	. "github.com/onsi/gomega"
 	"github.com/sirupsen/logrus"
+	k8sexec "k8s.io/client-go/util/exec"
 )
 
 // CRCBuilder is used to build, customize and execute a CRC command.
@@ -100,7 +101,7 @@ func Exec(cmd *exec.Cmd, timeout <-chan time.Time) (string, string, error) {
 				rc = int(ee.Sys().(syscall.WaitStatus).ExitStatus())
 				logrus.Infof("rc: %d", rc)
 			}
-			return stdout.String(), stderr.String(), CodeExitError{
+			return stdout.String(), stderr.String(), k8sexec.CodeExitError{
 				Err:  fmt.Errorf("error running %v:\nCommand stdout:\n%v\nstderr:\n%v\nerror:\n%v", cmd, cmd.Stdout, cmd.Stderr, err),
 				Code: rc,
 			}
@@ -150,39 +151,4 @@ func SendCommandToVM(cmd string) (string, error) {
 		return "", err
 	}
 	return string(out), nil
-}
-
-// ExitError is an interface that presents an API similar to os.ProcessState, which is
-// what ExitError from os/exec is.  This is designed to make testing a bit easier and
-// probably loses some of the cross-platform properties of the underlying library.
-type ExitError interface {
-	String() string
-	Error() string
-	Exited() bool
-	ExitStatus() int
-}
-
-// CodeExitError is an implementation of ExitError consisting of an error object
-// and an exit code (the upper bits of os.exec.ExitStatus).
-type CodeExitError struct {
-	Err  error
-	Code int
-}
-
-var _ ExitError = CodeExitError{}
-
-func (e CodeExitError) Error() string {
-	return e.Err.Error()
-}
-
-func (e CodeExitError) String() string {
-	return e.Err.Error()
-}
-
-func (e CodeExitError) Exited() bool {
-	return true
-}
-
-func (e CodeExitError) ExitStatus() int {
-	return e.Code
 }
