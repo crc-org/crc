@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/code-ready/crc/pkg/crc/adminhelper"
 	"github.com/code-ready/crc/pkg/crc/cache"
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -53,6 +54,11 @@ var genericPreflightChecks = [...]Check{
 	{
 		cleanupDescription: "Removing CRC Machine Instance directory",
 		cleanup:            removeCRCMachinesDir,
+		flags:              CleanUpOnly,
+	},
+	{
+		cleanupDescription: "Removing hosts file records added by CRC",
+		cleanup:            removeHostsFileEntry,
 		flags:              CleanUpOnly,
 	},
 	{
@@ -174,4 +180,12 @@ func removeOldLogs() error {
 		}
 	}
 	return nil
+}
+
+func removeHostsFileEntry() error {
+	err := adminhelper.CleanHostsFile()
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	return err
 }
