@@ -8,7 +8,6 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/code-ready/crc/pkg/crc/adminhelper"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	crcos "github.com/code-ready/crc/pkg/os"
 )
@@ -20,11 +19,6 @@ var nonWinPreflightChecks = [...]Check{
 		check:            checkIfRunningAsNormalUser,
 		fixDescription:   "crc should not be run as root",
 		flags:            NoFix,
-	},
-	{
-		cleanupDescription: "Removing hosts file records added by CRC",
-		cleanup:            removeHostsFileEntry,
-		flags:              CleanUpOnly,
 	},
 }
 
@@ -66,12 +60,4 @@ func checkSuid(path string) error {
 	}
 
 	return nil
-}
-
-func removeHostsFileEntry() error {
-	err := adminhelper.CleanHostsFile()
-	if errors.Is(err, os.ErrNotExist) {
-		return nil
-	}
-	return err
 }
