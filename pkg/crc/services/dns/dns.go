@@ -124,5 +124,7 @@ func addOpenShiftHosts(serviceConfig services.ServicePostStartConfig) error {
 	return adminhelper.UpdateHostsFile(serviceConfig.IP, serviceConfig.BundleMetadata.GetAPIHostname(),
 		serviceConfig.BundleMetadata.GetAppHostname("oauth-openshift"),
 		serviceConfig.BundleMetadata.GetAppHostname("console-openshift-console"),
+		serviceConfig.BundleMetadata.GetAppHostname("downloads-openshift-console"),
+		serviceConfig.BundleMetadata.GetAppHostname("canary-openshift-ingress-canary"),
 		serviceConfig.BundleMetadata.GetAppHostname("default-route-openshift-image-registry"))
 }
