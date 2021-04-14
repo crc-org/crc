@@ -45,6 +45,7 @@ func isOpened(exposed []types.ExposeRequest, port types.ExposeRequest) bool {
 const (
 	virtualMachineIP = "192.168.127.2"
 	internalSSHPort  = 22
+	httpPort         = 80
 	httpsPort        = 443
 	apiPort          = 6443
 )
@@ -62,6 +63,10 @@ func vsockPorts() []types.ExposeRequest {
 		{
 			Local:  fmt.Sprintf(":%d", httpsPort),
 			Remote: fmt.Sprintf("%s:%d", virtualMachineIP, httpsPort),
+		},
+		{
+			Local:  fmt.Sprintf(":%d", httpPort),
+			Remote: fmt.Sprintf("%s:%d", virtualMachineIP, httpPort),
 		},
 	}
 }
