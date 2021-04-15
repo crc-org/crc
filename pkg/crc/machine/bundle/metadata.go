@@ -67,9 +67,16 @@ type DiskImage struct {
 	Format string `json:"format"`
 }
 
+type FileType string
+
+const (
+	OcExecutable     FileType = "oc-executable"
+	PodmanExecutable FileType = "podman-executable"
+)
+
 type FileListItem struct {
 	File
-	Type string `json:"type"`
+	Type FileType `json:"type"`
 }
 
 type DriverInfo struct {
@@ -102,7 +109,17 @@ func (bundle *CrcBundleInfo) GetKubeConfigPath() string {
 
 func (bundle *CrcBundleInfo) GetOcPath() string {
 	for _, file := range bundle.Storage.Files {
-		if file.Type == "oc-executable" {
+		if file.Type == OcExecutable {
+			return bundle.resolvePath(file.Name)
+		}
+	}
+
+	return ""
+}
+
+func (bundle *CrcBundleInfo) GetPodmanPath() string {
+	for _, file := range bundle.Storage.Files {
+		if file.Type == PodmanExecutable {
 			return bundle.resolvePath(file.Name)
 		}
 	}
