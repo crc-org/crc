@@ -25,10 +25,10 @@ func runIP(arguments []string) error {
 		return err
 	}
 
-	ip, err := client.IP()
+	connectionDetails, err := client.ConnectionDetails()
 	if err != nil {
 		return err
 	}
-	fmt.Println(ip)
+	fmt.Println(connectionDetails.IP)
 	return nil
 }

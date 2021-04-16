@@ -30,15 +30,15 @@ func RunPodmanEnv(args []string) error {
 		return err
 	}
 
-	ip, err := client.IP()
+	connectionDetails, err := client.ConnectionDetails()
 	if err != nil {
 		return err
 	}
 
 	fmt.Println(shell.GetPathEnvString(userShell, constants.CrcBinDir))
-	fmt.Println(shell.GetEnvString(userShell, "PODMAN_USER", constants.DefaultSSHUser))
-	fmt.Println(shell.GetEnvString(userShell, "PODMAN_HOST", ip))
-	fmt.Println(shell.GetEnvString(userShell, "PODMAN_IDENTITY_FILE", constants.GetPrivateKeyPath()))
+	fmt.Println(shell.GetEnvString(userShell, "PODMAN_USER", connectionDetails.SSHUsername))
+	fmt.Println(shell.GetEnvString(userShell, "PODMAN_HOST", connectionDetails.IP))
+	fmt.Println(shell.GetEnvString(userShell, "PODMAN_IDENTITY_FILE", connectionDetails.SSHKeys[0]))
 	fmt.Println(shell.GetEnvString(userShell, "PODMAN_IGNORE_HOSTS", "1"))
 	fmt.Println(shell.GenerateUsageHintWithComment(userShell, "crc podman-env"))
 	return nil

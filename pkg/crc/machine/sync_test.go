@@ -135,8 +135,8 @@ func (m *waitingMachine) GetConsoleURL() (*types.ConsoleResult, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (m *waitingMachine) IP() (string, error) {
-	return "", errors.New("not implemented")
+func (m *waitingMachine) ConnectionDetails() (*types.ConnectionDetails, error) {
+	return nil, errors.New("not implemented")
 }
 
 func (m *waitingMachine) PowerOff() error {
