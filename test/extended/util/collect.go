@@ -1,4 +1,4 @@
-package crcsuite
+package util
 
 import (
 	"archive/zip"
@@ -22,7 +22,7 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-func runDiagnose(dir string) error {
+func RunDiagnose(dir string) error {
 	filename := filepath.Join(dir, fmt.Sprintf("diagnose-%d.zip", time.Now().Unix()))
 	absolute, err := filepath.Abs(filename)
 	if err != nil {
