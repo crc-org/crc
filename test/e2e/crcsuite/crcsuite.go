@@ -2,6 +2,7 @@ package crcsuite
 
 import (
 	"crypto/tls"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -16,6 +17,9 @@ import (
 	"github.com/cucumber/messages-go/v10"
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
+	"github.com/code-ready/crc/test/e2e/crcsuite/ux"
+	"github.com/code-ready/crc/test/extended/crc/cmd"
+	"github.com/code-ready/crc/test/extended/util"
 )
 
 var (
@@ -43,7 +47,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^setting config property "(.*)" to value "(.*)" (succeeds|fails)$`,
 		SetConfigPropertyToValueSucceedsOrFails)
 	s.Step(`^unsetting config property "(.*)" (succeeds|fails)$`,
-		UnsetConfigPropertySucceedsOrFails)
+		cmd.UnsetConfigPropertySucceedsOrFails)
 	s.Step(`^login to the oc cluster (succeeds|fails)$`,
 		LoginToOcClusterSucceedsOrFails)
 	s.Step(`^setting kubeconfig context to "(.*)" (succeeds|fails)$`,
@@ -106,7 +110,7 @@ func FeatureContext(s *godog.Suite) {
 		}
 
 		// remove $HOME/.crc
-		err = RemoveCRCHome()
+		err = util.RemoveCRCHome(CRCHome)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -120,7 +124,7 @@ func FeatureContext(s *godog.Suite) {
 				}
 				// Obtain the bundle to current dir
 				fmt.Println("Obtaining bundle...")
-				bundleLocation, err = DownloadBundle(bundleLocation, ".")
+				bundleLocation, err = util.DownloadBundle(bundleLocation, ".", bundleName)
 				if err != nil {
 					fmt.Printf("Failed to obtain CRC bundle, %v\n", err)
 					os.Exit(1)
@@ -136,7 +140,7 @@ func FeatureContext(s *godog.Suite) {
 		// copy data/config files to test dir
 		for _, tag := range pickle.GetTags() {
 			if tag.Name == "@testdata" {
-				err := CopyFilesToTestDir()
+				err := util.CopyFilesToTestDir()
 				if err != nil {
 					os.Exit(1)
 				}
@@ -146,18 +150,39 @@ func FeatureContext(s *godog.Suite) {
 
 	s.AfterScenario(func(pickle *messages.Pickle, err error) {
 		if err != nil {
-			if err := runDiagnose(filepath.Join("..", "test-results")); err != nil {
+			if err := util.RunDiagnose(filepath.Join("..", "test-results")); err != nil {
 				fmt.Printf("Failed to collect diagnostic: %v\n", err)
 			}
 		}
 	})
 
 	s.AfterSuite(func() {
-		err := DeleteCRC()
+		err := cmd.DeleteCRC()
 		if err != nil {
 			fmt.Printf("Could not delete CRC VM: %s.", err)
 		}
 	})
+
+	// Extend the context with tray when supported
+	ux.FeatureContext(s, &bundleLocation, &pullSecretFile)
+}
+
+func ParseFlags() {
+	flag.StringVar(&bundleLocation, "bundle-location", "", "Path to the bundle to be used in tests")
+	flag.StringVar(&pullSecretFile, "pull-secret-file", "", "Path to the file containing pull secret")
+	flag.StringVar(&CRCExecutable, "crc-binary", "", "Path to the CRC executable to be tested")
+	flag.StringVar(&bundleVersion, "bundle-version", "", "Version of the bundle used in tests")
+
+	// Extend the context with tray when supported
+	ux.ParseFlags()
+}
+
+func WaitForClusterInState(state string) error {
+	return cmd.WaitForClusterInState(state)
+}
+
+func RemoveCRCHome() error {
+	return util.RemoveCRCHome(CRCHome)
 }
 
 func CheckHTTPResponseWithRetry(retryCount int, retryWait string, address string, expectedStatusCode int) error {
@@ -185,7 +210,7 @@ func CheckHTTPResponseWithRetry(retryCount int, retryWait string, address string
 		time.Sleep(retryDuration)
 	}
 
-	return fmt.Errorf("Got %d as Status Code instead of expected %d", resp.StatusCode, expectedStatusCode)
+	return fmt.Errorf("got %d as Status Code instead of expected %d", resp.StatusCode, expectedStatusCode)
 }
 
 func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string, expected string, expectedOutput string) error {
@@ -218,16 +243,7 @@ func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string,
 // CheckCRCStatus checks that output of status command
 // matches given regex
 func CheckCRCStatus(state string) error {
-	expression := `.*OpenShift: .*Running \(v\d+\.\d+\.\d+.*\).*`
-	if state == "stopped" {
-		expression = ".*OpenShift: .*Stopped.*"
-	}
-
-	err := clicumber.ExecuteCommand("crc status --log-level debug")
-	if err != nil {
-		return err
-	}
-	return clicumber.CommandReturnShouldMatch("stdout", expression)
+	return cmd.CheckCRCStatus(state)
 }
 
 func DeleteFileFromCRCHome(fileName string) error {
@@ -239,7 +255,7 @@ func DeleteFileFromCRCHome(fileName string) error {
 	}
 
 	if err := clicumber.DeleteFile(theFile); err != nil {
-		return fmt.Errorf("Error deleting file %v", theFile)
+		return fmt.Errorf("error deleting file %v", theFile)
 	}
 	return nil
 }
@@ -278,9 +294,9 @@ func ConfigFileInCRCHomeContainsKeyMatchingValue(format string, configFile strin
 		return err
 	}
 	if (condition == "contains") && !matches {
-		return fmt.Errorf("For key '%s' config contains unexpected value '%s'", keyPath, keyValue)
+		return fmt.Errorf("for key '%s' config contains unexpected value '%s'", keyPath, keyValue)
 	} else if (condition == "does not contain") && matches {
-		return fmt.Errorf("For key '%s' config contains value '%s', which it should not contain", keyPath, keyValue)
+		return fmt.Errorf("for key '%s' config contains value '%s', which it should not contain", keyPath, keyValue)
 	}
 	return nil
 }
@@ -300,9 +316,9 @@ func ConfigFileInCRCHomeContainsKey(format string, configFile string, condition 
 	}
 
 	if (condition == "contains") && (keyValue == "<nil>") {
-		return fmt.Errorf("Config does not contain any value for key %s", keyPath)
+		return fmt.Errorf("config does not contain any value for key %s", keyPath)
 	} else if (condition == "does not contain") && (keyValue != "<nil>") {
-		return fmt.Errorf("Config contains key %s with assigned value: %s", keyPath, keyValue)
+		return fmt.Errorf("config contains key %s with assigned value: %s", keyPath, keyValue)
 	}
 
 	return nil
@@ -372,26 +388,12 @@ func CommandReturnShouldContainIfBundleEmbeddedOrNot(commandField string, value 
 }
 
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
-
 	if value == "current bundle" {
-
 		if bundleEmbedded {
 			value = filepath.Join(CRCHome, "cache", bundleName)
 		} else {
 			value = bundleLocation
 		}
 	}
-
-	cmd := "crc config set " + property + " " + value
-	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
-
-	return err
-}
-
-func UnsetConfigPropertySucceedsOrFails(property string, expected string) error {
-
-	cmd := "crc config unset " + property
-	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
-
-	return err
+	return cmd.SetConfigPropertyToValueSucceedsOrFails(property, value, expected)
 }
