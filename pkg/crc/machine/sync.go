@@ -154,8 +154,8 @@ func (s *Synchronized) GetConsoleURL() (*types.ConsoleResult, error) {
 	return s.underlying.GetConsoleURL()
 }
 
-func (s *Synchronized) IP() (string, error) {
-	return s.underlying.IP()
+func (s *Synchronized) ConnectionDetails() (*types.ConnectionDetails, error) {
+	return s.underlying.ConnectionDetails()
 }
 
 func (s *Synchronized) PowerOff() error {

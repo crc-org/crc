@@ -56,3 +56,10 @@ type ConsoleResult struct {
 	ClusterConfig ClusterConfig
 	State         state.State
 }
+
+type ConnectionDetails struct {
+	IP          string
+	SSHPort     int
+	SSHUsername string
+	SSHKeys     []string
+}

@@ -136,12 +136,11 @@ func RunCRCExpectFail(args ...string) (string, error) {
 // Send command to CRC VM via SSH
 func SendCommandToVM(cmd string) (string, error) {
 	client := machine.NewClient(constants.DefaultName, false, crcConfig.New(crcConfig.NewEmptyInMemoryStorage()))
-	ip, err := client.IP()
+	connectionDetails, err := client.ConnectionDetails()
 	if err != nil {
 		return "", err
 	}
-
-	ssh, err := ssh.NewClient(constants.DefaultSSHUser, ip, 22, constants.GetPrivateKeyPath())
+	ssh, err := ssh.NewClient(connectionDetails.SSHUsername, connectionDetails.IP, connectionDetails.SSHPort, connectionDetails.SSHKeys...)
 	if err != nil {
 		return "", err
 	}

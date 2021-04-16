@@ -12,11 +12,11 @@ import (
 
 type Client interface {
 	GetName() string
+	GetConsoleURL() (*types.ConsoleResult, error)
+	ConnectionDetails() (*types.ConnectionDetails, error)
 
 	Delete() error
 	Exists() (bool, error)
-	GetConsoleURL() (*types.ConsoleResult, error)
-	IP() (string, error)
 	PowerOff() error
 	Start(ctx context.Context, startConfig types.StartConfig) (*types.StartResult, error)
 	Status() (*types.ClusterStatusResult, error)

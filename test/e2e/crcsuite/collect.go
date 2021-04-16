@@ -177,12 +177,7 @@ type VMCommandCollector struct {
 }
 
 func (collector *VMCommandCollector) Collect(w Writer) error {
-	client := machine.NewClient(constants.DefaultName, true, crcConfig.New(crcConfig.NewEmptyInMemoryStorage()))
-	ip, err := client.IP()
-	if err != nil {
-		return err
-	}
-	ssh, err := ssh.NewClient(constants.DefaultSSHUser, ip, 22, constants.GetPrivateKeyPath())
+	ssh, err := sshClient()
 	if err != nil {
 		return err
 	}
@@ -198,12 +193,7 @@ type ContainerLogCollector struct {
 }
 
 func (collector *ContainerLogCollector) Collect(w Writer) error {
-	client := machine.NewClient(constants.DefaultName, true, crcConfig.New(crcConfig.NewEmptyInMemoryStorage()))
-	ip, err := client.IP()
-	if err != nil {
-		return err
-	}
-	ssh, err := ssh.NewClient(constants.DefaultSSHUser, ip, 22, constants.GetPrivateKeyPath())
+	ssh, err := sshClient()
 	if err != nil {
 		return err
 	}
@@ -232,6 +222,15 @@ func (collector *ContainerLogCollector) Collect(w Writer) error {
 		}
 	}
 	return nil
+}
+
+func sshClient() (ssh.Client, error) {
+	client := machine.NewClient(constants.DefaultName, true, crcConfig.New(crcConfig.NewEmptyInMemoryStorage()))
+	connectionDetails, err := client.ConnectionDetails()
+	if err != nil {
+		return nil, err
+	}
+	return ssh.NewClient(connectionDetails.SSHUsername, connectionDetails.IP, connectionDetails.SSHPort, connectionDetails.SSHKeys...)
 }
 
 func command(command, target string) *CommandCollector {
