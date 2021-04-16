@@ -84,6 +84,9 @@ func (repo *Repository) Use(bundleName string) (*CrcBundleInfo, error) {
 	if err := bundleInfo.createSymlinkOrCopyOpenShiftClient(repo.OcBinDir); err != nil {
 		return nil, err
 	}
+	if err := bundleInfo.createSymlinkOrCopyPodmanClient(repo.OcBinDir); err != nil {
+		return nil, err
+	}
 	return bundleInfo, nil
 }
 
@@ -115,6 +118,23 @@ func (bundle *CrcBundleInfo) createSymlinkOrCopyOpenShiftClient(ocBinDir string)
 		return crcos.CopyFileContents(ocInBundle, ocInBinDir, 0750)
 	}
 	return os.Symlink(ocInBundle, ocInBinDir)
+}
+
+func (bundle *CrcBundleInfo) createSymlinkOrCopyPodmanClient(ocBinDir string) error {
+	podmanInBundle := bundle.GetPodmanPath()
+	if podmanInBundle == "" {
+		return nil
+	}
+	podmanInBinDir := filepath.Join(ocBinDir, filepath.Base(podmanInBundle))
+
+	if err := os.MkdirAll(ocBinDir, 0750); err != nil {
+		return err
+	}
+	_ = os.Remove(podmanInBinDir)
+	if runtime.GOOS == "windows" {
+		return crcos.CopyFileContents(podmanInBundle, podmanInBinDir, 0750)
+	}
+	return os.Symlink(podmanInBundle, podmanInBinDir)
 }
 
 func (repo *Repository) Extract(path string) error {
