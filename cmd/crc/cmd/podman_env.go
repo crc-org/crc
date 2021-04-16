@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -14,12 +13,11 @@ var podmanEnvCmd = &cobra.Command{
 	Short: "Setup podman environment",
 	Long:  `Setup environment for 'podman' executable to access podman on CRC VM`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// See issue #961; Currently does not work on Windows in combination with the CRC vm.
-		return errors.New("currently not supported")
+		return runPodmanEnv()
 	},
 }
 
-func RunPodmanEnv(args []string) error {
+func runPodmanEnv() error {
 	userShell, err := shell.GetShell(forceShell)
 	if err != nil {
 		return fmt.Errorf("Error running the podman-env command: %s", err.Error())
@@ -35,11 +33,13 @@ func RunPodmanEnv(args []string) error {
 		return err
 	}
 
-	fmt.Println(shell.GetPathEnvString(userShell, constants.CrcBinDir))
-	fmt.Println(shell.GetEnvString(userShell, "PODMAN_USER", connectionDetails.SSHUsername))
-	fmt.Println(shell.GetEnvString(userShell, "PODMAN_HOST", connectionDetails.IP))
-	fmt.Println(shell.GetEnvString(userShell, "PODMAN_IDENTITY_FILE", connectionDetails.SSHKeys[0]))
-	fmt.Println(shell.GetEnvString(userShell, "PODMAN_IGNORE_HOSTS", "1"))
+	fmt.Println(shell.GetPathEnvString(userShell, constants.CrcOcBinDir))
+	fmt.Println(shell.GetEnvString(userShell, "CONTAINER_SSHKEY", connectionDetails.SSHKeys[0]))
+	fmt.Println(shell.GetEnvString(userShell, "CONTAINER_HOST",
+		fmt.Sprintf("ssh://%s@%s:%d/run/user/1000/podman/podman.sock",
+			connectionDetails.SSHUsername,
+			connectionDetails.IP,
+			connectionDetails.SSHPort)))
 	fmt.Println(shell.GenerateUsageHintWithComment(userShell, "crc podman-env"))
 	return nil
 }
