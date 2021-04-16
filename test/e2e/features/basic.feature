@@ -135,7 +135,14 @@ Feature: Basic test
         And unsetting config property "enable-cluster-monitoring" succeeds
         And unsetting config property "memory" succeeds
 
-    @darwin @linux @windows
+    @linux
+    Scenario: Bundle generation check
+        # This will remove the pull secret from the instance and from the cluster
+        # You need to provide pull secret file again if you want to start this cluster
+        # from an stopped state.
+        Given executing "crc bundle generate" succeeds
+
+    @darwin @windows
     Scenario: CRC forcible stop
         When executing "crc stop -f"
         Then stdout should match "(.*)[Ss]topped the OpenShift cluster"
@@ -155,6 +162,11 @@ Feature: Basic test
     Scenario: CRC delete
         When executing "crc delete -f" succeeds
         Then stdout should contain "Deleted the OpenShift cluster"
+
+    @linux
+    Scenario: CRC starts with generated bundle
+        Given starting CRC with custom bundle succeeds
+        Then stderr should contain "Using custom bundle"
 
     @darwin
     Scenario Outline: CRC clean-up
