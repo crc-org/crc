@@ -1,19 +1,12 @@
 [id="troubleshooting-expired-certificates_{context}"]
 = Troubleshooting expired certificates
 
-[NOTE]
-====
-As of the {prod} 1.10.0 release, the certificate renewal process is not working as intended.
-Follow this procedure to avoid potential errors due to certificate expiration.
-====
-
 The system bundle in each released [command]`{bin}` executable expires 30 days after the release.
 This expiration is due to certificates embedded in the OpenShift cluster.
-As a result, using an older [command]`{bin}` executable or system bundle can result in an expired certificates error.
-
-Starting from {prod} 1.2.0, the embedded certificates can be automatically renewed by [command]`{bin}`.
-The [command]`{bin} start` command triggers the certificate renewal process when needed.
+The [command]`{bin} start` command triggers an automatic certificate renewal process when needed.
 Certificate renewal can add up to five minutes to the start time of the cluster.
+
+In order to avoid this additional startup time, or in case of failures in the certificate renewal process, use the following procedure:
 
 .Procedure
 
