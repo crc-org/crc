@@ -36,6 +36,8 @@ func FeatureContext(s *godog.Suite) {
 		RemoveCRCHome)
 	s.Step(`^starting CRC with default bundle (succeeds|fails)$`,
 		StartCRCWithDefaultBundleSucceedsOrFails)
+	s.Step(`^starting CRC with custom bundle (succeeds|fails)$`,
+		StartCRCWithCustomBundleSucceedsOrFails)
 	s.Step(`^starting CRC with default bundle along with stopped network time synchronization (succeeds|fails)$`,
 		StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails)
 	s.Step(`^starting CRC with default bundle and nameserver "(.*)" (succeeds|fails)$`,
@@ -344,6 +346,11 @@ func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
+}
+
+func StartCRCWithCustomBundleSucceedsOrFails(expected string) error {
+	cmd := fmt.Sprintf("crc start -p '%s' -b *.crcbundle --log-level debug", pullSecretFile)
+	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
 
 func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, expected string) error {
