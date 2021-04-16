@@ -7,15 +7,15 @@ import (
 )
 
 type handler struct {
-	CurrentUserPassword *string
-	InstallerPath       *string
+	currentUserPassword *string
+	installerPath       *string
 }
 
 func NewInstaller(currentUserPassword *string, installerPath *string) Installer {
 	// TODO check parameters as they are mandatory otherwise exit
 	return handler{
-		BundleLocation: bundleLocationValue,
-		PullSecretFile: pullSecretFileValue}
+		currentUserPassword: currentUserPassword,
+		installerPath:       installerPath}
 
 }
 
