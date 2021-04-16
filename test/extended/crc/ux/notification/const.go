@@ -1,3 +1,6 @@
+// TODO support current implementation only for non windows
+// +build !windows
+
 package notification
 
 const (

@@ -1,7 +1,9 @@
 @ux
-Feature: Tray
+Feature: ux
 
-    Test the cluster management through the tray
+    Tets CRC usage with ux components. 
+        * Handle CRC install/ uninstall operations based on installer distribution
+        * Manage CRC through the tray
 
     @darwin
     Scenario: Install CRC 
@@ -52,7 +54,3 @@ Feature: Tray
         Then cluster should be started
         And tray should show cluster as running
         And user should get notified with cluster state as running
-
-    
-
-    
