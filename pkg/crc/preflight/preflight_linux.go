@@ -129,7 +129,8 @@ func checkVsock() error {
 	if err != nil {
 		return err
 	}
-	if !strings.Contains(getcap, "cap_net_bind_service+eip") {
+	if !strings.Contains(getcap, "cap_net_bind_service+eip") &&
+		!strings.Contains(getcap, "cap_net_bind_service=eip") {
 		return fmt.Errorf("capabilities are not correct for %s", executable)
 	}
 
