@@ -9,6 +9,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/cheggaaa/pb/v3 v3.0.5
+	github.com/code-ready/admin-helper v0.0.0-20210317085515-2d7f65e95985
 	github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a
 	github.com/code-ready/gvisor-tap-vsock v0.0.0-20210308122700-d61f9aac135c
 	github.com/code-ready/machine v0.0.0-20210122113819-281ccfbb4566

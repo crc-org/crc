@@ -3,6 +3,7 @@ package adminhelper
 import (
 	"path/filepath"
 
+	"github.com/code-ready/admin-helper/pkg/hosts"
 	"github.com/code-ready/crc/pkg/crc/constants"
 )
 
@@ -22,6 +23,19 @@ func UpdateHostsFile(instanceIP string, hostnames ...string) error {
 }
 
 func AddToHostsFile(instanceIP string, hostnames ...string) error {
+	hosts, err := hosts.New()
+	if err != nil {
+		return err
+	}
+	var filtered []string
+	for _, hostname := range hostnames {
+		if !hosts.Contains(instanceIP, hostname) {
+			filtered = append(filtered, hostname)
+		}
+	}
+	if len(filtered) == 0 {
+		return nil
+	}
 	return execute(append([]string{"add", instanceIP}, hostnames...)...)
 }
 

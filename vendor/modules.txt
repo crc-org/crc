@@ -32,6 +32,9 @@ github.com/cavaliercoder/grab
 ## explicit
 github.com/cheggaaa/pb/v3
 github.com/cheggaaa/pb/v3/termutil
+# github.com/code-ready/admin-helper v0.0.0-20210317085515-2d7f65e95985
+## explicit
+github.com/code-ready/admin-helper/pkg/hosts
 # github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a
 ## explicit
 github.com/code-ready/clicumber/testsuite
@@ -67,6 +70,8 @@ github.com/cucumber/messages-go/v10
 github.com/danieljoos/wincred
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
+# github.com/dimchansky/utfbom v1.1.1
+github.com/dimchansky/utfbom
 # github.com/docker/docker v17.12.0-ce-rc1.0.20200916142827-bd33bbf0497b+incompatible => github.com/docker/docker v1.4.2-0.20191121165722-d1d5f6476656
 github.com/docker/docker/pkg/term
 github.com/docker/docker/pkg/term/windows
@@ -93,6 +98,8 @@ github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/sortkeys
 # github.com/golang/protobuf v1.4.3
 github.com/golang/protobuf/proto
+# github.com/goodhosts/hostsfile v0.0.7
+github.com/goodhosts/hostsfile
 # github.com/google/btree v1.0.0
 github.com/google/btree
 # github.com/google/go-cmp v0.5.4
