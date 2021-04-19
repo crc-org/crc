@@ -8,7 +8,7 @@
 
 {prod} requires the following system resources:
 
-* 4 virtual CPUs (vCPUs)
+* 4 physical CPU cores
 * 9 GB of free memory
 * 35 GB of storage space
 
