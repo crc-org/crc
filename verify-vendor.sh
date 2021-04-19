@@ -29,7 +29,7 @@ make vendor
 
 echo "Diffing ${REPO_ROOT_DIR} against freshly generated codegen"
 ret=0
-diff -Naupr "${REPO_ROOT_DIR}/vendor" "${TMP_DIFFROOT}/vendor" || ret=1
+diff --strip-trailing-cr -Naupr "${REPO_ROOT_DIR}/vendor" "${TMP_DIFFROOT}/vendor" || ret=1
 
 # Restore working tree state
 rm -fr "${REPO_ROOT_DIR}/vendor"
