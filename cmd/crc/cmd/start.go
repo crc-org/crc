@@ -142,7 +142,7 @@ func (s *startResult) prettyPrintTo(writer io.Writer) error {
 		return s.Error
 	}
 	if s.ClusterConfig == nil {
-		return errors.New("either Error or ClusterConfig are needed")
+		return errors.New("either Error or ClusterConfig is needed")
 	}
 
 	if err := writeTemplatedMessage(writer, s); err != nil {
