@@ -29,6 +29,6 @@ var _ = Describe("run openshift with monitoring stack", func() {
 	It("collect pods usage", func() {
 		stdout, _, err := Exec(exec.Command("oc", "adm", "top", "pods", "-A"), nil)
 		Expect(err).ToNot(HaveOccurred())
-		Expect(ioutil.WriteFile(filepath.Join("out", "oc-adm-top-pods.txt"), []byte(stdout), 0600)).To(Succeed())
+		Expect(ioutil.WriteFile(filepath.Join(outputDirectory, "oc-adm-top-pods.txt"), []byte(stdout), 0600)).To(Succeed())
 	})
 })

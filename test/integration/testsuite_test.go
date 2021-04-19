@@ -13,6 +13,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+const outputDirectory = "out"
+
 type versionAnswer struct {
 	Embedded bool `json:"embedded"`
 }
@@ -26,7 +28,8 @@ var (
 func TestTest(t *testing.T) {
 	RegisterFailHandler(Fail)
 
-	junitReporter := reporters.NewJUnitReporter(filepath.Join("out", "integration.xml"))
+	_ = os.MkdirAll(outputDirectory, os.ModePerm)
+	junitReporter := reporters.NewJUnitReporter(filepath.Join(outputDirectory, "integration.xml"))
 	RunSpecsWithDefaultAndCustomReporters(t, "Test Suite", []Reporter{junitReporter})
 }
 
@@ -41,7 +44,7 @@ var _ = BeforeSuite(func() {
 	var versionInfo versionAnswer
 	Expect(json.Unmarshal([]byte(raw), &versionInfo)).NotTo(HaveOccurred())
 
-	Expect(ioutil.WriteFile(filepath.Join("out", "crc-version.json"), []byte(raw), 0600)).To(Succeed())
+	Expect(ioutil.WriteFile(filepath.Join(outputDirectory, "crc-version.json"), []byte(raw), 0600)).To(Succeed())
 
 	// bundle location
 	bundlePath = "embedded"
