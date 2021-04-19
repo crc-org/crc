@@ -44,5 +44,5 @@ func RemoveFromHostsFile(hostnames ...string) error {
 }
 
 func CleanHostsFile() error {
-	return execute([]string{"clean", constants.ClusterDomain, constants.AppsDomain}...)
+	return execute("clean", constants.ClusterDomain, constants.AppsDomain)
 }
