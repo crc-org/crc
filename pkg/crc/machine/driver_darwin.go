@@ -17,7 +17,7 @@ func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host
 	if err != nil {
 		return nil, errors.New("Failed to marshal driver options")
 	}
-	return api.NewHost("hyperkit", constants.CrcBinDir, json)
+	return api.NewHost("hyperkit", constants.BinDir(), json)
 }
 
 func loadDriverConfig(host *host.Host) (*machineHyperkit.Driver, error) {

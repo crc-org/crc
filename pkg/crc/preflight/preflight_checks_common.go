@@ -12,6 +12,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/validation"
+	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/embed"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/docker/go-units"
@@ -140,6 +141,10 @@ func fixPodmanExecutableCached() error {
 
 // Check if helper executable is cached or not
 func checkAdminHelperExecutableCached() error {
+	if version.IsMacosInstallPathSet() {
+		return nil
+	}
+
 	helper := cache.NewAdminHelperCache()
 	if !helper.IsCached() {
 		return errors.New("admin-helper executable is not cached")
@@ -152,6 +157,10 @@ func checkAdminHelperExecutableCached() error {
 }
 
 func fixAdminHelperExecutableCached() error {
+	if version.IsMacosInstallPathSet() {
+		return nil
+	}
+
 	helper := cache.NewAdminHelperCache()
 	if err := helper.EnsureIsCached(); err != nil {
 		return errors.Wrap(err, "Unable to download admin-helper executable")
