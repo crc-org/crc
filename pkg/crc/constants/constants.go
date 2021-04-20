@@ -114,6 +114,13 @@ func defaultBundlePath() string {
 	return filepath.Join(MachineCacheDir, GetDefaultBundle())
 }
 
+func BinDir() string {
+	if runtime.GOOS == "darwin" && version.IsMacosInstallPathSet() {
+		return version.GetMacosInstallPath()
+	}
+	return CrcBinDir
+}
+
 // GetHomeDir returns the home directory for the current user
 func GetHomeDir() string {
 	if runtime.GOOS == "windows" {

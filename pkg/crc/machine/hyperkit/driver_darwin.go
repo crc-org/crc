@@ -18,7 +18,7 @@ func CreateHost(machineConfig config.MachineConfig) *hyperkit.Driver {
 	hyperkitDriver.Cmdline = machineConfig.KernelCmdLine
 	hyperkitDriver.VmlinuzPath = machineConfig.Kernel
 	hyperkitDriver.InitrdPath = machineConfig.Initramfs
-	hyperkitDriver.HyperKitPath = filepath.Join(constants.CrcBinDir, HyperKitCommand)
+	hyperkitDriver.HyperKitPath = filepath.Join(constants.BinDir(), HyperKitCommand)
 
 	hyperkitDriver.VMNet = machineConfig.NetworkMode == network.DefaultMode
 

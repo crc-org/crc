@@ -31,6 +31,8 @@ sign "${BASEDIR}/root/Applications/CodeReady Containers.app"
 
 codesign --verify --verbose "${binDir}/hyperkit"
 
+sudo chmod +sx "${binDir}/hyperkit" "${binDir}/admin-helper-darwin" "${binDir}/crc-driver-hyperkit"
+
 pkgbuild --identifier com.redhat.crc --version ${version} \
   --scripts "${BASEDIR}/darwin/scripts" \
   --root "${BASEDIR}/root" \

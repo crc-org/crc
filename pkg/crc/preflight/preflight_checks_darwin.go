@@ -12,6 +12,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/version"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"golang.org/x/sys/unix"
 )
@@ -24,6 +25,10 @@ const (
 
 func checkHyperKitInstalled(networkMode network.Mode) func() error {
 	return func() error {
+		if version.IsMacosInstallPathSet() {
+			return nil
+		}
+
 		h := cache.NewHyperKitCache()
 		if !h.IsCached() {
 			return fmt.Errorf("%s executable is not cached", h.GetExecutableName())
@@ -45,6 +50,10 @@ func checkHyperKitInstalled(networkMode network.Mode) func() error {
 
 func fixHyperKitInstallation(networkMode network.Mode) func() error {
 	return func() error {
+		if version.IsMacosInstallPathSet() {
+			return nil
+		}
+
 		h := cache.NewHyperKitCache()
 
 		logging.Debugf("Installing %s", h.GetExecutableName())
@@ -61,6 +70,10 @@ func fixHyperKitInstallation(networkMode network.Mode) func() error {
 
 func checkMachineDriverHyperKitInstalled(networkMode network.Mode) func() error {
 	return func() error {
+		if version.IsMacosInstallPathSet() {
+			return nil
+		}
+
 		hyperkitDriver := cache.NewMachineDriverHyperKitCache()
 
 		logging.Debugf("Checking if %s is installed", hyperkitDriver.GetExecutableName())
@@ -80,6 +93,10 @@ func checkMachineDriverHyperKitInstalled(networkMode network.Mode) func() error 
 
 func fixMachineDriverHyperKitInstalled(networkMode network.Mode) func() error {
 	return func() error {
+		if version.IsMacosInstallPathSet() {
+			return nil
+		}
+
 		hyperkitDriver := cache.NewMachineDriverHyperKitCache()
 
 		logging.Debugf("Installing %s", hyperkitDriver.GetExecutableName())
@@ -192,7 +209,7 @@ func stopCRCHyperkitProcess() error {
 	if err != nil {
 		return fmt.Errorf("Could not find 'pgrep'. %w", err)
 	}
-	if _, _, err := crcos.RunWithDefaultLocale(pgrepPath, "-f", filepath.Join(constants.CrcBinDir, "hyperkit")); err != nil {
+	if _, _, err := crcos.RunWithDefaultLocale(pgrepPath, "-f", filepath.Join(constants.BinDir(), "hyperkit")); err != nil {
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) {
 			/* 1: no processes matched */
@@ -209,7 +226,7 @@ func stopCRCHyperkitProcess() error {
 	if err != nil {
 		return fmt.Errorf("Could not find 'pkill'. %w", err)
 	}
-	if _, _, err := crcos.RunWithDefaultLocale(pkillPath, "-SIGKILL", "-f", filepath.Join(constants.CrcBinDir, "hyperkit")); err != nil {
+	if _, _, err := crcos.RunWithDefaultLocale(pkillPath, "-SIGKILL", "-f", filepath.Join(constants.BinDir(), "hyperkit")); err != nil {
 		return fmt.Errorf("Failed to kill 'hyperkit' process. %w", err)
 	}
 	return nil
