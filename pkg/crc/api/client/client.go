@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -172,6 +173,29 @@ func (c *Client) UnsetConfig(configs []string) (SetOrUnsetConfigResult, error) {
 		return ucr, err
 	}
 	return ucr, nil
+}
+
+func (c *Client) Telemetry(action string) error {
+	data, err := json.Marshal(TelemetryRequest{
+		Action: action,
+	})
+	if err != nil {
+		return fmt.Errorf("Failed to encode data to JSON: %w", err)
+	}
+
+	body, err := c.sendPostRequest("/telemetry", bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+
+	var res Result
+	if err = json.Unmarshal(body, &res); err != nil {
+		return err
+	}
+	if res.Error != "" {
+		return errors.New(res.Error)
+	}
+	return nil
 }
 
 func (c *Client) sendGetRequest(url string) ([]byte, error) {

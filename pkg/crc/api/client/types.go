@@ -66,3 +66,7 @@ type SetConfigRequest struct {
 type getOrUnsetConfigRequest struct {
 	Properties []string `json:"properties"`
 }
+
+type TelemetryRequest struct {
+	Action string `json:"action"`
+}

@@ -22,10 +22,15 @@ type Handler struct {
 	Logger        Logger
 	MachineClient AdaptedClient
 	Config        crcConfig.Storage
+	Telemetry     Telemetry
 }
 
 type Logger interface {
 	Messages() []string
+}
+
+type Telemetry interface {
+	UploadAction(action string) error
 }
 
 func (h *Handler) Logs() string {
@@ -35,13 +40,14 @@ func (h *Handler) Logs() string {
 	})
 }
 
-func NewHandler(config crcConfig.Storage, machine machine.Client, logger Logger) *Handler {
+func NewHandler(config crcConfig.Storage, machine machine.Client, logger Logger, telemetry Telemetry) *Handler {
 	return &Handler{
 		MachineClient: &Adapter{
 			Underlying: machine,
 		},
-		Config: config,
-		Logger: logger,
+		Config:    config,
+		Logger:    logger,
+		Telemetry: telemetry,
 	}
 }
 
@@ -233,6 +239,19 @@ func (h *Handler) GetConfig(args json.RawMessage) string {
 		configResult.Configs = configs
 	}
 	return encodeStructToJSON(configResult)
+}
+
+func (h *Handler) UploadTelemetry(args json.RawMessage) string {
+	var req client.TelemetryRequest
+	if err := json.Unmarshal(args, &req); err != nil {
+		return encodeErrorToJSON(err.Error())
+	}
+	if err := h.Telemetry.UploadAction(req.Action); err != nil {
+		return encodeErrorToJSON(err.Error())
+	}
+	return encodeStructToJSON(client.Result{
+		Success: true,
+	})
 }
 
 func encodeStructToJSON(v interface{}) string {

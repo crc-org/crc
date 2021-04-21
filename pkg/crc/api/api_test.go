@@ -28,7 +28,7 @@ func TestApi(t *testing.T) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createServerWithListener(listener, setupNewInMemoryConfig(), client, &mockLogger{})
+	api, err := createServerWithListener(listener, setupNewInMemoryConfig(), client, &mockLogger{}, &mockTelemetry{})
 	require.NoError(t, err)
 	go func() {
 		if err := api.Serve(); err != nil {
@@ -122,6 +122,15 @@ func TestApi(t *testing.T) {
 				"Success":  true,
 			},
 		},
+		{
+			command: "telemetry",
+			args:    json.RawMessage(`{"action":"click start"}`),
+			expected: map[string]interface{}{
+				"Success": true,
+				"Name":    "",
+				"Error":   "",
+			},
+		},
 	}
 	for _, test := range tt {
 		client.Failing = test.clientFailing
@@ -211,7 +220,7 @@ func setupAPIServer(t *testing.T) (string, func()) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createServerWithListener(listener, setupNewInMemoryConfig(), client, &mockLogger{})
+	api, err := createServerWithListener(listener, setupNewInMemoryConfig(), client, &mockLogger{}, &mockTelemetry{})
 	require.NoError(t, err)
 	go func() {
 		if err := api.Serve(); err != nil {

@@ -12,8 +12,8 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
-func NewMux(config crcConfig.Storage, machine machine.Client, logger Logger) http.Handler {
-	handler := NewHandler(config, machine, logger)
+func NewMux(config crcConfig.Storage, machine machine.Client, logger Logger, telemetry Telemetry) http.Handler {
+	handler := NewHandler(config, machine, logger, telemetry)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/start", func(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +76,13 @@ func NewMux(config crcConfig.Storage, machine machine.Client, logger Logger) htt
 		sendResponse(w, handler.Logs())
 	})
 
+	mux.HandleFunc("/telemetry", func(w http.ResponseWriter, r *http.Request) {
+		data, err := verifyRequestAndReadBody(w, r, http.MethodGet, http.MethodPost)
+		if err != nil {
+			return
+		}
+		sendResponse(w, handler.UploadTelemetry(data))
+	})
 	return mux
 }
 

@@ -60,7 +60,15 @@ func (c *Client) Close() error {
 	return c.segmentClient.Close()
 }
 
-func (c *Client) Upload(ctx context.Context, action string, duration time.Duration, err error) error {
+func (c *Client) UploadAction(action string) error {
+	return c.upload(action, baseProperties())
+}
+
+func (c *Client) UploadCmd(ctx context.Context, action string, duration time.Duration, err error) error {
+	return c.upload(action, properties(ctx, err, duration))
+}
+
+func (c *Client) upload(action string, a analytics.Properties) error {
 	if c.config.Get(config.ConsentTelemetry).AsString() != "yes" {
 		return nil
 	}
@@ -77,12 +85,24 @@ func (c *Client) Upload(ctx context.Context, action string, duration time.Durati
 		return err
 	}
 
-	properties := analytics.NewProperties()
+	return c.segmentClient.Enqueue(analytics.Track{
+		UserId:     userID,
+		Event:      action,
+		Properties: a,
+	})
+}
+
+func baseProperties() analytics.Properties {
+	return analytics.NewProperties().Set("version", version.GetCRCVersion())
+}
+
+func properties(ctx context.Context, err error, duration time.Duration) analytics.Properties {
+	properties := baseProperties()
 	for k, v := range telemetry.GetContextProperties(ctx) {
 		properties = properties.Set(k, v)
 	}
 
-	properties = properties.Set("version", version.GetCRCVersion()).
+	properties = properties.
 		Set("success", err == nil).
 		Set("duration", duration.Milliseconds()).
 		Set("tty", crcos.RunningInTerminal()).
@@ -91,12 +111,7 @@ func (c *Client) Upload(ctx context.Context, action string, duration time.Durati
 		properties = properties.Set("error", telemetry.SetError(err)).
 			Set("error-type", errorType(err))
 	}
-
-	return c.segmentClient.Enqueue(analytics.Track{
-		UserId:     userID,
-		Event:      action,
-		Properties: properties,
-	})
+	return properties
 }
 
 func addConfigTraits(c *crcConfig.Config, in analytics.Traits) analytics.Traits {

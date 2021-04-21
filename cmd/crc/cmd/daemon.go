@@ -143,7 +143,7 @@ func run(configuration *types.Configuration) error {
 		}
 		mux := http.NewServeMux()
 		mux.Handle("/network/", http.StripPrefix("/network", vn.Mux()))
-		mux.Handle("/api/", http.StripPrefix("/api", api.NewMux(config, newMachine(), logging.Memory)))
+		mux.Handle("/api/", http.StripPrefix("/api", api.NewMux(config, newMachine(), logging.Memory, segmentClient)))
 		if err := http.Serve(listener, mux); err != nil {
 			errCh <- err
 		}
@@ -241,7 +241,7 @@ func acceptJSONStringArray(w http.ResponseWriter, r *http.Request, fun func(host
 func runDaemon() error {
 	// Remove if an old socket is present
 	os.Remove(constants.DaemonSocketPath)
-	apiServer, err := api.CreateServer(constants.DaemonSocketPath, config, newMachine(), logging.Memory)
+	apiServer, err := api.CreateServer(constants.DaemonSocketPath, config, newMachine(), logging.Memory, segmentClient)
 	if err != nil {
 		return err
 	}
