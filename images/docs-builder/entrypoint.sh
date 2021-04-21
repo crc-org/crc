@@ -2,7 +2,7 @@
 set -e
 
 if [ $# -lt 1 ]; then
-	echo "You need to provide an argument [build_docs, build_docs_pdf, docs_check_links, docs_serve]"
+	echo "You need to provide an argument [build_docs, docs_check_links, docs_serve]"
 fi
 
 case $1 in
@@ -10,11 +10,6 @@ case $1 in
 		echo "Generating html from docs source"
 		shift 
 		asciidoctor $@
-		;;
-	build_docs_pdf)
-		echo "Generating pdf from docs source"
-		shift 
-		asciidoctor-pdf $@
 		;;
 	docs_check_links)
 		echo "Checking if all links are alive in docs source"
@@ -25,7 +20,7 @@ case $1 in
 		python3 -m http.server 8088
 		;;
 	*)
-		echo "Need to provide one of: build_docs, build_docs_pdf, docs_check_links, docs_serve"
+		echo "Need to provide one of: build_docs, docs_check_links, docs_serve"
 		exit 1
 		;;
 esac
