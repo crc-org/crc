@@ -124,10 +124,6 @@ test-rpmbuild: spec
 build_docs:
 	${CONTAINER_RUNTIME} run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) build_docs -b html5 -D /$(DOCS_BUILD_DIR) -o index.html $(DOCS_BUILD_TARGET)
 
-.PHONY: build_docs_pdf
-build_docs_pdf:
-	${CONTAINER_RUNTIME} run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) build_docs_pdf -D /$(DOCS_BUILD_DIR) -o doc.pdf $(DOCS_BUILD_TARGET)
-
 .PHONY: docs_serve
 docs_serve: build_docs
 	${CONTAINER_RUNTIME} run -it -v $(CURDIR)/docs:/docs:Z --rm -p 8088:8088/tcp $(DOCS_BUILD_CONTAINER) docs_serve 
@@ -214,19 +210,19 @@ gen_release_info:
 
 .PHONY: release
 release: LDFLAGS += $(RELEASE_VERSION_VARIABLES)
-release: cross-lint embed_bundle build_docs_pdf gen_release_info
+release: cross-lint embed_bundle gen_release_info
 	mkdir $(RELEASE_DIR)
 	
 	@mkdir -p $(BUILD_DIR)/crc-macos-$(CRC_VERSION)-amd64
-	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/crc-macos-$(CRC_VERSION)-amd64
+	@cp LICENSE $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/crc-macos-$(CRC_VERSION)-amd64
 	tar cJSf $(RELEASE_DIR)/crc-macos-amd64.tar.xz -C $(BUILD_DIR) crc-macos-$(CRC_VERSION)-amd64 --owner=0 --group=0
 
 	@mkdir -p $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
-	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
+	@cp LICENSE $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
 	tar cJSf $(RELEASE_DIR)/crc-linux-amd64.tar.xz -C $(BUILD_DIR) crc-linux-$(CRC_VERSION)-amd64 --owner=0 --group=0
 	
 	@mkdir -p $(BUILD_DIR)/crc-windows-$(CRC_VERSION)-amd64
-	@cp LICENSE $(DOCS_BUILD_DIR)/doc.pdf $(BUILD_DIR)/windows-amd64/crc.exe $(BUILD_DIR)/crc-windows-$(CRC_VERSION)-amd64
+	@cp LICENSE $(BUILD_DIR)/windows-amd64/crc.exe $(BUILD_DIR)/crc-windows-$(CRC_VERSION)-amd64
 	cd $(BUILD_DIR) && zip -r $(CURDIR)/$(RELEASE_DIR)/crc-windows-amd64.zip crc-windows-$(CRC_VERSION)-amd64
 
 	@mv $(RELEASE_INFO) $(RELEASE_DIR)/$(RELEASE_INFO)

@@ -7,7 +7,7 @@ RUN yum update -y && \
     yum module install nodejs:14 -y && \
     yum clean all && rm -rf /var/cache/yum/*
 
-RUN gem install asciidoctor asciidoctor-pdf --pre && \
+RUN gem install asciidoctor && \
     npm install -g asciidoc-link-check
 
 COPY entrypoint.sh /sbin/entrypoint.sh
