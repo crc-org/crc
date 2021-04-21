@@ -13,9 +13,11 @@ import (
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/daemonclient"
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
+	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
@@ -76,6 +78,10 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 	isRunning, _ := client.IsRunning()
 
 	if !isRunning {
+		if err := checkDaemonStarted(); err != nil {
+			return nil, err
+		}
+
 		if err := preflight.StartPreflightChecks(config); err != nil {
 			return nil, exec.CodeExitError{
 				Err:  err,
@@ -249,4 +255,26 @@ func commandLinePrefix(shell string) string {
 		return ">"
 	}
 	return "$"
+}
+
+func checkDaemonStarted() error {
+	if config.Get(cmdConfig.NetworkMode).AsString() == string(network.DefaultMode) {
+		return nil
+	}
+	daemonClient := daemonclient.New()
+	version, err := daemonClient.APIClient.Version()
+	if err != nil {
+		return fmt.Errorf(daemonStartedErrorMessage(), err)
+	}
+	if version.CrcVersion != crcversion.GetCRCVersion() {
+		return fmt.Errorf("The executable version (%s) doesn't match the daemon version (%s)", crcversion.GetCRCVersion(), version.CrcVersion)
+	}
+	return nil
+}
+
+func daemonStartedErrorMessage() string {
+	if crcversion.IsMacosInstallPathSet() {
+		return "Is '/Applications/CodeReady Containers.app' running? Cannot reach daemon API: %v"
+	}
+	return "Is 'crc daemon' running? Cannot reach daemon API: %v"
 }
