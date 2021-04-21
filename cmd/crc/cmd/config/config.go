@@ -11,6 +11,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )
@@ -82,7 +83,7 @@ func RegisterSettings(cfg *config.Config) {
 		"Disable update check (true/false, default: false)")
 	cfg.AddSetting(ExperimentalFeatures, false, config.ValidateBool, config.SuccessfullyApplied,
 		"Enable experimental features (true/false, default: false)")
-	cfg.AddSetting(NetworkMode, string(network.DefaultMode), network.ValidateMode, network.SuccessfullyAppliedMode,
+	cfg.AddSetting(NetworkMode, string(defaultNetworkMode()), network.ValidateMode, network.SuccessfullyAppliedMode,
 		"Network mode (default or vsock)")
 	cfg.AddSetting(HostNetworkAccess, false, validateHostNetworkAccess, config.SuccessfullyApplied,
 		"Allow TCP/IP connections from the CodeReady Containers VM to services running on the host (true/false, default: false)")
@@ -105,6 +106,13 @@ func RegisterSettings(cfg *config.Config) {
 	// Telemeter Configuration
 	cfg.AddSetting(ConsentTelemetry, "", config.ValidateYesNo, config.SuccessfullyApplied,
 		"Consent to collection of anonymous usage data (yes/no)")
+}
+
+func defaultNetworkMode() network.Mode {
+	if runtime.GOOS == "darwin" && version.IsMacosInstallPathSet() {
+		return network.VSockMode
+	}
+	return network.DefaultMode
 }
 
 func isPreflightKey(key string) bool {
