@@ -187,7 +187,7 @@ func executeWithLogging(fullCmd string, input func(cmd *cobra.Command, args []st
 		logging.Debugf("Running '%s'", fullCmd)
 		startTime := time.Now()
 		err := input(cmd, args)
-		if serr := segmentClient.Upload(cmd.Context(), fullCmd, time.Since(startTime), err); serr != nil {
+		if serr := segmentClient.UploadCmd(cmd.Context(), fullCmd, time.Since(startTime), err); serr != nil {
 			logging.Debugf("Cannot send data to telemetry: %v", serr)
 		}
 		return err

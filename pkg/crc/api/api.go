@@ -11,19 +11,19 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
-func CreateServer(socketPath string, config crcConfig.Storage, machine machine.Client, logger Logger) (Server, error) {
+func CreateServer(socketPath string, config crcConfig.Storage, machine machine.Client, logger Logger, telemetry Telemetry) (Server, error) {
 	listener, err := net.Listen("unix", socketPath)
 	if err != nil {
 		logging.Error("Failed to create socket: ", err.Error())
 		return Server{}, err
 	}
-	return createServerWithListener(listener, config, machine, logger)
+	return createServerWithListener(listener, config, machine, logger, telemetry)
 }
 
-func createServerWithListener(listener net.Listener, config crcConfig.Storage, machine machine.Client, logger Logger) (Server, error) {
+func createServerWithListener(listener net.Listener, config crcConfig.Storage, machine machine.Client, logger Logger, telemetry Telemetry) (Server, error) {
 	apiServer := Server{
 		listener: listener,
-		handler:  NewHandler(config, machine, logger),
+		handler:  NewHandler(config, machine, logger, telemetry),
 	}
 	return apiServer, nil
 }
@@ -67,6 +67,8 @@ func (api Server) handleRequest(req commandRequest, conn net.Conn) {
 		result = api.handler.GetWebconsoleInfo()
 	case "logs":
 		result = api.handler.Logs()
+	case "telemetry":
+		result = api.handler.UploadTelemetry(req.Args)
 	default:
 		result = encodeErrorToJSON(fmt.Sprintf("Unknown command supplied: %s", req.Command))
 	}

@@ -44,3 +44,12 @@ type mockLogger struct {
 func (*mockLogger) Messages() []string {
 	return []string{"message 1", "message 2", "message 3"}
 }
+
+type mockTelemetry struct {
+	actions []string
+}
+
+func (m *mockTelemetry) UploadAction(action string) error {
+	m.actions = append(m.actions, action)
+	return nil
+}

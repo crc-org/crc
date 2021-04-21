@@ -92,7 +92,7 @@ func TestClientUploadWithConsentAndWithSerializableError(t *testing.T) {
 	c, err := newCustomClient(config, uuidFile, server.URL)
 	require.NoError(t, err)
 
-	require.NoError(t, c.Upload(context.Background(), "start", time.Minute, crcErr.ToSerializableError(crcErr.VMNotExist)))
+	require.NoError(t, c.UploadCmd(context.Background(), "start", time.Minute, crcErr.ToSerializableError(crcErr.VMNotExist)))
 	require.NoError(t, c.Close())
 
 	uuid, err := ioutil.ReadFile(uuidFile)
@@ -132,7 +132,7 @@ func TestClientUploadWithConsentAndWithoutSerializableError(t *testing.T) {
 	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
 	require.NoError(t, err)
 
-	require.NoError(t, c.Upload(context.Background(), "start", time.Minute, errors.New("an error occurred")))
+	require.NoError(t, c.UploadCmd(context.Background(), "start", time.Minute, errors.New("an error occurred")))
 	require.NoError(t, c.Close())
 
 	select {
@@ -169,7 +169,7 @@ func TestClientUploadWithContext(t *testing.T) {
 
 	ctx := telemetry.NewContext(context.Background())
 	telemetry.SetCPUs(ctx, 6)
-	require.NoError(t, c.Upload(ctx, "start", time.Minute, nil))
+	require.NoError(t, c.UploadCmd(ctx, "start", time.Minute, nil))
 	require.NoError(t, c.Close())
 
 	select {
@@ -197,7 +197,7 @@ func TestClientUploadWithOutConsent(t *testing.T) {
 	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
 	require.NoError(t, err)
 
-	require.NoError(t, c.Upload(context.Background(), "start", time.Second, errors.New("an error occurred")))
+	require.NoError(t, c.UploadCmd(context.Background(), "start", time.Second, errors.New("an error occurred")))
 	require.NoError(t, c.Close())
 
 	select {

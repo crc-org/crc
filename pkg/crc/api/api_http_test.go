@@ -16,7 +16,7 @@ func TestHTTPApi(t *testing.T) {
 	fakeMachine := fakemachine.NewClient()
 	config := setupNewInMemoryConfig()
 
-	ts := httptest.NewServer(NewMux(config, fakeMachine, &mockLogger{}))
+	ts := httptest.NewServer(NewMux(config, fakeMachine, &mockLogger{}, &mockTelemetry{}))
 	defer ts.Close()
 
 	client := apiClient.New(http.DefaultClient, ts.URL)
@@ -122,4 +122,20 @@ func TestHTTPApi(t *testing.T) {
 		},
 		configSetResult,
 	)
+}
+
+func TestTelemetry(t *testing.T) {
+	fakeMachine := fakemachine.NewClient()
+	config := setupNewInMemoryConfig()
+
+	telemetry := &mockTelemetry{}
+	ts := httptest.NewServer(NewMux(config, fakeMachine, &mockLogger{}, telemetry))
+	defer ts.Close()
+
+	client := apiClient.New(http.DefaultClient, ts.URL)
+
+	_ = client.Telemetry("click start")
+	_ = client.Telemetry("click stop")
+
+	assert.Equal(t, []string{"click start", "click stop"}, telemetry.actions)
 }
