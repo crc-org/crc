@@ -143,7 +143,7 @@ func run(configuration *types.Configuration) error {
 		}
 		mux := http.NewServeMux()
 		mux.Handle("/network/", http.StripPrefix("/network", vn.Mux()))
-		mux.Handle("/api/", http.StripPrefix("/api", api.NewMux(config, newMachine())))
+		mux.Handle("/api/", http.StripPrefix("/api", api.NewMux(config, newMachine(), logging.Memory)))
 		if err := http.Serve(listener, mux); err != nil {
 			errCh <- err
 		}

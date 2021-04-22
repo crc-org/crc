@@ -12,8 +12,8 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
-func NewMux(config crcConfig.Storage, machine machine.Client) http.Handler {
-	handler := NewHandler(config, machine)
+func NewMux(config crcConfig.Storage, machine machine.Client, logger Logger) http.Handler {
+	handler := NewHandler(config, machine, logger)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/start", func(w http.ResponseWriter, r *http.Request) {
@@ -71,6 +71,10 @@ func NewMux(config crcConfig.Storage, machine machine.Client) http.Handler {
 	})
 
 	mux.Handle("/config/", http.StripPrefix("/config", newConfigMux(handler)))
+
+	mux.HandleFunc("/logs", func(w http.ResponseWriter, r *http.Request) {
+		sendResponse(w, handler.Logs())
+	})
 
 	return mux
 }

@@ -16,7 +16,7 @@ func TestHTTPApi(t *testing.T) {
 	fakeMachine := fakemachine.NewClient()
 	config := setupNewInMemoryConfig()
 
-	ts := httptest.NewServer(NewMux(config, fakeMachine))
+	ts := httptest.NewServer(NewMux(config, fakeMachine, &mockLogger{}))
 	defer ts.Close()
 
 	client := apiClient.New(http.DefaultClient, ts.URL)

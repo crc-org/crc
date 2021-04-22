@@ -35,12 +35,13 @@ func (h *Handler) Logs() string {
 	})
 }
 
-func NewHandler(config crcConfig.Storage, machine machine.Client) *Handler {
+func NewHandler(config crcConfig.Storage, machine machine.Client, logger Logger) *Handler {
 	return &Handler{
 		MachineClient: &Adapter{
 			Underlying: machine,
 		},
 		Config: config,
+		Logger: logger,
 	}
 }
 
