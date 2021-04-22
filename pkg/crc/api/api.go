@@ -23,11 +23,7 @@ func CreateServer(socketPath string, config crcConfig.Storage, machine machine.C
 func createServerWithListener(listener net.Listener, config crcConfig.Storage, machine machine.Client, logger Logger) (Server, error) {
 	apiServer := Server{
 		listener: listener,
-		handler: &Handler{
-			Config:        config,
-			MachineClient: &Adapter{Underlying: machine},
-			Logger:        logger,
-		},
+		handler:  NewHandler(config, machine, logger),
 	}
 	return apiServer, nil
 }

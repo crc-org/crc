@@ -221,10 +221,3 @@ func setupAPIServer(t *testing.T) (string, func()) {
 
 	return socket, func() { os.RemoveAll(dir) }
 }
-
-type mockLogger struct {
-}
-
-func (*mockLogger) Messages() []string {
-	return []string{"message 1", "message 2", "message 3"}
-}

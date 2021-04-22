@@ -37,3 +37,10 @@ func (s *skipPreflights) Set(key string, value interface{}) error {
 func (s *skipPreflights) Unset(key string) error {
 	return s.storage.Unset(key)
 }
+
+type mockLogger struct {
+}
+
+func (*mockLogger) Messages() []string {
+	return []string{"message 1", "message 2", "message 3"}
+}
