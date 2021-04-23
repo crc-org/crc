@@ -6,21 +6,8 @@ import (
 )
 
 type Server struct {
-	handler  RequestHandler
+	handler  *Handler
 	listener net.Listener
-}
-
-type RequestHandler interface {
-	Start(json.RawMessage) string
-	Stop() string
-	Status() string
-	Delete() string
-	GetVersion() string
-	SetConfig(json.RawMessage) string
-	UnsetConfig(json.RawMessage) string
-	GetConfig(json.RawMessage) string
-	GetWebconsoleInfo() string
-	Logs() string
 }
 
 // commandRequest struct is used to decode the json request from tray
