@@ -60,8 +60,8 @@ func (c *Client) Close() error {
 	return c.segmentClient.Close()
 }
 
-func (c *Client) UploadAction(action string) error {
-	return c.upload(action, baseProperties())
+func (c *Client) UploadAction(action, source string) error {
+	return c.upload(action, baseProperties(source))
 }
 
 func (c *Client) UploadCmd(ctx context.Context, action string, duration time.Duration, err error) error {
@@ -92,12 +92,14 @@ func (c *Client) upload(action string, a analytics.Properties) error {
 	})
 }
 
-func baseProperties() analytics.Properties {
-	return analytics.NewProperties().Set("version", version.GetCRCVersion())
+func baseProperties(source string) analytics.Properties {
+	return analytics.NewProperties().
+		Set("version", version.GetCRCVersion()).
+		Set("source", source)
 }
 
 func properties(ctx context.Context, err error, duration time.Duration) analytics.Properties {
-	properties := baseProperties()
+	properties := baseProperties("cli")
 	for k, v := range telemetry.GetContextProperties(ctx) {
 		properties = properties.Set(k, v)
 	}

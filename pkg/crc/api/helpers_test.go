@@ -49,7 +49,7 @@ type mockTelemetry struct {
 	actions []string
 }
 
-func (m *mockTelemetry) UploadAction(action string) error {
+func (m *mockTelemetry) UploadAction(action, _ string) error {
 	m.actions = append(m.actions, action)
 	return nil
 }
