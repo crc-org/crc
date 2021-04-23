@@ -76,23 +76,10 @@ jobs:
   build_docs:
     machine:
       image: ubuntu-2004:202101-01
+    environment:
+      CONTAINER_RUNTIME: "docker"
     steps:
     - checkout
-    - run:
-        name: Remove google chrome repository
-        command: sudo rm -f /etc/apt/sources.list.d/google-chrome.list
-    - run:
-        name: Add podman ppa and update repo
-        command: |
-          echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /' | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-          curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_20.04/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/devel_kubic_libcontainers_stable.gpg > /dev/null
-          sudo apt update
-    - run:
-        name: Install podman
-        command: sudo apt -y install podman
-    - run:
-        name: Check podman
-        command: podman info
     - run:
         name: Make build_docs
         # force GOPATH to a sane value as the image we are using has an older go version
