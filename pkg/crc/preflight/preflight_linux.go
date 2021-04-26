@@ -63,8 +63,8 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			configKeySuffix:  "check-libvirt-version",
 			checkDescription: "Checking if a supported libvirt version is installed",
 			check:            checkLibvirtVersion,
-			fixDescription:   "Installing a supported libvirt version",
-			fix:              fixLibvirtVersion,
+			fixDescription:   fmt.Sprintf("libvirt v%s or newer is required and must be updated manually", minSupportedLibvirtVersion),
+			flags:            NoFix,
 		},
 		{
 			configKeySuffix:  "check-libvirt-driver",
