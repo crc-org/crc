@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/code-ready/crc/pkg/crc/adminhelper"
 	"github.com/code-ready/crc/pkg/crc/cache"
@@ -44,6 +45,14 @@ var genericPreflightChecks = [...]Check{
 		fix:              fixAdminHelperExecutableCached,
 	},
 	{
+
+		configKeySuffix:  "check-supported-cpu-arch",
+		checkDescription: "Checking if running on a supported CPU architecture",
+		check:            checkSupportedCPUArch,
+		fixDescription:   "CodeReady Containers is only supported on x86_64 hardware",
+		flags:            NoFix,
+	},
+	{
 		configKeySuffix:  "check-ram",
 		checkDescription: "Checking minimum RAM requirements",
 		check: func() error {
@@ -72,6 +81,14 @@ var genericPreflightChecks = [...]Check{
 		cleanup:            cluster.ForgetPullSecret,
 		flags:              CleanUpOnly,
 	},
+}
+
+func checkSupportedCPUArch() error {
+	if runtime.GOARCH != "amd64" {
+		logging.Debugf("GOARCH is %s", runtime.GOARCH)
+		return fmt.Errorf("CodeReady Containers can only run on x86_64 CPUs")
+	}
+	return nil
 }
 
 func checkBundleExtracted() error {

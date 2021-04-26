@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/cache"
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -14,6 +15,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/version"
 	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/klauspost/cpuid"
 	"golang.org/x/sys/unix"
 )
 
@@ -22,6 +24,15 @@ const (
 	resolverFile = "/etc/resolver/testing"
 	hostsFile    = "/etc/hosts"
 )
+
+func checkM1CPU() error {
+	if strings.HasPrefix(cpuid.CPU.BrandName, "VirtualApple") {
+		logging.Debugf("Running with an emulated x86_64 CPU")
+		return fmt.Errorf("CodeReady Containers is unsupported on Apple M1 hardware")
+	}
+
+	return nil
+}
 
 func checkHyperKitInstalled(networkMode network.Mode) func() error {
 	return func() error {

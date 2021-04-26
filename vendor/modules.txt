@@ -159,6 +159,9 @@ github.com/klauspost/compress/huff0
 github.com/klauspost/compress/snappy
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
+# github.com/klauspost/cpuid v1.3.1
+## explicit
+github.com/klauspost/cpuid
 # github.com/libvirt/libvirt-go-xml v6.10.0+incompatible
 ## explicit
 github.com/libvirt/libvirt-go-xml
