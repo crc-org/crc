@@ -350,7 +350,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		if !client.useVSock() {
 			return nil, errors.Wrapf(err, "Failed internal DNS query: %s", queryOutput)
 		}
-		logging.Warn(fmt.Sprintf("Failed internal DNS query: %s: %v", queryOutput, err))
 	}
 	logging.Info("Check internal and public DNS query ...")
 
