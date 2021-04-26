@@ -155,10 +155,6 @@ func installLibvirtCommand(distro *linux.OsRelease) string {
 	}
 }
 
-func fixLibvirtVersion() error {
-	return fmt.Errorf("libvirt v%s or newer is required and must be updated manually", minSupportedLibvirtVersion)
-}
-
 func checkLibvirtVersion() error {
 	logging.Debugf("Checking if libvirt version is >=%s", minSupportedLibvirtVersion)
 	stdOut, _, err := crcos.RunWithDefaultLocale("virsh", "-v")
