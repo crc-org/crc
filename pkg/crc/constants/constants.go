@@ -42,20 +42,6 @@ const (
 	AppsDomain    = ".apps-crc.testing"
 )
 
-var podmanURLForOs = map[string]string{
-	"darwin":  fmt.Sprintf("%s/%s", DefaultPodmanURLBase, "podman-remote-latest-master-darwin-amd64.zip"),
-	"linux":   fmt.Sprintf("%s/%s", DefaultPodmanURLBase, "podman-remote-latest-master-linux---amd64.zip"),
-	"windows": fmt.Sprintf("%s/%s", DefaultPodmanURLBase, "podman-remote-latest-master-windows-amd64.zip"),
-}
-
-func GetPodmanURLForOs(os string) string {
-	return podmanURLForOs[os]
-}
-
-func GetPodmanURL() string {
-	return podmanURLForOs[runtime.GOOS]
-}
-
 var adminHelperURLForOs = map[string]string{
 	"darwin":  fmt.Sprintf("%s/%s", DefaultAdminHelperCliBase, "admin-helper-darwin"),
 	"linux":   fmt.Sprintf("%s/%s", DefaultAdminHelperCliBase, "admin-helper-linux"),

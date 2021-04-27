@@ -63,7 +63,6 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: true,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{check: checkSupportedCPUArch},
 			{configKeySuffix: "check-ram"},
@@ -97,7 +96,6 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{check: checkSupportedCPUArch},
 			{configKeySuffix: "check-ram"},
@@ -130,7 +128,6 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{check: checkSupportedCPUArch},
 			{configKeySuffix: "check-ram"},
@@ -157,7 +154,6 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: true,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{check: checkSupportedCPUArch},
 			{configKeySuffix: "check-ram"},
@@ -191,7 +187,6 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{check: checkSupportedCPUArch},
 			{configKeySuffix: "check-ram"},
@@ -224,7 +219,6 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{check: checkSupportedCPUArch},
 			{configKeySuffix: "check-ram"},
@@ -251,7 +245,6 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: true,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{check: checkSupportedCPUArch},
 			{configKeySuffix: "check-ram"},
@@ -285,7 +278,6 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{check: checkSupportedCPUArch},
 			{configKeySuffix: "check-ram"},
@@ -318,7 +310,6 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{check: checkSupportedCPUArch},
 			{configKeySuffix: "check-ram"},
@@ -345,7 +336,6 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: true,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{check: checkSupportedCPUArch},
 			{configKeySuffix: "check-ram"},
@@ -380,7 +370,6 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{check: checkSupportedCPUArch},
 			{configKeySuffix: "check-ram"},
@@ -414,7 +403,6 @@ var checkListForDistros = []checkListForDistro{
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
-			{check: checkPodmanExecutableCached},
 			{check: checkAdminHelperExecutableCached},
 			{check: checkSupportedCPUArch},
 			{configKeySuffix: "check-ram"},

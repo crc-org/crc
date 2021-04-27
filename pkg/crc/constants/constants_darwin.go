@@ -8,7 +8,6 @@ import (
 
 const (
 	OcExecutableName          = "oc"
-	PodmanExecutableName      = "podman"
 	TrayExecutableName        = "CodeReady Containers.app"
 	AdminHelperExecutableName = "admin-helper-darwin"
 )

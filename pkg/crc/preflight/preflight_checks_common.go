@@ -31,13 +31,6 @@ var bundleCheck = Check{
 
 var genericPreflightChecks = [...]Check{
 	{
-		configKeySuffix:  "check-podman-cached",
-		checkDescription: "Checking if podman remote executable is cached",
-		check:            checkPodmanExecutableCached,
-		fixDescription:   "Caching podman remote executable",
-		fix:              fixPodmanExecutableCached,
-	},
-	{
 		configKeySuffix:  "check-admin-helper-cached",
 		checkDescription: "Checking if admin-helper executable is cached",
 		check:            checkAdminHelperExecutableCached,
@@ -137,22 +130,6 @@ func fixBundleExtracted() error {
 		return err
 	}
 
-	return nil
-}
-
-// Check if podman executable is cached or not
-func checkPodmanExecutableCached() error {
-	// Disable the podman cache until further notice
-	logging.Debug("Currently podman remote is not supported")
-	return nil
-}
-
-func fixPodmanExecutableCached() error {
-	podman := cache.NewPodmanCache()
-	if err := podman.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download podman remote executable %v", err)
-	}
-	logging.Debug("podman remote executable cached")
 	return nil
 }
 
