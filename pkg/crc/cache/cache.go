@@ -65,10 +65,6 @@ func getVersionGeneric(executablePath string, args ...string) (string, error) { 
 	return strings.TrimSpace(parsedOutput[1]), nil
 }
 
-func NewPodmanCache() *Cache {
-	return New(constants.PodmanExecutableName, constants.GetPodmanURL(), constants.CrcBinDir, "", nil)
-}
-
 func NewAdminHelperCache() *Cache {
 	url := constants.GetAdminHelperURL()
 	version := path.Base(path.Dir(url))

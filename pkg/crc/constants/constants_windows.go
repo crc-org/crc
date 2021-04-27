@@ -7,7 +7,6 @@ import (
 
 const (
 	OcExecutableName            = "oc.exe"
-	PodmanExecutableName        = "podman.exe"
 	AdminHelperExecutableName   = "admin-helper-windows.exe"
 	TrayExecutableName          = "tray-windows.exe"
 	TrayShortcutName            = "tray-windows.lnk"
