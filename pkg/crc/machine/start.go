@@ -661,7 +661,7 @@ func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Confi
 			Containers: []v1.Container{
 				{
 					Name:            "routes-controller",
-					Image:           "quay.io/crcont/routes-controller:6effc2f0304d3a11c1e22c278b10630e834d0220",
+					Image:           "quay.io/crcont/routes-controller:latest",
 					ImagePullPolicy: v1.PullIfNotPresent,
 				},
 			},
