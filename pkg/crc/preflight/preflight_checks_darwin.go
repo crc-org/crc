@@ -22,7 +22,6 @@ import (
 const (
 	resolverDir  = "/etc/resolver"
 	resolverFile = "/etc/resolver/testing"
-	hostsFile    = "/etc/hosts"
 )
 
 func checkM1CPU() error {
@@ -120,35 +119,6 @@ func fixMachineDriverHyperKitInstalled(networkMode network.Mode) func() error {
 		}
 		return setSuid(hyperkitDriver.GetExecutablePath())
 	}
-}
-
-func checkEtcHostsFilePermissions() error {
-	logging.Debugf("Checking if /etc/hosts ownership/permissions need to be adjusted after crc upgrade")
-	fileinfo, err := os.Stat(hostsFile)
-	if err != nil {
-		return err
-	}
-	// Older crc releases were setting /etc/hosts permissions to 0600 and ownership to the current user
-	// This will cause issues if ownership is reset to root:wheel with permissions
-	// issue if other tools
-	if fileinfo.Mode().Perm() == 0600 {
-		return fmt.Errorf("%s permissions are not 0644", hostsFile)
-	}
-	return nil
-}
-
-func fixEtcHostsFilePermissions() error {
-	stdOut, stdErr, err := crcos.RunPrivileged(fmt.Sprintf("Changing ownership of %s", hostsFile), "chown", "root:wheel", hostsFile)
-	if err != nil {
-		return fmt.Errorf("Unable to change ownership of %s: %s %v: %s", hostsFile, stdOut, err, stdErr)
-	}
-
-	stdOut, stdErr, err = crcos.RunPrivileged(fmt.Sprintf("Changing permissions of %s", hostsFile), "chmod", "644", hostsFile)
-	if err != nil {
-		return fmt.Errorf("Unable to change permissions of %s to 0644: %s %v: %s", hostsFile, stdOut, err, stdErr)
-	}
-
-	return nil
 }
 
 func checkResolverFilePermissions() error {
