@@ -143,7 +143,11 @@ func (h *Handler) SetConfig(args json.RawMessage) string {
 		return encodeStructToJSON(setConfigResult)
 	}
 
-	configs := a["properties"].(map[string]interface{})
+	configs, ok := a["properties"].(map[string]interface{})
+	if !ok {
+		setConfigResult.Error = "No config keys provided"
+		return encodeStructToJSON(setConfigResult)
+	}
 
 	// successProps slice contains the properties that were successfully set
 	var successProps []string
