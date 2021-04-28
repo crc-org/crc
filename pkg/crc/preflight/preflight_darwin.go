@@ -39,16 +39,6 @@ func hyperkitPreflightChecks(networkMode network.Mode) []Check {
 	}
 }
 
-var dnsPreflightChecks = [...]Check{
-	{
-		configKeySuffix:  "check-hosts-file-permissions",
-		checkDescription: fmt.Sprintf("Checking file permissions for %s", hostsFile),
-		check:            checkEtcHostsFilePermissions,
-		fixDescription:   fmt.Sprintf("Setting file permissions for %s", hostsFile),
-		fix:              fixEtcHostsFilePermissions,
-	},
-}
-
 var resolverPreflightChecks = [...]Check{
 	{
 		configKeySuffix:    "check-resolver-file-permissions",
@@ -104,7 +94,6 @@ func getPreflightChecks(experimentalFeatures bool, trayAutostart bool, mode netw
 	checks = append(checks, nonWinPreflightChecks[:]...)
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, hyperkitPreflightChecks(mode)...)
-	checks = append(checks, dnsPreflightChecks[:]...)
 	checks = append(checks, daemonSetupChecks[:]...)
 
 	if mode == network.DefaultMode {
