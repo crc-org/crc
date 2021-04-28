@@ -2,7 +2,6 @@
 
 package tray
 
-// TODO check if move to tray package
 const (
 	actionStart  string = "start"
 	actionStop   string = "stop"

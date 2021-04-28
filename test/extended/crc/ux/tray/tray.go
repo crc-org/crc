@@ -8,7 +8,7 @@ type Tray interface {
 	ClickStop() error
 	ClickDelete() error
 	ClickQuit() error
-	SetPullSecretFile() error
+	SetPullSecretFileLocation() error
 	IsClusterRunning() error
 	IsClusterStopped() error
 	CopyOCLoginCommandAsKubeadmin() error

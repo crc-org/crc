@@ -13,14 +13,14 @@ import (
 )
 
 const (
-	scriptsRelativePath    string = "applescripts"
-	checkTrayIconIsVisible string = "checkTrayIconIsVisible.applescript"
-	clickTrayMenuItem      string = "clickTrayMenuItem.applescript"
-	setPullSecretFile      string = "setPullSecretFile.applescript"
-	getTrayFieldlValue     string = "getTrayFieldlValue.applescript"
-	installTray            string = "installTray.applescript"
-	getOCLoginCommand      string = "getOCLoginCommand.applescript"
-	runOCLoginCommand      string = "runOCLoginCommand.applescript"
+	scriptsRelativePath       string = "applescripts"
+	checkTrayIconIsVisible    string = "checkTrayIconIsVisible.applescript"
+	clickTrayMenuItem         string = "clickTrayMenuItem.applescript"
+	setPullSecretFileLocation string = "setPullSecretFileLocation.applescript"
+	getTrayFieldlValue        string = "getTrayFieldlValue.applescript"
+	installTray               string = "installTray.applescript"
+	getOCLoginCommand         string = "getOCLoginCommand.applescript"
+	runOCLoginCommand         string = "runOCLoginCommand.applescript"
 
 	bundleIdentifier string = "com.redhat.codeready.containers"
 	appPath          string = "/Applications/CodeReady Containers.app"
@@ -53,15 +53,15 @@ var (
 )
 
 type applescriptHandler struct {
-	bundleLocation *string
-	pullSecretFile *string
+	bundleLocation         *string
+	pullSecretFileLocation *string
 }
 
-func NewTray(bundleLocationValue *string, pullSecretFileValue *string) Tray {
+func NewTray(bundleLocationValue *string, pullSecretFileLocationValue *string) Tray {
 	if runtime.GOOS == "darwin" {
 		return applescriptHandler{
-			bundleLocation: bundleLocationValue,
-			pullSecretFile: pullSecretFileValue}
+			bundleLocation:         bundleLocationValue,
+			pullSecretFileLocation: pullSecretFileLocationValue}
 
 	}
 	return nil
@@ -108,9 +108,9 @@ func (a applescriptHandler) ClickQuit() error {
 	return clickButtonByAction(actionQuit)
 }
 
-func (a applescriptHandler) SetPullSecretFile() error {
+func (a applescriptHandler) SetPullSecretFileLocation() error {
 	return applescript.ExecuteApplescript(
-		setPullSecretFile, bundleIdentifier, *a.pullSecretFile)
+		setPullSecretFileLocation, bundleIdentifier, *a.pullSecretFileLocation)
 }
 
 func (a applescriptHandler) IsClusterRunning() error {
