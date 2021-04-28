@@ -7,7 +7,9 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/code-ready/crc/pkg/download"
 )
@@ -135,4 +137,28 @@ func RemoveCRCHome(crcHome string) error {
 	}
 	// keepFile exists
 	return fmt.Errorf("folder %s not removed as per request: %s present", crcHome, keepFile)
+}
+
+// Based on the number of iterations for a given timeout in seconds the function returns the duration of echa loop
+// and the extra time in case required to complete the timeout
+func GetRetryParametersFromTimeoutInSeconds(iterations int, timeout string) (time.Duration, time.Duration, error) {
+	totalTime, err := strconv.Atoi(timeout)
+	if err != nil {
+		return 0, 0, err
+	}
+	iterationDuration, err :=
+		time.ParseDuration(strconv.Itoa(totalTime/iterations) + "s")
+	if err != nil {
+		return 0, 0, err
+	}
+	extraTime := totalTime % iterations
+	if extraTime != 0 {
+		extraTimeDuration, err :=
+			time.ParseDuration(strconv.Itoa(extraTime) + "s")
+		if err != nil {
+			return 0, 0, err
+		}
+		return iterationDuration, extraTimeDuration, nil
+	}
+	return iterationDuration, 0, nil
 }
