@@ -101,7 +101,7 @@ func doPreflightChecks(config config.Storage, checks []Check) error {
 	return nil
 }
 
-func doFixPreflightChecks(config config.Storage, checks []Check) error {
+func doFixPreflightChecks(config config.Storage, checks []Check, checkOnly bool) error {
 	for _, check := range checks {
 		if check.flags&CleanUpOnly == CleanUpOnly {
 			continue
@@ -109,6 +109,8 @@ func doFixPreflightChecks(config config.Storage, checks []Check) error {
 		err := check.doCheck(config)
 		if err == nil {
 			continue
+		} else if checkOnly {
+			return err
 		}
 		if err = check.doFix(); err != nil {
 			return err
@@ -160,11 +162,11 @@ func StartPreflightChecks(config config.Storage) error {
 }
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
-func SetupHost(config config.Storage) error {
+func SetupHost(config config.Storage, checkOnly bool) error {
 	experimentalFeatures := config.Get(cmdConfig.ExperimentalFeatures).AsBool()
 	mode := network.ParseMode(config.Get(cmdConfig.NetworkMode).AsString())
 	trayAutostart := config.Get(cmdConfig.AutostartTray).AsBool()
-	return doFixPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode))
+	return doFixPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode), checkOnly)
 }
 
 func RegisterSettings(config config.Schema) {

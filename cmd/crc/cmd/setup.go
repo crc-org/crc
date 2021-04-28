@@ -54,17 +54,13 @@ func runSetup(arguments []string) error {
 			fmt.Printf("No worry, you can still enable telemetry manually with the command 'crc config set %s yes'.\n", cmdConfig.ConsentTelemetry)
 		}
 	}
-	var err error
-	if checkOnly {
-		err = preflight.StartPreflightChecks(config)
-		if err != nil {
-			err = exec.CodeExitError{
-				Err:  err,
-				Code: preflightFailedExitCode,
-			}
+
+	err := preflight.SetupHost(config, checkOnly)
+	if err != nil && checkOnly {
+		err = exec.CodeExitError{
+			Err:  err,
+			Code: preflightFailedExitCode,
 		}
-	} else {
-		err = preflight.SetupHost(config)
 	}
 
 	return render(&setupResult{

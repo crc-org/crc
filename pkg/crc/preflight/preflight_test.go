@@ -34,9 +34,19 @@ func TestFixPreflight(t *testing.T) {
 	cfg := config.New(config.NewEmptyInMemoryStorage())
 	doRegisterSettings(cfg, []Check{*check})
 
-	assert.NoError(t, doFixPreflightChecks(cfg, []Check{*check}))
+	assert.NoError(t, doFixPreflightChecks(cfg, []Check{*check}, false))
 	assert.True(t, calls.checked)
 	assert.True(t, calls.fixed)
+}
+
+func TestFixPreflightCheckOnly(t *testing.T) {
+	check, calls := sampleCheck(errors.New("check failed"), nil)
+	cfg := config.New(config.NewEmptyInMemoryStorage())
+	doRegisterSettings(cfg, []Check{*check})
+
+	assert.Error(t, doFixPreflightChecks(cfg, []Check{*check}, true))
+	assert.True(t, calls.checked)
+	assert.False(t, calls.fixed)
 }
 
 func sampleCheck(checkErr, fixErr error) (*Check, *status) {
