@@ -5,11 +5,12 @@ import (
 	"time"
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
+	"github.com/code-ready/crc/test/extended/util"
 )
 
 const (
-	retryWait                 = "60s"
-	retryCount                = 15
+	// timeout to wait for cluster to change its state
+	clusterStateTimeout       = "900"
 	CRCExecutableInstalled    = "installed"
 	CRCExecutableNotInstalled = "notInstalled"
 )
@@ -25,19 +26,23 @@ func UnsetConfigPropertySucceedsOrFails(property string, expected string) error 
 }
 
 func WaitForClusterInState(state string) error {
-	retryDuration, err := time.ParseDuration(retryWait)
+	retryCount := 15
+	iterationDuration, extraDuration, err :=
+		util.GetRetryParametersFromTimeoutInSeconds(retryCount, clusterStateTimeout)
 	if err != nil {
 		return err
 	}
-
 	for i := 0; i < retryCount; i++ {
 		err := CheckCRCStatus(state)
 		if err == nil {
 			return nil
 		}
-		time.Sleep(retryDuration)
+		time.Sleep(iterationDuration)
 	}
-	return fmt.Errorf("cluster did not start properly")
+	if extraDuration != 0 {
+		time.Sleep(extraDuration)
+	}
+	return fmt.Errorf("the did not reach the %s state", state)
 }
 
 func CheckCRCStatus(state string) error {

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/code-ready/crc/test/extended/os/applescript"
+	"github.com/code-ready/crc/test/extended/util"
 )
 
 type applescriptHandler struct {
@@ -19,8 +20,7 @@ const (
 	manageNotificationActionGet   string = "get"
 	manageNotificationActionClear string = "clear"
 
-	notificationDelay   string = "5s"
-	notificationRetries int    = 36
+	notificationWaitTimeout string = "200"
 )
 
 func NewNotification() Notification {
@@ -53,17 +53,22 @@ func (a applescriptHandler) ClearNotifications() error {
 }
 
 func checkNotificationMessage(notificationMessage string) error {
-	retryDelay, err := time.ParseDuration(notificationDelay)
+	retryCount := 10
+	iterationDuration, extraDuration, err :=
+		util.GetRetryParametersFromTimeoutInSeconds(retryCount, notificationWaitTimeout)
 	if err != nil {
 		return err
 	}
-	for i := 0; i < notificationRetries; i++ {
+	for i := 0; i < retryCount; i++ {
 		err := applescript.ExecuteApplescriptReturnShouldMatch(
 			notificationMessage, manageNotifications, manageNotificationActionGet)
 		if err == nil {
 			return nil
 		}
-		time.Sleep(retryDelay)
+		time.Sleep(iterationDuration)
+	}
+	if extraDuration != 0 {
+		time.Sleep(extraDuration)
 	}
 	return fmt.Errorf("notification: %s. Timeout", notificationMessage)
 }
