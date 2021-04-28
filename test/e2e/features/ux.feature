@@ -1,5 +1,5 @@
 @ux
-Feature: ux
+Feature: UX Test
 
     Tets CRC usage with ux components. 
         * Handle CRC install/ uninstall operations based on installer distribution
@@ -7,7 +7,7 @@ Feature: ux
 
     @darwin
     Scenario: Install CRC 
-        Given a environment where CRC is not installed
+        Given an environment where CRC is not installed
         When install CRC from installer
         Then CRC is installed
 
@@ -18,16 +18,16 @@ Feature: ux
         And tray icon should be accessible
 
     @darwin
-    Scenario: Start Cluster
+    Scenario: Start the cluster
         Given fresh tray installation   
         When start the cluster from the tray
         And set the pull secret file 
-        Then cluster should be started
+        Then cluster should be running
         And tray should show cluster as running
         And user should get notified with cluster state as running
 
     @darwin
-    Scenario Outline: Connect the cluster
+    Scenario Outline: Connect to the cluster
         Given a running cluster   
         When using copied oc login command for <ocp-user>  
         Then user is connected to the cluster as <ocp-user> 
@@ -40,7 +40,7 @@ Feature: ux
             | developer |
 
     @darwin 
-    Scenario: Stop Cluster
+    Scenario: Stop the cluster
         Given a running cluster   
         When stop the cluster from the tray 
         Then cluster should be stopped
@@ -48,9 +48,9 @@ Feature: ux
         And user should get notified with cluster state as stopped
 
     @darwin 
-    Scenario: Restart Cluster
+    Scenario: Restart the cluster
         Given a stopped cluster   
         When start the cluster from the tray 
-        Then cluster should be started
+        Then cluster should be running
         And tray should show cluster as running
         And user should get notified with cluster state as running

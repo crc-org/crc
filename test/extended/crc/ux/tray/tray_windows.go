@@ -7,14 +7,14 @@ import (
 )
 
 type handler struct {
-	bundleLocation *string
-	pullSecretFile *string
+	bundleLocation         *string
+	pullSecretFileLocation *string
 }
 
-func NewTray(bundleLocationValue *string, pullSecretFileValue *string) Tray {
+func NewTray(bundleLocationValue *string, pullSecretFileLocationValue *string) Tray {
 	return handler{
-		bundleLocation: bundleLocationValue,
-		pullSecretFile: pullSecretFileValue}
+		bundleLocation:         bundleLocationValue,
+		pullSecretFileLocation: pullSecretFileLocationValue}
 
 }
 
@@ -50,7 +50,7 @@ func (h handler) ClickQuit() error {
 	return fmt.Errorf("not implemented yet")
 }
 
-func (h handler) SetPullSecretFile() error {
+func (h handler) SetPullSecretFileLocation() error {
 	return fmt.Errorf("not implemented yet")
 }
 
