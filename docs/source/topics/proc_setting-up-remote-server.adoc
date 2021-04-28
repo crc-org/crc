@@ -31,7 +31,7 @@ Ensure that the cluster remains running throughout this procedure.
 . Install the [package]`haproxy` package and other utilities:
 +
 ----
-$ sudo dnf install haproxy policycoreutils-python-utils
+$ sudo dnf install haproxy /usr/sbin/semanage
 ----
 
 . Modify the firewall to allow communication with the cluster:
