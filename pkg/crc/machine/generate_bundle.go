@@ -77,7 +77,7 @@ func (client *client) GenerateBundle() error {
 	// Copy disk image
 	logging.Infof("Copying the disk image to %s", customBundleNameWithoutExtension)
 	logging.Debugf("Absolute path of custom bundle directory: %s", customBundleDir)
-	diskPath, diskFormat, err := copyDiskImage(customBundleDir, bundleMetadata.GetDiskImagePath())
+	diskPath, diskFormat, err := copyDiskImage(customBundleDir)
 	if err != nil {
 		return err
 	}
