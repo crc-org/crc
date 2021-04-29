@@ -31,7 +31,7 @@ const (
 	// Tray version to be embedded in executable
 	crcMacTrayVersion = "1.0.8"
 	// Windows forms application version type major.minor.buildnumber.revesion
-	crcWindowsTrayVersion = "0.4.0.0"
+	crcWindowsTrayVersion = "0.5.0.0"
 )
 
 type CrcReleaseInfo struct {
