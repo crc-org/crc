@@ -139,7 +139,7 @@ Feature: Basic test
     Scenario: Bundle generation check
         # This will remove the pull secret from the instance and from the cluster
         # You need to provide pull secret file again if you want to start this cluster
-        # from an stopped state.
+        # from a stopped state.
         Given executing "crc bundle generate" succeeds
 
     @darwin @windows

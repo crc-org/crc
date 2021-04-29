@@ -224,5 +224,5 @@ func GetCustomBundleNameWithoutExtension(bundleName string) string {
 }
 
 func GetCustomBundle(bundleNameWithoutExtension string) string {
-	return fmt.Sprintf("%s.%s", bundleNameWithoutExtension, bundleExtension)
+	return fmt.Sprintf("%s%s", bundleNameWithoutExtension, bundleExtension)
 }
