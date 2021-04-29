@@ -74,7 +74,6 @@ Feature: Test configuration settings
         Examples:
             | property                             | value1 | value2 |
             | skip-check-bundle-extracted          | true   | false  |
-            | skip-check-hosts-file-permissions    | true   | false  |
             | skip-check-hyperkit-driver           | true   | false  |
             | skip-check-hyperkit-installed        | true   | false  |
             | skip-check-resolver-file-permissions | true   | false  |
