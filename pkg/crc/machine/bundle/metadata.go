@@ -219,10 +219,6 @@ func GetBundleNameWithoutExtension(bundleName string) string {
 	return strings.TrimSuffix(bundleName, bundleExtension)
 }
 
-func GetCustomBundleNameWithoutExtension(bundleName string) string {
-	return fmt.Sprintf("%s_%d", GetBundleNameWithoutExtension(bundleName), time.Now().Unix())
-}
-
-func GetCustomBundle(bundleNameWithoutExtension string) string {
-	return fmt.Sprintf("%s%s", bundleNameWithoutExtension, bundleExtension)
+func GetCustomBundleName(bundleName string) string {
+	return fmt.Sprintf("%s_%d%s", GetBundleNameWithoutExtension(bundleName), time.Now().Unix(), bundleExtension)
 }
