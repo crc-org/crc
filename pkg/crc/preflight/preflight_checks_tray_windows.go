@@ -102,10 +102,20 @@ func fixTrayInstalled() error {
 func removeTray() error {
 	trayShortcutPath := filepath.Join(constants.StartupFolder, constants.TrayShortcutName)
 	_ = stopTray()
+	/* we changed the name of the tray executable to crc-tray.exe from tray-windows.exe
+	 * this tries to remove the old tray shortcut, can be removed after a  few releases
+	 */
+	_ = os.RemoveFileIfExists(filepath.Join(constants.StartupFolder, "tray-windows.lnk"))
+
 	return os.RemoveFileIfExists(trayShortcutPath)
 }
 
 func stopTray() error {
+	/* we changed the name of the tray executable to crc-tray from tray-windows
+	 * this tries to stop the old tray process, can be removed after a  few releases
+	 */
+	_, _, _ = powershell.Execute(`Stop-Process -Name tray-windows`)
+
 	trayProcessName := strings.TrimSuffix(constants.TrayExecutableName, ".exe")
 	cmd := fmt.Sprintf(`Stop-Process -Name "%s"`, trayProcessName)
 	if _, _, err := powershell.Execute(cmd); err != nil {
@@ -162,6 +172,10 @@ func checkTrayExecutableExists() error {
 }
 
 func fixTrayExecutableExists() error {
+	/* we changed the name of the tray executable to crc-tray.exe from tray-windows.exe
+	 * this tries to remove the old tray folder, can be removed after a  few releases
+	 */
+	_ = goos.RemoveAll(filepath.Join(constants.CrcBinDir, "tray-windows"))
 	return downloadOrExtractTrayApp(constants.GetCRCWindowsTrayDownloadURL(), constants.TrayExecutableDir)
 }
 
