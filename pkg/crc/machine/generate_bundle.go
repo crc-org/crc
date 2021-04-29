@@ -44,7 +44,8 @@ func (client *client) GenerateBundle() error {
 	defer os.RemoveAll(tmpBaseDir)
 
 	// Create the custom bundle directory which is used as top level directory for tarball during compression
-	customBundleNameWithoutExtension := bundle.GetCustomBundleNameWithoutExtension(bundleMetadata.GetBundleName())
+	customBundleName := bundle.GetCustomBundleName(bundleMetadata.GetBundleName())
+	customBundleNameWithoutExtension := bundle.GetBundleNameWithoutExtension(customBundleName)
 
 	copier, err := bundle.NewCopier(bundleMetadata, tmpBaseDir, customBundleNameWithoutExtension)
 	if err != nil {
@@ -92,8 +93,8 @@ func (client *client) GenerateBundle() error {
 	if err != nil {
 		return err
 	}
-	logging.Infof("Bundle is generated in %s", filepath.Join(cwd, bundle.GetCustomBundle(customBundleNameWithoutExtension)))
-	logging.Infof("You need to perform 'crc delete' and 'crc start -b %s' to use this bundle", filepath.Join(cwd, bundle.GetCustomBundle(customBundleNameWithoutExtension)))
+	logging.Infof("Bundle is generated in %s", filepath.Join(cwd, customBundleName))
+	logging.Infof("You need to perform 'crc delete' and 'crc start -b %s' to use this bundle", filepath.Join(cwd, customBundleName))
 	return nil
 }
 
