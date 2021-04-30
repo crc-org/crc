@@ -11,6 +11,13 @@
     <installation-check script="installCheck();"/>
     <script>
 function installCheck() {
+    if (9216000000 > system.sysctl('hw.memsize')) {
+        my.result.title = 'Too few memory installed';
+        my.result.message = 'CodeReady Containers requires at least 9GB of memory to run';
+        my.result.type = 'Fatal';
+        return false;
+    }
+
 	var apps = system.applications.fromIdentifier('com.redhat.codeready.containers');
 	if(apps) {
         my.result.title = 'Update failed';
