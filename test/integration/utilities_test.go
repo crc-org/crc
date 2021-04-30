@@ -133,6 +133,42 @@ func RunCRCExpectFail(args ...string) (string, error) {
 	return stderr, nil
 }
 
+// Run command in the shell on the host
+func RunOnHost(timeout string, command string, args ...string) (string, string, error) {
+	parsedTimeout, err := time.ParseDuration(timeout)
+	if err != nil {
+		fmt.Printf("Failed to parse timeout string: %s, %v", timeout, err)
+		return "", "", err
+	}
+	cmd := exec.Command(command, args...)
+	tChan := make(chan time.Time, 1)
+
+	stdout, stderr, err := Exec(cmd, tChan)
+
+	time.Sleep(parsedTimeout)
+	tChan <- time.Now()
+
+	return stdout, stderr, err
+}
+
+// Run command in the shell on the host (assuming linux bash)
+func RunOnHostWithPrivilege(timeout string, args ...string) (string, string, error) {
+	parsedTimeout, err := time.ParseDuration(timeout)
+	if err != nil {
+		fmt.Printf("Failed to parse timeout string: %s, %v", timeout, err)
+		return "", "", err
+	}
+	cmd := exec.Command("sudo", args...)
+	tChan := make(chan time.Time, 1)
+
+	stdout, stderr, err := Exec(cmd, tChan)
+
+	time.Sleep(parsedTimeout)
+	tChan <- time.Now()
+
+	return stdout, stderr, err
+}
+
 // Send command to CRC VM via SSH
 func SendCommandToVM(cmd string) (string, error) {
 	client := machine.NewClient(constants.DefaultName, false, crcConfig.New(crcConfig.NewEmptyInMemoryStorage()))
@@ -149,6 +185,30 @@ func SendCommandToVM(cmd string) (string, error) {
 		return "", err
 	}
 	return string(out), nil
+}
+
+func RunCRCDaemon(c chan string) {
+
+	cmd := exec.Command("crc", "daemon")
+	err := cmd.Start()
+	if err != nil {
+		fmt.Printf("error running cmd: %v", err)
+	}
+
+	select {
+	case status := <-c:
+		if status == "done" {
+			err = cmd.Process.Kill()
+			if err != nil {
+				fmt.Printf("error killing the process: %v", err)
+			}
+		}
+	case <-time.After(30 * time.Minute):
+		err = cmd.Process.Kill()
+		if err != nil {
+			fmt.Printf("error killing the process: %v", err)
+		}
+	}
 }
 
 // ExitError is an interface that presents an API similar to os.ProcessState, which is
