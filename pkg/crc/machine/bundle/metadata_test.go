@@ -2,9 +2,15 @@ package bundle
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
+	"unicode"
+
+	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/logging"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const reference = `{
@@ -117,4 +123,30 @@ func TestUnmarshalMarshal(t *testing.T) {
 	bin, err := json.Marshal(bundle)
 	assert.NoError(t, err)
 	assert.JSONEq(t, string(bin), reference)
+}
+
+// check that the bundle name has the form "crc_libvirt_4.7.8.crcbundle" or "crc_libvirt_4.7.8_123456.crcbundle"
+func checkBundleName(t *testing.T, bundleName string) {
+	logging.Debugf("Checking bundle '%s", bundleName)
+	baseName := GetBundleNameWithoutExtension(constants.GetDefaultBundle())
+	require.True(t, strings.HasPrefix(bundleName, baseName), "%s should start with %s", bundleName, baseName)
+	bundleName = bundleName[len(baseName):]
+	require.True(t, strings.HasSuffix(bundleName, ".crcbundle"), "%s should have a '.crcbundle' extension", bundleName)
+	bundleName = bundleName[:len(bundleName)-len(".crcbundle")]
+	if bundleName == "" {
+		return
+	}
+	require.GreaterOrEqual(t, len(bundleName), 2)
+	require.Equal(t, rune(bundleName[0]), '_')
+	for _, char := range bundleName[1:] {
+		require.True(t, unicode.IsDigit(char), "%c should be a digit", char)
+	}
+}
+
+func TestCustomBundleName(t *testing.T) {
+	checkBundleName(t, constants.GetDefaultBundle())
+	customBundleName := GetCustomBundleName(constants.GetDefaultBundle())
+	checkBundleName(t, customBundleName)
+	customBundleName = GetCustomBundleName(customBundleName)
+	checkBundleName(t, customBundleName)
 }
