@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -219,6 +220,8 @@ func GetBundleNameWithoutExtension(bundleName string) string {
 	return strings.TrimSuffix(bundleName, bundleExtension)
 }
 
-func GetCustomBundleName(bundleName string) string {
-	return fmt.Sprintf("%s_%d%s", GetBundleNameWithoutExtension(bundleName), time.Now().Unix(), bundleExtension)
+func GetCustomBundleName(bundleFilename string) string {
+	re := regexp.MustCompile(`(?:_[0-9]+)*.crcbundle$`)
+	baseName := re.ReplaceAllLiteralString(bundleFilename, "")
+	return fmt.Sprintf("%s_%d%s", baseName, time.Now().Unix(), bundleExtension)
 }
