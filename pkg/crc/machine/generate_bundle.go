@@ -37,7 +37,7 @@ func (client *client) GenerateBundle() error {
 		return fmt.Errorf("VM is not stopped, current state is %s", currentState.String())
 	}
 
-	tmpBaseDir, err := ioutil.TempDir("", "crc_custom_bundle")
+	tmpBaseDir, err := ioutil.TempDir(constants.MachineCacheDir, "crc_custom_bundle")
 	if err != nil {
 		return err
 	}
