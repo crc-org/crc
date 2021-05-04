@@ -167,12 +167,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			return nil, errors.Wrap(err, "Error getting bundle metadata")
 		}
 
-		if client.useVSock() {
-			if err := exposePorts(); err != nil {
-				return nil, err
-			}
-		}
-
 		logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
 
 		machineConfig := config.MachineConfig{
@@ -192,9 +186,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		host, err = createHost(libMachineAPIClient, machineConfig)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error creating machine")
-		}
-		if err := startHost(ctx, libMachineAPIClient, host); err != nil {
-			return nil, errors.Wrap(err, "Error starting machine")
 		}
 	} else { // exists
 		host, err = libMachineAPIClient.Load(client.name)
@@ -237,23 +228,23 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			return nil, err
 		}
 
-		if client.useVSock() {
-			if err := exposePorts(); err != nil {
-				return nil, err
-			}
-		}
-
 		telemetry.SetStartType(ctx, telemetry.StartStartType)
 
 		logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
+	}
 
-		if err := client.updateVMConfig(startConfig, libMachineAPIClient, host); err != nil {
-			return nil, errors.Wrap(err, "Could not update CRC VM configuration")
+	if client.useVSock() {
+		if err := exposePorts(); err != nil {
+			return nil, err
 		}
+	}
 
-		if err := startHost(ctx, libMachineAPIClient, host); err != nil {
-			return nil, errors.Wrap(err, "Error starting machine")
-		}
+	if err := client.updateVMConfig(startConfig, libMachineAPIClient, host); err != nil {
+		return nil, errors.Wrap(err, "Could not update CRC VM configuration")
+	}
+
+	if err := startHost(ctx, libMachineAPIClient, host); err != nil {
+		return nil, errors.Wrap(err, "Error starting machine")
 	}
 
 	if runtime.GOOS == "darwin" && client.useVSock() {
