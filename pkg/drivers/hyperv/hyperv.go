@@ -87,12 +87,12 @@ func (d *Driver) DriverName() string {
 func (d *Driver) GetState() (state.State, error) {
 	stdout, err := cmdOut("(", "Hyper-V\\Get-VM", d.MachineName, ").state")
 	if err != nil {
-		return state.None, fmt.Errorf("Failed to find the VM status")
+		return state.Error, fmt.Errorf("Failed to find the VM status")
 	}
 
 	resp := parseLines(stdout)
 	if len(resp) < 1 {
-		return state.None, nil
+		return state.Error, fmt.Errorf("unexpected Hyper-V state %s", resp)
 	}
 
 	switch resp[0] {
@@ -101,7 +101,7 @@ func (d *Driver) GetState() (state.State, error) {
 	case "Off":
 		return state.Stopped, nil
 	default:
-		return state.None, nil
+		return state.Error, fmt.Errorf("unexpected Hyper-V state %s", resp[0])
 	}
 }
 

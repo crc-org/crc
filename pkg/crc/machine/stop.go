@@ -12,7 +12,7 @@ func (client *client) Stop() (state.State, error) {
 	host, err := libMachineAPIClient.Load(client.name)
 
 	if err != nil {
-		return state.None, errors.Wrap(err, "Cannot load machine")
+		return state.Error, errors.Wrap(err, "Cannot load machine")
 	}
 
 	logging.Info("Stopping the OpenShift cluster, this may take a few minutes...")
