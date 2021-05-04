@@ -96,7 +96,7 @@ func (d *Driver) GetState() (state.State, error) {
 	}
 
 	switch resp[0] {
-	case "Running":
+	case "Starting", "Running", "Stopping":
 		return state.Running, nil
 	case "Off":
 		return state.Stopped, nil
