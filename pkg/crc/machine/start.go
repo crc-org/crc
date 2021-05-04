@@ -254,8 +254,8 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			return nil, errors.Wrap(err, "Could not update CRC VM configuration")
 		}
 
-		if err := host.Driver.Start(); err != nil {
-			return nil, errors.Wrap(err, "Error starting stopped VM")
+		if err := startHost(ctx, libMachineAPIClient, host); err != nil {
+			return nil, errors.Wrap(err, "Error starting machine")
 		}
 	}
 
