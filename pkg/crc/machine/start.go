@@ -187,51 +187,51 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		if err != nil {
 			return nil, errors.Wrap(err, "Error creating machine")
 		}
-	} else { // exists
-		host, err = libMachineAPIClient.Load(client.name)
-		if err != nil {
-			return nil, errors.Wrap(err, "Error loading machine")
-		}
-
-		crcBundleMetadata, err = getBundleMetadataFromDriver(host.Driver)
-		if err != nil {
-			return nil, errors.Wrap(err, "Error loading bundle metadata")
-		}
-		bundleName := crcBundleMetadata.GetBundleName()
-		if bundleName != filepath.Base(startConfig.BundlePath) {
-			logging.Debugf("Bundle '%s' was requested, but the existing VM is using '%s'",
-				filepath.Base(startConfig.BundlePath), bundleName)
-			return nil, fmt.Errorf("Bundle '%s' was requested, but the existing VM is using '%s'",
-				filepath.Base(startConfig.BundlePath),
-				bundleName)
-		}
-		vmState, err := host.Driver.GetState()
-		if err != nil {
-			return nil, errors.Wrap(err, "Error getting the machine state")
-		}
-		if vmState == state.Running {
-			logging.Infof("A CodeReady Containers VM for OpenShift %s is already running", crcBundleMetadata.GetOpenshiftVersion())
-			clusterConfig, err := getClusterConfig(crcBundleMetadata)
-			if err != nil {
-				return nil, errors.Wrap(err, "Cannot create cluster configuration")
-			}
-
-			telemetry.SetStartType(ctx, telemetry.AlreadyRunningStartType)
-			return &types.StartResult{
-				Status:         vmState,
-				ClusterConfig:  *clusterConfig,
-				KubeletStarted: true,
-			}, nil
-		}
-
-		if _, err := bundle.Use(bundleName); err != nil {
-			return nil, err
-		}
-
+	} else {
 		telemetry.SetStartType(ctx, telemetry.StartStartType)
-
-		logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
 	}
+
+	host, err = libMachineAPIClient.Load(client.name)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error loading machine")
+	}
+
+	crcBundleMetadata, err = getBundleMetadataFromDriver(host.Driver)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error loading bundle metadata")
+	}
+	bundleName := crcBundleMetadata.GetBundleName()
+	if bundleName != filepath.Base(startConfig.BundlePath) {
+		logging.Debugf("Bundle '%s' was requested, but the existing VM is using '%s'",
+			filepath.Base(startConfig.BundlePath), bundleName)
+		return nil, fmt.Errorf("Bundle '%s' was requested, but the existing VM is using '%s'",
+			filepath.Base(startConfig.BundlePath),
+			bundleName)
+	}
+	vmState, err := host.Driver.GetState()
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting the machine state")
+	}
+	if vmState == state.Running {
+		logging.Infof("A CodeReady Containers VM for OpenShift %s is already running", crcBundleMetadata.GetOpenshiftVersion())
+		clusterConfig, err := getClusterConfig(crcBundleMetadata)
+		if err != nil {
+			return nil, errors.Wrap(err, "Cannot create cluster configuration")
+		}
+
+		telemetry.SetStartType(ctx, telemetry.AlreadyRunningStartType)
+		return &types.StartResult{
+			Status:         vmState,
+			ClusterConfig:  *clusterConfig,
+			KubeletStarted: true,
+		}, nil
+	}
+
+	if _, err := bundle.Use(bundleName); err != nil {
+		return nil, err
+	}
+
+	logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
 
 	if client.useVSock() {
 		if err := exposePorts(); err != nil {
@@ -259,7 +259,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	// Post-VM start
-	vmState, err := host.Driver.GetState()
+	vmState, err = host.Driver.GetState()
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting the state")
 	}
