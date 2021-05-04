@@ -95,7 +95,7 @@ func (c *Client) Status() (*types.ClusterStatusResult, error) {
 	}
 	return &types.ClusterStatusResult{
 		CrcStatus:        state.Running,
-		OpenshiftStatus:  "Running",
+		OpenshiftStatus:  types.OpenshiftRunning,
 		OpenshiftVersion: "4.5.1",
 		DiskUse:          10_000_000_000,
 		DiskSize:         20_000_000_000,

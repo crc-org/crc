@@ -37,7 +37,7 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	if vmStatus != state.Running {
 		return &types.ClusterStatusResult{
 			CrcStatus:        vmStatus,
-			OpenshiftStatus:  "Stopped",
+			OpenshiftStatus:  types.OpenshiftStopped,
 			OpenshiftVersion: crcBundleMetadata.GetOpenshiftVersion(),
 		}, nil
 	}
@@ -65,19 +65,19 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	}, nil
 }
 
-func getOpenShiftStatus(sshRunner *crcssh.Runner, monitoringEnabled bool) string {
+func getOpenShiftStatus(sshRunner *crcssh.Runner, monitoringEnabled bool) types.OpenshiftStatus {
 	status, err := cluster.GetClusterOperatorsStatus(oc.UseOCWithSSH(sshRunner), monitoringEnabled)
 	if err != nil {
 		logging.Debugf("cannot get OpenShift status: %v", err)
-		return "Unreachable"
+		return types.OpenshiftUnreachable
 	}
 	switch {
 	case status.Progressing:
-		return "Starting"
+		return types.OpenshiftStarting
 	case status.Degraded:
-		return "Degraded"
+		return types.OpenshiftDegraded
 	case status.Available:
-		return "Running"
+		return types.OpenshiftRunning
 	}
-	return "Stopped"
+	return types.OpenshiftStopped
 }

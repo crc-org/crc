@@ -10,6 +10,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/docker/go-units"
 	"github.com/spf13/cobra"
 )
@@ -32,7 +33,7 @@ type status struct {
 	Success          bool                         `json:"success"`
 	Error            *crcErrors.SerializableError `json:"error,omitempty"`
 	CrcStatus        string                       `json:"crcStatus,omitempty"`
-	OpenShiftStatus  string                       `json:"openshiftStatus,omitempty"`
+	OpenShiftStatus  types.OpenshiftStatus        `json:"openshiftStatus,omitempty"`
 	OpenShiftVersion string                       `json:"openshiftVersion,omitempty"`
 	DiskUsage        int64                        `json:"diskUsage,omitempty"`
 	DiskSize         int64                        `json:"diskSize,omitempty"`
@@ -107,7 +108,7 @@ func openshiftStatus(status *status) string {
 	if status.OpenShiftVersion != "" {
 		return fmt.Sprintf("%s (v%s)", status.OpenShiftStatus, status.OpenShiftVersion)
 	}
-	return status.OpenShiftStatus
+	return string(status.OpenShiftStatus)
 }
 
 func printLine(w *tabwriter.Writer, left string, right string) error {
