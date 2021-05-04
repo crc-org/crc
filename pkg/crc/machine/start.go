@@ -162,15 +162,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			return nil, errors.Wrap(err, "Failed to ask for pull secret")
 		}
 
-		machineConfig := config.MachineConfig{
-			Name:        client.name,
-			BundleName:  filepath.Base(startConfig.BundlePath),
-			CPUs:        startConfig.CPUs,
-			Memory:      startConfig.Memory,
-			DiskSize:    startConfig.DiskSize,
-			NetworkMode: client.networkMode(),
-		}
-
 		crcBundleMetadata, err = getCrcBundleInfo(startConfig.BundlePath)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error getting bundle metadata")
@@ -184,14 +175,20 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 		logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
 
-		// Retrieve metadata info
-		machineConfig.ImageSourcePath = crcBundleMetadata.GetDiskImagePath()
-		machineConfig.ImageFormat = crcBundleMetadata.GetDiskImageFormat()
-		machineConfig.SSHKeyPath = crcBundleMetadata.GetSSHKeyPath()
-		machineConfig.KernelCmdLine = crcBundleMetadata.GetKernelCommandLine()
-		machineConfig.Initramfs = crcBundleMetadata.GetInitramfsPath()
-		machineConfig.Kernel = crcBundleMetadata.GetKernelPath()
-
+		machineConfig := config.MachineConfig{
+			Name:            client.name,
+			BundleName:      filepath.Base(startConfig.BundlePath),
+			CPUs:            startConfig.CPUs,
+			Memory:          startConfig.Memory,
+			DiskSize:        startConfig.DiskSize,
+			NetworkMode:     client.networkMode(),
+			ImageSourcePath: crcBundleMetadata.GetDiskImagePath(),
+			ImageFormat:     crcBundleMetadata.GetDiskImageFormat(),
+			SSHKeyPath:      crcBundleMetadata.GetSSHKeyPath(),
+			KernelCmdLine:   crcBundleMetadata.GetKernelCommandLine(),
+			Initramfs:       crcBundleMetadata.GetInitramfsPath(),
+			Kernel:          crcBundleMetadata.GetKernelPath(),
+		}
 		host, err = createHost(libMachineAPIClient, machineConfig)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error creating machine")
