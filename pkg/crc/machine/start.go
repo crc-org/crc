@@ -521,15 +521,56 @@ func makeDaemonVisibleToHyperkit(name string) error {
 	return nil
 }
 
-func createHost(ctx context.Context, api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {
+func createHost(ctx context.Context, api *libmachine.Client, machineConfig config.MachineConfig) (*host.Host, error) {
 	vm, err := newHost(api, machineConfig)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating new host: %s", err)
 	}
-	if err := api.Create(ctx, vm); err != nil {
+	if err := createAndStartHost(ctx, api, vm); err != nil {
 		return nil, fmt.Errorf("Error creating the VM: %s", err)
 	}
 	return vm, nil
+}
+
+// Create is the wrapper method which covers all of the boilerplate around
+// actually creating, provisioning, and persisting an instance in the store.
+func createAndStartHost(ctx context.Context, api *libmachine.Client, h *host.Host) error {
+	logging.Debug("Running pre-create checks...")
+
+	if err := h.Driver.PreCreateCheck(); err != nil {
+		return errors.Wrap(err, "error with pre-create check")
+	}
+
+	if err := api.Save(h); err != nil {
+		return fmt.Errorf("Error saving host to store before attempting creation: %s", err)
+	}
+
+	logging.Debug("Creating machine...")
+
+	if err := h.Driver.Create(); err != nil {
+		return fmt.Errorf("Error in driver during machine creation: %s", err)
+	}
+
+	if err := h.Driver.Start(); err != nil {
+		return fmt.Errorf("Error in driver during machine start: %s", err)
+	}
+
+	if err := api.Save(h); err != nil {
+		return fmt.Errorf("Error saving host to store after attempting creation: %s", err)
+	}
+
+	logging.Debug("Waiting for machine to be running, this may take a few minutes...")
+	if err := crcerrors.RetryAfterWithContext(ctx, 3*time.Minute, host.MachineInState(h.Driver, state.Running), 3*time.Second); err != nil {
+		return fmt.Errorf("Error waiting for machine to be running: %s", err)
+	}
+
+	logging.Debug("Machine is up and running!")
+
+	if err := api.SetExists(h.Name); err != nil {
+		logging.Debug("Failed to record VM existence")
+	}
+
+	return nil
 }
 
 func addNameServerToInstance(sshRunner *crcssh.Runner, ns string) error {
