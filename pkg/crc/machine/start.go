@@ -141,13 +141,10 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, err
 	}
 
-	var crcBundleMetadata *bundle.CrcBundleInfo
-
 	libMachineAPIClient, cleanup := createLibMachineClient()
 	defer cleanup()
 
 	// Pre-VM start
-	var host *host.Host
 	exists, err := client.Exists()
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot determine if VM exists")
@@ -162,7 +159,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			return nil, errors.Wrap(err, "Failed to ask for pull secret")
 		}
 
-		crcBundleMetadata, err = getCrcBundleInfo(startConfig.BundlePath)
+		crcBundleMetadata, err := getCrcBundleInfo(startConfig.BundlePath)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error getting bundle metadata")
 		}
@@ -183,20 +180,19 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			Initramfs:       crcBundleMetadata.GetInitramfsPath(),
 			Kernel:          crcBundleMetadata.GetKernelPath(),
 		}
-		host, err = createHost(libMachineAPIClient, machineConfig)
-		if err != nil {
+		if err := createHost(libMachineAPIClient, machineConfig); err != nil {
 			return nil, errors.Wrap(err, "Error creating machine")
 		}
 	} else {
 		telemetry.SetStartType(ctx, telemetry.StartStartType)
 	}
 
-	host, err = libMachineAPIClient.Load(client.name)
+	host, err := libMachineAPIClient.Load(client.name)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error loading machine")
 	}
 
-	crcBundleMetadata, err = getBundleMetadataFromDriver(host.Driver)
+	crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error loading bundle metadata")
 	}
@@ -512,30 +508,30 @@ func makeDaemonVisibleToHyperkit(name string) error {
 	return nil
 }
 
-func createHost(api *libmachine.Client, machineConfig config.MachineConfig) (*host.Host, error) {
+func createHost(api *libmachine.Client, machineConfig config.MachineConfig) error {
 	vm, err := newHost(api, machineConfig)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating new host: %s", err)
+		return fmt.Errorf("Error creating new host: %s", err)
 	}
 
 	logging.Debug("Running pre-create checks...")
 
 	if err := vm.Driver.PreCreateCheck(); err != nil {
-		return nil, errors.Wrap(err, "error with pre-create check")
+		return errors.Wrap(err, "error with pre-create check")
 	}
 
 	if err := api.Save(vm); err != nil {
-		return nil, fmt.Errorf("Error saving host to store before attempting creation: %s", err)
+		return fmt.Errorf("Error saving host to store before attempting creation: %s", err)
 	}
 
 	logging.Debug("Creating machine...")
 
 	if err := vm.Driver.Create(); err != nil {
-		return nil, fmt.Errorf("Error in driver during machine creation: %s", err)
+		return fmt.Errorf("Error in driver during machine creation: %s", err)
 	}
 
 	logging.Debug("Machine successfully created")
-	return vm, nil
+	return nil
 }
 
 func startHost(ctx context.Context, api *libmachine.Client, vm *host.Host) error {
