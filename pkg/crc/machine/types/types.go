@@ -46,11 +46,21 @@ type StopResult struct {
 
 type ClusterStatusResult struct {
 	CrcStatus        state.State
-	OpenshiftStatus  string
+	OpenshiftStatus  OpenshiftStatus
 	OpenshiftVersion string
 	DiskUse          int64
 	DiskSize         int64
 }
+
+type OpenshiftStatus string
+
+const (
+	OpenshiftUnreachable OpenshiftStatus = "Unreachable"
+	OpenshiftStarting    OpenshiftStatus = "Starting"
+	OpenshiftRunning     OpenshiftStatus = "Running"
+	OpenshiftDegraded    OpenshiftStatus = "Degraded"
+	OpenshiftStopped     OpenshiftStatus = "Stopped"
+)
 
 type ConsoleResult struct {
 	ClusterConfig ClusterConfig

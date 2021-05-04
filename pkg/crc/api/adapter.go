@@ -88,7 +88,7 @@ func (a *Adapter) Status() client.ClusterStatusResult {
 	return client.ClusterStatusResult{
 		Name:             a.Underlying.GetName(),
 		CrcStatus:        res.CrcStatus.String(),
-		OpenshiftStatus:  res.OpenshiftStatus,
+		OpenshiftStatus:  string(res.OpenshiftStatus),
 		OpenshiftVersion: res.OpenshiftVersion,
 		DiskUse:          res.DiskUse,
 		DiskSize:         res.DiskSize,
