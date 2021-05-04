@@ -100,19 +100,6 @@ func (api *Client) Create(ctx context.Context, h *host.Host) error {
 
 	log.Debug("Creating machine...")
 
-	if err := api.performCreate(ctx, h); err != nil {
-		return fmt.Errorf("Error creating machine: %s", err)
-	}
-
-	log.Debug("Machine successfully created")
-	if err := api.SetExists(h.Name); err != nil {
-		log.Debug("Failed to record VM existence")
-	}
-
-	return nil
-}
-
-func (api *Client) performCreate(ctx context.Context, h *host.Host) error {
 	if err := h.Driver.Create(); err != nil {
 		return fmt.Errorf("Error in driver during machine creation: %s", err)
 	}
@@ -131,6 +118,11 @@ func (api *Client) performCreate(ctx context.Context, h *host.Host) error {
 	}
 
 	log.Debug("Machine is up and running!")
+
+	if err := api.SetExists(h.Name); err != nil {
+		log.Debug("Failed to record VM existence")
+	}
+
 	return nil
 }
 
