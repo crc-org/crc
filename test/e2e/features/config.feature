@@ -62,11 +62,11 @@ Feature: Test configuration settings
         When setting config property "<property>" to value "<value1>" succeeds
         And "JSON" config file "crc.json" in CRC home folder contains key "<property>" with value matching "<value1>"
         When executing "crc setup" succeeds
-        Then stderr should contain "Skipping above check ..."
+        Then stderr should contain "Skipping above check..."
         When setting config property "<property>" to value "<value2>" succeeds
         Then "JSON" config file "crc.json" in CRC home folder contains key "<property>" with value matching "<value2>"
         When executing "crc setup" succeeds
-        Then stderr should not contain "Skipping above check ..."
+        Then stderr should not contain "Skipping above check..."
         When unsetting config property "<property>" succeeds
         Then "JSON" config file "crc.json" in CRC home folder does not contain key "<property>"
         
