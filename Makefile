@@ -301,18 +301,21 @@ $(GOPATH)/bin/gomod2rpmdeps:
 $(HOST_BUILD_DIR)/split: packaging/windows/split.go
 	go build -o $(HOST_BUILD_DIR)/split packaging/windows/split.go
 
+CRC_EXE=crc.exe
+BUNDLE_NAME=crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+
 .PHONY: msidir
-msidir: CRC_EXE = crc.exe
 msidir: clean $(HOST_BUILD_DIR)/crc-embedder $(HOST_BUILD_DIR)/split $(BUILD_DIR)/windows-amd64/crc.exe check_bundledir $(PACKAGE_DIR)/product.wxs
 	mkdir -p $(PACKAGE_DIR)/msi
-	$(HOST_BUILD_DIR)/crc-embedder embed --goos windows --log-level debug --bundle-dir $(BUNDLE_DIR) $(BUILD_DIR)/windows-amd64/crc.exe
+	$(HOST_BUILD_DIR)/crc-embedder download $(PACKAGE_DIR)/msi 
 	cp $(HOST_BUILD_DIR)/crc.exe $(PACKAGE_DIR)/msi/$(CRC_EXE)
+	pwsh -NoProfile -Command "cd $(PACKAGE_DIR)/msi; Expand-Archive crc-tray-windows.zip -DestinationPath .\; Remove-Item crc-tray-windows.zip"
 ifeq ($(MOCK_BUNDLE),true)
-	mv $(PACKAGE_DIR)/msi/$(CRC_EXE) $(PACKAGE_DIR)/msi/$(CRC_EXE).0
-	touch $(PACKAGE_DIR)/msi/$(CRC_EXE).1 $(PACKAGE_DIR)/msi/$(CRC_EXE).2
+	touch $(PACKAGE_DIR)/msi/$(BUNDLE_NAME).0 $(PACKAGE_DIR)/msi/$(BUNDLE_NAME).1 $(PACKAGE_DIR)/msi/$(BUNDLE_NAME).2
 else
-	$(HOST_BUILD_DIR)/split $(PACKAGE_DIR)/msi/$(CRC_EXE)
-	rm $(PACKAGE_DIR)/msi/$(CRC_EXE)
+	cp $(HYPERV_BUNDLENAME) $(PACKAGE_DIR)/msi
+	$(HOST_BUILD_DIR)/split $(PACKAGE_DIR)/msi/$(BUNDLE_NAME)
+	rm $(PACKAGE_DIR)/msi/$(BUNDLE_NAME)
 endif
 	cp -r $(PACKAGE_DIR)/Resources $(PACKAGE_DIR)/msi/
 	cp $(PACKAGE_DIR)/*.wxs $(PACKAGE_DIR)/msi
