@@ -59,8 +59,9 @@ func (c *Client) Close() error {
 	return c.segmentClient.Close()
 }
 
-func (c *Client) UploadAction(action, source string) error {
-	return c.upload(action, baseProperties(source))
+func (c *Client) UploadAction(action, source, status string) error {
+	return c.upload(action, baseProperties(source).
+		Set("status", status))
 }
 
 func (c *Client) UploadCmd(ctx context.Context, action string, duration time.Duration, err error) error {

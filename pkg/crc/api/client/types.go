@@ -70,4 +70,5 @@ type getOrUnsetConfigRequest struct {
 type TelemetryRequest struct {
 	Action string `json:"action"`
 	Source string `json:"source"`
+	Status string `json:"status"`
 }
