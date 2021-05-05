@@ -4,18 +4,20 @@ package installer
 
 import (
 	"fmt"
+
+	goautoit "github.com/adrianriobo/goautoit"
 )
 
-type handler struct {
-	currentUserPassword *string
-	installerPath       *string
+type autoitHandler struct {
+	CurrentUserPassword *string
+	InstallerPath       *string
 }
 
 func NewInstaller(currentUserPassword *string, installerPath *string) Installer {
 	// TODO check parameters as they are mandatory otherwise exit
-	return handler{
-		currentUserPassword: currentUserPassword,
-		installerPath:       installerPath}
+	return autoitHandler{
+		CurrentUserPassword: currentUserPassword,
+		InstallerPath:       installerPath}
 
 }
 
@@ -23,6 +25,11 @@ func RequiredResourcesPath() (string, error) {
 	return "", nil
 }
 
-func (h handler) Install() error {
-	return fmt.Errorf("not implemented yet")
+func (a autoitHandler) Install() error {
+	command := fmt.Sprintf("msiexec.exe /i %s /qf", *a.InstallerPath)
+	installerPid := goautoit.RunWait(command)
+	if installerPid == 0 {
+		return fmt.Errorf("error starting the msi installer")
+	}
+	return nil
 }

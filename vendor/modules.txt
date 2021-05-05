@@ -15,6 +15,10 @@ github.com/VividCortex/ewma
 # github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
 ## explicit
 github.com/YourFin/binappend
+# github.com/adrianriobo/goautoit v0.0.0-20210415141646-fc37def5a975
+## explicit
+github.com/adrianriobo/goautoit
+github.com/adrianriobo/goautoit/external
 # github.com/alexbrainman/sspi v0.0.0-20180613141037-e580b900e9f5
 github.com/alexbrainman/sspi
 github.com/alexbrainman/sspi/negotiate

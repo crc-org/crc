@@ -81,6 +81,8 @@ github.com/VividCortex/ewma v1.1.1 h1:MnEK4VOv6n0RSY4vtRe3h11qjxL3+t0B8yOL8iMXdc
 github.com/VividCortex/ewma v1.1.1/go.mod h1:2Tkkvm3sRDVXaiyucHiACn4cqf7DpdyLvmxzcbUokwA=
 github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad h1:OUogh+sUEo6yRwGEkqifcr3MfXNi0AtdCSwh7H8yTUM=
 github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad/go.mod h1:QhzJSct0NZ/q7HOtQrw867061u93HYPWa4KTotzdzls=
+github.com/adrianriobo/goautoit v0.0.0-20210415141646-fc37def5a975 h1:3k1SNJREvY7Vb068kqfS4xXPJVIPhBXUBUHpyvV8W/w=
+github.com/adrianriobo/goautoit v0.0.0-20210415141646-fc37def5a975/go.mod h1:tKnCmOA6c/aHEc/rnnRjPMVG3YfAfCMMMuYbW8caej4=
 github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4RqaHDIsdSBg7lM=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
