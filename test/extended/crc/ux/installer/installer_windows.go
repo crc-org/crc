@@ -31,5 +31,6 @@ func (a autoitHandler) Install() error {
 	if installerPid == 0 {
 		return fmt.Errorf("error starting the msi installer")
 	}
+	goautoit.MouseClick("Next")
 	return nil
 }

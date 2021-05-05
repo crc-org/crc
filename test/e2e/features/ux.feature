@@ -5,7 +5,7 @@ Feature: UX Test
         * Handle CRC install/ uninstall operations based on installer distribution
         * Manage CRC through the tray
 
-    @darwin
+    @darwin @windows
     Scenario: Install CRC 
         Given an environment where CRC is not installed
         When install CRC from installer
