@@ -45,11 +45,11 @@ func getCrcBundleInfo(bundlePath string) (*bundle.CrcBundleInfo, error) {
 	bundleName := filepath.Base(bundlePath)
 	bundleInfo, err := bundle.Use(bundleName)
 	if err == nil {
-		logging.Infof("Loading bundle: %s ...", bundleName)
+		logging.Infof("Loading bundle: %s...", bundleName)
 		return bundleInfo, nil
 	}
 	logging.Debugf("Failed to load bundle %s: %v", bundleName, err)
-	logging.Infof("Extracting bundle: %s ...", bundleName)
+	logging.Infof("Extracting bundle: %s...", bundleName)
 	if _, err := bundle.Extract(bundlePath); err != nil {
 		return nil, err
 	}
@@ -351,14 +351,14 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			return nil, errors.Wrapf(err, "Failed internal DNS query: %s", queryOutput)
 		}
 	}
-	logging.Info("Check internal and public DNS query ...")
+	logging.Info("Check internal and public DNS query...")
 
 	if queryOutput, err := dns.CheckCRCPublicDNSReachable(servicePostStartConfig); err != nil {
 		logging.Warnf("Failed public DNS query from the cluster: %v : %s", err, queryOutput)
 	}
 
 	// Check DNS lookup from host to VM
-	logging.Info("Check DNS query from host ...")
+	logging.Info("Check DNS query from host...")
 	if err := network.CheckCRCLocalDNSReachableFromHost(crcBundleMetadata, instanceIP); err != nil {
 		if !client.useVSock() {
 			return nil, errors.Wrap(err, "Failed to query DNS from host")
@@ -375,7 +375,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	// Check the certs validity inside the vm
-	logging.Info("Verifying validity of the kubelet certificates ...")
+	logging.Info("Verifying validity of the kubelet certificates...")
 	certsExpired, err := cluster.CheckCertsValidity(sshRunner)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to check certificate validity")
@@ -454,7 +454,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 	}
 
-	logging.Info("Starting OpenShift cluster ... [waiting for the cluster to stabilize]")
+	logging.Info("Starting OpenShift cluster... [waiting for the cluster to stabilize]")
 
 	if err := cluster.WaitForClusterStable(ctx, ocConfig, client.monitoringEnabled()); err != nil {
 		logging.Errorf("Cluster is not ready: %v", err)
@@ -540,7 +540,7 @@ func addNameServerToInstance(sshRunner *crcssh.Runner, ns string) error {
 		return err
 	}
 	if !exist {
-		logging.Infof("Adding %s as nameserver to the instance ...", nameserver.IPAddress)
+		logging.Infof("Adding %s as nameserver to the instance...", nameserver.IPAddress)
 		return network.AddNameserversToInstance(sshRunner, nameservers)
 	}
 	return nil
@@ -553,7 +553,7 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 		}
 
 		// Generate ssh key pair
-		logging.Info("Generating new SSH Key pair ...")
+		logging.Info("Generating new SSH Key pair...")
 		if err := crcssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
 			return fmt.Errorf("Error generating ssh key pair: %v", err)
 		}
@@ -570,7 +570,7 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 		return nil
 	}
 
-	logging.Info("Updating authorized keys ...")
+	logging.Info("Updating authorized keys...")
 	cmd := fmt.Sprintf("echo '%s' > /home/core/.ssh/authorized_keys; chmod 644 /home/core/.ssh/authorized_keys", publicKey)
 	_, _, err = sshRunner.Run(cmd)
 	if err != nil {
@@ -587,7 +587,7 @@ func copyKubeconfig(name string, crcBundleMetadata *bundle.CrcBundleInfo) error 
 
 	// Copy Kubeconfig file from bundle extract path to machine directory.
 	// In our case it would be ~/.crc/machines/crc/
-	logging.Info("Copying kubeconfig file to instance dir ...")
+	logging.Info("Copying kubeconfig file to instance dir...")
 	err := crcos.CopyFileContents(crcBundleMetadata.GetKubeConfigPath(),
 		kubeConfigFilePath,
 		0644)
@@ -601,7 +601,7 @@ func ensureKubeletAndCRIOAreConfiguredForProxy(sshRunner *crcssh.Runner, proxy *
 	if !proxy.IsEnabled() {
 		return nil
 	}
-	logging.Info("Adding proxy configuration to kubelet and crio service ...")
+	logging.Info("Adding proxy configuration to kubelet and crio service...")
 	return cluster.AddProxyToKubeletAndCriO(sshRunner, proxy)
 }
 
@@ -609,7 +609,7 @@ func ensureProxyIsConfiguredInOpenShift(ocConfig oc.Config, sshRunner *crcssh.Ru
 	if !proxy.IsEnabled() {
 		return nil
 	}
-	logging.Info("Adding proxy configuration to the cluster ...")
+	logging.Info("Adding proxy configuration to the cluster...")
 	return cluster.AddProxyConfigToCluster(sshRunner, ocConfig, proxy)
 }
 
@@ -617,7 +617,7 @@ func waitForProxyPropagation(ctx context.Context, ocConfig oc.Config, proxyConfi
 	if !proxyConfig.IsEnabled() {
 		return
 	}
-	logging.Info("Waiting for the proxy configuration to be applied ...")
+	logging.Info("Waiting for the proxy configuration to be applied...")
 	checkProxySettingsForOperator := func() error {
 		proxySet, err := cluster.CheckProxySettingsForOperator(ocConfig, proxyConfig, "marketplace-operator", "openshift-marketplace")
 		if err != nil {

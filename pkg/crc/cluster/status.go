@@ -30,9 +30,9 @@ func WaitForClusterStable(ctx context.Context, ocConfig oc.Config, monitoringEna
 			if status.IsReady() {
 				count++
 				if count == 1 {
-					logging.Info("All operators are available. Ensuring stability ...")
+					logging.Info("All operators are available. Ensuring stability...")
 				} else {
-					logging.Infof("Operators are stable (%d/%d) ...", count, numConsecutive)
+					logging.Infof("Operators are stable (%d/%d)...", count, numConsecutive)
 				}
 			} else {
 				logging.Info(status.String())

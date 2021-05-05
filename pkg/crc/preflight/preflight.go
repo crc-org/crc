@@ -55,7 +55,7 @@ func (check *Check) doCheck(config config.Storage) error {
 		logging.Infof("%s", check.checkDescription)
 	}
 	if check.shouldSkip(config) {
-		logging.Warn("Skipping above check ...")
+		logging.Warn("Skipping above check...")
 		return nil
 	}
 

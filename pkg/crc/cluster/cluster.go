@@ -109,7 +109,7 @@ func EnsurePullSecretPresentInTheCluster(ocConfig oc.Config, pullSec PullSecretL
 		return nil
 	}
 
-	logging.Info("Adding user's pull secret to the cluster ...")
+	logging.Info("Adding user's pull secret to the cluster...")
 	content, err := pullSec.Value()
 	if err != nil {
 		return err
@@ -168,7 +168,7 @@ func EnsureClusterIDIsNotEmpty(ocConfig oc.Config) error {
 		return nil
 	}
 
-	logging.Info("Updating cluster ID ...")
+	logging.Info("Updating cluster ID...")
 	clusterID := uuid.New()
 	cmdArgs := []string{"patch", "clusterversion", "version", "-p",
 		fmt.Sprintf(`'{"spec":{"clusterID":"%s"}}'`, clusterID), "--type", "merge"}
