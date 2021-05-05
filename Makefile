@@ -326,8 +326,8 @@ $(BUILD_DIR)/windows-amd64/crc-windows-amd64.msi: msidir
 	cd $(PACKAGE_DIR)/msi && light.exe -ext WixUIExtension -ext WixUtilExtension -sacl -spdb -sice:ICE61 -out ../../../$@ *.wixobj
 
 CABS_MSI = "cab1.cab,cab2.cab,cab3.cab,crc-windows-amd64.msi"
-$(BUILD_DIR)/windows-amd64/crc-installer.zip: $(BUILD_DIR)/windows-amd64/crc-windows-amd64.msi
+$(BUILD_DIR)/windows-amd64/crc-windows-installer.zip: $(BUILD_DIR)/windows-amd64/crc-windows-amd64.msi
 	rm -f $(HOST_BUILD_DIR)/crc.exe
 	rm -f $(HOST_BUILD_DIR)/crc-embedder
 	rm -f $(HOST_BUILD_DIR)/split
-	pwsh -NoProfile -Command "cd $(HOST_BUILD_DIR); Compress-Archive -LiteralPath $(CABS_MSI) -DestinationPath crc-installer.zip"
+	pwsh -NoProfile -Command "cd $(HOST_BUILD_DIR); Compress-Archive -LiteralPath $(CABS_MSI) -DestinationPath crc-windows-installer.zip"
