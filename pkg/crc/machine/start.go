@@ -571,7 +571,7 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	}
 
 	logging.Info("Updating authorized keys ...")
-	cmd := fmt.Sprintf("echo '%s' > /home/core/.ssh/authorized_keys; chmod 644 /home/core/.ssh/authorized_keys", publicKey)
+	cmd := fmt.Sprintf("echo '%s' | sudo tee /home/core/.ssh/authorized_keys;sudo chmod 644 /home/core/.ssh/authorized_keys", publicKey)
 	_, _, err = sshRunner.Run(cmd)
 	if err != nil {
 		return err
