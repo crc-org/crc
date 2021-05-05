@@ -29,7 +29,7 @@ type Logger interface {
 }
 
 type Telemetry interface {
-	UploadAction(action, source string) error
+	UploadAction(action, source, status string) error
 }
 
 func (h *Handler) Logs() string {
@@ -249,7 +249,7 @@ func (h *Handler) UploadTelemetry(args json.RawMessage) string {
 	if err := json.Unmarshal(args, &req); err != nil {
 		return encodeErrorToJSON(err.Error())
 	}
-	if err := h.Telemetry.UploadAction(req.Action, req.Source); err != nil {
+	if err := h.Telemetry.UploadAction(req.Action, req.Source, req.Status); err != nil {
 		return encodeErrorToJSON(err.Error())
 	}
 	return encodeStructToJSON(client.Result{
