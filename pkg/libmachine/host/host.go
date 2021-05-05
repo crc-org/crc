@@ -43,17 +43,6 @@ func (h *Host) runActionForState(action func() error, desiredState state.State) 
 	return crcerrors.RetryAfter(3*time.Minute, MachineInState(h.Driver, desiredState), 3*time.Second)
 }
 
-func (h *Host) Start() error {
-	log.Debugf("Starting %q...", h.Name)
-	if err := h.runActionForState(h.Driver.Start, state.Running); err != nil {
-		return err
-	}
-
-	log.Debugf("Machine %q was started.", h.Name)
-
-	return nil
-}
-
 func (h *Host) Stop() error {
 	log.Debugf("Stopping %q...", h.Name)
 	if err := h.runActionForState(h.Driver.Stop, state.Stopped); err != nil {
