@@ -46,9 +46,9 @@ func RegisterSettings(cfg *config.Config) {
 
 	validateHostNetworkAccess := func(value interface{}) (bool, string) {
 		mode := network.ParseMode(cfg.Get(NetworkMode).AsString())
-		if mode != network.VSockMode {
+		if mode != network.UserNetworkingMode {
 			return false, fmt.Sprintf("%s can only be used with %s set to '%s'",
-				HostNetworkAccess, NetworkMode, network.VSockMode)
+				HostNetworkAccess, NetworkMode, network.UserNetworkingMode)
 		}
 		return config.ValidateBool(value)
 	}
@@ -110,9 +110,9 @@ func RegisterSettings(cfg *config.Config) {
 
 func defaultNetworkMode() network.Mode {
 	if runtime.GOOS == "darwin" && version.IsMacosInstallPathSet() {
-		return network.VSockMode
+		return network.UserNetworkingMode
 	}
-	return network.DefaultMode
+	return network.SystemNetworkingMode
 }
 
 func isPreflightKey(key string) bool {

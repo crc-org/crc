@@ -12,7 +12,7 @@ func CreateHost(machineConfig config.MachineConfig) *libvirt.Driver {
 
 	config.InitVMDriverFromMachineConfig(machineConfig, libvirtDriver.VMDriver)
 
-	if machineConfig.NetworkMode == network.VSockMode {
+	if machineConfig.NetworkMode == network.UserNetworkingMode {
 		libvirtDriver.Network = "" // don't need to attach a network interface
 		libvirtDriver.VSock = true
 	} else {

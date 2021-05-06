@@ -40,7 +40,7 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) error {
 }
 
 func setupDnsmasq(serviceConfig services.ServicePostStartConfig) error {
-	if serviceConfig.NetworkMode == network.VSockMode {
+	if serviceConfig.NetworkMode == network.UserNetworkingMode {
 		return nil
 	}
 
@@ -81,7 +81,7 @@ func getResolvFileValues(serviceConfig services.ServicePostStartConfig) (network
 }
 
 func dnsServers(serviceConfig services.ServicePostStartConfig) ([]network.NameServer, error) {
-	if serviceConfig.NetworkMode == network.VSockMode {
+	if serviceConfig.NetworkMode == network.UserNetworkingMode {
 		return []network.NameServer{
 			{
 				IPAddress: constants.VSockGateway,
