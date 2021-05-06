@@ -57,8 +57,6 @@ func (a autoitHandler) Install() error {
 	goautoit.ControlClick("", "&Install", "Button1")
 	time.Sleep(30 * time.Second)
 	goautoit.ControlClick("CodeReady Containers Setup", "&Finish", "Button1")
-	//I &accept the terms in the License Agreement
-	// fmt.Printf("After click\n")
 	// TODO which should be executed from a new cmd (to ensure ENVs)
 	return nil
 }
