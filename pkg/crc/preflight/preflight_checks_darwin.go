@@ -51,7 +51,7 @@ func checkHyperKitInstalled(networkMode network.Mode) func() error {
 		if err := h.CheckVersion(); err != nil {
 			return err
 		}
-		if networkMode == network.VSockMode {
+		if networkMode == network.UserNetworkingMode {
 			return nil
 		}
 		return checkSuid(hyperkitPath)
@@ -71,7 +71,7 @@ func fixHyperKitInstallation(networkMode network.Mode) func() error {
 		if err := h.EnsureIsCached(); err != nil {
 			return fmt.Errorf("Unable to download %s : %v", h.GetExecutableName(), err)
 		}
-		if networkMode == network.VSockMode {
+		if networkMode == network.UserNetworkingMode {
 			return nil
 		}
 		return setSuid(h.GetExecutablePath())
@@ -94,7 +94,7 @@ func checkMachineDriverHyperKitInstalled(networkMode network.Mode) func() error 
 		if err := hyperkitDriver.CheckVersion(); err != nil {
 			return err
 		}
-		if networkMode == network.VSockMode {
+		if networkMode == network.UserNetworkingMode {
 			return nil
 		}
 		return checkSuid(hyperkitDriver.GetExecutablePath())
@@ -114,7 +114,7 @@ func fixMachineDriverHyperKitInstalled(networkMode network.Mode) func() error {
 		if err := hyperkitDriver.EnsureIsCached(); err != nil {
 			return fmt.Errorf("Unable to download %s : %v", hyperkitDriver.GetExecutableName(), err)
 		}
-		if networkMode == network.VSockMode {
+		if networkMode == network.UserNetworkingMode {
 			return nil
 		}
 		return setSuid(hyperkitDriver.GetExecutablePath())

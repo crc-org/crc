@@ -59,7 +59,7 @@ type checkListForDistro struct {
 var checkListForDistros = []checkListForDistro{
 	{
 		distro:          &fedora,
-		networkMode:     network.DefaultMode,
+		networkMode:     network.SystemNetworkingMode,
 		systemdResolved: true,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
@@ -92,7 +92,7 @@ var checkListForDistros = []checkListForDistro{
 	},
 	{
 		distro:          &fedora,
-		networkMode:     network.DefaultMode,
+		networkMode:     network.SystemNetworkingMode,
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
@@ -124,7 +124,7 @@ var checkListForDistros = []checkListForDistro{
 	},
 	{
 		distro:          &fedora,
-		networkMode:     network.VSockMode,
+		networkMode:     network.UserNetworkingMode,
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
@@ -150,7 +150,7 @@ var checkListForDistros = []checkListForDistro{
 	},
 	{
 		distro:          &rhel,
-		networkMode:     network.DefaultMode,
+		networkMode:     network.SystemNetworkingMode,
 		systemdResolved: true,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
@@ -183,7 +183,7 @@ var checkListForDistros = []checkListForDistro{
 	},
 	{
 		distro:          &rhel,
-		networkMode:     network.DefaultMode,
+		networkMode:     network.SystemNetworkingMode,
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
@@ -215,7 +215,7 @@ var checkListForDistros = []checkListForDistro{
 	},
 	{
 		distro:          &rhel,
-		networkMode:     network.VSockMode,
+		networkMode:     network.UserNetworkingMode,
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
@@ -241,7 +241,7 @@ var checkListForDistros = []checkListForDistro{
 	},
 	{
 		distro:          &unexpected,
-		networkMode:     network.DefaultMode,
+		networkMode:     network.SystemNetworkingMode,
 		systemdResolved: true,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
@@ -274,7 +274,7 @@ var checkListForDistros = []checkListForDistro{
 	},
 	{
 		distro:          &unexpected,
-		networkMode:     network.DefaultMode,
+		networkMode:     network.SystemNetworkingMode,
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
@@ -306,7 +306,7 @@ var checkListForDistros = []checkListForDistro{
 	},
 	{
 		distro:          &unexpected,
-		networkMode:     network.VSockMode,
+		networkMode:     network.UserNetworkingMode,
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
@@ -332,7 +332,7 @@ var checkListForDistros = []checkListForDistro{
 	},
 	{
 		distro:          &ubuntu,
-		networkMode:     network.DefaultMode,
+		networkMode:     network.SystemNetworkingMode,
 		systemdResolved: true,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
@@ -366,7 +366,7 @@ var checkListForDistros = []checkListForDistro{
 	},
 	{
 		distro:          &ubuntu,
-		networkMode:     network.DefaultMode,
+		networkMode:     network.SystemNetworkingMode,
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
@@ -399,7 +399,7 @@ var checkListForDistros = []checkListForDistro{
 	},
 	{
 		distro:          &ubuntu,
-		networkMode:     network.VSockMode,
+		networkMode:     network.UserNetworkingMode,
 		systemdResolved: false,
 		checks: []Check{
 			{check: checkIfRunningAsNormalUser},
@@ -463,19 +463,19 @@ func assertExpectedPreflights(t *testing.T, distro *crcos.OsRelease, networkMode
 }
 
 func TestCountPreflights(t *testing.T) {
-	assertExpectedPreflights(t, &fedora, network.DefaultMode, true)
-	assertExpectedPreflights(t, &fedora, network.DefaultMode, false)
-	assertExpectedPreflights(t, &fedora, network.VSockMode, false)
+	assertExpectedPreflights(t, &fedora, network.SystemNetworkingMode, true)
+	assertExpectedPreflights(t, &fedora, network.SystemNetworkingMode, false)
+	assertExpectedPreflights(t, &fedora, network.UserNetworkingMode, false)
 
-	assertExpectedPreflights(t, &rhel, network.DefaultMode, true)
-	assertExpectedPreflights(t, &rhel, network.DefaultMode, false)
-	assertExpectedPreflights(t, &rhel, network.VSockMode, false)
+	assertExpectedPreflights(t, &rhel, network.SystemNetworkingMode, true)
+	assertExpectedPreflights(t, &rhel, network.SystemNetworkingMode, false)
+	assertExpectedPreflights(t, &rhel, network.UserNetworkingMode, false)
 
-	assertExpectedPreflights(t, &unexpected, network.DefaultMode, true)
-	assertExpectedPreflights(t, &unexpected, network.DefaultMode, false)
-	assertExpectedPreflights(t, &unexpected, network.VSockMode, false)
+	assertExpectedPreflights(t, &unexpected, network.SystemNetworkingMode, true)
+	assertExpectedPreflights(t, &unexpected, network.SystemNetworkingMode, false)
+	assertExpectedPreflights(t, &unexpected, network.UserNetworkingMode, false)
 
-	assertExpectedPreflights(t, &ubuntu, network.DefaultMode, true)
-	assertExpectedPreflights(t, &ubuntu, network.DefaultMode, false)
-	assertExpectedPreflights(t, &ubuntu, network.VSockMode, false)
+	assertExpectedPreflights(t, &ubuntu, network.SystemNetworkingMode, true)
+	assertExpectedPreflights(t, &ubuntu, network.SystemNetworkingMode, false)
+	assertExpectedPreflights(t, &ubuntu, network.UserNetworkingMode, false)
 }

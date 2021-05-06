@@ -36,7 +36,7 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
 		return err
 	}
 
-	if serviceConfig.NetworkMode == network.VSockMode {
+	if serviceConfig.NetworkMode == network.UserNetworkingMode {
 		return nil
 	}
 

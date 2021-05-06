@@ -138,7 +138,7 @@ func fixVsock() error {
 }
 
 func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true, true, network.VSockMode)
+	return getPreflightChecks(true, true, network.UserNetworkingMode)
 }
 
 func getPreflightChecks(experimentalFeatures bool, _ bool, networkMode network.Mode) []Check {
@@ -146,7 +146,7 @@ func getPreflightChecks(experimentalFeatures bool, _ bool, networkMode network.M
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, hypervPreflightChecks[:]...)
 
-	if networkMode == network.VSockMode {
+	if networkMode == network.UserNetworkingMode {
 		checks = append(checks, vsockChecks[:]...)
 	}
 

@@ -85,7 +85,7 @@ var traySetupChecks = [...]Check{
 }
 
 func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true, true, network.DefaultMode)
+	return getPreflightChecks(true, true, network.SystemNetworkingMode)
 }
 
 func getPreflightChecks(experimentalFeatures bool, trayAutostart bool, mode network.Mode) []Check {
@@ -96,7 +96,7 @@ func getPreflightChecks(experimentalFeatures bool, trayAutostart bool, mode netw
 	checks = append(checks, hyperkitPreflightChecks(mode)...)
 	checks = append(checks, daemonSetupChecks[:]...)
 
-	if mode == network.DefaultMode {
+	if mode == network.SystemNetworkingMode {
 		checks = append(checks, resolverPreflightChecks[:]...)
 	}
 

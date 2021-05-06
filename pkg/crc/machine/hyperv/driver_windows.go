@@ -15,7 +15,7 @@ func CreateHost(machineConfig config.MachineConfig) *hyperv.Driver {
 
 	hypervDriver.DisableDynamicMemory = true
 
-	if machineConfig.NetworkMode == network.VSockMode {
+	if machineConfig.NetworkMode == network.UserNetworkingMode {
 
 		hypervDriver.VirtualSwitch = ""
 	} else {
