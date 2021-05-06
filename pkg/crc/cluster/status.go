@@ -24,7 +24,7 @@ func WaitForClusterStable(ctx context.Context, ocConfig oc.Config, monitoringEna
 	var count int // holds num of consecutive matches
 
 	for i := 0; i < retryCount; i++ {
-		status, err := GetClusterOperatorsStatus(ocConfig, monitoringEnabled)
+		status, err := GetClusterOperatorsStatus(ocConfig)
 		if err == nil {
 			// update counter for consecutive matches
 			if status.IsReady() {
