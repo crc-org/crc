@@ -90,7 +90,10 @@ func fixKvmEnabled() error {
 func getLibvirtCapabilities() (*libvirtxml.Caps, error) {
 	stdOut, _, err := crcos.RunWithDefaultLocale("virsh", "--readonly", "--connect", "qemu:///system", "capabilities")
 	if err != nil {
-		return nil, fmt.Errorf("Failed to run 'virsh capabilities': %v", err)
+		stdOut, _, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///session", "capabilities")
+		if err != nil {
+			return nil, fmt.Errorf("Failed to run 'virsh capabilities': %v", err)
+		}
 	}
 	caps := &libvirtxml.Caps{}
 	err = caps.Unmarshal(stdOut)
