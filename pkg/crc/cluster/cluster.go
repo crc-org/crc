@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"regexp"
 	"strconv"
 	"strings"
@@ -90,6 +91,33 @@ func GetRootPartitionUsage(sshRunner *ssh.Runner) (int64, int64, error) {
 		return 0, 0, err
 	}
 	return diskSize, diskUsage, nil
+}
+
+func UpdateSSHKeyToMachineConfig(ocConfig oc.Config, sshPublicKeyPath string) error {
+	sshPublicKeyByte, err := ioutil.ReadFile(sshPublicKeyPath)
+	if err != nil {
+		return err
+	}
+	sshPublicKey := strings.TrimRight(string(sshPublicKeyByte), "\r\n")
+	if err := WaitForOpenshiftResource(ocConfig, "machineconfigs"); err != nil {
+		return err
+	}
+	stdout, _, err := ocConfig.RunOcCommand("get", "machineconfigs", "99-master-ssh", "-o", `jsonpath='{.spec.config.passwd.users[0].sshAuthorizedKeys[0]}'`)
+	if err != nil {
+		return err
+	}
+	if stdout == string(sshPublicKey) {
+		return nil
+	}
+	logging.Info("Updating SSH key to machine config resource...")
+	cmdArgs := []string{"patch", "machineconfig", "99-master-ssh", "-p",
+		fmt.Sprintf(`'{"spec": {"config": {"passwd": {"users": [{"name": "core", "sshAuthorizedKeys": ["%s"]}]}}}}'`, sshPublicKey),
+		"--type", "merge"}
+	_, stderr, err := ocConfig.RunOcCommandPrivate(cmdArgs...)
+	if err != nil {
+		return fmt.Errorf("Failed to update ssh key %v: %s", err, stderr)
+	}
+	return nil
 }
 
 func EnsurePullSecretPresentInTheCluster(ocConfig oc.Config, pullSec PullSecretLoader) error {
