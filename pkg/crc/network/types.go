@@ -23,15 +23,15 @@ type ResolvFileValues struct {
 type Mode string
 
 const (
-	SystemNetworkingMode Mode = "default"
-	UserNetworkingMode   Mode = "vsock"
+	SystemNetworkingMode Mode = "system"
+	UserNetworkingMode   Mode = "user"
 )
 
 func parseMode(input string) (Mode, error) {
 	switch input {
-	case string(UserNetworkingMode):
+	case string(UserNetworkingMode), "vsock":
 		return UserNetworkingMode, nil
-	case string(SystemNetworkingMode):
+	case string(SystemNetworkingMode), "default":
 		return SystemNetworkingMode, nil
 	default:
 		return SystemNetworkingMode, fmt.Errorf("Cannot parse mode '%s'", input)
