@@ -27,23 +27,31 @@ const (
 	VSockMode   Mode = "vsock"
 )
 
-func ParseMode(input string) Mode {
+func parseMode(input string) (Mode, error) {
 	switch input {
 	case string(VSockMode):
-		return VSockMode
+		return VSockMode, nil
 	case string(DefaultMode):
-		return DefaultMode
+		return DefaultMode, nil
 	default:
+		return DefaultMode, fmt.Errorf("Cannot parse mode '%s'", input)
+	}
+}
+func ParseMode(input string) Mode {
+	mode, err := parseMode(input)
+	if err != nil {
 		logging.Errorf("unexpected network mode %s, using default", input)
 		return DefaultMode
 	}
+	return mode
 }
 
 func ValidateMode(val interface{}) (bool, string) {
-	if cast.ToString(val) == string(DefaultMode) || cast.ToString(val) == string(VSockMode) {
-		return true, ""
+	_, err := parseMode(cast.ToString(val))
+	if err != nil {
+		return false, fmt.Sprintf("network mode should be either %s or %s", DefaultMode, VSockMode)
 	}
-	return false, fmt.Sprintf("network mode should be either %s or %s", DefaultMode, VSockMode)
+	return true, ""
 }
 
 func SuccessfullyAppliedMode(_ string, _ interface{}) string {
