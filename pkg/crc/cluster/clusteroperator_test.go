@@ -21,13 +21,13 @@ var (
 )
 
 func TestGetClusterOperatorsStatus(t *testing.T) {
-	status, err := GetClusterOperatorsStatus(ocConfig("co.json"), false)
+	status, err := GetClusterOperatorsStatus(ocConfig("co.json"))
 	assert.NoError(t, err)
 	assert.Equal(t, available, status)
 }
 
 func TestGetClusterOperatorsStatusProgressing(t *testing.T) {
-	status, err := GetClusterOperatorsStatus(ocConfig("co-progressing.json"), false)
+	status, err := GetClusterOperatorsStatus(ocConfig("co-progressing.json"))
 	assert.NoError(t, err)
 	assert.Equal(t, progressing, status)
 }

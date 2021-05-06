@@ -58,15 +58,15 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	}
 	return &types.ClusterStatusResult{
 		CrcStatus:        state.Running,
-		OpenshiftStatus:  getOpenShiftStatus(sshRunner, client.monitoringEnabled()),
+		OpenshiftStatus:  getOpenShiftStatus(sshRunner),
 		OpenshiftVersion: crcBundleMetadata.GetOpenshiftVersion(),
 		DiskUse:          diskUse,
 		DiskSize:         diskSize,
 	}, nil
 }
 
-func getOpenShiftStatus(sshRunner *crcssh.Runner, monitoringEnabled bool) types.OpenshiftStatus {
-	status, err := cluster.GetClusterOperatorsStatus(oc.UseOCWithSSH(sshRunner), monitoringEnabled)
+func getOpenShiftStatus(sshRunner *crcssh.Runner) types.OpenshiftStatus {
+	status, err := cluster.GetClusterOperatorsStatus(oc.UseOCWithSSH(sshRunner))
 	if err != nil {
 		logging.Debugf("cannot get OpenShift status: %v", err)
 		return types.OpenshiftUnreachable
