@@ -388,6 +388,13 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Error waiting for apiserver")
 	}
 
+	// Remove this check when we have official 4.8 bundle
+	if strings.HasPrefix(crcBundleMetadata.GetOpenshiftVersion(), "4.8.") {
+		if err := cluster.EnsureSSHKeyPresentInTheCluster(ocConfig, constants.GetPublicKeyPath()); err != nil {
+			return nil, errors.Wrap(err, "Failed to update ssh public key to machine config")
+		}
+	}
+
 	if err := ensureProxyIsConfiguredInOpenShift(ocConfig, sshRunner, proxyConfig, instanceIP); err != nil {
 		return nil, errors.Wrap(err, "Failed to update cluster proxy configuration")
 	}
