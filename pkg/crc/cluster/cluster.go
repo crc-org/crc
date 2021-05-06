@@ -313,18 +313,6 @@ func (p *PullSecretMemoizer) Value() (string, error) {
 	return val, err
 }
 
-func EnsurePullSecretPresentOnInstanceDisk(sshRunner *ssh.Runner, pullSecret PullSecretLoader) error {
-	if _, _, err := sshRunner.Run(fmt.Sprintf("test -e %s", vmPullSecretPath)); err == nil {
-		return nil
-	}
-	logging.Info("Adding user's pull secret to instance disk...")
-	content, err := pullSecret.Value()
-	if err != nil {
-		return err
-	}
-	return sshRunner.CopyData([]byte(content), vmPullSecretPath, 0600)
-}
-
 func WaitForRequestHeaderClientCaFile(sshRunner *ssh.Runner) error {
 	lookupRequestHeaderClientCa := func() error {
 		expired, err := checkCertValidity(sshRunner, AggregatorClientCert)

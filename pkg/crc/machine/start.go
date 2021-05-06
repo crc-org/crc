@@ -366,10 +366,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		logging.Warn(fmt.Sprintf("Failed to query DNS from host: %v", err))
 	}
 
-	if err := cluster.EnsurePullSecretPresentOnInstanceDisk(sshRunner, startConfig.PullSecret); err != nil {
-		return nil, errors.Wrap(err, "Failed to update VM pull secret")
-	}
-
 	if err := ensureKubeletAndCRIOAreConfiguredForProxy(sshRunner, proxyConfig, instanceIP); err != nil {
 		return nil, errors.Wrap(err, "Failed to update proxy configuration of kubelet and crio")
 	}
