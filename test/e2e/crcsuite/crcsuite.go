@@ -188,6 +188,7 @@ func RemoveCRCHome() error {
 }
 
 func CheckHTTPResponseWithRetry(retryCount int, retryWait string, address string, expectedStatusCode int) error {
+	var err error
 
 	retryDuration, err := time.ParseDuration(retryWait)
 	if err != nil {
@@ -203,15 +204,15 @@ func CheckHTTPResponseWithRetry(retryCount int, retryWait string, address string
 	var resp *http.Response
 	for i := 0; i < retryCount; i++ {
 		resp, err = client.Get(address)
-		if err != nil {
-			return err
-		}
-		if resp.StatusCode == expectedStatusCode {
+		if err == nil && resp.StatusCode == expectedStatusCode {
 			return nil
 		}
 		time.Sleep(retryDuration)
 	}
 
+	if err != nil {
+		return err
+	}
 	return fmt.Errorf("got %d as Status Code instead of expected %d", resp.StatusCode, expectedStatusCode)
 }
 
