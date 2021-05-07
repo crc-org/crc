@@ -21,3 +21,26 @@ func TestAddLogs(t *testing.T) {
 
 	assert.Equal(t, []string{"message 5", "message 6", "message 7", "message 8", "message 9"}, memory.Messages())
 }
+
+func TestRace(t *testing.T) {
+	memory := newInMemoryHook(5)
+
+	done := make(chan bool)
+	go func() {
+		for i := 0; i < 10000; i++ {
+			_ = memory.Fire(&logrus.Entry{
+				Message: "my message",
+			})
+		}
+		done <- true
+	}()
+
+	for {
+		select {
+		case <-done:
+			return
+		default:
+			assert.GreaterOrEqual(t, len(memory.Messages()), 0)
+		}
+	}
+}
