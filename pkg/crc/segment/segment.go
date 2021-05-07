@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -69,7 +68,7 @@ func (c *Client) UploadCmd(ctx context.Context, action string, duration time.Dur
 }
 
 func (c *Client) upload(action string, a analytics.Properties) error {
-	if c.config.Get(config.ConsentTelemetry).AsString() != "yes" {
+	if c.config.Get(crcConfig.ConsentTelemetry).AsString() != "yes" {
 		return nil
 	}
 
@@ -119,9 +118,9 @@ func properties(ctx context.Context, err error, duration time.Duration) analytic
 func addConfigTraits(c *crcConfig.Config, in analytics.Traits) analytics.Traits {
 	return in.
 		Set("proxy", isProxyUsed()).
-		Set(config.NetworkMode, c.Get(config.NetworkMode).AsString()).
-		Set(config.EnableClusterMonitoring, c.Get(config.EnableClusterMonitoring).AsBool()).
-		Set(config.ExperimentalFeatures, c.Get(config.ExperimentalFeatures).AsBool())
+		Set(crcConfig.NetworkMode, c.Get(crcConfig.NetworkMode).AsString()).
+		Set(crcConfig.EnableClusterMonitoring, c.Get(crcConfig.EnableClusterMonitoring).AsBool()).
+		Set(crcConfig.ExperimentalFeatures, c.Get(crcConfig.ExperimentalFeatures).AsBool())
 }
 
 func isProxyUsed() bool {

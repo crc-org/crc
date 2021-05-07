@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	CPUs       = "cpus"
-	NameServer = "nameservers"
+	cpus       = "cpus"
+	nameServer = "nameservers"
 )
 
 func newTestConfig(configFile, envPrefix string) (*Config, error) {
@@ -22,8 +22,8 @@ func newTestConfig(configFile, envPrefix string) (*Config, error) {
 		return nil, err
 	}
 	config := New(storage)
-	config.AddSetting(CPUs, 4, ValidateCPUs, RequiresRestartMsg, "")
-	config.AddSetting(NameServer, "", ValidateIPAddress, SuccessfullyApplied, "")
+	config.AddSetting(cpus, 4, ValidateCPUs, RequiresRestartMsg, "")
+	config.AddSetting(nameServer, "", ValidateIPAddress, SuccessfullyApplied, "")
 	return config, nil
 }
 
@@ -50,13 +50,13 @@ func TestViperConfigSetAndGet(t *testing.T) {
 	config, err := newTestConfig(configFile, "CRC")
 	require.NoError(t, err)
 
-	_, err = config.Set(CPUs, 5)
+	_, err = config.Set(cpus, 5)
 	assert.NoError(t, err)
 
 	assert.Equal(t, SettingValue{
 		Value:     5,
 		IsDefault: false,
-	}, config.Get(CPUs))
+	}, config.Get(cpus))
 
 	bin, err := ioutil.ReadFile(configFile)
 	assert.NoError(t, err)
@@ -73,13 +73,13 @@ func TestViperConfigUnsetAndGet(t *testing.T) {
 	config, err := newTestConfig(configFile, "CRC")
 	require.NoError(t, err)
 
-	_, err = config.Unset(CPUs)
+	_, err = config.Unset(cpus)
 	assert.NoError(t, err)
 
 	assert.Equal(t, SettingValue{
 		Value:     4,
 		IsDefault: true,
-	}, config.Get(CPUs))
+	}, config.Get(cpus))
 
 	bin, err := ioutil.ReadFile(configFile)
 	assert.NoError(t, err)
@@ -95,7 +95,7 @@ func TestViperConfigSetReloadAndGet(t *testing.T) {
 	config, err := newTestConfig(configFile, "CRC")
 	require.NoError(t, err)
 
-	_, err = config.Set(CPUs, 5)
+	_, err = config.Set(cpus, 5)
 	require.NoError(t, err)
 
 	config, err = newTestConfig(configFile, "CRC")
@@ -104,7 +104,7 @@ func TestViperConfigSetReloadAndGet(t *testing.T) {
 	assert.Equal(t, SettingValue{
 		Value:     5,
 		IsDefault: false,
-	}, config.Get(CPUs))
+	}, config.Get(cpus))
 }
 
 func TestViperConfigLoadDefaultValue(t *testing.T) {
@@ -119,9 +119,9 @@ func TestViperConfigLoadDefaultValue(t *testing.T) {
 	assert.Equal(t, SettingValue{
 		Value:     4,
 		IsDefault: true,
-	}, config.Get(CPUs))
+	}, config.Get(cpus))
 
-	_, err = config.Set(CPUs, 4)
+	_, err = config.Set(cpus, 4)
 	assert.NoError(t, err)
 
 	bin, err := ioutil.ReadFile(configFile)
@@ -131,7 +131,7 @@ func TestViperConfigLoadDefaultValue(t *testing.T) {
 	assert.Equal(t, SettingValue{
 		Value:     4,
 		IsDefault: true,
-	}, config.Get(CPUs))
+	}, config.Get(cpus))
 
 	config, err = newTestConfig(configFile, "CRC")
 	require.NoError(t, err)
@@ -139,7 +139,7 @@ func TestViperConfigLoadDefaultValue(t *testing.T) {
 	assert.Equal(t, SettingValue{
 		Value:     4,
 		IsDefault: true,
-	}, config.Get(CPUs))
+	}, config.Get(cpus))
 }
 
 func TestViperConfigBindFlagSet(t *testing.T) {
@@ -151,12 +151,12 @@ func TestViperConfigBindFlagSet(t *testing.T) {
 	storage, err := NewViperStorage(configFile, "CRC")
 	require.NoError(t, err)
 	config := New(storage)
-	config.AddSetting(CPUs, 4, ValidateCPUs, RequiresRestartMsg, "")
-	config.AddSetting(NameServer, "", ValidateIPAddress, SuccessfullyApplied, "")
+	config.AddSetting(cpus, 4, ValidateCPUs, RequiresRestartMsg, "")
+	config.AddSetting(nameServer, "", ValidateIPAddress, SuccessfullyApplied, "")
 
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
-	flagSet.IntP(CPUs, "c", 4, "")
-	flagSet.StringP(NameServer, "n", "", "")
+	flagSet.IntP(cpus, "c", 4, "")
+	flagSet.StringP(nameServer, "n", "", "")
 	flagSet.StringP("extra", "e", "", "")
 
 	_ = storage.BindFlagSet(flagSet)
@@ -164,20 +164,20 @@ func TestViperConfigBindFlagSet(t *testing.T) {
 	assert.Equal(t, SettingValue{
 		Value:     4,
 		IsDefault: true,
-	}, config.Get(CPUs))
+	}, config.Get(cpus))
 	assert.Equal(t, SettingValue{
 		Value:     "",
 		IsDefault: true,
-	}, config.Get(NameServer))
+	}, config.Get(nameServer))
 
-	assert.NoError(t, flagSet.Set(CPUs, "5"))
+	assert.NoError(t, flagSet.Set(cpus, "5"))
 
 	assert.Equal(t, SettingValue{
 		Value:     5,
 		IsDefault: false,
-	}, config.Get(CPUs))
+	}, config.Get(cpus))
 
-	_, err = config.Set(CPUs, "6")
+	_, err = config.Set(cpus, "6")
 	assert.NoError(t, err)
 
 	bin, err := ioutil.ReadFile(configFile)
@@ -194,7 +194,7 @@ func TestViperConfigCastSet(t *testing.T) {
 	config, err := newTestConfig(configFile, "CRC")
 	require.NoError(t, err)
 
-	_, err = config.Set(CPUs, "5")
+	_, err = config.Set(cpus, "5")
 	require.NoError(t, err)
 
 	config, err = newTestConfig(configFile, "CRC")
@@ -203,7 +203,7 @@ func TestViperConfigCastSet(t *testing.T) {
 	assert.Equal(t, SettingValue{
 		Value:     5,
 		IsDefault: false,
-	}, config.Get(CPUs))
+	}, config.Get(cpus))
 
 	bin, err := ioutil.ReadFile(configFile)
 	assert.NoError(t, err)
@@ -219,7 +219,7 @@ func TestCannotSetWithWrongType(t *testing.T) {
 	config, err := newTestConfig(configFile, "CRC")
 	require.NoError(t, err)
 
-	_, err = config.Set(CPUs, "helloworld")
+	_, err = config.Set(cpus, "helloworld")
 	assert.EqualError(t, err, "Value 'helloworld' for configuration property 'cpus' is invalid, reason: requires integer value >= 4")
 }
 
@@ -233,7 +233,7 @@ func TestCannotGetWithWrongType(t *testing.T) {
 	config, err := newTestConfig(configFile, "CRC")
 	require.NoError(t, err)
 
-	assert.True(t, config.Get(CPUs).Invalid)
+	assert.True(t, config.Get(cpus).Invalid)
 }
 
 func TestTwoInstancesSharingSameConfiguration(t *testing.T) {
@@ -248,7 +248,7 @@ func TestTwoInstancesSharingSameConfiguration(t *testing.T) {
 	config2, err := newTestConfig(configFile, "CRC")
 	require.NoError(t, err)
 
-	_, err = config1.Set(CPUs, 5)
+	_, err = config1.Set(cpus, 5)
 	require.NoError(t, err)
 
 	bin, err := ioutil.ReadFile(configFile)
@@ -258,11 +258,11 @@ func TestTwoInstancesSharingSameConfiguration(t *testing.T) {
 	assert.Equal(t, SettingValue{
 		Value:     5,
 		IsDefault: false,
-	}, config2.Get(CPUs))
+	}, config2.Get(cpus))
 	assert.Equal(t, SettingValue{
 		Value:     5,
 		IsDefault: false,
-	}, config1.Get(CPUs))
+	}, config1.Get(cpus))
 }
 
 func TestTwoInstancesWriteSameConfiguration(t *testing.T) {
@@ -277,21 +277,21 @@ func TestTwoInstancesWriteSameConfiguration(t *testing.T) {
 	config2, err := newTestConfig(configFile, "CRC")
 	require.NoError(t, err)
 
-	_, err = config1.Set(CPUs, 5)
+	_, err = config1.Set(cpus, 5)
 	require.NoError(t, err)
 
-	_, err = config2.Set(NameServer, "1.1.1.1")
+	_, err = config2.Set(nameServer, "1.1.1.1")
 	require.NoError(t, err)
 
 	bin, err := ioutil.ReadFile(configFile)
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{"cpus":5, "nameservers":"1.1.1.1"}`, string(bin))
 
-	assert.Equal(t, 5, config2.Get(CPUs).Value)
-	assert.Equal(t, 5, config1.Get(CPUs).Value)
+	assert.Equal(t, 5, config2.Get(cpus).Value)
+	assert.Equal(t, 5, config1.Get(cpus).Value)
 
-	assert.Equal(t, "1.1.1.1", config2.Get(NameServer).Value)
-	assert.Equal(t, "1.1.1.1", config1.Get(NameServer).Value)
+	assert.Equal(t, "1.1.1.1", config2.Get(nameServer).Value)
+	assert.Equal(t, "1.1.1.1", config1.Get(nameServer).Value)
 }
 
 func TestTwoInstancesSetAndUnsetSameConfiguration(t *testing.T) {
@@ -306,16 +306,16 @@ func TestTwoInstancesSetAndUnsetSameConfiguration(t *testing.T) {
 	config2, err := newTestConfig(configFile, "CRC")
 	require.NoError(t, err)
 
-	_, err = config1.Set(CPUs, 5)
+	_, err = config1.Set(cpus, 5)
 	require.NoError(t, err)
 
-	_, err = config2.Unset(CPUs)
+	_, err = config2.Unset(cpus)
 	require.NoError(t, err)
 
 	bin, err := ioutil.ReadFile(configFile)
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{}`, string(bin))
 
-	assert.Equal(t, 4, config2.Get(CPUs).Value)
-	assert.Equal(t, 4, config1.Get(CPUs).Value)
+	assert.Equal(t, 4, config2.Get(cpus).Value)
+	assert.Equal(t, 4, config1.Get(cpus).Value)
 }

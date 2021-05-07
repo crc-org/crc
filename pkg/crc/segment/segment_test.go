@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	crcErr "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -61,12 +60,12 @@ func mockServer() (chan []byte, *httptest.Server) {
 func newTestConfig(value string) (*crcConfig.Config, error) {
 	storage := crcConfig.NewEmptyInMemoryStorage()
 	config := crcConfig.New(storage)
-	cmdConfig.RegisterSettings(config)
+	crcConfig.RegisterSettings(config)
 
-	if _, err := config.Set(cmdConfig.ConsentTelemetry, value); err != nil {
+	if _, err := config.Set(crcConfig.ConsentTelemetry, value); err != nil {
 		return nil, err
 	}
-	if _, err := config.Set(cmdConfig.ExperimentalFeatures, true); err != nil {
+	if _, err := config.Set(crcConfig.ExperimentalFeatures, true); err != nil {
 		return nil, err
 	}
 	return config, nil

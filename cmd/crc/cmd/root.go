@@ -126,10 +126,10 @@ func checkIfMachineMissing(client machine.Client) error {
 }
 
 func setProxyDefaults() error {
-	httpProxy := config.Get(cmdConfig.HTTPProxy).AsString()
-	httpsProxy := config.Get(cmdConfig.HTTPSProxy).AsString()
-	noProxy := config.Get(cmdConfig.NoProxy).AsString()
-	proxyCAFile := config.Get(cmdConfig.ProxyCAFile).AsString()
+	httpProxy := config.Get(crcConfig.HTTPProxy).AsString()
+	httpsProxy := config.Get(crcConfig.HTTPSProxy).AsString()
+	noProxy := config.Get(crcConfig.NoProxy).AsString()
+	proxyCAFile := config.Get(crcConfig.ProxyCAFile).AsString()
 
 	proxyCAData, err := getProxyCAData(proxyCAFile)
 	if err != nil {
@@ -171,7 +171,7 @@ func newViperConfig() (*crcConfig.Config, *crcConfig.ViperStorage, error) {
 		return nil, nil, err
 	}
 	cfg := crcConfig.New(viper)
-	cmdConfig.RegisterSettings(cfg)
+	crcConfig.RegisterSettings(cfg)
 	preflight.RegisterSettings(cfg)
 	return cfg, viper, nil
 }

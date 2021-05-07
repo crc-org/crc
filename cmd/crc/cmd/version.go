@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
+	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
 	"github.com/spf13/cobra"
@@ -26,7 +26,7 @@ var versionCmd = &cobra.Command{
 }
 
 func runPrintVersion(writer io.Writer, version *version, outputFormat string) error {
-	checkIfNewVersionAvailable(config.Get(cmdConfig.DisableUpdateCheck).AsBool())
+	checkIfNewVersionAvailable(config.Get(crcConfig.DisableUpdateCheck).AsBool())
 	return render(version, writer, outputFormat)
 }
 

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/api/client"
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
@@ -99,10 +98,10 @@ func parseStartArgs(args json.RawMessage) (startArgs, error) {
 
 func getStartConfig(cfg crcConfig.Storage, args startArgs) types.StartConfig {
 	return types.StartConfig{
-		BundlePath: cfg.Get(config.Bundle).AsString(),
-		Memory:     cfg.Get(config.Memory).AsInt(),
-		CPUs:       cfg.Get(config.CPUs).AsInt(),
-		NameServer: cfg.Get(config.NameServer).AsString(),
+		BundlePath: cfg.Get(crcConfig.Bundle).AsString(),
+		Memory:     cfg.Get(crcConfig.Memory).AsInt(),
+		CPUs:       cfg.Get(crcConfig.CPUs).AsInt(),
+		NameServer: cfg.Get(crcConfig.NameServer).AsString(),
 		PullSecret: cluster.NewNonInteractivePullSecretLoader(cfg, args.PullSecretFile),
 	}
 }

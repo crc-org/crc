@@ -3,8 +3,7 @@ package preflight
 import (
 	"fmt"
 
-	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
-	"github.com/code-ready/crc/pkg/crc/config"
+	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
@@ -41,14 +40,14 @@ func (check *Check) getSkipConfigName() string {
 	return "skip-" + check.configKeySuffix
 }
 
-func (check *Check) shouldSkip(config config.Storage) bool {
+func (check *Check) shouldSkip(config crcConfig.Storage) bool {
 	if check.configKeySuffix == "" {
 		return false
 	}
 	return config.Get(check.getSkipConfigName()).AsBool()
 }
 
-func (check *Check) doCheck(config config.Storage) error {
+func (check *Check) doCheck(config crcConfig.Storage) error {
 	if check.checkDescription == "" {
 		panic(fmt.Sprintf("Should not happen, empty description for check '%s'", check.configKeySuffix))
 	} else {
@@ -89,7 +88,7 @@ func (check *Check) doCleanUp() error {
 	return check.cleanup()
 }
 
-func doPreflightChecks(config config.Storage, checks []Check) error {
+func doPreflightChecks(config crcConfig.Storage, checks []Check) error {
 	for _, check := range checks {
 		if check.flags&SetupOnly == SetupOnly || check.flags&CleanUpOnly == CleanUpOnly {
 			continue
@@ -101,7 +100,7 @@ func doPreflightChecks(config config.Storage, checks []Check) error {
 	return nil
 }
 
-func doFixPreflightChecks(config config.Storage, checks []Check, checkOnly bool) error {
+func doFixPreflightChecks(config crcConfig.Storage, checks []Check, checkOnly bool) error {
 	for _, check := range checks {
 		if check.flags&CleanUpOnly == CleanUpOnly {
 			continue
@@ -141,20 +140,20 @@ func doCleanUpPreflightChecks(checks []Check) error {
 	return mErr
 }
 
-func doRegisterSettings(cfg config.Schema, checks []Check) {
+func doRegisterSettings(cfg crcConfig.Schema, checks []Check) {
 	for _, check := range checks {
 		if check.configKeySuffix != "" {
-			cfg.AddSetting(check.getSkipConfigName(), false, config.ValidateBool, config.SuccessfullyApplied,
+			cfg.AddSetting(check.getSkipConfigName(), false, crcConfig.ValidateBool, crcConfig.SuccessfullyApplied,
 				"Skip preflight check (true/false, default: false)")
 		}
 	}
 }
 
 // StartPreflightChecks performs the preflight checks before starting the cluster
-func StartPreflightChecks(config config.Storage) error {
-	experimentalFeatures := config.Get(cmdConfig.ExperimentalFeatures).AsBool()
-	mode := network.ParseMode(config.Get(cmdConfig.NetworkMode).AsString())
-	trayAutostart := config.Get(cmdConfig.AutostartTray).AsBool()
+func StartPreflightChecks(config crcConfig.Storage) error {
+	experimentalFeatures := config.Get(crcConfig.ExperimentalFeatures).AsBool()
+	mode := network.ParseMode(config.Get(crcConfig.NetworkMode).AsString())
+	trayAutostart := config.Get(crcConfig.AutostartTray).AsBool()
 	if err := doPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode)); err != nil {
 		return &errors.PreflightError{Err: err}
 	}
@@ -162,14 +161,14 @@ func StartPreflightChecks(config config.Storage) error {
 }
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
-func SetupHost(config config.Storage, checkOnly bool) error {
-	experimentalFeatures := config.Get(cmdConfig.ExperimentalFeatures).AsBool()
-	mode := network.ParseMode(config.Get(cmdConfig.NetworkMode).AsString())
-	trayAutostart := config.Get(cmdConfig.AutostartTray).AsBool()
+func SetupHost(config crcConfig.Storage, checkOnly bool) error {
+	experimentalFeatures := config.Get(crcConfig.ExperimentalFeatures).AsBool()
+	mode := network.ParseMode(config.Get(crcConfig.NetworkMode).AsString())
+	trayAutostart := config.Get(crcConfig.AutostartTray).AsBool()
 	return doFixPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode), checkOnly)
 }
 
-func RegisterSettings(config config.Schema) {
+func RegisterSettings(config crcConfig.Schema) {
 	doRegisterSettings(config, getAllPreflightChecks())
 }
 
