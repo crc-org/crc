@@ -118,7 +118,7 @@ func properties(ctx context.Context, err error, duration time.Duration) analytic
 func addConfigTraits(c *crcConfig.Config, in analytics.Traits) analytics.Traits {
 	return in.
 		Set("proxy", isProxyUsed()).
-		Set(crcConfig.NetworkMode, c.Get(crcConfig.NetworkMode).AsString()).
+		Set(crcConfig.NetworkMode, crcConfig.GetNetworkMode(c)).
 		Set(crcConfig.EnableClusterMonitoring, c.Get(crcConfig.EnableClusterMonitoring).AsBool()).
 		Set(crcConfig.ExperimentalFeatures, c.Get(crcConfig.ExperimentalFeatures).AsBool())
 }

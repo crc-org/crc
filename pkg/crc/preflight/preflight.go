@@ -6,7 +6,6 @@ import (
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/network"
 )
 
 type Flags uint32
@@ -152,7 +151,7 @@ func doRegisterSettings(cfg crcConfig.Schema, checks []Check) {
 // StartPreflightChecks performs the preflight checks before starting the cluster
 func StartPreflightChecks(config crcConfig.Storage) error {
 	experimentalFeatures := config.Get(crcConfig.ExperimentalFeatures).AsBool()
-	mode := network.ParseMode(config.Get(crcConfig.NetworkMode).AsString())
+	mode := crcConfig.GetNetworkMode(config)
 	trayAutostart := config.Get(crcConfig.AutostartTray).AsBool()
 	if err := doPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode)); err != nil {
 		return &errors.PreflightError{Err: err}
@@ -163,7 +162,7 @@ func StartPreflightChecks(config crcConfig.Storage) error {
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
 func SetupHost(config crcConfig.Storage, checkOnly bool) error {
 	experimentalFeatures := config.Get(crcConfig.ExperimentalFeatures).AsBool()
-	mode := network.ParseMode(config.Get(crcConfig.NetworkMode).AsString())
+	mode := crcConfig.GetNetworkMode(config)
 	trayAutostart := config.Get(crcConfig.AutostartTray).AsBool()
 	return doFixPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode), checkOnly)
 }
