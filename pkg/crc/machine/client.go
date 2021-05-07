@@ -47,7 +47,7 @@ func (client *client) useVSock() bool {
 }
 
 func (client *client) networkMode() network.Mode {
-	return network.ParseMode(client.config.Get(crcConfig.NetworkMode).AsString())
+	return crcConfig.GetNetworkMode(client.config)
 }
 
 func (client *client) monitoringEnabled() bool {

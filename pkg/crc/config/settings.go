@@ -40,7 +40,7 @@ func RegisterSettings(cfg *Config) {
 	}
 
 	validateHostNetworkAccess := func(value interface{}) (bool, string) {
-		mode := network.ParseMode(cfg.Get(NetworkMode).AsString())
+		mode := GetNetworkMode(cfg)
 		if mode != network.UserNetworkingMode {
 			return false, fmt.Sprintf("%s can only be used with %s set to '%s'",
 				HostNetworkAccess, NetworkMode, network.UserNetworkingMode)
@@ -108,4 +108,8 @@ func defaultNetworkMode() network.Mode {
 		return network.UserNetworkingMode
 	}
 	return network.SystemNetworkingMode
+}
+
+func GetNetworkMode(config Storage) network.Mode {
+	return network.ParseMode(config.Get(NetworkMode).AsString())
 }
