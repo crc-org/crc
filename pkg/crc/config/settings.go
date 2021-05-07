@@ -1,0 +1,111 @@
+package config
+
+import (
+	"fmt"
+	"runtime"
+
+	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/version"
+
+	"github.com/spf13/cast"
+)
+
+const (
+	Bundle                  = "bundle"
+	CPUs                    = "cpus"
+	Memory                  = "memory"
+	DiskSize                = "disk-size"
+	NameServer              = "nameserver"
+	PullSecretFile          = "pull-secret-file"
+	DisableUpdateCheck      = "disable-update-check"
+	ExperimentalFeatures    = "enable-experimental-features"
+	NetworkMode             = "network-mode"
+	HostNetworkAccess       = "host-network-access"
+	HTTPProxy               = "http-proxy"
+	HTTPSProxy              = "https-proxy"
+	NoProxy                 = "no-proxy"
+	ProxyCAFile             = "proxy-ca-file"
+	ConsentTelemetry        = "consent-telemetry"
+	EnableClusterMonitoring = "enable-cluster-monitoring"
+	AutostartTray           = "autostart-tray"
+)
+
+func RegisterSettings(cfg *Config) {
+	validateTrayAutostart := func(value interface{}) (bool, string) {
+		if runtime.GOOS != "darwin" {
+			return false, "Tray autostart is only supported on macOS"
+		}
+		return ValidateBool(value)
+	}
+
+	validateHostNetworkAccess := func(value interface{}) (bool, string) {
+		mode := network.ParseMode(cfg.Get(NetworkMode).AsString())
+		if mode != network.UserNetworkingMode {
+			return false, fmt.Sprintf("%s can only be used with %s set to '%s'",
+				HostNetworkAccess, NetworkMode, network.UserNetworkingMode)
+		}
+		return ValidateBool(value)
+	}
+
+	disableEnableTrayAutostart := func(key string, value interface{}) string {
+		if cast.ToBool(value) {
+			return fmt.Sprintf(
+				"Successfully configured '%s' to '%s'. Run 'crc setup' for it to take effect.",
+				key, cast.ToString(value),
+			)
+		}
+		return fmt.Sprintf(
+			"Successfully configured '%s' to '%s'. Run 'crc cleanup' and then 'crc setup' for it to take effect.",
+			key, cast.ToString(value),
+		)
+	}
+
+	// Start command settings in config
+	cfg.AddSetting(Bundle, constants.DefaultBundlePath, ValidateBundlePath, SuccessfullyApplied,
+		fmt.Sprintf("Bundle path (string, default '%s')", constants.DefaultBundlePath))
+	cfg.AddSetting(CPUs, constants.DefaultCPUs, ValidateCPUs, RequiresRestartMsg,
+		fmt.Sprintf("Number of CPU cores (must be greater than or equal to '%d')", constants.DefaultCPUs))
+	cfg.AddSetting(Memory, constants.DefaultMemory, ValidateMemory, RequiresRestartMsg,
+		fmt.Sprintf("Memory size in MiB (must be greater than or equal to '%d')", constants.DefaultMemory))
+	cfg.AddSetting(DiskSize, constants.DefaultDiskSize, ValidateDiskSize, RequiresRestartMsg,
+		fmt.Sprintf("Total size in GiB of the disk (must be greater than or equal to '%d')", constants.DefaultDiskSize))
+	cfg.AddSetting(NameServer, "", ValidateIPAddress, SuccessfullyApplied,
+		"IPv4 address of nameserver (string, like '1.1.1.1 or 8.8.8.8')")
+	cfg.AddSetting(PullSecretFile, "", ValidatePath, SuccessfullyApplied,
+		fmt.Sprintf("Path of image pull secret (download from %s)", constants.CrcLandingPageURL))
+	cfg.AddSetting(DisableUpdateCheck, false, ValidateBool, SuccessfullyApplied,
+		"Disable update check (true/false, default: false)")
+	cfg.AddSetting(ExperimentalFeatures, false, ValidateBool, SuccessfullyApplied,
+		"Enable experimental features (true/false, default: false)")
+	cfg.AddSetting(NetworkMode, string(defaultNetworkMode()), network.ValidateMode, network.SuccessfullyAppliedMode,
+		"Network mode (default or vsock)")
+	cfg.AddSetting(HostNetworkAccess, false, validateHostNetworkAccess, SuccessfullyApplied,
+		"Allow TCP/IP connections from the CodeReady Containers VM to services running on the host (true/false, default: false)")
+	// System tray auto-start config
+	cfg.AddSetting(AutostartTray, true, validateTrayAutostart, disableEnableTrayAutostart,
+		"Automatically start the tray (true/false, default: true)")
+	// Proxy Configuration
+	cfg.AddSetting(HTTPProxy, "", ValidateURI, SuccessfullyApplied,
+		"HTTP proxy URL (string, like 'http://my-proxy.com:8443')")
+	cfg.AddSetting(HTTPSProxy, "", ValidateURI, SuccessfullyApplied,
+		"HTTPS proxy URL (string, like 'https://my-proxy.com:8443')")
+	cfg.AddSetting(NoProxy, "", ValidateNoProxy, SuccessfullyApplied,
+		"Hosts, ipv4 addresses or CIDR which do not use a proxy (string, comma-separated list such as '127.0.0.1,192.168.100.1/24')")
+	cfg.AddSetting(ProxyCAFile, "", ValidatePath, SuccessfullyApplied,
+		"Path to an HTTPS proxy certificate authority (CA)")
+
+	cfg.AddSetting(EnableClusterMonitoring, false, ValidateBool, SuccessfullyApplied,
+		"Enable cluster monitoring Operator (true/false, default: false)")
+
+	// Telemeter Configuration
+	cfg.AddSetting(ConsentTelemetry, "", ValidateYesNo, SuccessfullyApplied,
+		"Consent to collection of anonymous usage data (yes/no)")
+}
+
+func defaultNetworkMode() network.Mode {
+	if runtime.GOOS == "darwin" && version.IsMacosInstallPathSet() {
+		return network.UserNetworkingMode
+	}
+	return network.SystemNetworkingMode
+}

@@ -3,7 +3,6 @@ package api
 import (
 	"strings"
 
-	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 )
@@ -13,7 +12,7 @@ func setupNewInMemoryConfig() config.Storage {
 	cfg := config.New(&skipPreflights{
 		storage: storage,
 	})
-	cmdConfig.RegisterSettings(cfg)
+	config.RegisterSettings(cfg)
 	preflight.RegisterSettings(cfg)
 
 	return cfg

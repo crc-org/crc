@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
+	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/input"
@@ -20,7 +20,7 @@ var (
 )
 
 func init() {
-	setupCmd.Flags().Bool(cmdConfig.ExperimentalFeatures, false, "Allow the use of experimental features")
+	setupCmd.Flags().Bool(crcConfig.ExperimentalFeatures, false, "Allow the use of experimental features")
 	setupCmd.Flags().BoolVar(&checkOnly, "check-only", false, "Only run the preflight checks, don't try to fix any misconfiguration")
 	addOutputFormatFlag(setupCmd)
 	rootCmd.AddCommand(setupCmd)
@@ -39,19 +39,19 @@ var setupCmd = &cobra.Command{
 }
 
 func runSetup(arguments []string) error {
-	if config.Get(cmdConfig.ConsentTelemetry).AsString() == "" {
+	if config.Get(crcConfig.ConsentTelemetry).AsString() == "" {
 		fmt.Println("CodeReady Containers is constantly improving and we would like to know more about usage (more details at https://developers.redhat.com/article/tool-data-collection)")
 		fmt.Println("Your preference can be changed manually if desired using 'crc config set consent-telemetry <yes/no>'")
 		if input.PromptUserForYesOrNo("Would you like to contribute anonymous usage statistics", false) {
-			if _, err := config.Set(cmdConfig.ConsentTelemetry, "yes"); err != nil {
+			if _, err := config.Set(crcConfig.ConsentTelemetry, "yes"); err != nil {
 				return err
 			}
-			fmt.Printf("Thanks for helping us! You can disable telemetry with the command 'crc config set %s no'.\n", cmdConfig.ConsentTelemetry)
+			fmt.Printf("Thanks for helping us! You can disable telemetry with the command 'crc config set %s no'.\n", crcConfig.ConsentTelemetry)
 		} else {
-			if _, err := config.Set(cmdConfig.ConsentTelemetry, "no"); err != nil {
+			if _, err := config.Set(crcConfig.ConsentTelemetry, "no"); err != nil {
 				return err
 			}
-			fmt.Printf("No worry, you can still enable telemetry manually with the command 'crc config set %s yes'.\n", cmdConfig.ConsentTelemetry)
+			fmt.Printf("No worry, you can still enable telemetry manually with the command 'crc config set %s yes'.\n", crcConfig.ConsentTelemetry)
 		}
 	}
 

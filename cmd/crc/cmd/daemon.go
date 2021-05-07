@@ -14,9 +14,9 @@ import (
 	"syscall"
 	"time"
 
-	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/adminhelper"
 	"github.com/code-ready/crc/pkg/crc/api"
+	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/daemonclient"
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -90,7 +90,7 @@ var daemonCmd = &cobra.Command{
 				},
 			},
 		}
-		if config.Get(cmdConfig.HostNetworkAccess).AsBool() {
+		if config.Get(crcConfig.HostNetworkAccess).AsBool() {
 			log.Debugf("Enabling host network access")
 			for i := range virtualNetworkConfig.DNS {
 				zone := &virtualNetworkConfig.DNS[i]

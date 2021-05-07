@@ -10,8 +10,8 @@ import (
 	"strings"
 	"text/template"
 
-	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/cluster"
+	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/daemonclient"
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
@@ -32,13 +32,13 @@ func init() {
 	addOutputFormatFlag(startCmd)
 
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
-	flagSet.StringP(cmdConfig.Bundle, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster")
-	flagSet.StringP(cmdConfig.PullSecretFile, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
-	flagSet.IntP(cmdConfig.CPUs, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the OpenShift cluster")
-	flagSet.IntP(cmdConfig.Memory, "m", constants.DefaultMemory, "MiB of memory to allocate to the OpenShift cluster")
-	flagSet.UintP(cmdConfig.DiskSize, "d", constants.DefaultDiskSize, "Total size in GiB of the disk used by the OpenShift cluster")
-	flagSet.StringP(cmdConfig.NameServer, "n", "", "IPv4 address of nameserver to use for the OpenShift cluster")
-	flagSet.Bool(cmdConfig.DisableUpdateCheck, false, "Don't check for update")
+	flagSet.StringP(crcConfig.Bundle, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster")
+	flagSet.StringP(crcConfig.PullSecretFile, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
+	flagSet.IntP(crcConfig.CPUs, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the OpenShift cluster")
+	flagSet.IntP(crcConfig.Memory, "m", constants.DefaultMemory, "MiB of memory to allocate to the OpenShift cluster")
+	flagSet.UintP(crcConfig.DiskSize, "d", constants.DefaultDiskSize, "Total size in GiB of the disk used by the OpenShift cluster")
+	flagSet.StringP(crcConfig.NameServer, "n", "", "IPv4 address of nameserver to use for the OpenShift cluster")
+	flagSet.Bool(crcConfig.DisableUpdateCheck, false, "Don't check for update")
 
 	startCmd.Flags().AddFlagSet(flagSet)
 }
@@ -63,14 +63,14 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		return nil, err
 	}
 
-	checkIfNewVersionAvailable(config.Get(cmdConfig.DisableUpdateCheck).AsBool())
+	checkIfNewVersionAvailable(config.Get(crcConfig.DisableUpdateCheck).AsBool())
 
 	startConfig := types.StartConfig{
-		BundlePath: config.Get(cmdConfig.Bundle).AsString(),
-		Memory:     config.Get(cmdConfig.Memory).AsInt(),
-		DiskSize:   config.Get(cmdConfig.DiskSize).AsInt(),
-		CPUs:       config.Get(cmdConfig.CPUs).AsInt(),
-		NameServer: config.Get(cmdConfig.NameServer).AsString(),
+		BundlePath: config.Get(crcConfig.Bundle).AsString(),
+		Memory:     config.Get(crcConfig.Memory).AsInt(),
+		DiskSize:   config.Get(crcConfig.DiskSize).AsInt(),
+		CPUs:       config.Get(crcConfig.CPUs).AsInt(),
+		NameServer: config.Get(crcConfig.NameServer).AsString(),
 		PullSecret: cluster.NewInteractivePullSecretLoader(config),
 	}
 
@@ -170,20 +170,20 @@ func isDebugLog() bool {
 }
 
 func validateStartFlags() error {
-	if err := validation.ValidateMemory(config.Get(cmdConfig.Memory).AsInt()); err != nil {
+	if err := validation.ValidateMemory(config.Get(crcConfig.Memory).AsInt()); err != nil {
 		return err
 	}
-	if err := validation.ValidateCPUs(config.Get(cmdConfig.CPUs).AsInt()); err != nil {
+	if err := validation.ValidateCPUs(config.Get(crcConfig.CPUs).AsInt()); err != nil {
 		return err
 	}
-	if err := validation.ValidateDiskSize(config.Get(cmdConfig.DiskSize).AsInt()); err != nil {
+	if err := validation.ValidateDiskSize(config.Get(crcConfig.DiskSize).AsInt()); err != nil {
 		return err
 	}
-	if err := validation.ValidateBundle(config.Get(cmdConfig.Bundle).AsString()); err != nil {
+	if err := validation.ValidateBundle(config.Get(crcConfig.Bundle).AsString()); err != nil {
 		return err
 	}
-	if config.Get(cmdConfig.NameServer).AsString() != "" {
-		if err := validation.ValidateIPAddress(config.Get(cmdConfig.NameServer).AsString()); err != nil {
+	if config.Get(crcConfig.NameServer).AsString() != "" {
+		if err := validation.ValidateIPAddress(config.Get(crcConfig.NameServer).AsString()); err != nil {
 			return err
 		}
 	}
@@ -258,7 +258,7 @@ func commandLinePrefix(shell string) string {
 }
 
 func checkDaemonStarted() error {
-	if config.Get(cmdConfig.NetworkMode).AsString() == string(network.SystemNetworkingMode) {
+	if config.Get(crcConfig.NetworkMode).AsString() == string(network.SystemNetworkingMode) {
 		return nil
 	}
 	daemonClient := daemonclient.New()

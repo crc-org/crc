@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/zalando/go-keyring"
@@ -26,7 +25,7 @@ func TestLoadPullSecret(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	cfg := config.New(config.NewEmptyInMemoryStorage())
-	cmdConfig.RegisterSettings(cfg)
+	config.RegisterSettings(cfg)
 
 	loader := &nonInteractivePullSecretLoader{
 		config: cfg,
@@ -43,7 +42,7 @@ func TestLoadPullSecret(t *testing.T) {
 	assert.Equal(t, secret3, val)
 
 	assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, "file2"), []byte(secret2), 0600))
-	_, err = cfg.Set(cmdConfig.PullSecretFile, filepath.Join(dir, "file2"))
+	_, err = cfg.Set(config.PullSecretFile, filepath.Join(dir, "file2"))
 	assert.NoError(t, err)
 
 	val, err = loader.Value()

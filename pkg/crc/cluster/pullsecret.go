@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"strings"
 
-	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -89,7 +88,7 @@ func (loader *nonInteractivePullSecretLoader) Value() (string, error) {
 		}
 		logging.Debugf("Cannot load secret from path %q: %v", loader.path, err)
 	}
-	fromConfig, err := loadFile(loader.config.Get(cmdConfig.PullSecretFile).AsString())
+	fromConfig, err := loadFile(loader.config.Get(crcConfig.PullSecretFile).AsString())
 	if err == nil {
 		logging.Debugf("Using secret from configuration")
 		return fromConfig, nil

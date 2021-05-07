@@ -3,7 +3,6 @@ package machine
 import (
 	"context"
 
-	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
@@ -48,9 +47,9 @@ func (client *client) useVSock() bool {
 }
 
 func (client *client) networkMode() network.Mode {
-	return network.ParseMode(client.config.Get(cmdConfig.NetworkMode).AsString())
+	return network.ParseMode(client.config.Get(crcConfig.NetworkMode).AsString())
 }
 
 func (client *client) monitoringEnabled() bool {
-	return client.config.Get(cmdConfig.EnableClusterMonitoring).AsBool()
+	return client.config.Get(crcConfig.EnableClusterMonitoring).AsBool()
 }
