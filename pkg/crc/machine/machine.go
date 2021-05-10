@@ -51,7 +51,7 @@ func getBundleMetadataFromDriver(driver drivers.Driver) (*bundle.CrcBundleInfo, 
 	return metadata, err
 }
 
-func createLibMachineClient() (*libmachine.Client, func()) {
+func createLibMachineClient() (libmachine.API, func()) {
 	client := libmachine.NewClient(constants.MachineBaseDir)
 	return client, func() {
 		client.Close()
