@@ -4,7 +4,7 @@
 <?define crcBundlePart2="crc_hyperv___OPENSHIFT_VERSION__.crcbundle.2"?>
 <?define crcBundleName="crc_hyperv___OPENSHIFT_VERSION__.crcbundle"?>
 <Wix
-    xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
     <Product Id="*" UpgradeCode="53DE5BFA-0E53-44E7-8D4F-07E37E59A9AB"
             Name="CodeReady Containers"
             Version="__VERSION__"
@@ -65,6 +65,11 @@
         <CustomAction Id="RemoveParts" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
         <SetProperty Action="CAUninstall"  Id="Uninstall"  Value='"[WindowsFolder]\System32\cmd.exe" /c rmdir /S /Q "[INSTALLDIR]"' Before="Uninstall" Sequence="execute"/>
         <CustomAction Id="Uninstall" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
+
+        <util:CloseApplication Id = "TrayRunning" Description="Please exit CodeReady Containers from tray and run the installation again."
+            Target="crc-tray.exe" RebootPrompt="no"
+            PromptToContinue="yes" />
+
         <InstallExecuteSequence>
             <Custom Action="JoinBundle"  After="InstallFiles" >NOT Installed AND NOT PATCH</Custom>
             <Custom Action="RemoveParts"  After="JoinBundle" >NOT Installed AND NOT PATCH</Custom>
