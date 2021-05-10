@@ -530,6 +530,10 @@ func createHost(api libmachine.API, machineConfig config.MachineConfig) error {
 		return fmt.Errorf("Error in driver during machine creation: %s", err)
 	}
 
+	if err := api.SetExists(vm.Name); err != nil {
+		logging.Debug("Failed to record VM existence")
+	}
+
 	logging.Debug("Machine successfully created")
 	return nil
 }
@@ -549,10 +553,6 @@ func startHost(ctx context.Context, api libmachine.API, vm *host.Host) error {
 	}
 
 	logging.Debug("Machine is up and running!")
-
-	if err := api.SetExists(vm.Name); err != nil {
-		logging.Debug("Failed to record VM existence")
-	}
 
 	return nil
 }
