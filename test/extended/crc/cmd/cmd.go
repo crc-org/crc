@@ -59,6 +59,9 @@ func CheckCRCStatus(state string) error {
 }
 
 func CheckCRCExecutableState(state string) error {
+	// After installation a new shell is required to load ENVs
+	// otherwise user should setup manually
+	clicumber.StartHostShellInstance("")
 	command := "which crc"
 	switch state {
 	case CRCExecutableInstalled:
