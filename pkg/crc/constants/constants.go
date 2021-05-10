@@ -97,12 +97,21 @@ func defaultBundlePath() string {
 			return path
 		}
 	}
+	if runtime.GOOS == "windows" && version.IsMsiBuild() {
+		path := filepath.Join(GetMsiInstallPath(), GetDefaultBundle())
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
 	return filepath.Join(MachineCacheDir, GetDefaultBundle())
 }
 
 func BinDir() string {
 	if runtime.GOOS == "darwin" && version.IsMacosInstallPathSet() {
 		return version.GetMacosInstallPath()
+	}
+	if runtime.GOOS == "windows" && version.IsMsiBuild() {
+		return GetMsiInstallPath()
 	}
 	return CrcBinDir
 }
@@ -144,7 +153,7 @@ func BundleEmbedded() bool {
 }
 
 func IsRelease() bool {
-	return BundleEmbedded() || version.IsMacosInstallPathSet()
+	return BundleEmbedded() || version.IsMacosInstallPathSet() || version.IsMsiBuild()
 }
 
 func contains(arr []string, str string) bool {
@@ -180,4 +189,8 @@ func GetCRCMacTrayDownloadURL() string {
 
 func GetCRCWindowsTrayDownloadURL() string {
 	return fmt.Sprintf(CRCWindowsTrayDownloadURL, version.GetCRCWindowsTrayVersion())
+}
+
+func GetMsiInstallPath() string {
+	return filepath.Join(os.Getenv("PROGRAMFILES"), "CodeReady Containers")
 }

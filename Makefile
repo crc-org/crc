@@ -305,6 +305,7 @@ CRC_EXE=crc.exe
 BUNDLE_NAME=crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
 
 .PHONY: msidir
+msidir: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.msiBuild=true' $(RELEASE_VERSION_VARIABLES)
 msidir: clean $(HOST_BUILD_DIR)/crc-embedder $(HOST_BUILD_DIR)/split $(BUILD_DIR)/windows-amd64/crc.exe check_bundledir $(PACKAGE_DIR)/product.wxs
 	mkdir -p $(PACKAGE_DIR)/msi
 	$(HOST_BUILD_DIR)/crc-embedder download $(PACKAGE_DIR)/msi 
