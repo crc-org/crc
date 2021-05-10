@@ -24,6 +24,8 @@ var (
 	okdBuild = "false"
 
 	macosInstallPath = "/unset"
+
+	msiBuild = "false"
 )
 
 const (
@@ -70,6 +72,10 @@ func GetMacosInstallPath() string {
 
 func IsMacosInstallPathSet() bool {
 	return macosInstallPath != "/unset"
+}
+
+func IsMsiBuild() bool {
+	return msiBuild != "false"
 }
 
 func getCRCLatestVersionFromMirror() (*semver.Version, error) {

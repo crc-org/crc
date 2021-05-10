@@ -135,7 +135,7 @@ func fixBundleExtracted() error {
 
 // Check if helper executable is cached or not
 func checkAdminHelperExecutableCached() error {
-	if version.IsMacosInstallPathSet() {
+	if version.IsMacosInstallPathSet() || version.IsMsiBuild() {
 		return nil
 	}
 
@@ -151,7 +151,7 @@ func checkAdminHelperExecutableCached() error {
 }
 
 func fixAdminHelperExecutableCached() error {
-	if version.IsMacosInstallPathSet() {
+	if version.IsMacosInstallPathSet() || version.IsMsiBuild() {
 		return nil
 	}
 
