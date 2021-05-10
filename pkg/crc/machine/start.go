@@ -531,7 +531,7 @@ func createHost(api libmachine.API, machineConfig config.MachineConfig) error {
 	}
 
 	if err := api.SetExists(vm.Name); err != nil {
-		logging.Debug("Failed to record VM existence")
+		return fmt.Errorf("Failed to record VM existence: %s", err)
 	}
 
 	logging.Debug("Machine successfully created")
