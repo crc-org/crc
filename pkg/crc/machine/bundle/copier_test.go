@@ -36,7 +36,6 @@ func TestGenerateBundle(t *testing.T) {
 
 	assert.NoError(t, copier.CopyKubeConfig())
 
-	assert.NoError(t, copier.SetKubeAdminPassword("****-****-****"))
 	assert.NoError(t, copier.CopyPrivateSSHKey(copier.srcBundle.GetSSHKeyPath()))
 	assert.NoError(t, copier.CopyFilesFromFileList())
 
@@ -53,7 +52,6 @@ func createDummyBundleFiles(t *testing.T, bundle *CrcBundleInfo) {
 
 	files := []string{
 		bundle.GetOcPath(),
-		bundle.resolvePath(bundle.ClusterInfo.KubeadminPasswordFile),
 		bundle.GetKubeConfigPath(),
 		bundle.GetSSHKeyPath(),
 		bundle.GetDiskImagePath(),

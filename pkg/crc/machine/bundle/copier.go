@@ -63,12 +63,6 @@ func (copier *Copier) CopyPrivateSSHKey(srcPath string) error {
 	return crcos.CopyFileContents(srcPath, destPath, 0400)
 }
 
-func (copier *Copier) SetKubeAdminPassword(kubePassword string) error {
-	kubeAdminPasswordFileName := copier.srcBundle.ClusterInfo.KubeadminPasswordFile
-	path := copier.resolvePath(kubeAdminPasswordFileName)
-	return ioutil.WriteFile(path, []byte(kubePassword), 0600)
-}
-
 func (copier *Copier) CopyKubeConfig() error {
 	kubeConfigFileName := filepath.Base(copier.srcBundle.GetKubeConfigPath())
 	srcPath := copier.srcBundle.GetKubeConfigPath()

@@ -58,14 +58,6 @@ func (client *client) GenerateBundle() error {
 		return err
 	}
 
-	kubePassword, err := cluster.GetKubeadminPassword(bundleMetadata)
-	if err != nil {
-		return err
-	}
-	if err := copier.SetKubeAdminPassword(kubePassword); err != nil {
-		return err
-	}
-
 	if err := copier.CopyPrivateSSHKey(constants.GetPrivateKeyPath()); err != nil {
 		return err
 	}

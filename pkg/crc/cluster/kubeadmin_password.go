@@ -3,16 +3,13 @@ package cluster
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/big"
-	"os"
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/oc"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"golang.org/x/crypto/bcrypt"
@@ -57,13 +54,10 @@ func UpdateKubeAdminUserPassword(ocConfig oc.Config) error {
 	return ioutil.WriteFile(kubeAdminPasswordFile, []byte(kubeAdminPassword), 0600)
 }
 
-func GetKubeadminPassword(bundle *bundle.CrcBundleInfo) (string, error) {
+func GetKubeadminPassword() (string, error) {
 	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath()
 	rawData, err := ioutil.ReadFile(kubeAdminPasswordFile)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return bundle.GetKubeadminPassword()
-		}
 		return "", err
 	}
 	return strings.TrimSpace(string(rawData)), nil

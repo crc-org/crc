@@ -249,11 +249,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 	}
 
-	clusterConfig, err := getClusterConfig(crcBundleMetadata)
-	if err != nil {
-		return nil, errors.Wrap(err, "Cannot create cluster configuration")
-	}
-
 	// Post-VM start
 	vmState, err = host.Driver.GetState()
 	if err != nil {
@@ -396,10 +391,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if err := cluster.UpdateKubeAdminUserPassword(ocConfig); err != nil {
 		return nil, errors.Wrap(err, "Failed to update kubeadmin user password")
 	}
-	clusterConfig.KubeAdminPass, err = cluster.GetKubeadminPassword(crcBundleMetadata)
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to get kubeadmin user password")
-	}
 
 	if err := cluster.EnsureClusterIDIsNotEmpty(ocConfig); err != nil {
 		return nil, errors.Wrap(err, "Failed to update cluster ID")
@@ -448,6 +439,11 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	waitForProxyPropagation(ctx, ocConfig, proxyConfig)
+
+	clusterConfig, err := getClusterConfig(crcBundleMetadata)
+	if err != nil {
+		return nil, errors.Wrap(err, "Cannot get cluster configuration")
+	}
 
 	logging.Info("Adding crc-admin and crc-developer contexts to kubeconfig...")
 	if err := writeKubeconfig(instanceIP, clusterConfig); err != nil {
