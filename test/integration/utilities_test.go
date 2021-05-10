@@ -4,17 +4,17 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
-	crcConfig "github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/machine"
-	"github.com/code-ready/crc/pkg/crc/ssh"
 	. "github.com/onsi/gomega"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/crypto/ssh"
 )
 
 // CRCBuilder is used to build, customize and execute a CRC command.
@@ -170,21 +170,45 @@ func RunOnHostWithPrivilege(timeout string, args ...string) (string, string, err
 }
 
 // Send command to CRC VM via SSH
-func SendCommandToVM(cmd string) (string, error) {
-	client := machine.NewClient(constants.DefaultName, false, crcConfig.New(crcConfig.NewEmptyInMemoryStorage()))
-	connectionDetails, err := client.ConnectionDetails()
+func SendCommandToVM(cmd string, vm string, port string) (string, error) {
+	pkPath := filepath.Join(os.Getenv("HOME"), ".crc", "machines", "crc", "id_ecdsa")
+	pk, _ := ioutil.ReadFile(pkPath)
+	signer, err := ssh.ParsePrivateKey(pk)
+
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("could not parse the private key: %v", err)
 	}
-	ssh, err := ssh.NewClient(connectionDetails.SSHUsername, connectionDetails.IP, connectionDetails.SSHPort, connectionDetails.SSHKeys...)
+
+	config := &ssh.ClientConfig{
+		User:            "core",
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(signer),
+		},
+	}
+
+	destination := fmt.Sprintf("%s:%s", vm, port)
+	client, err := ssh.Dial("tcp", destination, config)
+
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to dial: %v", err)
 	}
-	out, _, err := ssh.Run(cmd)
+
+	// can be multiple of these per 1 client
+	session, err := client.NewSession()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to create a session: %v", err)
 	}
-	return string(out), nil
+	defer session.Close()
+
+	// Use the session
+	var b bytes.Buffer
+	session.Stdout = &b
+	if err := session.Run(cmd); err != nil {
+		return "", fmt.Errorf("failed to run: %v", err)
+	}
+
+	return b.String(), nil
 }
 
 func RunCRCDaemon(c chan string) {

@@ -166,11 +166,7 @@ var _ = Describe("Test config command", func() {
 				go RunCRCDaemon(dChan)
 				time.Sleep(10 * time.Second) // wait till daemon is running
 
-				// use test/testdata/host-network-access/Dockerfile
-				// podman build -t http-server:latest path/to/Dockerfile
-				// podman run -p 1234:8080 http-server:latest
-				// then ssh to VM and run from there: `curl host.crc.testing:1234` -> should give 'hello' string only.
-				// ideally, we could do this with podman-remote
+				// ideally, we could do this with podman-remote, but not yet
 
 				_, _, err := RunOnHost("120s", "podman", "build", "-t", "http-server:latest", "/home/jsliacan/github/code-ready/crc/test/testdata/host-network-access")
 				Expect(err).NotTo(HaveOccurred())
@@ -179,8 +175,7 @@ var _ = Describe("Test config command", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(RunCRCExpectSuccess("start", "-p", pullSecretPath)).To(ContainSubstring("Started the OpenShift cluster"))
-
-				out, _, err := RunOnHost("120s", "ssh", "-i", "~/.crc/machines/crc/id_ecdsa", "core@127.0.0.1", "-p", "2222", "curl host.crc.testing:1234")
+				out, err := SendCommandToVM("curl host.crc.testing:1234", "127.0.0.1", "2222")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(out).To(ContainSubstring("hello"))
 
