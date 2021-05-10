@@ -28,6 +28,10 @@ func runOcEnv(args []string) error {
 	}
 
 	client := newMachine()
+	if err := checkIfMachineMissing(client); err != nil {
+		return err
+	}
+
 	consoleResult, err := client.GetConsoleURL()
 	if err != nil {
 		return err
