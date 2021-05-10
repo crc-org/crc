@@ -508,7 +508,7 @@ func makeDaemonVisibleToHyperkit(name string) error {
 	return nil
 }
 
-func createHost(api *libmachine.Client, machineConfig config.MachineConfig) error {
+func createHost(api libmachine.API, machineConfig config.MachineConfig) error {
 	vm, err := newHost(api, machineConfig)
 	if err != nil {
 		return fmt.Errorf("Error creating new host: %s", err)
@@ -534,7 +534,7 @@ func createHost(api *libmachine.Client, machineConfig config.MachineConfig) erro
 	return nil
 }
 
-func startHost(ctx context.Context, api *libmachine.Client, vm *host.Host) error {
+func startHost(ctx context.Context, api libmachine.API, vm *host.Host) error {
 	if err := vm.Driver.Start(); err != nil {
 		return fmt.Errorf("Error in driver during machine start: %s", err)
 	}
