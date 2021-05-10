@@ -29,6 +29,20 @@ const (
 	minSupportedLibvirtVersion = "3.4.0"
 )
 
+func checkRunningInsideWSL2() error {
+	version, err := ioutil.ReadFile("/proc/version")
+	if err != nil {
+		return err
+	}
+
+	if strings.Contains(string(version), "Microsoft") {
+		logging.Debugf("Running inside WSL2 environment")
+		return fmt.Errorf("CodeReady Containers is unsupported using WSL2")
+	}
+
+	return nil
+}
+
 func checkVirtualizationEnabled() error {
 	logging.Debug("Checking if the vmx/svm flags are present in /proc/cpuinfo")
 	// Check if the cpu flags vmx or svm is present
