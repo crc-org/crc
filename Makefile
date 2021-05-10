@@ -323,7 +323,7 @@ endif
 	rm $(PACKAGE_DIR)/product.wxs
 
 $(BUILD_DIR)/windows-amd64/crc-windows-amd64.msi: msidir
-	candle.exe -arch x64 -o $(PACKAGE_DIR)/msi/ $(PACKAGE_DIR)/msi/*.wxs
+	candle.exe -arch x64 -ext WixUtilExtension -o $(PACKAGE_DIR)/msi/ $(PACKAGE_DIR)/msi/*.wxs
 	cd $(PACKAGE_DIR)/msi && light.exe -ext WixUIExtension -ext WixUtilExtension -sacl -spdb -sice:ICE61 -out ../../../$@ *.wixobj
 
 CABS_MSI = "cab1.cab,cab2.cab,cab3.cab,crc-windows-amd64.msi"
