@@ -114,6 +114,14 @@ var vsockPreflightChecks = Check{
 	cleanup:            removeVsockCrcSettings,
 }
 
+var wsl2PreflightChecks = Check{
+	configKeySuffix:  "check-wsl2",
+	checkDescription: "Checking if running inside WSL2",
+	check:            checkRunningInsideWSL2,
+	fixDescription:   "CodeReady Containers is unsupported using WSL2",
+	flags:            NoFix,
+}
+
 const (
 	vsockUdevSystemRulesPath     = "/usr/lib/udev/rules.d/99-crc-vsock.rules"
 	vsockUdevLocalAdminRulesPath = "/etc/udev/rules.d/99-crc-vsock.rules"
@@ -220,13 +228,16 @@ func removeVsockCrcSettings() error {
 func getAllPreflightChecks() []Check {
 	usingSystemdResolved := checkSystemdResolvedIsRunning()
 	checks := getPreflightChecksForDistro(distro(), network.SystemNetworkingMode, usingSystemdResolved == nil)
+	checks = append(checks, wsl2PreflightChecks)
 	checks = append(checks, vsockPreflightChecks)
 	return checks
 }
 
 func getPreflightChecks(_ bool, _ bool, networkMode network.Mode) []Check {
 	usingSystemdResolved := checkSystemdResolvedIsRunning()
-	return getPreflightChecksForDistro(distro(), networkMode, usingSystemdResolved == nil)
+	checks := getPreflightChecksForDistro(distro(), networkMode, usingSystemdResolved == nil)
+	checks = append(checks, wsl2PreflightChecks)
+	return checks
 }
 
 func getNetworkChecks(networkMode network.Mode, systemdResolved bool) []Check {
