@@ -2,7 +2,6 @@ package bundle
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -32,14 +31,13 @@ type BuildInfo struct {
 }
 
 type ClusterInfo struct {
-	OpenShiftVersion      string `json:"openshiftVersion"`
-	ClusterName           string `json:"clusterName"`
-	BaseDomain            string `json:"baseDomain"`
-	AppsDomain            string `json:"appsDomain"`
-	SSHPrivateKeyFile     string `json:"sshPrivateKeyFile"`
-	KubeConfig            string `json:"kubeConfig"`
-	KubeadminPasswordFile string `json:"kubeadminPasswordFile"`
-	OpenshiftPullSecret   string `json:"openshiftPullSecret,omitempty"`
+	OpenShiftVersion    string `json:"openshiftVersion"`
+	ClusterName         string `json:"clusterName"`
+	BaseDomain          string `json:"baseDomain"`
+	AppsDomain          string `json:"appsDomain"`
+	SSHPrivateKeyFile   string `json:"sshPrivateKeyFile"`
+	KubeConfig          string `json:"kubeConfig"`
+	OpenshiftPullSecret string `json:"openshiftPullSecret,omitempty"`
 }
 
 type Node struct {
@@ -154,14 +152,6 @@ func (bundle *CrcBundleInfo) GetKernelCommandLine() string {
 	return bundle.Nodes[0].KernelCmdLine
 }
 
-func (bundle *CrcBundleInfo) GetKubeadminPassword() (string, error) {
-	rawData, err := ioutil.ReadFile(bundle.resolvePath(bundle.ClusterInfo.KubeadminPasswordFile))
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(rawData)), nil
-}
-
 func (bundle *CrcBundleInfo) GetBundleBuildTime() (time.Time, error) {
 	return time.Parse(time.RFC3339, strings.TrimSpace(bundle.BuildInfo.BuildTime))
 }
@@ -177,7 +167,6 @@ func (bundle *CrcBundleInfo) GetBundleNameWithoutExtension() string {
 func (bundle *CrcBundleInfo) verify() error {
 	files := []string{
 		bundle.GetOcPath(),
-		bundle.resolvePath(bundle.ClusterInfo.KubeadminPasswordFile),
 		bundle.GetKubeConfigPath(),
 		bundle.GetSSHKeyPath(),
 		bundle.GetDiskImagePath(),

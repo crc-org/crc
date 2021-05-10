@@ -15,7 +15,7 @@ import (
 )
 
 func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*types.ClusterConfig, error) {
-	kubeadminPassword, err := cluster.GetKubeadminPassword(bundleInfo)
+	kubeadminPassword, err := cluster.GetKubeadminPassword()
 	if err != nil {
 		return nil, fmt.Errorf("Error reading kubeadmin password from bundle %v", err)
 	}

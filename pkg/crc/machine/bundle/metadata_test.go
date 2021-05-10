@@ -27,8 +27,7 @@ const reference = `{
     "baseDomain": "testing",
     "appsDomain": "apps-crc.testing",
     "sshPrivateKeyFile": "id_ecdsa_crc",
-    "kubeConfig": "kubeconfig",
-    "kubeadminPasswordFile": "kubeadmin-password"
+    "kubeConfig": "kubeconfig"
   },
   "nodes": [
     {
@@ -73,13 +72,12 @@ var parsedReference = CrcBundleInfo{
 		SncVersion:                "git4.1.14-137-g14e7",
 	},
 	ClusterInfo: ClusterInfo{
-		OpenShiftVersion:      "4.6.1",
-		ClusterName:           "crc",
-		BaseDomain:            "testing",
-		AppsDomain:            "apps-crc.testing",
-		SSHPrivateKeyFile:     "id_ecdsa_crc",
-		KubeConfig:            "kubeconfig",
-		KubeadminPasswordFile: "kubeadmin-password",
+		OpenShiftVersion:  "4.6.1",
+		ClusterName:       "crc",
+		BaseDomain:        "testing",
+		AppsDomain:        "apps-crc.testing",
+		SSHPrivateKeyFile: "id_ecdsa_crc",
+		KubeConfig:        "kubeconfig",
 	}, Nodes: []Node{
 		{
 			Kind:       []string{"master", "worker"},
