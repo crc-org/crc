@@ -123,6 +123,8 @@ func getStatus(ocConfig oc.Config, selector []string) (*Status, error) {
 					logging.Debug(c.ObjectMeta.Name, " operator is disabled, Reason: ", con.Reason)
 					cs.Disabled = true
 				}
+			case "ManagementStateDegraded": // only for the network operator
+				continue
 			default:
 				logging.Debugf("Unexpected operator status for %s: %s", c.ObjectMeta.Name, con.Type)
 			}
