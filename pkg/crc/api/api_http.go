@@ -1,12 +1,14 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
+	"github.com/code-ready/crc/pkg/crc/api/client"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -126,9 +128,26 @@ func wrongHTTPMethodUsed(r *http.Request, w http.ResponseWriter, allowedMethods 
 }
 
 func sendResponse(w http.ResponseWriter, response string) {
-	w.Header().Set("Content-Type", "application/json")
-	if _, err := io.WriteString(w, response); err != nil {
-		logging.Error("Failed to send response: ", err)
+	var result client.Result
+	if err := json.Unmarshal([]byte(response), &result); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		if _, err := io.WriteString(w, err.Error()); err != nil {
+			logging.Error("Failed to send response: ", err)
+		}
+		return
+	}
+
+	if result.Success {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if _, err := io.WriteString(w, response); err != nil {
+			logging.Error("Failed to send response: ", err)
+		}
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+		if _, err := io.WriteString(w, result.Error); err != nil {
+			logging.Error("Failed to send response: ", err)
+		}
 	}
 }
 
