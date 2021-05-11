@@ -12,14 +12,12 @@ type VersionResult struct {
 }
 
 type Result struct {
-	Name    string
 	Success bool
 	Error   string
 }
 
 type StartResult struct {
 	Success        bool
-	Name           string
 	Status         string
 	Error          string
 	ClusterConfig  types.ClusterConfig
@@ -27,7 +25,6 @@ type StartResult struct {
 }
 
 type ClusterStatusResult struct {
-	Name             string
 	CrcStatus        string
 	OpenshiftStatus  string
 	OpenshiftVersion string

@@ -38,7 +38,6 @@ func TestHTTPApi(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.ClusterStatusResult{
-			Name:             "crc",
 			CrcStatus:        "Running",
 			OpenshiftStatus:  "Running",
 			OpenshiftVersion: "4.5.1",
@@ -55,7 +54,6 @@ func TestHTTPApi(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.StartResult{
-			Name:           "crc",
 			Status:         "",
 			Error:          "",
 			KubeletStarted: true,
@@ -77,7 +75,6 @@ func TestHTTPApi(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.Result{
-			Name:    "crc",
 			Success: true,
 			Error:   "",
 		},
@@ -89,7 +86,6 @@ func TestHTTPApi(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.Result{
-			Name:    "crc",
 			Success: true,
 			Error:   "",
 		},
