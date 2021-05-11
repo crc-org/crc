@@ -102,28 +102,28 @@ func getStatus(ocConfig oc.Config, selector []string) (*Status, error) {
 		found = true
 		for _, con := range c.Status.Conditions {
 			switch con.Type {
-			case "Available":
-				if con.Status != "True" {
+			case openshiftapi.OperatorAvailable:
+				if con.Status != openshiftapi.ConditionTrue {
 					logging.Debug(c.ObjectMeta.Name, " operator not available, Reason: ", con.Reason)
 					cs.unavailable = append(cs.unavailable, c.ObjectMeta.Name)
 					cs.Available = false
 				}
-			case "Degraded":
-				if con.Status == "True" {
+			case openshiftapi.OperatorDegraded:
+				if con.Status == openshiftapi.ConditionTrue {
 					logging.Debug(c.ObjectMeta.Name, " operator is degraded, Reason: ", con.Reason)
 					cs.degraded = append(cs.degraded, c.ObjectMeta.Name)
 					cs.Degraded = true
 				}
-			case "Progressing":
-				if con.Status == "True" {
+			case openshiftapi.OperatorProgressing:
+				if con.Status == openshiftapi.ConditionTrue {
 					logging.Debug(c.ObjectMeta.Name, " operator is still progressing, Reason: ", con.Reason)
 					cs.progressing = append(cs.progressing, c.ObjectMeta.Name)
 					cs.Progressing = true
 				}
-			case "Upgradeable":
+			case openshiftapi.OperatorUpgradeable:
 				continue
-			case "Disabled":
-				if con.Status == "True" {
+			case "Disabled": // non official status, used by insights and cluster baremetal operators
+				if con.Status == openshiftapi.ConditionTrue {
 					logging.Debug(c.ObjectMeta.Name, " operator is disabled, Reason: ", con.Reason)
 					cs.Disabled = true
 				}
