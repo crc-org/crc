@@ -17,7 +17,62 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// CRCBuilder is used to build, customize and execute a CRC command.
+// =========== Podman ==========
+
+// PodmanBuilder is used to build, customize and execute a podman commands
+type PodmanBuilder struct {
+	cmd     *exec.Cmd
+	timeout <-chan time.Time
+}
+
+// NewPodmanCommand returns a PodmanBuilder for running Podman.
+func NewPodmanCommand(args ...string) *PodmanBuilder {
+	// TODO: split this to `podman-remote` for linux and `podman` for the rest
+	cmd := exec.Command("podman", args...)
+	return &PodmanBuilder{
+		cmd: cmd,
+	}
+}
+
+// WithTimeout sets the given timeout and returns itself.
+func (b *PodmanBuilder) WithTimeout(t <-chan time.Time) *PodmanBuilder {
+	b.timeout = t
+	return b
+}
+
+// ExecWithFullOutput runs the executable and returns the stdout and stderr.
+func (b PodmanBuilder) ExecWithFullOutput() (string, string, error) {
+	return Exec(b.cmd, b.timeout)
+}
+
+// Exec runs the executable.
+func (b PodmanBuilder) Exec() (string, error) {
+	stdout, _, err := b.ExecWithFullOutput()
+	return stdout, err
+}
+
+// ExecOrDie runs the executable or dies if error occurs.
+func (b PodmanBuilder) ExecOrDie() string {
+	stdout, err := b.Exec()
+	Expect(err).To(Not(HaveOccurred()))
+	return stdout
+}
+
+// ExecOrDieWithLogs runs the executable or dies if error occurs.
+func (b PodmanBuilder) ExecOrDieWithLogs() (string, string) {
+	stdout, stderr, err := b.ExecWithFullOutput()
+	Expect(err).To(Not(HaveOccurred()))
+	return stdout, stderr
+}
+
+//RunPodmanExpectSuccess
+func RunPodmanExpectSuccess(args ...string) string {
+	return NewPodmanCommand(args...).ExecOrDie()
+}
+
+// =========== CRC ==========
+
+// CRCBuilder is used to build, customize and execute a CRC commands
 type CRCBuilder struct {
 	cmd     *exec.Cmd
 	timeout <-chan time.Time
