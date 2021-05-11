@@ -16,6 +16,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/openshift/oc/pkg/helpers/tokencmd"
+	"k8s.io/apimachinery/third_party/forked/golang/netutil"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
@@ -79,12 +80,14 @@ func certificateAuthority(kubeconfigFile string) ([]byte, error) {
 	return cluster.CertificateAuthorityData, nil
 }
 
+// https://github.com/openshift/oc/blob/f94afb52dc8a3185b3b9eacaf92ec34d80f8708d/pkg/helpers/kubeconfig/smart_merge.go#L21
 func hostname(clusterAPI string) (string, error) {
 	p, err := url.Parse(clusterAPI)
 	if err != nil {
 		return "", err
 	}
-	return p.Host, nil
+	h := netutil.CanonicalAddr(p)
+	return strings.ReplaceAll(h, ".", "-"), nil
 }
 
 func addContext(cfg *api.Config, ip string, clusterConfig *types.ClusterConfig, ca []byte, context, username, password string) error {
