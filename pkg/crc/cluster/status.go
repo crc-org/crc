@@ -10,7 +10,7 @@ import (
 )
 
 // WaitForClusterStable checks that the cluster is running a number of consecutive times
-func WaitForClusterStable(ctx context.Context, ocConfig oc.Config, monitoringEnabled bool) error {
+func WaitForClusterStable(ctx context.Context, ocConfig oc.Config) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
