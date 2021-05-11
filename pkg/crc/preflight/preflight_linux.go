@@ -228,16 +228,13 @@ func removeVsockCrcSettings() error {
 func getAllPreflightChecks() []Check {
 	usingSystemdResolved := checkSystemdResolvedIsRunning()
 	checks := getPreflightChecksForDistro(distro(), network.SystemNetworkingMode, usingSystemdResolved == nil)
-	checks = append(checks, wsl2PreflightChecks)
 	checks = append(checks, vsockPreflightChecks)
 	return checks
 }
 
 func getPreflightChecks(_ bool, _ bool, networkMode network.Mode) []Check {
 	usingSystemdResolved := checkSystemdResolvedIsRunning()
-	checks := getPreflightChecksForDistro(distro(), networkMode, usingSystemdResolved == nil)
-	checks = append(checks, wsl2PreflightChecks)
-	return checks
+	return getPreflightChecksForDistro(distro(), networkMode, usingSystemdResolved == nil)
 }
 
 func getNetworkChecks(networkMode network.Mode, systemdResolved bool) []Check {
@@ -260,6 +257,7 @@ func getNetworkChecks(networkMode network.Mode, systemdResolved bool) []Check {
 func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode, systemdResolved bool) []Check {
 	var checks []Check
 	checks = append(checks, nonWinPreflightChecks[:]...)
+	checks = append(checks, wsl2PreflightChecks)
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, libvirtPreflightChecks(distro)...)
 	networkChecks := getNetworkChecks(networkMode, systemdResolved)
