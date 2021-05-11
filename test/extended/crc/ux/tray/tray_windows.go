@@ -4,6 +4,13 @@ package tray
 
 import (
 	"fmt"
+
+	clicumber "github.com/code-ready/clicumber/testsuite"
+	crc "github.com/code-ready/crc/test/extended/crc/cmd"
+)
+
+const (
+	trayAssemblyName string = "crc-tray.exe"
 )
 
 type handler struct {
@@ -23,11 +30,16 @@ func RequiredResourcesPath() (string, error) {
 }
 
 func (h handler) Install() error {
-	return fmt.Errorf("not implemented yet")
+	if err := crc.SetConfigPropertyToValueSucceedsOrFails("enable-experimental-features", "true", "succeeds"); err != nil {
+		return err
+	}
+	return clicumber.ExecuteCommandSucceedsOrFails("crc setup", "succeeds")
 }
 
 func (h handler) IsInstalled() error {
-	return fmt.Errorf("not implemented yet")
+	command := fmt.Sprintf("tasklist /NH /FI \"IMAGENAME eq %s\"", trayAssemblyName)
+	output := fmt.Sprintf("%s*", trayAssemblyName)
+	return clicumber.CommandReturnShouldContain(command, output)
 }
 
 func (h handler) IsAccessible() error {
