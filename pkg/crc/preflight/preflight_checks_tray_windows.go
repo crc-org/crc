@@ -14,6 +14,8 @@ import (
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 )
 
+var daemonBatchFileShortcutPath = filepath.Join(constants.StartupFolder, constants.DaemonBatchFileShortcutName)
+
 func checkIfTrayInstalled() error {
 	if os.FileExists(filepath.Join(constants.StartupFolder, constants.TrayShortcutName)) && checkTrayVersion() {
 		return nil
@@ -25,7 +27,7 @@ func checkIfDaemonInstalled() error {
 	if os.FileExists(constants.DaemonBatchFilePath) || os.FileExists(constants.DaemonPSScriptPath) {
 		return fmt.Errorf("Daemon should not be installed")
 	}
-	if os.FileExists(filepath.Join(constants.StartupFolder, constants.DaemonBatchFileShortcutName)) {
+	if os.FileExists(daemonBatchFileShortcutPath) {
 		return fmt.Errorf("Daemon should not be installed")
 	}
 	return nil
@@ -84,6 +86,9 @@ func removeDaemon() error {
 		mErr.Collect(err)
 	}
 	if err := os.RemoveFileIfExists(constants.DaemonPSScriptPath); err != nil {
+		mErr.Collect(err)
+	}
+	if err := os.RemoveFileIfExists(daemonBatchFileShortcutPath); err != nil {
 		mErr.Collect(err)
 	}
 	if len(mErr.Errors) == 0 {
