@@ -63,11 +63,13 @@ func (a *Adapter) Start(ctx context.Context, startConfig types.StartConfig) clie
 	if err != nil {
 		logging.Error(err)
 		return client.StartResult{
-			Name:  a.Underlying.GetName(),
-			Error: err.Error(),
+			Success: false,
+			Name:    a.Underlying.GetName(),
+			Error:   err.Error(),
 		}
 	}
 	return client.StartResult{
+		Success:        true,
 		Name:           a.Underlying.GetName(),
 		Status:         res.Status.String(),
 		ClusterConfig:  res.ClusterConfig,

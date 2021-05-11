@@ -59,6 +59,7 @@ func TestHTTPApi(t *testing.T) {
 			Status:         "",
 			Error:          "",
 			KubeletStarted: true,
+			Success:        true,
 			ClusterConfig: types.ClusterConfig{
 				ClusterCACert: "MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ",
 				KubeConfig:    "/tmp/kubeconfig",
@@ -100,7 +101,8 @@ func TestHTTPApi(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.GetConfigResult{
-			Error: "",
+			Success: true,
+			Error:   "",
 			Configs: map[string]interface{}{
 				"cpus": float64(4),
 			},
@@ -117,6 +119,7 @@ func TestHTTPApi(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.SetOrUnsetConfigResult{
+			Success:    true,
 			Error:      "",
 			Properties: []string{"cpus"},
 		},

@@ -67,16 +67,18 @@ func (h *Handler) Start(args json.RawMessage) string {
 		parsedArgs, err = parseStartArgs(args)
 		if err != nil {
 			startErr := &client.StartResult{
-				Name:  h.MachineClient.GetName(),
-				Error: fmt.Sprintf("Incorrect arguments given: %s", err.Error()),
+				Success: false,
+				Name:    h.MachineClient.GetName(),
+				Error:   fmt.Sprintf("Incorrect arguments given: %s", err.Error()),
 			}
 			return encodeStructToJSON(startErr)
 		}
 	}
 	if err := preflight.StartPreflightChecks(h.Config); err != nil {
 		startErr := &client.StartResult{
-			Name:  h.MachineClient.GetName(),
-			Error: err.Error(),
+			Success: false,
+			Name:    h.MachineClient.GetName(),
+			Error:   err.Error(),
 		}
 		return encodeStructToJSON(startErr)
 	}
@@ -127,8 +129,11 @@ func (h *Handler) GetWebconsoleInfo() string {
 }
 
 func (h *Handler) SetConfig(args json.RawMessage) string {
-	setConfigResult := client.SetOrUnsetConfigResult{}
+	setConfigResult := client.SetOrUnsetConfigResult{
+		Success: true,
+	}
 	if args == nil {
+		setConfigResult.Success = false
 		setConfigResult.Error = "No config keys provided"
 		return encodeStructToJSON(setConfigResult)
 	}
@@ -138,12 +143,14 @@ func (h *Handler) SetConfig(args json.RawMessage) string {
 
 	err := json.Unmarshal(args, &a)
 	if err != nil {
+		setConfigResult.Success = false
 		setConfigResult.Error = fmt.Sprintf("%v", err)
 		return encodeStructToJSON(setConfigResult)
 	}
 
 	configs, ok := a["properties"].(map[string]interface{})
 	if !ok {
+		setConfigResult.Success = false
 		setConfigResult.Error = "No config keys provided"
 		return encodeStructToJSON(setConfigResult)
 	}
@@ -161,6 +168,7 @@ func (h *Handler) SetConfig(args json.RawMessage) string {
 	}
 
 	if len(multiError.Errors) != 0 {
+		setConfigResult.Success = false
 		setConfigResult.Error = fmt.Sprintf("%v", multiError)
 	}
 
@@ -169,8 +177,11 @@ func (h *Handler) SetConfig(args json.RawMessage) string {
 }
 
 func (h *Handler) UnsetConfig(args json.RawMessage) string {
-	unsetConfigResult := client.SetOrUnsetConfigResult{}
+	unsetConfigResult := client.SetOrUnsetConfigResult{
+		Success: true,
+	}
 	if args == nil {
+		unsetConfigResult.Success = false
 		unsetConfigResult.Error = "No config keys provided"
 		return encodeStructToJSON(unsetConfigResult)
 	}
@@ -180,6 +191,7 @@ func (h *Handler) UnsetConfig(args json.RawMessage) string {
 
 	err := json.Unmarshal(args, &keys)
 	if err != nil {
+		unsetConfigResult.Success = false
 		unsetConfigResult.Error = fmt.Sprintf("%v", err)
 		return encodeStructToJSON(unsetConfigResult)
 	}
@@ -197,6 +209,7 @@ func (h *Handler) UnsetConfig(args json.RawMessage) string {
 		successProps = append(successProps, key)
 	}
 	if len(multiError.Errors) != 0 {
+		unsetConfigResult.Success = false
 		unsetConfigResult.Error = fmt.Sprintf("%v", multiError)
 	}
 	unsetConfigResult.Properties = successProps
@@ -204,7 +217,9 @@ func (h *Handler) UnsetConfig(args json.RawMessage) string {
 }
 
 func (h *Handler) GetConfig(args json.RawMessage) string {
-	configResult := client.GetConfigResult{}
+	configResult := client.GetConfigResult{
+		Success: true,
+	}
 	if args == nil {
 		allConfigs := h.Config.AllConfigs()
 		configResult.Error = ""
@@ -219,6 +234,7 @@ func (h *Handler) GetConfig(args json.RawMessage) string {
 
 	err := json.Unmarshal(args, &a)
 	if err != nil {
+		configResult.Success = false
 		configResult.Error = fmt.Sprintf("%v", err)
 		return encodeStructToJSON(configResult)
 	}
@@ -235,6 +251,7 @@ func (h *Handler) GetConfig(args json.RawMessage) string {
 		configs[key] = v.Value
 	}
 	if len(configs) == 0 {
+		configResult.Success = false
 		configResult.Error = "Unable to get configs"
 		configResult.Configs = nil
 	} else {

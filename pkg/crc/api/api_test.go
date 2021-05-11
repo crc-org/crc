@@ -87,6 +87,7 @@ func TestApi(t *testing.T) {
 				"Status":         "",
 				"Error":          "Incorrect arguments given: json: unknown field \"pull-secret\"",
 				"KubeletStarted": false,
+				"Success":        false,
 				"ClusterConfig": map[string]interface{}{
 					"KubeConfig":    "",
 					"KubeAdminPass": "",
@@ -105,6 +106,7 @@ func TestApi(t *testing.T) {
 				"Status":         "",
 				"Error":          "",
 				"KubeletStarted": true,
+				"Success":        true,
 				"ClusterConfig": map[string]interface{}{
 					"ClusterCACert": "MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ",
 					"KubeConfig":    "/tmp/kubeconfig",
@@ -176,6 +178,7 @@ func TestSetconfigApi(t *testing.T) {
 	var setconfigRes apiClient.SetOrUnsetConfigResult
 	assert.NoError(t, json.Unmarshal(payload[:n], &setconfigRes))
 	assert.Equal(t, apiClient.SetOrUnsetConfigResult{
+		Success:    true,
 		Error:      "",
 		Properties: []string{"cpus"},
 	}, setconfigRes)
@@ -206,6 +209,7 @@ func TestGetconfigApi(t *testing.T) {
 	configs["cpus"] = 4.0
 
 	assert.Equal(t, apiClient.GetConfigResult{
+		Success: true,
 		Error:   "",
 		Configs: configs,
 	}, getconfigRes)
