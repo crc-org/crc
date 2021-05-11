@@ -54,7 +54,6 @@ func TestApi(t *testing.T) {
 		{
 			command: "status",
 			expected: map[string]interface{}{
-				"Name":             "crc",
 				"CrcStatus":        "Running",
 				"OpenshiftStatus":  "Running",
 				"OpenshiftVersion": "4.5.1",
@@ -68,7 +67,6 @@ func TestApi(t *testing.T) {
 			command:       "status",
 			clientFailing: true,
 			expected: map[string]interface{}{
-				"Name":             "crc",
 				"CrcStatus":        "",
 				"OpenshiftStatus":  "",
 				"OpenshiftVersion": "",
@@ -83,7 +81,6 @@ func TestApi(t *testing.T) {
 			clientFailing: true,
 			args:          json.RawMessage(`{"pull-secret":"/Users/fake/pull-secret"}`),
 			expected: map[string]interface{}{
-				"Name":           "crc",
 				"Status":         "",
 				"Error":          "Incorrect arguments given: json: unknown field \"pull-secret\"",
 				"KubeletStarted": false,
@@ -102,7 +99,6 @@ func TestApi(t *testing.T) {
 			command: "start",
 			args:    json.RawMessage(`{"pullSecretFile":"/Users/fake/pull-secret"}`),
 			expected: map[string]interface{}{
-				"Name":           "crc",
 				"Status":         "",
 				"Error":          "",
 				"KubeletStarted": true,
@@ -129,7 +125,6 @@ func TestApi(t *testing.T) {
 			args:    json.RawMessage(`{"action":"click start"}`),
 			expected: map[string]interface{}{
 				"Success": true,
-				"Name":    "",
 				"Error":   "",
 			},
 		},

@@ -68,7 +68,6 @@ func (h *Handler) Start(args json.RawMessage) string {
 		if err != nil {
 			startErr := &client.StartResult{
 				Success: false,
-				Name:    h.MachineClient.GetName(),
 				Error:   fmt.Sprintf("Incorrect arguments given: %s", err.Error()),
 			}
 			return encodeStructToJSON(startErr)
@@ -77,7 +76,6 @@ func (h *Handler) Start(args json.RawMessage) string {
 	if err := preflight.StartPreflightChecks(h.Config); err != nil {
 		startErr := &client.StartResult{
 			Success: false,
-			Name:    h.MachineClient.GetName(),
 			Error:   err.Error(),
 		}
 		return encodeStructToJSON(startErr)

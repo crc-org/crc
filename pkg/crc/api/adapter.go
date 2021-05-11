@@ -11,7 +11,6 @@ import (
 )
 
 type AdaptedClient interface {
-	GetName() string
 	Delete() client.Result
 	GetConsoleURL() client.ConsoleResult
 	Start(ctx context.Context, startConfig types.StartConfig) client.StartResult
@@ -23,22 +22,16 @@ type Adapter struct {
 	Underlying machine.Client
 }
 
-func (a *Adapter) GetName() string {
-	return a.Underlying.GetName()
-}
-
 func (a *Adapter) Delete() client.Result {
 	err := a.Underlying.Delete()
 	if err != nil {
 		logging.Error(err)
 		return client.Result{
-			Name:    a.Underlying.GetName(),
 			Success: false,
 			Error:   err.Error(),
 		}
 	}
 	return client.Result{
-		Name:    a.Underlying.GetName(),
 		Success: true,
 	}
 }
@@ -64,13 +57,11 @@ func (a *Adapter) Start(ctx context.Context, startConfig types.StartConfig) clie
 		logging.Error(err)
 		return client.StartResult{
 			Success: false,
-			Name:    a.Underlying.GetName(),
 			Error:   err.Error(),
 		}
 	}
 	return client.StartResult{
 		Success:        true,
-		Name:           a.Underlying.GetName(),
 		Status:         res.Status.String(),
 		ClusterConfig:  res.ClusterConfig,
 		KubeletStarted: res.KubeletStarted,
@@ -82,13 +73,11 @@ func (a *Adapter) Status() client.ClusterStatusResult {
 	if err != nil {
 		logging.Error(err)
 		return client.ClusterStatusResult{
-			Name:    a.Underlying.GetName(),
 			Error:   err.Error(),
 			Success: false,
 		}
 	}
 	return client.ClusterStatusResult{
-		Name:             a.Underlying.GetName(),
 		CrcStatus:        res.CrcStatus.String(),
 		OpenshiftStatus:  string(res.OpenshiftStatus),
 		OpenshiftVersion: res.OpenshiftVersion,
@@ -107,7 +96,6 @@ func (a *Adapter) Stop() client.Result {
 			if err != nil {
 				logging.Error(err)
 				return client.Result{
-					Name:    a.Underlying.GetName(),
 					Success: false,
 					Error:   err.Error(),
 				}
@@ -115,7 +103,6 @@ func (a *Adapter) Stop() client.Result {
 		}
 	}
 	return client.Result{
-		Name:    a.Underlying.GetName(),
 		Success: true,
 	}
 }
