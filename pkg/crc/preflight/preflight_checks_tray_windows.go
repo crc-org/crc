@@ -2,7 +2,6 @@ package preflight
 
 import (
 	"fmt"
-	"io/ioutil"
 	goos "os"
 	"path/filepath"
 	"strings"
@@ -23,58 +22,12 @@ func checkIfTrayInstalled() error {
 }
 
 func checkIfDaemonInstalled() error {
-	// We want to force the installation of daemon as we want to
-	// run the daemon from the crc executable which ran the setup
-	return fmt.Errorf("Ignoring check, forcing installation of daemon")
-}
-
-func fixDaemonInstalled() error {
-	// call stop daemon
-	_ = stopDaemon()
-	currentExecutablePath, err := goos.Executable()
-	if err != nil {
-		return fmt.Errorf("Failed to find current executables path: %w", err)
+	if os.FileExists(constants.DaemonBatchFilePath) || os.FileExists(constants.DaemonPSScriptPath) {
+		return fmt.Errorf("Daemon should not be installed")
 	}
-
-	// Create the PowerShell script to launch daemon in the background with hidden window
-	daemonLaunchPSScriptContent := fmt.Sprintf(`$psi = New-Object System.Diagnostics.ProcessStartInfo
-$newproc = New-Object System.Diagnostics.Process
-$psi.FileName = "%s"
-$psi.Arguments = "%s"
-$psi.CreateNoWindow = $true
-$psi.WindowStyle = 'Hidden'
-$newproc.StartInfo = $psi
-$newproc.Start()
-$newproc
-`, currentExecutablePath, "daemon --log-level debug")
-
-	err = ioutil.WriteFile(constants.DaemonPSScriptPath, []byte(daemonLaunchPSScriptContent), 0600)
-	if err != nil {
-		return fmt.Errorf("Failed to create required PowerShell script for the daemon: %w", err)
+	if os.FileExists(filepath.Join(constants.StartupFolder, constants.DaemonBatchFileShortcutName)) {
+		return fmt.Errorf("Daemon should not be installed")
 	}
-
-	// Create the cmd file to start the PowerShell script at login
-	daemonBatchFileContent := fmt.Sprintf(`%s -file "%s"`, powershell.LocatePowerShell(), constants.DaemonPSScriptPath)
-	err = ioutil.WriteFile(constants.DaemonBatchFilePath, []byte(daemonBatchFileContent), 0600)
-	if err != nil {
-		return fmt.Errorf("Failed to create required batch file for the daemon: %w", err)
-	}
-
-	// Crete symlink to cmd file in the startup folder
-	cmd := fmt.Sprintf(`New-Item -ItemType SymbolicLink -Path "%s" -Name "%s" -Value "%s"`,
-		constants.StartupFolder,
-		constants.DaemonBatchFileName,
-		constants.DaemonBatchFilePath,
-	)
-	if _, _, err := powershell.ExecuteAsAdmin("Create symlink to daemon batch file in start-up folder", cmd); err != nil {
-		return fmt.Errorf("Error trying to create symlink to tray in start-up folder: %w", err)
-	}
-
-	// Start the daemon process from the PowerShell script
-	if _, _, err := powershell.Execute(constants.DaemonPSScriptPath); err != nil {
-		return fmt.Errorf("Failed to start the daemon process: %w", err)
-	}
-
 	return nil
 }
 
