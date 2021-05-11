@@ -73,20 +73,20 @@ var hypervPreflightChecks = [...]Check{
 
 var traySetupChecks = [...]Check{
 	{
+		checkDescription:   "Checking if CodeReady Containers daemon is installed",
+		check:              checkIfDaemonInstalled,
+		fixDescription:     "Removing CodeReady Containers daemon",
+		fix:                removeDaemon,
+		cleanupDescription: "Uninstalling daemon if installed",
+		cleanup:            removeDaemon,
+		flags:              SetupOnly,
+	},
+	{
 		checkDescription: "Checking if tray executable is present",
 		check:            checkTrayExecutableExists,
 		fixDescription:   "Caching tray executable",
 		fix:              fixTrayExecutableExists,
 		flags:            SetupOnly,
-	},
-	{
-		checkDescription:   "Checking if CodeReady Containers daemon is installed",
-		check:              checkIfDaemonInstalled,
-		fixDescription:     "Installing CodeReady Containers daemon",
-		fix:                fixDaemonInstalled,
-		cleanupDescription: "Uninstalling daemon if installed",
-		cleanup:            removeDaemon,
-		flags:              SetupOnly,
 	},
 	{
 		checkDescription:   "Checking if tray is installed",
