@@ -93,15 +93,10 @@ func removeDaemon() error {
 }
 
 func stopDaemon() error {
-	executablePath, err := goos.Executable()
-	if err != nil {
-		return fmt.Errorf("Failed to find current executable's path: %w", err)
-	}
 	// get the PID of the process running command 'crc daemon --log-level debug'
 	getCrcProcessCmd := `(Get-WmiObject Win32_Process -Filter "name = 'crc.exe'")`
-	cmd := fmt.Sprintf(`(%s | Where-Object -Property CommandLine -Eq '"%s" daemon --log-level debug').ProcessId`,
+	cmd := fmt.Sprintf(`(%s | Where-Object -Property CommandLine -Like '* daemon --log-level debug').ProcessId`,
 		getCrcProcessCmd,
-		executablePath,
 	)
 	stdOut, _, err := powershell.Execute(cmd)
 	if err != nil {
