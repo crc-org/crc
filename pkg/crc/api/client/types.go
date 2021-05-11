@@ -18,6 +18,7 @@ type Result struct {
 }
 
 type StartResult struct {
+	Success        bool
 	Name           string
 	Status         string
 	Error          string
@@ -45,12 +46,14 @@ type ConsoleResult struct {
 // setOrUnsetConfigResult struct is used to return the result of
 // setconfig/unsetconfig command
 type SetOrUnsetConfigResult struct {
+	Success    bool
 	Error      string
 	Properties []string
 }
 
 // getConfigResult struct is used to return the result of getconfig command
 type GetConfigResult struct {
+	Success bool
 	Error   string
 	Configs map[string]interface{}
 }
