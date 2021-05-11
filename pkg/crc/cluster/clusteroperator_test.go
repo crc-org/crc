@@ -32,25 +32,6 @@ func TestGetClusterOperatorsStatusProgressing(t *testing.T) {
 	assert.Equal(t, progressing, status)
 }
 
-func TestGetClusterOperatorStatus(t *testing.T) {
-	status, err := GetClusterOperatorStatus(ocConfig("co.json"), "authentication")
-	assert.NoError(t, err)
-	assert.Equal(t, available, status)
-
-	status, err = GetClusterOperatorStatus(ocConfig("co-progressing.json"), "authentication")
-	assert.NoError(t, err)
-	assert.Equal(t, progressing, status)
-
-	status, err = GetClusterOperatorStatus(ocConfig("co-progressing.json"), "cloud-credential")
-	assert.NoError(t, err)
-	assert.Equal(t, available, status)
-}
-
-func TestGetClusterOperatorStatusNotFound(t *testing.T) {
-	_, err := GetClusterOperatorStatus(ocConfig("co-progressing.json"), "not-found")
-	assert.EqualError(t, err, "no cluster operator found")
-}
-
 func ocConfig(s string) oc.Config {
 	return oc.Config{
 		Runner: &mockRunner{file: filepath.Join("testdata", s)},
