@@ -1,5 +1,5 @@
 package dns
 
-func runPostStartForOS(serviceConfig ServicePostStartConfig) error {
+func configureDNSOnHost(serviceConfig ServicePostStartConfig) error {
 	return nil
 }

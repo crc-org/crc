@@ -29,7 +29,7 @@ type resolverFileValues struct {
 	SearchOrder int
 }
 
-func runPostStartForOS(serviceConfig ServicePostStartConfig) error {
+func configureDNSOnHost(serviceConfig ServicePostStartConfig) error {
 	if serviceConfig.NetworkMode == network.UserNetworkingMode {
 		return nil
 	}
