@@ -2,6 +2,7 @@ package dns
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/code-ready/crc/pkg/crc/adminhelper"
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -21,6 +22,11 @@ func init() {
 
 func RunPostStart(serviceConfig ServicePostStartConfig) error {
 	if err := setupDnsmasq(serviceConfig); err != nil {
+		return err
+	}
+
+	// Update /etc/hosts file for host
+	if err := addOpenShiftHosts(serviceConfig); err != nil {
 		return err
 	}
 
@@ -88,6 +94,9 @@ func dnsServers(serviceConfig ServicePostStartConfig) ([]NameServer, error) {
 }
 
 func addOpenShiftHosts(serviceConfig ServicePostStartConfig) error {
+	if runtime.GOOS == "windows" && serviceConfig.NetworkMode == network.SystemNetworkingMode { // avoid UAC prompts on Windows in this mode
+		return nil
+	}
 	return adminhelper.UpdateHostsFile(serviceConfig.IP, serviceConfig.BundleMetadata.GetAPIHostname(),
 		serviceConfig.BundleMetadata.GetAppHostname("oauth-openshift"),
 		serviceConfig.BundleMetadata.GetAppHostname("console-openshift-console"),

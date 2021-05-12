@@ -19,7 +19,7 @@ const (
 
 func runPostStartForOS(serviceConfig ServicePostStartConfig) error {
 	if serviceConfig.NetworkMode == network.UserNetworkingMode {
-		return addOpenShiftHosts(serviceConfig)
+		return nil
 	}
 
 	_, switchName := winnet.SelectSwitchByNameOrDefault(AlternativeNetwork)
