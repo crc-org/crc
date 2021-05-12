@@ -30,7 +30,7 @@ func RunPostStart(serviceConfig ServicePostStartConfig) error {
 		return err
 	}
 
-	if err := runPostStartForOS(serviceConfig); err != nil {
+	if err := configureDNSOnHost(serviceConfig); err != nil {
 		return err
 	}
 
