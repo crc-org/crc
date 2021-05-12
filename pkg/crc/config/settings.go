@@ -79,7 +79,7 @@ func RegisterSettings(cfg *Config) {
 	cfg.AddSetting(ExperimentalFeatures, false, ValidateBool, SuccessfullyApplied,
 		"Enable experimental features (true/false, default: false)")
 	cfg.AddSetting(NetworkMode, string(defaultNetworkMode()), network.ValidateMode, network.SuccessfullyAppliedMode,
-		"Network mode (default or vsock)")
+		fmt.Sprintf("Network mode (%s or %s)", network.UserNetworkingMode, network.SystemNetworkingMode))
 	cfg.AddSetting(HostNetworkAccess, false, validateHostNetworkAccess, SuccessfullyApplied,
 		"Allow TCP/IP connections from the CodeReady Containers VM to services running on the host (true/false, default: false)")
 	// System tray auto-start config
