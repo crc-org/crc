@@ -324,7 +324,11 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	// Run the DNS server inside the VM
-	if err := dns.RunPostStart(servicePostStartConfig); err != nil {
+	if err := dns.ConfigureForOpenShift(servicePostStartConfig); err != nil {
+		return nil, errors.Wrap(err, "Error running post start")
+	}
+
+	if err := dns.CreateResolvFileOnInstance(servicePostStartConfig); err != nil {
 		return nil, errors.Wrap(err, "Error running post start")
 	}
 
