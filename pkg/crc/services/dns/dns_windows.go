@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/services"
 	winnet "github.com/code-ready/crc/pkg/os/windows/network"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 	"github.com/code-ready/crc/pkg/os/windows/win32"
@@ -18,7 +17,7 @@ const (
 	AlternativeNetwork = "crc"
 )
 
-func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
+func runPostStartForOS(serviceConfig ServicePostStartConfig) error {
 	if serviceConfig.NetworkMode == network.UserNetworkingMode {
 		return addOpenShiftHosts(serviceConfig)
 	}

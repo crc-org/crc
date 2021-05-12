@@ -21,7 +21,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/oc"
-	"github.com/code-ready/crc/pkg/crc/services"
 	"github.com/code-ready/crc/pkg/crc/services/dns"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/crc/systemd"
@@ -314,7 +313,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	proxyConfig.AddNoProxy(instanceIP)
 
 	// Create servicePostStartConfig for DNS checks and DNS start.
-	servicePostStartConfig := services.ServicePostStartConfig{
+	servicePostStartConfig := dns.ServicePostStartConfig{
 		Name: client.name,
 		// TODO: would prefer passing in a more generic type
 		SSHRunner: sshRunner,

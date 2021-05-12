@@ -8,7 +8,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/services"
 )
 
 const (
@@ -22,7 +21,7 @@ const (
 func init() {
 }
 
-func RunPostStart(serviceConfig services.ServicePostStartConfig) error {
+func RunPostStart(serviceConfig ServicePostStartConfig) error {
 	if err := setupDnsmasq(serviceConfig); err != nil {
 		return err
 	}
@@ -39,7 +38,7 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) error {
 	return network.CreateResolvFileOnInstance(serviceConfig.SSHRunner, resolvFileValues)
 }
 
-func setupDnsmasq(serviceConfig services.ServicePostStartConfig) error {
+func setupDnsmasq(serviceConfig ServicePostStartConfig) error {
 	if serviceConfig.NetworkMode == network.UserNetworkingMode {
 		return nil
 	}
@@ -65,7 +64,7 @@ func setupDnsmasq(serviceConfig services.ServicePostStartConfig) error {
 	return nil
 }
 
-func getResolvFileValues(serviceConfig services.ServicePostStartConfig) (network.ResolvFileValues, error) {
+func getResolvFileValues(serviceConfig ServicePostStartConfig) (network.ResolvFileValues, error) {
 	dnsServers, err := dnsServers(serviceConfig)
 	if err != nil {
 		return network.ResolvFileValues{}, err
@@ -80,7 +79,7 @@ func getResolvFileValues(serviceConfig services.ServicePostStartConfig) (network
 	}, nil
 }
 
-func dnsServers(serviceConfig services.ServicePostStartConfig) ([]network.NameServer, error) {
+func dnsServers(serviceConfig ServicePostStartConfig) ([]network.NameServer, error) {
 	if serviceConfig.NetworkMode == network.UserNetworkingMode {
 		return []network.NameServer{
 			{
@@ -95,7 +94,7 @@ func dnsServers(serviceConfig services.ServicePostStartConfig) ([]network.NameSe
 	return append([]network.NameServer{{IPAddress: dnsContainerIP}}, orgResolvValues.NameServers...), nil
 }
 
-func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (string, error) {
+func CheckCRCLocalDNSReachable(serviceConfig ServicePostStartConfig) (string, error) {
 	appsURI := fmt.Sprintf("foo.%s", serviceConfig.BundleMetadata.ClusterInfo.AppsDomain)
 	// Try 30 times for 1 second interval, In nested environment most of time crc failed to get
 	// Internal dns query resolved for some time.
@@ -115,12 +114,12 @@ func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (s
 	return queryOutput, err
 }
 
-func CheckCRCPublicDNSReachable(serviceConfig services.ServicePostStartConfig) (string, error) {
+func CheckCRCPublicDNSReachable(serviceConfig ServicePostStartConfig) (string, error) {
 	stdout, _, err := serviceConfig.SSHRunner.Run(fmt.Sprintf("host -R 3 %s", publicDNSQueryURI))
 	return stdout, err
 }
 
-func addOpenShiftHosts(serviceConfig services.ServicePostStartConfig) error {
+func addOpenShiftHosts(serviceConfig ServicePostStartConfig) error {
 	return adminhelper.UpdateHostsFile(serviceConfig.IP, serviceConfig.BundleMetadata.GetAPIHostname(),
 		serviceConfig.BundleMetadata.GetAppHostname("oauth-openshift"),
 		serviceConfig.BundleMetadata.GetAppHostname("console-openshift-console"),

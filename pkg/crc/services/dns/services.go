@@ -1,4 +1,4 @@
-package services
+package dns
 
 import (
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"

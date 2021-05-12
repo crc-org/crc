@@ -3,8 +3,6 @@ package dns
 import (
 	"bytes"
 	"text/template"
-
-	"github.com/code-ready/crc/pkg/crc/services"
 )
 
 const (
@@ -32,7 +30,7 @@ type dnsmasqConfFileValues struct {
 	InternalIP  string
 }
 
-func createDnsmasqDNSConfig(serviceConfig services.ServicePostStartConfig) error {
+func createDnsmasqDNSConfig(serviceConfig ServicePostStartConfig) error {
 	domain := serviceConfig.BundleMetadata.ClusterInfo.BaseDomain
 
 	dnsmasqConfFileValues := dnsmasqConfFileValues{

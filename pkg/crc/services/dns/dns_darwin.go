@@ -11,7 +11,6 @@ import (
 	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/services"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/pkg/errors"
 )
@@ -30,7 +29,7 @@ type resolverFileValues struct {
 	SearchOrder int
 }
 
-func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
+func runPostStartForOS(serviceConfig ServicePostStartConfig) error {
 	// Update /etc/hosts file for host
 	if err := addOpenShiftHosts(serviceConfig); err != nil {
 		return err
