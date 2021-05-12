@@ -110,7 +110,7 @@ func restartNetwork() error {
 }
 
 func checkNetworkConnectivity() error {
-	hostResolv, err := network.GetResolvValuesFromHost()
+	hostResolv, err := GetResolvValuesFromHost()
 	if err != nil {
 		logging.Debugf("Unable to read resolv.conf: %v", err)
 		return err

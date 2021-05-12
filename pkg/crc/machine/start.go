@@ -342,7 +342,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	// Check DNS lookup from host to VM
 	logging.Info("Check DNS query from host...")
-	if err := network.CheckCRCLocalDNSReachableFromHost(crcBundleMetadata, instanceIP); err != nil {
+	if err := dns.CheckCRCLocalDNSReachableFromHost(crcBundleMetadata, instanceIP); err != nil {
 		if !client.useVSock() {
 			return nil, errors.Wrap(err, "Failed to query DNS from host")
 		}
@@ -566,15 +566,15 @@ func startHost(ctx context.Context, api libmachine.API, vm *host.Host) error {
 }
 
 func addNameServerToInstance(sshRunner *crcssh.Runner, ns string) error {
-	nameserver := network.NameServer{IPAddress: ns}
-	nameservers := []network.NameServer{nameserver}
-	exist, err := network.HasGivenNameserversConfigured(sshRunner, nameserver)
+	nameserver := dns.NameServer{IPAddress: ns}
+	nameservers := []dns.NameServer{nameserver}
+	exist, err := dns.HasGivenNameserversConfigured(sshRunner, nameserver)
 	if err != nil {
 		return err
 	}
 	if !exist {
 		logging.Infof("Adding %s as nameserver to the instance...", nameserver.IPAddress)
-		return network.AddNameserversToInstance(sshRunner, nameservers)
+		return dns.AddNameserversToInstance(sshRunner, nameservers)
 	}
 	return nil
 }
