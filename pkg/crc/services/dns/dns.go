@@ -28,12 +28,7 @@ func RunPostStart(serviceConfig ServicePostStartConfig) error {
 		return err
 	}
 
-	resolvFileValues, err := getResolvFileValues(serviceConfig)
-	if err != nil {
-		return err
-	}
-	// override resolv.conf file
-	return CreateResolvFileOnInstance(serviceConfig.SSHRunner, resolvFileValues)
+	return CreateResolvFileOnInstance(serviceConfig)
 }
 
 func setupDnsmasq(serviceConfig ServicePostStartConfig) error {
