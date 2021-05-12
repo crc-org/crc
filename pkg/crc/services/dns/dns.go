@@ -20,7 +20,7 @@ const (
 func init() {
 }
 
-func RunPostStart(serviceConfig ServicePostStartConfig) error {
+func ConfigureForOpenShift(serviceConfig ServicePostStartConfig) error {
 	if err := setupDnsmasq(serviceConfig); err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func RunPostStart(serviceConfig ServicePostStartConfig) error {
 		return err
 	}
 
-	return CreateResolvFileOnInstance(serviceConfig)
+	return nil
 }
 
 func setupDnsmasq(serviceConfig ServicePostStartConfig) error {
