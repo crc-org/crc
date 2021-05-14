@@ -228,20 +228,18 @@ func (h *Handler) GetConfig(args json.RawMessage) string {
 		return encodeStructToJSON(configResult)
 	}
 
-	var a = make(map[string][]string)
+	var req client.GetOrUnsetConfigRequest
 
-	err := json.Unmarshal(args, &a)
+	err := json.Unmarshal(args, &req)
 	if err != nil {
 		configResult.Success = false
 		configResult.Error = fmt.Sprintf("%v", err)
 		return encodeStructToJSON(configResult)
 	}
 
-	keys := a["properties"]
-
 	var configs = make(map[string]interface{})
 
-	for _, key := range keys {
+	for _, key := range req.Properties {
 		v := h.Config.Get(key)
 		if v.Invalid {
 			continue
