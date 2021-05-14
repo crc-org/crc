@@ -56,7 +56,7 @@ type GetConfigResult struct {
 }
 
 type StartConfig struct {
-	PullSecretPath string
+	PullSecretFile string `json:"pullSecretFile"`
 }
 
 type SetConfigRequest struct {

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -61,16 +60,13 @@ func (h *Handler) Stop() string {
 }
 
 func (h *Handler) Start(args json.RawMessage) string {
-	var parsedArgs startArgs
-	var err error
+	var parsedArgs client.StartConfig
 	if args != nil {
-		parsedArgs, err = parseStartArgs(args)
-		if err != nil {
-			startErr := &client.StartResult{
+		if err := json.Unmarshal(args, &parsedArgs); err != nil {
+			return encodeStructToJSON(&client.StartResult{
 				Success: false,
 				Error:   fmt.Sprintf("Incorrect arguments given: %s", err.Error()),
-			}
-			return encodeStructToJSON(startErr)
+			})
 		}
 	}
 	if err := preflight.StartPreflightChecks(h.Config); err != nil {
@@ -86,17 +82,7 @@ func (h *Handler) Start(args json.RawMessage) string {
 	return encodeStructToJSON(status)
 }
 
-func parseStartArgs(args json.RawMessage) (startArgs, error) {
-	var parsedArgs startArgs
-	dec := json.NewDecoder(bytes.NewReader(args))
-	dec.DisallowUnknownFields()
-	if err := dec.Decode(&parsedArgs); err != nil {
-		return startArgs{}, err
-	}
-	return parsedArgs, nil
-}
-
-func getStartConfig(cfg crcConfig.Storage, args startArgs) types.StartConfig {
+func getStartConfig(cfg crcConfig.Storage, args client.StartConfig) types.StartConfig {
 	return types.StartConfig{
 		BundlePath: cfg.Get(crcConfig.Bundle).AsString(),
 		Memory:     cfg.Get(crcConfig.Memory).AsInt(),
