@@ -323,7 +323,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		NetworkMode:    client.networkMode(),
 	}
 
-	preset := &OpenShiftLevel2Preset{}
+	preset := client.preset()
 	if err := preset.PostStart(ctx, client, startConfig, servicePostStartConfig, crcBundleMetadata, instanceIP, sshRunner, proxyConfig); err != nil {
 		return nil, err
 	}
@@ -338,6 +338,13 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		ClusterConfig:  *clusterConfig,
 		Status:         vmState,
 	}, nil
+}
+
+func (client *client) preset() Preset {
+	if _, ok := os.LookupEnv("UNSUPPORTED_PODMAN_PRESET"); ok {
+		return &PodmanPreset{}
+	}
+	return &OpenShiftLevel2Preset{}
 }
 
 func (p *OpenShiftLevel2Preset) PostStart(
