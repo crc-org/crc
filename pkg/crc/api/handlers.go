@@ -134,28 +134,18 @@ func (h *Handler) SetConfig(args json.RawMessage) string {
 		})
 	}
 
-	var a = make(map[string]interface{})
-
-	err := json.Unmarshal(args, &a)
-	if err != nil {
+	var req client.SetConfigRequest
+	if err := json.Unmarshal(args, &req); err != nil {
 		return encodeStructToJSON(client.SetOrUnsetConfigResult{
 			Success: false,
 			Error:   err.Error(),
 		})
 	}
 
-	configs, ok := a["properties"].(map[string]interface{})
-	if !ok {
-		return encodeStructToJSON(client.SetOrUnsetConfigResult{
-			Success: false,
-			Error:   "No config keys provided",
-		})
-	}
-
 	// successProps slice contains the properties that were successfully set
 	var successProps []string
 	var multiError = errors.MultiError{}
-	for k, v := range configs {
+	for k, v := range req.Properties {
 		_, err := h.Config.Set(k, v)
 		if err != nil {
 			multiError.Collect(err)
