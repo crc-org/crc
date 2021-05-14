@@ -112,7 +112,7 @@ func (c *Client) GetConfig(configs []string) (GetConfigResult, error) {
 	var data = new(bytes.Buffer)
 
 	if len(configs) > 0 {
-		cfg := getOrUnsetConfigRequest{
+		cfg := GetOrUnsetConfigRequest{
 			Properties: configs,
 		}
 		if err := json.NewEncoder(data).Encode(cfg); err != nil {
@@ -158,7 +158,7 @@ func (c *Client) UnsetConfig(configs []string) (SetOrUnsetConfigResult, error) {
 	var ucr = SetOrUnsetConfigResult{}
 	var data = new(bytes.Buffer)
 
-	cfg := getOrUnsetConfigRequest{
+	cfg := GetOrUnsetConfigRequest{
 		Properties: configs,
 	}
 	if err := json.NewEncoder(data).Encode(cfg); err != nil {

@@ -63,7 +63,7 @@ type SetConfigRequest struct {
 	Properties map[string]interface{} `json:"properties"`
 }
 
-type getOrUnsetConfigRequest struct {
+type GetOrUnsetConfigRequest struct {
 	Properties []string `json:"properties"`
 }
 
