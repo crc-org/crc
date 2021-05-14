@@ -182,10 +182,8 @@ func (h *Handler) UnsetConfig(args json.RawMessage) string {
 		})
 	}
 
-	var multiError = errors.MultiError{}
-	var keys = make(map[string][]string)
-
-	if err := json.Unmarshal(args, &keys); err != nil {
+	var req client.GetOrUnsetConfigRequest
+	if err := json.Unmarshal(args, &req); err != nil {
 		return encodeStructToJSON(client.SetOrUnsetConfigResult{
 			Success: false,
 			Error:   err.Error(),
@@ -194,11 +192,9 @@ func (h *Handler) UnsetConfig(args json.RawMessage) string {
 
 	// successProps slice contains the properties that were successfully unset
 	var successProps []string
-
-	keysToUnset := keys["properties"]
-	for _, key := range keysToUnset {
-		_, err := h.Config.Unset(key)
-		if err != nil {
+	var multiError = errors.MultiError{}
+	for _, key := range req.Properties {
+		if _, err := h.Config.Unset(key); err != nil {
 			multiError.Collect(err)
 			continue
 		}
