@@ -127,35 +127,34 @@ func (h *Handler) GetWebconsoleInfo() string {
 }
 
 func (h *Handler) SetConfig(args json.RawMessage) string {
-	setConfigResult := client.SetOrUnsetConfigResult{
-		Success: true,
-	}
 	if args == nil {
-		setConfigResult.Success = false
-		setConfigResult.Error = "No config keys provided"
-		return encodeStructToJSON(setConfigResult)
+		return encodeStructToJSON(client.SetOrUnsetConfigResult{
+			Success: false,
+			Error:   "No config keys provided",
+		})
 	}
 
-	var multiError = errors.MultiError{}
 	var a = make(map[string]interface{})
 
 	err := json.Unmarshal(args, &a)
 	if err != nil {
-		setConfigResult.Success = false
-		setConfigResult.Error = fmt.Sprintf("%v", err)
-		return encodeStructToJSON(setConfigResult)
+		return encodeStructToJSON(client.SetOrUnsetConfigResult{
+			Success: false,
+			Error:   err.Error(),
+		})
 	}
 
 	configs, ok := a["properties"].(map[string]interface{})
 	if !ok {
-		setConfigResult.Success = false
-		setConfigResult.Error = "No config keys provided"
-		return encodeStructToJSON(setConfigResult)
+		return encodeStructToJSON(client.SetOrUnsetConfigResult{
+			Success: false,
+			Error:   "No config keys provided",
+		})
 	}
 
 	// successProps slice contains the properties that were successfully set
 	var successProps []string
-
+	var multiError = errors.MultiError{}
 	for k, v := range configs {
 		_, err := h.Config.Set(k, v)
 		if err != nil {
@@ -164,14 +163,16 @@ func (h *Handler) SetConfig(args json.RawMessage) string {
 		}
 		successProps = append(successProps, k)
 	}
-
 	if len(multiError.Errors) != 0 {
-		setConfigResult.Success = false
-		setConfigResult.Error = fmt.Sprintf("%v", multiError)
+		return encodeStructToJSON(client.SetOrUnsetConfigResult{
+			Success: false,
+			Error:   multiError.Error(),
+		})
 	}
-
-	setConfigResult.Properties = successProps
-	return encodeStructToJSON(setConfigResult)
+	return encodeStructToJSON(client.SetOrUnsetConfigResult{
+		Success:    true,
+		Properties: successProps,
+	})
 }
 
 func (h *Handler) UnsetConfig(args json.RawMessage) string {
