@@ -25,6 +25,7 @@ import (
 	"github.com/code-ready/gvisor-tap-vsock/pkg/types"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/virtualnetwork"
 	"github.com/docker/go-units"
+	"github.com/gorilla/handlers"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/util/exec"
@@ -145,7 +146,7 @@ func run(configuration *types.Configuration) error {
 		mux := http.NewServeMux()
 		mux.Handle("/network/", http.StripPrefix("/network", vn.Mux()))
 		mux.Handle("/api/", http.StripPrefix("/api", api.NewMux(config, newMachine(), logging.Memory, segmentClient)))
-		if err := http.Serve(listener, mux); err != nil {
+		if err := http.Serve(listener, handlers.LoggingHandler(os.Stderr, mux)); err != nil {
 			errCh <- err
 		}
 	}()
@@ -156,7 +157,7 @@ func run(configuration *types.Configuration) error {
 	}
 	go func() {
 		mux := gatewayAPIMux()
-		if err := http.Serve(ln, mux); err != nil {
+		if err := http.Serve(ln, handlers.LoggingHandler(os.Stderr, mux)); err != nil {
 			errCh <- err
 		}
 	}()

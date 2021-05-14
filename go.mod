@@ -18,6 +18,7 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/google/go-cmp v0.5.4 // indirect
+	github.com/gorilla/handlers v1.4.2
 	github.com/h2non/filetype v1.1.2-0.20210202002709-95e28344e08c
 	github.com/hectane/go-acl v0.0.0-20190604041725-da78bae5fc95
 	github.com/imdario/mergo v0.3.11 // indirect
