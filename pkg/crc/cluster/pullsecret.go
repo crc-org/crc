@@ -54,7 +54,7 @@ func (loader *interactivePullSecretLoader) Value() (string, error) {
 		return "", err
 	}
 
-	if err := storeInKeyring(pullSecret); err != nil {
+	if err := StoreInKeyring(pullSecret); err != nil {
 		logging.Warnf("Cannot add pull secret to keyring: %v", err)
 	}
 	return pullSecret, nil
@@ -129,7 +129,7 @@ func loadFromKeyring() (string, error) {
 	return b.String(), validation.ImagePullSecret(b.String())
 }
 
-func storeInKeyring(pullSecret string) error {
+func StoreInKeyring(pullSecret string) error {
 	var b bytes.Buffer
 	compressor := gzip.NewWriter(&b)
 	if _, err := compressor.Write([]byte(pullSecret)); err != nil {

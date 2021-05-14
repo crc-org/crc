@@ -35,7 +35,7 @@ func TestLoadPullSecret(t *testing.T) {
 	_, err = loader.Value()
 	assert.Error(t, err)
 
-	assert.NoError(t, storeInKeyring(secret3))
+	assert.NoError(t, StoreInKeyring(secret3))
 
 	val, err := loader.Value()
 	assert.NoError(t, err)

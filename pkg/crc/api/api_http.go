@@ -9,9 +9,11 @@ import (
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/api/client"
+	"github.com/code-ready/crc/pkg/crc/cluster"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/validation"
 )
 
 func NewMux(config crcConfig.Storage, machine machine.Client, logger Logger, telemetry Telemetry) http.Handler {
@@ -85,7 +87,37 @@ func NewMux(config crcConfig.Storage, machine machine.Client, logger Logger, tel
 		}
 		sendResponse(w, handler.UploadTelemetry(data))
 	})
+
+	mux.HandleFunc("/pull-secret", pullSecretHandler(config))
+
 	return mux
+}
+
+func pullSecretHandler(config crcConfig.Storage) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			bin, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			if err := validation.ImagePullSecret(string(bin)); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			if err := cluster.StoreInKeyring(string(bin)); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusCreated)
+			return
+		}
+		if _, err := cluster.NewNonInteractivePullSecretLoader(config, "").Value(); err == nil {
+			w.WriteHeader(http.StatusOK)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}
 }
 
 func newConfigMux(handler *Handler) http.Handler {
