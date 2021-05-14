@@ -79,10 +79,29 @@ func TestApi(t *testing.T) {
 		{
 			command:       "start",
 			clientFailing: true,
-			args:          json.RawMessage(`{"pull-secret":"/Users/fake/pull-secret"}`),
+			args:          json.RawMessage(`{"pullSecretFile":"/Users/fake/pull-secret"}`),
 			expected: map[string]interface{}{
 				"Status":         "",
-				"Error":          "Incorrect arguments given: json: unknown field \"pull-secret\"",
+				"Error":          "Failed to start",
+				"KubeletStarted": false,
+				"Success":        false,
+				"ClusterConfig": map[string]interface{}{
+					"KubeConfig":    "",
+					"KubeAdminPass": "",
+					"ClusterAPI":    "",
+					"WebConsoleURL": "",
+					"ProxyConfig":   nil,
+					"ClusterCACert": "",
+				},
+			},
+		},
+		{
+			command:       "start",
+			clientFailing: true,
+			args:          json.RawMessage(`[]`),
+			expected: map[string]interface{}{
+				"Status":         "",
+				"Error":          "Incorrect arguments given: json: cannot unmarshal array into Go value of type client.StartConfig",
 				"KubeletStarted": false,
 				"Success":        false,
 				"ClusterConfig": map[string]interface{}{
@@ -98,6 +117,23 @@ func TestApi(t *testing.T) {
 		{
 			command: "start",
 			args:    json.RawMessage(`{"pullSecretFile":"/Users/fake/pull-secret"}`),
+			expected: map[string]interface{}{
+				"Status":         "",
+				"Error":          "",
+				"KubeletStarted": true,
+				"Success":        true,
+				"ClusterConfig": map[string]interface{}{
+					"ClusterCACert": "MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ",
+					"KubeConfig":    "/tmp/kubeconfig",
+					"KubeAdminPass": "foobar",
+					"ClusterAPI":    "https://foo.testing:6443",
+					"WebConsoleURL": "https://console.foo.testing:6443",
+					"ProxyConfig":   nil,
+				},
+			},
+		},
+		{
+			command: "start",
 			expected: map[string]interface{}{
 				"Status":         "",
 				"Error":          "",

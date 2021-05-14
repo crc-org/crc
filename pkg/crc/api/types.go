@@ -16,11 +16,6 @@ type commandRequest struct {
 	Args    json.RawMessage `json:"args,omitempty"`
 }
 
-// startArgs is used to get the pull secret file path as argument for start handler
-type startArgs struct {
-	PullSecretFile string `json:"pullSecretFile"`
-}
-
 type loggerResult struct {
 	Success  bool
 	Messages []string
