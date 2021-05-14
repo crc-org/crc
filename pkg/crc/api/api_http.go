@@ -33,7 +33,7 @@ func NewMux(config crcConfig.Storage, machine machine.Client, logger Logger, tel
 	})
 
 	mux.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
-		if wrongHTTPMethodUsed(r, w, http.MethodGet) {
+		if wrongHTTPMethodUsed(r, w, http.MethodGet, http.MethodPost) {
 			return
 		}
 		stopResult := handler.Stop()
@@ -49,7 +49,7 @@ func NewMux(config crcConfig.Storage, machine machine.Client, logger Logger, tel
 	})
 
 	mux.HandleFunc("/delete", func(w http.ResponseWriter, r *http.Request) {
-		if wrongHTTPMethodUsed(r, w, http.MethodGet) {
+		if wrongHTTPMethodUsed(r, w, http.MethodGet, http.MethodDelete) {
 			return
 		}
 		deleteResult := handler.Delete()
