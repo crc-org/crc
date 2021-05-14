@@ -1,11 +1,16 @@
 package api
 
 import (
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 
 	apiClient "github.com/code-ready/crc/pkg/crc/api/client"
+	crcConfig "github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/version"
@@ -137,4 +142,33 @@ func TestTelemetry(t *testing.T) {
 	_ = client.Telemetry("click stop")
 
 	assert.Equal(t, []string{"click start", "click stop"}, telemetry.actions)
+}
+
+func TestPullSecret(t *testing.T) {
+	dir, err := ioutil.TempDir("", "test-pull-secret")
+	assert.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	fakeMachine := fakemachine.NewClient()
+	config := setupNewInMemoryConfig()
+
+	ts := httptest.NewServer(NewMux(config, fakeMachine, &mockLogger{}, &mockTelemetry{}))
+	defer ts.Close()
+
+	client := apiClient.New(http.DefaultClient, ts.URL)
+
+	defined, err := client.IsPullSecretDefined()
+	assert.NoError(t, err)
+	assert.False(t, defined)
+
+	pullSecretFile := filepath.Join(dir, "pull-secret.json")
+	assert.NoError(t, ioutil.WriteFile(pullSecretFile, []byte(constants.OkdPullSecret), 0600))
+	_, err = config.Set(crcConfig.PullSecretFile, pullSecretFile)
+	assert.NoError(t, err)
+
+	defined, err = client.IsPullSecretDefined()
+	assert.NoError(t, err)
+	assert.True(t, defined)
+
+	assert.Error(t, client.SetPullSecret("{}")) // invalid
 }

@@ -198,6 +198,23 @@ func (c *Client) Telemetry(action string) error {
 	return nil
 }
 
+func (c *Client) IsPullSecretDefined() (bool, error) {
+	res, err := c.client.Get(fmt.Sprintf("%s%s", c.base, "/pull-secret"))
+	if err != nil {
+		return false, err
+	}
+	defer res.Body.Close()
+	return res.StatusCode == http.StatusOK, nil
+}
+
+func (c *Client) SetPullSecret(data string) error {
+	_, err := c.sendPostRequest("/pull-secret", bytes.NewReader([]byte(data)))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c *Client) sendGetRequest(url string) ([]byte, error) {
 	res, err := c.client.Get(fmt.Sprintf("%s%s", c.base, url))
 	if err != nil {
@@ -225,7 +242,7 @@ func (c *Client) sendPostRequest(url string, data io.Reader) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if res.StatusCode != http.StatusOK {
+	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated {
 		return nil, fmt.Errorf("Error occurred sending POST request to : %s : %d", url, res.StatusCode)
 	}
 
