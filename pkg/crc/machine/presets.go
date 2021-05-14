@@ -2,6 +2,7 @@ package machine
 
 import (
 	"context"
+	"github.com/pkg/errors"
 
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
@@ -11,6 +12,7 @@ import (
 )
 
 type Preset interface {
+	PreCreate(startConfig types.StartConfig) error
 	PostStart(
 		ctx context.Context,
 		client *client,
@@ -26,7 +28,20 @@ type Preset interface {
 type OpenShiftLevel2Preset struct {
 }
 
+func (p *OpenShiftLevel2Preset) PreCreate(startConfig types.StartConfig) error {
+	// Ask early for pull secret if it hasn't been requested yet
+	_, err := startConfig.PullSecret.Value()
+	if err != nil {
+		return errors.Wrap(err, "Failed to ask for pull secret")
+	}
+	return nil
+}
+
 type PodmanPreset struct {
+}
+
+func (p *PodmanPreset) PreCreate(startConfig types.StartConfig) error {
+	return nil
 }
 
 func (p *PodmanPreset) PostStart(

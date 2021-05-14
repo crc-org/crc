@@ -152,10 +152,8 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if !exists {
 		telemetry.SetStartType(ctx, telemetry.CreationStartType)
 
-		// Ask early for pull secret if it hasn't been requested yet
-		_, err = startConfig.PullSecret.Value()
-		if err != nil {
-			return nil, errors.Wrap(err, "Failed to ask for pull secret")
+		if err := client.preset().PreCreate(startConfig); err != nil {
+			return nil, err
 		}
 
 		crcBundleMetadata, err := getCrcBundleInfo(startConfig.BundlePath)
