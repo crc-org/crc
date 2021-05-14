@@ -2,13 +2,13 @@ package machine
 
 import (
 	"context"
-	"github.com/pkg/errors"
 
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/services/dns"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
+	"github.com/pkg/errors"
 )
 
 type Preset interface {
@@ -24,6 +24,7 @@ type Preset interface {
 		sshRunner *crcssh.Runner,
 		proxyConfig *network.ProxyConfig,
 	) error
+	GetOpenShiftStatus(ctx context.Context, ip string, bundle *bundle.CrcBundleInfo) types.OpenshiftStatus
 }
 
 type OpenShiftPreset struct {
@@ -67,4 +68,8 @@ func (p *PodmanPreset) PostStart(
 	}
 
 	return nil
+}
+
+func (p *PodmanPreset) GetOpenShiftStatus(ctx context.Context, ip string, bundle *bundle.CrcBundleInfo) types.OpenshiftStatus {
+	return types.OpenshiftStopped
 }

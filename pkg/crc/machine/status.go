@@ -52,7 +52,7 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	diskSize, diskUse := client.getDiskDetails(ip, crcBundleMetadata)
 	return &types.ClusterStatusResult{
 		CrcStatus:        state.Running,
-		OpenshiftStatus:  getOpenShiftStatus(context.Background(), ip, crcBundleMetadata),
+		OpenshiftStatus:  client.preset().GetOpenShiftStatus(context.Background(), ip, crcBundleMetadata),
 		OpenshiftVersion: crcBundleMetadata.GetOpenshiftVersion(),
 		DiskUse:          diskUse,
 		DiskSize:         diskSize,
@@ -79,7 +79,7 @@ func (client *client) getDiskDetails(ip string, bundle *bundle.CrcBundleInfo) (i
 	return disk.([]int64)[0], disk.([]int64)[1]
 }
 
-func getOpenShiftStatus(ctx context.Context, ip string, bundle *bundle.CrcBundleInfo) types.OpenshiftStatus {
+func (p *OpenShiftPreset) GetOpenShiftStatus(ctx context.Context, ip string, bundle *bundle.CrcBundleInfo) types.OpenshiftStatus {
 	status, err := cluster.GetClusterOperatorsStatus(ctx, ip, bundle)
 	if err != nil {
 		logging.Debugf("cannot get OpenShift status: %v", err)
