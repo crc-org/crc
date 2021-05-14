@@ -175,23 +175,21 @@ func (h *Handler) SetConfig(args json.RawMessage) string {
 }
 
 func (h *Handler) UnsetConfig(args json.RawMessage) string {
-	unsetConfigResult := client.SetOrUnsetConfigResult{
-		Success: true,
-	}
 	if args == nil {
-		unsetConfigResult.Success = false
-		unsetConfigResult.Error = "No config keys provided"
-		return encodeStructToJSON(unsetConfigResult)
+		return encodeStructToJSON(client.SetOrUnsetConfigResult{
+			Success: false,
+			Error:   "No config keys provided",
+		})
 	}
 
 	var multiError = errors.MultiError{}
 	var keys = make(map[string][]string)
 
-	err := json.Unmarshal(args, &keys)
-	if err != nil {
-		unsetConfigResult.Success = false
-		unsetConfigResult.Error = fmt.Sprintf("%v", err)
-		return encodeStructToJSON(unsetConfigResult)
+	if err := json.Unmarshal(args, &keys); err != nil {
+		return encodeStructToJSON(client.SetOrUnsetConfigResult{
+			Success: false,
+			Error:   err.Error(),
+		})
 	}
 
 	// successProps slice contains the properties that were successfully unset
@@ -207,11 +205,15 @@ func (h *Handler) UnsetConfig(args json.RawMessage) string {
 		successProps = append(successProps, key)
 	}
 	if len(multiError.Errors) != 0 {
-		unsetConfigResult.Success = false
-		unsetConfigResult.Error = fmt.Sprintf("%v", multiError)
+		return encodeStructToJSON(client.SetOrUnsetConfigResult{
+			Success: false,
+			Error:   multiError.Error(),
+		})
 	}
-	unsetConfigResult.Properties = successProps
-	return encodeStructToJSON(unsetConfigResult)
+	return encodeStructToJSON(client.SetOrUnsetConfigResult{
+		Success:    true,
+		Properties: successProps,
+	})
 }
 
 func (h *Handler) GetConfig(args json.RawMessage) string {
