@@ -12,6 +12,7 @@ import (
 )
 
 type Preset interface {
+	ValidateStartConfig(startConfig types.StartConfig) error
 	PreCreate(startConfig types.StartConfig) error
 	PostStart(
 		ctx context.Context,
@@ -25,10 +26,11 @@ type Preset interface {
 	) error
 }
 
-type OpenShiftLevel2Preset struct {
+type OpenShiftPreset struct {
+	Monitoring bool
 }
 
-func (p *OpenShiftLevel2Preset) PreCreate(startConfig types.StartConfig) error {
+func (p *OpenShiftPreset) PreCreate(startConfig types.StartConfig) error {
 	// Ask early for pull secret if it hasn't been requested yet
 	_, err := startConfig.PullSecret.Value()
 	if err != nil {
@@ -38,6 +40,10 @@ func (p *OpenShiftLevel2Preset) PreCreate(startConfig types.StartConfig) error {
 }
 
 type PodmanPreset struct {
+}
+
+func (p *PodmanPreset) ValidateStartConfig(startConfig types.StartConfig) error {
+	return nil
 }
 
 func (p *PodmanPreset) PreCreate(startConfig types.StartConfig) error {

@@ -136,7 +136,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	telemetry.SetMemory(ctx, uint64(startConfig.Memory)*1024*1024)
 	telemetry.SetDiskSize(ctx, uint64(startConfig.DiskSize)*1024*1024*1024)
 
-	if err := client.validateStartConfig(startConfig); err != nil {
+	if err := client.preset().ValidateStartConfig(startConfig); err != nil {
 		return nil, err
 	}
 
@@ -342,10 +342,12 @@ func (client *client) preset() Preset {
 	if _, ok := os.LookupEnv("UNSUPPORTED_PODMAN_PRESET"); ok {
 		return &PodmanPreset{}
 	}
-	return &OpenShiftLevel2Preset{}
+	return &OpenShiftPreset{
+		Monitoring: client.monitoringEnabled(),
+	}
 }
 
-func (p *OpenShiftLevel2Preset) PostStart(
+func (p *OpenShiftPreset) PostStart(
 	ctx context.Context,
 	client *client,
 	startConfig types.StartConfig,
@@ -512,8 +514,8 @@ func (client *client) IsRunning() (bool, error) {
 	return true, nil
 }
 
-func (client *client) validateStartConfig(startConfig types.StartConfig) error {
-	if client.monitoringEnabled() && startConfig.Memory < minimumMemoryForMonitoring {
+func (p *OpenShiftPreset) ValidateStartConfig(startConfig types.StartConfig) error {
+	if p.Monitoring && startConfig.Memory < minimumMemoryForMonitoring {
 		return fmt.Errorf("Too little memory (%s) allocated to the virtual machine to start the monitoring stack, %s is the minimum",
 			units.BytesSize(float64(startConfig.Memory)*1024*1024),
 			units.BytesSize(minimumMemoryForMonitoring*1024*1024))
