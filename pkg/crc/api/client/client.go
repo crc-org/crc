@@ -220,10 +220,12 @@ func (c *Client) sendGetRequest(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
+
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("Error occurred sending GET request to : %s : %d", url, res.StatusCode)
 	}
-	defer res.Body.Close()
+
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("Unknown error reading response: %w", err)
@@ -242,11 +244,11 @@ func (c *Client) sendPostRequest(url string, data io.Reader) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
+
 	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated {
 		return nil, fmt.Errorf("Error occurred sending POST request to : %s : %d", url, res.StatusCode)
 	}
-
-	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
