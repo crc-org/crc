@@ -215,30 +215,27 @@ func (h *Handler) UnsetConfig(args json.RawMessage) string {
 }
 
 func (h *Handler) GetConfig(args json.RawMessage) string {
-	configResult := client.GetConfigResult{
-		Success: true,
-	}
 	if args == nil {
 		allConfigs := h.Config.AllConfigs()
-		configResult.Error = ""
-		configResult.Configs = make(map[string]interface{})
+		configs := make(map[string]interface{})
 		for k, v := range allConfigs {
-			configResult.Configs[k] = v.Value
+			configs[k] = v.Value
 		}
-		return encodeStructToJSON(configResult)
+		return encodeStructToJSON(client.GetConfigResult{
+			Success: true,
+			Configs: configs,
+		})
 	}
 
 	var req client.GetOrUnsetConfigRequest
-
-	err := json.Unmarshal(args, &req)
-	if err != nil {
-		configResult.Success = false
-		configResult.Error = fmt.Sprintf("%v", err)
-		return encodeStructToJSON(configResult)
+	if err := json.Unmarshal(args, &req); err != nil {
+		return encodeStructToJSON(client.GetConfigResult{
+			Success: false,
+			Error:   err.Error(),
+		})
 	}
 
-	var configs = make(map[string]interface{})
-
+	configs := make(map[string]interface{})
 	for _, key := range req.Properties {
 		v := h.Config.Get(key)
 		if v.Invalid {
@@ -246,15 +243,17 @@ func (h *Handler) GetConfig(args json.RawMessage) string {
 		}
 		configs[key] = v.Value
 	}
+
 	if len(configs) == 0 {
-		configResult.Success = false
-		configResult.Error = "Unable to get configs"
-		configResult.Configs = nil
-	} else {
-		configResult.Error = ""
-		configResult.Configs = configs
+		return encodeStructToJSON(client.GetConfigResult{
+			Success: false,
+			Error:   "Unable to get configs",
+		})
 	}
-	return encodeStructToJSON(configResult)
+	return encodeStructToJSON(client.GetConfigResult{
+		Success: true,
+		Configs: configs,
+	})
 }
 
 func (h *Handler) UploadTelemetry(args json.RawMessage) string {
