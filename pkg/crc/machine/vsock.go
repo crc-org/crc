@@ -10,9 +10,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-func exposePorts() error {
+func exposePorts(portsToExpose []types.ExposeRequest) error {
 	daemonClient := daemonclient.New()
-	portsToExpose := vsockPorts()
 	alreadyOpenedPorts, err := daemonClient.NetworkClient.List()
 	if err != nil {
 		logging.Error("Is 'crc daemon' running? Network mode 'vsock' requires 'crc daemon' to be running, run it manually on different terminal/tab")
@@ -50,12 +49,8 @@ const (
 	apiPort          = 6443
 )
 
-func vsockPorts() []types.ExposeRequest {
-	return []types.ExposeRequest{
-		{
-			Local:  fmt.Sprintf(":%d", constants.VsockSSHPort),
-			Remote: fmt.Sprintf("%s:%d", virtualMachineIP, internalSSHPort),
-		},
+func openshiftPorts() []types.ExposeRequest {
+	return append(basePorts(), []types.ExposeRequest{
 		{
 			Local:  fmt.Sprintf(":%d", apiPort),
 			Remote: fmt.Sprintf("%s:%d", virtualMachineIP, apiPort),
@@ -67,6 +62,15 @@ func vsockPorts() []types.ExposeRequest {
 		{
 			Local:  fmt.Sprintf(":%d", httpPort),
 			Remote: fmt.Sprintf("%s:%d", virtualMachineIP, httpPort),
+		},
+	}...)
+}
+
+func basePorts() []types.ExposeRequest {
+	return []types.ExposeRequest{
+		{
+			Local:  fmt.Sprintf(":%d", constants.VsockSSHPort),
+			Remote: fmt.Sprintf("%s:%d", virtualMachineIP, internalSSHPort),
 		},
 	}
 }

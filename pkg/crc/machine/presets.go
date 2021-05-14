@@ -14,6 +14,7 @@ import (
 type Preset interface {
 	ValidateStartConfig(startConfig types.StartConfig) error
 	PreCreate(startConfig types.StartConfig) error
+	PreStart(client *client) error
 	PostStart(
 		ctx context.Context,
 		client *client,
@@ -40,6 +41,13 @@ func (p *OpenShiftPreset) PreCreate(startConfig types.StartConfig) error {
 	return nil
 }
 
+func (p *OpenShiftPreset) PreStart(client *client) error {
+	if client.useVSock() {
+		return exposePorts(openshiftPorts())
+	}
+	return nil
+}
+
 type PodmanPreset struct {
 }
 
@@ -48,6 +56,13 @@ func (p *PodmanPreset) ValidateStartConfig(startConfig types.StartConfig) error 
 }
 
 func (p *PodmanPreset) PreCreate(startConfig types.StartConfig) error {
+	return nil
+}
+
+func (p *PodmanPreset) PreStart(client *client) error {
+	if client.useVSock() {
+		return exposePorts(basePorts())
+	}
 	return nil
 }
 

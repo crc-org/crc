@@ -227,10 +227,8 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
 
-	if client.useVSock() {
-		if err := exposePorts(); err != nil {
-			return nil, err
-		}
+	if err := client.preset().PreStart(client); err != nil {
+		return nil, err
 	}
 
 	if err := client.updateVMConfig(startConfig, libMachineAPIClient, host); err != nil {
