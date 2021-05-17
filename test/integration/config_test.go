@@ -84,7 +84,7 @@ var _ = Describe("config", func() {
 		})
 
 		It("stop CRC", func() {
-			Expect(RunCRCExpectSuccess("stop", "-f")).To(ContainSubstring("stopped the OpenShift cluster"))
+			Expect(RunCRCExpectSuccess("stop", "-f")).To(MatchRegexp(`[Ss]topped the OpenShift cluster`))
 		})
 
 		It("start CRC and fall back on config settings", func() {
@@ -100,7 +100,7 @@ var _ = Describe("config", func() {
 		})
 
 		It("stop CRC", func() {
-			Expect(RunCRCExpectSuccess("stop", "-f")).To(ContainSubstring("stopped the OpenShift cluster"))
+			Expect(RunCRCExpectSuccess("stop", "-f")).To(MatchRegexp(`[Ss]topped the OpenShift cluster`))
 		})
 
 		It("unset memory", func() {
