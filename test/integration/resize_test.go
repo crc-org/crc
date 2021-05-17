@@ -2,6 +2,7 @@ package test_test
 
 import (
 	"runtime"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -25,20 +26,23 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 		})
 
 		It("check VM's memory size", func() {
-			out, err := SendCommandToVM("cat /proc/meminfo", "192.168.130.11", "22")
+			ip := strings.TrimSpace(RunCRCExpectSuccess("ip"))
+			out, err := SendCommandToVM("cat /proc/meminfo", ip, "22")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*9\d{6}`))
 		})
 
 		It("check VM's number of cpus", func() {
-			out, err := SendCommandToVM("cat /proc/cpuinfo", "192.168.130.11", "22")
+			ip := strings.TrimSpace(RunCRCExpectSuccess("ip"))
+			out, err := SendCommandToVM("cat /proc/cpuinfo", ip, "22")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`processor[\s]*\:[\s]*3`))
 			Expect(out).ShouldNot(MatchRegexp(`processor[\s]*\:[\s]*4`))
 		})
 
 		It("check VM's disk size", func() {
-			out, err := SendCommandToVM("df -h | grep sysroot", "192.168.130.11", "22")
+			ip := strings.TrimSpace(RunCRCExpectSuccess("ip"))
+			out, err := SendCommandToVM("df -h | grep sysroot", ip, "22")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`.*31G[\s].*[\s]/sysroot`))
 		})
@@ -61,20 +65,23 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 		})
 
 		It("check VM's memory size", func() {
-			out, err := SendCommandToVM("cat /proc/meminfo", "192.168.130.11", "22")
+			ip := strings.TrimSpace(RunCRCExpectSuccess("ip"))
+			out, err := SendCommandToVM("cat /proc/meminfo", ip, "22")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*11\d{6}`))
 		})
 
 		It("check VM's number of cpus", func() {
-			out, err := SendCommandToVM("cat /proc/cpuinfo", "192.168.130.11", "22")
+			ip := strings.TrimSpace(RunCRCExpectSuccess("ip"))
+			out, err := SendCommandToVM("cat /proc/cpuinfo", ip, "22")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`processor[\s]*\:[\s]*5`))
 			Expect(out).ShouldNot(MatchRegexp(`processor[\s]*\:[\s]*6`))
 		})
 
 		It("check VM's disk size", func() {
-			out, err := SendCommandToVM("df -h | grep sysroot", "192.168.130.11", "22")
+			ip := strings.TrimSpace(RunCRCExpectSuccess("ip"))
+			out, err := SendCommandToVM("df -h | grep sysroot", ip, "22")
 			Expect(err).NotTo(HaveOccurred())
 			if runtime.GOOS == "darwin" { // darwin does not support resize
 				Expect(out).Should(MatchRegexp(`.*31G[\s].*[\s]/sysroot`))
@@ -118,13 +125,15 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 		})
 
 		It("check VM's memory size", func() {
-			out, err := SendCommandToVM("cat /proc/meminfo", "192.168.130.11", "22")
+			ip := strings.TrimSpace(RunCRCExpectSuccess("ip"))
+			out, err := SendCommandToVM("cat /proc/meminfo", ip, "22")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*9\d{6}`)) // there should be a check if cluster needs >9216MiB; it isn't there and mem gets scaled down regardless
 		})
 
 		It("check VM's number of cpus", func() {
-			out, err := SendCommandToVM("cat /proc/cpuinfo", "192.168.130.11", "22")
+			ip := strings.TrimSpace(RunCRCExpectSuccess("ip"))
+			out, err := SendCommandToVM("cat /proc/cpuinfo", ip, "22")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`processor[\s]*\:[\s]*3`))
 			Expect(out).ShouldNot(MatchRegexp(`processor[\s]*\:[\s]*4`))
@@ -132,7 +141,8 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 
 		if runtime.GOOS != "darwin" {
 			It("check VM's disk size", func() {
-				out, err := SendCommandToVM("df -h | grep sysroot", "192.168.130.11", "22")
+				ip := strings.TrimSpace(RunCRCExpectSuccess("ip"))
+				out, err := SendCommandToVM("df -h | grep sysroot", ip, "22")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(out).Should(MatchRegexp(`.*40G[\s].*[\s]/sysroot`))
 			})

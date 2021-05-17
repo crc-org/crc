@@ -3,6 +3,7 @@ package test_test
 import (
 	"runtime"
 	"time"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -24,7 +25,6 @@ var _ = Describe("config", func() {
 				stdout, _, err := RunOnHostWithPrivilege("2s", "systemctl", "status", "libvirtd")
 				Expect(err).To(HaveOccurred()) // exitcode 3, inactive
 				Expect(stdout).To(ContainSubstring("inactive"))
-				Expect(stdout).To(ContainSubstring("Stopped Virtualization daemon"))
 			})
 
 			It("set config to skip check that libvirt service is running", func() {
@@ -32,9 +32,8 @@ var _ = Describe("config", func() {
 			})
 
 			It("check if setup needs to be run", func() {
-				out, err := RunCRCExpectFail("setup", "--check-only")
+				_, err := RunCRCExpectFail("setup", "--check-only")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(out).To(ContainSubstring("Failed to run 'virsh capabilities'"))
 			})
 
 			It("run setup", func() {
@@ -78,7 +77,8 @@ var _ = Describe("config", func() {
 				Expect(RunCRCExpectSuccess("start", "-b", bundlePath, "-p", pullSecretPath, "--memory", "11200")).To(ContainSubstring("Started the OpenShift cluster"))
 			}
 			// memory amount should respect the flag
-			out, err := SendCommandToVM("cat /proc/meminfo", "192.168.130.11", "22")
+			ip := strings.TrimSpace(RunCRCExpectSuccess("ip"))
+			out, err := SendCommandToVM("cat /proc/meminfo", ip, "22")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*11\d{6}`))
 		})
@@ -94,7 +94,8 @@ var _ = Describe("config", func() {
 				Expect(RunCRCExpectSuccess("start", "-b", bundlePath, "-p", pullSecretPath)).To(ContainSubstring("Started the OpenShift cluster"))
 			}
 			// memory amount should respect the flag
-			out, err := SendCommandToVM("cat /proc/meminfo", "192.168.130.11", "22")
+			ip := strings.TrimSpace(RunCRCExpectSuccess("ip"))
+			out, err := SendCommandToVM("cat /proc/meminfo", ip, "22")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*10\d{6}`))
 		})
@@ -114,7 +115,8 @@ var _ = Describe("config", func() {
 				Expect(RunCRCExpectSuccess("start", "-b", bundlePath, "-p", pullSecretPath)).To(ContainSubstring("Started the OpenShift cluster"))
 			}
 			// memory amount should respect the flag
-			out, err := SendCommandToVM("cat /proc/meminfo", "192.168.130.11", "22")
+			ip := strings.TrimSpace(RunCRCExpectSuccess("ip"))
+			out, err := SendCommandToVM("cat /proc/meminfo", ip, "22")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*9\d{6}`))
 		})
@@ -155,7 +157,8 @@ var _ = Describe("config", func() {
 
 				Expect(RunCRCExpectSuccess("start", "-p", pullSecretPath)).To(ContainSubstring("Started the OpenShift cluster"))
 
-				out, err := SendCommandToVM("curl host.crc.testing:1234", "127.0.0.1", "2222")
+				ip := strings.TrimSpace(RunCRCExpectSuccess("ip"))
+				out, err := SendCommandToVM("curl host.crc.testing:1234", ip, "2222")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(out).To(ContainSubstring("hello"))
 
