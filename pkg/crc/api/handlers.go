@@ -60,6 +60,11 @@ func (h *Handler) Stop() string {
 	return encodeStructToJSON(commandResult)
 }
 
+func (h *Handler) PowerOff() string {
+	commandResult := h.MachineClient.PowerOff()
+	return encodeStructToJSON(commandResult)
+}
+
 func (h *Handler) Start(args json.RawMessage) string {
 	var parsedArgs startArgs
 	var err error
