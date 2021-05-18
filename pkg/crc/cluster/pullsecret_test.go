@@ -15,6 +15,7 @@ const (
 	secret1 = `{"auths":{"quay.io":{"auth":"secret1"}}}` // #nosec G101
 	secret2 = `{"auths":{"quay.io":{"auth":"secret2"}}}` // #nosec G101
 	secret3 = `{"auths":{"quay.io":{"auth":"secret3"}}}` // #nosec G101
+	secret4 = `{`
 )
 
 func TestLoadPullSecret(t *testing.T) {
@@ -54,4 +55,6 @@ func TestLoadPullSecret(t *testing.T) {
 	val, err = loader.Value()
 	assert.NoError(t, err)
 	assert.Equal(t, secret1, val)
+
+	assert.Error(t, StoreInKeyring(secret4))
 }

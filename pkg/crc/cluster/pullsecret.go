@@ -131,6 +131,11 @@ func loadFromKeyring() (string, error) {
 
 func StoreInKeyring(pullSecret string) error {
 	var b bytes.Buffer
+
+	if err := validation.ImagePullSecret(pullSecret); err != nil {
+		return err
+	}
+
 	compressor := gzip.NewWriter(&b)
 	if _, err := compressor.Write([]byte(pullSecret)); err != nil {
 		return err
