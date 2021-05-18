@@ -88,18 +88,12 @@ func (a *Adapter) Status() client.ClusterStatusResult {
 }
 
 func (a *Adapter) Stop() client.Result {
-	vmState, err := a.Underlying.Stop()
+	_, err := a.Underlying.Stop()
 	if err != nil {
 		logging.Error(err)
-		if vmState == state.Running {
-			err := a.Underlying.PowerOff()
-			if err != nil {
-				logging.Error(err)
-				return client.Result{
-					Success: false,
-					Error:   err.Error(),
-				}
-			}
+		return client.Result{
+			Success: false,
+			Error:   err.Error(),
 		}
 	}
 	return client.Result{
