@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # bundle location
-BUNDLE_VERSION=4.7.8
+BUNDLE_VERSION=4.7.11
 BUNDLE=crc_libvirt_$BUNDLE_VERSION.crcbundle
 GO_VERSION=1.14.13
 
