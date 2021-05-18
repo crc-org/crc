@@ -133,7 +133,7 @@ func untar(reader io.Reader, targetDir string, fileFilter func(string) bool, sho
 		// if it's a file create it
 		case tar.TypeReg, tar.TypeGNUSparse:
 			// tar.Next() will externally only iterate files, so we might have to create intermediate directories here
-			if err := untarFile(tarReader, header, path, showProgress); err != nil {
+			if err := uncompressFile(tarReader, header.FileInfo(), path, showProgress); err != nil {
 				return nil, err
 			}
 			extractedFiles = append(extractedFiles, path)
@@ -141,18 +141,19 @@ func untar(reader io.Reader, targetDir string, fileFilter func(string) bool, sho
 	}
 }
 
-func untarFile(tarReader *tar.Reader, header *tar.Header, path string, showProgress bool) error {
+func uncompressFile(tarReader io.Reader, fileInfo os.FileInfo, path string, showProgress bool) error {
+	// with a file filter, we may have skipped the intermediate directories, make sure they exist
 	if err := os.MkdirAll(filepath.Dir(path), 0750); err != nil {
 		return err
 	}
 
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, header.FileInfo().Mode())
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, fileInfo.Mode())
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	reader, cleanup := progressBarReader(tarReader, header.FileInfo(), showProgress)
+	reader, cleanup := progressBarReader(tarReader, fileInfo, showProgress)
 	defer cleanup()
 
 	// copy over contents
@@ -210,29 +211,13 @@ func unzip(archive, target string, fileFilter func(string) bool, showProgress bo
 }
 
 func unzipFile(file *zip.File, path string, showProgress bool) error {
-	// with a file filter, we may have skipped the intermediate directories, make sure they exist
-	if err := os.MkdirAll(filepath.Dir(path), 0750); err != nil {
-		return err
-	}
-
 	fileReader, err := file.Open()
 	if err != nil {
 		return err
 	}
 	defer fileReader.Close()
 
-	reader, cleanup := progressBarReader(fileReader, file.FileInfo(), showProgress)
-	defer cleanup()
-
-	targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
-	if err != nil {
-		return err
-	}
-	defer targetFile.Close()
-
-	// #nosec G110
-	_, err = io.Copy(targetFile, reader)
-	return err
+	return uncompressFile(fileReader, file.FileInfo(), path, showProgress)
 }
 
 func progressBarReader(reader io.Reader, info os.FileInfo, showProgress bool) (io.Reader, func()) {
