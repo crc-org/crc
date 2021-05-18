@@ -13,7 +13,6 @@ import (
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
-	"github.com/code-ready/crc/pkg/crc/validation"
 )
 
 func NewMux(config crcConfig.Storage, machine machine.Client, logger Logger, telemetry Telemetry) http.Handler {
@@ -98,10 +97,6 @@ func pullSecretHandler(config crcConfig.Storage) func(w http.ResponseWriter, r *
 		if r.Method == http.MethodPost {
 			bin, err := ioutil.ReadAll(r.Body)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			if err := validation.ImagePullSecret(string(bin)); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
