@@ -7,7 +7,6 @@ import (
 
 const (
 	OcExecutableName            = "oc.exe"
-	AdminHelperExecutableName   = "admin-helper-windows.exe"
 	TrayExecutableName          = "crc-tray.exe"
 	TrayShortcutName            = "crc-tray.lnk"
 	DaemonBatchFileName         = "crc-daemon-autostart.bat"

@@ -5,9 +5,8 @@ import (
 )
 
 const (
-	OcExecutableName          = "oc"
-	AdminHelperExecutableName = "admin-helper-linux"
-	TapSocketPath             = ""
+	OcExecutableName = "oc"
+	TapSocketPath    = ""
 )
 
 var DaemonHTTPSocketPath = filepath.Join(CrcBaseDir, "crc-http.sock")

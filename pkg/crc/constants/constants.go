@@ -42,18 +42,26 @@ const (
 	AppsDomain    = ".apps-crc.testing"
 )
 
-var adminHelperURLForOs = map[string]string{
-	"darwin":  fmt.Sprintf("%s/%s", DefaultAdminHelperCliBase, "admin-helper-darwin"),
-	"linux":   fmt.Sprintf("%s/%s", DefaultAdminHelperCliBase, "admin-helper-linux"),
-	"windows": fmt.Sprintf("%s/%s", DefaultAdminHelperCliBase, "admin-helper-windows.exe"),
+var adminHelperExecutableForOs = map[string]string{
+	"darwin":  "admin-helper-darwin",
+	"linux":   "admin-helper-linux",
+	"windows": "admin-helper-windows.exe",
+}
+
+func GetAdminHelperExecutableForOs(os string) string {
+	return adminHelperExecutableForOs[os]
+}
+
+func GetAdminHelperExecutable() string {
+	return GetAdminHelperExecutableForOs(runtime.GOOS)
 }
 
 func GetAdminHelperURLForOs(os string) string {
-	return adminHelperURLForOs[os]
+	return fmt.Sprintf("%s/%s", DefaultAdminHelperCliBase, GetAdminHelperExecutableForOs(os))
 }
 
 func GetAdminHelperURL() string {
-	return adminHelperURLForOs[runtime.GOOS]
+	return GetAdminHelperURLForOs(runtime.GOOS)
 }
 
 func defaultBundleForOs(bundleVersion string) map[string]string {
