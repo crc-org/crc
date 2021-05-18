@@ -24,14 +24,14 @@ binDir="${BASEDIR}/root/Applications/CodeReady Containers.app/Contents/Resources
 version=$(cat "${BASEDIR}/VERSION")
 
 sign "${binDir}/crc"
-sign "${binDir}/admin-helper-darwin"
+sign "${binDir}/crc-admin-helper-darwin"
 sign "${binDir}/crc-driver-hyperkit"
 
 sign "${BASEDIR}/root/Applications/CodeReady Containers.app"
 
 codesign --verify --verbose "${binDir}/hyperkit"
 
-sudo chmod +sx "${binDir}/hyperkit" "${binDir}/admin-helper-darwin" "${binDir}/crc-driver-hyperkit"
+sudo chmod +sx "${binDir}/hyperkit" "${binDir}/crc-admin-helper-darwin" "${binDir}/crc-driver-hyperkit"
 
 pkgbuild --identifier com.redhat.crc --version ${version} \
   --scripts "${BASEDIR}/darwin/scripts" \

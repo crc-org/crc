@@ -47,7 +47,7 @@
                         <File Id="CrcExe" Source="SourceDir\crc.exe" KeyPath="yes" DiskId="3" />
                     </Component>
                     <Component Id="AdminHelper" Guid="*">
-                        <File Id="AdminHelper" Source="SourceDir\admin-helper-windows.exe" KeyPath="yes" DiskId="3" />
+                        <File Id="AdminHelper" Source="SourceDir\crc-admin-helper-windows.exe" KeyPath="yes" DiskId="3" />
                     </Component>
                     <Component Id="CrcTray" Guid="*">
                         <File Id="CrcTray" Source="SourceDir\crc-tray.exe" KeyPath="yes" DiskId="3" />

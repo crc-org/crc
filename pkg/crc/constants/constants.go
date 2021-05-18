@@ -43,9 +43,9 @@ const (
 )
 
 var adminHelperExecutableForOs = map[string]string{
-	"darwin":  "admin-helper-darwin",
-	"linux":   "admin-helper-linux",
-	"windows": "admin-helper-windows.exe",
+	"darwin":  "crc-admin-helper-darwin",
+	"linux":   "crc-admin-helper-linux",
+	"windows": "crc-admin-helper-windows.exe",
 }
 
 func GetAdminHelperExecutableForOs(os string) string {
