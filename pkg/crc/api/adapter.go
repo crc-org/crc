@@ -7,7 +7,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
-	"github.com/code-ready/machine/libmachine/state"
 )
 
 type AdaptedClient interface {
@@ -16,6 +15,7 @@ type AdaptedClient interface {
 	Start(ctx context.Context, startConfig types.StartConfig) client.StartResult
 	Status() client.ClusterStatusResult
 	Stop() client.Result
+	PowerOff() client.Result
 }
 
 type Adapter struct {
@@ -90,6 +90,19 @@ func (a *Adapter) Status() client.ClusterStatusResult {
 func (a *Adapter) Stop() client.Result {
 	_, err := a.Underlying.Stop()
 	if err != nil {
+		logging.Error(err)
+		return client.Result{
+			Success: false,
+			Error:   err.Error(),
+		}
+	}
+	return client.Result{
+		Success: true,
+	}
+}
+
+func (a *Adapter) PowerOff() client.Result {
+	if err := a.Underlying.PowerOff(); err != nil {
 		logging.Error(err)
 		return client.Result{
 			Success: false,

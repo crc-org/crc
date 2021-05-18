@@ -42,6 +42,14 @@ func NewMux(config crcConfig.Storage, machine machine.Client, logger Logger, tel
 		sendResponse(w, stopResult)
 	})
 
+	mux.HandleFunc("/poweroff", func(w http.ResponseWriter, r *http.Request) {
+		if wrongHTTPMethodUsed(r, w, http.MethodPost) {
+			return
+		}
+		stopResult := handler.PowerOff()
+		sendResponse(w, stopResult)
+	})
+
 	mux.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
 		if wrongHTTPMethodUsed(r, w, http.MethodGet) {
 			return

@@ -51,6 +51,8 @@ func (api Server) handleRequest(req commandRequest, conn net.Conn) {
 		result = api.handler.Start(req.Args)
 	case "stop":
 		result = api.handler.Stop()
+	case "poweroff":
+		result = api.handler.PowerOff()
 	case "status":
 		result = api.handler.Status()
 	case "delete":
