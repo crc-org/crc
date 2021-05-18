@@ -159,7 +159,10 @@ func uncompressFile(tarReader io.Reader, fileInfo os.FileInfo, path string, show
 	// copy over contents
 	// #nosec G110
 	_, err = io.Copy(file, reader)
-	return err
+	if err != nil {
+		return err
+	}
+	return file.Close()
 }
 
 func buildPath(baseDir, filename string) (string, error) {

@@ -29,5 +29,9 @@ func copyFile(src, dst string) error {
 		return err
 	}
 
-	return os.Chmod(dst, fi.Mode())
+	if err = os.Chmod(dst, fi.Mode()); err != nil {
+		return err
+	}
+
+	return out.Close()
 }
