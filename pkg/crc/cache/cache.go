@@ -68,7 +68,7 @@ func getVersionGeneric(executablePath string, args ...string) (string, error) { 
 func NewAdminHelperCache() *Cache {
 	url := constants.GetAdminHelperURL()
 	version := path.Base(path.Dir(url))
-	return New(constants.AdminHelperExecutableName,
+	return New(constants.GetAdminHelperExecutable(),
 		url,
 		constants.CrcBinDir,
 		version,

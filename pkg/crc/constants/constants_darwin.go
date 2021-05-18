@@ -7,9 +7,8 @@ import (
 )
 
 const (
-	OcExecutableName          = "oc"
-	TrayExecutableName        = "CodeReady Containers.app"
-	AdminHelperExecutableName = "admin-helper-darwin"
+	OcExecutableName   = "oc"
+	TrayExecutableName = "CodeReady Containers.app"
 )
 
 var (
