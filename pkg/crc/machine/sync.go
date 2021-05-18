@@ -163,7 +163,20 @@ func (s *Synchronized) PowerOff() error {
 }
 
 func (s *Synchronized) Status() (*types.ClusterStatusResult, error) {
-	return s.underlying.Status()
+	switch s.CurrentState() {
+	case Starting:
+		return &types.ClusterStatusResult{
+			CrcStatus:       state.Starting,
+			OpenshiftStatus: types.OpenshiftStarting,
+		}, nil
+	case Stopping, Deleting:
+		return &types.ClusterStatusResult{
+			CrcStatus:       state.Stopping,
+			OpenshiftStatus: types.OpenshiftStopping,
+		}, nil
+	default:
+		return s.underlying.Status()
+	}
 }
 
 func (s *Synchronized) IsRunning() (bool, error) {
