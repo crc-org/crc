@@ -72,6 +72,11 @@ func CopyResourcesFromPath(resourcesPath string) error {
 			fmt.Printf("Error occurred syncing file: %s", err)
 			return err
 		}
+		err = dFile.Close()
+		if err != nil {
+			fmt.Printf("Error closing file: %s", err)
+			return err
+		}
 	}
 	return nil
 }

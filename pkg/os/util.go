@@ -60,7 +60,7 @@ func CopyFileContents(src string, dst string, permission os.FileMode) error {
 		return fmt.Errorf("[%v] Cannot sync '%s' to '%s'", err, src, dst)
 	}
 
-	return nil
+	return destFile.Close()
 }
 
 func FileContentMatches(path string, expectedContent []byte) error {

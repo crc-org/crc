@@ -43,5 +43,8 @@ func split(filePath string) error {
 			}
 			return err
 		}
+		if err = partFile.Close(); err != nil {
+			return err
+		}
 	}
 }

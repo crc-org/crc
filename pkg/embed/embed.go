@@ -65,5 +65,5 @@ func ExtractFromExecutable(executablePath, embedName, destFile string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to copy embedded '%s' from %s to %s: %v", embedName, executablePath, destFile, err)
 	}
-	return nil
+	return writer.Close()
 }
