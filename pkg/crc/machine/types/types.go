@@ -60,6 +60,7 @@ const (
 	OpenshiftRunning     OpenshiftStatus = "Running"
 	OpenshiftDegraded    OpenshiftStatus = "Degraded"
 	OpenshiftStopped     OpenshiftStatus = "Stopped"
+	OpenshiftStopping    OpenshiftStatus = "Stopping"
 )
 
 type ConsoleResult struct {
