@@ -32,9 +32,9 @@ var bundleCheck = Check{
 var genericPreflightChecks = [...]Check{
 	{
 		configKeySuffix:  "check-admin-helper-cached",
-		checkDescription: "Checking if admin-helper executable is cached",
+		checkDescription: "Checking if crc-admin-helper executable is cached",
 		check:            checkAdminHelperExecutableCached,
-		fixDescription:   "Caching admin-helper executable",
+		fixDescription:   "Caching crc-admin-helper executable",
 		fix:              fixAdminHelperExecutableCached,
 	},
 	{
@@ -141,12 +141,12 @@ func checkAdminHelperExecutableCached() error {
 
 	helper := cache.NewAdminHelperCache()
 	if !helper.IsCached() {
-		return errors.New("admin-helper executable is not cached")
+		return errors.New("crc-admin-helper executable is not cached")
 	}
 	if err := helper.CheckVersion(); err != nil {
-		return errors.Wrap(err, "unexpected version of the admin-helper executable")
+		return errors.Wrap(err, "unexpected version of the crc-admin-helper executable")
 	}
-	logging.Debug("admin-helper executable already cached")
+	logging.Debug("crc-admin-helper executable already cached")
 	return checkSuid(helper.GetExecutablePath())
 }
 
@@ -157,9 +157,9 @@ func fixAdminHelperExecutableCached() error {
 
 	helper := cache.NewAdminHelperCache()
 	if err := helper.EnsureIsCached(); err != nil {
-		return errors.Wrap(err, "Unable to download admin-helper executable")
+		return errors.Wrap(err, "Unable to download crc-admin-helper executable")
 	}
-	logging.Debug("admin-helper executable cached")
+	logging.Debug("crc-admin-helper executable cached")
 	return setSuid(helper.GetExecutablePath())
 }
 
