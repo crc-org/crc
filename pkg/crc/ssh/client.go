@@ -25,6 +25,7 @@ type NativeClient struct {
 	Keys     []string
 
 	sshClient *ssh.Client
+	conn      net.Conn
 }
 
 func NewClient(user string, host string, port int, keys ...string) (Client, error) {
@@ -78,10 +79,16 @@ func (client *NativeClient) session() (*ssh.Session, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Error getting config for native Go SSH: %s", err)
 		}
-		client.sshClient, err = ssh.Dial("tcp", net.JoinHostPort(client.Hostname, strconv.Itoa(client.Port)), config)
+		addr := net.JoinHostPort(client.Hostname, strconv.Itoa(client.Port))
+		client.conn, err = net.DialTimeout("tcp", addr, config.Timeout)
 		if err != nil {
 			return nil, err
 		}
+		c, chans, reqs, err := ssh.NewClientConn(client.conn, addr, config)
+		if err != nil {
+			return nil, err
+		}
+		client.sshClient = ssh.NewClient(c, chans, reqs)
 	}
 	session, err := client.sshClient.NewSession()
 	if err != nil {
