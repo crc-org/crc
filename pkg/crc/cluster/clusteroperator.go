@@ -1,15 +1,24 @@
 package cluster
 
 import (
-	"encoding/json"
+	"context"
 	"errors"
 	"fmt"
+	"net"
+	"net/http"
+	"net/url"
 	"sort"
 	"strings"
+	"time"
+
+	"github.com/code-ready/crc/pkg/crc/machine/bundle"
+	clientset "github.com/openshift/client-go/config/clientset/versioned"
+	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/oc"
 	openshiftapi "github.com/openshift/api/config/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusteroperator.md#what-should-an-operator-report-with-clusteroperator-custom-resource
@@ -71,22 +80,21 @@ func (status *Status) IsReady() bool {
 	return status.Available && !status.Progressing && !status.Degraded && !status.Disabled
 }
 
-func GetClusterOperatorsStatus(ocConfig oc.Config) (*Status, error) {
-	return getStatus(ocConfig, []string{})
+func GetClusterOperatorsStatus(ctx context.Context, ip string, bundle *bundle.CrcBundleInfo) (*Status, error) {
+	lister, err := kubernetesClient(ip, bundle)
+	if err != nil {
+		return nil, err
+	}
+	return getStatus(ctx, lister.ConfigV1().ClusterOperators(), []string{})
 }
 
-func getStatus(ocConfig oc.Config, selector []string) (*Status, error) {
+func getStatus(ctx context.Context, lister operatorLister, selector []string) (*Status, error) {
 	cs := &Status{
 		Available: true,
 	}
 
-	data, _, err := ocConfig.WithFailFast().RunOcCommandPrivate("get", "co", "-ojson")
+	co, err := lister.List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return nil, err
-	}
-
-	var co openshiftapi.ClusterOperatorList
-	if err := json.Unmarshal([]byte(data), &co); err != nil {
 		return nil, err
 	}
 
@@ -143,4 +151,34 @@ func contains(value string, list []string) bool {
 		}
 	}
 	return false
+}
+
+type operatorLister interface {
+	List(ctx context.Context, opts metav1.ListOptions) (*openshiftapi.ClusterOperatorList, error)
+}
+
+func kubernetesClient(ip string, bundle *bundle.CrcBundleInfo) (*clientset.Clientset, error) {
+	config, err := kubernetesClientConfiguration(ip, bundle)
+	if err != nil {
+		return nil, err
+	}
+	return clientset.NewForConfig(config)
+}
+
+func kubernetesClientConfiguration(ip string, bundle *bundle.CrcBundleInfo) (*restclient.Config, error) {
+	config, err := clientcmd.BuildConfigFromFlags("", bundle.GetKubeConfigPath())
+	if err != nil {
+		return nil, err
+	}
+	// override dial to directly use the IP of the VM
+	config.Dial = func(ctx context.Context, network, address string) (net.Conn, error) {
+		var d net.Dialer
+		return d.DialContext(ctx, "tcp", fmt.Sprintf("%s:6443", ip))
+	}
+	// discard any proxy configuration of the host
+	config.Proxy = func(request *http.Request) (*url.URL, error) {
+		return nil, nil
+	}
+	config.Timeout = 5 * time.Second
+	return config, nil
 }

@@ -34,6 +34,7 @@ require (
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
 	github.com/openshift/api v0.0.0-20201216151826-78a19e96f9eb
+	github.com/openshift/client-go v0.0.0-20201214125552-e615e336eb49
 	github.com/openshift/oc v0.0.0-alpha.0.0.20210319134016-c8d1f56fb3e2
 	github.com/pbnjay/memory v0.0.0-20201129165224-b12e5d931931
 	github.com/pborman/uuid v1.2.1

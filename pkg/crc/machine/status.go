@@ -1,11 +1,13 @@
 package machine
 
 import (
+	"context"
+
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
-	"github.com/code-ready/crc/pkg/crc/oc"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/machine/libmachine/state"
 	"github.com/pkg/errors"
@@ -58,15 +60,15 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	}
 	return &types.ClusterStatusResult{
 		CrcStatus:        state.Running,
-		OpenshiftStatus:  getOpenShiftStatus(sshRunner),
+		OpenshiftStatus:  getOpenShiftStatus(context.Background(), ip, crcBundleMetadata),
 		OpenshiftVersion: crcBundleMetadata.GetOpenshiftVersion(),
 		DiskUse:          diskUse,
 		DiskSize:         diskSize,
 	}, nil
 }
 
-func getOpenShiftStatus(sshRunner *crcssh.Runner) types.OpenshiftStatus {
-	status, err := cluster.GetClusterOperatorsStatus(oc.UseOCWithSSH(sshRunner))
+func getOpenShiftStatus(ctx context.Context, ip string, bundle *bundle.CrcBundleInfo) types.OpenshiftStatus {
+	status, err := cluster.GetClusterOperatorsStatus(ctx, ip, bundle)
 	if err != nil {
 		logging.Debugf("cannot get OpenShift status: %v", err)
 		return types.OpenshiftUnreachable
