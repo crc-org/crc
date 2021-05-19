@@ -2,6 +2,7 @@ package machine
 
 import (
 	"context"
+	"time"
 
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -66,7 +67,8 @@ func (client *client) getDiskDetails(ip string, bundle *bundle.CrcBundleInfo) (i
 			return nil, errors.Wrap(err, "Error creating the ssh client")
 		}
 		defer sshRunner.Close()
-		diskSize, diskUse, err := cluster.GetRootPartitionUsage(sshRunner)
+		sshRunnerWithTimeout := sshRunner.WithTimeout(5 * time.Second)
+		diskSize, diskUse, err := cluster.GetRootPartitionUsage(sshRunnerWithTimeout)
 		if err != nil {
 			return nil, err
 		}

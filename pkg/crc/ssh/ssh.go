@@ -6,13 +6,15 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
 type Runner struct {
-	client Client
+	client  Client
+	timeout time.Duration
 }
 
 func CreateRunner(ip string, port int, privateKeys ...string) (*Runner, error) {
@@ -21,8 +23,16 @@ func CreateRunner(ip string, port int, privateKeys ...string) (*Runner, error) {
 		return nil, err
 	}
 	return &Runner{
-		client: client,
+		client:  client,
+		timeout: 30 * time.Second,
 	}, nil
+}
+
+func (runner *Runner) WithTimeout(timeout time.Duration) *Runner {
+	return &Runner{
+		client:  runner.client,
+		timeout: timeout,
+	}
 }
 
 func (runner *Runner) Close() {
@@ -72,7 +82,7 @@ func (runner *Runner) runSSHCommand(command string, runPrivate bool) (string, st
 		logging.Debugf("Running SSH command: %s", command)
 	}
 
-	stdout, stderr, err := runner.client.Run(command)
+	stdout, stderr, err := runner.client.RunWithTimeout(command, runner.timeout)
 	if runPrivate {
 		if err != nil {
 			logging.Debugf("SSH command failed")
