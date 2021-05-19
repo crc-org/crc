@@ -33,8 +33,8 @@ const (
 
 func RegisterSettings(cfg *Config) {
 	validateTrayAutostart := func(value interface{}) (bool, string) {
-		if runtime.GOOS != "darwin" {
-			return false, "Tray autostart is only supported on macOS"
+		if runtime.GOOS == "linux" {
+			return false, "Tray autostart is only supported on macOS and windows"
 		}
 		return ValidateBool(value)
 	}
