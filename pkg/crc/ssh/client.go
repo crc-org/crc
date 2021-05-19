@@ -24,7 +24,7 @@ type NativeClient struct {
 	Port     int
 	Keys     []string
 
-	conn *ssh.Client
+	sshClient *ssh.Client
 }
 
 func NewClient(user string, host string, port int, keys ...string) (Client, error) {
@@ -72,18 +72,18 @@ func clientConfig(user string, keys []string) (*ssh.ClientConfig, error) {
 }
 
 func (client *NativeClient) session() (*ssh.Session, error) {
-	if client.conn == nil {
+	if client.sshClient == nil {
 		var err error
 		config, err := clientConfig(client.User, client.Keys)
 		if err != nil {
 			return nil, fmt.Errorf("Error getting config for native Go SSH: %s", err)
 		}
-		client.conn, err = ssh.Dial("tcp", net.JoinHostPort(client.Hostname, strconv.Itoa(client.Port)), config)
+		client.sshClient, err = ssh.Dial("tcp", net.JoinHostPort(client.Hostname, strconv.Itoa(client.Port)), config)
 		if err != nil {
 			return nil, err
 		}
 	}
-	session, err := client.conn.NewSession()
+	session, err := client.sshClient.NewSession()
 	if err != nil {
 		return nil, err
 	}
@@ -110,10 +110,10 @@ func (client *NativeClient) Run(command string) ([]byte, []byte, error) {
 }
 
 func (client *NativeClient) Close() {
-	if client.conn == nil {
+	if client.sshClient == nil {
 		return
 	}
-	err := client.conn.Close()
+	err := client.sshClient.Close()
 	if err != nil {
 		log.Debugf("Error closing ssh client: %s", err)
 	}
