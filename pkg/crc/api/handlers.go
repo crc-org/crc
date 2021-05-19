@@ -89,11 +89,12 @@ func (h *Handler) Start(args json.RawMessage) string {
 
 func getStartConfig(cfg crcConfig.Storage, args client.StartConfig) types.StartConfig {
 	return types.StartConfig{
-		BundlePath: cfg.Get(crcConfig.Bundle).AsString(),
-		Memory:     cfg.Get(crcConfig.Memory).AsInt(),
-		CPUs:       cfg.Get(crcConfig.CPUs).AsInt(),
-		NameServer: cfg.Get(crcConfig.NameServer).AsString(),
-		PullSecret: cluster.NewNonInteractivePullSecretLoader(cfg, args.PullSecretFile),
+		BundlePath:        cfg.Get(crcConfig.Bundle).AsString(),
+		Memory:            cfg.Get(crcConfig.Memory).AsInt(),
+		CPUs:              cfg.Get(crcConfig.CPUs).AsInt(),
+		NameServer:        cfg.Get(crcConfig.NameServer).AsString(),
+		PullSecret:        cluster.NewNonInteractivePullSecretLoader(cfg, args.PullSecretFile),
+		KubeAdminPassword: cfg.Get(crcConfig.KubeAdminPassword).AsString(),
 	}
 }
 

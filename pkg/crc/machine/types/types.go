@@ -20,6 +20,9 @@ type StartConfig struct {
 
 	// User Pull secret
 	PullSecret cluster.PullSecretLoader
+
+	// User defined kubeadmin password
+	KubeAdminPassword string
 }
 
 type ClusterConfig struct {
