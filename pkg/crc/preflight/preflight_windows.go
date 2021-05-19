@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 )
 
@@ -141,7 +142,7 @@ func getAllPreflightChecks() []Check {
 	return getPreflightChecks(true, true, network.UserNetworkingMode)
 }
 
-func getPreflightChecks(experimentalFeatures bool, _ bool, networkMode network.Mode) []Check {
+func getPreflightChecks(_ bool, trayAutostart bool, networkMode network.Mode) []Check {
 	checks := []Check{}
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, hypervPreflightChecks[:]...)
@@ -150,8 +151,7 @@ func getPreflightChecks(experimentalFeatures bool, _ bool, networkMode network.M
 		checks = append(checks, vsockChecks[:]...)
 	}
 
-	// Experimental feature
-	if experimentalFeatures {
+	if version.IsMsiBuild() && trayAutostart {
 		checks = append(checks, traySetupChecks[:]...)
 	}
 
