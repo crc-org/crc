@@ -48,16 +48,8 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting ip")
 	}
-	sshRunner, err := crcssh.CreateRunner(ip, getSSHPort(client.useVSock()), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath(), crcBundleMetadata.GetSSHKeyPath())
-	if err != nil {
-		return nil, errors.Wrap(err, "Error creating the ssh client")
-	}
-	defer sshRunner.Close()
-	// check if all the clusteroperators are running
-	diskSize, diskUse, err := cluster.GetRootPartitionUsage(sshRunner)
-	if err != nil {
-		logging.Debugf("Cannot get root partition usage: %v", err)
-	}
+
+	diskSize, diskUse := client.getDiskDetails(ip, crcBundleMetadata)
 	return &types.ClusterStatusResult{
 		CrcStatus:        state.Running,
 		OpenshiftStatus:  getOpenShiftStatus(context.Background(), ip, crcBundleMetadata),
@@ -65,6 +57,26 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 		DiskUse:          diskUse,
 		DiskSize:         diskSize,
 	}, nil
+}
+
+func (client *client) getDiskDetails(ip string, bundle *bundle.CrcBundleInfo) (int64, int64) {
+	disk, err, _ := client.diskDetails.Memoize("disks", func() (interface{}, error) {
+		sshRunner, err := crcssh.CreateRunner(ip, getSSHPort(client.useVSock()), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath(), bundle.GetSSHKeyPath())
+		if err != nil {
+			return nil, errors.Wrap(err, "Error creating the ssh client")
+		}
+		defer sshRunner.Close()
+		diskSize, diskUse, err := cluster.GetRootPartitionUsage(sshRunner)
+		if err != nil {
+			return nil, err
+		}
+		return []int64{diskSize, diskUse}, nil
+	})
+	if err != nil {
+		logging.Debugf("Cannot get root partition usage: %v", err)
+		return 0, 0
+	}
+	return disk.([]int64)[0], disk.([]int64)[1]
 }
 
 func getOpenShiftStatus(ctx context.Context, ip string, bundle *bundle.CrcBundleInfo) types.OpenshiftStatus {

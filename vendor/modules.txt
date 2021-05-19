@@ -173,6 +173,9 @@ github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/klauspost/cpuid v1.3.1
 ## explicit
 github.com/klauspost/cpuid
+# github.com/kofalt/go-memoize v0.0.0-20200917044458-9b55a8d73e1c
+## explicit
+github.com/kofalt/go-memoize
 # github.com/libvirt/libvirt-go-xml v6.10.0+incompatible
 ## explicit
 github.com/libvirt/libvirt-go-xml
@@ -256,6 +259,8 @@ github.com/openshift/library-go/pkg/oauth/oauthdiscovery
 ## explicit
 github.com/openshift/oc/pkg/helpers/term
 github.com/openshift/oc/pkg/helpers/tokencmd
+# github.com/patrickmn/go-cache v2.1.0+incompatible
+github.com/patrickmn/go-cache
 # github.com/pbnjay/memory v0.0.0-20201129165224-b12e5d931931
 ## explicit
 github.com/pbnjay/memory
@@ -352,6 +357,7 @@ golang.org/x/oauth2/internal
 # golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 ## explicit
 golang.org/x/sync/semaphore
+golang.org/x/sync/singleflight
 # golang.org/x/sys v0.0.0-20201204225414-ed752295db88
 ## explicit
 golang.org/x/sys/cpu

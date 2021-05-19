@@ -2,11 +2,13 @@ package machine
 
 import (
 	"context"
+	"time"
 
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/machine/libmachine/state"
+	"github.com/kofalt/go-memoize"
 )
 
 type Client interface {
@@ -28,13 +30,16 @@ type client struct {
 	name   string
 	debug  bool
 	config crcConfig.Storage
+
+	diskDetails *memoize.Memoizer
 }
 
 func NewClient(name string, debug bool, config crcConfig.Storage) Client {
 	return &client{
-		name:   name,
-		debug:  debug,
-		config: config,
+		name:        name,
+		debug:       debug,
+		config:      config,
+		diskDetails: memoize.NewMemoizer(time.Minute, 5*time.Minute),
 	}
 }
 

@@ -25,6 +25,7 @@ require (
 	github.com/jinzhu/copier v0.2.8
 	github.com/klauspost/compress v1.11.7
 	github.com/klauspost/cpuid v1.3.1
+	github.com/kofalt/go-memoize v0.0.0-20200917044458-9b55a8d73e1c
 	github.com/libvirt/libvirt-go-xml v6.10.0+incompatible
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mattn/go-colorable v0.1.8
