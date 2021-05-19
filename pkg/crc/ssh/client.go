@@ -13,8 +13,11 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+const dialTimeout = 10 * time.Second
+
 type Client interface {
 	Run(command string) ([]byte, []byte, error)
+	RunWithTimeout(command string, timeout time.Duration) ([]byte, []byte, error)
 	Close()
 }
 
@@ -68,11 +71,11 @@ func clientConfig(user string, keys []string) (*ssh.ClientConfig, error) {
 		Auth: []ssh.AuthMethod{ssh.PublicKeys(privateKeys...)},
 		// #nosec G106
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         10 * time.Second,
+		Timeout:         dialTimeout,
 	}, nil
 }
 
-func (client *NativeClient) session() (*ssh.Session, error) {
+func (client *NativeClient) session(timeout time.Duration) (*ssh.Session, error) {
 	if client.sshClient == nil {
 		var err error
 		config, err := clientConfig(client.User, client.Keys)
@@ -84,12 +87,28 @@ func (client *NativeClient) session() (*ssh.Session, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		if err := client.conn.SetDeadline(time.Now().Add(timeout)); err != nil {
+			return nil, err
+		}
+		defer func() {
+			_ = client.conn.SetDeadline(time.Time{})
+		}()
+
 		c, chans, reqs, err := ssh.NewClientConn(client.conn, addr, config)
 		if err != nil {
 			return nil, err
 		}
 		client.sshClient = ssh.NewClient(c, chans, reqs)
 	}
+
+	if err := client.conn.SetDeadline(time.Now().Add(timeout)); err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = client.conn.SetDeadline(time.Time{})
+	}()
+
 	session, err := client.sshClient.NewSession()
 	if err != nil {
 		return nil, err
@@ -97,12 +116,19 @@ func (client *NativeClient) session() (*ssh.Session, error) {
 	return session, err
 }
 
-func (client *NativeClient) Run(command string) ([]byte, []byte, error) {
-	session, err := client.session()
+func (client *NativeClient) RunWithTimeout(command string, timeout time.Duration) ([]byte, []byte, error) {
+	session, err := client.session(timeout)
 	if err != nil {
 		return nil, nil, err
 	}
 	defer session.Close()
+
+	if err := client.conn.SetDeadline(time.Now().Add(timeout)); err != nil {
+		return nil, nil, err
+	}
+	defer func() {
+		_ = client.conn.SetDeadline(time.Time{})
+	}()
 
 	var (
 		stdout bytes.Buffer
@@ -114,6 +140,10 @@ func (client *NativeClient) Run(command string) ([]byte, []byte, error) {
 	err = session.Run(command)
 
 	return stdout.Bytes(), stderr.Bytes(), err
+}
+
+func (client *NativeClient) Run(command string) ([]byte, []byte, error) {
+	return client.RunWithTimeout(command, 2*time.Minute)
 }
 
 func (client *NativeClient) Close() {
