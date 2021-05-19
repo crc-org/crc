@@ -434,7 +434,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	logging.Info("Starting OpenShift cluster... [waiting for the cluster to stabilize]")
 
-	if err := cluster.WaitForClusterStable(ctx, ocConfig); err != nil {
+	if err := cluster.WaitForClusterStable(ctx, instanceIP, crcBundleMetadata); err != nil {
 		logging.Errorf("Cluster is not ready: %v", err)
 	}
 
