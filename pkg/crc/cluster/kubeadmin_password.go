@@ -18,18 +18,20 @@ import (
 // UpdateKubeAdminUserPassword does following
 // - Create and put updated kubeadmin password to ~/.crc/machine/crc/kubeadmin-password
 // - Update the htpasswd secret
-func UpdateKubeAdminUserPassword(ocConfig oc.Config) error {
+func UpdateKubeAdminUserPassword(ocConfig oc.Config, kubeAdminPassword string) error {
+	var err error
 	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath()
 	if crcos.FileExists(kubeAdminPasswordFile) {
 		logging.Debugf("kubeadmin password has already been updated")
 		return nil
 	}
 
-	logging.Infof("Generating new password for the kubeadmin user")
-
-	kubeAdminPassword, err := GenerateRandomPasswordHash(23)
-	if err != nil {
-		return fmt.Errorf("Cannot generate the kubeadmin user password: %w", err)
+	if kubeAdminPassword == "" {
+		logging.Infof("Generating new password for the kubeadmin user")
+		kubeAdminPassword, err = GenerateRandomPasswordHash(23)
+		if err != nil {
+			return fmt.Errorf("Cannot generate the kubeadmin user password: %w", err)
+		}
 	}
 
 	hashDeveloperPasswd, err := hashBcrypt("developer")

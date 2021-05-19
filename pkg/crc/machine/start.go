@@ -388,7 +388,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to update cluster pull secret")
 	}
 
-	if err := cluster.UpdateKubeAdminUserPassword(ocConfig); err != nil {
+	if err := cluster.UpdateKubeAdminUserPassword(ocConfig, startConfig.KubeAdminPassword); err != nil {
 		return nil, errors.Wrap(err, "Failed to update kubeadmin user password")
 	}
 

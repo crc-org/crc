@@ -66,12 +66,13 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 	checkIfNewVersionAvailable(config.Get(crcConfig.DisableUpdateCheck).AsBool())
 
 	startConfig := types.StartConfig{
-		BundlePath: config.Get(crcConfig.Bundle).AsString(),
-		Memory:     config.Get(crcConfig.Memory).AsInt(),
-		DiskSize:   config.Get(crcConfig.DiskSize).AsInt(),
-		CPUs:       config.Get(crcConfig.CPUs).AsInt(),
-		NameServer: config.Get(crcConfig.NameServer).AsString(),
-		PullSecret: cluster.NewInteractivePullSecretLoader(config),
+		BundlePath:        config.Get(crcConfig.Bundle).AsString(),
+		Memory:            config.Get(crcConfig.Memory).AsInt(),
+		DiskSize:          config.Get(crcConfig.DiskSize).AsInt(),
+		CPUs:              config.Get(crcConfig.CPUs).AsInt(),
+		NameServer:        config.Get(crcConfig.NameServer).AsString(),
+		PullSecret:        cluster.NewInteractivePullSecretLoader(config),
+		KubeAdminPassword: config.Get(crcConfig.KubeAdminPassword).AsString(),
 	}
 
 	client := newMachine()

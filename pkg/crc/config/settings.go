@@ -29,6 +29,7 @@ const (
 	ConsentTelemetry        = "consent-telemetry"
 	EnableClusterMonitoring = "enable-cluster-monitoring"
 	AutostartTray           = "autostart-tray"
+	KubeAdminPassword       = "kubeadmin-password"
 )
 
 func RegisterSettings(cfg *Config) {
@@ -101,6 +102,9 @@ func RegisterSettings(cfg *Config) {
 	// Telemeter Configuration
 	cfg.AddSetting(ConsentTelemetry, "", ValidateYesNo, SuccessfullyApplied,
 		"Consent to collection of anonymous usage data (yes/no)")
+
+	cfg.AddSetting(KubeAdminPassword, "", ValidateString, SuccessfullyApplied,
+		"User defined kubeadmin password")
 }
 
 func defaultNetworkMode() network.Mode {
