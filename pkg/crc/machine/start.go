@@ -302,6 +302,10 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 	}
 
+	if _, _, err := sshRunner.RunPrivileged("make root Podman socket accessible", "chmod 777 /run/podman/ /run/podman/podman.sock"); err != nil {
+		return nil, errors.Wrap(err, "Failed to change permissions to root podman socket")
+	}
+
 	proxyConfig, err := getProxyConfig(crcBundleMetadata.ClusterInfo.BaseDomain)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting proxy configuration")
