@@ -170,6 +170,7 @@ func isDebugLog() bool {
 }
 
 func validateStartFlags() error {
+	fmt.Println("im here")
 	if err := validation.ValidateMemory(config.Get(crcConfig.Memory).AsInt()); err != nil {
 		return err
 	}

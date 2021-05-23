@@ -12,4 +12,6 @@ linters:
     - gocritic
     - deadcode
     - misspell
-    - golint
+    # replacement to golint, but it seems to be very verbose
+    # this is why it's commented but the old one is removed
+    #- revive

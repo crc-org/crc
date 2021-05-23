@@ -22,6 +22,7 @@ func CopyFilesToTestDir() error {
 	}
 
 	l := strings.Split(cwd, string(filepath.Separator))
+	// nolint:gocritic // should this be the case?
 	dataDirPieces := append(l[:len(l)-3], "testdata")
 	var volume string
 	if runtime.GOOS == "windows" {

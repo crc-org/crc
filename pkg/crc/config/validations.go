@@ -7,6 +7,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/validation"
+	"github.com/docker/go-units"
 	"github.com/spf13/cast"
 )
 
@@ -47,11 +48,18 @@ func ValidateCPUs(value interface{}) (bool, string) {
 
 // ValidateMemory checks if provided memory is valid in the config
 func ValidateMemory(value interface{}) (bool, string) {
-	v, err := cast.ToIntE(value)
+	s, err := cast.ToStringE(value)
+	if err != nil {
+		return false, "value is not a string type, odd?"
+	}
+
+	v, err := units.FromHumanSize(s)
 	if err != nil {
 		return false, fmt.Sprintf("requires integer value in MiB >= %d", constants.DefaultMemory)
 	}
-	if err := validation.ValidateMemory(v); err != nil {
+	res := int(v / 1024 / 1024) // result is in bytes
+
+	if err := validation.ValidateMemory(res); err != nil {
 		return false, err.Error()
 	}
 	return true, ""

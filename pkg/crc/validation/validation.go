@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
+
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -55,6 +57,7 @@ func ValidateEnoughMemory(value int) error {
 			units.HumanSize(float64(totalMemory)),
 			units.HumanSize(float64(valueBytes)))
 	}
+	debug.PrintStack()
 	return nil
 }
 
