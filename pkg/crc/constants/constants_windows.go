@@ -19,8 +19,7 @@ const (
 
 var (
 	StartupFolder       = filepath.Join(os.Getenv("USERPROFILE"), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup")
-	TrayExecutableDir   = filepath.Join(CrcBinDir, "tray-windows")
-	TrayExecutablePath  = filepath.Join(TrayExecutableDir, TrayExecutableName)
+	TrayExecutablePath  = filepath.Join(BinDir(), TrayExecutableName)
 	DaemonBatchFilePath = filepath.Join(CrcBinDir, DaemonBatchFileName)
 	DaemonPSScriptPath  = filepath.Join(CrcBinDir, DaemonPSScriptName)
 )
