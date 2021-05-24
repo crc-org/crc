@@ -51,6 +51,7 @@
                     </Component>
                     <Component Id="CrcTray" Guid="*">
                         <File Id="CrcTray" Source="SourceDir\crc-tray.exe" KeyPath="yes" DiskId="3" />
+                        <RemoveFile Id="RemoveInstallFiles" Name="*.*" On="uninstall" />
                     </Component>
                     <Component Id="AddToPath" Guid="09C1E713-44DE-44C3-BDAD-72BE10C10542">
                         <CreateFolder />
@@ -63,8 +64,6 @@
         <CustomAction Id="JoinBundle" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
         <SetProperty Action="CARemoveParts"  Id="RemoveParts"  Value='"[WindowsFolder]\System32\cmd.exe" /c cd "[INSTALLDIR]" &amp;&amp; del /f /q $(var.crcBundlePart0) $(var.crcBundlePart1) $(var.crcBundlePart2)' Before="RemoveParts" Sequence="execute"/>
         <CustomAction Id="RemoveParts" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
-        <SetProperty Action="CAUninstall"  Id="Uninstall"  Value='"[WindowsFolder]\System32\cmd.exe" /c rmdir /S /Q "[INSTALLDIR]"' Before="Uninstall" Sequence="execute"/>
-        <CustomAction Id="Uninstall" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
 
         <util:CloseApplication Id = "TrayRunning" Description="Please exit CodeReady Containers from tray and run the installation again."
             Target="crc-tray.exe" RebootPrompt="no"
@@ -73,7 +72,6 @@
         <InstallExecuteSequence>
             <Custom Action="JoinBundle"  After="InstallFiles" >NOT Installed AND NOT PATCH</Custom>
             <Custom Action="RemoveParts"  After="JoinBundle" >NOT Installed AND NOT PATCH</Custom>
-            <Custom Action="Uninstall"  After="RemoveFolders" >REMOVE~="ALL"</Custom>
         </InstallExecuteSequence>
         <Feature Id="DefaultFeature" Level="1">
             <ComponentRef Id="CrcBundlePart1"/>
