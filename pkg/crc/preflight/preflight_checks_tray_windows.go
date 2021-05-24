@@ -128,8 +128,7 @@ func fixTrayExecutableExists() error {
 	/* we changed the name of the tray executable to crc-tray.exe from tray-windows.exe
 	 * this tries to remove the old tray folder, can be removed after a  few releases
 	 */
-	_ = goos.RemoveAll(filepath.Join(constants.CrcBinDir, "tray-windows"))
-	return downloadOrExtractTrayApp(constants.GetCRCWindowsTrayDownloadURL(), constants.TrayExecutableDir)
+	return goos.RemoveAll(filepath.Join(constants.CrcBinDir, "tray-windows"))
 }
 
 func checkTrayVersion() bool {
