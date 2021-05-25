@@ -104,7 +104,7 @@ var libvirtNetworkPreflightChecks = []Check{
 	},
 }
 
-var vsockPreflightChecks = Check{
+var vsockPreflightCheck = Check{
 	configKeySuffix:    "check-vsock",
 	checkDescription:   "Checking if vsock is correctly configured",
 	check:              checkVsock,
@@ -114,7 +114,7 @@ var vsockPreflightChecks = Check{
 	cleanup:            removeVsockCrcSettings,
 }
 
-var wsl2PreflightChecks = Check{
+var wsl2PreflightCheck = Check{
 	configKeySuffix:  "check-wsl2",
 	checkDescription: "Checking if running inside WSL2",
 	check:            checkRunningInsideWSL2,
@@ -228,7 +228,7 @@ func removeVsockCrcSettings() error {
 func getAllPreflightChecks() []Check {
 	usingSystemdResolved := checkSystemdResolvedIsRunning()
 	checks := getPreflightChecksForDistro(distro(), network.SystemNetworkingMode, usingSystemdResolved == nil)
-	checks = append(checks, vsockPreflightChecks)
+	checks = append(checks, vsockPreflightCheck)
 	return checks
 }
 
@@ -241,7 +241,7 @@ func getNetworkChecks(networkMode network.Mode, systemdResolved bool) []Check {
 	var checks []Check
 
 	if networkMode == network.UserNetworkingMode {
-		return append(checks, vsockPreflightChecks)
+		return append(checks, vsockPreflightCheck)
 	}
 
 	checks = append(checks, nmPreflightChecks...)
@@ -257,7 +257,7 @@ func getNetworkChecks(networkMode network.Mode, systemdResolved bool) []Check {
 func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode, systemdResolved bool) []Check {
 	var checks []Check
 	checks = append(checks, nonWinPreflightChecks...)
-	checks = append(checks, wsl2PreflightChecks)
+	checks = append(checks, wsl2PreflightCheck)
 	checks = append(checks, genericPreflightChecks...)
 	checks = append(checks, libvirtPreflightChecks(distro)...)
 	networkChecks := getNetworkChecks(networkMode, systemdResolved)
