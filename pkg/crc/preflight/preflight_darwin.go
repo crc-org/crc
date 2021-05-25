@@ -39,7 +39,7 @@ func hyperkitPreflightChecks(networkMode network.Mode) []Check {
 	}
 }
 
-var resolverPreflightChecks = [...]Check{
+var resolverPreflightChecks = []Check{
 	{
 		configKeySuffix:    "check-resolver-file-permissions",
 		checkDescription:   fmt.Sprintf("Checking file permissions for %s", resolverFile),
@@ -51,7 +51,7 @@ var resolverPreflightChecks = [...]Check{
 	},
 }
 
-var daemonSetupChecks = [...]Check{
+var daemonSetupChecks = []Check{
 	{
 		checkDescription:   "Checking if CodeReady Containers daemon is running",
 		check:              checkIfDaemonAgentRunning,
@@ -63,7 +63,7 @@ var daemonSetupChecks = [...]Check{
 	},
 }
 
-var traySetupChecks = [...]Check{
+var traySetupChecks = []Check{
 	{
 		checkDescription:   "Checking if launchd configuration for tray exists",
 		check:              checkIfTrayPlistFileExists,
@@ -91,17 +91,17 @@ func getAllPreflightChecks() []Check {
 func getPreflightChecks(experimentalFeatures bool, trayAutostart bool, mode network.Mode) []Check {
 	checks := []Check{}
 
-	checks = append(checks, nonWinPreflightChecks[:]...)
-	checks = append(checks, genericPreflightChecks[:]...)
+	checks = append(checks, nonWinPreflightChecks...)
+	checks = append(checks, genericPreflightChecks...)
 	checks = append(checks, hyperkitPreflightChecks(mode)...)
-	checks = append(checks, daemonSetupChecks[:]...)
+	checks = append(checks, daemonSetupChecks...)
 
 	if mode == network.SystemNetworkingMode {
-		checks = append(checks, resolverPreflightChecks[:]...)
+		checks = append(checks, resolverPreflightChecks...)
 	}
 
 	if version.IsMacosInstallPathSet() && trayAutostart {
-		checks = append(checks, traySetupChecks[:]...)
+		checks = append(checks, traySetupChecks...)
 	}
 
 	checks = append(checks, bundleCheck)

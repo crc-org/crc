@@ -12,7 +12,7 @@ import (
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
-var nonWinPreflightChecks = [...]Check{
+var nonWinPreflightChecks = []Check{
 	{
 		configKeySuffix:  "check-root-user",
 		checkDescription: "Checking if running as non-root",

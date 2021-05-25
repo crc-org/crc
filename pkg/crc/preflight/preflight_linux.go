@@ -85,7 +85,7 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 	return checks
 }
 
-var libvirtNetworkPreflightChecks = [...]Check{
+var libvirtNetworkPreflightChecks = []Check{
 	{
 		configKeySuffix:    "check-crc-network",
 		checkDescription:   "Checking if libvirt 'crc' network is available",
@@ -244,11 +244,11 @@ func getNetworkChecks(networkMode network.Mode, systemdResolved bool) []Check {
 		return append(checks, vsockPreflightChecks)
 	}
 
-	checks = append(checks, nmPreflightChecks[:]...)
+	checks = append(checks, nmPreflightChecks...)
 	if systemdResolved {
-		checks = append(checks, systemdResolvedPreflightChecks[:]...)
+		checks = append(checks, systemdResolvedPreflightChecks...)
 	} else {
-		checks = append(checks, dnsmasqPreflightChecks[:]...)
+		checks = append(checks, dnsmasqPreflightChecks...)
 	}
 
 	return checks
@@ -256,14 +256,14 @@ func getNetworkChecks(networkMode network.Mode, systemdResolved bool) []Check {
 
 func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode, systemdResolved bool) []Check {
 	var checks []Check
-	checks = append(checks, nonWinPreflightChecks[:]...)
+	checks = append(checks, nonWinPreflightChecks...)
 	checks = append(checks, wsl2PreflightChecks)
-	checks = append(checks, genericPreflightChecks[:]...)
+	checks = append(checks, genericPreflightChecks...)
 	checks = append(checks, libvirtPreflightChecks(distro)...)
 	networkChecks := getNetworkChecks(networkMode, systemdResolved)
 	checks = append(checks, networkChecks...)
 	if networkMode == network.SystemNetworkingMode {
-		checks = append(checks, libvirtNetworkPreflightChecks[:]...)
+		checks = append(checks, libvirtNetworkPreflightChecks...)
 	}
 	checks = append(checks, bundleCheck)
 	return checks

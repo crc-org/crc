@@ -29,7 +29,7 @@ var bundleCheck = Check{
 	flags:            SetupOnly,
 }
 
-var genericPreflightChecks = [...]Check{
+var genericPreflightChecks = []Check{
 	{
 		configKeySuffix:  "check-admin-helper-cached",
 		checkDescription: "Checking if crc-admin-helper executable is cached",
