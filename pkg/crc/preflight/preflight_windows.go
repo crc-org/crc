@@ -10,7 +10,7 @@ import (
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 )
 
-var hypervPreflightChecks = [...]Check{
+var hypervPreflightChecks = []Check{
 	{
 		configKeySuffix:  "check-administrator-user",
 		checkDescription: "Checking if running in a shell with administrator rights",
@@ -72,7 +72,7 @@ var hypervPreflightChecks = [...]Check{
 	},
 }
 
-var traySetupChecks = [...]Check{
+var traySetupChecks = []Check{
 	{
 		checkDescription:   "Checking if CodeReady Containers daemon is installed",
 		check:              checkIfDaemonInstalled,
@@ -100,7 +100,7 @@ var traySetupChecks = [...]Check{
 	},
 }
 
-var vsockChecks = [...]Check{
+var vsockChecks = []Check{
 	{
 		configKeySuffix:  "check-vsock",
 		checkDescription: "Checking if vsock is correctly configured",
@@ -144,15 +144,15 @@ func getAllPreflightChecks() []Check {
 
 func getPreflightChecks(_ bool, trayAutostart bool, networkMode network.Mode) []Check {
 	checks := []Check{}
-	checks = append(checks, genericPreflightChecks[:]...)
-	checks = append(checks, hypervPreflightChecks[:]...)
+	checks = append(checks, genericPreflightChecks...)
+	checks = append(checks, hypervPreflightChecks...)
 
 	if networkMode == network.UserNetworkingMode {
-		checks = append(checks, vsockChecks[:]...)
+		checks = append(checks, vsockChecks...)
 	}
 
 	if version.IsMsiBuild() && trayAutostart {
-		checks = append(checks, traySetupChecks[:]...)
+		checks = append(checks, traySetupChecks...)
 	}
 
 	checks = append(checks, bundleCheck)

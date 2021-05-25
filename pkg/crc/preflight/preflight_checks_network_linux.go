@@ -14,7 +14,7 @@ import (
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
-var nmPreflightChecks = [...]Check{
+var nmPreflightChecks = []Check{
 	{
 		configKeySuffix:  "check-systemd-networkd-running",
 		checkDescription: "Checking if systemd-networkd is running",
@@ -38,7 +38,7 @@ var nmPreflightChecks = [...]Check{
 	},
 }
 
-var dnsmasqPreflightChecks = [...]Check{
+var dnsmasqPreflightChecks = []Check{
 	{
 		configKeySuffix:    "check-network-manager-config",
 		checkDescription:   "Checking if /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf exists",
@@ -100,7 +100,7 @@ exit 0
 `
 )
 
-var systemdResolvedPreflightChecks = [...]Check{
+var systemdResolvedPreflightChecks = []Check{
 	{
 		configKeySuffix:  "check-dnsmasq-network-manager-config",
 		checkDescription: "Checking if dnsmasq configurations file exist for NetworkManager",
