@@ -138,6 +138,13 @@ func fixVsock() error {
 	return err
 }
 
+// We want all preflight checks including
+// - experimental checks
+// - tray checks when using an installer, regardless of tray enabled or not
+// - both user and system networking checks
+//
+// Passing 'UserNetworkingMode' to getPreflightChecks currently achieves this
+// as there are no system networking specific checks
 func getAllPreflightChecks() []Check {
 	return getPreflightChecks(true, true, network.UserNetworkingMode)
 }
