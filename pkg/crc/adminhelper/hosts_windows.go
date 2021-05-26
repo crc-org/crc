@@ -11,6 +11,10 @@ import (
 )
 
 func instance() helper {
+	return Client()
+}
+
+func Client() *client.Client {
 	return client.New(&http.Client{
 		Transport: &http.Transport{
 			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
