@@ -23,6 +23,8 @@ var ubuntuPreflightChecks = []Check{
 		fix:                addAppArmorExceptionForQcowDisks(ioutil.ReadFile, crcos.WriteToFileAsRoot),
 		cleanupDescription: "Cleaning up AppArmor configuration",
 		cleanup:            removeAppArmorExceptionForQcowDisks(ioutil.ReadFile, crcos.WriteToFileAsRoot),
+
+		labels: labels{Os: Linux, Distro: UbuntuLike},
 	},
 }
 

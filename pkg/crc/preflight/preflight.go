@@ -30,6 +30,8 @@ type Check struct {
 	flags              Flags
 	cleanupDescription string
 	cleanup            CleanUpFunc
+
+	labels labels
 }
 
 func (check *Check) getSkipConfigName() string {

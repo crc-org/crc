@@ -27,6 +27,8 @@ var bundleCheck = Check{
 	fixDescription:   "Extracting bundle from the CRC executable",
 	fix:              fixBundleExtracted,
 	flags:            SetupOnly,
+
+	labels: None,
 }
 
 var genericPreflightChecks = []Check{
@@ -36,6 +38,8 @@ var genericPreflightChecks = []Check{
 		check:            checkAdminHelperExecutableCached,
 		fixDescription:   "Caching crc-admin-helper executable",
 		fix:              fixAdminHelperExecutableCached,
+
+		labels: None,
 	},
 	{
 		configKeySuffix:  "check-obsolete-admin-helper",
@@ -51,6 +55,8 @@ var genericPreflightChecks = []Check{
 		check:            checkSupportedCPUArch,
 		fixDescription:   "CodeReady Containers is only supported on x86_64 hardware",
 		flags:            NoFix,
+
+		labels: None,
 	},
 	{
 		configKeySuffix:  "check-ram",
@@ -60,26 +66,36 @@ var genericPreflightChecks = []Check{
 		},
 		fixDescription: fmt.Sprintf("crc requires at least %s to run", units.HumanSize(float64(constants.DefaultMemory*1024*1024))),
 		flags:          NoFix,
+
+		labels: None,
 	},
 	{
 		cleanupDescription: "Removing CRC Machine Instance directory",
 		cleanup:            removeCRCMachinesDir,
 		flags:              CleanUpOnly,
+
+		labels: None,
 	},
 	{
 		cleanupDescription: "Removing hosts file records added by CRC",
 		cleanup:            removeHostsFileEntry,
 		flags:              CleanUpOnly,
+
+		labels: None,
 	},
 	{
 		cleanupDescription: "Removing older logs",
 		cleanup:            removeOldLogs,
 		flags:              CleanUpOnly,
+
+		labels: None,
 	},
 	{
 		cleanupDescription: "Removing pull secret from the keyring",
 		cleanup:            cluster.ForgetPullSecret,
 		flags:              CleanUpOnly,
+
+		labels: None,
 	},
 }
 

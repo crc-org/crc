@@ -23,6 +23,8 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			check:            checkVirtualizationEnabled,
 			fixDescription:   "Setting up virtualization",
 			fix:              fixVirtualizationEnabled,
+
+			labels: labels{Os: Linux},
 		},
 		{
 			configKeySuffix:  "check-kvm-enabled",
@@ -30,6 +32,8 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			check:            checkKvmEnabled,
 			fixDescription:   "Setting up KVM",
 			fix:              fixKvmEnabled,
+
+			labels: labels{Os: Linux},
 		},
 		{
 			configKeySuffix:  "check-libvirt-installed",
@@ -37,6 +41,8 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			check:            checkLibvirtInstalled,
 			fixDescription:   "Installing libvirt service and dependencies",
 			fix:              fixLibvirtInstalled(distro),
+
+			labels: labels{Os: Linux},
 		},
 		{
 			configKeySuffix:  "check-user-in-libvirt-group",
@@ -44,6 +50,8 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			check:            checkUserPartOfLibvirtGroup,
 			fixDescription:   "Adding user to libvirt group",
 			fix:              fixUserPartOfLibvirtGroup,
+
+			labels: labels{Os: Linux},
 		},
 		{
 			configKeySuffix:  "check-libvirt-group-active",
@@ -51,6 +59,8 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			check:            checkCurrentGroups(distro),
 			fixDescription:   "You need to logout, re-login, and run crc setup again before the user is effectively a member of the 'libvirt' group.",
 			flags:            NoFix,
+
+			labels: labels{Os: Linux},
 		},
 		{
 			configKeySuffix:  "check-libvirt-running",
@@ -58,6 +68,8 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			check:            checkLibvirtServiceRunning,
 			fixDescription:   "Starting libvirt service",
 			fix:              fixLibvirtServiceRunning,
+
+			labels: labels{Os: Linux},
 		},
 		{
 			configKeySuffix:  "check-libvirt-version",
@@ -65,6 +77,8 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			check:            checkLibvirtVersion,
 			fixDescription:   fmt.Sprintf("libvirt v%s or newer is required and must be updated manually", minSupportedLibvirtVersion),
 			flags:            NoFix,
+
+			labels: labels{Os: Linux},
 		},
 		{
 			configKeySuffix:  "check-libvirt-driver",
@@ -72,11 +86,15 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			check:            checkMachineDriverLibvirtInstalled,
 			fixDescription:   "Installing crc-driver-libvirt",
 			fix:              fixMachineDriverLibvirtInstalled,
+
+			labels: labels{Os: Linux},
 		},
 		{
 			cleanupDescription: "Removing the crc VM if exists",
 			cleanup:            removeCrcVM,
 			flags:              CleanUpOnly,
+
+			labels: labels{Os: Linux},
 		},
 	}
 	if distroIsLike(distro, linux.Ubuntu) {
@@ -94,6 +112,8 @@ var libvirtNetworkPreflightChecks = []Check{
 		fix:                fixLibvirtCrcNetworkAvailable,
 		cleanupDescription: "Removing 'crc' network from libvirt",
 		cleanup:            removeLibvirtCrcNetwork,
+
+		labels: labels{Os: Linux, NetworkMode: System},
 	},
 	{
 		configKeySuffix:  "check-crc-network-active",
@@ -101,6 +121,8 @@ var libvirtNetworkPreflightChecks = []Check{
 		check:            checkLibvirtCrcNetworkActive,
 		fixDescription:   "Starting libvirt 'crc' network",
 		fix:              fixLibvirtCrcNetworkActive,
+
+		labels: labels{Os: Linux, NetworkMode: System},
 	},
 }
 
@@ -112,6 +134,8 @@ var vsockPreflightCheck = Check{
 	fix:                fixVsock,
 	cleanupDescription: "Removing vsock configuration",
 	cleanup:            removeVsockCrcSettings,
+
+	labels: labels{Os: Linux, NetworkMode: User},
 }
 
 var wsl2PreflightCheck = Check{
@@ -120,6 +144,8 @@ var wsl2PreflightCheck = Check{
 	check:            checkRunningInsideWSL2,
 	fixDescription:   "CodeReady Containers is unsupported using WSL2",
 	flags:            NoFix,
+
+	labels: labels{Os: Linux},
 }
 
 const (
@@ -224,6 +250,21 @@ func removeVsockCrcSettings() error {
 	}
 	return mErr
 }
+
+const (
+	Distro LabelName = iota + lastLabelName
+	DNS
+)
+
+const (
+	// distro
+	UbuntuLike LabelValue = iota + lastLabelValue
+	Other
+
+	// dns
+	Dnsmasq
+	SystemdResolved
+)
 
 // We want all preflight checks
 // - matching the current distro
