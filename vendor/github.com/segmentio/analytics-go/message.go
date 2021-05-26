@@ -36,9 +36,6 @@ type Message interface {
 	// Validate validates the internal structure of the message, the method must return
 	// nil if the message is valid, or an error describing what went wrong.
 	Validate() error
-
-	// internal is an unexposed interface function to ensure only types defined within this package can satisfy the Message interface. Invoking this method will panic.
-	internal()
 }
 
 // Takes a message id as first argument and returns it, unless it's the zero-

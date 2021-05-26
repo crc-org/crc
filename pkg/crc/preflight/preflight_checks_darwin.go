@@ -15,7 +15,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/version"
 	crcos "github.com/code-ready/crc/pkg/os"
-	"github.com/klauspost/cpuid"
+	"github.com/klauspost/cpuid/v2"
 	"golang.org/x/sys/unix"
 )
 

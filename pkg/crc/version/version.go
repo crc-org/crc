@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 )
 
 // The following variables are private fields and should be set when compiling with ldflags, for example --ldflags="-X github.com/code-ready/crc/pkg/version.crcVersion=vX.Y.Z

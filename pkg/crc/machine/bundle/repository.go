@@ -10,7 +10,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"

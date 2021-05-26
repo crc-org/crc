@@ -20,10 +20,6 @@ type Identify struct {
 	Integrations Integrations `json:"integrations,omitempty"`
 }
 
-func (msg Identify) internal() {
-	panic(unimplementedError)
-}
-
 func (msg Identify) Validate() error {
 	if len(msg.UserId) == 0 && len(msg.AnonymousId) == 0 {
 		return FieldError{

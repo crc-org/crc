@@ -21,10 +21,6 @@ type Page struct {
 	Integrations Integrations `json:"integrations,omitempty"`
 }
 
-func (msg Page) internal() {
-	panic(unimplementedError)
-}
-
 func (msg Page) Validate() error {
 	if len(msg.UserId) == 0 && len(msg.AnonymousId) == 0 {
 		return FieldError{

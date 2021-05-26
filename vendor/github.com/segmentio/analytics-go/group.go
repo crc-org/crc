@@ -21,10 +21,6 @@ type Group struct {
 	Integrations Integrations `json:"integrations,omitempty"`
 }
 
-func (msg Group) internal() {
-	panic(unimplementedError)
-}
-
 func (msg Group) Validate() error {
 	if len(msg.GroupId) == 0 {
 		return FieldError{
