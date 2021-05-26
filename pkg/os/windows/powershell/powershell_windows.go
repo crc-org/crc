@@ -89,27 +89,18 @@ func ExecuteAsAdmin(reason, cmd string) (string, string, error) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	psFile, err := os.Create(filepath.Join(tempDir, "runAsAdmin.ps1"))
-	if err != nil {
-		return "", "", err
-	}
-
 	// Write a temporary script
 	/* Add UTF-8 BOM at the beginning of the script so that Windows
 	 * correctly detects the file encoding
 	 */
-	_, err = psFile.Write([]byte{0xef, 0xbb, 0xbf})
-	if err != nil {
+	filename := filepath.Join(tempDir, "runAsAdmin.ps1")
+
+	// #nosec G306
+	if err := ioutil.WriteFile(filename, append([]byte{0xef, 0xbb, 0xbf}, []byte(scriptContent)...), 0666); err != nil {
 		return "", "", err
 	}
-	_, err = psFile.WriteString(scriptContent)
-	if err != nil {
-		return "", "", err
-	}
-	psFile.Close()
+
 	logging.Infof("Will run as admin: %s", reason)
 
-	return Execute(psFile.Name())
-
-	// TODO: cleanup the mess
+	return Execute(filename)
 }
