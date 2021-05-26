@@ -87,6 +87,8 @@ func ExecuteAsAdmin(reason, cmd string) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
+	defer os.RemoveAll(tempDir)
+
 	psFile, err := os.Create(filepath.Join(tempDir, "runAsAdmin.ps1"))
 	if err != nil {
 		return "", "", err
