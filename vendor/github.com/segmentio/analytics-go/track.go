@@ -21,10 +21,6 @@ type Track struct {
 	Integrations Integrations `json:"integrations,omitempty"`
 }
 
-func (msg Track) internal() {
-	panic(unimplementedError)
-}
-
 func (msg Track) Validate() error {
 	if len(msg.Event) == 0 {
 		return FieldError{

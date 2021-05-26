@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"strconv"
 	"sync"
 
 	"bytes"
@@ -14,7 +15,6 @@ import (
 
 // Version of the client.
 const Version = "3.0.0"
-const unimplementedError = "not implemented"
 
 // This interface is the main API exposed by the analytics package.
 // Values that satsify this interface are returned by the client constructors
@@ -291,7 +291,7 @@ func (c *client) upload(b []byte) error {
 
 	req.Header.Add("User-Agent", "analytics-go (version: "+Version+")")
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Content-Length", string(len(b)))
+	req.Header.Add("Content-Length", strconv.Itoa(len(b)))
 	req.SetBasicAuth(c.key, "")
 
 	res, err := c.http.Do(req)

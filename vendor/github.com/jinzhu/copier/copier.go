@@ -87,7 +87,7 @@ func copier(toValue interface{}, fromValue interface{}, opt Option) (err error) 
 		return
 	}
 
-	if fromType.Kind() == reflect.Map && toType.Kind() == reflect.Map {
+	if from.Kind() != reflect.Slice && fromType.Kind() == reflect.Map && toType.Kind() == reflect.Map {
 		if !fromType.Key().ConvertibleTo(toType.Key()) {
 			return ErrMapKeyNotMatch
 		}
@@ -282,9 +282,17 @@ func copier(toValue interface{}, fromValue interface{}, opt Option) (err error) 
 
 		if isSlice {
 			if dest.Addr().Type().AssignableTo(to.Type().Elem()) {
-				to.Set(reflect.Append(to, dest.Addr()))
+				if to.Len() < i+1 {
+					to.Set(reflect.Append(to, dest.Addr()))
+				} else {
+					set(to.Index(i), dest.Addr(), opt.DeepCopy)
+				}
 			} else if dest.Type().AssignableTo(to.Type().Elem()) {
-				to.Set(reflect.Append(to, dest))
+				if to.Len() < i+1 {
+					to.Set(reflect.Append(to, dest))
+				} else {
+					set(to.Index(i), dest, opt.DeepCopy)
+				}
 			}
 		} else if initDest {
 			to.Set(dest)
@@ -368,8 +376,10 @@ func set(to, from reflect.Value, deepCopy bool) bool {
 		if deepCopy {
 			toKind := to.Kind()
 			if toKind == reflect.Interface && to.IsNil() {
-				to.Set(reflect.New(reflect.TypeOf(from.Interface())).Elem())
-				toKind = reflect.TypeOf(to.Interface()).Kind()
+				if reflect.TypeOf(from.Interface()) != nil {
+					to.Set(reflect.New(reflect.TypeOf(from.Interface())).Elem())
+					toKind = reflect.TypeOf(to.Interface()).Kind()
+				}
 			}
 			if toKind == reflect.Struct || toKind == reflect.Map || toKind == reflect.Slice {
 				return false

@@ -1,4 +1,4 @@
-# analytics-go [![Circle CI](https://circleci.com/gh/segmentio/analytics-go/tree/master.svg?style=shield)](https://circleci.com/gh/segmentio/analytics-go/tree/master) [![go-doc](https://godoc.org/github.com/segmentio/analytics-go?status.svg)](https://godoc.org/github.com/segmentio/analytics-go)
+# analytics-go [![Circle CI](https://circleci.com/gh/segmentio/analytics-go/tree/v3.0.svg?style=shield)](https://circleci.com/gh/segmentio/analytics-go/tree/v3.0) [![go-doc](https://godoc.org/github.com/segmentio/analytics-go?status.svg)](https://godoc.org/github.com/segmentio/analytics-go)
 
 Segment analytics client for Go.
 

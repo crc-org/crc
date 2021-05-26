@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 )
 
 // Metadata structure to unmarshal the crc-bundle-info.json file
