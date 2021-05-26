@@ -12,22 +12,16 @@ import (
 	log "github.com/code-ready/crc/pkg/crc/logging"
 )
 
-var powershell string
-
 var (
 	ErrPowerShellNotFound = errors.New("Powershell was not found in the path")
 	ErrNotAdministrator   = errors.New("Hyper-v commands have to be run as an Administrator")
 	ErrNotInstalled       = errors.New("Hyper-V PowerShell Module is not available")
 )
 
-func init() {
-	powershell, _ = exec.LookPath("powershell.exe")
-}
-
 func cmdOut(args ...string) (string, error) {
 	args = append([]string{"-NoProfile", "-NonInteractive"}, args...)
-	cmd := exec.Command(powershell, args...)
-	log.Debugf("[executing ==>] : %v %v", powershell, strings.Join(args, " "))
+	cmd := exec.Command("powershell.exe", args...)
+	log.Debugf("[executing ==>] : powershell.exe %v", strings.Join(args, " "))
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
