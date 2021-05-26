@@ -225,6 +225,10 @@ func removeVsockCrcSettings() error {
 	return mErr
 }
 
+// We want all preflight checks
+// - matching the current distro
+// - matching the networking daemon in use (NetworkManager or systemd-resolved) regardless of user/system networking
+// - and we also want the user networking checks
 func getAllPreflightChecks() []Check {
 	usingSystemdResolved := checkSystemdResolvedIsRunning()
 	checks := getPreflightChecksForDistro(distro(), network.SystemNetworkingMode, usingSystemdResolved == nil)
