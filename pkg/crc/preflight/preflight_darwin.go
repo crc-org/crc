@@ -129,22 +129,24 @@ func getAllPreflightChecks() []Check {
 	return getPreflightChecks(true, true, network.SystemNetworkingMode)
 }
 
-func getPreflightChecks(experimentalFeatures bool, trayAutostart bool, mode network.Mode) []Check {
+func getChecks(mode network.Mode) []Check {
 	checks := []Check{}
 
 	checks = append(checks, nonWinPreflightChecks...)
 	checks = append(checks, genericPreflightChecks...)
 	checks = append(checks, hyperkitPreflightChecks(mode)...)
 	checks = append(checks, daemonSetupChecks...)
-
-	if mode == network.SystemNetworkingMode {
-		checks = append(checks, resolverPreflightChecks...)
-	}
-
-	if version.IsMacosInstallPathSet() && trayAutostart {
-		checks = append(checks, traySetupChecks...)
-	}
-
+	checks = append(checks, resolverPreflightChecks...)
+	checks = append(checks, traySetupChecks...)
 	checks = append(checks, bundleCheck)
+
 	return checks
+}
+
+func getPreflightChecks(_ bool, trayAutostart bool, mode network.Mode) []Check {
+	filter := newFilter()
+	filter.SetNetworkMode(mode)
+	filter.SetTray(trayAutostart)
+
+	return filter.Apply(getChecks(mode))
 }

@@ -97,9 +97,6 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			labels: labels{Os: Linux},
 		},
 	}
-	if distroIsLike(distro, linux.Ubuntu) {
-		checks = append(checks, ubuntuPreflightChecks...)
-	}
 	return checks
 }
 
@@ -288,45 +285,42 @@ func (filter preflightFilter) SetDistro(distro *linux.OsRelease) {
 // - and we also want the user networking checks
 func getAllPreflightChecks() []Check {
 	usingSystemdResolved := checkSystemdResolvedIsRunning()
-	checks := getPreflightChecksForDistro(distro(), network.SystemNetworkingMode, usingSystemdResolved == nil)
-	checks = append(checks, vsockPreflightCheck)
-	return checks
+	filter := newFilter()
+	filter.SetSystemdResolved(usingSystemdResolved == nil)
+	filter.SetDistro(distro())
+
+	return filter.Apply(getChecks(distro()))
 }
 
 func getPreflightChecks(_ bool, _ bool, networkMode network.Mode) []Check {
 	usingSystemdResolved := checkSystemdResolvedIsRunning()
+
 	return getPreflightChecksForDistro(distro(), networkMode, usingSystemdResolved == nil)
 }
 
-func getNetworkChecks(networkMode network.Mode, systemdResolved bool) []Check {
-	var checks []Check
+func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode, usingSystemdResolved bool) []Check {
+	filter := newFilter()
+	filter.SetDistro(distro)
+	filter.SetNetworkMode(networkMode)
+	filter.SetSystemdResolved(usingSystemdResolved)
 
-	if networkMode == network.UserNetworkingMode {
-		return append(checks, vsockPreflightCheck)
-	}
-
-	checks = append(checks, nmPreflightChecks...)
-	if systemdResolved {
-		checks = append(checks, systemdResolvedPreflightChecks...)
-	} else {
-		checks = append(checks, dnsmasqPreflightChecks...)
-	}
-
-	return checks
+	return filter.Apply(getChecks(distro))
 }
 
-func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode, systemdResolved bool) []Check {
+func getChecks(distro *linux.OsRelease) []Check {
 	var checks []Check
 	checks = append(checks, nonWinPreflightChecks...)
 	checks = append(checks, wsl2PreflightCheck)
 	checks = append(checks, genericPreflightChecks...)
 	checks = append(checks, libvirtPreflightChecks(distro)...)
-	networkChecks := getNetworkChecks(networkMode, systemdResolved)
-	checks = append(checks, networkChecks...)
-	if networkMode == network.SystemNetworkingMode {
-		checks = append(checks, libvirtNetworkPreflightChecks...)
-	}
+	checks = append(checks, ubuntuPreflightChecks...)
+	checks = append(checks, nmPreflightChecks...)
+	checks = append(checks, systemdResolvedPreflightChecks...)
+	checks = append(checks, dnsmasqPreflightChecks...)
+	checks = append(checks, libvirtNetworkPreflightChecks...)
+	checks = append(checks, vsockPreflightCheck)
 	checks = append(checks, bundleCheck)
+
 	return checks
 }
 
