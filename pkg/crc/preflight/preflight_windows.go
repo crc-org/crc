@@ -193,19 +193,21 @@ func getAllPreflightChecks() []Check {
 	return getPreflightChecks(true, true, network.UserNetworkingMode)
 }
 
-func getPreflightChecks(_ bool, trayAutostart bool, networkMode network.Mode) []Check {
+func getChecks() []Check {
 	checks := []Check{}
 	checks = append(checks, genericPreflightChecks...)
 	checks = append(checks, hypervPreflightChecks...)
-
-	if networkMode == network.UserNetworkingMode {
-		checks = append(checks, vsockChecks...)
-	}
-
-	if version.IsMsiBuild() && trayAutostart {
-		checks = append(checks, traySetupChecks...)
-	}
-
+	checks = append(checks, vsockChecks...)
+	checks = append(checks, traySetupChecks...)
 	checks = append(checks, bundleCheck)
+
 	return checks
+}
+
+func getPreflightChecks(_ bool, trayAutoStart bool, networkMode network.Mode) []Check {
+	filter := newFilter()
+	filter.SetNetworkMode(networkMode)
+	filter.SetTray(trayAutoStart)
+
+	return filter.Apply(getChecks())
 }
