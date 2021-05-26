@@ -2,14 +2,12 @@ package hyperv
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
-	"os/exec"
+	"fmt"
 	"strings"
 
-	"fmt"
-
 	log "github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/os/windows/powershell"
 )
 
 var (
@@ -19,17 +17,8 @@ var (
 )
 
 func cmdOut(args ...string) (string, error) {
-	args = append([]string{"-NoProfile", "-NonInteractive"}, args...)
-	cmd := exec.Command("powershell.exe", args...)
-	log.Debugf("[executing ==>] : powershell.exe %v", strings.Join(args, " "))
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	log.Debugf("[stdout =====>] : %s", stdout.String())
-	log.Debugf("[stderr =====>] : %s", stderr.String())
-	return stdout.String(), err
+	stdout, _, err := powershell.Execute(args...)
+	return stdout, err
 }
 
 func cmd(args ...string) error {
