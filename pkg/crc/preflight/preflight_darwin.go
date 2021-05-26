@@ -134,6 +134,7 @@ func getChecks(mode network.Mode) []Check {
 
 	checks = append(checks, nonWinPreflightChecks...)
 	checks = append(checks, genericPreflightChecks...)
+	checks = append(checks, cleanUpHostsFile)
 	checks = append(checks, hyperkitPreflightChecks(mode)...)
 	checks = append(checks, daemonSetupChecks...)
 	checks = append(checks, resolverPreflightChecks...)

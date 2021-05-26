@@ -312,6 +312,7 @@ func getChecks(distro *linux.OsRelease) []Check {
 	checks = append(checks, nonWinPreflightChecks...)
 	checks = append(checks, wsl2PreflightCheck)
 	checks = append(checks, genericPreflightChecks...)
+	checks = append(checks, cleanUpHostsFile)
 	checks = append(checks, libvirtPreflightChecks(distro)...)
 	checks = append(checks, ubuntuPreflightChecks...)
 	checks = append(checks, nmPreflightChecks...)

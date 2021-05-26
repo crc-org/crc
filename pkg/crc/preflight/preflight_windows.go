@@ -3,8 +3,12 @@ package preflight
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/code-ready/crc/pkg/crc/adminhelper"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
@@ -141,6 +145,67 @@ var vsockChecks = []Check{
 	},
 }
 
+var adminHelperChecks = []Check{
+	{
+		configKeySuffix:  "check-crc-users-group-exists",
+		checkDescription: "Checking if crc-users group exists",
+		check: func() error {
+			_, _, err := powershell.Execute("Get-LocalGroup -Name crc-users")
+			return err
+		},
+		fixDescription: "Creating crc-users group",
+		fix: func() error {
+			_, _, err := powershell.ExecuteAsAdmin("create crc-users group", "New-LocalGroup -Name crc-users")
+			return err
+		},
+		labels: labels{Os: Windows},
+	},
+	{
+		configKeySuffix:  "check-user-in-crc-users-group",
+		checkDescription: "Checking if current user is in crc-users group",
+		check: func() error {
+			_, _, err := powershell.Execute(fmt.Sprintf("Get-LocalGroupMember -Name crc-users -Member '%s'", os.Getenv("USERNAME")))
+			return err
+		},
+		fixDescription: "Adding current user to crc-users group",
+		fix: func() error {
+			_, _, err := powershell.ExecuteAsAdmin("adding current user to crc-users group", fmt.Sprintf("Add-LocalGroupMember -Group crc-users -Member '%s'", os.Getenv("USERNAME")))
+			if err != nil {
+				return err
+			}
+			return errors.New("Please reboot your system and run 'crc setup' to complete the setup process")
+		},
+		labels: labels{Os: Windows},
+	},
+	{
+		configKeySuffix:  "check-admin-helper-daemon-installed",
+		checkDescription: "Checking if admin-helper daemon is installed",
+		check: func() error {
+			version, err := adminhelper.Client().Version()
+			if err != nil {
+				return err
+			}
+			expected := filepath.Base(constants.DefaultAdminHelperCliBase)
+			if version != expected {
+				return fmt.Errorf("unexpected admin-helper daemon version (expected: %s, got: %s)", expected, version)
+			}
+			return nil
+		},
+		fixDescription: "Installing admin-helper daemon",
+		fix: func() error {
+			_, _, err := powershell.ExecuteAsAdmin("install admin-helper daemon", fmt.Sprintf("& '%s' uninstall-daemon; & '%s' install-daemon", adminhelper.BinPath, adminhelper.BinPath))
+			return err
+		},
+		cleanupDescription: "Uninstalling admin-helper daemon",
+		cleanup: func() error {
+			_, _, err := powershell.ExecuteAsAdmin("uninstall admin-helper daemon", fmt.Sprintf("& '%s' uninstall-daemon", adminhelper.BinPath))
+			return err
+		},
+		labels: labels{Os: Windows},
+	},
+	cleanUpHostsFile,
+}
+
 const (
 	// This key is required to activate the vsock communication
 	registryDirectory = `HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices`
@@ -201,11 +266,11 @@ func getAllPreflightChecks() []Check {
 func getChecks() []Check {
 	checks := []Check{}
 	checks = append(checks, genericPreflightChecks...)
+	checks = append(checks, adminHelperChecks...)
 	checks = append(checks, hypervPreflightChecks...)
 	checks = append(checks, vsockChecks...)
 	checks = append(checks, traySetupChecks...)
 	checks = append(checks, bundleCheck)
-
 	return checks
 }
 

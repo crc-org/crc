@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	adminHelperPath = filepath.Join(constants.BinDir(), constants.GetAdminHelperExecutable())
+	BinPath = filepath.Join(constants.BinDir(), constants.GetAdminHelperExecutable())
 )
 
 // UpdateHostsFile updates the host's /etc/hosts file with Instance IP.

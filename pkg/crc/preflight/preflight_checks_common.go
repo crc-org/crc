@@ -77,13 +77,6 @@ var genericPreflightChecks = []Check{
 		labels: None,
 	},
 	{
-		cleanupDescription: "Removing hosts file records added by CRC",
-		cleanup:            removeHostsFileEntry,
-		flags:              CleanUpOnly,
-
-		labels: None,
-	},
-	{
 		cleanupDescription: "Removing older logs",
 		cleanup:            removeOldLogs,
 		flags:              CleanUpOnly,
@@ -97,6 +90,14 @@ var genericPreflightChecks = []Check{
 
 		labels: None,
 	},
+}
+
+var cleanUpHostsFile = Check{
+	cleanupDescription: "Removing hosts file records added by CRC",
+	cleanup:            removeHostsFileEntry,
+	flags:              CleanUpOnly,
+
+	labels: None,
 }
 
 func checkSupportedCPUArch() error {
