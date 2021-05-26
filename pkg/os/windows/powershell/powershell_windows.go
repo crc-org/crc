@@ -59,7 +59,7 @@ func IsAdmin() bool {
 	return true
 }
 
-func Execute(args ...string) (stdOut string, stdErr string, err error) {
+func Execute(args ...string) (string, string, error) {
 	args = append([]string{"-NoProfile", "-NonInteractive", "-ExecutionPolicy", "RemoteSigned", "-Command"}, args...)
 	cmd := exec.Command(LocatePowerShell(), args...) // #nosec G204
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
@@ -69,13 +69,11 @@ func Execute(args ...string) (stdOut string, stdErr string, err error) {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	err = cmd.Run()
-	stdOut, stdErr = stdout.String(), stderr.String()
-
-	return
+	err := cmd.Run()
+	return stdout.String(), stderr.String(), err
 }
 
-func ExecuteAsAdmin(reason, cmd string) (stdOut string, stdErr string, err error) {
+func ExecuteAsAdmin(reason, cmd string) (string, string, error) {
 	scriptContent := strings.Join(append(runAsCmds, cmd), "\n")
 
 	tempDir, _ := ioutil.TempDir("", "crcScripts")
