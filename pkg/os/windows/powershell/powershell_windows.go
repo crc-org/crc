@@ -37,7 +37,7 @@ func Execute(args ...string) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	args = append([]string{"-NoProfile", "-NonInteractive", "-ExecutionPolicy", "RemoteSigned", "-Command"}, args...)
+	args = append([]string{"-NoProfile", "-NonInteractive", "-ExecutionPolicy", "RemoteSigned", "-Command", "$ProgressPreference = 'SilentlyContinue';"}, args...)
 	cmd := exec.Command(powershell, args...) // #nosec G204
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 
