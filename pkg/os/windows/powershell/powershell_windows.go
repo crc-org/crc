@@ -83,7 +83,10 @@ func Execute(args ...string) (string, string, error) {
 func ExecuteAsAdmin(reason, cmd string) (string, string, error) {
 	scriptContent := strings.Join(append(runAsCmds, cmd), "\n")
 
-	tempDir, _ := ioutil.TempDir("", "crcScripts")
+	tempDir, err := ioutil.TempDir("", "crcScripts")
+	if err != nil {
+		return "", "", err
+	}
 	psFile, err := os.Create(filepath.Join(tempDir, "runAsAdmin.ps1"))
 	if err != nil {
 		return "", "", err
