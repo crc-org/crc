@@ -60,6 +60,8 @@ func IsAdmin() bool {
 }
 
 func Execute(args ...string) (string, string, error) {
+	logging.Debugf("Running '%s'", strings.Join(args, " "))
+
 	args = append([]string{"-NoProfile", "-NonInteractive", "-ExecutionPolicy", "RemoteSigned", "-Command"}, args...)
 	cmd := exec.Command(LocatePowerShell(), args...) // #nosec G204
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
@@ -70,6 +72,11 @@ func Execute(args ...string) (string, string, error) {
 	cmd.Stderr = &stderr
 
 	err := cmd.Run()
+	if err != nil {
+		logging.Debugf("Command failed: %v", err)
+		logging.Debugf("stdout: %s", stdout.String())
+		logging.Debugf("stderr: %s", stderr.String())
+	}
 	return stdout.String(), stderr.String(), err
 }
 
