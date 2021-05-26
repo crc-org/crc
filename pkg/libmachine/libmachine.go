@@ -1,13 +1,10 @@
 package libmachine
 
 import (
-	"encoding/json"
 	"io"
 
-	"github.com/code-ready/crc/pkg/drivers/hyperv"
 	"github.com/code-ready/crc/pkg/libmachine/host"
 	"github.com/code-ready/crc/pkg/libmachine/persist"
-	"github.com/code-ready/machine/libmachine/drivers"
 	rpcdriver "github.com/code-ready/machine/libmachine/drivers/rpc"
 )
 
@@ -27,54 +24,6 @@ func NewClient(storePath string) *Client {
 		Filestore:           persist.NewFilestore(storePath),
 		clientDriverFactory: rpcdriver.NewRPCClientDriverFactory(),
 	}
-}
-
-func (api *Client) NewHost(driverName string, driverPath string, rawDriver []byte) (*host.Host, error) {
-	var driver drivers.Driver
-	if driverName == "hyperv" {
-		driver = hyperv.NewDriver("", "")
-		if err := json.Unmarshal(rawDriver, &driver); err != nil {
-			return nil, err
-		}
-	} else {
-		var err error
-		driver, err = api.clientDriverFactory.NewRPCClientDriver(driverName, driverPath, rawDriver)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &host.Host{
-		ConfigVersion: host.Version,
-		Name:          driver.GetMachineName(),
-		Driver:        driver,
-		DriverName:    driver.DriverName(),
-		DriverPath:    driverPath,
-		RawDriver:     rawDriver,
-	}, nil
-}
-
-func (api *Client) Load(name string) (*host.Host, error) {
-	h, err := api.Filestore.Load(name)
-	if err != nil {
-		return nil, err
-	}
-
-	if h.DriverName == "hyperv" {
-		driver := hyperv.NewDriver("", "")
-		if err := json.Unmarshal(h.RawDriver, &driver); err != nil {
-			return nil, err
-		}
-		h.Driver = driver
-		return h, nil
-	}
-
-	d, err := api.clientDriverFactory.NewRPCClientDriver(h.DriverName, h.DriverPath, h.RawDriver)
-	if err != nil {
-		return nil, err
-	}
-	h.Driver = d
-	return h, nil
 }
 
 func (api *Client) Close() error {
