@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os/exec"
 	"time"
 
 	log "github.com/code-ready/crc/pkg/crc/logging"
@@ -108,7 +109,7 @@ func (d *Driver) GetState() (state.State, error) {
 // PreCreateCheck checks that the machine creation process can be started safely.
 func (d *Driver) PreCreateCheck() error {
 	// Check that powershell was found
-	if powershell == "" {
+	if _, err := exec.LookPath("powershell.exe"); err != nil {
 		return ErrPowerShellNotFound
 	}
 
