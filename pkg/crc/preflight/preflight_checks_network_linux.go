@@ -21,6 +21,8 @@ var nmPreflightChecks = []Check{
 		check:            checkSystemdNetworkdIsNotRunning,
 		fixDescription:   "Network configuration with systemd-networkd is not supported. Perhaps you can try this new network mode: https://github.com/code-ready/crc/wiki/VPN-support--with-an--userland-network-stack",
 		flags:            NoFix,
+
+		labels: labels{Os: Linux, NetworkMode: System},
 	},
 	{
 		configKeySuffix:  "check-network-manager-installed",
@@ -28,6 +30,8 @@ var nmPreflightChecks = []Check{
 		check:            checkNetworkManagerInstalled,
 		fixDescription:   "NetworkManager is required and must be installed manually",
 		flags:            NoFix,
+
+		labels: labels{Os: Linux, NetworkMode: System},
 	},
 	{
 		configKeySuffix:  "check-network-manager-running",
@@ -35,6 +39,8 @@ var nmPreflightChecks = []Check{
 		check:            checkNetworkManagerIsRunning,
 		fixDescription:   "NetworkManager is required. Please make sure it is installed and running manually",
 		flags:            NoFix,
+
+		labels: labels{Os: Linux, NetworkMode: System},
 	},
 }
 
@@ -47,6 +53,8 @@ var dnsmasqPreflightChecks = []Check{
 		fix:                fixCrcNetworkManagerConfig,
 		cleanupDescription: "Removing /etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf file",
 		cleanup:            removeCrcNetworkManagerConfig,
+
+		labels: labels{Os: Linux, NetworkMode: System, DNS: Dnsmasq},
 	},
 	{
 		configKeySuffix:    "check-crc-dnsmasq-file",
@@ -56,6 +64,8 @@ var dnsmasqPreflightChecks = []Check{
 		fix:                fixCrcDnsmasqConfigFile,
 		cleanupDescription: "Removing /etc/NetworkManager/dnsmasq.d/crc.conf file",
 		cleanup:            removeCrcDnsmasqConfigFile,
+
+		labels: labels{Os: Linux, NetworkMode: System, DNS: Dnsmasq},
 	},
 }
 
@@ -107,6 +117,8 @@ var systemdResolvedPreflightChecks = []Check{
 		check:            checkCrcDnsmasqAndNetworkManagerConfigFile,
 		fixDescription:   "Removing dnsmasq configuration file for NetworkManager",
 		fix:              fixCrcDnsmasqAndNetworkManagerConfigFile,
+
+		labels: labels{Os: Linux, NetworkMode: System, DNS: SystemdResolved},
 	},
 	{
 		configKeySuffix:  "check-systemd-resolved-running",
@@ -114,6 +126,8 @@ var systemdResolvedPreflightChecks = []Check{
 		check:            checkSystemdResolvedIsRunning,
 		fixDescription:   "systemd-resolved is required on this distribution. Please make sure it is installed and running manually",
 		flags:            NoFix,
+
+		labels: labels{Os: Linux, NetworkMode: System, DNS: SystemdResolved},
 	},
 	{
 		configKeySuffix:    "check-network-manager-dispatcher-file",
@@ -123,6 +137,8 @@ var systemdResolvedPreflightChecks = []Check{
 		fix:                fixCrcNetworkManagerDispatcherFile,
 		cleanupDescription: fmt.Sprintf("Removing %s file", crcNetworkManagerDispatcherPath),
 		cleanup:            removeCrcNetworkManagerDispatcherFile,
+
+		labels: labels{Os: Linux, NetworkMode: System, DNS: SystemdResolved},
 	},
 }
 

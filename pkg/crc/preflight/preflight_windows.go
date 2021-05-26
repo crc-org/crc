@@ -17,6 +17,8 @@ var hypervPreflightChecks = []Check{
 		check:            checkIfRunningAsNormalUser,
 		fixDescription:   "crc should be ran in a shell without administrator rights",
 		flags:            NoFix,
+
+		labels: labels{Os: Windows},
 	},
 	{
 		configKeySuffix:  "check-windows-version",
@@ -24,6 +26,8 @@ var hypervPreflightChecks = []Check{
 		check:            checkVersionOfWindowsUpdate,
 		fixDescription:   "Please manually update your Windows 10 installation",
 		flags:            NoFix,
+
+		labels: labels{Os: Windows},
 	},
 	{
 		configKeySuffix:  "check-windows-edition",
@@ -31,6 +35,8 @@ var hypervPreflightChecks = []Check{
 		check:            checkWindowsEdition,
 		fixDescription:   "Your Windows edition is not supported. Consider using Professional or Enterprise editions of Windows",
 		flags:            NoFix,
+
+		labels: labels{Os: Windows},
 	},
 	{
 		configKeySuffix:  "check-hyperv-installed",
@@ -38,6 +44,8 @@ var hypervPreflightChecks = []Check{
 		check:            checkHyperVInstalled,
 		fixDescription:   "Installing Hyper-V",
 		fix:              fixHyperVInstalled,
+
+		labels: labels{Os: Windows},
 	},
 	{
 		configKeySuffix:  "check-user-in-hyperv-group",
@@ -45,6 +53,8 @@ var hypervPreflightChecks = []Check{
 		check:            checkIfUserPartOfHyperVAdmins,
 		fixDescription:   "Adding user to the Hyper-V Administrators group",
 		fix:              fixUserPartOfHyperVAdmins,
+
+		labels: labels{Os: Windows},
 	},
 	{
 		configKeySuffix:  "check-hyperv-service-running",
@@ -52,6 +62,8 @@ var hypervPreflightChecks = []Check{
 		check:            checkHyperVServiceRunning,
 		fixDescription:   "Enabling Hyper-V service",
 		fix:              fixHyperVServiceRunning,
+
+		labels: labels{Os: Windows},
 	},
 	{
 		configKeySuffix:  "check-hyperv-switch",
@@ -59,16 +71,22 @@ var hypervPreflightChecks = []Check{
 		check:            checkIfHyperVVirtualSwitchExists,
 		fixDescription:   "Unable to perform Hyper-V administrative commands. Please reboot your system and run 'crc setup' to complete the setup process",
 		flags:            NoFix,
+
+		labels: labels{Os: Windows},
 	},
 	{
 		cleanupDescription: "Removing dns server from interface",
 		cleanup:            removeDNSServerAddress,
 		flags:              CleanUpOnly,
+
+		labels: labels{Os: Windows},
 	},
 	{
 		cleanupDescription: "Removing the crc VM if exists",
 		cleanup:            removeCrcVM,
 		flags:              CleanUpOnly,
+
+		labels: labels{Os: Windows},
 	},
 }
 
@@ -81,6 +99,8 @@ var traySetupChecks = []Check{
 		cleanupDescription: "Uninstalling daemon if installed",
 		cleanup:            removeDaemon,
 		flags:              SetupOnly,
+
+		labels: labels{Os: Windows, Tray: Enabled},
 	},
 	{
 		checkDescription: "Checking if tray executable is present",
@@ -88,6 +108,8 @@ var traySetupChecks = []Check{
 		fixDescription:   "Caching tray executable",
 		fix:              fixTrayExecutableExists,
 		flags:            SetupOnly,
+
+		labels: labels{Os: Windows, Tray: Enabled},
 	},
 	{
 		checkDescription:   "Checking if tray is installed",
@@ -97,6 +119,8 @@ var traySetupChecks = []Check{
 		cleanupDescription: "Uninstalling tray if installed",
 		cleanup:            removeTray,
 		flags:              SetupOnly,
+
+		labels: labels{Os: Windows, Tray: Enabled},
 	},
 }
 
@@ -107,6 +131,8 @@ var vsockChecks = []Check{
 		check:            checkVsock,
 		fixDescription:   "Checking if vsock is correctly configured",
 		fix:              fixVsock,
+
+		labels: labels{Os: Windows, NetworkMode: User},
 	},
 }
 
@@ -137,6 +163,16 @@ func fixVsock() error {
 	_, _, err := powershell.ExecuteAsAdmin("adding vsock registry key", strings.Join(cmds, ";"))
 	return err
 }
+
+const (
+	Tray LabelName = iota + lastLabelName
+)
+
+const (
+	// tray
+	Enabled LabelValue = iota + lastLabelValue
+	Disabled
+)
 
 // We want all preflight checks including
 // - experimental checks

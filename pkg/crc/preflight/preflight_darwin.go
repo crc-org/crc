@@ -16,6 +16,8 @@ func hyperkitPreflightChecks(networkMode network.Mode) []Check {
 			check:            checkM1CPU,
 			fixDescription:   "CodeReady Containers is unsupported on Apple M1 hardware",
 			flags:            NoFix,
+
+			labels: labels{Os: Darwin},
 		},
 		{
 			configKeySuffix:  "check-hyperkit-installed",
@@ -23,6 +25,8 @@ func hyperkitPreflightChecks(networkMode network.Mode) []Check {
 			check:            checkHyperKitInstalled(networkMode),
 			fixDescription:   "Setting up virtualization with HyperKit",
 			fix:              fixHyperKitInstallation(networkMode),
+
+			labels: labels{Os: Darwin},
 		},
 		{
 			configKeySuffix:  "check-hyperkit-driver",
@@ -30,11 +34,15 @@ func hyperkitPreflightChecks(networkMode network.Mode) []Check {
 			check:            checkMachineDriverHyperKitInstalled(networkMode),
 			fixDescription:   "Installing crc-machine-hyperkit",
 			fix:              fixMachineDriverHyperKitInstalled(networkMode),
+
+			labels: labels{Os: Darwin},
 		},
 		{
 			cleanupDescription: "Stopping CRC Hyperkit process",
 			cleanup:            stopCRCHyperkitProcess,
 			flags:              CleanUpOnly,
+
+			labels: labels{Os: Darwin},
 		},
 	}
 }
@@ -48,6 +56,8 @@ var resolverPreflightChecks = []Check{
 		fix:                fixResolverFilePermissions,
 		cleanupDescription: fmt.Sprintf("Removing %s file", resolverFile),
 		cleanup:            removeResolverFile,
+
+		labels: labels{Os: Darwin, NetworkMode: System},
 	},
 }
 
@@ -60,6 +70,8 @@ var daemonSetupChecks = []Check{
 		flags:              SetupOnly,
 		cleanupDescription: "Unload CodeReady Containers daemon",
 		cleanup:            unLoadDaemonAgent,
+
+		labels: labels{Os: Darwin},
 	},
 }
 
@@ -72,6 +84,8 @@ var traySetupChecks = []Check{
 		flags:              SetupOnly,
 		cleanupDescription: "Removing launchd configuration for tray",
 		cleanup:            removeTrayPlistFile,
+
+		labels: labels{Os: Darwin, Tray: Enabled},
 	},
 	{
 		checkDescription:   "Check if CodeReady Containers tray is running",
@@ -81,8 +95,20 @@ var traySetupChecks = []Check{
 		flags:              SetupOnly,
 		cleanupDescription: "Unload CodeReady Containers tray",
 		cleanup:            unLoadTrayAgent,
+
+		labels: labels{Os: Darwin, Tray: Enabled},
 	},
 }
+
+const (
+	Tray LabelName = iota + lastLabelName
+)
+
+const (
+	// tray
+	Enabled LabelValue = iota + lastLabelValue
+	Disabled
+)
 
 // We want all preflight checks including
 // - experimental checks

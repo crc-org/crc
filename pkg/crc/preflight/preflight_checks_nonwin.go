@@ -19,6 +19,9 @@ var nonWinPreflightChecks = []Check{
 		check:            checkIfRunningAsNormalUser,
 		fixDescription:   "crc should not be run as root",
 		flags:            NoFix,
+
+		// no need for an "os" label as this is only built on relevant OSes through the use of golang build tags
+		labels: None,
 	},
 }
 
