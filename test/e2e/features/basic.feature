@@ -39,6 +39,7 @@ Feature: Basic test
     @linux
     Scenario: CRC setup on Linux
         When executing "crc setup --check-only" fails
+        Then executing "crc start" fails
         And executing "crc setup" succeeds
         And stderr should contain "Checking if CRC bundle is extracted in '$HOME/.crc'"
         And stderr should contain "Checking if running as non-root"
@@ -56,6 +57,14 @@ Feature: Basic test
         And stderr should contain "Using root access: Executing systemctl reload NetworkManager"
         And stdout should contain "Your system is correctly setup for using CodeReady Containers, you can now run 'crc start -b $bundlename' to start the OpenShift cluster" if bundle is not embedded
         And stdout should contain "Your system is correctly setup for using CodeReady Containers, you can now run 'crc start' to start the OpenShift cluster" if bundle is embedded
+
+    @linux
+    Scenario: Missing CRC setup
+	Given executing "rm ~/.crc/bin/crc-driver-libvirt" succeeds
+        Then executing "crc setup --check-only" fails
+        And starting CRC with default bundle fails
+	And stderr should contain "Preflight checks failed during `crc start`, please try to run `crc setup` first in case you haven't done so yet"
+	And executing "crc setup" succeeds
 
     @darwin
     Scenario: CRC setup on Mac

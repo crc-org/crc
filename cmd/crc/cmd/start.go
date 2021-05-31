@@ -21,10 +21,10 @@ import (
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
+	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/shell"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"k8s.io/client-go/util/exec"
 )
 
 func init() {
@@ -83,7 +83,7 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		}
 
 		if err := preflight.StartPreflightChecks(config); err != nil {
-			return nil, exec.CodeExitError{
+			return nil, crcos.CodeExitError{
 				Err:  err,
 				Code: preflightFailedExitCode,
 			}
