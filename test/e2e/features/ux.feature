@@ -21,7 +21,7 @@ Feature: UX Test
     Scenario: Start the cluster
         Given fresh tray installation   
         When start the cluster from the tray
-        And set the pull secret file 
+        And set the pull secret
         Then cluster should be running
         And tray should show cluster as running
         And user should get notified with cluster state as running

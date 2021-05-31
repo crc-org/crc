@@ -50,7 +50,7 @@ func (h handler) ClickQuit() error {
 	return fmt.Errorf("not implemented yet")
 }
 
-func (h handler) SetPullSecretFileLocation() error {
+func (h handler) SetPullSecret() error {
 	return fmt.Errorf("not implemented yet")
 }
 
