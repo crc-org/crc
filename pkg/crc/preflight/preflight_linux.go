@@ -266,6 +266,22 @@ const (
 	SystemdResolved
 )
 
+func (filter preflightFilter) SetSystemdResolved(usingSystemdResolved bool) {
+	if usingSystemdResolved {
+		filter[DNS] = SystemdResolved
+	} else {
+		filter[DNS] = Dnsmasq
+	}
+}
+
+func (filter preflightFilter) SetDistro(distro *linux.OsRelease) {
+	if distroIsLike(distro, linux.Ubuntu) {
+		filter[Distro] = UbuntuLike
+	} else {
+		filter[Distro] = Other
+	}
+}
+
 // We want all preflight checks
 // - matching the current distro
 // - matching the networking daemon in use (NetworkManager or systemd-resolved) regardless of user/system networking

@@ -174,6 +174,14 @@ const (
 	Disabled
 )
 
+func (filter preflightFilter) SetTray(enable bool) {
+	if version.IsMsiBuild() && enable {
+		filter[Tray] = Enabled
+	} else {
+		filter[Tray] = Disabled
+	}
+}
+
 // We want all preflight checks including
 // - experimental checks
 // - tray checks when using an installer, regardless of tray enabled or not
