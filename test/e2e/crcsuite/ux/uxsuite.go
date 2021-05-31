@@ -38,8 +38,8 @@ func FeatureContext(s *godog.Suite, bundleLocation *string, pullSecretFile *stri
 			clickTrayButton)
 		s.Step(`^cluster should be (.*)$`,
 			waitForClusterInState)
-		s.Step(`^set the pull secret file$`,
-			trayHandler.SetPullSecretFileLocation)
+		s.Step(`^set the pull secret$`,
+			trayHandler.SetPullSecret)
 		s.Step(`^tray should show cluster as (.*)$`,
 			checkClusterStateOnTray)
 		s.Step(`^(.*) CRC from installer$`,

@@ -13,14 +13,14 @@ import (
 )
 
 const (
-	scriptsRelativePath       string = "applescripts"
-	checkTrayIconIsVisible    string = "checkTrayIconIsVisible.applescript"
-	clickTrayMenuItem         string = "clickTrayMenuItem.applescript"
-	setPullSecretFileLocation string = "setPullSecretFileLocation.applescript"
-	getTrayFieldlValue        string = "getTrayFieldlValue.applescript"
-	installTray               string = "installTray.applescript"
-	getOCLoginCommand         string = "getOCLoginCommand.applescript"
-	runOCLoginCommand         string = "runOCLoginCommand.applescript"
+	scriptsRelativePath    string = "applescripts"
+	checkTrayIconIsVisible string = "checkTrayIconIsVisible.applescript"
+	clickTrayMenuItem      string = "clickTrayMenuItem.applescript"
+	setPullSecret          string = "setPullSecret.applescript"
+	getTrayFieldlValue     string = "getTrayFieldlValue.applescript"
+	installTray            string = "installTray.applescript"
+	getOCLoginCommand      string = "getOCLoginCommand.applescript"
+	runOCLoginCommand      string = "runOCLoginCommand.applescript"
 
 	bundleIdentifier string = "com.redhat.codeready.containers"
 	appPath          string = "/Applications/CodeReady Containers.app"
@@ -108,9 +108,9 @@ func (a applescriptHandler) ClickQuit() error {
 	return clickButtonByAction(actionQuit)
 }
 
-func (a applescriptHandler) SetPullSecretFileLocation() error {
+func (a applescriptHandler) SetPullSecret() error {
 	return applescript.ExecuteApplescript(
-		setPullSecretFileLocation, bundleIdentifier, *a.pullSecretFileLocation)
+		setPullSecret, bundleIdentifier, *a.pullSecretFileLocation)
 }
 
 func (a applescriptHandler) IsClusterRunning() error {
