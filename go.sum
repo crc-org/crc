@@ -141,8 +141,8 @@ github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGX
 github.com/cockroachdb/apd v1.1.0/go.mod h1:8Sl8LxpKi29FqWXR16WEFZRNSz3SoPzUzeMeY4+DwBQ=
 github.com/cockroachdb/cockroach-go v0.0.0-20181001143604-e0a95dfd547c/go.mod h1:XGLbWH/ujMcbPbhZq52Nv6UrCghb1yGn//133kEsvDk=
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
-github.com/code-ready/admin-helper v0.0.0-20210317085515-2d7f65e95985 h1:SWez+YUYr+AMTuqZFNxQ3L9KrG3ABNojr7+458Lwj5E=
-github.com/code-ready/admin-helper v0.0.0-20210317085515-2d7f65e95985/go.mod h1:4HSCLxIh62FmyT+XNNdPT7svzEcdcFvrlyzeUa1sqHY=
+github.com/code-ready/admin-helper v0.0.0-20210518083720-ee7100e9f7ae h1:2oPNH50PMnFXA+bfa7bHcg8XtVOt/maFb0A7V8qkKbc=
+github.com/code-ready/admin-helper v0.0.0-20210518083720-ee7100e9f7ae/go.mod h1:4HSCLxIh62FmyT+XNNdPT7svzEcdcFvrlyzeUa1sqHY=
 github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a h1:VOQmCj9Y8pAPU4C0rIvF2ByUBuuqnaR9JSvb9C8uBQE=
 github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a/go.mod h1:ZPZUcYGpv/FQGnwakUuhiHP9x/IIcU2SKbn8xPe4ROc=
 github.com/code-ready/gvisor-tap-vsock v0.0.0-20210308122700-d61f9aac135c h1:UOg6w7Uv5hWvFVABjJpawCEmAK99vG96SozUaulqVCk=
