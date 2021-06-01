@@ -1,6 +1,8 @@
 package cluster
 
 import (
+	"bufio"
+	"bytes"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -11,49 +13,63 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/oc"
-	crcos "github.com/code-ready/crc/pkg/os"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// UpdateKubeAdminUserPassword does following
-// - Create and put updated kubeadmin password to ~/.crc/machine/crc/kubeadmin-password
-// - Update the htpasswd secret
-func UpdateKubeAdminUserPassword(ocConfig oc.Config, kubeAdminPassword string) error {
-	var err error
+// GenerateKubeAdminUserPassword creates and put updated kubeadmin password to ~/.crc/machine/crc/kubeadmin-password
+func GenerateKubeAdminUserPassword() error {
+	logging.Infof("Generating new password for the kubeadmin user")
 	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath()
-	if crcos.FileExists(kubeAdminPasswordFile) {
-		logging.Debugf("kubeadmin password has already been updated")
-		return nil
+	kubeAdminPassword, err := GenerateRandomPasswordHash(23)
+	if err != nil {
+		return fmt.Errorf("Cannot generate the kubeadmin user password: %w", err)
 	}
+	return ioutil.WriteFile(kubeAdminPasswordFile, []byte(kubeAdminPassword), 0600)
+}
 
-	if kubeAdminPassword == "" {
-		logging.Infof("Generating new password for the kubeadmin user")
-		kubeAdminPassword, err = GenerateRandomPasswordHash(23)
-		if err != nil {
-			return fmt.Errorf("Cannot generate the kubeadmin user password: %w", err)
+// UpdateKubeAdminUserPassword updates the htpasswd secret
+func UpdateKubeAdminUserPassword(ocConfig oc.Config, newPassword string) error {
+	if newPassword != "" {
+		logging.Infof("Overriding password for kubeadmin user")
+		if err := ioutil.WriteFile(constants.GetKubeAdminPasswordPath(), []byte(strings.TrimSpace(newPassword)), 0600); err != nil {
+			return err
 		}
 	}
 
-	hashDeveloperPasswd, err := hashBcrypt("developer")
+	kubeAdminPassword, err := GetKubeadminPassword()
+	if err != nil {
+		return fmt.Errorf("Cannot generate the kubeadmin user password: %w", err)
+	}
+	credentials := map[string]string{
+		"developer": "developer",
+		"kubeadmin": kubeAdminPassword,
+	}
+
+	given, _, err := ocConfig.RunOcCommandPrivate("get", "secret", "htpass-secret", "-n", "openshift-config", "-o", `jsonpath="{.data.htpasswd}"`)
 	if err != nil {
 		return err
 	}
-
-	hashKubeAdminPasswd, err := hashBcrypt(kubeAdminPassword)
+	ok, err := compareHtpasswd(given, credentials)
 	if err != nil {
 		return err
 	}
-	base64Data := getBase64(hashDeveloperPasswd, hashKubeAdminPasswd)
+	if ok {
+		return nil
+	}
 
+	logging.Infof("Changing the password for the kubeadmin user")
+	expected, err := getHtpasswd(credentials)
+	if err != nil {
+		return err
+	}
 	cmdArgs := []string{"patch", "secret", "htpass-secret", "-p",
-		fmt.Sprintf(`'{"data":{"htpasswd":"%s"}}'`, base64Data),
+		fmt.Sprintf(`'{"data":{"htpasswd":"%s"}}'`, expected),
 		"-n", "openshift-config", "--type", "merge"}
 	_, stderr, err := ocConfig.RunOcCommandPrivate(cmdArgs...)
 	if err != nil {
 		return fmt.Errorf("Failed to update kubeadmin password %v: %s", err, stderr)
 	}
-
-	return ioutil.WriteFile(kubeAdminPasswordFile, []byte(kubeAdminPassword), 0600)
+	return nil
 }
 
 func GetKubeadminPassword() (string, error) {
@@ -110,7 +126,63 @@ func hashBcrypt(password string) (hash string, err error) {
 	return string(passwordBytes), nil
 }
 
-func getBase64(developerUserPassword, adminUserPassword string) string {
-	s := fmt.Sprintf("developer:%s\nkubeadmin:%s", developerUserPassword, adminUserPassword)
-	return base64.StdEncoding.EncodeToString([]byte(s))
+func getHtpasswd(credentials map[string]string) (string, error) {
+	var ret []string
+	for username, password := range credentials {
+		hash, err := hashBcrypt(password)
+		if err != nil {
+			return "", err
+		}
+		ret = append(ret, fmt.Sprintf("%s:%s", username, hash))
+	}
+	return base64.StdEncoding.EncodeToString([]byte(strings.Join(ret, "\n"))), nil
+}
+
+// source https://github.com/openshift/oauth-server/blob/04985077512fec241a5170074bf767c23592d7e7/pkg/authenticator/password/htpasswd/htpasswd.go
+func compareHtpasswd(given string, credentials map[string]string) (bool, error) {
+	decoded, err := base64.StdEncoding.DecodeString(given)
+	if err != nil {
+		return false, err
+	}
+	scanner := bufio.NewScanner(bytes.NewReader(decoded))
+
+	found := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		if len(line) == 0 {
+			continue
+		}
+		parts := strings.SplitN(line, ":", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		username := parts[0]
+		password := parts[1]
+
+		if expectedPassword, ok := credentials[username]; ok {
+			ok, err := testBCryptPassword(expectedPassword, password)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
+			found++
+		}
+	}
+	if found != len(credentials) {
+		return false, nil
+	}
+	return true, nil
+}
+
+func testBCryptPassword(password, hash string) (bool, error) {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	if err == bcrypt.ErrMismatchedHashAndPassword {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
