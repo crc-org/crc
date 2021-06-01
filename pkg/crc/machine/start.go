@@ -524,6 +524,10 @@ func createHost(api libmachine.API, machineConfig config.MachineConfig) error {
 		return fmt.Errorf("Error in driver during machine creation: %s", err)
 	}
 
+	logging.Info("Generating new SSH Key pair...")
+	if err := crcssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
+		return fmt.Errorf("Error generating ssh key pair: %v", err)
+	}
 	if err := cluster.GenerateKubeAdminUserPassword(); err != nil {
 		return errors.Wrap(err, "Error generating new kubeadmin password")
 	}
@@ -573,18 +577,6 @@ func addNameServerToInstance(sshRunner *crcssh.Runner, ns string) error {
 }
 
 func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
-	if _, err := os.Stat(constants.GetPrivateKeyPath()); err != nil {
-		if !os.IsNotExist(err) {
-			return err
-		}
-
-		// Generate ssh key pair
-		logging.Info("Generating new SSH Key pair...")
-		if err := crcssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
-			return fmt.Errorf("Error generating ssh key pair: %v", err)
-		}
-	}
-
 	// Read generated public key
 	publicKey, err := ioutil.ReadFile(constants.GetPublicKeyPath())
 	if err != nil {
