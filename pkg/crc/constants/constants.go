@@ -27,7 +27,7 @@ const (
 	DaemonLogFile             = "crcd.log"
 	CrcLandingPageURL         = "https://cloud.redhat.com/openshift/create/local" // #nosec G101
 	DefaultPodmanURLBase      = "https://storage.googleapis.com/libpod-master-releases"
-	DefaultAdminHelperCliBase = "https://github.com/code-ready/admin-helper/releases/download/0.0.3"
+	DefaultAdminHelperCliBase = "https://github.com/code-ready/admin-helper/releases/download/0.0.4"
 	CRCMacTrayDownloadURL     = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
 	CRCWindowsTrayDownloadURL = "https://github.com/code-ready/tray-windows/releases/download/v%s/crc-tray-windows.zip"
 	DefaultContext            = "admin"
