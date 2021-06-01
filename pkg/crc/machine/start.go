@@ -524,6 +524,9 @@ func createHost(api libmachine.API, machineConfig config.MachineConfig) error {
 		return fmt.Errorf("Error in driver during machine creation: %s", err)
 	}
 
+	if err := cluster.GenerateKubeAdminUserPassword(); err != nil {
+		return errors.Wrap(err, "Error generating new kubeadmin password")
+	}
 	if err := copyKubeconfig(machineConfig.Name, machineConfig); err != nil {
 		return errors.Wrap(err, "Error copying kubeconfig file")
 	}
