@@ -179,6 +179,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			KernelCmdLine:   crcBundleMetadata.GetKernelCommandLine(),
 			Initramfs:       crcBundleMetadata.GetInitramfsPath(),
 			Kernel:          crcBundleMetadata.GetKernelPath(),
+			KubeConfig:      crcBundleMetadata.GetKubeConfigPath(),
 		}
 		if err := createHost(libMachineAPIClient, machineConfig); err != nil {
 			return nil, errors.Wrap(err, "Error creating machine")
@@ -279,9 +280,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	// dir and VM
 	if err := updateSSHKeyPair(sshRunner); err != nil {
 		return nil, errors.Wrap(err, "Error updating public key")
-	}
-	if err := copyKubeconfig(client.name, crcBundleMetadata); err != nil {
-		return nil, errors.Wrap(err, "Error copying kubeconfig file")
 	}
 
 	// Trigger disk resize, this will be a no-op if no disk size change is needed
@@ -526,6 +524,10 @@ func createHost(api libmachine.API, machineConfig config.MachineConfig) error {
 		return fmt.Errorf("Error in driver during machine creation: %s", err)
 	}
 
+	if err := copyKubeconfig(machineConfig.Name, machineConfig); err != nil {
+		return errors.Wrap(err, "Error copying kubeconfig file")
+	}
+
 	if err := api.SetExists(vm.Name); err != nil {
 		return fmt.Errorf("Failed to record VM existence: %s", err)
 	}
@@ -600,7 +602,7 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	return err
 }
 
-func copyKubeconfig(name string, crcBundleMetadata *bundle.CrcBundleInfo) error {
+func copyKubeconfig(name string, machineConfig config.MachineConfig) error {
 	kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, name, "kubeconfig")
 	if _, err := os.Stat(kubeConfigFilePath); err == nil {
 		return nil
@@ -609,7 +611,7 @@ func copyKubeconfig(name string, crcBundleMetadata *bundle.CrcBundleInfo) error 
 	// Copy Kubeconfig file from bundle extract path to machine directory.
 	// In our case it would be ~/.crc/machines/crc/
 	logging.Info("Copying kubeconfig file to instance dir...")
-	err := crcos.CopyFileContents(crcBundleMetadata.GetKubeConfigPath(),
+	err := crcos.CopyFileContents(machineConfig.KubeConfig,
 		kubeConfigFilePath,
 		0644)
 	if err != nil {

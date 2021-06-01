@@ -14,6 +14,7 @@ type MachineConfig struct {
 	ImageSourcePath string
 	ImageFormat     string
 	SSHKeyPath      string
+	KubeConfig      string
 
 	// HyperKit specific configuration
 	KernelCmdLine string
