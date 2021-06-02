@@ -1,7 +1,12 @@
 {
 	"version": {
-		"crcVersion": @CRC_VERSION@,
-		"gitSha": @GIT_COMMIT_SHA@,
-		"openshiftVersion": @OPENSHIFT_VERSION@
+		"crcVersion": "@CRC_VERSION@",
+		"gitSha": "@GIT_COMMIT_SHA@",
+		"openshiftVersion": "@OPENSHIFT_VERSION@"
+	},
+	"links": {
+	    "linux": "https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/crc/@CRC_VERSION@/crc-linux-amd64.tar.xz",
+	    "darwin": "https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/crc/@CRC_VERSION@/crc-macos-amd64.pkg",
+	    "windows": "https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/crc/@CRC_VERSION@/crc-windows-amd64.zip"
 	}
 }
