@@ -83,7 +83,7 @@ func IsMsiBuild() bool {
 	return msiBuild != "false"
 }
 
-func getCRCLatestVersionFromMirror() (*semver.Version, error) {
+func GetCRCLatestVersionFromMirror() (*CrcReleaseInfo, error) {
 	client := &http.Client{
 		Timeout: 5 * time.Second,
 	}
@@ -107,17 +107,5 @@ func getCRCLatestVersionFromMirror() (*semver.Version, error) {
 		return nil, fmt.Errorf("Error unmarshaling JSON metadata: %v", err)
 	}
 
-	return releaseInfo.Version.CrcVersion, nil
-}
-
-func NewVersionAvailable() (bool, string, error) {
-	latestVersion, err := getCRCLatestVersionFromMirror()
-	if err != nil {
-		return false, "", err
-	}
-	currentVersion, err := semver.NewVersion(GetCRCVersion())
-	if err != nil {
-		return false, "", err
-	}
-	return latestVersion.GreaterThan(currentVersion), latestVersion.String(), nil
+	return &releaseInfo, nil
 }

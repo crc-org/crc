@@ -7,6 +7,7 @@ import (
 
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
 	"github.com/spf13/cobra"
 )
@@ -26,7 +27,9 @@ var versionCmd = &cobra.Command{
 }
 
 func runPrintVersion(writer io.Writer, version *version, outputFormat string) error {
-	checkIfNewVersionAvailable(config.Get(crcConfig.DisableUpdateCheck).AsBool())
+	if err := checkIfNewVersionAvailable(config.Get(crcConfig.DisableUpdateCheck).AsBool()); err != nil {
+		logging.Debugf("Unable to find out if a new version is available: %v", err)
+	}
 	return render(version, writer, outputFormat)
 }
 

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -63,7 +64,9 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		return nil, err
 	}
 
-	checkIfNewVersionAvailable(config.Get(crcConfig.DisableUpdateCheck).AsBool())
+	if err := checkIfNewVersionAvailable(config.Get(crcConfig.DisableUpdateCheck).AsBool()); err != nil {
+		logging.Debugf("Unable to find out if a new version is available: %v", err)
+	}
 
 	startConfig := types.StartConfig{
 		BundlePath:        config.Get(crcConfig.Bundle).AsString(),
@@ -191,20 +194,42 @@ func validateStartFlags() error {
 	return nil
 }
 
-func checkIfNewVersionAvailable(noUpdateCheck bool) {
+func checkIfNewVersionAvailable(noUpdateCheck bool) error {
 	if noUpdateCheck {
-		return
+		return nil
 	}
-	isNewVersionAvailable, newVersion, err := crcversion.NewVersionAvailable()
+	isNewVersionAvailable, newVersion, link, err := newVersionAvailable()
 	if err != nil {
-		logging.Debugf("Unable to find out if a new version is available: %v", err)
-		return
+		return err
 	}
 	if isNewVersionAvailable {
-		logging.Warnf("A new version (%s) has been published on %s", newVersion, constants.CrcLandingPageURL)
-		return
+		logging.Warnf("A new version (%s) has been published on %s", newVersion, link)
+		return nil
 	}
 	logging.Debugf("No new version available. The latest version is %s", newVersion)
+	return nil
+}
+
+func newVersionAvailable() (bool, string, string, error) {
+	release, err := crcversion.GetCRCLatestVersionFromMirror()
+	if err != nil {
+		return false, "", "", err
+	}
+	currentVersion, err := semver.NewVersion(crcversion.GetCRCVersion())
+	if err != nil {
+		return false, "", "", err
+	}
+	if release.Version.CrcVersion == nil {
+		return false, "", "", errors.New("empty version")
+	}
+	return release.Version.CrcVersion.GreaterThan(currentVersion), release.Version.CrcVersion.String(), downloadLink(release), nil
+}
+
+func downloadLink(release *crcversion.CrcReleaseInfo) string {
+	if link, ok := release.Links[runtime.GOOS]; ok {
+		return link
+	}
+	return constants.CrcLandingPageURL
 }
 
 const startTemplate = `Started the OpenShift cluster.
