@@ -37,9 +37,14 @@ const (
 )
 
 type CrcReleaseInfo struct {
-	Version struct {
-		LatestVersion string `json:"crcVersion"`
-	}
+	Version Version           `json:"version"`
+	Links   map[string]string `json:"links"`
+}
+
+type Version struct {
+	CrcVersion       *semver.Version `json:"crcVersion"`
+	GitSha           string          `json:"gitSha"`
+	OpenshiftVersion string          `json:"openshiftVersion"`
 }
 
 func GetCRCVersion() string {
@@ -79,7 +84,6 @@ func IsMsiBuild() bool {
 }
 
 func getCRCLatestVersionFromMirror() (*semver.Version, error) {
-	var releaseInfo CrcReleaseInfo
 	client := &http.Client{
 		Timeout: 5 * time.Second,
 	}
@@ -88,22 +92,22 @@ func getCRCLatestVersionFromMirror() (*semver.Version, error) {
 		return nil, err
 	}
 	defer response.Body.Close()
+
 	if response.StatusCode != 200 {
 		return nil, fmt.Errorf("HTTP error: %s: %d", response.Status, response.StatusCode)
 	}
+
 	releaseMetaData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal(releaseMetaData, &releaseInfo)
-	if err != nil {
+
+	var releaseInfo CrcReleaseInfo
+	if err := json.Unmarshal(releaseMetaData, &releaseInfo); err != nil {
 		return nil, fmt.Errorf("Error unmarshaling JSON metadata: %v", err)
 	}
-	version, err := semver.NewVersion(releaseInfo.Version.LatestVersion)
-	if err != nil {
-		return nil, err
-	}
-	return version, nil
+
+	return releaseInfo.Version.CrcVersion, nil
 }
 
 func NewVersionAvailable() (bool, string, error) {
