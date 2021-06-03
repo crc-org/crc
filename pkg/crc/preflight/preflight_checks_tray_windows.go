@@ -102,3 +102,25 @@ func checkTrayVersion() bool {
 	logging.Debugf("Got tray version: %s", strings.TrimSpace(stdOut))
 	return strings.TrimSpace(stdOut) == version.GetCRCWindowsTrayVersion()
 }
+
+func checkIfTrayRunning() error {
+	cmd := fmt.Sprintf("Get-Process -Name %s",
+		strings.TrimSuffix(constants.TrayExecutableName, filepath.Ext(constants.TrayExecutableName)))
+
+	_, stdErr, err := powershell.Execute(cmd)
+	if err != nil {
+		return err
+	}
+	if strings.TrimSpace(stdErr) != "" {
+		return fmt.Errorf("Tray not running: %s", stdErr)
+	}
+	return nil
+}
+
+func startTray() error {
+	cmd := fmt.Sprintf(`Start-Process -FilePath "%s"`, constants.TrayExecutablePath)
+	if _, _, err := powershell.Execute(cmd); err != nil {
+		return fmt.Errorf("Failed to start tray process: %w", err)
+	}
+	return nil
+}
