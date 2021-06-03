@@ -111,6 +111,15 @@ var traySetupChecks = []Check{
 
 		labels: labels{Os: Windows, Tray: Enabled},
 	},
+	{
+		checkDescription: "Checking if tray is running",
+		check:            checkIfTrayRunning,
+		fixDescription:   "Starting CodeReady Containers tray",
+		fix:              startTray,
+		flags:            SetupOnly,
+
+		labels: labels{Os: Windows, Tray: Enabled},
+	},
 }
 
 var vsockChecks = []Check{
