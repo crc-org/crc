@@ -70,6 +70,17 @@
                     <RegistryValue Root="HKCU" Key="Software\Red Hat\CodeReady Containers" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
                 </Component>
             </Directory>
+            <Directory Id="ProgramMenuFolder">
+                <Component Id="StartMenuEntry" Guid="*">
+                    <Shortcut Id="TrayStartMenuEntry" 
+                        Name="CodeReady Containers"
+                        Target="[#CrcTray]"
+                        Icon="crcicon.ico"
+                        WorkingDirectory="AppDataFolder"/>
+                    <RemoveFile Id="RemoveStartMenuEntry" Name="CodeReady Containers" On="uninstall"/>
+                    <RegistryValue Root="HKCU" Key="Software\Red Hat\CodeReady Containers" Name="startmenu" Type="integer" Value="1" KeyPath="yes"/>
+                </Component>
+            </Directory>
         </Directory>
         <SetProperty Action="CAJoinBundle"  Id="JoinBundle"  Value='"[WindowsFolder]\System32\cmd.exe" /c cd "[INSTALLDIR]" &amp;&amp; copy /b $(var.crcBundlePart0)+$(var.crcBundlePart1)+$(var.crcBundlePart2) $(var.crcBundleName)' Before="JoinBundle" Sequence="execute"/>
         <CustomAction Id="JoinBundle" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
@@ -93,6 +104,7 @@
             <ComponentRef Id="AdminHelper" />
             <ComponentRef Id="AddToPath"/>
             <ComponentRef Id="TrayStartup"/>
+            <ComponentRef Id="StartMenuEntry" />
         </Feature>
         <UI>
             <UIRef Id="WixUI_ErrorProgressText"/>
