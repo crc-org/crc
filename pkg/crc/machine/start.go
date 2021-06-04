@@ -290,10 +290,15 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	// Start network time synchronization if `CRC_DEBUG_ENABLE_STOP_NTP` is not set
-	if stopNtp, _ := strconv.ParseBool(os.Getenv("CRC_DEBUG_ENABLE_STOP_NTP")); !stopNtp {
-		logging.Info("Starting network time synchronization in CodeReady Containers VM")
-		if _, _, err := sshRunner.Run("sudo timedatectl set-ntp on"); err != nil {
-			return nil, errors.Wrap(err, "Failed to start network time synchronization")
+	if stopNtp, _ := strconv.ParseBool(os.Getenv("CRC_DEBUG_ENABLE_STOP_NTP")); stopNtp {
+		logging.Info("Stopping network time synchronization in CodeReady Containers VM")
+		if _, _, err := sshRunner.RunPrivileged("Turning off the ntp server", "timedatectl set-ntp off"); err != nil {
+			return nil, errors.Wrap(err, "Failed to stop network time synchronization")
+		}
+		logging.Info("Setting clock to host clock (UTC timezone)")
+		dateCmd := fmt.Sprintf("date -s '%s'", time.Now().Format(time.UnixDate))
+		if _, _, err := sshRunner.RunPrivileged("Setting clock same as host", dateCmd); err != nil {
+			return nil, errors.Wrap(err, "Failed to set clock to same as host")
 		}
 	}
 
