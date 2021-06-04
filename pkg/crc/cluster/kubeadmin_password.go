@@ -49,7 +49,7 @@ func UpdateKubeAdminUserPassword(ocConfig oc.Config, newPassword string) error {
 	if err != nil {
 		return err
 	}
-	ok, err := compareHtpasswd(given, credentials)
+	ok, externals, err := compareHtpasswd(given, credentials)
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func UpdateKubeAdminUserPassword(ocConfig oc.Config, newPassword string) error {
 	}
 
 	logging.Infof("Changing the password for the kubeadmin user")
-	expected, err := getHtpasswd(credentials)
+	expected, err := getHtpasswd(credentials, externals)
 	if err != nil {
 		return err
 	}
@@ -126,8 +126,9 @@ func hashBcrypt(password string) (hash string, err error) {
 	return string(passwordBytes), nil
 }
 
-func getHtpasswd(credentials map[string]string) (string, error) {
+func getHtpasswd(credentials map[string]string, externals []string) (string, error) {
 	var ret []string
+	ret = append(ret, externals...)
 	for username, password := range credentials {
 		hash, err := hashBcrypt(password)
 		if err != nil {
@@ -139,13 +140,14 @@ func getHtpasswd(credentials map[string]string) (string, error) {
 }
 
 // source https://github.com/openshift/oauth-server/blob/04985077512fec241a5170074bf767c23592d7e7/pkg/authenticator/password/htpasswd/htpasswd.go
-func compareHtpasswd(given string, credentials map[string]string) (bool, error) {
+func compareHtpasswd(given string, credentials map[string]string) (bool, []string, error) {
 	decoded, err := base64.StdEncoding.DecodeString(given)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 	scanner := bufio.NewScanner(bytes.NewReader(decoded))
 
+	var externals []string
 	found := 0
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -161,19 +163,18 @@ func compareHtpasswd(given string, credentials map[string]string) (bool, error) 
 
 		if expectedPassword, ok := credentials[username]; ok {
 			ok, err := testBCryptPassword(expectedPassword, password)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				return false, nil
+			if err != nil || !ok {
+				continue
 			}
 			found++
+		} else {
+			externals = append(externals, line)
 		}
 	}
 	if found != len(credentials) {
-		return false, nil
+		return false, externals, nil
 	}
-	return true, nil
+	return true, externals, nil
 }
 
 func testBCryptPassword(password, hash string) (bool, error) {
