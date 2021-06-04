@@ -4,13 +4,15 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 	"github.com/segmentio/analytics-go"
 )
 
 func traits() analytics.Traits {
 	base := analytics.NewTraits().
-		Set("os", runtime.GOOS)
+		Set("os", runtime.GOOS).
+		Set("used_installer", version.IsMsiBuild())
 
 	releaseID, _, err := powershell.Execute(`(Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseId`)
 	if err != nil {

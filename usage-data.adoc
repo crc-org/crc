@@ -9,6 +9,7 @@ The following table describes the opt-in usage data collected by CodeReady Conta
 |*Install*         | Host OS                      |
 |                  | Host OS version              |
 |                  | CodeReady Containers version |
+|                  | Installed using installers   | true/false
 
 |*Setup*           | Error message                |
 |                  | Error type                   |
