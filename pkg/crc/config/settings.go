@@ -79,8 +79,12 @@ func RegisterSettings(cfg *Config) {
 		"Disable update check (true/false, default: false)")
 	cfg.AddSetting(ExperimentalFeatures, false, ValidateBool, SuccessfullyApplied,
 		"Enable experimental features (true/false, default: false)")
-	cfg.AddSetting(NetworkMode, string(defaultNetworkMode()), network.ValidateMode, network.SuccessfullyAppliedMode,
-		fmt.Sprintf("Network mode (%s or %s)", network.UserNetworkingMode, network.SystemNetworkingMode))
+
+	if !version.IsMacosInstallPathSet() {
+		cfg.AddSetting(NetworkMode, string(defaultNetworkMode()), network.ValidateMode, network.SuccessfullyAppliedMode,
+			fmt.Sprintf("Network mode (%s or %s)", network.UserNetworkingMode, network.SystemNetworkingMode))
+	}
+
 	cfg.AddSetting(HostNetworkAccess, false, validateHostNetworkAccess, SuccessfullyApplied,
 		"Allow TCP/IP connections from the CodeReady Containers VM to services running on the host (true/false, default: false)")
 	// System tray auto-start config
@@ -118,5 +122,8 @@ func defaultNetworkMode() network.Mode {
 }
 
 func GetNetworkMode(config Storage) network.Mode {
+	if version.IsMacosInstallPathSet() {
+		return network.UserNetworkingMode
+	}
 	return network.ParseMode(config.Get(NetworkMode).AsString())
 }
