@@ -16,13 +16,6 @@ import (
 
 var daemonBatchFileShortcutPath = filepath.Join(constants.StartupFolder, constants.DaemonBatchFileShortcutName)
 
-func checkIfTrayInstalled() error {
-	if os.FileExists(filepath.Join(constants.StartupFolder, constants.TrayShortcutName)) && checkTrayVersion() {
-		return nil
-	}
-	return fmt.Errorf("CodeReady Containers tray is not Installed")
-}
-
 func checkIfDaemonInstalled() error {
 	if os.FileExists(constants.DaemonBatchFilePath) || os.FileExists(constants.DaemonPSScriptPath) {
 		return fmt.Errorf("Daemon should not be installed")
@@ -31,38 +24,6 @@ func checkIfDaemonInstalled() error {
 		return fmt.Errorf("Daemon should not be installed")
 	}
 	return nil
-}
-
-func fixTrayInstalled() error {
-	/* Start the tray process and copy the executable to start-up folder
-	 * "$USERPROFILE\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
-	 */
-	_ = stopTray()
-
-	cmd := fmt.Sprintf(`New-Item -ItemType SymbolicLink -Path "%s" -Name "%s" -Value "%s"`,
-		constants.StartupFolder,
-		constants.TrayShortcutName,
-		constants.TrayExecutablePath,
-	)
-	if _, _, err := powershell.ExecuteAsAdmin("Create symlink to tray in start-up folder", cmd); err != nil {
-		return fmt.Errorf("Error trying to create symlink to tray in start-up folder: %w", err)
-	}
-	cmd = fmt.Sprintf(`Start-Process -FilePath "%s"`, constants.TrayExecutablePath)
-	if _, _, err := powershell.Execute(cmd); err != nil {
-		return fmt.Errorf("Failed to start tray process: %w", err)
-	}
-	return nil
-}
-
-func removeTray() error {
-	trayShortcutPath := filepath.Join(constants.StartupFolder, constants.TrayShortcutName)
-	_ = stopTray()
-	/* we changed the name of the tray executable to crc-tray.exe from tray-windows.exe
-	 * this tries to remove the old tray shortcut, can be removed after a  few releases
-	 */
-	_ = os.RemoveFileIfExists(filepath.Join(constants.StartupFolder, "tray-windows.lnk"))
-
-	return os.RemoveFileIfExists(trayShortcutPath)
 }
 
 func stopTray() error {

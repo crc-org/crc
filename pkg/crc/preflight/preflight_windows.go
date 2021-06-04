@@ -111,17 +111,6 @@ var traySetupChecks = []Check{
 
 		labels: labels{Os: Windows, Tray: Enabled},
 	},
-	{
-		checkDescription:   "Checking if tray is installed",
-		check:              checkIfTrayInstalled,
-		fixDescription:     "Installing CodeReady Containers tray",
-		fix:                fixTrayInstalled,
-		cleanupDescription: "Uninstalling tray if installed",
-		cleanup:            removeTray,
-		flags:              SetupOnly,
-
-		labels: labels{Os: Windows, Tray: Enabled},
-	},
 }
 
 var vsockChecks = []Check{
