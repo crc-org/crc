@@ -120,6 +120,13 @@ var traySetupChecks = []Check{
 
 		labels: labels{Os: Windows, Tray: Enabled},
 	},
+	{
+		cleanupDescription: "Stopping tray if running",
+		cleanup:            stopTray,
+		flags:              CleanUpOnly,
+
+		labels: labels{Os: Windows, Tray: Enabled},
+	},
 }
 
 var vsockChecks = []Check{
