@@ -46,6 +46,36 @@ For more information, see the following:
 . link:https://github.com/golang/go/wiki/Modules[Introduction to Go modules]
 . link:https://blog.golang.org/using-go-modules[Using Go modules]
 
+[[compiling-binaries]]
+== Compiling the CRC Binary
+
+In order to compile the crc executable for your local platform, run the following command:
+
+----
+$ make
+----
+
+By default, the above command will place the crc executable in the `$GOBIN` path.
+
+Run the following command to cross-compile the crc executable for many platforms:
+
+----
+$ make cross
+----
+
+*Note*: This command will output the cross-compiled crc executable(s) in the `out` directory by default:
+
+----
+$ tree out/
+out/
+├── linux-amd64
+│   └── crc
+├── macos-amd64
+│   └── crc
+└── windows-amd64
+    └── crc.exe
+----
+
 [[running-e2e-tests]]
 == Running e2e tests
 
@@ -71,7 +101,7 @@ To start e2e tests, run:
 $ make e2e
 ```
 
-===== How to run only a subset of all e2e tests
+==== How to run only a subset of all e2e tests
 
 Implicitly, all e2e tests for your operating system are executed. If you want to run only tests from one feature file, you have to override `GODOG_OPTS` environment variable. For example:
 
