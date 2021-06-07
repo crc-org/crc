@@ -9,6 +9,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/adminhelper"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
@@ -52,12 +53,45 @@ var hypervPreflightChecks = []Check{
 		labels: labels{Os: Windows},
 	},
 	{
+		configKeySuffix:  "check-crc-users-group-exists",
+		checkDescription: "Checking if crc-users group exists",
+		check: func() error {
+			_, _, err := powershell.Execute("Get-LocalGroup -Name crc-users")
+			return err
+		},
+		fixDescription: "Creating crc-users group",
+		fix: func() error {
+			_, _, err := powershell.ExecuteAsAdmin("create crc-users group", "New-LocalGroup -Name crc-users")
+			return err
+		},
+		labels: labels{Os: Windows},
+	},
+	{
 		configKeySuffix:  "check-user-in-hyperv-group",
-		checkDescription: "Checking if user is a member of the Hyper-V Administrators group",
-		check:            checkIfUserPartOfHyperVAdmins,
-		fixDescription:   "Adding user to the Hyper-V Administrators group",
-		fix:              fixUserPartOfHyperVAdmins,
-
+		checkDescription: "Checking if current user is in Hyper-V group and crc-users group",
+		check: func() error {
+			if err := adminHelperGroup.check(); err != nil {
+				return err
+			}
+			return hypervGroup.check()
+		},
+		fixDescription: "Adding current user to group",
+		fix: func() error {
+			m := crcerrors.MultiError{}
+			if err := adminHelperGroup.check(); err != nil {
+				m.Collect(adminHelperGroup.fix())
+			}
+			if err := hypervGroup.check(); err != nil {
+				m.Collect(hypervGroup.fix())
+			}
+			if len(m.Errors) == 0 {
+				return nil
+			}
+			if m.Errors[0] == errReboot {
+				return errReboot
+			}
+			return m
+		},
 		labels: labels{Os: Windows},
 	},
 	{
@@ -145,38 +179,28 @@ var vsockChecks = []Check{
 	},
 }
 
+var errReboot = errors.New("Please reboot your system and run 'crc setup' to complete the setup process")
+
+var adminHelperGroup = Check{
+	check: func() error {
+		_, _, err := powershell.Execute(fmt.Sprintf("Get-LocalGroupMember -Name crc-users -Member '%s'", os.Getenv("USERNAME")))
+		return err
+	},
+	fix: func() error {
+		_, _, err := powershell.ExecuteAsAdmin("adding current user to crc-users group", fmt.Sprintf("Add-LocalGroupMember -Group crc-users -Member '%s'", os.Getenv("USERNAME")))
+		if err != nil {
+			return err
+		}
+		return errReboot
+	},
+}
+
+var hypervGroup = Check{
+	check: checkIfUserPartOfHyperVAdmins,
+	fix:   fixUserPartOfHyperVAdmins,
+}
+
 var adminHelperChecks = []Check{
-	{
-		configKeySuffix:  "check-crc-users-group-exists",
-		checkDescription: "Checking if crc-users group exists",
-		check: func() error {
-			_, _, err := powershell.Execute("Get-LocalGroup -Name crc-users")
-			return err
-		},
-		fixDescription: "Creating crc-users group",
-		fix: func() error {
-			_, _, err := powershell.ExecuteAsAdmin("create crc-users group", "New-LocalGroup -Name crc-users")
-			return err
-		},
-		labels: labels{Os: Windows},
-	},
-	{
-		configKeySuffix:  "check-user-in-crc-users-group",
-		checkDescription: "Checking if current user is in crc-users group",
-		check: func() error {
-			_, _, err := powershell.Execute(fmt.Sprintf("Get-LocalGroupMember -Name crc-users -Member '%s'", os.Getenv("USERNAME")))
-			return err
-		},
-		fixDescription: "Adding current user to crc-users group",
-		fix: func() error {
-			_, _, err := powershell.ExecuteAsAdmin("adding current user to crc-users group", fmt.Sprintf("Add-LocalGroupMember -Group crc-users -Member '%s'", os.Getenv("USERNAME")))
-			if err != nil {
-				return err
-			}
-			return errors.New("Please reboot your system and run 'crc setup' to complete the setup process")
-		},
-		labels: labels{Os: Windows},
-	},
 	{
 		configKeySuffix:  "check-admin-helper-daemon-installed",
 		checkDescription: "Checking if admin-helper daemon is installed",
@@ -266,8 +290,8 @@ func getAllPreflightChecks() []Check {
 func getChecks() []Check {
 	checks := []Check{}
 	checks = append(checks, genericPreflightChecks...)
-	checks = append(checks, adminHelperChecks...)
 	checks = append(checks, hypervPreflightChecks...)
+	checks = append(checks, adminHelperChecks...)
 	checks = append(checks, vsockChecks...)
 	checks = append(checks, traySetupChecks...)
 	checks = append(checks, bundleCheck)
