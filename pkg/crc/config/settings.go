@@ -108,6 +108,9 @@ func RegisterSettings(cfg *Config) {
 }
 
 func defaultNetworkMode() network.Mode {
+	if runtime.GOOS == "windows" && version.IsMsiBuild() {
+		return network.UserNetworkingMode
+	}
 	if runtime.GOOS == "darwin" && version.IsMacosInstallPathSet() {
 		return network.UserNetworkingMode
 	}
