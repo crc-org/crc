@@ -299,6 +299,9 @@ func checkDaemonStarted() error {
 }
 
 func daemonStartedErrorMessage() string {
+	if crcversion.IsMsiBuild() {
+		return "Is CodeReady Containers tray application running? Cannot reach daemon API: %v"
+	}
 	if crcversion.IsMacosInstallPathSet() {
 		return "Is '/Applications/CodeReady Containers.app' running? Cannot reach daemon API: %v"
 	}
