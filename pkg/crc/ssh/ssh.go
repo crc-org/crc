@@ -44,6 +44,7 @@ func (runner *Runner) RunPrivate(cmd string, args ...string) (string, string, er
 }
 
 func (runner *Runner) RunPrivileged(reason string, cmdAndArgs ...string) (string, string, error) {
+	logging.Debugf("Using root access: %s", reason)
 	commandline := fmt.Sprintf("sudo %s", strings.Join(cmdAndArgs, " "))
 	return runner.runSSHCommand(commandline, false)
 }
