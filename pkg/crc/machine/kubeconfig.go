@@ -68,6 +68,41 @@ func writeKubeconfig(ip string, clusterConfig *types.ClusterConfig) error {
 	return clientcmd.WriteToFile(*cfg, kubeconfig)
 }
 
+func removeContextFromKubeconfig(clusterConfig *types.ClusterConfig) error {
+	kubeconfig := getGlobalKubeConfigPath()
+	cfg, err := clientcmd.LoadFromFile(kubeconfig)
+	if err != nil {
+		return err
+	}
+
+	host, err := hostname(clusterConfig.ClusterAPI)
+	if err != nil {
+		return err
+	}
+
+	// Remove the entry for crc cluster
+	delete(cfg.Clusters, host)
+
+	// Remove the entry for every context which
+	// link to api-crc-testing
+	for k, v := range cfg.Contexts {
+		if strings.Contains(v.Cluster, host) {
+			delete(cfg.Contexts, k)
+		}
+	}
+
+	// Remove entry for Users for following conditions
+	// - if name is developer
+	// - if name is kubeadmin
+	// - if name contains crc host
+	for auth := range cfg.AuthInfos {
+		if auth == "kubeadmin" || auth == "developer" || strings.Contains(auth, host) {
+			delete(cfg.AuthInfos, auth)
+		}
+	}
+	return clientcmd.WriteToFile(*cfg, kubeconfig)
+}
+
 func certificateAuthority(kubeconfigFile string) ([]byte, error) {
 	builtin, err := clientcmd.LoadFromFile(kubeconfigFile)
 	if err != nil {
@@ -131,7 +166,7 @@ func addContext(cfg *api.Config, ip string, clusterConfig *types.ClusterConfig, 
 	return nil
 }
 
-// getGlobalKubeConfigPath returns the path to the first entry in the KUBECONFIG environment variable
+// getGlobalKubeConfigPath returns the path to the last entry in the KUBECONFIG environment variable
 // or if KUBECONFIG is not set then $HOME/.kube/config
 func getGlobalKubeConfigPath() string {
 	pathList := filepath.SplitList(os.Getenv("KUBECONFIG"))
