@@ -2,6 +2,8 @@ package machine
 
 import (
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -36,4 +38,17 @@ func TestCertificateAuthority(t *testing.T) {
 	assert.NoError(t, err, "")
 	expectedString := "-----BEGIN CERTIFICATE-----\nMIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJKoZIhvcNAQELBQAwJjEkMCIGA1UE\nAwwbaW5ncmVzcy1vcGVyYXRvckAxNTk5OTkxMDc4MB4XDTIwMDkxMzA5NTgwOFoX\nDTIyMDkxMzA5NTgwOVowHTEbMBkGA1UEAwwSKi5hcHBzLWNyYy50ZXN0aW5nMIIB\nIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtClYnM1FYiH+wcYiGIUnLvNi\nzLWWjsqJrQ/4Snnu61HDaU5w3An9yDZojyaJdCmWUg6CKXDiCoJB+lxMFdyaolXU\ndohJ9vr2wt6iuNfshmtxUwiBhI9ZBsVhztWdu3cgnUcYW8KMyUmajiEyXD8Npvba\nZ4ifUsjAYE1LByZzPIkmBmKPnv0fFZu1ejgg7HuQlYmfN/pJHudWMvwZJ8b3Zhqn\nsA0cDsaCDU1SJk6cQvNJFgF38+IWNhJpiQlGfFwKkal64/RYcR9yv8/pMV+7jj1z\nBPI9yxbFgLuxLxlyS8Kxnz9ln/4V0ZB12qU3c6aM4Ew3uhYv8ZDSOnpTUSjrRwID\nAQABo3MwcTAOBgNVHQ8BAf8EBAMCBaAwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYD\nVR0TAQH/BAIwADAdBgNVHQ4EFgQUTtNCBUyuPpf4M4YhlYBqJhZGQYYwHQYDVR0R\nBBYwFIISKi5hcHBzLWNyYy50ZXN0aW5nMA0GCSqGSIb3DQEBCwUAA4IBAQBkGZiv\nBqqEDKUTiifFfTxQXJzO5OBBTUDqSntrknAw0sidPgn9A8a2gGdCr7mKEH16FQ7N\n1SpkjXWZghE/1pZTaS7JVcT6+Yuplfy5Reoim/Nlu8ulDDfBSSp9S9BO+Q/lFJdM\nomwyIu0sSXI79ColhLirDinEmyQMDHdmTJ+kJfctpSH27L4j5osJxtNSAEABmUgX\n1HQ7FYzrNmys5OcK9SlDn0vCyOTHyqBbxRnF6L9Ec2bU6KD0DvEBurBpAYGMc9ss\nBD0FXdHEPg7HP0Nep79jhe10IXGrghtep3D5jUjbj1I4DGSsQ8y4df2vo6IFd96A\nf0uUS/73sncN64gl\n-----END CERTIFICATE-----\n"
 	assert.Equal(t, expectedString, string(st), "")
+}
+
+func TestCleanKubeconfig(t *testing.T) {
+	dir, err := ioutil.TempDir("", "clean")
+	assert.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	assert.NoError(t, cleanKubeconfig(filepath.Join("testdata", "kubeconfig.in"), filepath.Join(dir, "kubeconfig")))
+	actual, err := ioutil.ReadFile(filepath.Join(dir, "kubeconfig"))
+	assert.NoError(t, err)
+	expected, err := ioutil.ReadFile(filepath.Join("testdata", "kubeconfig.out"))
+	assert.NoError(t, err)
+	assert.YAMLEq(t, string(expected), string(actual))
 }

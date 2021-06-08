@@ -142,3 +142,55 @@ func getGlobalKubeConfigPath() string {
 	}
 	return filepath.Join(constants.GetHomeDir(), ".kube", "config")
 }
+
+func cleanKubeconfig(input, output string) error {
+	cfg, err := clientcmd.LoadFromFile(input)
+	if err != nil {
+		return err
+	}
+
+	var clusterNames []string
+	for name, cluster := range cfg.Clusters {
+		if cluster.Server == fmt.Sprintf("https://api%s:6443", constants.ClusterDomain) {
+			clusterNames = append(clusterNames, name)
+		}
+	}
+	var contextNames []string
+	authNames := make(map[string]struct{})
+	for name, context := range cfg.Contexts {
+		if contains(clusterNames, context.Cluster) {
+			contextNames = append(contextNames, name)
+			authNames[context.AuthInfo] = struct{}{}
+		}
+	}
+	// keep auth if it is shared with other contexts
+	for _, context := range cfg.Contexts {
+		if !contains(clusterNames, context.Cluster) {
+			delete(authNames, context.AuthInfo)
+		}
+	}
+
+	for _, name := range clusterNames {
+		delete(cfg.Clusters, name)
+	}
+	for _, name := range contextNames {
+		delete(cfg.Contexts, name)
+		if cfg.CurrentContext == name {
+			cfg.CurrentContext = ""
+		}
+	}
+	for name := range authNames {
+		delete(cfg.AuthInfos, name)
+	}
+
+	return clientcmd.WriteToFile(*cfg, output)
+}
+
+func contains(arr []string, str string) bool {
+	for _, a := range arr {
+		if a == str {
+			return true
+		}
+	}
+	return false
+}
