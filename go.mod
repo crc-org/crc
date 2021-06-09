@@ -13,7 +13,7 @@ require (
 	github.com/code-ready/admin-helper v0.0.0-20210602075518-d22477037442
 	github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a
 	github.com/code-ready/gvisor-tap-vsock v0.0.0-20210308122700-d61f9aac135c
-	github.com/code-ready/machine v0.0.0-20210122113819-281ccfbb4566
+	github.com/code-ready/machine v0.0.0-20210616065635-eff475d32b9a
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/go-units v0.4.0

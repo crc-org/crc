@@ -149,8 +149,8 @@ github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a h1:VOQmCj9Y8p
 github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a/go.mod h1:ZPZUcYGpv/FQGnwakUuhiHP9x/IIcU2SKbn8xPe4ROc=
 github.com/code-ready/gvisor-tap-vsock v0.0.0-20210308122700-d61f9aac135c h1:UOg6w7Uv5hWvFVABjJpawCEmAK99vG96SozUaulqVCk=
 github.com/code-ready/gvisor-tap-vsock v0.0.0-20210308122700-d61f9aac135c/go.mod h1:DsNrkk0GUSTqt0E/4/GMvjqsP7ns++O/6YaJn/TDBVM=
-github.com/code-ready/machine v0.0.0-20210122113819-281ccfbb4566 h1:zBDinebc2kFq99UNTmLmTRfgxcxC6YieKQuXDRCljzw=
-github.com/code-ready/machine v0.0.0-20210122113819-281ccfbb4566/go.mod h1:4JgMqho7KuxFifYCIi7cKVmh4yA2l0QHOPftv9f5PNc=
+github.com/code-ready/machine v0.0.0-20210616065635-eff475d32b9a h1:LLL1mb5Nm1bghXXK9g0qJTkV8DqlttnyllEgCa92xdI=
+github.com/code-ready/machine v0.0.0-20210616065635-eff475d32b9a/go.mod h1:4JgMqho7KuxFifYCIi7cKVmh4yA2l0QHOPftv9f5PNc=
 github.com/containerd/cgroups v0.0.0-20190919134610-bf292b21730f/go.mod h1:OApqhQ4XNSNC13gXIwDjhOQxjWa/NxkwZXJ1EvqT0ko=
 github.com/containerd/cgroups v0.0.0-20201119153540-4cbc285b3327/go.mod h1:ZJeTFisyysqgcCdecO57Dj79RfL0LNeGiFUqLYQRYLE=
 github.com/containerd/console v0.0.0-20180822173158-c12b1e7919c1/go.mod h1:Tj/on1eG8kiEhd0+fhSDzsPAFESxzBBvdyEgyryXffw=
