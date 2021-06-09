@@ -121,6 +121,36 @@ func fixMachineDriverHyperKitInstalled(networkMode network.Mode) func() error {
 	}
 }
 
+func checkQcowToolInstalled() error {
+	if version.IsMacosInstallPathSet() {
+		return nil
+	}
+
+	qcowTool := cache.NewQcowToolCache()
+
+	logging.Debugf("Checking if %s is installed", qcowTool.GetExecutableName())
+	if !qcowTool.IsCached() {
+		return fmt.Errorf("%s executable is not cached", qcowTool.GetExecutableName())
+	}
+
+	return qcowTool.CheckVersion()
+}
+
+func fixQcowToolInstalled() error {
+	if version.IsMacosInstallPathSet() {
+		return nil
+	}
+	qcowTool := cache.NewQcowToolCache()
+
+	logging.Debugf("Installing %s", qcowTool.GetExecutableName())
+
+	if err := qcowTool.EnsureIsCached(); err != nil {
+		return fmt.Errorf("Unable to download %s : %v", qcowTool.GetExecutableName(), err)
+	}
+
+	return nil
+}
+
 func checkResolverFilePermissions() error {
 	return isUserHaveFileWritePermission(resolverFile)
 }

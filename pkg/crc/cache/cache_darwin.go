@@ -15,12 +15,21 @@ func NewMachineDriverHyperKitCache() *Cache {
 	return New(hyperkit.MachineDriverCommand, hyperkit.MachineDriverDownloadURL, constants.CrcBinDir, hyperkit.MachineDriverVersion, getHyperKitMachineDriverVersion)
 }
 
+func NewQcowToolCache() *Cache {
+	return New(hyperkit.QcowToolCommand, hyperkit.QcowToolDownloadURL, constants.CrcBinDir, hyperkit.QcowToolVersion, getQcowToolVersion)
+}
+
 func NewHyperKitCache() *Cache {
 	return New(hyperkit.HyperKitCommand, hyperkit.HyperKitDownloadURL, constants.CrcBinDir, hyperkit.HyperKitVersion, getHyperKitVersion)
 }
 
 func getHyperKitMachineDriverVersion(executablePath string) (string, error) {
 	return getVersionGeneric(executablePath, "version")
+}
+
+func getQcowToolVersion(executablePath string) (string, error) {
+	stdout, _, err := crcos.RunWithDefaultLocale(executablePath, "--version")
+	return strings.TrimSpace(stdout), err
 }
 
 /* This is very similar to cache.getVersionGeneric, except that it's reading from stderr instead of

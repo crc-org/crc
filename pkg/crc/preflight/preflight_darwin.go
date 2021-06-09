@@ -29,6 +29,15 @@ func hyperkitPreflightChecks(networkMode network.Mode) []Check {
 			labels: labels{Os: Darwin},
 		},
 		{
+			configKeySuffix:  "check-qcow-tool-installed",
+			checkDescription: "Checking if qcow-tool is installed",
+			check:            checkQcowToolInstalled,
+			fixDescription:   "Installing qcow-tool",
+			fix:              fixQcowToolInstalled,
+
+			labels: labels{Os: Darwin},
+		},
+		{
 			configKeySuffix:  "check-hyperkit-driver",
 			checkDescription: "Checking if crc-driver-hyperkit is installed",
 			check:            checkMachineDriverHyperKitInstalled(networkMode),
