@@ -84,21 +84,26 @@ func embedFiles(executablePath string, filenames []string) error {
 	return nil
 }
 
+type remoteFileInfo struct {
+	url         string
+	permissions os.FileMode
+}
+
 var (
-	dataFileUrls = map[string][]string{
+	dataFileUrls = map[string][]remoteFileInfo{
 		"darwin": {
-			hyperkit.MachineDriverDownloadURL,
-			hyperkit.HyperKitDownloadURL,
-			constants.GetCRCMacTrayDownloadURL(),
-			constants.GetAdminHelperURLForOs("darwin"),
+			{hyperkit.MachineDriverDownloadURL, 0755},
+			{hyperkit.HyperKitDownloadURL, 0755},
+			{constants.GetCRCMacTrayDownloadURL(), 0644},
+			{constants.GetAdminHelperURLForOs("darwin"), 0755},
 		},
 		"linux": {
-			libvirt.MachineDriverDownloadURL,
-			constants.GetAdminHelperURLForOs("linux"),
+			{libvirt.MachineDriverDownloadURL, 0755},
+			{constants.GetAdminHelperURLForOs("linux"), 0755},
 		},
 		"windows": {
-			constants.GetAdminHelperURLForOs("windows"),
-			constants.GetCRCWindowsTrayDownloadURL(),
+			{constants.GetAdminHelperURLForOs("windows"), 0755},
+			{constants.GetCRCWindowsTrayDownloadURL(), 0644},
 		},
 	}
 )
@@ -106,8 +111,8 @@ var (
 func downloadDataFiles(goos string, destDir string) ([]string, error) {
 	downloadedFiles := []string{}
 	downloads := dataFileUrls[goos]
-	for _, url := range downloads {
-		filename, err := download.Download(url, destDir, 0644)
+	for _, dl := range downloads {
+		filename, err := download.Download(dl.url, destDir, dl.permissions)
 		if err != nil {
 			return nil, err
 		}
