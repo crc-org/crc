@@ -9,6 +9,8 @@ const (
 	MachineDriverVersion = "0.13.0"
 	HyperKitCommand      = "hyperkit"
 	HyperKitVersion      = "v0.20200224-44-gb54460"
+	QcowToolCommand      = "qcow-tool"
+	QcowToolVersion      = "1.0.0"
 )
 
 var (
@@ -16,4 +18,5 @@ var (
 
 	HyperKitDownloadURL      = fmt.Sprintf("%s/%s", baseURL, HyperKitCommand)
 	MachineDriverDownloadURL = fmt.Sprintf("%s/%s", baseURL, MachineDriverCommand)
+	QcowToolDownloadURL      = fmt.Sprintf("%s/%s", baseURL, QcowToolCommand)
 )
