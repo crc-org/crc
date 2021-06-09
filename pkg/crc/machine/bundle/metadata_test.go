@@ -23,6 +23,7 @@ func jsonForBundleWithVersion(version, name string) string {
 	return fmt.Sprintf(`{
   "version": "%s",
   "type": "snc",
+  "name": "%s",
   "buildInfo": {
     "buildTime": "2020-10-26T04:48:26+00:00",
     "openshiftInstallerVersion": "./openshift-install v4.6.0\nbuilt from commit ebdbda57fc18d3b73e69f0f2cc499ddfca7e6593\nrelease image registry.svc.ci.openshift.org/origin/release:4.5",
@@ -68,7 +69,7 @@ func jsonForBundleWithVersion(version, name string) string {
   "driverInfo": {
     "name": "libvirt"
   }
-}`, version, openshiftVersion(name), constants.OcExecutableName)
+}`, version, name, openshiftVersion(name), constants.OcExecutableName)
 }
 
 func openshiftVersion(name string) string {
@@ -79,6 +80,7 @@ func openshiftVersion(name string) string {
 var parsedReference = CrcBundleInfo{
 	Version: "1.0",
 	Type:    "snc",
+	Name:    "crc_libvirt_4.6.1",
 	BuildInfo: BuildInfo{
 		BuildTime:                 "2020-10-26T04:48:26+00:00",
 		OpenshiftInstallerVersion: "./openshift-install v4.6.0\nbuilt from commit ebdbda57fc18d3b73e69f0f2cc499ddfca7e6593\nrelease image registry.svc.ci.openshift.org/origin/release:4.5",
