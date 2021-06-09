@@ -12,6 +12,8 @@ const (
 )
 
 var (
-	HyperKitDownloadURL      = fmt.Sprintf("https://github.com/code-ready/machine-driver-hyperkit/releases/download/v%s/hyperkit", MachineDriverVersion)
-	MachineDriverDownloadURL = fmt.Sprintf("https://github.com/code-ready/machine-driver-hyperkit/releases/download/v%s/crc-driver-hyperkit", MachineDriverVersion)
+	baseURL = fmt.Sprintf("https://github.com/code-ready/machine-driver-hyperkit/releases/download/v%s", MachineDriverVersion)
+
+	HyperKitDownloadURL      = fmt.Sprintf("%s/%s", baseURL, HyperKitCommand)
+	MachineDriverDownloadURL = fmt.Sprintf("%s/%s", baseURL, MachineDriverCommand)
 )
