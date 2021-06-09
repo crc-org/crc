@@ -14,11 +14,13 @@ type Driver struct {
 	Cmdline       string
 	UUID          string
 	VpnKitSock    string
+	VpnKitUUID    string
 	VSockPorts    []string
 	VmlinuzPath   string
 	InitrdPath    string
 	KernelCmdLine string
 	HyperKitPath  string
+	QcowToolPath  string
 	VMNet         bool
 }
 

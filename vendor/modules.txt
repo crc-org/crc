@@ -51,7 +51,7 @@ github.com/code-ready/gvisor-tap-vsock/pkg/tap
 github.com/code-ready/gvisor-tap-vsock/pkg/transport
 github.com/code-ready/gvisor-tap-vsock/pkg/types
 github.com/code-ready/gvisor-tap-vsock/pkg/virtualnetwork
-# github.com/code-ready/machine v0.0.0-20210122113819-281ccfbb4566
+# github.com/code-ready/machine v0.0.0-20210616065635-eff475d32b9a
 ## explicit
 github.com/code-ready/machine/drivers/hyperkit
 github.com/code-ready/machine/drivers/libvirt
