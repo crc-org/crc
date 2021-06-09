@@ -30,6 +30,7 @@ sign "${binDir}/crc-driver-hyperkit"
 sign "${BASEDIR}/root/Applications/CodeReady Containers.app"
 
 codesign --verify --verbose "${binDir}/hyperkit"
+codesign --verify --verbose "${binDir}/qcow-tool"
 
 sudo chmod +sx "${binDir}/hyperkit" "${binDir}/crc-admin-helper-darwin" "${binDir}/crc-driver-hyperkit"
 

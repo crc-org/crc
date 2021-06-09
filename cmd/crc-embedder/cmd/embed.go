@@ -94,6 +94,7 @@ var (
 		"darwin": {
 			{hyperkit.MachineDriverDownloadURL, 0755},
 			{hyperkit.HyperKitDownloadURL, 0755},
+			{hyperkit.QcowToolDownloadURL, 0755},
 			{constants.GetCRCMacTrayDownloadURL(), 0644},
 			{constants.GetAdminHelperURLForOs("darwin"), 0755},
 		},
