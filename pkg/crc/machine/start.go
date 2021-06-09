@@ -41,8 +41,7 @@ import (
 
 const minimumMemoryForMonitoring = 14336
 
-func getCrcBundleInfo(bundlePath string) (*bundle.CrcBundleInfo, error) {
-	bundleName := filepath.Base(bundlePath)
+func getCrcBundleInfo(bundleName, bundlePath string) (*bundle.CrcBundleInfo, error) {
 	bundleInfo, err := bundle.Use(bundleName)
 	if err == nil {
 		logging.Infof("Loading bundle: %s...", bundleName)
@@ -150,6 +149,8 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Cannot determine if VM exists")
 	}
 
+	bundleName := bundle.GetBundleNameWithoutExtension(filepath.Base(startConfig.BundlePath))
+
 	if !exists {
 		telemetry.SetStartType(ctx, telemetry.CreationStartType)
 
@@ -159,7 +160,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			return nil, errors.Wrap(err, "Failed to ask for pull secret")
 		}
 
-		crcBundleMetadata, err := getCrcBundleInfo(startConfig.BundlePath)
+		crcBundleMetadata, err := getCrcBundleInfo(bundleName, startConfig.BundlePath)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error getting bundle metadata")
 		}
@@ -168,7 +169,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 		machineConfig := config.MachineConfig{
 			Name:            client.name,
-			BundleName:      filepath.Base(startConfig.BundlePath),
+			BundleName:      bundleName,
 			CPUs:            startConfig.CPUs,
 			Memory:          startConfig.Memory,
 			DiskSize:        startConfig.DiskSize,
@@ -197,13 +198,13 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if err != nil {
 		return nil, errors.Wrap(err, "Error loading bundle metadata")
 	}
-	bundleName := crcBundleMetadata.GetBundleName()
-	if bundleName != filepath.Base(startConfig.BundlePath) {
+	currentBundleName := crcBundleMetadata.GetBundleName()
+	if currentBundleName != bundleName {
 		logging.Debugf("Bundle '%s' was requested, but the existing VM is using '%s'",
-			filepath.Base(startConfig.BundlePath), bundleName)
+			bundleName, currentBundleName)
 		return nil, fmt.Errorf("Bundle '%s' was requested, but the existing VM is using '%s'",
-			filepath.Base(startConfig.BundlePath),
-			bundleName)
+			bundleName,
+			currentBundleName)
 	}
 	vmState, err := host.Driver.GetState()
 	if err != nil {
@@ -224,7 +225,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}, nil
 	}
 
-	if _, err := bundle.Use(bundleName); err != nil {
+	if _, err := bundle.Use(currentBundleName); err != nil {
 		return nil, err
 	}
 
