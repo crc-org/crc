@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,12 +15,10 @@ import (
 func TestGenerateBundle(t *testing.T) {
 	var b CrcBundleInfo
 	assert.NoError(t, json.Unmarshal([]byte(jsonForBundle("crc_4.7.1")), &b))
-	b.bundleName = "crc_4.7.1"
-	b.Storage.Files[0].Name = constants.OcExecutableName
 
 	tmpBundleDir, err := ioutil.TempDir("", "bundle_data")
 	assert.NoError(t, err)
-	b.cachedPath = filepath.Join(tmpBundleDir, b.bundleName)
+	b.cachedPath = filepath.Join(tmpBundleDir, b.Name)
 	defer os.RemoveAll(tmpBundleDir)
 
 	createDummyBundleFiles(t, &b)

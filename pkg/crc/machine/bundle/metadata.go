@@ -17,13 +17,14 @@ import (
 type CrcBundleInfo struct {
 	Version     string      `json:"version"`
 	Type        string      `json:"type"`
+	Name        string      `json:"name"`
 	BuildInfo   BuildInfo   `json:"buildInfo"`
 	ClusterInfo ClusterInfo `json:"clusterInfo"`
 	Nodes       []Node      `json:"nodes"`
 	Storage     Storage     `json:"storage"`
 	DriverInfo  DriverInfo  `json:"driverInfo"`
-	cachedPath  string
-	bundleName  string
+
+	cachedPath string
 }
 
 type BuildInfo struct {
@@ -89,7 +90,7 @@ func (bundle *CrcBundleInfo) resolvePath(filename string) string {
 }
 
 func (bundle *CrcBundleInfo) GetBundleName() string {
-	return bundle.bundleName
+	return bundle.Name
 }
 
 func (bundle *CrcBundleInfo) GetAPIHostname() string {

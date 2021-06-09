@@ -37,7 +37,7 @@ func NewCopier(srcBundle *CrcBundleInfo, basePath string, customBundleName strin
 		return nil, err
 	}
 
-	copier.copiedBundle.bundleName = customBundleName
+	copier.copiedBundle.Name = customBundleName
 	copier.copiedBundle.Type = "custom"
 	copier.srcBundle = srcBundle
 	copier.copiedBundle.cachedPath = bundlePath
@@ -114,7 +114,7 @@ func (copier *Copier) GenerateBundle(bundleName string) error {
 		return fmt.Errorf("error copying bundle metadata  %w", err)
 	}
 
-	logging.Infof("Compressing %s...", GetBundleNameWithoutExtension(copier.copiedBundle.bundleName))
+	logging.Infof("Compressing %s...", GetBundleNameWithoutExtension(copier.copiedBundle.Name))
 	return compress.Compress(copier.copiedBundle.cachedPath, fmt.Sprintf("%s%s", bundleName, bundleExtension))
 }
 
