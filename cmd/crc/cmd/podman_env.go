@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	rootless bool
+	root bool
 )
 
 var podmanEnvCmd = &cobra.Command{
@@ -37,9 +37,9 @@ func runPodmanEnv() error {
 		return err
 	}
 
-	socket := "/run/podman/podman.sock"
-	if rootless {
-		socket = "/run/user/1000/podman/podman.sock"
+	socket := "/run/user/1000/podman/podman.sock"
+	if root {
+		socket = "/run/podman/podman.sock"
 	}
 	fmt.Println(shell.GetPathEnvString(userShell, constants.CrcOcBinDir))
 	fmt.Println(shell.GetEnvString(userShell, "CONTAINER_SSHKEY", connectionDetails.SSHKeys[0]))
@@ -54,7 +54,7 @@ func runPodmanEnv() error {
 }
 
 func init() {
-	podmanEnvCmd.Flags().BoolVar(&rootless, "rootless", false, "Use rootless podman in the virtual machine")
+	podmanEnvCmd.Flags().BoolVar(&root, "root", false, "Use root podman in the virtual machine")
 	podmanEnvCmd.Flags().StringVar(&forceShell, "shell", "", "Set the environment for the specified shell: [fish, cmd, powershell, tcsh, bash, zsh]. Default is auto-detect.")
 	rootCmd.AddCommand(podmanEnvCmd)
 }
