@@ -87,7 +87,7 @@ func checkHyperVInstalled() error {
 
 //
 func fixHyperVInstalled() error {
-	enableHyperVCommand := `Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All`
+	enableHyperVCommand := `Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart`
 	_, _, err := powershell.ExecuteAsAdmin("enable Hyper-V", enableHyperVCommand)
 
 	if err != nil {
