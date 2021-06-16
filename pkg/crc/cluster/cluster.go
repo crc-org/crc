@@ -192,18 +192,51 @@ func RemovePullSecretFromCluster(ocConfig oc.Config, sshRunner *ssh.Runner) erro
 		return fmt.Errorf("Failed to remove Pull secret %w: %s", err, stderr)
 	}
 
-	cmdArgs = []string{"delete", "machineconfigs", "--all"}
-	_, stderr, err = ocConfig.RunOcCommand(cmdArgs...)
+	return nil
+}
+
+func RemoveOldRenderedMachineConfig(ocConfig oc.Config) error {
+	// This block (#L179-183) should be removed as soon as we start shipping with 4.8 bundle.
+	// This check is only make sure if there is any machineconfig resource or not because
+	// in 4.7 we disabled mco and also deleted all the machineconfig/machineconfig-pools.
+	// For 4.8 we don't disable mco and it does contain the machineconfigs.
+	stdout, stderr, err := ocConfig.RunOcCommand("get mc --sort-by=.metadata.creationTimestamp --no-headers -oname")
 	if err != nil {
-		return fmt.Errorf("Failed to remove machineconfigs %w: %s", err, stderr)
+		return fmt.Errorf("failed to get machineconfig resource %w: %s", err, stderr)
+	}
+	sortedMachineConfigsWithTime := strings.Split(stdout, "\n")
+	if len(sortedMachineConfigsWithTime) == 0 {
+		return nil
 	}
 
-	cmdArgs = []string{"delete", "machineconfigpools", "--all"}
-	_, stderr, err = ocConfig.RunOcCommand(cmdArgs...)
-	if err != nil {
-		return fmt.Errorf("Failed to remove machineconfigpools %w: %s", err, stderr)
+	// We need to make sure only old machine configs are deleted not the new one.
+	var (
+		renderedMaster []string
+		renderedWorker []string
+	)
+	for _, mc := range sortedMachineConfigsWithTime {
+		if strings.HasPrefix(mc, "rendered-master") {
+			renderedMaster = append(renderedMaster, mc)
+		}
+		if strings.HasPrefix(mc, "rendered-worker") {
+			renderedWorker = append(renderedWorker, mc)
+		}
 	}
 
+	var deleteRenderedMachineConfig string
+	if len(renderedMaster) > 0 {
+		deleteRenderedMachineConfig = strings.Join(renderedMaster[:len(renderedMaster)-1], " ")
+	}
+	if len(renderedWorker) > 0 {
+		deleteRenderedMachineConfig = fmt.Sprintf("%s %s", deleteRenderedMachineConfig, strings.Join(renderedWorker[:len(renderedWorker)-1], " "))
+	}
+
+	if deleteRenderedMachineConfig != "" {
+		_, stderr, err = ocConfig.RunOcCommand(fmt.Sprintf("delete %s", deleteRenderedMachineConfig))
+		if err != nil {
+			return fmt.Errorf("Failed to remove machineconfigpools %w: %s", err, stderr)
+		}
+	}
 	return nil
 }
 

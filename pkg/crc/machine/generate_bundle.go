@@ -28,6 +28,10 @@ func (client *client) GenerateBundle(forceStop bool) error {
 		return errors.Wrap(err, "Error removing pull secret from cluster")
 	}
 
+	if err := cluster.RemoveOldRenderedMachineConfig(ocConfig); err != nil {
+		return errors.Wrap(err, "Error removing old rendered machine configs")
+	}
+
 	// Stop the cluster
 	currentState, err := client.Stop()
 	if err != nil {
