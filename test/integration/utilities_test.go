@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 	"syscall"
@@ -26,15 +27,10 @@ type CRCBuilder struct {
 // NewCRCCommand returns a CRCBuilder for running CRC.
 func NewCRCCommand(args ...string) *CRCBuilder {
 	cmd := exec.Command("crc", args...)
+	cmd.Env = os.Environ()
 	return &CRCBuilder{
 		cmd: cmd,
 	}
-}
-
-// WithEnv sets the given environment and returns itself.
-func (b *CRCBuilder) WithEnv(env []string) *CRCBuilder {
-	b.cmd.Env = env
-	return b
 }
 
 // WithTimeout sets the given timeout and returns itself.
