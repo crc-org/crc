@@ -87,7 +87,12 @@ func GetCRCLatestVersionFromMirror() (*CrcReleaseInfo, error) {
 	client := &http.Client{
 		Timeout: 5 * time.Second,
 	}
-	response, err := client.Get(releaseInfoLink)
+	req, err := http.NewRequest(http.MethodGet, releaseInfoLink, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", fmt.Sprintf("crc/%s", crcVersion))
+	response, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
