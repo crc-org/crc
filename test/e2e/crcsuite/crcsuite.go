@@ -345,7 +345,7 @@ func StartCRCWithDefaultBundleSucceedsOrFails(expected string) error {
 	if !bundleEmbedded {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
-	cmd = fmt.Sprintf("crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
+	cmd = fmt.Sprintf("CRC_DISABLE_UPDATE_CHECK=true crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
@@ -359,14 +359,14 @@ func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(
 	if !bundleEmbedded {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
-	cmd = fmt.Sprintf("CRC_DEBUG_ENABLE_STOP_NTP=true crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
+	cmd = fmt.Sprintf("CRC_DISABLE_UPDATE_CHECK=true CRC_DEBUG_ENABLE_STOP_NTP=true crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
 }
 
 func StartCRCWithCustomBundleSucceedsOrFails(expected string) error {
-	cmd := fmt.Sprintf("crc start -p '%s' -b *.crcbundle --log-level debug", pullSecretFile)
+	cmd := fmt.Sprintf("CRC_DISABLE_UPDATE_CHECK=true crc start -p '%s' -b *.crcbundle --log-level debug", pullSecretFile)
 	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
 
@@ -377,7 +377,7 @@ func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, ex
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
 
-	cmd := fmt.Sprintf("crc start -n %s -p '%s' %s --log-level debug", nameserver, pullSecretFile, extraBundleArgs)
+	cmd := fmt.Sprintf("CRC_DISABLE_UPDATE_CHECK=true crc start -n %s -p '%s' %s --log-level debug", nameserver, pullSecretFile, extraBundleArgs)
 	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
 

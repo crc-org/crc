@@ -6,7 +6,7 @@ Feature: Basic test
 
     @darwin @linux @windows
     Scenario: CRC version
-        When executing "crc version" succeeds
+        When executing "CRC_DISABLE_UPDATE_CHECK=true crc version" succeeds
         Then stderr should be empty
         And stdout should contain "version:"
 
