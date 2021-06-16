@@ -17,9 +17,12 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	libMachineAPIClient, cleanup := createLibMachineClient()
 	defer cleanup()
 
-	_, err := libMachineAPIClient.Exists(client.name)
+	exists, err := libMachineAPIClient.Exists(client.name)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot check if machine exists")
+	}
+	if !exists {
+		return nil, errors.New("Machine doesn't exist")
 	}
 
 	host, err := libMachineAPIClient.Load(client.name)
