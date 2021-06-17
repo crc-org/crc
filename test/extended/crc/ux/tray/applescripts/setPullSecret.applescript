@@ -23,6 +23,7 @@ end paste_pullsecret_content
 
 on get_terminal()
 tell application "Terminal"
+        activate
         set crcTerminal to do script ("")
         return crcTerminal
 end tell

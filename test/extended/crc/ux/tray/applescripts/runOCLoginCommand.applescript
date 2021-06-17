@@ -7,8 +7,10 @@ try
         accept_insecure_connection(terminal)
         execute_command("clear", terminal)
         execute_command("oc whoami", terminal)
-        set result to command_output(whoAmICommandOutput)
-        return result
+        set user to command_output(whoAmICommandOutput)
+        # close terminal
+        close_terminal(terminal)
+        return user
 on error errMsg
         return errMsg
 end try
@@ -16,6 +18,7 @@ end run
 
 on get_terminal()
 tell application "Terminal"
+        activate
         set crcTerminal to do script ("")
         return crcTerminal
 end tell
@@ -29,10 +32,12 @@ end tell
 end execute_command
 
 on command_output(commandOutputLine)
+set result to ""
 tell application "Terminal"
         tell front window to set theText to contents of selected tab as text
-        return (paragraph commandOutputLine of theText)
+        set result to (paragraph commandOutputLine of theText)
 end tell
+return result
 end command_output
 
 on accept_insecure_connection(crcTerminal)
@@ -43,3 +48,12 @@ if insecure contains insecureConnectionQuestion
         execute_command("y", crcTerminal)
 end if
 end accept_insecure_connection
+
+on close_terminal(crcTerminal)
+tell application "Terminal"
+	do script ("") in crcTerminal
+        close window 1
+        delay 1
+        tell application "System Events" to keystroke return
+end tell
+end close_terminal 
