@@ -10,6 +10,7 @@ import (
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
 	"github.com/code-ready/crc/test/extended/os/applescript"
+	"github.com/code-ready/crc/test/extended/util"
 )
 
 const (
@@ -24,6 +25,8 @@ const (
 
 	bundleIdentifier string = "com.redhat.codeready.containers"
 	appPath          string = "/Applications/CodeReady Containers.app"
+
+	trayClusterStateTimeout = "90"
 )
 
 var (
@@ -114,11 +117,11 @@ func (a applescriptHandler) SetPullSecret() error {
 }
 
 func (a applescriptHandler) IsClusterRunning() error {
-	return checkTrayShowsFieldWithValue(fieldState, stateRunning)
+	return waitTrayShowsFieldWithValue(fieldState, stateRunning)
 }
 
 func (a applescriptHandler) IsClusterStopped() error {
-	return checkTrayShowsFieldWithValue(fieldState, stateStopped)
+	return waitTrayShowsFieldWithValue(fieldState, stateStopped)
 }
 
 func (a applescriptHandler) CopyOCLoginCommandAsKubeadmin() error {
@@ -154,6 +157,26 @@ func clickOnElement(elementName string, scriptName string) error {
 	}
 	return applescript.ExecuteApplescript(
 		scriptName, bundleIdentifier, element.AXIdentifier)
+}
+
+func waitTrayShowsFieldWithValue(field string, expectedValue string) error {
+	retryCount := 15
+	iterationDuration, extraDuration, err :=
+		util.GetRetryParametersFromTimeoutInSeconds(retryCount, trayClusterStateTimeout)
+	if err != nil {
+		return err
+	}
+	for i := 0; i < retryCount; i++ {
+		err := checkTrayShowsFieldWithValue(field, expectedValue)
+		if err == nil {
+			return nil
+		}
+		time.Sleep(iterationDuration)
+	}
+	if extraDuration != 0 {
+		time.Sleep(extraDuration)
+	}
+	return fmt.Errorf("Tray did not showed %s ", expectedValue)
 }
 
 func checkTrayShowsFieldWithValue(field string, expectedValue string) error {
