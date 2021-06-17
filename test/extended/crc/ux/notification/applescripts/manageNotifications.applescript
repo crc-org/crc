@@ -10,14 +10,17 @@ set os_version to system attribute "sys1"
 
 -- notifications should be visible to perform actions 
 if not is_notificationmenu_visible() then
-	open_notifications(os_version)
+	click_notifications(os_version)
 end if
 
 -- handle action
 if action = action_get then
-	get_notification(os_version)
+	set notification to get_notification(os_version)
+    click_notifications(os_version)
+    return notification
 else if action = action_clear then
 	clear_notifications(os_version)
+	click_notifications(os_version)
 else 
 	error "not supported action"
 end if
@@ -37,7 +40,7 @@ else
 end if 
 end get_systemmenu_controller
 
-on open_notifications(os_major_version)
+on click_notifications(os_major_version)
 set systemmenu_controler to get_systemmenu_controller(os_major_version)
 tell application "System Events"
 	tell (first application process whose bundle identifier is systemmenu_controler)
@@ -45,7 +48,7 @@ tell application "System Events"
                 delay 0.25
     	end tell
 end tell  
-end open_notifications
+end click_notifications
 
 on is_notificationmenu_visible() 
 try
@@ -87,7 +90,11 @@ try
 	tell application "System Events"
 		tell (first application process whose bundle identifier is "com.apple.notificationcenterui")
 			tell UI Element 1 of row 3 of table 1 of scroll area 1 of window 1
-				return value of static text 5
+				if (value of static text 4) as string is not equal to "" then
+                    return value of static text 4
+                else
+                    return value of static text 5
+                end if
 			end tell
 		end tell
 	end tell
