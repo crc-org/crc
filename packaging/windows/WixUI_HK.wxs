@@ -11,7 +11,7 @@
          <Property Id="WixUI_Mode" Value="InstallDir" />
          <Property Id="ARPNOMODIFY" Value="1" />
          <Property Id="ARPNOREPAIR" Value="1" />
-         <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="CodeReady Containers is installed in your computer. Run the command 'crc.exe setup' to setup your environment." />
+         <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="To finish installation of CodeReady Containers please restart you computer. After restart Open PowerShell or Command Prompt and run the command 'crc.exe setup' to setup your environment." />
 
          <DialogRef Id="BrowseDlg" />
          <DialogRef Id="DiskCostDlg" />

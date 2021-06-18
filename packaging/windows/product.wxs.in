@@ -113,6 +113,9 @@
             <Custom Action="RemoveParts"  After="JoinBundle" >NOT Installed AND NOT PATCH</Custom>
             <Custom Action="CreateCrcGroup" Before="ConfigureUsers" > NOT Installed AND NOT REMOVE~="ALL"</Custom>
             <Custom Action="RemoveCrcGroup" After="RemoveFolders" > Installed AND NOT PATCH AND REMOVE~="ALL"</Custom>
+            <Custom Action="InstallHyperv" After="RemoveParts" > NOT Installed AND NOT REMOVE~="ALL"</Custom>
+            <Custom Action="RemoveCrcGroupRollback" Before="CreateCrcGroup" > NOT Installed AND NOT REMOVE~="ALL"</Custom>
+            <ScheduleReboot After="InstallFinalize"> NOT Installed AND NOT REMOVE~="ALL"</ScheduleReboot>
         </InstallExecuteSequence>
         <Feature Id="DefaultFeature" Level="1">
             <ComponentRef Id="CrcBundlePart1"/>
