@@ -6,6 +6,7 @@ CRC_VERSION = 1.28.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 MACOS_INSTALL_PATH = /Applications/CodeReady Containers.app/Contents/Resources/
 CONTAINER_RUNTIME ?= podman
+GOLANGCI_LINT_VERSION = v1.39.0
 
 ifdef OKD_VERSION
     BUNDLE_VERSION = $(OKD_VERSION)
@@ -189,15 +190,18 @@ e2e:
 fmt:
 	@gofmt -l -w $(SOURCE_DIRS)
 
-$(GOPATH)/bin/golangci-lint:
-	pushd /tmp && GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.39.0 && popd
+.PHONY: golangci-lint
+golangci-lint:
+	@if $(GOPATH)/bin/golangci-lint version 2>&1 | grep -vq $(GOLANGCI_LINT_VERSION); then\
+		pushd /tmp && GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION) && popd; \
+	fi
 
 # Run golangci-lint against code
 .PHONY: lint cross-lint
-lint: $(GOPATH)/bin/golangci-lint
+lint: golangci-lint
 	$(GOPATH)/bin/golangci-lint run
 
-cross-lint: $(GOPATH)/bin/golangci-lint
+cross-lint: golangci-lint
 	GOOS=darwin $(GOPATH)/bin/golangci-lint run
 	GOOS=linux $(GOPATH)/bin/golangci-lint run
 	GOOS=windows $(GOPATH)/bin/golangci-lint run
