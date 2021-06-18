@@ -31,6 +31,8 @@
         <Condition Message="CodeReady Containers requires the Windows 10 Fall Creators Update (version 1709) or newer.">
             <![CDATA[Installed OR (CURRENTBUILD > MINIMUMBUILD)]]>
         </Condition>
+        <util:Group Id="HypervAdminsGroup" Name="Hyper-V Administrators" />
+        <util:Group Id="CrcUsersGroup" Name="crc-users" />
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
                 <Directory Id="INSTALLDIR" Name="CodeReady Containers">
@@ -52,6 +54,16 @@
                     <Component Id="CrcTray" Guid="*">
                         <File Id="CrcTray" Source="SourceDir\crc-tray.exe" KeyPath="yes" DiskId="3" />
                         <RemoveFile Id="RemoveInstallFiles" Name="*.*" On="uninstall" />
+                    </Component>
+                    <Component Id="AddUserToHypervAdmins" Guid="B5FFE50B-A2AC-4F81-8656-2060BA3E54AD" KeyPath="yes">
+                        <util:User Id="LogonUser" Domain="[%USERDOMAIN]" Name="[LogonUser]" CreateUser="no" RemoveOnUninstall="no">
+                            <util:GroupRef Id="HypervAdminsGroup" />
+                        </util:User>
+                    </Component>
+                    <Component Id="AddUserToCrcUsers" Guid="0C793EE7-109A-474B-9651-77E0A83BAF2D" KeyPath="yes">
+                        <util:User Id="LogonUser1" Domain="[%USERDOMAIN]" Name="[LogonUser]" CreateUser="no" RemoveOnUninstall="no">
+                            <util:GroupRef Id="CrcUsersGroup" />
+                        </util:User>
                     </Component>
                     <Component Id="AddToPath" Guid="09C1E713-44DE-44C3-BDAD-72BE10C10542">
                         <CreateFolder />
@@ -86,6 +98,11 @@
         <CustomAction Id="JoinBundle" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
         <SetProperty Action="CARemoveParts"  Id="RemoveParts"  Value='"[WindowsFolder]\System32\cmd.exe" /c cd "[INSTALLDIR]" &amp;&amp; del /f /q $(var.crcBundlePart0) $(var.crcBundlePart1) $(var.crcBundlePart2)' Before="RemoveParts" Sequence="execute"/>
         <CustomAction Id="RemoveParts" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
+        
+        <SetProperty Action="CACreateCrcUsersGroup"  Id="CreateCrcGroup"  Value='"[WindowsFolder]\System32\cmd.exe" /c net localgroup crc-users /comment:"Group for CodeReady Containers users" /add' Before="CreateCrcGroup" Sequence="execute"/>
+        <CustomAction Id="CreateCrcGroup" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
+        <SetProperty Action="CARemoveCrcUsersGroup"  Id="RemoveCrcGroup"  Value='"[WindowsFolder]\System32\cmd.exe" /c net localgroup crc-users /del' Before="RemoveCrcGroup" Sequence="execute"/>
+        <CustomAction Id="RemoveCrcGroup" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
 
         <util:CloseApplication Id = "TrayRunning" Description="Please exit CodeReady Containers from tray and run the installation again."
             Target="crc-tray.exe" RebootPrompt="no"
@@ -94,6 +111,8 @@
         <InstallExecuteSequence>
             <Custom Action="JoinBundle"  After="InstallFiles" >NOT Installed AND NOT PATCH</Custom>
             <Custom Action="RemoveParts"  After="JoinBundle" >NOT Installed AND NOT PATCH</Custom>
+            <Custom Action="CreateCrcGroup" Before="ConfigureUsers" > NOT Installed AND NOT REMOVE~="ALL"</Custom>
+            <Custom Action="RemoveCrcGroup" After="RemoveFolders" > Installed AND NOT PATCH AND REMOVE~="ALL"</Custom>
         </InstallExecuteSequence>
         <Feature Id="DefaultFeature" Level="1">
             <ComponentRef Id="CrcBundlePart1"/>
@@ -105,6 +124,8 @@
             <ComponentRef Id="AddToPath"/>
             <ComponentRef Id="TrayStartup"/>
             <ComponentRef Id="StartMenuEntry" />
+            <ComponentRef Id="AddUserToHypervAdmins" />
+            <ComponentRef Id="AddUserToCrcUsers" />   
         </Feature>
         <UI>
             <UIRef Id="WixUI_ErrorProgressText"/>
