@@ -246,7 +246,7 @@ embed_bundle: clean cross $(HOST_BUILD_DIR)/crc-embedder check_bundledir $(HYPER
 
 .PHONY: update-go-version
 update-go-version:
-	./update-go-version.sh 1.14
+	./update-go-version.sh 1.15
 
 .PHONY: goversioncheck
 goversioncheck:
