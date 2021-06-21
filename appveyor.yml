@@ -2,7 +2,7 @@ build: off
 clone_folder: c:\gopath\src\github.com\code-ready\crc
 environment:
   GOPATH: c:\gopath
-stack: go 1.14
+stack: go 1.15
 before_test:
   - choco install mingw
   - choco install make
@@ -12,7 +12,6 @@ before_test:
   - make cross
 test_script:
   - make test
-
 artifacts:
   - path: out\linux-amd64\crc
     name: crc linux executable
