@@ -14,5 +14,5 @@ go mod edit -go ${golang_base_version}
 sed -i "s,^FROM registry.svc.ci.openshift.org/openshift/release:golang-1\... AS builder\$,FROM registry.svc.ci.openshift.org/openshift/release:golang-${golang_base_version} AS builder," images/openshift-ci/Dockerfile
 sed -i "s/GOVERSION: .*\$/GOVERSION: \"${latest_version}\"/" .circleci/config.yml
 sed -i "s/^GO_VERSION=.*$/GO_VERSION=${latest_version}/" centos_ci.sh
-yq write --inplace ./appveyor.yml  stack "go ${golang_base_version}"
-yq write --inplace ./.travis.yml go[0] ${latest_version}
+yq eval --inplace ".stack = \"go ${golang_base_version}\"" ./appveyor.yml
+yq eval --inplace ".go[0] = \"${latest_version}\"" ./.travis.yml
