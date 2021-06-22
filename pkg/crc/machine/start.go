@@ -606,8 +606,9 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	}
 
 	logging.Info("Updating authorized keys...")
-	cmd := fmt.Sprintf("echo '%s' > /home/core/.ssh/authorized_keys; chmod 644 /home/core/.ssh/authorized_keys", publicKey)
-	_, _, err = sshRunner.Run(cmd)
+	// CopyData uses sudo and we need to use it
+	// because of https://bugzilla.redhat.com/show_bug.cgi?id=1956739
+	err = sshRunner.CopyData(publicKey, "/home/core/.ssh/authorized_keys", 0644)
 	if err != nil {
 		return err
 	}
