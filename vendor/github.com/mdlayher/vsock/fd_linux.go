@@ -129,8 +129,22 @@ type sysConnFD struct {
 
 // Blocking mode methods.
 
-func (cfd *sysConnFD) Connect(sa unix.Sockaddr) error      { return unix.Connect(cfd.fd, sa) }
 func (cfd *sysConnFD) Getsockname() (unix.Sockaddr, error) { return unix.Getsockname(cfd.fd) }
+func (cfd *sysConnFD) Connect(sa unix.Sockaddr) error {
+	var err error
+
+	for {
+		err = unix.Connect(cfd.fd, sa)
+		if err == unix.EINTR {
+			// Retry on interrupted syscalls.
+			continue
+		}
+
+		break
+	}
+
+	return err
+}
 
 // EarlyClose is a blocking version of Close, only used for cleanup before
 // entering non-blocking mode.
@@ -187,23 +201,34 @@ func socket() (int, error) {
 	//
 	// Explanation copied from netlink, courtesy of acln:
 	// https://github.com/mdlayher/netlink/pull/138.
-	fd, err := unix.Socket(unix.AF_VSOCK, unix.SOCK_STREAM|unix.SOCK_CLOEXEC, 0)
-	switch err {
-	case nil:
-		return fd, nil
-	case unix.EINVAL:
-		syscall.ForkLock.RLock()
-		defer syscall.ForkLock.RUnlock()
+	for {
+		fd, err := unix.Socket(unix.AF_VSOCK, unix.SOCK_STREAM|unix.SOCK_CLOEXEC, 0)
+		switch err {
+		case nil:
+			return fd, nil
+		case unix.EINTR:
+			// Retry on interrupted syscalls.
+			continue
+		case unix.EINVAL:
+			syscall.ForkLock.RLock()
 
-		fd, err = unix.Socket(unix.AF_VSOCK, unix.SOCK_STREAM, 0)
-		if err != nil {
+			fd, err = unix.Socket(unix.AF_VSOCK, unix.SOCK_STREAM, 0)
+			if err != nil {
+				syscall.ForkLock.RUnlock()
+				if err == unix.EINTR {
+					// Retry on interrupted syscalls.
+					continue
+				}
+
+				return 0, err
+			}
+			unix.CloseOnExec(fd)
+			syscall.ForkLock.RUnlock()
+
+			return fd, nil
+		default:
 			return 0, err
 		}
-		unix.CloseOnExec(fd)
-
-		return fd, nil
-	default:
-		return 0, err
 	}
 }
 
