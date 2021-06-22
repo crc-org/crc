@@ -63,6 +63,9 @@ github.com/code-ready/machine/libmachine/drivers/plugin/localbinary
 github.com/code-ready/machine/libmachine/drivers/rpc
 github.com/code-ready/machine/libmachine/state
 github.com/code-ready/machine/libmachine/version
+# github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
+## explicit
+github.com/coreos/go-systemd/activation
 # github.com/cucumber/gherkin-go/v11 v11.0.0
 github.com/cucumber/gherkin-go/v11
 # github.com/cucumber/godog v0.9.0
@@ -201,7 +204,8 @@ github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.13
 ## explicit
 github.com/mattn/go-runewidth
-# github.com/mdlayher/vsock v0.0.0-20200508120832-7ad3638b3fbc
+# github.com/mdlayher/vsock v0.0.0-20210303205602-10d591861736
+## explicit
 github.com/mdlayher/vsock
 # github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 ## explicit
