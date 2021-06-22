@@ -15,6 +15,7 @@ require (
 	github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a
 	github.com/code-ready/gvisor-tap-vsock v0.0.0-20210308122700-d61f9aac135c
 	github.com/code-ready/machine v0.0.0-20210616065635-eff475d32b9a
+	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/go-units v0.4.0
@@ -35,6 +36,7 @@ require (
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mattn/go-colorable v0.1.8
 	github.com/mattn/go-runewidth v0.0.13 // indirect
+	github.com/mdlayher/vsock v0.0.0-20210303205602-10d591861736
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/onsi/ginkgo v1.16.2
