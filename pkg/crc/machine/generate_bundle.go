@@ -25,7 +25,7 @@ func (client *client) GenerateBundle(forceStop bool) error {
 
 	ocConfig := oc.UseOCWithSSH(sshRunner)
 	if err := cluster.RemovePullSecretFromCluster(ocConfig, sshRunner); err != nil {
-		return errors.Wrap(err, "Error loading bundle metadata")
+		return errors.Wrap(err, "Error removing pull secret from cluster")
 	}
 
 	// Stop the cluster
