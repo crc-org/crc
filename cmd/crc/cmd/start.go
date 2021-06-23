@@ -52,10 +52,7 @@ var startCmd = &cobra.Command{
 		if err := viper.BindFlagSet(cmd.Flags()); err != nil {
 			return err
 		}
-		if err := renderStartResult(runStart(cmd.Context())); err != nil {
-			return err
-		}
-		return nil
+		return renderStartResult(runStart(cmd.Context()))
 	},
 }
 

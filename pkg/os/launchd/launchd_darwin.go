@@ -55,10 +55,7 @@ var (
 )
 
 func ensureLaunchAgentsDirExists() error {
-	if err := goos.MkdirAll(launchAgentsDir, 0700); err != nil {
-		return err
-	}
-	return nil
+	return goos.MkdirAll(launchAgentsDir, 0700)
 }
 
 func getPlistPath(label string) string {

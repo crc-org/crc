@@ -198,13 +198,9 @@ func (d *Driver) Create() error {
 		}
 	}
 
-	if err := cmd("Hyper-V\\Add-VMHardDiskDrive",
+	return cmd("Hyper-V\\Add-VMHardDiskDrive",
 		"-VMName", d.MachineName,
-		"-Path", quote(d.getDiskPath())); err != nil {
-		return err
-	}
-
-	return nil
+		"-Path", quote(d.getDiskPath()))
 }
 
 func (d *Driver) chooseVirtualSwitch() (string, error) {
