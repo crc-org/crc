@@ -22,7 +22,8 @@ func CopyFilesToTestDir() error {
 	}
 
 	l := strings.Split(cwd, string(filepath.Separator))
-	dataDirPieces := append(l[:len(l)-3], "testdata")
+	dataDirPieces := l[:len(l)-3]
+	dataDirPieces = append(dataDirPieces, "testdata")
 	var volume string
 	if runtime.GOOS == "windows" {
 		volume = filepath.VolumeName(cwd)

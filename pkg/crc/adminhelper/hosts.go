@@ -17,10 +17,7 @@ func UpdateHostsFile(instanceIP string, hostnames ...string) error {
 	if err := RemoveFromHostsFile(hostnames...); err != nil {
 		return err
 	}
-	if err := AddToHostsFile(instanceIP, hostnames...); err != nil {
-		return err
-	}
-	return nil
+	return AddToHostsFile(instanceIP, hostnames...)
 }
 
 func AddToHostsFile(instanceIP string, hostnames ...string) error {

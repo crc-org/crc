@@ -34,18 +34,10 @@ func (kp *KeyPair) WriteToFile(privateKeyPath string, publicKeyPath string) erro
 			return ErrUnableToWriteFile
 		}
 
-		if err := windowsChmod(v.File, 0600); err != nil {
+		if err := acl.Chmod(v.File, 0600); err != nil {
 			return err
 		}
 
-	}
-
-	return nil
-}
-
-func windowsChmod(filePath string, fileMode os.FileMode) error {
-	if err := acl.Chmod(filePath, fileMode); err != nil {
-		return err
 	}
 
 	return nil
