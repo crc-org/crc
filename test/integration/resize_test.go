@@ -44,7 +44,7 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 		})
 
 		It("stop CRC", func() {
-			Expect(RunCRCExpectSuccess("stop", "-f")).To(ContainSubstring("Stopped the OpenShift cluster"))
+			Expect(RunCRCExpectSuccess("stop", "-f")).To(MatchRegexp("[Ss]topped the OpenShift cluster"))
 		})
 
 	})
@@ -84,7 +84,7 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 		})
 
 		It("stop CRC", func() {
-			Expect(RunCRCExpectSuccess("stop", "-f")).To(ContainSubstring("Stopped the OpenShift cluster"))
+			Expect(RunCRCExpectSuccess("stop", "-f")).To(MatchRegexp("[Ss]topped the OpenShift cluster"))
 		})
 	})
 
