@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,19 +31,20 @@ type Client struct {
 	telemetryFilePath string
 }
 
-func NewClient(config *crcConfig.Config) (*Client, error) {
-	return newCustomClient(config,
+func NewClient(config *crcConfig.Config, transport http.RoundTripper) (*Client, error) {
+	return newCustomClient(config, transport,
 		filepath.Join(constants.GetHomeDir(), ".redhat", "anonymousId"),
 		analytics.DefaultEndpoint)
 }
 
-func newCustomClient(config *crcConfig.Config, telemetryFilePath, segmentEndpoint string) (*Client, error) {
+func newCustomClient(config *crcConfig.Config, transport http.RoundTripper, telemetryFilePath, segmentEndpoint string) (*Client, error) {
 	client, err := analytics.NewWithConfig(WriteKey, analytics.Config{
 		Endpoint: segmentEndpoint,
 		Logger:   &loggingAdapter{},
 		DefaultContext: &analytics.Context{
 			IP: net.IPv4(0, 0, 0, 0),
 		},
+		Transport: transport,
 	})
 	if err != nil {
 		return nil, err

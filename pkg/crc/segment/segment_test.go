@@ -88,7 +88,7 @@ func TestClientUploadWithConsentAndWithSerializableError(t *testing.T) {
 
 	uuidFile := filepath.Join(dir, "telemetry")
 
-	c, err := newCustomClient(config, uuidFile, server.URL)
+	c, err := newCustomClient(config, http.DefaultTransport, uuidFile, server.URL)
 	require.NoError(t, err)
 
 	require.NoError(t, c.UploadCmd(context.Background(), "start", time.Minute, crcErr.ToSerializableError(crcErr.VMNotExist)))
@@ -128,7 +128,7 @@ func TestClientUploadWithConsentAndWithoutSerializableError(t *testing.T) {
 	config, err := newTestConfig("yes")
 	require.NoError(t, err)
 
-	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
+	c, err := newCustomClient(config, http.DefaultTransport, filepath.Join(dir, "telemetry"), server.URL)
 	require.NoError(t, err)
 
 	require.NoError(t, c.UploadCmd(context.Background(), "start", time.Minute, errors.New("an error occurred")))
@@ -163,7 +163,7 @@ func TestClientUploadWithContext(t *testing.T) {
 	config, err := newTestConfig("yes")
 	require.NoError(t, err)
 
-	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
+	c, err := newCustomClient(config, http.DefaultTransport, filepath.Join(dir, "telemetry"), server.URL)
 	require.NoError(t, err)
 
 	ctx := telemetry.NewContext(context.Background())
@@ -193,7 +193,7 @@ func TestClientUploadWithOutConsent(t *testing.T) {
 	config, err := newTestConfig("no")
 	require.NoError(t, err)
 
-	c, err := newCustomClient(config, filepath.Join(dir, "telemetry"), server.URL)
+	c, err := newCustomClient(config, http.DefaultTransport, filepath.Join(dir, "telemetry"), server.URL)
 	require.NoError(t, err)
 
 	require.NoError(t, c.UploadCmd(context.Background(), "start", time.Second, errors.New("an error occurred")))
