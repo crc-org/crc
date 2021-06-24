@@ -113,6 +113,9 @@
         <SetProperty Action="CARemoveCrcUsersGroup"  Id="RemoveCrcGroup"  Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /del' Before="RemoveCrcGroup" Sequence="execute"/>
         <CustomAction Id="RemoveCrcGroup" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
 
+        <SetProperty Action="CAInstallHyperv" Id="InstallHyperv" Value='"[System64Folder]dism.exe" /online /enable-feature /featureName:microsoft-hyper-v-all /NoRestart /quiet' Before="InstallHyperv" Sequence="execute"/>
+        <CustomAction Id="InstallHyperv" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
+
         <util:CloseApplication Id = "TrayRunning" Description="Please exit CodeReady Containers from tray and run the installation again."
             Target="crc-tray.exe" RebootPrompt="no"
             PromptToContinue="yes" />
