@@ -145,7 +145,12 @@
         <UI>
             <UIRef Id="WixUI_ErrorProgressText"/>
             <!-- Define the installer UI -->
-            <UIRef Id="WixUI_HK"/>
+            <UIRef Id="WixUI_HK"/> 
+            <ProgressText Action="JoinBundle">Combining bundle parts</ProgressText>
+            <ProgressText Action="RemoveParts">Removing bundle parts after combining</ProgressText>
+            <ProgressText Action="CreateCrcGroup">Creating crc-users group</ProgressText>
+            <ProgressText Action="RemoveCrcGroup">Removing crc-users group</ProgressText>
+            <ProgressText Action="InstallHyperv">Installing Hyper-V</ProgressText>
         </UI>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
         <!-- this should help to propagate env var changes -->
