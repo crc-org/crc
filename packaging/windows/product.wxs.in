@@ -103,14 +103,14 @@
                 </Component>
             </Directory>
         </Directory>
-        <SetProperty Action="CAJoinBundle"  Id="JoinBundle"  Value='"[WindowsFolder]\System32\cmd.exe" /c cd "[INSTALLDIR]" &amp;&amp; copy /b $(var.crcBundlePart0)+$(var.crcBundlePart1)+$(var.crcBundlePart2) $(var.crcBundleName)' Before="JoinBundle" Sequence="execute"/>
+        <SetProperty Action="CAJoinBundle"  Id="JoinBundle"  Value='"[System64Folder]cmd.exe" /c cd "[INSTALLDIR]" &amp;&amp; copy /b $(var.crcBundlePart0)+$(var.crcBundlePart1)+$(var.crcBundlePart2) $(var.crcBundleName)' Before="JoinBundle" Sequence="execute"/>
         <CustomAction Id="JoinBundle" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
-        <SetProperty Action="CARemoveParts"  Id="RemoveParts"  Value='"[WindowsFolder]\System32\cmd.exe" /c cd "[INSTALLDIR]" &amp;&amp; del /f /q $(var.crcBundlePart0) $(var.crcBundlePart1) $(var.crcBundlePart2)' Before="RemoveParts" Sequence="execute"/>
+        <SetProperty Action="CARemoveParts"  Id="RemoveParts"  Value='"[System64Folder]cmd.exe" /c cd "[INSTALLDIR]" &amp;&amp; del /f /q $(var.crcBundlePart0) $(var.crcBundlePart1) $(var.crcBundlePart2)' Before="RemoveParts" Sequence="execute"/>
         <CustomAction Id="RemoveParts" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
         
-        <SetProperty Action="CACreateCrcUsersGroup"  Id="CreateCrcGroup"  Value='"[WindowsFolder]\System32\cmd.exe" /c net localgroup crc-users /comment:"Group for CodeReady Containers users" /add' Before="CreateCrcGroup" Sequence="execute"/>
+        <SetProperty Action="CACreateCrcUsersGroup"  Id="CreateCrcGroup"  Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /comment:"Group for CodeReady Containers users" /add' Before="CreateCrcGroup" Sequence="execute"/>
         <CustomAction Id="CreateCrcGroup" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
-        <SetProperty Action="CARemoveCrcUsersGroup"  Id="RemoveCrcGroup"  Value='"[WindowsFolder]\System32\cmd.exe" /c net localgroup crc-users /del' Before="RemoveCrcGroup" Sequence="execute"/>
+        <SetProperty Action="CARemoveCrcUsersGroup"  Id="RemoveCrcGroup"  Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /del' Before="RemoveCrcGroup" Sequence="execute"/>
         <CustomAction Id="RemoveCrcGroup" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
 
         <util:CloseApplication Id = "TrayRunning" Description="Please exit CodeReady Containers from tray and run the installation again."
