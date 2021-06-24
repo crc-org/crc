@@ -50,6 +50,15 @@
                     </Component>
                     <Component Id="AdminHelper" Guid="*">
                         <File Id="AdminHelper" Source="SourceDir\crc-admin-helper-windows.exe" KeyPath="yes" DiskId="3" />
+                        <ServiceInstall 
+                            Name="CodeReadyContainersAdminHelper"
+                            Description="Perform administrative tasks for the user"
+                            Arguments="daemon" 
+                            DisplayName="CodeReady Containers Admin Helper"
+                            ErrorControl="normal" Start="auto" Type="ownProcess" 
+                            />
+                        <ServiceControl Id="StartAdminHelperService" Name="CodeReadyContainersAdminHelper" Start='install' Stop='both' Remove='uninstall' />
+
                     </Component>
                     <Component Id="CrcTray" Guid="*">
                         <File Id="CrcTray" Source="SourceDir\crc-tray.exe" KeyPath="yes" DiskId="3" />
