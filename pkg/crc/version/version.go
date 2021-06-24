@@ -83,9 +83,10 @@ func IsMsiBuild() bool {
 	return msiBuild != "false"
 }
 
-func GetCRCLatestVersionFromMirror() (*CrcReleaseInfo, error) {
+func GetCRCLatestVersionFromMirror(transport http.RoundTripper) (*CrcReleaseInfo, error) {
 	client := &http.Client{
-		Timeout: 5 * time.Second,
+		Timeout:   5 * time.Second,
+		Transport: transport,
 	}
 	req, err := http.NewRequest(http.MethodGet, releaseInfoLink, nil)
 	if err != nil {

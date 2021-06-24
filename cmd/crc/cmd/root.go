@@ -2,9 +2,12 @@ package cmd
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -56,7 +59,7 @@ func init() {
 		logging.Fatal(err.Error())
 	}
 	// Initiate segment client
-	if segmentClient, err = segment.NewClient(config); err != nil {
+	if segmentClient, err = segment.NewClient(config, httpTransport()); err != nil {
 		logging.Fatal(err.Error())
 	}
 
@@ -205,5 +208,25 @@ func attachMiddleware(names []string, cmd *cobra.Command) {
 		fullCmd := strings.Join(append(names, cmd.Name()), " ")
 		src := cmd.RunE
 		cmd.RunE = executeWithLogging(fullCmd, src)
+	}
+}
+
+func httpTransport() http.RoundTripper {
+	if config.Get(crcConfig.ProxyCAFile).IsDefault {
+		return http.DefaultTransport
+	}
+	caCert, err := ioutil.ReadFile(config.Get(crcConfig.ProxyCAFile).AsString())
+	if err != nil {
+		logging.Errorf("Cannot read proxy-ca-file, using default http transport: %v", err)
+		return http.DefaultTransport
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	return &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		TLSClientConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+			RootCAs:    caCertPool,
+		},
 	}
 }
