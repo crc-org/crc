@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/sirupsen/logrus"
 	terminal "golang.org/x/term"
 )
@@ -18,10 +17,6 @@ var (
 )
 
 func OpenLogFile(path string) (*os.File, error) {
-	err := constants.EnsureBaseDirectoriesExist()
-	if err != nil {
-		return nil, err
-	}
 	logFile, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, err
