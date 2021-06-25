@@ -52,3 +52,13 @@ func TestCleanKubeconfig(t *testing.T) {
 	assert.NoError(t, err)
 	assert.YAMLEq(t, string(expected), string(actual))
 }
+
+func TestUpdateUserCaAndKeyToKubeconfig(t *testing.T) {
+	f, err := ioutil.TempFile("", "kubeconfig")
+	assert.NoError(t, err, "")
+	err = updateClientCrtAndKeyToKubeconfig([]byte("dummykey"), []byte("dummycert"), filepath.Join("testdata", "kubeconfig.in"), f.Name())
+	assert.NoError(t, err)
+	userClientCA, err := adminClientCertificate(f.Name())
+	assert.NoError(t, err)
+	assert.Equal(t, "dummycert", userClientCA)
+}
