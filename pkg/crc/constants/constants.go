@@ -7,6 +7,7 @@ import (
 	"runtime"
 
 	"github.com/YourFin/binappend"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
@@ -200,5 +201,11 @@ func GetCRCWindowsTrayDownloadURL() string {
 }
 
 func GetMsiInstallPath() string {
-	return filepath.Join(os.Getenv("PROGRAMFILES"), "CodeReady Containers")
+	// In case of error path will be empty string and upperr layer will handle
+	currentExecutablePath, err := os.Executable()
+	if err != nil {
+		logging.Errorf("Failed to find the MSI installation path: %v", err)
+		return ""
+	}
+	return filepath.Dir(currentExecutablePath)
 }
