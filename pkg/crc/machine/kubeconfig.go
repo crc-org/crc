@@ -27,6 +27,25 @@ const (
 	developerContext = "crc-developer"
 )
 
+func updateClientCrtAndKeyToKubeconfig(clientKey, clientCrt []byte, srcKubeconfigPath, destKubeconfigPath string) error {
+	cfg, err := clientcmd.LoadFromFile(srcKubeconfigPath)
+	if err != nil {
+		return err
+	}
+	var adminUserExist bool
+	for username, auth := range cfg.AuthInfos {
+		if username == "admin" {
+			adminUserExist = true
+			auth.ClientCertificateData = clientCrt
+			auth.ClientKeyData = clientKey
+		}
+	}
+	if !adminUserExist {
+		return fmt.Errorf("unable to find admin user in %s", srcKubeconfigPath)
+	}
+	return clientcmd.WriteToFile(*cfg, destKubeconfigPath)
+}
+
 func writeKubeconfig(ip string, clusterConfig *types.ClusterConfig) error {
 	kubeconfig := getGlobalKubeConfigPath()
 	dir := filepath.Dir(kubeconfig)
@@ -78,6 +97,19 @@ func certificateAuthority(kubeconfigFile string) ([]byte, error) {
 		return nil, fmt.Errorf("crc cluster not found in kubeconfig %s", kubeconfigFile)
 	}
 	return cluster.CertificateAuthorityData, nil
+}
+
+func adminClientCertificate(kubeconfigFile string) (string, error) {
+	builtin, err := clientcmd.LoadFromFile(kubeconfigFile)
+	if err != nil {
+		return "", err
+	}
+	users := builtin.AuthInfos
+	adminUser, ok := users["admin"]
+	if !ok {
+		return "", fmt.Errorf("admin user is not found in kubeconfig %s", kubeconfigFile)
+	}
+	return string(adminUser.ClientCertificateData), nil
 }
 
 // https://github.com/openshift/oc/blob/f94afb52dc8a3185b3b9eacaf92ec34d80f8708d/pkg/helpers/kubeconfig/smart_merge.go#L21

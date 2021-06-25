@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"context"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -11,11 +12,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/oc"
 	"github.com/code-ready/crc/pkg/crc/ssh"
+	crctls "github.com/code-ready/crc/pkg/crc/tls"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	"github.com/pborman/uuid"
 )
@@ -139,6 +142,39 @@ func EnsurePullSecretPresentInTheCluster(ocConfig oc.Config, pullSec PullSecretL
 	if err != nil {
 		return fmt.Errorf("Failed to add Pull secret %v: %s", err, stderr)
 	}
+	return nil
+}
+
+func EnsureGeneratedClientCAPresentInTheCluster(ocConfig oc.Config, sshRunner *ssh.Runner, selfSignedCACert *x509.Certificate, adminCert string) error {
+	selfSignedCAPem := crctls.CertToPem(selfSignedCACert)
+	if err := WaitForOpenshiftResource(ocConfig, "configmaps"); err != nil {
+		return err
+	}
+	clusterClientCA, stderr, err := ocConfig.RunOcCommand("get", "configmaps", "admin-kubeconfig-client-ca", "-n", "openshift-config", "-o", `jsonpath="{.data.ca-bundle\.crt}"`)
+	if err != nil {
+		return fmt.Errorf("Failed to get config map %v: %s", err, stderr)
+	}
+
+	ok, err := crctls.VerifyCertificateAgainstRootCA(clusterClientCA, adminCert)
+	if err != nil {
+		return err
+	}
+	if ok {
+		return nil
+	}
+
+	logging.Info("Updating root CA cert to admine-kubeconfig-client-ca configmap...")
+	jsonPath := fmt.Sprintf(`'{"data": {"ca-bundle.crt": %q}}'`, selfSignedCAPem)
+	cmdArgs := []string{"patch", "configmap", "admin-kubeconfig-client-ca",
+		"-n", "openshift-config", "--patch", jsonPath}
+	_, stderr, err = ocConfig.RunOcCommand(cmdArgs...)
+	if err != nil {
+		return fmt.Errorf("Failed to patch admin-kubeconfig-client-ca config map with new CA` %v: %s", err, stderr)
+	}
+	if err := sshRunner.CopyFile(constants.KubeconfigFilePath, ocConfig.KubeconfigPath, 0644); err != nil {
+		return fmt.Errorf("Failed to copy generated kubeconfig file to VM: %v", err)
+	}
+
 	return nil
 }
 

@@ -2,6 +2,8 @@ package machine
 
 import (
 	"context"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -26,9 +28,9 @@ import (
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/crc/systemd"
 	"github.com/code-ready/crc/pkg/crc/telemetry"
+	crctls "github.com/code-ready/crc/pkg/crc/tls"
 	"github.com/code-ready/crc/pkg/libmachine"
 	"github.com/code-ready/crc/pkg/libmachine/host"
-	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/state"
 	"github.com/docker/go-units"
@@ -447,6 +449,10 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 	}
 
+	if err := updateKubeconfig(ocConfig, sshRunner, crcBundleMetadata.GetKubeConfigPath()); err != nil {
+		return nil, errors.Wrap(err, "Failed to update kubeconfig file")
+	}
+
 	logging.Info("Starting OpenShift cluster... [waiting for the cluster to stabilize]")
 	if err := cluster.WaitForClusterStable(ctx, instanceIP, constants.KubeconfigFilePath); err != nil {
 		logging.Errorf("Cluster is not ready: %v", err)
@@ -547,10 +553,6 @@ func createHost(api libmachine.API, machineConfig config.MachineConfig) error {
 	if err := cluster.GenerateKubeAdminUserPassword(); err != nil {
 		return errors.Wrap(err, "Error generating new kubeadmin password")
 	}
-	if err := copyKubeconfig(machineConfig.Name, machineConfig); err != nil {
-		return errors.Wrap(err, "Error copying kubeconfig file")
-	}
-
 	if err := api.SetExists(vm.Name); err != nil {
 		return fmt.Errorf("Failed to record VM existence: %s", err)
 	}
@@ -614,21 +616,15 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	return err
 }
 
-func copyKubeconfig(name string, machineConfig config.MachineConfig) error {
+func copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey *rsa.PrivateKey, selfSignedCACert *x509.Certificate, srcKubeConfigPath, dstKubeConfigPath string) error {
 	if _, err := os.Stat(constants.KubeconfigFilePath); err == nil {
 		return nil
 	}
-
-	// Copy Kubeconfig file content from bundle extract path to machine directory.
-	// In our case it would be `constants.KubeconfigFilePath`
-	logging.Info("Copying kubeconfig file to instance dir...")
-	err := crcos.CopyFileContents(machineConfig.KubeConfig,
-		constants.KubeconfigFilePath,
-		0644)
+	clientKey, clientCert, err := crctls.GenerateClientCertificate(selfSignedCAKey, selfSignedCACert)
 	if err != nil {
-		return fmt.Errorf("Error copying kubeconfig file to instance dir: %v", err)
+		return err
 	}
-	return nil
+	return updateClientCrtAndKeyToKubeconfig(clientKey, clientCert, srcKubeConfigPath, dstKubeConfigPath)
 }
 
 func ensureKubeletAndCRIOAreConfiguredForProxy(sshRunner *crcssh.Runner, proxy *network.ProxyConfig, instanceIP string) (err error) {
@@ -710,6 +706,24 @@ func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Confi
 	_, _, err = ocConfig.RunOcCommand("apply", "-f", "/tmp/routes-controller.json")
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func updateKubeconfig(ocConfig oc.Config, sshRunner *crcssh.Runner, kubeconfigFilePath string) error {
+	selfSignedCAKey, selfSignedCACert, err := crctls.GetSelfSignedCA()
+	if err != nil {
+		return errors.Wrap(err, "Not able to generate root CA key and Cert")
+	}
+	if err := copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey, selfSignedCACert, kubeconfigFilePath, constants.KubeconfigFilePath); err != nil {
+		return errors.Wrapf(err, "Failed to copy kubeconfig file: %s", constants.KubeconfigFilePath)
+	}
+	adminClientCA, err := adminClientCertificate(constants.KubeconfigFilePath)
+	if err != nil {
+		return errors.Wrap(err, "Not able to get user CA")
+	}
+	if err := cluster.EnsureGeneratedClientCAPresentInTheCluster(ocConfig, sshRunner, selfSignedCACert, adminClientCA); err != nil {
+		return errors.Wrap(err, "Failed to update user CA to cluster")
 	}
 	return nil
 }
