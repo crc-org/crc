@@ -6,11 +6,10 @@ import (
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 )
 
 // WaitForClusterStable checks that the cluster is running a number of consecutive times
-func WaitForClusterStable(ctx context.Context, ip string, bundle *bundle.CrcBundleInfo) error {
+func WaitForClusterStable(ctx context.Context, ip string, kubeconfigFilePath string) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
@@ -24,7 +23,7 @@ func WaitForClusterStable(ctx context.Context, ip string, bundle *bundle.CrcBund
 	var count int // holds num of consecutive matches
 
 	for i := 0; i < retryCount; i++ {
-		status, err := GetClusterOperatorsStatus(ctx, ip, bundle)
+		status, err := GetClusterOperatorsStatus(ctx, ip, kubeconfigFilePath)
 		if err == nil {
 			// update counter for consecutive matches
 			if status.IsReady() {

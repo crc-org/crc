@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	clientset "github.com/openshift/client-go/config/clientset/versioned"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -80,8 +79,8 @@ func (status *Status) IsReady() bool {
 	return status.Available && !status.Progressing && !status.Degraded && !status.Disabled
 }
 
-func GetClusterOperatorsStatus(ctx context.Context, ip string, bundle *bundle.CrcBundleInfo) (*Status, error) {
-	lister, err := kubernetesClient(ip, bundle)
+func GetClusterOperatorsStatus(ctx context.Context, ip string, kubeconfigFilePath string) (*Status, error) {
+	lister, err := kubernetesClient(ip, kubeconfigFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -157,16 +156,16 @@ type operatorLister interface {
 	List(ctx context.Context, opts metav1.ListOptions) (*openshiftapi.ClusterOperatorList, error)
 }
 
-func kubernetesClient(ip string, bundle *bundle.CrcBundleInfo) (*clientset.Clientset, error) {
-	config, err := kubernetesClientConfiguration(ip, bundle)
+func kubernetesClient(ip string, kubeconfigFilePath string) (*clientset.Clientset, error) {
+	config, err := kubernetesClientConfiguration(ip, kubeconfigFilePath)
 	if err != nil {
 		return nil, err
 	}
 	return clientset.NewForConfig(config)
 }
 
-func kubernetesClientConfiguration(ip string, bundle *bundle.CrcBundleInfo) (*restclient.Config, error) {
-	config, err := clientcmd.BuildConfigFromFlags("", bundle.GetKubeConfigPath())
+func kubernetesClientConfiguration(ip string, kubeconfigFilePath string) (*restclient.Config, error) {
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigFilePath)
 	if err != nil {
 		return nil, err
 	}

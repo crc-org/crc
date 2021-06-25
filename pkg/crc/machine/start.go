@@ -448,8 +448,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	logging.Info("Starting OpenShift cluster... [waiting for the cluster to stabilize]")
-
-	if err := cluster.WaitForClusterStable(ctx, instanceIP, crcBundleMetadata); err != nil {
+	if err := cluster.WaitForClusterStable(ctx, instanceIP, constants.KubeconfigFilePath); err != nil {
 		logging.Errorf("Cluster is not ready: %v", err)
 	}
 
@@ -616,16 +615,15 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 }
 
 func copyKubeconfig(name string, machineConfig config.MachineConfig) error {
-	kubeConfigFilePath := filepath.Join(constants.MachineInstanceDir, name, "kubeconfig")
-	if _, err := os.Stat(kubeConfigFilePath); err == nil {
+	if _, err := os.Stat(constants.KubeconfigFilePath); err == nil {
 		return nil
 	}
 
-	// Copy Kubeconfig file from bundle extract path to machine directory.
-	// In our case it would be ~/.crc/machines/crc/
+	// Copy Kubeconfig file content from bundle extract path to machine directory.
+	// In our case it would be `constants.KubeconfigFilePath`
 	logging.Info("Copying kubeconfig file to instance dir...")
 	err := crcos.CopyFileContents(machineConfig.KubeConfig,
-		kubeConfigFilePath,
+		constants.KubeconfigFilePath,
 		0644)
 	if err != nil {
 		return fmt.Errorf("Error copying kubeconfig file to instance dir: %v", err)
