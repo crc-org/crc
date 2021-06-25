@@ -96,6 +96,7 @@ var (
 	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
 	DefaultBundlePath  = defaultBundlePath()
 	DaemonSocketPath   = filepath.Join(CrcBaseDir, "crc.sock")
+	KubeconfigFilePath = filepath.Join(MachineInstanceDir, DefaultName, "kubeconfig")
 )
 
 func defaultBundlePath() string {

@@ -55,7 +55,7 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	diskSize, diskUse := client.getDiskDetails(ip, crcBundleMetadata)
 	return &types.ClusterStatusResult{
 		CrcStatus:        state.Running,
-		OpenshiftStatus:  getOpenShiftStatus(context.Background(), ip, crcBundleMetadata),
+		OpenshiftStatus:  getOpenShiftStatus(context.Background(), ip),
 		OpenshiftVersion: crcBundleMetadata.GetOpenshiftVersion(),
 		DiskUse:          diskUse,
 		DiskSize:         diskSize,
@@ -82,8 +82,8 @@ func (client *client) getDiskDetails(ip string, bundle *bundle.CrcBundleInfo) (i
 	return disk.([]int64)[0], disk.([]int64)[1]
 }
 
-func getOpenShiftStatus(ctx context.Context, ip string, bundle *bundle.CrcBundleInfo) types.OpenshiftStatus {
-	status, err := cluster.GetClusterOperatorsStatus(ctx, ip, bundle)
+func getOpenShiftStatus(ctx context.Context, ip string) types.OpenshiftStatus {
+	status, err := cluster.GetClusterOperatorsStatus(ctx, ip, constants.KubeconfigFilePath)
 	if err != nil {
 		logging.Debugf("cannot get OpenShift status: %v", err)
 		return types.OpenshiftUnreachable
