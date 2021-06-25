@@ -31,7 +31,9 @@ func stopTray() error {
 	 * this tries to stop the old tray process, can be removed after a  few releases
 	 */
 	_, _, _ = powershell.Execute(`Stop-Process -Name tray-windows`)
-
+	if err := checkIfTrayRunning(); err != nil {
+		return nil
+	}
 	trayProcessName := strings.TrimSuffix(constants.TrayExecutableName, ".exe")
 	cmd := fmt.Sprintf(`Stop-Process -Name "%s"`, trayProcessName)
 	if _, _, err := powershell.Execute(cmd); err != nil {
