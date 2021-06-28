@@ -103,9 +103,9 @@
                 </Component>
             </Directory>
         </Directory>
-        <SetProperty Action="CAJoinBundle"  Id="JoinBundle"  Value='"[System64Folder]cmd.exe" /c cd "[INSTALLDIR]" &amp;&amp; copy /b $(var.crcBundlePart0)+$(var.crcBundlePart1)+$(var.crcBundlePart2) $(var.crcBundleName)' Before="JoinBundle" Sequence="execute"/>
+        <SetProperty Action="CAJoinBundle"  Id="JoinBundle"  Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; copy /b $(var.crcBundlePart0)+$(var.crcBundlePart1)+$(var.crcBundlePart2) $(var.crcBundleName)' Before="JoinBundle" Sequence="execute"/>
         <CustomAction Id="JoinBundle" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
-        <SetProperty Action="CARemoveParts"  Id="RemoveParts"  Value='"[System64Folder]cmd.exe" /c cd "[INSTALLDIR]" &amp;&amp; del /f /q $(var.crcBundlePart0) $(var.crcBundlePart1) $(var.crcBundlePart2)' Before="RemoveParts" Sequence="execute"/>
+        <SetProperty Action="CARemoveParts"  Id="RemoveParts"  Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; del /f /q $(var.crcBundlePart0) $(var.crcBundlePart1) $(var.crcBundlePart2)' Before="RemoveParts" Sequence="execute"/>
         <CustomAction Id="RemoveParts" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
         
         <SetProperty Action="CACreateCrcUsersGroup"  Id="CreateCrcGroup"  Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /comment:"Group for CodeReady Containers users" /add' Before="CreateCrcGroup" Sequence="execute"/>
