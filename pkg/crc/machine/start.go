@@ -272,7 +272,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	defer sshRunner.Close()
 
 	logging.Debug("Waiting until ssh is available")
-	if err := crcssh.WaitForSSH(ctx, sshRunner); err != nil {
+	if err := sshRunner.WaitForConnectivity(ctx, 300*time.Second); err != nil {
 		return nil, errors.Wrap(err, "Failed to connect to the CRC VM with SSH -- host might be unreachable")
 	}
 	logging.Info("CodeReady Containers VM is running")
