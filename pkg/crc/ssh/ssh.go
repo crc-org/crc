@@ -96,14 +96,14 @@ err     : %w\n`, command, err)
 	return string(stdout), string(stderr), nil
 }
 
-func WaitForSSH(ctx context.Context, sshRunner *Runner) error {
+func (runner *Runner) WaitForConnectivity(ctx context.Context, timeout time.Duration) error {
 	checkSSHConnectivity := func() error {
-		_, _, err := sshRunner.Run("exit 0")
+		_, _, err := runner.Run("exit 0")
 		if err != nil {
 			return &errors.RetriableError{Err: err}
 		}
 		return nil
 	}
 
-	return errors.RetryAfterWithContext(ctx, 300*time.Second, checkSSHConnectivity, time.Second)
+	return errors.RetryAfterWithContext(ctx, timeout, checkSSHConnectivity, time.Second)
 }
