@@ -64,6 +64,10 @@ var hypervPreflightChecks = []Check{
 			_, _, err := powershell.ExecuteAsAdmin("create crc-users group", "New-LocalGroup -Name crc-users")
 			return err
 		},
+		cleanup: func() error {
+			_, _, err := powershell.ExecuteAsAdmin("remove crc-users group", "Remove-LocalGroup -Name crc-users")
+			return err
+		},
 		labels: labels{Os: Windows},
 	},
 	{
