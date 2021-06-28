@@ -1,13 +1,16 @@
 package ssh
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
@@ -91,4 +94,16 @@ err     : %w\n`, command, err)
 	}
 
 	return string(stdout), string(stderr), nil
+}
+
+func WaitForSSH(ctx context.Context, sshRunner *Runner) error {
+	checkSSHConnectivity := func() error {
+		_, _, err := sshRunner.Run("exit 0")
+		if err != nil {
+			return &errors.RetriableError{Err: err}
+		}
+		return nil
+	}
+
+	return errors.RetryAfterWithContext(ctx, 300*time.Second, checkSSHConnectivity, time.Second)
 }

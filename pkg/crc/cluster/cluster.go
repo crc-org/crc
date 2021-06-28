@@ -23,18 +23,6 @@ import (
 // #nosec G101
 const vmPullSecretPath = "/var/lib/kubelet/config.json"
 
-func WaitForSSH(ctx context.Context, sshRunner *ssh.Runner) error {
-	checkSSHConnectivity := func() error {
-		_, _, err := sshRunner.Run("exit 0")
-		if err != nil {
-			return &errors.RetriableError{Err: err}
-		}
-		return nil
-	}
-
-	return errors.RetryAfterWithContext(ctx, 300*time.Second, checkSSHConnectivity, time.Second)
-}
-
 const (
 	KubeletServerCert = "/var/lib/kubelet/pki/kubelet-server-current.pem"
 	KubeletClientCert = "/var/lib/kubelet/pki/kubelet-client-current.pem"
