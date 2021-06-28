@@ -90,9 +90,9 @@ func EnsureSSHKeyPresentInTheCluster(ocConfig oc.Config, sshPublicKeyPath string
 	if err := WaitForOpenshiftResource(ocConfig, "machineconfigs"); err != nil {
 		return err
 	}
-	stdout, _, err := ocConfig.RunOcCommand("get", "machineconfigs", "99-master-ssh", "-o", `jsonpath='{.spec.config.passwd.users[0].sshAuthorizedKeys[0]}'`)
+	stdout, stderr, err := ocConfig.RunOcCommand("get", "machineconfigs", "99-master-ssh", "-o", `jsonpath='{.spec.config.passwd.users[0].sshAuthorizedKeys[0]}'`)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to get machine configs %v: %s", err, stderr)
 	}
 	if stdout == string(sshPublicKey) {
 		return nil
@@ -101,7 +101,7 @@ func EnsureSSHKeyPresentInTheCluster(ocConfig oc.Config, sshPublicKeyPath string
 	cmdArgs := []string{"patch", "machineconfig", "99-master-ssh", "-p",
 		fmt.Sprintf(`'{"spec": {"config": {"passwd": {"users": [{"name": "core", "sshAuthorizedKeys": ["%s"]}]}}}}'`, sshPublicKey),
 		"--type", "merge"}
-	_, stderr, err := ocConfig.RunOcCommand(cmdArgs...)
+	_, stderr, err = ocConfig.RunOcCommand(cmdArgs...)
 	if err != nil {
 		return fmt.Errorf("Failed to update ssh key %v: %s", err, stderr)
 	}
@@ -113,9 +113,9 @@ func EnsurePullSecretPresentInTheCluster(ocConfig oc.Config, pullSec PullSecretL
 		return err
 	}
 
-	stdout, _, err := ocConfig.RunOcCommandPrivate("get", "secret", "pull-secret", "-n", "openshift-config", "-o", `jsonpath="{['data']['\.dockerconfigjson']}"`)
+	stdout, stderr, err := ocConfig.RunOcCommandPrivate("get", "secret", "pull-secret", "-n", "openshift-config", "-o", `jsonpath="{['data']['\.dockerconfigjson']}"`)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to get pull secret %v: %s", err, stderr)
 	}
 	decoded, err := base64.StdEncoding.DecodeString(stdout)
 	if err != nil {
@@ -135,7 +135,7 @@ func EnsurePullSecretPresentInTheCluster(ocConfig oc.Config, pullSec PullSecretL
 		fmt.Sprintf(`'{"data":{".dockerconfigjson":"%s"}}'`, base64OfPullSec),
 		"-n", "openshift-config", "--type", "merge"}
 
-	_, stderr, err := ocConfig.RunOcCommandPrivate(cmdArgs...)
+	_, stderr, err = ocConfig.RunOcCommandPrivate(cmdArgs...)
 	if err != nil {
 		return fmt.Errorf("Failed to add Pull secret %v: %s", err, stderr)
 	}
@@ -176,9 +176,9 @@ func EnsureClusterIDIsNotEmpty(ocConfig oc.Config) error {
 		return err
 	}
 
-	stdout, _, err := ocConfig.RunOcCommand("get", "clusterversion", "version", "-o", `jsonpath="{['spec']['clusterID']}"`)
+	stdout, stderr, err := ocConfig.RunOcCommand("get", "clusterversion", "version", "-o", `jsonpath="{['spec']['clusterID']}"`)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to get clusterversion %v: %s", err, stderr)
 	}
 	if strings.TrimSpace(stdout) != "" {
 		return nil
@@ -189,7 +189,7 @@ func EnsureClusterIDIsNotEmpty(ocConfig oc.Config) error {
 	cmdArgs := []string{"patch", "clusterversion", "version", "-p",
 		fmt.Sprintf(`'{"spec":{"clusterID":"%s"}}'`, clusterID), "--type", "merge"}
 
-	_, stderr, err := ocConfig.RunOcCommand(cmdArgs...)
+	_, stderr, err = ocConfig.RunOcCommand(cmdArgs...)
 	if err != nil {
 		return fmt.Errorf("Failed to update cluster ID %v: %s", err, stderr)
 	}
@@ -307,8 +307,8 @@ func addProxyCACertToInstance(sshRunner *ssh.Runner, proxy *network.ProxyConfig)
 	if err := sshRunner.CopyData([]byte(proxy.ProxyCACert), "/etc/pki/ca-trust/source/anchors/openshift-config-user-ca-bundle.crt", 0600); err != nil {
 		return err
 	}
-	if _, _, err := sshRunner.Run("sudo update-ca-trust"); err != nil {
-		return err
+	if _, stderr, err := sshRunner.Run("sudo update-ca-trust"); err != nil {
+		return fmt.Errorf("Failed to run update-ca-trust  %v: %s", err, stderr)
 	}
 	return nil
 }
@@ -376,9 +376,9 @@ func DeleteOpenshiftAPIServerPods(ocConfig oc.Config) error {
 
 	deleteOpenshiftAPIServerPods := func() error {
 		cmdArgs := []string{"delete", "pod", "--all", "-n", "openshift-apiserver"}
-		_, _, err := ocConfig.WithFailFast().RunOcCommand(cmdArgs...)
+		_, stderr, err := ocConfig.WithFailFast().RunOcCommand(cmdArgs...)
 		if err != nil {
-			return &errors.RetriableError{Err: err}
+			return &errors.RetriableError{Err: fmt.Errorf("Failed to delete pod from openshift-apiserver namespace %v: %s", err, stderr)}
 		}
 		return nil
 	}
