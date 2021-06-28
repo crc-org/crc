@@ -3,7 +3,7 @@ package preflight
 import (
 	"errors"
 	"fmt"
-	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 
@@ -183,11 +183,19 @@ var errReboot = errors.New("Please reboot your system and run 'crc setup' to com
 
 var adminHelperGroup = Check{
 	check: func() error {
-		_, _, err := powershell.Execute(fmt.Sprintf("Get-LocalGroupMember -Name crc-users -Member '%s'", os.Getenv("USERNAME")))
+		user, err := user.Current()
+		if err != nil {
+			return err
+		}
+		_, _, err = powershell.Execute(fmt.Sprintf("Get-LocalGroupMember -Name crc-users -Member '%s'", user.Username))
 		return err
 	},
 	fix: func() error {
-		_, _, err := powershell.ExecuteAsAdmin("adding current user to crc-users group", fmt.Sprintf("Add-LocalGroupMember -Group crc-users -Member '%s'", os.Getenv("USERNAME")))
+		user, err := user.Current()
+		if err != nil {
+			return err
+		}
+		_, _, err = powershell.ExecuteAsAdmin("adding current user to crc-users group", fmt.Sprintf("Add-LocalGroupMember -Group crc-users -Member '%s'", user.Username))
 		if err != nil {
 			return err
 		}
