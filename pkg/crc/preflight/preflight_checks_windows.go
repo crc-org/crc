@@ -2,7 +2,6 @@ package preflight
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
@@ -154,16 +153,11 @@ func fixUserPartOfHyperVAdmins() error {
 	}
 	groupName := strings.TrimSpace(strings.ReplaceAll(strings.TrimSpace(outGroupName), "BUILTIN\\", ""))
 
-	username := os.Getenv("USERNAME")
-
-	netCmdArgs := fmt.Sprintf(`([adsi]"WinNT://./%s,group").Add("WinNT://%s,user")`, groupName, username)
-	_, _, err = powershell.ExecuteAsAdmin("add user to hyperv admins group", netCmdArgs)
+	_, _, err = powershell.ExecuteAsAdmin("adding current user to Hyper-V administrator group", fmt.Sprintf("Add-LocalGroupMember -Group '%s' -Member '%s'", groupName, username()))
 	if err != nil {
-		logging.Debug(err.Error())
-		return fmt.Errorf("Unable to get user name")
+		return err
 	}
-
-	return nil
+	return errReboot
 }
 
 func checkIfHyperVVirtualSwitchExists() error {
