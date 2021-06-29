@@ -95,7 +95,7 @@ func fixTrayExecutableExists() error {
 }
 
 func checkTrayVersion() bool {
-	cmd := fmt.Sprintf(`(Get-Item %s).VersionInfo.FileVersion`, constants.TrayExecutablePath)
+	cmd := fmt.Sprintf(`(Get-Item "%s").VersionInfo.FileVersion`, constants.TrayExecutablePath)
 	stdOut, _, err := powershell.Execute(cmd)
 	if err != nil {
 		logging.Debugf("Failed to get the version of tray: %v", err)
