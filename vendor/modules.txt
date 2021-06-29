@@ -10,6 +10,9 @@ github.com/Microsoft/go-winio
 github.com/Microsoft/go-winio/pkg/guid
 # github.com/RangelReale/osincli v0.0.0-20160924135400-fababb0555f2
 github.com/RangelReale/osincli
+# github.com/StackExchange/wmi v0.0.0-20210224194228-fe8f1750fd46
+## explicit
+github.com/StackExchange/wmi
 # github.com/VividCortex/ewma v1.2.0
 ## explicit
 github.com/VividCortex/ewma
@@ -94,6 +97,10 @@ github.com/felixge/httpsnoop
 github.com/fsnotify/fsnotify
 # github.com/go-logr/logr v0.2.0
 github.com/go-logr/logr
+# github.com/go-ole/go-ole v1.2.5
+## explicit
+github.com/go-ole/go-ole
+github.com/go-ole/go-ole/oleutil
 # github.com/godbus/dbus/v5 v5.0.4
 ## explicit
 github.com/godbus/dbus/v5

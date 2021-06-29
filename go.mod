@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/Microsoft/go-winio v0.5.0
+	github.com/StackExchange/wmi v0.0.0-20210224194228-fe8f1750fd46
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
@@ -19,6 +20,7 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
+	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/godbus/dbus/v5 v5.0.4 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/gorilla/handlers v1.5.1

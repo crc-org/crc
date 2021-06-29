@@ -13,6 +13,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
+	"github.com/code-ready/crc/pkg/os/windows/win32"
 )
 
 var hypervPreflightChecks = []Check{
@@ -194,16 +195,23 @@ var errReboot = errors.New("Please reboot your system and run 'crc setup' to com
 
 var adminHelperGroup = Check{
 	check: func() error {
-		_, _, err := powershell.Execute(fmt.Sprintf("Get-LocalGroupMember -Name crc-users -Member '%s'", os.Getenv("USERNAME")))
+		_, _, err := powershell.Execute(fmt.Sprintf("Get-LocalGroupMember -Name crc-users -Member '%s'", username()))
 		return err
 	},
 	fix: func() error {
-		_, _, err := powershell.ExecuteAsAdmin("adding current user to crc-users group", fmt.Sprintf("Add-LocalGroupMember -Group crc-users -Member '%s'", os.Getenv("USERNAME")))
+		_, _, err := powershell.ExecuteAsAdmin("adding current user to crc-users group", fmt.Sprintf("Add-LocalGroupMember -Group crc-users -Member '%s'", username()))
 		if err != nil {
 			return err
 		}
 		return errReboot
 	},
+}
+
+func username() string {
+	if ok, _ := win32.DomainJoined(); ok {
+		return fmt.Sprintf(`%s\%s`, os.Getenv("USERDOMAIN"), os.Getenv("USERNAME"))
+	}
+	return os.Getenv("USERNAME")
 }
 
 var hypervGroup = Check{
