@@ -64,6 +64,7 @@ var hypervPreflightChecks = []Check{
 			_, _, err := powershell.ExecuteAsAdmin("create crc-users group", "New-LocalGroup -Name crc-users")
 			return fmt.Errorf("failed to create 'crc-users' group: %v", err)
 		},
+		cleanupDescription: "Removing 'crc-users' group",
 		cleanup: func() error {
 			_, _, err := powershell.ExecuteAsAdmin("remove crc-users group", "Remove-LocalGroup -Name crc-users")
 			return fmt.Errorf("failed to remove 'crc-users' group: %v", err)
