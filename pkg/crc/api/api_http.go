@@ -179,8 +179,10 @@ func sendResponse(w http.ResponseWriter, response string) {
 			logging.Error("Failed to send response: ", err)
 		}
 	} else {
+		// Success = false, so only return the basic Result
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		if _, err := io.WriteString(w, result.Error); err != nil {
+		if _, err := io.WriteString(w, encodeStructToJSON(result)); err != nil {
 			logging.Error("Failed to send response: ", err)
 		}
 	}
