@@ -76,7 +76,7 @@
                     </Component>
                     <Component Id="AddToPath" Guid="09C1E713-44DE-44C3-BDAD-72BE10C10542">
                         <CreateFolder />
-                        <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" />
+                        <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes" />
                     </Component>
                 </Directory>
             </Directory>
