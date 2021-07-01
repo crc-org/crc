@@ -56,18 +56,24 @@ var hypervPreflightChecks = []Check{
 		configKeySuffix:  "check-crc-users-group-exists",
 		checkDescription: "Checking if crc-users group exists",
 		check: func() error {
-			_, _, err := powershell.Execute("Get-LocalGroup -Name crc-users")
-			return fmt.Errorf("'crc-users' group does not exist: %v", err)
+			if _, _, err := powershell.Execute("Get-LocalGroup -Name crc-users"); err != nil {
+				return fmt.Errorf("'crc-users' group does not exist: %v", err)
+			}
+			return nil
 		},
 		fixDescription: "Creating crc-users group",
 		fix: func() error {
-			_, _, err := powershell.ExecuteAsAdmin("create crc-users group", "New-LocalGroup -Name crc-users")
-			return fmt.Errorf("failed to create 'crc-users' group: %v", err)
+			if _, _, err := powershell.ExecuteAsAdmin("create crc-users group", "New-LocalGroup -Name crc-users"); err != nil {
+				return fmt.Errorf("failed to create 'crc-users' group: %v", err)
+			}
+			return nil
 		},
 		cleanupDescription: "Removing 'crc-users' group",
 		cleanup: func() error {
-			_, _, err := powershell.ExecuteAsAdmin("remove crc-users group", "Remove-LocalGroup -Name crc-users")
-			return fmt.Errorf("failed to remove 'crc-users' group: %v", err)
+			if _, _, err := powershell.ExecuteAsAdmin("remove crc-users group", "Remove-LocalGroup -Name crc-users"); err != nil {
+				return fmt.Errorf("failed to remove 'crc-users' group: %v", err)
+			}
+			return nil
 		},
 		labels: labels{Os: Windows},
 	},
