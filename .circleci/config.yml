@@ -5,7 +5,7 @@ version: 2
 jobs:
   build:
     macos:
-      xcode: "10.0.0"
+      xcode: "12.5.1"
     environment:
       GOVERSION: "1.15.13"
 
