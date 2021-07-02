@@ -58,16 +58,6 @@ server=/apps-crc.testing/192.168.130.11
 ----
 ** The NetworkManager `dnsmasq` instance forwards requests for the `crc.testing` and `apps-crc.testing` domains to the `192.168.130.11` DNS server.
 
-[id="dns-configuration-mac_{context}"]
-== {mac}
-
-On {mac}, {prod} expects the following DNS configuration:
-
-* {prod} creates a [filename]`/etc/resolver/testing` file which instructs {mac} to forward all DNS requests  for the `testing` domain to the {prod} virtual machine.
-* {prod} also adds an `api.crc.testing` entry to [filename]`/etc/hosts` pointing at the VM IP address.
-The [command]`oc` executable requires this entry.
-See https://github.com/openshift/origin/issues/23266[OpenShift issue #23266] for more information.
-
 ////
 == {msw}
 
