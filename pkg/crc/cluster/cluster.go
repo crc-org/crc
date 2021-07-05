@@ -163,7 +163,7 @@ func EnsureGeneratedClientCAPresentInTheCluster(ocConfig oc.Config, sshRunner *s
 		return nil
 	}
 
-	logging.Info("Updating root CA cert to admine-kubeconfig-client-ca configmap...")
+	logging.Info("Updating root CA cert to admin-kubeconfig-client-ca configmap...")
 	jsonPath := fmt.Sprintf(`'{"data": {"ca-bundle.crt": %q}}'`, selfSignedCAPem)
 	cmdArgs := []string{"patch", "configmap", "admin-kubeconfig-client-ca",
 		"-n", "openshift-config", "--patch", jsonPath}
