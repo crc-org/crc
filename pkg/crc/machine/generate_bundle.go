@@ -16,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (client *client) GenerateBundle() error {
+func (client *client) GenerateBundle(forceStop bool) error {
 	bundleMetadata, sshRunner, err := loadVM(client)
 	if err != nil {
 		return err
@@ -31,6 +31,11 @@ func (client *client) GenerateBundle() error {
 	// Stop the cluster
 	currentState, err := client.Stop()
 	if err != nil {
+		if forceStop {
+			if err := client.PowerOff(); err != nil {
+				return err
+			}
+		}
 		return err
 	}
 	if currentState != state.Stopped {
