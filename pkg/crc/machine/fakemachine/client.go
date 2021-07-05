@@ -68,7 +68,7 @@ func (c *Client) PowerOff() error {
 	return nil
 }
 
-func (c *Client) GenerateBundle() error {
+func (c *Client) GenerateBundle(forceStop bool) error {
 	return nil
 }
 

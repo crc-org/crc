@@ -166,6 +166,6 @@ func (m *waitingMachine) Stop() (state.State, error) {
 	return state.Stopped, nil
 }
 
-func (m *waitingMachine) GenerateBundle() error {
+func (m *waitingMachine) GenerateBundle(forceStop bool) error {
 	return errors.New("not implemented")
 }

@@ -183,6 +183,6 @@ func (s *Synchronized) IsRunning() (bool, error) {
 	return s.underlying.IsRunning()
 }
 
-func (s *Synchronized) GenerateBundle() error {
-	return s.underlying.GenerateBundle()
+func (s *Synchronized) GenerateBundle(forceStop bool) error {
+	return s.underlying.GenerateBundle(forceStop)
 }
