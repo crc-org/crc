@@ -298,7 +298,7 @@ github.com/pkg/errors
 github.com/pmezard/go-difflib/difflib
 # github.com/rivo/uniseg v0.2.0
 github.com/rivo/uniseg
-# github.com/segmentio/analytics-go v3.2.0+incompatible
+# github.com/segmentio/analytics-go v1.2.1-0.20201110202747-0566e489c7b9
 ## explicit
 github.com/segmentio/analytics-go
 # github.com/segmentio/backo-go v0.0.0-20200129164019-23eae7c10bd3
