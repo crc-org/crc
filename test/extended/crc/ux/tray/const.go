@@ -10,6 +10,7 @@ const (
 
 	fieldState string = "state"
 
+	stateInitial string = "Machine doesn't exist"
 	stateRunning string = "Running"
 	stateStopped string = "Stopped"
 

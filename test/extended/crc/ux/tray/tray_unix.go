@@ -116,6 +116,10 @@ func (a applescriptHandler) SetPullSecret() error {
 		setPullSecret, bundleIdentifier, *a.pullSecretFileLocation)
 }
 
+func (a applescriptHandler) IsInitialStatus() error {
+	return waitTrayShowsFieldWithValue(fieldState, stateInitial)
+}
+
 func (a applescriptHandler) IsClusterRunning() error {
 	return waitTrayShowsFieldWithValue(fieldState, stateRunning)
 }

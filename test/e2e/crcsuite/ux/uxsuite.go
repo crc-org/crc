@@ -97,7 +97,7 @@ func guaranteeFreshInstallation() error {
 	if err != nil {
 		return err
 	}
-	err = trayHandler.IsClusterStopped()
+	err = trayHandler.IsInitialStatus()
 	if err != nil {
 		return err
 	}

@@ -54,6 +54,10 @@ func (h handler) SetPullSecret() error {
 	return fmt.Errorf("not implemented yet")
 }
 
+func (h handler) IsInitialStatus() error {
+	return fmt.Errorf("not implemented yet")
+}
+
 func (h handler) IsClusterRunning() error {
 	return fmt.Errorf("not implemented yet")
 }
