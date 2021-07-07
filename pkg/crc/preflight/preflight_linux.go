@@ -107,6 +107,29 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 
 			labels: labels{Os: Linux},
 		},
+		{
+			configKeySuffix:    "check-daemon-systemd-unit",
+			checkDescription:   "Checking crc daemon systemd service",
+			check:              checkDaemonSystemdService,
+			fixDescription:     "Setting up crc daemon systemd service",
+			fix:                fixDaemonSystemdService,
+			cleanupDescription: "Remove crc daemon systemd service",
+			cleanup:            removeDaemonSystemdService,
+			flags:              SetupOnly,
+
+			labels: labels{Os: Linux},
+		},
+		{
+			configKeySuffix:    "check-daemon-systemd-sockets",
+			checkDescription:   "Checking crc daemon systemd socket units",
+			check:              checkDaemonSystemdSockets,
+			fixDescription:     "Setting up crc daemon systemd socket units",
+			fix:                fixDaemonSystemdSockets,
+			cleanupDescription: "Remove crc systemd socket units",
+			cleanup:            removeDaemonSystemdSockets,
+
+			labels: labels{Os: Linux},
+		},
 	}
 	return checks
 }
