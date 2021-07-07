@@ -23,6 +23,21 @@ var systemdListeners map[string][]net.Listener
 func init() {
 	// listenerWithNames() cannot be called multiple times
 	systemdListeners, _ = listenersWithNames()
+
+	checkIfDaemonIsRunning = func() (bool, error) {
+		ln, _ := getSystemdListener(httpUnitName)
+		if ln != nil {
+			/* detect if the daemon is being started by systemd,
+			* and socket activation is in use. In this scenario,
+			* trying to send an HTTP version check on the daemon
+			* HTTP socket would hang as the socket is listening for
+			* connections but is not setup to handle them yet.
+			 */
+			return false, nil
+		}
+
+		return checkDaemonVersion()
+	}
 }
 
 // listenersWithNames maps a listener name to a set of net.Listener instances.
