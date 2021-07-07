@@ -18,7 +18,7 @@ import (
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
 	"github.com/code-ready/crc/test/e2e/crcsuite/ux"
-	"github.com/code-ready/crc/test/extended/crc/cmd"
+	crcCmd "github.com/code-ready/crc/test/extended/crc/cmd"
 	"github.com/code-ready/crc/test/extended/util"
 )
 
@@ -49,7 +49,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^setting config property "(.*)" to value "(.*)" (succeeds|fails)$`,
 		SetConfigPropertyToValueSucceedsOrFails)
 	s.Step(`^unsetting config property "(.*)" (succeeds|fails)$`,
-		cmd.UnsetConfigPropertySucceedsOrFails)
+		crcCmd.UnsetConfigPropertySucceedsOrFails)
 	s.Step(`^login to the oc cluster (succeeds|fails)$`,
 		LoginToOcClusterSucceedsOrFails)
 	s.Step(`^setting kubeconfig context to "(.*)" (succeeds|fails)$`,
@@ -62,6 +62,10 @@ func FeatureContext(s *godog.Suite) {
 		CheckCRCStatus)
 	s.Step(`^(stdout|stderr) (?:should contain|contains) "(.*)" if bundle (is|is not) embedded$`,
 		CommandReturnShouldContainIfBundleEmbeddedOrNot)
+	s.Step(`^execute crc (.*) command$`,
+		ExecuteCommand)
+	s.Step(`^execute crc (.*) command (.*)$`,
+		ExecuteCommandWithExpectedExitStatus)
 
 	// CRC file operations
 	s.Step(`^file "([^"]*)" exists in CRC home folder$`,
@@ -159,7 +163,7 @@ func FeatureContext(s *godog.Suite) {
 	})
 
 	s.AfterSuite(func() {
-		err := cmd.DeleteCRC()
+		err := crcCmd.DeleteCRC()
 		if err != nil {
 			fmt.Printf("Could not delete CRC VM: %s.", err)
 		}
@@ -180,7 +184,7 @@ func ParseFlags() {
 }
 
 func WaitForClusterInState(state string) error {
-	return cmd.WaitForClusterInState(state)
+	return crcCmd.WaitForClusterInState(state)
 }
 
 func RemoveCRCHome() error {
@@ -246,7 +250,7 @@ func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string,
 // CheckCRCStatus checks that output of status command
 // matches given regex
 func CheckCRCStatus(state string) error {
-	return cmd.CheckCRCStatus(state)
+	return crcCmd.CheckCRCStatus(state)
 }
 
 func DeleteFileFromCRCHome(fileName string) error {
@@ -345,7 +349,8 @@ func StartCRCWithDefaultBundleSucceedsOrFails(expected string) error {
 	if !bundleEmbedded {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
-	cmd = fmt.Sprintf("CRC_DISABLE_UPDATE_CHECK=true crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
+	crcStart := crcCmd.CRC("start").WithDisableUpdateCheck().ToString()
+	cmd = fmt.Sprintf("%s -p '%s' %s --log-level debug", crcStart, pullSecretFile, extraBundleArgs)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
@@ -359,14 +364,16 @@ func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(
 	if !bundleEmbedded {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
-	cmd = fmt.Sprintf("CRC_DISABLE_UPDATE_CHECK=true CRC_DEBUG_ENABLE_STOP_NTP=true crc start -p '%s' %s --log-level debug", pullSecretFile, extraBundleArgs)
+	crcStart := crcCmd.CRC("start").WithDisableUpdateCheck().WithdisableNTP().ToString()
+	cmd = fmt.Sprintf("%s -p '%s' %s --log-level debug", crcStart, pullSecretFile, extraBundleArgs)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
 }
 
 func StartCRCWithCustomBundleSucceedsOrFails(expected string) error {
-	cmd := fmt.Sprintf("CRC_DISABLE_UPDATE_CHECK=true crc start -p '%s' -b *.crcbundle --log-level debug", pullSecretFile)
+	crcStart := crcCmd.CRC("start").WithDisableUpdateCheck().ToString()
+	cmd := fmt.Sprintf("%s -p '%s' -b *.crcbundle --log-level debug", crcStart, pullSecretFile)
 	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
 
@@ -377,7 +384,8 @@ func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, ex
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
 
-	cmd := fmt.Sprintf("CRC_DISABLE_UPDATE_CHECK=true crc start -n %s -p '%s' %s --log-level debug", nameserver, pullSecretFile, extraBundleArgs)
+	crcStart := crcCmd.CRC("start").WithDisableUpdateCheck().ToString()
+	cmd := fmt.Sprintf("%s -n %s -p '%s' %s --log-level debug", crcStart, nameserver, pullSecretFile, extraBundleArgs)
 	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
 
@@ -403,5 +411,13 @@ func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expe
 			value = bundleLocation
 		}
 	}
-	return cmd.SetConfigPropertyToValueSucceedsOrFails(property, value, expected)
+	return crcCmd.SetConfigPropertyToValueSucceedsOrFails(property, value, expected)
+}
+
+func ExecuteCommand(command string) error {
+	return crcCmd.CRC(command).WithDisableUpdateCheck().Execute()
+}
+
+func ExecuteCommandWithExpectedExitStatus(command string, expectedExitStatus string) error {
+	return crcCmd.CRC(command).WithDisableUpdateCheck().ExecuteWithExpectedExit(expectedExitStatus)
 }
