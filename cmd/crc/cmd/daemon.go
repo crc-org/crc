@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"regexp"
 	"runtime"
 	"syscall"
@@ -59,7 +58,7 @@ var daemonCmd = &cobra.Command{
 
 		virtualNetworkConfig := types.Configuration{
 			Debug:             false, // never log packets
-			CaptureFile:       captureFile(),
+			CaptureFile:       os.Getenv("CRC_DAEMON_PCAP_FILE"),
 			MTU:               4000, // Large packets slightly improve the performance. Less small packets.
 			Subnet:            "192.168.127.0/24",
 			GatewayIP:         constants.VSockGateway,
@@ -112,13 +111,6 @@ var daemonCmd = &cobra.Command{
 		err := run(&virtualNetworkConfig)
 		return err
 	},
-}
-
-func captureFile() string {
-	if !isDebugLog() {
-		return ""
-	}
-	return filepath.Join(constants.CrcBaseDir, "capture.pcap")
 }
 
 func run(configuration *types.Configuration) error {
