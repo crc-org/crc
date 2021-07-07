@@ -70,6 +70,7 @@ func (c Commander) service(name string, action actions.Action) (states.State, er
 		stdOut, stdErr string
 		err            error
 	)
+
 	if action.IsPriviledged() {
 		msg := fmt.Sprintf("Executing systemctl %s %s", action.String(), name)
 		stdOut, stdErr, err = c.commandRunner.RunPrivileged(msg, "systemctl", action.String(), name)
@@ -91,4 +92,39 @@ func (c Commander) service(name string, action actions.Action) (states.State, er
 	}
 
 	return states.Compare(stdOut), nil
+}
+
+type systemctlUserRunner struct {
+	runner crcos.CommandRunner
+}
+
+func (userRunner *systemctlUserRunner) Run(command string, args ...string) (string, string, error) {
+	if command != "systemctl" {
+		return "", "", fmt.Errorf("Invalid command: '%s'", command)
+	}
+	return userRunner.runner.Run("systemctl", append([]string{"--user"}, args...)...)
+}
+
+func (userRunner *systemctlUserRunner) RunPrivate(command string, args ...string) (string, string, error) {
+	if command != "systemctl" {
+		return "", "", fmt.Errorf("Invalid command: '%s'", command)
+	}
+	return userRunner.runner.RunPrivate("systemctl", append([]string{"--user"}, args...)...)
+}
+
+func (userRunner *systemctlUserRunner) RunPrivileged(reason string, cmdAndArgs ...string) (string, string, error) {
+	command := cmdAndArgs[0]
+	args := cmdAndArgs[1:]
+	if command != "systemctl" {
+		return "", "", fmt.Errorf("Invalid command: '%s'", command)
+	}
+	return userRunner.runner.Run("systemctl", append([]string{"--user"}, args...)...)
+}
+
+func (c *Commander) User() *Commander {
+	return &Commander{
+		commandRunner: &systemctlUserRunner{
+			c.commandRunner,
+		},
+	}
 }
