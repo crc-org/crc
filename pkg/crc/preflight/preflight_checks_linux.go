@@ -263,26 +263,170 @@ func checkCurrentGroups(distro *linux.OsRelease) func() error {
 	}
 }
 
+func systemdUnitRunning(sd *systemd.Commander, unitName string) bool {
+	status, err := sd.Status(unitName)
+	if err != nil {
+		logging.Debugf("Could not get %s  status: %v", unitName, err)
+		return false
+	}
+	switch status {
+	case states.Running:
+		logging.Debugf("%s is running", unitName)
+		return true
+	case states.Listening:
+		logging.Debugf("%s is listening", unitName)
+		return true
+	default:
+		logging.Debugf("%s is neither running nor listening", unitName)
+		return false
+	}
+}
+
+const (
+	vsockUnitName = "crc-vsock.socket"
+	vsockUnit     = `[Unit]
+Description=CodeReady Containers vsock socket
+
+[Socket]
+ListenStream=vsock::1024
+Service=crc-daemon.service
+`
+
+	httpUnitName = "crc-http.socket"
+	httpUnit     = `[Unit]
+Description=CodeReady Containers HTTP socket
+
+[Socket]
+ListenStream=%h/.crc/crc-http.sock
+Service=crc-daemon.service
+`
+
+	daemonUnitName     = "crc-daemon.service"
+	daemonUnitTemplate = `
+[Unit]
+Description=CodeReady Containers daemon
+Requires=crc-http.socket
+Requires=crc-vsock.socket
+
+[Service]
+ExecStart=%s daemon
+`
+)
+
+func checkSystemdUnit(unitName string, unitContent string, shouldBeRunning bool) error {
+	sd := systemd.NewHostSystemdCommander().User()
+
+	logging.Debugf("Checking if %s is running", unitName)
+	running := systemdUnitRunning(sd, unitName)
+	if !running && shouldBeRunning {
+		return fmt.Errorf("%s is not running", unitName)
+	} else if running && !shouldBeRunning {
+		return fmt.Errorf("%s is running", unitName)
+	}
+
+	logging.Debugf("Checking if %s has the expected content", unitName)
+	unitPath := systemd.UserUnitPath(unitName)
+	return crcos.FileContentMatches(unitPath, []byte(unitContent))
+}
+
+func daemonUnitContent() string {
+	return fmt.Sprintf(daemonUnitTemplate, constants.CrcSymlinkPath)
+}
+
+func checkDaemonSystemdSockets() error {
+	logging.Debug("Checking crc daemon systemd socket units")
+
+	if err := checkSystemdUnit(httpUnitName, httpUnit, true); err != nil {
+		return err
+	}
+
+	return checkSystemdUnit(vsockUnitName, vsockUnit, true)
+}
+
+func checkDaemonSystemdService() error {
+	logging.Debug("Checking crc daemon systemd service")
+
+	// the daemon should not be running at the end of setup, as it must be restarted on upgrades
+	return checkSystemdUnit(daemonUnitName, daemonUnitContent(), false)
+}
+
+func fixSystemdUnit(unitName string, unitContent string, shouldBeRunning bool) error {
+	logging.Debugf("Setting up %s", unitName)
+
+	sd := systemd.NewHostSystemdCommander().User()
+
+	if err := os.MkdirAll(systemd.UserUnitsDir(), 0750); err != nil {
+		return err
+	}
+	unitPath := systemd.UserUnitPath(unitName)
+	if crcos.FileContentMatches(unitPath, []byte(unitContent)) != nil {
+		logging.Debugf("Creating %s", unitPath)
+		if err := ioutil.WriteFile(unitPath, []byte(unitContent), 0600); err != nil {
+			return err
+		}
+		_ = sd.DaemonReload()
+	}
+
+	running := systemdUnitRunning(sd, unitName)
+	if !running && shouldBeRunning {
+		logging.Debugf("Starting %s", unitName)
+		return sd.Start(unitName)
+	} else if running && !shouldBeRunning {
+		logging.Debugf("Stopping %s", unitName)
+		return sd.Stop(unitName)
+	}
+
+	return nil
+}
+
+func fixDaemonSystemdSockets() error {
+	logging.Debugf("Setting up crc daemon systemd socket units")
+	if err := fixSystemdUnit(httpUnitName, httpUnit, true); err != nil {
+		return err
+	}
+
+	return fixSystemdUnit(vsockUnitName, vsockUnit, true)
+}
+
+func fixDaemonSystemdService() error {
+	logging.Debugf("Setting up crc daemon systemd unit")
+	return fixSystemdUnit(daemonUnitName, daemonUnitContent(), false)
+}
+
+func removeDaemonSystemdSockets() error {
+	logging.Debugf("Removing crc daemon systemd socket units")
+
+	sd := systemd.NewHostSystemdCommander().User()
+
+	_ = sd.Stop(httpUnitName)
+	os.Remove(systemd.UserUnitPath(httpUnitName))
+
+	_ = sd.Stop(vsockUnitName)
+	os.Remove(systemd.UserUnitPath(vsockUnitName))
+
+	return nil
+}
+
+func removeDaemonSystemdService() error {
+	logging.Debugf("Removing crc daemon systemd service")
+
+	sd := systemd.NewHostSystemdCommander().User()
+
+	_ = sd.Stop(daemonUnitName)
+	os.Remove(systemd.UserUnitPath(daemonUnitName))
+
+	return nil
+}
+
 func checkLibvirtServiceRunning() error {
 	logging.Debug("Checking if libvirtd service is running")
 	sd := systemd.NewHostSystemdCommander()
 
 	libvirtSystemdUnits := []string{"virtqemud.socket", "libvirtd.socket", "virtqemud.service", "libvirtd.service"}
 	for _, unit := range libvirtSystemdUnits {
-		status, err := sd.Status(unit)
-		if err == nil {
-			switch status {
-			case states.Running:
-				logging.Debugf("%s is running", unit)
-				return nil
-			case states.Listening:
-				logging.Debugf("%s is listening", unit)
-				return nil
-			default:
-				logging.Debugf("%s is neither running nor listening", unit)
-			}
+		if systemdUnitRunning(sd, unit) {
+			return nil
 		}
-
 	}
 
 	logging.Warnf("No active (running) libvirtd systemd unit could be found - make sure one of libvirt systemd units is enabled so that it's autostarted at boot time.")
