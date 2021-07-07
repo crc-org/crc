@@ -204,7 +204,7 @@ github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.13
 ## explicit
 github.com/mattn/go-runewidth
-# github.com/mdlayher/vsock v0.0.0-20210303205602-10d591861736
+# github.com/mdlayher/vsock v0.0.0-20210303205602-10d591861736 => github.com/cfergeau/vsock v0.0.0-20210707084117-4d87f8a20ba8
 ## explicit
 github.com/mdlayher/vsock
 # github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
@@ -635,3 +635,4 @@ sigs.k8s.io/yaml
 # k8s.io/apimachinery => github.com/openshift/kubernetes-apimachinery v0.0.0-20210108114224-194a87c5b03a
 # k8s.io/client-go => github.com/openshift/kubernetes-client-go v0.0.0-20210108114446-0829bdd68114
 # k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20210108115031-c0d78c0aeda3
+# github.com/mdlayher/vsock => github.com/cfergeau/vsock v0.0.0-20210707084117-4d87f8a20ba8

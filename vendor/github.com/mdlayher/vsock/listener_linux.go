@@ -3,7 +3,9 @@
 package vsock
 
 import (
+	"fmt"
 	"net"
+	"os"
 	"time"
 
 	"golang.org/x/sys/unix"
@@ -47,6 +49,19 @@ func (l *listener) Accept() (net.Conn, error) {
 	return newConn(cfd, l.addr, remote)
 }
 
+func FileListener(f *os.File) (ln net.Listener, err error) {
+	fd, err := unix.Dup(int(f.Fd()))
+	if err != nil {
+		return nil, err
+	}
+
+	lfd := &sysListenFD{
+		fd: fd,
+	}
+
+	return newListener(lfd)
+}
+
 // listen is the entry point for Listen on Linux.
 func listen(cid, port uint32) (*Listener, error) {
 	lfd, err := newListenFD()
@@ -55,6 +70,41 @@ func listen(cid, port uint32) (*Listener, error) {
 	}
 
 	return listenLinux(lfd, cid, port)
+}
+
+func newListener(lfd listenFD) (l *Listener, err error) {
+	lsa, err := lfd.Getsockname()
+	if err != nil {
+		return nil, err
+	}
+
+	// Done with blocking mode setup, transition to non-blocking before the
+	// caller has a chance to start calling things concurrently that might make
+	// the locking situation tricky.
+	//
+	// Note: if any calls fail after this point, lfd.Close should be invoked
+	// for cleanup because the socket is now non-blocking.
+	if err := lfd.SetNonblocking("vsock-listen"); err != nil {
+		return nil, err
+	}
+
+	switch lsavm := lsa.(type) {
+	case *unix.SockaddrVM:
+		addr := &Addr{
+			ContextID: lsavm.CID,
+			Port:      lsavm.Port,
+		}
+		return &Listener{
+			l: &listener{
+				fd:   lfd,
+				addr: addr,
+			},
+		}, nil
+		return
+
+	default:
+		return nil, fmt.Errorf("not an AF_VSOCK file")
+	}
 }
 
 // listenLinux is the entry point for tests on Linux.
@@ -85,31 +135,5 @@ func listenLinux(lfd listenFD, cid, port uint32) (l *Listener, err error) {
 		return nil, err
 	}
 
-	lsa, err := lfd.Getsockname()
-	if err != nil {
-		return nil, err
-	}
-
-	// Done with blocking mode setup, transition to non-blocking before the
-	// caller has a chance to start calling things concurrently that might make
-	// the locking situation tricky.
-	//
-	// Note: if any calls fail after this point, lfd.Close should be invoked
-	// for cleanup because the socket is now non-blocking.
-	if err := lfd.SetNonblocking("vsock-listen"); err != nil {
-		return nil, err
-	}
-
-	lsavm := lsa.(*unix.SockaddrVM)
-	addr := &Addr{
-		ContextID: lsavm.CID,
-		Port:      lsavm.Port,
-	}
-
-	return &Listener{
-		l: &listener{
-			fd:   lfd,
-			addr: addr,
-		},
-	}, nil
+	return newListener(lfd)
 }
