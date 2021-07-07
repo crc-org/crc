@@ -22,6 +22,21 @@ const (
 // startup, and then use `systemdListeners` in the rest of the code
 var systemdListeners, _ = listenersWithNames()
 
+func checkIfDaemonIsRunning() (bool, error) {
+	ln, _ := getSystemdListener(httpUnitName)
+	if ln != nil {
+		/* detect if the daemon is being started by systemd,
+		* and socket activation is in use. In this scenario,
+		* trying to send an HTTP version check on the daemon
+		* HTTP socket would hang as the socket is listening for
+		* connections but is not setup to handle them yet.
+		 */
+		return false, nil
+	}
+
+	return checkDaemonVersion()
+}
+
 // listenersWithNames maps a listener name to a set of net.Listener instances.
 // This is the same code as https://github.com/coreos/go-systemd/blob/main/activation/listeners.go
 // with support for vsock

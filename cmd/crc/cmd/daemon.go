@@ -38,13 +38,20 @@ func init() {
 
 const hostVirtualIP = "192.168.127.254"
 
+func checkDaemonVersion() (bool, error) {
+	if _, err := daemonclient.New().APIClient.Version(); err == nil {
+		return true, errors.New("daemon is already running")
+	}
+	return false, nil
+}
+
 var daemonCmd = &cobra.Command{
 	Use:    "daemon",
 	Short:  "Run the crc daemon",
 	Long:   "Run the crc daemon",
 	Hidden: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if _, err := daemonclient.New().APIClient.Version(); err == nil {
+		if running, _ := checkIfDaemonIsRunning(); running {
 			return errors.New("daemon is already running")
 		}
 
