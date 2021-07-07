@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"runtime"
+	"strings"
 	"time"
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
@@ -14,6 +16,88 @@ const (
 	CRCExecutableInstalled    = "installed"
 	CRCExecutableNotInstalled = "notInstalled"
 )
+
+var (
+	commands = map[string]struct{}{
+		"help":    {},
+		"version": {},
+		"setup":   {},
+		"start":   {},
+		"stop":    {},
+		"delete":  {},
+		"status":  {},
+		"config":  {},
+		"ip":      {},
+		"console": {},
+		"cleanup": {}}
+)
+
+type Command struct {
+	command            string
+	disableUpdateCheck bool
+	disableNTP         bool
+}
+
+func CRC(command string) Command {
+	return Command{command: command}
+}
+
+func (c Command) WithDisableUpdateCheck() Command {
+	c.disableUpdateCheck = true
+	return c
+}
+
+func (c Command) WithdisableNTP() Command {
+	c.disableNTP = true
+	return c
+}
+
+func (c Command) ToString() string {
+	cmd := append(c.env(), "crc", c.command)
+	return strings.Join(cmd, " ")
+}
+
+func (c Command) ExecuteWithExpectedExit(expectedExit string) error {
+	if err := c.validate(); err != nil {
+		return err
+	}
+	if expectedExit == "succeeds" || expectedExit == "fails" {
+		return clicumber.ExecuteCommandSucceedsOrFails(c.ToString(), expectedExit)
+	}
+	return fmt.Errorf("%s is a valid expected exit status", expectedExit)
+}
+
+func (c Command) Execute() error {
+	if err := c.validate(); err != nil {
+		return err
+	}
+	return clicumber.ExecuteCommand(c.ToString())
+}
+
+func (c Command) env() []string {
+	var env []string
+	if c.disableUpdateCheck {
+		env = append(env, envVariable("CRC_DISABLE_UPDATE_CHECK", "true"))
+	}
+	if c.disableNTP {
+		env = append(env, envVariable("CRC_DEBUG_ENABLE_STOP_NTP", "true"))
+	}
+	return env
+}
+
+func envVariable(key, value string) string {
+	if runtime.GOOS == "windows" {
+		return fmt.Sprintf("$env:%s=%s", key, value)
+	}
+	return fmt.Sprintf("%s=%s", key, value)
+}
+
+func (c Command) validate() error {
+	if _, ok := commands[c.command]; !ok {
+		return fmt.Errorf("%s is not a supported command", c.command)
+	}
+	return nil
+}
 
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
 	cmd := "crc config set " + property + " " + value
@@ -51,7 +135,7 @@ func CheckCRCStatus(state string) error {
 		expression = ".*OpenShift: .*Stopped.*"
 	}
 
-	err := clicumber.ExecuteCommand("crc status")
+	err := clicumber.ExecuteCommand(CRC("status").ToString())
 	if err != nil {
 		return err
 	}
@@ -72,7 +156,7 @@ func CheckCRCExecutableState(state string) error {
 
 func CheckMachineNotExists() error {
 	expression := `.*Machine does not exist.*`
-	err := clicumber.ExecuteCommand("crc status")
+	err := clicumber.ExecuteCommand(CRC("status").ToString())
 	if err != nil {
 		return err
 	}
@@ -81,8 +165,7 @@ func CheckMachineNotExists() error {
 
 func DeleteCRC() error {
 
-	command := "crc delete"
-	_ = clicumber.ExecuteCommand(command)
+	_ = clicumber.ExecuteCommand(CRC("delete").ToString())
 
 	fmt.Printf("Deleted CRC instance (if one existed).\n")
 	return nil
