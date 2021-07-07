@@ -24,18 +24,14 @@ Feature: Operator from marketplace
 
     @darwin @linux @windows @testdata
     Scenario: Install new operator
-        When executing "oc apply -f etcdop-sub.yaml" succeeds
+        When executing "oc apply -f redis-sub.yaml" succeeds
         # check if cluster operator is running
-        Then with up to "20" retries with wait period of "30s" command "oc get csv" output matches ".*etcdoperator\.(.*)Succeeded$"
+        Then with up to "20" retries with wait period of "30s" command "oc get csv" output matches ".*redis-operator\.(.*)Succeeded$"
         
     @darwin @linux @windows @testdata
-    Scenario: Scale up
-        # start cluster with 3 pods
-        When executing "oc apply -f etcd-cluster3.yaml" succeeds
-        Then with up to "10" retries with wait period of "30s" command "oc get pods" output matches "(?s)(.*example-[a-z0-9]* *1/1 *Running.*){3}"
-        # reconfigure cluster to 5 pods
-        When executing "oc apply -f etcd-cluster5.yaml" succeeds
-        Then with up to "10" retries with wait period of "30s" command "oc get pods" output matches "(?s)(.*example-[a-z0-9]* *1/1 *Running.*){5}"
+    Scenario: Install the redis instance
+        When executing "oc apply -f redis-cluster.yaml" succeeds
+        Then with up to "10" retries with wait period of "30s" command "oc get pods" output matches "redis-standalone-[a-z0-9]* .*Running.*"
     
     @darwin @linux
     Scenario: Failover
@@ -44,11 +40,8 @@ Feature: Operator from marketplace
         And executing "echo $POD" succeeds
         And executing "oc delete pod $POD --now" succeeds
         Then stdout should match "^pod(.*)deleted$"
-        # after a while 5 pods should be up & running again
-        And with up to "10" retries with wait period of "30s" command "oc get pods" output matches "(?s)(.*example-[a-z0-9]* *1/1 *Running.*){5}"
-        # but the deleted pod should not be up, it was replaced
-        But executing "oc get pods $POD" fails
-        And stderr matches "(.*)pods (.*) not found$"
+        # after a while 1 pods should be up & running again
+        And with up to "10" retries with wait period of "30s" command "oc get pods" output matches "redis-standalone-[a-z0-9]* .*Running.*"
 
     @windows
     Scenario: Failover
@@ -57,18 +50,8 @@ Feature: Operator from marketplace
         And executing "echo $Env:POD" succeeds
         And executing "oc delete pod $Env:POD --now" succeeds
         Then stdout should match "^pod(.*)deleted$"
-        # after a while 5 pods should be up & running again
-        And with up to "10" retries with wait period of "30s" command "oc get pods" output matches "(?s)(.*example-[a-z0-9]* *1/1 *Running.*){5}"
-        # but the deleted pod should not be up, it was replaced
-        But executing "oc get pods $Env:POD" fails
-        And stderr matches "(.*)pods (.*) not found$"
-
-    @darwin @linux @windows @testdata
-    Scenario: Scale down
-        # scale back down to 3 pods
-        When executing "oc apply -f etcd-cluster3.yaml" succeeds
-        Then with up to "10" retries with wait period of "30s" command "oc get pods" output matches "(?s)(.*example-[a-z0-9]* *1/1 *Running.*){3}"
-        But with up to "10" retries with wait period of "30s" command "oc get pods" output does not match "(?s)(.*example-[a-z0-9]* *1/1 *Running.*){4}"
+        # after a while 1 pods should be up & running again
+        And with up to "10" retries with wait period of "30s" command "oc get pods" output matches "redis-standalone-[a-z0-9]* .*Running.*"
         
     @darwin @linux @windows
     Scenario: Clean up
