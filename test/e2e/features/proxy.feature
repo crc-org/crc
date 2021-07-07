@@ -8,7 +8,7 @@ Feature: Behind proxy test
         Given executing "podman run --name squid -d -p 3128:3128 quay.io/crcont/squid" succeeds
 
     Scenario: Start CRC
-        Given executing "crc setup" succeeds
+        Given execute crc setup command succeeds
         And  executing "crc config set http-proxy http://192.168.130.1:3128" succeeds
         Then executing "crc config set https-proxy http://192.168.130.1:3128" succeeds
         When starting CRC with default bundle succeeds
@@ -27,5 +27,6 @@ Feature: Behind proxy test
         Then stdout should contain "Deleted the OpenShift cluster"
         And  executing "crc config unset http-proxy" succeeds
         And executing "crc config unset https-proxy" succeeds
-        And executing "crc cleanup" succeeds
+        And execute crc cleanup command succeeds
+        
 

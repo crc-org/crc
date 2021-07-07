@@ -6,7 +6,7 @@ Feature: Certificate rotation test
     an app and check its accessibility.
 
     Scenario: Setup CRC
-        Given executing "crc setup" succeeds
+        Given execute crc setup command succeeds
 
     Scenario: Set clock to 3 months ahead on the host
         Given executing "sudo timedatectl set-ntp off" succeeds
@@ -27,4 +27,4 @@ Feature: Certificate rotation test
     Scenario: CRC delete and cleanup
         When executing "crc delete -f" succeeds
         Then stdout should contain "Deleted the OpenShift cluster"
-        When executing "crc cleanup" succeeds
+        When execute crc cleanup command succeeds

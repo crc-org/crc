@@ -6,7 +6,7 @@ Feature: Local image to image-registry
     They deploy and expose the app and check its accessibility.
 
     Scenario: Start CRC and login to cluster
-        Given executing "crc setup" succeeds
+        Given execute crc setup command succeeds
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
         When checking that CRC is running
@@ -41,5 +41,5 @@ Feature: Local image to image-registry
         And executing "oc delete project testproj-img" succeeds
         And executing "crc delete -f" succeeds
         Then stdout should contain "Deleted the OpenShift cluster"
-        When executing "crc cleanup" succeeds
+        When execute crc cleanup command succeeds
         Then stdout should contain "Cleanup finished"

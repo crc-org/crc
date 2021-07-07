@@ -6,7 +6,7 @@ Feature: Operator from marketplace
 
     @linux @darwin
     Scenario: Start CRC and login to cluster
-        Given executing "crc setup" succeeds
+        Given execute crc setup command succeeds
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
         When checking that CRC is running
@@ -15,7 +15,7 @@ Feature: Operator from marketplace
 
     @windows
     Scenario: Start CRC on Windows
-        Given executing "crc setup" succeeds
+        Given execute crc setup command succeeds
         When starting CRC with default bundle and nameserver "10.75.5.25" succeeds
         Then stdout should contain "Started the OpenShift cluster"
         And executing "crc oc-env | Invoke-Expression" succeeds
@@ -74,5 +74,5 @@ Feature: Operator from marketplace
     Scenario: Clean up
         When executing "crc delete -f" succeeds
         Then stdout should contain "Deleted the OpenShift cluster"
-        When executing "crc cleanup" succeeds
+        When execute crc cleanup command succeeds
         Then stdout should contain "Cleanup finished"

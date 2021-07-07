@@ -8,7 +8,7 @@ Feature: End-to-end health check
 
     @linux @darwin
     Scenario: Start CRC
-        Given executing "crc setup" succeeds
+        Given execute crc setup command succeeds
         When setting config property "memory" to value "12000" succeeds
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
@@ -18,7 +18,7 @@ Feature: End-to-end health check
 
     @windows
     Scenario: Start CRC on Windows
-        Given executing "crc setup" succeeds
+        Given execute crc setup command succeeds
         When setting config property "memory" to value "12000" succeeds
         When starting CRC with default bundle and nameserver "10.75.5.25" succeeds
         Then stdout should contain "Started the OpenShift cluster"
@@ -59,4 +59,4 @@ Feature: End-to-end health check
     Scenario: Switch off CRC
         When executing "oc delete project testproj" succeeds
         And executing "crc delete -f" succeeds
-        And executing "crc cleanup" succeeds
+        And execute crc cleanup command succeeds
