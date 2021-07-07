@@ -90,3 +90,5 @@ replace (
 	k8s.io/client-go => github.com/openshift/kubernetes-client-go v0.0.0-20210108114446-0829bdd68114
 	k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20210108115031-c0d78c0aeda3
 )
+
+replace github.com/mdlayher/vsock => github.com/cfergeau/vsock v0.0.0-20210707084117-4d87f8a20ba8
