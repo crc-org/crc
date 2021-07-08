@@ -516,3 +516,50 @@ func getCPUFlags() (string, error) {
 	}
 	return flags, nil
 }
+
+func runtimeExecutablePath() (string, error) {
+	path, err := exec.LookPath(os.Args[0])
+	if err != nil {
+		// os.Args[0] is not in $PATH, crc must have been started by specifying the path to its binary
+		path = os.Args[0]
+	}
+	path, err = filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+	return filepath.EvalSymlinks(path)
+}
+
+func checkCrcSymlink() error {
+	runtimePath, err := runtimeExecutablePath()
+	if err != nil {
+		return err
+	}
+	symlinkPath, err := filepath.EvalSymlinks(constants.CrcSymlinkPath)
+	if err != nil {
+		return err
+	}
+	if symlinkPath != runtimePath {
+		return fmt.Errorf("%s points to %s, not to %s", constants.CrcSymlinkPath, symlinkPath, runtimePath)
+	}
+
+	return nil
+}
+
+func fixCrcSymlink() error {
+	_ = os.Remove(constants.CrcSymlinkPath)
+
+	runtimePath, err := runtimeExecutablePath()
+	if err != nil {
+		return err
+	}
+	logging.Debugf("symlinking %s to %s", runtimePath, constants.CrcSymlinkPath)
+	return os.Symlink(runtimePath, constants.CrcSymlinkPath)
+}
+
+func removeCrcSymlink() error {
+	if crcos.FileExists(constants.CrcSymlinkPath) {
+		return os.Remove(constants.CrcSymlinkPath)
+	}
+	return nil
+}
