@@ -18,6 +18,17 @@ import (
 func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 	checks := []Check{
 		{
+			configKeySuffix:    "check-crc-symlink",
+			checkDescription:   "Checking if crc executable symlink exists",
+			check:              checkCrcSymlink,
+			fixDescription:     "Creating symlink for crc executable",
+			fix:                fixCrcSymlink,
+			cleanupDescription: "Removing crc executable symlink",
+			cleanup:            removeCrcSymlink,
+
+			labels: labels{Os: Linux},
+		},
+		{
 			configKeySuffix:  "check-virt-enabled",
 			checkDescription: "Checking if Virtualization is enabled",
 			check:            checkVirtualizationEnabled,

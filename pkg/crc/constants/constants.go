@@ -89,6 +89,7 @@ var (
 	CrcBaseDir         = filepath.Join(GetHomeDir(), ".crc")
 	CrcBinDir          = filepath.Join(CrcBaseDir, "bin")
 	CrcOcBinDir        = filepath.Join(CrcBinDir, "oc")
+	CrcSymlinkPath     = filepath.Join(CrcBinDir, "crc")
 	ConfigPath         = filepath.Join(CrcBaseDir, ConfigFile)
 	LogFilePath        = filepath.Join(CrcBaseDir, LogFile)
 	DaemonLogFilePath  = filepath.Join(CrcBaseDir, DaemonLogFile)
