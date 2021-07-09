@@ -1,7 +1,6 @@
 package machine
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -33,8 +32,7 @@ func (client *client) GenerateBundle(forceStop bool) error {
 	}
 
 	// Stop the cluster
-	currentState, err := client.Stop()
-	if err != nil {
+	if _, err := client.Stop(); err != nil {
 		if forceStop {
 			if err := client.PowerOff(); err != nil {
 				return err
@@ -42,8 +40,12 @@ func (client *client) GenerateBundle(forceStop bool) error {
 		}
 		return err
 	}
-	if currentState != state.Stopped {
-		return fmt.Errorf("VM is not stopped, current state is %s", currentState.String())
+	running, err := client.IsRunning()
+	if err != nil {
+		return err
+	}
+	if running {
+		return errors.New("VM is still running")
 	}
 
 	tmpBaseDir, err := ioutil.TempDir(constants.MachineCacheDir, "crc_custom_bundle")
