@@ -309,6 +309,9 @@ Requires=crc-http.socket
 Requires=crc-vsock.socket
 
 [Service]
+# This allows systemd to know when startup is not complete (for example, because of a preflight failure)
+# daemon.SdNotify(false, daemon.SdNotifyReady) must be called before the startup is successful
+Type=notify
 ExecStart=%s daemon
 `
 )

@@ -10,6 +10,7 @@ import (
 	"github.com/code-ready/gvisor-tap-vsock/pkg/transport"
 
 	"github.com/coreos/go-systemd/activation"
+	"github.com/coreos/go-systemd/daemon"
 	"github.com/mdlayher/vsock"
 )
 
@@ -121,4 +122,8 @@ func httpListener() (net.Listener, error) {
 		return nil, err
 	}
 	return ln, nil
+}
+
+func startupDone() {
+	_, _ = daemon.SdNotify(false, daemon.SdNotifyReady)
 }
