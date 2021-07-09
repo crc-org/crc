@@ -148,7 +148,7 @@ Feature: Basic test
         # This will remove the pull secret from the instance and from the cluster
         # You need to provide pull secret file again if you want to start this cluster
         # from a stopped state.
-        Given executing "crc bundle generate" succeeds
+        Given executing "crc bundle generate -f" succeeds
 
     @darwin @windows
     Scenario: CRC forcible stop
