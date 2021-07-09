@@ -30,3 +30,6 @@ func httpListener() (net.Listener, error) {
 	}
 	return ln, nil
 }
+
+func startupDone() {
+}
