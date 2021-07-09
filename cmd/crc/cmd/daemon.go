@@ -168,6 +168,8 @@ func run(configuration *types.Configuration) error {
 		}
 	}()
 
+	startupDone()
+
 	if isDebugLog() {
 		go func() {
 			for {

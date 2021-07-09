@@ -34,3 +34,6 @@ func httpListener() (net.Listener, error) {
 func checkIfDaemonIsRunning() (bool, error) {
 	return checkDaemonVersion()
 }
+
+func startupDone() {
+}
