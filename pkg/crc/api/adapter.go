@@ -62,7 +62,7 @@ func (a *Adapter) Start(ctx context.Context, startConfig types.StartConfig) clie
 	}
 	return client.StartResult{
 		Success:        true,
-		Status:         res.Status.String(),
+		Status:         string(res.Status),
 		ClusterConfig:  res.ClusterConfig,
 		KubeletStarted: res.KubeletStarted,
 	}
@@ -78,7 +78,7 @@ func (a *Adapter) Status() client.ClusterStatusResult {
 		}
 	}
 	return client.ClusterStatusResult{
-		CrcStatus:        res.CrcStatus.String(),
+		CrcStatus:        string(res.CrcStatus),
 		OpenshiftStatus:  string(res.OpenshiftStatus),
 		OpenshiftVersion: res.OpenshiftVersion,
 		DiskUse:          res.DiskUse,

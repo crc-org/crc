@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
+	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/machine/libmachine/state"
 )
 
 func NewClient() *Client {

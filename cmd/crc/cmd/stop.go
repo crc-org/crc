@@ -8,7 +8,7 @@ import (
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/machine"
-	"github.com/code-ready/machine/libmachine/state"
+	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/spf13/cobra"
 )
 

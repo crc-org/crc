@@ -3,10 +3,10 @@ package machine
 import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/oc"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/libmachine/host"
-	"github.com/code-ready/machine/libmachine/state"
 	"github.com/pkg/errors"
 )
 
@@ -27,9 +27,13 @@ func (client *client) Stop() (state.State, error) {
 		if stateErr != nil {
 			logging.Debugf("Cannot get VM status after stopping it: %v", stateErr)
 		}
-		return status, errors.Wrap(err, "Cannot stop machine")
+		return state.FromMachine(status), errors.Wrap(err, "Cannot stop machine")
 	}
-	return host.Driver.GetState()
+	status, err := host.Driver.GetState()
+	if err != nil {
+		return state.Error, errors.Wrap(err, "Cannot get VM status")
+	}
+	return state.FromMachine(status), nil
 }
 
 // This should be removed after https://bugzilla.redhat.com/show_bug.cgi?id=1965992

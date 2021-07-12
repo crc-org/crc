@@ -8,8 +8,8 @@ import (
 
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
-	"github.com/code-ready/machine/libmachine/state"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 )

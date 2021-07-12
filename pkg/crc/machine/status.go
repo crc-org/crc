@@ -7,9 +7,10 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
+	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
-	"github.com/code-ready/machine/libmachine/state"
+	libmachinestate "github.com/code-ready/machine/libmachine/state"
 	"github.com/pkg/errors"
 )
 
@@ -39,9 +40,9 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 		return nil, errors.Wrap(err, "Error loading bundle metadata")
 	}
 
-	if vmStatus != state.Running {
+	if vmStatus != libmachinestate.Running {
 		return &types.ClusterStatusResult{
-			CrcStatus:        vmStatus,
+			CrcStatus:        state.FromMachine(vmStatus),
 			OpenshiftStatus:  types.OpenshiftStopped,
 			OpenshiftVersion: crcBundleMetadata.GetOpenshiftVersion(),
 		}, nil

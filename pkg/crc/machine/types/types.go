@@ -2,8 +2,8 @@ package types
 
 import (
 	"github.com/code-ready/crc/pkg/crc/cluster"
+	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/machine/libmachine/state"
 )
 
 type StartConfig struct {

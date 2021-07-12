@@ -6,8 +6,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
-	"github.com/code-ready/machine/libmachine/state"
 	"github.com/stretchr/testify/assert"
 )
 

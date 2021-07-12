@@ -1,6 +1,7 @@
 package machine
 
 import (
+	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/pkg/errors"
 )
@@ -34,6 +35,6 @@ func (client *client) GetConsoleURL() (*types.ConsoleResult, error) {
 
 	return &types.ConsoleResult{
 		ClusterConfig: *clusterConfig,
-		State:         vmState,
+		State:         state.FromMachine(vmState),
 	}, nil
 }
