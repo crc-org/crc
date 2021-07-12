@@ -20,6 +20,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
+	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/oc"
@@ -32,10 +33,9 @@ import (
 	"github.com/code-ready/crc/pkg/libmachine"
 	"github.com/code-ready/crc/pkg/libmachine/host"
 	"github.com/code-ready/machine/libmachine/drivers"
-	"github.com/code-ready/machine/libmachine/state"
+	libmachinestate "github.com/code-ready/machine/libmachine/state"
 	"github.com/docker/go-units"
 	"github.com/pkg/errors"
-
 	"golang.org/x/crypto/ssh"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -212,7 +212,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting the machine state")
 	}
-	if vmState == state.Running {
+	if vmState == libmachinestate.Running {
 		logging.Infof("A CodeReady Containers VM for OpenShift %s is already running", crcBundleMetadata.GetOpenshiftVersion())
 		clusterConfig, err := getClusterConfig(crcBundleMetadata)
 		if err != nil {
@@ -221,7 +221,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 		telemetry.SetStartType(ctx, telemetry.AlreadyRunningStartType)
 		return &types.StartResult{
-			Status:         vmState,
+			Status:         state.FromMachine(vmState),
 			ClusterConfig:  *clusterConfig,
 			KubeletStarted: true,
 		}, nil
@@ -258,7 +258,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting the state")
 	}
-	if vmState != state.Running {
+	if vmState != libmachinestate.Running {
 		return nil, errors.Wrap(err, "CodeReady Containers VM is not running")
 	}
 
@@ -473,7 +473,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	return &types.StartResult{
 		KubeletStarted: true,
 		ClusterConfig:  *clusterConfig,
-		Status:         vmState,
+		Status:         state.FromMachine(vmState),
 	}, nil
 }
 
@@ -492,7 +492,7 @@ func (client *client) IsRunning() (bool, error) {
 		// but reports not started on error
 		return false, errors.Wrap(err, "Error getting the state")
 	}
-	if vmState != state.Running {
+	if vmState != libmachinestate.Running {
 		return false, nil
 	}
 	return true, nil
@@ -571,7 +571,7 @@ func startHost(ctx context.Context, api libmachine.API, vm *host.Host) error {
 	}
 
 	logging.Debug("Waiting for machine to be running, this may take a few minutes...")
-	if err := crcerrors.RetryAfterWithContext(ctx, 3*time.Minute, host.MachineInState(vm.Driver, state.Running), 3*time.Second); err != nil {
+	if err := crcerrors.RetryAfterWithContext(ctx, 3*time.Minute, host.MachineInState(vm.Driver, libmachinestate.Running), 3*time.Second); err != nil {
 		return fmt.Errorf("Error waiting for machine to be running: %s", err)
 	}
 

@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
-	"github.com/code-ready/machine/libmachine/state"
 )
 
 const startCancelTimeout = 15 * time.Second
