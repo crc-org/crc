@@ -181,11 +181,13 @@ var traySetupChecks = []Check{
 
 var vsockChecks = []Check{
 	{
-		configKeySuffix:  "check-vsock",
-		checkDescription: "Checking if vsock is correctly configured",
-		check:            checkVsock,
-		fixDescription:   "Checking if vsock is correctly configured",
-		fix:              fixVsock,
+		configKeySuffix:    "check-vsock",
+		checkDescription:   "Checking if vsock is correctly configured",
+		check:              checkVsock,
+		fixDescription:     "Checking if vsock is correctly configured",
+		fix:                fixVsock,
+		cleanupDescription: "Removing vsock service from hyperv registry",
+		cleanup:            cleanVsock,
 
 		labels: labels{Os: Windows, NetworkMode: User},
 	},
@@ -275,6 +277,17 @@ func fixVsock() error {
 	}
 	_, _, err := powershell.ExecuteAsAdmin("adding vsock registry key", strings.Join(cmds, ";"))
 	return err
+}
+
+func cleanVsock() error {
+	if err := checkVsock(); err != nil {
+		return nil
+	}
+	_, _, err := powershell.Execute(fmt.Sprintf(`Remove-Item -Path "%s\%s"`, registryDirectory, registryKey))
+	if err != nil {
+		return fmt.Errorf("Unable to remove vsock service from hyperv registry: %v", err)
+	}
+	return nil
 }
 
 const (
