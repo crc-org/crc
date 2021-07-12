@@ -3,18 +3,10 @@
 <?define crcBundlePart1="crc_hyperv___OPENSHIFT_VERSION__.crcbundle.1"?>
 <?define crcBundlePart2="crc_hyperv___OPENSHIFT_VERSION__.crcbundle.2"?>
 <?define crcBundleName="crc_hyperv___OPENSHIFT_VERSION__.crcbundle"?>
-<Wix
-    xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-    <Product Id="*" UpgradeCode="53DE5BFA-0E53-44E7-8D4F-07E37E59A9AB"
-            Name="CodeReady Containers"
-            Version="__VERSION__"
-            Manufacturer="Red Hat Inc."
-            Language="1033">
-        <Package Id ="*" InstallerVersion="300" 
-			Compressed="yes" 
-			Description="CodeReady Containers __VERSION__"
-            Comments="This installs CodeReady Containers __VERSION__" 
-			InstallScope="perMachine" />
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+    xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+    <Product Id="*" UpgradeCode="53DE5BFA-0E53-44E7-8D4F-07E37E59A9AB" Name="CodeReady Containers" Version="__VERSION__" Manufacturer="Red Hat Inc." Language="1033">
+        <Package Id ="*" InstallerVersion="300" Compressed="yes" Description="CodeReady Containers __VERSION__" Comments="This installs CodeReady Containers __VERSION__" InstallScope="perMachine" />
         <Media Id="1" EmbedCab="no" Cabinet="cab1.cab" />
         <Media Id="2" EmbedCab="no" Cabinet="cab2.cab" />
         <Media Id="3" EmbedCab="no" Cabinet="cab3.cab" />
@@ -24,8 +16,7 @@
         <Icon Id="crcicon.ico" SourceFile=".\Resources\icon.ico"/>
         <Property Id="ARPPRODUCTICON" Value="crcicon.ico"/>
         <Property Id="CURRENTBUILD">
-            <RegistrySearch Id="CURRENTBUILDSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion"
-             Name="CurrentBuild"  Type="raw"/>
+            <RegistrySearch Id="CURRENTBUILDSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuild" Type="raw"/>
         </Property>
         <Property Id="MINIMUMBUILD" Value="1709" Secure="yes"></Property>
         <Condition Message="CodeReady Containers requires the Windows 10 Fall Creators Update (version 1709) or newer.">
@@ -50,13 +41,7 @@
                     </Component>
                     <Component Id="AdminHelper" Guid="*">
                         <File Id="AdminHelper" Source="SourceDir\crc-admin-helper-windows.exe" KeyPath="yes" DiskId="3" />
-                        <ServiceInstall 
-                            Name="CodeReadyContainersAdminHelper"
-                            Description="Perform administrative tasks for the user"
-                            Arguments="daemon" 
-                            DisplayName="CodeReady Containers Admin Helper"
-                            ErrorControl="normal" Start="auto" Type="ownProcess" 
-                            />
+                        <ServiceInstall Name="CodeReadyContainersAdminHelper" Description="Perform administrative tasks for the user" Arguments="daemon" DisplayName="CodeReady Containers Admin Helper" ErrorControl="normal" Start="auto" Type="ownProcess" />
                         <ServiceControl Id="StartAdminHelperService" Name="CodeReadyContainersAdminHelper" Start='install' Stop='both' Remove='uninstall' />
 
                     </Component>
@@ -87,53 +72,43 @@
             </Directory>
             <Directory Id="StartupFolder">
                 <Component Id="TrayStartup" Guid="*">
-                    <Shortcut Id="TrayStartupShortcut" 
-                     Name="CodeReady Containers"
-                     Target="[#CrcTray]"
-                     Icon="crcicon.ico"
-                     WorkingDirectory="AppDataFolder"/>
+                    <Shortcut Id="TrayStartupShortcut" Name="CodeReady Containers" Target="[#CrcTray]" Icon="crcicon.ico" WorkingDirectory="AppDataFolder"/>
                     <RemoveFile Id="RemoveTrayShortCut" Name="CodeReady Containers" On="uninstall"/>
                     <RegistryValue Root="HKCU" Key="Software\Red Hat\CodeReady Containers" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
                 </Component>
             </Directory>
             <Directory Id="ProgramMenuFolder">
                 <Component Id="StartMenuEntry" Guid="*">
-                    <Shortcut Id="TrayStartMenuEntry" 
-                        Name="CodeReady Containers"
-                        Target="[#CrcTray]"
-                        Icon="crcicon.ico"
-                        WorkingDirectory="AppDataFolder"/>
+                    <Shortcut Id="TrayStartMenuEntry" Name="CodeReady Containers" Target="[#CrcTray]" Icon="crcicon.ico" WorkingDirectory="AppDataFolder"/>
                     <RemoveFile Id="RemoveStartMenuEntry" Name="CodeReady Containers" On="uninstall"/>
                     <RegistryValue Root="HKCU" Key="Software\Red Hat\CodeReady Containers" Name="startmenu" Type="integer" Value="1" KeyPath="yes"/>
                 </Component>
             </Directory>
         </Directory>
-        <SetProperty Action="CAJoinBundle"  Id="JoinBundle"  Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; copy /b $(var.crcBundlePart0)+$(var.crcBundlePart1)+$(var.crcBundlePart2) $(var.crcBundleName)' Before="JoinBundle" Sequence="execute"/>
+        <SetProperty Action="CAJoinBundle" Id="JoinBundle" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; copy /b $(var.crcBundlePart0)+$(var.crcBundlePart1)+$(var.crcBundlePart2) $(var.crcBundleName)' Before="JoinBundle" Sequence="execute"/>
         <CustomAction Id="JoinBundle" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
-        <SetProperty Action="CARemoveParts"  Id="RemoveParts"  Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; del /f /q $(var.crcBundlePart0) $(var.crcBundlePart1) $(var.crcBundlePart2)' Before="RemoveParts" Sequence="execute"/>
+        <SetProperty Action="CARemoveParts" Id="RemoveParts" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; del /f /q $(var.crcBundlePart0) $(var.crcBundlePart1) $(var.crcBundlePart2)' Before="RemoveParts" Sequence="execute"/>
         <CustomAction Id="RemoveParts" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
-        
-        <SetProperty Action="CACreateCrcUsersGroup"  Id="CreateCrcGroup"  Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /comment:"Group for CodeReady Containers users" /add' Before="CreateCrcGroup" Sequence="execute"/>
+
+        <SetProperty Action="CACreateCrcUsersGroup" Id="CreateCrcGroup" Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /comment:"Group for CodeReady Containers users" /add' Before="CreateCrcGroup" Sequence="execute"/>
         <CustomAction Id="CreateCrcGroup" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
-        <SetProperty Action="CARemoveCrcUsersGroup"  Id="RemoveCrcGroup"  Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /del' Before="RemoveCrcGroup" Sequence="execute"/>
+        <SetProperty Action="CARemoveCrcUsersGroup" Id="RemoveCrcGroup" Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /del' Before="RemoveCrcGroup" Sequence="execute"/>
         <CustomAction Id="RemoveCrcGroup" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
-        <SetProperty Action="CARemoveCrcUsersGroupRollback"  Id="RemoveCrcGroupRollback"  Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /del' Before="RemoveCrcGroup" Sequence="execute"/>
+        <SetProperty Action="CARemoveCrcUsersGroupRollback" Id="RemoveCrcGroupRollback" Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /del' Before="RemoveCrcGroup" Sequence="execute"/>
         <CustomAction Id="RemoveCrcGroupRollback" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="rollback" Impersonate="no" Return="ignore" />
 
         <SetProperty Action="CAInstallHyperv" Id="InstallHyperv" Value='"[System64Folder]dism.exe" /online /enable-feature /featureName:microsoft-hyper-v-all /NoRestart /quiet' Before="InstallHyperv" Sequence="execute"/>
         <CustomAction Id="InstallHyperv" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
 
-        <util:CloseApplication Id = "TrayRunning" Description="Please exit CodeReady Containers from tray and run the installation again."
-            Target="crc-tray.exe" RebootPrompt="no"
-            PromptToContinue="yes" />
+        <util:CloseApplication Id = "TrayRunning" Description="Please exit CodeReady Containers from tray and run the installation again." Target="crc-tray.exe" RebootPrompt="no" PromptToContinue="yes" />
 
         <InstallExecuteSequence>
-            <Custom Action="JoinBundle"  After="InstallFiles" >NOT Installed AND NOT PATCH</Custom>
-            <Custom Action="RemoveParts"  After="JoinBundle" >NOT Installed AND NOT PATCH</Custom>
-            <Custom Action="CreateCrcGroup" Before="ConfigureUsers" > NOT Installed AND NOT REMOVE~="ALL"</Custom>
-            <Custom Action="RemoveCrcGroup" After="RemoveFolders" > Installed AND NOT PATCH AND REMOVE~="ALL"</Custom>
-            <Custom Action="InstallHyperv" After="RemoveParts" > NOT Installed AND NOT REMOVE~="ALL"</Custom>
-            <Custom Action="RemoveCrcGroupRollback" Before="CreateCrcGroup" > NOT Installed AND NOT REMOVE~="ALL"</Custom>
+            <Custom Action="JoinBundle" After="InstallFiles">NOT Installed AND NOT PATCH</Custom>
+            <Custom Action="RemoveParts" After="JoinBundle">NOT Installed AND NOT PATCH</Custom>
+            <Custom Action="CreateCrcGroup" Before="ConfigureUsers"> NOT Installed AND NOT REMOVE~="ALL"</Custom>
+            <Custom Action="RemoveCrcGroup" After="RemoveFolders"> Installed AND NOT PATCH AND REMOVE~="ALL"</Custom>
+            <Custom Action="InstallHyperv" After="RemoveParts"> NOT Installed AND NOT REMOVE~="ALL"</Custom>
+            <Custom Action="RemoveCrcGroupRollback" Before="CreateCrcGroup"> NOT Installed AND NOT REMOVE~="ALL"</Custom>
             <ScheduleReboot After="InstallFinalize"> NOT Installed AND NOT REMOVE~="ALL"</ScheduleReboot>
         </InstallExecuteSequence>
         <Feature Id="DefaultFeature" Level="1">
@@ -148,12 +123,12 @@
             <ComponentRef Id="StartMenuEntry" />
             <ComponentRef Id="AddUserToHypervAdmins" />
             <ComponentRef Id="AddUserToCrcUsers" />
-            <ComponentRef Id="VsockRegistryEntry" />  
+            <ComponentRef Id="VsockRegistryEntry" />
         </Feature>
         <UI>
             <UIRef Id="WixUI_ErrorProgressText"/>
             <!-- Define the installer UI -->
-            <UIRef Id="WixUI_HK"/> 
+            <UIRef Id="WixUI_HK"/>
             <ProgressText Action="JoinBundle">Combining bundle parts</ProgressText>
             <ProgressText Action="RemoveParts">Removing bundle parts after combining</ProgressText>
             <ProgressText Action="CreateCrcGroup">Creating crc-users group</ProgressText>
