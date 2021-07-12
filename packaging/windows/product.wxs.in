@@ -78,6 +78,11 @@
                         <CreateFolder />
                         <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes" />
                     </Component>
+                    <Component Id="VsockRegistryEntry" Guid="*">
+                        <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices\00000400-FACB-11E6-BD58-64006A7986D3">
+                            <RegistryValue Type="string" Name="ElementName" Value="gvisor-tap-vsock" KeyPath="yes"/>
+                        </RegistryKey>
+                    </Component>
                 </Directory>
             </Directory>
             <Directory Id="StartupFolder">
@@ -142,7 +147,8 @@
             <ComponentRef Id="TrayStartup"/>
             <ComponentRef Id="StartMenuEntry" />
             <ComponentRef Id="AddUserToHypervAdmins" />
-            <ComponentRef Id="AddUserToCrcUsers" />   
+            <ComponentRef Id="AddUserToCrcUsers" />
+            <ComponentRef Id="VsockRegistryEntry" />  
         </Feature>
         <UI>
             <UIRef Id="WixUI_ErrorProgressText"/>
