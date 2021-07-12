@@ -52,12 +52,7 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 	Describe("use custom values", func() {
 
 		It("start CRC", func() {
-			if runtime.GOOS == "darwin" {
-				Expect(RunCRCExpectFail("start", "--memory", "12000", "--cpus", "6", "--disk-size", "40")).To(ContainSubstring("Disk resizing is not supported on macOS"))
-				Expect(RunCRCExpectSuccess("start", "--memory", "12000", "--cpus", "6")).To(ContainSubstring("Started the OpenShift cluster"))
-			} else {
-				Expect(RunCRCExpectSuccess("start", "--memory", "12000", "--cpus", "6", "--disk-size", "40")).To(ContainSubstring("Started the OpenShift cluster"))
-			}
+			Expect(RunCRCExpectSuccess("start", "--memory", "12000", "--cpus", "6", "--disk-size", "40")).To(ContainSubstring("Started the OpenShift cluster"))
 		})
 
 		It("check VM's memory size", func() {
@@ -76,11 +71,7 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 		It("check VM's disk size", func() {
 			out, err := SendCommandToVM("df -h | grep sysroot")
 			Expect(err).NotTo(HaveOccurred())
-			if runtime.GOOS == "darwin" { // darwin does not support resize
-				Expect(out).Should(MatchRegexp(`.*31G[\s].*[\s]/sysroot`))
-			} else {
-				Expect(out).Should(MatchRegexp(`.*40G[\s].*[\s]/sysroot`))
-			}
+			Expect(out).Should(MatchRegexp(`.*40G[\s].*[\s]/sysroot`))
 		})
 
 		It("stop CRC", func() {
@@ -97,13 +88,10 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 			Expect(RunCRCExpectFail("start", "--cpus", "3")).To(ContainSubstring("requires CPUs >= 4"))
 		})
 		It("start CRC with smaller disk", func() { // bigger than default && smaller than current
-			switch runtime.GOOS {
-			case "darwin":
-				Expect(RunCRCExpectFail("start", "--disk-size", "35")).To(ContainSubstring("Disk resizing is not supported on macOS"))
-			case "linux":
-				Expect(RunCRCExpectFail("start", "--disk-size", "35")).To(ContainSubstring("current disk image capacity is bigger than the requested size"))
-			case "windows":
+			if runtime.GOOS == "windows" {
 				Expect(RunCRCExpectFail("start", "--disk-size", "35")).To(ContainSubstring("Failed to set disk size to"))
+			} else {
+				Expect(RunCRCExpectFail("start", "--disk-size", "35")).To(ContainSubstring("current disk image capacity is bigger than the requested size"))
 			}
 		})
 		It("start CRC with sub-minimum disk", func() { // smaller than min = default = 31GiB
