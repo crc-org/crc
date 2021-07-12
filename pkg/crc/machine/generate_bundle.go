@@ -37,8 +37,9 @@ func (client *client) GenerateBundle(forceStop bool) error {
 			if err := client.PowerOff(); err != nil {
 				return err
 			}
+		} else {
+			return err
 		}
-		return err
 	}
 	running, err := client.IsRunning()
 	if err != nil {
