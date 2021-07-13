@@ -23,7 +23,10 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 		return nil, errors.Wrap(err, "Cannot check if machine exists")
 	}
 	if !exists {
-		return nil, errors.New("Machine doesn't exist")
+		return &types.ClusterStatusResult{
+			CrcStatus:       state.Stopped,
+			OpenshiftStatus: types.OpenshiftStopped,
+		}, nil
 	}
 
 	host, err := libMachineAPIClient.Load(client.name)
