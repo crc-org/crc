@@ -11,7 +11,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"syscall"
 	"time"
 
@@ -179,12 +178,6 @@ func run(configuration *types.Configuration) error {
 		}()
 	}
 
-	go func() {
-		if err := runBinaryAPI(); err != nil {
-			errCh <- err
-		}
-	}()
-
 	c := make(chan os.Signal, 1)
 
 	if watchdog {
@@ -238,17 +231,4 @@ func acceptJSONStringArray(w http.ResponseWriter, r *http.Request, fun func(host
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-}
-
-func runBinaryAPI() error {
-	if runtime.GOOS != "windows" { // only Windows tray requires the binary protocol
-		return nil
-	}
-	// Remove if an old socket is present
-	os.Remove(constants.DaemonSocketPath)
-	apiServer, err := api.CreateServer(constants.DaemonSocketPath, config, newMachine(), logging.Memory, segmentClient)
-	if err != nil {
-		return err
-	}
-	return apiServer.Serve()
 }
