@@ -26,7 +26,7 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			cleanupDescription: "Removing crc executable symlink",
 			cleanup:            removeCrcSymlink,
 
-			labels: labels{Os: Linux},
+			labels: labels{Os: Linux, NetworkMode: User},
 		},
 		{
 			configKeySuffix:  "check-virt-enabled",
@@ -117,7 +117,7 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			cleanup:            removeDaemonSystemdService,
 			flags:              SetupOnly,
 
-			labels: labels{Os: Linux},
+			labels: labels{Os: Linux, NetworkMode: User},
 		},
 		{
 			configKeySuffix:    "check-daemon-systemd-sockets",
@@ -128,7 +128,7 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			cleanupDescription: "Remove crc systemd socket units",
 			cleanup:            removeDaemonSystemdSockets,
 
-			labels: labels{Os: Linux},
+			labels: labels{Os: Linux, NetworkMode: User},
 		},
 	}
 	return checks
