@@ -119,10 +119,23 @@ func (c *Client) GetConfig(configs []string) (GetConfigResult, error) {
 			return gcr, fmt.Errorf("Failed to encode data to JSON: %w", err)
 		}
 	}
-	body, err := c.sendPostRequest("/config/get", data)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s%s", c.base, "/config"), data)
 	if err != nil {
 		return gcr, err
 	}
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return gcr, err
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return gcr, fmt.Errorf("Unknown error reading response: %w", err)
+	}
+
 	err = json.Unmarshal(body, &gcr)
 	if err != nil {
 		return gcr, err
@@ -142,7 +155,7 @@ func (c *Client) SetConfig(configs SetConfigRequest) (SetOrUnsetConfigResult, er
 		return scr, fmt.Errorf("Failed to encode data to JSON: %w", err)
 	}
 
-	body, err := c.sendPostRequest("/config/set", data)
+	body, err := c.sendPostRequest("/config", data)
 	if err != nil {
 		return scr, err
 	}
@@ -164,10 +177,23 @@ func (c *Client) UnsetConfig(configs []string) (SetOrUnsetConfigResult, error) {
 	if err := json.NewEncoder(data).Encode(cfg); err != nil {
 		return ucr, fmt.Errorf("Failed to encode data to JSON: %w", err)
 	}
-	body, err := c.sendPostRequest("/config/unset", data)
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s%s", c.base, "/config"), data)
 	if err != nil {
 		return ucr, err
 	}
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return ucr, err
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return ucr, fmt.Errorf("Unknown error reading response: %w", err)
+	}
+
 	err = json.Unmarshal(body, &ucr)
 	if err != nil {
 		return ucr, err

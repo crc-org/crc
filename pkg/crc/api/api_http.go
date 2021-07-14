@@ -81,7 +81,7 @@ func NewMux(config crcConfig.Storage, machine machine.Client, logger Logger, tel
 		sendResponse(w, webconsoleInfo)
 	})
 
-	mux.Handle("/config/", http.StripPrefix("/config", newConfigMux(handler)))
+	mux.HandleFunc("/config", configHandler(handler))
 
 	mux.HandleFunc("/logs", func(w http.ResponseWriter, r *http.Request) {
 		sendResponse(w, handler.Logs())
@@ -123,32 +123,33 @@ func pullSecretHandler(config crcConfig.Storage) func(w http.ResponseWriter, r *
 	}
 }
 
-func newConfigMux(handler *Handler) http.Handler {
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) {
-		var configGetResult string
-		data, err := verifyRequestAndReadBody(w, r, http.MethodGet, http.MethodPost)
-		if err != nil {
+func configHandler(handler *Handler) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			var configGetResult string
+			data, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			if len(data) > 0 {
+				configGetResult = handler.GetConfig(data)
+			} else {
+				configGetResult = handler.GetConfig(nil)
+			}
+			sendResponse(w, configGetResult)
 			return
 		}
-		if len(data) > 0 {
-			configGetResult = handler.GetConfig(data)
-		} else {
-			configGetResult = handler.GetConfig(nil)
+		if r.Method == http.MethodPost {
+			handleConfigSetUnset(w, r, func(data []byte) string { return handler.SetConfig(data) })
+			return
 		}
-		sendResponse(w, configGetResult)
-	})
-
-	mux.HandleFunc("/set", func(w http.ResponseWriter, r *http.Request) {
-		handleConfigSetUnset(w, r, func(data []byte) string { return handler.SetConfig(data) })
-	})
-
-	mux.HandleFunc("/unset", func(w http.ResponseWriter, r *http.Request) {
-		handleConfigSetUnset(w, r, func(data []byte) string { return handler.UnsetConfig(data) })
-	})
-
-	return mux
+		if r.Method == http.MethodDelete {
+			handleConfigSetUnset(w, r, func(data []byte) string { return handler.UnsetConfig(data) })
+			return
+		}
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
 }
 
 func wrongHTTPMethodUsed(r *http.Request, w http.ResponseWriter, allowedMethods ...string) bool {
@@ -187,12 +188,12 @@ func sendResponse(w http.ResponseWriter, response string) {
 }
 
 func handleConfigSetUnset(w http.ResponseWriter, r *http.Request, fn func([]byte) string) {
-	data, err := verifyRequestAndReadBody(w, r, http.MethodPost)
+	data, err := verifyRequestAndReadBody(w, r, http.MethodPost, http.MethodDelete)
 	if err != nil {
 		return
 	}
 	if len(data) < 1 {
-		http.Error(w, "Not enough arguments for /config/(un)set", http.StatusBadRequest)
+		http.Error(w, "Not enough arguments for config (un)set", http.StatusBadRequest)
 		return
 	}
 
