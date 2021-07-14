@@ -225,7 +225,9 @@ func (collector *ContainerLogCollector) Collect(w Writer) error {
 }
 
 func sshClient() (ssh.Client, error) {
-	client := machine.NewClient(constants.DefaultName, true, crcConfig.New(crcConfig.NewEmptyInMemoryStorage()))
+	cfg := crcConfig.New(crcConfig.NewEmptyInMemoryStorage())
+	crcConfig.RegisterSettings(cfg)
+	client := machine.NewClient(constants.DefaultName, true, cfg)
 	connectionDetails, err := client.ConnectionDetails()
 	if err != nil {
 		return nil, err
