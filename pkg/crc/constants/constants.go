@@ -128,8 +128,10 @@ func BinDir() string {
 
 // GetHomeDir returns the home directory for the current user
 func GetHomeDir() string {
-	homeDir, _ := os.UserHomeDir()
-
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic("Failed to get homeDir: " + err.Error())
+	}
 	return homeDir
 }
 
