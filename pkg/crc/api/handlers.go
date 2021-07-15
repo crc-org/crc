@@ -17,10 +17,10 @@ import (
 )
 
 type Handler struct {
-	Logger        Logger
-	MachineClient AdaptedClient
-	Config        crcConfig.Storage
-	Telemetry     Telemetry
+	Logger    Logger
+	Client    machine.Client
+	Config    crcConfig.Storage
+	Telemetry Telemetry
 }
 
 type Logger interface {
@@ -40,9 +40,7 @@ func (h *Handler) Logs() string {
 
 func NewHandler(config crcConfig.Storage, machine machine.Client, logger Logger, telemetry Telemetry) *Handler {
 	return &Handler{
-		MachineClient: &Adapter{
-			Underlying: machine,
-		},
+		Client:    machine,
 		Config:    config,
 		Logger:    logger,
 		Telemetry: telemetry,
@@ -50,18 +48,49 @@ func NewHandler(config crcConfig.Storage, machine machine.Client, logger Logger,
 }
 
 func (h *Handler) Status() string {
-	clusterStatus := h.MachineClient.Status()
-	return encodeStructToJSON(clusterStatus)
+	res, err := h.Client.Status()
+	if err != nil {
+		logging.Error(err)
+		return encodeStructToJSON(client.ClusterStatusResult{
+			Error:   err.Error(),
+			Success: false,
+		})
+	}
+	return encodeStructToJSON(client.ClusterStatusResult{
+		CrcStatus:        string(res.CrcStatus),
+		OpenshiftStatus:  string(res.OpenshiftStatus),
+		OpenshiftVersion: res.OpenshiftVersion,
+		DiskUse:          res.DiskUse,
+		DiskSize:         res.DiskSize,
+		Success:          true,
+	})
 }
 
 func (h *Handler) Stop() string {
-	commandResult := h.MachineClient.Stop()
-	return encodeStructToJSON(commandResult)
+	_, err := h.Client.Stop()
+	if err != nil {
+		logging.Error(err)
+		return encodeStructToJSON(client.Result{
+			Success: false,
+			Error:   err.Error(),
+		})
+	}
+	return encodeStructToJSON(client.Result{
+		Success: true,
+	})
 }
 
 func (h *Handler) PowerOff() string {
-	commandResult := h.MachineClient.PowerOff()
-	return encodeStructToJSON(commandResult)
+	if err := h.Client.PowerOff(); err != nil {
+		logging.Error(err)
+		return encodeStructToJSON(client.Result{
+			Success: false,
+			Error:   err.Error(),
+		})
+	}
+	return encodeStructToJSON(client.Result{
+		Success: true,
+	})
 }
 
 func (h *Handler) Start(args json.RawMessage) string {
@@ -83,8 +112,20 @@ func (h *Handler) Start(args json.RawMessage) string {
 	}
 
 	startConfig := getStartConfig(h.Config, parsedArgs)
-	status := h.MachineClient.Start(context.Background(), startConfig)
-	return encodeStructToJSON(status)
+	res, err := h.Client.Start(context.Background(), startConfig)
+	if err != nil {
+		logging.Error(err)
+		return encodeStructToJSON(client.StartResult{
+			Success: false,
+			Error:   err.Error(),
+		})
+	}
+	return encodeStructToJSON(client.StartResult{
+		Success:        true,
+		Status:         string(res.Status),
+		ClusterConfig:  res.ClusterConfig,
+		KubeletStarted: res.KubeletStarted,
+	})
 }
 
 func getStartConfig(cfg crcConfig.Storage, args client.StartConfig) types.StartConfig {
@@ -110,13 +151,32 @@ func (h *Handler) GetVersion() string {
 }
 
 func (h *Handler) Delete() string {
-	r := h.MachineClient.Delete()
-	return encodeStructToJSON(r)
+	err := h.Client.Delete()
+	if err != nil {
+		logging.Error(err)
+		return encodeStructToJSON(client.Result{
+			Success: false,
+			Error:   err.Error(),
+		})
+	}
+	return encodeStructToJSON(client.Result{
+		Success: true,
+	})
 }
 
 func (h *Handler) GetWebconsoleInfo() string {
-	r := h.MachineClient.GetConsoleURL()
-	return encodeStructToJSON(r)
+	res, err := h.Client.GetConsoleURL()
+	if err != nil {
+		logging.Error(err)
+		return encodeStructToJSON(client.ConsoleResult{
+			Success: false,
+			Error:   err.Error(),
+		})
+	}
+	return encodeStructToJSON(client.ConsoleResult{
+		ClusterConfig: res.ClusterConfig,
+		Success:       true,
+	})
 }
 
 func (h *Handler) SetConfig(args json.RawMessage) string {
