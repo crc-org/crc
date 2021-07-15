@@ -87,7 +87,7 @@ func (c Command) env() []string {
 
 func envVariable(key, value string) string {
 	if runtime.GOOS == "windows" {
-		return fmt.Sprintf("$env:%s=%s", key, value)
+		return fmt.Sprintf("$env:%s=%s;", key, value)
 	}
 	return fmt.Sprintf("%s=%s", key, value)
 }
