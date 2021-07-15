@@ -1,15 +1,13 @@
 package api
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
+	gocontext "context"
+	"net/http"
 
 	"github.com/code-ready/crc/pkg/crc/api/client"
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/preflight"
@@ -31,8 +29,8 @@ type Telemetry interface {
 	UploadAction(action, source, status string) error
 }
 
-func (h *Handler) Logs() string {
-	return encodeStructToJSON(&loggerResult{
+func (h *Handler) Logs(c *context) error {
+	return c.JSON(http.StatusOK, &loggerResult{
 		Success:  true,
 		Messages: h.Logger.Messages(),
 	})
@@ -47,16 +45,12 @@ func NewHandler(config crcConfig.Storage, machine machine.Client, logger Logger,
 	}
 }
 
-func (h *Handler) Status() string {
+func (h *Handler) Status(c *context) error {
 	res, err := h.Client.Status()
 	if err != nil {
-		logging.Error(err)
-		return encodeStructToJSON(client.ClusterStatusResult{
-			Error:   err.Error(),
-			Success: false,
-		})
+		return err
 	}
-	return encodeStructToJSON(client.ClusterStatusResult{
+	return c.JSON(http.StatusOK, client.ClusterStatusResult{
 		CrcStatus:        string(res.CrcStatus),
 		OpenshiftStatus:  string(res.OpenshiftStatus),
 		OpenshiftVersion: res.OpenshiftVersion,
@@ -66,61 +60,45 @@ func (h *Handler) Status() string {
 	})
 }
 
-func (h *Handler) Stop() string {
+func (h *Handler) Stop(c *context) error {
 	_, err := h.Client.Stop()
 	if err != nil {
-		logging.Error(err)
-		return encodeStructToJSON(client.Result{
-			Success: false,
-			Error:   err.Error(),
-		})
+		return err
 	}
-	return encodeStructToJSON(client.Result{
+	return c.JSON(http.StatusOK, client.Result{
 		Success: true,
 	})
 }
 
-func (h *Handler) PowerOff() string {
+func (h *Handler) PowerOff(c *context) error {
+	if c.method != http.MethodPost {
+		return c.String(http.StatusMethodNotAllowed, "Only POST is allowed")
+	}
 	if err := h.Client.PowerOff(); err != nil {
-		logging.Error(err)
-		return encodeStructToJSON(client.Result{
-			Success: false,
-			Error:   err.Error(),
-		})
+		return err
 	}
-	return encodeStructToJSON(client.Result{
+	return c.JSON(http.StatusOK, client.Result{
 		Success: true,
 	})
 }
 
-func (h *Handler) Start(args json.RawMessage) string {
+func (h *Handler) Start(c *context) error {
 	var parsedArgs client.StartConfig
-	if args != nil {
-		if err := json.Unmarshal(args, &parsedArgs); err != nil {
-			return encodeStructToJSON(&client.StartResult{
-				Success: false,
-				Error:   fmt.Sprintf("Incorrect arguments given: %s", err.Error()),
-			})
+	if len(c.requestBody) > 0 {
+		if err := c.Bind(&parsedArgs); err != nil {
+			return err
 		}
 	}
 	if err := preflight.StartPreflightChecks(h.Config); err != nil {
-		startErr := &client.StartResult{
-			Success: false,
-			Error:   err.Error(),
-		}
-		return encodeStructToJSON(startErr)
+		return err
 	}
 
 	startConfig := getStartConfig(h.Config, parsedArgs)
-	res, err := h.Client.Start(context.Background(), startConfig)
+	res, err := h.Client.Start(gocontext.Background(), startConfig)
 	if err != nil {
-		logging.Error(err)
-		return encodeStructToJSON(client.StartResult{
-			Success: false,
-			Error:   err.Error(),
-		})
+		return err
 	}
-	return encodeStructToJSON(client.StartResult{
+	return c.JSON(http.StatusOK, client.StartResult{
 		Success:        true,
 		Status:         string(res.Status),
 		ClusterConfig:  res.ClusterConfig,
@@ -140,58 +118,46 @@ func getStartConfig(cfg crcConfig.Storage, args client.StartConfig) types.StartC
 	}
 }
 
-func (h *Handler) GetVersion() string {
-	v := &client.VersionResult{
+func (h *Handler) GetVersion(c *context) error {
+	return c.JSON(http.StatusOK, &client.VersionResult{
 		CrcVersion:       version.GetCRCVersion(),
 		CommitSha:        version.GetCommitSha(),
 		OpenshiftVersion: version.GetBundleVersion(),
 		Success:          true,
-	}
-	return encodeStructToJSON(v)
+	})
 }
 
-func (h *Handler) Delete() string {
+func (h *Handler) Delete(c *context) error {
 	err := h.Client.Delete()
 	if err != nil {
-		logging.Error(err)
-		return encodeStructToJSON(client.Result{
-			Success: false,
-			Error:   err.Error(),
-		})
+		return err
 	}
-	return encodeStructToJSON(client.Result{
+	return c.JSON(http.StatusOK, client.Result{
 		Success: true,
 	})
 }
 
-func (h *Handler) GetWebconsoleInfo() string {
+func (h *Handler) GetWebconsoleInfo(c *context) error {
 	res, err := h.Client.GetConsoleURL()
 	if err != nil {
-		logging.Error(err)
-		return encodeStructToJSON(client.ConsoleResult{
-			Success: false,
-			Error:   err.Error(),
-		})
+		return err
 	}
-	return encodeStructToJSON(client.ConsoleResult{
+	return c.JSON(http.StatusOK, client.ConsoleResult{
 		ClusterConfig: res.ClusterConfig,
 		Success:       true,
 	})
 }
 
-func (h *Handler) SetConfig(args json.RawMessage) string {
-	if args == nil {
-		return encodeStructToJSON(client.SetOrUnsetConfigResult{
-			Success: false,
-			Error:   "No config keys provided",
-		})
+func (h *Handler) SetConfig(c *context) error {
+	var req client.SetConfigRequest
+	if err := c.Bind(&req); err != nil {
+		return err
 	}
 
-	var req client.SetConfigRequest
-	if err := json.Unmarshal(args, &req); err != nil {
-		return encodeStructToJSON(client.SetOrUnsetConfigResult{
+	if len(req.Properties) == 0 {
+		return c.JSON(http.StatusBadRequest, client.SetOrUnsetConfigResult{
 			Success: false,
-			Error:   err.Error(),
+			Error:   "No config keys provided",
 		})
 	}
 
@@ -207,30 +173,24 @@ func (h *Handler) SetConfig(args json.RawMessage) string {
 		successProps = append(successProps, k)
 	}
 	if len(multiError.Errors) != 0 {
-		return encodeStructToJSON(client.SetOrUnsetConfigResult{
-			Success: false,
-			Error:   multiError.Error(),
-		})
+		return multiError
 	}
-	return encodeStructToJSON(client.SetOrUnsetConfigResult{
+	return c.JSON(http.StatusOK, client.SetOrUnsetConfigResult{
 		Success:    true,
 		Properties: successProps,
 	})
 }
 
-func (h *Handler) UnsetConfig(args json.RawMessage) string {
-	if args == nil {
-		return encodeStructToJSON(client.SetOrUnsetConfigResult{
-			Success: false,
-			Error:   "No config keys provided",
-		})
+func (h *Handler) UnsetConfig(c *context) error {
+	var req client.GetOrUnsetConfigRequest
+	if err := c.Bind(&req); err != nil {
+		return err
 	}
 
-	var req client.GetOrUnsetConfigRequest
-	if err := json.Unmarshal(args, &req); err != nil {
-		return encodeStructToJSON(client.SetOrUnsetConfigResult{
+	if len(req.Properties) == 0 {
+		return c.JSON(http.StatusBadRequest, client.SetOrUnsetConfigResult{
 			Success: false,
-			Error:   err.Error(),
+			Error:   "No config keys provided",
 		})
 	}
 
@@ -245,35 +205,29 @@ func (h *Handler) UnsetConfig(args json.RawMessage) string {
 		successProps = append(successProps, key)
 	}
 	if len(multiError.Errors) != 0 {
-		return encodeStructToJSON(client.SetOrUnsetConfigResult{
-			Success: false,
-			Error:   multiError.Error(),
-		})
+		return multiError
 	}
-	return encodeStructToJSON(client.SetOrUnsetConfigResult{
+	return c.JSON(http.StatusOK, client.SetOrUnsetConfigResult{
 		Success:    true,
 		Properties: successProps,
 	})
 }
 
-func (h *Handler) GetConfig(args json.RawMessage) string {
-	if args == nil {
+func (h *Handler) GetConfig(c *context) error {
+	var req client.GetOrUnsetConfigRequest
+	if err := c.Bind(&req); err != nil {
+		return err
+	}
+
+	if len(req.Properties) == 0 {
 		allConfigs := h.Config.AllConfigs()
 		configs := make(map[string]interface{})
 		for k, v := range allConfigs {
 			configs[k] = v.Value
 		}
-		return encodeStructToJSON(client.GetConfigResult{
+		return c.JSON(http.StatusOK, client.GetConfigResult{
 			Success: true,
 			Configs: configs,
-		})
-	}
-
-	var req client.GetOrUnsetConfigRequest
-	if err := json.Unmarshal(args, &req); err != nil {
-		return encodeStructToJSON(client.GetConfigResult{
-			Success: false,
-			Error:   err.Error(),
 		})
 	}
 
@@ -287,48 +241,23 @@ func (h *Handler) GetConfig(args json.RawMessage) string {
 	}
 
 	if len(configs) == 0 {
-		return encodeStructToJSON(client.GetConfigResult{
-			Success: false,
-			Error:   "Unable to get configs",
-		})
+		return c.String(http.StatusInternalServerError, "Unable to get configs")
 	}
-	return encodeStructToJSON(client.GetConfigResult{
+	return c.JSON(http.StatusOK, client.GetConfigResult{
 		Success: true,
 		Configs: configs,
 	})
 }
 
-func (h *Handler) UploadTelemetry(args json.RawMessage) string {
+func (h *Handler) UploadTelemetry(c *context) error {
 	var req client.TelemetryRequest
-	if err := json.Unmarshal(args, &req); err != nil {
-		return encodeErrorToJSON(err.Error())
+	if err := c.Bind(&req); err != nil {
+		return err
 	}
 	if err := h.Telemetry.UploadAction(req.Action, req.Source, req.Status); err != nil {
-		return encodeErrorToJSON(err.Error())
+		return err
 	}
-	return encodeStructToJSON(client.Result{
+	return c.JSON(http.StatusOK, client.Result{
 		Success: true,
 	})
-}
-
-func encodeStructToJSON(v interface{}) string {
-	s, err := json.Marshal(v)
-	if err != nil {
-		logging.Error(err.Error())
-		err := client.Result{
-			Success: false,
-			Error:   "Failed while encoding JSON to string",
-		}
-		s, _ := json.Marshal(err)
-		return string(s)
-	}
-	return string(s)
-}
-
-func encodeErrorToJSON(errMsg string) string {
-	err := client.Result{
-		Success: false,
-		Error:   errMsg,
-	}
-	return encodeStructToJSON(err)
 }
