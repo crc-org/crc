@@ -31,9 +31,9 @@ var (
 const (
 	releaseInfoLink = "https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/release-info.json"
 	// Tray version to be embedded in executable
-	crcMacTrayVersion = "1.0.10"
+	crcMacTrayVersion = "1.0.11"
 	// Windows forms application version type major.minor.buildnumber.revesion
-	crcWindowsTrayVersion = "0.8.0.0"
+	crcWindowsTrayVersion = "0.9.0.0"
 )
 
 type CrcReleaseInfo struct {
