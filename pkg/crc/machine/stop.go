@@ -4,8 +4,8 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/state"
-	"github.com/code-ready/crc/pkg/crc/oc"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
+	"github.com/code-ready/crc/pkg/crc/systemd"
 	"github.com/code-ready/crc/pkg/libmachine/host"
 	"github.com/pkg/errors"
 )
@@ -18,7 +18,7 @@ func (client *client) Stop() (state.State, error) {
 	if err != nil {
 		return state.Error, errors.Wrap(err, "Cannot load machine")
 	}
-	if err := removeMCOPods(host, client); err != nil {
+	if err := stopAllContainers(host, client); err != nil {
 		return state.Error, err
 	}
 	logging.Info("Stopping the OpenShift cluster, this may take a few minutes...")
@@ -40,8 +40,8 @@ func (client *client) Stop() (state.State, error) {
 // is fixed. We should also ignore the openshift specific errors because stop
 // operation shouldn't depend on the openshift side. Without this graceful shutdown
 // takes around 6-7 mins.
-func removeMCOPods(host *host.Host, client *client) error {
-	logging.Info("Deleting the pods from openshift-machine-config-operator namespace")
+func stopAllContainers(host *host.Host, client *client) error {
+	logging.Info("Stopping kubelet and all containers...")
 	instanceIP, err := getIP(host, client.useVSock())
 	if err != nil {
 		return errors.Wrapf(err, "Error getting the IP")
@@ -52,10 +52,13 @@ func removeMCOPods(host *host.Host, client *client) error {
 	}
 	defer sshRunner.Close()
 
-	ocConfig := oc.UseOCWithSSH(sshRunner)
-	_, stderr, err := ocConfig.RunOcCommand("delete", "pods", "--all", "-n openshift-machine-config-operator", "--grace-period=0")
+	if err := systemd.NewInstanceSystemdCommander(sshRunner).Stop("kubelet"); err != nil {
+		return err
+	}
+	_, stderr, err := sshRunner.RunPrivileged("stopping all containers", `-- sh -c 'crictl stop $(crictl ps -q)'`)
 	if err != nil {
-		logging.Debugf("Error deleting the pods from openshift-machine-config-operator namespace:%v \n StdErr: %s", err, stderr)
+		logging.Errorf("Failed to stop all containers: %v - %s", err, stderr)
+		return err
 	}
 	return nil
 }
