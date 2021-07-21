@@ -358,8 +358,12 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		logging.Warn(fmt.Sprintf("Failed to query DNS from host: %v", err))
 	}
 
-	if err := cluster.EnsurePullSecretPresentOnInstanceDisk(sshRunner, startConfig.PullSecret); err != nil {
-		return nil, errors.Wrap(err, "Failed to update VM pull secret")
+	// Remove this block after 2-3 release (after v1.32.0)
+	// This is just to support 4.7 bundle with current master
+	if strings.HasPrefix(crcBundleMetadata.GetOpenshiftVersion(), "4.7.") {
+		if err := cluster.EnsurePullSecretPresentOnInstanceDisk(sshRunner, startConfig.PullSecret); err != nil {
+			return nil, errors.Wrap(err, "Failed to update VM pull secret")
+		}
 	}
 
 	if err := ensureKubeletAndCRIOAreConfiguredForProxy(sshRunner, proxyConfig, instanceIP); err != nil {
@@ -396,6 +400,10 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	if err := cluster.EnsureSSHKeyPresentInTheCluster(ocConfig, constants.GetPublicKeyPath()); err != nil {
 		return nil, errors.Wrap(err, "Failed to update ssh public key to machine config")
+	}
+
+	if err := cluster.WaitForPullSecretPresentOnInstanceDisk(sshRunner); err != nil {
+		return nil, errors.Wrap(err, "Failed to update pull secret on the disk")
 	}
 
 	if err := ensureProxyIsConfiguredInOpenShift(ocConfig, sshRunner, proxyConfig, instanceIP); err != nil {
