@@ -49,7 +49,7 @@ Feature: End-to-end health check
     @darwin @linux @windows
     Scenario: Stop and start CRC, then check app still runs
         Given with up to "2" retries with wait period of "60s" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
-        When executing "crc stop -f" succeeds
+        When executing "crc stop" succeeds
         Then checking that CRC is stopped
         When starting CRC with default bundle succeeds
         Then checking that CRC is running
