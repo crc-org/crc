@@ -22,6 +22,9 @@
         <Condition Message="CodeReady Containers requires the Windows 10 Fall Creators Update (version 1709) or newer.">
             <![CDATA[Installed OR (CURRENTBUILD > MINIMUMBUILD)]]>
         </Condition>
+        <Condition Message="CodeReady Containers requires at least 9GB of RAM to run. Aborting installation.">
+            <![CDATA[Installed OR (PhysicalMemory >= 9126)]]>
+        </Condition>
         <util:Group Id="HypervAdminsGroup" Name="Hyper-V Administrators" />
         <util:Group Id="CrcUsersGroup" Name="crc-users" />
         <Directory Id="TARGETDIR" Name="SourceDir">
