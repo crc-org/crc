@@ -151,8 +151,8 @@ Feature: Basic test
         Given executing "crc bundle generate -f" succeeds
 
     @darwin @windows
-    Scenario: CRC forcible stop
-        When executing "crc stop -f"
+    Scenario: CRC stop
+        When executing "crc stop"
         Then stdout should match "(.*)[Ss]topped the OpenShift cluster"
         And executing "oc whoami" fails
 
