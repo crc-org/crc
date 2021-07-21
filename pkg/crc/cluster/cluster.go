@@ -459,7 +459,7 @@ func DeleteOpenshiftAPIServerPods(ocConfig oc.Config) error {
 	}
 
 	deleteOpenshiftAPIServerPods := func() error {
-		cmdArgs := []string{"delete", "pod", "--all", "-n", "openshift-apiserver"}
+		cmdArgs := []string{"delete", "pod", "--all", "--force", "-n", "openshift-apiserver"}
 		_, stderr, err := ocConfig.WithFailFast().RunOcCommand(cmdArgs...)
 		if err != nil {
 			return &errors.RetriableError{Err: fmt.Errorf("Failed to delete pod from openshift-apiserver namespace %v: %s", err, stderr)}
