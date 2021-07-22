@@ -11,6 +11,14 @@ import (
 	"github.com/spf13/cast"
 )
 
+type Preset string
+
+const (
+	Podman  Preset = "podman"
+	Minimal Preset = "minimal"
+	Full    Preset = "full"
+)
+
 const (
 	Bundle                  = "bundle"
 	CPUs                    = "cpus"
@@ -30,6 +38,7 @@ const (
 	EnableClusterMonitoring = "enable-cluster-monitoring"
 	AutostartTray           = "autostart-tray"
 	KubeAdminPassword       = "kubeadmin-password"
+	PresetConfigurationKey  = "preset"
 )
 
 func RegisterSettings(cfg *Config) {
@@ -109,6 +118,9 @@ func RegisterSettings(cfg *Config) {
 
 	cfg.AddSetting(KubeAdminPassword, "", ValidateString, SuccessfullyApplied,
 		"User defined kubeadmin password")
+
+	cfg.AddSetting(PresetConfigurationKey, string(Minimal), validatePreset, RequiresDeleteMsg,
+		fmt.Sprintf("Virtal machine preset (alpha feature - valid values are: %s, %s or %s)", Podman, Minimal, Full))
 }
 
 func defaultNetworkMode() network.Mode {
@@ -126,4 +138,13 @@ func GetNetworkMode(config Storage) network.Mode {
 		return network.UserNetworkingMode
 	}
 	return network.ParseMode(config.Get(NetworkMode).AsString())
+}
+
+func validatePreset(i interface{}) (bool, string) {
+	switch Preset(cast.ToString(i)) {
+	case Podman, Minimal, Full:
+		return true, ""
+	default:
+		return false, fmt.Sprintf("Unknown preset. Only %s, %s and %s are valid.", Podman, Minimal, Full)
+	}
 }
