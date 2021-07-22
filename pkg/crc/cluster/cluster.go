@@ -180,9 +180,6 @@ func EnsureGeneratedClientCAPresentInTheCluster(ocConfig oc.Config, sshRunner *s
 
 func RemovePullSecretFromCluster(ocConfig oc.Config, sshRunner *ssh.Runner) error {
 	logging.Info("Removing user's pull secret from instance disk and from cluster secret...")
-	if _, _, err := sshRunner.RunPrivileged("Removing user's pull secret", "rm", "-fr", vmPullSecretPath); err != nil {
-		return err
-	}
 	cmdArgs := []string{"patch", "secret", "pull-secret", "-p",
 		`'{"data":{".dockerconfigjson":"e30K"}}'`,
 		"-n", "openshift-config", "--type", "merge"}
@@ -192,7 +189,22 @@ func RemovePullSecretFromCluster(ocConfig oc.Config, sshRunner *ssh.Runner) erro
 		return fmt.Errorf("Failed to remove Pull secret %w: %s", err, stderr)
 	}
 
-	return nil
+	return waitForPullSecretRemovedFromInstanceDisk(sshRunner)
+}
+
+func waitForPullSecretRemovedFromInstanceDisk(sshRunner *ssh.Runner) error {
+	logging.Info("Waiting for user's pull secret removed from instance disk...")
+	pullSecretPresentFunc := func() error {
+		stdout, stderr, err := sshRunner.RunPrivate(fmt.Sprintf("sudo cat %s", vmPullSecretPath))
+		if err != nil {
+			return &errors.RetriableError{Err: fmt.Errorf("failed to read %s file: %v: %s", vmPullSecretPath, err, stderr)}
+		}
+		if err := validation.ImagePullSecret(stdout); err == nil {
+			return &errors.RetriableError{Err: fmt.Errorf("pull secret still part of instance disk")}
+		}
+		return nil
+	}
+	return errors.RetryAfter(1*time.Minute, pullSecretPresentFunc, 2*time.Second)
 }
 
 func RemoveOldRenderedMachineConfig(ocConfig oc.Config) error {
