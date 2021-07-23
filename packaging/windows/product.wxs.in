@@ -2,6 +2,7 @@
 <?define crcBundlePart0="crc_hyperv___OPENSHIFT_VERSION__.crcbundle.0"?>
 <?define crcBundlePart1="crc_hyperv___OPENSHIFT_VERSION__.crcbundle.1"?>
 <?define crcBundlePart2="crc_hyperv___OPENSHIFT_VERSION__.crcbundle.2"?>
+<?define crcBundlePart3="crc_hyperv___OPENSHIFT_VERSION__.crcbundle.3"?>
 <?define crcBundleName="crc_hyperv___OPENSHIFT_VERSION__.crcbundle"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
@@ -10,6 +11,7 @@
         <Media Id="1" EmbedCab="no" Cabinet="cab1.cab" />
         <Media Id="2" EmbedCab="no" Cabinet="cab2.cab" />
         <Media Id="3" EmbedCab="no" Cabinet="cab3.cab" />
+        <Media Id="4" EmbedCab="yes" Cabinet="cab4.cab" />
         <MajorUpgrade AllowDowngrades="yes" />
         <WixVariable Id="WixUIBannerBmp" Value=".\Resources\banner.png"/>
         <WixVariable Id="WixUIDialogBmp" Value=".\Resources\background.png"/>
@@ -39,17 +41,19 @@
                     <Component Id="CrcBundlePart3" Guid="*">
                         <File Id="CrcBundlePart3" Source="SourceDir\$(var.crcBundlePart2)" KeyPath="yes" DiskId="3" />
                     </Component>
+                    <Component Id="CrcBundlePart4" Guid="*">
+                        <File Id="CrcBundlePart4" Source="SourceDir\$(var.crcBundlePart3)" KeyPath="yes" DiskId="4" />
+                    </Component>
                     <Component Id="CrcExe" Guid="*">
-                        <File Id="CrcExe" Source="SourceDir\crc.exe" KeyPath="yes" DiskId="3" />
+                        <File Id="CrcExe" Source="SourceDir\crc.exe" KeyPath="yes" DiskId="4" />
                     </Component>
                     <Component Id="AdminHelper" Guid="*">
-                        <File Id="AdminHelper" Source="SourceDir\crc-admin-helper-windows.exe" KeyPath="yes" DiskId="3" />
+                        <File Id="AdminHelper" Source="SourceDir\crc-admin-helper-windows.exe" KeyPath="yes" DiskId="4" />
                         <ServiceInstall Name="CodeReadyContainersAdminHelper" Description="Perform administrative tasks for the user" Arguments="daemon" DisplayName="CodeReady Containers Admin Helper" ErrorControl="normal" Start="auto" Type="ownProcess" />
                         <ServiceControl Id="StartAdminHelperService" Name="CodeReadyContainersAdminHelper" Start='install' Stop='both' Remove='uninstall' />
-
                     </Component>
                     <Component Id="CrcTray" Guid="*">
-                        <File Id="CrcTray" Source="SourceDir\crc-tray.exe" KeyPath="yes" DiskId="3" />
+                        <File Id="CrcTray" Source="SourceDir\crc-tray.exe" KeyPath="yes" DiskId="4" />
                         <RemoveFile Id="RemoveInstallFiles" Name="*.*" On="uninstall" />
                     </Component>
                     <Component Id="AddUserToHypervAdmins" Guid="B5FFE50B-A2AC-4F81-8656-2060BA3E54AD" KeyPath="yes">
@@ -88,7 +92,7 @@
                 </Component>
             </Directory>
         </Directory>
-        <SetProperty Action="CAJoinBundle" Id="JoinBundle" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; copy /b $(var.crcBundlePart0)+$(var.crcBundlePart1)+$(var.crcBundlePart2) $(var.crcBundleName)' Before="JoinBundle" Sequence="execute"/>
+        <SetProperty Action="CAJoinBundle" Id="JoinBundle" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; copy /b $(var.crcBundlePart0)+$(var.crcBundlePart1)+$(var.crcBundlePart2)+$(var.crcBundlePart3) $(var.crcBundleName)' Before="JoinBundle" Sequence="execute"/>
         <CustomAction Id="JoinBundle" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
         <SetProperty Action="CARemoveParts" Id="RemoveParts" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; del /f /q $(var.crcBundlePart0) $(var.crcBundlePart1) $(var.crcBundlePart2)' Before="RemoveParts" Sequence="execute"/>
         <CustomAction Id="RemoveParts" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
@@ -118,6 +122,7 @@
             <ComponentRef Id="CrcBundlePart1"/>
             <ComponentRef Id="CrcBundlePart2"/>
             <ComponentRef Id="CrcBundlePart3"/>
+            <ComponentRef Id="CrcBundlePart4"/>
             <ComponentRef Id="CrcExe" />
             <ComponentRef Id="CrcTray" />
             <ComponentRef Id="AdminHelper" />
