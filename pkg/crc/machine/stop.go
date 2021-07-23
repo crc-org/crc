@@ -9,6 +9,9 @@ import (
 )
 
 func (client *client) Stop() (state.State, error) {
+	if running, _ := client.IsRunning(); !running {
+		return state.Error, errors.New("Cluster is already stopped")
+	}
 	vm, err := loadVirtualMachine(client.name, client.useVSock())
 	if err != nil {
 		return state.Error, errors.Wrap(err, "Cannot load machine")
