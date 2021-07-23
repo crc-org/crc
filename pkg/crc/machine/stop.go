@@ -11,6 +11,10 @@ import (
 )
 
 func (client *client) Stop() (state.State, error) {
+	if running, _ := client.IsRunning(); !running {
+		return state.Error, errors.New("Cluster is already stopped")
+	}
+
 	libMachineAPIClient, cleanup := createLibMachineClient()
 	defer cleanup()
 	host, err := libMachineAPIClient.Load(client.name)
