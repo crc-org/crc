@@ -283,7 +283,7 @@ func cleanVsock() error {
 	if err := checkVsock(); err != nil {
 		return nil
 	}
-	_, _, err := powershell.Execute(fmt.Sprintf(`Remove-Item -Path "%s\%s"`, registryDirectory, registryKey))
+	_, _, err := powershell.ExecuteAsAdmin("Removing vsock registry key", fmt.Sprintf(`Remove-Item -Path "%s\%s"`, registryDirectory, registryKey))
 	if err != nil {
 		return fmt.Errorf("Unable to remove vsock service from hyperv registry: %v", err)
 	}
