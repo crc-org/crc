@@ -179,16 +179,43 @@ func EnsureGeneratedClientCAPresentInTheCluster(ocConfig oc.Config, sshRunner *s
 }
 
 func RemovePullSecretFromCluster(ocConfig oc.Config, sshRunner *ssh.Runner) error {
+	mcBeforeRemovePullSecret, stderr, err := ocConfig.RunOcCommand("get mc --sort-by=.metadata.creationTimestamp --no-headers -oname")
+	if err != nil {
+		return fmt.Errorf("failed to get machineconfig resource %w: %s", err, stderr)
+	}
 	logging.Info("Removing user's pull secret from instance disk and from cluster secret...")
 	cmdArgs := []string{"patch", "secret", "pull-secret", "-p",
 		`'{"data":{".dockerconfigjson":"e30K"}}'`,
 		"-n", "openshift-config", "--type", "merge"}
 
-	_, stderr, err := ocConfig.RunOcCommand(cmdArgs...)
+	_, stderr, err = ocConfig.RunOcCommand(cmdArgs...)
 	if err != nil {
 		return fmt.Errorf("Failed to remove Pull secret %w: %s", err, stderr)
 	}
 
+	mcRenderedFunc := func() error {
+		mcAfterRemovePullSecret, stderr, err := ocConfig.RunOcCommand("get mc --sort-by=.metadata.creationTimestamp --no-headers -oname")
+		if err != nil {
+			return &errors.RetriableError{Err: fmt.Errorf("failed to get machineconfig resource %w: %s", err, stderr)}
+		}
+		if mcBeforeRemovePullSecret == mcAfterRemovePullSecret {
+			return &errors.RetriableError{Err: fmt.Errorf("machine config is not rendered after removing pull secret")}
+		}
+		// This 20sec sleep is required because just after machine config render happen it takes some time
+		// for machine config pool to process this new render file.
+		time.Sleep(20 * time.Second)
+		mcpDegradedMachineCount, stderr, err := ocConfig.RunOcCommand("get mcp master -ojsonpath='{.status.degradedMachineCount}'")
+		if err != nil {
+			return &errors.RetriableError{Err: fmt.Errorf("failed to get machineconfig resource %w: %s", err, stderr)}
+		}
+		if strings.TrimSpace(mcpDegradedMachineCount) != "0" {
+			return &errors.RetriableError{Err: fmt.Errorf("machine pool config is in degraded machine count")}
+		}
+		return nil
+	}
+	if err := errors.RetryAfter(1*time.Minute, mcRenderedFunc, 2*time.Second); err != nil {
+		return err
+	}
 	return waitForPullSecretRemovedFromInstanceDisk(sshRunner)
 }
 
