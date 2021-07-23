@@ -227,10 +227,10 @@ func RemoveOldRenderedMachineConfig(ocConfig oc.Config) error {
 		renderedWorker []string
 	)
 	for _, mc := range sortedMachineConfigsWithTime {
-		if strings.HasPrefix(mc, "rendered-master") {
+		if strings.Contains(mc, "rendered-master") {
 			renderedMaster = append(renderedMaster, mc)
 		}
-		if strings.HasPrefix(mc, "rendered-worker") {
+		if strings.Contains(mc, "rendered-worker") {
 			renderedWorker = append(renderedWorker, mc)
 		}
 	}
