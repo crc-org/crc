@@ -524,3 +524,11 @@ func CheckProxySettingsForOperator(ocConfig oc.Config, proxy *network.ProxyConfi
 	}
 	return false, nil
 }
+
+func DeleteMCOLeaderLease(ocConfig oc.Config) error {
+	if err := WaitForOpenshiftResource(ocConfig, "cm"); err != nil {
+		return err
+	}
+	_, _, err := ocConfig.RunOcCommand("delete", "-n", "openshift-machine-config-operator", "cm", "machine-config-controller")
+	return err
+}
