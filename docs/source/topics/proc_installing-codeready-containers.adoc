@@ -13,12 +13,19 @@ For more information, see link:{crc-gsg-url}#minimum-system-requirements_gsg[Min
 
 . Download the link:{crc-download-url}[latest release of {prod}] for your platform.
 
-. On {mac}, run the guided installer and follow the instructions.
-On {rhel} or {msw}, assuming the archive is in the [filename]*_~/Downloads_* directory, follow the procedure for your platform.
+. On {msw}, extract the contents of the archive.
+
+. On {mac} or {msw}, run the guided installer and follow the instructions.
 +
-** For {rhel}:
+[NOTE]
+====
+On {msw}, you must install {prod} to your local [filename]*_C:\_* drive.
+You cannot run {prod} from a network drive.
+====
 +
-... Extract the contents of the archive:
+On {rhel}, assuming the archive is in the [filename]*_~/Downloads_* directory, follow these steps:
++
+.. Extract the contents of the archive:
 +
 [subs="attributes"]
 ----
@@ -26,7 +33,7 @@ $ cd ~/Downloads
 $ tar xvf crc-linux-amd64.tar.xz
 ----
 +
-... Create the [filename]*_~/bin_* directory if it does not exist and copy the [command]`{bin}` executable to it:
+.. Create the [filename]*_~/bin_* directory if it does not exist and copy the [command]`{bin}` executable to it:
 +
 [subs="attributes"]
 ----
@@ -34,24 +41,10 @@ $ mkdir -p ~/bin
 $ cp ~/Downloads/crc-linux-*-amd64/{bin} ~/bin
 ----
 +
-... Add the [filename]*_~/bin_* directory to your `_PATH_`:
+.. Add the [filename]*_~/bin_* directory to your `_PATH_`:
 +
 [subs="attributes"]
 ----
 $ export PATH=$PATH:$HOME/bin
 $ echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
 ----
-+
-** For {msw}:
-+
-... Extract the contents of the archive.
-... Create the desired directory path for {prod} and copy the extracted [command]`{bin}.exe` executable to it.
-... Add the directory path to your `_PATH_` environment variable.
-+
-[NOTE]
-====
-On {msw}, you must execute the {prod} executable from your local [filename]*_C:\_* drive.
-You cannot run {prod} from a network drive.
-
-If you cannot install the executable in your `_PATH_`, run {prod} from the current directory as `./{bin}.exe`.
-====
