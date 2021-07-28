@@ -16,15 +16,20 @@ func main() {
 		log.Fatal("Split takes only one argument (the file to split)")
 	}
 
-	if err := split(os.Args[1]); err != nil {
+	files, err := split(os.Args[1])
+	if err != nil {
+		for _, f := range files {
+			os.Remove(f)
+		}
 		log.Fatal(err.Error())
 	}
 }
 
-func split(filePath string) error {
+func split(filePath string) ([]string, error) {
+	splitFiles := []string{}
 	bundle, err := os.Open(filePath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer bundle.Close()
 	bundleName := filepath.Base(filePath)
@@ -32,19 +37,20 @@ func split(filePath string) error {
 		partFileName := fmt.Sprintf("%s.%d", bundleName, i)
 		partFile, err := os.Create(filepath.Join(filepath.Dir(filePath), partFileName))
 		if err != nil {
-			return err
+			return splitFiles, err
 		}
+		splitFiles = append(splitFiles, partFileName)
 		defer partFile.Close()
 		n, err := io.CopyN(partFile, bundle, chunkSize)
 		fmt.Printf("Copied %d bytes from %s to %s\n", n, bundleName, partFileName)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
-				return nil
+				return splitFiles, nil
 			}
-			return err
+			return splitFiles, err
 		}
 		if err = partFile.Close(); err != nil {
-			return err
+			return splitFiles, err
 		}
 	}
 }
