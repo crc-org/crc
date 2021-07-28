@@ -305,7 +305,7 @@ $(GOPATH)/bin/gomod2rpmdeps:
 	     $< >$@
 
 $(HOST_BUILD_DIR)/split: packaging/windows/split.go
-	go build -o $(HOST_BUILD_DIR)/split packaging/windows/split.go
+	go build -o $(HOST_BUILD_DIR)/split -ldflags="-X main.crcVersion=$(CRC_VERSION)" packaging/windows/split.go
 
 CRC_EXE=crc.exe
 BUNDLE_NAME=crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
@@ -318,12 +318,11 @@ msidir: clean $(HOST_BUILD_DIR)/crc-embedder $(HOST_BUILD_DIR)/split $(BUILD_DIR
 	cp $(HOST_BUILD_DIR)/crc.exe $(PACKAGE_DIR)/msi/$(CRC_EXE)
 	pwsh -NoProfile -Command "cd $(PACKAGE_DIR)/msi; Expand-Archive crc-tray-windows.zip -DestinationPath .\; Remove-Item crc-tray-windows.zip"
 ifeq ($(MOCK_BUNDLE),true)
-	touch $(PACKAGE_DIR)/msi/$(BUNDLE_NAME).0 $(PACKAGE_DIR)/msi/$(BUNDLE_NAME).1 $(PACKAGE_DIR)/msi/$(BUNDLE_NAME).2
-else
+	touch $(PACKAGE_DIR)/msi/$(BUNDLE_NAME)
+endif
 	cp $(HYPERV_BUNDLENAME) $(PACKAGE_DIR)/msi
 	$(HOST_BUILD_DIR)/split $(PACKAGE_DIR)/msi/$(BUNDLE_NAME)
 	rm $(PACKAGE_DIR)/msi/$(BUNDLE_NAME)
-endif
 	cp -r $(PACKAGE_DIR)/Resources $(PACKAGE_DIR)/msi/
 	cp $(PACKAGE_DIR)/*.wxs $(PACKAGE_DIR)/msi
 	rm $(PACKAGE_DIR)/product.wxs
@@ -332,10 +331,10 @@ $(BUILD_DIR)/windows-amd64/crc-windows-amd64.msi: msidir
 	candle.exe -arch x64 -ext WixUtilExtension -o $(PACKAGE_DIR)/msi/ $(PACKAGE_DIR)/msi/*.wxs
 	light.exe -ext WixUIExtension -ext WixUtilExtension -sacl -spdb -sice:ICE61 -sice:ICE69 -b $(PACKAGE_DIR)/msi -out $@ $(PACKAGE_DIR)/msi/*.wixobj
 
-CABS_MSI = "cab1.cab,cab2.cab,cab3.cab,crc-windows-amd64.msi"
+CABS_MSI = "*.cab,crc-windows-amd64.msi"
 $(BUILD_DIR)/windows-amd64/crc-windows-installer.zip: $(BUILD_DIR)/windows-amd64/crc-windows-amd64.msi
 	rm -f $(HOST_BUILD_DIR)/crc.exe
 	rm -f $(HOST_BUILD_DIR)/crc-embedder
 	rm -f $(HOST_BUILD_DIR)/split
-	pwsh -NoProfile -Command "cd $(HOST_BUILD_DIR); Compress-Archive -LiteralPath $(CABS_MSI) -DestinationPath crc-windows-installer.zip"
+	pwsh -NoProfile -Command "cd $(HOST_BUILD_DIR); Compress-Archive -Path $(CABS_MSI) -DestinationPath crc-windows-installer.zip"
 	cd $(@D) && sha256sum $(@F)>$(@F).sha256sum
