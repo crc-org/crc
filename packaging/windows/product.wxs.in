@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
-<?define crcBundleName="crc_hyperv___OPENSHIFT_VERSION__.crcbundle"?>
+<?define crcBundleName="{{.BundleName}}"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-    <Product Id="*" UpgradeCode="53DE5BFA-0E53-44E7-8D4F-07E37E59A9AB" Name="CodeReady Containers" Version="__VERSION__" Manufacturer="Red Hat Inc." Language="1033">
-        <Package Id ="*" InstallerVersion="300" Compressed="yes" Description="CodeReady Containers __VERSION__" Comments="This installs CodeReady Containers __VERSION__" InstallScope="perMachine" />
-        <Media Id="1" EmbedCab="no" Cabinet="cab1.cab" />
-        <Media Id="2" EmbedCab="no" Cabinet="cab2.cab" />
-        <Media Id="3" EmbedCab="no" Cabinet="cab3.cab" />
+    <Product Id="*" UpgradeCode="53DE5BFA-0E53-44E7-8D4F-07E37E59A9AB" Name="CodeReady Containers" Version="{{.Version}}" Manufacturer="Red Hat Inc." Language="1033">
+        <Package Id ="*" InstallerVersion="300" Compressed="yes" Description="CodeReady Containers {{.Version}}" Comments="This installs CodeReady Containers {{.Version}}" InstallScope="perMachine" />
+        {{range $index, $element := .Parts}}
+        <Media Id="{{inc $index}}" EmbedCab="{{if eq (inc $index) (len $.Parts)}}yes{{else}}no{{end}}" Cabinet="cab{{inc $index}}.cab" />
+        {{end}}
         <MajorUpgrade AllowDowngrades="yes" />
         <WixVariable Id="WixUIBannerBmp" Value=".\Resources\banner.png"/>
         <WixVariable Id="WixUIDialogBmp" Value=".\Resources\background.png"/>
@@ -33,29 +33,21 @@
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
                 <Directory Id="INSTALLDIR" Name="CodeReady Containers">
-                    <Component Id="CrcBundlePart1" Guid="*">
-                        <File Id="CrcBundlePart1" Source="SourceDir\$(var.crcBundleName).1" KeyPath="yes" DiskId="1" />
+                    {{range $index, $element := .Parts}}
+                    <Component Id="CrcBundlePart{{inc $index}}" Guid="*">
+                        <File Id="CrcBundlePart{{inc $index}}" Source="SourceDir\$(var.crcBundleName).{{inc $index}}" KeyPath="yes" DiskId="{{inc $index}}" />
                     </Component>
-                    <Component Id="CrcBundlePart2" Guid="*">
-                        <File Id="CrcBundlePart2" Source="SourceDir\$(var.crcBundleName).2" KeyPath="yes" DiskId="2" />
-                    </Component>
-                    <Component Id="CrcBundlePart3" Guid="*">
-                        <File Id="CrcBundlePart3" Source="SourceDir\$(var.crcBundleName).3" KeyPath="yes" DiskId="3" />
-                    </Component>
-                    <Component Id="CrcBundlePart4" Guid="*">
-                        <File Id="CrcBundlePart4" Source="SourceDir\$(var.crcBundleName).4" KeyPath="yes" DiskId="4" />
-                    </Component>
+                    {{end}}
                     <Component Id="CrcExe" Guid="*">
-                        <File Id="CrcExe" Source="SourceDir\crc.exe" KeyPath="yes" DiskId="3" />
+                        <File Id="CrcExe" Source="SourceDir\crc.exe" KeyPath="yes" DiskId="{{len .Parts}}" />
                     </Component>
                     <Component Id="AdminHelper" Guid="*">
-                        <File Id="AdminHelper" Source="SourceDir\crc-admin-helper-windows.exe" KeyPath="yes" DiskId="3" />
+                        <File Id="AdminHelper" Source="SourceDir\crc-admin-helper-windows.exe" KeyPath="yes" DiskId="{{len .Parts}}" />
                         <ServiceInstall Name="CodeReadyContainersAdminHelper" Description="Perform administrative tasks for the user" Arguments="daemon" DisplayName="CodeReady Containers Admin Helper" ErrorControl="normal" Start="auto" Type="ownProcess" />
                         <ServiceControl Id="StartAdminHelperService" Name="CodeReadyContainersAdminHelper" Start='install' Stop='both' Remove='uninstall' />
-
                     </Component>
                     <Component Id="CrcTray" Guid="*">
-                        <File Id="CrcTray" Source="SourceDir\crc-tray.exe" KeyPath="yes" DiskId="3" />
+                        <File Id="CrcTray" Source="SourceDir\crc-tray.exe" KeyPath="yes" DiskId="{{len .Parts}}" />
                         <RemoveFile Id="RemoveInstallFiles" Name="*.*" On="uninstall" />
                     </Component>
                     <Component Id="AddUserToCrcUsers" Guid="0C793EE7-109A-474B-9651-77E0A83BAF2D" KeyPath="yes">
@@ -89,9 +81,9 @@
                 </Component>
             </Directory>
         </Directory>
-        <SetProperty Action="CAJoinBundle" Id="JoinBundle" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; copy /b $(var.crcBundleName).1+$(var.crcBundleName).2+$(var.crcBundleName).3+$(var.crcBundleName).4 $(var.crcBundleName)' Before="JoinBundle" Sequence="execute"/>
+        <SetProperty Action="CAJoinBundle" Id="JoinBundle" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; copy /b {{strjoin .Parts "+"}} $(var.crcBundleName)' Before="JoinBundle" Sequence="execute"/>
         <CustomAction Id="JoinBundle" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
-        <SetProperty Action="CARemoveParts" Id="RemoveParts" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; del /f /q $(var.crcBundleName).1 $(var.crcBundleName).2 $(var.crcBundleName).3 $(var.crcBundleName).4' Before="RemoveParts" Sequence="execute"/>
+        <SetProperty Action="CARemoveParts" Id="RemoveParts" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; del /f /q {{strjoin .Parts " "}}' Before="RemoveParts" Sequence="execute"/>
         <CustomAction Id="RemoveParts" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
 
         <SetProperty Action="CACreateCrcUsersGroup" Id="CreateCrcGroup" Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /comment:"Group for CodeReady Containers users" /add' Before="CreateCrcGroup" Sequence="execute"/>
@@ -120,9 +112,9 @@
             <ScheduleReboot After="InstallFinalize"> NOT Installed AND NOT REMOVE~="ALL"</ScheduleReboot>
         </InstallExecuteSequence>
         <Feature Id="DefaultFeature" Level="1">
-            <ComponentRef Id="CrcBundlePart1"/>
-            <ComponentRef Id="CrcBundlePart2"/>
-            <ComponentRef Id="CrcBundlePart3"/>
+            {{range $index, $element := .Parts}}
+            <ComponentRef Id="CrcBundlePart{{inc $index}}"/>
+            {{end}}
             <ComponentRef Id="CrcExe" />
             <ComponentRef Id="CrcTray" />
             <ComponentRef Id="AdminHelper" />
