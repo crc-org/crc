@@ -160,6 +160,16 @@ build_e2e: $(SOURCES)
 	GOOS=windows go test ./test/e2e/ -c -o $(BUILD_DIR)/windows-amd64/e2e.test.exe
 	GOOS=darwin  go test ./test/e2e/ -c -o $(BUILD_DIR)/macos-amd64/e2e.test
 
+#  Build the container image
+.PHONY: containerized_e2e
+containerized_e2e:
+ifndef CRC_E2E_IMG_VERSION
+CRC_E2E_IMG_VERSION=v$(CRC_VERSION)-$(COMMIT_SHA)
+endif
+IMG = quay.io/crcont/crc-e2e:$(CRC_E2E_IMG_VERSION)
+containerized_e2e: clean
+	$(CONTAINER_RUNTIME) build -t $(IMG) -f images/build-e2e/Dockerfile .
+
 .PHONY: integration ## Run integration tests in Ginkgo
 integration:
 ifndef PULL_SECRET_PATH
