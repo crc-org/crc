@@ -30,6 +30,7 @@ var (
 	bundleLocation string
 	bundleVersion  string
 	pullSecretFile string
+	cleanupHome    bool
 )
 
 // FeatureContext defines godog.Suite steps for the test suite.
@@ -115,11 +116,13 @@ func FeatureContext(s *godog.Suite) {
 			os.Exit(1)
 		}
 
-		// remove $HOME/.crc
-		err = util.RemoveCRCHome(CRCHome)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+		if cleanupHome {
+			// remove $HOME/.crc
+			err = util.RemoveCRCHome(CRCHome)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
 		}
 
 		if !bundleEmbedded {
@@ -178,6 +181,7 @@ func ParseFlags() {
 	flag.StringVar(&pullSecretFile, "pull-secret-file", "", "Path to the file containing pull secret")
 	flag.StringVar(&CRCExecutable, "crc-binary", "", "Path to the CRC executable to be tested")
 	flag.StringVar(&bundleVersion, "bundle-version", "", "Version of the bundle used in tests")
+	flag.BoolVar(&cleanupHome, "cleanup-home", true, "Try to remove crc home folder before starting the suite")
 
 	// Extend the context with tray when supported
 	ux.ParseFlags()
