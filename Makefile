@@ -194,7 +194,7 @@ ifndef CRC_BINARY
 	CRC_BINARY = --crc-binary=$(GOPATH)/bin
 endif
 e2e:
-	@go test --timeout=180m $(REPOPATH)/test/e2e -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --bundle-version=$(BUNDLE_VERSION) $(GODOG_OPTS) $(INSTALLER_PATH) $(USER_PASSWORD) 
+	@go test --timeout=180m $(REPOPATH)/test/e2e -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --bundle-version=$(BUNDLE_VERSION) $(GODOG_OPTS) $(CLEANUP_HOME) $(INSTALLER_PATH) $(USER_PASSWORD) 
 
 .PHONY: fmt
 fmt:
