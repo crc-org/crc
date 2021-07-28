@@ -33,7 +33,7 @@ func split(filePath string) ([]string, error) {
 	}
 	defer bundle.Close()
 	bundleName := filepath.Base(filePath)
-	for i := 0; ; i++ {
+	for i := 1; ; i++ {
 		partFileName := fmt.Sprintf("%s.%d", bundleName, i)
 		partFile, err := os.Create(filepath.Join(filepath.Dir(filePath), partFileName))
 		if err != nil {

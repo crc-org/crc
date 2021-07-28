@@ -34,16 +34,16 @@
             <Directory Id="ProgramFiles64Folder">
                 <Directory Id="INSTALLDIR" Name="CodeReady Containers">
                     <Component Id="CrcBundlePart1" Guid="*">
-                        <File Id="CrcBundlePart1" Source="SourceDir\$(var.crcBundleName).0" KeyPath="yes" DiskId="1" />
+                        <File Id="CrcBundlePart1" Source="SourceDir\$(var.crcBundleName).1" KeyPath="yes" DiskId="1" />
                     </Component>
                     <Component Id="CrcBundlePart2" Guid="*">
-                        <File Id="CrcBundlePart2" Source="SourceDir\$(var.crcBundleName).1" KeyPath="yes" DiskId="2" />
+                        <File Id="CrcBundlePart2" Source="SourceDir\$(var.crcBundleName).2" KeyPath="yes" DiskId="2" />
                     </Component>
                     <Component Id="CrcBundlePart3" Guid="*">
-                        <File Id="CrcBundlePart3" Source="SourceDir\$(var.crcBundleName).2" KeyPath="yes" DiskId="3" />
+                        <File Id="CrcBundlePart3" Source="SourceDir\$(var.crcBundleName).3" KeyPath="yes" DiskId="3" />
                     </Component>
                     <Component Id="CrcBundlePart4" Guid="*">
-                        <File Id="CrcBundlePart4" Source="SourceDir\$(var.crcBundleName).3" KeyPath="yes" DiskId="4" />
+                        <File Id="CrcBundlePart4" Source="SourceDir\$(var.crcBundleName).4" KeyPath="yes" DiskId="4" />
                     </Component>
                     <Component Id="CrcExe" Guid="*">
                         <File Id="CrcExe" Source="SourceDir\crc.exe" KeyPath="yes" DiskId="3" />
@@ -89,9 +89,9 @@
                 </Component>
             </Directory>
         </Directory>
-        <SetProperty Action="CAJoinBundle" Id="JoinBundle" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; copy /b $(var.crcBundleName).0+$(var.crcBundleName).1+$(var.crcBundleName).2+$(var.crcBundleName).3 $(var.crcBundleName)' Before="JoinBundle" Sequence="execute"/>
+        <SetProperty Action="CAJoinBundle" Id="JoinBundle" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; copy /b $(var.crcBundleName).1+$(var.crcBundleName).2+$(var.crcBundleName).3+$(var.crcBundleName).4 $(var.crcBundleName)' Before="JoinBundle" Sequence="execute"/>
         <CustomAction Id="JoinBundle" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
-        <SetProperty Action="CARemoveParts" Id="RemoveParts" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; del /f /q $(var.crcBundleName).0 $(var.crcBundleName).1 $(var.crcBundleName).2 $(var.crcBundleName).3' Before="RemoveParts" Sequence="execute"/>
+        <SetProperty Action="CARemoveParts" Id="RemoveParts" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; del /f /q $(var.crcBundleName).1 $(var.crcBundleName).2 $(var.crcBundleName).3 $(var.crcBundleName).4' Before="RemoveParts" Sequence="execute"/>
         <CustomAction Id="RemoveParts" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
 
         <SetProperty Action="CACreateCrcUsersGroup" Id="CreateCrcGroup" Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /comment:"Group for CodeReady Containers users" /add' Before="CreateCrcGroup" Sequence="execute"/>
