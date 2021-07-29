@@ -8,6 +8,7 @@ import (
 	"time"
 
 	log "github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/os/windows/powershell"
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/state"
 )
@@ -303,6 +304,10 @@ func (d *Driver) Stop() error {
 
 // Remove removes an host
 func (d *Driver) Remove() error {
+	if _, _, err := powershell.Execute(`Hyper-V\Get-VM`, d.MachineName, "-ErrorAction", "SilentlyContinue", "-ErrorVariable", "getVmErrors"); err != nil {
+		return nil
+	}
+
 	s, err := d.GetState()
 	if err != nil {
 		return err
