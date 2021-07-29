@@ -8,6 +8,7 @@ import (
 	"time"
 
 	log "github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/os/windows/powershell"
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/state"
 )
@@ -86,14 +87,14 @@ func (d *Driver) DriverName() string {
 }
 
 func (d *Driver) GetState() (state.State, error) {
-	stdout, err := cmdOut("(", "Hyper-V\\Get-VM", d.MachineName, ").state")
+	stdout, stderr, err := powershell.Execute("Hyper-V\\Get-VM", d.MachineName, "|", "Select-Object", "-ExpandProperty", "State")
 	if err != nil {
-		return state.Error, fmt.Errorf("Failed to find the VM status")
+		return state.Error, fmt.Errorf("Failed to find the VM status: %v - %s", err, stderr)
 	}
 
 	resp := parseLines(stdout)
 	if len(resp) < 1 {
-		return state.Error, fmt.Errorf("unexpected Hyper-V state %s", resp)
+		return state.Error, fmt.Errorf("unexpected Hyper-V state %s", stdout)
 	}
 
 	switch resp[0] {
