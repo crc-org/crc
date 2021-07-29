@@ -304,6 +304,10 @@ func (d *Driver) Stop() error {
 
 // Remove removes an host
 func (d *Driver) Remove() error {
+	if _, _, err := powershell.Execute(`Hyper-V\Get-VM`, d.MachineName, "-ErrorAction", "SilentlyContinue", "-ErrorVariable", "getVmErrors"); err != nil {
+		return nil
+	}
+
 	s, err := d.GetState()
 	if err != nil {
 		return err
