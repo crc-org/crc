@@ -46,7 +46,7 @@ $ oc get co
 +
 [NOTE]
 ====
-* {prod} disables the `machine-config` and `monitoring` Operators by default.
+* {prod} disables the `monitoring` Operator by default.
 ====
 
 See link:{crc-gsg-url}#troubleshooting-codeready-containers_gsg[Troubleshooting {prod}] if you cannot access the {prod} OpenShift cluster.
