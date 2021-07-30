@@ -75,6 +75,8 @@ function prepare_ci_user() {
   chown -R crc_ci:crc_ci /home/crc_ci/payload
   # Copy the jenkins-env into crc_ci home dir
   cp ~/.jenkins-env /home/crc_ci/jenkins-env
+
+  loginctl enable-linger crc_ci
 }
 
 function setup_golang() {
@@ -148,6 +150,8 @@ if [[ "$UID" = 0 ]]; then
 	runuser -l crc_ci -c "/bin/bash centos_ci.sh"
 else
 	source ~/jenkins-env # Source environment variables for minishift_ci user
+	export XDG_RUNTIME_DIR="/run/user/$UID"
+	export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
 	export TERM=xterm-256color
 	get_bundle
 	setup_golang
