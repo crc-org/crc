@@ -8,6 +8,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 type Client struct {
@@ -109,17 +111,12 @@ func (c *Client) WebconsoleURL() (ConsoleResult, error) {
 
 func (c *Client) GetConfig(configs []string) (GetConfigResult, error) {
 	var gcr = GetConfigResult{}
-	var data = new(bytes.Buffer)
-
-	if len(configs) > 0 {
-		cfg := GetOrUnsetConfigRequest{
-			Properties: configs,
-		}
-		if err := json.NewEncoder(data).Encode(cfg); err != nil {
-			return gcr, fmt.Errorf("Failed to encode data to JSON: %w", err)
-		}
+	var escapeConfigs []string
+	for _, v := range configs {
+		escapeConfigs = append(escapeConfigs, url.QueryEscape(v))
 	}
-	body, err := c.sendPostRequest("/config/get", data)
+	queryString := strings.Join(escapeConfigs, "&")
+	body, err := c.sendGetRequest(fmt.Sprintf("/config?%s", queryString))
 	if err != nil {
 		return gcr, err
 	}
@@ -142,7 +139,7 @@ func (c *Client) SetConfig(configs SetConfigRequest) (SetOrUnsetConfigResult, er
 		return scr, fmt.Errorf("Failed to encode data to JSON: %w", err)
 	}
 
-	body, err := c.sendPostRequest("/config/set", data)
+	body, err := c.sendPostRequest("/config", data)
 	if err != nil {
 		return scr, err
 	}
@@ -164,7 +161,7 @@ func (c *Client) UnsetConfig(configs []string) (SetOrUnsetConfigResult, error) {
 	if err := json.NewEncoder(data).Encode(cfg); err != nil {
 		return ucr, fmt.Errorf("Failed to encode data to JSON: %w", err)
 	}
-	body, err := c.sendPostRequest("/config/unset", data)
+	body, err := c.sendDeleteRequest("/config", data)
 	if err != nil {
 		return ucr, err
 	}
@@ -221,11 +218,9 @@ func (c *Client) sendGetRequest(url string) ([]byte, error) {
 		return nil, err
 	}
 	defer res.Body.Close()
-
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("Error occurred sending GET request to : %s : %d", url, res.StatusCode)
 	}
-
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("Unknown error reading response: %w", err)
@@ -234,7 +229,15 @@ func (c *Client) sendGetRequest(url string) ([]byte, error) {
 }
 
 func (c *Client) sendPostRequest(url string, data io.Reader) ([]byte, error) {
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s%s", c.base, url), data)
+	return c.sendRequest(url, http.MethodPost, data)
+}
+
+func (c *Client) sendDeleteRequest(url string, data io.Reader) ([]byte, error) {
+	return c.sendRequest(url, http.MethodDelete, data)
+}
+
+func (c *Client) sendRequest(url string, method string, data io.Reader) ([]byte, error) {
+	req, err := http.NewRequest(method, fmt.Sprintf("%s%s", c.base, url), data)
 	if err != nil {
 		return nil, err
 	}
@@ -246,8 +249,15 @@ func (c *Client) sendPostRequest(url string, data io.Reader) ([]byte, error) {
 	}
 	defer res.Body.Close()
 
-	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("Error occurred sending POST request to : %s : %d", url, res.StatusCode)
+	switch method {
+	case http.MethodPost:
+		if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated {
+			return nil, fmt.Errorf("Error occurred sending POST request to : %s : %d", url, res.StatusCode)
+		}
+	case http.MethodDelete, http.MethodGet:
+		if res.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("Error occurred sending %s request to : %s : %d", method, url, res.StatusCode)
+		}
 	}
 
 	body, err := ioutil.ReadAll(res.Body)

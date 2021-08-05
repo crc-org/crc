@@ -29,12 +29,9 @@ func NewMux(config crcConfig.Storage, machine machine.Client, logger Logger, tel
 
 	server.GET("/webconsoleurl", handler.GetWebconsoleInfo)
 
-	server.GET("/config/set", handler.SetConfig)
-	server.GET("/config/get", handler.GetConfig)
-	server.GET("/config/unset", handler.UnsetConfig)
-	server.POST("/config/set", handler.SetConfig)
-	server.POST("/config/get", handler.GetConfig)
-	server.POST("/config/unset", handler.UnsetConfig)
+	server.GET("/config", handler.GetConfig)
+	server.POST("/config", handler.SetConfig)
+	server.DELETE("/config", handler.UnsetConfig)
 
 	server.GET("/logs", handler.Logs)
 

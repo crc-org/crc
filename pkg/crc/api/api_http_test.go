@@ -126,6 +126,88 @@ func TestHTTPApi(t *testing.T) {
 		},
 		configSetResult,
 	)
+	// Get the cpus config again after setting it to make sure it is set
+	// properly.
+	configGetAfterSetResult, err := client.GetConfig([]string{"cpus"})
+	assert.NoError(t, err)
+	assert.Equal(
+		t,
+		apiClient.GetConfigResult{
+			Success: true,
+			Error:   "",
+			Configs: map[string]interface{}{
+				"cpus": float64(5),
+			},
+		},
+		configGetAfterSetResult,
+	)
+
+	configUnsetResult, err := client.UnsetConfig([]string{"cpus"})
+	assert.NoError(t, err)
+	assert.Equal(
+		t,
+		apiClient.SetOrUnsetConfigResult{
+			Success:    true,
+			Error:      "",
+			Properties: []string{"cpus"},
+		},
+		configUnsetResult,
+	)
+
+	allConfigGetResult, err := client.GetConfig(nil)
+	assert.NoError(t, err)
+	configs := make(map[string]interface{})
+	for k, v := range config.AllConfigs() {
+		// This is required because of https://pkg.go.dev/encoding/json#Unmarshal
+		// Unmarshal stores float64 for JSON numbers in case of interface.
+		switch v := v.Value.(type) {
+		case int:
+			configs[k] = float64(v)
+		default:
+			configs[k] = v
+		}
+	}
+	assert.Equal(
+		t,
+		apiClient.GetConfigResult{
+			Success: true,
+			Error:   "",
+			Configs: configs,
+		},
+		allConfigGetResult,
+	)
+
+	// Get result of making query for multiple property
+	configGetMultiplePropertyResult, err := client.GetConfig([]string{"cpus", "memory"})
+	assert.NoError(t, err)
+	assert.Equal(
+		t,
+		apiClient.GetConfigResult{
+			Success: true,
+			Error:   "",
+			Configs: map[string]interface{}{
+				"cpus":   float64(4),
+				"memory": float64(9216),
+			},
+		},
+		configGetMultiplePropertyResult,
+	)
+
+	// Get result of special query for multiple properties
+	configGetSpecialPropertyResult, err := client.GetConfig([]string{"a&a", "b&&&b"})
+	assert.NoError(t, err)
+	assert.Equal(
+		t,
+		apiClient.GetConfigResult{
+			Success: true,
+			Error:   "",
+			Configs: map[string]interface{}{
+				"a&a":   "foo",
+				"b&&&b": "bar",
+			},
+		},
+		configGetSpecialPropertyResult,
+	)
 }
 
 func TestTelemetry(t *testing.T) {

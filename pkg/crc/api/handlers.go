@@ -214,9 +214,10 @@ func (h *Handler) UnsetConfig(c *context) error {
 }
 
 func (h *Handler) GetConfig(c *context) error {
+	queries := c.url.Query()
 	var req client.GetOrUnsetConfigRequest
-	if err := c.Bind(&req); err != nil {
-		return err
+	for key := range queries {
+		req.Properties = append(req.Properties, key)
 	}
 
 	if len(req.Properties) == 0 {
