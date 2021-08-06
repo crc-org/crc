@@ -215,8 +215,10 @@ func (h *Handler) UnsetConfig(c *context) error {
 
 func (h *Handler) GetConfig(c *context) error {
 	var req client.GetOrUnsetConfigRequest
-	if err := c.Bind(&req); err != nil {
-		return err
+	if len(c.requestBody) > 0 {
+		if err := c.Bind(&req); err != nil {
+			return err
+		}
 	}
 
 	if len(req.Properties) == 0 {
