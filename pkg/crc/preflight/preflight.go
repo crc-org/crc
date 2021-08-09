@@ -15,6 +15,7 @@ const (
 	SetupOnly Flags = 1 << iota
 	NoFix
 	CleanUpOnly
+	StartUpOnly
 )
 
 type CheckFunc func() error
@@ -103,7 +104,7 @@ func doPreflightChecks(config crcConfig.Storage, checks []Check) error {
 
 func doFixPreflightChecks(config crcConfig.Storage, checks []Check, checkOnly bool) error {
 	for _, check := range checks {
-		if check.flags&CleanUpOnly == CleanUpOnly {
+		if check.flags&CleanUpOnly == CleanUpOnly || check.flags&StartUpOnly == StartUpOnly {
 			continue
 		}
 		err := check.doCheck(config)

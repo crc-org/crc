@@ -22,7 +22,7 @@ var hypervPreflightChecks = []Check{
 		checkDescription: "Checking if running in a shell with administrator rights",
 		check:            checkIfRunningAsNormalUser,
 		fixDescription:   "crc should be ran in a shell without administrator rights",
-		flags:            NoFix,
+		flags:            NoFix | StartUpOnly,
 
 		labels: labels{Os: Windows},
 	},
@@ -31,7 +31,7 @@ var hypervPreflightChecks = []Check{
 		checkDescription: "Checking Windows 10 release",
 		check:            checkVersionOfWindowsUpdate,
 		fixDescription:   "Please manually update your Windows 10 installation",
-		flags:            NoFix,
+		flags:            NoFix | StartUpOnly,
 
 		labels: labels{Os: Windows},
 	},
@@ -40,7 +40,7 @@ var hypervPreflightChecks = []Check{
 		checkDescription: "Checking Windows edition",
 		check:            checkWindowsEdition,
 		fixDescription:   "Your Windows edition is not supported. Consider using Professional or Enterprise editions of Windows",
-		flags:            NoFix,
+		flags:            NoFix | StartUpOnly,
 
 		labels: labels{Os: Windows},
 	},
@@ -50,6 +50,7 @@ var hypervPreflightChecks = []Check{
 		check:            checkHyperVInstalled,
 		fixDescription:   "Installing Hyper-V",
 		fix:              fixHyperVInstalled,
+		flags:            StartUpOnly,
 
 		labels: labels{Os: Windows},
 	},
@@ -76,6 +77,7 @@ var hypervPreflightChecks = []Check{
 			}
 			return nil
 		},
+		flags:  NoFix | StartUpOnly,
 		labels: labels{Os: Windows},
 	},
 	{
@@ -112,6 +114,7 @@ var hypervPreflightChecks = []Check{
 		check:            checkHyperVServiceRunning,
 		fixDescription:   "Enabling Hyper-V service",
 		fix:              fixHyperVServiceRunning,
+		flags:            StartUpOnly,
 
 		labels: labels{Os: Windows},
 	},
@@ -120,7 +123,7 @@ var hypervPreflightChecks = []Check{
 		checkDescription: "Checking if the Hyper-V virtual switch exists",
 		check:            checkIfHyperVVirtualSwitchExists,
 		fixDescription:   "Unable to perform Hyper-V administrative commands. Please reboot your system and run 'crc setup' to complete the setup process",
-		flags:            NoFix,
+		flags:            NoFix | StartUpOnly,
 
 		labels: labels{Os: Windows},
 	},
@@ -188,6 +191,7 @@ var vsockChecks = []Check{
 		fix:                fixVsock,
 		cleanupDescription: "Removing vsock service from hyperv registry",
 		cleanup:            cleanVsock,
+		flags:              NoFix | StartUpOnly,
 
 		labels: labels{Os: Windows, NetworkMode: User},
 	},
