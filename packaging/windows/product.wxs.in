@@ -27,7 +27,6 @@
         <Condition Message="CodeReady Containers requires at least 9GB of RAM to run. Aborting installation.">
             <![CDATA[Installed OR (PhysicalMemory >= 9126)]]>
         </Condition>
-        <util:Group Id="HypervAdminsGroup" Name="Hyper-V Administrators" />
         <util:Group Id="CrcUsersGroup" Name="crc-users" />
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
@@ -55,11 +54,6 @@
                     <Component Id="CrcTray" Guid="*">
                         <File Id="CrcTray" Source="SourceDir\crc-tray.exe" KeyPath="yes" DiskId="4" />
                         <RemoveFile Id="RemoveInstallFiles" Name="*.*" On="uninstall" />
-                    </Component>
-                    <Component Id="AddUserToHypervAdmins" Guid="B5FFE50B-A2AC-4F81-8656-2060BA3E54AD" KeyPath="yes">
-                        <util:User Id="LogonUser" Domain="[%USERDOMAIN]" Name="[LogonUser]" CreateUser="no" RemoveOnUninstall="no">
-                            <util:GroupRef Id="HypervAdminsGroup" />
-                        </util:User>
                     </Component>
                     <Component Id="AddUserToCrcUsers" Guid="0C793EE7-109A-474B-9651-77E0A83BAF2D" KeyPath="yes">
                         <util:User Id="LogonUser1" Domain="[%USERDOMAIN]" Name="[LogonUser]" CreateUser="no" RemoveOnUninstall="no">
@@ -107,12 +101,16 @@
         <SetProperty Action="CAInstallHyperv" Id="InstallHyperv" Value='"[System64Folder]dism.exe" /online /enable-feature /featureName:microsoft-hyper-v-all /NoRestart /quiet' Before="InstallHyperv" Sequence="execute"/>
         <CustomAction Id="InstallHyperv" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
 
+        <SetProperty Action="CAAddUserToHypervAdminGroup" Id="AddUserToHypervAdminGroup" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; .\crc.exe setup --log-level debug' Before="AddUserToHypervAdminGroup" Sequence="execute"/>
+        <CustomAction Id="AddUserToHypervAdminGroup" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
+
         <util:CloseApplication Id = "TrayRunning" Description="Please exit CodeReady Containers from tray and run the installation again." Target="crc-tray.exe" RebootPrompt="no" PromptToContinue="yes" />
 
         <InstallExecuteSequence>
             <Custom Action="JoinBundle" After="InstallFiles">NOT Installed AND NOT PATCH</Custom>
             <Custom Action="RemoveParts" After="JoinBundle">NOT Installed AND NOT PATCH</Custom>
             <Custom Action="CreateCrcGroup" Before="ConfigureUsers"> NOT Installed AND NOT REMOVE~="ALL"</Custom>
+            <Custom Action="AddUserToHypervAdminGroup" After="InstallHyperv"> NOT Installed AND NOT REMOVE~="ALL"</Custom>
             <Custom Action="RemoveCrcGroup" After="RemoveFolders"> Installed AND NOT PATCH AND REMOVE~="ALL"</Custom>
             <Custom Action="InstallHyperv" After="RemoveParts"> NOT Installed AND NOT REMOVE~="ALL"</Custom>
             <Custom Action="RemoveCrcGroupRollback" Before="CreateCrcGroup"> NOT Installed AND NOT REMOVE~="ALL"</Custom>
@@ -129,7 +127,6 @@
             <ComponentRef Id="AddToPath"/>
             <ComponentRef Id="TrayStartup"/>
             <ComponentRef Id="StartMenuEntry" />
-            <ComponentRef Id="AddUserToHypervAdmins" />
             <ComponentRef Id="AddUserToCrcUsers" />
             <ComponentRef Id="VsockRegistryEntry" />
         </Feature>
@@ -142,6 +139,7 @@
             <ProgressText Action="CreateCrcGroup">Creating crc-users group</ProgressText>
             <ProgressText Action="RemoveCrcGroup">Removing crc-users group</ProgressText>
             <ProgressText Action="InstallHyperv">Installing Hyper-V</ProgressText>
+            <ProgressText Action="AddUserToHypervAdminGroup">Adding user: [LogonUser] to Hyper-V Administrators group</ProgressText>
         </UI>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
         <!-- this should help to propagate env var changes -->
