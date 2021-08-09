@@ -4,14 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/adminhelper"
-	"github.com/code-ready/crc/pkg/crc/constants"
-	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 	"github.com/code-ready/crc/pkg/os/windows/win32"
 )
@@ -124,45 +119,6 @@ var hypervPreflightChecks = []Check{
 	},
 }
 
-var traySetupChecks = []Check{
-	{
-		checkDescription:   "Checking if CodeReady Containers daemon is installed",
-		check:              checkIfDaemonInstalled,
-		fixDescription:     "Removing CodeReady Containers daemon",
-		fix:                removeDaemon,
-		cleanupDescription: "Uninstalling daemon if installed",
-		cleanup:            removeDaemon,
-		flags:              SetupOnly,
-
-		labels: labels{Os: Windows, Tray: Enabled},
-	},
-	{
-		checkDescription: "Checking if tray executable is present",
-		check:            checkTrayExecutableExists,
-		fixDescription:   "Caching tray executable",
-		fix:              fixTrayExecutableExists,
-		flags:            SetupOnly,
-
-		labels: labels{Os: Windows, Tray: Enabled},
-	},
-	{
-		checkDescription: "Checking if tray is running",
-		check:            checkIfTrayRunning,
-		fixDescription:   "Starting CodeReady Containers tray",
-		fix:              startTray,
-		flags:            SetupOnly,
-
-		labels: labels{Os: Windows, Tray: Enabled},
-	},
-	{
-		cleanupDescription: "Stopping tray if running",
-		cleanup:            stopTray,
-		flags:              CleanUpOnly,
-
-		labels: labels{Os: Windows, Tray: Enabled},
-	},
-}
-
 var vsockChecks = []Check{
 	{
 		configKeySuffix:    "check-vsock",
@@ -180,60 +136,11 @@ var vsockChecks = []Check{
 
 var errReboot = errors.New("Please reboot your system and run 'crc setup' to complete the setup process")
 
-var adminHelperGroup = Check{
-	check: func() error {
-		_, _, err := powershell.Execute(fmt.Sprintf("Get-LocalGroupMember -Name crc-users -Member '%s'", username()))
-		return err
-	},
-	fix: func() error {
-		_, _, err := powershell.ExecuteAsAdmin("adding current user to crc-users group", fmt.Sprintf("Add-LocalGroupMember -Group crc-users -Member '%s'", username()))
-		if err != nil {
-			return err
-		}
-		return errReboot
-	},
-}
-
 func username() string {
 	if ok, _ := win32.DomainJoined(); ok {
 		return fmt.Sprintf(`%s\%s`, os.Getenv("USERDOMAIN"), os.Getenv("USERNAME"))
 	}
 	return os.Getenv("USERNAME")
-}
-
-var hypervGroup = Check{
-	check: checkIfUserPartOfHyperVAdmins,
-	fix:   fixUserPartOfHyperVAdmins,
-}
-
-var adminHelperChecks = []Check{
-	{
-		configKeySuffix:  "check-admin-helper-daemon-installed",
-		checkDescription: "Checking if admin-helper daemon is installed",
-		check: func() error {
-			version, err := adminhelper.Client().Version()
-			if err != nil {
-				return err
-			}
-			expected := filepath.Base(constants.DefaultAdminHelperCliBase)
-			if version != expected {
-				return fmt.Errorf("unexpected admin-helper daemon version (expected: %s, got: %s)", expected, version)
-			}
-			return nil
-		},
-		fixDescription: "Installing admin-helper daemon",
-		fix: func() error {
-			_, _, err := powershell.ExecuteAsAdmin("install admin-helper daemon", fmt.Sprintf("& '%s' uninstall-daemon; & '%s' install-daemon", adminhelper.BinPath, adminhelper.BinPath))
-			return err
-		},
-		cleanupDescription: "Uninstalling admin-helper daemon",
-		cleanup: func() error {
-			_, _, err := powershell.ExecuteAsAdmin("uninstall admin-helper daemon", fmt.Sprintf("& '%s' uninstall-daemon", adminhelper.BinPath))
-			return err
-		},
-		labels: labels{Os: Windows},
-	},
-	cleanUpHostsFile,
 }
 
 const (
@@ -275,24 +182,6 @@ func cleanVsock() error {
 	return nil
 }
 
-const (
-	Tray LabelName = iota + lastLabelName
-)
-
-const (
-	// tray
-	Enabled LabelValue = iota + lastLabelValue
-	Disabled
-)
-
-func (filter preflightFilter) SetTray(enable bool) {
-	if version.IsMsiBuild() && enable {
-		filter[Tray] = Enabled
-	} else {
-		filter[Tray] = Disabled
-	}
-}
-
 // We want all preflight checks including
 // - experimental checks
 // - tray checks when using an installer, regardless of tray enabled or not
@@ -306,19 +195,16 @@ func getAllPreflightChecks() []Check {
 
 func getChecks() []Check {
 	checks := []Check{}
-	checks = append(checks, genericPreflightChecks...)
 	checks = append(checks, hypervPreflightChecks...)
-	checks = append(checks, adminHelperChecks...)
 	checks = append(checks, vsockChecks...)
-	checks = append(checks, traySetupChecks...)
 	checks = append(checks, bundleCheck)
+	checks = append(checks, genericCleanupChecks...)
 	return checks
 }
 
 func getPreflightChecks(_ bool, trayAutoStart bool, networkMode network.Mode) []Check {
 	filter := newFilter()
 	filter.SetNetworkMode(networkMode)
-	filter.SetTray(trayAutoStart)
 
 	return filter.Apply(getChecks())
 }
