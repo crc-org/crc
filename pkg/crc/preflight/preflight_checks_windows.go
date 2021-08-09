@@ -210,11 +210,3 @@ func removeCrcVM() (err error) {
 	logging.Debug("'crc' VM is removed")
 	return nil
 }
-
-func setSuid(path string) error {
-	return nil
-}
-
-func checkSuid(path string) error {
-	return nil
-}
