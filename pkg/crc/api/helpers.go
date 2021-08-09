@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"sync"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -12,6 +13,7 @@ import (
 type context struct {
 	method      string
 	requestBody []byte
+	url         *url.URL
 
 	code         int
 	headers      map[string]string
@@ -102,6 +104,7 @@ func (s *server) Handler() http.Handler {
 			method:      r.Method,
 			requestBody: requestBody,
 			headers:     make(map[string]string),
+			url:         r.URL,
 		}
 		if err := handler(c); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
