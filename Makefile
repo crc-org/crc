@@ -231,10 +231,6 @@ release: cross-lint embed_bundle gen_release_info
 	@cp LICENSE $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
 	tar cJSf $(RELEASE_DIR)/crc-linux-amd64.tar.xz -C $(BUILD_DIR) crc-linux-$(CRC_VERSION)-amd64 --owner=0 --group=0
 	
-	@mkdir -p $(BUILD_DIR)/crc-windows-$(CRC_VERSION)-amd64
-	@cp LICENSE $(BUILD_DIR)/windows-amd64/crc.exe $(BUILD_DIR)/crc-windows-$(CRC_VERSION)-amd64
-	cd $(BUILD_DIR) && zip -r $(CURDIR)/$(RELEASE_DIR)/crc-windows-amd64.zip crc-windows-$(CRC_VERSION)-amd64
-
 	@mv $(RELEASE_INFO) $(RELEASE_DIR)/$(RELEASE_INFO)
 	
 	pushd $(RELEASE_DIR) && sha256sum * > sha256sum.txt && popd
