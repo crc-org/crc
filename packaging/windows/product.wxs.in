@@ -27,6 +27,13 @@
         <Condition Message="CodeReady Containers requires at least 9GB of RAM to run. Aborting installation.">
             <![CDATA[Installed OR (PhysicalMemory >= 9126)]]>
         </Condition>
+        <Property Id="WINDOWSEDITION" Secure="yes">
+            <RegistrySearch Id="WindowsEditionReg" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="EditionID" Type="raw" />
+        </Property>
+        <Condition Message="CodeReady Containers cannot run on Windows Home edition">
+            <![CDATA[Installed OR (WINDOWSEDITION <> "Home")]]>
+        </Condition>
+
         <util:Group Id="CrcUsersGroup" Name="crc-users" />
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
