@@ -82,30 +82,11 @@ var hypervPreflightChecks = []Check{
 	},
 	{
 		configKeySuffix:  "check-user-in-hyperv-group",
-		checkDescription: "Checking if current user is in Hyper-V group and crc-users group",
-		check: func() error {
-			if err := adminHelperGroup.check(); err != nil {
-				return err
-			}
-			return hypervGroup.check()
-		},
-		fixDescription: "Adding current user to group",
-		fix: func() error {
-			m := crcerrors.MultiError{}
-			if err := adminHelperGroup.check(); err != nil {
-				m.Collect(adminHelperGroup.fix())
-			}
-			if err := hypervGroup.check(); err != nil {
-				m.Collect(hypervGroup.fix())
-			}
-			if len(m.Errors) == 0 {
-				return nil
-			}
-			if m.Errors[0] == errReboot {
-				return errReboot
-			}
-			return m
-		},
+		checkDescription: "Checking if current user is in Hyper-V Admins group",
+		check:            checkIfUserPartOfHyperVAdmins,
+		fixDescription:   "Adding current user to Hyper-V Admins group",
+		fix:              fixUserPartOfHyperVAdmins,
+
 		labels: labels{Os: Windows},
 	},
 	{
