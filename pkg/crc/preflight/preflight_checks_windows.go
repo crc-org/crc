@@ -84,21 +84,6 @@ func checkHyperVInstalled() error {
 	return nil
 }
 
-//
-func fixHyperVInstalled() error {
-	enableHyperVCommand := `Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart`
-	_, _, err := powershell.ExecuteAsAdmin("enable Hyper-V", enableHyperVCommand)
-
-	if err != nil {
-		logging.Debug(err.Error())
-		return fmt.Errorf("Error occurred installing Hyper-V")
-	}
-
-	// We do need to error out as a restart might be needed (unfortunately no output redirect possible)
-	logging.Error("Please reboot your system")
-	return nil
-}
-
 func checkHyperVServiceRunning() error {
 	// Check if Hyper-V's Virtual Machine Management Service is running
 	checkVmmsRunning := `@(Get-Service vmms).Status`
@@ -109,18 +94,6 @@ func checkHyperVServiceRunning() error {
 	}
 	if strings.TrimSpace(stdOut) != "Running" {
 		return fmt.Errorf("Hyper-V Virtual Machine Management service not running")
-	}
-
-	return nil
-}
-
-func fixHyperVServiceRunning() error {
-	enableVmmsService := `Set-Service -Name vmms -StartupType Automatic; Set-Service -Name vmms -Status Running -PassThru`
-	_, _, err := powershell.ExecuteAsAdmin("enable Hyper-V service", enableVmmsService)
-
-	if err != nil {
-		logging.Debug(err.Error())
-		return fmt.Errorf("Error occurred enabling Hyper-V service")
 	}
 
 	return nil
