@@ -34,7 +34,7 @@ func checkIfDaemonIsRunning() (bool, error) {
 }
 
 func daemonNotRunningMessage() string {
-	if crcversion.IsMacosInstallPathSet() {
+	if crcversion.IsInstaller() {
 		return "Is '/Applications/CodeReady Containers.app' running? Cannot reach daemon API"
 	}
 	return genericDaemonNotRunningMessage

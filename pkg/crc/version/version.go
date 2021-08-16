@@ -5,9 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
 // The following variables are private fields and should be set when compiling with ldflags, for example --ldflags="-X github.com/code-ready/crc/pkg/version.crcVersion=vX.Y.Z
@@ -71,16 +75,36 @@ func GetCRCWindowsTrayVersion() string {
 	return crcWindowsTrayVersion
 }
 
-func GetMacosInstallPath() string {
-	return macosInstallPath
+func msiInstallPath() string {
+	// In case of error path will be empty string and upperr layer will handle
+	currentExecutablePath, err := os.Executable()
+	if err != nil {
+		logging.Errorf("Failed to find the MSI installation path: %v", err)
+		return ""
+	}
+	return filepath.Dir(currentExecutablePath)
 }
 
-func IsMacosInstallPathSet() bool {
-	return macosInstallPath != "/unset"
+func IsInstaller() bool {
+	switch runtime.GOOS {
+	case "windows":
+		return msiBuild != "false"
+	case "darwin":
+		return macosInstallPath != "/unset"
+	default:
+		return false
+	}
 }
 
-func IsMsiBuild() bool {
-	return msiBuild != "false"
+func InstallPath() string {
+	switch runtime.GOOS {
+	case "windows":
+		return msiInstallPath()
+	case "darwin":
+		return macosInstallPath
+	default:
+		return ""
+	}
 }
 
 func GetCRCLatestVersionFromMirror(transport http.RoundTripper) (*CrcReleaseInfo, error) {

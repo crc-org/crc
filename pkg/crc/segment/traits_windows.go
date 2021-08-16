@@ -12,7 +12,7 @@ import (
 func traits() analytics.Traits {
 	base := analytics.NewTraits().
 		Set("os", runtime.GOOS).
-		Set("used_installer", version.IsMsiBuild())
+		Set("used_installer", version.IsInstaller())
 
 	releaseID, _, err := powershell.Execute(`(Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseId`)
 	if err != nil {

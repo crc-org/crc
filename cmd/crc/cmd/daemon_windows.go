@@ -37,7 +37,7 @@ func checkIfDaemonIsRunning() (bool, error) {
 }
 
 func daemonNotRunningMessage() string {
-	if crcversion.IsMsiBuild() {
+	if crcversion.IsInstaller() {
 		return "Is CodeReady Containers tray application running? Cannot reach daemon API"
 	}
 	return genericDaemonNotRunningMessage

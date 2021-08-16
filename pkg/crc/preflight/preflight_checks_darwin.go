@@ -35,7 +35,7 @@ func checkM1CPU() error {
 
 func checkHyperKitInstalled(networkMode network.Mode) func() error {
 	return func() error {
-		if version.IsMacosInstallPathSet() {
+		if version.IsInstaller() {
 			return nil
 		}
 
@@ -60,7 +60,7 @@ func checkHyperKitInstalled(networkMode network.Mode) func() error {
 
 func fixHyperKitInstallation(networkMode network.Mode) func() error {
 	return func() error {
-		if version.IsMacosInstallPathSet() {
+		if version.IsInstaller() {
 			return nil
 		}
 
@@ -80,7 +80,7 @@ func fixHyperKitInstallation(networkMode network.Mode) func() error {
 
 func checkMachineDriverHyperKitInstalled(networkMode network.Mode) func() error {
 	return func() error {
-		if version.IsMacosInstallPathSet() {
+		if version.IsInstaller() {
 			return nil
 		}
 
@@ -103,7 +103,7 @@ func checkMachineDriverHyperKitInstalled(networkMode network.Mode) func() error 
 
 func fixMachineDriverHyperKitInstalled(networkMode network.Mode) func() error {
 	return func() error {
-		if version.IsMacosInstallPathSet() {
+		if version.IsInstaller() {
 			return nil
 		}
 
@@ -122,7 +122,7 @@ func fixMachineDriverHyperKitInstalled(networkMode network.Mode) func() error {
 }
 
 func checkQcowToolInstalled() error {
-	if version.IsMacosInstallPathSet() {
+	if version.IsInstaller() {
 		return nil
 	}
 
@@ -137,7 +137,7 @@ func checkQcowToolInstalled() error {
 }
 
 func fixQcowToolInstalled() error {
-	if version.IsMacosInstallPathSet() {
+	if version.IsInstaller() {
 		return nil
 	}
 	qcowTool := cache.NewQcowToolCache()

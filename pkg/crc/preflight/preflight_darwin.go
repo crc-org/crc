@@ -120,7 +120,7 @@ const (
 )
 
 func (filter preflightFilter) SetTray(enable bool) {
-	if version.IsMacosInstallPathSet() && enable {
+	if version.IsInstaller() && enable {
 		filter[Tray] = Enabled
 	} else {
 		filter[Tray] = Disabled

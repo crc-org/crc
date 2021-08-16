@@ -5,24 +5,15 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"runtime"
 
 	"github.com/YourFin/binappend"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
 func openEmbeddedFile(executablePath, embedName string) (io.ReadCloser, error) {
-	if runtime.GOOS == "darwin" && version.IsMacosInstallPathSet() {
-		path := filepath.Join(version.GetMacosInstallPath(), embedName)
-		if _, err := os.Stat(path); err == nil {
-			return os.Open(path)
-		}
-	}
-
-	if runtime.GOOS == "windows" && version.IsMsiBuild() {
-		path := filepath.Join(constants.GetMsiInstallPath(), embedName)
+	if version.IsInstaller() {
+		path := filepath.Join(version.InstallPath(), embedName)
 		if _, err := os.Stat(path); err == nil {
 			return os.Open(path)
 		}
