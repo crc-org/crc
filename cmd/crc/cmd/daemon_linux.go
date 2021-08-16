@@ -9,8 +9,8 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/gvisor-tap-vsock/pkg/transport"
 
-	"github.com/coreos/go-systemd/activation"
-	"github.com/coreos/go-systemd/daemon"
+	"github.com/coreos/go-systemd/v22/activation"
+	"github.com/coreos/go-systemd/v22/daemon"
 	"github.com/mdlayher/vsock"
 )
 
