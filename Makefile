@@ -285,8 +285,8 @@ packagedir: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)
 $(BUILD_DIR)/macos-amd64/crc-macos-amd64.pkg: packagedir
 	./packaging/package.sh $(BUILD_DIR)/macos-amd64
 
-$(BUILD_DIR)/macos-amd64/crc-installer.tar: packagedir
-	tar -cvf $(BUILD_DIR)/macos-amd64/crc-installer.tar ./packaging
+$(BUILD_DIR)/macos-amd64/crc-macos-installer-amd64.tar: packagedir
+	tar -cvf $@ ./packaging
 
 $(GOPATH)/bin/gomod2rpmdeps:
 	pushd /tmp && GO111MODULE=on go get github.com/cfergeau/gomod2rpmdeps/cmd/gomod2rpmdeps && popd
