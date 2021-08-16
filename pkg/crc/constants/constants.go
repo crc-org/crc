@@ -7,7 +7,6 @@ import (
 	"runtime"
 
 	"github.com/YourFin/binappend"
-	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
@@ -102,14 +101,8 @@ var (
 )
 
 func defaultBundlePath() string {
-	if runtime.GOOS == "darwin" && version.IsMacosInstallPathSet() {
-		path := filepath.Join(version.GetMacosInstallPath(), GetDefaultBundle())
-		if _, err := os.Stat(path); err == nil {
-			return path
-		}
-	}
-	if runtime.GOOS == "windows" && version.IsMsiBuild() {
-		path := filepath.Join(GetMsiInstallPath(), GetDefaultBundle())
+	if version.IsInstaller() {
+		path := filepath.Join(version.InstallPath(), GetDefaultBundle())
 		if _, err := os.Stat(path); err == nil {
 			return path
 		}
@@ -118,11 +111,8 @@ func defaultBundlePath() string {
 }
 
 func BinDir() string {
-	if runtime.GOOS == "darwin" && version.IsMacosInstallPathSet() {
-		return version.GetMacosInstallPath()
-	}
-	if runtime.GOOS == "windows" && version.IsMsiBuild() {
-		return GetMsiInstallPath()
+	if version.IsInstaller() {
+		return version.InstallPath()
 	}
 	return CrcBinDir
 }
@@ -155,7 +145,7 @@ func BundleEmbedded() bool {
 }
 
 func IsRelease() bool {
-	return BundleEmbedded() || version.IsMacosInstallPathSet() || version.IsMsiBuild()
+	return BundleEmbedded() || version.IsInstaller()
 }
 
 func contains(arr []string, str string) bool {
@@ -191,14 +181,4 @@ func GetCRCMacTrayDownloadURL() string {
 
 func GetCRCWindowsTrayDownloadURL() string {
 	return fmt.Sprintf(CRCWindowsTrayDownloadURL, version.GetCRCWindowsTrayVersion())
-}
-
-func GetMsiInstallPath() string {
-	// In case of error path will be empty string and upperr layer will handle
-	currentExecutablePath, err := os.Executable()
-	if err != nil {
-		logging.Errorf("Failed to find the MSI installation path: %v", err)
-		return ""
-	}
-	return filepath.Dir(currentExecutablePath)
 }

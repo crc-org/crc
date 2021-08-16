@@ -12,7 +12,7 @@ import (
 func traits() analytics.Traits {
 	base := analytics.NewTraits().
 		Set("os", runtime.GOOS).
-		Set("used_installer", version.IsMacosInstallPathSet())
+		Set("used_installer", version.IsInstaller())
 
 	version, _, err := crcos.RunWithDefaultLocale("sw_vers", "-productVersion")
 	if err != nil {
