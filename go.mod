@@ -3,6 +3,7 @@ module github.com/code-ready/crc
 go 1.15
 
 require (
+	github.com/AlecAivazis/survey/v2 v2.2.16
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/Microsoft/go-winio v0.5.0
 	github.com/StackExchange/wmi v1.2.1
@@ -63,7 +64,6 @@ require (
 	golang.org/x/sys v0.0.0-20210816074244-15123e1e1f71
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b
 	golang.org/x/text v0.3.7
-	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	k8s.io/api v0.20.1
 	k8s.io/apimachinery v0.20.1
 	k8s.io/client-go v0.20.1
