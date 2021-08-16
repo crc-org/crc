@@ -16,8 +16,9 @@ import (
 	"github.com/code-ready/crc/pkg/crc/validation"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
 	crcos "github.com/code-ready/crc/pkg/os"
+
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/zalando/go-keyring"
-	"gopkg.in/AlecAivazis/survey.v1"
 )
 
 const (
@@ -179,9 +180,9 @@ func promptUserForSecret() (string, error) {
 	prompt := &survey.Password{
 		Message: "Please enter the pull secret",
 	}
-	if err := survey.AskOne(prompt, &secret, func(ans interface{}) error {
+	if err := survey.AskOne(prompt, &secret, survey.WithValidator(func(ans interface{}) error {
 		return validation.ImagePullSecret(ans.(string))
-	}); err != nil {
+	})); err != nil {
 		return "", err
 	}
 	return secret, nil
