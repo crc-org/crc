@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	"github.com/code-ready/crc/pkg/crc/api/client"
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -49,15 +50,22 @@ func setPullSecret() func(c *context) error {
 		if err := cluster.StoreInKeyring(string(c.requestBody)); err != nil {
 			return err
 		}
-		return c.String(http.StatusCreated, "")
+		return c.JSON(http.StatusCreated, client.Result{
+			Success: true,
+		})
 	}
 }
 
 func getPullSecret(config crcConfig.Storage) func(c *context) error {
 	return func(c *context) error {
 		if _, err := cluster.NewNonInteractivePullSecretLoader(config, "").Value(); err == nil {
-			return c.String(http.StatusOK, "")
+			return c.JSON(http.StatusOK, client.Result{
+				Success: true,
+			})
 		}
-		return c.String(http.StatusNotFound, "")
+		return c.JSON(http.StatusNotFound, client.Result{
+			Success: false,
+			Error:   "pull secret not found",
+		})
 	}
 }
