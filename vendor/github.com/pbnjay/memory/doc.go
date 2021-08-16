@@ -12,3 +12,13 @@ package memory
 func TotalMemory() uint64 {
 	return sysTotalMemory()
 }
+
+// FreeMemory returns the total free system memory in bytes.
+//
+// The total free memory is installed physical memory size minus reserved
+// areas for other applications running on the same system.
+//
+// If free memory size could not be determined, then 0 is returned.
+func FreeMemory() uint64 {
+	return sysFreeMemory()
+}

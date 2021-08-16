@@ -27,15 +27,11 @@ package libvirtxml
 
 import "encoding/xml"
 
-type DomainSnapshotDiskDriver struct {
-	Type string `xml:"type,attr,omitempty"`
-}
-
 type DomainSnapshotDisk struct {
-	Name     string                    `xml:"name,attr"`
-	Snapshot string                    `xml:"snapshot,attr,omitempty"`
-	Driver   *DomainSnapshotDiskDriver `xml:"driver"`
-	Source   *DomainDiskSource         `xml:"source"`
+	Name     string            `xml:"name,attr"`
+	Snapshot string            `xml:"snapshot,attr,omitempty"`
+	Driver   *DomainDiskDriver `xml:"driver"`
+	Source   *DomainDiskSource `xml:"source"`
 }
 
 type DomainSnapshotDisks struct {

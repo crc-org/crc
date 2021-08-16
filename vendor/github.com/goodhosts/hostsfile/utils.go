@@ -15,12 +15,21 @@ func itemInSlice(item string, list []string) bool {
 }
 
 func removeFromSlice(s string, slice []string) []string {
-	for key, value := range slice {
-		if value == s {
-			return append(slice[:key], slice[key+1:]...)
+	pos := findPositionInSlice(s, slice)
+	for pos > -1 {
+		slice = append(slice[:pos], slice[pos+1:]...)
+		pos = findPositionInSlice(s, slice)
+	}
+	return slice
+}
+
+func findPositionInSlice(s string, slice []string) int {
+	for index, v := range slice {
+		if v == s {
+			return index
 		}
 	}
-	return nil
+	return -1
 }
 
 //func sliceContainsItem(item string, list []string) bool {
