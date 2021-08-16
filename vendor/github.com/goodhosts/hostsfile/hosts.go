@@ -43,8 +43,12 @@ func NewCustomHosts(osHostsFilePath string) (Hosts, error) {
 
 // Return ```true``` if hosts file is writable.
 func (h *Hosts) IsWritable() bool {
-	_, err := os.OpenFile(h.Path, os.O_WRONLY, 0660)
-	return err == nil
+	file, err := os.OpenFile(h.Path, os.O_WRONLY, 0660)
+	if err != nil {
+		return false
+	}
+	defer file.Close()
+	return true
 }
 
 // Load the hosts file into ```l.Lines```.
@@ -128,11 +132,8 @@ func (h *Hosts) Add(ip string, hosts ...string) error {
 // merge dupelicate ips and hosts per ip
 func (h *Hosts) Clean() {
 	h.RemoveDuplicateIps()
-	for pos, line := range h.Lines {
-		line.RemoveDuplicateHosts()
-		line.SortHosts()
-		h.Lines[pos] = line
-	}
+	h.RemoveDuplicateHosts()
+	h.SortHosts()
 	h.SortByIp()
 	h.HostsPerLine(HostsPerLine)
 }
@@ -190,16 +191,18 @@ func (h *Hosts) Remove(ip string, hosts ...string) error {
 
 // Remove  entries by hostname from the hosts file.
 func (h *Hosts) RemoveByHostname(host string) error {
-	pos := h.getHostnamePosition(host)
-	for pos > -1 {
-		if len(h.Lines[pos].Hosts) > 1 {
-			h.Lines[pos].Hosts = removeFromSlice(host, h.Lines[pos].Hosts)
-			h.Lines[pos].RegenRaw()
-		} else {
-			h.removeByPosition(pos)
+	newLines := []HostsLine{}
+	for _, line := range h.Lines {
+		if len(line.Hosts) > 0 {
+			line.Hosts = removeFromSlice(host, line.Hosts)
+			line.RegenRaw()
 		}
-		pos = h.getHostnamePosition(host)
+
+		if len(line.Hosts) > 0 {
+			newLines = append(newLines, line)
+		}
 	}
+	h.Lines = newLines
 
 	return nil
 }
@@ -223,6 +226,20 @@ func (h *Hosts) RemoveDuplicateIps() {
 		if count > 1 {
 			h.combineIp(ip)
 		}
+	}
+}
+
+func (h *Hosts) RemoveDuplicateHosts() {
+	for pos, line := range h.Lines {
+		line.RemoveDuplicateHosts()
+		h.Lines[pos] = line
+	}
+}
+
+func (h *Hosts) SortHosts() {
+	for pos, line := range h.Lines {
+		line.SortHosts()
+		h.Lines[pos] = line
 	}
 }
 

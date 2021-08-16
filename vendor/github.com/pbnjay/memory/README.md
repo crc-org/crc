@@ -1,9 +1,9 @@
 # memory
 
-Package `memory` provides a single method reporting total physical system memory
-accessible to the kernel. It does not account for memory used by other processes.
+Package `memory` provides two methods reporting total physical system memory
+accessible to the kernel, and free memory available to the running application.
 
-This package has no external dependency beside the standard library.
+This package has no external dependency besides the standard library and default operating system tools.
 
 Documentation:
 [![GoDoc](https://godoc.org/github.com/pbnjay/memory?status.svg)](https://godoc.org/github.com/pbnjay/memory)
@@ -16,6 +16,7 @@ See some history of the proposal at https://github.com/golang/go/issues/21816
 
 ```go
 fmt.Printf("Total system memory: %d\n", memory.TotalMemory())
+fmt.Printf("Free memory: %d\n", memory.FreeMemory())
 ```
 
 

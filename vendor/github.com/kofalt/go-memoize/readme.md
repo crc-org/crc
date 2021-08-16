@@ -1,6 +1,6 @@
 # go-memoize
 
-There didn't seem to be a decent [memoizer](https://wikipedia.org/wiki/Memoization) for Golang out there, so I lashed two nice libraries together and made one.
+There wasn't a decent [memoizer](https://wikipedia.org/wiki/Memoization) for Golang out there, so I lashed two nice libraries together and made one.
 
 Dead-simple. Safe for concurrent use.
 

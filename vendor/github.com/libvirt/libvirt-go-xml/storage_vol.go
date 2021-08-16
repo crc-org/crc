@@ -53,12 +53,18 @@ type StorageVolumeTargetTimestamps struct {
 	Ctime string `xml:"ctime"`
 }
 
+type StorageVolumeTargetCluterSize struct {
+	Unit  string `xml:"unit,attr,omitempty"`
+	Value uint64 `xml:",chardata"`
+}
+
 type StorageVolumeTarget struct {
 	Path        string                          `xml:"path,omitempty"`
 	Format      *StorageVolumeTargetFormat      `xml:"format"`
 	Permissions *StorageVolumeTargetPermissions `xml:"permissions"`
 	Timestamps  *StorageVolumeTargetTimestamps  `xml:"timestamps"`
 	Compat      string                          `xml:"compat,omitempty"`
+	ClusterSize *StorageVolumeTargetCluterSize  `xml:"clusterSize"`
 	NoCOW       *struct{}                       `xml:"nocow"`
 	Features    []StorageVolumeTargetFeature    `xml:"features"`
 	Encryption  *StorageEncryption              `xml:"encryption"`
