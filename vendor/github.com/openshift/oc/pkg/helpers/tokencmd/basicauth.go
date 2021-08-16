@@ -14,12 +14,13 @@ import (
 	"github.com/openshift/oc/pkg/helpers/term"
 )
 
-// BasicAuthNoUsernameError is an error that means that basic authentication challenge handling was attempted
+// BasicAuthNoUsernameError when basic authentication challenge handling was attempted
 // but the required username was not provided from the command line options
 type BasicAuthNoUsernameError struct{}
 
+//
 func (e *BasicAuthNoUsernameError) Error() string {
-	return "did not receive username - print token url instead of basic prompt"
+	return "did not receive username. Pass 'oc login --username <username>' for the password prompt"
 }
 
 // NewBasicAuthNoUsernameError returns an error for a basic challenge without a username

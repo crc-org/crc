@@ -10,6 +10,7 @@ require (
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
+	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/cheggaaa/pb/v3 v3.0.8
 	github.com/code-ready/admin-helper v0.0.0-20210705143132-4eb2d25dbcf9
@@ -41,10 +42,9 @@ require (
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.15.0
-	github.com/openshift/api v0.0.0-20210105115604-44119421ec6b
-	github.com/openshift/client-go v0.0.0-20210112165513-ebc401615f47
-	github.com/openshift/library-go v0.0.0-20210205203934-9eb0d970f2f4 // indirect
-	github.com/openshift/oc v0.0.0-alpha.0.0.20210411025417-95881afb5df0
+	github.com/openshift/api v0.0.0-20210521075222-e273a339932a
+	github.com/openshift/client-go v0.0.0-20210521082421-73d9475a9142
+	github.com/openshift/oc v0.0.0-alpha.0.0.20210811234350-0d10c3f72592
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
 	github.com/pborman/uuid v1.2.1
 	github.com/pkg/browser v0.0.0-20210706143420-7d21f8c997e2
@@ -64,23 +64,17 @@ require (
 	golang.org/x/sys v0.0.0-20210816074244-15123e1e1f71
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b
 	golang.org/x/text v0.3.7
-	k8s.io/api v0.20.1
-	k8s.io/apimachinery v0.20.1
-	k8s.io/client-go v0.20.1
+	k8s.io/api v0.21.1
+	k8s.io/apimachinery v0.21.1
+	k8s.io/client-go v0.21.1
 )
 
 replace (
 	github.com/apcera/gssapi => github.com/openshift/gssapi v0.0.0-20161010215902-5fb4217df13b
-	github.com/containers/image => github.com/openshift/containers-image v0.0.0-20190130162819-76de87591e9d
-	// Taking changes from https://github.com/moby/moby/pull/40021 to accomodate new version of golang.org/x/sys.
-	// Although the PR lists c3a0a3744636069f43197eb18245aaae89f568e5 as the commit with the fixes,
-	// d1d5f6476656c6aad457e2a91d3436e66b6f2251 is more suitable since it does not break fsouza/go-clientdocker,
-	// yet provides the same fix.
-	github.com/docker/docker => github.com/docker/docker v1.4.2-0.20191121165722-d1d5f6476656
 
-	k8s.io/apimachinery => github.com/openshift/kubernetes-apimachinery v0.0.0-20210108114224-194a87c5b03a
-	k8s.io/client-go => github.com/openshift/kubernetes-client-go v0.0.0-20210108114446-0829bdd68114
-	k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20210108115031-c0d78c0aeda3
+	k8s.io/apimachinery => github.com/openshift/kubernetes-apimachinery v0.0.0-20210521074607-b6b98f7a1855
+	k8s.io/client-go => github.com/openshift/kubernetes-client-go v0.0.0-20210521075216-71b63307b5df
+	k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20210521075729-633333dfccda
 )
 
 replace github.com/mdlayher/vsock => github.com/cfergeau/vsock v0.0.0-20210707084117-4d87f8a20ba8

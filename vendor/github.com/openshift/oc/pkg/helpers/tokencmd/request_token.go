@@ -237,7 +237,7 @@ func (o *RequestTokenOptions) RequestToken() (string, error) {
 				if err != nil {
 					if _, ok := err.(*BasicAuthNoUsernameError); ok {
 						tokenPromptErr := apierrs.NewUnauthorized(BasicAuthNoUsernameMessage)
-						klog.V(4).Infof("%v", err)
+						klog.V(2).Infof("%v", err)
 						tokenPromptErr.ErrStatus.Details = &metav1.StatusDetails{
 							Causes: []metav1.StatusCause{
 								{Message: fmt.Sprintf("You must obtain an API token by visiting %s/request", o.OsinConfig.TokenUrl)},
