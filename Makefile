@@ -287,6 +287,7 @@ $(BUILD_DIR)/macos-amd64/crc-macos-amd64.pkg: packagedir
 
 $(BUILD_DIR)/macos-amd64/crc-macos-installer-amd64.tar: packagedir
 	tar -cvf $@ ./packaging
+	cd $(@D) && sha256sum $(@F)>$(@F).sha256sum
 
 $(GOPATH)/bin/gomod2rpmdeps:
 	pushd /tmp && GO111MODULE=on go get github.com/cfergeau/gomod2rpmdeps/cmd/gomod2rpmdeps && popd
@@ -337,3 +338,4 @@ $(BUILD_DIR)/windows-amd64/crc-windows-installer.zip: $(BUILD_DIR)/windows-amd64
 	rm -f $(HOST_BUILD_DIR)/crc-embedder
 	rm -f $(HOST_BUILD_DIR)/split
 	pwsh -NoProfile -Command "cd $(HOST_BUILD_DIR); Compress-Archive -LiteralPath $(CABS_MSI) -DestinationPath crc-windows-installer.zip"
+	cd $(@D) && sha256sum $(@F)>$(@F).sha256sum
