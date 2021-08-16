@@ -80,7 +80,7 @@ func RegisterSettings(cfg *Config) {
 	cfg.AddSetting(ExperimentalFeatures, false, ValidateBool, SuccessfullyApplied,
 		"Enable experimental features (true/false, default: false)")
 
-	if !version.IsMacosInstallPathSet() {
+	if !version.IsMacosInstallPathSet() && !version.IsMsiBuild() {
 		cfg.AddSetting(NetworkMode, string(defaultNetworkMode()), network.ValidateMode, network.SuccessfullyAppliedMode,
 			fmt.Sprintf("Network mode (%s or %s)", network.UserNetworkingMode, network.SystemNetworkingMode))
 	}
@@ -122,7 +122,7 @@ func defaultNetworkMode() network.Mode {
 }
 
 func GetNetworkMode(config Storage) network.Mode {
-	if version.IsMacosInstallPathSet() {
+	if version.IsMacosInstallPathSet() || version.IsMsiBuild() {
 		return network.UserNetworkingMode
 	}
 	return network.ParseMode(config.Get(NetworkMode).AsString())
