@@ -260,7 +260,7 @@ goversioncheck:
 
 TRAY_RELEASE ?= packaging/tmp/crc-tray-macos.tar.gz
 
-packagedir: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.macosInstallPath=$(MACOS_INSTALL_PATH)' $(RELEASE_VERSION_VARIABLES)
+packagedir: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
 packagedir: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
 	echo -n $(CRC_VERSION) > packaging/VERSION
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
@@ -311,7 +311,7 @@ CRC_EXE=crc.exe
 BUNDLE_NAME=crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
 
 .PHONY: msidir
-msidir: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.msiBuild=true' $(RELEASE_VERSION_VARIABLES)
+msidir: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
 msidir: clean $(HOST_BUILD_DIR)/crc-embedder $(HOST_BUILD_DIR)/split $(BUILD_DIR)/windows-amd64/crc.exe check_bundledir $(PACKAGE_DIR)/product.wxs
 	mkdir -p $(PACKAGE_DIR)/msi
 	$(HOST_BUILD_DIR)/crc-embedder download $(PACKAGE_DIR)/msi 

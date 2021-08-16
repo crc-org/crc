@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"runtime"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
@@ -27,9 +26,10 @@ var (
 
 	okdBuild = "false"
 
-	macosInstallPath = "/unset"
-
-	msiBuild = "false"
+	// will always be false on linux
+	// will be true for releases on macos and windows
+	// will be false for git builds on macos and windows
+	installerBuild = "false"
 )
 
 const (
@@ -75,36 +75,23 @@ func GetCRCWindowsTrayVersion() string {
 	return crcWindowsTrayVersion
 }
 
-func msiInstallPath() string {
-	// In case of error path will be empty string and upperr layer will handle
-	currentExecutablePath, err := os.Executable()
-	if err != nil {
-		logging.Errorf("Failed to find the MSI installation path: %v", err)
-		return ""
-	}
-	return filepath.Dir(currentExecutablePath)
-}
-
 func IsInstaller() bool {
-	switch runtime.GOOS {
-	case "windows":
-		return msiBuild != "false"
-	case "darwin":
-		return macosInstallPath != "/unset"
-	default:
-		return false
-	}
+	return installerBuild != "false"
 }
 
 func InstallPath() string {
-	switch runtime.GOOS {
-	case "windows":
-		return msiInstallPath()
-	case "darwin":
-		return macosInstallPath
-	default:
+	if !IsInstaller() {
+		logging.Errorf("version.InstallPath() should not be called on non-installer builds")
 		return ""
 	}
+
+	// In case of error, path will be an empty string and the upper layers will handle it
+	currentExecutablePath, err := os.Executable()
+	if err != nil {
+		logging.Errorf("Failed to find the installation path: %v", err)
+		return ""
+	}
+	return filepath.Dir(currentExecutablePath)
 }
 
 func GetCRCLatestVersionFromMirror(transport http.RoundTripper) (*CrcReleaseInfo, error) {
