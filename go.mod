@@ -15,7 +15,7 @@ require (
 	github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a
 	github.com/code-ready/gvisor-tap-vsock v0.0.0-20210308122700-d61f9aac135c
 	github.com/code-ready/machine v0.0.0-20210616065635-eff475d32b9a
-	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
+	github.com/coreos/go-systemd/v22 v22.3.2
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/danieljoos/wincred v1.1.1 // indirect

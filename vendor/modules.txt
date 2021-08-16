@@ -63,10 +63,10 @@ github.com/code-ready/machine/libmachine/drivers/plugin/localbinary
 github.com/code-ready/machine/libmachine/drivers/rpc
 github.com/code-ready/machine/libmachine/state
 github.com/code-ready/machine/libmachine/version
-# github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
+# github.com/coreos/go-systemd/v22 v22.3.2
 ## explicit
-github.com/coreos/go-systemd/activation
-github.com/coreos/go-systemd/daemon
+github.com/coreos/go-systemd/v22/activation
+github.com/coreos/go-systemd/v22/daemon
 # github.com/cucumber/gherkin-go/v11 v11.0.0
 github.com/cucumber/gherkin-go/v11
 # github.com/cucumber/godog v0.9.0
