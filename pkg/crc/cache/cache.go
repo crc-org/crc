@@ -10,6 +10,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/download"
 	"github.com/code-ready/crc/pkg/embed"
 	"github.com/code-ready/crc/pkg/extract"
@@ -36,7 +37,7 @@ func (e *VersionMismatchError) Error() string {
 }
 
 func New(executableName string, archiveURL string, version string, getVersion func(string) (string, error)) *Cache {
-	return &Cache{executableName: executableName, archiveURL: archiveURL, destDir: constants.CrcBinDir, version: version, getVersion: getVersion}
+	return &Cache{executableName: executableName, archiveURL: archiveURL, destDir: constants.BinDir(), version: version, getVersion: getVersion}
 }
 
 func (c *Cache) GetExecutablePath() string {
@@ -91,6 +92,9 @@ func (c *Cache) IsCached() bool {
 
 func (c *Cache) EnsureIsCached() error {
 	if !c.IsCached() || c.CheckVersion() != nil {
+		if version.IsInstaller() {
+			return fmt.Errorf("%s could not be found - check your installation", c.GetExecutablePath())
+		}
 		return c.CacheExecutable()
 	}
 	return nil
