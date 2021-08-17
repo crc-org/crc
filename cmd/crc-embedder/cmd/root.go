@@ -10,16 +10,12 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "crc-embedder [list|embed|extract]",
+	Use:   "crc-embedder [command]",
 	Short: "Build helper for crc for binary embedding",
 	Long: `crc-embedder is a command line utility for listing or appending binary data
 when building the crc executable for release`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		runPrerun()
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		runRoot()
-		_ = cmd.Help()
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		runPostrun()
@@ -44,11 +40,6 @@ func Execute() {
 func runPrerun() {
 	// Setting up logrus
 	logging.InitLogrus(logging.LogLevel, constants.LogFilePath)
-}
-
-func runRoot() {
-	fmt.Println("No command given")
-	fmt.Println("")
 }
 
 func runPostrun() {
