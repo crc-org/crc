@@ -31,7 +31,7 @@ func init() {
 
 var embedCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
-	Use:   "embed",
+	Use:   "embed [path to the (non-embedded) crc executable]",
 	Short: "Embed data files in crc executable",
 	Long:  `Embed the OpenShift bundle and the binaries needed at runtime in the crc executable`,
 	Run: func(cmd *cobra.Command, args []string) {
