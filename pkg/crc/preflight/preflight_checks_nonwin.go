@@ -147,7 +147,7 @@ var oldAdminHelpers = []string{"admin-helper-linux", "admin-helper-darwin"}
 func checkOldAdminHelperExecutableCached() error {
 	logging.Debugf("Checking if an older admin-helper executable is installed")
 	for _, oldExecutable := range oldAdminHelpers {
-		oldPath := filepath.Join(constants.CrcBinDir, oldExecutable)
+		oldPath := filepath.Join(constants.BinDir(), oldExecutable)
 		if _, err := os.Stat(oldPath); !os.IsNotExist(err) {
 			return fmt.Errorf("Found old admin-helper executable '%s'", oldExecutable)
 		}
@@ -161,7 +161,7 @@ func checkOldAdminHelperExecutableCached() error {
 func fixOldAdminHelperExecutableCached() error {
 	logging.Debugf("Removing older admin-helper executable")
 	for _, oldExecutable := range oldAdminHelpers {
-		oldPath := filepath.Join(constants.CrcBinDir, oldExecutable)
+		oldPath := filepath.Join(constants.BinDir(), oldExecutable)
 		if err := os.Remove(oldPath); err != nil {
 			if !os.IsNotExist(err) {
 				logging.Debugf("Failed to remove  %s: %v", oldPath, err)

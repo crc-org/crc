@@ -85,9 +85,9 @@ func GetDefaultBundle() string {
 
 var (
 	CrcBaseDir         = filepath.Join(GetHomeDir(), ".crc")
-	CrcBinDir          = filepath.Join(CrcBaseDir, "bin")
-	CrcOcBinDir        = filepath.Join(CrcBinDir, "oc")
-	CrcSymlinkPath     = filepath.Join(CrcBinDir, "crc")
+	crcBinDir          = filepath.Join(CrcBaseDir, "bin")
+	CrcOcBinDir        = filepath.Join(crcBinDir, "oc")
+	CrcSymlinkPath     = filepath.Join(crcBinDir, "crc")
 	ConfigPath         = filepath.Join(CrcBaseDir, ConfigFile)
 	LogFilePath        = filepath.Join(CrcBaseDir, LogFile)
 	DaemonLogFilePath  = filepath.Join(CrcBaseDir, DaemonLogFile)
@@ -110,7 +110,7 @@ func BinDir() string {
 	if version.IsInstaller() {
 		return version.InstallPath()
 	}
-	return CrcBinDir
+	return crcBinDir
 }
 
 // GetHomeDir returns the home directory for the current user
