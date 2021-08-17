@@ -17,7 +17,7 @@ func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host
 	if err != nil {
 		return nil, errors.New("Failed to marshal driver options")
 	}
-	return api.NewHost("libvirt", constants.CrcBinDir, json)
+	return api.NewHost("libvirt", constants.BinDir(), json)
 }
 
 /* FIXME: host.Host is only known here, and libvirt.Driver is only accessible
