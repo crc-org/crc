@@ -13,6 +13,7 @@ func init() {
 }
 
 var extractCmd = &cobra.Command{
+	Args:  cobra.ExactArgs(3),
 	Use:   "extract",
 	Short: "Extract data file embedded in the crc executable",
 	Long:  `Extract a data file which is embedded in the crc executable`,
@@ -22,9 +23,6 @@ var extractCmd = &cobra.Command{
 }
 
 func runExtract(args []string) {
-	if len(args) != 3 {
-		logging.Fatalf("extract takes exactly three arguments")
-	}
 	executablePath := args[0]
 	embedName := args[1]
 	destFile := args[2]
