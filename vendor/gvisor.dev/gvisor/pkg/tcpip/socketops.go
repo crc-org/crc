@@ -15,10 +15,15 @@
 package tcpip
 
 import (
+	"math"
 	"sync/atomic"
 
 	"gvisor.dev/gvisor/pkg/sync"
 )
+
+// PacketOverheadFactor is used to multiply the value provided by the user on a
+// SetSockOpt for setting the send/receive buffer sizes sockets.
+const PacketOverheadFactor = 2
 
 // SocketOptionsHandler holds methods that help define endpoint specific
 // behavior for socket level socket options. These must be implemented by
@@ -41,13 +46,21 @@ type SocketOptionsHandler interface {
 	OnCorkOptionSet(v bool)
 
 	// LastError is invoked when SO_ERROR is read for an endpoint.
-	LastError() *Error
+	LastError() Error
 
 	// UpdateLastError updates the endpoint specific last error field.
-	UpdateLastError(err *Error)
+	UpdateLastError(err Error)
 
 	// HasNIC is invoked to check if the NIC is valid for SO_BINDTODEVICE.
 	HasNIC(v int32) bool
+
+	// OnSetSendBufferSize is invoked when the send buffer size for an endpoint is
+	// changed. The handler is invoked with the new value for the socket send
+	// buffer size. It also returns the newly set value.
+	OnSetSendBufferSize(v int64) (newSz int64)
+
+	// OnSetReceiveBufferSize is invoked to set the SO_RCVBUFSIZE.
+	OnSetReceiveBufferSize(v, oldSz int64) (newSz int64)
 }
 
 // DefaultSocketOptionsHandler is an embeddable type that implements no-op
@@ -72,16 +85,37 @@ func (*DefaultSocketOptionsHandler) OnDelayOptionSet(bool) {}
 func (*DefaultSocketOptionsHandler) OnCorkOptionSet(bool) {}
 
 // LastError implements SocketOptionsHandler.LastError.
-func (*DefaultSocketOptionsHandler) LastError() *Error {
+func (*DefaultSocketOptionsHandler) LastError() Error {
 	return nil
 }
 
 // UpdateLastError implements SocketOptionsHandler.UpdateLastError.
-func (*DefaultSocketOptionsHandler) UpdateLastError(*Error) {}
+func (*DefaultSocketOptionsHandler) UpdateLastError(Error) {}
 
 // HasNIC implements SocketOptionsHandler.HasNIC.
 func (*DefaultSocketOptionsHandler) HasNIC(int32) bool {
 	return false
+}
+
+// OnSetSendBufferSize implements SocketOptionsHandler.OnSetSendBufferSize.
+func (*DefaultSocketOptionsHandler) OnSetSendBufferSize(v int64) (newSz int64) {
+	return v
+}
+
+// OnSetReceiveBufferSize implements SocketOptionsHandler.OnSetReceiveBufferSize.
+func (*DefaultSocketOptionsHandler) OnSetReceiveBufferSize(v, oldSz int64) (newSz int64) {
+	return v
+}
+
+// StackHandler holds methods to access the stack options. These must be
+// implemented by the stack.
+type StackHandler interface {
+	// Option allows retrieving stack wide options.
+	Option(option interface{}) Error
+
+	// TransportProtocolOption allows retrieving individual protocol level
+	// option values.
+	TransportProtocolOption(proto TransportProtocolNumber, option GettableTransportProtocolOption) Error
 }
 
 // SocketOptions contains all the variables which store values for SOL_SOCKET,
@@ -90,6 +124,9 @@ func (*DefaultSocketOptionsHandler) HasNIC(int32) bool {
 // +stateify savable
 type SocketOptions struct {
 	handler SocketOptionsHandler
+
+	// StackHandler is initialized at the creation time and will not change.
+	stackHandler StackHandler `state:"manual"`
 
 	// These fields are accessed and modified using atomic operations.
 
@@ -170,6 +207,22 @@ type SocketOptions struct {
 	// bindToDevice determines the device to which the socket is bound.
 	bindToDevice int32
 
+	// getSendBufferLimits provides the handler to get the min, default and
+	// max size for send buffer. It  is initialized at the creation time and
+	// will not change.
+	getSendBufferLimits GetSendBufferLimits `state:"manual"`
+
+	// sendBufferSize determines the send buffer size for this socket.
+	sendBufferSize int64
+
+	// getReceiveBufferLimits provides the handler to get the min, default and
+	// max size for receive buffer. It is initialized at the creation time and
+	// will not change.
+	getReceiveBufferLimits GetReceiveBufferLimits `state:"manual"`
+
+	// receiveBufferSize determines the receive buffer size for this socket.
+	receiveBufferSize int64
+
 	// mu protects the access to the below fields.
 	mu sync.Mutex `state:"nosave"`
 
@@ -180,8 +233,11 @@ type SocketOptions struct {
 
 // InitHandler initializes the handler. This must be called before using the
 // socket options utility.
-func (so *SocketOptions) InitHandler(handler SocketOptionsHandler) {
+func (so *SocketOptions) InitHandler(handler SocketOptionsHandler, stack StackHandler, getSendBufferLimits GetSendBufferLimits, getReceiveBufferLimits GetReceiveBufferLimits) {
 	so.handler = handler
+	so.stackHandler = stack
+	so.getSendBufferLimits = getSendBufferLimits
+	so.getReceiveBufferLimits = getReceiveBufferLimits
 }
 
 func storeAtomicBool(addr *uint32, v bool) {
@@ -193,7 +249,7 @@ func storeAtomicBool(addr *uint32, v bool) {
 }
 
 // SetLastError sets the last error for a socket.
-func (so *SocketOptions) SetLastError(err *Error) {
+func (so *SocketOptions) SetLastError(err Error) {
 	so.handler.UpdateLastError(err)
 }
 
@@ -378,7 +434,7 @@ func (so *SocketOptions) SetRecvError(v bool) {
 }
 
 // GetLastError gets value for SO_ERROR option.
-func (so *SocketOptions) GetLastError() *Error {
+func (so *SocketOptions) GetLastError() Error {
 	return so.handler.LastError()
 }
 
@@ -428,6 +484,48 @@ func (origin SockErrOrigin) IsICMPErr() bool {
 	return origin == SockExtErrorOriginICMP || origin == SockExtErrorOriginICMP6
 }
 
+// SockErrorCause is the cause of a socket error.
+type SockErrorCause interface {
+	// Origin is the source of the error.
+	Origin() SockErrOrigin
+
+	// Type is the origin specific type of error.
+	Type() uint8
+
+	// Code is the origin and type specific error code.
+	Code() uint8
+
+	// Info is any extra information about the error.
+	Info() uint32
+}
+
+// LocalSockError is a socket error that originated from the local host.
+//
+// +stateify savable
+type LocalSockError struct {
+	info uint32
+}
+
+// Origin implements SockErrorCause.
+func (*LocalSockError) Origin() SockErrOrigin {
+	return SockExtErrorOriginLocal
+}
+
+// Type implements SockErrorCause.
+func (*LocalSockError) Type() uint8 {
+	return 0
+}
+
+// Code implements SockErrorCause.
+func (*LocalSockError) Code() uint8 {
+	return 0
+}
+
+// Info implements SockErrorCause.
+func (l *LocalSockError) Info() uint32 {
+	return l.info
+}
+
 // SockError represents a queue entry in the per-socket error queue.
 //
 // +stateify savable
@@ -435,15 +533,9 @@ type SockError struct {
 	sockErrorEntry
 
 	// Err is the error caused by the errant packet.
-	Err *Error
-	// ErrOrigin indicates the error origin.
-	ErrOrigin SockErrOrigin
-	// ErrType is the type in the ICMP header.
-	ErrType uint8
-	// ErrCode is the code in the ICMP header.
-	ErrCode uint8
-	// ErrInfo is additional info about the error.
-	ErrInfo uint32
+	Err Error
+	// Cause is the detailed cause of the error.
+	Cause SockErrorCause
 
 	// Payload is the errant packet's payload.
 	Payload []byte
@@ -493,14 +585,13 @@ func (so *SocketOptions) QueueErr(err *SockError) {
 }
 
 // QueueLocalErr queues a local error onto the local queue.
-func (so *SocketOptions) QueueLocalErr(err *Error, net NetworkProtocolNumber, info uint32, dst FullAddress, payload []byte) {
+func (so *SocketOptions) QueueLocalErr(err Error, net NetworkProtocolNumber, info uint32, dst FullAddress, payload []byte) {
 	so.QueueErr(&SockError{
-		Err:       err,
-		ErrOrigin: SockExtErrorOriginLocal,
-		ErrInfo:   info,
-		Payload:   payload,
-		Dst:       dst,
-		NetProto:  net,
+		Err:      err,
+		Cause:    &LocalSockError{info: info},
+		Payload:  payload,
+		Dst:      dst,
+		NetProto: net,
 	})
 }
 
@@ -510,11 +601,90 @@ func (so *SocketOptions) GetBindToDevice() int32 {
 }
 
 // SetBindToDevice sets value for SO_BINDTODEVICE option.
-func (so *SocketOptions) SetBindToDevice(bindToDevice int32) *Error {
+func (so *SocketOptions) SetBindToDevice(bindToDevice int32) Error {
 	if !so.handler.HasNIC(bindToDevice) {
-		return ErrUnknownDevice
+		return &ErrUnknownDevice{}
 	}
 
 	atomic.StoreInt32(&so.bindToDevice, bindToDevice)
 	return nil
+}
+
+// GetSendBufferSize gets value for SO_SNDBUF option.
+func (so *SocketOptions) GetSendBufferSize() int64 {
+	return atomic.LoadInt64(&so.sendBufferSize)
+}
+
+// SetSendBufferSize sets value for SO_SNDBUF option. notify indicates if the
+// stack handler should be invoked to set the send buffer size.
+func (so *SocketOptions) SetSendBufferSize(sendBufferSize int64, notify bool) {
+	v := sendBufferSize
+
+	if !notify {
+		atomic.StoreInt64(&so.sendBufferSize, v)
+		return
+	}
+
+	// Make sure the send buffer size is within the min and max
+	// allowed.
+	ss := so.getSendBufferLimits(so.stackHandler)
+	min := int64(ss.Min)
+	max := int64(ss.Max)
+	// Validate the send buffer size with min and max values.
+	// Multiply it by factor of 2.
+	if v > max {
+		v = max
+	}
+
+	if v < math.MaxInt32/PacketOverheadFactor {
+		v *= PacketOverheadFactor
+		if v < min {
+			v = min
+		}
+	} else {
+		v = math.MaxInt32
+	}
+
+	// Notify endpoint about change in buffer size.
+	newSz := so.handler.OnSetSendBufferSize(v)
+	atomic.StoreInt64(&so.sendBufferSize, newSz)
+}
+
+// GetReceiveBufferSize gets value for SO_RCVBUF option.
+func (so *SocketOptions) GetReceiveBufferSize() int64 {
+	return atomic.LoadInt64(&so.receiveBufferSize)
+}
+
+// SetReceiveBufferSize sets value for SO_RCVBUF option.
+func (so *SocketOptions) SetReceiveBufferSize(receiveBufferSize int64, notify bool) {
+	if !notify {
+		atomic.StoreInt64(&so.receiveBufferSize, receiveBufferSize)
+		return
+	}
+
+	// Make sure the send buffer size is within the min and max
+	// allowed.
+	v := receiveBufferSize
+	ss := so.getReceiveBufferLimits(so.stackHandler)
+	min := int64(ss.Min)
+	max := int64(ss.Max)
+	// Validate the send buffer size with min and max values.
+	if v > max {
+		v = max
+	}
+
+	// Multiply it by factor of 2.
+	if v < math.MaxInt32/PacketOverheadFactor {
+		v *= PacketOverheadFactor
+		if v < min {
+			v = min
+		}
+	} else {
+		v = math.MaxInt32
+	}
+
+	oldSz := atomic.LoadInt64(&so.receiveBufferSize)
+	// Notify endpoint about change in buffer size.
+	newSz := so.handler.OnSetReceiveBufferSize(v, oldSz)
+	atomic.StoreInt64(&so.receiveBufferSize, newSz)
 }

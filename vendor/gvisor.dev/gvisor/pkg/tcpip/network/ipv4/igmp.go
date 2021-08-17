@@ -22,7 +22,7 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
-	"gvisor.dev/gvisor/pkg/tcpip/network/ip"
+	"gvisor.dev/gvisor/pkg/tcpip/network/internal/ip"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 )
 
@@ -103,7 +103,7 @@ func (igmp *igmpState) Enabled() bool {
 // SendReport implements ip.MulticastGroupProtocol.
 //
 // Precondition: igmp.ep.mu must be read locked.
-func (igmp *igmpState) SendReport(groupAddress tcpip.Address) (bool, *tcpip.Error) {
+func (igmp *igmpState) SendReport(groupAddress tcpip.Address) (bool, tcpip.Error) {
 	igmpType := header.IGMPv2MembershipReport
 	if igmp.v1Present() {
 		igmpType = header.IGMPv1MembershipReport
@@ -114,7 +114,7 @@ func (igmp *igmpState) SendReport(groupAddress tcpip.Address) (bool, *tcpip.Erro
 // SendLeave implements ip.MulticastGroupProtocol.
 //
 // Precondition: igmp.ep.mu must be read locked.
-func (igmp *igmpState) SendLeave(groupAddress tcpip.Address) *tcpip.Error {
+func (igmp *igmpState) SendLeave(groupAddress tcpip.Address) tcpip.Error {
 	// As per RFC 2236 Section 6, Page 8: "If the interface state says the
 	// Querier is running IGMPv1, this action SHOULD be skipped. If the flag
 	// saying we were the last host to report is cleared, this action MAY be
@@ -124,6 +124,17 @@ func (igmp *igmpState) SendLeave(groupAddress tcpip.Address) *tcpip.Error {
 	}
 	_, err := igmp.writePacket(header.IPv4AllRoutersGroup, groupAddress, header.IGMPLeaveGroup)
 	return err
+}
+
+// ShouldPerformProtocol implements ip.MulticastGroupProtocol.
+func (igmp *igmpState) ShouldPerformProtocol(groupAddress tcpip.Address) bool {
+	// As per RFC 2236 section 6 page 10,
+	//
+	//   The all-systems group (address 224.0.0.1) is handled as a special
+	//   case. The host starts in Idle Member state for that group on every
+	//   interface, never transitions to another state, and never sends a
+	//   report for that group.
+	return groupAddress != header.IPv4AllSystems
 }
 
 // init sets up an igmpState struct, and is required to be called before using
@@ -137,7 +148,6 @@ func (igmp *igmpState) init(ep *endpoint) {
 		Clock:                     ep.protocol.stack.Clock(),
 		Protocol:                  igmp,
 		MaxUnsolicitedReportDelay: UnsolicitedReportIntervalMax,
-		AllNodesAddress:           header.IPv4AllSystems,
 	})
 	igmp.igmpV1Present = igmpV1PresentDefault
 	igmp.igmpV1Job = ep.protocol.stack.NewJob(&ep.mu, func() {
@@ -145,55 +155,108 @@ func (igmp *igmpState) init(ep *endpoint) {
 	})
 }
 
+// Precondition: igmp.ep.mu must be locked.
+func (igmp *igmpState) isSourceIPValidLocked(src tcpip.Address, messageType header.IGMPType) bool {
+	if messageType == header.IGMPMembershipQuery {
+		// RFC 2236 does not require the IGMP implementation to check the source IP
+		// for Membership Query messages.
+		return true
+	}
+
+	// As per RFC 2236 section 10,
+	//
+	//   Ignore the Report if you cannot identify the source address of the
+	//   packet as belonging to a subnet assigned to the interface on which the
+	//   packet was received.
+	//
+	//   Ignore the Leave message if you cannot identify the source address of
+	//   the packet as belonging to a subnet assigned to the interface on which
+	//   the packet was received.
+	//
+	// Note: this rule applies to both V1 and V2 Membership Reports.
+	var isSourceIPValid bool
+	igmp.ep.mu.addressableEndpointState.ForEachPrimaryEndpoint(func(addressEndpoint stack.AddressEndpoint) bool {
+		if subnet := addressEndpoint.Subnet(); subnet.Contains(src) {
+			isSourceIPValid = true
+			return false
+		}
+		return true
+	})
+
+	return isSourceIPValid
+}
+
+// Precondition: igmp.ep.mu must be locked.
+func (igmp *igmpState) isPacketValidLocked(pkt *stack.PacketBuffer, messageType header.IGMPType, hasRouterAlertOption bool) bool {
+	// We can safely assume that the IP header is valid if we got this far.
+	iph := header.IPv4(pkt.NetworkHeader().View())
+
+	// As per RFC 2236 section 2,
+	//
+	//   All IGMP messages described in this document are sent with IP TTL 1, and
+	//   contain the IP Router Alert option [RFC 2113] in their IP header.
+	if !hasRouterAlertOption || iph.TTL() != header.IGMPTTL {
+		return false
+	}
+
+	return igmp.isSourceIPValidLocked(iph.SourceAddress(), messageType)
+}
+
 // handleIGMP handles an IGMP packet.
 //
 // Precondition: igmp.ep.mu must be locked.
-func (igmp *igmpState) handleIGMP(pkt *stack.PacketBuffer) {
-	stats := igmp.ep.protocol.stack.Stats()
-	received := stats.IGMP.PacketsReceived
-	headerView, ok := pkt.Data.PullUp(header.IGMPMinimumSize)
+func (igmp *igmpState) handleIGMP(pkt *stack.PacketBuffer, hasRouterAlertOption bool) {
+	received := igmp.ep.stats.igmp.packetsReceived
+	headerView, ok := pkt.Data().PullUp(header.IGMPMinimumSize)
 	if !ok {
-		received.Invalid.Increment()
+		received.invalid.Increment()
 		return
 	}
 	h := header.IGMP(headerView)
 
-	// Temporarily reset the checksum field to 0 in order to calculate the proper
-	// checksum.
-	wantChecksum := h.Checksum()
-	h.SetChecksum(0)
-	gotChecksum := ^header.ChecksumVV(pkt.Data, 0 /* initial */)
-	h.SetChecksum(wantChecksum)
-
-	if gotChecksum != wantChecksum {
-		received.ChecksumErrors.Increment()
+	// As per RFC 1071 section 1.3,
+	//
+	//   To check a checksum, the 1's complement sum is computed over the
+	//   same set of octets, including the checksum field. If the result
+	//   is all 1 bits (-0 in 1's complement arithmetic), the check
+	//   succeeds.
+	if pkt.Data().AsRange().Checksum() != 0xFFFF {
+		received.checksumErrors.Increment()
 		return
+	}
+
+	isValid := func(minimumSize int) bool {
+		return len(headerView) >= minimumSize && igmp.isPacketValidLocked(pkt, h.Type(), hasRouterAlertOption)
 	}
 
 	switch h.Type() {
 	case header.IGMPMembershipQuery:
-		received.MembershipQuery.Increment()
-		if len(headerView) < header.IGMPQueryMinimumSize {
-			received.Invalid.Increment()
+		received.membershipQuery.Increment()
+		if !isValid(header.IGMPQueryMinimumSize) {
+			received.invalid.Increment()
 			return
 		}
 		igmp.handleMembershipQuery(h.GroupAddress(), h.MaxRespTime())
 	case header.IGMPv1MembershipReport:
-		received.V1MembershipReport.Increment()
-		if len(headerView) < header.IGMPReportMinimumSize {
-			received.Invalid.Increment()
+		received.v1MembershipReport.Increment()
+		if !isValid(header.IGMPReportMinimumSize) {
+			received.invalid.Increment()
 			return
 		}
 		igmp.handleMembershipReport(h.GroupAddress())
 	case header.IGMPv2MembershipReport:
-		received.V2MembershipReport.Increment()
-		if len(headerView) < header.IGMPReportMinimumSize {
-			received.Invalid.Increment()
+		received.v2MembershipReport.Increment()
+		if !isValid(header.IGMPReportMinimumSize) {
+			received.invalid.Increment()
 			return
 		}
 		igmp.handleMembershipReport(h.GroupAddress())
 	case header.IGMPLeaveGroup:
-		received.LeaveGroup.Increment()
+		received.leaveGroup.Increment()
+		if !isValid(header.IGMPLeaveMessageMinimumSize) {
+			received.invalid.Increment()
+			return
+		}
 		// As per RFC 2236 Section 6, Page 7: "IGMP messages other than Query or
 		// Report, are ignored in all states"
 
@@ -201,7 +264,7 @@ func (igmp *igmpState) handleIGMP(pkt *stack.PacketBuffer) {
 		// As per RFC 2236 Section 2.1 Page 3: "Unrecognized message types should
 		// be silently ignored. New message types may be used by newer versions of
 		// IGMP, by multicast routing protocols, or other uses."
-		received.Unrecognized.Increment()
+		received.unrecognized.Increment()
 	}
 }
 
@@ -215,6 +278,11 @@ func (igmp *igmpState) setV1Present(v bool) {
 	} else {
 		atomic.StoreUint32(&igmp.igmpV1Present, 0)
 	}
+}
+
+func (igmp *igmpState) resetV1Present() {
+	igmp.igmpV1Job.Cancel()
+	igmp.setV1Present(false)
 }
 
 // handleMembershipQuery handles a membership query.
@@ -244,7 +312,7 @@ func (igmp *igmpState) handleMembershipReport(groupAddress tcpip.Address) {
 // writePacket assembles and sends an IGMP packet.
 //
 // Precondition: igmp.ep.mu must be read locked.
-func (igmp *igmpState) writePacket(destAddress tcpip.Address, groupAddress tcpip.Address, igmpType header.IGMPType) (bool, *tcpip.Error) {
+func (igmp *igmpState) writePacket(destAddress tcpip.Address, groupAddress tcpip.Address, igmpType header.IGMPType) (bool, tcpip.Error) {
 	igmpData := header.IGMP(buffer.NewView(header.IGMPReportMinimumSize))
 	igmpData.SetType(igmpType)
 	igmpData.SetGroupAddress(groupAddress)
@@ -262,26 +330,28 @@ func (igmp *igmpState) writePacket(destAddress tcpip.Address, groupAddress tcpip
 	localAddr := addressEndpoint.AddressWithPrefix().Address
 	addressEndpoint.DecRef()
 	addressEndpoint = nil
-	igmp.ep.addIPHeader(localAddr, destAddress, pkt, stack.NetworkHeaderParams{
+	if err := igmp.ep.addIPHeader(localAddr, destAddress, pkt, stack.NetworkHeaderParams{
 		Protocol: header.IGMPProtocolNumber,
 		TTL:      header.IGMPTTL,
 		TOS:      stack.DefaultTOS,
 	}, header.IPv4OptionsSerializer{
 		&header.IPv4SerializableRouterAlertOption{},
-	})
+	}); err != nil {
+		panic(fmt.Sprintf("failed to add IP header: %s", err))
+	}
 
-	sentStats := igmp.ep.protocol.stack.Stats().IGMP.PacketsSent
-	if err := igmp.ep.nic.WritePacketToRemote(header.EthernetAddressFromMulticastIPv4Address(destAddress), nil /* gso */, ProtocolNumber, pkt); err != nil {
-		sentStats.Dropped.Increment()
+	sentStats := igmp.ep.stats.igmp.packetsSent
+	if err := igmp.ep.nic.WritePacketToRemote(header.EthernetAddressFromMulticastIPv4Address(destAddress), ProtocolNumber, pkt); err != nil {
+		sentStats.dropped.Increment()
 		return false, err
 	}
 	switch igmpType {
 	case header.IGMPv1MembershipReport:
-		sentStats.V1MembershipReport.Increment()
+		sentStats.v1MembershipReport.Increment()
 	case header.IGMPv2MembershipReport:
-		sentStats.V2MembershipReport.Increment()
+		sentStats.v2MembershipReport.Increment()
 	case header.IGMPLeaveGroup:
-		sentStats.LeaveGroup.Increment()
+		sentStats.leaveGroup.Increment()
 	default:
 		panic(fmt.Sprintf("unrecognized igmp type = %d", igmpType))
 	}
@@ -293,7 +363,7 @@ func (igmp *igmpState) writePacket(destAddress tcpip.Address, groupAddress tcpip
 // messages.
 //
 // If the group already exists in the membership map, returns
-// tcpip.ErrDuplicateAddress.
+// *tcpip.ErrDuplicateAddress.
 //
 // Precondition: igmp.ep.mu must be locked.
 func (igmp *igmpState) joinGroup(groupAddress tcpip.Address) {
@@ -312,13 +382,13 @@ func (igmp *igmpState) isInGroup(groupAddress tcpip.Address) bool {
 // if required.
 //
 // Precondition: igmp.ep.mu must be locked.
-func (igmp *igmpState) leaveGroup(groupAddress tcpip.Address) *tcpip.Error {
+func (igmp *igmpState) leaveGroup(groupAddress tcpip.Address) tcpip.Error {
 	// LeaveGroup returns false only if the group was not joined.
 	if igmp.genericMulticastProtocol.LeaveGroupLocked(groupAddress) {
 		return nil
 	}
 
-	return tcpip.ErrBadLocalAddress
+	return &tcpip.ErrBadLocalAddress{}
 }
 
 // softLeaveAll leaves all groups from the perspective of IGMP, but remains

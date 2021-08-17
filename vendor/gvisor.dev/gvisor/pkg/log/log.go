@@ -38,7 +38,6 @@ import (
 	"os"
 	"runtime"
 	"sync/atomic"
-	"syscall"
 	"time"
 
 	"gvisor.dev/gvisor/pkg/linewriter"
@@ -105,7 +104,7 @@ func (l *Writer) Write(data []byte) (int, error) {
 		n += w
 
 		// Is it a non-blocking socket?
-		if pathErr, ok := err.(*os.PathError); ok && pathErr.Err == syscall.EAGAIN {
+		if pathErr, ok := err.(*os.PathError); ok && pathErr.Timeout() {
 			runtime.Gosched()
 			continue
 		}

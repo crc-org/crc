@@ -19,8 +19,8 @@ import (
 	"github.com/code-ready/crc/pkg/crc/daemonclient"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/preflight"
-	"github.com/code-ready/gvisor-tap-vsock/pkg/types"
-	"github.com/code-ready/gvisor-tap-vsock/pkg/virtualnetwork"
+	"github.com/containers/gvisor-tap-vsock/pkg/types"
+	"github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork"
 	"github.com/docker/go-units"
 	"github.com/gorilla/handlers"
 	"github.com/pkg/errors"
@@ -68,7 +68,10 @@ var daemonCmd = &cobra.Command{
 			MTU:               4000, // Large packets slightly improve the performance. Less small packets.
 			Subnet:            "192.168.127.0/24",
 			GatewayIP:         constants.VSockGateway,
-			GatewayMacAddress: "\x5A\x94\xEF\xE4\x0C\xDD",
+			GatewayMacAddress: "5a:94:ef:e4:0c:dd",
+			DHCPStaticLeases: map[string]string{
+				"192.168.127.2": "5a:94:ef:e4:0c:ee",
+			},
 			DNS: []types.Zone{
 				{
 					Name:      "apps-crc.testing.",
@@ -96,6 +99,7 @@ var daemonCmd = &cobra.Command{
 					},
 				},
 			},
+			Protocol: types.HyperKitProtocol,
 		}
 		if config.Get(crcConfig.HostNetworkAccess).AsBool() {
 			log.Debugf("Enabling host network access")
@@ -113,6 +117,7 @@ var daemonCmd = &cobra.Command{
 				virtualNetworkConfig.NAT = make(map[string]string)
 			}
 			virtualNetworkConfig.NAT[hostVirtualIP] = "127.0.0.1"
+			virtualNetworkConfig.GatewayVirtualIPs = []string{hostVirtualIP}
 		}
 		err := run(&virtualNetworkConfig)
 		return err

@@ -22,6 +22,7 @@ func (p *rawPacket) StateFields() []string {
 
 func (p *rawPacket) beforeSave() {}
 
+// +checklocksignore
 func (p *rawPacket) StateSave(stateSinkObject state.Sink) {
 	p.beforeSave()
 	var dataValue buffer.VectorisedView = p.saveData()
@@ -33,6 +34,7 @@ func (p *rawPacket) StateSave(stateSinkObject state.Sink) {
 
 func (p *rawPacket) afterLoad() {}
 
+// +checklocksignore
 func (p *rawPacket) StateLoad(stateSourceObject state.Source) {
 	stateSourceObject.Load(0, &p.rawPacketEntry)
 	stateSourceObject.Load(2, &p.timestampNS)
@@ -52,38 +54,35 @@ func (e *endpoint) StateFields() []string {
 		"associated",
 		"rcvList",
 		"rcvBufSize",
-		"rcvBufSizeMax",
 		"rcvClosed",
-		"sndBufSize",
-		"sndBufSizeMax",
 		"closed",
 		"connected",
 		"bound",
 		"owner",
 		"ops",
+		"frozen",
 	}
 }
 
+// +checklocksignore
 func (e *endpoint) StateSave(stateSinkObject state.Sink) {
 	e.beforeSave()
-	var rcvBufSizeMaxValue int = e.saveRcvBufSizeMax()
-	stateSinkObject.SaveValue(6, rcvBufSizeMaxValue)
 	stateSinkObject.Save(0, &e.TransportEndpointInfo)
 	stateSinkObject.Save(1, &e.DefaultSocketOptionsHandler)
 	stateSinkObject.Save(2, &e.waiterQueue)
 	stateSinkObject.Save(3, &e.associated)
 	stateSinkObject.Save(4, &e.rcvList)
 	stateSinkObject.Save(5, &e.rcvBufSize)
-	stateSinkObject.Save(7, &e.rcvClosed)
-	stateSinkObject.Save(8, &e.sndBufSize)
-	stateSinkObject.Save(9, &e.sndBufSizeMax)
-	stateSinkObject.Save(10, &e.closed)
-	stateSinkObject.Save(11, &e.connected)
-	stateSinkObject.Save(12, &e.bound)
-	stateSinkObject.Save(13, &e.owner)
-	stateSinkObject.Save(14, &e.ops)
+	stateSinkObject.Save(6, &e.rcvClosed)
+	stateSinkObject.Save(7, &e.closed)
+	stateSinkObject.Save(8, &e.connected)
+	stateSinkObject.Save(9, &e.bound)
+	stateSinkObject.Save(10, &e.owner)
+	stateSinkObject.Save(11, &e.ops)
+	stateSinkObject.Save(12, &e.frozen)
 }
 
+// +checklocksignore
 func (e *endpoint) StateLoad(stateSourceObject state.Source) {
 	stateSourceObject.Load(0, &e.TransportEndpointInfo)
 	stateSourceObject.Load(1, &e.DefaultSocketOptionsHandler)
@@ -91,15 +90,13 @@ func (e *endpoint) StateLoad(stateSourceObject state.Source) {
 	stateSourceObject.Load(3, &e.associated)
 	stateSourceObject.Load(4, &e.rcvList)
 	stateSourceObject.Load(5, &e.rcvBufSize)
-	stateSourceObject.Load(7, &e.rcvClosed)
-	stateSourceObject.Load(8, &e.sndBufSize)
-	stateSourceObject.Load(9, &e.sndBufSizeMax)
-	stateSourceObject.Load(10, &e.closed)
-	stateSourceObject.Load(11, &e.connected)
-	stateSourceObject.Load(12, &e.bound)
-	stateSourceObject.Load(13, &e.owner)
-	stateSourceObject.Load(14, &e.ops)
-	stateSourceObject.LoadValue(6, new(int), func(y interface{}) { e.loadRcvBufSizeMax(y.(int)) })
+	stateSourceObject.Load(6, &e.rcvClosed)
+	stateSourceObject.Load(7, &e.closed)
+	stateSourceObject.Load(8, &e.connected)
+	stateSourceObject.Load(9, &e.bound)
+	stateSourceObject.Load(10, &e.owner)
+	stateSourceObject.Load(11, &e.ops)
+	stateSourceObject.Load(12, &e.frozen)
 	stateSourceObject.AfterLoad(e.afterLoad)
 }
 
@@ -116,6 +113,7 @@ func (l *rawPacketList) StateFields() []string {
 
 func (l *rawPacketList) beforeSave() {}
 
+// +checklocksignore
 func (l *rawPacketList) StateSave(stateSinkObject state.Sink) {
 	l.beforeSave()
 	stateSinkObject.Save(0, &l.head)
@@ -124,6 +122,7 @@ func (l *rawPacketList) StateSave(stateSinkObject state.Sink) {
 
 func (l *rawPacketList) afterLoad() {}
 
+// +checklocksignore
 func (l *rawPacketList) StateLoad(stateSourceObject state.Source) {
 	stateSourceObject.Load(0, &l.head)
 	stateSourceObject.Load(1, &l.tail)
@@ -142,6 +141,7 @@ func (e *rawPacketEntry) StateFields() []string {
 
 func (e *rawPacketEntry) beforeSave() {}
 
+// +checklocksignore
 func (e *rawPacketEntry) StateSave(stateSinkObject state.Sink) {
 	e.beforeSave()
 	stateSinkObject.Save(0, &e.next)
@@ -150,6 +150,7 @@ func (e *rawPacketEntry) StateSave(stateSinkObject state.Sink) {
 
 func (e *rawPacketEntry) afterLoad() {}
 
+// +checklocksignore
 func (e *rawPacketEntry) StateLoad(stateSourceObject state.Source) {
 	stateSourceObject.Load(0, &e.next)
 	stateSourceObject.Load(1, &e.prev)

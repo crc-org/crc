@@ -69,16 +69,15 @@ func (r *ForwarderRequest) ID() stack.TransportEndpointID {
 }
 
 // CreateEndpoint creates a connected UDP endpoint for the session request.
-func (r *ForwarderRequest) CreateEndpoint(queue *waiter.Queue) (tcpip.Endpoint, *tcpip.Error) {
+func (r *ForwarderRequest) CreateEndpoint(queue *waiter.Queue) (tcpip.Endpoint, tcpip.Error) {
 	netHdr := r.pkt.Network()
 	route, err := r.stack.FindRoute(r.pkt.NICID, netHdr.DestinationAddress(), netHdr.SourceAddress(), r.pkt.NetworkProtocolNumber, false /* multicastLoop */)
 	if err != nil {
 		return nil, err
 	}
-	route.ResolveWith(r.pkt.SourceLinkAddress())
 
 	ep := newEndpoint(r.stack, r.pkt.NetworkProtocolNumber, queue)
-	if err := r.stack.RegisterTransportEndpoint(r.pkt.NICID, []tcpip.NetworkProtocolNumber{r.pkt.NetworkProtocolNumber}, ProtocolNumber, r.id, ep, ep.portFlags, tcpip.NICID(ep.ops.GetBindToDevice())); err != nil {
+	if err := r.stack.RegisterTransportEndpoint([]tcpip.NetworkProtocolNumber{r.pkt.NetworkProtocolNumber}, ProtocolNumber, r.id, ep, ep.portFlags, tcpip.NICID(ep.ops.GetBindToDevice())); err != nil {
 		ep.Close()
 		route.Release()
 		return nil, err

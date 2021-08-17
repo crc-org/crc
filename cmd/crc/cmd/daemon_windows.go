@@ -7,7 +7,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
-	"github.com/code-ready/gvisor-tap-vsock/pkg/transport"
+	"github.com/containers/gvisor-tap-vsock/pkg/transport"
 )
 
 func vsockListener() (net.Listener, error) {

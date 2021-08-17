@@ -22,9 +22,11 @@ import (
 	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
+	"gvisor.dev/gvisor/pkg/tcpip/ports"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 )
 
+// +checklocks:e.mu
 func (e *endpoint) drainSegmentLocked() {
 	// Drain only up to once.
 	if e.drainDone != nil {
@@ -55,15 +57,17 @@ func (e *endpoint) beforeSave() {
 	case epState.connected() || epState.handshake():
 		if !e.route.HasSaveRestoreCapability() {
 			if !e.route.HasDisconncetOkCapability() {
-				panic(tcpip.ErrSaveRejection{fmt.Errorf("endpoint cannot be saved in connected state: local %v:%d, remote %v:%d", e.ID.LocalAddress, e.ID.LocalPort, e.ID.RemoteAddress, e.ID.RemotePort)})
+				panic(&tcpip.ErrSaveRejection{
+					Err: fmt.Errorf("endpoint cannot be saved in connected state: local %s:%d, remote %s:%d", e.TransportEndpointInfo.ID.LocalAddress, e.TransportEndpointInfo.ID.LocalPort, e.TransportEndpointInfo.ID.RemoteAddress, e.TransportEndpointInfo.ID.RemotePort),
+				})
 			}
-			e.resetConnectionLocked(tcpip.ErrConnectionAborted)
+			e.resetConnectionLocked(&tcpip.ErrConnectionAborted{})
 			e.mu.Unlock()
 			e.Close()
 			e.mu.Lock()
 		}
 		if !e.workerRunning {
-			// The endpoint must be in acceptedChan or has been just
+			// The endpoint must be in the accepted queue or has been just
 			// disconnected and closed.
 			break
 		}
@@ -84,7 +88,7 @@ func (e *endpoint) beforeSave() {
 			e.mu.Lock()
 		}
 		if e.workerRunning {
-			panic(fmt.Sprintf("endpoint: %+v still has worker running in closed or error state", e.ID))
+			panic(fmt.Sprintf("endpoint: %+v still has worker running in closed or error state", e.TransportEndpointInfo.ID))
 		}
 	default:
 		panic(fmt.Sprintf("endpoint in unknown state %v", e.EndpointState()))
@@ -95,37 +99,19 @@ func (e *endpoint) beforeSave() {
 	}
 }
 
-// saveAcceptedChan is invoked by stateify.
-func (e *endpoint) saveAcceptedChan() []*endpoint {
-	if e.acceptedChan == nil {
-		return nil
-	}
-	acceptedEndpoints := make([]*endpoint, len(e.acceptedChan), cap(e.acceptedChan))
-	for i := 0; i < len(acceptedEndpoints); i++ {
-		select {
-		case ep := <-e.acceptedChan:
-			acceptedEndpoints[i] = ep
-		default:
-			panic("endpoint acceptedChan buffer got consumed by background context")
-		}
-	}
-	for i := 0; i < len(acceptedEndpoints); i++ {
-		select {
-		case e.acceptedChan <- acceptedEndpoints[i]:
-		default:
-			panic("endpoint acceptedChan buffer got populated by background context")
-		}
+// saveEndpoints is invoked by stateify.
+func (a *accepted) saveEndpoints() []*endpoint {
+	acceptedEndpoints := make([]*endpoint, a.endpoints.Len())
+	for i, e := 0, a.endpoints.Front(); e != nil; i, e = i+1, e.Next() {
+		acceptedEndpoints[i] = e.Value.(*endpoint)
 	}
 	return acceptedEndpoints
 }
 
-// loadAcceptedChan is invoked by stateify.
-func (e *endpoint) loadAcceptedChan(acceptedEndpoints []*endpoint) {
-	if cap(acceptedEndpoints) > 0 {
-		e.acceptedChan = make(chan *endpoint, cap(acceptedEndpoints))
-		for _, ep := range acceptedEndpoints {
-			e.acceptedChan <- ep
-		}
+// loadEndpoints is invoked by stateify.
+func (a *accepted) loadEndpoints(acceptedEndpoints []*endpoint) {
+	for _, ep := range acceptedEndpoints {
+		a.endpoints.PushBack(ep)
 	}
 }
 
@@ -179,31 +165,42 @@ func (e *endpoint) afterLoad() {
 // Resume implements tcpip.ResumableEndpoint.Resume.
 func (e *endpoint) Resume(s *stack.Stack) {
 	e.stack = s
+	e.ops.InitHandler(e, e.stack, GetTCPSendBufferLimits, GetTCPReceiveBufferLimits)
 	e.segmentQueue.thaw()
 	epState := e.origEndpointState
 	switch epState {
 	case StateInitial, StateBound, StateListen, StateConnecting, StateEstablished:
 		var ss tcpip.TCPSendBufferSizeRangeOption
 		if err := e.stack.TransportProtocolOption(ProtocolNumber, &ss); err == nil {
-			if e.sndBufSize < ss.Min || e.sndBufSize > ss.Max {
-				panic(fmt.Sprintf("endpoint.sndBufSize %d is outside the min and max allowed [%d, %d]", e.sndBufSize, ss.Min, ss.Max))
+			sendBufferSize := e.getSendBufferSize()
+			if sendBufferSize < ss.Min || sendBufferSize > ss.Max {
+				panic(fmt.Sprintf("endpoint sendBufferSize %d is outside the min and max allowed [%d, %d]", sendBufferSize, ss.Min, ss.Max))
 			}
 		}
 
 		var rs tcpip.TCPReceiveBufferSizeRangeOption
 		if err := e.stack.TransportProtocolOption(ProtocolNumber, &rs); err == nil {
-			if e.rcvBufSize < rs.Min || e.rcvBufSize > rs.Max {
-				panic(fmt.Sprintf("endpoint.rcvBufSize %d is outside the min and max allowed [%d, %d]", e.rcvBufSize, rs.Min, rs.Max))
+			if rcvBufSize := e.ops.GetReceiveBufferSize(); rcvBufSize < int64(rs.Min) || rcvBufSize > int64(rs.Max) {
+				panic(fmt.Sprintf("endpoint rcvBufSize %d is outside the min and max allowed [%d, %d]", rcvBufSize, rs.Min, rs.Max))
 			}
 		}
 	}
 
 	bind := func() {
-		addr, _, err := e.checkV4MappedLocked(tcpip.FullAddress{Addr: e.BindAddr, Port: e.ID.LocalPort})
+		addr, _, err := e.checkV4MappedLocked(tcpip.FullAddress{Addr: e.BindAddr, Port: e.TransportEndpointInfo.ID.LocalPort})
 		if err != nil {
 			panic("unable to parse BindAddr: " + err.String())
 		}
-		if ok := e.stack.ReserveTuple(e.effectiveNetProtos, ProtocolNumber, addr.Addr, addr.Port, e.boundPortFlags, e.boundBindToDevice, e.boundDest); !ok {
+		portRes := ports.Reservation{
+			Networks:     e.effectiveNetProtos,
+			Transport:    ProtocolNumber,
+			Addr:         addr.Addr,
+			Port:         addr.Port,
+			Flags:        e.boundPortFlags,
+			BindToDevice: e.boundBindToDevice,
+			Dest:         e.boundDest,
+		}
+		if ok := e.stack.ReserveTuple(portRes); !ok {
 			panic(fmt.Sprintf("unable to re-reserve tuple (%v, %q, %d, %+v, %d, %v)", e.effectiveNetProtos, addr.Addr, addr.Port, e.boundPortFlags, e.boundBindToDevice, e.boundDest))
 		}
 		e.isPortReserved = true
@@ -216,19 +213,20 @@ func (e *endpoint) Resume(s *stack.Stack) {
 	case epState.connected():
 		bind()
 		if len(e.connectingAddress) == 0 {
-			e.connectingAddress = e.ID.RemoteAddress
+			e.connectingAddress = e.TransportEndpointInfo.ID.RemoteAddress
 			// This endpoint is accepted by netstack but not yet by
 			// the app. If the endpoint is IPv6 but the remote
 			// address is IPv4, we need to connect as IPv6 so that
 			// dual-stack mode can be properly activated.
-			if e.NetProto == header.IPv6ProtocolNumber && len(e.ID.RemoteAddress) != header.IPv6AddressSize {
-				e.connectingAddress = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff" + e.ID.RemoteAddress
+			if e.NetProto == header.IPv6ProtocolNumber && len(e.TransportEndpointInfo.ID.RemoteAddress) != header.IPv6AddressSize {
+				e.connectingAddress = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff" + e.TransportEndpointInfo.ID.RemoteAddress
 			}
 		}
 		// Reset the scoreboard to reinitialize the sack information as
 		// we do not restore SACK information.
 		e.scoreboard.Reset()
-		if err := e.connect(tcpip.FullAddress{NIC: e.boundNICID, Addr: e.connectingAddress, Port: e.ID.RemotePort}, false, e.workerRunning); err != tcpip.ErrConnectStarted {
+		err := e.connect(tcpip.FullAddress{NIC: e.boundNICID, Addr: e.connectingAddress, Port: e.TransportEndpointInfo.ID.RemotePort}, false, e.workerRunning)
+		if _, ok := err.(*tcpip.ErrConnectStarted); !ok {
 			panic("endpoint connecting failed: " + err.String())
 		}
 		e.mu.Lock()
@@ -247,7 +245,7 @@ func (e *endpoint) Resume(s *stack.Stack) {
 		go func() {
 			connectedLoading.Wait()
 			bind()
-			backlog := cap(e.acceptedChan)
+			backlog := e.accepted.cap
 			if err := e.Listen(backlog); err != nil {
 				panic("endpoint listening failed: " + err.String())
 			}
@@ -265,7 +263,8 @@ func (e *endpoint) Resume(s *stack.Stack) {
 			connectedLoading.Wait()
 			listenLoading.Wait()
 			bind()
-			if err := e.Connect(tcpip.FullAddress{NIC: e.boundNICID, Addr: e.connectingAddress, Port: e.ID.RemotePort}); err != tcpip.ErrConnectStarted {
+			err := e.Connect(tcpip.FullAddress{NIC: e.boundNICID, Addr: e.connectingAddress, Port: e.TransportEndpointInfo.ID.RemotePort})
+			if _, ok := err.(*tcpip.ErrConnectStarted); !ok {
 				panic("endpoint connecting failed: " + err.String())
 			}
 			connectingLoading.Done()
@@ -292,24 +291,6 @@ func (e *endpoint) Resume(s *stack.Stack) {
 	}
 }
 
-// saveLastError is invoked by stateify.
-func (e *endpoint) saveLastError() string {
-	if e.lastError == nil {
-		return ""
-	}
-
-	return e.lastError.String()
-}
-
-// loadLastError is invoked by stateify.
-func (e *endpoint) loadLastError(s string) {
-	if s == "" {
-		return
-	}
-
-	e.lastError = tcpip.StringToError(s)
-}
-
 // saveRecentTSTime is invoked by stateify.
 func (e *endpoint) saveRecentTSTime() unixTime {
 	return unixTime{e.recentTSTime.Unix(), e.recentTSTime.UnixNano()}
@@ -320,40 +301,12 @@ func (e *endpoint) loadRecentTSTime(unix unixTime) {
 	e.recentTSTime = time.Unix(unix.second, unix.nano)
 }
 
-// saveHardError is invoked by stateify.
-func (e *endpoint) saveHardError() string {
-	if e.hardError == nil {
-		return ""
-	}
-
-	return e.hardError.String()
+// saveLastOutOfWindowAckTime is invoked by stateify.
+func (e *endpoint) saveLastOutOfWindowAckTime() unixTime {
+	return unixTime{e.lastOutOfWindowAckTime.Unix(), e.lastOutOfWindowAckTime.UnixNano()}
 }
 
-// loadHardError is invoked by stateify.
-func (e *endpoint) loadHardError(s string) {
-	if s == "" {
-		return
-	}
-
-	e.hardError = tcpip.StringToError(s)
-}
-
-// saveMeasureTime is invoked by stateify.
-func (r *rcvBufAutoTuneParams) saveMeasureTime() unixTime {
-	return unixTime{r.measureTime.Unix(), r.measureTime.UnixNano()}
-}
-
-// loadMeasureTime is invoked by stateify.
-func (r *rcvBufAutoTuneParams) loadMeasureTime(unix unixTime) {
-	r.measureTime = time.Unix(unix.second, unix.nano)
-}
-
-// saveRttMeasureTime is invoked by stateify.
-func (r *rcvBufAutoTuneParams) saveRttMeasureTime() unixTime {
-	return unixTime{r.rttMeasureTime.Unix(), r.rttMeasureTime.UnixNano()}
-}
-
-// loadRttMeasureTime is invoked by stateify.
-func (r *rcvBufAutoTuneParams) loadRttMeasureTime(unix unixTime) {
-	r.rttMeasureTime = time.Unix(unix.second, unix.nano)
+// loadLastOutOfWindowAckTime is invoked by stateify.
+func (e *endpoint) loadLastOutOfWindowAckTime(unix unixTime) {
+	e.lastOutOfWindowAckTime = time.Unix(unix.second, unix.nano)
 }
