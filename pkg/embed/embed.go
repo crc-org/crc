@@ -4,21 +4,12 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/YourFin/binappend"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/version"
 )
 
 func openEmbeddedFile(executablePath, embedName string) (io.ReadCloser, error) {
-	if version.IsInstaller() {
-		path := filepath.Join(version.InstallPath(), embedName)
-		if _, err := os.Stat(path); err == nil {
-			return os.Open(path)
-		}
-	}
-
 	extractor, err := binappend.MakeExtractor(executablePath)
 	if err != nil {
 		return nil, fmt.Errorf("Could not data embedded in %s: %v", executablePath, err)
