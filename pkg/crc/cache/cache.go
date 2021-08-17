@@ -35,8 +35,8 @@ func (e *VersionMismatchError) Error() string {
 	return fmt.Sprintf("%s version mismatch: %s expected but %s found in the cache", e.ExecutableName, e.ExpectedVersion, e.CurrentVersion)
 }
 
-func New(executableName string, archiveURL string, destDir string, version string, getVersion func(string) (string, error)) *Cache {
-	return &Cache{executableName: executableName, archiveURL: archiveURL, destDir: destDir, version: version, getVersion: getVersion}
+func New(executableName string, archiveURL string, version string, getVersion func(string) (string, error)) *Cache {
+	return &Cache{executableName: executableName, archiveURL: archiveURL, destDir: constants.CrcBinDir, version: version, getVersion: getVersion}
 }
 
 func (c *Cache) GetExecutablePath() string {
@@ -70,7 +70,6 @@ func NewAdminHelperCache() *Cache {
 	version := path.Base(path.Dir(url))
 	return New(constants.GetAdminHelperExecutable(),
 		url,
-		constants.CrcBinDir,
 		version,
 		func(executable string) (string, error) {
 			out, _, err := crcos.RunWithDefaultLocale(executable, "--version")

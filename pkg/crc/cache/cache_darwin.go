@@ -6,21 +6,20 @@ import (
 	"io"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
 func NewMachineDriverHyperKitCache() *Cache {
-	return New(hyperkit.MachineDriverCommand, hyperkit.MachineDriverDownloadURL, constants.CrcBinDir, hyperkit.MachineDriverVersion, getHyperKitMachineDriverVersion)
+	return New(hyperkit.MachineDriverCommand, hyperkit.MachineDriverDownloadURL, hyperkit.MachineDriverVersion, getHyperKitMachineDriverVersion)
 }
 
 func NewQcowToolCache() *Cache {
-	return New(hyperkit.QcowToolCommand, hyperkit.QcowToolDownloadURL, constants.CrcBinDir, hyperkit.QcowToolVersion, getQcowToolVersion)
+	return New(hyperkit.QcowToolCommand, hyperkit.QcowToolDownloadURL, hyperkit.QcowToolVersion, getQcowToolVersion)
 }
 
 func NewHyperKitCache() *Cache {
-	return New(hyperkit.HyperKitCommand, hyperkit.HyperKitDownloadURL, constants.CrcBinDir, hyperkit.HyperKitVersion, getHyperKitVersion)
+	return New(hyperkit.HyperKitCommand, hyperkit.HyperKitDownloadURL, hyperkit.HyperKitVersion, getHyperKitVersion)
 }
 
 func getHyperKitMachineDriverVersion(executablePath string) (string, error) {
