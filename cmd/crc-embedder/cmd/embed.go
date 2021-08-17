@@ -30,6 +30,7 @@ func init() {
 }
 
 var embedCmd = &cobra.Command{
+	Args:  cobra.ExactArgs(1),
 	Use:   "embed",
 	Short: "Embed data files in crc executable",
 	Long:  `Embed the OpenShift bundle and the binaries needed at runtime in the crc executable`,
@@ -39,9 +40,6 @@ var embedCmd = &cobra.Command{
 }
 
 func runEmbed(args []string) {
-	if len(args) != 1 {
-		logging.Fatal("embed takes exactly one argument")
-	}
 	executablePath := args[0]
 	destDir, err := ioutil.TempDir("", "crc-embedder")
 	if err != nil {

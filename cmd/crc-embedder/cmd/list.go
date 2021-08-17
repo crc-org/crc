@@ -13,6 +13,7 @@ func init() {
 }
 
 var listCmd = &cobra.Command{
+	Args:  cobra.ExactArgs(1),
 	Use:   "list",
 	Short: "List data files embedded in the crc executable",
 	Long:  `List all the data files which were embedded in the crc executable`,
@@ -22,9 +23,6 @@ var listCmd = &cobra.Command{
 }
 
 func runList(args []string) {
-	if len(args) != 1 {
-		logging.Fatalf("list takes exactly one argument")
-	}
 	executablePath := args[0]
 	extractor, err := binappend.MakeExtractor(executablePath)
 	if err != nil {
