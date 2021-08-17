@@ -56,7 +56,7 @@ const (
 	// Postrouting happens just before a packet goes out on the wire.
 	Postrouting
 
-	// The total number of hooks.
+	// NumHooks is the total number of hooks.
 	NumHooks
 )
 
@@ -210,8 +210,19 @@ type IPHeaderFilter struct {
 	// filter will match packets that fail the source comparison.
 	SrcInvert bool
 
-	// OutputInterface matches the name of the outgoing interface for the
-	// packet.
+	// InputInterface matches the name of the incoming interface for the packet.
+	InputInterface string
+
+	// InputInterfaceMask masks the characters of the interface name when
+	// comparing with InputInterface.
+	InputInterfaceMask string
+
+	// InputInterfaceInvert inverts the meaning of incoming interface check,
+	// i.e. when true the filter will match packets that fail the incoming
+	// interface comparison.
+	InputInterfaceInvert bool
+
+	// OutputInterface matches the name of the outgoing interface for the packet.
 	OutputInterface string
 
 	// OutputInterfaceMask masks the characters of the interface name when
@@ -228,7 +239,7 @@ type IPHeaderFilter struct {
 //
 // Preconditions: pkt.NetworkHeader is set and is at least of the minimal IPv4
 // or IPv6 header length.
-func (fl IPHeaderFilter) match(pkt *PacketBuffer, hook Hook, nicName string) bool {
+func (fl IPHeaderFilter) match(pkt *PacketBuffer, hook Hook, inNicName, outNicName string) bool {
 	// Extract header fields.
 	var (
 		// TODO(gvisor.dev/issue/170): Support other filter fields.
@@ -264,28 +275,35 @@ func (fl IPHeaderFilter) match(pkt *PacketBuffer, hook Hook, nicName string) boo
 		return false
 	}
 
-	// Check the output interface.
-	// TODO(gvisor.dev/issue/170): Add the check for FORWARD and POSTROUTING
-	// hooks after supported.
-	if hook == Output {
-		n := len(fl.OutputInterface)
-		if n == 0 {
-			return true
-		}
-
-		// If the interface name ends with '+', any interface which begins
-		// with the name should be matched.
-		ifName := fl.OutputInterface
-		matches := true
-		if strings.HasSuffix(ifName, "+") {
-			matches = strings.HasPrefix(nicName, ifName[:n-1])
-		} else {
-			matches = nicName == ifName
-		}
-		return fl.OutputInterfaceInvert != matches
+	switch hook {
+	case Prerouting, Input:
+		return matchIfName(inNicName, fl.InputInterface, fl.InputInterfaceInvert)
+	case Output:
+		return matchIfName(outNicName, fl.OutputInterface, fl.OutputInterfaceInvert)
+	case Forward, Postrouting:
+		// TODO(gvisor.dev/issue/170): Add the check for FORWARD and POSTROUTING
+		// hooks after supported.
+		return true
+	default:
+		panic(fmt.Sprintf("unknown hook: %d", hook))
 	}
+}
 
-	return true
+func matchIfName(nicName string, ifName string, invert bool) bool {
+	n := len(ifName)
+	if n == 0 {
+		// If the interface name is omitted in the filter, any interface will match.
+		return true
+	}
+	// If the interface name ends with '+', any interface which begins with the
+	// name should be matched.
+	var matches bool
+	if strings.HasSuffix(ifName, "+") {
+		matches = strings.HasPrefix(nicName, ifName[:n-1])
+	} else {
+		matches = nicName == ifName
+	}
+	return matches != invert
 }
 
 // NetworkProtocol returns the protocol (IPv4 or IPv6) on to which the header
@@ -314,15 +332,12 @@ func filterAddress(addr, mask, filterAddr tcpip.Address, invert bool) bool {
 
 // A Matcher is the interface for matching packets.
 type Matcher interface {
-	// Name returns the name of the Matcher.
-	Name() string
-
 	// Match returns whether the packet matches and whether the packet
 	// should be "hotdropped", i.e. dropped immediately. This is usually
 	// used for suspicious packets.
 	//
 	// Precondition: packet.NetworkHeader is set.
-	Match(hook Hook, packet *PacketBuffer, interfaceName string) (matches bool, hotdrop bool)
+	Match(hook Hook, packet *PacketBuffer, inputInterfaceName, outputInterfaceName string) (matches bool, hotdrop bool)
 }
 
 // A Target is the interface for taking an action for a packet.
@@ -330,5 +345,5 @@ type Target interface {
 	// Action takes an action on the packet and returns a verdict on how
 	// traversal should (or should not) continue. If the return value is
 	// Jump, it also returns the index of the rule to jump to.
-	Action(packet *PacketBuffer, connections *ConnTrack, hook Hook, gso *GSO, r *Route, address tcpip.Address) (RuleVerdict, int)
+	Action(*PacketBuffer, *ConnTrack, Hook, *Route, tcpip.Address) (RuleVerdict, int)
 }

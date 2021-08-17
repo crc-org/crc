@@ -15,8 +15,8 @@ require (
 	github.com/cheggaaa/pb/v3 v3.0.8
 	github.com/code-ready/admin-helper v0.0.0-20210705143132-4eb2d25dbcf9
 	github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a
-	github.com/code-ready/gvisor-tap-vsock v0.0.0-20210308122700-d61f9aac135c
 	github.com/code-ready/machine v0.0.0-20210616065635-eff475d32b9a
+	github.com/containers/gvisor-tap-vsock v0.1.1-0.20210816082554-ebd241aab69f
 	github.com/coreos/go-systemd/v22 v22.3.2
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3

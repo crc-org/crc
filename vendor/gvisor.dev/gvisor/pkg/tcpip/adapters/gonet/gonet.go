@@ -16,6 +16,7 @@
 package gonet
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -247,16 +248,16 @@ func NewTCPConn(wq *waiter.Queue, ep tcpip.Endpoint) *TCPConn {
 func (l *TCPListener) Accept() (net.Conn, error) {
 	n, wq, err := l.ep.Accept(nil)
 
-	if err == tcpip.ErrWouldBlock {
+	if _, ok := err.(*tcpip.ErrWouldBlock); ok {
 		// Create wait queue entry that notifies a channel.
 		waitEntry, notifyCh := waiter.NewChannelEntry(nil)
-		l.wq.EventRegister(&waitEntry, waiter.EventIn)
+		l.wq.EventRegister(&waitEntry, waiter.ReadableEvents)
 		defer l.wq.EventUnregister(&waitEntry)
 
 		for {
 			n, wq, err = l.ep.Accept(nil)
 
-			if err != tcpip.ErrWouldBlock {
+			if _, ok := err.(*tcpip.ErrWouldBlock); !ok {
 				break
 			}
 
@@ -286,45 +287,47 @@ type opErrorer interface {
 
 // commonRead implements the common logic between net.Conn.Read and
 // net.PacketConn.ReadFrom.
-func commonRead(ep tcpip.Endpoint, wq *waiter.Queue, deadline <-chan struct{}, addr *tcpip.FullAddress, errorer opErrorer, dontWait bool) ([]byte, error) {
+func commonRead(b []byte, ep tcpip.Endpoint, wq *waiter.Queue, deadline <-chan struct{}, addr *tcpip.FullAddress, errorer opErrorer) (int, error) {
 	select {
 	case <-deadline:
-		return nil, errorer.newOpError("read", &timeoutError{})
+		return 0, errorer.newOpError("read", &timeoutError{})
 	default:
 	}
 
-	read, _, err := ep.Read(addr)
+	w := tcpip.SliceWriter(b)
+	opts := tcpip.ReadOptions{NeedRemoteAddr: addr != nil}
+	res, err := ep.Read(&w, opts)
 
-	if err == tcpip.ErrWouldBlock {
-		if dontWait {
-			return nil, errWouldBlock
-		}
+	if _, ok := err.(*tcpip.ErrWouldBlock); ok {
 		// Create wait queue entry that notifies a channel.
 		waitEntry, notifyCh := waiter.NewChannelEntry(nil)
-		wq.EventRegister(&waitEntry, waiter.EventIn)
+		wq.EventRegister(&waitEntry, waiter.ReadableEvents)
 		defer wq.EventUnregister(&waitEntry)
 		for {
-			read, _, err = ep.Read(addr)
-			if err != tcpip.ErrWouldBlock {
+			res, err = ep.Read(&w, opts)
+			if _, ok := err.(*tcpip.ErrWouldBlock); !ok {
 				break
 			}
 			select {
 			case <-deadline:
-				return nil, errorer.newOpError("read", &timeoutError{})
+				return 0, errorer.newOpError("read", &timeoutError{})
 			case <-notifyCh:
 			}
 		}
 	}
 
-	if err == tcpip.ErrClosedForReceive {
-		return nil, io.EOF
+	if _, ok := err.(*tcpip.ErrClosedForReceive); ok {
+		return 0, io.EOF
 	}
 
 	if err != nil {
-		return nil, errorer.newOpError("read", errors.New(err.String()))
+		return 0, errorer.newOpError("read", errors.New(err.String()))
 	}
 
-	return read, nil
+	if addr != nil {
+		*addr = res.RemoteAddr
+	}
+	return res.Count, nil
 }
 
 // Read implements net.Conn.Read.
@@ -334,31 +337,11 @@ func (c *TCPConn) Read(b []byte) (int, error) {
 
 	deadline := c.readCancel()
 
-	numRead := 0
-	defer func() {
-		if numRead != 0 {
-			c.ep.ModerateRecvBuf(numRead)
-		}
-	}()
-	for numRead != len(b) {
-		if len(c.read) == 0 {
-			var err error
-			c.read, err = commonRead(c.ep, c.wq, deadline, nil, c, numRead != 0)
-			if err != nil {
-				if numRead != 0 {
-					return numRead, nil
-				}
-				return numRead, err
-			}
-		}
-		n := copy(b[numRead:], c.read)
-		c.read.TrimFront(n)
-		numRead += n
-		if len(c.read) == 0 {
-			c.read = nil
-		}
+	n, err := commonRead(b, c.ep, c.wq, deadline, nil, c)
+	if n != 0 {
+		c.ep.ModerateRecvBuf(n)
 	}
-	return numRead, nil
+	return n, err
 }
 
 // Write implements net.Conn.Write.
@@ -372,10 +355,8 @@ func (c *TCPConn) Write(b []byte) (int, error) {
 	default:
 	}
 
-	v := buffer.NewViewFromBytes(b)
-
 	// We must handle two soft failure conditions simultaneously:
-	//  1. Write may write nothing and return tcpip.ErrWouldBlock.
+	//  1. Write may write nothing and return *tcpip.ErrWouldBlock.
 	//     If this happens, we need to register for notifications if we have
 	//     not already and wait to try again.
 	//  2. Write may write fewer than the full number of bytes and return
@@ -386,22 +367,23 @@ func (c *TCPConn) Write(b []byte) (int, error) {
 	// There is no guarantee that all of the condition #1s will occur before
 	// all of the condition #2s or visa-versa.
 	var (
-		err      *tcpip.Error
-		nbytes   int
-		reg      bool
-		notifyCh chan struct{}
+		r      bytes.Reader
+		nbytes int
+		entry  waiter.Entry
+		ch     <-chan struct{}
 	)
-	for nbytes < len(b) && (err == tcpip.ErrWouldBlock || err == nil) {
-		if err == tcpip.ErrWouldBlock {
-			if !reg {
-				// Only register once.
-				reg = true
+	for nbytes != len(b) {
+		r.Reset(b[nbytes:])
+		n, err := c.ep.Write(&r, tcpip.WriteOptions{})
+		nbytes += int(n)
+		switch err.(type) {
+		case nil:
+		case *tcpip.ErrWouldBlock:
+			if ch == nil {
+				entry, ch = waiter.NewChannelEntry(nil)
 
-				// Create wait queue entry that notifies a channel.
-				var waitEntry waiter.Entry
-				waitEntry, notifyCh = waiter.NewChannelEntry(nil)
-				c.wq.EventRegister(&waitEntry, waiter.EventOut)
-				defer c.wq.EventUnregister(&waitEntry)
+				c.wq.EventRegister(&entry, waiter.WritableEvents)
+				defer c.wq.EventUnregister(&entry)
 			} else {
 				// Don't wait immediately after registration in case more data
 				// became available between when we last checked and when we setup
@@ -409,35 +391,15 @@ func (c *TCPConn) Write(b []byte) (int, error) {
 				select {
 				case <-deadline:
 					return nbytes, c.newOpError("write", &timeoutError{})
-				case <-notifyCh:
+				case <-ch:
+					continue
 				}
 			}
-		}
-
-		var n int64
-		var resCh <-chan struct{}
-		n, resCh, err = c.ep.Write(tcpip.SlicePayload(v), tcpip.WriteOptions{})
-		nbytes += int(n)
-		v.TrimFront(int(n))
-
-		if resCh != nil {
-			select {
-			case <-deadline:
-				return nbytes, c.newOpError("write", &timeoutError{})
-			case <-resCh:
-			}
-
-			n, _, err = c.ep.Write(tcpip.SlicePayload(v), tcpip.WriteOptions{})
-			nbytes += int(n)
-			v.TrimFront(int(n))
+		default:
+			return nbytes, c.newOpError("write", errors.New(err.String()))
 		}
 	}
-
-	if err == nil {
-		return nbytes, nil
-	}
-
-	return nbytes, c.newOpError("write", errors.New(err.String()))
+	return nbytes, nil
 }
 
 // Close implements net.Conn.Close.
@@ -523,7 +485,7 @@ func DialContextTCP(ctx context.Context, s *stack.Stack, addr tcpip.FullAddress,
 	//
 	// We do this unconditionally as Connect will always return an error.
 	waitEntry, notifyCh := waiter.NewChannelEntry(nil)
-	wq.EventRegister(&waitEntry, waiter.EventOut)
+	wq.EventRegister(&waitEntry, waiter.WritableEvents)
 	defer wq.EventUnregister(&waitEntry)
 
 	select {
@@ -533,7 +495,7 @@ func DialContextTCP(ctx context.Context, s *stack.Stack, addr tcpip.FullAddress,
 	}
 
 	err = ep.Connect(addr)
-	if err == tcpip.ErrConnectStarted {
+	if _, ok := err.(*tcpip.ErrConnectStarted); ok {
 		select {
 		case <-ctx.Done():
 			ep.Close()
@@ -652,12 +614,11 @@ func (c *UDPConn) ReadFrom(b []byte) (int, net.Addr, error) {
 	deadline := c.readCancel()
 
 	var addr tcpip.FullAddress
-	read, err := commonRead(c.ep, c.wq, deadline, &addr, c, false)
+	n, err := commonRead(b, c.ep, c.wq, deadline, &addr, c)
 	if err != nil {
 		return 0, nil, err
 	}
-
-	return copy(b, read), fullToUDPAddr(addr), nil
+	return n, fullToUDPAddr(addr), nil
 }
 
 func (c *UDPConn) Write(b []byte) (int, error) {
@@ -676,30 +637,22 @@ func (c *UDPConn) WriteTo(b []byte, addr net.Addr) (int, error) {
 	}
 
 	// If we're being called by Write, there is no addr
-	wopts := tcpip.WriteOptions{}
+	writeOptions := tcpip.WriteOptions{}
 	if addr != nil {
 		ua := addr.(*net.UDPAddr)
-		wopts.To = &tcpip.FullAddress{Addr: tcpip.Address(ua.IP), Port: uint16(ua.Port)}
-	}
-
-	v := buffer.NewView(len(b))
-	copy(v, b)
-
-	n, resCh, err := c.ep.Write(tcpip.SlicePayload(v), wopts)
-	if resCh != nil {
-		select {
-		case <-deadline:
-			return int(n), c.newRemoteOpError("write", addr, &timeoutError{})
-		case <-resCh:
+		writeOptions.To = &tcpip.FullAddress{
+			Addr: tcpip.Address(ua.IP),
+			Port: uint16(ua.Port),
 		}
-
-		n, _, err = c.ep.Write(tcpip.SlicePayload(v), wopts)
 	}
 
-	if err == tcpip.ErrWouldBlock {
+	var r bytes.Reader
+	r.Reset(b)
+	n, err := c.ep.Write(&r, writeOptions)
+	if _, ok := err.(*tcpip.ErrWouldBlock); ok {
 		// Create wait queue entry that notifies a channel.
 		waitEntry, notifyCh := waiter.NewChannelEntry(nil)
-		c.wq.EventRegister(&waitEntry, waiter.EventOut)
+		c.wq.EventRegister(&waitEntry, waiter.WritableEvents)
 		defer c.wq.EventUnregister(&waitEntry)
 		for {
 			select {
@@ -708,8 +661,8 @@ func (c *UDPConn) WriteTo(b []byte, addr net.Addr) (int, error) {
 			case <-notifyCh:
 			}
 
-			n, _, err = c.ep.Write(tcpip.SlicePayload(v), wopts)
-			if err != tcpip.ErrWouldBlock {
+			n, err = c.ep.Write(&r, writeOptions)
+			if _, ok := err.(*tcpip.ErrWouldBlock); !ok {
 				break
 			}
 		}

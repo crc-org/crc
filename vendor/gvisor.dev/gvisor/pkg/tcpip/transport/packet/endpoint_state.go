@@ -38,54 +38,17 @@ func (p *packet) loadData(data buffer.VectorisedView) {
 
 // beforeSave is invoked by stateify.
 func (ep *endpoint) beforeSave() {
-	// Stop incoming packets from being handled (and mutate endpoint state).
-	// The lock will be released after saveRcvBufSizeMax(), which would have
-	// saved ep.rcvBufSizeMax and set it to 0 to continue blocking incoming
-	// packets.
-	ep.rcvMu.Lock()
-}
-
-// saveRcvBufSizeMax is invoked by stateify.
-func (ep *endpoint) saveRcvBufSizeMax() int {
-	max := ep.rcvBufSizeMax
-	// Make sure no new packets will be handled regardless of the lock.
-	ep.rcvBufSizeMax = 0
-	// Release the lock acquired in beforeSave() so regular endpoint closing
-	// logic can proceed after save.
-	ep.rcvMu.Unlock()
-	return max
-}
-
-// loadRcvBufSizeMax is invoked by stateify.
-func (ep *endpoint) loadRcvBufSizeMax(max int) {
-	ep.rcvBufSizeMax = max
+	ep.freeze()
 }
 
 // afterLoad is invoked by stateify.
 func (ep *endpoint) afterLoad() {
-	// StackFromEnv is a stack used specifically for save/restore.
+	ep.thaw()
 	ep.stack = stack.StackFromEnv
+	ep.ops.InitHandler(ep, ep.stack, tcpip.GetStackSendBufferLimits, tcpip.GetStackReceiveBufferLimits)
 
 	// TODO(gvisor.dev/173): Once bind is supported, choose the right NIC.
 	if err := ep.stack.RegisterPacketEndpoint(0, ep.netProto, ep); err != nil {
-		panic(*err)
+		panic(err)
 	}
-}
-
-// saveLastError is invoked by stateify.
-func (ep *endpoint) saveLastError() string {
-	if ep.lastError == nil {
-		return ""
-	}
-
-	return ep.lastError.String()
-}
-
-// loadLastError is invoked by stateify.
-func (ep *endpoint) loadLastError(s string) {
-	if s == "" {
-		return
-	}
-
-	ep.lastError = tcpip.StringToError(s)
 }

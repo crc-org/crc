@@ -6,7 +6,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/daemonclient"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/gvisor-tap-vsock/pkg/types"
+	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	"github.com/pkg/errors"
 )
 

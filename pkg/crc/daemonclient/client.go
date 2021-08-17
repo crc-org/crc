@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/code-ready/crc/pkg/crc/api/client"
-	networkclient "github.com/code-ready/gvisor-tap-vsock/pkg/client"
+	networkclient "github.com/containers/gvisor-tap-vsock/pkg/client"
 )
 
 type Client struct {

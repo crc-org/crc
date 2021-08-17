@@ -17,6 +17,7 @@ package buffer
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 )
 
@@ -105,18 +106,18 @@ func (vv *VectorisedView) TrimFront(count int) {
 }
 
 // Read implements io.Reader.
-func (vv *VectorisedView) Read(v View) (copied int, err error) {
-	count := len(v)
+func (vv *VectorisedView) Read(b []byte) (copied int, err error) {
+	count := len(b)
 	for count > 0 && len(vv.views) > 0 {
 		if count < len(vv.views[0]) {
 			vv.size -= count
-			copy(v[copied:], vv.views[0][:count])
+			copy(b[copied:], vv.views[0][:count])
 			vv.views[0].TrimFront(count)
 			copied += count
 			return copied, nil
 		}
 		count -= len(vv.views[0])
-		copy(v[copied:], vv.views[0])
+		copy(b[copied:], vv.views[0])
 		copied += len(vv.views[0])
 		vv.removeFirst()
 	}
@@ -143,6 +144,28 @@ func (vv *VectorisedView) ReadToVV(dstVV *VectorisedView, count int) (copied int
 		vv.removeFirst()
 	}
 	return copied
+}
+
+// ReadTo reads up to count bytes from vv to dst. It also removes them from vv
+// unless peek is true.
+func (vv *VectorisedView) ReadTo(dst io.Writer, peek bool) (int, error) {
+	var err error
+	done := 0
+	for _, v := range vv.Views() {
+		var n int
+		n, err = dst.Write(v)
+		done += n
+		if err != nil {
+			break
+		}
+		if n != len(v) {
+			panic(fmt.Sprintf("io.Writer.Write succeeded with incomplete write: %d != %d", n, len(v)))
+		}
+	}
+	if !peek {
+		vv.TrimFront(done)
+	}
+	return done, err
 }
 
 // CapLength irreversibly reduces the length of the vectorised view.
@@ -173,7 +196,7 @@ func (vv *VectorisedView) CapLength(length int) {
 // If the buffer argument is large enough to contain all the Views of this
 // VectorisedView, the method will avoid allocations and use the buffer to
 // store the Views of the clone.
-func (vv *VectorisedView) Clone(buffer []View) VectorisedView {
+func (vv VectorisedView) Clone(buffer []View) VectorisedView {
 	return VectorisedView{views: append(buffer[:0], vv.views...), size: vv.size}
 }
 
@@ -216,6 +239,16 @@ func (vv *VectorisedView) Size() int {
 	return vv.size
 }
 
+// MemSize returns the estimation size of the vv in memory, including backing
+// buffer data.
+func (vv *VectorisedView) MemSize() int {
+	var size int
+	for _, v := range vv.views {
+		size += cap(v)
+	}
+	return size + cap(vv.views)*viewStructSize + vectorisedViewStructSize
+}
+
 // ToView returns a single view containing the content of the vectorised view.
 //
 // If the vectorised view contains a single view, that view will be returned
@@ -255,6 +288,14 @@ func (vv *VectorisedView) AppendView(v View) {
 	}
 	vv.views = append(vv.views, v)
 	vv.size += len(v)
+}
+
+// AppendViews appends views to vv.
+func (vv *VectorisedView) AppendViews(views []View) {
+	vv.views = append(vv.views, views...)
+	for _, v := range views {
+		vv.size += len(v)
+	}
 }
 
 // Readers returns a bytes.Reader for each of vv's views.

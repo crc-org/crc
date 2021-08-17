@@ -1,4 +1,4 @@
-// Copyright 2018 The gVisor Authors.
+// Copyright 2021 The gVisor Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@ package header
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 
 	"gvisor.dev/gvisor/pkg/tcpip"
@@ -178,6 +177,26 @@ const (
 	IPv4FlagMoreFragments = 1 << iota
 	IPv4FlagDontFragment
 )
+
+// ipv4LinkLocalUnicastSubnet is the IPv4 link local unicast subnet as defined
+// by RFC 3927 section 1.
+var ipv4LinkLocalUnicastSubnet = func() tcpip.Subnet {
+	subnet, err := tcpip.NewSubnet("\xa9\xfe\x00\x00", tcpip.AddressMask("\xff\xff\x00\x00"))
+	if err != nil {
+		panic(err)
+	}
+	return subnet
+}()
+
+// ipv4LinkLocalMulticastSubnet is the IPv4 link local multicast subnet as
+// defined by RFC 5771 section 4.
+var ipv4LinkLocalMulticastSubnet = func() tcpip.Subnet {
+	subnet, err := tcpip.NewSubnet("\xe0\x00\x00\x00", tcpip.AddressMask("\xff\xff\xff\x00"))
+	if err != nil {
+		panic(err)
+	}
+	return subnet
+}()
 
 // IPv4EmptySubnet is the empty IPv4 subnet.
 var IPv4EmptySubnet = func() tcpip.Subnet {
@@ -424,6 +443,44 @@ func (b IPv4) IsValid(pktSize int) bool {
 	return true
 }
 
+// IsV4LinkLocalUnicastAddress determines if the provided address is an IPv4
+// link-local unicast address.
+func IsV4LinkLocalUnicastAddress(addr tcpip.Address) bool {
+	return ipv4LinkLocalUnicastSubnet.Contains(addr)
+}
+
+// IsV4LinkLocalMulticastAddress determines if the provided address is an IPv4
+// link-local multicast address.
+func IsV4LinkLocalMulticastAddress(addr tcpip.Address) bool {
+	return ipv4LinkLocalMulticastSubnet.Contains(addr)
+}
+
+// IsChecksumValid returns true iff the IPv4 header's checksum is valid.
+func (b IPv4) IsChecksumValid() bool {
+	// There has been some confusion regarding verifying checksums. We need
+	// just look for negative 0 (0xffff) as the checksum, as it's not possible to
+	// get positive 0 (0) for the checksum. Some bad implementations could get it
+	// when doing entry replacement in the early days of the Internet,
+	// however the lore that one needs to check for both persists.
+	//
+	// RFC 1624 section 1 describes the source of this confusion as:
+	//     [the partial recalculation method described in RFC 1071] computes a
+	//     result for certain cases that differs from the one obtained from
+	//     scratch (one's complement of one's complement sum of the original
+	//     fields).
+	//
+	// However RFC 1624 section 5 clarifies that if using the verification method
+	// "recommended by RFC 1071, it does not matter if an intermediate system
+	// generated a -0 instead of +0".
+	//
+	// RFC1071 page 1 specifies the verification method as:
+	//	  (3)  To check a checksum, the 1's complement sum is computed over the
+	//        same set of octets, including the checksum field.  If the result
+	//        is all 1 bits (-0 in 1's complement arithmetic), the check
+	//        succeeds.
+	return b.CalculateChecksum() == 0xffff
+}
+
 // IsV4MulticastAddress determines if the provided address is an IPv4 multicast
 // address (range 224.0.0.0 to 239.255.255.255). The four most significant bits
 // will be 1110 = 0xe0.
@@ -481,15 +538,13 @@ const (
 	IPv4OptionLengthOffset = 1
 )
 
-// Potential errors when parsing generic IP options.
-var (
-	ErrIPv4OptZeroLength   = errors.New("zero length IP option")
-	ErrIPv4OptDuplicate    = errors.New("duplicate IP option")
-	ErrIPv4OptInvalid      = errors.New("invalid IP option")
-	ErrIPv4OptMalformed    = errors.New("malformed IP option")
-	ErrIPv4OptionTruncated = errors.New("truncated IP option")
-	ErrIPv4OptionAddress   = errors.New("bad IP option address")
-)
+// IPv4OptParameterProblem indicates that a Parameter Problem message
+// should be generated, and gives the offset in the current entity
+// that should be used in that packet.
+type IPv4OptParameterProblem struct {
+	Pointer  uint8
+	NeedICMP bool
+}
 
 // IPv4Option is an interface representing various option types.
 type IPv4Option interface {
@@ -522,6 +577,7 @@ func (o *IPv4OptionGeneric) Contents() []byte { return []byte(*o) }
 // IPv4OptionIterator is an iterator pointing to a specific IP option
 // at any point of time. It also holds information as to a new options buffer
 // that we are building up to hand back to the caller.
+// TODO(https://gvisor.dev/issues/5513): Add unit tests for IPv4OptionIterator.
 type IPv4OptionIterator struct {
 	options IPv4Options
 	// ErrCursor is where we are while parsing options. It is exported as any
@@ -540,6 +596,15 @@ func (o IPv4Options) MakeIterator() IPv4OptionIterator {
 		options:       o,
 		nextErrCursor: IPv4MinimumSize,
 	}
+}
+
+// InitReplacement copies the option into the new option buffer.
+func (i *IPv4OptionIterator) InitReplacement(option IPv4Option) IPv4Options {
+	replacementOption := i.RemainingBuffer()[:option.Size()]
+	if copied := copy(replacementOption, option.Contents()); copied != len(replacementOption) {
+		panic(fmt.Sprintf("copied %d bytes in the replacement option buffer, expected %d bytes", copied, len(replacementOption)))
+	}
+	return replacementOption
 }
 
 // RemainingBuffer returns the remaining (unused) part of the new option buffer,
@@ -583,8 +648,9 @@ func (i *IPv4OptionIterator) Finalize() IPv4Options {
 // It returns
 // - A slice of bytes holding the next option or nil if there is error.
 // - A boolean which is true if parsing of all the options is complete.
-// - An error which is non-nil if an error condition was encountered.
-func (i *IPv4OptionIterator) Next() (IPv4Option, bool, error) {
+//   Undefined in the case of error.
+// - An error indication which is non-nil if an error condition was found.
+func (i *IPv4OptionIterator) Next() (IPv4Option, bool, *IPv4OptParameterProblem) {
 	// The opts slice gets shorter as we process the options. When we have no
 	// bytes left we are done.
 	if len(i.options) == 0 {
@@ -606,24 +672,22 @@ func (i *IPv4OptionIterator) Next() (IPv4Option, bool, error) {
 	// There are no more single byte options defined.  All the rest have a length
 	// field so we need to sanity check it.
 	if len(i.options) == 1 {
-		return nil, true, ErrIPv4OptMalformed
+		return nil, false, &IPv4OptParameterProblem{
+			Pointer:  i.ErrCursor,
+			NeedICMP: true,
+		}
 	}
 
 	optLen := i.options[IPv4OptionLengthOffset]
 
-	if optLen == 0 {
-		i.ErrCursor++
-		return nil, true, ErrIPv4OptZeroLength
-	}
+	if optLen <= IPv4OptionLengthOffset || optLen > uint8(len(i.options)) {
+		// The actual error is in the length (2nd byte of the option) but we
+		// return the start of the option for compatibility with Linux.
 
-	if optLen == 1 {
-		i.ErrCursor++
-		return nil, true, ErrIPv4OptMalformed
-	}
-
-	if optLen > uint8(len(i.options)) {
-		i.ErrCursor++
-		return nil, true, ErrIPv4OptionTruncated
+		return nil, false, &IPv4OptParameterProblem{
+			Pointer:  i.ErrCursor,
+			NeedICMP: true,
+		}
 	}
 
 	optionBody := i.options[:optLen]
@@ -635,7 +699,10 @@ func (i *IPv4OptionIterator) Next() (IPv4Option, bool, error) {
 	case IPv4OptionTimestampType:
 		if optLen < IPv4OptionTimestampHdrLength {
 			i.ErrCursor++
-			return nil, true, ErrIPv4OptMalformed
+			return nil, false, &IPv4OptParameterProblem{
+				Pointer:  i.ErrCursor,
+				NeedICMP: true,
+			}
 		}
 		retval := IPv4OptionTimestamp(optionBody)
 		return &retval, false, nil
@@ -643,9 +710,23 @@ func (i *IPv4OptionIterator) Next() (IPv4Option, bool, error) {
 	case IPv4OptionRecordRouteType:
 		if optLen < IPv4OptionRecordRouteHdrLength {
 			i.ErrCursor++
-			return nil, true, ErrIPv4OptMalformed
+			return nil, false, &IPv4OptParameterProblem{
+				Pointer:  i.ErrCursor,
+				NeedICMP: true,
+			}
 		}
 		retval := IPv4OptionRecordRoute(optionBody)
+		return &retval, false, nil
+
+	case IPv4OptionRouterAlertType:
+		if optLen != IPv4OptionRouterAlertLength {
+			i.ErrCursor++
+			return nil, false, &IPv4OptParameterProblem{
+				Pointer:  i.ErrCursor,
+				NeedICMP: true,
+			}
+		}
+		retval := IPv4OptionRouterAlert(optionBody)
 		return &retval, false, nil
 	}
 	retval := IPv4OptionGeneric(optionBody)
@@ -894,10 +975,29 @@ const (
 	// payload of the router alert option.
 	IPv4OptionRouterAlertValue = 0
 
-	// iPv4OptionRouterAlertValueOffset is the offset for the value of a
+	// IPv4OptionRouterAlertValueOffset is the offset for the value of a
 	// RouterAlert option.
-	iPv4OptionRouterAlertValueOffset = 2
+	IPv4OptionRouterAlertValueOffset = 2
 )
+
+var _ IPv4Option = (*IPv4OptionRouterAlert)(nil)
+
+// IPv4OptionRouterAlert is an IPv4 RouterAlert option defined by RFC 2113.
+type IPv4OptionRouterAlert []byte
+
+// Type implements IPv4Option.
+func (*IPv4OptionRouterAlert) Type() IPv4OptionType { return IPv4OptionRouterAlertType }
+
+// Size implements IPv4Option.
+func (ra *IPv4OptionRouterAlert) Size() uint8 { return uint8(len(*ra)) }
+
+// Contents implements IPv4Option.
+func (ra *IPv4OptionRouterAlert) Contents() []byte { return []byte(*ra) }
+
+// Value returns the value of the IPv4OptionRouterAlert.
+func (ra *IPv4OptionRouterAlert) Value() uint16 {
+	return binary.BigEndian.Uint16(ra.Contents()[IPv4OptionRouterAlertValueOffset:])
+}
 
 // IPv4SerializableOption is an interface to represent serializable IPv4 option
 // types.
@@ -997,7 +1097,7 @@ func (*IPv4SerializableRouterAlertOption) optionType() IPv4OptionType {
 
 // Length implements IPv4SerializableOption.
 func (*IPv4SerializableRouterAlertOption) length() uint8 {
-	return IPv4OptionRouterAlertLength - iPv4OptionRouterAlertValueOffset
+	return IPv4OptionRouterAlertLength - IPv4OptionRouterAlertValueOffset
 }
 
 // SerializeInto implements IPv4SerializableOption.

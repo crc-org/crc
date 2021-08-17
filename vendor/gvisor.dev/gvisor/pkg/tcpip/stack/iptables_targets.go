@@ -29,7 +29,7 @@ type AcceptTarget struct {
 }
 
 // Action implements Target.Action.
-func (*AcceptTarget) Action(*PacketBuffer, *ConnTrack, Hook, *GSO, *Route, tcpip.Address) (RuleVerdict, int) {
+func (*AcceptTarget) Action(*PacketBuffer, *ConnTrack, Hook, *Route, tcpip.Address) (RuleVerdict, int) {
 	return RuleAccept, 0
 }
 
@@ -40,7 +40,7 @@ type DropTarget struct {
 }
 
 // Action implements Target.Action.
-func (*DropTarget) Action(*PacketBuffer, *ConnTrack, Hook, *GSO, *Route, tcpip.Address) (RuleVerdict, int) {
+func (*DropTarget) Action(*PacketBuffer, *ConnTrack, Hook, *Route, tcpip.Address) (RuleVerdict, int) {
 	return RuleDrop, 0
 }
 
@@ -52,7 +52,7 @@ type ErrorTarget struct {
 }
 
 // Action implements Target.Action.
-func (*ErrorTarget) Action(*PacketBuffer, *ConnTrack, Hook, *GSO, *Route, tcpip.Address) (RuleVerdict, int) {
+func (*ErrorTarget) Action(*PacketBuffer, *ConnTrack, Hook, *Route, tcpip.Address) (RuleVerdict, int) {
 	log.Debugf("ErrorTarget triggered.")
 	return RuleDrop, 0
 }
@@ -67,7 +67,7 @@ type UserChainTarget struct {
 }
 
 // Action implements Target.Action.
-func (*UserChainTarget) Action(*PacketBuffer, *ConnTrack, Hook, *GSO, *Route, tcpip.Address) (RuleVerdict, int) {
+func (*UserChainTarget) Action(*PacketBuffer, *ConnTrack, Hook, *Route, tcpip.Address) (RuleVerdict, int) {
 	panic("UserChainTarget should never be called.")
 }
 
@@ -79,7 +79,7 @@ type ReturnTarget struct {
 }
 
 // Action implements Target.Action.
-func (*ReturnTarget) Action(*PacketBuffer, *ConnTrack, Hook, *GSO, *Route, tcpip.Address) (RuleVerdict, int) {
+func (*ReturnTarget) Action(*PacketBuffer, *ConnTrack, Hook, *Route, tcpip.Address) (RuleVerdict, int) {
 	return RuleReturn, 0
 }
 
@@ -103,7 +103,7 @@ type RedirectTarget struct {
 // TODO(gvisor.dev/issue/170): Parse headers without copying. The current
 // implementation only works for Prerouting and calls pkt.Clone(), neither
 // of which should be the case.
-func (rt *RedirectTarget) Action(pkt *PacketBuffer, ct *ConnTrack, hook Hook, gso *GSO, r *Route, address tcpip.Address) (RuleVerdict, int) {
+func (rt *RedirectTarget) Action(pkt *PacketBuffer, ct *ConnTrack, hook Hook, r *Route, address tcpip.Address) (RuleVerdict, int) {
 	// Sanity check.
 	if rt.NetworkProtocol != pkt.NetworkProtocolNumber {
 		panic(fmt.Sprintf(
@@ -153,7 +153,7 @@ func (rt *RedirectTarget) Action(pkt *PacketBuffer, ct *ConnTrack, hook Hook, gs
 			if r.RequiresTXTransportChecksum() {
 				length := uint16(pkt.Size()) - uint16(len(pkt.NetworkHeader().View()))
 				xsum := header.PseudoHeaderChecksum(protocol, netHeader.SourceAddress(), netHeader.DestinationAddress(), length)
-				xsum = header.ChecksumVV(pkt.Data, xsum)
+				xsum = header.ChecksumCombine(xsum, pkt.Data().AsRange().Checksum())
 				udpHeader.SetChecksum(^udpHeader.CalculateChecksum(xsum))
 			}
 		}
@@ -174,7 +174,85 @@ func (rt *RedirectTarget) Action(pkt *PacketBuffer, ct *ConnTrack, hook Hook, gs
 		// packet of the connection comes here. Other packets will be
 		// manipulated in connection tracking.
 		if conn := ct.insertRedirectConn(pkt, hook, rt.Port, address); conn != nil {
-			ct.handlePacket(pkt, hook, gso, r)
+			ct.handlePacket(pkt, hook, r)
+		}
+	default:
+		return RuleDrop, 0
+	}
+
+	return RuleAccept, 0
+}
+
+// SNATTarget modifies the source port/IP in the outgoing packets.
+type SNATTarget struct {
+	Addr tcpip.Address
+	Port uint16
+
+	// NetworkProtocol is the network protocol the target is used with. It
+	// is immutable.
+	NetworkProtocol tcpip.NetworkProtocolNumber
+}
+
+// Action implements Target.Action.
+func (st *SNATTarget) Action(pkt *PacketBuffer, ct *ConnTrack, hook Hook, r *Route, address tcpip.Address) (RuleVerdict, int) {
+	// Sanity check.
+	if st.NetworkProtocol != pkt.NetworkProtocolNumber {
+		panic(fmt.Sprintf(
+			"SNATTarget.Action with NetworkProtocol %d called on packet with NetworkProtocolNumber %d",
+			st.NetworkProtocol, pkt.NetworkProtocolNumber))
+	}
+
+	// Packet is already manipulated.
+	if pkt.NatDone {
+		return RuleAccept, 0
+	}
+
+	// Drop the packet if network and transport header are not set.
+	if pkt.NetworkHeader().View().IsEmpty() || pkt.TransportHeader().View().IsEmpty() {
+		return RuleDrop, 0
+	}
+
+	switch hook {
+	case Postrouting, Input:
+	case Prerouting, Output, Forward:
+		panic(fmt.Sprintf("%s not supported", hook))
+	default:
+		panic(fmt.Sprintf("%s unrecognized", hook))
+	}
+
+	switch protocol := pkt.TransportProtocolNumber; protocol {
+	case header.UDPProtocolNumber:
+		udpHeader := header.UDP(pkt.TransportHeader().View())
+		udpHeader.SetChecksum(0)
+		udpHeader.SetSourcePort(st.Port)
+		netHeader := pkt.Network()
+		netHeader.SetSourceAddress(st.Addr)
+
+		// Only calculate the checksum if offloading isn't supported.
+		if r.RequiresTXTransportChecksum() {
+			length := uint16(pkt.Size()) - uint16(len(pkt.NetworkHeader().View()))
+			xsum := header.PseudoHeaderChecksum(protocol, netHeader.SourceAddress(), netHeader.DestinationAddress(), length)
+			xsum = header.ChecksumCombine(xsum, pkt.Data().AsRange().Checksum())
+			udpHeader.SetChecksum(^udpHeader.CalculateChecksum(xsum))
+		}
+
+		// After modification, IPv4 packets need a valid checksum.
+		if pkt.NetworkProtocolNumber == header.IPv4ProtocolNumber {
+			netHeader := header.IPv4(pkt.NetworkHeader().View())
+			netHeader.SetChecksum(0)
+			netHeader.SetChecksum(^netHeader.CalculateChecksum())
+		}
+		pkt.NatDone = true
+	case header.TCPProtocolNumber:
+		if ct == nil {
+			return RuleAccept, 0
+		}
+
+		// Set up conection for matching NAT rule. Only the first
+		// packet of the connection comes here. Other packets will be
+		// manipulated in connection tracking.
+		if conn := ct.insertSNATConn(pkt, hook, st.Port, st.Addr); conn != nil {
+			ct.handlePacket(pkt, hook, r)
 		}
 	default:
 		return RuleDrop, 0

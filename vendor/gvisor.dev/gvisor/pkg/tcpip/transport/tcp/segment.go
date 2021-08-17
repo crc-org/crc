@@ -37,7 +37,7 @@ const (
 
 // segment represents a TCP segment. It holds the payload and parsed TCP segment
 // information, and can be added to intrusive lists.
-// segment is mostly immutable, the only field allowed to change is viewToDeliver.
+// segment is mostly immutable, the only field allowed to change is data.
 //
 // +stateify savable
 type segment struct {
@@ -49,24 +49,20 @@ type segment struct {
 
 	// TODO(gvisor.dev/issue/4417): Hold a stack.PacketBuffer instead of
 	// individual members for link/network packet info.
-	srcAddr        tcpip.Address
-	dstAddr        tcpip.Address
-	netProto       tcpip.NetworkProtocolNumber
-	nicID          tcpip.NICID
-	remoteLinkAddr tcpip.LinkAddress
+	srcAddr  tcpip.Address
+	dstAddr  tcpip.Address
+	netProto tcpip.NetworkProtocolNumber
+	nicID    tcpip.NICID
 
 	data buffer.VectorisedView `state:".(buffer.VectorisedView)"`
 
 	hdr header.TCP
 	// views is used as buffer for data when its length is large
 	// enough to store a VectorisedView.
-	views [8]buffer.View `state:"nosave"`
-	// viewToDeliver keeps track of the next View that should be
-	// delivered by the Read endpoint.
-	viewToDeliver  int
+	views          [8]buffer.View `state:"nosave"`
 	sequenceNumber seqnum.Value
 	ackNumber      seqnum.Value
-	flags          uint8
+	flags          header.TCPFlags
 	window         seqnum.Size
 	// csum is only populated for received segments.
 	csum uint16
@@ -84,22 +80,28 @@ type segment struct {
 
 	// acked indicates if the segment has already been SACKed.
 	acked bool
+
+	// dataMemSize is the memory used by data initially.
+	dataMemSize int
+
+	// lost indicates if the segment is marked as lost by RACK.
+	lost bool
 }
 
 func newIncomingSegment(id stack.TransportEndpointID, pkt *stack.PacketBuffer) *segment {
 	netHdr := pkt.Network()
 	s := &segment{
-		refCnt:         1,
-		id:             id,
-		srcAddr:        netHdr.SourceAddress(),
-		dstAddr:        netHdr.DestinationAddress(),
-		netProto:       pkt.NetworkProtocolNumber,
-		nicID:          pkt.NICID,
-		remoteLinkAddr: pkt.SourceLinkAddress(),
+		refCnt:   1,
+		id:       id,
+		srcAddr:  netHdr.SourceAddress(),
+		dstAddr:  netHdr.DestinationAddress(),
+		netProto: pkt.NetworkProtocolNumber,
+		nicID:    pkt.NICID,
 	}
-	s.data = pkt.Data.Clone(s.views[:])
+	s.data = pkt.Data().ExtractVV().Clone(s.views[:])
 	s.hdr = header.TCP(pkt.TransportHeader().View())
 	s.rcvdTime = time.Now()
+	s.dataMemSize = s.data.Size()
 	return s
 }
 
@@ -113,6 +115,7 @@ func newOutgoingSegment(id stack.TransportEndpointID, v buffer.View) *segment {
 		s.views[0] = v
 		s.data = buffer.NewVectorisedView(len(v), s.views[:1])
 	}
+	s.dataMemSize = s.data.Size()
 	return s
 }
 
@@ -126,25 +129,24 @@ func (s *segment) clone() *segment {
 		window:         s.window,
 		netProto:       s.netProto,
 		nicID:          s.nicID,
-		remoteLinkAddr: s.remoteLinkAddr,
-		viewToDeliver:  s.viewToDeliver,
 		rcvdTime:       s.rcvdTime,
 		xmitTime:       s.xmitTime,
 		xmitCount:      s.xmitCount,
 		ep:             s.ep,
 		qFlags:         s.qFlags,
+		dataMemSize:    s.dataMemSize,
 	}
 	t.data = s.data.Clone(t.views[:])
 	return t
 }
 
 // flagIsSet checks if at least one flag in flags is set in s.flags.
-func (s *segment) flagIsSet(flags uint8) bool {
+func (s *segment) flagIsSet(flags header.TCPFlags) bool {
 	return s.flags&flags != 0
 }
 
 // flagsAreSet checks if all flags in flags are set in s.flags.
-func (s *segment) flagsAreSet(flags uint8) bool {
+func (s *segment) flagsAreSet(flags header.TCPFlags) bool {
 	return s.flags&flags == flags
 }
 
@@ -204,7 +206,7 @@ func (s *segment) payloadSize() int {
 // segMemSize is the amount of memory used to hold the segment data and
 // the associated metadata.
 func (s *segment) segMemSize() int {
-	return SegSize + s.data.Size()
+	return SegSize + s.dataMemSize
 }
 
 // parse populates the sequence & ack numbers, flags, and window fields of the
@@ -234,20 +236,14 @@ func (s *segment) parse(skipChecksumValidation bool) bool {
 
 	s.options = []byte(s.hdr[header.TCPMinimumSize:])
 	s.parsedOptions = header.ParseTCPOptions(s.options)
-
-	verifyChecksum := true
 	if skipChecksumValidation {
 		s.csumValid = true
-		verifyChecksum = false
-	}
-	if verifyChecksum {
+	} else {
 		s.csum = s.hdr.Checksum()
-		xsum := header.PseudoHeaderChecksum(ProtocolNumber, s.srcAddr, s.dstAddr, uint16(s.data.Size()+len(s.hdr)))
-		xsum = s.hdr.CalculateChecksum(xsum)
-		xsum = header.ChecksumVV(s.data, xsum)
-		s.csumValid = xsum == 0xffff
+		payloadChecksum := header.ChecksumVV(s.data, 0)
+		payloadLength := uint16(s.data.Size())
+		s.csumValid = s.hdr.IsChecksumValid(s.srcAddr, s.dstAddr, payloadChecksum, payloadLength)
 	}
-
 	s.sequenceNumber = seqnum.Value(s.hdr.SequenceNumber())
 	s.ackNumber = seqnum.Value(s.hdr.AckNumber())
 	s.flags = s.hdr.Flags()
