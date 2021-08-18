@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -245,12 +244,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	if err := startHost(ctx, libMachineAPIClient, host); err != nil {
 		return nil, errors.Wrap(err, "Error starting machine")
-	}
-
-	if runtime.GOOS == "darwin" && client.useVSock() {
-		if err := makeDaemonVisibleToHyperkit(client.name); err != nil {
-			return nil, err
-		}
 	}
 
 	// Post-VM start
@@ -512,23 +505,6 @@ func (client *client) validateStartConfig(startConfig types.StartConfig) error {
 		return fmt.Errorf("Too little memory (%s) allocated to the virtual machine to start the monitoring stack, %s is the minimum",
 			units.BytesSize(float64(startConfig.Memory)*1024*1024),
 			units.BytesSize(minimumMemoryForMonitoring*1024*1024))
-	}
-	return nil
-}
-
-// makeDaemonVisibleToHyperkit crc daemon is launched in background and doesn't know where hyperkit is running.
-// In order to vsock to work with hyperkit, we need to put the unix socket in the hyperkit working directory with a
-// special name. The name is the hex representation of the cid and the vsock port.
-// This function adds the unix socket in the hyperkit directory.
-func makeDaemonVisibleToHyperkit(name string) error {
-	dst := filepath.Join(constants.MachineInstanceDir, name, "00000002.00000400")
-	if _, err := os.Stat(dst); err != nil {
-		if !os.IsNotExist(err) {
-			return errors.Wrap(err, "VSock listener error")
-		}
-		if err := os.Symlink(constants.TapSocketPath, dst); err != nil {
-			return errors.Wrap(err, "VSock listener error")
-		}
 	}
 	return nil
 }
