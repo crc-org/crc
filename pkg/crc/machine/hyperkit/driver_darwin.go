@@ -22,6 +22,8 @@ func CreateHost(machineConfig config.MachineConfig) *hyperkit.Driver {
 	hyperkitDriver.QcowToolPath = filepath.Join(constants.BinDir(), QcowToolCommand)
 
 	hyperkitDriver.VMNet = machineConfig.NetworkMode == network.SystemNetworkingMode
+	hyperkitDriver.VpnKitSock = constants.TapSocketPath
+	hyperkitDriver.VpnKitUUID = "c3d68012-0208-11ea-9fd7-f2189899ab08"
 
 	return hyperkitDriver
 }
