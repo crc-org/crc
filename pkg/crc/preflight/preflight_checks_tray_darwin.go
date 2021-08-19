@@ -24,7 +24,7 @@ func getTrayConfig() (*launchd.AgentConfig, error) {
 
 	trayConfig := launchd.AgentConfig{
 		Label:          trayAgentLabel,
-		ExecutablePath: constants.TrayExecutablePath,
+		ExecutablePath: constants.TrayExecutablePath(),
 		StdOutFilePath: stdOutFilePathTray,
 	}
 
