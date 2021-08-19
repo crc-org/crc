@@ -34,12 +34,12 @@ func main() {
 }
 
 func generateWxsFromTemplate(bundleName string, parts []string) error {
-	tmpl := template.New("product.wxs.in")
+	tmpl := template.New("product.wxs.template")
 	tmpl.Funcs(template.FuncMap{
 		"strjoin": strings.Join,
 		"inc":     func(val int) int { return val + 1 },
 	})
-	tmpl, err := tmpl.ParseFiles("packaging/windows/product.wxs.in")
+	tmpl, err := tmpl.ParseFiles("packaging/windows/product.wxs.template")
 	if err != nil {
 		return err
 	}
