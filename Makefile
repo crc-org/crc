@@ -304,15 +304,15 @@ $(GOPATH)/bin/gomod2rpmdeps:
 	     -e 's/__OPENSHIFT_VERSION__/'$(BUNDLE_VERSION)'/g' \
 	     $< >$@
 
-$(HOST_BUILD_DIR)/split: packaging/windows/split.go
-	go build -o $(HOST_BUILD_DIR)/split -ldflags="-X main.crcVersion=$(CRC_VERSION)" packaging/windows/split.go
+$(HOST_BUILD_DIR)/GenMsiWxs: packaging/windows/gen_msi_wxs.go
+	go build -o $@ -ldflags="-X main.crcVersion=$(CRC_VERSION)" $<
 
 CRC_EXE=crc.exe
 BUNDLE_NAME=crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
 
 .PHONY: msidir
 msidir: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
-msidir: clean $(HOST_BUILD_DIR)/crc-embedder $(HOST_BUILD_DIR)/split $(BUILD_DIR)/windows-amd64/crc.exe check_bundledir $(PACKAGE_DIR)/product.wxs.template
+msidir: clean $(HOST_BUILD_DIR)/crc-embedder $(HOST_BUILD_DIR)/GenMsiWxs $(BUILD_DIR)/windows-amd64/crc.exe check_bundledir $(PACKAGE_DIR)/product.wxs.template
 	mkdir -p $(PACKAGE_DIR)/msi
 	$(HOST_BUILD_DIR)/crc-embedder download $(PACKAGE_DIR)/msi 
 	cp $(HOST_BUILD_DIR)/crc.exe $(PACKAGE_DIR)/msi/$(CRC_EXE)
@@ -321,7 +321,7 @@ ifeq ($(MOCK_BUNDLE),true)
 	touch $(PACKAGE_DIR)/msi/$(BUNDLE_NAME)
 endif
 	cp $(HYPERV_BUNDLENAME) $(PACKAGE_DIR)/msi
-	$(HOST_BUILD_DIR)/split $(PACKAGE_DIR)/msi/$(BUNDLE_NAME)
+	$(HOST_BUILD_DIR)/GenMsiWxs $(PACKAGE_DIR)/msi/$(BUNDLE_NAME)
 	rm $(PACKAGE_DIR)/msi/$(BUNDLE_NAME)
 	cp -r $(PACKAGE_DIR)/Resources $(PACKAGE_DIR)/msi/
 	cp $(PACKAGE_DIR)/*.wxs $(PACKAGE_DIR)/msi
