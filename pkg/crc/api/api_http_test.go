@@ -17,14 +17,32 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHTTPApi(t *testing.T) {
+type testClient struct {
+	*apiClient.Client
+	config     crcConfig.Storage
+	httpServer *httptest.Server
+}
+
+func (client *testClient) Close() {
+	client.httpServer.Close()
+}
+
+func newTestClient() *testClient {
 	fakeMachine := fakemachine.NewClient()
 	config := setupNewInMemoryConfig()
 
 	ts := httptest.NewServer(NewMux(config, fakeMachine, &mockLogger{}, &mockTelemetry{}))
-	defer ts.Close()
 
-	client := apiClient.New(http.DefaultClient, ts.URL)
+	return &testClient{
+		apiClient.New(http.DefaultClient, ts.URL),
+		config,
+		ts,
+	}
+}
+
+func TestVersion(t *testing.T) {
+	client := newTestClient()
+	defer client.Close()
 	vr, err := client.Version()
 	assert.NoError(t, err)
 	assert.Equal(
@@ -37,7 +55,11 @@ func TestHTTPApi(t *testing.T) {
 		},
 		vr,
 	)
+}
 
+func TestStatus(t *testing.T) {
+	client := newTestClient()
+	defer client.Close()
 	statusResult, err := client.Status()
 	assert.NoError(t, err)
 	assert.Equal(
@@ -52,8 +74,12 @@ func TestHTTPApi(t *testing.T) {
 		},
 		statusResult,
 	)
+}
 
-	var startConfig = apiClient.StartConfig{}
+func TestStart(t *testing.T) {
+	client := newTestClient()
+	defer client.Close()
+	startConfig := apiClient.StartConfig{}
 	startResult, err := client.Start(startConfig)
 	assert.NoError(t, err)
 	assert.Equal(
@@ -74,7 +100,11 @@ func TestHTTPApi(t *testing.T) {
 		},
 		startResult,
 	)
+}
 
+func TestSetup(t *testing.T) {
+	client := newTestClient()
+	defer client.Close()
 	stopResult, err := client.Stop()
 	assert.NoError(t, err)
 	assert.Equal(
@@ -85,7 +115,11 @@ func TestHTTPApi(t *testing.T) {
 		},
 		stopResult,
 	)
+}
 
+func TestDelete(t *testing.T) {
+	client := newTestClient()
+	defer client.Close()
 	deleteResult, err := client.Delete()
 	assert.NoError(t, err)
 	assert.Equal(
@@ -96,7 +130,11 @@ func TestHTTPApi(t *testing.T) {
 		},
 		deleteResult,
 	)
+}
 
+func TestConfigGet(t *testing.T) {
+	client := newTestClient()
+	defer client.Close()
 	configGetResult, err := client.GetConfig([]string{"cpus"})
 	assert.NoError(t, err)
 	assert.Equal(
@@ -110,7 +148,11 @@ func TestHTTPApi(t *testing.T) {
 		},
 		configGetResult,
 	)
+}
 
+func TestConfigSet(t *testing.T) {
+	client := newTestClient()
+	defer client.Close()
 	configSetResult, err := client.SetConfig(apiClient.SetConfigRequest{
 		Properties: map[string]interface{}{
 			"cpus": float64(5),
@@ -141,7 +183,11 @@ func TestHTTPApi(t *testing.T) {
 		},
 		configGetAfterSetResult,
 	)
+}
 
+func TestConfigUnset(t *testing.T) {
+	client := newTestClient()
+	defer client.Close()
 	configUnsetResult, err := client.UnsetConfig([]string{"cpus"})
 	assert.NoError(t, err)
 	assert.Equal(
@@ -153,11 +199,15 @@ func TestHTTPApi(t *testing.T) {
 		},
 		configUnsetResult,
 	)
+}
 
+func TestConfigGetAll(t *testing.T) {
+	client := newTestClient()
+	defer client.Close()
 	allConfigGetResult, err := client.GetConfig(nil)
 	assert.NoError(t, err)
 	configs := make(map[string]interface{})
-	for k, v := range config.AllConfigs() {
+	for k, v := range client.config.AllConfigs() {
 		// This is required because of https://pkg.go.dev/encoding/json#Unmarshal
 		// Unmarshal stores float64 for JSON numbers in case of interface.
 		switch v := v.Value.(type) {
@@ -176,7 +226,11 @@ func TestHTTPApi(t *testing.T) {
 		},
 		allConfigGetResult,
 	)
+}
 
+func TestConfigGetMultiple(t *testing.T) {
+	client := newTestClient()
+	defer client.Close()
 	// Get result of making query for multiple property
 	configGetMultiplePropertyResult, err := client.GetConfig([]string{"cpus", "memory"})
 	assert.NoError(t, err)
@@ -192,7 +246,11 @@ func TestHTTPApi(t *testing.T) {
 		},
 		configGetMultiplePropertyResult,
 	)
+}
 
+func TestConfigGetEscaped(t *testing.T) {
+	client := newTestClient()
+	defer client.Close()
 	// Get result of special query for multiple properties
 	configGetSpecialPropertyResult, err := client.GetConfig([]string{"a&a", "b&&&b"})
 	assert.NoError(t, err)
