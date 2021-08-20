@@ -233,7 +233,7 @@ release: cross-lint embed_bundle gen_release_info
 	
 	@mv $(RELEASE_INFO) $(RELEASE_DIR)/$(RELEASE_INFO)
 	
-	pushd $(RELEASE_DIR) && sha256sum * > sha256sum.txt && popd
+	cd $(RELEASE_DIR) && sha256sum * > sha256sum.txt
 
 HYPERKIT_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
 HYPERV_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
