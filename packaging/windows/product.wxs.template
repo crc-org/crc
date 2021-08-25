@@ -51,7 +51,7 @@
                         <RemoveFile Id="RemoveInstallFiles" Name="*.*" On="uninstall" />
                     </Component>
                     <Component Id="AddUserToCrcUsers" Guid="0C793EE7-109A-474B-9651-77E0A83BAF2D" KeyPath="yes">
-                        <Condition>NOT UPGRADINGPRODUCTCODE</Condition>
+                        <Condition>NOT UPGRADINGPRODUCTCODE AND NOT WIX_UPGRADE_DETECTED</Condition>
                         <util:User Id="LogonUser1" Domain="[%USERDOMAIN]" Name="[LogonUser]" CreateUser="no" RemoveOnUninstall="no">
                             <util:GroupRef Id="CrcUsersGroup" />
                         </util:User>
@@ -105,11 +105,11 @@
         <InstallExecuteSequence>
             <Custom Action="JoinBundle" After="InstallFiles">NOT Installed AND NOT PATCH</Custom>
             <Custom Action="RemoveParts" After="JoinBundle">NOT Installed AND NOT PATCH</Custom>
-            <Custom Action="CreateCrcGroup" Before="ConfigureUsers"> NOT Installed AND NOT REMOVE~="ALL"</Custom>
-            <Custom Action="AddUserToHypervAdminGroup" After="InstallHyperv"> NOT Installed AND NOT REMOVE~="ALL"</Custom>
+            <Custom Action="CreateCrcGroup" Before="ConfigureUsers"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
+            <Custom Action="AddUserToHypervAdminGroup" After="InstallHyperv"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <Custom Action="RemoveCrcGroup" After="RemoveFolders"> Installed AND NOT PATCH AND REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE</Custom>
-            <Custom Action="InstallHyperv" After="RemoveParts"> NOT Installed AND NOT REMOVE~="ALL"</Custom>
-            <Custom Action="RemoveCrcGroupRollback" Before="CreateCrcGroup"> NOT Installed AND NOT REMOVE~="ALL"</Custom>
+            <Custom Action="InstallHyperv" After="RemoveParts"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
+            <Custom Action="RemoveCrcGroupRollback" Before="CreateCrcGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <ScheduleReboot After="InstallFinalize"> NOT Installed AND NOT REMOVE~="ALL"</ScheduleReboot>
         </InstallExecuteSequence>
         <Feature Id="DefaultFeature" Level="1">
