@@ -168,11 +168,11 @@ var testCases = []testCase{
 	// start
 	{
 		request:  post("start"),
-		response: jSon(`{"Success":true,"Status":"","Error":"","ClusterConfig":{"ClusterType":"openshift","ClusterCACert":"MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ","KubeConfig":"/tmp/kubeconfig","KubeAdminPass":"foobar","ClusterAPI":"https://foo.testing:6443","WebConsoleURL":"https://console.foo.testing:6443","ProxyConfig":null},"KubeletStarted":true}`),
+		response: jSon(`{"Status":"","ClusterConfig":{"ClusterType":"openshift","ClusterCACert":"MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ","KubeConfig":"/tmp/kubeconfig","KubeAdminPass":"foobar","ClusterAPI":"https://foo.testing:6443","WebConsoleURL":"https://console.foo.testing:6443","ProxyConfig":null},"KubeletStarted":true}`),
 	},
 	{
 		request:  get("start"),
-		response: jSon(`{"Success":true,"Status":"","Error":"","ClusterConfig":{"ClusterType":"openshift","ClusterCACert":"MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ","KubeConfig":"/tmp/kubeconfig","KubeAdminPass":"foobar","ClusterAPI":"https://foo.testing:6443","WebConsoleURL":"https://console.foo.testing:6443","ProxyConfig":null},"KubeletStarted":true}`),
+		response: jSon(`{"Status":"","ClusterConfig":{"ClusterType":"openshift","ClusterCACert":"MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ","KubeConfig":"/tmp/kubeconfig","KubeAdminPass":"foobar","ClusterAPI":"https://foo.testing:6443","WebConsoleURL":"https://console.foo.testing:6443","ProxyConfig":null},"KubeletStarted":true}`),
 	},
 
 	// start with failure
@@ -228,7 +228,7 @@ var testCases = []testCase{
 	// status
 	{
 		request:  get("status"),
-		response: jSon(`{"CrcStatus":"Running","OpenshiftStatus":"Running","OpenshiftVersion":"4.5.1","PodmanVersion":"3.3.1","DiskUse":10000000000,"DiskSize":20000000000,"Error":"","Success":true,"Preset":"openshift"}`),
+		response: jSon(`{"CrcStatus":"Running","OpenshiftStatus":"Running","OpenshiftVersion":"4.5.1","PodmanVersion":"3.3.1","DiskUse":10000000000,"DiskSize":20000000000,"Preset":"openshift"}`),
 	},
 
 	// status with failure
@@ -266,7 +266,7 @@ var testCases = []testCase{
 	// version
 	{
 		request:  get("version"),
-		response: jSon(fmt.Sprintf(`{"CrcVersion":"%s","CommitSha":"%s","OpenshiftVersion":"%s","Success":true}`, version.GetCRCVersion(), version.GetCommitSha(), version.GetBundleVersion())),
+		response: jSon(fmt.Sprintf(`{"CrcVersion":"%s","CommitSha":"%s","OpenshiftVersion":"%s"}`, version.GetCRCVersion(), version.GetCommitSha(), version.GetBundleVersion())),
 	},
 
 	// version never fails
@@ -274,7 +274,7 @@ var testCases = []testCase{
 	// webconsoleurl
 	{
 		request:  get("webconsoleurl"),
-		response: jSon(`{"ClusterConfig":{"ClusterType":"openshift","ClusterCACert":"MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ","KubeConfig":"/tmp/kubeconfig","KubeAdminPass":"foobar","ClusterAPI":"https://foo.testing:6443","WebConsoleURL":"https://console.foo.testing:6443","ProxyConfig":null},"Success":true,"Error":""}`),
+		response: jSon(`{"ClusterConfig":{"ClusterType":"openshift","ClusterCACert":"MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ","KubeConfig":"/tmp/kubeconfig","KubeAdminPass":"foobar","ClusterAPI":"https://foo.testing:6443","WebConsoleURL":"https://console.foo.testing:6443","ProxyConfig":null}}`),
 	},
 
 	// webconsoleurl with failure
@@ -288,7 +288,7 @@ var testCases = []testCase{
 	// config
 	{
 		request:  get("config?cpus"),
-		response: jSon(`{"Success":true,"Error":"","Configs":{"cpus":4}}`),
+		response: jSon(`{"Configs":{"cpus":4}}`),
 	},
 	{
 		request:  post("config?cpus").withBody("xx"),
@@ -300,13 +300,13 @@ var testCases = []testCase{
 	},
 	{
 		request:  get("config?cpus").withBody("xx"),
-		response: jSon(`{"Success":true,"Error":"","Configs":{"cpus":4}}`),
+		response: jSon(`{"Configs":{"cpus":4}}`),
 	},
 
 	// logs
 	{
 		request:  get("logs"),
-		response: jSon(`{"Success":true,"Messages":["message 1","message 2","message 3"]}`),
+		response: jSon(`{"Messages":["message 1","message 2","message 3"]}`),
 	},
 
 	// logs never fails
@@ -367,7 +367,7 @@ var testCases = []testCase{
 	// config
 	{
 		request:  get("config?cpus"),
-		response: jSon(`{"Success":true,"Error":"","Configs":{"cpus":4}}`),
+		response: jSon(`{"Configs":{"cpus":4}}`),
 	},
 }
 

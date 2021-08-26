@@ -29,9 +29,12 @@ type Telemetry interface {
 	UploadAction(action, source, status string) error
 }
 
+type loggerResult struct {
+	Messages []string
+}
+
 func (h *Handler) Logs(c *context) error {
 	return c.JSON(http.StatusOK, &loggerResult{
-		Success:  true,
 		Messages: h.Logger.Messages(),
 	})
 }
@@ -57,7 +60,6 @@ func (h *Handler) Status(c *context) error {
 		PodmanVersion:    res.PodmanVersion,
 		DiskUse:          res.DiskUse,
 		DiskSize:         res.DiskSize,
-		Success:          true,
 		Preset:           res.Preset,
 	})
 }
@@ -102,7 +104,6 @@ func (h *Handler) Start(c *context) error {
 		return err
 	}
 	return c.JSON(http.StatusOK, client.StartResult{
-		Success:        true,
 		Status:         string(res.Status),
 		ClusterConfig:  res.ClusterConfig,
 		KubeletStarted: res.KubeletStarted,
@@ -127,7 +128,6 @@ func (h *Handler) GetVersion(c *context) error {
 		CrcVersion:       version.GetCRCVersion(),
 		CommitSha:        version.GetCommitSha(),
 		OpenshiftVersion: version.GetBundleVersion(),
-		Success:          true,
 	})
 }
 
@@ -148,7 +148,6 @@ func (h *Handler) GetWebconsoleInfo(c *context) error {
 	}
 	return c.JSON(http.StatusOK, client.ConsoleResult{
 		ClusterConfig: res.ClusterConfig,
-		Success:       true,
 	})
 }
 
@@ -159,10 +158,7 @@ func (h *Handler) SetConfig(c *context) error {
 	}
 
 	if len(req.Properties) == 0 {
-		return c.JSON(http.StatusBadRequest, client.SetOrUnsetConfigResult{
-			Success: false,
-			Error:   "No config keys provided",
-		})
+		return c.JSON(http.StatusBadRequest, client.SetOrUnsetConfigResult{})
 	}
 
 	// successProps slice contains the properties that were successfully set
@@ -180,7 +176,6 @@ func (h *Handler) SetConfig(c *context) error {
 		return multiError
 	}
 	return c.JSON(http.StatusOK, client.SetOrUnsetConfigResult{
-		Success:    true,
 		Properties: successProps,
 	})
 }
@@ -192,10 +187,7 @@ func (h *Handler) UnsetConfig(c *context) error {
 	}
 
 	if len(req.Properties) == 0 {
-		return c.JSON(http.StatusBadRequest, client.SetOrUnsetConfigResult{
-			Success: false,
-			Error:   "No config keys provided",
-		})
+		return c.JSON(http.StatusBadRequest, client.SetOrUnsetConfigResult{})
 	}
 
 	// successProps slice contains the properties that were successfully unset
@@ -212,7 +204,6 @@ func (h *Handler) UnsetConfig(c *context) error {
 		return multiError
 	}
 	return c.JSON(http.StatusOK, client.SetOrUnsetConfigResult{
-		Success:    true,
 		Properties: successProps,
 	})
 }
@@ -232,7 +223,6 @@ func (h *Handler) GetConfig(c *context) error {
 			configs[k] = v.Value
 		}
 		return c.JSON(http.StatusOK, client.GetConfigResult{
-			Success: true,
 			Configs: configs,
 		})
 	}
@@ -250,7 +240,6 @@ func (h *Handler) GetConfig(c *context) error {
 		return c.String(http.StatusInternalServerError, "Unable to get configs")
 	}
 	return c.JSON(http.StatusOK, client.GetConfigResult{
-		Success: true,
 		Configs: configs,
 	})
 }
