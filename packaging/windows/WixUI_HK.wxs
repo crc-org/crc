@@ -28,13 +28,28 @@
                especially if they are not included explicitly in the publish chain below -->
          <DialogRef Id="LicenseAgreementDlg_HK"/>
 
+         <!-- Custom dialog to ask for removal of old version if an upgrade is detected -->
+         <Dialog Id="OldVersionDlg" Width="240" Height="95" Title="[ProductName] Setup" NoMinimize="yes">
+            <Control Id="Text" Type="Text" X="28" Y="15" Width="194" Height="50">
+               <Text>A previous version of CodeReady Containers is currently installed. By continuing the installation this version will be uninstalled. Do you want to continue?</Text>
+            </Control>
+            <Control Id="Exit" Type="PushButton" X="123" Y="67" Width="62" Height="17" Default="yes" Cancel="yes" Text="No, Exit">
+               <Publish Event="EndDialog" Value="Exit">1</Publish>
+            </Control>
+            <Control Id="Next" Type="PushButton" X="55" Y="67" Width="62" Height="17" Text="Yes, Uninstall">
+               <Publish Event="EndDialog" Value="Return">1</Publish>
+            </Control>
+         </Dialog>
+
          <Publish Dialog="BrowseDlg" Control="OK" Event="DoAction" Value="WixUIValidatePath" Order="3">1</Publish>
          <Publish Dialog="BrowseDlg" Control="OK" Event="SpawnDialog" Value="InvalidDirDlg" Order="4"><![CDATA[WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
 
          <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
 
-         <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg_HK">NOT Installed</Publish>
-         <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg">Installed AND PATCH</Publish>
+         <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="OldVersionDlg"><![CDATA[CRCINSTALLED << "#1"]]></Publish>
+         <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg_HK"><![CDATA[NOT (CRCINSTALLED << "#1")]]></Publish>
+
+         <Publish Dialog="OldVersionDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg_HK">1</Publish>
 
          <Publish Dialog="LicenseAgreementDlg_HK" Control="Back" Event="NewDialog" Value="WelcomeDlg">1</Publish>
          <Publish Dialog="LicenseAgreementDlg_HK" Control="Next" Event="NewDialog" Value="InstallDirDlg">LicenseAccepted = "1"</Publish>

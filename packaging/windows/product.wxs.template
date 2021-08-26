@@ -29,6 +29,10 @@
             <![CDATA[Installed OR (WINDOWSEDITION <> "Core")]]>
         </Condition>
 
+        <Property Id="CRCINSTALLED" Secure="yes">
+            <RegistrySearch Id="CrcInstalledReg" Root="HKCU" Key="Software\Red Hat\CodeReady Containers" Name="installed" Type="raw" />
+        </Property>
+
         <util:Group Id="CrcUsersGroup" Name="crc-users" />
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
