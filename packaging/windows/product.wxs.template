@@ -114,7 +114,7 @@
             <Custom Action="RemoveCrcGroup" After="RemoveFolders"> Installed AND NOT PATCH AND REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE</Custom>
             <Custom Action="InstallHyperv" After="RemoveParts"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <Custom Action="RemoveCrcGroupRollback" Before="CreateCrcGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
-            <ScheduleReboot After="InstallFinalize"> NOT Installed AND NOT REMOVE~="ALL"</ScheduleReboot>
+            <ScheduleReboot After="InstallFinalize"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</ScheduleReboot>
         </InstallExecuteSequence>
         <Feature Id="DefaultFeature" Level="1">
             {{range $index, $element := .Parts}}

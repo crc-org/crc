@@ -11,8 +11,7 @@
          <Property Id="WixUI_Mode" Value="InstallDir" />
          <Property Id="ARPNOMODIFY" Value="1" />
          <Property Id="ARPNOREPAIR" Value="1" />
-         <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="To finish installation of CodeReady Containers please restart you computer. After restart Open PowerShell or Command Prompt and run the command 'crc.exe setup' to setup your environment." />
-
+        
          <DialogRef Id="BrowseDlg" />
          <DialogRef Id="DiskCostDlg" />
          <DialogRef Id="ErrorDlg" />
@@ -74,5 +73,12 @@
       </UI>
 
       <UIRef Id="WixUI_Common" />
+
+      <CustomAction Id="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT" Property="WIXUI_EXITDIALOGOPTIONALTEXT" Value="To finish installation of  [ProductName] please restart your computer. After restart Open PowerShell or Command Prompt and run the command 'crc.exe setup' to setup your environment."/>
+      <CustomAction Id="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT_NOREBOOT" Property="WIXUI_EXITDIALOGOPTIONALTEXT" Value="Suceesfully installed [ProductName]. You can now start [ProductName] from the Start menu."/>
+      <InstallUISequence>
+         <Custom Action="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT" After="FindRelatedProducts"><![CDATA[NOT WIX_UPGRADE_DETECTED]]></Custom>
+         <Custom Action="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT_NOREBOOT" After="FindRelatedProducts"><![CDATA[WIX_UPGRADE_DETECTED]]></Custom>
+      </InstallUISequence>
    </Fragment>
 </Wix>
