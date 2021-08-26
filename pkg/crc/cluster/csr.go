@@ -8,6 +8,7 @@ import (
 	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/oc"
+	"github.com/pkg/errors"
 	k8scerts "k8s.io/api/certificates/v1beta1"
 )
 
@@ -28,12 +29,7 @@ func WaitForOpenshiftResource(ocConfig oc.Config, resource string) error {
 // approveNodeCSR approves the certificate for the node.
 func approveNodeCSR(ocConfig oc.Config, expectedSignerName string) error {
 	logging.Debug("Approving pending CSRs")
-	output, stderr, err := ocConfig.RunOcCommand("get", "csr", "-ojson")
-	if err != nil {
-		return fmt.Errorf("Failed to get all certificate signing requests: %v %s", err, stderr)
-	}
-	var csrs k8scerts.CertificateSigningRequestList
-	err = json.Unmarshal([]byte(output), &csrs)
+	csrs, err := getCSRList(ocConfig)
 	if err != nil {
 		return err
 	}
@@ -57,4 +53,36 @@ func approveNodeCSR(ocConfig oc.Config, expectedSignerName string) error {
 		}
 	}
 	return nil
+}
+
+func deleteCSR(ocConfig oc.Config, expectedSignerName string) error {
+	csrs, err := getCSRList(ocConfig)
+	if err != nil {
+		return err
+	}
+	for _, csr := range csrs.Items {
+		var signerName string
+		if csr.Spec.SignerName != nil {
+			signerName = *csr.Spec.SignerName
+		}
+		if expectedSignerName != signerName {
+			continue
+		}
+		logging.Debugf("Deleting csr %s (signerName: %s)", csr.ObjectMeta.Name, signerName)
+		_, stderr, err := ocConfig.RunOcCommand("adm", "certificate", "delete", csr.ObjectMeta.Name)
+		if err != nil {
+			return errors.Wrapf(err, stderr, "Not able to delete csr (%v : %s)")
+		}
+	}
+	return nil
+}
+
+func getCSRList(ocConfig oc.Config) (*k8scerts.CertificateSigningRequestList, error) {
+	var csrs k8scerts.CertificateSigningRequestList
+	output, stderr, err := ocConfig.RunOcCommand("get", "csr", "-ojson")
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get all certificate signing requests: %v %s", err, stderr)
+	}
+	err = json.Unmarshal([]byte(output), &csrs)
+	return &csrs, err
 }
