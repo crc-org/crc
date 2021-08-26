@@ -9,7 +9,6 @@ type VersionResult struct {
 	CrcVersion       string
 	CommitSha        string
 	OpenshiftVersion string
-	Success          bool
 }
 
 type Result struct {
@@ -18,9 +17,7 @@ type Result struct {
 }
 
 type StartResult struct {
-	Success        bool
 	Status         string
-	Error          string
 	ClusterConfig  types.ClusterConfig
 	KubeletStarted bool
 }
@@ -32,29 +29,21 @@ type ClusterStatusResult struct {
 	PodmanVersion    string
 	DiskUse          int64
 	DiskSize         int64
-	Error            string
-	Success          bool
 	Preset           preset.Preset
 }
 
 type ConsoleResult struct {
 	ClusterConfig types.ClusterConfig
-	Success       bool
-	Error         string
 }
 
 // setOrUnsetConfigResult struct is used to return the result of
 // setconfig/unsetconfig command
 type SetOrUnsetConfigResult struct {
-	Success    bool
-	Error      string
 	Properties []string
 }
 
 // getConfigResult struct is used to return the result of getconfig command
 type GetConfigResult struct {
-	Success bool
-	Error   string
 	Configs map[string]interface{}
 }
 

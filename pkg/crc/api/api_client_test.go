@@ -52,7 +52,6 @@ func TestVersion(t *testing.T) {
 			CrcVersion:       version.GetCRCVersion(),
 			OpenshiftVersion: version.GetBundleVersion(),
 			CommitSha:        version.GetCommitSha(),
-			Success:          true,
 		},
 		vr,
 	)
@@ -72,7 +71,6 @@ func TestStatus(t *testing.T) {
 			PodmanVersion:    "3.3.1",
 			DiskUse:          int64(10000000000),
 			DiskSize:         int64(20000000000),
-			Success:          true,
 			Preset:           preset.OpenShift,
 		},
 		statusResult,
@@ -89,9 +87,7 @@ func TestStart(t *testing.T) {
 		t,
 		apiClient.StartResult{
 			Status:         "",
-			Error:          "",
 			KubeletStarted: true,
-			Success:        true,
 			ClusterConfig: types.ClusterConfig{
 				ClusterType:   "openshift",
 				ClusterCACert: "MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ",
@@ -144,8 +140,6 @@ func TestConfigGet(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.GetConfigResult{
-			Success: true,
-			Error:   "",
 			Configs: map[string]interface{}{
 				"cpus": float64(4),
 			},
@@ -166,8 +160,6 @@ func TestConfigSet(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.SetOrUnsetConfigResult{
-			Success:    true,
-			Error:      "",
 			Properties: []string{"cpus"},
 		},
 		configSetResult,
@@ -179,8 +171,6 @@ func TestConfigSet(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.GetConfigResult{
-			Success: true,
-			Error:   "",
 			Configs: map[string]interface{}{
 				"cpus": float64(5),
 			},
@@ -197,8 +187,6 @@ func TestConfigUnset(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.SetOrUnsetConfigResult{
-			Success:    true,
-			Error:      "",
 			Properties: []string{"cpus"},
 		},
 		configUnsetResult,
@@ -224,8 +212,6 @@ func TestConfigGetAll(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.GetConfigResult{
-			Success: true,
-			Error:   "",
 			Configs: configs,
 		},
 		allConfigGetResult,
@@ -241,8 +227,6 @@ func TestConfigGetMultiple(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.GetConfigResult{
-			Success: true,
-			Error:   "",
 			Configs: map[string]interface{}{
 				"cpus":   float64(4),
 				"memory": float64(9216),
@@ -261,8 +245,6 @@ func TestConfigGetEscaped(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.GetConfigResult{
-			Success: true,
-			Error:   "",
 			Configs: map[string]interface{}{
 				"a&a":   "foo",
 				"b&&&b": "bar",
