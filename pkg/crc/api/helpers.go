@@ -40,6 +40,11 @@ func (c *context) String(code int, r string) error {
 	return err
 }
 
+func (c *context) Code(code int) error {
+	c.code = code
+	return nil
+}
+
 type server struct {
 	routes     map[string]map[string]func(*context) error
 	routesLock sync.RWMutex
