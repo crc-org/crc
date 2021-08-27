@@ -26,27 +26,6 @@ func WaitForOpenshiftResource(ocConfig oc.Config, resource string) error {
 	return crcerrors.RetryAfter(80*time.Second, waitForAPIServer, time.Second)
 }
 
-// approveNodeCSR approves the certificate for the node.
-func approveNodeCSR(ocConfig oc.Config, expectedSignerName string) error {
-	logging.Debug("Approving pending CSRs")
-	csrs, err := getCSRList(ocConfig, expectedSignerName)
-	if err != nil {
-		return err
-	}
-	for _, csr := range csrs.Items {
-		/* When the CSR hasn't been approved, csr.status is empty in the json data */
-		if len(csr.Status.Conditions) != 0 {
-			continue
-		}
-		logging.Debugf("Approving csr %s (signerName: %s)", csr.ObjectMeta.Name, expectedSignerName)
-		_, stderr, err := ocConfig.RunOcCommand("adm", "certificate", "approve", csr.ObjectMeta.Name)
-		if err != nil {
-			return fmt.Errorf("Not able to approve csr (%v : %s)", err, stderr)
-		}
-	}
-	return nil
-}
-
 func deleteCSR(ocConfig oc.Config, expectedSignerName string) error {
 	csrs, err := getCSRList(ocConfig, expectedSignerName)
 	if err != nil {
