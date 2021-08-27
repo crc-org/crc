@@ -69,9 +69,7 @@ func (h *Handler) Stop(c *context) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, client.Result{
-		Success: true,
-	})
+	return c.Code(http.StatusOK)
 }
 
 func (h *Handler) PowerOff(c *context) error {
@@ -81,9 +79,7 @@ func (h *Handler) PowerOff(c *context) error {
 	if err := h.Client.PowerOff(); err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, client.Result{
-		Success: true,
-	})
+	return c.Code(http.StatusOK)
 }
 
 func (h *Handler) Start(c *context) error {
@@ -136,9 +132,7 @@ func (h *Handler) Delete(c *context) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, client.Result{
-		Success: true,
-	})
+	return c.Code(http.StatusOK)
 }
 
 func (h *Handler) GetWebconsoleInfo(c *context) error {
@@ -252,7 +246,5 @@ func (h *Handler) UploadTelemetry(c *context) error {
 	if err := h.Telemetry.UploadAction(req.Action, req.Source, req.Status); err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, client.Result{
-		Success: true,
-	})
+	return c.Code(http.StatusOK)
 }

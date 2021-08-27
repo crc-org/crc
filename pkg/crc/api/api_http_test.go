@@ -147,7 +147,6 @@ func empty() response {
 		statusCode: 200,
 		protoMajor: 1,
 		protoMinor: 1,
-		body:       `{"Success":true,"Error":""}`,
 	}
 }
 

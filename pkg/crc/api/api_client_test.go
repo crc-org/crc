@@ -105,31 +105,15 @@ func TestStart(t *testing.T) {
 func TestSetup(t *testing.T) {
 	client := newTestClient()
 	defer client.Close()
-	stopResult, err := client.Stop()
+	err := client.Stop()
 	assert.NoError(t, err)
-	assert.Equal(
-		t,
-		apiClient.Result{
-			Success: true,
-			Error:   "",
-		},
-		stopResult,
-	)
 }
 
 func TestDelete(t *testing.T) {
 	client := newTestClient()
 	defer client.Close()
-	deleteResult, err := client.Delete()
+	err := client.Delete()
 	assert.NoError(t, err)
-	assert.Equal(
-		t,
-		apiClient.Result{
-			Success: true,
-			Error:   "",
-		},
-		deleteResult,
-	)
 }
 
 func TestConfigGet(t *testing.T) {
