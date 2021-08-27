@@ -3,7 +3,6 @@ package client
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -70,30 +69,14 @@ func (c *Client) Start(config StartConfig) (StartResult, error) {
 	return sr, nil
 }
 
-func (c *Client) Stop() (Result, error) {
-	var sr = Result{}
-	body, err := c.sendGetRequest("/stop")
-	if err != nil {
-		return sr, err
-	}
-	err = json.Unmarshal(body, &sr)
-	if err != nil {
-		return sr, err
-	}
-	return sr, nil
+func (c *Client) Stop() error {
+	_, err := c.sendGetRequest("/stop")
+	return err
 }
 
-func (c *Client) Delete() (Result, error) {
-	var dr = Result{}
-	body, err := c.sendGetRequest("/delete")
-	if err != nil {
-		return dr, err
-	}
-	err = json.Unmarshal(body, &dr)
-	if err != nil {
-		return dr, err
-	}
-	return dr, nil
+func (c *Client) Delete() error {
+	_, err := c.sendGetRequest("/delete")
+	return err
 }
 
 func (c *Client) WebconsoleURL() (ConsoleResult, error) {
@@ -180,19 +163,9 @@ func (c *Client) Telemetry(action string) error {
 		return fmt.Errorf("Failed to encode data to JSON: %w", err)
 	}
 
-	body, err := c.sendPostRequest("/telemetry", bytes.NewReader(data))
-	if err != nil {
-		return err
-	}
+	_, err = c.sendPostRequest("/telemetry", bytes.NewReader(data))
 
-	var res Result
-	if err = json.Unmarshal(body, &res); err != nil {
-		return err
-	}
-	if res.Error != "" {
-		return errors.New(res.Error)
-	}
-	return nil
+	return err
 }
 
 func (c *Client) IsPullSecretDefined() (bool, error) {

@@ -11,11 +11,6 @@ type VersionResult struct {
 	OpenshiftVersion string
 }
 
-type Result struct {
-	Success bool
-	Error   string
-}
-
 type StartResult struct {
 	Status         string
 	ClusterConfig  types.ClusterConfig
