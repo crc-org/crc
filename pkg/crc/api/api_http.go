@@ -56,15 +56,15 @@ func setPullSecret() func(c *context) error {
 		if err := cluster.StoreInKeyring(string(c.requestBody)); err != nil {
 			return err
 		}
-		return c.String(http.StatusCreated, "")
+		return c.Code(http.StatusCreated)
 	}
 }
 
 func getPullSecret(config crcConfig.Storage) func(c *context) error {
 	return func(c *context) error {
 		if _, err := cluster.NewNonInteractivePullSecretLoader(config, "").Value(); err == nil {
-			return c.String(http.StatusOK, "")
+			return c.Code(http.StatusOK)
 		}
-		return c.String(http.StatusNotFound, "")
+		return c.Code(http.StatusNotFound)
 	}
 }
