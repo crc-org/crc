@@ -25,6 +25,11 @@ func waitForPendingCSRs(ocConfig oc.Config, signerName string) error {
 }
 
 func ApproveCSRAndWaitForCertsRenewal(sshRunner *ssh.Runner, ocConfig oc.Config, client, server bool) error {
+	const (
+		kubeletClientSignerName = "kubernetes.io/kube-apiserver-client-kubelet"
+		authClientSignerName    = "kubernetes.io/kube-apiserver-client"
+	)
+
 	// First, kubelet starts and tries to connect to API server. If its certificate is expired, it asks for a new one
 	// Admin needs to approve it. The Kubernetes controller manager will then issue the cert, kubelet will fetch it and use it.
 	// Kubelet stores the cert in /var/lib/kubelet/pki/kubelet-client-current.pem
