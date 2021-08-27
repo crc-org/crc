@@ -30,9 +30,6 @@ const (
 	KubeletServerCert = "/var/lib/kubelet/pki/kubelet-server-current.pem"
 	KubeletClientCert = "/var/lib/kubelet/pki/kubelet-client-current.pem"
 
-	kubeletClientSignerName = "kubernetes.io/kube-apiserver-client-kubelet"
-	authClientSignerName    = "kubernetes.io/kube-apiserver-client"
-
 	AggregatorClientCert = "/etc/kubernetes/static-pod-resources/kube-apiserver-certs/configmaps/aggregator-client-ca/ca-bundle.crt"
 )
 
