@@ -117,7 +117,7 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			cleanup:            removeDaemonSystemdService,
 			flags:              SetupOnly,
 
-			labels: labels{Os: Linux},
+			labels: labels{Os: Linux, SystemdUser: Supported},
 		},
 		{
 			configKeySuffix:    "check-daemon-systemd-sockets",
@@ -128,7 +128,7 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			cleanupDescription: "Removing crc daemon systemd socket units",
 			cleanup:            removeDaemonSystemdSockets,
 
-			labels: labels{Os: Linux},
+			labels: labels{Os: Linux, SystemdUser: Supported},
 		},
 	}
 	return checks
@@ -285,6 +285,7 @@ func removeVsockCrcSettings() error {
 const (
 	Distro LabelName = iota + lastLabelName
 	DNS
+	SystemdUser
 )
 
 const (
@@ -295,6 +296,10 @@ const (
 	// dns
 	Dnsmasq
 	SystemdResolved
+
+	// systemd user session
+	Supported
+	Unsupported
 )
 
 func (filter preflightFilter) SetSystemdResolved(usingSystemdResolved bool) {
@@ -313,6 +318,15 @@ func (filter preflightFilter) SetDistro(distro *linux.OsRelease) {
 	}
 }
 
+func (filter preflightFilter) SetSystemdUser(distro *linux.OsRelease) {
+	switch {
+	case distroIsLike(distro, linux.RHEL) && distro.VersionID == "7":
+		filter[SystemdUser] = Unsupported
+	default:
+		filter[SystemdUser] = Supported
+	}
+}
+
 // We want all preflight checks
 // - matching the current distro
 // - matching the networking daemon in use (NetworkManager or systemd-resolved) regardless of user/system networking
@@ -322,6 +336,7 @@ func getAllPreflightChecks() []Check {
 	filter := newFilter()
 	filter.SetSystemdResolved(usingSystemdResolved == nil)
 	filter.SetDistro(distro())
+	filter.SetSystemdUser(distro())
 
 	return filter.Apply(getChecks(distro()))
 }
@@ -335,6 +350,7 @@ func getPreflightChecks(_ bool, _ bool, networkMode network.Mode) []Check {
 func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode, usingSystemdResolved bool) []Check {
 	filter := newFilter()
 	filter.SetDistro(distro)
+	filter.SetSystemdUser(distro)
 	filter.SetNetworkMode(networkMode)
 	filter.SetSystemdResolved(usingSystemdResolved)
 
