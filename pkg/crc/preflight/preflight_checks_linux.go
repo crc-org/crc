@@ -421,6 +421,12 @@ func removeDaemonSystemdService() error {
 	return nil
 }
 
+func warnNoDaemonAutostart() error {
+	// only purpose of this check is to trigger a warning for RHEL7/CentOS7 users
+	logging.Warnf("systemd --user is not available, crc daemon won't be autostarted and must be run manually before using CodeReady Containers")
+	return nil
+}
+
 func checkLibvirtServiceRunning() error {
 	logging.Debug("Checking if libvirtd service is running")
 	sd := systemd.NewHostSystemdCommander()
