@@ -130,6 +130,12 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 
 			labels: labels{Os: Linux, SystemdUser: Supported},
 		},
+		{
+			checkDescription: "Checking if crc daemon will be autostarted",
+			check:            warnNoDaemonAutostart,
+
+			labels: labels{Os: Linux, NetworkMode: User, SystemdUser: Unsupported},
+		},
 	}
 	return checks
 }
