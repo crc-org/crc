@@ -26,7 +26,7 @@
             <RegistrySearch Id="WindowsEditionReg" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="EditionID" Type="raw" />
         </Property>
         <Condition Message="CodeReady Containers cannot run on Windows Home edition">
-            <![CDATA[Installed OR (WINDOWSEDITION <> "Home")]]>
+            <![CDATA[Installed OR (WINDOWSEDITION <> "Core")]]>
         </Condition>
 
         <util:Group Id="CrcUsersGroup" Name="crc-users" />

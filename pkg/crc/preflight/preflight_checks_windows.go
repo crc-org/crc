@@ -52,7 +52,7 @@ func checkWindowsEdition() error {
 	windowsEdition := strings.TrimSpace(stdOut)
 	logging.Debugf("Running on Windows %s edition", windowsEdition)
 
-	if strings.HasPrefix(windowsEdition, "Home") {
+	if strings.ToLower(windowsEdition) == "core" {
 		return fmt.Errorf("Windows Home edition is not supported")
 	}
 
