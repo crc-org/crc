@@ -1,6 +1,8 @@
 package machine
 
 import (
+	"os"
+
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/pkg/errors"
 )
@@ -23,7 +25,9 @@ func (client *client) Delete() error {
 	}
 
 	if err := cleanKubeconfig(getGlobalKubeConfigPath(), getGlobalKubeConfigPath()); err != nil {
-		logging.Warn(err)
+		if !errors.Is(err, os.ErrNotExist) {
+			logging.Warnf("Failed to remove crc contexts from kubeconfig: %v", err)
+		}
 	}
 	return nil
 }
