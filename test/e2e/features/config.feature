@@ -41,7 +41,7 @@ Feature: Test configuration settings
 
     @linux @darwin @windows
     Scenario: CRC config checks (bundle version)
-        Given execute crc setup command succeeds
+        Given executing crc setup command succeeds
         When setting config property "bundle" to value "current bundle" succeeds
         And "JSON" config file "crc.json" in CRC home folder contains key "bundle" with value matching "current bundle"
         And setting config property "bundle" to value "/path/to/nonexistent/bundle/crc_hypervisor_version.tar.xz" fails
@@ -112,7 +112,7 @@ Feature: Test configuration settings
     @linux
     Scenario: Check network setup and destroy it, then check again
         When removing file "crc.json" from CRC home folder succeeds
-        And execute crc setup command succeeds
+        And executing crc setup command succeeds
         And executing "sudo virsh net-list --name" succeeds
         Then stdout contains "crc"
         When executing "sudo virsh net-undefine crc && sudo virsh net-destroy crc" succeeds
@@ -123,7 +123,7 @@ Feature: Test configuration settings
     Scenario: Running `crc setup` with checks enabled restores destroyed network
         When executing "crc config set skip-check-crc-network false" succeeds
         And executing "crc config set skip-check-crc-network-active false" succeeds
-        Then execute crc setup command succeeds
+        Then executing crc setup command succeeds
         And executing "sudo virsh net-list --name" succeeds
         And stdout contains "crc"
 
@@ -144,6 +144,6 @@ Feature: Test configuration settings
     Scenario: Clean-up
         # Remove the config file
         When removing file "crc.json" from CRC home folder succeeds
-        And execute crc setup command succeeds
+        And executing crc setup command succeeds
         Then stderr should not contain "Skipping above check"
-       
+

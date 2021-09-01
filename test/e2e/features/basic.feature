@@ -6,12 +6,12 @@ Feature: Basic test
 
     @darwin @linux @windows
     Scenario: CRC version
-        When execute crc version command
+        When executing crc version command
         Then stdout should contain "version:"
 
     @darwin @linux @windows
     Scenario: CRC help
-        When execute crc help command succeeds
+        When executing crc help command succeeds
         Then stdout should contain "Usage:"
         And stdout should contain "Available Commands:"
         And stdout should contain "help"
@@ -29,7 +29,7 @@ Feature: Basic test
 
     @darwin @linux @windows
     Scenario: CRC status
-        When execute crc status command fails
+        When executing crc status command fails
         Then stderr should contain
             """
             Machine does not exist. Use 'crc start' to create it
@@ -38,8 +38,8 @@ Feature: Basic test
     @linux
     Scenario: CRC setup on Linux
         When executing "crc setup --check-only" fails
-        Then execute crc start command fails
-        And execute crc setup command succeeds
+        Then executing crc start command fails
+        And executing crc setup command succeeds
         And stderr should contain "Checking if CRC bundle is extracted in '$HOME/.crc'"
         And stderr should contain "Checking if running as non-root"
         And stderr should contain "Checking if Virtualization is enabled"
@@ -68,7 +68,7 @@ Feature: Basic test
     @darwin
     Scenario: CRC setup on Mac
         When executing "crc setup --check-only" fails
-        And execute crc setup command succeeds
+        And executing crc setup command succeeds
         And stderr should contain "Checking if running as non-root"
         And stderr should contain "Checking if HyperKit is installed"
         And stderr should contain "Checking if crc-driver-hyperkit is installed"
@@ -79,7 +79,7 @@ Feature: Basic test
 
     @windows
     Scenario: CRC setup on Windows
-        When execute crc setup command succeeds
+        When executing crc setup command succeeds
         Then stderr should contain "Extracting bundle from the CRC executable" if bundle is embedded
         Then stderr should contain "Checking Windows 10 release"
         Then stderr should contain "Checking if Hyper-V is installed"
@@ -109,7 +109,7 @@ Feature: Basic test
 
     @darwin @linux @windows
     Scenario: CRC IP check
-        When execute crc ip command succeeds
+        When executing crc ip command succeeds
         Then stdout should match "\d+\.\d+\.\d+\.\d+"
 
     @darwin @linux @windows
@@ -163,7 +163,7 @@ Feature: Basic test
 
     @darwin @linux @windows
     Scenario: CRC console check
-        When execute crc console command
+        When executing crc console command
         Then stderr should contain "The OpenShift cluster is not running, cannot open the OpenShift Web Console"
 
     @darwin @linux @windows
@@ -178,7 +178,7 @@ Feature: Basic test
 
     @darwin
     Scenario Outline: CRC clean-up
-        When execute crc cleanup command succeeds
+        When executing crc cleanup command succeeds
         Then stderr should contain "Removing /etc/resolver/testing file"
         And stderr should contain "Unload CodeReady Containers daemon"
         And stderr should contain "Removing pull secret from the keyring"
@@ -187,7 +187,7 @@ Feature: Basic test
 
     @linux
     Scenario Outline: CRC clean-up
-        When execute crc cleanup command succeeds
+        When executing crc cleanup command succeeds
         Then stderr should contain "Removing the crc VM if exists"
         And stderr should contain "Removing 'crc' network from libvirt"
         And stderr should contain "Using root access: Executing systemctl daemon-reload command"
@@ -199,7 +199,7 @@ Feature: Basic test
 
     @windows
     Scenario Outline: CRC clean-up
-        When execute crc cleanup command succeeds
+        When executing crc cleanup command succeeds
         Then stderr should contain "Uninstalling tray if installed"
         Then stderr should contain "Uninstalling daemon if installed"
         And stderr should contain "Removing the crc VM if exists"
