@@ -41,5 +41,5 @@ Feature: Local image to image-registry
         And executing "oc delete project testproj-img" succeeds
         And executing "crc delete -f" succeeds
         Then stdout should contain "Deleted the OpenShift cluster"
-        When execute crc cleanup command succeeds
+        When executing crc cleanup command succeeds
         Then stdout should contain "Cleanup finished"

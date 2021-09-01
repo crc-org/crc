@@ -93,8 +93,12 @@ func envVariable(key, value string) string {
 }
 
 func (c Command) validate() error {
-	if _, ok := commands[c.command]; !ok {
-		return fmt.Errorf("%s is not a supported command", c.command)
+	cmdline := strings.Fields(c.command)
+	if len(cmdline) < 1 {
+		return fmt.Errorf("empty command? %s", c.command)
+	}
+	if _, ok := commands[cmdline[0]]; !ok {
+		return fmt.Errorf("%s is not a supported command", cmdline[0])
 	}
 	return nil
 }

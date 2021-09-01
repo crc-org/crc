@@ -52,10 +52,10 @@ Feature: Operator from marketplace
         Then stdout should match "^pod(.*)deleted$"
         # after a while 1 pods should be up & running again
         And with up to "10" retries with wait period of "30s" command "oc get pods" output matches "redis-standalone-[a-z0-9]* .*Running.*"
-        
+
     @darwin @linux @windows
     Scenario: Clean up
         When executing "crc delete -f" succeeds
         Then stdout should contain "Deleted the OpenShift cluster"
-        When execute crc cleanup command succeeds
+        When executing crc cleanup command succeeds
         Then stdout should contain "Cleanup finished"

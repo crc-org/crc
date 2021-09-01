@@ -63,9 +63,9 @@ func FeatureContext(s *godog.Suite) {
 		CheckCRCStatus)
 	s.Step(`^(stdout|stderr) (?:should contain|contains) "(.*)" if bundle (is|is not) embedded$`,
 		CommandReturnShouldContainIfBundleEmbeddedOrNot)
-	s.Step(`^execute crc (.*) command$`,
+	s.Step(`^execut(?:e|ing) crc (.*) command$`,
 		ExecuteCommand)
-	s.Step(`^execute crc (.*) command (.*)$`,
+	s.Step(`^execut(?:e|ing) crc (.*) command (.*)$`,
 		ExecuteCommandWithExpectedExitStatus)
 
 	// CRC file operations
