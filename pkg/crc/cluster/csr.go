@@ -79,7 +79,10 @@ func deleteCSR(ocConfig oc.Config, expectedSignerName string) error {
 
 func getCSRList(ocConfig oc.Config) (*k8scerts.CertificateSigningRequestList, error) {
 	var csrs k8scerts.CertificateSigningRequestList
-	output, stderr, err := ocConfig.RunOcCommand("get", "csr", "-ojson")
+	if err := WaitForOpenshiftResource(ocConfig, "csr"); err != nil {
+		return nil, err
+	}
+	output, stderr, err := ocConfig.WithFailFast().RunOcCommand("get", "csr", "-ojson")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get all certificate signing requests: %v %s", err, stderr)
 	}
