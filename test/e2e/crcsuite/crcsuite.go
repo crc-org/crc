@@ -368,7 +368,7 @@ func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(
 	if !bundleEmbedded {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
-	crcStart := crcCmd.CRC("start").WithDisableUpdateCheck().WithdisableNTP().ToString()
+	crcStart := crcCmd.CRC("start").WithDisableUpdateCheck().WithDisableNTP().ToString()
 	cmd = fmt.Sprintf("%s -p '%s' %s --log-level debug", crcStart, pullSecretFile, extraBundleArgs)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
