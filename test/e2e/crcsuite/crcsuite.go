@@ -353,7 +353,7 @@ func StartCRCWithDefaultBundleSucceedsOrFails(expected string) error {
 	if !bundleEmbedded {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
-	crcStart := crcCmd.CRC("start").WithDisableUpdateCheck().ToString()
+	crcStart := crcCmd.CRC("start").ToString()
 	cmd = fmt.Sprintf("%s -p '%s' %s --log-level debug", crcStart, pullSecretFile, extraBundleArgs)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
@@ -368,7 +368,7 @@ func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(
 	if !bundleEmbedded {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
-	crcStart := crcCmd.CRC("start").WithDisableUpdateCheck().WithDisableNTP().ToString()
+	crcStart := crcCmd.CRC("start").WithDisableNTP().ToString()
 	cmd = fmt.Sprintf("%s -p '%s' %s --log-level debug", crcStart, pullSecretFile, extraBundleArgs)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
@@ -376,7 +376,7 @@ func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(
 }
 
 func StartCRCWithCustomBundleSucceedsOrFails(expected string) error {
-	crcStart := crcCmd.CRC("start").WithDisableUpdateCheck().ToString()
+	crcStart := crcCmd.CRC("start").ToString()
 	cmd := fmt.Sprintf("%s -p '%s' -b *.crcbundle --log-level debug", crcStart, pullSecretFile)
 	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
@@ -388,7 +388,7 @@ func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, ex
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
 
-	crcStart := crcCmd.CRC("start").WithDisableUpdateCheck().ToString()
+	crcStart := crcCmd.CRC("start").ToString()
 	cmd := fmt.Sprintf("%s -n %s -p '%s' %s --log-level debug", crcStart, nameserver, pullSecretFile, extraBundleArgs)
 	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
@@ -419,9 +419,9 @@ func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expe
 }
 
 func ExecuteCommand(command string) error {
-	return crcCmd.CRC(command).WithDisableUpdateCheck().Execute()
+	return crcCmd.CRC(command).Execute()
 }
 
 func ExecuteCommandWithExpectedExitStatus(command string, expectedExitStatus string) error {
-	return crcCmd.CRC(command).WithDisableUpdateCheck().ExecuteWithExpectedExit(expectedExitStatus)
+	return crcCmd.CRC(command).ExecuteWithExpectedExit(expectedExitStatus)
 }
