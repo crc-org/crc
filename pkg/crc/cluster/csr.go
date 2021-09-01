@@ -33,7 +33,7 @@ func deleteCSR(ocConfig oc.Config, expectedSignerName string) error {
 	}
 	for _, csr := range csrs.Items {
 		logging.Debugf("Deleting csr %s (signerName: %s)", csr.ObjectMeta.Name, expectedSignerName)
-		_, stderr, err := ocConfig.RunOcCommand("adm", "certificate", "delete", csr.ObjectMeta.Name)
+		_, stderr, err := ocConfig.RunOcCommand("delete", "csr", csr.ObjectMeta.Name)
 		if err != nil {
 			return errors.Wrapf(err, stderr, "Not able to delete csr (%v : %s)")
 		}
