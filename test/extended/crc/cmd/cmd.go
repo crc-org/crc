@@ -37,17 +37,17 @@ var (
 )
 
 type Command struct {
-	command            string
-	disableUpdateCheck bool
-	disableNTP         bool
+	command     string
+	updateCheck bool
+	disableNTP  bool
 }
 
 func CRC(command string) Command {
 	return Command{command: command}
 }
 
-func (c Command) WithDisableUpdateCheck() Command {
-	c.disableUpdateCheck = true
+func (c Command) WithUpdateCheck() Command {
+	c.updateCheck = true
 	return c
 }
 
@@ -80,7 +80,7 @@ func (c Command) Execute() error {
 
 func (c Command) env() []string {
 	var env []string
-	if c.disableUpdateCheck {
+	if !c.updateCheck {
 		env = append(env, envVariable("CRC_DISABLE_UPDATE_CHECK", "true"))
 	}
 	if c.disableNTP {

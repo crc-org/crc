@@ -11,12 +11,12 @@ func TestCommand(t *testing.T) {
 		command: "setup",
 	}.ToString())
 	assert.Equal(t, "CRC_DEBUG_ENABLE_STOP_NTP=true crc start -b bundle", Command{
-		command:    "start -b bundle",
-		disableNTP: true,
+		command:     "start -b bundle",
+		disableNTP:  true,
+		updateCheck: true,
 	}.ToString())
 	assert.Equal(t, "CRC_DISABLE_UPDATE_CHECK=true CRC_DEBUG_ENABLE_STOP_NTP=true crc start -b bundle", Command{
-		command:            "start -b bundle",
-		disableNTP:         true,
-		disableUpdateCheck: true,
+		command:    "start -b bundle",
+		disableNTP: true,
 	}.ToString())
 }
