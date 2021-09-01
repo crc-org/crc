@@ -51,7 +51,7 @@ func (c Command) WithDisableUpdateCheck() Command {
 	return c
 }
 
-func (c Command) WithdisableNTP() Command {
+func (c Command) WithDisableNTP() Command {
 	c.disableNTP = true
 	return c
 }
