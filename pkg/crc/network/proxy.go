@@ -10,7 +10,7 @@ import (
 
 var (
 	DefaultProxy     ProxyConfig
-	defaultNoProxies = []string{"127.0.0.1", "localhost"}
+	defaultNoProxies = []string{"127.0.0.1", "localhost", ".testing"}
 )
 
 // ProxyConfig keeps the proxy configuration for the current environment
