@@ -19,7 +19,7 @@ Feature: Certificate rotation test
         And executing "eval $(crc oc-env)" succeeds
         When checking that CRC is running
         Then login to the oc cluster succeeds
-        Then execute "oc whoami" succeeds
+        Then executing "oc whoami" succeeds
         And stdout should contain "kubeadmin"
 
     Scenario: Set clock back to the original time
