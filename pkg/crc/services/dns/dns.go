@@ -52,11 +52,6 @@ func setupDnsmasq(serviceConfig services.ServicePostStartConfig) error {
 	// Remove the dnsmasq container if it exists during the VM stop cycle
 	_, _, _ = serviceConfig.SSHRunner.Run("sudo podman rm -f dnsmasq")
 
-	// Remove the CNI network definition forcefully
-	// https://github.com/containers/libpod/issues/2767
-	// TODO: We need to revisit it once podman update the CNI plugins.
-	_, _, _ = serviceConfig.SSHRunner.Run(fmt.Sprintf("sudo rm -f /var/lib/cni/networks/podman/%s", dnsContainerIP))
-
 	// Start the dnsmasq container
 	dnsServerRunCmd := fmt.Sprintf("sudo podman run  --ip %s --name dnsmasq -v %s:/etc/dnsmasq.conf -p 53:%d/udp --privileged -d %s",
 		dnsContainerIP, dnsConfigFilePathInInstance, dnsServicePort, dnsContainerImage)
