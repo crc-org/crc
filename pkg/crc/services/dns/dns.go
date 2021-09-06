@@ -10,14 +10,15 @@ import (
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/services"
+	"github.com/code-ready/crc/pkg/crc/systemd"
+	"github.com/code-ready/crc/pkg/crc/systemd/states"
 )
 
 const (
-	dnsServicePort              = 53
-	dnsConfigFilePathInInstance = "/var/srv/dnsmasq.conf"
-	dnsContainerIP              = "10.88.0.8"
-	dnsContainerImage           = "quay.io/crcont/dnsmasq:latest"
-	publicDNSQueryURI           = "quay.io"
+	dnsServicePort    = 53
+	dnsContainerIP    = "10.88.0.8"
+	publicDNSQueryURI = "quay.io"
+	crcDnsmasqService = "crc-dnsmasq.service"
 )
 
 func init() {
@@ -48,17 +49,13 @@ func setupDnsmasq(serviceConfig services.ServicePostStartConfig) error {
 	if err := createDnsmasqDNSConfig(serviceConfig); err != nil {
 		return err
 	}
-
-	// Remove the dnsmasq container if it exists during the VM stop cycle
-	_, _, _ = serviceConfig.SSHRunner.Run("sudo podman rm -f dnsmasq")
-
-	// Start the dnsmasq container
-	dnsServerRunCmd := fmt.Sprintf("sudo podman run  --ip %s --name dnsmasq -v %s:/etc/dnsmasq.conf -p 53:%d/udp --privileged -d %s",
-		dnsContainerIP, dnsConfigFilePathInInstance, dnsServicePort, dnsContainerImage)
-	if _, _, err := serviceConfig.SSHRunner.Run(dnsServerRunCmd); err != nil {
-		return err
+	sd := systemd.NewInstanceSystemdCommander(serviceConfig.SSHRunner)
+	if state, err := sd.Status(crcDnsmasqService); err != nil || state != states.Running {
+		if err := sd.Enable(crcDnsmasqService); err != nil {
+			return err
+		}
 	}
-	return nil
+	return sd.Start(crcDnsmasqService)
 }
 
 func getResolvFileValues(serviceConfig services.ServicePostStartConfig) (network.ResolvFileValues, error) {
