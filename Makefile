@@ -160,7 +160,13 @@ build_e2e: $(SOURCES)
 	GOOS=windows go test ./test/e2e/ -c -o $(BUILD_DIR)/windows-amd64/e2e.test.exe
 	GOOS=darwin  go test ./test/e2e/ -c -o $(BUILD_DIR)/macos-amd64/e2e.test
 
-#  Build the container image
+.PHONY: build_integration
+build_integration: $(SOURCES)
+	GOOS=linux   go test ./test/integration/ -c -o $(BUILD_DIR)/linux-amd64/integration.test
+	GOOS=windows go test --ldflags="-X $(REPOPATH)/pkg/crc/version.installerBuild=true" ./test/integration/ -c -o $(BUILD_DIR)/windows-amd64/integration.test.exe
+	GOOS=darwin  go test --ldflags="-X $(REPOPATH)/pkg/crc/version.installerBuild=true" ./test/integration/ -c -o $(BUILD_DIR)/macos-amd64/integration.test
+
+#  Build the container image for e2e
 .PHONY: containerized_e2e
 containerized_e2e:
 ifndef CRC_E2E_IMG_VERSION
@@ -169,6 +175,16 @@ endif
 IMG = quay.io/crcont/crc-e2e:$(CRC_E2E_IMG_VERSION)
 containerized_e2e: clean
 	$(CONTAINER_RUNTIME) build -t $(IMG) -f images/build-e2e/Dockerfile .
+
+#  Build the container image for integration
+.PHONY: containerized_integration
+containerized_integration:
+ifndef CRC_INTEGRATION_IMG_VERSION
+CRC_INTEGRATION_IMG_VERSION=v$(CRC_VERSION)-$(COMMIT_SHA)
+endif
+IMG = quay.io/crcont/crc-integration:$(CRC_INTEGRATION_IMG_VERSION)
+containerized_integration: clean
+	$(CONTAINER_RUNTIME) build -t $(IMG) -f images/build-integration/Dockerfile .
 
 .PHONY: integration ## Run integration tests in Ginkgo
 integration:
