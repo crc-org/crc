@@ -34,10 +34,9 @@ func (c *context) JSON(code int, r interface{}) error {
 
 func (c *context) String(code int, r string) error {
 	c.code = code
-	var err error
 	c.responseBody = []byte(r)
 	c.headers["Content-Type"] = "text/plain; charset=UTF-8"
-	return err
+	return nil
 }
 
 func (c *context) Code(code int) error {
