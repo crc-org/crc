@@ -19,17 +19,21 @@ const (
 
 var (
 	commands = map[string]struct{}{
-		"help":    {},
-		"version": {},
-		"setup":   {},
-		"start":   {},
-		"stop":    {},
-		"delete":  {},
-		"status":  {},
-		"config":  {},
-		"ip":      {},
-		"console": {},
-		"cleanup": {}}
+		"bundle":     {},
+		"cleanup":    {},
+		"config":     {},
+		"console":    {},
+		"delete":     {},
+		"help":       {},
+		"ip":         {},
+		"oc-env":     {},
+		"podman-env": {},
+		"setup":      {},
+		"start":      {},
+		"status":     {},
+		"stop":       {},
+		"version":    {},
+	}
 )
 
 type Command struct {
