@@ -91,7 +91,12 @@ func InstallPath() string {
 		logging.Errorf("Failed to find the installation path: %v", err)
 		return ""
 	}
-	return filepath.Dir(currentExecutablePath)
+	src, err := filepath.EvalSymlinks(currentExecutablePath)
+	if err != nil {
+		logging.Errorf("Failed to find the symlink destination of %s: %v", currentExecutablePath, err)
+		return filepath.Dir(currentExecutablePath)
+	}
+	return filepath.Dir(src)
 }
 
 func GetCRCLatestVersionFromMirror(transport http.RoundTripper) (*CrcReleaseInfo, error) {
