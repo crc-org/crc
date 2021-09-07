@@ -7,9 +7,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
+	"os"
 	"strings"
 	"testing"
 
+	crcConfig "github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/stretchr/testify/assert"
@@ -19,17 +22,37 @@ import (
 type mockServer struct {
 	*server
 	client *fakemachine.Client
+	config crcConfig.Storage
 }
 
-func newMockServer() *mockServer {
+func createDummyPullSecret(t *testing.T) string {
+	f, err := ioutil.TempFile("", "kubeconfig")
+	assert.NoError(t, err)
+	_, err = f.WriteString(constants.OkdPullSecret)
+	assert.NoError(t, err)
+	err = f.Close()
+	assert.NoError(t, err)
+
+	return f.Name()
+}
+
+func removePullSecret(t *testing.T, server *mockServer) {
+	_, err := server.config.Unset(crcConfig.PullSecretFile)
+	assert.NoError(t, err)
+}
+
+func newMockServer(pullSecretPath string) *mockServer {
 	fakeMachine := fakemachine.NewClient()
+
 	config := setupNewInMemoryConfig()
+	_, _ = config.Set(crcConfig.PullSecretFile, pullSecretPath)
 
 	handler := NewHandler(config, fakeMachine, &mockLogger{}, &mockTelemetry{})
 
 	return &mockServer{
 		server: newServerWithRoutes(handler),
 		client: fakeMachine,
+		config: config,
 	}
 }
 
@@ -74,6 +97,7 @@ type response struct {
 }
 
 type testCase struct {
+	preTestFunc func(t *testing.T, server *mockServer)
 	request     request
 	failRequest bool
 	response    response
@@ -313,7 +337,7 @@ var testCases = []testCase{
 	{
 		request: get("pull-secret"),
 		// other 404 return "not found", and others "404 not found"
-		response: httpError(404),
+		response: empty().withBody(""),
 	},
 	{
 		request:  post("pull-secret"),
@@ -322,6 +346,7 @@ var testCases = []testCase{
 
 	// pull-secret with failure
 	{
+		preTestFunc: removePullSecret,
 		request:     get("pull-secret"),
 		failRequest: true,
 		// other 404 return "not found", and others "404 not found"
@@ -347,11 +372,16 @@ var testCases = []testCase{
 }
 
 func TestRequests(t *testing.T) {
-	server := newMockServer()
+	pullSecretPath := createDummyPullSecret(t)
+	defer os.Remove(pullSecretPath)
+	server := newMockServer(pullSecretPath)
 	handler := server.Handler()
 
 	for _, testCase := range testCases {
 		server.client.Failing = testCase.failRequest
+		if testCase.preTestFunc != nil {
+			testCase.preTestFunc(t, server)
+		}
 		resp := sendRequest(handler, &testCase.request)
 
 		require.Equal(t, testCase.response.statusCode, resp.StatusCode, testCase.request)
@@ -377,7 +407,7 @@ func TestRoutes(t *testing.T) {
 		routes[pattern] = append(routes[pattern], testCase.request.httpMethod)
 	}
 
-	server := newMockServer()
+	server := newMockServer("")
 	for pattern, methodMap := range server.routes {
 		assert.Contains(t, routes, pattern)
 		for method := range methodMap {
