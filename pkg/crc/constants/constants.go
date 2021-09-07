@@ -102,10 +102,7 @@ var (
 
 func defaultBundlePath() string {
 	if version.IsInstaller() {
-		path := filepath.Join(version.InstallPath(), GetDefaultBundle())
-		if _, err := os.Stat(path); err == nil {
-			return path
-		}
+		return filepath.Join(version.InstallPath(), GetDefaultBundle())
 	}
 	return filepath.Join(MachineCacheDir, GetDefaultBundle())
 }
