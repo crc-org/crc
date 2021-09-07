@@ -371,26 +371,116 @@ var testCases = []testCase{
 	},
 }
 
+var invalidHTTPMethods = []testCase{
+	// start
+	{
+		request:  delete("start"),
+		response: httpError(404).withBody("Not Found\n"),
+	},
+
+	// stop
+	{
+		request:  delete("stop"),
+		response: httpError(404).withBody("Not Found\n"),
+	},
+
+	// poweroff
+	{
+		request:  get("poweroff"),
+		response: httpError(404).withBody("Not Found\n"),
+	},
+	{
+		request:  delete("poweroff"),
+		response: httpError(404).withBody("Not Found\n"),
+	},
+
+	// status
+	{
+		request:  post("status"),
+		response: httpError(404).withBody("Not Found\n"),
+	},
+	{
+		request:  delete("status"),
+		response: httpError(404).withBody("Not Found\n"),
+	},
+
+	// delete
+	{
+		request:  post("delete"),
+		response: httpError(404).withBody("Not Found\n"),
+	},
+
+	// version
+	{
+		request:  post("version"),
+		response: httpError(404).withBody("Not Found\n"),
+	},
+	{
+		request:  delete("version"),
+		response: httpError(404).withBody("Not Found\n"),
+	},
+
+	// webconsoleurl
+	{
+		request:  post("webconsoleurl"),
+		response: httpError(404).withBody("Not Found\n"),
+	},
+	{
+		request:  delete("webconsoleurl"),
+		response: httpError(404).withBody("Not Found\n"),
+	},
+
+	// logs
+	{
+		request:  post("logs"),
+		response: httpError(404).withBody("Not Found\n"),
+	},
+	{
+		request:  delete("logs"),
+		response: httpError(404).withBody("Not Found\n"),
+	},
+
+	// telemetry
+	{
+		request:  delete("telemetry"),
+		response: httpError(404).withBody("Not Found\n"),
+	},
+
+	// pull-secret
+	{
+		request: delete("pull-secret"),
+		// other 404 return "not found", and others "404 not found"
+		response: httpError(404).withBody("Not Found\n"),
+	},
+}
+
+func testOne(t *testing.T, testCase *testCase, server *mockServer) {
+	server.client.Failing = testCase.failRequest
+	if testCase.preTestFunc != nil {
+		testCase.preTestFunc(t, server)
+	}
+	resp := sendRequest(server.Handler(), &testCase.request)
+
+	require.Equal(t, testCase.response.statusCode, resp.StatusCode, testCase.request)
+	require.Equal(t, testCase.response.protoMajor, resp.ProtoMajor, testCase.request)
+	require.Equal(t, testCase.response.protoMinor, resp.ProtoMinor, testCase.request)
+	body, err := ioutil.ReadAll(resp.Body)
+	require.NoError(t, err, testCase.request)
+	require.Equal(t, testCase.response.body, string(body), testCase.request)
+	fmt.Println("-----")
+}
+
 func TestRequests(t *testing.T) {
 	pullSecretPath := createDummyPullSecret(t)
 	defer os.Remove(pullSecretPath)
 	server := newMockServer(pullSecretPath)
-	handler := server.Handler()
 
-	for _, testCase := range testCases {
-		server.client.Failing = testCase.failRequest
-		if testCase.preTestFunc != nil {
-			testCase.preTestFunc(t, server)
-		}
-		resp := sendRequest(handler, &testCase.request)
+	for i := range testCases {
+		testOne(t, &testCases[i], server)
+	}
 
-		require.Equal(t, testCase.response.statusCode, resp.StatusCode, testCase.request)
-		require.Equal(t, testCase.response.protoMajor, resp.ProtoMajor, testCase.request)
-		require.Equal(t, testCase.response.protoMinor, resp.ProtoMinor, testCase.request)
-		body, err := ioutil.ReadAll(resp.Body)
-		require.NoError(t, err, testCase.request)
-		require.Equal(t, testCase.response.body, string(body), testCase.request)
-		fmt.Println("-----")
+	for i := range invalidHTTPMethods {
+		testOne(t, &testCases[i], server)
 	}
 }
 
