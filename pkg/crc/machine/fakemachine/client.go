@@ -69,6 +69,9 @@ func (c *Client) PowerOff() error {
 }
 
 func (c *Client) GenerateBundle(forceStop bool) error {
+	if c.Failing {
+		return errors.New("bundle generation failed")
+	}
 	return nil
 }
 
