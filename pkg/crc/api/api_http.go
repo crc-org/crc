@@ -11,6 +11,12 @@ import (
 func NewMux(config crcConfig.Storage, machine machine.Client, logger Logger, telemetry Telemetry) http.Handler {
 	handler := NewHandler(config, machine, logger, telemetry)
 
+	server := newServerWithRoutes(handler)
+
+	return server.Handler()
+}
+
+func newServerWithRoutes(handler *Handler) *server {
 	server := newServer()
 
 	server.POST("/start", handler.Start)
@@ -20,6 +26,7 @@ func NewMux(config crcConfig.Storage, machine machine.Client, logger Logger, tel
 	server.GET("/stop", handler.Stop)
 
 	server.POST("/poweroff", handler.PowerOff)
+
 	server.GET("/status", handler.Status)
 
 	server.DELETE("/delete", handler.Delete)
@@ -38,10 +45,10 @@ func NewMux(config crcConfig.Storage, machine machine.Client, logger Logger, tel
 	server.GET("/telemetry", handler.UploadTelemetry)
 	server.POST("/telemetry", handler.UploadTelemetry)
 
-	server.GET("/pull-secret", getPullSecret(config))
+	server.GET("/pull-secret", getPullSecret(handler.Config))
 	server.POST("/pull-secret", setPullSecret())
 
-	return server.Handler()
+	return server
 }
 
 func setPullSecret() func(c *context) error {
