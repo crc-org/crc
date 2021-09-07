@@ -2,6 +2,7 @@ package dns
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -137,7 +138,7 @@ func waitForNetwork() error {
 		}
 		return nil
 	}
-	if err := crcerrors.RetryAfter(15*time.Second, retriableConnectivityCheck, time.Second); err != nil {
+	if err := crcerrors.Retry(context.Background(), 15*time.Second, retriableConnectivityCheck, time.Second); err != nil {
 		return fmt.Errorf("Host is not connected to internet")
 	}
 

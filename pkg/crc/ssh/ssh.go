@@ -105,5 +105,5 @@ func (runner *Runner) WaitForConnectivity(ctx context.Context, timeout time.Dura
 		return nil
 	}
 
-	return errors.RetryAfterWithContext(ctx, timeout, checkSSHConnectivity, time.Second)
+	return errors.Retry(ctx, timeout, checkSSHConnectivity, time.Second)
 }

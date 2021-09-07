@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -95,7 +96,7 @@ func dnsServers(serviceConfig services.ServicePostStartConfig) ([]network.NameSe
 	return append([]network.NameServer{{IPAddress: dnsContainerIP}}, orgResolvValues.NameServers...), nil
 }
 
-func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (string, error) {
+func CheckCRCLocalDNSReachable(ctx context.Context, serviceConfig services.ServicePostStartConfig) (string, error) {
 	appsURI := fmt.Sprintf("foo.%s", serviceConfig.BundleMetadata.ClusterInfo.AppsDomain)
 	// Try 30 times for 1 second interval, In nested environment most of time crc failed to get
 	// Internal dns query resolved for some time.
@@ -109,7 +110,7 @@ func CheckCRCLocalDNSReachable(serviceConfig services.ServicePostStartConfig) (s
 		return nil
 	}
 
-	if err := errors.RetryAfter(30*time.Second, checkLocalDNSReach, time.Second); err != nil {
+	if err := errors.Retry(ctx, 30*time.Second, checkLocalDNSReach, time.Second); err != nil {
 		return queryOutput, err
 	}
 	return queryOutput, err

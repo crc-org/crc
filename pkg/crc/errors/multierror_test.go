@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -9,9 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRetryAfter(t *testing.T) {
+func TestRetryAfterWithContext(t *testing.T) {
 	calls := 0
-	ret := RetryAfter(time.Second, func() error {
+	ret := Retry(context.Background(), time.Second, func() error {
 		calls++
 		return nil
 	}, 0)
@@ -21,7 +22,7 @@ func TestRetryAfter(t *testing.T) {
 
 func TestRetryAfterFailure(t *testing.T) {
 	calls := 0
-	ret := RetryAfter(time.Second, func() error {
+	ret := Retry(context.Background(), time.Second, func() error {
 		calls++
 		return errors.New("failed")
 	}, 0)
@@ -31,7 +32,7 @@ func TestRetryAfterFailure(t *testing.T) {
 
 func TestRetryAfterSlowFailure(t *testing.T) {
 	calls := 0
-	ret := RetryAfter(time.Millisecond, func() error {
+	ret := Retry(context.Background(), time.Millisecond, func() error {
 		time.Sleep(50 * time.Millisecond)
 		calls++
 		if calls < 2 {
@@ -45,7 +46,7 @@ func TestRetryAfterSlowFailure(t *testing.T) {
 
 func TestRetryAfterMaxAttempts(t *testing.T) {
 	calls := 0
-	ret := RetryAfter(10*time.Millisecond, func() error {
+	ret := Retry(context.Background(), 10*time.Millisecond, func() error {
 		calls++
 		return &RetriableError{Err: errors.New("failed")}
 	}, 0)
@@ -55,7 +56,7 @@ func TestRetryAfterMaxAttempts(t *testing.T) {
 
 func TestRetryAfterSuccessAfterFailures(t *testing.T) {
 	calls := 0
-	ret := RetryAfter(time.Second, func() error {
+	ret := Retry(context.Background(), time.Second, func() error {
 		calls++
 		if calls < 3 {
 			return &RetriableError{Err: errors.New("failed")}

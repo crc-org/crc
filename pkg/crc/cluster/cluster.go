@@ -82,13 +82,13 @@ func GetRootPartitionUsage(sshRunner *ssh.Runner) (int64, int64, error) {
 	return diskSize, diskUsage, nil
 }
 
-func EnsureSSHKeyPresentInTheCluster(ocConfig oc.Config, sshPublicKeyPath string) error {
+func EnsureSSHKeyPresentInTheCluster(ctx context.Context, ocConfig oc.Config, sshPublicKeyPath string) error {
 	sshPublicKeyByte, err := ioutil.ReadFile(sshPublicKeyPath)
 	if err != nil {
 		return err
 	}
 	sshPublicKey := strings.TrimRight(string(sshPublicKeyByte), "\r\n")
-	if err := WaitForOpenshiftResource(ocConfig, "machineconfigs"); err != nil {
+	if err := WaitForOpenshiftResource(ctx, ocConfig, "machineconfigs"); err != nil {
 		return err
 	}
 	stdout, stderr, err := ocConfig.RunOcCommand("get", "machineconfigs", "99-master-ssh", "-o", `jsonpath='{.spec.config.passwd.users[0].sshAuthorizedKeys[0]}'`)
@@ -109,8 +109,8 @@ func EnsureSSHKeyPresentInTheCluster(ocConfig oc.Config, sshPublicKeyPath string
 	return nil
 }
 
-func EnsurePullSecretPresentInTheCluster(ocConfig oc.Config, pullSec PullSecretLoader) error {
-	if err := WaitForOpenshiftResource(ocConfig, "secret"); err != nil {
+func EnsurePullSecretPresentInTheCluster(ctx context.Context, ocConfig oc.Config, pullSec PullSecretLoader) error {
+	if err := WaitForOpenshiftResource(ctx, ocConfig, "secret"); err != nil {
 		return err
 	}
 
@@ -143,9 +143,9 @@ func EnsurePullSecretPresentInTheCluster(ocConfig oc.Config, pullSec PullSecretL
 	return nil
 }
 
-func EnsureGeneratedClientCAPresentInTheCluster(ocConfig oc.Config, sshRunner *ssh.Runner, selfSignedCACert *x509.Certificate, adminCert string) error {
+func EnsureGeneratedClientCAPresentInTheCluster(ctx context.Context, ocConfig oc.Config, sshRunner *ssh.Runner, selfSignedCACert *x509.Certificate, adminCert string) error {
 	selfSignedCAPem := crctls.CertToPem(selfSignedCACert)
-	if err := WaitForOpenshiftResource(ocConfig, "configmaps"); err != nil {
+	if err := WaitForOpenshiftResource(ctx, ocConfig, "configmaps"); err != nil {
 		return err
 	}
 	clusterClientCA, stderr, err := ocConfig.RunOcCommand("get", "configmaps", "admin-kubeconfig-client-ca", "-n", "openshift-config", "-o", `jsonpath="{.data.ca-bundle\.crt}"`)
@@ -176,7 +176,7 @@ func EnsureGeneratedClientCAPresentInTheCluster(ocConfig oc.Config, sshRunner *s
 	return nil
 }
 
-func RemovePullSecretFromCluster(ocConfig oc.Config, sshRunner *ssh.Runner) error {
+func RemovePullSecretFromCluster(ctx context.Context, ocConfig oc.Config, sshRunner *ssh.Runner) error {
 	logging.Info("Removing user's pull secret from instance disk and from cluster secret...")
 	cmdArgs := []string{"patch", "secret", "pull-secret", "-p",
 		`'{"data":{".dockerconfigjson":"e30K"}}'`,
@@ -186,10 +186,10 @@ func RemovePullSecretFromCluster(ocConfig oc.Config, sshRunner *ssh.Runner) erro
 	if err != nil {
 		return fmt.Errorf("Failed to remove Pull secret %w: %s", err, stderr)
 	}
-	return waitForPullSecretRemovedFromInstanceDisk(sshRunner)
+	return waitForPullSecretRemovedFromInstanceDisk(ctx, sshRunner)
 }
 
-func waitForPullSecretRemovedFromInstanceDisk(sshRunner *ssh.Runner) error {
+func waitForPullSecretRemovedFromInstanceDisk(ctx context.Context, sshRunner *ssh.Runner) error {
 	logging.Info("Waiting for user's pull secret removed from instance disk...")
 	pullSecretPresentFunc := func() error {
 		stdout, stderr, err := sshRunner.RunPrivate(fmt.Sprintf("sudo cat %s", vmPullSecretPath))
@@ -201,7 +201,7 @@ func waitForPullSecretRemovedFromInstanceDisk(sshRunner *ssh.Runner) error {
 		}
 		return nil
 	}
-	return errors.RetryAfter(1*time.Minute, pullSecretPresentFunc, 2*time.Second)
+	return errors.Retry(ctx, 1*time.Minute, pullSecretPresentFunc, 2*time.Second)
 }
 
 func RemoveOldRenderedMachineConfig(ocConfig oc.Config) error {
@@ -249,8 +249,8 @@ func RemoveOldRenderedMachineConfig(ocConfig oc.Config) error {
 	return nil
 }
 
-func EnsureClusterIDIsNotEmpty(ocConfig oc.Config) error {
-	if err := WaitForOpenshiftResource(ocConfig, "clusterversion"); err != nil {
+func EnsureClusterIDIsNotEmpty(ctx context.Context, ocConfig oc.Config) error {
+	if err := WaitForOpenshiftResource(ctx, ocConfig, "clusterversion"); err != nil {
 		return err
 	}
 
@@ -275,7 +275,7 @@ func EnsureClusterIDIsNotEmpty(ocConfig oc.Config) error {
 	return nil
 }
 
-func AddProxyConfigToCluster(sshRunner *ssh.Runner, ocConfig oc.Config, proxy *network.ProxyConfig) error {
+func AddProxyConfigToCluster(ctx context.Context, sshRunner *ssh.Runner, ocConfig oc.Config, proxy *network.ProxyConfig) error {
 	type trustedCA struct {
 		Name string `json:"name"`
 	}
@@ -299,7 +299,7 @@ func AddProxyConfigToCluster(sshRunner *ssh.Runner, ocConfig oc.Config, proxy *n
 		},
 	}
 
-	if err := WaitForOpenshiftResource(ocConfig, "proxy"); err != nil {
+	if err := WaitForOpenshiftResource(ctx, ocConfig, "proxy"); err != nil {
 		return err
 	}
 
@@ -419,7 +419,7 @@ func EnsurePullSecretPresentOnInstanceDisk(sshRunner *ssh.Runner, pullSecret Pul
 	return sshRunner.CopyData([]byte(content), vmPullSecretPath, 0600)
 }
 
-func WaitForPullSecretPresentOnInstanceDisk(sshRunner *ssh.Runner) error {
+func WaitForPullSecretPresentOnInstanceDisk(ctx context.Context, sshRunner *ssh.Runner) error {
 	logging.Info("Waiting for user's pull secret part of instance disk...")
 	pullSecretPresentFunc := func() error {
 		stdout, stderr, err := sshRunner.RunPrivate(fmt.Sprintf("sudo cat %s", vmPullSecretPath))
@@ -431,10 +431,10 @@ func WaitForPullSecretPresentOnInstanceDisk(sshRunner *ssh.Runner) error {
 		}
 		return nil
 	}
-	return errors.RetryAfter(7*time.Minute, pullSecretPresentFunc, 2*time.Second)
+	return errors.Retry(ctx, 7*time.Minute, pullSecretPresentFunc, 2*time.Second)
 }
 
-func WaitForRequestHeaderClientCaFile(sshRunner *ssh.Runner) error {
+func WaitForRequestHeaderClientCaFile(ctx context.Context, sshRunner *ssh.Runner) error {
 	lookupRequestHeaderClientCa := func() error {
 		expired, err := checkCertValidity(sshRunner, AggregatorClientCert)
 		if err != nil {
@@ -445,7 +445,7 @@ func WaitForRequestHeaderClientCaFile(sshRunner *ssh.Runner) error {
 		}
 		return nil
 	}
-	return errors.RetryAfter(8*time.Minute, lookupRequestHeaderClientCa, 2*time.Second)
+	return errors.Retry(ctx, 8*time.Minute, lookupRequestHeaderClientCa, 2*time.Second)
 }
 
 func WaitForAPIServer(ctx context.Context, ocConfig oc.Config) error {
@@ -459,11 +459,11 @@ func WaitForAPIServer(ctx context.Context, ocConfig oc.Config) error {
 		logging.Debug(stdout)
 		return nil
 	}
-	return errors.RetryAfterWithContext(ctx, 4*time.Minute, waitForAPIServer, time.Second)
+	return errors.Retry(ctx, 4*time.Minute, waitForAPIServer, time.Second)
 }
 
-func DeleteOpenshiftAPIServerPods(ocConfig oc.Config) error {
-	if err := WaitForOpenshiftResource(ocConfig, "pod"); err != nil {
+func DeleteOpenshiftAPIServerPods(ctx context.Context, ocConfig oc.Config) error {
+	if err := WaitForOpenshiftResource(ctx, ocConfig, "pod"); err != nil {
 		return err
 	}
 
@@ -476,7 +476,7 @@ func DeleteOpenshiftAPIServerPods(ocConfig oc.Config) error {
 		return nil
 	}
 
-	return errors.RetryAfter(60*time.Second, deleteOpenshiftAPIServerPods, time.Second)
+	return errors.Retry(ctx, 60*time.Second, deleteOpenshiftAPIServerPods, time.Second)
 }
 
 func CheckProxySettingsForOperator(ocConfig oc.Config, proxy *network.ProxyConfig, deployment, namespace string) (bool, error) {
@@ -495,8 +495,8 @@ func CheckProxySettingsForOperator(ocConfig oc.Config, proxy *network.ProxyConfi
 	return false, nil
 }
 
-func DeleteMCOLeaderLease(ocConfig oc.Config) error {
-	if err := WaitForOpenshiftResource(ocConfig, "cm"); err != nil {
+func DeleteMCOLeaderLease(ctx context.Context, ocConfig oc.Config) error {
+	if err := WaitForOpenshiftResource(ctx, ocConfig, "cm"); err != nil {
 		return err
 	}
 	_, _, err := ocConfig.RunOcCommand("delete", "-n", "openshift-machine-config-operator", "cm", "machine-config-controller")

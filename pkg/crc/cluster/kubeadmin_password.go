@@ -3,6 +3,7 @@ package cluster
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -28,7 +29,7 @@ func GenerateKubeAdminUserPassword() error {
 }
 
 // UpdateKubeAdminUserPassword updates the htpasswd secret
-func UpdateKubeAdminUserPassword(ocConfig oc.Config, newPassword string) error {
+func UpdateKubeAdminUserPassword(ctx context.Context, ocConfig oc.Config, newPassword string) error {
 	if newPassword != "" {
 		logging.Infof("Overriding password for kubeadmin user")
 		if err := ioutil.WriteFile(constants.GetKubeAdminPasswordPath(), []byte(strings.TrimSpace(newPassword)), 0600); err != nil {
@@ -45,7 +46,7 @@ func UpdateKubeAdminUserPassword(ocConfig oc.Config, newPassword string) error {
 		"kubeadmin": kubeAdminPassword,
 	}
 
-	if err := WaitForOpenshiftResource(ocConfig, "secret"); err != nil {
+	if err := WaitForOpenshiftResource(ctx, ocConfig, "secret"); err != nil {
 		return err
 	}
 
