@@ -6,6 +6,7 @@ jobs:
   build:
     macos:
       xcode: "12.5.1"
+    resource_class: large
     environment:
       GOVERSION: "1.15.13"
 
