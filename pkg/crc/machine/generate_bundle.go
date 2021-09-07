@@ -1,6 +1,7 @@
 package machine
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -23,7 +24,7 @@ func (client *client) GenerateBundle(forceStop bool) error {
 	defer sshRunner.Close()
 
 	ocConfig := oc.UseOCWithSSH(sshRunner)
-	if err := cluster.RemovePullSecretFromCluster(ocConfig, sshRunner); err != nil {
+	if err := cluster.RemovePullSecretFromCluster(context.Background(), ocConfig, sshRunner); err != nil {
 		return errors.Wrap(err, "Error removing pull secret from cluster")
 	}
 

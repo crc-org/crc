@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -12,7 +13,7 @@ import (
 	k8scerts "k8s.io/api/certificates/v1beta1"
 )
 
-func WaitForOpenshiftResource(ocConfig oc.Config, resource string) error {
+func WaitForOpenshiftResource(ctx context.Context, ocConfig oc.Config, resource string) error {
 	logging.Debugf("Waiting for availability of resource type '%s'", resource)
 	waitForAPIServer := func() error {
 		stdout, stderr, err := ocConfig.WithFailFast().RunOcCommand("get", resource)
@@ -23,11 +24,11 @@ func WaitForOpenshiftResource(ocConfig oc.Config, resource string) error {
 		logging.Debug(stdout)
 		return nil
 	}
-	return crcerrors.RetryAfter(80*time.Second, waitForAPIServer, time.Second)
+	return crcerrors.Retry(ctx, 80*time.Second, waitForAPIServer, time.Second)
 }
 
-func deleteCSR(ocConfig oc.Config, expectedSignerName string) error {
-	csrs, err := getCSRList(ocConfig, expectedSignerName)
+func deleteCSR(ctx context.Context, ocConfig oc.Config, expectedSignerName string) error {
+	csrs, err := getCSRList(ctx, ocConfig, expectedSignerName)
 	if err != nil {
 		return err
 	}
@@ -41,9 +42,9 @@ func deleteCSR(ocConfig oc.Config, expectedSignerName string) error {
 	return nil
 }
 
-func getCSRList(ocConfig oc.Config, expectedSignerName string) (*k8scerts.CertificateSigningRequestList, error) {
+func getCSRList(ctx context.Context, ocConfig oc.Config, expectedSignerName string) (*k8scerts.CertificateSigningRequestList, error) {
 	var csrs k8scerts.CertificateSigningRequestList
-	if err := WaitForOpenshiftResource(ocConfig, "csr"); err != nil {
+	if err := WaitForOpenshiftResource(ctx, ocConfig, "csr"); err != nil {
 		return nil, err
 	}
 	output, stderr, err := ocConfig.WithFailFast().RunOcCommand("get", "csr", "-ojson")

@@ -1,6 +1,7 @@
 package host
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/rpc"
@@ -40,7 +41,7 @@ func (h *Host) runActionForState(action func() error, desiredState state.State) 
 		return err
 	}
 
-	return crcerrors.RetryAfter(3*time.Minute, MachineInState(h.Driver, desiredState), 3*time.Second)
+	return crcerrors.Retry(context.Background(), 3*time.Minute, MachineInState(h.Driver, desiredState), 3*time.Second)
 }
 
 func (h *Host) Stop() error {

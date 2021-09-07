@@ -1,6 +1,7 @@
 package bundle
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -153,7 +154,7 @@ func (repo *Repository) Extract(path string) error {
 	bundleBaseDir := GetBundleNameWithoutExtension(bundleName)
 	bundleDir := filepath.Join(repo.CacheDir, bundleBaseDir)
 	_ = os.RemoveAll(bundleDir)
-	return crcerrors.RetryAfter(time.Minute, func() error {
+	return crcerrors.Retry(context.Background(), time.Minute, func() error {
 		if err := os.Rename(filepath.Join(tmpDir, bundleBaseDir), bundleDir); err != nil {
 			return &crcerrors.RetriableError{Err: err}
 		}

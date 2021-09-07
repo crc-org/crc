@@ -338,7 +338,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	// Check DNS lookup before starting the kubelet
-	if queryOutput, err := dns.CheckCRCLocalDNSReachable(servicePostStartConfig); err != nil {
+	if queryOutput, err := dns.CheckCRCLocalDNSReachable(ctx, servicePostStartConfig); err != nil {
 		if !client.useVSock() {
 			return nil, errors.Wrapf(err, "Failed internal DNS query: %s", queryOutput)
 		}
@@ -385,7 +385,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	ocConfig := oc.UseOCWithSSH(sshRunner)
 
-	if err := cluster.ApproveCSRAndWaitForCertsRenewal(sshRunner, ocConfig, certsExpired[cluster.KubeletClientCert], certsExpired[cluster.KubeletServerCert]); err != nil {
+	if err := cluster.ApproveCSRAndWaitForCertsRenewal(ctx, sshRunner, ocConfig, certsExpired[cluster.KubeletClientCert], certsExpired[cluster.KubeletServerCert]); err != nil {
 		logBundleDate(crcBundleMetadata)
 		return nil, errors.Wrap(err, "Failed to renew TLS certificates: please check if a newer CodeReady Containers release is available")
 	}
@@ -394,31 +394,31 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Error waiting for apiserver")
 	}
 
-	if err := cluster.DeleteMCOLeaderLease(ocConfig); err != nil {
+	if err := cluster.DeleteMCOLeaderLease(ctx, ocConfig); err != nil {
 		return nil, err
 	}
 
-	if err := cluster.EnsurePullSecretPresentInTheCluster(ocConfig, startConfig.PullSecret); err != nil {
+	if err := cluster.EnsurePullSecretPresentInTheCluster(ctx, ocConfig, startConfig.PullSecret); err != nil {
 		return nil, errors.Wrap(err, "Failed to update cluster pull secret")
 	}
 
-	if err := cluster.EnsureSSHKeyPresentInTheCluster(ocConfig, constants.GetPublicKeyPath()); err != nil {
+	if err := cluster.EnsureSSHKeyPresentInTheCluster(ctx, ocConfig, constants.GetPublicKeyPath()); err != nil {
 		return nil, errors.Wrap(err, "Failed to update ssh public key to machine config")
 	}
 
-	if err := cluster.WaitForPullSecretPresentOnInstanceDisk(sshRunner); err != nil {
+	if err := cluster.WaitForPullSecretPresentOnInstanceDisk(ctx, sshRunner); err != nil {
 		return nil, errors.Wrap(err, "Failed to update pull secret on the disk")
 	}
 
-	if err := ensureProxyIsConfiguredInOpenShift(ocConfig, sshRunner, proxyConfig, instanceIP); err != nil {
+	if err := ensureProxyIsConfiguredInOpenShift(ctx, ocConfig, sshRunner, proxyConfig, instanceIP); err != nil {
 		return nil, errors.Wrap(err, "Failed to update cluster proxy configuration")
 	}
 
-	if err := cluster.UpdateKubeAdminUserPassword(ocConfig, startConfig.KubeAdminPassword); err != nil {
+	if err := cluster.UpdateKubeAdminUserPassword(ctx, ocConfig, startConfig.KubeAdminPassword); err != nil {
 		return nil, errors.Wrap(err, "Failed to update kubeadmin user password")
 	}
 
-	if err := cluster.EnsureClusterIDIsNotEmpty(ocConfig); err != nil {
+	if err := cluster.EnsureClusterIDIsNotEmpty(ctx, ocConfig); err != nil {
 		return nil, errors.Wrap(err, "Failed to update cluster ID")
 	}
 
@@ -449,16 +449,16 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	// More info: https://bugzilla.redhat.com/show_bug.cgi?id=1795163
 	if certsExpired[cluster.AggregatorClientCert] {
 		logging.Debug("Waiting for the renewal of the request header client ca...")
-		if err := cluster.WaitForRequestHeaderClientCaFile(sshRunner); err != nil {
+		if err := cluster.WaitForRequestHeaderClientCaFile(ctx, sshRunner); err != nil {
 			return nil, errors.Wrap(err, "Failed to wait for aggregator client ca renewal")
 		}
 
-		if err := cluster.DeleteOpenshiftAPIServerPods(ocConfig); err != nil {
+		if err := cluster.DeleteOpenshiftAPIServerPods(ctx, ocConfig); err != nil {
 			return nil, errors.Wrap(err, "Cannot delete OpenShift API Server pods")
 		}
 	}
 
-	if err := updateKubeconfig(ocConfig, sshRunner, crcBundleMetadata.GetKubeConfigPath()); err != nil {
+	if err := updateKubeconfig(ctx, ocConfig, sshRunner, crcBundleMetadata.GetKubeConfigPath()); err != nil {
 		return nil, errors.Wrap(err, "Failed to update kubeconfig file")
 	}
 
@@ -580,7 +580,7 @@ func startHost(ctx context.Context, api libmachine.API, vm *host.Host) error {
 	}
 
 	logging.Debug("Waiting for machine to be running, this may take a few minutes...")
-	if err := crcerrors.RetryAfterWithContext(ctx, 3*time.Minute, host.MachineInState(vm.Driver, libmachinestate.Running), 3*time.Second); err != nil {
+	if err := crcerrors.Retry(ctx, 3*time.Minute, host.MachineInState(vm.Driver, libmachinestate.Running), 3*time.Second); err != nil {
 		return fmt.Errorf("Error waiting for machine to be running: %s", err)
 	}
 
@@ -644,12 +644,12 @@ func ensureKubeletAndCRIOAreConfiguredForProxy(sshRunner *crcssh.Runner, proxy *
 	return cluster.AddProxyToKubeletAndCriO(sshRunner, proxy)
 }
 
-func ensureProxyIsConfiguredInOpenShift(ocConfig oc.Config, sshRunner *crcssh.Runner, proxy *network.ProxyConfig, instanceIP string) (err error) {
+func ensureProxyIsConfiguredInOpenShift(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, proxy *network.ProxyConfig, instanceIP string) (err error) {
 	if !proxy.IsEnabled() {
 		return nil
 	}
 	logging.Info("Adding proxy configuration to the cluster...")
-	return cluster.AddProxyConfigToCluster(sshRunner, ocConfig, proxy)
+	return cluster.AddProxyConfigToCluster(ctx, sshRunner, ocConfig, proxy)
 }
 
 func waitForProxyPropagation(ctx context.Context, ocConfig oc.Config, proxyConfig *network.ProxyConfig) {
@@ -670,7 +670,7 @@ func waitForProxyPropagation(ctx context.Context, ocConfig oc.Config, proxyConfi
 		return nil
 	}
 
-	if err := crcerrors.RetryAfterWithContext(ctx, 300*time.Second, checkProxySettingsForOperator, 2*time.Second); err != nil {
+	if err := crcerrors.Retry(ctx, 300*time.Second, checkProxySettingsForOperator, 2*time.Second); err != nil {
 		logging.Debug("Failed to propagate proxy settings to cluster")
 	}
 }
@@ -719,7 +719,7 @@ func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Confi
 	return nil
 }
 
-func updateKubeconfig(ocConfig oc.Config, sshRunner *crcssh.Runner, kubeconfigFilePath string) error {
+func updateKubeconfig(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, kubeconfigFilePath string) error {
 	selfSignedCAKey, selfSignedCACert, err := crctls.GetSelfSignedCA()
 	if err != nil {
 		return errors.Wrap(err, "Not able to generate root CA key and Cert")
@@ -731,7 +731,7 @@ func updateKubeconfig(ocConfig oc.Config, sshRunner *crcssh.Runner, kubeconfigFi
 	if err != nil {
 		return errors.Wrap(err, "Not able to get user CA")
 	}
-	if err := cluster.EnsureGeneratedClientCAPresentInTheCluster(ocConfig, sshRunner, selfSignedCACert, adminClientCA); err != nil {
+	if err := cluster.EnsureGeneratedClientCAPresentInTheCluster(ctx, ocConfig, sshRunner, selfSignedCACert, adminClientCA); err != nil {
 		return errors.Wrap(err, "Failed to update user CA to cluster")
 	}
 	return nil

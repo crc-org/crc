@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -16,9 +17,9 @@ func isPending(csr *k8scerts.CertificateSigningRequest) bool {
 	return len(csr.Status.Conditions) == 0 && len(csr.Status.Certificate) == 0
 }
 
-func approvePendingCSRs(ocConfig oc.Config, expectedSignerName string) error {
-	return crcerrors.RetryAfter(8*time.Minute, func() error {
-		csrs, err := getCSRList(ocConfig, expectedSignerName)
+func approvePendingCSRs(ctx context.Context, ocConfig oc.Config, expectedSignerName string) error {
+	return crcerrors.Retry(ctx, 8*time.Minute, func() error {
+		csrs, err := getCSRList(ctx, ocConfig, expectedSignerName)
 		if err != nil {
 			return &crcerrors.RetriableError{Err: err}
 		}
@@ -42,7 +43,7 @@ func approvePendingCSRs(ocConfig oc.Config, expectedSignerName string) error {
 	}, time.Second*5)
 }
 
-func ApproveCSRAndWaitForCertsRenewal(sshRunner *ssh.Runner, ocConfig oc.Config, client, server bool) error {
+func ApproveCSRAndWaitForCertsRenewal(ctx context.Context, sshRunner *ssh.Runner, ocConfig oc.Config, client, server bool) error {
 	const (
 		kubeletClientSignerName = "kubernetes.io/kube-apiserver-client-kubelet"
 		authClientSignerName    = "kubernetes.io/kube-apiserver-client"
@@ -53,7 +54,7 @@ func ApproveCSRAndWaitForCertsRenewal(sshRunner *ssh.Runner, ocConfig oc.Config,
 	// Kubelet stores the cert in /var/lib/kubelet/pki/kubelet-client-current.pem
 	if client {
 		logging.Info("Kubelet client certificate has expired, renewing it... [will take up to 8 minutes]")
-		if err := approvePendingCSRs(ocConfig, kubeletClientSignerName); err != nil {
+		if err := approvePendingCSRs(ctx, ocConfig, kubeletClientSignerName); err != nil {
 			logging.Debugf("Error approving pending kube-apiserver-client-kubelet CSRs: %v", err)
 			return err
 		}
@@ -62,11 +63,11 @@ func ApproveCSRAndWaitForCertsRenewal(sshRunner *ssh.Runner, ocConfig oc.Config,
 		// if the patch backported to 4.8 z stream.
 		// https://github.com/openshift/library-go/pull/1190 and https://github.com/openshift/cluster-authentication-operator/pull/475
 		// https://bugzilla.redhat.com/show_bug.cgi?id=1997906
-		if err := deleteCSR(ocConfig, authClientSignerName); err != nil {
+		if err := deleteCSR(ctx, ocConfig, authClientSignerName); err != nil {
 			logging.Debugf("Error deleting openshift-authenticator csr: %v", err)
 			return err
 		}
-		if err := crcerrors.RetryAfter(5*time.Minute, waitForCertRenewal(sshRunner, KubeletClientCert), time.Second*5); err != nil {
+		if err := crcerrors.Retry(ctx, 5*time.Minute, waitForCertRenewal(sshRunner, KubeletClientCert), time.Second*5); err != nil {
 			logging.Debugf("Error approving pending kube-apiserver-client-kubelet CSR: %v", err)
 			return err
 		}
@@ -77,7 +78,7 @@ func ApproveCSRAndWaitForCertsRenewal(sshRunner *ssh.Runner, ocConfig oc.Config,
 	// This CSR is automatically approved by the cluster-machine-approver. The k8s controller manager issues the cert and kubelet fetches it.
 	if server {
 		logging.Info("Kubelet serving certificate has expired, waiting for automatic renewal... [will take up to 8 minutes]")
-		return crcerrors.RetryAfter(5*time.Minute, waitForCertRenewal(sshRunner, KubeletServerCert), time.Second*5)
+		return crcerrors.Retry(ctx, 5*time.Minute, waitForCertRenewal(sshRunner, KubeletServerCert), time.Second*5)
 	}
 	return nil
 }

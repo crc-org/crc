@@ -81,8 +81,8 @@ func (r *RetriableError) Error() string {
 	return "Temporary error: " + r.Err.Error()
 }
 
-// RetryAfterWithContext retries for a certain duration, after a delay
-func RetryAfterWithContext(ctx context.Context, limit time.Duration, callback func() error, d time.Duration) error {
+// Retry retries for a certain duration, after a delay
+func Retry(ctx context.Context, limit time.Duration, callback func() error, d time.Duration) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
@@ -111,9 +111,4 @@ func RetryAfterWithContext(ctx context.Context, limit time.Duration, callback fu
 	}
 	logging.Debugf("RetryAfter timeout after %d tries", attempt)
 	return m
-}
-
-// RetryAfter retries for a certain duration, after a delay
-func RetryAfter(limit time.Duration, callback func() error, d time.Duration) error {
-	return RetryAfterWithContext(context.Background(), limit, callback, d)
 }
