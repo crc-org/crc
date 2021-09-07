@@ -18,6 +18,7 @@ import (
 
 type mockServer struct {
 	*server
+	client *fakemachine.Client
 }
 
 func newMockServer() *mockServer {
@@ -28,6 +29,7 @@ func newMockServer() *mockServer {
 
 	return &mockServer{
 		server: newServerWithRoutes(handler),
+		client: fakeMachine,
 	}
 }
 
@@ -72,8 +74,9 @@ type response struct {
 }
 
 type testCase struct {
-	request  request
-	response response
+	request     request
+	failRequest bool
+	response    response
 }
 
 func get(resource string) request {
@@ -148,6 +151,18 @@ var testCases = []testCase{
 		response: jSon(`{"Success":true,"Status":"","Error":"","ClusterConfig":{"ClusterCACert":"MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ","KubeConfig":"/tmp/kubeconfig","KubeAdminPass":"foobar","ClusterAPI":"https://foo.testing:6443","WebConsoleURL":"https://console.foo.testing:6443","ProxyConfig":null},"KubeletStarted":true}`),
 	},
 
+	// start with failure
+	{
+		request:     post("start"),
+		failRequest: true,
+		response:    httpError(500).withBody("Failed to start\n"),
+	},
+	{
+		request:     get("start"),
+		failRequest: true,
+		response:    httpError(500).withBody("Failed to start\n"),
+	},
+
 	// stop
 	{
 		request:  post("stop"),
@@ -158,16 +173,46 @@ var testCases = []testCase{
 		response: empty(),
 	},
 
+	// stop with failure
+	{
+		request:     post("stop"),
+		failRequest: true,
+		// error message comes from fakemachine
+		response: httpError(500).withBody("stop failed\n"),
+	},
+	{
+		request:     get("stop"),
+		failRequest: true,
+		// error message comes from fakemachine
+		response: httpError(500).withBody("stop failed\n"),
+	},
+
 	// poweroff
 	{
 		request:  post("poweroff"),
 		response: empty(),
 	},
 
+	// poweroff with failure
+	{
+		request:     post("poweroff"),
+		failRequest: true,
+		// error message comes from fakemachine
+		response: httpError(500).withBody("poweroff failed\n"),
+	},
+
 	// status
 	{
 		request:  get("status"),
 		response: jSon(`{"CrcStatus":"Running","OpenshiftStatus":"Running","OpenshiftVersion":"4.5.1","DiskUse":10000000000,"DiskSize":20000000000,"Error":"","Success":true}`),
+	},
+
+	// status with failure
+	{
+		request:     get("status"),
+		failRequest: true,
+		// error message comes from fakemachine
+		response: httpError(500).withBody("broken\n"),
 	},
 
 	// delete
@@ -180,16 +225,40 @@ var testCases = []testCase{
 		response: empty(),
 	},
 
+	// delete with failure
+	{
+		request:     delete("delete"),
+		failRequest: true,
+		// error message comes from fakemachine
+		response: httpError(500).withBody("delete failed\n"),
+	},
+	{
+		request:     get("delete"),
+		failRequest: true,
+		// error message comes from fakemachine
+		response: httpError(500).withBody("delete failed\n"),
+	},
+
 	// version
 	{
 		request:  get("version"),
 		response: jSon(fmt.Sprintf(`{"CrcVersion":"%s","CommitSha":"%s","OpenshiftVersion":"%s","Success":true}`, version.GetCRCVersion(), version.GetCommitSha(), version.GetBundleVersion())),
 	},
 
+	// version never fails
+
 	// webconsoleurl
 	{
 		request:  get("webconsoleurl"),
 		response: jSon(`{"ClusterConfig":{"ClusterCACert":"MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ","KubeConfig":"/tmp/kubeconfig","KubeAdminPass":"foobar","ClusterAPI":"https://foo.testing:6443","WebConsoleURL":"https://console.foo.testing:6443","ProxyConfig":null},"Success":true,"Error":""}`),
+	},
+
+	// webconsoleurl with failure
+	{
+		request:     get("webconsoleurl"),
+		failRequest: true,
+		// error message comes from fakemachine
+		response: httpError(500).withBody("console failed\n"),
 	},
 
 	// config
@@ -216,6 +285,8 @@ var testCases = []testCase{
 		response: jSon(`{"Success":true,"Messages":["message 1","message 2","message 3"]}`),
 	},
 
+	// logs never fails
+
 	// telemetry
 	{
 		request:  get("telemetry"),
@@ -224,6 +295,18 @@ var testCases = []testCase{
 	{
 		request:  post("telemetry"),
 		response: httpError(500).withBody("unexpected end of JSON input\n"),
+	},
+
+	// telemetry with failure
+	{
+		request:     get("telemetry"),
+		failRequest: true,
+		response:    httpError(500).withBody("unexpected end of JSON input\n"),
+	},
+	{
+		request:     post("telemetry"),
+		failRequest: true,
+		response:    httpError(500).withBody("unexpected end of JSON input\n"),
 	},
 
 	// pull-secret
@@ -235,6 +318,19 @@ var testCases = []testCase{
 	{
 		request:  post("pull-secret"),
 		response: httpError(500).withBody("empty pull secret\n"),
+	},
+
+	// pull-secret with failure
+	{
+		request:     get("pull-secret"),
+		failRequest: true,
+		// other 404 return "not found", and others "404 not found"
+		response: httpError(404),
+	},
+	{
+		request:     post("pull-secret"),
+		failRequest: true,
+		response:    httpError(500).withBody("empty pull secret\n"),
 	},
 
 	// not found
@@ -255,6 +351,7 @@ func TestRequests(t *testing.T) {
 	handler := server.Handler()
 
 	for _, testCase := range testCases {
+		server.client.Failing = testCase.failRequest
 		resp := sendRequest(handler, &testCase.request)
 
 		require.Equal(t, testCase.response.statusCode, resp.StatusCode, testCase.request)
