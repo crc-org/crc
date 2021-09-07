@@ -12,6 +12,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
 	"github.com/code-ready/crc/pkg/crc/version"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -263,5 +264,27 @@ func TestRequests(t *testing.T) {
 		require.NoError(t, err, testCase.request)
 		require.Equal(t, testCase.response.body, string(body), testCase.request)
 		fmt.Println("-----")
+	}
+}
+
+func TestRoutes(t *testing.T) {
+	// this checks that we have test cases for all routes registered with the `api` entrypoint
+
+	var routes = map[string][]string{}
+	for _, testCase := range testCases {
+		// Add leading '/', remove trailing '?....'
+		pattern := fmt.Sprintf("/%s", strings.SplitN(testCase.request.resource, "?", 2)[0])
+		if _, ok := routes[pattern]; !ok {
+			routes[pattern] = []string{}
+		}
+		routes[pattern] = append(routes[pattern], testCase.request.httpMethod)
+	}
+
+	server := newMockServer()
+	for pattern, methodMap := range server.routes {
+		assert.Contains(t, routes, pattern)
+		for method := range methodMap {
+			assert.Contains(t, routes[pattern], method, "routes[%s][%s] is missing from the API testcases", pattern, method)
+		}
 	}
 }
