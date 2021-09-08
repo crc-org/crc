@@ -154,12 +154,17 @@ func (repo *Repository) Extract(path string) error {
 	bundleBaseDir := GetBundleNameWithoutExtension(bundleName)
 	bundleDir := filepath.Join(repo.CacheDir, bundleBaseDir)
 	_ = os.RemoveAll(bundleDir)
-	return crcerrors.Retry(context.Background(), time.Minute, func() error {
+	err := crcerrors.Retry(context.Background(), time.Minute, func() error {
 		if err := os.Rename(filepath.Join(tmpDir, bundleBaseDir), bundleDir); err != nil {
 			return &crcerrors.RetriableError{Err: err}
 		}
 		return nil
 	}, 5*time.Second)
+	if err != nil {
+		return err
+	}
+
+	return os.Chmod(bundleDir, 0755)
 }
 
 func (repo *Repository) List() ([]CrcBundleInfo, error) {
