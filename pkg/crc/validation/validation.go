@@ -1,17 +1,21 @@
 package validation
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
+	"github.com/containers/common/pkg/auth"
 	"github.com/docker/go-units"
 	"github.com/pbnjay/memory"
 )
@@ -133,5 +137,73 @@ func ImagePullSecret(secret string) error {
 			return fmt.Errorf("invalid pull secret, '%q' JSON-object requires either 'auth' or 'credsStore' field", d)
 		}
 	}
+
+	return tryLoginToRegistries(secret)
+}
+
+func getRegistriesFromPullSecret(secret string) ([]string, error) {
+	var pullSecret imagePullSecret
+	var registries []string
+	err := json.Unmarshal([]byte(secret), &pullSecret)
+	if err != nil {
+		return []string{}, err
+	}
+	for registry := range pullSecret.Auths {
+		registries = append(registries, registry)
+	}
+	return registries, nil
+}
+
+func tryLoginToRegistries(secret string) error {
+	var mErr = crcErrors.MultiError{}
+	registries, err := getRegistriesFromPullSecret(secret)
+	if err != nil {
+		return err
+	}
+
+	pullSecretFile, cleanup, err := writePullSecretToTempFile(secret)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
+	for _, registry := range registries {
+		// cloud.openshift.com is not a docker registry but included in the pull-secret
+		if registry == "cloud.openshift.com" {
+			continue
+		}
+		logging.Debugf("Trying to login to %s with pull-secret file", registry)
+		err := authenticateWithPullSecret(pullSecretFile, registry)
+		if err != nil {
+			mErr.Collect(err)
+			logging.Debugf("Failed to login to %s: %v", registry, err)
+		}
+	}
+	if len(mErr.Errors) != 0 {
+		return fmt.Errorf("unable to login to registries with provided pull secret: %s", mErr.Error())
+	}
 	return nil
+}
+
+func authenticateWithPullSecret(pullSecretPath, registry string) error {
+	opts := auth.LoginOptions{
+		AuthFile: pullSecretPath,
+		Stdout:   ioutil.Discard,
+		Stdin:    os.Stdin,
+	}
+
+	return auth.Login(context.Background(), nil, &opts, []string{registry})
+}
+
+func writePullSecretToTempFile(secret string) (string, func(), error) {
+	tempDir, err := ioutil.TempDir("", "crc-pull")
+	if err != nil {
+		return "", func() {}, err
+	}
+	pullSecretFile := filepath.Join(tempDir, "temp-crc-pull")
+	if err := ioutil.WriteFile(pullSecretFile, []byte(secret), 0600); err != nil {
+		os.RemoveAll(tempDir)
+		return "", func() {}, err
+	}
+	return pullSecretFile, func() { os.RemoveAll(tempDir) }, nil
 }

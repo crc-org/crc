@@ -337,7 +337,7 @@ var testCases = []testCase{
 	{
 		request: get("pull-secret"),
 		// other 404 return "not found", and others "404 not found"
-		response: empty().withBody(""),
+		response: httpError(404),
 	},
 	{
 		request:  post("pull-secret"),

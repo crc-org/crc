@@ -127,7 +127,7 @@ func loadFromKeyring() (string, error) {
 	if err := decompressor.Close(); err != nil {
 		return "", err
 	}
-	return b.String(), validation.ImagePullSecret(b.String())
+	return b.String(), nil
 }
 
 func StoreInKeyring(pullSecret string) error {
@@ -161,7 +161,7 @@ func loadFile(path string) (string, error) {
 		return "", err
 	}
 	pullsecret := strings.TrimSpace(string(data))
-	return pullsecret, validation.ImagePullSecret(pullsecret)
+	return pullsecret, nil
 }
 
 const helpMessage = `CodeReady Containers requires a pull secret to download content from Red Hat.

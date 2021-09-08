@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"io/ioutil"
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -117,4 +118,22 @@ func ValidateYesNo(value interface{}) (bool, string) {
 		return true, ""
 	}
 	return false, "must be yes or no"
+}
+
+func ValidatePullSecretFile(value interface{}) (bool, string) {
+	path := cast.ToString(value)
+	if validPath, msg := ValidatePath(path); !validPath {
+		return false, msg
+	}
+
+	data, err := ioutil.ReadFile(cast.ToString(path))
+	if err != nil {
+		return false, err.Error()
+	}
+	pullsecret := strings.TrimSpace(string(data))
+
+	if err := validation.ImagePullSecret(pullsecret); err != nil {
+		return false, "Invalid pull secret file"
+	}
+	return true, ""
 }

@@ -308,7 +308,7 @@ func TestPullSecret(t *testing.T) {
 
 	defined, err = client.IsPullSecretDefined()
 	assert.NoError(t, err)
-	assert.True(t, defined)
+	assert.False(t, defined)
 
 	assert.Error(t, client.SetPullSecret("{}")) // invalid
 }

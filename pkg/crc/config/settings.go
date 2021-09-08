@@ -73,7 +73,7 @@ func RegisterSettings(cfg *Config) {
 		fmt.Sprintf("Total size in GiB of the disk (must be greater than or equal to '%d')", constants.DefaultDiskSize))
 	cfg.AddSetting(NameServer, "", ValidateIPAddress, SuccessfullyApplied,
 		"IPv4 address of nameserver (string, like '1.1.1.1 or 8.8.8.8')")
-	cfg.AddSetting(PullSecretFile, "", ValidatePath, SuccessfullyApplied,
+	cfg.AddSetting(PullSecretFile, "", ValidatePullSecretFile, SuccessfullyApplied,
 		fmt.Sprintf("Path of image pull secret (download from %s)", constants.CrcLandingPageURL))
 	cfg.AddSetting(DisableUpdateCheck, false, ValidateBool, SuccessfullyApplied,
 		"Disable update check (true/false, default: false)")
