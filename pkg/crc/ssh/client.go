@@ -93,6 +93,11 @@ func (client *NativeClient) session() (*ssh.Session, error) {
 func (client *NativeClient) Run(command string) ([]byte, []byte, error) {
 	session, err := client.session()
 	if err != nil {
+		if client.conn != nil {
+			log.Debugf("Failed to create new ssh session: %s", err)
+			client.conn.Close()
+			client.conn = nil
+		}
 		return nil, nil, err
 	}
 	defer session.Close()

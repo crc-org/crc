@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"bytes"
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -33,11 +34,34 @@ func TestRunner(t *testing.T) {
 	clientKeyFile := filepath.Join(dir, "private.key")
 	writePrivateKey(t, clientKeyFile, clientKey)
 
+	cancel, runner, _ := createListnerAndSSHServer(t, clientKey, clientKeyFile)
+
+	assert.NoError(t, err)
+	defer runner.Close()
+
+	bin, _, err := runner.Run("echo hello")
+	assert.NoError(t, err)
+	assert.Equal(t, "hello", bin)
+	cancel()
+	// Expect error when sending data over close ssh server channel
+	assert.Error(t, runner.CopyData([]byte(`hello world`), "/hello", 0644))
+
+	_, runner, totalConn := createListnerAndSSHServer(t, clientKey, clientKeyFile)
+	assert.NoError(t, runner.CopyData([]byte(`hello world`), "/hello", 0644))
+	assert.NoError(t, runner.CopyData([]byte(`hello world`), "/hello", 0644))
+	assert.NoError(t, runner.CopyData([]byte(`hello world`), "/hello", 0644))
+	assert.Equal(t, 1, *totalConn)
+}
+
+func createListnerAndSSHServer(t *testing.T, clientKey *ecdsa.PrivateKey, clientKeyFile string) (context.CancelFunc, *Runner, *int) {
 	listener, err := net.Listen("tcp", "127.0.0.1:")
 	require.NoError(t, err)
-	defer listener.Close()
+	addr := listener.Addr().String()
+	runner, err := CreateRunner(ipFor(addr), portFor(addr), clientKeyFile)
+	require.NoError(t, err)
 
-	totalConn := createSSHServer(t, listener, clientKey, func(input string) (byte, string) {
+	ctx, cancel := context.WithCancel(context.Background())
+	totalConn := createSSHServer(ctx, t, listener, clientKey, func(input string) (byte, string) {
 		escaped := fmt.Sprintf("%q", input)
 		if escaped == `"echo hello"` {
 			return 0, "hello"
@@ -47,21 +71,10 @@ func TestRunner(t *testing.T) {
 		}
 		return 1, fmt.Sprintf("unexpected command: %q", input)
 	})
-
-	addr := listener.Addr().String()
-	runner, err := CreateRunner(ipFor(addr), portFor(addr), clientKeyFile)
-	assert.NoError(t, err)
-	defer runner.Close()
-
-	bin, _, err := runner.Run("echo hello")
-	assert.NoError(t, err)
-	assert.Equal(t, "hello", bin)
-	assert.NoError(t, runner.CopyData([]byte(`hello world`), "/hello", 0644))
-
-	assert.Equal(t, 1, *totalConn)
+	return cancel, runner, totalConn
 }
 
-func createSSHServer(t *testing.T, listener net.Listener, clientKey *ecdsa.PrivateKey, fun func(string) (byte, string)) *int {
+func createSSHServer(ctx context.Context, t *testing.T, listener net.Listener, clientKey *ecdsa.PrivateKey, fun func(string) (byte, string)) *int {
 	totalConn := 0
 	config := &ssh.ServerConfig{
 		PublicKeyCallback: func(c ssh.ConnMetadata, pubKey ssh.PublicKey) (*ssh.Permissions, error) {
@@ -104,26 +117,31 @@ func createSSHServer(t *testing.T, listener net.Listener, clientKey *ecdsa.Priva
 			go ssh.DiscardRequests(reqs)
 
 			for newChannel := range chans {
-				if newChannel.ChannelType() != "session" {
-					_ = newChannel.Reject(ssh.UnknownChannelType, "unknown channel type")
-					continue
-				}
-
-				channel, requests, err := newChannel.Accept()
-				require.NoError(t, err)
-
-				go func(in <-chan *ssh.Request) {
-					for req := range in {
-						command := string(req.Payload[4 : req.Payload[3]+4])
-						logrus.Debugf("received command: %s", command)
-						_ = req.Reply(req.Type == "exec", nil)
-
-						ret, out := fun(command)
-						_, _ = channel.Write([]byte(out))
-						_, _ = channel.SendRequest("exit-status", false, []byte{0, 0, 0, ret})
-						_ = channel.Close()
+				select {
+				case <-ctx.Done():
+					return
+				default:
+					if newChannel.ChannelType() != "session" {
+						_ = newChannel.Reject(ssh.UnknownChannelType, "unknown channel type")
+						continue
 					}
-				}(requests)
+
+					channel, requests, err := newChannel.Accept()
+					require.NoError(t, err)
+
+					go func(in <-chan *ssh.Request) {
+						for req := range in {
+							command := string(req.Payload[4 : req.Payload[3]+4])
+							logrus.Debugf("received command: %s", command)
+							_ = req.Reply(req.Type == "exec", nil)
+
+							ret, out := fun(command)
+							_, _ = channel.Write([]byte(out))
+							_, _ = channel.SendRequest("exit-status", false, []byte{0, 0, 0, ret})
+							_ = channel.Close()
+						}
+					}(requests)
+				}
 			}
 		}
 	}()
