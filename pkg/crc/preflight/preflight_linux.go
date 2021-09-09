@@ -326,7 +326,7 @@ func (filter preflightFilter) SetDistro(distro *linux.OsRelease) {
 
 func (filter preflightFilter) SetSystemdUser(distro *linux.OsRelease) {
 	switch {
-	case distroIsLike(distro, linux.RHEL) && distro.VersionID == "7":
+	case distroIsLike(distro, linux.RHEL) && (distro.VersionID == "7" || strings.HasPrefix(distro.VersionID, "7.")):
 		filter[SystemdUser] = Unsupported
 	default:
 		filter[SystemdUser] = Supported
