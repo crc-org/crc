@@ -24,6 +24,10 @@ func init() {
 }
 
 func RunPostStart(serviceConfig services.ServicePostStartConfig) error {
+	if serviceConfig.NetworkMode == network.UserNetworkingMode {
+		return addOpenShiftHosts(serviceConfig)
+	}
+
 	if err := setupDnsmasq(serviceConfig); err != nil {
 		return err
 	}
@@ -41,10 +45,6 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) error {
 }
 
 func setupDnsmasq(serviceConfig services.ServicePostStartConfig) error {
-	if serviceConfig.NetworkMode == network.UserNetworkingMode {
-		return nil
-	}
-
 	if err := createDnsmasqDNSConfig(serviceConfig); err != nil {
 		return err
 	}

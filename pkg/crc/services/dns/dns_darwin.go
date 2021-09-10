@@ -37,10 +37,6 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
 		return err
 	}
 
-	if serviceConfig.NetworkMode == network.UserNetworkingMode {
-		return nil
-	}
-
 	// Write resolver config to host
 	needRestart, err := createResolverFile(serviceConfig.IP, serviceConfig.BundleMetadata.ClusterInfo.BaseDomain,
 		serviceConfig.BundleMetadata.ClusterInfo.BaseDomain)

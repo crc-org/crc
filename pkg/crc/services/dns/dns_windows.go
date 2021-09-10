@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/services"
 	winnet "github.com/code-ready/crc/pkg/os/windows/network"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
@@ -19,10 +18,6 @@ const (
 )
 
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
-	if serviceConfig.NetworkMode == network.UserNetworkingMode {
-		return addOpenShiftHosts(serviceConfig)
-	}
-
 	_, switchName := winnet.SelectSwitchByNameOrDefault(AlternativeNetwork)
 	networkInterface := fmt.Sprintf("vEthernet (%s)", switchName)
 
