@@ -137,6 +137,11 @@ func CheckCRCStatus(state string) error {
 
 func CheckCRCExecutableState(state string) error {
 	command := "which crc"
+	if runtime.GOOS == "windows" {
+		if err := clicumber.ExecuteCommand("$env:Path = [System.Environment]::GetEnvironmentVariable(\"Path\",\"Machine\")"); err != nil {
+			return err
+		}
+	}
 	switch state {
 	case CRCExecutableInstalled:
 		return clicumber.ExecuteCommandSucceedsOrFails(command, "succeeds")
