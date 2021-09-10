@@ -9,6 +9,8 @@ BINARY_PATH="/opt/crc/bin/${PLATFORM}-amd64/${BINARY}"
 
 # Running options
 CLEANUP_HOME="${CLEANUP_HOME:-"true"}"
+# Valid options are non-ux or ux
+TESTING_MODE="${TESTING_MODE:-"non-ux"}"
 # Review this when go 1.16 with embed support
 FEATURES_PATH=/opt/crc/features
 TESTDATA_PATH=/opt/crc/testdata
@@ -44,6 +46,10 @@ validate=true
     && echo "BUNDLE_VERSION or BUNDLE_LOCATION required" \
     && validate=false
 
+[[ "${TESTING_MODE}" != "ux" && "${TESTING_MODE}" != "non-ux" ]] \
+    && echo "TESTING_MODE should have valid value ux or non-ux" \
+    && validate=false
+
 [[ $validate == false ]] && exit 1
 
 # Define remote connection
@@ -77,8 +83,6 @@ else
 fi
 
 # Copy crc-e2e binary and pull-secret
-# Review this when ux feature cleanup environment 
-rm "${FEATURES_PATH}/ux.feature"
 # Review this when go 1.16 with embed support
 $SCP "${BINARY_PATH}" "${REMOTE}:${EXECUTION_FOLDER}/bin"
 $SCP "${PULL_SECRET_FILE_PATH}" "${REMOTE}:${EXECUTION_FOLDER}/pull-secret"
@@ -91,9 +95,10 @@ if [[ ${PLATFORM} == 'windows' ]]; then
     $SCP "${UX_RESOURCES_PATH}" "${REMOTE}:${REMOTE_RESOURCES_PATH}"
 
 else
-    $SSH "${REMOTE}" "sudo mkdir -p ${REMOTE_RESOURCES_PATH}"
-    $SCP "${UX_RESOURCES_PATH}" "${REMOTE}:${EXECUTION_FOLDER}"
-    $SSH "${REMOTE}" "sudo mv ${EXECUTION_FOLDER}/ux ${REMOTE_RESOURCES_PATH}"
+    # This relies on:  cat /etc/synthetic.conf 
+    #workspace  Users/crcqe/crc-e2e/workspace as symbolic link
+    $SSH "${REMOTE}" "mkdir -p ${EXECUTION_FOLDER}/workspace/test/extended/crc"
+    $SCP "${UX_RESOURCES_PATH}" "${REMOTE}:${EXECUTION_FOLDER}/workspace/test/extended/crc"
 fi
 # Testdata files
 $SCP "${TESTDATA_PATH}" "${REMOTE}:${EXECUTION_FOLDER}"
@@ -110,7 +115,11 @@ if [[ ${PLATFORM} == 'macos' ]]; then
     PLATFORM="darwin"
 fi
 GODOG_TAGS="@${PLATFORM} "
-
+if [ "${TESTING_MODE}" = "non-ux" ]; then
+    GODOG_TAGS+="&& ~@ux "
+else 
+    GODOG_TAGS+="&& @ux "
+fi
 OPTIONS+="--godog.tags='${GODOG_TAGS}' --godog.format=junit "
 if [ "${CLEANUP_HOME}" = "false" ]; then
     OPTIONS+="--cleanup-home=false "
@@ -135,7 +144,5 @@ echo "Cleanup target"
 if [[ ${PLATFORM} == 'windows' ]]; then
     # Todo change for powershell cmdlet
     $SSH "${REMOTE}" "rm -r /workspace"
-else
-    $SSH "${REMOTE}" "sudo rm -rf /workspace"
 fi
 $SSH "${REMOTE}" "rm -r ${EXECUTION_FOLDER}"

@@ -16,6 +16,7 @@ The container connects through ssh to the target host and copy the right binary 
 **BUNDLE_LOCATION**:*(Mandatory if not BUNDLE_VERSION). When testing crc with custom bundle set the bundle location on target server.*  
 **RESULTS_PATH**:*(Optional). Path inside container to pick results and logs from e2e execution.*  
 **CLEANUP_HOME**:*(Optional). Cleanup crc home folder or keep as it is to run test.*  
+**TESTING_MODE**:*(Optional). Define e2e testing mode (valid values are ux, non-ux. Default is non-ux)*  
 
 ## Samples
 
