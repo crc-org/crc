@@ -15,6 +15,21 @@ github.com/Microsoft/go-winio
 github.com/Microsoft/go-winio/pkg/guid
 # github.com/RangelReale/osincli v0.0.0-20160924135400-fababb0555f2
 github.com/RangelReale/osincli
+# github.com/RedHatQE/gowinx v0.0.3
+## explicit
+github.com/RedHatQE/gowinx/pkg/app/action-center
+github.com/RedHatQE/gowinx/pkg/util
+github.com/RedHatQE/gowinx/pkg/util/logging
+github.com/RedHatQE/gowinx/pkg/win32/api/system-services
+github.com/RedHatQE/gowinx/pkg/win32/api/user-interface/windows-accesibility-features
+github.com/RedHatQE/gowinx/pkg/win32/api/user-interface/windows-and-messages
+github.com/RedHatQE/gowinx/pkg/win32/api/util
+github.com/RedHatQE/gowinx/pkg/win32/desktop/notificationarea
+github.com/RedHatQE/gowinx/pkg/win32/interaction
+github.com/RedHatQE/gowinx/pkg/win32/services/process
+github.com/RedHatQE/gowinx/pkg/win32/ux
+github.com/RedHatQE/gowinx/pkg/win32/ux/toolbar
+github.com/RedHatQE/gowinx/pkg/win32/ux/windows
 # github.com/StackExchange/wmi v1.2.1
 ## explicit
 github.com/StackExchange/wmi
@@ -296,6 +311,8 @@ github.com/openshift/library-go/pkg/oauth/oauthdiscovery
 ## explicit
 github.com/openshift/oc/pkg/helpers/term
 github.com/openshift/oc/pkg/helpers/tokencmd
+# github.com/openstandia/w32uiautomation v0.0.0-20190416091226-c987b5b65d6b
+github.com/openstandia/w32uiautomation
 # github.com/patrickmn/go-cache v2.1.0+incompatible
 github.com/patrickmn/go-cache
 # github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
@@ -631,7 +648,7 @@ k8s.io/klog/v2
 # k8s.io/kubectl v0.21.0-beta.1 => github.com/openshift/kubernetes-kubectl v0.0.0-20210521075729-633333dfccda
 k8s.io/kubectl/pkg/util/interrupt
 k8s.io/kubectl/pkg/util/term
-# k8s.io/utils v0.0.0-20210305010621-2afb4311ab10
+# k8s.io/utils v0.0.0-20210527160623-6fdb442a123b
 k8s.io/utils/integer
 # sigs.k8s.io/structured-merge-diff/v4 v4.1.0
 sigs.k8s.io/structured-merge-diff/v4/value
