@@ -147,17 +147,13 @@ func RemoveCRCHome(crcHome string) error {
 
 // Based on the number of iterations for a given timeout in seconds the function returns the duration of echa loop
 // and the extra time in case required to complete the timeout
-func GetRetryParametersFromTimeoutInSeconds(iterations int, timeout string) (time.Duration, time.Duration, error) {
-	totalTime, err := strconv.Atoi(timeout)
-	if err != nil {
-		return 0, 0, err
-	}
+func GetRetryParametersFromTimeoutInSeconds(iterations, timeout int) (time.Duration, time.Duration, error) {
 	iterationDuration, err :=
-		time.ParseDuration(strconv.Itoa(totalTime/iterations) + "s")
+		time.ParseDuration(strconv.Itoa(timeout/iterations) + "s")
 	if err != nil {
 		return 0, 0, err
 	}
-	extraTime := totalTime % iterations
+	extraTime := timeout % iterations
 	if extraTime != 0 {
 		extraTimeDuration, err :=
 			time.ParseDuration(strconv.Itoa(extraTime) + "s")
@@ -167,4 +163,23 @@ func GetRetryParametersFromTimeoutInSeconds(iterations int, timeout string) (tim
 		return iterationDuration, extraTimeDuration, nil
 	}
 	return iterationDuration, 0, nil
+}
+
+func MatchWithRetry(expression string, match func(string) error, retryCount, timeout int) error {
+	iterationDuration, extraDuration, err :=
+		GetRetryParametersFromTimeoutInSeconds(retryCount, timeout)
+	if err != nil {
+		return err
+	}
+	for i := 0; i < retryCount; i++ {
+		err := match(expression)
+		if err == nil {
+			return nil
+		}
+		time.Sleep(iterationDuration)
+	}
+	if extraDuration != 0 {
+		time.Sleep(extraDuration)
+	}
+	return fmt.Errorf("not found: %s. Timeout", expression)
 }
