@@ -6,12 +6,17 @@ if [[ ${PLATFORM} == 'windows' ]]; then
     BINARY=e2e.test.exe
 fi
 BINARY_PATH="/opt/crc/bin/${PLATFORM}-amd64/${BINARY}"
+
+# Running options
+CLEANUP_HOME="${CLEANUP_HOME:-"true"}"
 # Review this when go 1.16 with embed support
 FEATURES_PATH=/opt/crc/features
 TESTDATA_PATH=/opt/crc/testdata
 UX_RESOURCES_PATH=/opt/crc/ux
+
 # Results
 RESULTS_PATH="${RESULTS_PATH:-/output}"
+
 
 if [ "${DEBUG:-}" = "true" ]; then
     set -xuo 
@@ -104,7 +109,12 @@ OPTIONS+="--pull-secret-file=${EXECUTION_FOLDER}/pull-secret "
 if [[ ${PLATFORM} == 'macos' ]]; then
     PLATFORM="darwin"
 fi
-OPTIONS+="--godog.tags='@${PLATFORM}' --godog.format=junit"
+GODOG_TAGS="@${PLATFORM} "
+
+OPTIONS+="--godog.tags='${GODOG_TAGS}' --godog.format=junit "
+if [ "${CLEANUP_HOME}" = "false" ]; then
+    OPTIONS+="--cleanup-home=false "
+fi
 # Review when pwsh added as powershell supported
 if [[ ${PLATFORM} == 'windows' ]]; then
     BINARY_EXEC="\$env:SHELL='powershell'; "
