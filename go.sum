@@ -75,6 +75,8 @@ github.com/PuerkitoBio/urlesc v0.0.0-20160726150825-5bd2802263f2/go.mod h1:uGdko
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/RangelReale/osincli v0.0.0-20160924135400-fababb0555f2 h1:x8Brv0YNEe6jY3V/hQglIG2nd8g5E2Zj5ubGKkPQctQ=
 github.com/RangelReale/osincli v0.0.0-20160924135400-fababb0555f2/go.mod h1:XyjUkMA8GN+tOOPXvnbi3XuRxWFvTJntqvTFnjmhzbk=
+github.com/RedHatQE/gowinx v0.0.3 h1:+BiJGqw4EQY7WVnj1PWBWnarcgQTWE3uP9oLHu3/sI8=
+github.com/RedHatQE/gowinx v0.0.3/go.mod h1:HOvEFhbJSXfbAOzlvr8EBG9vufpCcYP6A+PA+L97vtI=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/StackExchange/wmi v1.2.1 h1:VIkavFPXSjcnS+O8yTq7NI32k0R5Aj+v39y29VYDOSA=
@@ -771,6 +773,8 @@ github.com/openshift/library-go v0.0.0-20210521084623-7392ea9b02ca h1:NtRAdQTnE4
 github.com/openshift/library-go v0.0.0-20210521084623-7392ea9b02ca/go.mod h1:87ZYjEncF0YNUKNzncb8Fiw8yFNevpIWZW83C/etzpw=
 github.com/openshift/oc v0.0.0-alpha.0.0.20210811234350-0d10c3f72592 h1:iFnjZszwx+smnnQKUm3AzC/9iX67yphs4Hpi/TsB9Tg=
 github.com/openshift/oc v0.0.0-alpha.0.0.20210811234350-0d10c3f72592/go.mod h1:6dAb7ETNOJOaFM3r88Q9IYtK9636cLy0rQoT9FiNZ1I=
+github.com/openstandia/w32uiautomation v0.0.0-20190416091226-c987b5b65d6b h1:c6u4dBKbsr+SIU7G+edjUdAwXRHrU774em+YpBc6x5o=
+github.com/openstandia/w32uiautomation v0.0.0-20190416091226-c987b5b65d6b/go.mod h1:3eWcciZpLm6NimB0Wv65kt4IuLDidcBE3z5YJj03MbA=
 github.com/opentracing-contrib/go-observer v0.0.0-20170622124052-a52f23424492/go.mod h1:Ngi6UdF0k5OKD5t5wlmGhe/EDKPoUM3BXZSSfIuJbis=
 github.com/opentracing/basictracer-go v1.0.0/go.mod h1:QfBfYuafItcjQuMwinw9GhYKwFXS9KnPs5lxoYwgW74=
 github.com/opentracing/opentracing-go v1.0.2/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
@@ -921,6 +925,7 @@ github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An
 github.com/spf13/viper v1.3.2/go.mod h1:ZiWeW+zYFKm7srdB9IoDzzZXaJaI5eL9QjNiN/DMA2s=
 github.com/spf13/viper v1.4.0/go.mod h1:PTJ7Z/lr49W6bUbkmS1V3by4uWynFiR9p7+dSq/yZzE=
 github.com/spf13/viper v1.7.0/go.mod h1:8WkrPz2fc9jxqZNCJI/76HCieCp4Q8HaLFoCha5qpdg=
+github.com/spf13/viper v1.7.1/go.mod h1:8WkrPz2fc9jxqZNCJI/76HCieCp4Q8HaLFoCha5qpdg=
 github.com/spf13/viper v1.8.1 h1:Kq1fyeebqsBfbjZj4EL7gj2IO0mMaiyjYUWcUsl2O44=
 github.com/spf13/viper v1.8.1/go.mod h1:o0Pch8wJ9BVSWGQMbra6iw0oQ5oktSIBaujf1rJH9Ns=
 github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=
@@ -1577,6 +1582,8 @@ k8s.io/utils v0.0.0-20200229041039-0a110f9eb7ab/go.mod h1:sZAwmy6armz5eXlNoLmJcl
 k8s.io/utils v0.0.0-20201110183641-67b214c5f920/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 k8s.io/utils v0.0.0-20210305010621-2afb4311ab10 h1:u5rPykqiCpL+LBfjRkXvnK71gOgIdmq3eHUEkPrbeTI=
 k8s.io/utils v0.0.0-20210305010621-2afb4311ab10/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
+k8s.io/utils v0.0.0-20210527160623-6fdb442a123b h1:MSqsVQ3pZvPGTqCjptfimO2WjG7A9un2zcpiHkA6M/s=
+k8s.io/utils v0.0.0-20210527160623-6fdb442a123b/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 modernc.org/cc v1.0.0/go.mod h1:1Sk4//wdnYJiUIxnW8ddKpaOJCF37yAdqYnkxUpaYxw=
 modernc.org/golex v1.0.0/go.mod h1:b/QX9oBD/LhixY6NDh+IdGv17hgB+51fET1i2kPSmvk=
 modernc.org/mathutil v1.0.0/go.mod h1:wU0vUrJsVWBZ4P6e7xtFJEhFSNsfRLJ8H458uRjg03k=
