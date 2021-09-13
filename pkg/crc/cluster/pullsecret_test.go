@@ -1,9 +1,11 @@
 package cluster
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/code-ready/crc/pkg/crc/config"
@@ -12,49 +14,77 @@ import (
 )
 
 const (
-	secret1 = `{"auths":{"quay.io":{"auth":"secret1"}}}` // #nosec G101
-	secret2 = `{"auths":{"quay.io":{"auth":"secret2"}}}` // #nosec G101
-	secret3 = `{"auths":{"quay.io":{"auth":"secret3"}}}` // #nosec G101
-	secret4 = `{`
+	secret1          = `{"auths":{"quay.io":{"auth":"secret1"}}}` // #nosec G101
+	secret2          = `{`
+	crcPullSecretEnv = "CRC_TEST_PULL_SECRET_FILE" // #nosec G101
+)
+
+var (
+	cfg    *config.Config
+	loader *nonInteractivePullSecretLoader
+	dir    string
 )
 
 func TestLoadPullSecret(t *testing.T) {
+	_, err := loader.Value()
+	assert.Error(t, err)
+
+	assert.Error(t, StoreInKeyring(secret1))
+	assert.Error(t, StoreInKeyring(secret2))
+}
+
+func TestStoreInKeyringAndLoad(t *testing.T) {
+	if os.Getenv(crcPullSecretEnv) == "" {
+		t.Skip("Skipping since CRC_TEST_PULL_SECRET_FILE env is not set")
+	}
+	secret, err := getPullSecretContent()
+	assert.NoError(t, err)
+	assert.NoError(t, StoreInKeyring(secret))
+
+	val, err := loader.Value()
+	assert.NoError(t, err)
+	assert.Equal(t, secret, val)
+
+}
+
+func TestLoadFromConfig(t *testing.T) {
+	if os.Getenv(crcPullSecretEnv) == "" {
+		t.Skip(fmt.Sprintf("Skipping since %s env is not set", crcPullSecretEnv))
+	}
+	secret, err := getPullSecretContent()
+	assert.NoError(t, err)
+	assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, "file2"), []byte(secret), 0600))
+	_, err = cfg.Set(config.PullSecretFile, filepath.Join(dir, "file2"))
+	assert.NoError(t, err)
+
+	val, err := loader.Value()
+	assert.NoError(t, err)
+	assert.Equal(t, secret, val)
+}
+
+func TestMain(m *testing.M) {
 	keyring.MockInit()
 
 	dir, err := ioutil.TempDir("", "pull-secret")
-	assert.NoError(t, err)
-	defer os.RemoveAll(dir)
+	assert.NoError(&testing.T{}, err)
 
-	cfg := config.New(config.NewEmptyInMemoryStorage())
+	cfg = config.New(config.NewEmptyInMemoryStorage())
 	config.RegisterSettings(cfg)
 
-	loader := &nonInteractivePullSecretLoader{
+	loader = &nonInteractivePullSecretLoader{
 		config: cfg,
 		path:   filepath.Join(dir, "file1"),
 	}
 
-	_, err = loader.Value()
-	assert.Error(t, err)
+	code := m.Run()
 
-	assert.NoError(t, StoreInKeyring(secret3))
+	defer func() {
+		os.RemoveAll(dir)
+		os.Exit(code)
+	}()
+}
 
-	val, err := loader.Value()
-	assert.NoError(t, err)
-	assert.Equal(t, secret3, val)
-
-	assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, "file2"), []byte(secret2), 0600))
-	_, err = cfg.Set(config.PullSecretFile, filepath.Join(dir, "file2"))
-	assert.NoError(t, err)
-
-	val, err = loader.Value()
-	assert.NoError(t, err)
-	assert.Equal(t, secret2, val)
-
-	assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, "file2"), []byte(secret1), 0600))
-
-	val, err = loader.Value()
-	assert.NoError(t, err)
-	assert.Equal(t, secret1, val)
-
-	assert.Error(t, StoreInKeyring(secret4))
+func getPullSecretContent() (string, error) {
+	secret, err := ioutil.ReadFile(os.Getenv(crcPullSecretEnv))
+	return strings.TrimSpace(string(secret)), err
 }

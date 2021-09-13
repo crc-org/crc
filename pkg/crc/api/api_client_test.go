@@ -303,8 +303,8 @@ func TestPullSecret(t *testing.T) {
 
 	pullSecretFile := filepath.Join(dir, "pull-secret.json")
 	assert.NoError(t, ioutil.WriteFile(pullSecretFile, []byte(constants.OkdPullSecret), 0600))
-	_, err = config.Set(crcConfig.PullSecretFile, pullSecretFile)
-	assert.NoError(t, err)
+	_, err = config.Set(crcConfig.PullSecretFile, pullSecretFile) // invalid
+	assert.Error(t, err)
 
 	defined, err = client.IsPullSecretDefined()
 	assert.NoError(t, err)
