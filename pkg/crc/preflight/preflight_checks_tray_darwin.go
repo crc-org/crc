@@ -1,11 +1,15 @@
 package preflight
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/daemonclient"
+	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/os/launchd"
 )
@@ -71,7 +75,7 @@ func checkIfTrayAgentRunning() error {
 	if !launchd.AgentRunning(trayAgentLabel) {
 		return fmt.Errorf("Tray is not running")
 	}
-	return nil
+	return checkIfDaemonRunning()
 }
 
 func fixTrayAgentRunning() error {
@@ -98,4 +102,13 @@ func fixPlistFileExists(agentConfig launchd.AgentConfig) error {
 		return err
 	}
 	return nil
+}
+
+func checkIfDaemonRunning() error {
+	return crcerrors.Retry(context.Background(), time.Second*3, func() error {
+		if _, err := daemonclient.New().APIClient.Version(); err != nil {
+			return &crcerrors.RetriableError{Err: fmt.Errorf("Daemon is not yet running: %w", err)}
+		}
+		return nil
+	}, time.Second)
 }
