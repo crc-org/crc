@@ -18,7 +18,7 @@ func getGenerateCmd(config *config.Config) *cobra.Command {
 			return runGenerate(config, forceStop)
 		},
 	}
-	generateCmd.PersistentFlags().BoolVarP(&forceStop, "forceStop", "f", false, "Forcefully stop the instance")
+	generateCmd.PersistentFlags().BoolVarP(&forceStop, "force-stop", "f", false, "Forcefully stop the instance")
 	return generateCmd
 }
 
