@@ -134,7 +134,7 @@ function run_tests() {
   # this is copied over using https://github.com/minishift/minishift-ci-jobs/blob/master/minishift-ci-index.yaml#L99
   export PULL_SECRET_FILE=--pull-secret-file=$HOME/payload/crc_pull_secret
   export BUNDLE_LOCATION=--bundle-location=$HOME/Downloads/$BUNDLE 
-  make e2e 
+  make e2e GODOG_OPTS="--godog.tags='~@story_marketplace && @linux'"
   if [[ $? -ne 0 ]]; then
     upload_logs $1
     exit 1
