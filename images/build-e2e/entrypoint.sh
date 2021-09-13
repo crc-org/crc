@@ -139,7 +139,7 @@ $SCP "${REMOTE}:${EXECUTION_FOLDER}/bin/e2e.results" "${RESULTS_PATH}"
 $SCP "${REMOTE}:${EXECUTION_FOLDER}/bin/out/test-results" "${RESULTS_PATH}"
 
 echo "Cleanup target"
-# Clenaup
+# Cleanup
 # Review this when go 1.16 with embed support
 if [[ ${PLATFORM} == 'windows' ]]; then
     # Todo change for powershell cmdlet
