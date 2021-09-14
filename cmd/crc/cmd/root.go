@@ -147,8 +147,12 @@ func setProxyDefaults() error {
 	}
 
 	if proxyConfig.IsEnabled() {
-		logging.Debugf("HTTP-PROXY: %s, HTTPS-PROXY: %s, NO-PROXY: %s, proxyCAFile: %s", proxyConfig.HTTPProxyForDisplay(),
-			proxyConfig.HTTPSProxyForDisplay(), proxyConfig.GetNoProxyString(), proxyCAFile)
+		var caFileForDisplay string
+		if proxyCAFile != "" {
+			caFileForDisplay = fmt.Sprintf(", proxyCAFile: %s", proxyCAFile)
+		}
+		logging.Debugf("HTTP-PROXY: %s, HTTPS-PROXY: %s, NO-PROXY: %s%s", proxyConfig.HTTPProxyForDisplay(),
+			proxyConfig.HTTPSProxyForDisplay(), proxyConfig.GetNoProxyString(), caFileForDisplay)
 		proxyConfig.ApplyToEnvironment()
 	}
 	return nil
