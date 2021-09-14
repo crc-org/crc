@@ -77,4 +77,4 @@ replace (
 	k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20210521075729-633333dfccda
 )
 
-replace github.com/mdlayher/vsock => github.com/cfergeau/vsock v0.0.0-20210707084117-4d87f8a20ba8
+replace github.com/mdlayher/vsock => github.com/cfergeau/vsock v0.0.0-20210707100525-4def293f672e
