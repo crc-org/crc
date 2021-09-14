@@ -49,6 +49,11 @@ func (l *listener) Accept() (net.Conn, error) {
 	return newConn(cfd, l.addr, remote)
 }
 
+// FileListener returns a network listener for the open file f.
+// It is the caller's responsibility to close ln when finished.
+// Closing ln does not affect f, and closing f does not affect ln.
+// This is similar to https://golang.org/pkg/net/#FileListener
+// but for vsock-backed files.
 func FileListener(f *os.File) (ln net.Listener, err error) {
 	fd, err := unix.Dup(int(f.Fd()))
 	if err != nil {
