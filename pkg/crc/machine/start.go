@@ -359,10 +359,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 	}
 
-	if err := ensureKubeletAndCRIOAreConfiguredForProxy(sshRunner, proxyConfig, instanceIP); err != nil {
-		return nil, errors.Wrap(err, "Failed to update proxy configuration of kubelet and crio")
-	}
-
 	// Check the certs validity inside the vm
 	logging.Info("Verifying validity of the kubelet certificates...")
 	certsExpired, err := cluster.CheckCertsValidity(sshRunner)
@@ -610,14 +606,6 @@ func copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey *rsa.Priv
 		return err
 	}
 	return updateClientCrtAndKeyToKubeconfig(clientKey, clientCert, srcKubeConfigPath, dstKubeConfigPath)
-}
-
-func ensureKubeletAndCRIOAreConfiguredForProxy(sshRunner *crcssh.Runner, proxy *network.ProxyConfig, instanceIP string) (err error) {
-	if !proxy.IsEnabled() {
-		return nil
-	}
-	logging.Info("Adding proxy configuration to kubelet and crio service...")
-	return cluster.AddProxyToKubeletAndCriO(sshRunner, proxy)
 }
 
 func ensureProxyIsConfiguredInOpenShift(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, proxy *network.ProxyConfig, instanceIP string) (err error) {
