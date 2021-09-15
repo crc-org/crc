@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/asaskevich/govalidator"
+	"golang.org/x/net/http/httpproxy"
 )
 
 var (
@@ -27,15 +28,16 @@ func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCACert string) (*Prox
 		HTTPSProxy:  httpsProxy,
 		ProxyCACert: proxyCACert,
 	}
+	envProxy := httpproxy.FromEnvironment()
 
 	if DefaultProxy.HTTPProxy == "" {
-		DefaultProxy.HTTPProxy = getProxyFromEnv("http_proxy")
+		DefaultProxy.HTTPProxy = envProxy.HTTPProxy
 	}
 	if DefaultProxy.HTTPSProxy == "" {
-		DefaultProxy.HTTPSProxy = getProxyFromEnv("https_proxy")
+		DefaultProxy.HTTPSProxy = envProxy.HTTPSProxy
 	}
 	if noProxy == "" {
-		noProxy = getProxyFromEnv("no_proxy")
+		noProxy = envProxy.NoProxy
 	}
 	DefaultProxy.setNoProxyString(noProxy)
 
@@ -67,14 +69,6 @@ func NewProxyConfig() (*ProxyConfig, error) {
 	}
 
 	return &config, nil
-}
-
-func getProxyFromEnv(proxyScheme string) string {
-	p := os.Getenv(proxyScheme)
-	if p == "" {
-		p = os.Getenv(strings.ToUpper(proxyScheme))
-	}
-	return p
 }
 
 // HTTPProxy with hidden credentials
