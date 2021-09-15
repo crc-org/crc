@@ -2,6 +2,8 @@ package network
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -117,6 +119,22 @@ func (p *ProxyConfig) ApplyToEnvironment() {
 		os.Setenv("NO_PROXY", p.GetNoProxyString())
 		os.Setenv("no_proxy", p.GetNoProxyString())
 	}
+}
+
+// This wraps https://pkg.go.dev/golang.org/x/net/http/httpproxy#Config.ProxyFunc
+// This can be called on a nil *ProxyConfig
+func (p *ProxyConfig) ProxyFunc() func(req *http.Request) (*url.URL, error) {
+	var cfg httpproxy.Config
+
+	if p != nil {
+		cfg = httpproxy.Config{
+			HTTPProxy:  p.HTTPProxy,
+			HTTPSProxy: p.HTTPSProxy,
+			NoProxy:    p.GetNoProxyString(),
+		}
+	}
+
+	return func(req *http.Request) (*url.URL, error) { return cfg.ProxyFunc()(req.URL) }
 }
 
 // Enabled returns true if at least one proxy (HTTP or HTTPS) is configured. Returns false otherwise.

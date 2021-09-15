@@ -133,7 +133,8 @@ func addContext(cfg *api.Config, ip string, clusterConfig *types.ClusterConfig, 
 		return fmt.Errorf("failed to parse root certificate")
 	}
 	token, err := tokencmd.RequestToken(&restclient.Config{
-		Host: clusterConfig.ClusterAPI,
+		Proxy: clusterConfig.ProxyConfig.ProxyFunc(),
+		Host:  clusterConfig.ClusterAPI,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
 				RootCAs:    roots,

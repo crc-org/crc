@@ -58,6 +58,11 @@ func init() {
 	if err != nil {
 		logging.Fatal(err.Error())
 	}
+
+	if err := setProxyDefaults(); err != nil {
+		logging.Fatal(err.Error())
+	}
+
 	// Initiate segment client
 	if segmentClient, err = segment.NewClient(config, httpTransport()); err != nil {
 		logging.Fatal(err.Error())
@@ -77,9 +82,6 @@ func runPrerun(cmd *cobra.Command) error {
 		logFile = constants.DaemonLogFilePath
 	}
 	logging.InitLogrus(logging.LogLevel, logFile)
-	if err := setProxyDefaults(); err != nil {
-		return err
-	}
 
 	for _, str := range defaultVersion().lines() {
 		logging.Debugf(str)
@@ -211,22 +213,33 @@ func attachMiddleware(names []string, cmd *cobra.Command) {
 	}
 }
 
+func defaultTransport() *http.Transport {
+	transport := http.DefaultTransport.(*http.Transport)
+	proxyConfig, err := network.NewProxyConfig()
+	if err != nil {
+		return transport
+	}
+
+	transport = transport.Clone()
+	transport.Proxy = proxyConfig.ProxyFunc()
+	return transport
+}
+
 func httpTransport() http.RoundTripper {
 	if config.Get(crcConfig.ProxyCAFile).IsDefault {
-		return http.DefaultTransport
+		return defaultTransport()
 	}
 	caCert, err := ioutil.ReadFile(config.Get(crcConfig.ProxyCAFile).AsString())
 	if err != nil {
 		logging.Errorf("Cannot read proxy-ca-file, using default http transport: %v", err)
-		return http.DefaultTransport
+		return defaultTransport()
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
-	return &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		TLSClientConfig: &tls.Config{
-			MinVersion: tls.VersionTLS12,
-			RootCAs:    caCertPool,
-		},
+	transport := defaultTransport()
+	transport.TLSClientConfig = &tls.Config{
+		MinVersion: tls.VersionTLS12,
+		RootCAs:    caCertPool,
 	}
+	return transport
 }
