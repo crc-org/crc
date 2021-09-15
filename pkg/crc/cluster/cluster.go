@@ -353,44 +353,6 @@ func addProxyCACertToCluster(sshRunner *ssh.Runner, ocConfig oc.Config, proxy *n
 	return nil
 }
 
-// AddProxyToKubeletAndCriO adds the systemd drop-in proxy configuration file to the instance,
-// both services (kubelet and crio) need to be restarted after this change.
-// Since proxy operator is not able to make changes to in the kubelet/crio side,
-// this is the job of machine config operator on the node and for crc this is not
-// possible so we do need to put it here.
-func AddProxyToKubeletAndCriO(sshRunner *ssh.Runner, proxy *network.ProxyConfig) error {
-	proxyTemplate := `[Service]
-Environment=HTTP_PROXY=%s
-Environment=HTTPS_PROXY=%s
-Environment=NO_PROXY=.cluster.local,.svc,10.217.0.0/22,10.217.4.0/23,192.168.126.0/24,%s`
-	p := fmt.Sprintf(proxyTemplate, proxy.HTTPProxy, proxy.HTTPSProxy, proxy.GetNoProxyString())
-	// This will create a systemd drop-in configuration for proxy (both for kubelet and crio services) on the VM.
-	err := sshRunner.CopyData([]byte(p), "/etc/systemd/system/crio.service.d/10-default-env.conf", 0644)
-	if err != nil {
-		return err
-	}
-	err = sshRunner.CopyData([]byte(p), "/etc/systemd/system/kubelet.service.d/10-default-env.conf", 0644)
-	if err != nil {
-		return err
-	}
-
-	if proxy.ProxyCACert != "" {
-		logging.Debug("Adding proxy CA cert to instance")
-		return addProxyCACertToInstance(sshRunner, proxy)
-	}
-	return nil
-}
-
-func addProxyCACertToInstance(sshRunner *ssh.Runner, proxy *network.ProxyConfig) error {
-	if err := sshRunner.CopyData([]byte(proxy.ProxyCACert), "/etc/pki/ca-trust/source/anchors/openshift-config-user-ca-bundle.crt", 0600); err != nil {
-		return err
-	}
-	if _, stderr, err := sshRunner.Run("sudo update-ca-trust"); err != nil {
-		return fmt.Errorf("Failed to run update-ca-trust  %v: %s", err, stderr)
-	}
-	return nil
-}
-
 type PullSecretMemoizer struct {
 	value  string
 	Getter PullSecretLoader
