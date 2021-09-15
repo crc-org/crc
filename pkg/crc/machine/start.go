@@ -459,7 +459,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	logging.Info("Starting OpenShift cluster... [waiting for the cluster to stabilize]")
-	if err := cluster.WaitForClusterStable(ctx, instanceIP, constants.KubeconfigFilePath); err != nil {
+	if err := cluster.WaitForClusterStable(ctx, instanceIP, constants.KubeconfigFilePath, proxyConfig); err != nil {
 		logging.Errorf("Cluster is not ready: %v", err)
 	}
 

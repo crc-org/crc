@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/network"
 )
 
 // WaitForClusterStable checks that the cluster is running a number of consecutive times
-func WaitForClusterStable(ctx context.Context, ip string, kubeconfigFilePath string) error {
+func WaitForClusterStable(ctx context.Context, ip string, kubeconfigFilePath string, proxy *network.ProxyConfig) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
@@ -18,6 +19,12 @@ func WaitForClusterStable(ctx context.Context, ip string, kubeconfigFilePath str
 
 	retryDuration := 30 * time.Second
 	retryCount := 20 // 10 minutes
+
+	if proxy.IsEnabled() {
+		// In case proxy is enabled increase the retry count
+		// to 10 and this will add addition 5 mins.
+		retryCount += 10
+	}
 
 	numConsecutive := 3
 	var count int // holds num of consecutive matches
