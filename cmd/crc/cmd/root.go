@@ -216,7 +216,7 @@ func attachMiddleware(names []string, cmd *cobra.Command) {
 func defaultTransport() *http.Transport {
 	transport := http.DefaultTransport.(*http.Transport)
 	proxyConfig, err := network.NewProxyConfig()
-	if err != nil {
+	if err != nil || !proxyConfig.IsEnabled() {
 		return transport
 	}
 
