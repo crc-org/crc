@@ -39,3 +39,7 @@ func (a applescriptHandler) Install() error {
 		*a.installerPath,
 		*a.currentUserPassword)
 }
+
+func (a applescriptHandler) RebootRequired() error {
+	return nil
+}
