@@ -1,5 +1,9 @@
 package tray
 
+import (
+	"fmt"
+)
+
 type Tray interface {
 	Install() error
 	IsInstalled() error
@@ -18,7 +22,10 @@ type Tray interface {
 	ConnectClusterAsDeveloper() error
 }
 
-type Element struct {
-	Name         string
-	AXIdentifier string
+func getElement(name string, elements map[string]string) (string, error) {
+	identifier, ok := elements[name]
+	if ok {
+		return identifier, nil
+	}
+	return "", fmt.Errorf("element '%s', Can not be accessed from the tray", name)
 }

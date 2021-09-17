@@ -1,5 +1,3 @@
-// +build !windows
-
 package tray
 
 const (
@@ -15,9 +13,7 @@ const (
 
 	userKubeadmin string = "kubeadmin"
 	userDeveloper string = "developer"
-)
 
-const (
-	uxCheckAccessibilityDuration = "2s"
-	uxCheckAccessibilityRetry    = 10
+	trayClusterStateRetries int = 15
+	trayClusterStateTimeout int = 90
 )
