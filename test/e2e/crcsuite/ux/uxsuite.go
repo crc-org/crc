@@ -28,6 +28,8 @@ func FeatureContext(s *godog.Suite, bundleLocation *string, pullSecretFile *stri
 	if handlersAreInitialized() {
 		s.Step(`^install CRC tray$`,
 			trayHandler.Install)
+		s.Step(`^reboot is required$`,
+			installerHandler.RebootRequired)
 		s.Step(`^tray should be installed$`,
 			trayHandler.IsInstalled)
 		s.Step(`^tray icon should be accessible$`,
