@@ -26,33 +26,19 @@ const (
 	bundleIdentifier string = "com.redhat.codeready.containers"
 	appPath          string = "/Applications/CodeReady Containers.app"
 
-	trayClusterStateTimeout = "90"
+	uxCheckAccessibilityDuration = "2s"
+	uxCheckAccessibilityRetry    = 10
 )
 
 var (
-	elements = []Element{
-		{
-			Name:         actionStart,
-			AXIdentifier: "start"},
-		{
-			Name:         actionStop,
-			AXIdentifier: "stop"},
-		{
-			Name:         actionDelete,
-			AXIdentifier: "delete"},
-		{
-			Name:         actionQuit,
-			AXIdentifier: "quit"},
-		{
-			Name:         fieldState,
-			AXIdentifier: "cluster_status"},
-		{
-			Name:         userKubeadmin,
-			AXIdentifier: "kubeadmin_login"},
-		{
-			Name:         userDeveloper,
-			AXIdentifier: "developer_login"},
-	}
+	elements = map[string]string{
+		actionStart:   "start",
+		actionStop:    "stop",
+		actionDelete:  "delete",
+		actionQuit:    "quit",
+		fieldState:    "cluster_status",
+		userKubeadmin: "kubeadmin_login",
+		userDeveloper: "developer_login"}
 )
 
 type applescriptHandler struct {
@@ -60,7 +46,7 @@ type applescriptHandler struct {
 	pullSecretFileLocation *string
 }
 
-func NewTray(bundleLocationValue *string, pullSecretFileLocationValue *string) Tray {
+func NewTray(bundleLocationValue, pullSecretFileLocationValue *string) Tray {
 	if runtime.GOOS == "darwin" {
 		return applescriptHandler{
 			bundleLocation:         bundleLocationValue,
@@ -117,11 +103,13 @@ func (a applescriptHandler) SetPullSecret() error {
 }
 
 func (a applescriptHandler) IsClusterRunning() error {
-	return waitTrayShowsFieldWithValue(fieldState, stateRunning)
+	return util.MatchWithRetry(stateRunning, checkTrayShowsStatusValue,
+		trayClusterStateRetries, trayClusterStateTimeout)
 }
 
 func (a applescriptHandler) IsClusterStopped() error {
-	return waitTrayShowsFieldWithValue(fieldState, stateStopped)
+	return util.MatchWithRetry(stateStopped, checkTrayShowsStatusValue,
+		trayClusterStateRetries, trayClusterStateTimeout)
 }
 
 func (a applescriptHandler) CopyOCLoginCommandAsKubeadmin() error {
@@ -156,46 +144,16 @@ func clickOnElement(elementName string, scriptName string) error {
 		return err
 	}
 	return applescript.ExecuteApplescript(
-		scriptName, bundleIdentifier, element.AXIdentifier)
+		scriptName, bundleIdentifier, element)
 }
 
-func waitTrayShowsFieldWithValue(field string, expectedValue string) error {
-	retryCount := 15
-	iterationDuration, extraDuration, err :=
-		util.GetRetryParametersFromTimeoutInSeconds(retryCount, trayClusterStateTimeout)
-	if err != nil {
-		return err
-	}
-	for i := 0; i < retryCount; i++ {
-		err := checkTrayShowsFieldWithValue(field, expectedValue)
-		if err == nil {
-			return nil
-		}
-		time.Sleep(iterationDuration)
-	}
-	if extraDuration != 0 {
-		time.Sleep(extraDuration)
-	}
-	return fmt.Errorf("Tray did not showed %s ", expectedValue)
-}
-
-func checkTrayShowsFieldWithValue(field string, expectedValue string) error {
-	element, err := getElement(field, elements)
+func checkTrayShowsStatusValue(expectedValue string) error {
+	element, err := getElement(fieldState, elements)
 	if err != nil {
 		return err
 	}
 	return applescript.ExecuteApplescriptReturnShouldMatch(
-		expectedValue, getTrayFieldlValue, bundleIdentifier, element.AXIdentifier)
-}
-
-func getElement(name string, elements []Element) (Element, error) {
-	for _, e := range elements {
-		if name == e.Name {
-			return e, nil
-		}
-	}
-	return Element{},
-		fmt.Errorf("element '%s', Can not be accessed from the tray", name)
+		expectedValue, getTrayFieldlValue, bundleIdentifier, element)
 }
 
 func checkAccessible(uxIsAccessible func() error, component string) error {
