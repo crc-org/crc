@@ -209,7 +209,7 @@ func checkIfNewVersionAvailable(noUpdateCheck bool) error {
 }
 
 func newVersionAvailable() (bool, string, string, error) {
-	release, err := crcversion.GetCRCLatestVersionFromMirror(httpTransport())
+	release, err := crcversion.GetCRCLatestVersionFromMirror(network.HTTPTransport())
 	if err != nil {
 		return false, "", "", err
 	}
