@@ -290,6 +290,9 @@ Description=CodeReady Containers vsock socket
 [Socket]
 ListenStream=vsock::1024
 Service=crc-daemon.service
+
+[Install]
+WantedBy=default.target
 `
 
 	httpUnitName = "crc-http.socket"
@@ -299,6 +302,9 @@ Description=CodeReady Containers HTTP socket
 [Socket]
 ListenStream=%h/.crc/crc-http.sock
 Service=crc-daemon.service
+
+[Install]
+WantedBy=default.target
 `
 
 	daemonUnitName     = "crc-daemon.service"
