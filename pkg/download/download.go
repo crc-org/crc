@@ -3,8 +3,10 @@ package download
 import (
 	"os"
 
-	"github.com/cavaliercoder/grab"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/network"
+
+	"github.com/cavaliercoder/grab"
 	"github.com/pkg/errors"
 )
 
@@ -12,6 +14,7 @@ func Download(uri, destination string, mode os.FileMode) (string, error) {
 	logging.Debugf("Downloading %s to %s", uri, destination)
 
 	client := grab.NewClient()
+	client.HTTPClient.Transport = network.HTTPTransport()
 	req, err := grab.NewRequest(destination, uri)
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to get response from %s", uri)
