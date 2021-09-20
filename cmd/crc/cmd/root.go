@@ -2,11 +2,8 @@ package cmd
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -63,7 +60,7 @@ func init() {
 	}
 
 	// Initiate segment client
-	if segmentClient, err = segment.NewClient(config, httpTransport()); err != nil {
+	if segmentClient, err = segment.NewClient(config, network.HTTPTransport()); err != nil {
 		logging.Fatal(err.Error())
 	}
 
@@ -188,41 +185,4 @@ func attachMiddleware(names []string, cmd *cobra.Command) {
 		src := cmd.RunE
 		cmd.RunE = executeWithLogging(fullCmd, src)
 	}
-}
-
-func proxyTLSConfig(proxyConfig *network.ProxyConfig) (*tls.Config, error) {
-	if proxyConfig.ProxyCACert == "" {
-		return nil, nil
-	}
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM([]byte(proxyConfig.ProxyCACert))
-	return &tls.Config{
-		MinVersion: tls.VersionTLS12,
-		RootCAs:    caCertPool,
-	}, nil
-}
-
-func httpTransport() http.RoundTripper {
-	proxyConfig, err := network.NewProxyConfig()
-	if err != nil || !proxyConfig.IsEnabled() {
-		return http.DefaultTransport
-	}
-
-	defaultTransport, ok := http.DefaultTransport.(*http.Transport)
-	if !ok {
-		logging.Warnf("Unexpected default http transport type")
-		return http.DefaultTransport
-	}
-
-	transport := defaultTransport.Clone()
-
-	transport.Proxy = proxyConfig.ProxyFunc()
-	tlsConfig, err := proxyTLSConfig(proxyConfig)
-	if err != nil {
-		logging.Warnf("Failed to add proxy CA to crc http transport")
-		return transport
-	}
-	transport.TLSClientConfig = tlsConfig
-
-	return transport
 }

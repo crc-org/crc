@@ -1,12 +1,16 @@
 package network
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
+
+	"github.com/code-ready/crc/pkg/crc/logging"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/pkg/errors"
@@ -192,4 +196,53 @@ func ValidateProxyURL(proxyURL string) error {
 		return fmt.Errorf("Proxy URL '%s' is not valid", proxyURL)
 	}
 	return nil
+}
+
+func (p *ProxyConfig) tlsConfig() (*tls.Config, error) {
+	if p.ProxyCACert == "" {
+		return nil, nil
+	}
+
+	caCertPool := x509.NewCertPool()
+	ok := caCertPool.AppendCertsFromPEM([]byte(p.ProxyCACert))
+	if !ok {
+		return nil, fmt.Errorf("Failed to append proxy CA to system CAs")
+	}
+	return &tls.Config{
+		MinVersion: tls.VersionTLS12,
+		RootCAs:    caCertPool,
+	}, nil
+}
+
+func (p *ProxyConfig) HTTPTransport() http.RoundTripper {
+	if !p.IsEnabled() {
+		return http.DefaultTransport
+	}
+
+	defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		logging.Warnf("Unexpected default http transport type")
+		return http.DefaultTransport
+	}
+
+	transport := defaultTransport.Clone()
+
+	transport.Proxy = p.ProxyFunc()
+	tlsConfig, err := p.tlsConfig()
+	if err != nil {
+		logging.Warnf("Failed to add proxy CA to crc http transport")
+		return transport
+	}
+	transport.TLSClientConfig = tlsConfig
+
+	return transport
+}
+
+func HTTPTransport() http.RoundTripper {
+	proxyConfig, err := NewProxyConfig()
+	if err != nil {
+		return http.DefaultTransport
+	}
+
+	return proxyConfig.HTTPTransport()
 }
