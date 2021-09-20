@@ -98,12 +98,12 @@ func NewProxyConfig() (*ProxyConfig, error) {
 		config.AddNoProxy(DefaultProxy.noProxy...)
 	}
 
-	err := ValidateProxyURL(config.HTTPProxy)
+	err := ValidateProxyURL(config.HTTPProxy, false)
 	if err != nil {
 		return nil, err
 	}
 
-	err = ValidateProxyURL(config.HTTPSProxy)
+	err = ValidateProxyURL(config.HTTPSProxy, true)
 	if err != nil {
 		return nil, err
 	}
@@ -181,17 +181,23 @@ func (p *ProxyConfig) IsEnabled() bool {
 }
 
 // ValidateProxyURL validates that the specified proxyURL is valid
-func ValidateProxyURL(proxyURL string) error {
+func ValidateProxyURL(proxyURL string, isHTTPSProxy bool) error {
 	if proxyURL == "" {
 		return nil
 	}
 
-	if strings.HasPrefix(proxyURL, "https://") {
-		return fmt.Errorf("Proxy URL '%s' is not valid: https is not supported", proxyURL)
+	// check URL scheme
+	// http proxy URLs must start with http://
+	// https proxy URLs must start with http://or https://
+	httpScheme := strings.HasPrefix(proxyURL, "http://")
+	httpsScheme := strings.HasPrefix(proxyURL, "https://")
+	switch {
+	case !isHTTPSProxy && !httpScheme:
+		return fmt.Errorf("HTTP proxy URL '%s' is not valid: url should start with http://", proxyURL)
+	case isHTTPSProxy && !httpScheme && !httpsScheme:
+		return fmt.Errorf("HTTPS proxy URL '%s' is not valid: url should start with http:// or https://", proxyURL)
 	}
-	if !strings.HasPrefix(proxyURL, "http://") {
-		return fmt.Errorf("Proxy URL '%s' is not valid: url should start with http://", proxyURL)
-	}
+
 	if !govalidator.IsURL(proxyURL) {
 		return fmt.Errorf("Proxy URL '%s' is not valid", proxyURL)
 	}
