@@ -379,6 +379,9 @@ func fixSystemdUnit(unitName string, unitContent string, shouldBeRunning bool) e
 	running := systemdUnitRunning(sd, unitName)
 	if !running && shouldBeRunning {
 		logging.Debugf("Starting %s", unitName)
+		if err := sd.Enable(unitName); err != nil {
+			return err
+		}
 		return sd.Start(unitName)
 	} else if running && !shouldBeRunning {
 		logging.Debugf("Stopping %s", unitName)
