@@ -88,9 +88,17 @@ func ValidatePath(value interface{}) (bool, string) {
 	return true, ""
 }
 
-// ValidateURI checks if given URI is valid
-func ValidateURI(value interface{}) (bool, string) {
-	if err := network.ValidateProxyURL(cast.ToString(value)); err != nil {
+// ValidateHTTPProxy checks if given URI is valid for a HTTP proxy
+func ValidateHTTPProxy(value interface{}) (bool, string) {
+	if err := network.ValidateProxyURL(cast.ToString(value), false); err != nil {
+		return false, err.Error()
+	}
+	return true, ""
+}
+
+// ValidateHTTPSProxy checks if given URI is valid for a HTTPS proxy
+func ValidateHTTPSProxy(value interface{}) (bool, string) {
+	if err := network.ValidateProxyURL(cast.ToString(value), true); err != nil {
 		return false, err.Error()
 	}
 	return true, ""

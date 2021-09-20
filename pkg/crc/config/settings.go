@@ -91,9 +91,9 @@ func RegisterSettings(cfg *Config) {
 	cfg.AddSetting(AutostartTray, true, validateTrayAutostart, disableEnableTrayAutostart,
 		"Automatically start the tray (true/false, default: true)")
 	// Proxy Configuration
-	cfg.AddSetting(HTTPProxy, "", ValidateURI, SuccessfullyApplied,
+	cfg.AddSetting(HTTPProxy, "", ValidateHTTPProxy, SuccessfullyApplied,
 		"HTTP proxy URL (string, like 'http://my-proxy.com:8443')")
-	cfg.AddSetting(HTTPSProxy, "", ValidateURI, SuccessfullyApplied,
+	cfg.AddSetting(HTTPSProxy, "", ValidateHTTPSProxy, SuccessfullyApplied,
 		"HTTPS proxy URL (string, like 'https://my-proxy.com:8443')")
 	cfg.AddSetting(NoProxy, "", ValidateNoProxy, SuccessfullyApplied,
 		"Hosts, ipv4 addresses or CIDR which do not use a proxy (string, comma-separated list such as '127.0.0.1,192.168.100.1/24')")
