@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -191,33 +190,39 @@ func attachMiddleware(names []string, cmd *cobra.Command) {
 	}
 }
 
-func defaultTransport() *http.Transport {
-	transport := http.DefaultTransport.(*http.Transport)
-	proxyConfig, err := network.NewProxyConfig()
-	if err != nil || !proxyConfig.IsEnabled() {
-		return transport
+func proxyTLSConfig(proxyConfig *network.ProxyConfig) (*tls.Config, error) {
+	if proxyConfig.ProxyCACert == "" {
+		return nil, nil
 	}
-
-	transport = transport.Clone()
-	transport.Proxy = proxyConfig.ProxyFunc()
-	return transport
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM([]byte(proxyConfig.ProxyCACert))
+	return &tls.Config{
+		MinVersion: tls.VersionTLS12,
+		RootCAs:    caCertPool,
+	}, nil
 }
 
 func httpTransport() http.RoundTripper {
-	if config.Get(crcConfig.ProxyCAFile).IsDefault {
-		return defaultTransport()
+	proxyConfig, err := network.NewProxyConfig()
+	if err != nil || !proxyConfig.IsEnabled() {
+		return http.DefaultTransport
 	}
-	caCert, err := ioutil.ReadFile(config.Get(crcConfig.ProxyCAFile).AsString())
+
+	defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		logging.Warnf("Unexpected default http transport type")
+		return http.DefaultTransport
+	}
+
+	transport := defaultTransport.Clone()
+
+	transport.Proxy = proxyConfig.ProxyFunc()
+	tlsConfig, err := proxyTLSConfig(proxyConfig)
 	if err != nil {
-		logging.Errorf("Cannot read proxy-ca-file, using default http transport: %v", err)
-		return defaultTransport()
+		logging.Warnf("Failed to add proxy CA to crc http transport")
+		return transport
 	}
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-	transport := defaultTransport()
-	transport.TLSClientConfig = &tls.Config{
-		MinVersion: tls.VersionTLS12,
-		RootCAs:    caCertPool,
-	}
+	transport.TLSClientConfig = tlsConfig
+
 	return transport
 }
