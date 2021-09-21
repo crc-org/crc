@@ -109,7 +109,27 @@ func CheckCRCLocalDNSReachable(ctx context.Context, serviceConfig services.Servi
 }
 
 func CheckCRCPublicDNSReachable(serviceConfig services.ServicePostStartConfig) (string, error) {
-	stdout, _, err := serviceConfig.SSHRunner.Run(fmt.Sprintf("host -R 3 %s", publicDNSQueryURI))
+	// This does not query DNS directly to account for corporate environment where external DNS resolution
+	// may only be done on the host running the http(s) proxies used for internet connectivity
+	proxyConfig, err := network.NewProxyConfig()
+	if err != nil {
+		// try without using proxy
+		proxyConfig = &network.ProxyConfig{}
+	}
+	curlArgs := []string{"--head", publicDNSQueryURI}
+	if proxyConfig.IsEnabled() {
+		if proxyConfig.HTTPProxy != "" {
+			curlArgs = append(curlArgs, "--proxy", proxyConfig.HTTPProxy)
+		}
+		if proxyConfig.HTTPSProxy != "" {
+			curlArgs = append(curlArgs, "--proxy", proxyConfig.HTTPSProxy)
+		}
+		curlArgs = append(curlArgs, "--noproxy", proxyConfig.GetNoProxyString())
+		if proxyConfig.ProxyCAFile != "" {
+			curlArgs = append(curlArgs, "--proxy-cacert", proxyConfig.HTTPProxy)
+		}
+	}
+	stdout, _, err := serviceConfig.SSHRunner.Run("curl", curlArgs...)
 	return stdout, err
 }
 
