@@ -2,12 +2,14 @@ package network
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/pkg/errors"
 	"golang.org/x/net/http/httpproxy"
 )
 
@@ -22,13 +24,35 @@ type ProxyConfig struct {
 	HTTPSProxy  string
 	noProxy     []string
 	ProxyCACert string
+	proxyCAFile string
 }
 
-func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCACert string) (*ProxyConfig, error) {
+func readProxyCAData(proxyCAFile string) (string, error) {
+	if proxyCAFile == "" {
+		return "", nil
+	}
+	proxyCACert, err := ioutil.ReadFile(proxyCAFile)
+	if err != nil {
+		return "", err
+	}
+	return trimTrailingEOL(string(proxyCACert)), nil
+}
+
+func trimTrailingEOL(s string) string {
+	return strings.TrimRight(s, "\n")
+}
+
+func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) (*ProxyConfig, error) {
+	proxyCAData, err := readProxyCAData(proxyCAFile)
+	if err != nil {
+		return nil, errors.Wrapf(err, "not able to read proxy CA data from %s", proxyCAFile)
+	}
+
 	DefaultProxy = ProxyConfig{
 		HTTPProxy:   httpProxy,
 		HTTPSProxy:  httpsProxy,
-		ProxyCACert: proxyCACert,
+		ProxyCACert: proxyCAData,
+		proxyCAFile: proxyCAFile,
 	}
 	envProxy := httpproxy.FromEnvironment()
 
@@ -53,6 +77,7 @@ func NewProxyConfig() (*ProxyConfig, error) {
 		HTTPProxy:   DefaultProxy.HTTPProxy,
 		HTTPSProxy:  DefaultProxy.HTTPSProxy,
 		ProxyCACert: DefaultProxy.ProxyCACert,
+		proxyCAFile: DefaultProxy.proxyCAFile,
 	}
 
 	config.noProxy = defaultNoProxies

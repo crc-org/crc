@@ -136,12 +136,7 @@ func setProxyDefaults() error {
 	noProxy := config.Get(crcConfig.NoProxy).AsString()
 	proxyCAFile := config.Get(crcConfig.ProxyCAFile).AsString()
 
-	proxyCAData, err := getProxyCAData(proxyCAFile)
-	if err != nil {
-		return fmt.Errorf("not able to read proxyCAFile %s: %v", proxyCAFile, err.Error())
-	}
-
-	proxyConfig, err := network.NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAData)
+	proxyConfig, err := network.NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile)
 	if err != nil {
 		return err
 	}
@@ -156,22 +151,6 @@ func setProxyDefaults() error {
 		proxyConfig.ApplyToEnvironment()
 	}
 	return nil
-}
-
-func getProxyCAData(proxyCAFile string) (string, error) {
-	if proxyCAFile == "" {
-		return "", nil
-	}
-	proxyCACert, err := ioutil.ReadFile(proxyCAFile)
-	if err != nil {
-		return "", err
-	}
-	// Before passing string back to caller function, remove the empty lines in the end
-	return trimTrailingEOL(string(proxyCACert)), nil
-}
-
-func trimTrailingEOL(s string) string {
-	return strings.TrimRight(s, "\n")
 }
 
 func newViperConfig() (*crcConfig.Config, *crcConfig.ViperStorage, error) {
