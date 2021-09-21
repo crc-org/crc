@@ -142,12 +142,7 @@ func setProxyDefaults() error {
 	}
 
 	if proxyConfig.IsEnabled() {
-		var caFileForDisplay string
-		if proxyCAFile != "" {
-			caFileForDisplay = fmt.Sprintf(", proxyCAFile: %s", proxyCAFile)
-		}
-		logging.Debugf("HTTP-PROXY: %s, HTTPS-PROXY: %s, NO-PROXY: %s%s", proxyConfig.HTTPProxyForDisplay(),
-			proxyConfig.HTTPSProxyForDisplay(), proxyConfig.GetNoProxyString(), caFileForDisplay)
+		logging.Debugf(proxyConfig.String())
 		proxyConfig.ApplyToEnvironment()
 	}
 	return nil

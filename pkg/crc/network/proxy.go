@@ -27,6 +27,15 @@ type ProxyConfig struct {
 	proxyCAFile string
 }
 
+func (p *ProxyConfig) String() string {
+	var caCertForDisplay string
+	if p.proxyCAFile != "" {
+		caCertForDisplay = fmt.Sprintf(", proxyCAFile: %s", p.proxyCAFile)
+	}
+	return fmt.Sprintf("HTTP-PROXY: %s, HTTPS-PROXY: %s, NO-PROXY: %s%s", p.HTTPProxyForDisplay(),
+		p.HTTPSProxyForDisplay(), p.GetNoProxyString(), caCertForDisplay)
+}
+
 func readProxyCAData(proxyCAFile string) (string, error) {
 	if proxyCAFile == "" {
 		return "", nil
