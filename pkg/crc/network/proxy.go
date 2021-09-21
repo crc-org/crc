@@ -28,13 +28,13 @@ type ProxyConfig struct {
 	HTTPSProxy  string
 	noProxy     []string
 	ProxyCACert string
-	proxyCAFile string
+	ProxyCAFile string
 }
 
 func (p *ProxyConfig) String() string {
 	var caCertForDisplay string
-	if p.proxyCAFile != "" {
-		caCertForDisplay = fmt.Sprintf(", proxyCAFile: %s", p.proxyCAFile)
+	if p.ProxyCAFile != "" {
+		caCertForDisplay = fmt.Sprintf(", proxyCAFile: %s", p.ProxyCAFile)
 	}
 	return fmt.Sprintf("HTTP-PROXY: %s, HTTPS-PROXY: %s, NO-PROXY: %s%s", p.HTTPProxyForDisplay(),
 		p.HTTPSProxyForDisplay(), p.GetNoProxyString(), caCertForDisplay)
@@ -65,7 +65,7 @@ func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) (*Prox
 		HTTPProxy:   httpProxy,
 		HTTPSProxy:  httpsProxy,
 		ProxyCACert: proxyCAData,
-		proxyCAFile: proxyCAFile,
+		ProxyCAFile: proxyCAFile,
 	}
 	envProxy := httpproxy.FromEnvironment()
 
@@ -90,7 +90,7 @@ func NewProxyConfig() (*ProxyConfig, error) {
 		HTTPProxy:   DefaultProxy.HTTPProxy,
 		HTTPSProxy:  DefaultProxy.HTTPSProxy,
 		ProxyCACert: DefaultProxy.ProxyCACert,
-		proxyCAFile: DefaultProxy.proxyCAFile,
+		ProxyCAFile: DefaultProxy.ProxyCAFile,
 	}
 
 	config.noProxy = defaultNoProxies
