@@ -202,8 +202,10 @@ func (p *ProxyConfig) tlsConfig() (*tls.Config, error) {
 	if p.ProxyCACert == "" {
 		return nil, nil
 	}
-
-	caCertPool := x509.NewCertPool()
+	caCertPool, err := x509.SystemCertPool()
+	if err != nil {
+		return nil, err
+	}
 	ok := caCertPool.AppendCertsFromPEM([]byte(p.ProxyCACert))
 	if !ok {
 		return nil, fmt.Errorf("Failed to append proxy CA to system CAs")
