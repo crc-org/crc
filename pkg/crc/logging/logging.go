@@ -66,6 +66,10 @@ func InitLogrus(logLevel, logFilePath string) {
 	}
 }
 
+func IsDebug() bool {
+	return LogLevel == "debug"
+}
+
 func Info(args ...interface{}) {
 	logrus.Info(args...)
 }

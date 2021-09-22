@@ -23,11 +23,7 @@ func getGenerateCmd(config *config.Config) *cobra.Command {
 }
 
 func runGenerate(config *config.Config, forceStop bool) error {
-	client := machine.NewClient(constants.DefaultName, isDebugLog(), config)
+	client := machine.NewClient(constants.DefaultName, logging.IsDebug(), config)
 
 	return client.GenerateBundle(forceStop)
-}
-
-func isDebugLog() bool {
-	return logging.LogLevel == "debug"
 }

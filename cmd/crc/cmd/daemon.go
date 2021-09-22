@@ -202,7 +202,7 @@ func run(configuration *types.Configuration) error {
 
 	startupDone()
 
-	if isDebugLog() {
+	if logging.IsDebug() {
 		go func() {
 			for {
 				fmt.Printf("%v sent to the VM, %v received from the VM\n", units.HumanSize(float64(vn.BytesSent())), units.HumanSize(float64(vn.BytesReceived())))

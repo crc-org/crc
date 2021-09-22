@@ -167,10 +167,6 @@ func (s *startResult) prettyPrintTo(writer io.Writer) error {
 	return nil
 }
 
-func isDebugLog() bool {
-	return logging.LogLevel == "debug"
-}
-
 func validateStartFlags() error {
 	if err := validation.ValidateMemory(config.Get(crcConfig.Memory).AsInt()); err != nil {
 		return err
