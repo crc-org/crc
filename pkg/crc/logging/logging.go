@@ -10,11 +10,9 @@ import (
 	terminal "golang.org/x/term"
 )
 
-const defaultLogLevel = "info"
-
 var (
 	logfile       *os.File
-	logLevel      = defaultLogLevel
+	logLevel      = defaultLogLevel()
 	originalHooks = logrus.LevelHooks{}
 	Memory        = newInMemoryHook(100)
 )
@@ -70,8 +68,18 @@ func InitLogrus(logFilePath string) {
 	}
 }
 
+func defaultLogLevel() string {
+	defaultLevel := "info"
+	envLogLevel := os.Getenv("CRC_LOG_LEVEL")
+	if envLogLevel != "" {
+		defaultLevel = envLogLevel
+	}
+
+	return defaultLevel
+}
+
 func AddLogLevelFlag(flagset *pflag.FlagSet) {
-	flagset.StringVar(&logLevel, "log-level", defaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
+	flagset.StringVar(&logLevel, "log-level", defaultLogLevel(), "log level (e.g. \"debug | info | warn | error\")")
 }
 
 func IsDebug() bool {
