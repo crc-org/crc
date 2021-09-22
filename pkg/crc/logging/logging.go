@@ -6,12 +6,15 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
 	terminal "golang.org/x/term"
 )
 
+const defaultLogLevel = "info"
+
 var (
 	logfile       *os.File
-	LogLevel      string
+	logLevel      = defaultLogLevel
 	originalHooks = logrus.LevelHooks{}
 	Memory        = newInMemoryHook(100)
 )
@@ -36,8 +39,9 @@ func BackupLogFile() {
 	os.Rename(logfile.Name(), fmt.Sprintf("%s_%s", logfile.Name(), time.Now().Format("20060102150405"))) // nolint
 }
 
-func InitLogrus(logLevel, logFilePath string) {
+func InitLogrus(logFilePath string) {
 	var err error
+
 	logfile, err = OpenLogFile(logFilePath)
 	if err != nil {
 		logrus.Fatal("Unable to open log file: ", err)
@@ -66,8 +70,12 @@ func InitLogrus(logLevel, logFilePath string) {
 	}
 }
 
+func AddLogLevelFlag(flagset *pflag.FlagSet) {
+	flagset.StringVar(&logLevel, "log-level", defaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
+}
+
 func IsDebug() bool {
-	return LogLevel == "debug"
+	return logLevel == "debug"
 }
 
 func Info(args ...interface{}) {
