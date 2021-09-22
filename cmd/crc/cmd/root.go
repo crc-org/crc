@@ -68,7 +68,7 @@ func init() {
 	rootCmd.AddCommand(cmdConfig.GetConfigCmd(config))
 	rootCmd.AddCommand(cmdBundle.GetBundleCmd(config))
 
-	rootCmd.PersistentFlags().StringVar(&logging.LogLevel, "log-level", constants.DefaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
+	logging.AddLogLevelFlag(rootCmd.PersistentFlags())
 }
 
 func runPrerun(cmd *cobra.Command) error {
@@ -77,7 +77,7 @@ func runPrerun(cmd *cobra.Command) error {
 	if cmd == daemonCmd {
 		logFile = constants.DaemonLogFilePath
 	}
-	logging.InitLogrus(logging.LogLevel, logFile)
+	logging.InitLogrus(logFile)
 
 	for _, str := range defaultVersion().lines() {
 		logging.Debugf(str)

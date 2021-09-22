@@ -21,7 +21,6 @@ const (
 
 	CrcEnvPrefix = "CRC"
 
-	DefaultLogLevel           = "info"
 	ConfigFile                = "crc.json"
 	LogFile                   = "crc.log"
 	DaemonLogFile             = "crcd.log"

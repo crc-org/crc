@@ -28,7 +28,7 @@ func init() {
 		fmt.Println("CRC base directories are missing: ", err)
 		os.Exit(1)
 	}
-	rootCmd.PersistentFlags().StringVar(&logging.LogLevel, "log-level", constants.DefaultLogLevel, "log level (e.g. \"debug | info | warn | error\")")
+	logging.AddLogLevelFlag(rootCmd.PersistentFlags())
 }
 
 func Execute() {
@@ -38,8 +38,7 @@ func Execute() {
 }
 
 func runPrerun() {
-	// Setting up logrus
-	logging.InitLogrus(logging.LogLevel, constants.LogFilePath)
+	logging.InitLogrus(constants.LogFilePath)
 }
 
 func runPostrun() {
