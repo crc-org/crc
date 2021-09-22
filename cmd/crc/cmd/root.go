@@ -156,7 +156,7 @@ func newViperConfig() (*crcConfig.Config, *crcConfig.ViperStorage, error) {
 }
 
 func newMachine() machine.Client {
-	return machine.NewSynchronizedMachine(machine.NewClient(constants.DefaultName, isDebugLog(), config))
+	return machine.NewSynchronizedMachine(machine.NewClient(constants.DefaultName, logging.IsDebug(), config))
 }
 
 func addForceFlag(cmd *cobra.Command) {
