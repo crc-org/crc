@@ -4,21 +4,27 @@ Feature: Operator from marketplace
     User installs an OpenShift operator from OperatorHub and uses
     it to manage admin tasks.
 
-    @linux @darwin
-    Scenario: Start CRC and login to cluster
+    @linux @darwin @startstop
+    Scenario: Start CRC
         Given execute crc setup command succeeds
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
-        When checking that CRC is running
+
+    @linux @darwin
+    Scenario: Login to cluster
+        Given checking that CRC is running
         Then executing "eval $(crc oc-env)" succeeds
         And login to the oc cluster succeeds
 
-    @windows
+    @windows @startstop
     Scenario: Start CRC on Windows
         Given execute crc setup command succeeds
         When starting CRC with default bundle and nameserver "10.75.5.25" succeeds
         Then stdout should contain "Started the OpenShift cluster"
-        And executing "crc oc-env | Invoke-Expression" succeeds
+
+    @windows
+    Scenario: Login to cluster
+        Given executing "crc oc-env | Invoke-Expression" succeeds
         When checking that CRC is running
         Then login to the oc cluster succeeds
 
@@ -53,7 +59,7 @@ Feature: Operator from marketplace
         # after a while 1 pods should be up & running again
         And with up to "10" retries with wait period of "30s" command "oc get pods" output matches "redis-standalone-[a-z0-9]* .*Running.*"
 
-    @darwin @linux @windows
+    @darwin @linux @windows @startstop
     Scenario: Clean up
         When executing "crc delete -f" succeeds
         Then stdout should contain "Deleted the OpenShift cluster"

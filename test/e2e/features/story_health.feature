@@ -6,23 +6,29 @@ Feature: End-to-end health check
     They check on the app and delete the project. They stop CRC
     and delete the CRC VM.
 
-    @linux @darwin
+    @linux @darwin @startstop
     Scenario: Start CRC
         Given execute crc setup command succeeds
         When setting config property "memory" to value "12000" succeeds
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
-        And executing "eval $(crc oc-env)" succeeds
-        When checking that CRC is running
-        Then login to the oc cluster succeeds
 
-    @windows
+    @linux @darwin
+    Scenario: Login to cluster
+        Given checking that CRC is running
+        Then executing "eval $(crc oc-env)" succeeds
+        And login to the oc cluster succeeds
+
+    @windows @startstop
     Scenario: Start CRC on Windows
         Given execute crc setup command succeeds
         When setting config property "memory" to value "12000" succeeds
         When starting CRC with default bundle and nameserver "10.75.5.25" succeeds
         Then stdout should contain "Started the OpenShift cluster"
-        And executing "crc oc-env | Invoke-Expression" succeeds
+
+    @windows
+    Scenario: Login to cluster
+        Given executing "crc oc-env | Invoke-Expression" succeeds
         When checking that CRC is running
         Then login to the oc cluster succeeds
 
@@ -46,7 +52,7 @@ Feature: End-to-end health check
         When executing "oc expose svc httpd-example" succeeds
         Then stdout should contain "httpd-example exposed"
 
-    @darwin @linux @windows
+    @darwin @linux @windows @startstop
     Scenario: Stop and start CRC, then check app still runs
         Given with up to "2" retries with wait period of "60s" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
         When executing "crc stop" succeeds
@@ -56,7 +62,10 @@ Feature: End-to-end health check
         And with up to "4" retries with wait period of "1m" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
 
     @darwin @linux @windows
-    Scenario: Switch off CRC
+    Scenario: Clean up project
         When executing "oc delete project testproj" succeeds
-        And executing "crc delete -f" succeeds
+
+    @darwin @linux @windows @startstop
+    Scenario: Switch off CRC
+        When executing "crc delete -f" succeeds
         And execute crc cleanup command succeeds

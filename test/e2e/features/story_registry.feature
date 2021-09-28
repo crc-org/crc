@@ -5,11 +5,14 @@ Feature: Local image to image-registry
     push it to the OpenShift image-registry in their project/namespace.
     They deploy and expose the app and check its accessibility.
 
-    Scenario: Start CRC and login to cluster
+    @startstop
+    Scenario: Start CRC
         Given execute crc setup command succeeds
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
-        When checking that CRC is running
+
+    Scenario: Login to cluster
+        Given checking that CRC is running
         Then executing "eval $(crc oc-env)" succeeds
         And login to the oc cluster succeeds
 
@@ -34,12 +37,15 @@ Feature: Local image to image-registry
         When executing "oc logs deployment/hello" succeeds
         Then stdout should contain "Starting NGINX"
 
-    Scenario: Clean up
+    Scenario: Clean up image and project
         Given executing "podman images" succeeds
         When stdout contains "quay.io/bitnami/nginx"
         Then executing "podman image rm quay.io/bitnami/nginx" succeeds
         And executing "oc delete project testproj-img" succeeds
-        And executing "crc delete -f" succeeds
+
+    @startstop
+    Scenario: Clean up
+        When executing "crc delete -f" succeeds
         Then stdout should contain "Deleted the OpenShift cluster"
         When executing crc cleanup command succeeds
         Then stdout should contain "Cleanup finished"
