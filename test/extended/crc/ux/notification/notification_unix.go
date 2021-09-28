@@ -13,6 +13,10 @@ type applescriptHandler struct {
 }
 
 const (
+	startMessage  string = "OpenShift cluster is running"
+	stopMessage   string = "The OpenShift Cluster was successfully stopped"
+	deleteMessage string = "The OpenShift Cluster is successfully deleted"
+
 	scriptsRelativePath           string = "applescripts"
 	manageNotifications           string = "manageNotifications.applescript"
 	manageNotificationActionGet   string = "get"
