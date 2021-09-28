@@ -20,6 +20,11 @@ var notificationHandler notification.Notification
 var currentUserPassword string
 var installerPath string
 
+const (
+	clusterStateWaitTimeout int = 200
+	clusterStateWaitRetries int = 10
+)
+
 // FeatureContext defines godog.Suite steps for the test suite.
 func FeatureContext(s *godog.Suite, bundleLocation *string, pullSecretFile *string) {
 	trayHandler = tray.NewTray(bundleLocation, pullSecretFile)
@@ -113,7 +118,8 @@ func guaranteeFreshInstallation() error {
 func guaranteeClusterState(state string) error {
 	switch state {
 	case "running", "stopped":
-		err := cmd.CheckCRCStatus(state)
+		err := util.MatchWithRetry(state, clusterIsOnState,
+			clusterStateWaitRetries, clusterStateWaitTimeout)
 		if err != nil {
 			return err
 		}
@@ -121,6 +127,10 @@ func guaranteeClusterState(state string) error {
 		return fmt.Errorf("%s state is not defined as valid cluster state", state)
 	}
 	return notificationHandler.ClearNotifications()
+}
+
+func clusterIsOnState(expectedState string) error {
+	return cmd.CheckCRCStatus(expectedState)
 }
 
 func clickTrayButton(action string) error {
