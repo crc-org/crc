@@ -27,12 +27,12 @@ Feature: Operator from marketplace
         When executing "oc apply -f redis-sub.yaml" succeeds
         # check if cluster operator is running
         Then with up to "20" retries with wait period of "30s" command "oc get csv" output matches ".*redis-operator\.(.*)Succeeded$"
-        
+
     @darwin @linux @windows @testdata
     Scenario: Install the redis instance
         When executing "oc apply -f redis-cluster.yaml" succeeds
         Then with up to "10" retries with wait period of "30s" command "oc get pods" output matches "redis-standalone-[a-z0-9]* .*Running.*"
-    
+
     @darwin @linux
     Scenario: Failover
         # simulate failure of 1 pod, check that it was replaced
