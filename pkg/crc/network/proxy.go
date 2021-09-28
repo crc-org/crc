@@ -210,7 +210,8 @@ func (p *ProxyConfig) tlsConfig() (*tls.Config, error) {
 	}
 	caCertPool, err := x509.SystemCertPool()
 	if err != nil {
-		return nil, err
+		logging.Warnf("Could not load system CA pool: %v", err)
+		caCertPool = x509.NewCertPool()
 	}
 	ok := caCertPool.AppendCertsFromPEM([]byte(p.ProxyCACert))
 	if !ok {
