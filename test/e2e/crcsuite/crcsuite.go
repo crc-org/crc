@@ -33,6 +33,10 @@ var (
 	cleanupHome    bool
 )
 
+func usingPreexistingCluster() bool {
+	return strings.Contains(clicumber.GodogTags, "~@startstop")
+}
+
 // FeatureContext defines godog.Suite steps for the test suite.
 func FeatureContext(s *godog.Suite) {
 
@@ -98,6 +102,13 @@ func FeatureContext(s *godog.Suite) {
 			os.Exit(1)
 		}
 
+		// If we are running the tests against an existing, already
+		// running cluster, we don't need a bundle nor a pull secret,
+		// and we don't want to remove ~/.crc, so bail out early.
+		if usingPreexistingCluster() {
+			return
+		}
+
 		if bundleLocation == "" {
 			fmt.Println("Expecting the bundle to be embedded in the CRC executable.")
 			bundleEmbedded = true
@@ -158,6 +169,12 @@ func FeatureContext(s *godog.Suite) {
 	})
 
 	s.AfterScenario(func(pickle *messages.Pickle, err error) {
+		if usingPreexistingCluster() {
+			// collecting diagnostics data is quite slow, and they
+			// are not really useful when running the tests locally
+			// against an already running cluster
+			return
+		}
 		if err != nil {
 			if err := util.RunDiagnose(filepath.Join("..", "test-results")); err != nil {
 				fmt.Printf("Failed to collect diagnostic: %v\n", err)

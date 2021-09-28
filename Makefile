@@ -212,6 +212,18 @@ endif
 e2e:
 	@go test --timeout=180m $(REPOPATH)/test/e2e -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --bundle-version=$(BUNDLE_VERSION) $(GODOG_OPTS) $(CLEANUP_HOME) $(INSTALLER_PATH) $(USER_PASSWORD) 
 
+.PHONY: e2e-stories e2e-story-health e2e-story-marketplace e2e-story-registry
+# cluster must already be running, crc must be in the path
+e2e-stories: install e2e-story-health e2e-story-marketplace e2e-story-registry
+
+e2e-story-health: install
+	@go test $(REPOPATH)/test/e2e -v --godog.tags="$(GOOS) && ~@startstop && @story_health" --cleanup-home=false
+e2e-story-marketplace: install
+	@go test $(REPOPATH)/test/e2e -v --godog.tags="$(GOOS) && ~@startstop && @story_marketplace" --cleanup-home=false
+e2e-story-registry: install
+	@go test $(REPOPATH)/test/e2e -v --godog.tags="$(GOOS) && ~@startstop && @story_registry" --cleanup-home=false
+
+
 .PHONY: fmt
 fmt:
 	@gofmt -l -w $(SOURCE_DIRS)
