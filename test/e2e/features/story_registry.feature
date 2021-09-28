@@ -17,7 +17,7 @@ Feature: Local image to image-registry
         Given executing "podman pull quay.io/bitnami/nginx" succeeds
         When executing "podman images" succeeds
         Then stdout should contain "quay.io/bitnami/nginx"
-        
+
     Scenario: Push local image to OpenShift image registry
         Given executing "oc new-project testproj-img" succeeds
         When executing "podman login -u kubeadmin -p $(oc whoami -t) default-route-openshift-image-registry.apps-crc.testing --tls-verify=false" succeeds
