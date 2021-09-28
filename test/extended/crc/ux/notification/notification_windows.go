@@ -14,6 +14,10 @@ type gowinxHandler struct {
 }
 
 const (
+	startMessage  string = "CodeReady Containers Cluster has started"
+	stopMessage   string = "Cluster stopped"
+	deleteMessage string = "Cluster deleted"
+
 	notificationGroupName string = "CodeReady Containers"
 )
 
