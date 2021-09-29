@@ -89,10 +89,16 @@ func FeatureContext(s *godog.Suite) {
 			CRCExecutable = filepath.Join(usr.HomeDir, "go", "bin")
 		}
 
+		// Force debug logs
+		err := os.Setenv("CRC_LOG_LEVEL", "debug")
+		if err != nil {
+			fmt.Println("Could not set `CRC_LOG_LEVEL` to `debug`:", err)
+		}
+
 		// put CRC executable location on top of PATH
 		path := os.Getenv("PATH")
 		newPath := fmt.Sprintf("%s%c%s", CRCExecutable, os.PathListSeparator, path)
-		err := os.Setenv("PATH", newPath)
+		err = os.Setenv("PATH", newPath)
 		if err != nil {
 			fmt.Println("Could not put CRC location on top of PATH")
 			os.Exit(1)
@@ -354,7 +360,7 @@ func StartCRCWithDefaultBundleSucceedsOrFails(expected string) error {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
 	crcStart := crcCmd.CRC("start").ToString()
-	cmd = fmt.Sprintf("%s -p '%s' %s --log-level debug", crcStart, pullSecretFile, extraBundleArgs)
+	cmd = fmt.Sprintf("%s -p '%s' %s", crcStart, pullSecretFile, extraBundleArgs)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
@@ -369,7 +375,7 @@ func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
 	crcStart := crcCmd.CRC("start").WithDisableNTP().ToString()
-	cmd = fmt.Sprintf("%s -p '%s' %s --log-level debug", crcStart, pullSecretFile, extraBundleArgs)
+	cmd = fmt.Sprintf("%s -p '%s' %s", crcStart, pullSecretFile, extraBundleArgs)
 	err := clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 
 	return err
@@ -377,7 +383,7 @@ func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(
 
 func StartCRCWithCustomBundleSucceedsOrFails(expected string) error {
 	crcStart := crcCmd.CRC("start").ToString()
-	cmd := fmt.Sprintf("%s -p '%s' -b *.crcbundle --log-level debug", crcStart, pullSecretFile)
+	cmd := fmt.Sprintf("%s -p '%s' -b *.crcbundle", crcStart, pullSecretFile)
 	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
 
@@ -389,7 +395,7 @@ func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, ex
 	}
 
 	crcStart := crcCmd.CRC("start").ToString()
-	cmd := fmt.Sprintf("%s -n %s -p '%s' %s --log-level debug", crcStart, nameserver, pullSecretFile, extraBundleArgs)
+	cmd := fmt.Sprintf("%s -n %s -p '%s' %s", crcStart, nameserver, pullSecretFile, extraBundleArgs)
 	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
 
