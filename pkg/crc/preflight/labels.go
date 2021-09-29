@@ -50,9 +50,10 @@ func newFilter() preflightFilter {
 		return preflightFilter{Os: Linux}
 	case "windows":
 		return preflightFilter{Os: Windows}
+	default:
+		// In case of different platform (Should not happen)
+		return preflightFilter{Os: Linux}
 	}
-	// Should not happen
-	return preflightFilter{Os: Linux}
 }
 
 func (filter preflightFilter) SetNetworkMode(networkMode network.Mode) {
