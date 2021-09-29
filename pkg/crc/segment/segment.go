@@ -27,10 +27,10 @@ import (
 var WriteKey = "R7jGNYYO5gH0Nl5gDlMEuZ3gPlDJKQak" // test
 
 type Client struct {
-	segmentClient     analytics.Client
-	config            *crcConfig.Config
-	telemetryFilePath string
-	cachedIdentify    *analytics.Identify
+	segmentClient  analytics.Client
+	config         *crcConfig.Config
+	userID         string
+	cachedIdentify *analytics.Identify
 }
 
 func NewClient(config *crcConfig.Config, transport http.RoundTripper) (*Client, error) {
@@ -40,6 +40,10 @@ func NewClient(config *crcConfig.Config, transport http.RoundTripper) (*Client, 
 }
 
 func newCustomClient(config *crcConfig.Config, transport http.RoundTripper, telemetryFilePath, segmentEndpoint string) (*Client, error) {
+	userID, err := getUserIdentity(telemetryFilePath)
+	if err != nil {
+		return nil, err
+	}
 	client, err := analytics.NewWithConfig(WriteKey, analytics.Config{
 		Endpoint: segmentEndpoint,
 		Logger:   &loggingAdapter{},
@@ -53,9 +57,9 @@ func newCustomClient(config *crcConfig.Config, transport http.RoundTripper, tele
 	}
 
 	return &Client{
-		segmentClient:     client,
-		config:            config,
-		telemetryFilePath: telemetryFilePath,
+		segmentClient: client,
+		config:        config,
+		userID:        userID,
 	}, nil
 }
 
@@ -79,9 +83,9 @@ func (c *Client) identifyNeeded(identify *analytics.Identify) bool {
 	return (identify.UserId != c.cachedIdentify.UserId) || !reflect.DeepEqual(identify, c.cachedIdentify)
 }
 
-func (c *Client) identify(userID string) *analytics.Identify {
+func (c *Client) identify() *analytics.Identify {
 	return &analytics.Identify{
-		UserId: userID,
+		UserId: c.userID,
 		Traits: addConfigTraits(c.config, traits()),
 	}
 }
@@ -91,12 +95,7 @@ func (c *Client) upload(action string, a analytics.Properties) error {
 		return nil
 	}
 
-	userID, uerr := getUserIdentity(c.telemetryFilePath)
-	if uerr != nil {
-		return uerr
-	}
-
-	identify := c.identify(userID)
+	identify := c.identify()
 	if c.identifyNeeded(identify) {
 		logging.Debug("Sending 'identify' to segment")
 		if err := c.segmentClient.Enqueue(identify); err != nil {
@@ -106,7 +105,7 @@ func (c *Client) upload(action string, a analytics.Properties) error {
 	}
 
 	return c.segmentClient.Enqueue(analytics.Track{
-		UserId:     userID,
+		UserId:     c.userID,
 		Event:      action,
 		Properties: a,
 	})
