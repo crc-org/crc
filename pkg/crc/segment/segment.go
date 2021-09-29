@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 
@@ -29,6 +30,7 @@ type Client struct {
 	segmentClient     analytics.Client
 	config            *crcConfig.Config
 	telemetryFilePath string
+	cachedIdentify    *analytics.Identify
 }
 
 func NewClient(config *crcConfig.Config, transport http.RoundTripper) (*Client, error) {
@@ -70,6 +72,20 @@ func (c *Client) UploadCmd(ctx context.Context, action string, duration time.Dur
 	return c.upload(action, properties(ctx, err, duration))
 }
 
+func (c *Client) identifyNeeded(identify *analytics.Identify) bool {
+	if c.cachedIdentify == nil {
+		return true
+	}
+	return (identify.UserId != c.cachedIdentify.UserId) || !reflect.DeepEqual(identify, c.cachedIdentify)
+}
+
+func (c *Client) identify(userID string) *analytics.Identify {
+	return &analytics.Identify{
+		UserId: userID,
+		Traits: addConfigTraits(c.config, traits()),
+	}
+}
+
 func (c *Client) upload(action string, a analytics.Properties) error {
 	if c.config.Get(crcConfig.ConsentTelemetry).AsString() != "yes" {
 		return nil
@@ -80,11 +96,13 @@ func (c *Client) upload(action string, a analytics.Properties) error {
 		return uerr
 	}
 
-	if err := c.segmentClient.Enqueue(analytics.Identify{
-		UserId: userID,
-		Traits: addConfigTraits(c.config, traits()),
-	}); err != nil {
-		return err
+	identify := c.identify(userID)
+	if c.identifyNeeded(identify) {
+		logging.Debug("Sending 'identify' to segment")
+		if err := c.segmentClient.Enqueue(identify); err != nil {
+			return err
+		}
+		c.cachedIdentify = identify
 	}
 
 	return c.segmentClient.Enqueue(analytics.Track{

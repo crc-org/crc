@@ -205,3 +205,34 @@ func TestClientUploadWithOutConsent(t *testing.T) {
 	default:
 	}
 }
+
+func TestClientUploadWithConsentAndCachedIdentify(t *testing.T) {
+	body, server := mockServer()
+	defer server.Close()
+	defer close(body)
+
+	dir, err := ioutil.TempDir("", "cfg")
+	require.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	config, err := newTestConfig("yes")
+	require.NoError(t, err)
+
+	c, err := newCustomClient(config, http.DefaultTransport, filepath.Join(dir, "telemetry"), server.URL)
+	require.NoError(t, err)
+
+	require.NoError(t, c.UploadCmd(context.Background(), "start", time.Minute, errors.New("an error occurred")))
+	require.NoError(t, c.UploadCmd(context.Background(), "stop", time.Minute, errors.New("an error occurred")))
+	require.NoError(t, c.Close())
+
+	select {
+	case x := <-body:
+		s := segmentResponse{}
+		require.NoError(t, json.Unmarshal(x, &s))
+		require.Equal(t, s.Batch[0].Type, "identify")
+		require.Equal(t, s.Batch[1].Type, "track")
+		require.Equal(t, s.Batch[2].Type, "track")
+	default:
+		require.Fail(t, "server should receive data")
+	}
+}
