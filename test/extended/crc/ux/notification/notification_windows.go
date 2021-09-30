@@ -30,18 +30,15 @@ func RequiredResourcesPath() (string, error) {
 }
 
 func (g gowinxHandler) GetClusterRunning() error {
-	return util.MatchWithRetry(startMessage, existNotification,
-		notificationWaitRetries, notificationWaitTimeout)
+	return clusterStateNotified(startMessage)
 }
 
 func (g gowinxHandler) GetClusterStopped() error {
-	return util.MatchWithRetry(stopMessage, existNotification,
-		notificationWaitRetries, notificationWaitTimeout)
+	return clusterStateNotified(stopMessage)
 }
 
 func (g gowinxHandler) GetClusterDeleted() error {
-	return util.MatchWithRetry(deleteMessage, existNotification,
-		notificationWaitRetries, notificationWaitTimeout)
+	return clusterStateNotified(deleteMessage)
 }
 
 func (g gowinxHandler) ClearNotifications() error {
@@ -54,14 +51,32 @@ func (g gowinxHandler) ClearNotifications() error {
 	return nil
 }
 
+func clusterStateNotified(notificationMessage string) error {
+	err := util.MatchWithRetry(notificationMessage, existNotification,
+		notificationWaitRetries, notificationWaitTimeout)
+	return err
+}
+
 func existNotification(expectedNotification string) error {
 	notifications, err := actionCenter.GetNotifications(notificationGroupName)
+	if errClear := actionCenter.ClickNotifyButton(); err != nil {
+		logging.Error(errClear)
+	}
+	if errClear := actionCenter.ClearNotifications(); err != nil {
+		logging.Error(errClear)
+	}
+	if errClear := actionCenter.ClickNotifyButton(); err != nil {
+		logging.Error(errClear)
+	}
 	if err == nil {
 		for _, notification := range notifications {
+			logging.Infof("Expected notification is %s", expectedNotification)
+			logging.Infof("Current notification is %s", notification)
 			if notification == expectedNotification {
 				return nil
 			}
 		}
+
 	}
 	return fmt.Errorf("%s not found with error", expectedNotification)
 }
