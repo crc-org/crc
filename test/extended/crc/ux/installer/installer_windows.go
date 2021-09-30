@@ -38,15 +38,13 @@ type element struct {
 type gowinxHandler struct {
 	CurrentUserPassword *string
 	InstallerPath       *string
-	Finished            chan bool
 }
 
 func NewInstaller(currentUserPassword, installerPath *string) Installer {
 	// TODO check parameters as they are mandatory otherwise exit
 	return gowinxHandler{
 		CurrentUserPassword: currentUserPassword,
-		InstallerPath:       installerPath,
-		Finished:            make(chan bool)}
+		InstallerPath:       installerPath}
 
 }
 
@@ -56,8 +54,8 @@ func RequiredResourcesPath() (string, error) {
 
 func (g gowinxHandler) Install() error {
 	// Initialize context
-	ux.Initialize()
-	if err := runInstaller(*g.InstallerPath, g.Finished); err != nil {
+	initialize()
+	if err := runInstaller(*g.InstallerPath); err != nil {
 		return err
 	}
 	time.Sleep(installerStartTime)
@@ -84,12 +82,12 @@ func (g gowinxHandler) Install() error {
 	}
 	// TODO which should be executed from a new cmd (to ensure ENVs)
 	// Finalize context
-	ux.Finalize()
+	finalize()
 	return nil
 }
 
 func (g gowinxHandler) RebootRequired() error {
-	ux.Initialize()
+	initialize()
 	installer, err := ux.GetActiveElement(installerWindowTitle, ux.WINDOW)
 	if err != nil {
 		return err
@@ -103,37 +101,30 @@ func (g gowinxHandler) RebootRequired() error {
 		logging.Error(err)
 		return err
 	}
-	<-g.Finished
-	ux.Finalize()
+	finalize()
 	return nil
 }
 
-func runInstaller(installerPath string, finished chan bool) error {
-	// cmd := exec.Command("powershell.exe", "-c", "msiexec.exe", "/i", installerPath, "/qf")
-	// if err := cmd.Start(); err != nil {
-	// 	return fmt.Errorf("error starting %v with error %v", cmd, err)
-	// }
-	go openInstaller(installerPath, finished)
+func runInstaller(installerPath string) error {
+	cmd := exec.Command("msiexec.exe", "/i", installerPath, "/qf")
+	if err := cmd.Start(); err != nil {
+		logging.Error(err)
+	}
 	// delay to get window as active
 	time.Sleep(1 * time.Second)
 	return nil
 }
 
-func openInstaller(installerPath string, finished chan bool) {
-	// msiexecArguments := strings.Join(append([]string{"'"}, "/i", installerPath, "/qf", "'"), " ")
-	// cmd := exec.Command("powershell.exe", "-c", "Start-Process", "msiexec.exe", "-Wait", "-ArgumentList", msiexecArguments)
-	// // cmd := exec.Command("Start-Process", "msiexec.exe", "-Wait", "-ArgumentList", "/i", installerPath, "/qf")
-	// // if err := cmd.Start(); err != nil {
-	// // 	return fmt.Errorf("error starting %v with error %v", cmd, err)
-	// // }
-	// // cmd := exec.Command("powershell.exe", "-c", "msiexec.exe", "/i", installerPath, "/qf")
-	cmd := exec.Command("msiexec.exe", "/i", installerPath, "/qf")
-	if err := cmd.Start(); err != nil {
-		logging.Error(err)
-		finished <- true
-	}
-	if err := cmd.Wait(); err != nil {
+func initialize() {
+	// Initialize context
+	ux.Initialize()
+	// Ensure clean desktop
+	if err := exec.Command("powershell.exe", "-c", "(New-Object", "-ComObject", "\"Shell.Application\").minimizeall()").Run(); err != nil {
 		logging.Error(err)
 	}
-	finished <- true
+}
+
+func finalize() {
+	// Finalize context
+	ux.Finalize()
 }
