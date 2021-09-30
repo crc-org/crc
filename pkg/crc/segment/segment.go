@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"hash/fnv"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
-	"reflect"
+	"sort"
 	"strings"
 	"time"
 
@@ -22,15 +24,16 @@ import (
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/pborman/uuid"
 	"github.com/segmentio/analytics-go"
+	"github.com/spf13/cast"
 )
 
 var WriteKey = "R7jGNYYO5gH0Nl5gDlMEuZ3gPlDJKQak" // test
 
 type Client struct {
-	segmentClient  analytics.Client
-	config         *crcConfig.Config
-	userID         string
-	cachedIdentify *analytics.Identify
+	segmentClient analytics.Client
+	config        *crcConfig.Config
+	userID        string
+	identifyHash  uint64
 }
 
 func NewClient(config *crcConfig.Config, transport http.RoundTripper) (*Client, error) {
@@ -76,11 +79,39 @@ func (c *Client) UploadCmd(ctx context.Context, action string, duration time.Dur
 	return c.upload(action, properties(ctx, err, duration))
 }
 
-func (c *Client) identifyNeeded(identify *analytics.Identify) bool {
-	if c.cachedIdentify == nil {
-		return true
+func identifyHash(identify *analytics.Identify) (uint64, error) {
+	h := fnv.New64a()
+	_, err := io.WriteString(h, identify.UserId)
+	if err != nil {
+		logging.Warnf("Failed to calculate checksum for userID '%s'", identify.UserId)
+		return 0, err
 	}
-	return (identify.UserId != c.cachedIdentify.UserId) || !reflect.DeepEqual(identify, c.cachedIdentify)
+
+	// Make sure we hash the map fields always in the same order
+	traits := []string{}
+	for trait := range identify.Traits {
+		traits = append(traits, trait)
+	}
+	sort.Strings(traits)
+	for _, trait := range traits {
+		_, err := io.WriteString(h, trait)
+		if err != nil {
+			logging.Warnf("Failed to calculate checksum for '%s'", trait)
+			return 0, err
+		}
+		str, err := cast.ToStringE(identify.Traits[trait])
+		if err != nil {
+			logging.Warnf("Could not convert 'Traits[%s]' to string, extraneous 'identify' may be sent to segment", trait)
+			return 0, err
+		}
+		_, err = io.WriteString(h, str)
+		if err != nil {
+			logging.Warnf("Failed to calculate checksum for '%s'", str)
+			return 0, err
+		}
+	}
+
+	return h.Sum64(), nil
 }
 
 func (c *Client) identify() *analytics.Identify {
@@ -96,12 +127,13 @@ func (c *Client) upload(action string, a analytics.Properties) error {
 	}
 
 	identify := c.identify()
-	if c.identifyNeeded(identify) {
+	hash, err := identifyHash(identify)
+	if err != nil || hash != c.identifyHash {
 		logging.Debug("Sending 'identify' to segment")
 		if err := c.segmentClient.Enqueue(identify); err != nil {
 			return err
 		}
-		c.cachedIdentify = identify
+		c.identifyHash = hash
 	}
 
 	return c.segmentClient.Enqueue(analytics.Track{
