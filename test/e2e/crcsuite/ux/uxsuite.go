@@ -56,7 +56,7 @@ func FeatureContext(s *godog.Suite, bundleLocation *string, pullSecretFile *stri
 		s.Step(`^user should get notified with cluster state as (.*)$`,
 			getNotification)
 		s.Step(`^a (.*) cluster$`,
-			guaranteeClusterState)
+			guaranteeClusterHasState)
 		s.Step(`^using copied oc login command for (.*)$`,
 			copyOCLoginCommandByUser)
 		s.Step(`^user is connected to the cluster as (.*)$`,
@@ -115,10 +115,10 @@ func guaranteeFreshInstallation() error {
 	return notificationHandler.ClearNotifications()
 }
 
-func guaranteeClusterState(state string) error {
+func guaranteeClusterHasState(state string) error {
 	switch state {
 	case "running", "stopped":
-		err := util.MatchWithRetry(state, clusterIsOnState,
+		err := util.MatchWithRetry(state, clusterHasState,
 			clusterStateWaitRetries, clusterStateWaitTimeout)
 		if err != nil {
 			return err
@@ -129,7 +129,7 @@ func guaranteeClusterState(state string) error {
 	return notificationHandler.ClearNotifications()
 }
 
-func clusterIsOnState(expectedState string) error {
+func clusterHasState(expectedState string) error {
 	return cmd.CheckCRCStatus(expectedState)
 }
 
