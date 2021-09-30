@@ -31,7 +31,8 @@ const (
 	pullSecretWindowID   string = "Pull Secret Picker"
 	pullSecretButtonOkID string = "OK"
 
-	elementClickTime time.Duration = 2 * time.Second
+	elementClickTime          time.Duration = 2 * time.Second
+	pullSecretWindowDelayTime time.Duration = 8 * time.Second
 )
 
 var (
@@ -133,6 +134,10 @@ func (g gowinxHandler) ConnectClusterAsDeveloper() error {
 func initialize() {
 	// Initialize context
 	ux.Initialize()
+	// Ensure clean desktop
+	if err := exec.Command("powershell.exe", "-c", "(New-Object", "-ComObject", "\"Shell.Application\").minimizeall()").Run(); err != nil {
+		logging.Error(err)
+	}
 }
 
 func finalize() {
@@ -143,6 +148,7 @@ func finalize() {
 func click(action string) (err error) {
 	// Initialize base elements
 	initialize()
+	time.Sleep(elementClickTime)
 	_, err = clickOnContextMenu(action)
 	// Finalize context
 	finalize()
@@ -224,7 +230,11 @@ func connectClusterAs(connectedUser string) error {
 		return err
 	}
 	// Check user
-	return clicumber.CommandReturnShouldContain("oc whoami", connectedUser)
+	err = clicumber.ExecuteCommand("oc whoami")
+	if err != nil {
+		return err
+	}
+	return clicumber.CommandReturnShouldMatch("stdout", connectedUser)
 }
 
 func checkTrayShowsStatusValue(expectedValue string) (err error) {
@@ -246,12 +256,12 @@ func checkTrayShowsStatusValue(expectedValue string) (err error) {
 }
 
 func fillFullSecretField(pullSecretLocation string) error {
-	time.Sleep(elementClickTime)
 	// Get pull secret content
 	err := exec.Command("powershell.exe", "-c", "Get-Content", pullSecretLocation, "|", "Set-Clipboard").Run()
 	if err != nil {
 		return err
 	}
+	time.Sleep(pullSecretWindowDelayTime)
 	pullSecretWindow, err := ux.GetActiveElement(pullSecretWindowID, ux.WINDOW)
 	if err != nil {
 		logging.Infof("Pullsecret file already configured")
