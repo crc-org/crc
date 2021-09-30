@@ -22,6 +22,10 @@ type ResolvFileValues struct {
 
 type Mode string
 
+func (m Mode) String() string {
+	return string(m)
+}
+
 const (
 	SystemNetworkingMode Mode = "system"
 	UserNetworkingMode   Mode = "user"
