@@ -4,12 +4,25 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"time"
 )
+
+// HTTPClient provides an interface allowing us to perform HTTP requests.
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+// truncater is a private interface allowing different response
+// Writers to be truncated
+type truncater interface {
+	Truncate(size int64) error
+}
 
 // A Client is a file download client.
 //
@@ -17,7 +30,7 @@ import (
 type Client struct {
 	// HTTPClient specifies the http.Client which will be used for communicating
 	// with the remote server during the file transfer.
-	HTTPClient *http.Client
+	HTTPClient HTTPClient
 
 	// UserAgent specifies the User-Agent string which will be set in the
 	// headers of all requests made by this client.
@@ -64,6 +77,7 @@ var DefaultClient = NewClient()
 func (c *Client) Do(req *Request) *Response {
 	// cancel will be called on all code-paths via closeResponse
 	ctx, cancel := context.WithCancel(req.Context())
+	req = req.WithContext(ctx)
 	resp := &Response{
 		Request:    req,
 		Start:      time.Now(),
@@ -189,7 +203,7 @@ func (c *Client) run(resp *Response, f stateFunc) {
 //
 // If an error occurs, the next stateFunc is closeResponse.
 func (c *Client) statFileInfo(resp *Response) stateFunc {
-	if resp.Filename == "" {
+	if resp.Request.NoStore || resp.Filename == "" {
 		return c.headRequest
 	}
 	fi, err := os.Stat(resp.Filename)
@@ -225,31 +239,39 @@ func (c *Client) validateLocal(resp *Response) stateFunc {
 		return c.closeResponse
 	}
 
-	// determine expected file size
-	size := resp.Request.Size
-	if size == 0 && resp.HTTPResponse != nil {
-		size = resp.HTTPResponse.ContentLength
+	// determine target file size
+	expectedSize := resp.Request.Size
+	if expectedSize == 0 && resp.HTTPResponse != nil {
+		expectedSize = resp.HTTPResponse.ContentLength
 	}
-	if size == 0 {
+
+	if expectedSize == 0 {
+		// size is either actually 0 or unknown
+		// if unknown, we ask the remote server
+		// if known to be 0, we proceed with a GET
 		return c.headRequest
 	}
 
-	if size == resp.fi.Size() {
+	if expectedSize == resp.fi.Size() {
+		// local file matches remote file size - wrap it up
 		resp.DidResume = true
 		resp.bytesResumed = resp.fi.Size()
 		return c.checksumFile
 	}
 
 	if resp.Request.NoResume {
+		// local file should be overwritten
 		return c.getRequest
 	}
 
-	if size < resp.fi.Size() {
+	if expectedSize >= 0 && expectedSize < resp.fi.Size() {
+		// remote size is known, is smaller than local size and we want to resume
 		resp.err = ErrBadLength
 		return c.closeResponse
 	}
 
 	if resp.CanResume {
+		// set resume range on GET request
 		resp.Request.HTTPRequest.Header.Set(
 			"Range",
 			fmt.Sprintf("bytes=%d-", resp.fi.Size()))
@@ -265,19 +287,24 @@ func (c *Client) checksumFile(resp *Response) stateFunc {
 		return c.closeResponse
 	}
 	if resp.Filename == "" {
-		panic("filename not set")
+		panic("grab: developer error: filename not set")
+	}
+	if resp.Size() < 0 {
+		panic("grab: developer error: size unknown")
 	}
 	req := resp.Request
 
-	// compare checksum
+	// compute checksum
 	var sum []byte
-	sum, resp.err = checksum(req.Context(), resp.Filename, req.hash)
+	sum, resp.err = resp.checksumUnsafe()
 	if resp.err != nil {
 		return c.closeResponse
 	}
+
+	// compare checksum
 	if !bytes.Equal(sum, req.checksum) {
 		resp.err = ErrBadChecksum
-		if req.deleteOnError {
+		if !resp.Request.NoStore && req.deleteOnError {
 			if err := os.Remove(resp.Filename); err != nil {
 				// err should be os.PathError and include file path
 				resp.err = fmt.Errorf(
@@ -326,6 +353,14 @@ func (c *Client) headRequest(resp *Response) stateFunc {
 		return c.getRequest
 	}
 
+	// In case of redirects during HEAD, record the final URL and use it
+	// instead of the original URL when sending future requests.
+	// This way we avoid sending potentially unsupported requests to
+	// the original URL, e.g. "Range", since it was the final URL
+	// that advertised its support.
+	resp.Request.HTTPRequest.URL = resp.HTTPResponse.Request.URL
+	resp.Request.HTTPRequest.Host = resp.HTTPResponse.Request.Host
+
 	return c.readResponse
 }
 
@@ -334,6 +369,8 @@ func (c *Client) getRequest(resp *Response) stateFunc {
 	if resp.err != nil {
 		return c.closeResponse
 	}
+
+	// TODO: check Content-Range
 
 	// check status code
 	if !resp.Request.IgnoreBadStatusCodes {
@@ -348,13 +385,15 @@ func (c *Client) getRequest(resp *Response) stateFunc {
 
 func (c *Client) readResponse(resp *Response) stateFunc {
 	if resp.HTTPResponse == nil {
-		panic("Response.HTTPResponse is not ready")
+		panic("grab: developer error: Response.HTTPResponse is nil")
 	}
 
 	// check expected size
-	resp.Size = resp.bytesResumed + resp.HTTPResponse.ContentLength
-	if resp.HTTPResponse.ContentLength > 0 && resp.Request.Size > 0 {
-		if resp.Request.Size != resp.Size {
+	resp.sizeUnsafe = resp.HTTPResponse.ContentLength
+	if resp.sizeUnsafe >= 0 {
+		// remote size is known
+		resp.sizeUnsafe += resp.bytesResumed
+		if resp.Request.Size > 0 && resp.Request.Size != resp.sizeUnsafe {
 			resp.err = ErrBadLength
 			return c.closeResponse
 		}
@@ -371,7 +410,7 @@ func (c *Client) readResponse(resp *Response) stateFunc {
 		resp.Filename = filepath.Join(resp.Request.Filename, filename)
 	}
 
-	if resp.requestMethod() == "HEAD" {
+	if !resp.Request.NoStore && resp.requestMethod() == "HEAD" {
 		if resp.HTTPResponse.Header.Get("Accept-Ranges") == "bytes" {
 			resp.CanResume = true
 		}
@@ -385,39 +424,45 @@ func (c *Client) readResponse(resp *Response) stateFunc {
 //
 // Requires that Response.Filename and resp.DidResume are already be set.
 func (c *Client) openWriter(resp *Response) stateFunc {
-	if !resp.Request.NoCreateDirectories {
+	if !resp.Request.NoStore && !resp.Request.NoCreateDirectories {
 		resp.err = mkdirp(resp.Filename)
 		if resp.err != nil {
 			return c.closeResponse
 		}
 	}
 
-	// compute write flags
-	flag := os.O_CREATE | os.O_WRONLY
-	if resp.fi != nil {
-		if resp.DidResume {
-			flag = os.O_APPEND | os.O_WRONLY
-		} else {
-			flag = os.O_TRUNC | os.O_WRONLY
+	if resp.Request.NoStore {
+		resp.writer = &resp.storeBuffer
+	} else {
+		// compute write flags
+		flag := os.O_CREATE | os.O_WRONLY
+		if resp.fi != nil {
+			if resp.DidResume {
+				flag = os.O_APPEND | os.O_WRONLY
+			} else {
+				// truncate later in copyFile, if not cancelled
+				// by BeforeCopy hook
+				flag = os.O_WRONLY
+			}
 		}
-	}
 
-	// open file
-	f, err := os.OpenFile(resp.Filename, flag, 0644)
-	if err != nil {
-		resp.err = err
-		return c.closeResponse
-	}
-	resp.writer = f
+		// open file
+		f, err := os.OpenFile(resp.Filename, flag, 0666)
+		if err != nil {
+			resp.err = err
+			return c.closeResponse
+		}
+		resp.writer = f
 
-	// seek to start or end
-	whence := os.SEEK_SET
-	if resp.bytesResumed > 0 {
-		whence = os.SEEK_END
-	}
-	_, resp.err = f.Seek(0, whence)
-	if resp.err != nil {
-		return c.closeResponse
+		// seek to start or end
+		whence := os.SEEK_SET
+		if resp.bytesResumed > 0 {
+			whence = os.SEEK_END
+		}
+		_, resp.err = f.Seek(0, whence)
+		if resp.err != nil {
+			return c.closeResponse
+		}
 	}
 
 	// init transfer
@@ -450,20 +495,38 @@ func (c *Client) copyFile(resp *Response) stateFunc {
 		}
 	}
 
+	var bytesCopied int64
 	if resp.transfer == nil {
-		panic("developer error: Response.transfer is not initialized")
+		panic("grab: developer error: Response.transfer is nil")
 	}
-	go resp.watchBps()
-	_, resp.err = resp.transfer.copy()
+
+	// We waited to truncate the file in openWriter() to make sure
+	// the BeforeCopy didn't cancel the copy. If this was an existing
+	// file that is not going to be resumed, truncate the contents.
+	if t, ok := resp.writer.(truncater); ok && resp.fi != nil && !resp.DidResume {
+		t.Truncate(0)
+	}
+
+	bytesCopied, resp.err = resp.transfer.copy()
 	if resp.err != nil {
 		return c.closeResponse
 	}
 	closeWriter(resp)
 
-	// set timestamp
-	if !resp.Request.IgnoreRemoteTime {
+	// set file timestamp
+	if !resp.Request.NoStore && !resp.Request.IgnoreRemoteTime {
 		resp.err = setLastModified(resp.HTTPResponse, resp.Filename)
 		if resp.err != nil {
+			return c.closeResponse
+		}
+	}
+
+	// update transfer size if previously unknown
+	if resp.Size() < 0 {
+		discoveredSize := resp.bytesResumed + bytesCopied
+		atomic.StoreInt64(&resp.sizeUnsafe, discoveredSize)
+		if resp.Request.Size > 0 && resp.Request.Size != discoveredSize {
+			resp.err = ErrBadLength
 			return c.closeResponse
 		}
 	}
@@ -480,16 +543,16 @@ func (c *Client) copyFile(resp *Response) stateFunc {
 }
 
 func closeWriter(resp *Response) {
-	if resp.writer != nil {
-		resp.writer.Close()
-		resp.writer = nil
+	if closer, ok := resp.writer.(io.Closer); ok {
+		closer.Close()
 	}
+	resp.writer = nil
 }
 
 // close finalizes the Response
 func (c *Client) closeResponse(resp *Response) stateFunc {
 	if resp.IsComplete() {
-		panic("response already closed")
+		panic("grab: developer error: response already closed")
 	}
 
 	resp.fi = nil

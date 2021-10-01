@@ -1,11 +1,13 @@
 package grab
 
 import (
+	"bytes"
 	"context"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
-	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -31,7 +33,7 @@ type Response struct {
 	Filename string
 
 	// Size specifies the total expected size of the file transfer.
-	Size int64
+	sizeUnsafe int64
 
 	// Start specifies the time at which the file transfer started.
 	Start time.Time
@@ -70,7 +72,11 @@ type Response struct {
 
 	// writer is the file handle used to write the downloaded file to local
 	// storage
-	writer io.WriteCloser
+	writer io.Writer
+
+	// storeBuffer receives the contents of the transfer if Request.NoStore is
+	// enabled.
+	storeBuffer bytes.Buffer
 
 	// bytesCompleted specifies the number of bytes which were already
 	// transferred before this transfer began.
@@ -79,11 +85,6 @@ type Response struct {
 	// transfer is responsible for copying data from the remote server to a local
 	// file, tracking progress and allowing for cancelation.
 	transfer *transfer
-
-	// bytesPerSecond specifies the number of bytes that have been transferred in
-	// the last 1-second window.
-	bytesPerSecond   float64
-	bytesPerSecondMu sync.Mutex
 
 	// bufferSize specifies the size in bytes of the transfer buffer.
 	bufferSize int
@@ -125,6 +126,13 @@ func (c *Response) Err() error {
 	return c.err
 }
 
+// Size returns the size of the file transfer. If the remote server does not
+// specify the total size and the transfer is incomplete, the return value is
+// -1.
+func (c *Response) Size() int64 {
+	return atomic.LoadInt64(&c.sizeUnsafe)
+}
+
 // BytesComplete returns the total number of bytes which have been copied to
 // the destination, including any bytes that were resumed from a previous
 // download.
@@ -132,25 +140,24 @@ func (c *Response) BytesComplete() int64 {
 	return c.bytesResumed + c.transfer.N()
 }
 
-// BytesPerSecond returns the number of bytes transferred in the last second. If
-// the download is already complete, the average bytes/sec for the life of the
-// download is returned.
+// BytesPerSecond returns the number of bytes per second transferred using a
+// simple moving average of the last five seconds. If the download is already
+// complete, the average bytes/sec for the life of the download is returned.
 func (c *Response) BytesPerSecond() float64 {
 	if c.IsComplete() {
 		return float64(c.transfer.N()) / c.Duration().Seconds()
 	}
-	c.bytesPerSecondMu.Lock()
-	defer c.bytesPerSecondMu.Unlock()
-	return c.bytesPerSecond
+	return c.transfer.BPS()
 }
 
 // Progress returns the ratio of total bytes that have been downloaded. Multiply
 // the returned value by 100 to return the percentage completed.
 func (c *Response) Progress() float64 {
-	if c.Size == 0 {
+	size := c.Size()
+	if size <= 0 {
 		return 0
 	}
-	return float64(c.BytesComplete()) / float64(c.Size)
+	return float64(c.BytesComplete()) / float64(size)
 }
 
 // Duration returns the duration of a file transfer. If the transfer is in
@@ -173,40 +180,53 @@ func (c *Response) ETA() time.Time {
 		return c.End
 	}
 	bt := c.BytesComplete()
-	bps := c.BytesPerSecond()
+	bps := c.transfer.BPS()
 	if bps == 0 {
 		return time.Time{}
 	}
-	secs := float64(c.Size-bt) / bps
+	secs := float64(c.Size()-bt) / bps
 	return time.Now().Add(time.Duration(secs) * time.Second)
 }
 
-// watchBps watches the progress of a transfer and maintains statistics.
-func (c *Response) watchBps() {
-	var prev int64
-	then := c.Start
-
-	t := time.NewTicker(time.Second)
-	defer t.Stop()
-
-	for {
-		select {
-		case <-c.Done:
-			return
-
-		case now := <-t.C:
-			d := now.Sub(then)
-			then = now
-
-			cur := c.transfer.N()
-			bs := cur - prev
-			prev = cur
-
-			c.bytesPerSecondMu.Lock()
-			c.bytesPerSecond = float64(bs) / d.Seconds()
-			c.bytesPerSecondMu.Unlock()
-		}
+// Open blocks the calling goroutine until the underlying file transfer is
+// completed and then opens the transferred file for reading. If Request.NoStore
+// was enabled, the reader will read from memory.
+//
+// If an error occurred during the transfer, it will be returned.
+//
+// It is the callers responsibility to close the returned file handle.
+func (c *Response) Open() (io.ReadCloser, error) {
+	if err := c.Err(); err != nil {
+		return nil, err
 	}
+	return c.openUnsafe()
+}
+
+func (c *Response) openUnsafe() (io.ReadCloser, error) {
+	if c.Request.NoStore {
+		return ioutil.NopCloser(bytes.NewReader(c.storeBuffer.Bytes())), nil
+	}
+	return os.Open(c.Filename)
+}
+
+// Bytes blocks the calling goroutine until the underlying file transfer is
+// completed and then reads all bytes from the completed tranafer. If
+// Request.NoStore was enabled, the bytes will be read from memory.
+//
+// If an error occurred during the transfer, it will be returned.
+func (c *Response) Bytes() ([]byte, error) {
+	if err := c.Err(); err != nil {
+		return nil, err
+	}
+	if c.Request.NoStore {
+		return c.storeBuffer.Bytes(), nil
+	}
+	f, err := c.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return ioutil.ReadAll(f)
 }
 
 func (c *Response) requestMethod() string {
@@ -214,6 +234,20 @@ func (c *Response) requestMethod() string {
 		return ""
 	}
 	return c.HTTPResponse.Request.Method
+}
+
+func (c *Response) checksumUnsafe() ([]byte, error) {
+	f, err := c.openUnsafe()
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	t := newTransfer(c.Request.Context(), nil, c.Request.hash, f, nil)
+	if _, err = t.copy(); err != nil {
+		return nil, err
+	}
+	sum := c.Request.hash.Sum(nil)
+	return sum, nil
 }
 
 func (c *Response) closeResponseBody() error {

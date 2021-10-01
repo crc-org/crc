@@ -51,9 +51,11 @@ github.com/apparentlymart/go-cidr/cidr
 github.com/asaskevich/govalidator
 # github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 ## explicit
-# github.com/cavaliercoder/grab v2.0.0+incompatible
+# github.com/cavaliercoder/grab v1.0.1-0.20210912125936-718223ba0a5a
 ## explicit
 github.com/cavaliercoder/grab
+github.com/cavaliercoder/grab/bps
+github.com/cavaliercoder/grab/grabui
 # github.com/cheggaaa/pb/v3 v3.0.8
 ## explicit
 github.com/cheggaaa/pb/v3
