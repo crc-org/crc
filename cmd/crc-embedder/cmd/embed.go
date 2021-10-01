@@ -111,7 +111,7 @@ func downloadDataFiles(goos string, destDir string) ([]string, error) {
 	downloadedFiles := []string{}
 	downloads := dataFileUrls[goos]
 	for _, dl := range downloads {
-		filename, err := download.Download(dl.url, destDir, dl.permissions)
+		filename, err := download.Download(dl.url, destDir, dl.permissions, nil)
 		if err != nil {
 			return nil, err
 		}

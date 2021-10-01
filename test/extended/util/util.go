@@ -117,7 +117,7 @@ func DownloadBundle(bundleLocation string, bundleDestination string, bundleName 
 		return bundleDestination, err
 	}
 
-	filename, err := download.Download(bundleLocation, bundleDestination, 0644)
+	filename, err := download.Download(bundleLocation, bundleDestination, 0644, nil)
 	fmt.Printf("Downloading bundle from %s to %s.\n", bundleLocation, bundleDestination)
 	if err != nil {
 		return "", err

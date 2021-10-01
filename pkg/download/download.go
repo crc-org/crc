@@ -2,6 +2,7 @@ package download
 
 import (
 	"context"
+	"crypto/sha256"
 	"net/http"
 	"os"
 
@@ -13,7 +14,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-func Download(uri, destination string, mode os.FileMode) (string, error) {
+// Download function takes sha256sum as hex decoded byte
+// something like hex.DecodeString("33daf4c03f86120fdfdc66bddf6bfff4661c7ca11c5d")
+func Download(uri, destination string, mode os.FileMode, sha256sum []byte) (string, error) {
 	logging.Debugf("Downloading %s to %s", uri, destination)
 
 	client := grab.NewClient()
@@ -22,6 +25,9 @@ func Download(uri, destination string, mode os.FileMode) (string, error) {
 	req, err := grab.NewRequest(destination, uri)
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to get response from %s", uri)
+	}
+	if sha256sum != nil {
+		req.SetChecksum(sha256.New(), sha256sum, true)
 	}
 
 	respCh := consoleClient.Do(context.Background(), 3, req)
