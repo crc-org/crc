@@ -1,9 +1,7 @@
 package grab
 
 import (
-	"context"
 	"fmt"
-	"hash"
 	"mime"
 	"net/http"
 	"os"
@@ -36,22 +34,26 @@ func mkdirp(path string) error {
 		if !os.IsNotExist(err) {
 			return fmt.Errorf("error checking destination directory: %v", err)
 		}
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0777); err != nil {
 			return fmt.Errorf("error creating destination directory: %v", err)
 		}
 	} else if !fi.IsDir() {
-		panic("destination path is not directory")
+		panic("grab: developer error: destination path is not directory")
 	}
 	return nil
 }
 
 // guessFilename returns a filename for the given http.Response. If none can be
 // determined ErrNoFilename is returned.
+//
+// TODO: NoStore operations should not require a filename
 func guessFilename(resp *http.Response) (string, error) {
 	filename := resp.Request.URL.Path
 	if cd := resp.Header.Get("Content-Disposition"); cd != "" {
 		if _, params, err := mime.ParseMediaType(cd); err == nil {
-			filename = params["filename"]
+			if val, ok := params["filename"]; ok {
+				filename = val
+			} // else filename directive is missing.. fallback to URL.Path
 		}
 	}
 
@@ -66,24 +68,4 @@ func guessFilename(resp *http.Response) (string, error) {
 	}
 
 	return filename, nil
-}
-
-// checksum returns a hash of the given file, using the given hash algorithm.
-func checksum(ctx context.Context, filename string, h hash.Hash) (b []byte, err error) {
-	var f *os.File
-	f, err = os.Open(filename)
-	if err != nil {
-		return
-	}
-	defer func() {
-		err = f.Close()
-	}()
-
-	t := newTransfer(ctx, nil, h, f, nil)
-	if _, err = t.copy(); err != nil {
-		return
-	}
-
-	b = h.Sum(nil)
-	return
 }

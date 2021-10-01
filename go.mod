@@ -12,7 +12,7 @@ require (
 	github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
-	github.com/cavaliercoder/grab v2.0.0+incompatible
+	github.com/cavaliercoder/grab v1.0.1-0.20210912125936-718223ba0a5a
 	github.com/cheggaaa/pb/v3 v3.0.8
 	github.com/code-ready/admin-helper v0.0.7
 	github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a
