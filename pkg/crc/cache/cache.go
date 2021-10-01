@@ -158,7 +158,7 @@ func (c *Cache) getExecutable(destDir string) (string, error) {
 	destPath := filepath.Join(destDir, archiveName)
 	err := embed.Extract(archiveName, destPath)
 	if err != nil {
-		return download.Download(c.archiveURL, destDir, 0600)
+		return download.Download(c.archiveURL, destDir, 0600, nil)
 	}
 
 	return destPath, err
