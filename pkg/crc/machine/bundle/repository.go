@@ -190,6 +190,10 @@ func (repo *Repository) List() ([]CrcBundleInfo, error) {
 	return ret, nil
 }
 
+func (repo *Repository) CalculateBundleSha256Sum(bundlePath string) (string, error) {
+	return sha256sum(bundlePath)
+}
+
 var defaultRepo = &Repository{
 	CacheDir: constants.MachineCacheDir,
 	OcBinDir: constants.CrcOcBinDir,
@@ -197,6 +201,10 @@ var defaultRepo = &Repository{
 
 func Get(bundleName string) (*CrcBundleInfo, error) {
 	return defaultRepo.Get(bundleName)
+}
+
+func CalculateBundleSha256Sum(bundlePath string) (string, error) {
+	return defaultRepo.CalculateBundleSha256Sum(bundlePath)
 }
 
 func Use(bundleName string) (*CrcBundleInfo, error) {
