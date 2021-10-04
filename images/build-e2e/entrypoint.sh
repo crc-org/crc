@@ -9,8 +9,8 @@ BINARY_PATH="/opt/crc/bin/${PLATFORM}-amd64/${BINARY}"
 
 # Running options
 CLEANUP_HOME="${CLEANUP_HOME:-"true"}"
-# Valid options are non-ux or ux
-TESTING_MODE="${TESTING_MODE:-"non-ux"}"
+# e2e tag picking
+E2E_TAG_EXPRESSION="${E2E_TAG_EXPRESSION:-""}"
 # Review this when go 1.16 with embed support
 FEATURES_PATH=/opt/crc/features
 TESTDATA_PATH=/opt/crc/testdata
@@ -18,7 +18,8 @@ UX_RESOURCES_PATH=/opt/crc/ux
 
 # Results
 RESULTS_PATH="${RESULTS_PATH:-/output}"
-
+# results file name
+RESULTS_FILE="${RESULTS_FILE:-"e2e"}"
 
 if [ "${DEBUG:-}" = "true" ]; then
     set -xuo 
@@ -44,10 +45,6 @@ validate=true
 
 [[ -z "${BUNDLE_VERSION+x}" && -z "${BUNDLE_LOCATION+x}" ]] \
     && echo "BUNDLE_VERSION or BUNDLE_LOCATION required" \
-    && validate=false
-
-[[ "${TESTING_MODE}" != "ux" && "${TESTING_MODE}" != "non-ux" ]] \
-    && echo "TESTING_MODE should have valid value ux or non-ux" \
     && validate=false
 
 [[ $validate == false ]] && exit 1
@@ -104,39 +101,49 @@ fi
 $SCP "${TESTDATA_PATH}" "${REMOTE}:${EXECUTION_FOLDER}"
 
 echo "Running e2e tests"
-# Run e2e cmd
+# e2e envs
+if [[ ${PLATFORM} == 'windows' ]]; then
+    # BINARY_EXEC="(New-Object -ComObject "Shell.Application").minimizeall(); \$env:SHELL=\"powershell\"; "
+    BINARY_EXEC="\$env:SHELL=\"powershell\"; "
+fi
+# e2e running options
 if [[ ! -z "${BUNDLE_LOCATION+x}" ]]; then
     OPTIONS="--bundle-location=${BUNDLE_LOCATION} "
 else
-    OPTIONS="--bundle-location='' --bundle-version=${BUNDLE_VERSION} "
+    OPTIONS="--bundle-location=\"\" --bundle-version=${BUNDLE_VERSION} "
 fi
-OPTIONS+="--pull-secret-file=${EXECUTION_FOLDER}/pull-secret "
+if [[ ${PLATFORM} == 'windows' ]]; then
+    OPTIONS+="--pull-secret-file=C:\\Users\\${TARGET_HOST_USERNAME}\\crc-e2e\\pull-secret "
+else
+    OPTIONS+="--pull-secret-file=${EXECUTION_FOLDER}/pull-secret "
+fi
 if [[ ${PLATFORM} == 'macos' ]]; then
     PLATFORM="darwin"
 fi
-GODOG_TAGS="@${PLATFORM} "
-if [ "${TESTING_MODE}" = "non-ux" ]; then
-    GODOG_TAGS+="&& ~@ux "
-else 
-    GODOG_TAGS+="&& @ux "
-fi
-OPTIONS+="--godog.tags='${GODOG_TAGS}' --godog.format=junit "
 if [ "${CLEANUP_HOME}" = "false" ]; then
     OPTIONS+="--cleanup-home=false "
 fi
-# Review when pwsh added as powershell supported
-if [[ ${PLATFORM} == 'windows' ]]; then
-    BINARY_EXEC="\$env:SHELL='powershell'; "
+if [ -n "${INSTALLER_PATH}" ]; then
+    OPTIONS+="--installer-path=${INSTALLER_PATH} "
 fi
-BINARY_EXEC+="cd ${EXECUTION_FOLDER}/bin && ./${BINARY} ${OPTIONS} > e2e.results"
+if [ -n "${USER_PASSWORD}" ]; then
+    OPTIONS+="--user-password=${USER_PASSWORD} "
+fi
+OPTIONS+="--godog.tags=\"@${PLATFORM} && ${E2E_TAG_EXPRESSION}\" --godog.format=junit "
+BINARY_EXEC+="cd ${EXECUTION_FOLDER}/bin && ./${BINARY} ${OPTIONS} > ${RESULTS_FILE}.results"
 # Execute command remote
-$SSH "${REMOTE}" "${BINARY_EXEC}"
+$SSH ${REMOTE} ${BINARY_EXEC}
 
 echo "Getting e2e tests results and logs"
 # Get results
 mkdir -p "${RESULTS_PATH}"
-$SCP "${REMOTE}:${EXECUTION_FOLDER}/bin/e2e.results" "${RESULTS_PATH}"
+$SCP "${REMOTE}:${EXECUTION_FOLDER}/bin/${RESULTS_FILE}.results" "${RESULTS_PATH}"
 $SCP "${REMOTE}:${EXECUTION_FOLDER}/bin/out/test-results" "${RESULTS_PATH}"
+# xunit cleanup on results
+pushd "${RESULTS_PATH}"
+init_line=$(grep -n '<?xml version="1.0" encoding="UTF-8"?>' ${RESULTS_FILE}.results | awk '{split($0,n,":"); print n[1]}')
+tail -n +$init_line ${RESULTS_FILE}.results > ${RESULTS_FILE}.xml
+popd
 
 echo "Cleanup target"
 # Cleanup
