@@ -2,6 +2,7 @@ package segment
 
 import (
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"hash/fnv"
@@ -33,16 +34,19 @@ type Client struct {
 	segmentClient analytics.Client
 	config        *crcConfig.Config
 	userID        string
-	identifyHash  uint64
+
+	identifyHash     uint64
+	identifyHashPath string
 }
 
 func NewClient(config *crcConfig.Config, transport http.RoundTripper) (*Client, error) {
 	return newCustomClient(config, transport,
 		filepath.Join(constants.GetHomeDir(), ".redhat", "anonymousId"),
+		filepath.Join(constants.CrcBaseDir, "segmentIdentifyHash"),
 		analytics.DefaultEndpoint)
 }
 
-func newCustomClient(config *crcConfig.Config, transport http.RoundTripper, telemetryFilePath, segmentEndpoint string) (*Client, error) {
+func newCustomClient(config *crcConfig.Config, transport http.RoundTripper, telemetryFilePath, identifyHashFilePath, segmentEndpoint string) (*Client, error) {
 	userID, err := getUserIdentity(telemetryFilePath)
 	if err != nil {
 		return nil, err
@@ -59,10 +63,18 @@ func newCustomClient(config *crcConfig.Config, transport http.RoundTripper, tele
 		return nil, err
 	}
 
+	identifyHash, err := readIdentifyHash(identifyHashFilePath)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Client{
 		segmentClient: client,
 		config:        config,
 		userID:        userID,
+
+		identifyHash:     identifyHash,
+		identifyHashPath: identifyHashFilePath,
 	}, nil
 }
 
@@ -114,7 +126,34 @@ func identifyHash(identify *analytics.Identify) (uint64, error) {
 	return h.Sum64(), nil
 }
 
-func (c *Client) identify() *analytics.Identify {
+func readIdentifyHash(identifyHashPath string) (uint64, error) {
+	if identifyHashPath == "" {
+		return 0, nil
+	}
+
+	cachedHashBytes, err := ioutil.ReadFile(identifyHashPath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return 0, nil
+		}
+		return 0, err
+	}
+
+	return binary.LittleEndian.Uint64(cachedHashBytes), nil
+}
+
+func writeIdentifyHash(client *Client) error {
+	if client.identifyHashPath == "" {
+		return nil
+	}
+
+	hashBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(hashBytes, client.identifyHash)
+
+	return ioutil.WriteFile(client.identifyHashPath, hashBytes, 0600)
+}
+
+func (c *Client) identifyNew() *analytics.Identify {
 	return &analytics.Identify{
 		UserId: c.userID,
 		Traits: addConfigTraits(c.config, traits()),
@@ -126,7 +165,7 @@ func (c *Client) upload(action string, a analytics.Properties) error {
 		return nil
 	}
 
-	identify := c.identify()
+	identify := c.identifyNew()
 	hash, err := identifyHash(identify)
 	if err != nil || hash != c.identifyHash {
 		logging.Debug("Sending 'identify' to segment")
@@ -134,6 +173,7 @@ func (c *Client) upload(action string, a analytics.Properties) error {
 			return err
 		}
 		c.identifyHash = hash
+		_ = writeIdentifyHash(c)
 	}
 
 	return c.segmentClient.Enqueue(analytics.Track{
