@@ -108,7 +108,7 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			labels: labels{Os: Linux},
 		},
 		{
-			cleanupDescription: "Removing the crc VM if exists",
+			cleanupDescription: "Removing crc's virtual machine",
 			cleanup:            removeCrcVM,
 			flags:              CleanUpOnly,
 

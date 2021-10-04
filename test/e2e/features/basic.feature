@@ -188,7 +188,7 @@ Feature: Basic test
     @linux
     Scenario Outline: CRC clean-up
         When executing crc cleanup command succeeds
-        Then stderr should contain "Removing the crc VM if exists"
+        Then stderr should contain "Removing crc's virtual machine"
         And stderr should contain "Removing 'crc' network from libvirt"
         And stderr should contain "Using root access: Executing systemctl daemon-reload command"
         And stderr should contain "Using root access: Executing systemctl reload NetworkManager"
@@ -202,7 +202,7 @@ Feature: Basic test
         When executing crc cleanup command succeeds
         Then stderr should contain "Uninstalling tray if installed"
         Then stderr should contain "Uninstalling daemon if installed"
-        And stderr should contain "Removing the crc VM if exists"
+        And stderr should contain "Removing crc's virtual machine"
         And stderr should contain "Removing dns server from interface"
         And stderr should contain "Will run as admin: Remove dns entry for default switch"
         And stdout should contain "Cleanup finished"
