@@ -597,6 +597,27 @@ func removeCrcVM() error {
 	return nil
 }
 
+func removeLibvirtStoragePool() error {
+	_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "pool-info", constants.DefaultName)
+	if err != nil {
+		logging.Debugf("%v : %s", err, stderr)
+		// Pool does not exist
+		return nil
+	}
+	_, stderr, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "pool-destroy", constants.DefaultName)
+	if err != nil {
+		logging.Debugf("%v : %s", err, stderr)
+		// ignore error, we want to try to delete the pool regardless of success or not
+	}
+	_, stderr, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "pool-undefine", constants.DefaultName)
+	if err != nil {
+		logging.Debugf("%v : %s", err, stderr)
+		return fmt.Errorf("Failed to undefine 'crc' libvirt storage pool")
+	}
+	logging.Debug("'crc' libvirt storage has been removed")
+	return nil
+}
+
 func trimSpacesFromXML(str string) string {
 	strs := strings.Split(str, "\n")
 	var builder strings.Builder
