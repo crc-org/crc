@@ -15,8 +15,11 @@ The container connects through ssh to the target host and copy the right binary 
 **BUNDLE_VERSION**:*(Mandatory if not BUNDLE_LOCATION). Testing agaisnt crc released version bundle version for crc released version.*
 **BUNDLE_LOCATION**:*(Mandatory if not BUNDLE_VERSION). When testing crc with custom bundle set the bundle location on target server.*  
 **RESULTS_PATH**:*(Optional). Path inside container to pick results and logs from e2e execution.*  
+**RESULTS_FILE**:*(Optional). File name for results xunit results. Default value: e2e.*  
 **CLEANUP_HOME**:*(Optional). Cleanup crc home folder or keep as it is to run test.*  
-**TESTING_MODE**:*(Optional). Define e2e testing mode (valid values are ux, non-ux. Default is non-ux)*  
+**E2E_TAG_EXPRESSION**:*(Optional). Define e2e tag expression to select tests. If empty all tests available for the platform will be executed.*  
+**INSTALLER_PATH**:*(Required when testing mode ux). Path on target host holding the installer*  
+**USER_PASSWORD**:*(Required when testing mode ux). Password for the user with privileges to run the installer*  
 
 ## Samples
 
