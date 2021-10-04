@@ -90,7 +90,7 @@ var hypervPreflightChecks = []Check{
 		labels: labels{Os: Windows},
 	},
 	{
-		cleanupDescription: "Removing the crc VM if exists",
+		cleanupDescription: "Removing crc's virtual machine",
 		cleanup:            removeCrcVM,
 		flags:              CleanUpOnly,
 
