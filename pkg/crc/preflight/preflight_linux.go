@@ -101,6 +101,13 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			labels: labels{Os: Linux},
 		},
 		{
+			cleanupDescription: "Removing crc libvirt storage pool",
+			cleanup:            removeLibvirtStoragePool,
+			flags:              CleanUpOnly,
+
+			labels: labels{Os: Linux},
+		},
+		{
 			cleanupDescription: "Removing the crc VM if exists",
 			cleanup:            removeCrcVM,
 			flags:              CleanUpOnly,
