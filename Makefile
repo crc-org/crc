@@ -172,9 +172,9 @@ containerized_e2e:
 ifndef CRC_E2E_IMG_VERSION
 CRC_E2E_IMG_VERSION=v$(CRC_VERSION)-$(COMMIT_SHA)
 endif
-IMG = quay.io/crcont/crc-e2e:$(CRC_E2E_IMG_VERSION)
+IMG_E2E = quay.io/crcont/crc-e2e:$(CRC_E2E_IMG_VERSION)
 containerized_e2e: clean
-	$(CONTAINER_RUNTIME) build -t $(IMG) -f images/build-e2e/Dockerfile .
+	$(CONTAINER_RUNTIME) build -t $(IMG_E2E) -f images/build-e2e/Dockerfile .
 
 #  Build the container image for integration
 .PHONY: containerized_integration
@@ -182,9 +182,9 @@ containerized_integration:
 ifndef CRC_INTEGRATION_IMG_VERSION
 CRC_INTEGRATION_IMG_VERSION=v$(CRC_VERSION)-$(COMMIT_SHA)
 endif
-IMG = quay.io/crcont/crc-integration:$(CRC_INTEGRATION_IMG_VERSION)
+IMG_INTEGRATION = quay.io/crcont/crc-integration:$(CRC_INTEGRATION_IMG_VERSION)
 containerized_integration: clean
-	$(CONTAINER_RUNTIME) build -t $(IMG) -f images/build-integration/Dockerfile .
+	$(CONTAINER_RUNTIME) build -t $(IMG_INTEGRATION) -f images/build-integration/Dockerfile .
 
 .PHONY: integration ## Run integration tests in Ginkgo
 integration:
