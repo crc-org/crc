@@ -1,4 +1,4 @@
-# github.com/AlecAivazis/survey/v2 v2.2.16
+# github.com/AlecAivazis/survey/v2 v2.3.2
 ## explicit
 github.com/AlecAivazis/survey/v2
 github.com/AlecAivazis/survey/v2/core
@@ -99,7 +99,7 @@ github.com/cucumber/godog/colors
 # github.com/cucumber/messages-go/v10 v10.0.3
 ## explicit
 github.com/cucumber/messages-go/v10
-# github.com/danieljoos/wincred v1.1.1
+# github.com/danieljoos/wincred v1.1.2
 ## explicit
 github.com/danieljoos/wincred
 # github.com/davecgh/go-spew v1.1.1
@@ -111,20 +111,21 @@ github.com/docker/docker/pkg/term
 # github.com/docker/go-units v0.4.0
 ## explicit
 github.com/docker/go-units
-# github.com/fatih/color v1.12.0
+# github.com/fatih/color v1.13.0
 ## explicit
 github.com/fatih/color
 # github.com/felixge/httpsnoop v1.0.2
 ## explicit
 github.com/felixge/httpsnoop
-# github.com/fsnotify/fsnotify v1.4.9
+# github.com/fsnotify/fsnotify v1.5.1
 github.com/fsnotify/fsnotify
 # github.com/go-logr/logr v0.4.0
 github.com/go-logr/logr
 # github.com/go-ole/go-ole v1.2.5
 github.com/go-ole/go-ole
 github.com/go-ole/go-ole/oleutil
-# github.com/godbus/dbus/v5 v5.0.4
+# github.com/godbus/dbus/v5 v5.0.5
+## explicit
 github.com/godbus/dbus/v5
 # github.com/gofrs/uuid v3.2.0+incompatible
 github.com/gofrs/uuid
@@ -138,14 +139,11 @@ github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
-# github.com/golang/snappy v0.0.3
-github.com/golang/snappy
 # github.com/goodhosts/hostsfile v0.0.8
 github.com/goodhosts/hostsfile
 # github.com/google/btree v1.0.0
 github.com/google/btree
 # github.com/google/go-cmp v0.5.6
-## explicit
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
@@ -168,7 +166,7 @@ github.com/googleapis/gnostic/openapiv2
 # github.com/gorilla/handlers v1.5.1
 ## explicit
 github.com/gorilla/handlers
-# github.com/h2non/filetype v1.1.2-0.20210602110014-3305bbb7ac7b
+# github.com/h2non/filetype v1.1.2-0.20210917125640-7fafb18134ff
 ## explicit
 github.com/h2non/filetype
 github.com/h2non/filetype/matchers
@@ -207,11 +205,12 @@ github.com/jinzhu/copier
 github.com/json-iterator/go
 # github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 github.com/kballard/go-shellquote
-# github.com/klauspost/compress v1.13.4
+# github.com/klauspost/compress v1.13.6
 ## explicit
 github.com/klauspost/compress
 github.com/klauspost/compress/fse
 github.com/klauspost/compress/huff0
+github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/klauspost/cpuid/v2 v2.0.9
@@ -220,6 +219,8 @@ github.com/klauspost/cpuid/v2
 # github.com/kofalt/go-memoize v0.0.0-20210721235729-46a601ff34b8
 ## explicit
 github.com/kofalt/go-memoize
+# github.com/kr/pretty v0.3.0
+## explicit
 # github.com/libvirt/libvirt-go-xml v7.4.0+incompatible
 ## explicit
 github.com/libvirt/libvirt-go-xml
@@ -227,11 +228,10 @@ github.com/libvirt/libvirt-go-xml
 github.com/linuxkit/virtsock/pkg/hvsock
 # github.com/magiconair/properties v1.8.5
 github.com/magiconair/properties
-# github.com/mattn/go-colorable v0.1.8
+# github.com/mattn/go-colorable v0.1.11
 ## explicit
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.13
-## explicit
+# github.com/mattn/go-isatty v0.0.14
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.13
 ## explicit
@@ -246,7 +246,7 @@ github.com/mgutz/ansi
 github.com/miekg/dns
 # github.com/mitchellh/go-wordwrap v1.0.0
 github.com/mitchellh/go-wordwrap
-# github.com/mitchellh/mapstructure v1.4.1
+# github.com/mitchellh/mapstructure v1.4.2
 github.com/mitchellh/mapstructure
 # github.com/moby/spdystream v0.2.0
 github.com/moby/spdystream
@@ -286,7 +286,7 @@ github.com/onsi/ginkgo/reporters/stenographer
 github.com/onsi/ginkgo/reporters/stenographer/support/go-colorable
 github.com/onsi/ginkgo/reporters/stenographer/support/go-isatty
 github.com/onsi/ginkgo/types
-# github.com/onsi/gomega v1.15.0
+# github.com/onsi/gomega v1.16.0
 ## explicit
 github.com/onsi/gomega
 github.com/onsi/gomega/format
@@ -307,7 +307,7 @@ github.com/openshift/client-go/config/clientset/versioned/scheme
 github.com/openshift/client-go/config/clientset/versioned/typed/config/v1
 # github.com/openshift/library-go v0.0.0-20210521084623-7392ea9b02ca
 github.com/openshift/library-go/pkg/oauth/oauthdiscovery
-# github.com/openshift/oc v0.0.0-alpha.0.0.20210811234350-0d10c3f72592
+# github.com/openshift/oc v0.0.0-alpha.0.0.20210920131146-88e7eba36ac7
 ## explicit
 github.com/openshift/oc/pkg/helpers/term
 github.com/openshift/oc/pkg/helpers/tokencmd
@@ -321,9 +321,9 @@ github.com/pbnjay/memory
 # github.com/pborman/uuid v1.2.1
 ## explicit
 github.com/pborman/uuid
-# github.com/pelletier/go-toml v1.9.3
+# github.com/pelletier/go-toml v1.9.4
 github.com/pelletier/go-toml
-# github.com/pkg/browser v0.0.0-20210706143420-7d21f8c997e2
+# github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 ## explicit
 github.com/pkg/browser
 # github.com/pkg/errors v0.9.1
@@ -333,6 +333,8 @@ github.com/pkg/errors
 github.com/pmezard/go-difflib/difflib
 # github.com/rivo/uniseg v0.2.0
 github.com/rivo/uniseg
+# github.com/rogpeppe/go-internal v1.8.0
+## explicit
 # github.com/segmentio/analytics-go v3.2.0+incompatible
 ## explicit
 github.com/segmentio/analytics-go
@@ -355,9 +357,16 @@ github.com/spf13/jwalterweatherman
 # github.com/spf13/pflag v1.0.5
 ## explicit
 github.com/spf13/pflag
-# github.com/spf13/viper v1.8.1
+# github.com/spf13/viper v1.9.0
 ## explicit
 github.com/spf13/viper
+github.com/spf13/viper/internal/encoding
+github.com/spf13/viper/internal/encoding/hcl
+github.com/spf13/viper/internal/encoding/json
+github.com/spf13/viper/internal/encoding/toml
+github.com/spf13/viper/internal/encoding/yaml
+# github.com/stretchr/objx v0.3.0
+## explicit
 # github.com/stretchr/testify v1.7.0
 ## explicit
 github.com/stretchr/testify/assert
@@ -377,7 +386,7 @@ github.com/xtgo/uuid
 ## explicit
 github.com/zalando/go-keyring
 github.com/zalando/go-keyring/secret_service
-# golang.org/x/crypto v0.0.0-20210813211128-0a44fdfbc16e
+# golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 ## explicit
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
@@ -390,7 +399,7 @@ golang.org/x/crypto/internal/subtle
 golang.org/x/crypto/poly1305
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
-# golang.org/x/net v0.0.0-20210913180222-943fd674d43e
+# golang.org/x/net v0.0.0-20210929193557-e81a3d93ecf6
 ## explicit
 golang.org/x/net/bpf
 golang.org/x/net/context
@@ -407,21 +416,21 @@ golang.org/x/net/internal/iana
 golang.org/x/net/internal/socket
 golang.org/x/net/ipv4
 golang.org/x/net/ipv6
-# golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602
+# golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
 # golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 ## explicit
 golang.org/x/sync/semaphore
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.0.0-20210816074244-15123e1e1f71
+# golang.org/x/sys v0.0.0-20211004093028-2c5d950f24ef
 ## explicit
 golang.org/x/sys/cpu
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b
+# golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 ## explicit
 golang.org/x/term
 # golang.org/x/text v0.3.7
@@ -457,7 +466,7 @@ google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/remote_api
 google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/urlfetch
-# google.golang.org/protobuf v1.26.0
+# google.golang.org/protobuf v1.27.1
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
 google.golang.org/protobuf/internal/descfmt
@@ -488,9 +497,11 @@ google.golang.org/protobuf/types/descriptorpb
 google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/timestamppb
+# gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
+## explicit
 # gopkg.in/inf.v0 v0.9.1
 gopkg.in/inf.v0
-# gopkg.in/ini.v1 v1.62.0
+# gopkg.in/ini.v1 v1.63.2
 gopkg.in/ini.v1
 # gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 gopkg.in/tomb.v1
