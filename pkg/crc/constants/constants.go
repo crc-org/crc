@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/YourFin/binappend"
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
@@ -127,30 +126,8 @@ func EnsureBaseDirectoriesExist() error {
 	return os.MkdirAll(CrcBaseDir, 0750)
 }
 
-// BundleEmbedded returns true if the executable was compiled to contain the bundle
-func BundleEmbedded() bool {
-	executablePath, err := os.Executable()
-	if err != nil {
-		return false
-	}
-	extractor, err := binappend.MakeExtractor(executablePath)
-	if err != nil {
-		return false
-	}
-	return contains(extractor.AvalibleData(), GetDefaultBundle())
-}
-
 func IsRelease() bool {
-	return BundleEmbedded() || version.IsInstaller()
-}
-
-func contains(arr []string, str string) bool {
-	for _, a := range arr {
-		if a == str {
-			return true
-		}
-	}
-	return false
+	return version.IsInstaller()
 }
 
 func GetPublicKeyPath() string {
