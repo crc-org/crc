@@ -19,12 +19,10 @@ import (
 )
 
 var (
-	bundleDir string
-	goos      string
+	goos string
 )
 
 func init() {
-	embedCmd.Flags().StringVar(&bundleDir, "bundle-dir", constants.MachineCacheDir, "Directory where the OpenShift bundle can be found")
 	embedCmd.Flags().StringVar(&goos, "goos", runtime.GOOS, "Target platform (darwin, linux or windows)")
 	rootCmd.AddCommand(embedCmd)
 }
@@ -50,9 +48,6 @@ func runEmbed(args []string) {
 	if err != nil {
 		logging.Fatalf("Failed to download data files: %v", err)
 	}
-
-	bundlePath := path.Join(bundleDir, constants.GetDefaultBundleForOs(goos))
-	downloadedFiles = append(downloadedFiles, bundlePath)
 	err = embedFiles(executablePath, downloadedFiles)
 	if err != nil {
 		logging.Fatalf("Failed to embed data files: %v", err)
