@@ -65,8 +65,6 @@ func FeatureContext(s *godog.Suite) {
 		CheckOutputMatchWithRetry)
 	s.Step(`^checking that CRC is (running|stopped)$`,
 		CheckCRCStatus)
-	s.Step(`^(stdout|stderr) (?:should contain|contains) "(.*)" if bundle (is|is not) embedded$`,
-		CommandReturnShouldContainIfBundleEmbeddedOrNot)
 	s.Step(`^execut(?:e|ing) crc (.*) command$`,
 		ExecuteCommand)
 	s.Step(`^execut(?:e|ing) crc (.*) command (.*)$`,
@@ -414,20 +412,6 @@ func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, ex
 	crcStart := crcCmd.CRC("start").ToString()
 	cmd := fmt.Sprintf("%s -n %s -p '%s' %s", crcStart, nameserver, pullSecretFile, extraBundleArgs)
 	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
-}
-
-func CommandReturnShouldContainIfBundleEmbeddedOrNot(commandField string, value string, expected string) error {
-	if expected == "is" { // expect embedded
-		if bundleEmbedded { // really embedded
-			return clicumber.CommandReturnShouldContain(commandField, value)
-		}
-		return clicumber.CommandReturnShouldNotContain(commandField, value)
-	}
-	// expect not embedded
-	if !bundleEmbedded { // really not embedded
-		return clicumber.CommandReturnShouldContain(commandField, value)
-	}
-	return clicumber.CommandReturnShouldNotContain(commandField, value)
 }
 
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
