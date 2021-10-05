@@ -251,7 +251,7 @@ gen_release_info:
 	@sed -i s/@OPENSHIFT_VERSION@/$(BUNDLE_VERSION)/ $(RELEASE_INFO)
 
 .PHONY: release
-release: LDFLAGS += $(RELEASE_VERSION_VARIABLES)
+release: LDFLAGS += -X '$(REPOPATH)/pkg/crc/version.linuxReleaseBuild=true' $(RELEASE_VERSION_VARIABLES)
 release: cross-lint embed_bundle gen_release_info
 	mkdir $(RELEASE_DIR)
 
