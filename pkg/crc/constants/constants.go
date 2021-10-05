@@ -127,7 +127,7 @@ func EnsureBaseDirectoriesExist() error {
 }
 
 func IsRelease() bool {
-	return version.IsInstaller()
+	return version.IsInstaller() || version.IsLinuxRelease()
 }
 
 func GetPublicKeyPath() string {
