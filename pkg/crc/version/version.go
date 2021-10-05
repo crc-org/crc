@@ -30,6 +30,11 @@ var (
 	// will be true for releases on macos and windows
 	// will be false for git builds on macos and windows
 	installerBuild = "false"
+
+	// will always false on macos and windows
+	// will be true for release on linux
+	// will be false for git builds on linux
+	linuxReleaseBuild = "false"
 )
 
 const (
@@ -77,6 +82,10 @@ func GetCRCWindowsTrayVersion() string {
 
 func IsInstaller() bool {
 	return installerBuild != "false"
+}
+
+func IsLinuxRelease() bool {
+	return linuxReleaseBuild != "false"
 }
 
 func InstallPath() string {
