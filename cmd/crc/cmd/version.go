@@ -37,7 +37,6 @@ type version struct {
 	Version             string `json:"version"`
 	Commit              string `json:"commit"`
 	OpenshiftVersion    string `json:"openshiftVersion"`
-	Embedded            bool   `json:"embedded"`
 	InstalledBundlePath string `json:"installedBundlePath,omitempty"`
 }
 
@@ -50,7 +49,6 @@ func defaultVersion() *version {
 		Version:             crcversion.GetCRCVersion(),
 		Commit:              crcversion.GetCommitSha(),
 		OpenshiftVersion:    crcversion.GetBundleVersion(),
-		Embedded:            constants.BundleEmbedded(),
 		InstalledBundlePath: installedBundlePath,
 	}
 }
@@ -69,8 +67,6 @@ func (v *version) lines() []string {
 	switch {
 	case v.InstalledBundlePath != "":
 		bundleStatus = fmt.Sprintf("bundle installed at %s", v.InstalledBundlePath)
-	case v.Embedded:
-		bundleStatus = "embedded in executable"
 	default:
 		bundleStatus = "not embedded in executable"
 	}
