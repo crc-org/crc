@@ -133,7 +133,7 @@ function run_tests() {
   # In Jenkins slave we have pull secret file in the $HOME/payload/crc_pull_secret
   # this is copied over using https://github.com/minishift/minishift-ci-jobs/blob/master/minishift-ci-index.yaml#L99
   export PULL_SECRET_FILE=--pull-secret-file=$HOME/payload/crc_pull_secret
-  export BUNDLE_LOCATION=--bundle-location=$HOME/Downloads/$BUNDLE 
+  export CRC_BINARY=--crc-binary=$HOME/payload/out/linux-amd64
   make e2e 
   if [[ $? -ne 0 ]]; then
     upload_logs $1
@@ -158,7 +158,7 @@ else
 
 	# setup to run e2e tests
 	cd payload
-	make
+	make release
 	make check
 	
 	# Retrieve password for rsync and run e2e tests
