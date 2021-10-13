@@ -7,7 +7,6 @@ import (
 	"runtime"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 )
 
 func URIStringForDisplay(uri string) (string, error) {
@@ -30,8 +29,7 @@ func matchIP(ips []net.IP, expectedIP string) bool {
 
 	return false
 }
-func CheckCRCLocalDNSReachableFromHost(bundle *bundle.CrcBundleInfo, expectedIP string) error {
-	apiHostname := bundle.GetAPIHostname()
+func CheckCRCLocalDNSReachableFromHost(apiHostname, appsHostname, appsDomain, expectedIP string) error {
 	ip, err := net.LookupIP(apiHostname)
 	if err != nil {
 		return err
@@ -47,7 +45,6 @@ func CheckCRCLocalDNSReachableFromHost(bundle *bundle.CrcBundleInfo, expectedIP 
 		 * in this case, /etc/resolver/ will not be used, so we won't
 		 * have wildcard DNS for our domains
 		 */
-		appsHostname := bundle.GetAppHostname("foo")
 		ip, err = net.LookupIP(appsHostname)
 		if err != nil {
 			// Right now admin helper fallback is not implemented on windows so
@@ -55,7 +52,7 @@ func CheckCRCLocalDNSReachableFromHost(bundle *bundle.CrcBundleInfo, expectedIP 
 			if runtime.GOOS == "windows" {
 				return err
 			}
-			logging.Warnf("Wildcard DNS resolution for %s does not appear to be working", bundle.ClusterInfo.AppsDomain)
+			logging.Warnf("Wildcard DNS resolution for %s does not appear to be working", appsDomain)
 			return nil
 		}
 		logging.Debugf("%s resolved to %s", appsHostname, ip)
