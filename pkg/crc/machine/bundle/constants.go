@@ -8,7 +8,7 @@ import (
 	"github.com/code-ready/crc/pkg/download"
 )
 
-var _ = map[string]bundlesDownloadInfo{
+var bundleLocations = map[string]bundlesDownloadInfo{
 	"amd64": {
 		"darwin": download.NewRemoteFile("", ""),
 		"linux": download.NewRemoteFile(
