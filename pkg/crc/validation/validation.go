@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
@@ -196,8 +197,11 @@ func authenticateWithPullSecret(pullSecretPath, registry string) error {
 		Stdout:   ioutil.Discard,
 		Stdin:    os.Stdin,
 	}
+	timeOutDuration := 6 * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), timeOutDuration)
+	defer cancel()
 
-	return auth.Login(context.Background(), nil, &opts, []string{registry})
+	return auth.Login(ctx, nil, &opts, []string{registry})
 }
 
 func writePullSecretToTempFile(secret string) (string, func(), error) {
