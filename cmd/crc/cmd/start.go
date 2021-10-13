@@ -29,13 +29,15 @@ import (
 	"github.com/spf13/pflag"
 )
 
+var pullSecretPath string
+
 func init() {
 	rootCmd.AddCommand(startCmd)
 	addOutputFormatFlag(startCmd)
 
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
 	flagSet.StringP(crcConfig.Bundle, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster")
-	flagSet.StringP(crcConfig.PullSecretFile, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
+	flagSet.StringVarP(&pullSecretPath, crcConfig.PullSecretFile, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
 	flagSet.IntP(crcConfig.CPUs, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the OpenShift cluster")
 	flagSet.IntP(crcConfig.Memory, "m", constants.DefaultMemory, "MiB of memory to allocate to the OpenShift cluster")
 	flagSet.UintP(crcConfig.DiskSize, "d", constants.DefaultDiskSize, "Total size in GiB of the disk used by the OpenShift cluster")
@@ -185,6 +187,13 @@ func validateStartFlags() error {
 			return err
 		}
 	}
+	if pullSecretPath != "" {
+		fmt.Println("validation pull secret")
+		if valid, msg := crcConfig.ValidatePullSecretFile(pullSecretPath); !valid {
+			return fmt.Errorf("Invalid pull secret: %s", msg)
+		}
+	}
+
 	return nil
 }
 
