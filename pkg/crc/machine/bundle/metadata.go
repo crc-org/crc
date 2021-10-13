@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/code-ready/crc/pkg/download"
 )
 
 // Metadata structure to unmarshal the crc-bundle-info.json file
@@ -217,3 +218,5 @@ func GetCustomBundleName(bundleFilename string) string {
 	baseName := re.ReplaceAllLiteralString(bundleFilename, "")
 	return fmt.Sprintf("%s_%d%s", baseName, time.Now().Unix(), bundleExtension)
 }
+
+type bundlesDownloadInfo map[string]*download.RemoteFile
