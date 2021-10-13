@@ -3,6 +3,7 @@ package download
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 	"os"
 
@@ -44,4 +45,29 @@ func Download(uri, destination string, mode os.FileMode, sha256sum []byte) (stri
 
 	logging.Debugf("Download saved to %v", resp.Filename)
 	return resp.Filename, nil
+}
+
+type RemoteFile struct {
+	uri       string
+	sha256sum string
+}
+
+func NewRemoteFile(uri, sha256sum string) *RemoteFile {
+	return &RemoteFile{
+		uri:       uri,
+		sha256sum: sha256sum,
+	}
+
+}
+
+func (r *RemoteFile) Download(bundlePath string, mode os.FileMode) (string, error) {
+	sha256, err := hex.DecodeString(r.sha256sum)
+	if err != nil {
+		return "", err
+	}
+	return Download(r.uri, bundlePath, mode, sha256)
+}
+
+func (r *RemoteFile) GetSha256Sum() string {
+	return r.sha256sum
 }
