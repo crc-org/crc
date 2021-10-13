@@ -10,8 +10,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
-	"github.com/code-ready/crc/pkg/embed"
-	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/pkg/errors"
 )
 
@@ -19,7 +17,7 @@ var bundleCheck = Check{
 	configKeySuffix:  "check-bundle-extracted",
 	checkDescription: "Checking if CRC bundle is extracted in '$HOME/.crc'",
 	check:            checkBundleExtracted,
-	fixDescription:   "Extracting bundle from the CRC executable",
+	fixDescription:   "Getting bundle for the CRC executable",
 	fix:              fixBundleExtracted,
 	flags:            SetupOnly,
 
@@ -89,15 +87,11 @@ func fixBundleExtracted() error {
 		return fmt.Errorf("Cannot create directory %s: %v", bundleDir, err)
 	}
 
-	if !crcos.FileExists(constants.DefaultBundlePath) && constants.BundleEmbedded() {
-		logging.Infof("Extracting embedded bundle %s to %s", constants.GetDefaultBundle(), bundleDir)
-		if err := embed.Extract(constants.GetDefaultBundle(), constants.DefaultBundlePath); err != nil {
-			return err
-		}
-	}
-
 	_, err := bundle.Get(constants.GetDefaultBundle())
 	if err != nil {
+		if err := bundle.Download(); err != nil {
+			return err
+		}
 		logging.Infof("Uncompressing %s", constants.GetDefaultBundle())
 		_, err := bundle.Extract(constants.DefaultBundlePath)
 		return err
