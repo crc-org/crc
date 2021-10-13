@@ -5,11 +5,13 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/download"
 )
 
@@ -220,3 +222,28 @@ func GetCustomBundleName(bundleFilename string) string {
 }
 
 type bundlesDownloadInfo map[string]*download.RemoteFile
+
+func getBundleDownloadInfo() (*download.RemoteFile, error) {
+	bundles, ok := bundleLocations[runtime.GOARCH]
+	if !ok {
+		return nil, fmt.Errorf("Unsupported architecture: %s", runtime.GOARCH)
+	}
+	downloadInfo, ok := bundles[runtime.GOOS]
+	if !ok {
+		return nil, fmt.Errorf("Unknown GOOS: %s", runtime.GOOS)
+	}
+
+	return downloadInfo, nil
+}
+
+func Download() error {
+	downloadInfo, err := getBundleDownloadInfo()
+	if err != nil {
+		return err
+	}
+	if _, err := downloadInfo.Download(constants.DefaultBundlePath, 0664); err != nil {
+		return err
+	}
+
+	return nil
+}
