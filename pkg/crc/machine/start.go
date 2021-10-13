@@ -344,7 +344,8 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	// Check DNS lookup from host to VM
 	logging.Info("Check DNS query from host...")
-	if err := network.CheckCRCLocalDNSReachableFromHost(crcBundleMetadata, instanceIP); err != nil {
+	if err := network.CheckCRCLocalDNSReachableFromHost(crcBundleMetadata.GetAPIHostname(),
+		crcBundleMetadata.GetAppHostname("foo"), crcBundleMetadata.ClusterInfo.AppsDomain, instanceIP); err != nil {
 		if !client.useVSock() {
 			return nil, errors.Wrap(err, "Failed to query DNS from host")
 		}
