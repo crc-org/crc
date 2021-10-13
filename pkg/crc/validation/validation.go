@@ -15,6 +15,7 @@ import (
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
+	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/containers/common/pkg/auth"
 	"github.com/docker/go-units"
 	"github.com/pbnjay/memory"
@@ -128,6 +129,10 @@ func ImagePullSecret(secret string) error {
 	}
 	if len(s.Auths) == 0 {
 		return fmt.Errorf("invalid pull secret: missing 'auths' JSON-object field")
+	}
+
+	if version.IsOkdBuild() {
+		return nil
 	}
 
 	for d, a := range s.Auths {
