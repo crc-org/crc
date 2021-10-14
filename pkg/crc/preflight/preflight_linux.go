@@ -351,26 +351,26 @@ func getAllPreflightChecks() []Check {
 	filter.SetDistro(distro())
 	filter.SetSystemdUser(distro())
 
-	return filter.Apply(getChecks(distro()))
+	return filter.Apply(getChecks(distro(), ""))
 }
 
-func getPreflightChecks(_ bool, _ bool, networkMode network.Mode) []Check {
+func getPreflightChecks(_ bool, _ bool, networkMode network.Mode, bundlePath string) []Check {
 	usingSystemdResolved := checkSystemdResolvedIsRunning()
 
-	return getPreflightChecksForDistro(distro(), networkMode, usingSystemdResolved == nil)
+	return getPreflightChecksForDistro(distro(), networkMode, usingSystemdResolved == nil, bundlePath)
 }
 
-func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode, usingSystemdResolved bool) []Check {
+func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode, usingSystemdResolved bool, bundlePath string) []Check {
 	filter := newFilter()
 	filter.SetDistro(distro)
 	filter.SetSystemdUser(distro)
 	filter.SetNetworkMode(networkMode)
 	filter.SetSystemdResolved(usingSystemdResolved)
 
-	return filter.Apply(getChecks(distro))
+	return filter.Apply(getChecks(distro, bundlePath))
 }
 
-func getChecks(distro *linux.OsRelease) []Check {
+func getChecks(distro *linux.OsRelease, bundlePath string) []Check {
 	var checks []Check
 	checks = append(checks, nonWinPreflightChecks...)
 	checks = append(checks, wsl2PreflightCheck)
@@ -383,7 +383,7 @@ func getChecks(distro *linux.OsRelease) []Check {
 	checks = append(checks, dnsmasqPreflightChecks...)
 	checks = append(checks, libvirtNetworkPreflightChecks...)
 	checks = append(checks, vsockPreflightCheck)
-	checks = append(checks, bundleCheck)
+	checks = append(checks, bundleCheck(bundlePath))
 
 	return checks
 }

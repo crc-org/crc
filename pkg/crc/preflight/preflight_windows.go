@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 	"github.com/code-ready/crc/pkg/os/windows/win32"
@@ -145,21 +146,21 @@ func checkVsock() error {
 // Passing 'UserNetworkingMode' to getPreflightChecks currently achieves this
 // as there are no system networking specific checks
 func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true, true, network.UserNetworkingMode)
+	return getPreflightChecks(true, true, network.UserNetworkingMode, constants.DefaultBundlePath)
 }
 
-func getChecks() []Check {
+func getChecks(bundlePath string) []Check {
 	checks := []Check{}
 	checks = append(checks, hypervPreflightChecks...)
 	checks = append(checks, vsockChecks...)
-	checks = append(checks, bundleCheck)
+	checks = append(checks, bundleCheck(bundlePath))
 	checks = append(checks, genericCleanupChecks...)
 	return checks
 }
 
-func getPreflightChecks(_ bool, trayAutoStart bool, networkMode network.Mode) []Check {
+func getPreflightChecks(_ bool, trayAutoStart bool, networkMode network.Mode, bundlePath string) []Check {
 	filter := newFilter()
 	filter.SetNetworkMode(networkMode)
 
-	return filter.Apply(getChecks())
+	return filter.Apply(getChecks(bundlePath))
 }

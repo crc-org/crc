@@ -10,6 +10,7 @@ import (
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/input"
 	"github.com/code-ready/crc/pkg/crc/preflight"
+	"github.com/code-ready/crc/pkg/crc/validation"
 
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/util/exec"
@@ -21,6 +22,7 @@ var (
 
 func init() {
 	setupCmd.Flags().Bool(crcConfig.ExperimentalFeatures, false, "Allow the use of experimental features")
+	setupCmd.Flags().StringP(crcConfig.Bundle, "b", constants.DefaultBundlePath, "Bundle to use for VM")
 	setupCmd.Flags().BoolVar(&checkOnly, "check-only", false, "Only run the preflight checks, don't try to fix any misconfiguration")
 	addOutputFormatFlag(setupCmd)
 	rootCmd.AddCommand(setupCmd)
@@ -52,6 +54,12 @@ func runSetup(arguments []string) error {
 				return err
 			}
 			fmt.Printf("No worry, you can still enable telemetry manually with the command 'crc config set %s yes'.\n", crcConfig.ConsentTelemetry)
+		}
+	}
+
+	if !config.Get(crcConfig.Bundle).IsDefault {
+		if err := validation.ValidatePath(config.Get(crcConfig.Bundle).AsString()); err != nil {
+			return err
 		}
 	}
 
