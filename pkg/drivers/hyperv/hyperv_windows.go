@@ -199,6 +199,16 @@ func (d *Driver) Create() error {
 		}
 	}
 
+	// Disables creating checkpoints and Automatic Start
+	// Shuts down the VM when host shuts down
+	if err := cmd("Hyper-V\\Set-VM",
+		"-VMName", d.MachineName,
+		"-AutomaticStartAction", "Nothing",
+		"-AutomaticStopAction", "ShutDown",
+		"-CheckpointType", "Disabled"); err != nil {
+		return err
+	}
+
 	return cmd("Hyper-V\\Add-VMHardDiskDrive",
 		"-VMName", d.MachineName,
 		"-Path", quote(d.getDiskPath()))
