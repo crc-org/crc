@@ -10,18 +10,21 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
+	"github.com/code-ready/crc/pkg/crc/validation"
 	"github.com/pkg/errors"
 )
 
-var bundleCheck = Check{
-	configKeySuffix:  "check-bundle-extracted",
-	checkDescription: "Checking if CRC bundle is extracted in '$HOME/.crc'",
-	check:            checkBundleExtracted,
-	fixDescription:   "Getting bundle for the CRC executable",
-	fix:              fixBundleExtracted,
-	flags:            SetupOnly,
+func bundleCheck(bundlePath string) Check {
+	return Check{
+		configKeySuffix:  "check-bundle-extracted",
+		checkDescription: "Checking if CRC bundle is extracted in '$HOME/.crc'",
+		check:            checkBundleExtracted(bundlePath),
+		fixDescription:   "Getting bundle for the CRC executable",
+		fix:              fixBundleExtracted(bundlePath),
+		flags:            SetupOnly,
 
-	labels: None,
+		labels: None,
+	}
 }
 
 var genericCleanupChecks = []Check{
@@ -55,21 +58,20 @@ var genericCleanupChecks = []Check{
 	},
 }
 
-func checkBundleExtracted() error {
-	if !constants.IsRelease() {
-		logging.Debugf("Development build, skipping check")
+func checkBundleExtracted(bundlePath string) func() error {
+	return func() error {
+		logging.Infof("Checking if %s exists", bundlePath)
+		bundleName := filepath.Base(bundlePath)
+		if _, err := bundle.Get(bundleName); err != nil {
+			logging.Debugf("error getting bundle info for %s: %v", bundleName, err)
+			return err
+		}
+		logging.Debugf("%s exists", bundlePath)
 		return nil
 	}
-	logging.Infof("Checking if %s exists", constants.DefaultBundlePath)
-	if _, err := bundle.Get(constants.GetDefaultBundle()); err != nil {
-		logging.Debugf("error getting bundle info for %s: %v", constants.GetDefaultBundle(), err)
-		return err
-	}
-	logging.Debugf("%s exists", constants.DefaultBundlePath)
-	return nil
 }
 
-func fixBundleExtracted() error {
+func fixBundleExtracted(bundlePath string) func() error {
 	// Should be removed after 1.19 release
 	// This check will ensure correct mode for `~/.crc/cache` directory
 	// in case it exists.
@@ -77,27 +79,31 @@ func fixBundleExtracted() error {
 		logging.Debugf("Error changing %s permissions to 0775", constants.MachineCacheDir)
 	}
 
-	if !constants.IsRelease() {
-		return fmt.Errorf("CRC bundle is not embedded in the executable")
-	}
+	return func() error {
+		bundleDir := filepath.Dir(constants.DefaultBundlePath)
+		logging.Infof("Ensuring directory %s exists", bundleDir)
+		if err := os.MkdirAll(bundleDir, 0775); err != nil {
+			return fmt.Errorf("Cannot create directory %s: %v", bundleDir, err)
+		}
+		if constants.IsRelease() {
+			if err := validation.ValidateBundle(bundlePath); err != nil {
+				logging.Warnf("Provided %s not supported with this release", bundlePath)
+				if err := bundle.Download(); err != nil {
+					return err
+				}
+				bundlePath = constants.DefaultBundlePath
+			}
+		}
 
-	bundleDir := filepath.Dir(constants.DefaultBundlePath)
-	logging.Infof("Ensuring directory %s exists", bundleDir)
-	if err := os.MkdirAll(bundleDir, 0775); err != nil {
-		return fmt.Errorf("Cannot create directory %s: %v", bundleDir, err)
-	}
-
-	_, err := bundle.Get(constants.GetDefaultBundle())
-	if err != nil {
-		if err := bundle.Download(); err != nil {
+		logging.Infof("Uncompressing %s", bundlePath)
+		if _, err := bundle.Extract(bundlePath); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return errors.Wrap(err, "Use `crc setup -b <bundle-path>`")
+			}
 			return err
 		}
-		logging.Infof("Uncompressing %s", constants.GetDefaultBundle())
-		_, err := bundle.Extract(constants.DefaultBundlePath)
-		return err
+		return nil
 	}
-
-	return nil
 }
 
 func removeHostsFileEntry() error {
