@@ -3,6 +3,7 @@ package hosts
 import (
 	"fmt"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 
@@ -65,6 +66,11 @@ func (h *Hosts) Add(ip string, hosts []string) error {
 
 	if err := h.File.Add(ip, hostEntries...); err != nil {
 		return err
+	}
+	// Only execute clean in case of windows to avoid more than
+	// 9 domain entry in a single line
+	if runtime.GOOS == "windows" {
+		h.File.Clean()
 	}
 	return h.File.Flush()
 }
