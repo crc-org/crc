@@ -163,8 +163,8 @@ github.com/cncf/udpa/go v0.0.0-20201120205902-5459f2c99403/go.mod h1:WmhPx2Nbnht
 github.com/cncf/xds/go v0.0.0-20210312221358-fbca930ec8ed/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
-github.com/code-ready/admin-helper v0.0.0-20210705143132-4eb2d25dbcf9 h1:Wj3aGq1oXexfKjTKH6MYIictJxRz9FEbsQl07EFpNeA=
-github.com/code-ready/admin-helper v0.0.0-20210705143132-4eb2d25dbcf9/go.mod h1:yFmV6RdTVWNluagsNyMhgOA/Y4/hEmT1hrfviNemypw=
+github.com/code-ready/admin-helper v0.0.7 h1:s6hgSighOvJQsX6LZJ0cAk370p+/9ZW2Or/tCjHliLI=
+github.com/code-ready/admin-helper v0.0.7/go.mod h1:yFmV6RdTVWNluagsNyMhgOA/Y4/hEmT1hrfviNemypw=
 github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a h1:VOQmCj9Y8pAPU4C0rIvF2ByUBuuqnaR9JSvb9C8uBQE=
 github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a/go.mod h1:ZPZUcYGpv/FQGnwakUuhiHP9x/IIcU2SKbn8xPe4ROc=
 github.com/code-ready/machine v0.0.0-20210616065635-eff475d32b9a h1:LLL1mb5Nm1bghXXK9g0qJTkV8DqlttnyllEgCa92xdI=

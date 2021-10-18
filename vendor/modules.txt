@@ -58,7 +58,7 @@ github.com/cavaliercoder/grab
 ## explicit
 github.com/cheggaaa/pb/v3
 github.com/cheggaaa/pb/v3/termutil
-# github.com/code-ready/admin-helper v0.0.0-20210705143132-4eb2d25dbcf9
+# github.com/code-ready/admin-helper v0.0.7
 ## explicit
 github.com/code-ready/admin-helper/pkg/client
 github.com/code-ready/admin-helper/pkg/hosts
