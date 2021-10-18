@@ -203,7 +203,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if currentBundleName != bundleName {
 		logging.Debugf("Bundle '%s' was requested, but the existing VM is using '%s'",
 			bundleName, currentBundleName)
-		return nil, fmt.Errorf("Bundle '%s' was requested, but the existing VM is using '%s'",
+		return nil, fmt.Errorf("Bundle '%s' was requested, but the existing VM is using '%s'. Please delete your existing cluster and start again",
 			bundleName,
 			currentBundleName)
 	}
