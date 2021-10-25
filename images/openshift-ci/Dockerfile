@@ -4,7 +4,7 @@
 FROM registry.svc.ci.openshift.org/openshift/release:golang-1.15 AS builder
 WORKDIR /go/src/github.com/code-ready/crc
 COPY . .
-RUN make cross
+RUN make release
 
 FROM registry.centos.org/centos/centos:7
 COPY --from=builder /go/src/github.com/code-ready/crc /opt/crc
