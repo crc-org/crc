@@ -157,7 +157,8 @@ func StartPreflightChecks(config crcConfig.Storage) error {
 	mode := crcConfig.GetNetworkMode(config)
 	trayAutostart := config.Get(crcConfig.AutostartTray).AsBool()
 	bundlePath := config.Get(crcConfig.Bundle).AsString()
-	if err := doPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode, bundlePath)); err != nil {
+	preset := config.Get(crcConfig.PresetConfigurationKey).AsString()
+	if err := doPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode, bundlePath, preset)); err != nil {
 		return &errors.PreflightError{Err: err}
 	}
 	return nil
@@ -169,8 +170,9 @@ func SetupHost(config crcConfig.Storage, checkOnly bool) error {
 	mode := crcConfig.GetNetworkMode(config)
 	trayAutostart := config.Get(crcConfig.AutostartTray).AsBool()
 	bundlePath := config.Get(crcConfig.Bundle).AsString()
+	preset := config.Get(crcConfig.PresetConfigurationKey).AsString()
 	logging.Infof("Using bundle path %s", bundlePath)
-	return doFixPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode, bundlePath), checkOnly)
+	return doFixPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode, bundlePath, preset), checkOnly)
 }
 
 func RegisterSettings(config crcConfig.Schema) {

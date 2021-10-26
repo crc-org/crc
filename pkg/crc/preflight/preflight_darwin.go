@@ -136,10 +136,10 @@ func (filter preflightFilter) SetTray(enable bool) {
 // Passing 'SystemNetworkingMode' to getPreflightChecks currently achieves this
 // as there are no user networking specific checks
 func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true, true, network.SystemNetworkingMode, constants.DefaultBundlePath)
+	return getPreflightChecks(true, true, network.SystemNetworkingMode, constants.DefaultBundlePath, "")
 }
 
-func getChecks(mode network.Mode, bundlePath string) []Check {
+func getChecks(mode network.Mode, bundlePath, preset string) []Check {
 	checks := []Check{}
 
 	checks = append(checks, nonWinPreflightChecks...)
@@ -149,15 +149,15 @@ func getChecks(mode network.Mode, bundlePath string) []Check {
 	checks = append(checks, daemonSetupChecks...)
 	checks = append(checks, resolverPreflightChecks...)
 	checks = append(checks, traySetupChecks...)
-	checks = append(checks, bundleCheck(bundlePath))
+	checks = append(checks, bundleCheck(bundlePath, preset))
 
 	return checks
 }
 
-func getPreflightChecks(_ bool, trayAutostart bool, mode network.Mode, bundlePath string) []Check {
+func getPreflightChecks(_ bool, trayAutostart bool, mode network.Mode, bundlePath, preset string) []Check {
 	filter := newFilter()
 	filter.SetNetworkMode(mode)
 	filter.SetTray(trayAutostart)
 
-	return filter.Apply(getChecks(mode, bundlePath))
+	return filter.Apply(getChecks(mode, bundlePath, preset))
 }
