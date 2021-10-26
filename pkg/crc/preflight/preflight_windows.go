@@ -146,21 +146,21 @@ func checkVsock() error {
 // Passing 'UserNetworkingMode' to getPreflightChecks currently achieves this
 // as there are no system networking specific checks
 func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true, true, network.UserNetworkingMode, constants.DefaultBundlePath)
+	return getPreflightChecks(true, true, network.UserNetworkingMode, constants.DefaultBundlePath, "")
 }
 
-func getChecks(bundlePath string) []Check {
+func getChecks(bundlePath, preset string) []Check {
 	checks := []Check{}
 	checks = append(checks, hypervPreflightChecks...)
 	checks = append(checks, vsockChecks...)
-	checks = append(checks, bundleCheck(bundlePath))
+	checks = append(checks, bundleCheck(bundlePath, preset))
 	checks = append(checks, genericCleanupChecks...)
 	return checks
 }
 
-func getPreflightChecks(_ bool, trayAutoStart bool, networkMode network.Mode, bundlePath string) []Check {
+func getPreflightChecks(_ bool, trayAutoStart bool, networkMode network.Mode, bundlePath, preset string) []Check {
 	filter := newFilter()
 	filter.SetNetworkMode(networkMode)
 
-	return filter.Apply(getChecks(bundlePath))
+	return filter.Apply(getChecks(bundlePath, preset))
 }
