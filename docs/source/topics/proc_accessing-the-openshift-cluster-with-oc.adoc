@@ -1,5 +1,7 @@
 [id="accessing-the-openshift-cluster-with-oc_{context}"]
-= Accessing the OpenShift cluster with `oc`
+= Accessing the OpenShift cluster with the OpenShift CLI
+
+Access the OpenShift cluster by using the OpenShift CLI ([command]`oc`).
 
 .Prerequisites
 
@@ -8,9 +10,7 @@ For more information, see link:{crc-gsg-url}#starting-the-virtual-machine_gsg[St
 
 .Procedure
 
-To access the OpenShift cluster through the [command]`oc` command, follow these steps:
-
-. Run the [command]`{bin} oc-env` command to print the command needed to add the cached [command]`oc` executable to your `_PATH_`:
+. Run the [command]`{bin} oc-env` command to print the command needed to add the cached [command]`oc` executable to your `$PATH`:
 +
 [subs="+quotes,attributes"]
 ----
@@ -33,8 +33,7 @@ You can also view it by running the [command]`{bin} console --credentials` comma
 ====
 
 . You can now use [command]`oc` to interact with your OpenShift cluster.
-For example, to verify that the OpenShift cluster Operators are available, you need to be logged in as `kubeadmin` user and
-run the following command:
+For example, to verify that the OpenShift cluster Operators are available, log in as the `kubeadmin` user and run the following command:
 +
 [subs="+quotes,attributes",options="nowrap"]
 ----
@@ -46,7 +45,7 @@ $ oc get co
 +
 [NOTE]
 ====
-* {prod} disables the `monitoring` Operator by default.
+{prod} disables the Cluster Monitoring Operator by default.
 ====
 
 See link:{crc-gsg-url}#troubleshooting-codeready-containers_gsg[Troubleshooting {prod}] if you cannot access the {prod} OpenShift cluster.

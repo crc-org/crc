@@ -3,7 +3,12 @@
 
 The [command]`{bin} setup` command performs operations to set up the environment of your host machine for the {prod} virtual machine.
 
-This procedure will create the [filename]`~/.crc` directory if it does not already exist.
+This procedure creates the [filename]*_~/.crc_* directory if it does not already exist.
+
+[WARNING]
+====
+If you are setting up a new version, capture any changes made to the virtual machine before setting up a new {prod} release.
+====
 
 .Prerequisites
 
@@ -12,9 +17,8 @@ On {msw}, ensure that your user account can elevate to Administrator privileges.
 
 [NOTE]
 ====
-* Do not run the [command]`{bin}` executable as `root` (or Administrator).
+Do not run the [command]`{bin}` executable as the `root` user or an administrator.
 Always run the [command]`{bin}` executable with your user account.
-* If you are setting up a new version, capture any changes made to the virtual machine before setting up a new {prod} release.
 ====
 
 .Procedure

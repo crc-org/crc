@@ -6,11 +6,11 @@ The [command]`{bin} start` command starts the {prod} virtual machine and OpenShi
 .Prerequisites
 
 * To avoid networking-related issues, ensure that you are not connected to a VPN and that your network connection is reliable.
-* You set up the host machine through the [command]`{bin} setup` command.
+* You set up the host machine using the [command]`{bin} setup` command.
 For more information, see link:{crc-gsg-url}#setting-up-codeready-containers_gsg[Setting up {prod}].
 * On {msw}, ensure that your user account can elevate to Administrator privileges.
 * You have a valid OpenShift user pull secret.
-Copy or download the pull secret from the Pull Secret section of the link:https://cloud.redhat.com/openshift/create/local[Install on Laptop: {rh-prod}] page on cloud.redhat.com.
+Copy or download the pull secret from the Pull Secret section of the link:https://console.redhat.com/openshift/create/local[{prod} page on the {rh} Hybrid Cloud Console].
 +
 [NOTE]
 ====
@@ -27,13 +27,13 @@ $ {bin} start
 ----
 
 . When prompted, supply your user pull secret.
-
++
 [NOTE]
 ====
-* The cluster takes a minimum of four minutes to start the necessary containers and Operators before serving a request.
-* If you see errors during [command]`{bin} start`, check the link:{crc-gsg-url}#troubleshooting-codeready-containers_gsg[Troubleshooting {prod}] section for potential solutions.
+The cluster takes a minimum of four minutes to start the necessary containers and Operators before serving a request.
 ====
 
 .Additional resources
 
 * To change the default resources allocated to the virtual machine, see link:{crc-gsg-url}#configuring-the-virtual-machine_gsg[Configuring the virtual machine].
+* If you see errors during [command]`{bin} start`, see the link:{crc-gsg-url}#troubleshooting-codeready-containers_gsg[Troubleshooting {prod}] section for potential solutions.

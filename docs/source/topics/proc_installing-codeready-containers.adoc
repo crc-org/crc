@@ -41,7 +41,7 @@ $ mkdir -p ~/bin
 $ cp ~/Downloads/crc-linux-*-amd64/{bin} ~/bin
 ----
 +
-.. Add the [filename]*_~/bin_* directory to your `_PATH_`:
+.. Add the [filename]*_~/bin_* directory to your `$PATH`:
 +
 [subs="attributes"]
 ----

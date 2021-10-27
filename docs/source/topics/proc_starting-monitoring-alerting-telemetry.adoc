@@ -1,14 +1,14 @@
 [id="starting-monitoring-alerting-telemetry_{context}"]
-= Starting Monitoring, Alerting, and Telemetry
+= Starting monitoring, alerting, and telemetry
 
-To make sure {prod} can run on a typical laptop, some resource-heavy services get disabled by default.
-One of these is Prometheus and the related monitoring, alerting, and telemetry functionality.
-Telemetry functionality is responsible for listing your cluster in the link:https://cloud.redhat.com/openshift[Red Hat OpenShift Cluster Manager].
+{prod} disables cluster monitoring by default to ensure that {prod} can run on a typical notebook.
+Telemetry is responsible for listing your cluster in the link:https://console.redhat.com/openshift[Red Hat Hybrid Cloud Console].
+Follow this procedure to enable monitoring for your cluster.
 
 .Prerequisites
 
 * You must assign additional memory to the {prod} virtual machine.
-At least 14 GiB of memory (a value of `14336`) is recommended for core functionality. 
+At least 14 GiB of memory, a value of `14336`, is recommended for core functionality.
 Increased workloads will require more memory.
 For more information, see link:{crc-gsg-url}#configuring-the-virtual-machine_gsg[Configuring the virtual machine].
 

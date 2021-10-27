@@ -13,8 +13,6 @@ For more information, see link:{crc-gsg-url}#starting-the-virtual-machine_gsg[St
 
 .Procedure
 
-To deploy a sample application through [command]`odo`, follow these steps:
-
 . Log in to the running {prod} OpenShift cluster as the `developer` user:
 +
 [subs="+quotes,attributes"]
