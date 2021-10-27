@@ -1,22 +1,22 @@
 [id="connecting-to-remote-instance_{context}"]
 = Connecting to a remote {prod} instance
 
-Follow this procedure to connect a client machine to a remote server running a {prod} OpenShift cluster.
+Use [application]`dnsmasq` to connect a client machine to a remote server running a {prod} OpenShift cluster.
 
-[NOTE]
+This procedure assumes the use of a {rhel}, {fed}, or {centos} client.
+Run every command in this procedure on the client.
+
+[IMPORTANT]
 ====
-* **It is strongly advised to connect to a server that is only exposed on your local network.**
-* All of the commands in this procedure must be run on the client.
-* This procedure assumes the use of a {rhel}, {fed}, or {centos} client.
+**Connect to a server that is only exposed on your local network.**
 ====
 
 .Prerequisites
 
 * A remote server is set up for the client to connect to.
 For more information, see link:{crc-gsg-url}#setting-up-remote-server_gsg[Setting up {prod} on a remote server].
-* NetworkManager is installed and running.
 * You know the external IP address of the server.
-* You have the link:{oc-download-url}[latest OpenShift client executable ([command]`oc`)] in your `$PATH` on the client.
+* You have the link:{oc-download-url}[latest OpenShift CLI ([command]`oc`)] in your `$PATH` on the client.
 
 .Procedure
 
@@ -47,7 +47,7 @@ EOF
 +
 [NOTE]
 ====
-Comment out any existing entries in `/etc/NetworkManager/dnsmasq.d/crc.conf`.
+Comment out any existing entries in [filename]*_/etc/NetworkManager/dnsmasq.d/crc.conf_*.
 These entries are created by running a local instance of {prod} and will conflict with the entries for the remote cluster.
 ====
 

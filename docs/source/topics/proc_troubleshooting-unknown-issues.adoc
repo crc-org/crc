@@ -6,9 +6,9 @@ This involves stopping the virtual machine, deleting it, reverting changes made 
 
 .Prerequisites
 
-* You set up the host machine through the [command]`{bin} setup` command.
+* You set up the host machine with the [command]`{bin} setup` command.
 For more information, see link:{crc-gsg-url}#setting-up-codeready-containers_gsg[Setting up {prod}].
-* You started {prod} through the [command]`{bin} start` command.
+* You started {prod} with the [command]`{bin} start` command.
 For more information, see link:{crc-gsg-url}#starting-the-virtual-machine_gsg[Starting the virtual machine].
 * You are using the latest {prod} release.
 Using a version earlier than {prod} 1.2.0 may result in errors related to expired x509 certificates.
@@ -64,5 +64,5 @@ The cluster takes a minimum of four minutes to start the necessary containers an
 If your issue is not resolved by this procedure, perform the following steps:
 
 . link:https://github.com/code-ready/crc/issues[Search open issues] for the issue that you are encountering.
-. If no existing issue addresses the encountered issue, link:https://github.com/code-ready/crc/issues/new[create an issue] and link:https://help.github.com/en/articles/file-attachments-on-issues-and-pull-requests[attach the [filename]`~/.crc/crc.log` file] to the created issue.
-The [filename]`~/.crc/crc.log` file has detailed debugging and troubleshooting information which can help diagnose the problem that you are experiencing.
+. If no existing issue addresses the encountered issue, link:https://github.com/code-ready/crc/issues/new[create an issue] and link:https://help.github.com/en/articles/file-attachments-on-issues-and-pull-requests[attach the [filename]*_~/.crc/crc.log_* file] to the created issue.
+The [filename]*_~/.crc/crc.log_* file has detailed debugging and troubleshooting information which can help diagnose the problem that you are experiencing.
