@@ -1,14 +1,15 @@
 [id="setting-up-remote-server_{context}"]
 = Setting up {prod} on a remote server
 
-Follow this procedure to configure a remote server to run a {prod} OpenShift cluster.
+Configure a remote server to run a {prod} OpenShift cluster.
 
-[NOTE]
+This procedure assumes the use of a {rhel}, {fed}, or {centos} server.
+Run every command in this procedure on the remote server.
+
+[WARNING]
 ====
-* **It is strongly advised to perform this procedure on a local network.**
-Exposing an insecure server on the internet comes with many security implications.
-* All of the commands in this procedure must be run on the remote server.
-* This procedure assumes the use of a {rhel}, {fed}, or {centos} server.
+**Perform this procedure only on a local network.**
+Exposing an insecure server on the internet has many security implications.
 ====
 
 .Prerequisites
@@ -26,7 +27,7 @@ For more information, see link:{crc-gsg-url}#installing-codeready-containers_gsg
 $ {bin} start
 ----
 +
-Ensure that the cluster remains running throughout this procedure.
+Ensure that the cluster remains running during this procedure.
 
 . Install the [package]`haproxy` package and other utilities:
 +

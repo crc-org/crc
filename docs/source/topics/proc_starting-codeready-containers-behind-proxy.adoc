@@ -1,13 +1,18 @@
 [id="starting-codeready-containers-behind-proxy_{context}"]
 = Starting {prod} behind a proxy
 
+You can start {prod} behind a defined proxy using environment variables or configurable properties.
+
+[NOTE]
+====
+SOCKS proxies are not supported by OpenShift Container Platform.
+====
+
 .Prerequisites
 
-* To use an existing [command]`oc` executable on your host machine, export the `.testing` domain as part of the `no_proxy` environment variable.
-
-* The embedded [command]`oc` executable does not require manual settings.
-For more information about using the embedded [command]`oc` executable, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the OpenShift cluster with `oc`].
-
+* To use an existing OpenShift CLI ([command]`oc`) executable on your host machine, export the `.testing` domain as part of the `no_proxy` environment variable.
+The embedded [command]`oc` executable does not require manual settings.
+For more information about using the embedded [command]`oc` executable, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the OpenShift cluster with the OpenShift CLI].
 
 .Procedure
 
@@ -27,10 +32,7 @@ $ {bin} config set no-proxy __<comma-separated-no-proxy-entries>__
 $ {bin} config set proxy-ca-file __<path-to-custom-ca-file>__
 ----
 
-The [command]`{bin}` executable will be able to use the defined proxy once set through environment variables or {prod} configuration.
-
 [NOTE]
 ====
-* Proxy-related values set in the configuration for {prod} have priority over values set through environment variables.
-* SOCKS proxies are not supported by OpenShift Container Platform.
+Proxy-related values set in the configuration for {prod} have priority over values set with environment variables.
 ====
