@@ -15,6 +15,13 @@ import (
 	"github.com/code-ready/crc/pkg/download"
 )
 
+type Type string
+
+const (
+	OpenShift Type = "snc"
+	Podman    Type = "podman"
+)
+
 // Metadata structure to unmarshal the crc-bundle-info.json file
 
 type CrcBundleInfo struct {
@@ -170,14 +177,24 @@ func (bundle *CrcBundleInfo) GetBundleNameWithoutExtension() string {
 	return GetBundleNameWithoutExtension(bundle.GetBundleName())
 }
 
+func (bundle *CrcBundleInfo) GetBundleType() Type {
+	if bundle.Type == "snc" {
+		return OpenShift
+	}
+	return Podman
+}
+
 func (bundle *CrcBundleInfo) verify() error {
 	files := []string{
-		bundle.GetOcPath(),
-		bundle.GetKubeConfigPath(),
 		bundle.GetSSHKeyPath(),
 		bundle.GetDiskImagePath(),
 		bundle.GetKernelPath(),
 		bundle.GetInitramfsPath(),
+	}
+	if bundle.GetBundleType() == OpenShift {
+		files = append(files, []string{
+			bundle.GetOcPath(),
+			bundle.GetKubeConfigPath()}...)
 	}
 
 	for _, file := range files {
