@@ -6,7 +6,7 @@ This expiration is due to certificates embedded in the OpenShift cluster.
 The [command]`{bin} start` command triggers an automatic certificate renewal process when needed.
 Certificate renewal can add up to five minutes to the start time of the cluster.
 
-In order to avoid this additional startup time, or in case of failures in the certificate renewal process, use the following procedure:
+To avoid this additional startup time, or in case of failures in the certificate renewal process, use the following procedure:
 
 .Procedure
 

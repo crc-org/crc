@@ -9,8 +9,8 @@ To access the internal OpenShift registry, follow these steps.
 
 * A running {prod} virtual machine.
 For more information, see link:{crc-gsg-url}#starting-the-virtual-machine_gsg[Starting the virtual machine].
-* A working [command]`oc` command.
-For more information, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the OpenShift cluster with `oc`].
+* A working OpenShift CLI ([command]`oc`) command.
+For more information, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the OpenShift cluster with the OpenShift CLI].
 * An installation of [command]`podman` or [command]`docker`.
 ** For Docker, add `default-route-openshift-image-registry.apps-crc.testing` as an insecure registry.
 For more information, see link:https://docs.docker.com/registry/insecure/[the Docker documentation].

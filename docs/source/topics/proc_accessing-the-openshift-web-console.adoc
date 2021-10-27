@@ -1,6 +1,12 @@
 [id="accessing-the-openshift-web-console_{context}"]
 = Accessing the OpenShift web console
 
+Access the OpenShift web console by using your web browser.
+
+Access the cluster by using either the `kubeadmin` or `developer` user.
+Use the `developer` user for creating projects or OpenShift applications and for application deployment.
+Use the `kubeadmin` user only for administrative tasks such as creating new users or setting roles.
+
 .Prerequisites
 
 * A running {prod} virtual machine.
@@ -8,20 +14,20 @@ For more information, see link:{crc-gsg-url}#starting-the-virtual-machine_gsg[St
 
 .Procedure
 
-To access the OpenShift web console, follow these steps:
-
-. Run [command]`{bin} console`.
-This will open your web browser and direct it to the web console.
+. To access the OpenShift web console with your default web browser, run the following command:
++
+[subs="+quotes,attributes"]
+----
+$ {bin} console
+----
 
 . Log in as the `developer` user with the password printed in the output of the [command]`{bin} start` command.
+You can also view the password for the `developer` and `kubeadmin` users by running the following command:
 +
-[NOTE]
-====
-* You can also view the password for the `developer` and `kubeadmin` users by running [command]`{bin} console --credentials`.
-* You can initially access the cluster through either the `kubeadmin` or `developer` user.
-Use the `developer` user for creating projects or OpenShift applications and for application deployment.
-Only use the `kubeadmin` user for administrative tasks such as creating new users, setting roles, and so on.
-====
+[subs="+quotes,attributes"]
+----
+$ {bin} console --credentials
+----
 
 See link:{crc-gsg-url}#troubleshooting-codeready-containers_gsg[Troubleshooting {prod}] if you cannot access the {prod} OpenShift cluster.
 

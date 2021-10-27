@@ -8,10 +8,10 @@ The OpenShift cluster managed by {prod} uses 2 DNS domain names, `crc.testing` a
 The `crc.testing` domain is for core OpenShift services.
 The `apps-crc.testing` domain is for accessing OpenShift applications deployed on the cluster.
 
-For example, the OpenShift API server will be exposed as `api.crc.testing` while the OpenShift console is accessed through `console-openshift-console.apps-crc.testing`.
+For example, the OpenShift API server is exposed as `api.crc.testing` while the OpenShift console is accessed as `console-openshift-console.apps-crc.testing`.
 These DNS domains are served by a `dnsmasq` DNS container running inside the {prod} virtual machine.
 
-Running [command]`{bin} setup` will detect and adjust your system DNS configuration so that it can resolve these domains.
+The [command]`{bin} setup` command detects and adjusts your system DNS configuration so that it can resolve these domains.
 Additional checks are done to verify DNS is properly configured when running [command]`{bin} start`.
 
 [id="dns-configuration-linux_{context}"]
@@ -26,7 +26,7 @@ This configuration is used by default on Fedora 33 or newer, and on Ubuntu Deskt
 * {prod} expects NetworkManager to manage networking.
 * {prod} configures `systemd-resolved` to forward requests for the `testing` domain to the `192.168.130.11` DNS server.
 `192.168.130.11` is the IP of the {prod} virtual machine.
-* `systemd-resolved` configuration is done through a NetworkManager dispatcher script in `/etc/NetworkManager/dispatcher.d/99-crc.sh`:
+* `systemd-resolved` configuration is done with a NetworkManager dispatcher script in [filename]*_/etc/NetworkManager/dispatcher.d/99-crc.sh_*:
 +
 ----
 #!/bin/sh
@@ -49,8 +49,8 @@ After {rhel-resolved-docs}[configuring the host] to use `systemd-resolved`, stop
 This configuration is used by default on Fedora 32 or older, on {rhel}, and on {centos}.
 
 * {prod} expects NetworkManager to manage networking.
-* NetworkManager uses `dnsmasq` through the [filename]`/etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf` configuration file.
-* The configuration file for this `dnsmasq` instance is [filename]`/etc/NetworkManager/dnsmasq.d/crc.conf`:
+* NetworkManager uses `dnsmasq` with the [filename]*_/etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf_* configuration file.
+* The configuration file for this `dnsmasq` instance is [filename]*_/etc/NetworkManager/dnsmasq.d/crc.conf_*:
 +
 ----
 server=/crc.testing/192.168.130.11

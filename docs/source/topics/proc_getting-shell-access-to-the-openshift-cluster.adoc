@@ -1,17 +1,21 @@
 [id="getting-shell-access-to-the-openshift-cluster_{context}"]
 = Getting shell access to the OpenShift cluster
 
-Direct access to the OpenShift cluster is not needed for regular use and is strongly discouraged.
 To access the cluster for troubleshooting or debugging purposes, follow this procedure.
+
+[NOTE]
+====
+Direct access to the OpenShift cluster is not needed for regular use and is strongly discouraged.
+====
 
 .Prerequisites
 
-* Enable [command]`oc` access to the cluster and log in as the `kubeadmin` user.
-For detailed steps, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the OpenShift cluster with `oc`].
+* Enable OpenShift CLI ([command]`oc`) access to the cluster and log in as the `kubeadmin` user.
+For detailed steps, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the OpenShift cluster with the OpenShift CLI].
 
 .Procedure
 
-. Run [command]`oc get nodes`.
+. Run the [command]`oc get nodes` command to identify the desired node.
 The output will be similar to this:
 +
 [subs="+quotes,attributes",options="nowrap"]
