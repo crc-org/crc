@@ -177,11 +177,15 @@ func (bundle *CrcBundleInfo) GetBundleNameWithoutExtension() string {
 	return GetBundleNameWithoutExtension(bundle.GetBundleName())
 }
 
-func (bundle *CrcBundleInfo) GetBundleType() Type {
+func (bundle *CrcBundleInfo) getBundleType() Type {
 	if bundle.Type == "snc" {
 		return OpenShift
 	}
 	return Podman
+}
+
+func (bundle *CrcBundleInfo) IsOpenShift() bool {
+	return bundle.getBundleType() == OpenShift
 }
 
 func (bundle *CrcBundleInfo) verify() error {
@@ -191,7 +195,7 @@ func (bundle *CrcBundleInfo) verify() error {
 		bundle.GetKernelPath(),
 		bundle.GetInitramfsPath(),
 	}
-	if bundle.GetBundleType() == OpenShift {
+	if bundle.IsOpenShift() {
 		files = append(files, []string{
 			bundle.GetOcPath(),
 			bundle.GetKubeConfigPath()}...)

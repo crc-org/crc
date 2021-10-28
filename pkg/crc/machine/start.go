@@ -166,7 +166,11 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			return nil, errors.Wrap(err, "Error getting bundle metadata")
 		}
 
-		logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
+		if crcBundleMetadata.IsOpenShift() {
+			logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
+		} else {
+			logging.Info("Creating CodeReady Containers VM for Podman")
+		}
 
 		machineConfig := config.MachineConfig{
 			Name:            client.name,
@@ -181,7 +185,9 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			KernelCmdLine:   crcBundleMetadata.GetKernelCommandLine(),
 			Initramfs:       crcBundleMetadata.GetInitramfsPath(),
 			Kernel:          crcBundleMetadata.GetKernelPath(),
-			KubeConfig:      crcBundleMetadata.GetKubeConfigPath(),
+		}
+		if crcBundleMetadata.IsOpenShift() {
+			machineConfig.KubeConfig = crcBundleMetadata.GetKubeConfigPath()
 		}
 		if err := createHost(libMachineAPIClient, machineConfig); err != nil {
 			return nil, errors.Wrap(err, "Error creating machine")
@@ -212,6 +218,12 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Error getting the machine state")
 	}
 	if vmState == libmachinestate.Running {
+		if !crcBundleMetadata.IsOpenShift() {
+			logging.Info("A CodeReady Containers VM for Podman is already running")
+			return &types.StartResult{
+				Status: state.FromMachine(vmState),
+			}, nil
+		}
 		logging.Infof("A CodeReady Containers VM for OpenShift %s is already running", crcBundleMetadata.GetOpenshiftVersion())
 		clusterConfig, err := getClusterConfig(crcBundleMetadata)
 		if err != nil {
@@ -229,9 +241,9 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if _, err := bundle.Use(currentBundleName); err != nil {
 		return nil, err
 	}
-
-	logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
-
+	if crcBundleMetadata.IsOpenShift() {
+		logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
+	}
 	if client.useVSock() {
 		if err := exposePorts(); err != nil {
 			return nil, err
@@ -313,6 +325,12 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 	proxyConfig.ApplyToEnvironment()
 	proxyConfig.AddNoProxy(instanceIP)
+
+	if !crcBundleMetadata.IsOpenShift() {
+		return &types.StartResult{
+			Status: state.FromMachine(vmState),
+		}, nil
+	}
 
 	// Create servicePostStartConfig for DNS checks and DNS start.
 	servicePostStartConfig := services.ServicePostStartConfig{
