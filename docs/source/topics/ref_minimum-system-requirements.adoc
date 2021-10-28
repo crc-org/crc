@@ -14,6 +14,7 @@
 
 {prod} is supported only on AMD64 and Intel 64 processor architectures.
 {prod} does not support the ARM-based M1 architecture.
+{prod} does not support nested virtualization.
 
 [NOTE]
 ====
