@@ -61,6 +61,7 @@ type Node struct {
 	Initramfs     string   `json:"initramfs,omitempty"`
 	Kernel        string   `json:"kernel,omitempty"`
 	InternalIP    string   `json:"internalIP"`
+	PodmanVersion string   `json:"podmanVersion,omitempty"`
 }
 
 type Storage struct {
@@ -171,6 +172,10 @@ func (bundle *CrcBundleInfo) GetBundleBuildTime() (time.Time, error) {
 
 func (bundle *CrcBundleInfo) GetOpenshiftVersion() string {
 	return bundle.ClusterInfo.OpenShiftVersion.String()
+}
+
+func (bundle *CrcBundleInfo) GetPodmanVersion() string {
+	return bundle.Nodes[0].PodmanVersion
 }
 
 func (bundle *CrcBundleInfo) GetBundleNameWithoutExtension() string {
