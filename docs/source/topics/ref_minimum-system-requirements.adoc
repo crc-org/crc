@@ -12,6 +12,9 @@
 * 9 GB of free memory
 * 35 GB of storage space
 
+{prod} is supported only on AMD64 and Intel 64 processor architectures.
+{prod} does not support the ARM-based M1 architecture.
+
 [NOTE]
 ====
 The OpenShift cluster requires these minimum resources to run in the {prod} virtual machine.
@@ -32,7 +35,7 @@ To assign more resources to the {prod} virtual machine, see link:{crc-gsg-url}#c
 
 === {mac}
 
-* On {mac}, {prod} requires macOS 10.14 Mojave or newer.
+* On {mac}, {prod} requires {mac} 10.14 Mojave or newer.
 {prod} does not work on earlier versions of {mac}.
 
 === Linux
