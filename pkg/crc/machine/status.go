@@ -57,13 +57,16 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	}
 
 	diskSize, diskUse := client.getDiskDetails(ip, crcBundleMetadata)
-	return &types.ClusterStatusResult{
-		CrcStatus:        state.Running,
-		OpenshiftStatus:  getOpenShiftStatus(context.Background(), ip),
-		OpenshiftVersion: crcBundleMetadata.GetOpenshiftVersion(),
-		DiskUse:          diskUse,
-		DiskSize:         diskSize,
-	}, nil
+	clusterStatusResult := &types.ClusterStatusResult{
+		CrcStatus: state.Running,
+		DiskUse:   diskUse,
+		DiskSize:  diskSize,
+	}
+	if crcBundleMetadata.IsOpenShift() {
+		clusterStatusResult.OpenshiftStatus = getOpenShiftStatus(context.Background(), ip)
+		clusterStatusResult.OpenshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
+	}
+	return clusterStatusResult, nil
 }
 
 func (client *client) getDiskDetails(ip string, bundle *bundle.CrcBundleInfo) (int64, int64) {
