@@ -226,7 +226,8 @@ func downloadLink(release *crcversion.CrcReleaseInfo) string {
 	return constants.CrcLandingPageURL
 }
 
-const startTemplate = `Started the OpenShift cluster.
+const (
+	startTemplateForOpenshift = `Started the OpenShift cluster.
 
 The server is accessible via web console at:
   {{ .ClusterConfig.WebConsoleURL }}
@@ -243,6 +244,12 @@ Use the 'oc' command line interface:
   {{ .CommandLinePrefix }} {{ .EvalCommandLine }}
   {{ .CommandLinePrefix }} oc login -u {{ .ClusterConfig.DeveloperCredentials.Username }} {{ .ClusterConfig.URL }}
 `
+	startTemplateForPodman = `Enabled the podman socket.
+
+Use the 'podman' command line interface:
+  {{ .CommandLinePrefix }} {{ .EvalCommandLine }}
+`
+)
 
 type templateVariables struct {
 	ClusterConfig     *clusterConfig
@@ -251,18 +258,32 @@ type templateVariables struct {
 }
 
 func writeTemplatedMessage(writer io.Writer, s *startResult) error {
-	parsed, err := template.New("template").Parse(startTemplate)
+	parsed, err := template.New("template").Parse(startTemplateForPodman)
 	if err != nil {
 		return err
 	}
-
+	// This should be replaced with the config preset once
+	// we start using preset as part of config.
+	if s.ClusterConfig.ClusterCACert != "" {
+		parsed, err = template.New("template").Parse(startTemplateForOpenshift)
+		if err != nil {
+			return err
+		}
+	}
 	userShell, err := shell.GetShell("")
 	if err != nil {
 		userShell = ""
 	}
+
+	if s.ClusterConfig.ClusterCACert != "" {
+		return parsed.Execute(writer, &templateVariables{
+			ClusterConfig:     s.ClusterConfig,
+			EvalCommandLine:   shell.GenerateUsageHint(userShell, "crc oc-env"),
+			CommandLinePrefix: commandLinePrefix(userShell),
+		})
+	}
 	return parsed.Execute(writer, &templateVariables{
-		ClusterConfig:     s.ClusterConfig,
-		EvalCommandLine:   shell.GenerateUsageHint(userShell, "crc oc-env"),
+		EvalCommandLine:   shell.GenerateUsageHint(userShell, "crc podman-env"),
 		CommandLinePrefix: commandLinePrefix(userShell),
 	})
 }
