@@ -19,7 +19,7 @@ func (client *client) Stop() (state.State, error) {
 		return state.Error, errors.Wrap(err, "Cannot load machine")
 	}
 	if err := stopAllContainers(host, client); err != nil {
-		return state.Error, err
+		logging.Warnf("Failed to stop all containers: %v\nProceeding with stop...", err)
 	}
 	logging.Info("Stopping the OpenShift cluster, this may take a few minutes...")
 	if err := host.Stop(); err != nil {
