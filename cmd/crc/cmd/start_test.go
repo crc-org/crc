@@ -21,6 +21,7 @@ func TestRenderActionPlainSuccess(t *testing.T) {
 	assert.NoError(t, render(&startResult{
 		Success: true,
 		ClusterConfig: &clusterConfig{
+			ClusterCACert: "HKMLDJAJDV",
 			WebConsoleURL: defaultWebConsoleURL,
 			URL:           defaultAPIURL,
 			AdminCredentials: credentials{

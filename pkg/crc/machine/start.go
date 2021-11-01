@@ -169,7 +169,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		if crcBundleMetadata.IsOpenShift() {
 			logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
 		} else {
-			logging.Info("Creating CodeReady Containers VM for Podman")
+			logging.Infof("Creating CodeReady Containers VM for Podman %s...", crcBundleMetadata.GetPodmanVersion())
 		}
 
 		machineConfig := config.MachineConfig{
@@ -219,7 +219,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 	if vmState == libmachinestate.Running {
 		if !crcBundleMetadata.IsOpenShift() {
-			logging.Info("A CodeReady Containers VM for Podman is already running")
+			logging.Infof("A CodeReady Containers VM for Podman %s is already running", crcBundleMetadata.GetPodmanVersion())
 			return &types.StartResult{
 				Status: state.FromMachine(vmState),
 			}, nil
