@@ -86,14 +86,6 @@ func (s *setupResult) prettyPrintTo(writer io.Writer) error {
 	if s.Error != nil {
 		return s.Error
 	}
-	_, err := fmt.Fprintf(writer, "Your system is correctly setup for using CodeReady Containers, you can now run 'crc start%s' to start the OpenShift cluster\n", extraArguments())
+	_, err := fmt.Fprintf(writer, "Your system is correctly setup for using CodeReady Containers, you can now run 'crc start' to start the OpenShift cluster\n")
 	return err
-}
-
-func extraArguments() string {
-	var bundle string
-	if !constants.IsRelease() {
-		bundle = " -b $bundlename"
-	}
-	return bundle
 }
