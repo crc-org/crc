@@ -56,7 +56,7 @@ func ValidateEnoughMemory(value int) error {
 // ValidateBundlePath checks if the provided bundle path exist
 func ValidateBundlePath(bundlePath string) error {
 	if err := ValidatePath(bundlePath); err != nil {
-		return fmt.Errorf("%s is invalid or missing, run 'crc setup' to download the bundle", bundlePath)
+		return err
 	}
 
 	userProvidedBundle := filepath.Base(bundlePath)
@@ -97,10 +97,19 @@ func ValidateIPAddress(ipAddress string) error {
 	return nil
 }
 
+type InvalidPath struct {
+	path string
+}
+
+func (e *InvalidPath) Error() string {
+	return fmt.Sprintf("file '%s' does not exist", e.path)
+
+}
+
 // ValidatePath check if provide path is exist
 func ValidatePath(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return fmt.Errorf("file '%s' does not exist", path)
+		return &InvalidPath{path: path}
 	}
 	return nil
 }

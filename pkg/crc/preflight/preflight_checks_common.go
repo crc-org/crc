@@ -86,7 +86,14 @@ func fixBundleExtracted(bundlePath, preset string) func() error {
 			return fmt.Errorf("Cannot create directory %s: %v", bundleDir, err)
 		}
 		if err := validation.ValidateBundle(bundlePath); err != nil {
-			logging.Warnf("Provided %s not supported with this release", bundlePath)
+			var e *validation.InvalidPath
+			if !errors.As(err, &e) {
+				return err
+			}
+			if bundlePath != constants.DefaultBundlePath {
+				/* This message needs to be improved when the bundle has been set in crc config for example */
+				return fmt.Errorf("%s is invalid or missing, run 'crc setup' to download the bundle", bundlePath)
+			}
 			if err := bundle.Download(); err != nil {
 				return err
 			}
