@@ -49,7 +49,11 @@ func runPodmanEnv() error {
 			connectionDetails.IP,
 			connectionDetails.SSHPort,
 			socket)))
-	fmt.Println(shell.GenerateUsageHintWithComment(userShell, "crc podman-env"))
+	cmdLine := "crc podman-env"
+	if root {
+		cmdLine += " --root"
+	}
+	fmt.Println(shell.GenerateUsageHintWithComment(userShell, cmdLine))
 	return nil
 }
 
