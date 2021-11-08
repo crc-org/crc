@@ -16,7 +16,13 @@ import (
 )
 
 func doRequest(client *grab.Client, req *grab.Request) (string, error) {
+	const minSizeForProgressBar = 100_000_000
+
 	resp := client.Do(req)
+	if resp.Size() < minSizeForProgressBar {
+		<-resp.Done
+		return resp.Filename, resp.Err()
+	}
 
 	t := time.NewTicker(500 * time.Millisecond)
 	defer t.Stop()
