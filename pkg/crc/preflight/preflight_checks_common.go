@@ -81,7 +81,7 @@ func fixBundleExtracted(bundlePath, preset string) func() error {
 
 	return func() error {
 		bundleDir := filepath.Dir(constants.DefaultBundlePath)
-		logging.Infof("Ensuring directory %s exists", bundleDir)
+		logging.Debugf("Ensuring directory %s exists", bundleDir)
 		if err := os.MkdirAll(bundleDir, 0775); err != nil {
 			return fmt.Errorf("Cannot create directory %s: %v", bundleDir, err)
 		}
@@ -94,6 +94,7 @@ func fixBundleExtracted(bundlePath, preset string) func() error {
 				/* This message needs to be improved when the bundle has been set in crc config for example */
 				return fmt.Errorf("%s is invalid or missing, run 'crc setup' to download the bundle", bundlePath)
 			}
+			logging.Infof("Downloading %s", constants.GetDefaultBundle())
 			if err := bundle.Download(); err != nil {
 				return err
 			}
