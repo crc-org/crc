@@ -55,7 +55,6 @@ github.com/asaskevich/govalidator
 ## explicit
 github.com/cavaliercoder/grab
 github.com/cavaliercoder/grab/bps
-github.com/cavaliercoder/grab/grabui
 # github.com/cheggaaa/pb/v3 v3.0.8
 ## explicit
 github.com/cheggaaa/pb/v3
