@@ -56,11 +56,7 @@ func ValidateEnoughMemory(value int) error {
 // ValidateBundlePath checks if the provided bundle path exist
 func ValidateBundlePath(bundlePath string) error {
 	if err := ValidatePath(bundlePath); err != nil {
-		if constants.IsRelease() {
-			return fmt.Errorf("%s is invalid or missing, run 'crc setup' to download the bundle", bundlePath)
-
-		}
-		return fmt.Errorf("%s not found, please provide the path to a valid bundle using the -b option", bundlePath)
+		return fmt.Errorf("%s is invalid or missing, run 'crc setup' to download the bundle", bundlePath)
 	}
 
 	userProvidedBundle := filepath.Base(bundlePath)

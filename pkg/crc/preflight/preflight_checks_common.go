@@ -85,14 +85,12 @@ func fixBundleExtracted(bundlePath, preset string) func() error {
 		if err := os.MkdirAll(bundleDir, 0775); err != nil {
 			return fmt.Errorf("Cannot create directory %s: %v", bundleDir, err)
 		}
-		if constants.IsRelease() {
-			if err := validation.ValidateBundle(bundlePath); err != nil {
-				logging.Warnf("Provided %s not supported with this release", bundlePath)
-				if err := bundle.Download(); err != nil {
-					return err
-				}
-				bundlePath = constants.DefaultBundlePath
+		if err := validation.ValidateBundle(bundlePath); err != nil {
+			logging.Warnf("Provided %s not supported with this release", bundlePath)
+			if err := bundle.Download(); err != nil {
+				return err
 			}
+			bundlePath = constants.DefaultBundlePath
 		}
 
 		logging.Infof("Uncompressing %s", bundlePath)
