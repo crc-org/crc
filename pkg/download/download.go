@@ -1,19 +1,41 @@
 package download
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
 
 	"github.com/cavaliercoder/grab"
-	"github.com/cavaliercoder/grab/grabui"
+	"github.com/cheggaaa/pb/v3"
 	"github.com/pkg/errors"
 )
+
+func doRequest(client *grab.Client, req *grab.Request) (string, error) {
+	resp := client.Do(req)
+
+	t := time.NewTicker(500 * time.Millisecond)
+	defer t.Stop()
+	bar := pb.Start64(resp.Size())
+	bar.Set(pb.Bytes, true)
+	defer bar.Finish()
+
+loop:
+	for {
+		select {
+		case <-t.C:
+			bar.SetCurrent(resp.BytesComplete())
+		case <-resp.Done:
+			break loop
+		}
+	}
+
+	return resp.Filename, resp.Err()
+}
 
 // Download function takes sha256sum as hex decoded byte
 // something like hex.DecodeString("33daf4c03f86120fdfdc66bddf6bfff4661c7ca11c5d")
@@ -22,29 +44,26 @@ func Download(uri, destination string, mode os.FileMode, sha256sum []byte) (stri
 
 	client := grab.NewClient()
 	client.HTTPClient = &http.Client{Transport: network.HTTPTransport()}
-	consoleClient := grabui.NewConsoleClient(client)
 	req, err := grab.NewRequest(destination, uri)
 	if err != nil {
-		return "", errors.Wrapf(err, "unable to get response from %s", uri)
+		return "", errors.Wrapf(err, "unable to get request from %s", uri)
 	}
 	if sha256sum != nil {
 		req.SetChecksum(sha256.New(), sha256sum, true)
 	}
 
-	respCh := consoleClient.Do(context.Background(), 3, req)
-	resp := <-respCh
-
-	if resp.Err() != nil {
-		return "", resp.Err()
-	}
-
-	if err := os.Chmod(resp.Filename, mode); err != nil {
-		_ = os.Remove(resp.Filename)
+	filename, err := doRequest(client, req)
+	if err != nil {
 		return "", err
 	}
 
-	logging.Debugf("Download saved to %v", resp.Filename)
-	return resp.Filename, nil
+	if err := os.Chmod(filename, mode); err != nil {
+		_ = os.Remove(filename)
+		return "", err
+	}
+
+	logging.Debugf("Download saved to %v", filename)
+	return filename, nil
 }
 
 type RemoteFile struct {
