@@ -35,7 +35,7 @@ func Download(uri, destination string, mode os.FileMode, sha256sum []byte) (stri
 	resp := <-respCh
 
 	if resp.Err() != nil {
-		return "", err
+		return "", resp.Err()
 	}
 
 	if err := os.Chmod(resp.Filename, mode); err != nil {
