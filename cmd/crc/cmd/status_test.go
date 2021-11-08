@@ -27,6 +27,7 @@ func TestPlainStatus(t *testing.T) {
 
 	expected := `CRC VM:          Running
 OpenShift:       Running (v4.5.1)
+Podman:          3.3.1
 Disk Usage:      10GB of 20GB (Inside the CRC VM)
 Cache Usage:     10kB
 Cache Directory: %s
@@ -49,6 +50,7 @@ func TestJsonStatus(t *testing.T) {
   "crcStatus": "Running",
   "openshiftStatus": "Running",
   "openshiftVersion": "4.5.1",
+  "podmanVersion": "3.3.1",
   "diskUsage": 10000000000,
   "diskSize": 20000000000,
   "cacheUsage": 10000,

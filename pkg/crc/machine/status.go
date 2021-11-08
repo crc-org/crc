@@ -44,11 +44,16 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	}
 
 	if vmStatus != libmachinestate.Running {
-		return &types.ClusterStatusResult{
-			CrcStatus:        state.FromMachine(vmStatus),
-			OpenshiftStatus:  types.OpenshiftStopped,
-			OpenshiftVersion: crcBundleMetadata.GetOpenshiftVersion(),
-		}, nil
+		clusterStatusResult := &types.ClusterStatusResult{
+			CrcStatus: state.FromMachine(vmStatus),
+		}
+		if crcBundleMetadata.GetBundleType() == bundle.OpenShift {
+			clusterStatusResult.OpenshiftStatus = types.OpenshiftStopped
+			clusterStatusResult.OpenshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
+		} else {
+			clusterStatusResult.PodmanVersion = crcBundleMetadata.GetPodmanVersion()
+		}
+		return clusterStatusResult, nil
 	}
 
 	ip, err := getIP(host, client.useVSock())
@@ -65,6 +70,8 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	if crcBundleMetadata.IsOpenShift() {
 		clusterStatusResult.OpenshiftStatus = getOpenShiftStatus(context.Background(), ip)
 		clusterStatusResult.OpenshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
+	} else {
+		clusterStatusResult.PodmanVersion = crcBundleMetadata.GetPodmanVersion()
 	}
 	return clusterStatusResult, nil
 }

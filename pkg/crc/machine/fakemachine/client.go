@@ -100,6 +100,7 @@ func (c *Client) Status() (*types.ClusterStatusResult, error) {
 		CrcStatus:        state.Running,
 		OpenshiftStatus:  types.OpenshiftRunning,
 		OpenshiftVersion: "4.5.1",
+		PodmanVersion:    "3.3.1",
 		DiskUse:          10_000_000_000,
 		DiskSize:         20_000_000_000,
 	}, nil
