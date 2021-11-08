@@ -13,7 +13,7 @@ var bundleLocations = map[string]bundlesDownloadInfo{
 		"darwin": download.NewRemoteFile("", ""),
 		"linux": download.NewRemoteFile(
 			fmt.Sprintf("https://storage.googleapis.com/crc-bundle-github-ci/%s/%s", version.GetBundleVersion(), constants.GetDefaultBundle()),
-			"8eda3326dcf6e5476acbdd2705ff6a6bfb5f1dd7768512b885a48a6ac8cfe752",
+			"603d87599f4c129683d3a8a11bcd41f240a529b2dd81075755eebf3d2b8cacc6",
 		),
 		"windows": download.NewRemoteFile("", ""),
 	},
