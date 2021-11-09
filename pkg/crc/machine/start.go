@@ -193,7 +193,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		telemetry.SetStartType(ctx, telemetry.StartStartType)
 	}
 
-	vm, err := loadVirtualMachine(client.name)
+	vm, err := loadVirtualMachine(client.name, client.useVSock())
 	if err != nil {
 		return nil, errors.Wrap(err, "Error loading machine")
 	}
@@ -266,12 +266,12 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "CodeReady Containers VM is not running")
 	}
 
-	instanceIP, err := getIP(vm.Host, client.useVSock())
+	instanceIP, err := vm.IP()
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting the IP")
 	}
 	logging.Infof("CodeReady Containers instance is running with IP %s", instanceIP)
-	sshRunner, err := crcssh.CreateRunner(instanceIP, getSSHPort(client.useVSock()), vm.bundle.GetSSHKeyPath(), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath())
+	sshRunner, err := vm.SSHRunner()
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating the ssh client")
 	}
@@ -494,7 +494,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 }
 
 func (client *client) IsRunning() (bool, error) {
-	vm, err := loadVirtualMachine(client.name)
+	vm, err := loadVirtualMachine(client.name, client.useVSock())
 	if err != nil {
 		return false, errors.Wrap(err, "Cannot load machine")
 	}

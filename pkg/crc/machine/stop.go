@@ -1,23 +1,20 @@
 package machine
 
 import (
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/state"
-	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/crc/systemd"
-	"github.com/code-ready/crc/pkg/libmachine/host"
 	"github.com/pkg/errors"
 )
 
 func (client *client) Stop() (state.State, error) {
-	vm, err := loadVirtualMachine(client.name)
+	vm, err := loadVirtualMachine(client.name, client.useVSock())
 	if err != nil {
 		return state.Error, errors.Wrap(err, "Cannot load machine")
 	}
 	defer vm.Close()
 
-	if err := stopAllContainers(vm.Host, client); err != nil {
+	if err := stopAllContainers(vm); err != nil {
 		logging.Warnf("Failed to stop all OpenShift containers.\nShutting down VM...")
 		logging.Debugf("%v", err)
 	}
@@ -40,13 +37,9 @@ func (client *client) Stop() (state.State, error) {
 // is fixed. We should also ignore the openshift specific errors because stop
 // operation shouldn't depend on the openshift side. Without this graceful shutdown
 // takes around 6-7 mins.
-func stopAllContainers(host *host.Host, client *client) error {
+func stopAllContainers(vm *virtualMachine) error {
 	logging.Info("Stopping kubelet and all containers...")
-	instanceIP, err := getIP(host, client.useVSock())
-	if err != nil {
-		return errors.Wrapf(err, "Error getting the IP")
-	}
-	sshRunner, err := crcssh.CreateRunner(instanceIP, getSSHPort(client.useVSock()), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath())
+	sshRunner, err := vm.SSHRunner()
 	if err != nil {
 		return errors.Wrapf(err, "Error creating the ssh client")
 	}

@@ -10,7 +10,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/libmachine"
-	"github.com/code-ready/crc/pkg/libmachine/host"
 	"github.com/code-ready/machine/libmachine/drivers"
 )
 
@@ -63,20 +62,6 @@ func createLibMachineClient() (libmachine.API, func()) {
 	return client, func() {
 		client.Close()
 	}
-}
-
-func getSSHPort(vsockNetwork bool) int {
-	if vsockNetwork {
-		return constants.VsockSSHPort
-	}
-	return constants.DefaultSSHPort
-}
-
-func getIP(h *host.Host, vsockNetwork bool) (string, error) {
-	if vsockNetwork {
-		return "127.0.0.1", nil
-	}
-	return h.Driver.GetIP()
 }
 
 func getProxyConfig(baseDomainName string) (*network.ProxyConfig, error) {

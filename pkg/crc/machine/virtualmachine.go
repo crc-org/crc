@@ -6,6 +6,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/machine/state"
+	"github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/libmachine"
 	libmachinehost "github.com/code-ready/crc/pkg/libmachine/host"
 	"github.com/pkg/errors"
@@ -16,6 +17,7 @@ type virtualMachine struct {
 	*libmachinehost.Host
 	bundle *bundle.CrcBundleInfo
 	api    libmachine.API
+	vsock  bool
 }
 
 type MissingHostError struct {
@@ -30,7 +32,7 @@ func (err *MissingHostError) Error() string {
 	return fmt.Sprintf("no such libmachine vm: %s", err.name)
 }
 
-func loadVirtualMachine(name string) (*virtualMachine, error) {
+func loadVirtualMachine(name string, useVSock bool) (*virtualMachine, error) {
 	apiClient := libmachine.NewClient(constants.MachineBaseDir)
 	exists, err := apiClient.Exists(name)
 	if err != nil {
@@ -55,6 +57,7 @@ func loadVirtualMachine(name string) (*virtualMachine, error) {
 		Host:   libmachineHost,
 		bundle: crcBundleMetadata,
 		api:    apiClient,
+		vsock:  useVSock,
 	}, nil
 }
 
@@ -80,4 +83,26 @@ func (vm *virtualMachine) State() (state.State, error) {
 		return state.Error, err
 	}
 	return state.FromMachine(vmStatus), nil
+}
+
+func (vm *virtualMachine) IP() (string, error) {
+	if vm.vsock {
+		return "127.0.0.1", nil
+	}
+	return vm.Driver.GetIP()
+}
+
+func (vm *virtualMachine) SSHPort() int {
+	if vm.vsock {
+		return constants.VsockSSHPort
+	}
+	return constants.DefaultSSHPort
+}
+
+func (vm *virtualMachine) SSHRunner() (*ssh.Runner, error) {
+	ip, err := vm.IP()
+	if err != nil {
+		return nil, err
+	}
+	return ssh.CreateRunner(ip, vm.SSHPort(), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath(), vm.bundle.GetSSHKeyPath())
 }
