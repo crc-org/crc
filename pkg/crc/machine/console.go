@@ -10,7 +10,7 @@ func (client *client) GetConsoleURL() (*types.ConsoleResult, error) {
 	// Here we are only checking if the VM exist and not the status of the VM.
 	// We might need to improve and use crc status logic, only
 	// return if the Openshift is running as part of status.
-	vm, err := loadVirtualMachine(client.name)
+	vm, err := loadVirtualMachine(client.name, client.useVSock())
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot load machine")
 	}

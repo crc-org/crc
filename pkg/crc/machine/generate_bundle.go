@@ -106,7 +106,7 @@ func (client *client) GenerateBundle(forceStop bool) error {
 }
 
 func loadVM(client *client) (*bundle.CrcBundleInfo, *crcssh.Runner, error) {
-	vm, err := loadVirtualMachine(client.name)
+	vm, err := loadVirtualMachine(client.name, client.useVSock())
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Cannot load machine")
 	}
@@ -120,11 +120,7 @@ func loadVM(client *client) (*bundle.CrcBundleInfo, *crcssh.Runner, error) {
 		return nil, nil, errors.New("machine is not running")
 	}
 
-	instanceIP, err := getIP(vm.Host, client.useVSock())
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "Error getting the IP")
-	}
-	sshRunner, err := crcssh.CreateRunner(instanceIP, getSSHPort(client.useVSock()), vm.bundle.GetSSHKeyPath(), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath())
+	sshRunner, err := vm.SSHRunner()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Error creating the ssh client")
 	}

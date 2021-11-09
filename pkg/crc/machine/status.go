@@ -7,15 +7,13 @@ import (
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
-	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/pkg/errors"
 )
 
 func (client *client) Status() (*types.ClusterStatusResult, error) {
-	vm, err := loadVirtualMachine(client.name)
+	vm, err := loadVirtualMachine(client.name, client.useVSock())
 	if err != nil {
 		if errors.Is(err, errMissingHost(client.name)) {
 			return &types.ClusterStatusResult{
@@ -45,12 +43,12 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 		return clusterStatusResult, nil
 	}
 
-	ip, err := getIP(vm.Host, client.useVSock())
+	ip, err := vm.IP()
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting ip")
 	}
 
-	diskSize, diskUse := client.getDiskDetails(ip, vm.bundle)
+	diskSize, diskUse := client.getDiskDetails(vm)
 	clusterStatusResult := &types.ClusterStatusResult{
 		CrcStatus: state.Running,
 		DiskUse:   diskUse,
@@ -65,9 +63,9 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	return clusterStatusResult, nil
 }
 
-func (client *client) getDiskDetails(ip string, bundle *bundle.CrcBundleInfo) (int64, int64) {
+func (client *client) getDiskDetails(vm *virtualMachine) (int64, int64) {
 	disk, err, _ := client.diskDetails.Memoize("disks", func() (interface{}, error) {
-		sshRunner, err := crcssh.CreateRunner(ip, getSSHPort(client.useVSock()), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath(), bundle.GetSSHKeyPath())
+		sshRunner, err := vm.SSHRunner()
 		if err != nil {
 			return nil, errors.Wrap(err, "Error creating the ssh client")
 		}
