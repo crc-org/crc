@@ -11,26 +11,25 @@ import (
 )
 
 func (client *client) Stop() (state.State, error) {
-	libMachineAPIClient, cleanup := createLibMachineClient()
-	defer cleanup()
-	host, err := libMachineAPIClient.Load(client.name)
-
+	vm, err := loadVirtualMachine(client.name)
 	if err != nil {
 		return state.Error, errors.Wrap(err, "Cannot load machine")
 	}
-	if err := stopAllContainers(host, client); err != nil {
+	defer vm.Close()
+
+	if err := stopAllContainers(vm.Host, client); err != nil {
 		logging.Warnf("Failed to stop all OpenShift containers.\nShutting down VM...")
 		logging.Debugf("%v", err)
 	}
 	logging.Info("Stopping the OpenShift cluster, this may take a few minutes...")
-	if err := host.Stop(); err != nil {
-		status, stateErr := host.Driver.GetState()
+	if err := vm.Stop(); err != nil {
+		status, stateErr := vm.Driver.GetState()
 		if stateErr != nil {
 			logging.Debugf("Cannot get VM status after stopping it: %v", stateErr)
 		}
 		return state.FromMachine(status), errors.Wrap(err, "Cannot stop machine")
 	}
-	status, err := host.Driver.GetState()
+	status, err := vm.Driver.GetState()
 	if err != nil {
 		return state.Error, errors.Wrap(err, "Cannot get VM status")
 	}

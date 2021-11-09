@@ -106,15 +106,13 @@ func (client *client) GenerateBundle(forceStop bool) error {
 }
 
 func loadVM(client *client) (*bundle.CrcBundleInfo, *crcssh.Runner, error) {
-	libMachineAPIClient, cleanup := createLibMachineClient()
-	defer cleanup()
-
-	host, err := libMachineAPIClient.Load(client.name)
+	vm, err := loadVirtualMachine(client.name)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Cannot load machine")
 	}
+	defer vm.Close()
 
-	currentState, err := host.Driver.GetState()
+	currentState, err := vm.Driver.GetState()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Cannot get machine state")
 	}
@@ -122,19 +120,14 @@ func loadVM(client *client) (*bundle.CrcBundleInfo, *crcssh.Runner, error) {
 		return nil, nil, errors.New("machine is not running")
 	}
 
-	crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "Error loading bundle metadata")
-	}
-
-	instanceIP, err := getIP(host, client.useVSock())
+	instanceIP, err := getIP(vm.Host, client.useVSock())
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Error getting the IP")
 	}
-	sshRunner, err := crcssh.CreateRunner(instanceIP, getSSHPort(client.useVSock()), crcBundleMetadata.GetSSHKeyPath(), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath())
+	sshRunner, err := crcssh.CreateRunner(instanceIP, getSSHPort(client.useVSock()), vm.bundle.GetSSHKeyPath(), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath())
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Error creating the ssh client")
 	}
 
-	return crcBundleMetadata, sshRunner, nil
+	return vm.bundle, sshRunner, nil
 }

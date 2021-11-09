@@ -11,24 +11,18 @@ func (client *client) GetConsoleURL() (*types.ConsoleResult, error) {
 	// Here we are only checking if the VM exist and not the status of the VM.
 	// We might need to improve and use crc status logic, only
 	// return if the Openshift is running as part of status.
-	libMachineAPIClient, cleanup := createLibMachineClient()
-	defer cleanup()
-	host, err := libMachineAPIClient.Load(client.name)
+	vm, err := loadVirtualMachine(client.name)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot load machine")
 	}
+	defer vm.Close()
 
-	vmState, err := host.Driver.GetState()
+	vmState, err := vm.Driver.GetState()
 	if err != nil {
-		return nil, errors.Wrap(err, "Error getting the state for host")
+		return nil, errors.Wrap(err, "Error getting the state of the virtual machine")
 	}
 
-	crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error loading bundle metadata")
-	}
-
-	clusterConfig, err := getClusterConfig(crcBundleMetadata)
+	clusterConfig, err := getClusterConfig(vm.bundle)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error loading cluster configuration")
 	}

@@ -7,19 +7,13 @@ import (
 )
 
 func (client *client) ConnectionDetails() (*types.ConnectionDetails, error) {
-	libMachineAPIClient, cleanup := createLibMachineClient()
-	defer cleanup()
-	host, err := libMachineAPIClient.Load(client.name)
+	vm, err := loadVirtualMachine(client.name)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot load machine")
 	}
+	defer vm.Close()
 
-	bundle, err := getBundleMetadataFromDriver(host.Driver)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error loading bundle metadata")
-	}
-
-	ip, err := getIP(host, client.useVSock())
+	ip, err := getIP(vm.Host, client.useVSock())
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot get IP")
 	}
@@ -27,6 +21,6 @@ func (client *client) ConnectionDetails() (*types.ConnectionDetails, error) {
 		IP:          ip,
 		SSHPort:     getSSHPort(client.useVSock()),
 		SSHUsername: constants.DefaultSSHUser,
-		SSHKeys:     []string{constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath(), bundle.GetSSHKeyPath()},
+		SSHKeys:     []string{constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath(), vm.bundle.GetSSHKeyPath()},
 	}, nil
 }
