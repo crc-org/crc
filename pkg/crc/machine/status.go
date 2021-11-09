@@ -2,6 +2,7 @@ package machine
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -15,63 +16,52 @@ import (
 )
 
 func (client *client) Status() (*types.ClusterStatusResult, error) {
-	libMachineAPIClient, cleanup := createLibMachineClient()
-	defer cleanup()
-
-	exists, err := libMachineAPIClient.Exists(client.name)
+	vm, err := loadVirtualMachine(client.name)
 	if err != nil {
-		return nil, errors.Wrap(err, "Cannot check if machine exists")
+		if errors.Is(err, errMissingHost(client.name)) {
+			return &types.ClusterStatusResult{
+				CrcStatus:       state.Stopped,
+				OpenshiftStatus: types.OpenshiftStopped,
+			}, nil
+		}
+		return nil, errors.Wrap(err, fmt.Sprintf("Cannot load '%s' virtual machine", client.name))
 	}
-	if !exists {
-		return &types.ClusterStatusResult{
-			CrcStatus:       state.Stopped,
-			OpenshiftStatus: types.OpenshiftStopped,
-		}, nil
-	}
+	defer vm.Close()
 
-	host, err := libMachineAPIClient.Load(client.name)
-	if err != nil {
-		return nil, errors.Wrap(err, "Cannot load machine")
-	}
-	vmStatus, err := host.Driver.GetState()
+	vmStatus, err := vm.Driver.GetState()
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot get machine state")
-	}
-
-	crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error loading bundle metadata")
 	}
 
 	if vmStatus != libmachinestate.Running {
 		clusterStatusResult := &types.ClusterStatusResult{
 			CrcStatus: state.FromMachine(vmStatus),
 		}
-		if crcBundleMetadata.IsOpenShift() {
+		if vm.bundle.IsOpenShift() {
 			clusterStatusResult.OpenshiftStatus = types.OpenshiftStopped
-			clusterStatusResult.OpenshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
+			clusterStatusResult.OpenshiftVersion = vm.bundle.GetOpenshiftVersion()
 		} else {
-			clusterStatusResult.PodmanVersion = crcBundleMetadata.GetPodmanVersion()
+			clusterStatusResult.PodmanVersion = vm.bundle.GetPodmanVersion()
 		}
 		return clusterStatusResult, nil
 	}
 
-	ip, err := getIP(host, client.useVSock())
+	ip, err := getIP(vm.Host, client.useVSock())
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting ip")
 	}
 
-	diskSize, diskUse := client.getDiskDetails(ip, crcBundleMetadata)
+	diskSize, diskUse := client.getDiskDetails(ip, vm.bundle)
 	clusterStatusResult := &types.ClusterStatusResult{
 		CrcStatus: state.Running,
 		DiskUse:   diskUse,
 		DiskSize:  diskSize,
 	}
-	if crcBundleMetadata.IsOpenShift() {
+	if vm.bundle.IsOpenShift() {
 		clusterStatusResult.OpenshiftStatus = getOpenShiftStatus(context.Background(), ip)
-		clusterStatusResult.OpenshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
+		clusterStatusResult.OpenshiftVersion = vm.bundle.GetOpenshiftVersion()
 	} else {
-		clusterStatusResult.PodmanVersion = crcBundleMetadata.GetPodmanVersion()
+		clusterStatusResult.PodmanVersion = vm.bundle.GetPodmanVersion()
 	}
 	return clusterStatusResult, nil
 }

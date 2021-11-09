@@ -142,9 +142,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, err
 	}
 
-	libMachineAPIClient, cleanup := createLibMachineClient()
-	defer cleanup()
-
 	// Pre-VM start
 	exists, err := client.Exists()
 	if err != nil {
@@ -190,23 +187,20 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		if crcBundleMetadata.IsOpenShift() {
 			machineConfig.KubeConfig = crcBundleMetadata.GetKubeConfigPath()
 		}
-		if err := createHost(libMachineAPIClient, machineConfig); err != nil {
+		if err := createHost(machineConfig); err != nil {
 			return nil, errors.Wrap(err, "Error creating machine")
 		}
 	} else {
 		telemetry.SetStartType(ctx, telemetry.StartStartType)
 	}
 
-	host, err := libMachineAPIClient.Load(client.name)
+	vm, err := loadVirtualMachine(client.name)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error loading machine")
 	}
+	defer vm.Close()
 
-	crcBundleMetadata, err := getBundleMetadataFromDriver(host.Driver)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error loading bundle metadata")
-	}
-	currentBundleName := crcBundleMetadata.GetBundleName()
+	currentBundleName := vm.bundle.GetBundleName()
 	if currentBundleName != bundleName {
 		logging.Debugf("Bundle '%s' was requested, but the existing VM is using '%s'",
 			bundleName, currentBundleName)
@@ -214,22 +208,22 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			bundleName,
 			currentBundleName)
 	}
-	if err := bundleMismatchWithPreset(startConfig.Preset, crcBundleMetadata); err != nil {
+	if err := bundleMismatchWithPreset(startConfig.Preset, vm.bundle); err != nil {
 		return nil, err
 	}
-	vmState, err := host.Driver.GetState()
+	vmState, err := vm.Driver.GetState()
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting the machine state")
 	}
 	if vmState == libmachinestate.Running {
-		if !crcBundleMetadata.IsOpenShift() {
-			logging.Infof("A CodeReady Containers VM for Podman %s is already running", crcBundleMetadata.GetPodmanVersion())
+		if !vm.bundle.IsOpenShift() {
+			logging.Infof("A CodeReady Containers VM for Podman %s is already running", vm.bundle.GetPodmanVersion())
 			return &types.StartResult{
 				Status: state.FromMachine(vmState),
 			}, nil
 		}
-		logging.Infof("A CodeReady Containers VM for OpenShift %s is already running", crcBundleMetadata.GetOpenshiftVersion())
-		clusterConfig, err := getClusterConfig(crcBundleMetadata)
+		logging.Infof("A CodeReady Containers VM for OpenShift %s is already running", vm.bundle.GetOpenshiftVersion())
+		clusterConfig, err := getClusterConfig(vm.bundle)
 		if err != nil {
 			return nil, errors.Wrap(err, "Cannot create cluster configuration")
 		}
@@ -245,25 +239,27 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if _, err := bundle.Use(currentBundleName); err != nil {
 		return nil, err
 	}
-	if crcBundleMetadata.IsOpenShift() {
-		logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
+
+	if vm.bundle.IsOpenShift() {
+		logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", vm.bundle.GetOpenshiftVersion())
 	}
+
 	if client.useVSock() {
 		if err := exposePorts(); err != nil {
 			return nil, err
 		}
 	}
 
-	if err := client.updateVMConfig(startConfig, libMachineAPIClient, host); err != nil {
+	if err := client.updateVMConfig(startConfig, vm.api, vm.Host); err != nil {
 		return nil, errors.Wrap(err, "Could not update CRC VM configuration")
 	}
 
-	if err := startHost(ctx, libMachineAPIClient, host); err != nil {
+	if err := startHost(ctx, vm.api, vm.Host); err != nil {
 		return nil, errors.Wrap(err, "Error starting machine")
 	}
 
 	// Post-VM start
-	vmState, err = host.Driver.GetState()
+	vmState, err = vm.Driver.GetState()
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting the state")
 	}
@@ -271,12 +267,12 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "CodeReady Containers VM is not running")
 	}
 
-	instanceIP, err := getIP(host, client.useVSock())
+	instanceIP, err := getIP(vm.Host, client.useVSock())
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting the IP")
 	}
 	logging.Infof("CodeReady Containers instance is running with IP %s", instanceIP)
-	sshRunner, err := crcssh.CreateRunner(instanceIP, getSSHPort(client.useVSock()), crcBundleMetadata.GetSSHKeyPath(), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath())
+	sshRunner, err := crcssh.CreateRunner(instanceIP, getSSHPort(client.useVSock()), vm.bundle.GetSSHKeyPath(), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath())
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating the ssh client")
 	}
@@ -284,7 +280,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	logging.Debug("Waiting until ssh is available")
 	if err := sshRunner.WaitForConnectivity(ctx, 300*time.Second); err != nil {
-		return nil, errors.Wrap(err, "Failed to connect to the CRC VM with SSH -- host might be unreachable")
+		return nil, errors.Wrap(err, "Failed to connect to the CRC VM with SSH -- virtual machine might be unreachable")
 	}
 	logging.Info("CodeReady Containers VM is running")
 
@@ -305,7 +301,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		if _, _, err := sshRunner.RunPrivileged("Turning off the ntp server", "timedatectl set-ntp off"); err != nil {
 			return nil, errors.Wrap(err, "Failed to stop network time synchronization")
 		}
-		logging.Info("Setting clock to host clock (UTC timezone)")
+		logging.Info("Setting clock to vm clock (UTC timezone)")
 		dateCmd := fmt.Sprintf("date -s '%s'", time.Now().Format(time.UnixDate))
 		if _, _, err := sshRunner.RunPrivileged("Setting clock same as host", dateCmd); err != nil {
 			return nil, errors.Wrap(err, "Failed to set clock to same as host")
@@ -323,14 +319,14 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to change permissions to root podman socket")
 	}
 
-	proxyConfig, err := getProxyConfig(crcBundleMetadata.ClusterInfo.BaseDomain)
+	proxyConfig, err := getProxyConfig(vm.bundle.ClusterInfo.BaseDomain)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting proxy configuration")
 	}
 	proxyConfig.ApplyToEnvironment()
 	proxyConfig.AddNoProxy(instanceIP)
 
-	if !crcBundleMetadata.IsOpenShift() {
+	if !vm.bundle.IsOpenShift() {
 		return &types.StartResult{
 			Status: state.FromMachine(vmState),
 		}, nil
@@ -343,7 +339,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		SSHRunner: sshRunner,
 		IP:        instanceIP,
 		// TODO: should be more finegrained
-		BundleMetadata: *crcBundleMetadata,
+		BundleMetadata: *vm.bundle,
 		NetworkMode:    client.networkMode(),
 	}
 
@@ -366,8 +362,8 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	// Check DNS lookup from host to VM
 	logging.Info("Check DNS query from host...")
-	if err := network.CheckCRCLocalDNSReachableFromHost(crcBundleMetadata.GetAPIHostname(),
-		crcBundleMetadata.GetAppHostname("foo"), crcBundleMetadata.ClusterInfo.AppsDomain, instanceIP); err != nil {
+	if err := network.CheckCRCLocalDNSReachableFromHost(vm.bundle.GetAPIHostname(),
+		vm.bundle.GetAppHostname("foo"), vm.bundle.ClusterInfo.AppsDomain, instanceIP); err != nil {
 		if !client.useVSock() {
 			return nil, errors.Wrap(err, "Failed to query DNS from host")
 		}
@@ -376,7 +372,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	// Remove this block after 2-3 release (after v1.32.0)
 	// This is just to support 4.7 bundle with current master
-	if strings.HasPrefix(crcBundleMetadata.GetOpenshiftVersion(), "4.7.") {
+	if strings.HasPrefix(vm.bundle.GetOpenshiftVersion(), "4.7.") {
 		if err := cluster.EnsurePullSecretPresentOnInstanceDisk(sshRunner, startConfig.PullSecret); err != nil {
 			return nil, errors.Wrap(err, "Failed to update VM pull secret")
 		}
@@ -398,7 +394,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	ocConfig := oc.UseOCWithSSH(sshRunner)
 
 	if err := cluster.ApproveCSRAndWaitForCertsRenewal(ctx, sshRunner, ocConfig, certsExpired[cluster.KubeletClientCert], certsExpired[cluster.KubeletServerCert]); err != nil {
-		logBundleDate(crcBundleMetadata)
+		logBundleDate(vm.bundle)
 		return nil, errors.Wrap(err, "Failed to renew TLS certificates: please check if a newer CodeReady Containers release is available")
 	}
 
@@ -470,7 +466,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 	}
 
-	if err := updateKubeconfig(ctx, ocConfig, sshRunner, crcBundleMetadata.GetKubeConfigPath()); err != nil {
+	if err := updateKubeconfig(ctx, ocConfig, sshRunner, vm.bundle.GetKubeConfigPath()); err != nil {
 		return nil, errors.Wrap(err, "Failed to update kubeconfig file")
 	}
 
@@ -481,7 +477,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	waitForProxyPropagation(ctx, ocConfig, proxyConfig)
 
-	clusterConfig, err := getClusterConfig(crcBundleMetadata)
+	clusterConfig, err := getClusterConfig(vm.bundle)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot get cluster configuration")
 	}
@@ -499,16 +495,14 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 }
 
 func (client *client) IsRunning() (bool, error) {
-	libMachineAPIClient, cleanup := createLibMachineClient()
-	defer cleanup()
-	host, err := libMachineAPIClient.Load(client.name)
-
+	vm, err := loadVirtualMachine(client.name)
 	if err != nil {
 		return false, errors.Wrap(err, "Cannot load machine")
 	}
+	defer vm.Close()
 
 	// get the actual state
-	vmState, err := host.Driver.GetState()
+	vmState, err := vm.Driver.GetState()
 	if err != nil {
 		// but reports not started on error
 		return false, errors.Wrap(err, "Error getting the state")
@@ -528,7 +522,10 @@ func (client *client) validateStartConfig(startConfig types.StartConfig) error {
 	return nil
 }
 
-func createHost(api libmachine.API, machineConfig config.MachineConfig) error {
+func createHost(machineConfig config.MachineConfig) error {
+	api, cleanup := createLibMachineClient()
+	defer cleanup()
+
 	vm, err := newHost(api, machineConfig)
 	if err != nil {
 		return fmt.Errorf("Error creating new host: %s", err)
@@ -571,7 +568,7 @@ func startHost(ctx context.Context, api libmachine.API, vm *host.Host) error {
 	}
 
 	if err := api.Save(vm); err != nil {
-		return fmt.Errorf("Error saving host to store after attempting creation: %s", err)
+		return fmt.Errorf("Error saving virtual machine to store after attempting creation: %s", err)
 	}
 
 	logging.Debug("Waiting for machine to be running, this may take a few minutes...")

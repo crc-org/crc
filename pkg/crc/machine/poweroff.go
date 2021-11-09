@@ -3,15 +3,13 @@ package machine
 import "github.com/pkg/errors"
 
 func (client *client) PowerOff() error {
-	libMachineAPIClient, cleanup := createLibMachineClient()
-	defer cleanup()
-
-	host, err := libMachineAPIClient.Load(client.name)
+	vm, err := loadVirtualMachine(client.name)
 	if err != nil {
 		return errors.Wrap(err, "Cannot load machine")
 	}
+	defer vm.Close()
 
-	if err := host.Kill(); err != nil {
+	if err := vm.Kill(); err != nil {
 		return errors.Wrap(err, "Cannot kill machine")
 	}
 	return nil
