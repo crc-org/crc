@@ -210,15 +210,15 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if err := bundleMismatchWithPreset(startConfig.Preset, vm.bundle); err != nil {
 		return nil, err
 	}
-	vmState, err := vm.Driver.GetState()
+	vmState, err := vm.State()
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting the machine state")
 	}
-	if vmState == libmachinestate.Running {
+	if vmState == state.Running {
 		if !vm.bundle.IsOpenShift() {
 			logging.Infof("A CodeReady Containers VM for Podman %s is already running", vm.bundle.GetPodmanVersion())
 			return &types.StartResult{
-				Status: state.FromMachine(vmState),
+				Status: vmState,
 			}, nil
 		}
 		logging.Infof("A CodeReady Containers VM for OpenShift %s is already running", vm.bundle.GetOpenshiftVersion())
@@ -229,7 +229,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 		telemetry.SetStartType(ctx, telemetry.AlreadyRunningStartType)
 		return &types.StartResult{
-			Status:         state.FromMachine(vmState),
+			Status:         vmState,
 			ClusterConfig:  *clusterConfig,
 			KubeletStarted: true,
 		}, nil
@@ -258,11 +258,11 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	// Post-VM start
-	vmState, err = vm.Driver.GetState()
+	vmState, err = vm.State()
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting the state")
 	}
-	if vmState != libmachinestate.Running {
+	if vmState != state.Running {
 		return nil, errors.Wrap(err, "CodeReady Containers VM is not running")
 	}
 
@@ -327,7 +327,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	if !vm.bundle.IsOpenShift() {
 		return &types.StartResult{
-			Status: state.FromMachine(vmState),
+			Status: vmState,
 		}, nil
 	}
 
@@ -489,7 +489,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	return &types.StartResult{
 		KubeletStarted: true,
 		ClusterConfig:  *clusterConfig,
-		Status:         state.FromMachine(vmState),
+		Status:         vmState,
 	}, nil
 }
 
@@ -501,12 +501,12 @@ func (client *client) IsRunning() (bool, error) {
 	defer vm.Close()
 
 	// get the actual state
-	vmState, err := vm.Driver.GetState()
+	vmState, err := vm.State()
 	if err != nil {
 		// but reports not started on error
 		return false, errors.Wrap(err, "Error getting the state")
 	}
-	if vmState != libmachinestate.Running {
+	if vmState != state.Running {
 		return false, nil
 	}
 	return true, nil

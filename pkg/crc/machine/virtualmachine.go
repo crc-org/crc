@@ -5,6 +5,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
+	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/libmachine"
 	libmachinehost "github.com/code-ready/crc/pkg/libmachine/host"
 	"github.com/pkg/errors"
@@ -71,4 +72,12 @@ func (vm *virtualMachine) Remove() error {
 	}
 
 	return nil
+}
+
+func (vm *virtualMachine) State() (state.State, error) {
+	vmStatus, err := vm.Driver.GetState()
+	if err != nil {
+		return state.Error, err
+	}
+	return state.FromMachine(vmStatus), nil
 }

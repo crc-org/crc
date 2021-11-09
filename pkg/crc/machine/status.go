@@ -11,7 +11,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
-	libmachinestate "github.com/code-ready/machine/libmachine/state"
 	"github.com/pkg/errors"
 )
 
@@ -28,14 +27,14 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	}
 	defer vm.Close()
 
-	vmStatus, err := vm.Driver.GetState()
+	vmStatus, err := vm.State()
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot get machine state")
 	}
 
-	if vmStatus != libmachinestate.Running {
+	if vmStatus != state.Running {
 		clusterStatusResult := &types.ClusterStatusResult{
-			CrcStatus: state.FromMachine(vmStatus),
+			CrcStatus: vmStatus,
 		}
 		if vm.bundle.IsOpenShift() {
 			clusterStatusResult.OpenshiftStatus = types.OpenshiftStopped

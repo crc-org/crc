@@ -1,7 +1,6 @@
 package machine
 
 import (
-	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/pkg/errors"
 )
@@ -17,9 +16,9 @@ func (client *client) GetConsoleURL() (*types.ConsoleResult, error) {
 	}
 	defer vm.Close()
 
-	vmState, err := vm.Driver.GetState()
+	vmState, err := vm.State()
 	if err != nil {
-		return nil, errors.Wrap(err, "Error getting the state of the virtual machine")
+		return nil, errors.Wrap(err, "Error getting the state for virtual machine")
 	}
 
 	clusterConfig, err := getClusterConfig(vm.bundle)
@@ -29,6 +28,6 @@ func (client *client) GetConsoleURL() (*types.ConsoleResult, error) {
 
 	return &types.ConsoleResult{
 		ClusterConfig: *clusterConfig,
-		State:         state.FromMachine(vmState),
+		State:         vmState,
 	}, nil
 }
