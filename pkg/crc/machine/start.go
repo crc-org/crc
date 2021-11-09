@@ -30,7 +30,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/systemd"
 	"github.com/code-ready/crc/pkg/crc/telemetry"
 	crctls "github.com/code-ready/crc/pkg/crc/tls"
-	"github.com/code-ready/crc/pkg/libmachine"
 	"github.com/code-ready/crc/pkg/libmachine/host"
 	"github.com/code-ready/machine/libmachine/drivers"
 	libmachinestate "github.com/code-ready/machine/libmachine/state"
@@ -57,10 +56,10 @@ func getCrcBundleInfo(bundleName, bundlePath string) (*bundle.CrcBundleInfo, err
 	return bundle.Use(bundleName)
 }
 
-func (client *client) updateVMConfig(startConfig types.StartConfig, api libmachine.API, host *host.Host) error {
+func (client *client) updateVMConfig(startConfig types.StartConfig, vm *virtualMachine) error {
 	/* Memory */
 	logging.Debugf("Updating CRC VM configuration")
-	if err := setMemory(host, startConfig.Memory); err != nil {
+	if err := setMemory(vm.Host, startConfig.Memory); err != nil {
 		logging.Debugf("Failed to update CRC VM configuration: %v", err)
 		if err == drivers.ErrNotImplemented {
 			logging.Warn("Memory configuration change has been ignored as the machine driver does not support it")
@@ -68,7 +67,7 @@ func (client *client) updateVMConfig(startConfig types.StartConfig, api libmachi
 			return err
 		}
 	}
-	if err := setVcpus(host, startConfig.CPUs); err != nil {
+	if err := setVcpus(vm.Host, startConfig.CPUs); err != nil {
 		logging.Debugf("Failed to update CRC VM configuration: %v", err)
 		if err == drivers.ErrNotImplemented {
 			logging.Warn("CPU configuration change has been ignored as the machine driver does not support it")
@@ -76,13 +75,13 @@ func (client *client) updateVMConfig(startConfig types.StartConfig, api libmachi
 			return err
 		}
 	}
-	if err := api.Save(host); err != nil {
+	if err := vm.api.Save(vm.Host); err != nil {
 		return err
 	}
 
 	/* Disk size */
 	if startConfig.DiskSize != constants.DefaultDiskSize {
-		if err := setDiskSize(host, startConfig.DiskSize); err != nil {
+		if err := setDiskSize(vm.Host, startConfig.DiskSize); err != nil {
 			logging.Debugf("Failed to update CRC disk configuration: %v", err)
 			if err == drivers.ErrNotImplemented {
 				logging.Warn("Disk size configuration change has been ignored as the machine driver does not support it")
@@ -90,7 +89,7 @@ func (client *client) updateVMConfig(startConfig types.StartConfig, api libmachi
 				return err
 			}
 		}
-		if err := api.Save(host); err != nil {
+		if err := vm.api.Save(vm.Host); err != nil {
 			return err
 		}
 	}
@@ -250,11 +249,11 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 	}
 
-	if err := client.updateVMConfig(startConfig, vm.api, vm.Host); err != nil {
+	if err := client.updateVMConfig(startConfig, vm); err != nil {
 		return nil, errors.Wrap(err, "Could not update CRC VM configuration")
 	}
 
-	if err := startHost(ctx, vm.api, vm.Host); err != nil {
+	if err := startHost(ctx, vm); err != nil {
 		return nil, errors.Wrap(err, "Error starting machine")
 	}
 
@@ -562,12 +561,12 @@ func createHost(machineConfig config.MachineConfig) error {
 	return nil
 }
 
-func startHost(ctx context.Context, api libmachine.API, vm *host.Host) error {
+func startHost(ctx context.Context, vm *virtualMachine) error {
 	if err := vm.Driver.Start(); err != nil {
 		return fmt.Errorf("Error in driver during machine start: %s", err)
 	}
 
-	if err := api.Save(vm); err != nil {
+	if err := vm.api.Save(vm.Host); err != nil {
 		return fmt.Errorf("Error saving virtual machine to store after attempting creation: %s", err)
 	}
 
