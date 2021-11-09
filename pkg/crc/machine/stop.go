@@ -23,17 +23,17 @@ func (client *client) Stop() (state.State, error) {
 	}
 	logging.Info("Stopping the OpenShift cluster, this may take a few minutes...")
 	if err := vm.Stop(); err != nil {
-		status, stateErr := vm.Driver.GetState()
+		status, stateErr := vm.State()
 		if stateErr != nil {
 			logging.Debugf("Cannot get VM status after stopping it: %v", stateErr)
 		}
-		return state.FromMachine(status), errors.Wrap(err, "Cannot stop machine")
+		return status, errors.Wrap(err, "Cannot stop machine")
 	}
-	status, err := vm.Driver.GetState()
+	status, err := vm.State()
 	if err != nil {
 		return state.Error, errors.Wrap(err, "Cannot get VM status")
 	}
-	return state.FromMachine(status), nil
+	return status, nil
 }
 
 // This should be removed after https://bugzilla.redhat.com/show_bug.cgi?id=1965992
