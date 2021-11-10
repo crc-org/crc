@@ -17,12 +17,15 @@ const (
 )
 
 func newTestConfig(configFile, envPrefix string) (*Config, error) {
+	validateCPUs := func(value interface{}) (bool, string) {
+		return ValidateCPUs(value, true)
+	}
 	storage, err := NewViperStorage(configFile, envPrefix)
 	if err != nil {
 		return nil, err
 	}
 	config := New(storage)
-	config.AddSetting(cpus, 4, ValidateCPUs, RequiresRestartMsg, "")
+	config.AddSetting(cpus, 4, validateCPUs, RequiresRestartMsg, "")
 	config.AddSetting(nameServer, "", ValidateIPAddress, SuccessfullyApplied, "")
 	return config, nil
 }
@@ -148,10 +151,13 @@ func TestViperConfigBindFlagSet(t *testing.T) {
 	defer os.RemoveAll(dir)
 	configFile := filepath.Join(dir, "crc.json")
 
+	validateCPUs := func(value interface{}) (bool, string) {
+		return ValidateCPUs(value, true)
+	}
 	storage, err := NewViperStorage(configFile, "CRC")
 	require.NoError(t, err)
 	config := New(storage)
-	config.AddSetting(cpus, 4, ValidateCPUs, RequiresRestartMsg, "")
+	config.AddSetting(cpus, 4, validateCPUs, RequiresRestartMsg, "")
 	config.AddSetting(nameServer, "", ValidateIPAddress, SuccessfullyApplied, "")
 
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)

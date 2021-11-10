@@ -11,8 +11,6 @@ import (
 
 const (
 	DefaultName     = "crc"
-	DefaultCPUs     = 4
-	DefaultMemory   = 9216
 	DefaultDiskSize = 31
 
 	DefaultSSHUser = "core"
@@ -154,4 +152,18 @@ func GetCRCMacTrayDownloadURL() string {
 
 func GetCRCWindowsTrayDownloadURL() string {
 	return fmt.Sprintf(CRCWindowsTrayDownloadURL, version.GetCRCWindowsTrayVersion())
+}
+
+func GetDefaultCPUs(openshift bool) int {
+	if openshift {
+		return 4
+	}
+	return 2
+}
+
+func GetDefaultMemory(openshift bool) int {
+	if openshift {
+		return 9216
+	}
+	return 2048
 }
