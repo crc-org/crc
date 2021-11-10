@@ -17,17 +17,17 @@ import (
 )
 
 // ValidateCPUs checks if provided cpus count is valid
-func ValidateCPUs(value int) error {
-	if value < constants.DefaultCPUs {
-		return fmt.Errorf("requires CPUs >= %d", constants.DefaultCPUs)
+func ValidateCPUs(value int, openshift bool) error {
+	if value < constants.GetDefaultCPUs(openshift) {
+		return fmt.Errorf("requires CPUs >= %d", constants.GetDefaultCPUs(openshift))
 	}
 	return nil
 }
 
 // ValidateMemory checks if provided Memory count is valid
-func ValidateMemory(value int) error {
-	if value < constants.DefaultMemory {
-		return fmt.Errorf("requires memory in MiB >= %d", constants.DefaultMemory)
+func ValidateMemory(value int, openshift bool) error {
+	if value < constants.GetDefaultMemory(openshift) {
+		return fmt.Errorf("requires memory in MiB >= %d", constants.GetDefaultMemory(openshift))
 	}
 	return ValidateEnoughMemory(value)
 }

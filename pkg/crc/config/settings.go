@@ -70,13 +70,24 @@ func RegisterSettings(cfg *Config) {
 		)
 	}
 
+	validateCPUs := func(value interface{}) (bool, string) {
+		return ValidateCPUs(value, IsOpenShift(cfg))
+	}
+
+	validateMemory := func(value interface{}) (bool, string) {
+		return ValidateMemory(value, IsOpenShift(cfg))
+	}
+
+	// Preset setting should be on top because CPUs/Memory config depend on it.
+	cfg.AddSetting(PresetConfigurationKey, string(Openshift), validatePreset, RequiresDeleteMsg,
+		fmt.Sprintf("Virtal machine preset (alpha feature - valid values are: %s or %s)", Podman, Openshift))
 	// Start command settings in config
 	cfg.AddSetting(Bundle, constants.DefaultBundlePath, ValidateBundlePath, SuccessfullyApplied,
 		fmt.Sprintf("Bundle path (string, default '%s')", constants.DefaultBundlePath))
-	cfg.AddSetting(CPUs, constants.DefaultCPUs, ValidateCPUs, RequiresRestartMsg,
-		fmt.Sprintf("Number of CPU cores (must be greater than or equal to '%d')", constants.DefaultCPUs))
-	cfg.AddSetting(Memory, constants.DefaultMemory, ValidateMemory, RequiresRestartMsg,
-		fmt.Sprintf("Memory size in MiB (must be greater than or equal to '%d')", constants.DefaultMemory))
+	cfg.AddSetting(CPUs, DefaultCPUs(cfg), validateCPUs, RequiresRestartMsg,
+		fmt.Sprintf("Number of CPU cores (must be greater than or equal to '%d')", DefaultCPUs(cfg)))
+	cfg.AddSetting(Memory, DefaultMem(cfg), validateMemory, RequiresRestartMsg,
+		fmt.Sprintf("Memory size in MiB (must be greater than or equal to '%d')", DefaultMem(cfg)))
 	cfg.AddSetting(DiskSize, constants.DefaultDiskSize, ValidateDiskSize, RequiresRestartMsg,
 		fmt.Sprintf("Total size in GiB of the disk (must be greater than or equal to '%d')", constants.DefaultDiskSize))
 	cfg.AddSetting(NameServer, "", ValidateIPAddress, SuccessfullyApplied,
@@ -117,9 +128,18 @@ func RegisterSettings(cfg *Config) {
 
 	cfg.AddSetting(KubeAdminPassword, "", ValidateString, SuccessfullyApplied,
 		"User defined kubeadmin password")
+}
 
-	cfg.AddSetting(PresetConfigurationKey, string(Openshift), validatePreset, RequiresDeleteMsg,
-		fmt.Sprintf("Virtal machine preset (alpha feature - valid values are: %s or %s)", Podman, Openshift))
+func DefaultCPUs(cfg Storage) int {
+	return constants.GetDefaultCPUs(IsOpenShift(cfg))
+}
+
+func DefaultMem(cfg Storage) int {
+	return constants.GetDefaultMemory(IsOpenShift(cfg))
+}
+
+func IsOpenShift(cfg Storage) bool {
+	return cfg.Get(PresetConfigurationKey).AsString() == string(Openshift)
 }
 
 func defaultNetworkMode() network.Mode {

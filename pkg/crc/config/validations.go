@@ -41,24 +41,24 @@ func ValidateDiskSize(value interface{}) (bool, string) {
 }
 
 // ValidateCPUs checks if provided cpus count is valid in the config
-func ValidateCPUs(value interface{}) (bool, string) {
+func ValidateCPUs(value interface{}, openshift bool) (bool, string) {
 	v, err := cast.ToIntE(value)
 	if err != nil {
-		return false, fmt.Sprintf("requires integer value >= %d", constants.DefaultCPUs)
+		return false, fmt.Sprintf("requires integer value >= %d", constants.GetDefaultCPUs(openshift))
 	}
-	if err := validation.ValidateCPUs(v); err != nil {
+	if err := validation.ValidateCPUs(v, openshift); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
 }
 
 // ValidateMemory checks if provided memory is valid in the config
-func ValidateMemory(value interface{}) (bool, string) {
+func ValidateMemory(value interface{}, openshift bool) (bool, string) {
 	v, err := cast.ToIntE(value)
 	if err != nil {
-		return false, fmt.Sprintf("requires integer value in MiB >= %d", constants.DefaultMemory)
+		return false, fmt.Sprintf("requires integer value in MiB >= %d", constants.GetDefaultMemory(openshift))
 	}
-	if err := validation.ValidateMemory(v); err != nil {
+	if err := validation.ValidateMemory(v, openshift); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
