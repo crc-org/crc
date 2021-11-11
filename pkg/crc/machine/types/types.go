@@ -23,6 +23,9 @@ type StartConfig struct {
 
 	// User defined kubeadmin password
 	KubeAdminPassword string
+
+	// Preset
+	Preset string
 }
 
 type ClusterConfig struct {

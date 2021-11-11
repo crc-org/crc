@@ -74,6 +74,7 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		NameServer:        config.Get(crcConfig.NameServer).AsString(),
 		PullSecret:        cluster.NewInteractivePullSecretLoader(config),
 		KubeAdminPassword: config.Get(crcConfig.KubeAdminPassword).AsString(),
+		Preset:            config.Get(crcConfig.PresetConfigurationKey).AsString(),
 	}
 
 	client := newMachine()
