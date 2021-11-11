@@ -23,6 +23,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/oc"
+	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/services"
 	"github.com/code-ready/crc/pkg/crc/services/dns"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
@@ -212,6 +213,9 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, fmt.Errorf("Bundle '%s' was requested, but the existing VM is using '%s'. Please delete your existing cluster and start again",
 			bundleName,
 			currentBundleName)
+	}
+	if err := bundleMismatchWithPreset(startConfig.Preset, crcBundleMetadata); err != nil {
+		return nil, err
 	}
 	vmState, err := host.Driver.GetState()
 	if err != nil {
@@ -716,6 +720,16 @@ func updateKubeconfig(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh
 	}
 	if err := cluster.EnsureGeneratedClientCAPresentInTheCluster(ctx, ocConfig, sshRunner, selfSignedCACert, adminClientCA); err != nil {
 		return errors.Wrap(err, "Failed to update user CA to cluster")
+	}
+	return nil
+}
+
+func bundleMismatchWithPreset(preset string, bundleMetadata *bundle.CrcBundleInfo) error {
+	if preset != string(crcPreset.OpenShift) && bundleMetadata.IsOpenShift() {
+		return errors.Errorf("Preset %s is used but bundle is provided for %s preset", crcPreset.Podman, crcPreset.OpenShift)
+	}
+	if preset != string(crcPreset.Podman) && !bundleMetadata.IsOpenShift() {
+		return errors.Errorf("Preset %s is used but bundle is provided for %s preset", crcPreset.OpenShift, crcPreset.Podman)
 	}
 	return nil
 }
