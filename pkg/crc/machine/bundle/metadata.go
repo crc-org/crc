@@ -12,14 +12,8 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/download"
-)
-
-type Type string
-
-const (
-	OpenShift Type = "snc"
-	Podman    Type = "podman"
 )
 
 // Metadata structure to unmarshal the crc-bundle-info.json file
@@ -182,15 +176,15 @@ func (bundle *CrcBundleInfo) GetBundleNameWithoutExtension() string {
 	return GetBundleNameWithoutExtension(bundle.GetBundleName())
 }
 
-func (bundle *CrcBundleInfo) getBundleType() Type {
+func (bundle *CrcBundleInfo) getBundleType() preset.Preset {
 	if bundle.Type == "snc" {
-		return OpenShift
+		return preset.OpenShift
 	}
-	return Podman
+	return preset.Podman
 }
 
 func (bundle *CrcBundleInfo) IsOpenShift() bool {
-	return bundle.getBundleType() == OpenShift
+	return bundle.getBundleType() == preset.OpenShift
 }
 
 func (bundle *CrcBundleInfo) verify() error {

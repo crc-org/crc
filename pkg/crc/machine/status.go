@@ -47,7 +47,7 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 		clusterStatusResult := &types.ClusterStatusResult{
 			CrcStatus: state.FromMachine(vmStatus),
 		}
-		if crcBundleMetadata.GetBundleType() == bundle.OpenShift {
+		if crcBundleMetadata.IsOpenShift() {
 			clusterStatusResult.OpenshiftStatus = types.OpenshiftStopped
 			clusterStatusResult.OpenshiftVersion = crcBundleMetadata.GetOpenshiftVersion()
 		} else {

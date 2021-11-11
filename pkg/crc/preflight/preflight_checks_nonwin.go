@@ -10,9 +10,9 @@ import (
 	"syscall"
 
 	"github.com/code-ready/crc/pkg/crc/cache"
-	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	"github.com/code-ready/crc/pkg/crc/version"
 	crcos "github.com/code-ready/crc/pkg/os"
@@ -73,7 +73,7 @@ var genericPreflightChecks = []Check{
 }
 
 func getDefaultMemory() int {
-	if preset == string(crcConfig.Openshift) {
+	if preset == string(crcPreset.OpenShift) {
 		return constants.GetDefaultMemory(true)
 	}
 	return constants.GetDefaultMemory(false)

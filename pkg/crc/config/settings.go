@@ -6,16 +6,10 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/version"
 
 	"github.com/spf13/cast"
-)
-
-type Preset string
-
-const (
-	Podman    Preset = "podman"
-	Openshift Preset = "openshift"
 )
 
 const (
@@ -79,8 +73,8 @@ func RegisterSettings(cfg *Config) {
 	}
 
 	// Preset setting should be on top because CPUs/Memory config depend on it.
-	cfg.AddSetting(PresetConfigurationKey, string(Openshift), validatePreset, RequiresDeleteMsg,
-		fmt.Sprintf("Virtal machine preset (alpha feature - valid values are: %s or %s)", Podman, Openshift))
+	cfg.AddSetting(PresetConfigurationKey, string(preset.OpenShift), validatePreset, RequiresDeleteMsg,
+		fmt.Sprintf("Virtal machine preset (alpha feature - valid values are: %s or %s)", preset.Podman, preset.OpenShift))
 	// Start command settings in config
 	cfg.AddSetting(Bundle, constants.DefaultBundlePath, ValidateBundlePath, SuccessfullyApplied,
 		fmt.Sprintf("Bundle path (string, default '%s')", constants.DefaultBundlePath))
@@ -139,7 +133,7 @@ func DefaultMem(cfg Storage) int {
 }
 
 func IsOpenShift(cfg Storage) bool {
-	return cfg.Get(PresetConfigurationKey).AsString() == string(Openshift)
+	return cfg.Get(PresetConfigurationKey).AsString() == string(preset.OpenShift)
 }
 
 func defaultNetworkMode() network.Mode {
@@ -157,10 +151,10 @@ func GetNetworkMode(config Storage) network.Mode {
 }
 
 func validatePreset(i interface{}) (bool, string) {
-	switch Preset(cast.ToString(i)) {
-	case Podman, Openshift:
+	switch preset.Preset(cast.ToString(i)) {
+	case preset.Podman, preset.OpenShift:
 		return true, ""
 	default:
-		return false, fmt.Sprintf("Unknown preset. Only %s and %s are valid.", Podman, Openshift)
+		return false, fmt.Sprintf("Unknown preset. Only %s and %s are valid.", preset.Podman, preset.OpenShift)
 	}
 }
