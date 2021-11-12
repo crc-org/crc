@@ -177,7 +177,7 @@ func (bundle *CrcBundleInfo) GetBundleNameWithoutExtension() string {
 }
 
 func (bundle *CrcBundleInfo) getBundleType() preset.Preset {
-	if bundle.Type == "snc" {
+	if bundle.Type == "snc" || bundle.Type == "snc_custom" {
 		return preset.OpenShift
 	}
 	return preset.Podman
