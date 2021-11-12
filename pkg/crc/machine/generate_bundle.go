@@ -23,13 +23,15 @@ func (client *client) GenerateBundle(forceStop bool) error {
 	}
 	defer sshRunner.Close()
 
-	ocConfig := oc.UseOCWithSSH(sshRunner)
-	if err := cluster.RemovePullSecretFromCluster(context.Background(), ocConfig, sshRunner); err != nil {
-		return errors.Wrap(err, "Error removing pull secret from cluster")
-	}
+	if bundleMetadata.IsOpenShift() {
+		ocConfig := oc.UseOCWithSSH(sshRunner)
+		if err := cluster.RemovePullSecretFromCluster(context.Background(), ocConfig, sshRunner); err != nil {
+			return errors.Wrap(err, "Error removing pull secret from cluster")
+		}
 
-	if err := cluster.RemoveOldRenderedMachineConfig(ocConfig); err != nil {
-		return errors.Wrap(err, "Error removing old rendered machine configs")
+		if err := cluster.RemoveOldRenderedMachineConfig(ocConfig); err != nil {
+			return errors.Wrap(err, "Error removing old rendered machine configs")
+		}
 	}
 
 	// Stop the cluster
