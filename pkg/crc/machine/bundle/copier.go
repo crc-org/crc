@@ -38,7 +38,7 @@ func NewCopier(srcBundle *CrcBundleInfo, basePath string, customBundleName strin
 	}
 
 	copier.copiedBundle.Name = customBundleName
-	copier.copiedBundle.Type = "custom"
+	copier.copiedBundle.Type = fmt.Sprintf("%s_custom", srcBundle.Type)
 	copier.srcBundle = srcBundle
 	copier.copiedBundle.cachedPath = bundlePath
 
