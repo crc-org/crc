@@ -64,10 +64,13 @@ func (copier *Copier) CopyPrivateSSHKey(srcPath string) error {
 }
 
 func (copier *Copier) CopyKubeConfig() error {
-	kubeConfigFileName := filepath.Base(copier.srcBundle.GetKubeConfigPath())
-	srcPath := copier.srcBundle.GetKubeConfigPath()
-	destPath := copier.resolvePath(kubeConfigFileName)
-	return crcos.CopyFileContents(srcPath, destPath, 0640)
+	if copier.srcBundle.IsOpenShift() {
+		kubeConfigFileName := filepath.Base(copier.srcBundle.GetKubeConfigPath())
+		srcPath := copier.srcBundle.GetKubeConfigPath()
+		destPath := copier.resolvePath(kubeConfigFileName)
+		return crcos.CopyFileContents(srcPath, destPath, 0640)
+	}
+	return nil
 }
 
 func (copier *Copier) CopyFilesFromFileList() error {
