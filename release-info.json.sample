@@ -3,6 +3,7 @@
 		"crcVersion": "@CRC_VERSION@",
 		"gitSha": "@GIT_COMMIT_SHA@",
 		"openshiftVersion": "@OPENSHIFT_VERSION@"
+		"podmanVersion": "@PODMAN_VERSION"
 	},
 	"links": {
 	    "linux": "https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/crc/@CRC_VERSION@/crc-linux-amd64.tar.xz",
