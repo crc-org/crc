@@ -24,6 +24,9 @@ var (
 	// Bundle version which used for the release.
 	bundleVersion = "0.0.0-unset"
 
+	// Podman version for podman specific bundles
+	podmanVersion = "0.0.0-unset"
+
 	okdBuild = "false"
 
 	// will always be false on linux
@@ -66,6 +69,10 @@ func GetCommitSha() string {
 
 func GetBundleVersion() string {
 	return bundleVersion
+}
+
+func GetPodmanVersion() string {
+	return podmanVersion
 }
 
 func IsOkdBuild() bool {

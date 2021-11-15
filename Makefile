@@ -1,6 +1,7 @@
 SHELL := /bin/bash
 
 BUNDLE_VERSION ?= 4.9.5
+PODMAN_VERSION ?= 3.4.1
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 1.34.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
@@ -53,6 +54,7 @@ __check_defined = \
 # Linker flags
 VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.bundleVersion=$(BUNDLE_VERSION) \
+	-X $(REPOPATH)/pkg/crc/version.podmanVersion=$(PODMAN_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.commitSha=$(COMMIT_SHA)
 RELEASE_VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/segment.WriteKey=cvpHsNcmGCJqVzf6YxrSnVlwFSAZaYtp
 
@@ -249,6 +251,7 @@ gen_release_info:
 	@cat release-info.json.sample | sed s/@CRC_VERSION@/$(CRC_VERSION)/ > $(RELEASE_INFO)
 	@sed -i s/@GIT_COMMIT_SHA@/$(COMMIT_SHA)/ $(RELEASE_INFO)
 	@sed -i s/@OPENSHIFT_VERSION@/$(BUNDLE_VERSION)/ $(RELEASE_INFO)
+	@sed -i s/@PODMAN_VERSION@/$(PODMAN_VERSION)/ $(RELEASE_INFO)
 
 .PHONY: release
 release: LDFLAGS += -X '$(REPOPATH)/pkg/crc/version.linuxReleaseBuild=true' $(RELEASE_VERSION_VARIABLES)
