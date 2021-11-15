@@ -241,23 +241,28 @@ func GetCustomBundleName(bundleFilename string) string {
 	return fmt.Sprintf("%s_%d%s", baseName, time.Now().Unix(), bundleExtension)
 }
 
-type bundlesDownloadInfo map[string]*download.RemoteFile
+type presetDownloadInfo map[string]*download.RemoteFile
+type bundlesDownloadInfo map[string]presetDownloadInfo
 
-func getBundleDownloadInfo() (*download.RemoteFile, error) {
+func getBundleDownloadInfo(preset string) (*download.RemoteFile, error) {
 	bundles, ok := bundleLocations[runtime.GOARCH]
 	if !ok {
 		return nil, fmt.Errorf("Unsupported architecture: %s", runtime.GOARCH)
 	}
-	downloadInfo, ok := bundles[runtime.GOOS]
+	presetdownloadInfo, ok := bundles[runtime.GOOS]
 	if !ok {
 		return nil, fmt.Errorf("Unknown GOOS: %s", runtime.GOOS)
+	}
+	downloadInfo, ok := presetdownloadInfo[preset]
+	if !ok {
+		return nil, fmt.Errorf("Unknown preset: %s", preset)
 	}
 
 	return downloadInfo, nil
 }
 
-func Download() error {
-	downloadInfo, err := getBundleDownloadInfo()
+func Download(preset string) error {
+	downloadInfo, err := getBundleDownloadInfo(preset)
 	if err != nil {
 		return err
 	}

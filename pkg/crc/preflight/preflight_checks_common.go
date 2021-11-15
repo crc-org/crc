@@ -95,7 +95,7 @@ func fixBundleExtracted(bundlePath, preset string) func() error {
 				return fmt.Errorf("%s is invalid or missing, run 'crc setup' to download the bundle", bundlePath)
 			}
 			logging.Infof("Downloading %s", constants.GetDefaultBundle())
-			if err := bundle.Download(); err != nil {
+			if err := bundle.Download(preset); err != nil {
 				return err
 			}
 			bundlePath = constants.DefaultBundlePath
