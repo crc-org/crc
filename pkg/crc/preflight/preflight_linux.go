@@ -375,7 +375,7 @@ func getChecks(distro *linux.OsRelease, bundlePath string, preset crcpreset.Pres
 	var checks []Check
 	checks = append(checks, nonWinPreflightChecks...)
 	checks = append(checks, wsl2PreflightCheck)
-	checks = append(checks, genericPreflightChecks...)
+	checks = append(checks, genericPreflightChecks(preset)...)
 	checks = append(checks, genericCleanupChecks...)
 	checks = append(checks, libvirtPreflightChecks(distro)...)
 	checks = append(checks, ubuntuPreflightChecks...)
