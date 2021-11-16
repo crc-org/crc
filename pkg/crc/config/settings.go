@@ -31,7 +31,7 @@ const (
 	EnableClusterMonitoring = "enable-cluster-monitoring"
 	AutostartTray           = "autostart-tray"
 	KubeAdminPassword       = "kubeadmin-password"
-	PresetConfigurationKey  = "preset"
+	Preset                  = "preset"
 )
 
 func RegisterSettings(cfg *Config) {
@@ -73,7 +73,7 @@ func RegisterSettings(cfg *Config) {
 	}
 
 	// Preset setting should be on top because CPUs/Memory config depend on it.
-	cfg.AddSetting(PresetConfigurationKey, string(preset.OpenShift), validatePreset, RequiresDeleteMsg,
+	cfg.AddSetting(Preset, string(preset.OpenShift), validatePreset, RequiresDeleteMsg,
 		fmt.Sprintf("Virtal machine preset (alpha feature - valid values are: %s or %s)", preset.Podman, preset.OpenShift))
 	// Start command settings in config
 	cfg.AddSetting(Bundle, constants.DefaultBundlePath, ValidateBundlePath, SuccessfullyApplied,
@@ -133,7 +133,7 @@ func DefaultMem(cfg Storage) int {
 }
 
 func IsOpenShift(cfg Storage) bool {
-	return cfg.Get(PresetConfigurationKey).AsString() == string(preset.OpenShift)
+	return cfg.Get(Preset).AsString() == string(preset.OpenShift)
 }
 
 func defaultNetworkMode() network.Mode {
