@@ -144,7 +144,7 @@ func getChecks(mode network.Mode, bundlePath string, preset crcpreset.Preset) []
 	checks := []Check{}
 
 	checks = append(checks, nonWinPreflightChecks...)
-	checks = append(checks, genericPreflightChecks...)
+	checks = append(checks, genericPreflightChecks(preset)...)
 	checks = append(checks, genericCleanupChecks...)
 	checks = append(checks, hyperkitPreflightChecks(mode)...)
 	checks = append(checks, daemonSetupChecks...)
