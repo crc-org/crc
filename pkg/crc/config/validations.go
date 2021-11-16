@@ -6,6 +6,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
+	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	"github.com/spf13/cast"
 )
@@ -117,4 +118,12 @@ func ValidateYesNo(value interface{}) (bool, string) {
 		return true, ""
 	}
 	return false, "must be yes or no"
+}
+
+func validatePreset(value interface{}) (bool, string) {
+	_, err := crcpreset.ParsePresetE(cast.ToString(value))
+	if err != nil {
+		return false, fmt.Sprintf("Unknown preset. Only %s and %s are valid.", crcpreset.Podman, crcpreset.OpenShift)
+	}
+	return true, ""
 }

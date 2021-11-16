@@ -149,12 +149,3 @@ func GetNetworkMode(config Storage) network.Mode {
 	}
 	return network.ParseMode(config.Get(NetworkMode).AsString())
 }
-
-func validatePreset(i interface{}) (bool, string) {
-	switch preset.Preset(cast.ToString(i)) {
-	case preset.Podman, preset.OpenShift:
-		return true, ""
-	default:
-		return false, fmt.Sprintf("Unknown preset. Only %s and %s are valid.", preset.Podman, preset.OpenShift)
-	}
-}
