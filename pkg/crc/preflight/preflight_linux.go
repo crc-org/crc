@@ -9,6 +9,7 @@ import (
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
+	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/linux"
 
@@ -354,13 +355,13 @@ func getAllPreflightChecks() []Check {
 	return filter.Apply(getChecks(distro(), "", ""))
 }
 
-func getPreflightChecks(_ bool, _ bool, networkMode network.Mode, bundlePath, preset string) []Check {
+func getPreflightChecks(_ bool, _ bool, networkMode network.Mode, bundlePath string, preset crcpreset.Preset) []Check {
 	usingSystemdResolved := checkSystemdResolvedIsRunning()
 
 	return getPreflightChecksForDistro(distro(), networkMode, usingSystemdResolved == nil, bundlePath, preset)
 }
 
-func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode, usingSystemdResolved bool, bundlePath, preset string) []Check {
+func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode, usingSystemdResolved bool, bundlePath string, preset crcpreset.Preset) []Check {
 	filter := newFilter()
 	filter.SetDistro(distro)
 	filter.SetSystemdUser(distro)
@@ -370,7 +371,7 @@ func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mo
 	return filter.Apply(getChecks(distro, bundlePath, preset))
 }
 
-func getChecks(distro *linux.OsRelease, bundlePath, preset string) []Check {
+func getChecks(distro *linux.OsRelease, bundlePath string, preset crcpreset.Preset) []Check {
 	var checks []Check
 	checks = append(checks, nonWinPreflightChecks...)
 	checks = append(checks, wsl2PreflightCheck)
