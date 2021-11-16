@@ -78,8 +78,7 @@ func NewNonInteractivePullSecretLoader(config crcConfig.Storage, path string) Pu
 
 func (loader *nonInteractivePullSecretLoader) Value() (string, error) {
 	// If crc is built from an OKD bundle or podman bundle is used, then use the fake pull secret in contants.
-	if crcversion.IsOkdBuild() ||
-		loader.config.Get(crcConfig.Preset).AsString() == string(preset.Podman) {
+	if crcversion.IsOkdBuild() || crcConfig.GetPreset(loader.config) == preset.Podman {
 		return constants.OkdPullSecret, nil
 	}
 
