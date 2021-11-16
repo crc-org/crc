@@ -153,7 +153,7 @@ func getChecks(bundlePath, preset string) []Check {
 	checks := []Check{}
 	checks = append(checks, hypervPreflightChecks...)
 	checks = append(checks, vsockChecks...)
-	checks = append(checks, bundleCheck(bundlePath, preset))
+	checks = append(checks, bundleCheck(bundlePath))
 	checks = append(checks, genericCleanupChecks...)
 	return checks
 }

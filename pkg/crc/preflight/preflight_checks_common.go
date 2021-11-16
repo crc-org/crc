@@ -14,13 +14,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-func bundleCheck(bundlePath, preset string) Check {
+func bundleCheck(bundlePath string) Check {
 	return Check{
 		configKeySuffix:  "check-bundle-extracted",
 		checkDescription: "Checking if CRC bundle is extracted in '$HOME/.crc'",
-		check:            checkBundleExtracted(bundlePath, preset),
+		check:            checkBundleExtracted(bundlePath),
 		fixDescription:   "Getting bundle for the CRC executable",
-		fix:              fixBundleExtracted(bundlePath, preset),
+		fix:              fixBundleExtracted(bundlePath),
 		flags:            SetupOnly,
 
 		labels: None,
@@ -58,7 +58,7 @@ var genericCleanupChecks = []Check{
 	},
 }
 
-func checkBundleExtracted(bundlePath, preset string) func() error {
+func checkBundleExtracted(bundlePath string) func() error {
 	return func() error {
 		logging.Infof("Checking if %s exists", bundlePath)
 		bundleName := filepath.Base(bundlePath)
@@ -71,7 +71,7 @@ func checkBundleExtracted(bundlePath, preset string) func() error {
 	}
 }
 
-func fixBundleExtracted(bundlePath, preset string) func() error {
+func fixBundleExtracted(bundlePath string) func() error {
 	// Should be removed after 1.19 release
 	// This check will ensure correct mode for `~/.crc/cache` directory
 	// in case it exists.

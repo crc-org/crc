@@ -383,7 +383,7 @@ func getChecks(distro *linux.OsRelease, bundlePath, preset string) []Check {
 	checks = append(checks, dnsmasqPreflightChecks...)
 	checks = append(checks, libvirtNetworkPreflightChecks...)
 	checks = append(checks, vsockPreflightCheck)
-	checks = append(checks, bundleCheck(bundlePath, preset))
+	checks = append(checks, bundleCheck(bundlePath))
 
 	return checks
 }

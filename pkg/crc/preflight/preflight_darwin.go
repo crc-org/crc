@@ -149,7 +149,7 @@ func getChecks(mode network.Mode, bundlePath, preset string) []Check {
 	checks = append(checks, daemonSetupChecks...)
 	checks = append(checks, resolverPreflightChecks...)
 	checks = append(checks, traySetupChecks...)
-	checks = append(checks, bundleCheck(bundlePath, preset))
+	checks = append(checks, bundleCheck(bundlePath))
 
 	return checks
 }
