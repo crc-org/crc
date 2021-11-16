@@ -115,7 +115,7 @@ func getStartConfig(cfg crcConfig.Storage, args client.StartConfig) types.StartC
 		NameServer:        cfg.Get(crcConfig.NameServer).AsString(),
 		PullSecret:        cluster.NewNonInteractivePullSecretLoader(cfg, args.PullSecretFile),
 		KubeAdminPassword: cfg.Get(crcConfig.KubeAdminPassword).AsString(),
-		Preset:            cfg.Get(crcConfig.Preset).AsString(),
+		Preset:            crcConfig.GetPreset(cfg),
 	}
 }
 
