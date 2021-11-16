@@ -5,6 +5,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
+	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
@@ -139,7 +140,7 @@ func getAllPreflightChecks() []Check {
 	return getPreflightChecks(true, true, network.SystemNetworkingMode, constants.DefaultBundlePath, "")
 }
 
-func getChecks(mode network.Mode, bundlePath, preset string) []Check {
+func getChecks(mode network.Mode, bundlePath string, preset crcpreset.Preset) []Check {
 	checks := []Check{}
 
 	checks = append(checks, nonWinPreflightChecks...)
@@ -154,7 +155,7 @@ func getChecks(mode network.Mode, bundlePath, preset string) []Check {
 	return checks
 }
 
-func getPreflightChecks(_ bool, trayAutostart bool, mode network.Mode, bundlePath, preset string) []Check {
+func getPreflightChecks(_ bool, trayAutostart bool, mode network.Mode, bundlePath string, preset crcpreset.Preset) []Check {
 	filter := newFilter()
 	filter.SetNetworkMode(mode)
 	filter.SetTray(trayAutostart)

@@ -8,6 +8,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
+	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 	"github.com/code-ready/crc/pkg/os/windows/win32"
 )
@@ -149,7 +150,7 @@ func getAllPreflightChecks() []Check {
 	return getPreflightChecks(true, true, network.UserNetworkingMode, constants.DefaultBundlePath, "")
 }
 
-func getChecks(bundlePath, preset string) []Check {
+func getChecks(bundlePath string, preset crcpreset.Preset) []Check {
 	checks := []Check{}
 	checks = append(checks, hypervPreflightChecks...)
 	checks = append(checks, vsockChecks...)
@@ -158,7 +159,7 @@ func getChecks(bundlePath, preset string) []Check {
 	return checks
 }
 
-func getPreflightChecks(_ bool, trayAutoStart bool, networkMode network.Mode, bundlePath, preset string) []Check {
+func getPreflightChecks(_ bool, trayAutoStart bool, networkMode network.Mode, bundlePath string, preset crcpreset.Preset) []Check {
 	filter := newFilter()
 	filter.SetNetworkMode(networkMode)
 

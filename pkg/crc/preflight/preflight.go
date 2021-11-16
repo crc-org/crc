@@ -6,6 +6,7 @@ import (
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
 )
 
 type Flags uint32
@@ -19,7 +20,7 @@ const (
 )
 
 var (
-	preset string
+	preset crcpreset.Preset
 )
 
 type CheckFunc func() error
@@ -161,7 +162,7 @@ func StartPreflightChecks(config crcConfig.Storage) error {
 	mode := crcConfig.GetNetworkMode(config)
 	trayAutostart := config.Get(crcConfig.AutostartTray).AsBool()
 	bundlePath := config.Get(crcConfig.Bundle).AsString()
-	preset = config.Get(crcConfig.Preset).AsString()
+	preset = crcConfig.GetPreset(config)
 	if err := doPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode, bundlePath, preset)); err != nil {
 		return &errors.PreflightError{Err: err}
 	}
@@ -174,7 +175,7 @@ func SetupHost(config crcConfig.Storage, checkOnly bool) error {
 	mode := crcConfig.GetNetworkMode(config)
 	trayAutostart := config.Get(crcConfig.AutostartTray).AsBool()
 	bundlePath := config.Get(crcConfig.Bundle).AsString()
-	preset = config.Get(crcConfig.Preset).AsString()
+	preset = crcConfig.GetPreset(config)
 	logging.Infof("Using bundle path %s", bundlePath)
 	return doFixPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode, bundlePath, preset), checkOnly)
 }

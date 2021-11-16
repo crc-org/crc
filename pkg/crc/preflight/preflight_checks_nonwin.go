@@ -73,7 +73,7 @@ var genericPreflightChecks = []Check{
 }
 
 func getDefaultMemory() int {
-	if preset == string(crcPreset.OpenShift) {
+	if preset == crcPreset.OpenShift {
 		return constants.GetDefaultMemory(true)
 	}
 	return constants.GetDefaultMemory(false)
