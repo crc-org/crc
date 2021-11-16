@@ -133,7 +133,11 @@ func DefaultMem(cfg Storage) int {
 }
 
 func IsOpenShift(cfg Storage) bool {
-	return cfg.Get(Preset).AsString() == string(preset.OpenShift)
+	return GetPreset(cfg) == preset.OpenShift
+}
+
+func GetPreset(config Storage) preset.Preset {
+	return preset.ParsePreset(config.Get(Preset).AsString())
 }
 
 func defaultNetworkMode() network.Mode {
