@@ -12,22 +12,23 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
+	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/docker/go-units"
 	"github.com/pbnjay/memory"
 )
 
 // ValidateCPUs checks if provided cpus count is valid
-func ValidateCPUs(value int, openshift bool) error {
-	if value < constants.GetDefaultCPUs(openshift) {
-		return fmt.Errorf("requires CPUs >= %d", constants.GetDefaultCPUs(openshift))
+func ValidateCPUs(value int, preset crcpreset.Preset) error {
+	if value < constants.GetDefaultCPUs(preset) {
+		return fmt.Errorf("requires CPUs >= %d", constants.GetDefaultCPUs(preset))
 	}
 	return nil
 }
 
 // ValidateMemory checks if provided Memory count is valid
-func ValidateMemory(value int, openshift bool) error {
-	if value < constants.GetDefaultMemory(openshift) {
-		return fmt.Errorf("requires memory in MiB >= %d", constants.GetDefaultMemory(openshift))
+func ValidateMemory(value int, preset crcpreset.Preset) error {
+	if value < constants.GetDefaultMemory(preset) {
+		return fmt.Errorf("requires memory in MiB >= %d", constants.GetDefaultMemory(preset))
 	}
 	return ValidateEnoughMemory(value)
 }

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
@@ -154,16 +155,26 @@ func GetCRCWindowsTrayDownloadURL() string {
 	return fmt.Sprintf(CRCWindowsTrayDownloadURL, version.GetCRCWindowsTrayVersion())
 }
 
-func GetDefaultCPUs(openshift bool) int {
-	if openshift {
+func GetDefaultCPUs(preset crcpreset.Preset) int {
+	switch preset {
+	case crcpreset.OpenShift:
+		return 4
+	case crcpreset.Podman:
+		return 2
+	default:
+		// should not be reached
 		return 4
 	}
-	return 2
 }
 
-func GetDefaultMemory(openshift bool) int {
-	if openshift {
+func GetDefaultMemory(preset crcpreset.Preset) int {
+	switch preset {
+	case crcpreset.OpenShift:
+		return 9216
+	case crcpreset.Podman:
+		return 2048
+	default:
+		// should not be reached
 		return 9216
 	}
-	return 2048
 }

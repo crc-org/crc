@@ -12,7 +12,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/cache"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	"github.com/code-ready/crc/pkg/crc/version"
 	crcos "github.com/code-ready/crc/pkg/os"
@@ -63,20 +62,13 @@ var genericPreflightChecks = []Check{
 		configKeySuffix:  "check-ram",
 		checkDescription: "Checking minimum RAM requirements",
 		check: func() error {
-			return validation.ValidateEnoughMemory(getDefaultMemory())
+			return validation.ValidateEnoughMemory(constants.GetDefaultMemory(preset))
 		},
-		fixDescription: fmt.Sprintf("crc requires at least %s to run", units.HumanSize(float64(getDefaultMemory()*1024*1024))),
+		fixDescription: fmt.Sprintf("crc requires at least %s to run", units.HumanSize(float64(constants.GetDefaultMemory(preset)*1024*1024))),
 		flags:          NoFix,
 
 		labels: None,
 	},
-}
-
-func getDefaultMemory() int {
-	if preset == crcPreset.OpenShift {
-		return constants.GetDefaultMemory(true)
-	}
-	return constants.GetDefaultMemory(false)
 }
 
 func checkIfRunningAsNormalUser() error {

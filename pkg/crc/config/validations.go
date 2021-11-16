@@ -42,24 +42,24 @@ func ValidateDiskSize(value interface{}) (bool, string) {
 }
 
 // ValidateCPUs checks if provided cpus count is valid in the config
-func ValidateCPUs(value interface{}, openshift bool) (bool, string) {
+func ValidateCPUs(value interface{}, preset crcpreset.Preset) (bool, string) {
 	v, err := cast.ToIntE(value)
 	if err != nil {
-		return false, fmt.Sprintf("requires integer value >= %d", constants.GetDefaultCPUs(openshift))
+		return false, fmt.Sprintf("requires integer value >= %d", constants.GetDefaultCPUs(preset))
 	}
-	if err := validation.ValidateCPUs(v, openshift); err != nil {
+	if err := validation.ValidateCPUs(v, preset); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
 }
 
 // ValidateMemory checks if provided memory is valid in the config
-func ValidateMemory(value interface{}, openshift bool) (bool, string) {
+func ValidateMemory(value interface{}, preset crcpreset.Preset) (bool, string) {
 	v, err := cast.ToIntE(value)
 	if err != nil {
-		return false, fmt.Sprintf("requires integer value in MiB >= %d", constants.GetDefaultMemory(openshift))
+		return false, fmt.Sprintf("requires integer value in MiB >= %d", constants.GetDefaultMemory(preset))
 	}
-	if err := validation.ValidateMemory(v, openshift); err != nil {
+	if err := validation.ValidateMemory(v, preset); err != nil {
 		return false, err.Error()
 	}
 	return true, ""

@@ -36,8 +36,8 @@ func init() {
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
 	flagSet.StringP(crcConfig.Bundle, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster")
 	flagSet.StringP(crcConfig.PullSecretFile, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
-	flagSet.IntP(crcConfig.CPUs, "c", crcConfig.DefaultCPUs(config), "Number of CPU cores to allocate to the OpenShift cluster")
-	flagSet.IntP(crcConfig.Memory, "m", crcConfig.DefaultMem(config), "MiB of memory to allocate to the OpenShift cluster")
+	flagSet.IntP(crcConfig.CPUs, "c", constants.GetDefaultCPUs(crcConfig.GetPreset(config)), "Number of CPU cores to allocate to the OpenShift cluster")
+	flagSet.IntP(crcConfig.Memory, "m", constants.GetDefaultMemory(crcConfig.GetPreset(config)), "MiB of memory to allocate to the OpenShift cluster")
 	flagSet.UintP(crcConfig.DiskSize, "d", constants.DefaultDiskSize, "Total size in GiB of the disk used by the OpenShift cluster")
 	flagSet.StringP(crcConfig.NameServer, "n", "", "IPv4 address of nameserver to use for the OpenShift cluster")
 	flagSet.Bool(crcConfig.DisableUpdateCheck, false, "Don't check for update")
@@ -169,10 +169,10 @@ func (s *startResult) prettyPrintTo(writer io.Writer) error {
 }
 
 func validateStartFlags() error {
-	if err := validation.ValidateMemory(config.Get(crcConfig.Memory).AsInt(), crcConfig.IsOpenShift(config)); err != nil {
+	if err := validation.ValidateMemory(config.Get(crcConfig.Memory).AsInt(), crcConfig.GetPreset(config)); err != nil {
 		return err
 	}
-	if err := validation.ValidateCPUs(config.Get(crcConfig.CPUs).AsInt(), crcConfig.IsOpenShift(config)); err != nil {
+	if err := validation.ValidateCPUs(config.Get(crcConfig.CPUs).AsInt(), crcConfig.GetPreset(config)); err != nil {
 		return err
 	}
 	if err := validation.ValidateDiskSize(config.Get(crcConfig.DiskSize).AsInt()); err != nil {

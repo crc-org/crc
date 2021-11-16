@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,7 +19,7 @@ const (
 
 func newTestConfig(configFile, envPrefix string) (*Config, error) {
 	validateCPUs := func(value interface{}) (bool, string) {
-		return ValidateCPUs(value, true)
+		return ValidateCPUs(value, preset.OpenShift)
 	}
 	storage, err := NewViperStorage(configFile, envPrefix)
 	if err != nil {
@@ -152,7 +153,7 @@ func TestViperConfigBindFlagSet(t *testing.T) {
 	configFile := filepath.Join(dir, "crc.json")
 
 	validateCPUs := func(value interface{}) (bool, string) {
-		return ValidateCPUs(value, true)
+		return ValidateCPUs(value, preset.OpenShift)
 	}
 	storage, err := NewViperStorage(configFile, "CRC")
 	require.NoError(t, err)
