@@ -278,7 +278,7 @@ embed_bundle: clean cross $(HOST_BUILD_DIR)/crc-embedder
 
 .PHONY: update-go-version
 update-go-version:
-	./update-go-version.sh 1.15
+	./update-go-version.sh 1.16
 
 .PHONY: goversioncheck
 goversioncheck:
