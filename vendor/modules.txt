@@ -3,7 +3,7 @@
 github.com/AlecAivazis/survey/v2
 github.com/AlecAivazis/survey/v2/core
 github.com/AlecAivazis/survey/v2/terminal
-# github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78
+# github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1
 github.com/Azure/go-ansiterm
 github.com/Azure/go-ansiterm/winterm
 # github.com/Masterminds/semver/v3 v3.1.1
@@ -34,7 +34,6 @@ github.com/RedHatQE/gowinx/pkg/win32/ux/windows
 ## explicit
 github.com/StackExchange/wmi
 # github.com/VividCortex/ewma v1.2.0
-## explicit
 github.com/VividCortex/ewma
 # github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
 ## explicit
@@ -49,8 +48,6 @@ github.com/apparentlymart/go-cidr/cidr
 # github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 ## explicit
 github.com/asaskevich/govalidator
-# github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
-## explicit
 # github.com/cavaliercoder/grab v2.0.0+incompatible
 ## explicit
 github.com/cavaliercoder/grab
@@ -141,7 +138,7 @@ github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/goodhosts/hostsfile v0.0.8
 github.com/goodhosts/hostsfile
-# github.com/google/btree v1.0.0
+# github.com/google/btree v1.0.1
 github.com/google/btree
 # github.com/google/go-cmp v0.5.6
 github.com/google/go-cmp/cmp
@@ -159,9 +156,10 @@ github.com/google/tcpproxy
 # github.com/google/uuid v1.3.0
 ## explicit
 github.com/google/uuid
-# github.com/googleapis/gnostic v0.4.1
+# github.com/googleapis/gnostic v0.5.5
 github.com/googleapis/gnostic/compiler
 github.com/googleapis/gnostic/extensions
+github.com/googleapis/gnostic/jsonschema
 github.com/googleapis/gnostic/openapiv2
 # github.com/gorilla/handlers v1.5.1
 ## explicit
@@ -188,7 +186,6 @@ github.com/hashicorp/hcl/json/token
 github.com/hectane/go-acl
 github.com/hectane/go-acl/api
 # github.com/imdario/mergo v0.3.12
-## explicit
 github.com/imdario/mergo
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
@@ -234,7 +231,6 @@ github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.14
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.13
-## explicit
 github.com/mattn/go-runewidth
 # github.com/mdlayher/vsock v0.0.0-20210303205602-10d591861736 => github.com/cfergeau/vsock v0.0.0-20210707100525-4def293f672e
 ## explicit
@@ -251,7 +247,7 @@ github.com/mitchellh/mapstructure
 # github.com/moby/spdystream v0.2.0
 github.com/moby/spdystream
 github.com/moby/spdystream/spdy
-# github.com/moby/term v0.0.0-20201216013528-df9cb8a40635
+# github.com/moby/term v0.0.0-20210610120745-9d4ed1856297
 github.com/moby/term
 github.com/moby/term/windows
 # github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
@@ -297,17 +293,17 @@ github.com/onsi/gomega/matchers/support/goraph/edge
 github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
 github.com/onsi/gomega/types
-# github.com/openshift/api v0.0.0-20210521075222-e273a339932a
+# github.com/openshift/api v0.0.0-20210730095913-85e1d547cdee
 ## explicit
 github.com/openshift/api/config/v1
-# github.com/openshift/client-go v0.0.0-20210521082421-73d9475a9142
+# github.com/openshift/client-go v0.0.0-20210730113412-1811c1b3fc0e
 ## explicit
 github.com/openshift/client-go/config/clientset/versioned
 github.com/openshift/client-go/config/clientset/versioned/scheme
 github.com/openshift/client-go/config/clientset/versioned/typed/config/v1
-# github.com/openshift/library-go v0.0.0-20210521084623-7392ea9b02ca
+# github.com/openshift/library-go v0.0.0-20210730125111-f3b4cc9813a9
 github.com/openshift/library-go/pkg/oauth/oauthdiscovery
-# github.com/openshift/oc v0.0.0-alpha.0.0.20210920131146-88e7eba36ac7
+# github.com/openshift/oc v0.0.0-alpha.0.0.20210902003738-96e95cef877b
 ## explicit
 github.com/openshift/oc/pkg/helpers/term
 github.com/openshift/oc/pkg/helpers/tokencmd
@@ -497,8 +493,6 @@ google.golang.org/protobuf/types/descriptorpb
 google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/timestamppb
-# gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
-## explicit
 # gopkg.in/inf.v0 v0.9.1
 gopkg.in/inf.v0
 # gopkg.in/ini.v1 v1.63.2
@@ -542,7 +536,7 @@ gvisor.dev/gvisor/pkg/tcpip/transport/tcp
 gvisor.dev/gvisor/pkg/tcpip/transport/tcpconntrack
 gvisor.dev/gvisor/pkg/tcpip/transport/udp
 gvisor.dev/gvisor/pkg/waiter
-# k8s.io/api v0.21.1
+# k8s.io/api v0.22.0-rc.0
 ## explicit
 k8s.io/api/admissionregistration/v1
 k8s.io/api/admissionregistration/v1beta1
@@ -587,7 +581,7 @@ k8s.io/api/scheduling/v1beta1
 k8s.io/api/storage/v1
 k8s.io/api/storage/v1alpha1
 k8s.io/api/storage/v1beta1
-# k8s.io/apimachinery v0.21.1 => github.com/openshift/kubernetes-apimachinery v0.0.0-20210521074607-b6b98f7a1855
+# k8s.io/apimachinery v0.22.0-rc.0 => github.com/openshift/kubernetes-apimachinery v0.0.0-20210730111815-c26349f8e2c9
 ## explicit
 k8s.io/apimachinery/pkg/api/errors
 k8s.io/apimachinery/pkg/api/resource
@@ -627,11 +621,13 @@ k8s.io/apimachinery/pkg/version
 k8s.io/apimachinery/pkg/watch
 k8s.io/apimachinery/third_party/forked/golang/netutil
 k8s.io/apimachinery/third_party/forked/golang/reflect
-# k8s.io/client-go v0.21.1 => github.com/openshift/kubernetes-client-go v0.0.0-20210521075216-71b63307b5df
+# k8s.io/client-go v0.22.0-rc.0 => github.com/openshift/kubernetes-client-go v0.0.0-20210826123502-7208c21f5119
 ## explicit
 k8s.io/client-go/discovery
 k8s.io/client-go/kubernetes/scheme
 k8s.io/client-go/pkg/apis/clientauthentication
+k8s.io/client-go/pkg/apis/clientauthentication/install
+k8s.io/client-go/pkg/apis/clientauthentication/v1
 k8s.io/client-go/pkg/apis/clientauthentication/v1alpha1
 k8s.io/client-go/pkg/apis/clientauthentication/v1beta1
 k8s.io/client-go/pkg/version
@@ -654,19 +650,19 @@ k8s.io/client-go/util/flowcontrol
 k8s.io/client-go/util/homedir
 k8s.io/client-go/util/keyutil
 k8s.io/client-go/util/workqueue
-# k8s.io/klog/v2 v2.8.0
+# k8s.io/klog/v2 v2.9.0
 k8s.io/klog/v2
-# k8s.io/kubectl v0.21.0-beta.1 => github.com/openshift/kubernetes-kubectl v0.0.0-20210521075729-633333dfccda
+# k8s.io/kubectl v0.22.0-rc.0 => github.com/openshift/kubernetes-kubectl v0.0.0-20210730111826-9c6734b9d97d
 k8s.io/kubectl/pkg/util/interrupt
 k8s.io/kubectl/pkg/util/term
-# k8s.io/utils v0.0.0-20210527160623-6fdb442a123b
+# k8s.io/utils v0.0.0-20210707171843-4b05e18ac7d9
 k8s.io/utils/integer
-# sigs.k8s.io/structured-merge-diff/v4 v4.1.0
+# sigs.k8s.io/structured-merge-diff/v4 v4.1.2
 sigs.k8s.io/structured-merge-diff/v4/value
 # sigs.k8s.io/yaml v1.2.0
 sigs.k8s.io/yaml
 # github.com/apcera/gssapi => github.com/openshift/gssapi v0.0.0-20161010215902-5fb4217df13b
-# k8s.io/apimachinery => github.com/openshift/kubernetes-apimachinery v0.0.0-20210521074607-b6b98f7a1855
-# k8s.io/client-go => github.com/openshift/kubernetes-client-go v0.0.0-20210521075216-71b63307b5df
-# k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20210521075729-633333dfccda
+# k8s.io/apimachinery => github.com/openshift/kubernetes-apimachinery v0.0.0-20210730111815-c26349f8e2c9
+# k8s.io/client-go => github.com/openshift/kubernetes-client-go v0.0.0-20210826123502-7208c21f5119
+# k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20210730111826-9c6734b9d97d
 # github.com/mdlayher/vsock => github.com/cfergeau/vsock v0.0.0-20210707100525-4def293f672e
