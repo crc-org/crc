@@ -7,7 +7,7 @@ jobs:
     macos:
       xcode: "12.5.1"
     environment:
-      GOVERSION: "1.15.13"
+      GOVERSION: "1.16.10"
 
 ## Build crc
     steps:
@@ -44,7 +44,7 @@ jobs:
     machine:
       image: ubuntu-2004:202101-01
     environment:
-      GOVERSION: "1.15.13"
+      GOVERSION: "1.16.10"
       CONTAINER_RUNTIME: "docker"
     steps:
       - checkout
