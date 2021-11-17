@@ -15,4 +15,3 @@ sed -i "s,^FROM registry.svc.ci.openshift.org/openshift/release:golang-1\... AS 
 sed -i "s/GOVERSION: .*\$/GOVERSION: \"${latest_version}\"/" .circleci/config.yml
 sed -i "s/^GO_VERSION=.*$/GO_VERSION=${latest_version}/" centos_ci.sh
 yq eval --inplace ".stack = \"go ${golang_base_version}\"" ./appveyor.yml
-yq eval --inplace ".go[0] = \"${latest_version}\"" ./.travis.yml
