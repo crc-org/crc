@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/Masterminds/semver/v3 v3.1.1
-	github.com/Microsoft/go-winio v0.5.0
+	github.com/Microsoft/go-winio v0.5.1
 	github.com/RedHatQE/gowinx v0.0.3
 	github.com/StackExchange/wmi v1.2.1
 	github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
@@ -23,7 +23,9 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
-	github.com/godbus/dbus/v5 v5.0.5 // indirect
+	github.com/go-ole/go-ole v1.2.6 // indirect
+	github.com/godbus/dbus/v5 v5.0.6 // indirect
+	github.com/gofrs/uuid v4.1.0+incompatible // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/handlers v1.5.1
 	github.com/h2non/filetype v1.1.2-0.20210917125640-7fafb18134ff
@@ -37,8 +39,8 @@ require (
 	github.com/mattn/go-colorable v0.1.11
 	github.com/mdlayher/vsock v0.0.0-20210303205602-10d591861736
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
-	github.com/onsi/ginkgo v1.16.4
-	github.com/onsi/gomega v1.16.0
+	github.com/onsi/ginkgo v1.16.5
+	github.com/onsi/gomega v1.17.0
 	github.com/openshift/api v0.0.0-20210730095913-85e1d547cdee
 	github.com/openshift/client-go v0.0.0-20210730113412-1811c1b3fc0e
 	github.com/openshift/oc v0.0.0-alpha.0.0.20210902003738-96e95cef877b
@@ -57,12 +59,13 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 	github.com/zalando/go-keyring v0.1.1
-	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
-	golang.org/x/net v0.0.0-20210929193557-e81a3d93ecf6
+	golang.org/x/crypto v0.0.0-20211115234514-b4de73f9ece8
+	golang.org/x/net v0.0.0-20211116231205-47ca1ff31462
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20211004093028-2c5d950f24ef
+	golang.org/x/sys v0.0.0-20211116061358-0a5406a5449c
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	golang.org/x/text v0.3.7
+	gopkg.in/ini.v1 v1.64.0 // indirect
 	k8s.io/api v0.22.0-rc.0
 	k8s.io/apimachinery v0.22.0-rc.0
 	k8s.io/client-go v0.22.0-rc.0
