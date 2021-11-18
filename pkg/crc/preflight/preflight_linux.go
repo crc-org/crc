@@ -6,9 +6,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/code-ready/crc/pkg/crc/constants"
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/linux"
@@ -352,7 +354,7 @@ func getAllPreflightChecks() []Check {
 	filter.SetDistro(distro())
 	filter.SetSystemdUser(distro())
 
-	return filter.Apply(getChecks(distro(), "", ""))
+	return filter.Apply(getChecks(distro(), constants.DefaultBundlePath, preset.OpenShift))
 }
 
 func getPreflightChecks(_ bool, _ bool, networkMode network.Mode, bundlePath string, preset crcpreset.Preset) []Check {

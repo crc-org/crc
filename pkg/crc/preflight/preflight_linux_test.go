@@ -9,6 +9,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	crcos "github.com/code-ready/crc/pkg/os/linux"
 	"github.com/stretchr/testify/assert"
 )
@@ -508,7 +509,7 @@ func assertFuncEqual(t *testing.T, func1 interface{}, func2 interface{}) {
 }
 
 func assertExpectedPreflights(t *testing.T, distro *crcos.OsRelease, networkMode network.Mode, systemdResolved bool) {
-	preflights := getPreflightChecksForDistro(distro, networkMode, systemdResolved, constants.DefaultBundlePath, "")
+	preflights := getPreflightChecksForDistro(distro, networkMode, systemdResolved, constants.DefaultBundlePath, preset.OpenShift)
 	var expected checkListForDistro
 	for _, expected = range checkListForDistros {
 		if expected.distro == distro && expected.networkMode == networkMode && expected.systemdResolved == systemdResolved {
