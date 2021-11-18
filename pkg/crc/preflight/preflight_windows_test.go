@@ -6,6 +6,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,9 +17,9 @@ func TestCountConfigurationOptions(t *testing.T) {
 }
 
 func TestCountPreflights(t *testing.T) {
-	assert.Len(t, getPreflightChecks(false, false, network.SystemNetworkingMode, constants.DefaultBundlePath, ""), 15)
-	assert.Len(t, getPreflightChecks(true, true, network.SystemNetworkingMode, constants.DefaultBundlePath, ""), 15)
+	assert.Len(t, getPreflightChecks(false, false, network.SystemNetworkingMode, constants.DefaultBundlePath, preset.OpenShift), 15)
+	assert.Len(t, getPreflightChecks(true, true, network.SystemNetworkingMode, constants.DefaultBundlePath, preset.OpenShift), 15)
 
-	assert.Len(t, getPreflightChecks(false, false, network.UserNetworkingMode, constants.DefaultBundlePath, ""), 16)
-	assert.Len(t, getPreflightChecks(true, true, network.UserNetworkingMode, constants.DefaultBundlePath, ""), 16)
+	assert.Len(t, getPreflightChecks(false, false, network.UserNetworkingMode, constants.DefaultBundlePath, preset.OpenShift), 16)
+	assert.Len(t, getPreflightChecks(true, true, network.UserNetworkingMode, constants.DefaultBundlePath, preset.OpenShift), 16)
 }

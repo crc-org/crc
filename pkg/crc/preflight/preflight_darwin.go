@@ -5,6 +5,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/version"
 )
@@ -137,7 +138,7 @@ func (filter preflightFilter) SetTray(enable bool) {
 // Passing 'SystemNetworkingMode' to getPreflightChecks currently achieves this
 // as there are no user networking specific checks
 func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true, true, network.SystemNetworkingMode, constants.DefaultBundlePath, "")
+	return getPreflightChecks(true, true, network.SystemNetworkingMode, constants.DefaultBundlePath, preset.OpenShift)
 }
 
 func getChecks(mode network.Mode, bundlePath string, preset crcpreset.Preset) []Check {
