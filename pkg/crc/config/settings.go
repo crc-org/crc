@@ -73,7 +73,7 @@ func RegisterSettings(cfg *Config) {
 	}
 
 	// Preset setting should be on top because CPUs/Memory config depend on it.
-	cfg.AddSetting(Preset, string(preset.OpenShift), validatePreset, RequiresDeleteMsg,
+	cfg.AddSetting(Preset, preset.OpenShift, validatePreset, RequiresDeleteMsg,
 		fmt.Sprintf("Virtal machine preset (alpha feature - valid values are: %s or %s)", preset.Podman, preset.OpenShift))
 	// Start command settings in config
 	cfg.AddSetting(Bundle, constants.DefaultBundlePath, ValidateBundlePath, SuccessfullyApplied,
