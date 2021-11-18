@@ -6,23 +6,35 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
-type Preset string
+type Preset int
 
 const (
-	Podman    Preset = "podman"
-	OpenShift Preset = "openshift"
+	Podman Preset = iota
+	OpenShift
 )
+
+func (preset Preset) String() string {
+	switch preset {
+	case Podman:
+		return "podman"
+	case OpenShift:
+		return "openshift"
+	}
+
+	return "invalid"
+}
 
 func ParsePresetE(input string) (Preset, error) {
 	switch input {
-	case string(Podman):
+	case Podman.String():
 		return Podman, nil
-	case string(OpenShift):
+	case OpenShift.String():
 		return OpenShift, nil
 	default:
 		return OpenShift, fmt.Errorf("Cannot parse preset '%s'", input)
 	}
 }
+
 func ParsePreset(input string) Preset {
 	preset, err := ParsePresetE(input)
 	if err != nil {
