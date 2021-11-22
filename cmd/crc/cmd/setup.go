@@ -22,7 +22,7 @@ var (
 
 func init() {
 	setupCmd.Flags().Bool(crcConfig.ExperimentalFeatures, false, "Allow the use of experimental features")
-	setupCmd.Flags().StringP(crcConfig.Bundle, "b", constants.DefaultBundlePath, "Bundle to use for VM")
+	setupCmd.Flags().StringP(crcConfig.Bundle, "b", constants.GetDefaultBundlePath(), "Bundle to use for VM")
 	setupCmd.Flags().BoolVar(&checkOnly, "check-only", false, "Only run the preflight checks, don't try to fix any misconfiguration")
 	addOutputFormatFlag(setupCmd)
 	rootCmd.AddCommand(setupCmd)

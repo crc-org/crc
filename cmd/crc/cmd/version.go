@@ -43,7 +43,7 @@ type version struct {
 func defaultVersion() *version {
 	var installedBundlePath string
 	if crcversion.IsInstaller() {
-		installedBundlePath = constants.DefaultBundlePath
+		installedBundlePath = constants.GetDefaultBundlePath()
 	}
 	return &version{
 		Version:             crcversion.GetCRCVersion(),

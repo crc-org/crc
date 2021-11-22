@@ -76,8 +76,8 @@ func RegisterSettings(cfg *Config) {
 	cfg.AddSetting(Preset, string(preset.OpenShift), validatePreset, RequiresDeleteMsg,
 		fmt.Sprintf("Virtual machine preset (alpha feature - valid values are: %s or %s)", preset.Podman, preset.OpenShift))
 	// Start command settings in config
-	cfg.AddSetting(Bundle, constants.DefaultBundlePath, ValidateBundlePath, SuccessfullyApplied,
-		fmt.Sprintf("Bundle path (string, default '%s')", constants.DefaultBundlePath))
+	cfg.AddSetting(Bundle, constants.GetDefaultBundlePath(), ValidateBundlePath, SuccessfullyApplied,
+		fmt.Sprintf("Bundle path (string, default '%s')", constants.GetDefaultBundlePath()))
 	cfg.AddSetting(CPUs, defaultCPUs(cfg), validateCPUs, RequiresRestartMsg,
 		fmt.Sprintf("Number of CPU cores (must be greater than or equal to '%d')", defaultCPUs(cfg)))
 	cfg.AddSetting(Memory, defaultMemory(cfg), validateMemory, RequiresRestartMsg,

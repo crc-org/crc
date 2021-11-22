@@ -148,7 +148,7 @@ func checkVsock() error {
 // Passing 'UserNetworkingMode' to getPreflightChecks currently achieves this
 // as there are no system networking specific checks
 func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true, true, network.UserNetworkingMode, constants.DefaultBundlePath, preset.OpenShift)
+	return getPreflightChecks(true, true, network.UserNetworkingMode, constants.GetDefaultBundlePath(), preset.OpenShift)
 }
 
 func getChecks(bundlePath string, preset crcpreset.Preset) []Check {
