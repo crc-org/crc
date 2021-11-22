@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/spf13/cast"
 )
 
 const (
 	configPropDoesntExistMsg = "Configuration property '%s' does not exist"
 	invalidProp              = "Value '%v' for configuration property '%s' is invalid, reason: %s"
+	invalidType              = "Type %T for configuration property '%s' is invalid"
 )
 
 type Config struct {
@@ -84,6 +86,10 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf(invalidProp, value, key, err)
 		}
+	case preset.Preset:
+		castValue = cast.ToString(value)
+	default:
+		return "", fmt.Errorf(invalidType, value, key)
 	}
 
 	if err := c.storage.Set(key, castValue); err != nil {
@@ -131,6 +137,13 @@ func (c *Config) Get(key string) SettingValue {
 		value = cast.ToString(value)
 	case bool:
 		value, err = cast.ToBoolE(value)
+		if err != nil {
+			return SettingValue{
+				Invalid: true,
+			}
+		}
+	case preset.Preset:
+		value, err = preset.ParsePresetE(cast.ToString(value))
 		if err != nil {
 			return SettingValue{
 				Invalid: true,
