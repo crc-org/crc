@@ -92,12 +92,11 @@ var (
 	MachineBaseDir     = CrcBaseDir
 	MachineCacheDir    = filepath.Join(MachineBaseDir, "cache")
 	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
-	DefaultBundlePath  = defaultBundlePath()
 	DaemonSocketPath   = filepath.Join(CrcBaseDir, "crc.sock")
 	KubeconfigFilePath = filepath.Join(MachineInstanceDir, DefaultName, "kubeconfig")
 )
 
-func defaultBundlePath() string {
+func GetDefaultBundlePath() string {
 	if version.IsInstaller() {
 		return filepath.Join(version.InstallPath(), GetDefaultBundle())
 	}

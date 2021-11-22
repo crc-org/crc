@@ -261,7 +261,7 @@ func Download() error {
 	if err != nil {
 		return err
 	}
-	if _, err := downloadInfo.Download(constants.DefaultBundlePath, 0664); err != nil {
+	if _, err := downloadInfo.Download(constants.GetDefaultBundlePath(), 0664); err != nil {
 		return err
 	}
 

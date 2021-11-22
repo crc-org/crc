@@ -354,7 +354,7 @@ func getAllPreflightChecks() []Check {
 	filter.SetDistro(distro())
 	filter.SetSystemdUser(distro())
 
-	return filter.Apply(getChecks(distro(), constants.DefaultBundlePath, preset.OpenShift))
+	return filter.Apply(getChecks(distro(), constants.GetDefaultBundlePath(), preset.OpenShift))
 }
 
 func getPreflightChecks(_ bool, _ bool, networkMode network.Mode, bundlePath string, preset crcpreset.Preset) []Check {
