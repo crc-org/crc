@@ -9,6 +9,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/preset"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/stretchr/testify/assert"
@@ -141,7 +142,7 @@ func TestUnmarshalMarshal(t *testing.T) {
 // check that the bundle name has the form "crc_libvirt_4.7.8.crcbundle" or "crc_libvirt_4.7.8_123456.crcbundle"
 func checkBundleName(t *testing.T, bundleName string) {
 	logging.Debugf("Checking bundle '%s", bundleName)
-	baseName := GetBundleNameWithoutExtension(constants.GetDefaultBundle())
+	baseName := GetBundleNameWithoutExtension(constants.GetDefaultBundle(preset.OpenShift))
 	require.True(t, strings.HasPrefix(bundleName, baseName), "%s should start with %s", bundleName, baseName)
 	bundleName = bundleName[len(baseName):]
 	require.True(t, strings.HasSuffix(bundleName, ".crcbundle"), "%s should have a '.crcbundle' extension", bundleName)
@@ -157,8 +158,8 @@ func checkBundleName(t *testing.T, bundleName string) {
 }
 
 func TestCustomBundleName(t *testing.T) {
-	checkBundleName(t, constants.GetDefaultBundle())
-	customBundleName := GetCustomBundleName(constants.GetDefaultBundle())
+	checkBundleName(t, constants.GetDefaultBundle(preset.OpenShift))
+	customBundleName := GetCustomBundleName(constants.GetDefaultBundle(preset.OpenShift))
 	checkBundleName(t, customBundleName)
 	customBundleName = GetCustomBundleName(customBundleName)
 	checkBundleName(t, customBundleName)

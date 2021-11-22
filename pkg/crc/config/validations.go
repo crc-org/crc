@@ -66,8 +66,8 @@ func ValidateMemory(value interface{}, preset crcpreset.Preset) (bool, string) {
 }
 
 // ValidateBundlePath checks if the provided bundle path is valid
-func ValidateBundlePath(value interface{}) (bool, string) {
-	if err := validation.ValidateBundlePath(cast.ToString(value)); err != nil {
+func ValidateBundlePath(value interface{}, preset crcpreset.Preset) (bool, string) {
+	if err := validation.ValidateBundlePath(cast.ToString(value), preset); err != nil {
 		return false, err.Error()
 	}
 	return true, ""

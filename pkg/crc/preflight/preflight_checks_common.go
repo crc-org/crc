@@ -10,17 +10,18 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	"github.com/pkg/errors"
 )
 
-func bundleCheck(bundlePath string) Check {
+func bundleCheck(bundlePath string, preset preset.Preset) Check {
 	return Check{
 		configKeySuffix:  "check-bundle-extracted",
 		checkDescription: "Checking if CRC bundle is extracted in '$HOME/.crc'",
 		check:            checkBundleExtracted(bundlePath),
 		fixDescription:   "Getting bundle for the CRC executable",
-		fix:              fixBundleExtracted(bundlePath),
+		fix:              fixBundleExtracted(bundlePath, preset),
 		flags:            SetupOnly,
 
 		labels: None,
@@ -71,7 +72,7 @@ func checkBundleExtracted(bundlePath string) func() error {
 	}
 }
 
-func fixBundleExtracted(bundlePath string) func() error {
+func fixBundleExtracted(bundlePath string, preset preset.Preset) func() error {
 	// Should be removed after 1.19 release
 	// This check will ensure correct mode for `~/.crc/cache` directory
 	// in case it exists.
@@ -80,25 +81,25 @@ func fixBundleExtracted(bundlePath string) func() error {
 	}
 
 	return func() error {
-		bundleDir := filepath.Dir(constants.GetDefaultBundlePath())
+		bundleDir := filepath.Dir(constants.GetDefaultBundlePath(preset))
 		logging.Debugf("Ensuring directory %s exists", bundleDir)
 		if err := os.MkdirAll(bundleDir, 0775); err != nil {
 			return fmt.Errorf("Cannot create directory %s: %v", bundleDir, err)
 		}
-		if err := validation.ValidateBundle(bundlePath); err != nil {
+		if err := validation.ValidateBundle(bundlePath, preset); err != nil {
 			var e *validation.InvalidPath
 			if !errors.As(err, &e) {
 				return err
 			}
-			if bundlePath != constants.GetDefaultBundlePath() {
+			if bundlePath != constants.GetDefaultBundlePath(preset) {
 				/* This message needs to be improved when the bundle has been set in crc config for example */
 				return fmt.Errorf("%s is invalid or missing, run 'crc setup' to download the bundle", bundlePath)
 			}
-			logging.Infof("Downloading %s", constants.GetDefaultBundle())
-			if err := bundle.Download(); err != nil {
+			logging.Infof("Downloading %s", constants.GetDefaultBundle(preset))
+			if err := bundle.Download(preset); err != nil {
 				return err
 			}
-			bundlePath = constants.GetDefaultBundlePath()
+			bundlePath = constants.GetDefaultBundlePath(preset)
 		}
 
 		logging.Infof("Uncompressing %s", bundlePath)

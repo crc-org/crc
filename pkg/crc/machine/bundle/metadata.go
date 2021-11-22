@@ -243,7 +243,7 @@ func GetCustomBundleName(bundleFilename string) string {
 
 type bundlesDownloadInfo map[string]*download.RemoteFile
 
-func getBundleDownloadInfo() (*download.RemoteFile, error) {
+func getBundleDownloadInfo(preset preset.Preset) (*download.RemoteFile, error) {
 	bundles, ok := bundleLocations[runtime.GOARCH]
 	if !ok {
 		return nil, fmt.Errorf("Unsupported architecture: %s", runtime.GOARCH)
@@ -256,12 +256,12 @@ func getBundleDownloadInfo() (*download.RemoteFile, error) {
 	return downloadInfo, nil
 }
 
-func Download() error {
-	downloadInfo, err := getBundleDownloadInfo()
+func Download(preset preset.Preset) error {
+	downloadInfo, err := getBundleDownloadInfo(preset)
 	if err != nil {
 		return err
 	}
-	if _, err := downloadInfo.Download(constants.GetDefaultBundlePath(), 0664); err != nil {
+	if _, err := downloadInfo.Download(constants.GetDefaultBundlePath(preset), 0664); err != nil {
 		return err
 	}
 
