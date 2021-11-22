@@ -95,7 +95,7 @@ var checkListForDistros = []checkListForDistro{
 			{check: checkCrcNetworkManagerDispatcherFile},
 			{check: checkLibvirtCrcNetworkAvailable},
 			{check: checkLibvirtCrcNetworkActive},
-			{check: checkBundleExtracted(constants.GetDefaultBundlePath())},
+			{check: checkBundleExtracted(constants.GetDefaultBundlePath(preset.OpenShift))},
 		},
 	},
 	{
@@ -133,7 +133,7 @@ var checkListForDistros = []checkListForDistro{
 			{check: checkCrcDnsmasqConfigFile},
 			{check: checkLibvirtCrcNetworkAvailable},
 			{check: checkLibvirtCrcNetworkActive},
-			{check: checkBundleExtracted(constants.GetDefaultBundlePath())},
+			{check: checkBundleExtracted(constants.GetDefaultBundlePath(preset.OpenShift))},
 		},
 	},
 	{
@@ -165,7 +165,7 @@ var checkListForDistros = []checkListForDistro{
 			{check: checkDaemonSystemdService},
 			{check: checkDaemonSystemdSockets},
 			{check: checkVsock},
-			{check: checkBundleExtracted(constants.GetDefaultBundlePath())},
+			{check: checkBundleExtracted(constants.GetDefaultBundlePath(preset.OpenShift))},
 		},
 	},
 	{
@@ -204,7 +204,7 @@ var checkListForDistros = []checkListForDistro{
 			{check: checkCrcNetworkManagerDispatcherFile},
 			{check: checkLibvirtCrcNetworkAvailable},
 			{check: checkLibvirtCrcNetworkActive},
-			{check: checkBundleExtracted(constants.GetDefaultBundlePath())},
+			{check: checkBundleExtracted(constants.GetDefaultBundlePath(preset.OpenShift))},
 		},
 	},
 	{
@@ -242,7 +242,7 @@ var checkListForDistros = []checkListForDistro{
 			{check: checkCrcDnsmasqConfigFile},
 			{check: checkLibvirtCrcNetworkAvailable},
 			{check: checkLibvirtCrcNetworkActive},
-			{check: checkBundleExtracted(constants.GetDefaultBundlePath())},
+			{check: checkBundleExtracted(constants.GetDefaultBundlePath(preset.OpenShift))},
 		},
 	},
 	{
@@ -274,7 +274,7 @@ var checkListForDistros = []checkListForDistro{
 			{check: checkDaemonSystemdService},
 			{check: checkDaemonSystemdSockets},
 			{check: checkVsock},
-			{check: checkBundleExtracted(constants.GetDefaultBundlePath())},
+			{check: checkBundleExtracted(constants.GetDefaultBundlePath(preset.OpenShift))},
 		},
 	},
 	{
@@ -313,7 +313,7 @@ var checkListForDistros = []checkListForDistro{
 			{check: checkCrcNetworkManagerDispatcherFile},
 			{check: checkLibvirtCrcNetworkAvailable},
 			{check: checkLibvirtCrcNetworkActive},
-			{check: checkBundleExtracted(constants.GetDefaultBundlePath())},
+			{check: checkBundleExtracted(constants.GetDefaultBundlePath(preset.OpenShift))},
 		},
 	},
 	{
@@ -351,7 +351,7 @@ var checkListForDistros = []checkListForDistro{
 			{check: checkCrcDnsmasqConfigFile},
 			{check: checkLibvirtCrcNetworkAvailable},
 			{check: checkLibvirtCrcNetworkActive},
-			{check: checkBundleExtracted(constants.GetDefaultBundlePath())},
+			{check: checkBundleExtracted(constants.GetDefaultBundlePath(preset.OpenShift))},
 		},
 	},
 	{
@@ -383,7 +383,7 @@ var checkListForDistros = []checkListForDistro{
 			{check: checkDaemonSystemdService},
 			{check: checkDaemonSystemdSockets},
 			{check: checkVsock},
-			{check: checkBundleExtracted(constants.GetDefaultBundlePath())},
+			{check: checkBundleExtracted(constants.GetDefaultBundlePath(preset.OpenShift))},
 		},
 	},
 	{
@@ -423,7 +423,7 @@ var checkListForDistros = []checkListForDistro{
 			{check: checkCrcNetworkManagerDispatcherFile},
 			{check: checkLibvirtCrcNetworkAvailable},
 			{check: checkLibvirtCrcNetworkActive},
-			{check: checkBundleExtracted(constants.GetDefaultBundlePath())},
+			{check: checkBundleExtracted(constants.GetDefaultBundlePath(preset.OpenShift))},
 		},
 	},
 	{
@@ -462,7 +462,7 @@ var checkListForDistros = []checkListForDistro{
 			{check: checkCrcDnsmasqConfigFile},
 			{check: checkLibvirtCrcNetworkAvailable},
 			{check: checkLibvirtCrcNetworkActive},
-			{check: checkBundleExtracted(constants.GetDefaultBundlePath())},
+			{check: checkBundleExtracted(constants.GetDefaultBundlePath(preset.OpenShift))},
 		},
 	},
 	{
@@ -495,7 +495,7 @@ var checkListForDistros = []checkListForDistro{
 			{check: checkDaemonSystemdSockets},
 			{configKeySuffix: "check-apparmor-profile-setup"},
 			{check: checkVsock},
-			{check: checkBundleExtracted(constants.GetDefaultBundlePath())},
+			{check: checkBundleExtracted(constants.GetDefaultBundlePath(preset.OpenShift))},
 		},
 	},
 }
@@ -509,7 +509,7 @@ func assertFuncEqual(t *testing.T, func1 interface{}, func2 interface{}) {
 }
 
 func assertExpectedPreflights(t *testing.T, distro *crcos.OsRelease, networkMode network.Mode, systemdResolved bool) {
-	preflights := getPreflightChecksForDistro(distro, networkMode, systemdResolved, constants.GetDefaultBundlePath(), preset.OpenShift)
+	preflights := getPreflightChecksForDistro(distro, networkMode, systemdResolved, constants.GetDefaultBundlePath(preset.OpenShift), preset.OpenShift)
 	var expected checkListForDistro
 	for _, expected = range checkListForDistros {
 		if expected.distro == distro && expected.networkMode == networkMode && expected.systemdResolved == systemdResolved {

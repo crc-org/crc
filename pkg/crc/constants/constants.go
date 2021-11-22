@@ -61,7 +61,14 @@ func GetAdminHelperURL() string {
 	return GetAdminHelperURLForOs(runtime.GOOS)
 }
 
-func defaultBundleForOs() map[string]string {
+func defaultBundleForOs(preset crcpreset.Preset) map[string]string {
+	if preset == crcpreset.Podman {
+		return map[string]string{
+			"darwin":  fmt.Sprintf("crc_podman_hyperkit_%s.crcbundle", version.GetPodmanVersion()),
+			"linux":   fmt.Sprintf("crc_podman_libvirt_%s.crcbundle", version.GetPodmanVersion()),
+			"windows": fmt.Sprintf("crc_podman_hyperv_%s.crcbundle", version.GetPodmanVersion()),
+		}
+	}
 	return map[string]string{
 		"darwin":  fmt.Sprintf("crc_hyperkit_%s.crcbundle", version.GetBundleVersion()),
 		"linux":   fmt.Sprintf("crc_libvirt_%s.crcbundle", version.GetBundleVersion()),
@@ -69,8 +76,8 @@ func defaultBundleForOs() map[string]string {
 	}
 }
 
-func GetDefaultBundle() string {
-	bundles := defaultBundleForOs()
+func GetDefaultBundle(preset crcpreset.Preset) string {
+	bundles := defaultBundleForOs(preset)
 	return bundles[runtime.GOOS]
 }
 
@@ -89,11 +96,11 @@ var (
 	KubeconfigFilePath = filepath.Join(MachineInstanceDir, DefaultName, "kubeconfig")
 )
 
-func GetDefaultBundlePath() string {
+func GetDefaultBundlePath(preset crcpreset.Preset) string {
 	if version.IsInstaller() {
-		return filepath.Join(version.InstallPath(), GetDefaultBundle())
+		return filepath.Join(version.InstallPath(), GetDefaultBundle(preset))
 	}
-	return filepath.Join(MachineCacheDir, GetDefaultBundle())
+	return filepath.Join(MachineCacheDir, GetDefaultBundle(preset))
 }
 
 func BinDir() string {

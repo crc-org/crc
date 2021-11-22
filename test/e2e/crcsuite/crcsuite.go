@@ -16,6 +16,7 @@ import (
 	"github.com/cucumber/messages-go/v10"
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/test/e2e/crcsuite/ux"
 	crcCmd "github.com/code-ready/crc/test/extended/crc/cmd"
 	"github.com/code-ready/crc/test/extended/util"
@@ -119,7 +120,7 @@ func FeatureContext(s *godog.Suite) {
 				fmt.Println("User must specify --bundle-version if bundle is embedded")
 				os.Exit(1)
 			}
-			bundleName = constants.GetDefaultBundle()
+			bundleName = constants.GetDefaultBundle(preset.OpenShift)
 		} else {
 			bundleEmbedded = false
 			_, bundleName = filepath.Split(bundleLocation)

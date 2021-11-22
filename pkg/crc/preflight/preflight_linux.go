@@ -354,7 +354,7 @@ func getAllPreflightChecks() []Check {
 	filter.SetDistro(distro())
 	filter.SetSystemdUser(distro())
 
-	return filter.Apply(getChecks(distro(), constants.GetDefaultBundlePath(), preset.OpenShift))
+	return filter.Apply(getChecks(distro(), constants.GetDefaultBundlePath(preset.OpenShift), preset.OpenShift))
 }
 
 func getPreflightChecks(_ bool, _ bool, networkMode network.Mode, bundlePath string, preset crcpreset.Preset) []Check {
@@ -386,7 +386,7 @@ func getChecks(distro *linux.OsRelease, bundlePath string, preset crcpreset.Pres
 	checks = append(checks, dnsmasqPreflightChecks...)
 	checks = append(checks, libvirtNetworkPreflightChecks...)
 	checks = append(checks, vsockPreflightCheck)
-	checks = append(checks, bundleCheck(bundlePath))
+	checks = append(checks, bundleCheck(bundlePath, preset))
 
 	return checks
 }
