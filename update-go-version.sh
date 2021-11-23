@@ -7,7 +7,7 @@ set -euo pipefail
 # This requires yq and jq in addition to fairly standard shell tools (curl, grep, sed, ...)
 
 golang_base_version=$1
-latest_version=$(curl --silent  'https://golang.org/dl/?mode=json&include=all' | jq -r '.[].files[].version'  |uniq | sed -e 's/go//' |sort -V |grep ${golang_base_version}|tail -1)
+latest_version=$(curl --location --silent  'https://go.dev/dl/?mode=json&include=all' | jq -r '.[].files[].version'  |uniq | sed -e 's/go//' |sort -V |grep ${golang_base_version}|tail -1)
 echo "Updating golang version to $latest_version"
 
 go mod edit -go ${golang_base_version}
