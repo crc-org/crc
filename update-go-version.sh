@@ -11,7 +11,7 @@ latest_version=$(curl --location --silent  'https://go.dev/dl/?mode=json&include
 echo "Updating golang version to $latest_version"
 
 go mod edit -go ${golang_base_version}
-sed -i "s,^FROM registry.svc.ci.openshift.org/openshift/release:golang-1\... AS builder\$,FROM registry.svc.ci.openshift.org/openshift/release:golang-${golang_base_version} AS builder," images/openshift-ci/Dockerfile
+sed -i "s,^FROM registry.ci.openshift.org/openshift/release:golang-1\... AS builder\$,FROM registry.ci.openshift.org/openshift/release:golang-${golang_base_version} AS builder," images/openshift-ci/Dockerfile
 sed -i "s,^FROM registry.access.redhat.com/ubi8/go-toolset:[.0-9]\+ as builder\$,FROM registry.access.redhat.com/ubi8/go-toolset:${latest_version} as builder," images/build-e2e/Dockerfile
 sed -i "s,^FROM registry.access.redhat.com/ubi8/go-toolset:[.0-9]\+ as builder\$,FROM registry.access.redhat.com/ubi8/go-toolset:${latest_version} as builder," images/build-integration/Dockerfile
 sed -i "s/GOVERSION: .*\$/GOVERSION: \"${latest_version}\"/" .circleci/config.yml
