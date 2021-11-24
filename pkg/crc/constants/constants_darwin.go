@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	OcExecutableName   = "oc"
-	TrayExecutableName = "CodeReady Containers.app"
+	OcExecutableName           = "oc"
+	PodmanRemoteExecutableName = "podman"
+	TrayExecutableName         = "CodeReady Containers.app"
 )
 
 var (

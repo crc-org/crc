@@ -245,10 +245,11 @@ Use the 'oc' command line interface:
   {{ .CommandLinePrefix }} {{ .EvalCommandLine }}
   {{ .CommandLinePrefix }} oc login -u {{ .ClusterConfig.DeveloperCredentials.Username }} {{ .ClusterConfig.URL }}
 `
-	startTemplateForPodman = `Enabled the podman socket.
+	startTemplateForPodman = `podman runtime is now running.
 
 Use the 'podman' command line interface:
   {{ .CommandLinePrefix }} {{ .EvalCommandLine }}
+  {{ .CommandLinePrefix }} {{ .PodmanRemote }} COMMAND
 `
 )
 
@@ -256,6 +257,7 @@ type templateVariables struct {
 	ClusterConfig     *clusterConfig
 	EvalCommandLine   string
 	CommandLinePrefix string
+	PodmanRemote      string
 }
 
 func writeTemplatedMessage(writer io.Writer, s *startResult) error {
@@ -298,6 +300,7 @@ func writePodmanTemplatedMessage(writer io.Writer, s *startResult) error {
 	return parsed.Execute(writer, &templateVariables{
 		EvalCommandLine:   shell.GenerateUsageHint(userShell, "crc podman-env"),
 		CommandLinePrefix: commandLinePrefix(userShell),
+		PodmanRemote:      constants.PodmanRemoteExecutableName,
 	})
 }
 
