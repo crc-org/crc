@@ -259,30 +259,42 @@ type templateVariables struct {
 }
 
 func writeTemplatedMessage(writer io.Writer, s *startResult) error {
-	parsed, err := template.New("template").Parse(startTemplateForPodman)
-	if err != nil {
-		return err
-	}
 	// This should be replaced with the config preset once
 	// we start using preset as part of config.
 	if s.ClusterConfig.ClusterCACert != "" {
-		parsed, err = template.New("template").Parse(startTemplateForOpenshift)
-		if err != nil {
-			return err
-		}
+		return writeOpenShiftTemplatedMessage(writer, s)
+	}
+
+	return writePodmanTemplatedMessage(writer, s)
+}
+
+func writeOpenShiftTemplatedMessage(writer io.Writer, s *startResult) error {
+	parsed, err := template.New("template").Parse(startTemplateForOpenshift)
+	if err != nil {
+		return err
 	}
 	userShell, err := shell.GetShell("")
 	if err != nil {
 		userShell = ""
 	}
 
-	if s.ClusterConfig.ClusterCACert != "" {
-		return parsed.Execute(writer, &templateVariables{
-			ClusterConfig:     s.ClusterConfig,
-			EvalCommandLine:   shell.GenerateUsageHint(userShell, "crc oc-env"),
-			CommandLinePrefix: commandLinePrefix(userShell),
-		})
+	return parsed.Execute(writer, &templateVariables{
+		ClusterConfig:     s.ClusterConfig,
+		EvalCommandLine:   shell.GenerateUsageHint(userShell, "crc oc-env"),
+		CommandLinePrefix: commandLinePrefix(userShell),
+	})
+}
+
+func writePodmanTemplatedMessage(writer io.Writer, s *startResult) error {
+	parsed, err := template.New("template").Parse(startTemplateForPodman)
+	if err != nil {
+		return err
 	}
+	userShell, err := shell.GetShell("")
+	if err != nil {
+		userShell = ""
+	}
+
 	return parsed.Execute(writer, &templateVariables{
 		EvalCommandLine:   shell.GenerateUsageHint(userShell, "crc podman-env"),
 		CommandLinePrefix: commandLinePrefix(userShell),
