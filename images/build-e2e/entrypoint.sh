@@ -43,10 +43,6 @@ validate=true
     && echo "PULL_SECRET_FILE_PATH required" \
     && validate=false
 
-[[ -z "${BUNDLE_VERSION+x}" && -z "${BUNDLE_LOCATION+x}" ]] \
-    && echo "BUNDLE_VERSION or BUNDLE_LOCATION required" \
-    && validate=false
-
 [[ $validate == false ]] && exit 1
 
 # Define remote connection
@@ -110,7 +106,7 @@ fi
 if [[ ! -z "${BUNDLE_LOCATION+x}" ]]; then
     OPTIONS="--bundle-location=${BUNDLE_LOCATION} "
 else
-    OPTIONS="--bundle-location=\"\" --bundle-version=${BUNDLE_VERSION} "
+    OPTIONS="--bundle-location=\"\" "
 fi
 if [[ ${PLATFORM} == 'windows' ]]; then
     OPTIONS+="--pull-secret-file=C:\\Users\\${TARGET_HOST_USERNAME}\\crc-e2e\\pull-secret "
