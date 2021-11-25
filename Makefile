@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-BUNDLE_VERSION ?= 4.9.5
+OPENSHIFT_VERSION ?= 4.9.5
 PODMAN_VERSION ?= 3.4.1
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 1.34.0
@@ -53,7 +53,7 @@ __check_defined = \
 
 # Linker flags
 VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
-	-X $(REPOPATH)/pkg/crc/version.bundleVersion=$(BUNDLE_VERSION) \
+	-X $(REPOPATH)/pkg/crc/version.bundleVersion=$(OPENSHIFT_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.podmanVersion=$(PODMAN_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.commitSha=$(COMMIT_SHA)
 RELEASE_VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/segment.WriteKey=cvpHsNcmGCJqVzf6YxrSnVlwFSAZaYtp
@@ -194,7 +194,7 @@ ifndef PULL_SECRET_PATH
 export PULL_SECRET_PATH = $(HOME)/Downloads/crc-pull-secret
 endif
 ifndef BUNDLE_PATH
-export BUNDLE_PATH = $(HOME)/Downloads/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+export BUNDLE_PATH = $(HOME)/Downloads/crc_libvirt_$(OPENSHIFT_VERSION).$(BUNDLE_EXTENSION)
 endif
 integration:
 	@go test -timeout=60m $(REPOPATH)/test/integration -v
@@ -206,13 +206,13 @@ ifndef PULL_SECRET_FILE
 	PULL_SECRET_FILE = --pull-secret-file=$(HOME)/Downloads/crc-pull-secret
 endif
 ifndef BUNDLE_LOCATION
-	BUNDLE_LOCATION = --bundle-location=$(HOME)/Downloads/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+	BUNDLE_LOCATION = --bundle-location=$(HOME)/Downloads/crc_libvirt_$(OPENSHIFT_VERSION).$(BUNDLE_EXTENSION)
 endif
 ifndef CRC_BINARY
 	CRC_BINARY = --crc-binary=$(GOPATH)/bin
 endif
 e2e:
-	@go test --timeout=180m $(REPOPATH)/test/e2e -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --bundle-version=$(BUNDLE_VERSION) $(GODOG_OPTS) $(CLEANUP_HOME) $(INSTALLER_PATH) $(USER_PASSWORD) 
+	@go test --timeout=180m $(REPOPATH)/test/e2e -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --bundle-version=$(OPENSHIFT_VERSION) $(GODOG_OPTS) $(CLEANUP_HOME) $(INSTALLER_PATH) $(USER_PASSWORD)
 
 .PHONY: e2e-stories e2e-story-health e2e-story-marketplace e2e-story-registry
 # cluster must already be running, crc must be in the path
@@ -250,7 +250,7 @@ cross-lint: golangci-lint
 gen_release_info:
 	@cat release-info.json.sample | sed s/@CRC_VERSION@/$(CRC_VERSION)/ > $(RELEASE_INFO)
 	@sed -i s/@GIT_COMMIT_SHA@/$(COMMIT_SHA)/ $(RELEASE_INFO)
-	@sed -i s/@OPENSHIFT_VERSION@/$(BUNDLE_VERSION)/ $(RELEASE_INFO)
+	@sed -i s/@OPENSHIFT_VERSION@/$(OPENSHIFT_VERSION)/ $(RELEASE_INFO)
 	@sed -i s/@PODMAN_VERSION@/$(PODMAN_VERSION)/ $(RELEASE_INFO)
 
 .PHONY: release
@@ -266,8 +266,8 @@ release: cross-lint embed_bundle gen_release_info
 	
 	cd $(RELEASE_DIR) && sha256sum * > sha256sum.txt
 
-HYPERKIT_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
-HYPERV_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+HYPERKIT_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperkit_$(OPENSHIFT_VERSION).$(BUNDLE_EXTENSION)
+HYPERV_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperv_$(OPENSHIFT_VERSION).$(BUNDLE_EXTENSION)
 
 .PHONY: embed_bundle check_bundledir
 check_bundledir:
@@ -325,19 +325,19 @@ $(GOPATH)/bin/gomod2rpmdeps:
 	@$(GOPATH)/bin/gomod2rpmdeps | sed -e '/__BUNDLED_REQUIRES__/r /dev/stdin' \
 					   -e '/__BUNDLED_REQUIRES__/d' \
 					   -e 's/__VERSION__/'$(CRC_VERSION)'/g' \
-					   -e 's/__OPENSHIFT_VERSION__/'$(BUNDLE_VERSION)'/g' \
+					   -e 's/__OPENSHIFT_VERSION__/'$(OPENSHIFT_VERSION)'/g' \
 				       $< >$@
 
 %: %.in
 	@sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' \
-	     -e 's/__OPENSHIFT_VERSION__/'$(BUNDLE_VERSION)'/g' \
+	     -e 's/__OPENSHIFT_VERSION__/'$(OPENSHIFT_VERSION)'/g' \
 	     $< >$@
 
 $(HOST_BUILD_DIR)/GenMsiWxs: packaging/windows/gen_msi_wxs.go
 	go build -o $@ -ldflags="-X main.crcVersion=$(CRC_VERSION)" $<
 
 CRC_EXE=crc.exe
-BUNDLE_NAME=crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+BUNDLE_NAME=crc_hyperv_$(OPENSHIFT_VERSION).$(BUNDLE_EXTENSION)
 
 .PHONY: msidir
 msidir: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
