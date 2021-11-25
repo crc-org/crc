@@ -28,7 +28,6 @@ var (
 	bundleEmbedded bool
 	bundleName     string
 	bundleLocation string
-	bundleVersion  string
 	pullSecretFile string
 	cleanupHome    bool
 )
@@ -116,10 +115,6 @@ func FeatureContext(s *godog.Suite) {
 		if bundleLocation == "" {
 			fmt.Println("Expecting the bundle to be embedded in the CRC executable.")
 			bundleEmbedded = true
-			if bundleVersion == "" {
-				fmt.Println("User must specify --bundle-version if bundle is embedded")
-				os.Exit(1)
-			}
 			bundleName = constants.GetDefaultBundle(preset.OpenShift)
 		} else {
 			bundleEmbedded = false
@@ -201,7 +196,6 @@ func ParseFlags() {
 	flag.StringVar(&bundleLocation, "bundle-location", "", "Path to the bundle to be used in tests")
 	flag.StringVar(&pullSecretFile, "pull-secret-file", "", "Path to the file containing pull secret")
 	flag.StringVar(&CRCExecutable, "crc-binary", "", "Path to the CRC executable to be tested")
-	flag.StringVar(&bundleVersion, "bundle-version", "", "Version of the bundle used in tests")
 	flag.BoolVar(&cleanupHome, "cleanup-home", true, "Try to remove crc home folder before starting the suite")
 
 	// Extend the context with tray when supported
