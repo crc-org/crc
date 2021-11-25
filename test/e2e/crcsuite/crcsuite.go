@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
@@ -120,7 +119,7 @@ func FeatureContext(s *godog.Suite) {
 				fmt.Println("User must specify --bundle-version if bundle is embedded")
 				os.Exit(1)
 			}
-			bundleName = constants.GetBundleFosOs(runtime.GOOS, bundleVersion)
+			bundleName = constants.GetDefaultBundle()
 		} else {
 			bundleEmbedded = false
 			_, bundleName = filepath.Split(bundleLocation)
