@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/os/shell"
 	"github.com/stretchr/testify/assert"
 )
@@ -21,6 +22,7 @@ func TestRenderActionPlainSuccess(t *testing.T) {
 	assert.NoError(t, render(&startResult{
 		Success: true,
 		ClusterConfig: &clusterConfig{
+			ClusterType:   preset.OpenShift,
 			ClusterCACert: "HKMLDJAJDV",
 			WebConsoleURL: defaultWebConsoleURL,
 			URL:           defaultAPIURL,
@@ -63,6 +65,7 @@ func TestRenderActionJSONSuccess(t *testing.T) {
 	assert.NoError(t, render(&startResult{
 		Success: true,
 		ClusterConfig: &clusterConfig{
+			ClusterType:   preset.OpenShift,
 			WebConsoleURL: defaultWebConsoleURL,
 			URL:           defaultAPIURL,
 			AdminCredentials: credentials{
@@ -78,6 +81,7 @@ func TestRenderActionJSONSuccess(t *testing.T) {
 	assert.Equal(t, `{
   "success": true,
   "clusterConfig": {
+    "clusterType": "openshift",
     "cacert": "",
     "webConsoleUrl": "https://console-openshift-console.apps-crc.testing",
     "url": "https://api.crc.testing:6443",
