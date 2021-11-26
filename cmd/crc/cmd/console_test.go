@@ -43,7 +43,8 @@ func TestConsoleJSONSuccess(t *testing.T) {
 	expectedJSONOut := fmt.Sprintf(`{
   "success": true,
   "clusterConfig": {
-	"cacert": "%s",
+    "clusterType": "openshift",
+    "cacert": "%s",
     "webConsoleUrl": "%s",
     "url": "%s",
     "adminCredentials": {

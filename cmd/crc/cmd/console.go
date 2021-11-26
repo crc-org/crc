@@ -118,6 +118,7 @@ func toConsoleClusterConfig(result *types.ConsoleResult) *clusterConfig {
 		return nil
 	}
 	return &clusterConfig{
+		ClusterType:   result.ClusterConfig.ClusterType,
 		ClusterCACert: result.ClusterConfig.ClusterCACert,
 		WebConsoleURL: result.ClusterConfig.WebConsoleURL,
 		URL:           result.ClusterConfig.ClusterAPI,

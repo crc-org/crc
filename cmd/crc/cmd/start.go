@@ -20,6 +20,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/preflight"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
 	crcos "github.com/code-ready/crc/pkg/os"
@@ -109,6 +110,7 @@ func toClusterConfig(result *types.StartResult) *clusterConfig {
 		return nil
 	}
 	return &clusterConfig{
+		ClusterType:   result.ClusterConfig.ClusterType,
 		ClusterCACert: result.ClusterConfig.ClusterCACert,
 		WebConsoleURL: result.ClusterConfig.WebConsoleURL,
 		URL:           result.ClusterConfig.ClusterAPI,
@@ -124,11 +126,12 @@ func toClusterConfig(result *types.StartResult) *clusterConfig {
 }
 
 type clusterConfig struct {
-	ClusterCACert        string      `json:"cacert"`
-	WebConsoleURL        string      `json:"webConsoleUrl"`
-	URL                  string      `json:"url"`
-	AdminCredentials     credentials `json:"adminCredentials"`
-	DeveloperCredentials credentials `json:"developerCredentials"`
+	ClusterType          preset.Preset `json:"clusterType"`
+	ClusterCACert        string        `json:"cacert"`
+	WebConsoleURL        string        `json:"webConsoleUrl"`
+	URL                  string        `json:"url"`
+	AdminCredentials     credentials   `json:"adminCredentials"`
+	DeveloperCredentials credentials   `json:"developerCredentials"`
 }
 
 type credentials struct {
@@ -261,9 +264,7 @@ type templateVariables struct {
 }
 
 func writeTemplatedMessage(writer io.Writer, s *startResult) error {
-	// This should be replaced with the config preset once
-	// we start using preset as part of config.
-	if s.ClusterConfig.ClusterCACert != "" {
+	if s.ClusterConfig.ClusterType == preset.OpenShift {
 		return writeOpenShiftTemplatedMessage(writer, s)
 	}
 
