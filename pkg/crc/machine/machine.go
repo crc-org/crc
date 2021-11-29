@@ -15,6 +15,12 @@ import (
 )
 
 func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*types.ClusterConfig, error) {
+	if !bundleInfo.IsOpenShift() {
+		return &types.ClusterConfig{
+			ClusterType: bundleInfo.GetBundleType(),
+		}, nil
+	}
+
 	kubeadminPassword, err := cluster.GetKubeadminPassword()
 	if err != nil {
 		return nil, fmt.Errorf("Error reading kubeadmin password from bundle %v", err)
