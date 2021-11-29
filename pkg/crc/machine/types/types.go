@@ -4,6 +4,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
 )
 
@@ -30,6 +31,7 @@ type StartConfig struct {
 }
 
 type ClusterConfig struct {
+	ClusterType   preset.Preset
 	ClusterCACert string
 	KubeConfig    string
 	KubeAdminPass string

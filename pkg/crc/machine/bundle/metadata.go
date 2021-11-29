@@ -176,7 +176,7 @@ func (bundle *CrcBundleInfo) GetBundleNameWithoutExtension() string {
 	return GetBundleNameWithoutExtension(bundle.GetBundleName())
 }
 
-func (bundle *CrcBundleInfo) getBundleType() preset.Preset {
+func (bundle *CrcBundleInfo) GetBundleType() preset.Preset {
 	if bundle.Type == "snc" || bundle.Type == "snc_custom" {
 		return preset.OpenShift
 	}
@@ -184,7 +184,7 @@ func (bundle *CrcBundleInfo) getBundleType() preset.Preset {
 }
 
 func (bundle *CrcBundleInfo) IsOpenShift() bool {
-	return bundle.getBundleType() == preset.OpenShift
+	return bundle.GetBundleType() == preset.OpenShift
 }
 
 func (bundle *CrcBundleInfo) verify() error {
