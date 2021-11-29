@@ -90,6 +90,7 @@ func TestStart(t *testing.T) {
 			KubeletStarted: true,
 			Success:        true,
 			ClusterConfig: types.ClusterConfig{
+				ClusterType:   "openshift",
 				ClusterCACert: "MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ",
 				KubeConfig:    "/tmp/kubeconfig",
 				KubeAdminPass: "foobar",

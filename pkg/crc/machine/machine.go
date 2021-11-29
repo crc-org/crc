@@ -28,6 +28,7 @@ func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*types.ClusterConfig, e
 		return nil, err
 	}
 	return &types.ClusterConfig{
+		ClusterType:   bundleInfo.GetBundleType(),
 		ClusterCACert: base64.StdEncoding.EncodeToString(clusterCACert),
 		KubeConfig:    bundleInfo.GetKubeConfigPath(),
 		KubeAdminPass: kubeadminPassword,
