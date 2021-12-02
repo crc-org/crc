@@ -1,9 +1,12 @@
 package preflight
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
@@ -49,35 +52,97 @@ func (check *Check) shouldSkip(config crcConfig.Storage) bool {
 	return config.Get(check.getSkipConfigName()).AsBool()
 }
 
+type State string
+
+const (
+	Unknown = State("unknown")
+	Passed  = State("passed")
+	Failed  = State("failed")
+	Skipped = State("skipped")
+)
+
+var id = 1 // used in the json-stream output
+
+type checkResult struct {
+	ID            int    `json:"id"`
+	PreflightType string `json:"type"`
+	Description   string `json:"description"`
+	State         State  `json:"result"`
+	Err           error  `json:"error"`
+}
+
+func printJSONResult(res *checkResult) {
+	res.ID = id
+	defer func() {
+		id++
+	}()
+	bin, err := json.MarshalIndent(res, "", "  ")
+	if err != nil {
+		panic("error while encoding to JSON")
+	}
+	fmt.Fprintln(os.Stdout, string(bin))
+}
+
 func (check *Check) doCheck(config crcConfig.Storage) error {
+	res := checkResult{
+		PreflightType: "check",
+		Description:   check.checkDescription,
+	}
+
+	if config.Get(crcConfig.JSONStream).AsBool() {
+		defer printJSONResult(&res)
+	}
+
 	if check.checkDescription == "" {
 		panic(fmt.Sprintf("Should not happen, empty description for check '%s'", check.configKeySuffix))
 	} else {
 		logging.Infof("%s", check.checkDescription)
 	}
 	if check.shouldSkip(config) {
+		res.State = Skipped
 		logging.Warn("Skipping above check...")
 		return nil
 	}
 
 	err := check.check()
 	if err != nil {
+		res.State = Failed
+		res.Err = err // FIXME: not sure this should be exposed
 		logging.Debug(err.Error())
+	} else {
+		res.State = Passed
 	}
 	return err
 }
 
-func (check *Check) doFix() error {
+func (check *Check) doFix(config crcConfig.Storage) error {
+	res := checkResult{
+		PreflightType: "fix",
+		Description:   check.fixDescription,
+	}
+	if config.Get(crcConfig.JSONStream).AsBool() {
+		defer printJSONResult(&res)
+	}
 	if check.fixDescription == "" {
 		panic(fmt.Sprintf("Should not happen, empty description for fix '%s'", check.configKeySuffix))
 	}
 	if check.flags&NoFix == NoFix {
+		res.State = Failed
+		res.Err = fmt.Errorf(check.fixDescription)
 		return fmt.Errorf(check.fixDescription)
 	}
 
 	logging.Infof("%s", check.fixDescription)
 
-	return check.fix()
+	err := check.fix()
+	if err != nil {
+		res.State = Failed
+		res.Err = err
+	} else {
+		res.State = Passed
+	}
+
+	return err
 }
 
 func (check *Check) doCleanUp() error {
@@ -103,17 +168,37 @@ func doPreflightChecks(config crcConfig.Storage, checks []Check) error {
 }
 
 func doFixPreflightChecks(config crcConfig.Storage, checks []Check, checkOnly bool) error {
-	for _, check := range checks {
-		if check.flags&CleanUpOnly == CleanUpOnly || check.flags&StartUpOnly == StartUpOnly {
-			continue
+	checksToRun := func() []Check {
+		var c = []Check{}
+		for _, check := range checks {
+			if check.flags&CleanUpOnly == CleanUpOnly || check.flags&StartUpOnly == StartUpOnly {
+				continue
+			}
+			c = append(c, check)
 		}
+		return c
+	}()
+
+	if constants.JSONStream {
+		total := map[string]int{
+			"total": len(checksToRun),
+		}
+
+		j, err := json.MarshalIndent(total, "", "  ")
+		if err != nil {
+			panic("error while encoding to JSON")
+		}
+		fmt.Fprintln(os.Stdout, string(j))
+	}
+
+	for _, check := range checksToRun {
 		err := check.doCheck(config)
 		if err == nil {
 			continue
 		} else if checkOnly {
 			return err
 		}
-		if err = check.doFix(); err != nil {
+		if err = check.doFix(config); err != nil {
 			return err
 		}
 	}

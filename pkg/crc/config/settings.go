@@ -32,6 +32,7 @@ const (
 	AutostartTray           = "autostart-tray"
 	KubeAdminPassword       = "kubeadmin-password"
 	Preset                  = "preset"
+	JSONStream              = "json-stream"
 )
 
 func RegisterSettings(cfg *Config) {
@@ -96,6 +97,8 @@ func RegisterSettings(cfg *Config) {
 		"Disable update check (true/false, default: false)")
 	cfg.AddSetting(ExperimentalFeatures, false, ValidateBool, SuccessfullyApplied,
 		"Enable experimental features (true/false, default: false)")
+	cfg.AddSetting(JSONStream, false, ValidateBool, SuccessfullyApplied,
+		"Write o/p stream of setup command in JSON format to Stdout")
 
 	if !version.IsInstaller() {
 		cfg.AddSetting(NetworkMode, string(defaultNetworkMode()), network.ValidateMode, network.SuccessfullyAppliedMode,
