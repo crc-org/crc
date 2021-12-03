@@ -118,9 +118,9 @@ func (bundle *CrcBundleInfo) GetKubeConfigPath() string {
 	return bundle.resolvePath(bundle.ClusterInfo.KubeConfig)
 }
 
-func (bundle *CrcBundleInfo) GetOcPath() string {
+func (bundle *CrcBundleInfo) getHelperPath(fileType FileType) string {
 	for _, file := range bundle.Storage.Files {
-		if file.Type == OcExecutable {
+		if file.Type == fileType {
 			return bundle.resolvePath(file.Name)
 		}
 	}
@@ -128,14 +128,12 @@ func (bundle *CrcBundleInfo) GetOcPath() string {
 	return ""
 }
 
-func (bundle *CrcBundleInfo) GetPodmanPath() string {
-	for _, file := range bundle.Storage.Files {
-		if file.Type == PodmanExecutable {
-			return bundle.resolvePath(file.Name)
-		}
-	}
+func (bundle *CrcBundleInfo) GetOcPath() string {
+	return bundle.getHelperPath(OcExecutable)
+}
 
-	return ""
+func (bundle *CrcBundleInfo) GetPodmanPath() string {
+	return bundle.getHelperPath(PodmanExecutable)
 }
 
 func (bundle *CrcBundleInfo) GetSSHKeyPath() string {
