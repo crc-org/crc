@@ -96,38 +96,31 @@ func (repo *Repository) Use(bundleName string) (*CrcBundleInfo, error) {
 	return bundleInfo, nil
 }
 
-func (bundle *CrcBundleInfo) createSymlinkOrCopyOpenShiftClient(ocBinDir string) error {
-	ocInBundle := bundle.GetOcPath()
-	if ocInBundle == "" {
+func (bundle *CrcBundleInfo) copyExecutableFromBundle(destDir string, fileType FileType, executableName string) error {
+	srcPath := bundle.getHelperPath(fileType)
+	if srcPath == "" {
+		// this can happen if the bundle metadata does not list an executable for 'fileType'
 		return nil
 	}
-	ocInBinDir := filepath.Join(ocBinDir, constants.OcExecutableName)
+	destPath := filepath.Join(destDir, executableName)
 
-	if err := os.MkdirAll(ocBinDir, 0750); err != nil {
+	if err := os.MkdirAll(destDir, 0750); err != nil {
 		return err
 	}
-	_ = os.Remove(ocInBinDir)
+	_ = os.Remove(destPath)
 	if runtime.GOOS == "windows" {
-		return crcos.CopyFileContents(ocInBundle, ocInBinDir, 0750)
+		return crcos.CopyFileContents(srcPath, destPath, 0750)
 	}
-	return os.Symlink(ocInBundle, ocInBinDir)
+	// on unix-like OSes, a symlink is good enough, no need for a copy
+	return os.Symlink(srcPath, destPath)
 }
 
-func (bundle *CrcBundleInfo) createSymlinkOrCopyPodmanClient(ocBinDir string) error {
-	podmanInBundle := bundle.GetPodmanPath()
-	if podmanInBundle == "" {
-		return nil
-	}
-	podmanInBinDir := filepath.Join(ocBinDir, filepath.Base(podmanInBundle))
+func (bundle *CrcBundleInfo) createSymlinkOrCopyOpenShiftClient(ocBinDir string) error {
+	return bundle.copyExecutableFromBundle(ocBinDir, OcExecutable, constants.OcExecutableName)
+}
 
-	if err := os.MkdirAll(ocBinDir, 0750); err != nil {
-		return err
-	}
-	_ = os.Remove(podmanInBinDir)
-	if runtime.GOOS == "windows" {
-		return crcos.CopyFileContents(podmanInBundle, podmanInBinDir, 0750)
-	}
-	return os.Symlink(podmanInBundle, podmanInBinDir)
+func (bundle *CrcBundleInfo) createSymlinkOrCopyPodmanClient(binDir string) error {
+	return bundle.copyExecutableFromBundle(binDir, PodmanExecutable, constants.PodmanRemoteExecutableName)
 }
 
 func (repo *Repository) Extract(path string) error {
