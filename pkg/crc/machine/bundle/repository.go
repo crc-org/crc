@@ -98,14 +98,8 @@ func (repo *Repository) Use(bundleName string) (*CrcBundleInfo, error) {
 
 func (bundle *CrcBundleInfo) createSymlinkOrCopyOpenShiftClient(ocBinDir string) error {
 	ocInBundle := bundle.GetOcPath()
-	// For backward-compatibility with bundles which shipped an oc binary in the bundle
-	// before fileList was added to crc-bundle-info.json
 	if ocInBundle == "" {
-		ocInBundle = bundle.resolvePath(constants.OcExecutableName)
-		if !crcos.FileExists(ocInBundle) {
-			// This is not an error, bundles for OpenShift 4.5 and older did not contain oc
-			return nil
-		}
+		return nil
 	}
 	ocInBinDir := filepath.Join(ocBinDir, constants.OcExecutableName)
 
