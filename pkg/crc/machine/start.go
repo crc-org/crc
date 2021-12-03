@@ -326,6 +326,9 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	proxyConfig.AddNoProxy(instanceIP)
 
 	if !vm.bundle.IsOpenShift() {
+		// **************************
+		//  END OF PODMAN START CODE
+		// **************************
 		return &types.StartResult{
 			Status: vmState,
 		}, nil
