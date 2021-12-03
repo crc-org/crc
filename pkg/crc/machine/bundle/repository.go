@@ -90,7 +90,7 @@ func (repo *Repository) Use(bundleName string) (*CrcBundleInfo, error) {
 			return nil, err
 		}
 	}
-	if err := bundleInfo.createSymlinkOrCopyPodmanClient(repo.OcBinDir); err != nil {
+	if err := bundleInfo.createSymlinkOrCopyPodmanRemote(repo.OcBinDir); err != nil {
 		return nil, err
 	}
 	return bundleInfo, nil
@@ -119,7 +119,7 @@ func (bundle *CrcBundleInfo) createSymlinkOrCopyOpenShiftClient(ocBinDir string)
 	return bundle.copyExecutableFromBundle(ocBinDir, OcExecutable, constants.OcExecutableName)
 }
 
-func (bundle *CrcBundleInfo) createSymlinkOrCopyPodmanClient(binDir string) error {
+func (bundle *CrcBundleInfo) createSymlinkOrCopyPodmanRemote(binDir string) error {
 	return bundle.copyExecutableFromBundle(binDir, PodmanExecutable, constants.PodmanRemoteExecutableName)
 }
 
