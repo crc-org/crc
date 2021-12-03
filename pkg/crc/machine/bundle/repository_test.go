@@ -36,27 +36,6 @@ func TestUse(t *testing.T) {
 	assert.Equal(t, "openshift-client", string(bin))
 }
 
-func TestUseWithOCFile(t *testing.T) {
-	dir, err := ioutil.TempDir("", "repo")
-	assert.NoError(t, err)
-	defer os.RemoveAll(dir)
-
-	fd, err := ioutil.TempFile("", "oc-bin-dir")
-	assert.NoError(t, err)
-	fd.Close()
-	defer os.RemoveAll(fd.Name())
-
-	createDummyBundleContent(t, dir, "crc_libvirt_4.6.1", "1.0")
-
-	repo := &Repository{
-		CacheDir: dir,
-		OcBinDir: fd.Name(),
-	}
-
-	_, err = repo.Use("crc_libvirt_4.6.1.crcbundle")
-	assert.NoError(t, err)
-}
-
 func TestExtract(t *testing.T) {
 	dir, err := ioutil.TempDir("", "repo")
 	assert.NoError(t, err)

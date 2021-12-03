@@ -109,13 +109,6 @@ func (bundle *CrcBundleInfo) createSymlinkOrCopyOpenShiftClient(ocBinDir string)
 	}
 	ocInBinDir := filepath.Join(ocBinDir, constants.OcExecutableName)
 
-	// this is needed when upgrading from crc versions anterior to commit 1.11.0~5
-	if info, err := os.Stat(ocBinDir); err == nil && !info.IsDir() {
-		if err := os.Remove(ocBinDir); err != nil {
-			return err
-		}
-	}
-
 	if err := os.MkdirAll(ocBinDir, 0750); err != nil {
 		return err
 	}
