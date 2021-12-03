@@ -372,14 +372,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		logging.Warn(fmt.Sprintf("Failed to query DNS from host: %v", err))
 	}
 
-	// Remove this block after 2-3 release (after v1.32.0)
-	// This is just to support 4.7 bundle with current master
-	if strings.HasPrefix(vm.bundle.GetOpenshiftVersion(), "4.7.") {
-		if err := cluster.EnsurePullSecretPresentOnInstanceDisk(sshRunner, startConfig.PullSecret); err != nil {
-			return nil, errors.Wrap(err, "Failed to update VM pull secret")
-		}
-	}
-
 	// Check the certs validity inside the vm
 	logging.Info("Verifying validity of the kubelet certificates...")
 	certsExpired, err := cluster.CheckCertsValidity(sshRunner)
