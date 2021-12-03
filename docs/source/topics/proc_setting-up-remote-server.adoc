@@ -38,14 +38,14 @@ $ sudo dnf install haproxy /usr/sbin/semanage
 . Modify the firewall to allow communication with the cluster:
 +
 ----
-$ sudo systemctl start firewalld
-$ sudo firewall-cmd --add-port=80/tcp --permanent
-$ sudo firewall-cmd --add-port=6443/tcp --permanent
-$ sudo firewall-cmd --add-port=443/tcp --permanent
-$ sudo systemctl restart firewalld
+$ sudo systemctl enable --now firewalld
+$ sudo firewall-cmd --add-service=http --permanent
+$ sudo firewall-cmd --add-service=https --permanent
+$ sudo firewall-cmd --add-service=kube-apiserver --permanent
+$ sudo firewall-cmd --reload
 ----
 
-. For SELinux, allow listening to TCP port 6443:
+. For SELinux, allow HAProxy to listen on TCP port 6443 to serve kube-apiserver on this port:
 +
 ----
 $ sudo semanage port -a -t http_port_t -p tcp 6443
