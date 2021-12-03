@@ -318,13 +318,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to change permissions to root podman socket")
 	}
 
-	proxyConfig, err := getProxyConfig(vm.bundle.ClusterInfo.BaseDomain)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error getting proxy configuration")
-	}
-	proxyConfig.ApplyToEnvironment()
-	proxyConfig.AddNoProxy(instanceIP)
-
 	if !vm.bundle.IsOpenShift() {
 		// **************************
 		//  END OF PODMAN START CODE
@@ -333,6 +326,13 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			Status: vmState,
 		}, nil
 	}
+
+	proxyConfig, err := getProxyConfig(vm.bundle.ClusterInfo.BaseDomain)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting proxy configuration")
+	}
+	proxyConfig.ApplyToEnvironment()
+	proxyConfig.AddNoProxy(instanceIP)
 
 	// Create servicePostStartConfig for DNS checks and DNS start.
 	servicePostStartConfig := services.ServicePostStartConfig{
