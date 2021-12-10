@@ -6,7 +6,7 @@ WORKDIR /go/src/github.com/code-ready/crc
 COPY . .
 RUN make cross
 
-FROM registry.centos.org/centos/centos:7
+FROM registry.centos.org/centos/centos:8
 COPY --from=builder /go/src/github.com/code-ready/crc /opt/crc
 COPY --from=builder /go/src/github.com/code-ready/crc/out/linux-amd64/crc /bin/crc
 COPY --from=builder /go/src/github.com/code-ready/crc/images/openshift-ci/mock-nss.sh /bin/mock-nss.sh
