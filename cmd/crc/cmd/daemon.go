@@ -82,6 +82,10 @@ var daemonCmd = &cobra.Command{
 					Name: "crc.testing.",
 					Records: []types.Record{
 						{
+							Name: "host",
+							IP:   net.ParseIP(hostVirtualIP),
+						},
+						{
 							Name: "gateway",
 							IP:   net.ParseIP("192.168.127.1"),
 						},
@@ -107,22 +111,12 @@ var daemonCmd = &cobra.Command{
 		}
 		if config.Get(crcConfig.HostNetworkAccess).AsBool() {
 			log.Debugf("Enabling host network access")
-			for i := range virtualNetworkConfig.DNS {
-				zone := &virtualNetworkConfig.DNS[i]
-				if zone.Name != "crc.testing." {
-					continue
-				}
-				log.Debugf("Adding \"host\" -> %s DNS record to crc.testing. zone", hostVirtualIP)
-
-				zone.Records = append(zone.Records, types.Record{Name: "host", IP: net.ParseIP(hostVirtualIP)})
-			}
-
 			if virtualNetworkConfig.NAT == nil {
 				virtualNetworkConfig.NAT = make(map[string]string)
 			}
 			virtualNetworkConfig.NAT[hostVirtualIP] = "127.0.0.1"
-			virtualNetworkConfig.GatewayVirtualIPs = []string{hostVirtualIP}
 		}
+		virtualNetworkConfig.GatewayVirtualIPs = []string{hostVirtualIP}
 		err := run(&virtualNetworkConfig)
 		return err
 	},
