@@ -170,6 +170,17 @@ func run(configuration *types.Configuration) error {
 		}
 	}()
 
+	networkListener, err := vn.Listen("tcp", fmt.Sprintf("%s:7777", hostVirtualIP))
+	if err != nil {
+		return err
+	}
+	go func() {
+		mux := networkAPIMux(vn)
+		if err := http.Serve(networkListener, handlers.LoggingHandler(os.Stderr, mux)); err != nil {
+			errCh <- errors.Wrap(err, "host virtual IP http.Serve failed")
+		}
+	}()
+
 	go func() {
 		if runtime.GOOS == "darwin" {
 			for {
@@ -240,6 +251,12 @@ func gatewayAPIMux() *http.ServeMux {
 			return adminhelper.RemoveFromHostsFile(hostnames...)
 		})
 	})
+	return mux
+}
+
+func networkAPIMux(vn *virtualnetwork.VirtualNetwork) *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.Handle("/", vn.Mux())
 	return mux
 }
 
