@@ -1,0 +1,30 @@
+name: Run 'make check' on Windows
+on:
+  push:
+    branches:
+      - "main"
+      - "old-main"
+  pull_request: {}
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-2019
+          - windows-2022
+        go:
+          - 1.16
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Disable gofmt/goimports linters on Windows
+        run: sed -i "/gofmt/d" .golangci.yml && sed -i "/goimports/d" .golangci.yml
+        shell: bash
+      - name: make check
+        run: make check
