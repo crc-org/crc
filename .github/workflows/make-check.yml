@@ -1,0 +1,29 @@
+name: Run 'make check'
+on:
+  push:
+    branches:
+      - "main"
+      - "old-main"
+  pull_request: {}
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macOS-10.15
+          - macOS-11
+          - ubuntu-latest
+          - ubuntu-18.04
+        go:
+          - 1.16
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Build
+        run: make check
