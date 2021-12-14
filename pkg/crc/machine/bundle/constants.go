@@ -8,25 +8,25 @@ import (
 var bundleLocations = map[string]bundlesDownloadInfo{
 	"amd64": {
 		"darwin": {
-			preset.OpenShift: download.NewRemoteFile("https://storage.googleapis.com/crc-bundle-github-ci/4.9.5/crc_hyperkit_4.9.5.crcbundle",
-				"25dca789468f5b59be039cd26948f800498b9eaf5a26e540b8d9c99bfc40d0fc"),
+			preset.OpenShift: download.NewRemoteFile("https://storage.googleapis.com/crc-bundle-github-ci/4.9.10/crc_hyperkit_4.9.10.crcbundle",
+				"c7a4bc040a1a7347eb2ab6947f157f586dd500878f91c481c89be1ab0f55c69a"),
 			preset.Podman: download.NewRemoteFile("https://storage.googleapis.com/crc-bundle-github-ci/3.4.1/crc_podman_hyperkit_3.4.1.crcbundle",
-				"91c661d3b9417bbf0114790c2352d314f3047f1093f65c30b1eb3a8f29c34583"),
+				"0b449988906fff01c7fa018c7c163335e95604a1f1feec5828c954bfeb7f47ba"),
 		},
 
 		"linux": {
 			preset.OpenShift: download.NewRemoteFile(
-				"https://storage.googleapis.com/crc-bundle-github-ci/4.9.5/crc_libvirt_4.9.5.crcbundle",
-				"603d87599f4c129683d3a8a11bcd41f240a529b2dd81075755eebf3d2b8cacc6",
+				"https://storage.googleapis.com/crc-bundle-github-ci/4.9.10/crc_libvirt_4.9.10.crcbundle",
+				"9c50de98600eb4275f1fbe0515d9cedfd9e16509b024192c20c8facae328dc3e",
 			),
 			preset.Podman: download.NewRemoteFile("https://storage.googleapis.com/crc-bundle-github-ci/3.4.1/crc_podman_libvirt_3.4.1.crcbundle",
-				"be090392382b84ae340ea3593acbe359f997c84a229e1c695dfe711726fff2aa"),
+				"e1ecc16473b1bbb9e4e781c6eb5b004fc6e93500adf0e6d5286ae0442253d281"),
 		},
 		"windows": {
-			preset.OpenShift: download.NewRemoteFile("https://storage.googleapis.com/crc-bundle-github-ci/4.9.5/crc_hyperv_4.9.5.crcbundle",
-				"38ca501ceb4c3a2a58db942022548a2dd9d05af6558b416e680ba81463fab3ef"),
+			preset.OpenShift: download.NewRemoteFile("https://storage.googleapis.com/crc-bundle-github-ci/4.9.10/crc_hyperv_4.9.10.crcbundle",
+				"926fe58e9f364da720c1ac8c301dae293586063a9e08c3f30716af4d81627acc"),
 			preset.Podman: download.NewRemoteFile("https://storage.googleapis.com/crc-bundle-github-ci/3.4.1/crc_podman_hyperv_3.4.1.crcbundle",
-				"6edd0cbf0c7e1a1211bc3d4239ff62d5c8acdf436e13f05fd8495cbb450eea0a"),
+				"9e0b6ac883f942f2e9e6efce60c9664e7247bad985dd44eeb2dbb7f5bb4d6ddd"),
 		},
 	},
 }
