@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -316,6 +317,12 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	if _, _, err := sshRunner.RunPrivileged("make root Podman socket accessible", "chmod 777 /run/podman/ /run/podman/podman.sock"); err != nil {
 		return nil, errors.Wrap(err, "Failed to change permissions to root podman socket")
+	}
+
+	if !vm.bundle.IsOpenShift() && runtime.GOOS != "darwin" {
+		if _, _, err := sshRunner.RunPrivileged("Add dns server to tap interface", "systemd-resolve --interface tap0 --set-dns 192.168.127.1"); err != nil {
+			return nil, errors.Wrap(err, "Failed to add dns server to tap interface")
+		}
 	}
 
 	if !vm.bundle.IsOpenShift() {
