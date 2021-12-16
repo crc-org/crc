@@ -8,7 +8,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
-func NewMux(config crcConfig.Storage, machine machine.Client, logger Logger, telemetry Telemetry) http.Handler {
+func NewMux(config *crcConfig.Config, machine machine.Client, logger Logger, telemetry Telemetry) http.Handler {
 	handler := NewHandler(config, machine, logger, telemetry)
 
 	server := newServerWithRoutes(handler)

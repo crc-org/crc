@@ -7,7 +7,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/preflight"
 )
 
-func setupNewInMemoryConfig() config.Storage {
+func setupNewInMemoryConfig() *config.Config {
 	storage := config.NewEmptyInMemoryStorage()
 	cfg := config.New(&skipPreflights{
 		storage: storage,
