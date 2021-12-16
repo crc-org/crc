@@ -17,7 +17,7 @@ import (
 type Handler struct {
 	Logger    Logger
 	Client    machine.Client
-	Config    crcConfig.Storage
+	Config    *crcConfig.Config
 	Telemetry Telemetry
 }
 
@@ -36,7 +36,7 @@ func (h *Handler) Logs(c *context) error {
 	})
 }
 
-func NewHandler(config crcConfig.Storage, machine machine.Client, logger Logger, telemetry Telemetry) *Handler {
+func NewHandler(config *crcConfig.Config, machine machine.Client, logger Logger, telemetry Telemetry) *Handler {
 	return &Handler{
 		Client:    machine,
 		Config:    config,
@@ -83,6 +83,7 @@ func (h *Handler) PowerOff(c *context) error {
 }
 
 func (h *Handler) Start(c *context) error {
+	crcConfig.RegisterSettings(h.Config)
 	var parsedArgs client.StartConfig
 	if len(c.requestBody) > 0 {
 		if err := c.Bind(&parsedArgs); err != nil {
@@ -215,6 +216,7 @@ func (h *Handler) UnsetConfig(c *context) error {
 }
 
 func (h *Handler) GetConfig(c *context) error {
+	crcConfig.RegisterSettings(h.Config)
 	queries := c.url.Query()
 	var req client.GetOrUnsetConfigRequest
 	for key := range queries {
