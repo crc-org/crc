@@ -272,7 +272,7 @@ HYPERV_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperv_$(OPENSHIFT_VERSION).$(BUNDLE_EXTEN
 .PHONY: embed_bundle check_bundledir
 check_bundledir:
 ifeq ($(MOCK_BUNDLE),true)
-	touch $(HYPERKIT_BUNDLENAME) $(HYPERV_BUNDLENAME)
+	touch $(HYPERV_BUNDLENAME)
 endif
 	@$(call check_defined, BUNDLE_DIR, "Embedding bundle requires BUNDLE_DIR set to a directory containing CRC bundles for all hypervisors")
 
@@ -290,7 +290,7 @@ goversioncheck:
 TRAY_RELEASE ?= packaging/tmp/crc-tray-macos.tar.gz
 
 packagedir: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
-packagedir: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
+packagedir: clean $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
 	echo -n $(CRC_VERSION) > packaging/VERSION
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
@@ -305,7 +305,6 @@ packagedir: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)
 
 	mv packaging/tmp/* packaging/root/"$(MACOS_INSTALL_PATH)"
 
-	cp $(HYPERKIT_BUNDLENAME) packaging/root/"$(MACOS_INSTALL_PATH)"
 	cp $(BUILD_DIR)/macos-amd64/crc packaging/root/"$(MACOS_INSTALL_PATH)"
 	cp LICENSE packaging/darwin/Resources/LICENSE.txt
 	pkgbuild --analyze --root packaging/root packaging/components.plist
