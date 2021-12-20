@@ -1,12 +1,9 @@
 <?xml version="1.0"?>
-<?define crcBundleName="{{.BundleName}}"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
     <Product Id="*" UpgradeCode="53DE5BFA-0E53-44E7-8D4F-07E37E59A9AB" Name="CodeReady Containers" Version="{{.Version}}" Manufacturer="Red Hat Inc." Language="1033">
         <Package Id ="*" InstallerVersion="300" Compressed="yes" Description="CodeReady Containers {{.Version}}" Comments="This installs CodeReady Containers {{.Version}}" InstallScope="perMachine" />
-        {{range $index, $element := .Parts}}
-        <Media Id="{{inc $index}}" EmbedCab="{{if eq (inc $index) (len $.Parts)}}yes{{else}}no{{end}}" Cabinet="cab{{inc $index}}.cab" />
-        {{end}}
+	    <Media Id="1" EmbedCab="yes" Cabinet="cab1.cab"/>
         <MajorUpgrade AllowDowngrades="yes" />
         <WixVariable Id="WixUIBannerBmp" Value=".\Resources\banner.png"/>
         <WixVariable Id="WixUIDialogBmp" Value=".\Resources\background.png"/>
@@ -37,21 +34,16 @@
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
                 <Directory Id="INSTALLDIR" Name="CodeReady Containers">
-                    {{range $index, $element := .Parts}}
-                    <Component Id="CrcBundlePart{{inc $index}}" Guid="*">
-                        <File Id="CrcBundlePart{{inc $index}}" Source="SourceDir\$(var.crcBundleName).{{inc $index}}" KeyPath="yes" DiskId="{{inc $index}}" />
-                    </Component>
-                    {{end}}
                     <Component Id="CrcExe" Guid="*">
-                        <File Id="CrcExe" Source="SourceDir\crc.exe" KeyPath="yes" DiskId="{{len .Parts}}" />
+                        <File Id="CrcExe" Source="SourceDir\crc.exe" KeyPath="yes" DiskId="1" />
                     </Component>
                     <Component Id="AdminHelper" Guid="*">
-                        <File Id="AdminHelper" Source="SourceDir\crc-admin-helper-windows.exe" KeyPath="yes" DiskId="{{len .Parts}}" />
+                        <File Id="AdminHelper" Source="SourceDir\crc-admin-helper-windows.exe" KeyPath="yes" DiskId="1" />
                         <ServiceInstall Name="CodeReadyContainersAdminHelper" Description="Perform administrative tasks for the user" Arguments="daemon" DisplayName="CodeReady Containers Admin Helper" ErrorControl="normal" Start="auto" Type="ownProcess" />
                         <ServiceControl Id="StartAdminHelperService" Name="CodeReadyContainersAdminHelper" Start='install' Stop='both' Remove='uninstall' />
                     </Component>
                     <Component Id="CrcTray" Guid="*">
-                        <File Id="CrcTray" Source="SourceDir\crc-tray.exe" KeyPath="yes" DiskId="{{len .Parts}}" />
+                        <File Id="CrcTray" Source="SourceDir\crc-tray.exe" KeyPath="yes" DiskId="1" />
                         <RemoveFile Id="RemoveInstallFiles" Name="*.*" On="uninstall" />
                     </Component>
                     <Component Id="AddUserToCrcUsers" Guid="0C793EE7-109A-474B-9651-77E0A83BAF2D" KeyPath="yes">
@@ -86,10 +78,6 @@
                 </Component>
             </Directory>
         </Directory>
-        <SetProperty Action="CAJoinBundle" Id="JoinBundle" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; copy /b {{strjoin .Parts "+"}} $(var.crcBundleName)' Before="JoinBundle" Sequence="execute"/>
-        <CustomAction Id="JoinBundle" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
-        <SetProperty Action="CARemoveParts" Id="RemoveParts" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; del /f /q {{strjoin .Parts " "}}' Before="RemoveParts" Sequence="execute"/>
-        <CustomAction Id="RemoveParts" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" />
 
         <SetProperty Action="CACreateCrcUsersGroup" Id="CreateCrcGroup" Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /comment:"Group for CodeReady Containers users" /add' Before="CreateCrcGroup" Sequence="execute"/>
         <CustomAction Id="CreateCrcGroup" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
@@ -107,19 +95,14 @@
         <util:CloseApplication Id = "TrayRunning" Description="Please exit CodeReady Containers from tray and run the installation again." Target="crc-tray.exe" RebootPrompt="no" PromptToContinue="yes" />
 
         <InstallExecuteSequence>
-            <Custom Action="JoinBundle" After="InstallFiles">NOT Installed AND NOT PATCH</Custom>
-            <Custom Action="RemoveParts" After="JoinBundle">NOT Installed AND NOT PATCH</Custom>
             <Custom Action="CreateCrcGroup" Before="ConfigureUsers"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <Custom Action="AddUserToHypervAdminGroup" After="InstallHyperv"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <Custom Action="RemoveCrcGroup" After="RemoveFolders"> Installed AND NOT PATCH AND REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE</Custom>
-            <Custom Action="InstallHyperv" After="RemoveParts"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
-            <Custom Action="RemoveCrcGroupRollback" Before="CreateCrcGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
+            <Custom Action="InstallHyperv" Before="CreateCrcGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
+            <Custom Action="RemoveCrcGroupRollback" After="CreateCrcGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <ScheduleReboot After="InstallFinalize"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</ScheduleReboot>
         </InstallExecuteSequence>
         <Feature Id="DefaultFeature" Level="1">
-            {{range $index, $element := .Parts}}
-            <ComponentRef Id="CrcBundlePart{{inc $index}}"/>
-            {{end}}
             <ComponentRef Id="CrcExe" />
             <ComponentRef Id="CrcTray" />
             <ComponentRef Id="AdminHelper" />
@@ -133,8 +116,6 @@
             <UIRef Id="WixUI_ErrorProgressText"/>
             <!-- Define the installer UI -->
             <UIRef Id="WixUI_HK"/>
-            <ProgressText Action="JoinBundle">Combining bundle parts</ProgressText>
-            <ProgressText Action="RemoveParts">Removing bundle parts after combining</ProgressText>
             <ProgressText Action="CreateCrcGroup">Creating crc-users group</ProgressText>
             <ProgressText Action="RemoveCrcGroup">Removing crc-users group</ProgressText>
             <ProgressText Action="InstallHyperv">Installing Hyper-V</ProgressText>
