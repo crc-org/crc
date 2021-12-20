@@ -29,6 +29,7 @@ type ClusterStatusResult struct {
 	CrcStatus        string
 	OpenshiftStatus  string
 	OpenshiftVersion string
+	PodmanVersion    string
 	DiskUse          int64
 	DiskSize         int64
 	Error            string
