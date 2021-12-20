@@ -157,3 +157,7 @@ func GetNetworkMode(config Storage) network.Mode {
 	}
 	return network.ParseMode(config.Get(NetworkMode).AsString())
 }
+
+func UpdateDefaults(cfg *Config) {
+	RegisterSettings(cfg)
+}
