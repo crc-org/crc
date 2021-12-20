@@ -11,6 +11,7 @@ import (
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/docker/go-units"
 	"github.com/spf13/cobra"
 )
@@ -40,6 +41,7 @@ type status struct {
 	DiskSize         int64                        `json:"diskSize,omitempty"`
 	CacheUsage       int64                        `json:"cacheUsage,omitempty"`
 	CacheDir         string                       `json:"cacheDir,omitempty"`
+	Preset           preset.Preset                `json:"preset"`
 }
 
 func runStatus(writer io.Writer, client machine.Client, cacheDir, outputFormat string) error {
@@ -77,6 +79,7 @@ func getStatus(client machine.Client, cacheDir string) *status {
 		DiskSize:         clusterStatus.DiskSize,
 		CacheUsage:       size,
 		CacheDir:         cacheDir,
+		Preset:           clusterStatus.Preset,
 	}
 }
 

@@ -13,6 +13,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/stretchr/testify/assert"
 )
@@ -71,6 +72,7 @@ func TestStatus(t *testing.T) {
 			DiskUse:          int64(10000000000),
 			DiskSize:         int64(20000000000),
 			Success:          true,
+			Preset:           preset.OpenShift,
 		},
 		statusResult,
 	)

@@ -9,6 +9,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/pkg/errors"
 )
 
@@ -37,8 +38,10 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 		if vm.bundle.IsOpenShift() {
 			clusterStatusResult.OpenshiftStatus = types.OpenshiftStopped
 			clusterStatusResult.OpenshiftVersion = vm.bundle.GetOpenshiftVersion()
+			clusterStatusResult.Preset = preset.OpenShift
 		} else {
 			clusterStatusResult.PodmanVersion = vm.bundle.GetPodmanVersion()
+			clusterStatusResult.Preset = preset.Podman
 		}
 		return clusterStatusResult, nil
 	}
@@ -57,8 +60,10 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	if vm.bundle.IsOpenShift() {
 		clusterStatusResult.OpenshiftStatus = getOpenShiftStatus(context.Background(), ip)
 		clusterStatusResult.OpenshiftVersion = vm.bundle.GetOpenshiftVersion()
+		clusterStatusResult.Preset = preset.OpenShift
 	} else {
 		clusterStatusResult.PodmanVersion = vm.bundle.GetPodmanVersion()
+		clusterStatusResult.Preset = preset.Podman
 	}
 	return clusterStatusResult, nil
 }
