@@ -69,6 +69,7 @@ func TestStatus(t *testing.T) {
 			CrcStatus:        "Running",
 			OpenshiftStatus:  "Running",
 			OpenshiftVersion: "4.5.1",
+			PodmanVersion:    "3.3.1",
 			DiskUse:          int64(10000000000),
 			DiskSize:         int64(20000000000),
 			Success:          true,
