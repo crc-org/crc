@@ -97,9 +97,6 @@ var (
 )
 
 func GetDefaultBundlePath(preset crcpreset.Preset) string {
-	if version.IsInstaller() {
-		return filepath.Join(version.InstallPath(), GetDefaultBundle(preset))
-	}
 	return filepath.Join(MachineCacheDir, GetDefaultBundle(preset))
 }
 
