@@ -57,6 +57,7 @@ func (h *Handler) Status(c *context) error {
 		DiskUse:          res.DiskUse,
 		DiskSize:         res.DiskSize,
 		Success:          true,
+		Preset:           res.Preset,
 	})
 }
 

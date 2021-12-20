@@ -2,6 +2,7 @@ package client
 
 import (
 	"github.com/code-ready/crc/pkg/crc/machine/types"
+	"github.com/code-ready/crc/pkg/crc/preset"
 )
 
 type VersionResult struct {
@@ -32,6 +33,7 @@ type ClusterStatusResult struct {
 	DiskSize         int64
 	Error            string
 	Success          bool
+	Preset           preset.Preset
 }
 
 type ConsoleResult struct {

@@ -60,6 +60,7 @@ type ClusterStatusResult struct {
 	PodmanVersion    string
 	DiskUse          int64
 	DiskSize         int64
+	Preset           crcpreset.Preset
 }
 
 type OpenshiftStatus string

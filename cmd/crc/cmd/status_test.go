@@ -54,7 +54,8 @@ func TestJsonStatus(t *testing.T) {
   "diskUsage": 10000000000,
   "diskSize": 20000000000,
   "cacheUsage": 10000,
-  "cacheDir": "%s"
+  "cacheDir": "%s",
+  "preset": "openshift"
 }
 `
 	assert.Equal(t, fmt.Sprintf(expected, strings.ReplaceAll(cacheDir, `\`, `\\`)), out.String())
@@ -84,7 +85,8 @@ func TestJsonStatusWithError(t *testing.T) {
 
 	expected := `{
   "success": false,
-  "error": "broken"
+  "error": "broken",
+  "preset": ""
 }
 `
 	assert.Equal(t, expected, out.String())

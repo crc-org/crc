@@ -7,6 +7,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/code-ready/crc/pkg/crc/preset"
 )
 
 func NewClient() *Client {
@@ -104,6 +105,7 @@ func (c *Client) Status() (*types.ClusterStatusResult, error) {
 		PodmanVersion:    "3.3.1",
 		DiskUse:          10_000_000_000,
 		DiskSize:         20_000_000_000,
+		Preset:           preset.OpenShift,
 	}, nil
 }
 
