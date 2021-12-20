@@ -84,7 +84,7 @@ func (h *Handler) PowerOff(c *context) error {
 }
 
 func (h *Handler) Start(c *context) error {
-	crcConfig.RegisterSettings(h.Config)
+	crcConfig.UpdateDefaults(h.Config)
 	var parsedArgs client.StartConfig
 	if len(c.requestBody) > 0 {
 		if err := c.Bind(&parsedArgs); err != nil {
@@ -217,7 +217,7 @@ func (h *Handler) UnsetConfig(c *context) error {
 }
 
 func (h *Handler) GetConfig(c *context) error {
-	crcConfig.RegisterSettings(h.Config)
+	crcConfig.UpdateDefaults(h.Config)
 	queries := c.url.Query()
 	var req client.GetOrUnsetConfigRequest
 	for key := range queries {
