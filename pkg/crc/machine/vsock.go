@@ -6,13 +6,14 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/daemonclient"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	"github.com/pkg/errors"
 )
 
-func exposePorts() error {
+func exposePorts(preset preset.Preset) error {
 	daemonClient := daemonclient.New()
-	portsToExpose := vsockPorts()
+	portsToExpose := vsockPorts(preset)
 	alreadyOpenedPorts, err := daemonClient.NetworkClient.List()
 	if err != nil {
 		logging.Error("Is 'crc daemon' running? Network mode 'vsock' requires 'crc daemon' to be running, run it manually on different terminal/tab")
@@ -48,25 +49,37 @@ const (
 	httpPort         = 80
 	httpsPort        = 443
 	apiPort          = 6443
+	cockpitPort      = 9090
 )
 
-func vsockPorts() []types.ExposeRequest {
-	return []types.ExposeRequest{
+func vsockPorts(ps preset.Preset) []types.ExposeRequest {
+	exposeRequest := []types.ExposeRequest{
 		{
 			Local:  fmt.Sprintf(":%d", constants.VsockSSHPort),
 			Remote: fmt.Sprintf("%s:%d", virtualMachineIP, internalSSHPort),
 		},
-		{
-			Local:  fmt.Sprintf(":%d", apiPort),
-			Remote: fmt.Sprintf("%s:%d", virtualMachineIP, apiPort),
-		},
-		{
-			Local:  fmt.Sprintf(":%d", httpsPort),
-			Remote: fmt.Sprintf("%s:%d", virtualMachineIP, httpsPort),
-		},
-		{
-			Local:  fmt.Sprintf(":%d", httpPort),
-			Remote: fmt.Sprintf("%s:%d", virtualMachineIP, httpPort),
-		},
 	}
+	if ps == preset.OpenShift {
+		exposeRequest = append(exposeRequest, []types.ExposeRequest{
+			{
+				Local:  fmt.Sprintf(":%d", apiPort),
+				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, apiPort),
+			},
+			{
+				Local:  fmt.Sprintf(":%d", httpsPort),
+				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, httpsPort),
+			},
+			{
+				Local:  fmt.Sprintf(":%d", httpPort),
+				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, httpPort),
+			},
+		}...)
+	}
+	if ps == preset.Podman {
+		exposeRequest = append(exposeRequest, types.ExposeRequest{
+			Local:  fmt.Sprintf(":%d", cockpitPort),
+			Remote: fmt.Sprintf("%s:%d", virtualMachineIP, cockpitPort),
+		})
+	}
+	return exposeRequest
 }
