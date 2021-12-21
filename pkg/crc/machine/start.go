@@ -322,6 +322,9 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		// **************************
 		//  END OF PODMAN START CODE
 		// **************************
+		if err := dns.AddPodmanHosts(instanceIP); err != nil {
+			return nil, errors.Wrap(err, "Failed to add podman host dns entry")
+		}
 		return &types.StartResult{
 			Status: vmState,
 		}, nil
