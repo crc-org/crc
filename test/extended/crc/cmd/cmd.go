@@ -2,10 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/test/extended/util"
 )
 
@@ -150,6 +153,31 @@ func CheckCRCExecutableState(state string) error {
 	default:
 		return fmt.Errorf("%s state is not defined as valid crc executable state", state)
 	}
+}
+
+func GetCRCBinaryPath() string {
+	var CRCExecutablePath string
+	if runtime.GOOS == "windows" {
+		path, err := exec.Command("powershell.exe", "-c",
+			"Get-Command", "crc", "|", "Select-Object",
+			"-ExpandProperty", "Definition").Output()
+		if err != nil {
+			return ""
+		}
+		CRCExecutablePath = string(path)
+	} else {
+		path, err := exec.Command("which", "crc").Output()
+		if err != nil {
+			return ""
+		}
+		CRCExecutablePath = strings.TrimSuffix(string(path), "\n")
+	}
+	src, err := filepath.EvalSymlinks(CRCExecutablePath)
+	if err != nil {
+		logging.Errorf("Failed to find the symlink destination of %s: %v", CRCExecutablePath, err)
+		return filepath.Dir(CRCExecutablePath)
+	}
+	return filepath.Dir(src)
 }
 
 func CheckMachineNotExists() error {
