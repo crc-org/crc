@@ -157,8 +157,8 @@ clean: clean_docs clean_macos_package clean_windows_msi
 .PHONY: build_e2e
 build_e2e: $(SOURCES)
 	GOOS=linux   go test ./test/e2e/ -c -o $(BUILD_DIR)/linux-amd64/e2e.test
-	GOOS=windows go test ./test/e2e/ -c -o $(BUILD_DIR)/windows-amd64/e2e.test.exe
-	GOOS=darwin  go test ./test/e2e/ -c -o $(BUILD_DIR)/macos-amd64/e2e.test
+	GOOS=windows go test --ldflags="-X $(REPOPATH)/test/e2e/crcsuite.installerBuild=true" ./test/e2e/ -c -o $(BUILD_DIR)/windows-amd64/e2e.test.exe
+	GOOS=darwin  go test --ldflags="-X $(REPOPATH)/test/e2e/crcsuite.installerBuild=true" ./test/e2e/ -c -o $(BUILD_DIR)/macos-amd64/e2e.test
 
 .PHONY: build_integration
 build_integration: $(SOURCES)
