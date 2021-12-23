@@ -18,6 +18,7 @@ import (
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
 	"github.com/code-ready/crc/test/e2e/crcsuite/ux"
+	"github.com/code-ready/crc/test/extended/crc/cmd"
 	crcCmd "github.com/code-ready/crc/test/extended/crc/cmd"
 	"github.com/code-ready/crc/test/extended/util"
 )
@@ -31,6 +32,7 @@ var (
 	bundleVersion  string
 	pullSecretFile string
 	cleanupHome    bool
+	installerBuild = "false"
 )
 
 func usingPreexistingCluster() bool {
@@ -433,7 +435,11 @@ func CommandReturnShouldContainIfBundleEmbeddedOrNot(commandField string, value 
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
 	if value == "current bundle" {
 		if bundleEmbedded {
-			value = filepath.Join(CRCHome, "cache", bundleName)
+			if installerBuild != "false" {
+				value = filepath.Join(cmd.GetCRCBinaryPath(), bundleName)
+			} else {
+				value = filepath.Join(CRCHome, "cache", bundleName)
+			}
 		} else {
 			value = bundleLocation
 		}
