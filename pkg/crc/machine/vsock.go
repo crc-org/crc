@@ -46,6 +46,7 @@ func isOpened(exposed []types.ExposeRequest, port types.ExposeRequest) bool {
 const (
 	virtualMachineIP = "192.168.127.2"
 	internalSSHPort  = 22
+	localIP          = "127.0.0.1"
 	httpPort         = 80
 	httpsPort        = 443
 	apiPort          = 6443
@@ -55,7 +56,7 @@ const (
 func vsockPorts(preset crcPreset.Preset) []types.ExposeRequest {
 	exposeRequest := []types.ExposeRequest{
 		{
-			Local:  fmt.Sprintf(":%d", constants.VsockSSHPort),
+			Local:  fmt.Sprintf("%s:%d", localIP, constants.VsockSSHPort),
 			Remote: fmt.Sprintf("%s:%d", virtualMachineIP, internalSSHPort),
 		},
 	}
@@ -63,21 +64,21 @@ func vsockPorts(preset crcPreset.Preset) []types.ExposeRequest {
 	case crcPreset.OpenShift:
 		exposeRequest = append(exposeRequest,
 			types.ExposeRequest{
-				Local:  fmt.Sprintf(":%d", apiPort),
+				Local:  fmt.Sprintf("%s:%d", localIP, apiPort),
 				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, apiPort),
 			},
 			types.ExposeRequest{
-				Local:  fmt.Sprintf(":%d", httpsPort),
+				Local:  fmt.Sprintf("%s:%d", localIP, httpsPort),
 				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, httpsPort),
 			},
 			types.ExposeRequest{
-				Local:  fmt.Sprintf(":%d", httpPort),
+				Local:  fmt.Sprintf("%s:%d", localIP, httpPort),
 				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, httpPort),
 			})
 	case crcPreset.Podman:
 		exposeRequest = append(exposeRequest,
 			types.ExposeRequest{
-				Local:  fmt.Sprintf(":%d", cockpitPort),
+				Local:  fmt.Sprintf("%s:%d", localIP, cockpitPort),
 				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, cockpitPort),
 			})
 	default:
