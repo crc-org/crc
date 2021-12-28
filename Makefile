@@ -5,7 +5,7 @@ PODMAN_VERSION ?= 3.4.2
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 1.34.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
-MACOS_INSTALL_PATH = /Applications/CodeReady Containers.app/Contents/Resources/
+MACOS_INSTALL_PATH = /Applications/CodeReady Containers.app/Contents/Resources/app
 CONTAINER_RUNTIME ?= podman
 GOLANGCI_LINT_VERSION = v1.41.1
 
@@ -296,6 +296,8 @@ packagedir: clean $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
 	mkdir -p packaging/root/Applications
 	tar -C packaging/root/Applications -xvzf $(TRAY_RELEASE)
 	rm packaging/tmp/crc-tray-macos.tar.gz
+	mv packaging/root/Applications/crc-tray-darwin-x64/crc-tray.app packaging/root/Applications/CodeReady\ Containers.app
+	rm -fr packaging/root/Applications/crc-tray-darwin-x64
 
 	mv packaging/tmp/* packaging/root/"$(MACOS_INSTALL_PATH)"
 
