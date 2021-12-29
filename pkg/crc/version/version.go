@@ -43,9 +43,7 @@ var (
 const (
 	releaseInfoLink = "https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/release-info.json"
 	// Tray version to be embedded in executable
-	crcMacTrayVersion = "0.9.5"
-	// Windows forms application version type major.minor.buildnumber.revesion
-	crcWindowsTrayVersion = "0.11.0.0"
+	crcTrayElectronVersion = "0.9.5"
 )
 
 type CrcReleaseInfo struct {
@@ -79,12 +77,8 @@ func IsOkdBuild() bool {
 	return okdBuild == "true"
 }
 
-func GetCRCMacTrayVersion() string {
-	return crcMacTrayVersion
-}
-
-func GetCRCWindowsTrayVersion() string {
-	return crcWindowsTrayVersion
+func GetTrayVersion() string {
+	return crcTrayElectronVersion
 }
 
 func IsInstaller() bool {

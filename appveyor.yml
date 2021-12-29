@@ -4,10 +4,10 @@ environment:
   GOPATH: c:\gopath
 image: Visual Studio 2019
 before_test:
-  - choco install mingw
   - choco install make
   - choco install wixtoolset
-  - set PATH="C:\go116";%PATH%;"C:\Program Files (x86)\WiX Toolset v3.11\bin"
+  - set PATH=C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin;%PATH%
+  - set PATH=C:\go116;%WIX%bin;%PATH%
   - make MOCK_BUNDLE=true BUNDLE_DIR=./ out/windows-amd64/crc-windows-installer.zip
   - make cross
 test_script:
