@@ -36,16 +36,15 @@
                 <Directory Id="INSTALLDIR" Name="CodeReady Containers">
                     <Component Id="CrcExe" Guid="*">
                         <File Id="CrcExe" Source="SourceDir\crc.exe" KeyPath="yes" DiskId="1" />
+                        <RemoveFile Id="RemoveInstallFiles" Name="*.*" On="uninstall" />
                     </Component>
                     <Component Id="AdminHelper" Guid="*">
                         <File Id="AdminHelper" Source="SourceDir\crc-admin-helper-windows.exe" KeyPath="yes" DiskId="1" />
                         <ServiceInstall Name="CodeReadyContainersAdminHelper" Description="Perform administrative tasks for the user" Arguments="daemon" DisplayName="CodeReady Containers Admin Helper" ErrorControl="normal" Start="auto" Type="ownProcess" />
                         <ServiceControl Id="StartAdminHelperService" Name="CodeReadyContainersAdminHelper" Start='install' Stop='both' Remove='uninstall' />
                     </Component>
-                    <Component Id="CrcTray" Guid="*">
-                        <File Id="CrcTray" Source="SourceDir\crc-tray.exe" KeyPath="yes" DiskId="1" />
-                        <RemoveFile Id="RemoveInstallFiles" Name="*.*" On="uninstall" />
-                    </Component>
+                    <Directory Id="TRAYDIR">
+                    </Directory>
                     <Component Id="AddUserToCrcUsers" Guid="0C793EE7-109A-474B-9651-77E0A83BAF2D" KeyPath="yes">
                         <Condition>NOT UPGRADINGPRODUCTCODE AND NOT WIX_UPGRADE_DETECTED</Condition>
                         <util:User Id="LogonUser1" Domain="[%USERDOMAIN]" Name="[LogonUser]" CreateUser="no" RemoveOnUninstall="no">
@@ -65,14 +64,14 @@
             </Directory>
             <Directory Id="StartupFolder">
                 <Component Id="TrayStartup" Guid="*">
-                    <Shortcut Id="TrayStartupShortcut" Name="CodeReady Containers" Target="[#CrcTray]" Icon="crcicon.ico" WorkingDirectory="AppDataFolder"/>
+                    <Shortcut Id="TrayStartupShortcut" Name="CodeReady Containers" Target="[INSTALLDIR]crc-tray.exe" Icon="crcicon.ico" WorkingDirectory="AppDataFolder"/>
                     <RemoveFile Id="RemoveTrayShortCut" Name="CodeReady Containers" On="uninstall"/>
                     <RegistryValue Root="HKCU" Key="Software\Red Hat\CodeReady Containers" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
                 </Component>
             </Directory>
             <Directory Id="ProgramMenuFolder">
                 <Component Id="StartMenuEntry" Guid="*">
-                    <Shortcut Id="TrayStartMenuEntry" Name="CodeReady Containers" Target="[#CrcTray]" Icon="crcicon.ico" WorkingDirectory="AppDataFolder"/>
+                    <Shortcut Id="TrayStartMenuEntry" Name="CodeReady Containers" Target="[INSTALLDIR]crc-tray.exe" Icon="crcicon.ico" WorkingDirectory="AppDataFolder"/>
                     <RemoveFile Id="RemoveStartMenuEntry" Name="CodeReady Containers" On="uninstall"/>
                     <RegistryValue Root="HKCU" Key="Software\Red Hat\CodeReady Containers" Name="startmenu" Type="integer" Value="1" KeyPath="yes"/>
                 </Component>
@@ -104,13 +103,13 @@
         </InstallExecuteSequence>
         <Feature Id="DefaultFeature" Level="1">
             <ComponentRef Id="CrcExe" />
-            <ComponentRef Id="CrcTray" />
             <ComponentRef Id="AdminHelper" />
             <ComponentRef Id="AddToPath"/>
             <ComponentRef Id="TrayStartup"/>
             <ComponentRef Id="StartMenuEntry" />
             <ComponentRef Id="AddUserToCrcUsers" />
             <ComponentRef Id="VsockRegistryEntry" />
+            <ComponentGroupRef Id="CrcTrayFiles" />
         </Feature>
         <UI>
             <UIRef Id="WixUI_ErrorProgressText"/>

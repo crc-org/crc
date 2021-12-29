@@ -26,7 +26,7 @@ const (
 	DefaultPodmanURLBase      = "https://storage.googleapis.com/libpod-master-releases"
 	DefaultAdminHelperCliBase = "https://github.com/code-ready/admin-helper/releases/download/v0.0.8"
 	CRCMacTrayDownloadURL     = "https://github.com/code-ready/tray-electron/releases/download/%s/crc-tray-macos.tar.gz"
-	CRCWindowsTrayDownloadURL = "https://github.com/code-ready/tray-windows/releases/download/v%s/crc-tray-windows.zip"
+	CRCWindowsTrayDownloadURL = "https://github.com/code-ready/tray-electron/releases/download/%s/crc-tray-windows.zip"
 	DefaultContext            = "admin"
 	DaemonHTTPEndpoint        = "http://unix/api"
 
@@ -144,11 +144,11 @@ func GetKubeAdminPasswordPath() string {
 
 // TODO: follow the same pattern as oc and podman above
 func GetCRCMacTrayDownloadURL() string {
-	return fmt.Sprintf(CRCMacTrayDownloadURL, version.GetCRCMacTrayVersion())
+	return fmt.Sprintf(CRCMacTrayDownloadURL, version.GetTrayVersion())
 }
 
 func GetCRCWindowsTrayDownloadURL() string {
-	return fmt.Sprintf(CRCWindowsTrayDownloadURL, version.GetCRCWindowsTrayVersion())
+	return fmt.Sprintf(CRCWindowsTrayDownloadURL, version.GetTrayVersion())
 }
 
 func GetDefaultCPUs(preset crcpreset.Preset) int {
