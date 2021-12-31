@@ -3,3 +3,4 @@ docs/build/
 release/
 /release-info.json
 *.crcbundle
+packaging/tmp
