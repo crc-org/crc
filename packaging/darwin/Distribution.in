@@ -26,6 +26,14 @@ function installCheck() {
         return false;
 	}
 
+    var apps = system.applications.fromIdentifier('com.electron.crc-tray');
+    if(apps) {
+        my.result.title = 'Update failed';
+        my.result.message = 'CodeReady Containers dev preview is running. Please stop the application before updating.';
+        my.result.type = 'Fatal';
+        return false;
+    }
+
     if(!(system.compareVersions(system.version.ProductVersion, '10.14.0') >= 0)) {
         my.result.title = 'Unable to install';
         my.result.message = 'CodeReady Containers requires macOS 10.14 or later.';
