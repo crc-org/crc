@@ -5,7 +5,7 @@ PODMAN_VERSION ?= 3.4.2
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 1.34.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
-MACOS_INSTALL_PATH = /Applications/CodeReady Containers.app/Contents/Resources/app
+MACOS_INSTALL_PATH = /Applications/CodeReady Containers.app/Contents/Resources
 CONTAINER_RUNTIME ?= podman
 GOLANGCI_LINT_VERSION = v1.41.1
 

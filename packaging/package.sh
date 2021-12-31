@@ -19,7 +19,7 @@ function sign() {
   codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime --force ${opts} "$1"
 }
 
-binDir="${BASEDIR}/root/Applications/CodeReady Containers.app/Contents/Resources/app"
+binDir="${BASEDIR}/root/Applications/CodeReady Containers.app/Contents/Resources"
 
 version=$(cat "${BASEDIR}/VERSION")
 
