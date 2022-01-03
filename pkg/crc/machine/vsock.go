@@ -6,12 +6,12 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/daemonclient"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/preset"
+	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	"github.com/pkg/errors"
 )
 
-func exposePorts(preset preset.Preset) error {
+func exposePorts(preset crcPreset.Preset) error {
 	daemonClient := daemonclient.New()
 	portsToExpose := vsockPorts(preset)
 	alreadyOpenedPorts, err := daemonClient.NetworkClient.List()
@@ -52,34 +52,37 @@ const (
 	cockpitPort      = 9090
 )
 
-func vsockPorts(ps preset.Preset) []types.ExposeRequest {
+func vsockPorts(preset crcPreset.Preset) []types.ExposeRequest {
 	exposeRequest := []types.ExposeRequest{
 		{
 			Local:  fmt.Sprintf(":%d", constants.VsockSSHPort),
 			Remote: fmt.Sprintf("%s:%d", virtualMachineIP, internalSSHPort),
 		},
 	}
-	if ps == preset.OpenShift {
-		exposeRequest = append(exposeRequest, []types.ExposeRequest{
-			{
+	switch preset {
+	case crcPreset.OpenShift:
+		exposeRequest = append(exposeRequest,
+			types.ExposeRequest{
 				Local:  fmt.Sprintf(":%d", apiPort),
 				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, apiPort),
 			},
-			{
+			types.ExposeRequest{
 				Local:  fmt.Sprintf(":%d", httpsPort),
 				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, httpsPort),
 			},
-			{
+			types.ExposeRequest{
 				Local:  fmt.Sprintf(":%d", httpPort),
 				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, httpPort),
-			},
-		}...)
+			})
+	case crcPreset.Podman:
+		exposeRequest = append(exposeRequest,
+			types.ExposeRequest{
+				Local:  fmt.Sprintf(":%d", cockpitPort),
+				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, cockpitPort),
+			})
+	default:
+		logging.Errorf("Invalid preset: %s", preset)
 	}
-	if ps == preset.Podman {
-		exposeRequest = append(exposeRequest, types.ExposeRequest{
-			Local:  fmt.Sprintf(":%d", cockpitPort),
-			Remote: fmt.Sprintf("%s:%d", virtualMachineIP, cockpitPort),
-		})
-	}
+
 	return exposeRequest
 }
