@@ -38,12 +38,10 @@ func runOcEnv(args []string) error {
 	}
 	proxyConfig := consoleResult.ClusterConfig.ProxyConfig
 	fmt.Println(shell.GetPathEnvString(userShell, constants.CrcOcBinDir))
-	if proxyConfig != nil {
-		if proxyConfig.IsEnabled() {
-			fmt.Println(shell.GetEnvString(userShell, "HTTP_PROXY", proxyConfig.HTTPProxy))
-			fmt.Println(shell.GetEnvString(userShell, "HTTPS_PROXY", proxyConfig.HTTPSProxy))
-			fmt.Println(shell.GetEnvString(userShell, "NO_PROXY", proxyConfig.GetNoProxyString()))
-		}
+	if proxyConfig.IsEnabled() {
+		fmt.Println(shell.GetEnvString(userShell, "HTTP_PROXY", proxyConfig.HTTPProxy))
+		fmt.Println(shell.GetEnvString(userShell, "HTTPS_PROXY", proxyConfig.HTTPSProxy))
+		fmt.Println(shell.GetEnvString(userShell, "NO_PROXY", proxyConfig.GetNoProxyString()))
 	}
 	fmt.Println(shell.GenerateUsageHintWithComment(userShell, "crc oc-env"))
 	return nil
