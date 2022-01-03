@@ -17,6 +17,7 @@ func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*types.ClusterConfig, e
 	if !bundleInfo.IsOpenShift() {
 		return &types.ClusterConfig{
 			ClusterType: bundleInfo.GetBundleType(),
+			ProxyConfig: &network.ProxyConfig{},
 		}, nil
 	}
 
