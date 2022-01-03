@@ -18,8 +18,8 @@ const testArchiveName = "testdata.tar.zst"
 
 var (
 	files fileMap = map[string]string{
-		filepath.Join("a"):      "a",
-		filepath.Join("c"):      "c",
+		"a":                     "a",
+		"c":                     "c",
 		filepath.Join("b", "d"): "d",
 	}
 )
