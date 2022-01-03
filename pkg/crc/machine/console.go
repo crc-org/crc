@@ -1,6 +1,8 @@
 package machine
 
 import (
+	"fmt"
+
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/pkg/errors"
 )
@@ -15,6 +17,10 @@ func (client *client) GetConsoleURL() (*types.ConsoleResult, error) {
 		return nil, errors.Wrap(err, "Cannot load machine")
 	}
 	defer vm.Close()
+
+	if !vm.bundle.IsOpenShift() {
+		return nil, fmt.Errorf("Only supported with OpenShift bundles")
+	}
 
 	vmState, err := vm.State()
 	if err != nil {
