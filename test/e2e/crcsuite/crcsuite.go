@@ -436,7 +436,7 @@ func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expe
 	if value == "current bundle" {
 		if bundleEmbedded {
 			if installerBuild != "false" {
-				value = filepath.Join(cmd.GetCRCBinaryPath(), bundleName)
+				value = fmt.Sprintf(`"%s"`, filepath.Join(cmd.GetCRCBinaryPath(), bundleName))
 			} else {
 				value = filepath.Join(CRCHome, "cache", bundleName)
 			}
