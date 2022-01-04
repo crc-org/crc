@@ -9,7 +9,7 @@ import (
 
 func (client *client) Delete() error {
 	vm, err := loadVirtualMachine(client.name, client.useVSock())
-	if err != nil {
+	if err != nil && !errors.Is(err, errInvalidBundleMetadata) {
 		return errors.Wrap(err, "Cannot load machine")
 	}
 	defer vm.Close()
