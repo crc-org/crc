@@ -32,6 +32,8 @@ func (err *MissingHostError) Error() string {
 	return fmt.Sprintf("no such libmachine vm: %s", err.name)
 }
 
+var errInvalidBundleMetadata = errors.New("Error loading bundle metadata")
+
 func loadVirtualMachine(name string, useVSock bool) (*virtualMachine, error) {
 	apiClient := libmachine.NewClient(constants.MachineBaseDir)
 	exists, err := apiClient.Exists(name)
@@ -49,7 +51,7 @@ func loadVirtualMachine(name string, useVSock bool) (*virtualMachine, error) {
 
 	crcBundleMetadata, err := getBundleMetadataFromDriver(libmachineHost.Driver)
 	if err != nil {
-		return nil, errors.Wrap(err, "Error loading bundle metadata")
+		err = errInvalidBundleMetadata
 	}
 
 	return &virtualMachine{
@@ -58,7 +60,7 @@ func loadVirtualMachine(name string, useVSock bool) (*virtualMachine, error) {
 		bundle: crcBundleMetadata,
 		api:    apiClient,
 		vsock:  useVSock,
-	}, nil
+	}, err
 }
 
 func (vm *virtualMachine) Close() error {
