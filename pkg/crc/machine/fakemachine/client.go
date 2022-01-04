@@ -116,3 +116,7 @@ func (c *Client) Exists() (bool, error) {
 func (c *Client) IsRunning() (bool, error) {
 	return true, nil
 }
+
+func (c *Client) GetPreset() preset.Preset {
+	return preset.OpenShift
+}
