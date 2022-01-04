@@ -9,6 +9,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
+	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
 )
 
 const startCancelTimeout = 15 * time.Second
@@ -168,11 +169,13 @@ func (s *Synchronized) Status() (*types.ClusterStatusResult, error) {
 		return &types.ClusterStatusResult{
 			CrcStatus:       state.Starting,
 			OpenshiftStatus: types.OpenshiftStarting,
+			Preset:          s.underlying.GetPreset(),
 		}, nil
 	case Stopping, Deleting:
 		return &types.ClusterStatusResult{
 			CrcStatus:       state.Stopping,
 			OpenshiftStatus: types.OpenshiftStopping,
+			Preset:          s.underlying.GetPreset(),
 		}, nil
 	default:
 		return s.underlying.Status()
@@ -185,4 +188,8 @@ func (s *Synchronized) IsRunning() (bool, error) {
 
 func (s *Synchronized) GenerateBundle(forceStop bool) error {
 	return s.underlying.GenerateBundle(forceStop)
+}
+
+func (s *Synchronized) GetPreset() crcPreset.Preset {
+	return s.underlying.GetPreset()
 }

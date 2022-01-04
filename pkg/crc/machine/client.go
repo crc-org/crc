@@ -8,6 +8,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
+	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/kofalt/go-memoize"
 )
 
@@ -24,6 +25,7 @@ type Client interface {
 	Stop() (state.State, error)
 	IsRunning() (bool, error)
 	GenerateBundle(forceStop bool) error
+	GetPreset() crcPreset.Preset
 }
 
 type client struct {
@@ -45,6 +47,10 @@ func NewClient(name string, debug bool, config crcConfig.Storage) Client {
 
 func (client *client) GetName() string {
 	return client.name
+}
+
+func (client *client) GetPreset() crcPreset.Preset {
+	return crcConfig.GetPreset(client.config)
 }
 
 func (client *client) useVSock() bool {

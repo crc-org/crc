@@ -8,6 +8,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/machine/state"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
+	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -168,4 +169,8 @@ func (m *waitingMachine) Stop() (state.State, error) {
 
 func (m *waitingMachine) GenerateBundle(forceStop bool) error {
 	return errors.New("not implemented")
+}
+
+func (m *waitingMachine) GetPreset() crcPreset.Preset {
+	return crcPreset.OpenShift
 }
