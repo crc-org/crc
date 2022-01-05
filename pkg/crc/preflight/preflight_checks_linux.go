@@ -204,6 +204,7 @@ func checkUserPartOfLibvirtGroup() error {
 	}
 	gids, err := currentUser.GroupIds()
 	if err != nil {
+		logging.Debugf("currentUser.GroupIds() failed: %v", err)
 		return fmt.Errorf("Failed to get the groups user '%s' belongs to", currentUser.Username)
 	}
 	for _, gid := range gids {
