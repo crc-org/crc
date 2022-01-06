@@ -1,8 +1,8 @@
-[id="starting-monitoring-alerting-telemetry_{context}"]
-= Starting monitoring, alerting, and telemetry
+[id="starting-monitoring_{context}"]
+= Starting monitoring
 
 {prod} disables cluster monitoring by default to ensure that {prod} can run on a typical notebook.
-Telemetry is responsible for listing your cluster in the link:https://console.redhat.com/openshift[Red Hat Hybrid Cloud Console].
+Monitoring is responsible for listing your cluster in the link:https://console.redhat.com/openshift[Red Hat Hybrid Cloud Console].
 Follow this procedure to enable monitoring for your cluster.
 
 .Prerequisites
@@ -31,5 +31,5 @@ $ {bin} start
 [WARNING]
 ====
 Cluster monitoring cannot be disabled.
-To remove monitoring, alerting, and telemetry, set the `enable-cluster-monitoring` configurable property to `false` and delete the existing {prod} virtual machine.
+To remove monitoring, set the `enable-cluster-monitoring` configurable property to `false` and delete the existing {prod} virtual machine.
 ====
