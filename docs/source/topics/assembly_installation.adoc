@@ -7,4 +7,8 @@ include::ref_required-software-packages.adoc[leveloffset=+1]
 
 include::proc_installing-codeready-containers.adoc[leveloffset=+1]
 
+include::con_about-usage-data-collection.adoc[leveloffset=+1]
+
+include::proc_configuring-usage-data-collection.adoc[leveloffset=+1]
+
 include::proc_upgrading-codeready-containers.adoc[leveloffset=+1]
