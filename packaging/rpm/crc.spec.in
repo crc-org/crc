@@ -79,6 +79,7 @@ make test
 %license %{golicenses}
 %doc
 %{_bindir}/*
+%attr(0755,root,root) %caps(cap_net_bind_service=+eip) %{_bindir}/crc
 %{_datadir}/%{name}-redistributable/linux/*
 %{_datadir}/%{name}-redistributable/macos/*
 %{_datadir}/%{name}-redistributable/windows/*
