@@ -6,9 +6,9 @@ import "fmt"
 
 const (
 	MachineDriverCommand = "crc-driver-hyperkit"
-	MachineDriverVersion = "0.15.0"
+	MachineDriverVersion = "0.15.1"
 	HyperKitCommand      = "hyperkit"
-	HyperKitVersion      = "v0.20200224-44-gb54460"
+	HyperKitVersion      = "v0.20210107-12-gadc4ea"
 	QcowToolCommand      = "qcow-tool"
 	QcowToolVersion      = "1.0.0"
 )
