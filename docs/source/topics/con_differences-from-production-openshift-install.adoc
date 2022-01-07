@@ -6,7 +6,7 @@
 * **The {prod} OpenShift cluster is ephemeral and is not intended for production use.**
 * **{prod} does not have a supported upgrade path to newer OpenShift versions.**
 Upgrading the OpenShift version may cause issues that are difficult to reproduce.
-* It uses a single node which behaves as both a master and worker node.
+* It uses a single node which behaves as both a control plane and worker node.
 * It disables the Cluster Monitoring Operator by default.
 This disabled Operator causes the corresponding part of the web console to be non-functional.
 * The OpenShift instance runs in a virtual machine.
