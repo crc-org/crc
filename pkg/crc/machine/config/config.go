@@ -16,7 +16,7 @@ type MachineConfig struct {
 	SSHKeyPath      string
 	KubeConfig      string
 
-	// HyperKit specific configuration
+	// macOS specific configuration
 	KernelCmdLine string
 	Initramfs     string
 	Kernel        string

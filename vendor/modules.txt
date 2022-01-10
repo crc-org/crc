@@ -64,7 +64,6 @@ github.com/code-ready/clicumber/testsuite
 github.com/code-ready/clicumber/util
 # github.com/code-ready/machine v0.0.0-20210616065635-eff475d32b9a
 ## explicit
-github.com/code-ready/machine/drivers/hyperkit
 github.com/code-ready/machine/drivers/libvirt
 github.com/code-ready/machine/libmachine/drivers
 github.com/code-ready/machine/libmachine/drivers/plugin/localbinary
