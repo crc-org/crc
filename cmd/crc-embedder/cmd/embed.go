@@ -12,8 +12,8 @@ import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/download"
 
-	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
 	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
+	"github.com/code-ready/crc/pkg/crc/machine/vfkit"
 
 	"github.com/YourFin/binappend"
 	"github.com/spf13/cobra"
@@ -98,9 +98,7 @@ type remoteFileInfo struct {
 var (
 	dataFileUrls = map[string][]remoteFileInfo{
 		"darwin": {
-			{hyperkit.MachineDriverDownloadURL, 0755},
-			{hyperkit.HyperKitDownloadURL, 0755},
-			{hyperkit.QcowToolDownloadURL, 0755},
+			{vfkit.VfkitDownloadURL, 0755},
 			{constants.GetCRCMacTrayDownloadURL(), 0644},
 			{constants.GetAdminHelperURLForOs("darwin"), 0755},
 		},

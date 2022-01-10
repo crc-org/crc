@@ -6,28 +6,28 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
-	"github.com/code-ready/crc/pkg/crc/machine/hyperkit"
+	"github.com/code-ready/crc/pkg/crc/machine/vfkit"
+	machineVf "github.com/code-ready/crc/pkg/drivers/vfkit"
 	"github.com/code-ready/crc/pkg/libmachine"
 	"github.com/code-ready/crc/pkg/libmachine/host"
-	machineHyperkit "github.com/code-ready/machine/drivers/hyperkit"
 )
 
 func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {
-	json, err := json.Marshal(hyperkit.CreateHost(machineConfig))
+	json, err := json.Marshal(vfkit.CreateHost(machineConfig))
 	if err != nil {
 		return nil, errors.New("Failed to marshal driver options")
 	}
-	return api.NewHost("hyperkit", constants.BinDir(), json)
+	return api.NewHost("vf", constants.BinDir(), json)
 }
 
-func loadDriverConfig(host *host.Host) (*machineHyperkit.Driver, error) {
-	var hyperkitDriver machineHyperkit.Driver
-	err := json.Unmarshal(host.RawDriver, &hyperkitDriver)
+func loadDriverConfig(host *host.Host) (*machineVf.Driver, error) {
+	var vfDriver machineVf.Driver
+	err := json.Unmarshal(host.RawDriver, &vfDriver)
 
-	return &hyperkitDriver, err
+	return &vfDriver, err
 }
 
-func updateDriverConfig(host *host.Host, driver *machineHyperkit.Driver) error {
+func updateDriverConfig(host *host.Host, driver *machineVf.Driver) error {
 	driverData, err := json.Marshal(driver)
 	if err != nil {
 		return err

@@ -69,12 +69,8 @@ Feature: Basic test
         When executing "crc setup --check-only" fails
         And executing crc setup command succeeds
         And stderr should contain "Checking if running as non-root"
-        And stderr should contain "Checking if HyperKit is installed"
-        And stderr should contain "Checking if crc-driver-hyperkit is installed"
-        And stderr should contain "Installing crc-machine-hyperkit"
+        And stderr should contain "Checking if vfkit is installed"
         And stderr should contain "Using root access: Changing ownership"
-        And stderr should contain "Using root access: Setting suid"
-        And stderr should contain "Checking file permissions"
 
     @windows
     Scenario: CRC setup on Windows

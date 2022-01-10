@@ -11,7 +11,7 @@ import (
 )
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
-func hyperkitPreflightChecks(networkMode network.Mode) []Check {
+func vfkitPreflightChecks(networkMode network.Mode) []Check {
 	return []Check{
 		{
 			configKeySuffix:  "check-m1-cpu",
@@ -23,35 +23,17 @@ func hyperkitPreflightChecks(networkMode network.Mode) []Check {
 			labels: labels{Os: Darwin},
 		},
 		{
-			configKeySuffix:  "check-hyperkit-installed",
-			checkDescription: "Checking if HyperKit is installed",
-			check:            checkHyperKitInstalled(networkMode),
-			fixDescription:   "Setting up virtualization with HyperKit",
-			fix:              fixHyperKitInstallation(networkMode),
+			configKeySuffix:  "check-vfkit-installed",
+			checkDescription: "Checking if vfkit is installed",
+			check:            checkVfkitInstalled(networkMode),
+			fixDescription:   "Setting up virtualization with vfkit",
+			fix:              fixVfkitInstallation(networkMode),
 
 			labels: labels{Os: Darwin},
 		},
 		{
-			configKeySuffix:  "check-qcow-tool-installed",
-			checkDescription: "Checking if qcow-tool is installed",
-			check:            checkQcowToolInstalled,
-			fixDescription:   "Installing qcow-tool",
-			fix:              fixQcowToolInstalled,
-
-			labels: labels{Os: Darwin},
-		},
-		{
-			configKeySuffix:  "check-hyperkit-driver",
-			checkDescription: "Checking if crc-driver-hyperkit is installed",
-			check:            checkMachineDriverHyperKitInstalled(networkMode),
-			fixDescription:   "Installing crc-machine-hyperkit",
-			fix:              fixMachineDriverHyperKitInstalled(networkMode),
-
-			labels: labels{Os: Darwin},
-		},
-		{
-			cleanupDescription: "Stopping CRC Hyperkit process",
-			cleanup:            stopCRCHyperkitProcess,
+			cleanupDescription: "Stopping CRC vfkit process",
+			cleanup:            killVfkitProcess,
 			flags:              CleanUpOnly,
 
 			labels: labels{Os: Darwin},
@@ -128,7 +110,7 @@ func getChecks(mode network.Mode, bundlePath string, preset crcpreset.Preset) []
 	checks = append(checks, nonWinPreflightChecks...)
 	checks = append(checks, genericPreflightChecks(preset)...)
 	checks = append(checks, genericCleanupChecks...)
-	checks = append(checks, hyperkitPreflightChecks(mode)...)
+	checks = append(checks, vfkitPreflightChecks(mode)...)
 	checks = append(checks, resolverPreflightChecks...)
 	checks = append(checks, bundleCheck(bundlePath, preset))
 	checks = append(checks, trayLaunchdCleanupChecks...)

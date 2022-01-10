@@ -35,122 +35,40 @@ func checkM1CPU() error {
 	return nil
 }
 
-func checkHyperKitInstalled(networkMode network.Mode) func() error {
+func checkVfkitInstalled(networkMode network.Mode) func() error {
 	return func() error {
 		if version.IsInstaller() {
 			return nil
 		}
 
-		h := cache.NewHyperKitCache()
+		h := cache.NewVfkitCache()
 		if !h.IsCached() {
 			return fmt.Errorf("%s executable is not cached", h.GetExecutableName())
 		}
-		hyperkitPath := h.GetExecutablePath()
-		err := unix.Access(hyperkitPath, unix.X_OK)
+		vfkitPath := h.GetExecutablePath()
+		err := unix.Access(vfkitPath, unix.X_OK)
 		if err != nil {
-			return fmt.Errorf("%s not executable", hyperkitPath)
+			return fmt.Errorf("%s not executable", vfkitPath)
 		}
-		if err := h.CheckVersion(); err != nil {
-			return err
-		}
-		if networkMode == network.UserNetworkingMode {
-			return nil
-		}
-		return checkSuid(hyperkitPath)
+		return h.CheckVersion()
 	}
 }
 
-func fixHyperKitInstallation(networkMode network.Mode) func() error {
+func fixVfkitInstallation(networkMode network.Mode) func() error {
 	return func() error {
 		if version.IsInstaller() {
 			return nil
 		}
 
-		h := cache.NewHyperKitCache()
+		h := cache.NewVfkitCache()
 
 		logging.Debugf("Installing %s", h.GetExecutableName())
 
 		if err := h.EnsureIsCached(); err != nil {
 			return fmt.Errorf("Unable to download %s : %v", h.GetExecutableName(), err)
 		}
-		if networkMode == network.UserNetworkingMode {
-			return nil
-		}
-		return setSuid(h.GetExecutablePath())
-	}
-}
-
-func checkMachineDriverHyperKitInstalled(networkMode network.Mode) func() error {
-	return func() error {
-		if version.IsInstaller() {
-			return nil
-		}
-
-		hyperkitDriver := cache.NewMachineDriverHyperKitCache()
-
-		logging.Debugf("Checking if %s is installed", hyperkitDriver.GetExecutableName())
-		if !hyperkitDriver.IsCached() {
-			return fmt.Errorf("%s executable is not cached", hyperkitDriver.GetExecutableName())
-		}
-
-		if err := hyperkitDriver.CheckVersion(); err != nil {
-			return err
-		}
-		if networkMode == network.UserNetworkingMode {
-			return nil
-		}
-		return checkSuid(hyperkitDriver.GetExecutablePath())
-	}
-}
-
-func fixMachineDriverHyperKitInstalled(networkMode network.Mode) func() error {
-	return func() error {
-		if version.IsInstaller() {
-			return nil
-		}
-
-		hyperkitDriver := cache.NewMachineDriverHyperKitCache()
-
-		logging.Debugf("Installing %s", hyperkitDriver.GetExecutableName())
-
-		if err := hyperkitDriver.EnsureIsCached(); err != nil {
-			return fmt.Errorf("Unable to download %s : %v", hyperkitDriver.GetExecutableName(), err)
-		}
-		if networkMode == network.UserNetworkingMode {
-			return nil
-		}
-		return setSuid(hyperkitDriver.GetExecutablePath())
-	}
-}
-
-func checkQcowToolInstalled() error {
-	if version.IsInstaller() {
 		return nil
 	}
-
-	qcowTool := cache.NewQcowToolCache()
-
-	logging.Debugf("Checking if %s is installed", qcowTool.GetExecutableName())
-	if !qcowTool.IsCached() {
-		return fmt.Errorf("%s executable is not cached", qcowTool.GetExecutableName())
-	}
-
-	return qcowTool.CheckVersion()
-}
-
-func fixQcowToolInstalled() error {
-	if version.IsInstaller() {
-		return nil
-	}
-	qcowTool := cache.NewQcowToolCache()
-
-	logging.Debugf("Installing %s", qcowTool.GetExecutableName())
-
-	if err := qcowTool.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download %s : %v", qcowTool.GetExecutableName(), err)
-	}
-
-	return nil
 }
 
 func checkResolverFilePermissions() error {
@@ -217,21 +135,21 @@ func addFileWritePermissionToUser(filename string) error {
 	return nil
 }
 
-func stopCRCHyperkitProcess() error {
+func killVfkitProcess() error {
 	pgrepPath, err := exec.LookPath("pgrep")
 	if err != nil {
 		return fmt.Errorf("Could not find 'pgrep'. %w", err)
 	}
-	if _, _, err := crcos.RunWithDefaultLocale(pgrepPath, "-f", filepath.Join(constants.BinDir(), "hyperkit")); err != nil {
+	if _, _, err := crcos.RunWithDefaultLocale(pgrepPath, "-f", filepath.Join(constants.BinDir(), "vfkit")); err != nil {
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) {
 			/* 1: no processes matched */
 			if exitErr.ExitCode() == 1 {
-				logging.Debugf("No running 'hyperkit' process started by crc")
+				logging.Debugf("No running 'vfkit' process started by crc")
 				return nil
 			}
 		}
-		logging.Debugf("Failed to find 'hyperkit' process. %v", err)
+		logging.Debugf("Failed to find 'vfkit' process. %v", err)
 		/* Unclear what pgrep failure was, don't return, maybe pkill will be more successful */
 	}
 
@@ -239,8 +157,8 @@ func stopCRCHyperkitProcess() error {
 	if err != nil {
 		return fmt.Errorf("Could not find 'pkill'. %w", err)
 	}
-	if _, _, err := crcos.RunWithDefaultLocale(pkillPath, "-SIGKILL", "-f", filepath.Join(constants.BinDir(), "hyperkit")); err != nil {
-		return fmt.Errorf("Failed to kill 'hyperkit' process. %w", err)
+	if _, _, err := crcos.RunWithDefaultLocale(pkillPath, "-SIGKILL", "-f", filepath.Join(constants.BinDir(), "vfkit")); err != nil {
+		return fmt.Errorf("Failed to kill 'vfkit' process. %w", err)
 	}
 	return nil
 }
