@@ -1,5 +1,5 @@
 /*
- * This file is part of the libvirt-go-xml project
+ * This file is part of the libvirt-go-xml-module project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@
  *
  */
 
-// Package libvirt-go-xml defines structs for parsing libvirt XML schemas
+// Package libvirt-go-xml-module defines structs for parsing libvirt XML schemas
 //
 // The libvirt API uses XML schemas/documents to describe the configuration
 // of many of its managed objects. Thus when using the libvirt-go package,
@@ -36,7 +36,7 @@
 //  package main
 //
 //  import (
-//   "libvirt.org/libvirt-go-xml"
+//   "libvirt.org/go/libvirtxml"
 //  )
 //
 //  func main() {
@@ -51,8 +51,8 @@
 //  package main
 //
 //  import (
-//    "libvirt.org/libvirt-go"
-//    "libvirt.org/libvirt-go-xml"
+//    "libvirt.org/go/libvirt"
+//    "libvirt.org/go/libvirtxml"
 //    "fmt"
 //  )
 //

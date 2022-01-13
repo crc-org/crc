@@ -21,7 +21,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/systemd/states"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/linux"
-	libvirtxml "github.com/libvirt/libvirt-go-xml"
+	"libvirt.org/go/libvirtxml"
 )
 
 const (

@@ -1,5 +1,5 @@
 /*
- * This file is part of the libvirt-go-xml project
+ * This file is part of the libvirt-go-xml-module project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,17 +30,18 @@ import (
 )
 
 type DomainCaps struct {
-	XMLName   xml.Name             `xml:"domainCapabilities"`
-	Path      string               `xml:"path"`
-	Domain    string               `xml:"domain"`
-	Machine   string               `xml:"machine,omitempty"`
-	Arch      string               `xml:"arch"`
-	VCPU      *DomainCapsVCPU      `xml:"vcpu"`
-	IOThreads *DomainCapsIOThreads `xml:"iothreads"`
-	OS        *DomainCapsOS        `xml:"os"`
-	CPU       *DomainCapsCPU       `xml:"cpu"`
-	Devices   *DomainCapsDevices   `xml:"devices"`
-	Features  *DomainCapsFeatures  `xml:"features"`
+	XMLName       xml.Name                 `xml:"domainCapabilities"`
+	Path          string                   `xml:"path"`
+	Domain        string                   `xml:"domain"`
+	Machine       string                   `xml:"machine,omitempty"`
+	Arch          string                   `xml:"arch"`
+	VCPU          *DomainCapsVCPU          `xml:"vcpu"`
+	IOThreads     *DomainCapsIOThreads     `xml:"iothreads"`
+	OS            *DomainCapsOS            `xml:"os"`
+	CPU           *DomainCapsCPU           `xml:"cpu"`
+	MemoryBacking *DomainCapsMemoryBacking `xml:"memoryBacking"`
+	Devices       *DomainCapsDevices       `xml:"devices"`
+	Features      *DomainCapsFeatures      `xml:"features"`
 }
 
 type DomainCapsVCPU struct {
@@ -93,6 +94,11 @@ type DomainCapsEnum struct {
 	Values []string `xml:"value"`
 }
 
+type DomainCapsMemoryBacking struct {
+	Supported string           `xml:"supported,attr"`
+	Enums     []DomainCapsEnum `xml:"enum"`
+}
+
 type DomainCapsDevices struct {
 	Disk       *DomainCapsDevice `xml:"disk"`
 	Graphics   *DomainCapsDevice `xml:"graphics"`
@@ -113,6 +119,7 @@ type DomainCapsFeatures struct {
 	GenID             *DomainCapsFeatureGenID             `xml:"genid"`
 	BackingStoreInput *DomainCapsFeatureBackingStoreInput `xml:"backingStoreInput"`
 	Backup            *DomainCapsFeatureBackup            `xml:"backup"`
+	S390PV            *DomainCapsFeatureS390PV            `xml:"s390-pv"`
 	SEV               *DomainCapsFeatureSEV               `xml:"sev"`
 }
 
@@ -134,6 +141,10 @@ type DomainCapsFeatureBackingStoreInput struct {
 }
 
 type DomainCapsFeatureBackup struct {
+	Supported string `xml:"supported,attr"`
+}
+
+type DomainCapsFeatureS390PV struct {
 	Supported string `xml:"supported,attr"`
 }
 

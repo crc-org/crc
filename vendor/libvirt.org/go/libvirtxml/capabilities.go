@@ -1,5 +1,5 @@
 /*
- * This file is part of the libvirt-go-xml project
+ * This file is part of the libvirt-go-xml-module project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -94,11 +94,30 @@ type CapsHostNUMASibling struct {
 	Value int `xml:"value,attr"`
 }
 
+type CapsHostNUMACacheSize struct {
+	Value uint   `xml:"value,attr,omitempty"`
+	Unit  string `xml:"unit,attr,omitempty"`
+}
+
+type CapsHostNUMACacheLine struct {
+	Value uint   `xml:"value,attr,omitempty"`
+	Unit  string `xml:"unit,attr,omitempty"`
+}
+
+type CapsHostNUMACache struct {
+	Level         int                    `xml:"level,attr,omitempty"`
+	Associativity string                 `xml:"associativity,attr,omitempty"`
+	Policy        string                 `xml:"policy,attr,omitempty"`
+	Size          *CapsHostNUMACacheSize `xml:"size"`
+	Line          *CapsHostNUMACacheLine `xml:"line"`
+}
+
 type CapsHostNUMACell struct {
 	ID        int                    `xml:"id,attr"`
 	Memory    *CapsHostNUMAMemory    `xml:"memory"`
 	PageInfo  []CapsHostNUMAPageInfo `xml:"pages"`
 	Distances *CapsHostNUMADistances `xml:"distances"`
+	Cache     []CapsHostNUMACache    `xml:"cache"`
 	CPUS      *CapsHostNUMACPUs      `xml:"cpus"`
 }
 
@@ -107,12 +126,33 @@ type CapsHostNUMADistances struct {
 }
 
 type CapsHostNUMACPUs struct {
-	Num  uint              `xml:"num,attr,omitempty"`
+	Num  uint              `xml:"num,attr"`
 	CPUs []CapsHostNUMACPU `xml:"cpu"`
 }
 
+type CapsHostNUMAInterconnects struct {
+	Latency   []CapsHostNUMAInterconnectLatency   `xml:"latency"`
+	Bandwidth []CapsHostNUMAInterconnectBandwidth `xml:"bandwidth"`
+}
+
+type CapsHostNUMAInterconnectLatency struct {
+	Initiator uint   `xml:"initiator,attr"`
+	Target    uint   `xml:"target,attr"`
+	Type      string `xml:"type,attr"`
+	Value     uint   `xml:"value,attr"`
+}
+
+type CapsHostNUMAInterconnectBandwidth struct {
+	Initiator uint   `xml:"initiator,attr"`
+	Target    uint   `xml:"target,attr"`
+	Type      string `xml:"type,attr"`
+	Value     uint   `xml:"value,attr"`
+	Unit      string `xml:"unit,attr"`
+}
+
 type CapsHostNUMATopology struct {
-	Cells *CapsHostNUMACells `xml:"cells"`
+	Cells         *CapsHostNUMACells         `xml:"cells"`
+	Interconnects *CapsHostNUMAInterconnects `xml:"interconnects"`
 }
 
 type CapsHostNUMACells struct {

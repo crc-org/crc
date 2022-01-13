@@ -1,5 +1,5 @@
 /*
- * This file is part of the libvirt-go-xml project
+ * This file is part of the libvirt-go-xml-module project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -19,40 +19,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * Copyright (C) 2016 Red Hat, Inc.
+ * Copyright (C) 2017 Red Hat, Inc.
  *
  */
 
 package libvirtxml
 
-import (
-	"encoding/xml"
-)
-
-type SecretUsage struct {
-	Type   string `xml:"type,attr"`
-	Volume string `xml:"volume,omitempty"`
-	Name   string `xml:"name,omitempty"`
-	Target string `xml:"target,omitempty"`
+type StorageEncryptionSecret struct {
+	Type string `xml:"type,attr"`
+	UUID string `xml:"uuid,attr"`
 }
 
-type Secret struct {
-	XMLName     xml.Name     `xml:"secret"`
-	Ephemeral   string       `xml:"ephemeral,attr,omitempty"`
-	Private     string       `xml:"private,attr,omitempty"`
-	Description string       `xml:"description,omitempty"`
-	UUID        string       `xml:"uuid,omitempty"`
-	Usage       *SecretUsage `xml:"usage"`
+type StorageEncryptionCipher struct {
+	Name string `xml:"name,attr"`
+	Size uint64 `xml:"size,attr"`
+	Mode string `xml:"mode,attr"`
+	Hash string `xml:"hash,attr"`
 }
 
-func (s *Secret) Unmarshal(doc string) error {
-	return xml.Unmarshal([]byte(doc), s)
+type StorageEncryptionIvgen struct {
+	Name string `xml:"name,attr"`
+	Hash string `xml:"hash,attr"`
 }
 
-func (s *Secret) Marshal() (string, error) {
-	doc, err := xml.MarshalIndent(s, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(doc), nil
+type StorageEncryption struct {
+	Format string                   `xml:"format,attr"`
+	Secret *StorageEncryptionSecret `xml:"secret"`
+	Cipher *StorageEncryptionCipher `xml:"cipher"`
+	Ivgen  *StorageEncryptionIvgen  `xml:"ivgen"`
 }
