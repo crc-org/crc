@@ -325,6 +325,11 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		if err := dns.AddPodmanHosts(instanceIP); err != nil {
 			return nil, errors.Wrap(err, "Failed to add podman host dns entry")
 		}
+
+		if err := updateCockpitConsoleBearerToken(sshRunner); err != nil {
+			return nil, fmt.Errorf("Failed to rotate bearer token for cockpit webconsole: %w", err)
+		}
+
 		return &types.StartResult{
 			Status: vmState,
 		}, nil
@@ -725,5 +730,27 @@ func bundleMismatchWithPreset(preset crcPreset.Preset, bundleMetadata *bundle.Cr
 	if preset != crcPreset.Podman && !bundleMetadata.IsOpenShift() {
 		return errors.Errorf("Preset %s is used but bundle is provided for %s preset", crcPreset.OpenShift, crcPreset.Podman)
 	}
+	return nil
+}
+
+func updateCockpitConsoleBearerToken(sshRunner *crcssh.Runner) error {
+	logging.Info("Adding new bearer token for cockpit webconsole")
+
+	tokenPath := filepath.Join(constants.MachineInstanceDir, constants.DefaultName, "cockpit-bearer-token")
+	token := cluster.GenerateCockpitBearerToken()
+
+	if err := ioutil.WriteFile(tokenPath, []byte(token), 0600); err != nil {
+		return fmt.Errorf("failed to write cockpit bearer token: %w", err)
+	}
+
+	if err := sshRunner.CopyData([]byte(token), "/home/core/cockpit-bearer-token", 0600); err != nil {
+		return fmt.Errorf("failed to set token for cockpit: %w", err)
+	}
+
+	_, _, err := sshRunner.RunPrivileged("chown cockpit-bearer-token file to core", "chown core:core /home/core/cockpit-bearer-token")
+	if err != nil {
+		return fmt.Errorf("failed to change ownership of cockpit-bearer-token to core user: %w", err)
+	}
+
 	return nil
 }
