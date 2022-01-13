@@ -1,5 +1,5 @@
 /*
- * This file is part of the libvirt-go-xml project
+ * This file is part of the libvirt-go-xml-module project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -86,6 +86,7 @@ type DomainControllerDriver struct {
 	IOMMU      string `xml:"iommu,attr,omitempty"`
 	ATS        string `xml:"ats,attr,omitempty"`
 	Packed     string `xml:"packed,attr,omitempty"`
+	PagePerVQ  string `xml:"page_per_vq,attr,omitempty"`
 }
 
 type DomainController struct {
@@ -269,9 +270,11 @@ type DomainDiskDriver struct {
 	IOThread      *uint                    `xml:"iothread,attr"`
 	DetectZeros   string                   `xml:"detect_zeroes,attr,omitempty"`
 	Queues        *uint                    `xml:"queues,attr"`
+	QueueSize     *uint                    `xml:"queue_size,attr"`
 	IOMMU         string                   `xml:"iommu,attr,omitempty"`
 	ATS           string                   `xml:"ats,attr,omitempty"`
 	Packed        string                   `xml:"packed,attr,omitempty"`
+	PagePerVQ     string                   `xml:"page_per_vq,attr,omitempty"`
 	MetadataCache *DomainDiskMetadataCache `xml:"metadata_cache"`
 }
 
@@ -285,6 +288,7 @@ type DomainDiskTarget struct {
 
 type DomainDiskEncryption struct {
 	Format string            `xml:"format,attr,omitempty"`
+	Engine string            `xml:"engine,attr,omitempty"`
 	Secret *DomainDiskSecret `xml:"secret"`
 }
 
@@ -389,14 +393,15 @@ type DomainDisk struct {
 }
 
 type DomainFilesystemDriver struct {
-	Type     string `xml:"type,attr,omitempty"`
-	Format   string `xml:"format,attr,omitempty"`
-	Name     string `xml:"name,attr,omitempty"`
-	WRPolicy string `xml:"wrpolicy,attr,omitempty"`
-	IOMMU    string `xml:"iommu,attr,omitempty"`
-	ATS      string `xml:"ats,attr,omitempty"`
-	Packed   string `xml:"packed,attr,omitempty"`
-	Queue    uint   `xml:"queue,attr,omitempty"`
+	Type      string `xml:"type,attr,omitempty"`
+	Format    string `xml:"format,attr,omitempty"`
+	Name      string `xml:"name,attr,omitempty"`
+	WRPolicy  string `xml:"wrpolicy,attr,omitempty"`
+	IOMMU     string `xml:"iommu,attr,omitempty"`
+	ATS       string `xml:"ats,attr,omitempty"`
+	Packed    string `xml:"packed,attr,omitempty"`
+	PagePerVQ string `xml:"page_per_vq,attr,omitempty"`
+	Queue     uint   `xml:"queue,attr,omitempty"`
 }
 
 type DomainFilesystemSource struct {
@@ -619,6 +624,7 @@ type DomainInterfaceDriver struct {
 	IOMMU       string                      `xml:"iommu,attr,omitempty"`
 	ATS         string                      `xml:"ats,attr,omitempty"`
 	Packed      string                      `xml:"packed,attr,omitempty"`
+	PagePerVQ   string                      `xml:"page_per_vq,attr,omitempty"`
 	Host        *DomainInterfaceDriverHost  `xml:"host"`
 	Guest       *DomainInterfaceDriverGuest `xml:"guest"`
 }
@@ -1121,9 +1127,10 @@ type DomainInput struct {
 }
 
 type DomainInputDriver struct {
-	IOMMU  string `xml:"iommu,attr,omitempty"`
-	ATS    string `xml:"ats,attr,omitempty"`
-	Packed string `xml:"packed,attr,omitempty"`
+	IOMMU     string `xml:"iommu,attr,omitempty"`
+	ATS       string `xml:"ats,attr,omitempty"`
+	Packed    string `xml:"packed,attr,omitempty"`
+	PagePerVQ string `xml:"page_per_vq,attr,omitempty"`
 }
 
 type DomainInputSource struct {
@@ -1136,9 +1143,10 @@ type DomainInputSourcePassthrough struct {
 }
 
 type DomainInputSourceEVDev struct {
-	Dev    string `xml:"dev,attr"`
-	Grab   string `xml:"grab,attr,omitempty"`
-	Repeat string `xml:"repeat,attr,omitempty"`
+	Dev        string `xml:"dev,attr"`
+	Grab       string `xml:"grab,attr,omitempty"`
+	GrabToggle string `xml:"grabToggle,attr,omitempty"`
+	Repeat     string `xml:"repeat,attr,omitempty"`
 }
 
 type DomainGraphicListenerAddress struct {
@@ -1330,11 +1338,12 @@ type DomainVideo struct {
 }
 
 type DomainVideoDriver struct {
-	Name    string `xml:"name,attr,omitempty"`
-	VGAConf string `xml:"vgaconf,attr,omitempty"`
-	IOMMU   string `xml:"iommu,attr,omitempty"`
-	ATS     string `xml:"ats,attr,omitempty"`
-	Packed  string `xml:"packed,attr,omitempty"`
+	Name      string `xml:"name,attr,omitempty"`
+	VGAConf   string `xml:"vgaconf,attr,omitempty"`
+	IOMMU     string `xml:"iommu,attr,omitempty"`
+	ATS       string `xml:"ats,attr,omitempty"`
+	Packed    string `xml:"packed,attr,omitempty"`
+	PagePerVQ string `xml:"page_per_vq,attr,omitempty"`
 }
 
 type DomainMemBalloonStats struct {
@@ -1359,9 +1368,10 @@ type DomainVSockCID struct {
 }
 
 type DomainVSockDriver struct {
-	IOMMU  string `xml:"iommu,attr,omitempty"`
-	ATS    string `xml:"ats,attr,omitempty"`
-	Packed string `xml:"packed,attr,omitempty"`
+	IOMMU     string `xml:"iommu,attr,omitempty"`
+	ATS       string `xml:"ats,attr,omitempty"`
+	Packed    string `xml:"packed,attr,omitempty"`
+	PagePerVQ string `xml:"page_per_vq,attr,omitempty"`
 }
 
 type DomainVSock struct {
@@ -1375,9 +1385,10 @@ type DomainVSock struct {
 }
 
 type DomainMemBalloonDriver struct {
-	IOMMU  string `xml:"iommu,attr,omitempty"`
-	ATS    string `xml:"ats,attr,omitempty"`
-	Packed string `xml:"packed,attr,omitempty"`
+	IOMMU     string `xml:"iommu,attr,omitempty"`
+	ATS       string `xml:"ats,attr,omitempty"`
+	Packed    string `xml:"packed,attr,omitempty"`
+	PagePerVQ string `xml:"page_per_vq,attr,omitempty"`
 }
 
 type DomainPanic struct {
@@ -1407,17 +1418,18 @@ type DomainSoundAudio struct {
 }
 
 type DomainAudio struct {
-	XMLName    xml.Name               `xml:"audio"`
-	ID         int                    `xml:"id,attr"`
-	None       *DomainAudioNone       `xml:"-"`
-	ALSA       *DomainAudioALSA       `xml:"-"`
-	CoreAudio  *DomainAudioCoreAudio  `xml:"-"`
-	Jack       *DomainAudioJack       `xml:"-"`
-	OSS        *DomainAudioOSS        `xml:"-"`
-	PulseAudio *DomainAudioPulseAudio `xml:"-"`
-	SDL        *DomainAudioSDL        `xml:"-"`
-	SPICE      *DomainAudioSPICE      `xml:"-"`
-	File       *DomainAudioFile       `xml:"-"`
+	XMLName     xml.Name               `xml:"audio"`
+	ID          int                    `xml:"id,attr"`
+	TimerPeriod uint                   `xml:"timerPeriod,attr,omitempty"`
+	None        *DomainAudioNone       `xml:"-"`
+	ALSA        *DomainAudioALSA       `xml:"-"`
+	CoreAudio   *DomainAudioCoreAudio  `xml:"-"`
+	Jack        *DomainAudioJack       `xml:"-"`
+	OSS         *DomainAudioOSS        `xml:"-"`
+	PulseAudio  *DomainAudioPulseAudio `xml:"-"`
+	SDL         *DomainAudioSDL        `xml:"-"`
+	SPICE       *DomainAudioSPICE      `xml:"-"`
+	File        *DomainAudioFile       `xml:"-"`
 }
 
 type DomainAudioChannel struct {
@@ -1570,9 +1582,10 @@ type DomainRNG struct {
 }
 
 type DomainRNGDriver struct {
-	IOMMU  string `xml:"iommu,attr,omitempty"`
-	ATS    string `xml:"ats,attr,omitempty"`
-	Packed string `xml:"packed,attr,omitempty"`
+	IOMMU     string `xml:"iommu,attr,omitempty"`
+	ATS       string `xml:"ats,attr,omitempty"`
+	Packed    string `xml:"packed,attr,omitempty"`
+	PagePerVQ string `xml:"page_per_vq,attr,omitempty"`
 }
 
 type DomainHostdevSubsysUSB struct {
@@ -1748,15 +1761,27 @@ type DomainMemorydevTargetSize struct {
 	Unit  string `xml:"unit,attr,omitempty"`
 }
 
+type DomainMemorydevTargetBlock struct {
+	Value uint   `xml:",chardata"`
+	Unit  string `xml:"unit,attr,omitempty"`
+}
+
+type DomainMemorydevTargetRequested struct {
+	Value uint   `xml:",chardata"`
+	Unit  string `xml:"unit,attr,omitempty"`
+}
+
 type DomainMemorydevTargetLabel struct {
 	Size *DomainMemorydevTargetSize `xml:"size"`
 }
 
 type DomainMemorydevTarget struct {
-	Size     *DomainMemorydevTargetSize     `xml:"size"`
-	Node     *DomainMemorydevTargetNode     `xml:"node"`
-	Label    *DomainMemorydevTargetLabel    `xml:"label"`
-	ReadOnly *DomainMemorydevTargetReadOnly `xml:"readonly"`
+	Size      *DomainMemorydevTargetSize      `xml:"size"`
+	Node      *DomainMemorydevTargetNode      `xml:"node"`
+	Label     *DomainMemorydevTargetLabel     `xml:"label"`
+	Block     *DomainMemorydevTargetBlock     `xml:"block"`
+	Requested *DomainMemorydevTargetRequested `xml:"requested"`
+	ReadOnly  *DomainMemorydevTargetReadOnly  `xml:"readonly"`
 }
 
 type DomainMemorydev struct {
@@ -1859,6 +1884,17 @@ type DomainTPMBackendEmulator struct {
 	Version         string                      `xml:"version,attr,omitempty"`
 	Encryption      *DomainTPMBackendEncryption `xml:"encryption"`
 	PersistentState string                      `xml:"persistent_state,attr,omitempty"`
+	ActivePCRBanks  *DomainTPMBackendPCRBanks   `xml:"active_pcr_banks"`
+}
+
+type DomainTPMBackendPCRBanks struct {
+	SHA1   *DomainTPMBackendPCRBank `xml:"sha1"`
+	SHA256 *DomainTPMBackendPCRBank `xml:"sha256"`
+	SHA384 *DomainTPMBackendPCRBank `xml:"sha384"`
+	SHA512 *DomainTPMBackendPCRBank `xml:"sha512"`
+}
+
+type DomainTPMBackendPCRBank struct {
 }
 
 type DomainTPMBackendEncryption struct {
@@ -2128,7 +2164,12 @@ type DomainOS struct {
 }
 
 type DomainResource struct {
-	Partition string `xml:"partition,omitempty"`
+	Partition    string                      `xml:"partition,omitempty"`
+	FibreChannel *DomainResourceFibreChannel `xml:"fibrechannel"`
+}
+
+type DomainResourceFibreChannel struct {
+	AppID string `xml:"appid,attr"`
 }
 
 type DomainVCPU struct {
@@ -2245,6 +2286,7 @@ type DomainNUMAInterconnectLatency struct {
 type DomainNUMAInterconnectBandwidth struct {
 	Initiator uint   `xml:"initiator,attr"`
 	Target    uint   `xml:"target,attr"`
+	Cache     uint   `xml:"cache,attr,omitempty"`
 	Type      string `xml:"type,attr"`
 	Value     uint   `xml:"value,attr"`
 	Unit      string `xml:"unit,attr"`
@@ -2322,6 +2364,7 @@ type DomainFeatureKVM struct {
 	Hidden        *DomainFeatureState `xml:"hidden"`
 	HintDedicated *DomainFeatureState `xml:"hint-dedicated"`
 	PollControl   *DomainFeatureState `xml:"poll-control"`
+	PVIPI         *DomainFeatureState `xml:"pv-ipi"`
 }
 
 type DomainFeatureXenPassthrough struct {
@@ -2371,7 +2414,8 @@ type DomainFeatureCapability struct {
 }
 
 type DomainLaunchSecurity struct {
-	SEV *DomainLaunchSecuritySEV `xml:"-"`
+	SEV    *DomainLaunchSecuritySEV    `xml:"-"`
+	S390PV *DomainLaunchSecurityS390PV `xml:"-"`
 }
 
 type DomainLaunchSecuritySEV struct {
@@ -2380,6 +2424,9 @@ type DomainLaunchSecuritySEV struct {
 	Policy          *uint  `xml:"policy"`
 	DHCert          string `xml:"dhCert"`
 	Session         string `xml:"sesion"`
+}
+
+type DomainLaunchSecurityS390PV struct {
 }
 
 type DomainFeatureCapabilities struct {
@@ -2512,6 +2559,7 @@ type DomainCPUTuneEmulatorSched struct {
 
 type DomainCPUCacheTune struct {
 	VCPUs   string                      `xml:"vcpus,attr,omitempty"`
+	ID      string                      `xml:"id,attr,omitempty"`
 	Cache   []DomainCPUCacheTuneCache   `xml:"cache"`
 	Monitor []DomainCPUCacheTuneMonitor `xml:"monitor"`
 }
@@ -5309,6 +5357,11 @@ func (a *DomainAudio) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 			xml.Name{Local: "id"}, fmt.Sprintf("%d", a.ID),
 		})
 	}
+	if a.TimerPeriod != 0 {
+		start.Attr = append(start.Attr, xml.Attr{
+			xml.Name{Local: "timerPeriod"}, fmt.Sprintf("%d", a.TimerPeriod),
+		})
+	}
 	if a.None != nil {
 		start.Attr = append(start.Attr, xml.Attr{
 			xml.Name{Local: "type"}, "none",
@@ -5370,6 +5423,15 @@ func (a *DomainAudio) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error
 			return err
 		}
 		a.ID = int(idval)
+	}
+
+	period, ok := getAttr(start.Attr, "timerPeriod")
+	if ok {
+		periodval, err := strconv.ParseUint(period, 10, 32)
+		if err != nil {
+			return err
+		}
+		a.TimerPeriod = uint(periodval)
 	}
 
 	if typ == "none" {
@@ -6111,6 +6173,11 @@ func (a *DomainLaunchSecurity) MarshalXML(e *xml.Encoder, start xml.StartElement
 			xml.Name{Local: "type"}, "sev",
 		})
 		return e.EncodeElement(a.SEV, start)
+	} else if a.S390PV != nil {
+		start.Attr = append(start.Attr, xml.Attr{
+			xml.Name{Local: "type"}, "s390-pv",
+		})
+		return e.EncodeElement(a.S390PV, start)
 	} else {
 		return nil
 	}
@@ -6133,6 +6200,9 @@ func (a *DomainLaunchSecurity) UnmarshalXML(d *xml.Decoder, start xml.StartEleme
 	if typ == "sev" {
 		a.SEV = &DomainLaunchSecuritySEV{}
 		return d.DecodeElement(a.SEV, &start)
+	} else if typ == "s390-pv" {
+		a.S390PV = &DomainLaunchSecurityS390PV{}
+		return d.DecodeElement(a.S390PV, &start)
 	}
 
 	return nil

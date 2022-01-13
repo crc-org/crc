@@ -1,5 +1,5 @@
 /*
- * This file is part of the libvirt-go-xml project
+ * This file is part of the libvirt-go-xml-module project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -19,7 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * Copyright (C) 2017 Lian Duan <blazeblue@gmail.com>
+ * Copyright (C) 2016 Red Hat, Inc.
  *
  */
 
@@ -29,42 +29,27 @@ import (
 	"encoding/xml"
 )
 
-type NWFilterBinding struct {
-	XMLName   xml.Name                  `xml:"filterbinding"`
-	Owner     *NWFilterBindingOwner     `xml:"owner"`
-	PortDev   *NWFilterBindingPortDev   `xml:"portdev"`
-	MAC       *NWFilterBindingMAC       `xml:"mac"`
-	FilterRef *NWFilterBindingFilterRef `xml:"filterref"`
+type SecretUsage struct {
+	Type   string `xml:"type,attr"`
+	Volume string `xml:"volume,omitempty"`
+	Name   string `xml:"name,omitempty"`
+	Target string `xml:"target,omitempty"`
 }
 
-type NWFilterBindingOwner struct {
-	UUID string `xml:"uuid,omitempty"`
-	Name string `xml:"name,omitempty"`
+type Secret struct {
+	XMLName     xml.Name     `xml:"secret"`
+	Ephemeral   string       `xml:"ephemeral,attr,omitempty"`
+	Private     string       `xml:"private,attr,omitempty"`
+	Description string       `xml:"description,omitempty"`
+	UUID        string       `xml:"uuid,omitempty"`
+	Usage       *SecretUsage `xml:"usage"`
 }
 
-type NWFilterBindingPortDev struct {
-	Name string `xml:"name,attr"`
-}
-
-type NWFilterBindingMAC struct {
-	Address string `xml:"address,attr"`
-}
-
-type NWFilterBindingFilterRef struct {
-	Filter     string                       `xml:"filter,attr"`
-	Parameters []NWFilterBindingFilterParam `xml:"parameter"`
-}
-
-type NWFilterBindingFilterParam struct {
-	Name  string `xml:"name,attr"`
-	Value string `xml:"value,attr"`
-}
-
-func (s *NWFilterBinding) Unmarshal(doc string) error {
+func (s *Secret) Unmarshal(doc string) error {
 	return xml.Unmarshal([]byte(doc), s)
 }
 
-func (s *NWFilterBinding) Marshal() (string, error) {
+func (s *Secret) Marshal() (string, error) {
 	doc, err := xml.MarshalIndent(s, "", "  ")
 	if err != nil {
 		return "", err

@@ -1,5 +1,5 @@
 /*
- * This file is part of the libvirt-go-xml project
+ * This file is part of the libvirt-go-xml-module project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -122,6 +122,7 @@ type NodeDevicePCISubCapability struct {
 	PhysFunction  *NodeDevicePCIPhysFunctionCapability
 	MDevTypes     *NodeDevicePCIMDevTypesCapability
 	Bridge        *NodeDevicePCIBridgeCapability
+	VPD           *NodeDevicePCIVPDCapability
 }
 
 type NodeDevicePCIVirtFunctionsCapability struct {
@@ -145,6 +146,31 @@ type NodeDeviceMDevType struct {
 }
 
 type NodeDevicePCIBridgeCapability struct {
+}
+
+type NodeDevicePCIVPDCapability struct {
+	Name      string                    `xml:"name,omitempty"`
+	ReadOnly  *NodeDevicePCIVPDFieldsRO `xml:"-"`
+	ReadWrite *NodeDevicePCIVPDFieldsRW `xml:"-"`
+}
+
+type NodeDevicePCIVPDFieldsRO struct {
+	ChangeLevel   string                        `xml:"change_level,omitempty"`
+	ManufactureID string                        `xml:"manufacture_id,omitempty"`
+	PartNumber    string                        `xml:"part_number,omitempty"`
+	SerialNumber  string                        `xml:"serial_number,omitempty"`
+	VendorFields  []NodeDevicePCIVPDCustomField `xml:"vendor_field"`
+}
+
+type NodeDevicePCIVPDFieldsRW struct {
+	AssetTag     string                        `xml:"asset_tag,omitempty"`
+	VendorFields []NodeDevicePCIVPDCustomField `xml:"vendor_field"`
+	SystemFields []NodeDevicePCIVPDCustomField `xml:"system_field"`
+}
+
+type NodeDevicePCIVPDCustomField struct {
+	Index string `xml:"index,attr"`
+	Value string `xml:",chardata"`
 }
 
 type NodeDeviceSystemHardware struct {
@@ -605,6 +631,12 @@ func (c *NodeDevicePCISubCapability) UnmarshalXML(d *xml.Decoder, start xml.Star
 			return err
 		}
 		c.Bridge = &bridgeCaps
+	case "vpd":
+		var vpdCaps NodeDevicePCIVPDCapability
+		if err := d.DecodeElement(&vpdCaps, &start); err != nil {
+			return err
+		}
+		c.VPD = &vpdCaps
 	}
 	d.Skip()
 	return nil
@@ -631,6 +663,11 @@ func (c *NodeDevicePCISubCapability) MarshalXML(e *xml.Encoder, start xml.StartE
 			xml.Name{Local: "type"}, "pci-bridge",
 		})
 		return e.EncodeElement(c.Bridge, start)
+	} else if c.VPD != nil {
+		start.Attr = append(start.Attr, xml.Attr{
+			xml.Name{Local: "type"}, "vpd",
+		})
+		return e.EncodeElement(c.VPD, start)
 	}
 	return nil
 }
@@ -793,6 +830,88 @@ func (c *NodeDeviceAPMatrixSubCapability) MarshalXML(e *xml.Encoder, start xml.S
 			xml.Name{Local: "type"}, "mdev_types",
 		})
 		return e.EncodeElement(c.MDevTypes, start)
+	}
+	return nil
+}
+
+type nodeDevicePCIVPDFields struct {
+	ReadOnly  *NodeDevicePCIVPDFieldsRO
+	ReadWrite *NodeDevicePCIVPDFieldsRW
+}
+
+type nodeDevicePCIVPDCapability struct {
+	Name   string                   `xml:"name,omitempty"`
+	Fields []nodeDevicePCIVPDFields `xml:"fields"`
+}
+
+func (c *nodeDevicePCIVPDFields) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	acc, ok := getAttr(start.Attr, "access")
+	if !ok {
+		return fmt.Errorf("Missing node device PCI VPD capability access")
+	}
+
+	switch acc {
+	case "readonly":
+		var ro NodeDevicePCIVPDFieldsRO
+		if err := d.DecodeElement(&ro, &start); err != nil {
+			return err
+		}
+		c.ReadOnly = &ro
+	case "readwrite":
+		var rw NodeDevicePCIVPDFieldsRW
+		if err := d.DecodeElement(&rw, &start); err != nil {
+			return err
+		}
+		c.ReadWrite = &rw
+	}
+	d.Skip()
+	return nil
+}
+
+func (c *NodeDevicePCIVPDCapability) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	var ccopy nodeDevicePCIVPDCapability
+	ccopy.Name = c.Name
+	if c.ReadOnly != nil {
+		ccopy.Fields = append(ccopy.Fields, nodeDevicePCIVPDFields{
+			ReadOnly: c.ReadOnly,
+		})
+	}
+	if c.ReadWrite != nil {
+		ccopy.Fields = append(ccopy.Fields, nodeDevicePCIVPDFields{
+			ReadWrite: c.ReadWrite,
+		})
+	}
+	e.EncodeElement(&ccopy, start)
+	return nil
+}
+
+func (c *NodeDevicePCIVPDCapability) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	var ccopy nodeDevicePCIVPDCapability
+	if err := d.DecodeElement(&ccopy, &start); err != nil {
+		return err
+	}
+	c.Name = ccopy.Name
+	for _, field := range ccopy.Fields {
+		if field.ReadOnly != nil {
+			c.ReadOnly = field.ReadOnly
+		} else if field.ReadWrite != nil {
+			c.ReadWrite = field.ReadWrite
+		}
+	}
+	return nil
+}
+
+func (c *nodeDevicePCIVPDFields) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if c.ReadOnly != nil {
+		start.Attr = append(start.Attr, xml.Attr{
+			xml.Name{Local: "access"}, "readonly",
+		})
+		return e.EncodeElement(c.ReadOnly, start)
+	} else if c.ReadWrite != nil {
+		start.Attr = append(start.Attr, xml.Attr{
+			xml.Name{Local: "access"}, "readwrite",
+		})
+		return e.EncodeElement(c.ReadWrite, start)
 	}
 	return nil
 }

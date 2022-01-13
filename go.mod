@@ -35,7 +35,6 @@ require (
 	github.com/klauspost/cpuid/v2 v2.0.9
 	github.com/kofalt/go-memoize v0.0.0-20210721235729-46a601ff34b8
 	github.com/kr/pretty v0.3.0 // indirect
-	github.com/libvirt/libvirt-go-xml v7.4.0+incompatible
 	github.com/mattn/go-colorable v0.1.11
 	github.com/mdlayher/vsock v1.1.0
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
@@ -69,6 +68,7 @@ require (
 	k8s.io/api v0.22.0-rc.0
 	k8s.io/apimachinery v0.22.0-rc.0
 	k8s.io/client-go v0.22.0-rc.0
+	libvirt.org/go/libvirtxml v1.7010.0
 )
 
 replace (
