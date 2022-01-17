@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# bundle location
-BUNDLE_VERSION=4.9.10
-BUNDLE=crc_libvirt_$BUNDLE_VERSION.crcbundle
 GO_VERSION=1.16.10
 
 # Output command before executing
@@ -109,12 +106,6 @@ function perform_artifacts_upload() {
   fi
 }
 
-function get_bundle() {
-  mkdir $HOME/Downloads
-  curl -L "https://storage.googleapis.com/crc-bundle-github-ci/crc_libvirt_$BUNDLE_VERSION.zip" -o $HOME/Downloads/bundle.zip
-  unzip -P $CRC_BUNDLE_PASSWORD $HOME/Downloads/bundle.zip -d $HOME/Downloads/
-}
-
 function upload_logs() {
   set +x
 
@@ -153,7 +144,6 @@ else
 	export XDG_RUNTIME_DIR="/run/user/$UID"
 	export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
 	export TERM=xterm-256color
-	get_bundle
 	setup_golang
 
 	# setup to run e2e tests
