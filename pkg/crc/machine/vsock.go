@@ -5,6 +5,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/daemonclient"
+	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
@@ -12,11 +13,10 @@ import (
 )
 
 func exposePorts(preset crcPreset.Preset) error {
-	daemonClient := daemonclient.New()
 	portsToExpose := vsockPorts(preset)
-	alreadyOpenedPorts, err := daemonClient.NetworkClient.List()
+	daemonClient := daemonclient.New()
+	alreadyOpenedPorts, err := listOpenPorts(daemonClient)
 	if err != nil {
-		logging.Error("Is 'crc daemon' running? Network mode 'vsock' requires 'crc daemon' to be running, run it manually on different terminal/tab")
 		return err
 	}
 	var missingPorts []types.ExposeRequest
@@ -41,6 +41,33 @@ func isOpened(exposed []types.ExposeRequest, port types.ExposeRequest) bool {
 		}
 	}
 	return false
+}
+
+func unexposePorts() error {
+	var mErr crcErrors.MultiError
+	daemonClient := daemonclient.New()
+	alreadyOpenedPorts, err := listOpenPorts(daemonClient)
+	if err != nil {
+		return err
+	}
+	for _, port := range alreadyOpenedPorts {
+		if err := daemonClient.NetworkClient.Unexpose(&types.UnexposeRequest{Local: port.Local}); err != nil {
+			mErr.Collect(errors.Wrapf(err, "failed to unexpose port %s ", port.Local))
+		}
+	}
+	if len(mErr.Errors) == 0 {
+		return nil
+	}
+	return mErr
+}
+
+func listOpenPorts(daemonClient *daemonclient.Client) ([]types.ExposeRequest, error) {
+	alreadyOpenedPorts, err := daemonClient.NetworkClient.List()
+	if err != nil {
+		logging.Error("Is 'crc daemon' running? Network mode 'vsock' requires 'crc daemon' to be running, run it manually on different terminal/tab")
+		return nil, err
+	}
+	return alreadyOpenedPorts, nil
 }
 
 const (
