@@ -44,6 +44,22 @@ func TestGenerateBundle(t *testing.T) {
 	defer os.Remove(fmt.Sprintf("%s%s", customBundleName, bundleExtension))
 }
 
+func TestGetType(t *testing.T) {
+	type data struct {
+		value         string
+		expectedValue string
+	}
+	testdata := []data{
+		{value: "snc", expectedValue: "snc_custom"},
+		{value: "podman", expectedValue: "podman_custom"},
+		{value: "snc_custom", expectedValue: "snc_custom"},
+		{value: "podman_custom", expectedValue: "podman_custom"},
+	}
+	for _, d := range testdata {
+		assert.EqualValues(t, d.expectedValue, getType(d.value))
+	}
+}
+
 func createDummyBundleFiles(t *testing.T, bundle *CrcBundleInfo) {
 	assert.NoError(t, os.MkdirAll(bundle.cachedPath, 0750))
 

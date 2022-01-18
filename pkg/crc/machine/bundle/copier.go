@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/code-ready/crc/pkg/compress"
@@ -38,11 +39,17 @@ func NewCopier(srcBundle *CrcBundleInfo, basePath string, customBundleName strin
 	}
 
 	copier.copiedBundle.Name = customBundleName
-	copier.copiedBundle.Type = fmt.Sprintf("%s_custom", srcBundle.Type)
+	copier.copiedBundle.Type = getType(srcBundle.Type)
 	copier.srcBundle = srcBundle
 	copier.copiedBundle.cachedPath = bundlePath
 
 	return &copier, nil
+}
+
+func getType(srcType string) string {
+	customType := "_custom"
+	srcType = strings.TrimSuffix(srcType, customType)
+	return fmt.Sprintf("%s%s", srcType, customType)
 }
 
 func (copier *Copier) Cleanup() error {
