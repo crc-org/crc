@@ -148,6 +148,14 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	bundleName := bundle.GetBundleNameWithoutExtension(filepath.Base(startConfig.BundlePath))
+	crcBundleMetadata, err := getCrcBundleInfo(bundleName, startConfig.BundlePath)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting bundle metadata")
+	}
+
+	if err := bundleMismatchWithPreset(startConfig.Preset, crcBundleMetadata); err != nil {
+		return nil, err
+	}
 
 	if !exists {
 		telemetry.SetStartType(ctx, telemetry.CreationStartType)
@@ -156,11 +164,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		_, err = startConfig.PullSecret.Value()
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to ask for pull secret")
-		}
-
-		crcBundleMetadata, err := getCrcBundleInfo(bundleName, startConfig.BundlePath)
-		if err != nil {
-			return nil, errors.Wrap(err, "Error getting bundle metadata")
 		}
 
 		if crcBundleMetadata.IsOpenShift() {
@@ -206,9 +209,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, fmt.Errorf("Bundle '%s' was requested, but the existing VM is using '%s'. Please delete your existing cluster and start again",
 			bundleName,
 			currentBundleName)
-	}
-	if err := bundleMismatchWithPreset(startConfig.Preset, vm.bundle); err != nil {
-		return nil, err
 	}
 	vmState, err := vm.State()
 	if err != nil {
