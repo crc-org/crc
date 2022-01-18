@@ -189,7 +189,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		if crcBundleMetadata.IsOpenShift() {
 			machineConfig.KubeConfig = crcBundleMetadata.GetKubeConfigPath()
 		}
-		if err := createHost(machineConfig); err != nil {
+		if err := createHost(machineConfig, crcBundleMetadata.GetBundleType()); err != nil {
 			return nil, errors.Wrap(err, "Error creating machine")
 		}
 	} else {
@@ -524,7 +524,7 @@ func (client *client) validateStartConfig(startConfig types.StartConfig) error {
 	return nil
 }
 
-func createHost(machineConfig config.MachineConfig) error {
+func createHost(machineConfig config.MachineConfig, preset crcPreset.Preset) error {
 	api, cleanup := createLibMachineClient()
 	defer cleanup()
 
@@ -553,8 +553,10 @@ func createHost(machineConfig config.MachineConfig) error {
 	if err := crcssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
 		return fmt.Errorf("Error generating ssh key pair: %v", err)
 	}
-	if err := cluster.GenerateKubeAdminUserPassword(); err != nil {
-		return errors.Wrap(err, "Error generating new kubeadmin password")
+	if preset == crcPreset.OpenShift {
+		if err := cluster.GenerateKubeAdminUserPassword(); err != nil {
+			return errors.Wrap(err, "Error generating new kubeadmin password")
+		}
 	}
 	if err := api.SetExists(vm.Name); err != nil {
 		return fmt.Errorf("Failed to record VM existence: %s", err)
