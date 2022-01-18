@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
 )
 
 type contextKey struct{}
@@ -75,6 +76,10 @@ func SetDiskSize(ctx context.Context, value uint64) {
 
 func SetConfigurationKey(ctx context.Context, value string) {
 	setContextProperty(ctx, "key", value)
+}
+
+func SetPreset(ctx context.Context, value crcpreset.Preset) {
+	setContextProperty(ctx, "preset", value)
 }
 
 func SetStartType(ctx context.Context, value StartType) {
