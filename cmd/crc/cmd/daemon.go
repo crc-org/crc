@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
-	"runtime"
 	"syscall"
 	"time"
 
@@ -57,7 +56,7 @@ var daemonCmd = &cobra.Command{
 		virtualNetworkConfig := types.Configuration{
 			Debug:             false, // never log packets
 			CaptureFile:       os.Getenv("CRC_DAEMON_PCAP_FILE"),
-			MTU:               mtu(), // Large packets slightly improve the performance. Less small packets.
+			MTU:               4000, // Large packets slightly improve the performance. Less small packets.
 			Subnet:            "192.168.127.0/24",
 			GatewayIP:         constants.VSockGateway,
 			GatewayMacAddress: "5a:94:ef:e4:0c:dd",
@@ -95,9 +94,6 @@ var daemonCmd = &cobra.Command{
 					},
 				},
 			},
-			VpnKitUUIDMacAddresses: map[string]string{
-				"c3d68012-0208-11ea-9fd7-f2189899ab08": "5a:94:ef:e4:0c:ee",
-			},
 			Protocol: types.HyperKitProtocol,
 		}
 		if config.Get(crcConfig.HostNetworkAccess).AsBool() {
@@ -111,13 +107,6 @@ var daemonCmd = &cobra.Command{
 		err := run(&virtualNetworkConfig)
 		return err
 	},
-}
-
-func mtu() int {
-	if runtime.GOOS == "darwin" {
-		return 1500
-	}
-	return 4000
 }
 
 func run(configuration *types.Configuration) error {
@@ -173,26 +162,10 @@ func run(configuration *types.Configuration) error {
 	}()
 
 	go func() {
-		if runtime.GOOS == "darwin" {
-			for {
-				conn, err := vsockListener.Accept()
-				if err != nil {
-					log.Errorf("vpnkit accept error: %s", err)
-					continue
-				}
-				go func() {
-					if err := vn.AcceptVpnKit(conn); err != nil {
-						log.Errorf("vpnkit accept error: %s", err)
-
-					}
-				}()
-			}
-		} else {
-			mux := http.NewServeMux()
-			mux.Handle(types.ConnectPath, vn.Mux())
-			if err := http.Serve(vsockListener, mux); err != nil {
-				errCh <- errors.Wrap(err, "virtualnetwork http.Serve failed")
-			}
+		mux := http.NewServeMux()
+		mux.Handle(types.ConnectPath, vn.Mux())
+		if err := http.Serve(vsockListener, mux); err != nil {
+			errCh <- errors.Wrap(err, "virtualnetwork http.Serve failed")
 		}
 	}()
 
