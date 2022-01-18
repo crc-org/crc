@@ -175,10 +175,14 @@ func (bundle *CrcBundleInfo) GetBundleNameWithoutExtension() string {
 }
 
 func (bundle *CrcBundleInfo) GetBundleType() preset.Preset {
-	if bundle.Type == "snc" || bundle.Type == "snc_custom" {
+	switch bundle.Type {
+	case "snc", "snc_custom":
+		return preset.OpenShift
+	case "podman", "podman_custom":
+		return preset.Podman
+	default:
 		return preset.OpenShift
 	}
-	return preset.Podman
 }
 
 func (bundle *CrcBundleInfo) IsOpenShift() bool {
