@@ -18,7 +18,7 @@ func TestPlainDelete(t *testing.T) {
 
 	out := new(bytes.Buffer)
 	assert.NoError(t, runDelete(out, fakemachine.NewClient(), true, cacheDir, true, true, ""))
-	assert.Equal(t, "Deleted the OpenShift cluster\n", out.String())
+	assert.Equal(t, "Deleted the instance\n", out.String())
 
 	_, err = os.Stat(cacheDir)
 	assert.True(t, os.IsNotExist(err))

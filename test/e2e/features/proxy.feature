@@ -24,7 +24,7 @@ Feature: Behind proxy test
 
     Scenario: CRC delete and remove proxy settings from config
         When executing "crc delete -f" succeeds
-        Then stdout should contain "Deleted the OpenShift cluster"
+        Then stdout should contain "Deleted the instance"
         And  executing "crc config unset http-proxy" succeeds
         And executing "crc config unset https-proxy" succeeds
         And executing crc cleanup command succeeds

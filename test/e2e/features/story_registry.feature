@@ -46,6 +46,6 @@ Feature: Local image to image-registry
     @startstop
     Scenario: Clean up
         When executing "crc delete -f" succeeds
-        Then stdout should contain "Deleted the OpenShift cluster"
+        Then stdout should contain "Deleted the instance"
         When executing crc cleanup command succeeds
         Then stdout should contain "Cleanup finished"

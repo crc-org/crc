@@ -54,7 +54,7 @@ Feature: Basic test
         And stderr should contain "Checking if NetworkManager service is running"
         And stderr should contain "Using root access: Executing systemctl daemon-reload command"
         And stderr should contain "Using root access: Executing systemctl reload NetworkManager"
-        And stdout should contain "Your system is correctly setup for using CodeReady Containers, you can now run 'crc start' to start the OpenShift cluster"
+        And stdout should contain "Your system is correctly setup for using CodeReady Containers. Use 'crc start' to start the instance"
 
     @linux
     Scenario: Missing CRC setup
@@ -152,7 +152,7 @@ Feature: Basic test
     @darwin @windows
     Scenario: CRC stop
         When executing "crc stop"
-        Then stdout should match "(.*)[Ss]topped the OpenShift cluster"
+        Then stdout should match "(.*)[Ss]topped the instance"
         And executing "oc whoami" fails
 
     @darwin @linux @windows
@@ -168,7 +168,7 @@ Feature: Basic test
     @darwin @linux @windows
     Scenario: CRC delete
         When executing "crc delete -f" succeeds
-        Then stdout should contain "Deleted the OpenShift cluster"
+        Then stdout should contain "Deleted the instance"
 
     @linux
     Scenario: CRC starts with generated bundle

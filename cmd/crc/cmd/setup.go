@@ -22,7 +22,7 @@ var (
 
 func init() {
 	setupCmd.Flags().Bool(crcConfig.ExperimentalFeatures, false, "Allow the use of experimental features")
-	setupCmd.Flags().StringP(crcConfig.Bundle, "b", constants.GetDefaultBundlePath(crcConfig.GetPreset(config)), "Bundle to use for VM")
+	setupCmd.Flags().StringP(crcConfig.Bundle, "b", constants.GetDefaultBundlePath(crcConfig.GetPreset(config)), "Bundle to use for instance")
 	setupCmd.Flags().BoolVar(&checkOnly, "check-only", false, "Only run the preflight checks, don't try to fix any misconfiguration")
 	addOutputFormatFlag(setupCmd)
 	rootCmd.AddCommand(setupCmd)
@@ -30,8 +30,8 @@ func init() {
 
 var setupCmd = &cobra.Command{
 	Use:   "setup",
-	Short: "Set up prerequisites for the OpenShift cluster",
-	Long:  "Set up local virtualization and networking infrastructure for the OpenShift cluster",
+	Short: "Set up prerequisites for using CodeReady Containers",
+	Long:  "Set up local virtualization and networking infrastructure for using CodeReady Containers",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if err := viper.BindFlagSet(cmd.Flags()); err != nil {
 			return err
@@ -86,6 +86,7 @@ func (s *setupResult) prettyPrintTo(writer io.Writer) error {
 	if s.Error != nil {
 		return s.Error
 	}
-	_, err := fmt.Fprintf(writer, "Your system is correctly setup for using CodeReady Containers, you can now run 'crc start' to start the OpenShift cluster\n")
+	_, err := fmt.Fprintln(writer, "Your system is correctly setup for using CodeReady Containers. "+
+		"Use 'crc start' to start the instance")
 	return err
 }

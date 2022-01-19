@@ -20,7 +20,7 @@ func (client *client) Stop() (state.State, error) {
 			logging.Debugf("%v", err)
 		}
 	}
-	logging.Info("Stopping the OpenShift cluster, this may take a few minutes...")
+	logging.Info("Stopping the instance, this may take a few minutes...")
 	if err := vm.Stop(); err != nil {
 		status, stateErr := vm.State()
 		if stateErr != nil {
