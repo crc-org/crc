@@ -95,11 +95,11 @@ func vsockPorts(preset crcPreset.Preset) []types.ExposeRequest {
 				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, apiPort),
 			},
 			types.ExposeRequest{
-				Local:  fmt.Sprintf("%s:%d", localIP, httpsPort),
+				Local:  fmt.Sprintf(":%d", httpsPort),
 				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, httpsPort),
 			},
 			types.ExposeRequest{
-				Local:  fmt.Sprintf("%s:%d", localIP, httpPort),
+				Local:  fmt.Sprintf(":%d", httpPort),
 				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, httpPort),
 			})
 	case crcPreset.Podman:
