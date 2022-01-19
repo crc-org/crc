@@ -11,7 +11,7 @@ import (
 func TestStopPlainSuccess(t *testing.T) {
 	out := new(bytes.Buffer)
 	assert.NoError(t, runStop(out, fakemachine.NewClient(), true, false, ""))
-	assert.Equal(t, "Stopped the OpenShift cluster\n", out.String())
+	assert.Equal(t, "Stopped the instance\n", out.String())
 }
 
 func TestStopPlainError(t *testing.T) {

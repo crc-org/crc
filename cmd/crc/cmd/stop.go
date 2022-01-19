@@ -20,8 +20,8 @@ func init() {
 
 var stopCmd = &cobra.Command{
 	Use:   "stop",
-	Short: "Stop the OpenShift cluster",
-	Long:  "Stop the OpenShift cluster",
+	Short: "Stop the instance",
+	Long:  "Stop the instance",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runStop(os.Stdout, newMachine(), outputFormat != jsonFormat, globalForce, outputFormat)
 	},
@@ -74,9 +74,9 @@ func (s *stopResult) prettyPrintTo(writer io.Writer) error {
 		return s.Error
 	}
 	if s.Forced {
-		_, err := fmt.Fprintln(writer, "Forcibly stopped the OpenShift cluster")
+		_, err := fmt.Fprintln(writer, "Forcibly stopped the instance")
 		return err
 	}
-	_, err := fmt.Fprintln(writer, "Stopped the OpenShift cluster")
+	_, err := fmt.Fprintln(writer, "Stopped the instance")
 	return err
 }

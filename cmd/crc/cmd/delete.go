@@ -18,7 +18,7 @@ var clearCache bool
 
 func init() {
 	deleteCmd.Flags().BoolVarP(&clearCache, "clear-cache", "", false,
-		fmt.Sprintf("Clear the OpenShift cluster cache at: %s", constants.MachineCacheDir))
+		fmt.Sprintf("Clear the instance cache at: %s", constants.MachineCacheDir))
 	addOutputFormatFlag(deleteCmd)
 	addForceFlag(deleteCmd)
 	rootCmd.AddCommand(deleteCmd)
@@ -26,8 +26,8 @@ func init() {
 
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
-	Short: "Delete the OpenShift cluster",
-	Long:  "Delete the OpenShift cluster",
+	Short: "Delete the instance",
+	Long:  "Delete the instance",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runDelete(os.Stdout, newMachine(), clearCache, constants.MachineCacheDir, outputFormat != jsonFormat, globalForce, outputFormat)
 	},
@@ -38,7 +38,7 @@ func deleteMachine(client machine.Client, clearCache bool, cacheDir string, inte
 		if !interactive && !force {
 			return false, errors.New("non-interactive deletion requires --force")
 		}
-		yes := input.PromptUserForYesOrNo("Do you want to delete the OpenShift cluster cache", force)
+		yes := input.PromptUserForYesOrNo("Do you want to delete the instance cache", force)
 		if yes {
 			_ = os.RemoveAll(cacheDir)
 		}
@@ -52,7 +52,8 @@ func deleteMachine(client machine.Client, clearCache bool, cacheDir string, inte
 		return false, errors.New("non-interactive deletion requires --force")
 	}
 
-	yes := input.PromptUserForYesOrNo("Do you want to delete the OpenShift cluster", force)
+	yes := input.PromptUserForYesOrNo("Do you want to delete the instance",
+		force)
 	if yes {
 		defer logging.BackupLogFile()
 		return true, client.Delete()
@@ -80,7 +81,7 @@ func (s *deleteResult) prettyPrintTo(writer io.Writer) error {
 		return s.Error
 	}
 	if s.machineDeleted {
-		if _, err := fmt.Fprintln(writer, "Deleted the OpenShift cluster"); err != nil {
+		if _, err := fmt.Fprintln(writer, "Deleted the instance"); err != nil {
 			return err
 		}
 	}
