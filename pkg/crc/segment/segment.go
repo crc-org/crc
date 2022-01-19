@@ -250,7 +250,7 @@ func (l *loggingAdapter) Logf(format string, args ...interface{}) {
 }
 
 func (l *loggingAdapter) Errorf(format string, args ...interface{}) {
-	logging.Errorf(format, args...)
+	logging.Debugf(format, args...)
 }
 
 func errorType(err error) string {
