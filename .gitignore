@@ -4,3 +4,4 @@ release/
 /release-info.json
 *.crcbundle
 packaging/tmp
+packaging/*.pkg
