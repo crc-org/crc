@@ -1,4 +1,5 @@
-//+build darwin build
+//go:build darwin || build
+// +build darwin build
 
 package hyperkit
 

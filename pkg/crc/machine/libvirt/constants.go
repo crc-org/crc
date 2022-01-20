@@ -1,4 +1,5 @@
-//+build linux build
+//go:build linux || build
+// +build linux build
 
 package libvirt
 
