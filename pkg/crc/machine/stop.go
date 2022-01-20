@@ -3,6 +3,7 @@ package machine
 import (
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/state"
+	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/systemd"
 	"github.com/pkg/errors"
 )
@@ -13,10 +14,11 @@ func (client *client) Stop() (state.State, error) {
 		return state.Error, errors.Wrap(err, "Cannot load machine")
 	}
 	defer vm.Close()
-
-	if err := stopAllContainers(vm); err != nil {
-		logging.Warnf("Failed to stop all OpenShift containers.\nShutting down VM...")
-		logging.Debugf("%v", err)
+	if client.GetPreset() == crcPreset.OpenShift {
+		if err := stopAllContainers(vm); err != nil {
+			logging.Warnf("Failed to stop all OpenShift containers.\nShutting down VM...")
+			logging.Debugf("%v", err)
+		}
 	}
 	logging.Info("Stopping the OpenShift cluster, this may take a few minutes...")
 	if err := vm.Stop(); err != nil {
