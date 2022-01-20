@@ -37,6 +37,8 @@ SOURCES := $(shell git ls-files  *.go ":^vendor")
 RELEASE_INFO := release-info.json
 
 MOCK_BUNDLE ?= false
+CUSTOM_EMBED ?= false
+EMBED_DOWNLOAD_DIR ?= tmp-embed
 
 # Check that given variables are set and all have non-empty values,
 # die with an error otherwise.
@@ -283,16 +285,21 @@ goversioncheck:
 
 TRAY_RELEASE ?= packaging/tmp/crc-tray-macos.tar.gz
 
+embed-download: $(HOST_BUILD_DIR)/crc-embedder
+ifeq ($(CUSTOM_EMBED),false)
+	mkdir -p $(EMBED_DOWNLOAD_DIR)
+	$(HOST_BUILD_DIR)/crc-embedder download $(EMBED_DOWNLOAD_DIR)
+endif
+
 packagedir: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
-packagedir: clean $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
+packagedir: clean embed-download $(BUILD_DIR)/macos-amd64/crc 
 	echo -n $(CRC_VERSION) > packaging/VERSION
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/postinstall.in >packaging/darwin/scripts/postinstall
 	chmod 755 packaging/darwin/scripts/postinstall
 	mkdir -p packaging/tmp/
-	$(HOST_BUILD_DIR)/crc-embedder download packaging/tmp/
-
+	cp $(EMBED_DOWNLOAD_DIR)/* packaging/tmp/
 	mkdir -p packaging/root/Applications
 	tar -C packaging/root/Applications -xvzf $(TRAY_RELEASE)
 	rm packaging/tmp/crc-tray-macos.tar.gz
@@ -336,9 +343,9 @@ BUNDLE_NAME=crc_hyperv_$(OPENSHIFT_VERSION).$(BUNDLE_EXTENSION)
 
 .PHONY: msidir
 msidir: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
-msidir: clean $(HOST_BUILD_DIR)/crc-embedder $(HOST_BUILD_DIR)/GenMsiWxs $(BUILD_DIR)/windows-amd64/crc.exe $(PACKAGE_DIR)/product.wxs.template
+msidir: clean embed-download $(HOST_BUILD_DIR)/GenMsiWxs $(BUILD_DIR)/windows-amd64/crc.exe $(PACKAGE_DIR)/product.wxs.template
 	mkdir -p $(PACKAGE_DIR)/msi
-	$(HOST_BUILD_DIR)/crc-embedder download $(PACKAGE_DIR)/msi 
+	cp $(EMBED_DOWNLOAD_DIR)/* $(PACKAGE_DIR)/msi
 	cp $(HOST_BUILD_DIR)/crc.exe $(PACKAGE_DIR)/msi/$(CRC_EXE)
 	pwsh -NoProfile -Command "cd $(PACKAGE_DIR)/msi; Expand-Archive crc-tray-windows.zip -DestinationPath .\; Remove-Item crc-tray-windows.zip"
 ifeq ($(MOCK_BUNDLE),true)
