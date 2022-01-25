@@ -1,10 +1,15 @@
 package machine
 
 import (
+	"path/filepath"
+	"runtime"
+
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/state"
 	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/systemd"
+	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/pkg/errors"
 )
 
@@ -32,6 +37,9 @@ func (client *client) Stop() (state.State, error) {
 	if err != nil {
 		return state.Error, errors.Wrap(err, "Cannot get VM status")
 	}
+	if err := copyMachineDirContentToPreset(client.GetPreset()); err != nil {
+		return status, errors.Wrap(err, "Failed to copy machine content to preset")
+	}
 	return status, nil
 }
 
@@ -54,6 +62,15 @@ func stopAllContainers(vm *virtualMachine) error {
 	if err != nil {
 		logging.Errorf("Failed to stop all containers: %v - %s", err, stderr)
 		return err
+	}
+	return nil
+}
+
+func copyMachineDirContentToPreset(preset crcPreset.Preset) error {
+	if runtime.GOOS == "windows" {
+		presetDir := filepath.Join(constants.MachineInstanceDir, preset.String())
+		srcPath := filepath.Join(constants.MachineInstanceDir, constants.DefaultName)
+		return crcos.CopyDirectory(srcPath, presetDir)
 	}
 	return nil
 }

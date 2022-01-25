@@ -2,7 +2,9 @@ package machine
 
 import (
 	"os"
+	"path/filepath"
 
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/pkg/errors"
 )
@@ -23,6 +25,10 @@ func (client *client) Delete() error {
 		if err := unexposePorts(); err != nil {
 			return err
 		}
+	}
+	presetDir := filepath.Join(constants.MachineInstanceDir, client.GetPreset().String())
+	if err := os.RemoveAll(presetDir); err != nil {
+		return errors.Wrapf(err, "Not able to remove %s", presetDir)
 	}
 
 	if err := cleanKubeconfig(getGlobalKubeConfigPath(), getGlobalKubeConfigPath()); err != nil {

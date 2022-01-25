@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -31,6 +32,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/telemetry"
 	crctls "github.com/code-ready/crc/pkg/crc/tls"
 	"github.com/code-ready/crc/pkg/libmachine/host"
+	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/machine/libmachine/drivers"
 	libmachinestate "github.com/code-ready/machine/libmachine/state"
 	"github.com/docker/go-units"
@@ -137,6 +139,11 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	telemetry.SetMemory(ctx, uint64(startConfig.Memory)*1024*1024)
 	telemetry.SetDiskSize(ctx, uint64(startConfig.DiskSize)*1024*1024*1024)
 	telemetry.SetPreset(ctx, startConfig.Preset)
+
+	// Create the directory as per preset and symlink it to default name
+	if err := createPresetDirAndSymlink(startConfig.Preset); err != nil {
+		return nil, err
+	}
 
 	if err := client.validateStartConfig(startConfig); err != nil {
 		return nil, err
@@ -756,4 +763,30 @@ func updateCockpitConsoleBearerToken(sshRunner *crcssh.Runner) error {
 	}
 
 	return nil
+}
+
+func createPresetDirAndSymlink(preset crcPreset.Preset) error {
+	presetDir := filepath.Join(constants.MachineInstanceDir, preset.String())
+	symlinkPath := filepath.Join(constants.MachineInstanceDir, constants.DefaultName)
+	if !crcos.FileExists(presetDir) {
+		if err := os.MkdirAll(presetDir, 0755); err != nil {
+			return err
+		}
+	}
+	if runtime.GOOS != "windows" {
+		if _, err := os.Lstat(symlinkPath); err == nil {
+			if err := os.Remove(symlinkPath); err != nil {
+				return fmt.Errorf("failed to unlink: %+v", err)
+			}
+		} else if os.IsNotExist(err) {
+			logging.Debugf("Creating symlink %s to %s ...", presetDir, symlinkPath)
+		}
+		return os.Symlink(presetDir, symlinkPath)
+	}
+	if _, err := os.Stat(symlinkPath); err == nil {
+		if err := os.RemoveAll(symlinkPath); err != nil {
+			return fmt.Errorf("failed to Delete: %+v", err)
+		}
+	}
+	return crcos.CopyDirectory(presetDir, symlinkPath)
 }
