@@ -57,10 +57,12 @@ func (c *Cache) GetExecutableName() string {
 func getVersionGeneric(executablePath string, args ...string) (string, error) { //nolint:deadcode,unused
 	stdOut, _, err := crcos.RunWithDefaultLocale(executablePath, args...)
 	if err != nil {
+		logging.Debugf("failed to run executable %s: %v", executablePath, err)
 		return "", err
 	}
 	parsedOutput := strings.Split(stdOut, ":")
 	if len(parsedOutput) < 2 {
+		logging.Debugf("failed to parse version information for %s: %s", executablePath, stdOut)
 		return "", fmt.Errorf("Unable to parse the version information of %s", executablePath)
 	}
 	return strings.TrimSpace(parsedOutput[1]), nil
