@@ -71,6 +71,9 @@ github.com/code-ready/machine/libmachine/drivers/plugin/localbinary
 github.com/code-ready/machine/libmachine/drivers/rpc
 github.com/code-ready/machine/libmachine/state
 github.com/code-ready/machine/libmachine/version
+# github.com/code-ready/vfkit v0.0.1
+## explicit
+github.com/code-ready/vfkit/pkg/client
 # github.com/containers/gvisor-tap-vsock v0.3.1-0.20220228052040-b735d4413359
 ## explicit
 github.com/containers/gvisor-tap-vsock/pkg/client
@@ -422,7 +425,7 @@ golang.org/x/crypto/internal/subtle
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
 golang.org/x/crypto/ssh/knownhosts
-# golang.org/x/mod v0.4.2
+# golang.org/x/mod v0.5.0
 golang.org/x/mod/semver
 # golang.org/x/net v0.0.0-20220412020605-290c469a71a5
 ## explicit

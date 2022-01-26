@@ -14,6 +14,7 @@ require (
 	github.com/code-ready/admin-helper v0.0.7
 	github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a
 	github.com/code-ready/machine v0.0.0-20210616065635-eff475d32b9a
+	github.com/code-ready/vfkit v0.0.1
 	github.com/containers/gvisor-tap-vsock v0.3.1-0.20220228052040-b735d4413359
 	github.com/coreos/go-systemd/v22 v22.3.2
 	github.com/cucumber/godog v0.9.0
