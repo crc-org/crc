@@ -93,6 +93,9 @@ install: $(SOURCES)
 $(BUILD_DIR)/macos-amd64/crc: $(SOURCES)
 	GOARCH=amd64 GOOS=darwin go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/macos-amd64/crc $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
+$(BUILD_DIR)/macos-arm64/crc: $(SOURCES)
+	GOARCH=arm64 GOOS=darwin go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/macos-arm64/crc $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
+
 $(BUILD_DIR)/linux-amd64/crc: $(SOURCES)
 	GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/linux-amd64/crc $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
@@ -103,7 +106,7 @@ $(HOST_BUILD_DIR)/crc-embedder: $(SOURCES)
 	go build --tags="build" -ldflags="$(LDFLAGS)" -o $(HOST_BUILD_DIR)/crc-embedder $(GO_EXTRA_BUILDFLAGS) ./cmd/crc-embedder
 
 .PHONY: cross ## Cross compiles all binaries
-cross: $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/windows-amd64/crc.exe
+cross: $(BUILD_DIR)/macos-arm64/crc $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/windows-amd64/crc.exe
 
 .PHONY: containerized ## Cross compile from container
 containerized: clean
@@ -260,7 +263,7 @@ linux-release-binary: LDFLAGS += -X '$(REPOPATH)/pkg/crc/version.linuxReleaseBui
 linux-release-binary: $(BUILD_DIR)/linux-amd64/crc
 
 macos-release-binary: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
-macos-release-binary: $(BUILD_DIR)/macos-amd64/crc
+macos-release-binary: $(BUILD_DIR)/macos-arm64/crc $(BUILD_DIR)/macos-amd64/crc
 
 windows-release-binary: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
 windows-release-binary: $(BUILD_DIR)/windows-amd64/crc.exe
