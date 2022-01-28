@@ -39,7 +39,7 @@ func FeatureContext(s *godog.Suite, bundleLocation *string, pullSecretFile *stri
 			trayHandler.IsInstalled)
 		s.Step(`^tray icon should be accessible$`,
 			trayHandler.IsAccessible)
-		s.Step(`^fresh tray installation$`,
+		s.Step(`^fresh CRC app installation$`,
 			guaranteeFreshInstallation)
 		s.Step(`^(.*) the cluster from the tray$`,
 			clickTrayButton)
