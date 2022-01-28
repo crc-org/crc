@@ -19,7 +19,7 @@ var (
 
 func TrayExecutablePath() string {
 	if version.IsInstaller() {
-		return filepath.Clean(filepath.Join(version.InstallPath(), "..", "MacOS", "CodeReady Containers"))
+		return filepath.Clean(filepath.Join(version.InstallPath(), "..", "MacOS", "crc-tray"))
 	}
 	// Should not be reached, tray is only supported on installer builds
 	return filepath.Clean(filepath.Join(BinDir(), "CodeReady Containers"))
