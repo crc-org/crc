@@ -11,6 +11,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/daemonclient"
 	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/os/launchd"
 )
 
@@ -72,6 +73,9 @@ func unLoadDaemonAgent() error {
 }
 
 func checkIfTrayAgentRunning() error {
+	if version.IsInstaller() {
+		return nil
+	}
 	if !launchd.AgentRunning(trayAgentLabel) {
 		return fmt.Errorf("Tray is not running")
 	}
@@ -97,6 +101,9 @@ func fixPlistFileExists(agentConfig launchd.AgentConfig) error {
 		return err
 	}
 	// load plist
+	if version.IsInstaller() {
+		return nil
+	}
 	if err := launchd.LoadPlist(agentConfig.Label); err != nil {
 		logging.Debug("failed while creating plist:", err.Error())
 		return err
