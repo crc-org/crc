@@ -26,6 +26,7 @@ const (
 
 	bundleIdentifier string = "com.redhat.codeready.containers"
 	appPath          string = "/Applications/CodeReady Containers.app"
+	appName          string = "crc-tray"
 
 	uxCheckAccessibilityDuration = "2s"
 	uxCheckAccessibilityRetry    = 10
@@ -72,7 +73,9 @@ func (a applescriptHandler) Install() error {
 }
 
 func (a applescriptHandler) IsInstalled() error {
-	return executeCommandSucceeds("launchctl list | grep crc", "0.*tray")
+	return executeCommandSucceeds(
+		strings.Join(append([]string{"ps aux | pgrep"}, appName, "| xargs ps -o 'command=' | head -1"), " "),
+		strings.Join(append([]string{"*"}, appName), ""))
 }
 
 func (a applescriptHandler) IsAccessible() error {
