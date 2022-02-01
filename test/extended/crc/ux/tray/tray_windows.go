@@ -58,11 +58,11 @@ func RequiredResourcesPath() (string, error) {
 	return "", nil
 }
 
-func (g gowinxHandler) Install() error {
+func (g gowinxHandler) Onboarding(preset string) error {
 	return clicumber.ExecuteCommandSucceedsOrFails("crc setup", "succeeds")
 }
 
-func (g gowinxHandler) IsInstalled() (err error) {
+func (g gowinxHandler) IsRunning() (err error) {
 	trayAssamblyNameFilter := fmt.Sprintf("IMAGENAME eq %s", trayAssemblyName)
 	out, err := exec.Command("tasklist", "/NH", "/FI", trayAssamblyNameFilter).Output()
 	if !strings.Contains(string(out), trayAssemblyName) {
@@ -106,13 +106,8 @@ func (g gowinxHandler) SetPullSecret() (err error) {
 	return
 }
 
-func (g gowinxHandler) IsClusterRunning() error {
-	return util.MatchWithRetry(stateRunning, checkTrayShowsStatusValue,
-		trayClusterStateRetries, trayClusterStateTimeout)
-}
-
-func (g gowinxHandler) IsClusterStopped() error {
-	return util.MatchWithRetry(stateStopped, checkTrayShowsStatusValue,
+func (g gowinxHandler) IsInstanceOnState(state string) error {
+	return util.MatchWithRetry(state, checkTrayShowsStatusValue,
 		trayClusterStateRetries, trayClusterStateTimeout)
 }
 

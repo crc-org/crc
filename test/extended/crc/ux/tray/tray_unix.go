@@ -62,7 +62,7 @@ func RequiredResourcesPath() (string, error) {
 	return applescript.GetScriptsPath(scriptsRelativePath)
 }
 
-func (a applescriptHandler) Install() error {
+func (a applescriptHandler) Onboarding(preset string) error {
 	err := clicumber.ExecuteCommandSucceedsOrFails("crc setup", "succeeds")
 	if err != nil {
 		return err
@@ -72,7 +72,7 @@ func (a applescriptHandler) Install() error {
 	return applescript.ExecuteApplescript(installTray, sanitizedAppPath)
 }
 
-func (a applescriptHandler) IsInstalled() error {
+func (a applescriptHandler) IsRunning() error {
 	return executeCommandSucceeds(
 		strings.Join(append([]string{"ps aux | pgrep"}, appName, "| xargs ps -o 'command=' | head -1"), " "),
 		strings.Join(append([]string{"*"}, appName), ""))
@@ -106,13 +106,8 @@ func (a applescriptHandler) SetPullSecret() error {
 		setPullSecret, bundleIdentifier, *a.pullSecretFileLocation)
 }
 
-func (a applescriptHandler) IsClusterRunning() error {
-	return util.MatchWithRetry(stateRunning, checkTrayShowsStatusValue,
-		trayClusterStateRetries, trayClusterStateTimeout)
-}
-
-func (a applescriptHandler) IsClusterStopped() error {
-	return util.MatchWithRetry(stateStopped, checkTrayShowsStatusValue,
+func (a applescriptHandler) IsInstanceOnState(state string) error {
+	return util.MatchWithRetry(state, checkTrayShowsStatusValue,
 		trayClusterStateRetries, trayClusterStateTimeout)
 }
 

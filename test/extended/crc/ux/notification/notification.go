@@ -1,8 +1,6 @@
 package notification
 
 type Notification interface {
-	GetClusterRunning() error
-	GetClusterStopped() error
-	GetClusterDeleted() error
+	CheckProcessNotification(process string) error
 	ClearNotifications() error
 }

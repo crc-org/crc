@@ -8,8 +8,8 @@ const (
 
 	fieldState string = "state"
 
-	stateRunning string = "Running"
-	stateStopped string = "Stopped"
+	InstanceStateRunning string = "Running"
+	InstanceStateStopped string = "Stopped"
 
 	userKubeadmin string = "kubeadmin"
 	userDeveloper string = "developer"

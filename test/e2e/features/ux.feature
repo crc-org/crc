@@ -21,9 +21,9 @@ Feature: UX Test
     Scenario: App onboarding  
         Given a fresh CRC app installation
         When onboarding CRC app setting <preset-id> preset
-        Then CRC should be installed
+        Then CRC app should be running
         And CRC app should be accessible
-        And CRC should be ready to start a environment for <preset-id> preset
+        And CRC app should be ready to start a environment for <preset-id> preset
 
     Examples:
             | preset-id |
@@ -33,10 +33,10 @@ Feature: UX Test
 	@darwin @windows
     Scenario: Start instance of <preset-id> preset
         Given crc app configured to run then <preset-id> preset   
-        When user click start button from the app
-        Then user should get notified about the starting process 
-        And running instance for <preset-id> preset exists
-        And app should show instance as running
+        When click start button from the app
+        Then get notification about the starting process 
+        And the <preset-id> instance should be running
+        And app shows running as the state for the instance
 
     Examples:
             | preset-id |
@@ -57,9 +57,9 @@ Feature: UX Test
     @darwin @windows
     Scenario: Stop instance of <preset-id> preset
         Given running instance for <preset-id> preset
-        When user click stop button from the app
-        Then user should get notified about the stopping process 
-        And the running instance for <preset-id> should be stopped
+        When click stop button from the app
+        Then get notification about the stopping process 
+        And the <preset-id> instance should be stopped
         And app should show instance as stopped
 
     Examples:
@@ -67,14 +67,13 @@ Feature: UX Test
             | openshift |
             | podman    |
 
-
 	@darwin @windows
     Scenario: Restart instance of <preset-id> preset
-        Given a stopped cluster   
-        When start the cluster from the tray 
-        Then cluster should be running
-        And tray should show cluster as running
-        And user should get notified with cluster state as running
+        Given stopped instance for <preset-id> preset
+        When click start button from the app
+        Then get notification about the starting process 
+        And the <preset-id> instance should be running
+        And app shows running as the state for the instance
 
     Examples:
             | preset-id |

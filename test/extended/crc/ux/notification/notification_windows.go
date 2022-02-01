@@ -15,9 +15,9 @@ type gowinxHandler struct {
 }
 
 const (
-	startMessage  string = "CodeReady Containers Cluster has started"
-	stopMessage   string = "Cluster stopped"
-	deleteMessage string = "Cluster deleted"
+	// startMessage  string = "CodeReady Containers Cluster has started"
+	// stopMessage   string = "Cluster stopped"
+	// deleteMessage string = "Cluster deleted"
 
 	notificationGroupName string = "CodeReady Containers"
 )
@@ -30,16 +30,8 @@ func RequiredResourcesPath() (string, error) {
 	return "", nil
 }
 
-func (g gowinxHandler) GetClusterRunning() error {
-	return clusterStateNotified(startMessage)
-}
-
-func (g gowinxHandler) GetClusterStopped() error {
-	return clusterStateNotified(stopMessage)
-}
-
-func (g gowinxHandler) GetClusterDeleted() error {
-	return clusterStateNotified(deleteMessage)
+func (g gowinxHandler) CheckProcessNotification(process string) error {
+	return clusterStateNotified(process)
 }
 
 func (g gowinxHandler) ClearNotifications() error {

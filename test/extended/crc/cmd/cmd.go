@@ -15,6 +15,7 @@ const (
 	clusterStateTimeout       = 900
 	CRCExecutableInstalled    = "installed"
 	CRCExecutableNotInstalled = "notInstalled"
+	ConfigPropertyPreset      = "preset"
 )
 
 var (
@@ -107,6 +108,14 @@ func (c Command) validate() error {
 	return nil
 }
 
+func IsPresetConfig(preset string) error {
+	err := clicumber.ExecuteCommand(CRC("config get " + ConfigPropertyPreset).ToString())
+	if err != nil {
+		return err
+	}
+	return clicumber.CommandReturnShouldMatch("stdout", fmt.Sprintf("*%s", preset))
+}
+
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
 	cmd := "crc config set " + property + " " + value
 	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
@@ -117,7 +126,7 @@ func UnsetConfigPropertySucceedsOrFails(property string, expected string) error 
 	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
 
-func WaitForClusterInState(state string) error {
+func WaitForInstanceOnState(preset, state string) error {
 	return util.MatchWithRetry(state, CheckCRCStatus,
 		clusterStateRetryCount, clusterStateTimeout)
 }
@@ -162,9 +171,7 @@ func CheckMachineNotExists() error {
 }
 
 func DeleteCRC() error {
-
 	_ = clicumber.ExecuteCommand(CRC("delete").ToString())
-
 	fmt.Printf("Deleted CRC instance (if one existed).\n")
 	return nil
 }

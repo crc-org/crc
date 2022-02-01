@@ -5,4 +5,8 @@ const (
 
 	notificationWaitTimeout int = 50
 	notificationWaitRetries int = 10
+
+	NotificationProcessStart  = "start"
+	NotificationProcessStop   = "stop"
+	NotificationProcessDelete = "delete"
 )

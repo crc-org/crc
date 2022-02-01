@@ -5,16 +5,15 @@ import (
 )
 
 type Tray interface {
-	Install() error
-	IsInstalled() error
+	Onboarding(preset string) error
+	IsRunning() error
 	IsAccessible() error
 	ClickStart() error
 	ClickStop() error
 	ClickDelete() error
 	ClickQuit() error
 	SetPullSecret() error
-	IsClusterRunning() error
-	IsClusterStopped() error
+	IsInstanceOnState(state string) error
 	CopyOCLoginCommandAsKubeadmin() error
 	CopyOCLoginCommandAsDeveloper() error
 	// TODO check if make sense create a new ux component

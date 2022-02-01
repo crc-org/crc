@@ -14,9 +14,9 @@ type applescriptHandler struct {
 }
 
 const (
-	startMessage  string = "OpenShift cluster is running"
-	stopMessage   string = "The OpenShift Cluster was successfully stopped"
-	deleteMessage string = "The OpenShift Cluster is successfully deleted"
+	// startMessage  string = "OpenShift cluster is running"
+	// stopMessage   string = "The OpenShift Cluster was successfully stopped"
+	// deleteMessage string = "The OpenShift Cluster is successfully deleted"
 
 	scriptsRelativePath           string = "applescripts"
 	manageNotifications           string = "manageNotifications.applescript"
@@ -35,18 +35,8 @@ func RequiredResourcesPath() (string, error) {
 	return applescript.GetScriptsPath(scriptsRelativePath)
 }
 
-func (a applescriptHandler) GetClusterRunning() error {
-	return util.MatchWithRetry(startMessage, existNotification,
-		notificationWaitRetries, notificationWaitTimeout)
-}
-
-func (a applescriptHandler) GetClusterStopped() error {
-	return util.MatchWithRetry(stopMessage, existNotification,
-		notificationWaitRetries, notificationWaitTimeout)
-}
-
-func (a applescriptHandler) GetClusterDeleted() error {
-	return util.MatchWithRetry(deleteMessage, existNotification,
+func (a applescriptHandler) CheckProcessNotification(process string) error {
+	return util.MatchWithRetry(process, existNotification,
 		notificationWaitRetries, notificationWaitTimeout)
 }
 

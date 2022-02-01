@@ -202,10 +202,6 @@ func ParseFlags() {
 	ux.ParseFlags()
 }
 
-func WaitForClusterInState(state string) error {
-	return crcCmd.WaitForClusterInState(state)
-}
-
 func RemoveCRCHome() error {
 	return util.RemoveCRCHome(CRCHome)
 }

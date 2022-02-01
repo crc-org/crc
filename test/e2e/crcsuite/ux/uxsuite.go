@@ -31,32 +31,36 @@ func FeatureContext(s *godog.Suite, bundleLocation *string, pullSecretFile *stri
 	installerHandler = installer.NewInstaller(&currentUserPassword, &installerPath)
 	notificationHandler = notification.NewNotification()
 	if handlersAreInitialized() {
-		s.Step(`^install CRC tray$`,
-			trayHandler.Install)
+		s.Step(`^(.*) CRC app from installer$`,
+			executeActionFromInstaller)
+		s.Step(`^.*CRC app (.*) installed$`,
+			crcInstalled)
 		s.Step(`^reboot is required$`,
 			installerHandler.RebootRequired)
-		s.Step(`^tray should be installed$`,
-			trayHandler.IsInstalled)
-		s.Step(`^tray icon should be accessible$`,
-			trayHandler.IsAccessible)
 		s.Step(`^fresh CRC app installation$`,
 			guaranteeFreshInstallation)
-		s.Step(`^(.*) the cluster from the tray$`,
+		// On windows onboarding is shown as first process after reboot
+		// on macos this step should include click on app icon
+		// both scenearios for openshift preset this step includes set pullsecret
+		s.Step(`^onboarding CRC app setting (.*) preset$`,
+			trayHandler.Onboarding)
+		s.Step(`^CRC app should be running$`,
+			trayHandler.IsRunning)
+		s.Step(`^CRC app should be accessible$`,
+			trayHandler.IsAccessible)
+		// todo change this to inspect selected value from config window?
+		s.Step(`^CRC app should be ready to start a environment for (.*) preset$`,
+			cmd.IsPresetConfig)
+		s.Step(`^click (.*) button from app$`,
 			clickTrayButton)
-		s.Step(`^cluster should be (.*)$`,
-			waitForClusterInState)
-		s.Step(`^set the pull secret$`,
-			trayHandler.SetPullSecret)
-		s.Step(`^tray should show cluster as (.*)$`,
-			checkClusterStateOnTray)
-		s.Step(`^(.*) CRC from installer$`,
-			executeActionFromInstaller)
-		s.Step(`^.*CRC (.*) installed$`,
-			crcInstalled)
-		s.Step(`^user should get notified with cluster state as (.*)$`,
+		s.Step(`^get notification about the (.*) process$`,
 			getNotification)
-		s.Step(`^a (.*) cluster$`,
-			guaranteeClusterHasState)
+		s.Step(`^the (.*) instance should be (.*)$`,
+			cmd.WaitForInstanceOnState)
+		s.Step(`^app shows (.*) as the state for the instance$`,
+			checkInstanceStateInApp)
+		s.Step(`^a (.*) instance for (.*) preset$`,
+			guaranteeInstanceOnState)
 		s.Step(`^using copied oc login command for (.*)$`,
 			copyOCLoginCommandByUser)
 		s.Step(`^user is connected to the cluster as (.*)$`,
@@ -96,7 +100,7 @@ func copyRequiredResources(requiredResources func() (string, error)) {
 }
 
 func guaranteeFreshInstallation() error {
-	err := trayHandler.IsInstalled()
+	err := trayHandler.IsRunning()
 	if err != nil {
 		return err
 	}
@@ -104,7 +108,7 @@ func guaranteeFreshInstallation() error {
 	if err != nil {
 		return err
 	}
-	err = trayHandler.IsClusterStopped()
+	err = trayHandler.IsInstanceOnState(tray.InstanceStateStopped)
 	if err != nil {
 		return err
 	}
@@ -115,7 +119,7 @@ func guaranteeFreshInstallation() error {
 	return notificationHandler.ClearNotifications()
 }
 
-func guaranteeClusterHasState(state string) error {
+func guaranteeInstanceOnState(preset, state string) error {
 	switch state {
 	case "running", "stopped":
 		err := util.MatchWithRetry(state, clusterHasState,
@@ -151,15 +155,15 @@ func clickTrayButton(action string) error {
 	}
 }
 
-func checkClusterStateOnTray(state string) error {
+func checkInstanceStateInApp(state string) error {
 	if trayHandler == nil {
 		return fmt.Errorf("tray handler should be initialized. Check if tray is supported on your OS")
 	}
 	switch state {
 	case "running":
-		return trayHandler.IsClusterRunning()
+		return trayHandler.IsInstanceOnState(tray.InstanceStateRunning)
 	case "stopped":
-		return trayHandler.IsClusterStopped()
+		return trayHandler.IsInstanceOnState(tray.InstanceStateStopped)
 	default:
 		return fmt.Errorf("%s state is not defined as valid cluster state", state)
 	}
@@ -175,10 +179,6 @@ func executeActionFromInstaller(action string) error {
 	default:
 		return fmt.Errorf("%s action is not supported by the installer", action)
 	}
-}
-
-func waitForClusterInState(state string) error {
-	return cmd.WaitForClusterInState(state)
 }
 
 func crcInstalled(state string) error {
@@ -197,12 +197,12 @@ func getNotification(action string) error {
 		return fmt.Errorf("notification handler should be initialized. Check if tray is supported on your OS")
 	}
 	switch action {
-	case "running":
-		return notificationHandler.GetClusterRunning()
-	case "stopped":
-		return notificationHandler.GetClusterStopped()
+	case "starting":
+		return notificationHandler.CheckProcessNotification(notification.NotificationProcessStart)
+	case "stopping":
+		return notificationHandler.CheckProcessNotification(notification.NotificationProcessStop)
 	case "deleted":
-		return notificationHandler.GetClusterDeleted()
+		return notificationHandler.CheckProcessNotification(notification.NotificationProcessDelete)
 	default:
 		return fmt.Errorf("%s action will not be notified", action)
 	}
