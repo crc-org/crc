@@ -27,4 +27,10 @@ var bundleLocations = map[string]bundlesDownloadInfo{
 				"e2a55c818b8d2f071f4cc0d26aba11f0a852aebdb7588a08eb96bd41faea0ef4"),
 		},
 	},
+	"arm64": {
+		"darwin": {
+			preset.Podman: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/podman/4.0.2/crc_podman_vfkit_4.0.2_arm64.crcbundle",
+				"2c03258fdc75805d9f57e6f1b4d32d82e16a2bddadb3207888e36d9b06ad4008"),
+		},
+	},
 }
