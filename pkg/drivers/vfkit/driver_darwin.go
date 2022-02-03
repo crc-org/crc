@@ -33,6 +33,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/v3/process"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/sys/unix"
 )
 
 type Driver struct {
@@ -100,8 +101,11 @@ func (d *Driver) Create() error {
 
 	switch d.ImageFormat {
 	case "raw":
-		if err := crcos.CopyFile(d.ImageSourcePath, d.getDiskPath()); err != nil {
-			return err
+		if err := unix.Clonefile(d.ImageSourcePath, d.getDiskPath(), 0); err != nil {
+			// fall back to a regular sparse copy, the error may be caused by the filesystem not supporting unix.CloneFile
+			if err := crcos.CopyFileSparse(d.ImageSourcePath, d.getDiskPath()); err != nil {
+				return err
+			}
 		}
 	default:
 		return fmt.Errorf("%s is an unsupported disk image format", d.ImageFormat)
