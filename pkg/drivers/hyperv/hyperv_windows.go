@@ -8,6 +8,7 @@ import (
 	"time"
 
 	log "github.com/code-ready/crc/pkg/crc/logging"
+	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/state"
@@ -145,7 +146,7 @@ func (d *Driver) getDiskPath() string {
 }
 
 func (d *Driver) Create() error {
-	if err := copyFile(d.ImageSourcePath, d.getDiskPath()); err != nil {
+	if err := crcos.CopyFile(d.ImageSourcePath, d.getDiskPath()); err != nil {
 		return err
 	}
 
