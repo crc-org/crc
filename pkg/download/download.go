@@ -3,10 +3,13 @@ package download
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
 
@@ -14,6 +17,19 @@ import (
 	"github.com/cheggaaa/pb/v3"
 	"github.com/pkg/errors"
 )
+
+type stats struct {
+	TotalBytes     int64 `json:"totalBytes"`
+	CompletedBytes int64 `json:"completedBytes"`
+}
+
+func getStatsJSON(d *stats) string {
+	bin, err := json.MarshalIndent(d, "", "  ")
+	if err != nil {
+		panic("error while encoding to JSON")
+	}
+	return string(bin)
+}
 
 func doRequest(client *grab.Client, req *grab.Request) (string, error) {
 	const minSizeForProgressBar = 100_000_000
@@ -35,6 +51,9 @@ loop:
 		select {
 		case <-t.C:
 			bar.SetCurrent(resp.BytesComplete())
+			if constants.JSONStream {
+				fmt.Fprintln(os.Stdout, getStatsJSON(&stats{resp.Size(), resp.BytesComplete()}))
+			}
 		case <-resp.Done:
 			break loop
 		}

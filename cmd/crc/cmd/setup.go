@@ -37,11 +37,16 @@ var setupCmd = &cobra.Command{
 		if err := viper.BindFlagSet(cmd.Flags()); err != nil {
 			return err
 		}
+
 		return runSetup(args)
 	},
 }
 
 func runSetup(arguments []string) error {
+	if config.Get(crcConfig.JSONStream).AsBool() {
+		constants.JSONStream = true
+	}
+
 	if config.Get(crcConfig.ConsentTelemetry).AsString() == "" {
 		fmt.Println("CodeReady Containers is constantly improving and we would like to know more about usage (more details at https://developers.redhat.com/article/tool-data-collection)")
 		fmt.Println("Your preference can be changed manually if desired using 'crc config set consent-telemetry <yes/no>'")
