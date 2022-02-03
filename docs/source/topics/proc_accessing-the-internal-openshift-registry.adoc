@@ -1,14 +1,14 @@
 [id="accessing-the-internal-openshift-registry_{context}"]
 = Accessing the internal OpenShift registry
 
-The OpenShift cluster running in the {prod} virtual machine includes an internal container image registry by default.
+The OpenShift cluster running in the {prod} instance includes an internal container image registry by default.
 This internal container image registry can be used as a publication target for locally developed container images.
 To access the internal OpenShift registry, follow these steps.
 
 .Prerequisites
 
-* A running {prod} virtual machine.
-For more information, see link:{crc-gsg-url}#starting-the-virtual-machine_gsg[Starting the virtual machine].
+* A running {prod} instance.
+For more information, see link:{crc-gsg-url}#starting-the-instance_gsg[Starting the instance].
 * A working OpenShift CLI ([command]`oc`) command.
 For more information, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the OpenShift cluster with the OpenShift CLI].
 * An installation of [command]`podman` or [command]`docker`.
