@@ -25,7 +25,7 @@ include::snip_crc-delete.adoc[]
 $ {bin} setup
 ----
 
-. Start the new virtual machine:
+. Start the new instance:
 +
 [subs="+quotes,attributes"]
 ----

@@ -1,13 +1,13 @@
 [id="setting-up-codeready-containers_{context}"]
 = Setting up {prod}
 
-The [command]`{bin} setup` command performs operations to set up the environment of your host machine for the {prod} virtual machine.
+The [command]`{bin} setup` command performs operations to set up the environment of your host machine for the {prod} instance.
 
 This procedure creates the [filename]*_~/.crc_* directory if it does not already exist.
 
 [WARNING]
 ====
-If you are setting up a new version, capture any changes made to the virtual machine before setting up a new {prod} release.
+If you are setting up a new version, capture any changes made to the instance before setting up a new {prod} release.
 ====
 
 .Prerequisites

@@ -5,4 +5,4 @@ include::con_about-codeready-containers-configuration.adoc[leveloffset=+1]
 
 include::proc_viewing-codeready-containers-configuration.adoc[leveloffset=+1]
 
-include::proc_configuring-the-virtual-machine.adoc[leveloffset=+1]
+include::proc_configuring-the-instance.adoc[leveloffset=+1]
