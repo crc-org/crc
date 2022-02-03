@@ -12,6 +12,7 @@ import (
 
 	"github.com/cheggaaa/pb/v3"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/h2non/filetype"
 	"github.com/klauspost/compress/zstd"
 	"github.com/pkg/errors"
@@ -156,9 +157,7 @@ func uncompressFile(tarReader io.Reader, fileInfo os.FileInfo, path string, show
 	reader, cleanup := progressBarReader(tarReader, fileInfo, showProgress)
 	defer cleanup()
 
-	// copy over contents
-	// #nosec G110
-	_, err = io.Copy(file, reader)
+	_, err = crcos.CopySparse(file, reader)
 	if err != nil {
 		return err
 	}
