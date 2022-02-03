@@ -1,4 +1,4 @@
-package hyperv
+package os
 
 import (
 	"io/ioutil"
@@ -38,7 +38,7 @@ func TestCopyFile(t *testing.T) {
 
 	destFilePath := filepath.Join(os.TempDir(), destFi.Name())
 
-	if err := copyFile(srcFilePath, destFilePath); err != nil {
+	if err := CopyFile(srcFilePath, destFilePath); err != nil {
 		t.Fatal(err)
 	}
 

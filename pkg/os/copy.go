@@ -1,11 +1,11 @@
-package hyperv
+package os
 
 import (
 	"io"
 	"os"
 )
 
-func copyFile(src, dst string) error {
+func CopyFile(src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {
 		return err
