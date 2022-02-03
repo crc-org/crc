@@ -18,9 +18,9 @@
 
 [NOTE]
 ====
-The OpenShift cluster requires these minimum resources to run in the {prod} virtual machine.
+The OpenShift cluster requires these minimum resources to run in the {prod} instance.
 Some workloads may require more resources.
-To assign more resources to the {prod} virtual machine, see link:{crc-gsg-url}#configuring-the-virtual-machine_gsg[Configuring the virtual machine].
+To assign more resources to the {prod} instance, see link:{crc-gsg-url}#configuring-the-instance_gsg[Configuring the instance].
 ====
 
 [id="minimum-system-requirements-operating-system_{context}"]

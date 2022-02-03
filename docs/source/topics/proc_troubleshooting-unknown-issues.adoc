@@ -2,14 +2,14 @@
 = Troubleshooting unknown issues
 
 Resolve most issues by restarting {prod} with a clean state.
-This involves stopping the virtual machine, deleting it, reverting changes made by the [command]`{bin} setup` command, reapplying those changes, and restarting the virtual machine.
+This involves stopping the instance, deleting it, reverting changes made by the [command]`{bin} setup` command, reapplying those changes, and restarting the instance.
 
 .Prerequisites
 
 * You set up the host machine with the [command]`{bin} setup` command.
 For more information, see link:{crc-gsg-url}#setting-up-codeready-containers_gsg[Setting up {prod}].
 * You started {prod} with the [command]`{bin} start` command.
-For more information, see link:{crc-gsg-url}#starting-the-virtual-machine_gsg[Starting the virtual machine].
+For more information, see link:{crc-gsg-url}#starting-the-instance_gsg[Starting the instance].
 * You are using the latest {prod} release.
 Using a version earlier than {prod} 1.2.0 may result in errors related to expired x509 certificates.
 For more information, see link:{crc-gsg-url}#troubleshooting-expired-certificates_gsg[Troubleshooting expired certificates].
@@ -18,14 +18,14 @@ For more information, see link:{crc-gsg-url}#troubleshooting-expired-certificate
 
 To troubleshoot {prod}, perform the following steps:
 
-. Stop the {prod} virtual machine:
+. Stop the {prod} instance:
 +
 [subs="+quotes,attributes"]
 ----
 $ {bin} stop
 ----
 
-. Delete the {prod} virtual machine:
+. Delete the {prod} instance:
 +
 include::snip_crc-delete.adoc[]
 
@@ -38,7 +38,7 @@ $ {bin} cleanup
 +
 [NOTE]
 ====
-The [command]`{bin} cleanup` command removes an existing {prod} virtual machine and reverts changes to DNS entries created by the [command]`{bin} setup` command.
+The [command]`{bin} cleanup` command removes an existing {prod} instance and reverts changes to DNS entries created by the [command]`{bin} setup` command.
 On {mac}, the [command]`{bin} cleanup` command also removes the system tray.
 ====
 
@@ -49,7 +49,7 @@ On {mac}, the [command]`{bin} cleanup` command also removes the system tray.
 $ {bin} setup
 ----
 
-. Start the {prod} virtual machine:
+. Start the {prod} instance:
 +
 [subs="+quotes,attributes"]
 ----

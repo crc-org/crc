@@ -9,7 +9,7 @@ The `crc.testing` domain is for core OpenShift services.
 The `apps-crc.testing` domain is for accessing OpenShift applications deployed on the cluster.
 
 For example, the OpenShift API server is exposed as `api.crc.testing` while the OpenShift console is accessed as `console-openshift-console.apps-crc.testing`.
-These DNS domains are served by a `dnsmasq` DNS container running inside the {prod} virtual machine.
+These DNS domains are served by a `dnsmasq` DNS container running inside the {prod} instance.
 
 The [command]`{bin} setup` command detects and adjusts your system DNS configuration so that it can resolve these domains.
 Additional checks are done to verify DNS is properly configured when running [command]`{bin} start`.
@@ -25,7 +25,7 @@ This configuration is used by default on Fedora 33 or newer, and on Ubuntu Deskt
 
 * {prod} expects NetworkManager to manage networking.
 * {prod} configures `systemd-resolved` to forward requests for the `testing` domain to the `192.168.130.11` DNS server.
-`192.168.130.11` is the IP of the {prod} virtual machine.
+`192.168.130.11` is the IP of the {prod} instance.
 * `systemd-resolved` configuration is done with a NetworkManager dispatcher script in [filename]*_/etc/NetworkManager/dispatcher.d/99-crc.sh_*:
 +
 ----

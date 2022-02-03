@@ -2,14 +2,14 @@
 = Deploying a sample application with `odo`
 
 You can use [command]`odo` to create OpenShift projects and applications from the command line.
-This procedure deploys a sample application to the OpenShift cluster running in the {prod} virtual machine.
+This procedure deploys a sample application to the OpenShift cluster running in the {prod} instance.
 
 .Prerequisites
 
 * You have installed [command]`odo`.
 For more information, see link:{odo-docs-url-installing}[Installing `odo`] in the [command]`odo` documentation.
-* The {prod} virtual machine is running.
-For more information, see link:{crc-gsg-url}#starting-the-virtual-machine_gsg[Starting the virtual machine].
+* The {prod} instance is running.
+For more information, see link:{crc-gsg-url}#starting-the-instance_gsg[Starting the instance].
 
 .Procedure
 
