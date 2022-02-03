@@ -9,8 +9,8 @@ Use the `kubeadmin` user only for administrative tasks such as creating new user
 
 .Prerequisites
 
-* A running {prod} virtual machine.
-For more information, see link:{crc-gsg-url}#starting-the-virtual-machine_gsg[Starting the virtual machine].
+* A running {prod} instance.
+For more information, see link:{crc-gsg-url}#starting-the-instance_gsg[Starting the instance].
 
 .Procedure
 

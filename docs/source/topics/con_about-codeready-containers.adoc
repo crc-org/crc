@@ -8,4 +8,4 @@ For other use cases, such as headless or multi-developer setups, use the link:ht
 
 See the link:https://docs.openshift.com/container-platform/latest/welcome/index.html#developer-activities[OpenShift documentation] for a full introduction to OpenShift.
 
-{prod} includes the [command]`{bin}` command-line interface (CLI) to interact with the {prod} virtual machine running the OpenShift cluster.
+{prod} includes the [command]`{bin}` command-line interface (CLI) to interact with the {prod} instance running the OpenShift cluster.

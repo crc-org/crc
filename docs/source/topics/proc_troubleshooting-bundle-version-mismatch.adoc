@@ -1,7 +1,7 @@
 [id="troubleshooting-bundle-version-mismatch_{context}"]
 = Troubleshooting bundle version mismatch
 
-Created {prod} virtual machines contain bundle information and instance data.
+Created {prod} instances contain bundle information and instance data.
 Bundle information and instance data is not updated when setting up a new {prod} release.
 This information is not updated due to customization in the earlier instance data.
 This will lead to errors when running the [command]`{bin} start` command:

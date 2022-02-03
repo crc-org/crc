@@ -1,19 +1,19 @@
-[id="configuring-the-virtual-machine_{context}"]
-= Configuring the virtual machine
+[id="configuring-the-instance_{context}"]
+= Configuring the instance
 
-Use the `cpus` and `memory` properties to configure the default number of vCPUs and amount of memory available to the {prod} virtual machine, respectively.
+Use the `cpus` and `memory` properties to configure the default number of vCPUs and amount of memory available to the {prod} instance, respectively.
 
 Alternatively, the number of vCPUs and amount of memory can be assigned using the `--cpus` and `--memory` flags to the `{bin} start` command, respectively.
 
 [IMPORTANT]
 ====
-You cannot change the configuration of a running {prod} virtual machine.
-To enable configuration changes, you must stop the running virtual machine and start it again.
+You cannot change the configuration of a running {prod} instance.
+To enable configuration changes, you must stop the running instance and start it again.
 ====
 
 .Procedure
 
-* To configure the number of vCPUs available to the virtual machine:
+* To configure the number of vCPUs available to the instance:
 +
 [subs="+quotes,attributes"]
 ----
@@ -23,14 +23,14 @@ $ {bin} config set cpus __<number>__
 The default value for the `cpus` property is `4`.
 The number of vCPUs to assign must be greater than or equal to the default.
 
-* To start the virtual machine with the desired number of vCPUs:
+* To start the instance with the desired number of vCPUs:
 +
 [subs="+quotes,attributes"]
 ----
 $ {bin} start --cpus __<number>__
 ----
 
-* To configure the memory available to the virtual machine:
+* To configure the memory available to the instance:
 +
 [subs="+quotes,attributes"]
 ----
@@ -46,7 +46,7 @@ One gibibyte (GiB) of memory is equal to 1024 MiB.
 The default value for the `memory` property is `9216`.
 The amount of memory to assign must be greater than or equal to the default.
 
-* To start the virtual machine with the desired amount of memory:
+* To start the instance with the desired amount of memory:
 +
 [subs="+quotes,attributes"]
 ----
