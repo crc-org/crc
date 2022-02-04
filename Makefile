@@ -279,7 +279,11 @@ linux-release: clean lint linux-release-binary embed_crc_helpers gen_release_inf
 
 .PHONY: embed_crc_helpers
 embed_crc_helpers: $(BUILD_DIR)/linux-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
+ifeq ($(CUSTOM_EMBED),false)
 	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=linux $(BUILD_DIR)/linux-amd64/crc
+else
+	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --cache-dir=$(EMBED_DOWNLOAD_DIR) --no-download --goos=linux $(BUILD_DIR)/linux-amd64/crc
+endif
 
 .PHONY: update-go-version
 update-go-version:
