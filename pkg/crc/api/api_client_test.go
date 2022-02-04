@@ -52,6 +52,7 @@ func TestVersion(t *testing.T) {
 			CrcVersion:       version.GetCRCVersion(),
 			OpenshiftVersion: version.GetBundleVersion(),
 			CommitSha:        version.GetCommitSha(),
+			PodmanVersion:    version.GetPodmanVersion(),
 		},
 		vr,
 	)
