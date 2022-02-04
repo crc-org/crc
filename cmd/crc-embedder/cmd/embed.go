@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -19,11 +20,15 @@ import (
 )
 
 var (
-	goos string
+	goos       string
+	cacheDir   string
+	noDownload bool
 )
 
 func init() {
 	embedCmd.Flags().StringVar(&goos, "goos", runtime.GOOS, "Target platform (darwin, linux or windows)")
+	embedCmd.Flags().StringVar(&cacheDir, "cache-dir", "", "Destination directory for the downloaded files")
+	embedCmd.Flags().BoolVar(&noDownload, "no-download", false, "Only embed files, don't download")
 	rootCmd.AddCommand(embedCmd)
 }
 
@@ -38,17 +43,25 @@ var embedCmd = &cobra.Command{
 }
 
 func runEmbed(args []string) {
+	var err error
 	executablePath := args[0]
-	destDir, err := ioutil.TempDir("", "crc-embedder")
-	if err != nil {
-		logging.Fatalf("Failed to create temporary directory: %v", err)
+	if cacheDir == "" {
+		cacheDir, err = ioutil.TempDir("", "crc-embedder")
+		if err != nil {
+			logging.Fatalf("Failed to create temporary directory: %v", err)
+		}
+		defer os.RemoveAll(cacheDir)
 	}
-	defer os.RemoveAll(destDir)
-	downloadedFiles, err := downloadDataFiles(goos, destDir)
-	if err != nil {
-		logging.Fatalf("Failed to download data files: %v", err)
+	var embedFileList []string
+	if noDownload {
+		embedFileList = getEmbedFileList(goos, cacheDir)
+	} else {
+		embedFileList, err = downloadDataFiles(goos, cacheDir)
+		if err != nil {
+			logging.Fatalf("Failed to download data files: %v", err)
+		}
 	}
-	err = embedFiles(executablePath, downloadedFiles)
+	err = embedFiles(executablePath, embedFileList)
 	if err != nil {
 		logging.Fatalf("Failed to embed data files: %v", err)
 	}
@@ -101,6 +114,17 @@ var (
 		},
 	}
 )
+
+func getEmbedFileList(goos string, destDir string) []string {
+	fileList := []string{}
+	urls := dataFileUrls[goos]
+	for _, dlDetails := range urls {
+		filename := filepath.Base(dlDetails.url)
+		fileList = append(fileList, filepath.Join(destDir, filename))
+	}
+
+	return fileList
+}
 
 func downloadDataFiles(goos string, destDir string) ([]string, error) {
 	downloadedFiles := []string{}
