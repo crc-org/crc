@@ -9,6 +9,7 @@ type VersionResult struct {
 	CrcVersion       string
 	CommitSha        string
 	OpenshiftVersion string
+	PodmanVersion    string
 }
 
 type StartResult struct {

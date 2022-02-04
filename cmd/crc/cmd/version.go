@@ -37,6 +37,7 @@ type version struct {
 	Version             string `json:"version"`
 	Commit              string `json:"commit"`
 	OpenshiftVersion    string `json:"openshiftVersion"`
+	PodmanVersion       string `json:"podmanVersion"`
 	InstalledBundlePath string `json:"installedBundlePath,omitempty"`
 }
 
@@ -49,6 +50,7 @@ func defaultVersion() *version {
 		Version:             crcversion.GetCRCVersion(),
 		Commit:              crcversion.GetCommitSha(),
 		OpenshiftVersion:    crcversion.GetBundleVersion(),
+		PodmanVersion:       crcversion.GetPodmanVersion(),
 		InstalledBundlePath: installedBundlePath,
 	}
 }
@@ -73,5 +75,6 @@ func (v *version) lines() []string {
 	return []string{
 		fmt.Sprintf("CodeReady Containers version: %s+%s\n", v.Version, v.Commit),
 		fmt.Sprintf("OpenShift version: %s (%s)\n", v.OpenshiftVersion, bundleStatus),
+		fmt.Sprintf("Podman version: %s\n", v.PodmanVersion),
 	}
 }
