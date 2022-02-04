@@ -264,9 +264,9 @@ macos-release-binary: $(BUILD_DIR)/macos-amd64/crc
 windows-release-binary: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
 windows-release-binary: $(BUILD_DIR)/windows-amd64/crc.exe
 
-.PHONY: release
-release: LDFLAGS += -X '$(REPOPATH)/pkg/crc/version.linuxReleaseBuild=true' $(RELEASE_VERSION_VARIABLES)
-release: clean cross-lint embed_crc_helpers gen_release_info
+.PHONY: release linux-release
+release: clean linux-release macos-release-binary windows-release-binary check
+linux-release: clean lint linux-release-binary embed_crc_helpers gen_release_info
 	mkdir $(RELEASE_DIR)
 
 	@mkdir -p $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
@@ -278,7 +278,7 @@ release: clean cross-lint embed_crc_helpers gen_release_info
 	cd $(RELEASE_DIR) && sha256sum * > sha256sum.txt
 
 .PHONY: embed_crc_helpers
-embed_crc_helpers: cross $(HOST_BUILD_DIR)/crc-embedder
+embed_crc_helpers: $(BUILD_DIR)/linux-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
 	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=linux $(BUILD_DIR)/linux-amd64/crc
 
 .PHONY: update-go-version
