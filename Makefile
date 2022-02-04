@@ -256,7 +256,7 @@ gen_release_info:
 
 .PHONY: release
 release: LDFLAGS += -X '$(REPOPATH)/pkg/crc/version.linuxReleaseBuild=true' $(RELEASE_VERSION_VARIABLES)
-release: cross-lint embed_bundle gen_release_info
+release: cross-lint embed_crc_helpers gen_release_info
 	mkdir $(RELEASE_DIR)
 
 	@mkdir -p $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
@@ -267,8 +267,8 @@ release: cross-lint embed_bundle gen_release_info
 	
 	cd $(RELEASE_DIR) && sha256sum * > sha256sum.txt
 
-.PHONY: embed_bundle
-embed_bundle: clean cross $(HOST_BUILD_DIR)/crc-embedder
+.PHONY: embed_crc_helpers
+embed_crc_helpers: clean cross $(HOST_BUILD_DIR)/crc-embedder
 	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=linux $(BUILD_DIR)/linux-amd64/crc
 
 .PHONY: update-go-version
