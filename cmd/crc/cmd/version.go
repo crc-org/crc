@@ -6,7 +6,6 @@ import (
 	"os"
 
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
 	"github.com/spf13/cobra"
@@ -34,24 +33,18 @@ func runPrintVersion(writer io.Writer, version *version, outputFormat string) er
 }
 
 type version struct {
-	Version             string `json:"version"`
-	Commit              string `json:"commit"`
-	OpenshiftVersion    string `json:"openshiftVersion"`
-	PodmanVersion       string `json:"podmanVersion"`
-	InstalledBundlePath string `json:"installedBundlePath,omitempty"`
+	Version          string `json:"version"`
+	Commit           string `json:"commit"`
+	OpenshiftVersion string `json:"openshiftVersion"`
+	PodmanVersion    string `json:"podmanVersion"`
 }
 
 func defaultVersion() *version {
-	var installedBundlePath string
-	if crcversion.IsInstaller() {
-		installedBundlePath = constants.GetDefaultBundlePath(crcConfig.GetPreset(config))
-	}
 	return &version{
-		Version:             crcversion.GetCRCVersion(),
-		Commit:              crcversion.GetCommitSha(),
-		OpenshiftVersion:    crcversion.GetBundleVersion(),
-		PodmanVersion:       crcversion.GetPodmanVersion(),
-		InstalledBundlePath: installedBundlePath,
+		Version:          crcversion.GetCRCVersion(),
+		Commit:           crcversion.GetCommitSha(),
+		OpenshiftVersion: crcversion.GetBundleVersion(),
+		PodmanVersion:    crcversion.GetPodmanVersion(),
 	}
 }
 
@@ -65,16 +58,9 @@ func (v *version) prettyPrintTo(writer io.Writer) error {
 }
 
 func (v *version) lines() []string {
-	var bundleStatus string
-	switch {
-	case v.InstalledBundlePath != "":
-		bundleStatus = fmt.Sprintf("bundle installed at %s", v.InstalledBundlePath)
-	default:
-		bundleStatus = "not embedded in executable"
-	}
 	return []string{
 		fmt.Sprintf("CodeReady Containers version: %s+%s\n", v.Version, v.Commit),
-		fmt.Sprintf("OpenShift version: %s (%s)\n", v.OpenshiftVersion, bundleStatus),
+		fmt.Sprintf("OpenShift version: %s\n", v.OpenshiftVersion),
 		fmt.Sprintf("Podman version: %s\n", v.PodmanVersion),
 	}
 }
