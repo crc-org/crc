@@ -11,6 +11,7 @@ import (
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	"github.com/insomniacslk/dhcp/dhcpv4"
 	"github.com/insomniacslk/dhcp/dhcpv4/server4"
+	"github.com/insomniacslk/dhcp/rfc1035label"
 	log "github.com/sirupsen/logrus"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
@@ -50,6 +51,9 @@ func handler(configuration *types.Configuration, ipPool *tap.IPPool) server4.Han
 		reply.UpdateOption(dhcpv4.Option{Code: dhcpv4.OptionRouter, Value: dhcpv4.IP(net.ParseIP(configuration.GatewayIP))})
 		reply.UpdateOption(dhcpv4.Option{Code: dhcpv4.OptionDomainNameServer, Value: dhcpv4.IPs([]net.IP{net.ParseIP(configuration.GatewayIP)})})
 		reply.UpdateOption(dhcpv4.Option{Code: dhcpv4.OptionInterfaceMTU, Value: dhcpv4.Uint16(configuration.MTU)})
+		reply.UpdateOption(dhcpv4.Option{Code: dhcpv4.OptionDNSDomainSearchList, Value: &rfc1035label.Labels{
+			Labels: configuration.DNSSearchDomains,
+		}})
 
 		switch mt := m.MessageType(); mt {
 		case dhcpv4.MessageTypeDiscover:

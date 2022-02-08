@@ -150,7 +150,7 @@ func (igmp *igmpState) init(ep *endpoint) {
 		MaxUnsolicitedReportDelay: UnsolicitedReportIntervalMax,
 	})
 	igmp.igmpV1Present = igmpV1PresentDefault
-	igmp.igmpV1Job = ep.protocol.stack.NewJob(&ep.mu, func() {
+	igmp.igmpV1Job = tcpip.NewJob(ep.protocol.stack.Clock(), &ep.mu, func() {
 		igmp.setV1Present(false)
 	})
 }
@@ -322,6 +322,7 @@ func (igmp *igmpState) writePacket(destAddress tcpip.Address, groupAddress tcpip
 		ReserveHeaderBytes: int(igmp.ep.MaxHeaderLength()),
 		Data:               buffer.View(igmpData).ToVectorisedView(),
 	})
+	defer pkt.DecRef()
 
 	addressEndpoint := igmp.ep.acquireOutgoingPrimaryAddressRLocked(destAddress, false /* allowExpired */)
 	if addressEndpoint == nil {
@@ -341,7 +342,7 @@ func (igmp *igmpState) writePacket(destAddress tcpip.Address, groupAddress tcpip
 	}
 
 	sentStats := igmp.ep.stats.igmp.packetsSent
-	if err := igmp.ep.nic.WritePacketToRemote(header.EthernetAddressFromMulticastIPv4Address(destAddress), ProtocolNumber, pkt); err != nil {
+	if err := igmp.ep.nic.WritePacketToRemote(header.EthernetAddressFromMulticastIPv4Address(destAddress), pkt); err != nil {
 		sentStats.dropped.Increment()
 		return false, err
 	}

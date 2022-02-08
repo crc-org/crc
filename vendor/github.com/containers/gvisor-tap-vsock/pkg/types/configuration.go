@@ -28,6 +28,9 @@ type Configuration struct {
 	// Built-in DNS records that will be served by the DNS server embedded in the gateway
 	DNS []Zone
 
+	// List of search domains that will be added in all DHCP replies
+	DNSSearchDomains []string
+
 	// Port forwarding between the machine running the gateway and the virtual network.
 	Forwards map[string]string
 
@@ -48,6 +51,7 @@ type Configuration struct {
 	// Qemu or Hyperkit protocol
 	// Qemu protocol is 32bits big endian size of the packet, then the packet.
 	// Hyperkit protocol is handshake, then 16bits little endian size of packet, then the packet.
+	// Bess protocol transfers bare L2 packets as SOCK_SEQPACKET.
 	Protocol Protocol
 }
 
@@ -56,6 +60,7 @@ type Protocol string
 const (
 	HyperKitProtocol Protocol = "hyperkit"
 	QemuProtocol     Protocol = "qemu"
+	BessProtocol     Protocol = "bess"
 )
 
 type Zone struct {

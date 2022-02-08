@@ -1,4 +1,4 @@
-// Copyright 2014 Google, Inc. All rights reserved.
+// Copyright 2014, 2018 GoPacket Authors. All rights reserved.
 //
 // Use of this source code is governed by a BSD-style license
 // that can be found in the LICENSE file in the root of the source
@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/google/gopacket"
 )
@@ -51,24 +52,26 @@ type DNSType uint16
 
 // DNSType known values.
 const (
-	DNSTypeA     DNSType = 1  // a host address
-	DNSTypeNS    DNSType = 2  // an authoritative name server
-	DNSTypeMD    DNSType = 3  // a mail destination (Obsolete - use MX)
-	DNSTypeMF    DNSType = 4  // a mail forwarder (Obsolete - use MX)
-	DNSTypeCNAME DNSType = 5  // the canonical name for an alias
-	DNSTypeSOA   DNSType = 6  // marks the start of a zone of authority
-	DNSTypeMB    DNSType = 7  // a mailbox domain name (EXPERIMENTAL)
-	DNSTypeMG    DNSType = 8  // a mail group member (EXPERIMENTAL)
-	DNSTypeMR    DNSType = 9  // a mail rename domain name (EXPERIMENTAL)
-	DNSTypeNULL  DNSType = 10 // a null RR (EXPERIMENTAL)
-	DNSTypeWKS   DNSType = 11 // a well known service description
-	DNSTypePTR   DNSType = 12 // a domain name pointer
-	DNSTypeHINFO DNSType = 13 // host information
-	DNSTypeMINFO DNSType = 14 // mailbox or mail list information
-	DNSTypeMX    DNSType = 15 // mail exchange
-	DNSTypeTXT   DNSType = 16 // text strings
-	DNSTypeAAAA  DNSType = 28 // a IPv6 host address [RFC3596]
-	DNSTypeSRV   DNSType = 33 // server discovery [RFC2782] [RFC6195]
+	DNSTypeA     DNSType = 1   // a host address
+	DNSTypeNS    DNSType = 2   // an authoritative name server
+	DNSTypeMD    DNSType = 3   // a mail destination (Obsolete - use MX)
+	DNSTypeMF    DNSType = 4   // a mail forwarder (Obsolete - use MX)
+	DNSTypeCNAME DNSType = 5   // the canonical name for an alias
+	DNSTypeSOA   DNSType = 6   // marks the start of a zone of authority
+	DNSTypeMB    DNSType = 7   // a mailbox domain name (EXPERIMENTAL)
+	DNSTypeMG    DNSType = 8   // a mail group member (EXPERIMENTAL)
+	DNSTypeMR    DNSType = 9   // a mail rename domain name (EXPERIMENTAL)
+	DNSTypeNULL  DNSType = 10  // a null RR (EXPERIMENTAL)
+	DNSTypeWKS   DNSType = 11  // a well known service description
+	DNSTypePTR   DNSType = 12  // a domain name pointer
+	DNSTypeHINFO DNSType = 13  // host information
+	DNSTypeMINFO DNSType = 14  // mailbox or mail list information
+	DNSTypeMX    DNSType = 15  // mail exchange
+	DNSTypeTXT   DNSType = 16  // text strings
+	DNSTypeAAAA  DNSType = 28  // a IPv6 host address [RFC3596]
+	DNSTypeSRV   DNSType = 33  // server discovery [RFC2782] [RFC6195]
+	DNSTypeOPT   DNSType = 41  // OPT Pseudo-RR [RFC6891]
+	DNSTypeURI   DNSType = 256 // URI RR [RFC7553]
 )
 
 func (dt DNSType) String() string {
@@ -111,6 +114,10 @@ func (dt DNSType) String() string {
 		return "AAAA"
 	case DNSTypeSRV:
 		return "SRV"
+	case DNSTypeOPT:
+		return "OPT"
+	case DNSTypeURI:
+		return "URI"
 	}
 }
 
@@ -119,25 +126,26 @@ type DNSResponseCode uint8
 
 // DNSResponseCode known values.
 const (
-	DNSResponseCodeNoErr    DNSResponseCode = 0  // No error
-	DNSResponseCodeFormErr  DNSResponseCode = 1  // Format Error                       [RFC1035]
-	DNSResponseCodeServFail DNSResponseCode = 2  // Server Failure                     [RFC1035]
-	DNSResponseCodeNXDomain DNSResponseCode = 3  // Non-Existent Domain                [RFC1035]
-	DNSResponseCodeNotImp   DNSResponseCode = 4  // Not Implemented                    [RFC1035]
-	DNSResponseCodeRefused  DNSResponseCode = 5  // Query Refused                      [RFC1035]
-	DNSResponseCodeYXDomain DNSResponseCode = 6  // Name Exists when it should not     [RFC2136]
-	DNSResponseCodeYXRRSet  DNSResponseCode = 7  // RR Set Exists when it should not   [RFC2136]
-	DNSResponseCodeNXRRSet  DNSResponseCode = 8  // RR Set that should exist does not  [RFC2136]
-	DNSResponseCodeNotAuth  DNSResponseCode = 9  // Server Not Authoritative for zone  [RFC2136]
-	DNSResponseCodeNotZone  DNSResponseCode = 10 // Name not contained in zone         [RFC2136]
-	DNSResponseCodeBadVers  DNSResponseCode = 16 // Bad OPT Version                    [RFC2671]
-	DNSResponseCodeBadSig   DNSResponseCode = 16 // TSIG Signature Failure             [RFC2845]
-	DNSResponseCodeBadKey   DNSResponseCode = 17 // Key not recognized                 [RFC2845]
-	DNSResponseCodeBadTime  DNSResponseCode = 18 // Signature out of time window       [RFC2845]
-	DNSResponseCodeBadMode  DNSResponseCode = 19 // Bad TKEY Mode                      [RFC2930]
-	DNSResponseCodeBadName  DNSResponseCode = 20 // Duplicate key name                 [RFC2930]
-	DNSResponseCodeBadAlg   DNSResponseCode = 21 // Algorithm not supported            [RFC2930]
-	DNSResponseCodeBadTruc  DNSResponseCode = 22 // Bad Truncation                     [RFC4635]
+	DNSResponseCodeNoErr     DNSResponseCode = 0  // No error
+	DNSResponseCodeFormErr   DNSResponseCode = 1  // Format Error                       [RFC1035]
+	DNSResponseCodeServFail  DNSResponseCode = 2  // Server Failure                     [RFC1035]
+	DNSResponseCodeNXDomain  DNSResponseCode = 3  // Non-Existent Domain                [RFC1035]
+	DNSResponseCodeNotImp    DNSResponseCode = 4  // Not Implemented                    [RFC1035]
+	DNSResponseCodeRefused   DNSResponseCode = 5  // Query Refused                      [RFC1035]
+	DNSResponseCodeYXDomain  DNSResponseCode = 6  // Name Exists when it should not     [RFC2136]
+	DNSResponseCodeYXRRSet   DNSResponseCode = 7  // RR Set Exists when it should not   [RFC2136]
+	DNSResponseCodeNXRRSet   DNSResponseCode = 8  // RR Set that should exist does not  [RFC2136]
+	DNSResponseCodeNotAuth   DNSResponseCode = 9  // Server Not Authoritative for zone  [RFC2136]
+	DNSResponseCodeNotZone   DNSResponseCode = 10 // Name not contained in zone         [RFC2136]
+	DNSResponseCodeBadVers   DNSResponseCode = 16 // Bad OPT Version                    [RFC2671]
+	DNSResponseCodeBadSig    DNSResponseCode = 16 // TSIG Signature Failure             [RFC2845]
+	DNSResponseCodeBadKey    DNSResponseCode = 17 // Key not recognized                 [RFC2845]
+	DNSResponseCodeBadTime   DNSResponseCode = 18 // Signature out of time window       [RFC2845]
+	DNSResponseCodeBadMode   DNSResponseCode = 19 // Bad TKEY Mode                      [RFC2930]
+	DNSResponseCodeBadName   DNSResponseCode = 20 // Duplicate key name                 [RFC2930]
+	DNSResponseCodeBadAlg    DNSResponseCode = 21 // Algorithm not supported            [RFC2930]
+	DNSResponseCodeBadTruc   DNSResponseCode = 22 // Bad Truncation                     [RFC4635]
+	DNSResponseCodeBadCookie DNSResponseCode = 23 // Bad/missing Server Cookie          [RFC7873]
 )
 
 func (drc DNSResponseCode) String() string {
@@ -180,6 +188,8 @@ func (drc DNSResponseCode) String() string {
 		return "Algorithm not supported"
 	case DNSResponseCodeBadTruc:
 		return "Bad Truncation"
+	case DNSResponseCodeBadCookie:
+		return "Bad Cookie"
 	}
 }
 
@@ -363,6 +373,10 @@ func (d *DNS) DecodeFromBytes(data []byte, df gopacket.DecodeFeedback) error {
 			d.Additionals = d.Additionals[:i] // strip off erroneous value
 			return err
 		}
+		// extract extended RCODE from OPT RRs, RFC 6891 section 6.1.3
+		if d.Additionals[i].Type == DNSTypeOPT {
+			d.ResponseCode = DNSResponseCode(uint8(d.ResponseCode) | uint8(d.Additionals[i].TTL>>20&0xF0))
+		}
 	}
 
 	if uint16(len(d.Questions)) != d.QDCount {
@@ -423,6 +437,14 @@ func recSize(rr *DNSResourceRecord) int {
 		return l
 	case DNSTypeSRV:
 		return 6 + len(rr.SRV.Name) + 2
+	case DNSTypeURI:
+		return 4 + len(rr.URI.Target)
+	case DNSTypeOPT:
+		l := len(rr.OPT) * 4
+		for _, opt := range rr.OPT {
+			l += len(opt.Data)
+		}
+		return l
 	}
 
 	return 0
@@ -431,7 +453,14 @@ func recSize(rr *DNSResourceRecord) int {
 func computeSize(recs []DNSResourceRecord) int {
 	sz := 0
 	for _, rr := range recs {
-		sz += len(rr.Name) + 12
+		v := len(rr.Name)
+
+		if v == 0 {
+			sz += v + 11
+		} else {
+			sz += v + 12
+		}
+
 		sz += recSize(&rr)
 	}
 	return sz
@@ -592,7 +621,7 @@ loop:
 		}
 	}
 	if len(*buffer) <= start {
-		return nil, 0, errDNSNameHasNoData
+		return (*buffer)[start:], index + 1, nil
 	}
 	return (*buffer)[start+1:], index + 1, nil
 }
@@ -619,9 +648,10 @@ func (q *DNSQuestion) decode(data []byte, offset int, df gopacket.DecodeFeedback
 
 func (q *DNSQuestion) encode(data []byte, offset int) int {
 	noff := encodeName(q.Name, data, offset)
+	nSz := noff - offset
 	binary.BigEndian.PutUint16(data[noff:], uint16(q.Type))
 	binary.BigEndian.PutUint16(data[noff+2:], uint16(q.Class))
-	return len(q.Name) + 6
+	return nSz + 4
 }
 
 //  DNSResourceRecord
@@ -665,6 +695,8 @@ type DNSResourceRecord struct {
 	SOA            DNSSOA
 	SRV            DNSSRV
 	MX             DNSMX
+	OPT            []DNSOPT // See RFC 6891, section 6.1.2
+	URI            DNSURI
 
 	// Undecoded TXT for backward compatibility
 	TXT []byte
@@ -688,7 +720,7 @@ func (rr *DNSResourceRecord) decode(data []byte, offset int, df gopacket.DecodeF
 	}
 	rr.Data = data[endq+10 : end]
 
-	if err = rr.decodeRData(data, endq+10, buffer); err != nil {
+	if err = rr.decodeRData(data[:end], endq+10, buffer); err != nil {
 		return 0, err
 	}
 
@@ -707,6 +739,12 @@ func encodeName(name []byte, data []byte, offset int) int {
 			l++
 		}
 	}
+
+	if len(name) == 0 {
+		data[offset] = 0x00 // terminal
+		return offset + 1
+	}
+
 	// length for final portion
 	data[offset+len(name)-l] = byte(l)
 	data[offset+len(name)+1] = 0x00 // terminal
@@ -716,6 +754,7 @@ func encodeName(name []byte, data []byte, offset int) int {
 func (rr *DNSResourceRecord) encode(data []byte, offset int, opts gopacket.SerializeOptions) (int, error) {
 
 	noff := encodeName(rr.Name, data, offset)
+	nSz := noff - offset
 
 	binary.BigEndian.PutUint16(data[noff:], uint16(rr.Type))
 	binary.BigEndian.PutUint16(data[noff+2:], uint16(rr.Class))
@@ -755,6 +794,18 @@ func (rr *DNSResourceRecord) encode(data []byte, offset int, opts gopacket.Seria
 		binary.BigEndian.PutUint16(data[noff+12:], rr.SRV.Weight)
 		binary.BigEndian.PutUint16(data[noff+14:], rr.SRV.Port)
 		encodeName(rr.SRV.Name, data, noff+16)
+	case DNSTypeURI:
+		binary.BigEndian.PutUint16(data[noff+10:], rr.URI.Priority)
+		binary.BigEndian.PutUint16(data[noff+12:], rr.URI.Weight)
+		copy(data[noff+14:], rr.URI.Target)
+	case DNSTypeOPT:
+		noff2 := noff + 10
+		for _, opt := range rr.OPT {
+			binary.BigEndian.PutUint16(data[noff2:], uint16(opt.Code))
+			binary.BigEndian.PutUint16(data[noff2+2:], uint16(len(opt.Data)))
+			copy(data[noff2+4:], opt.Data)
+			noff2 += 4 + len(opt.Data)
+		}
 	default:
 		return 0, fmt.Errorf("serializing resource record of type %v not supported", rr.Type)
 	}
@@ -767,11 +818,21 @@ func (rr *DNSResourceRecord) encode(data []byte, offset int, opts gopacket.Seria
 		rr.DataLength = uint16(dSz)
 	}
 
-	return len(rr.Name) + 1 + 11 + dSz, nil
+	return nSz + 10 + dSz, nil
 }
 
 func (rr *DNSResourceRecord) String() string {
 
+	if rr.Type == DNSTypeOPT {
+		opts := make([]string, len(rr.OPT))
+		for i, opt := range rr.OPT {
+			opts[i] = opt.String()
+		}
+		return "OPT " + strings.Join(opts, ",")
+	}
+	if rr.Type == DNSTypeURI {
+		return fmt.Sprintf("URI %d %d %s", rr.URI.Priority, rr.URI.Weight, string(rr.URI.Target))
+	}
 	if rr.Class == DNSClassIN {
 		switch rr.Type {
 		case DNSTypeA, DNSTypeAAAA:
@@ -801,6 +862,35 @@ func decodeCharacterStrings(data []byte) ([][]byte, error) {
 		strings = append(strings, data[index+1:index2])
 	}
 	return strings, nil
+}
+
+func decodeOPTs(data []byte, offset int) ([]DNSOPT, error) {
+	allOPT := []DNSOPT{}
+	end := len(data)
+
+	if offset == end {
+		return allOPT, nil // There is no data to read
+	}
+
+	if offset+4 > end {
+		return allOPT, fmt.Errorf("DNSOPT record is of length %d, it should be at least length 4", end-offset)
+	}
+
+	for i := offset; i < end; {
+		opt := DNSOPT{}
+		if len(data) < i+4 {
+			return allOPT, fmt.Errorf("Malformed DNSOPT record.  Length %d < %d", len(data), i+4)
+		}
+		opt.Code = DNSOptionCode(binary.BigEndian.Uint16(data[i : i+2]))
+		l := binary.BigEndian.Uint16(data[i+2 : i+4])
+		if i+4+int(l) > end {
+			return allOPT, fmt.Errorf("Malformed DNSOPT record. The length (%d) field implies a packet larger than the one received", l)
+		}
+		opt.Data = data[i+4 : i+4+int(l)]
+		allOPT = append(allOPT, opt)
+		i += int(l) + 4
+	}
+	return allOPT, nil
 }
 
 func (rr *DNSResourceRecord) decodeRData(data []byte, offset int, buffer *[]byte) error {
@@ -844,6 +934,9 @@ func (rr *DNSResourceRecord) decodeRData(data []byte, offset int, buffer *[]byte
 		if err != nil {
 			return err
 		}
+		if len(data) < endq+20 {
+			return errors.New("SOA too small")
+		}
 		rr.SOA.RName = name
 		rr.SOA.Serial = binary.BigEndian.Uint32(data[endq : endq+4])
 		rr.SOA.Refresh = binary.BigEndian.Uint32(data[endq+4 : endq+8])
@@ -851,13 +944,26 @@ func (rr *DNSResourceRecord) decodeRData(data []byte, offset int, buffer *[]byte
 		rr.SOA.Expire = binary.BigEndian.Uint32(data[endq+12 : endq+16])
 		rr.SOA.Minimum = binary.BigEndian.Uint32(data[endq+16 : endq+20])
 	case DNSTypeMX:
+		if len(data) < offset+2 {
+			return errors.New("MX too small")
+		}
 		rr.MX.Preference = binary.BigEndian.Uint16(data[offset : offset+2])
 		name, _, err := decodeName(data, offset+2, buffer, 1)
 		if err != nil {
 			return err
 		}
 		rr.MX.Name = name
+	case DNSTypeURI:
+		if len(rr.Data) < 4 {
+			return errors.New("URI too small")
+		}
+		rr.URI.Priority = binary.BigEndian.Uint16(data[offset : offset+2])
+		rr.URI.Weight = binary.BigEndian.Uint16(data[offset+2 : offset+4])
+		rr.URI.Target = rr.Data[4:]
 	case DNSTypeSRV:
+		if len(data) < offset+6 {
+			return errors.New("SRV too small")
+		}
 		rr.SRV.Priority = binary.BigEndian.Uint16(data[offset : offset+2])
 		rr.SRV.Weight = binary.BigEndian.Uint16(data[offset+2 : offset+4])
 		rr.SRV.Port = binary.BigEndian.Uint16(data[offset+4 : offset+6])
@@ -866,6 +972,12 @@ func (rr *DNSResourceRecord) decodeRData(data []byte, offset int, buffer *[]byte
 			return err
 		}
 		rr.SRV.Name = name
+	case DNSTypeOPT:
+		allOPT, err := decodeOPTs(data, offset)
+		if err != nil {
+			return err
+		}
+		rr.OPT = allOPT
 	}
 	return nil
 }
@@ -889,6 +1001,78 @@ type DNSSRV struct {
 type DNSMX struct {
 	Preference uint16
 	Name       []byte
+}
+
+// DNSURI is a URI record, defining a target (URI) of a server/service
+type DNSURI struct {
+	Priority, Weight uint16
+	Target           []byte
+}
+
+// DNSOptionCode represents the code of a DNS Option, see RFC6891, section 6.1.2
+type DNSOptionCode uint16
+
+func (doc DNSOptionCode) String() string {
+	switch doc {
+	default:
+		return "Unknown"
+	case DNSOptionCodeNSID:
+		return "NSID"
+	case DNSOptionCodeDAU:
+		return "DAU"
+	case DNSOptionCodeDHU:
+		return "DHU"
+	case DNSOptionCodeN3U:
+		return "N3U"
+	case DNSOptionCodeEDNSClientSubnet:
+		return "EDNSClientSubnet"
+	case DNSOptionCodeEDNSExpire:
+		return "EDNSExpire"
+	case DNSOptionCodeCookie:
+		return "Cookie"
+	case DNSOptionCodeEDNSKeepAlive:
+		return "EDNSKeepAlive"
+	case DNSOptionCodePadding:
+		return "CodePadding"
+	case DNSOptionCodeChain:
+		return "CodeChain"
+	case DNSOptionCodeEDNSKeyTag:
+		return "CodeEDNSKeyTag"
+	case DNSOptionCodeEDNSClientTag:
+		return "EDNSClientTag"
+	case DNSOptionCodeEDNSServerTag:
+		return "EDNSServerTag"
+	case DNSOptionCodeDeviceID:
+		return "DeviceID"
+	}
+}
+
+// DNSOptionCode known values. See IANA
+const (
+	DNSOptionCodeNSID             DNSOptionCode = 3
+	DNSOptionCodeDAU              DNSOptionCode = 5
+	DNSOptionCodeDHU              DNSOptionCode = 6
+	DNSOptionCodeN3U              DNSOptionCode = 7
+	DNSOptionCodeEDNSClientSubnet DNSOptionCode = 8
+	DNSOptionCodeEDNSExpire       DNSOptionCode = 9
+	DNSOptionCodeCookie           DNSOptionCode = 10
+	DNSOptionCodeEDNSKeepAlive    DNSOptionCode = 11
+	DNSOptionCodePadding          DNSOptionCode = 12
+	DNSOptionCodeChain            DNSOptionCode = 13
+	DNSOptionCodeEDNSKeyTag       DNSOptionCode = 14
+	DNSOptionCodeEDNSClientTag    DNSOptionCode = 16
+	DNSOptionCodeEDNSServerTag    DNSOptionCode = 17
+	DNSOptionCodeDeviceID         DNSOptionCode = 26946
+)
+
+// DNSOPT is a DNS Option, see RFC6891, section 6.1.2
+type DNSOPT struct {
+	Code DNSOptionCode
+	Data []byte
+}
+
+func (opt DNSOPT) String() string {
+	return fmt.Sprintf("%s=%x", opt.Code, opt.Data)
 }
 
 var (

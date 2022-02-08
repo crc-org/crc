@@ -3,6 +3,7 @@ package virtualnetwork
 import (
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/containers/gvisor-tap-vsock/pkg/services/dhcp"
@@ -79,9 +80,7 @@ func dhcpServer(configuration *types.Configuration, s *stack.Stack, ipPool *tap.
 		return nil, err
 	}
 	go func() {
-		if err := server.Serve(); err != nil {
-			log.Error(err)
-		}
+		log.Error(server.Serve())
 	}()
 	return server.Mux(), nil
 }
@@ -89,8 +88,14 @@ func dhcpServer(configuration *types.Configuration, s *stack.Stack, ipPool *tap.
 func forwardHostVM(configuration *types.Configuration, s *stack.Stack) (http.Handler, error) {
 	fw := forwarder.NewPortsForwarder(s)
 	for local, remote := range configuration.Forwards {
-		if err := fw.Expose(local, remote); err != nil {
-			return nil, err
+		if strings.HasPrefix(local, "udp:") {
+			if err := fw.Expose(types.UDP, strings.TrimPrefix(local, "udp:"), remote); err != nil {
+				return nil, err
+			}
+		} else {
+			if err := fw.Expose(types.TCP, local, remote); err != nil {
+				return nil, err
+			}
 		}
 	}
 	return fw.Mux(), nil

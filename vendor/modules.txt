@@ -74,12 +74,14 @@ github.com/code-ready/machine/libmachine/drivers/plugin/localbinary
 github.com/code-ready/machine/libmachine/drivers/rpc
 github.com/code-ready/machine/libmachine/state
 github.com/code-ready/machine/libmachine/version
-# github.com/containers/gvisor-tap-vsock v0.1.1-0.20210816082554-ebd241aab69f
+# github.com/containers/gvisor-tap-vsock v0.3.1-0.20220214154721-84c937f8176f
 ## explicit
 github.com/containers/gvisor-tap-vsock/pkg/client
+github.com/containers/gvisor-tap-vsock/pkg/fs
 github.com/containers/gvisor-tap-vsock/pkg/services/dhcp
 github.com/containers/gvisor-tap-vsock/pkg/services/dns
 github.com/containers/gvisor-tap-vsock/pkg/services/forwarder
+github.com/containers/gvisor-tap-vsock/pkg/sshclient
 github.com/containers/gvisor-tap-vsock/pkg/tap
 github.com/containers/gvisor-tap-vsock/pkg/transport
 github.com/containers/gvisor-tap-vsock/pkg/types
@@ -143,7 +145,7 @@ github.com/golang/protobuf/ptypes/timestamp
 github.com/goodhosts/hostsfile
 # github.com/google/btree v1.0.1
 github.com/google/btree
-# github.com/google/go-cmp v0.5.6
+# github.com/google/go-cmp v0.5.7
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
@@ -151,7 +153,7 @@ github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
 # github.com/google/gofuzz v1.1.0
 github.com/google/gofuzz
-# github.com/google/gopacket v1.1.16
+# github.com/google/gopacket v1.1.19
 github.com/google/gopacket
 github.com/google/gopacket/layers
 # github.com/google/tcpproxy v0.0.0-20200125044825-b6bb9b5b8252
@@ -192,7 +194,7 @@ github.com/hectane/go-acl/api
 github.com/imdario/mergo
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
-# github.com/insomniacslk/dhcp v0.0.0-20210608085346-465dd6c35f6c
+# github.com/insomniacslk/dhcp v0.0.0-20210812084645-decc701b3665
 github.com/insomniacslk/dhcp/dhcpv4
 github.com/insomniacslk/dhcp/dhcpv4/server4
 github.com/insomniacslk/dhcp/iana
@@ -224,7 +226,7 @@ github.com/kofalt/go-memoize
 # github.com/libvirt/libvirt-go-xml v7.4.0+incompatible
 ## explicit
 github.com/libvirt/libvirt-go-xml
-# github.com/linuxkit/virtsock v0.0.0-20180830132707-8e79449dea07
+# github.com/linuxkit/virtsock v0.0.0-20201010232012-f8cee7dfc7a3
 github.com/linuxkit/virtsock/pkg/hvsock
 # github.com/magiconair/properties v1.8.5
 github.com/magiconair/properties
@@ -235,13 +237,15 @@ github.com/mattn/go-colorable
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.13
 github.com/mattn/go-runewidth
-# github.com/mdlayher/vsock v0.0.0-20210303205602-10d591861736 => github.com/cfergeau/vsock v0.0.0-20210707100525-4def293f672e
+# github.com/mdlayher/socket v0.2.0
+github.com/mdlayher/socket
+# github.com/mdlayher/vsock v1.1.0
 ## explicit
 github.com/mdlayher/vsock
 # github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 ## explicit
 github.com/mgutz/ansi
-# github.com/miekg/dns v1.1.35
+# github.com/miekg/dns v1.1.46
 github.com/miekg/dns
 # github.com/mitchellh/go-wordwrap v1.0.0
 github.com/mitchellh/go-wordwrap
@@ -285,11 +289,12 @@ github.com/onsi/ginkgo/reporters/stenographer
 github.com/onsi/ginkgo/reporters/stenographer/support/go-colorable
 github.com/onsi/ginkgo/reporters/stenographer/support/go-isatty
 github.com/onsi/ginkgo/types
-# github.com/onsi/gomega v1.17.0
+# github.com/onsi/gomega v1.18.1
 ## explicit
 github.com/onsi/gomega
 github.com/onsi/gomega/format
 github.com/onsi/gomega/internal
+github.com/onsi/gomega/internal/gutil
 github.com/onsi/gomega/matchers
 github.com/onsi/gomega/matchers/support/goraph/bipartitegraph
 github.com/onsi/gomega/matchers/support/goraph/edge
@@ -398,7 +403,10 @@ golang.org/x/crypto/internal/poly1305
 golang.org/x/crypto/internal/subtle
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
-# golang.org/x/net v0.0.0-20211116231205-47ca1ff31462
+golang.org/x/crypto/ssh/knownhosts
+# golang.org/x/mod v0.4.2
+golang.org/x/mod/semver
+# golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
 ## explicit
 golang.org/x/net/bpf
 golang.org/x/net/context
@@ -415,16 +423,18 @@ golang.org/x/net/internal/iana
 golang.org/x/net/internal/socket
 golang.org/x/net/ipv4
 golang.org/x/net/ipv6
-# golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f
+# golang.org/x/oauth2 v0.0.0-20211005180243-6b3c2da341f1
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
 # golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 ## explicit
+golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.0.0-20211116061358-0a5406a5449c
+# golang.org/x/sys v0.0.0-20220204135822-1c1b9b1eba6a
 ## explicit
 golang.org/x/sys/cpu
+golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
@@ -457,6 +467,21 @@ golang.org/x/text/unicode/norm
 golang.org/x/text/width
 # golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
 golang.org/x/time/rate
+# golang.org/x/tools v0.1.6-0.20210726203631-07bc1bf47fb2
+golang.org/x/tools/go/gcexportdata
+golang.org/x/tools/go/internal/gcimporter
+golang.org/x/tools/go/internal/packagesdriver
+golang.org/x/tools/go/packages
+golang.org/x/tools/internal/event
+golang.org/x/tools/internal/event/core
+golang.org/x/tools/internal/event/keys
+golang.org/x/tools/internal/event/label
+golang.org/x/tools/internal/gocommand
+golang.org/x/tools/internal/packagesinternal
+golang.org/x/tools/internal/typesinternal
+# golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
+golang.org/x/xerrors
+golang.org/x/xerrors/internal
 # google.golang.org/appengine v1.6.7
 google.golang.org/appengine/internal
 google.golang.org/appengine/internal/base
@@ -507,12 +532,17 @@ gopkg.in/tomb.v1
 gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 gopkg.in/yaml.v3
-# gvisor.dev/gvisor v0.0.0-20210424070529-29f85eb7ca69
+# gvisor.dev/gvisor v0.0.0-20220121190119-4f2d380c8b55
+gvisor.dev/gvisor/pkg/atomicbitops
+gvisor.dev/gvisor/pkg/buffer
+gvisor.dev/gvisor/pkg/context
 gvisor.dev/gvisor/pkg/gohacks
 gvisor.dev/gvisor/pkg/goid
 gvisor.dev/gvisor/pkg/linewriter
 gvisor.dev/gvisor/pkg/log
 gvisor.dev/gvisor/pkg/rand
+gvisor.dev/gvisor/pkg/refs
+gvisor.dev/gvisor/pkg/refsvfs2
 gvisor.dev/gvisor/pkg/sleep
 gvisor.dev/gvisor/pkg/state
 gvisor.dev/gvisor/pkg/state/wire
@@ -523,6 +553,7 @@ gvisor.dev/gvisor/pkg/tcpip/buffer
 gvisor.dev/gvisor/pkg/tcpip/hash/jenkins
 gvisor.dev/gvisor/pkg/tcpip/header
 gvisor.dev/gvisor/pkg/tcpip/header/parse
+gvisor.dev/gvisor/pkg/tcpip/internal/tcp
 gvisor.dev/gvisor/pkg/tcpip/link/nested
 gvisor.dev/gvisor/pkg/tcpip/link/sniffer
 gvisor.dev/gvisor/pkg/tcpip/network/arp
@@ -533,7 +564,10 @@ gvisor.dev/gvisor/pkg/tcpip/network/ipv4
 gvisor.dev/gvisor/pkg/tcpip/ports
 gvisor.dev/gvisor/pkg/tcpip/seqnum
 gvisor.dev/gvisor/pkg/tcpip/stack
+gvisor.dev/gvisor/pkg/tcpip/transport
 gvisor.dev/gvisor/pkg/tcpip/transport/icmp
+gvisor.dev/gvisor/pkg/tcpip/transport/internal/network
+gvisor.dev/gvisor/pkg/tcpip/transport/internal/noop
 gvisor.dev/gvisor/pkg/tcpip/transport/packet
 gvisor.dev/gvisor/pkg/tcpip/transport/raw
 gvisor.dev/gvisor/pkg/tcpip/transport/tcp
@@ -669,4 +703,3 @@ sigs.k8s.io/yaml
 # k8s.io/apimachinery => github.com/openshift/kubernetes-apimachinery v0.0.0-20210730111815-c26349f8e2c9
 # k8s.io/client-go => github.com/openshift/kubernetes-client-go v0.0.0-20210826123502-7208c21f5119
 # k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20210730111826-9c6734b9d97d
-# github.com/mdlayher/vsock => github.com/cfergeau/vsock v0.0.0-20210707100525-4def293f672e

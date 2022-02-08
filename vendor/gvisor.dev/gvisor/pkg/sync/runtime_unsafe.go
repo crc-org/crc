@@ -3,11 +3,16 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// +build go1.13
-// +build !go1.18
+//go:build go1.13 && !go1.19
+// +build go1.13,!go1.19
 
-// Check go:linkname function signatures, type definitions, and constants when
-// updating Go version.
+// //go:linkname directives type-checked by checklinkname. Any other
+// non-linkname assumptions outside the Go 1 compatibility guarantee should
+// have an accompanied vet check or version guard build tag.
+
+// Check type definitions and constants when updating Go version.
+//
+// TODO(b/165820485): add these checks to checklinkname.
 
 package sync
 
@@ -30,15 +35,39 @@ func Gopark(unlockf func(uintptr, unsafe.Pointer) bool, lock unsafe.Pointer, rea
 //go:linkname gopark runtime.gopark
 func gopark(unlockf func(uintptr, unsafe.Pointer) bool, lock unsafe.Pointer, reason uint8, traceEv byte, traceskip int)
 
-// Goready is runtime.goready.
+//go:linkname wakep runtime.wakep
+func wakep()
+
+// Wakep is runtime.wakep.
 //
 //go:nosplit
-func Goready(gp uintptr, traceskip int) {
-	goready(gp, traceskip)
+func Wakep() {
+	// This is only supported if we can suppress the wakep called
+	// from  Goready below, which is in certain architectures only.
+	if supportsWakeSuppression {
+		wakep()
+	}
 }
 
 //go:linkname goready runtime.goready
 func goready(gp uintptr, traceskip int)
+
+// Goready is runtime.goready.
+//
+// The additional wakep argument controls whether a new thread will be kicked to
+// execute the P. This should be true in most circumstances. However, if the
+// current thread is about to sleep, then this can be false for efficiency.
+//
+//go:nosplit
+func Goready(gp uintptr, traceskip int, wakep bool) {
+	if supportsWakeSuppression && !wakep {
+		preGoReadyWakeSuppression()
+	}
+	goready(gp, traceskip)
+	if supportsWakeSuppression && !wakep {
+		preGoReadyWakeSuppression()
+	}
+}
 
 // Values for the reason argument to gopark, from Go's src/runtime/runtime2.go.
 const (
@@ -109,10 +138,10 @@ type maptype struct {
 // These functions are only used within the sync package.
 
 //go:linkname semacquire sync.runtime_Semacquire
-func semacquire(s *uint32)
+func semacquire(addr *uint32)
 
 //go:linkname semrelease sync.runtime_Semrelease
-func semrelease(s *uint32, handoff bool, skipframes int)
+func semrelease(addr *uint32, handoff bool, skipframes int)
 
 //go:linkname canSpin sync.runtime_canSpin
 func canSpin(i int) bool

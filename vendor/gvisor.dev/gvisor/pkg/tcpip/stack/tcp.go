@@ -19,6 +19,7 @@ import (
 
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
+	"gvisor.dev/gvisor/pkg/tcpip/internal/tcp"
 	"gvisor.dev/gvisor/pkg/tcpip/seqnum"
 )
 
@@ -39,7 +40,7 @@ type TCPCubicState struct {
 	WMax float64
 
 	// T is the time when the current congestion avoidance was entered.
-	T time.Time `state:".(unixTime)"`
+	T tcpip.MonotonicTime
 
 	// TimeSinceLastCongestion denotes the time since the current
 	// congestion avoidance was entered.
@@ -78,7 +79,7 @@ type TCPCubicState struct {
 type TCPRACKState struct {
 	// XmitTime is the transmission timestamp of the most recent
 	// acknowledged segment.
-	XmitTime time.Time `state:".(unixTime)"`
+	XmitTime tcpip.MonotonicTime
 
 	// EndSequence is the ending TCP sequence number of the most recent
 	// acknowledged segment.
@@ -216,7 +217,7 @@ type TCPRTTState struct {
 // +stateify savable
 type TCPSenderState struct {
 	// LastSendTime is the timestamp at which we sent the last segment.
-	LastSendTime time.Time `state:".(unixTime)"`
+	LastSendTime tcpip.MonotonicTime
 
 	// DupAckCount is the number of Duplicate ACKs received. It is used for
 	// fast retransmit.
@@ -256,7 +257,7 @@ type TCPSenderState struct {
 	RTTMeasureSeqNum seqnum.Value
 
 	// RTTMeasureTime is the time when the RTTMeasureSeqNum was sent.
-	RTTMeasureTime time.Time `state:".(unixTime)"`
+	RTTMeasureTime tcpip.MonotonicTime
 
 	// Closed indicates that the caller has closed the endpoint for
 	// sending.
@@ -288,6 +289,12 @@ type TCPSenderState struct {
 
 	// RACKState holds the state related to RACK loss detection algorithm.
 	RACKState TCPRACKState
+
+	// RetransmitTS records the timestamp used to detect spurious recovery.
+	RetransmitTS uint32
+
+	// SpuriousRecovery indicates if the sender entered recovery spuriously.
+	SpuriousRecovery bool
 }
 
 // TCPSACKInfo holds TCP SACK related information for a given TCP endpoint.
@@ -313,7 +320,7 @@ type TCPSACKInfo struct {
 type RcvBufAutoTuneParams struct {
 	// MeasureTime is the time at which the current measurement was
 	// started.
-	MeasureTime time.Time `state:".(unixTime)"`
+	MeasureTime tcpip.MonotonicTime
 
 	// CopiedBytes is the number of bytes copied to user space since this
 	// measure began.
@@ -341,7 +348,7 @@ type RcvBufAutoTuneParams struct {
 
 	// RTTMeasureTime is the absolute time at which the current RTT
 	// measurement period began.
-	RTTMeasureTime time.Time `state:".(unixTime)"`
+	RTTMeasureTime tcpip.MonotonicTime
 
 	// Disabled is true if an explicit receive buffer is set for the
 	// endpoint.
@@ -380,15 +387,18 @@ type TCPSndBufState struct {
 	// SndClosed indicates that the endpoint has been closed for sends.
 	SndClosed bool
 
-	// SndBufInQueue is the number of bytes in the send queue.
-	SndBufInQueue seqnum.Size
-
 	// PacketTooBigCount is used to notify the main protocol routine how
 	// many times a "packet too big" control packet is received.
 	PacketTooBigCount int
 
 	// SndMTU is the smallest MTU seen in the control packets received.
 	SndMTU int
+
+	// AutoTuneSndBufDisabled indicates that the auto tuning of send buffer
+	// is disabled.
+	//
+	// Must be accessed using atomic operations.
+	AutoTuneSndBufDisabled uint32
 }
 
 // TCPEndpointStateInner contains the members of TCPEndpointState used directly
@@ -399,7 +409,7 @@ type TCPSndBufState struct {
 type TCPEndpointStateInner struct {
 	// TSOffset is a randomized offset added to the value of the TSVal
 	// field in the timestamp option.
-	TSOffset uint32
+	TSOffset tcp.TSOffset
 
 	// SACKPermitted is set to true if the peer sends the TCPSACKPermitted
 	// option in the SYN/SYN-ACK.
@@ -429,7 +439,7 @@ type TCPEndpointState struct {
 	ID TCPEndpointID
 
 	// SegTime denotes the absolute time when this segment was received.
-	SegTime time.Time `state:".(unixTime)"`
+	SegTime tcpip.MonotonicTime
 
 	// RcvBufState contains information about the state of the endpoint's
 	// receive socket buffer.

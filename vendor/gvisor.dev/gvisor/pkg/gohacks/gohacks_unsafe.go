@@ -12,10 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build go1.13
-// +build !go1.18
+//go:build go1.13 && !go1.19
+// +build go1.13,!go1.19
 
-// Check type signatures when updating Go version.
+// //go:linkname directives type-checked by checklinkname. Any other
+// non-linkname assumptions outside the Go 1 compatibility guarantee should
+// have an accompanied vet check or version guard build tag.
+
+// Check type signatures and Noescape when updating Go version.
+//
+// TODO(b/165820485): add these checks to checklinkname.
 
 // Package gohacks contains utilities for subverting the Go compiler.
 package gohacks

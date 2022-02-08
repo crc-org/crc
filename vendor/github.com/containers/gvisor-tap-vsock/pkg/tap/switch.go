@@ -2,7 +2,6 @@ package tap
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net"
 	"sync"
@@ -113,9 +112,23 @@ func (e *Switch) connect(conn net.Conn) (int, bool) {
 }
 
 func (e *Switch) tx(src, dst tcpip.LinkAddress, pkt *stack.PacketBuffer) error {
-	size := e.protocol.Buf()
-	e.protocol.Write(size, pkt.Size())
+	if e.protocol.Stream() {
+		return e.txStream(src, dst, pkt, e.protocol.(streamProtocol))
+	}
+	return e.txNonStream(src, dst, pkt)
+}
 
+func (e *Switch) txNonStream(src, dst tcpip.LinkAddress, pkt *stack.PacketBuffer) error {
+	return e.txBuf(src, dst, pkt, nil)
+}
+
+func (e *Switch) txStream(src, dst tcpip.LinkAddress, pkt *stack.PacketBuffer, sProtocol streamProtocol) error {
+	size := sProtocol.Buf()
+	sProtocol.Write(size, pkt.Size())
+	return e.txBuf(src, dst, pkt, size)
+}
+
+func (e *Switch) txBuf(src, dst tcpip.LinkAddress, pkt *stack.PacketBuffer, size []byte) error {
 	e.writeLock.Lock()
 	defer e.writeLock.Unlock()
 
@@ -133,12 +146,23 @@ func (e *Switch) tx(src, dst tcpip.LinkAddress, pkt *stack.PacketBuffer) error {
 			if id == srcID {
 				continue
 			}
-			if _, err := conn.Write(size); err != nil {
-				e.disconnect(id, conn)
-				return err
-			}
-			for _, view := range pkt.Views() {
-				if _, err := conn.Write(view); err != nil {
+			if len(size) > 0 {
+				if _, err := conn.Write(size); err != nil {
+					e.disconnect(id, conn)
+					return err
+				}
+				for _, view := range pkt.Views() {
+					if _, err := conn.Write(view); err != nil {
+						e.disconnect(id, conn)
+						return err
+					}
+				}
+			} else {
+				var b []byte
+				for _, view := range pkt.Views() {
+					b = append(b, []byte(view)...)
+				}
+				if _, err := conn.Write(b); err != nil {
 					e.disconnect(id, conn)
 					return err
 				}
@@ -155,12 +179,23 @@ func (e *Switch) tx(src, dst tcpip.LinkAddress, pkt *stack.PacketBuffer) error {
 		}
 		e.camLock.RUnlock()
 		conn := e.conns[id]
-		if _, err := conn.Write(size); err != nil {
-			e.disconnect(id, conn)
-			return err
-		}
-		for _, view := range pkt.Views() {
-			if _, err := conn.Write(view); err != nil {
+		if len(size) > 0 {
+			if _, err := conn.Write(size); err != nil {
+				e.disconnect(id, conn)
+				return err
+			}
+			for _, view := range pkt.Views() {
+				if _, err := conn.Write(view); err != nil {
+					e.disconnect(id, conn)
+					return err
+				}
+			}
+		} else {
+			var b []byte
+			for _, view := range pkt.Views() {
+				b = append(b, []byte(view)...)
+			}
+			if _, err := conn.Write(b); err != nil {
 				e.disconnect(id, conn)
 				return err
 			}
@@ -184,7 +219,15 @@ func (e *Switch) disconnect(id int, conn net.Conn) {
 }
 
 func (e *Switch) rx(ctx context.Context, id int, conn net.Conn) error {
-	sizeBuf := e.protocol.Buf()
+	if e.protocol.Stream() {
+		return e.rxStream(ctx, id, conn, e.protocol.(streamProtocol))
+	}
+	return e.rxNonStream(ctx, id, conn)
+}
+
+func (e *Switch) rxNonStream(ctx context.Context, id int, conn net.Conn) error {
+	bufSize := 1024 * 128
+	buf := make([]byte, bufSize)
 loop:
 	for {
 		select {
@@ -193,61 +236,84 @@ loop:
 		default:
 			// passthrough
 		}
-		n, err := io.ReadFull(conn, sizeBuf)
+		n, err := conn.Read(buf)
 		if err != nil {
 			return errors.Wrap(err, "cannot read size from socket")
 		}
-		size := int(e.protocol.Read(sizeBuf))
-
-		buf := make([]byte, size)
-		n, err = io.ReadFull(conn, buf)
-		if err != nil {
-			return errors.Wrap(err, "cannot read packet from socket")
-		}
-		if n == 0 || n != size {
-			return fmt.Errorf("unexpected size %d != %d", n, size)
-		}
-
-		if e.debug {
-			packet := gopacket.NewPacket(buf, layers.LayerTypeEthernet, gopacket.Default)
-			log.Info(packet.String())
-		}
-
-		view := buffer.View(buf)
-		eth := header.Ethernet(view)
-		vv := buffer.NewVectorisedView(len(view), []buffer.View{view})
-
-		e.camLock.Lock()
-		e.cam[eth.SourceAddress()] = id
-		e.camLock.Unlock()
-
-		if eth.DestinationAddress() != e.gateway.LinkAddress() {
-			if err := e.tx(eth.SourceAddress(), eth.DestinationAddress(), stack.NewPacketBuffer(stack.PacketBufferOptions{
-				Data: vv,
-			})); err != nil {
-				log.Error(err)
-			}
-		}
-		if eth.DestinationAddress() == e.gateway.LinkAddress() || eth.DestinationAddress() == header.EthernetBroadcastAddress {
-			vv.TrimFront(header.EthernetMinimumSize)
-			e.gateway.DeliverNetworkPacket(
-				eth.SourceAddress(),
-				eth.DestinationAddress(),
-				eth.Type(),
-				stack.NewPacketBuffer(stack.PacketBufferOptions{
-					Data: vv,
-				}),
-			)
-		}
-
-		atomic.AddUint64(&e.Received, uint64(size))
+		e.rxBuf(ctx, id, buf[:n])
 	}
 	return nil
 }
 
-func protocolImplementation(protocol types.Protocol) protocol {
-	if protocol == types.QemuProtocol {
-		return &qemuProtocol{}
+func (e *Switch) rxStream(ctx context.Context, id int, conn net.Conn, sProtocol streamProtocol) error {
+	sizeBuf := sProtocol.Buf()
+loop:
+	for {
+		select {
+		case <-ctx.Done():
+			break loop
+		default:
+			// passthrough
+		}
+		_, err := io.ReadFull(conn, sizeBuf)
+		if err != nil {
+			return errors.Wrap(err, "cannot read size from socket")
+		}
+		size := sProtocol.Read(sizeBuf)
+
+		buf := make([]byte, size)
+		_, err = io.ReadFull(conn, buf)
+		if err != nil {
+			return errors.Wrap(err, "cannot read packet from socket")
+		}
+		e.rxBuf(ctx, id, buf)
 	}
-	return &hyperkitProtocol{}
+	return nil
+}
+
+func (e *Switch) rxBuf(ctx context.Context, id int, buf []byte) {
+	if e.debug {
+		packet := gopacket.NewPacket(buf, layers.LayerTypeEthernet, gopacket.Default)
+		log.Info(packet.String())
+	}
+
+	view := buffer.View(buf)
+	eth := header.Ethernet(view)
+	vv := buffer.NewVectorisedView(len(view), []buffer.View{view})
+
+	e.camLock.Lock()
+	e.cam[eth.SourceAddress()] = id
+	e.camLock.Unlock()
+
+	if eth.DestinationAddress() != e.gateway.LinkAddress() {
+		if err := e.tx(eth.SourceAddress(), eth.DestinationAddress(), stack.NewPacketBuffer(stack.PacketBufferOptions{
+			Data: vv,
+		})); err != nil {
+			log.Error(err)
+		}
+	}
+	if eth.DestinationAddress() == e.gateway.LinkAddress() || eth.DestinationAddress() == header.EthernetBroadcastAddress {
+		vv.TrimFront(header.EthernetMinimumSize)
+		e.gateway.DeliverNetworkPacket(
+			eth.SourceAddress(),
+			eth.DestinationAddress(),
+			eth.Type(),
+			stack.NewPacketBuffer(stack.PacketBufferOptions{
+				Data: vv,
+			}),
+		)
+	}
+
+	atomic.AddUint64(&e.Received, uint64(len(buf)))
+}
+
+func protocolImplementation(protocol types.Protocol) protocol {
+	switch protocol {
+	case types.QemuProtocol:
+		return &qemuProtocol{}
+	case types.BessProtocol:
+		return &bessProtocol{}
+	default:
+		return &hyperkitProtocol{}
+	}
 }
