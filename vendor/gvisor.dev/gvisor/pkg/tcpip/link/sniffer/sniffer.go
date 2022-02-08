@@ -87,11 +87,7 @@ func NewWithPrefix(lower stack.LinkEndpoint, logPrefix string) stack.LinkEndpoin
 }
 
 func zoneOffset() (int32, error) {
-	loc, err := time.LoadLocation("Local")
-	if err != nil {
-		return 0, err
-	}
-	date := time.Date(0, 0, 0, 0, 0, 0, 0, loc)
+	date := time.Date(0, 0, 0, 0, 0, 0, 0, time.Local)
 	_, offset := date.Zone()
 	return int32(offset), nil
 }
@@ -117,8 +113,9 @@ func writePCAPHeader(w io.Writer, maxLen uint32) error {
 // NewWithWriter creates a new sniffer link-layer endpoint. It wraps around
 // another endpoint and logs packets as they traverse the endpoint.
 //
-// Packets are logged to writer in the pcap format. A sniffer created with this
-// function will not emit packets using the standard log package.
+// Each packet is written to writer in the pcap format in a single Write call
+// without synchronization. A sniffer created with this function will not emit
+// packets using the standard log package.
 //
 // snapLen is the maximum amount of a packet to be saved. Packets with a length
 // less than or equal to snapLen will be saved in their entirety. Longer
@@ -143,63 +140,35 @@ func (e *endpoint) DeliverNetworkPacket(remote, local tcpip.LinkAddress, protoco
 	e.Endpoint.DeliverNetworkPacket(remote, local, protocol, pkt)
 }
 
-// DeliverOutboundPacket implements stack.NetworkDispatcher.DeliverOutboundPacket.
-func (e *endpoint) DeliverOutboundPacket(remote, local tcpip.LinkAddress, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
-	e.Endpoint.DeliverOutboundPacket(remote, local, protocol, pkt)
-}
-
 func (e *endpoint) dumpPacket(dir direction, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
 	writer := e.writer
 	if writer == nil && atomic.LoadUint32(&LogPackets) == 1 {
 		logPacket(e.logPrefix, dir, protocol, pkt)
 	}
 	if writer != nil && atomic.LoadUint32(&LogPacketsToPCAP) == 1 {
-		totalLength := pkt.Size()
-		length := totalLength
-		if max := int(e.maxPCAPLen); length > max {
-			length = max
+		packet := pcapPacket{
+			timestamp:     time.Now(),
+			packet:        pkt,
+			maxCaptureLen: int(e.maxPCAPLen),
 		}
-		if err := binary.Write(writer, binary.BigEndian, newPCAPPacketHeader(uint32(length), uint32(totalLength))); err != nil {
+		b, err := packet.MarshalBinary()
+		if err != nil {
 			panic(err)
 		}
-		write := func(b []byte) {
-			if len(b) > length {
-				b = b[:length]
-			}
-			for len(b) != 0 {
-				n, err := writer.Write(b)
-				if err != nil {
-					panic(err)
-				}
-				b = b[n:]
-				length -= n
-			}
-		}
-		for _, v := range pkt.Views() {
-			if length == 0 {
-				break
-			}
-			write(v)
+		if _, err := writer.Write(b); err != nil {
+			panic(err)
 		}
 	}
-}
-
-// WritePacket implements the stack.LinkEndpoint interface. It is called by
-// higher-level protocols to write packets; it just logs the packet and
-// forwards the request to the lower endpoint.
-func (e *endpoint) WritePacket(r stack.RouteInfo, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) tcpip.Error {
-	e.dumpPacket(directionSend, protocol, pkt)
-	return e.Endpoint.WritePacket(r, protocol, pkt)
 }
 
 // WritePackets implements the stack.LinkEndpoint interface. It is called by
 // higher-level protocols to write packets; it just logs the packet and
 // forwards the request to the lower endpoint.
-func (e *endpoint) WritePackets(r stack.RouteInfo, pkts stack.PacketBufferList, protocol tcpip.NetworkProtocolNumber) (int, tcpip.Error) {
+func (e *endpoint) WritePackets(pkts stack.PacketBufferList) (int, tcpip.Error) {
 	for pkt := pkts.Front(); pkt != nil; pkt = pkt.Next() {
-		e.dumpPacket(directionSend, protocol, pkt)
+		e.dumpPacket(directionSend, pkt.NetworkProtocolNumber, pkt)
 	}
-	return e.Endpoint.WritePackets(r, pkts, protocol)
+	return e.Endpoint.WritePackets(pkts)
 }
 
 func logPacket(prefix string, dir direction, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
@@ -230,8 +199,10 @@ func logPacket(prefix string, dir direction, protocol tcpip.NetworkProtocolNumbe
 	// We trim the link headers from the cloned buffer as the sniffer doesn't
 	// handle link headers.
 	vv := buffer.NewVectorisedView(pkt.Size(), pkt.Views())
+	vv.TrimFront(len(pkt.VirtioNetHeader().View()))
 	vv.TrimFront(len(pkt.LinkHeader().View()))
 	pkt = stack.NewPacketBuffer(stack.PacketBufferOptions{Data: vv})
+	defer pkt.DecRef()
 	switch protocol {
 	case header.IPv4ProtocolNumber:
 		if ok := parse.IPv4(pkt); !ok {

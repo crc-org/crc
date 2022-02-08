@@ -1,13 +1,14 @@
-//+build linux
+//go:build linux
+// +build linux
 
 package vsock
 
 import (
-	"fmt"
 	"net"
 	"os"
 	"time"
 
+	"github.com/mdlayher/socket"
 	"golang.org/x/sys/unix"
 )
 
@@ -16,129 +17,116 @@ var _ net.Listener = &listener{}
 // A listener is the net.Listener implementation for connection-oriented
 // VM sockets.
 type listener struct {
-	fd   listenFD
+	c    *socket.Conn
 	addr *Addr
 }
 
 // Addr and Close implement the net.Listener interface for listener.
 func (l *listener) Addr() net.Addr                { return l.addr }
-func (l *listener) Close() error                  { return l.fd.Close() }
-func (l *listener) SetDeadline(t time.Time) error { return l.fd.SetDeadline(t) }
+func (l *listener) Close() error                  { return l.c.Close() }
+func (l *listener) SetDeadline(t time.Time) error { return l.c.SetDeadline(t) }
 
 // Accept accepts a single connection from the listener, and sets up
 // a net.Conn backed by conn.
 func (l *listener) Accept() (net.Conn, error) {
-	// Mimic what internal/poll does and close on exec, but leave it up to
-	// newConn to set non-blocking mode.
-	// See: https://golang.org/src/internal/poll/sock_cloexec.go.
-	//
-	// TODO(mdlayher): acquire syscall.ForkLock.RLock here once the Go 1.11
-	// code can be removed and we're fully using the runtime network poller in
-	// non-blocking mode.
-	cfd, sa, err := l.fd.Accept4(unix.SOCK_CLOEXEC)
+	c, rsa, err := l.c.Accept(0)
 	if err != nil {
 		return nil, err
 	}
 
-	savm := sa.(*unix.SockaddrVM)
+	savm := rsa.(*unix.SockaddrVM)
 	remote := &Addr{
 		ContextID: savm.CID,
 		Port:      savm.Port,
 	}
 
-	return newConn(cfd, l.addr, remote)
+	return &Conn{
+		c:      c,
+		local:  l.addr,
+		remote: remote,
+	}, nil
 }
 
-// FileListener returns a network listener for the open file f.
-// It is the caller's responsibility to close ln when finished.
-// Closing ln does not affect f, and closing f does not affect ln.
-// This is similar to https://golang.org/pkg/net/#FileListener
-// but for vsock-backed files.
-func FileListener(f *os.File) (ln net.Listener, err error) {
-	fd, err := unix.Dup(int(f.Fd()))
-	if err != nil {
-		return nil, err
-	}
-
-	lfd := &sysListenFD{
-		fd: fd,
-	}
-
-	return newListener(lfd)
-}
+// name is the socket name passed to package socket.
+const name = "vsock"
 
 // listen is the entry point for Listen on Linux.
-func listen(cid, port uint32) (*Listener, error) {
-	lfd, err := newListenFD()
+func listen(cid, port uint32, _ *Config) (*Listener, error) {
+	// TODO(mdlayher): Config default nil check and initialize. Pass options to
+	// socket.Config where necessary.
+
+	c, err := socket.Socket(unix.AF_VSOCK, unix.SOCK_STREAM, 0, name, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return listenLinux(lfd, cid, port)
-}
+	// Be sure to close the Conn if any of the system calls fail before we
+	// return the Conn to the caller.
 
-func newListener(lfd listenFD) (l *Listener, err error) {
-	lsa, err := lfd.Getsockname()
-	if err != nil {
-		return nil, err
-	}
-
-	// Done with blocking mode setup, transition to non-blocking before the
-	// caller has a chance to start calling things concurrently that might make
-	// the locking situation tricky.
-	//
-	// Note: if any calls fail after this point, lfd.Close should be invoked
-	// for cleanup because the socket is now non-blocking.
-	if err := lfd.SetNonblocking("vsock-listen"); err != nil {
-		return nil, err
-	}
-
-	switch lsavm := lsa.(type) {
-	case *unix.SockaddrVM:
-		addr := &Addr{
-			ContextID: lsavm.CID,
-			Port:      lsavm.Port,
-		}
-		return &Listener{
-			l: &listener{
-				fd:   lfd,
-				addr: addr,
-			},
-		}, nil
-		return
-
-	default:
-		return nil, fmt.Errorf("not an AF_VSOCK file")
-	}
-}
-
-// listenLinux is the entry point for tests on Linux.
-func listenLinux(lfd listenFD, cid, port uint32) (l *Listener, err error) {
-	defer func() {
-		if err != nil {
-			// If any system calls fail during setup, the socket must be closed
-			// to avoid file descriptor leaks.
-			_ = lfd.EarlyClose()
-		}
-	}()
-
-	// Zero-value for "any port" is friendlier in Go than a constant.
 	if port == 0 {
 		port = unix.VMADDR_PORT_ANY
 	}
 
-	sa := &unix.SockaddrVM{
-		CID:  cid,
-		Port: port,
-	}
-
-	if err := lfd.Bind(sa); err != nil {
+	if err := c.Bind(&unix.SockaddrVM{CID: cid, Port: port}); err != nil {
+		_ = c.Close()
 		return nil, err
 	}
 
-	if err := lfd.Listen(unix.SOMAXCONN); err != nil {
+	if err := c.Listen(unix.SOMAXCONN); err != nil {
+		_ = c.Close()
 		return nil, err
 	}
 
-	return newListener(lfd)
+	l, err := newListener(c)
+	if err != nil {
+		_ = c.Close()
+		return nil, err
+	}
+
+	return l, nil
+}
+
+// fileListener is the entry point for FileListener on Linux.
+func fileListener(f *os.File) (*Listener, error) {
+	c, err := socket.FileConn(f, name)
+	if err != nil {
+		return nil, err
+	}
+
+	l, err := newListener(c)
+	if err != nil {
+		_ = c.Close()
+		return nil, err
+	}
+
+	return l, nil
+}
+
+// newListener creates a Listener from a raw socket.Conn.
+func newListener(c *socket.Conn) (*Listener, error) {
+	lsa, err := c.Getsockname()
+	if err != nil {
+		return nil, err
+	}
+
+	// Now that the library can also accept arbitrary os.Files, we have to
+	// verify the address family so we don't accidentally create a
+	// *vsock.Listener backed by TCP or some other socket type.
+	lsavm, ok := lsa.(*unix.SockaddrVM)
+	if !ok {
+		// All errors should wrapped with os.SyscallError.
+		return nil, os.NewSyscallError("listen", unix.EINVAL)
+	}
+
+	addr := &Addr{
+		ContextID: lsavm.CID,
+		Port:      lsavm.Port,
+	}
+
+	return &Listener{
+		l: &listener{
+			c:    c,
+			addr: addr,
+		},
+	}, nil
 }

@@ -15,8 +15,9 @@ func (p *rawPacket) StateFields() []string {
 	return []string{
 		"rawPacketEntry",
 		"data",
-		"timestampNS",
+		"receivedAt",
 		"senderAddr",
+		"packetInfo",
 	}
 }
 
@@ -25,11 +26,15 @@ func (p *rawPacket) beforeSave() {}
 // +checklocksignore
 func (p *rawPacket) StateSave(stateSinkObject state.Sink) {
 	p.beforeSave()
-	var dataValue buffer.VectorisedView = p.saveData()
+	var dataValue buffer.VectorisedView
+	dataValue = p.saveData()
 	stateSinkObject.SaveValue(1, dataValue)
+	var receivedAtValue int64
+	receivedAtValue = p.saveReceivedAt()
+	stateSinkObject.SaveValue(2, receivedAtValue)
 	stateSinkObject.Save(0, &p.rawPacketEntry)
-	stateSinkObject.Save(2, &p.timestampNS)
 	stateSinkObject.Save(3, &p.senderAddr)
+	stateSinkObject.Save(4, &p.packetInfo)
 }
 
 func (p *rawPacket) afterLoad() {}
@@ -37,9 +42,10 @@ func (p *rawPacket) afterLoad() {}
 // +checklocksignore
 func (p *rawPacket) StateLoad(stateSourceObject state.Source) {
 	stateSourceObject.Load(0, &p.rawPacketEntry)
-	stateSourceObject.Load(2, &p.timestampNS)
 	stateSourceObject.Load(3, &p.senderAddr)
+	stateSourceObject.Load(4, &p.packetInfo)
 	stateSourceObject.LoadValue(1, new(buffer.VectorisedView), func(y interface{}) { p.loadData(y.(buffer.VectorisedView)) })
+	stateSourceObject.LoadValue(2, new(int64), func(y interface{}) { p.loadReceivedAt(y.(int64)) })
 }
 
 func (e *endpoint) StateTypeName() string {
@@ -48,55 +54,55 @@ func (e *endpoint) StateTypeName() string {
 
 func (e *endpoint) StateFields() []string {
 	return []string{
-		"TransportEndpointInfo",
 		"DefaultSocketOptionsHandler",
+		"transProto",
 		"waiterQueue",
 		"associated",
+		"net",
+		"stats",
+		"ops",
 		"rcvList",
 		"rcvBufSize",
 		"rcvClosed",
-		"closed",
-		"connected",
-		"bound",
-		"owner",
-		"ops",
-		"frozen",
+		"rcvDisabled",
+		"ipv6ChecksumOffset",
+		"icmpv6Filter",
 	}
 }
 
 // +checklocksignore
 func (e *endpoint) StateSave(stateSinkObject state.Sink) {
 	e.beforeSave()
-	stateSinkObject.Save(0, &e.TransportEndpointInfo)
-	stateSinkObject.Save(1, &e.DefaultSocketOptionsHandler)
+	stateSinkObject.Save(0, &e.DefaultSocketOptionsHandler)
+	stateSinkObject.Save(1, &e.transProto)
 	stateSinkObject.Save(2, &e.waiterQueue)
 	stateSinkObject.Save(3, &e.associated)
-	stateSinkObject.Save(4, &e.rcvList)
-	stateSinkObject.Save(5, &e.rcvBufSize)
-	stateSinkObject.Save(6, &e.rcvClosed)
-	stateSinkObject.Save(7, &e.closed)
-	stateSinkObject.Save(8, &e.connected)
-	stateSinkObject.Save(9, &e.bound)
-	stateSinkObject.Save(10, &e.owner)
-	stateSinkObject.Save(11, &e.ops)
-	stateSinkObject.Save(12, &e.frozen)
+	stateSinkObject.Save(4, &e.net)
+	stateSinkObject.Save(5, &e.stats)
+	stateSinkObject.Save(6, &e.ops)
+	stateSinkObject.Save(7, &e.rcvList)
+	stateSinkObject.Save(8, &e.rcvBufSize)
+	stateSinkObject.Save(9, &e.rcvClosed)
+	stateSinkObject.Save(10, &e.rcvDisabled)
+	stateSinkObject.Save(11, &e.ipv6ChecksumOffset)
+	stateSinkObject.Save(12, &e.icmpv6Filter)
 }
 
 // +checklocksignore
 func (e *endpoint) StateLoad(stateSourceObject state.Source) {
-	stateSourceObject.Load(0, &e.TransportEndpointInfo)
-	stateSourceObject.Load(1, &e.DefaultSocketOptionsHandler)
+	stateSourceObject.Load(0, &e.DefaultSocketOptionsHandler)
+	stateSourceObject.Load(1, &e.transProto)
 	stateSourceObject.Load(2, &e.waiterQueue)
 	stateSourceObject.Load(3, &e.associated)
-	stateSourceObject.Load(4, &e.rcvList)
-	stateSourceObject.Load(5, &e.rcvBufSize)
-	stateSourceObject.Load(6, &e.rcvClosed)
-	stateSourceObject.Load(7, &e.closed)
-	stateSourceObject.Load(8, &e.connected)
-	stateSourceObject.Load(9, &e.bound)
-	stateSourceObject.Load(10, &e.owner)
-	stateSourceObject.Load(11, &e.ops)
-	stateSourceObject.Load(12, &e.frozen)
+	stateSourceObject.Load(4, &e.net)
+	stateSourceObject.Load(5, &e.stats)
+	stateSourceObject.Load(6, &e.ops)
+	stateSourceObject.Load(7, &e.rcvList)
+	stateSourceObject.Load(8, &e.rcvBufSize)
+	stateSourceObject.Load(9, &e.rcvClosed)
+	stateSourceObject.Load(10, &e.rcvDisabled)
+	stateSourceObject.Load(11, &e.ipv6ChecksumOffset)
+	stateSourceObject.Load(12, &e.icmpv6Filter)
 	stateSourceObject.AfterLoad(e.afterLoad)
 }
 

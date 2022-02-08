@@ -17,7 +17,6 @@ package tcp
 import (
 	"container/heap"
 	"math"
-	"time"
 
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
@@ -50,7 +49,7 @@ type receiver struct {
 	pendingRcvdSegments segmentHeap
 
 	// Time when the last ack was received.
-	lastRcvdAckTime time.Time `state:".(unixTime)"`
+	lastRcvdAckTime tcpip.MonotonicTime
 }
 
 func newReceiver(ep *endpoint, irs seqnum.Value, rcvWnd seqnum.Size, rcvWndScale uint8) *receiver {
@@ -63,7 +62,7 @@ func newReceiver(ep *endpoint, irs seqnum.Value, rcvWnd seqnum.Size, rcvWndScale
 		},
 		rcvWnd:          rcvWnd,
 		rcvWUP:          irs + 1,
-		lastRcvdAckTime: time.Now(),
+		lastRcvdAckTime: ep.stack.Clock().NowMonotonic(),
 	}
 }
 
@@ -137,9 +136,9 @@ func (r *receiver) getSendParams() (RcvNxt seqnum.Value, rcvWnd seqnum.Size) {
 	// rcvWUP       RcvNxt         RcvAcc          new RcvAcc
 	//               <=====curWnd ===>
 	//               <========= newWnd > curWnd ========= >
-	if r.RcvNxt.Add(seqnum.Size(curWnd)).LessThan(r.RcvNxt.Add(seqnum.Size(newWnd))) && toGrow {
+	if r.RcvNxt.Add(curWnd).LessThan(r.RcvNxt.Add(newWnd)) && toGrow {
 		// If the new window moves the right edge, then update RcvAcc.
-		r.RcvAcc = r.RcvNxt.Add(seqnum.Size(newWnd))
+		r.RcvAcc = r.RcvNxt.Add(newWnd)
 	} else {
 		if newWnd == 0 {
 			// newWnd is zero but we can't advertise a zero as it would cause window
@@ -148,6 +147,18 @@ func (r *receiver) getSendParams() (RcvNxt seqnum.Value, rcvWnd seqnum.Size) {
 		}
 		newWnd = curWnd
 	}
+
+	// Apply silly-window avoidance when recovering from zero-window situation.
+	// Keep advertising zero receive window up until the new window reaches a
+	// threshold.
+	if r.rcvWnd == 0 && newWnd != 0 {
+		r.ep.rcvQueueInfo.rcvQueueMu.Lock()
+		if crossed, above := r.ep.windowCrossedACKThresholdLocked(int(newWnd), int(r.ep.ops.GetReceiveBufferSize())); !crossed && !above {
+			newWnd = 0
+		}
+		r.ep.rcvQueueInfo.rcvQueueMu.Unlock()
+	}
+
 	// Stash away the non-scaled receive window as we use it for measuring
 	// receiver's estimated RTT.
 	r.rcvWnd = newWnd
@@ -233,7 +244,7 @@ func (r *receiver) consumeSegment(s *segment, segSeq seqnum.Value, segLen seqnum
 	TrimSACKBlockList(&r.ep.sack, r.RcvNxt)
 
 	// Handle FIN or FIN-ACK.
-	if s.flagIsSet(header.TCPFlagFin) {
+	if s.flags.Contains(header.TCPFlagFin) {
 		r.RcvNxt++
 
 		// Send ACK immediately.
@@ -249,7 +260,7 @@ func (r *receiver) consumeSegment(s *segment, segSeq seqnum.Value, segLen seqnum
 		case StateEstablished:
 			r.ep.setEndpointState(StateCloseWait)
 		case StateFinWait1:
-			if s.flagIsSet(header.TCPFlagAck) && s.ackNumber == r.ep.snd.SndNxt {
+			if s.flags.Contains(header.TCPFlagAck) && s.ackNumber == r.ep.snd.SndNxt {
 				// FIN-ACK, transition to TIME-WAIT.
 				r.ep.setEndpointState(StateTimeWait)
 			} else {
@@ -284,7 +295,7 @@ func (r *receiver) consumeSegment(s *segment, segSeq seqnum.Value, segLen seqnum
 
 	// Handle ACK (not FIN-ACK, which we handled above) during one of the
 	// shutdown states.
-	if s.flagIsSet(header.TCPFlagAck) && s.ackNumber == r.ep.snd.SndNxt {
+	if s.flags.Contains(header.TCPFlagAck) && s.ackNumber == r.ep.snd.SndNxt {
 		switch r.ep.EndpointState() {
 		case StateFinWait1:
 			r.ep.setEndpointState(StateFinWait2)
@@ -313,9 +324,9 @@ func (r *receiver) updateRTT() {
 	// is first acknowledged and the receipt of data that is at least one
 	// window beyond the sequence number that was acknowledged.
 	r.ep.rcvQueueInfo.rcvQueueMu.Lock()
-	if r.ep.rcvQueueInfo.RcvAutoParams.RTTMeasureTime.IsZero() {
+	if r.ep.rcvQueueInfo.RcvAutoParams.RTTMeasureTime == (tcpip.MonotonicTime{}) {
 		// New measurement.
-		r.ep.rcvQueueInfo.RcvAutoParams.RTTMeasureTime = time.Now()
+		r.ep.rcvQueueInfo.RcvAutoParams.RTTMeasureTime = r.ep.stack.Clock().NowMonotonic()
 		r.ep.rcvQueueInfo.RcvAutoParams.RTTMeasureSeqNumber = r.RcvNxt.Add(r.rcvWnd)
 		r.ep.rcvQueueInfo.rcvQueueMu.Unlock()
 		return
@@ -324,14 +335,14 @@ func (r *receiver) updateRTT() {
 		r.ep.rcvQueueInfo.rcvQueueMu.Unlock()
 		return
 	}
-	rtt := time.Since(r.ep.rcvQueueInfo.RcvAutoParams.RTTMeasureTime)
+	rtt := r.ep.stack.Clock().NowMonotonic().Sub(r.ep.rcvQueueInfo.RcvAutoParams.RTTMeasureTime)
 	// We only store the minimum observed RTT here as this is only used in
 	// absence of a SRTT available from either timestamps or a sender
 	// measurement of RTT.
 	if r.ep.rcvQueueInfo.RcvAutoParams.RTT == 0 || rtt < r.ep.rcvQueueInfo.RcvAutoParams.RTT {
 		r.ep.rcvQueueInfo.RcvAutoParams.RTT = rtt
 	}
-	r.ep.rcvQueueInfo.RcvAutoParams.RTTMeasureTime = time.Now()
+	r.ep.rcvQueueInfo.RcvAutoParams.RTTMeasureTime = r.ep.stack.Clock().NowMonotonic()
 	r.ep.rcvQueueInfo.RcvAutoParams.RTTMeasureSeqNumber = r.RcvNxt.Add(r.rcvWnd)
 	r.ep.rcvQueueInfo.rcvQueueMu.Unlock()
 }
@@ -412,7 +423,7 @@ func (r *receiver) handleRcvdSegmentClosing(s *segment, state EndpointState, clo
 		// while the FIN is considered to occur after
 		// the last actual data octet in a segment in
 		// which it occurs.
-		if closed && (!s.flagIsSet(header.TCPFlagFin) || s.sequenceNumber.Add(s.logicalLen()) != r.RcvNxt+1) {
+		if closed && (!s.flags.Contains(header.TCPFlagFin) || s.sequenceNumber.Add(s.logicalLen()) != r.RcvNxt+1) {
 			return true, &tcpip.ErrConnectionAborted{}
 		}
 	}
@@ -455,18 +466,18 @@ func (r *receiver) handleRcvdSegment(s *segment) (drop bool, err tcpip.Error) {
 	}
 
 	// Store the time of the last ack.
-	r.lastRcvdAckTime = time.Now()
+	r.lastRcvdAckTime = r.ep.stack.Clock().NowMonotonic()
 
 	// Defer segment processing if it can't be consumed now.
 	if !r.consumeSegment(s, segSeq, segLen) {
-		if segLen > 0 || s.flagIsSet(header.TCPFlagFin) {
+		if segLen > 0 || s.flags.Contains(header.TCPFlagFin) {
 			// We only store the segment if it's within our buffer size limit.
 			//
 			// Only use 75% of the receive buffer queue for out-of-order
 			// segments. This ensures that we always leave some space for the inorder
 			// segments to arrive allowing pending segments to be processed and
 			// delivered to the user.
-			if rcvBufSize := r.ep.ops.GetReceiveBufferSize(); rcvBufSize > 0 && r.PendingBufUsed < int(rcvBufSize)>>2 {
+			if rcvBufSize := r.ep.ops.GetReceiveBufferSize(); rcvBufSize > 0 && (r.PendingBufUsed+int(segLen)) < int(rcvBufSize)>>2 {
 				r.ep.rcvQueueInfo.rcvQueueMu.Lock()
 				r.PendingBufUsed += s.segMemSize()
 				r.ep.rcvQueueInfo.rcvQueueMu.Unlock()
@@ -527,7 +538,7 @@ func (r *receiver) handleTimeWaitSegment(s *segment) (resetTimeWait bool, newSyn
 	//
 	// As we do not yet support PAWS, we are being conservative in ignoring
 	// RSTs by default.
-	if s.flagIsSet(header.TCPFlagRst) {
+	if s.flags.Contains(header.TCPFlagRst) {
 		return false, false
 	}
 
@@ -547,13 +558,12 @@ func (r *receiver) handleTimeWaitSegment(s *segment) (resetTimeWait bool, newSyn
 
 	//    (2) returns to TIME-WAIT state if the SYN turns out
 	//      to be an old duplicate".
-	if s.flagIsSet(header.TCPFlagSyn) && r.RcvNxt.LessThan(segSeq) {
-
+	if s.flags.Contains(header.TCPFlagSyn) && r.RcvNxt.LessThan(segSeq) {
 		return false, true
 	}
 
 	// Drop the segment if it does not contain an ACK.
-	if !s.flagIsSet(header.TCPFlagAck) {
+	if !s.flags.Contains(header.TCPFlagAck) {
 		return false, false
 	}
 
@@ -562,7 +572,7 @@ func (r *receiver) handleTimeWaitSegment(s *segment) (resetTimeWait bool, newSyn
 		r.ep.updateRecentTimestamp(s.parsedOptions.TSVal, r.ep.snd.MaxSentAck, segSeq)
 	}
 
-	if segSeq.Add(1) == r.RcvNxt && s.flagIsSet(header.TCPFlagFin) {
+	if segSeq.Add(1) == r.RcvNxt && s.flags.Contains(header.TCPFlagFin) {
 		// If it's a FIN-ACK then resetTimeWait and send an ACK, as it
 		// indicates our final ACK could have been lost.
 		r.ep.snd.sendAck()

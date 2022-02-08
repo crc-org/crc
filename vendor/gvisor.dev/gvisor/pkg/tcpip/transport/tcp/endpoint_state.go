@@ -100,7 +100,7 @@ func (e *endpoint) beforeSave() {
 }
 
 // saveEndpoints is invoked by stateify.
-func (a *accepted) saveEndpoints() []*endpoint {
+func (a *acceptQueue) saveEndpoints() []*endpoint {
 	acceptedEndpoints := make([]*endpoint, a.endpoints.Len())
 	for i, e := 0, a.endpoints.Front(); e != nil; i, e = i+1, e.Next() {
 		acceptedEndpoints[i] = e.Value.(*endpoint)
@@ -109,7 +109,7 @@ func (a *accepted) saveEndpoints() []*endpoint {
 }
 
 // loadEndpoints is invoked by stateify.
-func (a *accepted) loadEndpoints(acceptedEndpoints []*endpoint) {
+func (a *acceptQueue) loadEndpoints(acceptedEndpoints []*endpoint) {
 	for _, ep := range acceptedEndpoints {
 		a.endpoints.PushBack(ep)
 	}
@@ -154,20 +154,26 @@ func (e *endpoint) afterLoad() {
 	e.origEndpointState = e.state
 	// Restore the endpoint to InitialState as it will be moved to
 	// its origEndpointState during Resume.
-	e.state = StateInitial
+	e.state = uint32(StateInitial)
 	// Condition variables and mutexs are not S/R'ed so reinitialize
 	// acceptCond with e.acceptMu.
 	e.acceptCond = sync.NewCond(&e.acceptMu)
-	e.keepalive.timer.init(&e.keepalive.waker)
 	stack.StackFromEnv.RegisterRestoredEndpoint(e)
 }
 
 // Resume implements tcpip.ResumableEndpoint.Resume.
 func (e *endpoint) Resume(s *stack.Stack) {
+	e.keepalive.timer.init(s.Clock(), &e.keepalive.waker)
+	if snd := e.snd; snd != nil {
+		snd.resendTimer.init(s.Clock(), &snd.resendWaker)
+		snd.reorderTimer.init(s.Clock(), &snd.reorderWaker)
+		snd.probeTimer.init(s.Clock(), &snd.probeWaker)
+	}
 	e.stack = s
+	e.protocol = protocolFromStack(s)
 	e.ops.InitHandler(e, e.stack, GetTCPSendBufferLimits, GetTCPReceiveBufferLimits)
 	e.segmentQueue.thaw()
-	epState := e.origEndpointState
+	epState := EndpointState(e.origEndpointState)
 	switch epState {
 	case StateInitial, StateBound, StateListen, StateConnecting, StateEstablished:
 		var ss tcpip.TCPSendBufferSizeRangeOption
@@ -245,7 +251,9 @@ func (e *endpoint) Resume(s *stack.Stack) {
 		go func() {
 			connectedLoading.Wait()
 			bind()
-			backlog := e.accepted.cap
+			e.acceptMu.Lock()
+			backlog := e.acceptQueue.capacity
+			e.acceptMu.Unlock()
 			if err := e.Listen(backlog); err != nil {
 				panic("endpoint listening failed: " + err.String())
 			}
@@ -281,32 +289,12 @@ func (e *endpoint) Resume(s *stack.Stack) {
 		}()
 	case epState == StateClose:
 		e.isPortReserved = false
-		e.state = StateClose
+		e.state = uint32(StateClose)
 		e.stack.CompleteTransportEndpointCleanup(e)
 		tcpip.DeleteDanglingEndpoint(e)
 	case epState == StateError:
-		e.state = StateError
+		e.state = uint32(StateError)
 		e.stack.CompleteTransportEndpointCleanup(e)
 		tcpip.DeleteDanglingEndpoint(e)
 	}
-}
-
-// saveRecentTSTime is invoked by stateify.
-func (e *endpoint) saveRecentTSTime() unixTime {
-	return unixTime{e.recentTSTime.Unix(), e.recentTSTime.UnixNano()}
-}
-
-// loadRecentTSTime is invoked by stateify.
-func (e *endpoint) loadRecentTSTime(unix unixTime) {
-	e.recentTSTime = time.Unix(unix.second, unix.nano)
-}
-
-// saveLastOutOfWindowAckTime is invoked by stateify.
-func (e *endpoint) saveLastOutOfWindowAckTime() unixTime {
-	return unixTime{e.lastOutOfWindowAckTime.Unix(), e.lastOutOfWindowAckTime.UnixNano()}
-}
-
-// loadLastOutOfWindowAckTime is invoked by stateify.
-func (e *endpoint) loadLastOutOfWindowAckTime(unix unixTime) {
-	e.lastOutOfWindowAckTime = time.Unix(unix.second, unix.nano)
 }

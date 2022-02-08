@@ -24,7 +24,7 @@ func Dial(endpoint string) (net.Conn, string, error) {
 		if err != nil {
 			return nil, "", err
 		}
-		conn, err := mdlayhervsock.Dial(uint32(contextID), uint32(port))
+		conn, err := mdlayhervsock.Dial(uint32(contextID), uint32(port), nil)
 		return conn, parsed.Path, err
 	case "unix":
 		conn, err := net.Dial("unix", parsed.Path)

@@ -237,6 +237,14 @@ func (f *Fragmentation) release(r *reassembler, timedOut bool) {
 	if h := f.timeoutHandler; timedOut && h != nil {
 		h.OnReassemblyTimeout(r.pkt)
 	}
+	if r.pkt != nil {
+		r.pkt.DecRef()
+	}
+	for _, h := range r.holes {
+		if h.pkt != nil {
+			h.pkt.DecRef()
+		}
+	}
 }
 
 // releaseReassemblersLocked releases already-expired reassemblers, then
@@ -251,7 +259,7 @@ func (f *Fragmentation) releaseReassemblersLocked() {
 			// The list is empty.
 			break
 		}
-		elapsed := time.Duration(now-r.creationTime) * time.Nanosecond
+		elapsed := now.Sub(r.createdAt)
 		if f.timeout > elapsed {
 			// If the oldest reassembler has not expired, schedule the release
 			// job so that this function is called back when it has expired.

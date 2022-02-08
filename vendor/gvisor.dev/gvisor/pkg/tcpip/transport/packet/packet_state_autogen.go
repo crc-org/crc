@@ -15,7 +15,7 @@ func (p *packet) StateFields() []string {
 	return []string{
 		"packetEntry",
 		"data",
-		"timestampNS",
+		"receivedAt",
 		"senderAddr",
 		"packetInfo",
 	}
@@ -26,10 +26,13 @@ func (p *packet) beforeSave() {}
 // +checklocksignore
 func (p *packet) StateSave(stateSinkObject state.Sink) {
 	p.beforeSave()
-	var dataValue buffer.VectorisedView = p.saveData()
+	var dataValue buffer.VectorisedView
+	dataValue = p.saveData()
 	stateSinkObject.SaveValue(1, dataValue)
+	var receivedAtValue int64
+	receivedAtValue = p.saveReceivedAt()
+	stateSinkObject.SaveValue(2, receivedAtValue)
 	stateSinkObject.Save(0, &p.packetEntry)
-	stateSinkObject.Save(2, &p.timestampNS)
 	stateSinkObject.Save(3, &p.senderAddr)
 	stateSinkObject.Save(4, &p.packetInfo)
 }
@@ -39,10 +42,10 @@ func (p *packet) afterLoad() {}
 // +checklocksignore
 func (p *packet) StateLoad(stateSourceObject state.Source) {
 	stateSourceObject.Load(0, &p.packetEntry)
-	stateSourceObject.Load(2, &p.timestampNS)
 	stateSourceObject.Load(3, &p.senderAddr)
 	stateSourceObject.Load(4, &p.packetInfo)
 	stateSourceObject.LoadValue(1, new(buffer.VectorisedView), func(y interface{}) { p.loadData(y.(buffer.VectorisedView)) })
+	stateSourceObject.LoadValue(2, new(int64), func(y interface{}) { p.loadReceivedAt(y.(int64)) })
 }
 
 func (ep *endpoint) StateTypeName() string {
@@ -51,58 +54,55 @@ func (ep *endpoint) StateTypeName() string {
 
 func (ep *endpoint) StateFields() []string {
 	return []string{
-		"TransportEndpointInfo",
 		"DefaultSocketOptionsHandler",
-		"netProto",
 		"waiterQueue",
 		"cooked",
+		"ops",
+		"stats",
 		"rcvList",
 		"rcvBufSize",
 		"rcvClosed",
+		"rcvDisabled",
 		"closed",
-		"bound",
+		"boundNetProto",
 		"boundNIC",
 		"lastError",
-		"ops",
-		"frozen",
 	}
 }
 
 // +checklocksignore
 func (ep *endpoint) StateSave(stateSinkObject state.Sink) {
 	ep.beforeSave()
-	stateSinkObject.Save(0, &ep.TransportEndpointInfo)
-	stateSinkObject.Save(1, &ep.DefaultSocketOptionsHandler)
-	stateSinkObject.Save(2, &ep.netProto)
-	stateSinkObject.Save(3, &ep.waiterQueue)
-	stateSinkObject.Save(4, &ep.cooked)
+	stateSinkObject.Save(0, &ep.DefaultSocketOptionsHandler)
+	stateSinkObject.Save(1, &ep.waiterQueue)
+	stateSinkObject.Save(2, &ep.cooked)
+	stateSinkObject.Save(3, &ep.ops)
+	stateSinkObject.Save(4, &ep.stats)
 	stateSinkObject.Save(5, &ep.rcvList)
 	stateSinkObject.Save(6, &ep.rcvBufSize)
 	stateSinkObject.Save(7, &ep.rcvClosed)
-	stateSinkObject.Save(8, &ep.closed)
-	stateSinkObject.Save(9, &ep.bound)
-	stateSinkObject.Save(10, &ep.boundNIC)
-	stateSinkObject.Save(11, &ep.lastError)
-	stateSinkObject.Save(12, &ep.ops)
-	stateSinkObject.Save(13, &ep.frozen)
+	stateSinkObject.Save(8, &ep.rcvDisabled)
+	stateSinkObject.Save(9, &ep.closed)
+	stateSinkObject.Save(10, &ep.boundNetProto)
+	stateSinkObject.Save(11, &ep.boundNIC)
+	stateSinkObject.Save(12, &ep.lastError)
 }
 
 // +checklocksignore
 func (ep *endpoint) StateLoad(stateSourceObject state.Source) {
-	stateSourceObject.Load(0, &ep.TransportEndpointInfo)
-	stateSourceObject.Load(1, &ep.DefaultSocketOptionsHandler)
-	stateSourceObject.Load(2, &ep.netProto)
-	stateSourceObject.Load(3, &ep.waiterQueue)
-	stateSourceObject.Load(4, &ep.cooked)
+	stateSourceObject.Load(0, &ep.DefaultSocketOptionsHandler)
+	stateSourceObject.Load(1, &ep.waiterQueue)
+	stateSourceObject.Load(2, &ep.cooked)
+	stateSourceObject.Load(3, &ep.ops)
+	stateSourceObject.Load(4, &ep.stats)
 	stateSourceObject.Load(5, &ep.rcvList)
 	stateSourceObject.Load(6, &ep.rcvBufSize)
 	stateSourceObject.Load(7, &ep.rcvClosed)
-	stateSourceObject.Load(8, &ep.closed)
-	stateSourceObject.Load(9, &ep.bound)
-	stateSourceObject.Load(10, &ep.boundNIC)
-	stateSourceObject.Load(11, &ep.lastError)
-	stateSourceObject.Load(12, &ep.ops)
-	stateSourceObject.Load(13, &ep.frozen)
+	stateSourceObject.Load(8, &ep.rcvDisabled)
+	stateSourceObject.Load(9, &ep.closed)
+	stateSourceObject.Load(10, &ep.boundNetProto)
+	stateSourceObject.Load(11, &ep.boundNIC)
+	stateSourceObject.Load(12, &ep.lastError)
 	stateSourceObject.AfterLoad(ep.afterLoad)
 }
 

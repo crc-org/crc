@@ -1,6 +1,7 @@
 package virtualnetwork
 
 import (
+	"context"
 	"errors"
 	"net"
 	"strconv"
@@ -20,6 +21,20 @@ func (n *VirtualNetwork) Dial(network, addr string) (net.Conn, error) {
 		Addr: tcpip.Address(ip.To4()),
 		Port: uint16(port),
 	}, ipv4.ProtocolNumber)
+}
+
+func (n *VirtualNetwork) DialContextTCP(ctx context.Context, addr string) (net.Conn, error) {
+	ip, port, err := splitIPPort("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+
+	return gonet.DialContextTCP(ctx, n.stack,
+		tcpip.FullAddress{
+			NIC:  1,
+			Addr: tcpip.Address(ip.To4()),
+			Port: uint16(port),
+		}, ipv4.ProtocolNumber)
 }
 
 func (n *VirtualNetwork) Listen(network, addr string) (net.Listener, error) {

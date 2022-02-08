@@ -145,11 +145,6 @@ func (*endpoint) NetworkProtocolNumber() tcpip.NetworkProtocolNumber {
 	return ProtocolNumber
 }
 
-// WritePackets implements stack.NetworkEndpoint.WritePackets.
-func (*endpoint) WritePackets(*stack.Route, stack.PacketBufferList, stack.NetworkHeaderParams) (int, tcpip.Error) {
-	return 0, &tcpip.ErrNotSupported{}
-}
-
 func (*endpoint) WriteHeaderIncludedPacket(*stack.Route, *stack.PacketBuffer) tcpip.Error {
 	return &tcpip.ErrNotSupported{}
 }
@@ -198,6 +193,7 @@ func (e *endpoint) HandlePacket(pkt *stack.PacketBuffer) {
 		respPkt := stack.NewPacketBuffer(stack.PacketBufferOptions{
 			ReserveHeaderBytes: int(e.nic.MaxHeaderLength()) + header.ARPSize,
 		})
+		defer respPkt.DecRef()
 		packet := header.ARP(respPkt.NetworkHeader().Push(header.ARPSize))
 		respPkt.NetworkProtocolNumber = ProtocolNumber
 		packet.SetIPv4OverEthernet()
@@ -222,7 +218,7 @@ func (e *endpoint) HandlePacket(pkt *stack.PacketBuffer) {
 		//
 		//   Send the packet to the (new) target hardware address on the same
 		//   hardware on which the request was received.
-		if err := e.nic.WritePacketToRemote(tcpip.LinkAddress(origSender), ProtocolNumber, respPkt); err != nil {
+		if err := e.nic.WritePacketToRemote(tcpip.LinkAddress(origSender), respPkt); err != nil {
 			stats.outgoingRepliesDropped.Increment()
 		} else {
 			stats.outgoingRepliesSent.Increment()
@@ -272,13 +268,12 @@ type protocol struct {
 
 func (p *protocol) Number() tcpip.NetworkProtocolNumber { return ProtocolNumber }
 func (p *protocol) MinimumPacketSize() int              { return header.ARPSize }
-func (p *protocol) DefaultPrefixLen() int               { return 0 }
 
 func (*protocol) ParseAddresses(buffer.View) (src, dst tcpip.Address) {
 	return "", ""
 }
 
-func (p *protocol) NewEndpoint(nic stack.NetworkInterface, dispatcher stack.TransportDispatcher) stack.NetworkEndpoint {
+func (p *protocol) NewEndpoint(nic stack.NetworkInterface, _ stack.TransportDispatcher) stack.NetworkEndpoint {
 	e := &endpoint{
 		protocol: p,
 		nic:      nic,
@@ -340,6 +335,7 @@ func (e *endpoint) sendARPRequest(localAddr, targetAddr tcpip.Address, remoteLin
 	pkt := stack.NewPacketBuffer(stack.PacketBufferOptions{
 		ReserveHeaderBytes: int(e.MaxHeaderLength()),
 	})
+	defer pkt.DecRef()
 	h := header.ARP(pkt.NetworkHeader().Push(header.ARPSize))
 	pkt.NetworkProtocolNumber = ProtocolNumber
 	h.SetIPv4OverEthernet()
@@ -355,7 +351,7 @@ func (e *endpoint) sendARPRequest(localAddr, targetAddr tcpip.Address, remoteLin
 	}
 
 	stats := e.stats.arp
-	if err := e.nic.WritePacketToRemote(remoteLinkAddr, ProtocolNumber, pkt); err != nil {
+	if err := e.nic.WritePacketToRemote(remoteLinkAddr, pkt); err != nil {
 		stats.outgoingRequestsDropped.Increment()
 		return err
 	}

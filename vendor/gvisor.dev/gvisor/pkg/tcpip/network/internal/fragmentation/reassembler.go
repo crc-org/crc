@@ -35,21 +35,21 @@ type hole struct {
 
 type reassembler struct {
 	reassemblerEntry
-	id           FragmentID
-	memSize      int
-	proto        uint8
-	mu           sync.Mutex
-	holes        []hole
-	filled       int
-	done         bool
-	creationTime int64
-	pkt          *stack.PacketBuffer
+	id        FragmentID
+	memSize   int
+	proto     uint8
+	mu        sync.Mutex
+	holes     []hole
+	filled    int
+	done      bool
+	createdAt tcpip.MonotonicTime
+	pkt       *stack.PacketBuffer
 }
 
 func newReassembler(id FragmentID, clock tcpip.Clock) *reassembler {
 	r := &reassembler{
-		id:           id,
-		creationTime: clock.NowMonotonic(),
+		id:        id,
+		createdAt: clock.NowMonotonic(),
 	}
 	r.holes = append(r.holes, hole{
 		first:  0,
@@ -135,6 +135,7 @@ func (r *reassembler) process(first, last uint16, more bool, proto uint8, pkt *s
 			final:  currentHole.final,
 			pkt:    pkt,
 		}
+		pkt.IncRef()
 		r.filled++
 		// For IPv6, it is possible to have different Protocol values between
 		// fragments of a packet (because, unlike IPv4, the Protocol is not used to
@@ -145,10 +146,13 @@ func (r *reassembler) process(first, last uint16, more bool, proto uint8, pkt *s
 		// options received in the first fragment should be used - and they should
 		// override options from following fragments.
 		if first == 0 {
+			if r.pkt != nil {
+				r.pkt.DecRef()
+			}
 			r.pkt = pkt
+			pkt.IncRef()
 			r.proto = proto
 		}
-
 		break
 	}
 	if !holeFound {
@@ -167,8 +171,7 @@ func (r *reassembler) process(first, last uint16, more bool, proto uint8, pkt *s
 
 	resPkt := r.holes[0].pkt
 	for i := 1; i < len(r.holes); i++ {
-		fragData := r.holes[i].pkt.Data()
-		resPkt.Data().ReadFromData(fragData, fragData.Size())
+		stack.MergeFragment(resPkt, r.holes[i].pkt)
 	}
 	return resPkt, r.proto, true, memConsumed, nil
 }

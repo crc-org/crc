@@ -113,7 +113,10 @@ func createStack(configuration *types.Configuration, endpoint stack.LinkEndpoint
 		return nil, errors.New(err.String())
 	}
 
-	if err := s.AddAddress(1, ipv4.ProtocolNumber, tcpip.Address(net.ParseIP(configuration.GatewayIP).To4())); err != nil {
+	if err := s.AddProtocolAddress(1, tcpip.ProtocolAddress{
+		Protocol:          ipv4.ProtocolNumber,
+		AddressWithPrefix: tcpip.Address(net.ParseIP(configuration.GatewayIP).To4()).WithPrefix(),
+	}, stack.AddressProperties{}); err != nil {
 		return nil, errors.New(err.String())
 	}
 

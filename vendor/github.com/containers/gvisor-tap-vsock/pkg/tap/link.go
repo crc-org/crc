@@ -83,11 +83,18 @@ func (e *LinkEndpoint) MTU() uint32 {
 func (e *LinkEndpoint) Wait() {
 }
 
-func (e *LinkEndpoint) WritePackets(r stack.RouteInfo, pkts stack.PacketBufferList, protocol tcpip.NetworkProtocolNumber) (int, tcpip.Error) {
-	return 1, &tcpip.ErrNoRoute{}
+func (e *LinkEndpoint) WritePackets(pkts stack.PacketBufferList) (int, tcpip.Error) {
+	n := 0
+	for p := pkts.Front(); p != nil; p = p.Next() {
+		if err := e.writePacket(p.EgressRoute, p.NetworkProtocolNumber, p); err != nil {
+			return n, err
+		}
+		n++
+	}
+	return n, nil
 }
 
-func (e *LinkEndpoint) WritePacket(r stack.RouteInfo, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) tcpip.Error {
+func (e *LinkEndpoint) writePacket(r stack.RouteInfo, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) tcpip.Error {
 	// Preserve the src address if it's set in the route.
 	srcAddr := e.LinkAddress()
 	if r.LocalLinkAddress != "" {
@@ -121,8 +128,8 @@ func (e *LinkEndpoint) WritePacket(r stack.RouteInfo, protocol tcpip.NetworkProt
 	return nil
 }
 
-func (e *LinkEndpoint) WriteRawPacket(vv buffer.VectorisedView) tcpip.Error {
-	return &tcpip.ErrNoRoute{}
+func (e *LinkEndpoint) WriteRawPacket(pkt *stack.PacketBuffer) tcpip.Error {
+	return &tcpip.ErrNotSupported{}
 }
 
 func (e *LinkEndpoint) IP() string {

@@ -101,7 +101,7 @@ func (b UDP) SetDestinationPort(port uint16) {
 
 // SetChecksum sets the "checksum" field of the UDP header.
 func (b UDP) SetChecksum(checksum uint16) {
-	binary.BigEndian.PutUint16(b[udpChecksum:], checksum)
+	PutChecksum(b[udpChecksum:], checksum)
 }
 
 // SetLength sets the "length" field of the UDP header.
@@ -125,8 +125,37 @@ func (b UDP) IsChecksumValid(src, dst tcpip.Address, payloadChecksum uint16) boo
 
 // Encode encodes all the fields of the UDP header.
 func (b UDP) Encode(u *UDPFields) {
-	binary.BigEndian.PutUint16(b[udpSrcPort:], u.SrcPort)
-	binary.BigEndian.PutUint16(b[udpDstPort:], u.DstPort)
-	binary.BigEndian.PutUint16(b[udpLength:], u.Length)
-	binary.BigEndian.PutUint16(b[udpChecksum:], u.Checksum)
+	b.SetSourcePort(u.SrcPort)
+	b.SetDestinationPort(u.DstPort)
+	b.SetLength(u.Length)
+	b.SetChecksum(u.Checksum)
+}
+
+// SetSourcePortWithChecksumUpdate implements ChecksummableTransport.
+func (b UDP) SetSourcePortWithChecksumUpdate(new uint16) {
+	old := b.SourcePort()
+	b.SetSourcePort(new)
+	b.SetChecksum(^checksumUpdate2ByteAlignedUint16(^b.Checksum(), old, new))
+}
+
+// SetDestinationPortWithChecksumUpdate implements ChecksummableTransport.
+func (b UDP) SetDestinationPortWithChecksumUpdate(new uint16) {
+	old := b.DestinationPort()
+	b.SetDestinationPort(new)
+	b.SetChecksum(^checksumUpdate2ByteAlignedUint16(^b.Checksum(), old, new))
+}
+
+// UpdateChecksumPseudoHeaderAddress implements ChecksummableTransport.
+func (b UDP) UpdateChecksumPseudoHeaderAddress(old, new tcpip.Address, fullChecksum bool) {
+	xsum := b.Checksum()
+	if fullChecksum {
+		xsum = ^xsum
+	}
+
+	xsum = checksumUpdate2ByteAlignedAddress(xsum, old, new)
+	if fullChecksum {
+		xsum = ^xsum
+	}
+
+	b.SetChecksum(xsum)
 }

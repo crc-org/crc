@@ -18,7 +18,7 @@ import (
 const linkLocalSubnet = "169.254.0.0/16"
 
 func TCP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mutex) *tcp.Forwarder {
-	return tcp.NewForwarder(s, 30000, 10, func(r *tcp.ForwarderRequest) {
+	return tcp.NewForwarder(s, 0, 10, func(r *tcp.ForwarderRequest) {
 		localAddress := r.ID().LocalAddress
 
 		if linkLocal().Contains(localAddress) {
@@ -33,7 +33,7 @@ func TCP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mute
 		natLock.Unlock()
 		outbound, err := net.Dial("tcp", fmt.Sprintf("%s:%d", localAddress, r.ID().LocalPort))
 		if err != nil {
-			log.Errorf("net.Dial() = %v", err)
+			log.Tracef("net.Dial() = %v", err)
 			r.Complete(true)
 			return
 		}

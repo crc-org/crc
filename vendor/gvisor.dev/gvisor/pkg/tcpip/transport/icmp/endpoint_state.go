@@ -15,10 +15,24 @@
 package icmp
 
 import (
+	"fmt"
+	"time"
+
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
+	"gvisor.dev/gvisor/pkg/tcpip/transport"
 )
+
+// saveReceivedAt is invoked by stateify.
+func (p *icmpPacket) saveReceivedAt() int64 {
+	return p.receivedAt.UnixNano()
+}
+
+// loadReceivedAt is invoked by stateify.
+func (p *icmpPacket) loadReceivedAt(nsec int64) {
+	p.receivedAt = time.Unix(0, nsec)
+}
 
 // saveData saves icmpPacket.data field.
 func (p *icmpPacket) saveData() buffer.VectorisedView {
@@ -49,29 +63,24 @@ func (e *endpoint) beforeSave() {
 // Resume implements tcpip.ResumableEndpoint.Resume.
 func (e *endpoint) Resume(s *stack.Stack) {
 	e.thaw()
+
+	e.net.Resume(s)
+
 	e.stack = s
 	e.ops.InitHandler(e, e.stack, tcpip.GetStackSendBufferLimits, tcpip.GetStackReceiveBufferLimits)
 
-	if e.state != stateBound && e.state != stateConnected {
-		return
-	}
-
-	var err tcpip.Error
-	if e.state == stateConnected {
-		e.route, err = e.stack.FindRoute(e.RegisterNICID, e.BindAddr, e.ID.RemoteAddress, e.NetProto, false /* multicastLoop */)
+	switch state := e.net.State(); state {
+	case transport.DatagramEndpointStateInitial, transport.DatagramEndpointStateClosed:
+	case transport.DatagramEndpointStateBound, transport.DatagramEndpointStateConnected:
+		var err tcpip.Error
+		info := e.net.Info()
+		info.ID.LocalPort = e.ident
+		info.ID, err = e.registerWithStack(info.NetProto, info.ID)
 		if err != nil {
-			panic(err)
+			panic(fmt.Sprintf("e.registerWithStack(%d, %#v): %s", info.NetProto, info.ID, err))
 		}
-
-		e.ID.LocalAddress = e.route.LocalAddress()
-	} else if len(e.ID.LocalAddress) != 0 { // stateBound
-		if e.stack.CheckLocalAddress(e.RegisterNICID, e.NetProto, e.ID.LocalAddress) == 0 {
-			panic(&tcpip.ErrBadLocalAddress{})
-		}
-	}
-
-	e.ID, err = e.registerWithStack(e.RegisterNICID, []tcpip.NetworkProtocolNumber{e.NetProto}, e.ID)
-	if err != nil {
-		panic(err)
+		e.ident = info.ID.LocalPort
+	default:
+		panic(fmt.Sprintf("unhandled state = %s", state))
 	}
 }

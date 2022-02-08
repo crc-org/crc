@@ -16,7 +16,7 @@ func (n *VirtualNetwork) AcceptVpnKit(conn net.Conn) error {
 	if err := vpnkitHandshake(conn, n.configuration); err != nil {
 		log.Error(err)
 	}
-	n.networkSwitch.Accept(context.Background(), conn)
+	_ = n.networkSwitch.Accept(context.Background(), conn)
 	return nil
 }
 
