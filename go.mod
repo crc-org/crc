@@ -39,6 +39,7 @@ require (
 	github.com/mattn/go-colorable v0.1.11
 	github.com/mdlayher/vsock v0.0.0-20210303205602-10d591861736
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
+	github.com/mitchellh/go-ps v1.0.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
 	github.com/openshift/api v0.0.0-20210730095913-85e1d547cdee

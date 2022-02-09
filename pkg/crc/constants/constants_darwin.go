@@ -10,6 +10,7 @@ const (
 	OcExecutableName           = "oc"
 	PodmanRemoteExecutableName = "podman"
 	TrayExecutableName         = "CodeReady Containers.app"
+	TrayBinaryName             = "crc-tray"
 )
 
 var (

@@ -106,7 +106,7 @@ var traySetupChecks = []Check{
 		fix:                fixTrayAgentRunning,
 		flags:              SetupOnly,
 		cleanupDescription: "Unload CodeReady Containers tray",
-		cleanup:            unLoadTrayAgent,
+		cleanup:            stopTrayProcess,
 
 		labels: labels{Os: Darwin, Tray: Enabled},
 	},

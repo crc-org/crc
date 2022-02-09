@@ -243,6 +243,9 @@ github.com/mdlayher/vsock
 github.com/mgutz/ansi
 # github.com/miekg/dns v1.1.35
 github.com/miekg/dns
+# github.com/mitchellh/go-ps v1.0.0
+## explicit
+github.com/mitchellh/go-ps
 # github.com/mitchellh/go-wordwrap v1.0.0
 github.com/mitchellh/go-wordwrap
 # github.com/mitchellh/mapstructure v1.4.2

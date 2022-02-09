@@ -12,7 +12,9 @@ import (
 	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/version"
+	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/launchd"
+	"github.com/mitchellh/go-ps"
 )
 
 const (
@@ -118,4 +120,24 @@ func checkIfDaemonRunning() error {
 		}
 		return nil
 	}, time.Second)
+}
+
+func stopTrayProcess() error {
+	_ = unLoadTrayAgent()
+
+	processes, err := ps.Processes()
+	if err != nil {
+		return fmt.Errorf("unable to find if 'crc-tray' process is running. %w", err)
+	}
+
+	for _, p := range processes {
+		if p.Executable() == constants.TrayBinaryName {
+			_, _, err = crcos.RunWithDefaultLocale("kill", "-9", fmt.Sprintf("%d", p.Pid()))
+			if err != nil {
+				return fmt.Errorf("failed to kill 'crc-tray' process. %w", err)
+			}
+			break
+		}
+	}
+	return nil
 }
