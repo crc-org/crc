@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/os/shell"
@@ -49,6 +50,11 @@ func runPodmanEnv() error {
 			connectionDetails.IP,
 			connectionDetails.SSHPort,
 			socket)))
+	// Todo: This need to fixed by using named pipe for windows
+	// https://docs.docker.com/desktop/faqs/#how-do-i-connect-to-the-remote-docker-engine-api
+	if runtime.GOOS != "windows" {
+		fmt.Println(shell.GetEnvString(userShell, "DOCKER_HOST", fmt.Sprintf("unix://%s", constants.GetHostDockerSocketPath())))
+	}
 	fmt.Println(shell.GenerateUsageHintWithComment(userShell, "crc podman-env"))
 	return nil
 }
