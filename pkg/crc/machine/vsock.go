@@ -112,6 +112,11 @@ func vsockPorts(preset crcPreset.Preset) []types.ExposeRequest {
 				Protocol: "tcp",
 				Local:    fmt.Sprintf("%s:%d", localIP, cockpitPort),
 				Remote:   fmt.Sprintf("%s:%d", virtualMachineIP, cockpitPort),
+			},
+			types.ExposeRequest{
+				Protocol: "unix",
+				Local:    constants.GetHostDockerSocketPath(),
+				Remote:   fmt.Sprintf("ssh-tunnel://core@%s:%d/run/podman/podman.sock?key=%s", virtualMachineIP, internalSSHPort, constants.GetPrivateKeyPath()),
 			})
 	default:
 		logging.Errorf("Invalid preset: %s", preset)
