@@ -51,7 +51,7 @@ func unexposePorts() error {
 		return err
 	}
 	for _, port := range alreadyOpenedPorts {
-		if err := daemonClient.NetworkClient.Unexpose(&types.UnexposeRequest{Local: port.Local}); err != nil {
+		if err := daemonClient.NetworkClient.Unexpose(&types.UnexposeRequest{Protocol: port.Protocol, Local: port.Local}); err != nil {
 			mErr.Collect(errors.Wrapf(err, "failed to unexpose port %s ", port.Local))
 		}
 	}
@@ -83,30 +83,35 @@ const (
 func vsockPorts(preset crcPreset.Preset) []types.ExposeRequest {
 	exposeRequest := []types.ExposeRequest{
 		{
-			Local:  fmt.Sprintf("%s:%d", localIP, constants.VsockSSHPort),
-			Remote: fmt.Sprintf("%s:%d", virtualMachineIP, internalSSHPort),
+			Protocol: "tcp",
+			Local:    fmt.Sprintf("%s:%d", localIP, constants.VsockSSHPort),
+			Remote:   fmt.Sprintf("%s:%d", virtualMachineIP, internalSSHPort),
 		},
 	}
 	switch preset {
 	case crcPreset.OpenShift:
 		exposeRequest = append(exposeRequest,
 			types.ExposeRequest{
-				Local:  fmt.Sprintf("%s:%d", localIP, apiPort),
-				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, apiPort),
+				Protocol: "tcp",
+				Local:    fmt.Sprintf("%s:%d", localIP, apiPort),
+				Remote:   fmt.Sprintf("%s:%d", virtualMachineIP, apiPort),
 			},
 			types.ExposeRequest{
-				Local:  fmt.Sprintf(":%d", httpsPort),
-				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, httpsPort),
+				Protocol: "tcp",
+				Local:    fmt.Sprintf(":%d", httpsPort),
+				Remote:   fmt.Sprintf("%s:%d", virtualMachineIP, httpsPort),
 			},
 			types.ExposeRequest{
-				Local:  fmt.Sprintf(":%d", httpPort),
-				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, httpPort),
+				Protocol: "tcp",
+				Local:    fmt.Sprintf(":%d", httpPort),
+				Remote:   fmt.Sprintf("%s:%d", virtualMachineIP, httpPort),
 			})
 	case crcPreset.Podman:
 		exposeRequest = append(exposeRequest,
 			types.ExposeRequest{
-				Local:  fmt.Sprintf("%s:%d", localIP, cockpitPort),
-				Remote: fmt.Sprintf("%s:%d", virtualMachineIP, cockpitPort),
+				Protocol: "tcp",
+				Local:    fmt.Sprintf("%s:%d", localIP, cockpitPort),
+				Remote:   fmt.Sprintf("%s:%d", virtualMachineIP, cockpitPort),
 			})
 	default:
 		logging.Errorf("Invalid preset: %s", preset)
