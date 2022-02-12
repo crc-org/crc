@@ -37,7 +37,7 @@ require (
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/libvirt/libvirt-go-xml v7.4.0+incompatible
 	github.com/mattn/go-colorable v0.1.11
-	github.com/mdlayher/vsock v0.0.0-20210303205602-10d591861736
+	github.com/mdlayher/vsock v1.1.0
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
@@ -62,7 +62,7 @@ require (
 	golang.org/x/crypto v0.0.0-20211115234514-b4de73f9ece8
 	golang.org/x/net v0.0.0-20211116231205-47ca1ff31462
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20211116061358-0a5406a5449c
+	golang.org/x/sys v0.0.0-20220204135822-1c1b9b1eba6a
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	golang.org/x/text v0.3.7
 	gopkg.in/ini.v1 v1.64.0 // indirect
@@ -78,5 +78,3 @@ replace (
 	k8s.io/client-go => github.com/openshift/kubernetes-client-go v0.0.0-20210826123502-7208c21f5119
 	k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20210730111826-9c6734b9d97d
 )
-
-replace github.com/mdlayher/vsock => github.com/cfergeau/vsock v0.0.0-20210707100525-4def293f672e
