@@ -2,6 +2,9 @@ package machine
 
 import (
 	"fmt"
+	"net"
+	"net/url"
+	"strconv"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/daemonclient"
@@ -72,20 +75,20 @@ func listOpenPorts(daemonClient *daemonclient.Client) ([]types.ExposeRequest, er
 
 const (
 	virtualMachineIP = "192.168.127.2"
-	internalSSHPort  = 22
+	internalSSHPort  = "22"
 	localIP          = "127.0.0.1"
-	httpPort         = 80
-	httpsPort        = 443
-	apiPort          = 6443
-	cockpitPort      = 9090
+	httpPort         = "80"
+	httpsPort        = "443"
+	apiPort          = "6443"
+	cockpitPort      = "9090"
 )
 
 func vsockPorts(preset crcPreset.Preset) []types.ExposeRequest {
 	exposeRequest := []types.ExposeRequest{
 		{
 			Protocol: "tcp",
-			Local:    fmt.Sprintf("%s:%d", localIP, constants.VsockSSHPort),
-			Remote:   fmt.Sprintf("%s:%d", virtualMachineIP, internalSSHPort),
+			Local:    net.JoinHostPort(localIP, strconv.Itoa(constants.VsockSSHPort)),
+			Remote:   net.JoinHostPort(virtualMachineIP, internalSSHPort),
 		},
 	}
 	switch preset {
@@ -93,34 +96,46 @@ func vsockPorts(preset crcPreset.Preset) []types.ExposeRequest {
 		exposeRequest = append(exposeRequest,
 			types.ExposeRequest{
 				Protocol: "tcp",
-				Local:    fmt.Sprintf("%s:%d", localIP, apiPort),
-				Remote:   fmt.Sprintf("%s:%d", virtualMachineIP, apiPort),
+				Local:    net.JoinHostPort(localIP, apiPort),
+				Remote:   net.JoinHostPort(virtualMachineIP, apiPort),
 			},
 			types.ExposeRequest{
 				Protocol: "tcp",
-				Local:    fmt.Sprintf(":%d", httpsPort),
-				Remote:   fmt.Sprintf("%s:%d", virtualMachineIP, httpsPort),
+				Local:    fmt.Sprintf(":%s", httpsPort),
+				Remote:   net.JoinHostPort(virtualMachineIP, httpsPort),
 			},
 			types.ExposeRequest{
 				Protocol: "tcp",
-				Local:    fmt.Sprintf(":%d", httpPort),
-				Remote:   fmt.Sprintf("%s:%d", virtualMachineIP, httpPort),
+				Local:    fmt.Sprintf(":%s", httpPort),
+				Remote:   net.JoinHostPort(virtualMachineIP, httpPort),
 			})
 	case crcPreset.Podman:
 		exposeRequest = append(exposeRequest,
 			types.ExposeRequest{
 				Protocol: "tcp",
-				Local:    fmt.Sprintf("%s:%d", localIP, cockpitPort),
-				Remote:   fmt.Sprintf("%s:%d", virtualMachineIP, cockpitPort),
+				Local:    net.JoinHostPort(localIP, cockpitPort),
+				Remote:   net.JoinHostPort(virtualMachineIP, cockpitPort),
 			},
 			types.ExposeRequest{
 				Protocol: "unix",
 				Local:    constants.GetHostDockerSocketPath(),
-				Remote:   fmt.Sprintf("ssh-tunnel://core@%s:%d/run/podman/podman.sock?key=%s", virtualMachineIP, internalSSHPort, constants.GetPrivateKeyPath()),
+				Remote:   getSSHTunnelURI(),
 			})
 	default:
 		logging.Errorf("Invalid preset: %s", preset)
 	}
 
 	return exposeRequest
+}
+
+func getSSHTunnelURI() string {
+	u := url.URL{
+		Scheme:     "ssh-tunnel",
+		User:       url.User("core"),
+		Host:       net.JoinHostPort(virtualMachineIP, internalSSHPort),
+		Path:       "/run/podman/podman.sock",
+		ForceQuery: false,
+		RawQuery:   fmt.Sprintf("key=%s", url.QueryEscape(constants.GetPrivateKeyPath())),
+	}
+	return u.String()
 }
