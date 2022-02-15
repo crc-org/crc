@@ -7,7 +7,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/preset"
 	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
-	"github.com/code-ready/crc/pkg/crc/version"
 )
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
@@ -73,63 +72,6 @@ var resolverPreflightChecks = []Check{
 	},
 }
 
-var daemonSetupChecks = []Check{
-	{
-		checkDescription:   "Checking if CodeReady Containers daemon is running",
-		check:              checkIfDaemonAgentRunning,
-		fixDescription:     "Unloading CodeReady Containers daemon",
-		fix:                unLoadDaemonAgent,
-		flags:              SetupOnly,
-		cleanupDescription: "Unload CodeReady Containers daemon",
-		cleanup:            unLoadDaemonAgent,
-
-		labels: labels{Os: Darwin},
-	},
-}
-
-var traySetupChecks = []Check{
-	{
-		checkDescription:   "Checking if launchd configuration for tray exists",
-		check:              checkIfTrayPlistFileExists,
-		fixDescription:     "Creating launchd configuration for tray",
-		fix:                fixTrayPlistFileExists,
-		flags:              SetupOnly,
-		cleanupDescription: "Removing launchd configuration for tray",
-		cleanup:            removeTrayPlistFile,
-
-		labels: labels{Os: Darwin, Tray: Enabled},
-	},
-	{
-		checkDescription:   "Check if CodeReady Containers tray is running",
-		check:              checkIfTrayAgentRunning,
-		fixDescription:     "Starting CodeReady Containers tray",
-		fix:                fixTrayAgentRunning,
-		flags:              SetupOnly,
-		cleanupDescription: "Unload CodeReady Containers tray",
-		cleanup:            unLoadTrayAgent,
-
-		labels: labels{Os: Darwin, Tray: Enabled},
-	},
-}
-
-const (
-	Tray LabelName = iota + lastLabelName
-)
-
-const (
-	// tray
-	Enabled LabelValue = iota + lastLabelValue
-	Disabled
-)
-
-func (filter preflightFilter) SetTray(enable bool) {
-	if version.IsInstaller() && enable {
-		filter[Tray] = Enabled
-	} else {
-		filter[Tray] = Disabled
-	}
-}
-
 // We want all preflight checks including
 // - experimental checks
 // - tray checks when using an installer, regardless of tray enabled or not
@@ -138,7 +80,7 @@ func (filter preflightFilter) SetTray(enable bool) {
 // Passing 'SystemNetworkingMode' to getPreflightChecks currently achieves this
 // as there are no user networking specific checks
 func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true, true, network.SystemNetworkingMode, constants.GetDefaultBundlePath(preset.OpenShift), preset.OpenShift)
+	return getPreflightChecks(true, network.SystemNetworkingMode, constants.GetDefaultBundlePath(preset.OpenShift), preset.OpenShift)
 }
 
 func getChecks(mode network.Mode, bundlePath string, preset crcpreset.Preset) []Check {
@@ -148,18 +90,15 @@ func getChecks(mode network.Mode, bundlePath string, preset crcpreset.Preset) []
 	checks = append(checks, genericPreflightChecks(preset)...)
 	checks = append(checks, genericCleanupChecks...)
 	checks = append(checks, hyperkitPreflightChecks(mode)...)
-	checks = append(checks, daemonSetupChecks...)
 	checks = append(checks, resolverPreflightChecks...)
-	checks = append(checks, traySetupChecks...)
 	checks = append(checks, bundleCheck(bundlePath, preset))
 
 	return checks
 }
 
-func getPreflightChecks(_ bool, trayAutostart bool, mode network.Mode, bundlePath string, preset crcpreset.Preset) []Check {
+func getPreflightChecks(_ bool, mode network.Mode, bundlePath string, preset crcpreset.Preset) []Check {
 	filter := newFilter()
 	filter.SetNetworkMode(mode)
-	filter.SetTray(trayAutostart)
 
 	return filter.Apply(getChecks(mode, bundlePath, preset))
 }
