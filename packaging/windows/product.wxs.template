@@ -62,19 +62,6 @@
                     </Component>
                 </Directory>
             </Directory>
-            <Directory Id="StartupFolder">
-                <Component Id="TrayStartup" Guid="*">
-                    <Shortcut Id="TrayStartupShortcut" 
-                            Name="CodeReady Containers" 
-                            Target="[INSTALLDIR]crc-tray.exe" 
-                            Icon="crcicon.ico" 
-                            WorkingDirectory="AppDataFolder">
-                        <ShortcutProperty Key="System.AppUserModel.ID" Value="redhat.codereadycontainers.tray"/>
-                    </Shortcut>
-                    <RemoveFile Id="RemoveTrayShortCut" Name="CodeReady Containers" On="uninstall"/>
-                    <RegistryValue Root="HKCU" Key="Software\Red Hat\CodeReady Containers" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
-                </Component>
-            </Directory>
             <Directory Id="ProgramMenuFolder">
                 <Component Id="StartMenuEntry" Guid="*">
                     <Shortcut Id="TrayStartMenuEntry" 
@@ -117,7 +104,6 @@
             <ComponentRef Id="CrcExe" />
             <ComponentRef Id="AdminHelper" />
             <ComponentRef Id="AddToPath"/>
-            <ComponentRef Id="TrayStartup"/>
             <ComponentRef Id="StartMenuEntry" />
             <ComponentRef Id="AddUserToCrcUsers" />
             <ComponentRef Id="VsockRegistryEntry" />
