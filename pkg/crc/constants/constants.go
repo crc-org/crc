@@ -25,7 +25,7 @@ const (
 	CrcLandingPageURL         = "https://console.redhat.com/openshift/create/local" // #nosec G101
 	DefaultPodmanURLBase      = "https://storage.googleapis.com/libpod-master-releases"
 	DefaultAdminHelperCliBase = "https://github.com/code-ready/admin-helper/releases/download/0.0.10"
-	CRCMacTrayDownloadURL     = "https://github.com/code-ready/tray-electron/releases/download/%s/crc-tray-macos.tar.gz"
+	CRCMacTrayDownloadURL     = "https://github.com/code-ready/tray-electron/releases/download/%s/crc-tray-macos-%s.tar.gz"
 	CRCWindowsTrayDownloadURL = "https://github.com/code-ready/tray-electron/releases/download/%s/crc-tray-windows.zip"
 	DefaultContext            = "admin"
 	DaemonHTTPEndpoint        = "http://unix/api"
@@ -158,7 +158,7 @@ func GetKubeAdminPasswordPath() string {
 
 // TODO: follow the same pattern as oc and podman above
 func GetCRCMacTrayDownloadURL() string {
-	return fmt.Sprintf(CRCMacTrayDownloadURL, version.GetTrayVersion())
+	return fmt.Sprintf(CRCMacTrayDownloadURL, version.GetTrayVersion(), runtime.GOARCH)
 }
 
 func GetCRCWindowsTrayDownloadURL() string {
