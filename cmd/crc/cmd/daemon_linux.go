@@ -50,7 +50,7 @@ func listenersWithNames() (map[string][]net.Listener, error) {
 	for _, f := range files {
 		pc, err := net.FileListener(f)
 		if err != nil {
-			logging.Infof("got error %t %v", err, err)
+			logging.Debugf("socket-activation: net.FileListener() error, falling back to mdlayher/vsock.FileListener(): %v", err)
 			// net.FileListener does not support vsock, need to fallback to vsock-specific code
 			pc, err = vsock.FileListener(f)
 			if err != nil {
