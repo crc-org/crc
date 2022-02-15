@@ -3,6 +3,7 @@ set -euxo pipefail
 
 BASEDIR=$(dirname "$0")
 OUTPUT=$1
+GOARCH=$(go env GOARCH)
 CODESIGN_IDENTITY=${CODESIGN_IDENTITY:-mock}
 PRODUCTSIGN_IDENTITY=${PRODUCTSIGN_IDENTITY:-mock}
 NO_CODESIGN=${NO_CODESIGN:-0}
@@ -40,14 +41,11 @@ version=$(cat "${BASEDIR}/VERSION")
 
 sign "${binDir}/crc"
 sign "${binDir}/crc-admin-helper-darwin"
-sign "${binDir}/crc-driver-hyperkit"
+sign "${binDir}/vfkit-${GOARCH}"
 
 signAppBundle "${BASEDIR}/root/Applications/Red Hat OpenShift Local.app"
 
-codesign --verify --verbose "${binDir}/hyperkit"
-codesign --verify --verbose "${binDir}/qcow-tool"
-
-sudo chmod +sx "${binDir}/hyperkit" "${binDir}/crc-admin-helper-darwin" "${binDir}/crc-driver-hyperkit"
+sudo chmod +sx "${binDir}/crc-admin-helper-darwin"
 
 pkgbuild --identifier com.redhat.crc --version ${version} \
   --scripts "${BASEDIR}/darwin/scripts" \
@@ -63,7 +61,7 @@ productbuild --distribution "${BASEDIR}/darwin/Distribution" \
 rm "${OUTPUT}/crc.pkg"
 
 if [ ! "${NO_CODESIGN}" -eq "1" ]; then
-  productsign --sign "${PRODUCTSIGN_IDENTITY}" "${OUTPUT}/crc-unsigned.pkg" "${OUTPUT}/crc-macos-amd64.pkg"
+  productsign --sign "${PRODUCTSIGN_IDENTITY}" "${OUTPUT}/crc-unsigned.pkg" "${OUTPUT}/crc-macos-${GOARCH}.pkg"
 else
-  mv "${OUTPUT}/crc-unsigned.pkg" "${OUTPUT}/crc-macos-amd64.pkg"
+  mv "${OUTPUT}/crc-unsigned.pkg" "${OUTPUT}/crc-macos-${GOARCH}.pkg"
 fi
