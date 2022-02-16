@@ -34,6 +34,9 @@ BuildRequires: git-core
 BuildRequires: go-srpm-macros
 BuildRequires: make
 
+BuildRequires: crc-admin-helper
+BuildRequires: crc-driver-libvirt
+
 __BUNDLED_REQUIRES__
 
 %description
@@ -52,7 +55,11 @@ ln -fs "$(pwd)" "%{gobuilddir}/src/%{goipath}"
 
 %build
 export GOFLAGS="-mod=vendor"
-make GO_EXTRA_LDFLAGS="-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \n')" GO_EXTRA_BUILDFLAGS="" cross
+mkdir embed-files
+cp /usr/bin/crc-driver-libvirt embed-files
+cp /usr/bin/crc-admin-helper embed-files/crc-admin-helper-linux
+make GO_EXTRA_LDFLAGS="-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \n')" GO_EXTRA_BUILDFLAGS="" CUSTOM_EMBED=true EMBED_DOWNLOAD_DIR=embed-files/ linux-release
+make GO_EXTRA_LDFLAGS="-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \n')" GO_EXTRA_BUILDFLAGS="" macos-release-binary windows-release-binary
 
 %install
 # with fedora macros: gopkginstall
