@@ -254,6 +254,16 @@ gen_release_info:
 	@sed -i s/@OPENSHIFT_VERSION@/$(OPENSHIFT_VERSION)/ $(RELEASE_INFO)
 	@sed -i s/@PODMAN_VERSION@/$(PODMAN_VERSION)/ $(RELEASE_INFO)
 
+.PHONY: linux-release-binary macos-release-binary windows-release-binary
+linux-release-binary: LDFLAGS += -X '$(REPOPATH)/pkg/crc/version.linuxReleaseBuild=true' $(RELEASE_VERSION_VARIABLES)
+linux-release-binary: $(BUILD_DIR)/linux-amd64/crc
+
+macos-release-binary: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
+macos-release-binary: $(BUILD_DIR)/macos-amd64/crc
+
+windows-release-binary: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
+windows-release-binary: $(BUILD_DIR)/windows-amd64/crc.exe
+
 .PHONY: release
 release: LDFLAGS += -X '$(REPOPATH)/pkg/crc/version.linuxReleaseBuild=true' $(RELEASE_VERSION_VARIABLES)
 release: clean cross-lint embed_crc_helpers gen_release_info
@@ -287,8 +297,7 @@ ifeq ($(CUSTOM_EMBED),false)
 	$(HOST_BUILD_DIR)/crc-embedder download $(EMBED_DOWNLOAD_DIR)
 endif
 
-packagedir: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
-packagedir: clean embed-download $(BUILD_DIR)/macos-amd64/crc 
+packagedir: clean embed-download macos-release-binary
 	echo -n $(CRC_VERSION) > packaging/VERSION
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
@@ -338,8 +347,7 @@ CRC_EXE=crc.exe
 BUNDLE_NAME=crc_hyperv_$(OPENSHIFT_VERSION).$(BUNDLE_EXTENSION)
 
 .PHONY: msidir
-msidir: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
-msidir: clean embed-download $(HOST_BUILD_DIR)/GenMsiWxs $(BUILD_DIR)/windows-amd64/crc.exe $(PACKAGE_DIR)/product.wxs.template
+msidir: clean embed-download $(HOST_BUILD_DIR)/GenMsiWxs windows-release-binary $(PACKAGE_DIR)/product.wxs.template
 	mkdir -p $(PACKAGE_DIR)/msi
 	cp $(EMBED_DOWNLOAD_DIR)/* $(PACKAGE_DIR)/msi
 	cp $(HOST_BUILD_DIR)/crc.exe $(PACKAGE_DIR)/msi/$(CRC_EXE)
