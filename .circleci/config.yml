@@ -35,12 +35,12 @@ jobs:
         command: make check
     - run:
         name: mock make out/macos-amd64/crc-macos-amd64.pkg
-        command: make NO_CODESIGN=1 BUNDLE_DIR=/tmp MOCK_BUNDLE=true out/macos-amd64/crc-macos-amd64.pkg
+        command: make NO_CODESIGN=1 out/macos-amd64/crc-macos-amd64.pkg
     - store_artifacts:
         path: ~/project/out
         destination: crc
 
-  build_mock_release:
+  build_release:
     machine:
       image: ubuntu-2004:202101-01
     environment:
@@ -67,8 +67,8 @@ jobs:
           name: List go environment
           command: go env
       - run:
-          name: mock make release
-          command: make BUNDLE_DIR=/tmp MOCK_BUNDLE=true release
+          name: make release
+          command: make release
       - run:
           name: make rpm
           command: CONTAINER_RUNTIME=docker make test-rpmbuild
@@ -123,7 +123,7 @@ workflows:
   build:
     jobs:
       - build
-      - build_mock_release
+      - build_release
       - build_docs
       - docs_deploy:
           requires:
