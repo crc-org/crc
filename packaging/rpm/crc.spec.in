@@ -1,5 +1,6 @@
 # https://github.com/code-ready/admin-helper
 %global goipath         github.com/code-ready/crc
+%global goname          crc
 Version:                __VERSION__
 %global 	 	openshift_suffix -__OPENSHIFT_VERSION__
 
@@ -59,7 +60,7 @@ install -m 0755 -vd                     %{buildroot}%{_bindir}
 install -m 0755 -vp %{gobuilddir}/src/%{goipath}/out/linux-amd64/crc %{buildroot}%{_bindir}/
 
 install -d %{buildroot}%{_datadir}/%{name}-redistributable/{linux,macos,windows}
-install -m 0755 -vp %{gobuilddir}/src/%{goipath}/out/linux-amd64/crc %{buildroot}%{_datadir}/%{name}-redistributable/linux/
+install -m 0755 -vp %{gobuilddir}/src/%{goipath}/release/* %{buildroot}%{_datadir}/%{name}-redistributable/linux/
 install -m 0755 -vp %{gobuilddir}/src/%{goipath}/out/windows-amd64/crc.exe %{buildroot}%{_datadir}/%{name}-redistributable/windows/
 install -m 0755 -vp %{gobuilddir}/src/%{goipath}/out/macos-amd64/crc %{buildroot}%{_datadir}/%{name}-redistributable/macos/
 
