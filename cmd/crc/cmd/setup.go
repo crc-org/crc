@@ -74,7 +74,7 @@ func runSetup(arguments []string) error {
 		err = exec.CodeExitError{
 			Err:  err,
 			Code: preflightFailedExitCode,
-		}
+		} 
 	}
 
 	return render(&setupResult{

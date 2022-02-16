@@ -76,7 +76,7 @@ func printJSONResult(res *checkResult) {
 	defer func() {
 		id++
 	}()
-	bin, err := json.MarshalIndent(res, "", "  ")
+	bin, err := json.Marshal(res)
 	if err != nil {
 		panic("error while encoding to JSON")
 	}
@@ -184,7 +184,7 @@ func doFixPreflightChecks(config crcConfig.Storage, checks []Check, checkOnly bo
 			"total": len(checksToRun),
 		}
 
-		j, err := json.MarshalIndent(total, "", "  ")
+		j, err := json.Marshal(total)
 		if err != nil {
 			panic("error while encoding to JSON")
 		}

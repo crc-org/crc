@@ -19,12 +19,14 @@ import (
 )
 
 type stats struct {
-	TotalBytes     int64 `json:"totalBytes"`
-	CompletedBytes int64 `json:"completedBytes"`
+	Type           string `json:"type"`
+	Filename       string `json:"filename"`
+	TotalBytes     int64  `json:"totalBytes"`
+	CompletedBytes int64  `json:"completedBytes"`
 }
 
 func getStatsJSON(d *stats) string {
-	bin, err := json.MarshalIndent(d, "", "  ")
+	bin, err := json.Marshal(d)
 	if err != nil {
 		panic("error while encoding to JSON")
 	}
@@ -52,7 +54,7 @@ loop:
 		case <-t.C:
 			bar.SetCurrent(resp.BytesComplete())
 			if constants.JSONStream {
-				fmt.Fprintln(os.Stdout, getStatsJSON(&stats{resp.Size(), resp.BytesComplete()}))
+				fmt.Fprintln(os.Stdout, getStatsJSON(&stats{"download", resp.Filename, resp.Size(), resp.BytesComplete()}))
 			}
 		case <-resp.Done:
 			break loop
