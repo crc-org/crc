@@ -37,7 +37,7 @@ BuildRequires: make
 BuildRequires: crc-admin-helper
 BuildRequires: crc-driver-libvirt
 
-__BUNDLED_REQUIRES__
+__BUNDLED_PROVIDES__
 
 %description
 %{common_description}
