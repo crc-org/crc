@@ -17,6 +17,7 @@ limitations under the License.
 package vfkit
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -93,6 +94,23 @@ func (d *Driver) getDiskPath() string {
 	return d.ResolveStorePath(fmt.Sprintf("%s.img", d.MachineName))
 }
 
+func (d *Driver) resize(newSize int64) error {
+	diskPath := d.getDiskPath()
+	fi, err := os.Stat(diskPath)
+	if err != nil {
+		return err
+	}
+	if newSize == fi.Size() {
+		log.Debugf("%s is already %d bytes", diskPath, newSize)
+		return nil
+	}
+	if newSize < fi.Size() {
+		return fmt.Errorf("current disk image capacity is bigger than the requested size (%d > %d)", fi.Size(), newSize)
+	}
+	return os.Truncate(diskPath, newSize)
+
+}
+
 // Create a host using the driver's config
 func (d *Driver) Create() error {
 	if err := d.PreCreateCheck(); err != nil {
@@ -111,8 +129,7 @@ func (d *Driver) Create() error {
 		return fmt.Errorf("%s is an unsupported disk image format", d.ImageFormat)
 	}
 
-	// TODO: resize disk
-	return nil
+	return d.resize(int64(d.DiskCapacity))
 }
 
 func startVfkit(vfkitPath string, args []string) (*os.Process, error) {
@@ -279,8 +296,21 @@ func (d *Driver) Remove() error {
 }
 
 // UpdateConfigRaw allows to change the state (memory, ...) of an already created machine
-func (d *Driver) UpdateConfigRaw(rawDriver []byte) error {
-	return errors.New("UpdateConfigRaw() is not implemented")
+func (d *Driver) UpdateConfigRaw(rawConfig []byte) error {
+	var newDriver Driver
+	err := json.Unmarshal(rawConfig, &newDriver)
+	if err != nil {
+		return err
+	}
+
+	err = d.resize(int64(newDriver.DiskCapacity))
+	if err != nil {
+		log.Debugf("failed to resize disk image: %v", err)
+		return err
+	}
+	*d = newDriver
+
+	return nil
 }
 
 // Stop a host gracefully
