@@ -7,7 +7,7 @@ CRC_VERSION = 1.99.1
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 MACOS_INSTALL_PATH = /Applications/CodeReady Containers.app/Contents/Resources
 CONTAINER_RUNTIME ?= podman
-GOLANGCI_LINT_VERSION = v1.43.0
+GOLANGCI_LINT_VERSION = v1.44.0
 
 ifdef OKD_VERSION
     OPENSHIFT_VERSION = $(OKD_VERSION)
