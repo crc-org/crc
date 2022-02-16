@@ -36,7 +36,6 @@ SOURCES := $(shell git ls-files  *.go ":^vendor")
 
 RELEASE_INFO := release-info.json
 
-MOCK_BUNDLE ?= false
 CUSTOM_EMBED ?= false
 EMBED_DOWNLOAD_DIR ?= tmp-embed
 
@@ -268,9 +267,6 @@ release: cross-lint embed_bundle gen_release_info
 	
 	cd $(RELEASE_DIR) && sha256sum * > sha256sum.txt
 
-HYPERKIT_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperkit_$(OPENSHIFT_VERSION).$(BUNDLE_EXTENSION)
-HYPERV_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperv_$(OPENSHIFT_VERSION).$(BUNDLE_EXTENSION)
-
 .PHONY: embed_bundle
 embed_bundle: clean cross $(HOST_BUILD_DIR)/crc-embedder
 	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=linux $(BUILD_DIR)/linux-amd64/crc
@@ -348,9 +344,6 @@ msidir: clean embed-download $(HOST_BUILD_DIR)/GenMsiWxs $(BUILD_DIR)/windows-am
 	cp $(EMBED_DOWNLOAD_DIR)/* $(PACKAGE_DIR)/msi
 	cp $(HOST_BUILD_DIR)/crc.exe $(PACKAGE_DIR)/msi/$(CRC_EXE)
 	pwsh -NoProfile -Command "cd $(PACKAGE_DIR)/msi; Expand-Archive crc-tray-windows.zip -DestinationPath .\; Remove-Item crc-tray-windows.zip"
-ifeq ($(MOCK_BUNDLE),true)
-	touch $(PACKAGE_DIR)/msi/$(BUNDLE_NAME)
-endif
 	$(HOST_BUILD_DIR)/GenMsiWxs
 	cp -r $(PACKAGE_DIR)/Resources $(PACKAGE_DIR)/msi/
 	cp $(PACKAGE_DIR)/*.wxs $(PACKAGE_DIR)/msi

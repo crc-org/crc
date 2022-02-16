@@ -8,7 +8,7 @@ before_test:
   - choco install wixtoolset
   - set PATH=C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin;%PATH%
   - set PATH=C:\go116;%WIX%bin;%PATH%
-  - make MOCK_BUNDLE=true BUNDLE_DIR=./ out/windows-amd64/crc-windows-installer.zip
+  - make out/windows-amd64/crc-windows-installer.zip
   - make cross
 test_script:
   - make test
