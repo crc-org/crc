@@ -136,7 +136,7 @@ func (c *Cache) CacheExecutable() error {
 	// Copy the requested asset into its final destination
 	err = os.MkdirAll(c.destDir, 0750)
 	if err != nil {
-		return errors.Wrap(err, "Cannot create the target directory.")
+		return errors.Wrap(err, "cannot create the target directory")
 	}
 
 	for _, extractedFilePath := range extractedFiles {
