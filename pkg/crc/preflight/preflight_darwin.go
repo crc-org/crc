@@ -11,34 +11,32 @@ import (
 )
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
-func vfkitPreflightChecks(networkMode network.Mode) []Check {
-	return []Check{
-		{
-			configKeySuffix:  "check-m1-cpu",
-			checkDescription: "Checking if running emulated on a M1 CPU",
-			check:            checkM1CPU,
-			fixDescription:   "This version of CRC for AMD64/Intel64 CPUs is unsupported on Apple M1 hardware",
-			flags:            NoFix,
+var vfkitPreflightChecks = []Check{
+	{
+		configKeySuffix:  "check-m1-cpu",
+		checkDescription: "Checking if running emulated on a M1 CPU",
+		check:            checkM1CPU,
+		fixDescription:   "This version of CRC for AMD64/Intel64 CPUs is unsupported on Apple M1 hardware",
+		flags:            NoFix,
 
-			labels: labels{Os: Darwin},
-		},
-		{
-			configKeySuffix:  "check-vfkit-installed",
-			checkDescription: "Checking if vfkit is installed",
-			check:            checkVfkitInstalled(networkMode),
-			fixDescription:   "Setting up virtualization with vfkit",
-			fix:              fixVfkitInstallation(networkMode),
+		labels: labels{Os: Darwin},
+	},
+	{
+		configKeySuffix:  "check-vfkit-installed",
+		checkDescription: "Checking if vfkit is installed",
+		check:            checkVfkitInstalled,
+		fixDescription:   "Setting up virtualization with vfkit",
+		fix:              fixVfkitInstallation,
 
-			labels: labels{Os: Darwin},
-		},
-		{
-			cleanupDescription: "Stopping CRC vfkit process",
-			cleanup:            killVfkitProcess,
-			flags:              CleanUpOnly,
+		labels: labels{Os: Darwin},
+	},
+	{
+		cleanupDescription: "Stopping CRC vfkit process",
+		cleanup:            killVfkitProcess,
+		flags:              CleanUpOnly,
 
-			labels: labels{Os: Darwin},
-		},
-	}
+		labels: labels{Os: Darwin},
+	},
 }
 
 /*
@@ -110,7 +108,7 @@ func getChecks(mode network.Mode, bundlePath string, preset crcpreset.Preset) []
 	checks = append(checks, nonWinPreflightChecks...)
 	checks = append(checks, genericPreflightChecks(preset)...)
 	checks = append(checks, genericCleanupChecks...)
-	checks = append(checks, vfkitPreflightChecks(mode)...)
+	checks = append(checks, vfkitPreflightChecks...)
 	checks = append(checks, resolverPreflightChecks...)
 	checks = append(checks, bundleCheck(bundlePath, preset))
 	checks = append(checks, trayLaunchdCleanupChecks...)
