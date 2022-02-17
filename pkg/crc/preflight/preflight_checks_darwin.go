@@ -13,7 +13,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/daemonclient"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/version"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/launchd"
@@ -35,40 +34,36 @@ func checkM1CPU() error {
 	return nil
 }
 
-func checkVfkitInstalled(networkMode network.Mode) func() error {
-	return func() error {
-		if version.IsInstaller() {
-			return nil
-		}
-
-		h := cache.NewVfkitCache()
-		if !h.IsCached() {
-			return fmt.Errorf("%s executable is not cached", h.GetExecutableName())
-		}
-		vfkitPath := h.GetExecutablePath()
-		err := unix.Access(vfkitPath, unix.X_OK)
-		if err != nil {
-			return fmt.Errorf("%s not executable", vfkitPath)
-		}
-		return h.CheckVersion()
-	}
-}
-
-func fixVfkitInstallation(networkMode network.Mode) func() error {
-	return func() error {
-		if version.IsInstaller() {
-			return nil
-		}
-
-		h := cache.NewVfkitCache()
-
-		logging.Debugf("Installing %s", h.GetExecutableName())
-
-		if err := h.EnsureIsCached(); err != nil {
-			return fmt.Errorf("Unable to download %s : %v", h.GetExecutableName(), err)
-		}
+func checkVfkitInstalled() error {
+	if version.IsInstaller() {
 		return nil
 	}
+
+	h := cache.NewVfkitCache()
+	if !h.IsCached() {
+		return fmt.Errorf("%s executable is not cached", h.GetExecutableName())
+	}
+	vfkitPath := h.GetExecutablePath()
+	err := unix.Access(vfkitPath, unix.X_OK)
+	if err != nil {
+		return fmt.Errorf("%s not executable", vfkitPath)
+	}
+	return h.CheckVersion()
+}
+
+func fixVfkitInstallation() error {
+	if version.IsInstaller() {
+		return nil
+	}
+
+	h := cache.NewVfkitCache()
+
+	logging.Debugf("Installing %s", h.GetExecutableName())
+
+	if err := h.EnsureIsCached(); err != nil {
+		return fmt.Errorf("Unable to download %s : %v", h.GetExecutableName(), err)
+	}
+	return nil
 }
 
 func checkResolverFilePermissions() error {
