@@ -4,7 +4,7 @@
 FROM registry.ci.openshift.org/openshift/release:golang-1.16 AS builder
 WORKDIR /go/src/github.com/code-ready/crc
 COPY . .
-RUN make release
+RUN make linux-release
 
 FROM quay.io/centos/centos:stream8
 COPY --from=builder /go/src/github.com/code-ready/crc /opt/crc
