@@ -135,7 +135,7 @@ docs_serve: build_docs
 
 .PHONY: docs_check_links
 docs_check_links:
-	${CONTAINER_RUNTIME} run -it -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) docs_check_links
+	${CONTAINER_RUNTIME} run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_BUILD_CONTAINER) docs_check_links
 
 .PHONY: clean_docs clean_macos_package
 clean_docs:
