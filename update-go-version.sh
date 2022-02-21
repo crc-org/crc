@@ -19,3 +19,6 @@ sed -i "s/^GO_VERSION=.*$/GO_VERSION=${latest_version}/" centos_ci.sh
 appveyor_go_version=$(echo $golang_base_version | tr -d .)
 sed -i 's/set PATH=C:\\go[0-9]\+/set PATH=C:\\go'${appveyor_go_version}'/' ./appveyor.yml
 sed -i 's/set GOROOT=C:\\go[0-9]\+/set GOROOT=C:\\go'${appveyor_go_version}'"/' ./appveyor.yml
+for f in .github/workflows/*.yml; do
+    yq eval --inplace ".jobs.build.strategy.matrix.go[0] = ${golang_base_version}" "$f";
+done
