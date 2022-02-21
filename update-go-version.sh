@@ -14,11 +14,7 @@ go mod edit -go ${golang_base_version}
 sed -i "s,^FROM registry.ci.openshift.org/openshift/release:golang-1\... AS builder\$,FROM registry.ci.openshift.org/openshift/release:golang-${golang_base_version} AS builder," images/openshift-ci/Dockerfile
 sed -i "s,^FROM registry.access.redhat.com/ubi8/go-toolset:[.0-9]\+ as builder\$,FROM registry.access.redhat.com/ubi8/go-toolset:${latest_version} as builder," images/build-e2e/Dockerfile
 sed -i "s,^FROM registry.access.redhat.com/ubi8/go-toolset:[.0-9]\+ as builder\$,FROM registry.access.redhat.com/ubi8/go-toolset:${latest_version} as builder," images/build-integration/Dockerfile
-sed -i "s/GOVERSION: .*\$/GOVERSION: \"${latest_version}\"/" .circleci/config.yml
 sed -i "s/^GO_VERSION=.*$/GO_VERSION=${latest_version}/" centos_ci.sh
-appveyor_go_version=$(echo $golang_base_version | tr -d .)
-sed -i 's/set PATH=C:\\go[0-9]\+/set PATH=C:\\go'${appveyor_go_version}'/' ./appveyor.yml
-sed -i 's/set GOROOT=C:\\go[0-9]\+/set GOROOT=C:\\go'${appveyor_go_version}'"/' ./appveyor.yml
 for f in .github/workflows/*.yml; do
     yq eval --inplace ".jobs.build.strategy.matrix.go[0] = ${golang_base_version}" "$f";
 done
