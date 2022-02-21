@@ -1,0 +1,26 @@
+name: Build RPM
+on:
+  push:
+    branches:
+      - "main"
+      - "old-main"
+  pull_request: {}
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        go:
+          - 1.16
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Build rpm
+        run: CONTAINER_RUNTIME=docker make test-rpmbuild
