@@ -1,0 +1,32 @@
+name: Build macOS installer
+on:
+  push:
+    branches:
+      - "main"
+      - "old-main"
+  pull_request: {}
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macOS-10.15
+          - macOS-11
+        go:
+          - 1.16
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Build macOS installer
+        run: make NO_CODESIGN=1 out/macos-amd64/crc-macos-amd64.pkg
+      - name: Upload macOS installer artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: macOS Installer
+          path: "./out/macos-amd64/crc-macos-amd64.pkg"
