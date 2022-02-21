@@ -10,7 +10,7 @@ assignees: ""
 ### General information
 
   * OS: Linux / macOS / Windows
-  * Hypervisor: KVM / Hyper-V / hyperkit
+  * Hypervisor: KVM / Hyper-V / hyperkit / vfkit
   * Did you run `crc setup` before starting it (Yes/No)?
   * Running CRC on: Laptop / Baremetal-Server / VM
 
