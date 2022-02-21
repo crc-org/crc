@@ -65,7 +65,7 @@ func TestExtract(t *testing.T) {
 func testBundle(t *testing.T) string {
 	switch runtime.GOOS {
 	case "darwin":
-		return "crc_hyperkit_4.6.1.crcbundle"
+		return "crc_vfkit_4.6.1.crcbundle"
 	case "windows":
 		return "crc_hyperv_4.6.1.crcbundle"
 	case "linux":
