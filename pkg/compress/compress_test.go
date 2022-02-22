@@ -28,7 +28,7 @@ func testCompress(t *testing.T, baseDir string) {
 	// This is useful to check that the top-level directory of the archive
 	// was created with the correct permissions, and was not created by the
 	// `os.MkdirAll(0750)` call at the beginning of `untarFile`
-	require.NoError(t, os.Chmod(baseDir, 0700))
+	require.NoError(t, os.Chmod(baseDir, 0755))
 	require.NoError(t, Compress(baseDir, testArchiveName))
 	defer os.Remove(testArchiveName)
 
@@ -42,7 +42,7 @@ func testCompress(t *testing.T, baseDir string) {
 	_, d := filepath.Split(baseDir)
 	fi, err := os.Stat(filepath.Join(destDir, d))
 	require.NoError(t, err)
-	fMode := os.FileMode(0700)
+	fMode := os.FileMode(0755)
 	if runtime.GOOS == "windows" {
 		// https://golang.org/pkg/os/#Chmod
 		fMode = os.FileMode(0777)
