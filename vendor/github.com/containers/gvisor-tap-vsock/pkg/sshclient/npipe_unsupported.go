@@ -9,6 +9,6 @@ import (
 	"net/url"
 )
 
-func listenNpipe(socketURI *url.URL) (net.Listener, error) {
+func ListenNpipe(socketURI *url.URL) (net.Listener, error) {
 	return nil, errors.New("named pipes are not supported by this platform")
 }

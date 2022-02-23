@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"runtime"
 	"strconv"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -110,6 +111,12 @@ func vsockPorts(preset crcPreset.Preset) []types.ExposeRequest {
 				Remote:   net.JoinHostPort(virtualMachineIP, httpPort),
 			})
 	case crcPreset.Podman:
+		socketProtocol := types.UNIX
+		socketLocal := constants.GetHostDockerSocketPath()
+		if runtime.GOOS == "windows" {
+			socketProtocol = types.NPIPE
+			socketLocal = constants.DefaultPodmanNamedPipe
+		}
 		exposeRequest = append(exposeRequest,
 			types.ExposeRequest{
 				Protocol: "tcp",
@@ -117,8 +124,8 @@ func vsockPorts(preset crcPreset.Preset) []types.ExposeRequest {
 				Remote:   net.JoinHostPort(virtualMachineIP, cockpitPort),
 			},
 			types.ExposeRequest{
-				Protocol: "unix",
-				Local:    constants.GetHostDockerSocketPath(),
+				Protocol: socketProtocol,
+				Local:    socketLocal,
 				Remote:   getSSHTunnelURI(),
 			})
 	default:

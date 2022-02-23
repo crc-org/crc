@@ -140,7 +140,7 @@ func setupProxy(ctx context.Context, socketURI *url.URL, dest *url.URL, identity
 			return &SSHForward{}, err
 		}
 	case "npipe":
-		listener, err = listenNpipe(socketURI)
+		listener, err = ListenNpipe(socketURI)
 		if err != nil {
 			return &SSHForward{}, err
 		}

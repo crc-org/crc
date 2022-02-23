@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/Masterminds/semver/v3 v3.1.1
-	github.com/Microsoft/go-winio v0.5.1
+	github.com/Microsoft/go-winio v0.5.2
 	github.com/RedHatQE/gowinx v0.0.3
 	github.com/StackExchange/wmi v1.2.1
 	github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
@@ -78,3 +78,5 @@ replace (
 	k8s.io/client-go => github.com/openshift/kubernetes-client-go v0.0.0-20210826123502-7208c21f5119
 	k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20210730111826-9c6734b9d97d
 )
+
+replace github.com/containers/gvisor-tap-vsock => github.com/praveenkumar/gvisor-tap-vsock v0.3.1-0.20220223095915-137f40464097

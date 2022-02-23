@@ -16,7 +16,7 @@ import (
 // Allow built-in admins and system/kernel components
 const SddlDevObjSysAllAdmAll = "D:P(A;;GA;;;SY)(A;;GA;;;BA)"
 
-func listenNpipe(socketURI *url.URL) (net.Listener, error) {
+func ListenNpipe(socketURI *url.URL) (net.Listener, error) {
 	user, err := user.Current()
 	if err != nil {
 		return nil, err
