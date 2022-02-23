@@ -73,7 +73,7 @@ func (f *PortsForwarder) Expose(protocol types.TransportProtocol, local, remote 
 	}
 
 	switch protocol {
-	case types.UNIX:
+	case types.UNIX, types.NPIPE:
 		// parse URI for remote
 		remoteURI, err := url.Parse(remote)
 		if err != nil {
@@ -155,13 +155,23 @@ func (f *PortsForwarder) Expose(protocol types.TransportProtocol, local, remote 
 
 		// build the tcp proxy
 		var p tcpproxy.Proxy
-		p.ListenFunc = func(_, socketPath string) (net.Listener, error) {
-			// remove existing socket file
-			if err := os.Remove(socketPath); err != nil && !os.IsNotExist(err) {
-				return nil, err
+		switch protocol {
+		case types.UNIX:
+			p.ListenFunc = func(_, socketPath string) (net.Listener, error) {
+				// remove existing socket file
+				if err := os.Remove(socketPath); err != nil && !os.IsNotExist(err) {
+					return nil, err
+				}
+				return net.Listen("unix", socketPath) // override tcp to use unix socket
 			}
-
-			return net.Listen("unix", socketPath) // override tcp to use unix socket
+		case types.NPIPE:
+			p.ListenFunc = func(_, socketPath string) (net.Listener, error) {
+				npipeURI, err := url.Parse(socketPath)
+				if err != nil {
+					return nil, err
+				}
+				return sshclient.ListenNpipe(npipeURI)
+			}
 		}
 		p.AddRoute(local, &tcpproxy.DialProxy{
 			Addr:        remoteAddr,
@@ -175,9 +185,8 @@ func (f *PortsForwarder) Expose(protocol types.TransportProtocol, local, remote 
 				log.Error(err)
 			}
 		}()
-
 		f.proxies[key(protocol, local)] = proxy{
-			Protocol: "unix",
+			Protocol: string(protocol),
 			Local:    local,
 			Remote:   remote,
 			underlying: CloseWrapper(func() error {
@@ -187,7 +196,6 @@ func (f *PortsForwarder) Expose(protocol types.TransportProtocol, local, remote 
 				return p.Close()
 			}),
 		}
-
 	case types.UDP:
 		address, err := tcpipAddress(1, remote)
 		if err != nil {
@@ -298,7 +306,7 @@ func (f *PortsForwarder) Mux() http.Handler {
 		remoteAddr := req.Remote
 
 		// TCP and UDP rely on remote() to preparse the remote field
-		if req.Protocol != types.UNIX {
+		if req.Protocol != types.UNIX && req.Protocol != types.NPIPE {
 			var err error
 			remoteAddr, err = remote(req, r.RemoteAddr)
 			if err != nil {

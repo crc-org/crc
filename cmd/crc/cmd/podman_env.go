@@ -54,6 +54,8 @@ func runPodmanEnv() error {
 	// https://docs.docker.com/desktop/faqs/#how-do-i-connect-to-the-remote-docker-engine-api
 	if runtime.GOOS != "windows" {
 		fmt.Println(shell.GetEnvString(userShell, "DOCKER_HOST", fmt.Sprintf("unix://%s", constants.GetHostDockerSocketPath())))
+	} else {
+		fmt.Println(shell.GetEnvString(userShell, "DOCKER_HOST", "npipe:////./pipe/crc-podman"))
 	}
 	fmt.Println(shell.GenerateUsageHintWithComment(userShell, "crc podman-env"))
 	return nil

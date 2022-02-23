@@ -9,7 +9,7 @@ github.com/Azure/go-ansiterm/winterm
 # github.com/Masterminds/semver/v3 v3.1.1
 ## explicit
 github.com/Masterminds/semver/v3
-# github.com/Microsoft/go-winio v0.5.1
+# github.com/Microsoft/go-winio v0.5.2
 ## explicit
 github.com/Microsoft/go-winio
 github.com/Microsoft/go-winio/pkg/guid
@@ -74,7 +74,7 @@ github.com/code-ready/machine/libmachine/drivers/plugin/localbinary
 github.com/code-ready/machine/libmachine/drivers/rpc
 github.com/code-ready/machine/libmachine/state
 github.com/code-ready/machine/libmachine/version
-# github.com/containers/gvisor-tap-vsock v0.3.1-0.20220214154721-84c937f8176f
+# github.com/containers/gvisor-tap-vsock v0.3.1-0.20220214154721-84c937f8176f => github.com/praveenkumar/gvisor-tap-vsock v0.3.1-0.20220223095915-137f40464097
 ## explicit
 github.com/containers/gvisor-tap-vsock/pkg/client
 github.com/containers/gvisor-tap-vsock/pkg/fs
@@ -703,3 +703,4 @@ sigs.k8s.io/yaml
 # k8s.io/apimachinery => github.com/openshift/kubernetes-apimachinery v0.0.0-20210730111815-c26349f8e2c9
 # k8s.io/client-go => github.com/openshift/kubernetes-client-go v0.0.0-20210826123502-7208c21f5119
 # k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20210730111826-9c6734b9d97d
+# github.com/containers/gvisor-tap-vsock => github.com/praveenkumar/gvisor-tap-vsock v0.3.1-0.20220223095915-137f40464097
