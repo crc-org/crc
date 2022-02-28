@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v1.1.1
+
+- [Bug Fix] [commit](https://github.com/mdlayher/vsock/commit/ead86435c244d5d6baad549a6df0557ada3f4401):
+  fix build on non-UNIX platforms such as Windows. This is a no-op change on
+  Linux but provides a friendlier experience for non-Linux users.
+
 ## v1.1.0
 
 - [New API] [commit](https://github.com/mdlayher/vsock/commit/44cd82dc5f7de644436f22236b111ab97fa9a14f):

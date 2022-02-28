@@ -15,7 +15,7 @@ require (
 	github.com/code-ready/admin-helper v0.0.7
 	github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a
 	github.com/code-ready/machine v0.0.0-20210616065635-eff475d32b9a
-	github.com/containers/gvisor-tap-vsock v0.3.1-0.20220214154721-84c937f8176f
+	github.com/containers/gvisor-tap-vsock v0.3.1-0.20220228052040-b735d4413359
 	github.com/coreos/go-systemd/v22 v22.3.2
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3
@@ -36,7 +36,7 @@ require (
 	github.com/kofalt/go-memoize v0.0.0-20210721235729-46a601ff34b8
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.11
-	github.com/mdlayher/vsock v1.1.0
+	github.com/mdlayher/vsock v1.1.1
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.18.1
@@ -78,5 +78,3 @@ replace (
 	k8s.io/client-go => github.com/openshift/kubernetes-client-go v0.0.0-20210826123502-7208c21f5119
 	k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20210730111826-9c6734b9d97d
 )
-
-replace github.com/containers/gvisor-tap-vsock => github.com/praveenkumar/gvisor-tap-vsock v0.3.1-0.20220223095915-137f40464097
