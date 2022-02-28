@@ -8,6 +8,11 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// A conn is the net.Conn implementation for connection-oriented VM sockets.
+// We can use socket.Conn directly on Linux to implement all of the necessary
+// methods.
+type conn = socket.Conn
+
 // dial is the entry point for Dial on Linux.
 func dial(cid, port uint32, _ *Config) (*Conn, error) {
 	// TODO(mdlayher): Config default nil check and initialize. Pass options to
