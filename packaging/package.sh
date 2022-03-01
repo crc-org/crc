@@ -19,6 +19,21 @@ function sign() {
   codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime --force ${opts} "$1"
 }
 
+function signAppBundle() {
+  if [ "${NO_CODESIGN}" -eq "1" ]; then
+    return
+  fi
+  entitlements=$(sed -e 's| |_|g' <<< "${BASEDIR}/$(basename "$1").entitlements")
+  if [ ! -f "${entitlements}" ]; then
+    echo "ERROR: need entitlement file: ${entitlements}"
+    return
+  fi
+
+  frameworks=$(find "$1"/Contents/Frameworks -depth -type d -name "*.framework" -or -name "*.dylib" -or -type f -perm +111)
+  echo "${frameworks}" | xargs -t -I % codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime % || true
+  codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime --force --entitlements "${entitlements}" "$1"
+}
+
 binDir="${BASEDIR}/root/Applications/CodeReady Containers.app/Contents/Resources"
 
 version=$(cat "${BASEDIR}/VERSION")
@@ -27,7 +42,7 @@ sign "${binDir}/crc"
 sign "${binDir}/crc-admin-helper-darwin"
 sign "${binDir}/crc-driver-hyperkit"
 
-sign "${BASEDIR}/root/Applications/CodeReady Containers.app"
+signAppBundle "${BASEDIR}/root/Applications/CodeReady Containers.app"
 
 codesign --verify --verbose "${binDir}/hyperkit"
 codesign --verify --verbose "${binDir}/qcow-tool"
