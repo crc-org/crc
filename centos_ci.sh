@@ -2,7 +2,7 @@
 
 # bundle location
 BUNDLE_VERSION=4.9.15
-BUNDLE=crc_libvirt_$BUNDLE_VERSION.crcbundle
+BUNDLE=crc_libvirt_$BUNDLE_VERSION_amd64.crcbundle
 GO_VERSION=1.16.10
 
 # Output command before executing
@@ -51,7 +51,6 @@ function install_required_packages() {
     libvirt-devel \
     jq \
     gcc \
-    unzip \
     podman
 
   # Install the required version of golang
@@ -111,8 +110,7 @@ function perform_artifacts_upload() {
 
 function get_bundle() {
   mkdir $HOME/Downloads
-  curl -L "https://storage.googleapis.com/crc-bundle-github-ci/crc_libvirt_$BUNDLE_VERSION.zip" -o $HOME/Downloads/bundle.zip
-  unzip -P $CRC_BUNDLE_PASSWORD $HOME/Downloads/bundle.zip -d $HOME/Downloads/
+  curl -L "https://storage.googleapis.com/crc-bundle-github-ci/${BUNDLE}" -o $HOME/Downloads/${BUNDLE}
 }
 
 function upload_logs() {
