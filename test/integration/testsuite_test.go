@@ -17,7 +17,6 @@ type VersionAnswer struct {
 	Version          string `json:"version"`
 	Commit           string `json:"commit"`
 	OpenshiftVersion string `json:"openshiftVersion"`
-	Embedded         bool   `json:"embedded"`
 }
 
 var credPath string
@@ -54,13 +53,9 @@ var _ = BeforeSuite(func() {
 
 	Expect(err).NotTo(HaveOccurred())
 
-	// bundle location
-	bundlePath = "embedded"
-	if !versionInfo.Embedded {
-		bundlePath = os.Getenv("BUNDLE_PATH") // this env var should contain location of bundle or string "embedded"
-		if bundlePath != "embedded" {         // if real bundle
-			Expect(bundlePath).To(BeAnExistingFile())
-		}
+	bundlePath = os.Getenv("BUNDLE_PATH") // this env var should contain location of bundle
+	if bundlePath != "" {
+		Expect(bundlePath).To(BeAnExistingFile())
 	}
 
 	// pull-secret location
