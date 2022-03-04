@@ -7,7 +7,7 @@ Feature: Local image to image-registry
 
     @startstop
     Scenario: Start CRC
-        Given execute crc setup command succeeds
+        Given executing crc setup command succeeds
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
 

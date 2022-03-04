@@ -23,13 +23,13 @@ import (
 )
 
 var (
-	CRCHome        string
-	CRCExecutable  string
-	bundleEmbedded bool
-	bundleName     string
-	bundleLocation string
-	pullSecretFile string
-	cleanupHome    bool
+	CRCHome            string
+	CRCExecutable      string
+	userProvidedBundle bool
+	bundleName         string
+	bundleLocation     string
+	pullSecretFile     string
+	cleanupHome        bool
 )
 
 func usingPreexistingCluster() bool {
@@ -113,11 +113,11 @@ func FeatureContext(s *godog.Suite) {
 		}
 
 		if bundleLocation == "" {
-			fmt.Println("Expecting the bundle to be embedded in the CRC executable.")
-			bundleEmbedded = true
+			fmt.Println("Expecting the bundle provided by the user")
+			userProvidedBundle = false
 			bundleName = constants.GetDefaultBundle(preset.OpenShift)
 		} else {
-			bundleEmbedded = false
+			userProvidedBundle = true
 			_, bundleName = filepath.Split(bundleLocation)
 		}
 
@@ -135,7 +135,7 @@ func FeatureContext(s *godog.Suite) {
 			}
 		}
 
-		if !bundleEmbedded {
+		if userProvidedBundle {
 			if _, err := os.Stat(bundleLocation); err != nil {
 				if !os.IsNotExist(err) {
 					fmt.Printf("Unexpected error obtaining the bundle %v.\n", bundleLocation)
@@ -365,7 +365,7 @@ func StartCRCWithDefaultBundleSucceedsOrFails(expected string) error {
 	var cmd string
 	var extraBundleArgs string
 
-	if !bundleEmbedded {
+	if userProvidedBundle {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
 	crcStart := crcCmd.CRC("start").ToString()
@@ -380,7 +380,7 @@ func StartCRCWithDefaultBundleWithStopNetworkTimeSynchronizationSucceedsOrFails(
 	var cmd string
 	var extraBundleArgs string
 
-	if !bundleEmbedded {
+	if userProvidedBundle {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
 	crcStart := crcCmd.CRC("start").WithDisableNTP().ToString()
@@ -399,7 +399,7 @@ func StartCRCWithCustomBundleSucceedsOrFails(expected string) error {
 func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, expected string) error {
 
 	var extraBundleArgs string
-	if !bundleEmbedded {
+	if userProvidedBundle {
 		extraBundleArgs = fmt.Sprintf("-b %s", bundleLocation)
 	}
 
@@ -410,7 +410,7 @@ func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, ex
 
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
 	if value == "current bundle" {
-		if bundleEmbedded {
+		if !userProvidedBundle {
 			value = filepath.Join(CRCHome, "cache", bundleName)
 		} else {
 			value = bundleLocation
@@ -424,5 +424,8 @@ func ExecuteCommand(command string) error {
 }
 
 func ExecuteCommandWithExpectedExitStatus(command string, expectedExitStatus string) error {
+	if command == "setup" && userProvidedBundle {
+		command = fmt.Sprintf("%s -b %s", command, bundleLocation)
+	}
 	return crcCmd.CRC(command).ExecuteWithExpectedExit(expectedExitStatus)
 }
