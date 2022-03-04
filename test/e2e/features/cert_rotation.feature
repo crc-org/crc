@@ -6,7 +6,7 @@ Feature: Certificate rotation test
     an app and check its accessibility.
 
     Scenario: Setup CRC
-        Given execute crc setup command succeeds
+        Given executing crc setup command succeeds
 
     Scenario: Set clock to 3 months ahead on the host
         Given executing "sudo timedatectl set-ntp off" succeeds

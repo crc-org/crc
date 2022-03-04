@@ -8,7 +8,7 @@ Feature: End-to-end health check
 
     @linux @darwin @startstop
     Scenario: Start CRC
-        Given execute crc setup command succeeds
+        Given executing crc setup command succeeds
         When setting config property "memory" to value "12000" succeeds
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
@@ -21,7 +21,7 @@ Feature: End-to-end health check
 
     @windows @startstop
     Scenario: Start CRC on Windows
-        Given execute crc setup command succeeds
+        Given executing crc setup command succeeds
         When setting config property "memory" to value "12000" succeeds
         When starting CRC with default bundle and nameserver "10.75.5.25" succeeds
         Then stdout should contain "Started the OpenShift cluster"
