@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # bundle location
-BUNDLE_VERSION=4.9.15
+BUNDLE_VERSION=4.10.2
 BUNDLE=crc_libvirt_$BUNDLE_VERSION_amd64.crcbundle
 GO_VERSION=1.16.10
 
