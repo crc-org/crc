@@ -45,7 +45,7 @@ $ sudo firewall-cmd --add-service=kube-apiserver --permanent
 $ sudo firewall-cmd --reload
 ----
 
-. For SELinux, allow HAProxy to listen on TCP port 6443 to serve kube-apiserver on this port:
+. For SELinux, allow HAProxy to listen on TCP port 6443 to serve `kube-apiserver` on this port:
 +
 ----
 $ sudo semanage port -a -t http_port_t -p tcp 6443

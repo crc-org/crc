@@ -1,8 +1,8 @@
 [id="installing-codeready-containers_{context}"]
 = Installing {prod}
 
-{prod} is available as a portable executable for {rhel} and {msw}.
-On {mac}, {prod} is available using a guided installer.
+{prod} is available as a portable executable for {rhel}.
+On {msw} and {mac}, {prod} is available using a guided installer.
 
 .Prerequisites
 

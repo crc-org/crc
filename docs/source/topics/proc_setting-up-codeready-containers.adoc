@@ -1,9 +1,10 @@
 [id="setting-up-codeready-containers_{context}"]
 = Setting up {prod}
 
+[role="_abstract"]
 The [command]`{bin} setup` command performs operations to set up the environment of your host machine for the {prod} instance.
 
-This procedure creates the [filename]*_~/.crc_* directory if it does not already exist.
+The [command]`{bin} setup` command creates the [filename]*_~/.crc_* directory if it does not already exist.
 
 [WARNING]
 ====
