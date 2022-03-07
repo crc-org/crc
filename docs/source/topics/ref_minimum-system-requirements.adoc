@@ -1,27 +1,36 @@
 [id="minimum-system-requirements_{context}"]
 = Minimum system requirements
 
+[role="_abstract"]
 {prod} has the following minimum hardware and operating system requirements.
 
 [id="minimum-system-requirements-hardware_{context}"]
 == Hardware requirements
 
-{prod} requires the following system resources:
+{prod} is supported only on AMD64 and Intel 64 processor architectures.
+{prod} does not support the ARM-based M1 architecture.
+{prod} does not support nested virtualization.
+
+Depending on the desired container runtime, {prod} requires the following system resources:
+
+=== For {ocp}
 
 * 4 physical CPU cores
 * 9 GB of free memory
 * 35 GB of storage space
 
-{prod} is supported only on AMD64 and Intel 64 processor architectures.
-{prod} does not support the ARM-based M1 architecture.
-{prod} does not support nested virtualization.
-
 [NOTE]
 ====
-The OpenShift cluster requires these minimum resources to run in the {prod} instance.
+The {ocp} cluster requires these minimum resources to run in the {prod} instance.
 Some workloads may require more resources.
 To assign more resources to the {prod} instance, see link:{crc-gsg-url}#configuring-the-instance_gsg[Configuring the instance].
 ====
+
+=== For the Podman container runtime
+
+* 2 physical CPU cores
+* 2 GB of free memory
+* 35 GB of storage space
 
 [id="minimum-system-requirements-operating-system_{context}"]
 == Operating system requirements
