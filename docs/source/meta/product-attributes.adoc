@@ -18,6 +18,8 @@
 :msw: Microsoft Windows
 :debian: Debian
 :ubuntu: Ubuntu
+:openshift: OpenShift
+:ocp: {openshift} Container Platform
 
 // Product naming
 :prod: CodeReady Containers
