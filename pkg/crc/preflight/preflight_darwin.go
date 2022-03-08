@@ -2,6 +2,8 @@ package preflight
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
@@ -58,6 +60,26 @@ func hyperkitPreflightChecks(networkMode network.Mode) []Check {
 	}
 }
 
+/*
+ * Following check should be removed after 2-3 releases
+ * since the tray now handles the autostart and it is unaware
+ * of existing launchd configs, this is necessary to prevent
+ * two instances of tray to be launched and interfering
+ */
+var trayLaunchdCleanupChecks = []Check{
+	{
+		configKeySuffix:  "check-old-autostart",
+		checkDescription: "Checking if old launchd config for tray autostart exists",
+		check:            func() error { return fmt.Errorf("force trigger cleanup to remove old launchd config for tray") },
+		fixDescription:   "Removing old launchd config for tray autostart",
+		fix: func() error {
+			_ = os.Remove(filepath.Join(constants.GetHomeDir(), "Library", "LaunchAgents", "crc.tray.plist"))
+			return os.Remove(filepath.Join(constants.GetHomeDir(), "Library", "LaunchAgents", "crc.daemon.plist"))
+		},
+
+		labels: labels{Os: Darwin},
+	},
+}
 var resolverPreflightChecks = []Check{
 	{
 		configKeySuffix:    "check-resolver-file-permissions",
@@ -92,6 +114,7 @@ func getChecks(mode network.Mode, bundlePath string, preset crcpreset.Preset) []
 	checks = append(checks, hyperkitPreflightChecks(mode)...)
 	checks = append(checks, resolverPreflightChecks...)
 	checks = append(checks, bundleCheck(bundlePath, preset))
+	checks = append(checks, trayLaunchdCleanupChecks...)
 
 	return checks
 }
