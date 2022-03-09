@@ -33,11 +33,15 @@
 :crc-download-url: https://console.redhat.com/openshift/create/local
 :crc-gsg-url: https://code-ready.github.io/crc/
 
+:openshift-installer-url: https://console.redhat.com/openshift/install
+:openshift-docs-url: https://docs.openshift.com/container-platform/latest
+:openshift-docs-url-landing-page: {openshift-docs-url}/welcome/index.html#developer-activities
+
 :oc-download-url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/
 
-:odo-docs-url: https://docs.openshift.com/container-platform/latest/cli_reference/developer_cli_odo/understanding-odo.html
-:odo-docs-url-installing: https://docs.openshift.com/container-platform/latest/cli_reference/developer_cli_odo/installing-odo.html
-:odo-docs-url-single-component: https://docs.openshift.com/container-platform/latest/cli_reference/developer_cli_odo/creating_and_deploying_applications_with_odo/creating-a-single-component-application-with-odo.html
+:odo-docs-url: {openshift-docs-url}/cli_reference/developer_cli_odo/understanding-odo.html
+:odo-docs-url-installing: {openshift-docs-url}/cli_reference/developer_cli_odo/installing-odo.html
+:odo-docs-url-single-component: {openshift-docs-url}/cli_reference/developer_cli_odo/creating_and_deploying_applications_with_odo/creating-a-single-component-application-with-odo.html
 
 :telemetry-notice-url: https://developers.redhat.com/article/tool-data-collection
 
