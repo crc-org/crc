@@ -1,7 +1,7 @@
 [id="differences-from-production-openshift-install_{context}"]
 = Differences from a production OpenShift installation
 
-{rh-prod} provides a regular OpenShift installation with the following notable differences:
+The {openshift} preset for {rh-prod} provides a regular {ocp} installation with the following notable differences:
 
 * **The {prod} OpenShift cluster is ephemeral and is not intended for production use.**
 * **{prod} does not have a supported upgrade path to newer OpenShift versions.**
