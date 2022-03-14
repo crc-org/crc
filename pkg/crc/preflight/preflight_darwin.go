@@ -74,7 +74,8 @@ var trayLaunchdCleanupChecks = []Check{
 		fixDescription:   "Removing old launchd config for tray autostart",
 		fix: func() error {
 			_ = os.Remove(filepath.Join(constants.GetHomeDir(), "Library", "LaunchAgents", "crc.tray.plist"))
-			return os.Remove(filepath.Join(constants.GetHomeDir(), "Library", "LaunchAgents", "crc.daemon.plist"))
+			_ = os.Remove(filepath.Join(constants.GetHomeDir(), "Library", "LaunchAgents", "crc.daemon.plist"))
+			return nil
 		},
 
 		labels: labels{Os: Darwin},
