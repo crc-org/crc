@@ -2,14 +2,12 @@ package preflight
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/preset"
 	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
-	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/code-ready/crc/pkg/os/launchd"
 )
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
@@ -72,21 +70,16 @@ var trayLaunchdCleanupChecks = []Check{
 		configKeySuffix:  "check-old-autostart",
 		checkDescription: "Checking if old launchd config for tray autostart exists",
 		check: func() error {
-			if crcos.FileExists(filepath.Join(constants.GetHomeDir(), "Library", "LaunchAgents", "crc.tray.plist")) {
+			if launchd.PlistExists("crc.tray") {
 				return fmt.Errorf("force trigger cleanup to remove old launchd config for tray")
 			}
 			return nil
 		},
 		fixDescription: "Removing old launchd config for tray autostart",
 		fix: func() error {
-			var err error
-			if crcos.FileExists(filepath.Join(constants.GetHomeDir(), "Library", "LaunchAgents", "crc.tray.plist")) {
-				err = os.Remove(filepath.Join(constants.GetHomeDir(), "Library", "LaunchAgents", "crc.tray.plist"))
-			}
-			if crcos.FileExists(filepath.Join(constants.GetHomeDir(), "Library", "LaunchAgents", "crc.daemon.plist")) {
-				err = os.Remove(filepath.Join(constants.GetHomeDir(), "Library", "LaunchAgents", "crc.daemon.plist"))
-			}
-			return err
+			_ = launchd.RemovePlist("crc.tray")
+			_ = launchd.RemovePlist("crc.daemon")
+			return nil
 		},
 
 		labels: labels{Os: Darwin},
