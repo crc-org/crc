@@ -70,7 +70,7 @@ var trayLaunchdCleanupChecks = []Check{
 		configKeySuffix:  "check-old-autostart",
 		checkDescription: "Checking if old launchd config for tray autostart exists",
 		check: func() error {
-			if launchd.PlistExists("crc.tray") {
+			if launchd.PlistExists("crc.tray") || launchd.PlistExists("crc.daemon") {
 				return fmt.Errorf("force trigger cleanup to remove old launchd config for tray")
 			}
 			return nil
