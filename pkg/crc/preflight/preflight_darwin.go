@@ -68,14 +68,14 @@ func hyperkitPreflightChecks(networkMode network.Mode) []Check {
 var trayLaunchdCleanupChecks = []Check{
 	{
 		configKeySuffix:  "check-old-autostart",
-		checkDescription: "Checking if old launchd config for tray autostart exists",
+		checkDescription: "Checking if old launchd config for tray and/or daemon exists",
 		check: func() error {
 			if launchd.PlistExists("crc.tray") || launchd.PlistExists("crc.daemon") {
-				return fmt.Errorf("force trigger cleanup to remove old launchd config for tray")
+				return fmt.Errorf("plist file for tray or daemon is present")
 			}
 			return nil
 		},
-		fixDescription: "Removing old launchd config for tray autostart",
+		fixDescription: "Removing old launchd config for tray and/or daemon",
 		fix: func() error {
 			_ = launchd.RemovePlist("crc.tray")
 			_ = launchd.RemovePlist("crc.daemon")
