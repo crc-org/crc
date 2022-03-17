@@ -99,6 +99,18 @@ var resolverPreflightChecks = []Check{
 	},
 }
 
+var daemonLaunchdChecks = []Check{
+	{
+		configKeySuffix:    "check-daemon-launchd-plist",
+		checkDescription:   "Checking if crc daemon plist file is present and loaded",
+		check:              checkIfDaemonPlistFileExists,
+		fixDescription:     "Adding crc daemon plist file and loading it",
+		fix:                fixDaemonPlistFileExists,
+		cleanupDescription: "Unloading and removing the daemon plist file",
+		cleanup:            removeDaemonPlistFile,
+	},
+}
+
 // We want all preflight checks including
 // - experimental checks
 // - tray checks when using an installer, regardless of tray enabled or not
@@ -120,6 +132,7 @@ func getChecks(mode network.Mode, bundlePath string, preset crcpreset.Preset) []
 	checks = append(checks, resolverPreflightChecks...)
 	checks = append(checks, bundleCheck(bundlePath, preset))
 	checks = append(checks, trayLaunchdCleanupChecks...)
+	checks = append(checks, daemonLaunchdChecks...)
 
 	return checks
 }
