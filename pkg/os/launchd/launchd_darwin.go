@@ -18,28 +18,32 @@ import (
 
 const (
 	plistTemplate = `<?xml version='1.0' encoding='UTF-8'?>
-	<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-	<plist version='1.0'>
-		<dict>
-			<key>Label</key>
-			<string>{{ .Label }}</string>
-			<key>ProgramArguments</key>
-			<array>
-				<string>{{ .ExecutablePath }}</string>
-			{{ range .Args }}
-				<string>{{ . }}</string>
-			{{ end }}
-			</array>
-			<key>StandardOutPath</key>
-			<string>{{ .StdOutFilePath }}</string>
-			<key>Disabled</key>
-			<false/>
-			<key>RunAtLoad</key>
-			<true/>
-			<key>ProcessType</key>
-			<string>Interactive</string>
-		</dict>
-	</plist>`
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version='1.0'>
+<dict>
+	<key>Label</key>
+	<string>{{ .Label }}</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>{{ .ExecutablePath }}</string>
+	{{ range .Args }}
+		<string>{{ . }}</string>
+	{{ end }}
+	</array>
+	<key>StandardOutPath</key>
+	<string>{{ .StdOutFilePath }}</string>
+	<key>StandardErrorPath</key>
+	<string>{{ .StdErrFilePath }}</string>
+	<key>EnvironmentVariables</key>
+	<dict>
+		{{ range $key, $value := .Env }}
+		<key>{{ $key }}</key>
+		<string>{{ $value }}</string>
+		{{ end }}
+	</dict>
+</dict>
+</plist>
+`
 )
 
 // AgentConfig is struct to contain configuration for agent plist file
@@ -47,7 +51,9 @@ type AgentConfig struct {
 	Label          string
 	ExecutablePath string
 	StdOutFilePath string
+	StdErrFilePath string
 	Args           []string
+	Env            map[string]string
 }
 
 var (

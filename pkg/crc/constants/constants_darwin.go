@@ -10,6 +10,7 @@ const (
 	OcExecutableName           = "oc"
 	PodmanRemoteExecutableName = "podman"
 	TrayExecutableName         = "CodeReady Containers.app"
+	DaemonAgentLabel           = "com.redhat.crc.daemon"
 )
 
 var (

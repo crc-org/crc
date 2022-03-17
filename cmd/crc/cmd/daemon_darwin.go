@@ -6,7 +6,6 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	crcversion "github.com/code-ready/crc/pkg/crc/version"
 )
 
 func vsockListener() (net.Listener, error) {
@@ -34,9 +33,6 @@ func checkIfDaemonIsRunning() (bool, error) {
 }
 
 func daemonNotRunningMessage() string {
-	if crcversion.IsInstaller() {
-		return "Is '/Applications/CodeReady Containers.app' running? Cannot reach daemon API"
-	}
 	return genericDaemonNotRunningMessage
 }
 
