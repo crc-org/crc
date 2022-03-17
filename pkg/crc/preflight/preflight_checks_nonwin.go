@@ -6,6 +6,7 @@ package preflight
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"syscall"
@@ -69,6 +70,17 @@ func genericPreflightChecks(preset crcpreset.Preset) []Check {
 			},
 			fixDescription: fmt.Sprintf("crc requires at least %s to run", units.HumanSize(float64(constants.GetDefaultMemory(preset)*1024*1024))),
 			flags:          NoFix,
+
+			labels: None,
+		},
+		{
+			configKeySuffix:    "check-crc-symlink",
+			checkDescription:   "Checking if crc executable symlink exists",
+			check:              checkCrcSymlink,
+			fixDescription:     "Creating symlink for crc executable",
+			fix:                fixCrcSymlink,
+			cleanupDescription: "Removing crc executable symlink",
+			cleanup:            removeCrcSymlink,
 
 			labels: None,
 		},
@@ -183,6 +195,53 @@ func checkSupportedCPUArch() error {
 	if runtime.GOARCH != "amd64" {
 		logging.Debugf("GOARCH is %s", runtime.GOARCH)
 		return fmt.Errorf("CodeReady Containers can only run on x86_64 CPUs")
+	}
+	return nil
+}
+
+func runtimeExecutablePath() (string, error) {
+	path, err := exec.LookPath(os.Args[0])
+	if err != nil {
+		// os.Args[0] is not in $PATH, crc must have been started by specifying the path to its binary
+		path = os.Args[0]
+	}
+	path, err = filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+	return filepath.EvalSymlinks(path)
+}
+
+func checkCrcSymlink() error {
+	runtimePath, err := runtimeExecutablePath()
+	if err != nil {
+		return err
+	}
+	symlinkPath, err := filepath.EvalSymlinks(constants.CrcSymlinkPath)
+	if err != nil {
+		return err
+	}
+	if symlinkPath != runtimePath {
+		return fmt.Errorf("%s points to %s, not to %s", constants.CrcSymlinkPath, symlinkPath, runtimePath)
+	}
+
+	return nil
+}
+
+func fixCrcSymlink() error {
+	_ = os.Remove(constants.CrcSymlinkPath)
+
+	runtimePath, err := runtimeExecutablePath()
+	if err != nil {
+		return err
+	}
+	logging.Debugf("symlinking %s to %s", runtimePath, constants.CrcSymlinkPath)
+	return os.Symlink(runtimePath, constants.CrcSymlinkPath)
+}
+
+func removeCrcSymlink() error {
+	if crcos.FileExists(constants.CrcSymlinkPath) {
+		return os.Remove(constants.CrcSymlinkPath)
 	}
 	return nil
 }
