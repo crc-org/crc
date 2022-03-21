@@ -38,9 +38,9 @@ func runPodmanEnv() error {
 		return err
 	}
 
-	socket := "/run/user/1000/podman/podman.sock"
+	socket := constants.RootlessPodmanSocket
 	if root {
-		socket = "/run/podman/podman.sock"
+		socket = constants.RootfulPodmanSocket
 	}
 	fmt.Println(shell.GetPathEnvString(userShell, constants.CrcOcBinDir))
 	fmt.Println(shell.GetEnvString(userShell, "CONTAINER_SSHKEY", connectionDetails.SSHKeys[0]))

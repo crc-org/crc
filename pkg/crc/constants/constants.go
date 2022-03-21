@@ -30,6 +30,8 @@ const (
 	DefaultContext            = "admin"
 	DaemonHTTPEndpoint        = "http://unix/api"
 	DefaultPodmanNamedPipe    = `\\.\pipe\crc-podman`
+	RootlessPodmanSocket      = "/run/user/1000/podman/podman.sock"
+	RootfulPodmanSocket       = "/run/podman/podman.sock"
 
 	VSockGateway = "192.168.127.1"
 	VsockSSHPort = 2222
