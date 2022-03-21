@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
@@ -119,7 +120,7 @@ func GetPreset(config Storage) preset.Preset {
 }
 
 func defaultNetworkMode() network.Mode {
-	if version.IsInstaller() {
+	if runtime.GOOS != "linux" {
 		return network.UserNetworkingMode
 	}
 	return network.SystemNetworkingMode
