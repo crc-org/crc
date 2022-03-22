@@ -23,6 +23,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/oc"
+	"github.com/code-ready/crc/pkg/crc/podman"
 	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/services"
 	"github.com/code-ready/crc/pkg/crc/services/dns"
@@ -329,6 +330,14 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 		if err := updateCockpitConsoleBearerToken(sshRunner); err != nil {
 			return nil, fmt.Errorf("Failed to rotate bearer token for cockpit webconsole: %w", err)
+		}
+
+		c, err := client.ConnectionDetails()
+		if err != nil {
+			return nil, err
+		}
+		if err := addPodmanSystemConnections(c); err != nil {
+			return nil, err
 		}
 
 		return &types.StartResult{
@@ -755,5 +764,20 @@ func updateCockpitConsoleBearerToken(sshRunner *crcssh.Runner) error {
 		return fmt.Errorf("failed to change ownership of cockpit-bearer-token to core user: %w", err)
 	}
 
+	return nil
+}
+
+func addPodmanSystemConnections(c *types.ConnectionDetails) error {
+	rootlessURI := fmt.Sprintf("ssh://%s@%s:%d%s", c.SSHUsername, c.IP, c.SSHPort, constants.RootlessPodmanSocket)
+	rootfulURI := fmt.Sprintf("ssh://%s@%s:%d%s", c.SSHUsername, c.IP, c.SSHPort, constants.RootfulPodmanSocket)
+	if err := podman.AddRootlessSystemConnection(c.SSHKeys[0], rootlessURI); err != nil {
+		return err
+	}
+	if err := podman.MakeRootlessSystemConnectionDefault(); err != nil {
+		return err
+	}
+	if err := podman.AddRootfulSystemConnection(c.SSHKeys[0], rootfulURI); err != nil {
+		return err
+	}
 	return nil
 }
