@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("vary VM parameters: memory cpus, disk", func() {
+var _ = Describe("vary VM parameters: memory cpus, disk", Label("openshift-preset", "vm-resize"), func() {
 
 	Describe("use default values", func() {
 
