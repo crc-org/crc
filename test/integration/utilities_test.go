@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -24,6 +25,12 @@ type CRCBuilder struct {
 	timeout <-chan time.Time
 }
 
+// PodmanBuilder is used to build, customize, and execute a podman-remote command.
+type PodmanBuilder struct {
+	cmd     *exec.Cmd
+	timeout <-chan time.Time
+}
+
 // NewCRCCommand returns a CRCBuilder for running CRC.
 func NewCRCCommand(args ...string) *CRCBuilder {
 	cmd := exec.Command("crc", args...)
@@ -34,8 +41,31 @@ func NewCRCCommand(args ...string) *CRCBuilder {
 	}
 }
 
+// NewPodmanCommand returns a PodmanBuilder for running CRC.
+func NewPodmanCommand(args ...string) *PodmanBuilder {
+
+	cmd := exec.Command("podman", args...)
+
+	switch runtime.GOOS {
+	case "linux":
+		cmd = exec.Command("podman-remote", args...)
+	case "windows":
+		cmd = exec.Command("podman.exe", args...)
+	}
+
+	return &PodmanBuilder{
+		cmd: cmd,
+	}
+}
+
 // WithTimeout sets the given timeout and returns itself.
 func (b *CRCBuilder) WithTimeout(t <-chan time.Time) *CRCBuilder {
+	b.timeout = t
+	return b
+}
+
+// WithTimeout sets the given timeout and returns itself.
+func (b *PodmanBuilder) WithTimeout(t <-chan time.Time) *PodmanBuilder {
 	b.timeout = t
 	return b
 }
@@ -46,14 +76,33 @@ func (b CRCBuilder) WithStdinData(data string) *CRCBuilder {
 	return &b
 }
 
+// WithStdinData sets the given data to stdin and returns itself.
+func (b PodmanBuilder) WithStdinData(data string) *PodmanBuilder {
+	b.cmd.Stdin = strings.NewReader(data)
+	return &b
+}
+
 // WithStdinReader sets the given reader and returns itself.
 func (b CRCBuilder) WithStdinReader(reader io.Reader) *CRCBuilder {
 	b.cmd.Stdin = reader
 	return &b
 }
 
+// WithStdinReader sets the given reader and returns itself.
+func (b PodmanBuilder) WithStdinReader(reader io.Reader) *PodmanBuilder {
+	b.cmd.Stdin = reader
+	return &b
+}
+
 // ExecOrDie runs the executable or dies if error occurs.
 func (b CRCBuilder) ExecOrDie() string {
+	stdout, err := b.Exec()
+	Expect(err).To(Not(HaveOccurred()))
+	return stdout
+}
+
+// ExecOrDie runs the executable or dies if error occurs.
+func (b PodmanBuilder) ExecOrDie() string {
 	stdout, err := b.Exec()
 	Expect(err).To(Not(HaveOccurred()))
 	return stdout
@@ -66,14 +115,32 @@ func (b CRCBuilder) ExecOrDieWithLogs() (string, string) {
 	return stdout, stderr
 }
 
+// ExecOrDieWithLogs runs the executable or dies if error occurs.
+func (b PodmanBuilder) ExecOrDieWithLogs() (string, string) {
+	stdout, stderr, err := b.ExecWithFullOutput()
+	Expect(err).To(Not(HaveOccurred()))
+	return stdout, stderr
+}
+
 // Exec runs the executable.
 func (b CRCBuilder) Exec() (string, error) {
 	stdout, _, err := b.ExecWithFullOutput()
 	return stdout, err
 }
 
+// Exec runs the executable.
+func (b PodmanBuilder) Exec() (string, error) {
+	stdout, _, err := b.ExecWithFullOutput()
+	return stdout, err
+}
+
 // ExecWithFullOutput runs the executable and returns the stdout and stderr.
 func (b CRCBuilder) ExecWithFullOutput() (string, string, error) {
+	return Exec(b.cmd, b.timeout)
+}
+
+// ExecWithFullOutput runs the executable and returns the stdout and stderr.
+func (b PodmanBuilder) ExecWithFullOutput() (string, string, error) {
 	return Exec(b.cmd, b.timeout)
 }
 
@@ -116,11 +183,30 @@ func RunCRCExpectSuccess(args ...string) string {
 	return NewCRCCommand(args...).ExecOrDie()
 }
 
+// RunPodmanExpectSuccess is a convenience wrapper over podman-remote
+func RunPodmanExpectSuccess(args ...string) string {
+	return NewPodmanCommand(args...).ExecOrDie()
+}
+
 // RunCRCExpectFail is a convenience wrapper over CRCBuilder
 // if err != nil: return stderr, nil
 // if err == nil: return stdout, err
 func RunCRCExpectFail(args ...string) (string, error) {
 	stdout, stderr, err := NewCRCCommand(args...).ExecWithFullOutput()
+
+	if err == nil {
+		err = fmt.Errorf("Expected error but exited without error")
+		return stdout, err
+	}
+
+	return stderr, nil
+}
+
+// RunPodmanExpectFail is a convenience wrapper over PodmanBuilder
+// if err != nil: return stderr, nil
+// if err == nil: return stdout, err
+func RunPodmanExpectFail(args ...string) (string, error) {
+	stdout, stderr, err := NewPodmanCommand(args...).ExecWithFullOutput()
 
 	if err == nil {
 		err = fmt.Errorf("Expected error but exited without error")

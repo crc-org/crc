@@ -23,6 +23,7 @@ var userHome string
 var versionInfo VersionAnswer
 
 var bundlePath string
+var ginkgoOpts string
 var pullSecretPath string
 
 func TestTest(t *testing.T) {
@@ -30,14 +31,15 @@ func TestTest(t *testing.T) {
 	RegisterFailHandler(Fail)
 
 	// fetch the current (reporter) config
-	_, reporterConfig := GinkgoConfiguration()
+	suiteConfig, reporterConfig := GinkgoConfiguration()
+
 	err := os.MkdirAll("out", 0775)
 	if err != nil {
 		logrus.Infof("failed to create directory: %v", err)
 	}
 	reporterConfig.JUnitReport = filepath.Join("out", "integration.xml")
 
-	RunSpecs(t, "Test Suite", reporterConfig)
+	RunSpecs(t, "Test Suite", suiteConfig, reporterConfig)
 
 }
 
@@ -64,13 +66,20 @@ var _ = BeforeSuite(func() {
 		Expect(bundlePath).To(BeAnExistingFile())
 	}
 
-	// pull-secret location
+	ginkgoOpts = os.Getenv("GINKGO_OPTS")
+	if err != nil {
+
+		logrus.Infof("Error: Could not read GINKGO_OPTS.")
+		logrus.Infof("%v", err)
+		Expect(err).NotTo(HaveOccurred())
+	}
+
 	pullSecretPath = os.Getenv("PULL_SECRET_PATH") // this env var should contain location of pull-secret file
 	if err != nil {
+
 		logrus.Infof("Error: You need to set PULL_SECRET_PATH to find CRC useful.")
 		logrus.Infof("%v", err)
 		Expect(err).NotTo(HaveOccurred())
 	}
-	Expect(pullSecretPath).To(BeAnExistingFile()) // not checking if it's a valid pull secret file
 
 })
