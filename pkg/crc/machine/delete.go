@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/podman"
 	"github.com/pkg/errors"
 )
 
@@ -23,6 +24,14 @@ func (client *client) Delete() error {
 		if err := unexposePorts(); err != nil {
 			return err
 		}
+	}
+
+	// Remove the podman system connection for crc
+	if err := podman.RemoveRootlessSystemConnection(); err != nil {
+		return err
+	}
+	if err := podman.RemoveRootfulSystemConnection(); err != nil {
+		return err
 	}
 
 	if err := cleanKubeconfig(getGlobalKubeConfigPath(), getGlobalKubeConfigPath()); err != nil {
