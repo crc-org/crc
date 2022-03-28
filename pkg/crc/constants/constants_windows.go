@@ -6,4 +6,5 @@ const (
 	TapSocketPath              = ""
 	DaemonHTTPNamedPipe        = `\\.\pipe\crc-http`
 	DaemonTaskName             = "crcDaemon"
+	AdminHelperServiceName     = "CodeReadyContainersAdminHelper"
 )

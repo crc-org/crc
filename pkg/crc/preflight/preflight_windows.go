@@ -135,6 +135,18 @@ var daemonTaskChecks = []Check{
 	},
 }
 
+var adminHelperServiceCheks = []Check{
+	{
+		configKeySuffix:  "check-admin-helper-service-running",
+		checkDescription: "Checking admin helper service is running",
+		check:            checkIfAdminHelperServiceRunning,
+		fixDescription:   "Make sure you installed the crc using installer",
+		flags:            NoFix,
+
+		labels: labels{Os: Windows},
+	},
+}
+
 var errReboot = errors.New("Please reboot your system and run 'crc setup' to complete the setup process")
 
 func username() string {
@@ -181,6 +193,7 @@ func getChecks(bundlePath string, preset crcpreset.Preset) []Check {
 	checks = append(checks, bundleCheck(bundlePath, preset))
 	checks = append(checks, genericCleanupChecks...)
 	checks = append(checks, daemonTaskChecks...)
+	checks = append(checks, adminHelperServiceCheks...)
 	return checks
 }
 
