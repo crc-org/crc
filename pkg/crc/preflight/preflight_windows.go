@@ -112,6 +112,29 @@ var vsockChecks = []Check{
 	},
 }
 
+var daemonTaskChecks = []Check{
+	{
+		configKeySuffix:    "check-daemon-task-install",
+		checkDescription:   "Checking if daemon task is installed",
+		check:              checkIfDaemonTaskInstalled,
+		fixDescription:     "Installing the daemon task",
+		fix:                fixDaemonTaskInstalled,
+		cleanupDescription: "Removing daemon task",
+		cleanup:            removeDaemonTask,
+
+		labels: labels{Os: Windows},
+	},
+	{
+		configKeySuffix:  "check-daemon-task-running",
+		checkDescription: "Checking if daemon task is running",
+		check:            checkIfDaemonTaskRunning,
+		fixDescription:   "Running the daemon task",
+		fix:              fixDaemonTaskRunning,
+
+		labels: labels{Os: Windows},
+	},
+}
+
 var errReboot = errors.New("Please reboot your system and run 'crc setup' to complete the setup process")
 
 func username() string {
@@ -157,6 +180,7 @@ func getChecks(bundlePath string, preset crcpreset.Preset) []Check {
 	checks = append(checks, vsockChecks...)
 	checks = append(checks, bundleCheck(bundlePath, preset))
 	checks = append(checks, genericCleanupChecks...)
+	checks = append(checks, daemonTaskChecks...)
 	return checks
 }
 

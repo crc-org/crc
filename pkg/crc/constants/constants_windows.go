@@ -5,4 +5,5 @@ const (
 	PodmanRemoteExecutableName = "podman.exe"
 	TapSocketPath              = ""
 	DaemonHTTPNamedPipe        = `\\.\pipe\crc-http`
+	DaemonTaskName             = "crcDaemon"
 )
