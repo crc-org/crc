@@ -9,6 +9,8 @@ Use the `kubeadmin` user only for administrative tasks such as creating new user
 
 .Prerequisites
 
+* {prod} is configured to use the {openshift} preset.
+For more information, see link:{crc-gsg-url}#changing-the-selected-preset_gsg[Changing the selected preset].
 * A running {prod} instance.
 For more information, see link:{crc-gsg-url}#starting-the-instance_gsg[Starting the instance].
 
