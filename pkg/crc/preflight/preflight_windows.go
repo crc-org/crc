@@ -83,14 +83,14 @@ var hypervPreflightChecks = []Check{
 		check:            checkIfHyperVVirtualSwitchExists,
 		flags:            StartUpOnly,
 
-		labels: labels{Os: Windows},
+		labels: labels{Os: Windows, NetworkMode: System},
 	},
 	{
 		cleanupDescription: "Removing dns server from interface",
 		cleanup:            removeDNSServerAddress,
 		flags:              CleanUpOnly,
 
-		labels: labels{Os: Windows},
+		labels: labels{Os: Windows, NetworkMode: System},
 	},
 	{
 		cleanupDescription: "Removing crc's virtual machine",
