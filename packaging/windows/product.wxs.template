@@ -83,6 +83,8 @@
         <CustomAction Id="RemoveCrcGroup" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
         <SetProperty Action="CARemoveCrcUsersGroupRollback" Id="RemoveCrcGroupRollback" Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /del' Before="RemoveCrcGroup" Sequence="execute"/>
         <CustomAction Id="RemoveCrcGroupRollback" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="rollback" Impersonate="no" Return="ignore" />
+        <SetProperty Action="CARemoveCrcDaemonTask" Id="RemoveCrcDaemonTask" Value='"[System64Folder]cmd.exe" /c schtasks /delete /TN crcDaemon /F' Before='RemoveFiles' Sequence="execute"/>
+        <CustomAction Id="RemoveCrcDaemonTask" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
 
         <SetProperty Action="CAInstallHyperv" Id="InstallHyperv" Value='"[System64Folder]dism.exe" /online /enable-feature /featureName:microsoft-hyper-v-all /NoRestart /quiet' Before="InstallHyperv" Sequence="execute"/>
         <CustomAction Id="InstallHyperv" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
@@ -98,6 +100,7 @@
             <Custom Action="RemoveCrcGroup" After="RemoveFolders"> Installed AND NOT PATCH AND REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE</Custom>
             <Custom Action="InstallHyperv" Before="CreateCrcGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <Custom Action="RemoveCrcGroupRollback" After="CreateCrcGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
+            <Custom Action="RemoveCrcDaemonTask" Before='RemoveFiles'>Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
             <ScheduleReboot After="InstallFinalize"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</ScheduleReboot>
         </InstallExecuteSequence>
         <Feature Id="DefaultFeature" Level="1">
@@ -117,6 +120,7 @@
             <ProgressText Action="RemoveCrcGroup">Removing crc-users group</ProgressText>
             <ProgressText Action="InstallHyperv">Installing Hyper-V</ProgressText>
             <ProgressText Action="AddUserToHypervAdminGroup">Adding user: [LogonUser] to Hyper-V Administrators group</ProgressText>
+            <ProgressText Action="RemoveCrcDaemonTask">Removing crcDaemon task</ProgressText>
         </UI>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
         <!-- this should help to propagate env var changes -->
