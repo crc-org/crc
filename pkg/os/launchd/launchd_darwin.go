@@ -41,6 +41,8 @@ const (
 		<string>{{ $value }}</string>
 		{{ end }}
 	</dict>
+	<key>RunAtLoad</key>
+	<true/>
 </dict>
 </plist>
 `
@@ -112,12 +114,12 @@ func CheckPlist(config AgentConfig) error {
 
 // LoadPlist loads a launchd agents' plist file
 func LoadPlist(label string) error {
-	return runLaunchCtl("load", getPlistPath(label))
+	return runLaunchCtl("load", "-w", getPlistPath(label))
 }
 
 // UnloadPlist Unloads a launchd agent's service
 func UnloadPlist(label string) error {
-	return runLaunchCtl("unload", getPlistPath(label))
+	return runLaunchCtl("unload", "-w", getPlistPath(label))
 }
 
 // RemovePlist removes a launchd agent plist config file
