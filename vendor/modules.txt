@@ -122,7 +122,6 @@ github.com/fsnotify/fsnotify
 # github.com/go-logr/logr v0.4.0
 github.com/go-logr/logr
 # github.com/go-ole/go-ole v1.2.6
-## explicit
 github.com/go-ole/go-ole
 github.com/go-ole/go-ole/oleutil
 # github.com/godbus/dbus/v5 v5.0.6
@@ -225,6 +224,8 @@ github.com/kofalt/go-memoize
 ## explicit
 # github.com/linuxkit/virtsock v0.0.0-20201010232012-f8cee7dfc7a3
 github.com/linuxkit/virtsock/pkg/hvsock
+# github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0
+github.com/lufia/plan9stats
 # github.com/magiconair/properties v1.8.5
 github.com/magiconair/properties
 # github.com/mattn/go-colorable v0.1.11
@@ -332,6 +333,8 @@ github.com/pkg/browser
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
+# github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c
+github.com/power-devops/perfstat
 # github.com/rivo/uniseg v0.2.0
 github.com/rivo/uniseg
 # github.com/rogpeppe/go-internal v1.8.0
@@ -341,6 +344,13 @@ github.com/rivo/uniseg
 github.com/segmentio/analytics-go
 # github.com/segmentio/backo-go v0.0.0-20200129164019-23eae7c10bd3
 github.com/segmentio/backo-go
+# github.com/shirou/gopsutil/v3 v3.22.3
+## explicit
+github.com/shirou/gopsutil/v3/cpu
+github.com/shirou/gopsutil/v3/internal/common
+github.com/shirou/gopsutil/v3/mem
+github.com/shirou/gopsutil/v3/net
+github.com/shirou/gopsutil/v3/process
 # github.com/sirupsen/logrus v1.8.1
 ## explicit
 github.com/sirupsen/logrus
@@ -368,12 +378,16 @@ github.com/spf13/viper/internal/encoding/toml
 github.com/spf13/viper/internal/encoding/yaml
 # github.com/stretchr/objx v0.3.0
 ## explicit
-# github.com/stretchr/testify v1.7.0
+# github.com/stretchr/testify v1.7.1
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/subosito/gotenv v1.2.0
 github.com/subosito/gotenv
+# github.com/tklauser/go-sysconf v0.3.10
+github.com/tklauser/go-sysconf
+# github.com/tklauser/numcpus v0.4.0
+github.com/tklauser/numcpus
 # github.com/u-root/uio v0.0.0-20210528114334-82958018845c
 github.com/u-root/uio/rand
 github.com/u-root/uio/ubinary
@@ -383,6 +397,8 @@ github.com/u-root/uio/uio
 github.com/xi2/xz
 # github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
 github.com/xtgo/uuid
+# github.com/yusufpapurcu/wmi v1.2.2
+github.com/yusufpapurcu/wmi
 # github.com/zalando/go-keyring v0.1.1
 ## explicit
 github.com/zalando/go-keyring
