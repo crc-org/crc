@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/daemonclient"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
@@ -112,8 +111,8 @@ func removeDaemonTask() error {
 }
 
 func checkIfDaemonTaskRunning() error {
-	if isDaemonRunningWithReleasedVersion() {
-		return nil
+	if err := olderDaemonVersionRunning(); err != nil {
+		return err
 	}
 	stdout, stderr, err := powershell.Execute(fmt.Sprintf(`(Get-ScheduledTask -TaskName "%s").State`, constants.DaemonTaskName))
 	if err != nil {
@@ -127,6 +126,11 @@ func checkIfDaemonTaskRunning() error {
 }
 
 func fixDaemonTaskRunning() error {
+	if err := olderDaemonVersionRunning(); err != nil {
+		if err := killDaemonProcess(); err != nil {
+			return err
+		}
+	}
 	_, stderr, err := powershell.Execute("Start-ScheduledTask", "-TaskName", constants.DaemonTaskName)
 	if err != nil {
 		logging.Debugf("unable to run the %s task: %v : %s", constants.DaemonTaskName, err, stderr)
@@ -144,16 +148,4 @@ func checkIfOlderTask() error {
 		return fmt.Errorf("expected %s task to be on version '%s' but got '%s'", constants.DaemonTaskName, version.GetCRCVersion(), stdout)
 	}
 	return nil
-}
-
-func isDaemonRunningWithReleasedVersion() bool {
-	ver, err := daemonclient.New().APIClient.Version()
-	if err != nil {
-		return false
-	}
-	if ver.CrcVersion != version.GetCRCVersion() {
-		logging.Debugf("Daemon is running with %s version but binary version is %s", ver.CrcVersion, version.GetCRCVersion())
-		return false
-	}
-	return true
 }

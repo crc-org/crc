@@ -23,7 +23,6 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
-	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/godbus/dbus/v5 v5.0.6 // indirect
 	github.com/gofrs/uuid v4.1.0+incompatible // indirect
 	github.com/google/uuid v1.3.0 // indirect
@@ -49,13 +48,14 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/segmentio/analytics-go v3.2.0+incompatible
+	github.com/shirou/gopsutil/v3 v3.22.3
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cast v1.4.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.9.0
 	github.com/stretchr/objx v0.3.0 // indirect
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 	github.com/zalando/go-keyring v0.1.1
 	golang.org/x/crypto v0.0.0-20211115234514-b4de73f9ece8
