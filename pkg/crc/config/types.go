@@ -15,7 +15,7 @@ type Schema interface {
 
 type Setting struct {
 	Name         string
-	defaultValue interface{}
+	DefaultValue interface{}
 	validationFn ValidationFnType
 	callbackFn   SetFn
 	Help         string

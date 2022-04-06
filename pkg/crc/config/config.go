@@ -52,7 +52,7 @@ func (c *Config) AllSettings() []Setting {
 func (c *Config) AddSetting(name string, defValue interface{}, validationFn ValidationFnType, callbackFn SetFn, help string) {
 	c.settingsByName[name] = Setting{
 		Name:         name,
-		defaultValue: defValue,
+		DefaultValue: defValue,
 		validationFn: validationFn,
 		callbackFn:   callbackFn,
 		Help:         help,
@@ -73,7 +73,7 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 
 	var castValue interface{}
 	var err error
-	switch setting.defaultValue.(type) {
+	switch setting.DefaultValue.(type) {
 	case int:
 		castValue, err = cast.ToIntE(value)
 		if err != nil {
@@ -122,10 +122,10 @@ func (c *Config) Get(key string) SettingValue {
 	}
 	value := c.storage.Get(key)
 	if value == nil {
-		value = setting.defaultValue
+		value = setting.DefaultValue
 	}
 	var err error
-	switch setting.defaultValue.(type) {
+	switch setting.DefaultValue.(type) {
 	case int:
 		value, err = cast.ToIntE(value)
 		if err != nil {
@@ -156,6 +156,6 @@ func (c *Config) Get(key string) SettingValue {
 	}
 	return SettingValue{
 		Value:     value,
-		IsDefault: reflect.DeepEqual(setting.defaultValue, value),
+		IsDefault: reflect.DeepEqual(setting.DefaultValue, value),
 	}
 }
