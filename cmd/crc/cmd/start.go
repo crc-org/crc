@@ -25,7 +25,6 @@ import (
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/shell"
-	pkgerrors "github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -315,19 +314,13 @@ func commandLinePrefix(shell string) string {
 	return "$"
 }
 
-const genericDaemonNotRunningMessage = "Is 'crc daemon' running? Cannot reach daemon API"
-
 func checkDaemonStarted() error {
 	if crcConfig.GetNetworkMode(config) == network.SystemNetworkingMode {
 		return nil
 	}
-	daemonClient := daemonclient.New()
-	version, err := daemonClient.APIClient.Version()
+	v, err := daemonclient.GetVersionFromDaemonAPI()
 	if err != nil {
-		return pkgerrors.Wrap(err, daemonNotRunningMessage())
+		return err
 	}
-	if version.CrcVersion != crcversion.GetCRCVersion() {
-		return fmt.Errorf("The executable version (%s) doesn't match the daemon version (%s)", crcversion.GetCRCVersion(), version.CrcVersion)
-	}
-	return nil
+	return daemonclient.CheckIfOlderVersion(v)
 }
