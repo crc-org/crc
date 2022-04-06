@@ -8,6 +8,7 @@ COMMIT_SHA=$(shell git rev-parse --short HEAD)
 MACOS_INSTALL_PATH = /Applications/CodeReady Containers.app/Contents/Resources
 CONTAINER_RUNTIME ?= podman
 GOLANGCI_LINT_VERSION = v1.44.2
+TOOLS_BINDIR = $(realpath tools/bin)
 
 ifdef OKD_VERSION
     OPENSHIFT_VERSION = $(OKD_VERSION)
@@ -233,19 +234,19 @@ fmt:
 
 .PHONY: golangci-lint
 golangci-lint:
-	@if $(GOPATH)/bin/golangci-lint version 2>&1 | grep -vq $(GOLANGCI_LINT_VERSION); then\
-		go install -mod=mod github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); \
+	if $(TOOLS_BINDIR)/golangci-lint version 2>&1 | grep -vq $(GOLANGCI_LINT_VERSION); then\
+		GOBIN=$(TOOLS_BINDIR) go install -mod=mod github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); \
 	fi
 
 # Run golangci-lint against code
 .PHONY: lint cross-lint
 lint: golangci-lint
-	$(GOPATH)/bin/golangci-lint run
+	$(TOOLS_BINDIR)/golangci-lint run
 
 cross-lint: golangci-lint
-	GOOS=darwin $(GOPATH)/bin/golangci-lint run
-	GOOS=linux $(GOPATH)/bin/golangci-lint run
-	GOOS=windows $(GOPATH)/bin/golangci-lint run
+	GOOS=darwin $(TOOLS_BINDIR)/golangci-lint run
+	GOOS=linux $(TOOLS_BINDIR)/golangci-lint run
+	GOOS=windows $(TOOLS_BINDIR)/golangci-lint run
 
 .PHONY: gen_release_info
 gen_release_info:
