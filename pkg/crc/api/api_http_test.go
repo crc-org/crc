@@ -287,7 +287,7 @@ var testCases = []testCase{
 	// config
 	{
 		request:  get("config?cpus"),
-		response: jSon(`{"Configs":{"cpus":4}}`),
+		response: jSon(`{"Configs":{"cpus":{"value":4,"isDefault":true,"defaultValue":4}}}`),
 	},
 	{
 		request:  post("config?cpus").withBody("xx"),
@@ -299,7 +299,7 @@ var testCases = []testCase{
 	},
 	{
 		request:  get("config?cpus").withBody("xx"),
-		response: jSon(`{"Configs":{"cpus":4}}`),
+		response: jSon(`{"Configs":{"cpus":{"value":4,"isDefault":true,"defaultValue":4}}}`),
 	},
 
 	// logs
@@ -365,8 +365,9 @@ var testCases = []testCase{
 
 	// config
 	{
-		request:  get("config?cpus"),
-		response: jSon(`{"Configs":{"cpus":4}}`),
+		request: get("config?cpus"),
+		// order of the fields are important
+		response: jSon(`{"Configs":{"cpus":{"value":4,"isDefault":true,"defaultValue":4}}}`),
 	},
 }
 

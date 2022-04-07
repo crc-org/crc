@@ -2,6 +2,7 @@ package api
 
 import (
 	gocontext "context"
+	"fmt"
 	"net/http"
 
 	"github.com/code-ready/crc/pkg/crc/api/client"
@@ -213,22 +214,37 @@ func (h *Handler) GetConfig(c *context) error {
 
 	if len(req.Properties) == 0 {
 		allConfigs := h.Config.AllConfigs()
-		configs := make(map[string]interface{})
-		for k, v := range allConfigs {
-			configs[k] = v.Value
+		allSettings := h.Config.AllSettings()
+
+		configs := make(map[string]client.SettingValue)
+		for _, setting := range allSettings {
+			settingValue, settingValueFound := allConfigs[setting.Name]
+			if !settingValueFound {
+				return fmt.Errorf("unable to find config for setting: %s", setting.Name)
+			}
+			configs[setting.Name] = client.SettingValue{
+				Value:        settingValue.Value,
+				IsDefault:    settingValue.IsDefault,
+				DefaultValue: setting.DefaultValue,
+			}
 		}
 		return c.JSON(http.StatusOK, client.GetConfigResult{
 			Configs: configs,
 		})
 	}
 
-	configs := make(map[string]interface{})
+	configs := make(map[string]client.SettingValue)
 	for _, key := range req.Properties {
 		v := h.Config.Get(key)
-		if v.Invalid {
+		s, err := h.Config.GetSetting(key)
+		if v.Invalid || err != nil {
 			continue
 		}
-		configs[key] = v.Value
+		configs[key] = client.SettingValue{
+			Value:        v.Value,
+			IsDefault:    v.IsDefault,
+			DefaultValue: s.DefaultValue,
+		}
 	}
 
 	if len(configs) == 0 {

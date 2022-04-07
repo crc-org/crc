@@ -40,7 +40,13 @@ type SetOrUnsetConfigResult struct {
 
 // getConfigResult struct is used to return the result of getconfig command
 type GetConfigResult struct {
-	Configs map[string]interface{}
+	Configs map[string]SettingValue
+}
+
+type SettingValue struct {
+	Value        interface{} `json:"value"`
+	IsDefault    bool        `json:"isDefault"`
+	DefaultValue interface{} `json:"defaultValue"`
 }
 
 type StartConfig struct {

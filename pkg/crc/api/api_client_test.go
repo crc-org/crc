@@ -18,9 +18,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type testConfig interface {
+	crcConfig.Storage
+	AllSettings() []crcConfig.Setting
+}
+
 type testClient struct {
 	*apiClient.Client
-	config     crcConfig.Storage
+	config     testConfig
 	httpServer *httptest.Server
 }
 
@@ -125,8 +130,12 @@ func TestConfigGet(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.GetConfigResult{
-			Configs: map[string]interface{}{
-				"cpus": float64(4),
+			Configs: map[string]apiClient.SettingValue{
+				"cpus": {
+					Value:        float64(4),
+					IsDefault:    true,
+					DefaultValue: float64(4),
+				},
 			},
 		},
 		configGetResult,
@@ -156,8 +165,12 @@ func TestConfigSet(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.GetConfigResult{
-			Configs: map[string]interface{}{
-				"cpus": float64(5),
+			Configs: map[string]apiClient.SettingValue{
+				"cpus": {
+					IsDefault:    false,
+					DefaultValue: float64(4),
+					Value:        float64(5),
+				},
 			},
 		},
 		configGetAfterSetResult,
@@ -182,16 +195,25 @@ func TestConfigGetAll(t *testing.T) {
 	client := newTestClient()
 	defer client.Close()
 	allConfigGetResult, err := client.GetConfig(nil)
+	allConfigs := client.config.AllConfigs()
 	assert.NoError(t, err)
-	configs := make(map[string]interface{})
-	for k, v := range client.config.AllConfigs() {
+	configs := make(map[string]apiClient.SettingValue)
+	for _, setting := range client.config.AllSettings() {
 		// This is required because of https://pkg.go.dev/encoding/json#Unmarshal
 		// Unmarshal stores float64 for JSON numbers in case of interface.
-		switch v := v.Value.(type) {
+		switch v := setting.DefaultValue.(type) {
 		case int:
-			configs[k] = float64(v)
+			configs[setting.Name] = apiClient.SettingValue{
+				Value:        float64(allConfigs[setting.Name].Value.(int)),
+				DefaultValue: float64(v),
+				IsDefault:    allConfigs[setting.Name].IsDefault,
+			}
 		default:
-			configs[k] = v
+			configs[setting.Name] = apiClient.SettingValue{
+				Value:        allConfigs[setting.Name].Value,
+				DefaultValue: v,
+				IsDefault:    allConfigs[setting.Name].IsDefault,
+			}
 		}
 	}
 	assert.Equal(
@@ -212,9 +234,17 @@ func TestConfigGetMultiple(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.GetConfigResult{
-			Configs: map[string]interface{}{
-				"cpus":   float64(4),
-				"memory": float64(9216),
+			Configs: map[string]apiClient.SettingValue{
+				"cpus": {
+					Value:        float64(4),
+					IsDefault:    true,
+					DefaultValue: float64(4),
+				},
+				"memory": {
+					Value:        float64(9216),
+					IsDefault:    true,
+					DefaultValue: float64(9216),
+				},
 			},
 		},
 		configGetMultiplePropertyResult,
@@ -230,9 +260,17 @@ func TestConfigGetEscaped(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.GetConfigResult{
-			Configs: map[string]interface{}{
-				"a&a":   "foo",
-				"b&&&b": "bar",
+			Configs: map[string]apiClient.SettingValue{
+				"a&a": {
+					Value:        "foo",
+					IsDefault:    true,
+					DefaultValue: "foo",
+				},
+				"b&&&b": {
+					Value:        "bar",
+					IsDefault:    true,
+					DefaultValue: "bar",
+				},
 			},
 		},
 		configGetSpecialPropertyResult,
