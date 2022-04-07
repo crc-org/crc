@@ -124,10 +124,6 @@ func httpListener() (net.Listener, error) {
 	return ln, nil
 }
 
-func daemonNotRunningMessage() string {
-	return genericDaemonNotRunningMessage
-}
-
 func startupDone() {
 	_, _ = daemon.SdNotify(false, daemon.SdNotifyReady)
 }

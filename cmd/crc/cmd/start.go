@@ -324,7 +324,7 @@ func checkDaemonStarted() error {
 	daemonClient := daemonclient.New()
 	version, err := daemonClient.APIClient.Version()
 	if err != nil {
-		return pkgerrors.Wrap(err, daemonNotRunningMessage())
+		return pkgerrors.Wrap(err, genericDaemonNotRunningMessage)
 	}
 	if version.CrcVersion != crcversion.GetCRCVersion() {
 		return fmt.Errorf("The executable version (%s) doesn't match the daemon version (%s)", crcversion.GetCRCVersion(), version.CrcVersion)
