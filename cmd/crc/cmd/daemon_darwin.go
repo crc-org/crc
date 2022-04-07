@@ -32,9 +32,5 @@ func checkIfDaemonIsRunning() (bool, error) {
 	return checkDaemonVersion()
 }
 
-func daemonNotRunningMessage() string {
-	return genericDaemonNotRunningMessage
-}
-
 func startupDone() {
 }
