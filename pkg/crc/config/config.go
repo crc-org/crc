@@ -59,6 +59,14 @@ func (c *Config) AddSetting(name string, defValue interface{}, validationFn Vali
 	}
 }
 
+func (c *Config) GetSetting(name string) (Setting, error) {
+	if s, ok := c.settingsByName[name]; ok {
+		return s, nil
+	}
+
+	return Setting{}, fmt.Errorf("Setting with name: '%s' does not exist", name)
+}
+
 // Set sets the value for a given config key
 func (c *Config) Set(key string, value interface{}) (string, error) {
 	setting, ok := c.settingsByName[key]
