@@ -6,7 +6,6 @@ import (
 	"github.com/Microsoft/go-winio"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	crcversion "github.com/code-ready/crc/pkg/crc/version"
 	"github.com/containers/gvisor-tap-vsock/pkg/transport"
 )
 
@@ -37,9 +36,6 @@ func checkIfDaemonIsRunning() (bool, error) {
 }
 
 func daemonNotRunningMessage() string {
-	if crcversion.IsInstaller() {
-		return "Is CodeReady Containers tray application running? Cannot reach daemon API"
-	}
 	return genericDaemonNotRunningMessage
 }
 
