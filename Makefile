@@ -114,7 +114,7 @@ containerized: clean
 
 .PHONY: test
 test:
-	go test -race --tags build -v -ldflags="$(VERSION_VARIABLES)" ./pkg/... ./cmd/...
+	go test -mod=vendor -race --tags build -v -ldflags="$(VERSION_VARIABLES)" ./pkg/... ./cmd/...
 
 .PHONY: spec test-rpmbuild
 
