@@ -118,11 +118,12 @@ func CheckCRCPublicDNSReachable(serviceConfig services.ServicePostStartConfig) (
 	}
 	curlArgs := []string{"--head", publicDNSQueryURI}
 	if proxyConfig.IsEnabled() {
-		if proxyConfig.HTTPProxy != "" {
-			curlArgs = append(curlArgs, "--proxy", proxyConfig.HTTPProxy)
-		}
+		proxyHost := proxyConfig.HTTPProxy
 		if proxyConfig.HTTPSProxy != "" {
-			curlArgs = append(curlArgs, "--proxy", proxyConfig.HTTPSProxy)
+			proxyHost = proxyConfig.HTTPSProxy
+		}
+		if proxyHost != "" {
+			curlArgs = append(curlArgs, "--proxy", proxyHost)
 		}
 		curlArgs = append(curlArgs, "--noproxy", proxyConfig.GetNoProxyString())
 		if proxyConfig.ProxyCAFile != "" {
