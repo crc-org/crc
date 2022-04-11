@@ -127,7 +127,15 @@ func CheckCRCPublicDNSReachable(serviceConfig services.ServicePostStartConfig) (
 		}
 		curlArgs = append(curlArgs, "--noproxy", proxyConfig.GetNoProxyString())
 		if proxyConfig.ProxyCAFile != "" {
-			curlArgs = append(curlArgs, "--proxy-cacert", proxyConfig.HTTPProxy)
+			// --proxy-cacert/--cacert replaces the system CAs with the specified one.
+			// If not using MITM proxy, --cacert must *not* be used, and if not using
+			// https:// proxy, --proxy-cacert must *not* be used
+			// ProxyCAFile is ambiguous, we cannot know if it's set because of MITM proxy,
+			// because of https:// proxy, or because of both
+			// We do not really care about transport security for this test, all that
+			// matters is whether or not we can resolve the hostname, so we can
+			// workaround this ambiguity by using an insecure connection
+			curlArgs = append(curlArgs, "--insecure", "--proxy-insecure")
 		}
 	}
 	stdout, _, err := serviceConfig.SSHRunner.Run("curl", curlArgs...)
