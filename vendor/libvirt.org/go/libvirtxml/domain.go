@@ -205,16 +205,17 @@ type DomainDiskSourceDir struct {
 }
 
 type DomainDiskSourceNetwork struct {
-	Protocol  string                            `xml:"protocol,attr,omitempty"`
-	Name      string                            `xml:"name,attr,omitempty"`
-	Query     string                            `xml:"query,attr,omitempty"`
-	TLS       string                            `xml:"tls,attr,omitempty"`
-	Hosts     []DomainDiskSourceHost            `xml:"host"`
-	Identity  *DomainDiskSourceNetworkIdentity  `xml:"identity"`
-	Initiator *DomainDiskSourceNetworkInitiator `xml:"initiator"`
-	Snapshot  *DomainDiskSourceNetworkSnapshot  `xml:"snapshot"`
-	Config    *DomainDiskSourceNetworkConfig    `xml:"config"`
-	Auth      *DomainDiskAuth                   `xml:"auth"`
+	Protocol    string                            `xml:"protocol,attr,omitempty"`
+	Name        string                            `xml:"name,attr,omitempty"`
+	Query       string                            `xml:"query,attr,omitempty"`
+	TLS         string                            `xml:"tls,attr,omitempty"`
+	TLSHostname string                            `xml:"tlsHostname,attr,omitempty"`
+	Hosts       []DomainDiskSourceHost            `xml:"host"`
+	Identity    *DomainDiskSourceNetworkIdentity  `xml:"identity"`
+	Initiator   *DomainDiskSourceNetworkInitiator `xml:"initiator"`
+	Snapshot    *DomainDiskSourceNetworkSnapshot  `xml:"snapshot"`
+	Config      *DomainDiskSourceNetworkConfig    `xml:"config"`
+	Auth        *DomainDiskAuth                   `xml:"auth"`
 }
 
 type DomainDiskSourceNetworkIdentity struct {
@@ -2012,7 +2013,8 @@ type DomainMemoryAccess struct {
 }
 
 type DomainMemoryAllocation struct {
-	Mode string `xml:"mode,attr,omitempty"`
+	Mode    string `xml:"mode,attr,omitempty"`
+	Threads uint   `xml:"threads,attr,omitempty"`
 }
 
 type DomainMemoryDiscard struct {
@@ -2344,6 +2346,7 @@ type DomainFeatureHyperVSTimer struct {
 
 type DomainFeatureHyperV struct {
 	DomainFeature
+	Mode            string                        `xml:"mode,attr,omitempty"`
 	Relaxed         *DomainFeatureState           `xml:"relaxed"`
 	VAPIC           *DomainFeatureState           `xml:"vapic"`
 	Spinlocks       *DomainFeatureHyperVSpinlocks `xml:"spinlocks"`
@@ -2360,11 +2363,26 @@ type DomainFeatureHyperV struct {
 	EVMCS           *DomainFeatureState           `xml:"evmcs"`
 }
 
+type DomainFeatureKVMDirtyRing struct {
+	DomainFeatureState
+	Size uint `xml:"size,attr,omitempty"`
+}
+
 type DomainFeatureKVM struct {
-	Hidden        *DomainFeatureState `xml:"hidden"`
-	HintDedicated *DomainFeatureState `xml:"hint-dedicated"`
-	PollControl   *DomainFeatureState `xml:"poll-control"`
-	PVIPI         *DomainFeatureState `xml:"pv-ipi"`
+	Hidden        *DomainFeatureState        `xml:"hidden"`
+	HintDedicated *DomainFeatureState        `xml:"hint-dedicated"`
+	PollControl   *DomainFeatureState        `xml:"poll-control"`
+	PVIPI         *DomainFeatureState        `xml:"pv-ipi"`
+	DirtyRing     *DomainFeatureKVMDirtyRing `xml:"dirty-ring"`
+}
+
+type DomainFeatureTCGTBCache struct {
+	Unit string `xml:"unit,attr,omitempty"`
+	Size uint   `xml:",chardata"`
+}
+
+type DomainFeatureTCG struct {
+	TBCache *DomainFeatureTCGTBCache `xml:"tb-cache"`
 }
 
 type DomainFeatureXenPassthrough struct {
@@ -2419,6 +2437,7 @@ type DomainLaunchSecurity struct {
 }
 
 type DomainLaunchSecuritySEV struct {
+	KernelHashes    string `xml:"kernelHashes,attr,omitempty"`
 	CBitPos         *uint  `xml:"cbitpos"`
 	ReducedPhysBits *uint  `xml:"reducedPhysBits"`
 	Policy          *uint  `xml:"policy"`
@@ -2512,6 +2531,7 @@ type DomainFeatureList struct {
 	CFPC         *DomainFeatureCFPC         `xml:"cfpc"`
 	SBBC         *DomainFeatureSBBC         `xml:"sbbc"`
 	IBS          *DomainFeatureIBS          `xml:"ibs"`
+	TCG          *DomainFeatureTCG          `xml:"tcg"`
 }
 
 type DomainCPUTuneShares struct {
@@ -2640,6 +2660,26 @@ type DomainQEMUCapabilities struct {
 type DomainQEMUDeprecation struct {
 	XMLName  xml.Name `xml:"http://libvirt.org/schemas/domain/qemu/1.0 deprecation"`
 	Behavior string   `xml:"behavior,attr,omitempty"`
+}
+
+type DomainQEMUOverride struct {
+	XMLName xml.Name                   `xml:"http://libvirt.org/schemas/domain/qemu/1.0 override"`
+	Devices []DomainQEMUOverrideDevice `xml:"device"`
+}
+
+type DomainQEMUOverrideDevice struct {
+	Alias    string                     `xml:"alias,attr"`
+	Frontend DomainQEMUOverrideFrontend `xml:"frontend"`
+}
+
+type DomainQEMUOverrideFrontend struct {
+	Properties []DomainQEMUOverrideProperty `xml:"property"`
+}
+
+type DomainQEMUOverrideProperty struct {
+	Name  string `xml:"name,attr"`
+	Type  string `xml:"type,attr,omitempty"`
+	Value string `xml:"value,attr,omitempty"`
 }
 
 type DomainLXCNamespace struct {
@@ -2843,6 +2883,7 @@ type Domain struct {
 	/* Hypervisor namespaces must all be last */
 	QEMUCommandline      *DomainQEMUCommandline
 	QEMUCapabilities     *DomainQEMUCapabilities
+	QEMUOverride         *DomainQEMUOverride
 	QEMUDeprecation      *DomainQEMUDeprecation
 	LXCNamespace         *DomainLXCNamespace
 	BHyveCommandline     *DomainBHyveCommandline
@@ -6049,6 +6090,13 @@ func (d *DomainCPU) Marshal() (string, error) {
 }
 
 func (a *DomainLaunchSecuritySEV) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+
+	if a.KernelHashes != "" {
+		start.Attr = append(start.Attr, xml.Attr{
+			xml.Name{Local: "kernelHashes"}, a.KernelHashes,
+		})
+	}
+
 	e.EncodeToken(start)
 
 	if a.CBitPos != nil {
@@ -6098,6 +6146,12 @@ func (a *DomainLaunchSecuritySEV) MarshalXML(e *xml.Encoder, start xml.StartElem
 }
 
 func (a *DomainLaunchSecuritySEV) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	for _, attr := range start.Attr {
+		if attr.Name.Local == "kernelHashes" {
+			a.KernelHashes = attr.Value
+		}
+	}
+
 	for {
 		tok, err := d.Token()
 		if err == io.EOF {
