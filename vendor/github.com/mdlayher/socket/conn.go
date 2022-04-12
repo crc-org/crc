@@ -184,7 +184,7 @@ func socket(domain, typ, proto int, name string) (*Conn, error) {
 			}
 
 			// No error, prepare the Conn.
-			return newConn(fd, name)
+			return New(fd, name)
 		case !ready(err):
 			// System call interrupted or not ready, try again.
 			continue
@@ -211,7 +211,7 @@ func socket(domain, typ, proto int, name string) (*Conn, error) {
 			unix.CloseOnExec(fd)
 			syscall.ForkLock.RUnlock()
 
-			return newConn(fd, name)
+			return New(fd, name)
 		default:
 			// Unhandled error.
 			return nil, os.NewSyscallError("socket", err)
@@ -230,7 +230,7 @@ func FileConn(f *os.File, name string) (*Conn, error) {
 	switch err {
 	case nil:
 		// OK, ready to set up non-blocking I/O.
-		return newConn(fd, name)
+		return New(fd, name)
 	case unix.EINVAL:
 		// The kernel rejected our fcntl(2), fall back to separate dup(2) and
 		// setting close on exec.
@@ -248,18 +248,25 @@ func FileConn(f *os.File, name string) (*Conn, error) {
 		unix.CloseOnExec(fd)
 		syscall.ForkLock.RUnlock()
 
-		return newConn(fd, name)
+		return New(fd, name)
 	default:
 		// Any other errors.
 		return nil, os.NewSyscallError("fcntl", err)
 	}
 }
 
-// TODO(mdlayher): consider exporting newConn as New?
-
-// newConn wraps an existing file descriptor to create a Conn. name should be a
+// New wraps an existing file descriptor to create a Conn. name should be a
 // unique name for the socket type such as "netlink" or "vsock".
-func newConn(fd int, name string) (*Conn, error) {
+//
+// Most callers should use Socket or FileConn to construct a Conn. New is
+// intended for integrating with specific system calls which provide a file
+// descriptor that supports asynchronous I/O. The file descriptor is immediately
+// set to nonblocking mode and registered with Go's runtime network poller for
+// future I/O operations.
+//
+// Unlike FileConn, New does not duplicate the existing file descriptor in any
+// way. The returned Conn takes ownership of the underlying file descriptor.
+func New(fd int, name string) (*Conn, error) {
 	// All Conn I/O is nonblocking for integration with Go's runtime network
 	// poller. Depending on the OS this might already be set but it can't hurt
 	// to set it again.
@@ -318,7 +325,7 @@ func (c *Conn) Accept(flags int) (*Conn, unix.Sockaddr, error) {
 
 	// Successfully accepted a connection, wrap it in a Conn for use by the
 	// caller.
-	ac, err := newConn(nfd, c.name)
+	ac, err := New(nfd, c.name)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -328,18 +335,9 @@ func (c *Conn) Accept(flags int) (*Conn, unix.Sockaddr, error) {
 
 // Bind wraps bind(2).
 func (c *Conn) Bind(sa unix.Sockaddr) error {
-	const op = "bind"
-
-	var err error
-	doErr := c.control(op, func(fd int) error {
-		err = unix.Bind(fd, sa)
-		return err
+	return c.controlErr("bind", func(fd int) error {
+		return unix.Bind(fd, sa)
 	})
-	if doErr != nil {
-		return doErr
-	}
-
-	return os.NewSyscallError(op, err)
 }
 
 // Connect wraps connect(2). In order to verify that the underlying socket is
@@ -481,18 +479,9 @@ func (c *Conn) GetsockoptInt(level, opt int) (int, error) {
 
 // Listen wraps listen(2).
 func (c *Conn) Listen(n int) error {
-	const op = "listen"
-
-	var err error
-	doErr := c.control(op, func(fd int) error {
-		err = unix.Listen(fd, n)
-		return err
+	return c.controlErr("listen", func(fd int) error {
+		return unix.Listen(fd, n)
 	})
-	if doErr != nil {
-		return doErr
-	}
-
-	return os.NewSyscallError(op, err)
 }
 
 // Recvmsg wraps recvmsg(2).
@@ -539,66 +528,32 @@ func (c *Conn) Recvfrom(p []byte, flags int) (int, unix.Sockaddr, error) {
 
 // Sendmsg wraps sendmsg(2).
 func (c *Conn) Sendmsg(p, oob []byte, to unix.Sockaddr, flags int) error {
-	const op = "sendmsg"
-
-	var err error
-	doErr := c.write(op, func(fd int) error {
-		err = unix.Sendmsg(fd, p, oob, to, flags)
-		return err
+	return c.writeErr("sendmsg", func(fd int) error {
+		return unix.Sendmsg(fd, p, oob, to, flags)
 	})
-	if doErr != nil {
-		return doErr
-	}
-
-	return os.NewSyscallError(op, err)
 }
 
 // Sendto wraps sendto(2).
-func (c *Conn) Sendto(b []byte, to unix.Sockaddr, flags int) error {
-	const op = "sendto"
-
-	var err error
-	doErr := c.write(op, func(fd int) error {
-		err = unix.Sendto(fd, b, flags, to)
-		return err
+func (c *Conn) Sendto(p []byte, to unix.Sockaddr, flags int) error {
+	// TODO(mdlayher): we accidentally swapped argument order when creating this
+	// wrapper. Consider fixing.
+	return c.writeErr("sendto", func(fd int) error {
+		return unix.Sendto(fd, p, flags, to)
 	})
-	if doErr != nil {
-		return doErr
-	}
-
-	return os.NewSyscallError(op, err)
 }
 
 // SetsockoptInt wraps setsockopt(2) for integer values.
 func (c *Conn) SetsockoptInt(level, opt, value int) error {
-	const op = "setsockopt"
-
-	var err error
-	doErr := c.control(op, func(fd int) error {
-		err = unix.SetsockoptInt(fd, level, opt, value)
-		return err
+	return c.controlErr("setsockopt", func(fd int) error {
+		return unix.SetsockoptInt(fd, level, opt, value)
 	})
-	if doErr != nil {
-		return doErr
-	}
-
-	return os.NewSyscallError(op, err)
 }
 
 // Shutdown wraps shutdown(2).
 func (c *Conn) Shutdown(how int) error {
-	const op = "shutdown"
-
-	var err error
-	doErr := c.control(op, func(fd int) error {
-		err = unix.Shutdown(fd, how)
-		return err
+	return c.controlErr("shutdown", func(fd int) error {
+		return unix.Shutdown(fd, how)
 	})
-	if doErr != nil {
-		return doErr
-	}
-
-	return os.NewSyscallError(op, err)
 }
 
 // Conn low-level read/write/control functions. These functions mirror the
@@ -635,6 +590,22 @@ func (c *Conn) write(op string, f func(fd int) error) error {
 	})
 }
 
+// writeErr wraps write to execute a function and capture its error result.
+// This is a convenience wrapper for functions which don't return any extra
+// values to capture in a closure.
+func (c *Conn) writeErr(op string, f func(fd int) error) error {
+	var err error
+	doErr := c.write(op, func(fd int) error {
+		err = f(fd)
+		return err
+	})
+	if doErr != nil {
+		return doErr
+	}
+
+	return os.NewSyscallError(op, err)
+}
+
 // control executes f, a control function, against the associated file
 // descriptor. op is used to create an *os.SyscallError if the file descriptor
 // is closed.
@@ -652,6 +623,22 @@ func (c *Conn) control(op string, f func(fd int) error) error {
 			}
 		}
 	})
+}
+
+// controlErr wraps control to execute a function and capture its error result.
+// This is a convenience wrapper for functions which don't return any extra
+// values to capture in a closure.
+func (c *Conn) controlErr(op string, f func(fd int) error) error {
+	var err error
+	doErr := c.control(op, func(fd int) error {
+		err = f(fd)
+		return err
+	})
+	if doErr != nil {
+		return doErr
+	}
+
+	return os.NewSyscallError(op, err)
 }
 
 // ready indicates readiness based on the value of err.
