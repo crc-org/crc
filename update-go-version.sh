@@ -17,4 +17,4 @@ sed -i "s,^FROM registry.access.redhat.com/ubi8/go-toolset:[.0-9]\+ as builder\$
 sed -i "s/GOVERSION: .*\$/GOVERSION: \"${latest_version}\"/" .circleci/config.yml
 sed -i "s/^GO_VERSION=.*$/GO_VERSION=${latest_version}/" centos_ci.sh
 appveyor_go_version=$(echo $golang_base_version | tr -d .)
-sed -i 's/set PATH="C:\\go[0-9]\+"/set PATH="C:\\go'${appveyor_go_version}'"/' ./appveyor.yml
+sed -i 's/set PATH=C:\\go[0-9]\+/set PATH=C:\\go'${appveyor_go_version}'/' ./appveyor.yml
