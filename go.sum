@@ -115,8 +115,6 @@ github.com/RangelReale/osincli v0.0.0-20160924135400-fababb0555f2/go.mod h1:XyjU
 github.com/RedHatQE/gowinx v0.0.3 h1:+BiJGqw4EQY7WVnj1PWBWnarcgQTWE3uP9oLHu3/sI8=
 github.com/RedHatQE/gowinx v0.0.3/go.mod h1:HOvEFhbJSXfbAOzlvr8EBG9vufpCcYP6A+PA+L97vtI=
 github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d/go.mod h1:HI8ITrYtUY+O+ZhtlqUnD8+KwNPOyugEhfP9fdUIaEQ=
-github.com/StackExchange/wmi v1.2.1 h1:VIkavFPXSjcnS+O8yTq7NI32k0R5Aj+v39y29VYDOSA=
-github.com/StackExchange/wmi v1.2.1/go.mod h1:rcmrprowKIVzvc+NUiLncP2uuArMWLCbu9SBzvHz7e8=
 github.com/VividCortex/ewma v1.1.1/go.mod h1:2Tkkvm3sRDVXaiyucHiACn4cqf7DpdyLvmxzcbUokwA=
 github.com/VividCortex/ewma v1.2.0 h1:f58SaIzcDXrSy3kWaHNvuJgJ3Nmz59Zji6XoJR/q1ow=
 github.com/VividCortex/ewma v1.2.0/go.mod h1:nz4BbCtbLyFDeC9SUHbtcT5644juEuWfUAUnGx7j5l4=
