@@ -7,7 +7,6 @@ require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/Microsoft/go-winio v0.5.2
 	github.com/RedHatQE/gowinx v0.0.3
-	github.com/StackExchange/wmi v1.2.1
 	github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/cavaliergopher/grab/v3 v3.0.1
@@ -57,6 +56,7 @@ require (
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.7.1
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
+	github.com/yusufpapurcu/wmi v1.2.2
 	github.com/zalando/go-keyring v0.1.1
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	golang.org/x/net v0.0.0-20220412020605-290c469a71a5

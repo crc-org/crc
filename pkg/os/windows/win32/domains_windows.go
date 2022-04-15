@@ -19,7 +19,7 @@ package win32
 import (
 	"errors"
 
-	"github.com/StackExchange/wmi"
+	"github.com/yusufpapurcu/wmi"
 )
 
 //nolint
