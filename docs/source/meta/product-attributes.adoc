@@ -22,7 +22,7 @@
 :ocp: {openshift} Container Platform
 
 // Product naming
-:prod: CodeReady Containers
+:prod: CRC
 :rh-prod: {rh} {prod}
 :bin: crc
 
