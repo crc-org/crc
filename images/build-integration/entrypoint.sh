@@ -71,21 +71,20 @@ $SCP "${PULL_SECRET_FILE_PATH}" "${REMOTE}:${EXECUTION_FOLDER}/pull-secret"
 
 echo "Running integration tests"
 # Run integration cmd
-if [[ ! -z "${BUNDLE_LOCATION+x}" ]] && [[ -n "${BUNDLE_LOCATION}" ]]; then
-    BUNDLE_PATH="${BUNDLE_LOCATION}"
-else
-    BUNDLE_PATH="embedded"
-fi
 # Review when pwsh added as powershell supported
 if [[ ${PLATFORM} == 'windows' ]]; then
     BINARY_EXEC="cd ${EXECUTION_FOLDER}/bin; "
     BINARY_EXEC+="\$env:SHELL='powershell'; "
     BINARY_EXEC+="\$env:PULL_SECRET_PATH='${EXECUTION_FOLDER}/pull-secret'; "
-    BINARY_EXEC+="\$env:BUNDLE_PATH='${BUNDLE_PATH}'; "
+    if [[ ! -z "${BUNDLE_LOCATION+x}" ]] && [[ -n "${BUNDLE_LOCATION}" ]]; then
+        BINARY_EXEC+="\$env:BUNDLE_PATH='${BUNDLE_LOCATION}'; "
+    fi
 else 
     BINARY_EXEC="cd ${EXECUTION_FOLDER}/bin && "
     BINARY_EXEC+="PULL_SECRET_PATH=${EXECUTION_FOLDER}/pull-secret "
-    BINARY_EXEC+="BUNDLE_PATH=${BUNDLE_PATH} "
+    if [[ ! -z "${BUNDLE_LOCATION+x}" ]] && [[ -n "${BUNDLE_LOCATION}" ]]; then
+        BINARY_EXEC+="BUNDLE_PATH=${BUNDLE_LOCATION} "
+    fi
 fi
 BINARY_EXEC+="./${BINARY} > integration.results"
 # Execute command remote
