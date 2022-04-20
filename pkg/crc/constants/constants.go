@@ -119,9 +119,16 @@ func GetHomeDir() string {
 	return homeDir
 }
 
-// EnsureBaseDirectoryExists create the ~/.crc directory if it is not present
+// EnsureBaseDirectoriesExist creates ~/.crc, ~/.crc/bin and ~/.crc/cache directories if it is not present
 func EnsureBaseDirectoriesExist() error {
-	return os.MkdirAll(CrcBaseDir, 0750)
+	baseDirectories := []string{CrcBaseDir, MachineCacheDir, crcBinDir}
+	for _, baseDir := range baseDirectories {
+		err := os.MkdirAll(baseDir, 0750)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func IsRelease() bool {
