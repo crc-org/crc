@@ -57,7 +57,7 @@ func genericPreflightChecks(preset crcpreset.Preset) []Check {
 			configKeySuffix:  "check-supported-cpu-arch",
 			checkDescription: "Checking if running on a supported CPU architecture",
 			check:            checkSupportedCPUArch,
-			fixDescription:   "CodeReady Containers is only supported on x86_64 hardware",
+			fixDescription:   "CRC is only supported on x86_64 hardware",
 			flags:            NoFix,
 
 			labels: None,
@@ -194,7 +194,7 @@ func fixOldAdminHelperExecutableCached() error {
 func checkSupportedCPUArch() error {
 	if runtime.GOARCH != "amd64" {
 		logging.Debugf("GOARCH is %s", runtime.GOARCH)
-		return fmt.Errorf("CodeReady Containers can only run on x86_64 CPUs")
+		return fmt.Errorf("CRC can only run on x86_64 CPUs")
 	}
 	return nil
 }

@@ -81,7 +81,7 @@ func RegisterSettings(cfg *Config) {
 	}
 
 	cfg.AddSetting(HostNetworkAccess, false, validateHostNetworkAccess, SuccessfullyApplied,
-		"Allow TCP/IP connections from the CodeReady Containers VM to services running on the host (true/false, default: false)")
+		"Allow TCP/IP connections from the CRC VM to services running on the host (true/false, default: false)")
 	// Proxy Configuration
 	cfg.AddSetting(HTTPProxy, "", ValidateHTTPProxy, SuccessfullyApplied,
 		"HTTP proxy URL (string, like 'http://my-proxy.com:8443')")

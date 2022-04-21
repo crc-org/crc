@@ -7,7 +7,7 @@ RUN make build_e2e
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal 
 
-LABEL MAINTAINER "CodeReady Containers <devtools-cdk@redhat.com>"
+LABEL MAINTAINER "CRC <devtools-cdk@redhat.com>"
 
 COPY --from=builder /workspace/images/build-e2e/entrypoint.sh /usr/local/bin/
 COPY --from=builder /workspace/out /opt/crc/bin

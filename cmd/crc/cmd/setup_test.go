@@ -14,7 +14,7 @@ func TestSetupRenderActionPlainSuccess(t *testing.T) {
 	assert.NoError(t, render(&setupResult{
 		Success: true,
 	}, out, ""))
-	assert.Equal(t, "Your system is correctly setup for using CodeReady Containers. Use 'crc start' to start the instance\n", out.String())
+	assert.Equal(t, "Your system is correctly setup for using CRC. Use 'crc start' to start the instance\n", out.String())
 }
 
 func TestSetupRenderActionPlainFailure(t *testing.T) {

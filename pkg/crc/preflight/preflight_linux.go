@@ -178,7 +178,7 @@ var wsl2PreflightCheck = Check{
 	configKeySuffix:  "check-wsl2",
 	checkDescription: "Checking if running inside WSL2",
 	check:            checkRunningInsideWSL2,
-	fixDescription:   "CodeReady Containers is unsupported using WSL2",
+	fixDescription:   "CRC is unsupported using WSL2",
 	flags:            NoFix,
 
 	labels: labels{Os: Linux},

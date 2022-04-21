@@ -17,7 +17,7 @@ func hyperkitPreflightChecks(networkMode network.Mode) []Check {
 			configKeySuffix:  "check-m1-cpu",
 			checkDescription: "Checking if running emulated on a M1 CPU",
 			check:            checkM1CPU,
-			fixDescription:   "CodeReady Containers is unsupported on Apple M1 hardware",
+			fixDescription:   "CRC is unsupported on Apple M1 hardware",
 			flags:            NoFix,
 
 			labels: labels{Os: Darwin},

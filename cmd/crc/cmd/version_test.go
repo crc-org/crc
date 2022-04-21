@@ -15,7 +15,7 @@ func TestPlainVersion(t *testing.T) {
 		OpenshiftVersion: "4.5.4",
 		PodmanVersion:    "3.4.4",
 	}, ""))
-	assert.Equal(t, `CodeReady Containers version: 1.13+aabbcc
+	assert.Equal(t, `CRC version: 1.13+aabbcc
 OpenShift version: 4.5.4
 Podman version: 3.4.4
 `, out.String())

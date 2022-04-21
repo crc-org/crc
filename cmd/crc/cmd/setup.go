@@ -30,8 +30,8 @@ func init() {
 
 var setupCmd = &cobra.Command{
 	Use:   "setup",
-	Short: "Set up prerequisites for using CodeReady Containers",
-	Long:  "Set up local virtualization and networking infrastructure for using CodeReady Containers",
+	Short: "Set up prerequisites for using CRC",
+	Long:  "Set up local virtualization and networking infrastructure for using CRC",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if err := viper.BindFlagSet(cmd.Flags()); err != nil {
 			return err
@@ -42,7 +42,7 @@ var setupCmd = &cobra.Command{
 
 func runSetup(arguments []string) error {
 	if config.Get(crcConfig.ConsentTelemetry).AsString() == "" {
-		fmt.Println("CodeReady Containers is constantly improving and we would like to know more about usage (more details at https://developers.redhat.com/article/tool-data-collection)")
+		fmt.Println("CRC is constantly improving and we would like to know more about usage (more details at https://developers.redhat.com/article/tool-data-collection)")
 		fmt.Println("Your preference can be changed manually if desired using 'crc config set consent-telemetry <yes/no>'")
 		if input.PromptUserForYesOrNo("Would you like to contribute anonymous usage statistics", false) {
 			if _, err := config.Set(crcConfig.ConsentTelemetry, "yes"); err != nil {
@@ -86,7 +86,7 @@ func (s *setupResult) prettyPrintTo(writer io.Writer) error {
 	if s.Error != nil {
 		return s.Error
 	}
-	_, err := fmt.Fprintln(writer, "Your system is correctly setup for using CodeReady Containers. "+
+	_, err := fmt.Fprintln(writer, "Your system is correctly setup for using CRC. "+
 		"Use 'crc start' to start the instance")
 	return err
 }
