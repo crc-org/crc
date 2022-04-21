@@ -5,7 +5,7 @@ PODMAN_VERSION ?= 3.4.4
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 2.1.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
-MACOS_INSTALL_PATH = /Applications/CodeReady Containers.app/Contents/Resources
+MACOS_INSTALL_PATH = /Applications/Red Hat OpenShift Local.app/Contents/Resources
 CONTAINER_RUNTIME ?= podman
 GOLANGCI_LINT_VERSION = v1.44.2
 TOOLS_BINDIR = $(realpath tools/bin)
@@ -313,7 +313,7 @@ packagedir: clean embed-download macos-release-binary
 	mkdir -p packaging/root/Applications
 	tar -C packaging/root/Applications -xvzf $(TRAY_RELEASE)
 	rm packaging/tmp/crc-tray-macos.tar.gz
-	mv packaging/root/Applications/crc-tray-darwin-x64/crc-tray.app packaging/root/Applications/CodeReady\ Containers.app
+	mv packaging/root/Applications/crc-tray-darwin-x64/crc-tray.app packaging/root/Applications/Red\ Hat\ OpenShift\ Local.app
 	rm -fr packaging/root/Applications/crc-tray-darwin-x64
 
 	mv packaging/tmp/* packaging/root/"$(MACOS_INSTALL_PATH)"

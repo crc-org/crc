@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <installer-script minSpecVersion="1.000000">
-    <title>CodeReady Containers</title>
+    <title>Red Hat OpenShift Local</title>
     <background mime-type="image/png" file="banner.png" scaling="proportional"/>
     <welcome file="welcome.html" mime-type="text/html" />
     <conclusion file="conclusion.html" mime-type="text/html" />
@@ -13,7 +13,7 @@
 function installCheck() {
     if (9216000000 > system.sysctl('hw.memsize')) {
         my.result.title = 'Too few memory installed';
-        my.result.message = 'CodeReady Containers requires at least 9GB of memory to run';
+        my.result.message = 'Red Hat OpenShift Local requires at least 9GB of memory to run';
         my.result.type = 'Fatal';
         return false;
     }
@@ -21,7 +21,7 @@ function installCheck() {
 	var apps = system.applications.fromIdentifier('com.redhat.codeready.containers');
 	if(apps) {
         my.result.title = 'Update failed';
-        my.result.message = 'CodeReady Containers is running. Please stop the application before updating.';
+        my.result.message = 'Red Hat OpenShift Local is running. Please stop the application before updating.';
         my.result.type = 'Fatal';
         return false;
 	}
@@ -29,14 +29,14 @@ function installCheck() {
     var apps = system.applications.fromIdentifier('com.electron.crc-tray');
     if(apps) {
         my.result.title = 'Update failed';
-        my.result.message = 'CodeReady Containers dev preview is running. Please stop the application before updating.';
+        my.result.message = 'Red Hat OpenShift Local dev preview is running. Please stop the application before updating.';
         my.result.type = 'Fatal';
         return false;
     }
 
     if(!(system.compareVersions(system.version.ProductVersion, '10.14.0') >= 0)) {
         my.result.title = 'Unable to install';
-        my.result.message = 'CodeReady Containers requires macOS 10.14 or later.';
+        my.result.message = 'Red Hat OpenShift Local requires macOS 10.14 or later.';
         my.result.type = 'Fatal';
         return false;
     }

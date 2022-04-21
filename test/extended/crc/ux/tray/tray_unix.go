@@ -25,7 +25,7 @@ const (
 	runOCLoginCommand      string = "runOCLoginCommand.applescript"
 
 	bundleIdentifier string = "com.redhat.codeready.containers"
-	appPath          string = "/Applications/CodeReady Containers.app"
+	appPath          string = "/Applications/Red Hat OpenShift Local.app"
 
 	uxCheckAccessibilityDuration = "2s"
 	uxCheckAccessibilityRetry    = 10

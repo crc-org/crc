@@ -34,7 +34,7 @@ function signAppBundle() {
   codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime --force --entitlements "${entitlements}" "$1"
 }
 
-binDir="${BASEDIR}/root/Applications/CodeReady Containers.app/Contents/Resources"
+binDir="${BASEDIR}/root/Applications/Red Hat OpenShift Local.app/Contents/Resources"
 
 version=$(cat "${BASEDIR}/VERSION")
 
@@ -42,7 +42,7 @@ sign "${binDir}/crc"
 sign "${binDir}/crc-admin-helper-darwin"
 sign "${binDir}/crc-driver-hyperkit"
 
-signAppBundle "${BASEDIR}/root/Applications/CodeReady Containers.app"
+signAppBundle "${BASEDIR}/root/Applications/Red Hat OpenShift Local.app"
 
 codesign --verify --verbose "${binDir}/hyperkit"
 codesign --verify --verbose "${binDir}/qcow-tool"
