@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-    <Product Id="*" UpgradeCode="53DE5BFA-0E53-44E7-8D4F-07E37E59A9AB" Name="CodeReady Containers" Version="{{.Version}}" Manufacturer="Red Hat Inc." Language="1033">
-        <Package Id ="*" InstallerVersion="300" Compressed="yes" Description="CodeReady Containers {{.Version}}" Comments="This installs CodeReady Containers {{.Version}}" InstallScope="perMachine" />
+    <Product Id="*" UpgradeCode="53DE5BFA-0E53-44E7-8D4F-07E37E59A9AB" Name="Red Hat OpenShift Local" Version="{{.Version}}" Manufacturer="Red Hat Inc." Language="1033">
+        <Package Id ="*" InstallerVersion="300" Compressed="yes" Description="Red Hat OpenShift Local {{.Version}}" Comments="This installs Red Hat OpenShift Local {{.Version}}" InstallScope="perMachine" />
 	    <Media Id="1" EmbedCab="yes" Cabinet="cab1.cab"/>
         <MajorUpgrade AllowDowngrades="yes" />
         <WixVariable Id="WixUIBannerBmp" Value=".\Resources\banner.png"/>
@@ -13,35 +13,35 @@
             <RegistrySearch Id="CURRENTBUILDSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuild" Type="raw"/>
         </Property>
         <Property Id="MINIMUMBUILD" Value="1709" Secure="yes"></Property>
-        <Condition Message="CodeReady Containers requires the Windows 10 Fall Creators Update (version 1709) or newer.">
+        <Condition Message="Red Hat OpenShift Local requires the Windows 10 Fall Creators Update (version 1709) or newer.">
             <![CDATA[Installed OR (CURRENTBUILD > MINIMUMBUILD)]]>
         </Condition>
-        <Condition Message="CodeReady Containers requires at least 9GB of RAM to run. Aborting installation.">
+        <Condition Message="Red Hat OpenShift Local requires at least 9GB of RAM to run. Aborting installation.">
             <![CDATA[Installed OR (PhysicalMemory >= 9126)]]>
         </Condition>
         <Property Id="WINDOWSEDITION" Secure="yes">
             <RegistrySearch Id="WindowsEditionReg" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="EditionID" Type="raw" />
         </Property>
-        <Condition Message="CodeReady Containers cannot run on Windows Home edition">
+        <Condition Message="Red Hat OpenShift Local cannot run on Windows Home edition">
             <![CDATA[Installed OR (WINDOWSEDITION <> "Core")]]>
         </Condition>
 
         <Property Id="CRCINSTALLED" Secure="yes">
-            <RegistrySearch Id="CrcInstalledReg" Root="HKCU" Key="Software\Red Hat\CodeReady Containers" Name="installed" Type="raw" />
+            <RegistrySearch Id="CrcInstalledReg" Root="HKCU" Key="Software\Red Hat\Red Hat OpenShift Local" Name="installed" Type="raw" />
         </Property>
 
         <util:Group Id="CrcUsersGroup" Name="crc-users" />
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
-                <Directory Id="INSTALLDIR" Name="CodeReady Containers">
+                <Directory Id="INSTALLDIR" Name="Red Hat OpenShift Local">
                     <Component Id="CrcExe" Guid="*">
                         <File Id="CrcExe" Source="SourceDir\crc.exe" KeyPath="yes" DiskId="1" />
                         <RemoveFile Id="RemoveInstallFiles" Name="*.*" On="uninstall" />
                     </Component>
                     <Component Id="AdminHelper" Guid="*">
                         <File Id="AdminHelper" Source="SourceDir\crc-admin-helper-windows.exe" KeyPath="yes" DiskId="1" />
-                        <ServiceInstall Name="CodeReadyContainersAdminHelper" Description="Perform administrative tasks for the user" Arguments="daemon" DisplayName="CodeReady Containers Admin Helper" ErrorControl="normal" Start="auto" Type="ownProcess" />
-                        <ServiceControl Id="StartAdminHelperService" Name="CodeReadyContainersAdminHelper" Start='install' Stop='both' Remove='uninstall' />
+                        <ServiceInstall Name="crcAdminHelper" Description="Perform administrative tasks for the user" Arguments="daemon" DisplayName="Red Hat OpenShift Local Admin Helper" ErrorControl="normal" Start="auto" Type="ownProcess" />
+                        <ServiceControl Id="StartAdminHelperService" Name="crcAdminHelper" Start='install' Stop='both' Remove='uninstall' />
                     </Component>
                     <Directory Id="TRAYDIR">
                     </Directory>
@@ -65,19 +65,19 @@
             <Directory Id="ProgramMenuFolder">
                 <Component Id="StartMenuEntry" Guid="*">
                     <Shortcut Id="TrayStartMenuEntry" 
-                            Name="CodeReady Containers" 
+                            Name="Red Hat OpenShift Local" 
                             Target="[INSTALLDIR]crc-tray.exe" 
                             Icon="crcicon.ico" 
                             WorkingDirectory="AppDataFolder">
                         <ShortcutProperty Key="System.AppUserModel.ID" Value="redhat.codereadycontainers.tray"/>
                     </Shortcut>
-                    <RemoveFile Id="RemoveStartMenuEntry" Name="CodeReady Containers" On="uninstall" />
-                    <RegistryValue Root="HKCU" Key="Software\Red Hat\CodeReady Containers" Name="startmenu" Type="integer" Value="1" KeyPath="yes"/>
+                    <RemoveFile Id="RemoveStartMenuEntry" Name="Red Hat OpenShift Local" On="uninstall" />
+                    <RegistryValue Root="HKCU" Key="Software\Red Hat\Red Hat OpenShift Local" Name="startmenu" Type="integer" Value="1" KeyPath="yes"/>
                 </Component>
             </Directory>
         </Directory>
 
-        <SetProperty Action="CACreateCrcUsersGroup" Id="CreateCrcGroup" Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /comment:"Group for CodeReady Containers users" /add' Before="CreateCrcGroup" Sequence="execute"/>
+        <SetProperty Action="CACreateCrcUsersGroup" Id="CreateCrcGroup" Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /comment:"Group for Red Hat OpenShift Local users" /add' Before="CreateCrcGroup" Sequence="execute"/>
         <CustomAction Id="CreateCrcGroup" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
         <SetProperty Action="CARemoveCrcUsersGroup" Id="RemoveCrcGroup" Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /del' Before="RemoveCrcGroup" Sequence="execute"/>
         <CustomAction Id="RemoveCrcGroup" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
@@ -92,7 +92,7 @@
         <SetProperty Action="CAAddUserToHypervAdminGroup" Id="AddUserToHypervAdminGroup" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; .\crc.exe setup --log-level debug' Before="AddUserToHypervAdminGroup" Sequence="execute"/>
         <CustomAction Id="AddUserToHypervAdminGroup" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
 
-        <util:CloseApplication Id = "TrayRunning" Description="Please exit CodeReady Containers from tray and run the installation again." Target="crc-tray.exe" RebootPrompt="no" PromptToContinue="yes" />
+        <util:CloseApplication Id = "TrayRunning" Description="Please exit Red Hat OpenShift Local from tray and run the installation again." Target="crc-tray.exe" RebootPrompt="no" PromptToContinue="yes" />
 
         <InstallExecuteSequence>
             <Custom Action="CreateCrcGroup" Before="ConfigureUsers"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
