@@ -59,7 +59,7 @@ func (v *version) prettyPrintTo(writer io.Writer) error {
 
 func (v *version) lines() []string {
 	return []string{
-		fmt.Sprintf("CodeReady Containers version: %s+%s\n", v.Version, v.Commit),
+		fmt.Sprintf("CRC version: %s+%s\n", v.Version, v.Commit),
 		fmt.Sprintf("OpenShift version: %s\n", v.OpenshiftVersion),
 		fmt.Sprintf("Podman version: %s\n", v.PodmanVersion),
 	}

@@ -47,7 +47,7 @@ func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*types.ClusterConfig, e
 func getBundleMetadataFromDriver(driver drivers.Driver) (*bundle.CrcBundleInfo, error) {
 	bundleName, err := driver.GetBundleName()
 	if err != nil {
-		err := fmt.Errorf("Error getting bundle name from CodeReady Containers instance, make sure you ran 'crc setup' and are using the latest bundle")
+		err := fmt.Errorf("Error getting bundle name from CRC instance, make sure you ran 'crc setup' and are using the latest bundle")
 		return nil, err
 	}
 	metadata, err := bundle.Get(bundleName)

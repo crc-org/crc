@@ -1,5 +1,5 @@
 FROM registry.access.redhat.com/ubi8/ubi
-MAINTAINER CodeReady Containers <devtools-cdk@redhat.com>
+MAINTAINER CRC <devtools-cdk@redhat.com>
 
 RUN yum -y install dnsmasq && \
     yum clean all

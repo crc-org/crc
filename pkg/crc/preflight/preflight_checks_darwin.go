@@ -28,7 +28,7 @@ const (
 func checkM1CPU() error {
 	if strings.HasPrefix(cpuid.CPU.BrandName, "VirtualApple") {
 		logging.Debugf("Running with an emulated x86_64 CPU")
-		return fmt.Errorf("CodeReady Containers is unsupported on Apple M1 hardware")
+		return fmt.Errorf("CRC is unsupported on Apple M1 hardware")
 	}
 
 	return nil

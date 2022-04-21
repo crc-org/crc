@@ -7,7 +7,7 @@ RUN make build_integration
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal 
 
-LABEL MAINTAINER "CodeReady Containers <devtools-cdk@redhat.com>"
+LABEL MAINTAINER "CRC <devtools-cdk@redhat.com>"
 
 COPY --from=builder /workspace/images/build-integration/entrypoint.sh /usr/local/bin/
 COPY --from=builder /workspace/out /opt/crc/bin

@@ -37,7 +37,7 @@ func checkRunningInsideWSL2() error {
 
 	if strings.Contains(string(version), "Microsoft") {
 		logging.Debugf("Running inside WSL2 environment")
-		return fmt.Errorf("CodeReady Containers is unsupported using WSL2")
+		return fmt.Errorf("CRC is unsupported using WSL2")
 	}
 
 	return nil
@@ -286,7 +286,7 @@ func systemdUnitRunning(sd *systemd.Commander, unitName string) bool {
 const (
 	vsockUnitName = "crc-vsock.socket"
 	vsockUnit     = `[Unit]
-Description=CodeReady Containers vsock socket
+Description=CRC vsock socket
 
 [Socket]
 ListenStream=vsock::1024
@@ -298,7 +298,7 @@ WantedBy=default.target
 
 	httpUnitName = "crc-http.socket"
 	httpUnit     = `[Unit]
-Description=CodeReady Containers HTTP socket
+Description=CRC HTTP socket
 
 [Socket]
 ListenStream=%h/.crc/crc-http.sock
@@ -311,7 +311,7 @@ WantedBy=default.target
 	daemonUnitName     = "crc-daemon.service"
 	daemonUnitTemplate = `
 [Unit]
-Description=CodeReady Containers daemon
+Description=CRC daemon
 Requires=crc-http.socket
 Requires=crc-vsock.socket
 
@@ -433,7 +433,7 @@ func removeDaemonSystemdService() error {
 
 func warnNoDaemonAutostart() error {
 	// only purpose of this check is to trigger a warning for RHEL7/CentOS7 users
-	logging.Warnf("systemd --user is not available, crc daemon won't be autostarted and must be run manually before using CodeReady Containers")
+	logging.Warnf("systemd --user is not available, crc daemon won't be autostarted and must be run manually before using CRC")
 	return nil
 }
 

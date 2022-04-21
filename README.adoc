@@ -1,4 +1,4 @@
-= Red Hat CodeReady Containers - OpenShift 4 on your Laptop
+= CRC - OpenShift 4 on your Laptop
 :icons:
 :toc: macro
 :toc-title:
@@ -20,9 +20,9 @@ If you are looking for a solution for running OpenShift 3.x, you will need tools
 [[usage-data]]
 == Usage data
 
-The first time CodeReady Containers is run, you will be asked to opt-in to Red Hat's telemetry collection program.
+The first time CRC is run, you will be asked to opt-in to Red Hat's telemetry collection program.
 
-With your approval, CodeReady Containers collects pseudonymized usage data and sends it to Red Hat servers to help improve our products and services. Read our https://developers.redhat.com/article/tool-data-collection[privacy statement] to learn more about it. For the specific data points being collected, see xref:usage-data.adoc#data-table[Usage data].
+With your approval, CRC collects pseudonymized usage data and sends it to Red Hat servers to help improve our products and services. Read our https://developers.redhat.com/article/tool-data-collection[privacy statement] to learn more about it. For the specific data points being collected, see xref:usage-data.adoc#data-table[Usage data].
 
 === Manually configuring usage data collection
 
@@ -32,15 +32,15 @@ You can manually change your preference about usage data collection by running `
 [[documentation]]
 == Documentation
 
-=== Getting CodeReady Containers
+=== Getting CRC
 
-CodeReady Containers binaries with an embedded OpenShift disk image can be downloaded from link:https://cloud.redhat.com/openshift/create/local[this page].
+CRC binaries with an embedded OpenShift disk image can be downloaded from link:https://cloud.redhat.com/openshift/create/local[this page].
 
-=== Using CodeReady Containers
+=== Using CRC
 
-The documentation for CodeReady Containers is currently hosted by GitHub Pages.
+The documentation for CRC is currently hosted by GitHub Pages.
 
-See the link:https://code-ready.github.io/crc/[Red Hat CodeReady Containers Getting Started Guide].
+See the link:https://code-ready.github.io/crc/[CRC Getting Started Guide].
 
 === Building the documentation
 
@@ -56,9 +56,9 @@ $ make build_docs
 
 This will create a [filename]`docs/build/master.html` file which you can view in your browser.
 
-=== Developing CodeReady Containers
+=== Developing CRC
 
-Developers who want to work on CodeReady Containers should visit the link:./developing.adoc[Developing CodeReady Containers] document.
+Developers who want to work on CRC should visit the link:./developing.adoc[Developing CRC] document.
 
 [[community]]
 == Community

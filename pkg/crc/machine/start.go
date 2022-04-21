@@ -169,9 +169,9 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 
 		if crcBundleMetadata.IsOpenShift() {
-			logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
+			logging.Infof("Creating CRC VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
 		} else {
-			logging.Infof("Creating CodeReady Containers VM for Podman %s...", crcBundleMetadata.GetPodmanVersion())
+			logging.Infof("Creating CRC VM for Podman %s...", crcBundleMetadata.GetPodmanVersion())
 		}
 
 		machineConfig := config.MachineConfig{
@@ -218,12 +218,12 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 	if vmState == state.Running {
 		if !vm.bundle.IsOpenShift() {
-			logging.Infof("A CodeReady Containers VM for Podman %s is already running", vm.bundle.GetPodmanVersion())
+			logging.Infof("A CRC VM for Podman %s is already running", vm.bundle.GetPodmanVersion())
 			return &types.StartResult{
 				Status: vmState,
 			}, nil
 		}
-		logging.Infof("A CodeReady Containers VM for OpenShift %s is already running", vm.bundle.GetOpenshiftVersion())
+		logging.Infof("A CRC VM for OpenShift %s is already running", vm.bundle.GetOpenshiftVersion())
 		clusterConfig, err := getClusterConfig(vm.bundle)
 		if err != nil {
 			return nil, errors.Wrap(err, "Cannot create cluster configuration")
@@ -242,7 +242,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	if vm.bundle.IsOpenShift() {
-		logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", vm.bundle.GetOpenshiftVersion())
+		logging.Infof("Starting CRC VM for OpenShift %s...", vm.bundle.GetOpenshiftVersion())
 	}
 
 	if client.useVSock() {
@@ -265,14 +265,14 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Error getting the state")
 	}
 	if vmState != state.Running {
-		return nil, errors.Wrap(err, "CodeReady Containers VM is not running")
+		return nil, errors.Wrap(err, "CRC VM is not running")
 	}
 
 	instanceIP, err := vm.IP()
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting the IP")
 	}
-	logging.Infof("CodeReady Containers instance is running with IP %s", instanceIP)
+	logging.Infof("CRC instance is running with IP %s", instanceIP)
 	sshRunner, err := vm.SSHRunner()
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating the ssh client")
@@ -283,7 +283,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if err := sshRunner.WaitForConnectivity(ctx, 300*time.Second); err != nil {
 		return nil, errors.Wrap(err, "Failed to connect to the CRC VM with SSH -- virtual machine might be unreachable")
 	}
-	logging.Info("CodeReady Containers VM is running")
+	logging.Info("CRC VM is running")
 
 	// Post VM start immediately update SSH key and copy kubeconfig to instance
 	// dir and VM
@@ -298,7 +298,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	// Start network time synchronization if `CRC_DEBUG_ENABLE_STOP_NTP` is not set
 	if stopNtp, _ := strconv.ParseBool(os.Getenv("CRC_DEBUG_ENABLE_STOP_NTP")); stopNtp {
-		logging.Info("Stopping network time synchronization in CodeReady Containers VM")
+		logging.Info("Stopping network time synchronization in CRC VM")
 		if _, _, err := sshRunner.RunPrivileged("Turning off the ntp server", "timedatectl set-ntp off"); err != nil {
 			return nil, errors.Wrap(err, "Failed to stop network time synchronization")
 		}
@@ -407,7 +407,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	if err := cluster.ApproveCSRAndWaitForCertsRenewal(ctx, sshRunner, ocConfig, certsExpired[cluster.KubeletClientCert], certsExpired[cluster.KubeletServerCert]); err != nil {
 		logBundleDate(vm.bundle)
-		return nil, errors.Wrap(err, "Failed to renew TLS certificates: please check if a newer CodeReady Containers release is available")
+		return nil, errors.Wrap(err, "Failed to renew TLS certificates: please check if a newer CRC release is available")
 	}
 
 	if err := cluster.WaitForAPIServer(ctx, ocConfig); err != nil {

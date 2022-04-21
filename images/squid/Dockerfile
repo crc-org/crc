@@ -31,7 +31,7 @@
 
 # Intermediate build image to generate the CA and certificate used for https
 FROM registry.centos.org/centos/centos:centos8 AS gencerts
-MAINTAINER CodeReady Containers <devtools-cdk@redhat.com>
+MAINTAINER CRC <devtools-cdk@redhat.com>
 
 RUN yum -y install openssl
 
@@ -42,7 +42,7 @@ RUN bash ./generate-certs.sh
 
 # Final squid container
 FROM registry.centos.org/centos/centos:centos8
-MAINTAINER CodeReady Containers <devtools-cdk@redhat.com>
+MAINTAINER CRC <devtools-cdk@redhat.com>
 
 RUN yum -y install squid && \
     yum clean all

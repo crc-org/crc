@@ -165,7 +165,7 @@ func loadFile(path string) (string, error) {
 	return pullsecret, validation.ImagePullSecret(pullsecret)
 }
 
-const helpMessage = `CodeReady Containers requires a pull secret to download content from Red Hat.
+const helpMessage = `CRC requires a pull secret to download content from Red Hat.
 You can copy it from the Pull Secret section of %s.
 `
 
