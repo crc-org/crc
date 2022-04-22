@@ -1,0 +1,6 @@
+[id="introducing_{context}"]
+= Introducing {rh-prod}
+
+include::con_about.adoc[leveloffset=+1]
+
+include::con_differences-from-production-openshift-install.adoc[leveloffset=+1]

@@ -1,4 +1,4 @@
-[id="starting-codeready-containers-behind-proxy_{context}"]
+[id="starting-behind-proxy_{context}"]
 = Starting {prod} behind a proxy
 
 You can start {prod} behind a defined proxy using environment variables or configurable properties.

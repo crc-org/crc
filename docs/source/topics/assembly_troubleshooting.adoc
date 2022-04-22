@@ -1,4 +1,4 @@
-[id="troubleshooting-codeready-containers_{context}"]
+[id="troubleshooting_{context}"]
 = Troubleshooting {rh-prod}
 
 [NOTE]

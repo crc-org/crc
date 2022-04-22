@@ -1,4 +1,4 @@
-[id="about-codeready-containers_{context}"]
+[id="about_{context}"]
 = About {prod}
 
 {rh-prod} brings a minimal {ocp} 4 cluster and Podman container runtime to your local computer.
@@ -6,6 +6,6 @@ These runtimes provide minimal environments for development and testing purposes
 {prod} is mainly targeted at running on developers' desktops.
 For other {ocp} use cases, such as headless or multi-developer setups, use the link:{openshift-installer-url}[full {openshift} installer].
 
-See the link:{openshift-docs-url-landing-page}[{openshift} documentation] for a full introduction to {ocp}.
+See the link:{openshift-docs-url-landing-page}[{ocp} documentation] for a full introduction to {ocp}.
 
 {prod} includes the [command]`{bin}` command-line interface (CLI) to interact with the {prod} instance using the desired container runtime.

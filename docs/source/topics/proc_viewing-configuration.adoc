@@ -1,4 +1,4 @@
-[id="viewing-codeready-containers-configuration_{context}"]
+[id="viewing-configuration_{context}"]
 = Viewing {prod} configuration
 
 The {prod} executable provides commands to view configurable properties and the current {prod} configuration.
