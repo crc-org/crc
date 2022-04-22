@@ -50,7 +50,7 @@ $ oc get co
 {prod} disables the Cluster Monitoring Operator by default.
 ====
 
-See link:{crc-gsg-url}#troubleshooting_gsg[Troubleshooting {prod}] if you cannot access the {prod} cluster.
+See link:{crc-gsg-url}#troubleshooting_gsg[Troubleshooting {prod}] if you cannot access the {ocp} cluster managed by {prod}.
 
 .Additional resources
 
