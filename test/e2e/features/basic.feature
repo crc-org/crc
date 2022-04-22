@@ -54,7 +54,7 @@ Feature: Basic test
         And stderr should contain "Checking if NetworkManager service is running"
         And stderr should contain "Using root access: Executing systemctl daemon-reload command"
         And stderr should contain "Using root access: Executing systemctl reload NetworkManager"
-        And stdout should contain "Your system is correctly setup for using CodeReady Containers. Use 'crc start' to start the instance"
+        And stdout should contain "Your system is correctly setup for using CRC. Use 'crc start' to start the instance"
 
     @linux
     Scenario: Missing CRC setup
@@ -179,7 +179,7 @@ Feature: Basic test
     Scenario Outline: CRC clean-up
         When executing crc cleanup command succeeds
         Then stderr should contain "Removing /etc/resolver/testing file"
-        And stderr should contain "Unload CodeReady Containers daemon"
+        And stderr should contain "Unload CRC daemon"
         And stderr should contain "Removing pull secret from the keyring"
         And stdout should contain "Cleanup finished"
 

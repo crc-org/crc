@@ -13,9 +13,9 @@ var _ = Describe("vary VM parameters: memory cpus, disk", func() {
 
 		It("setup CRC", func() {
 			if bundlePath == "" {
-				Expect(RunCRCExpectSuccess("setup")).To(ContainSubstring("Your system is correctly setup for using CodeReady Containers"))
+				Expect(RunCRCExpectSuccess("setup")).To(ContainSubstring("Your system is correctly setup for using CRC"))
 			} else {
-				Expect(RunCRCExpectSuccess("setup", "-b", bundlePath)).To(ContainSubstring("Your system is correctly setup for using CodeReady Containers"))
+				Expect(RunCRCExpectSuccess("setup", "-b", bundlePath)).To(ContainSubstring("Your system is correctly setup for using CRC"))
 			}
 		})
 
