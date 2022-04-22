@@ -15,7 +15,7 @@ For more information, see link:{crc-gsg-url}#starting-the-instance_gsg[Starting 
 
 .Procedure
 
-. Log in to the running {prod} cluster as the `developer` user:
+. Log in to the running {ocp} cluster managed by {prod} as the `developer` user:
 +
 [subs="+quotes,attributes"]
 ----

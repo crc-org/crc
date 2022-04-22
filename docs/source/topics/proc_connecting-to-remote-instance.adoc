@@ -1,7 +1,7 @@
 [id="connecting-to-remote-instance_{context}"]
 = Connecting to a remote {prod} instance
 
-Use [application]`dnsmasq` to connect a client machine to a remote server running a {prod} cluster.
+Use [application]`dnsmasq` to connect a client machine to a remote server running a {ocp} cluster managed by {prod}.
 
 This procedure assumes the use of a {rhel}, {fed}, or {centos} client.
 Run every command in this procedure on the client.

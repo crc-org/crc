@@ -31,7 +31,7 @@ You can also view the password for the `developer` and `kubeadmin` users by runn
 $ {bin} console --credentials
 ----
 
-See link:{crc-gsg-url}#troubleshooting_gsg[Troubleshooting {prod}] if you cannot access the {prod} cluster.
+See link:{crc-gsg-url}#troubleshooting_gsg[Troubleshooting {prod}] if you cannot access the {ocp} cluster managed by {prod}.
 
 .Additional resources
 
