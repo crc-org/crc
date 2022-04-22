@@ -1,7 +1,7 @@
 [id="accessing-the-openshift-web-console_{context}"]
 = Accessing the {openshift} web console
 
-Access the {openshift} web console by using your web browser.
+Access the {ocp} web console by using your web browser.
 
 Access the cluster by using either the `kubeadmin` or `developer` user.
 Use the `developer` user for creating projects or {openshift} applications and for application deployment.
@@ -16,7 +16,7 @@ For more information, see link:{crc-gsg-url}#starting-the-instance_gsg[Starting 
 
 .Procedure
 
-. To access the {openshift} web console with your default web browser, run the following command:
+. To access the {ocp} web console with your default web browser, run the following command:
 +
 [subs="+quotes,attributes"]
 ----

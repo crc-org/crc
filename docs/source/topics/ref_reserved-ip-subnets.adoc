@@ -1,7 +1,7 @@
 [id="reserved-ip-subnets_{context}"]
 = Reserved IP subnets
 
-The {ocp} cluster provided by {prod} reserves IP subnets for internal use which should not collide with your host network.
+The {ocp} cluster managed by {prod} reserves IP subnets for internal use which should not collide with your host network.
 Ensure that the following IP subnets are available for use:
 
 .Reserved IP subnets

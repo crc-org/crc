@@ -1,7 +1,7 @@
 [id="accessing-the-openshift-cluster-with-oc_{context}"]
 = Accessing the {openshift} cluster with the {openshift} CLI
 
-Access the {openshift} cluster by using the {openshift} CLI ([command]`oc`).
+Access the {ocp} cluster managed by {prod} by using the {openshift} CLI ([command]`oc`).
 
 .Prerequisites
 
