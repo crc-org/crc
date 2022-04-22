@@ -1,6 +1,6 @@
 on run {installerPath, adminPassword}
     set installer to installerPath as POSIX file
-    set installerWindow to "Install CodeReady Containers"
+    set installerWindow to "Install CRC"
     tell application "Finder" to open installer
     delay 1
     tell application "System Events"

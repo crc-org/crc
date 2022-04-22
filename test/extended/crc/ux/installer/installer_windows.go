@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	installerWindowTitle string = "CodeReady Containers Setup"
+	installerWindowTitle string = "CRC Setup"
 
 	installerStartTime time.Duration = 20 * time.Second
 	elementClickTime   time.Duration = 2 * time.Second

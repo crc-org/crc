@@ -15,11 +15,11 @@ type gowinxHandler struct {
 }
 
 const (
-	startMessage  string = "CodeReady Containers Cluster has started"
+	startMessage  string = "CRC Cluster has started"
 	stopMessage   string = "Cluster stopped"
 	deleteMessage string = "Cluster deleted"
 
-	notificationGroupName string = "CodeReady Containers"
+	notificationGroupName string = "CRC"
 )
 
 func NewNotification() Notification {
