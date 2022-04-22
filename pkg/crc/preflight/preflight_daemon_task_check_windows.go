@@ -3,6 +3,7 @@ package preflight
 import (
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -43,6 +44,7 @@ var (
   </Actions>
 </Task>
 `
+	errOlderVersion = fmt.Errorf("expected %s task to be on version '%s'", constants.DaemonTaskName, version.GetCRCVersion())
 )
 
 func genDaemonTaskInstallTemplate(crcVersion, daemonCommand string) (string, error) {
@@ -70,6 +72,10 @@ func checkIfDaemonTaskInstalled() error {
 }
 
 func fixDaemonTaskInstalled() error {
+	// Remove older task if exist
+	if err := removeDaemonTask(); err != nil {
+		return err
+	}
 	// prepare the task script
 	binPath, err := os.Executable()
 	if err != nil {
@@ -100,7 +106,7 @@ func removeDaemonTask() error {
 			return err
 		}
 	}
-	if err := checkIfDaemonTaskInstalled(); err == nil {
+	if err := checkIfDaemonTaskInstalled(); err == nil || errors.Is(err, errOlderVersion) {
 		_, stderr, err := powershell.Execute("Unregister-ScheduledTask", "-TaskName", constants.DaemonTaskName, "-Confirm:$false")
 		if err != nil {
 			logging.Debugf("unable to unregister the %s task: %v : %s", constants.DaemonTaskName, err, stderr)
@@ -145,7 +151,7 @@ func checkIfOlderTask() error {
 		return fmt.Errorf("%s task is not running: %v : %s", constants.DaemonTaskName, err, stderr)
 	}
 	if strings.TrimSpace(stdout) != version.GetCRCVersion() {
-		return fmt.Errorf("expected %s task to be on version '%s' but got '%s'", constants.DaemonTaskName, version.GetCRCVersion(), stdout)
+		return fmt.Errorf("%w but got '%s'", errOlderVersion, stdout)
 	}
 	return nil
 }
