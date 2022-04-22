@@ -1,8 +1,8 @@
 [id="deploying-sample-application-with-odo_{context}"]
 = Deploying a sample application with `odo`
 
-You can use [command]`odo` to create OpenShift projects and applications from the command line.
-This procedure deploys a sample application to the OpenShift cluster running in the {prod} instance.
+You can use [command]`odo` to create {openshift} projects and applications from the command line.
+This procedure deploys a sample application to the {ocp} cluster running in the {prod} instance.
 
 .Prerequisites
 
@@ -15,7 +15,7 @@ For more information, see link:{crc-gsg-url}#starting-the-instance_gsg[Starting 
 
 .Procedure
 
-. Log in to the running {prod} OpenShift cluster as the `developer` user:
+. Log in to the running {prod} cluster as the `developer` user:
 +
 [subs="+quotes,attributes"]
 ----

@@ -9,7 +9,7 @@ The [command]`{bin} start` command starts the {prod} instance and configured con
 * You set up the host machine using the [command]`{bin} setup` command.
 For more information, see link:{crc-gsg-url}#setting-up-codeready-containers_gsg[Setting up {prod}].
 * On {msw}, ensure that your user account can elevate to Administrator privileges.
-* For the OpenShift preset, ensure that you have a valid OpenShift user pull secret.
+* For the {openshift} preset, ensure that you have a valid {openshift} user pull secret.
 Copy or download the pull secret from the Pull Secret section of the link:https://console.redhat.com/openshift/create/local[{prod} page on the {rh} Hybrid Cloud Console].
 +
 [NOTE]
@@ -26,7 +26,7 @@ Accessing the user pull secret requires a Red Hat account.
 $ {bin} start
 ----
 
-. For the OpenShift preset, supply your user pull secret when prompted.
+. For the {openshift} preset, supply your user pull secret when prompted.
 +
 [NOTE]
 ====

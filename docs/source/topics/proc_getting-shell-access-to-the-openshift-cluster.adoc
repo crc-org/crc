@@ -1,17 +1,17 @@
 [id="getting-shell-access-to-the-openshift-cluster_{context}"]
-= Getting shell access to the OpenShift cluster
+= Getting shell access to the {openshift} cluster
 
 To access the cluster for troubleshooting or debugging purposes, follow this procedure.
 
 [NOTE]
 ====
-Direct access to the OpenShift cluster is not needed for regular use and is strongly discouraged.
+Direct access to the {ocp} cluster is not needed for regular use and is strongly discouraged.
 ====
 
 .Prerequisites
 
-* Enable OpenShift CLI ([command]`oc`) access to the cluster and log in as the `kubeadmin` user.
-For detailed steps, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the OpenShift cluster with the OpenShift CLI].
+* Enable {openshift} CLI ([command]`oc`) access to the cluster and log in as the `kubeadmin` user.
+For detailed steps, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the {openshift} cluster with the {openshift} CLI].
 
 .Procedure
 

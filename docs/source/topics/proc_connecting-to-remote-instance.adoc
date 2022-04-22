@@ -1,7 +1,7 @@
 [id="connecting-to-remote-instance_{context}"]
 = Connecting to a remote {prod} instance
 
-Use [application]`dnsmasq` to connect a client machine to a remote server running a {prod} OpenShift cluster.
+Use [application]`dnsmasq` to connect a client machine to a remote server running a {prod} cluster.
 
 This procedure assumes the use of a {rhel}, {fed}, or {centos} client.
 Run every command in this procedure on the client.
@@ -16,7 +16,7 @@ Run every command in this procedure on the client.
 * A remote server is set up for the client to connect to.
 For more information, see link:{crc-gsg-url}#setting-up-remote-server_gsg[Setting up {prod} on a remote server].
 * You know the external IP address of the server.
-* You have the link:{oc-download-url}[latest OpenShift CLI ([command]`oc`)] in your `$PATH` on the client.
+* You have the link:{oc-download-url}[latest {openshift} CLI ([command]`oc`)] in your `$PATH` on the client.
 
 .Procedure
 
@@ -63,4 +63,4 @@ $ sudo systemctl reload NetworkManager
 $ oc login -u developer -p developer https://api.crc.testing:6443
 ----
 +
-The remote OpenShift Web Console is available at \https://console-openshift-console.apps-crc.testing.
+The remote {ocp} web console is available at \https://console-openshift-console.apps-crc.testing.
