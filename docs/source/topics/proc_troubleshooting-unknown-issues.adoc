@@ -7,7 +7,7 @@ This involves stopping the instance, deleting it, reverting changes made by the 
 .Prerequisites
 
 * You set up the host machine with the [command]`{bin} setup` command.
-For more information, see link:{crc-gsg-url}#setting-up-codeready-containers_gsg[Setting up {prod}].
+For more information, see link:{crc-gsg-url}#setting-up_gsg[Setting up {prod}].
 * You started {prod} with the [command]`{bin} start` command.
 For more information, see link:{crc-gsg-url}#starting-the-instance_gsg[Starting the instance].
 * You are using the latest {prod} release.

@@ -1,4 +1,4 @@
-[id="installing-codeready-containers_{context}"]
+[id="installing_{context}"]
 = Installing {prod}
 
 {prod} is available as a portable executable for {rhel}.

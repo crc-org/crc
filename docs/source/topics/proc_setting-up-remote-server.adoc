@@ -15,7 +15,7 @@ Exposing an insecure server on the internet has many security implications.
 .Prerequisites
 
 * {prod} is installed and set up on the remote server.
-For more information, see link:{crc-gsg-url}#installing-codeready-containers_gsg[Installing {prod}] and link:{crc-gsg-url}#setting-up-codeready-containers_gsg[Setting up {prod}].
+For more information, see link:{crc-gsg-url}#installing_gsg[Installing {prod}] and link:{crc-gsg-url}#setting-up_gsg[Setting up {prod}].
 * {prod} is configured to use the {openshift} preset on the remote server.
 For more information, see link:{crc-gsg-url}#changing-the-selected-preset_gsg[Changing the selected preset].
 * Your user account has `sudo` permissions on the remote server.

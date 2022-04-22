@@ -1,9 +1,9 @@
-[id="using-codeready-containers_{context}"]
+[id="using_{context}"]
 = Using {prod}
 
 include::con_about-presets.adoc[leveloffset=+1]
 
-include::proc_setting-up-codeready-containers.adoc[leveloffset=+1]
+include::proc_setting-up.adoc[leveloffset=+1]
 
 include::proc_starting-the-instance.adoc[leveloffset=+1]
 

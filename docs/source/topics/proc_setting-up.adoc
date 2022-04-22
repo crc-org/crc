@@ -1,4 +1,4 @@
-[id="setting-up-codeready-containers_{context}"]
+[id="setting-up_{context}"]
 = Setting up {prod}
 
 [role="_abstract"]
