@@ -28,10 +28,10 @@ func (client *client) Delete() error {
 
 	// Remove the podman system connection for crc
 	if err := podman.RemoveRootlessSystemConnection(); err != nil {
-		return err
+		logging.Debugf("Failed to remove podman rootless system connection: %v", err)
 	}
 	if err := podman.RemoveRootfulSystemConnection(); err != nil {
-		return err
+		logging.Debugf("Failed to remove podman rootful system connection: %v", err)
 	}
 
 	if err := cleanKubeconfig(getGlobalKubeConfigPath(), getGlobalKubeConfigPath()); err != nil {
