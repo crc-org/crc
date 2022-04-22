@@ -1,7 +1,7 @@
 [id="accessing-the-openshift-cluster_{context}"]
-= Accessing the OpenShift cluster
+= Accessing the {openshift} cluster
 
-Access the OpenShift cluster running in the {prod} instance by using the OpenShift web console or OpenShift CLI ([command]`oc`).
+Access the {ocp} cluster running in the {prod} instance by using the {openshift} web console or {openshift} CLI ([command]`oc`).
 
 include::proc_accessing-the-openshift-web-console.adoc[leveloffset=+1]
 

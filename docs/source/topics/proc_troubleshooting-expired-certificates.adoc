@@ -2,7 +2,7 @@
 = Troubleshooting expired certificates
 
 The system bundle in each released [command]`{bin}` executable expires 30 days after the release.
-This expiration is due to certificates embedded in the OpenShift cluster.
+This expiration is due to certificates embedded in the {ocp} cluster.
 The [command]`{bin} start` command triggers an automatic certificate renewal process when needed.
 Certificate renewal can add up to five minutes to the start time of the cluster.
 

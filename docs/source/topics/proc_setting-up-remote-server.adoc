@@ -1,7 +1,7 @@
 [id="setting-up-remote-server_{context}"]
 = Setting up {prod} on a remote server
 
-Configure a remote server to run a {prod} OpenShift cluster.
+Configure a remote server to run an {ocp} cluster provided by {prod}.
 
 This procedure assumes the use of a {rhel}, {fed}, or {centos} server.
 Run every command in this procedure on the remote server.

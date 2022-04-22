@@ -1,10 +1,10 @@
 [id="accessing-the-openshift-web-console_{context}"]
-= Accessing the OpenShift web console
+= Accessing the {openshift} web console
 
-Access the OpenShift web console by using your web browser.
+Access the {openshift} web console by using your web browser.
 
 Access the cluster by using either the `kubeadmin` or `developer` user.
-Use the `developer` user for creating projects or OpenShift applications and for application deployment.
+Use the `developer` user for creating projects or {openshift} applications and for application deployment.
 Use the `kubeadmin` user only for administrative tasks such as creating new users or setting roles.
 
 .Prerequisites
@@ -16,7 +16,7 @@ For more information, see link:{crc-gsg-url}#starting-the-instance_gsg[Starting 
 
 .Procedure
 
-. To access the OpenShift web console with your default web browser, run the following command:
+. To access the {openshift} web console with your default web browser, run the following command:
 +
 [subs="+quotes,attributes"]
 ----
@@ -31,8 +31,8 @@ You can also view the password for the `developer` and `kubeadmin` users by runn
 $ {bin} console --credentials
 ----
 
-See link:{crc-gsg-url}#troubleshooting-codeready-containers_gsg[Troubleshooting {prod}] if you cannot access the {prod} OpenShift cluster.
+See link:{crc-gsg-url}#troubleshooting-codeready-containers_gsg[Troubleshooting {prod}] if you cannot access the {prod} cluster.
 
 .Additional resources
 
-* The link:https://docs.openshift.com/container-platform/latest/applications/projects/working-with-projects.html[OpenShift documentation] covers the creation of projects and applications.
+* The link:https://docs.openshift.com/container-platform/latest/applications/projects/working-with-projects.html[{ocp} documentation] covers the creation of projects and applications.

@@ -4,11 +4,11 @@
 [id="dns-configuration-general{context}"]
 == General DNS setup
 
-The OpenShift cluster managed by {prod} uses 2 DNS domain names, `crc.testing` and `apps-crc.testing`.
-The `crc.testing` domain is for core OpenShift services.
-The `apps-crc.testing` domain is for accessing OpenShift applications deployed on the cluster.
+The {ocp} cluster managed by {prod} uses 2 DNS domain names, `crc.testing` and `apps-crc.testing`.
+The `crc.testing` domain is for core {ocp} services.
+The `apps-crc.testing` domain is for accessing {openshift} applications deployed on the cluster.
 
-For example, the OpenShift API server is exposed as `api.crc.testing` while the OpenShift console is accessed as `console-openshift-console.apps-crc.testing`.
+For example, the {ocp} API server is exposed as `api.crc.testing` while the {ocp} console is accessed as `console-openshift-console.apps-crc.testing`.
 These DNS domains are served by a `dnsmasq` DNS container running inside the {prod} instance.
 
 The [command]`{bin} setup` command detects and adjusts your system DNS configuration so that it can resolve these domains.

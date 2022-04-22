@@ -1,7 +1,7 @@
 [id="accessing-the-openshift-cluster-with-oc_{context}"]
-= Accessing the OpenShift cluster with the OpenShift CLI
+= Accessing the {openshift} cluster with the {openshift} CLI
 
-Access the OpenShift cluster by using the OpenShift CLI ([command]`oc`).
+Access the {openshift} cluster by using the {openshift} CLI ([command]`oc`).
 
 .Prerequisites
 
@@ -34,8 +34,8 @@ The [command]`{bin} start` command prints the password for the `developer` user.
 You can also view it by running the [command]`{bin} console --credentials` command.
 ====
 
-. You can now use [command]`oc` to interact with your OpenShift cluster.
-For example, to verify that the OpenShift cluster Operators are available, log in as the `kubeadmin` user and run the following command:
+. You can now use [command]`oc` to interact with your {ocp} cluster.
+For example, to verify that the {ocp} cluster Operators are available, log in as the `kubeadmin` user and run the following command:
 +
 [subs="+quotes,attributes",options="nowrap"]
 ----
@@ -50,8 +50,8 @@ $ oc get co
 {prod} disables the Cluster Monitoring Operator by default.
 ====
 
-See link:{crc-gsg-url}#troubleshooting-codeready-containers_gsg[Troubleshooting {prod}] if you cannot access the {prod} OpenShift cluster.
+See link:{crc-gsg-url}#troubleshooting-codeready-containers_gsg[Troubleshooting {prod}] if you cannot access the {prod} cluster.
 
 .Additional resources
 
-* The link:https://docs.openshift.com/container-platform/latest/applications/projects/working-with-projects.html[OpenShift documentation] covers the creation of projects and applications.
+* The link:https://docs.openshift.com/container-platform/latest/applications/projects/working-with-projects.html[{ocp} documentation] covers the creation of projects and applications.

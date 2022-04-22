@@ -5,14 +5,14 @@ You can start {prod} behind a defined proxy using environment variables or confi
 
 [NOTE]
 ====
-SOCKS proxies are not supported by OpenShift Container Platform.
+SOCKS proxies are not supported by {ocp}.
 ====
 
 .Prerequisites
 
-* To use an existing OpenShift CLI ([command]`oc`) executable on your host machine, export the `.testing` domain as part of the `no_proxy` environment variable.
+* To use an existing {openshift} CLI ([command]`oc`) executable on your host machine, export the `.testing` domain as part of the `no_proxy` environment variable.
 The embedded [command]`oc` executable does not require manual settings.
-For more information about using the embedded [command]`oc` executable, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the OpenShift cluster with the OpenShift CLI].
+For more information about using the embedded [command]`oc` executable, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the {openshift} cluster with the {openshift} CLI].
 
 .Procedure
 
