@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+rm -fr  /Applications/CodeReady\ Containers.app || true
+
 chmod 755 "__INSTALL_PATH__"/crc
 
 [ -d /usr/local/bin ] || mkdir /usr/local/bin
