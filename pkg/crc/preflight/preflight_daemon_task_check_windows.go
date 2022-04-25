@@ -100,7 +100,7 @@ func fixDaemonTaskInstalled() error {
 }
 
 func removeDaemonTask() error {
-	if err := checkIfDaemonTaskRunning(); err == nil {
+	if err := checkIfDaemonScheduledTaskRunning(); err == nil {
 		_, stderr, err := powershell.Execute("Stop-ScheduledTask", "-TaskName", constants.DaemonTaskName)
 		if err != nil {
 			logging.Debugf("unable to stop the %s task: %v : %s", constants.DaemonTaskName, err, stderr)
@@ -128,6 +128,10 @@ func checkIfDaemonTaskRunning() error {
 		return nil
 	}
 
+	return checkIfDaemonScheduledTaskRunning()
+}
+
+func checkIfDaemonScheduledTaskRunning() error {
 	stdout, stderr, err := powershell.Execute(fmt.Sprintf(`(Get-ScheduledTask -TaskName "%s").State`, constants.DaemonTaskName))
 	if err != nil {
 		logging.Debugf("%s task is not running: %v : %s", constants.DaemonTaskName, err, stderr)
