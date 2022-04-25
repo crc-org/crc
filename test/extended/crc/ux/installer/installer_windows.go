@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	installerWindowTitle string = "CRC Setup"
+	installerWindowTitle string = "OpenShift Local Setup"
 
 	installerStartTime time.Duration = 20 * time.Second
 	elementClickTime   time.Duration = 2 * time.Second
