@@ -1,6 +1,6 @@
 on run {installerPath, adminPassword}
     set installer to installerPath as POSIX file
-    set installerWindow to "Install CRC"
+    set installerWindow to "Install OpenShift Local"
     tell application "Finder" to open installer
     delay 1
     tell application "System Events"

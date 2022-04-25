@@ -25,7 +25,7 @@ type gowinxHandler struct {
 const (
 	trayAssemblyName string = "crc-tray.exe"
 
-	notificationIcon string = "CRC"
+	notificationIcon string = "OpenShift Local"
 	contextMenu      string = "menu"
 	loginMenu        string = "loginMenu"
 

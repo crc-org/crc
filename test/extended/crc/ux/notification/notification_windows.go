@@ -15,11 +15,11 @@ type gowinxHandler struct {
 }
 
 const (
-	startMessage  string = "CRC Cluster has started"
+	startMessage  string = "OpenShift Local Cluster has started"
 	stopMessage   string = "Cluster stopped"
 	deleteMessage string = "Cluster deleted"
 
-	notificationGroupName string = "CRC"
+	notificationGroupName string = "OpenShift Local"
 )
 
 func NewNotification() Notification {
