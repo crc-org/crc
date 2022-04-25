@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/user"
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -36,7 +37,11 @@ var (
     </IdleSettings>
     <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
   </Settings>
-  <Triggers />
+  <Triggers>
+    <LogonTrigger>
+      <UserId>%s</UserId>
+    </LogonTrigger>
+  </Triggers>
   <Actions Context="Author">
     <Exec>
       <Command>powershell.exe</Command>
@@ -48,7 +53,7 @@ var (
 	errOlderVersion = fmt.Errorf("expected %s task to be on version '%s'", constants.DaemonTaskName, version.GetCRCVersion())
 )
 
-func genDaemonTaskInstallTemplate(crcVersion, daemonCommand string) (string, error) {
+func genDaemonTaskInstallTemplate(crcVersion, userName, daemonCommand string) (string, error) {
 	var escapedName bytes.Buffer
 	if err := xml.EscapeText(&escapedName, []byte(daemonCommand)); err != nil {
 		return "", err
@@ -56,6 +61,7 @@ func genDaemonTaskInstallTemplate(crcVersion, daemonCommand string) (string, err
 
 	return fmt.Sprintf(daemonTaskTemplate,
 		crcVersion,
+		userName,
 		escapedName.String(),
 	), nil
 }
@@ -83,9 +89,14 @@ func fixDaemonTaskInstalled() error {
 		return fmt.Errorf("unable to find the current executable location: %v", err)
 	}
 	binPathWithArgs := fmt.Sprintf("& '%s' daemon", binPath)
-
+	// Get current user along with domain
+	u, err := user.Current()
+	if err != nil {
+		return fmt.Errorf("failed to get current user: %w", err)
+	}
 	taskContent, err := genDaemonTaskInstallTemplate(
 		version.GetCRCVersion(),
+		u.Username,
 		binPathWithArgs,
 	)
 	if err != nil {
