@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/daemonclient"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
@@ -117,9 +118,16 @@ func removeDaemonTask() error {
 }
 
 func checkIfDaemonTaskRunning() error {
-	if err := olderDaemonVersionRunning(); err != nil {
-		return err
+	// First check if a daemon process is running and then check if
+	// the running daemon process is of older version, this way  we
+	// return nil if a daemon process is running that is not old
+	if _, err := daemonclient.GetVersionFromDaemonAPI(); err == nil {
+		if err := olderDaemonVersionRunning(); err != nil {
+			return err
+		}
+		return nil
 	}
+
 	stdout, stderr, err := powershell.Execute(fmt.Sprintf(`(Get-ScheduledTask -TaskName "%s").State`, constants.DaemonTaskName))
 	if err != nil {
 		logging.Debugf("%s task is not running: %v : %s", constants.DaemonTaskName, err, stderr)
