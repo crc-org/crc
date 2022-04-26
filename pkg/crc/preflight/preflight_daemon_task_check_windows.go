@@ -100,6 +100,12 @@ func fixDaemonTaskInstalled() error {
 }
 
 func removeDaemonTask() error {
+	// Return nil if the task does not exist
+	_, stderr, err := powershell.Execute("Get-ScheduledTask", "-TaskName", constants.DaemonTaskName)
+	if err != nil {
+		logging.Debugf("%s task is not installed: %v : %s", constants.DaemonTaskName, err, stderr)
+		return nil
+	}
 	if err := checkIfDaemonTaskRunning(); err == nil {
 		_, stderr, err := powershell.Execute("Stop-ScheduledTask", "-TaskName", constants.DaemonTaskName)
 		if err != nil {
