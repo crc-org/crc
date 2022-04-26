@@ -156,7 +156,7 @@ func fixDaemonTaskRunning() error {
 		logging.Debugf("unable to run the %s task: %v : %s", constants.DaemonTaskName, err, stderr)
 		return err
 	}
-	return nil
+	return waitForDaemonRunning()
 }
 
 func checkIfOlderTask() error {
