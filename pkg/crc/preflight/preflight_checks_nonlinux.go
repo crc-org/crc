@@ -4,10 +4,14 @@
 package preflight
 
 import (
+	"context"
+	"fmt"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/code-ready/crc/pkg/crc/daemonclient"
+	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/shirou/gopsutil/v3/process"
 )
@@ -69,4 +73,20 @@ func olderDaemonVersionRunning() error {
 		return nil
 	}
 	return daemonclient.CheckIfOlderVersion(v)
+}
+
+func daemonRunning() bool {
+	if _, err := daemonclient.GetVersionFromDaemonAPI(); err != nil {
+		return false
+	}
+	return true
+}
+
+func waitForDaemonRunning() error {
+	return crcerrors.Retry(context.Background(), 15*time.Second, func() error {
+		if !daemonRunning() {
+			return &crcerrors.RetriableError{Err: fmt.Errorf("daemon is not running yet")}
+		}
+		return nil
+	}, 2*time.Second)
 }
