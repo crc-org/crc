@@ -11,6 +11,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/crc/cache"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/daemonclient"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/version"
@@ -271,10 +272,17 @@ func checkIfDaemonPlistFileExists() error {
 	if err := launchd.CheckPlist(*daemonConfig); err != nil {
 		return err
 	}
-	if !launchd.AgentRunning(daemonConfig.Label) {
+	if !launchd.AgentRunning(daemonConfig.Label) && !daemonRunning() {
 		return fmt.Errorf("launchd agent '%s' is not running", daemonConfig.Label)
 	}
 	return nil
+}
+
+func daemonRunning() bool {
+	if _, err := daemonclient.GetVersionFromDaemonAPI(); err != nil {
+		return false
+	}
+	return true
 }
 
 func fixDaemonPlistFileExists() error {
