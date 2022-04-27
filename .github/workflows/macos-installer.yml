@@ -38,6 +38,16 @@ jobs:
           go-version: ${{ matrix.go }}
       - name: Build macOS installer
         run: make NO_CODESIGN=1 out/macos-amd64/crc-macos-amd64.pkg
+      - name: Install crc pkg
+        run: sudo installer -pkg out/macos-amd64/crc-macos-amd64.pkg -target /
+      - name: Set podman preset as part of config
+        run: crc config set preset podman
+      - name: Run crc setup command
+        run: crc setup
+      - name: Wait 10 sec for the daemon to serve
+        run: sleep 10
+      - name: Run crc with podman preset
+        run: crc start
       - name: Upload macOS installer artifact
         uses: actions/upload-artifact@v2
         with:
