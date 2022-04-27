@@ -5,6 +5,12 @@ on:
       - "main"
       - "old-main"
   pull_request: {}
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -17,6 +23,13 @@ jobs:
         go:
           - 1.16
     steps:
+      # Enable tmate debugging of manually-triggered workflows if the input option was provided
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+        with:
+          limit-access-to-actor: true
+        timeout-minutes: 30
       - name: Check out repository code
         uses: actions/checkout@v2
       - name: Set up Go
