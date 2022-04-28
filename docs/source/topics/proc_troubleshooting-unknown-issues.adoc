@@ -64,5 +64,5 @@ The cluster takes a minimum of four minutes to start the necessary containers an
 If your issue is not resolved by this procedure, perform the following steps:
 
 . link:https://github.com/code-ready/crc/issues[Search open issues] for the issue that you are encountering.
-. If no existing issue addresses the encountered issue, link:https://github.com/code-ready/crc/issues/new[create an issue] and link:https://help.github.com/en/articles/file-attachments-on-issues-and-pull-requests[attach the [filename]*_~/.crc/crc.log_* file] to the created issue.
+. If no existing issue addresses the encountered issue, link:https://github.com/code-ready/crc/issues/new[create an issue] and link:https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files[attach the [filename]*_~/.crc/crc.log_* file] to the created issue.
 The [filename]*_~/.crc/crc.log_* file has detailed debugging and troubleshooting information which can help diagnose the problem that you are experiencing.
