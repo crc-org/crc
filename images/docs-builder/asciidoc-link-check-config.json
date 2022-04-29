@@ -5,5 +5,4 @@
         { "pattern": "https://console-openshift-console.apps-crc.testing" },
         { "pattern": "http://proxy.example.com" }
     ]
-
 }
