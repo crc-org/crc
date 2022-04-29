@@ -12,7 +12,7 @@ RUN gem install asciidoctor && \
 
 COPY entrypoint.sh /sbin/entrypoint.sh
 RUN chmod 755 /sbin/entrypoint.sh
-COPY links_ignorelist.json /links_ignorelist.json
+COPY asciidoc-link-check-config.json /asciidoc-link-check-config.json
 
 VOLUME /docs
 WORKDIR /docs
