@@ -45,7 +45,7 @@ To assign more resources to the {prod} instance, see link:{crc-gsg-url}#configur
 
 === {mac}
 
-* On {mac}, {prod} requires {mac} 10.14 Mojave or later.
+* On {mac}, {prod} requires {mac} 11 Big Sur or later.
 {prod} does not work on earlier versions of {mac}.
 
 === Linux
