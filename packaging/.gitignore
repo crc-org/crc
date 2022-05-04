@@ -7,3 +7,4 @@ root/
 /VERSION
 /windows/msi/
 packaging/windows/product.wxs
+vfkit-*.entitlements
