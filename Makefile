@@ -302,7 +302,10 @@ ifeq ($(CUSTOM_EMBED),false)
 	$(HOST_BUILD_DIR)/crc-embedder download $(EMBED_DOWNLOAD_DIR)
 endif
 
-packagedir: clean embed-download macos-release-binary
+packaging/vfkit-$(GOARCH).entitlements:
+	curl -sL https://raw.githubusercontent.com/code-ready/vfkit/main/vf.entitlements -o $@
+
+packagedir: clean embed-download macos-release-binary packaging/vfkit-$(GOARCH).entitlements
 	echo -n $(CRC_VERSION) > packaging/VERSION
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
