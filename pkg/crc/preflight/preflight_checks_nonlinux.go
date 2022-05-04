@@ -63,18 +63,6 @@ func isDaemonProcess(cmdLine []string) bool {
 	return false
 }
 
-func olderDaemonVersionRunning() error {
-	// Here daemonclient.GetVersionFromDaemonAPI() can return the error
-	// if the daemon is not running or daemon version API is not responding
-	// in both situation we can't check if daemon is running with an older
-	// version of crc or not, so we are just ignoring the error from it.
-	v, err := daemonclient.GetVersionFromDaemonAPI()
-	if err != nil {
-		return nil
-	}
-	return daemonclient.CheckIfOlderVersion(v)
-}
-
 func daemonRunning() bool {
 	if _, err := daemonclient.GetVersionFromDaemonAPI(); err != nil {
 		return false

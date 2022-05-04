@@ -134,9 +134,6 @@ func removeDaemonTask() error {
 }
 
 func checkIfDaemonTaskRunning() error {
-	if err := olderDaemonVersionRunning(); err != nil {
-		return err
-	}
 	stdout, stderr, err := powershell.Execute(fmt.Sprintf(`(Get-ScheduledTask -TaskName "%s").State`, constants.DaemonTaskName))
 	if err != nil {
 		logging.Debugf("%s task is not running: %v : %s", constants.DaemonTaskName, err, stderr)
@@ -149,7 +146,7 @@ func checkIfDaemonTaskRunning() error {
 }
 
 func fixDaemonTaskRunning() error {
-	if err := olderDaemonVersionRunning(); err != nil {
+	if daemonRunning() {
 		if err := killDaemonProcess(); err != nil {
 			return err
 		}
