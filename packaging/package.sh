@@ -3,10 +3,22 @@ set -euxo pipefail
 
 BASEDIR=$(dirname "$0")
 OUTPUT=$1
-GOARCH=$(go env GOARCH)
 CODESIGN_IDENTITY=${CODESIGN_IDENTITY:-mock}
 PRODUCTSIGN_IDENTITY=${PRODUCTSIGN_IDENTITY:-mock}
 NO_CODESIGN=${NO_CODESIGN:-0}
+
+case "$(uname -m)" in
+    "x86_64")
+        GOARCH="amd64"
+        ;;
+    "arm64")
+        GOARCH="arm64"
+        ;;
+    *)
+        echo "Unknown arch, exiting"
+        exit 1
+        ;;
+esac
 
 function sign() {
   if [ "${NO_CODESIGN}" -eq "1" ]; then
