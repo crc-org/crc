@@ -23,7 +23,7 @@
 
 // Product naming
 :prod: CRC
-:rh-prod: {rh} {prod}
+:rh-prod: {prod}
 :bin: crc
 
 // Documentation naming
