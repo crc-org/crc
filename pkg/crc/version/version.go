@@ -43,7 +43,7 @@ var (
 const (
 	releaseInfoLink = "https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/release-info.json"
 	// Tray version to be embedded in executable
-	crcTrayElectronVersion = "1.2.3"
+	crcTrayElectronVersion = "1.2.4"
 )
 
 type CrcReleaseInfo struct {
