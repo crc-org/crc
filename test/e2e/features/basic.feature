@@ -195,9 +195,10 @@ Feature: Basic test
     @windows
     Scenario Outline: CRC clean-up
         When executing crc cleanup command succeeds
-        Then stderr should contain "Uninstalling tray if installed"
-        Then stderr should contain "Uninstalling daemon if installed"
+        Then stderr should contain "Removing daemon task"
+        And stderr should contain "Removing hosts file records added by CRC"
+        And stderr should contain "Removing pull secret from the keyring"
+        And stderr should contain "Removing older logs"
+        And stderr should contain "Removing CRC Machine Instance directory"
         And stderr should contain "Removing crc's virtual machine"
-        And stderr should contain "Removing dns server from interface"
-        And stderr should contain "Will run as admin: Remove dns entry for default switch"
         And stdout should contain "Cleanup finished"
