@@ -320,10 +320,18 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to change permissions to root podman socket")
 	}
 
+	proxyConfig, err := getProxyConfig(vm.bundle)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting proxy configuration")
+	}
+
 	if !vm.bundle.IsOpenShift() {
 		// **************************
 		//  END OF PODMAN START CODE
 		// **************************
+		if err := configurePodmanProxy(ctx, sshRunner, proxyConfig); err != nil {
+			return nil, errors.Wrap(err, "Failed to configure proxy for podman")
+		}
 		if err := dns.AddPodmanHosts(instanceIP); err != nil {
 			return nil, errors.Wrap(err, "Failed to add podman host dns entry")
 		}
@@ -345,10 +353,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}, nil
 	}
 
-	proxyConfig, err := getProxyConfig(vm.bundle)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error getting proxy configuration")
-	}
 	proxyConfig.ApplyToEnvironment()
 	proxyConfig.AddNoProxy(instanceIP)
 
@@ -640,6 +644,58 @@ func copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey *rsa.Priv
 		return err
 	}
 	return updateClientCrtAndKeyToKubeconfig(clientKey, clientCert, srcKubeConfigPath, dstKubeConfigPath)
+}
+
+func configurePodmanProxy(ctx context.Context, sshRunner *crcssh.Runner, proxy *network.ProxyConfig) (err error) {
+	if !proxy.IsEnabled() {
+		return nil
+	}
+
+	_, _, err = sshRunner.RunPrivileged("creating /etc/environment.d/", "mkdir -p /etc/environment.d/")
+	if err != nil {
+		return err
+	}
+
+	proxyEnv := strings.Builder{}
+	if proxy.HTTPProxy != "" {
+		proxyEnv.WriteString(fmt.Sprintf("http_proxy=%s\n", proxy.HTTPProxy))
+		proxyEnv.WriteString(fmt.Sprintf("HTTP_PROXY=%s\n", proxy.HTTPProxy))
+	}
+	if proxy.HTTPSProxy != "" {
+		proxyEnv.WriteString(fmt.Sprintf("https_proxy=%s\n", proxy.HTTPSProxy))
+		proxyEnv.WriteString(fmt.Sprintf("HTTPS_PROXY=%s\n", proxy.HTTPSProxy))
+	}
+	if len(proxy.GetNoProxyString()) != 0 {
+		proxyEnv.WriteString(fmt.Sprintf("no_proxy=%s\n", proxy.GetNoProxyString()))
+		proxyEnv.WriteString(fmt.Sprintf("NO_PROXY=%s\n", proxy.GetNoProxyString()))
+	}
+	err = sshRunner.CopyData([]byte(proxyEnv.String()), "/etc/environment.d/proxy-env.conf", 0644)
+	if err != nil {
+		return err
+	}
+
+	_, _, err = sshRunner.RunPrivileged("creating /etc/systemd/system/podman.service.d/", "mkdir -p /etc/systemd/system/podman.service.d/")
+	if err != nil {
+		return err
+	}
+	podmanServiceConf := "[Service]\nEnvironmentFile=/etc/environment.d/proxy-env.conf\n"
+	err = sshRunner.CopyData([]byte(podmanServiceConf), "/etc/systemd/system/podman.service.d/proxy-env.conf", 0644)
+	if err != nil {
+		return err
+	}
+
+	systemdCommander := systemd.NewInstanceSystemdCommander(sshRunner)
+	err = systemdCommander.DaemonReload()
+	if err != nil {
+		return err
+	}
+	err = systemdCommander.User().DaemonReload()
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 func ensureProxyIsConfiguredInOpenShift(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, proxy *network.ProxyConfig) (err error) {
