@@ -430,7 +430,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to update pull secret on the disk")
 	}
 
-	if err := ensureProxyIsConfiguredInOpenShift(ctx, ocConfig, sshRunner, proxyConfig, instanceIP); err != nil {
+	if err := ensureProxyIsConfiguredInOpenShift(ctx, ocConfig, sshRunner, proxyConfig); err != nil {
 		return nil, errors.Wrap(err, "Failed to update cluster proxy configuration")
 	}
 
@@ -642,7 +642,7 @@ func copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey *rsa.Priv
 	return updateClientCrtAndKeyToKubeconfig(clientKey, clientCert, srcKubeConfigPath, dstKubeConfigPath)
 }
 
-func ensureProxyIsConfiguredInOpenShift(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, proxy *network.ProxyConfig, instanceIP string) (err error) {
+func ensureProxyIsConfiguredInOpenShift(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, proxy *network.ProxyConfig) (err error) {
 	if !proxy.IsEnabled() {
 		return nil
 	}
