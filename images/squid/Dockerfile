@@ -30,7 +30,7 @@
 # (commonName must be set to 192.168.122.1 before running generate-certs.sh and building the container image)
 
 # Intermediate build image to generate the CA and certificate used for https
-FROM registry.centos.org/centos/centos:centos8 AS gencerts
+FROM quay.io/centos/centos:stream8 AS gencerts
 MAINTAINER CRC <devtools-cdk@redhat.com>
 
 RUN yum -y install openssl
@@ -41,7 +41,8 @@ RUN bash ./generate-certs.sh
 
 
 # Final squid container
-FROM registry.centos.org/centos/centos:centos8
+FROM quay.io/centos/centos:stream8
+
 MAINTAINER CRC <devtools-cdk@redhat.com>
 
 RUN yum -y install squid && \
