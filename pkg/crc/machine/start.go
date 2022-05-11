@@ -345,7 +345,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}, nil
 	}
 
-	proxyConfig, err := getProxyConfig(vm.bundle.ClusterInfo.BaseDomain)
+	proxyConfig, err := getProxyConfig(vm.bundle)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting proxy configuration")
 	}
