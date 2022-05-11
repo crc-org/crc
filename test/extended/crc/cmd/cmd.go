@@ -12,7 +12,7 @@ import (
 const (
 	// timeout to wait for cluster to change its state
 	clusterStateRetryCount    = 15
-	clusterStateTimeout       = 900
+	clusterStateTimeout       = 600
 	CRCExecutableInstalled    = "installed"
 	CRCExecutableNotInstalled = "notInstalled"
 )
