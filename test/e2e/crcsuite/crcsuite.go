@@ -202,10 +202,6 @@ func ParseFlags() {
 	ux.ParseFlags()
 }
 
-func WaitForClusterInState(state string) error {
-	return crcCmd.WaitForClusterInState(state)
-}
-
 func RemoveCRCHome() error {
 	return util.RemoveCRCHome(CRCHome)
 }
@@ -266,9 +262,13 @@ func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string,
 	return matchErr
 }
 
-// CheckCRCStatus checks that output of status command
-// matches given regex
 func CheckCRCStatus(state string) error {
+	if state == "running" {
+		// crc start can finish succesfully, even when
+		// status for cluster is still starting. It is expected
+		// the cluster got stabilized at most within 10 minutes
+		return crcCmd.WaitForClusterInState(state)
+	}
 	return crcCmd.CheckCRCStatus(state)
 }
 
