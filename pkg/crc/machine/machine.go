@@ -25,7 +25,7 @@ func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*types.ClusterConfig, e
 	if err != nil {
 		return nil, fmt.Errorf("Error reading kubeadmin password from bundle %v", err)
 	}
-	proxyConfig, err := getProxyConfig(bundleInfo.ClusterInfo.BaseDomain)
+	proxyConfig, err := getProxyConfig(bundleInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -65,13 +65,13 @@ func createLibMachineClient() (libmachine.API, func()) {
 	}
 }
 
-func getProxyConfig(baseDomainName string) (*network.ProxyConfig, error) {
+func getProxyConfig(bundleInfo *bundle.CrcBundleInfo) (*network.ProxyConfig, error) {
 	proxy, err := network.NewProxyConfig()
 	if err != nil {
 		return nil, err
 	}
-	if proxy.IsEnabled() {
-		proxy.AddNoProxy(fmt.Sprintf(".%s", baseDomainName))
+	if proxy.IsEnabled() && bundleInfo.IsOpenShift() {
+		proxy.AddNoProxy(fmt.Sprintf(".%s", bundleInfo.ClusterInfo.BaseDomain))
 	}
 
 	return proxy, nil
