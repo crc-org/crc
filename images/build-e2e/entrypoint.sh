@@ -51,14 +51,16 @@ if [[ ! -z "${TARGET_HOST_DOMAIN+x}" ]]; then
     REMOTE="${TARGET_HOST_USERNAME}@${TARGET_HOST_DOMAIN}@${TARGET_HOST}"
 fi
 
+# Increase ssh connectivity reliability 
+RELIABLE_CONNECTION='-o ServerAliveInterval=30 -o ServerAliveCountMax=1200'
 # Set SCP / SSH command with pass or key
 NO_STRICT='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 if [[ ! -z "${TARGET_HOST_KEY_PATH+x}" ]]; then
-    SCP="scp -r ${NO_STRICT} -i ${TARGET_HOST_KEY_PATH}"
-    SSH="ssh ${NO_STRICT} -i ${TARGET_HOST_KEY_PATH}"
+    SCP="scp -r ${RELIABLE_CONNECTION} ${NO_STRICT} -i ${TARGET_HOST_KEY_PATH}"
+    SSH="ssh ${RELIABLE_CONNECTION} ${NO_STRICT} -i ${TARGET_HOST_KEY_PATH}"
 else
-    SCP="sshpass -p ${TARGET_HOST_PASSWORD} scp -r ${NO_STRICT}" \
-    SSH="sshpass -p ${TARGET_HOST_PASSWORD} ssh ${NO_STRICT}"
+    SCP="sshpass -p ${TARGET_HOST_PASSWORD} scp -r ${RELIABLE_CONNECTION} ${NO_STRICT}" \
+    SSH="sshpass -p ${TARGET_HOST_PASSWORD} ssh ${RELIABLE_CONNECTION} ${NO_STRICT}"
 fi
 
 echo "Copy resources to target"
