@@ -115,18 +115,18 @@ var vsockChecks = []Check{
 var daemonTaskChecks = []Check{
 	{
 		configKeySuffix:    "check-daemon-task-install",
-		checkDescription:   "Checking if daemon task is installed",
+		checkDescription:   "Checking if the daemon task is installed",
 		check:              checkIfDaemonTaskInstalled,
 		fixDescription:     "Installing the daemon task",
 		fix:                fixDaemonTaskInstalled,
-		cleanupDescription: "Removing daemon task",
+		cleanupDescription: "Removing the daemon task",
 		cleanup:            removeDaemonTask,
 
 		labels: labels{Os: Windows},
 	},
 	{
 		configKeySuffix:  "check-daemon-task-running",
-		checkDescription: "Checking if daemon task is running",
+		checkDescription: "Checking if the daemon task is running",
 		check:            checkIfDaemonTaskRunning,
 		fixDescription:   "Running the daemon task",
 		fix:              fixDaemonTaskRunning,
@@ -140,7 +140,7 @@ var adminHelperServiceCheks = []Check{
 		configKeySuffix:  "check-admin-helper-service-running",
 		checkDescription: "Checking admin helper service is running",
 		check:            checkIfAdminHelperServiceRunning,
-		fixDescription:   "Make sure you installed the crc using installer",
+		fixDescription:   "Make sure you installed crc using the Windows installer",
 		flags:            NoFix,
 
 		labels: labels{Os: Windows},
