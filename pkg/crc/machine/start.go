@@ -559,7 +559,7 @@ func createHost(machineConfig config.MachineConfig, preset crcPreset.Preset) err
 		return fmt.Errorf("Error in driver during machine creation: %s", err)
 	}
 
-	logging.Info("Generating new SSH Key pair...")
+	logging.Info("Generating new SSH key pair...")
 	if err := crcssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
 		return fmt.Errorf("Error generating ssh key pair: %v", err)
 	}
