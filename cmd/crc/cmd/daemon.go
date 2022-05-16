@@ -93,6 +93,15 @@ var daemonCmd = &cobra.Command{
 						},
 					},
 				},
+				{
+					Name: "containers.internal.",
+					Records: []types.Record{
+						{
+							Name: "gateway",
+							IP:   net.ParseIP(hostVirtualIP),
+						},
+					},
+				},
 			},
 			Protocol: types.HyperKitProtocol,
 		}
@@ -150,7 +159,7 @@ func run(configuration *types.Configuration) error {
 		}
 	}()
 
-	networkListener, err := vn.Listen("tcp", fmt.Sprintf("%s:7777", hostVirtualIP))
+	networkListener, err := vn.Listen("tcp", fmt.Sprintf("%s:80", hostVirtualIP))
 	if err != nil {
 		return err
 	}
