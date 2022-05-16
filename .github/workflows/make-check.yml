@@ -16,7 +16,7 @@ jobs:
           - ubuntu-latest
           - ubuntu-18.04
         go:
-          - 1.16
+          - 1.17
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2

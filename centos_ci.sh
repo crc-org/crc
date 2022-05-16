@@ -3,7 +3,7 @@
 # bundle location
 BUNDLE_VERSION=4.10.6
 BUNDLE=crc_libvirt_$BUNDLE_VERSION_amd64.crcbundle
-GO_VERSION=1.16.10
+GO_VERSION=1.17.10
 
 # Output command before executing
 set -x
