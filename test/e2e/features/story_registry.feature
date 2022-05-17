@@ -17,15 +17,15 @@ Feature: Local image to image-registry
         And login to the oc cluster succeeds
 
     Scenario: Create local image
-        Given executing "podman pull quay.io/bitnami/nginx" succeeds
+        Given executing "podman pull quay.io/centos7/httpd-24-centos7" succeeds
         When executing "podman images" succeeds
-        Then stdout should contain "quay.io/bitnami/nginx"
+        Then stdout should contain "quay.io/centos7/httpd-24-centos7"
 
     Scenario: Push local image to OpenShift image registry
         Given executing "oc new-project testproj-img" succeeds
         When executing "podman login -u kubeadmin -p $(oc whoami -t) default-route-openshift-image-registry.apps-crc.testing --tls-verify=false" succeeds
         Then stdout should contain "Login Succeeded!"
-         And executing "podman tag quay.io/bitnami/nginx:latest default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test" succeeds
+         And executing "podman tag quay.io/centos7/httpd-24-centos7 default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test" succeeds
         When executing "podman push default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test --tls-verify=false" succeeds
 
     Scenario: Deploy the image
@@ -35,12 +35,12 @@ Feature: Local image to image-registry
         When executing "oc get pods" succeeds
         Then stdout should contain "Running"
         When executing "oc logs deployment/hello" succeeds
-        Then stdout should contain "Starting NGINX"
+        Then stdout should contain "Apache"
 
     Scenario: Clean up image and project
         Given executing "podman images" succeeds
-        When stdout contains "quay.io/bitnami/nginx"
-        Then executing "podman image rm quay.io/bitnami/nginx" succeeds
+        When stdout contains "quay.io/centos7/httpd-24-centos7"
+        Then executing "podman image rm quay.io/centos7/httpd-24-centos7" succeeds
         And executing "oc delete project testproj-img" succeeds
 
     @startstop
