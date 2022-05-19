@@ -15,6 +15,7 @@ type MachineConfig struct {
 	ImageFormat     string
 	SSHKeyPath      string
 	KubeConfig      string
+	SharedDirs      []string
 
 	// macOS specific configuration
 	KernelCmdLine string
