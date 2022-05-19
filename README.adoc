@@ -34,7 +34,7 @@ You can manually change your preference about usage data collection by running `
 
 === Getting CRC
 
-CRC binaries with an embedded OpenShift disk image can be downloaded from link:https://cloud.redhat.com/openshift/create/local[this page].
+CRC binaries with an embedded OpenShift disk image can be downloaded from link:https://console.redhat.com/openshift/create/local[this page].
 
 === Using CRC
 
