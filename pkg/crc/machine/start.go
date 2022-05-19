@@ -133,6 +133,52 @@ func growRootFileSystem(sshRunner *crcssh.Runner) error {
 
 	return nil
 }
+
+func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
+	logging.Debugf("Configuring shared directories")
+	sharedDirs, err := vm.Driver.GetSharedDirs()
+	if err != nil {
+		// the libvirt machine driver uses net/rpc, which wraps errors
+		// in rpc.ServerError, but without using golang 1.13 error
+		// wrapping feature. Moreover this package is marked as
+		// frozen/not accepting new features, so it's unlikely we'll
+		// ever be able to use errors.Is()
+		if err.Error() == drivers.ErrNotSupported.Error() || err.Error() == drivers.ErrNotImplemented.Error() {
+			return nil
+		}
+		return err
+	}
+	if len(sharedDirs) == 0 {
+		return nil
+	}
+	logging.Infof("Configuring shared directories")
+	for _, mount := range sharedDirs {
+		// CoreOS makes / immutable, we need to handle this if we need to create a directory outside of /home and /mnt
+		isHomeOrMnt := strings.HasPrefix(mount.Target, "/home") || strings.HasPrefix(mount.Target, "/mnt")
+		if !isHomeOrMnt {
+			if _, _, err := sshRunner.RunPrivileged("Making / mutable", "chattr", "-i", "/"); err != nil {
+				return err
+			}
+		}
+		if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Creating %s", mount.Target), "mkdir", "-p", mount.Target); err != nil {
+			return err
+		}
+		if !isHomeOrMnt {
+			if _, _, err := sshRunner.RunPrivileged("Making / immutable again", "chattr", "+i", "/"); err != nil {
+				return err
+			}
+		}
+		logging.Debugf("Mounting tag %s at %s", mount.Tag, mount.Target)
+		//FIXME: do not hardcode this
+		mount.Type = "virtiofs"
+		if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Mounting %s", mount.Target), "mount", "-o", "context=\"system_u:object_r:container_file_t:s0\"", "-t", mount.Type, mount.Tag, mount.Target); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (client *client) Start(ctx context.Context, startConfig types.StartConfig) (*types.StartResult, error) {
 	telemetry.SetCPUs(ctx, startConfig.CPUs)
 	telemetry.SetMemory(ctx, uint64(startConfig.Memory)*1024*1024)
@@ -174,6 +220,11 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			logging.Infof("Creating CRC VM for Podman %s...", crcBundleMetadata.GetPodmanVersion())
 		}
 
+		sharedDirs := []string{}
+		if homeDir, err := os.UserHomeDir(); err == nil {
+			sharedDirs = append(sharedDirs, homeDir)
+		}
+
 		machineConfig := config.MachineConfig{
 			Name:            client.name,
 			BundleName:      bundleName,
@@ -187,6 +238,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			KernelCmdLine:   crcBundleMetadata.GetKernelCommandLine(),
 			Initramfs:       crcBundleMetadata.GetInitramfsPath(),
 			Kernel:          crcBundleMetadata.GetKernelPath(),
+			SharedDirs:      sharedDirs,
 		}
 		if crcBundleMetadata.IsOpenShift() {
 			machineConfig.KubeConfig = crcBundleMetadata.GetKubeConfigPath()
@@ -314,6 +366,10 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		if err = addNameServerToInstance(sshRunner, startConfig.NameServer); err != nil {
 			return nil, errors.Wrap(err, "Failed to add nameserver to the VM")
 		}
+	}
+
+	if err := configureSharedDirs(vm, sshRunner); err != nil {
+		return nil, err
 	}
 
 	if _, _, err := sshRunner.RunPrivileged("make root Podman socket accessible", "chmod 777 /run/podman/ /run/podman/podman.sock"); err != nil {
