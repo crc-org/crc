@@ -6,9 +6,11 @@
 
 toc::[]
 
-image:https://travis-ci.org/code-ready/crc.svg?branch=master["Travis CI Build Status", link="https://travis-ci.org/code-ready/crc"]
-image:https://circleci.com/gh/code-ready/crc/tree/master.svg?style=svg["CircleCI Build Status", link="https://circleci.com/gh/code-ready/crc"]
-image:https://ci.centos.org/buildStatus/icon?job=codeready-crc-master["CentOS CI Build Status", link="https://ci.centos.org/job/codeready-crc-master"]
+image:https://github.com/code-ready/crc/actions/workflows/make-check.yml/badge.svg?branch=main["main", link="https://github.com/code-ready/crc/actions/workflows/make-check.yml"]
+image:https://github.com/code-ready/crc/actions/workflows/windows-installer.yml/badge.svg["win msi", link="https://github.com/code-ready/crc/actions/workflows/windows-installer.yml"]
+image:https://github.com/code-ready/crc/actions/workflows/macos-installer.yml/badge.svg["macos pkg", link="https://github.com/code-ready/crc/actions/workflows/macos-installer.yml"]
+image:https://github.com/code-ready/crc/actions/workflows/make-rpm.yml/badge.svg["rpm", link="https://github.com/code-ready/crc/actions/workflows/make-rpm.yml"]
+image:https://github.com/code-ready/crc/actions/workflows/make-check-win.yml/badge.svg["win", link="https://github.com/code-ready/crc/actions/workflows/make-check-win.yml"]
 
 [[intro-to-crc]]
 == Introduction
