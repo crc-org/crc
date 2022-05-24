@@ -268,6 +268,13 @@ func Download(preset preset.Preset) error {
 	if err != nil {
 		return err
 	}
+	bundleNameFromURI, err := downloadInfo.GetSourceFilename()
+	if err != nil {
+		return err
+	}
+	if constants.GetDefaultBundle(preset) != bundleNameFromURI {
+		return fmt.Errorf("expected %s but found %s in Makefile", bundleNameFromURI, constants.GetDefaultBundle(preset))
+	}
 	if _, err := downloadInfo.Download(constants.GetDefaultBundlePath(preset), 0664); err != nil {
 		return err
 	}
