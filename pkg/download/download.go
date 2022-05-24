@@ -4,7 +4,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"net/http"
+	"net/url"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -95,4 +97,12 @@ func (r *RemoteFile) Download(bundlePath string, mode os.FileMode) (string, erro
 
 func (r *RemoteFile) GetSha256Sum() string {
 	return r.sha256sum
+}
+
+func (r *RemoteFile) GetSourceFilename() (string, error) {
+	u, err := url.Parse(r.uri)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Base(u.Path), nil
 }
