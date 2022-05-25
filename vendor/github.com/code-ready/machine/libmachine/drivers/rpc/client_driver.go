@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/drivers/plugin/localbinary"
 	"github.com/code-ready/machine/libmachine/state"
 	"github.com/code-ready/machine/libmachine/version"
@@ -73,6 +74,7 @@ const (
 	StartMethod           = `.Start`
 	StopMethod            = `.Stop`
 	KillMethod            = `.Kill`
+	GetSharedDirsMethod   = `.GetSharedDirs`
 )
 
 func (ic *InternalClient) Call(serviceMethod string, args interface{}, reply interface{}) error {
@@ -309,4 +311,13 @@ func (c *RPCClientDriver) Stop() error {
 
 func (c *RPCClientDriver) Kill() error {
 	return c.Client.Call(KillMethod, struct{}{}, nil)
+}
+
+func (c *RPCClientDriver) GetSharedDirs() ([]drivers.SharedDir, error) {
+	var sharedDirs []drivers.SharedDir
+	if err := c.Client.Call(GetSharedDirsMethod, struct{}{}, &sharedDirs); err != nil {
+		return []drivers.SharedDir{}, err
+	}
+
+	return sharedDirs, nil
 }

@@ -21,6 +21,15 @@ type VMDriver struct {
 	Memory          int
 	CPU             int
 	DiskCapacity    uint64 // bytes
+	SharedDirs      []SharedDir
+}
+
+type SharedDir struct {
+	ReadOnly bool
+	Source   string
+	Tag      string
+	Target   string
+	Type     string
 }
 
 // DriverName returns the name of the driver
@@ -66,4 +75,8 @@ func (d *BaseDriver) GetBundleName() (string, error) {
 
 func (d *BaseDriver) UpdateConfigRaw(rawData []byte) error {
 	return ErrNotImplemented
+}
+
+func (d *VMDriver) GetSharedDirs() ([]SharedDir, error) {
+	return nil, ErrNotImplemented
 }

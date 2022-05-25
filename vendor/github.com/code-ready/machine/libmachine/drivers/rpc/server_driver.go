@@ -137,3 +137,9 @@ func (r *RPCServerDriver) Heartbeat(_ *struct{}, _ *struct{}) error {
 	r.HeartbeatCh <- true
 	return nil
 }
+
+func (r *RPCServerDriver) GetSharedDirs(_ *struct{}, reply *[]drivers.SharedDir) error {
+	sharedDirs, err := r.ActualDriver.GetSharedDirs()
+	*reply = sharedDirs
+	return err
+}

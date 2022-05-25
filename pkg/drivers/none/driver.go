@@ -61,3 +61,7 @@ func (d *Driver) Start() error {
 func (d *Driver) Stop() error {
 	return fmt.Errorf("hosts without a driver cannot be stopped")
 }
+
+func (d *Driver) GetSharedDirs() ([]drivers.SharedDir, error) {
+	return []drivers.SharedDir{}, nil
+}

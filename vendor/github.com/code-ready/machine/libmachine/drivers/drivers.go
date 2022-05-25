@@ -27,6 +27,8 @@ type Driver interface {
 	// GetBundleName() Returns the name of the unpacked bundle which was used to create this machine
 	GetBundleName() (string, error)
 
+	GetSharedDirs() ([]SharedDir, error)
+
 	// GetState returns the state that the host is in (running, stopped, etc)
 	GetState() (state.State, error)
 
@@ -54,6 +56,7 @@ type Driver interface {
 
 var ErrHostIsNotRunning = errors.New("Host is not running")
 var ErrNotImplemented = errors.New("Not Implemented")
+var ErrNotSupported = errors.New("Not Supported")
 
 func MachineInState(d Driver, desiredState state.State) func() bool {
 	return func() bool {

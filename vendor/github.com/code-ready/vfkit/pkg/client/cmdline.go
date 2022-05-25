@@ -45,6 +45,11 @@ type virtioSerial struct {
 	logFile string
 }
 
+type virtioFs struct {
+	sharedDir string
+	mountTag  string
+}
+
 func NewVirtualMachine(vcpus uint, memoryBytes uint64, bootloader *Bootloader) *VirtualMachine {
 	return &VirtualMachine{
 		vcpus:       vcpus,
@@ -193,4 +198,22 @@ func (dev *virtioSerial) ToCmdLine() ([]string, error) {
 		return nil, fmt.Errorf("virtio-serial needs the path to the log file")
 	}
 	return []string{"--device", fmt.Sprintf("virtio-serial,logFilePath=%s", dev.logFile)}, nil
+}
+
+func VirtioFsNew(sharedDir string, mountTag string) (VirtioDevice, error) {
+	return &virtioFs{
+		sharedDir: sharedDir,
+		mountTag:  mountTag,
+	}, nil
+}
+
+func (dev *virtioFs) ToCmdLine() ([]string, error) {
+	if dev.sharedDir == "" {
+		return nil, fmt.Errorf("virtio-fs needs the path to the directory to share")
+	}
+	if dev.mountTag != "" {
+		return []string{"--device", fmt.Sprintf("virtio-fs,sharedDir=%s,mountTag=%s", dev.sharedDir, dev.mountTag)}, nil
+	} else {
+		return []string{"--device", fmt.Sprintf("virtio-fs,sharedDir=%s", dev.sharedDir)}, nil
+	}
 }
