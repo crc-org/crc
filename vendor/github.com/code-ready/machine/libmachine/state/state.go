@@ -4,15 +4,15 @@ package state
 type State int
 
 const (
-	reserved0 State = iota
+	reserved0 State = iota //nolint:deadcode,varcheck
 	Running
-	reserved2
-	reserved3
+	reserved2 //nolint:deadcode,varcheck
+	reserved3 //nolint:deadcode,varcheck
 	Stopped
-	reserved5
-	reserved6
+	reserved5 //nolint:deadcode,varcheck
+	reserved6 //nolint:deadcode,varcheck
 	Error
-	reserved8
+	reserved8 //nolint:deadcode,varcheck
 )
 
 var states = []string{

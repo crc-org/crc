@@ -14,8 +14,8 @@ require (
 	github.com/cheggaaa/pb/v3 v3.0.8
 	github.com/code-ready/admin-helper v0.0.10
 	github.com/code-ready/clicumber v0.0.0-20210817053019-08963a832984
-	github.com/code-ready/machine v0.0.0-20210902065103-07b1904d5147
-	github.com/code-ready/vfkit v0.0.1
+	github.com/code-ready/machine v0.0.0-20220727160217-7bf0dd8c2d7b
+	github.com/code-ready/vfkit v0.0.2
 	github.com/containers/gvisor-tap-vsock v0.3.1-0.20220228052040-b735d4413359
 	github.com/containers/image/v5 v5.15.0
 	github.com/coreos/go-systemd/v22 v22.3.2
@@ -43,19 +43,19 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/segmentio/analytics-go/v3 v3.2.1
 	github.com/shirou/gopsutil/v3 v3.22.4
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.11.0
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.8.0
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 	github.com/yusufpapurcu/wmi v1.2.2
 	github.com/zalando/go-keyring v0.2.1
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 	golang.org/x/net v0.0.0-20220708220712-1185a9018129
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
-	golang.org/x/sys v0.0.0-20220712014510-0a85c31ab51e
+	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467
 	golang.org/x/text v0.3.7
 	k8s.io/api v0.23.2
@@ -155,7 +155,6 @@ require (
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/stefanberger/go-pkcs11uri v0.0.0-20201008174630-78d3cae3a980 // indirect
-	github.com/stretchr/objx v0.4.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635 // indirect
 	github.com/tklauser/go-sysconf v0.3.10 // indirect
