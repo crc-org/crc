@@ -200,7 +200,7 @@ Feature: Basic test
     @windows
     Scenario Outline: CRC clean-up
         When executing crc cleanup command succeeds
-        Then stderr should contain "Removing daemon task"
+        Then stderr should contain "Removing the daemon task"
         And stderr should contain "Removing hosts file records added by CRC"
         And stderr should contain "Removing pull secret from the keyring"
         And stderr should contain "Removing older logs"
