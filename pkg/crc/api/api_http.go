@@ -19,34 +19,34 @@ func NewMux(config *crcConfig.Config, machine machine.Client, logger Logger, tel
 func newServerWithRoutes(handler *Handler) *server {
 	server := newServer()
 
-	server.POST("/start", handler.Start)
-	server.GET("/start", handler.Start)
+	server.POST("/start", handler.Start, apiV1)
+	server.GET("/start", handler.Start, apiV1)
 
-	server.POST("/stop", handler.Stop)
-	server.GET("/stop", handler.Stop)
+	server.POST("/stop", handler.Stop, apiV1)
+	server.GET("/stop", handler.Stop, apiV1)
 
-	server.POST("/poweroff", handler.PowerOff)
+	server.POST("/poweroff", handler.PowerOff, apiV1)
 
-	server.GET("/status", handler.Status)
+	server.GET("/status", handler.Status, apiV1)
 
-	server.DELETE("/delete", handler.Delete)
-	server.GET("/delete", handler.Delete)
+	server.DELETE("/delete", handler.Delete, apiV1)
+	server.GET("/delete", handler.Delete, apiV1)
 
-	server.GET("/version", handler.GetVersion)
+	server.GET("/version", handler.GetVersion, apiV1)
 
-	server.GET("/webconsoleurl", handler.GetWebconsoleInfo)
+	server.GET("/webconsoleurl", handler.GetWebconsoleInfo, apiV1)
 
-	server.GET("/config", handler.GetConfig)
-	server.POST("/config", handler.SetConfig)
-	server.DELETE("/config", handler.UnsetConfig)
+	server.GET("/config", handler.GetConfig, apiV1)
+	server.POST("/config", handler.SetConfig, apiV1)
+	server.DELETE("/config", handler.UnsetConfig, apiV1)
 
-	server.GET("/logs", handler.Logs)
+	server.GET("/logs", handler.Logs, apiV1)
 
-	server.GET("/telemetry", handler.UploadTelemetry)
-	server.POST("/telemetry", handler.UploadTelemetry)
+	server.GET("/telemetry", handler.UploadTelemetry, apiV1)
+	server.POST("/telemetry", handler.UploadTelemetry, apiV1)
 
-	server.GET("/pull-secret", getPullSecret(handler.Config))
-	server.POST("/pull-secret", setPullSecret())
+	server.GET("/pull-secret", getPullSecret(handler.Config), apiV1)
+	server.POST("/pull-secret", setPullSecret(), apiV1)
 
 	return server
 }
