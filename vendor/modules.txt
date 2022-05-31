@@ -393,11 +393,11 @@ github.com/power-devops/perfstat
 github.com/rivo/uniseg
 # github.com/rogpeppe/go-internal v1.8.0
 ## explicit; go 1.11
-# github.com/segmentio/analytics-go v3.2.0+incompatible
-## explicit; go 1.14
-github.com/segmentio/analytics-go
-# github.com/segmentio/backo-go v0.0.0-20200129164019-23eae7c10bd3
-## explicit; go 1.13
+# github.com/segmentio/analytics-go/v3 v3.2.1
+## explicit; go 1.17
+github.com/segmentio/analytics-go/v3
+# github.com/segmentio/backo-go v1.0.0
+## explicit
 github.com/segmentio/backo-go
 # github.com/shirou/gopsutil/v3 v3.22.3
 ## explicit; go 1.15
@@ -459,9 +459,6 @@ github.com/u-root/uio/uio
 # github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 ## explicit
 github.com/xi2/xz
-# github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
-## explicit
-github.com/xtgo/uuid
 # github.com/yusufpapurcu/wmi v1.2.2
 ## explicit; go 1.16
 github.com/yusufpapurcu/wmi

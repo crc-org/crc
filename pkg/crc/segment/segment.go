@@ -24,7 +24,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/version"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/pborman/uuid"
-	"github.com/segmentio/analytics-go"
+	"github.com/segmentio/analytics-go/v3"
 	"github.com/spf13/cast"
 )
 

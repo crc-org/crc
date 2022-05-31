@@ -20,6 +20,7 @@ type Context struct {
 	Referrer  ReferrerInfo `json:"referrer,omitempty"`
 	Screen    ScreenInfo   `json:"screen,omitempty"`
 	IP        net.IP       `json:"ip,omitempty"`
+	Direct    bool         `json:"direct,omitempty"`
 	Locale    string       `json:"locale,omitempty"`
 	Timezone  string       `json:"timezone,omitempty"`
 	UserAgent string       `json:"userAgent,omitempty"`

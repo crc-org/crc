@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/segmentio/backo-go"
-	"github.com/xtgo/uuid"
 )
 
 // Instances of this type carry the different configuration options that may
@@ -169,5 +169,5 @@ func makeConfig(c Config) Config {
 // This function returns a string representation of a UUID, it's the default
 // function used for generating unique IDs.
 func uid() string {
-	return uuid.NewRandom().String()
+	return uuid.NewString()
 }
