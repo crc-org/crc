@@ -1,3 +1,4 @@
+//go:build gssapi
 // +build gssapi
 
 package tokencmd

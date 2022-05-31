@@ -427,14 +427,7 @@ func transportWithSystemRoots(issuer string, clientConfig *restclient.Config) (h
 	// perform the retrieval with insecure transport, otherwise oauth-server
 	// logs remote tls error which is confusing during troubleshooting
 	client := http.Client{
-		Transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			TLSClientConfig: &tls.Config{
-				Certificates:       []tls.Certificate{},
-				InsecureSkipVerify: true,
-				ServerName:         issuerURL.Hostname(),
-			},
-		},
+		Transport: insecureTransport(clientConfig.Transport, issuerURL),
 	}
 	resp, err := client.Head(issuer)
 	if err != nil {
@@ -498,4 +491,23 @@ func verifyServerCertChain(dnsName string, chain []*x509.Certificate) ([][]*x509
 		Intermediates: intermediates,
 		DNSName:       dnsName,
 	})
+}
+
+func insecureTransport(roundTripper http.RoundTripper, issuerURL *url.URL) *http.Transport {
+	tlsConfig := &tls.Config{
+		Certificates:       []tls.Certificate{},
+		InsecureSkipVerify: true,
+		ServerName:         issuerURL.Hostname(),
+	}
+	if transport, ok := roundTripper.(*http.Transport); ok {
+		return &http.Transport{
+			Proxy:           transport.Proxy,
+			DialContext:     transport.DialContext,
+			TLSClientConfig: tlsConfig,
+		}
+	}
+	return &http.Transport{
+		Proxy:           http.ProxyFromEnvironment,
+		TLSClientConfig: tlsConfig,
+	}
 }
