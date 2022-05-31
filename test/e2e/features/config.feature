@@ -75,7 +75,6 @@ Feature: Test configuration settings
             | property                             | value1 | value2 |
             | skip-check-bundle-extracted          | true   | false  |
             | skip-check-vfkit-installed           | true   | false  |
-            | skip-check-resolver-file-permissions | true   | false  |
             | skip-check-root-user                 | true   | false  |
 
         @linux
