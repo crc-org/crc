@@ -17,7 +17,7 @@ type HostsLine struct {
 
 const commentChar string = "#"
 
-// Return a new instance of ```HostsLine```.
+// NewHostsLine return a new instance of ```HostsLine```.
 func NewHostsLine(raw string) HostsLine {
 	output := HostsLine{Raw: raw}
 	if output.IsComment() { //whole line is comment

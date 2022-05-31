@@ -2,8 +2,8 @@ package hosts
 
 import (
 	"fmt"
+	"os"
 	"regexp"
-	"runtime"
 	"sort"
 	"strings"
 
@@ -27,6 +27,14 @@ type Hosts struct {
 	HostFilter func(string) bool
 }
 
+func init() {
+	// goodhosts unconditionally uses this environment variable
+	// as an override for the hosts file to use. We don't want admin-helper
+	// to modify arbitrary file, so we have to unset it before calling into
+	// goodhosts.
+	os.Unsetenv("HOSTS_PATH")
+}
+
 func New() (*Hosts, error) {
 	file, err := hostsfile.NewHosts()
 	if err != nil {
@@ -34,7 +42,7 @@ func New() (*Hosts, error) {
 	}
 
 	return &Hosts{
-		File:       &file,
+		File:       file,
 		HostFilter: defaultFilter,
 	}, nil
 }
@@ -66,11 +74,6 @@ func (h *Hosts) Add(ip string, hosts []string) error {
 
 	if err := h.File.Add(ip, hostEntries...); err != nil {
 		return err
-	}
-	// Only execute clean in case of windows to avoid more than
-	// 9 domain entry in a single line
-	if runtime.GOOS == "windows" {
-		h.File.Clean()
 	}
 	return h.File.Flush()
 }

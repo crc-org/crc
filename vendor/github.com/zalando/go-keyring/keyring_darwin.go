@@ -17,8 +17,11 @@ package keyring
 import (
 	"encoding/hex"
 	"fmt"
+	"io"
 	"os/exec"
 	"strings"
+
+	"github.com/alessio/shellescape"
 )
 
 const (
@@ -61,19 +64,32 @@ func (k macOSXKeychain) Get(service, username string) (string, error) {
 
 // Set stores a secret in the keyring given a service name and a user.
 func (k macOSXKeychain) Set(service, username, password string) error {
-	// if the added secret has multiple lines, osx will hex encode it
-	// identify this with a well-known prefix.
-	if strings.ContainsRune(password, '\n') {
-		password = encodingPrefix + hex.EncodeToString([]byte(password))
+	// if the added secret has multiple lines or some non ascii,
+	// osx will hex encode it on return. To avoid getting garbage, we
+	// encode all passwords
+	password = encodingPrefix + hex.EncodeToString([]byte(password))
+
+	cmd := exec.Command(execPathKeychain, "-i")
+	stdIn, err := cmd.StdinPipe()
+	if err != nil {
+		return err
 	}
 
-	return exec.Command(
-		execPathKeychain,
-		"add-generic-password",
-		"-U", //update if exists
-		"-s", service,
-		"-a", username,
-		"-w", password).Run()
+	if err = cmd.Start(); err != nil {
+		return err
+	}
+
+	command := fmt.Sprintf("add-generic-password -U -s %s -a %s -w %s\n", shellescape.Quote(service), shellescape.Quote(username), shellescape.Quote(password))
+	if _, err := io.WriteString(stdIn, command); err != nil {
+		return err
+	}
+
+	if err = stdIn.Close(); err != nil {
+		return err
+	}
+
+	err = cmd.Wait()
+	return err
 }
 
 // Delete deletes a secret, identified by service & user, from the keyring.

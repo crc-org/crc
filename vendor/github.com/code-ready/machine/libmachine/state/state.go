@@ -4,27 +4,27 @@ package state
 type State int
 
 const (
-	None State = iota
+	reserved0 State = iota
 	Running
-	Paused
-	Saved
+	reserved2
+	reserved3
 	Stopped
-	Stopping
-	Starting
+	reserved5
+	reserved6
 	Error
-	Timeout
+	reserved8
 )
 
 var states = []string{
-	"",
+	"reserved0",
 	"Running",
-	"Paused",
-	"Saved",
+	"reserved2",
+	"reserved3",
 	"Stopped",
-	"Stopping",
-	"Starting",
+	"reserved5",
+	"reserved6",
 	"Error",
-	"Timeout",
+	"reserved8",
 }
 
 // Given a State type, returns its string representation
