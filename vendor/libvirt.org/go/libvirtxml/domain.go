@@ -615,19 +615,21 @@ type DomainInterfaceScript struct {
 }
 
 type DomainInterfaceDriver struct {
-	Name        string                      `xml:"name,attr,omitempty"`
-	TXMode      string                      `xml:"txmode,attr,omitempty"`
-	IOEventFD   string                      `xml:"ioeventfd,attr,omitempty"`
-	EventIDX    string                      `xml:"event_idx,attr,omitempty"`
-	Queues      uint                        `xml:"queues,attr,omitempty"`
-	RXQueueSize uint                        `xml:"rx_queue_size,attr,omitempty"`
-	TXQueueSize uint                        `xml:"tx_queue_size,attr,omitempty"`
-	IOMMU       string                      `xml:"iommu,attr,omitempty"`
-	ATS         string                      `xml:"ats,attr,omitempty"`
-	Packed      string                      `xml:"packed,attr,omitempty"`
-	PagePerVQ   string                      `xml:"page_per_vq,attr,omitempty"`
-	Host        *DomainInterfaceDriverHost  `xml:"host"`
-	Guest       *DomainInterfaceDriverGuest `xml:"guest"`
+	Name          string                      `xml:"name,attr,omitempty"`
+	TXMode        string                      `xml:"txmode,attr,omitempty"`
+	IOEventFD     string                      `xml:"ioeventfd,attr,omitempty"`
+	EventIDX      string                      `xml:"event_idx,attr,omitempty"`
+	Queues        uint                        `xml:"queues,attr,omitempty"`
+	RXQueueSize   uint                        `xml:"rx_queue_size,attr,omitempty"`
+	TXQueueSize   uint                        `xml:"tx_queue_size,attr,omitempty"`
+	IOMMU         string                      `xml:"iommu,attr,omitempty"`
+	ATS           string                      `xml:"ats,attr,omitempty"`
+	Packed        string                      `xml:"packed,attr,omitempty"`
+	PagePerVQ     string                      `xml:"page_per_vq,attr,omitempty"`
+	RSS           string                      `xml:"rss,attr,omitempty"`
+	RSSHashReport string                      `xml:"rss_hash_report,attr,omitempty"`
+	Host          *DomainInterfaceDriverHost  `xml:"host"`
+	Guest         *DomainInterfaceDriverGuest `xml:"guest"`
 }
 
 type DomainInterfaceDriverHost struct {
@@ -1815,8 +1817,11 @@ type DomainHub struct {
 }
 
 type DomainIOMMU struct {
-	Model  string             `xml:"model,attr"`
-	Driver *DomainIOMMUDriver `xml:"driver"`
+	Model   string             `xml:"model,attr"`
+	Driver  *DomainIOMMUDriver `xml:"driver"`
+	ACPI    *DomainDeviceACPI  `xml:"acpi"`
+	Alias   *DomainAlias       `xml:"alias"`
+	Address *DomainAddress     `xml:"address"`
 }
 
 type DomainIOMMUDriver struct {
