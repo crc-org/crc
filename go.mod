@@ -31,9 +31,9 @@ require (
 	github.com/mdlayher/vsock v1.1.1
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.19.0
-	github.com/openshift/api v0.0.0-20210730095913-85e1d547cdee
-	github.com/openshift/client-go v0.0.0-20210730113412-1811c1b3fc0e
-	github.com/openshift/oc v0.0.0-alpha.0.0.20210902003738-96e95cef877b
+	github.com/openshift/api v0.0.0-20220124143425-d74727069f6f
+	github.com/openshift/client-go v0.0.0-20211209144617-7385dd6338e3
+	github.com/openshift/oc v0.0.0-alpha.0.0.20220519063019-878f5a8fe0d0
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
 	github.com/pborman/uuid v1.2.1
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
@@ -55,9 +55,9 @@ require (
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467
 	golang.org/x/text v0.3.7
-	k8s.io/api v0.22.0-rc.0
-	k8s.io/apimachinery v0.22.0-rc.0
-	k8s.io/client-go v0.22.0-rc.0
+	k8s.io/api v0.23.2
+	k8s.io/apimachinery v0.23.2
+	k8s.io/client-go v0.23.2
 	libvirt.org/go/libvirtxml v1.8003.0
 )
 
@@ -69,6 +69,7 @@ require (
 	github.com/alexbrainman/sspi v0.0.0-20180613141037-e580b900e9f5 // indirect
 	github.com/apcera/gssapi v0.0.0-00010101000000-000000000000 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
+	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/cucumber/gherkin-go/v11 v11.0.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -77,7 +78,7 @@ require (
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
-	github.com/go-logr/logr v0.4.0 // indirect
+	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
@@ -86,7 +87,7 @@ require (
 	github.com/goodhosts/hostsfile v0.1.1 // indirect
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/go-cmp v0.5.7 // indirect
-	github.com/google/gofuzz v1.1.0 // indirect
+	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
 	github.com/google/tcpproxy v0.0.0-20200125044825-b6bb9b5b8252 // indirect
 	github.com/google/uuid v1.3.0 // indirect
@@ -112,7 +113,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
-	github.com/openshift/library-go v0.0.0-20210730125111-f3b4cc9813a9 // indirect
+	github.com/openshift/library-go v0.0.0-20220211142501-9f57c596fd46 // indirect
 	github.com/openstandia/w32uiautomation v0.0.0-20190416091226-c987b5b65d6b // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
@@ -131,28 +132,28 @@ require (
 	github.com/u-root/uio v0.0.0-20210528114334-82958018845c // indirect
 	golang.org/x/mod v0.5.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
-	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
-	golang.org/x/tools v0.1.6-0.20210726203631-07bc1bf47fb2 // indirect
+	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
+	golang.org/x/tools v0.1.6-0.20210820212750-d4cc65f0b2ff // indirect
 	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gvisor.dev/gvisor v0.0.0-20220121190119-4f2d380c8b55 // indirect
-	k8s.io/klog/v2 v2.9.0 // indirect
-	k8s.io/kubectl v0.22.0-rc.0 // indirect
-	k8s.io/utils v0.0.0-20210707171843-4b05e18ac7d9 // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
+	k8s.io/klog/v2 v2.40.1 // indirect
+	k8s.io/kubectl v0.23.2 // indirect
+	k8s.io/utils v0.0.0-20211208161948-7d6a63dca704 // indirect
+	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
 replace (
 	github.com/apcera/gssapi => github.com/openshift/gssapi v0.0.0-20161010215902-5fb4217df13b
 
-	k8s.io/apimachinery => github.com/openshift/kubernetes-apimachinery v0.0.0-20210730111815-c26349f8e2c9
-	k8s.io/client-go => github.com/openshift/kubernetes-client-go v0.0.0-20210826123502-7208c21f5119
-	k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20210730111826-9c6734b9d97d
+	k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20220124124213-df787b5b471c
 )
