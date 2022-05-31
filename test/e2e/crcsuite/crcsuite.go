@@ -264,7 +264,7 @@ func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string,
 
 func CheckCRCStatus(state string) error {
 	if state == "running" {
-		// crc start can finish succesfully, even when
+		// crc start can finish successfully, even when
 		// status for cluster is still starting. It is expected
 		// the cluster got stabilized at most within 10 minutes
 		return crcCmd.WaitForClusterInState(state)
