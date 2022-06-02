@@ -10,21 +10,21 @@ var bundleLocations = map[string]bundlesDownloadInfo{
 		"darwin": {
 			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.10.12/crc_vfkit_4.10.12_amd64.crcbundle",
 				"99a07b0ac77867365571a40b79d5f8f9fd79acb9ac071def7fe2e99d603ca9a1"),
-			preset.Podman: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/podman/3.4.4/crc_podman_vfkit_3.4.4_amd64.crcbundle",
-				"91836b50c1b8e6b2141ed7560d3b38ae1e24e2d63bc70fe52547aa894afb09d6"),
+			preset.Podman: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/podman/4.0.2/crc_podman_vfkit_4.0.2_amd64.crcbundle",
+				"6a0cb740e02a7f109da4c2b72a48d72da081469b5eba7692a2dc583727fd8e01"),
 		},
 
 		"linux": {
 			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.10.12/crc_libvirt_4.10.12_amd64.crcbundle",
 				"3081028fbb9da369e5e2aa730d3b65f4f689f7a5b4e6f48952391f696a616e48"),
-			preset.Podman: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/podman/3.4.4/crc_podman_libvirt_3.4.4_amd64.crcbundle",
-				"8e8d150dfbefcec93639df53e6181377d1bfc0df3c8719a6fedf0929779f6f63"),
+			preset.Podman: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/podman/4.0.2/crc_podman_libvirt_4.0.2_amd64.crcbundle",
+				"e8148d317f4aff523f00f2f9a7d520e70eb0c55d466e43847172ddb5d97e3ebf"),
 		},
 		"windows": {
 			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.10.12/crc_hyperv_4.10.12_amd64.crcbundle",
 				"6d17978c8dd678ffefcd46d5aaf8d2057517c018460f1a5ece4e18538bb4bb46"),
-			preset.Podman: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/podman/3.4.4/crc_podman_hyperv_3.4.4_amd64.crcbundle",
-				"e2a55c818b8d2f071f4cc0d26aba11f0a852aebdb7588a08eb96bd41faea0ef4"),
+			preset.Podman: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/podman/4.0.2/crc_podman_hyperv_4.0.2_amd64.crcbundle",
+				"aeaeece60435fc9dd5c10125662416e8976bc567c65f4ca191f542e2d64f9bfd"),
 		},
 	},
 	"arm64": {
