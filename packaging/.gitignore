@@ -5,6 +5,7 @@ root/
 /darwin/Resources/welcome.html
 /darwin/scripts/postinstall
 /VERSION
+/ARCH
 /windows/msi/
 packaging/windows/product.wxs
 vfkit-*.entitlements

@@ -312,6 +312,7 @@ packaging/vfkit-$(GOARCH).entitlements:
 
 packagedir: clean embed-download macos-release-binary packaging/vfkit-$(GOARCH).entitlements
 	echo -n $(CRC_VERSION) > packaging/VERSION
+	echo -n $(GOARCH) > packaging/ARCH
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/postinstall.in >packaging/darwin/scripts/postinstall
