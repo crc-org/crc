@@ -132,6 +132,8 @@ func getStatus(ctx context.Context, lister operatorLister, selector []string) (*
 				}
 			case "ManagementStateDegraded": // only for the network operator
 				continue
+			case "RecentBackup": // only for etcd operator
+				continue
 			default:
 				logging.Debugf("Unexpected operator status for %s: %s", c.ObjectMeta.Name, con.Type)
 			}
