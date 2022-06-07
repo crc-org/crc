@@ -14,7 +14,6 @@ go mod edit -go ${golang_base_version}
 sed -i "s,^FROM registry.ci.openshift.org/openshift/release:golang-1\... AS builder\$,FROM registry.ci.openshift.org/openshift/release:golang-${golang_base_version} AS builder," images/openshift-ci/Dockerfile
 sed -i "s,^FROM registry.access.redhat.com/ubi8/go-toolset:[.0-9]\+ as builder\$,FROM registry.access.redhat.com/ubi8/go-toolset:${latest_version} as builder," images/build-e2e/Dockerfile
 sed -i "s,^FROM registry.access.redhat.com/ubi8/go-toolset:[.0-9]\+ as builder\$,FROM registry.access.redhat.com/ubi8/go-toolset:${latest_version} as builder," images/build-integration/Dockerfile
-sed -i "s/^GO_VERSION=.*$/GO_VERSION=${latest_version}/" centos_ci.sh
 for f in .github/workflows/*.yml; do
     yq eval --inplace ".jobs.build.strategy.matrix.go[0] = ${golang_base_version}" "$f";
 done
