@@ -37,11 +37,10 @@ function signAppBundle() {
 binDir="${BASEDIR}/root/Applications/Red Hat OpenShift Local.app/Contents/Resources"
 
 version=$(cat "${BASEDIR}/VERSION")
-arch=$(cat "${BASEDIR}/ARCH")
 
 sign "${binDir}/crc"
 sign "${binDir}/crc-admin-helper-darwin"
-sign "${binDir}/vfkit-${arch}"
+sign "${binDir}/vfkit"
 
 signAppBundle "${BASEDIR}/root/Applications/Red Hat OpenShift Local.app"
 
@@ -61,7 +60,7 @@ productbuild --distribution "${BASEDIR}/darwin/Distribution" \
 rm "${OUTPUT}/crc.pkg"
 
 if [ ! "${NO_CODESIGN}" -eq "1" ]; then
-  productsign --sign "${PRODUCTSIGN_IDENTITY}" "${OUTPUT}/crc-unsigned.pkg" "${OUTPUT}/crc-macos-${arch}.pkg"
+  productsign --sign "${PRODUCTSIGN_IDENTITY}" "${OUTPUT}/crc-unsigned.pkg" "${OUTPUT}/crc-macos-installer.pkg"
 else
-  mv "${OUTPUT}/crc-unsigned.pkg" "${OUTPUT}/crc-macos-${arch}.pkg"
+  mv "${OUTPUT}/crc-unsigned.pkg" "${OUTPUT}/crc-macos-installer.pkg"
 fi
