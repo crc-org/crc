@@ -8,4 +8,4 @@ root/
 /ARCH
 /windows/msi/
 packaging/windows/product.wxs
-vfkit-*.entitlements
+vfkit.entitlements

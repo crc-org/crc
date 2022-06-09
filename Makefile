@@ -27,7 +27,6 @@ DOCS_BUILD_TARGET ?= /docs/source/getting_started/master.adoc
 
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
-TRAY_ARCH = $(subst amd64,x64,$(GOARCH))
 
 HOST_BUILD_DIR=$(BUILD_DIR)/$(GOOS)-$(GOARCH)
 GOPATH ?= $(shell go env GOPATH)
@@ -299,7 +298,7 @@ update-go-version:
 goversioncheck:
 	./verify-go-version.sh
 
-TRAY_RELEASE ?= packaging/tmp/crc-tray-macos-$(GOARCH).tar.gz
+TRAY_RELEASE ?= packaging/tmp/crc-tray-macos.tar.gz
 
 embed-download: $(HOST_BUILD_DIR)/crc-embedder
 ifeq ($(CUSTOM_EMBED),false)
@@ -307,12 +306,15 @@ ifeq ($(CUSTOM_EMBED),false)
 	$(HOST_BUILD_DIR)/crc-embedder download $(EMBED_DOWNLOAD_DIR)
 endif
 
-packaging/vfkit-$(GOARCH).entitlements:
+packaging/vfkit.entitlements:
 	curl -sL https://raw.githubusercontent.com/code-ready/vfkit/main/vf.entitlements -o $@
 
-packagedir: clean embed-download macos-release-binary packaging/vfkit-$(GOARCH).entitlements
+macos-universal-binary: macos-release-binary
+	mkdir -p out/macos-universal
+	lipo -create out/macos-amd64/crc out/macos-arm64/crc -output out/macos-universal/crc
+
+packagedir: clean embed-download macos-universal-binary packaging/vfkit.entitlements
 	echo -n $(CRC_VERSION) > packaging/VERSION
-	echo -n $(GOARCH) > packaging/ARCH
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/postinstall.in >packaging/darwin/scripts/postinstall
@@ -322,20 +324,20 @@ packagedir: clean embed-download macos-release-binary packaging/vfkit-$(GOARCH).
 	mkdir -p packaging/root/Applications
 	tar -C packaging/root/Applications -xvzf $(TRAY_RELEASE)
 	rm $(TRAY_RELEASE)
-	mv packaging/root/Applications/crc-tray-darwin-$(TRAY_ARCH)/crc-tray.app packaging/root/Applications/Red\ Hat\ OpenShift\ Local.app
-	rm -fr packaging/root/Applications/crc-tray-darwin-$(TRAY_ARCH)
+	mv packaging/root/Applications/crc-tray-darwin-universal/crc-tray.app packaging/root/Applications/Red\ Hat\ OpenShift\ Local.app
+	rm -fr packaging/root/Applications/crc-tray-darwin-universal
 
 	mv packaging/tmp/* packaging/root/"$(MACOS_INSTALL_PATH)"
 
-	cp $(BUILD_DIR)/macos-$(GOARCH)/crc packaging/root/"$(MACOS_INSTALL_PATH)"
+	cp $(BUILD_DIR)/macos-universal/crc packaging/root/"$(MACOS_INSTALL_PATH)"
 	cp LICENSE packaging/darwin/Resources/LICENSE.txt
 	pkgbuild --analyze --root packaging/root packaging/components.plist
 	plutil -replace BundleIsRelocatable -bool NO packaging/components.plist
 
-$(BUILD_DIR)/macos-$(GOARCH)/crc-macos-$(GOARCH).pkg: packagedir
+$(BUILD_DIR)/macos-universal/crc-macos-installer.pkg: packagedir
 	./packaging/package.sh $(@D)
 
-$(BUILD_DIR)/macos-$(GOARCH)/crc-macos-installer-$(GOARCH).tar: packagedir
+$(BUILD_DIR)/macos-universal/crc-macos-installer.tar: packagedir
 	tar -cvf $@ ./packaging
 	cd $(@D) && sha256sum $(@F)>$(@F).sha256sum
 

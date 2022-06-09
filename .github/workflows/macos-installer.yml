@@ -36,9 +36,9 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
       - name: Build macOS installer
-        run: make NO_CODESIGN=1 out/macos-amd64/crc-macos-amd64.pkg
+        run: make NO_CODESIGN=1 out/macos-universal/crc-macos-installer.pkg
       - name: Install crc pkg
-        run: sudo installer -pkg out/macos-amd64/crc-macos-amd64.pkg -target /
+        run: sudo installer -pkg out/macos-universal/crc-macos-installer.pkg -target /
       - name: Set podman preset as part of config
         run: crc config set preset podman
       - name: Run crc setup command

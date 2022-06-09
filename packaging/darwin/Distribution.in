@@ -8,6 +8,7 @@
     <options customize="never" allow-external-scripts="no"/>
     <domains enable_localSystem="true" />
     <options rootVolumeOnly="true"/>
+    <options hostArchitectures="x86_64,arm64" />
     <installation-check script="installCheck();"/>
     <script>
 function installCheck() {
