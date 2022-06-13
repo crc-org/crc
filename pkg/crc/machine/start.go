@@ -626,9 +626,7 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	}
 
 	logging.Info("Updating authorized keys...")
-	// CopyData uses sudo and we need to use it
-	// because of https://bugzilla.redhat.com/show_bug.cgi?id=1956739
-	err = sshRunner.CopyDataPrivileged(publicKey, "/home/core/.ssh/authorized_keys", 0644)
+	err = sshRunner.CopyData(publicKey, "/home/core/.ssh/authorized_keys", 0644)
 	if err != nil {
 		return err
 	}
