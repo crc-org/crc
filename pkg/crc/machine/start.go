@@ -630,7 +630,10 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	if err != nil {
 		return err
 	}
-	return err
+
+	/* This is specific to the podman bundle, but is required to drop the 'default' ssh key */
+	_, _, _ = sshRunner.Run("rm", "/home/core/.ssh/authorized_keys.d/ignition")
+	return nil
 }
 
 func copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey *rsa.PrivateKey, selfSignedCACert *x509.Certificate, srcKubeConfigPath, dstKubeConfigPath string) error {
