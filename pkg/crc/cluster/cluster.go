@@ -342,7 +342,7 @@ func addProxyCACertToCluster(sshRunner *ssh.Runner, ocConfig oc.Config, proxy *n
 	// Replace the carriage return ("\n" or "\r\n") with literal `\n` string
 	re := regexp.MustCompile(`\r?\n`)
 	p := fmt.Sprintf(proxyCABundleTemplate, re.ReplaceAllString(proxy.ProxyCACert, `\n`), trustedCAName)
-	err := sshRunner.CopyData([]byte(p), proxyConfigMapFileName, 0644)
+	err := sshRunner.CopyDataPrivileged([]byte(p), proxyConfigMapFileName, 0644)
 	if err != nil {
 		return err
 	}
@@ -378,7 +378,7 @@ func EnsurePullSecretPresentOnInstanceDisk(sshRunner *ssh.Runner, pullSecret Pul
 	if err != nil {
 		return err
 	}
-	return sshRunner.CopyData([]byte(content), vmPullSecretPath, 0600)
+	return sshRunner.CopyDataPrivileged([]byte(content), vmPullSecretPath, 0600)
 }
 
 func WaitForPullSecretPresentOnInstanceDisk(ctx context.Context, sshRunner *ssh.Runner) error {

@@ -628,7 +628,7 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	logging.Info("Updating authorized keys...")
 	// CopyData uses sudo and we need to use it
 	// because of https://bugzilla.redhat.com/show_bug.cgi?id=1956739
-	err = sshRunner.CopyData(publicKey, "/home/core/.ssh/authorized_keys", 0644)
+	err = sshRunner.CopyDataPrivileged(publicKey, "/home/core/.ssh/authorized_keys", 0644)
 	if err != nil {
 		return err
 	}
@@ -669,7 +669,7 @@ func configurePodmanProxy(ctx context.Context, sshRunner *crcssh.Runner, proxy *
 		proxyEnv.WriteString(fmt.Sprintf("no_proxy=%s\n", proxy.GetNoProxyString()))
 		proxyEnv.WriteString(fmt.Sprintf("NO_PROXY=%s\n", proxy.GetNoProxyString()))
 	}
-	err = sshRunner.CopyData([]byte(proxyEnv.String()), "/etc/environment.d/proxy-env.conf", 0644)
+	err = sshRunner.CopyDataPrivileged([]byte(proxyEnv.String()), "/etc/environment.d/proxy-env.conf", 0644)
 	if err != nil {
 		return err
 	}
@@ -679,7 +679,7 @@ func configurePodmanProxy(ctx context.Context, sshRunner *crcssh.Runner, proxy *
 		return err
 	}
 	podmanServiceConf := "[Service]\nEnvironmentFile=/etc/environment.d/proxy-env.conf\n"
-	err = sshRunner.CopyData([]byte(podmanServiceConf), "/etc/systemd/system/podman.service.d/proxy-env.conf", 0644)
+	err = sshRunner.CopyDataPrivileged([]byte(podmanServiceConf), "/etc/systemd/system/podman.service.d/proxy-env.conf", 0644)
 	if err != nil {
 		return err
 	}
@@ -763,7 +763,7 @@ func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Confi
 	if err != nil {
 		return err
 	}
-	if err := sshRunner.CopyData(bin, "/tmp/routes-controller.json", 0444); err != nil {
+	if err := sshRunner.CopyDataPrivileged(bin, "/tmp/routes-controller.json", 0444); err != nil {
 		return err
 	}
 	_, _, err = ocConfig.RunOcCommand("apply", "-f", "/tmp/routes-controller.json")
@@ -811,7 +811,7 @@ func updateCockpitConsoleBearerToken(sshRunner *crcssh.Runner) error {
 		return fmt.Errorf("failed to write cockpit bearer token: %w", err)
 	}
 
-	if err := sshRunner.CopyData([]byte(token), "/home/core/cockpit-bearer-token", 0600); err != nil {
+	if err := sshRunner.CopyDataPrivileged([]byte(token), "/home/core/cockpit-bearer-token", 0600); err != nil {
 		return fmt.Errorf("failed to set token for cockpit: %w", err)
 	}
 

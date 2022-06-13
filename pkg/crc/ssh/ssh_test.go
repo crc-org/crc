@@ -44,12 +44,13 @@ func TestRunner(t *testing.T) {
 	assert.Equal(t, "hello", bin)
 	cancel()
 	// Expect error when sending data over close ssh server channel
-	assert.Error(t, runner.CopyData([]byte(`hello world`), "/hello", 0644))
+	assert.Error(t, runner.CopyDataPrivileged([]byte(`hello world`), "/hello", 0644))
 
 	_, runner, totalConn := createListnerAndSSHServer(t, clientKey, clientKeyFile)
-	assert.NoError(t, runner.CopyData([]byte(`hello world`), "/hello", 0644))
-	assert.NoError(t, runner.CopyData([]byte(`hello world`), "/hello", 0644))
-	assert.NoError(t, runner.CopyData([]byte(`hello world`), "/hello", 0644))
+	assert.NoError(t, runner.CopyDataPrivileged([]byte(`hello world`), "/hello", 0644))
+	assert.NoError(t, runner.CopyDataPrivileged([]byte(`hello world`), "/hello", 0644))
+	assert.NoError(t, runner.CopyDataPrivileged([]byte(`hello world`), "/hello", 0644))
+	assert.NoError(t, runner.CopyData([]byte(`hello world`), "/home/core/hello", 0644))
 	assert.Equal(t, 1, *totalConn)
 }
 
@@ -67,6 +68,9 @@ func createListnerAndSSHServer(t *testing.T, clientKey *ecdsa.PrivateKey, client
 			return 0, "hello"
 		}
 		if escaped == `"sudo install -m 0644 /dev/null /hello && cat <<EOF | base64 --decode | sudo tee /hello\naGVsbG8gd29ybGQ=\nEOF"` {
+			return 0, ""
+		}
+		if escaped == `"install -m 0644 /dev/null /home/core/hello && cat <<EOF | base64 --decode | tee /home/core/hello\naGVsbG8gd29ybGQ=\nEOF"` {
 			return 0, ""
 		}
 		return 1, fmt.Sprintf("unexpected command: %q", input)
