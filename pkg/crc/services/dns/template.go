@@ -50,7 +50,7 @@ func createDnsmasqDNSConfig(serviceConfig services.ServicePostStartConfig) error
 		return err
 	}
 
-	return serviceConfig.SSHRunner.CopyData([]byte(dnsConfig), "/var/srv/dnsmasq.conf", 0644)
+	return serviceConfig.SSHRunner.CopyDataPrivileged([]byte(dnsConfig), "/var/srv/dnsmasq.conf", 0644)
 }
 
 func createDNSConfigFile(values dnsmasqConfFileValues, tmpl string) (string, error) {

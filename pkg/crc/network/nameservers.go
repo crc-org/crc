@@ -34,7 +34,7 @@ func GetResolvValuesFromInstance(sshRunner *ssh.Runner) (*ResolvFileValues, erro
 func CreateResolvFileOnInstance(sshRunner *ssh.Runner, resolvFileValues ResolvFileValues) error {
 	resolvFile, _ := CreateResolvFile(resolvFileValues)
 
-	err := sshRunner.CopyData([]byte(resolvFile), "/etc/resolv.conf", 0644)
+	err := sshRunner.CopyDataPrivileged([]byte(resolvFile), "/etc/resolv.conf", 0644)
 	if err != nil {
 		return fmt.Errorf("Error creating /etc/resolv on instance: %s", err.Error())
 	}

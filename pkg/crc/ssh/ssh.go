@@ -52,13 +52,25 @@ func (runner *Runner) RunPrivileged(reason string, cmdAndArgs ...string) (string
 	return runner.runSSHCommand(commandline, false)
 }
 
-func (runner *Runner) CopyData(data []byte, destFilename string, mode os.FileMode) error {
+func (runner *Runner) copyDataFull(data []byte, destFilename string, mode os.FileMode, privileged bool) error {
+	var sudo string
+	if privileged {
+		sudo = "sudo "
+	}
 	logging.Debugf("Creating %s with permissions 0%o in the CRC VM", destFilename, mode)
 	base64Data := base64.StdEncoding.EncodeToString(data)
-	command := fmt.Sprintf("sudo install -m 0%o /dev/null %s && cat <<EOF | base64 --decode | sudo tee %s\n%s\nEOF", mode, destFilename, destFilename, base64Data)
+	command := fmt.Sprintf("%sinstall -m 0%o /dev/null %s && cat <<EOF | base64 --decode | %stee %s\n%s\nEOF", sudo, mode, destFilename, sudo, destFilename, base64Data)
 	_, _, err := runner.RunPrivate(command)
 
 	return err
+}
+
+func (runner *Runner) CopyDataPrivileged(data []byte, destFilename string, mode os.FileMode) error {
+	return runner.copyDataFull(data, destFilename, mode, true)
+}
+
+func (runner *Runner) CopyData(data []byte, destFilename string, mode os.FileMode) error {
+	return runner.copyDataFull(data, destFilename, mode, false)
 }
 
 func (runner *Runner) CopyFile(srcFilename string, destFilename string, mode os.FileMode) error {
@@ -66,7 +78,7 @@ func (runner *Runner) CopyFile(srcFilename string, destFilename string, mode os.
 	if err != nil {
 		return err
 	}
-	return runner.CopyData(data, destFilename, mode)
+	return runner.CopyDataPrivileged(data, destFilename, mode)
 }
 
 func (runner *Runner) runSSHCommand(command string, runPrivate bool) (string, string, error) {
