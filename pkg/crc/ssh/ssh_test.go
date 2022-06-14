@@ -34,7 +34,7 @@ func TestRunner(t *testing.T) {
 	clientKeyFile := filepath.Join(dir, "private.key")
 	writePrivateKey(t, clientKeyFile, clientKey)
 
-	cancel, runner, _ := createListnerAndSSHServer(t, clientKey, clientKeyFile)
+	cancel, runner, _ := createListenerAndSSHServer(t, clientKey, clientKeyFile)
 
 	assert.NoError(t, err)
 	defer runner.Close()
@@ -46,7 +46,7 @@ func TestRunner(t *testing.T) {
 	// Expect error when sending data over close ssh server channel
 	assert.Error(t, runner.CopyDataPrivileged([]byte(`hello world`), "/hello", 0644))
 
-	_, runner, totalConn := createListnerAndSSHServer(t, clientKey, clientKeyFile)
+	_, runner, totalConn := createListenerAndSSHServer(t, clientKey, clientKeyFile)
 	assert.NoError(t, runner.CopyDataPrivileged([]byte(`hello world`), "/hello", 0644))
 	assert.NoError(t, runner.CopyDataPrivileged([]byte(`hello world`), "/hello", 0644))
 	assert.NoError(t, runner.CopyDataPrivileged([]byte(`hello world`), "/hello", 0644))
@@ -54,7 +54,7 @@ func TestRunner(t *testing.T) {
 	assert.Equal(t, 1, *totalConn)
 }
 
-func createListnerAndSSHServer(t *testing.T, clientKey *ecdsa.PrivateKey, clientKeyFile string) (context.CancelFunc, *Runner, *int) {
+func createListenerAndSSHServer(t *testing.T, clientKey *ecdsa.PrivateKey, clientKeyFile string) (context.CancelFunc, *Runner, *int) {
 	listener, err := net.Listen("tcp", "127.0.0.1:")
 	require.NoError(t, err)
 	addr := listener.Addr().String()
