@@ -763,7 +763,7 @@ func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Confi
 	if err != nil {
 		return err
 	}
-	if err := sshRunner.CopyDataPrivileged(bin, "/tmp/routes-controller.json", 0444); err != nil {
+	if err := sshRunner.CopyData(bin, "/tmp/routes-controller.json", 0444); err != nil {
 		return err
 	}
 	_, _, err = ocConfig.RunOcCommand("apply", "-f", "/tmp/routes-controller.json")
@@ -811,13 +811,8 @@ func updateCockpitConsoleBearerToken(sshRunner *crcssh.Runner) error {
 		return fmt.Errorf("failed to write cockpit bearer token: %w", err)
 	}
 
-	if err := sshRunner.CopyDataPrivileged([]byte(token), "/home/core/cockpit-bearer-token", 0600); err != nil {
+	if err := sshRunner.CopyData([]byte(token), "/home/core/cockpit-bearer-token", 0600); err != nil {
 		return fmt.Errorf("failed to set token for cockpit: %w", err)
-	}
-
-	_, _, err := sshRunner.RunPrivileged("chown cockpit-bearer-token file to core", "chown core:core /home/core/cockpit-bearer-token")
-	if err != nil {
-		return fmt.Errorf("failed to change ownership of cockpit-bearer-token to core user: %w", err)
 	}
 
 	return nil
