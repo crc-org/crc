@@ -55,10 +55,10 @@ Feature: End-to-end health check
         Then stdout should contain "httpd-example exposed"
         When executing "oc expose svc httpd-example" succeeds
         Then stdout should contain "httpd-example exposed"
+        And with up to "20" retries with wait period of "5s" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
 
     @darwin @linux @windows @startstop
     Scenario: Stop and start CRC, then check app still runs
-        Given with up to "2" retries with wait period of "60s" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
         When executing "crc stop" succeeds
         Then checking that CRC is stopped
         When starting CRC with default bundle succeeds
