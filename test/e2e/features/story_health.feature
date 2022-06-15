@@ -41,13 +41,13 @@ Feature: End-to-end health check
             """
         And stdout should contain "You can add applications to this project with the 'new-app' command."
 
-    @darwin @linux @windows
+    @darwin @linux @windows @testdata
     Scenario: Create and test app
         When executing "oc create deployment httpd-example --image=registry.access.redhat.com/ubi8/httpd-24 --port=8080" succeeds
         Then stdout should contain "deployment.apps/httpd-example created"
         When executing "oc rollout status deployment httpd-example" succeeds
         Then stdout should contain "successfully rolled out"
-        When executing "oc create configmap www-content --from-literal=index.html=" succeeds
+        When executing "oc create configmap www-content --from-file=index.html=httpd-example-index.html" succeeds
         Then stdout should contain "configmap/www-content created"
         When executing "oc set volume deployment/httpd-example --add --type configmap --configmap-name www-content --name www --mount-path /var/www/html" succeeds
         Then stdout should contain "deployment.apps/httpd-example volume updated"
@@ -55,7 +55,9 @@ Feature: End-to-end health check
         Then stdout should contain "httpd-example exposed"
         When executing "oc expose svc httpd-example" succeeds
         Then stdout should contain "httpd-example exposed"
-        And with up to "20" retries with wait period of "5s" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
+        When with up to "20" retries with wait period of "5s" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
+        Then executing "curl -s http://httpd-example-testproj.apps-crc.testing" succeeds
+        And stdout should contain "Hello CRC!"
 
     @darwin @linux @windows @startstop
     Scenario: Stop and start CRC, then check app still runs
@@ -64,6 +66,8 @@ Feature: End-to-end health check
         When starting CRC with default bundle succeeds
         Then checking that CRC is running
         And with up to "4" retries with wait period of "1m" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
+        Then executing "curl -s http://httpd-example-testproj.apps-crc.testing" succeeds
+        And stdout should contain "Hello CRC!"
 
     @darwin @linux @windows
     Scenario: Clean up project
