@@ -31,6 +31,12 @@ function signAppBundle() {
 
   frameworks=$(find "$1"/Contents/Frameworks -depth -type d -name "*.framework" -or -name "*.dylib" -or -type f -perm +111)
   echo "${frameworks}" | xargs -t -I % codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime --timestamp % || true
+
+  # sign the .app bundles inside $1/Contents/Frameworks
+  frameworks=$(find "$1"/Contents/Frameworks -depth -type d -name "*.app" -perm +111)
+  echo "${frameworks}" | xargs -t -I % codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime --timestamp --force % || true
+
+  # finally sign $1 app bundle
   codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime --timestamp --force --entitlements "${entitlements}" "$1"
 }
 
