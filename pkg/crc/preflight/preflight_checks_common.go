@@ -8,14 +8,16 @@ import (
 	"github.com/code-ready/crc/pkg/crc/adminhelper"
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/image"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
-	"github.com/code-ready/crc/pkg/crc/preset"
+	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/validation"
+	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/pkg/errors"
 )
 
-func bundleCheck(bundlePath string, preset preset.Preset) Check {
+func bundleCheck(bundlePath string, preset crcpreset.Preset) Check {
 	return Check{
 		configKeySuffix:  "check-bundle-extracted",
 		checkDescription: "Checking if CRC bundle is extracted in '$HOME/.crc'",
@@ -72,7 +74,7 @@ func checkBundleExtracted(bundlePath string) func() error {
 	}
 }
 
-func fixBundleExtracted(bundlePath string, preset preset.Preset) func() error {
+func fixBundleExtracted(bundlePath string, preset crcpreset.Preset) func() error {
 	// Should be removed after 1.19 release
 	// This check will ensure correct mode for `~/.crc/cache` directory
 	// in case it exists.
@@ -98,8 +100,16 @@ func fixBundleExtracted(bundlePath string, preset preset.Preset) func() error {
 		}
 		if bundlePath == constants.GetDefaultBundlePath(preset) {
 			logging.Infof("Downloading %s", constants.GetDefaultBundle(preset))
-			if err := bundle.Download(preset); err != nil {
-				return err
+			// In case of OKD or podman bundle then pull the bundle image from quay
+			// otherwise use mirror location to download the bundle.
+			if version.IsOkdBuild() || preset == crcpreset.Podman {
+				if err := image.PullBundle(preset); err != nil {
+					return err
+				}
+			} else {
+				if err := bundle.Download(preset); err != nil {
+					return err
+				}
 			}
 			bundlePath = constants.GetDefaultBundlePath(preset)
 		}

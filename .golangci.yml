@@ -1,6 +1,7 @@
 run:
   build-tags:
     - build
+    - containers_image_openpgp
   timeout: 10m
 
 linters:

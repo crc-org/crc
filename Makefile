@@ -67,6 +67,8 @@ endif
 
 # https://golang.org/cmd/link/
 LDFLAGS := $(VERSION_VARIABLES) ${GO_EXTRA_LDFLAGS}
+# Same build flags are used in the podman remote to cross build it https://github.com/containers/podman/blob/main/Makefile
+BUILDTAGS := containers_image_openpgp
 
 # Add default target
 .PHONY: default
@@ -89,19 +91,19 @@ check: cross build_e2e $(HOST_BUILD_DIR)/crc-embedder test cross-lint vendorchec
 
 .PHONY: install
 install: $(SOURCES)
-	go install -ldflags="$(LDFLAGS)" $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
+	go install -tags "$(BUILDTAGS)"  -ldflags="$(LDFLAGS)" $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
 $(BUILD_DIR)/macos-amd64/crc: $(SOURCES)
-	GOARCH=amd64 GOOS=darwin go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/macos-amd64/crc $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
+	GOARCH=amd64 GOOS=darwin go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/macos-amd64/crc $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
 $(BUILD_DIR)/macos-arm64/crc: $(SOURCES)
-	GOARCH=arm64 GOOS=darwin go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/macos-arm64/crc $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
+	GOARCH=arm64 GOOS=darwin go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/macos-arm64/crc $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
 $(BUILD_DIR)/linux-amd64/crc: $(SOURCES)
-	GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/linux-amd64/crc $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
+	GOOS=linux GOARCH=amd64 go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/linux-amd64/crc $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
 $(BUILD_DIR)/windows-amd64/crc.exe: $(SOURCES)
-	GOARCH=amd64 GOOS=windows go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/windows-amd64/crc.exe $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
+	GOARCH=amd64 GOOS=windows go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/windows-amd64/crc.exe $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
 $(HOST_BUILD_DIR)/crc-embedder: $(SOURCES)
 	go build --tags="build" -ldflags="$(LDFLAGS)" -o $(HOST_BUILD_DIR)/crc-embedder $(GO_EXTRA_BUILDFLAGS) ./cmd/crc-embedder
@@ -119,7 +121,7 @@ containerized: clean
 
 .PHONY: test
 test:
-	go test -race --tags build -v -ldflags="$(VERSION_VARIABLES)" ./pkg/... ./cmd/...
+	go test -race --tags "build $(BUILDTAGS)" -v -ldflags="$(VERSION_VARIABLES)" ./pkg/... ./cmd/...
 
 .PHONY: spec test-rpmbuild
 
