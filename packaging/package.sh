@@ -16,7 +16,7 @@ function sign() {
   if [ -f "${entitlements}" ]; then
       opts="--entitlements ${entitlements}"
   fi
-  codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime --force ${opts} "$1"
+  codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime --timestamp --force ${opts} "$1"
 }
 
 function signAppBundle() {
@@ -30,8 +30,8 @@ function signAppBundle() {
   fi
 
   frameworks=$(find "$1"/Contents/Frameworks -depth -type d -name "*.framework" -or -name "*.dylib" -or -type f -perm +111)
-  echo "${frameworks}" | xargs -t -I % codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime % || true
-  codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime --force --entitlements "${entitlements}" "$1"
+  echo "${frameworks}" | xargs -t -I % codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime --timestamp % || true
+  codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime --timestamp --force --entitlements "${entitlements}" "$1"
 }
 
 binDir="${BASEDIR}/root/Applications/Red Hat OpenShift Local.app/Contents/Resources"
