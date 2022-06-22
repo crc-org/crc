@@ -1,4 +1,4 @@
-@story_registry @linux
+@story_registry @darwin @linux @windows
 Feature: Local image to image-registry
 
     User creates a local container image with an app inside it. They then
