@@ -17,15 +17,15 @@ Feature: Local image to image-registry
         And login to the oc cluster succeeds
 
     Scenario: Create local image
-        Given executing "podman pull quay.io/centos7/httpd-24-centos7" succeeds
+        Given executing "podman pull registry.access.redhat.com/ubi8/httpd-24" succeeds
         When executing "podman images" succeeds
-        Then stdout should contain "quay.io/centos7/httpd-24-centos7"
+        Then stdout should contain "registry.access.redhat.com/ubi8/httpd-24"
 
     Scenario: Push local image to OpenShift image registry
         Given executing "oc new-project testproj-img" succeeds
         When executing "podman login -u kubeadmin -p $(oc whoami -t) default-route-openshift-image-registry.apps-crc.testing --tls-verify=false" succeeds
         Then stdout should contain "Login Succeeded!"
-         And executing "podman tag quay.io/centos7/httpd-24-centos7 default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test" succeeds
+         And executing "podman tag registry.access.redhat.com/ubi8/httpd-24 default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test" succeeds
         When executing "podman push default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test --tls-verify=false" succeeds
 
     Scenario: Deploy the image
@@ -39,8 +39,8 @@ Feature: Local image to image-registry
 
     Scenario: Clean up image and project
         Given executing "podman images" succeeds
-        When stdout contains "quay.io/centos7/httpd-24-centos7"
-        Then executing "podman image rm quay.io/centos7/httpd-24-centos7" succeeds
+        When stdout contains "registry.access.redhat.com/ubi8/httpd-24"
+        Then executing "podman image rm registry.access.redhat.com/ubi8/httpd-24" succeeds
         And executing "oc delete project testproj-img" succeeds
 
     @startstop
