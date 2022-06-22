@@ -16,32 +16,22 @@ Feature: Local image to image-registry
         Then executing "eval $(crc oc-env)" succeeds
         And login to the oc cluster succeeds
 
-    Scenario: Create local image
-        Given executing "podman pull registry.access.redhat.com/ubi8/httpd-24" succeeds
-        When executing "podman images" succeeds
-        Then stdout should contain "registry.access.redhat.com/ubi8/httpd-24"
-
-    Scenario: Push local image to OpenShift image registry
+    Scenario: Mirror image to OpenShift image registry
         Given executing "oc new-project testproj-img" succeeds
-        When executing "podman login -u kubeadmin -p $(oc whoami -t) default-route-openshift-image-registry.apps-crc.testing --tls-verify=false" succeeds
-        Then stdout should contain "Login Succeeded!"
-         And executing "podman tag registry.access.redhat.com/ubi8/httpd-24 default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test" succeeds
-        When executing "podman push default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test --tls-verify=false" succeeds
+        When executing "oc registry login --insecure=true" succeeds
+        Then stdout should contain "Saved credentials for default-route-openshift-image-registry.apps-crc.testing"
+         And executing "oc image mirror registry.access.redhat.com/ubi8/httpd-24:latest=default-route-openshift-image-registry.apps-crc.testing/testproj-img/httpd-24:latest --insecure=true --filter-by-os=linux/amd64" succeeds
+         And executing "oc set image-lookup httpd-24" 
+         
 
     Scenario: Deploy the image
-        Given executing "oc new-app testproj-img/hello:test" succeeds
-        When executing "oc rollout status deployment hello" succeeds
+        Given executing "oc new-app testproj-img/httpd-24:latest" succeeds
+        When executing "oc rollout status deployment httpd-24" succeeds
         Then stdout should contain "successfully rolled out"
         When executing "oc get pods" succeeds
         Then stdout should contain "Running"
-        When executing "oc logs deployment/hello" succeeds
+        When executing "oc logs deployment/httpd-24" succeeds
         Then stdout should contain "Apache"
-
-    Scenario: Clean up image and project
-        Given executing "podman images" succeeds
-        When stdout contains "registry.access.redhat.com/ubi8/httpd-24"
-        Then executing "podman image rm registry.access.redhat.com/ubi8/httpd-24" succeeds
-        And executing "oc delete project testproj-img" succeeds
 
     @startstop
     Scenario: Clean up
