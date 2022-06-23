@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -70,7 +69,7 @@ func getVersionGeneric(executablePath string, args ...string) (string, error) { 
 
 func NewAdminHelperCache() *Cache {
 	url := constants.GetAdminHelperURL()
-	version := path.Base(path.Dir(url))
+	version := version.GetAdminHelperVersion()
 	return New(constants.GetAdminHelperExecutable(),
 		url,
 		version,

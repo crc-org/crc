@@ -24,7 +24,7 @@ const (
 	DaemonLogFile             = "crcd.log"
 	CrcLandingPageURL         = "https://console.redhat.com/openshift/create/local" // #nosec G101
 	DefaultPodmanURLBase      = "https://storage.googleapis.com/libpod-master-releases"
-	DefaultAdminHelperCliBase = "https://github.com/code-ready/admin-helper/releases/download/v0.0.11"
+	DefaultAdminHelperURLBase = "https://github.com/code-ready/admin-helper/releases/download/v%s/%s"
 	CRCMacTrayDownloadURL     = "https://github.com/code-ready/tray-electron/releases/download/%s/crc-tray-macos.tar.gz"
 	CRCWindowsTrayDownloadURL = "https://github.com/code-ready/tray-electron/releases/download/%s/crc-tray-windows.zip"
 	DefaultContext            = "admin"
@@ -57,7 +57,7 @@ func GetAdminHelperExecutable() string {
 }
 
 func GetAdminHelperURLForOs(os string) string {
-	return fmt.Sprintf("%s/%s", DefaultAdminHelperCliBase, GetAdminHelperExecutableForOs(os))
+	return fmt.Sprintf(DefaultAdminHelperURLBase, version.GetAdminHelperVersion(), GetAdminHelperExecutableForOs(os))
 }
 
 func GetAdminHelperURL() string {
