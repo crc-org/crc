@@ -764,7 +764,7 @@ func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Confi
 	if err != nil {
 		return err
 	}
-	if err := sshRunner.CopyData(bin, "/tmp/routes-controller.json", 0444); err != nil {
+	if err := sshRunner.CopyData(bin, "/tmp/routes-controller.json", 0644); err != nil {
 		return err
 	}
 	_, _, err = ocConfig.RunOcCommand("apply", "-f", "/tmp/routes-controller.json")
