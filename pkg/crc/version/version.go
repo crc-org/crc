@@ -44,6 +44,7 @@ const (
 	releaseInfoLink = "https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/release-info.json"
 	// Tray version to be embedded in executable
 	crcTrayElectronVersion = "1.2.7"
+	crcAdminHelperVersion  = "0.0.11"
 )
 
 type CrcReleaseInfo struct {
@@ -71,6 +72,10 @@ func GetBundleVersion() string {
 
 func GetPodmanVersion() string {
 	return podmanVersion
+}
+
+func GetAdminHelperVersion() string {
+	return crcAdminHelperVersion
 }
 
 func IsOkdBuild() bool {
