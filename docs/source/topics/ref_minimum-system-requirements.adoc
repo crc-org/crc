@@ -50,7 +50,7 @@ To assign more resources to the {prod} instance, see link:{crc-gsg-url}#configur
 
 === Linux
 
-* On Linux, {prod} is supported only on {rhel}/{centos} 7.5 or later (including 8.x versions) and on the latest two stable {fed} releases.
+* On Linux, {prod} is supported only on the latest two {rhel}/{centos} 7, 8 and 9 minor releases and on the latest two stable {fed} releases.
 * When using {rhel}, the machine running {prod} must be link:https://access.redhat.com/solutions/253273[registered with the Red Hat Customer Portal].
 * {ubuntu} 18.04 LTS or later and {debian} 10 or later are not supported and may require manual set up of the host machine.
 * See link:{crc-gsg-url}#required-software-packages_gsg[Required software packages] to install the required packages for your Linux distribution.
