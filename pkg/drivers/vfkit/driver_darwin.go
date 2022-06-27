@@ -201,6 +201,20 @@ func (d *Driver) Start() error {
 		}
 	}
 
+	// shared directories
+	for _, sharedDir := range d.SharedDirs {
+		// TODO: add support for 'mount.ReadOnly'
+		// TODO: check format
+		dev, err := client.VirtioFsNew(sharedDir.Source, sharedDir.Tag)
+		if err != nil {
+			return err
+		}
+		err = vm.AddDevice(dev)
+		if err != nil {
+			return err
+		}
+	}
+
 	// entropy
 	dev, err = client.VirtioRNGNew()
 	if err != nil {
@@ -262,6 +276,11 @@ func (d *Driver) Start() error {
 	log.Debugf("IP: %s", d.IPAddress)
 
 	return nil
+}
+
+func (d *Driver) GetSharedDirs() ([]drivers.SharedDir, error) {
+	// check if host supports file sharing, return drivers.ErrNotSupported if not
+	return d.SharedDirs, nil
 }
 
 // GetState returns the state that the host is in (running, stopped, etc)
