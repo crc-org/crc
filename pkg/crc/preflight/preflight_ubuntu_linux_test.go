@@ -19,7 +19,7 @@ profile LIBVIRT_TEMPLATE flags=(attach_disconnected) {
 }`
 	expected = `#include <tunables/global>
 profile LIBVIRT_TEMPLATE flags=(attach_disconnected) {
-  ` + constants.MachineCacheDir + `/*/crc.qcow2 rk,
+  ` + constants.MachineCacheDir + `/*/crc*.qcow2 rk,
 
   #include <abstractions/libvirt-qemu>
 }`

@@ -51,7 +51,7 @@ func checkAppArmorExceptionIsPresent(reader reader) func() error {
 	}
 }
 
-// Add the exception `cacheDir/*/crc.qcow2 rk` in AppArmor template
+// Add the exception `cacheDir/*/crc*.qcow2 rk` in AppArmor template
 func addAppArmorExceptionForQcowDisks(reader reader, writer writer) func() error {
 	return replaceInAppArmorTemplate(reader, writer, appArmorHeader, expectedLines())
 }
@@ -77,6 +77,6 @@ func replaceInAppArmorTemplate(reader reader, writer writer, before string, afte
 }
 
 func expectedLines() string {
-	line := fmt.Sprintf("  %s rk,", filepath.Join(constants.MachineCacheDir, "*", "crc.qcow2"))
+	line := fmt.Sprintf("  %s rk,", filepath.Join(constants.MachineCacheDir, "*", "crc*.qcow2"))
 	return fmt.Sprintf("%s\n%s\n", appArmorHeader, line)
 }
