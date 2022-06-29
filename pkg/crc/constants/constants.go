@@ -41,6 +41,23 @@ const (
 	RegistryURI   = "quay.io/crcont"
 	ClusterDomain = ".crc.testing"
 	AppsDomain    = ".apps-crc.testing"
+
+	// GPGPublicKey key is submitted to keyserver.ubuntu.com and can be fetched using
+	// gpg --keyserver hkps://keyserver.ubuntu.com --recv-key DC7EAC400A1BFDFB
+	GPGPublicKey = `-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+mDMEYrvgDRYJKwYBBAHaRw8BAQdAoW+hjSRYpTAdLEE1u6ZuYNER1g97e8ygT4ic
+mvo1AKi0MmNyYyAoS2V5IHRvIHNpZ24gYnVuZGxlIHVzZWQgYnkgY3JjKSA8Y3Jj
+QGNyYy5kZXY+iJkEExYKAEEWIQS4RlW/rByOBn/ZyofcfqxAChv9+wUCYrvgDQIb
+AwUJEswDAAULCQgHAgIiAgYVCgkICwIEFgIDAQIeBwIXgAAKCRDcfqxAChv9+/ep
+APwISi03R7npwimqdL7NYKDGMO8ikOwmmPkqh9CKwt4CdwD8Cc6HNcZumHDpJ4gH
+x7FXxIS9KLwDihpm1Gxr4t1t5Qy4OARiu+ANEgorBgEEAZdVAQUBAQdA/w7pM7hf
+bxZ2qwSuoBuhcA1sAlPSb3NrIZf3CceoqzQDAQgHiH4EGBYKACYWIQS4RlW/rByO
+Bn/ZyofcfqxAChv9+wUCYrvgDQIbDAUJEswDAAAKCRDcfqxAChv9+2UkAQCNCdaf
+vnhbvfPHDltmwDZ3aD4l3jjSKpeySeKQocgjQAD6A7kawst/50k4wb+vUDUnEoYo
+9Ix7lKfKWCXil/z0vg4=
+=lmb/
+-----END PGP PUBLIC KEY BLOCK-----`
 )
 
 var adminHelperExecutableForOs = map[string]string{

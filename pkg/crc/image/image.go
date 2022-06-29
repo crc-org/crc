@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/gpg"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/version"
@@ -113,5 +114,24 @@ func PullBundle(preset crcpreset.Preset) error {
 		return err
 	}
 	_, err = extract.Uncompress(filepath.Join(destDir, imgLayer), constants.MachineCacheDir, true)
-	return err
+	if err != nil {
+		return err
+	}
+
+	fileList, err := extract.Uncompress(filepath.Join(destDir, imgLayer), constants.MachineCacheDir, true)
+	if err != nil {
+		return err
+	}
+	logging.Debugf("Bundle and sign path: %v", fileList)
+
+	logging.Info("Verifying the bundle signature...")
+	if len(fileList) != 2 {
+		return fmt.Errorf("image layer contains more files than expected: %v", fileList)
+	}
+	bundleFilePath, sigFilePath := fileList[0], fileList[1]
+	if !strings.HasSuffix(sigFilePath, ".crcbundle.sig") {
+		sigFilePath, bundleFilePath = fileList[0], fileList[1]
+	}
+
+	return gpg.Verify(bundleFilePath, sigFilePath)
 }
