@@ -6,6 +6,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.4
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/Microsoft/go-winio v0.5.2
+	github.com/ProtonMail/go-crypto v0.0.0-20220623141421-5afb4c282135
 	github.com/RedHatQE/gowinx v0.0.3
 	github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
