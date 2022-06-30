@@ -7,8 +7,9 @@
 [id="minimum-system-requirements-hardware_{context}"]
 == Hardware requirements
 
-{prod} is supported only on AMD64 and Intel 64 processor architectures.
-{prod} does not support the ARM-based M1 architecture.
+{prod} is supported on AMD64 and Intel 64 processor architectures.
+The Podman container runtime preset is supported on the ARM-based M1 architecture.
+The {ocp} preset is not supported on the M1 architecture.
 {prod} does not support nested virtualization.
 
 Depending on the desired container runtime, {prod} requires the following system resources:
