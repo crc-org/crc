@@ -53,9 +53,9 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.2
 	github.com/zalando/go-keyring v0.2.1
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
-	golang.org/x/net v0.0.0-20220526153639-5463443f8c37
+	golang.org/x/net v0.0.0-20220708220712-1185a9018129
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
+	golang.org/x/sys v0.0.0-20220712014510-0a85c31ab51e
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467
 	golang.org/x/text v0.3.7
 	k8s.io/api v0.23.2
@@ -129,15 +129,15 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
-	github.com/moby/sys/mountinfo v0.4.1 // indirect
+	github.com/moby/sys/mountinfo v0.6.2 // indirect
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mtrmac/gpgme v0.1.2 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/runc v1.0.1 // indirect
-	github.com/opencontainers/runtime-spec v1.0.3-0.20211123151946-c2389c3cb60a // indirect
+	github.com/opencontainers/runc v1.1.3 // indirect
+	github.com/opencontainers/runtime-spec v1.0.3-0.20220706171101-8d0d6d41d096 // indirect
 	github.com/openshift/library-go v0.0.0-20220211142501-9f57c596fd46 // indirect
 	github.com/openstandia/w32uiautomation v0.0.0-20190416091226-c987b5b65d6b // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
