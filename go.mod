@@ -33,7 +33,7 @@ require (
 	github.com/mdlayher/vsock v1.1.1
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.19.0
-	github.com/opencontainers/image-spec v1.0.2-0.20190823105129-775207bd45b6
+	github.com/opencontainers/image-spec v1.0.3-0.20220512140940-7b36cea86235
 	github.com/openshift/api v0.0.0-20220124143425-d74727069f6f
 	github.com/openshift/client-go v0.0.0-20211209144617-7385dd6338e3
 	github.com/openshift/oc v0.0.0-alpha.0.0.20220519063019-878f5a8fe0d0
