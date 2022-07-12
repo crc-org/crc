@@ -42,8 +42,9 @@ const (
 	ClusterDomain = ".crc.testing"
 	AppsDomain    = ".apps-crc.testing"
 
-	// GPGPublicKey key is submitted to keyserver.ubuntu.com and can be fetched using
-	// gpg --keyserver hkps://keyserver.ubuntu.com --recv-key DC7EAC400A1BFDFB
+	// This public key is owned by the CRC team (crc@crc.dev), and is used
+	// to sign bundles uploaded to an image registry.
+	// It can be fetched with: `gpg --recv-key DC7EAC400A1BFDFB`
 	GPGPublicKey = `-----BEGIN PGP PUBLIC KEY BLOCK-----
 
 mDMEYrvgDRYJKwYBBAHaRw8BAQdAoW+hjSRYpTAdLEE1u6ZuYNER1g97e8ygT4ic
