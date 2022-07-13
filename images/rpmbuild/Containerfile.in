@@ -2,7 +2,7 @@ FROM quay.io/centos/centos:stream8
 WORKDIR $APP_ROOT/src
 RUN yum -y install git-core rpm-build dnf-plugins-core 'dnf-command(builddep)' \
         https://github.com/code-ready/admin-helper/releases/download/0.0.10/crc-admin-helper-0.0.10-1.el8.x86_64.rpm \
-	https://github.com/code-ready/machine-driver-libvirt/releases/download/0.13.2/crc-driver-libvirt-0.13.2-1.el8.x86_64.rpm
+	https://github.com/code-ready/machine-driver-libvirt/releases/download/0.13.3/crc-driver-libvirt-0.13.3-1.el8.x86_64.rpm
 COPY . .
 RUN mkdir -p ~/rpmbuild/SOURCES/ && \
     git archive --format=tar --prefix=crc-__VERSION__-__OPENSHIFT_VERSION__/ HEAD | gzip >~/rpmbuild/SOURCES/crc-__VERSION__.tar.gz
