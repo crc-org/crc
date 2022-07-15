@@ -30,6 +30,14 @@
             <RegistrySearch Id="CrcInstalledReg" Root="HKCU" Key="Software\Red Hat\Red Hat OpenShift Local" Name="installed" Type="raw" />
         </Property>
 
+        <Property Id="POWERSHELLEXE">
+            <RegistrySearch Id="POWERSHELLEXE"
+                Type="raw"
+                Root="HKLM"
+                Key="SOFTWARE\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell"
+                Name="Path" />
+        </Property>
+
         <util:Group Id="CrcUsersGroup" Name="crc-users" />
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
@@ -85,12 +93,14 @@
         <CustomAction Id="RemoveCrcGroupRollback" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="rollback" Impersonate="no" Return="ignore" />
         <SetProperty Action="CARemoveCrcDaemonTask" Id="RemoveCrcDaemonTask" Value='"[System64Folder]cmd.exe" /c schtasks /delete /TN crcDaemon /F' Before='RemoveFiles' Sequence="execute"/>
         <CustomAction Id="RemoveCrcDaemonTask" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
-
         <SetProperty Action="CAInstallHyperv" Id="InstallHyperv" Value='"[System64Folder]dism.exe" /online /enable-feature /featureName:microsoft-hyper-v-all /NoRestart /quiet' Before="InstallHyperv" Sequence="execute"/>
         <CustomAction Id="InstallHyperv" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
-
-        <SetProperty Action="CAAddUserToHypervAdminGroup" Id="AddUserToHypervAdminGroup" Value='"[System64Folder]cmd.exe" /c cd /d "[INSTALLDIR]" &amp;&amp; .\crc.exe setup --log-level debug' Before="AddUserToHypervAdminGroup" Sequence="execute"/>
-        <CustomAction Id="AddUserToHypervAdminGroup" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
+        <SetProperty Action="CAAddUserToHypervAdminGroup" 
+            Id="AddUserToHypervAdminGroup" 
+            Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Add-LocalGroupMember -Member [LogonUser] -SID S-1-5-32-578&quot;" 
+            Before="AddUserToHypervAdminGroup" 
+            Sequence="execute"/>
+        <CustomAction Id="AddUserToHypervAdminGroup" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
 
         <util:CloseApplication Id = "TrayRunning" Description="Please exit Red Hat OpenShift Local from tray and run the installation again." Target="crc-tray.exe" RebootPrompt="no" PromptToContinue="yes" />
 
