@@ -3,6 +3,4 @@ docs/build/
 release/
 /release-info.json
 *.crcbundle
-packaging/tmp
-packaging/*.pkg
 tmp-embed/
