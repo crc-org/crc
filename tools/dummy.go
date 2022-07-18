@@ -4,5 +4,6 @@
 package buildtools
 
 import (
+	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
 	_ "github.com/randall77/makefat"
 )

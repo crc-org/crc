@@ -7,7 +7,7 @@ CRC_VERSION = 2.6.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 MACOS_INSTALL_PATH = /Applications/Red Hat OpenShift Local.app/Contents/Resources
 CONTAINER_RUNTIME ?= podman
-GOLANGCI_LINT_VERSION = v1.44.2
+GOLANGCI_LINT_VERSION = v1.47.0
 TOOLS_BINDIR = $(realpath tools/bin)
 
 ifdef OKD_VERSION
@@ -244,7 +244,7 @@ $(TOOLS_BINDIR)/makefat:
 .PHONY: golangci-lint
 golangci-lint:
 	if $(TOOLS_BINDIR)/golangci-lint version 2>&1 | grep -vq $(GOLANGCI_LINT_VERSION); then\
-		GOBIN=$(TOOLS_BINDIR) go install -mod=mod github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); \
+		cd tools && GOBIN=$(TOOLS_BINDIR) go install github.com/golangci/golangci-lint/cmd/golangci-lint; \
 	fi
 
 # Run golangci-lint against code
