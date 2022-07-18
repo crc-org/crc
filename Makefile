@@ -238,6 +238,9 @@ e2e-story-registry: install
 fmt:
 	@gofmt -l -w $(SOURCE_DIRS)
 
+$(TOOLS_BINDIR)/makefat:
+	GOBIN=$(TOOLS_BINDIR) go install -mod=mod github.com/randall77/makefat@latest
+
 .PHONY: golangci-lint
 golangci-lint:
 	if $(TOOLS_BINDIR)/golangci-lint version 2>&1 | grep -vq $(GOLANGCI_LINT_VERSION); then\
@@ -311,9 +314,9 @@ endif
 packaging/vfkit.entitlements:
 	curl -sL https://raw.githubusercontent.com/code-ready/vfkit/main/vf.entitlements -o $@
 
-macos-universal-binary: macos-release-binary
+macos-universal-binary: macos-release-binary $(TOOLS_BINDIR)/makefat
 	mkdir -p out/macos-universal
-	lipo -create out/macos-amd64/crc out/macos-arm64/crc -output out/macos-universal/crc
+	cd $(BUILD_DIR) && $(TOOLS_BINDIR)/makefat macos-universal/crc macos-amd64/crc macos-arm64/crc
 
 packagedir: clean embed-download macos-universal-binary packaging/vfkit.entitlements
 	echo -n $(CRC_VERSION) > packaging/VERSION
