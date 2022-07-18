@@ -7,7 +7,7 @@ root/
 /VERSION
 /ARCH
 /windows/msi/
-packaging/windows/product.wxs
+/windows/product.wxs
 vfkit.entitlements
 /tmp
 /*.pkg
