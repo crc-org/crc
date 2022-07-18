@@ -7,6 +7,7 @@ import (
 )
 
 func init() {
+	downloadCmd.Flags().StringVar(&goos, "goos", runtime.GOOS, "Target platform (darwin, linux or windows)")
 	rootCmd.AddCommand(downloadCmd)
 }
 
@@ -20,6 +21,6 @@ var downloadCmd = &cobra.Command{
 }
 
 func runDownload(args []string) error {
-	_, err := downloadDataFiles(runtime.GOOS, args[0])
+	_, err := downloadDataFiles(goos, args[0])
 	return err
 }
