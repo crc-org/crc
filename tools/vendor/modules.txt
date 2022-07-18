@@ -1,0 +1,3 @@
+# github.com/randall77/makefat v0.0.0-20210315173500-7ddd0e42c844
+## explicit; go 1.13
+github.com/randall77/makefat

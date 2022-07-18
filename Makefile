@@ -239,7 +239,7 @@ fmt:
 	@gofmt -l -w $(SOURCE_DIRS)
 
 $(TOOLS_BINDIR)/makefat:
-	GOBIN=$(TOOLS_BINDIR) go install -mod=mod github.com/randall77/makefat@latest
+	cd tools && GOBIN=$(TOOLS_BINDIR) go install github.com/randall77/makefat
 
 .PHONY: golangci-lint
 golangci-lint:
