@@ -44,6 +44,9 @@ binDir="${BASEDIR}/root/Applications/Red Hat OpenShift Local.app/Contents/Resour
 
 version=$(cat "${BASEDIR}/VERSION")
 
+pkgbuild --analyze --root ${BASEDIR}/root ${BASEDIR}/components.plist
+plutil -replace BundleIsRelocatable -bool NO ${BASEDIR}/components.plist
+
 sign "${binDir}/crc"
 sign "${binDir}/crc-admin-helper-darwin"
 sign "${binDir}/vfkit"
