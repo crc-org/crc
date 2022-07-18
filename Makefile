@@ -331,8 +331,6 @@ packagedir: clean embed-download-darwin macos-universal-binary
 
 	cp $(BUILD_DIR)/macos-universal/crc packaging/root/"$(MACOS_INSTALL_PATH)"
 	cp LICENSE packaging/darwin/Resources/LICENSE.txt
-	pkgbuild --analyze --root packaging/root packaging/components.plist
-	plutil -replace BundleIsRelocatable -bool NO packaging/components.plist
 
 $(BUILD_DIR)/macos-universal/crc-macos-installer.pkg: packagedir
 	./packaging/package.sh $(@D)
