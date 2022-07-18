@@ -343,11 +343,11 @@ $(BUILD_DIR)/macos-universal/crc-macos-installer.tar: packagedir
 	tar -cvf $@ ./packaging
 	cd $(@D) && sha256sum $(@F)>$(@F).sha256sum
 
-$(GOPATH)/bin/gomod2rpmdeps:
-	pushd /tmp && GO111MODULE=on go get github.com/cfergeau/gomod2rpmdeps/cmd/gomod2rpmdeps && popd
+$(TOOLS_BINDIR)/gomod2rpmdeps:
+	GOBIN=$(TOOLS_BINDIR) go install -mod=mod github.com/cfergeau/gomod2rpmdeps/cmd/gomod2rpmdeps@latest
 
-%.spec: %.spec.in $(GOPATH)/bin/gomod2rpmdeps
-	@$(GOPATH)/bin/gomod2rpmdeps | sed -e '/__BUNDLED_PROVIDES__/r /dev/stdin' \
+%.spec: %.spec.in $(TOOLS_BINDIR)/gomod2rpmdeps
+	@$(TOOLS_BINDIR)/gomod2rpmdeps | sed -e '/__BUNDLED_PROVIDES__/r /dev/stdin' \
 					   -e '/__BUNDLED_PROVIDES__/d' \
 					   -e 's/__VERSION__/'$(CRC_VERSION)'/g' \
 					   -e 's/__OPENSHIFT_VERSION__/'$(OPENSHIFT_VERSION)'/g' \
