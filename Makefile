@@ -301,17 +301,18 @@ goversioncheck:
 
 TRAY_RELEASE ?= packaging/tmp/crc-tray-macos.tar.gz
 
-embed-download: $(HOST_BUILD_DIR)/crc-embedder
+.PHONY: embed-download-windows embed-download-darwin
+embed-download-windows embed-download-darwin: embed-download-%: $(HOST_BUILD_DIR)/crc-embedder
 ifeq ($(CUSTOM_EMBED),false)
 	mkdir -p $(EMBED_DOWNLOAD_DIR)
-	$(HOST_BUILD_DIR)/crc-embedder download $(EMBED_DOWNLOAD_DIR)
+	$(HOST_BUILD_DIR)/crc-embedder download --goos=$* $(EMBED_DOWNLOAD_DIR)
 endif
 
 macos-universal-binary: macos-release-binary $(TOOLS_BINDIR)/makefat
 	mkdir -p out/macos-universal
 	cd $(BUILD_DIR) && "$(TOOLS_BINDIR)"/makefat macos-universal/crc macos-amd64/crc macos-arm64/crc
 
-packagedir: clean embed-download macos-universal-binary
+packagedir: clean embed-download-darwin macos-universal-binary
 	echo -n $(CRC_VERSION) > packaging/VERSION
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
@@ -359,7 +360,7 @@ CRC_EXE=crc.exe
 BUNDLE_NAME=crc_hyperv_$(OPENSHIFT_VERSION).$(BUNDLE_EXTENSION)
 
 .PHONY: msidir
-msidir: clean embed-download $(HOST_BUILD_DIR)/GenMsiWxs windows-release-binary $(PACKAGE_DIR)/product.wxs.template
+msidir: clean embed-download-windows $(HOST_BUILD_DIR)/GenMsiWxs windows-release-binary $(PACKAGE_DIR)/product.wxs.template
 	mkdir -p $(PACKAGE_DIR)/msi
 	cp $(EMBED_DOWNLOAD_DIR)/* $(PACKAGE_DIR)/msi
 	cp $(HOST_BUILD_DIR)/crc.exe $(PACKAGE_DIR)/msi/$(CRC_EXE)
