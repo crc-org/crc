@@ -7,7 +7,6 @@ CRC_VERSION = 2.6.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 MACOS_INSTALL_PATH = /Applications/Red Hat OpenShift Local.app/Contents/Resources
 CONTAINER_RUNTIME ?= podman
-GOLANGCI_LINT_VERSION = v1.47.0
 TOOLS_BINDIR = $(realpath tools/bin)
 
 ifdef OKD_VERSION
@@ -238,21 +237,18 @@ e2e-story-registry: install
 fmt:
 	@gofmt -l -w $(SOURCE_DIRS)
 
-$(TOOLS_BINDIR)/makefat:
+$(TOOLS_BINDIR)/makefat: tools/go.mod
 	cd tools && GOBIN=$(TOOLS_BINDIR) go install github.com/randall77/makefat
 
-.PHONY: golangci-lint
-golangci-lint:
-	if $(TOOLS_BINDIR)/golangci-lint version 2>&1 | grep -vq $(GOLANGCI_LINT_VERSION); then\
-		cd tools && GOBIN=$(TOOLS_BINDIR) go install github.com/golangci/golangci-lint/cmd/golangci-lint; \
-	fi
+$(TOOLS_BINDIR)/golangci-lint: tools/go.mod
+	cd tools && GOBIN=$(TOOLS_BINDIR) go install github.com/golangci/golangci-lint/cmd/golangci-lint
 
 # Run golangci-lint against code
 .PHONY: lint cross-lint
-lint: golangci-lint
+lint: $(TOOLS_BINDIR)/golangci-lint
 	$(TOOLS_BINDIR)/golangci-lint run
 
-cross-lint: golangci-lint
+cross-lint: $(TOOLS_BINDIR)/golangci-lint
 	GOOS=darwin $(TOOLS_BINDIR)/golangci-lint run
 	GOOS=linux $(TOOLS_BINDIR)/golangci-lint run
 	GOARCH=amd64 GOOS=windows $(TOOLS_BINDIR)/golangci-lint run
