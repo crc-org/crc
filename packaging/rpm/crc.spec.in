@@ -60,7 +60,7 @@ export GOFLAGS="-mod=vendor"
 mkdir embed-files
 cp /usr/bin/crc-driver-libvirt embed-files
 cp /usr/bin/crc-admin-helper embed-files/crc-admin-helper-linux
-make GO_EXTRA_LDFLAGS="-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \n')" GO_EXTRA_BUILDFLAGS="" CUSTOM_EMBED=true EMBED_DOWNLOAD_DIR=embed-files/ release
+make COMMIT_SHA=__COMMIT_SHA__ GO_EXTRA_LDFLAGS="-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \n')" GO_EXTRA_BUILDFLAGS="" CUSTOM_EMBED=true EMBED_DOWNLOAD_DIR=embed-files/ release
 
 %install
 # with fedora macros: gopkginstall
