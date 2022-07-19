@@ -98,6 +98,7 @@ var (
 	dataFileUrls = map[string][]remoteFileInfo{
 		"darwin": {
 			{vfkit.VfkitDownloadURL, 0755},
+			{vfkit.VfkitEntitlementsURL, 0644},
 			{constants.GetCRCMacTrayDownloadURL(), 0644},
 			{constants.GetAdminHelperURLForOs("darwin"), 0755},
 		},

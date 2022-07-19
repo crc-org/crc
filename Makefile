@@ -307,14 +307,11 @@ ifeq ($(CUSTOM_EMBED),false)
 	$(HOST_BUILD_DIR)/crc-embedder download $(EMBED_DOWNLOAD_DIR)
 endif
 
-packaging/vfkit.entitlements:
-	curl -sL https://raw.githubusercontent.com/crc-org/vfkit/main/vf.entitlements -o $@
-
 macos-universal-binary: macos-release-binary $(TOOLS_BINDIR)/makefat
 	mkdir -p out/macos-universal
 	cd $(BUILD_DIR) && "$(TOOLS_BINDIR)"/makefat macos-universal/crc macos-amd64/crc macos-arm64/crc
 
-packagedir: clean embed-download macos-universal-binary packaging/vfkit.entitlements
+packagedir: clean embed-download macos-universal-binary
 	echo -n $(CRC_VERSION) > packaging/VERSION
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
@@ -322,6 +319,7 @@ packagedir: clean embed-download macos-universal-binary packaging/vfkit.entitlem
 	chmod 755 packaging/darwin/scripts/postinstall
 	mkdir -p packaging/tmp/
 	cp $(EMBED_DOWNLOAD_DIR)/* packaging/tmp/
+	cp $(EMBED_DOWNLOAD_DIR)/vf.entitlements packaging/vfkit.entitlements
 	mkdir -p packaging/root/Applications
 	tar -C packaging/root/Applications -xvzf $(TRAY_RELEASE)
 	rm $(TRAY_RELEASE)
