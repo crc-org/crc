@@ -7,7 +7,9 @@ CRC_VERSION = 2.6.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
 MACOS_INSTALL_PATH = /Applications/Red Hat OpenShift Local.app/Contents/Resources
 CONTAINER_RUNTIME ?= podman
-TOOLS_BINDIR = $(realpath tools/bin)
+
+TOOLS_DIR := tools
+include tools/tools.mk
 
 ifdef OKD_VERSION
     OPENSHIFT_VERSION = $(OKD_VERSION)
@@ -236,15 +238,6 @@ e2e-story-registry: install
 .PHONY: fmt
 fmt:
 	@gofmt -l -w $(SOURCE_DIRS)
-
-$(TOOLS_BINDIR)/makefat: tools/go.mod
-	cd tools && GOBIN=$(TOOLS_BINDIR) go install github.com/randall77/makefat
-
-$(TOOLS_BINDIR)/golangci-lint: tools/go.mod
-	cd tools && GOBIN=$(TOOLS_BINDIR) go install github.com/golangci/golangci-lint/cmd/golangci-lint
-
-$(TOOLS_BINDIR)/gomod2rpmdeps: tools/go.mod
-	cd tools && GOBIN=$(TOOLS_BINDIR) go install github.com/cfergeau/gomod2rpmdeps/cmd/gomod2rpmdeps
 
 # Run golangci-lint against code
 .PHONY: lint cross-lint
