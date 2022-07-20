@@ -61,6 +61,9 @@ github.com/butuzov/ireturn/types
 # github.com/cespare/xxhash/v2 v2.1.2
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
+# github.com/cfergeau/gomod2rpmdeps v0.0.0-20210223144124-2042c4850ca8
+## explicit
+github.com/cfergeau/gomod2rpmdeps/cmd/gomod2rpmdeps
 # github.com/charithe/durationcheck v0.0.9
 ## explicit; go 1.14
 github.com/charithe/durationcheck

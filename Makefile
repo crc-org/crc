@@ -243,6 +243,9 @@ $(TOOLS_BINDIR)/makefat: tools/go.mod
 $(TOOLS_BINDIR)/golangci-lint: tools/go.mod
 	cd tools && GOBIN=$(TOOLS_BINDIR) go install github.com/golangci/golangci-lint/cmd/golangci-lint
 
+$(TOOLS_BINDIR)/gomod2rpmdeps: tools/go.mod
+	cd tools && GOBIN=$(TOOLS_BINDIR) go install github.com/cfergeau/gomod2rpmdeps/cmd/gomod2rpmdeps
+
 # Run golangci-lint against code
 .PHONY: lint cross-lint
 lint: $(TOOLS_BINDIR)/golangci-lint
@@ -341,9 +344,6 @@ $(BUILD_DIR)/macos-universal/crc-macos-installer.pkg: packagedir
 $(BUILD_DIR)/macos-universal/crc-macos-installer.tar: packagedir
 	tar -cvf $@ ./packaging
 	cd $(@D) && sha256sum $(@F)>$(@F).sha256sum
-
-$(TOOLS_BINDIR)/gomod2rpmdeps:
-	GOBIN=$(TOOLS_BINDIR) go install -mod=mod github.com/cfergeau/gomod2rpmdeps/cmd/gomod2rpmdeps@latest
 
 %.spec: %.spec.in $(TOOLS_BINDIR)/gomod2rpmdeps
 	@$(TOOLS_BINDIR)/gomod2rpmdeps | sed -e '/__BUNDLED_PROVIDES__/r /dev/stdin' \

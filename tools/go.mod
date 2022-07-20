@@ -3,6 +3,7 @@ module github.com/code-ready/crc/tools
 go 1.17
 
 require (
+	github.com/cfergeau/gomod2rpmdeps v0.0.0-20210223144124-2042c4850ca8
 	github.com/golangci/golangci-lint v1.47.0
 	github.com/randall77/makefat v0.0.0-20210315173500-7ddd0e42c844
 )
