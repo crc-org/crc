@@ -113,11 +113,6 @@ func PullBundle(preset crcpreset.Preset) error {
 	if err != nil {
 		return err
 	}
-	_, err = extract.Uncompress(filepath.Join(destDir, imgLayer), constants.MachineCacheDir, true)
-	if err != nil {
-		return err
-	}
-
 	fileList, err := extract.Uncompress(filepath.Join(destDir, imgLayer), constants.MachineCacheDir, true)
 	if err != nil {
 		return err
