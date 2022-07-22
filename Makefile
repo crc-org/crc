@@ -252,7 +252,7 @@ lint: golangci-lint
 cross-lint: golangci-lint
 	GOOS=darwin $(TOOLS_BINDIR)/golangci-lint run
 	GOOS=linux $(TOOLS_BINDIR)/golangci-lint run
-	GOOS=windows $(TOOLS_BINDIR)/golangci-lint run
+	GOARCH=amd64 GOOS=windows $(TOOLS_BINDIR)/golangci-lint run
 
 .PHONY: gen_release_info
 gen_release_info:
