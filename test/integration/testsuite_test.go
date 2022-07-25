@@ -7,8 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/reporters"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/sirupsen/logrus"
 )
@@ -30,8 +29,11 @@ func TestTest(t *testing.T) {
 
 	RegisterFailHandler(Fail)
 
-	junitReporter := reporters.NewJUnitReporter(filepath.Join("out", "integration.xml"))
-	RunSpecsWithDefaultAndCustomReporters(t, "Test Suite", []Reporter{junitReporter})
+	// fetch the current (reporter) config
+	_, reporterConfig := GinkgoConfiguration()
+	reporterConfig.JUnitReport = filepath.Join("out", "integration.xml")
+
+	RunSpecs(t, "Test Suite", reporterConfig)
 
 }
 
