@@ -11,6 +11,7 @@ type Preset string
 const (
 	Podman    Preset = "podman"
 	OpenShift Preset = "openshift"
+	OKD       Preset = "okd"
 )
 
 func (preset Preset) String() string {
@@ -19,6 +20,8 @@ func (preset Preset) String() string {
 		return string(Podman)
 	case OpenShift:
 		return string(OpenShift)
+	case OKD:
+		return string(OKD)
 	}
 	return "invalid"
 }
@@ -29,6 +32,8 @@ func ParsePresetE(input string) (Preset, error) {
 		return Podman, nil
 	case OpenShift.String():
 		return OpenShift, nil
+	case OKD.String():
+		return OKD, nil
 	default:
 		return OpenShift, fmt.Errorf("Cannot parse preset '%s'", input)
 	}
