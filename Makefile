@@ -242,12 +242,12 @@ fmt:
 # Run golangci-lint against code
 .PHONY: lint cross-lint
 lint: $(TOOLS_BINDIR)/golangci-lint
-	$(TOOLS_BINDIR)/golangci-lint run
+	"$(TOOLS_BINDIR)"/golangci-lint run
 
 cross-lint: $(TOOLS_BINDIR)/golangci-lint
-	GOOS=darwin $(TOOLS_BINDIR)/golangci-lint run
-	GOOS=linux $(TOOLS_BINDIR)/golangci-lint run
-	GOARCH=amd64 GOOS=windows $(TOOLS_BINDIR)/golangci-lint run
+	GOOS=darwin "$(TOOLS_BINDIR)"/golangci-lint run
+	GOOS=linux "$(TOOLS_BINDIR)"/golangci-lint run
+	GOARCH=amd64 GOOS=windows "$(TOOLS_BINDIR)"/golangci-lint run
 
 .PHONY: gen_release_info
 gen_release_info:
@@ -308,7 +308,7 @@ packaging/vfkit.entitlements:
 
 macos-universal-binary: macos-release-binary $(TOOLS_BINDIR)/makefat
 	mkdir -p out/macos-universal
-	cd $(BUILD_DIR) && $(TOOLS_BINDIR)/makefat macos-universal/crc macos-amd64/crc macos-arm64/crc
+	cd $(BUILD_DIR) && "$(TOOLS_BINDIR)"/makefat macos-universal/crc macos-amd64/crc macos-arm64/crc
 
 packagedir: clean embed-download macos-universal-binary packaging/vfkit.entitlements
 	echo -n $(CRC_VERSION) > packaging/VERSION
@@ -339,7 +339,7 @@ $(BUILD_DIR)/macos-universal/crc-macos-installer.tar: packagedir
 	cd $(@D) && sha256sum $(@F)>$(@F).sha256sum
 
 %.spec: %.spec.in $(TOOLS_BINDIR)/gomod2rpmdeps
-	@$(TOOLS_BINDIR)/gomod2rpmdeps | sed -e '/__BUNDLED_PROVIDES__/r /dev/stdin' \
+	@"$(TOOLS_BINDIR)"/gomod2rpmdeps | sed -e '/__BUNDLED_PROVIDES__/r /dev/stdin' \
 					   -e '/__BUNDLED_PROVIDES__/d' \
 					   -e 's/__VERSION__/'$(CRC_VERSION)'/g' \
 					   -e 's/__OPENSHIFT_VERSION__/'$(OPENSHIFT_VERSION)'/g' \
