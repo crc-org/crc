@@ -31,5 +31,5 @@ jobs:
       - name: Upload windows installer artifact
         uses: actions/upload-artifact@v2
         with:
-          name: Windows Installer
+          name: Windows Installer (${{ matrix.os }})
           path: "./out/windows-amd64/crc-windows-installer.zip"

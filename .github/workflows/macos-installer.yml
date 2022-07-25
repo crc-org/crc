@@ -50,5 +50,5 @@ jobs:
       - name: Upload macOS installer artifact
         uses: actions/upload-artifact@v2
         with:
-          name: macOS Installer
+          name: macOS Installer (${{ matrix.os }})
           path: "./out/macos-amd64/crc-macos-amd64.pkg"
