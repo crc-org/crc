@@ -17,6 +17,8 @@ jobs:
         go:
           - 1.17
     steps:
+      - name: Downgrade mingw to workaround https://github.com/golang/go/issues/46099
+        run: choco install mingw --version 10.2.0 --allow-downgrade
       - name: Check out repository code
         uses: actions/checkout@v2
       - name: Set up Go
