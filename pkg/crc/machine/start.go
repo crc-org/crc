@@ -793,7 +793,7 @@ func updateKubeconfig(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh
 }
 
 func bundleMismatchWithPreset(preset crcPreset.Preset, bundleMetadata *bundle.CrcBundleInfo) error {
-	if preset != crcPreset.OpenShift && bundleMetadata.IsOpenShift() {
+	if preset == crcPreset.Podman && bundleMetadata.IsOpenShift() {
 		return errors.Errorf("Preset %s is used but bundle is provided for %s preset", crcPreset.Podman, crcPreset.OpenShift)
 	}
 	if preset != crcPreset.Podman && !bundleMetadata.IsOpenShift() {
