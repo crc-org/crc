@@ -14,6 +14,7 @@ import (
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -265,7 +266,7 @@ var testCases = []testCase{
 	// version
 	{
 		request:  get("version"),
-		response: jSon(fmt.Sprintf(`{"CrcVersion":"%s","CommitSha":"%s","OpenshiftVersion":"%s","PodmanVersion":"%s"}`, version.GetCRCVersion(), version.GetCommitSha(), version.GetBundleVersion(), version.GetPodmanVersion())),
+		response: jSon(fmt.Sprintf(`{"CrcVersion":"%s","CommitSha":"%s","OpenshiftVersion":"%s","PodmanVersion":"%s"}`, version.GetCRCVersion(), version.GetCommitSha(), version.GetBundleVersion(preset.OpenShift), version.GetPodmanVersion())),
 	},
 
 	// version never fails

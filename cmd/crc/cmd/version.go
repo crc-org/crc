@@ -7,6 +7,7 @@ import (
 
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
 	"github.com/spf13/cobra"
 )
@@ -21,7 +22,7 @@ var versionCmd = &cobra.Command{
 	Short: "Print version information",
 	Long:  "Print version information",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return runPrintVersion(os.Stdout, defaultVersion(), outputFormat)
+		return runPrintVersion(os.Stdout, defaultVersion(crcConfig.GetPreset(config)), outputFormat)
 	},
 }
 
@@ -39,11 +40,11 @@ type version struct {
 	PodmanVersion    string `json:"podmanVersion"`
 }
 
-func defaultVersion() *version {
+func defaultVersion(preset crcPreset.Preset) *version {
 	return &version{
 		Version:          crcversion.GetCRCVersion(),
 		Commit:           crcversion.GetCommitSha(),
-		OpenshiftVersion: crcversion.GetBundleVersion(),
+		OpenshiftVersion: crcversion.GetBundleVersion(preset),
 		PodmanVersion:    crcversion.GetPodmanVersion(),
 	}
 }
