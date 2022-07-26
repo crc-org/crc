@@ -11,6 +11,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/code-ready/crc/pkg/crc/logging"
+	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
 )
 
 // The following variables are private fields and should be set when compiling with ldflags, for example --ldflags="-X github.com/code-ready/crc/pkg/version.crcVersion=vX.Y.Z
@@ -66,7 +67,7 @@ func GetCommitSha() string {
 	return commitSha
 }
 
-func GetBundleVersion() string {
+func GetBundleVersion(_ crcPreset.Preset) string {
 	return bundleVersion
 }
 

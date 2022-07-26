@@ -79,7 +79,7 @@ func runPrerun(cmd *cobra.Command) error {
 	}
 	logging.InitLogrus(logFile)
 
-	for _, str := range defaultVersion().lines() {
+	for _, str := range defaultVersion(crcConfig.GetPreset(config)).lines() {
 		logging.Debugf(str)
 	}
 	return nil

@@ -50,7 +50,7 @@ func TestVersion(t *testing.T) {
 		t,
 		apiClient.VersionResult{
 			CrcVersion:       version.GetCRCVersion(),
-			OpenshiftVersion: version.GetBundleVersion(),
+			OpenshiftVersion: version.GetBundleVersion(preset.OpenShift),
 			CommitSha:        version.GetCommitSha(),
 			PodmanVersion:    version.GetPodmanVersion(),
 		},

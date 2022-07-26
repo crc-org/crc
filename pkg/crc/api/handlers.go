@@ -123,7 +123,7 @@ func (h *Handler) GetVersion(c *context) error {
 	return c.JSON(http.StatusOK, &client.VersionResult{
 		CrcVersion:       version.GetCRCVersion(),
 		CommitSha:        version.GetCommitSha(),
-		OpenshiftVersion: version.GetBundleVersion(),
+		OpenshiftVersion: version.GetBundleVersion(crcConfig.GetPreset(h.Config)),
 		PodmanVersion:    version.GetPodmanVersion(),
 	})
 }

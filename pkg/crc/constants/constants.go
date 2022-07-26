@@ -92,9 +92,9 @@ func defaultBundleForOs(preset crcpreset.Preset) map[string]string {
 		}
 	}
 	return map[string]string{
-		"darwin":  fmt.Sprintf("crc_vfkit_%s_%s.crcbundle", version.GetBundleVersion(), runtime.GOARCH),
-		"linux":   fmt.Sprintf("crc_libvirt_%s_%s.crcbundle", version.GetBundleVersion(), runtime.GOARCH),
-		"windows": fmt.Sprintf("crc_hyperv_%s_%s.crcbundle", version.GetBundleVersion(), runtime.GOARCH),
+		"darwin":  fmt.Sprintf("crc_vfkit_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH),
+		"linux":   fmt.Sprintf("crc_libvirt_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH),
+		"windows": fmt.Sprintf("crc_hyperv_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH),
 	}
 }
 
