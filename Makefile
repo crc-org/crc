@@ -12,11 +12,6 @@ CONTAINER_RUNTIME ?= podman
 TOOLS_DIR := tools
 include tools/tools.mk
 
-ifdef OKD_VERSION
-    OPENSHIFT_VERSION = $(OKD_VERSION)
-    CRC_VERSION := $(CRC_VERSION)-OKD
-endif
-
 # Go and compilation related variables
 BUILD_DIR ?= out
 SOURCE_DIRS = cmd pkg test
@@ -63,10 +58,6 @@ VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.podmanVersion=$(PODMAN_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.commitSha=$(COMMIT_SHA)
 RELEASE_VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/segment.WriteKey=cvpHsNcmGCJqVzf6YxrSnVlwFSAZaYtp
-
-ifdef OKD_VERSION
-	VERSION_VARIABLES := $(VERSION_VARIABLES) -X $(REPOPATH)/pkg/crc/version.okdBuild=true
-endif
 
 # https://golang.org/cmd/link/
 LDFLAGS := $(VERSION_VARIABLES) ${GO_EXTRA_LDFLAGS}
