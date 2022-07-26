@@ -28,8 +28,6 @@ var (
 	// Podman version for podman specific bundles
 	podmanVersion = "0.0.0-unset"
 
-	okdBuild = "false"
-
 	okdVersion = "0.0.0-unset"
 	// will always be false on linux
 	// will be true for releases on macos and windows
@@ -81,10 +79,6 @@ func GetPodmanVersion() string {
 
 func GetAdminHelperVersion() string {
 	return crcAdminHelperVersion
-}
-
-func IsOkdBuild() bool {
-	return okdBuild == "true"
 }
 
 func GetTrayVersion() string {

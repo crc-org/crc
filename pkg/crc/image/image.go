@@ -85,13 +85,14 @@ func getLayerPath(m *v1.Manifest, index int, mediaType string) (string, error) {
 }
 
 func getImageName(preset crcpreset.Preset) string {
-	if preset == crcpreset.Podman {
+	switch preset {
+	case crcpreset.Podman:
 		return "podman-bundle"
-	}
-	if version.IsOkdBuild() {
+	case crcpreset.OKD:
 		return "okd-bundle"
+	default:
+		return "openshift-bundle"
 	}
-	return "openshift-bundle"
 }
 
 func PullBundle(preset crcpreset.Preset) error {

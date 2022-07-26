@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"runtime"
-	"strings"
 	"text/template"
 
 	"github.com/Masterminds/semver/v3"
@@ -156,18 +155,7 @@ func (s *startResult) prettyPrintTo(writer io.Writer) error {
 		return errors.New("either Error or ClusterConfig is needed")
 	}
 
-	if err := writeTemplatedMessage(writer, s); err != nil {
-		return err
-	}
-	if crcversion.IsOkdBuild() {
-		_, err := fmt.Fprintln(writer, strings.Join([]string{
-			"",
-			"NOTE:",
-			"This cluster was built from OKD - The Community Distribution of Kubernetes that powers Red Hat OpenShift.",
-			"If you find an issue, please report it at https://github.com/openshift/okd"}, "\n"))
-		return err
-	}
-	return nil
+	return writeTemplatedMessage(writer, s)
 }
 
 func validateStartFlags() error {
@@ -253,6 +241,10 @@ Use the 'podman' command line interface:
   {{ .CommandLinePrefix }} {{ .EvalCommandLine }}
   {{ .CommandLinePrefix }} {{ .PodmanRemote }} COMMAND
 `
+	startTemplateForOKD = `NOTE:
+This cluster was built from OKD - The Community Distribution of Kubernetes that powers Red Hat OpenShift.
+If you find an issue, please report it at https://github.com/openshift/okd
+`
 )
 
 type templateVariables struct {
@@ -263,7 +255,7 @@ type templateVariables struct {
 }
 
 func writeTemplatedMessage(writer io.Writer, s *startResult) error {
-	if s.ClusterConfig.ClusterType == preset.OpenShift {
+	if s.ClusterConfig.ClusterType == preset.OpenShift || s.ClusterConfig.ClusterType == preset.OKD {
 		return writeOpenShiftTemplatedMessage(writer, s)
 	}
 
@@ -271,7 +263,11 @@ func writeTemplatedMessage(writer io.Writer, s *startResult) error {
 }
 
 func writeOpenShiftTemplatedMessage(writer io.Writer, s *startResult) error {
-	parsed, err := template.New("template").Parse(startTemplateForOpenshift)
+	tmpl := startTemplateForOpenshift
+	if s.ClusterConfig.ClusterType == preset.OKD {
+		tmpl = fmt.Sprintf("%s\n\n%s", startTemplateForOpenshift, startTemplateForOKD)
+	}
+	parsed, err := template.New("template").Parse(tmpl)
 	if err != nil {
 		return err
 	}

@@ -13,7 +13,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/validation"
-	"github.com/code-ready/crc/pkg/crc/version"
 	"github.com/pkg/errors"
 )
 
@@ -102,7 +101,7 @@ func fixBundleExtracted(bundlePath string, preset crcpreset.Preset) func() error
 			logging.Infof("Downloading %s", constants.GetDefaultBundle(preset))
 			// In case of OKD or podman bundle then pull the bundle image from quay
 			// otherwise use mirror location to download the bundle.
-			if version.IsOkdBuild() || preset == crcpreset.Podman {
+			if preset == crcpreset.OKD || preset == crcpreset.Podman {
 				if err := image.PullBundle(preset); err != nil {
 					return err
 				}
