@@ -30,6 +30,7 @@ var (
 
 	okdBuild = "false"
 
+	okdVersion = "0.0.0-unset"
 	// will always be false on linux
 	// will be true for releases on macos and windows
 	// will be false for git builds on macos and windows
@@ -67,8 +68,11 @@ func GetCommitSha() string {
 	return commitSha
 }
 
-func GetBundleVersion(_ crcPreset.Preset) string {
-	return bundleVersion
+func GetBundleVersion(preset crcPreset.Preset) string {
+	if preset == crcPreset.OpenShift {
+		return bundleVersion
+	}
+	return okdVersion
 }
 
 func GetPodmanVersion() string {
