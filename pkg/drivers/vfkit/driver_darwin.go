@@ -202,16 +202,18 @@ func (d *Driver) Start() error {
 	}
 
 	// shared directories
-	for _, sharedDir := range d.SharedDirs {
-		// TODO: add support for 'mount.ReadOnly'
-		// TODO: check format
-		dev, err := client.VirtioFsNew(sharedDir.Source, sharedDir.Tag)
-		if err != nil {
-			return err
-		}
-		err = vm.AddDevice(dev)
-		if err != nil {
-			return err
+	if d.supportsVirtiofs() {
+		for _, sharedDir := range d.SharedDirs {
+			// TODO: add support for 'mount.ReadOnly'
+			// TODO: check format
+			dev, err := client.VirtioFsNew(sharedDir.Source, sharedDir.Tag)
+			if err != nil {
+				return err
+			}
+			err = vm.AddDevice(dev)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -279,6 +281,9 @@ func (d *Driver) Start() error {
 }
 
 func (d *Driver) GetSharedDirs() ([]drivers.SharedDir, error) {
+	if !d.supportsVirtiofs() {
+		return nil, drivers.ErrNotSupported
+	}
 	// check if host supports file sharing, return drivers.ErrNotSupported if not
 	return d.SharedDirs, nil
 }
@@ -460,4 +465,12 @@ func (d *Driver) sendSignal(s syscall.Signal) error {
 	}
 
 	return proc.SendSignal(s)
+}
+
+func (d *Driver) supportsVirtiofs() bool {
+	macosVersion, _, err := crcos.RunWithDefaultLocale("sw_vers", "-productVersion")
+	if err != nil {
+		return false
+	}
+	return strings.HasPrefix(macosVersion, "12.")
 }
