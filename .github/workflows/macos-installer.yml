@@ -37,6 +37,11 @@ jobs:
           go-version: ${{ matrix.go }}
       - name: Build macOS installer
         run: make NO_CODESIGN=1 out/macos-universal/crc-macos-installer.pkg
+      - name: Upload macOS installer artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: macOS Installer (${{ matrix.os }})
+          path: "./out/macos-universal/crc-macos-installer.pkg"
       - name: Install crc pkg
         run: sudo installer -pkg out/macos-universal/crc-macos-installer.pkg -target /
       - name: Set podman preset as part of config
@@ -47,8 +52,3 @@ jobs:
         run: sleep 10
       - name: Run crc with podman preset
         run: crc start
-      - name: Upload macOS installer artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: macOS Installer (${{ matrix.os }})
-          path: "./out/macos-universal/crc-macos-installer.pkg"
