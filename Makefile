@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
 OPENSHIFT_VERSION ?= 4.10.22
-PODMAN_VERSION ?= 4.1.0
+PODMAN_VERSION ?= 4.1.1
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 2.6.0.999
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
