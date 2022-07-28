@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/messages-go/v10"
 
@@ -115,7 +114,7 @@ func FeatureContext(s *godog.Suite) {
 		if bundleLocation == "" {
 			fmt.Println("Expecting the bundle provided by the user")
 			userProvidedBundle = false
-			bundleName = constants.GetDefaultBundle(preset.OpenShift)
+			bundleName = preset.OpenShift.BundleFilename()
 		} else {
 			userProvidedBundle = true
 			_, bundleName = filepath.Split(bundleLocation)

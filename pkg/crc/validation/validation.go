@@ -61,11 +61,11 @@ func ValidateBundlePath(bundlePath string, preset crcpreset.Preset) error {
 	}
 
 	userProvidedBundle := filepath.Base(bundlePath)
-	if userProvidedBundle != constants.GetDefaultBundle(preset) {
+	if userProvidedBundle != preset.BundleFilename() {
 		// Should append underscore (_) here, as we don't want crc_libvirt_4.7.15.crcbundle
 		// to be detected as a custom bundle for crc_libvirt_4.7.1.crcbundle
 		usingCustomBundle := strings.HasPrefix(bundle.GetBundleNameWithoutExtension(userProvidedBundle),
-			fmt.Sprintf("%s_", bundle.GetBundleNameWithoutExtension(constants.GetDefaultBundle(preset))))
+			fmt.Sprintf("%s_", bundle.GetBundleNameWithoutExtension(preset.BundleFilename())))
 		if usingCustomBundle {
 			logging.Warnf("Using custom bundle %s", userProvidedBundle)
 			return nil
@@ -74,7 +74,7 @@ func ValidateBundlePath(bundlePath string, preset crcpreset.Preset) error {
 			logging.Warnf("Using unsupported bundle %s", userProvidedBundle)
 			return nil
 		}
-		return fmt.Errorf("%s is not supported by this crc executable, please use %s", userProvidedBundle, constants.GetDefaultBundle(preset))
+		return fmt.Errorf("%s is not supported by this crc executable, please use %s", userProvidedBundle, preset.BundleFilename())
 	}
 	return nil
 }

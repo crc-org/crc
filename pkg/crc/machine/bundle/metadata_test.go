@@ -142,7 +142,7 @@ func TestUnmarshalMarshal(t *testing.T) {
 // check that the bundle name has the form "crc_libvirt_4.7.8.crcbundle" or "crc_libvirt_4.7.8_123456.crcbundle"
 func checkBundleName(t *testing.T, bundleName string) {
 	logging.Debugf("Checking bundle '%s", bundleName)
-	baseName := GetBundleNameWithoutExtension(constants.GetDefaultBundle(preset.OpenShift))
+	baseName := GetBundleNameWithoutExtension(preset.OpenShift.BundleFilename())
 	require.True(t, strings.HasPrefix(bundleName, baseName), "%s should start with %s", bundleName, baseName)
 	bundleName = bundleName[len(baseName):]
 	require.True(t, strings.HasSuffix(bundleName, ".crcbundle"), "%s should have a '.crcbundle' extension", bundleName)
@@ -158,8 +158,8 @@ func checkBundleName(t *testing.T, bundleName string) {
 }
 
 func TestCustomBundleName(t *testing.T) {
-	checkBundleName(t, constants.GetDefaultBundle(preset.OpenShift))
-	customBundleName := GetCustomBundleName(constants.GetDefaultBundle(preset.OpenShift))
+	checkBundleName(t, preset.OpenShift.BundleFilename())
+	customBundleName := GetCustomBundleName(preset.OpenShift.BundleFilename())
 	checkBundleName(t, customBundleName)
 	customBundleName = GetCustomBundleName(customBundleName)
 	checkBundleName(t, customBundleName)

@@ -83,10 +83,6 @@ func GetAdminHelperURL() string {
 	return GetAdminHelperURLForOs(runtime.GOOS)
 }
 
-func GetDefaultBundle(preset crcpreset.Preset) string {
-	return preset.BundleFilename(runtime.GOOS)
-}
-
 var (
 	CrcBaseDir         = filepath.Join(GetHomeDir(), ".crc")
 	crcBinDir          = filepath.Join(CrcBaseDir, "bin")
@@ -103,7 +99,7 @@ var (
 )
 
 func GetDefaultBundlePath(preset crcpreset.Preset) string {
-	return filepath.Join(MachineCacheDir, GetDefaultBundle(preset))
+	return filepath.Join(MachineCacheDir, preset.BundleFilename())
 }
 
 func BinDir() string {
