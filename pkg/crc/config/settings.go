@@ -56,8 +56,8 @@ func RegisterSettings(cfg *Config) {
 
 	// Preset setting should be on top because CPUs/Memory config depend on it.
 	if runtime.GOOS != "darwin" || runtime.GOARCH != "arm64" {
-		cfg.AddSetting(Preset, string(preset.OpenShift), validatePreset, RequiresDeleteAndSetupMsg,
-			fmt.Sprintf("Virtual machine preset (alpha feature - valid values are: %s, %s and %s)", preset.Podman, preset.OpenShift, preset.OKD))
+		cfg.AddSetting(Preset, preset.OpenShift.String(), validatePreset, RequiresDeleteAndSetupMsg,
+			fmt.Sprintf("Virtual machine preset (alpha feature - valid values are: %s or %s)", preset.Podman, preset.OpenShift))
 	}
 	// Start command settings in config
 	cfg.AddSetting(Bundle, defaultBundlePath(cfg), validateBundlePath, SuccessfullyApplied,
@@ -106,11 +106,13 @@ func RegisterSettings(cfg *Config) {
 }
 
 func defaultCPUs(cfg Storage) int {
-	return constants.GetDefaultCPUs(GetPreset(cfg))
+	p := GetPreset(cfg)
+	return p.MinCPUs()
 }
 
 func defaultMemory(cfg Storage) int {
-	return constants.GetDefaultMemory(GetPreset(cfg))
+	p := GetPreset(cfg)
+	return p.MinMemoryMiB()
 }
 
 func defaultBundlePath(cfg Storage) string {

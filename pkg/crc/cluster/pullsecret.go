@@ -13,7 +13,6 @@ import (
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/validation"
 	crcos "github.com/code-ready/crc/pkg/os"
 
@@ -76,8 +75,8 @@ func NewNonInteractivePullSecretLoader(config crcConfig.Storage, path string) Pu
 }
 
 func (loader *nonInteractivePullSecretLoader) Value() (string, error) {
-	// If crc is built from an OKD bundle or podman bundle is used, then use the fake pull secret in constants.
-	if crcConfig.GetPreset(loader.config) == preset.OKD || crcConfig.GetPreset(loader.config) == preset.Podman {
+	preset := crcConfig.GetPreset(loader.config)
+	if !preset.PullSecretRequired() {
 		return constants.OkdPullSecret, nil
 	}
 

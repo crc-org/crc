@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/network"
 	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/validation"
@@ -45,7 +44,7 @@ func ValidateDiskSize(value interface{}) (bool, string) {
 func ValidateCPUs(value interface{}, preset crcpreset.Preset) (bool, string) {
 	v, err := cast.ToIntE(value)
 	if err != nil {
-		return false, fmt.Sprintf("requires integer value >= %d", constants.GetDefaultCPUs(preset))
+		return false, fmt.Sprintf("requires integer value >= %d", preset.MinCPUs())
 	}
 	if err := validation.ValidateCPUs(v, preset); err != nil {
 		return false, err.Error()
@@ -57,7 +56,7 @@ func ValidateCPUs(value interface{}, preset crcpreset.Preset) (bool, string) {
 func ValidateMemory(value interface{}, preset crcpreset.Preset) (bool, string) {
 	v, err := cast.ToIntE(value)
 	if err != nil {
-		return false, fmt.Sprintf("requires integer value in MiB >= %d", constants.GetDefaultMemory(preset))
+		return false, fmt.Sprintf("requires integer value in MiB >= %d", preset.MinMemoryMiB())
 	}
 	if err := validation.ValidateMemory(v, preset); err != nil {
 		return false, err.Error()

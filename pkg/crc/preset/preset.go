@@ -2,28 +2,100 @@ package preset
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/crc/version"
 )
 
-type Preset string
+type Preset interface {
+	fmt.Stringer
+	BundleFilename(goos string) string
+	BundleVersion() string
+	PullSecretRequired() bool
+	MinCPUs() int
+	MinMemoryMiB() int
+}
 
-const (
-	Podman    Preset = "podman"
-	OpenShift Preset = "openshift"
-	OKD       Preset = "okd"
+type PodmanPreset struct{}
+type OpenShiftPreset struct{}
+type OkdPreset struct{}
+
+var (
+	Podman    = PodmanPreset{}
+	OpenShift = OpenShiftPreset{}
+	OKD       = OkdPreset{}
 )
 
-func (preset Preset) String() string {
-	switch preset {
-	case Podman:
-		return string(Podman)
-	case OpenShift:
-		return string(OpenShift)
-	case OKD:
-		return string(OKD)
-	}
-	return "invalid"
+func (preset PodmanPreset) String() string {
+	return "podman"
+}
+
+func (preset PodmanPreset) BundleVersion() string {
+	return version.GetPodmanVersion()
+}
+
+func (preset PodmanPreset) BundleFilename(goos string) string {
+	return fmt.Sprintf("crc_podman_%s_%s_%s.crcbundle", hypervisorForGoos(goos), preset.BundleVersion(), runtime.GOARCH)
+}
+
+func (preset PodmanPreset) PullSecretRequired() bool {
+	return false
+}
+
+func (preset PodmanPreset) MinCPUs() int {
+	return 2
+}
+
+func (preset PodmanPreset) MinMemoryMiB() int {
+	return 2048
+}
+
+func (preset OpenShiftPreset) String() string {
+	return "openshift"
+}
+func (preset OpenShiftPreset) BundleVersion() string {
+	return version.GetBundleVersion()
+}
+
+func (preset OpenShiftPreset) PullSecretRequired() bool {
+	return true
+}
+
+func (preset OpenShiftPreset) MinCPUs() int {
+	return 4
+}
+
+func (preset OpenShiftPreset) MinMemoryMiB() int {
+	return 9216
+}
+
+func (preset OpenShiftPreset) BundleFilename(goos string) string {
+	return fmt.Sprintf("crc_%s_%s_%s.crcbundle", hypervisorForGoos(goos), preset.BundleVersion(), runtime.GOARCH)
+}
+
+func (preset OkdPreset) String() string {
+	return "okd"
+}
+
+func (preset OkdPreset) BundleVersion() string {
+	return version.GetOKDVersion()
+}
+
+func (preset OkdPreset) BundleFilename(goos string) string {
+	return fmt.Sprintf("crc_%s_%s_%s.crcbundle", hypervisorForGoos(goos), preset.BundleVersion(), runtime.GOARCH)
+}
+
+func (preset OkdPreset) PullSecretRequired() bool {
+	return true
+}
+
+func (preset OkdPreset) MinCPUs() int {
+	return 4
+}
+
+func (preset OkdPreset) MinMemoryMiB() int {
+	return 9216
 }
 
 func ParsePresetE(input string) (Preset, error) {
@@ -45,4 +117,17 @@ func ParsePreset(input string) Preset {
 		return OpenShift
 	}
 	return preset
+}
+
+func hypervisorForGoos(goos string) string {
+	switch goos {
+	case "darwin":
+		return "vfkit"
+	case "linux":
+		return "libvirt"
+	case "windows":
+		return "hyperv"
+	default:
+		return ""
+	}
 }

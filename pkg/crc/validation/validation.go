@@ -19,16 +19,16 @@ import (
 
 // ValidateCPUs checks if provided cpus count is valid
 func ValidateCPUs(value int, preset crcpreset.Preset) error {
-	if value < constants.GetDefaultCPUs(preset) {
-		return fmt.Errorf("requires CPUs >= %d", constants.GetDefaultCPUs(preset))
+	if value < preset.MinCPUs() {
+		return fmt.Errorf("requires CPUs >= %d", preset.MinCPUs())
 	}
 	return nil
 }
 
 // ValidateMemory checks if provided Memory count is valid
 func ValidateMemory(value int, preset crcpreset.Preset) error {
-	if value < constants.GetDefaultMemory(preset) {
-		return fmt.Errorf("requires memory in MiB >= %d", constants.GetDefaultMemory(preset))
+	if value < preset.MinMemoryMiB() {
+		return fmt.Errorf("requires memory in MiB >= %d", preset.MinMemoryMiB())
 	}
 	return ValidateEnoughMemory(value)
 }

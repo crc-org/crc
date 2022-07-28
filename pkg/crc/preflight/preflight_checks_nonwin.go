@@ -66,9 +66,9 @@ func genericPreflightChecks(preset crcpreset.Preset) []Check {
 			configKeySuffix:  "check-ram",
 			checkDescription: "Checking minimum RAM requirements",
 			check: func() error {
-				return validation.ValidateEnoughMemory(constants.GetDefaultMemory(preset))
+				return validation.ValidateEnoughMemory(preset.MinMemoryMiB())
 			},
-			fixDescription: fmt.Sprintf("crc requires at least %s to run", units.HumanSize(float64(constants.GetDefaultMemory(preset)*1024*1024))),
+			fixDescription: fmt.Sprintf("crc requires at least %s to run", units.HumanSize(float64(preset.MinMemoryMiB()*1024*1024))),
 			flags:          NoFix,
 
 			labels: None,

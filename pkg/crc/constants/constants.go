@@ -83,24 +83,8 @@ func GetAdminHelperURL() string {
 	return GetAdminHelperURLForOs(runtime.GOOS)
 }
 
-func defaultBundleForOs(preset crcpreset.Preset) map[string]string {
-	if preset == crcpreset.Podman {
-		return map[string]string{
-			"darwin":  fmt.Sprintf("crc_podman_vfkit_%s_%s.crcbundle", version.GetPodmanVersion(), runtime.GOARCH),
-			"linux":   fmt.Sprintf("crc_podman_libvirt_%s_%s.crcbundle", version.GetPodmanVersion(), runtime.GOARCH),
-			"windows": fmt.Sprintf("crc_podman_hyperv_%s_%s.crcbundle", version.GetPodmanVersion(), runtime.GOARCH),
-		}
-	}
-	return map[string]string{
-		"darwin":  fmt.Sprintf("crc_vfkit_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH),
-		"linux":   fmt.Sprintf("crc_libvirt_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH),
-		"windows": fmt.Sprintf("crc_hyperv_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH),
-	}
-}
-
 func GetDefaultBundle(preset crcpreset.Preset) string {
-	bundles := defaultBundleForOs(preset)
-	return bundles[runtime.GOOS]
+	return preset.BundleFilename(runtime.GOOS)
 }
 
 var (
@@ -182,28 +166,4 @@ func GetCRCMacTrayDownloadURL() string {
 
 func GetCRCWindowsTrayDownloadURL() string {
 	return fmt.Sprintf(CRCWindowsTrayDownloadURL, version.GetTrayVersion())
-}
-
-func GetDefaultCPUs(preset crcpreset.Preset) int {
-	switch preset {
-	case crcpreset.OpenShift, crcpreset.OKD:
-		return 4
-	case crcpreset.Podman:
-		return 2
-	default:
-		// should not be reached
-		return 4
-	}
-}
-
-func GetDefaultMemory(preset crcpreset.Preset) int {
-	switch preset {
-	case crcpreset.OpenShift, crcpreset.OKD:
-		return 9216
-	case crcpreset.Podman:
-		return 2048
-	default:
-		// should not be reached
-		return 9216
-	}
 }

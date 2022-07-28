@@ -25,7 +25,7 @@ type Client struct {
 }
 
 var DummyClusterConfig = types.ClusterConfig{
-	ClusterType:   "openshift",
+	ClusterType:   preset.OpenShift,
 	ClusterCACert: "MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ",
 	KubeConfig:    "/tmp/kubeconfig",
 	KubeAdminPass: "foobar",
