@@ -82,7 +82,8 @@ func fixBundleExtracted(bundlePath string, preset crcpreset.Preset) func() error
 	}
 
 	return func() error {
-		bundleDir := filepath.Dir(constants.GetDefaultBundlePath(preset))
+		defaultBundlePath := constants.GetDefaultBundlePath(preset)
+		bundleDir := filepath.Dir(defaultBundlePath)
 		logging.Debugf("Ensuring directory %s exists", bundleDir)
 		if err := os.MkdirAll(bundleDir, 0775); err != nil {
 			return fmt.Errorf("Cannot create directory %s: %v", bundleDir, err)
@@ -92,13 +93,13 @@ func fixBundleExtracted(bundlePath string, preset crcpreset.Preset) func() error
 			if !errors.As(err, &e) {
 				return err
 			}
-			if bundlePath != constants.GetDefaultBundlePath(preset) {
+			if bundlePath != defaultBundlePath {
 				/* This message needs to be improved when the bundle has been set in crc config for example */
 				return fmt.Errorf("%s is invalid or missing, run 'crc setup' to download the bundle", bundlePath)
 			}
 		}
-		if bundlePath == constants.GetDefaultBundlePath(preset) {
-			logging.Infof("Downloading %s", constants.GetDefaultBundle(preset))
+		if bundlePath == defaultBundlePath {
+			logging.Infof("Downloading %s", defaultBundlePath)
 			// In case of OKD or podman bundle then pull the bundle image from quay
 			// otherwise use mirror location to download the bundle.
 			if preset == crcpreset.OKD || preset == crcpreset.Podman {
@@ -110,7 +111,7 @@ func fixBundleExtracted(bundlePath string, preset crcpreset.Preset) func() error
 					return err
 				}
 			}
-			bundlePath = constants.GetDefaultBundlePath(preset)
+			bundlePath = defaultBundlePath
 		}
 
 		logging.Infof("Uncompressing %s", bundlePath)
