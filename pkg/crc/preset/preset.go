@@ -12,6 +12,7 @@ type Preset interface {
 	fmt.Stringer
 	BundleFilename() string
 	BundleVersion() string
+	ContainerImageName() string
 	PullSecretRequired() bool
 	MinCPUs() int
 	MinMemoryMiB() int
@@ -39,6 +40,10 @@ func (preset PodmanPreset) BundleFilename() string {
 	return fmt.Sprintf("crc_podman_%s_%s_%s.crcbundle", hypervisorForGoos(runtime.GOOS), preset.BundleVersion(), runtime.GOARCH)
 }
 
+func (preset PodmanPreset) ContainerImageName() string {
+	return "podman-bundle"
+}
+
 func (preset PodmanPreset) PullSecretRequired() bool {
 	return false
 }
@@ -58,12 +63,16 @@ func (preset OpenShiftPreset) BundleVersion() string {
 	return version.GetBundleVersion()
 }
 
-func (preset OpenShiftPreset) PullSecretRequired() bool {
-	return true
-}
-
 func (preset OpenShiftPreset) BundleFilename() string {
 	return fmt.Sprintf("crc_%s_%s_%s.crcbundle", hypervisorForGoos(runtime.GOOS), preset.BundleVersion(), runtime.GOARCH)
+}
+
+func (preset OpenShiftPreset) ContainerImageName() string {
+	return "openshift-bundle"
+}
+
+func (preset OpenShiftPreset) PullSecretRequired() bool {
+	return true
 }
 
 func (preset OkdPreset) String() string {
@@ -76,6 +85,10 @@ func (preset OkdPreset) BundleVersion() string {
 
 func (preset OkdPreset) BundleFilename() string {
 	return fmt.Sprintf("crc_%s_%s_%s.crcbundle", hypervisorForGoos(runtime.GOOS), preset.BundleVersion(), runtime.GOARCH)
+}
+
+func (preset OkdPreset) ContainerImageName() string {
+	return "okd-bundle"
 }
 
 func (preset OkdPreset) PullSecretRequired() bool {
