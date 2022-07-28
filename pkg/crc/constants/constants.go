@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/version"
@@ -84,29 +85,28 @@ func GetAdminHelperURL() string {
 }
 
 func GetDefaultBundle(preset crcpreset.Preset) string {
-	var bundleMap map[string]string
+	var bundleName strings.Builder
+
+	bundleName.WriteString("crc")
+
 	switch preset {
 	case crcpreset.Podman:
-		bundleMap = map[string]string{
-			"darwin":  fmt.Sprintf("crc_podman_vfkit_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH),
-			"linux":   fmt.Sprintf("crc_podman_libvirt_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH),
-			"windows": fmt.Sprintf("crc_podman_hyperv_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH),
-		}
+		bundleName.WriteString("_podman")
 	case crcpreset.OKD:
-		bundleMap = map[string]string{
-			"darwin":  fmt.Sprintf("crc_okd_vfkit_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH),
-			"linux":   fmt.Sprintf("crc_okd_libvirt_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH),
-			"windows": fmt.Sprintf("crc_okd_hyperv_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH),
-		}
-	default:
-		bundleMap = map[string]string{
-			"darwin":  fmt.Sprintf("crc_vfkit_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH),
-			"linux":   fmt.Sprintf("crc_libvirt_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH),
-			"windows": fmt.Sprintf("crc_hyperv_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH),
-		}
+		bundleName.WriteString("_okd")
 	}
 
-	return bundleMap[runtime.GOOS]
+	switch runtime.GOOS {
+	case "darwin":
+		bundleName.WriteString("_vfkit")
+	case "linux":
+		bundleName.WriteString("_libvirt")
+	case "windows":
+		bundleName.WriteString("_hyperv")
+	}
+
+	fmt.Fprintf(&bundleName, "_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH)
+	return bundleName.String()
 }
 
 var (
