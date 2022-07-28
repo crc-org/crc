@@ -92,7 +92,7 @@ func (preset OkdPreset) ContainerImageName() string {
 }
 
 func (preset OkdPreset) PullSecretRequired() bool {
-	return true
+	return false
 }
 
 func (preset OkdPreset) MinCPUs() int {
