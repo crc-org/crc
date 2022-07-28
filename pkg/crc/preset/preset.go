@@ -18,7 +18,7 @@ type Preset interface {
 }
 
 type PodmanPreset struct{}
-type OpenShiftPreset struct{}
+type OpenShiftPreset struct{ OkdPreset }
 type OkdPreset struct{}
 
 var (
@@ -60,14 +60,6 @@ func (preset OpenShiftPreset) BundleVersion() string {
 
 func (preset OpenShiftPreset) PullSecretRequired() bool {
 	return true
-}
-
-func (preset OpenShiftPreset) MinCPUs() int {
-	return 4
-}
-
-func (preset OpenShiftPreset) MinMemoryMiB() int {
-	return 9216
 }
 
 func (preset OpenShiftPreset) BundleFilename(goos string) string {
