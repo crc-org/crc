@@ -169,7 +169,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 
 		if crcBundleMetadata.IsOpenShift() {
-			logging.Infof("Creating CRC VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
+			logging.Infof("Creating CRC VM for %s %s...", startConfig.Preset, crcBundleMetadata.GetOpenshiftVersion())
 		} else {
 			logging.Infof("Creating CRC VM for Podman %s...", crcBundleMetadata.GetPodmanVersion())
 		}
@@ -242,7 +242,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	if vm.bundle.IsOpenShift() {
-		logging.Infof("Starting CRC VM for OpenShift %s...", vm.bundle.GetOpenshiftVersion())
+		logging.Infof("Starting CRC VM for %s %s...", startConfig.Preset, vm.bundle.GetOpenshiftVersion())
 	}
 
 	if client.useVSock() {
@@ -401,7 +401,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to check certificate validity")
 	}
 
-	logging.Info("Starting OpenShift kubelet service")
+	logging.Info("Starting kubelet service")
 	sd := systemd.NewInstanceSystemdCommander(sshRunner)
 	if err := sd.Start("kubelet"); err != nil {
 		return nil, errors.Wrap(err, "Error starting kubelet")
@@ -486,7 +486,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to update kubeconfig file")
 	}
 
-	logging.Info("Starting OpenShift cluster... [waiting for the cluster to stabilize]")
+	logging.Infof("Starting %s instance... [waiting for the cluster to stabilize]", startConfig.Preset)
 	if err := cluster.WaitForClusterStable(ctx, instanceIP, constants.KubeconfigFilePath, proxyConfig); err != nil {
 		logging.Errorf("Cluster is not ready: %v", err)
 	}
