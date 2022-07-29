@@ -186,7 +186,7 @@ func GetCRCWindowsTrayDownloadURL() string {
 
 func GetDefaultCPUs(preset crcpreset.Preset) int {
 	switch preset {
-	case crcpreset.OpenShift:
+	case crcpreset.OpenShift, crcpreset.OKD:
 		return 4
 	case crcpreset.Podman:
 		return 2
@@ -198,7 +198,7 @@ func GetDefaultCPUs(preset crcpreset.Preset) int {
 
 func GetDefaultMemory(preset crcpreset.Preset) int {
 	switch preset {
-	case crcpreset.OpenShift:
+	case crcpreset.OpenShift, crcpreset.OKD:
 		return 9216
 	case crcpreset.Podman:
 		return 2048
