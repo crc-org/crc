@@ -93,7 +93,7 @@ func vsockPorts(preset crcPreset.Preset) []types.ExposeRequest {
 		},
 	}
 	switch preset {
-	case crcPreset.OpenShift:
+	case crcPreset.OpenShift, crcPreset.OKD:
 		exposeRequest = append(exposeRequest,
 			types.ExposeRequest{
 				Protocol: "tcp",
