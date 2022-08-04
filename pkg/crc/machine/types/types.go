@@ -28,6 +28,9 @@ type StartConfig struct {
 
 	// Preset
 	Preset crcpreset.Preset
+
+	// Shared dirs
+	EnableSharedDirs bool
 }
 
 type ClusterConfig struct {
