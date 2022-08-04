@@ -31,6 +31,10 @@ func TestTest(t *testing.T) {
 
 	// fetch the current (reporter) config
 	_, reporterConfig := GinkgoConfiguration()
+	err := os.MkdirAll("out", 0775)
+	if err != nil {
+		logrus.Infof("failed to create directory: %v", err)
+	}
 	reporterConfig.JUnitReport = filepath.Join("out", "integration.xml")
 
 	RunSpecs(t, "Test Suite", reporterConfig)
