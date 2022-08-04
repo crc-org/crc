@@ -74,6 +74,7 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		PullSecret:        cluster.NewInteractivePullSecretLoader(config),
 		KubeAdminPassword: config.Get(crcConfig.KubeAdminPassword).AsString(),
 		Preset:            crcConfig.GetPreset(config),
+		EnableSharedDirs:  crcConfig.ShouldEnableSharedDirs(config),
 	}
 
 	client := newMachine()

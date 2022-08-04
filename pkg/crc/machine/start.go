@@ -367,9 +367,10 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			return nil, errors.Wrap(err, "Failed to add nameserver to the VM")
 		}
 	}
-
-	if err := configureSharedDirs(vm, sshRunner); err != nil {
-		return nil, err
+	if startConfig.EnableSharedDirs {
+		if err := configureSharedDirs(vm, sshRunner); err != nil {
+			return nil, err
+		}
 	}
 
 	if _, _, err := sshRunner.RunPrivileged("make root Podman socket accessible", "chmod 777 /run/podman/ /run/podman/podman.sock"); err != nil {
