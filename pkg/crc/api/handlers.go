@@ -116,6 +116,7 @@ func getStartConfig(cfg crcConfig.Storage, args client.StartConfig) types.StartC
 		PullSecret:        cluster.NewNonInteractivePullSecretLoader(cfg, args.PullSecretFile),
 		KubeAdminPassword: cfg.Get(crcConfig.KubeAdminPassword).AsString(),
 		Preset:            crcConfig.GetPreset(cfg),
+		EnableSharedDirs:  crcConfig.ShouldEnableSharedDirs(cfg),
 	}
 }
 

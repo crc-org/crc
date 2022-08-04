@@ -145,6 +145,14 @@ func GetNetworkMode(config Storage) network.Mode {
 	return network.ParseMode(config.Get(NetworkMode).AsString())
 }
 
+func ShouldEnableSharedDirs(config Storage) bool {
+	// Shared dirs are not implemented for windows
+	if runtime.GOOS == "windows" {
+		return false
+	}
+	return config.Get(EnableSharedDirs).AsBool()
+}
+
 func UpdateDefaults(cfg *Config) {
 	RegisterSettings(cfg)
 }
