@@ -30,6 +30,7 @@ const (
 	AutostartTray           = "autostart-tray"
 	KubeAdminPassword       = "kubeadmin-password"
 	Preset                  = "preset"
+	EnableSharedDirs        = "enable-shared-dirs"
 )
 
 func RegisterSettings(cfg *Config) {
@@ -76,6 +77,11 @@ func RegisterSettings(cfg *Config) {
 		"Disable update check (true/false, default: false)")
 	cfg.AddSetting(ExperimentalFeatures, false, ValidateBool, SuccessfullyApplied,
 		"Enable experimental features (true/false, default: false)")
+	// shared dir is not implemented for windows yet
+	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
+		cfg.AddSetting(EnableSharedDirs, true, ValidateBool, SuccessfullyApplied,
+			"Enable shared directories which mounts host's $HOME at /home in the CRC VM (true/false, default: true)")
+	}
 
 	if !version.IsInstaller() {
 		cfg.AddSetting(NetworkMode, string(defaultNetworkMode()), network.ValidateMode, network.SuccessfullyAppliedMode,
