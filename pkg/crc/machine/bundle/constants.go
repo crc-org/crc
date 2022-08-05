@@ -29,6 +29,8 @@ var bundleLocations = map[string]bundlesDownloadInfo{
 	},
 	"arm64": {
 		"darwin": {
+			preset.OpenShift: download.NewRemoteFile("https://storage.googleapis.com/crc-bundle-github-ci/crc_vfkit_4.10.23_arm64.crcbundle",
+				"1cd0f693dffc212ae94bca6e3b033897c3fd8546f1fb2bb2425bc8033ea9cee1"),
 			preset.Podman: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/podman/4.1.0/crc_podman_vfkit_4.1.0_arm64.crcbundle",
 				"6674c016591ee56451741de754b14b754aaaf1a981e4a1fa922c238353988e9a"),
 		},
