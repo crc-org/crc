@@ -25,7 +25,7 @@ var hypervPreflightChecks = []Check{
 	},
 	{
 		configKeySuffix:  "check-windows-version",
-		checkDescription: "Checking Windows 10 release",
+		checkDescription: "Checking Windows release",
 		check:            checkVersionOfWindowsUpdate,
 		flags:            StartUpOnly,
 

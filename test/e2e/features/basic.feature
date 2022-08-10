@@ -76,7 +76,7 @@ Feature: Basic test
     Scenario: CRC setup on Windows
         When executing crc setup command succeeds
         Then stderr should contain "Extracting bundle from the CRC executable" if bundle is embedded
-        Then stderr should contain "Checking Windows 10 release"
+        Then stderr should contain "Checking Windows release"
         Then stderr should contain "Checking if Hyper-V is installed"
         Then stderr should contain "Checking if user is a member of the Hyper-V Administrators group"
         Then stderr should contain "Checking if the Hyper-V virtual switch exist"
