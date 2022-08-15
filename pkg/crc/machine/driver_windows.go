@@ -33,3 +33,7 @@ func updateDriverConfig(host *host.Host, driver *machineHyperv.Driver) error {
 	}
 	return host.UpdateConfig(driverData)
 }
+
+func updateKernelArgs(vm *virtualMachine) error {
+	return nil
+}
