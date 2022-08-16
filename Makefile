@@ -160,15 +160,15 @@ clean: clean_docs clean_macos_package clean_windows_msi
 
 .PHONY: build_e2e
 build_e2e: $(SOURCES)
-	GOOS=linux   go test ./test/e2e/ -c -o $(BUILD_DIR)/linux-amd64/e2e.test
-	GOOS=windows go test ./test/e2e/ -c -o $(BUILD_DIR)/windows-amd64/e2e.test.exe
-	GOOS=darwin  go test ./test/e2e/ -c -o $(BUILD_DIR)/macos-amd64/e2e.test
+	GOOS=linux   go test ./test/e2e/ --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/linux-amd64/e2e.test
+	GOOS=windows go test ./test/e2e/ --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/windows-amd64/e2e.test.exe
+	GOOS=darwin  go test ./test/e2e/ --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/macos-amd64/e2e.test
 
 .PHONY: build_integration
 build_integration: $(SOURCES)
-	GOOS=linux   go test ./test/integration/ -c -o $(BUILD_DIR)/linux-amd64/integration.test
-	GOOS=windows go test --ldflags="-X $(REPOPATH)/pkg/crc/version.installerBuild=true" ./test/integration/ -c -o $(BUILD_DIR)/windows-amd64/integration.test.exe
-	GOOS=darwin  go test --ldflags="-X $(REPOPATH)/pkg/crc/version.installerBuild=true" ./test/integration/ -c -o $(BUILD_DIR)/macos-amd64/integration.test
+	GOOS=linux   go test ./test/integration/ --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/linux-amd64/integration.test
+	GOOS=windows go test --ldflags="-X $(REPOPATH)/pkg/crc/version.installerBuild=true $(VERSION_VARIABLES)" ./test/integration/ -c -o $(BUILD_DIR)/windows-amd64/integration.test.exe
+	GOOS=darwin  go test --ldflags="-X $(REPOPATH)/pkg/crc/version.installerBuild=true $(VERSION_VARIABLES)" ./test/integration/ -c -o $(BUILD_DIR)/macos-amd64/integration.test
 
 #  Build the container image for e2e
 .PHONY: containerized_e2e
@@ -214,18 +214,18 @@ ifndef CRC_BINARY
 	CRC_BINARY = --crc-binary=$(GOPATH)/bin
 endif
 e2e:
-	@go test --timeout=180m $(REPOPATH)/test/e2e -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) $(GODOG_OPTS) $(CLEANUP_HOME) $(INSTALLER_PATH) $(USER_PASSWORD)
+	@go test --timeout=180m $(REPOPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) $(GODOG_OPTS) $(CLEANUP_HOME) $(INSTALLER_PATH) $(USER_PASSWORD)
 
 .PHONY: e2e-stories e2e-story-health e2e-story-marketplace e2e-story-registry
 # cluster must already be running, crc must be in the path
 e2e-stories: install e2e-story-health e2e-story-marketplace e2e-story-registry
 
 e2e-story-health: install
-	@go test $(REPOPATH)/test/e2e -v --godog.tags="$(GOOS) && ~@startstop && @story_health" --cleanup-home=false
+	@go test $(REPOPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v --godog.tags="$(GOOS) && ~@startstop && @story_health" --cleanup-home=false
 e2e-story-marketplace: install
-	@go test $(REPOPATH)/test/e2e -v --godog.tags="$(GOOS) && ~@startstop && @story_marketplace" --cleanup-home=false
+	@go test $(REPOPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v --godog.tags="$(GOOS) && ~@startstop && @story_marketplace" --cleanup-home=false
 e2e-story-registry: install
-	@go test $(REPOPATH)/test/e2e -v --godog.tags="$(GOOS) && ~@startstop && @story_registry" --cleanup-home=false
+	@go test $(REPOPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v --godog.tags="$(GOOS) && ~@startstop && @story_registry" --cleanup-home=false
 
 
 .PHONY: fmt
