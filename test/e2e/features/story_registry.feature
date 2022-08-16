@@ -19,10 +19,8 @@ Feature: Local image to image-registry
     Scenario: Mirror image to OpenShift image registry
         Given executing "oc new-project testproj-img" succeeds
         When executing "oc registry login --insecure=true" succeeds
-        Then stdout should contain "Saved credentials for default-route-openshift-image-registry.apps-crc.testing"
-        And executing "oc image mirror registry.access.redhat.com/ubi8/httpd-24:latest=default-route-openshift-image-registry.apps-crc.testing/testproj-img/httpd-24:latest --insecure=true --filter-by-os=linux/amd64" succeeds
-        And executing "oc set image-lookup httpd-24"
-
+        Then executing "oc image mirror registry.access.redhat.com/ubi8/httpd-24:latest=default-route-openshift-image-registry.apps-crc.testing/testproj-img/httpd-24:latest --insecure=true --filter-by-os=linux/amd64" succeeds
+        And executing "oc set image-lookup httpd-24" succeeds
 
     Scenario: Deploy the image
         Given executing "oc new-app testproj-img/httpd-24:latest" succeeds
