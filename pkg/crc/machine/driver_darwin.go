@@ -1,10 +1,8 @@
 package machine
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
-	"time"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -46,10 +44,6 @@ func updateKernelArgs(vm *virtualMachine) error {
 		return err
 	}
 	defer sshRunner.Close()
-
-	if err := sshRunner.WaitForConnectivity(context.Background(), 20*time.Second); err != nil {
-		return err
-	}
 
 	stdout, stderr, err := sshRunner.RunPrivileged("Get kernel args", `-- sh -c 'rpm-ostree kargs'`)
 	if err != nil {
