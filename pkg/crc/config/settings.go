@@ -27,7 +27,6 @@ const (
 	ProxyCAFile             = "proxy-ca-file"
 	ConsentTelemetry        = "consent-telemetry"
 	EnableClusterMonitoring = "enable-cluster-monitoring"
-	AutostartTray           = "autostart-tray"
 	KubeAdminPassword       = "kubeadmin-password"
 	Preset                  = "preset"
 	EnableSharedDirs        = "enable-shared-dirs"
