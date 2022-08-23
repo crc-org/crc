@@ -101,6 +101,12 @@
             Before="AddUserToHypervAdminGroup" 
             Sequence="execute"/>
         <CustomAction Id="AddUserToHypervAdminGroup" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
+        <SetProperty Action="CAEnableFileAndPrinterSharing"
+            Id="EnableFileAndPrinterSharing"
+            Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Set-NetFirewallRule -DisplayGroup 'File And Printer Sharing' -Enabled True -Profile 'Private,Public'&quot;"
+            Before="EnableFileAndPrinterSharing"
+            Sequence="execute"/>
+        <CustomAction Id="EnableFileAndPrinterSharing" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="check" />
 
         <util:CloseApplication Id = "TrayRunning" Description="Please exit Red Hat OpenShift Local from tray and run the installation again." Target="crc-tray.exe" RebootPrompt="no" PromptToContinue="yes" />
 
@@ -111,6 +117,7 @@
             <Custom Action="InstallHyperv" Before="CreateCrcGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <Custom Action="RemoveCrcGroupRollback" After="CreateCrcGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <Custom Action="RemoveCrcDaemonTask" Before='RemoveFiles'>Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
+            <Custom Action="EnableFileAndPrinterSharing" After="AddUserToHypervAdminGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <ScheduleReboot After="InstallFinalize"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</ScheduleReboot>
         </InstallExecuteSequence>
         <Feature Id="DefaultFeature" Level="1">
@@ -131,6 +138,7 @@
             <ProgressText Action="InstallHyperv">Installing Hyper-V</ProgressText>
             <ProgressText Action="AddUserToHypervAdminGroup">Adding user: [LogonUser] to Hyper-V Administrators group</ProgressText>
             <ProgressText Action="RemoveCrcDaemonTask">Removing crcDaemon task</ProgressText>
+            <ProgressText Action="EnableFileAndPrinterSharing">Enabling file and printer Sharing</ProgressText>
         </UI>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
         <!-- this should help to propagate env var changes -->
