@@ -38,6 +38,12 @@
                 Name="Path" />
         </Property>
 
+        <Property Id="USERFOLDER">
+            <DirectorySearch Id="userProfileSearch" Depth="0" Path="[%USERPROFILE]" />
+        </Property>
+
+        <Property Id="SHAREDDIRNAME" Secure="yes">crc-dir0</Property>
+
         <util:Group Id="CrcUsersGroup" Name="crc-users" />
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
@@ -101,6 +107,12 @@
             Before="AddUserToHypervAdminGroup" 
             Sequence="execute"/>
         <CustomAction Id="AddUserToHypervAdminGroup" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
+        <SetProperty Action="CACreateSMBShare"
+            Id="CreateSMBShare"
+            Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;New-SmbShare -Name '[SHAREDDIRNAME]' -Path '[USERFOLDER]' -FullAccess '[LogonUser]'&quot;"
+            Before="CreateSMBShare"
+            Sequence="execute"/>
+        <CustomAction Id="CreateSMBShare" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="check" />
         <SetProperty Action="CAEnableFileAndPrinterSharing"
             Id="EnableFileAndPrinterSharing"
             Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Set-NetFirewallRule -DisplayGroup 'File And Printer Sharing' -Enabled True -Profile 'Private,Public'&quot;"
@@ -118,6 +130,7 @@
             <Custom Action="RemoveCrcGroupRollback" After="CreateCrcGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <Custom Action="RemoveCrcDaemonTask" Before='RemoveFiles'>Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
             <Custom Action="EnableFileAndPrinterSharing" After="AddUserToHypervAdminGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
+            <Custom Action="CreateSMBShare" After="EnableFileAndPrinterSharing"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <ScheduleReboot After="InstallFinalize"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</ScheduleReboot>
         </InstallExecuteSequence>
         <Feature Id="DefaultFeature" Level="1">
@@ -138,6 +151,7 @@
             <ProgressText Action="InstallHyperv">Installing Hyper-V</ProgressText>
             <ProgressText Action="AddUserToHypervAdminGroup">Adding user: [LogonUser] to Hyper-V Administrators group</ProgressText>
             <ProgressText Action="RemoveCrcDaemonTask">Removing crcDaemon task</ProgressText>
+            <ProgressText Action="CreateSMBShare">Creating share named: [SHAREDDIRNAME] for folder: [USERFOLDER]</ProgressText>
             <ProgressText Action="EnableFileAndPrinterSharing">Enabling file and printer Sharing</ProgressText>
         </UI>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
