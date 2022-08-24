@@ -45,7 +45,7 @@ func defaultVersion(preset crcPreset.Preset) *version {
 		Version:          crcversion.GetCRCVersion(),
 		Commit:           crcversion.GetCommitSha(),
 		OpenshiftVersion: crcversion.GetBundleVersion(preset),
-		PodmanVersion:    crcversion.GetPodmanVersion(),
+		PodmanVersion:    crcversion.GetBundleVersion(crcPreset.Podman),
 	}
 }
 
