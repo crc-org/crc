@@ -22,8 +22,8 @@ var (
 	// The SHA-1 of the commit this executable is build off
 	commitSha = "sha-unset"
 
-	// Bundle version which used for the release.
-	bundleVersion = "0.0.0-unset"
+	// OCP version which is used for the release.
+	ocpVersion = "0.0.0-unset"
 
 	// Podman version for podman specific bundles
 	podmanVersion = "0.0.0-unset"
@@ -73,7 +73,7 @@ func GetBundleVersion(preset crcPreset.Preset) string {
 	case crcPreset.OKD:
 		return okdVersion
 	default:
-		return bundleVersion
+		return ocpVersion
 	}
 }
 
