@@ -53,7 +53,7 @@ __check_defined = \
 
 # Linker flags
 VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
-	-X $(REPOPATH)/pkg/crc/version.bundleVersion=$(OPENSHIFT_VERSION) \
+	-X $(REPOPATH)/pkg/crc/version.ocpVersion=$(OPENSHIFT_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.okdVersion=$(OKD_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.podmanVersion=$(PODMAN_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.commitSha=$(COMMIT_SHA)
