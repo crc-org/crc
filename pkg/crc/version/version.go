@@ -67,14 +67,14 @@ func GetCommitSha() string {
 }
 
 func GetBundleVersion(preset crcPreset.Preset) string {
-	if preset == crcPreset.OpenShift {
+	switch preset {
+	case crcPreset.Podman:
+		return podmanVersion
+	case crcPreset.OKD:
+		return okdVersion
+	default:
 		return bundleVersion
 	}
-	return okdVersion
-}
-
-func GetPodmanVersion() string {
-	return podmanVersion
 }
 
 func GetAdminHelperVersion() string {

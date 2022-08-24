@@ -11,6 +11,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/preflight"
+	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
@@ -125,7 +126,7 @@ func (h *Handler) GetVersion(c *context) error {
 		CrcVersion:       version.GetCRCVersion(),
 		CommitSha:        version.GetCommitSha(),
 		OpenshiftVersion: version.GetBundleVersion(crcConfig.GetPreset(h.Config)),
-		PodmanVersion:    version.GetPodmanVersion(),
+		PodmanVersion:    version.GetBundleVersion(preset.Podman),
 	})
 }
 
