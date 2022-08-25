@@ -102,7 +102,7 @@ func fixBundleExtracted(bundlePath string, preset crcpreset.Preset) func() error
 			// In case of OKD or podman bundle then pull the bundle image from quay
 			// otherwise use mirror location to download the bundle.
 			if preset == crcpreset.OKD || preset == crcpreset.Podman {
-				if err := image.PullBundle(preset); err != nil {
+				if err := image.PullBundle(preset, ""); err != nil {
 					return err
 				}
 			} else {
