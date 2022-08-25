@@ -26,7 +26,7 @@ type imageHandler struct {
 	imageURI string
 }
 
-func uri(preset crcpreset.Preset) string {
+func defaultURI(preset crcpreset.Preset) string {
 	return fmt.Sprintf("//%s/%s:%s", constants.RegistryURI, getImageName(preset), version.GetCRCVersion())
 }
 
@@ -95,9 +95,12 @@ func getImageName(preset crcpreset.Preset) string {
 	}
 }
 
-func PullBundle(preset crcpreset.Preset) error {
+func PullBundle(preset crcpreset.Preset, imageURI string) error {
+	if imageURI == "" {
+		imageURI = defaultURI(preset)
+	}
 	imgHandler := imageHandler{
-		imageURI: uri(preset),
+		imageURI: strings.TrimPrefix(imageURI, "docker:"),
 	}
 	destDir, err := os.MkdirTemp(constants.MachineCacheDir, "tmpBundleImage")
 	if err != nil {
