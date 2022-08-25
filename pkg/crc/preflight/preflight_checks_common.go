@@ -106,7 +106,7 @@ func fixBundleExtracted(bundlePath string, preset crcpreset.Preset) func() error
 					return err
 				}
 			} else {
-				if err := bundle.Download(preset); err != nil {
+				if err := bundle.DownloadDefault(preset); err != nil {
 					return err
 				}
 			}

@@ -270,7 +270,7 @@ func getBundleDownloadInfo(preset preset.Preset) (*download.RemoteFile, error) {
 	return downloadInfo, nil
 }
 
-func Download(preset preset.Preset) error {
+func DownloadDefault(preset preset.Preset) error {
 	downloadInfo, err := getBundleDownloadInfo(preset)
 	if err != nil {
 		return err
