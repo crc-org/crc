@@ -8,7 +8,6 @@ import (
 	"github.com/code-ready/crc/pkg/crc/adminhelper"
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/image"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
@@ -63,7 +62,7 @@ var genericCleanupChecks = []Check{
 func checkBundleExtracted(bundlePath string) func() error {
 	return func() error {
 		logging.Infof("Checking if %s exists", bundlePath)
-		bundleName := filepath.Base(bundlePath)
+		bundleName := bundle.GetBundleNameFromURI(bundlePath)
 		if _, err := bundle.Get(bundleName); err != nil {
 			logging.Debugf("error getting bundle info for %s: %v", bundleName, err)
 			return err
@@ -97,20 +96,10 @@ func fixBundleExtracted(bundlePath string, preset crcpreset.Preset) func() error
 				return fmt.Errorf("%s is invalid or missing, run 'crc setup' to download the bundle", bundlePath)
 			}
 		}
-		if bundlePath == constants.GetDefaultBundlePath(preset) {
-			logging.Infof("Downloading %s", constants.GetDefaultBundle(preset))
-			// In case of OKD or podman bundle then pull the bundle image from quay
-			// otherwise use mirror location to download the bundle.
-			if preset == crcpreset.OKD || preset == crcpreset.Podman {
-				if err := image.PullBundle(preset, ""); err != nil {
-					return err
-				}
-			} else {
-				if err := bundle.DownloadDefault(preset); err != nil {
-					return err
-				}
-			}
-			bundlePath = constants.GetDefaultBundlePath(preset)
+
+		var err error
+		if bundlePath, err = bundle.Download(preset, bundlePath); err != nil {
+			return err
 		}
 
 		logging.Infof("Uncompressing %s", bundlePath)

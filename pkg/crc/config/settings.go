@@ -61,7 +61,8 @@ func RegisterSettings(cfg *Config) {
 		fmt.Sprintf("Virtual machine preset (valid values are: %s, %s and %s)", preset.Podman, preset.OpenShift, preset.OKD))
 	// Start command settings in config
 	cfg.AddSetting(Bundle, defaultBundlePath(cfg), validateBundlePath, SuccessfullyApplied,
-		fmt.Sprintf("Bundle path (string, default '%s')", defaultBundlePath(cfg)))
+		fmt.Sprintf("Bundle path/URI - absolute or local path, http, https or docker URI (string, like 'https://foo.com/%s', 'docker://quay.io/myorg/%s:%s' default '%s' )",
+			constants.GetDefaultBundle(GetPreset(cfg)), constants.GetDefaultBundle(GetPreset(cfg)), version.GetCRCVersion(), defaultBundlePath(cfg)))
 	cfg.AddSetting(CPUs, defaultCPUs(cfg), validateCPUs, RequiresRestartMsg,
 		fmt.Sprintf("Number of CPU cores (must be greater than or equal to '%d')", defaultCPUs(cfg)))
 	cfg.AddSetting(Memory, defaultMemory(cfg), validateMemory, RequiresRestartMsg,

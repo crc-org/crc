@@ -5,11 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/image"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
@@ -56,17 +57,26 @@ func ValidateEnoughMemory(value int) error {
 
 // ValidateBundlePath checks if the provided bundle path exist
 func ValidateBundlePath(bundlePath string, preset crcpreset.Preset) error {
-	if err := ValidatePath(bundlePath); err != nil {
-		return err
+	logging.Debugf("Got bundle path: %s", bundlePath)
+	if err := ValidateURL(bundlePath); err != nil {
+		var urlError *url.Error
+		// Some local paths (for example relative paths) can't be parsed/validated by `ValidateURL` and will be validated here
+		if errors.As(err, &urlError) {
+			if err1 := ValidatePath(bundlePath); err1 != nil {
+				return err1
+			}
+		} else {
+			return err
+		}
 	}
 
-	userProvidedBundle := filepath.Base(bundlePath)
+	userProvidedBundle := bundle.GetBundleNameFromURI(bundlePath)
 	bundleMismatchWarning(userProvidedBundle, preset)
 	return nil
 }
 
 func ValidateBundle(bundlePath string, preset crcpreset.Preset) error {
-	bundleName := filepath.Base(bundlePath)
+	bundleName := bundle.GetBundleNameFromURI(bundlePath)
 	bundleMetadata, err := bundle.Get(bundleName)
 	if err != nil {
 		return ValidateBundlePath(bundlePath, preset)
@@ -98,6 +108,26 @@ func ValidateIPAddress(ipAddress string) error {
 		return fmt.Errorf("'%s' is not a valid IPv4 address", ipAddress)
 	}
 	return nil
+}
+
+func ValidateURL(uri string) error {
+	u, err := url.ParseRequestURI(uri)
+	if err != nil {
+		logging.Debugf("Failed to parse url: %v", err)
+		return err
+	}
+	switch {
+	// If uri string is without scheme then check if it is a valid absolute path.
+	// Relative paths will cause `ParseRequestURI` to error out, and will be handled in `ValidateBundlePath`
+	case !u.IsAbs():
+		return ValidatePath(uri)
+	case u.Scheme == "http", u.Scheme == "https":
+		return nil
+	case u.Scheme == "docker":
+		return image.ValidateURI(u)
+	default:
+		return fmt.Errorf("invalid %s format (only supported http, https or docker)", uri)
+	}
 }
 
 type InvalidPath struct {
