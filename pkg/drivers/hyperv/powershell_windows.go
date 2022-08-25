@@ -95,3 +95,10 @@ func quote(text string) string {
 func toMb(value int) string {
 	return fmt.Sprintf("%dMB", value)
 }
+
+func smbShareExists(name string) bool {
+	if err := cmd(fmt.Sprintf("Get-SmbShare -Name %s", name)); err != nil {
+		return false
+	}
+	return true
+}

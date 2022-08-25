@@ -7,15 +7,17 @@ type MachineConfig struct {
 	BundleName string
 
 	// Virtual machine configuration
-	Name            string
-	Memory          int
-	CPUs            int
-	DiskSize        int
-	ImageSourcePath string
-	ImageFormat     string
-	SSHKeyPath      string
-	KubeConfig      string
-	SharedDirs      []string
+	Name              string
+	Memory            int
+	CPUs              int
+	DiskSize          int
+	ImageSourcePath   string
+	ImageFormat       string
+	SSHKeyPath        string
+	KubeConfig        string
+	SharedDirs        []string
+	SharedDirPassword string
+	SharedDirUsername string
 
 	// macOS specific configuration
 	KernelCmdLine string

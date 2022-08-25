@@ -76,6 +76,7 @@ func listOpenPorts(daemonClient *daemonclient.Client) ([]types.ExposeRequest, er
 
 const (
 	virtualMachineIP = "192.168.127.2"
+	hostVirtualIP    = "192.168.127.254"
 	internalSSHPort  = "22"
 	localIP          = "127.0.0.1"
 	remoteHTTPPort   = "80"

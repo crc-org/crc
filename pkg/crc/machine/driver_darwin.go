@@ -11,6 +11,7 @@ import (
 	machineVf "github.com/code-ready/crc/pkg/drivers/vfkit"
 	"github.com/code-ready/crc/pkg/libmachine"
 	"github.com/code-ready/crc/pkg/libmachine/host"
+	"github.com/code-ready/machine/libmachine/drivers"
 )
 
 func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {
@@ -63,4 +64,8 @@ func updateKernelArgs(vm *virtualMachine) error {
 		return err
 	}
 	return vm.api.Save(vm.Host)
+}
+
+func updateDriverStruct(host *host.Host, driver *machineVf.Driver) error {
+	return drivers.ErrNotImplemented
 }
