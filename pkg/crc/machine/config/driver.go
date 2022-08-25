@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/code-ready/machine/libmachine/drivers"
 )
 
@@ -17,13 +15,4 @@ func InitVMDriverFromMachineConfig(machineConfig MachineConfig, driver *drivers.
 	driver.BundleName = machineConfig.BundleName
 	driver.ImageSourcePath = machineConfig.ImageSourcePath
 	driver.ImageFormat = machineConfig.ImageFormat
-
-	for i, dir := range machineConfig.SharedDirs {
-		sharedDir := drivers.SharedDir{
-			Source: dir,
-			Target: dir,
-			Tag:    fmt.Sprintf("dir%d", i),
-		}
-		driver.SharedDirs = append(driver.SharedDirs, sharedDir)
-	}
 }

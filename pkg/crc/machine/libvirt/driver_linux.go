@@ -1,10 +1,13 @@
 package libvirt
 
 import (
+	"fmt"
+
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/machine/drivers/libvirt"
+	"github.com/code-ready/machine/libmachine/drivers"
 )
 
 func CreateHost(machineConfig config.MachineConfig) *libvirt.Driver {
@@ -20,5 +23,21 @@ func CreateHost(machineConfig config.MachineConfig) *libvirt.Driver {
 	}
 
 	libvirtDriver.StoragePool = DefaultStoragePool
+	libvirtDriver.SharedDirs = configureShareDirs(machineConfig)
+
 	return libvirtDriver
+}
+
+func configureShareDirs(machineConfig config.MachineConfig) []drivers.SharedDir {
+	var sharedDirs []drivers.SharedDir
+	for i, dir := range machineConfig.SharedDirs {
+		sharedDir := drivers.SharedDir{
+			Source: dir,
+			Target: dir,
+			Tag:    fmt.Sprintf("dir%d", i),
+			Type:   "virtiofs",
+		}
+		sharedDirs = append(sharedDirs, sharedDir)
+	}
+	return sharedDirs
 }
