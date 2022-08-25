@@ -173,10 +173,13 @@ func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
 			}
 		}
 		logging.Debugf("Mounting tag %s at %s", mount.Tag, mount.Target)
-		//FIXME: do not hardcode this
-		mount.Type = "virtiofs"
-		if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Mounting %s", mount.Target), "mount", "-o", "context=\"system_u:object_r:container_file_t:s0\"", "-t", mount.Type, mount.Tag, mount.Target); err != nil {
-			return err
+		switch mount.Type {
+		case "virtiofs":
+			if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Mounting %s", mount.Target), "mount", "-o", "context=\"system_u:object_r:container_file_t:s0\"", "-t", mount.Type, mount.Tag, mount.Target); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("Unknown Shared dir type requested: %s", mount.Type)
 		}
 	}
 
