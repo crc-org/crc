@@ -3,6 +3,7 @@ package bundle
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -12,7 +13,8 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/preset"
+	"github.com/code-ready/crc/pkg/crc/image"
+	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/code-ready/crc/pkg/download"
 )
 
@@ -174,19 +176,19 @@ func (bundle *CrcBundleInfo) GetBundleNameWithoutExtension() string {
 	return GetBundleNameWithoutExtension(bundle.GetBundleName())
 }
 
-func (bundle *CrcBundleInfo) GetBundleType() preset.Preset {
+func (bundle *CrcBundleInfo) GetBundleType() crcPreset.Preset {
 	switch bundle.Type {
 	case "snc", "snc_custom":
-		return preset.OpenShift
+		return crcPreset.OpenShift
 	case "podman", "podman_custom":
-		return preset.Podman
+		return crcPreset.Podman
 	default:
-		return preset.OpenShift
+		return crcPreset.OpenShift
 	}
 }
 
 func (bundle *CrcBundleInfo) IsOpenShift() bool {
-	return bundle.GetBundleType() == preset.OpenShift
+	return bundle.GetBundleType() == crcPreset.OpenShift
 }
 
 func (bundle *CrcBundleInfo) verify() error {
@@ -250,10 +252,24 @@ func GetCustomBundleName(bundleFilename string) string {
 	return fmt.Sprintf("%s_%d%s", baseName, time.Now().Unix(), bundleExtension)
 }
 
-type presetDownloadInfo map[preset.Preset]*download.RemoteFile
+func GetBundleNameFromURI(bundleURI string) string {
+	// the URI is expected to have been validated by validation.ValidateBundlePath first
+	switch {
+	case strings.HasPrefix(bundleURI, "docker://"):
+		imageAndTag := strings.Split(path.Base(bundleURI), ":")
+		return constants.BundleForPreset(image.GetPresetName(imageAndTag[0]), imageAndTag[1])
+	case strings.HasPrefix(bundleURI, "http://"), strings.HasPrefix(bundleURI, "https://"):
+		return path.Base(bundleURI)
+	default:
+		// local path
+		return filepath.Base(bundleURI)
+	}
+}
+
+type presetDownloadInfo map[crcPreset.Preset]*download.RemoteFile
 type bundlesDownloadInfo map[string]presetDownloadInfo
 
-func getBundleDownloadInfo(preset preset.Preset) (*download.RemoteFile, error) {
+func getBundleDownloadInfo(preset crcPreset.Preset) (*download.RemoteFile, error) {
 	bundles, ok := bundleLocations[runtime.GOARCH]
 	if !ok {
 		return nil, fmt.Errorf("Unsupported architecture: %s", runtime.GOARCH)
@@ -270,7 +286,7 @@ func getBundleDownloadInfo(preset preset.Preset) (*download.RemoteFile, error) {
 	return downloadInfo, nil
 }
 
-func DownloadDefault(preset preset.Preset) error {
+func DownloadDefault(preset crcPreset.Preset) error {
 	downloadInfo, err := getBundleDownloadInfo(preset)
 	if err != nil {
 		return err
@@ -287,4 +303,30 @@ func DownloadDefault(preset preset.Preset) error {
 	}
 
 	return nil
+}
+
+func Download(preset crcPreset.Preset, bundleURI string) (string, error) {
+	// If we are asked to download
+	// ~/.crc/cache/crc_podman_libvirt_4.1.1.crcbundle, this means we want
+	// are downloading the default bundle for this release. This uses a
+	// different codepath from user-specified URIs as for the default
+	// bundles, their sha256sums are known and can be checked.
+	if bundleURI == constants.GetDefaultBundlePath(preset) {
+		if preset == crcPreset.OpenShift {
+			return bundleURI, DownloadDefault(preset)
+		}
+		return bundleURI, image.PullBundle(preset, "")
+	}
+	switch {
+	case strings.HasPrefix(bundleURI, "http://"), strings.HasPrefix(bundleURI, "https://"):
+		return download.Download(bundleURI, constants.MachineCacheDir, 0644, nil)
+	case strings.HasPrefix(bundleURI, "docker://"):
+		if err := image.PullBundle(preset, bundleURI); err != nil {
+			return "", err
+		}
+		bundlePath := filepath.Join(constants.MachineCacheDir, GetBundleNameFromURI(bundleURI))
+		return bundlePath, nil
+	}
+	// the `bundleURI` parameter turned out to be a local path
+	return bundleURI, nil
 }

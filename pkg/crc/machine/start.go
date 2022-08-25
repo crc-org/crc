@@ -43,13 +43,17 @@ import (
 
 const minimumMemoryForMonitoring = 14336
 
-func getCrcBundleInfo(bundleName, bundlePath string) (*bundle.CrcBundleInfo, error) {
+func getCrcBundleInfo(preset crcPreset.Preset, bundleName, bundlePath string) (*bundle.CrcBundleInfo, error) {
 	bundleInfo, err := bundle.Use(bundleName)
 	if err == nil {
 		logging.Infof("Loading bundle: %s...", bundleName)
 		return bundleInfo, nil
 	}
 	logging.Debugf("Failed to load bundle %s: %v", bundleName, err)
+	bundlePath, err = bundle.Download(preset, bundlePath)
+	if err != nil {
+		return nil, err
+	}
 	logging.Infof("Extracting bundle: %s...", bundleName)
 	if _, err := bundle.Extract(bundlePath); err != nil {
 		return nil, err
@@ -195,8 +199,8 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Cannot determine if VM exists")
 	}
 
-	bundleName := bundle.GetBundleNameWithoutExtension(filepath.Base(startConfig.BundlePath))
-	crcBundleMetadata, err := getCrcBundleInfo(bundleName, startConfig.BundlePath)
+	bundleName := bundle.GetBundleNameWithoutExtension(bundle.GetBundleNameFromURI(startConfig.BundlePath))
+	crcBundleMetadata, err := getCrcBundleInfo(startConfig.Preset, bundleName, startConfig.BundlePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting bundle metadata")
 	}
