@@ -70,11 +70,7 @@ func ValidateBundlePath(bundlePath string, preset crcpreset.Preset) error {
 			logging.Warnf("Using custom bundle %s", userProvidedBundle)
 			return nil
 		}
-		if !constants.IsRelease() {
-			logging.Warnf("Using unsupported bundle %s", userProvidedBundle)
-			return nil
-		}
-		return fmt.Errorf("%s is not supported by this crc executable, please use %s", userProvidedBundle, constants.GetDefaultBundle(preset))
+		logging.Warnf("Using %s bundle, but %s is expected for this release", userProvidedBundle, constants.GetDefaultBundle(preset))
 	}
 	return nil
 }
