@@ -99,6 +99,14 @@ func (client *client) updateVMConfig(startConfig types.StartConfig, vm *virtualM
 		}
 	}
 
+	// we want to set the shared dir password on-the-fly to be used
+	// we do not want this value to be persisted to disk
+	if startConfig.SharedDirPassword != "" {
+		if err := setSharedDirPassword(vm.Host, startConfig.SharedDirPassword); err != nil {
+			return fmt.Errorf("Failed to set shared dir password: %w", err)
+		}
+	}
+
 	return nil
 }
 
@@ -178,6 +186,11 @@ func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
 			if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Mounting %s", mount.Target), "mount", "-o", "context=\"system_u:object_r:container_file_t:s0\"", "-t", mount.Type, mount.Tag, mount.Target); err != nil {
 				return err
 			}
+		case "cifs":
+			smbUncPath := fmt.Sprintf("//%s/%s", hostVirtualIP, mount.Tag)
+			if _, _, err := sshRunner.RunPrivate("sudo", "mount", "-o", fmt.Sprintf("rw,uid=core,gid=core,username='%s',password='%s'", mount.Username, mount.Password), "-t", mount.Type, smbUncPath, mount.Target); err != nil {
+				return fmt.Errorf("Failed to mount CIFS/SMB share '%s' please make sure configured password is correct: %w", mount.Tag, err)
+			}
 		default:
 			return fmt.Errorf("Unknown Shared dir type requested: %s", mount.Type)
 		}
@@ -233,19 +246,21 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 
 		machineConfig := config.MachineConfig{
-			Name:            client.name,
-			BundleName:      bundleName,
-			CPUs:            startConfig.CPUs,
-			Memory:          startConfig.Memory,
-			DiskSize:        startConfig.DiskSize,
-			NetworkMode:     client.networkMode(),
-			ImageSourcePath: crcBundleMetadata.GetDiskImagePath(),
-			ImageFormat:     crcBundleMetadata.GetDiskImageFormat(),
-			SSHKeyPath:      crcBundleMetadata.GetSSHKeyPath(),
-			KernelCmdLine:   crcBundleMetadata.GetKernelCommandLine(),
-			Initramfs:       crcBundleMetadata.GetInitramfsPath(),
-			Kernel:          crcBundleMetadata.GetKernelPath(),
-			SharedDirs:      sharedDirs,
+			Name:              client.name,
+			BundleName:        bundleName,
+			CPUs:              startConfig.CPUs,
+			Memory:            startConfig.Memory,
+			DiskSize:          startConfig.DiskSize,
+			NetworkMode:       client.networkMode(),
+			ImageSourcePath:   crcBundleMetadata.GetDiskImagePath(),
+			ImageFormat:       crcBundleMetadata.GetDiskImageFormat(),
+			SSHKeyPath:        crcBundleMetadata.GetSSHKeyPath(),
+			KernelCmdLine:     crcBundleMetadata.GetKernelCommandLine(),
+			Initramfs:         crcBundleMetadata.GetInitramfsPath(),
+			Kernel:            crcBundleMetadata.GetKernelPath(),
+			SharedDirs:        sharedDirs,
+			SharedDirPassword: startConfig.SharedDirPassword,
+			SharedDirUsername: startConfig.SharedDirUsername,
 		}
 		if crcBundleMetadata.IsOpenShift() {
 			machineConfig.KubeConfig = crcBundleMetadata.GetKubeConfigPath()

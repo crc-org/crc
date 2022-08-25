@@ -373,3 +373,12 @@ func (d *Driver) GetIP() (string, error) {
 
 	return resp[0], nil
 }
+
+func (d *Driver) GetSharedDirs() ([]drivers.SharedDir, error) {
+	for _, dir := range d.SharedDirs {
+		if !smbShareExists(dir.Tag) {
+			return []drivers.SharedDir{}, nil
+		}
+	}
+	return d.SharedDirs, nil
+}

@@ -30,7 +30,9 @@ type StartConfig struct {
 	Preset crcpreset.Preset
 
 	// Shared dirs
-	EnableSharedDirs bool
+	EnableSharedDirs  bool
+	SharedDirPassword string
+	SharedDirUsername string
 
 	// Ports to access openshift routes
 	IngressHTTPPort  uint
