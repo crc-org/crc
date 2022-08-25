@@ -58,7 +58,7 @@ func runSetup(arguments []string) error {
 	}
 
 	if !config.Get(crcConfig.Bundle).IsDefault {
-		if err := validation.ValidatePath(config.Get(crcConfig.Bundle).AsString()); err != nil {
+		if err := validation.ValidateBundlePath(config.Get(crcConfig.Bundle).AsString(), crcConfig.GetPreset(config)); err != nil {
 			return err
 		}
 	}
