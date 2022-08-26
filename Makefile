@@ -162,10 +162,10 @@ clean: clean_docs clean_macos_package clean_windows_msi
 
 .PHONY: build_e2e
 build_e2e: $(SOURCES)
-	GOARCH=amd64 GOOS=linux   go test ./test/e2e/ --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/linux-amd64/e2e.test
-	GOARCH=amd64 GOOS=windows go test ./test/e2e/ --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/windows-amd64/e2e.test.exe
-	GOARCH=amd64 GOOS=darwin  go test ./test/e2e/ --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/macos-amd64/e2e.test
-	GOARCH=arm64 GOOS=darwin  go test ./test/e2e/ --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/macos-arm64/e2e.test
+	GOARCH=amd64 GOOS=linux   go test ./test/e2e/ -tags "$(BUILDTAGS)" --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/linux-amd64/e2e.test
+	GOARCH=amd64 GOOS=windows go test ./test/e2e/ -tags "$(BUILDTAGS)" --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/windows-amd64/e2e.test.exe
+	GOARCH=amd64 GOOS=darwin  go test ./test/e2e/ -tags "$(BUILDTAGS)" --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/macos-amd64/e2e.test
+	GOARCH=arm64 GOOS=darwin  go test ./test/e2e/ -tags "$(BUILDTAGS)" --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/macos-arm64/e2e.test
 
 .PHONY: build_integration
 build_integration: $(SOURCES)
@@ -206,7 +206,7 @@ export BUNDLE_PATH = $(HOME)/Downloads/crc_libvirt_$(OPENSHIFT_VERSION)_$(GOARCH
 endif
 
 integration:
-	@go test -timeout=60m $(REPOPATH)/test/integration -v $(GINKGO_OPTS)
+	@go test -timeout=60m -tags "$(BUILDTAGS)" $(REPOPATH)/test/integration -v $(GINKGO_OPTS)
 
 .PHONY: e2e ## Run e2e tests
 e2e:
@@ -221,7 +221,7 @@ ifndef CRC_BINARY
 	CRC_BINARY = --crc-binary=$(GOPATH)/bin
 endif
 e2e:
-	@go test --timeout=180m $(REPOPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) $(GODOG_OPTS) $(CLEANUP_HOME) $(INSTALLER_PATH) $(USER_PASSWORD)
+	@go test --timeout=180m $(REPOPATH)/test/e2e -tags "$(BUILDTAGS)" --ldflags="$(VERSION_VARIABLES)" -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) $(GODOG_OPTS) $(CLEANUP_HOME) $(INSTALLER_PATH) $(USER_PASSWORD)
 
 .PHONY: e2e-stories e2e-story-health e2e-story-marketplace e2e-story-registry
 # cluster must already be running, crc must be in the path
