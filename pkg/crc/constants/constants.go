@@ -86,7 +86,7 @@ func GetAdminHelperURL() string {
 	return GetAdminHelperURLForOs(runtime.GOOS)
 }
 
-func GetDefaultBundle(preset crcpreset.Preset) string {
+func BundleForPreset(preset crcpreset.Preset, version string) string {
 	var bundleName strings.Builder
 
 	bundleName.WriteString("crc")
@@ -107,8 +107,12 @@ func GetDefaultBundle(preset crcpreset.Preset) string {
 		bundleName.WriteString("_hyperv")
 	}
 
-	fmt.Fprintf(&bundleName, "_%s_%s.crcbundle", version.GetBundleVersion(preset), runtime.GOARCH)
+	fmt.Fprintf(&bundleName, "_%s_%s.crcbundle", version, runtime.GOARCH)
 	return bundleName.String()
+}
+
+func GetDefaultBundle(preset crcpreset.Preset) string {
+	return BundleForPreset(preset, version.GetBundleVersion(preset))
 }
 
 var (
