@@ -10,7 +10,7 @@ SOCKS proxies are not supported by {ocp}.
 
 .Prerequisites
 
-* To use an existing {openshift} CLI ([command]`oc`) executable on your host machine, export the `.testing` domain as part of the `no_proxy` environment variable.
+* If you are not using [command]`crc oc-env`, when interacting with the cluster, export the `.testing` domain as part of the `no_proxy` environment variable.
 The embedded [command]`oc` executable does not require manual settings.
 For more information about using the embedded [command]`oc` executable, see link:{crc-gsg-url}#accessing-the-openshift-cluster-with-oc_gsg[Accessing the {openshift} cluster with the {openshift} CLI].
 
