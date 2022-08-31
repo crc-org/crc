@@ -286,23 +286,20 @@ func getBundleDownloadInfo(preset crcPreset.Preset) (*download.RemoteFile, error
 	return downloadInfo, nil
 }
 
-func DownloadDefault(preset crcPreset.Preset) error {
+func DownloadDefault(preset crcPreset.Preset) (string, error) {
 	downloadInfo, err := getBundleDownloadInfo(preset)
 	if err != nil {
-		return err
+		return "", err
 	}
 	bundleNameFromURI, err := downloadInfo.GetSourceFilename()
 	if err != nil {
-		return err
+		return "", err
 	}
 	if constants.GetDefaultBundle(preset) != bundleNameFromURI {
-		return fmt.Errorf("expected %s but found %s in Makefile", bundleNameFromURI, constants.GetDefaultBundle(preset))
-	}
-	if _, err := downloadInfo.Download(constants.GetDefaultBundlePath(preset), 0664); err != nil {
-		return err
+		return "", fmt.Errorf("expected %s but found %s in Makefile", bundleNameFromURI, constants.GetDefaultBundle(preset))
 	}
 
-	return nil
+	return downloadInfo.Download(constants.GetDefaultBundlePath(preset), 0664)
 }
 
 func Download(preset crcPreset.Preset, bundleURI string) (string, error) {
@@ -313,19 +310,15 @@ func Download(preset crcPreset.Preset, bundleURI string) (string, error) {
 	// bundles, their sha256sums are known and can be checked.
 	if bundleURI == constants.GetDefaultBundlePath(preset) {
 		if preset == crcPreset.OpenShift {
-			return bundleURI, DownloadDefault(preset)
+			return DownloadDefault(preset)
 		}
-		return bundleURI, image.PullBundle(preset, "")
+		return image.PullBundle(preset, "")
 	}
 	switch {
 	case strings.HasPrefix(bundleURI, "http://"), strings.HasPrefix(bundleURI, "https://"):
 		return download.Download(bundleURI, constants.MachineCacheDir, 0644, nil)
 	case strings.HasPrefix(bundleURI, "docker://"):
-		if err := image.PullBundle(preset, bundleURI); err != nil {
-			return "", err
-		}
-		bundlePath := filepath.Join(constants.MachineCacheDir, GetBundleNameFromURI(bundleURI))
-		return bundlePath, nil
+		return image.PullBundle(preset, bundleURI)
 	}
 	// the `bundleURI` parameter turned out to be a local path
 	return bundleURI, nil
