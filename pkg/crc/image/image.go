@@ -29,7 +29,7 @@ type imageHandler struct {
 }
 
 func defaultURI(preset crcpreset.Preset) string {
-	return fmt.Sprintf("//%s/%s:%s", constants.RegistryURI, getImageName(preset), version.GetCRCVersion())
+	return fmt.Sprintf("//%s/%s:%s", constants.RegistryURI, getImageName(preset), version.GetBundleVersion(preset))
 }
 
 func ValidateURI(uri *url.URL) error {
