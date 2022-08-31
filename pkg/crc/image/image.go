@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -28,6 +30,21 @@ type imageHandler struct {
 
 func defaultURI(preset crcpreset.Preset) string {
 	return fmt.Sprintf("//%s/%s:%s", constants.RegistryURI, getImageName(preset), version.GetCRCVersion())
+}
+
+func ValidateURI(uri *url.URL) error {
+	/* For now we are very restrictive on the docker:// URLs we accept, it
+	 * has to contain the bundle version as the tag, and it has to use the
+	 * same image names as the official registry (openshift-bundle,
+	 * okd-bundle, podman-bundle). In future releases, we'll make this more
+	 * flexible
+	 */
+	imageAndTag := strings.Split(path.Base(uri.Path), ":")
+	if len(imageAndTag) != 2 {
+		return fmt.Errorf("invalid %s registry URL, tag is required (such as docker://quay.io/crcont/openshift-bundle:4.11.0)", uri)
+	}
+	_, err := getPresetNameE(imageAndTag[0])
+	return err
 }
 
 func (img *imageHandler) policyContext() (*signature.PolicyContext, error) {
@@ -93,6 +110,23 @@ func getImageName(preset crcpreset.Preset) string {
 	default:
 		return "openshift-bundle"
 	}
+}
+
+func getPresetNameE(imageName string) (crcpreset.Preset, error) {
+	switch imageName {
+	case "openshift-bundle":
+		return crcpreset.OpenShift, nil
+	case "okd-bundle":
+		return crcpreset.OKD, nil
+	case "podman-bundle":
+		return crcpreset.Podman, nil
+	default:
+		return crcpreset.OpenShift, fmt.Errorf("invalid image name '%s' (Should be openshift-bundle, okd-bundle or podman-bundle)", imageName)
+	}
+}
+func GetPresetName(imageName string) crcpreset.Preset {
+	preset, _ := getPresetNameE(imageName)
+	return preset
 }
 
 func PullBundle(preset crcpreset.Preset, imageURI string) error {
