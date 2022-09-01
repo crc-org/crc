@@ -67,10 +67,11 @@ func ValidateBundlePath(bundlePath string, preset crcpreset.Preset) error {
 
 func ValidateBundle(bundlePath string, preset crcpreset.Preset) error {
 	bundleName := filepath.Base(bundlePath)
-	_, err := bundle.Get(bundleName)
+	bundleMetadata, err := bundle.Get(bundleName)
 	if err != nil {
 		return ValidateBundlePath(bundlePath, preset)
 	}
+	bundleMismatchWarning(bundleMetadata.GetBundleName(), preset)
 	/* 'bundle' is already unpacked in ~/.crc/cache */
 	return nil
 }
