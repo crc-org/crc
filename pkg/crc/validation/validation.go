@@ -61,18 +61,7 @@ func ValidateBundlePath(bundlePath string, preset crcpreset.Preset) error {
 	}
 
 	userProvidedBundle := filepath.Base(bundlePath)
-	userProvidedBundle = bundle.GetBundleNameWithExtension(userProvidedBundle)
-	if userProvidedBundle != constants.GetDefaultBundle(preset) {
-		// Should append underscore (_) here, as we don't want crc_libvirt_4.7.15.crcbundle
-		// to be detected as a custom bundle for crc_libvirt_4.7.1.crcbundle
-		usingCustomBundle := strings.HasPrefix(bundle.GetBundleNameWithoutExtension(userProvidedBundle),
-			fmt.Sprintf("%s_", bundle.GetBundleNameWithoutExtension(constants.GetDefaultBundle(preset))))
-		if usingCustomBundle {
-			logging.Warnf("Using custom bundle %s", userProvidedBundle)
-			return nil
-		}
-		logging.Warnf("Using %s bundle, but %s is expected for this release", userProvidedBundle, constants.GetDefaultBundle(preset))
-	}
+	bundleMismatchWarning(userProvidedBundle, preset)
 	return nil
 }
 
@@ -84,6 +73,21 @@ func ValidateBundle(bundlePath string, preset crcpreset.Preset) error {
 	}
 	/* 'bundle' is already unpacked in ~/.crc/cache */
 	return nil
+}
+
+func bundleMismatchWarning(userProvidedBundle string, preset crcpreset.Preset) {
+	userProvidedBundle = bundle.GetBundleNameWithExtension(userProvidedBundle)
+	if userProvidedBundle != constants.GetDefaultBundle(preset) {
+		// Should append underscore (_) here, as we don't want crc_libvirt_4.7.15.crcbundle
+		// to be detected as a custom bundle for crc_libvirt_4.7.1.crcbundle
+		usingCustomBundle := strings.HasPrefix(bundle.GetBundleNameWithoutExtension(userProvidedBundle),
+			fmt.Sprintf("%s_", bundle.GetBundleNameWithoutExtension(constants.GetDefaultBundle(preset))))
+		if usingCustomBundle {
+			logging.Warnf("Using custom bundle %s", userProvidedBundle)
+		} else {
+			logging.Warnf("Using %s bundle, but %s is expected for this release", userProvidedBundle, constants.GetDefaultBundle(preset))
+		}
+	}
 }
 
 // ValidateIPAddress checks if provided IP is valid
