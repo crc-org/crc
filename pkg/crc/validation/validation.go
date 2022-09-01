@@ -61,6 +61,7 @@ func ValidateBundlePath(bundlePath string, preset crcpreset.Preset) error {
 	}
 
 	userProvidedBundle := filepath.Base(bundlePath)
+	userProvidedBundle = bundle.GetBundleNameWithExtension(userProvidedBundle)
 	if userProvidedBundle != constants.GetDefaultBundle(preset) {
 		// Should append underscore (_) here, as we don't want crc_libvirt_4.7.15.crcbundle
 		// to be detected as a custom bundle for crc_libvirt_4.7.1.crcbundle

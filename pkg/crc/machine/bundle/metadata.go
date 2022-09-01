@@ -237,6 +237,13 @@ func GetBundleNameWithoutExtension(bundleName string) string {
 	return strings.TrimSuffix(bundleName, bundleExtension)
 }
 
+func GetBundleNameWithExtension(bundleName string) string {
+	if strings.HasSuffix(bundleName, bundleExtension) {
+		return bundleName
+	}
+	return fmt.Sprintf("%s%s", bundleName, bundleExtension)
+}
+
 func GetCustomBundleName(bundleFilename string) string {
 	re := regexp.MustCompile(`(?:_[0-9]+)*.crcbundle$`)
 	baseName := re.ReplaceAllLiteralString(bundleFilename, "")
