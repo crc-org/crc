@@ -318,7 +318,7 @@ func AddProxyConfigToCluster(ctx context.Context, sshRunner *ssh.Runner, ocConfi
 	}
 	logging.Debugf("Patch string %s", string(patchEncode))
 
-	cmdArgs := []string{"patch", "proxy", "cluster", "-p", fmt.Sprintf("'%s'", string(patchEncode)), "-n", "openshift-config", "--type", "merge"}
+	cmdArgs := []string{"patch", "proxy", "cluster", "-p", fmt.Sprintf("'%s'", string(patchEncode)), "--type", "merge"}
 	if _, stderr, err := ocConfig.RunOcCommandPrivate(cmdArgs...); err != nil {
 		return fmt.Errorf("Failed to add proxy details %v: %s", err, stderr)
 	}
