@@ -298,7 +298,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	if client.useVSock() {
-		if err := exposePorts(startConfig.Preset); err != nil {
+		if err := exposePorts(startConfig.Preset, startConfig.IngressHTTPPort, startConfig.IngressHTTPSPort); err != nil {
 			return nil, err
 		}
 	}

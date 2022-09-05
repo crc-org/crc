@@ -42,6 +42,9 @@ const (
 	ClusterDomain = ".crc.testing"
 	AppsDomain    = ".apps-crc.testing"
 
+	OpenShiftIngressHTTPPort  = 80
+	OpenShiftIngressHTTPSPort = 443
+
 	// This public key is owned by the CRC team (crc@crc.dev), and is used
 	// to sign bundles uploaded to an image registry.
 	// It can be fetched with: `gpg --recv-key DC7EAC400A1BFDFB`

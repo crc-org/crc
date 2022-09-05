@@ -31,6 +31,8 @@ const (
 	KubeAdminPassword       = "kubeadmin-password"
 	Preset                  = "preset"
 	EnableSharedDirs        = "enable-shared-dirs"
+	IngressHTTPPort         = "ingress-http-port"
+	IngressHTTPSPort        = "ingress-https-port"
 )
 
 func RegisterSettings(cfg *Config) {
@@ -107,6 +109,10 @@ func RegisterSettings(cfg *Config) {
 
 	cfg.AddSetting(KubeAdminPassword, "", ValidateString, SuccessfullyApplied,
 		"User defined kubeadmin password")
+	cfg.AddSetting(IngressHTTPPort, constants.OpenShiftIngressHTTPPort, ValidatePort, RequiresHTTPPortChangeWarning,
+		fmt.Sprintf("HTTP port to use for OpenShift ingress/routes on the host (1024-65535, default: %d)", constants.OpenShiftIngressHTTPPort))
+	cfg.AddSetting(IngressHTTPSPort, constants.OpenShiftIngressHTTPSPort, ValidatePort, RequiresHTTPSPortChangeWarning,
+		fmt.Sprintf("HTTPS port to use for OpenShift ingress/routes on the host (1024-65535, default: %d)", constants.OpenShiftIngressHTTPSPort))
 }
 
 func defaultCPUs(cfg Storage) int {

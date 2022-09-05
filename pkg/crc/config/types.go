@@ -39,6 +39,10 @@ func (v SettingValue) AsInt() int {
 	return cast.ToInt(v.Value)
 }
 
+func (v SettingValue) AsUInt() uint {
+	return cast.ToUint(v.Value)
+}
+
 // validationFnType takes the key, value as args and checks if valid
 type ValidationFnType func(interface{}) (bool, string)
 type SetFn func(string, interface{}) string
