@@ -16,8 +16,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-func exposePorts(preset crcPreset.Preset) error {
-	portsToExpose := vsockPorts(preset)
+func exposePorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint) error {
+	portsToExpose := vsockPorts(preset, ingressHTTPPort, ingressHTTPSPort)
 	daemonClient := daemonclient.New()
 	alreadyOpenedPorts, err := listOpenPorts(daemonClient)
 	if err != nil {
@@ -78,13 +78,13 @@ const (
 	virtualMachineIP = "192.168.127.2"
 	internalSSHPort  = "22"
 	localIP          = "127.0.0.1"
-	httpPort         = "80"
-	httpsPort        = "443"
+	remoteHTTPPort   = "80"
+	remoteHTTPSPort  = "443"
 	apiPort          = "6443"
 	cockpitPort      = "9090"
 )
 
-func vsockPorts(preset crcPreset.Preset) []types.ExposeRequest {
+func vsockPorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint) []types.ExposeRequest {
 	exposeRequest := []types.ExposeRequest{
 		{
 			Protocol: "tcp",
@@ -102,13 +102,13 @@ func vsockPorts(preset crcPreset.Preset) []types.ExposeRequest {
 			},
 			types.ExposeRequest{
 				Protocol: "tcp",
-				Local:    fmt.Sprintf(":%s", httpsPort),
-				Remote:   net.JoinHostPort(virtualMachineIP, httpsPort),
+				Local:    fmt.Sprintf(":%d", ingressHTTPSPort),
+				Remote:   net.JoinHostPort(virtualMachineIP, remoteHTTPSPort),
 			},
 			types.ExposeRequest{
 				Protocol: "tcp",
-				Local:    fmt.Sprintf(":%s", httpPort),
-				Remote:   net.JoinHostPort(virtualMachineIP, httpPort),
+				Local:    fmt.Sprintf(":%d", ingressHTTPPort),
+				Remote:   net.JoinHostPort(virtualMachineIP, remoteHTTPPort),
 			})
 	case crcPreset.Podman:
 		socketProtocol := types.UNIX

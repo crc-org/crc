@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"strings"
 	"text/template"
 
 	"github.com/Masterminds/semver/v3"
@@ -75,6 +76,8 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		KubeAdminPassword: config.Get(crcConfig.KubeAdminPassword).AsString(),
 		Preset:            crcConfig.GetPreset(config),
 		EnableSharedDirs:  crcConfig.ShouldEnableSharedDirs(config),
+		IngressHTTPPort:   config.Get(crcConfig.IngressHTTPPort).AsUInt(),
+		IngressHTTPSPort:  config.Get(crcConfig.IngressHTTPSPort).AsUInt(),
 	}
 
 	client := newMachine()
@@ -249,10 +252,11 @@ If you find an issue, please report it at https://github.com/openshift/okd
 )
 
 type templateVariables struct {
-	ClusterConfig     *clusterConfig
-	EvalCommandLine   string
-	CommandLinePrefix string
-	PodmanRemote      string
+	ClusterConfig       *clusterConfig
+	EvalCommandLine     string
+	CommandLinePrefix   string
+	PodmanRemote        string
+	FallbackPortWarning string
 }
 
 func writeTemplatedMessage(writer io.Writer, s *startResult) error {
@@ -267,6 +271,10 @@ func writeOpenShiftTemplatedMessage(writer io.Writer, s *startResult) error {
 	tmpl := startTemplateForOpenshift
 	if s.ClusterConfig.ClusterType == preset.OKD {
 		tmpl = fmt.Sprintf("%s\n\n%s", startTemplateForOpenshift, startTemplateForOKD)
+	}
+	fallbackPortWarning := portFallbackWarning()
+	if fallbackPortWarning != "" {
+		tmpl = fmt.Sprintf("%s\n%s", tmpl, fallbackPortWarning)
 	}
 	parsed, err := template.New("template").Parse(tmpl)
 	if err != nil {
@@ -320,4 +328,27 @@ func checkDaemonStarted() error {
 		return err
 	}
 	return daemonclient.CheckIfOlderVersion(v)
+}
+
+func portFallbackWarning() string {
+	var fallbackPortWarning string
+	httpScheme := "http"
+	httpsScheme := "https"
+	fallbackPortWarningTmpl := `
+Warning: Port %d is used for OpenShift %s routes instead of the default
+You have to add this port to %s URLs when accessing OpenShift application,
+such as %s://myapp.apps-crc.testing:%d
+`
+	ingressHTTPPort := config.Get(crcConfig.IngressHTTPPort).AsUInt()
+	ingressHTTPSPort := config.Get(crcConfig.IngressHTTPSPort).AsUInt()
+
+	if ingressHTTPSPort != constants.OpenShiftIngressHTTPSPort {
+		fallbackPortWarning += fmt.Sprintf(fallbackPortWarningTmpl,
+			ingressHTTPSPort, strings.ToUpper(httpsScheme), strings.ToUpper(httpsScheme), httpsScheme, ingressHTTPSPort)
+	}
+	if ingressHTTPPort != constants.OpenShiftIngressHTTPPort {
+		fallbackPortWarning += fmt.Sprintf(fallbackPortWarningTmpl,
+			ingressHTTPPort, strings.ToUpper(httpScheme), strings.ToUpper(httpScheme), httpScheme, ingressHTTPPort)
+	}
+	return fallbackPortWarning
 }

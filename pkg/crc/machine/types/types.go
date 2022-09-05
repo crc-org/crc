@@ -31,6 +31,10 @@ type StartConfig struct {
 
 	// Shared dirs
 	EnableSharedDirs bool
+
+	// Ports to access openshift routes
+	IngressHTTPPort  uint
+	IngressHTTPSPort uint
 }
 
 type ClusterConfig struct {

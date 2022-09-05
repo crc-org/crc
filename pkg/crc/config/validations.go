@@ -127,3 +127,14 @@ func validatePreset(value interface{}) (bool, string) {
 	}
 	return true, ""
 }
+
+func ValidatePort(value interface{}) (bool, string) {
+	port, err := cast.ToUintE(value)
+	if err != nil {
+		return false, "Requires integer value in range of 1024-65535"
+	}
+	if port < 1024 || port > 65535 {
+		return false, fmt.Sprintf("Provided %d but requires value in range of 1024-65535", port)
+	}
+	return true, ""
+}
