@@ -16,7 +16,10 @@ const (
 	DefaultConfigViewFormat = "- {{.ConfigKey | printf \"%-38s\"}}: {{.ConfigValue}}"
 )
 
-var configViewFormat string
+var (
+	configViewFormat string
+	showSecrets      bool
+)
 
 type configViewTemplate struct {
 	ConfigKey   string
@@ -38,6 +41,7 @@ func configViewCmd(config config.Storage) *cobra.Command {
 	}
 	configViewCmd.Flags().StringVar(&configViewFormat, "format", DefaultConfigViewFormat,
 		`Go template format to apply to the configuration file. For more information about Go templates, see: https://golang.org/pkg/text/template/`)
+	configViewCmd.Flags().BoolVar(&showSecrets, "show-secrets", false, "Show values of secret config properties")
 	return configViewCmd
 }
 
@@ -55,7 +59,7 @@ func runConfigView(cfg map[string]config.SettingValue, tmpl *template.Template, 
 		if v.IsDefault {
 			continue
 		}
-		if v.IsSecret {
+		if v.IsSecret && !showSecrets {
 			continue
 		}
 		viewTmplt := configViewTemplate{k, v.AsString()}
