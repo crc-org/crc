@@ -89,7 +89,7 @@ func (vm *virtualMachine) State() (state.State, error) {
 
 func (vm *virtualMachine) IP() (string, error) {
 	if vm.vsock {
-		return "127.0.0.1", nil
+		return VsockPrivateAddress(), nil
 	}
 	return vm.Driver.GetIP()
 }

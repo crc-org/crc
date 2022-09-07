@@ -92,10 +92,15 @@ func vsockPorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint)
 		socketProtocol = types.NPIPE
 		socketLocal = constants.DefaultPodmanNamedPipe
 	}
+
+	// API, Cockpit and Internal SSH are all bound to a private address, usually 127.0.0.1
+	// On Windows, where WSL2 is active, it's bound to the Windows machine's address within the private WSL2 network
+	privateIP := VsockPrivateAddress()
+
 	exposeRequest := []types.ExposeRequest{
 		{
 			Protocol: "tcp",
-			Local:    net.JoinHostPort(localIP, strconv.Itoa(constants.VsockSSHPort)),
+			Local:    net.JoinHostPort(privateIP, strconv.Itoa(constants.VsockSSHPort)),
 			Remote:   net.JoinHostPort(virtualMachineIP, internalSSHPort),
 		},
 		{
@@ -110,7 +115,7 @@ func vsockPorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint)
 		exposeRequest = append(exposeRequest,
 			types.ExposeRequest{
 				Protocol: "tcp",
-				Local:    net.JoinHostPort(localIP, apiPort),
+				Local:    net.JoinHostPort(privateIP, apiPort),
 				Remote:   net.JoinHostPort(virtualMachineIP, apiPort),
 			},
 			types.ExposeRequest{
@@ -127,7 +132,7 @@ func vsockPorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint)
 		exposeRequest = append(exposeRequest,
 			types.ExposeRequest{
 				Protocol: "tcp",
-				Local:    net.JoinHostPort(localIP, cockpitPort),
+				Local:    net.JoinHostPort(privateIP, cockpitPort),
 				Remote:   net.JoinHostPort(virtualMachineIP, cockpitPort),
 			})
 	default:

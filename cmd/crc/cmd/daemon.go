@@ -21,6 +21,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/machine"
 	"github.com/docker/go-units"
 	"github.com/gorilla/handlers"
 	"github.com/pkg/errors"
@@ -238,7 +239,10 @@ func gatewayAPIMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/hosts/add", func(w http.ResponseWriter, r *http.Request) {
 		acceptJSONStringArray(w, r, func(hostnames []string) error {
-			return adminhelper.AddToHostsFile("127.0.0.1", hostnames...)
+			// Most of the time we will add a hosts entry to resolve this to 127.0.0.1
+			// On a Windows machine running WSL this is the "IP" of the machine within the WSL2 network,
+			// so it is accessible from both WSL2 and Windows
+			return adminhelper.AddToHostsFile(machine.VsockPrivateAddress(), hostnames...)
 		})
 	})
 	mux.HandleFunc("/hosts/remove", func(w http.ResponseWriter, r *http.Request) {
