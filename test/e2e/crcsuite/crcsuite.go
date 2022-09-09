@@ -68,6 +68,8 @@ func FeatureContext(s *godog.Suite) {
 		ExecuteCommand)
 	s.Step(`^execut(?:e|ing) crc (.*) command (.*)$`,
 		ExecuteCommandWithExpectedExitStatus)
+	s.Step(`^execut(?:e|ing) single crc (.*) command (.*)$`,
+		ExecuteSingleCommandWithExpectedExitStatus)
 
 	// CRC file operations
 	s.Step(`^file "([^"]*)" exists in CRC home folder$`,
@@ -428,4 +430,11 @@ func ExecuteCommandWithExpectedExitStatus(command string, expectedExitStatus str
 		command = fmt.Sprintf("%s -b %s", command, bundleLocation)
 	}
 	return crcCmd.CRC(command).ExecuteWithExpectedExit(expectedExitStatus)
+}
+
+func ExecuteSingleCommandWithExpectedExitStatus(command string, expectedExitStatus string) error {
+	if command == "setup" && userProvidedBundle {
+		command = fmt.Sprintf("%s -b %s", command, bundleLocation)
+	}
+	return crcCmd.CRC(command).ExecuteSingleWithExpectedExit(expectedExitStatus)
 }
