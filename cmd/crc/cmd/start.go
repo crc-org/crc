@@ -75,9 +75,9 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		PullSecret:        cluster.NewInteractivePullSecretLoader(config),
 		KubeAdminPassword: config.Get(crcConfig.KubeAdminPassword).AsString(),
 		Preset:            crcConfig.GetPreset(config),
-		EnableSharedDirs:  crcConfig.ShouldEnableSharedDirs(config),
 		IngressHTTPPort:   config.Get(crcConfig.IngressHTTPPort).AsUInt(),
 		IngressHTTPSPort:  config.Get(crcConfig.IngressHTTPSPort).AsUInt(),
+		EnableSharedDirs:  config.Get(crcConfig.EnableSharedDirs).AsBool(),
 	}
 
 	client := newMachine()
@@ -94,6 +94,17 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 				Code: preflightFailedExitCode,
 			}
 		}
+	}
+
+	if runtime.GOOS == "windows" {
+		username, err := crcos.GetCurrentUsername()
+		if err != nil {
+			return nil, err
+		}
+
+		// config SharedDirPassword ('shared-dir-password') only exists in windows
+		startConfig.SharedDirPassword = config.Get(crcConfig.SharedDirPassword).AsString()
+		startConfig.SharedDirUsername = username
 	}
 
 	return client.Start(ctx, startConfig)

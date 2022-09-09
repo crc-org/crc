@@ -30,6 +30,7 @@ const (
 	KubeAdminPassword       = "kubeadmin-password"
 	Preset                  = "preset"
 	EnableSharedDirs        = "enable-shared-dirs"
+	SharedDirPassword       = "shared-dir-password" // #nosec G101
 	IngressHTTPPort         = "ingress-http-port"
 	IngressHTTPSPort        = "ingress-https-port"
 )
@@ -56,6 +57,17 @@ func RegisterSettings(cfg *Config) {
 		return ValidateBundlePath(value, GetPreset(cfg))
 	}
 
+	validateSmbSharedDirs := func(value interface{}) (bool, string) {
+		if !cfg.Get(HostNetworkAccess).AsBool() {
+			return false, fmt.Sprintf("%s can only be used with %s set to 'true'",
+				EnableSharedDirs, HostNetworkAccess)
+		}
+		if cfg.Get(SharedDirPassword).IsDefault {
+			return false, fmt.Sprintf("Please set '%s' first to enable shared directories", SharedDirPassword)
+		}
+		return ValidateBool(value)
+	}
+
 	// Preset setting should be on top because CPUs/Memory config depend on it.
 	cfg.AddSetting(Preset, string(preset.OpenShift), validatePreset, RequiresDeleteAndSetupMsg,
 		fmt.Sprintf("Virtual machine preset (valid values are: %s, %s and %s)", preset.Podman, preset.OpenShift, preset.OKD))
@@ -77,10 +89,17 @@ func RegisterSettings(cfg *Config) {
 		"Disable update check (true/false, default: false)")
 	cfg.AddSetting(ExperimentalFeatures, false, ValidateBool, SuccessfullyApplied,
 		"Enable experimental features (true/false, default: false)")
-	// shared dir is not implemented for windows yet
-	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
+
+	// Shared directories configs
+	if runtime.GOOS == "windows" {
+		cfg.AddSetting(SharedDirPassword, Secret(""), ValidateString, SuccessfullyApplied,
+			"Password used while using CIFS/SMB file sharing (It is the password for the current logged in user)")
+
+		cfg.AddSetting(EnableSharedDirs, false, validateSmbSharedDirs, SuccessfullyApplied,
+			"Mounts host's user profile folder at '/' in the CRC VM (true/false, default: false)")
+	} else {
 		cfg.AddSetting(EnableSharedDirs, true, ValidateBool, SuccessfullyApplied,
-			"Enable shared directories which mounts host's $HOME at /home in the CRC VM (true/false, default: true)")
+			"Mounts host's home directory at '/' in the CRC VM (true/false, default: true)")
 	}
 
 	if !version.IsInstaller() {
@@ -143,14 +162,6 @@ func GetNetworkMode(config Storage) network.Mode {
 		return network.UserNetworkingMode
 	}
 	return network.ParseMode(config.Get(NetworkMode).AsString())
-}
-
-func ShouldEnableSharedDirs(config Storage) bool {
-	// Shared dirs are not implemented for windows
-	if runtime.GOOS == "windows" {
-		return false
-	}
-	return config.Get(EnableSharedDirs).AsBool()
 }
 
 func UpdateDefaults(cfg *Config) {
