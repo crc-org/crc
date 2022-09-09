@@ -78,10 +78,10 @@
             </Directory>
             <Directory Id="ProgramMenuFolder">
                 <Component Id="StartMenuEntry" Guid="*">
-                    <Shortcut Id="TrayStartMenuEntry" 
-                            Name="Red Hat OpenShift Local" 
-                            Target="[INSTALLDIR]crc-tray.exe" 
-                            Icon="crcicon.ico" 
+                    <Shortcut Id="TrayStartMenuEntry"
+                            Name="Red Hat OpenShift Local"
+                            Target="[INSTALLDIR]crc-tray.exe"
+                            Icon="crcicon.ico"
                             WorkingDirectory="AppDataFolder">
                         <ShortcutProperty Key="System.AppUserModel.ID" Value="redhat.codereadycontainers.tray"/>
                     </Shortcut>
@@ -101,10 +101,10 @@
         <CustomAction Id="RemoveCrcDaemonTask" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
         <SetProperty Action="CAInstallHyperv" Id="InstallHyperv" Value='"[System64Folder]dism.exe" /online /enable-feature /featureName:microsoft-hyper-v-all /NoRestart /quiet' Before="InstallHyperv" Sequence="execute"/>
         <CustomAction Id="InstallHyperv" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
-        <SetProperty Action="CAAddUserToHypervAdminGroup" 
-            Id="AddUserToHypervAdminGroup" 
-            Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Add-LocalGroupMember -Member [LogonUser] -SID S-1-5-32-578&quot;" 
-            Before="AddUserToHypervAdminGroup" 
+        <SetProperty Action="CAAddUserToHypervAdminGroup"
+            Id="AddUserToHypervAdminGroup"
+            Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Add-LocalGroupMember -Member [LogonUser] -SID S-1-5-32-578&quot;"
+            Before="AddUserToHypervAdminGroup"
             Sequence="execute"/>
         <CustomAction Id="AddUserToHypervAdminGroup" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
         <SetProperty Action="CACreateSMBShare"
