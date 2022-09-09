@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"os/exec"
 	"runtime"
 	"strings"
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
+	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/test/extended/util"
 )
 
@@ -167,4 +169,22 @@ func DeleteCRC() error {
 
 	fmt.Printf("Deleted CRC instance (if one existed).\n")
 	return nil
+}
+
+func (c Command) ExecuteSingleWithExpectedExit(expectedExit string) error {
+	if err := c.validate(); err != nil {
+		return err
+	}
+	if expectedExit == "succeeds" || expectedExit == "fails" {
+		// Disable G204 lint check as it will force us to use fixed args for the command
+		cmd := exec.Command("crc", strings.Split(c.command, " ")...) // #nosec G204
+		err := cmd.Run()
+		logging.Debugf("Running single command crc %s", c.command)
+		if err != nil && expectedExit == "fails" ||
+			err == nil && expectedExit == "succeeds" {
+			return nil
+		}
+		return fmt.Errorf("%s expected %s but it did not", c.ToString(), expectedExit)
+	}
+	return fmt.Errorf("%s is a valid expected exit status", expectedExit)
 }

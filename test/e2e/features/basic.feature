@@ -39,22 +39,7 @@ Feature: Basic test
     Scenario: CRC setup on Linux
         When executing "crc setup --check-only" fails
         Then executing crc start command fails
-        And executing crc setup command succeeds
-        And stderr should contain "Checking if CRC bundle is extracted in '$HOME/.crc'"
-        And stderr should contain "Checking if running as non-root"
-        And stderr should contain "Checking if Virtualization is enabled"
-        And stderr should contain "Checking if KVM is enabled"
-        And stderr should contain "Checking if libvirt is installed"
-        And stderr should contain "Checking if user is part of libvirt group"
-        And stderr should contain "Checking if libvirt daemon is running"
-        And stderr should contain "Checking if a supported libvirt version is installed"
-        And stderr should contain "Checking if libvirt 'crc' network is available"
-        And stderr should contain "Checking if libvirt 'crc' network is active"
-        And stderr should contain "Checking if NetworkManager is installed"
-        And stderr should contain "Checking if NetworkManager service is running"
-        And stderr should contain "Using root access: Executing systemctl daemon-reload command"
-        And stderr should contain "Using root access: Executing systemctl reload NetworkManager"
-        And stdout should contain "Your system is correctly setup for using CRC. Use 'crc start' to start the instance"
+        And executing single crc setup command succeeds
 
     @linux
     Scenario: Missing CRC setup
@@ -67,19 +52,11 @@ Feature: Basic test
     @darwin
     Scenario: CRC setup on Mac
         When executing "crc setup --check-only" fails
-        And executing crc setup command succeeds
-        And stderr should contain "Checking if running as non-root"
-        And stderr should contain "Checking if vfkit is installed"
-        And stderr should contain "Using root access: Changing ownership"
-
+        And executing single crc setup command succeeds
+        
     @windows
     Scenario: CRC setup on Windows
-        When executing crc setup command succeeds
-        Then stderr should contain "Extracting bundle from the CRC executable" if bundle is embedded
-        Then stderr should contain "Checking Windows release"
-        Then stderr should contain "Checking if Hyper-V is installed"
-        Then stderr should contain "Checking if user is a member of the Hyper-V Administrators group"
-        Then stderr should contain "Checking if the Hyper-V virtual switch exist"
+        When executing single crc setup command succeeds
 
     @darwin @linux @windows
     Scenario: Request start with monitoring stack
