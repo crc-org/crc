@@ -2,7 +2,10 @@ package os
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
+	"os/user"
+	"strings"
 
 	"golang.org/x/text/encoding/unicode"
 	"golang.org/x/text/transform"
@@ -27,4 +30,16 @@ func ReadFileUTF16LE(filename string) ([]byte, error) {
 	unicodeReader := transform.NewReader(bytes.NewReader(raw), utf16bom)
 	decoded, err := ioutil.ReadAll(unicodeReader)
 	return decoded, err
+}
+
+func GetCurrentUsername() (string, error) {
+	u, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	userAndDomain := strings.Split(u.Username, "\\")
+	if len(userAndDomain) > 1 {
+		return userAndDomain[1], nil
+	}
+	return "", errors.New("unable to find the username of current user")
 }
