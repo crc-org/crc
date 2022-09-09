@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"strconv"
 	"strings"
 
@@ -36,4 +37,12 @@ func RemoveFileAsRoot(reason, filepath string) error {
 	}
 	_, _, err := RunPrivileged(reason, "rm", "-fr", filepath)
 	return err
+}
+
+func GetCurrentUsername() (string, error) {
+	u, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	return u.Username, nil
 }
