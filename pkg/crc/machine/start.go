@@ -189,6 +189,10 @@ func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
 		case "cifs":
 			smbUncPath := fmt.Sprintf("//%s/%s", hostVirtualIP, mount.Tag)
 			if _, _, err := sshRunner.RunPrivate("sudo", "mount", "-o", fmt.Sprintf("rw,uid=core,gid=core,username='%s',password='%s'", mount.Username, mount.Password), "-t", mount.Type, smbUncPath, mount.Target); err != nil {
+				err = &crcerrors.MaskedSecretError{
+					Err:    err,
+					Secret: mount.Password,
+				}
 				return fmt.Errorf("Failed to mount CIFS/SMB share '%s' please make sure configured password is correct: %w", mount.Tag, err)
 			}
 		default:
