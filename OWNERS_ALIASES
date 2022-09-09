@@ -6,17 +6,24 @@ aliases:
     - praveenkumar
     - anjannath
     - jsliacan
-    - guillaumerose
-    - robin-owen
     - gbraad
+    - evidolob
+    - adrianriobo
   crc-reviewers:
     - cfergeau
     - praveenkumar
     - anjannath
-    - guillaumerose
     - gbraad
+    - evidolob
   doc-reviewers:
-    - robin-owen
+    - cfergeau
+    - praveenkumar
+    - anjannath
+    - gbraad
+    - evidolob
+    - jsliacan
+    - adrianriobo
   test-reviewers:
     - jsliacan
+    - adrianriobo
 
