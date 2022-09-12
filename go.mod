@@ -16,7 +16,7 @@ require (
 	github.com/code-ready/clicumber v0.0.0-20210817053019-08963a832984
 	github.com/code-ready/machine v0.0.0-20220727160217-7bf0dd8c2d7b
 	github.com/code-ready/vfkit v0.0.2
-	github.com/containers/gvisor-tap-vsock v0.3.1-0.20220228052040-b735d4413359
+	github.com/containers/gvisor-tap-vsock v0.4.1-0.20220908123107-8d91f6d62de2
 	github.com/containers/image/v5 v5.15.0
 	github.com/coreos/go-systemd/v22 v22.3.2
 	github.com/cucumber/godog v0.9.0
@@ -31,8 +31,8 @@ require (
 	github.com/kofalt/go-memoize v0.0.0-20210721235729-46a601ff34b8
 	github.com/mattn/go-colorable v0.1.12
 	github.com/mdlayher/vsock v1.1.1
-	github.com/onsi/ginkgo/v2 v2.1.4
-	github.com/onsi/gomega v1.19.0
+	github.com/onsi/ginkgo/v2 v2.1.6
+	github.com/onsi/gomega v1.20.2
 	github.com/opencontainers/image-spec v1.0.3-0.20220512140940-7b36cea86235
 	github.com/openshift/api v0.0.0-20220124143425-d74727069f6f
 	github.com/openshift/client-go v0.0.0-20211209144617-7385dd6338e3
@@ -52,10 +52,10 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 	github.com/yusufpapurcu/wmi v1.2.2
 	github.com/zalando/go-keyring v0.2.1
-	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
-	golang.org/x/net v0.0.0-20220708220712-1185a9018129
-	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
-	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8
+	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
+	golang.org/x/net v0.0.0-20220722155237-a158d28d115b
+	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
+	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467
 	golang.org/x/text v0.3.7
 	k8s.io/api v0.23.2
@@ -100,10 +100,9 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/goodhosts/hostsfile v0.1.1 // indirect
 	github.com/google/btree v1.0.1 // indirect
-	github.com/google/go-cmp v0.5.7 // indirect
+	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
-	github.com/google/tcpproxy v0.0.0-20200125044825-b6bb9b5b8252 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
@@ -112,11 +111,11 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/insomniacslk/dhcp v0.0.0-20210812084645-decc701b3665 // indirect
+	github.com/insomniacslk/dhcp v0.0.0-20220504074936-1ca156eafb9f // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
-	github.com/linuxkit/virtsock v0.0.0-20201010232012-f8cee7dfc7a3 // indirect
+	github.com/linuxkit/virtsock v0.0.0-20220523201153-1a23e78aa7a2 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
@@ -124,7 +123,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mdlayher/socket v0.2.3 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
-	github.com/miekg/dns v1.1.46 // indirect
+	github.com/miekg/dns v1.1.50 // indirect
 	github.com/miekg/pkcs11 v1.0.3 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
@@ -164,11 +163,10 @@ require (
 	github.com/vbauerster/mpb/v7 v7.0.3 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.mozilla.org/pkcs7 v0.0.0-20200128120323-432b2356ecb1 // indirect
-	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
+	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
-	golang.org/x/tools v0.1.10 // indirect
-	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
+	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220407144326-9054f6ed7bac // indirect
 	google.golang.org/grpc v1.45.0 // indirect
@@ -179,7 +177,8 @@ require (
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gvisor.dev/gvisor v0.0.0-20220121190119-4f2d380c8b55 // indirect
+	gvisor.dev/gvisor v0.0.0-20220908032458-edc830a43ba6 // indirect
+	inet.af/tcpproxy v0.0.0-20220326234310-be3ee21c9fa0 // indirect
 	k8s.io/klog/v2 v2.40.1 // indirect
 	k8s.io/kubectl v0.23.2 // indirect
 	k8s.io/utils v0.0.0-20211208161948-7d6a63dca704 // indirect

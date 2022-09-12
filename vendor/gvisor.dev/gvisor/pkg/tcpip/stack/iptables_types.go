@@ -17,24 +17,24 @@ package stack
 import (
 	"fmt"
 	"strings"
-	"sync"
 
+	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 )
 
 // A Hook specifies one of the hooks built into the network stack.
 //
-//                      Userspace app          Userspace app
-//                            ^                      |
-//                            |                      v
-//                         [Input]               [Output]
-//                            ^                      |
-//                            |                      v
-//                            |                   routing
-//                            |                      |
-//                            |                      v
-// ----->[Prerouting]----->routing----->[Forward]---------[Postrouting]----->
+//	                     Userspace app          Userspace app
+//	                           ^                      |
+//	                           |                      v
+//	                        [Input]               [Output]
+//	                           ^                      |
+//	                           |                      v
+//	                           |                   routing
+//	                           |                      |
+//	                           |                      v
+//		----->[Prerouting]----->routing----->[Forward]---------[Postrouting]----->
 type Hook uint
 
 const (
@@ -249,13 +249,13 @@ func (fl IPHeaderFilter) match(pkt *PacketBuffer, hook Hook, inNicName, outNicNa
 	)
 	switch proto := pkt.NetworkProtocolNumber; proto {
 	case header.IPv4ProtocolNumber:
-		hdr := header.IPv4(pkt.NetworkHeader().View())
+		hdr := header.IPv4(pkt.NetworkHeader().Slice())
 		transProto = hdr.TransportProtocol()
 		dstAddr = hdr.DestinationAddress()
 		srcAddr = hdr.SourceAddress()
 
 	case header.IPv6ProtocolNumber:
-		hdr := header.IPv6(pkt.NetworkHeader().View())
+		hdr := header.IPv6(pkt.NetworkHeader().Slice())
 		transProto = hdr.TransportProtocol()
 		dstAddr = hdr.DestinationAddress()
 		srcAddr = hdr.SourceAddress()

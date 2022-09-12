@@ -112,7 +112,7 @@ github.com/code-ready/machine/libmachine/version
 # github.com/code-ready/vfkit v0.0.2
 ## explicit; go 1.16
 github.com/code-ready/vfkit/pkg/client
-# github.com/containers/gvisor-tap-vsock v0.3.1-0.20220228052040-b735d4413359
+# github.com/containers/gvisor-tap-vsock v0.4.1-0.20220908123107-8d91f6d62de2
 ## explicit; go 1.16
 github.com/containers/gvisor-tap-vsock/pkg/client
 github.com/containers/gvisor-tap-vsock/pkg/fs
@@ -287,8 +287,8 @@ github.com/goodhosts/hostsfile
 # github.com/google/btree v1.0.1
 ## explicit; go 1.12
 github.com/google/btree
-# github.com/google/go-cmp v0.5.7
-## explicit; go 1.11
+# github.com/google/go-cmp v0.5.8
+## explicit; go 1.13
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
@@ -302,9 +302,6 @@ github.com/google/gofuzz/bytesource
 ## explicit; go 1.12
 github.com/google/gopacket
 github.com/google/gopacket/layers
-# github.com/google/tcpproxy v0.0.0-20200125044825-b6bb9b5b8252
-## explicit
-github.com/google/tcpproxy
 # github.com/google/uuid v1.3.0
 ## explicit
 github.com/google/uuid
@@ -354,7 +351,7 @@ github.com/imdario/mergo
 # github.com/inconshreveable/mousetrap v1.0.0
 ## explicit
 github.com/inconshreveable/mousetrap
-# github.com/insomniacslk/dhcp v0.0.0-20210812084645-decc701b3665
+# github.com/insomniacslk/dhcp v0.0.0-20220504074936-1ca156eafb9f
 ## explicit; go 1.13
 github.com/insomniacslk/dhcp/dhcpv4
 github.com/insomniacslk/dhcp/dhcpv4/server4
@@ -389,8 +386,8 @@ github.com/klauspost/pgzip
 # github.com/kofalt/go-memoize v0.0.0-20210721235729-46a601ff34b8
 ## explicit; go 1.12
 github.com/kofalt/go-memoize
-# github.com/linuxkit/virtsock v0.0.0-20201010232012-f8cee7dfc7a3
-## explicit
+# github.com/linuxkit/virtsock v0.0.0-20220523201153-1a23e78aa7a2
+## explicit; go 1.17
 github.com/linuxkit/virtsock/pkg/hvsock
 # github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0
 ## explicit; go 1.16
@@ -419,7 +416,7 @@ github.com/mdlayher/vsock
 # github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 ## explicit
 github.com/mgutz/ansi
-# github.com/miekg/dns v1.1.46
+# github.com/miekg/dns v1.1.50
 ## explicit; go 1.14
 github.com/miekg/dns
 # github.com/miekg/pkcs11 v1.0.3
@@ -451,7 +448,7 @@ github.com/modern-go/reflect2
 # github.com/mtrmac/gpgme v0.1.2
 ## explicit; go 1.11
 github.com/mtrmac/gpgme
-# github.com/onsi/ginkgo/v2 v2.1.4
+# github.com/onsi/ginkgo/v2 v2.1.6
 ## explicit; go 1.18
 github.com/onsi/ginkgo/v2
 github.com/onsi/ginkgo/v2/config
@@ -463,7 +460,7 @@ github.com/onsi/ginkgo/v2/internal/parallel_support
 github.com/onsi/ginkgo/v2/internal/testingtproxy
 github.com/onsi/ginkgo/v2/reporters
 github.com/onsi/ginkgo/v2/types
-# github.com/onsi/gomega v1.19.0
+# github.com/onsi/gomega v1.20.2
 ## explicit; go 1.18
 github.com/onsi/gomega
 github.com/onsi/gomega/format
@@ -657,7 +654,7 @@ go.etcd.io/bbolt
 # go.mozilla.org/pkcs7 v0.0.0-20200128120323-432b2356ecb1
 ## explicit; go 1.11
 go.mozilla.org/pkcs7
-# golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
+# golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 ## explicit; go 1.17
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
@@ -678,10 +675,10 @@ golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
 golang.org/x/crypto/ssh/knownhosts
-# golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3
+# golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
 ## explicit; go 1.17
 golang.org/x/mod/semver
-# golang.org/x/net v0.0.0-20220708220712-1185a9018129
+# golang.org/x/net v0.0.0-20220722155237-a158d28d115b
 ## explicit; go 1.17
 golang.org/x/net/bpf
 golang.org/x/net/context
@@ -706,12 +703,12 @@ golang.org/x/net/trace
 ## explicit; go 1.11
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
-# golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
+# golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 ## explicit
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8
+# golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f
 ## explicit; go 1.17
 golang.org/x/sys/cpu
 golang.org/x/sys/execabs
@@ -748,11 +745,12 @@ golang.org/x/text/width
 # golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
 ## explicit
 golang.org/x/time/rate
-# golang.org/x/tools v0.1.10
-## explicit; go 1.17
+# golang.org/x/tools v0.1.12
+## explicit; go 1.18
 golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/internal/gcimporter
 golang.org/x/tools/go/internal/packagesdriver
+golang.org/x/tools/go/internal/pkgbits
 golang.org/x/tools/go/packages
 golang.org/x/tools/internal/event
 golang.org/x/tools/internal/event/core
@@ -762,10 +760,6 @@ golang.org/x/tools/internal/gocommand
 golang.org/x/tools/internal/packagesinternal
 golang.org/x/tools/internal/typeparams
 golang.org/x/tools/internal/typesinternal
-# golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f
-## explicit; go 1.11
-golang.org/x/xerrors
-golang.org/x/xerrors/internal
 # google.golang.org/appengine v1.6.7
 ## explicit; go 1.11
 google.golang.org/appengine/internal
@@ -876,11 +870,13 @@ gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# gvisor.dev/gvisor v0.0.0-20220121190119-4f2d380c8b55
+# gvisor.dev/gvisor v0.0.0-20220908032458-edc830a43ba6
 ## explicit; go 1.17
 gvisor.dev/gvisor/pkg/atomicbitops
-gvisor.dev/gvisor/pkg/buffer
+gvisor.dev/gvisor/pkg/bits
+gvisor.dev/gvisor/pkg/bufferv2
 gvisor.dev/gvisor/pkg/context
+gvisor.dev/gvisor/pkg/cpuid
 gvisor.dev/gvisor/pkg/gohacks
 gvisor.dev/gvisor/pkg/goid
 gvisor.dev/gvisor/pkg/linewriter
@@ -894,7 +890,6 @@ gvisor.dev/gvisor/pkg/state/wire
 gvisor.dev/gvisor/pkg/sync
 gvisor.dev/gvisor/pkg/tcpip
 gvisor.dev/gvisor/pkg/tcpip/adapters/gonet
-gvisor.dev/gvisor/pkg/tcpip/buffer
 gvisor.dev/gvisor/pkg/tcpip/hash/jenkins
 gvisor.dev/gvisor/pkg/tcpip/header
 gvisor.dev/gvisor/pkg/tcpip/header/parse
@@ -905,6 +900,7 @@ gvisor.dev/gvisor/pkg/tcpip/network/arp
 gvisor.dev/gvisor/pkg/tcpip/network/hash
 gvisor.dev/gvisor/pkg/tcpip/network/internal/fragmentation
 gvisor.dev/gvisor/pkg/tcpip/network/internal/ip
+gvisor.dev/gvisor/pkg/tcpip/network/internal/multicast
 gvisor.dev/gvisor/pkg/tcpip/network/ipv4
 gvisor.dev/gvisor/pkg/tcpip/ports
 gvisor.dev/gvisor/pkg/tcpip/seqnum
@@ -919,6 +915,9 @@ gvisor.dev/gvisor/pkg/tcpip/transport/tcp
 gvisor.dev/gvisor/pkg/tcpip/transport/tcpconntrack
 gvisor.dev/gvisor/pkg/tcpip/transport/udp
 gvisor.dev/gvisor/pkg/waiter
+# inet.af/tcpproxy v0.0.0-20220326234310-be3ee21c9fa0
+## explicit; go 1.16
+inet.af/tcpproxy
 # k8s.io/api v0.23.2
 ## explicit; go 1.16
 k8s.io/api/admissionregistration/v1

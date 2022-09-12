@@ -51,12 +51,22 @@ func (e *Endpoint) Init(child stack.LinkEndpoint, embedder stack.NetworkDispatch
 }
 
 // DeliverNetworkPacket implements stack.NetworkDispatcher.
-func (e *Endpoint) DeliverNetworkPacket(remote, local tcpip.LinkAddress, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
+func (e *Endpoint) DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
 	e.mu.RLock()
 	d := e.dispatcher
 	e.mu.RUnlock()
 	if d != nil {
-		d.DeliverNetworkPacket(remote, local, protocol, pkt)
+		d.DeliverNetworkPacket(protocol, pkt)
+	}
+}
+
+// DeliverLinkPacket implements stack.NetworkDispatcher.
+func (e *Endpoint) DeliverLinkPacket(protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer, incoming bool) {
+	e.mu.RLock()
+	d := e.dispatcher
+	e.mu.RUnlock()
+	if d != nil {
+		d.DeliverLinkPacket(protocol, pkt, incoming)
 	}
 }
 
@@ -134,11 +144,6 @@ func (e *Endpoint) ARPHardwareType() header.ARPHardwareType {
 }
 
 // AddHeader implements stack.LinkEndpoint.AddHeader.
-func (e *Endpoint) AddHeader(local, remote tcpip.LinkAddress, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
-	e.child.AddHeader(local, remote, protocol, pkt)
-}
-
-// WriteRawPacket implements stack.LinkEndpoint.
-func (e *Endpoint) WriteRawPacket(pkt *stack.PacketBuffer) tcpip.Error {
-	return e.child.WriteRawPacket(pkt)
+func (e *Endpoint) AddHeader(pkt *stack.PacketBuffer) {
+	e.child.AddHeader(pkt)
 }

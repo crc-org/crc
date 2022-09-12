@@ -23,6 +23,7 @@ import (
 	"runtime"
 	"sync/atomic"
 
+	"gvisor.dev/gvisor/pkg/atomicbitops"
 	"gvisor.dev/gvisor/pkg/context"
 	"gvisor.dev/gvisor/pkg/log"
 	"gvisor.dev/gvisor/pkg/sync"
@@ -188,7 +189,7 @@ func (w *WeakRef) zap() {
 // favor of the refsvfs2 package.
 //
 // N.B. To allow the zero-object to be initialized, the count is offset by
-//      1, that is, when refCount is n, there are really n+1 references.
+// 1, that is, when refCount is n, there are really n+1 references.
 //
 // +stateify savable
 type AtomicRefCount struct {
@@ -199,7 +200,7 @@ type AtomicRefCount struct {
 	// Speculative references are used for TryIncRef, to avoid a
 	// CompareAndSwap loop. See IncRef, DecRef and TryIncRef for details of
 	// how these fields are used.
-	refCount int64
+	refCount atomicbitops.Int64
 
 	// name is the name of the type which owns this ref count.
 	//
@@ -288,16 +289,16 @@ func (l LeakMode) String() string {
 // Values must be one of the LeakMode values.
 //
 // leakMode must be accessed atomically.
-var leakMode uint32
+var leakMode atomicbitops.Uint32
 
 // SetLeakMode configures the reference leak checker.
 func SetLeakMode(mode LeakMode) {
-	atomic.StoreUint32(&leakMode, uint32(mode))
+	leakMode.Store(uint32(mode))
 }
 
 // GetLeakMode returns the current leak mode.
 func GetLeakMode() LeakMode {
-	return LeakMode(atomic.LoadUint32(&leakMode))
+	return LeakMode(leakMode.Load())
 }
 
 const maxStackFrames = 40
@@ -374,7 +375,7 @@ func FormatStack(pcs []uintptr) string {
 
 func (r *AtomicRefCount) finalize() {
 	var note string
-	switch LeakMode(atomic.LoadUint32(&leakMode)) {
+	switch LeakMode(leakMode.Load()) {
 	case NoLeakChecking:
 		return
 	case UninitializedLeakChecking:
@@ -404,7 +405,7 @@ func (r *AtomicRefCount) EnableLeakCheck(name string) {
 	if name == "" {
 		panic("invalid name")
 	}
-	switch LeakMode(atomic.LoadUint32(&leakMode)) {
+	switch LeakMode(leakMode.Load()) {
 	case NoLeakChecking:
 		return
 	case LeaksLogTraces:
@@ -418,7 +419,7 @@ func (r *AtomicRefCount) EnableLeakCheck(name string) {
 // inherently racy and is unsafe to use without external synchronization.
 func (r *AtomicRefCount) ReadRefs() int64 {
 	// Account for the internal -1 offset on refcounts.
-	return atomic.LoadInt64(&r.refCount) + 1
+	return r.refCount.Load() + 1
 }
 
 // IncRef increments this object's reference count. While the count is kept
@@ -429,7 +430,7 @@ func (r *AtomicRefCount) ReadRefs() int64 {
 //
 //go:nosplit
 func (r *AtomicRefCount) IncRef() {
-	if v := atomic.AddInt64(&r.refCount, 1); v <= 0 {
+	if v := r.refCount.Add(1); v <= 0 {
 		panic("Incrementing non-positive ref count")
 	}
 }
@@ -446,15 +447,15 @@ func (r *AtomicRefCount) IncRef() {
 //go:nosplit
 func (r *AtomicRefCount) TryIncRef() bool {
 	const speculativeRef = 1 << 32
-	v := atomic.AddInt64(&r.refCount, speculativeRef)
+	v := r.refCount.Add(speculativeRef)
 	if int32(v) < 0 {
 		// This object has already been freed.
-		atomic.AddInt64(&r.refCount, -speculativeRef)
+		r.refCount.Add(-speculativeRef)
 		return false
 	}
 
 	// Turn into a real reference.
-	atomic.AddInt64(&r.refCount, -speculativeRef+1)
+	r.refCount.Add(-speculativeRef + 1)
 	return true
 }
 
@@ -487,7 +488,7 @@ func (r *AtomicRefCount) dropWeakRef(w *WeakRef) {
 //
 //go:nosplit
 func (r *AtomicRefCount) DecRefWithDestructor(ctx context.Context, destroy func(context.Context)) {
-	switch v := atomic.AddInt64(&r.refCount, -1); {
+	switch v := r.refCount.Add(-1); {
 	case v < -1:
 		panic("Decrementing non-positive ref count")
 
@@ -532,7 +533,7 @@ func (r *AtomicRefCount) DecRef(ctx context.Context) {
 // finalizer will run before exiting, but this at least ensures that they will
 // be discovered/enqueued by GC.
 func OnExit() {
-	if LeakMode(atomic.LoadUint32(&leakMode)) != NoLeakChecking {
+	if LeakMode(leakMode.Load()) != NoLeakChecking {
 		runtime.GC()
 	}
 }

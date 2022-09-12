@@ -12,20 +12,20 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"gvisor.dev/gvisor/pkg/bufferv2"
 	"gvisor.dev/gvisor/pkg/tcpip"
-	"gvisor.dev/gvisor/pkg/tcpip/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 )
 
 type VirtualDevice interface {
-	DeliverNetworkPacket(remote, local tcpip.LinkAddress, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer)
+	DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer)
 	LinkAddress() tcpip.LinkAddress
 	IP() string
 }
 
 type NetworkSwitch interface {
-	DeliverNetworkPacket(remote, local tcpip.LinkAddress, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer)
+	DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer)
 }
 
 type Switch struct {
@@ -73,8 +73,8 @@ func (e *Switch) Connect(ep VirtualDevice) {
 	e.gateway = ep
 }
 
-func (e *Switch) DeliverNetworkPacket(remote, local tcpip.LinkAddress, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
-	if err := e.tx(local, remote, pkt); err != nil {
+func (e *Switch) DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
+	if err := e.tx(pkt); err != nil {
 		log.Error(err)
 	}
 }
@@ -111,29 +111,34 @@ func (e *Switch) connect(conn net.Conn) (int, bool) {
 	return id, false
 }
 
-func (e *Switch) tx(src, dst tcpip.LinkAddress, pkt *stack.PacketBuffer) error {
+func (e *Switch) tx(pkt *stack.PacketBuffer) error {
 	if e.protocol.Stream() {
-		return e.txStream(src, dst, pkt, e.protocol.(streamProtocol))
+		return e.txStream(pkt, e.protocol.(streamProtocol))
 	}
-	return e.txNonStream(src, dst, pkt)
+	return e.txNonStream(pkt)
 }
 
-func (e *Switch) txNonStream(src, dst tcpip.LinkAddress, pkt *stack.PacketBuffer) error {
-	return e.txBuf(src, dst, pkt, nil)
+func (e *Switch) txNonStream(pkt *stack.PacketBuffer) error {
+	return e.txBuf(pkt, nil)
 }
 
-func (e *Switch) txStream(src, dst tcpip.LinkAddress, pkt *stack.PacketBuffer, sProtocol streamProtocol) error {
+func (e *Switch) txStream(pkt *stack.PacketBuffer, sProtocol streamProtocol) error {
 	size := sProtocol.Buf()
 	sProtocol.Write(size, pkt.Size())
-	return e.txBuf(src, dst, pkt, size)
+	return e.txBuf(pkt, size)
 }
 
-func (e *Switch) txBuf(src, dst tcpip.LinkAddress, pkt *stack.PacketBuffer, size []byte) error {
+func (e *Switch) txBuf(pkt *stack.PacketBuffer, size []byte) error {
 	e.writeLock.Lock()
 	defer e.writeLock.Unlock()
 
 	e.connLock.Lock()
 	defer e.connLock.Unlock()
+
+	buf := pkt.ToView().AsSlice()
+	eth := header.Ethernet(buf)
+	dst := eth.DestinationAddress()
+	src := eth.SourceAddress()
 
 	if dst == header.EthernetBroadcastAddress {
 		e.camLock.RLock()
@@ -151,21 +156,10 @@ func (e *Switch) txBuf(src, dst tcpip.LinkAddress, pkt *stack.PacketBuffer, size
 					e.disconnect(id, conn)
 					return err
 				}
-				for _, view := range pkt.Views() {
-					if _, err := conn.Write(view); err != nil {
-						e.disconnect(id, conn)
-						return err
-					}
-				}
-			} else {
-				var b []byte
-				for _, view := range pkt.Views() {
-					b = append(b, []byte(view)...)
-				}
-				if _, err := conn.Write(b); err != nil {
-					e.disconnect(id, conn)
-					return err
-				}
+			}
+			if _, err := conn.Write(buf); err != nil {
+				e.disconnect(id, conn)
+				return err
 			}
 
 			atomic.AddUint64(&e.Sent, uint64(pkt.Size()))
@@ -184,21 +178,10 @@ func (e *Switch) txBuf(src, dst tcpip.LinkAddress, pkt *stack.PacketBuffer, size
 				e.disconnect(id, conn)
 				return err
 			}
-			for _, view := range pkt.Views() {
-				if _, err := conn.Write(view); err != nil {
-					e.disconnect(id, conn)
-					return err
-				}
-			}
-		} else {
-			var b []byte
-			for _, view := range pkt.Views() {
-				b = append(b, []byte(view)...)
-			}
-			if _, err := conn.Write(b); err != nil {
-				e.disconnect(id, conn)
-				return err
-			}
+		}
+		if _, err := conn.Write(buf); err != nil {
+			e.disconnect(id, conn)
+			return err
 		}
 		atomic.AddUint64(&e.Sent, uint64(pkt.Size()))
 	}
@@ -277,29 +260,26 @@ func (e *Switch) rxBuf(ctx context.Context, id int, buf []byte) {
 		log.Info(packet.String())
 	}
 
-	view := buffer.View(buf)
-	eth := header.Ethernet(view)
-	vv := buffer.NewVectorisedView(len(view), []buffer.View{view})
+	eth := header.Ethernet(buf)
 
 	e.camLock.Lock()
 	e.cam[eth.SourceAddress()] = id
 	e.camLock.Unlock()
 
 	if eth.DestinationAddress() != e.gateway.LinkAddress() {
-		if err := e.tx(eth.SourceAddress(), eth.DestinationAddress(), stack.NewPacketBuffer(stack.PacketBufferOptions{
-			Data: vv,
+		if err := e.tx(stack.NewPacketBuffer(stack.PacketBufferOptions{
+			Payload: bufferv2.MakeWithData(buf),
 		})); err != nil {
 			log.Error(err)
 		}
 	}
 	if eth.DestinationAddress() == e.gateway.LinkAddress() || eth.DestinationAddress() == header.EthernetBroadcastAddress {
-		vv.TrimFront(header.EthernetMinimumSize)
+		data := bufferv2.MakeWithData(buf)
+		data.TrimFront(header.EthernetMinimumSize)
 		e.gateway.DeliverNetworkPacket(
-			eth.SourceAddress(),
-			eth.DestinationAddress(),
 			eth.Type(),
 			stack.NewPacketBuffer(stack.PacketBufferOptions{
-				Data: vv,
+				Payload: data,
 			}),
 		)
 	}

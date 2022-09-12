@@ -17,10 +17,9 @@ import (
 	"fmt"
 	"io"
 
-	"gvisor.dev/gvisor/pkg/buffer"
+	"gvisor.dev/gvisor/pkg/bufferv2"
 	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/tcpip"
-	tcpipbuffer "gvisor.dev/gvisor/pkg/tcpip/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 )
 
@@ -46,13 +45,17 @@ type PacketBufferOptions struct {
 	// number of bytes pushed onto the headers must not exceed this value.
 	ReserveHeaderBytes int
 
-	// Data is the initial unparsed data for the new packet. If set, it will be
-	// owned by the new packet.
-	Data tcpipbuffer.VectorisedView
+	// Payload is the initial unparsed data for the new packet. If set, it will
+	// be owned by the new packet.
+	Payload bufferv2.Buffer
 
 	// IsForwardedPacket identifies that the PacketBuffer being created is for a
 	// forwarded packet.
 	IsForwardedPacket bool
+
+	// OnRelease is a function to be run when the packet buffer is no longer
+	// referenced (released back to the pool).
+	OnRelease func()
 }
 
 // A PacketBuffer contains all the data of a network packet.
@@ -64,20 +67,22 @@ type PacketBufferOptions struct {
 // LinkHeader, NetworkHeader, TransportHeader, and Data. Any of them can be
 // empty. Use of PacketBuffer in any other order is unsupported.
 //
-// PacketBuffer must be created with NewPacketBuffer.
+// PacketBuffer must be created with NewPacketBuffer, which sets the initial
+// reference count to 1. Owners should call `DecRef()` when they are finished
+// with the buffer to return it to the pool.
 //
-// Internal structure: A PacketBuffer holds a pointer to buffer.Buffer, which
+// Internal structure: A PacketBuffer holds a pointer to bufferv2.Buffer, which
 // exposes a logically-contiguous byte storage. The underlying storage structure
 // is abstracted out, and should not be a concern here for most of the time.
 //
-// |- reserved ->|
-//               |--->| consumed (incoming)
-// 0             V    V
-// +--------+----+----+--------------------+
-// |        |    |    | current data ...   | (buf)
-// +--------+----+----+--------------------+
-//          ^    |
-//          |<---| pushed (outgoing)
+//	|- reserved ->|
+//								|--->| consumed (incoming)
+//	0             V    V
+//	+--------+----+----+--------------------+
+//	|        |    |    | current data ...   | (buf)
+//	+--------+----+----+--------------------+
+//					 ^    |
+//					 |<---| pushed (outgoing)
 //
 // When a PacketBuffer is created, a `reserved` header region can be specified,
 // which stack pushes headers in this region for an outgoing packet. There could
@@ -100,13 +105,9 @@ type PacketBuffer struct {
 
 	packetBufferRefs
 
-	// PacketBufferEntry is used to build an intrusive list of
-	// PacketBuffers.
-	PacketBufferEntry
-
 	// buf is the underlying buffer for the packet. See struct level docs for
 	// details.
-	buf      buffer.Buffer
+	buf      bufferv2.Buffer
 	reserved int
 	pushed   int
 	consumed int
@@ -162,7 +163,9 @@ type PacketBuffer struct {
 
 	tuple *tuple
 
-	preserveObject bool
+	// onRelease is a function to be run when the packet buffer is no longer
+	// referenced (released back to the pool).
+	onRelease func() `state:"nosave"`
 }
 
 // NewPacketBuffer creates a new PacketBuffer with opts.
@@ -170,23 +173,23 @@ func NewPacketBuffer(opts PacketBufferOptions) *PacketBuffer {
 	pk := pkPool.Get().(*PacketBuffer)
 	pk.reset()
 	if opts.ReserveHeaderBytes != 0 {
-		pk.buf.AppendOwned(make([]byte, opts.ReserveHeaderBytes))
+		v := bufferv2.NewViewSize(opts.ReserveHeaderBytes)
+		pk.buf.Append(v)
 		pk.reserved = opts.ReserveHeaderBytes
 	}
-	for _, v := range opts.Data.Views() {
-		pk.buf.AppendOwned(v)
+	if opts.Payload.Size() > 0 {
+		pk.buf.Merge(&opts.Payload)
 	}
-	if opts.IsForwardedPacket {
-		pk.NetworkPacketInfo.IsForwardedPacket = opts.IsForwardedPacket
-	}
+	pk.NetworkPacketInfo.IsForwardedPacket = opts.IsForwardedPacket
+	pk.onRelease = opts.OnRelease
 	pk.InitRefs()
 	return pk
 }
 
-// PreserveObject marks this PacketBuffer so it is not recycled by internal
-// pooling.
-func (pk *PacketBuffer) PreserveObject() {
-	pk.preserveObject = true
+// IncRef increments the PacketBuffer's refcount.
+func (pk *PacketBuffer) IncRef() *PacketBuffer {
+	pk.packetBufferRefs.IncRef()
+	return pk
 }
 
 // DecRef decrements the PacketBuffer's refcount. If the refcount is
@@ -194,9 +197,12 @@ func (pk *PacketBuffer) PreserveObject() {
 // pool.
 func (pk *PacketBuffer) DecRef() {
 	pk.packetBufferRefs.DecRef(func() {
-		if pk.packetBufferRefs.refCount == 0 && !pk.preserveObject {
-			pkPool.Put(pk)
+		if pk.onRelease != nil {
+			pk.onRelease()
 		}
+
+		pk.buf.Release()
+		pkPool.Put(pk)
 	})
 }
 
@@ -261,7 +267,7 @@ func (pk *PacketBuffer) Size() int {
 // MemSize returns the estimation size of the pk in memory, including backing
 // buffer data.
 func (pk *PacketBuffer) MemSize() int {
-	return int(pk.buf.Size()) + packetBufferStructSize
+	return int(pk.buf.Size()) + PacketBufferStructSize
 }
 
 // Data returns the handle to data portion of pk.
@@ -269,14 +275,33 @@ func (pk *PacketBuffer) Data() PacketData {
 	return PacketData{pk: pk}
 }
 
-// Views returns the underlying storage of the whole packet.
-func (pk *PacketBuffer) Views() []tcpipbuffer.View {
-	var views []tcpipbuffer.View
+// AsSlices returns the underlying storage of the whole packet.
+func (pk *PacketBuffer) AsSlices() [][]byte {
+	var views [][]byte
 	offset := pk.headerOffset()
-	pk.buf.SubApply(offset, int(pk.buf.Size())-offset, func(v []byte) {
-		views = append(views, v)
+	pk.buf.SubApply(offset, int(pk.buf.Size())-offset, func(v *bufferv2.View) {
+		views = append(views, v.AsSlice())
 	})
 	return views
+}
+
+// ToBuffer returns a caller-owned copy of the underlying storage of the whole
+// packet.
+func (pk *PacketBuffer) ToBuffer() bufferv2.Buffer {
+	b := pk.buf.Clone()
+	b.TrimFront(int64(pk.headerOffset()))
+	return b
+}
+
+// ToView returns a caller-owned copy of the underlying storage of the whole
+// packet as a view.
+func (pk *PacketBuffer) ToView() *bufferv2.View {
+	p := bufferv2.NewView(int(pk.buf.Size()))
+	offset := pk.headerOffset()
+	pk.buf.SubApply(offset, int(pk.buf.Size())-offset, func(v *bufferv2.View) {
+		p.Write(v.AsSlice())
+	})
+	return p
 }
 
 func (pk *PacketBuffer) headerOffset() int {
@@ -291,7 +316,7 @@ func (pk *PacketBuffer) dataOffset() int {
 	return pk.reserved + pk.consumed
 }
 
-func (pk *PacketBuffer) push(typ headerType, size int) tcpipbuffer.View {
+func (pk *PacketBuffer) push(typ headerType, size int) []byte {
 	h := &pk.headers[typ]
 	if h.length > 0 {
 		panic(fmt.Sprintf("push(%s, %d) called after previous push", typ, size))
@@ -302,10 +327,11 @@ func (pk *PacketBuffer) push(typ headerType, size int) tcpipbuffer.View {
 	pk.pushed += size
 	h.offset = -pk.pushed
 	h.length = size
-	return pk.headerView(typ)
+	view := pk.headerView(typ)
+	return view.AsSlice()
 }
 
-func (pk *PacketBuffer) consume(typ headerType, size int) (v tcpipbuffer.View, consumed bool) {
+func (pk *PacketBuffer) consume(typ headerType, size int) (v []byte, consumed bool) {
 	h := &pk.headers[typ]
 	if h.length > 0 {
 		panic(fmt.Sprintf("consume must not be called twice: type %s", typ))
@@ -316,13 +342,14 @@ func (pk *PacketBuffer) consume(typ headerType, size int) (v tcpipbuffer.View, c
 	h.offset = pk.consumed
 	h.length = size
 	pk.consumed += size
-	return pk.headerView(typ), true
+	view := pk.headerView(typ)
+	return view.AsSlice(), true
 }
 
-func (pk *PacketBuffer) headerView(typ headerType) tcpipbuffer.View {
+func (pk *PacketBuffer) headerView(typ headerType) bufferv2.View {
 	h := &pk.headers[typ]
 	if h.length == 0 {
-		return nil
+		return bufferv2.View{}
 	}
 	v, ok := pk.buf.PullUp(pk.headerOffsetOf(typ), h.length)
 	if !ok {
@@ -335,7 +362,7 @@ func (pk *PacketBuffer) headerView(typ headerType) tcpipbuffer.View {
 // shared. Hence, no modifications is done to underlying packet payload.
 func (pk *PacketBuffer) Clone() *PacketBuffer {
 	newPk := pkPool.Get().(*PacketBuffer)
-	newPk.PacketBufferEntry = pk.PacketBufferEntry
+	newPk.reset()
 	newPk.buf = pk.buf.Clone()
 	newPk.reserved = pk.reserved
 	newPk.pushed = pk.pushed
@@ -357,15 +384,25 @@ func (pk *PacketBuffer) Clone() *PacketBuffer {
 	return newPk
 }
 
+// ReserveHeaderBytes prepends reserved space for headers at the front
+// of the underlying buf. Can only be called once per packet.
+func (pk *PacketBuffer) ReserveHeaderBytes(reserved int) {
+	if pk.reserved != 0 {
+		panic(fmt.Sprintf("ReserveHeaderBytes(...) called on packet with reserved=%d, want reserved=0", pk.reserved))
+	}
+	pk.reserved = reserved
+	pk.buf.Prepend(bufferv2.NewViewSize(reserved))
+}
+
 // Network returns the network header as a header.Network.
 //
 // Network should only be called when NetworkHeader has been set.
 func (pk *PacketBuffer) Network() header.Network {
 	switch netProto := pk.NetworkProtocolNumber; netProto {
 	case header.IPv4ProtocolNumber:
-		return header.IPv4(pk.NetworkHeader().View())
+		return header.IPv4(pk.NetworkHeader().Slice())
 	case header.IPv6ProtocolNumber:
-		return header.IPv6(pk.NetworkHeader().View())
+		return header.IPv6(pk.NetworkHeader().Slice())
 	default:
 		panic(fmt.Sprintf("unknown network protocol number %d", netProto))
 	}
@@ -395,12 +432,12 @@ func (pk *PacketBuffer) CloneToInbound() *PacketBuffer {
 func (pk *PacketBuffer) DeepCopyForForwarding(reservedHeaderBytes int) *PacketBuffer {
 	newPk := NewPacketBuffer(PacketBufferOptions{
 		ReserveHeaderBytes: reservedHeaderBytes,
-		Data:               PayloadSince(pk.NetworkHeader()).ToVectorisedView(),
+		Payload:            BufferSince(pk.NetworkHeader()),
 		IsForwardedPacket:  true,
 	})
 
 	{
-		consumeBytes := pk.NetworkHeader().View().Size()
+		consumeBytes := len(pk.NetworkHeader().Slice())
 		if _, consumed := newPk.NetworkHeader().Consume(consumeBytes); !consumed {
 			panic(fmt.Sprintf("expected to consume network header %d bytes from new packet", consumeBytes))
 		}
@@ -408,7 +445,7 @@ func (pk *PacketBuffer) DeepCopyForForwarding(reservedHeaderBytes int) *PacketBu
 	}
 
 	{
-		consumeBytes := pk.TransportHeader().View().Size()
+		consumeBytes := len(pk.TransportHeader().Slice())
 		if _, consumed := newPk.TransportHeader().Consume(consumeBytes); !consumed {
 			panic(fmt.Sprintf("expected to consume transport header %d bytes from new packet", consumeBytes))
 		}
@@ -418,28 +455,6 @@ func (pk *PacketBuffer) DeepCopyForForwarding(reservedHeaderBytes int) *PacketBu
 	newPk.tuple = pk.tuple
 
 	return newPk
-}
-
-// IncRef increases the reference count on each PacketBuffer
-// stored in the PacketBufferList.
-func (pk *PacketBufferList) IncRef() {
-	for pb := pk.Front(); pb != nil; pb = pb.Next() {
-		pb.IncRef()
-	}
-}
-
-// DecRef decreases the reference count on each PacketBuffer
-// stored in the PacketBufferList.
-func (pk *PacketBufferList) DecRef() {
-	// Using a while-loop here (instead of for-loop) because DecRef() can cause
-	// the pb to be recycled. If it is recycled during execution of this loop,
-	// there is a possibility of a data race during a call to pb.Next().
-	pb := pk.Front()
-	for pb != nil {
-		next := pb.Next()
-		pb.DecRef()
-		pb = next
-	}
 }
 
 // headerInfo stores metadata about a header in a packet.
@@ -460,15 +475,28 @@ type PacketHeader struct {
 	typ headerType
 }
 
-// View returns the underlying storage of h.
-func (h PacketHeader) View() tcpipbuffer.View {
-	return h.pk.headerView(h.typ)
+// View returns an caller-owned copy of the underlying storage of h as a
+// *bufferv2.View.
+func (h PacketHeader) View() *bufferv2.View {
+	view := h.pk.headerView(h.typ)
+	if view.Size() == 0 {
+		return nil
+	}
+	return view.Clone()
+}
+
+// Slice returns the underlying storage of h as a []byte. The returned slice
+// should not be modified if the underlying packet could be shared, cloned, or
+// borrowed.
+func (h PacketHeader) Slice() []byte {
+	view := h.pk.headerView(h.typ)
+	return view.AsSlice()
 }
 
 // Push pushes size bytes in the front of its residing packet, and returns the
 // backing storage. Callers may only call one of Push or Consume once on each
 // header in the lifetime of the underlying packet.
-func (h PacketHeader) Push(size int) tcpipbuffer.View {
+func (h PacketHeader) Push(size int) []byte {
 	return h.pk.push(h.typ, size)
 }
 
@@ -477,7 +505,7 @@ func (h PacketHeader) Push(size int) tcpipbuffer.View {
 // size, consumed will be false, and the state of h will not be affected.
 // Callers may only call one of Push or Consume once on each header in the
 // lifetime of the underlying packet.
-func (h PacketHeader) Consume(size int) (v tcpipbuffer.View, consumed bool) {
+func (h PacketHeader) Consume(size int) (v []byte, consumed bool) {
 	return h.pk.consume(h.typ, size)
 }
 
@@ -488,15 +516,18 @@ type PacketData struct {
 	pk *PacketBuffer
 }
 
-// PullUp returns a contiguous view of size bytes from the beginning of d.
-// Callers should not write to or keep the view for later use.
-func (d PacketData) PullUp(size int) (tcpipbuffer.View, bool) {
-	return d.pk.buf.PullUp(d.pk.dataOffset(), size)
+// PullUp returns a contiguous slice of size bytes from the beginning of d.
+// Callers should not keep the view for later use. Callers can write to the
+// returned slice if they have singular ownership over the underlying
+// Buffer.
+func (d PacketData) PullUp(size int) (b []byte, ok bool) {
+	view, ok := d.pk.buf.PullUp(d.pk.dataOffset(), size)
+	return view.AsSlice(), ok
 }
 
 // Consume is the same as PullUp except that is additionally consumes the
 // returned bytes. Subsequent PullUp or Consume will not return these bytes.
-func (d PacketData) Consume(size int) (tcpipbuffer.View, bool) {
+func (d PacketData) Consume(size int) ([]byte, bool) {
 	v, ok := d.PullUp(size)
 	if ok {
 		d.pk.consumed += size
@@ -507,19 +538,25 @@ func (d PacketData) Consume(size int) (tcpipbuffer.View, bool) {
 // ReadTo reads bytes from d to dst. It also removes these bytes from d
 // unless peek is true.
 func (d PacketData) ReadTo(dst io.Writer, peek bool) (int, error) {
-	var err error
-	done := 0
-	for _, v := range d.Views() {
+	var (
+		err  error
+		done int
+	)
+	offset := d.pk.dataOffset()
+	d.pk.buf.SubApply(offset, int(d.pk.buf.Size())-offset, func(v *bufferv2.View) {
+		if err != nil {
+			return
+		}
 		var n int
-		n, err = dst.Write(v)
+		n, err = dst.Write(v.AsSlice())
 		done += n
 		if err != nil {
-			break
+			return
 		}
-		if n != len(v) {
-			panic(fmt.Sprintf("io.Writer.Write succeeded with incomplete write: %d != %d", n, len(v)))
+		if n != v.Size() {
+			panic(fmt.Sprintf("io.Writer.Write succeeded with incomplete write: %d != %d", n, v.Size()))
 		}
-	}
+	})
 	if !peek {
 		d.pk.buf.TrimFront(int64(done))
 	}
@@ -531,26 +568,25 @@ func (d PacketData) CapLength(length int) {
 	if length < 0 {
 		panic("length < 0")
 	}
-	if currLength := d.Size(); currLength > length {
-		trim := currLength - length
-		d.pk.buf.Remove(int(d.pk.buf.Size())-trim, trim)
-	}
+	d.pk.buf.Truncate(int64(length + d.pk.dataOffset()))
 }
 
-// Views returns the underlying storage of d in a slice of Views. Caller should
-// not modify the returned slice.
-func (d PacketData) Views() []tcpipbuffer.View {
-	var views []tcpipbuffer.View
+// ToBuffer returns the underlying storage of d in a bufferv2.Buffer.
+func (d PacketData) ToBuffer() bufferv2.Buffer {
+	buf := d.pk.buf.Clone()
 	offset := d.pk.dataOffset()
-	d.pk.buf.SubApply(offset, int(d.pk.buf.Size())-offset, func(v []byte) {
-		views = append(views, v)
-	})
-	return views
+	buf.TrimFront(int64(offset))
+	return buf
 }
 
 // AppendView appends v into d, taking the ownership of v.
-func (d PacketData) AppendView(v tcpipbuffer.View) {
-	d.pk.buf.AppendOwned(v)
+func (d PacketData) AppendView(v *bufferv2.View) {
+	d.pk.buf.Append(v)
+}
+
+// MergeBuffer merges b into d and clears b.
+func (d PacketData) MergeBuffer(b *bufferv2.Buffer) {
+	d.pk.buf.Merge(b)
 }
 
 // MergeFragment appends the data portion of frag to dst. It modifies
@@ -560,25 +596,45 @@ func MergeFragment(dst, frag *PacketBuffer) {
 	dst.buf.Merge(&frag.buf)
 }
 
-// ReadFromVV moves at most count bytes from the beginning of srcVV to the end
+// ReadFrom moves at most count bytes from the beginning of src to the end
 // of d and returns the number of bytes moved.
-func (d PacketData) ReadFromVV(srcVV *tcpipbuffer.VectorisedView, count int) int {
-	done := 0
-	for _, v := range srcVV.Views() {
-		if len(v) < count {
-			count -= len(v)
-			done += len(v)
-			d.pk.buf.AppendOwned(v)
-		} else {
-			v = v[:count]
-			count -= len(v)
-			done += len(v)
-			d.pk.buf.Append(v)
-			break
-		}
+func (d PacketData) ReadFrom(src *bufferv2.Buffer, count int) int {
+	toRead := int64(count)
+	if toRead > src.Size() {
+		toRead = src.Size()
 	}
-	srcVV.TrimFront(done)
-	return done
+	clone := src.Clone()
+	clone.Truncate(toRead)
+	d.pk.buf.Merge(&clone)
+	src.TrimFront(toRead)
+	return int(toRead)
+}
+
+// ReadFromPacketData moves count bytes from the beginning of oth to the end of
+// d.
+func (d PacketData) ReadFromPacketData(oth PacketData, count int) {
+	buf := oth.ToBuffer()
+	buf.Truncate(int64(count))
+	d.MergeBuffer(&buf)
+	oth.TrimFront(count)
+	buf.Release()
+}
+
+// Merge clears headers in oth and merges its data with d.
+func (d PacketData) Merge(oth PacketData) {
+	oth.pk.buf.TrimFront(int64(oth.pk.dataOffset()))
+	d.pk.buf.Merge(&oth.pk.buf)
+}
+
+// TrimFront removes up to count bytes from the front of d's payload.
+func (d PacketData) TrimFront(count int) {
+	if count > d.Size() {
+		count = d.Size()
+	}
+	buf := d.pk.Data().ToBuffer()
+	buf.TrimFront(int64(count))
+	d.pk.buf.Truncate(int64(d.pk.dataOffset()))
+	d.pk.buf.Merge(&buf)
 }
 
 // Size returns the number of bytes in the data payload of the packet.
@@ -593,19 +649,6 @@ func (d PacketData) AsRange() Range {
 		offset: d.pk.dataOffset(),
 		length: d.Size(),
 	}
-}
-
-// ExtractVV returns a VectorisedView of d. This method has the semantic to
-// destruct the underlying packet, hence the packet cannot be used again.
-//
-// This method exists for compatibility between PacketBuffer and VectorisedView.
-// It may be removed later and should be used with care.
-func (d PacketData) ExtractVV() tcpipbuffer.VectorisedView {
-	var vv tcpipbuffer.VectorisedView
-	d.pk.buf.SubApply(d.pk.dataOffset(), d.pk.Size(), func(v []byte) {
-		vv.AppendView(v)
-	})
-	return vv
 }
 
 // Range represents a contiguous subportion of a PacketBuffer.
@@ -646,62 +689,48 @@ func (r Range) Capped(max int) Range {
 	}
 }
 
-// AsView returns the backing storage of r if possible. It will allocate a new
-// View if r spans multiple pieces internally. Caller should not write to the
-// returned View in any way.
-func (r Range) AsView() tcpipbuffer.View {
-	var allocated bool
-	var v tcpipbuffer.View
-	r.iterate(func(b []byte) {
-		if v == nil {
-			// v has not been assigned, allowing first view to be returned.
-			v = b
-		} else {
-			// v has been assigned. This range spans more than a view, a new view
-			// needs to be allocated.
-			if !allocated {
-				allocated = true
-				all := make([]byte, 0, r.length)
-				all = append(all, v...)
-				v = all
-			}
-			v = append(v, b...)
-		}
-	})
-	return v
-}
-
-// ToOwnedView returns a owned copy of data in r.
-func (r Range) ToOwnedView() tcpipbuffer.View {
+// ToSlice returns a caller-owned copy of data in r.
+func (r Range) ToSlice() []byte {
 	if r.length == 0 {
 		return nil
 	}
 	all := make([]byte, 0, r.length)
-	r.iterate(func(b []byte) {
-		all = append(all, b...)
+	r.iterate(func(v *bufferv2.View) {
+		all = append(all, v.AsSlice()...)
 	})
 	return all
+}
+
+// ToView returns a caller-owned copy of data in r.
+func (r Range) ToView() *bufferv2.View {
+	if r.length == 0 {
+		return nil
+	}
+	newV := bufferv2.NewView(r.length)
+	r.iterate(func(v *bufferv2.View) {
+		newV.Write(v.AsSlice())
+	})
+	return newV
 }
 
 // Checksum calculates the RFC 1071 checksum for the underlying bytes of r.
 func (r Range) Checksum() uint16 {
 	var c header.Checksumer
-	r.iterate(c.Add)
+	r.iterate(func(v *bufferv2.View) {
+		c.Add(v.AsSlice())
+	})
 	return c.Checksum()
 }
 
 // iterate calls fn for each piece in r. fn is always called with a non-empty
 // slice.
-func (r Range) iterate(fn func([]byte)) {
+func (r Range) iterate(fn func(*bufferv2.View)) {
 	r.pk.buf.SubApply(r.offset, r.length, fn)
 }
 
-// PayloadSince returns packet payload starting from and including a particular
-// header.
-//
-// The returned View is owned by the caller - its backing buffer is separate
-// from the packet header's underlying packet buffer.
-func PayloadSince(h PacketHeader) tcpipbuffer.View {
+// PayloadSince returns a caller-owned view containing the payload starting from
+// and including a particular header.
+func PayloadSince(h PacketHeader) *bufferv2.View {
 	offset := h.pk.headerOffset()
 	for i := headerType(0); i < h.typ; i++ {
 		offset += h.pk.headers[i].length
@@ -710,5 +739,17 @@ func PayloadSince(h PacketHeader) tcpipbuffer.View {
 		pk:     h.pk,
 		offset: offset,
 		length: int(h.pk.buf.Size()) - offset,
-	}.ToOwnedView()
+	}.ToView()
+}
+
+// BufferSince returns a caller-owned view containing the packet payload
+// starting from and including a particular header.
+func BufferSince(h PacketHeader) bufferv2.Buffer {
+	offset := h.pk.headerOffset()
+	for i := headerType(0); i < h.typ; i++ {
+		offset += h.pk.headers[i].length
+	}
+	clone := h.pk.buf.Clone()
+	clone.TrimFront(int64(offset))
+	return clone
 }

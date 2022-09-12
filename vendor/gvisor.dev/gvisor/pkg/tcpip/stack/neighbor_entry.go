@@ -34,7 +34,7 @@ type NeighborEntry struct {
 	Addr      tcpip.Address
 	LinkAddr  tcpip.LinkAddress
 	State     NeighborState
-	UpdatedAt time.Time
+	UpdatedAt tcpip.MonotonicTime
 }
 
 // NeighborState defines the state of a NeighborEntry within the Neighbor
@@ -141,7 +141,7 @@ func newStaticNeighborEntry(cache *neighborCache, addr tcpip.Address, linkAddr t
 		Addr:      addr,
 		LinkAddr:  linkAddr,
 		State:     Static,
-		UpdatedAt: cache.nic.stack.clock.Now(),
+		UpdatedAt: cache.nic.stack.clock.NowMonotonic(),
 	}
 	n := &neighborEntry{
 		cache:    cache,
@@ -230,15 +230,15 @@ func (e *neighborEntry) cancelTimerLocked() {
 //
 // Precondition: e.mu MUST be locked.
 func (e *neighborEntry) removeLocked() {
-	e.mu.neigh.UpdatedAt = e.cache.nic.stack.clock.Now()
+	e.mu.neigh.UpdatedAt = e.cache.nic.stack.clock.NowMonotonic()
 	e.dispatchRemoveEventLocked()
 	e.cancelTimerLocked()
 	// TODO(https://gvisor.dev/issues/5583): test the case where this function is
 	// called during resolution; that can happen in at least these scenarios:
 	//
-	// - manual address removal during resolution
+	//	- manual address removal during resolution
 	//
-	// - neighbor cache eviction during resolution
+	//	- neighbor cache eviction during resolution
 	e.notifyCompletionLocked(&tcpip.ErrAborted{})
 }
 
@@ -252,7 +252,7 @@ func (e *neighborEntry) setStateLocked(next NeighborState) {
 
 	prev := e.mu.neigh.State
 	e.mu.neigh.State = next
-	e.mu.neigh.UpdatedAt = e.cache.nic.stack.clock.Now()
+	e.mu.neigh.UpdatedAt = e.cache.nic.stack.clock.NowMonotonic()
 	config := e.nudState.Config()
 
 	switch next {
@@ -360,7 +360,7 @@ func (e *neighborEntry) handlePacketQueuedLocked(localAddr tcpip.Address) {
 	case Unknown, Unreachable:
 		prev := e.mu.neigh.State
 		e.mu.neigh.State = Incomplete
-		e.mu.neigh.UpdatedAt = e.cache.nic.stack.clock.Now()
+		e.mu.neigh.UpdatedAt = e.cache.nic.stack.clock.NowMonotonic()
 
 		switch prev {
 		case Unknown:
@@ -592,13 +592,13 @@ func (e *neighborEntry) handleConfirmationLocked(linkAddr tcpip.LinkAddress, fla
 // Precondition: e.mu MUST be locked.
 func (e *neighborEntry) handleUpperLevelConfirmationLocked() {
 	switch e.mu.neigh.State {
-	case Reachable, Stale, Delay, Probe:
-		wasReachable := e.mu.neigh.State == Reachable
-		// Set state to Reachable again to refresh timers.
+	case Stale, Delay, Probe:
 		e.setStateLocked(Reachable)
-		if !wasReachable {
-			e.dispatchChangeEventLocked()
-		}
+		e.dispatchChangeEventLocked()
+
+	case Reachable:
+		// Avoid setStateLocked; Timer.Reset is cheaper.
+		e.mu.timer.timer.Reset(e.nudState.ReachableTime())
 
 	case Unknown, Incomplete, Unreachable, Static:
 		// Do nothing

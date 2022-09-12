@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/url"
 	"os"
@@ -39,7 +38,7 @@ type Bastion struct {
 type ConnectCallback func(ctx context.Context, bastion *Bastion) (net.Conn, error)
 
 func PublicKey(path string, passphrase []byte) (ssh.Signer, error) {
-	key, err := ioutil.ReadFile(path)
+	key, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}

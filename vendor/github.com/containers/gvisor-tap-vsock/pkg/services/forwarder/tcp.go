@@ -6,13 +6,13 @@ import (
 	"net"
 	"sync"
 
-	"github.com/google/tcpproxy"
 	log "github.com/sirupsen/logrus"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
 	"gvisor.dev/gvisor/pkg/waiter"
+	"inet.af/tcpproxy"
 )
 
 const linkLocalSubnet = "169.254.0.0/16"
@@ -40,11 +40,11 @@ func TCP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mute
 
 		var wq waiter.Queue
 		ep, tcpErr := r.CreateEndpoint(&wq)
+		r.Complete(false)
 		if tcpErr != nil {
 			log.Errorf("r.CreateEndpoint() = %v", tcpErr)
 			return
 		}
-		r.Complete(false)
 
 		remote := tcpproxy.DialProxy{
 			DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
