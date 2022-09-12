@@ -134,6 +134,8 @@ type TCPFields struct {
 
 // TCPSynOptions is used to return the parsed TCP Options in a syn
 // segment.
+//
+// +stateify savable
 type TCPSynOptions struct {
 	// MSS is the maximum segment size provided by the peer in the SYN.
 	MSS uint16
@@ -219,6 +221,10 @@ const (
 	// TCPMinimumMSS is the minimum acceptable value for MSS. This is the
 	// same as the value TCP_MIN_MSS defined net/tcp.h.
 	TCPMinimumMSS = IPv4MaximumHeaderSize + TCPHeaderMaximumSize + MinIPFragmentPayloadSize - IPv4MinimumSize - TCPMinimumSize
+
+	// TCPMinimumSendMSS is the minimum value for MSS in a sender. This is the
+	// same as the value TCP_MIN_SND_MSS in net/tcp.h.
+	TCPMinimumSendMSS = TCPOptionsMaximumSize + MinIPFragmentPayloadSize
 
 	// TCPMaximumMSS is the maximum acceptable value for MSS.
 	TCPMaximumMSS = 0xffff
@@ -456,6 +462,9 @@ func ParseSynOptions(opts []byte, isAck bool) TCPSynOptions {
 				return synOpts
 			}
 			synOpts.MSS = mss
+			if mss < TCPMinimumSendMSS {
+				synOpts.MSS = TCPMinimumSendMSS
+			}
 			i += 4
 
 		case TCPOptionWS:
@@ -684,4 +693,24 @@ func Acceptable(segSeq seqnum.Value, segLen seqnum.Size, rcvNxt, rcvAcc seqnum.V
 	// differently, it uses segSeq <= rcvAcc, we'd want to keep the same behavior
 	// as Linux.
 	return rcvNxt.LessThan(segSeq.Add(segLen)) && segSeq.LessThanEq(rcvAcc)
+}
+
+// TCPValid returns true if the pkt has a valid TCP header. It checks whether:
+//   - The data offset is too small.
+//   - The data offset is too large.
+//   - The checksum is invalid.
+//
+// TCPValid corresponds to net/netfilter/nf_conntrack_proto_tcp.c:tcp_error.
+func TCPValid(hdr TCP, payloadChecksum func() uint16, payloadSize uint16, srcAddr, dstAddr tcpip.Address, skipChecksumValidation bool) (csum uint16, csumValid, ok bool) {
+	if offset := int(hdr.DataOffset()); offset < TCPMinimumSize || offset > len(hdr) {
+		return
+	}
+
+	if skipChecksumValidation {
+		csumValid = true
+	} else {
+		csum = hdr.Checksum()
+		csumValid = hdr.IsChecksumValid(srcAddr, dstAddr, payloadChecksum(), payloadSize)
+	}
+	return csum, csumValid, true
 }

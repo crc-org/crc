@@ -24,12 +24,11 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"sync/atomic"
 	"time"
 
+	"gvisor.dev/gvisor/pkg/atomicbitops"
 	"gvisor.dev/gvisor/pkg/log"
 	"gvisor.dev/gvisor/pkg/tcpip"
-	"gvisor.dev/gvisor/pkg/tcpip/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 	"gvisor.dev/gvisor/pkg/tcpip/header/parse"
 	"gvisor.dev/gvisor/pkg/tcpip/link/nested"
@@ -38,16 +37,12 @@ import (
 
 // LogPackets is a flag used to enable or disable packet logging via the log
 // package. Valid values are 0 or 1.
-//
-// LogPackets must be accessed atomically.
-var LogPackets uint32 = 1
+var LogPackets atomicbitops.Uint32 = atomicbitops.FromUint32(1)
 
 // LogPacketsToPCAP is a flag used to enable or disable logging packets to a
 // pcap writer. Valid values are 0 or 1. A writer must have been specified when the
 // sniffer was created for this flag to have effect.
-//
-// LogPacketsToPCAP must be accessed atomically.
-var LogPacketsToPCAP uint32 = 1
+var LogPacketsToPCAP atomicbitops.Uint32 = atomicbitops.FromUint32(1)
 
 type endpoint struct {
 	nested.Endpoint
@@ -60,11 +55,14 @@ var _ stack.GSOEndpoint = (*endpoint)(nil)
 var _ stack.LinkEndpoint = (*endpoint)(nil)
 var _ stack.NetworkDispatcher = (*endpoint)(nil)
 
-type direction int
+// A Direction indicates whether the packing is being sent or received.
+type Direction int
 
 const (
-	directionSend = iota
-	directionRecv
+	// DirectionSend indicates a sent packet.
+	DirectionSend = iota
+	// DirectionRecv indicates a received packet.
+	DirectionRecv
 )
 
 // New creates a new sniffer link-layer endpoint. It wraps around another
@@ -97,7 +95,7 @@ func writePCAPHeader(w io.Writer, maxLen uint32) error {
 	if err != nil {
 		return err
 	}
-	return binary.Write(w, binary.BigEndian, pcapHeader{
+	return binary.Write(w, binary.LittleEndian, pcapHeader{
 		// From https://wiki.wireshark.org/Development/LibpcapFileFormat
 		MagicNumber: 0xa1b2c3d4,
 
@@ -135,17 +133,17 @@ func NewWithWriter(lower stack.LinkEndpoint, writer io.Writer, snapLen uint32) (
 // DeliverNetworkPacket implements the stack.NetworkDispatcher interface. It is
 // called by the link-layer endpoint being wrapped when a packet arrives, and
 // logs the packet before forwarding to the actual dispatcher.
-func (e *endpoint) DeliverNetworkPacket(remote, local tcpip.LinkAddress, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
-	e.dumpPacket(directionRecv, protocol, pkt)
-	e.Endpoint.DeliverNetworkPacket(remote, local, protocol, pkt)
+func (e *endpoint) DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
+	e.dumpPacket(DirectionRecv, protocol, pkt)
+	e.Endpoint.DeliverNetworkPacket(protocol, pkt)
 }
 
-func (e *endpoint) dumpPacket(dir direction, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
+func (e *endpoint) dumpPacket(dir Direction, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
 	writer := e.writer
-	if writer == nil && atomic.LoadUint32(&LogPackets) == 1 {
-		logPacket(e.logPrefix, dir, protocol, pkt)
+	if writer == nil && LogPackets.Load() == 1 {
+		LogPacket(e.logPrefix, dir, protocol, pkt)
 	}
-	if writer != nil && atomic.LoadUint32(&LogPacketsToPCAP) == 1 {
+	if writer != nil && LogPacketsToPCAP.Load() == 1 {
 		packet := pcapPacket{
 			timestamp:     time.Now(),
 			packet:        pkt,
@@ -165,13 +163,14 @@ func (e *endpoint) dumpPacket(dir direction, protocol tcpip.NetworkProtocolNumbe
 // higher-level protocols to write packets; it just logs the packet and
 // forwards the request to the lower endpoint.
 func (e *endpoint) WritePackets(pkts stack.PacketBufferList) (int, tcpip.Error) {
-	for pkt := pkts.Front(); pkt != nil; pkt = pkt.Next() {
-		e.dumpPacket(directionSend, pkt.NetworkProtocolNumber, pkt)
+	for _, pkt := range pkts.AsSlice() {
+		e.dumpPacket(DirectionSend, pkt.NetworkProtocolNumber, pkt)
 	}
 	return e.Endpoint.WritePackets(pkts)
 }
 
-func logPacket(prefix string, dir direction, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
+// LogPacket logs a packet to stdout.
+func LogPacket(prefix string, dir Direction, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
 	// Figure out the network layer info.
 	var transProto uint8
 	src := tcpip.Address("unknown")
@@ -183,25 +182,15 @@ func logPacket(prefix string, dir direction, protocol tcpip.NetworkProtocolNumbe
 
 	var directionPrefix string
 	switch dir {
-	case directionSend:
+	case DirectionSend:
 		directionPrefix = "send"
-	case directionRecv:
+	case DirectionRecv:
 		directionPrefix = "recv"
 	default:
 		panic(fmt.Sprintf("unrecognized direction: %d", dir))
 	}
 
-	// Clone the packet buffer to not modify the original.
-	//
-	// We don't clone the original packet buffer so that the new packet buffer
-	// does not have any of its headers set.
-	//
-	// We trim the link headers from the cloned buffer as the sniffer doesn't
-	// handle link headers.
-	vv := buffer.NewVectorisedView(pkt.Size(), pkt.Views())
-	vv.TrimFront(len(pkt.VirtioNetHeader().View()))
-	vv.TrimFront(len(pkt.LinkHeader().View()))
-	pkt = stack.NewPacketBuffer(stack.PacketBufferOptions{Data: vv})
+	pkt = trimmedClone(pkt)
 	defer pkt.DecRef()
 	switch protocol {
 	case header.IPv4ProtocolNumber:
@@ -209,7 +198,7 @@ func logPacket(prefix string, dir direction, protocol tcpip.NetworkProtocolNumbe
 			return
 		}
 
-		ipv4 := header.IPv4(pkt.NetworkHeader().View())
+		ipv4 := header.IPv4(pkt.NetworkHeader().Slice())
 		fragmentOffset = ipv4.FragmentOffset()
 		moreFragments = ipv4.Flags()&header.IPv4FlagMoreFragments == header.IPv4FlagMoreFragments
 		src = ipv4.SourceAddress()
@@ -224,7 +213,7 @@ func logPacket(prefix string, dir direction, protocol tcpip.NetworkProtocolNumbe
 			return
 		}
 
-		ipv6 := header.IPv6(pkt.NetworkHeader().View())
+		ipv6 := header.IPv6(pkt.NetworkHeader().Slice())
 		src = ipv6.SourceAddress()
 		dst = ipv6.DestinationAddress()
 		transProto = uint8(proto)
@@ -238,7 +227,7 @@ func logPacket(prefix string, dir direction, protocol tcpip.NetworkProtocolNumbe
 			return
 		}
 
-		arp := header.ARP(pkt.NetworkHeader().View())
+		arp := header.ARP(pkt.NetworkHeader().Slice())
 		log.Infof(
 			"%s%s arp %s (%s) -> %s (%s) valid:%t",
 			prefix,
@@ -249,7 +238,7 @@ func logPacket(prefix string, dir direction, protocol tcpip.NetworkProtocolNumbe
 		)
 		return
 	default:
-		log.Infof("%s%s unknown network protocol", prefix, directionPrefix)
+		log.Infof("%s%s unknown network protocol: %d", prefix, directionPrefix, protocol)
 		return
 	}
 
@@ -337,7 +326,7 @@ func logPacket(prefix string, dir direction, protocol tcpip.NetworkProtocolNumbe
 			break
 		}
 
-		udp := header.UDP(pkt.TransportHeader().View())
+		udp := header.UDP(pkt.TransportHeader().Slice())
 		if fragmentOffset == 0 {
 			srcPort = udp.SourcePort()
 			dstPort = udp.DestinationPort()
@@ -351,7 +340,7 @@ func logPacket(prefix string, dir direction, protocol tcpip.NetworkProtocolNumbe
 			break
 		}
 
-		tcp := header.TCP(pkt.TransportHeader().View())
+		tcp := header.TCP(pkt.TransportHeader().Slice())
 		if fragmentOffset == 0 {
 			offset := int(tcp.DataOffset())
 			if offset < header.TCPMinimumSize {
@@ -387,4 +376,18 @@ func logPacket(prefix string, dir direction, protocol tcpip.NetworkProtocolNumbe
 	}
 
 	log.Infof("%s%s %s %s:%d -> %s:%d len:%d id:%04x %s", prefix, directionPrefix, transName, src, srcPort, dst, dstPort, size, id, details)
+}
+
+// trimmedClone clones the packet buffer to not modify the original. It trims
+// anything before the network header.
+func trimmedClone(pkt *stack.PacketBuffer) *stack.PacketBuffer {
+	// We don't clone the original packet buffer so that the new packet buffer
+	// does not have any of its headers set.
+	//
+	// We trim the link headers from the cloned buffer as the sniffer doesn't
+	// handle link headers.
+	buf := pkt.ToBuffer()
+	buf.TrimFront(int64(len(pkt.VirtioNetHeader().Slice())))
+	buf.TrimFront(int64(len(pkt.LinkHeader().Slice())))
+	return stack.NewPacketBuffer(stack.PacketBufferOptions{Payload: buf})
 }

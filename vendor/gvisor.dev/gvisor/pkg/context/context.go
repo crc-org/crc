@@ -24,6 +24,7 @@ package context
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"gvisor.dev/gvisor/pkg/log"
@@ -140,12 +141,12 @@ func (*NoTask) UninterruptibleSleepFinish(bool) {}
 // context.Context, the standard type represents the state of an operation
 // rather than that of a goroutine. This is a critical distinction:
 //
-// - Unlike context.Context, which "may be passed to functions running in
-// different goroutines", it is *not safe* to use the same Context in multiple
-// concurrent goroutines.
+//   - Unlike context.Context, which "may be passed to functions running in
+//     different goroutines", it is *not safe* to use the same Context in multiple
+//     concurrent goroutines.
 //
-// - It is *not safe* to retain a Context passed to a function beyond the scope
-// of that function call.
+//   - It is *not safe* to retain a Context passed to a function beyond the scope
+//     of that function call.
 //
 // In both cases, values extracted from the Context should be used instead.
 type Context interface {
@@ -162,10 +163,8 @@ type logContext struct {
 }
 
 // bgContext is the context returned by context.Background.
-var bgContext Context = &logContext{
-	Context: context.Background(),
-	Logger:  log.Log(),
-}
+var bgContext Context
+var bgOnce sync.Once
 
 // Background returns an empty context using the default logger.
 // Generally, one should use the Task as their context when available, or avoid
@@ -173,7 +172,15 @@ var bgContext Context = &logContext{
 //
 // Using a Background context for tests is fine, as long as no values are
 // needed from the context in the tested code paths.
+//
+// The global log.SetTarget() must be called before context.Background()
 func Background() Context {
+	bgOnce.Do(func() {
+		bgContext = &logContext{
+			Context: context.Background(),
+			Logger:  log.Log(),
+		}
+	})
 	return bgContext
 }
 

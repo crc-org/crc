@@ -26,7 +26,6 @@ import (
 
 	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/tcpip"
-	"gvisor.dev/gvisor/pkg/tcpip/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/udp"
@@ -48,10 +47,11 @@ func (e *timeoutError) Temporary() bool { return true }
 // A TCPListener is a wrapper around a TCP tcpip.Endpoint that implements
 // net.Listener.
 type TCPListener struct {
-	stack  *stack.Stack
-	ep     tcpip.Endpoint
-	wq     *waiter.Queue
-	cancel chan struct{}
+	stack      *stack.Stack
+	ep         tcpip.Endpoint
+	wq         *waiter.Queue
+	cancelOnce sync.Once
+	cancel     chan struct{}
 }
 
 // NewTCPListener creates a new TCPListener from a listening tcpip.Endpoint.
@@ -63,6 +63,14 @@ func NewTCPListener(s *stack.Stack, wq *waiter.Queue, ep tcpip.Endpoint) *TCPLis
 		cancel: make(chan struct{}),
 	}
 }
+
+// maxListenBacklog is set to be reasonably high for most uses of gonet. Go net
+// package uses the value in /proc/sys/net/core/somaxconn file in Linux as the
+// default listen backlog. The value below matches the default in common linux
+// distros.
+//
+// See: https://cs.opensource.google/go/go/+/refs/tags/go1.18.1:src/net/sock_linux.go;drc=refs%2Ftags%2Fgo1.18.1;l=66
+const maxListenBacklog = 4096
 
 // ListenTCP creates a new TCPListener.
 func ListenTCP(s *stack.Stack, addr tcpip.FullAddress, network tcpip.NetworkProtocolNumber) (*TCPListener, error) {
@@ -83,7 +91,7 @@ func ListenTCP(s *stack.Stack, addr tcpip.FullAddress, network tcpip.NetworkProt
 		}
 	}
 
-	if err := ep.Listen(10); err != nil {
+	if err := ep.Listen(maxListenBacklog); err != nil {
 		ep.Close()
 		return nil, &net.OpError{
 			Op:   "listen",
@@ -105,7 +113,9 @@ func (l *TCPListener) Close() error {
 // Shutdown stops the HTTP server.
 func (l *TCPListener) Shutdown() {
 	l.ep.Shutdown(tcpip.ShutdownWrite | tcpip.ShutdownRead)
-	close(l.cancel) // broadcast cancellation
+	l.cancelOnce.Do(func() {
+		close(l.cancel) // broadcast cancellation
+	})
 }
 
 // Addr implements net.Listener.Addr.
@@ -232,7 +242,7 @@ type TCPConn struct {
 
 	// read contains bytes that have been read from the endpoint,
 	// but haven't yet been returned.
-	read buffer.View
+	read []byte
 }
 
 // NewTCPConn creates a new TCPConn.

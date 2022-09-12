@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -52,7 +52,7 @@ func (c *Client) Expose(req *types.ExposeRequest) error {
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		err, readErr := ioutil.ReadAll(res.Body)
+		err, readErr := io.ReadAll(res.Body)
 		if readErr != nil {
 			return fmt.Errorf("error while reading error message: %v", readErr)
 		}
@@ -72,7 +72,7 @@ func (c *Client) Unexpose(req *types.UnexposeRequest) error {
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		err, readErr := ioutil.ReadAll(res.Body)
+		err, readErr := io.ReadAll(res.Body)
 		if readErr != nil {
 			return fmt.Errorf("error while reading error message: %v", readErr)
 		}

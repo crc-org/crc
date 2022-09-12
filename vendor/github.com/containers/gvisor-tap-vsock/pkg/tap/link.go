@@ -7,7 +7,6 @@ import (
 	"github.com/google/gopacket/layers"
 	log "github.com/sirupsen/logrus"
 	"gvisor.dev/gvisor/pkg/tcpip"
-	"gvisor.dev/gvisor/pkg/tcpip/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 )
@@ -57,11 +56,11 @@ func (e *LinkEndpoint) IsAttached() bool {
 	return e.dispatcher != nil
 }
 
-func (e *LinkEndpoint) DeliverNetworkPacket(remote, local tcpip.LinkAddress, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
-	e.dispatcher.DeliverNetworkPacket(remote, local, protocol, pkt)
+func (e *LinkEndpoint) DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
+	e.dispatcher.DeliverNetworkPacket(protocol, pkt)
 }
 
-func (e *LinkEndpoint) AddHeader(local, remote tcpip.LinkAddress, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
+func (e *LinkEndpoint) AddHeader(pkt *stack.PacketBuffer) {
 }
 
 func (e *LinkEndpoint) Capabilities() stack.LinkEndpointCapabilities {
@@ -85,7 +84,7 @@ func (e *LinkEndpoint) Wait() {
 
 func (e *LinkEndpoint) WritePackets(pkts stack.PacketBufferList) (int, tcpip.Error) {
 	n := 0
-	for p := pkts.Front(); p != nil; p = p.Next() {
+	for _, p := range pkts.AsSlice() {
 		if err := e.writePacket(p.EgressRoute, p.NetworkProtocolNumber, p); err != nil {
 			return n, err
 		}
@@ -107,7 +106,7 @@ func (e *LinkEndpoint) writePacket(r stack.RouteInfo, protocol tcpip.NetworkProt
 		DstAddr: r.RemoteLinkAddress,
 	})
 
-	h := header.ARP(pkt.NetworkHeader().View())
+	h := header.ARP(pkt.NetworkHeader().Slice())
 	if h.IsValid() &&
 		h.Op() == header.ARPReply {
 		ip := tcpip.Address(h.ProtocolAddressSender()).String()
@@ -119,12 +118,11 @@ func (e *LinkEndpoint) writePacket(r stack.RouteInfo, protocol tcpip.NetworkProt
 	}
 
 	if e.debug {
-		vv := buffer.NewVectorisedView(pkt.Size(), pkt.Views())
-		packet := gopacket.NewPacket(vv.ToView(), layers.LayerTypeEthernet, gopacket.Default)
+		packet := gopacket.NewPacket(pkt.ToView().AsSlice(), layers.LayerTypeEthernet, gopacket.Default)
 		log.Info(packet.String())
 	}
 
-	e.networkSwitch.DeliverNetworkPacket(r.RemoteLinkAddress, srcAddr, protocol, pkt)
+	e.networkSwitch.DeliverNetworkPacket(protocol, pkt)
 	return nil
 }
 

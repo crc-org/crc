@@ -232,22 +232,13 @@ func NewInform(hwaddr net.HardwareAddr, localIP net.IP, modifiers ...Modifier) (
 
 // NewRequestFromOffer builds a DHCPv4 request from an offer.
 func NewRequestFromOffer(offer *DHCPv4, modifiers ...Modifier) (*DHCPv4, error) {
-	// find server IP address
-	serverIP := offer.ServerIdentifier()
-	if serverIP == nil {
-		if offer.ServerIPAddr == nil || offer.ServerIPAddr.IsUnspecified() {
-			return nil, fmt.Errorf("missing Server IP Address in DHCP Offer")
-		}
-		serverIP = offer.ServerIPAddr
-	}
-
 	return New(PrependModifiers(modifiers,
 		WithReply(offer),
 		WithMessageType(MessageTypeRequest),
-		WithServerIP(serverIP),
 		WithClientIP(offer.ClientIPAddr),
 		WithOption(OptRequestedIPAddress(offer.YourIPAddr)),
-		WithOption(OptServerIdentifier(serverIP)),
+		// This is usually the server IP.
+		WithOptionCopied(offer, OptionServerIdentifier),
 		WithRequestedOptions(
 			OptionSubnetMask,
 			OptionRouter,
@@ -287,7 +278,7 @@ func NewReleaseFromACK(ack *DHCPv4, modifiers ...Modifier) (*DHCPv4, error) {
 	)...)
 }
 
-// FromBytes encodes the DHCPv4 packet into a sequence of bytes, and returns an
+// FromBytes decodes a DHCPv4 packet from a sequence of bytes, and returns an
 // error if the packet is not valid.
 func FromBytes(q []byte) (*DHCPv4, error) {
 	var p DHCPv4
