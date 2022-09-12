@@ -1,3 +1,5 @@
+all: install
+
 SHELL := /bin/bash
 
 OPENSHIFT_VERSION ?= 4.11.1
