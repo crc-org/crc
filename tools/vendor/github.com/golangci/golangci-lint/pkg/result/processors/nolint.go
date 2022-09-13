@@ -1,7 +1,7 @@
 package processors
 
 import (
-	"fmt"
+	"errors"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -105,7 +105,7 @@ func (p *Nolint) getOrCreateFileData(i *result.Issue) (*fileData, error) {
 	p.cache[i.FilePath()] = fd
 
 	if i.FilePath() == "" {
-		return nil, fmt.Errorf("no file path for issue")
+		return nil, errors.New("no file path for issue")
 	}
 
 	// TODO: migrate this parsing to go/analysis facts
@@ -252,7 +252,7 @@ func (p *Nolint) extractInlineRangeFromComment(text string, g ast.Node, fset *to
 		}
 	}
 
-	if !strings.HasPrefix(text, "nolint:") {
+	if strings.HasPrefix(text, "nolint:all") || !strings.HasPrefix(text, "nolint:") {
 		return buildRange(nil) // ignore all linters
 	}
 
@@ -260,8 +260,12 @@ func (p *Nolint) extractInlineRangeFromComment(text string, g ast.Node, fset *to
 	var linters []string
 	text = strings.Split(text, "//")[0] // allow another comment after this comment
 	linterItems := strings.Split(strings.TrimPrefix(text, "nolint:"), ",")
-	for _, linter := range linterItems {
-		linterName := strings.ToLower(strings.TrimSpace(linter))
+	for _, item := range linterItems {
+		linterName := strings.ToLower(strings.TrimSpace(item))
+		if linterName == "all" {
+			p.unknownLintersSet = map[string]bool{}
+			return buildRange(nil)
+		}
 
 		lcs := p.dbManager.GetLinterConfigs(linterName)
 		if lcs == nil {
