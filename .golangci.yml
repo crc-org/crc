@@ -11,6 +11,6 @@ linters:
     - gofmt
     - gosec
     - gocritic
-    - deadcode
+    - unused
     - misspell
     - revive
