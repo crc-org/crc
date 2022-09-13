@@ -143,7 +143,12 @@ func run(configuration *types.Configuration) error {
 		mux := http.NewServeMux()
 		mux.Handle("/network/", http.StripPrefix("/network", vn.Mux()))
 		mux.Handle("/api/", http.StripPrefix("/api", api.NewMux(config, newMachine(), logging.Memory, segmentClient)))
-		if err := http.Serve(listener, handlers.LoggingHandler(os.Stderr, mux)); err != nil {
+		s := &http.Server{
+			Handler:      handlers.LoggingHandler(os.Stderr, mux),
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 10 * time.Second,
+		}
+		if err := s.Serve(listener); err != nil {
 			errCh <- errors.Wrap(err, "api http.Serve failed")
 		}
 	}()
@@ -154,7 +159,12 @@ func run(configuration *types.Configuration) error {
 	}
 	go func() {
 		mux := gatewayAPIMux()
-		if err := http.Serve(ln, handlers.LoggingHandler(os.Stderr, mux)); err != nil {
+		s := &http.Server{
+			Handler:      handlers.LoggingHandler(os.Stderr, mux),
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 10 * time.Second,
+		}
+		if err := s.Serve(ln); err != nil {
 			errCh <- errors.Wrap(err, "gateway http.Serve failed")
 		}
 	}()
@@ -165,7 +175,12 @@ func run(configuration *types.Configuration) error {
 	}
 	go func() {
 		mux := networkAPIMux(vn)
-		if err := http.Serve(networkListener, handlers.LoggingHandler(os.Stderr, mux)); err != nil {
+		s := &http.Server{
+			Handler:      handlers.LoggingHandler(os.Stderr, mux),
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 10 * time.Second,
+		}
+		if err := s.Serve(networkListener); err != nil {
 			errCh <- errors.Wrap(err, "host virtual IP http.Serve failed")
 		}
 	}()
@@ -173,7 +188,12 @@ func run(configuration *types.Configuration) error {
 	go func() {
 		mux := http.NewServeMux()
 		mux.Handle(types.ConnectPath, vn.Mux())
-		if err := http.Serve(vsockListener, mux); err != nil {
+		s := &http.Server{
+			Handler:      mux,
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 10 * time.Second,
+		}
+		if err := s.Serve(vsockListener); err != nil {
 			errCh <- errors.Wrap(err, "virtualnetwork http.Serve failed")
 		}
 	}()
