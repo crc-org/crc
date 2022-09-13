@@ -163,6 +163,9 @@ func targetRunner(params []*ast.Field, fileName string) (string, bool) {
 		switch typ := p.Type.(type) {
 		case *ast.StarExpr:
 			if checkStarExprTarget(typ) {
+				if len(p.Names) == 0 {
+					return "", false
+				}
 				argName := p.Names[0].Name
 				return argName, true
 			}

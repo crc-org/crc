@@ -40,8 +40,8 @@ var defaultLintersSettings = LintersSettings{
 	Gocognit: GocognitSettings{
 		MinComplexity: 30,
 	},
-	Gocritic: GocriticSettings{
-		SettingsPerCheck: map[string]GocriticCheckSettings{},
+	Gocritic: GoCriticSettings{
+		SettingsPerCheck: map[string]GoCriticCheckSettings{},
 	},
 	Godox: GodoxSettings{
 		Keywords: []string{},
@@ -77,7 +77,6 @@ var defaultLintersSettings = LintersSettings{
 	},
 	NoLintLint: NoLintLintSettings{
 		RequireExplanation: false,
-		AllowLeadingSpace:  true,
 		RequireSpecific:    false,
 		AllowUnused:        false,
 	},
@@ -134,7 +133,7 @@ type LintersSettings struct {
 	Gci              GciSettings
 	Gocognit         GocognitSettings
 	Goconst          GoConstSettings
-	Gocritic         GocriticSettings
+	Gocritic         GoCriticSettings
 	Gocyclo          GoCycloSettings
 	Godot            GodotSettings
 	Godox            GodoxSettings
@@ -152,6 +151,7 @@ type LintersSettings struct {
 	Grouper          GrouperSettings
 	Ifshort          IfshortSettings
 	ImportAs         ImportAsSettings
+	InterfaceBloat   InterfaceBloatSettings
 	Ireturn          IreturnSettings
 	Lll              LllSettings
 	MaintIdx         MaintIdxSettings
@@ -168,6 +168,7 @@ type LintersSettings struct {
 	Prealloc         PreallocSettings
 	Predeclared      PredeclaredSettings
 	Promlinter       PromlinterSettings
+	Reassign         ReassignSettings
 	Revive           ReviveSettings
 	RowsErrCheck     RowsErrCheckSettings
 	Staticcheck      StaticCheckSettings
@@ -179,6 +180,7 @@ type LintersSettings struct {
 	Thelper          ThelperSettings
 	Unparam          UnparamSettings
 	Unused           StaticCheckSettings
+	UseStdlibVars    UseStdlibVarsSettings
 	Varcheck         VarCheckSettings
 	Varnamelen       VarnamelenSettings
 	Whitespace       WhitespaceSettings
@@ -288,6 +290,7 @@ type GciSettings struct {
 	LocalPrefixes string   `mapstructure:"local-prefixes"` // Deprecated
 	Sections      []string `mapstructure:"sections"`
 	SkipGenerated bool     `mapstructure:"skip-generated"`
+	CustomOrder   bool     `mapstructure:"custom-order"`
 }
 
 type GocognitSettings struct {
@@ -304,6 +307,16 @@ type GoConstSettings struct {
 	NumberMax           int  `mapstructure:"max"`
 	IgnoreCalls         bool `mapstructure:"ignore-calls"`
 }
+
+type GoCriticSettings struct {
+	EnabledChecks    []string                         `mapstructure:"enabled-checks"`
+	DisabledChecks   []string                         `mapstructure:"disabled-checks"`
+	EnabledTags      []string                         `mapstructure:"enabled-tags"`
+	DisabledTags     []string                         `mapstructure:"disabled-tags"`
+	SettingsPerCheck map[string]GoCriticCheckSettings `mapstructure:"settings"`
+}
+
+type GoCriticCheckSettings map[string]interface{}
 
 type GoCycloSettings struct {
 	MinComplexity int `mapstructure:"min-complexity"`
@@ -443,6 +456,10 @@ type ImportAsAlias struct {
 	Alias string
 }
 
+type InterfaceBloatSettings struct {
+	Max int `mapstructure:"max"`
+}
+
 type IreturnSettings struct {
 	Allow  []string `mapstructure:"allow"`
 	Reject []string `mapstructure:"reject"`
@@ -488,7 +505,6 @@ type NlreturnSettings struct {
 
 type NoLintLintSettings struct {
 	RequireExplanation bool     `mapstructure:"require-explanation"`
-	AllowLeadingSpace  bool     `mapstructure:"allow-leading-space"`
 	RequireSpecific    bool     `mapstructure:"require-specific"`
 	AllowNoExplanation []string `mapstructure:"allow-no-explanation"`
 	AllowUnused        bool     `mapstructure:"allow-unused"`
@@ -515,6 +531,10 @@ type PredeclaredSettings struct {
 type PromlinterSettings struct {
 	Strict          bool     `mapstructure:"strict"`
 	DisabledLinters []string `mapstructure:"disabled-linters"`
+}
+
+type ReassignSettings struct {
+	Patterns []string `mapstructure:"patterns"`
 }
 
 type ReviveSettings struct {
@@ -586,6 +606,16 @@ type ThelperOptions struct {
 
 type TenvSettings struct {
 	All bool `mapstructure:"all"`
+}
+
+type UseStdlibVarsSettings struct {
+	HTTPMethod         bool `mapstructure:"http-method"`
+	HTTPStatusCode     bool `mapstructure:"http-status-code"`
+	TimeWeekday        bool `mapstructure:"time-weekday"`
+	TimeMonth          bool `mapstructure:"time-month"`
+	TimeLayout         bool `mapstructure:"time-layout"`
+	CryptoHash         bool `mapstructure:"crypto-hash"`
+	DefaultRPCPathFlag bool `mapstructure:"default-rpc-path"`
 }
 
 type UnparamSettings struct {

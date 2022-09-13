@@ -56,11 +56,7 @@ func NewLLL(settings *config.LllSettings) *goanalysis.Linter {
 }
 
 func runLll(pass *analysis.Pass, settings *config.LllSettings) ([]goanalysis.Issue, error) {
-	var fileNames []string
-	for _, f := range pass.Files {
-		pos := pass.Fset.PositionFor(f.Pos(), false)
-		fileNames = append(fileNames, pos.Filename)
-	}
+	fileNames := getFileNames(pass)
 
 	spaces := strings.Repeat(" ", settings.TabWidth)
 
@@ -92,7 +88,7 @@ func getLLLIssuesForFile(filename string, maxLineLen int, tabSpaces string) ([]r
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
-		line = strings.Replace(line, "\t", tabSpaces, -1)
+		line = strings.ReplaceAll(line, "\t", tabSpaces)
 		lineLen := utf8.RuneCountInString(line)
 		if lineLen > maxLineLen {
 			res = append(res, result.Issue{
