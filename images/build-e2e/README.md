@@ -7,6 +7,7 @@ The container connects through ssh to the target host and copy the right binary 
 ## Envs
 
 **PLATFORM**:*define target platform (windows, macos, linux).*
+**ARCH**:*define target arch (amd64, arm64). Default amd64
 **TARGET_HOST**:*dns or ip for the target host.*  
 **TARGET_HOST_USERNAME**:*username for target host.*  
 **TARGET_HOST_KEY_PATH**:*private key for user. (Mandatory if not TARGET_HOST_PASSWORD).*  
