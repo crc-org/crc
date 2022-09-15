@@ -57,6 +57,7 @@ func (c *Config) AddSetting(name string, defValue interface{}, validationFn Vali
 		defaultValue: defValue,
 		validationFn: validationFn,
 		callbackFn:   callbackFn,
+		isSecret:     isUnderlyingTypeSecret(defValue),
 		Help:         help,
 	}
 }
@@ -81,7 +82,7 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf(invalidProp, value, key, err)
 		}
-	case string:
+	case string, Secret:
 		castValue = cast.ToString(value)
 	case bool:
 		castValue, err = cast.ToBoolE(value)
@@ -94,8 +95,14 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 		return "", fmt.Errorf(invalidType, value, key)
 	}
 
-	if err := c.storage.Set(key, castValue); err != nil {
-		return "", err
+	if setting.isSecret {
+		if err := c.secretStorage.Set(key, castValue); err != nil {
+			return "", err
+		}
+	} else {
+		if err := c.storage.Set(key, castValue); err != nil {
+			return "", err
+		}
 	}
 
 	return c.settingsByName[key].callbackFn(key, castValue), nil
@@ -103,15 +110,19 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 
 // Unset unsets a given config key
 func (c *Config) Unset(key string) (string, error) {
-	_, ok := c.settingsByName[key]
+	setting, ok := c.settingsByName[key]
 	if !ok {
 		return "", fmt.Errorf(configPropDoesntExistMsg, key)
 	}
-
-	if err := c.storage.Unset(key); err != nil {
-		return "", err
+	if setting.isSecret {
+		if err := c.secretStorage.Unset(key); err != nil {
+			return "", err
+		}
+	} else {
+		if err := c.storage.Unset(key); err != nil {
+			return "", err
+		}
 	}
-
 	return fmt.Sprintf("Successfully unset configuration property '%s'", key), nil
 }
 
@@ -122,7 +133,12 @@ func (c *Config) Get(key string) SettingValue {
 			Invalid: true,
 		}
 	}
-	value := c.storage.Get(key)
+	var value interface{}
+	if setting.isSecret {
+		value = c.secretStorage.Get(key)
+	} else {
+		value = c.storage.Get(key)
+	}
 	if value == nil {
 		value = setting.defaultValue
 	}
@@ -151,6 +167,13 @@ func (c *Config) Get(key string) SettingValue {
 				Invalid: true,
 			}
 		}
+	case Secret:
+		value, err = toSecret(value)
+		if err != nil {
+			return SettingValue{
+				Invalid: true,
+			}
+		}
 	default:
 		return SettingValue{
 			Invalid: true,
@@ -160,4 +183,22 @@ func (c *Config) Get(key string) SettingValue {
 		Value:     value,
 		IsDefault: reflect.DeepEqual(setting.defaultValue, value),
 	}
+}
+
+func toSecret(value interface{}) (Secret, error) {
+	if isUnderlyingTypeSecret(value) {
+		return value.(Secret), nil
+	}
+	v, err := cast.ToStringE(value)
+	if err != nil {
+		return Secret(""), err
+	}
+	return Secret(v), nil
+}
+
+func isUnderlyingTypeSecret(value interface{}) bool {
+	if _, ok := value.(Secret); ok {
+		return true
+	}
+	return false
 }
