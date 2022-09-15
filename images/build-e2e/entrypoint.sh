@@ -15,7 +15,6 @@ E2E_TAG_EXPRESSION="${E2E_TAG_EXPRESSION:-""}"
 # Review this when go 1.16 with embed support
 FEATURES_PATH=/opt/crc/features
 TESTDATA_PATH=/opt/crc/testdata
-UX_RESOURCES_PATH=/opt/crc/ux
 
 # Results
 RESULTS_PATH="${RESULTS_PATH:-/output}"
@@ -83,19 +82,6 @@ fi
 $SCP "${BINARY_PATH}" "${REMOTE}:${EXECUTION_FOLDER}/bin"
 $SCP "${PULL_SECRET_FILE_PATH}" "${REMOTE}:${EXECUTION_FOLDER}/pull-secret"
 $SCP "${FEATURES_PATH}" "${REMOTE}:${EXECUTION_FOLDER}/bin"
-# Applescripts
-REMOTE_RESOURCES_PATH=/workspace/test/extended/crc
-if [[ ${PLATFORM} == 'windows' ]]; then
-    # Todo change for powershell cmdlet
-    $SSH "${REMOTE}" "powershell.exe -c New-Item -ItemType directory -Path ${REMOTE_RESOURCES_PATH}"
-    $SCP "${UX_RESOURCES_PATH}" "${REMOTE}:${REMOTE_RESOURCES_PATH}"
-
-else
-    # This relies on:  cat /etc/synthetic.conf 
-    #workspace  Users/crcqe/crc-e2e/workspace as symbolic link
-    $SSH "${REMOTE}" "mkdir -p ${EXECUTION_FOLDER}/workspace/test/extended/crc"
-    $SCP "${UX_RESOURCES_PATH}" "${REMOTE}:${EXECUTION_FOLDER}/workspace/test/extended/crc"
-fi
 # Testdata files
 $SCP "${TESTDATA_PATH}" "${REMOTE}:${EXECUTION_FOLDER}"
 
@@ -150,9 +136,4 @@ popd
 
 echo "Cleanup target"
 # Cleanup
-# Review this when go 1.16 with embed support
-if [[ ${PLATFORM} == 'windows' ]]; then
-    # Todo change for powershell cmdlet
-    $SSH "${REMOTE}" "rm -r /workspace"
-fi
 $SSH "${REMOTE}" "rm -r ${EXECUTION_FOLDER}"
