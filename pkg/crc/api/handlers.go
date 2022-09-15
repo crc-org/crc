@@ -217,6 +217,9 @@ func (h *Handler) GetConfig(c *context) error {
 		allConfigs := h.Config.AllConfigs()
 		configs := make(map[string]interface{})
 		for k, v := range allConfigs {
+			if v.IsSecret {
+				continue
+			}
 			configs[k] = v.Value
 		}
 		return c.JSON(http.StatusOK, client.GetConfigResult{
@@ -228,6 +231,9 @@ func (h *Handler) GetConfig(c *context) error {
 	for _, key := range req.Properties {
 		v := h.Config.Get(key)
 		if v.Invalid {
+			continue
+		}
+		if v.IsSecret {
 			continue
 		}
 		configs[key] = v.Value
