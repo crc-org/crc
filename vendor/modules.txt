@@ -38,21 +38,6 @@ github.com/ProtonMail/go-crypto/openpgp/s2k
 # github.com/RangelReale/osincli v0.0.0-20160924135400-fababb0555f2
 ## explicit
 github.com/RangelReale/osincli
-# github.com/RedHatQE/gowinx v0.0.3
-## explicit; go 1.15
-github.com/RedHatQE/gowinx/pkg/app/action-center
-github.com/RedHatQE/gowinx/pkg/util
-github.com/RedHatQE/gowinx/pkg/util/logging
-github.com/RedHatQE/gowinx/pkg/win32/api/system-services
-github.com/RedHatQE/gowinx/pkg/win32/api/user-interface/windows-accesibility-features
-github.com/RedHatQE/gowinx/pkg/win32/api/user-interface/windows-and-messages
-github.com/RedHatQE/gowinx/pkg/win32/api/util
-github.com/RedHatQE/gowinx/pkg/win32/desktop/notificationarea
-github.com/RedHatQE/gowinx/pkg/win32/interaction
-github.com/RedHatQE/gowinx/pkg/win32/services/process
-github.com/RedHatQE/gowinx/pkg/win32/ux
-github.com/RedHatQE/gowinx/pkg/win32/ux/toolbar
-github.com/RedHatQE/gowinx/pkg/win32/ux/windows
 # github.com/VividCortex/ewma v1.2.0
 ## explicit; go 1.12
 github.com/VividCortex/ewma
@@ -500,9 +485,6 @@ github.com/openshift/library-go/pkg/oauth/oauthdiscovery
 ## explicit; go 1.17
 github.com/openshift/oc/pkg/helpers/term
 github.com/openshift/oc/pkg/helpers/tokencmd
-# github.com/openstandia/w32uiautomation v0.0.0-20190416091226-c987b5b65d6b
-## explicit
-github.com/openstandia/w32uiautomation
 # github.com/patrickmn/go-cache v2.1.0+incompatible
 ## explicit
 github.com/patrickmn/go-cache

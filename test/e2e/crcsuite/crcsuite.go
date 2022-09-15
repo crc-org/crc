@@ -17,7 +17,6 @@ import (
 
 	clicumber "github.com/code-ready/clicumber/testsuite"
 	"github.com/code-ready/crc/pkg/crc/preset"
-	"github.com/code-ready/crc/test/e2e/crcsuite/ux"
 	crcCmd "github.com/code-ready/crc/test/extended/crc/cmd"
 	"github.com/code-ready/crc/test/extended/util"
 )
@@ -189,9 +188,6 @@ func FeatureContext(s *godog.Suite) {
 			fmt.Printf("Could not delete CRC VM: %s.", err)
 		}
 	})
-
-	// Extend the context with tray when supported
-	ux.FeatureContext(s, &bundleLocation, &pullSecretFile)
 }
 
 func ParseFlags() {
@@ -199,9 +195,6 @@ func ParseFlags() {
 	flag.StringVar(&pullSecretFile, "pull-secret-file", "", "Path to the file containing pull secret")
 	flag.StringVar(&CRCExecutable, "crc-binary", "", "Path to the CRC executable to be tested")
 	flag.BoolVar(&cleanupHome, "cleanup-home", true, "Try to remove crc home folder before starting the suite")
-
-	// Extend the context with tray when supported
-	ux.ParseFlags()
 }
 
 func RemoveCRCHome() error {
