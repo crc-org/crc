@@ -162,9 +162,10 @@ clean: clean_docs clean_macos_package clean_windows_msi
 
 .PHONY: build_e2e
 build_e2e: $(SOURCES)
-	GOOS=linux   go test ./test/e2e/ --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/linux-amd64/e2e.test
-	GOOS=windows go test ./test/e2e/ --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/windows-amd64/e2e.test.exe
-	GOOS=darwin  go test ./test/e2e/ --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/macos-amd64/e2e.test
+	GOARCH=amd64 GOOS=linux   go test ./test/e2e/ --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/linux-amd64/e2e.test
+	GOARCH=amd64 GOOS=windows go test ./test/e2e/ --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/windows-amd64/e2e.test.exe
+	GOARCH=amd64 GOOS=darwin  go test ./test/e2e/ --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/macos-amd64/e2e.test
+	GOARCH=arm64 GOOS=darwin  go test ./test/e2e/ --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/macos-arm64/e2e.test
 
 .PHONY: build_integration
 build_integration: $(SOURCES)
