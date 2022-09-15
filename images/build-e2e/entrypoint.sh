@@ -1,11 +1,12 @@
 #!/bin/sh
 
+ARCH="${ARCH:-"amd64"}"
 # Vars
 BINARY=e2e.test
 if [[ ${PLATFORM} == 'windows' ]]; then
     BINARY=e2e.test.exe
 fi
-BINARY_PATH="/opt/crc/bin/${PLATFORM}-amd64/${BINARY}"
+BINARY_PATH="/opt/crc/bin/${PLATFORM}-${ARCH}/${BINARY}"
 
 # Running options
 CLEANUP_HOME="${CLEANUP_HOME:-"true"}"
