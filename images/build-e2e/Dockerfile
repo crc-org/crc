@@ -14,10 +14,6 @@ COPY --from=builder /workspace/out /opt/crc/bin
 # Review this when go 1.16 with embed support
 COPY --from=builder /workspace/test/e2e/features /opt/crc/features
 COPY --from=builder /workspace/test/testdata /opt/crc/testdata
-COPY --from=builder /workspace/test/extended/crc/ux/installer/applescripts /opt/crc/ux/installer/applescripts
-COPY --from=builder /workspace/test/extended/crc/ux/notification/applescripts /opt/crc/ux/notification/applescripts
-COPY --from=builder /workspace/test/extended/crc/ux/tray/applescripts /opt/crc/ux/tray/applescripts
-
 
 ENV EPEL https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
 
