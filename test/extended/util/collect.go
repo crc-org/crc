@@ -230,7 +230,7 @@ func (collector *ContainerLogCollector) Collect(w Writer) error {
 }
 
 func sshClient() (ssh.Client, error) {
-	cfg := crcConfig.New(crcConfig.NewEmptyInMemoryStorage())
+	cfg := crcConfig.New(crcConfig.NewEmptyInMemoryStorage(), crcConfig.NewEmptyInMemorySecretStorage())
 	crcConfig.RegisterSettings(cfg)
 	client := machine.NewClient(constants.DefaultName, true, cfg)
 	connectionDetails, err := client.ConnectionDetails()

@@ -25,7 +25,7 @@ func TestLoadPullSecret(t *testing.T) {
 	assert.NoError(t, err)
 	defer os.RemoveAll(dir)
 
-	cfg := config.New(config.NewEmptyInMemoryStorage())
+	cfg := config.New(config.NewEmptyInMemoryStorage(), config.NewEmptyInMemorySecretStorage())
 	config.RegisterSettings(cfg)
 
 	loader := &nonInteractivePullSecretLoader{

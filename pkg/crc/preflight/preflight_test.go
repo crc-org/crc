@@ -10,7 +10,7 @@ import (
 
 func TestCheckPreflight(t *testing.T) {
 	check, calls := sampleCheck(nil, nil)
-	cfg := config.New(config.NewEmptyInMemoryStorage())
+	cfg := config.New(config.NewEmptyInMemoryStorage(), config.NewEmptyInMemorySecretStorage())
 	doRegisterSettings(cfg, []Check{*check})
 
 	assert.NoError(t, doPreflightChecks(cfg, []Check{*check}))
@@ -20,7 +20,7 @@ func TestCheckPreflight(t *testing.T) {
 
 func TestSkipPreflight(t *testing.T) {
 	check, calls := sampleCheck(nil, nil)
-	cfg := config.New(config.NewEmptyInMemoryStorage())
+	cfg := config.New(config.NewEmptyInMemoryStorage(), config.NewEmptyInMemorySecretStorage())
 	doRegisterSettings(cfg, []Check{*check})
 	_, err := cfg.Set("skip-sample", true)
 	assert.NoError(t, err)
@@ -31,7 +31,7 @@ func TestSkipPreflight(t *testing.T) {
 
 func TestFixPreflight(t *testing.T) {
 	check, calls := sampleCheck(errors.New("check failed"), nil)
-	cfg := config.New(config.NewEmptyInMemoryStorage())
+	cfg := config.New(config.NewEmptyInMemoryStorage(), config.NewEmptyInMemorySecretStorage())
 	doRegisterSettings(cfg, []Check{*check})
 
 	assert.NoError(t, doFixPreflightChecks(cfg, []Check{*check}, false))
@@ -41,7 +41,7 @@ func TestFixPreflight(t *testing.T) {
 
 func TestFixPreflightCheckOnly(t *testing.T) {
 	check, calls := sampleCheck(errors.New("check failed"), nil)
-	cfg := config.New(config.NewEmptyInMemoryStorage())
+	cfg := config.New(config.NewEmptyInMemoryStorage(), config.NewEmptyInMemorySecretStorage())
 	doRegisterSettings(cfg, []Check{*check})
 
 	assert.Error(t, doFixPreflightChecks(cfg, []Check{*check}, true))

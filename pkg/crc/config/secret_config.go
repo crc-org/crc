@@ -67,3 +67,11 @@ func keyringAccessible() bool {
 	logging.Debugf("Keyring is not accessible: %v", err)
 	return false
 }
+
+func NewEmptyInMemorySecretStorage() *SecretStorage {
+	keyring.MockInit()
+	return &SecretStorage{
+		secretService:   secretServiceName,
+		storeAccessible: true,
+	}
+}
