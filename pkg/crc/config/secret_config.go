@@ -13,6 +13,12 @@ const secretServiceName = "crc"
 
 var ErrSecretsNotAccessible = errors.New("secret store is not accessible")
 
+type Secret string
+
+func (s Secret) String() string {
+	return string(s)
+}
+
 type SecretStorage struct {
 	secretService   string
 	storeAccessible bool

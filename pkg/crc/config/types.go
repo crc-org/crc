@@ -18,6 +18,7 @@ type Setting struct {
 	defaultValue interface{}
 	validationFn ValidationFnType
 	callbackFn   SetFn
+	isSecret     bool
 	Help         string
 }
 
