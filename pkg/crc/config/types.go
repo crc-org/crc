@@ -26,6 +26,7 @@ type SettingValue struct {
 	Value     interface{}
 	Invalid   bool
 	IsDefault bool
+	IsSecret  bool
 }
 
 func (v SettingValue) AsBool() bool {

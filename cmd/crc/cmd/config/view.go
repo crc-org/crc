@@ -55,6 +55,9 @@ func runConfigView(cfg map[string]config.SettingValue, tmpl *template.Template, 
 		if v.IsDefault {
 			continue
 		}
+		if v.IsSecret {
+			continue
+		}
 		viewTmplt := configViewTemplate{k, v.AsString()}
 		var buffer bytes.Buffer
 		if err := tmpl.Execute(&buffer, viewTmplt); err != nil {

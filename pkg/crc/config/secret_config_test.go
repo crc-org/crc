@@ -27,6 +27,7 @@ func TestGetSecret(t *testing.T) {
 	assert.Equal(t, SettingValue{
 		Value:     Secret("apples"),
 		IsDefault: true,
+		IsSecret:  true,
 	}, cfg.Get(secret))
 }
 
@@ -49,6 +50,7 @@ func TestSecretConfigSetAndGet(t *testing.T) {
 	assert.Equal(t, SettingValue{
 		Value:     Secret("pass123"),
 		IsDefault: false,
+		IsSecret:  true,
 	}, cfg.Get(password))
 }
 
@@ -62,5 +64,6 @@ func TestSecretConfigUnsetAndGet(t *testing.T) {
 	assert.Equal(t, SettingValue{
 		Value:     Secret("apples"),
 		IsDefault: true,
+		IsSecret:  true,
 	}, cfg.Get(secret))
 }
