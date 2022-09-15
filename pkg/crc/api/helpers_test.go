@@ -11,7 +11,7 @@ func setupNewInMemoryConfig() *config.Config {
 	storage := config.NewEmptyInMemoryStorage()
 	cfg := config.New(&skipPreflights{
 		storage: storage,
-	})
+	}, config.NewEmptyInMemorySecretStorage())
 	cfg.AddSetting("a&a", "foo", nil, nil, "test special string")
 	cfg.AddSetting("b&&&b", "bar", nil, nil, "test special string")
 	config.RegisterSettings(cfg)

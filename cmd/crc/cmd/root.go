@@ -50,7 +50,7 @@ func init() {
 		logging.Fatal(err.Error())
 	}
 	var err error
-	config, viper, err = newViperConfig()
+	config, viper, err = newConfig()
 	if err != nil {
 		logging.Fatal(err.Error())
 	}
@@ -144,12 +144,12 @@ func setProxyDefaults() error {
 	return nil
 }
 
-func newViperConfig() (*crcConfig.Config, *crcConfig.ViperStorage, error) {
+func newConfig() (*crcConfig.Config, *crcConfig.ViperStorage, error) {
 	viper, err := crcConfig.NewViperStorage(constants.ConfigPath, constants.CrcEnvPrefix)
 	if err != nil {
 		return nil, nil, err
 	}
-	cfg := crcConfig.New(viper)
+	cfg := crcConfig.New(viper, crcConfig.NewSecretStorage())
 	crcConfig.RegisterSettings(cfg)
 	preflight.RegisterSettings(cfg)
 	return cfg, viper, nil

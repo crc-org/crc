@@ -11,7 +11,7 @@ import (
 )
 
 func TestCountConfigurationOptions(t *testing.T) {
-	cfg := config.New(config.NewEmptyInMemoryStorage())
+	cfg := config.New(config.NewEmptyInMemoryStorage(), config.NewEmptyInMemorySecretStorage())
 	RegisterSettings(cfg)
 	assert.Len(t, cfg.AllConfigs(), 12)
 }

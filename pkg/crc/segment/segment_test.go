@@ -59,7 +59,8 @@ func mockServer() (chan []byte, *httptest.Server) {
 
 func newTestConfig(value string) (*crcConfig.Config, error) {
 	storage := crcConfig.NewEmptyInMemoryStorage()
-	config := crcConfig.New(storage)
+	secretStorage := crcConfig.NewEmptyInMemorySecretStorage()
+	config := crcConfig.New(storage, secretStorage)
 	crcConfig.RegisterSettings(config)
 
 	if _, err := config.Set(crcConfig.ConsentTelemetry, value); err != nil {

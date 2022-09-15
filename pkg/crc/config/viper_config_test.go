@@ -25,7 +25,9 @@ func newTestConfig(configFile, envPrefix string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	config := New(storage)
+
+	secretStorage := NewEmptyInMemorySecretStorage()
+	config := New(storage, secretStorage)
 	config.AddSetting(cpus, 4, validateCPUs, RequiresRestartMsg, "")
 	config.AddSetting(nameServer, "", ValidateIPAddress, SuccessfullyApplied, "")
 	return config, nil
@@ -157,7 +159,7 @@ func TestViperConfigBindFlagSet(t *testing.T) {
 	}
 	storage, err := NewViperStorage(configFile, "CRC")
 	require.NoError(t, err)
-	config := New(storage)
+	config := New(storage, NewEmptyInMemorySecretStorage())
 	config.AddSetting(cpus, 4, validateCPUs, RequiresRestartMsg, "")
 	config.AddSetting(nameServer, "", ValidateIPAddress, SuccessfullyApplied, "")
 

@@ -16,12 +16,14 @@ const (
 
 type Config struct {
 	storage        RawStorage
+	secretStorage  RawStorage
 	settingsByName map[string]Setting
 }
 
-func New(storage RawStorage) *Config {
+func New(storage, secretStorage RawStorage) *Config {
 	return &Config{
 		storage:        storage,
+		secretStorage:  secretStorage,
 		settingsByName: make(map[string]Setting),
 	}
 }
