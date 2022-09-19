@@ -121,6 +121,11 @@ func ValidateURL(uri string) error {
 	// Relative paths will cause `ParseRequestURI` to error out, and will be handled in `ValidateBundlePath`
 	case !u.IsAbs():
 		return ValidatePath(uri)
+	// In case of windows where path started with C:\<path> the uri scheme would be `C`
+	// We are going to check if the uri scheme is a single letter and assume that it is windows drive path url
+	// and send it to ValidatePath
+	case len(u.Scheme) == 1:
+		return ValidatePath(uri)
 	case u.Scheme == "http", u.Scheme == "https":
 		return nil
 	case u.Scheme == "docker":
