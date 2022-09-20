@@ -81,7 +81,7 @@ vendorcheck:
 	./verify-vendor.sh
 
 .PHONY: check
-check: cross build_e2e $(HOST_BUILD_DIR)/crc-embedder test cross-lint vendorcheck
+check: cross build_e2e $(HOST_BUILD_DIR)/crc-embedder test cross-lint vendorcheck build_integration
 
 # Start of the actual build targets
 
