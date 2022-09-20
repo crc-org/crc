@@ -257,7 +257,6 @@ gen_release_info:
 	@sed -i s/@PODMAN_VERSION@/$(PODMAN_VERSION)/ $(RELEASE_INFO)
 
 .PHONY: linux-release-binary macos-release-binary windows-release-binary
-linux-release-binary: LDFLAGS += -X '$(REPOPATH)/pkg/crc/version.linuxReleaseBuild=true' $(RELEASE_VERSION_VARIABLES)
 linux-release-binary: $(BUILD_DIR)/linux-amd64/crc
 
 macos-release-binary: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)

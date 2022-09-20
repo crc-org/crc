@@ -162,10 +162,6 @@ func EnsureBaseDirectoriesExist() error {
 	return nil
 }
 
-func IsRelease() bool {
-	return version.IsInstaller() || version.IsLinuxRelease()
-}
-
 func GetPublicKeyPath() string {
 	return filepath.Join(MachineInstanceDir, DefaultName, "id_ecdsa.pub")
 }
