@@ -169,9 +169,9 @@ build_e2e: $(SOURCES)
 
 .PHONY: build_integration
 build_integration: $(SOURCES)
-	GOOS=linux   go test ./test/integration/ --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/linux-amd64/integration.test
-	GOOS=windows go test --ldflags="-X $(REPOPATH)/pkg/crc/version.installerBuild=true $(VERSION_VARIABLES)" ./test/integration/ -c -o $(BUILD_DIR)/windows-amd64/integration.test.exe
-	GOOS=darwin  go test --ldflags="-X $(REPOPATH)/pkg/crc/version.installerBuild=true $(VERSION_VARIABLES)" ./test/integration/ -c -o $(BUILD_DIR)/macos-amd64/integration.test
+	GOOS=linux   go test ./test/integration/ -tags "$(BUILDTAGS)" --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/linux-amd64/integration.test
+	GOOS=windows go test -tags "$(BUILDTAGS)" --ldflags="-X $(REPOPATH)/pkg/crc/version.installerBuild=true $(VERSION_VARIABLES)" ./test/integration/ -c -o $(BUILD_DIR)/windows-amd64/integration.test.exe
+	GOOS=darwin  go test -tags "$(BUILDTAGS)" --ldflags="-X $(REPOPATH)/pkg/crc/version.installerBuild=true $(VERSION_VARIABLES)" ./test/integration/ -c -o $(BUILD_DIR)/macos-amd64/integration.test
 
 #  Build the container image for e2e
 .PHONY: containerized_e2e
