@@ -24,7 +24,7 @@ const (
 	LogFile                   = "crc.log"
 	DaemonLogFile             = "crcd.log"
 	CrcLandingPageURL         = "https://console.redhat.com/openshift/create/local" // #nosec G101
-	DefaultAdminHelperURLBase = "https://github.com/code-ready/admin-helper/releases/download/v%s/%s"
+	DefaultAdminHelperURLBase = "https://github.com/crc-org/admin-helper/releases/download/v%s/%s"
 	CRCMacTrayDownloadURL     = "https://github.com/code-ready/tray-electron/releases/download/%s/crc-tray-macos.tar.gz"
 	CRCWindowsTrayDownloadURL = "https://github.com/code-ready/tray-electron/releases/download/%s/crc-tray-windows.zip"
 	DefaultContext            = "admin"

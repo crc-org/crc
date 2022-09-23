@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/code-ready/admin-helper/pkg/types"
+	"github.com/crc-org/admin-helper/pkg/types"
 )
 
 type Client struct {
