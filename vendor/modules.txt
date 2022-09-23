@@ -90,9 +90,6 @@ github.com/code-ready/machine/libmachine/drivers/plugin/localbinary
 github.com/code-ready/machine/libmachine/drivers/rpc
 github.com/code-ready/machine/libmachine/state
 github.com/code-ready/machine/libmachine/version
-# github.com/code-ready/vfkit v0.0.2
-## explicit; go 1.16
-github.com/code-ready/vfkit/pkg/client
 # github.com/containers/gvisor-tap-vsock v0.4.1-0.20220908123107-8d91f6d62de2
 ## explicit; go 1.16
 github.com/containers/gvisor-tap-vsock/pkg/client
@@ -175,6 +172,9 @@ github.com/containers/storage/pkg/unshare
 ## explicit; go 1.12
 github.com/coreos/go-systemd/v22/activation
 github.com/coreos/go-systemd/v22/daemon
+# github.com/crc-org/vfkit v0.0.2-0.20221012144032-2e4961165b68
+## explicit; go 1.17
+github.com/crc-org/vfkit/pkg/client
 # github.com/cucumber/gherkin-go/v19 v19.0.3
 ## explicit; go 1.13
 github.com/cucumber/gherkin-go/v19
@@ -710,7 +710,7 @@ golang.org/x/oauth2/internal
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f
+# golang.org/x/sys v0.0.0-20221010170243-090e33056c14
 ## explicit; go 1.17
 golang.org/x/sys/cpu
 golang.org/x/sys/execabs
