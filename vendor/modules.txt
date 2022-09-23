@@ -77,11 +77,6 @@ github.com/cespare/xxhash/v2
 ## explicit; go 1.12
 github.com/cheggaaa/pb/v3
 github.com/cheggaaa/pb/v3/termutil
-# github.com/code-ready/admin-helper v0.0.10
-## explicit; go 1.15
-github.com/code-ready/admin-helper/pkg/client
-github.com/code-ready/admin-helper/pkg/hosts
-github.com/code-ready/admin-helper/pkg/types
 # github.com/code-ready/machine v0.0.0-20220927132822-3408fdecc41c
 ## explicit; go 1.17
 github.com/code-ready/machine/drivers/libvirt
@@ -172,6 +167,11 @@ github.com/containers/storage/pkg/unshare
 ## explicit; go 1.12
 github.com/coreos/go-systemd/v22/activation
 github.com/coreos/go-systemd/v22/daemon
+# github.com/crc-org/admin-helper v0.0.12-0.20221012143549-fd5acd1c478e
+## explicit; go 1.17
+github.com/crc-org/admin-helper/pkg/client
+github.com/crc-org/admin-helper/pkg/hosts
+github.com/crc-org/admin-helper/pkg/types
 # github.com/crc-org/vfkit v0.0.2-0.20221012144032-2e4961165b68
 ## explicit; go 1.17
 github.com/crc-org/vfkit/pkg/client

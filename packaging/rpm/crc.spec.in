@@ -1,4 +1,4 @@
-# https://github.com/code-ready/admin-helper
+# https://github.com/crc-org/admin-helper
 %global goipath         github.com/code-ready/crc
 %global goname          crc
 Version:                __VERSION__

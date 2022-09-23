@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Microsoft/go-winio"
-	"github.com/code-ready/admin-helper/pkg/client"
+	"github.com/crc-org/admin-helper/pkg/client"
 )
 
 func instance() helper {
