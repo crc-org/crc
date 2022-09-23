@@ -13,10 +13,10 @@ require (
 	github.com/cheggaaa/pb/v3 v3.0.8
 	github.com/code-ready/admin-helper v0.0.10
 	github.com/code-ready/machine v0.0.0-20220927132822-3408fdecc41c
-	github.com/code-ready/vfkit v0.0.2
 	github.com/containers/gvisor-tap-vsock v0.4.1-0.20220908123107-8d91f6d62de2
 	github.com/containers/image/v5 v5.15.0
 	github.com/coreos/go-systemd/v22 v22.3.2
+	github.com/crc-org/vfkit v0.0.2-0.20221012144032-2e4961165b68
 	github.com/cucumber/godog v0.12.5
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/go-units v0.4.0
@@ -53,7 +53,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
-	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f
+	golang.org/x/sys v0.0.0-20221010170243-090e33056c14
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467
 	golang.org/x/text v0.3.7
 	gopkg.in/yaml.v2 v2.4.0

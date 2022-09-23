@@ -30,7 +30,7 @@ import (
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/machine/libmachine/drivers"
 	"github.com/code-ready/machine/libmachine/state"
-	"github.com/code-ready/vfkit/pkg/client"
+	"github.com/crc-org/vfkit/pkg/client"
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/v3/process"
 	log "github.com/sirupsen/logrus"

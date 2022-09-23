@@ -13,5 +13,5 @@ const (
 )
 
 var (
-	VfkitDownloadURL = fmt.Sprintf("https://github.com/code-ready/vfkit/releases/download/v%s/%s", VfkitVersion, VfkitCommand)
+	VfkitDownloadURL = fmt.Sprintf("https://github.com/crc-org/vfkit/releases/download/v%s/%s", VfkitVersion, VfkitCommand)
 )

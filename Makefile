@@ -303,7 +303,7 @@ ifeq ($(CUSTOM_EMBED),false)
 endif
 
 packaging/vfkit.entitlements:
-	curl -sL https://raw.githubusercontent.com/code-ready/vfkit/main/vf.entitlements -o $@
+	curl -sL https://raw.githubusercontent.com/crc-org/vfkit/main/vf.entitlements -o $@
 
 macos-universal-binary: macos-release-binary $(TOOLS_BINDIR)/makefat
 	mkdir -p out/macos-universal
