@@ -107,7 +107,7 @@ func RegisterSettings(cfg *Config) {
 			fmt.Sprintf("Network mode (%s or %s)", network.UserNetworkingMode, network.SystemNetworkingMode))
 	}
 
-	cfg.AddSetting(HostNetworkAccess, false, validateHostNetworkAccess, SuccessfullyApplied,
+	cfg.AddSetting(HostNetworkAccess, false, validateHostNetworkAccess, RequiresCleanupAndSetupMsg,
 		"Allow TCP/IP connections from the CRC VM to services running on the host (true/false, default: false)")
 	// Proxy Configuration
 	cfg.AddSetting(HTTPProxy, "", ValidateHTTPProxy, SuccessfullyApplied,

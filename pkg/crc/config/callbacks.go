@@ -33,6 +33,11 @@ func RequiresCRCSetup(key string, _ interface{}) string {
 		"Please run 'crc setup' for this configuration to take effect.", key)
 }
 
+func RequiresCleanupAndSetupMsg(key string, _ interface{}) string {
+	return fmt.Sprintf("Changes to configuration property '%s' are only applied during 'crc setup'.\n"+
+		"Please run 'crc cleanup' followed by 'crc setup' for this configuration to take effect.", key)
+}
+
 func RequiresHTTPPortChangeWarning(key string, value interface{}) string {
 	return fmt.Sprintf("Changes to configuration property '%s' will break OpenShift HTTP routes.\n"+
 		"In order to access OpenShift applications through HTTP URLs "+
