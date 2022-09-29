@@ -183,6 +183,16 @@ func RunCRCExpectSuccess(args ...string) string {
 	return NewCRCCommand(args...).ExecOrDie()
 }
 
+// RunCRCExpectSuccessWithEnv is a convenience wrapper over CRC
+// Appends env variable to the command
+func RunCRCAddEnvExpectSuccess(envVars []string, args ...string) string {
+	crcBuilder := NewCRCCommand(args...)
+	for _, env := range envVars {
+		crcBuilder.cmd.Env = append(os.Environ(), env)
+	}
+	return crcBuilder.ExecOrDie()
+}
+
 // RunPodmanExpectSuccess is a convenience wrapper over podman-remote
 func RunPodmanExpectSuccess(args ...string) string {
 	return NewPodmanCommand(args...).ExecOrDie()
@@ -269,4 +279,29 @@ func (e CodeExitError) Exited() bool {
 
 func (e CodeExitError) ExitStatus() int {
 	return e.Code
+}
+
+func CheckOutputContainsWithRetry(retryCount int, retryTime string, command string, expectedOutput string) (bool, error) {
+
+	retryDuration, err := time.ParseDuration(retryTime)
+	if err != nil {
+		return false, err
+	}
+
+	var contains = false
+
+	for i := 0; i < retryCount; i++ {
+		out, err := exec.Command("bash", "-c", command).Output()
+		outstr := string(out)
+		if err != nil {
+			return false, err
+		}
+		if strings.Contains(outstr, expectedOutput) {
+			contains = true
+			break
+		}
+		time.Sleep(retryDuration)
+	}
+
+	return contains, err
 }

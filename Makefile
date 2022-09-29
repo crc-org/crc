@@ -200,7 +200,7 @@ containerized_integration: clean
 .PHONY: integration ## Run integration tests in Ginkgo
 integration:
 ifndef GINKGO_OPTS
-export GINKGO_OPTS = --ginkgo.label-filter=""
+export GINKGO_OPTS = --ginkgo.label-filter="cert-renewal"
 endif
 ifndef PULL_SECRET_PATH
 export PULL_SECRET_PATH = $(HOME)/Downloads/crc-pull-secret
