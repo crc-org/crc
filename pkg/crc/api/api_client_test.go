@@ -185,6 +185,11 @@ func TestConfigGetAll(t *testing.T) {
 	assert.NoError(t, err)
 	configs := make(map[string]interface{})
 	for k, v := range client.config.AllConfigs() {
+		// since we filter out secret configs at the config api handler level
+		// we need exclude them from AllConfigs
+		if v.IsSecret {
+			continue
+		}
 		// This is required because of https://pkg.go.dev/encoding/json#Unmarshal
 		// Unmarshal stores float64 for JSON numbers in case of interface.
 		switch v := v.Value.(type) {
