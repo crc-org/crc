@@ -22,165 +22,55 @@ Feature: Basic test
         And stdout should contain "delete"
         And stdout should contain "status"
         And stdout should contain "Flags:"
-        And stdout should contain
-            """
-            Use "crc [command] --help" for more information about a command.
-            """
 
     @darwin @linux @windows
     Scenario: CRC status
         When executing crc status command fails
-        Then stderr should contain
-            """
-            Machine does not exist. Use 'crc start' to create it
-            """
-
-    @linux
-    Scenario: CRC setup on Linux
-        When executing "crc setup --check-only" fails
-        Then executing crc start command fails
-        And executing single crc setup command succeeds
-
-    @linux
-    Scenario: Missing CRC setup
-	Given executing "rm ~/.crc/bin/crc-driver-libvirt" succeeds
-        Then executing "crc setup --check-only" fails
-        And starting CRC with default bundle fails
-	And stderr should contain "Preflight checks failed during `crc start`, please try to run `crc setup` first in case you haven't done so yet"
-	And executing crc setup command succeeds
-
-    @darwin
-    Scenario: CRC setup on Mac
-        When executing "crc setup --check-only" fails
-        And executing single crc setup command succeeds
-        
-    @windows
-    Scenario: CRC setup on Windows
-        When executing single crc setup command succeeds
+        Then stderr should contain "Machine does not exist. Use 'crc start' to create it"
 
     @darwin @linux @windows
-    Scenario: Request start with monitoring stack
-        When setting config property "enable-cluster-monitoring" to value "true" succeeds
-        And setting config property "memory" to value "14000" succeeds
-        Then starting CRC with default bundle fails
-        And stderr should contain "Too little memory"
-        And setting config property "memory" to value "16000" succeeds
-
-    @darwin @linux @windows
-    Scenario: CRC start
+    Scenario: CRC start usecase
+        Given executing "crc setup --check-only" fails
+        # Request start with monitoring stack
+        * setting config property "enable-cluster-monitoring" to value "true" succeeds
+        * setting config property "memory" to value "16000" succeeds
+        Given executing crc setup command succeeds
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
         # Check if user can copy-paste login details for developer and kubeadmin users
-        And stdout should match "(?s)(.*)oc login -u developer https:\/\/api\.crc\.testing:6443(.*)$"
-        And stdout should match "(?s)(.*)https:\/\/console-openshift-console\.apps-crc\.testing(.*)$"
-
-    @darwin @linux @windows
-    Scenario: CRC status and disk space check
+        * stdout should match "(?s)(.*)oc login -u developer https:\/\/api\.crc\.testing:6443(.*)$"
+        * stdout should match "(?s)(.*)https:\/\/console-openshift-console\.apps-crc\.testing(.*)$"
+        # status
         When checking that CRC is running
-        And stdout should match ".*Disk Usage: *\d+[\.\d]*GB of 32.\d+GB.*"
-
-    @darwin @linux @windows
-    Scenario: CRC IP check
+        # ip
         When executing crc ip command succeeds
         Then stdout should match "\d+\.\d+\.\d+\.\d+"
-
-    @darwin @linux @windows
-    Scenario: CRC console URL
+        # console url
         When executing "crc console --url" succeeds
         Then stdout should contain "https://console-openshift-console.apps-crc.testing"
-
-    @darwin @linux @windows
-    Scenario: CRC console credentials
+        # console credentials
         When executing "crc console --credentials" succeeds
         Then stdout should contain "To login as a regular user, run 'oc login -u developer -p developer"
         And stdout should contain "To login as an admin, run 'oc login -u kubeadmin -p "
-
-    @darwin @linux
-    Scenario: Monitoring stack check
-        Given checking that CRC is running
-        When executing "eval $(crc oc-env)" succeeds
-        And login to the oc cluster succeeds
+        # monitoring stack check
+        When checking that CRC is running
+        And ensuring user is logged in succeeds
         And executing "oc get pods -n openshift-monitoring" succeeds
         Then stdout matches ".*cluster-monitoring-operator-\w+-\w+\ *2/2\ *Running.*"
         And unsetting config property "enable-cluster-monitoring" succeeds
         And unsetting config property "memory" succeeds
-
-    @windows
-    Scenario: Monitoring stack check
-        Given checking that CRC is running
-        And executing "crc oc-env | Invoke-Expression" succeeds
-        And login to the oc cluster succeeds
-        And executing "oc get pods -n openshift-monitoring" succeeds
-        Then stdout matches ".*cluster-monitoring-operator-\w+-\w+\ *2/2\ *Running.*"
-        And unsetting config property "enable-cluster-monitoring" succeeds
-        And unsetting config property "memory" succeeds
-
-    @linux
-    Scenario: Bundle generation check
-        # This will remove the pull secret from the instance and from the cluster
-        # You need to provide pull secret file again if you want to start this cluster
-        # from a stopped state.
-        Given executing "crc bundle generate -f" succeeds
-
-    @darwin @windows
-    Scenario: CRC stop
+        # stop
         When executing "crc stop"
         Then stdout should match "(.*)[Ss]topped the instance"
         And executing "oc whoami" fails
-
-    @darwin @linux @windows
-    Scenario: CRC status check
+        # status check
         When checking that CRC is stopped
         And stdout should not contain "Running"
-
-    @darwin @linux @windows
-    Scenario: CRC console check
+        # console check
         When executing crc console command
         Then stderr should contain "The OpenShift cluster is not running, cannot open the OpenShift Web Console"
-
-    @darwin @linux @windows
-    Scenario: CRC delete
+        # delete
         When executing "crc delete -f" succeeds
         Then stdout should contain "Deleted the instance"
-
-    @linux
-    Scenario: CRC starts with generated bundle
-        Given starting CRC with custom bundle succeeds
-        Then stderr should contain "Using custom bundle"
-
-    @darwin
-    Scenario Outline: CRC clean-up
+        # cleanup
         When executing crc cleanup command succeeds
-        Then stderr should contain "Unloading and removing the daemon plist file"
-        And stderr should contain "Removing /etc/resolver/testing file"
-        And stderr should contain "Stopping CRC vfkit process"
-        And stderr should contain "Removing hosts file records added by CRC"
-        And stderr should contain "Removing pull secret from the keyring"
-        And stderr should contain "Removing older logs"
-        And stderr should contain "Removing CRC Machine Instance directory"
-        And stderr should contain "Removing crc executable symlink"
-        And stdout should contain "Cleanup finished"
-
-
-    @linux
-    Scenario Outline: CRC clean-up
-        When executing crc cleanup command succeeds
-        Then stderr should contain "Removing crc's virtual machine"
-        And stderr should contain "Removing 'crc' network from libvirt"
-        And stderr should contain "Using root access: Executing systemctl daemon-reload command"
-        And stderr should contain "Using root access: Executing systemctl reload NetworkManager"
-        And stderr should contain "Removing pull secret from the keyring"
-        And stderr should contain "Removing older logs"
-        And stderr should contain "Removing CRC Machine Instance directory"
-        And stdout should contain "Cleanup finished"
-
-    @windows
-    Scenario Outline: CRC clean-up
-        When executing crc cleanup command succeeds
-        Then stderr should contain "Removing the daemon task"
-        And stderr should contain "Removing hosts file records added by CRC"
-        And stderr should contain "Removing pull secret from the keyring"
-        And stderr should contain "Removing older logs"
-        And stderr should contain "Removing CRC Machine Instance directory"
-        And stderr should contain "Removing crc's virtual machine"
-        And stdout should contain "Cleanup finished"

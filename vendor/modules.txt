@@ -82,10 +82,6 @@ github.com/cheggaaa/pb/v3/termutil
 github.com/code-ready/admin-helper/pkg/client
 github.com/code-ready/admin-helper/pkg/hosts
 github.com/code-ready/admin-helper/pkg/types
-# github.com/code-ready/clicumber v0.0.0-20210817053019-08963a832984
-## explicit; go 1.14
-github.com/code-ready/clicumber/testsuite
-github.com/code-ready/clicumber/util
 # github.com/code-ready/machine v0.0.0-20220727160217-7bf0dd8c2d7b
 ## explicit; go 1.17
 github.com/code-ready/machine/drivers/libvirt
@@ -179,16 +175,28 @@ github.com/containers/storage/pkg/unshare
 ## explicit; go 1.12
 github.com/coreos/go-systemd/v22/activation
 github.com/coreos/go-systemd/v22/daemon
-# github.com/cucumber/gherkin-go/v11 v11.0.0
+# github.com/cucumber/gherkin-go/v19 v19.0.3
 ## explicit; go 1.13
-github.com/cucumber/gherkin-go/v11
-# github.com/cucumber/godog v0.9.0
+github.com/cucumber/gherkin-go/v19
+# github.com/cucumber/godog v0.12.5
 ## explicit; go 1.13
 github.com/cucumber/godog
 github.com/cucumber/godog/colors
+github.com/cucumber/godog/formatters
+github.com/cucumber/godog/internal/builder
+github.com/cucumber/godog/internal/flags
+github.com/cucumber/godog/internal/formatters
+github.com/cucumber/godog/internal/models
+github.com/cucumber/godog/internal/parser
+github.com/cucumber/godog/internal/storage
+github.com/cucumber/godog/internal/tags
+github.com/cucumber/godog/internal/utils
 # github.com/cucumber/messages-go/v10 v10.0.3
 ## explicit; go 1.13
 github.com/cucumber/messages-go/v10
+# github.com/cucumber/messages-go/v16 v16.0.1
+## explicit; go 1.13
+github.com/cucumber/messages-go/v16
 # github.com/danieljoos/wincred v1.1.2
 ## explicit; go 1.13
 github.com/danieljoos/wincred
@@ -256,7 +264,6 @@ github.com/godbus/dbus/v5
 github.com/gofrs/uuid
 # github.com/gogo/protobuf v1.3.2
 ## explicit; go 1.15
-github.com/gogo/protobuf/io
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/sortkeys
 # github.com/golang/protobuf v1.5.2
@@ -311,9 +318,18 @@ github.com/h2non/filetype/types
 # github.com/hashicorp/errwrap v1.0.0
 ## explicit
 github.com/hashicorp/errwrap
+# github.com/hashicorp/go-immutable-radix v1.3.1
+## explicit
+github.com/hashicorp/go-immutable-radix
+# github.com/hashicorp/go-memdb v1.3.0
+## explicit; go 1.12
+github.com/hashicorp/go-memdb
 # github.com/hashicorp/go-multierror v1.1.1
 ## explicit; go 1.13
 github.com/hashicorp/go-multierror
+# github.com/hashicorp/golang-lru v0.5.4
+## explicit; go 1.12
+github.com/hashicorp/golang-lru/simplelru
 # github.com/hashicorp/hcl v1.0.0
 ## explicit
 github.com/hashicorp/hcl
@@ -833,8 +849,6 @@ google.golang.org/protobuf/types/descriptorpb
 google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/timestamppb
-# gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
-## explicit; go 1.11
 # gopkg.in/inf.v0 v0.9.1
 ## explicit
 gopkg.in/inf.v0

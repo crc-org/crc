@@ -1,7 +1,7 @@
 @config
 Feature: Test configuration settings
 
-    User checks whether CRC `config set` command works as expected 
+    User checks whether CRC `config set` command works as expected
     in conjunction with `crc setup` and `crc start` commands.
 
     # SETTINGS
@@ -13,31 +13,31 @@ Feature: Test configuration settings
         And setting config property "<property>" to value "<value2>" fails
         When unsetting config property "<property>" succeeds
         Then "JSON" config file "crc.json" in CRC home folder does not contain key "<property>"
-        
+
         # always return to default values
         @darwin
-        Examples: Config settings on Mac 
-            | property         |    value1 |            value2 |
-            | cpus             |         4 |                 3 |
-            | memory           |      9216 |              4096 |
-            | nameserver       | 120.0.0.1 |   999.999.999.999 |
-            | pull-secret-file |      /etc | /nonexistent-file |
+        Examples: Config settings on Mac
+            | property         | value1    | value2            |
+            | cpus             | 4         | 3                 |
+            | memory           | 9216      | 4096              |
+            | nameserver       | 120.0.0.1 | 999.999.999.999   |
+            | pull-secret-file | /etc      | /nonexistent-file |
 
         @linux
         Examples: Config settings on Linux
-            | property         |    value1 |            value2 |
-            | cpus             |         4 |                 3 |
-            | memory           |      9216 |              4096 |
-            | nameserver       | 120.0.0.1 |   999.999.999.999 |
-            | pull-secret-file |      /etc | /nonexistent-file |
+            | property         | value1    | value2            |
+            | cpus             | 4         | 3                 |
+            | memory           | 9216      | 4096              |
+            | nameserver       | 120.0.0.1 | 999.999.999.999   |
+            | pull-secret-file | /etc      | /nonexistent-file |
 
         @windows
         Examples: Config settings on Windows
-            | property         |    value1 |            value2 |
-            | cpus             |         4 |                 3 |
-            | memory           |      9216 |              4096 |
-            | nameserver       | 120.0.0.1 |   999.999.999.999 |
-            | pull-secret-file |    /Users | /nonexistent-file |
+            | property         | value1    | value2            |
+            | cpus             | 4         | 3                 |
+            | memory           | 9216      | 4096              |
+            | nameserver       | 120.0.0.1 | 999.999.999.999   |
+            | pull-secret-file | /Users    | /nonexistent-file |
 
     @linux @darwin @windows
     Scenario: CRC config checks (bundle version)
@@ -69,13 +69,13 @@ Feature: Test configuration settings
         Then stderr should not contain "Skipping above check..."
         When unsetting config property "<property>" succeeds
         Then "JSON" config file "crc.json" in CRC home folder does not contain key "<property>"
-        
+
         @darwin
         Examples:
-            | property                             | value1 | value2 |
-            | skip-check-bundle-extracted          | true   | false  |
-            | skip-check-vfkit-installed           | true   | false  |
-            | skip-check-root-user                 | true   | false  |
+            | property                    | value1 | value2 |
+            | skip-check-bundle-extracted | true   | false  |
+            | skip-check-vfkit-installed  | true   | false  |
+            | skip-check-root-user        | true   | false  |
 
         @linux
         Examples:
@@ -106,6 +106,13 @@ Feature: Test configuration settings
 
     # --------------------------------------
     # Linux-specific Scenarios
+
+    @linux
+    Scenario: Missing CRC setup
+        Given executing single crc setup command succeeds
+        When executing "rm ~/.crc/bin/crc-driver-libvirt" succeeds
+        Then starting CRC with default bundle fails
+        And stderr should contain "Preflight checks failed during `crc start`, please try to run `crc setup` first in case you haven't done so yet"
 
     @linux
     Scenario: Check network setup and destroy it, then check again
