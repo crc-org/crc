@@ -83,9 +83,7 @@ We have automated e2e tests which keep CodeReady Containers in shape.
 
 [[intro-to-e2e-testing]]
 === Introduction
-End-to-end (e2e) tests use the link:http://github.com/code-ready/clicumber[Clicumber] package to provide basic functionality for testing CLI binaries.
-
-Clicumber allows running commands in a persistent shell instance (`bash`, `tcsh`, `zsh`, Command Prompt, or PowerShell), assert its outputs (standard output, standard error, or exit code), check configuration files, and so on. The general functionality of Clicumber is then extended by CodeReady Containers specific test code to cover the whole functionality of CodeReady Containers.
+End-to-end (e2e) tests borrow code from link:http://github.com/code-ready/clicumber[Clicumber] package to provide basic functionality for testing CLI binaries. This facilitates running commands in a persistent shell instance (`bash`, `tcsh`, `zsh`, Command Prompt, or PowerShell), assert its outputs (standard output, standard error, or exit code), check configuration files, and so on. The general functionality of Clicumber is then extended by CodeReady Containers specific test code to cover the whole functionality of CodeReady Containers.
 
 [[how-to-run-e2e-tests]]
 === How to run

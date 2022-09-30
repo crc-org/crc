@@ -2,44 +2,44 @@ package e2e
 
 import (
 	"os"
-	"strings"
 	"testing"
 
-	"github.com/code-ready/clicumber/testsuite"
-	"github.com/code-ready/crc/test/e2e/crcsuite"
+	"github.com/code-ready/crc/test/e2e/testsuite"
 	"github.com/cucumber/godog"
+	"github.com/spf13/pflag"
 )
+
+var opts = godog.Options{
+	Format:              "pretty",
+	Paths:               []string{"./features"},
+	Tags:                "",
+	ShowStepDefinitions: false,
+	StopOnFailure:       false,
+	NoColors:            false,
+}
+
+func init() {
+
+	pflag.StringVar(&opts.Format, "godog.format", "pretty", "Sets which format godog will use")
+	pflag.StringSliceVar(&opts.Paths, "godog.paths", []string{"./features"}, "Relative location of feature files")
+	pflag.StringVar(&opts.Tags, "godog.tags", "", "Tags for godog test")
+	pflag.BoolVar(&opts.ShowStepDefinitions, "godog.definitions", false, "")
+	pflag.BoolVar(&opts.StopOnFailure, "godog.stop-on-failure", false, "Stop when failure is found")
+	pflag.BoolVar(&opts.NoColors, "godog.no-colors", false, "Disable colors in godog output")
+
+	testsuite.ParseFlags()
+}
 
 func TestMain(m *testing.M) {
 
-	parseFlags()
+	pflag.Parse()
 
-	status := godog.RunWithOptions("crc", func(s *godog.Suite) {
-		getFeatureContext(s)
-	}, godog.Options{
-		Format:              testsuite.GodogFormat,
-		Paths:               strings.Split(testsuite.GodogPaths, ","),
-		Tags:                testsuite.GodogTags,
-		ShowStepDefinitions: testsuite.GodogShowStepDefinitions,
-		StopOnFailure:       testsuite.GodogStopOnFailure,
-		NoColors:            testsuite.GodogNoColors,
-	})
+	status := godog.TestSuite{
+		Name:                 "crc",
+		TestSuiteInitializer: testsuite.InitializeTestSuite,
+		ScenarioInitializer:  testsuite.InitializeScenario,
+		Options:              &opts,
+	}.Run()
 
 	os.Exit(status)
-}
-
-func getFeatureContext(s *godog.Suite) {
-	// load default step definitions of clicumber testsuite
-	testsuite.FeatureContext(s)
-
-	// here you can load additional step definitions, for example:
-	crcsuite.FeatureContext(s) // CRC specific step definitions
-}
-
-func parseFlags() {
-
-	// NOTE:
-	// testsuite.ParseFlags() needs to be last: it calls flag.Parse()
-	crcsuite.ParseFlags()
-	testsuite.ParseFlags()
 }

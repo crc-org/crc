@@ -6,7 +6,6 @@ import (
 	"runtime"
 	"strings"
 
-	clicumber "github.com/code-ready/clicumber/testsuite"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/test/extended/util"
 )
@@ -68,7 +67,7 @@ func (c Command) ExecuteWithExpectedExit(expectedExit string) error {
 		return err
 	}
 	if expectedExit == "succeeds" || expectedExit == "fails" {
-		return clicumber.ExecuteCommandSucceedsOrFails(c.ToString(), expectedExit)
+		return util.ExecuteCommandSucceedsOrFails(c.ToString(), expectedExit)
 	}
 	return fmt.Errorf("%s is a valid expected exit status", expectedExit)
 }
@@ -77,7 +76,7 @@ func (c Command) Execute() error {
 	if err := c.validate(); err != nil {
 		return err
 	}
-	return clicumber.ExecuteCommand(c.ToString())
+	return util.ExecuteCommand(c.ToString())
 }
 
 func (c Command) env() []string {
@@ -111,12 +110,12 @@ func (c Command) validate() error {
 
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
 	cmd := "crc config set " + property + " " + value
-	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
+	return util.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
 
 func UnsetConfigPropertySucceedsOrFails(property string, expected string) error {
 	cmd := "crc config unset " + property
-	return clicumber.ExecuteCommandSucceedsOrFails(cmd, expected)
+	return util.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
 
 func WaitForClusterInState(state string) error {
@@ -130,25 +129,25 @@ func CheckCRCStatus(state string) error {
 		expression = ".*OpenShift: .*Stopped.*"
 	}
 
-	err := clicumber.ExecuteCommand(CRC("status").ToString())
+	err := util.ExecuteCommand(CRC("status").ToString())
 	if err != nil {
 		return err
 	}
-	return clicumber.CommandReturnShouldMatch("stdout", expression)
+	return util.CommandReturnShouldMatch("stdout", expression)
 }
 
 func CheckCRCExecutableState(state string) error {
 	command := "which crc"
 	if runtime.GOOS == "windows" {
-		if err := clicumber.ExecuteCommand("$env:Path = [System.Environment]::GetEnvironmentVariable(\"Path\",\"Machine\")"); err != nil {
+		if err := util.ExecuteCommand("$env:Path = [System.Environment]::GetEnvironmentVariable(\"Path\",\"Machine\")"); err != nil {
 			return err
 		}
 	}
 	switch state {
 	case CRCExecutableInstalled:
-		return clicumber.ExecuteCommandSucceedsOrFails(command, "succeeds")
+		return util.ExecuteCommandSucceedsOrFails(command, "succeeds")
 	case CRCExecutableNotInstalled:
-		return clicumber.ExecuteCommandSucceedsOrFails(command, "fails")
+		return util.ExecuteCommandSucceedsOrFails(command, "fails")
 	default:
 		return fmt.Errorf("%s state is not defined as valid crc executable state", state)
 	}
@@ -156,16 +155,16 @@ func CheckCRCExecutableState(state string) error {
 
 func CheckMachineNotExists() error {
 	expression := `.*Machine does not exist.*`
-	err := clicumber.ExecuteCommand(CRC("status").ToString())
+	err := util.ExecuteCommand(CRC("status").ToString())
 	if err != nil {
 		return err
 	}
-	return clicumber.CommandReturnShouldMatch("stderr", expression)
+	return util.CommandReturnShouldMatch("stderr", expression)
 }
 
 func DeleteCRC() error {
 
-	_ = clicumber.ExecuteCommand(CRC("delete").ToString())
+	_ = util.ExecuteCommand(CRC("delete").ToString())
 
 	fmt.Printf("Deleted CRC instance (if one existed).\n")
 	return nil

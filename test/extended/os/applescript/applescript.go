@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strings"
 
-	clicumber "github.com/code-ready/clicumber/testsuite"
+	"github.com/code-ready/crc/test/extended/util"
 )
 
 func ExecuteApplescript(scriptFilename string, args ...string) error {
@@ -18,7 +18,7 @@ func ExecuteApplescript(scriptFilename string, args ...string) error {
 		append([]string{"osascript"}, scriptFilename),
 		args...),
 		" ")
-	return clicumber.ExecuteCommandSucceedsOrFails(command, "succeeds")
+	return util.ExecuteCommandSucceedsOrFails(command, "succeeds")
 }
 
 func ExecuteApplescriptReturnShouldMatch(expectedOutput string,
@@ -27,11 +27,11 @@ func ExecuteApplescriptReturnShouldMatch(expectedOutput string,
 		append([]string{"osascript"}, scriptFilename),
 		args...),
 		" ")
-	err := clicumber.ExecuteCommand(command)
+	err := util.ExecuteCommand(command)
 	if err != nil {
 		return err
 	}
-	return clicumber.CommandReturnShouldMatch("stdout", expectedOutput)
+	return util.CommandReturnShouldMatch("stdout", expectedOutput)
 }
 
 func GetScriptsPath(scriptsRelativePath string) (string, error) {
