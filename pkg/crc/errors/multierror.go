@@ -17,6 +17,14 @@ func (v vmNotExist) Error() string {
 
 const VMNotExist vmNotExist = "Machine does not exist. Use 'crc start' to create it"
 
+type daemonNotRunning string
+
+func (d daemonNotRunning) Error() string {
+	return string(d)
+}
+
+const DaemonNotRunning daemonNotRunning = "crc does not seem to be setup correctly, have you run 'crc setup'?"
+
 type PreflightError struct {
 	Err error
 }

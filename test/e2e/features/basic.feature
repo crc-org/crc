@@ -26,7 +26,7 @@ Feature: Basic test
     @darwin @linux @windows
     Scenario: CRC status
         When executing crc status command fails
-        Then stderr should contain "Machine does not exist. Use 'crc start' to create it"
+        Then stderr should contain "crc does not seem to be setup correctly, have you run 'crc setup'?"
 
     @darwin @linux @windows
     Scenario: CRC start usecase
