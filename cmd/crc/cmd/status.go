@@ -92,19 +92,29 @@ func (s *status) prettyPrintTo(writer io.Writer) error {
 	}
 	w := tabwriter.NewWriter(writer, 0, 0, 1, ' ', 0)
 
-	lines := []struct {
+	// todo: replace this with Pair when switching to go@1.18
+	type line struct {
 		left, right string
-	}{
+	}
+	lines := []line{
 		{"CRC VM", s.CrcStatus},
-		{"OpenShift", openshiftStatus(s)},
-		{"Podman", s.PodmanVersion},
-		{"Disk Usage", fmt.Sprintf(
+	}
+
+	if s.OpenShiftVersion != "" {
+		lines = append(lines, line{"OpenShift", openshiftStatus(s)})
+	}
+	if s.PodmanVersion != "" {
+		lines = append(lines, line{"Podman", s.PodmanVersion})
+	}
+
+	lines = append(lines,
+		line{"Disk Usage", fmt.Sprintf(
 			"%s of %s (Inside the CRC VM)",
 			units.HumanSize(float64(s.DiskUsage)),
 			units.HumanSize(float64(s.DiskSize)))},
-		{"Cache Usage", units.HumanSize(float64(s.CacheUsage))},
-		{"Cache Directory", s.CacheDir},
-	}
+		line{"Cache Usage", units.HumanSize(float64(s.CacheUsage))},
+		line{"Cache Directory", s.CacheDir})
+
 	for _, line := range lines {
 		if err := printLine(w, line.left, line.right); err != nil {
 			return err
