@@ -76,6 +76,23 @@ out/
     └── crc.exe
 ----
 
+[[running-unit-tests]]
+== Running unit tests
+
+To run all unit test use:
+
+[source,bash]
+----
+$ make test
+----
+
+If you need to update mocks use:
+
+[source,bash]
+----
+$ make generate_mocks
+----
+
 [[running-e2e-tests]]
 == Running e2e tests
 
