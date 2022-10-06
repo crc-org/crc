@@ -19,7 +19,7 @@ import (
 )
 
 type testClient struct {
-	*apiClient.Client
+	apiClient.Client
 	config     crcConfig.Storage
 	httpServer *httptest.Server
 }

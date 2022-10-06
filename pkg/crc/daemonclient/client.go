@@ -14,7 +14,7 @@ const genericDaemonNotRunningMessage = "Is 'crc daemon' running? Cannot reach da
 
 type Client struct {
 	NetworkClient *networkclient.Client
-	APIClient     *client.Client
+	APIClient     client.Client
 }
 
 func New() *Client {

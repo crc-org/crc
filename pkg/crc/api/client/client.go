@@ -11,19 +11,45 @@ import (
 	"strings"
 )
 
-type Client struct {
+type Client interface {
+	Version() (VersionResult, error)
+	Status() (ClusterStatusResult, error)
+	Start(config StartConfig) (StartResult, error)
+	Stop() error
+	Delete() error
+	WebconsoleURL() (ConsoleResult, error)
+	GetConfig(configs []string) (GetConfigResult, error)
+	SetConfig(configs SetConfigRequest) (SetOrUnsetConfigResult, error)
+	UnsetConfig(configs []string) (SetOrUnsetConfigResult, error)
+	Telemetry(action string) error
+	IsPullSecretDefined() (bool, error)
+	SetPullSecret(data string) error
+}
+
+type HTTPError struct {
+	URL        string
+	Method     string
+	StatusCode int
+	Body       string
+}
+
+func (err *HTTPError) Error() string {
+	return err.Body
+}
+
+type client struct {
 	client *http.Client
 	base   string
 }
 
-func New(client *http.Client, baseURL string) *Client {
-	return &Client{
-		client: client,
+func New(httpClient *http.Client, baseURL string) Client {
+	return &client{
+		client: httpClient,
 		base:   baseURL,
 	}
 }
 
-func (c *Client) Version() (VersionResult, error) {
+func (c *client) Version() (VersionResult, error) {
 	var vr = VersionResult{}
 	body, err := c.sendGetRequest("/version")
 	if err != nil {
@@ -36,7 +62,7 @@ func (c *Client) Version() (VersionResult, error) {
 	return vr, nil
 }
 
-func (c *Client) Status() (ClusterStatusResult, error) {
+func (c *client) Status() (ClusterStatusResult, error) {
 	var sr = ClusterStatusResult{}
 	body, err := c.sendGetRequest("/status")
 	if err != nil {
@@ -49,7 +75,7 @@ func (c *Client) Status() (ClusterStatusResult, error) {
 	return sr, nil
 }
 
-func (c *Client) Start(config StartConfig) (StartResult, error) {
+func (c *client) Start(config StartConfig) (StartResult, error) {
 	var sr = StartResult{}
 	var data = new(bytes.Buffer)
 
@@ -69,17 +95,17 @@ func (c *Client) Start(config StartConfig) (StartResult, error) {
 	return sr, nil
 }
 
-func (c *Client) Stop() error {
+func (c *client) Stop() error {
 	_, err := c.sendGetRequest("/stop")
 	return err
 }
 
-func (c *Client) Delete() error {
+func (c *client) Delete() error {
 	_, err := c.sendGetRequest("/delete")
 	return err
 }
 
-func (c *Client) WebconsoleURL() (ConsoleResult, error) {
+func (c *client) WebconsoleURL() (ConsoleResult, error) {
 	var cr = ConsoleResult{}
 	body, err := c.sendGetRequest("/webconsoleurl")
 	if err != nil {
@@ -92,7 +118,7 @@ func (c *Client) WebconsoleURL() (ConsoleResult, error) {
 	return cr, nil
 }
 
-func (c *Client) GetConfig(configs []string) (GetConfigResult, error) {
+func (c *client) GetConfig(configs []string) (GetConfigResult, error) {
 	var gcr = GetConfigResult{}
 	var escapeConfigs []string
 	for _, v := range configs {
@@ -110,7 +136,7 @@ func (c *Client) GetConfig(configs []string) (GetConfigResult, error) {
 	return gcr, nil
 }
 
-func (c *Client) SetConfig(configs SetConfigRequest) (SetOrUnsetConfigResult, error) {
+func (c *client) SetConfig(configs SetConfigRequest) (SetOrUnsetConfigResult, error) {
 	var scr = SetOrUnsetConfigResult{}
 	var data = new(bytes.Buffer)
 
@@ -134,7 +160,7 @@ func (c *Client) SetConfig(configs SetConfigRequest) (SetOrUnsetConfigResult, er
 	return scr, nil
 }
 
-func (c *Client) UnsetConfig(configs []string) (SetOrUnsetConfigResult, error) {
+func (c *client) UnsetConfig(configs []string) (SetOrUnsetConfigResult, error) {
 	var ucr = SetOrUnsetConfigResult{}
 	var data = new(bytes.Buffer)
 
@@ -155,7 +181,7 @@ func (c *Client) UnsetConfig(configs []string) (SetOrUnsetConfigResult, error) {
 	return ucr, nil
 }
 
-func (c *Client) Telemetry(action string) error {
+func (c *client) Telemetry(action string) error {
 	data, err := json.Marshal(TelemetryRequest{
 		Action: action,
 	})
@@ -168,7 +194,7 @@ func (c *Client) Telemetry(action string) error {
 	return err
 }
 
-func (c *Client) IsPullSecretDefined() (bool, error) {
+func (c *client) IsPullSecretDefined() (bool, error) {
 	res, err := c.client.Get(fmt.Sprintf("%s%s", c.base, "/pull-secret"))
 	if err != nil {
 		return false, err
@@ -177,7 +203,7 @@ func (c *Client) IsPullSecretDefined() (bool, error) {
 	return res.StatusCode == http.StatusOK, nil
 }
 
-func (c *Client) SetPullSecret(data string) error {
+func (c *client) SetPullSecret(data string) error {
 	_, err := c.sendPostRequest("/pull-secret", bytes.NewReader([]byte(data)))
 	if err != nil {
 		return err
@@ -185,31 +211,39 @@ func (c *Client) SetPullSecret(data string) error {
 	return nil
 }
 
-func (c *Client) sendGetRequest(url string) ([]byte, error) {
+func (c *client) sendGetRequest(url string) ([]byte, error) {
 	res, err := c.client.Get(fmt.Sprintf("%s%s", c.base, url))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Error occurred sending GET request to : %s : %d", url, res.StatusCode)
-	}
+
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("Unknown error reading response: %w", err)
 	}
+
+	if res.StatusCode != http.StatusOK {
+		return nil, &HTTPError{
+			URL:        url,
+			Method:     "GET",
+			StatusCode: res.StatusCode,
+			Body:       string(body),
+		}
+	}
+
 	return body, nil
 }
 
-func (c *Client) sendPostRequest(url string, data io.Reader) ([]byte, error) {
+func (c *client) sendPostRequest(url string, data io.Reader) ([]byte, error) {
 	return c.sendRequest(url, http.MethodPost, data)
 }
 
-func (c *Client) sendDeleteRequest(url string, data io.Reader) ([]byte, error) {
+func (c *client) sendDeleteRequest(url string, data io.Reader) ([]byte, error) {
 	return c.sendRequest(url, http.MethodDelete, data)
 }
 
-func (c *Client) sendRequest(url string, method string, data io.Reader) ([]byte, error) {
+func (c *client) sendRequest(url string, method string, data io.Reader) ([]byte, error) {
 	req, err := http.NewRequest(method, fmt.Sprintf("%s%s", c.base, url), data)
 	if err != nil {
 		return nil, err
