@@ -1,15 +1,17 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
 	"text/tabwriter"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/pkg/crc/daemonclient"
 	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/docker/go-units"
@@ -26,7 +28,7 @@ var statusCmd = &cobra.Command{
 	Short: "Display status of the OpenShift cluster",
 	Long:  "Show details about the OpenShift cluster",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return runStatus(os.Stdout, newMachine(), constants.MachineCacheDir, outputFormat)
+		return runStatus(os.Stdout, daemonclient.New(), constants.MachineCacheDir, outputFormat)
 	},
 }
 
@@ -44,18 +46,19 @@ type status struct {
 	Preset           preset.Preset                `json:"preset"`
 }
 
-func runStatus(writer io.Writer, client machine.Client, cacheDir, outputFormat string) error {
+func runStatus(writer io.Writer, client *daemonclient.Client, cacheDir, outputFormat string) error {
 	status := getStatus(client, cacheDir)
 	return render(status, writer, outputFormat)
 }
 
-func getStatus(client machine.Client, cacheDir string) *status {
-	if err := checkIfMachineMissing(client); err != nil {
-		return &status{Success: false, Error: crcErrors.ToSerializableError(err)}
-	}
+func getStatus(client *daemonclient.Client, cacheDir string) *status {
 
-	clusterStatus, err := client.Status()
+	clusterStatus, err := client.APIClient.Status()
 	if err != nil {
+		var urlError *url.Error
+		if errors.As(err, &urlError) {
+			return &status{Success: false, Error: crcErrors.ToSerializableError(crcErrors.DaemonNotRunning)}
+		}
 		return &status{Success: false, Error: crcErrors.ToSerializableError(err)}
 	}
 	var size int64
@@ -71,8 +74,8 @@ func getStatus(client machine.Client, cacheDir string) *status {
 
 	return &status{
 		Success:          true,
-		CrcStatus:        string(clusterStatus.CrcStatus),
-		OpenShiftStatus:  clusterStatus.OpenshiftStatus,
+		CrcStatus:        clusterStatus.CrcStatus,
+		OpenShiftStatus:  types.OpenshiftStatus(clusterStatus.OpenshiftStatus),
 		OpenShiftVersion: clusterStatus.OpenshiftVersion,
 		PodmanVersion:    clusterStatus.PodmanVersion,
 		DiskUsage:        clusterStatus.DiskUse,

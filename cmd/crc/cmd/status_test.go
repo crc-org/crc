@@ -9,25 +9,92 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
+	mocks "github.com/code-ready/crc/test/mocks/api"
+
+	apiClient "github.com/code-ready/crc/pkg/crc/api/client"
+	"github.com/code-ready/crc/pkg/crc/daemonclient"
+	"github.com/code-ready/crc/pkg/crc/machine/state"
+	"github.com/code-ready/crc/pkg/crc/machine/types"
+	"github.com/code-ready/crc/pkg/crc/preset"
+
+	"github.com/pkg/errors"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func setUpClient(t *testing.T) *mocks.Client {
+	client := mocks.NewClient(t)
+
+	client.On("Status").Return(apiClient.ClusterStatusResult{
+		CrcStatus:        string(state.Running),
+		OpenshiftStatus:  string(types.OpenshiftRunning),
+		OpenshiftVersion: "4.5.1",
+		PodmanVersion:    "3.3.1",
+		DiskUse:          10_000_000_000,
+		DiskSize:         20_000_000_000,
+		Preset:           preset.OpenShift,
+	}, nil)
+
+	return client
+}
+
+func setUpFailingClient(t *testing.T) *mocks.Client {
+	client := mocks.NewClient(t)
+
+	client.On("Status").Return(apiClient.ClusterStatusResult{}, errors.New("broken"))
+
+	return client
+}
 
 func TestPlainStatus(t *testing.T) {
 	cacheDir, err := ioutil.TempDir("", "cache")
 	require.NoError(t, err)
 	defer os.RemoveAll(cacheDir)
 
+	client := setUpClient(t)
+
 	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
 
 	out := new(bytes.Buffer)
-	assert.NoError(t, runStatus(out, fakemachine.NewClient(), cacheDir, ""))
+	assert.NoError(t, runStatus(out, &daemonclient.Client{
+		APIClient: client,
+	}, cacheDir, ""))
 
 	expected := `CRC VM:          Running
 OpenShift:       Running (v4.5.1)
 Podman:          3.3.1
+Disk Usage:      10GB of 20GB (Inside the CRC VM)
+Cache Usage:     10kB
+Cache Directory: %s
+`
+	assert.Equal(t, fmt.Sprintf(expected, cacheDir), out.String())
+}
+
+func TestStatusWithoutPodman(t *testing.T) {
+	cacheDir, err := ioutil.TempDir("", "cache")
+	require.NoError(t, err)
+	defer os.RemoveAll(cacheDir)
+
+	client := mocks.NewClient(t)
+	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
+
+	client.On("Status").Return(apiClient.ClusterStatusResult{
+		CrcStatus:        string(state.Running),
+		OpenshiftStatus:  string(types.OpenshiftRunning),
+		OpenshiftVersion: "4.5.1",
+		DiskUse:          10_000_000_000,
+		DiskSize:         20_000_000_000,
+		Preset:           preset.OpenShift,
+	}, nil)
+
+	out := new(bytes.Buffer)
+	assert.NoError(t, runStatus(out, &daemonclient.Client{
+		APIClient: client,
+	}, cacheDir, ""))
+
+	expected := `CRC VM:          Running
+OpenShift:       Running (v4.5.1)
 Disk Usage:      10GB of 20GB (Inside the CRC VM)
 Cache Usage:     10kB
 Cache Directory: %s
@@ -40,10 +107,14 @@ func TestJsonStatus(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(cacheDir)
 
+	client := setUpClient(t)
+
 	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
 
 	out := new(bytes.Buffer)
-	assert.NoError(t, runStatus(out, fakemachine.NewClient(), cacheDir, jsonFormat))
+	assert.NoError(t, runStatus(out, &daemonclient.Client{
+		APIClient: client,
+	}, cacheDir, jsonFormat))
 
 	expected := `{
   "success": true,
@@ -66,10 +137,14 @@ func TestPlainStatusWithError(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(cacheDir)
 
+	client := setUpFailingClient(t)
+
 	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
 
 	out := new(bytes.Buffer)
-	assert.EqualError(t, runStatus(out, fakemachine.NewFailingClient(), cacheDir, ""), "broken")
+	assert.EqualError(t, runStatus(out, &daemonclient.Client{
+		APIClient: client,
+	}, cacheDir, ""), "broken")
 	assert.Equal(t, "", out.String())
 }
 
@@ -78,10 +153,14 @@ func TestJsonStatusWithError(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(cacheDir)
 
+	client := setUpFailingClient(t)
+
 	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
 
 	out := new(bytes.Buffer)
-	assert.NoError(t, runStatus(out, fakemachine.NewFailingClient(), cacheDir, jsonFormat))
+	assert.NoError(t, runStatus(out, &daemonclient.Client{
+		APIClient: client,
+	}, cacheDir, jsonFormat))
 
 	expected := `{
   "success": false,

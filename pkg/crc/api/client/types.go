@@ -21,8 +21,8 @@ type StartResult struct {
 type ClusterStatusResult struct {
 	CrcStatus        string
 	OpenshiftStatus  string
-	OpenshiftVersion string
-	PodmanVersion    string
+	OpenshiftVersion string `json:"OpenshiftVersion,omitempty"`
+	PodmanVersion    string `json:"PodmanVersion,omitempty"`
 	DiskUse          int64
 	DiskSize         int64
 	Preset           preset.Preset
