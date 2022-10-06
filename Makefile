@@ -115,6 +115,10 @@ containerized: clean
 	${CONTAINER_RUNTIME} rm crc-cross
 	${CONTAINER_RUNTIME} rmi crc-build
 
+.PHONY: generate_mocks
+generate_mocks: $(TOOLS_BINDIR)/mockery
+	$(TOOLS_BINDIR)/mockery --srcpkg ./pkg/crc/api/client --name Client --output test/mocks/api  --filename client.go
+
 .PHONY: test
 test:
 	go test -race --tags "build $(BUILDTAGS)" -v -ldflags="$(VERSION_VARIABLES)" ./pkg/... ./cmd/...

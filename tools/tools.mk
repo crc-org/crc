@@ -8,3 +8,6 @@ $(TOOLS_BINDIR)/golangci-lint: $(TOOLS_DIR)/go.mod
 
 $(TOOLS_BINDIR)/gomod2rpmdeps: $(TOOLS_DIR)/go.mod
 	cd $(TOOLS_DIR) && GOBIN="$(TOOLS_BINDIR)" go install github.com/cfergeau/gomod2rpmdeps/cmd/gomod2rpmdeps
+
+$(TOOLS_BINDIR)/mockery: $(TOOLS_DIR)/go.mod
+	cd $(TOOLS_DIR) && GOBIN="$(TOOLS_BINDIR)" go install github.com/vektra/mockery/v2@latest
