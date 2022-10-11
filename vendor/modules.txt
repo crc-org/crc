@@ -82,7 +82,7 @@ github.com/cheggaaa/pb/v3/termutil
 github.com/code-ready/admin-helper/pkg/client
 github.com/code-ready/admin-helper/pkg/hosts
 github.com/code-ready/admin-helper/pkg/types
-# github.com/code-ready/machine v0.0.0-20220727160217-7bf0dd8c2d7b
+# github.com/code-ready/machine v0.0.0-20220927132822-3408fdecc41c
 ## explicit; go 1.17
 github.com/code-ready/machine/drivers/libvirt
 github.com/code-ready/machine/libmachine/drivers

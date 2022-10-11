@@ -30,6 +30,8 @@ type SharedDir struct {
 	Tag      string
 	Target   string
 	Type     string
+	Username string
+	Password string `json:"-"`
 }
 
 // DriverName returns the name of the driver
