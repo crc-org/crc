@@ -243,8 +243,8 @@ github.com/cockroachdb/errors v1.2.4/go.mod h1:rQD95gz6FARkaKkQXUksEje/d9a6wBJoC
 github.com/cockroachdb/logtags v0.0.0-20190617123548-eb05cc24525f/go.mod h1:i/u985jwjWRlyHXQbwatDASoW0RMlZ/3i9yJHE2xLkI=
 github.com/code-ready/admin-helper v0.0.10 h1:J7z6cu8owR9UemZlHQXL2W1aCOfo1nGhY1YtYz2+aCo=
 github.com/code-ready/admin-helper v0.0.10/go.mod h1:8ACGWyeBXkVcQ53idgXhYzLGrK/+xjabcGVCtPtKaRQ=
-github.com/code-ready/machine v0.0.0-20220727160217-7bf0dd8c2d7b h1:Eev9Enne43B+k6s2gfYxaSh0f0/+owLbrAyk8+7eoeM=
-github.com/code-ready/machine v0.0.0-20220727160217-7bf0dd8c2d7b/go.mod h1:zeUHkDy+CASmOmTcbvv9m5SlkXmhp0MAtcs6f7EMp68=
+github.com/code-ready/machine v0.0.0-20220927132822-3408fdecc41c h1:cVthP8D5RUFAegEqrVWXiHUwRR+0dqN0mdOGYU6RJwU=
+github.com/code-ready/machine v0.0.0-20220927132822-3408fdecc41c/go.mod h1:zeUHkDy+CASmOmTcbvv9m5SlkXmhp0MAtcs6f7EMp68=
 github.com/code-ready/vfkit v0.0.2 h1:DA7wnPVXjs8bwa3ksNd8JtKzXsZ1oC1F7JanVoDyzCw=
 github.com/code-ready/vfkit v0.0.2/go.mod h1:rjWQeMUISswhWXeBp5LEzwVjv8aN3Gn1QxIHDCmxu40=
 github.com/codegangsta/cli v1.20.0/go.mod h1:/qJNoX69yVSKu5o4jLyXAENLRyk1uhi7zkbQ3slBdOA=
