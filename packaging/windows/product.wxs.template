@@ -119,6 +119,12 @@
             Before="EnableFileAndPrinterSharing"
             Sequence="execute"/>
         <CustomAction Id="EnableFileAndPrinterSharing" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="check" />
+        <SetProperty Action="CARemoveSMBShare"
+            Id="RemoveSMBShare"
+            Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Remove-SmbShare -Name '[SHAREDDIRNAME]' -Force&quot;"
+            Before="RemoveSMBShare"
+            Sequence="execute"/>
+        <CustomAction Id="RemoveSMBShare" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
 
         <util:CloseApplication Id = "TrayRunning" Description="Please exit Red Hat OpenShift Local from tray and run the installation again." Target="crc-tray.exe" RebootPrompt="no" PromptToContinue="yes" />
 
@@ -131,6 +137,7 @@
             <Custom Action="RemoveCrcDaemonTask" Before='RemoveFiles'>Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
             <Custom Action="EnableFileAndPrinterSharing" After="AddUserToHypervAdminGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <Custom Action="CreateSMBShare" After="EnableFileAndPrinterSharing"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
+            <Custom Action="RemoveSMBShare" After='RemoveCrcDaemonTask'>Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
             <ScheduleReboot After="InstallFinalize"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</ScheduleReboot>
         </InstallExecuteSequence>
         <Feature Id="DefaultFeature" Level="1">
@@ -152,6 +159,7 @@
             <ProgressText Action="AddUserToHypervAdminGroup">Adding user: [LogonUser] to Hyper-V Administrators group</ProgressText>
             <ProgressText Action="RemoveCrcDaemonTask">Removing crcDaemon task</ProgressText>
             <ProgressText Action="CreateSMBShare">Creating share named: [SHAREDDIRNAME] for folder: [USERFOLDER]</ProgressText>
+            <ProgressText Action="RemoveSMBShare">Removing share named: [SHAREDDIRNAME] for folder: [USERFOLDER]</ProgressText>
             <ProgressText Action="EnableFileAndPrinterSharing">Enabling file and printer Sharing</ProgressText>
         </UI>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
