@@ -136,7 +136,7 @@
             <Custom Action="RemoveCrcGroupRollback" After="CreateCrcGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <Custom Action="RemoveCrcDaemonTask" Before='RemoveFiles'>Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
             <Custom Action="EnableFileAndPrinterSharing" After="AddUserToHypervAdminGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
-            <Custom Action="CreateSMBShare" After="EnableFileAndPrinterSharing"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
+            <Custom Action="CreateSMBShare" After="EnableFileAndPrinterSharing"> NOT Installed AND NOT REMOVE~="ALL"</Custom>
             <Custom Action="RemoveSMBShare" After='RemoveCrcDaemonTask'>Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
             <ScheduleReboot After="InstallFinalize"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</ScheduleReboot>
         </InstallExecuteSequence>
