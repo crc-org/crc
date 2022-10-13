@@ -242,7 +242,7 @@ func (d *Driver) Start() error {
 
 	// virtio-vsock device
 	const vsockPort = 1024
-	dev, err = client.VirtioVsockNew(vsockPort, d.VsockPath)
+	dev, err = client.VirtioVsockNew(vsockPort, d.VsockPath, true)
 	if err != nil {
 		return err
 	}

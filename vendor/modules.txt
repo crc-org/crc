@@ -172,7 +172,7 @@ github.com/crc-org/machine/libmachine/drivers/plugin/localbinary
 github.com/crc-org/machine/libmachine/drivers/rpc
 github.com/crc-org/machine/libmachine/state
 github.com/crc-org/machine/libmachine/version
-# github.com/crc-org/vfkit v0.0.2-0.20221012144032-2e4961165b68
+# github.com/crc-org/vfkit v0.0.4
 ## explicit; go 1.17
 github.com/crc-org/vfkit/pkg/client
 # github.com/cucumber/gherkin-go/v19 v19.0.3
@@ -710,7 +710,7 @@ golang.org/x/oauth2/internal
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.0.0-20221010170243-090e33056c14
+# golang.org/x/sys v0.1.0
 ## explicit; go 1.17
 golang.org/x/sys/cpu
 golang.org/x/sys/execabs

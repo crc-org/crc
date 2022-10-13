@@ -16,7 +16,7 @@ require (
 	github.com/coreos/go-systemd/v22 v22.3.2
 	github.com/crc-org/admin-helper v0.0.12-0.20221012143549-fd5acd1c478e
 	github.com/crc-org/machine v0.0.0-20221028075518-f9b43442196b
-	github.com/crc-org/vfkit v0.0.2-0.20221012144032-2e4961165b68
+	github.com/crc-org/vfkit v0.0.4
 	github.com/cucumber/godog v0.12.5
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/go-units v0.4.0
@@ -53,7 +53,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
-	golang.org/x/sys v0.0.0-20221010170243-090e33056c14
+	golang.org/x/sys v0.1.0
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467
 	golang.org/x/text v0.3.7
 	gopkg.in/yaml.v2 v2.4.0
