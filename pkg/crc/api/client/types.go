@@ -25,6 +25,8 @@ type ClusterStatusResult struct {
 	PodmanVersion    string `json:"PodmanVersion,omitempty"`
 	DiskUse          int64
 	DiskSize         int64
+	RAMUse           int64
+	RAMSize          int64
 	Preset           preset.Preset
 }
 
@@ -32,13 +34,13 @@ type ConsoleResult struct {
 	ClusterConfig types.ClusterConfig
 }
 
-// setOrUnsetConfigResult struct is used to return the result of
+// SetOrUnsetConfigResult struct is used to return the result of
 // setconfig/unsetconfig command
 type SetOrUnsetConfigResult struct {
 	Properties []string
 }
 
-// getConfigResult struct is used to return the result of getconfig command
+// GetConfigResult struct is used to return the result of getconfig command
 type GetConfigResult struct {
 	Configs map[string]interface{}
 }

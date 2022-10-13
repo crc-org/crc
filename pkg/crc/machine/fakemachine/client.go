@@ -105,6 +105,8 @@ func (c *Client) Status() (*types.ClusterStatusResult, error) {
 		PodmanVersion:    "3.3.1",
 		DiskUse:          10_000_000_000,
 		DiskSize:         20_000_000_000,
+		RAMSize:          2_000,
+		RAMUse:           1_000,
 		Preset:           preset.OpenShift,
 	}, nil
 }

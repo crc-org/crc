@@ -64,6 +64,7 @@ func TestPlainStatus(t *testing.T) {
 	expected := `CRC VM:          Running
 OpenShift:       Running (v4.5.1)
 Podman:          3.3.1
+RAM Usage:       0B of 0B
 Disk Usage:      10GB of 20GB (Inside the CRC VM)
 Cache Usage:     10kB
 Cache Directory: %s
@@ -95,6 +96,7 @@ func TestStatusWithoutPodman(t *testing.T) {
 
 	expected := `CRC VM:          Running
 OpenShift:       Running (v4.5.1)
+RAM Usage:       0B of 0B
 Disk Usage:      10GB of 20GB (Inside the CRC VM)
 Cache Usage:     10kB
 Cache Directory: %s
@@ -169,4 +171,38 @@ func TestJsonStatusWithError(t *testing.T) {
 }
 `
 	assert.Equal(t, expected, out.String())
+}
+
+func TestStatusWithMemoryPodman(t *testing.T) {
+	cacheDir, err := ioutil.TempDir("", "cache")
+	require.NoError(t, err)
+	defer os.RemoveAll(cacheDir)
+
+	client := mocks.NewClient(t)
+	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
+
+	client.On("Status").Return(apiClient.ClusterStatusResult{
+		CrcStatus:        string(state.Running),
+		OpenshiftStatus:  string(types.OpenshiftRunning),
+		OpenshiftVersion: "4.5.1",
+		DiskUse:          10_000_000_000,
+		DiskSize:         20_000_000_000,
+		RAMSize:          1_000_000,
+		RAMUse:           900_000,
+		Preset:           preset.OpenShift,
+	}, nil)
+
+	out := new(bytes.Buffer)
+	assert.NoError(t, runStatus(out, &daemonclient.Client{
+		APIClient: client,
+	}, cacheDir, ""))
+
+	expected := `CRC VM:          Running
+OpenShift:       Running (v4.5.1)
+RAM Usage:       900kB of 1MB
+Disk Usage:      10GB of 20GB (Inside the CRC VM)
+Cache Usage:     10kB
+Cache Directory: %s
+`
+	assert.Equal(t, fmt.Sprintf(expected, cacheDir), out.String())
 }
