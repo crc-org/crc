@@ -30,10 +30,14 @@ type VirtualMachine struct {
 	devices     []VirtioDevice
 }
 
-// The VirtioDevice interface is an interface which is implemented by all devices.
-type VirtioDevice interface {
+// The VMComponent interface represents a VM element (device, bootloader, ...)
+// which can be converted to commandline parameters
+type VMComponent interface {
 	ToCmdLine() ([]string, error)
 }
+
+// The VirtioDevice interface is an interface which is implemented by all devices.
+type VirtioDevice VMComponent
 
 // VirtioVsock configures of a virtio-vsock device allowing 2-way communication
 // between the host and the virtual machine type
@@ -43,6 +47,9 @@ type VirtioVsock struct {
 	Port uint
 	// SocketURL is the path to a unix socket on the host to use for the virtio-vsock communication with the guest.
 	SocketURL string
+	// If true, vsock connections will have to be done from guest to host. If false, vsock connections will only be possible
+	// from host to guest
+	Listen bool
 }
 
 // virtioBlk configures a disk device.
@@ -69,6 +76,12 @@ type virtioSerial struct {
 type virtioFs struct {
 	sharedDir string
 	mountTag  string
+}
+
+// timeSync enables synchronization of the host time to the linux guest after the host was suspended.
+// This requires qemu-guest-agent to be running in the guest, and to be listening on a vsock socket
+type timeSync struct {
+	vsockPort uint
 }
 
 // NewVirtualMachine creates a new VirtualMachine instance. The virtual machine
@@ -160,10 +173,13 @@ func (bootloader *Bootloader) ToCmdLine() ([]string, error) {
 // VirtioVsockNew creates a new virtio-vsock device for 2-way communication
 // between the host and the virtual machine. The communication will happen on
 // vsock port, and on the host it will use the unix socket at socketURL.
-func VirtioVsockNew(port uint, socketURL string) (VirtioDevice, error) {
+// When listen is true, the host will be listening for connections over vsock.
+// When listen  is false, the guest will be listening for connections over vsock.
+func VirtioVsockNew(port uint, socketURL string, listen bool) (VirtioDevice, error) {
 	return &VirtioVsock{
 		Port:      port,
 		SocketURL: socketURL,
+		Listen:    listen,
 	}, nil
 }
 
@@ -171,7 +187,13 @@ func (dev *VirtioVsock) ToCmdLine() ([]string, error) {
 	if dev.Port == 0 || dev.SocketURL == "" {
 		return nil, fmt.Errorf("virtio-vsock needs both a port and a socket URL")
 	}
-	return []string{"--device", fmt.Sprintf("virtio-vsock,port=%d,socketURL=%s", dev.Port, dev.SocketURL)}, nil
+	var listenStr string
+	if dev.Listen {
+		listenStr = "listen"
+	} else {
+		listenStr = "connect"
+	}
+	return []string{"--device", fmt.Sprintf("virtio-vsock,port=%d,socketURL=%s,%s", dev.Port, dev.SocketURL, listenStr)}, nil
 }
 
 // VirtioBlkNew creates a new disk to use in the virtual machine. It will use
@@ -265,4 +287,18 @@ func (dev *virtioFs) ToCmdLine() ([]string, error) {
 	} else {
 		return []string{"--device", fmt.Sprintf("virtio-fs,sharedDir=%s", dev.sharedDir)}, nil
 	}
+}
+
+func TimeSyncNew(vsockPort uint) (VMComponent, error) {
+	return &timeSync{
+		vsockPort: vsockPort,
+	}, nil
+}
+
+func (ts *timeSync) ToCmdLine() ([]string, error) {
+	args := []string{}
+	if ts.vsockPort != 0 {
+		args = append(args, fmt.Sprintf("vsockPort=%d", ts.vsockPort))
+	}
+	return []string{"--timesync", strings.Join(args, ",")}, nil
 }

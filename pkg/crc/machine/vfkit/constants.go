@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	VfkitVersion = "0.0.2"
+	VfkitVersion = "0.0.4"
 	VfkitCommand = "vfkit"
 )
 
