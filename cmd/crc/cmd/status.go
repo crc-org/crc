@@ -43,6 +43,8 @@ type status struct {
 	DiskSize         int64                        `json:"diskSize,omitempty"`
 	CacheUsage       int64                        `json:"cacheUsage,omitempty"`
 	CacheDir         string                       `json:"cacheDir,omitempty"`
+	RAMSize          int64                        `json:"ramSize,omitempty"`
+	RAMUsage         int64                        `json:"ramUsage,omitempty"`
 	Preset           preset.Preset                `json:"preset"`
 }
 
@@ -80,6 +82,8 @@ func getStatus(client *daemonclient.Client, cacheDir string) *status {
 		PodmanVersion:    clusterStatus.PodmanVersion,
 		DiskUsage:        clusterStatus.DiskUse,
 		DiskSize:         clusterStatus.DiskSize,
+		RAMSize:          clusterStatus.RAMSize,
+		RAMUsage:         clusterStatus.RAMUse,
 		CacheUsage:       size,
 		CacheDir:         cacheDir,
 		Preset:           clusterStatus.Preset,
@@ -108,6 +112,10 @@ func (s *status) prettyPrintTo(writer io.Writer) error {
 	}
 
 	lines = append(lines,
+		line{"RAM Usage", fmt.Sprintf(
+			"%s of %s",
+			units.HumanSize(float64(s.RAMUsage)),
+			units.HumanSize(float64(s.RAMSize)))},
 		line{"Disk Usage", fmt.Sprintf(
 			"%s of %s (Inside the CRC VM)",
 			units.HumanSize(float64(s.DiskUsage)),

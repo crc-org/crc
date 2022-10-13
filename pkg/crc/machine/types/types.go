@@ -69,6 +69,8 @@ type ClusterStatusResult struct {
 	PodmanVersion    string
 	DiskUse          int64
 	DiskSize         int64
+	RAMUse           int64
+	RAMSize          int64
 	Preset           crcpreset.Preset
 }
 

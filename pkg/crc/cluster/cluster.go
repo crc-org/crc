@@ -82,6 +82,28 @@ func GetRootPartitionUsage(sshRunner *ssh.Runner) (int64, int64, error) {
 	return diskSize, diskUsage, nil
 }
 
+// GetRAMUsage return RAM size and RAM usage in bytes
+func GetRAMUsage(sshRunner *ssh.Runner) (int64, int64, error) {
+	cmd := "awk '/^Mem/ {print $2,$3}' <(free -b)"
+	out, _, err := sshRunner.Run(cmd)
+
+	if err != nil {
+		return 0, 0, err
+	}
+
+	ramDetails := strings.Split(strings.TrimSpace(out), " ")
+	ramSize, err := strconv.ParseInt(ramDetails[0], 10, 64)
+	if err != nil {
+		return 0, 0, err
+	}
+	ramUsage, err := strconv.ParseInt(ramDetails[1], 10, 64)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return ramSize, ramUsage, nil
+}
+
 func EnsureSSHKeyPresentInTheCluster(ctx context.Context, ocConfig oc.Config, sshPublicKeyPath string) error {
 	sshPublicKeyByte, err := ioutil.ReadFile(sshPublicKeyPath)
 	if err != nil {

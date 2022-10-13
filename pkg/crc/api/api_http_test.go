@@ -228,7 +228,7 @@ var testCases = []testCase{
 	// status
 	{
 		request:  get("status"),
-		response: jSon(`{"CrcStatus":"Running","OpenshiftStatus":"Running","OpenshiftVersion":"4.5.1","PodmanVersion":"3.3.1","DiskUse":10000000000,"DiskSize":20000000000,"Preset":"openshift"}`),
+		response: jSon(`{"CrcStatus":"Running","OpenshiftStatus":"Running","OpenshiftVersion":"4.5.1","PodmanVersion":"3.3.1","DiskUse":10000000000,"DiskSize":20000000000,"RAMUse":1000,"RAMSize":2000,"Preset":"openshift"}`),
 	},
 
 	// status with failure

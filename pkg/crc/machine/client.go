@@ -34,6 +34,7 @@ type client struct {
 	config crcConfig.Storage
 
 	diskDetails *memoize.Memoizer
+	ramDetails  *memoize.Memoizer
 }
 
 func NewClient(name string, debug bool, config crcConfig.Storage) Client {
@@ -42,6 +43,7 @@ func NewClient(name string, debug bool, config crcConfig.Storage) Client {
 		debug:       debug,
 		config:      config,
 		diskDetails: memoize.NewMemoizer(time.Minute, 5*time.Minute),
+		ramDetails:  memoize.NewMemoizer(30*time.Second, 2*time.Minute),
 	}
 }
 

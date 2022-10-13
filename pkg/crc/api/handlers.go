@@ -69,6 +69,8 @@ func (h *Handler) Status(c *context) error {
 		PodmanVersion:    res.PodmanVersion,
 		DiskUse:          res.DiskUse,
 		DiskSize:         res.DiskSize,
+		RAMSize:          res.RAMSize,
+		RAMUse:           res.RAMUse,
 		Preset:           res.Preset,
 	})
 }

@@ -65,6 +65,11 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 		clusterStatusResult.PodmanVersion = vm.bundle.GetPodmanVersion()
 		clusterStatusResult.Preset = preset.Podman
 	}
+
+	ramSize, ramUse := client.getRAMStatus(vm)
+	clusterStatusResult.RAMSize = ramSize
+	clusterStatusResult.RAMUse = ramUse
+
 	return clusterStatusResult, nil
 }
 
@@ -103,4 +108,26 @@ func getOpenShiftStatus(ctx context.Context, ip string) types.OpenshiftStatus {
 		return types.OpenshiftRunning
 	}
 	return types.OpenshiftStopped
+}
+
+func (client *client) getRAMStatus(vm *virtualMachine) (int64, int64) {
+	ram, err, _ := client.ramDetails.Memoize("ram", func() (interface{}, error) {
+		sshRunner, err := vm.SSHRunner()
+		if err != nil {
+			return nil, errors.Wrap(err, "Error creating the ssh client")
+		}
+		defer sshRunner.Close()
+		ramSize, ramUse, err := cluster.GetRAMUsage(sshRunner)
+		if err != nil {
+			return nil, err
+		}
+		return []int64{ramSize, ramUse}, nil
+	})
+
+	if err != nil {
+		logging.Debugf("Cannot get RAM usage: %v", err)
+		return 0, 0
+	}
+
+	return ram.([]int64)[0], ram.([]int64)[1]
 }
