@@ -20,9 +20,9 @@ jobs:
       - name: Downgrade mingw to workaround https://github.com/golang/go/issues/46099
         run: choco install mingw --version 10.2.0 --allow-downgrade
       - name: Check out repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go }}
       - name: Disable gofmt/goimports linters on Windows
