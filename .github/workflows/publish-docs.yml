@@ -15,7 +15,7 @@ jobs:
           - ubuntu-latest
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Build docs
         run: CONTAINER_RUNTIME=docker make build_docs
       - name: Check links in docs
