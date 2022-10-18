@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/logging"
 	crcos "github.com/crc-org/crc/pkg/os"
 	"github.com/crc-org/machine/libmachine/drivers"
@@ -46,8 +47,9 @@ type Driver struct {
 	InitrdPath  string
 	VfkitPath   string
 	VirtioNet   bool
-	// TODO: Add vsock port(s)
-	VsockPath string
+
+	VsockPath       string
+	DaemonVsockPort uint
 }
 
 func NewDriver(hostName, storePath string) *Driver {
@@ -62,6 +64,9 @@ func NewDriver(hostName, storePath string) *Driver {
 			CPU:    DefaultCPUs,
 			Memory: DefaultMemory,
 		},
+		// needed when loading a VM which was created before
+		// DaemonVsockPort was introduced
+		DaemonVsockPort: constants.DaemonVsockPort,
 	}
 }
 
@@ -241,8 +246,7 @@ func (d *Driver) Start() error {
 	}
 
 	// virtio-vsock device
-	const vsockPort = 1024
-	dev, err = client.VirtioVsockNew(vsockPort, d.VsockPath, true)
+	dev, err = client.VirtioVsockNew(d.DaemonVsockPort, d.VsockPath, true)
 	if err != nil {
 		return err
 	}

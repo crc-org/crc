@@ -22,7 +22,9 @@ func CreateHost(machineConfig config.MachineConfig) *vfkit.Driver {
 	vfDriver.VfkitPath = filepath.Join(constants.BinDir(), VfkitCommand)
 
 	vfDriver.VirtioNet = machineConfig.NetworkMode == network.SystemNetworkingMode
+
 	vfDriver.VsockPath = constants.TapSocketPath
+	vfDriver.DaemonVsockPort = constants.DaemonVsockPort
 
 	vfDriver.SharedDirs = configureShareDirs(machineConfig)
 
