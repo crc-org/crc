@@ -26,6 +26,8 @@ func CreateHost(machineConfig config.MachineConfig) *vfkit.Driver {
 	vfDriver.VsockPath = constants.TapSocketPath
 	vfDriver.DaemonVsockPort = constants.DaemonVsockPort
 
+	vfDriver.QemuGAVsockPort = constants.QemuGuestAgentPort
+
 	vfDriver.SharedDirs = configureShareDirs(machineConfig)
 
 	return vfDriver
