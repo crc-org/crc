@@ -283,12 +283,12 @@ func systemdUnitRunning(sd *systemd.Commander, unitName string) bool {
 }
 
 const (
-	vsockUnitName = "crc-vsock.socket"
-	vsockUnit     = `[Unit]
+	vsockUnitName     = "crc-vsock.socket"
+	vsockUnitTemplate = `[Unit]
 Description=CRC vsock socket
 
 [Socket]
-ListenStream=vsock::1024
+ListenStream=vsock::%d
 Service=crc-daemon.service
 
 [Install]
@@ -321,6 +321,8 @@ Type=notify
 ExecStart=%s daemon
 `
 )
+
+var vsockUnit = fmt.Sprintf(vsockUnitTemplate, constants.DaemonVsockPort)
 
 func checkSystemdUnit(unitName string, unitContent string, shouldBeRunning bool) error {
 	sd := systemd.NewHostSystemdCommander().User()

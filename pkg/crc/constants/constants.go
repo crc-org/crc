@@ -29,6 +29,7 @@ const (
 	CRCWindowsTrayDownloadURL = "https://github.com/crc-org/tray-electron/releases/download/%s/crc-tray-windows.zip"
 	DefaultContext            = "admin"
 	DaemonHTTPEndpoint        = "http://unix/api"
+	DaemonVsockPort           = 1024
 	DefaultPodmanNamedPipe    = `\\.\pipe\crc-podman`
 	RootlessPodmanSocket      = "/run/user/1000/podman/podman.sock"
 	RootfulPodmanSocket       = "/run/podman/podman.sock"
