@@ -11,6 +11,7 @@ const (
 	PodmanRemoteExecutableName = "podman"
 	TrayExecutableName         = "Red Hat OpenShift Local.app"
 	DaemonAgentLabel           = "com.redhat.crc.daemon"
+	QemuGuestAgentPort         = 1234
 )
 
 var (
