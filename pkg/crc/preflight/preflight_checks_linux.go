@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	// This is defined in https://github.com/code-ready/machine-driver-libvirt/blob/master/go.mod#L5
+	// This is defined in https://github.com/crc-org/machine-driver-libvirt/blob/master/go.mod#L5
 	minSupportedLibvirtVersion = "3.4.0"
 )
 
