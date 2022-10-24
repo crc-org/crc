@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/code-ready/machine/libmachine/drivers"
+	"github.com/crc-org/machine/libmachine/drivers"
 )
 
 func ConvertGiBToBytes(gib int) uint64 {

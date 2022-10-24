@@ -1,7 +1,7 @@
 package libvirt
 
 import (
-	"github.com/code-ready/machine/libmachine/drivers"
+	"github.com/crc-org/machine/libmachine/drivers"
 )
 
 type Driver struct {

@@ -1,6 +1,6 @@
 package state
 
-import libmachinestate "github.com/code-ready/machine/libmachine/state"
+import libmachinestate "github.com/crc-org/machine/libmachine/state"
 
 // State represents the state of crc (both VM and components)
 type State string

@@ -9,7 +9,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/drivers/hyperv"
 	winnet "github.com/code-ready/crc/pkg/os/windows/network"
-	"github.com/code-ready/machine/libmachine/drivers"
+	"github.com/crc-org/machine/libmachine/drivers"
 )
 
 func CreateHost(machineConfig config.MachineConfig) *hyperv.Driver {

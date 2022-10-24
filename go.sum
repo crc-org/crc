@@ -241,8 +241,6 @@ github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:z
 github.com/cockroachdb/datadriven v0.0.0-20200714090401-bf6692d28da5/go.mod h1:h6jFvWxBdQXxjopDMZyH2UVceIRfR84bdzbkoKrsWNo=
 github.com/cockroachdb/errors v1.2.4/go.mod h1:rQD95gz6FARkaKkQXUksEje/d9a6wBJoCr5oaCLELYA=
 github.com/cockroachdb/logtags v0.0.0-20190617123548-eb05cc24525f/go.mod h1:i/u985jwjWRlyHXQbwatDASoW0RMlZ/3i9yJHE2xLkI=
-github.com/code-ready/machine v0.0.0-20220927132822-3408fdecc41c h1:cVthP8D5RUFAegEqrVWXiHUwRR+0dqN0mdOGYU6RJwU=
-github.com/code-ready/machine v0.0.0-20220927132822-3408fdecc41c/go.mod h1:zeUHkDy+CASmOmTcbvv9m5SlkXmhp0MAtcs6f7EMp68=
 github.com/codegangsta/cli v1.20.0/go.mod h1:/qJNoX69yVSKu5o4jLyXAENLRyk1uhi7zkbQ3slBdOA=
 github.com/containerd/aufs v0.0.0-20200908144142-dab0cbea06f4/go.mod h1:nukgQABAEopAHvB6j7cnP5zJ+/3aVcE7hCYqvIwAHyE=
 github.com/containerd/aufs v0.0.0-20201003224125-76a6863f2989/go.mod h1:AkGGQs9NM2vtYHaUen+NljV0/baGCAPELGm2q9ZXpWU=
@@ -367,6 +365,8 @@ github.com/cpuguy83/go-md2man/v2 v2.0.0/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsr
 github.com/cpuguy83/go-md2man/v2 v2.0.1/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/crc-org/admin-helper v0.0.12-0.20221012143549-fd5acd1c478e h1:T6m4n9ZQzeGHq3/PaaoMBE5aefogjZT2Y9FOarbujoE=
 github.com/crc-org/admin-helper v0.0.12-0.20221012143549-fd5acd1c478e/go.mod h1:CerKYGP0C/zPeDd6T/k8H7TmyKKBWhfhAzAupcSKPMU=
+github.com/crc-org/machine v0.0.0-20221028075518-f9b43442196b h1:VPbW5D21B1WToPvEA/EGwhi4e3lXevmRff9M1lUTc5g=
+github.com/crc-org/machine v0.0.0-20221028075518-f9b43442196b/go.mod h1:9bEsvgLE3LIPfvGATt9Mo73gG1CKKS6A/++VqOONKqc=
 github.com/crc-org/vfkit v0.0.2-0.20221012144032-2e4961165b68 h1:BD25mjxOu/hnh2ajkMnyAJbAqvcFTS+YyEaqlwU2o/U=
 github.com/crc-org/vfkit v0.0.2-0.20221012144032-2e4961165b68/go.mod h1:9Q+9eVp1Ygxi6Fss8Id6erZ1TKUpHEo2f7b2i7EOuG8=
 github.com/creack/pty v1.1.7/go.mod h1:lj5s0c3V2DBrqTV7llrYr5NG6My20zk30Fl46Y7DoTY=

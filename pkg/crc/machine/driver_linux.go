@@ -9,8 +9,8 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
 	"github.com/code-ready/crc/pkg/libmachine"
 	"github.com/code-ready/crc/pkg/libmachine/host"
-	machineLibvirt "github.com/code-ready/machine/drivers/libvirt"
-	"github.com/code-ready/machine/libmachine/drivers"
+	machineLibvirt "github.com/crc-org/machine/drivers/libvirt"
+	"github.com/crc-org/machine/libmachine/drivers"
 )
 
 func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {

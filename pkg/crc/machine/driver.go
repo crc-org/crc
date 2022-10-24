@@ -3,7 +3,7 @@ package machine
 import (
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"github.com/code-ready/crc/pkg/libmachine/host"
-	libmachine "github.com/code-ready/machine/libmachine/drivers"
+	libmachine "github.com/crc-org/machine/libmachine/drivers"
 )
 
 type valueSetter func(driver *libmachine.VMDriver) bool

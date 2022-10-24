@@ -10,8 +10,8 @@ import (
 
 	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	log "github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/machine/libmachine/drivers"
-	"github.com/code-ready/machine/libmachine/state"
+	"github.com/crc-org/machine/libmachine/drivers"
+	"github.com/crc-org/machine/libmachine/state"
 )
 
 // ConfigVersion dictates which version of the config.json format is

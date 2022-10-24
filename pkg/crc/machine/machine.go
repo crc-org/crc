@@ -10,7 +10,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/libmachine"
-	"github.com/code-ready/machine/libmachine/drivers"
+	"github.com/crc-org/machine/libmachine/drivers"
 )
 
 func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*types.ClusterConfig, error) {

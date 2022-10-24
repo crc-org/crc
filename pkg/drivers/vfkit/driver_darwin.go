@@ -28,8 +28,8 @@ import (
 	"time"
 
 	crcos "github.com/code-ready/crc/pkg/os"
-	"github.com/code-ready/machine/libmachine/drivers"
-	"github.com/code-ready/machine/libmachine/state"
+	"github.com/crc-org/machine/libmachine/drivers"
+	"github.com/crc-org/machine/libmachine/state"
 	"github.com/crc-org/vfkit/pkg/client"
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/v3/process"
