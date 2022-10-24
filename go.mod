@@ -11,11 +11,11 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/cheggaaa/pb/v3 v3.0.8
-	github.com/code-ready/machine v0.0.0-20220927132822-3408fdecc41c
 	github.com/containers/gvisor-tap-vsock v0.4.1-0.20220908123107-8d91f6d62de2
 	github.com/containers/image/v5 v5.15.0
 	github.com/coreos/go-systemd/v22 v22.3.2
 	github.com/crc-org/admin-helper v0.0.12-0.20221012143549-fd5acd1c478e
+	github.com/crc-org/machine v0.0.0-20221028075518-f9b43442196b
 	github.com/crc-org/vfkit v0.0.2-0.20221012144032-2e4961165b68
 	github.com/cucumber/godog v0.12.5
 	github.com/cucumber/messages-go/v10 v10.0.3

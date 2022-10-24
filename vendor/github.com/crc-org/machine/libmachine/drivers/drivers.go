@@ -3,7 +3,7 @@ package drivers
 import (
 	"errors"
 
-	"github.com/code-ready/machine/libmachine/state"
+	"github.com/crc-org/machine/libmachine/state"
 	log "github.com/sirupsen/logrus"
 )
 

@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/code-ready/machine/libmachine/drivers"
-	"github.com/code-ready/machine/libmachine/drivers/plugin/localbinary"
-	"github.com/code-ready/machine/libmachine/state"
-	"github.com/code-ready/machine/libmachine/version"
+	"github.com/crc-org/machine/libmachine/drivers"
+	"github.com/crc-org/machine/libmachine/drivers/plugin/localbinary"
+	"github.com/crc-org/machine/libmachine/state"
+	"github.com/crc-org/machine/libmachine/version"
 	log "github.com/sirupsen/logrus"
 )
 

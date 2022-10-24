@@ -6,8 +6,8 @@ import (
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/machine/drivers/libvirt"
-	"github.com/code-ready/machine/libmachine/drivers"
+	"github.com/crc-org/machine/drivers/libvirt"
+	"github.com/crc-org/machine/libmachine/drivers"
 )
 
 func CreateHost(machineConfig config.MachineConfig) *libvirt.Driver {

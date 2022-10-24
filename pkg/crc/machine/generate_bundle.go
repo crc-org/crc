@@ -12,7 +12,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/oc"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
-	"github.com/code-ready/machine/libmachine/state"
+	"github.com/crc-org/machine/libmachine/state"
 	"github.com/pkg/errors"
 )
 

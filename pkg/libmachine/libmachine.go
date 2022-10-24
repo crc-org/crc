@@ -5,7 +5,7 @@ import (
 
 	"github.com/code-ready/crc/pkg/libmachine/host"
 	"github.com/code-ready/crc/pkg/libmachine/persist"
-	rpcdriver "github.com/code-ready/machine/libmachine/drivers/rpc"
+	rpcdriver "github.com/crc-org/machine/libmachine/drivers/rpc"
 )
 
 type API interface {

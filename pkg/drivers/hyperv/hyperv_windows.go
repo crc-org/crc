@@ -10,8 +10,8 @@ import (
 	log "github.com/code-ready/crc/pkg/crc/logging"
 	crcos "github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/windows/powershell"
-	"github.com/code-ready/machine/libmachine/drivers"
-	"github.com/code-ready/machine/libmachine/state"
+	"github.com/crc-org/machine/libmachine/drivers"
+	"github.com/crc-org/machine/libmachine/state"
 )
 
 type Driver struct {

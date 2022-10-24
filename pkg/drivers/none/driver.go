@@ -3,8 +3,8 @@ package none
 import (
 	"fmt"
 
-	"github.com/code-ready/machine/libmachine/drivers"
-	"github.com/code-ready/machine/libmachine/state"
+	"github.com/crc-org/machine/libmachine/drivers"
+	"github.com/crc-org/machine/libmachine/state"
 )
 
 const driverName = "none"

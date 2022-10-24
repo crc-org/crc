@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	"github.com/code-ready/machine/libmachine/drivers"
-	"github.com/code-ready/machine/libmachine/state"
-	"github.com/code-ready/machine/libmachine/version"
+	"github.com/crc-org/machine/libmachine/drivers"
+	"github.com/crc-org/machine/libmachine/state"
+	"github.com/crc-org/machine/libmachine/version"
 )
 
 type Stacker interface {
