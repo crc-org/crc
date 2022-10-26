@@ -1,11 +1,15 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/daemonclient"
+	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
 	crcversion "github.com/code-ready/crc/pkg/crc/version"
@@ -22,7 +26,7 @@ var versionCmd = &cobra.Command{
 	Short: "Print version information",
 	Long:  "Print version information",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return runPrintVersion(os.Stdout, defaultVersion(crcConfig.GetPreset(config)), outputFormat)
+		return runPrintVersion(os.Stdout, getVersion(daemonclient.New()), outputFormat)
 	},
 }
 
@@ -34,10 +38,11 @@ func runPrintVersion(writer io.Writer, version *version, outputFormat string) er
 }
 
 type version struct {
-	Version          string `json:"version"`
-	Commit           string `json:"commit"`
-	OpenshiftVersion string `json:"openshiftVersion"`
-	PodmanVersion    string `json:"podmanVersion"`
+	Version          string                       `json:"version"`
+	Commit           string                       `json:"commit"`
+	OpenshiftVersion string                       `json:"openshiftVersion"`
+	PodmanVersion    string                       `json:"podmanVersion"`
+	Error            *crcErrors.SerializableError `json:"error,omitempty"`
 }
 
 func defaultVersion(preset crcPreset.Preset) *version {
@@ -49,7 +54,27 @@ func defaultVersion(preset crcPreset.Preset) *version {
 	}
 }
 
+func getVersion(client *daemonclient.Client) *version {
+	res, err := client.APIClient.Version()
+	if err != nil {
+		var urlError *url.Error
+		if errors.As(err, &urlError) {
+			err = crcErrors.ToSerializableError(crcErrors.DaemonNotRunning)
+		}
+	}
+	return &version{
+		Version:          res.CrcVersion,
+		Commit:           res.CommitSha,
+		OpenshiftVersion: res.OpenshiftVersion,
+		PodmanVersion:    res.PodmanVersion,
+		Error:            crcErrors.ToSerializableError(err),
+	}
+}
+
 func (v *version) prettyPrintTo(writer io.Writer) error {
+	if v.Error != nil {
+		return v.Error
+	}
 	for _, line := range v.lines() {
 		if _, err := fmt.Fprint(writer, line); err != nil {
 			return err
