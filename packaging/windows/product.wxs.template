@@ -115,7 +115,7 @@
         <CustomAction Id="CreateSMBShare" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
         <SetProperty Action="CAEnableFileAndPrinterSharing"
             Id="EnableFileAndPrinterSharing"
-            Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Set-NetFirewallRule -DisplayGroup 'File And Printer Sharing' -Enabled True -Profile 'Private,Public'&quot;"
+            Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Set-NetFirewallRule -Group '@FirewallAPI.dll,-28502' -Enabled True -Profile 'Private,Public'&quot;"
             Before="EnableFileAndPrinterSharing"
             Sequence="execute"/>
         <CustomAction Id="EnableFileAndPrinterSharing" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="check" />
