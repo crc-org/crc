@@ -118,7 +118,7 @@
             Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Set-NetFirewallRule -Group '@FirewallAPI.dll,-28502' -Enabled True -Profile 'Private,Public'&quot;"
             Before="EnableFileAndPrinterSharing"
             Sequence="execute"/>
-        <CustomAction Id="EnableFileAndPrinterSharing" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="check" />
+        <CustomAction Id="EnableFileAndPrinterSharing" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
         <SetProperty Action="CARemoveSMBShare"
             Id="RemoveSMBShare"
             Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Remove-SmbShare -Name '[SHAREDDIRNAME]' -Force&quot;"
