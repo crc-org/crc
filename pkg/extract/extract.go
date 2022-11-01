@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/cheggaaa/pb/v3"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	crcos "github.com/crc-org/crc/pkg/os"
 	"github.com/h2non/filetype"
 	"github.com/klauspost/compress/zstd"
 	"github.com/pkg/errors"

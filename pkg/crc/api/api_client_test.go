@@ -8,13 +8,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	apiClient "github.com/code-ready/crc/pkg/crc/api/client"
-	crcConfig "github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/machine/fakemachine"
-	"github.com/code-ready/crc/pkg/crc/machine/types"
-	"github.com/code-ready/crc/pkg/crc/preset"
-	"github.com/code-ready/crc/pkg/crc/version"
+	apiClient "github.com/crc-org/crc/pkg/crc/api/client"
+	crcConfig "github.com/crc-org/crc/pkg/crc/config"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/machine/fakemachine"
+	"github.com/crc-org/crc/pkg/crc/machine/types"
+	"github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/version"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -1,4 +1,4 @@
-module github.com/code-ready/crc/tools
+module github.com/crc-org/crc/tools
 
 go 1.17
 

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/code-ready/crc/cmd/crc-embedder/cmd"
+	"github.com/crc-org/crc/cmd/crc-embedder/cmd"
 )
 
 func main() {

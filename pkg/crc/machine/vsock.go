@@ -7,12 +7,12 @@ import (
 	"runtime"
 	"strconv"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/daemonclient"
-	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/daemonclient"
+	crcErrors "github.com/crc-org/crc/pkg/crc/errors"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	crcPreset "github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/pkg/errors"
 )
 

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
+	crcErrors "github.com/crc-org/crc/pkg/crc/errors"
 	"github.com/stretchr/testify/assert"
 )
 

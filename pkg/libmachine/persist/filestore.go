@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
-	log "github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/libmachine/host"
+	log "github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/libmachine/host"
 )
 
 type Filestore struct {

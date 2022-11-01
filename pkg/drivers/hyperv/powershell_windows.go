@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	log "github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/os/windows/powershell"
+	log "github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/os/windows/powershell"
 )
 
 var (

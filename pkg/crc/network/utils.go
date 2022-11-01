@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"runtime"
 
-	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/logging"
 )
 
 func URIStringForDisplay(uri string) (string, error) {

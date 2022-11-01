@@ -12,14 +12,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/oc"
-	"github.com/code-ready/crc/pkg/crc/ssh"
-	crctls "github.com/code-ready/crc/pkg/crc/tls"
-	"github.com/code-ready/crc/pkg/crc/validation"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/errors"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/oc"
+	"github.com/crc-org/crc/pkg/crc/ssh"
+	crctls "github.com/crc-org/crc/pkg/crc/tls"
+	"github.com/crc-org/crc/pkg/crc/validation"
 	"github.com/pborman/uuid"
 )
 

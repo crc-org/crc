@@ -1,8 +1,8 @@
 package bundle
 
 import (
-	"github.com/code-ready/crc/pkg/crc/preset"
-	"github.com/code-ready/crc/pkg/download"
+	"github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/download"
 )
 
 var bundleLocations = map[string]bundlesDownloadInfo{

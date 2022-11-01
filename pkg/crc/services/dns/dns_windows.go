@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/services"
-	winnet "github.com/code-ready/crc/pkg/os/windows/network"
-	"github.com/code-ready/crc/pkg/os/windows/powershell"
-	"github.com/code-ready/crc/pkg/os/windows/win32"
+	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/services"
+	winnet "github.com/crc-org/crc/pkg/os/windows/network"
+	"github.com/crc-org/crc/pkg/os/windows/powershell"
+	"github.com/crc-org/crc/pkg/os/windows/win32"
 )
 
 const (
@@ -31,7 +31,7 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
 	time.Sleep(2 * time.Second)
 
 	if !contains(getInterfaceNameserverValues(networkInterface), serviceConfig.IP) {
-		return fmt.Errorf("Nameserver %s not successfully set on interface %s. Perhaps you can try this new network mode: https://github.com/code-ready/crc/wiki/VPN-support--with-an--userland-network-stack", serviceConfig.IP, networkInterface)
+		return fmt.Errorf("Nameserver %s not successfully set on interface %s. Perhaps you can try this new network mode: https://github.com/crc-org/crc/wiki/VPN-support--with-an--userland-network-stack", serviceConfig.IP, networkInterface)
 	}
 	return nil
 }

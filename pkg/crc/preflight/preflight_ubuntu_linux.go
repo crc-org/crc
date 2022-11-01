@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	crcos "github.com/crc-org/crc/pkg/os"
 )
 
 var ubuntuPreflightChecks = []Check{

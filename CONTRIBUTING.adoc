@@ -4,7 +4,7 @@
 [[filing-issues]]
 == Filing issues
 
-File issues using the standard link:https://github.com/code-ready/crc/issues[GitHub issue tracker] for the repository.
+File issues using the standard link:https://github.com/crc-org/crc/issues[GitHub issue tracker] for the repository.
 Before you submit a new issue, we recommend that you search the list of issues to see if anyone already submitted a similar issue.
 
 [[contributing-patches]]

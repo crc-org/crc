@@ -1,11 +1,11 @@
 package types
 
 import (
-	"github.com/code-ready/crc/pkg/crc/cluster"
-	"github.com/code-ready/crc/pkg/crc/machine/state"
-	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/preset"
-	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/cluster"
+	"github.com/crc-org/crc/pkg/crc/machine/state"
+	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/preset"
+	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
 )
 
 type StartConfig struct {

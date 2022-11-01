@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/Microsoft/go-winio"
-	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/constants"
 )
 
 func transport() *http.Transport {

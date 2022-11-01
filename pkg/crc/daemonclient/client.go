@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/code-ready/crc/pkg/crc/api/client"
-	crcversion "github.com/code-ready/crc/pkg/crc/version"
 	networkclient "github.com/containers/gvisor-tap-vsock/pkg/client"
+	"github.com/crc-org/crc/pkg/crc/api/client"
+	crcversion "github.com/crc-org/crc/pkg/crc/version"
 	pkgerrors "github.com/pkg/errors"
 )
 

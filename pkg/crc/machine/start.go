@@ -13,25 +13,25 @@ import (
 	"strings"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/cluster"
-	"github.com/code-ready/crc/pkg/crc/constants"
-	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine/bundle"
-	"github.com/code-ready/crc/pkg/crc/machine/config"
-	"github.com/code-ready/crc/pkg/crc/machine/state"
-	"github.com/code-ready/crc/pkg/crc/machine/types"
-	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/oc"
-	"github.com/code-ready/crc/pkg/crc/podman"
-	crcPreset "github.com/code-ready/crc/pkg/crc/preset"
-	"github.com/code-ready/crc/pkg/crc/services"
-	"github.com/code-ready/crc/pkg/crc/services/dns"
-	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
-	"github.com/code-ready/crc/pkg/crc/systemd"
-	"github.com/code-ready/crc/pkg/crc/telemetry"
-	crctls "github.com/code-ready/crc/pkg/crc/tls"
-	"github.com/code-ready/crc/pkg/libmachine/host"
+	"github.com/crc-org/crc/pkg/crc/cluster"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	crcerrors "github.com/crc-org/crc/pkg/crc/errors"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/machine/bundle"
+	"github.com/crc-org/crc/pkg/crc/machine/config"
+	"github.com/crc-org/crc/pkg/crc/machine/state"
+	"github.com/crc-org/crc/pkg/crc/machine/types"
+	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/oc"
+	"github.com/crc-org/crc/pkg/crc/podman"
+	crcPreset "github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/services"
+	"github.com/crc-org/crc/pkg/crc/services/dns"
+	crcssh "github.com/crc-org/crc/pkg/crc/ssh"
+	"github.com/crc-org/crc/pkg/crc/systemd"
+	"github.com/crc-org/crc/pkg/crc/telemetry"
+	crctls "github.com/crc-org/crc/pkg/crc/tls"
+	"github.com/crc-org/crc/pkg/libmachine/host"
 	"github.com/crc-org/machine/libmachine/drivers"
 	libmachinestate "github.com/crc-org/machine/libmachine/state"
 	"github.com/docker/go-units"
@@ -112,7 +112,7 @@ func (client *client) updateVMConfig(startConfig types.StartConfig, vm *virtualM
 
 func growRootFileSystem(sshRunner *crcssh.Runner) error {
 	// With 4.7, this is quite a manual process until https://github.com/openshift/installer/pull/4746 gets fixed
-	// See https://github.com/code-ready/crc/issues/2104 for details
+	// See https://github.com/crc-org/crc/issues/2104 for details
 	rootPart, _, err := sshRunner.Run("realpath", "/dev/disk/by-label/root")
 	if err != nil {
 		return err

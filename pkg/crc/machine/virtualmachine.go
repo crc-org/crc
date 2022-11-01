@@ -3,12 +3,12 @@ package machine
 import (
 	"fmt"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/machine/bundle"
-	"github.com/code-ready/crc/pkg/crc/machine/state"
-	"github.com/code-ready/crc/pkg/crc/ssh"
-	"github.com/code-ready/crc/pkg/libmachine"
-	libmachinehost "github.com/code-ready/crc/pkg/libmachine/host"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/machine/bundle"
+	"github.com/crc-org/crc/pkg/crc/machine/state"
+	"github.com/crc-org/crc/pkg/crc/ssh"
+	"github.com/crc-org/crc/pkg/libmachine"
+	libmachinehost "github.com/crc-org/crc/pkg/libmachine/host"
 	"github.com/pkg/errors"
 )
 

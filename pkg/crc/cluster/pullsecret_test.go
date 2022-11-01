@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/code-ready/crc/pkg/crc/config"
+	"github.com/crc-org/crc/pkg/crc/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/zalando/go-keyring"
 )

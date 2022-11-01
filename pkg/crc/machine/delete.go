@@ -3,8 +3,8 @@ package machine
 import (
 	"os"
 
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/podman"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/podman"
 	"github.com/pkg/errors"
 )
 

@@ -8,12 +8,12 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/download"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/download"
 
-	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
-	"github.com/code-ready/crc/pkg/crc/machine/vfkit"
+	"github.com/crc-org/crc/pkg/crc/machine/libvirt"
+	"github.com/crc-org/crc/pkg/crc/machine/vfkit"
 
 	"github.com/YourFin/binappend"
 	"github.com/spf13/cobra"

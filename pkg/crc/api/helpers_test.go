@@ -3,8 +3,8 @@ package api
 import (
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/preflight"
+	"github.com/crc-org/crc/pkg/crc/config"
+	"github.com/crc-org/crc/pkg/crc/preflight"
 )
 
 func setupNewInMemoryConfig() *config.Config {

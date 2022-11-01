@@ -9,10 +9,10 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/systemd"
-	"github.com/code-ready/crc/pkg/crc/systemd/states"
-	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/systemd"
+	"github.com/crc-org/crc/pkg/crc/systemd/states"
+	crcos "github.com/crc-org/crc/pkg/os"
 )
 
 var nmPreflightChecks = []Check{
@@ -20,7 +20,7 @@ var nmPreflightChecks = []Check{
 		configKeySuffix:  "check-systemd-networkd-running",
 		checkDescription: "Checking if systemd-networkd is running",
 		check:            checkSystemdNetworkdIsNotRunning,
-		fixDescription:   "Network configuration with systemd-networkd is not supported. Perhaps you can try this new network mode: https://github.com/code-ready/crc/wiki/VPN-support--with-an--userland-network-stack",
+		fixDescription:   "Network configuration with systemd-networkd is not supported. Perhaps you can try this new network mode: https://github.com/crc-org/crc/wiki/VPN-support--with-an--userland-network-stack",
 		flags:            NoFix,
 
 		labels: labels{Os: Linux, NetworkMode: System},

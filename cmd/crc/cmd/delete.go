@@ -6,11 +6,11 @@ import (
 	"io"
 	"os"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/input"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	crcErrors "github.com/crc-org/crc/pkg/crc/errors"
+	"github.com/crc-org/crc/pkg/crc/input"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/machine"
 	"github.com/spf13/cobra"
 )
 

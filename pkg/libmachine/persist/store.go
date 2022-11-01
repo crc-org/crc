@@ -1,7 +1,7 @@
 package persist
 
 import (
-	"github.com/code-ready/crc/pkg/libmachine/host"
+	"github.com/crc-org/crc/pkg/libmachine/host"
 )
 
 type Store interface {

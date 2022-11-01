@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine/config"
-	"github.com/code-ready/crc/pkg/crc/machine/vfkit"
-	machineVf "github.com/code-ready/crc/pkg/drivers/vfkit"
-	"github.com/code-ready/crc/pkg/libmachine"
-	"github.com/code-ready/crc/pkg/libmachine/host"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/machine/config"
+	"github.com/crc-org/crc/pkg/crc/machine/vfkit"
+	machineVf "github.com/crc-org/crc/pkg/drivers/vfkit"
+	"github.com/crc-org/crc/pkg/libmachine"
+	"github.com/crc-org/crc/pkg/libmachine/host"
 	"github.com/crc-org/machine/libmachine/drivers"
 )
 

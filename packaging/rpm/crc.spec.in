@@ -1,5 +1,5 @@
 # https://github.com/crc-org/admin-helper
-%global goipath         github.com/code-ready/crc
+%global goipath         github.com/crc-org/crc
 %global goname          crc
 Version:                __VERSION__
 %global 	 	openshift_suffix -__OPENSHIFT_VERSION__

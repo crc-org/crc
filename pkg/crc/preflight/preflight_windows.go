@@ -6,12 +6,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/preset"
-	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
-	"github.com/code-ready/crc/pkg/os/windows/powershell"
-	"github.com/code-ready/crc/pkg/os/windows/win32"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/preset"
+	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/os/windows/powershell"
+	"github.com/crc-org/crc/pkg/os/windows/win32"
 )
 
 var hypervPreflightChecks = []Check{

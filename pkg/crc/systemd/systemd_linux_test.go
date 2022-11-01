@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/code-ready/crc/pkg/crc/systemd/states"
+	"github.com/crc-org/crc/pkg/crc/systemd/states"
 
 	"github.com/stretchr/testify/assert"
 )

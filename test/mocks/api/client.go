@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	client "github.com/code-ready/crc/pkg/crc/api/client"
+	client "github.com/crc-org/crc/pkg/crc/api/client"
 	mock "github.com/stretchr/testify/mock"
 )
 

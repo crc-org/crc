@@ -31,7 +31,7 @@
 
 // URLs
 :crc-download-url: https://console.redhat.com/openshift/create/local
-:crc-gsg-url: https://code-ready.github.io/crc/
+:crc-gsg-url: https://crc-org.github.io/crc/
 
 :openshift-installer-url: https://console.redhat.com/openshift/install
 :openshift-docs-url: https://docs.openshift.com/container-platform/latest

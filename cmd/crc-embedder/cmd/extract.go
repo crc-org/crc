@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/embed"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/embed"
 	"github.com/spf13/cobra"
 )
 

@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/code-ready/crc/pkg/crc/machine/vfkit"
+	"github.com/crc-org/crc/pkg/crc/machine/vfkit"
 )
 
 func NewVfkitCache() *Cache {

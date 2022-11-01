@@ -1,7 +1,7 @@
 package libmachine
 
 import (
-	"github.com/code-ready/crc/pkg/libmachine/host"
+	"github.com/crc-org/crc/pkg/libmachine/host"
 )
 
 func (api *Client) NewHost(driverName string, driverPath string, rawDriver []byte) (*host.Host, error) {

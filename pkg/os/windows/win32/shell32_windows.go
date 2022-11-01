@@ -3,7 +3,7 @@ package win32
 import (
 	"syscall"
 
-	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/logging"
 	"golang.org/x/sys/windows"
 )
 

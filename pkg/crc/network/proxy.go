@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/logging"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/pkg/errors"

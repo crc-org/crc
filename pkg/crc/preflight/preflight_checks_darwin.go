@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/cache"
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/version"
-	crcos "github.com/code-ready/crc/pkg/os"
-	"github.com/code-ready/crc/pkg/os/launchd"
+	"github.com/crc-org/crc/pkg/crc/cache"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/version"
+	crcos "github.com/crc-org/crc/pkg/os"
+	"github.com/crc-org/crc/pkg/os/launchd"
 	"github.com/klauspost/cpuid/v2"
 	"golang.org/x/sys/unix"
 )

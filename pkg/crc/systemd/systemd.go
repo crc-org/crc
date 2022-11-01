@@ -3,10 +3,10 @@ package systemd
 import (
 	"fmt"
 
-	"github.com/code-ready/crc/pkg/crc/ssh"
-	"github.com/code-ready/crc/pkg/crc/systemd/actions"
-	"github.com/code-ready/crc/pkg/crc/systemd/states"
-	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/crc-org/crc/pkg/crc/ssh"
+	"github.com/crc-org/crc/pkg/crc/systemd/actions"
+	"github.com/crc-org/crc/pkg/crc/systemd/states"
+	crcos "github.com/crc-org/crc/pkg/os"
 )
 
 type Commander struct {

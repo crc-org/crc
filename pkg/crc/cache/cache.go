@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/version"
-	"github.com/code-ready/crc/pkg/download"
-	"github.com/code-ready/crc/pkg/embed"
-	"github.com/code-ready/crc/pkg/extract"
-	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/version"
+	"github.com/crc-org/crc/pkg/download"
+	"github.com/crc-org/crc/pkg/embed"
+	"github.com/crc-org/crc/pkg/extract"
+	crcos "github.com/crc-org/crc/pkg/os"
 	"github.com/pkg/errors"
 )
 

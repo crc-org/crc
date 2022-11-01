@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/adminhelper"
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/services"
-	"github.com/code-ready/crc/pkg/crc/systemd"
-	"github.com/code-ready/crc/pkg/crc/systemd/states"
+	"github.com/crc-org/crc/pkg/crc/adminhelper"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/errors"
+	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/services"
+	"github.com/crc-org/crc/pkg/crc/systemd"
+	"github.com/crc-org/crc/pkg/crc/systemd/states"
 )
 
 const (

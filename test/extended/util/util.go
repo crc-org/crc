@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/code-ready/crc/pkg/download"
+	"github.com/crc-org/crc/pkg/download"
 )
 
 func CopyFilesToTestDir() error {

@@ -8,7 +8,7 @@ import (
 	"sort"
 	"text/template"
 
-	"github.com/code-ready/crc/pkg/crc/config"
+	"github.com/crc-org/crc/pkg/crc/config"
 	"github.com/spf13/cobra"
 )
 

@@ -4,8 +4,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/version"
-	crcos "github.com/code-ready/crc/pkg/os"
+	"github.com/crc-org/crc/pkg/crc/version"
+	crcos "github.com/crc-org/crc/pkg/os"
 	"github.com/segmentio/analytics-go/v3"
 )
 

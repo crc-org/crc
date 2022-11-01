@@ -4,11 +4,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/machine/config"
-	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/drivers/hyperv"
-	winnet "github.com/code-ready/crc/pkg/os/windows/network"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/machine/config"
+	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/drivers/hyperv"
+	winnet "github.com/crc-org/crc/pkg/os/windows/network"
 	"github.com/crc-org/machine/libmachine/drivers"
 )
 
