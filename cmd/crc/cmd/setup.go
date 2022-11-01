@@ -5,12 +5,12 @@ import (
 	"io"
 	"os"
 
-	crcConfig "github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/constants"
-	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/input"
-	"github.com/code-ready/crc/pkg/crc/preflight"
-	"github.com/code-ready/crc/pkg/crc/validation"
+	crcConfig "github.com/crc-org/crc/pkg/crc/config"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	crcErrors "github.com/crc-org/crc/pkg/crc/errors"
+	"github.com/crc-org/crc/pkg/crc/input"
+	"github.com/crc-org/crc/pkg/crc/preflight"
+	"github.com/crc-org/crc/pkg/crc/validation"
 
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/util/exec"

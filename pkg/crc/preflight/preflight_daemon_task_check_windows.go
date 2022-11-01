@@ -9,10 +9,10 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/version"
-	"github.com/code-ready/crc/pkg/os/windows/powershell"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/version"
+	"github.com/crc-org/crc/pkg/os/windows/powershell"
 )
 
 var (

@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/daemonclient"
-	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/daemonclient"
+	crcerrors "github.com/crc-org/crc/pkg/crc/errors"
+	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/shirou/gopsutil/v3/process"
 )
 

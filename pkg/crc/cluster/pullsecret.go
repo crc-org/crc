@@ -10,12 +10,12 @@ import (
 	"io/ioutil"
 	"strings"
 
-	crcConfig "github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/preset"
-	"github.com/code-ready/crc/pkg/crc/validation"
-	crcos "github.com/code-ready/crc/pkg/os"
+	crcConfig "github.com/crc-org/crc/pkg/crc/config"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/validation"
+	crcos "github.com/crc-org/crc/pkg/os"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/zalando/go-keyring"

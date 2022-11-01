@@ -3,7 +3,7 @@ package oc
 import (
 	"testing"
 
-	crcos "github.com/code-ready/crc/pkg/os"
+	crcos "github.com/crc-org/crc/pkg/os"
 
 	"github.com/stretchr/testify/assert"
 )

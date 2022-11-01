@@ -3,9 +3,9 @@ package adminhelper
 import (
 	"path/filepath"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/crc-org/admin-helper/pkg/hosts"
 	"github.com/crc-org/admin-helper/pkg/types"
+	"github.com/crc-org/crc/pkg/crc/constants"
 )
 
 var (

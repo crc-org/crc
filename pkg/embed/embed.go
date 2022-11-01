@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/YourFin/binappend"
-	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/logging"
 )
 
 func openEmbeddedFile(executablePath, embedName string) (io.ReadCloser, error) {

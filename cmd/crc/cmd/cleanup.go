@@ -5,8 +5,8 @@ import (
 	"io"
 	"os"
 
-	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/preflight"
+	crcErrors "github.com/crc-org/crc/pkg/crc/errors"
+	"github.com/crc-org/crc/pkg/crc/preflight"
 	"github.com/spf13/cobra"
 )
 

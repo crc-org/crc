@@ -6,7 +6,7 @@ import (
 	"os/user"
 	"testing"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/stretchr/testify/assert"
 )
 

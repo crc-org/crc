@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/ssh"
+	"github.com/crc-org/crc/pkg/crc/ssh"
 )
 
 // HasGivenNameserversConfigured returns true if the instance uses a provided nameserver.

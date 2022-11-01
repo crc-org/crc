@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/code-ready/crc/cmd/crc/cmd"
+	"github.com/crc-org/crc/cmd/crc/cmd"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"sync"
 
-	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/logging"
 )
 
 type context struct {

@@ -5,13 +5,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/logging"
 
-	winnet "github.com/code-ready/crc/pkg/os/windows/network"
-	"github.com/code-ready/crc/pkg/os/windows/powershell"
+	winnet "github.com/crc-org/crc/pkg/os/windows/network"
+	"github.com/crc-org/crc/pkg/os/windows/powershell"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/machine/hyperv"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/machine/hyperv"
 )
 
 const (

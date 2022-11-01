@@ -27,7 +27,7 @@ import (
 	"syscall"
 	"time"
 
-	crcos "github.com/code-ready/crc/pkg/os"
+	crcos "github.com/crc-org/crc/pkg/os"
 	"github.com/crc-org/machine/libmachine/drivers"
 	"github.com/crc-org/machine/libmachine/state"
 	"github.com/crc-org/vfkit/pkg/client"

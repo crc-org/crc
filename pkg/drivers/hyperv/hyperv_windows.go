@@ -7,9 +7,9 @@ import (
 	"os/exec"
 	"time"
 
-	log "github.com/code-ready/crc/pkg/crc/logging"
-	crcos "github.com/code-ready/crc/pkg/os"
-	"github.com/code-ready/crc/pkg/os/windows/powershell"
+	log "github.com/crc-org/crc/pkg/crc/logging"
+	crcos "github.com/crc-org/crc/pkg/os"
+	"github.com/crc-org/crc/pkg/os/windows/powershell"
 	"github.com/crc-org/machine/libmachine/drivers"
 	"github.com/crc-org/machine/libmachine/state"
 )

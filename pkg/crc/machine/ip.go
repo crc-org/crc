@@ -1,8 +1,8 @@
 package machine
 
 import (
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/machine/types"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/machine/types"
 	"github.com/pkg/errors"
 )
 

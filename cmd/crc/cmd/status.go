@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"text/tabwriter"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/daemonclient"
-	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/machine/types"
-	"github.com/code-ready/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/daemonclient"
+	crcErrors "github.com/crc-org/crc/pkg/crc/errors"
+	"github.com/crc-org/crc/pkg/crc/machine/types"
+	"github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/docker/go-units"
 	"github.com/spf13/cobra"
 )

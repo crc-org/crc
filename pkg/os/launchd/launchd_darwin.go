@@ -12,8 +12,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/os"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/os"
 )
 
 const (

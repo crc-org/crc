@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	crcos "github.com/code-ready/crc/pkg/os"
+	crcos "github.com/crc-org/crc/pkg/os"
 )
 
 func NewHostSystemdCommander() *Commander {

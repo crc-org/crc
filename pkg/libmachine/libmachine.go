@@ -3,8 +3,8 @@ package libmachine
 import (
 	"io"
 
-	"github.com/code-ready/crc/pkg/libmachine/host"
-	"github.com/code-ready/crc/pkg/libmachine/persist"
+	"github.com/crc-org/crc/pkg/libmachine/host"
+	"github.com/crc-org/crc/pkg/libmachine/persist"
 	rpcdriver "github.com/crc-org/machine/libmachine/drivers/rpc"
 )
 

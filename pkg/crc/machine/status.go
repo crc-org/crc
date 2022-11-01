@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/code-ready/crc/pkg/crc/cluster"
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine/state"
-	"github.com/code-ready/crc/pkg/crc/machine/types"
-	"github.com/code-ready/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/cluster"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/machine/state"
+	"github.com/crc-org/crc/pkg/crc/machine/types"
+	"github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/pkg/errors"
 )
 

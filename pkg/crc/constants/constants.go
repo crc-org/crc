@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"strings"
 
-	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
-	"github.com/code-ready/crc/pkg/crc/version"
+	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/version"
 )
 
 const (
@@ -25,8 +25,8 @@ const (
 	DaemonLogFile             = "crcd.log"
 	CrcLandingPageURL         = "https://console.redhat.com/openshift/create/local" // #nosec G101
 	DefaultAdminHelperURLBase = "https://github.com/crc-org/admin-helper/releases/download/v%s/%s"
-	CRCMacTrayDownloadURL     = "https://github.com/code-ready/tray-electron/releases/download/%s/crc-tray-macos.tar.gz"
-	CRCWindowsTrayDownloadURL = "https://github.com/code-ready/tray-electron/releases/download/%s/crc-tray-windows.zip"
+	CRCMacTrayDownloadURL     = "https://github.com/crc-org/tray-electron/releases/download/%s/crc-tray-macos.tar.gz"
+	CRCWindowsTrayDownloadURL = "https://github.com/crc-org/tray-electron/releases/download/%s/crc-tray-windows.zip"
 	DefaultContext            = "admin"
 	DaemonHTTPEndpoint        = "http://unix/api"
 	DefaultPodmanNamedPipe    = `\\.\pipe\crc-podman`

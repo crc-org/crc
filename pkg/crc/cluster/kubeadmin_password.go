@@ -11,9 +11,9 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/oc"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/oc"
 	"golang.org/x/crypto/bcrypt"
 )
 

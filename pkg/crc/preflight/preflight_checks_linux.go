@@ -13,14 +13,14 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/code-ready/crc/pkg/crc/cache"
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine/libvirt"
-	"github.com/code-ready/crc/pkg/crc/systemd"
-	"github.com/code-ready/crc/pkg/crc/systemd/states"
-	crcos "github.com/code-ready/crc/pkg/os"
-	"github.com/code-ready/crc/pkg/os/linux"
+	"github.com/crc-org/crc/pkg/crc/cache"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/machine/libvirt"
+	"github.com/crc-org/crc/pkg/crc/systemd"
+	"github.com/crc-org/crc/pkg/crc/systemd/states"
+	crcos "github.com/crc-org/crc/pkg/os"
+	"github.com/crc-org/crc/pkg/os/linux"
 	"libvirt.org/go/libvirtxml"
 )
 

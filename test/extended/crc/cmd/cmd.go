@@ -6,8 +6,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/test/extended/util"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/test/extended/util"
 )
 
 const (

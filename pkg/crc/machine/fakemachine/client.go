@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/code-ready/crc/pkg/crc/machine/state"
-	"github.com/code-ready/crc/pkg/crc/machine/types"
-	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/machine/state"
+	"github.com/crc-org/crc/pkg/crc/machine/types"
+	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/preset"
 )
 
 func NewClient() *Client {

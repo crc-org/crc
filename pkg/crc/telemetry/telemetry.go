@@ -6,8 +6,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
 )
 
 type contextKey struct{}

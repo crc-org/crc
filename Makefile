@@ -29,7 +29,7 @@ GOARCH ?= $(shell go env GOARCH)
 
 HOST_BUILD_DIR=$(BUILD_DIR)/$(GOOS)-$(GOARCH)
 GOPATH ?= $(shell go env GOPATH)
-ORG := github.com/code-ready
+ORG := github.com/crc-org
 REPOPATH ?= $(ORG)/crc
 PACKAGE_DIR := packaging/$(GOOS)
 

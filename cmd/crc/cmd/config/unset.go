@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/telemetry"
+	"github.com/crc-org/crc/pkg/crc/config"
+	"github.com/crc-org/crc/pkg/crc/telemetry"
 	"github.com/spf13/cobra"
 )
 

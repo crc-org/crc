@@ -5,13 +5,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/code-ready/crc/pkg/crc/adminhelper"
-	"github.com/code-ready/crc/pkg/crc/cluster"
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine/bundle"
-	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
-	"github.com/code-ready/crc/pkg/crc/validation"
+	"github.com/crc-org/crc/pkg/crc/adminhelper"
+	"github.com/crc-org/crc/pkg/crc/cluster"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/machine/bundle"
+	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/validation"
 	"github.com/pkg/errors"
 )
 

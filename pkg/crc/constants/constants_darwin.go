@@ -3,7 +3,7 @@ package constants
 import (
 	"path/filepath"
 
-	"github.com/code-ready/crc/pkg/crc/version"
+	"github.com/crc-org/crc/pkg/crc/version"
 )
 
 const (

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/code-ready/crc/pkg/crc/oc"
+	"github.com/crc-org/crc/pkg/crc/oc"
 	v1 "github.com/openshift/api/config/v1"
 	log "github.com/sirupsen/logrus"
 )

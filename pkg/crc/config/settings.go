@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/preset"
-	"github.com/code-ready/crc/pkg/crc/version"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/version"
 )
 
 const (

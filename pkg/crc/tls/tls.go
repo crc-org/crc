@@ -16,7 +16,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/pkg/errors"
 )
 

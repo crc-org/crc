@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/extract"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/extract"
 
 	"github.com/stretchr/testify/require"
 )

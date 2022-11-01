@@ -3,11 +3,11 @@ package preflight
 import (
 	"fmt"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/preset"
-	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
-	"github.com/code-ready/crc/pkg/os/launchd"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/preset"
+	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/os/launchd"
 )
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster

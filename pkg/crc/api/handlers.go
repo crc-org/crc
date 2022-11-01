@@ -4,15 +4,15 @@ import (
 	gocontext "context"
 	"net/http"
 
-	"github.com/code-ready/crc/pkg/crc/api/client"
-	"github.com/code-ready/crc/pkg/crc/cluster"
-	crcConfig "github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/machine"
-	"github.com/code-ready/crc/pkg/crc/machine/types"
-	"github.com/code-ready/crc/pkg/crc/preflight"
-	"github.com/code-ready/crc/pkg/crc/preset"
-	"github.com/code-ready/crc/pkg/crc/version"
+	"github.com/crc-org/crc/pkg/crc/api/client"
+	"github.com/crc-org/crc/pkg/crc/cluster"
+	crcConfig "github.com/crc-org/crc/pkg/crc/config"
+	"github.com/crc-org/crc/pkg/crc/errors"
+	"github.com/crc-org/crc/pkg/crc/machine"
+	"github.com/crc-org/crc/pkg/crc/machine/types"
+	"github.com/crc-org/crc/pkg/crc/preflight"
+	"github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/version"
 )
 
 type Handler struct {

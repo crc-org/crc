@@ -9,13 +9,13 @@ import (
 	"strings"
 	"testing"
 
-	mocks "github.com/code-ready/crc/test/mocks/api"
+	mocks "github.com/crc-org/crc/test/mocks/api"
 
-	apiClient "github.com/code-ready/crc/pkg/crc/api/client"
-	"github.com/code-ready/crc/pkg/crc/daemonclient"
-	"github.com/code-ready/crc/pkg/crc/machine/state"
-	"github.com/code-ready/crc/pkg/crc/machine/types"
-	"github.com/code-ready/crc/pkg/crc/preset"
+	apiClient "github.com/crc-org/crc/pkg/crc/api/client"
+	"github.com/crc-org/crc/pkg/crc/daemonclient"
+	"github.com/crc-org/crc/pkg/crc/machine/state"
+	"github.com/crc-org/crc/pkg/crc/machine/types"
+	"github.com/crc-org/crc/pkg/crc/preset"
 
 	"github.com/pkg/errors"
 

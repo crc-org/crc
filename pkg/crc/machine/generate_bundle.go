@@ -6,12 +6,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/code-ready/crc/pkg/crc/cluster"
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine/bundle"
-	"github.com/code-ready/crc/pkg/crc/oc"
-	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
+	"github.com/crc-org/crc/pkg/crc/cluster"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/machine/bundle"
+	"github.com/crc-org/crc/pkg/crc/oc"
+	crcssh "github.com/crc-org/crc/pkg/crc/ssh"
 	"github.com/crc-org/machine/libmachine/state"
 	"github.com/pkg/errors"
 )

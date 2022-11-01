@@ -1,6 +1,6 @@
 package config
 
-import "github.com/code-ready/crc/pkg/crc/network"
+import "github.com/crc-org/crc/pkg/crc/network"
 
 type MachineConfig struct {
 	// CRC system bundle

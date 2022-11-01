@@ -3,7 +3,7 @@ package preflight
 import (
 	"runtime"
 
-	"github.com/code-ready/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/network"
 )
 
 type LabelName uint32

@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
-	log "github.com/code-ready/crc/pkg/crc/logging"
+	crcerrors "github.com/crc-org/crc/pkg/crc/errors"
+	log "github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/machine/libmachine/drivers"
 	"github.com/crc-org/machine/libmachine/state"
 )

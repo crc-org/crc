@@ -13,11 +13,11 @@ import (
 	"testing"
 	"time"
 
-	crcConfig "github.com/code-ready/crc/pkg/crc/config"
-	crcErr "github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/telemetry"
-	"github.com/code-ready/crc/pkg/crc/version"
+	crcConfig "github.com/crc-org/crc/pkg/crc/config"
+	crcErr "github.com/crc-org/crc/pkg/crc/errors"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/telemetry"
+	"github.com/crc-org/crc/pkg/crc/version"
 	"github.com/stretchr/testify/require"
 )
 

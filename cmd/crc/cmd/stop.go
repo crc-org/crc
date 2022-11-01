@@ -5,10 +5,10 @@ import (
 	"io"
 	"os"
 
-	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/input"
-	"github.com/code-ready/crc/pkg/crc/machine"
-	"github.com/code-ready/crc/pkg/crc/machine/state"
+	crcErrors "github.com/crc-org/crc/pkg/crc/errors"
+	"github.com/crc-org/crc/pkg/crc/input"
+	"github.com/crc-org/crc/pkg/crc/machine"
+	"github.com/crc-org/crc/pkg/crc/machine/state"
 	"github.com/spf13/cobra"
 )
 

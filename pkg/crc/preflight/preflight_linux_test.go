@@ -5,12 +5,12 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/code-ready/crc/pkg/crc/cluster"
-	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/network"
-	"github.com/code-ready/crc/pkg/crc/preset"
-	crcos "github.com/code-ready/crc/pkg/os/linux"
+	"github.com/crc-org/crc/pkg/crc/cluster"
+	"github.com/crc-org/crc/pkg/crc/config"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/preset"
+	crcos "github.com/crc-org/crc/pkg/os/linux"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/code-ready/crc/pkg/drivers/none"
+	"github.com/crc-org/crc/pkg/drivers/none"
 )
 
 var (

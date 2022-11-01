@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	crcos "github.com/code-ready/crc/pkg/os"
+	crcos "github.com/crc-org/crc/pkg/os"
 )
 
 func PromptUserForYesOrNo(message string, force bool) bool {

@@ -4,8 +4,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/version"
-	"github.com/code-ready/crc/pkg/os/windows/powershell"
+	"github.com/crc-org/crc/pkg/crc/version"
+	"github.com/crc-org/crc/pkg/os/windows/powershell"
 	"github.com/segmentio/analytics-go/v3"
 )
 

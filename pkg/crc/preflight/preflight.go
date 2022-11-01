@@ -3,9 +3,9 @@ package preflight
 import (
 	"fmt"
 
-	crcConfig "github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/errors"
-	"github.com/code-ready/crc/pkg/crc/logging"
+	crcConfig "github.com/crc-org/crc/pkg/crc/config"
+	"github.com/crc-org/crc/pkg/crc/errors"
+	"github.com/crc-org/crc/pkg/crc/logging"
 )
 
 type Flags uint32

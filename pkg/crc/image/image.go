@@ -11,16 +11,16 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/gpg"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	crcpreset "github.com/code-ready/crc/pkg/crc/preset"
-	"github.com/code-ready/crc/pkg/crc/version"
-	"github.com/code-ready/crc/pkg/extract"
 	"github.com/containers/image/v5/copy"
 	"github.com/containers/image/v5/directory"
 	"github.com/containers/image/v5/docker"
 	"github.com/containers/image/v5/signature"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/gpg"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/version"
+	"github.com/crc-org/crc/pkg/extract"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 )
 

@@ -1,10 +1,10 @@
 package bundle
 
 import (
-	"github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/constants"
-	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/crc-org/crc/pkg/crc/config"
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/machine"
 	"github.com/spf13/cobra"
 )
 
