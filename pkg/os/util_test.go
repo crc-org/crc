@@ -1,13 +1,11 @@
 package os
 
 import (
-	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 	"runtime"
 	"testing"
-
-	"os/user"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -30,9 +28,7 @@ func TestAddEnv(t *testing.T) {
 }
 
 func TestFileContentFuncs(t *testing.T) {
-	dir, err := ioutil.TempDir("", "filecontent")
-	assert.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	filename := filepath.Join(dir, "testfile")
 
@@ -58,12 +54,10 @@ func TestFileContentFuncs(t *testing.T) {
 }
 
 func TestFileExists(t *testing.T) {
-	dir, err := ioutil.TempDir("", "fileexists")
-	assert.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	filename := filepath.Join(dir, "testfile1")
-	_, err = WriteFileIfContentChanged(filename, []byte("content"), 0644)
+	_, err := WriteFileIfContentChanged(filename, []byte("content"), 0644)
 	assert.NoError(t, err)
 	assert.True(t, FileExists(filename))
 
@@ -81,6 +75,10 @@ func TestFileExists(t *testing.T) {
 
 	err = os.Chmod(dirname, 0000)
 	assert.NoError(t, err)
+	defer func() {
+		assert.NoError(t, os.Chmod(dirname, 0777))
+	}()
+
 	if runtime.GOOS == "windows" {
 		assert.True(t, FileExists(filename))
 	} else {

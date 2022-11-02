@@ -12,13 +12,8 @@ import (
 )
 
 func TestUse(t *testing.T) {
-	dir, err := ioutil.TempDir("", "repo")
-	assert.NoError(t, err)
-	defer os.RemoveAll(dir)
-
-	ocBinDir, err := ioutil.TempDir("", "oc-bin-dir")
-	assert.NoError(t, err)
-	defer os.RemoveAll(ocBinDir)
+	dir := t.TempDir()
+	ocBinDir := t.TempDir()
 
 	createDummyBundleContent(t, dir, "crc_libvirt_4.6.1", "1.0")
 
@@ -37,13 +32,8 @@ func TestUse(t *testing.T) {
 }
 
 func TestExtract(t *testing.T) {
-	dir, err := ioutil.TempDir("", "repo")
-	assert.NoError(t, err)
-	defer os.RemoveAll(dir)
-
-	ocBinDir, err := ioutil.TempDir("", "oc-bin-dir")
-	assert.NoError(t, err)
-	defer os.RemoveAll(ocBinDir)
+	dir := t.TempDir()
+	ocBinDir := t.TempDir()
 
 	repo := &Repository{
 		CacheDir: dir,
@@ -77,9 +67,7 @@ func testBundle(t *testing.T) string {
 }
 
 func TestVersionCheck(t *testing.T) {
-	dir, err := ioutil.TempDir("", "repo")
-	assert.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	repo := &Repository{
 		CacheDir: dir,
@@ -87,7 +75,7 @@ func TestVersionCheck(t *testing.T) {
 
 	bundlePath := filepath.Join(dir, "crc_libvirt_4.6.1")
 	createDummyBundleContent(t, dir, "crc_libvirt_4.6.1", "0.9")
-	_, err = repo.Get("crc_libvirt_4.6.1.crcbundle")
+	_, err := repo.Get("crc_libvirt_4.6.1.crcbundle")
 	assert.EqualError(t, err, "cannot use bundle with version 0.9, bundle version must satisfy ^1.0 constraint")
 	os.RemoveAll(bundlePath)
 
@@ -103,13 +91,8 @@ func TestVersionCheck(t *testing.T) {
 }
 
 func TestListBundles(t *testing.T) {
-	dir, err := ioutil.TempDir("", "repo")
-	assert.NoError(t, err)
-	defer os.RemoveAll(dir)
-
-	ocBinDir, err := ioutil.TempDir("", "oc-bin-dir")
-	assert.NoError(t, err)
-	defer os.RemoveAll(ocBinDir)
+	dir := t.TempDir()
+	ocBinDir := t.TempDir()
 
 	createDummyBundleContent(t, dir, "crc_libvirt_4.6.15", "1.0")
 	createDummyBundleContent(t, dir, "crc_libvirt_4.7.0", "1.0")

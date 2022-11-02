@@ -80,9 +80,7 @@ func TestClientUploadWithConsentAndWithSerializableError(t *testing.T) {
 	require.NoError(t, os.Setenv("SSH_TTY", "test"))
 	defer os.Unsetenv("SSH_TTY")
 
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	config, err := newTestConfig("yes")
 	require.NoError(t, err)
@@ -122,9 +120,7 @@ func TestClientUploadWithConsentAndWithoutSerializableError(t *testing.T) {
 	defer server.Close()
 	defer close(body)
 
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	config, err := newTestConfig("yes")
 	require.NoError(t, err)
@@ -157,9 +153,7 @@ func TestClientUploadWithContext(t *testing.T) {
 	defer server.Close()
 	defer close(body)
 
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	config, err := newTestConfig("yes")
 	require.NoError(t, err)
@@ -187,9 +181,7 @@ func TestClientUploadWithOutConsent(t *testing.T) {
 	defer server.Close()
 	defer close(body)
 
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	config, err := newTestConfig("no")
 	require.NoError(t, err)
@@ -212,9 +204,7 @@ func TestClientUploadWithConsentAndCachedIdentify(t *testing.T) {
 	defer server.Close()
 	defer close(body)
 
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	config, err := newTestConfig("yes")
 	require.NoError(t, err)

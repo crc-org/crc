@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -263,9 +262,7 @@ func TestTelemetry(t *testing.T) {
 }
 
 func TestPullSecret(t *testing.T) {
-	dir, err := ioutil.TempDir("", "test-pull-secret")
-	assert.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	fakeMachine := fakemachine.NewClient()
 	config := setupNewInMemoryConfig()

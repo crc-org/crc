@@ -9,7 +9,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -24,9 +23,7 @@ import (
 )
 
 func TestRunner(t *testing.T) {
-	dir, err := ioutil.TempDir("", "ssh")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	clientKey, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	require.NoError(t, err)
@@ -173,10 +170,7 @@ func portFor(addr string) int {
 }
 
 func TestGenerateSSHKey(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "machine-test-")
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpDir := t.TempDir()
 
 	filename := filepath.Join(tmpDir, "sshkey")
 
@@ -187,7 +181,4 @@ func TestGenerateSSHKey(t *testing.T) {
 	if _, err := os.Stat(filename); err != nil {
 		t.Fatalf("expected ssh key at %s", filename)
 	}
-
-	// cleanup
-	_ = os.RemoveAll(tmpDir)
 }

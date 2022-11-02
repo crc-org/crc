@@ -3,7 +3,6 @@ package bundle
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,16 +15,12 @@ func TestGenerateBundle(t *testing.T) {
 	var b CrcBundleInfo
 	assert.NoError(t, json.Unmarshal([]byte(jsonForBundle("crc_4.7.1")), &b))
 
-	tmpBundleDir, err := ioutil.TempDir("", "bundle_data")
-	assert.NoError(t, err)
+	tmpBundleDir := t.TempDir()
 	b.cachedPath = filepath.Join(tmpBundleDir, b.Name)
-	defer os.RemoveAll(tmpBundleDir)
 
 	createDummyBundleFiles(t, &b)
 
-	srcDir, err := ioutil.TempDir("", "testdata")
-	assert.NoError(t, err)
-	defer os.RemoveAll(srcDir)
+	srcDir := t.TempDir()
 
 	customBundleName := "custom_bundle"
 	copier, err := NewCopier(&b, srcDir, customBundleName)

@@ -34,21 +34,19 @@ var (
 
 func TestUncompress(t *testing.T) {
 	for _, archive := range archives {
-		assert.NoError(t, testUncompress(filepath.Join("testdata", archive), nil, files))
-		assert.NoError(t, testUncompress(filepath.Join("testdata", archive), fileFilter, filteredFiles))
+		assert.NoError(t, testUncompress(t, filepath.Join("testdata", archive), nil, files))
+		assert.NoError(t, testUncompress(t, filepath.Join("testdata", archive), fileFilter, filteredFiles))
 	}
 }
 
 func TestUnCompressBundle(t *testing.T) {
-	dir, err := ioutil.TempDir("", "bundles")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	bundle := filepath.Join(dir, "test.crcbundle")
 	for _, archive := range archives {
 		require.NoError(t, crcos.CopyFileContents(filepath.Join("testdata", archive), bundle, 0600))
-		assert.NoError(t, testUncompress(bundle, nil, files))
-		assert.NoError(t, testUncompress(bundle, fileFilter, filteredFiles))
+		assert.NoError(t, testUncompress(t, bundle, nil, files))
+		assert.NoError(t, testUncompress(t, bundle, fileFilter, filteredFiles))
 	}
 }
 
@@ -129,14 +127,11 @@ func checkFiles(destDir string, files fileMap) error {
 	return nil
 }
 
-func testUncompress(archiveName string, fileFilter func(string) bool, files fileMap) error {
-	destDir, err := ioutil.TempDir("", "crc-extract-test")
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(destDir)
+func testUncompress(t *testing.T, archiveName string, fileFilter func(string) bool, files fileMap) error {
+	destDir := t.TempDir()
 
 	var fileList []string
+	var err error
 	if fileFilter != nil {
 		fileList, err = UncompressWithFilter(archiveName, destDir, false, fileFilter)
 	} else {
