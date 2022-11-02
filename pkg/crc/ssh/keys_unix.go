@@ -30,6 +30,7 @@ func (kp *KeyPair) WriteToFile(privateKeyPath string, publicKeyPath string) erro
 		if err != nil {
 			return ErrUnableToWriteFile
 		}
+		defer f.Close()
 
 		if _, err := f.Write(v.Value); err != nil {
 			return ErrUnableToWriteFile
