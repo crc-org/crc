@@ -1,7 +1,7 @@
 package machine
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -29,7 +29,7 @@ users:
 `
 
 func TestCertificateAuthority(t *testing.T) {
-	f, err := ioutil.TempFile("", "kubeconfig")
+	f, err := os.CreateTemp("", "kubeconfig")
 	assert.NoError(t, err, "")
 	_, err = f.WriteString(dummyKubeconfigFileContent)
 	assert.NoError(t, err, "")
@@ -43,15 +43,15 @@ func TestCleanKubeconfig(t *testing.T) {
 	dir := t.TempDir()
 
 	assert.NoError(t, cleanKubeconfig(filepath.Join("testdata", "kubeconfig.in"), filepath.Join(dir, "kubeconfig")))
-	actual, err := ioutil.ReadFile(filepath.Join(dir, "kubeconfig"))
+	actual, err := os.ReadFile(filepath.Join(dir, "kubeconfig"))
 	assert.NoError(t, err)
-	expected, err := ioutil.ReadFile(filepath.Join("testdata", "kubeconfig.out"))
+	expected, err := os.ReadFile(filepath.Join("testdata", "kubeconfig.out"))
 	assert.NoError(t, err)
 	assert.YAMLEq(t, string(expected), string(actual))
 }
 
 func TestUpdateUserCaAndKeyToKubeconfig(t *testing.T) {
-	f, err := ioutil.TempFile("", "kubeconfig")
+	f, err := os.CreateTemp("", "kubeconfig")
 	assert.NoError(t, err, "")
 	err = updateClientCrtAndKeyToKubeconfig([]byte("dummykey"), []byte("dummycert"), filepath.Join("testdata", "kubeconfig.in"), f.Name())
 	assert.NoError(t, err)

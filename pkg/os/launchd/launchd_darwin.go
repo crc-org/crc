@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	goos "os"
 	"os/exec"
 	"path/filepath"
@@ -96,7 +95,7 @@ func CreatePlist(config AgentConfig) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(getPlistPath(config.Label), plist, 0600)
+	err = goos.WriteFile(getPlistPath(config.Label), plist, 0600)
 	return err
 }
 

@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
+	"os"
 	"strconv"
 	"time"
 
@@ -43,7 +43,7 @@ func clientConfig(user string, keys []string) (*ssh.ClientConfig, error) {
 	)
 
 	for _, k := range keys {
-		key, err := ioutil.ReadFile(k)
+		key, err := os.ReadFile(k)
 		if err != nil {
 			continue
 		}

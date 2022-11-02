@@ -3,7 +3,6 @@ package persist
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -23,16 +22,16 @@ func NewFilestore(path string) *Filestore {
 
 func (s Filestore) saveToFile(data []byte, file string) error {
 	if _, err := os.Stat(file); os.IsNotExist(err) {
-		return ioutil.WriteFile(file, data, 0600)
+		return os.WriteFile(file, data, 0600)
 	}
 
-	tmpfi, err := ioutil.TempFile(filepath.Dir(file), "config.json.tmp")
+	tmpfi, err := os.CreateTemp(filepath.Dir(file), "config.json.tmp")
 	if err != nil {
 		return err
 	}
 	defer os.Remove(tmpfi.Name())
 
-	if err = ioutil.WriteFile(tmpfi.Name(), data, 0600); err != nil {
+	if err = os.WriteFile(tmpfi.Name(), data, 0600); err != nil {
 		return err
 	}
 
@@ -101,7 +100,7 @@ func (s Filestore) Load(name string) (*host.Host, error) {
 	if _, err := os.Stat(hostPath); os.IsNotExist(err) {
 		return nil, fmt.Errorf("machine %s does not exist", name)
 	}
-	data, err := ioutil.ReadFile(filepath.Join(s.MachinesDir, name, "config.json"))
+	data, err := os.ReadFile(filepath.Join(s.MachinesDir, name, "config.json"))
 	if err != nil {
 		return nil, err
 	}

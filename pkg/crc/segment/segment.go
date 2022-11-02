@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"hash/fnv"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -131,7 +130,7 @@ func readIdentifyHash(identifyHashPath string) (uint64, error) {
 		return 0, nil
 	}
 
-	cachedHashBytes, err := ioutil.ReadFile(identifyHashPath)
+	cachedHashBytes, err := os.ReadFile(identifyHashPath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return 0, nil
@@ -150,7 +149,7 @@ func writeIdentifyHash(client *Client) error {
 	hashBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(hashBytes, client.identifyHash)
 
-	return ioutil.WriteFile(client.identifyHashPath, hashBytes, 0600)
+	return os.WriteFile(client.identifyHashPath, hashBytes, 0600)
 }
 
 func (c *Client) identifyNew() *analytics.Identify {
@@ -229,14 +228,14 @@ func getUserIdentity(telemetryFilePath string) (string, error) {
 		return "", err
 	}
 	if _, err := os.Stat(telemetryFilePath); !os.IsNotExist(err) {
-		id, err = ioutil.ReadFile(telemetryFilePath)
+		id, err = os.ReadFile(telemetryFilePath)
 		if err != nil {
 			return "", err
 		}
 	}
 	if uuid.Parse(strings.TrimSpace(string(id))) == nil {
 		id = []byte(uuid.NewRandom().String())
-		if err := ioutil.WriteFile(telemetryFilePath, id, 0600); err != nil {
+		if err := os.WriteFile(telemetryFilePath, id, 0600); err != nil {
 			return "", err
 		}
 	}

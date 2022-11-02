@@ -7,8 +7,8 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"math/big"
+	"os"
 	"strings"
 
 	"github.com/crc-org/crc/pkg/crc/constants"
@@ -25,14 +25,14 @@ func GenerateKubeAdminUserPassword() error {
 	if err != nil {
 		return fmt.Errorf("Cannot generate the kubeadmin user password: %w", err)
 	}
-	return ioutil.WriteFile(kubeAdminPasswordFile, []byte(kubeAdminPassword), 0600)
+	return os.WriteFile(kubeAdminPasswordFile, []byte(kubeAdminPassword), 0600)
 }
 
 // UpdateKubeAdminUserPassword updates the htpasswd secret
 func UpdateKubeAdminUserPassword(ctx context.Context, ocConfig oc.Config, newPassword string) error {
 	if newPassword != "" {
 		logging.Infof("Overriding password for kubeadmin user")
-		if err := ioutil.WriteFile(constants.GetKubeAdminPasswordPath(), []byte(strings.TrimSpace(newPassword)), 0600); err != nil {
+		if err := os.WriteFile(constants.GetKubeAdminPasswordPath(), []byte(strings.TrimSpace(newPassword)), 0600); err != nil {
 			return err
 		}
 	}
@@ -79,7 +79,7 @@ func UpdateKubeAdminUserPassword(ctx context.Context, ocConfig oc.Config, newPas
 
 func GetKubeadminPassword() (string, error) {
 	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath()
-	rawData, err := ioutil.ReadFile(kubeAdminPasswordFile)
+	rawData, err := os.ReadFile(kubeAdminPasswordFile)
 	if err != nil {
 		return "", err
 	}

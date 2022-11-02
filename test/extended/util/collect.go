@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -139,7 +138,7 @@ type FileCollector struct {
 }
 
 func (collector *FileCollector) Collect(w Writer) error {
-	bin, err := ioutil.ReadFile(collector.Source)
+	bin, err := os.ReadFile(collector.Source)
 	if err != nil {
 		return err
 	}

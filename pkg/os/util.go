@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -68,7 +67,7 @@ func FileContentMatches(path string, expectedContent []byte) error {
 	if err != nil {
 		return fmt.Errorf("File not found: %s: %s", path, err.Error())
 	}
-	content, err := ioutil.ReadFile(filepath.Clean(path))
+	content, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return fmt.Errorf("Error opening file: %s: %s", path, err.Error())
 	}
@@ -86,7 +85,8 @@ func WriteFileIfContentChanged(path string, newContent []byte, perm os.FileMode)
 	}
 
 	/* Intentionally ignore errors, just try to write the file if we can't read it */
-	err = ioutil.WriteFile(path, newContent, perm)
+	err = os.WriteFile(path, newContent, perm)
+
 	if err != nil {
 		return false, err
 	}

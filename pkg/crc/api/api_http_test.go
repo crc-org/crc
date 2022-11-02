@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
@@ -27,7 +26,7 @@ type mockServer struct {
 }
 
 func createDummyPullSecret(t *testing.T) string {
-	f, err := ioutil.TempFile("", "kubeconfig")
+	f, err := os.CreateTemp("", "kubeconfig")
 	assert.NoError(t, err)
 	_, err = f.WriteString(constants.OkdPullSecret)
 	assert.NoError(t, err)
@@ -464,7 +463,7 @@ func testOne(t *testing.T, testCase *testCase, server *mockServer) {
 	require.Equal(t, testCase.response.statusCode, resp.StatusCode, testCase.request)
 	require.Equal(t, testCase.response.protoMajor, resp.ProtoMajor, testCase.request)
 	require.Equal(t, testCase.response.protoMinor, resp.ProtoMinor, testCase.request)
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err, testCase.request)
 	require.Equal(t, testCase.response.body, string(body), testCase.request)
 	fmt.Println("-----")

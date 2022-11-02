@@ -3,7 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -193,7 +193,7 @@ func run(configuration *types.Configuration) error {
 
 	if watchdog {
 		go func() {
-			if _, err := ioutil.ReadAll(os.Stdin); err != nil {
+			if _, err := io.ReadAll(os.Stdin); err != nil {
 				logging.Errorf("unexpected error while reading stdin: %v", err)
 			}
 			logging.Error("stdin is closed, shutdown...")

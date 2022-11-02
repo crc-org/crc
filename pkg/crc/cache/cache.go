@@ -2,7 +2,6 @@ package cache
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -108,7 +107,7 @@ func (c *Cache) CacheExecutable() error {
 	}
 
 	// Create tmp dir to download the requested tarball
-	tmpDir, err := ioutil.TempDir("", "crc")
+	tmpDir, err := os.MkdirTemp("", "crc")
 	if err != nil {
 		return err
 	}

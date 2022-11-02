@@ -2,7 +2,6 @@ package extract
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -107,7 +106,7 @@ func checkFiles(destDir string, files fileMap) error {
 		}
 		delete(files, archivePath)
 
-		data, err := ioutil.ReadFile(path) // #nosec G304
+		data, err := os.ReadFile(path) // #nosec G304
 		if err != nil {
 			return err
 		}

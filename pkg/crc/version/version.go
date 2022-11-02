@@ -3,7 +3,7 @@ package version
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -124,7 +124,7 @@ func GetCRCLatestVersionFromMirror(transport http.RoundTripper) (*CrcReleaseInfo
 		return nil, fmt.Errorf("HTTP error: %s: %d", response.Status, response.StatusCode)
 	}
 
-	releaseMetaData, err := ioutil.ReadAll(response.Body)
+	releaseMetaData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
 	}

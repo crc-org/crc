@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -46,7 +45,7 @@ func runEmbed(args []string) {
 	var err error
 	executablePath := args[0]
 	if cacheDir == "" {
-		cacheDir, err = ioutil.TempDir("", "crc-embedder")
+		cacheDir, err = os.MkdirTemp("", "crc-embedder")
 		if err != nil {
 			logging.Fatalf("Failed to create temporary directory: %v", err)
 		}

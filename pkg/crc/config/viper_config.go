@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -68,7 +67,7 @@ func (c *ViperStorage) Set(key string, value interface{}) error {
 	if err := ensureConfigFileExists(c.configFile); err != nil {
 		return err
 	}
-	in, err := ioutil.ReadFile(c.configFile)
+	in, err := os.ReadFile(c.configFile)
 	if err != nil {
 		return err
 	}
@@ -90,7 +89,7 @@ func (c *ViperStorage) Unset(key string) error {
 	if err := ensureConfigFileExists(c.configFile); err != nil {
 		return err
 	}
-	in, err := ioutil.ReadFile(c.configFile)
+	in, err := os.ReadFile(c.configFile)
 	if err != nil {
 		return err
 	}
@@ -118,7 +117,7 @@ func (c *ViperStorage) BindFlagSet(flagSet *pflag.FlagSet) error {
 func ensureConfigFileExists(file string) error {
 	_, err := os.Stat(file)
 	if os.IsNotExist(err) {
-		return ioutil.WriteFile(file, []byte("{}\n"), 0600)
+		return os.WriteFile(file, []byte("{}\n"), 0600)
 	}
 	return err
 }
@@ -126,7 +125,7 @@ func ensureConfigFileExists(file string) error {
 func atomicWrite(bin []byte, configFile string) error {
 	ext := filepath.Ext(configFile)
 	pattern := fmt.Sprintf("%s*%s", strings.TrimSuffix(filepath.Base(configFile), ext), ext)
-	tmpFile, err := ioutil.TempFile(filepath.Dir(configFile), pattern)
+	tmpFile, err := os.CreateTemp(filepath.Dir(configFile), pattern)
 	if err != nil {
 		return err
 	}
@@ -136,7 +135,7 @@ func atomicWrite(bin []byte, configFile string) error {
 	if err := tmpFile.Close(); err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(tmpFile.Name(), bin, 0600); err != nil {
+	if err := os.WriteFile(tmpFile.Name(), bin, 0600); err != nil {
 		return err
 	}
 	return os.Rename(tmpFile.Name(), configFile)

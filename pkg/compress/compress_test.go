@@ -2,7 +2,6 @@ package compress
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -121,7 +120,7 @@ func checkFiles(destDir string, files fileMap) error {
 		}
 		delete(files, archivePath)
 
-		data, err := ioutil.ReadFile(path) // #nosec G304
+		data, err := os.ReadFile(path) // #nosec G304
 		if err != nil {
 			return err
 		}

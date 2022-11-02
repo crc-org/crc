@@ -2,7 +2,6 @@ package machine
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -52,7 +51,7 @@ func (client *client) GenerateBundle(forceStop bool) error {
 		return errors.New("VM is still running")
 	}
 
-	tmpBaseDir, err := ioutil.TempDir(constants.MachineCacheDir, "crc_custom_bundle")
+	tmpBaseDir, err := os.MkdirTemp(constants.MachineCacheDir, "crc_custom_bundle")
 	if err != nil {
 		return err
 	}

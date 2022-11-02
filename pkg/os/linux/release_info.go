@@ -7,7 +7,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
@@ -103,7 +102,7 @@ func GetOsRelease() (*OsRelease, error) {
 	if _, err := os.Stat(releaseFile); os.IsNotExist(err) {
 		return nil, fmt.Errorf("%s doesn't exist", releaseFile)
 	}
-	content, err := ioutil.ReadFile(releaseFile)
+	content, err := os.ReadFile(releaseFile)
 	if err != nil {
 		return nil, err
 	}
