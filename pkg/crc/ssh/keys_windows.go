@@ -29,6 +29,7 @@ func (kp *KeyPair) WriteToFile(privateKeyPath string, publicKeyPath string) erro
 		if err != nil {
 			return ErrUnableToWriteFile
 		}
+		defer f.Close()
 
 		if _, err := f.Write(v.Value); err != nil {
 			return ErrUnableToWriteFile
@@ -37,7 +38,6 @@ func (kp *KeyPair) WriteToFile(privateKeyPath string, publicKeyPath string) erro
 		if err := acl.Chmod(v.File, 0600); err != nil {
 			return err
 		}
-
 	}
 
 	return nil
