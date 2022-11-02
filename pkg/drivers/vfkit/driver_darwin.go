@@ -19,7 +19,6 @@ package vfkit
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
@@ -420,7 +419,7 @@ func (d *Driver) findVfkitProcess() (*process.Process, error) {
 }
 
 func readPidFromFile(filename string) (int, error) {
-	bs, err := ioutil.ReadFile(filename)
+	bs, err := os.ReadFile(filename)
 	if err != nil {
 		return 0, err
 	}

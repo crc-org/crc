@@ -3,7 +3,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -51,7 +51,7 @@ func TestPlainStatus(t *testing.T) {
 
 	client := setUpClient(t)
 
-	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
 
 	out := new(bytes.Buffer)
 	assert.NoError(t, runStatus(out, &daemonclient.Client{
@@ -73,7 +73,7 @@ func TestStatusWithoutPodman(t *testing.T) {
 	cacheDir := t.TempDir()
 
 	client := mocks.NewClient(t)
-	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
 
 	client.On("Status").Return(apiClient.ClusterStatusResult{
 		CrcStatus:        string(state.Running),
@@ -104,7 +104,7 @@ func TestJsonStatus(t *testing.T) {
 
 	client := setUpClient(t)
 
-	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
 
 	out := new(bytes.Buffer)
 	assert.NoError(t, runStatus(out, &daemonclient.Client{
@@ -132,7 +132,7 @@ func TestPlainStatusWithError(t *testing.T) {
 
 	client := setUpFailingClient(t)
 
-	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
 
 	out := new(bytes.Buffer)
 	assert.EqualError(t, runStatus(out, &daemonclient.Client{
@@ -146,7 +146,7 @@ func TestJsonStatusWithError(t *testing.T) {
 
 	client := setUpFailingClient(t)
 
-	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
 
 	out := new(bytes.Buffer)
 	assert.NoError(t, runStatus(out, &daemonclient.Client{
@@ -166,7 +166,7 @@ func TestStatusWithMemoryPodman(t *testing.T) {
 	cacheDir := t.TempDir()
 
 	client := mocks.NewClient(t)
-	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
 
 	client.On("Status").Return(apiClient.ClusterStatusResult{
 		CrcStatus:        string(state.Running),

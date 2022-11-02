@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -105,7 +105,7 @@ func GetRAMUsage(sshRunner *ssh.Runner) (int64, int64, error) {
 }
 
 func EnsureSSHKeyPresentInTheCluster(ctx context.Context, ocConfig oc.Config, sshPublicKeyPath string) error {
-	sshPublicKeyByte, err := ioutil.ReadFile(sshPublicKeyPath)
+	sshPublicKeyByte, err := os.ReadFile(sshPublicKeyPath)
 	if err != nil {
 		return err
 	}

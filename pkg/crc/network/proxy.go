@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -44,7 +43,7 @@ func readProxyCAData(proxyCAFile string) (string, error) {
 	if proxyCAFile == "" {
 		return "", nil
 	}
-	proxyCACert, err := ioutil.ReadFile(proxyCAFile)
+	proxyCACert, err := os.ReadFile(proxyCAFile)
 	if err != nil {
 		return "", err
 	}

@@ -2,7 +2,6 @@ package powershell
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -62,7 +61,7 @@ func ExecuteAsAdmin(reason, cmd string) (string, string, error) {
 	}
 	scriptContent := strings.Join(append(runAsCmds(powershell), cmd), "\n")
 
-	tempDir, err := ioutil.TempDir("", "crcScripts")
+	tempDir, err := os.MkdirTemp("", "crcScripts")
 	if err != nil {
 		return "", "", err
 	}
@@ -75,7 +74,7 @@ func ExecuteAsAdmin(reason, cmd string) (string, string, error) {
 	filename := filepath.Join(tempDir, "runAsAdmin.ps1")
 
 	// #nosec G306
-	if err := ioutil.WriteFile(filename, append([]byte{0xef, 0xbb, 0xbf}, []byte(scriptContent)...), 0666); err != nil {
+	if err := os.WriteFile(filename, append([]byte{0xef, 0xbb, 0xbf}, []byte(scriptContent)...), 0666); err != nil {
 		return "", "", err
 	}
 

@@ -1,7 +1,7 @@
 package cluster
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -39,7 +39,7 @@ func TestLoadPullSecret(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, secret3, val)
 
-	assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, "file2"), []byte(secret2), 0600))
+	assert.NoError(t, os.WriteFile(filepath.Join(dir, "file2"), []byte(secret2), 0600))
 	_, err = cfg.Set(config.PullSecretFile, filepath.Join(dir, "file2"))
 	assert.NoError(t, err)
 
@@ -47,7 +47,7 @@ func TestLoadPullSecret(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, secret2, val)
 
-	assert.NoError(t, ioutil.WriteFile(filepath.Join(dir, "file2"), []byte(secret1), 0600))
+	assert.NoError(t, os.WriteFile(filepath.Join(dir, "file2"), []byte(secret1), 0600))
 
 	val, err = loader.Value()
 	assert.NoError(t, err)

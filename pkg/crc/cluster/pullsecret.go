@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	crcConfig "github.com/crc-org/crc/pkg/crc/config"
@@ -156,7 +156,7 @@ func loadFile(path string) (string, error) {
 	if path == "" {
 		return "", errors.New("empty path")
 	}
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
 	}

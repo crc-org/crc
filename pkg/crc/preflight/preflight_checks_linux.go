@@ -3,7 +3,6 @@ package preflight
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/user"
@@ -30,7 +29,7 @@ const (
 )
 
 func checkRunningInsideWSL2() error {
-	version, err := ioutil.ReadFile("/proc/version")
+	version, err := os.ReadFile("/proc/version")
 	if err != nil {
 		return err
 	}
@@ -371,7 +370,7 @@ func fixSystemdUnit(unitName string, unitContent string, shouldBeRunning bool) e
 	unitPath := systemd.UserUnitPath(unitName)
 	if crcos.FileContentMatches(unitPath, []byte(unitContent)) != nil {
 		logging.Debugf("Creating %s", unitPath)
-		if err := ioutil.WriteFile(unitPath, []byte(unitContent), 0600); err != nil {
+		if err := os.WriteFile(unitPath, []byte(unitContent), 0600); err != nil {
 			return err
 		}
 		_ = sd.DaemonReload()
@@ -687,7 +686,7 @@ func fixLibvirtCrcNetworkActive() error {
 
 func getCPUFlags() (string, error) {
 	// Check if the cpu flags vmx or svm is present
-	out, err := ioutil.ReadFile("/proc/cpuinfo")
+	out, err := os.ReadFile("/proc/cpuinfo")
 	if err != nil {
 		logging.Debugf("Failed to read /proc/cpuinfo: %v", err)
 		return "", fmt.Errorf("Failed to read /proc/cpuinfo")

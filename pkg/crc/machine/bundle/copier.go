@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -119,7 +118,7 @@ func (copier *Copier) GenerateBundle(bundleName string) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(copier.resolvePath("crc-bundle-info.json"), bundleContent, 0600)
+	err = os.WriteFile(copier.resolvePath("crc-bundle-info.json"), bundleContent, 0600)
 	if err != nil {
 		return fmt.Errorf("error copying bundle metadata  %w", err)
 	}

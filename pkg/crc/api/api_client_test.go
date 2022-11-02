@@ -1,9 +1,9 @@
 package api
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -277,7 +277,7 @@ func TestPullSecret(t *testing.T) {
 	assert.False(t, defined)
 
 	pullSecretFile := filepath.Join(dir, "pull-secret.json")
-	assert.NoError(t, ioutil.WriteFile(pullSecretFile, []byte(constants.OkdPullSecret), 0600))
+	assert.NoError(t, os.WriteFile(pullSecretFile, []byte(constants.OkdPullSecret), 0600))
 	_, err = config.Set(crcConfig.PullSecretFile, pullSecretFile)
 	assert.NoError(t, err)
 

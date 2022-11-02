@@ -3,7 +3,7 @@ package cluster
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -40,7 +40,7 @@ type mockLister struct {
 }
 
 func (r *mockLister) List(ctx context.Context, opts metav1.ListOptions) (*v1.ClusterOperatorList, error) {
-	bin, err := ioutil.ReadFile(r.file)
+	bin, err := os.ReadFile(r.file)
 	if err != nil {
 		return nil, err
 	}

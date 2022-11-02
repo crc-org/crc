@@ -18,7 +18,6 @@ package util
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -31,7 +30,7 @@ func PrepareForE2eTest() error {
 
 	var err error
 	if TestDir == "" {
-		TestDir, err = ioutil.TempDir("", "crc-e2e-test-")
+		TestDir, err = os.MkdirTemp("", "crc-e2e-test-")
 		if err != nil {
 			return fmt.Errorf("error creating temporary directory for test run: %v", err)
 		}
@@ -92,7 +91,7 @@ func PrepareTestRunDir() error {
 }
 
 func CleanTestRunDir() error {
-	files, err := ioutil.ReadDir(TestRunDir)
+	files, err := os.ReadDir(TestRunDir)
 	if err != nil {
 		return err
 	}

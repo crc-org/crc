@@ -2,7 +2,7 @@ package persist
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -37,7 +37,7 @@ func TestStoreSaveOmitRawDriver(t *testing.T) {
 
 	configJSONPath := filepath.Join(store.MachinesDir, h.Name, "config.json")
 
-	configData, err := ioutil.ReadFile(configJSONPath)
+	configData, err := os.ReadFile(configJSONPath)
 	assert.NoError(t, err)
 
 	fakeHost := make(map[string]interface{})

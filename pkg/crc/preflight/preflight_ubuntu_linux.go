@@ -6,7 +6,6 @@ package preflight
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,11 +18,11 @@ var ubuntuPreflightChecks = []Check{
 	{
 		configKeySuffix:    "check-apparmor-profile-setup",
 		checkDescription:   "Checking if AppArmor is configured",
-		check:              checkAppArmorExceptionIsPresent(ioutil.ReadFile),
+		check:              checkAppArmorExceptionIsPresent(os.ReadFile),
 		fixDescription:     "Updating AppArmor configuration",
-		fix:                addAppArmorExceptionForQcowDisks(ioutil.ReadFile, crcos.WriteToFileAsRoot),
+		fix:                addAppArmorExceptionForQcowDisks(os.ReadFile, crcos.WriteToFileAsRoot),
 		cleanupDescription: "Cleaning up AppArmor configuration",
-		cleanup:            removeAppArmorExceptionForQcowDisks(ioutil.ReadFile, crcos.WriteToFileAsRoot),
+		cleanup:            removeAppArmorExceptionForQcowDisks(os.ReadFile, crcos.WriteToFileAsRoot),
 
 		labels: labels{Os: Linux, Distro: UbuntuLike},
 	},

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -46,7 +46,7 @@ func mockServer() (chan []byte, *httptest.Server) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
-		bin, err := ioutil.ReadAll(r.Body)
+		bin, err := io.ReadAll(r.Body)
 		if err != nil {
 			logging.Error(err)
 			return
@@ -93,7 +93,7 @@ func TestClientUploadWithConsentAndWithSerializableError(t *testing.T) {
 	require.NoError(t, c.UploadCmd(context.Background(), "start", time.Minute, crcErr.ToSerializableError(crcErr.VMNotExist)))
 	require.NoError(t, c.Close())
 
-	uuid, err := ioutil.ReadFile(uuidFile)
+	uuid, err := os.ReadFile(uuidFile)
 	require.NoError(t, err)
 
 	select {

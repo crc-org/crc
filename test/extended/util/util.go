@@ -3,7 +3,6 @@ package util
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -36,7 +35,7 @@ func CopyFilesToTestDir() error {
 }
 
 func CopyResourcesFromPath(resourcesPath string) error {
-	files, err := ioutil.ReadDir(resourcesPath)
+	files, err := os.ReadDir(resourcesPath)
 	if err != nil {
 		fmt.Printf("Error occurred loading data files: %s", err)
 		return err

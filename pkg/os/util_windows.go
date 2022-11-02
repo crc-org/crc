@@ -3,7 +3,8 @@ package os
 import (
 	"bytes"
 	"errors"
-	"io/ioutil"
+	"io"
+	"os"
 	"os/user"
 	"strings"
 
@@ -16,7 +17,7 @@ import (
 // file directly without this would result in malformed texts
 func ReadFileUTF16LE(filename string) ([]byte, error) {
 	// Read the file into a []byte
-	raw, err := ioutil.ReadFile(filename)
+	raw, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +29,7 @@ func ReadFileUTF16LE(filename string) ([]byte, error) {
 
 	// Make a Reader that uses utf16bom
 	unicodeReader := transform.NewReader(bytes.NewReader(raw), utf16bom)
-	decoded, err := ioutil.ReadAll(unicodeReader)
+	decoded, err := io.ReadAll(unicodeReader)
 	return decoded, err
 }
 

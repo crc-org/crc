@@ -2,7 +2,7 @@ package network
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/crc-org/crc/pkg/crc/ssh"
@@ -63,7 +63,7 @@ func addNameserverToInstance(sshRunner *ssh.Runner, nameserver NameServer) error
 
 func GetResolvValuesFromHost() (*ResolvFileValues, error) {
 	// TODO: we need to add runtime OS in case of windows.
-	out, err := ioutil.ReadFile("/etc/resolv.conf")
+	out, err := os.ReadFile("/etc/resolv.conf")
 	/*
 		if crcos.CurrentOS() == crcos.WINDOWS {
 			// TODO: we need to add logic in case of windows.

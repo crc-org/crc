@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -698,7 +697,7 @@ func addNameServerToInstance(sshRunner *crcssh.Runner, ns string) error {
 
 func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	// Read generated public key
-	publicKey, err := ioutil.ReadFile(constants.GetPublicKeyPath())
+	publicKey, err := os.ReadFile(constants.GetPublicKeyPath())
 	if err != nil {
 		return err
 	}
@@ -891,7 +890,7 @@ func updateCockpitConsoleBearerToken(sshRunner *crcssh.Runner) error {
 	tokenPath := filepath.Join(constants.MachineInstanceDir, constants.DefaultName, "cockpit-bearer-token")
 	token := cluster.GenerateCockpitBearerToken()
 
-	if err := ioutil.WriteFile(tokenPath, []byte(token), 0600); err != nil {
+	if err := os.WriteFile(tokenPath, []byte(token), 0600); err != nil {
 		return fmt.Errorf("failed to write cockpit bearer token: %w", err)
 	}
 

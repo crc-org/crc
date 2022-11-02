@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -74,7 +73,7 @@ func (runner *Runner) CopyData(data []byte, destFilename string, mode os.FileMod
 }
 
 func (runner *Runner) CopyFile(srcFilename string, destFilename string, mode os.FileMode) error {
-	data, err := ioutil.ReadFile(srcFilename)
+	data, err := os.ReadFile(srcFilename)
 	if err != nil {
 		return err
 	}

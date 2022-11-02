@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -37,7 +36,7 @@ func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
 		return nil, errors.Wrapf(err, "could not find cached bundle info in %s", path)
 	}
 	jsonFilepath := filepath.Join(path, metadataFilename)
-	content, err := ioutil.ReadFile(jsonFilepath)
+	content, err := os.ReadFile(jsonFilepath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error reading %s file", jsonFilepath)
 	}
@@ -153,7 +152,7 @@ func (repo *Repository) Extract(path string) error {
 }
 
 func (repo *Repository) List() ([]CrcBundleInfo, error) {
-	files, err := ioutil.ReadDir(repo.CacheDir)
+	files, err := os.ReadDir(repo.CacheDir)
 	if err != nil {
 		return nil, err
 	}

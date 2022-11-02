@@ -1,7 +1,6 @@
 package bundle
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -26,7 +25,7 @@ func TestUse(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "4.6.1", bundle.ClusterInfo.OpenShiftVersion.String())
 
-	bin, err := ioutil.ReadFile(filepath.Join(ocBinDir, constants.OcExecutableName))
+	bin, err := os.ReadFile(filepath.Join(ocBinDir, constants.OcExecutableName))
 	assert.NoError(t, err)
 	assert.Equal(t, "openshift-client", string(bin))
 }
@@ -123,10 +122,10 @@ func TestListBundles(t *testing.T) {
 func createDummyBundleContent(t *testing.T, dir, name, version string) {
 	bundleDir := filepath.Join(dir, name)
 	assert.NoError(t, os.MkdirAll(bundleDir, 0755))
-	assert.NoError(t, ioutil.WriteFile(filepath.Join(bundleDir, metadataFilename), []byte(jsonForBundleWithVersion(version, name)), 0600))
-	assert.NoError(t, ioutil.WriteFile(filepath.Join(bundleDir, constants.OcExecutableName), []byte("openshift-client"), 0600))
-	assert.NoError(t, ioutil.WriteFile(filepath.Join(bundleDir, "kubeadmin-password"), []byte("kubeadmin-password"), 0600))
-	assert.NoError(t, ioutil.WriteFile(filepath.Join(bundleDir, "kubeconfig"), []byte("kubeconfig"), 0600))
-	assert.NoError(t, ioutil.WriteFile(filepath.Join(bundleDir, "id_ecdsa_crc"), []byte("id_ecdsa_crc"), 0600))
-	assert.NoError(t, ioutil.WriteFile(filepath.Join(bundleDir, "crc.qcow2"), []byte("crc.qcow2"), 0600))
+	assert.NoError(t, os.WriteFile(filepath.Join(bundleDir, metadataFilename), []byte(jsonForBundleWithVersion(version, name)), 0600))
+	assert.NoError(t, os.WriteFile(filepath.Join(bundleDir, constants.OcExecutableName), []byte("openshift-client"), 0600))
+	assert.NoError(t, os.WriteFile(filepath.Join(bundleDir, "kubeadmin-password"), []byte("kubeadmin-password"), 0600))
+	assert.NoError(t, os.WriteFile(filepath.Join(bundleDir, "kubeconfig"), []byte("kubeconfig"), 0600))
+	assert.NoError(t, os.WriteFile(filepath.Join(bundleDir, "id_ecdsa_crc"), []byte("id_ecdsa_crc"), 0600))
+	assert.NoError(t, os.WriteFile(filepath.Join(bundleDir, "crc.qcow2"), []byte("crc.qcow2"), 0600))
 }

@@ -18,7 +18,7 @@ package util
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path"
@@ -38,7 +38,7 @@ var (
 
 func init() {
 	// Make sure there is a log, even before StartLog is called
-	E2eLog = log.New(ioutil.Discard, "", 0)
+	E2eLog = log.New(io.Discard, "", 0)
 }
 
 func StartLog(logPath string) error {

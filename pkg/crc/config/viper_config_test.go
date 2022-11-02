@@ -1,7 +1,7 @@
 package config
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -59,7 +59,7 @@ func TestViperConfigSetAndGet(t *testing.T) {
 		IsDefault: false,
 	}, config.Get(cpus))
 
-	bin, err := ioutil.ReadFile(configFile)
+	bin, err := os.ReadFile(configFile)
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{"cpus":5}`, string(bin))
 }
@@ -67,7 +67,7 @@ func TestViperConfigSetAndGet(t *testing.T) {
 func TestViperConfigUnsetAndGet(t *testing.T) {
 	dir := t.TempDir()
 	configFile := filepath.Join(dir, "crc.json")
-	assert.NoError(t, ioutil.WriteFile(configFile, []byte("{\"cpus\": 5}"), 0600))
+	assert.NoError(t, os.WriteFile(configFile, []byte("{\"cpus\": 5}"), 0600))
 
 	config, err := newTestConfig(configFile, "CRC")
 	require.NoError(t, err)
@@ -80,7 +80,7 @@ func TestViperConfigUnsetAndGet(t *testing.T) {
 		IsDefault: true,
 	}, config.Get(cpus))
 
-	bin, err := ioutil.ReadFile(configFile)
+	bin, err := os.ReadFile(configFile)
 	assert.NoError(t, err)
 	assert.Equal(t, "{}", string(bin))
 }
@@ -119,7 +119,7 @@ func TestViperConfigLoadDefaultValue(t *testing.T) {
 	_, err = config.Set(cpus, 4)
 	assert.NoError(t, err)
 
-	bin, err := ioutil.ReadFile(configFile)
+	bin, err := os.ReadFile(configFile)
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{"cpus":4}`, string(bin))
 
@@ -176,7 +176,7 @@ func TestViperConfigBindFlagSet(t *testing.T) {
 	_, err = config.Set(cpus, "6")
 	assert.NoError(t, err)
 
-	bin, err := ioutil.ReadFile(configFile)
+	bin, err := os.ReadFile(configFile)
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{"cpus":6}`, string(bin))
 }
@@ -199,7 +199,7 @@ func TestViperConfigCastSet(t *testing.T) {
 		IsDefault: false,
 	}, config.Get(cpus))
 
-	bin, err := ioutil.ReadFile(configFile)
+	bin, err := os.ReadFile(configFile)
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{"cpus": 5}`, string(bin))
 }
@@ -218,7 +218,7 @@ func TestCannotSetWithWrongType(t *testing.T) {
 func TestCannotGetWithWrongType(t *testing.T) {
 	dir := t.TempDir()
 	configFile := filepath.Join(dir, "crc.json")
-	assert.NoError(t, ioutil.WriteFile(configFile, []byte("{\"cpus\": \"hello\"}"), 0600))
+	assert.NoError(t, os.WriteFile(configFile, []byte("{\"cpus\": \"hello\"}"), 0600))
 
 	config, err := newTestConfig(configFile, "CRC")
 	require.NoError(t, err)
@@ -239,7 +239,7 @@ func TestTwoInstancesSharingSameConfiguration(t *testing.T) {
 	_, err = config1.Set(cpus, 5)
 	require.NoError(t, err)
 
-	bin, err := ioutil.ReadFile(configFile)
+	bin, err := os.ReadFile(configFile)
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{"cpus":5}`, string(bin))
 
@@ -269,7 +269,7 @@ func TestTwoInstancesWriteSameConfiguration(t *testing.T) {
 	_, err = config2.Set(nameServer, "1.1.1.1")
 	require.NoError(t, err)
 
-	bin, err := ioutil.ReadFile(configFile)
+	bin, err := os.ReadFile(configFile)
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{"cpus":5, "nameservers":"1.1.1.1"}`, string(bin))
 
@@ -296,7 +296,7 @@ func TestTwoInstancesSetAndUnsetSameConfiguration(t *testing.T) {
 	_, err = config2.Unset(cpus)
 	require.NoError(t, err)
 
-	bin, err := ioutil.ReadFile(configFile)
+	bin, err := os.ReadFile(configFile)
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{}`, string(bin))
 
