@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -48,9 +47,7 @@ func setUpFailingClient(t *testing.T) *mocks.Client {
 }
 
 func TestPlainStatus(t *testing.T) {
-	cacheDir, err := ioutil.TempDir("", "cache")
-	require.NoError(t, err)
-	defer os.RemoveAll(cacheDir)
+	cacheDir := t.TempDir()
 
 	client := setUpClient(t)
 
@@ -73,9 +70,7 @@ Cache Directory: %s
 }
 
 func TestStatusWithoutPodman(t *testing.T) {
-	cacheDir, err := ioutil.TempDir("", "cache")
-	require.NoError(t, err)
-	defer os.RemoveAll(cacheDir)
+	cacheDir := t.TempDir()
 
 	client := mocks.NewClient(t)
 	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
@@ -105,9 +100,7 @@ Cache Directory: %s
 }
 
 func TestJsonStatus(t *testing.T) {
-	cacheDir, err := ioutil.TempDir("", "cache")
-	require.NoError(t, err)
-	defer os.RemoveAll(cacheDir)
+	cacheDir := t.TempDir()
 
 	client := setUpClient(t)
 
@@ -135,9 +128,7 @@ func TestJsonStatus(t *testing.T) {
 }
 
 func TestPlainStatusWithError(t *testing.T) {
-	cacheDir, err := ioutil.TempDir("", "cache")
-	require.NoError(t, err)
-	defer os.RemoveAll(cacheDir)
+	cacheDir := t.TempDir()
 
 	client := setUpFailingClient(t)
 
@@ -151,9 +142,7 @@ func TestPlainStatusWithError(t *testing.T) {
 }
 
 func TestJsonStatusWithError(t *testing.T) {
-	cacheDir, err := ioutil.TempDir("", "cache")
-	require.NoError(t, err)
-	defer os.RemoveAll(cacheDir)
+	cacheDir := t.TempDir()
 
 	client := setUpFailingClient(t)
 
@@ -174,9 +163,7 @@ func TestJsonStatusWithError(t *testing.T) {
 }
 
 func TestStatusWithMemoryPodman(t *testing.T) {
-	cacheDir, err := ioutil.TempDir("", "cache")
-	require.NoError(t, err)
-	defer os.RemoveAll(cacheDir)
+	cacheDir := t.TempDir()
 
 	client := mocks.NewClient(t)
 	require.NoError(t, ioutil.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))

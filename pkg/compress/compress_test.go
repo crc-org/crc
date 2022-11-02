@@ -32,9 +32,7 @@ func testCompress(t *testing.T, baseDir string) {
 	require.NoError(t, Compress(baseDir, testArchiveName))
 	defer os.Remove(testArchiveName)
 
-	destDir, err := ioutil.TempDir("", "testdata-extracted")
-	require.NoError(t, err)
-	defer os.RemoveAll(destDir)
+	destDir := t.TempDir()
 
 	fileList, err := extract.Uncompress(testArchiveName, destDir, false)
 	require.NoError(t, err)

@@ -2,7 +2,6 @@ package machine
 
 import (
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -41,9 +40,7 @@ func TestCertificateAuthority(t *testing.T) {
 }
 
 func TestCleanKubeconfig(t *testing.T) {
-	dir, err := ioutil.TempDir("", "clean")
-	assert.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	assert.NoError(t, cleanKubeconfig(filepath.Join("testdata", "kubeconfig.in"), filepath.Join(dir, "kubeconfig")))
 	actual, err := ioutil.ReadFile(filepath.Join(dir, "kubeconfig"))

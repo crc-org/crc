@@ -2,7 +2,6 @@ package config
 
 import (
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -34,9 +33,7 @@ func newTestConfig(configFile, envPrefix string) (*Config, error) {
 }
 
 func TestViperConfigUnknown(t *testing.T) {
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	configFile := filepath.Join(dir, "crc.json")
 
 	config, err := newTestConfig(configFile, "CRC")
@@ -48,9 +45,7 @@ func TestViperConfigUnknown(t *testing.T) {
 }
 
 func TestViperConfigSetAndGet(t *testing.T) {
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	configFile := filepath.Join(dir, "crc.json")
 
 	config, err := newTestConfig(configFile, "CRC")
@@ -70,9 +65,7 @@ func TestViperConfigSetAndGet(t *testing.T) {
 }
 
 func TestViperConfigUnsetAndGet(t *testing.T) {
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	configFile := filepath.Join(dir, "crc.json")
 	assert.NoError(t, ioutil.WriteFile(configFile, []byte("{\"cpus\": 5}"), 0600))
 
@@ -93,9 +86,7 @@ func TestViperConfigUnsetAndGet(t *testing.T) {
 }
 
 func TestViperConfigSetReloadAndGet(t *testing.T) {
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	configFile := filepath.Join(dir, "crc.json")
 
 	config, err := newTestConfig(configFile, "CRC")
@@ -114,9 +105,7 @@ func TestViperConfigSetReloadAndGet(t *testing.T) {
 }
 
 func TestViperConfigLoadDefaultValue(t *testing.T) {
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	configFile := filepath.Join(dir, "crc.json")
 
 	config, err := newTestConfig(configFile, "CRC")
@@ -149,9 +138,7 @@ func TestViperConfigLoadDefaultValue(t *testing.T) {
 }
 
 func TestViperConfigBindFlagSet(t *testing.T) {
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	configFile := filepath.Join(dir, "crc.json")
 
 	validateCPUs := func(value interface{}) (bool, string) {
@@ -195,9 +182,7 @@ func TestViperConfigBindFlagSet(t *testing.T) {
 }
 
 func TestViperConfigCastSet(t *testing.T) {
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	configFile := filepath.Join(dir, "crc.json")
 
 	config, err := newTestConfig(configFile, "CRC")
@@ -220,9 +205,7 @@ func TestViperConfigCastSet(t *testing.T) {
 }
 
 func TestCannotSetWithWrongType(t *testing.T) {
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	configFile := filepath.Join(dir, "crc.json")
 
 	config, err := newTestConfig(configFile, "CRC")
@@ -233,9 +216,7 @@ func TestCannotSetWithWrongType(t *testing.T) {
 }
 
 func TestCannotGetWithWrongType(t *testing.T) {
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	configFile := filepath.Join(dir, "crc.json")
 	assert.NoError(t, ioutil.WriteFile(configFile, []byte("{\"cpus\": \"hello\"}"), 0600))
 
@@ -246,9 +227,7 @@ func TestCannotGetWithWrongType(t *testing.T) {
 }
 
 func TestTwoInstancesSharingSameConfiguration(t *testing.T) {
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	configFile := filepath.Join(dir, "crc.json")
 
 	config1, err := newTestConfig(configFile, "CRC")
@@ -275,9 +254,7 @@ func TestTwoInstancesSharingSameConfiguration(t *testing.T) {
 }
 
 func TestTwoInstancesWriteSameConfiguration(t *testing.T) {
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	configFile := filepath.Join(dir, "crc.json")
 
 	config1, err := newTestConfig(configFile, "CRC")
@@ -304,9 +281,7 @@ func TestTwoInstancesWriteSameConfiguration(t *testing.T) {
 }
 
 func TestTwoInstancesSetAndUnsetSameConfiguration(t *testing.T) {
-	dir, err := ioutil.TempDir("", "cfg")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	configFile := filepath.Join(dir, "crc.json")
 
 	config1, err := newTestConfig(configFile, "CRC")

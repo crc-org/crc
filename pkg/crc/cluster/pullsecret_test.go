@@ -2,7 +2,6 @@ package cluster
 
 import (
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -21,9 +20,7 @@ const (
 func TestLoadPullSecret(t *testing.T) {
 	keyring.MockInit()
 
-	dir, err := ioutil.TempDir("", "pull-secret")
-	assert.NoError(t, err)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	cfg := config.New(config.NewEmptyInMemoryStorage(), config.NewEmptyInMemorySecretStorage())
 	config.RegisterSettings(cfg)
@@ -33,7 +30,7 @@ func TestLoadPullSecret(t *testing.T) {
 		path:   filepath.Join(dir, "file1"),
 	}
 
-	_, err = loader.Value()
+	_, err := loader.Value()
 	assert.Error(t, err)
 
 	assert.NoError(t, StoreInKeyring(secret3))

@@ -3,7 +3,6 @@ package persist
 import (
 	"encoding/json"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -12,22 +11,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getTestStore() (Filestore, func(), error) {
-	tmpDir, err := ioutil.TempDir("", "machine-test-")
-	if err != nil {
-		return Filestore{}, nil, err
-	}
+func getTestStore(t *testing.T) Filestore {
 	return Filestore{
-			MachinesDir: tmpDir,
-		}, func() {
-			os.RemoveAll(tmpDir)
-		}, nil
+		MachinesDir: t.TempDir(),
+	}
 }
 
 func TestStoreSave(t *testing.T) {
-	store, cleanup, err := getTestStore()
-	assert.NoError(t, err)
-	defer cleanup()
+	store := getTestStore(t)
 
 	h := testHost()
 
@@ -38,9 +29,7 @@ func TestStoreSave(t *testing.T) {
 }
 
 func TestStoreSaveOmitRawDriver(t *testing.T) {
-	store, cleanup, err := getTestStore()
-	assert.NoError(t, err)
-	defer cleanup()
+	store := getTestStore(t)
 
 	h := testHost()
 
@@ -60,9 +49,7 @@ func TestStoreSaveOmitRawDriver(t *testing.T) {
 }
 
 func TestStoreRemove(t *testing.T) {
-	store, cleanup, err := getTestStore()
-	assert.NoError(t, err)
-	defer cleanup()
+	store := getTestStore(t)
 
 	h := testHost()
 
@@ -71,16 +58,14 @@ func TestStoreRemove(t *testing.T) {
 	path := filepath.Join(store.MachinesDir, h.Name)
 	assert.DirExists(t, path)
 
-	err = store.Remove(h.Name)
+	err := store.Remove(h.Name)
 	assert.NoError(t, err)
 
 	assert.NoDirExists(t, path)
 }
 
 func TestStoreExists(t *testing.T) {
-	store, cleanup, err := getTestStore()
-	assert.NoError(t, err)
-	defer cleanup()
+	store := getTestStore(t)
 
 	h := testHost()
 
@@ -104,14 +89,13 @@ func TestStoreExists(t *testing.T) {
 }
 
 func TestStoreLoad(t *testing.T) {
-	store, cleanup, err := getTestStore()
-	assert.NoError(t, err)
-	defer cleanup()
+	store := getTestStore(t)
 
 	h := testHost()
 
 	assert.NoError(t, store.Save(h))
 
+	var err error
 	h, err = store.Load(h.Name)
 	assert.NoError(t, err)
 
