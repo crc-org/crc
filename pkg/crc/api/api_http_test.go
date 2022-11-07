@@ -273,7 +273,7 @@ var testCases = []testCase{
 	// webconsoleurl
 	{
 		request:  get("webconsoleurl"),
-		response: jSon(`{"ClusterConfig":{"ClusterType":"openshift","ClusterCACert":"MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ","KubeConfig":"/tmp/kubeconfig","KubeAdminPass":"foobar","ClusterAPI":"https://foo.testing:6443","WebConsoleURL":"https://console.foo.testing:6443","ProxyConfig":null}}`),
+		response: jSon(`{"ClusterConfig":{"ClusterType":"openshift","ClusterCACert":"MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ","KubeConfig":"/tmp/kubeconfig","KubeAdminPass":"foobar","ClusterAPI":"https://foo.testing:6443","WebConsoleURL":"https://console.foo.testing:6443","ProxyConfig":null},"State":"Running"}`),
 	},
 
 	// webconsoleurl with failure

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/crc-org/crc/pkg/crc/machine/state"
 	"github.com/crc-org/crc/pkg/crc/machine/types"
 	"github.com/crc-org/crc/pkg/crc/preset"
 )
@@ -32,6 +33,7 @@ type ClusterStatusResult struct {
 
 type ConsoleResult struct {
 	ClusterConfig types.ClusterConfig
+	State         state.State
 }
 
 // SetOrUnsetConfigResult struct is used to return the result of

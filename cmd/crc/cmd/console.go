@@ -6,10 +6,10 @@ import (
 	"io"
 	"os"
 
+	"github.com/crc-org/crc/pkg/crc/api/client"
+	"github.com/crc-org/crc/pkg/crc/daemonclient"
 	crcErrors "github.com/crc-org/crc/pkg/crc/errors"
-	"github.com/crc-org/crc/pkg/crc/machine"
 	"github.com/crc-org/crc/pkg/crc/machine/state"
-	"github.com/crc-org/crc/pkg/crc/machine/types"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 )
@@ -33,21 +33,16 @@ var consoleCmd = &cobra.Command{
 	Short:   "Open the OpenShift Web Console in the default browser",
 	Long:    `Open the OpenShift Web Console in the default browser or print its URL or credentials`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return runConsole(os.Stdout, newMachine(), consolePrintURL, consolePrintCredentials, outputFormat)
+		return runConsole(os.Stdout, daemonclient.New(), consolePrintURL, consolePrintCredentials, outputFormat)
 	},
 }
 
-func showConsole(client machine.Client) (*types.ConsoleResult, error) {
-	if err := checkIfMachineMissing(client); err != nil {
-		// In case of machine doesn't exist then consoleResult error
-		// should be updated so that when rendering the result it have
-		// error details also.
-		return nil, err
-	}
-	return client.GetConsoleURL()
+func showConsole(client *daemonclient.Client) (*client.ConsoleResult, error) {
+	res, err := client.APIClient.WebconsoleURL()
+	return res, err
 }
 
-func runConsole(writer io.Writer, client machine.Client, consolePrintURL, consolePrintCredentials bool, outputFormat string) error {
+func runConsole(writer io.Writer, client *daemonclient.Client, consolePrintURL, consolePrintCredentials bool, outputFormat string) error {
 	result, err := showConsole(client)
 	return render(&consoleResult{
 		Success:                 err == nil,
@@ -106,14 +101,14 @@ func (s *consoleResult) prettyPrintTo(writer io.Writer) error {
 	return nil
 }
 
-func toState(result *types.ConsoleResult) state.State {
+func toState(result *client.ConsoleResult) state.State {
 	if result == nil {
 		return state.Error
 	}
 	return result.State
 }
 
-func toConsoleClusterConfig(result *types.ConsoleResult) *clusterConfig {
+func toConsoleClusterConfig(result *client.ConsoleResult) *clusterConfig {
 	if result == nil {
 		return nil
 	}
