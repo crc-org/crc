@@ -1,6 +1,10 @@
 package machine
 
-import "fmt"
+import (
+	"fmt"
+
+	crcErr "github.com/crc-org/crc/pkg/crc/errors"
+)
 
 func (client *client) Exists() (bool, error) {
 	libMachineAPIClient, cleanup := createLibMachineClient()
@@ -10,4 +14,15 @@ func (client *client) Exists() (bool, error) {
 		return false, fmt.Errorf("Error checking if the host exists: %s", err)
 	}
 	return exists, nil
+}
+
+func CheckIfMachineMissing(client Client) error {
+	exists, err := client.Exists()
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return crcErr.VMNotExist
+	}
+	return nil
 }

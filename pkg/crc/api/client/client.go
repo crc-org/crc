@@ -16,7 +16,7 @@ type Client interface {
 	Start(config StartConfig) (StartResult, error)
 	Stop() error
 	Delete() error
-	WebconsoleURL() (ConsoleResult, error)
+	WebconsoleURL() (*ConsoleResult, error)
 	GetConfig(configs []string) (GetConfigResult, error)
 	SetConfig(configs SetConfigRequest) (SetOrUnsetConfigResult, error)
 	UnsetConfig(configs []string) (SetOrUnsetConfigResult, error)
@@ -104,17 +104,17 @@ func (c *client) Delete() error {
 	return err
 }
 
-func (c *client) WebconsoleURL() (ConsoleResult, error) {
+func (c *client) WebconsoleURL() (*ConsoleResult, error) {
 	var cr = ConsoleResult{}
 	body, err := c.sendGetRequest("/webconsoleurl")
 	if err != nil {
-		return cr, err
+		return &cr, err
 	}
 	err = json.Unmarshal(body, &cr)
 	if err != nil {
-		return cr, err
+		return &cr, err
 	}
-	return cr, nil
+	return &cr, nil
 }
 
 func (c *client) GetConfig(configs []string) (GetConfigResult, error) {

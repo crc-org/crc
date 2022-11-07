@@ -151,12 +151,19 @@ func (h *Handler) Delete(c *context) error {
 }
 
 func (h *Handler) GetWebconsoleInfo(c *context) error {
+	if err := machine.CheckIfMachineMissing(h.Client); err != nil {
+		// In case of machine doesn't exist then consoleResult error
+		// should be updated so that when rendering the result it have
+		// error details also.
+		return err
+	}
 	res, err := h.Client.GetConsoleURL()
 	if err != nil {
 		return err
 	}
 	return c.JSON(http.StatusOK, client.ConsoleResult{
 		ClusterConfig: res.ClusterConfig,
+		State:         res.State,
 	})
 }
 
