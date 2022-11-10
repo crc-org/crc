@@ -22,7 +22,7 @@ var versionCmd = &cobra.Command{
 	Short: "Print version information",
 	Long:  "Print version information",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return runPrintVersion(os.Stdout, defaultVersion(crcConfig.GetPreset(config)), outputFormat)
+		return runPrintVersion(os.Stdout, defaultVersion(), outputFormat)
 	},
 }
 
@@ -40,11 +40,11 @@ type version struct {
 	PodmanVersion    string `json:"podmanVersion"`
 }
 
-func defaultVersion(preset crcPreset.Preset) *version {
+func defaultVersion() *version {
 	return &version{
 		Version:          crcversion.GetCRCVersion(),
 		Commit:           crcversion.GetCommitSha(),
-		OpenshiftVersion: crcversion.GetBundleVersion(preset),
+		OpenshiftVersion: crcversion.GetBundleVersion(crcPreset.OpenShift),
 		PodmanVersion:    crcversion.GetBundleVersion(crcPreset.Podman),
 	}
 }
