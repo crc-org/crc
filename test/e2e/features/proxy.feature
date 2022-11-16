@@ -1,14 +1,13 @@
 @proxy @linux
 Feature: Behind proxy test
 
-    User starts CRC behind a proxy. They expect a successful start
-    and to be able to deploy an app and check its accessibility.
+    Check CRC use behind proxy
 
     Background: Setup the proxy container using podman
         * executing "podman run --name squid -d -p 3128:3128 quay.io/crcont/squid" succeeds
 
     @cleanup
-    Scenario: Start CRC behind proxy
+    Scenario: Start CRC behind proxy under openshift preset
         Given executing single crc setup command succeeds
         And  executing "crc config set http-proxy http://192.168.130.1:3128" succeeds
         Then executing "crc config set https-proxy http://192.168.130.1:3128" succeeds
@@ -29,3 +28,22 @@ Feature: Behind proxy test
         And executing crc cleanup command succeeds
 
 
+    Scenario: Cache podman bundle behind proxy under podman preset
+        * executing "crc config set http-proxy http://192.168.130.1:3128" succeeds
+        * executing "crc config set https-proxy http://192.168.130.1:3128" succeeds
+        * removing podman bundle from cache succeeds
+<<<<<<< HEAD
+        Given executing "crc config set preset podman" succeeds
+        Then executing single crc setup command succeeds
+        And podman bundle is cached
+        # cleanup proxy and preset settings from config
+        * executing "crc config unset http-proxy" succeeds
+        * executing "crc config unset https-proxy" succeeds
+        * executing "crc config unset preset" succeeds
+        * executing "podman stop squid" succeeds
+        * executing "podman rm squid" succeeds
+=======
+        * executing "crc config set preset podman" succeeds
+        When executing single crc setup command succeeds
+        Then executing "crc start" succeeds
+>>>>>>> 5c6d0b94 (Trying a pure start for podman preset)

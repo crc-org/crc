@@ -180,6 +180,12 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		}
 
 		for _, tag := range sc.Tags {
+
+			// if podman preset is activated, bundle will not be provided by the user
+			if tag.Name == "@podman-preset" {
+				userProvidedBundle = false
+			}
+
 			// copy data/config files to test dir
 			if tag.Name == "@testdata" {
 				err := util.CopyFilesToTestDir()
@@ -332,6 +338,10 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		util.DownloadFileIntoLocation)
 	s.Step(`^writing text "([^"]*)" to file "([^"]*)" succeeds$`,
 		util.WriteToFile)
+	s.Step(`^removing (podman|openshift) bundle from cache succeeds$`,
+		RemoveBundleFromCache)
+	s.Step(`^(podman|openshift) bundle (is|is not) cached$`,
+		BundleIsCachedOrNot)
 
 	// File content checks
 	s.Step(`^content of file "([^"]*)" should contain "([^"]*)"$`,
@@ -537,6 +547,63 @@ func FileExistsInCRCHome(fileName string) error {
 	}
 
 	return err
+}
+
+func BundleIsCachedOrNot(presetName string, isOrNot string) error {
+
+	bundle := ""
+	if presetName == "podman" {
+		bundle = constants.GetDefaultBundle(preset.Podman)
+	} else {
+		bundle = constants.GetDefaultBundle(preset.OpenShift)
+	}
+
+	theFile := filepath.Join(CRCHome, "cache", bundle)
+
+	_, err := os.Stat(theFile)
+
+	if os.IsNotExist(err) && isOrNot == "is" {
+		return fmt.Errorf("file %s does not exists, error: %v ", theFile, err)
+	}
+
+	if err == nil && isOrNot == "is not" {
+		return fmt.Errorf("file %s exists when it should not exist", theFile)
+	}
+
+	return nil
+}
+
+func RemoveBundleFromCache(presetName string) error {
+
+<<<<<<< HEAD
+	var theFolder, theBundle string // locations to be removed
+=======
+>>>>>>> f339a7c5 (Refactoring podman proxy feature addition)
+	var p preset.Preset
+
+	if presetName == "podman" {
+		p = preset.Podman
+	} else {
+		p = preset.OpenShift
+	}
+
+	theBundle := util.GetBundlePath(p)
+	theFolder := strings.TrimSuffix(theBundle, ".crcbundle")
+
+	// remove the unpacked folder (if present)
+	err := os.RemoveAll(theFolder)
+	if err != nil {
+		return err
+	}
+
+	// remove the bundle file (if present)
+	err = os.RemoveAll(theBundle)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func ConfigFileInCRCHomeContainsKeyMatchingValue(format string, configFile string, condition string, keyPath string, expectedValue string) error {
