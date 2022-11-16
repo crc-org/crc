@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/user"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
 
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/download"
 )
 
@@ -173,4 +176,15 @@ func MatchRepetitionsWithRetry(expression string, match func(string) error, matc
 			}
 		}
 	}
+}
+
+// GetBundlePath returns a path to the cached bundle, depending on the preset
+func GetBundlePath(preset preset.Preset) string {
+
+	usr, _ := user.Current()
+	crcHome := filepath.Join(usr.HomeDir, ".crc")
+
+	bundle := constants.GetDefaultBundle(preset)
+	return filepath.Join(crcHome, "cache", bundle)
+
 }
