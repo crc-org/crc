@@ -1,0 +1,78 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: httpd-example
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: scc-nonroot-v2
+rules:
+- apiGroups: 
+  - security.openshift.io
+  resources: 
+  - securitycontextconstraints
+  resourceNames: 
+  - nonroot-v2
+  verbs:  
+  - use
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: httpd-example-anyuid
+subjects:
+- kind: ServiceAccount
+  name: httpd-example
+roleRef:
+  kind: Role
+  name: scc-nonroot-v2
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: httpd-example
+  name: httpd-example
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: httpd-example
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: httpd-example
+    spec:
+      containers:
+      - image: registry.access.redhat.com/ubi8/httpd-24
+        imagePullPolicy: Always
+        name: httpd-24
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        securityContext: 
+          runAsUser: 1001
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      serviceAccountName: httpd-example
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: 
+        runAsNonRoot: true
+      terminationGracePeriodSeconds: 30
