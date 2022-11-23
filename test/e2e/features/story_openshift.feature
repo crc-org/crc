@@ -13,7 +13,7 @@ Feature: 3 Openshift stories
 		#And ensuring user is logged in succeeds
 		Given checking that CRC is running
 		Then executing "oc new-project testproj" succeeds
-		And executing "oc create deployment httpd-example --image=registry.access.redhat.com/ubi8/httpd-24 --port=8080" succeeds
+		And executing "oc apply -f httpd-example.yaml" succeeds
 		When executing "oc rollout status deployment httpd-example" succeeds
 		Then stdout should contain "successfully rolled out"
 		When executing "oc create configmap www-content --from-file=index.html=httpd-example-index.html" succeeds
@@ -38,7 +38,7 @@ Feature: 3 Openshift stories
 
 	# Old: Local image to image-registry feature
 
-	@linux
+	@linux @testdata
 	Scenario: Create local image, push to registry, deploy
 		Given checking that CRC is running
 		And executing "podman pull quay.io/centos7/httpd-24-centos7" succeeds
@@ -46,7 +46,7 @@ Feature: 3 Openshift stories
 		And executing "podman login -u kubeadmin -p $(oc whoami -t) default-route-openshift-image-registry.apps-crc.testing --tls-verify=false" succeeds
 		And executing "podman tag quay.io/centos7/httpd-24-centos7 default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test" succeeds
 		And executing "podman push default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test --tls-verify=false" succeeds
-		And executing "oc new-app testproj-img/hello:test" succeeds
+		And executing "oc apply -f hello.yaml" succeeds
 		When executing "oc rollout status deployment hello" succeeds
 		Then stdout should contain "successfully rolled out"
 		And executing "oc get pods" succeeds
