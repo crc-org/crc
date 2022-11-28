@@ -11,7 +11,6 @@ import (
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/errors"
 	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/machine/bundle"
 	"github.com/crc-org/crc/pkg/crc/network"
 	"github.com/crc-org/crc/pkg/crc/services"
 	"github.com/crc-org/crc/pkg/crc/systemd"
@@ -146,15 +145,16 @@ func CheckCRCPublicDNSReachable(serviceConfig services.ServicePostStartConfig) (
 	return stdout, err
 }
 
-func CheckCRCLocalDNSReachableFromHost(bundle *bundle.CrcBundleInfo, expectedIP string) error {
+func CheckCRCLocalDNSReachableFromHost(serviceConfig services.ServicePostStartConfig) error {
+	bundle := serviceConfig.BundleMetadata
 	apiHostname := bundle.GetAPIHostname()
 	ip, err := net.LookupIP(apiHostname)
 	if err != nil {
 		return err
 	}
 	logging.Debugf("%s resolved to %s", apiHostname, ip)
-	if !matchIP(ip, expectedIP) {
-		logging.Warnf("%s resolved to %s but %s was expected", apiHostname, ip, expectedIP)
+	if !matchIP(ip, serviceConfig.IP) {
+		logging.Warnf("%s resolved to %s but %s was expected", apiHostname, ip, serviceConfig.IP)
 		return fmt.Errorf("Invalid IP for %s", apiHostname)
 	}
 
@@ -175,8 +175,8 @@ func CheckCRCLocalDNSReachableFromHost(bundle *bundle.CrcBundleInfo, expectedIP 
 			return nil
 		}
 		logging.Debugf("%s resolved to %s", appsHostname, ip)
-		if !matchIP(ip, expectedIP) {
-			logging.Warnf("%s resolved to %s but %s was expected", appsHostname, ip, expectedIP)
+		if !matchIP(ip, serviceConfig.IP) {
+			logging.Warnf("%s resolved to %s but %s was expected", appsHostname, ip, serviceConfig.IP)
 			return fmt.Errorf("Invalid IP for %s", appsHostname)
 		}
 	}
