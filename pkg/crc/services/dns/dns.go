@@ -164,27 +164,32 @@ func CheckCRCLocalDNSReachableFromHost(serviceConfig services.ServicePostStartCo
 		return nil
 	}
 
-	if runtime.GOOS != "darwin" {
+	if runtime.GOOS == "darwin" {
 		/* This check will fail with !CGO_ENABLED builds on darwin as
 		 * in this case, /etc/resolver/ will not be used, so we won't
 		 * have wildcard DNS for our domains
 		 */
-		appsHostname := bundle.GetAppHostname("foo")
-		ip, err = net.LookupIP(appsHostname)
-		if err != nil {
-			// Right now admin helper fallback is not implemented on windows so
-			// this check should still return an error.
-			if runtime.GOOS == "windows" {
-				return err
-			}
-			logging.Warnf("Wildcard DNS resolution for %s does not appear to be working", bundle.ClusterInfo.AppsDomain)
-			return nil
+		/* This can be removed when we switch to go 1.20
+		 *  https://github.com/golang/go/issues/12524
+		 */
+		return nil
+	}
+
+	appsHostname := bundle.GetAppHostname("foo")
+	ip, err = net.LookupIP(appsHostname)
+	if err != nil {
+		// Right now admin helper fallback is not implemented on windows so
+		// this check should still return an error.
+		if runtime.GOOS == "windows" {
+			return err
 		}
-		logging.Debugf("%s resolved to %s", appsHostname, ip)
-		if !matchIP(ip, serviceConfig.IP) {
-			logging.Warnf("%s resolved to %s but %s was expected", appsHostname, ip, serviceConfig.IP)
-			return fmt.Errorf("Invalid IP for %s", appsHostname)
-		}
+		logging.Warnf("Wildcard DNS resolution for %s does not appear to be working", bundle.ClusterInfo.AppsDomain)
+		return nil
+	}
+	logging.Debugf("%s resolved to %s", appsHostname, ip)
+	if !matchIP(ip, serviceConfig.IP) {
+		logging.Warnf("%s resolved to %s but %s was expected", appsHostname, ip, serviceConfig.IP)
+		return fmt.Errorf("Invalid IP for %s", appsHostname)
 	}
 	return nil
 }
