@@ -108,17 +108,17 @@ fi
 if [ "${CLEANUP_HOME}" = "false" ]; then
     OPTIONS+="--cleanup-home=false "
 fi
-if [ -n "${INSTALLER_PATH}" ]; then
-    OPTIONS+="--installer-path=${INSTALLER_PATH} "
+
+TAGS="@${PLATFORM}"
+if [ -n "${E2E_TAG_EXPRESSION}" ]; then
+    TAGS+=" && ${E2E_TAG_EXPRESSION}"
 fi
-if [ -n "${USER_PASSWORD}" ]; then
-    OPTIONS+="--user-password=${USER_PASSWORD} "
-fi
-OPTIONS+="--godog.tags=\"@${PLATFORM} && ${E2E_TAG_EXPRESSION}\" --godog.format=junit "
-if [[ ${PLATFORM} == 'windows' ]]; then
-    BINARY_EXEC+="cd ${EXECUTION_FOLDER}/bin && ./${BINARY} ${OPTIONS} > ${RESULTS_FILE}.results"
+if [[ ${PLATFORM} == 'darwin' ]]; then
+    OPTIONS+="--godog.tags=\\\"${TAGS}\\\" --godog.format=junit "
+    BINARY_EXEC+="sudo su - ${TARGET_HOST_USERNAME} -c \"PATH=\$PATH:/usr/local/bin && cd ${EXECUTION_FOLDER}/bin && ./${BINARY} ${OPTIONS} > ${RESULTS_FILE}.results\""
 else
-    BINARY_EXEC+="sudo su - ${TARGET_HOST_USERNAME} -c \"cd ${EXECUTION_FOLDER}/bin && ./${BINARY} ${OPTIONS} > ${RESULTS_FILE}.results\""
+    OPTIONS+="--godog.tags=\"${TAGS}\" --godog.format=junit "
+    BINARY_EXEC+="cd ${EXECUTION_FOLDER}/bin && ./${BINARY} ${OPTIONS} > ${RESULTS_FILE}.results"
 fi
 # Execute command remote
 $SSH ${REMOTE} ${BINARY_EXEC}
