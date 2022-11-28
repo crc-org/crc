@@ -26,7 +26,7 @@ $ odo login -u developer -p developer
 +
 [subs="+quotes,attributes"]
 ----
-$ odo project create sample-app
+$ odo create project sample-app
 ----
 
 . Create a directory for your components:
@@ -37,45 +37,22 @@ $ mkdir sample-app
 $ cd sample-app
 ----
 
-. Clone an example Node.js application:
+. Bootstrap a Node.js component and download a starter project:
 +
 [subs="+quotes,attributes"]
 ----
-$ git clone https://github.com/openshift/nodejs-ex
-$ cd nodejs-ex
+$ odo init --name sample-app --devfile nodejs --starter nodejs-starter
 ----
 
-. Add a `nodejs` component to the application:
+. Developing the `nodejs` application continuously:
 +
 [subs="+quotes,attributes"]
 ----
-$ odo create nodejs
-----
-
-. Create a URL and add an entry to the local configuration file:
-+
-[subs="+quotes,attributes"]
-----
-$ odo url create --port 8080
-----
-
-. Push the changes:
-+
-[subs="+quotes,attributes"]
-----
-$ odo push
+$ odo dev
 ----
 +
-Your component is now deployed to the cluster with an accessible URL.
-
-. List the URLs and check the desired URL for the component:
-+
-[subs="+quotes,attributes"]
-----
-$ odo url list
-----
-
-. View the deployed application using the generated URL.
+You can now access the application in your local browser using the URL from the output of the above command and start your development loop.
+[command]`odo` will watch for changes and push the code for real-time updates.
 
 .Additional resources
 
