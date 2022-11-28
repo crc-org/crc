@@ -49,6 +49,7 @@ func getCrcBundleInfo(preset crcPreset.Preset, bundleName, bundlePath string) (*
 		return bundleInfo, nil
 	}
 	logging.Debugf("Failed to load bundle %s: %v", bundleName, err)
+	logging.Infof("Downloading bundle: %s...", bundleName)
 	bundlePath, err = bundle.Download(preset, bundlePath)
 	if err != nil {
 		return nil, err

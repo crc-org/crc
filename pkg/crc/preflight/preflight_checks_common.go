@@ -98,6 +98,7 @@ func fixBundleExtracted(bundlePath string, preset crcpreset.Preset) func() error
 		}
 
 		var err error
+		logging.Infof("Downloading bundle: %s...", bundlePath)
 		if bundlePath, err = bundle.Download(preset, bundlePath); err != nil {
 			return err
 		}
