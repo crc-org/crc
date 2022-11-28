@@ -158,6 +158,12 @@ func CheckCRCLocalDNSReachableFromHost(serviceConfig services.ServicePostStartCo
 		return fmt.Errorf("Invalid IP for %s", apiHostname)
 	}
 
+	if serviceConfig.NetworkMode == network.UserNetworkingMode {
+		// user-mode networking does not setup wildcard DNS on the host. It relies on admin-helper
+		// to create entries in /etc/hosts for routes defined in the cluster.
+		return nil
+	}
+
 	if runtime.GOOS != "darwin" {
 		/* This check will fail with !CGO_ENABLED builds on darwin as
 		 * in this case, /etc/resolver/ will not be used, so we won't
