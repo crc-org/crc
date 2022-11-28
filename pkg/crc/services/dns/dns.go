@@ -11,6 +11,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/errors"
 	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/machine/bundle"
 	"github.com/crc-org/crc/pkg/crc/network"
 	"github.com/crc-org/crc/pkg/crc/services"
 	"github.com/crc-org/crc/pkg/crc/systemd"
@@ -145,7 +146,8 @@ func CheckCRCPublicDNSReachable(serviceConfig services.ServicePostStartConfig) (
 	return stdout, err
 }
 
-func CheckCRCLocalDNSReachableFromHost(apiHostname, appsHostname, appsDomain, expectedIP string) error {
+func CheckCRCLocalDNSReachableFromHost(bundle *bundle.CrcBundleInfo, expectedIP string) error {
+	apiHostname := bundle.GetAPIHostname()
 	ip, err := net.LookupIP(apiHostname)
 	if err != nil {
 		return err
@@ -161,6 +163,7 @@ func CheckCRCLocalDNSReachableFromHost(apiHostname, appsHostname, appsDomain, ex
 		 * in this case, /etc/resolver/ will not be used, so we won't
 		 * have wildcard DNS for our domains
 		 */
+		appsHostname := bundle.GetAppHostname("foo")
 		ip, err = net.LookupIP(appsHostname)
 		if err != nil {
 			// Right now admin helper fallback is not implemented on windows so
@@ -168,7 +171,7 @@ func CheckCRCLocalDNSReachableFromHost(apiHostname, appsHostname, appsDomain, ex
 			if runtime.GOOS == "windows" {
 				return err
 			}
-			logging.Warnf("Wildcard DNS resolution for %s does not appear to be working", appsDomain)
+			logging.Warnf("Wildcard DNS resolution for %s does not appear to be working", bundle.ClusterInfo.AppsDomain)
 			return nil
 		}
 		logging.Debugf("%s resolved to %s", appsHostname, ip)
