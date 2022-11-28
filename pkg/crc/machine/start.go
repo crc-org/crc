@@ -469,7 +469,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	// Check DNS lookup from host to VM
 	logging.Info("Check DNS query from host...")
-	if err := dns.CheckCRCLocalDNSReachableFromHost(vm.bundle, instanceIP); err != nil {
+	if err := dns.CheckCRCLocalDNSReachableFromHost(servicePostStartConfig); err != nil {
 		if !client.useVSock() {
 			return nil, errors.Wrap(err, "Failed to query DNS from host")
 		}
