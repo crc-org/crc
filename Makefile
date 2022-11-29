@@ -127,7 +127,7 @@ test:
 
 GENERATED_RPM_FILES=packaging/rpm/crc.spec images/rpmbuild/Containerfile
 spec: $(GENERATED_RPM_FILES)
-	
+
 test-rpmbuild: spec
 	${CONTAINER_RUNTIME} build -t test-rpmbuild-img -f images/rpmbuild/Containerfile .
 	${CONTAINER_RUNTIME} create --name test-rpmbuild test-rpmbuild-img
@@ -142,7 +142,7 @@ build_docs:
 
 .PHONY: docs_serve
 docs_serve: build_docs
-	${CONTAINER_RUNTIME} run -it -v $(CURDIR)/docs:/docs:Z --rm -p 8088:8088/tcp $(DOCS_BUILD_CONTAINER) docs_serve 
+	${CONTAINER_RUNTIME} run -it -v $(CURDIR)/docs:/docs:Z --rm -p 8088:8088/tcp $(DOCS_BUILD_CONTAINER) docs_serve
 
 .PHONY: docs_check_links
 docs_check_links:
@@ -283,9 +283,9 @@ linux-release: clean lint linux-release-binary embed_crc_helpers gen_release_inf
 	@mkdir -p $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
 	@cp LICENSE $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
 	tar cJSf $(RELEASE_DIR)/crc-linux-amd64.tar.xz -C $(BUILD_DIR) crc-linux-$(CRC_VERSION)-amd64 --owner=0 --group=0
-	
+
 	@mv $(RELEASE_INFO) $(RELEASE_DIR)/$(RELEASE_INFO)
-	
+
 	cd $(RELEASE_DIR) && sha256sum * > sha256sum.txt
 
 .PHONY: embed_crc_helpers
@@ -383,3 +383,14 @@ $(BUILD_DIR)/windows-amd64/crc-windows-installer.zip: $(BUILD_DIR)/windows-amd64
 	rm -f $(HOST_BUILD_DIR)/split
 	pwsh -NoProfile -Command "cd $(HOST_BUILD_DIR); Compress-Archive -Path $(CABS_MSI) -DestinationPath crc-windows-installer.zip"
 	cd $(@D) && sha256sum $(@F)>$(@F).sha256sum
+
+.PHONY: choco choco-clean
+CHOCO_PKG_DIR = packaging/chocolatey/crc
+choco: clean choco-clean $(BUILD_DIR)/windows-amd64/crc.exe $(HOST_BUILD_DIR)/crc-embedder $(CHOCO_PKG_DIR)/crc.nuspec
+	$(HOST_BUILD_DIR)/crc-embedder download --goos=windows --components=admin-helper $(CHOCO_PKG_DIR)/tools
+	cp $(BUILD_DIR)/windows-amd64/crc.exe $(CHOCO_PKG_DIR)/tools/crc.exe
+	cp LICENSE $(CHOCO_PKG_DIR)/tools/LICENSE.txt
+	cd $(CHOCO_PKG_DIR) && choco pack
+choco-clean:
+	rm -f $(CHOCO_PKG_DIR)/*.nupkg
+	rm -f $(CHOCO_PKG_DIR)/tools/*.exe
