@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>crc</id>
+    <version>__VERSION__</version>
+    <owners>https://github.com/crc-org</owners>
+    <title>CRC - Runs Containers</title>
+    <authors>anjannath</authors>
+    <projectUrl>https://crc.dev/blog/about</projectUrl>
+    <iconUrl>https://i.ibb.co/m0b6dsL/crc-upstream-logo.png</iconUrl>
+    <licenseUrl>https://github.com/crc-org/crc/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <tags>crc ocp openshift openshiftlocal okd podman</tags>
+    <summary>CRC is a tool to run containers. It manages a local OpenShift 4.x cluster, OKD cluster or a Podman VM optimized for testing and development purposes.</summary>
+    <description>
+## CRC - Runs Containers
+
+CRC is a tool to run containers. It manages a local OpenShift 4.x cluster, OKD cluster or a Podman VM optimized for testing and development purposes.
+Learn more and contribute on [GitHub](https://github.com/crc-org/crc).
+    </description>
+    <releaseNotes>https://github.com/crc-org/crc/releases/tag/v__VERSION__</releaseNotes>
+    <copyright>2022 Red Hat, Inc</copyright>
+    <packageSourceUrl>https://github.com/crc-org/crc/tree/main/packaging/chocolatey</packageSourceUrl>
+    <projectSourceUrl>https://github.com/crc-org/crc</projectSourceUrl>
+    <docsUrl>https://crc.dev/crc</docsUrl>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

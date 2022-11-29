@@ -9,3 +9,7 @@
 /darwin/*.pkg
 /windows/msi/
 /windows/product.wxs
+/chocolatey/crc/*.nupkg
+/chocolatey/crc/crc.nuspec
+/chocolatey/crc/tools/*.exe
+/chocolatey/crc/tools/LICENSE.txt
