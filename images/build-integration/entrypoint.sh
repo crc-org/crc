@@ -1,11 +1,12 @@
 #!/bin/sh
 
 # Vars
+ARCH="${ARCH:-"amd64"}"
 BINARY=integration.test
 if [[ ${PLATFORM} == 'windows' ]]; then
     BINARY=integration.test.exe
 fi
-BINARY_PATH="/opt/crc/bin/${PLATFORM}-amd64/${BINARY}"
+BINARY_PATH="/opt/crc/bin/${PLATFORM}-${ARCH}/${BINARY}"
 
 # Results
 RESULTS_PATH="${RESULTS_PATH:-/output}"
