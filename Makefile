@@ -151,7 +151,7 @@ clean_macos_package:
 	rm -f packaging/darwin/Distribution
 	rm -f packaging/darwin/Resources/welcome.html
 	rm -f packaging/darwin/scripts/postinstall
-	rm -rf packaging/root/
+	rm -rf packaging/darwin/root/
 
 clean_windows_msi:
 	rm -rf packaging/windows/msi
@@ -313,28 +313,28 @@ macos-universal-binary: macos-release-binary $(TOOLS_BINDIR)/makefat
 	cd $(BUILD_DIR) && "$(TOOLS_BINDIR)"/makefat macos-universal/crc macos-amd64/crc macos-arm64/crc
 
 packagedir: clean embed-download-darwin macos-universal-binary
-	echo -n $(CRC_VERSION) > packaging/VERSION
+	echo -n $(CRC_VERSION) > packaging/darwin/VERSION
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/postinstall.in >packaging/darwin/scripts/postinstall
 	chmod 755 packaging/darwin/scripts/postinstall
-	mkdir -p packaging/root/Applications
+	mkdir -p packaging/darwin/root/Applications
 
-	mv $(EMBED_DOWNLOAD_DIR)/vf.entitlements packaging/vfkit.entitlements
+	mv $(EMBED_DOWNLOAD_DIR)/vf.entitlements packaging/darwin/vfkit.entitlements
 	tar -C $(EMBED_DOWNLOAD_DIR) -xvzf $(EMBED_DOWNLOAD_DIR)/$(TRAY_TARBALL)
 	rm $(EMBED_DOWNLOAD_DIR)/$(TRAY_TARBALL)
-	mv $(EMBED_DOWNLOAD_DIR)/crc-tray-darwin-universal/crc-tray.app packaging/root/Applications/Red\ Hat\ OpenShift\ Local.app
+	mv $(EMBED_DOWNLOAD_DIR)/crc-tray-darwin-universal/crc-tray.app packaging/darwin/root/Applications/Red\ Hat\ OpenShift\ Local.app
 	rm -fr $(EMBED_DOWNLOAD_DIR)/crc-tray-darwin-universal
 
-	mv $(EMBED_DOWNLOAD_DIR)/* packaging/root/"$(MACOS_INSTALL_PATH)"
-	cp $(BUILD_DIR)/macos-universal/crc packaging/root/"$(MACOS_INSTALL_PATH)"
+	mv $(EMBED_DOWNLOAD_DIR)/* packaging/darwin/root/"$(MACOS_INSTALL_PATH)"
+	cp $(BUILD_DIR)/macos-universal/crc packaging/darwin/root/"$(MACOS_INSTALL_PATH)"
 	cp LICENSE packaging/darwin/Resources/LICENSE.txt
 
 $(BUILD_DIR)/macos-universal/crc-macos-installer.pkg: packagedir
-	./packaging/package.sh $(@D)
+	./packaging/darwin/package.sh $(@D)
 
 $(BUILD_DIR)/macos-universal/crc-macos-installer.tar: packagedir
-	tar -cvf $@ ./packaging
+	tar -cvf $@ ./packaging/darwin
 	cd $(@D) && sha256sum $(@F)>$(@F).sha256sum
 
 %.spec: %.spec.in $(TOOLS_BINDIR)/gomod2rpmdeps
