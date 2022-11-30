@@ -8,5 +8,4 @@ root/
 /windows/msi/
 /windows/product.wxs
 vfkit.entitlements
-/tmp
 /*.pkg
