@@ -56,14 +56,14 @@ signAppBundle "${BASEDIR}/root/Applications/Red Hat OpenShift Local.app"
 sudo chmod +sx "${binDir}/crc-admin-helper-darwin"
 
 pkgbuild --identifier com.redhat.crc --version ${version} \
-  --scripts "${BASEDIR}/darwin/scripts" \
+  --scripts "${BASEDIR}/scripts" \
   --root "${BASEDIR}/root" \
   --install-location / \
   --component-plist "${BASEDIR}/components.plist" \
   "${OUTPUT}/crc.pkg"
 
-productbuild --distribution "${BASEDIR}/darwin/Distribution" \
-  --resources "${BASEDIR}/darwin/Resources" \
+productbuild --distribution "${BASEDIR}/Distribution" \
+  --resources "${BASEDIR}/Resources" \
   --package-path "${OUTPUT}" \
   "${OUTPUT}/crc-unsigned.pkg"
 rm "${OUTPUT}/crc.pkg"

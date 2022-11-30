@@ -1,11 +1,11 @@
-root/
 /components.plist
+/darwin/root/
 /darwin/Distribution
 /darwin/Resources/LICENSE.txt
 /darwin/Resources/welcome.html
 /darwin/scripts/postinstall
-/VERSION
+/darwin/vfkit.entitlements
+/darwin/VERSION
+/darwin/*.pkg
 /windows/msi/
 /windows/product.wxs
-vfkit.entitlements
-/*.pkg
