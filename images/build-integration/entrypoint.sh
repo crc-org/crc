@@ -82,14 +82,18 @@ if [[ ${PLATFORM} == 'windows' ]]; then
     if [[ ! -z "${BUNDLE_LOCATION+x}" ]] && [[ -n "${BUNDLE_LOCATION}" ]]; then
         BINARY_EXEC+="\$env:BUNDLE_PATH='${BUNDLE_LOCATION}'; "
     fi
+    BINARY_EXEC+="./${BINARY} > integration.results"
 else 
     BINARY_EXEC="cd ${EXECUTION_FOLDER}/bin && "
     BINARY_EXEC+="PULL_SECRET_PATH=${EXECUTION_FOLDER}/pull-secret "
     if [[ ! -z "${BUNDLE_LOCATION+x}" ]] && [[ -n "${BUNDLE_LOCATION}" ]]; then
         BINARY_EXEC+="BUNDLE_PATH=${BUNDLE_LOCATION} "
     fi
+    BINARY_EXEC+="./${BINARY} > integration.results"
+	if  ${PLATFORM} == 'macos' ; then
+		BINARY_EXEC="sudo su - ${TARGET_HOST_USERNAME} -c \"PATH=\$PATH:/usr/local/bin && ${BINARY_EXEC} \""
+	fi
 fi
-BINARY_EXEC+="./${BINARY} > integration.results"
 # Execute command remote
 $SSH "${REMOTE}" "${BINARY_EXEC}"
 
