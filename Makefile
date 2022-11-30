@@ -299,7 +299,7 @@ update-go-version:
 goversioncheck:
 	./verify-go-version.sh
 
-TRAY_RELEASE ?= packaging/tmp/crc-tray-macos.tar.gz
+TRAY_TARBALL = crc-tray-macos.tar.gz
 
 .PHONY: embed-download-windows embed-download-darwin
 embed-download-windows embed-download-darwin: embed-download-%: $(HOST_BUILD_DIR)/crc-embedder
@@ -318,17 +318,15 @@ packagedir: clean embed-download-darwin macos-universal-binary
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/postinstall.in >packaging/darwin/scripts/postinstall
 	chmod 755 packaging/darwin/scripts/postinstall
-	mkdir -p packaging/tmp/
-	cp $(EMBED_DOWNLOAD_DIR)/* packaging/tmp/
-	cp $(EMBED_DOWNLOAD_DIR)/vf.entitlements packaging/vfkit.entitlements
 	mkdir -p packaging/root/Applications
-	tar -C packaging/root/Applications -xvzf $(TRAY_RELEASE)
-	rm $(TRAY_RELEASE)
-	mv packaging/root/Applications/crc-tray-darwin-universal/crc-tray.app packaging/root/Applications/Red\ Hat\ OpenShift\ Local.app
-	rm -fr packaging/root/Applications/crc-tray-darwin-universal
 
-	mv packaging/tmp/* packaging/root/"$(MACOS_INSTALL_PATH)"
+	mv $(EMBED_DOWNLOAD_DIR)/vf.entitlements packaging/vfkit.entitlements
+	tar -C $(EMBED_DOWNLOAD_DIR) -xvzf $(EMBED_DOWNLOAD_DIR)/$(TRAY_TARBALL)
+	rm $(EMBED_DOWNLOAD_DIR)/$(TRAY_TARBALL)
+	mv $(EMBED_DOWNLOAD_DIR)/crc-tray-darwin-universal/crc-tray.app packaging/root/Applications/Red\ Hat\ OpenShift\ Local.app
+	rm -fr $(EMBED_DOWNLOAD_DIR)/crc-tray-darwin-universal
 
+	mv $(EMBED_DOWNLOAD_DIR)/* packaging/root/"$(MACOS_INSTALL_PATH)"
 	cp $(BUILD_DIR)/macos-universal/crc packaging/root/"$(MACOS_INSTALL_PATH)"
 	cp LICENSE packaging/darwin/Resources/LICENSE.txt
 
