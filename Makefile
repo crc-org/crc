@@ -331,7 +331,7 @@ packagedir: clean embed-download-darwin macos-universal-binary
 	cp LICENSE packaging/darwin/Resources/LICENSE.txt
 
 $(BUILD_DIR)/macos-universal/crc-macos-installer.pkg: packagedir
-	./packaging/darwin/package.sh $(@D)
+	./packaging/darwin/macos-pkg-build-and-sign.sh $(@D)
 
 $(BUILD_DIR)/macos-universal/crc-macos-installer.tar: packagedir
 	tar -cvf $@ ./packaging/darwin
