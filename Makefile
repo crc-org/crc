@@ -334,7 +334,7 @@ $(BUILD_DIR)/macos-universal/crc-macos-installer.pkg: packagedir
 	./packaging/darwin/macos-pkg-build-and-sign.sh $(@D)
 
 $(BUILD_DIR)/macos-universal/crc-macos-installer.tar: packagedir
-	tar -cvf $@ ./packaging/darwin
+	tar -C ./packaging -cvf $@ darwin
 	cd $(@D) && sha256sum $(@F)>$(@F).sha256sum
 
 %.spec: %.spec.in $(TOOLS_BINDIR)/gomod2rpmdeps
