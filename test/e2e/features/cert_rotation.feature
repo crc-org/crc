@@ -8,7 +8,7 @@ Feature: Certificate rotation test
     Background: Setup CRC and rewind the clock forward
         When executing crc setup command succeeds
         And executing "sudo timedatectl set-ntp off" succeeds
-        Then executing "sudo date -s '3 month'" succeeds
+        Then executing "sudo date -s '13 month'" succeeds
         And with up to "10" retries with wait period of "1s" command "virsh --readonly -c qemu:///system capabilities" output matches "^<capabilities>"
 
     Scenario: Start CRC "in the future" and clean up
@@ -20,7 +20,7 @@ Feature: Certificate rotation test
         Then executing "oc whoami" succeeds
         And stdout should contain "kubeadmin"
         # Set clock back to the original time
-        When executing "sudo date -s '-3 month'" succeeds
+        When executing "sudo date -s '-13 month'" succeeds
         And executing "sudo timedatectl set-ntp on" succeeds
         # CRC delete and cleanup
         When executing "crc delete -f" succeeds
