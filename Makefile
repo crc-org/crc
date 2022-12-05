@@ -8,7 +8,7 @@ OKD_VERSION ?= 4.12.0-0.okd-2023-02-18-033438
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 2.15.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
-MACOS_INSTALL_PATH = /Applications/Red Hat OpenShift Local.app/Contents/Resources
+MACOS_INSTALL_PATH = /usr/local/crc
 CONTAINER_RUNTIME ?= podman
 
 TOOLS_DIR := tools

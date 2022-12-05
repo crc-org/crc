@@ -42,7 +42,7 @@ function signAppBundle() {
 
 crcRootDir="${BASEDIR}/root-crc"
 trayRootDir="${BASEDIR}/root-crc-tray"
-crcBinDir="${crcRootDir}/Applications/Red Hat OpenShift Local.app/Contents/Resources"
+crcBinDir="${crcRootDir}/usr/local/crc"
 
 version=$(cat "${BASEDIR}/VERSION")
 
