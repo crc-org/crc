@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/crc-org/crc/pkg/crc/logging"
 
@@ -118,4 +119,15 @@ func RunningInTerminal() bool {
 
 func RunningUsingSSH() bool {
 	return os.Getenv("SSH_TTY") != ""
+}
+
+func GetTimeOutEnvOrDefValue(env string, defValue time.Duration) time.Duration {
+	usrDefinedValue, err := time.ParseDuration(os.Getenv(env))
+	if err != nil {
+		return defValue
+	}
+	if usrDefinedValue != 0 {
+		return usrDefinedValue
+	}
+	return defValue
 }

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -93,4 +94,23 @@ func TestFileExists(t *testing.T) {
 
 	filename = filepath.Join(dirname, "nonexistent")
 	assert.False(t, FileExists(filename))
+}
+
+func TestGetTimeOutEnvOrDefValue(t *testing.T) {
+	// In case there is no env set
+	dummyTimeout := 10 * time.Second
+	gotTimeout := GetTimeOutEnvOrDefValue("CRC_DUMMY_TIME", dummyTimeout)
+	assert.Equal(t, dummyTimeout, gotTimeout)
+
+	// In case user provided the timeout value from env
+	os.Setenv("CRC_DUMMY_TIME", "40s")
+	defer os.Unsetenv("CRC_DUMMY_TIME")
+
+	gotTimeout = GetTimeOutEnvOrDefValue("CRC_DUMMY_TIME", dummyTimeout)
+	assert.Equal(t, 40*time.Second, gotTimeout)
+
+	// In case user provided wrong formatted timeout value from env
+	os.Setenv("CRC_DUMMY_TIME", "40")
+	gotTimeout = GetTimeOutEnvOrDefValue("CRC_DUMMY_TIME", dummyTimeout)
+	assert.NotEqual(t, 40*time.Second, gotTimeout)
 }
