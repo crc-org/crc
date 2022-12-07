@@ -2,6 +2,7 @@ package oc
 
 import (
 	"path/filepath"
+	"time"
 
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/ssh"
@@ -9,8 +10,8 @@ import (
 )
 
 const (
-	defaultTimeout = "30s"
-	fastTimeout    = "5s"
+	defaultTimeout = 30 * time.Second
+	fastTimeout    = 5 * time.Second
 )
 
 type Config struct {
@@ -19,7 +20,7 @@ type Config struct {
 	KubeconfigPath   string
 	Context          string
 	Cluster          string
-	Timeout          string
+	Timeout          time.Duration
 }
 
 // UseOcWithConfig return the oc executable along with valid kubeconfig
@@ -57,10 +58,10 @@ func (oc Config) runCommand(isPrivate bool, args ...string) (string, string, err
 	}
 
 	if isPrivate {
-		return oc.Runner.RunPrivate("timeout", append([]string{oc.Timeout, oc.OcExecutablePath}, args...)...)
+		return oc.Runner.RunPrivate("timeout", append([]string{oc.Timeout.String(), oc.OcExecutablePath}, args...)...)
 	}
 
-	return oc.Runner.Run("timeout", append([]string{oc.Timeout, oc.OcExecutablePath}, args...)...)
+	return oc.Runner.Run("timeout", append([]string{oc.Timeout.String(), oc.OcExecutablePath}, args...)...)
 }
 
 func (oc Config) RunOcCommand(args ...string) (string, string, error) {
