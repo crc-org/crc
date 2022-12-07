@@ -11,6 +11,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/errors"
 	"github.com/crc-org/crc/pkg/crc/logging"
+	crcos "github.com/crc-org/crc/pkg/os"
 )
 
 type Runner struct {
@@ -108,6 +109,7 @@ err     : %w`+"\n", command, err)
 }
 
 func (runner *Runner) WaitForConnectivity(ctx context.Context, timeout time.Duration) error {
+	timeout = crcos.GetTimeOutEnvOrDefValue("CRC_SSH_TIMEOUT", timeout)
 	checkSSHConnectivity := func() error {
 		_, _, err := runner.Run("exit 0")
 		if err != nil {
