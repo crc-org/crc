@@ -31,7 +31,7 @@ func UseOCWithConfig(machineName string) Config {
 		KubeconfigPath:   filepath.Join(constants.MachineInstanceDir, machineName, "kubeconfig"),
 		Context:          constants.DefaultContext,
 		Cluster:          constants.DefaultName,
-		Timeout:          defaultTimeout,
+		Timeout:          crcos.GetTimeOutEnvOrDefValue("CRC_OC_TIMEOUT", defaultTimeout),
 	}
 }
 
@@ -42,7 +42,7 @@ func (oc Config) WithFailFast() Config {
 		KubeconfigPath:   oc.KubeconfigPath,
 		Context:          oc.Context,
 		Cluster:          oc.Cluster,
-		Timeout:          fastTimeout,
+		Timeout:          crcos.GetTimeOutEnvOrDefValue("CRC_OC_TIMEOUT", fastTimeout),
 	}
 }
 
@@ -83,6 +83,6 @@ func UseOCWithSSH(sshRunner *ssh.Runner) Config {
 		KubeconfigPath:   "/opt/kubeconfig",
 		Context:          constants.DefaultContext,
 		Cluster:          constants.DefaultName,
-		Timeout:          defaultTimeout,
+		Timeout:          crcos.GetTimeOutEnvOrDefValue("CRC_OC_TIMEOUT", defaultTimeout),
 	}
 }
