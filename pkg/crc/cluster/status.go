@@ -7,6 +7,7 @@ import (
 
 	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/network"
+	crcos "github.com/crc-org/crc/pkg/os"
 )
 
 // WaitForClusterStable checks that the cluster is running a number of consecutive times
@@ -17,7 +18,7 @@ func WaitForClusterStable(ctx context.Context, ip string, kubeconfigFilePath str
 
 	startTime := time.Now()
 
-	retryDuration := 30 * time.Second
+	retryDuration := crcos.GetTimeOutEnvOrDefValue("CRC_CLUSTER_STABLE_DURATION", 30*time.Second)
 	retryCount := 20 // 10 minutes
 
 	if proxy.IsEnabled() {
