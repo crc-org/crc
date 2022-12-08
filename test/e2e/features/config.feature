@@ -41,7 +41,7 @@ Feature: Test configuration settings
 
     @linux @darwin @windows
     Scenario: CRC config checks (bundle version)
-        Given executing crc setup command succeeds
+        Given executing single crc setup command succeeds
         When setting config property "bundle" to value "current bundle" succeeds
         And "JSON" config file "crc.json" in CRC home folder contains key "bundle" with value matching "current bundle"
         And setting config property "bundle" to value "/path/to/nonexistent/bundle/crc_hypervisor_version.tar.xz" fails
@@ -110,7 +110,7 @@ Feature: Test configuration settings
 
     @linux
     Scenario: Missing CRC setup
-        Given executing crc setup command succeeds
+        Given executing single crc setup command succeeds
         When executing "rm ~/.crc/bin/crc-driver-libvirt" succeeds
         Then starting CRC with default bundle fails
         And stderr should contain "Preflight checks failed during `crc start`, please try to run `crc setup` first in case you haven't done so yet"
@@ -118,7 +118,7 @@ Feature: Test configuration settings
     @linux
     Scenario: Check network setup and destroy it, then check again
         When removing file "crc.json" from CRC home folder succeeds
-        And executing crc setup command succeeds
+        And executing single crc setup command succeeds
         And executing "sudo virsh net-list --name" succeeds
         Then stdout contains "crc"
         When executing "sudo virsh net-undefine crc && sudo virsh net-destroy crc" succeeds
@@ -129,7 +129,7 @@ Feature: Test configuration settings
     Scenario: Running `crc setup` with checks enabled restores destroyed network
         When executing "crc config set skip-check-crc-network false" succeeds
         And executing "crc config set skip-check-crc-network-active false" succeeds
-        Then executing crc setup command succeeds
+        Then executing single crc setup command succeeds
         And executing "sudo virsh net-list --name" succeeds
         And stdout contains "crc"
 

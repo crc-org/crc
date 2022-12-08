@@ -600,7 +600,7 @@ func EnsureCRCIsRunningSucceedsOrFails(expected string) error {
 		return err
 	}
 
-	err = ExecuteCommandWithExpectedExitStatus("setup", expected) // uses the right bundle argument if needed
+	err = ExecuteSingleCommandWithExpectedExitStatus("setup", expected) // uses the right bundle argument if needed
 	if err != nil {
 		return err
 	}
