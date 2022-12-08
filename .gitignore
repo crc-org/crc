@@ -4,3 +4,5 @@ release/
 /release-info.json
 *.crcbundle
 tmp-embed/
+RPMS/
+crc

@@ -129,7 +129,12 @@ GENERATED_RPM_FILES=packaging/rpm/crc.spec images/rpmbuild/Containerfile
 spec: $(GENERATED_RPM_FILES)
 	
 test-rpmbuild: spec
-	${CONTAINER_RUNTIME} build -f images/rpmbuild/Containerfile .
+	${CONTAINER_RUNTIME} build -t test-rpmbuild-img -f images/rpmbuild/Containerfile .
+	${CONTAINER_RUNTIME} create --name test-rpmbuild test-rpmbuild-img
+	${CONTAINER_RUNTIME} cp test-rpmbuild:/root/rpmbuild/RPMS/ .
+	${CONTAINER_RUNTIME} cp test-rpmbuild:/root/rpmbuild/BUILD/crc-$(CRC_VERSION)-$(OPENSHIFT_VERSION)/out/linux-amd64/crc .
+	${CONTAINER_RUNTIME} rm test-rpmbuild
+	${CONTAINER_RUNTIME} rmi test-rpmbuild-img
 
 .PHONY: build_docs
 build_docs:
