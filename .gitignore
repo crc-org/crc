@@ -6,3 +6,5 @@ release/
 packaging/tmp
 packaging/*.pkg
 tmp-embed/
+RPMS/
+crc
