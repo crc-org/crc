@@ -97,19 +97,20 @@ Feature: Test configuration settings
         @windows
         Examples:
             | property                        | value1 | value2 |
-            | skip-check-administrator-user   | true   | false  |
             | skip-check-bundle-extracted     | true   | false  |
-            | skip-check-hyperv-installed     | true   | false  |
-            | skip-check-hyperv-switch        | true   | false  |
             | skip-check-user-in-hyperv-group | true   | false  |
-            | skip-check-windows-version      | true   | false  |
+
+    #| skip-check-hyperv-installed     | true   | false  |
+    #| skip-check-hyperv-switch        | true   | false  |
+    #| skip-check-administrator-user   | true   | false  |
+    #| skip-check-windows-version      | true   | false  |
 
     # --------------------------------------
     # Linux-specific Scenarios
 
     @linux
     Scenario: Missing CRC setup
-        Given executing single crc setup command succeeds
+        Given executing crc setup command succeeds
         When executing "rm ~/.crc/bin/crc-driver-libvirt" succeeds
         Then starting CRC with default bundle fails
         And stderr should contain "Preflight checks failed during `crc start`, please try to run `crc setup` first in case you haven't done so yet"
