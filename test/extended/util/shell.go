@@ -304,6 +304,10 @@ func CommandReturnShouldNotContainContent(commandField string, notexpected *mess
 	return CompareExpectedWithActualNotContains(notexpected.Content, shell.GetLastCmdOutput(commandField))
 }
 
+func GetLastCommandOutput(commandField string) string {
+	return shell.GetLastCmdOutput(commandField)
+}
+
 func CommandReturnShouldBeEmpty(commandField string) error {
 	return CompareExpectedWithActualEquals("", shell.GetLastCmdOutput(commandField))
 }

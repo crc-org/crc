@@ -1,13 +1,18 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os/exec"
 	"runtime"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/test/extended/util"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -188,4 +193,158 @@ func (c Command) ExecuteSingleWithExpectedExit(expectedExit string) error {
 		return fmt.Errorf("%s expected %s but it did not", c.ToString(), expectedExit)
 	}
 	return fmt.Errorf("%s is a valid expected exit status", expectedExit)
+}
+
+// PODMAN
+
+// PodmanBuilder is used to build, customize, and execute a podman-remote command.
+type PodmanBuilder struct {
+	cmd     *exec.Cmd
+	timeout <-chan time.Time
+}
+
+// NewPodmanCommand returns a PodmanBuilder for running CRC.
+func NewPodmanCommand(args ...string) *PodmanBuilder {
+
+	cmd := exec.Command("podman", args...)
+
+	switch runtime.GOOS {
+	case "linux":
+		cmd = exec.Command("podman-remote", args...)
+	case "windows":
+		cmd = exec.Command("podman.exe", args...)
+	}
+
+	return &PodmanBuilder{
+		cmd: cmd,
+	}
+}
+
+// WithTimeout sets the given timeout and returns itself.
+func (b *PodmanBuilder) WithTimeout(t <-chan time.Time) *PodmanBuilder {
+	b.timeout = t
+	return b
+}
+
+// WithStdinData sets the given data to stdin and returns itself.
+func (b PodmanBuilder) WithStdinData(data string) *PodmanBuilder {
+	b.cmd.Stdin = strings.NewReader(data)
+	return &b
+}
+
+// WithStdinReader sets the given reader and returns itself.
+func (b PodmanBuilder) WithStdinReader(reader io.Reader) *PodmanBuilder {
+	b.cmd.Stdin = reader
+	return &b
+}
+
+// ExecOrDie runs the executable or dies if error occurs.
+func (b PodmanBuilder) ExecOrDie() (string, error) {
+	stdout, err := b.Exec()
+	return stdout, err
+}
+
+// ExecOrDieWithLogs runs the executable or dies if error occurs.
+func (b PodmanBuilder) ExecOrDieWithLogs() (string, string, error) {
+	stdout, stderr, err := b.ExecWithFullOutput()
+	return stdout, stderr, err
+}
+
+// Exec runs the executable.
+func (b PodmanBuilder) Exec() (string, error) {
+	stdout, _, err := b.ExecWithFullOutput()
+	return stdout, err
+}
+
+// ExecWithFullOutput runs the executable and returns the stdout and stderr.
+func (b PodmanBuilder) ExecWithFullOutput() (string, string, error) {
+	return Exec(b.cmd, b.timeout)
+}
+
+func Exec(cmd *exec.Cmd, timeout <-chan time.Time) (string, string, error) {
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &stdout, &stderr
+
+	logrus.Infof("Running '%s %s'", cmd.Path, strings.Join(cmd.Args[1:], " ")) // skip arg[0] as it is printed separately
+	if err := cmd.Start(); err != nil {
+		return "", "", fmt.Errorf("error starting %v:\nCommand stdout:\n%v\nstderr:\n%v\nerror:\n%v", cmd, cmd.Stdout, cmd.Stderr, err)
+	}
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- cmd.Wait()
+	}()
+	select {
+	case err := <-errCh:
+		if err != nil {
+			var rc = 127
+			if ee, ok := err.(*exec.ExitError); ok {
+				rc = int(ee.Sys().(syscall.WaitStatus).ExitStatus())
+				logrus.Infof("rc: %d", rc)
+			}
+			return stdout.String(), stderr.String(), CodeExitError{
+				Err:  fmt.Errorf("error running %v:\nCommand stdout:\n%v\nstderr:\n%v\nerror:\n%v", cmd, cmd.Stdout, cmd.Stderr, err),
+				Code: rc,
+			}
+		}
+	case <-timeout:
+		_ = cmd.Process.Kill()
+		return "", "", fmt.Errorf("timed out waiting for command %v:\nCommand stdout:\n%v\nstderr:\n%v", cmd, cmd.Stdout, cmd.Stderr)
+	}
+	logrus.Infof("stderr: %q", stderr.String())
+	logrus.Infof("stdout: %q", stdout.String())
+	return stdout.String(), stderr.String(), nil
+}
+
+// RunPodmanExpectSuccess is a convenience wrapper over podman-remote
+func RunPodmanExpectSuccess(args ...string) (string, error) {
+	return NewPodmanCommand(args...).ExecOrDie()
+}
+
+// RunPodmanExpectFail is a convenience wrapper over PodmanBuilder
+// if err != nil: return stderr, nil
+// if err == nil: return stdout, err
+func RunPodmanExpectFail(args ...string) (string, error) {
+	stdout, stderr, err := NewPodmanCommand(args...).ExecWithFullOutput()
+
+	if err == nil {
+		err = fmt.Errorf("Expected error but exited without error")
+		return stdout, err
+	}
+
+	return stderr, nil
+}
+
+// ExitError is an interface that presents an API similar to os.ProcessState, which is
+// what ExitError from os/exec is.  This is designed to make testing a bit easier and
+// probably loses some of the cross-platform properties of the underlying library.
+type ExitError interface {
+	String() string
+	Error() string
+	Exited() bool
+	ExitStatus() int
+}
+
+// CodeExitError is an implementation of ExitError consisting of an error object
+// and an exit code (the upper bits of os.exec.ExitStatus).
+type CodeExitError struct {
+	Err  error
+	Code int
+}
+
+var _ ExitError = CodeExitError{}
+
+func (e CodeExitError) Error() string {
+	return e.Err.Error()
+}
+
+func (e CodeExitError) String() string {
+	return e.Err.Error()
+}
+
+func (e CodeExitError) Exited() bool {
+	return true
+}
+
+func (e CodeExitError) ExitStatus() int {
+	return e.Code
 }
