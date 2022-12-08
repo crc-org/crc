@@ -1,5 +1,5 @@
 @story_openshift
-Feature: 3 Openshift stories
+Feature: 4 Openshift stories
 
 	Background:
 		Given ensuring CRC cluster is running succeeds
@@ -7,7 +7,7 @@ Feature: 3 Openshift stories
 
 	# End-to-end health check
 
-	@darwin @linux @windows @startstop @testdata
+	@darwin @linux @windows @startstop @testdata @story_health
 	Scenario: Overall cluster health
 		#Given ensuring CRC cluster is running succeeds
 		#And ensuring user is logged in succeeds
@@ -38,8 +38,8 @@ Feature: 3 Openshift stories
 
 	# Local image to image-registry feature
 
-	@darwin @linux @windows
-	Scenario: Mirror image to OpenShift image registry (via oc registry login)
+	@darwin @linux @windows @story_registry
+	Scenario: Mirror image to OpenShift image registry
 		# mirror
 		When executing "oc new-project testproj-img" succeeds
 		And  executing "oc registry login --insecure=true" succeeds
@@ -56,14 +56,11 @@ Feature: 3 Openshift stories
 		# cleanup
 		And executing "oc delete project testproj-img" succeeds
 
-	@linux
-	Scenario: Create local image, push to registry, deploy (via podman login)
-		Given checking that CRC is running
-		And executing "podman pull quay.io/centos7/httpd-24-centos7" succeeds
-		When executing "oc new-project testproj-img" succeeds
-		And executing "podman login -u kubeadmin -p $(oc whoami -t) default-route-openshift-image-registry.apps-crc.testing --tls-verify=false" succeeds
-		And executing "podman tag quay.io/centos7/httpd-24-centos7 default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test" succeeds
-		And executing "podman push default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test --tls-verify=false" succeeds
+	@darwin @linux @windows @local-img-to-registry @testdata @story_registry
+	Scenario: Pull image locally, push to registry, deploy
+		Given podman command is available
+		And executing "oc new-project testproj-img" succeeds
+		When pulling image "quay.io/centos7/httpd-24-centos7", logging in, and pushing local image to internal registry succeeds
 		And executing "oc apply -f hello.yaml" succeeds
 		When executing "oc rollout status deployment hello" succeeds
 		Then stdout should contain "successfully rolled out"
@@ -75,7 +72,7 @@ Feature: 3 Openshift stories
 
 	# Operator from marketplace
 
-	@darwin @linux @windows @testdata
+	@darwin @linux @windows @testdata @story_marketplace
 	Scenario: Install new operator
 		When executing "oc apply -f redis-sub.yaml" succeeds
 		Then with up to "20" retries with wait period of "30s" command "oc get csv" output matches ".*redis-operator\.(.*)Succeeded$"

@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/crc-org/crc/test/extended/crc/cmd"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -49,15 +50,19 @@ var _ = Describe("podman preset", Label("podman-preset"), func() {
 		})
 
 		It("version", func() {
-			Expect(RunPodmanExpectSuccess("version")).Should(MatchRegexp(`Version:[\s]*\d+\.\d+\.\d+`))
+			out, err := cmd.RunPodmanExpectSuccess("version")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(out).Should(MatchRegexp(`Version:[\s]*\d+\.\d+\.\d+`))
 		})
 
 		It("pull image", func() {
-			RunPodmanExpectSuccess("pull", "fedora")
+			_, err := cmd.RunPodmanExpectSuccess("pull", "fedora")
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("run image", func() {
-			RunPodmanExpectSuccess("run", "fedora")
+			_, err := cmd.RunPodmanExpectSuccess("run", "fedora")
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("cleanup CRC", func() {
