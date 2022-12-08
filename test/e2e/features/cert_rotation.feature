@@ -6,7 +6,7 @@ Feature: Certificate rotation test
     an app and check its accessibility.
 
     Background: Setup CRC and rewind the clock forward
-        When executing crc setup command succeeds
+        When executing single crc setup command succeeds
         And executing "sudo timedatectl set-ntp off" succeeds
         Then executing "sudo date -s '13 month'" succeeds
         And with up to "10" retries with wait period of "1s" command "virsh --readonly -c qemu:///system capabilities" output matches "^<capabilities>"

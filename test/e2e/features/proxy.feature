@@ -8,7 +8,7 @@ Feature: Behind proxy test
         * executing "podman run --name squid -d -p 3128:3128 quay.io/crcont/squid" succeeds
 
     Scenario: Start CRC behind proxy
-        Given executing crc setup command succeeds
+        Given executing single crc setup command succeeds
         And  executing "crc config set http-proxy http://192.168.130.1:3128" succeeds
         Then executing "crc config set https-proxy http://192.168.130.1:3128" succeeds
         When starting CRC with default bundle succeeds

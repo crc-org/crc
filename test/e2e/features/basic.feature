@@ -34,7 +34,7 @@ Feature: Basic test
         # Request start with monitoring stack
         * setting config property "enable-cluster-monitoring" to value "true" succeeds
         * setting config property "memory" to value "16000" succeeds
-        Given executing crc setup command succeeds
+        Given executing single crc setup command succeeds
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
         # Check if user can copy-paste login details for developer and kubeadmin users
