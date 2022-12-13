@@ -159,15 +159,15 @@ func fixLibvirtInstalled(distro *linux.OsRelease) func() error {
 }
 
 func installLibvirtCommand(distro *linux.OsRelease) string {
-	yumCommand := "yum install -y libvirt libvirt-daemon-kvm qemu-kvm"
+	dnfCommand := "dnf install -y libvirt libvirt-daemon-kvm qemu-kvm"
 	switch {
 	case distroIsLike(distro, linux.Ubuntu):
 		return "apt-get update && apt-get install -y libvirt-daemon libvirt-daemon-system libvirt-clients"
 	case distroIsLike(distro, linux.Fedora):
-		return yumCommand
+		return dnfCommand
 	default:
-		logging.Warnf("unsupported distribution %s, trying to install libvirt with yum", distro)
-		return yumCommand
+		logging.Warnf("unsupported distribution %s, trying to install libvirt with dnf", distro)
+		return dnfCommand
 	}
 }
 

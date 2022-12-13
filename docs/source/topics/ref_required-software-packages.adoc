@@ -8,7 +8,6 @@ Consult the following table to find the command used to install these packages f
 [options="header"]
 |====
 |Linux Distribution|Installation command
-|{fed}|`sudo dnf install NetworkManager`
-|{rhel}/{centos}|`su -c 'yum install NetworkManager'`
+|{fed}/{rhel}/{centos}|`sudo dnf install NetworkManager`
 |{debian}/{ubuntu}|`sudo apt install qemu-kvm libvirt-daemon libvirt-daemon-system network-manager`
 |====
