@@ -531,8 +531,16 @@ func ConfigFileInCRCHomeContainsKey(format string, configFile string, condition 
 }
 
 func LoginToOcClusterSucceedsOrFails(expected string) error {
-	cmd := "oc config use-context crc-admin"
-	return util.ExecuteCommandSucceedsOrFails(cmd, expected)
+
+	credentialsCommand := "crc console --credentials" //#nosec G101
+	err := util.ExecuteCommand(credentialsCommand)
+	if err != nil {
+		return err
+	}
+	out := util.GetLastCommandOutput("stdout")
+	ocLoginAsAdminCommand := strings.Split(out, "'")[3]
+
+	return util.ExecuteCommandSucceedsOrFails(ocLoginAsAdminCommand, expected)
 }
 
 func SetKubeConfigContextSucceedsOrFails(context, expected string) error {
