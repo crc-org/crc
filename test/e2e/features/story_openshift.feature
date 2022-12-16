@@ -12,7 +12,8 @@ Feature: 4 Openshift stories
 		#Given ensuring CRC cluster is running succeeds
 		#And ensuring user is logged in succeeds
 		Given checking that CRC is running
-		Then executing "oc new-project testproj" succeeds
+		Then executing "oc create namespace testproj" succeeds
+		And executing "oc project testproj" succeeds
 		And executing "oc apply -f httpd-example.yaml" succeeds
 		When executing "oc rollout status deployment httpd-example" succeeds
 		Then stdout should contain "successfully rolled out"
@@ -34,32 +35,34 @@ Feature: 4 Openshift stories
 		Then executing "curl -s http://httpd-example-testproj.apps-crc.testing" succeeds
 		And stdout should contain "Hello CRC!"
 		Then with up to "4" retries with wait period of "1m" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
-		And executing "oc delete project testproj" succeeds
+		And executing "oc delete namespace testproj" succeeds
 
 	# Local image to image-registry feature
 
-	@darwin @linux @windows @story_registry
+	@darwin @linux @windows @testdata @story_registry @mirror-registry
 	Scenario: Mirror image to OpenShift image registry
+		Given executing "oc create namespace testproj-img" succeeds
+		And executing "oc project testproj-img" succeeds
 		# mirror
-		When executing "oc new-project testproj-img" succeeds
-		And  executing "oc registry login --insecure=true" succeeds
-		Then executing "oc image mirror registry.access.redhat.com/ubi8/httpd-24:latest=default-route-openshift-image-registry.apps-crc.testing/testproj-img/httpd-24:latest --insecure=true --filter-by-os=linux/amd64" succeeds
-		And executing "oc set image-lookup httpd-24" succeeds
+		When executing "oc registry login --insecure=true" succeeds
+		Then executing "oc image mirror quay.io/centos7/httpd-24-centos7:latest=default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test --insecure=true --filter-by-os=linux/amd64" succeeds
+		And executing "oc set image-lookup hello" succeeds
 		# deploy
-		When executing "oc new-app testproj-img/httpd-24:latest" succeeds
-		When executing "oc rollout status deployment httpd-24" succeeds
+		When executing "oc apply -f hello.yaml" succeeds
+		When executing "oc rollout status deployment hello" succeeds
 		Then stdout should contain "successfully rolled out"
 		When executing "oc get pods" succeeds
 		Then stdout should contain "Running"
-		When executing "oc logs deployment/httpd-24" succeeds
+		When executing "oc logs deployment/hello" succeeds
 		Then stdout should contain "httpd"
 		# cleanup
-		And executing "oc delete project testproj-img" succeeds
+		And executing "oc delete namespace testproj-img" succeeds
 
-	@darwin @linux @windows @local-img-to-registry @testdata @story_registry
+	@darwin @linux @windows @testdata @story_registry @local-registry
 	Scenario: Pull image locally, push to registry, deploy
 		Given podman command is available
-		And executing "oc new-project testproj-img" succeeds
+		And executing "oc create namespace testproj-img" succeeds
+		And executing "oc project testproj-img" succeeds
 		When pulling image "quay.io/centos7/httpd-24-centos7", logging in, and pushing local image to internal registry succeeds
 		And executing "oc apply -f hello.yaml" succeeds
 		When executing "oc rollout status deployment hello" succeeds
@@ -68,7 +71,7 @@ Feature: 4 Openshift stories
 		Then stdout should contain "Running"
 		When executing "oc logs deployment/hello" succeeds
 		Then stdout should contain "httpd"
-		And executing "oc delete project testproj-img" succeeds
+		And executing "oc delete namespace testproj-img" succeeds
 
 	# Operator from marketplace
 
