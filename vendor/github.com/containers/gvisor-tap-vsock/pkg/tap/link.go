@@ -56,11 +56,11 @@ func (e *LinkEndpoint) IsAttached() bool {
 	return e.dispatcher != nil
 }
 
-func (e *LinkEndpoint) DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
+func (e *LinkEndpoint) DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt stack.PacketBufferPtr) {
 	e.dispatcher.DeliverNetworkPacket(protocol, pkt)
 }
 
-func (e *LinkEndpoint) AddHeader(pkt *stack.PacketBuffer) {
+func (e *LinkEndpoint) AddHeader(pkt stack.PacketBufferPtr) {
 }
 
 func (e *LinkEndpoint) Capabilities() stack.LinkEndpointCapabilities {
@@ -93,7 +93,7 @@ func (e *LinkEndpoint) WritePackets(pkts stack.PacketBufferList) (int, tcpip.Err
 	return n, nil
 }
 
-func (e *LinkEndpoint) writePacket(r stack.RouteInfo, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) tcpip.Error {
+func (e *LinkEndpoint) writePacket(r stack.RouteInfo, protocol tcpip.NetworkProtocolNumber, pkt stack.PacketBufferPtr) tcpip.Error {
 	// Preserve the src address if it's set in the route.
 	srcAddr := e.LinkAddress()
 	if r.LocalLinkAddress != "" {
@@ -126,7 +126,7 @@ func (e *LinkEndpoint) writePacket(r stack.RouteInfo, protocol tcpip.NetworkProt
 	return nil
 }
 
-func (e *LinkEndpoint) WriteRawPacket(pkt *stack.PacketBuffer) tcpip.Error {
+func (e *LinkEndpoint) WriteRawPacket(pkt stack.PacketBufferPtr) tcpip.Error {
 	return &tcpip.ErrNotSupported{}
 }
 
