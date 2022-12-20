@@ -25,6 +25,8 @@ func Listen(endpoint string) (net.Listener, error) {
 			VMID:      hvsock.GUIDWildcard,
 			ServiceID: svcid,
 		})
+	case "unix":
+		return net.Listen(parsed.Scheme, parsed.Path)
 	case "tcp":
 		return net.Listen("tcp", parsed.Host)
 	default:

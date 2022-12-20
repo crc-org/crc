@@ -41,7 +41,7 @@ const (
 )
 
 var segmentPool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return &segment{}
 	},
 }
@@ -59,7 +59,7 @@ type segment struct {
 	qFlags queueFlags
 	id     stack.TransportEndpointID `state:"manual"`
 
-	pkt *stack.PacketBuffer
+	pkt stack.PacketBufferPtr
 
 	sequenceNumber seqnum.Value
 	ackNumber      seqnum.Value
@@ -92,16 +92,16 @@ type segment struct {
 	lost bool
 }
 
-func newIncomingSegment(id stack.TransportEndpointID, clock tcpip.Clock, pkt *stack.PacketBuffer) (*segment, error) {
+func newIncomingSegment(id stack.TransportEndpointID, clock tcpip.Clock, pkt stack.PacketBufferPtr) (*segment, error) {
 	hdr := header.TCP(pkt.TransportHeader().Slice())
 	netHdr := pkt.Network()
 	csum, csumValid, ok := header.TCPValid(
 		hdr,
-		func() uint16 { return pkt.Data().AsRange().Checksum() },
+		func() uint16 { return pkt.Data().Checksum() },
 		uint16(pkt.Data().Size()),
 		netHdr.SourceAddress(),
 		netHdr.DestinationAddress(),
-		pkt.RXTransportChecksumValidated)
+		pkt.RXChecksumValidated)
 	if !ok {
 		return nil, fmt.Errorf("header data offset does not respect size constraints: %d < offset < %d, got offset=%d", header.TCPMinimumSize, len(hdr), hdr.DataOffset())
 	}
@@ -116,11 +116,10 @@ func newIncomingSegment(id stack.TransportEndpointID, clock tcpip.Clock, pkt *st
 	s.window = seqnum.Size(hdr.WindowSize())
 	s.rcvdTime = clock.NowMonotonic()
 	s.dataMemSize = pkt.MemSize()
-	s.pkt = pkt
-	pkt.IncRef()
+	s.pkt = pkt.IncRef()
 	s.csumValid = csumValid
 
-	if !s.pkt.RXTransportChecksumValidated {
+	if !s.pkt.RXChecksumValidated {
 		s.csum = csum
 	}
 	return s, nil
@@ -195,7 +194,6 @@ func (s *segment) DecRef() {
 			}
 		}
 		s.pkt.DecRef()
-		s.pkt = nil
 		segmentPool.Put(s)
 	})
 }

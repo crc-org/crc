@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package refsvfs2
+package refs
 
 import (
 	"fmt"
 
 	"gvisor.dev/gvisor/pkg/log"
-	refs_vfs1 "gvisor.dev/gvisor/pkg/refs"
 	"gvisor.dev/gvisor/pkg/sync"
 )
 
@@ -50,14 +49,14 @@ func init() {
 // LeakCheckEnabled returns whether leak checking is enabled. The following
 // functions should only be called if it returns true.
 func LeakCheckEnabled() bool {
-	mode := refs_vfs1.GetLeakMode()
-	return mode != refs_vfs1.NoLeakChecking && mode != refs_vfs1.UninitializedLeakChecking
+	mode := GetLeakMode()
+	return mode != NoLeakChecking
 }
 
 // leakCheckPanicEnabled returns whether DoLeakCheck() should panic when leaks
 // are detected.
 func leakCheckPanicEnabled() bool {
-	return refs_vfs1.GetLeakMode() == refs_vfs1.LeaksPanic
+	return GetLeakMode() == LeaksPanic
 }
 
 // Register adds obj to the live object map.
@@ -116,7 +115,7 @@ func LogDecRef(obj CheckedObject, refs int64) {
 // obj.LogRefs() should be checked before calling logEvent, in order to avoid
 // calling any text processing needed to evaluate msg.
 func logEvent(obj CheckedObject, msg string) {
-	log.Infof("[%s %p] %s:\n%s", obj.RefType(), obj, msg, refs_vfs1.FormatStack(refs_vfs1.RecordStack()))
+	log.Infof("[%s %p] %s:\n%s", obj.RefType(), obj, msg, FormatStack(RecordStack()))
 }
 
 // checkOnce makes sure that leak checking is only done once. DoLeakCheck is
@@ -142,14 +141,35 @@ func DoRepeatedLeakCheck() {
 	}
 }
 
+type leakCheckDisabled interface {
+	LeakCheckDisabled() bool
+}
+
+// CleanupSync is used to wait for async cleanup actions.
+var CleanupSync sync.WaitGroup
+
 func doLeakCheck() {
+	CleanupSync.Wait()
 	liveObjectsMu.Lock()
 	defer liveObjectsMu.Unlock()
 	leaked := len(liveObjects)
 	if leaked > 0 {
+		n := 0
 		msg := fmt.Sprintf("Leak checking detected %d leaked objects:\n", leaked)
 		for obj := range liveObjects {
+			skip := false
+			if o, ok := obj.(leakCheckDisabled); ok {
+				skip = o.LeakCheckDisabled()
+			}
+			if skip {
+				log.Debugf(obj.LeakMessage())
+				continue
+			}
 			msg += obj.LeakMessage() + "\n"
+			n++
+		}
+		if n == 0 {
+			return
 		}
 		if leakCheckPanicEnabled() {
 			panic(msg)

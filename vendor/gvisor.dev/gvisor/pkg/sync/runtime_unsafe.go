@@ -74,7 +74,7 @@ func Goready(gp uintptr, traceskip int, wakep bool) {
 	}
 	goready(gp, traceskip)
 	if supportsWakeSuppression && !wakep {
-		preGoReadyWakeSuppression()
+		postGoReadyWakeSuppression()
 	}
 }
 
@@ -116,7 +116,7 @@ func RandUintptr() uintptr {
 // MapKeyHasher returns a hash function for pointers of m's key type.
 //
 // Preconditions: m must be a map.
-func MapKeyHasher(m interface{}) func(unsafe.Pointer, uintptr) uintptr {
+func MapKeyHasher(m any) func(unsafe.Pointer, uintptr) uintptr {
 	if rtyp := reflect.TypeOf(m); rtyp.Kind() != reflect.Map {
 		panic(fmt.Sprintf("sync.MapKeyHasher: m is %v, not map", rtyp))
 	}

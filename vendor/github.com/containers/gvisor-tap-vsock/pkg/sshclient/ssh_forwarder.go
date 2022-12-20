@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/containers/gvisor-tap-vsock/pkg/fs"
@@ -228,14 +229,22 @@ func acceptConnection(ctx context.Context, listener net.Listener, bastion *Basti
 		return nil // eat
 	}
 
-	go forward(src, dest)
-	go forward(dest, src)
+	complete := new(sync.WaitGroup)
+	complete.Add(2)
+	go forward(src, dest, complete)
+	go forward(dest, src, complete)
+
+	go func() {
+		complete.Wait()
+		src.Close()
+		dest.Close()
+	}()
 
 	return nil
 }
 
-func forward(src io.ReadCloser, dest CloseWriteStream) {
-	defer src.Close()
+func forward(src io.ReadCloser, dest CloseWriteStream, complete *sync.WaitGroup) {
+	defer complete.Done()
 	_, _ = io.Copy(dest, src)
 
 	// Trigger an EOF on the other end

@@ -1,4 +1,4 @@
-package refs
+package stack
 
 // ElementMapper provides an identity mapping by default.
 //
@@ -6,14 +6,14 @@ package refs
 // objects, if they are not the same. An ElementMapper is not typically
 // required if: Linker is left as is, Element is left as is, or Linker and
 // Element are the same type.
-type weakRefElementMapper struct{}
+type groPacketElementMapper struct{}
 
 // linkerFor maps an Element to a Linker.
 //
 // This default implementation should be inlined.
 //
 //go:nosplit
-func (weakRefElementMapper) linkerFor(elem *WeakRef) *WeakRef { return elem }
+func (groPacketElementMapper) linkerFor(elem *groPacket) *groPacket { return elem }
 
 // List is an intrusive list. Entries can be added to or removed from the list
 // in O(1) time and with no additional memory allocations.
@@ -27,13 +27,13 @@ func (weakRefElementMapper) linkerFor(elem *WeakRef) *WeakRef { return elem }
 //	}
 //
 // +stateify savable
-type weakRefList struct {
-	head *WeakRef
-	tail *WeakRef
+type groPacketList struct {
+	head *groPacket
+	tail *groPacket
 }
 
 // Reset resets list l to the empty state.
-func (l *weakRefList) Reset() {
+func (l *groPacketList) Reset() {
 	l.head = nil
 	l.tail = nil
 }
@@ -41,21 +41,21 @@ func (l *weakRefList) Reset() {
 // Empty returns true iff the list is empty.
 //
 //go:nosplit
-func (l *weakRefList) Empty() bool {
+func (l *groPacketList) Empty() bool {
 	return l.head == nil
 }
 
 // Front returns the first element of list l or nil.
 //
 //go:nosplit
-func (l *weakRefList) Front() *WeakRef {
+func (l *groPacketList) Front() *groPacket {
 	return l.head
 }
 
 // Back returns the last element of list l or nil.
 //
 //go:nosplit
-func (l *weakRefList) Back() *WeakRef {
+func (l *groPacketList) Back() *groPacket {
 	return l.tail
 }
 
@@ -64,8 +64,8 @@ func (l *weakRefList) Back() *WeakRef {
 // NOTE: This is an O(n) operation.
 //
 //go:nosplit
-func (l *weakRefList) Len() (count int) {
-	for e := l.Front(); e != nil; e = (weakRefElementMapper{}.linkerFor(e)).Next() {
+func (l *groPacketList) Len() (count int) {
+	for e := l.Front(); e != nil; e = (groPacketElementMapper{}.linkerFor(e)).Next() {
 		count++
 	}
 	return count
@@ -74,12 +74,12 @@ func (l *weakRefList) Len() (count int) {
 // PushFront inserts the element e at the front of list l.
 //
 //go:nosplit
-func (l *weakRefList) PushFront(e *WeakRef) {
-	linker := weakRefElementMapper{}.linkerFor(e)
+func (l *groPacketList) PushFront(e *groPacket) {
+	linker := groPacketElementMapper{}.linkerFor(e)
 	linker.SetNext(l.head)
 	linker.SetPrev(nil)
 	if l.head != nil {
-		weakRefElementMapper{}.linkerFor(l.head).SetPrev(e)
+		groPacketElementMapper{}.linkerFor(l.head).SetPrev(e)
 	} else {
 		l.tail = e
 	}
@@ -90,13 +90,13 @@ func (l *weakRefList) PushFront(e *WeakRef) {
 // PushFrontList inserts list m at the start of list l, emptying m.
 //
 //go:nosplit
-func (l *weakRefList) PushFrontList(m *weakRefList) {
+func (l *groPacketList) PushFrontList(m *groPacketList) {
 	if l.head == nil {
 		l.head = m.head
 		l.tail = m.tail
 	} else if m.head != nil {
-		weakRefElementMapper{}.linkerFor(l.head).SetPrev(m.tail)
-		weakRefElementMapper{}.linkerFor(m.tail).SetNext(l.head)
+		groPacketElementMapper{}.linkerFor(l.head).SetPrev(m.tail)
+		groPacketElementMapper{}.linkerFor(m.tail).SetNext(l.head)
 
 		l.head = m.head
 	}
@@ -107,12 +107,12 @@ func (l *weakRefList) PushFrontList(m *weakRefList) {
 // PushBack inserts the element e at the back of list l.
 //
 //go:nosplit
-func (l *weakRefList) PushBack(e *WeakRef) {
-	linker := weakRefElementMapper{}.linkerFor(e)
+func (l *groPacketList) PushBack(e *groPacket) {
+	linker := groPacketElementMapper{}.linkerFor(e)
 	linker.SetNext(nil)
 	linker.SetPrev(l.tail)
 	if l.tail != nil {
-		weakRefElementMapper{}.linkerFor(l.tail).SetNext(e)
+		groPacketElementMapper{}.linkerFor(l.tail).SetNext(e)
 	} else {
 		l.head = e
 	}
@@ -123,13 +123,13 @@ func (l *weakRefList) PushBack(e *WeakRef) {
 // PushBackList inserts list m at the end of list l, emptying m.
 //
 //go:nosplit
-func (l *weakRefList) PushBackList(m *weakRefList) {
+func (l *groPacketList) PushBackList(m *groPacketList) {
 	if l.head == nil {
 		l.head = m.head
 		l.tail = m.tail
 	} else if m.head != nil {
-		weakRefElementMapper{}.linkerFor(l.tail).SetNext(m.head)
-		weakRefElementMapper{}.linkerFor(m.head).SetPrev(l.tail)
+		groPacketElementMapper{}.linkerFor(l.tail).SetNext(m.head)
+		groPacketElementMapper{}.linkerFor(m.head).SetPrev(l.tail)
 
 		l.tail = m.tail
 	}
@@ -140,9 +140,9 @@ func (l *weakRefList) PushBackList(m *weakRefList) {
 // InsertAfter inserts e after b.
 //
 //go:nosplit
-func (l *weakRefList) InsertAfter(b, e *WeakRef) {
-	bLinker := weakRefElementMapper{}.linkerFor(b)
-	eLinker := weakRefElementMapper{}.linkerFor(e)
+func (l *groPacketList) InsertAfter(b, e *groPacket) {
+	bLinker := groPacketElementMapper{}.linkerFor(b)
+	eLinker := groPacketElementMapper{}.linkerFor(e)
 
 	a := bLinker.Next()
 
@@ -151,7 +151,7 @@ func (l *weakRefList) InsertAfter(b, e *WeakRef) {
 	bLinker.SetNext(e)
 
 	if a != nil {
-		weakRefElementMapper{}.linkerFor(a).SetPrev(e)
+		groPacketElementMapper{}.linkerFor(a).SetPrev(e)
 	} else {
 		l.tail = e
 	}
@@ -160,9 +160,9 @@ func (l *weakRefList) InsertAfter(b, e *WeakRef) {
 // InsertBefore inserts e before a.
 //
 //go:nosplit
-func (l *weakRefList) InsertBefore(a, e *WeakRef) {
-	aLinker := weakRefElementMapper{}.linkerFor(a)
-	eLinker := weakRefElementMapper{}.linkerFor(e)
+func (l *groPacketList) InsertBefore(a, e *groPacket) {
+	aLinker := groPacketElementMapper{}.linkerFor(a)
+	eLinker := groPacketElementMapper{}.linkerFor(e)
 
 	b := aLinker.Prev()
 	eLinker.SetNext(a)
@@ -170,7 +170,7 @@ func (l *weakRefList) InsertBefore(a, e *WeakRef) {
 	aLinker.SetPrev(e)
 
 	if b != nil {
-		weakRefElementMapper{}.linkerFor(b).SetNext(e)
+		groPacketElementMapper{}.linkerFor(b).SetNext(e)
 	} else {
 		l.head = e
 	}
@@ -179,19 +179,19 @@ func (l *weakRefList) InsertBefore(a, e *WeakRef) {
 // Remove removes e from l.
 //
 //go:nosplit
-func (l *weakRefList) Remove(e *WeakRef) {
-	linker := weakRefElementMapper{}.linkerFor(e)
+func (l *groPacketList) Remove(e *groPacket) {
+	linker := groPacketElementMapper{}.linkerFor(e)
 	prev := linker.Prev()
 	next := linker.Next()
 
 	if prev != nil {
-		weakRefElementMapper{}.linkerFor(prev).SetNext(next)
+		groPacketElementMapper{}.linkerFor(prev).SetNext(next)
 	} else if l.head == e {
 		l.head = next
 	}
 
 	if next != nil {
-		weakRefElementMapper{}.linkerFor(next).SetPrev(prev)
+		groPacketElementMapper{}.linkerFor(next).SetPrev(prev)
 	} else if l.tail == e {
 		l.tail = prev
 	}
@@ -205,35 +205,35 @@ func (l *weakRefList) Remove(e *WeakRef) {
 // methods needed by List.
 //
 // +stateify savable
-type weakRefEntry struct {
-	next *WeakRef
-	prev *WeakRef
+type groPacketEntry struct {
+	next *groPacket
+	prev *groPacket
 }
 
 // Next returns the entry that follows e in the list.
 //
 //go:nosplit
-func (e *weakRefEntry) Next() *WeakRef {
+func (e *groPacketEntry) Next() *groPacket {
 	return e.next
 }
 
 // Prev returns the entry that precedes e in the list.
 //
 //go:nosplit
-func (e *weakRefEntry) Prev() *WeakRef {
+func (e *groPacketEntry) Prev() *groPacket {
 	return e.prev
 }
 
 // SetNext assigns 'entry' as the entry that follows e in the list.
 //
 //go:nosplit
-func (e *weakRefEntry) SetNext(elem *WeakRef) {
+func (e *groPacketEntry) SetNext(elem *groPacket) {
 	e.next = elem
 }
 
 // SetPrev assigns 'entry' as the entry that precedes e in the list.
 //
 //go:nosplit
-func (e *weakRefEntry) SetPrev(elem *WeakRef) {
+func (e *groPacketEntry) SetPrev(elem *groPacket) {
 	e.prev = elem
 }
