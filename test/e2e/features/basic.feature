@@ -28,7 +28,7 @@ Feature: Basic test
         When executing crc status command fails
         Then stderr should contain "crc does not seem to be setup correctly, have you run 'crc setup'?"
 
-    @darwin @linux @windows
+    @darwin @linux @windows @cleanup
     Scenario: CRC start usecase
         Given executing "crc setup --check-only" fails
         # Request start with monitoring stack

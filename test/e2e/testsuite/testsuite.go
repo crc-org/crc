@@ -179,15 +179,64 @@ func InitializeScenario(s *godog.ScenarioContext) {
 			fmt.Println("error logging:", err)
 		}
 
-		// copy data/config files to test dir
 		for _, tag := range sc.Tags {
+			// copy data/config files to test dir
 			if tag.Name == "@testdata" {
 				err := util.CopyFilesToTestDir()
 				if err != nil {
 					os.Exit(1)
 				}
-
 			}
+
+			// move host's date 13 months forward and turn timesync off
+			if tag.Name == "@timesync" {
+				err := util.ExecuteCommand("sudo timedatectl set-ntp off")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+				err = util.ExecuteCommand("sudo date -s '13 month'")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+				err = util.ExecuteCommandWithRetry(10, "1s", "virsh --readonly -c qemu:///system capabilities", "contains", "<capabilities>")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+			}
+		}
+
+		return ctx, nil
+	})
+
+	s.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+
+		for _, tag := range sc.Tags {
+
+			// move host's date 13 months back and turn timesync on
+			if tag.Name == "@timesync" {
+				err := util.ExecuteCommand("sudo date -s '-13 month'")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+				err = util.ExecuteCommand("sudo timedatectl set-ntp on")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+			}
+
+			if tag.Name == "@cleanup" {
+				err := util.ExecuteCommand("crc cleanup")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+			}
+
 		}
 
 		return ctx, nil
