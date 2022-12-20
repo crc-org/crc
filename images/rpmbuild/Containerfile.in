@@ -1,7 +1,7 @@
 FROM quay.io/centos/centos:stream8
 WORKDIR $APP_ROOT/src
 RUN yum -y install git-core rpm-build dnf-plugins-core 'dnf-command(builddep)' \
-        https://github.com/crc-org/admin-helper/releases/download/v0.0.11/crc-admin-helper-0.0.11-1.el8.x86_64.rpm \
+        https://github.com/crc-org/admin-helper/releases/download/v0.0.12/crc-admin-helper-0.0.12-1.el8.x86_64.rpm \
 	https://github.com/crc-org/machine-driver-libvirt/releases/download/0.13.5/crc-driver-libvirt-0.13.5-1.el8.x86_64.rpm
 COPY . .
 RUN mkdir -p ~/rpmbuild/SOURCES/ && \
