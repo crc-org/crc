@@ -75,7 +75,7 @@ Feature: 4 Openshift stories
 
 	# Operator from marketplace
 
-	@darwin @linux @windows @testdata @story_marketplace
+	@darwin @linux @windows @testdata @story_marketplace @cleanup
 	Scenario: Install new operator
 		When executing "oc apply -f redis-sub.yaml" succeeds
 		Then with up to "20" retries with wait period of "30s" command "oc get csv" output matches ".*redis-operator\.(.*)Succeeded$"
@@ -86,8 +86,5 @@ Feature: 4 Openshift stories
 		Then stdout should match "^pod(.*)deleted$"
 		# after a while 1 pods should be up & running again
 		And with up to "10" retries with wait period of "30s" command "oc get pods" output matches "redis-standalone-[a-z0-9]* .*Running.*"
-		# cleanup
-		When executing "crc delete -f" succeeds
-		And executing crc cleanup command succeeds
 
 
