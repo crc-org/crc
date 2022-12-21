@@ -10,7 +10,7 @@ require (
 	github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/cavaliergopher/grab/v3 v3.0.1
-	github.com/cheggaaa/pb/v3 v3.0.8
+	github.com/cheggaaa/pb/v3 v3.1.0
 	github.com/containers/gvisor-tap-vsock v0.4.1-0.20220908123107-8d91f6d62de2
 	github.com/containers/image/v5 v5.15.0
 	github.com/coreos/go-systemd/v22 v22.3.2
@@ -61,6 +61,7 @@ require (
 	k8s.io/apimachinery v0.23.2
 	k8s.io/client-go v0.23.2
 	libvirt.org/go/libvirtxml v1.8003.0
+	nhooyr.io/websocket v1.8.7
 )
 
 require (

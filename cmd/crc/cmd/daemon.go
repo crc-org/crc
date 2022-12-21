@@ -16,6 +16,7 @@ import (
 	"github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork"
 	"github.com/crc-org/crc/pkg/crc/adminhelper"
 	"github.com/crc-org/crc/pkg/crc/api"
+	"github.com/crc-org/crc/pkg/crc/api/websocket"
 	crcConfig "github.com/crc-org/crc/pkg/crc/config"
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/daemonclient"
@@ -142,7 +143,9 @@ func run(configuration *types.Configuration) error {
 		}
 		mux := http.NewServeMux()
 		mux.Handle("/network/", http.StripPrefix("/network", vn.Mux()))
-		mux.Handle("/api/", http.StripPrefix("/api", api.NewMux(config, newMachine(), logging.Memory, segmentClient)))
+		machineClient := newMachine()
+		mux.Handle("/api/", http.StripPrefix("/api", api.NewMux(config, machineClient, logging.Memory, segmentClient)))
+		mux.Handle("/socket/", http.StripPrefix("/socket", websocket.NewWebsocketServer(machineClient)))
 		if err := http.Serve(listener, handlers.LoggingHandler(os.Stderr, mux)); err != nil {
 			errCh <- errors.Wrap(err, "api http.Serve failed")
 		}

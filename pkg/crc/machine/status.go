@@ -73,6 +73,42 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	return clusterStatusResult, nil
 }
 
+func (client *client) GetClusterLoad() (*types.ClusterLoadResult, error) {
+	vm, err := loadVirtualMachine(client.name, client.useVSock())
+	if err != nil {
+		if errors.Is(err, errMissingHost(client.name)) {
+			return &types.ClusterLoadResult{
+				RAMUse:  -1,
+				RAMSize: -1,
+				CPUUse:  nil,
+			}, nil
+		}
+		return nil, errors.Wrap(err, fmt.Sprintf("Cannot load '%s' virtual machine", client.name))
+	}
+	defer vm.Close()
+
+	vmStatus, err := vm.State()
+	if err != nil {
+		return nil, errors.Wrap(err, "Cannot get machine state")
+	}
+	if vmStatus != state.Running {
+		return &types.ClusterLoadResult{
+			RAMUse:  -1,
+			RAMSize: -1,
+			CPUUse:  nil,
+		}, nil
+	}
+
+	ramSize, ramUse := client.getRAMStatus(vm)
+	cpuUsage := client.getCPUStatus(vm)
+
+	return &types.ClusterLoadResult{
+		RAMUse:  ramUse,
+		RAMSize: ramSize,
+		CPUUse:  cpuUsage,
+	}, nil
+}
+
 func (client *client) getDiskDetails(vm *virtualMachine) (int64, int64) {
 	disk, err, _ := client.diskDetails.Memoize("disks", func() (interface{}, error) {
 		sshRunner, err := vm.SSHRunner()
@@ -126,8 +162,26 @@ func (client *client) getRAMStatus(vm *virtualMachine) (int64, int64) {
 
 	if err != nil {
 		logging.Debugf("Cannot get RAM usage: %v", err)
-		return 0, 0
+		return -1, -1
 	}
 
 	return ram.([]int64)[0], ram.([]int64)[1]
+}
+
+func (client *client) getCPUStatus(vm *virtualMachine) []int64 {
+	sshRunner, err := vm.SSHRunner()
+	if err != nil {
+		logging.Debugf("Cannot get SSH runner: %v", err)
+		return []int64{}
+	}
+	defer sshRunner.Close()
+
+	cpuUsage, err := cluster.GetCPUUsage(sshRunner)
+	if err != nil {
+		logging.Debugf("Cannot get CPU usage: %v", err)
+		return nil
+	}
+
+	return cpuUsage
+
 }

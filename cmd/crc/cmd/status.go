@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"text/tabwriter"
 
+	"github.com/cheggaaa/pb/v3"
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/daemonclient"
 	crcErrors "github.com/crc-org/crc/pkg/crc/errors"
@@ -18,7 +19,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	watch bool
+)
+
 func init() {
+	statusCmd.Flags().BoolVarP(&watch, "watch", "w", false, "watch mode, continuously update status with CPU load graph")
 	addOutputFormatFlag(statusCmd)
 	rootCmd.AddCommand(statusCmd)
 }
@@ -28,7 +34,7 @@ var statusCmd = &cobra.Command{
 	Short: "Display status of the OpenShift cluster",
 	Long:  "Show details about the OpenShift cluster",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return runStatus(os.Stdout, daemonclient.New(), constants.MachineCacheDir, outputFormat)
+		return runStatus(os.Stdout, daemonclient.New(), constants.MachineCacheDir, outputFormat, watch)
 	},
 }
 
@@ -48,9 +54,79 @@ type status struct {
 	Preset           preset.Preset                `json:"preset"`
 }
 
-func runStatus(writer io.Writer, client *daemonclient.Client, cacheDir, outputFormat string) error {
+func runStatus(writer io.Writer, client *daemonclient.Client, cacheDir, outputFormat string, watch bool) error {
+	if watch {
+		return runWatchStatus(writer, client, cacheDir)
+	}
 	status := getStatus(client, cacheDir)
 	return render(status, writer, outputFormat)
+}
+
+func runWatchStatus(writer io.Writer, client *daemonclient.Client, cacheDir string) error {
+
+	status := getStatus(client, cacheDir)
+	// do not render RAM size/use
+	status.RAMSize = -1
+	status.RAMUsage = -1
+	renderError := render(status, writer, outputFormat)
+	if renderError != nil {
+		return renderError
+	}
+
+	var (
+		barPull *pb.Pool
+		cpuBars []*pb.ProgressBar
+		ramBar  *pb.ProgressBar
+	)
+
+	isPullInit := false
+
+	for {
+		loadResult, err := client.WebSocketClient.Status()
+
+		if err != nil {
+			return err
+		}
+
+		if !isPullInit {
+			ramBar, cpuBars = createBars(loadResult.CPUUse, writer)
+			barPull = pb.NewPool(append([]*pb.ProgressBar{ramBar}, cpuBars...)...)
+			isPullInit = true
+			err = barPull.Start()
+			if err != nil {
+				return nil
+			}
+		}
+
+		ramBar.SetTotal(loadResult.RAMSize)
+		ramBar.SetCurrent(loadResult.RAMUse)
+		for i, cpuLoad := range loadResult.CPUUse {
+			cpuBars[i].SetCurrent(cpuLoad)
+		}
+	}
+}
+
+func createBars(cpuUse []int64, writer io.Writer) (ramBar *pb.ProgressBar, cpuBars []*pb.ProgressBar) {
+	ramBar = pb.New(101)
+	ramBar.SetWriter(writer)
+	ramBar.Set(pb.Bytes, true)
+	ramBar.Set(pb.Static, true)
+	tmpl := `{{ red "RAM:" }} {{counters . }} {{percent .}} {{string . "my_green_string" | green}} {{ bar . "[" "\u2588" "\u2588" " " "]"}} `
+	ramBar.SetMaxWidth(151)
+	ramBar.SetTemplateString(tmpl)
+
+	for i := range cpuUse {
+		bar := pb.New(101)
+		bar.SetWriter(writer)
+		bar.Set(pb.Static, true)
+		tmpl := fmt.Sprintf(`{{ green "CPU%d:" }} {{percent .}} {{string . "my_green_string" | green}} {{ bar . "[" "\u2588" "\u2588" " " "]"}}`, i)
+		bar.SetTemplateString(tmpl)
+		bar.SetMaxWidth(150)
+
+		cpuBars = append(cpuBars, bar)
+	}
+
+	return ramBar, cpuBars
 }
 
 func getStatus(client *daemonclient.Client, cacheDir string) *status {
@@ -111,11 +187,14 @@ func (s *status) prettyPrintTo(writer io.Writer) error {
 		lines = append(lines, line{"Podman", s.PodmanVersion})
 	}
 
-	lines = append(lines,
-		line{"RAM Usage", fmt.Sprintf(
+	if s.RAMSize != -1 && s.RAMUsage != -1 {
+		lines = append(lines, line{"RAM Usage", fmt.Sprintf(
 			"%s of %s",
 			units.HumanSize(float64(s.RAMUsage)),
-			units.HumanSize(float64(s.RAMSize)))},
+			units.HumanSize(float64(s.RAMSize)))})
+	}
+
+	lines = append(lines,
 		line{"Disk Usage", fmt.Sprintf(
 			"%s of %s (Inside the CRC VM)",
 			units.HumanSize(float64(s.DiskUsage)),
