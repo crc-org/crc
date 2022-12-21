@@ -56,7 +56,7 @@ func TestPlainStatus(t *testing.T) {
 	out := new(bytes.Buffer)
 	assert.NoError(t, runStatus(out, &daemonclient.Client{
 		APIClient: client,
-	}, cacheDir, ""))
+	}, cacheDir, "", false))
 
 	expected := `CRC VM:          Running
 OpenShift:       Running (v4.5.1)
@@ -87,7 +87,7 @@ func TestStatusWithoutPodman(t *testing.T) {
 	out := new(bytes.Buffer)
 	assert.NoError(t, runStatus(out, &daemonclient.Client{
 		APIClient: client,
-	}, cacheDir, ""))
+	}, cacheDir, "", false))
 
 	expected := `CRC VM:          Running
 OpenShift:       Running (v4.5.1)
@@ -109,7 +109,7 @@ func TestJsonStatus(t *testing.T) {
 	out := new(bytes.Buffer)
 	assert.NoError(t, runStatus(out, &daemonclient.Client{
 		APIClient: client,
-	}, cacheDir, jsonFormat))
+	}, cacheDir, jsonFormat, false))
 
 	expected := `{
   "success": true,
@@ -137,7 +137,7 @@ func TestPlainStatusWithError(t *testing.T) {
 	out := new(bytes.Buffer)
 	assert.EqualError(t, runStatus(out, &daemonclient.Client{
 		APIClient: client,
-	}, cacheDir, ""), "broken")
+	}, cacheDir, "", false), "broken")
 	assert.Equal(t, "", out.String())
 }
 
@@ -151,7 +151,7 @@ func TestJsonStatusWithError(t *testing.T) {
 	out := new(bytes.Buffer)
 	assert.NoError(t, runStatus(out, &daemonclient.Client{
 		APIClient: client,
-	}, cacheDir, jsonFormat))
+	}, cacheDir, jsonFormat, false))
 
 	expected := `{
   "success": false,
@@ -182,7 +182,7 @@ func TestStatusWithMemoryPodman(t *testing.T) {
 	out := new(bytes.Buffer)
 	assert.NoError(t, runStatus(out, &daemonclient.Client{
 		APIClient: client,
-	}, cacheDir, ""))
+	}, cacheDir, "", false))
 
 	expected := `CRC VM:          Running
 OpenShift:       Running (v4.5.1)

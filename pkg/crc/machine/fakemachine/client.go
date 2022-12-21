@@ -122,3 +122,7 @@ func (c *Client) IsRunning() (bool, error) {
 func (c *Client) GetPreset() preset.Preset {
 	return preset.OpenShift
 }
+
+func (c *Client) GetClusterLoad() (*types.ClusterLoadResult, error) {
+	return nil, errors.New("not implemented")
+}

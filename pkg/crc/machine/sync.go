@@ -182,6 +182,10 @@ func (s *Synchronized) Status() (*types.ClusterStatusResult, error) {
 	}
 }
 
+func (s *Synchronized) GetClusterLoad() (*types.ClusterLoadResult, error) {
+	return s.underlying.GetClusterLoad()
+}
+
 func (s *Synchronized) IsRunning() (bool, error) {
 	return s.underlying.IsRunning()
 }

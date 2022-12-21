@@ -73,7 +73,7 @@ github.com/cavaliergopher/grab/v3/pkg/bps
 # github.com/cespare/xxhash/v2 v2.1.2
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
-# github.com/cheggaaa/pb/v3 v3.0.8
+# github.com/cheggaaa/pb/v3 v3.1.0
 ## explicit; go 1.12
 github.com/cheggaaa/pb/v3
 github.com/cheggaaa/pb/v3/termutil
@@ -1050,6 +1050,14 @@ k8s.io/utils/net
 # libvirt.org/go/libvirtxml v1.8003.0
 ## explicit; go 1.11
 libvirt.org/go/libvirtxml
+# nhooyr.io/websocket v1.8.7
+## explicit; go 1.13
+nhooyr.io/websocket
+nhooyr.io/websocket/internal/bpool
+nhooyr.io/websocket/internal/errd
+nhooyr.io/websocket/internal/wsjs
+nhooyr.io/websocket/internal/xsync
+nhooyr.io/websocket/wsjson
 # sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2
 ## explicit; go 1.17
 sigs.k8s.io/json

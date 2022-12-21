@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"regexp"
 	"strconv"
@@ -102,6 +103,30 @@ func GetRAMUsage(sshRunner *ssh.Runner) (int64, int64, error) {
 	}
 
 	return ramSize, ramUsage, nil
+}
+
+// GetCPUUsage return CPU usage array, index correspond to CPU number, value is load % (values between 0 nad 100)
+func GetCPUUsage(sshRunner *ssh.Runner) ([]int64, error) {
+	cmd := "top -n1 -1 -b -w 79  | grep %Cpu | awk '{print $3}'"
+	out, _, err := sshRunner.Run(cmd)
+
+	if err != nil {
+		return nil, err
+	}
+
+	cpuUsages := strings.Split(strings.TrimSpace(out), "\n")
+	var result []int64
+	for _, cpuUse := range cpuUsages {
+		usage, err := strconv.ParseFloat(cpuUse, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, int64(math.Round(usage)))
+	}
+
+	return result, nil
+
 }
 
 func EnsureSSHKeyPresentInTheCluster(ctx context.Context, ocConfig oc.Config, sshPublicKeyPath string) error {

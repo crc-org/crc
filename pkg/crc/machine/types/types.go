@@ -74,6 +74,12 @@ type ClusterStatusResult struct {
 	Preset           crcpreset.Preset
 }
 
+type ClusterLoadResult struct {
+	RAMUse  int64
+	RAMSize int64
+	CPUUse  []int64
+}
+
 type OpenshiftStatus string
 
 const (

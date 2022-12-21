@@ -174,3 +174,7 @@ func (m *waitingMachine) GenerateBundle(forceStop bool) error {
 func (m *waitingMachine) GetPreset() crcPreset.Preset {
 	return crcPreset.OpenShift
 }
+
+func (m *waitingMachine) GetClusterLoad() (*types.ClusterLoadResult, error) {
+	return nil, errors.New("not implemented")
+}

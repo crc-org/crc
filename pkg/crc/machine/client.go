@@ -22,6 +22,7 @@ type Client interface {
 	PowerOff() error
 	Start(ctx context.Context, startConfig types.StartConfig) (*types.StartResult, error)
 	Status() (*types.ClusterStatusResult, error)
+	GetClusterLoad() (*types.ClusterLoadResult, error)
 	Stop() (state.State, error)
 	IsRunning() (bool, error)
 	GenerateBundle(forceStop bool) error
