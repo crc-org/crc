@@ -56,7 +56,7 @@ func (c *SecretStorage) Unset(key string) error {
 }
 
 func NewEmptyInMemorySecretStorage() *SecretStorage {
-	keyring.MockInit()
+	// keyring.MockInit()
 	return &SecretStorage{
 		secretService: secretServiceName,
 	}
