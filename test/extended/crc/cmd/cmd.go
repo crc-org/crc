@@ -12,8 +12,10 @@ import (
 
 const (
 	// timeout to wait for cluster to change its state
-	clusterStateRetryCount    = 15
-	clusterStateTimeout       = 600
+	clusterStateRetryCount = 25
+	clusterStateTimeout    = 600
+	// defines the number of times the state should be matches in a row
+	clusterStateRepetition    = 3
 	CRCExecutableInstalled    = "installed"
 	CRCExecutableNotInstalled = "notInstalled"
 )
@@ -119,7 +121,7 @@ func UnsetConfigPropertySucceedsOrFails(property string, expected string) error 
 }
 
 func WaitForClusterInState(state string) error {
-	return util.MatchWithRetry(state, CheckCRCStatus,
+	return util.MatchRepetitionsWithRetry(state, CheckCRCStatus, clusterStateRepetition,
 		clusterStateRetryCount, clusterStateTimeout)
 }
 
