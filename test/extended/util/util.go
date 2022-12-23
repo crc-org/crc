@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -144,41 +143,34 @@ func RemoveCRCHome(crcHome string) error {
 	return fmt.Errorf("folder %s not removed as per request: %s present", crcHome, keepFile)
 }
 
-// Based on the number of iterations for a given timeout in seconds the function returns the duration of echa loop
-// and the extra time in case required to complete the timeout
-func GetRetryParametersFromTimeoutInSeconds(iterations, timeout int) (time.Duration, time.Duration, error) {
-	iterationDuration, err :=
-		time.ParseDuration(strconv.Itoa(timeout/iterations) + "s")
-	if err != nil {
-		return 0, 0, err
-	}
-	extraTime := timeout % iterations
-	if extraTime != 0 {
-		extraTimeDuration, err :=
-			time.ParseDuration(strconv.Itoa(extraTime) + "s")
-		if err != nil {
-			return 0, 0, err
-		}
-		return iterationDuration, extraTimeDuration, nil
-	}
-	return iterationDuration, 0, nil
+// MatchWithRetry will execute match function with expression as arg
+// for #iterations with a timeout
+func MatchWithRetry(expression string, match func(string) error, iterations, timeoutInSeconds int) error {
+	return MatchRepetitionsWithRetry(expression, match, 1, iterations, timeoutInSeconds)
 }
 
-func MatchWithRetry(expression string, match func(string) error, retryCount, timeout int) error {
-	iterationDuration, extraDuration, err :=
-		GetRetryParametersFromTimeoutInSeconds(retryCount, timeout)
-	if err != nil {
-		return err
-	}
-	for i := 0; i < retryCount; i++ {
-		err := match(expression)
-		if err == nil {
-			return nil
+// MatchRepetitionsWithRetry will execute match function with expression as arg
+// for #iterations with a timeout, expression should be matched # matchRepetitions in a row
+func MatchRepetitionsWithRetry(expression string, match func(string) error, matchRepetitions int, iterations, timeoutInSeconds int) error {
+	timeout := time.After(time.Duration(timeoutInSeconds) * time.Second)
+	tick := time.NewTicker(time.Duration(timeoutInSeconds/iterations) * time.Second)
+	matchRepetition := 0
+	for {
+		select {
+		case <-timeout:
+			tick.Stop()
+			return fmt.Errorf("not found: %s. Timeout", expression)
+		case <-tick.C:
+			if err := match(expression); err == nil {
+				matchRepetition++
+				if matchRepetition == matchRepetitions {
+					tick.Stop()
+					return nil
+				}
+			} else {
+				// repetions should be matched in a row, otherwise reset the counter
+				matchRepetition = 0
+			}
 		}
-		time.Sleep(iterationDuration)
 	}
-	if extraDuration != 0 {
-		time.Sleep(extraDuration)
-	}
-	return fmt.Errorf("not found: %s. Timeout", expression)
 }
