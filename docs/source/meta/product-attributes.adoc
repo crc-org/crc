@@ -20,6 +20,7 @@
 :ubuntu: Ubuntu
 :openshift: OpenShift
 :ocp: {openshift} Container Platform
+:okd: OKD
 
 // Product naming
 :prod: CRC
