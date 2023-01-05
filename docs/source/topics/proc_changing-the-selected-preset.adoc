@@ -23,7 +23,7 @@ To enable preset changes, you must delete the existing instance and start a new 
 $ {bin} config set preset __<name>__
 ----
 +
-Valid preset names are `openshift` for {ocp} and `podman` for the Podman container runtime.
+Valid preset names are `openshift` for {ocp}, `okd` for {okd} and `podman` for the Podman container runtime.
 
 [role="_additional-resources"]
 .Additional resources
