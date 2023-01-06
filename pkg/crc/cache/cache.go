@@ -33,7 +33,7 @@ func (e *VersionMismatchError) Error() string {
 	return fmt.Sprintf("%s version mismatch: %s expected but %s found in the cache", e.ExecutableName, e.ExpectedVersion, e.CurrentVersion)
 }
 
-func New(executablePath string, archiveURL string, version string, getVersion func(string) (string, error)) *Cache {
+func new(executablePath string, archiveURL string, version string, getVersion func(string) (string, error)) *Cache {
 	return &Cache{executablePath: executablePath, archiveURL: archiveURL, version: version, getVersion: getVersion}
 }
 
@@ -68,7 +68,7 @@ func getVersionGeneric(executablePath string, args ...string) (string, error) { 
 func NewAdminHelperCache() *Cache {
 	url := constants.GetAdminHelperURL()
 	version := version.GetAdminHelperVersion()
-	return New(constants.AdminHelperPath(),
+	return new(constants.AdminHelperPath(),
 		url,
 		version,
 		func(executable string) (string, error) {
@@ -94,13 +94,13 @@ func (c *Cache) EnsureIsCached() error {
 		if version.IsInstaller() {
 			return fmt.Errorf("%s could not be found - check your installation", c.GetExecutablePath())
 		}
-		return c.CacheExecutable()
+		return c.cacheExecutable()
 	}
 	return nil
 }
 
 // CacheExecutable downloads and caches the requested executable into the CRC directory
-func (c *Cache) CacheExecutable() error {
+func (c *Cache) cacheExecutable() error {
 	if c.IsCached() && c.CheckVersion() == nil {
 		return nil
 	}
@@ -118,7 +118,7 @@ func (c *Cache) CacheExecutable() error {
 
 	var extractedFiles []string
 	// Check the file is tarball or not
-	if IsTarball(assetTmpFile) {
+	if isTarball(assetTmpFile) {
 		// Extract the tarball and put it the cache directory.
 		extractedFiles, err = extract.UncompressWithFilter(assetTmpFile, tmpDir, false,
 			func(filename string) bool { return filepath.Base(filename) == c.GetExecutableName() })
@@ -180,7 +180,7 @@ func (c *Cache) CheckVersion() error {
 	return nil
 }
 
-func IsTarball(filename string) bool {
+func isTarball(filename string) bool {
 	tarballExtensions := []string{".tar", ".tar.gz", ".tar.xz", ".zip", ".tar.bz2", ".crcbundle"}
 	for _, extension := range tarballExtensions {
 		if strings.HasSuffix(strings.ToLower(filename), extension) {

@@ -5,7 +5,7 @@ import (
 )
 
 func NewVfkitCache() *Cache {
-	return New(vfkit.ExecutablePath(), vfkit.VfkitDownloadURL, vfkit.VfkitVersion, getVfkitVersion)
+	return new(vfkit.ExecutablePath(), vfkit.VfkitDownloadURL, vfkit.VfkitVersion, getVfkitVersion)
 }
 
 func getVfkitVersion(executablePath string) (string, error) {
