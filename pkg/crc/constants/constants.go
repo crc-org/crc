@@ -142,6 +142,10 @@ func BinDir() string {
 	return crcBinDir
 }
 
+func AdminHelperPath() string {
+	return filepath.Join(BinDir(), GetAdminHelperExecutable())
+}
+
 // GetHomeDir returns the home directory for the current user
 func GetHomeDir() string {
 	homeDir, err := os.UserHomeDir()
