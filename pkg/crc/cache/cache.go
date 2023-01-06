@@ -19,7 +19,6 @@ import (
 type Cache struct {
 	executablePath string
 	archiveURL     string
-	destDir        string
 	version        string
 	getVersion     func(string) (string, error)
 }
@@ -35,7 +34,7 @@ func (e *VersionMismatchError) Error() string {
 }
 
 func New(executablePath string, archiveURL string, version string, getVersion func(string) (string, error)) *Cache {
-	return &Cache{executablePath: executablePath, archiveURL: archiveURL, destDir: constants.BinDir(), version: version, getVersion: getVersion}
+	return &Cache{executablePath: executablePath, archiveURL: archiveURL, version: version, getVersion: getVersion}
 }
 
 func (c *Cache) GetExecutablePath() string {
@@ -134,13 +133,13 @@ func (c *Cache) CacheExecutable() error {
 	}
 
 	// Copy the requested asset into its final destination
-	err = os.MkdirAll(c.destDir, 0750)
+	err = os.MkdirAll(constants.BinDir(), 0750)
 	if err != nil {
 		return errors.Wrap(err, "cannot create the target directory")
 	}
 
 	for _, extractedFilePath := range extractedFiles {
-		finalExecutablePath := filepath.Join(c.destDir, filepath.Base(extractedFilePath))
+		finalExecutablePath := filepath.Join(constants.BinDir(), filepath.Base(extractedFilePath))
 		// If the file exists then remove it (ignore error) first before copy because with `0500` permission
 		// it is not possible to overwrite the file.
 		os.Remove(finalExecutablePath)
