@@ -1,15 +1,9 @@
 package adminhelper
 
 import (
-	"path/filepath"
-
 	"github.com/crc-org/admin-helper/pkg/hosts"
 	"github.com/crc-org/admin-helper/pkg/types"
 	"github.com/crc-org/crc/pkg/crc/constants"
-)
-
-var (
-	BinPath = filepath.Join(constants.BinDir(), constants.GetAdminHelperExecutable())
 )
 
 // UpdateHostsFile updates the host's /etc/hosts file with Instance IP.

@@ -5,11 +5,12 @@ package adminhelper
 
 import (
 	"github.com/crc-org/admin-helper/pkg/types"
+	"github.com/crc-org/crc/pkg/crc/constants"
 	crcos "github.com/crc-org/crc/pkg/os"
 )
 
 func execute(args ...string) error {
-	_, _, err := crcos.RunWithDefaultLocale(BinPath, args...)
+	_, _, err := crcos.RunWithDefaultLocale(constants.AdminHelperPath(), args...)
 	return err
 }
 
