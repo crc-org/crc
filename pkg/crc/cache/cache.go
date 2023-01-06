@@ -17,7 +17,7 @@ import (
 )
 
 type Cache struct {
-	executableName string
+	executablePath string
 	archiveURL     string
 	destDir        string
 	version        string
@@ -34,16 +34,16 @@ func (e *VersionMismatchError) Error() string {
 	return fmt.Sprintf("%s version mismatch: %s expected but %s found in the cache", e.ExecutableName, e.ExpectedVersion, e.CurrentVersion)
 }
 
-func New(executableName string, archiveURL string, version string, getVersion func(string) (string, error)) *Cache {
-	return &Cache{executableName: executableName, archiveURL: archiveURL, destDir: constants.BinDir(), version: version, getVersion: getVersion}
+func New(executablePath string, archiveURL string, version string, getVersion func(string) (string, error)) *Cache {
+	return &Cache{executablePath: executablePath, archiveURL: archiveURL, destDir: constants.BinDir(), version: version, getVersion: getVersion}
 }
 
 func (c *Cache) GetExecutablePath() string {
-	return filepath.Join(c.destDir, c.executableName)
+	return c.executablePath
 }
 
 func (c *Cache) GetExecutableName() string {
-	return c.executableName
+	return filepath.Base(c.executablePath)
 }
 
 /* getVersionGeneric runs the cached executable with 'args', and assumes the version string
@@ -69,7 +69,7 @@ func getVersionGeneric(executablePath string, args ...string) (string, error) { 
 func NewAdminHelperCache() *Cache {
 	url := constants.GetAdminHelperURL()
 	version := version.GetAdminHelperVersion()
-	return New(constants.GetAdminHelperExecutable(),
+	return New(constants.AdminHelperPath(),
 		url,
 		version,
 		func(executable string) (string, error) {
@@ -122,14 +122,14 @@ func (c *Cache) CacheExecutable() error {
 	if IsTarball(assetTmpFile) {
 		// Extract the tarball and put it the cache directory.
 		extractedFiles, err = extract.UncompressWithFilter(assetTmpFile, tmpDir, false,
-			func(filename string) bool { return filepath.Base(filename) == c.executableName })
+			func(filename string) bool { return filepath.Base(filename) == c.GetExecutableName() })
 		if err != nil {
 			return errors.Wrapf(err, "Cannot uncompress '%s'", assetTmpFile)
 		}
 	} else {
 		extractedFiles = append(extractedFiles, assetTmpFile)
-		if filepath.Base(assetTmpFile) != c.executableName {
-			logging.Warnf("Executable name is %s but extracted file name is %s", c.executableName, filepath.Base(assetTmpFile))
+		if filepath.Base(assetTmpFile) != c.GetExecutableName() {
+			logging.Warnf("Executable name is %s but extracted file name is %s", c.GetExecutableName(), filepath.Base(assetTmpFile))
 		}
 	}
 
@@ -153,7 +153,7 @@ func (c *Cache) CacheExecutable() error {
 }
 
 func (c *Cache) getExecutable(destDir string) (string, error) {
-	logging.Debugf("Trying to extract %s from crc executable", c.executableName)
+	logging.Debugf("Trying to extract %s from crc executable", c.GetExecutableName())
 	archiveName := filepath.Base(c.archiveURL)
 	destPath := filepath.Join(destDir, archiveName)
 	err := embed.Extract(archiveName, destPath)
@@ -175,14 +175,14 @@ func (c *Cache) CheckVersion() error {
 	}
 	if currentVersion != c.version {
 		err := &VersionMismatchError{
-			ExecutableName:  c.executableName,
+			ExecutableName:  c.GetExecutableName(),
 			CurrentVersion:  currentVersion,
 			ExpectedVersion: c.version,
 		}
 		logging.Debugf("%s", err.Error())
 		return err
 	}
-	logging.Debugf("Found %s version %s", c.executableName, c.version)
+	logging.Debugf("Found %s version %s", c.GetExecutableName(), c.version)
 	return nil
 }
 
