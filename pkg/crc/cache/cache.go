@@ -134,7 +134,7 @@ func (c *Cache) cacheExecutable() error {
 
 	// Copy the requested asset into its final destination
 	for _, extractedFilePath := range extractedFiles {
-		finalExecutablePath := filepath.Join(constants.BinDir(), filepath.Base(extractedFilePath))
+		finalExecutablePath := filepath.Join(constants.CrcBinDir, filepath.Base(extractedFilePath))
 		// If the file exists then remove it (ignore error) first before copy because with `0500` permission
 		// it is not possible to overwrite the file.
 		os.Remove(finalExecutablePath)

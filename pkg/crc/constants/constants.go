@@ -75,10 +75,6 @@ func GetAdminHelperExecutableForOs(os string) string {
 	return adminHelperExecutableForOs[os]
 }
 
-func GetAdminHelperExecutable() string {
-	return GetAdminHelperExecutableForOs(runtime.GOOS)
-}
-
 func GetAdminHelperURLForOs(os string) string {
 	return fmt.Sprintf(DefaultAdminHelperURLBase, version.GetAdminHelperVersion(), GetAdminHelperExecutableForOs(os))
 }
@@ -118,9 +114,9 @@ func GetDefaultBundle(preset crcpreset.Preset) string {
 
 var (
 	CrcBaseDir         = filepath.Join(GetHomeDir(), ".crc")
-	crcBinDir          = filepath.Join(CrcBaseDir, "bin")
-	CrcOcBinDir        = filepath.Join(crcBinDir, "oc")
-	CrcSymlinkPath     = filepath.Join(crcBinDir, "crc")
+	CrcBinDir          = filepath.Join(CrcBaseDir, "bin")
+	CrcOcBinDir        = filepath.Join(CrcBinDir, "oc")
+	CrcSymlinkPath     = filepath.Join(CrcBinDir, "crc")
 	ConfigPath         = filepath.Join(CrcBaseDir, ConfigFile)
 	LogFilePath        = filepath.Join(CrcBaseDir, LogFile)
 	DaemonLogFilePath  = filepath.Join(CrcBaseDir, DaemonLogFile)
@@ -135,15 +131,15 @@ func GetDefaultBundlePath(preset crcpreset.Preset) string {
 	return filepath.Join(MachineCacheDir, GetDefaultBundle(preset))
 }
 
-func BinDir() string {
+func ResolveHelperPath(executableName string) string {
 	if version.IsInstaller() {
-		return version.InstallPath()
+		return filepath.Join(version.InstallPath(), executableName)
 	}
-	return crcBinDir
+	return filepath.Join(CrcBinDir, executableName)
 }
 
 func AdminHelperPath() string {
-	return filepath.Join(BinDir(), GetAdminHelperExecutable())
+	return ResolveHelperPath(GetAdminHelperExecutableForOs(runtime.GOOS))
 }
 
 // GetHomeDir returns the home directory for the current user
@@ -157,7 +153,7 @@ func GetHomeDir() string {
 
 // EnsureBaseDirectoriesExist creates ~/.crc, ~/.crc/bin and ~/.crc/cache directories if it is not present
 func EnsureBaseDirectoriesExist() error {
-	baseDirectories := []string{CrcBaseDir, MachineCacheDir, crcBinDir}
+	baseDirectories := []string{CrcBaseDir, MachineCacheDir, CrcBinDir}
 	for _, baseDir := range baseDirectories {
 		err := os.MkdirAll(baseDir, 0750)
 		if err != nil {
