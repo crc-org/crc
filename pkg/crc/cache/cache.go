@@ -133,11 +133,6 @@ func (c *Cache) CacheExecutable() error {
 	}
 
 	// Copy the requested asset into its final destination
-	err = os.MkdirAll(constants.BinDir(), 0750)
-	if err != nil {
-		return errors.Wrap(err, "cannot create the target directory")
-	}
-
 	for _, extractedFilePath := range extractedFiles {
 		finalExecutablePath := filepath.Join(constants.BinDir(), filepath.Base(extractedFilePath))
 		// If the file exists then remove it (ignore error) first before copy because with `0500` permission
