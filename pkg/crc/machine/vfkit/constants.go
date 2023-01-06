@@ -5,7 +5,6 @@ package vfkit
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/crc-org/crc/pkg/crc/constants"
 )
@@ -21,5 +20,5 @@ var (
 )
 
 func ExecutablePath() string {
-	return filepath.Join(constants.BinDir(), vfkitCommand)
+	return constants.ResolveHelperPath(vfkitCommand)
 }
