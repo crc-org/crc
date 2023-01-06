@@ -2,7 +2,6 @@ package vfkit
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/machine/config"
@@ -19,7 +18,7 @@ func CreateHost(machineConfig config.MachineConfig) *vfkit.Driver {
 	vfDriver.Cmdline = machineConfig.KernelCmdLine
 	vfDriver.VmlinuzPath = machineConfig.Kernel
 	vfDriver.InitrdPath = machineConfig.Initramfs
-	vfDriver.VfkitPath = filepath.Join(constants.BinDir(), VfkitCommand)
+	vfDriver.VfkitPath = ExecutablePath()
 
 	vfDriver.VirtioNet = machineConfig.NetworkMode == network.SystemNetworkingMode
 

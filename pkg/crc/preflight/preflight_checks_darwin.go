@@ -12,6 +12,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/cache"
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/machine/vfkit"
 	"github.com/crc-org/crc/pkg/crc/version"
 	crcos "github.com/crc-org/crc/pkg/os"
 	"github.com/crc-org/crc/pkg/os/launchd"
@@ -134,7 +135,7 @@ func killVfkitProcess() error {
 	if err != nil {
 		return fmt.Errorf("Could not find 'pgrep'. %w", err)
 	}
-	if _, _, err := crcos.RunWithDefaultLocale(pgrepPath, "-f", filepath.Join(constants.BinDir(), "vfkit")); err != nil {
+	if _, _, err := crcos.RunWithDefaultLocale(pgrepPath, "-f", vfkit.ExecutablePath()); err != nil {
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) {
 			/* 1: no processes matched */
@@ -151,7 +152,7 @@ func killVfkitProcess() error {
 	if err != nil {
 		return fmt.Errorf("Could not find 'pkill'. %w", err)
 	}
-	if _, _, err := crcos.RunWithDefaultLocale(pkillPath, "-SIGKILL", "-f", filepath.Join(constants.BinDir(), "vfkit")); err != nil {
+	if _, _, err := crcos.RunWithDefaultLocale(pkillPath, "-SIGKILL", "-f", vfkit.ExecutablePath()); err != nil {
 		return fmt.Errorf("Failed to kill 'vfkit' process. %w", err)
 	}
 	return nil
