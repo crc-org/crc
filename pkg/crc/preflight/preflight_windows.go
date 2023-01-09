@@ -48,28 +48,6 @@ var hypervPreflightChecks = []Check{
 		labels: labels{Os: Windows},
 	},
 	{
-		configKeySuffix:  "check-crc-users-group-exists",
-		checkDescription: "Checking if crc-users group exists",
-		check: func() error {
-			if _, _, err := powershell.Execute("Get-LocalGroup -Name crc-users"); err != nil {
-				return fmt.Errorf("'crc-users' group does not exist: %v", err)
-			}
-			return nil
-		},
-		flags: StartUpOnly,
-
-		labels: labels{Os: Windows},
-	},
-	{
-		configKeySuffix:  "check-user-in-hyperv-group",
-		checkDescription: "Checking if current user is in Hyper-V Admins group",
-		check:            checkIfUserPartOfHyperVAdmins,
-		fixDescription:   "Adding current user to Hyper-V Admins group",
-		fix:              fixUserPartOfHyperVAdmins,
-
-		labels: labels{Os: Windows},
-	},
-	{
 		configKeySuffix:  "check-hyperv-service-running",
 		checkDescription: "Checking if Hyper-V service is enabled",
 		check:            checkHyperVServiceRunning,
@@ -147,12 +125,29 @@ var adminHelperServiceCheks = []Check{
 	},
 }
 
-var userPartOfCrcUsersGroupCheck = Check{
-	configKeySuffix:  "check-user-in-crc-users-group",
-	checkDescription: "Checking if current user is in crc-users group",
-	check:            checkUserPartOfCrcUsers,
-	fixDescription:   "Adding logon user to crc-users group",
-	fix:              fixUserPartOfCrcUsers,
+// 'crc-user' group is supposed to be created by the msi or chocolatey
+// this check makes sure that was done before stating crc, it does not
+// have a fix function since this'll be handled by the msi or choco
+var crcUsersGroupExistsCheck = Check{
+	configKeySuffix:  "check-crc-users-group-exists",
+	checkDescription: "Checking if crc-users group exists",
+	check: func() error {
+		if _, _, err := powershell.Execute("Get-LocalGroup -Name crc-users"); err != nil {
+			return fmt.Errorf("'crc-users' group does not exist: %v", err)
+		}
+		return nil
+	},
+	flags: StartUpOnly,
+
+	labels: labels{Os: Windows},
+}
+
+var userPartOfCrcUsersAndHypervAdminsGroupCheck = Check{
+	configKeySuffix:  "check-user-in-crc-users-and-hyperv-admins-group",
+	checkDescription: "Checking if current user is in crc-users and Hyper-V admins group",
+	check:            checkUserPartOfCrcUsersAndHypervAdminsGroup,
+	fixDescription:   "Adding logon user to crc-users and Hyper-V admins group",
+	fix:              fixUserPartOfCrcUsersAndHypervAdminsGroup,
 
 	labels: labels{Os: Windows},
 }
@@ -199,7 +194,8 @@ func getAllPreflightChecks() []Check {
 func getChecks(bundlePath string, preset crcpreset.Preset) []Check {
 	checks := []Check{}
 	checks = append(checks, hypervPreflightChecks...)
-	checks = append(checks, userPartOfCrcUsersGroupCheck)
+	checks = append(checks, crcUsersGroupExistsCheck)
+	checks = append(checks, userPartOfCrcUsersAndHypervAdminsGroupCheck)
 	checks = append(checks, vsockChecks...)
 	checks = append(checks, bundleCheck(bundlePath, preset))
 	checks = append(checks, genericCleanupChecks...)
