@@ -99,40 +99,21 @@ func checkHyperVServiceRunning() error {
 	return nil
 }
 
-func checkIfUserPartOfHyperVAdmins() error {
-	// https://support.microsoft.com/en-us/help/243330/well-known-security-identifiers-in-windows-operating-systems
-	// BUILTIN\Hyper-V Administrators => S-1-5-32-578
-
-	checkIfMemberOfHyperVAdmins :=
-		`$sid = New-Object System.Security.Principal.SecurityIdentifier("S-1-5-32-578")
-	@([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole($sid)`
-	stdOut, _, err := powershell.Execute(checkIfMemberOfHyperVAdmins)
-	if err != nil {
-		logging.Debug(err.Error())
-		return fmt.Errorf("Failed checking if user is part of hyperv admins group")
-	}
-	if !strings.Contains(stdOut, "True") {
-		return fmt.Errorf("User is not a member of the Hyper-V administrators group")
-	}
-
-	return nil
-}
-
-func fixUserPartOfHyperVAdmins() error {
-	_, _, err := powershell.ExecuteAsAdmin("adding current user to Hyper-V administrator group", fmt.Sprintf("Add-LocalGroupMember -SID 'S-1-5-32-578' -Member '%s'", username()))
+func checkUserPartOfCrcUsersAndHypervAdminsGroup() error {
+	_, _, err := powershell.Execute(fmt.Sprintf("Get-LocalGroupMember -Group 'crc-users' -Member '%s'", username()))
 	if err != nil {
 		return err
 	}
-	return errReboot
-}
 
-func checkUserPartOfCrcUsers() error {
-	_, _, err := powershell.Execute(fmt.Sprintf("Get-LocalGroupMember -Group 'crc-users' -Member '%s'", username()))
+	// https://support.microsoft.com/en-us/help/243330/well-known-security-identifiers-in-windows-operating-systems
+	// BUILTIN\Hyper-V Administrators => S-1-5-32-578
+	_, _, err = powershell.Execute(fmt.Sprintf("Get-LocalGroupMember -SID 'S-1-5-32-578' -Member '%s'", username()))
 	return err
 }
 
-func fixUserPartOfCrcUsers() error {
-	_, _, err := powershell.ExecuteAsAdmin("adding current user to crc-users group", fmt.Sprintf("Add-LocalGroupMember -Group 'crc-users' -Member '%s'", username()))
+func fixUserPartOfCrcUsersAndHypervAdminsGroup() error {
+	cmd := `Add-LocalGroupMember -Group 'crc-users' -Member '%s';Add-LocalGroupMember -SID 'S-1-5-32-578' -Member '%s'`
+	_, _, err := powershell.ExecuteAsAdmin("adding current user to crc-users and Hyper-V admins group", fmt.Sprintf(cmd, username(), username()))
 	if err != nil {
 		return err
 	}
