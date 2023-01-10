@@ -119,14 +119,7 @@ func checkIfUserPartOfHyperVAdmins() error {
 }
 
 func fixUserPartOfHyperVAdmins() error {
-	outGroupName, _, err := powershell.Execute(`(New-Object System.Security.Principal.SecurityIdentifier("S-1-5-32-578")).Translate([System.Security.Principal.NTAccount]).Value`)
-	if err != nil {
-		logging.Debug(err.Error())
-		return fmt.Errorf("Unable to get group name")
-	}
-	groupName := strings.TrimSpace(strings.ReplaceAll(strings.TrimSpace(outGroupName), "BUILTIN\\", ""))
-
-	_, _, err = powershell.ExecuteAsAdmin("adding current user to Hyper-V administrator group", fmt.Sprintf("Add-LocalGroupMember -Group '%s' -Member '%s'", groupName, username()))
+	_, _, err := powershell.ExecuteAsAdmin("adding current user to Hyper-V administrator group", fmt.Sprintf("Add-LocalGroupMember -SID 'S-1-5-32-578' -Member '%s'", username()))
 	if err != nil {
 		return err
 	}
