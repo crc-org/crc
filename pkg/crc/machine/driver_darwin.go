@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/machine/config"
 	"github.com/crc-org/crc/pkg/crc/machine/vfkit"
@@ -19,7 +18,7 @@ func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host
 	if err != nil {
 		return nil, errors.New("Failed to marshal driver options")
 	}
-	return api.NewHost("vf", constants.BinDir(), json)
+	return api.NewHost("vf", "", json)
 }
 
 func loadDriverConfig(host *host.Host) (*machineVf.Driver, error) {
