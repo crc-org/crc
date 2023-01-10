@@ -3,8 +3,8 @@ package machine
 import (
 	"encoding/json"
 	"errors"
+	"path/filepath"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/machine/config"
 	"github.com/crc-org/crc/pkg/crc/machine/libvirt"
 	"github.com/crc-org/crc/pkg/libmachine"
@@ -18,7 +18,7 @@ func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host
 	if err != nil {
 		return nil, errors.New("Failed to marshal driver options")
 	}
-	return api.NewHost("libvirt", constants.BinDir(), json)
+	return api.NewHost("libvirt", filepath.Dir(libvirt.MachineDriverPath()), json)
 }
 
 /* FIXME: host.Host is only known here, and libvirt.Driver is only accessible

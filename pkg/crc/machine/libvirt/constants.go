@@ -3,7 +3,12 @@
 
 package libvirt
 
-import "fmt"
+import (
+	"fmt"
+	"path/filepath"
+
+	"github.com/crc-org/crc/pkg/crc/constants"
+)
 
 const (
 	// Defaults
@@ -21,5 +26,9 @@ const (
 )
 
 var (
-	MachineDriverDownloadURL = fmt.Sprintf("https://github.com/crc-org/machine-driver-libvirt/releases/download/%s/crc-driver-libvirt", MachineDriverVersion)
+	MachineDriverDownloadURL = fmt.Sprintf("https://github.com/crc-org/machine-driver-libvirt/releases/download/%s/%s", MachineDriverVersion, MachineDriverCommand)
 )
+
+func MachineDriverPath() string {
+	return filepath.Join(constants.BinDir(), MachineDriverCommand)
+}
