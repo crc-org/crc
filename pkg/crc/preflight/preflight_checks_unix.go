@@ -47,13 +47,6 @@ func genericPreflightChecks(preset crcpreset.Preset) []Check {
 			labels: None,
 		},
 		{
-			configKeySuffix:  "check-obsolete-admin-helper",
-			checkDescription: "Checking for obsolete admin-helper executable",
-			check:            checkOldAdminHelperExecutableCached,
-			fixDescription:   "Removing obsolete admin-helper executable",
-			fix:              fixOldAdminHelperExecutableCached,
-		},
-		{
 			configKeySuffix:  "check-supported-cpu-arch",
 			checkDescription: "Checking if running on a supported CPU architecture",
 			check:            checkSupportedCPUArch,
@@ -155,40 +148,6 @@ func fixAdminHelperExecutableCached() error {
 	}
 	logging.Debug("crc-admin-helper executable cached")
 	return setSuid(helper.GetExecutablePath())
-}
-
-var oldAdminHelpers = []string{"admin-helper-linux", "admin-helper-darwin"}
-
-/* These 2 checks can be removed after a few releases */
-func checkOldAdminHelperExecutableCached() error {
-	logging.Debugf("Checking if an older admin-helper executable is installed")
-	for _, oldExecutable := range oldAdminHelpers {
-		oldPath := filepath.Join(constants.BinDir(), oldExecutable)
-		if _, err := os.Stat(oldPath); !os.IsNotExist(err) {
-			return fmt.Errorf("Found old admin-helper executable '%s'", oldExecutable)
-		}
-	}
-
-	logging.Debugf("No older admin-helper executable found")
-
-	return nil
-}
-
-func fixOldAdminHelperExecutableCached() error {
-	logging.Debugf("Removing older admin-helper executable")
-	for _, oldExecutable := range oldAdminHelpers {
-		oldPath := filepath.Join(constants.BinDir(), oldExecutable)
-		if err := os.Remove(oldPath); err != nil {
-			if !os.IsNotExist(err) {
-				logging.Debugf("Failed to remove  %s: %v", oldPath, err)
-				return err
-			}
-		} else {
-			logging.Debugf("Successfully removed %s", oldPath)
-		}
-	}
-
-	return nil
 }
 
 func checkSupportedCPUArch() error {
