@@ -147,6 +147,16 @@ var adminHelperServiceCheks = []Check{
 	},
 }
 
+var userPartOfCrcUsersGroupCheck = Check{
+	configKeySuffix:  "check-user-in-crc-users-group",
+	checkDescription: "Checking if current user is in crc-users group",
+	check:            checkUserPartOfCrcUsers,
+	fixDescription:   "Adding logon user to crc-users group",
+	fix:              fixUserPartOfCrcUsers,
+
+	labels: labels{Os: Windows},
+}
+
 var errReboot = errors.New("Please reboot your system and run 'crc setup' to complete the setup process")
 
 func username() string {
@@ -189,6 +199,7 @@ func getAllPreflightChecks() []Check {
 func getChecks(bundlePath string, preset crcpreset.Preset) []Check {
 	checks := []Check{}
 	checks = append(checks, hypervPreflightChecks...)
+	checks = append(checks, userPartOfCrcUsersGroupCheck)
 	checks = append(checks, vsockChecks...)
 	checks = append(checks, bundleCheck(bundlePath, preset))
 	checks = append(checks, genericCleanupChecks...)

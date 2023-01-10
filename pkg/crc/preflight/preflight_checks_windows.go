@@ -126,6 +126,19 @@ func fixUserPartOfHyperVAdmins() error {
 	return errReboot
 }
 
+func checkUserPartOfCrcUsers() error {
+	_, _, err := powershell.Execute(fmt.Sprintf("Get-LocalGroupMember -Group 'crc-users' -Member '%s'", username()))
+	return err
+}
+
+func fixUserPartOfCrcUsers() error {
+	_, _, err := powershell.ExecuteAsAdmin("adding current user to crc-users group", fmt.Sprintf("Add-LocalGroupMember -Group 'crc-users' -Member '%s'", username()))
+	if err != nil {
+		return err
+	}
+	return errReboot
+}
+
 func checkIfHyperVVirtualSwitchExists() error {
 	switchName := hyperv.AlternativeNetwork
 
