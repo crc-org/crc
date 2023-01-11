@@ -6,6 +6,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/logging"
@@ -21,13 +22,23 @@ import (
 var (
 	goos       string
 	cacheDir   string
+	components []string
 	noDownload bool
+)
+
+const (
+	vfkitDriver      = "vfkit-driver"
+	vfkitEntitlement = "vfkit-entitlement"
+	libvirtDriver    = "libvirt-driver"
+	adminHelper      = "admin-helper"
+	tray             = "tray"
 )
 
 func init() {
 	embedCmd.Flags().StringVar(&goos, "goos", runtime.GOOS, "Target platform (darwin, linux or windows)")
 	embedCmd.Flags().StringVar(&cacheDir, "cache-dir", "", "Destination directory for the downloaded files")
 	embedCmd.Flags().BoolVar(&noDownload, "no-download", false, "Only embed files, don't download")
+	embedCmd.Flags().StringSliceVar(&components, "components", []string{}, fmt.Sprintf("List of component(s) to download (%s)", strings.Join(getAllComponentNames(goos), ", ")))
 	rootCmd.AddCommand(embedCmd)
 }
 
@@ -55,7 +66,7 @@ func runEmbed(args []string) {
 	if noDownload {
 		embedFileList = getEmbedFileList(goos, cacheDir)
 	} else {
-		embedFileList, err = downloadDataFiles(goos, cacheDir)
+		embedFileList, err = downloadDataFiles(goos, components, cacheDir)
 		if err != nil {
 			logging.Fatalf("Failed to download data files: %v", err)
 		}
@@ -95,20 +106,20 @@ type remoteFileInfo struct {
 }
 
 var (
-	dataFileUrls = map[string][]remoteFileInfo{
+	dataFileUrls = map[string]map[string]remoteFileInfo{
 		"darwin": {
-			{vfkit.VfkitDownloadURL, 0755},
-			{vfkit.VfkitEntitlementsURL, 0644},
-			{constants.GetCRCMacTrayDownloadURL(), 0644},
-			{constants.GetAdminHelperURLForOs("darwin"), 0755},
+			vfkitDriver:      {vfkit.VfkitDownloadURL, 0755},
+			vfkitEntitlement: {vfkit.VfkitEntitlementsURL, 0644},
+			tray:             {constants.GetCRCMacTrayDownloadURL(), 0644},
+			adminHelper:      {constants.GetAdminHelperURLForOs("darwin"), 0755},
 		},
 		"linux": {
-			{libvirt.MachineDriverDownloadURL, 0755},
-			{constants.GetAdminHelperURLForOs("linux"), 0755},
+			libvirtDriver: {libvirt.MachineDriverDownloadURL, 0755},
+			adminHelper:   {constants.GetAdminHelperURLForOs("linux"), 0755},
 		},
 		"windows": {
-			{constants.GetAdminHelperURLForOs("windows"), 0755},
-			{constants.GetCRCWindowsTrayDownloadURL(), 0644},
+			adminHelper: {constants.GetAdminHelperURLForOs("windows"), 0755},
+			tray:        {constants.GetCRCWindowsTrayDownloadURL(), 0644},
 		},
 	}
 )
@@ -124,15 +135,43 @@ func getEmbedFileList(goos string, destDir string) []string {
 	return fileList
 }
 
-func downloadDataFiles(goos string, destDir string) ([]string, error) {
+func getAllComponentNames(goos string) []string {
+	var components []string
+	for component := range dataFileUrls[goos] {
+		components = append(components, component)
+	}
+	return components
+}
+
+func shouldDownload(components []string, component string) bool {
+	if len(components) == 0 {
+		return true
+	}
+	for _, v := range components {
+		if v == component {
+			return true
+		}
+	}
+	return false
+}
+
+func downloadDataFiles(goos string, components []string, destDir string) ([]string, error) {
 	downloadedFiles := []string{}
 	downloads := dataFileUrls[goos]
-	for _, dl := range downloads {
+
+	for componentName, dl := range downloads {
+		if !shouldDownload(components, componentName) {
+			continue
+		}
 		filename, err := download.Download(dl.url, destDir, dl.permissions, nil)
 		if err != nil {
 			return nil, err
 		}
 		downloadedFiles = append(downloadedFiles, filename)
+	}
+
+	if len(components) != 0 && len(components) != len(downloadedFiles) {
+		logging.Warnf("invalid components requested, supported components are: %s", strings.Join(getAllComponentNames(goos), ", "))
 	}
 
 	return downloadedFiles, nil

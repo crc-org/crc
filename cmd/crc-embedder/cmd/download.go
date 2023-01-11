@@ -1,13 +1,16 @@
 package cmd
 
 import (
+	"fmt"
 	"runtime"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	downloadCmd.Flags().StringVar(&goos, "goos", runtime.GOOS, "Target platform (darwin, linux or windows)")
+	downloadCmd.Flags().StringSliceVar(&components, "components", []string{}, fmt.Sprintf("List of component(s) to download (%s)", strings.Join(getAllComponentNames(goos), ", ")))
 	rootCmd.AddCommand(downloadCmd)
 }
 
@@ -21,6 +24,6 @@ var downloadCmd = &cobra.Command{
 }
 
 func runDownload(args []string) error {
-	_, err := downloadDataFiles(goos, args[0])
+	_, err := downloadDataFiles(goos, components, args[0])
 	return err
 }
