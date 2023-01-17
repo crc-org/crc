@@ -1,4 +1,4 @@
-= CRC - OpenShift 4 on your Laptop
+= CRC - Runs Containers
 :icons:
 :toc: macro
 :toc-title:
@@ -15,7 +15,7 @@ image:https://github.com/crc-org/crc/actions/workflows/make-check-win.yml/badge.
 [[intro-to-crc]]
 == Introduction
 
-This project is focused on bringing a minimal http://github.com/openshift/origin[OpenShift 4.x] cluster to your local laptop or desktop computer.
+`crc` is a tool to run containers. It manages a local https://github.com/openshift/origin[OpenShift 4.x] cluster, https://github.com/openshift/okd[OKD] cluster or a https://github.com/containers/podman[Podman] VM optimized for testing and development purposes.
 
 If you are looking for a solution for running OpenShift 3.x, you will need tools such as `oc cluster up`, http://github.com/minishift/minishift[Minishift] or https://developers.redhat.com/products/cdk/overview/[CDK].
 
@@ -28,7 +28,7 @@ With your approval, CRC collects pseudonymized usage data and sends it to Red Ha
 
 === Manually configuring usage data collection
 
-You can manually change your preference about usage data collection by running `crc config set consent-telemetry <yes/no>` before the next `crc start`. 
+You can manually change your preference about usage data collection by running `crc config set consent-telemetry <yes/no>` before the next `crc start`.
 
 
 [[documentation]]
