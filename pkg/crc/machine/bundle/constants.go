@@ -8,23 +8,23 @@ import (
 var bundleLocations = map[string]bundlesDownloadInfo{
 	"amd64": {
 		"darwin": {
-			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.11.18/crc_vfkit_4.11.18_amd64.crcbundle",
-				"dd5e570bd8eac02ef3ff41e38a477fc26e4f86cfa74256f81f5c401ac131193c"),
+			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.12.0/crc_vfkit_4.12.0_amd64.crcbundle",
+				"d19c80e53f5c593908a09eb9b3f43ebd908db60ca2e54a01d87a8b09c208557f"),
 		},
 
 		"linux": {
-			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.11.18/crc_libvirt_4.11.18_amd64.crcbundle",
-				"4e0380ad83dfd2c32f8675f79643f2f23aa726b4fad3825d5618ce1f0ed2f6d9"),
+			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.12.0/crc_libvirt_4.12.0_amd64.crcbundle",
+				"cbc75023e63fb33ce4a571ba2047c813acc04f68d6e51879e6a3b238913f54bb"),
 		},
 		"windows": {
-			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.11.18/crc_hyperv_4.11.18_amd64.crcbundle",
-				"e2ee24a2128ee8054561aedebb825650369534f9ad962d066dd23a5654f0089b"),
+			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.12.0/crc_hyperv_4.12.0_amd64.crcbundle",
+				"a780aed82eea3a023b67247598f57ecf16c3d6fd80375cc3e2f1b564d2b9bc71"),
 		},
 	},
 	"arm64": {
 		"darwin": {
-			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.11.18/crc_vfkit_4.11.18_arm64.crcbundle",
-				"5a3564d28af6aeeacae7c8a2a08441206f976a287acef317961bcea9d390af1c"),
+			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.12.0/crc_vfkit_4.12.0_arm64.crcbundle",
+				"59ec291480daf9e0a92978473b573f06fbb38ff5e1839ee7029aa77d2abea93a"),
 		},
 	},
 }
