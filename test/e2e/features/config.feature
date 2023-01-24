@@ -96,9 +96,9 @@ Feature: Test configuration settings
 
         @windows
         Examples:
-            | property                        | value1 | value2 |
-            | skip-check-bundle-extracted     | true   | false  |
-            | skip-check-user-in-hyperv-group | true   | false  |
+            | property                                        | value1 | value2 |
+            | skip-check-bundle-extracted                     | true   | false  |
+            | check-user-in-crc-users-and-hyperv-admins-group | true   | false  |
 
     #| skip-check-hyperv-installed     | true   | false  |
     #| skip-check-hyperv-switch        | true   | false  |
