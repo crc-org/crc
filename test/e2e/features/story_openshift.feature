@@ -9,9 +9,6 @@ Feature: 4 Openshift stories
 
 	@darwin @linux @windows @startstop @testdata @story_health
 	Scenario: Overall cluster health
-		#Given ensuring CRC cluster is running succeeds
-		#And ensuring user is logged in succeeds
-		Given checking that CRC is running
 		Then executing "oc create namespace testproj" succeeds
 		And executing "oc project testproj" succeeds
 		And executing "oc apply -f httpd-example.yaml" succeeds
