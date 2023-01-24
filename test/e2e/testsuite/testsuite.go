@@ -646,12 +646,28 @@ func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, ex
 }
 func EnsureCRCIsRunningSucceedsOrFails(expected string) error {
 
-	err := crcCmd.CheckCRCStatus("running")
-	if err == nil {
-		return err // exit if cluster running already
+	err := crcCmd.WaitForClusterInState("running")
+
+	// (1) If cluster is NOT expected to be Running and it is NOT running
+	if expected == "fails" && err != nil {
+		return nil
 	}
 
-	// if cluster NOT running, start it with 12000 memory
+	// (2) If cluster is NOT expected to be Running but it IS running, stop it
+	if expected == "fails" && err == nil {
+		miniErr := util.ExecuteCommandSucceedsOrFails("crc stop", "succeeds")
+		if miniErr != nil {
+			return err
+		}
+		return nil
+	}
+
+	// (3) If cluster IS expected to be Running and it IS
+	if expected == "succeeds" && err == nil {
+		return nil
+	}
+
+	// (4) If cluster IS expected to be Running but is NOT, start it with 12000 memory
 	err = SetConfigPropertyToValueSucceedsOrFails("memory", "12000", expected)
 	if err != nil {
 		return err
@@ -667,8 +683,20 @@ func EnsureCRCIsRunningSucceedsOrFails(expected string) error {
 	} else {
 		err = StartCRCWithDefaultBundleSucceedsOrFails(expected)
 	}
+	if err != nil {
+		return err
+	}
 
-	return err
+	// We're not testing if the cluster comes up fast enough, just need it Running
+	err = crcCmd.WaitForClusterInState("running")
+	if err != nil {
+		err = crcCmd.WaitForClusterInState("running")
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func EnsureUserIsLoggedIntoClusterSucceedsOrFails(expected string) error {
