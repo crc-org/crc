@@ -235,6 +235,18 @@ func InitializeScenario(s *godog.ScenarioContext) {
 					fmt.Println(err)
 					os.Exit(1)
 				}
+
+				err = crcCmd.UnsetConfigPropertySucceedsOrFails("enable-cluster-monitoring", "succeeds") // unsetting property that is not set gives 0 exitcode, so this works
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				err = crcCmd.UnsetConfigPropertySucceedsOrFails("memory", "succeeds") // unsetting property that is not set gives 0 exitcode, so this works
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
 			}
 
 		}
