@@ -1,0 +1,17 @@
+name: Publish release on github
+on:
+  workflow_dispatch:
+jobs:
+  publish_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Prepare empty notable changes
+        run: touch notable_changes.txt
+      - name: Run gh-release.sh
+        run: NONINTERACTIVE=1 ./gh-release.sh
+        env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
