@@ -75,13 +75,13 @@ func Download(uri, destination string, mode os.FileMode, sha256sum []byte) (stri
 }
 
 type RemoteFile struct {
-	uri       string
+	URI       string
 	sha256sum string
 }
 
 func NewRemoteFile(uri, sha256sum string) *RemoteFile {
 	return &RemoteFile{
-		uri:       uri,
+		URI:       uri,
 		sha256sum: sha256sum,
 	}
 
@@ -92,7 +92,7 @@ func (r *RemoteFile) Download(bundlePath string, mode os.FileMode) (string, erro
 	if err != nil {
 		return "", err
 	}
-	return Download(r.uri, bundlePath, mode, sha256)
+	return Download(r.URI, bundlePath, mode, sha256)
 }
 
 func (r *RemoteFile) GetSha256Sum() string {
@@ -100,7 +100,7 @@ func (r *RemoteFile) GetSha256Sum() string {
 }
 
 func (r *RemoteFile) GetSourceFilename() (string, error) {
-	u, err := url.Parse(r.uri)
+	u, err := url.Parse(r.URI)
 	if err != nil {
 		return "", err
 	}
