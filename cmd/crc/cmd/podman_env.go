@@ -57,7 +57,12 @@ func runPodmanEnv() error {
 	} else {
 		fmt.Println(shell.GetEnvString(userShell, "DOCKER_HOST", "npipe:////./pipe/crc-podman"))
 	}
-	fmt.Println(shell.GenerateUsageHintWithComment(userShell, "crc podman-env"))
+	if root {
+		fmt.Println(shell.GenerateUsageHintWithComment(userShell, "crc podman-env --root"))
+	} else {
+		fmt.Println(shell.GenerateUsageHintWithComment(userShell, "crc podman-env"))
+	}
+
 	return nil
 }
 
