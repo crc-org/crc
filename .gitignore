@@ -1,8 +1,8 @@
-out/
-docs/build/
-release/
+/out/
+/docs/build/
+/release/
 /release-info.json
 *.crcbundle
-tmp-embed/
-RPMS/
-crc
+/tmp-embed/
+/RPMS/
+/crc
