@@ -212,6 +212,35 @@ func InitializeScenario(s *godog.ScenarioContext) {
 					os.Exit(1)
 				}
 			}
+
+			if tag.Name == "@proxy" {
+
+				// start container with squid proxy
+				err := util.ExecuteCommand("podman run --name squid -d -p 3128:3128 quay.io/crcont/squid")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				err = util.ExecuteCommand("crc config set http-proxy http://192.168.130.1:3128")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				err = util.ExecuteCommand("crc config set https-proxy http://192.168.130.1:3128")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				err = util.ExecuteCommand("crc config set no-proxy .testing")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+			}
 		}
 
 		return ctx, nil
@@ -236,12 +265,15 @@ func InitializeScenario(s *godog.ScenarioContext) {
 			}
 
 			if tag.Name == "@cleanup" {
+
+				// CRC instance cleanup
 				err := util.ExecuteCommand("crc cleanup")
 				if err != nil {
 					fmt.Println(err)
 					os.Exit(1)
 				}
 
+				// CRC config cleanup
 				err = crcCmd.UnsetConfigPropertySucceedsOrFails("enable-cluster-monitoring", "succeeds") // unsetting property that is not set gives 0 exitcode, so this works
 				if err != nil {
 					fmt.Println(err)
@@ -250,6 +282,61 @@ func InitializeScenario(s *godog.ScenarioContext) {
 
 				err = crcCmd.UnsetConfigPropertySucceedsOrFails("memory", "succeeds") // unsetting property that is not set gives 0 exitcode, so this works
 				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				err = crcCmd.UnsetConfigPropertySucceedsOrFails("preset", "succeeds") // unsetting property that is not set gives 0 exitcode, so this works
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+			}
+
+			if tag.Name == "@proxy" {
+
+				err := util.ExecuteCommand("podman stop squid")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				err = util.ExecuteCommand("podman rm squid")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				err = crcCmd.UnsetConfigPropertySucceedsOrFails("http-proxy", "succeeds") // unsetting property that is not set gives 0 exitcode, so this works
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				err = crcCmd.UnsetConfigPropertySucceedsOrFails("https-proxy", "succeeds") // unsetting property that is not set gives 0 exitcode, so this works
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				err = crcCmd.UnsetConfigPropertySucceedsOrFails("no-proxy", "succeeds") // unsetting property that is not set gives 0 exitcode, so this works
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				// crc oc-env sets these three quietly if http(s)-proxy is set in crc config
+				if err := os.Unsetenv("HTTP_PROXY"); err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				if err := os.Unsetenv("HTTPS_PROXY"); err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				if err := os.Unsetenv("NO_PROXY"); err != nil {
 					fmt.Println(err)
 					os.Exit(1)
 				}
@@ -340,8 +427,6 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		util.WriteToFile)
 	s.Step(`^removing (podman|openshift) bundle from cache succeeds$`,
 		RemoveBundleFromCache)
-	s.Step(`^(podman|openshift) bundle (is|is not) cached$`,
-		BundleIsCachedOrNot)
 
 	// File content checks
 	s.Step(`^content of file "([^"]*)" should contain "([^"]*)"$`,
@@ -549,36 +634,8 @@ func FileExistsInCRCHome(fileName string) error {
 	return err
 }
 
-func BundleIsCachedOrNot(presetName string, isOrNot string) error {
-
-	bundle := ""
-	if presetName == "podman" {
-		bundle = constants.GetDefaultBundle(preset.Podman)
-	} else {
-		bundle = constants.GetDefaultBundle(preset.OpenShift)
-	}
-
-	theFile := filepath.Join(CRCHome, "cache", bundle)
-
-	_, err := os.Stat(theFile)
-
-	if os.IsNotExist(err) && isOrNot == "is" {
-		return fmt.Errorf("file %s does not exists, error: %v ", theFile, err)
-	}
-
-	if err == nil && isOrNot == "is not" {
-		return fmt.Errorf("file %s exists when it should not exist", theFile)
-	}
-
-	return nil
-}
-
 func RemoveBundleFromCache(presetName string) error {
 
-<<<<<<< HEAD
-	var theFolder, theBundle string // locations to be removed
-=======
->>>>>>> f339a7c5 (Refactoring podman proxy feature addition)
 	var p preset.Preset
 
 	if presetName == "podman" {
