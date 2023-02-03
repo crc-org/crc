@@ -1,4 +1,6 @@
 /out/
+/test/e2e/out/
+/test/integration/out/
 /docs/build/
 /release/
 /release-info.json
