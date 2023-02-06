@@ -64,6 +64,8 @@ func detect() (string, error) {
 		switch {
 		case strings.Contains(strings.ToLower(shell), "powershell"):
 			return "powershell", nil
+		case strings.Contains(strings.ToLower(shell), "pwsh"):
+			return "powershell", nil
 		case strings.Contains(strings.ToLower(shell), "cmd"):
 			return "cmd", nil
 		default:
