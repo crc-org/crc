@@ -8,23 +8,23 @@ import (
 var bundleLocations = map[string]bundlesDownloadInfo{
 	"amd64": {
 		"darwin": {
-			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.12.0/crc_vfkit_4.12.0_amd64.crcbundle",
-				"d19c80e53f5c593908a09eb9b3f43ebd908db60ca2e54a01d87a8b09c208557f"),
+			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.12.1/crc_vfkit_4.12.1_amd64.crcbundle",
+				"b73f2740cfa13d5abbf131907dd7be8ad9a48c3c14b174b23b3970247c474a4d"),
 		},
 
 		"linux": {
-			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.12.0/crc_libvirt_4.12.0_amd64.crcbundle",
-				"cbc75023e63fb33ce4a571ba2047c813acc04f68d6e51879e6a3b238913f54bb"),
+			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.12.1/crc_libvirt_4.12.1_amd64.crcbundle",
+				"e4cdb4ba53590150a02db0c471264120481a84b84578252551264d451d4ca4f7"),
 		},
 		"windows": {
-			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.12.0/crc_hyperv_4.12.0_amd64.crcbundle",
-				"a780aed82eea3a023b67247598f57ecf16c3d6fd80375cc3e2f1b564d2b9bc71"),
+			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.12.1/crc_hyperv_4.12.1_amd64.crcbundle",
+				"c5e53fd81f1ad7b280d80fdca1b8ccba9048faeec1b97115fee64f6913fc01fc"),
 		},
 	},
 	"arm64": {
 		"darwin": {
-			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.12.0/crc_vfkit_4.12.0_arm64.crcbundle",
-				"59ec291480daf9e0a92978473b573f06fbb38ff5e1839ee7029aa77d2abea93a"),
+			preset.OpenShift: download.NewRemoteFile("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/4.12.1/crc_vfkit_4.12.1_arm64.crcbundle",
+				"594bb86484b92325566b2ac3fd05b5c79b24e24b18c74d4e4e4498385359e6b9"),
 		},
 	},
 }
