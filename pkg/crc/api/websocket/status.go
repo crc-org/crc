@@ -11,6 +11,8 @@ import (
 
 type genData func() (interface{}, error)
 
+// A data generator for a websocket endpoint. It will fetch data at regular intervals, and
+// send it to all clients connected to the endpoint.
 type TickListener struct {
 	done       chan bool
 	generator  genData

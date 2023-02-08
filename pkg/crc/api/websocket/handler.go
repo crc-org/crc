@@ -4,6 +4,8 @@ import (
 	"io"
 )
 
+// An EndpointHandler tells a set of listeners when they should be generating
+// data for sending to clients.
 type EndpointHandler struct {
 	listeners  []ConnectionListener
 	dataSender io.Writer
