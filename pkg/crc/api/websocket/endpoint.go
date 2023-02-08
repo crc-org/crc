@@ -5,6 +5,9 @@ import (
 	"sync"
 )
 
+// websocket endpoint such as "/status". It has a number of clients connected
+// to it, and works together with an EndpointHandler to listen for the data to
+// send to its clients.
 type Endpoint interface {
 	addClient(client *wsClient)
 	deleteClient(client *wsClient)
