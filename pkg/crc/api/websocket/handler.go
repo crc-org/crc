@@ -1,23 +1,25 @@
 package websocket
 
-type EndpointHandler struct {
-	listeners []ConnectionListener
-	sendData  SendData
-}
+import (
+	"io"
+)
 
-type SendData func([]byte)
+type EndpointHandler struct {
+	listeners  []ConnectionListener
+	dataSender io.Writer
+}
 
 type ConnectionListener interface {
 	// called when first client connected
-	start(sendData SendData)
+	start(dataSender io.Writer)
 	// called when all clients close connections
 	stop()
 }
 
-func NewEndpointHandler(data SendData) *EndpointHandler {
+func NewEndpointHandler(dataSender io.Writer) *EndpointHandler {
 	handler := &EndpointHandler{
-		listeners: make([]ConnectionListener, 0),
-		sendData:  data,
+		listeners:  make([]ConnectionListener, 0),
+		dataSender: dataSender,
 	}
 
 	return handler
@@ -25,7 +27,7 @@ func NewEndpointHandler(data SendData) *EndpointHandler {
 
 func (h *EndpointHandler) hasClient() {
 	for _, l := range h.listeners {
-		l.start(h.sendData)
+		l.start(h.dataSender)
 	}
 }
 

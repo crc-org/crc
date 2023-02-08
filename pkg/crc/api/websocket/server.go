@@ -121,7 +121,7 @@ func writeTimeout(ctx goContext.Context, timeout time.Duration, c *websocket.Con
 
 func createStatusEndpoint(machine machine.Client) Endpoint {
 	statusEndpoint := NewEndpoint()
-	statusEndpointHandler := NewEndpointHandler(statusEndpoint.Write)
+	statusEndpointHandler := NewEndpointHandler(statusEndpoint)
 	statusEndpoint.setHandler(statusEndpointHandler)
 	statusEndpointHandler.addListener(NewStatusListener(machine))
 	return statusEndpoint
