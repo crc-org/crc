@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"io"
 	"sync"
 )
 
@@ -8,7 +9,7 @@ type Endpoint interface {
 	addClient(client *wsClient)
 	deleteClient(client *wsClient)
 	setHandler(handler *EndpointHandler)
-	Write([]byte)
+	io.Writer
 }
 
 type endpoint struct {
@@ -46,7 +47,7 @@ func (e *endpoint) deleteClient(client *wsClient) {
 }
 
 // send data bytes to clients
-func (e *endpoint) Write(data []byte) {
+func (e *endpoint) Write(data []byte) (int, error) {
 	e.clientsMutex.Lock()
 	defer e.clientsMutex.Unlock()
 
@@ -58,6 +59,8 @@ func (e *endpoint) Write(data []byte) {
 			go client.closeSlow()
 		}
 	}
+
+	return len(data), nil
 }
 
 func (e *endpoint) setHandler(handler *EndpointHandler) {

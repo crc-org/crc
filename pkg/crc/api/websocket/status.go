@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
+	"io"
 	"time"
 
 	"github.com/crc-org/crc/pkg/crc/logging"
@@ -20,7 +21,7 @@ func NewStatusListener(machine machine.Client) ConnectionListener {
 	}
 }
 
-func (s StatusConnectionListener) start(sendData SendData) {
+func (s StatusConnectionListener) start(dataSender io.Writer) {
 
 	ticker := time.NewTicker(2000 * time.Millisecond)
 	go func() {
@@ -41,7 +42,10 @@ func (s StatusConnectionListener) start(sendData SendData) {
 					logging.Errorf("unexpected error during status object to JSON conversion: %v", err)
 					continue
 				}
-				sendData(bytes)
+				_, err = dataSender.Write(bytes)
+				if err != nil {
+					logging.Errorf("unexpected error during writing data to WebSocket: %v", err)
+				}
 			}
 		}
 	}()
