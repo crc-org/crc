@@ -6,24 +6,35 @@ import (
 	"time"
 
 	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/machine"
+	crcMachine "github.com/crc-org/crc/pkg/crc/machine"
 )
 
-type StatusConnectionListener struct {
-	machine machine.Client
-	done    chan bool
+type genData func() (interface{}, error)
+
+type TickListener struct {
+	done       chan bool
+	generator  genData
+	tickPeriod time.Duration
 }
 
-func NewStatusListener(machine machine.Client) ConnectionListener {
-	return &StatusConnectionListener{
-		machine: machine,
-		done:    make(chan bool),
+func NewStatusListener(machine crcMachine.Client) ConnectionListener {
+	getStatus := func() (interface{}, error) {
+		return machine.GetClusterLoad()
+	}
+	return NewTickListener(getStatus)
+}
+
+func NewTickListener(generator genData) ConnectionListener {
+	return &TickListener{
+		done:       make(chan bool),
+		generator:  generator,
+		tickPeriod: 2000 * time.Millisecond,
 	}
 }
 
-func (s StatusConnectionListener) start(dataSender io.Writer) {
+func (s *TickListener) start(dataSender io.Writer) {
 
-	ticker := time.NewTicker(2000 * time.Millisecond)
+	ticker := time.NewTicker(s.tickPeriod)
 	go func() {
 		for {
 			select {
@@ -32,12 +43,13 @@ func (s StatusConnectionListener) start(dataSender io.Writer) {
 				logging.Debug("stop fetching machine info")
 				return
 			case <-ticker.C:
-				status, err := s.machine.GetClusterLoad()
+				data, err := s.generator()
 				if err != nil {
 					logging.Errorf("unexpected error during getting machine status: %v", err)
+					continue
 				}
 
-				bytes, marshallError := json.Marshal(status)
+				bytes, marshallError := json.Marshal(data)
 				if marshallError != nil {
 					logging.Errorf("unexpected error during status object to JSON conversion: %v", err)
 					continue
@@ -52,6 +64,6 @@ func (s StatusConnectionListener) start(dataSender io.Writer) {
 
 }
 
-func (s StatusConnectionListener) stop() {
+func (s *TickListener) stop() {
 	s.done <- true
 }
