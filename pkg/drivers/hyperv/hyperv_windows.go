@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"strconv"
+	"strings"
 	"time"
 
 	log "github.com/crc-org/crc/pkg/crc/logging"
@@ -71,9 +73,7 @@ func (d *Driver) UpdateConfigRaw(rawConfig []byte) error {
 		}
 	}
 	if newDriver.DiskCapacity != d.DiskCapacity {
-		log.Debugf("Resizing disk from %d bytes to %d bytes", d.DiskCapacity, newDriver.DiskCapacity)
-		err := cmd("Hyper-V\\Resize-VHD", "-Path", quote(d.getDiskPath()), "-SizeBytes", fmt.Sprintf("%d", newDriver.DiskCapacity))
-		if err != nil {
+		if err := d.resizeDisk(int64(newDriver.DiskCapacity)); err != nil {
 			log.Warnf("Failed to set disk size to %d", newDriver.DiskCapacity)
 			return err
 		}
@@ -145,6 +145,32 @@ func (d *Driver) getDiskPath() string {
 	return d.ResolveStorePath(fmt.Sprintf("%s.%s", d.MachineName, d.ImageFormat))
 }
 
+func (d *Driver) resizeDisk(newSize int64) error {
+	diskPath := d.getDiskPath()
+	out, err := cmdOut(fmt.Sprintf("@(Get-VHD -Path %s).Size", quote(diskPath)))
+	if err != nil {
+		return fmt.Errorf("unable to get current size of crc.vhdx: %w", err)
+	}
+	currentSize, err := strconv.ParseInt(strings.TrimSpace(out), 10, 64)
+	if err != nil {
+		return fmt.Errorf("unable to convert disk size to int: %w", err)
+	}
+	if newSize == currentSize {
+		log.Debugf("%s is already %d bytes", diskPath, newSize)
+		return nil
+	}
+	if newSize < currentSize {
+		return fmt.Errorf("current disk image capacity is bigger than the requested size (%d > %d)", currentSize, newSize)
+	}
+
+	log.Debugf("Resizing disk from %d bytes to %d bytes", currentSize, newSize)
+	return cmd("Hyper-V\\Resize-VHD",
+		"-Path",
+		quote(diskPath),
+		"-SizeBytes",
+		fmt.Sprintf("%d", newSize))
+}
+
 func (d *Driver) Create() error {
 	if err := crcos.CopyFile(d.ImageSourcePath, d.getDiskPath()); err != nil {
 		return err
@@ -210,9 +236,14 @@ func (d *Driver) Create() error {
 		return err
 	}
 
-	return cmd("Hyper-V\\Add-VMHardDiskDrive",
+	if err := cmd("Hyper-V\\Add-VMHardDiskDrive",
 		"-VMName", d.MachineName,
-		"-Path", quote(d.getDiskPath()))
+		"-Path", quote(d.getDiskPath())); err != nil {
+		return err
+	}
+
+	return d.resizeDisk(int64(d.DiskCapacity))
+
 }
 
 func (d *Driver) chooseVirtualSwitch() (string, error) {
