@@ -11,7 +11,7 @@
          <Property Id="WixUI_Mode" Value="InstallDir" />
          <Property Id="ARPNOMODIFY" Value="1" />
          <Property Id="ARPNOREPAIR" Value="1" />
-        
+
          <DialogRef Id="BrowseDlg" />
          <DialogRef Id="DiskCostDlg" />
          <DialogRef Id="ErrorDlg" />
@@ -22,6 +22,7 @@
          <DialogRef Id="ProgressDlg" />
          <DialogRef Id="ResumeDlg" />
          <DialogRef Id="UserExit" />
+         <DialogRef Id="FeaturesDlg" />
 
          <!--   Make sure to include custom dialogs in the installer database via a DialogRef command,
                especially if they are not included explicitly in the publish chain below -->
@@ -57,10 +58,13 @@
          <Publish Dialog="InstallDirDlg" Control="Next" Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
          <Publish Dialog="InstallDirDlg" Control="Next" Event="DoAction" Value="WixUIValidatePath" Order="2">NOT WIXUI_DONTVALIDATEPATH</Publish>
          <Publish Dialog="InstallDirDlg" Control="Next" Event="SpawnDialog" Value="InvalidDirDlg" Order="3"><![CDATA[NOT WIXUI_DONTVALIDATEPATH AND WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
-         <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="4">WIXUI_DONTVALIDATEPATH OR WIXUI_INSTALLDIR_VALID="1"</Publish>
+         <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="FeaturesDlg" Order="4">WIXUI_DONTVALIDATEPATH OR WIXUI_INSTALLDIR_VALID="1"</Publish>
 
          <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Property="_BrowseProperty" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
          <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Event="SpawnDialog" Value="BrowseDlg" Order="2">1</Publish>
+
+         <Publish Dialog="FeaturesDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">Installed</Publish>
+         <Publish Dialog="FeaturesDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg">NOT Installed</Publish>
 
          <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg">NOT Installed</Publish>
          <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg">Installed</Publish>
@@ -75,7 +79,7 @@
       <UIRef Id="WixUI_Common" />
 
       <CustomAction Id="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT" Property="WIXUI_EXITDIALOGOPTIONALTEXT" Value="To finish installation of  [ProductName] please restart your computer."/>
-      <CustomAction Id="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT_NOREBOOT" Property="WIXUI_EXITDIALOGOPTIONALTEXT" Value="Suceesfully installed [ProductName]. You can now start [ProductName] from the Start menu."/>
+      <CustomAction Id="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT_NOREBOOT" Property="WIXUI_EXITDIALOGOPTIONALTEXT" Value="Suceesfully installed [ProductName]."/>
       <InstallUISequence>
          <Custom Action="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT" After="FindRelatedProducts"><![CDATA[NOT WIX_UPGRADE_DETECTED]]></Custom>
          <Custom Action="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT_NOREBOOT" After="FindRelatedProducts"><![CDATA[WIX_UPGRADE_DETECTED]]></Custom>
