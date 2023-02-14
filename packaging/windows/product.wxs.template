@@ -140,14 +140,16 @@
             <Custom Action="RemoveSMBShare" After='RemoveCrcDaemonTask'>Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
             <ScheduleReboot After="InstallFinalize"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</ScheduleReboot>
         </InstallExecuteSequence>
-        <Feature Id="DefaultFeature" Level="1">
+        <Feature Id="DefaultFeature" Title="Install core features" Absent="disallow" Level="1">
             <ComponentRef Id="CrcExe" />
             <ComponentRef Id="AdminHelper" />
             <ComponentRef Id="AddToPath"/>
-            <ComponentRef Id="StartMenuEntry" />
             <ComponentRef Id="AddUserToCrcUsers" />
             <ComponentRef Id="VsockRegistryEntry" />
+        </Feature>
+        <Feature Id="TrayFeature" Title="Install system tray" Absent="allow" Level="2">
             <ComponentGroupRef Id="CrcTrayFiles" />
+            <ComponentRef Id="StartMenuEntry" />
         </Feature>
         <UI>
             <UIRef Id="WixUI_ErrorProgressText"/>
