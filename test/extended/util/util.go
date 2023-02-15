@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/user"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -13,6 +12,10 @@ import (
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/download"
+)
+
+var (
+	CRCHome string
 )
 
 func CopyFilesToTestDir() error {
@@ -127,23 +130,23 @@ func DownloadBundle(bundleLocation string, bundleDestination string, bundleName 
 	return filename, nil
 }
 
-func RemoveCRCHome(crcHome string) error {
-	keepFile := filepath.Join(crcHome, ".keep")
+func RemoveCRCHome() error {
+	keepFile := filepath.Join(CRCHome, ".keep")
 	_, err := os.Stat(keepFile)
 	if err != nil { // cannot get keepFile's status
-		err = os.RemoveAll(crcHome)
+		err = os.RemoveAll(CRCHome)
 
 		if err != nil {
-			fmt.Printf("Problem deleting CRC home folder %s.\n", crcHome)
+			fmt.Printf("Problem deleting CRC home folder %s.\n", CRCHome)
 			return err
 		}
 
-		fmt.Printf("Deleted CRC home folder %s.\n", crcHome)
+		fmt.Printf("Deleted CRC home folder %s.\n", CRCHome)
 		return nil
 
 	}
 	// keepFile exists
-	return fmt.Errorf("folder %s not removed as per request: %s present", crcHome, keepFile)
+	return fmt.Errorf("folder %s not removed as per request: %s present", CRCHome, keepFile)
 }
 
 // MatchWithRetry will execute match function with expression as arg
@@ -180,11 +183,7 @@ func MatchRepetitionsWithRetry(expression string, match func(string) error, matc
 
 // GetBundlePath returns a path to the cached bundle, depending on the preset
 func GetBundlePath(preset preset.Preset) string {
-
-	usr, _ := user.Current()
-	crcHome := filepath.Join(usr.HomeDir, ".crc")
-
 	bundle := constants.GetDefaultBundle(preset)
-	return filepath.Join(crcHome, "cache", bundle)
+	return filepath.Join(CRCHome, "cache", bundle)
 
 }

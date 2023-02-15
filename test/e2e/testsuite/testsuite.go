@@ -22,7 +22,6 @@ import (
 )
 
 var (
-	CRCHome            string
 	CRCExecutable      string
 	userProvidedBundle bool
 	bundleName         string
@@ -61,7 +60,7 @@ func InitializeTestSuite(tctx *godog.TestSuiteContext) {
 		}
 
 		usr, _ := user.Current()
-		CRCHome = filepath.Join(usr.HomeDir, ".crc")
+		util.CRCHome = filepath.Join(usr.HomeDir, ".crc")
 
 		// init CRCExecutable if no location provided by user
 		if CRCExecutable == "" {
@@ -108,7 +107,7 @@ func InitializeTestSuite(tctx *godog.TestSuiteContext) {
 
 		if cleanupHome {
 			// remove $HOME/.crc
-			err = util.RemoveCRCHome(CRCHome)
+			err = util.RemoveCRCHome()
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -452,7 +451,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 
 	// CRC related steps
 	s.Step(`^removing CRC home directory succeeds$`,
-		RemoveCRCHome)
+		util.RemoveCRCHome)
 	s.Step(`^starting CRC with default bundle (succeeds|fails)$`,
 		StartCRCWithDefaultBundleSucceedsOrFails)
 	s.Step(`^starting CRC with custom bundle (succeeds|fails)$`,
@@ -538,10 +537,6 @@ func WaitForClusterInState(state string) error {
 	return crcCmd.WaitForClusterInState(state)
 }
 
-func RemoveCRCHome() error {
-	return util.RemoveCRCHome(CRCHome)
-}
-
 func CheckHTTPResponseWithRetry(retryCount int, retryWait string, address string, expectedStatusCode int) error {
 	var err error
 
@@ -610,7 +605,7 @@ func CheckCRCStatus(state string) error {
 
 func DeleteFileFromCRCHome(fileName string) error {
 
-	theFile := filepath.Join(CRCHome, fileName)
+	theFile := filepath.Join(util.CRCHome, fileName)
 
 	if _, err := os.Stat(theFile); os.IsNotExist(err) {
 		return nil
@@ -624,7 +619,7 @@ func DeleteFileFromCRCHome(fileName string) error {
 
 func FileExistsInCRCHome(fileName string) error {
 
-	theFile := filepath.Join(CRCHome, fileName)
+	theFile := filepath.Join(util.CRCHome, fileName)
 
 	_, err := os.Stat(theFile)
 	if os.IsNotExist(err) {
@@ -668,7 +663,7 @@ func ConfigFileInCRCHomeContainsKeyMatchingValue(format string, configFile strin
 	if expectedValue == "current bundle" {
 		expectedValue = fmt.Sprintf(".*%s", bundleName)
 	}
-	configPath := filepath.Join(CRCHome, configFile)
+	configPath := filepath.Join(util.CRCHome, configFile)
 
 	config, err := util.GetFileContent(configPath)
 	if err != nil {
@@ -694,7 +689,7 @@ func ConfigFileInCRCHomeContainsKeyMatchingValue(format string, configFile strin
 
 func ConfigFileInCRCHomeContainsKey(format string, configFile string, condition string, keyPath string) error {
 
-	configPath := filepath.Join(CRCHome, configFile)
+	configPath := filepath.Join(util.CRCHome, configFile)
 
 	config, err := util.GetFileContent(configPath)
 	if err != nil {
@@ -854,7 +849,7 @@ func EnsureUserIsLoggedIntoClusterSucceedsOrFails(expected string) error {
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
 	if value == "current bundle" {
 		if !userProvidedBundle {
-			value = filepath.Join(CRCHome, "cache", bundleName)
+			value = filepath.Join(util.CRCHome, "cache", bundleName)
 		} else {
 			value = bundleLocation
 		}
