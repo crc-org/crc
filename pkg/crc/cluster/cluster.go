@@ -391,18 +391,6 @@ func (p *PullSecretMemoizer) Value() (string, error) {
 	return val, err
 }
 
-func EnsurePullSecretPresentOnInstanceDisk(sshRunner *ssh.Runner, pullSecret PullSecretLoader) error {
-	if _, _, err := sshRunner.Run(fmt.Sprintf("test -e %s", vmPullSecretPath)); err == nil {
-		return nil
-	}
-	logging.Info("Adding user's pull secret to instance disk...")
-	content, err := pullSecret.Value()
-	if err != nil {
-		return err
-	}
-	return sshRunner.CopyDataPrivileged([]byte(content), vmPullSecretPath, 0600)
-}
-
 func WaitForPullSecretPresentOnInstanceDisk(ctx context.Context, sshRunner *ssh.Runner) error {
 	logging.Info("Waiting for user's pull secret part of instance disk...")
 	pullSecretPresentFunc := func() error {
