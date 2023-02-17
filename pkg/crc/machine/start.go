@@ -500,6 +500,10 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Error waiting for apiserver")
 	}
 
+	if err := ensureProxyIsConfiguredInOpenShift(ctx, ocConfig, sshRunner, proxyConfig); err != nil {
+		return nil, errors.Wrap(err, "Failed to update cluster proxy configuration")
+	}
+
 	if err := cluster.DeleteMCOLeaderLease(ctx, ocConfig); err != nil {
 		return nil, err
 	}
@@ -514,10 +518,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	if err := cluster.WaitForPullSecretPresentOnInstanceDisk(ctx, sshRunner); err != nil {
 		return nil, errors.Wrap(err, "Failed to update pull secret on the disk")
-	}
-
-	if err := ensureProxyIsConfiguredInOpenShift(ctx, ocConfig, sshRunner, proxyConfig); err != nil {
-		return nil, errors.Wrap(err, "Failed to update cluster proxy configuration")
 	}
 
 	if err := cluster.UpdateKubeAdminUserPassword(ctx, ocConfig, startConfig.KubeAdminPassword); err != nil {
