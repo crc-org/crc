@@ -237,14 +237,14 @@ func RemovePullSecretFromCluster(ctx context.Context, ocConfig oc.Config, sshRun
 }
 
 func waitForPullSecretRemovedFromInstanceDisk(ctx context.Context, sshRunner *ssh.Runner) error {
-	logging.Info("Waiting for user's pull secret removed from instance disk...")
+	logging.Info("Waiting until the user's pull secret is removed from the instance disk...")
 	pullSecretPresentFunc := func() error {
 		stdout, stderr, err := sshRunner.RunPrivate(fmt.Sprintf("sudo cat %s", vmPullSecretPath))
 		if err != nil {
 			return &errors.RetriableError{Err: fmt.Errorf("failed to read %s file: %v: %s", vmPullSecretPath, err, stderr)}
 		}
 		if err := validation.ImagePullSecret(stdout); err == nil {
-			return &errors.RetriableError{Err: fmt.Errorf("pull secret still part of instance disk")}
+			return &errors.RetriableError{Err: fmt.Errorf("pull secret is still present on the instance disk")}
 		}
 		return nil
 	}
@@ -417,7 +417,7 @@ func (p *PullSecretMemoizer) Value() (string, error) {
 }
 
 func WaitForPullSecretPresentOnInstanceDisk(ctx context.Context, sshRunner *ssh.Runner) error {
-	logging.Info("Waiting for user's pull secret part of instance disk...")
+	logging.Info("Waiting until the user's pull secret is written to the instance disk...")
 	pullSecretPresentFunc := func() error {
 		stdout, stderr, err := sshRunner.RunPrivate(fmt.Sprintf("sudo cat %s", vmPullSecretPath))
 		if err != nil {
