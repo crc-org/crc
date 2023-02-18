@@ -18,17 +18,28 @@ package win32
 
 import (
 	"errors"
+	"os"
 
 	"github.com/yusufpapurcu/wmi"
 )
 
-//nolint
+// nolint
 type Win32_ComputerSystem struct {
 	Partofdomain bool
 }
 
 // DomainJoined attempts to determine whether the machine is actively domain joined.
-func DomainJoined() (bool, error) {
+
+func DomainJoined() bool {
+	domainJoined, err := domainJoinedWmi()
+	if err != nil {
+		// simple additional domain check: a local User got the computername = domain
+		return os.Getenv("USERDOMAIN") != os.Getenv("COMPUTERNAME")
+	}
+	return domainJoined
+}
+
+func domainJoinedWmi() (bool, error) {
 	var c []Win32_ComputerSystem
 	q := wmi.CreateQuery(&c, "")
 

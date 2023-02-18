@@ -155,7 +155,7 @@ var userPartOfCrcUsersAndHypervAdminsGroupCheck = Check{
 var errReboot = errors.New("Please reboot your system and run 'crc setup' to complete the setup process")
 
 func username() string {
-	if ok, _ := win32.DomainJoined(); ok {
+	if ok := win32.DomainJoined(); ok {
 		return fmt.Sprintf(`%s\%s`, os.Getenv("USERDOMAIN"), os.Getenv("USERNAME"))
 	}
 	return os.Getenv("USERNAME")
