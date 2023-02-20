@@ -69,6 +69,8 @@ github.com/apparentlymart/go-cidr/cidr
 github.com/asaskevich/govalidator
 # github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 ## explicit
+# github.com/bytedance/sonic v1.8.1
+## explicit; go 1.15
 # github.com/cavaliergopher/grab/v3 v3.0.1
 ## explicit; go 1.14
 github.com/cavaliergopher/grab/v3
@@ -278,6 +280,8 @@ github.com/fsnotify/fsnotify
 # github.com/ghodss/yaml v1.0.0
 ## explicit
 github.com/ghodss/yaml
+# github.com/gin-gonic/gin v1.9.0
+## explicit; go 1.18
 # github.com/go-logr/logr v1.2.3
 ## explicit; go 1.16
 github.com/go-logr/logr
@@ -735,6 +739,8 @@ github.com/tklauser/numcpus
 github.com/u-root/uio/rand
 github.com/u-root/uio/ubinary
 github.com/u-root/uio/uio
+# github.com/ugorji/go/codec v1.2.10
+## explicit; go 1.11
 # github.com/ulikunitz/xz v0.5.11
 ## explicit; go 1.12
 github.com/ulikunitz/xz
@@ -775,6 +781,8 @@ go.mongodb.org/mongo-driver/x/bsonx/bsoncore
 # go.mozilla.org/pkcs7 v0.0.0-20210826202110-33d05740a352
 ## explicit; go 1.11
 go.mozilla.org/pkcs7
+# golang.org/x/arch v0.2.0
+## explicit; go 1.17
 # golang.org/x/crypto v0.6.0
 ## explicit; go 1.17
 golang.org/x/crypto/bcrypt
