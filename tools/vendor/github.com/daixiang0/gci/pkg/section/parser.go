@@ -25,10 +25,14 @@ func Parse(data []string) (SectionList, error) {
 			list = append(list, Standard{})
 		} else if s == "newline" {
 			list = append(list, NewLine{})
-		} else if strings.HasPrefix(s, "prefix(") && len(s) > 8 {
-			list = append(list, Custom{s[7 : len(s)-1]})
-		} else if strings.HasPrefix(s, "commentline(") && len(s) > 13 {
-			list = append(list, Custom{s[12 : len(s)-1]})
+		} else if strings.HasPrefix(s, "prefix(") && len(d) > 8 {
+			list = append(list, Custom{d[7 : len(d)-1]})
+		} else if strings.HasPrefix(s, "commentline(") && len(d) > 13 {
+			list = append(list, Custom{d[12 : len(d)-1]})
+		} else if s == "dot" {
+			list = append(list, Dot{})
+		} else if s == "blank" {
+			list = append(list, Blank{})
 		} else {
 			errString += fmt.Sprintf(" %s", s)
 		}
