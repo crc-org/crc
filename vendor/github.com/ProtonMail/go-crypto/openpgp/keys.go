@@ -648,16 +648,10 @@ func (e *Entity) serializePrivate(w io.Writer, config *packet.Config, reSign boo
 				return
 			}
 		}
-		for _, revocation := range ident.Revocations {
-			err := revocation.Serialize(w)
+		for _, sig := range ident.Signatures {
+			err = sig.Serialize(w)
 			if err != nil {
 				return err
-			}
-		}
-		if ident.SelfSignature != nil {
-			err = ident.SelfSignature.Serialize(w)
-			if err != nil {
-				return
 			}
 		}
 	}
@@ -757,18 +751,7 @@ func (e *Entity) SignIdentity(identity string, signer *Entity, config *packet.Co
 		return errors.InvalidArgumentError("given identity string not found in Entity")
 	}
 
-	sig := &packet.Signature{
-		Version:      certificationKey.PrivateKey.Version,
-		SigType:      packet.SigTypeGenericCert,
-		PubKeyAlgo:   certificationKey.PrivateKey.PubKeyAlgo,
-		Hash:         config.Hash(),
-		CreationTime: config.Now(),
-		IssuerKeyId:  &certificationKey.PrivateKey.KeyId,
-	}
-
-	if config.SigLifetime() != 0 {
-		sig.SigLifetimeSecs = &config.SigLifetimeSecs
-	}
+	sig := createSignaturePacket(certificationKey.PublicKey, packet.SigTypeGenericCert, config)
 
 	signingUserID := config.SigningUserId()
 	if signingUserID != "" {
@@ -789,16 +772,9 @@ func (e *Entity) SignIdentity(identity string, signer *Entity, config *packet.Co
 // specified reason code and text (RFC4880 section-5.2.3.23).
 // If config is nil, sensible defaults will be used.
 func (e *Entity) RevokeKey(reason packet.ReasonForRevocation, reasonText string, config *packet.Config) error {
-	revSig := &packet.Signature{
-		Version:              e.PrimaryKey.Version,
-		CreationTime:         config.Now(),
-		SigType:              packet.SigTypeKeyRevocation,
-		PubKeyAlgo:           e.PrimaryKey.PubKeyAlgo,
-		Hash:                 config.Hash(),
-		RevocationReason:     &reason,
-		RevocationReasonText: reasonText,
-		IssuerKeyId:          &e.PrimaryKey.KeyId,
-	}
+	revSig := createSignaturePacket(e.PrimaryKey, packet.SigTypeKeyRevocation, config)
+	revSig.RevocationReason = &reason
+	revSig.RevocationReasonText = reasonText
 
 	if err := revSig.RevokeKey(e.PrimaryKey, e.PrivateKey, config); err != nil {
 		return err
@@ -815,16 +791,9 @@ func (e *Entity) RevokeSubkey(sk *Subkey, reason packet.ReasonForRevocation, rea
 		return errors.InvalidArgumentError("given subkey is not associated with this key")
 	}
 
-	revSig := &packet.Signature{
-		Version:              e.PrimaryKey.Version,
-		CreationTime:         config.Now(),
-		SigType:              packet.SigTypeSubkeyRevocation,
-		PubKeyAlgo:           e.PrimaryKey.PubKeyAlgo,
-		Hash:                 config.Hash(),
-		RevocationReason:     &reason,
-		RevocationReasonText: reasonText,
-		IssuerKeyId:          &e.PrimaryKey.KeyId,
-	}
+	revSig := createSignaturePacket(e.PrimaryKey, packet.SigTypeSubkeyRevocation, config)
+	revSig.RevocationReason = &reason
+	revSig.RevocationReasonText = reasonText
 
 	if err := revSig.RevokeSubkey(sk.PublicKey, e.PrivateKey, config); err != nil {
 		return err

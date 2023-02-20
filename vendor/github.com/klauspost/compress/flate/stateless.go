@@ -59,9 +59,9 @@ var bitWriterPool = sync.Pool{
 	},
 }
 
-// StatelessDeflate allows to compress directly to a Writer without retaining state.
+// StatelessDeflate allows compressing directly to a Writer without retaining state.
 // When returning everything will be flushed.
-// Up to 8KB of an optional dictionary can be given which is presumed to presumed to precede the block.
+// Up to 8KB of an optional dictionary can be given which is presumed to precede the block.
 // Longer dictionaries will be truncated and will still produce valid output.
 // Sending nil dictionary is perfectly fine.
 func StatelessDeflate(out io.Writer, in []byte, eof bool, dict []byte) error {
@@ -86,11 +86,19 @@ func StatelessDeflate(out io.Writer, in []byte, eof bool, dict []byte) error {
 		dict = dict[len(dict)-maxStatelessDict:]
 	}
 
+	// For subsequent loops, keep shallow dict reference to avoid alloc+copy.
+	var inDict []byte
+
 	for len(in) > 0 {
 		todo := in
-		if len(todo) > maxStatelessBlock-len(dict) {
+		if len(inDict) > 0 {
+			if len(todo) > maxStatelessBlock-maxStatelessDict {
+				todo = todo[:maxStatelessBlock-maxStatelessDict]
+			}
+		} else if len(todo) > maxStatelessBlock-len(dict) {
 			todo = todo[:maxStatelessBlock-len(dict)]
 		}
+		inOrg := in
 		in = in[len(todo):]
 		uncompressed := todo
 		if len(dict) > 0 {
@@ -102,7 +110,11 @@ func StatelessDeflate(out io.Writer, in []byte, eof bool, dict []byte) error {
 			todo = combined
 		}
 		// Compress
-		statelessEnc(&dst, todo, int16(len(dict)))
+		if len(inDict) == 0 {
+			statelessEnc(&dst, todo, int16(len(dict)))
+		} else {
+			statelessEnc(&dst, inDict[:maxStatelessDict+len(todo)], maxStatelessDict)
+		}
 		isEof := eof && len(in) == 0
 
 		if dst.n == 0 {
@@ -119,7 +131,8 @@ func StatelessDeflate(out io.Writer, in []byte, eof bool, dict []byte) error {
 		}
 		if len(in) > 0 {
 			// Retain a dict if we have more
-			dict = todo[len(todo)-maxStatelessDict:]
+			inDict = inOrg[len(uncompressed)-maxStatelessDict:]
+			dict = nil
 			dst.Reset()
 		}
 		if bw.err != nil {
