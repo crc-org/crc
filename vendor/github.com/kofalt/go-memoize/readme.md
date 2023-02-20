@@ -4,9 +4,9 @@ There wasn't a decent [memoizer](https://wikipedia.org/wiki/Memoization) for Gol
 
 Dead-simple. Safe for concurrent use.
 
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/kofalt/go-memoize)](https://pkg.go.dev/github.com/kofalt/go-memoize)
-[![Report Card](https://goreportcard.com/badge/github.com/kofalt/go-memoize)](https://goreportcard.com/report/github.com/kofalt/go-memoize)
-[![Build status](https://github.com/kofalt/go-memoize/workflows/Go/badge.svg)](https://github.com/kofalt/go-memoize/actions)
+[![Reference](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](https://pkg.go.dev/github.com/kofalt/go-memoize)
+[![Linter](https://goreportcard.com/badge/github.com/kofalt/go-memoize?style=flat-square)](https://goreportcard.com/report/github.com/kofalt/go-memoize)
+[![Build status](https://github.com/kofalt/go-memoize/workflows/Build/badge.svg)](https://github.com/kofalt/go-memoize/actions)
 
 ## Project status
 
@@ -18,7 +18,7 @@ Go-memoize has been in production for a few years, and has yet to burn the house
 
 Cache expensive function calls in memory, with a configurable timeout and purge interval:
 
-```go
+```golang
 import (
 	"time"
 

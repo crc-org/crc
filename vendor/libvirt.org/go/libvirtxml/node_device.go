@@ -236,8 +236,8 @@ type NodeDeviceNetCapability struct {
 }
 
 type NodeDeviceSCSIVPortOpsCapability struct {
-	VPorts    int `xml:"vports,omitempty"`
-	MaxVPorts int `xml:"maxvports,omitempty"`
+	VPorts    int `xml:"vports"`
+	MaxVPorts int `xml:"max_vports"`
 }
 
 type NodeDeviceSCSIFCHostCapability struct {
@@ -331,10 +331,17 @@ type NodeDeviceMDevCapabilityAttrs struct {
 }
 
 type NodeDeviceCSSCapability struct {
-	CSSID        *uint                        `xml:"cssid"`
-	SSID         *uint                        `xml:"ssid"`
-	DevNo        *uint                        `xml:"devno"`
-	Capabilities []NodeDeviceCSSSubCapability `xml:"capability"`
+	CSSID          *uint                        `xml:"cssid"`
+	SSID           *uint                        `xml:"ssid"`
+	DevNo          *uint                        `xml:"devno"`
+	ChannelDevAddr *NodeDeviceCSSChannelDevAddr `xml:"channel_dev_addr"`
+	Capabilities   []NodeDeviceCSSSubCapability `xml:"capability"`
+}
+
+type NodeDeviceCSSChannelDevAddr struct {
+	CSSID *uint `xml:"cssid"`
+	SSID  *uint `xml:"ssid"`
+	DevNo *uint `xml:"devno"`
 }
 
 type NodeDeviceCSSSubCapability struct {
@@ -531,6 +538,12 @@ func (c *NodeDeviceCSSCapability) MarshalXML(e *xml.Encoder, start xml.StartElem
 		e.EncodeToken(xml.CharData(fmt.Sprintf("0x%04x", *c.DevNo)))
 		e.EncodeToken(devno.End())
 	}
+	if c.ChannelDevAddr != nil {
+		start := xml.StartElement{
+			Name: xml.Name{Local: "channel_dev_addr"},
+		}
+		e.EncodeElement(c.ChannelDevAddr, start)
+	}
 	if c.Capabilities != nil {
 		for _, subcap := range c.Capabilities {
 			start := xml.StartElement{
@@ -568,6 +581,91 @@ func (c *NodeDeviceCSSCapability) UnmarshalXML(d *xml.Decoder, start xml.StartEl
 				}
 				c.Capabilities = append(c.Capabilities, *subcap)
 				continue
+			} else if tok.Name.Local == "channel_dev_addr" {
+				chandev := &NodeDeviceCSSChannelDevAddr{}
+				err := d.DecodeElement(chandev, &tok)
+				if err != nil {
+					return err
+				}
+				c.ChannelDevAddr = chandev
+				continue
+			}
+
+			if tok.Name.Local != "cssid" &&
+				tok.Name.Local != "ssid" &&
+				tok.Name.Local != "devno" {
+				continue
+			}
+
+			chardata, ok := cdata.(xml.CharData)
+			if !ok {
+				return fmt.Errorf("Expected text for CSS '%s'", tok.Name.Local)
+			}
+
+			valstr := strings.TrimPrefix(string(chardata), "0x")
+			val, err := strconv.ParseUint(valstr, 16, 64)
+			if err != nil {
+				return err
+			}
+
+			vali := uint(val)
+			if tok.Name.Local == "cssid" {
+				c.CSSID = &vali
+			} else if tok.Name.Local == "ssid" {
+				c.SSID = &vali
+			} else if tok.Name.Local == "devno" {
+				c.DevNo = &vali
+			}
+		}
+	}
+	return nil
+}
+
+func (c *NodeDeviceCSSChannelDevAddr) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	e.EncodeToken(start)
+	if c.CSSID != nil {
+		cssid := xml.StartElement{
+			Name: xml.Name{Local: "cssid"},
+		}
+		e.EncodeToken(cssid)
+		e.EncodeToken(xml.CharData(fmt.Sprintf("0x%x", *c.CSSID)))
+		e.EncodeToken(cssid.End())
+	}
+	if c.SSID != nil {
+		ssid := xml.StartElement{
+			Name: xml.Name{Local: "ssid"},
+		}
+		e.EncodeToken(ssid)
+		e.EncodeToken(xml.CharData(fmt.Sprintf("0x%x", *c.SSID)))
+		e.EncodeToken(ssid.End())
+	}
+	if c.DevNo != nil {
+		devno := xml.StartElement{
+			Name: xml.Name{Local: "devno"},
+		}
+		e.EncodeToken(devno)
+		e.EncodeToken(xml.CharData(fmt.Sprintf("0x%04x", *c.DevNo)))
+		e.EncodeToken(devno.End())
+	}
+	e.EncodeToken(start.End())
+	return nil
+}
+
+func (c *NodeDeviceCSSChannelDevAddr) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	for {
+		tok, err := d.Token()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		switch tok := tok.(type) {
+		case xml.StartElement:
+			cdata, err := d.Token()
+			if err != nil {
+				return err
 			}
 
 			if tok.Name.Local != "cssid" &&

@@ -5,11 +5,19 @@ import (
 	"io"
 
 	"github.com/vbauerster/mpb/v7/decor"
-	"github.com/vbauerster/mpb/v7/internal"
 )
 
 // BarOption is a func option to alter default behavior of a bar.
 type BarOption func(*bState)
+
+func skipNil(decorators []decor.Decorator) (filtered []decor.Decorator) {
+	for _, d := range decorators {
+		if d != nil {
+			filtered = append(filtered, d)
+		}
+	}
+	return
+}
 
 func (s *bState) addDecorators(dest *[]decor.Decorator, decorators ...decor.Decorator) {
 	type mergeWrapper interface {
@@ -26,14 +34,14 @@ func (s *bState) addDecorators(dest *[]decor.Decorator, decorators ...decor.Deco
 // AppendDecorators let you inject decorators to the bar's right side.
 func AppendDecorators(decorators ...decor.Decorator) BarOption {
 	return func(s *bState) {
-		s.addDecorators(&s.aDecorators, decorators...)
+		s.addDecorators(&s.aDecorators, skipNil(decorators)...)
 	}
 }
 
 // PrependDecorators let you inject decorators to the bar's left side.
 func PrependDecorators(decorators ...decor.Decorator) BarOption {
 	return func(s *bState) {
-		s.addDecorators(&s.pDecorators, decorators...)
+		s.addDecorators(&s.pDecorators, skipNil(decorators)...)
 	}
 }
 
@@ -51,14 +59,18 @@ func BarWidth(width int) BarOption {
 	}
 }
 
-// BarQueueAfter queues this (being constructed) bar to relplace
-// runningBar after it has been completed.
-func BarQueueAfter(runningBar *Bar) BarOption {
-	if runningBar == nil {
+// BarQueueAfter puts this (being constructed) bar into the queue.
+// BarPriority will be inherited from the argument bar.
+// When argument bar completes or aborts queued bar replaces its place.
+// If sync is true queued bar is suspended until argument bar completes
+// or aborts.
+func BarQueueAfter(bar *Bar, sync bool) BarOption {
+	if bar == nil {
 		return nil
 	}
 	return func(s *bState) {
-		s.runningBar = runningBar
+		s.wait.bar = bar
+		s.wait.sync = sync
 	}
 }
 
@@ -81,7 +93,10 @@ func BarFillerOnComplete(message string) BarOption {
 	return BarFillerMiddleware(func(base BarFiller) BarFiller {
 		return BarFillerFunc(func(w io.Writer, reqWidth int, st decor.Statistics) {
 			if st.Completed {
-				io.WriteString(w, message)
+				_, err := io.WriteString(w, message)
+				if err != nil {
+					panic(err)
+				}
 			} else {
 				base.Fill(w, reqWidth, st)
 			}
@@ -97,29 +112,61 @@ func BarFillerMiddleware(middle func(BarFiller) BarFiller) BarOption {
 }
 
 // BarPriority sets bar's priority. Zero is highest priority, i.e. bar
-// will be on top. If `BarReplaceOnComplete` option is supplied, this
-// option is ignored.
+// will be on top. This option isn't effective with `BarQueueAfter` option.
 func BarPriority(priority int) BarOption {
 	return func(s *bState) {
 		s.priority = priority
 	}
 }
 
-// BarExtender provides a way to extend bar to the next new line.
+// BarExtender extends bar with arbitrary lines. Provided BarFiller will be
+// called at each render/flush cycle. Any lines written to the underlying
+// io.Writer will be printed after the bar itself.
 func BarExtender(filler BarFiller) BarOption {
+	return barExtender(filler, false)
+}
+
+// BarExtenderRev extends bar with arbitrary lines in reverse order. Provided
+// BarFiller will be called at each render/flush cycle. Any lines written
+// to the underlying io.Writer will be printed before the bar itself.
+func BarExtenderRev(filler BarFiller) BarOption {
+	return barExtender(filler, true)
+}
+
+func barExtender(filler BarFiller, rev bool) BarOption {
 	if filler == nil {
 		return nil
 	}
 	return func(s *bState) {
-		s.extender = makeExtenderFunc(filler)
+		s.extender = makeExtenderFunc(filler, rev)
 	}
 }
 
-func makeExtenderFunc(filler BarFiller) extenderFunc {
+func makeExtenderFunc(filler BarFiller, rev bool) extenderFunc {
 	buf := new(bytes.Buffer)
-	return func(r io.Reader, reqWidth int, st decor.Statistics) (io.Reader, int) {
-		filler.Fill(buf, reqWidth, st)
-		return io.MultiReader(r, buf), bytes.Count(buf.Bytes(), []byte("\n"))
+	base := func(rows []io.Reader, width int, stat decor.Statistics) []io.Reader {
+		buf.Reset()
+		filler.Fill(buf, width, stat)
+		for {
+			b, err := buf.ReadBytes('\n')
+			if err != nil {
+				break
+			}
+			rows = append(rows, bytes.NewReader(b))
+		}
+		return rows
+	}
+
+	if !rev {
+		return base
+	} else {
+		return func(rows []io.Reader, width int, stat decor.Statistics) []io.Reader {
+			rows = base(rows, width, stat)
+			for left, right := 0, len(rows)-1; left < right; left, right = left+1, right-1 {
+				rows[left], rows[right] = rows[right], rows[left]
+			}
+			return rows
+		}
 	}
 }
 
@@ -138,9 +185,12 @@ func BarNoPop() BarOption {
 	}
 }
 
-// BarOptional will invoke provided option only when pick is true.
-func BarOptional(option BarOption, pick bool) BarOption {
-	return BarOptOn(option, internal.Predicate(pick))
+// BarOptional will invoke provided option only when cond is true.
+func BarOptional(option BarOption, cond bool) BarOption {
+	if cond {
+		return option
+	}
+	return nil
 }
 
 // BarOptOn will invoke provided option only when higher order predicate

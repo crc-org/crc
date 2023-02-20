@@ -31,6 +31,7 @@ import (
 
 type CapsHostCPUTopology struct {
 	Sockets int `xml:"sockets,attr"`
+	Dies    int `xml:"dies,attr,omitempty"`
 	Cores   int `xml:"cores,attr"`
 	Threads int `xml:"threads,attr"`
 }
@@ -48,16 +49,42 @@ type CapsHostCPUMicrocode struct {
 	Version int `xml:"version,attr"`
 }
 
+type CapsHostCPUSignature struct {
+	Family   int `xml:"family,attr"`
+	Model    int `xml:"model,attr"`
+	Stepping int `xml:"stepping,attr"`
+}
+
+type CapsHostCPUCounter struct {
+	Name      string `xml:"name,attr"`
+	Frequency uint   `xml:"frequency,attr"`
+	Scaling   string `xml:"scaling,attr,omitempty"`
+}
+
+type CapsHostCPUCache struct {
+	Level *uint  `xml:"level,attr,omitempty"`
+	Mode  string `xml:"mode,attr"`
+}
+
+type CapsHostCPUMaxPhysAddr struct {
+	Mode string `xml:"mode,attr"`
+	Bits uint   `xml:"bits,attr,omitempty"`
+}
+
 type CapsHostCPU struct {
 	XMLName      xml.Name                 `xml:"cpu"`
 	Arch         string                   `xml:"arch,omitempty"`
 	Model        string                   `xml:"model,omitempty"`
 	Vendor       string                   `xml:"vendor,omitempty"`
+	Microcode    *CapsHostCPUMicrocode    `xml:"microcode"`
+	Signature    *CapsHostCPUSignature    `xml:"signature"`
+	Counter      *CapsHostCPUCounter      `xml:"counter"`
 	Topology     *CapsHostCPUTopology     `xml:"topology"`
+	Cache        *CapsHostCPUCache        `xml:"cache"`
+	MaxPhysAddr  *CapsHostCPUMaxPhysAddr  `xml:"maxphysaddr"`
 	FeatureFlags []CapsHostCPUFeatureFlag `xml:"feature"`
 	Features     *CapsHostCPUFeatures     `xml:"features"`
 	PageSizes    []CapsHostCPUPageSize    `xml:"pages"`
-	Microcode    *CapsHostCPUMicrocode    `xml:"microcode"`
 }
 
 type CapsHostCPUFeature struct {

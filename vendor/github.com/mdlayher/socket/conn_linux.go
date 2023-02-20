@@ -4,6 +4,7 @@
 package socket
 
 import (
+	"context"
 	"os"
 	"unsafe"
 
@@ -21,7 +22,7 @@ func (c *Conn) IoctlKCMClone() (*Conn, error) {
 		err  error
 	)
 
-	doErr := c.control(op, func(fd int) error {
+	doErr := c.control(context.Background(), op, func(fd int) error {
 		info, err = unix.IoctlKCMClone(fd)
 		return err
 	})
@@ -38,14 +39,14 @@ func (c *Conn) IoctlKCMClone() (*Conn, error) {
 
 // IoctlKCMAttach wraps ioctl(2) for unix.KCMAttach values.
 func (c *Conn) IoctlKCMAttach(info unix.KCMAttach) error {
-	return c.controlErr("ioctl", func(fd int) error {
+	return c.controlErr(context.Background(), "ioctl", func(fd int) error {
 		return unix.IoctlKCMAttach(fd, info)
 	})
 }
 
 // IoctlKCMUnattach wraps ioctl(2) for unix.KCMUnattach values.
 func (c *Conn) IoctlKCMUnattach(info unix.KCMUnattach) error {
-	return c.controlErr("ioctl", func(fd int) error {
+	return c.controlErr(context.Background(), "ioctl", func(fd int) error {
 		return unix.IoctlKCMUnattach(fd, info)
 	})
 }
@@ -60,7 +61,7 @@ func (c *Conn) PidfdGetfd(targetFD, flags int) (*Conn, error) {
 		err   error
 	)
 
-	doErr := c.control(op, func(fd int) error {
+	doErr := c.control(context.Background(), op, func(fd int) error {
 		outFD, err = unix.PidfdGetfd(fd, targetFD, flags)
 		return err
 	})
@@ -78,7 +79,7 @@ func (c *Conn) PidfdGetfd(targetFD, flags int) (*Conn, error) {
 // PidfdSendSignal wraps pidfd_send_signal(2) for a Conn which wraps a Linux
 // pidfd.
 func (c *Conn) PidfdSendSignal(sig unix.Signal, info *unix.Siginfo, flags int) error {
-	return c.controlErr("pidfd_send_signal", func(fd int) error {
+	return c.controlErr(context.Background(), "pidfd_send_signal", func(fd int) error {
 		return unix.PidfdSendSignal(fd, sig, info, flags)
 	})
 }
@@ -107,19 +108,22 @@ func (c *Conn) RemoveBPF() error {
 
 // SetsockoptPacketMreq wraps setsockopt(2) for unix.PacketMreq values.
 func (c *Conn) SetsockoptPacketMreq(level, opt int, mreq *unix.PacketMreq) error {
-	return c.controlErr("setsockopt", func(fd int) error {
+	return c.controlErr(context.Background(), "setsockopt", func(fd int) error {
 		return unix.SetsockoptPacketMreq(fd, level, opt, mreq)
 	})
 }
 
 // SetsockoptSockFprog wraps setsockopt(2) for unix.SockFprog values.
 func (c *Conn) SetsockoptSockFprog(level, opt int, fprog *unix.SockFprog) error {
-	return c.controlErr("setsockopt", func(fd int) error {
+	return c.controlErr(context.Background(), "setsockopt", func(fd int) error {
 		return unix.SetsockoptSockFprog(fd, level, opt, fprog)
 	})
 }
 
-// GetSockoptTpacketStats wraps getsockopt(2) for getting TpacketStats
+// TODO(mdlayher): we accidentally called these GetSockopt rather than
+// Getsockopt by package unix convention. Consider fixing.
+
+// GetSockoptTpacketStats wraps getsockopt(2) for unix.TpacketStats values.
 func (c *Conn) GetSockoptTpacketStats(level, name int) (*unix.TpacketStats, error) {
 	const op = "getsockopt"
 
@@ -128,7 +132,7 @@ func (c *Conn) GetSockoptTpacketStats(level, name int) (*unix.TpacketStats, erro
 		err   error
 	)
 
-	doErr := c.control(op, func(fd int) error {
+	doErr := c.control(context.Background(), op, func(fd int) error {
 		stats, err = unix.GetsockoptTpacketStats(fd, level, name)
 		return err
 	})
@@ -139,7 +143,7 @@ func (c *Conn) GetSockoptTpacketStats(level, name int) (*unix.TpacketStats, erro
 	return stats, os.NewSyscallError(op, err)
 }
 
-// GetSockoptTpacketStatsV3 wraps getsockopt(2) for getting TpacketStatsV3
+// GetSockoptTpacketStatsV3 wraps getsockopt(2) for unix.TpacketStatsV3 values.
 func (c *Conn) GetSockoptTpacketStatsV3(level, name int) (*unix.TpacketStatsV3, error) {
 	const op = "getsockopt"
 
@@ -148,7 +152,7 @@ func (c *Conn) GetSockoptTpacketStatsV3(level, name int) (*unix.TpacketStatsV3, 
 		err   error
 	)
 
-	doErr := c.control(op, func(fd int) error {
+	doErr := c.control(context.Background(), op, func(fd int) error {
 		stats, err = unix.GetsockoptTpacketStatsV3(fd, level, name)
 		return err
 	})
@@ -157,4 +161,11 @@ func (c *Conn) GetSockoptTpacketStatsV3(level, name int) (*unix.TpacketStatsV3, 
 	}
 
 	return stats, os.NewSyscallError(op, err)
+}
+
+// Waitid wraps waitid(2).
+func (c *Conn) Waitid(idType int, info *unix.Siginfo, options int, rusage *unix.Rusage) error {
+	return c.readErr(context.Background(), "waitid", func(fd int) error {
+		return unix.Waitid(idType, fd, info, options, rusage)
+	})
 }

@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/acarl005/stripansi"
@@ -17,35 +17,21 @@ import (
 
 // Bar represents a progress bar.
 type Bar struct {
-	priority int // used by heap
-	index    int // used by heap
-
-	extendedLines     int
-	toShutdown        bool
-	toDrop            bool
-	noPop             bool
-	hasEwmaDecorators bool
-	operateState      chan func(*bState)
-	frameCh           chan io.Reader
-	syncTableCh       chan [][]chan int
-	completed         chan bool
-
-	// cancel is called either by user or on complete event
-	cancel func()
-	// done is closed after cacheState is assigned
-	done chan struct{}
-	// cacheState is populated, right after close(shutdown)
-	cacheState *bState
-
+	index          int // used by heap
+	priority       int // used by heap
+	hasEwma        bool
+	frameCh        chan *renderFrame
+	operateState   chan func(*bState)
+	done           chan struct{}
 	container      *Progress
-	dlogger        *log.Logger
+	bs             *bState
+	cancel         func()
 	recoveredPanic interface{}
 }
 
-type extenderFunc func(in io.Reader, reqWidth int, st decor.Statistics) (out io.Reader, lines int)
+type extenderFunc func(rows []io.Reader, width int, stat decor.Statistics) []io.Reader
 
-// bState is actual bar state. It gets passed to *Bar.serve(...) monitor
-// goroutine.
+// bState is actual bar's state.
 type bState struct {
 	id                int
 	priority          int
@@ -53,11 +39,10 @@ type bState struct {
 	total             int64
 	current           int64
 	refill            int64
-	lastN             int64
-	iterated          bool
+	lastIncrement     int64
 	trimSpace         bool
 	completed         bool
-	completeFlushed   bool
+	aborted           bool
 	triggerComplete   bool
 	dropOnComplete    bool
 	noPop             bool
@@ -66,33 +51,34 @@ type bState struct {
 	averageDecorators []decor.AverageDecorator
 	ewmaDecorators    []decor.EwmaDecorator
 	shutdownListeners []decor.ShutdownListener
-	bufP, bufB, bufA  *bytes.Buffer
+	buffers           [3]*bytes.Buffer
 	filler            BarFiller
 	middleware        func(BarFiller) BarFiller
 	extender          extenderFunc
+	debugOut          io.Writer
 
-	// runningBar is a key for *pState.parkedBars
-	runningBar *Bar
+	wait struct {
+		bar  *Bar // key for (*pState).queueBars
+		sync bool
+	}
+}
 
-	debugOut io.Writer
+type renderFrame struct {
+	rows     []io.Reader
+	shutdown int
 }
 
 func newBar(container *Progress, bs *bState) *Bar {
-	logPrefix := fmt.Sprintf("%sbar#%02d ", container.dlogger.Prefix(), bs.id)
 	ctx, cancel := context.WithCancel(container.ctx)
 
 	bar := &Bar{
-		container:    container,
 		priority:     bs.priority,
-		toDrop:       bs.dropOnComplete,
-		noPop:        bs.noPop,
+		hasEwma:      len(bs.ewmaDecorators) != 0,
+		frameCh:      make(chan *renderFrame, 1),
 		operateState: make(chan func(*bState)),
-		frameCh:      make(chan io.Reader, 1),
-		syncTableCh:  make(chan [][]chan int, 1),
-		completed:    make(chan bool, 1),
 		done:         make(chan struct{}),
+		container:    container,
 		cancel:       cancel,
-		dlogger:      log.New(bs.debugOut, logPrefix, log.Lshortfile),
 	}
 
 	go bar.serve(ctx, bs)
@@ -100,12 +86,20 @@ func newBar(container *Progress, bs *bState) *Bar {
 }
 
 // ProxyReader wraps r with metrics required for progress tracking.
-// Panics if r is nil.
+// If r is 'unknown total/size' reader it's mandatory to call
+// (*Bar).SetTotal(-1, true) method after (Reader).Read returns io.EOF.
+// Panics if r is nil. If bar is already completed or aborted, returns
+// nil.
 func (b *Bar) ProxyReader(r io.Reader) io.ReadCloser {
 	if r == nil {
 		panic("expected non nil io.Reader")
 	}
-	return newProxyReader(r, b)
+	select {
+	case <-b.done:
+		return nil
+	default:
+		return b.newProxyReader(r)
+	}
 }
 
 // ID returs id of the bar.
@@ -115,18 +109,18 @@ func (b *Bar) ID() int {
 	case b.operateState <- func(s *bState) { result <- s.id }:
 		return <-result
 	case <-b.done:
-		return b.cacheState.id
+		return b.bs.id
 	}
 }
 
-// Current returns bar's current number, in other words sum of all increments.
+// Current returns bar's current value, in other words sum of all increments.
 func (b *Bar) Current() int64 {
 	result := make(chan int64)
 	select {
 	case b.operateState <- func(s *bState) { result <- s.current }:
 		return <-result
 	case <-b.done:
-		return b.cacheState.current
+		return b.bs.current
 	}
 }
 
@@ -145,6 +139,7 @@ func (b *Bar) SetRefill(amount int64) {
 
 // TraverseDecorators traverses all available decorators and calls cb func on each.
 func (b *Bar) TraverseDecorators(cb func(decor.Decorator)) {
+	sync := make(chan struct{})
 	select {
 	case b.operateState <- func(s *bState) {
 		for _, decorators := range [...][]decor.Decorator{
@@ -155,26 +150,56 @@ func (b *Bar) TraverseDecorators(cb func(decor.Decorator)) {
 				cb(extractBaseDecorator(d))
 			}
 		}
+		close(sync)
+	}:
+		<-sync
+	case <-b.done:
+	}
+}
+
+// EnableTriggerComplete enables triggering complete event. It's
+// effective only for bar which was constructed with `total <= 0` and
+// after total has been set with (*Bar).SetTotal(int64, false). If bar
+// has been incremented to the total, complete event is triggered right
+// away.
+func (b *Bar) EnableTriggerComplete() {
+	select {
+	case b.operateState <- func(s *bState) {
+		if s.triggerComplete || s.total <= 0 {
+			return
+		}
+		if s.current >= s.total {
+			s.current = s.total
+			s.completed = true
+			go b.forceRefresh()
+		} else {
+			s.triggerComplete = true
+		}
 	}:
 	case <-b.done:
 	}
 }
 
-// SetTotal sets total dynamically.
-// If total is less than or equal to zero it takes progress' current value.
-func (b *Bar) SetTotal(total int64, triggerComplete bool) {
+// SetTotal sets total to an arbitrary value. It's effective only for
+// bar which was constructed with `total <= 0`. Setting total to negative
+// value is equivalent to (*Bar).SetTotal((*Bar).Current(), bool).
+// If triggerCompleteNow is true, total value is set to current and
+// complete event is triggered right away.
+func (b *Bar) SetTotal(total int64, triggerCompleteNow bool) {
 	select {
 	case b.operateState <- func(s *bState) {
-		s.triggerComplete = triggerComplete
-		if total <= 0 {
+		if s.triggerComplete {
+			return
+		}
+		if total < 0 {
 			s.total = s.current
 		} else {
 			s.total = total
 		}
-		if s.triggerComplete && !s.completed {
+		if triggerCompleteNow {
 			s.current = s.total
 			s.completed = true
-			go b.refreshTillShutdown()
+			go b.forceRefresh()
 		}
 	}:
 	case <-b.done:
@@ -186,13 +211,12 @@ func (b *Bar) SetTotal(total int64, triggerComplete bool) {
 func (b *Bar) SetCurrent(current int64) {
 	select {
 	case b.operateState <- func(s *bState) {
-		s.iterated = true
-		s.lastN = current - s.current
+		s.lastIncrement = current - s.current
 		s.current = current
 		if s.triggerComplete && s.current >= s.total {
 			s.current = s.total
 			s.completed = true
-			go b.refreshTillShutdown()
+			go b.forceRefresh()
 		}
 	}:
 	case <-b.done:
@@ -211,15 +235,17 @@ func (b *Bar) IncrBy(n int) {
 
 // IncrInt64 increments progress by amount of n.
 func (b *Bar) IncrInt64(n int64) {
+	if n <= 0 {
+		return
+	}
 	select {
 	case b.operateState <- func(s *bState) {
-		s.iterated = true
-		s.lastN = n
+		s.lastIncrement = n
 		s.current += n
 		if s.triggerComplete && s.current >= s.total {
 			s.current = s.total
 			s.completed = true
-			go b.refreshTillShutdown()
+			go b.forceRefresh()
 		}
 	}:
 	case <-b.done:
@@ -233,10 +259,18 @@ func (b *Bar) IncrInt64(n int64) {
 func (b *Bar) DecoratorEwmaUpdate(dur time.Duration) {
 	select {
 	case b.operateState <- func(s *bState) {
-		ewmaIterationUpdate(false, s, dur)
+		if s.lastIncrement > 0 {
+			s.decoratorEwmaUpdate(dur)
+			s.lastIncrement = 0
+		} else {
+			panic("increment required before ewma iteration update")
+		}
 	}:
 	case <-b.done:
-		ewmaIterationUpdate(true, b.cacheState, dur)
+		if b.bs.lastIncrement > 0 {
+			b.bs.decoratorEwmaUpdate(dur)
+			b.bs.lastIncrement = 0
+		}
 	}
 }
 
@@ -246,9 +280,7 @@ func (b *Bar) DecoratorEwmaUpdate(dur time.Duration) {
 func (b *Bar) DecoratorAverageAdjust(start time.Time) {
 	select {
 	case b.operateState <- func(s *bState) {
-		for _, d := range s.averageDecorators {
-			d.AverageAdjust(start)
-		}
+		s.decoratorAverageAdjust(start)
 	}:
 	case <-b.done:
 	}
@@ -258,50 +290,68 @@ func (b *Bar) DecoratorAverageAdjust(start time.Time) {
 // priority, i.e. bar will be on top. If you don't need to set priority
 // dynamically, better use BarPriority option.
 func (b *Bar) SetPriority(priority int) {
+	b.container.UpdateBarPriority(b, priority)
+}
+
+// Abort interrupts bar's running goroutine. Abort won't be engaged
+// if bar is already in complete state. If drop is true bar will be
+// removed as well. To make sure that bar has been removed call
+// (*Bar).Wait method.
+func (b *Bar) Abort(drop bool) {
 	select {
+	case b.operateState <- func(s *bState) {
+		if s.completed || s.aborted {
+			return
+		}
+		s.aborted = true
+		s.dropOnComplete = drop
+		go b.forceRefresh()
+	}:
 	case <-b.done:
-	default:
-		b.container.setBarPriority(b, priority)
 	}
 }
 
-// Abort interrupts bar's running goroutine. Call this, if you'd like
-// to stop/remove bar before completion event. It has no effect after
-// completion event. If drop is true bar will be removed as well.
-func (b *Bar) Abort(drop bool) {
+// Aborted reports whether the bar is in aborted state.
+func (b *Bar) Aborted() bool {
+	result := make(chan bool)
 	select {
+	case b.operateState <- func(s *bState) { result <- s.aborted }:
+		return <-result
 	case <-b.done:
-	default:
-		if drop {
-			b.container.dropBar(b)
-		}
-		b.cancel()
+		return b.bs.aborted
 	}
 }
 
 // Completed reports whether the bar is in completed state.
 func (b *Bar) Completed() bool {
+	result := make(chan bool)
 	select {
-	case b.operateState <- func(s *bState) { b.completed <- s.completed }:
-		return <-b.completed
+	case b.operateState <- func(s *bState) { result <- s.completed }:
+		return <-result
 	case <-b.done:
-		return true
+		return b.bs.completed
 	}
 }
 
-func (b *Bar) serve(ctx context.Context, s *bState) {
+// Wait blocks until bar is completed or aborted.
+func (b *Bar) Wait() {
+	<-b.done
+}
+
+func (b *Bar) serve(ctx context.Context, bs *bState) {
 	defer b.container.bwg.Done()
+	if bs.wait.bar != nil && bs.wait.sync {
+		bs.wait.bar.Wait()
+	}
 	for {
 		select {
 		case op := <-b.operateState:
-			op(s)
+			op(bs)
 		case <-ctx.Done():
-			b.cacheState = s
+			bs.aborted = !bs.completed
+			bs.decoratorShutdownNotify()
+			b.bs = bs
 			close(b.done)
-			// Notifying decorators about shutdown event
-			for _, sl := range s.shutdownListeners {
-				sl.Shutdown()
-			}
 			return
 		}
 	}
@@ -310,120 +360,137 @@ func (b *Bar) serve(ctx context.Context, s *bState) {
 func (b *Bar) render(tw int) {
 	select {
 	case b.operateState <- func(s *bState) {
+		var rows []io.Reader
 		stat := newStatistics(tw, s)
 		defer func() {
 			// recovering if user defined decorator panics for example
 			if p := recover(); p != nil {
-				if b.recoveredPanic == nil {
-					s.extender = makePanicExtender(p)
-					b.toShutdown = !b.toShutdown
-					b.recoveredPanic = p
+				if s.debugOut != nil {
+					for _, fn := range []func() (int, error){
+						func() (int, error) {
+							return fmt.Fprintln(s.debugOut, p)
+						},
+						func() (int, error) {
+							return s.debugOut.Write(debug.Stack())
+						},
+					} {
+						if _, err := fn(); err != nil {
+							panic(err)
+						}
+					}
 				}
-				frame, lines := s.extender(nil, s.reqWidth, stat)
-				b.extendedLines = lines
-				b.frameCh <- frame
-				b.dlogger.Println(p)
+				s.aborted = !s.completed
+				s.extender = makePanicExtender(p)
+				b.recoveredPanic = p
 			}
-			s.completeFlushed = s.completed
+			if fn := s.extender; fn != nil {
+				rows = fn(rows, s.reqWidth, stat)
+			}
+			frame := &renderFrame{
+				rows: rows,
+			}
+			if s.completed || s.aborted {
+				b.cancel()
+				frame.shutdown++
+			}
+			b.frameCh <- frame
 		}()
-		frame, lines := s.extender(s.draw(stat), s.reqWidth, stat)
-		b.extendedLines = lines
-		b.toShutdown = s.completed && !s.completeFlushed
-		b.frameCh <- frame
+		if b.recoveredPanic == nil {
+			rows = append(rows, s.draw(stat))
+		}
 	}:
 	case <-b.done:
-		s := b.cacheState
-		stat := newStatistics(tw, s)
-		var r io.Reader
+		var rows []io.Reader
+		s, stat := b.bs, newStatistics(tw, b.bs)
 		if b.recoveredPanic == nil {
-			r = s.draw(stat)
+			rows = append(rows, s.draw(stat))
 		}
-		frame, lines := s.extender(r, s.reqWidth, stat)
-		b.extendedLines = lines
+		if fn := s.extender; fn != nil {
+			rows = fn(rows, s.reqWidth, stat)
+		}
+		frame := &renderFrame{
+			rows: rows,
+		}
 		b.frameCh <- frame
 	}
 }
 
-func (b *Bar) subscribeDecorators() {
-	var averageDecorators []decor.AverageDecorator
-	var ewmaDecorators []decor.EwmaDecorator
-	var shutdownListeners []decor.ShutdownListener
-	b.TraverseDecorators(func(d decor.Decorator) {
-		if d, ok := d.(decor.AverageDecorator); ok {
-			averageDecorators = append(averageDecorators, d)
-		}
-		if d, ok := d.(decor.EwmaDecorator); ok {
-			ewmaDecorators = append(ewmaDecorators, d)
-		}
-		if d, ok := d.(decor.ShutdownListener); ok {
-			shutdownListeners = append(shutdownListeners, d)
-		}
+func (b *Bar) forceRefresh() {
+	var anyOtherRunning bool
+	b.container.traverseBars(func(bar *Bar) bool {
+		anyOtherRunning = b != bar && bar.isRunning()
+		return !anyOtherRunning
 	})
+	if !anyOtherRunning {
+		for {
+			select {
+			case b.container.refreshCh <- time.Now():
+				time.Sleep(prr)
+			case <-b.done:
+				return
+			}
+		}
+	}
+}
+
+func (b *Bar) isRunning() bool {
+	result := make(chan bool)
 	select {
 	case b.operateState <- func(s *bState) {
-		s.averageDecorators = averageDecorators
-		s.ewmaDecorators = ewmaDecorators
-		s.shutdownListeners = shutdownListeners
+		result <- !s.completed && !s.aborted
 	}:
-		b.hasEwmaDecorators = len(ewmaDecorators) != 0
+		return <-result
 	case <-b.done:
-	}
-}
-
-func (b *Bar) refreshTillShutdown() {
-	for {
-		select {
-		case b.container.refreshCh <- time.Now():
-		case <-b.done:
-			return
-		}
+		return false
 	}
 }
 
 func (b *Bar) wSyncTable() [][]chan int {
+	result := make(chan [][]chan int)
 	select {
-	case b.operateState <- func(s *bState) { b.syncTableCh <- s.wSyncTable() }:
-		return <-b.syncTableCh
+	case b.operateState <- func(s *bState) { result <- s.wSyncTable() }:
+		return <-result
 	case <-b.done:
-		return b.cacheState.wSyncTable()
+		return b.bs.wSyncTable()
 	}
 }
 
 func (s *bState) draw(stat decor.Statistics) io.Reader {
-	nlr := strings.NewReader("\n")
+	bufP, bufB, bufA := s.buffers[0], s.buffers[1], s.buffers[2]
+	nlr := bytes.NewReader([]byte("\n"))
 	tw := stat.AvailableWidth
 	for _, d := range s.pDecorators {
 		str := d.Decor(stat)
 		stat.AvailableWidth -= runewidth.StringWidth(stripansi.Strip(str))
-		s.bufP.WriteString(str)
+		bufP.WriteString(str)
 	}
 	if stat.AvailableWidth < 1 {
-		trunc := strings.NewReader(runewidth.Truncate(stripansi.Strip(s.bufP.String()), tw, "…"))
-		s.bufP.Reset()
+		trunc := strings.NewReader(runewidth.Truncate(stripansi.Strip(bufP.String()), tw, "…"))
+		bufP.Reset()
 		return io.MultiReader(trunc, nlr)
 	}
 
 	if !s.trimSpace && stat.AvailableWidth > 1 {
 		stat.AvailableWidth -= 2
-		s.bufB.WriteByte(' ')
-		defer s.bufB.WriteByte(' ')
+		bufB.WriteByte(' ')
+		defer bufB.WriteByte(' ')
 	}
 
 	tw = stat.AvailableWidth
 	for _, d := range s.aDecorators {
 		str := d.Decor(stat)
 		stat.AvailableWidth -= runewidth.StringWidth(stripansi.Strip(str))
-		s.bufA.WriteString(str)
+		bufA.WriteString(str)
 	}
 	if stat.AvailableWidth < 1 {
-		trunc := strings.NewReader(runewidth.Truncate(stripansi.Strip(s.bufA.String()), tw, "…"))
-		s.bufA.Reset()
-		return io.MultiReader(s.bufP, s.bufB, trunc, nlr)
+		trunc := strings.NewReader(runewidth.Truncate(stripansi.Strip(bufA.String()), tw, "…"))
+		bufA.Reset()
+		return io.MultiReader(bufP, bufB, trunc, nlr)
 	}
 
-	s.filler.Fill(s.bufB, s.reqWidth, stat)
+	s.filler.Fill(bufB, s.reqWidth, stat)
 
-	return io.MultiReader(s.bufP, s.bufB, s.bufA, nlr)
+	return io.MultiReader(bufP, bufB, bufA, nlr)
 }
 
 func (s *bState) wSyncTable() [][]chan int {
@@ -448,14 +515,86 @@ func (s *bState) wSyncTable() [][]chan int {
 	return table
 }
 
+func (s *bState) subscribeDecorators() {
+	for _, decorators := range [...][]decor.Decorator{
+		s.pDecorators,
+		s.aDecorators,
+	} {
+		for _, d := range decorators {
+			d = extractBaseDecorator(d)
+			if d, ok := d.(decor.AverageDecorator); ok {
+				s.averageDecorators = append(s.averageDecorators, d)
+			}
+			if d, ok := d.(decor.EwmaDecorator); ok {
+				s.ewmaDecorators = append(s.ewmaDecorators, d)
+			}
+			if d, ok := d.(decor.ShutdownListener); ok {
+				s.shutdownListeners = append(s.shutdownListeners, d)
+			}
+		}
+	}
+}
+
+func (s bState) decoratorEwmaUpdate(dur time.Duration) {
+	wg := new(sync.WaitGroup)
+	for i := 0; i < len(s.ewmaDecorators); i++ {
+		switch d := s.ewmaDecorators[i]; i {
+		case len(s.ewmaDecorators) - 1:
+			d.EwmaUpdate(s.lastIncrement, dur)
+		default:
+			wg.Add(1)
+			go func() {
+				d.EwmaUpdate(s.lastIncrement, dur)
+				wg.Done()
+			}()
+		}
+	}
+	wg.Wait()
+}
+
+func (s bState) decoratorAverageAdjust(start time.Time) {
+	wg := new(sync.WaitGroup)
+	for i := 0; i < len(s.averageDecorators); i++ {
+		switch d := s.averageDecorators[i]; i {
+		case len(s.averageDecorators) - 1:
+			d.AverageAdjust(start)
+		default:
+			wg.Add(1)
+			go func() {
+				d.AverageAdjust(start)
+				wg.Done()
+			}()
+		}
+	}
+	wg.Wait()
+}
+
+func (s bState) decoratorShutdownNotify() {
+	wg := new(sync.WaitGroup)
+	for i := 0; i < len(s.shutdownListeners); i++ {
+		switch d := s.shutdownListeners[i]; i {
+		case len(s.shutdownListeners) - 1:
+			d.Shutdown()
+		default:
+			wg.Add(1)
+			go func() {
+				d.Shutdown()
+				wg.Done()
+			}()
+		}
+	}
+	wg.Wait()
+}
+
 func newStatistics(tw int, s *bState) decor.Statistics {
 	return decor.Statistics{
-		ID:             s.id,
 		AvailableWidth: tw,
+		ID:             s.id,
 		Total:          s.total,
 		Current:        s.current,
 		Refill:         s.refill,
-		Completed:      s.completeFlushed,
+		Completed:      s.completed,
+		Aborted:        s.aborted,
 	}
 }
 
@@ -466,27 +605,13 @@ func extractBaseDecorator(d decor.Decorator) decor.Decorator {
 	return d
 }
 
-func ewmaIterationUpdate(done bool, s *bState, dur time.Duration) {
-	if !done && !s.iterated {
-		panic("increment required before ewma iteration update")
-	} else {
-		s.iterated = false
-	}
-	for _, d := range s.ewmaDecorators {
-		d.EwmaUpdate(s.lastN, dur)
-	}
-}
-
 func makePanicExtender(p interface{}) extenderFunc {
 	pstr := fmt.Sprint(p)
-	stack := debug.Stack()
-	stackLines := bytes.Count(stack, []byte("\n"))
-	return func(_ io.Reader, _ int, st decor.Statistics) (io.Reader, int) {
-		mr := io.MultiReader(
-			strings.NewReader(runewidth.Truncate(pstr, st.AvailableWidth, "…")),
-			strings.NewReader(fmt.Sprintf("\n%#v\n", st)),
-			bytes.NewReader(stack),
+	return func(rows []io.Reader, _ int, stat decor.Statistics) []io.Reader {
+		r := io.MultiReader(
+			strings.NewReader(runewidth.Truncate(pstr, stat.AvailableWidth, "…")),
+			bytes.NewReader([]byte("\n")),
 		)
-		return mr, stackLines + 1
+		return append(rows, r)
 	}
 }

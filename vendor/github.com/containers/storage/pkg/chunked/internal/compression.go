@@ -8,43 +8,54 @@ import (
 	"archive/tar"
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"io"
 	"time"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/klauspost/compress/zstd"
 	"github.com/opencontainers/go-digest"
 )
 
-type ZstdTOC struct {
-	Version int                `json:"version"`
-	Entries []ZstdFileMetadata `json:"entries"`
+type TOC struct {
+	Version int            `json:"version"`
+	Entries []FileMetadata `json:"entries"`
+
+	// internal: used by unmarshalToc
+	StringsBuf bytes.Buffer `json:"-"`
 }
 
-type ZstdFileMetadata struct {
+type FileMetadata struct {
 	Type       string            `json:"type"`
 	Name       string            `json:"name"`
 	Linkname   string            `json:"linkName,omitempty"`
 	Mode       int64             `json:"mode,omitempty"`
-	Size       int64             `json:"size"`
-	UID        int               `json:"uid"`
-	GID        int               `json:"gid"`
-	ModTime    time.Time         `json:"modtime"`
-	AccessTime time.Time         `json:"accesstime"`
-	ChangeTime time.Time         `json:"changetime"`
-	Devmajor   int64             `json:"devMajor"`
-	Devminor   int64             `json:"devMinor"`
+	Size       int64             `json:"size,omitempty"`
+	UID        int               `json:"uid,omitempty"`
+	GID        int               `json:"gid,omitempty"`
+	ModTime    *time.Time        `json:"modtime,omitempty"`
+	AccessTime *time.Time        `json:"accesstime,omitempty"`
+	ChangeTime *time.Time        `json:"changetime,omitempty"`
+	Devmajor   int64             `json:"devMajor,omitempty"`
+	Devminor   int64             `json:"devMinor,omitempty"`
 	Xattrs     map[string]string `json:"xattrs,omitempty"`
 	Digest     string            `json:"digest,omitempty"`
 	Offset     int64             `json:"offset,omitempty"`
 	EndOffset  int64             `json:"endOffset,omitempty"`
 
-	// Currently chunking is not supported.
 	ChunkSize   int64  `json:"chunkSize,omitempty"`
 	ChunkOffset int64  `json:"chunkOffset,omitempty"`
 	ChunkDigest string `json:"chunkDigest,omitempty"`
+	ChunkType   string `json:"chunkType,omitempty"`
+
+	// internal: computed by mergeTOCEntries.
+	Chunks []*FileMetadata `json:"-"`
 }
+
+const (
+	ChunkTypeData  = ""
+	ChunkTypeZeros = "zeros"
+)
 
 const (
 	TypeReg     = "reg"
@@ -77,8 +88,8 @@ func GetType(t byte) (string, error) {
 }
 
 const (
-	ManifestChecksumKey = "io.containers.zstd-chunked.manifest-checksum"
-	ManifestInfoKey     = "io.containers.zstd-chunked.manifest-position"
+	ManifestChecksumKey = "io.github.containers.zstd-chunked.manifest-checksum"
+	ManifestInfoKey     = "io.github.containers.zstd-chunked.manifest-position"
 
 	// ManifestTypeCRFS is a manifest file compatible with the CRFS TOC file.
 	ManifestTypeCRFS = 1
@@ -103,7 +114,7 @@ func appendZstdSkippableFrame(dest io.Writer, data []byte) error {
 		return err
 	}
 
-	var size []byte = make([]byte, 4)
+	size := make([]byte, 4)
 	binary.LittleEndian.PutUint32(size, uint32(len(data)))
 	if _, err := dest.Write(size); err != nil {
 		return err
@@ -114,15 +125,16 @@ func appendZstdSkippableFrame(dest io.Writer, data []byte) error {
 	return nil
 }
 
-func WriteZstdChunkedManifest(dest io.Writer, outMetadata map[string]string, offset uint64, metadata []ZstdFileMetadata, level int) error {
+func WriteZstdChunkedManifest(dest io.Writer, outMetadata map[string]string, offset uint64, metadata []FileMetadata, level int) error {
 	// 8 is the size of the zstd skippable frame header + the frame size
 	manifestOffset := offset + 8
 
-	toc := ZstdTOC{
+	toc := TOC{
 		Version: 1,
 		Entries: metadata,
 	}
 
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	// Generate the manifest
 	manifest, err := json.Marshal(toc)
 	if err != nil {
@@ -156,7 +168,7 @@ func WriteZstdChunkedManifest(dest io.Writer, outMetadata map[string]string, off
 	}
 
 	// Store the offset to the manifest and its size in LE order
-	var manifestDataLE []byte = make([]byte, FooterSizeSupported)
+	manifestDataLE := make([]byte, FooterSizeSupported)
 	binary.LittleEndian.PutUint64(manifestDataLE, manifestOffset)
 	binary.LittleEndian.PutUint64(manifestDataLE[8:], uint64(len(compressedManifest)))
 	binary.LittleEndian.PutUint64(manifestDataLE[16:], uint64(len(manifest)))

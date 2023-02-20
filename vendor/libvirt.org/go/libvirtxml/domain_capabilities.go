@@ -82,6 +82,7 @@ type DomainCapsCPUModel struct {
 	Usable     string `xml:"usable,attr,omitempty"`
 	Fallback   string `xml:"fallback,attr,omitempty"`
 	Deprecated string `xml:"deprecated,attr,omitempty"`
+	Vendor     string `xml:"vendor,attr,omitempty"`
 }
 
 type DomainCapsCPUFeature struct {
@@ -107,6 +108,8 @@ type DomainCapsDevices struct {
 	RNG        *DomainCapsDevice `xml:"rng"`
 	FileSystem *DomainCapsDevice `xml:"filesystem"`
 	TPM        *DomainCapsDevice `xml:"tpm"`
+	Redirdev   *DomainCapsDevice `xml:"redirdev"`
+	Channel    *DomainCapsDevice `xml:"channel"`
 }
 
 type DomainCapsDevice struct {
@@ -122,6 +125,8 @@ type DomainCapsFeatures struct {
 	Backup            *DomainCapsFeatureBackup            `xml:"backup"`
 	S390PV            *DomainCapsFeatureS390PV            `xml:"s390-pv"`
 	SEV               *DomainCapsFeatureSEV               `xml:"sev"`
+	SGX               *DomainCapsFeatureSGX               `xml:"sgx"`
+	HyperV            *DomainCapsFeatureHyperV            `xml:"hyperv"`
 }
 
 type DomainCapsFeatureGIC struct {
@@ -155,6 +160,35 @@ type DomainCapsFeatureSEV struct {
 	ReducedPhysBits uint   `xml:"reducedPhysBits,omitempty"`
 	MaxGuests       uint   `xml:"maxGuests,omitempty"`
 	MaxESGuests     uint   `xml:"maxESGuests,omitempty"`
+}
+
+type DomainCapsFeatureSGX struct {
+	Supported   string                           `xml:"supported,attr"`
+	FLC         *DomainCapsFeatureSGXFeature     `xml:"flc"`
+	SGX1        *DomainCapsFeatureSGXFeature     `xml:"sgx1"`
+	SGX2        *DomainCapsFeatureSGXFeature     `xml:"sgx2"`
+	SectionSize *DomainCapsFeatureSGXSectionSize `xml:"section_size"`
+	Sections    *[]DomainCapsFeatureSGXSection   `xml:"sections>section"`
+}
+
+type DomainCapsFeatureSGXFeature struct {
+	Supported string `xml:",chardata"`
+}
+
+type DomainCapsFeatureSGXSectionSize struct {
+	Value uint   `xml:",chardata"`
+	Unit  string `xml:"unit,attr,omitempty"`
+}
+
+type DomainCapsFeatureSGXSection struct {
+	Node uint   `xml:"node,attr"`
+	Size uint   `xml:"size,attr"`
+	Unit string `xml:"unit,attr"`
+}
+
+type DomainCapsFeatureHyperV struct {
+	Supported string           `xml:"supported,attr"`
+	Enums     []DomainCapsEnum `xml:"enum"`
 }
 
 func (c *DomainCaps) Unmarshal(doc string) error {
