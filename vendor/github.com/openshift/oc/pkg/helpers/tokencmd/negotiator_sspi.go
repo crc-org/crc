@@ -14,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 
 	"github.com/openshift/oc/pkg/helpers/term"
+	"github.com/openshift/oc/pkg/version"
 
 	"github.com/alexbrainman/sspi"
 	"github.com/alexbrainman/sspi/negotiate"
@@ -95,17 +96,20 @@ type sspiNegotiator struct {
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/aa374764(v=vs.85).aspx
 	// Set to true once InitializeSecurityContext or CompleteAuthToken return sspi.SEC_E_OK
 	complete bool
+	// serverVersionRetriever is used for fetching server version
+	serverVersionRetriever version.ServerVersionRetriever
 }
 
-func NewSSPINegotiator(principalName, password, host string, reader io.Reader) Negotiator {
+func NewSSPINegotiator(principalName, password, host string, reader io.Reader, serverVersionRetriever version.ServerVersionRetriever) Negotiator {
 	return &sspiNegotiator{
-		principalName: principalName,
-		password:      password,
-		reader:        reader,
-		writer:        os.Stdout,
-		host:          host,
-		desiredFlags:  desiredFlags,
-		requiredFlags: requiredFlags,
+		principalName:          principalName,
+		password:               password,
+		reader:                 reader,
+		writer:                 os.Stdout,
+		host:                   host,
+		desiredFlags:           desiredFlags,
+		requiredFlags:          requiredFlags,
+		serverVersionRetriever: serverVersionRetriever,
 	}
 }
 
@@ -247,6 +251,13 @@ func (s *sspiNegotiator) getPassword(domain, username string) (string, error) {
 			fmt.Fprintf(s.writer, "Authentication required for %s (%s)\n", s.host, domain)
 		} else {
 			fmt.Fprintf(s.writer, "Authentication required for %s\n", s.host)
+		}
+		if s.serverVersionRetriever != nil {
+			serverVersion, err := s.serverVersionRetriever.RetrieveServerVersion()
+			// this feature was introduced in Openshift 4.11 which should correspond to 1.24
+			if err == nil && serverVersion.MajorNumber >= 1 && serverVersion.MinorNumber >= 24 {
+				fmt.Fprintf(s.writer, "Console URL: %s/console\n", s.host)
+			}
 		}
 		fmt.Fprintf(s.writer, "Username: %s\n", username)
 		// empty password from prompt is ok

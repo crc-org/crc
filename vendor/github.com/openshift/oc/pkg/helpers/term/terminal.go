@@ -56,8 +56,10 @@ func PromptForPasswordString(r io.Reader, w io.Writer, format string, a ...inter
 }
 
 // PromptForBool prompts for user input of a boolean value. The accepted values are:
-//   yes, y, true, 	t, 1 (not case sensitive)
-//   no, 	n, false, f, 0 (not case sensitive)
+//
+//	yes, y, true, 	t, 1 (not case sensitive)
+//	no, 	n, false, f, 0 (not case sensitive)
+//
 // A valid answer is mandatory so it will keep asking until an answer is provided.
 func PromptForBool(r io.Reader, w io.Writer, format string, a ...interface{}) bool {
 	if w == nil {

@@ -20,6 +20,8 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
 
+	"github.com/openshift/oc/pkg/version"
+
 	"github.com/openshift/library-go/pkg/oauth/oauthdiscovery"
 )
 
@@ -85,6 +87,8 @@ func NewRequestTokenOptions(clientCfg *restclient.Config, reader io.Reader, defa
 	// the SPNEGO ones must come before basic auth
 	var handlers []ChallengeHandler
 
+	serverVersionDetector := version.NewServerVersionRetriever(clientCfg)
+
 	if GSSAPIEnabled() {
 		klog.V(6).Info("GSSAPI Enabled")
 		handlers = append(handlers, NewNegotiateChallengeHandler(NewGSSAPINegotiator(defaultUsername)))
@@ -92,10 +96,10 @@ func NewRequestTokenOptions(clientCfg *restclient.Config, reader io.Reader, defa
 
 	if SSPIEnabled() {
 		klog.V(6).Info("SSPI Enabled")
-		handlers = append(handlers, NewNegotiateChallengeHandler(NewSSPINegotiator(defaultUsername, defaultPassword, clientCfg.Host, reader)))
+		handlers = append(handlers, NewNegotiateChallengeHandler(NewSSPINegotiator(defaultUsername, defaultPassword, clientCfg.Host, reader, serverVersionDetector)))
 	}
 
-	handlers = append(handlers, &BasicChallengeHandler{Host: clientCfg.Host, Reader: reader, Username: defaultUsername, Password: defaultPassword})
+	handlers = append(handlers, &BasicChallengeHandler{Host: clientCfg.Host, serverVersionRetriever: serverVersionDetector, Reader: reader, Username: defaultUsername, Password: defaultPassword})
 
 	var handler ChallengeHandler
 	if len(handlers) == 1 {
