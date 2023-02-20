@@ -12,13 +12,13 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/openshift/oc/pkg/helpers/term"
+	"github.com/openshift/oc/pkg/version"
 )
 
 // BasicAuthNoUsernameError when basic authentication challenge handling was attempted
 // but the required username was not provided from the command line options
 type BasicAuthNoUsernameError struct{}
 
-//
 func (e *BasicAuthNoUsernameError) Error() string {
 	return "did not receive username. Pass 'oc login --username <username>' for the password prompt"
 }
@@ -31,6 +31,9 @@ func NewBasicAuthNoUsernameError() error {
 type BasicChallengeHandler struct {
 	// Host is the server being authenticated to. Used only for displaying messages when prompting for username/password
 	Host string
+
+	// serverVersionRetriever is used for fetching server version
+	serverVersionRetriever version.ServerVersionRetriever
 
 	// Reader is used to prompt for username/password. If nil, no prompting is done
 	Reader io.Reader
@@ -86,6 +89,13 @@ func (c *BasicChallengeHandler) HandleChallenge(requestURL string, headers http.
 			fmt.Fprintf(w, "Authentication required for %s (%s)\n", c.Host, realm)
 		} else {
 			fmt.Fprintf(w, "Authentication required for %s\n", c.Host)
+		}
+		if c.serverVersionRetriever != nil {
+			serverVersion, err := c.serverVersionRetriever.RetrieveServerVersion()
+			// this feature was introduced in Openshift 4.11 which should correspond to 1.24
+			if err == nil && serverVersion.MajorNumber >= 1 && serverVersion.MinorNumber >= 24 {
+				fmt.Fprintf(w, "Console URL: %s/console\n", c.Host)
+			}
 		}
 		fmt.Fprintf(w, "Username: %s\n", username)
 		if missingPassword {

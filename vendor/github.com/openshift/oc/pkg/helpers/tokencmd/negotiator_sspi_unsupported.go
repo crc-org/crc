@@ -3,12 +3,16 @@
 
 package tokencmd
 
-import "io"
+import (
+	"io"
+
+	"github.com/openshift/oc/pkg/version"
+)
 
 func SSPIEnabled() bool {
 	return false
 }
 
-func NewSSPINegotiator(string, string, string, io.Reader) Negotiator {
+func NewSSPINegotiator(string, string, string, io.Reader, version.ServerVersionRetriever) Negotiator {
 	return newUnsupportedNegotiator("SSPI")
 }
