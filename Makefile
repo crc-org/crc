@@ -156,7 +156,8 @@ clean_macos_package:
 	rm -f packaging/darwin/Distribution
 	rm -f packaging/darwin/Resources/welcome.html
 	rm -f packaging/darwin/scripts/postinstall
-	rm -rf packaging/darwin/root/
+	rm -rf packaging/darwin/root-crc/
+	rm -rf packaging/darwin/root-crc-tray/
 
 clean_windows_msi:
 	rm -rf packaging/windows/msi
@@ -320,20 +321,28 @@ macos-universal-binary: macos-release-binary $(TOOLS_BINDIR)/makefat
 
 packagedir: clean embed-download-darwin macos-universal-binary
 	echo -n $(CRC_VERSION) > packaging/darwin/VERSION
+
+	mkdir -p packaging/darwin/root-crc/Applications
+	mkdir -p packaging/darwin/root-crc-tray/Applications
+
+	# crc-tray.pkg
+	tar -C $(EMBED_DOWNLOAD_DIR) -xvzf $(EMBED_DOWNLOAD_DIR)/$(TRAY_TARBALL)
+	rm $(EMBED_DOWNLOAD_DIR)/$(TRAY_TARBALL)
+	mv $(EMBED_DOWNLOAD_DIR)/crc-tray-darwin-universal/crc-tray.app packaging/darwin/root-crc-tray/Applications/Red\ Hat\ OpenShift\ Local\ Tray.app
+	rm -fr $(EMBED_DOWNLOAD_DIR)/crc-tray-darwin-universal
+
+	# crc.pkg
+	#ls $(EMBED_DOWNLOAD_DIR)
+	mkdir -p packaging/darwin/root-crc/"$(MACOS_INSTALL_PATH)"
+	mv $(EMBED_DOWNLOAD_DIR)/vf.entitlements packaging/darwin/vfkit.entitlements
+	mv $(EMBED_DOWNLOAD_DIR)/* packaging/darwin/root-crc/"$(MACOS_INSTALL_PATH)"
+	cp $(BUILD_DIR)/macos-universal/crc packaging/darwin/root-crc/"$(MACOS_INSTALL_PATH)"
+
+	# Resources used by `productbuild`
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/Distribution.in >packaging/darwin/Distribution
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/welcome.html.in >packaging/darwin/Resources/welcome.html
 	sed -e 's/__VERSION__/'$(CRC_VERSION)'/g' -e 's@__INSTALL_PATH__@$(MACOS_INSTALL_PATH)@g' packaging/darwin/postinstall.in >packaging/darwin/scripts/postinstall
 	chmod 755 packaging/darwin/scripts/postinstall
-	mkdir -p packaging/darwin/root/Applications
-
-	mv $(EMBED_DOWNLOAD_DIR)/vf.entitlements packaging/darwin/vfkit.entitlements
-	tar -C $(EMBED_DOWNLOAD_DIR) -xvzf $(EMBED_DOWNLOAD_DIR)/$(TRAY_TARBALL)
-	rm $(EMBED_DOWNLOAD_DIR)/$(TRAY_TARBALL)
-	mv $(EMBED_DOWNLOAD_DIR)/crc-tray-darwin-universal/crc-tray.app packaging/darwin/root/Applications/Red\ Hat\ OpenShift\ Local.app
-	rm -fr $(EMBED_DOWNLOAD_DIR)/crc-tray-darwin-universal
-
-	mv $(EMBED_DOWNLOAD_DIR)/* packaging/darwin/root/"$(MACOS_INSTALL_PATH)"
-	cp $(BUILD_DIR)/macos-universal/crc packaging/darwin/root/"$(MACOS_INSTALL_PATH)"
 	cp LICENSE packaging/darwin/Resources/LICENSE.txt
 
 $(BUILD_DIR)/macos-universal/crc-macos-installer.pkg: packagedir

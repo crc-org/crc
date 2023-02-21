@@ -40,34 +40,44 @@ function signAppBundle() {
   codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime --timestamp --force --entitlements "${entitlements}" "$1"
 }
 
-rootDir="${BASEDIR}/root"
-binDir="${rootDir}/Applications/Red Hat OpenShift Local.app/Contents/Resources"
+crcRootDir="${BASEDIR}/root-crc"
+trayRootDir="${BASEDIR}/root-crc-tray"
+crcBinDir="${crcRootDir}/Applications/Red Hat OpenShift Local.app/Contents/Resources"
 
 version=$(cat "${BASEDIR}/VERSION")
 
-pkgbuild --analyze --root "${rootDir}" ${BASEDIR}/components.plist
-plutil -replace BundleIsRelocatable -bool NO ${BASEDIR}/components.plist
+pkgbuild --analyze --root "${crcRootDir}" ${BASEDIR}/CrcComponents.plist
+plutil -replace BundleIsRelocatable -bool NO ${BASEDIR}/CrcComponents.plist
+pkgbuild --analyze --root "${trayRootDir}" ${BASEDIR}/TrayComponents.plist
+plutil -replace BundleIsRelocatable -bool NO ${BASEDIR}/TrayComponents.plist
 
-sign "${binDir}/crc"
-sign "${binDir}/crc-admin-helper-darwin"
-sign "${binDir}/vfkit"
+sign "${crcBinDir}/crc"
+sign "${crcBinDir}/crc-admin-helper-darwin"
+sign "${crcBinDir}/vfkit"
 
-signAppBundle "${rootDir}/Applications/Red Hat OpenShift Local.app"
+signAppBundle "${trayRootDir}/Applications/Red Hat OpenShift Local Tray.app"
 
-sudo chmod +sx "${binDir}/crc-admin-helper-darwin"
+sudo chmod +sx "${crcBinDir}/crc-admin-helper-darwin"
 
 pkgbuild --identifier com.redhat.crc --version ${version} \
   --scripts "${BASEDIR}/scripts" \
-  --root "${rootDir}" \
+  --root "${crcRootDir}" \
   --install-location / \
-  --component-plist "${BASEDIR}/components.plist" \
+  --component-plist "${BASEDIR}/CrcComponents.plist" \
   "${OUTPUT}/crc.pkg"
+
+pkgbuild --identifier com.redhat.crc-tray --version ${version} \
+  --root "${trayRootDir}" \
+  --install-location / \
+  --component-plist "${BASEDIR}/TrayComponents.plist" \
+  "${OUTPUT}/crc-tray.pkg"
 
 productbuild --distribution "${BASEDIR}/Distribution" \
   --resources "${BASEDIR}/Resources" \
   --package-path "${OUTPUT}" \
   "${OUTPUT}/crc-unsigned.pkg"
 rm "${OUTPUT}/crc.pkg"
+rm "${OUTPUT}/crc-tray.pkg"
 
 if [ ! "${NO_CODESIGN}" -eq "1" ]; then
   productsign --sign "${PRODUCTSIGN_IDENTITY}" "${OUTPUT}/crc-unsigned.pkg" "${OUTPUT}/crc-macos-installer.pkg"
