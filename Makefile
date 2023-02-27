@@ -402,11 +402,25 @@ $(BUILD_DIR)/windows-amd64/crc-windows-installer.zip: $(BUILD_DIR)/windows-amd64
 
 .PHONY: choco choco-clean
 CHOCO_PKG_DIR = packaging/chocolatey/crc
-choco: clean choco-clean $(BUILD_DIR)/windows-amd64/crc.exe $(HOST_BUILD_DIR)/crc-embedder $(CHOCO_PKG_DIR)/crc.nuspec
+$(CHOCO_PKG_DIR)/tools/crc-admin-helper-windows.exe: $(HOST_BUILD_DIR)/crc-embedder
 	$(HOST_BUILD_DIR)/crc-embedder download --goos=windows --components=admin-helper $(CHOCO_PKG_DIR)/tools
+choco: clean choco-clean $(BUILD_DIR)/windows-amd64/crc.exe $(CHOCO_PKG_DIR)/tools/crc-admin-helper-windows.exe $(CHOCO_PKG_DIR)/crc.nuspec $(CHOCO_PKG_DIR)/VERIFICATION.txt
 	cp $(BUILD_DIR)/windows-amd64/crc.exe $(CHOCO_PKG_DIR)/tools/crc.exe
-	cp LICENSE $(CHOCO_PKG_DIR)/tools/LICENSE.txt
+	mv $(CHOCO_PKG_DIR)/VERIFICATION.txt $(CHOCO_PKG_DIR)/tools/VERIFICATION.txt
+	powershell.exe -NoProfile -Command "@('From: https://github.com/crc-org/crc/blob/main/LICENSE') + (Get-Content 'LICENSE') | Set-Content $(CHOCO_PKG_DIR)/tools/LICENSE.txt"
 	cd $(CHOCO_PKG_DIR) && choco pack
 choco-clean:
 	rm -f $(CHOCO_PKG_DIR)/*.nupkg
 	rm -f $(CHOCO_PKG_DIR)/tools/*.exe
+	rm -f $(CHOCO_PKG_DIR)/crc.nuspec
+	rm -f $(CHOCO_PKG_DIR)/tools/VERIFICATION.txt
+
+ADMIN_HELPER_HASH = $(shell powershell.exe -NoProfile -Command "Get-FileHash -Algorithm SHA256 $(CHOCO_PKG_DIR)/tools/crc-admin-helper-windows.exe | Select-Object -ExpandProperty Hash")
+HELPER_SCRIPT_HASH = $(shell powershell.exe -NoProfile -Command "Get-FileHash -Algorithm SHA256 $(CHOCO_PKG_DIR)/tools/crcprerequisitesetup.ps1 | Select-Object -ExpandProperty Hash")
+# todo: retreive this dynamically instead of setting here
+ADMIN_HELPER_VERSION = 0.0.12
+%.txt: %.txt.in
+	@sed -e 's/__ADMIN_HELPER_CHECKSUM__/'$(ADMIN_HELPER_HASH)'/g' \
+		 -e 's/__HELPER_SCRIPT_CHECKSUM__/'$(HELPER_SCRIPT_HASH)'/g' \
+		 -e 's/__ADMIN_HELPER_VERSION__/'$(ADMIN_HELPER_VERSION)'/g' \
+	     $< >$@

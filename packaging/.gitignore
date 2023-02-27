@@ -15,3 +15,5 @@
 /chocolatey/crc/crc.nuspec
 /chocolatey/crc/tools/*.exe
 /chocolatey/crc/tools/LICENSE.txt
+/chocolatey/crc/VERIFICATION.txt
+/chocolatey/crc/tools/VERIFICATION.txt
