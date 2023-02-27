@@ -1,10 +1,9 @@
-﻿$ErrorActionPreference = 'Stop'; # stop on all errors
+﻿$ErrorActionPreference = 'Stop';
 $toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
 $setupScript = Join-Path "$toolsDir" "crcprerequisitesetup.ps1"
 
 Import-Module $setupScript
 
-# generate ignore file for crc-admin-helper-windows.exe to avoid shim generation and addintion to PATH
 New-Item "$toolsDir\crc-admin-helper-windows.exe.ignore" -ItemType File -Force | Out-Null
 
 if (Test-ProcessAdminRights) {
