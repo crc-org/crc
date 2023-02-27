@@ -13,5 +13,5 @@ if (Test-ProcessAdminRights) {
     New-VsockGuestCommunicationRegistry
 } else {
     Write-Host "CRC needs administrator privileges to enable Hyper-V, create new group and add current user to needed groups, please run the installation as administrator"
-    Exit 1
+    Set-PowershellExitCode 1
 }
