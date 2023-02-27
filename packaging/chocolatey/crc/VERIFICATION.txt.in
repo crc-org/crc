@@ -1,0 +1,23 @@
+﻿VERIFICATION
+
+Verification is intended to assist the Chocolatey moderators and community
+in verifying that this package's contents are trustworthy.
+
+This package is published by the CRC project itself.
+
+There are two embedded files in the package, those can be verified like this:
+
+1. crc.exe
+    - crc.exe is built from source while building the chocolatey package, the chocolatey package specific files lives in the same
+      git repo as the CRC project at: https://github.com/crc-org/crc/tree/main/packaging/chocolatey/crc
+      the chocolatey package is also published by CRC project itself.
+
+2. crc-admin-helper-windows.exe
+    - Go to https://github.com/crc-org/admin-helper/releases/download/v__ADMIN_HELPER_VERSION__/crc-admin-helper-windows.exe to download the binary
+    - User posh cmdlet 'Get-FileHash -Algorithm SHA256' to obtain the hash for the downloaded binary
+    - Checksum SHA256: __ADMIN_HELPER_CHECKSUM__
+
+3. crcprerequisitesetup.ps1
+    - Go to https://github.com/crc-org/crc/raw/main/packaging/chocolatey/crc/tools/crcprerequisitesetup.ps1 to download the script
+    - User posh cmdlet 'Get-FileHash -Algorithm SHA256' to obtain the hash for the downloaded script
+    - Checksum SHA256: __HELPER_SCRIPT_CHECKSUM__
