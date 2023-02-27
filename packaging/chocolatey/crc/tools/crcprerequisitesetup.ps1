@@ -6,7 +6,7 @@ $VsockGuestCommunicationRegistryPath = "HKLM:\Software\Microsoft\Windows NT\Curr
 function New-CrcGroup {
     $crcgrp = Get-LocalGroup -Name $CrcGroupName -ErrorAction SilentlyContinue
     if ($crcgrp) {
-        Write-Host "crc-users group already exists"
+        Write-Host "Local Group 'crc-users' already exists"
     } else {
         New-LocalGroup -Name $CrcGroupName -Description 'Group for Red Hat OpenShift Local users' | Out-Null
     }
@@ -21,7 +21,8 @@ function Install-Hyperv {
             if ($enabled) {
                 Write-Host "Hyper-V is already enabled"
             } else {
-                Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart -ErrorAction SilentlyContinue | Out-Null
+                Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart | Out-Null
+                Write-Host -ForegroundColor Red "Hyper-V has been enabled, please reboot to complete installation"
             }
         }
         "Server" {
@@ -29,7 +30,8 @@ function Install-Hyperv {
             if ($enabled) {
                 Write-Host "Hyper-V is already enabled"
             } else {
-                Install-WindowsFeature -Name Hyper-V -IncludeManagementTools -ErrorAction SilentlyContinue | Out-Null
+                Install-WindowsFeature -Name Hyper-V -IncludeManagementTools -Confirm:$false -Restart:$false | Out-Null
+                Write-Host -ForegroundColor Red "Hyper-V has been enabled, please reboot to complete installation"
             }
         }
     }
