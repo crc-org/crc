@@ -3,11 +3,12 @@
   <metadata>
     <id>crc</id>
     <version>__VERSION__</version>
-    <owners>https://github.com/crc-org</owners>
+    <owners>anjannath</owners>
     <title>CRC - Runs Containers</title>
-    <authors>anjannath</authors>
+    <authors>https://github.com/crc-org</authors>
     <projectUrl>https://crc.dev/blog/about</projectUrl>
-    <iconUrl>https://i.ibb.co/m0b6dsL/crc-upstream-logo.png</iconUrl>
+    <bugTrackerUrl>https://github.com/crc-org/crc/issues</bugTrackerUrl>
+    <iconUrl>https://cdn.statically.io/gh/crc-org/blog/main/static/crc-upstream-logo.png</iconUrl>
     <licenseUrl>https://github.com/crc-org/crc/blob/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <tags>crc ocp openshift openshiftlocal okd podman</tags>
@@ -19,7 +20,7 @@ CRC is a tool to run containers. It manages a local OpenShift 4.x cluster, OKD c
 Learn more and contribute on [GitHub](https://github.com/crc-org/crc).
     </description>
     <releaseNotes>https://github.com/crc-org/crc/releases/tag/v__VERSION__</releaseNotes>
-    <copyright>2022 Red Hat, Inc</copyright>
+    <copyright>2023 Red Hat, Inc</copyright>
     <packageSourceUrl>https://github.com/crc-org/crc/tree/main/packaging/chocolatey</packageSourceUrl>
     <projectSourceUrl>https://github.com/crc-org/crc</projectSourceUrl>
     <docsUrl>https://crc.dev/crc</docsUrl>
