@@ -21,8 +21,14 @@ function Install-Hyperv {
             if ($enabled) {
                 Write-Host "Hyper-V is already enabled"
             } else {
-                Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart | Out-Null
-                Write-Host -ForegroundColor Red "Hyper-V has been enabled, please reboot to complete installation"
+                try {
+                    Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart | Out-Null
+                    Write-Host -ForegroundColor Red "Hyper-V has been enabled, please reboot to complete installation"
+                }
+                catch {
+                    Write-Host -ForegroundColor Red "Failed to enable Hyper-V, aborting installation"
+                    Set-PowershellExitCode 1
+                }
             }
         }
         "Server" {
@@ -30,8 +36,14 @@ function Install-Hyperv {
             if ($enabled) {
                 Write-Host "Hyper-V is already enabled"
             } else {
-                Install-WindowsFeature -Name Hyper-V -IncludeManagementTools -Confirm:$false -Restart:$false | Out-Null
-                Write-Host -ForegroundColor Red "Hyper-V has been enabled, please reboot to complete installation"
+                try {
+                    Install-WindowsFeature -Name Hyper-V -IncludeManagementTools -Confirm:$false -Restart:$false | Out-Null
+                    Write-Host -ForegroundColor Red "Hyper-V has been enabled, please reboot to complete installation"
+                }
+                catch {
+                    Write-Host -ForegroundColor Red "Failed to enable Hyper-V, aborting installation"
+                    Set-PowershellExitCode 1
+                }
             }
         }
     }
