@@ -529,7 +529,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	if client.useVSock() {
-		if err := ensureRoutesControllerIsRunning(sshRunner, ocConfig); err != nil {
+		if err := ensureRoutesControllerIsRunning(sshRunner, ocConfig, startConfig.Preset, vm.bundle); err != nil {
 			return nil, err
 		}
 	}
@@ -822,7 +822,7 @@ func logBundleDate(crcBundleMetadata *bundle.CrcBundleInfo) {
 	}
 }
 
-func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Config) error {
+func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Config, preset crcPreset.Preset, bundleInfo *bundle.CrcBundleInfo) error {
 	bin, err := json.Marshal(v1.Pod{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",
@@ -837,7 +837,7 @@ func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Confi
 			Containers: []v1.Container{
 				{
 					Name:            "routes-controller",
-					Image:           "quay.io/crcont/routes-controller:latest",
+					Image:           getRouterControllerImage(preset, bundleInfo),
 					ImagePullPolicy: v1.PullIfNotPresent,
 				},
 			},
@@ -854,6 +854,13 @@ func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Confi
 		return err
 	}
 	return nil
+}
+
+func getRouterControllerImage(preset crcPreset.Preset, bundleInfo *bundle.CrcBundleInfo) string {
+	if preset == crcPreset.OpenShift {
+		return fmt.Sprintf("quay.io/crcont/routes-controller:%s", bundleInfo.GetOpenshiftVersion())
+	}
+	return "quay.io/crcont/routes-controller:latest"
 }
 
 func updateKubeconfig(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, kubeconfigFilePath string) error {
