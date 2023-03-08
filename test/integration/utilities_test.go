@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -112,4 +114,22 @@ func SendCommandToVM(cmd string) (string, error) {
 		return "", err
 	}
 	return string(out), nil
+}
+
+func AddOCToPath() error {
+	path := os.ExpandEnv("${HOME}/.crc/bin/oc:$PATH")
+	if runtime.GOOS == "windows" {
+		userHomeDir, err := os.UserHomeDir()
+		if err != nil {
+			return err
+		}
+		unexpandedPath := filepath.Join(userHomeDir, ".crc/bin/oc;${PATH}")
+		path = os.ExpandEnv(unexpandedPath)
+	}
+	err := os.Setenv("PATH", path)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
