@@ -29,6 +29,7 @@ var (
 	pullSecretFile     string
 	cleanupHome        bool
 	testWithShell      string
+	CRCVersion         string
 
 	GodogFormat              string
 	GodogTags                string
@@ -47,6 +48,7 @@ func ParseFlags() {
 	pflag.StringVar(&pullSecretFile, "pull-secret-file", "/path/to/pull-secret", "Path to the file containing pull secret")
 	pflag.StringVar(&CRCExecutable, "crc-binary", "/path/to/binary/crc", "Path to the CRC executable to be tested")
 	pflag.BoolVar(&cleanupHome, "cleanup-home", false, "Try to remove crc home folder before starting the suite") // TODO: default=true
+	pflag.StringVar(&CRCVersion, "crc-version", "", "Version of CRC to be tested")
 }
 
 func InitializeTestSuite(tctx *godog.TestSuiteContext) {
@@ -366,6 +368,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		util.CommandReturnShouldNotContain)
 	s.Step(`^(stdout|stderr|exitcode) (?:should|does not) contain$`,
 		util.CommandReturnShouldNotContainContent)
+	s.Step(`^(stdout|stderr|exitcode) (?:should contain|contains) correct version$`,
+		CommandReturnShouldContainCorrectVersion)
 
 	s.Step(`^(stdout|stderr|exitcode) (?:should equal|equals) "(.*)"$`,
 		util.CommandReturnShouldEqual)
@@ -591,6 +595,15 @@ func CheckOutputMatchWithRetry(retryCount int, retryTime string, command string,
 	}
 
 	return matchErr
+}
+
+func CommandReturnShouldContainCorrectVersion() error {
+
+	if CRCVersion == "" {
+		return util.CommandReturnShouldContain("stdout", "version:")
+	}
+
+	return util.CommandReturnShouldContain("stdout", CRCVersion)
 }
 
 func CheckCRCStatus(state string) error {
