@@ -1,6 +1,7 @@
 package test_test
 
 import (
+	"os/exec"
 	"runtime"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -26,6 +27,25 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Label("openshift-prese
 			} else {
 				Expect(RunCRCExpectSuccess("start", "--memory", "12000", "--cpus", "5", "--disk-size", "40", "-b", bundlePath, "-p", pullSecretPath)).To(ContainSubstring("Started the OpenShift cluster"))
 			}
+		})
+
+		It("login to cluster using crc-admin context", func() {
+
+			err := AddOCToPath()
+			Expect(err).NotTo(HaveOccurred())
+
+			cmd := exec.Command("oc", "config", "use-context", "crc-admin")
+			err = cmd.Run()
+			Expect(err).NotTo(HaveOccurred())
+
+			cmd = exec.Command("oc", "whoami")
+			out, err := cmd.Output()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(out)).To(ContainSubstring("kubeadmin"))
+
+			cmd = exec.Command("oc", "get", "co")
+			err = cmd.Run()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("check VM's memory size", func() {
@@ -137,4 +157,5 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Label("openshift-prese
 
 		})
 	})
+
 })
