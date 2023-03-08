@@ -22,29 +22,29 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Label("openshift-prese
 		It("start CRC", func() {
 			// default values: "--memory", "9216", "--cpus", "4", "disk-size", "31"
 			if bundlePath == "" {
-				Expect(RunCRCExpectSuccess("start", "-p", pullSecretPath)).To(ContainSubstring("Started the OpenShift cluster"))
+				Expect(RunCRCExpectSuccess("start", "--memory", "12000", "--cpus", "5", "--disk-size", "40", "-p", pullSecretPath)).To(ContainSubstring("Started the OpenShift cluster"))
 			} else {
-				Expect(RunCRCExpectSuccess("start", "-b", bundlePath, "-p", pullSecretPath)).To(ContainSubstring("Started the OpenShift cluster"))
+				Expect(RunCRCExpectSuccess("start", "--memory", "12000", "--cpus", "5", "--disk-size", "40", "-b", bundlePath, "-p", pullSecretPath)).To(ContainSubstring("Started the OpenShift cluster"))
 			}
 		})
 
 		It("check VM's memory size", func() {
 			out, err := SendCommandToVM("cat /proc/meminfo")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*9\d{6}`))
+			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*11\d{6}`))
 		})
 
 		It("check VM's number of cpus", func() {
 			out, err := SendCommandToVM("cat /proc/cpuinfo")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(out).Should(MatchRegexp(`processor[\s]*\:[\s]*3`))
-			Expect(out).ShouldNot(MatchRegexp(`processor[\s]*\:[\s]*4`))
+			Expect(out).Should(MatchRegexp(`processor[\s]*\:[\s]*4`))
+			Expect(out).ShouldNot(MatchRegexp(`processor[\s]*\:[\s]*5`))
 		})
 
 		It("check VM's disk size", func() {
 			out, err := SendCommandToVM("df -h | grep sysroot")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(out).Should(MatchRegexp(`.*31G[\s].*[\s]/sysroot`))
+			Expect(out).Should(MatchRegexp(`.*40G[\s].*[\s]/sysroot`))
 		})
 
 		It("stop CRC", func() {
@@ -56,13 +56,13 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Label("openshift-prese
 	Describe("use custom values", func() {
 
 		It("start CRC", func() {
-			Expect(RunCRCExpectSuccess("start", "--memory", "12000", "--cpus", "6", "--disk-size", "40")).To(ContainSubstring("Started the OpenShift cluster"))
+			Expect(RunCRCExpectSuccess("start", "--memory", "13000", "--cpus", "6", "--disk-size", "50")).To(ContainSubstring("Started the OpenShift cluster"))
 		})
 
 		It("check VM's memory size", func() {
 			out, err := SendCommandToVM("cat /proc/meminfo")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*11\d{6}`))
+			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*12\d{6}`))
 		})
 
 		It("check VM's number of cpus", func() {
@@ -75,7 +75,7 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Label("openshift-prese
 		It("check VM's disk size", func() {
 			out, err := SendCommandToVM("df -h | grep sysroot")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(out).Should(MatchRegexp(`.*40G[\s].*[\s]/sysroot`))
+			Expect(out).Should(MatchRegexp(`.*50G[\s].*[\s]/sysroot`))
 		})
 
 		It("stop CRC", func() {
@@ -126,7 +126,7 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Label("openshift-prese
 			It("check VM's disk size", func() {
 				out, err := SendCommandToVM("df -h | grep sysroot")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(out).Should(MatchRegexp(`.*40G[\s].*[\s]/sysroot`))
+				Expect(out).Should(MatchRegexp(`.*50G[\s].*[\s]/sysroot`))
 			})
 		}
 
