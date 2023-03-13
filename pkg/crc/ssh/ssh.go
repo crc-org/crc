@@ -72,6 +72,19 @@ func (runner *Runner) CopyData(data []byte, destFilename string, mode os.FileMod
 	return runner.copyDataFull(data, destFilename, mode, false)
 }
 
+func (runner *Runner) CopyFileFromVM(srcFilename string, destFilename string, mode os.FileMode) error {
+	command := fmt.Sprintf("sudo base64 %s", srcFilename)
+	stdout, stderr, err := runner.RunPrivate(command)
+	if err != nil {
+		return fmt.Errorf("Failed to get file content %s : %w", stderr, err)
+	}
+	rawDecodedText, err := base64.StdEncoding.DecodeString(stdout)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(destFilename, rawDecodedText, mode)
+}
+
 func (runner *Runner) CopyFile(srcFilename string, destFilename string, mode os.FileMode) error {
 	data, err := os.ReadFile(srcFilename)
 	if err != nil {
