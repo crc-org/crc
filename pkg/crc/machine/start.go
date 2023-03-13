@@ -110,7 +110,11 @@ func (client *client) updateVMConfig(startConfig types.StartConfig, vm *virtualM
 	return nil
 }
 
-func growRootFileSystem(sshRunner *crcssh.Runner) error {
+func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset) error {
+	if preset == crcPreset.Microshift {
+		logging.Debugf("growRootFileSystem does not support LVM which is used by %s images", preset)
+		return nil
+	}
 	// With 4.7, this is quite a manual process until https://github.com/openshift/installer/pull/4746 gets fixed
 	// See https://github.com/crc-org/crc/issues/2104 for details
 	rootPart, _, err := sshRunner.Run("realpath", "/dev/disk/by-label/root")
@@ -370,7 +374,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	// Trigger disk resize, this will be a no-op if no disk size change is needed
-	if err := growRootFileSystem(sshRunner); err != nil {
+	if err := growRootFileSystem(sshRunner, startConfig.Preset); err != nil {
 		return nil, errors.Wrap(err, "Error updating filesystem size")
 	}
 
@@ -408,7 +412,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Error getting proxy configuration")
 	}
 
-	if !vm.bundle.IsOpenShift() {
+	if vm.bundle.IsPodman() {
 		// **************************
 		//  END OF PODMAN START CODE
 		// **************************
@@ -474,6 +478,31 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			return nil, errors.Wrap(err, "Failed to query DNS from host")
 		}
 		logging.Warn(fmt.Sprintf("Failed to query DNS from host: %v", err))
+	}
+
+	if vm.bundle.IsMicroshift() {
+		// **************************
+		//  END OF MICROSHIFT START CODE
+		// **************************
+		// Start the microshift and copy the generated kubeconfig file
+		ocConfig := oc.UseOCWithSSH(sshRunner)
+		ocConfig.Context = "microshift"
+		ocConfig.Cluster = "microshift"
+
+		if err := startMicroshift(ctx, sshRunner, ocConfig, startConfig.PullSecret); err != nil {
+			return nil, err
+		}
+
+		if client.useVSock() {
+			if err := ensureRoutesControllerIsRunning(sshRunner, ocConfig, startConfig.Preset, vm.bundle); err != nil {
+				return nil, err
+			}
+		}
+
+		return &types.StartResult{
+			ClusterConfig: types.ClusterConfig{ClusterType: startConfig.Preset},
+			Status:        vmState,
+		}, nil
 	}
 
 	// Check the certs validity inside the vm
@@ -882,11 +911,8 @@ func updateKubeconfig(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh
 }
 
 func bundleMismatchWithPreset(preset crcPreset.Preset, bundleMetadata *bundle.CrcBundleInfo) error {
-	if preset == crcPreset.Podman && bundleMetadata.IsOpenShift() {
-		return errors.Errorf("Preset %s is used but bundle is provided for %s preset", crcPreset.Podman, crcPreset.OpenShift)
-	}
-	if preset != crcPreset.Podman && !bundleMetadata.IsOpenShift() {
-		return errors.Errorf("Preset %s is used but bundle is provided for %s preset", crcPreset.OpenShift, crcPreset.Podman)
+	if preset != bundleMetadata.GetBundleType() {
+		return errors.Errorf("Preset %s is used but bundle is provided for %s preset", preset, bundleMetadata.GetBundleType())
 	}
 	return nil
 }
@@ -920,5 +946,34 @@ func addPodmanSystemConnections(c *types.ConnectionDetails) error {
 	if err := podman.AddRootfulSystemConnection(c.SSHKeys[0], rootfulURI); err != nil {
 		return err
 	}
+	return nil
+}
+
+func startMicroshift(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.Config, pullSec cluster.PullSecretLoader) error {
+	logging.Infof("Starting Microshift service... [takes around 1min]")
+	content, err := pullSec.Value()
+	if err != nil {
+		return err
+	}
+	if err := sshRunner.CopyDataPrivileged([]byte(content), "/etc/crio/openshift-pull-secret", 0600); err != nil {
+		return err
+	}
+	if _, _, err := sshRunner.RunPrivileged("Starting microshift service", "systemctl", "start", "microshift"); err != nil {
+		return err
+	}
+	if err := sshRunner.CopyFileFromVM("/var/lib/microshift/resources/kubeadmin/kubeconfig", constants.KubeconfigFilePath, 0600); err != nil {
+		return err
+	}
+	if err := sshRunner.CopyFile(constants.KubeconfigFilePath, "/opt/kubeconfig", 0644); err != nil {
+		return err
+	}
+	if err := updateServerDetailsToKubeConfig(constants.KubeconfigFilePath, constants.KubeconfigFilePath); err != nil {
+		return err
+	}
+
+	if err := cluster.WaitForAPIServer(ctx, ocConfig); err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -37,6 +37,8 @@ func ParsePresetE(input string) (Preset, error) {
 		return OpenShift, nil
 	case OKD.String():
 		return OKD, nil
+	case Microshift.String():
+		return Microshift, nil
 	default:
 		return OpenShift, fmt.Errorf("Cannot parse preset '%s'", input)
 	}

@@ -5,6 +5,7 @@ SHELL := /bin/bash
 OPENSHIFT_VERSION ?= 4.12.5
 PODMAN_VERSION ?= 4.3.1
 OKD_VERSION ?= 4.12.0-0.okd-2023-02-18-033438
+MICROSHIFT_VERSION ?= 4.12.5
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 2.15.0
 COMMIT_SHA=$(shell git rev-parse --short HEAD)
@@ -58,6 +59,7 @@ VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.ocpVersion=$(OPENSHIFT_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.okdVersion=$(OKD_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.podmanVersion=$(PODMAN_VERSION) \
+	-X $(REPOPATH)/pkg/crc/version.microshiftVersion=$(MICROSHIFT_VERSION) \
 	-X $(REPOPATH)/pkg/crc/version.commitSha=$(COMMIT_SHA)
 RELEASE_VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/segment.WriteKey=cvpHsNcmGCJqVzf6YxrSnVlwFSAZaYtp
 

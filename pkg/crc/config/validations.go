@@ -123,7 +123,7 @@ func ValidateYesNo(value interface{}) (bool, string) {
 func validatePreset(value interface{}) (bool, string) {
 	_, err := crcpreset.ParsePresetE(cast.ToString(value))
 	if err != nil {
-		return false, fmt.Sprintf("Unknown preset. Only %s and %s are valid.", crcpreset.Podman, crcpreset.OpenShift)
+		return false, fmt.Sprintf("Unknown preset. Only %s, %s, %s and %s are valid.", crcpreset.Podman, crcpreset.OpenShift, crcpreset.OKD, crcpreset.Microshift)
 	}
 	return true, ""
 }
