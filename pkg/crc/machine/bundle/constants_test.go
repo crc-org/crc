@@ -12,15 +12,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestURIOpenShiftVersion(t *testing.T) {
-	openshiftVersion := version.GetBundleVersion(preset.OpenShift)
-	require.NotEqual(t, openshiftVersion, "0.0.0-unset", fmt.Sprintf("OpenShift version is unset (%s), build flags are incorrect", openshiftVersion))
+func TestBundleVersionURI(t *testing.T) {
+	checkBundleVersionURI(t, preset.OpenShift)
+	checkBundleVersionURI(t, preset.Microshift)
+}
 
-	uriPrefix := fmt.Sprintf("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/openshift/%s", openshiftVersion)
+func checkBundleVersionURI(t *testing.T, p preset.Preset) {
+	bundleVersion := version.GetBundleVersion(p)
+	require.NotEqual(t, bundleVersion, "0.0.0-unset", fmt.Sprintf("%s version is unset (%s), build flags are incorrect", p, bundleVersion))
+
+	uriPrefix := fmt.Sprintf("https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/%s/%s", p, bundleVersion)
 	for _, osInfo := range bundleLocations {
 		for _, presetInfo := range osInfo {
-			for _, remoteFile := range presetInfo {
-				assert.True(t, strings.HasPrefix(remoteFile.URI, uriPrefix), fmt.Sprintf("URI %s does not match OpenShift version %s", remoteFile.URI, openshiftVersion))
+			for preset, remoteFile := range presetInfo {
+				if preset == p {
+					assert.True(t, strings.HasPrefix(remoteFile.URI, uriPrefix), fmt.Sprintf("URI %s does not match %s version %s", remoteFile.URI, p, bundleVersion))
+				}
 			}
 		}
 	}

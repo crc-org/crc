@@ -18,7 +18,7 @@ func (client *client) GetConsoleURL() (*types.ConsoleResult, error) {
 	}
 	defer vm.Close()
 
-	if !vm.bundle.IsOpenShift() {
+	if vm.bundle.IsPodman() {
 		return nil, fmt.Errorf("Only supported with OpenShift bundles")
 	}
 
