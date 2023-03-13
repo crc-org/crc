@@ -29,6 +29,8 @@ var (
 	podmanVersion = "0.0.0-unset"
 
 	okdVersion = "0.0.0-unset"
+
+	microshiftVersion = "0.0.0-unset"
 	// will always be false on linux
 	// will be true for releases on macos and windows
 	// will be false for git builds on macos and windows
@@ -67,6 +69,8 @@ func GetBundleVersion(preset crcPreset.Preset) string {
 		return podmanVersion
 	case crcPreset.OKD:
 		return okdVersion
+	case crcPreset.Microshift:
+		return microshiftVersion
 	default:
 		return ocpVersion
 	}

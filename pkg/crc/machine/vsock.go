@@ -94,7 +94,7 @@ func vsockPorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint)
 		},
 	}
 	switch preset {
-	case crcPreset.OpenShift, crcPreset.OKD:
+	case crcPreset.OpenShift, crcPreset.OKD, crcPreset.Microshift:
 		exposeRequest = append(exposeRequest,
 			types.ExposeRequest{
 				Protocol: "tcp",

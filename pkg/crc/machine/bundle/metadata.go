@@ -182,6 +182,8 @@ func (bundle *CrcBundleInfo) GetBundleType() crcPreset.Preset {
 		return crcPreset.OpenShift
 	case "podman", "podman_custom":
 		return crcPreset.Podman
+	case "microshift", "microshift_custom":
+		return crcPreset.Microshift
 	default:
 		return crcPreset.OpenShift
 	}
@@ -189,6 +191,14 @@ func (bundle *CrcBundleInfo) GetBundleType() crcPreset.Preset {
 
 func (bundle *CrcBundleInfo) IsOpenShift() bool {
 	return bundle.GetBundleType() == crcPreset.OpenShift
+}
+
+func (bundle *CrcBundleInfo) IsMicroshift() bool {
+	return bundle.GetBundleType() == crcPreset.Microshift
+}
+
+func (bundle *CrcBundleInfo) IsPodman() bool {
+	return bundle.GetBundleType() == crcPreset.Podman
 }
 
 func (bundle *CrcBundleInfo) verify() error {
@@ -309,7 +319,7 @@ func Download(preset crcPreset.Preset, bundleURI string) (string, error) {
 	// different codepath from user-specified URIs as for the default
 	// bundles, their sha256sums are known and can be checked.
 	if bundleURI == constants.GetDefaultBundlePath(preset) {
-		if preset == crcPreset.OpenShift {
+		if preset == crcPreset.OpenShift || preset == crcPreset.Microshift {
 			return DownloadDefault(preset)
 		}
 		return image.PullBundle(preset, "")
