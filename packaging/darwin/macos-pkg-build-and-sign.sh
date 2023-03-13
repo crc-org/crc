@@ -40,24 +40,25 @@ function signAppBundle() {
   codesign --deep --sign "${CODESIGN_IDENTITY}" --options runtime --timestamp --force --entitlements "${entitlements}" "$1"
 }
 
-binDir="${BASEDIR}/root/Applications/Red Hat OpenShift Local.app/Contents/Resources"
+rootDir="${BASEDIR}/root"
+binDir="${rootDir}/Applications/Red Hat OpenShift Local.app/Contents/Resources"
 
 version=$(cat "${BASEDIR}/VERSION")
 
-pkgbuild --analyze --root ${BASEDIR}/root ${BASEDIR}/components.plist
+pkgbuild --analyze --root "${rootDir}" ${BASEDIR}/components.plist
 plutil -replace BundleIsRelocatable -bool NO ${BASEDIR}/components.plist
 
 sign "${binDir}/crc"
 sign "${binDir}/crc-admin-helper-darwin"
 sign "${binDir}/vfkit"
 
-signAppBundle "${BASEDIR}/root/Applications/Red Hat OpenShift Local.app"
+signAppBundle "${rootDir}/Applications/Red Hat OpenShift Local.app"
 
 sudo chmod +sx "${binDir}/crc-admin-helper-darwin"
 
 pkgbuild --identifier com.redhat.crc --version ${version} \
   --scripts "${BASEDIR}/scripts" \
-  --root "${BASEDIR}/root" \
+  --root "${rootDir}" \
   --install-location / \
   --component-plist "${BASEDIR}/components.plist" \
   "${OUTPUT}/crc.pkg"
