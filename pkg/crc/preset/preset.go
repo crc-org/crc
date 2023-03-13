@@ -9,9 +9,10 @@ import (
 type Preset string
 
 const (
-	Podman    Preset = "podman"
-	OpenShift Preset = "openshift"
-	OKD       Preset = "okd"
+	Podman     Preset = "podman"
+	OpenShift  Preset = "openshift"
+	OKD        Preset = "okd"
+	Microshift Preset = "microshift"
 )
 
 func (preset Preset) String() string {
@@ -22,6 +23,8 @@ func (preset Preset) String() string {
 		return string(OpenShift)
 	case OKD:
 		return string(OKD)
+	case Microshift:
+		return string(Microshift)
 	}
 	return "invalid"
 }
