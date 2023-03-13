@@ -262,17 +262,38 @@ If you find an issue, please report it at https://github.com/openshift/okd
 `
 )
 
+func startTemplateForMicroshift() string {
+	tmpl := `Started the MicroShift cluster.
+
+%s
+
+Use the 'oc' command line interface:
+  {{ .CommandLinePrefix }} {{ .EvalCommandLine }}
+  {{ .CommandLinePrefix }} oc COMMAND
+`
+	userShell, err := shell.GetShell("")
+	if err != nil {
+		userShell = ""
+	}
+
+	return fmt.Sprintf(tmpl, shell.GetEnvString(userShell, "KUBECONFIG", "{{ .KubeConfigPath }}"))
+}
+
 type templateVariables struct {
 	ClusterConfig       *clusterConfig
 	EvalCommandLine     string
 	CommandLinePrefix   string
 	PodmanRemote        string
 	FallbackPortWarning string
+	KubeConfigPath      string
 }
 
 func writeTemplatedMessage(writer io.Writer, s *startResult) error {
 	if s.ClusterConfig.ClusterType == preset.OpenShift || s.ClusterConfig.ClusterType == preset.OKD {
 		return writeOpenShiftTemplatedMessage(writer, s)
+	}
+	if s.ClusterConfig.ClusterType == preset.Microshift {
+		return writeMicroShiftTemplatedMessage(writer, s)
 	}
 
 	return writePodmanTemplatedMessage(writer, s)
@@ -317,6 +338,23 @@ func writePodmanTemplatedMessage(writer io.Writer, s *startResult) error {
 		EvalCommandLine:   shell.GenerateUsageHint(userShell, "crc podman-env"),
 		CommandLinePrefix: commandLinePrefix(userShell),
 		PodmanRemote:      constants.PodmanRemoteExecutableName,
+	})
+}
+
+func writeMicroShiftTemplatedMessage(writer io.Writer, s *startResult) error {
+	parsed, err := template.New("template").Parse(startTemplateForMicroshift())
+	if err != nil {
+		return err
+	}
+	userShell, err := shell.GetShell("")
+	if err != nil {
+		userShell = ""
+	}
+
+	return parsed.Execute(writer, &templateVariables{
+		EvalCommandLine:   shell.GenerateUsageHint(userShell, "crc oc-env"),
+		CommandLinePrefix: commandLinePrefix(userShell),
+		KubeConfigPath:    constants.KubeconfigFilePath,
 	})
 }
 
