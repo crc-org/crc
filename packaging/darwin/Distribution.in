@@ -5,7 +5,7 @@
     <welcome file="welcome.html" mime-type="text/html" />
     <conclusion file="conclusion.html" mime-type="text/html" />
     <license file="LICENSE.txt"/>
-    <options customize="never" allow-external-scripts="no"/>
+    <options customize="allow" allow-external-scripts="no"/>
     <domains enable_localSystem="true" />
     <options rootVolumeOnly="true"/>
     <options hostArchitectures="x86_64,arm64" />
@@ -48,11 +48,11 @@ function installCheck() {
         <line choice="crc"/>
         <line choice="crc-tray"/>
     </choices-outline>
-    <choice id="crc" title="crc">
+    <choice id="crc" title="Red Hat OpenShift Local" enabled="false" selected="true" visible="true">
         <pkg-ref id="crc.pkg"/>
     </choice>
     <pkg-ref id="crc.pkg" auth="Root">crc.pkg</pkg-ref>
-    <choice id="crc-tray" title="crc-tray">
+    <choice id="crc-tray" title="System Tray for Red Hat OpenShift Local" enabled="true" selected="false" visible="true">
         <pkg-ref id="crc-tray.pkg"/>
     </choice>
     <pkg-ref id="crc-tray.pkg" auth="Root">crc-tray.pkg</pkg-ref>
