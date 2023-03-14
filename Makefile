@@ -328,7 +328,7 @@ packagedir: clean embed-download-darwin macos-universal-binary
 	# crc-tray.pkg
 	tar -C $(EMBED_DOWNLOAD_DIR) -xvzf $(EMBED_DOWNLOAD_DIR)/$(TRAY_TARBALL)
 	rm $(EMBED_DOWNLOAD_DIR)/$(TRAY_TARBALL)
-	mv $(EMBED_DOWNLOAD_DIR)/crc-tray-darwin-universal/crc-tray.app packaging/darwin/root-crc-tray/Applications/Red\ Hat\ OpenShift\ Local\ Tray.app
+	mv $(EMBED_DOWNLOAD_DIR)/crc-tray-darwin-universal/crc-tray.app packaging/darwin/root-crc-tray/Applications/Red\ Hat\ OpenShift\ Local.app
 	rm -fr $(EMBED_DOWNLOAD_DIR)/crc-tray-darwin-universal
 
 	# crc.pkg

@@ -55,7 +55,7 @@ sign "${crcBinDir}/crc"
 sign "${crcBinDir}/crc-admin-helper-darwin"
 sign "${crcBinDir}/vfkit"
 
-signAppBundle "${trayRootDir}/Applications/Red Hat OpenShift Local Tray.app"
+signAppBundle "${trayRootDir}/Applications/Red Hat OpenShift Local.app"
 
 sudo chmod +sx "${crcBinDir}/crc-admin-helper-darwin"
 
