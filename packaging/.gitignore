@@ -1,5 +1,7 @@
-/components.plist
-/darwin/root/
+/darwin/CrcComponents.plist
+/darwin/TrayComponents.plist
+/darwin/root-crc-tray/
+/darwin/root-crc/
 /darwin/Distribution
 /darwin/Resources/LICENSE.txt
 /darwin/Resources/welcome.html
