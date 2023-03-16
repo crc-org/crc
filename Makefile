@@ -247,8 +247,8 @@ e2e-story-registry: install
 
 
 .PHONY: fmt
-fmt:
-	@gofmt -l -w $(SOURCE_DIRS)
+fmt: $(TOOLS_BINDIR)/goimports
+	@$(TOOLS_BINDIR)/goimports -l -w $(SOURCE_DIRS)
 
 # Run golangci-lint against code
 .PHONY: lint cross-lint
