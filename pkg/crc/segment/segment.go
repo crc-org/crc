@@ -22,6 +22,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/telemetry"
 	"github.com/crc-org/crc/pkg/crc/version"
 	crcos "github.com/crc-org/crc/pkg/os"
+	crcTerminal "github.com/crc-org/crc/pkg/os/terminal"
 	"github.com/pborman/uuid"
 	"github.com/segmentio/analytics-go/v3"
 	"github.com/spf13/cast"
@@ -197,7 +198,7 @@ func properties(ctx context.Context, err error, duration time.Duration) analytic
 	properties = properties.
 		Set("success", err == nil).
 		Set("duration", duration.Milliseconds()).
-		Set("tty", crcos.RunningInTerminal()).
+		Set("tty", crcTerminal.IsRunningInTerminal()).
 		Set("remote", crcos.RunningUsingSSH())
 	if err != nil {
 		properties = properties.Set("error", telemetry.SetError(err)).

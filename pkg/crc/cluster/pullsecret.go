@@ -15,7 +15,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/crc/validation"
-	crcos "github.com/crc-org/crc/pkg/os"
+	crcTerminal "github.com/crc-org/crc/pkg/os/terminal"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/zalando/go-keyring"
@@ -171,7 +171,7 @@ You can copy it from the Pull Secret section of %s.
 // promptUserForSecret can be used for any kind of secret like image pull
 // secret or for password.
 func promptUserForSecret() (string, error) {
-	if !crcos.RunningInTerminal() {
+	if !crcTerminal.IsRunningInTerminal() {
 		return "", errors.New("cannot ask for secret, crc not launched by a terminal")
 	}
 

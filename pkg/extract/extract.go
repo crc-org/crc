@@ -13,28 +13,29 @@ import (
 	"github.com/cheggaaa/pb/v3"
 	"github.com/crc-org/crc/pkg/crc/logging"
 	crcos "github.com/crc-org/crc/pkg/os"
+	"github.com/crc-org/crc/pkg/os/terminal"
+
 	"github.com/h2non/filetype"
 	"github.com/klauspost/compress/zstd"
 	"github.com/pkg/errors"
 	"github.com/xi2/xz"
-	terminal "golang.org/x/term"
 )
 
 const minSizeForProgressBar = 100_000_000
 
-func UncompressWithFilter(tarball, targetDir string, showProgress bool, fileFilter func(string) bool) ([]string, error) {
-	return uncompress(tarball, targetDir, fileFilter, showProgress && terminal.IsTerminal(int(os.Stdout.Fd())))
+func UncompressWithFilter(tarball, targetDir string, fileFilter func(string) bool) ([]string, error) {
+	return uncompress(tarball, targetDir, fileFilter, false) // never show detailed output
 }
 
 func Uncompress(tarball, targetDir string, showProgress bool) ([]string, error) {
-	return uncompress(tarball, targetDir, nil, showProgress && terminal.IsTerminal(int(os.Stdout.Fd())))
+	return uncompress(tarball, targetDir, nil, terminal.IsShowTerminalOutput())
 }
 
 func uncompress(tarball, targetDir string, fileFilter func(string) bool, showProgress bool) ([]string, error) {
 	logging.Debugf("Uncompressing %s to %s", tarball, targetDir)
 
 	if strings.HasSuffix(tarball, ".zip") {
-		return unzip(tarball, targetDir, fileFilter, showProgress)
+		return unzip(tarball, targetDir, fileFilter, terminal.IsShowTerminalOutput())
 	}
 
 	file, err := os.Open(filepath.Clean(tarball))

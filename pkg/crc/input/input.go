@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"strings"
 
-	crcos "github.com/crc-org/crc/pkg/os"
+	crcTerminal "github.com/crc-org/crc/pkg/os/terminal"
 )
 
 func PromptUserForYesOrNo(message string, force bool) bool {
 	if force {
 		return true
 	}
-	if !crcos.RunningInTerminal() {
+	if !crcTerminal.IsRunningInTerminal() {
 		return false
 	}
 	var response string

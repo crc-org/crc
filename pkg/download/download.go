@@ -11,6 +11,7 @@ import (
 
 	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/os/terminal"
 
 	"github.com/cavaliergopher/grab/v3"
 	"github.com/cheggaaa/pb/v3"
@@ -28,15 +29,20 @@ func doRequest(client *grab.Client, req *grab.Request) (string, error) {
 
 	t := time.NewTicker(500 * time.Millisecond)
 	defer t.Stop()
-	bar := pb.Start64(resp.Size())
-	bar.Set(pb.Bytes, true)
-	defer bar.Finish()
+	var bar *pb.ProgressBar
+	if terminal.IsShowTerminalOutput() {
+		bar = pb.Start64(resp.Size())
+		bar.Set(pb.Bytes, true)
+		defer bar.Finish()
+	}
 
 loop:
 	for {
 		select {
 		case <-t.C:
-			bar.SetCurrent(resp.BytesComplete())
+			if terminal.IsShowTerminalOutput() {
+				bar.SetCurrent(resp.BytesComplete())
+			}
 		case <-resp.Done:
 			break loop
 		}

@@ -120,7 +120,7 @@ func (c *Cache) cacheExecutable() error {
 	// Check the file is tarball or not
 	if isTarball(assetTmpFile) {
 		// Extract the tarball and put it the cache directory.
-		extractedFiles, err = extract.UncompressWithFilter(assetTmpFile, tmpDir, false,
+		extractedFiles, err = extract.UncompressWithFilter(assetTmpFile, tmpDir,
 			func(filename string) bool { return filepath.Base(filename) == c.GetExecutableName() })
 		if err != nil {
 			return errors.Wrapf(err, "Cannot uncompress '%s'", assetTmpFile)

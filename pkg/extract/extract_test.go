@@ -132,7 +132,7 @@ func testUncompress(t *testing.T, archiveName string, fileFilter func(string) bo
 	var fileList []string
 	var err error
 	if fileFilter != nil {
-		fileList, err = UncompressWithFilter(archiveName, destDir, false, fileFilter)
+		fileList, err = UncompressWithFilter(archiveName, destDir, fileFilter)
 	} else {
 		fileList, err = Uncompress(archiveName, destDir, false)
 	}
