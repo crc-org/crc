@@ -1,4 +1,4 @@
-@story_openshift
+@story_openshift @darwin @linux @windows
 Feature: 4 Openshift stories
 
 	Background:
@@ -7,7 +7,7 @@ Feature: 4 Openshift stories
 
 	# End-to-end health check
 
-	@darwin @linux @windows @startstop @testdata @story_health
+	@startstop @testdata @story_health
 	Scenario: Overall cluster health
 		Then executing "oc create namespace testproj" succeeds
 		And executing "oc project testproj" succeeds
@@ -36,7 +36,7 @@ Feature: 4 Openshift stories
 
 	# Local image to image-registry feature
 
-	@darwin @linux @windows @testdata @story_registry @mirror-registry
+	@testdata @story_registry @mirror-registry
 	Scenario: Mirror image to OpenShift image registry
 		Given executing "oc create namespace testproj-img" succeeds
 		And executing "oc project testproj-img" succeeds
@@ -55,7 +55,7 @@ Feature: 4 Openshift stories
 		# cleanup
 		And executing "oc delete namespace testproj-img" succeeds
 
-	@darwin @linux @windows @testdata @story_registry @local-registry
+	@testdata @story_registry @local-registry
 	Scenario: Pull image locally, push to registry, deploy
 		Given podman command is available
 		And executing "oc create namespace testproj-img" succeeds
@@ -72,7 +72,7 @@ Feature: 4 Openshift stories
 
 	# Operator from marketplace
 
-	@darwin @linux @windows @testdata @story_marketplace @cleanup
+	@testdata @story_marketplace @cleanup
 	Scenario: Install new operator
 		When executing "oc apply -f redis-sub.yaml" succeeds
 		Then with up to "20" retries with wait period of "30s" command "oc get csv" output matches ".*redis-operator\.(.*)Succeeded$"
