@@ -13,7 +13,7 @@ Version:                __VERSION__
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
 
 %global common_description %{expand:
-CodeReady Container's executable}
+CRC's main executable}
 
 
 %global golicenses    LICENSE
@@ -22,7 +22,7 @@ CodeReady Container's executable}
 
 Name:           %{goname}
 Release:        1%{?dist}
-Summary:        CodeReady Container's executable
+Summary:        CRC's main executable
 License:        APL 2.0
 ExcludeArch:    armv7hl i686
 URL:            %{gourl}
