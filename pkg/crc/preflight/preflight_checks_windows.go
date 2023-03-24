@@ -100,15 +100,60 @@ func checkHyperVServiceRunning() error {
 }
 
 func checkUserPartOfCrcUsersAndHypervAdminsGroup() error {
-	_, _, err := powershell.Execute(fmt.Sprintf("Get-LocalGroupMember -Group 'crc-users' -Member '%s'", username()))
+	groupMembers, _, err := powershell.Execute(`(Get-LocalGroupMember -Group 'crc-users').Name`)
 	if err != nil {
 		return err
 	}
-
+	logging.Debug("Checking current user is in the 'crc-user' group")
+	if !usernameInMembersList(username(), groupMembers) {
+		return fmt.Errorf("Could not find: %s in the 'crc-users' group", username())
+	}
 	// https://support.microsoft.com/en-us/help/243330/well-known-security-identifiers-in-windows-operating-systems
 	// BUILTIN\Hyper-V Administrators => S-1-5-32-578
-	_, _, err = powershell.Execute(fmt.Sprintf("Get-LocalGroupMember -SID 'S-1-5-32-578' -Member '%s'", username()))
-	return err
+	groupMembers, _, err = powershell.Execute(`(Get-LocalGroupMember -SID 'S-1-5-32-578').Name`)
+	if err != nil {
+		return err
+	}
+	logging.Debug("Checking current user is in the 'Hyper-v Administrators' group")
+	if !usernameInMembersList(username(), groupMembers) {
+		return fmt.Errorf("Could not find: %s in the 'Hyper-v Administrators' group", username())
+	}
+	return nil
+}
+
+func usernameInMembersList(username, members string) bool {
+	m := strings.Split(members, "\n")
+	var memberList []string
+	// remove any empty elements
+	for _, elem := range m {
+		if strings.TrimSpace(elem) != "" {
+			memberList = append(memberList, strings.TrimSpace(elem))
+		}
+	}
+	logging.Debugf("group members: %s", strings.Join(memberList, ","))
+	for _, member := range memberList {
+		// we get the members of a group in the form domain\username
+		// if the current username is also returned in the same form
+		// check if that full domain\username is present in the list
+		if strings.Contains(username, "\\") {
+			if username == member {
+				return true
+			}
+			continue
+		}
+
+		// if we get only the username without domain part then we
+		// compare it with the username part of the group members
+		m := strings.Split(member, "\\")
+		if len(m) == 2 {
+			if m[1] == username {
+				return true
+			}
+		} else {
+			logging.Warnf("Got group member's name in unexpected format: %s", member)
+		}
+	}
+	return false
 }
 
 func fixUserPartOfCrcUsersAndHypervAdminsGroup() error {
