@@ -321,7 +321,7 @@ $(BUILD_DIR)/macos-universal/crc: $(BUILD_DIR)/macos-arm64/crc $(BUILD_DIR)/maco
 	mkdir -p out/macos-universal
 	cd $(BUILD_DIR) && "$(TOOLS_BINDIR)"/makefat macos-universal/crc macos-amd64/crc macos-arm64/crc
 
-packagedir: clean embed-download-darwin $(BUILD_DIR)/macos-universal/crc
+packagedir: clean_macos_package embed-download-darwin $(BUILD_DIR)/macos-universal/crc
 	echo -n $(CRC_VERSION) > packaging/darwin/VERSION
 
 	mkdir -p packaging/darwin/root-crc/Applications
@@ -374,7 +374,7 @@ CRC_EXE=crc.exe
 BUNDLE_NAME=crc_hyperv_$(OPENSHIFT_VERSION).$(BUNDLE_EXTENSION)
 
 .PHONY: msidir
-msidir: clean embed-download-windows $(HOST_BUILD_DIR)/GenMsiWxs windows-release-binary $(PACKAGE_DIR)/product.wxs.template
+msidir: clean_windows_msi embed-download-windows $(HOST_BUILD_DIR)/GenMsiWxs windows-release-binary $(PACKAGE_DIR)/product.wxs.template
 	mkdir -p $(PACKAGE_DIR)/msi
 	cp $(EMBED_DOWNLOAD_DIR)/* $(PACKAGE_DIR)/msi
 	cp $(HOST_BUILD_DIR)/crc.exe $(PACKAGE_DIR)/msi/$(CRC_EXE)
