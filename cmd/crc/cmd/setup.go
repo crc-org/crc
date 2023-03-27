@@ -24,7 +24,7 @@ var (
 
 func init() {
 	setupCmd.Flags().Bool(crcConfig.ExperimentalFeatures, false, "Allow the use of experimental features")
-	setupCmd.Flags().StringP(crcConfig.Bundle, "b", constants.GetDefaultBundlePath(crcConfig.GetPreset(config)), "Bundle to use for instance")
+	setupCmd.Flags().StringP(crcConfig.Bundle, "b", constants.GetDefaultBundlePath(crcConfig.GetPreset(config)), crcConfig.BundleHelpMsg(config))
 	setupCmd.Flags().BoolVar(&checkOnly, "check-only", false, "Only run the preflight checks, don't try to fix any misconfiguration")
 	setupCmd.Flags().BoolVar(&forceShowProgressbars, "show-progressbars", false, "Always show the progress bars for download and extraction")
 	addOutputFormatFlag(setupCmd)

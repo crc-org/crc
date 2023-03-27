@@ -34,7 +34,7 @@ func init() {
 	addOutputFormatFlag(startCmd)
 
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
-	flagSet.StringP(crcConfig.Bundle, "b", constants.GetDefaultBundlePath(crcConfig.GetPreset(config)), "The system bundle used to provision the instance")
+	flagSet.StringP(crcConfig.Bundle, "b", constants.GetDefaultBundlePath(crcConfig.GetPreset(config)), crcConfig.BundleHelpMsg(config))
 	flagSet.StringP(crcConfig.PullSecretFile, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
 	flagSet.IntP(crcConfig.CPUs, "c", constants.GetDefaultCPUs(crcConfig.GetPreset(config)), "Number of CPU cores to allocate to the instance")
 	flagSet.IntP(crcConfig.Memory, "m", constants.GetDefaultMemory(crcConfig.GetPreset(config)), "MiB of memory to allocate to the instance")
