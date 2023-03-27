@@ -274,7 +274,7 @@ linux-release-binary: LDFLAGS+= $(RELEASE_VERSION_VARIABLES)
 linux-release-binary: $(BUILD_DIR)/linux-amd64/crc
 
 macos-release-binary: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
-macos-release-binary: $(BUILD_DIR)/macos-arm64/crc $(BUILD_DIR)/macos-amd64/crc
+macos-release-binary: $(BUILD_DIR)/macos-universal/crc
 
 windows-release-binary: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
 windows-release-binary: $(BUILD_DIR)/windows-amd64/crc.exe
@@ -317,11 +317,11 @@ ifeq ($(CUSTOM_EMBED),false)
 	$(HOST_BUILD_DIR)/crc-embedder download --goos=$* $(EMBED_DOWNLOAD_DIR)
 endif
 
-macos-universal-binary: macos-release-binary $(TOOLS_BINDIR)/makefat
+$(BUILD_DIR)/macos-universal/crc: $(BUILD_DIR)/macos-arm64/crc $(BUILD_DIR)/macos-amd64/crc $(TOOLS_BINDIR)/makefat
 	mkdir -p out/macos-universal
 	cd $(BUILD_DIR) && "$(TOOLS_BINDIR)"/makefat macos-universal/crc macos-amd64/crc macos-arm64/crc
 
-packagedir: clean embed-download-darwin macos-universal-binary
+packagedir: clean embed-download-darwin $(BUILD_DIR)/macos-universal/crc
 	echo -n $(CRC_VERSION) > packaging/darwin/VERSION
 
 	mkdir -p packaging/darwin/root-crc/Applications
