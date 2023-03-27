@@ -70,7 +70,7 @@ install -m 0755 -vp %{gobuilddir}/src/%{goipath}/out/linux-amd64/crc %{buildroot
 install -d %{buildroot}%{_datadir}/%{name}-redistributable/{linux,macos,windows}
 install -m 0755 -vp %{gobuilddir}/src/%{goipath}/release/* %{buildroot}%{_datadir}/%{name}-redistributable/linux/
 install -m 0755 -vp %{gobuilddir}/src/%{goipath}/out/windows-amd64/crc.exe %{buildroot}%{_datadir}/%{name}-redistributable/windows/
-install -m 0755 -vp %{gobuilddir}/src/%{goipath}/out/macos-amd64/crc %{buildroot}%{_datadir}/%{name}-redistributable/macos/
+install -m 0755 -vp %{gobuilddir}/src/%{goipath}/out/macos-universal/crc %{buildroot}%{_datadir}/%{name}-redistributable/macos/
 
 %check
 # with fedora macros: gocheck
