@@ -242,11 +242,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			return nil, errors.Wrap(err, "Failed to ask for pull secret")
 		}
 
-		if crcBundleMetadata.IsOpenShift() {
-			logging.Infof("Creating CRC VM for %s %s...", startConfig.Preset, crcBundleMetadata.GetOpenshiftVersion())
-		} else {
-			logging.Infof("Creating CRC VM for Podman %s...", crcBundleMetadata.GetPodmanVersion())
-		}
+		logging.Infof("Creating CRC VM for %s %s...", startConfig.Preset.ForDisplay(), crcBundleMetadata.GetVersion())
 
 		sharedDirs := []string{}
 		if homeDir, err := os.UserHomeDir(); err == nil {

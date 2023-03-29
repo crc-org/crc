@@ -172,6 +172,15 @@ func (bundle *CrcBundleInfo) GetPodmanVersion() string {
 	return bundle.Nodes[0].PodmanVersion
 }
 
+func (bundle *CrcBundleInfo) GetVersion() string {
+	switch bundle.GetBundleType() {
+	case crcPreset.Podman:
+		return bundle.GetPodmanVersion()
+	default:
+		return bundle.GetOpenshiftVersion()
+	}
+}
+
 func (bundle *CrcBundleInfo) GetBundleNameWithoutExtension() string {
 	return GetBundleNameWithoutExtension(bundle.GetBundleName())
 }

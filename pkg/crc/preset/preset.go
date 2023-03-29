@@ -29,6 +29,20 @@ func (preset Preset) String() string {
 	return "invalid"
 }
 
+func (preset Preset) ForDisplay() string {
+	switch preset {
+	case Podman:
+		return "Podman"
+	case OpenShift:
+		return "OpenShift"
+	case OKD:
+		return "OKD"
+	case Microshift:
+		return "MicroShift"
+	}
+	return "unknown"
+}
+
 func ParsePresetE(input string) (Preset, error) {
 	switch input {
 	case Podman.String():
