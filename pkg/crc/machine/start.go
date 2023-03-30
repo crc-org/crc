@@ -399,6 +399,12 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 	}
 
+	if !client.useVSock() {
+		if err := removeContainerConfFile(sshRunner); err != nil {
+			return nil, err
+		}
+	}
+
 	if _, _, err := sshRunner.RunPrivileged("make root Podman socket accessible", "chmod 777 /run/podman/ /run/podman/podman.sock"); err != nil {
 		return nil, errors.Wrap(err, "Failed to change permissions to root podman socket")
 	}
@@ -971,5 +977,19 @@ func startMicroshift(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.
 		return err
 	}
 
+	return nil
+}
+
+// The containers.conf file has a setting called machine_enabled in the engine section,
+// which lets the podman client know that a command is running on an instance created
+// with the podman machine command. This allows the use of gvisor-tap-vsock when a
+// container is created with an exposed port. However, this setting should be disabled
+// for system mode networking, so that it doesn't prevent the creation of containers that
+// need to expose a port.
+// - https://github.com/crc-org/crc/issues/3515
+func removeContainerConfFile(sshRunner *crcssh.Runner) error {
+	if _, _, err := sshRunner.RunPrivileged("remove /etc/containers/containers.conf to disable machine_enabled", "rm -fr /etc/containers/containers.conf"); err != nil {
+		return errors.Wrap(err, "Failed to remove /etc/containers/containers.conf")
+	}
 	return nil
 }
