@@ -21,6 +21,7 @@
 :openshift: OpenShift
 :ocp: {openshift} Container Platform
 :okd: OKD
+:ushift: MicroShift
 
 // Product naming
 :prod: CRC
