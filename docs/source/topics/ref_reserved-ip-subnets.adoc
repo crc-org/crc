@@ -10,6 +10,5 @@ Ensure that the following IP subnets are available for use:
 * `192.168.126.0/24`
 
 Additionally, the host hypervisor may reserve another IP subnet depending on the host operating system.
-On {msw}, the hypervisor reserves a randomly generated IP subnet that cannot be determined ahead-of-time.
-No additional subnet is reserved on {mac}.
+No additional subnet is reserved on {mac} and {msw}.
 The additional reserved subnet for Linux is `192.168.130.0/24`.
