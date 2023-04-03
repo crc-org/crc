@@ -20,9 +20,15 @@ Depending on the desired container runtime, {prod} requires the following system
 * 9 GB of free memory
 * 35 GB of storage space
 
+=== For {ushift}
+
+* 2 physical CPU cores
+* 4 GB of free memory
+* 35 GB of storage space
+
 [NOTE]
 ====
-The {ocp} cluster requires these minimum resources to run in the {prod} instance.
+The {ocp} and {ushift} presets require these minimum resources to run in the {prod} instance.
 Some workloads may require more resources.
 To assign more resources to the {prod} instance, see link:{crc-gsg-url}#configuring-the-instance_gsg[Configuring the instance].
 ====
