@@ -35,6 +35,21 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go }}
+      - name: check if OCP_PULL_SECRET exists
+        shell: bash
+        run: |
+          if [ ${PULL_SECRET} == "" ]; then
+            echo "The secret \"OCP_PULL_SECRET\" is not set; echo please go to \"settings > secrets > actions\" to create it"
+            exit 1
+          fi
+        env:
+          PULL_SECRET: ${{ secrets.OCP_PULL_SECRET }}
+      - name: Write the pull secret to json file
+        shell: bash
+        run: |
+          echo $PULL_SECRET > temp-ps.json
+        env:
+          PULL_SECRET: ${{ secrets.OCP_PULL_SECRET }}
       - name: Build macOS installer
         run: make NO_CODESIGN=1 out/macos-universal/crc-macos-installer.pkg
       - name: Install crc pkg
@@ -46,4 +61,4 @@ jobs:
       - name: Wait 10 sec for the daemon to serve
         run: sleep 10
       - name: Run crc with microshift preset
-        run: crc start
+        run: crc start --pull-secret-file temp-ps.json
