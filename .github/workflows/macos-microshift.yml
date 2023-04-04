@@ -1,4 +1,4 @@
-name: Build macOS installer
+name: Test MicroShift preset
 on:
   push:
     branches:
