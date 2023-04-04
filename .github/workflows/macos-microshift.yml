@@ -1,0 +1,49 @@
+name: Build macOS installer
+on:
+  push:
+    branches:
+      - "main"
+  pull_request: {}
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macOS-latest
+          - macOS-11
+        go:
+          - 1.19
+    steps:
+      # Enable tmate debugging of manually-triggered workflows if the input option was provided
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+        with:
+          limit-access-to-actor: true
+        timeout-minutes: 30
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Build macOS installer
+        run: make NO_CODESIGN=1 out/macos-universal/crc-macos-installer.pkg
+      - name: Install crc pkg
+        run: sudo installer -pkg out/macos-universal/crc-macos-installer.pkg -target /
+      - name: Set microshift preset as part of config
+        run: crc config set preset microshift
+      - name: Run crc setup command
+        run: crc setup
+      - name: Wait 10 sec for the daemon to serve
+        run: sleep 10
+      - name: Run crc with microshift preset
+        run: crc start
