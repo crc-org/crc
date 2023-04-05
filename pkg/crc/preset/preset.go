@@ -22,6 +22,14 @@ var presetMap = map[Preset]string{
 	Microshift: string(Microshift),
 }
 
+func AllPresets() []Preset {
+	var keys []Preset
+	for k := range presetMap {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
 func (preset Preset) String() string {
 	presetStr, presetExists := presetMap[preset]
 	if !presetExists {
