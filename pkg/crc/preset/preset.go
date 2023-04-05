@@ -15,18 +15,19 @@ const (
 	Microshift Preset = "microshift"
 )
 
+var presetMap = map[Preset]string{
+	Podman:     string(Podman),
+	OpenShift:  string(OpenShift),
+	OKD:        string(OKD),
+	Microshift: string(Microshift),
+}
+
 func (preset Preset) String() string {
-	switch preset {
-	case Podman:
-		return string(Podman)
-	case OpenShift:
-		return string(OpenShift)
-	case OKD:
-		return string(OKD)
-	case Microshift:
-		return string(Microshift)
+	presetStr, presetExists := presetMap[preset]
+	if !presetExists {
+		return "invalid"
 	}
-	return "invalid"
+	return presetStr
 }
 
 func (preset Preset) ForDisplay() string {
@@ -44,18 +45,13 @@ func (preset Preset) ForDisplay() string {
 }
 
 func ParsePresetE(input string) (Preset, error) {
-	switch input {
-	case Podman.String():
-		return Podman, nil
-	case OpenShift.String():
-		return OpenShift, nil
-	case OKD.String():
-		return OKD, nil
-	case Microshift.String():
-		return Microshift, nil
-	default:
-		return OpenShift, fmt.Errorf("Cannot parse preset '%s'", input)
+	for pSet, pString := range presetMap {
+		if pString == input {
+			return pSet, nil
+		}
 	}
+	return OpenShift, fmt.Errorf("Cannot parse preset '%s'", input)
+
 }
 func ParsePreset(input string) Preset {
 	preset, err := ParsePresetE(input)
