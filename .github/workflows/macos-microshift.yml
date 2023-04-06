@@ -41,9 +41,12 @@ jobs:
         run: sudo installer -pkg out/macos-universal/crc-macos-installer.pkg -target /
       - name: Set microshift preset as part of config
         run: crc config set preset microshift
+      - name: Create dummy pull secret
+        run: |
+          echo '{"auths":{"quay.io":{"auth":"b3BlbnN","email":"dummy@dummy.com"}}}' > dummy_pull.json
       - name: Run crc setup command
         run: crc setup
       - name: Wait 10 sec for the daemon to serve
         run: sleep 10
       - name: Run crc with microshift preset
-        run: crc start
+        run: crc start --pull-secret-file dummy_pull.json
