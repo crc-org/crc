@@ -11,6 +11,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/machine/bundle"
 	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/ssh"
 	"github.com/crc-org/crc/pkg/crc/validation"
 	"github.com/pkg/errors"
 )
@@ -53,6 +54,13 @@ var genericCleanupChecks = []Check{
 	{
 		cleanupDescription: "Removing hosts file records added by CRC",
 		cleanup:            removeHostsFileEntry,
+		flags:              CleanUpOnly,
+
+		labels: None,
+	},
+	{
+		cleanupDescription: "Removing CRC Specific entries from user's known_hosts file",
+		cleanup:            removeCRCHostEntriesFromKnownHosts,
 		flags:              CleanUpOnly,
 
 		labels: None,
@@ -142,4 +150,8 @@ func removeOldLogs() error {
 		}
 	}
 	return nil
+}
+
+func removeCRCHostEntriesFromKnownHosts() error {
+	return ssh.RemoveCRCHostEntriesFromKnownHosts()
 }
