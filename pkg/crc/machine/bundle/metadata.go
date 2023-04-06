@@ -217,7 +217,7 @@ func (bundle *CrcBundleInfo) verify() error {
 		bundle.GetKernelPath(),
 		bundle.GetInitramfsPath(),
 	}
-	if bundle.IsOpenShift() {
+	if !bundle.IsPodman() {
 		files = append(files, []string{
 			bundle.GetOcPath(),
 			bundle.GetKubeConfigPath()}...)
