@@ -84,10 +84,8 @@ func (repo *Repository) Use(bundleName string) (*CrcBundleInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	if bundleInfo.IsOpenShift() {
-		if err := bundleInfo.createSymlinkOrCopyOpenShiftClient(repo.OcBinDir); err != nil {
-			return nil, err
-		}
+	if err := bundleInfo.createSymlinkOrCopyOpenShiftClient(repo.OcBinDir); err != nil {
+		return nil, err
 	}
 	if err := bundleInfo.createSymlinkOrCopyPodmanRemote(repo.OcBinDir); err != nil {
 		return nil, err
