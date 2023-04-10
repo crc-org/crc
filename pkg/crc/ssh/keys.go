@@ -127,6 +127,10 @@ func RemoveCRCHostEntriesFromKnownHosts() error {
 		}
 	}
 
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("Error while reading content from known_hosts file: %w", err)
+	}
+
 	if err := writer.Flush(); err != nil {
 		return fmt.Errorf("Error while flushing buffered content to temp file: %w", err)
 	}
