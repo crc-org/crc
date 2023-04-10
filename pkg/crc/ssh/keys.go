@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -98,15 +99,30 @@ func RemoveCRCHostEntriesFromKnownHosts() error {
 		return fmt.Errorf("Error trying to change permissions for temp file: %w", err)
 	}
 
+	// return each line along with the newline '\n' marker
+	var splitFunc = func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+		if atEOF && len(data) == 0 {
+			return 0, nil, nil
+		}
+		if i := bytes.IndexByte(data, '\n'); i >= 0 {
+			return i + 1, data[0 : i+1], nil
+		}
+		if atEOF {
+			return len(data), data, nil
+		}
+		return 0, nil, nil
+	}
+
 	var foundCRCEntries bool
 	scanner := bufio.NewScanner(f)
+	scanner.Split(splitFunc)
 	writer := bufio.NewWriter(tempHostsFile)
 	for scanner.Scan() {
 		if strings.Contains(scanner.Text(), "[127.0.0.1]:2222") || strings.Contains(scanner.Text(), "192.168.130.11") {
 			foundCRCEntries = true
 			continue
 		}
-		if _, err := writer.WriteString(fmt.Sprintf("%s\n", scanner.Text())); err != nil {
+		if _, err := writer.WriteString(scanner.Text()); err != nil {
 			return fmt.Errorf("Error while writing hostsfile content to temp file: %w", err)
 		}
 	}
