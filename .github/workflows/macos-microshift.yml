@@ -50,3 +50,9 @@ jobs:
         run: sleep 10
       - name: Run crc with microshift preset
         run: crc start --pull-secret-file dummy_pull.json
+      - name: check if podman binary is symlinked correctly
+        run: |
+          eval $(crc podman-env) && podman pull quay.io/crc-org/crc-extension:latest
+      - name: check if oc binary is symlinked correctly
+        run: |
+          eval $(crc oc-env) && oc get pods -A
