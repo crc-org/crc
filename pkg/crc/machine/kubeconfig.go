@@ -47,14 +47,10 @@ func updateClientCrtAndKeyToKubeconfig(clientKey, clientCrt []byte, srcKubeconfi
 }
 
 func writeKubeconfig(ip string, clusterConfig *types.ClusterConfig) error {
-	kubeconfig := getGlobalKubeConfigPath()
-	dir := filepath.Dir(kubeconfig)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	kubeconfig, cfg, err := getGlobalKubeConfig()
+	if err != nil {
 		return err
 	}
-	// Make sure .kube/config exist if not then this will create
-	_, _ = os.OpenFile(kubeconfig, os.O_RDONLY|os.O_CREATE, 0600)
-
 	ca, err := certificateAuthority(clusterConfig.KubeConfig)
 	if err != nil {
 		return err
@@ -64,10 +60,6 @@ func writeKubeconfig(ip string, clusterConfig *types.ClusterConfig) error {
 		return err
 	}
 
-	cfg, err := clientcmd.LoadFromFile(kubeconfig)
-	if err != nil {
-		return err
-	}
 	cfg.Clusters[host] = &api.Cluster{
 		Server:                   clusterConfig.ClusterAPI,
 		CertificateAuthorityData: ca,
@@ -85,6 +77,18 @@ func writeKubeconfig(ip string, clusterConfig *types.ClusterConfig) error {
 	}
 
 	return clientcmd.WriteToFile(*cfg, kubeconfig)
+}
+
+func getGlobalKubeConfig() (string, *api.Config, error) {
+	kubeconfig := getGlobalKubeConfigPath()
+	config, err := clientcmd.LoadFromFile(kubeconfig)
+	if err != nil && !os.IsNotExist(err) {
+		return "", nil, err
+	}
+	if config == nil {
+		config = api.NewConfig()
+	}
+	return kubeconfig, config, nil
 }
 
 func certificateAuthority(kubeconfigFile string) ([]byte, error) {
@@ -239,4 +243,35 @@ func updateServerDetailsToKubeConfig(input, output string) error {
 		}
 	}
 	return clientcmd.WriteToFile(*cfg, output)
+}
+
+func mergeKubeConfigFile(kubeConfigFile string) error {
+	globalConfigPath, kubeConf1, err := getGlobalKubeConfig()
+	if err != nil {
+		return err
+	}
+	kubeConf2, err := clientcmd.LoadFromFile(kubeConfigFile)
+	if err != nil {
+		return err
+	}
+	// Merge the kubeConf2 to globalConfig
+	mergedConfig, err := clientcmd.NewDefaultClientConfig(*kubeConf1, &clientcmd.ConfigOverrides{}).ConfigAccess().GetStartingConfig()
+	if err != nil {
+		return err
+	}
+
+	for name, cluster := range kubeConf2.Clusters {
+		mergedConfig.Clusters[name] = cluster
+	}
+
+	for name, authInfo := range kubeConf2.AuthInfos {
+		mergedConfig.AuthInfos[name] = authInfo
+	}
+
+	for name, context := range kubeConf2.Contexts {
+		mergedConfig.Contexts[name] = context
+	}
+
+	mergedConfig.CurrentContext = kubeConf2.CurrentContext
+	return clientcmd.WriteToFile(*mergedConfig, globalConfigPath)
 }
