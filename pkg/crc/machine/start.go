@@ -888,7 +888,7 @@ func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Confi
 }
 
 func getRouterControllerImage(preset crcPreset.Preset, bundleInfo *bundle.CrcBundleInfo) string {
-	if preset == crcPreset.OpenShift {
+	if preset == crcPreset.OpenShift || preset == crcPreset.Microshift {
 		return fmt.Sprintf("quay.io/crcont/routes-controller:%s", bundleInfo.GetOpenshiftVersion())
 	}
 	return "quay.io/crcont/routes-controller:latest"
