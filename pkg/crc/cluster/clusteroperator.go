@@ -80,7 +80,7 @@ func (status *Status) IsReady() bool {
 }
 
 func GetClusterOperatorsStatus(ctx context.Context, ip string, kubeconfigFilePath string) (*Status, error) {
-	lister, err := kubernetesClient(ip, kubeconfigFilePath)
+	lister, err := openshiftClient(ip, kubeconfigFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ type operatorLister interface {
 	List(ctx context.Context, opts metav1.ListOptions) (*openshiftapi.ClusterOperatorList, error)
 }
 
-func kubernetesClient(ip string, kubeconfigFilePath string) (*clientset.Clientset, error) {
+func openshiftClient(ip string, kubeconfigFilePath string) (*clientset.Clientset, error) {
 	config, err := kubernetesClientConfiguration(ip, kubeconfigFilePath)
 	if err != nil {
 		return nil, err
