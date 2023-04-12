@@ -295,13 +295,12 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Error getting the machine state")
 	}
 	if vmState == state.Running {
-		if !vm.bundle.IsOpenShift() {
-			logging.Infof("A CRC VM for Podman %s is already running", vm.bundle.GetPodmanVersion())
+		logging.Infof("A CRC VM for %s %s is already running", startConfig.Preset.ForDisplay(), vm.bundle.GetVersion())
+		if vm.bundle.IsPodman() {
 			return &types.StartResult{
 				Status: vmState,
 			}, nil
 		}
-		logging.Infof("A CRC VM for OpenShift %s is already running", vm.bundle.GetOpenshiftVersion())
 		clusterConfig, err := getClusterConfig(vm.bundle)
 		if err != nil {
 			return nil, errors.Wrap(err, "Cannot create cluster configuration")
