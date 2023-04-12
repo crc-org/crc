@@ -500,6 +500,10 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 				return nil, err
 			}
 		}
+		logging.Info("Adding microshift context to kubeconfig...")
+		if err := mergeKubeConfigFile(constants.KubeconfigFilePath); err != nil {
+			return nil, err
+		}
 
 		return &types.StartResult{
 			ClusterConfig: types.ClusterConfig{ClusterType: startConfig.Preset},
