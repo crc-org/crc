@@ -56,7 +56,7 @@ Feature: Basic test
         When checking that CRC is running
         And ensuring user is logged in succeeds
         And executing "oc get pods -n openshift-monitoring" succeeds
-        Then stdout matches ".*cluster-monitoring-operator-\w+-\w+\ *2/2\ *Running.*"
+        Then stdout matches ".*cluster-monitoring-operator-\w+-\w+\ *1/1\ *Running.*"
         # stop
         When executing "crc stop"
         Then stdout should match "(.*)[Ss]topped the instance"
