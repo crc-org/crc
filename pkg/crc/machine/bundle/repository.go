@@ -53,7 +53,7 @@ func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
 		return nil, err
 	}
 
-	if bundleInfo.IsOpenShift() {
+	if !bundleInfo.IsPodman() {
 		if fmt.Sprintf(".%s", bundleInfo.ClusterInfo.AppsDomain) != constants.AppsDomain {
 			return nil, fmt.Errorf("unexpected bundle, it must have %s apps domain", constants.AppsDomain)
 		}
