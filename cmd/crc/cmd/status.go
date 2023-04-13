@@ -186,6 +186,9 @@ func (s *status) prettyPrintTo(writer io.Writer) error {
 	if s.PodmanVersion != "" {
 		lines = append(lines, line{"Podman", s.PodmanVersion})
 	}
+	if s.Preset == preset.Microshift {
+		lines = append(lines, line{"MicroShift", openshiftStatus(s)})
+	}
 
 	if s.RAMSize != -1 && s.RAMUsage != -1 {
 		lines = append(lines, line{"RAM Usage", fmt.Sprintf(
