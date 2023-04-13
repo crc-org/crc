@@ -10,6 +10,8 @@ import (
 	"github.com/crc-org/crc/pkg/crc/machine/state"
 	"github.com/crc-org/crc/pkg/crc/machine/types"
 	"github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/systemd"
+	sdState "github.com/crc-org/crc/pkg/crc/systemd/states"
 	"github.com/pkg/errors"
 )
 
@@ -31,17 +33,26 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 		return nil, errors.Wrap(err, "Cannot get machine state")
 	}
 
+	clusterStatusResult := &types.ClusterStatusResult{
+		CrcStatus: vmStatus,
+	}
+	switch {
+	case vm.bundle.IsPodman():
+		clusterStatusResult.PodmanVersion = vm.bundle.GetPodmanVersion()
+		clusterStatusResult.Preset = preset.Podman
+	case vm.bundle.IsMicroshift():
+		clusterStatusResult.OpenshiftStatus = types.OpenshiftStopped
+		clusterStatusResult.OpenshiftVersion = vm.bundle.GetOpenshiftVersion()
+		clusterStatusResult.Preset = preset.Microshift
+	default:
+		clusterStatusResult.OpenshiftStatus = types.OpenshiftStopped
+		clusterStatusResult.OpenshiftVersion = vm.bundle.GetOpenshiftVersion()
+		clusterStatusResult.Preset = preset.OpenShift
+	}
+
 	if vmStatus != state.Running {
 		clusterStatusResult := &types.ClusterStatusResult{
 			CrcStatus: vmStatus,
-		}
-		if vm.bundle.IsOpenShift() {
-			clusterStatusResult.OpenshiftStatus = types.OpenshiftStopped
-			clusterStatusResult.OpenshiftVersion = vm.bundle.GetOpenshiftVersion()
-			clusterStatusResult.Preset = preset.OpenShift
-		} else {
-			clusterStatusResult.PodmanVersion = vm.bundle.GetPodmanVersion()
-			clusterStatusResult.Preset = preset.Podman
 		}
 		return clusterStatusResult, nil
 	}
@@ -52,18 +63,15 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	}
 
 	diskSize, diskUse := client.getDiskDetails(vm)
-	clusterStatusResult := &types.ClusterStatusResult{
-		CrcStatus: state.Running,
-		DiskUse:   diskUse,
-		DiskSize:  diskSize,
-	}
-	if vm.bundle.IsOpenShift() {
+	clusterStatusResult.CrcStatus = state.Running
+	clusterStatusResult.DiskUse = diskUse
+	clusterStatusResult.DiskSize = diskSize
+
+	switch {
+	case vm.bundle.IsMicroshift():
+		clusterStatusResult.OpenshiftStatus = getMicroShiftStatus(vm)
+	case vm.bundle.IsOpenShift():
 		clusterStatusResult.OpenshiftStatus = getOpenShiftStatus(context.Background(), ip)
-		clusterStatusResult.OpenshiftVersion = vm.bundle.GetOpenshiftVersion()
-		clusterStatusResult.Preset = preset.OpenShift
-	} else {
-		clusterStatusResult.PodmanVersion = vm.bundle.GetPodmanVersion()
-		clusterStatusResult.Preset = preset.Podman
 	}
 
 	ramSize, ramUse := client.getRAMStatus(vm)
@@ -141,6 +149,24 @@ func getOpenShiftStatus(ctx context.Context, ip string) types.OpenshiftStatus {
 	case status.Degraded:
 		return types.OpenshiftDegraded
 	case status.Available:
+		return types.OpenshiftRunning
+	}
+	return types.OpenshiftStopped
+}
+
+func getMicroShiftStatus(vm *virtualMachine) types.OpenshiftStatus {
+	sshRunner, err := vm.SSHRunner()
+	if err != nil {
+		logging.Debugf("cannot get MicroShift status: %v", err)
+		return types.OpenshiftUnreachable
+	}
+	sd := systemd.NewInstanceSystemdCommander(sshRunner)
+	microShiftServiceState, err := sd.Status("microshift")
+	if err != nil {
+		logging.Debugf("failed to get microshift service status: %v", err)
+		return types.OpenshiftUnreachable
+	}
+	if microShiftServiceState == sdState.Running {
 		return types.OpenshiftRunning
 	}
 	return types.OpenshiftStopped
