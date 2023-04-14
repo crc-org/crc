@@ -60,7 +60,6 @@ func TestPlainStatus(t *testing.T) {
 
 	expected := `CRC VM:          Running
 OpenShift:       Running (v4.5.1)
-Podman:          3.3.1
 RAM Usage:       0B of 0B
 Disk Usage:      10GB of 20GB (Inside the CRC VM)
 Cache Usage:     10kB

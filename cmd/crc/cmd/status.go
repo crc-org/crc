@@ -180,10 +180,10 @@ func (s *status) prettyPrintTo(writer io.Writer) error {
 		{"CRC VM", s.CrcStatus},
 	}
 
-	if s.OpenShiftVersion != "" {
+	if s.Preset == preset.OpenShift {
 		lines = append(lines, line{"OpenShift", openshiftStatus(s)})
 	}
-	if s.PodmanVersion != "" {
+	if s.Preset == preset.Podman {
 		lines = append(lines, line{"Podman", s.PodmanVersion})
 	}
 	if s.Preset == preset.Microshift {
