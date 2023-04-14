@@ -260,24 +260,13 @@ Use the 'podman' command line interface:
 This cluster was built from OKD - The Community Distribution of Kubernetes that powers Red Hat OpenShift.
 If you find an issue, please report it at https://github.com/openshift/okd
 `
-)
-
-func startTemplateForMicroshift() string {
-	tmpl := `Started the MicroShift cluster.
-
-%s
+	startTemplateForMicroShift = `Started the MicroShift cluster.
 
 Use the 'oc' command line interface:
   {{ .CommandLinePrefix }} {{ .EvalCommandLine }}
   {{ .CommandLinePrefix }} oc COMMAND
 `
-	userShell, err := shell.GetShell("")
-	if err != nil {
-		userShell = ""
-	}
-
-	return fmt.Sprintf(tmpl, shell.GetEnvString(userShell, "KUBECONFIG", "{{ .KubeConfigPath }}"))
-}
+)
 
 type templateVariables struct {
 	ClusterConfig       *clusterConfig
@@ -342,7 +331,7 @@ func writePodmanTemplatedMessage(writer io.Writer, s *startResult) error {
 }
 
 func writeMicroShiftTemplatedMessage(writer io.Writer, s *startResult) error {
-	parsed, err := template.New("template").Parse(startTemplateForMicroshift())
+	parsed, err := template.New("template").Parse(startTemplateForMicroShift)
 	if err != nil {
 		return err
 	}
