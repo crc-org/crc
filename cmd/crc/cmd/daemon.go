@@ -147,9 +147,8 @@ func run(configuration *types.Configuration) error {
 		mux.Handle("/api/", http.StripPrefix("/api", api.NewMux(config, machineClient, logging.Memory, segmentClient)))
 		mux.Handle("/socket/", http.StripPrefix("/socket", websocket.NewWebsocketServer(machineClient)))
 		s := &http.Server{
-			Handler:      handlers.LoggingHandler(os.Stderr, mux),
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 10 * time.Second,
+			Handler:           handlers.LoggingHandler(os.Stderr, mux),
+			ReadHeaderTimeout: 10 * time.Second,
 		}
 		if err := s.Serve(listener); err != nil {
 			errCh <- errors.Wrap(err, "api http.Serve failed")
