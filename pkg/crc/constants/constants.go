@@ -45,24 +45,6 @@ const (
 
 	OpenShiftIngressHTTPPort  = 80
 	OpenShiftIngressHTTPSPort = 443
-
-	// This public key is owned by the CRC team (crc@crc.dev), and is used
-	// to sign bundles uploaded to an image registry.
-	// It can be fetched with: `gpg --recv-key DC7EAC400A1BFDFB`
-	GPGPublicKey = `-----BEGIN PGP PUBLIC KEY BLOCK-----
-
-mDMEYrvgDRYJKwYBBAHaRw8BAQdAoW+hjSRYpTAdLEE1u6ZuYNER1g97e8ygT4ic
-mvo1AKi0MmNyYyAoS2V5IHRvIHNpZ24gYnVuZGxlIHVzZWQgYnkgY3JjKSA8Y3Jj
-QGNyYy5kZXY+iJkEExYKAEEWIQS4RlW/rByOBn/ZyofcfqxAChv9+wUCYrvgDQIb
-AwUJEswDAAULCQgHAgIiAgYVCgkICwIEFgIDAQIeBwIXgAAKCRDcfqxAChv9+/ep
-APwISi03R7npwimqdL7NYKDGMO8ikOwmmPkqh9CKwt4CdwD8Cc6HNcZumHDpJ4gH
-x7FXxIS9KLwDihpm1Gxr4t1t5Qy4OARiu+ANEgorBgEEAZdVAQUBAQdA/w7pM7hf
-bxZ2qwSuoBuhcA1sAlPSb3NrIZf3CceoqzQDAQgHiH4EGBYKACYWIQS4RlW/rByO
-Bn/ZyofcfqxAChv9+wUCYrvgDQIbDAUJEswDAAAKCRDcfqxAChv9+2UkAQCNCdaf
-vnhbvfPHDltmwDZ3aD4l3jjSKpeySeKQocgjQAD6A7kawst/50k4wb+vUDUnEoYo
-9Ix7lKfKWCXil/z0vg4=
-=lmb/
------END PGP PUBLIC KEY BLOCK-----`
 )
 
 var adminHelperExecutableForOs = map[string]string{
