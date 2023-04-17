@@ -51,9 +51,6 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	}
 
 	if vmStatus != state.Running {
-		clusterStatusResult := &types.ClusterStatusResult{
-			CrcStatus: vmStatus,
-		}
 		return clusterStatusResult, nil
 	}
 
