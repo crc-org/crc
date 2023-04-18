@@ -1,7 +1,10 @@
 package bundle
 
 import (
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -13,7 +16,10 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/gpg"
 	"github.com/crc-org/crc/pkg/crc/image"
+	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/network"
 	crcPreset "github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/download"
 )
@@ -298,6 +304,43 @@ func getBundleDownloadInfo(preset crcPreset.Preset) (*download.RemoteFile, error
 	}
 
 	return downloadInfo, nil
+}
+
+// getDefaultBundleVerifiedHash downloads the sha256sum.txt.sig file from mirror.openshift.com
+// then verifies it is signed by redhat release key, if signature is valid it returns the hash
+// for the default bundle of preset from the file
+func getDefaultBundleVerifiedHash(preset crcPreset.Preset) (string, error) {
+	client := &http.Client{
+		Timeout:   5 * time.Second,
+		Transport: network.HTTPTransport(),
+	}
+	res, err := client.Get(constants.GetDefaultBundleSignedHashURL(preset))
+	if err != nil {
+		return "", err
+	}
+	signedHashes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+	if err := res.Body.Close(); err != nil {
+		logging.Debug(err)
+	}
+
+	verifiedHashes, err := gpg.GetVerifiedClearsignedMsgV3(constants.RedHatReleaseKey, string(signedHashes))
+	if err != nil {
+		return "", fmt.Errorf("Invalid signature: %w", err)
+	}
+
+	logging.Debugf("Verified bundle hashes:\n%s", verifiedHashes)
+
+	lines := strings.Split(verifiedHashes, "\n")
+	for _, line := range lines {
+		if strings.HasSuffix(line, constants.GetDefaultBundle(preset)) {
+			sha256sum := strings.TrimSuffix(line, "  "+constants.GetDefaultBundle(preset))
+			return sha256sum, nil
+		}
+	}
+	return "", errors.New("default bundle's hash is missing or shasums are malformed")
 }
 
 func DownloadDefault(preset crcPreset.Preset) (string, error) {
