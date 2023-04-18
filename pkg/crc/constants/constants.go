@@ -116,6 +116,14 @@ func GetDefaultBundlePath(preset crcpreset.Preset) string {
 	return filepath.Join(MachineCacheDir, GetDefaultBundle(preset))
 }
 
+func GetDefaultBundleDownloadURL(preset crcpreset.Preset) string {
+	return fmt.Sprintf(DefaultBundleURLBase,
+		preset.String(),
+		version.GetBundleVersion(preset),
+		GetDefaultBundle(preset),
+	)
+}
+
 func GetDefaultBundleSignedHashURL(preset crcpreset.Preset) string {
 	return fmt.Sprintf(DefaultBundleURLBase,
 		preset.String(),
