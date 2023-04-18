@@ -27,6 +27,7 @@ const (
 	DefaultAdminHelperURLBase = "https://github.com/crc-org/admin-helper/releases/download/v%s/%s"
 	CRCMacTrayDownloadURL     = "https://github.com/crc-org/tray-electron/releases/download/%s/crc-tray-macos.tar.gz"
 	CRCWindowsTrayDownloadURL = "https://github.com/crc-org/tray-electron/releases/download/%s/crc-tray-windows.zip"
+	DefaultBundleURLBase      = "https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/%s/%s/%s"
 	DefaultContext            = "admin"
 	DaemonHTTPEndpoint        = "http://unix/api"
 	DaemonVsockPort           = 1024
@@ -113,6 +114,14 @@ var (
 
 func GetDefaultBundlePath(preset crcpreset.Preset) string {
 	return filepath.Join(MachineCacheDir, GetDefaultBundle(preset))
+}
+
+func GetDefaultBundleSignedHashURL(preset crcpreset.Preset) string {
+	return fmt.Sprintf(DefaultBundleURLBase,
+		preset.String(),
+		version.GetBundleVersion(preset),
+		"sha256sum.txt.sig",
+	)
 }
 
 func ResolveHelperPath(executableName string) string {
