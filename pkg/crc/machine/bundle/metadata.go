@@ -9,7 +9,6 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -286,23 +285,12 @@ func GetBundleNameFromURI(bundleURI string) string {
 	}
 }
 
-type presetDownloadInfo map[crcPreset.Preset]*download.RemoteFile
-type bundlesDownloadInfo map[string]presetDownloadInfo
-
 func getBundleDownloadInfo(preset crcPreset.Preset) (*download.RemoteFile, error) {
-	bundles, ok := bundleLocations[runtime.GOARCH]
-	if !ok {
-		return nil, fmt.Errorf("Unsupported architecture: %s", runtime.GOARCH)
+	sha256sum, err := getDefaultBundleVerifiedHash(preset)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get verified hash for default bundle: %w", err)
 	}
-	presetdownloadInfo, ok := bundles[runtime.GOOS]
-	if !ok {
-		return nil, fmt.Errorf("Unknown GOOS: %s", runtime.GOOS)
-	}
-	downloadInfo, ok := presetdownloadInfo[preset]
-	if !ok {
-		return nil, fmt.Errorf("Unknown preset: %s", preset)
-	}
-
+	downloadInfo := download.NewRemoteFile(constants.GetDefaultBundleDownloadURL(preset), sha256sum)
 	return downloadInfo, nil
 }
 
