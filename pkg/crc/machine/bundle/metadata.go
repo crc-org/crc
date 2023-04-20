@@ -186,16 +186,11 @@ func (bundle *CrcBundleInfo) GetBundleNameWithoutExtension() string {
 }
 
 func (bundle *CrcBundleInfo) GetBundleType() crcPreset.Preset {
-	switch bundle.Type {
-	case "snc", "snc_custom":
-		return crcPreset.OpenShift
-	case "podman", "podman_custom":
-		return crcPreset.Podman
-	case "microshift", "microshift_custom":
-		return crcPreset.Microshift
-	default:
-		return crcPreset.OpenShift
+	bundleType := strings.TrimSuffix(bundle.Type, "_custom")
+	if bundleType == "snc" {
+		bundleType = "openshift"
 	}
+	return crcPreset.ParsePreset(bundleType)
 }
 
 func (bundle *CrcBundleInfo) IsOpenShift() bool {
