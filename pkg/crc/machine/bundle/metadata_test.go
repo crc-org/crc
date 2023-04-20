@@ -164,3 +164,25 @@ func TestCustomBundleName(t *testing.T) {
 	customBundleName = GetCustomBundleName(customBundleName)
 	checkBundleName(t, customBundleName)
 }
+
+func TestGetBundleType(t *testing.T) {
+	var bundle CrcBundleInfo
+	bundle.Type = "okd"
+	require.Equal(t, preset.OKD, bundle.GetBundleType())
+	bundle.Type = "okd_custom"
+	require.Equal(t, preset.OKD, bundle.GetBundleType())
+	bundle.Type = "microshift"
+	require.Equal(t, preset.Microshift, bundle.GetBundleType())
+	bundle.Type = "microshift_custom"
+	require.Equal(t, preset.Microshift, bundle.GetBundleType())
+	bundle.Type = "openshift"
+	require.Equal(t, preset.OpenShift, bundle.GetBundleType())
+	bundle.Type = "openshift_custom"
+	require.Equal(t, preset.OpenShift, bundle.GetBundleType())
+	bundle.Type = "snc"
+	require.Equal(t, preset.OpenShift, bundle.GetBundleType())
+	bundle.Type = "snc_custom"
+	require.Equal(t, preset.OpenShift, bundle.GetBundleType())
+	bundle.Type = ""
+	require.Equal(t, preset.OpenShift, bundle.GetBundleType())
+}
