@@ -321,7 +321,7 @@ $(BUILD_DIR)/macos-universal/crc: $(BUILD_DIR)/macos-arm64/crc $(BUILD_DIR)/maco
 	mkdir -p out/macos-universal
 	cd $(BUILD_DIR) && "$(TOOLS_BINDIR)"/makefat macos-universal/crc macos-amd64/crc macos-arm64/crc
 
-packagedir: clean_macos_package embed-download-darwin $(BUILD_DIR)/macos-universal/crc
+packagedir: clean_macos_package embed-download-darwin macos-release-binary
 	echo -n $(CRC_VERSION) > packaging/darwin/VERSION
 
 	mkdir -p packaging/darwin/root-crc/Applications
