@@ -86,13 +86,25 @@ const (
 )
 
 func vsockPorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint) []types.ExposeRequest {
+	socketProtocol := types.UNIX
+	socketLocal := constants.GetHostDockerSocketPath()
+	if runtime.GOOS == "windows" {
+		socketProtocol = types.NPIPE
+		socketLocal = constants.DefaultPodmanNamedPipe
+	}
 	exposeRequest := []types.ExposeRequest{
 		{
 			Protocol: "tcp",
 			Local:    net.JoinHostPort(localIP, strconv.Itoa(constants.VsockSSHPort)),
 			Remote:   net.JoinHostPort(virtualMachineIP, internalSSHPort),
 		},
+		{
+			Protocol: socketProtocol,
+			Local:    socketLocal,
+			Remote:   getSSHTunnelURI(),
+		},
 	}
+
 	switch preset {
 	case crcPreset.OpenShift, crcPreset.OKD, crcPreset.Microshift:
 		exposeRequest = append(exposeRequest,
@@ -112,22 +124,11 @@ func vsockPorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint)
 				Remote:   net.JoinHostPort(virtualMachineIP, remoteHTTPPort),
 			})
 	case crcPreset.Podman:
-		socketProtocol := types.UNIX
-		socketLocal := constants.GetHostDockerSocketPath()
-		if runtime.GOOS == "windows" {
-			socketProtocol = types.NPIPE
-			socketLocal = constants.DefaultPodmanNamedPipe
-		}
 		exposeRequest = append(exposeRequest,
 			types.ExposeRequest{
 				Protocol: "tcp",
 				Local:    net.JoinHostPort(localIP, cockpitPort),
 				Remote:   net.JoinHostPort(virtualMachineIP, cockpitPort),
-			},
-			types.ExposeRequest{
-				Protocol: socketProtocol,
-				Local:    socketLocal,
-				Remote:   getSSHTunnelURI(),
 			})
 	default:
 		logging.Errorf("Invalid preset: %s", preset)
