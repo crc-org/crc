@@ -157,6 +157,8 @@ func getMicroShiftStatus(vm *virtualMachine) types.OpenshiftStatus {
 		logging.Debugf("cannot get MicroShift status: %v", err)
 		return types.OpenshiftUnreachable
 	}
+	defer sshRunner.Close()
+
 	sd := systemd.NewInstanceSystemdCommander(sshRunner)
 	microShiftServiceState, err := sd.Status("microshift")
 	if err != nil {
