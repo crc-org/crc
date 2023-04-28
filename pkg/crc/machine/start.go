@@ -983,7 +983,7 @@ func startMicroshift(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.
 	return nil
 }
 
-// The containers.conf file has a setting called machine_enabled in the engine section,
+// The containers.conf/podman marker file has a setting called machine_enabled in the engine section,
 // which lets the podman client know that a command is running on an instance created
 // with the podman machine command. This allows the use of gvisor-tap-vsock when a
 // container is created with an exposed port. However, this setting should be disabled
@@ -991,8 +991,13 @@ func startMicroshift(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.
 // need to expose a port.
 // - https://github.com/crc-org/crc/issues/3515
 func removeContainerConfFile(sshRunner *crcssh.Runner) error {
+	// We would keep this for older bundles compatibility and remove it after
+	// 2.22.0 release.
 	if _, _, err := sshRunner.RunPrivileged("remove /etc/containers/containers.conf to disable machine_enabled", "rm -fr /etc/containers/containers.conf"); err != nil {
 		return errors.Wrap(err, "Failed to remove /etc/containers/containers.conf")
+	}
+	if _, _, err := sshRunner.RunPrivileged("remove /etc/containers/podman-machine marker file to disable machine_enabled", "rm -fr /etc/containers/podman-machine"); err != nil {
+		return errors.Wrap(err, "Failed to remove /etc/containers/podman-machine")
 	}
 	return nil
 }
