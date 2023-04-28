@@ -70,7 +70,7 @@ func (copier *Copier) CopyPrivateSSHKey(srcPath string) error {
 }
 
 func (copier *Copier) CopyKubeConfig() error {
-	if copier.srcBundle.IsOpenShift() {
+	if !copier.srcBundle.IsPodman() {
 		kubeConfigFileName := filepath.Base(copier.srcBundle.GetKubeConfigPath())
 		srcPath := copier.srcBundle.GetKubeConfigPath()
 		destPath := copier.resolvePath(kubeConfigFileName)
