@@ -16,9 +16,6 @@
         <Condition Message="Red Hat OpenShift Local requires the Windows 10 Fall Creators Update (version 1709) or newer.">
             <![CDATA[Installed OR (CURRENTBUILD > MINIMUMBUILD)]]>
         </Condition>
-        <Condition Message="Red Hat OpenShift Local requires at least 9GB of RAM to run. Aborting installation.">
-            <![CDATA[Installed OR (PhysicalMemory >= 9126)]]>
-        </Condition>
         <Property Id="WINDOWSEDITION" Secure="yes">
             <RegistrySearch Id="WindowsEditionReg" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="EditionID" Type="raw" />
         </Property>
