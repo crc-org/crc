@@ -115,13 +115,14 @@ func TestViperConfigLoadDefaultValue(t *testing.T) {
 		Value:     4,
 		IsDefault: true,
 	}, config.Get(cpus))
-
 	_, err = config.Set(cpus, 4)
 	assert.NoError(t, err)
 
 	bin, err := os.ReadFile(configFile)
 	assert.NoError(t, err)
-	assert.JSONEq(t, `{"cpus":4}`, string(bin))
+	// Setting default value will not update
+	// write to the config so expected would be {}
+	assert.JSONEq(t, `{}`, string(bin))
 
 	assert.Equal(t, SettingValue{
 		Value:     4,

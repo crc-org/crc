@@ -95,6 +95,17 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 		return "", fmt.Errorf(invalidType, value, key)
 	}
 
+	// Make sure if user try to set same value which
+	// is default then just unset the value which
+	// anyway make it default and don't update it
+	// ~/.crc/crc.json (viper config) file.
+	if setting.defaultValue == castValue {
+		if _, err := c.Unset(key); err != nil {
+			return "", err
+		}
+		return "", nil
+	}
+
 	if setting.isSecret {
 		if err := c.secretStorage.Set(key, castValue); err != nil {
 			return "", err
