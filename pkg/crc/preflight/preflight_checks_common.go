@@ -13,6 +13,7 @@ import (
 	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/crc/ssh"
 	"github.com/crc-org/crc/pkg/crc/validation"
+	"github.com/docker/go-units"
 	"github.com/pkg/errors"
 )
 
@@ -24,6 +25,20 @@ func bundleCheck(bundlePath string, preset crcpreset.Preset) Check {
 		fixDescription:   "Getting bundle for the CRC executable",
 		fix:              fixBundleExtracted(bundlePath, preset),
 		flags:            SetupOnly,
+
+		labels: None,
+	}
+}
+
+func memoryCheck(preset crcpreset.Preset) Check {
+	return Check{
+		configKeySuffix:  "check-ram",
+		checkDescription: "Checking minimum RAM requirements",
+		check: func() error {
+			return validation.ValidateEnoughMemory(constants.GetDefaultMemory(preset))
+		},
+		fixDescription: fmt.Sprintf("crc requires at least %s to run", units.HumanSize(float64(constants.GetDefaultMemory(preset)*1024*1024))),
+		flags:          NoFix,
 
 		labels: None,
 	}

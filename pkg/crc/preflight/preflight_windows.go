@@ -193,6 +193,7 @@ func getAllPreflightChecks() []Check {
 
 func getChecks(bundlePath string, preset crcpreset.Preset) []Check {
 	checks := []Check{}
+	checks = append(checks, memoryCheck(preset))
 	checks = append(checks, hypervPreflightChecks...)
 	checks = append(checks, crcUsersGroupExistsCheck)
 	checks = append(checks, userPartOfCrcUsersAndHypervAdminsGroupCheck)

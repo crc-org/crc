@@ -15,10 +15,8 @@ import (
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/logging"
 	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
-	"github.com/crc-org/crc/pkg/crc/validation"
 	"github.com/crc-org/crc/pkg/crc/version"
 	crcos "github.com/crc-org/crc/pkg/os"
-	"github.com/docker/go-units"
 	"github.com/pkg/errors"
 )
 
@@ -52,17 +50,6 @@ func genericPreflightChecks(preset crcpreset.Preset) []Check {
 			check:            checkSupportedCPUArch,
 			fixDescription:   "CRC is only supported on AMD64/Intel64 hardware",
 			flags:            NoFix,
-
-			labels: None,
-		},
-		{
-			configKeySuffix:  "check-ram",
-			checkDescription: "Checking minimum RAM requirements",
-			check: func() error {
-				return validation.ValidateEnoughMemory(constants.GetDefaultMemory(preset))
-			},
-			fixDescription: fmt.Sprintf("crc requires at least %s to run", units.HumanSize(float64(constants.GetDefaultMemory(preset)*1024*1024))),
-			flags:          NoFix,
 
 			labels: None,
 		},
