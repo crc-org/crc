@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/validation"
 	"github.com/spf13/cast"
 )
 
@@ -93,6 +94,25 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 		castValue = cast.ToString(value)
 	default:
 		return "", fmt.Errorf(invalidType, value, key)
+	}
+
+	// Preset is mapped with `memory`, `cpus` and `bundle` and
+	// we want to make sure if cpu or memory is less for a preset
+	// then default is set automatic.
+	if setting.Name == Preset {
+		preset := preset.ParsePreset(value.(string))
+		mem := c.Get(Memory)
+		if err := validation.ValidateMemory(mem.AsInt(), preset); err != nil {
+			if _, err := c.Unset(Memory); err != nil {
+				return "", err
+			}
+		}
+		cpu := c.Get(CPUs)
+		if err := validation.ValidateCPUs(cpu.AsInt(), preset); err != nil {
+			if _, err := c.Unset(CPUs); err != nil {
+				return "", err
+			}
+		}
 	}
 
 	// Make sure if user try to set same value which
