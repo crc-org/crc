@@ -7,6 +7,7 @@ import (
 
 	"github.com/crc-org/crc/pkg/crc/logging"
 
+	"github.com/crc-org/crc/pkg/crc/adminhelper"
 	winnet "github.com/crc-org/crc/pkg/os/windows/network"
 	"github.com/crc-org/crc/pkg/os/windows/powershell"
 
@@ -223,6 +224,14 @@ func checkIfAdminHelperServiceRunning() error {
 	}
 	if strings.TrimSpace(stdout) != "Running" {
 		return fmt.Errorf("%s service is not running", constants.AdminHelperServiceName)
+	}
+	return checkAdminHelperNamedPipeAccessible()
+}
+
+func checkAdminHelperNamedPipeAccessible() error {
+	client := adminhelper.Client()
+	if _, err := client.Version(); err != nil {
+		return err
 	}
 	return nil
 }
