@@ -118,7 +118,7 @@ var adminHelperServiceCheks = []Check{
 		configKeySuffix:  "check-admin-helper-service-running",
 		checkDescription: "Checking admin helper service is running",
 		check:            checkIfAdminHelperServiceRunning,
-		fixDescription:   "Make sure you installed crc using the Windows installer",
+		fixDescription:   "Make sure you installed crc using the Windows installer and performed required reboot",
 		flags:            NoFix,
 
 		labels: labels{Os: Windows},
