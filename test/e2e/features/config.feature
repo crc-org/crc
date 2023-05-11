@@ -18,24 +18,24 @@ Feature: Test configuration settings
         @darwin
         Examples: Config settings on Mac
             | property         | value1    | value2            |
-            | cpus             | 4         | 3                 |
-            | memory           | 9216      | 4096              |
+            | cpus             | 5         | 3                 |
+            | memory           | 9217      | 4096              |
             | nameserver       | 120.0.0.1 | 999.999.999.999   |
             | pull-secret-file | /etc      | /nonexistent-file |
 
         @linux
         Examples: Config settings on Linux
             | property         | value1    | value2            |
-            | cpus             | 4         | 3                 |
-            | memory           | 9216      | 4096              |
+            | cpus             | 5         | 3                 |
+            | memory           | 9217      | 4096              |
             | nameserver       | 120.0.0.1 | 999.999.999.999   |
             | pull-secret-file | /etc      | /nonexistent-file |
 
         @windows
         Examples: Config settings on Windows
             | property         | value1    | value2            |
-            | cpus             | 4         | 3                 |
-            | memory           | 9216      | 4096              |
+            | cpus             | 5         | 3                 |
+            | memory           | 9217      | 4096              |
             | nameserver       | 120.0.0.1 | 999.999.999.999   |
             | pull-secret-file | /Users    | /nonexistent-file |
 
@@ -53,7 +53,7 @@ Feature: Test configuration settings
     Scenario: CRC config checks (update check)
         When setting config property "disable-update-check" to value "true" succeeds
         Then  "JSON" config file "crc.json" in CRC home folder contains key "disable-update-check" with value matching "true"
-        When unsetting config property "disable-update-check" succeeds
+        When setting config property "disable-update-check" to value "false" succeeds
         Then "JSON" config file "crc.json" in CRC home folder does not contain key "disable-update-check"
 
     # SKIP
@@ -64,11 +64,9 @@ Feature: Test configuration settings
         When executing crc setup command succeeds
         Then stderr should contain "Skipping above check..."
         When setting config property "<property>" to value "<value2>" succeeds
-        Then "JSON" config file "crc.json" in CRC home folder contains key "<property>" with value matching "<value2>"
+        Then "JSON" config file "crc.json" in CRC home folder does not contain key "<property>"
         When executing crc setup command succeeds
         Then stderr should not contain "Skipping above check..."
-        When unsetting config property "<property>" succeeds
-        Then "JSON" config file "crc.json" in CRC home folder does not contain key "<property>"
 
         @darwin
         Examples:
@@ -127,8 +125,8 @@ Feature: Test configuration settings
 
     @linux
     Scenario: Running `crc setup` with checks enabled restores destroyed network
-        When executing "crc config set skip-check-crc-network false" succeeds
-        And executing "crc config set skip-check-crc-network-active false" succeeds
+        When setting config property "skip-check-crc-network" to value "false" succeeds
+        And setting config property "skip-check-crc-network-active" to value "false" succeeds
         Then executing single crc setup command succeeds
         And executing "sudo virsh net-list --name" succeeds
         And stdout contains "crc"
@@ -140,8 +138,9 @@ Feature: Test configuration settings
         And executing "sudo virsh net-list --name" succeeds
         Then stdout should not contain "crc"
         # Disable checks
-        When executing "crc config set skip-check-crc-network true" succeeds
-        And executing "crc config set skip-check-crc-network-active true" succeeds
+        When setting config property "skip-check-crc-network" to value "true" succeeds
+        And setting config property "skip-check-crc-network-active" to value "true" succeeds
+
         # Start CRC
         Then starting CRC with default bundle fails
         And stderr contains "Network not found: no network with matching name 'crc'"
