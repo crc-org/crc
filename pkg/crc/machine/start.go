@@ -318,9 +318,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, err
 	}
 
-	if vm.bundle.IsOpenShift() {
-		logging.Infof("Starting CRC VM for %s %s...", startConfig.Preset, vm.bundle.GetOpenshiftVersion())
-	}
+	logging.Infof("Starting CRC VM for %s %s...", startConfig.Preset, vm.bundle.GetVersion())
 
 	if client.useVSock() {
 		if err := exposePorts(startConfig.Preset, startConfig.IngressHTTPPort, startConfig.IngressHTTPSPort); err != nil {
