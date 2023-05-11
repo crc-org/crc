@@ -75,16 +75,6 @@ func (c *Config) validate(key string, value interface{}) error {
 	return nil
 }
 
-func (c *Config) revalidateSettingsValue(key string) error {
-	if err := c.validate(key, c.Get(key)); err != nil {
-		if _, err := c.Unset(key); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // Set sets the value for a given config key
 func (c *Config) Set(key string, value interface{}) (string, error) {
 	setting, ok := c.settingsByName[key]
@@ -115,18 +105,6 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 		castValue = cast.ToString(value)
 	default:
 		return "", fmt.Errorf(invalidType, value, key)
-	}
-
-	// The `memory` and `cpus` values are preset-dependent.
-	// When they are lower than the preset requirements, this code
-	// automatically resets them to their default value.
-	if setting.Name == Preset {
-		if err := c.revalidateSettingsValue(Memory); err != nil {
-			return "", err
-		}
-		if err := c.revalidateSettingsValue(CPUs); err != nil {
-			return "", err
-		}
 	}
 
 	// Make sure if user try to set same value which

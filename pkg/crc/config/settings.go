@@ -5,6 +5,7 @@ import (
 	"runtime"
 
 	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/network"
 	"github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/crc/version"
@@ -130,6 +131,22 @@ func RegisterSettings(cfg *Config) {
 		fmt.Sprintf("HTTP port to use for OpenShift ingress/routes on the host (1024-65535, default: %d)", constants.OpenShiftIngressHTTPPort))
 	cfg.AddSetting(IngressHTTPSPort, constants.OpenShiftIngressHTTPSPort, ValidatePort, RequiresHTTPSPortChangeWarning,
 		fmt.Sprintf("HTTPS port to use for OpenShift ingress/routes on the host (1024-65535, default: %d)", constants.OpenShiftIngressHTTPSPort))
+
+	if err := cfg.RegisterNotifier(Preset, presetChanged); err != nil {
+		logging.Debugf("Failed to register notifier for Preset: %v", err)
+	}
+}
+
+func presetChanged(cfg *Config, _ string, _ interface{}) {
+	// The `memory` and `cpus` values are preset-dependent.
+	// When they are lower than the preset requirements, this code
+	// automatically resets them to their default value.
+	if err := revalidateSettingsValue(cfg, Memory); err != nil {
+		logging.Debugf("error validating Memory config value: %v", err)
+	}
+	if err := revalidateSettingsValue(cfg, CPUs); err != nil {
+		logging.Debugf("error validating CPUs config value: %v", err)
+	}
 }
 
 func defaultCPUs(cfg Storage) int {
@@ -160,6 +177,18 @@ func GetNetworkMode(config Storage) network.Mode {
 		return network.UserNetworkingMode
 	}
 	return network.ParseMode(config.Get(NetworkMode).AsString())
+}
+
+func revalidateSettingsValue(cfg *Config, key string) error {
+	if err := cfg.validate(key, cfg.Get(key).Value); err != nil {
+		logging.Debugf("'%s' value is invalid: %v", key, err)
+		if _, err := cfg.Unset(key); err != nil {
+			return err
+		}
+		logging.Warnf("Value for config setting '%s' is invalid, resetting it to its default value", key)
+	}
+
+	return nil
 }
 
 func UpdateDefaults(cfg *Config) {
