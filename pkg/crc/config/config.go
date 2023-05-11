@@ -5,7 +5,6 @@ import (
 	"reflect"
 
 	"github.com/crc-org/crc/pkg/crc/preset"
-	"github.com/crc-org/crc/pkg/crc/validation"
 	"github.com/spf13/cast"
 )
 
@@ -63,6 +62,14 @@ func (c *Config) AddSetting(name string, defValue interface{}, validationFn Vali
 	}
 }
 
+func (c *Config) validate(key string, value interface{}) error {
+	ok, expectedValue := c.settingsByName[key].validationFn(value)
+	if !ok {
+		return fmt.Errorf(invalidProp, value, key, expectedValue)
+	}
+	return nil
+}
+
 // Set sets the value for a given config key
 func (c *Config) Set(key string, value interface{}) (string, error) {
 	setting, ok := c.settingsByName[key]
@@ -70,9 +77,8 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 		return "", fmt.Errorf(configPropDoesntExistMsg, key)
 	}
 
-	ok, expectedValue := c.settingsByName[key].validationFn(value)
-	if !ok {
-		return "", fmt.Errorf(invalidProp, value, key, expectedValue)
+	if err := c.validate(key, value); err != nil {
+		return "", err
 	}
 
 	var castValue interface{}
@@ -100,15 +106,14 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 	// we want to make sure if cpu or memory is less for a preset
 	// then default is set automatic.
 	if setting.Name == Preset {
-		preset := preset.ParsePreset(value.(string))
 		mem := c.Get(Memory)
-		if err := validation.ValidateMemory(mem.AsInt(), preset); err != nil {
+		if err := c.validate(Memory, mem); err != nil {
 			if _, err := c.Unset(Memory); err != nil {
 				return "", err
 			}
 		}
 		cpu := c.Get(CPUs)
-		if err := validation.ValidateCPUs(cpu.AsInt(), preset); err != nil {
+		if err := c.validate(CPUs, cpu); err != nil {
 			if _, err := c.Unset(CPUs); err != nil {
 				return "", err
 			}
