@@ -33,6 +33,10 @@ func doRequest(client *grab.Client, req *grab.Request) (string, error) {
 	if terminal.IsShowTerminalOutput() {
 		bar = pb.Start64(resp.Size())
 		bar.Set(pb.Bytes, true)
+		// This is the same as the 'Default' template https://github.com/cheggaaa/pb/blob/224e0746e1e7b9c5309d6e2637264bfeb746d043/v3/preset.go#L8-L10
+		// except that the 'per second' suffix is changed to '/s' (by default it is ' p/s' which is unexpected)
+		progressBarTemplate := `{{with string . "prefix"}}{{.}} {{end}}{{counters . }} {{bar . }} {{percent . }} {{speed . "%s/s" "??/s"}}{{with string . "suffix"}} {{.}}{{end}}`
+		bar.SetTemplateString(progressBarTemplate)
 		defer bar.Finish()
 	}
 
