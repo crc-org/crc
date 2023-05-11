@@ -187,3 +187,14 @@ func GetBundlePath(preset preset.Preset) string {
 	return filepath.Join(CRCHome, "cache", bundle)
 
 }
+
+// WriteTempFile returns full path of the temp file it created, and an error
+func WriteTempFile(content string, name string) (string, error) {
+	tmpFile, err := os.CreateTemp("", name)
+	if err != nil {
+		return "", err
+	}
+	defer tmpFile.Close()
+	_, err = tmpFile.WriteString(content)
+	return tmpFile.Name(), err
+}
