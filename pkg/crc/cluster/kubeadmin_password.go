@@ -39,7 +39,7 @@ func UpdateKubeAdminUserPassword(ctx context.Context, ocConfig oc.Config, newPas
 
 	kubeAdminPassword, err := GetKubeadminPassword()
 	if err != nil {
-		return fmt.Errorf("Cannot generate the kubeadmin user password: %w", err)
+		return fmt.Errorf("Cannot read the kubeadmin user password from file: %w", err)
 	}
 	credentials := map[string]string{
 		"developer": "developer",
