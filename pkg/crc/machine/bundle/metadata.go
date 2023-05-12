@@ -199,7 +199,8 @@ func (bundle *CrcBundleInfo) GetBundleType() crcPreset.Preset {
 }
 
 func (bundle *CrcBundleInfo) IsOpenShift() bool {
-	return bundle.GetBundleType() == crcPreset.OpenShift
+	preset := bundle.GetBundleType()
+	return preset == crcPreset.OpenShift || preset == crcPreset.OKD
 }
 
 func (bundle *CrcBundleInfo) IsMicroshift() bool {
