@@ -100,7 +100,7 @@
         <CustomAction Id="InstallHyperv" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
         <SetProperty Action="CAAddUserToHypervAdminGroup"
             Id="AddUserToHypervAdminGroup"
-            Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Add-LocalGroupMember -Member [LogonUser] -SID S-1-5-32-578&quot;"
+            Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Add-LocalGroupMember -Member '[LogonUser]' -SID S-1-5-32-578&quot;"
             Before="AddUserToHypervAdminGroup"
             Sequence="execute"/>
         <CustomAction Id="AddUserToHypervAdminGroup" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
