@@ -304,3 +304,26 @@ func TestTwoInstancesSetAndUnsetSameConfiguration(t *testing.T) {
 	assert.Equal(t, 4, config2.Get(cpus).Value)
 	assert.Equal(t, 4, config1.Get(cpus).Value)
 }
+
+func TestNotifier(t *testing.T) {
+	dir := t.TempDir()
+	configFile := filepath.Join(dir, "crc.json")
+
+	config, err := newTestConfig(configFile, "CRC")
+	require.NoError(t, err)
+
+	var notified = false
+	err = config.RegisterNotifier(CPUs, func(config *Config, key string, value interface{}) {
+		notified = true
+		require.Equal(t, key, CPUs)
+		assert.Equal(t, SettingValue{
+			Value:     value,
+			IsDefault: false,
+		}, config.Get(cpus))
+
+	})
+	require.NoError(t, err)
+	_, err = config.Set(cpus, 5)
+	assert.NoError(t, err)
+	require.True(t, notified)
+}

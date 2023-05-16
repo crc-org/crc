@@ -14,17 +14,22 @@ const (
 	invalidType              = "Type %T for configuration property '%s' is invalid"
 )
 
+type ValueChangedFunc func(config *Config, key string, value interface{})
+
 type Config struct {
 	storage        RawStorage
 	secretStorage  RawStorage
 	settingsByName map[string]Setting
+
+	valueChangeNotifiers map[string]ValueChangedFunc
 }
 
 func New(storage, secretStorage RawStorage) *Config {
 	return &Config{
-		storage:        storage,
-		secretStorage:  secretStorage,
-		settingsByName: make(map[string]Setting),
+		storage:              storage,
+		secretStorage:        secretStorage,
+		settingsByName:       make(map[string]Setting),
+		valueChangeNotifiers: map[string]ValueChangedFunc{},
 	}
 }
 
@@ -145,6 +150,8 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 		}
 	}
 
+	c.valueChangeNotify(key, value)
+
 	return c.settingsByName[key].callbackFn(key, castValue), nil
 }
 
@@ -163,7 +170,29 @@ func (c *Config) Unset(key string) (string, error) {
 			return "", err
 		}
 	}
+
+	c.valueChangeNotify(key, nil)
+
 	return fmt.Sprintf("Successfully unset configuration property '%s'", key), nil
+}
+
+func (c *Config) RegisterNotifier(key string, changeNotifier ValueChangedFunc) error {
+	if _, hasKey := c.valueChangeNotifiers[key]; hasKey {
+		return fmt.Errorf("Config change notifier already registered for %s", key)
+	}
+
+	c.valueChangeNotifiers[key] = changeNotifier
+
+	return nil
+}
+
+func (c *Config) valueChangeNotify(key string, value interface{}) {
+	changeNotifier, hasKey := c.valueChangeNotifiers[key]
+	if !hasKey {
+		return
+	}
+
+	changeNotifier(c, key, value)
 }
 
 func (c *Config) Get(key string) SettingValue {
