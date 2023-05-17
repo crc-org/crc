@@ -54,7 +54,8 @@ func ValidateCPUs(value interface{}, preset crcpreset.Preset) (bool, string) {
 }
 
 // ValidateMemory checks if provided memory is valid in the config
-func ValidateMemory(value interface{}, preset crcpreset.Preset) (bool, string) {
+// It's defined as a variable so that it can be overridden in tests to disable the physical memory check
+var ValidateMemory = func(value interface{}, preset crcpreset.Preset) (bool, string) {
 	v, err := cast.ToIntE(value)
 	if err != nil {
 		return false, fmt.Sprintf("requires integer value in MiB >= %d", constants.GetDefaultMemory(preset))
