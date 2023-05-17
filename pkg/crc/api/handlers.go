@@ -191,7 +191,6 @@ func (h *Handler) SetConfig(c *context) error {
 	if len(multiError.Errors) != 0 {
 		return multiError
 	}
-	crcConfig.UpdateDefaults(h.Config)
 	return c.JSON(http.StatusOK, client.SetOrUnsetConfigResult{
 		Properties: successProps,
 	})
@@ -220,7 +219,6 @@ func (h *Handler) UnsetConfig(c *context) error {
 	if len(multiError.Errors) != 0 {
 		return multiError
 	}
-	crcConfig.UpdateDefaults(h.Config)
 	return c.JSON(http.StatusOK, client.SetOrUnsetConfigResult{
 		Properties: successProps,
 	})

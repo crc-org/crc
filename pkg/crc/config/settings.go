@@ -138,15 +138,7 @@ func RegisterSettings(cfg *Config) {
 }
 
 func presetChanged(cfg *Config, _ string, _ interface{}) {
-	// The `memory` and `cpus` values are preset-dependent.
-	// When they are lower than the preset requirements, this code
-	// automatically resets them to their default value.
-	if err := revalidateSettingsValue(cfg, Memory); err != nil {
-		logging.Debugf("error validating Memory config value: %v", err)
-	}
-	if err := revalidateSettingsValue(cfg, CPUs); err != nil {
-		logging.Debugf("error validating CPUs config value: %v", err)
-	}
+	UpdateDefaults(cfg)
 }
 
 func defaultCPUs(cfg Storage) int {
@@ -193,6 +185,16 @@ func revalidateSettingsValue(cfg *Config, key string) error {
 
 func UpdateDefaults(cfg *Config) {
 	RegisterSettings(cfg)
+
+	// The `memory` and `cpus` values are preset-dependent.
+	// When they are lower than the preset requirements, this code
+	// automatically resets them to their default value.
+	if err := revalidateSettingsValue(cfg, Memory); err != nil {
+		logging.Infof("failed to validate Memory setting: %v", err)
+	}
+	if err := revalidateSettingsValue(cfg, CPUs); err != nil {
+		logging.Infof("failed to validate CPUs setting: %v", err)
+	}
 }
 
 func BundleHelpMsg(cfg *Config) string {
