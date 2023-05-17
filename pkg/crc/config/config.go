@@ -115,7 +115,7 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 		if _, err := c.Unset(key); err != nil {
 			return "", err
 		}
-		return "", nil
+		return c.settingsByName[key].callbackFn(key, castValue), nil
 	}
 
 	if setting.isSecret {
