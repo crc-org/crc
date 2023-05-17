@@ -35,6 +35,8 @@ var (
 	// will be true for releases on macos and windows
 	// will be false for git builds on macos and windows
 	installerBuild = "false"
+
+	defaultPreset = "openshift"
 )
 
 const (
@@ -139,4 +141,13 @@ func GetCRCLatestVersionFromMirror(transport http.RoundTripper) (*CrcReleaseInfo
 	}
 
 	return &releaseInfo, nil
+}
+
+func GetDefaultPreset() crcPreset.Preset {
+	preset, err := crcPreset.ParsePresetE(defaultPreset)
+	if err != nil {
+		// defaultPreset is set at compile-time, it should *never* be invalid
+		panic(fmt.Sprintf("Invalid compilet-time default preset '%s'", defaultPreset))
+	}
+	return preset
 }

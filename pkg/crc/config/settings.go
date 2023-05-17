@@ -70,7 +70,7 @@ func RegisterSettings(cfg *Config) {
 	}
 
 	// Preset setting should be on top because CPUs/Memory config depend on it.
-	cfg.AddSetting(Preset, string(preset.OpenShift), validatePreset, RequiresDeleteAndSetupMsg,
+	cfg.AddSetting(Preset, version.GetDefaultPreset().String(), validatePreset, RequiresDeleteAndSetupMsg,
 		fmt.Sprintf("Virtual machine preset (valid values are: %s)", preset.AllPresets()))
 	// Start command settings in config
 	cfg.AddSetting(Bundle, defaultBundlePath(cfg), validateBundlePath, SuccessfullyApplied, BundleHelpMsg(cfg))
