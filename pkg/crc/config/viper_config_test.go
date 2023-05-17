@@ -327,3 +327,27 @@ func TestNotifier(t *testing.T) {
 	assert.NoError(t, err)
 	require.True(t, notified)
 }
+
+func TestCallbacks(t *testing.T) {
+	dir := t.TempDir()
+	configFile := filepath.Join(dir, "crc.json")
+
+	config, err := newTestConfig(configFile, "CRC")
+	require.NoError(t, err)
+
+	callback, err := config.Set(cpus, 5)
+	require.NoError(t, err)
+	require.NotEmpty(t, callback)
+
+	callback, err = config.Unset(cpus)
+	require.NoError(t, err)
+	require.NotEmpty(t, callback)
+
+	callback, err = config.Set(cpus, 4)
+	require.NoError(t, err)
+	require.NotEmpty(t, callback)
+
+	callback, err = config.Unset(cpus)
+	require.NoError(t, err)
+	require.NotEmpty(t, callback)
+}
