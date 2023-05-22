@@ -22,6 +22,7 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
       - name: Build the chocolatey package
+        shell: powershell
         run: make choco
       - name: Upload nupkg artifact
         uses: actions/upload-artifact@v3

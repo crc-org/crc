@@ -22,9 +22,9 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
       - name: Build the chocolatey package
+        shell: powershell
         run: make choco
       - name: Add api key for choco community feed
-        shell: pwsh
         env:
           CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
         run: choco apikey --key "$env:CHOCO_API_KEY" --source https://push.chocolatey.org/
