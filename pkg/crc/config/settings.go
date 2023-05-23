@@ -46,16 +46,16 @@ func RegisterSettings(cfg *Config) {
 		return ValidateBool(value)
 	}
 
-	validateCPUs := func(value interface{}) (bool, string) {
-		return ValidateCPUs(value, GetPreset(cfg))
+	validCPUs := func(value interface{}) (bool, string) {
+		return validateCPUs(value, GetPreset(cfg))
 	}
 
-	validateMemory := func(value interface{}) (bool, string) {
-		return ValidateMemory(value, GetPreset(cfg))
+	validMemory := func(value interface{}) (bool, string) {
+		return validateMemory(value, GetPreset(cfg))
 	}
 
-	validateBundlePath := func(value interface{}) (bool, string) {
-		return ValidateBundlePath(value, GetPreset(cfg))
+	validBundlePath := func(value interface{}) (bool, string) {
+		return validateBundlePath(value, GetPreset(cfg))
 	}
 
 	validateSmbSharedDirs := func(value interface{}) (bool, string) {
@@ -73,16 +73,16 @@ func RegisterSettings(cfg *Config) {
 	cfg.AddSetting(Preset, version.GetDefaultPreset().String(), validatePreset, RequiresDeleteAndSetupMsg,
 		fmt.Sprintf("Virtual machine preset (valid values are: %s)", preset.AllPresets()))
 	// Start command settings in config
-	cfg.AddSetting(Bundle, defaultBundlePath(cfg), validateBundlePath, SuccessfullyApplied, BundleHelpMsg(cfg))
-	cfg.AddSetting(CPUs, defaultCPUs(cfg), validateCPUs, RequiresRestartMsg,
+	cfg.AddSetting(Bundle, defaultBundlePath(cfg), validBundlePath, SuccessfullyApplied, BundleHelpMsg(cfg))
+	cfg.AddSetting(CPUs, defaultCPUs(cfg), validCPUs, RequiresRestartMsg,
 		fmt.Sprintf("Number of CPU cores (must be greater than or equal to '%d')", defaultCPUs(cfg)))
-	cfg.AddSetting(Memory, defaultMemory(cfg), validateMemory, RequiresRestartMsg,
+	cfg.AddSetting(Memory, defaultMemory(cfg), validMemory, RequiresRestartMsg,
 		fmt.Sprintf("Memory size in MiB (must be greater than or equal to '%d')", defaultMemory(cfg)))
-	cfg.AddSetting(DiskSize, constants.DefaultDiskSize, ValidateDiskSize, RequiresRestartMsg,
+	cfg.AddSetting(DiskSize, constants.DefaultDiskSize, validateDiskSize, RequiresRestartMsg,
 		fmt.Sprintf("Total size in GiB of the disk (must be greater than or equal to '%d')", constants.DefaultDiskSize))
-	cfg.AddSetting(NameServer, "", ValidateIPAddress, SuccessfullyApplied,
+	cfg.AddSetting(NameServer, "", validateIPAddress, SuccessfullyApplied,
 		"IPv4 address of nameserver (string, like '1.1.1.1 or 8.8.8.8')")
-	cfg.AddSetting(PullSecretFile, "", ValidatePath, SuccessfullyApplied,
+	cfg.AddSetting(PullSecretFile, "", validatePath, SuccessfullyApplied,
 		fmt.Sprintf("Path of image pull secret (download from %s)", constants.CrcLandingPageURL))
 	cfg.AddSetting(DisableUpdateCheck, false, ValidateBool, SuccessfullyApplied,
 		"Disable update check (true/false, default: false)")
@@ -91,7 +91,7 @@ func RegisterSettings(cfg *Config) {
 
 	// Shared directories configs
 	if runtime.GOOS == "windows" {
-		cfg.AddSetting(SharedDirPassword, Secret(""), ValidateString, SuccessfullyApplied,
+		cfg.AddSetting(SharedDirPassword, Secret(""), validateString, SuccessfullyApplied,
 			"Password used while using CIFS/SMB file sharing (It is the password for the current logged in user)")
 
 		cfg.AddSetting(EnableSharedDirs, false, validateSmbSharedDirs, SuccessfullyApplied,
@@ -109,27 +109,27 @@ func RegisterSettings(cfg *Config) {
 	cfg.AddSetting(HostNetworkAccess, false, validateHostNetworkAccess, RequiresCleanupAndSetupMsg,
 		"Allow TCP/IP connections from the CRC VM to services running on the host (true/false, default: false)")
 	// Proxy Configuration
-	cfg.AddSetting(HTTPProxy, "", ValidateHTTPProxy, SuccessfullyApplied,
+	cfg.AddSetting(HTTPProxy, "", validateHTTPProxy, SuccessfullyApplied,
 		"HTTP proxy URL (string, like 'http://my-proxy.com:8443')")
-	cfg.AddSetting(HTTPSProxy, "", ValidateHTTPSProxy, SuccessfullyApplied,
+	cfg.AddSetting(HTTPSProxy, "", validateHTTPSProxy, SuccessfullyApplied,
 		"HTTPS proxy URL (string, like 'https://my-proxy.com:8443')")
-	cfg.AddSetting(NoProxy, "", ValidateNoProxy, SuccessfullyApplied,
+	cfg.AddSetting(NoProxy, "", validateNoProxy, SuccessfullyApplied,
 		"Hosts, ipv4 addresses or CIDR which do not use a proxy (string, comma-separated list such as '127.0.0.1,192.168.100.1/24')")
-	cfg.AddSetting(ProxyCAFile, "", ValidatePath, SuccessfullyApplied,
+	cfg.AddSetting(ProxyCAFile, "", validatePath, SuccessfullyApplied,
 		"Path to an HTTPS proxy certificate authority (CA)")
 
 	cfg.AddSetting(EnableClusterMonitoring, false, ValidateBool, SuccessfullyApplied,
 		"Enable cluster monitoring Operator (true/false, default: false)")
 
 	// Telemeter Configuration
-	cfg.AddSetting(ConsentTelemetry, "", ValidateYesNo, SuccessfullyApplied,
+	cfg.AddSetting(ConsentTelemetry, "", validateYesNo, SuccessfullyApplied,
 		"Consent to collection of anonymous usage data (yes/no)")
 
-	cfg.AddSetting(KubeAdminPassword, "", ValidateString, SuccessfullyApplied,
+	cfg.AddSetting(KubeAdminPassword, "", validateString, SuccessfullyApplied,
 		"User defined kubeadmin password")
-	cfg.AddSetting(IngressHTTPPort, constants.OpenShiftIngressHTTPPort, ValidatePort, RequiresHTTPPortChangeWarning,
+	cfg.AddSetting(IngressHTTPPort, constants.OpenShiftIngressHTTPPort, validatePort, RequiresHTTPPortChangeWarning,
 		fmt.Sprintf("HTTP port to use for OpenShift ingress/routes on the host (1024-65535, default: %d)", constants.OpenShiftIngressHTTPPort))
-	cfg.AddSetting(IngressHTTPSPort, constants.OpenShiftIngressHTTPSPort, ValidatePort, RequiresHTTPSPortChangeWarning,
+	cfg.AddSetting(IngressHTTPSPort, constants.OpenShiftIngressHTTPSPort, validatePort, RequiresHTTPSPortChangeWarning,
 		fmt.Sprintf("HTTPS port to use for OpenShift ingress/routes on the host (1024-65535, default: %d)", constants.OpenShiftIngressHTTPSPort))
 
 	if err := cfg.RegisterNotifier(Preset, presetChanged); err != nil {

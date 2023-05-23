@@ -26,7 +26,7 @@ func validateMemoryNoPhysicalCheck(value interface{}, preset crcpreset.Preset) (
 }
 
 func newInMemoryConfig() (*Config, error) {
-	ValidateMemory = validateMemoryNoPhysicalCheck
+	validateMemory = validateMemoryNoPhysicalCheck
 	cfg := New(NewEmptyInMemoryStorage(), NewEmptyInMemorySecretStorage())
 
 	RegisterSettings(cfg)
