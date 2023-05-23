@@ -17,8 +17,8 @@ const (
 )
 
 func newTestConfig(configFile, envPrefix string) (*Config, error) {
-	validateCPUs := func(value interface{}) (bool, string) {
-		return ValidateCPUs(value, preset.OpenShift)
+	validCPUs := func(value interface{}) (bool, string) {
+		return validateCPUs(value, preset.OpenShift)
 	}
 	storage, err := NewViperStorage(configFile, envPrefix)
 	if err != nil {
@@ -27,8 +27,8 @@ func newTestConfig(configFile, envPrefix string) (*Config, error) {
 
 	secretStorage := NewEmptyInMemorySecretStorage()
 	config := New(storage, secretStorage)
-	config.AddSetting(cpus, 4, validateCPUs, RequiresRestartMsg, "")
-	config.AddSetting(nameServer, "", ValidateIPAddress, SuccessfullyApplied, "")
+	config.AddSetting(cpus, 4, validCPUs, RequiresRestartMsg, "")
+	config.AddSetting(nameServer, "", validateIPAddress, SuccessfullyApplied, "")
 	return config, nil
 }
 
@@ -142,14 +142,14 @@ func TestViperConfigBindFlagSet(t *testing.T) {
 	dir := t.TempDir()
 	configFile := filepath.Join(dir, "crc.json")
 
-	validateCPUs := func(value interface{}) (bool, string) {
-		return ValidateCPUs(value, preset.OpenShift)
+	validCPUs := func(value interface{}) (bool, string) {
+		return validateCPUs(value, preset.OpenShift)
 	}
 	storage, err := NewViperStorage(configFile, "CRC")
 	require.NoError(t, err)
 	config := New(storage, NewEmptyInMemorySecretStorage())
-	config.AddSetting(cpus, 4, validateCPUs, RequiresRestartMsg, "")
-	config.AddSetting(nameServer, "", ValidateIPAddress, SuccessfullyApplied, "")
+	config.AddSetting(cpus, 4, validCPUs, RequiresRestartMsg, "")
+	config.AddSetting(nameServer, "", validateIPAddress, SuccessfullyApplied, "")
 
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
 	flagSet.IntP(cpus, "c", 4, "")

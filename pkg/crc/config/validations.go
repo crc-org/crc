@@ -21,15 +21,15 @@ func ValidateBool(value interface{}) (bool, string) {
 	return true, ""
 }
 
-func ValidateString(value interface{}) (bool, string) {
+func validateString(value interface{}) (bool, string) {
 	if _, err := cast.ToStringE(value); err != nil {
 		return false, "must be a valid string"
 	}
 	return true, ""
 }
 
-// ValidateDiskSize checks if provided disk size is valid in the config
-func ValidateDiskSize(value interface{}) (bool, string) {
+// validateDiskSize checks if provided disk size is valid in the config
+func validateDiskSize(value interface{}) (bool, string) {
 	diskSize, err := cast.ToIntE(value)
 	if err != nil {
 		return false, fmt.Sprintf("could not convert '%s' to integer", value)
@@ -41,8 +41,8 @@ func ValidateDiskSize(value interface{}) (bool, string) {
 	return true, ""
 }
 
-// ValidateCPUs checks if provided cpus count is valid in the config
-func ValidateCPUs(value interface{}, preset crcpreset.Preset) (bool, string) {
+// validateCPUs checks if provided cpus count is valid in the config
+func validateCPUs(value interface{}, preset crcpreset.Preset) (bool, string) {
 	v, err := cast.ToIntE(value)
 	if err != nil {
 		return false, fmt.Sprintf("requires integer value >= %d", constants.GetDefaultCPUs(preset))
@@ -53,9 +53,9 @@ func ValidateCPUs(value interface{}, preset crcpreset.Preset) (bool, string) {
 	return true, ""
 }
 
-// ValidateMemory checks if provided memory is valid in the config
+// validateMemory checks if provided memory is valid in the config
 // It's defined as a variable so that it can be overridden in tests to disable the physical memory check
-var ValidateMemory = func(value interface{}, preset crcpreset.Preset) (bool, string) {
+var validateMemory = func(value interface{}, preset crcpreset.Preset) (bool, string) {
 	v, err := cast.ToIntE(value)
 	if err != nil {
 		return false, fmt.Sprintf("requires integer value in MiB >= %d", constants.GetDefaultMemory(preset))
@@ -66,55 +66,55 @@ var ValidateMemory = func(value interface{}, preset crcpreset.Preset) (bool, str
 	return true, ""
 }
 
-// ValidateBundlePath checks if the provided bundle path is valid
-func ValidateBundlePath(value interface{}, preset crcpreset.Preset) (bool, string) {
+// validateBundlePath checks if the provided bundle path is valid
+func validateBundlePath(value interface{}, preset crcpreset.Preset) (bool, string) {
 	if err := validation.ValidateBundlePath(cast.ToString(value), preset); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
 }
 
-// ValidateIP checks if provided IP is valid
-func ValidateIPAddress(value interface{}) (bool, string) {
+// validateIP checks if provided IP is valid
+func validateIPAddress(value interface{}) (bool, string) {
 	if err := validation.ValidateIPAddress(cast.ToString(value)); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
 }
 
-// ValidatePath checks if provided path is exist
-func ValidatePath(value interface{}) (bool, string) {
+// validatePath checks if provided path is exist
+func validatePath(value interface{}) (bool, string) {
 	if err := validation.ValidatePath(cast.ToString(value)); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
 }
 
-// ValidateHTTPProxy checks if given URI is valid for a HTTP proxy
-func ValidateHTTPProxy(value interface{}) (bool, string) {
+// validateHTTPProxy checks if given URI is valid for a HTTP proxy
+func validateHTTPProxy(value interface{}) (bool, string) {
 	if err := network.ValidateProxyURL(cast.ToString(value), false); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
 }
 
-// ValidateHTTPSProxy checks if given URI is valid for a HTTPS proxy
-func ValidateHTTPSProxy(value interface{}) (bool, string) {
+// validateHTTPSProxy checks if given URI is valid for a HTTPS proxy
+func validateHTTPSProxy(value interface{}) (bool, string) {
 	if err := network.ValidateProxyURL(cast.ToString(value), true); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
 }
 
-// ValidateNoProxy checks if the NoProxy string has the correct format
-func ValidateNoProxy(value interface{}) (bool, string) {
+// validateNoProxy checks if the NoProxy string has the correct format
+func validateNoProxy(value interface{}) (bool, string) {
 	if strings.Contains(cast.ToString(value), " ") {
 		return false, "NoProxy string can't contain spaces"
 	}
 	return true, ""
 }
 
-func ValidateYesNo(value interface{}) (bool, string) {
+func validateYesNo(value interface{}) (bool, string) {
 	if cast.ToString(value) == "yes" || cast.ToString(value) == "no" {
 		return true, ""
 	}
@@ -129,7 +129,7 @@ func validatePreset(value interface{}) (bool, string) {
 	return true, ""
 }
 
-func ValidatePort(value interface{}) (bool, string) {
+func validatePort(value interface{}) (bool, string) {
 	port, err := cast.ToUintE(value)
 	if err != nil {
 		return false, "Requires integer value in range of 1024-65535"

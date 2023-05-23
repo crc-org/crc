@@ -15,8 +15,8 @@ const (
 func newTestConfigSecret() (*Config, error) {
 	cfg := New(NewEmptyInMemoryStorage(), NewEmptyInMemorySecretStorage())
 
-	cfg.AddSetting(password, Secret(""), ValidateString, SuccessfullyApplied, "")
-	cfg.AddSetting(secret, Secret("apples"), ValidateString, SuccessfullyApplied, "")
+	cfg.AddSetting(password, Secret(""), validateString, SuccessfullyApplied, "")
+	cfg.AddSetting(secret, Secret("apples"), validateString, SuccessfullyApplied, "")
 	return cfg, nil
 }
 
