@@ -681,7 +681,7 @@ func createHost(machineConfig config.MachineConfig, preset crcPreset.Preset) err
 	if err := crcssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
 		return fmt.Errorf("Error generating ssh key pair: %v", err)
 	}
-	if preset == crcPreset.OpenShift {
+	if preset == crcPreset.OpenShift || preset == crcPreset.OKD {
 		if err := cluster.GenerateKubeAdminUserPassword(); err != nil {
 			return errors.Wrap(err, "Error generating new kubeadmin password")
 		}
