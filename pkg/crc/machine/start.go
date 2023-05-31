@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -32,6 +33,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/telemetry"
 	crctls "github.com/crc-org/crc/pkg/crc/tls"
 	"github.com/crc-org/crc/pkg/libmachine/host"
+	crcos "github.com/crc-org/crc/pkg/os"
 	"github.com/crc-org/machine/libmachine/drivers"
 	libmachinestate "github.com/crc-org/machine/libmachine/state"
 	"github.com/docker/go-units"
@@ -417,6 +419,16 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 	logging.Info("CRC VM is running")
 
+	if startConfig.EmergencyLogin {
+		if err := enableEmergencyLogin(sshRunner); err != nil {
+			return nil, errors.Wrap(err, "Error enabling emergency login")
+		}
+	} else {
+		if err := disableEmergencyLogin(sshRunner); err != nil {
+			return nil, errors.Wrap(err, "Error deleting the password for core user")
+		}
+	}
+
 	// Post VM start immediately update SSH key and copy kubeconfig to instance
 	// dir and VM
 	if err := updateSSHKeyPair(sshRunner); err != nil {
@@ -782,6 +794,29 @@ func addNameServerToInstance(sshRunner *crcssh.Runner, ns string) error {
 		return network.AddNameserversToInstance(sshRunner, nameservers)
 	}
 	return nil
+}
+
+func enableEmergencyLogin(sshRunner *crcssh.Runner) error {
+	if crcos.FileExists(constants.PasswdFilePath) {
+		return nil
+	}
+	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, 8)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))] //nolint
+	}
+	if err := os.WriteFile(constants.PasswdFilePath, b, 0600); err != nil {
+		return err
+	}
+	logging.Infof("Emergency login password for core user is stored to %s", constants.PasswdFilePath)
+	_, _, err := sshRunner.Run(fmt.Sprintf("sudo passwd core --unlock && echo %s | sudo passwd core --stdin", b))
+	return err
+}
+
+func disableEmergencyLogin(sshRunner *crcssh.Runner) error {
+	defer os.Remove(constants.PasswdFilePath)
+	_, _, err := sshRunner.RunPrivileged("disable core user password", "passwd", "--lock", "core")
+	return err
 }
 
 func updateSSHKeyPair(sshRunner *crcssh.Runner) error {

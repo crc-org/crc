@@ -34,6 +34,7 @@ const (
 	SharedDirPassword       = "shared-dir-password" // #nosec G101
 	IngressHTTPPort         = "ingress-http-port"
 	IngressHTTPSPort        = "ingress-https-port"
+	EmergencyLogin          = "enable-emergency-login"
 )
 
 func RegisterSettings(cfg *Config) {
@@ -88,6 +89,8 @@ func RegisterSettings(cfg *Config) {
 		"Disable update check (true/false, default: false)")
 	cfg.AddSetting(ExperimentalFeatures, false, ValidateBool, SuccessfullyApplied,
 		"Enable experimental features (true/false, default: false)")
+	cfg.AddSetting(EmergencyLogin, false, ValidateBool, SuccessfullyApplied,
+		"Enable emergency login for 'core' user. Password is randomly generated. (true/false, default: false)")
 
 	// Shared directories configs
 	if runtime.GOOS == "windows" {

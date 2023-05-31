@@ -79,6 +79,8 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		IngressHTTPPort:   config.Get(crcConfig.IngressHTTPPort).AsUInt(),
 		IngressHTTPSPort:  config.Get(crcConfig.IngressHTTPSPort).AsUInt(),
 		EnableSharedDirs:  config.Get(crcConfig.EnableSharedDirs).AsBool(),
+
+		EmergencyLogin: config.Get(crcConfig.EmergencyLogin).AsBool(),
 	}
 
 	client := newMachine()
