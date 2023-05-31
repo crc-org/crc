@@ -37,6 +37,9 @@ type StartConfig struct {
 	// Ports to access openshift routes
 	IngressHTTPPort  uint
 	IngressHTTPSPort uint
+
+	// Enable emergency login
+	EmergencyLogin bool
 }
 
 type ClusterConfig struct {

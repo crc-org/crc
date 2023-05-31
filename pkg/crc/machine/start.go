@@ -360,6 +360,13 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 	logging.Info("CRC VM is running")
 
+	// VM started and SSH available, so we can enable the emergency login
+	if startConfig.EmergencyLogin {
+		if err := enableEmergencyLogin(sshRunner); err != nil {
+			return nil, errors.Wrap(err, "Error enabling emergency login")
+		}
+	}
+
 	// Post VM start immediately update SSH key and copy kubeconfig to instance
 	// dir and VM
 	if err := updateSSHKeyPair(sshRunner); err != nil {
@@ -725,6 +732,12 @@ func addNameServerToInstance(sshRunner *crcssh.Runner, ns string) error {
 		return network.AddNameserversToInstance(sshRunner, nameservers)
 	}
 	return nil
+}
+
+func enableEmergencyLogin(sshRunner *crcssh.Runner) error {
+
+	_, _, err := sshRunner.Run("echo rescue | sudo passwd core --stdin")
+	return err
 }
 
 func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
