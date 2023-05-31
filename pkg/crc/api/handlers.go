@@ -130,6 +130,7 @@ func getStartConfig(cfg crcConfig.Storage, args client.StartConfig) types.StartC
 		IngressHTTPSPort:  cfg.Get(crcConfig.IngressHTTPSPort).AsUInt(),
 		Preset:            crcConfig.GetPreset(cfg),
 		EnableSharedDirs:  cfg.Get(crcConfig.EnableSharedDirs).AsBool(),
+		EmergencyLogin:    cfg.Get(crcConfig.EmergencyLogin).AsBool(),
 	}
 }
 

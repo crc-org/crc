@@ -110,6 +110,7 @@ var (
 	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
 	DaemonSocketPath   = filepath.Join(CrcBaseDir, "crc.sock")
 	KubeconfigFilePath = filepath.Join(MachineInstanceDir, DefaultName, "kubeconfig")
+	PasswdFilePath     = filepath.Join(MachineInstanceDir, DefaultName, "passwd")
 )
 
 func GetDefaultBundlePath(preset crcpreset.Preset) string {
