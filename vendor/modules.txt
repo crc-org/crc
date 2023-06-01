@@ -69,8 +69,6 @@ github.com/apparentlymart/go-cidr/cidr
 github.com/asaskevich/govalidator
 # github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 ## explicit
-# github.com/bytedance/sonic v1.8.1
-## explicit; go 1.15
 # github.com/cavaliergopher/grab/v3 v3.0.1
 ## explicit; go 1.14
 github.com/cavaliergopher/grab/v3
@@ -280,8 +278,8 @@ github.com/fsnotify/fsnotify
 # github.com/ghodss/yaml v1.0.0
 ## explicit
 github.com/ghodss/yaml
-# github.com/gin-gonic/gin v1.9.0
-## explicit; go 1.18
+# github.com/gin-gonic/gin v1.9.1
+## explicit; go 1.20
 # github.com/go-logr/logr v1.2.3
 ## explicit; go 1.16
 github.com/go-logr/logr
@@ -500,7 +498,7 @@ github.com/mailru/easyjson/jwriter
 # github.com/mattn/go-colorable v0.1.13
 ## explicit; go 1.15
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.17
+# github.com/mattn/go-isatty v0.0.19
 ## explicit; go 1.15
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.14
@@ -620,7 +618,7 @@ github.com/pbnjay/memory
 # github.com/pborman/uuid v1.2.1
 ## explicit
 github.com/pborman/uuid
-# github.com/pelletier/go-toml/v2 v2.0.6
+# github.com/pelletier/go-toml/v2 v2.0.8
 ## explicit; go 1.16
 github.com/pelletier/go-toml/v2
 github.com/pelletier/go-toml/v2/internal/characters
@@ -711,8 +709,8 @@ github.com/stefanberger/go-pkcs11uri
 # github.com/stretchr/objx v0.5.0
 ## explicit; go 1.12
 github.com/stretchr/objx
-# github.com/stretchr/testify v1.8.1
-## explicit; go 1.13
+# github.com/stretchr/testify v1.8.3
+## explicit; go 1.20
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
 github.com/stretchr/testify/require
@@ -739,8 +737,6 @@ github.com/tklauser/numcpus
 github.com/u-root/uio/rand
 github.com/u-root/uio/ubinary
 github.com/u-root/uio/uio
-# github.com/ugorji/go/codec v1.2.10
-## explicit; go 1.11
 # github.com/ulikunitz/xz v0.5.11
 ## explicit; go 1.12
 github.com/ulikunitz/xz
@@ -781,9 +777,7 @@ go.mongodb.org/mongo-driver/x/bsonx/bsoncore
 # go.mozilla.org/pkcs7 v0.0.0-20210826202110-33d05740a352
 ## explicit; go 1.11
 go.mozilla.org/pkcs7
-# golang.org/x/arch v0.2.0
-## explicit; go 1.17
-# golang.org/x/crypto v0.6.0
+# golang.org/x/crypto v0.9.0
 ## explicit; go 1.17
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
@@ -814,7 +808,7 @@ golang.org/x/crypto/ssh/knownhosts
 # golang.org/x/mod v0.8.0
 ## explicit; go 1.17
 golang.org/x/mod/semver
-# golang.org/x/net v0.7.0
+# golang.org/x/net v0.10.0
 ## explicit; go 1.17
 golang.org/x/net/bpf
 golang.org/x/net/context
@@ -842,7 +836,7 @@ golang.org/x/oauth2/internal
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.5.0
+# golang.org/x/sys v0.8.0
 ## explicit; go 1.17
 golang.org/x/sys/cpu
 golang.org/x/sys/execabs
@@ -850,10 +844,10 @@ golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/term v0.5.0
+# golang.org/x/term v0.8.0
 ## explicit; go 1.17
 golang.org/x/term
-# golang.org/x/text v0.7.0
+# golang.org/x/text v0.9.0
 ## explicit; go 1.17
 golang.org/x/text/encoding
 golang.org/x/text/encoding/charmap
@@ -959,7 +953,7 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# google.golang.org/protobuf v1.28.1
+# google.golang.org/protobuf v1.30.0
 ## explicit; go 1.11
 google.golang.org/protobuf/encoding/protojson
 google.golang.org/protobuf/encoding/prototext
