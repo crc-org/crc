@@ -173,7 +173,9 @@ func (c *Client) upload(action string, a analytics.Properties) error {
 			return err
 		}
 		c.identifyHash = hash
-		_ = writeIdentifyHash(c)
+		if err := writeIdentifyHash(c); err != nil {
+			return fmt.Errorf("failed to write new identify hash to file: %w", err)
+		}
 	}
 
 	return c.segmentClient.Enqueue(analytics.Track{
