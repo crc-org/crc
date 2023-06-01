@@ -3,6 +3,8 @@ package download
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -82,6 +84,30 @@ func Download(uri, destination string, mode os.FileMode, sha256sum []byte) (stri
 
 	logging.Debugf("Download saved to %v", filename)
 	return filename, nil
+}
+
+// Download takes an URL and the User-Agent string to use in the http request
+// it takes  http.RoundTripper as the third argument to be used by the client
+func InMemory(url, userAgent string, transport http.RoundTripper) (io.ReadCloser, error) {
+	client := grab.NewClient()
+	client.HTTPClient = &http.Client{Transport: transport}
+
+	httpReq, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create http request: %w", err)
+	}
+	httpReq.Header.Set("User-Agent", userAgent)
+
+	grabReq, err := grab.NewRequest("", "")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create grab request: %w", err)
+	}
+	grabReq.HTTPRequest = httpReq
+	// do not write the downloaded file to disk
+	grabReq.NoStore = true
+
+	rsp := client.Do(grabReq)
+	return rsp.Open()
 }
 
 type RemoteFile struct {
