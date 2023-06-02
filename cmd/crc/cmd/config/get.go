@@ -28,7 +28,7 @@ func configGetCmd(config config.Storage) *cobra.Command {
 			telemetry.SetConfigurationKey(cmd.Context(), args[0])
 
 			if v.IsDefault {
-				fmt.Printf("Configuration property '%s' is not set. Default value is '%s'\n", key, v.AsString())
+				fmt.Printf("Configuration property '%s' is not set. Default value '%s' is used\n", key, v.AsString())
 			} else {
 				fmt.Println(key, ":", v.AsString())
 			}
