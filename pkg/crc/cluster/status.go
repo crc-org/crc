@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 )
 
 // WaitForClusterStable checks that the cluster is running a number of consecutive times
-func WaitForClusterStable(ctx context.Context, ip string, kubeconfigFilePath string, proxy *network.ProxyConfig) error {
+func WaitForClusterStable(ctx context.Context, ip string, kubeconfigFilePath string, proxy *httpproxy.ProxyConfig) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}

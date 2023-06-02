@@ -6,7 +6,7 @@ import (
 
 	"github.com/crc-org/crc/pkg/crc/machine/state"
 	"github.com/crc-org/crc/pkg/crc/machine/types"
-	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/pkg/crc/preset"
 )
 
@@ -55,7 +55,7 @@ func (c *Client) GetConsoleURL() (*types.ConsoleResult, error) {
 	}, nil
 }
 
-func (c *Client) GetProxyConfig(machineName string) (*network.ProxyConfig, error) {
+func (c *Client) GetProxyConfig(machineName string) (*httpproxy.ProxyConfig, error) {
 	return nil, errors.New("not implemented")
 }
 

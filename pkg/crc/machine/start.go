@@ -21,6 +21,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/machine/state"
 	"github.com/crc-org/crc/pkg/crc/machine/types"
 	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/pkg/crc/oc"
 	"github.com/crc-org/crc/pkg/crc/podman"
 	crcPreset "github.com/crc-org/crc/pkg/crc/preset"
@@ -761,7 +762,7 @@ func copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey *rsa.Priv
 	return updateClientCrtAndKeyToKubeconfig(clientKey, clientCert, srcKubeConfigPath, dstKubeConfigPath)
 }
 
-func configurePodmanProxy(ctx context.Context, sshRunner *crcssh.Runner, proxy *network.ProxyConfig) (err error) {
+func configurePodmanProxy(ctx context.Context, sshRunner *crcssh.Runner, proxy *httpproxy.ProxyConfig) (err error) {
 	if !proxy.IsEnabled() {
 		return nil
 	}
@@ -813,7 +814,7 @@ func configurePodmanProxy(ctx context.Context, sshRunner *crcssh.Runner, proxy *
 
 }
 
-func ensureProxyIsConfiguredInOpenShift(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, proxy *network.ProxyConfig) (err error) {
+func ensureProxyIsConfiguredInOpenShift(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, proxy *httpproxy.ProxyConfig) (err error) {
 	if !proxy.IsEnabled() {
 		return nil
 	}
@@ -821,7 +822,7 @@ func ensureProxyIsConfiguredInOpenShift(ctx context.Context, ocConfig oc.Config,
 	return cluster.AddProxyConfigToCluster(ctx, sshRunner, ocConfig, proxy)
 }
 
-func waitForProxyPropagation(ctx context.Context, ocConfig oc.Config, proxyConfig *network.ProxyConfig) {
+func waitForProxyPropagation(ctx context.Context, ocConfig oc.Config, proxyConfig *httpproxy.ProxyConfig) {
 	if !proxyConfig.IsEnabled() {
 		return
 	}

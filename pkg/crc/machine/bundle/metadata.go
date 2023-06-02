@@ -18,7 +18,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/gpg"
 	"github.com/crc-org/crc/pkg/crc/image"
 	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 	crcPreset "github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/download"
 )
@@ -301,7 +301,7 @@ func getBundleDownloadInfo(preset crcPreset.Preset) (*download.RemoteFile, error
 func getDefaultBundleVerifiedHash(preset crcPreset.Preset) (string, error) {
 	client := &http.Client{
 		Timeout:   5 * time.Second,
-		Transport: network.HTTPTransport(),
+		Transport: httpproxy.HTTPTransport(),
 	}
 	res, err := client.Get(constants.GetDefaultBundleSignedHashURL(preset))
 	if err != nil {

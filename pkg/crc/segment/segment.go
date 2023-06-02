@@ -18,7 +18,7 @@ import (
 	crcConfig "github.com/crc-org/crc/pkg/crc/config"
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/pkg/crc/telemetry"
 	"github.com/crc-org/crc/pkg/crc/version"
 	crcos "github.com/crc-org/crc/pkg/os"
@@ -216,7 +216,7 @@ func addConfigTraits(c *crcConfig.Config, in analytics.Traits) analytics.Traits 
 }
 
 func isProxyUsed() bool {
-	proxyConfig, err := network.NewProxyConfig()
+	proxyConfig, err := httpproxy.NewProxyConfig()
 	if err != nil {
 		return false
 	}

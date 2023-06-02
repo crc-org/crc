@@ -19,6 +19,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/machine/types"
 	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/pkg/crc/preflight"
 	"github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/crc/validation"
@@ -211,7 +212,7 @@ func checkIfNewVersionAvailable(noUpdateCheck bool) error {
 }
 
 func newVersionAvailable() (bool, string, string, error) {
-	release, err := crcversion.GetCRCLatestVersionFromMirror(network.HTTPTransport())
+	release, err := crcversion.GetCRCLatestVersionFromMirror(httpproxy.HTTPTransport())
 	if err != nil {
 		return false, "", "", err
 	}

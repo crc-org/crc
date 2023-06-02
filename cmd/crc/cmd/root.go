@@ -15,7 +15,7 @@ import (
 	crcErr "github.com/crc-org/crc/pkg/crc/errors"
 	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/machine"
-	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/pkg/crc/preflight"
 	"github.com/crc-org/crc/pkg/crc/segment"
 	"github.com/crc-org/crc/pkg/crc/telemetry"
@@ -60,7 +60,7 @@ func init() {
 	}
 
 	// Initiate segment client
-	if segmentClient, err = segment.NewClient(config, network.HTTPTransport()); err != nil {
+	if segmentClient, err = segment.NewClient(config, httpproxy.HTTPTransport()); err != nil {
 		logging.Fatal(err.Error())
 	}
 
@@ -132,7 +132,7 @@ func setProxyDefaults() error {
 	noProxy := config.Get(crcConfig.NoProxy).AsString()
 	proxyCAFile := config.Get(crcConfig.ProxyCAFile).AsString()
 
-	proxyConfig, err := network.NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile)
+	proxyConfig, err := httpproxy.NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile)
 	if err != nil {
 		return err
 	}

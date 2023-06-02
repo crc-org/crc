@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/pkg/os/terminal"
 
 	"github.com/cavaliergopher/grab/v3"
@@ -61,7 +61,7 @@ func Download(uri, destination string, mode os.FileMode, sha256sum []byte) (stri
 	logging.Debugf("Downloading %s to %s", uri, destination)
 
 	client := grab.NewClient()
-	client.HTTPClient = &http.Client{Transport: network.HTTPTransport()}
+	client.HTTPClient = &http.Client{Transport: httpproxy.HTTPTransport()}
 	req, err := grab.NewRequest(destination, uri)
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to get request from %s", uri)
