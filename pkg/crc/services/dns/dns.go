@@ -12,6 +12,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/errors"
 	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/pkg/crc/services"
 	"github.com/crc-org/crc/pkg/crc/systemd"
 	"github.com/crc-org/crc/pkg/crc/systemd/states"
@@ -114,10 +115,10 @@ func CheckCRCLocalDNSReachable(ctx context.Context, serviceConfig services.Servi
 func CheckCRCPublicDNSReachable(serviceConfig services.ServicePostStartConfig) (string, error) {
 	// This does not query DNS directly to account for corporate environment where external DNS resolution
 	// may only be done on the host running the http(s) proxies used for internet connectivity
-	proxyConfig, err := network.NewProxyConfig()
+	proxyConfig, err := httpproxy.NewProxyConfig()
 	if err != nil {
 		// try without using proxy
-		proxyConfig = &network.ProxyConfig{}
+		proxyConfig = &httpproxy.ProxyConfig{}
 	}
 	curlArgs := []string{"--head", publicDNSQueryURI}
 	if proxyConfig.IsEnabled() {

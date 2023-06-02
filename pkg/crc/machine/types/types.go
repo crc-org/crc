@@ -3,7 +3,7 @@ package types
 import (
 	"github.com/crc-org/crc/pkg/crc/cluster"
 	"github.com/crc-org/crc/pkg/crc/machine/state"
-	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/pkg/crc/preset"
 	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
 )
@@ -46,7 +46,7 @@ type ClusterConfig struct {
 	KubeAdminPass string
 	ClusterAPI    string
 	WebConsoleURL string
-	ProxyConfig   *network.ProxyConfig
+	ProxyConfig   *httpproxy.ProxyConfig
 }
 
 type StartResult struct {

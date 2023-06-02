@@ -8,7 +8,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/machine/bundle"
 	"github.com/crc-org/crc/pkg/crc/machine/types"
-	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/pkg/libmachine"
 	"github.com/crc-org/machine/libmachine/drivers"
 )
@@ -17,7 +17,7 @@ func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*types.ClusterConfig, e
 	if !bundleInfo.IsOpenShift() {
 		return &types.ClusterConfig{
 			ClusterType: bundleInfo.GetBundleType(),
-			ProxyConfig: &network.ProxyConfig{},
+			ProxyConfig: &httpproxy.ProxyConfig{},
 		}, nil
 	}
 
@@ -65,8 +65,8 @@ func createLibMachineClient() (libmachine.API, func()) {
 	}
 }
 
-func getProxyConfig(bundleInfo *bundle.CrcBundleInfo) (*network.ProxyConfig, error) {
-	proxy, err := network.NewProxyConfig()
+func getProxyConfig(bundleInfo *bundle.CrcBundleInfo) (*httpproxy.ProxyConfig, error) {
+	proxy, err := httpproxy.NewProxyConfig()
 	if err != nil {
 		return nil, err
 	}

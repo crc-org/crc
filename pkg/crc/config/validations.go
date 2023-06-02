@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/crc/validation"
 	"github.com/spf13/cast"
@@ -92,7 +92,7 @@ func validatePath(value interface{}) (bool, string) {
 
 // validateHTTPProxy checks if given URI is valid for a HTTP proxy
 func validateHTTPProxy(value interface{}) (bool, string) {
-	if err := network.ValidateProxyURL(cast.ToString(value), false); err != nil {
+	if err := httpproxy.ValidateProxyURL(cast.ToString(value), false); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
@@ -100,7 +100,7 @@ func validateHTTPProxy(value interface{}) (bool, string) {
 
 // validateHTTPSProxy checks if given URI is valid for a HTTPS proxy
 func validateHTTPSProxy(value interface{}) (bool, string) {
-	if err := network.ValidateProxyURL(cast.ToString(value), true); err != nil {
+	if err := httpproxy.ValidateProxyURL(cast.ToString(value), true); err != nil {
 		return false, err.Error()
 	}
 	return true, ""

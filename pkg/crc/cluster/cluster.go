@@ -16,7 +16,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/errors"
 	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/pkg/crc/oc"
 	"github.com/crc-org/crc/pkg/crc/ssh"
 	crctls "github.com/crc-org/crc/pkg/crc/tls"
@@ -322,7 +322,7 @@ func EnsureClusterIDIsNotEmpty(ctx context.Context, ocConfig oc.Config) error {
 	return nil
 }
 
-func AddProxyConfigToCluster(ctx context.Context, sshRunner *ssh.Runner, ocConfig oc.Config, proxy *network.ProxyConfig) error {
+func AddProxyConfigToCluster(ctx context.Context, sshRunner *ssh.Runner, ocConfig oc.Config, proxy *httpproxy.ProxyConfig) error {
 	type trustedCA struct {
 		Name string `json:"name"`
 	}
@@ -372,7 +372,7 @@ func AddProxyConfigToCluster(ctx context.Context, sshRunner *ssh.Runner, ocConfi
 	return nil
 }
 
-func addProxyCACertToCluster(sshRunner *ssh.Runner, ocConfig oc.Config, proxy *network.ProxyConfig, trustedCAName string) error {
+func addProxyCACertToCluster(sshRunner *ssh.Runner, ocConfig oc.Config, proxy *httpproxy.ProxyConfig, trustedCAName string) error {
 	proxyConfigMapFileName := fmt.Sprintf("/tmp/%s.json", trustedCAName)
 	proxyCABundleTemplate := `{
   "apiVersion": "v1",
@@ -476,7 +476,7 @@ func DeleteOpenshiftAPIServerPods(ctx context.Context, ocConfig oc.Config) error
 	return errors.Retry(ctx, 60*time.Second, deleteOpenshiftAPIServerPods, time.Second)
 }
 
-func CheckProxySettingsForOperator(ocConfig oc.Config, proxy *network.ProxyConfig, deployment, namespace string) (bool, error) {
+func CheckProxySettingsForOperator(ocConfig oc.Config, proxy *httpproxy.ProxyConfig, deployment, namespace string) (bool, error) {
 	if !proxy.IsEnabled() {
 		logging.Debugf("No proxy in use")
 		return true, nil
