@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -20,6 +19,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 	crcPreset "github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/crc/version"
 	"github.com/crc-org/crc/pkg/download"
 )
 
@@ -299,20 +299,17 @@ func getBundleDownloadInfo(preset crcPreset.Preset) (*download.RemoteFile, error
 // then verifies it is signed by redhat release key, if signature is valid it returns the hash
 // for the default bundle of preset from the file
 func getDefaultBundleVerifiedHash(preset crcPreset.Preset) (string, error) {
-	client := &http.Client{
-		Timeout:   5 * time.Second,
-		Transport: httpproxy.HTTPTransport(),
-	}
-	res, err := client.Get(constants.GetDefaultBundleSignedHashURL(preset))
+	res, err := download.InMemory(constants.GetDefaultBundleSignedHashURL(preset),
+		version.UserAgent(),
+		httpproxy.HTTPTransport(),
+	)
 	if err != nil {
 		return "", err
 	}
-	signedHashes, err := io.ReadAll(res.Body)
+	defer res.Close()
+	signedHashes, err := io.ReadAll(res)
 	if err != nil {
 		return "", err
-	}
-	if err := res.Body.Close(); err != nil {
-		logging.Debug(err)
 	}
 
 	verifiedHashes, err := gpg.GetVerifiedClearsignedMsgV3(constants.RedHatReleaseKey, string(signedHashes))
