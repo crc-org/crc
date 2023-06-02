@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/crc-org/crc/pkg/crc/logging"
 	crcPreset "github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/pkg/download"
 )
 
 // The following variables are private fields and should be set when compiling with ldflags, for example --ldflags="-X github.com/crc-org/crc/pkg/version.crcVersion=vX.Y.Z
@@ -111,26 +111,13 @@ func InstallPath() string {
 }
 
 func GetCRCLatestVersionFromMirror(transport http.RoundTripper) (*CrcReleaseInfo, error) {
-	client := &http.Client{
-		Timeout:   5 * time.Second,
-		Transport: transport,
-	}
-	req, err := http.NewRequest(http.MethodGet, releaseInfoLink, nil)
+	response, err := download.InMemory(releaseInfoLink, UserAgent(), transport)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", fmt.Sprintf("crc/%s", crcVersion))
-	response, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close()
+	defer response.Close()
 
-	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("HTTP error: %s: %d", response.Status, response.StatusCode)
-	}
-
-	releaseMetaData, err := io.ReadAll(response.Body)
+	releaseMetaData, err := io.ReadAll(response)
 	if err != nil {
 		return nil, err
 	}
@@ -150,4 +137,8 @@ func GetDefaultPreset() crcPreset.Preset {
 		panic(fmt.Sprintf("Invalid compilet-time default preset '%s'", defaultPreset))
 	}
 	return preset
+}
+
+func UserAgent() string {
+	return fmt.Sprintf("crc/%s", crcVersion)
 }
