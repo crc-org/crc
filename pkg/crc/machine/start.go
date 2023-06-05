@@ -113,8 +113,7 @@ func (client *client) updateVMConfig(startConfig types.StartConfig, vm *virtualM
 
 func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset) error {
 	if preset == crcPreset.Microshift {
-		logging.Debugf("growRootFileSystem does not support LVM which is used by %s images", preset)
-		return nil
+		return growLVForMicroshift(sshRunner)
 	}
 	// With 4.7, this is quite a manual process until https://github.com/openshift/installer/pull/4746 gets fixed
 	// See https://github.com/crc-org/crc/issues/2104 for details
@@ -161,6 +160,53 @@ func runGrowpart(sshRunner *crcssh.Runner, rootPart string) error {
 			return err
 		}
 		logging.Debugf("No free space after %s, nothing to do", rootPart)
+	}
+	return nil
+}
+
+func growLVForMicroshift(sshRunner *crcssh.Runner) error {
+	rootPart, _, err := sshRunner.RunPrivileged("Get PV disk path", "/usr/sbin/pvs", "-S", "lv_name=root", "-o", "pv_name", "--noheadings")
+	if err != nil {
+		return err
+	}
+	rootPart = strings.TrimSpace(rootPart)
+	if err := runGrowpart(sshRunner, rootPart); err != nil {
+		return err
+	}
+
+	if _, _, err := sshRunner.RunPrivileged("Resizing the physical volume(PV)", "/usr/sbin/pvresize", rootPart); err != nil {
+		return err
+	}
+
+	// Get the size of volume group
+	sizeVG, _, err := sshRunner.RunPrivileged("Get the volume group size", "/usr/sbin/vgs", "--noheadings", "--nosuffix", "--units", "b", "-o", "vg_size")
+	if err != nil {
+		return err
+	}
+	vgSize, err := strconv.Atoi(strings.TrimSpace(sizeVG))
+	if err != nil {
+		return err
+	}
+
+	// Get the size of root lv
+	sizeLV, _, err := sshRunner.RunPrivileged("Get the size of root logical volume", "/usr/sbin/lvs", "-S", "lv_name=root", "--noheadings", "--nosuffix", "--units", "b", "-o", "lv_size")
+	if err != nil {
+		return err
+	}
+	lvSize, err := strconv.Atoi(strings.TrimSpace(sizeLV))
+	if err != nil {
+		return err
+	}
+
+	// vgFree space as part of the bundle is default to ~15.02G (16127098880 byte)
+	vgFree := 16127098880
+	expectedLVSize := vgSize - vgFree
+	sizeToIncrease := expectedLVSize - lvSize
+	if sizeToIncrease > 1 {
+		logging.Info("Extending and resizing '/dev/rhel/root' logical volume")
+		if _, _, err := sshRunner.RunPrivileged("Extending and resizing the logical volume(LV)", "/usr/sbin/lvextend", "-r", "-L", fmt.Sprintf("+%db", sizeToIncrease), "/dev/rhel/root"); err != nil {
+			return err
+		}
 	}
 	return nil
 }
