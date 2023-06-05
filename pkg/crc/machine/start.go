@@ -15,7 +15,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/cluster"
 	"github.com/crc-org/crc/pkg/crc/constants"
 	crcerrors "github.com/crc-org/crc/pkg/crc/errors"
-	"github.com/crc-org/crc/pkg/crc/logging"
+	logging "github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/machine/bundle"
 	"github.com/crc-org/crc/pkg/crc/machine/config"
 	"github.com/crc-org/crc/pkg/crc/machine/state"
@@ -118,26 +118,13 @@ func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset) error
 	}
 	// With 4.7, this is quite a manual process until https://github.com/openshift/installer/pull/4746 gets fixed
 	// See https://github.com/crc-org/crc/issues/2104 for details
-	rootPart, _, err := sshRunner.Run("realpath", "/dev/disk/by-label/root")
+	rootPart, err := getrootPartition(sshRunner, "/dev/disk/by-label/root")
 	if err != nil {
 		return err
 	}
-	rootPart = strings.TrimSpace(rootPart)
-	if !strings.HasPrefix(rootPart, "/dev/vda") && !strings.HasPrefix(rootPart, "/dev/sda") {
-		return fmt.Errorf("Unexpected root device: %s", rootPart)
-	}
-	// with '/dev/[sv]da4' as input, run 'growpart /dev/[sv]da 4'
-	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Growing %s partition", rootPart), "/usr/bin/growpart", rootPart[:len("/dev/.da")], rootPart[len(rootPart)-1:]); err != nil {
-		var exitErr *ssh.ExitError
-		if !errors.As(err, &exitErr) {
-			return err
-		}
-		if exitErr.ExitStatus() != 1 {
-			return err
-		}
 
-		logging.Debugf("No free space after %s, nothing to do", rootPart)
-		return nil
+	if err := runGrowpart(sshRunner, rootPart); err != nil {
+		return err
 	}
 
 	logging.Infof("Resizing %s filesystem", rootPart)
@@ -148,6 +135,33 @@ func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset) error
 		return err
 	}
 
+	return nil
+}
+
+func getrootPartition(sshRunner *crcssh.Runner, label string) (string, error) {
+	rootPart, _, err := sshRunner.Run("realpath", label)
+	if err != nil {
+		return "", err
+	}
+	rootPart = strings.TrimSpace(rootPart)
+	if !strings.HasPrefix(rootPart, "/dev/vda") && !strings.HasPrefix(rootPart, "/dev/sda") {
+		return "", fmt.Errorf("Unexpected root device: %s", rootPart)
+	}
+	return rootPart, nil
+}
+
+func runGrowpart(sshRunner *crcssh.Runner, rootPart string) error {
+	// with '/dev/[sv]da4' as input, run 'growpart /dev/[sv]da 4'
+	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Growing %s partition", rootPart), "/usr/bin/growpart", rootPart[:len("/dev/.da")], rootPart[len(rootPart)-1:]); err != nil {
+		var exitErr *ssh.ExitError
+		if !errors.As(err, &exitErr) {
+			return err
+		}
+		if exitErr.ExitStatus() != 1 {
+			return err
+		}
+		logging.Debugf("No free space after %s, nothing to do", rootPart)
+	}
 	return nil
 }
 
