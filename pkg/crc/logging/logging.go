@@ -57,6 +57,14 @@ func InitLogrus(logFilePath string) {
 	}))
 }
 
+func DefaultLogLevel() logrus.Level {
+	level, err := logrus.ParseLevel(logLevel)
+	if err != nil {
+		level = logrus.InfoLevel
+	}
+	return level
+}
+
 func defaultLogLevel() string {
 	defaultLevel := "info"
 	envLogLevel := os.Getenv("CRC_LOG_LEVEL")
