@@ -645,6 +645,9 @@ github.com/power-devops/perfstat
 github.com/proglottis/gpgme
 # github.com/prometheus/client_golang v1.14.0
 ## explicit; go 1.17
+# github.com/r3labs/sse/v2 v2.10.0
+## explicit; go 1.13
+github.com/r3labs/sse/v2
 # github.com/rivo/uniseg v0.4.3
 ## explicit; go 1.18
 github.com/rivo/uniseg
@@ -992,6 +995,9 @@ google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/emptypb
 google.golang.org/protobuf/types/known/timestamppb
+# gopkg.in/cenkalti/backoff.v1 v1.1.0
+## explicit
+gopkg.in/cenkalti/backoff.v1
 # gopkg.in/inf.v0 v0.9.1
 ## explicit
 gopkg.in/inf.v0
