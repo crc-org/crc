@@ -16,6 +16,7 @@ type Client struct {
 	NetworkClient   *networkclient.Client
 	APIClient       client.Client
 	WebSocketClient *client.WebSocketClient
+	SSEClient       *client.SSEClient
 }
 
 func New() *Client {
@@ -29,6 +30,7 @@ func New() *Client {
 		WebSocketClient: client.NewWebSocketClient(&http.Client{
 			Transport: transport(),
 		}),
+		SSEClient: client.NewSSEClient(transport()),
 	}
 }
 
