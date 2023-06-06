@@ -63,7 +63,6 @@ require (
 	k8s.io/apimachinery v0.25.6
 	k8s.io/client-go v0.25.6
 	libvirt.org/go/libvirtxml v1.9000.0
-	nhooyr.io/websocket v1.8.7
 )
 
 require (

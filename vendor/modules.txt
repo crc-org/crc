@@ -1303,14 +1303,6 @@ k8s.io/utils/strings/slices
 # libvirt.org/go/libvirtxml v1.9000.0
 ## explicit; go 1.11
 libvirt.org/go/libvirtxml
-# nhooyr.io/websocket v1.8.7
-## explicit; go 1.13
-nhooyr.io/websocket
-nhooyr.io/websocket/internal/bpool
-nhooyr.io/websocket/internal/errd
-nhooyr.io/websocket/internal/wsjs
-nhooyr.io/websocket/internal/xsync
-nhooyr.io/websocket/wsjson
 # sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2
 ## explicit; go 1.18
 sigs.k8s.io/json
