@@ -16,6 +16,7 @@ import (
 	"github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork"
 	"github.com/crc-org/crc/pkg/crc/adminhelper"
 	"github.com/crc-org/crc/pkg/crc/api"
+	"github.com/crc-org/crc/pkg/crc/api/events"
 	"github.com/crc-org/crc/pkg/crc/api/websocket"
 	crcConfig "github.com/crc-org/crc/pkg/crc/config"
 	"github.com/crc-org/crc/pkg/crc/constants"
@@ -145,6 +146,7 @@ func run(configuration *types.Configuration) error {
 		mux.Handle("/network/", http.StripPrefix("/network", vn.Mux()))
 		machineClient := newMachine()
 		mux.Handle("/api/", http.StripPrefix("/api", api.NewMux(config, machineClient, logging.Memory, segmentClient)))
+		mux.Handle("/events", http.StripPrefix("/events", events.NewEventServer(machineClient)))
 		mux.Handle("/socket/", http.StripPrefix("/socket", websocket.NewWebsocketServer(machineClient)))
 		s := &http.Server{
 			Handler:           handlers.LoggingHandler(os.Stderr, mux),
