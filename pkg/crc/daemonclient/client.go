@@ -13,10 +13,9 @@ import (
 const genericDaemonNotRunningMessage = "Is 'crc daemon' running? Cannot reach daemon API"
 
 type Client struct {
-	NetworkClient   *networkclient.Client
-	APIClient       client.Client
-	WebSocketClient *client.WebSocketClient
-	SSEClient       *client.SSEClient
+	NetworkClient *networkclient.Client
+	APIClient     client.Client
+	SSEClient     *client.SSEClient
 }
 
 func New() *Client {
@@ -27,9 +26,6 @@ func New() *Client {
 		APIClient: client.New(&http.Client{
 			Transport: transport(),
 		}, "http://unix/api"),
-		WebSocketClient: client.NewWebSocketClient(&http.Client{
-			Transport: transport(),
-		}),
 		SSEClient: client.NewSSEClient(transport()),
 	}
 }

@@ -99,29 +99,6 @@ func runWatchStatus(writer io.Writer, client *daemonclient.Client, cacheDir stri
 		}
 	})
 	return err
-	//for {
-	//	loadResult, err := client.WebSocketClient.Status()
-	//
-	//	if err != nil {
-	//		return err
-	//	}
-	//
-	//	if !isPullInit {
-	//		ramBar, cpuBars = createBars(loadResult.CPUUse, writer)
-	//		barPull = pb.NewPool(append([]*pb.ProgressBar{ramBar}, cpuBars...)...)
-	//		isPullInit = true
-	//		err = barPull.Start()
-	//		if err != nil {
-	//			return nil
-	//		}
-	//	}
-	//
-	//	ramBar.SetTotal(loadResult.RAMSize)
-	//	ramBar.SetCurrent(loadResult.RAMUse)
-	//	for i, cpuLoad := range loadResult.CPUUse {
-	//		cpuBars[i].SetCurrent(cpuLoad)
-	//	}
-	//}
 }
 
 func createBars(cpuUse []int64, writer io.Writer) (ramBar *pb.ProgressBar, cpuBars []*pb.ProgressBar) {
