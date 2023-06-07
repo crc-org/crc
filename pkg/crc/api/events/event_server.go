@@ -17,9 +17,8 @@ type EventServer struct {
 }
 
 func NewEventServer(machine machine.Client) *EventServer {
-	var sseServer *sse.Server
 
-	sseServer = sse.New()
+	var sseServer = sse.New()
 	sseServer.AutoReplay = false
 
 	eventServer := &EventServer{
@@ -64,8 +63,8 @@ func (es *EventServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	es.sseServer.ServeHTTP(w, r)
 }
 
-func createEventStream(server *EventServer, streamId string) EventStream {
-	switch streamId {
+func createEventStream(server *EventServer, streamID string) EventStream {
+	switch streamID {
 	case LOGS:
 		return newLogsStream(server)
 	case STATUS:

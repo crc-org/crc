@@ -17,17 +17,17 @@ type EventProducer interface {
 }
 
 type eventPublisher struct {
-	streamId  string
+	streamID  string
 	sseServer *sse.Server
 }
 
-func newEventPublisher(streamId string, server *sse.Server) EventPublisher {
+func newEventPublisher(streamID string, server *sse.Server) EventPublisher {
 	return &eventPublisher{
-		streamId:  streamId,
+		streamID:  streamID,
 		sseServer: server,
 	}
 }
 
 func (ep *eventPublisher) Publish(event *sse.Event) {
-	ep.sseServer.Publish(ep.streamId, event)
+	ep.sseServer.Publish(ep.streamID, event)
 }
