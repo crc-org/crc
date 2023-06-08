@@ -9,6 +9,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	gomegaformat "github.com/onsi/gomega/format"
 	"github.com/sirupsen/logrus"
 )
 
@@ -29,6 +30,9 @@ var pullSecretPath string
 func TestTest(t *testing.T) {
 
 	RegisterFailHandler(Fail)
+
+	// disable error/output strings truncation
+	gomegaformat.MaxLength = 0
 
 	// fetch the current (reporter) config
 	suiteConfig, reporterConfig := GinkgoConfiguration()
