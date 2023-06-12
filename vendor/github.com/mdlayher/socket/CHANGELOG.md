@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.4.1
+
+- [Bug Fix] [commit](https://github.com/mdlayher/socket/commit/2a14ceef4da279de1f957c5761fffcc6c87bbd3b):
+  ensure `socket.Conn` can be used with non-socket file descriptors by handling
+  `ENOTSOCK` in the constructor.
+
 ## v0.4.0
 
 **This is the first release of package socket that only supports Go 1.18+.

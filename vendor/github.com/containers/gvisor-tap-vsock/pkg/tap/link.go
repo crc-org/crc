@@ -60,7 +60,7 @@ func (e *LinkEndpoint) DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber
 	e.dispatcher.DeliverNetworkPacket(protocol, pkt)
 }
 
-func (e *LinkEndpoint) AddHeader(pkt stack.PacketBufferPtr) {
+func (e *LinkEndpoint) AddHeader(_ stack.PacketBufferPtr) {
 }
 
 func (e *LinkEndpoint) Capabilities() stack.LinkEndpointCapabilities {
@@ -126,7 +126,7 @@ func (e *LinkEndpoint) writePacket(r stack.RouteInfo, protocol tcpip.NetworkProt
 	return nil
 }
 
-func (e *LinkEndpoint) WriteRawPacket(pkt stack.PacketBufferPtr) tcpip.Error {
+func (e *LinkEndpoint) WriteRawPacket(_ stack.PacketBufferPtr) tcpip.Error {
 	return &tcpip.ErrNotSupported{}
 }
 

@@ -48,19 +48,21 @@ type Configuration struct {
 	// Allow to assign a pre-defined MAC address to an Hyperkit VM
 	VpnKitUUIDMacAddresses map[string]string
 
-	// Qemu or Hyperkit protocol
-	// Qemu protocol is 32bits big endian size of the packet, then the packet.
-	// Hyperkit protocol is handshake, then 16bits little endian size of packet, then the packet.
-	// Bess protocol transfers bare L2 packets as SOCK_SEQPACKET.
+	// Protocol to be used. Only for /connect mux
 	Protocol Protocol
 }
 
 type Protocol string
 
 const (
+	// HyperKitProtocol is handshake, then 16bits little endian size of packet, then the packet.
 	HyperKitProtocol Protocol = "hyperkit"
-	QemuProtocol     Protocol = "qemu"
-	BessProtocol     Protocol = "bess"
+	// QemuProtocol is 32bits big endian size of the packet, then the packet.
+	QemuProtocol Protocol = "qemu"
+	// BessProtocol transfers bare L2 packets as SOCK_SEQPACKET.
+	BessProtocol Protocol = "bess"
+	// StdioProtocol is HyperKitProtocol without the handshake
+	StdioProtocol Protocol = "stdio"
 )
 
 type Zone struct {

@@ -29,7 +29,8 @@ func addServices(configuration *types.Configuration, s *stack.Stack, ipPool *tap
 	udpForwarder := forwarder.UDP(s, translation, &natLock)
 	s.SetTransportProtocolHandler(udp.ProtocolNumber, udpForwarder.HandlePacket)
 
-	if err := dnsServer(configuration, s); err != nil {
+	dnsMux, err := dnsServer(configuration, s)
+	if err != nil {
 		return nil, err
 	}
 
@@ -45,6 +46,7 @@ func addServices(configuration *types.Configuration, s *stack.Stack, ipPool *tap
 	mux := http.NewServeMux()
 	mux.Handle("/forwarder/", http.StripPrefix("/forwarder", forwarderMux))
 	mux.Handle("/dhcp/", http.StripPrefix("/dhcp", dhcpMux))
+	mux.Handle("/dns/", http.StripPrefix("/dns", dnsMux))
 	return mux, nil
 }
 
@@ -56,22 +58,41 @@ func parseNATTable(configuration *types.Configuration) map[tcpip.Address]tcpip.A
 	return translation
 }
 
-func dnsServer(configuration *types.Configuration, s *stack.Stack) error {
+func dnsServer(configuration *types.Configuration, s *stack.Stack) (http.Handler, error) {
 	udpConn, err := gonet.DialUDP(s, &tcpip.FullAddress{
 		NIC:  1,
 		Addr: tcpip.Address(net.ParseIP(configuration.GatewayIP).To4()),
 		Port: uint16(53),
 	}, nil, ipv4.ProtocolNumber)
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	tcpLn, err := gonet.ListenTCP(s, tcpip.FullAddress{
+		NIC:  1,
+		Addr: tcpip.Address(net.ParseIP(configuration.GatewayIP).To4()),
+		Port: uint16(53),
+	}, ipv4.ProtocolNumber)
+	if err != nil {
+		return nil, err
+	}
+
+	server, err := dns.New(udpConn, tcpLn, configuration.DNS)
+	if err != nil {
+		return nil, err
 	}
 
 	go func() {
-		if err := dns.Serve(udpConn, configuration.DNS); err != nil {
+		if err := server.Serve(); err != nil {
 			log.Error(err)
 		}
 	}()
-	return nil
+	go func() {
+		if err := server.ServeTCP(); err != nil {
+			log.Error(err)
+		}
+	}()
+	return server.Mux(), nil
 }
 
 func dhcpServer(configuration *types.Configuration, s *stack.Stack, ipPool *tap.IPPool) (http.Handler, error) {

@@ -14,10 +14,12 @@ github.com/BurntSushi/toml/internal
 # github.com/Masterminds/semver/v3 v3.2.0
 ## explicit; go 1.18
 github.com/Masterminds/semver/v3
-# github.com/Microsoft/go-winio v0.6.0
+# github.com/Microsoft/go-winio v0.6.1
 ## explicit; go 1.17
 github.com/Microsoft/go-winio
+github.com/Microsoft/go-winio/internal/fs
 github.com/Microsoft/go-winio/internal/socket
+github.com/Microsoft/go-winio/internal/stringbuffer
 github.com/Microsoft/go-winio/pkg/guid
 # github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8
 ## explicit; go 1.13
@@ -91,10 +93,11 @@ github.com/cloudflare/circl/math/mlsbset
 github.com/cloudflare/circl/sign
 github.com/cloudflare/circl/sign/ed25519
 github.com/cloudflare/circl/sign/ed448
-# github.com/containers/gvisor-tap-vsock v0.5.0
+# github.com/containers/gvisor-tap-vsock v0.6.2-0.20230609094134-b79db04d368e
 ## explicit; go 1.18
 github.com/containers/gvisor-tap-vsock/pkg/client
 github.com/containers/gvisor-tap-vsock/pkg/fs
+github.com/containers/gvisor-tap-vsock/pkg/net/stdio
 github.com/containers/gvisor-tap-vsock/pkg/services/dhcp
 github.com/containers/gvisor-tap-vsock/pkg/services/dns
 github.com/containers/gvisor-tap-vsock/pkg/services/forwarder
@@ -280,7 +283,7 @@ github.com/fsnotify/fsnotify
 github.com/ghodss/yaml
 # github.com/gin-gonic/gin v1.9.1
 ## explicit; go 1.20
-# github.com/go-logr/logr v1.2.3
+# github.com/go-logr/logr v1.2.4
 ## explicit; go 1.16
 github.com/go-logr/logr
 github.com/go-logr/logr/funcr
@@ -325,7 +328,7 @@ github.com/go-openapi/swag
 # github.com/go-openapi/validate v0.22.0
 ## explicit; go 1.14
 github.com/go-openapi/validate
-# github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0
+# github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572
 ## explicit; go 1.13
 github.com/go-task/slim-sprig
 # github.com/godbus/dbus/v5 v5.1.0
@@ -338,7 +341,7 @@ github.com/gofrs/uuid
 ## explicit; go 1.15
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/sortkeys
-# github.com/golang/protobuf v1.5.2
+# github.com/golang/protobuf v1.5.3
 ## explicit; go 1.9
 github.com/golang/protobuf/jsonpb
 github.com/golang/protobuf/proto
@@ -504,17 +507,17 @@ github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.14
 ## explicit; go 1.9
 github.com/mattn/go-runewidth
-# github.com/mdlayher/socket v0.4.0
-## explicit; go 1.18
+# github.com/mdlayher/socket v0.4.1
+## explicit; go 1.20
 github.com/mdlayher/socket
-# github.com/mdlayher/vsock v1.2.0
-## explicit; go 1.18
+# github.com/mdlayher/vsock v1.2.1
+## explicit; go 1.20
 github.com/mdlayher/vsock
 # github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 ## explicit
 github.com/mgutz/ansi
-# github.com/miekg/dns v1.1.50
-## explicit; go 1.14
+# github.com/miekg/dns v1.1.54
+## explicit; go 1.19
 github.com/miekg/dns
 # github.com/miekg/pkcs11 v1.1.1
 ## explicit; go 1.12
@@ -541,7 +544,7 @@ github.com/munnerz/goautoneg
 # github.com/oklog/ulid v1.3.1
 ## explicit
 github.com/oklog/ulid
-# github.com/onsi/ginkgo/v2 v2.8.3
+# github.com/onsi/ginkgo/v2 v2.9.7
 ## explicit; go 1.18
 github.com/onsi/ginkgo/v2
 github.com/onsi/ginkgo/v2/config
@@ -563,7 +566,7 @@ github.com/onsi/ginkgo/v2/internal/parallel_support
 github.com/onsi/ginkgo/v2/internal/testingtproxy
 github.com/onsi/ginkgo/v2/reporters
 github.com/onsi/ginkgo/v2/types
-# github.com/onsi/gomega v1.27.1
+# github.com/onsi/gomega v1.27.8
 ## explicit; go 1.18
 github.com/onsi/gomega
 github.com/onsi/gomega/format
@@ -672,7 +675,7 @@ github.com/sigstore/sigstore/pkg/cryptoutils
 github.com/sigstore/sigstore/pkg/signature
 github.com/sigstore/sigstore/pkg/signature/options
 github.com/sigstore/sigstore/pkg/signature/payload
-# github.com/sirupsen/logrus v1.9.0
+# github.com/sirupsen/logrus v1.9.3
 ## explicit; go 1.13
 github.com/sirupsen/logrus
 # github.com/spf13/afero v1.9.3
@@ -709,7 +712,7 @@ github.com/stefanberger/go-pkcs11uri
 # github.com/stretchr/objx v0.5.0
 ## explicit; go 1.12
 github.com/stretchr/objx
-# github.com/stretchr/testify v1.8.3
+# github.com/stretchr/testify v1.8.4
 ## explicit; go 1.20
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
@@ -805,7 +808,7 @@ golang.org/x/crypto/sha3
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
 golang.org/x/crypto/ssh/knownhosts
-# golang.org/x/mod v0.8.0
+# golang.org/x/mod v0.10.0
 ## explicit; go 1.17
 golang.org/x/mod/semver
 # golang.org/x/net v0.10.0
@@ -831,7 +834,7 @@ golang.org/x/net/trace
 ## explicit; go 1.17
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
-# golang.org/x/sync v0.1.0
+# golang.org/x/sync v0.2.0
 ## explicit
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
@@ -873,13 +876,14 @@ golang.org/x/text/width
 # golang.org/x/time v0.2.0
 ## explicit
 golang.org/x/time/rate
-# golang.org/x/tools v0.6.0
+# golang.org/x/tools v0.9.1
 ## explicit; go 1.18
 golang.org/x/tools/cmd/stringer
 golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/internal/packagesdriver
 golang.org/x/tools/go/packages
+golang.org/x/tools/go/types/objectpath
 golang.org/x/tools/internal/event
 golang.org/x/tools/internal/event/core
 golang.org/x/tools/internal/event/keys

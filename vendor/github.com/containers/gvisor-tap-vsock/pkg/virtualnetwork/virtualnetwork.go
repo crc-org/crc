@@ -45,7 +45,7 @@ func New(configuration *types.Configuration) (*VirtualNetwork, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create tap endpoint")
 	}
-	networkSwitch := tap.NewSwitch(configuration.Debug, configuration.MTU, configuration.Protocol)
+	networkSwitch := tap.NewSwitch(configuration.Debug, configuration.MTU)
 	tapEndpoint.Connect(networkSwitch)
 	networkSwitch.Connect(tapEndpoint)
 

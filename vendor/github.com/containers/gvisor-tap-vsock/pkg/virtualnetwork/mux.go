@@ -45,7 +45,7 @@ func (n *VirtualNetwork) Mux() *http.ServeMux {
 			return
 		}
 
-		_ = n.networkSwitch.Accept(context.Background(), conn)
+		_ = n.networkSwitch.Accept(context.Background(), conn, n.configuration.Protocol)
 	})
 	mux.HandleFunc("/tunnel", func(w http.ResponseWriter, r *http.Request) {
 		ip := r.URL.Query().Get("ip")
