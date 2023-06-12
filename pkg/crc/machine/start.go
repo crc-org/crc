@@ -112,19 +112,25 @@ func (client *client) updateVMConfig(startConfig types.StartConfig, vm *virtualM
 }
 
 func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset) error {
+	var rootPart string
+	var err error
 	if preset == crcPreset.Microshift {
 		lvFullName := "rhel/root"
-		return growLVForMicroshift(sshRunner, lvFullName)
-	}
-	// With 4.7, this is quite a manual process until https://github.com/openshift/installer/pull/4746 gets fixed
-	// See https://github.com/crc-org/crc/issues/2104 for details
-	rootPart, err := getrootPartition(sshRunner, "/dev/disk/by-label/root")
-	if err != nil {
-		return err
-	}
+		rootPart = fmt.Sprintf("/dev/%s", lvFullName)
+		if err := growLVForMicroshift(sshRunner, lvFullName); err != nil {
+			return err
+		}
+	} else {
+		// With 4.7, this is quite a manual process until https://github.com/openshift/installer/pull/4746 gets fixed
+		// See https://github.com/crc-org/crc/issues/2104 for details
+		rootPart, err = getrootPartition(sshRunner, "/dev/disk/by-label/root")
+		if err != nil {
+			return err
+		}
 
-	if err := runGrowpart(sshRunner, rootPart); err != nil {
-		return err
+		if err := runGrowpart(sshRunner, rootPart); err != nil {
+			return err
+		}
 	}
 
 	logging.Infof("Resizing %s filesystem", rootPart)
@@ -206,7 +212,7 @@ func growLVForMicroshift(sshRunner *crcssh.Runner, lvFullName string) error {
 	lvPath := fmt.Sprintf("/dev/%s", lvFullName)
 	if sizeToIncrease > 1 {
 		logging.Info("Extending and resizing '/dev/rhel/root' logical volume")
-		if _, _, err := sshRunner.RunPrivileged("Extending and resizing the logical volume(LV)", "/usr/sbin/lvextend", "-r", "-L", fmt.Sprintf("+%db", sizeToIncrease), lvPath); err != nil {
+		if _, _, err := sshRunner.RunPrivileged("Extending and resizing the logical volume(LV)", "/usr/sbin/lvextend", "-L", fmt.Sprintf("+%db", sizeToIncrease), lvPath); err != nil {
 			return err
 		}
 	}
