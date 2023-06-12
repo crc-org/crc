@@ -1,6 +1,7 @@
 package tap
 
 import (
+	"bufio"
 	"context"
 	"io"
 	"net"
@@ -36,7 +37,7 @@ type Switch struct {
 	maxTransmissionUnit int
 
 	nextConnID int
-	conns      map[int]net.Conn
+	conns      map[int]protocolConn
 	connLock   sync.Mutex
 
 	cam     map[tcpip.LinkAddress]int
@@ -45,17 +46,14 @@ type Switch struct {
 	writeLock sync.Mutex
 
 	gateway VirtualDevice
-
-	protocol protocol
 }
 
-func NewSwitch(debug bool, mtu int, protocol types.Protocol) *Switch {
+func NewSwitch(debug bool, mtu int) *Switch {
 	return &Switch{
 		debug:               debug,
 		maxTransmissionUnit: mtu,
-		conns:               make(map[int]net.Conn),
+		conns:               make(map[int]protocolConn),
 		cam:                 make(map[tcpip.LinkAddress]int),
-		protocol:            protocolImplementation(protocol),
 	}
 }
 
@@ -73,13 +71,14 @@ func (e *Switch) Connect(ep VirtualDevice) {
 	e.gateway = ep
 }
 
-func (e *Switch) DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt stack.PacketBufferPtr) {
+func (e *Switch) DeliverNetworkPacket(_ tcpip.NetworkProtocolNumber, pkt stack.PacketBufferPtr) {
 	if err := e.tx(pkt); err != nil {
 		log.Error(err)
 	}
 }
 
-func (e *Switch) Accept(ctx context.Context, conn net.Conn) error {
+func (e *Switch) Accept(ctx context.Context, rawConn net.Conn, protocol types.Protocol) error {
+	conn := protocolConn{Conn: rawConn, protocolImpl: protocolImplementation(protocol)}
 	log.Infof("new connection from %s to %s", conn.RemoteAddr().String(), conn.LocalAddr().String())
 	id, failed := e.connect(conn)
 	if failed {
@@ -100,7 +99,7 @@ func (e *Switch) Accept(ctx context.Context, conn net.Conn) error {
 	return nil
 }
 
-func (e *Switch) connect(conn net.Conn) (int, bool) {
+func (e *Switch) connect(conn protocolConn) (int, bool) {
 	e.connLock.Lock()
 	defer e.connLock.Unlock()
 
@@ -112,23 +111,10 @@ func (e *Switch) connect(conn net.Conn) (int, bool) {
 }
 
 func (e *Switch) tx(pkt stack.PacketBufferPtr) error {
-	if e.protocol.Stream() {
-		return e.txStream(pkt, e.protocol.(streamProtocol))
-	}
-	return e.txNonStream(pkt)
+	return e.txPkt(pkt)
 }
 
-func (e *Switch) txNonStream(pkt stack.PacketBufferPtr) error {
-	return e.txBuf(pkt, nil)
-}
-
-func (e *Switch) txStream(pkt stack.PacketBufferPtr, sProtocol streamProtocol) error {
-	size := sProtocol.Buf()
-	sProtocol.Write(size, pkt.Size())
-	return e.txBuf(pkt, size)
-}
-
-func (e *Switch) txBuf(pkt stack.PacketBufferPtr, size []byte) error {
+func (e *Switch) txPkt(pkt stack.PacketBufferPtr) error {
 	e.writeLock.Lock()
 	defer e.writeLock.Unlock()
 
@@ -151,14 +137,9 @@ func (e *Switch) txBuf(pkt stack.PacketBufferPtr, size []byte) error {
 			if id == srcID {
 				continue
 			}
-			if len(size) > 0 {
-				if _, err := conn.Write(size); err != nil {
-					e.disconnect(id, conn)
-					return err
-				}
-			}
-			if _, err := conn.Write(buf); err != nil {
-				e.disconnect(id, conn)
+
+			err := e.txBuf(id, conn, buf)
+			if err != nil {
 				return err
 			}
 
@@ -173,17 +154,28 @@ func (e *Switch) txBuf(pkt stack.PacketBufferPtr, size []byte) error {
 		}
 		e.camLock.RUnlock()
 		conn := e.conns[id]
-		if len(size) > 0 {
-			if _, err := conn.Write(size); err != nil {
-				e.disconnect(id, conn)
-				return err
-			}
-		}
-		if _, err := conn.Write(buf); err != nil {
-			e.disconnect(id, conn)
+		err := e.txBuf(id, conn, buf)
+		if err != nil {
 			return err
 		}
 		atomic.AddUint64(&e.Sent, uint64(pkt.Size()))
+	}
+	return nil
+}
+
+func (e *Switch) txBuf(id int, conn protocolConn, buf []byte) error {
+	if conn.protocolImpl.Stream() {
+		size := conn.protocolImpl.(streamProtocol).Buf()
+		conn.protocolImpl.(streamProtocol).Write(size, len(buf))
+
+		if _, err := conn.Write(size); err != nil {
+			e.disconnect(id, conn)
+			return err
+		}
+	}
+	if _, err := conn.Write(buf); err != nil {
+		e.disconnect(id, conn)
+		return err
 	}
 	return nil
 }
@@ -201,9 +193,9 @@ func (e *Switch) disconnect(id int, conn net.Conn) {
 	delete(e.conns, id)
 }
 
-func (e *Switch) rx(ctx context.Context, id int, conn net.Conn) error {
-	if e.protocol.Stream() {
-		return e.rxStream(ctx, id, conn, e.protocol.(streamProtocol))
+func (e *Switch) rx(ctx context.Context, id int, conn protocolConn) error {
+	if conn.protocolImpl.Stream() {
+		return e.rxStream(ctx, id, conn, conn.protocolImpl.(streamProtocol))
 	}
 	return e.rxNonStream(ctx, id, conn)
 }
@@ -229,6 +221,7 @@ loop:
 }
 
 func (e *Switch) rxStream(ctx context.Context, id int, conn net.Conn, sProtocol streamProtocol) error {
+	reader := bufio.NewReader(conn)
 	sizeBuf := sProtocol.Buf()
 loop:
 	for {
@@ -238,14 +231,14 @@ loop:
 		default:
 			// passthrough
 		}
-		_, err := io.ReadFull(conn, sizeBuf)
+		_, err := io.ReadFull(reader, sizeBuf)
 		if err != nil {
 			return errors.Wrap(err, "cannot read size from socket")
 		}
 		size := sProtocol.Read(sizeBuf)
 
 		buf := make([]byte, size)
-		_, err = io.ReadFull(conn, buf)
+		_, err = io.ReadFull(reader, buf)
 		if err != nil {
 			return errors.Wrap(err, "cannot read packet from socket")
 		}
@@ -254,7 +247,7 @@ loop:
 	return nil
 }
 
-func (e *Switch) rxBuf(ctx context.Context, id int, buf []byte) {
+func (e *Switch) rxBuf(_ context.Context, id int, buf []byte) {
 	if e.debug {
 		packet := gopacket.NewPacket(buf, layers.LayerTypeEthernet, gopacket.Default)
 		log.Info(packet.String())

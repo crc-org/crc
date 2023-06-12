@@ -1,6 +1,8 @@
 package tap
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+)
 
 type protocol interface {
 	Stream() bool

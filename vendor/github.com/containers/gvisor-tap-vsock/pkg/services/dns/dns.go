@@ -2,9 +2,12 @@ package dns
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	"github.com/miekg/dns"
@@ -12,13 +15,15 @@ import (
 )
 
 type dnsHandler struct {
-	zones []types.Zone
+	zones     []types.Zone
+	zonesLock sync.RWMutex
 }
 
 func (h *dnsHandler) handle(w dns.ResponseWriter, r *dns.Msg) {
 	m := new(dns.Msg)
 	m.SetReply(r)
 	m.RecursionAvailable = true
+	m.Compress = true
 	h.addAnswers(m)
 	if err := w.WriteMsg(m); err != nil {
 		log.Error(err)
@@ -26,6 +31,8 @@ func (h *dnsHandler) handle(w dns.ResponseWriter, r *dns.Msg) {
 }
 
 func (h *dnsHandler) addAnswers(m *dns.Msg) {
+	h.zonesLock.RLock()
+	defer h.zonesLock.RUnlock()
 	for _, q := range m.Question {
 		for _, zone := range h.zones {
 			zoneSuffix := fmt.Sprintf(".%s", zone.Name)
@@ -111,13 +118,60 @@ func (h *dnsHandler) addAnswers(m *dns.Msg) {
 	}
 }
 
-func Serve(udpConn net.PacketConn, zones []types.Zone) error {
-	mux := dns.NewServeMux()
+type Server struct {
+	udpConn net.PacketConn
+	tcpLn   net.Listener
+	handler *dnsHandler
+}
+
+func New(udpConn net.PacketConn, tcpLn net.Listener, zones []types.Zone) (*Server, error) {
 	handler := &dnsHandler{zones: zones}
-	mux.HandleFunc(".", handler.handle)
+	return &Server{udpConn: udpConn, tcpLn: tcpLn, handler: handler}, nil
+}
+
+func (s *Server) Serve() error {
+	mux := dns.NewServeMux()
+	mux.HandleFunc(".", s.handler.handle)
 	srv := &dns.Server{
-		PacketConn: udpConn,
+		PacketConn: s.udpConn,
 		Handler:    mux,
 	}
 	return srv.ActivateAndServe()
+}
+
+func (s *Server) ServeTCP() error {
+	mux := dns.NewServeMux()
+	mux.HandleFunc(".", s.handler.handle)
+	tcpSrv := &dns.Server{
+		Listener: s.tcpLn,
+		Handler:  mux,
+	}
+	return tcpSrv.ActivateAndServe()
+}
+
+func (s *Server) Mux() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/all", func(w http.ResponseWriter, r *http.Request) {
+		s.handler.zonesLock.RLock()
+		_ = json.NewEncoder(w).Encode(s.handler.zones)
+		s.handler.zonesLock.RUnlock()
+	})
+
+	mux.HandleFunc("/add", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "post only", http.StatusBadRequest)
+			return
+		}
+		var req types.Zone
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		s.handler.zonesLock.Lock()
+		s.handler.zones = append([]types.Zone{req}, s.handler.zones...)
+		s.handler.zonesLock.Unlock()
+		w.WriteHeader(http.StatusOK)
+	})
+	return mux
 }

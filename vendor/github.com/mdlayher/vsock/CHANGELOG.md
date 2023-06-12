@@ -1,5 +1,9 @@
 # CHANGELOG
 
+# v1.2.1
+
+- [Improvement]: updated dependencies, test with Go 1.20.
+
 # v1.2.0
 
 **This is the first release of package vsock that only supports Go 1.18+. Users
