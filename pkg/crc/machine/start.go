@@ -113,7 +113,8 @@ func (client *client) updateVMConfig(startConfig types.StartConfig, vm *virtualM
 
 func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset) error {
 	if preset == crcPreset.Microshift {
-		return growLVForMicroshift(sshRunner)
+		lvFullName := "rhel/root"
+		return growLVForMicroshift(sshRunner, lvFullName)
 	}
 	// With 4.7, this is quite a manual process until https://github.com/openshift/installer/pull/4746 gets fixed
 	// See https://github.com/crc-org/crc/issues/2104 for details
@@ -164,8 +165,8 @@ func runGrowpart(sshRunner *crcssh.Runner, rootPart string) error {
 	return nil
 }
 
-func growLVForMicroshift(sshRunner *crcssh.Runner) error {
-	rootPart, _, err := sshRunner.RunPrivileged("Get PV disk path", "/usr/sbin/pvs", "-S", "lv_name=root", "-o", "pv_name", "--noheadings")
+func growLVForMicroshift(sshRunner *crcssh.Runner, lvFullName string) error {
+	rootPart, _, err := sshRunner.RunPrivileged("Get PV disk path", "/usr/sbin/pvs", "-S", fmt.Sprintf("lv_full_name=%s", lvFullName), "-o", "pv_name", "--noheadings")
 	if err != nil {
 		return err
 	}
@@ -189,7 +190,7 @@ func growLVForMicroshift(sshRunner *crcssh.Runner) error {
 	}
 
 	// Get the size of root lv
-	sizeLV, _, err := sshRunner.RunPrivileged("Get the size of root logical volume", "/usr/sbin/lvs", "-S", "lv_name=root", "--noheadings", "--nosuffix", "--units", "b", "-o", "lv_size")
+	sizeLV, _, err := sshRunner.RunPrivileged("Get the size of root logical volume", "/usr/sbin/lvs", "-S", fmt.Sprintf("lv_full_name=%s", lvFullName), "--noheadings", "--nosuffix", "--units", "b", "-o", "lv_size")
 	if err != nil {
 		return err
 	}
@@ -202,9 +203,10 @@ func growLVForMicroshift(sshRunner *crcssh.Runner) error {
 	vgFree := 16127098880
 	expectedLVSize := vgSize - vgFree
 	sizeToIncrease := expectedLVSize - lvSize
+	lvPath := fmt.Sprintf("/dev/%s", lvFullName)
 	if sizeToIncrease > 1 {
 		logging.Info("Extending and resizing '/dev/rhel/root' logical volume")
-		if _, _, err := sshRunner.RunPrivileged("Extending and resizing the logical volume(LV)", "/usr/sbin/lvextend", "-r", "-L", fmt.Sprintf("+%db", sizeToIncrease), "/dev/rhel/root"); err != nil {
+		if _, _, err := sshRunner.RunPrivileged("Extending and resizing the logical volume(LV)", "/usr/sbin/lvextend", "-r", "-L", fmt.Sprintf("+%db", sizeToIncrease), lvPath); err != nil {
 			return err
 		}
 	}
