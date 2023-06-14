@@ -41,6 +41,9 @@ func deleteMachine(client machine.Client, clearCache bool, cacheDir string, inte
 		yes := input.PromptUserForYesOrNo("Do you want to delete the instance cache", force)
 		if yes {
 			_ = os.RemoveAll(cacheDir)
+			// also delete the crc.log and crcd.log files
+			_ = os.Remove(constants.LogFilePath)
+			_ = os.Remove(constants.DaemonLogFilePath)
 		}
 	}
 
