@@ -12,11 +12,13 @@ import (
 	"time"
 
 	clientset "github.com/openshift/client-go/config/clientset/versioned"
+	k8sclient "k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/crc-org/crc/pkg/crc/logging"
 	openshiftapi "github.com/openshift/api/config/v1"
+	k8sapi "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -145,6 +147,37 @@ func getStatus(ctx context.Context, lister operatorLister, selector []string) (*
 	return cs, nil
 }
 
+func GetClusterNodeStatus(ctx context.Context, ip string, kubeconfigFilePath string) (*Status, error) {
+	status := &Status{
+		Available: true,
+	}
+	clientSet, err := kubernetesClient(ip, kubeconfigFilePath)
+	if err != nil {
+		return nil, err
+	}
+	nodes, err := clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	var ns k8sapi.ConditionStatus
+	for _, c := range nodes.Items[0].Status.Conditions {
+		if c.Type == k8sapi.NodeReady {
+			ns = c.Status
+		}
+	}
+	switch ns {
+	case k8sapi.ConditionTrue:
+		status.Available = true
+	case k8sapi.ConditionFalse:
+		status.Progressing = true
+	case k8sapi.ConditionUnknown:
+		status.Degraded = true
+	default:
+		logging.Debugf("Unexpected node status for %s", ns)
+	}
+	return status, nil
+}
+
 func contains(value string, list []string) bool {
 	for _, v := range list {
 		if v == value {
@@ -164,6 +197,14 @@ func openshiftClient(ip string, kubeconfigFilePath string) (*clientset.Clientset
 		return nil, err
 	}
 	return clientset.NewForConfig(config)
+}
+
+func kubernetesClient(ip string, kubeconfigFilePath string) (*k8sclient.Clientset, error) {
+	config, err := kubernetesClientConfiguration(ip, kubeconfigFilePath)
+	if err != nil {
+		return nil, err
+	}
+	return k8sclient.NewForConfig(config)
 }
 
 func kubernetesClientConfiguration(ip string, kubeconfigFilePath string) (*restclient.Config, error) {

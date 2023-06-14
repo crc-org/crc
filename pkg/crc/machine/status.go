@@ -10,8 +10,6 @@ import (
 	"github.com/crc-org/crc/pkg/crc/machine/state"
 	"github.com/crc-org/crc/pkg/crc/machine/types"
 	"github.com/crc-org/crc/pkg/crc/preset"
-	"github.com/crc-org/crc/pkg/crc/systemd"
-	sdState "github.com/crc-org/crc/pkg/crc/systemd/states"
 	"github.com/pkg/errors"
 )
 
@@ -66,7 +64,7 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 
 	switch {
 	case vm.bundle.IsMicroshift():
-		clusterStatusResult.OpenshiftStatus = getMicroShiftStatus(vm)
+		clusterStatusResult.OpenshiftStatus = getMicroShiftStatus(context.Background(), ip)
 	case vm.bundle.IsOpenShift():
 		clusterStatusResult.OpenshiftStatus = getOpenShiftStatus(context.Background(), ip)
 	}
@@ -140,32 +138,25 @@ func getOpenShiftStatus(ctx context.Context, ip string) types.OpenshiftStatus {
 		logging.Debugf("cannot get OpenShift status: %v", err)
 		return types.OpenshiftUnreachable
 	}
+	return getStatus(status)
+}
+
+func getMicroShiftStatus(ctx context.Context, ip string) types.OpenshiftStatus {
+	status, err := cluster.GetClusterNodeStatus(ctx, ip, constants.KubeconfigFilePath)
+	if err != nil {
+		logging.Debugf("failed to get microshift node status: %v", err)
+		return types.OpenshiftUnreachable
+	}
+	return getStatus(status)
+}
+
+func getStatus(status *cluster.Status) types.OpenshiftStatus {
 	switch {
 	case status.Progressing:
 		return types.OpenshiftStarting
 	case status.Degraded:
 		return types.OpenshiftDegraded
 	case status.Available:
-		return types.OpenshiftRunning
-	}
-	return types.OpenshiftStopped
-}
-
-func getMicroShiftStatus(vm *virtualMachine) types.OpenshiftStatus {
-	sshRunner, err := vm.SSHRunner()
-	if err != nil {
-		logging.Debugf("cannot get MicroShift status: %v", err)
-		return types.OpenshiftUnreachable
-	}
-	defer sshRunner.Close()
-
-	sd := systemd.NewInstanceSystemdCommander(sshRunner)
-	microShiftServiceState, err := sd.Status("microshift")
-	if err != nil {
-		logging.Debugf("failed to get microshift service status: %v", err)
-		return types.OpenshiftUnreachable
-	}
-	if microShiftServiceState == sdState.Running {
 		return types.OpenshiftRunning
 	}
 	return types.OpenshiftStopped
