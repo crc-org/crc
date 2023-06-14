@@ -40,6 +40,8 @@ var (
     <LogonTrigger>
       <UserId>%s</UserId>
     </LogonTrigger>
+    <RegistrationTrigger>
+    </RegistrationTrigger>
   </Triggers>
   <Actions Context="Author">
     <Exec>
