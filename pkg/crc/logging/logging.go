@@ -8,24 +8,20 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	terminal "golang.org/x/term"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var (
-	logfile  *os.File
-	logLevel = defaultLogLevel()
-	Memory   = newInMemoryHook(100)
+	lumberjackLogger *lumberjack.Logger
+	logfile          *os.File
+	logLevel         = defaultLogLevel()
+	Memory           = newInMemoryHook(100)
 )
 
-func OpenLogFile(path string) (*os.File, error) {
-	logFile, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
-	if err != nil {
-		return nil, err
-	}
-	return logFile, nil
-}
-
 func CloseLogging() {
-	logfile.Close()
+	if lumberjackLogger != nil {
+		_ = lumberjackLogger.Close()
+	}
 	logrus.StandardLogger().ReplaceHooks(make(logrus.LevelHooks))
 }
 
@@ -39,12 +35,13 @@ func BackupLogFile() {
 func InitLogrus(logFilePath string) {
 	var err error
 
-	logfile, err = OpenLogFile(logFilePath)
-	if err != nil {
-		logrus.Fatal("Unable to open log file: ", err)
+	lumberjackLogger := &lumberjack.Logger{
+		Filename:   logFilePath,
+		MaxSize:    5, // 5MB
+		MaxBackups: 2,
 	}
 	// send logs to file
-	logrus.SetOutput(logfile)
+	logrus.SetOutput(lumberjackLogger)
 
 	logrus.SetLevel(logrus.TraceLevel)
 
