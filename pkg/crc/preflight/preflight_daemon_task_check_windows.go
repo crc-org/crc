@@ -35,6 +35,7 @@ var (
       <RestartOnIdle>false</RestartOnIdle>
     </IdleSettings>
     <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
   </Settings>
   <Triggers>
     <LogonTrigger>
