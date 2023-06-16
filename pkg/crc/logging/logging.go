@@ -1,9 +1,7 @@
 package logging
 
 import (
-	"fmt"
 	"os"
-	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
@@ -13,7 +11,6 @@ import (
 
 var (
 	lumberjackLogger *lumberjack.Logger
-	logfile          *os.File
 	logLevel         = defaultLogLevel()
 	Memory           = newInMemoryHook(100)
 )
@@ -26,10 +23,10 @@ func CloseLogging() {
 }
 
 func BackupLogFile() {
-	if logfile == nil {
+	if lumberjackLogger == nil {
 		return
 	}
-	os.Rename(logfile.Name(), fmt.Sprintf("%s_%s", logfile.Name(), time.Now().Format("20060102150405"))) // nolint
+	_ = lumberjackLogger.Rotate()
 }
 
 func InitLogrus(logFilePath string) {
