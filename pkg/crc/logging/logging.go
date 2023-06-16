@@ -11,10 +11,9 @@ import (
 )
 
 var (
-	logfile       *os.File
-	logLevel      = defaultLogLevel()
-	originalHooks = logrus.LevelHooks{}
-	Memory        = newInMemoryHook(100)
+	logfile  *os.File
+	logLevel = defaultLogLevel()
+	Memory   = newInMemoryHook(100)
 )
 
 func OpenLogFile(path string) (*os.File, error) {
@@ -62,10 +61,6 @@ func InitLogrus(logFilePath string) {
 		DisableTimestamp:       true,
 		DisableLevelTruncation: false,
 	}))
-
-	for k, v := range logrus.StandardLogger().Hooks {
-		originalHooks[k] = v
-	}
 }
 
 func defaultLogLevel() string {
