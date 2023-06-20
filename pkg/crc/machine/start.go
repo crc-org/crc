@@ -158,7 +158,7 @@ func getrootPartition(sshRunner *crcssh.Runner, label string) (string, error) {
 
 func runGrowpart(sshRunner *crcssh.Runner, rootPart string) error {
 	// with '/dev/[sv]da4' as input, run 'growpart /dev/[sv]da 4'
-	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Growing %s partition", rootPart), "/usr/bin/growpart", rootPart[:len("/dev/.da")], rootPart[len(rootPart)-1:]); err != nil {
+	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Growing %s partition", rootPart), "/usr/bin/growpart", rootPart[:len("/dev/.da")], rootPart[len("/dev/.da"):]); err != nil {
 		var exitErr *ssh.ExitError
 		if !errors.As(err, &exitErr) {
 			return err
