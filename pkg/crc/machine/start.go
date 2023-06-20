@@ -134,10 +134,11 @@ func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset) error
 	}
 
 	logging.Infof("Resizing %s filesystem", rootPart)
-	if _, _, err := sshRunner.RunPrivileged("Remounting /sysroot read/write", "mount -o remount,rw /sysroot"); err != nil {
+	rootFS := "/sysroot"
+	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Remounting %s read/write", rootFS), "mount -o remount,rw", rootFS); err != nil {
 		return err
 	}
-	if _, _, err = sshRunner.RunPrivileged(fmt.Sprintf("Growing %s filesystem", rootPart), "xfs_growfs", rootPart); err != nil {
+	if _, _, err = sshRunner.RunPrivileged(fmt.Sprintf("Growing %s filesystem", rootFS), "xfs_growfs", rootFS); err != nil {
 		return err
 	}
 
