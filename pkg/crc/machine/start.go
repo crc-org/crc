@@ -112,23 +112,18 @@ func (client *client) updateVMConfig(startConfig types.StartConfig, vm *virtualM
 }
 
 func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset) error {
-	var rootPart string
-	var err error
+	rootPart, err := getrootPartition(sshRunner, preset)
+	if err != nil {
+		return err
+	}
+
+	if err := runGrowpart(sshRunner, rootPart); err != nil {
+		return err
+	}
+
 	if preset == crcPreset.Microshift {
 		lvFullName := "rhel/root"
-		rootPart = fmt.Sprintf("/dev/%s", lvFullName)
-		if err := growLVForMicroshift(sshRunner, lvFullName); err != nil {
-			return err
-		}
-	} else {
-		// With 4.7, this is quite a manual process until https://github.com/openshift/installer/pull/4746 gets fixed
-		// See https://github.com/crc-org/crc/issues/2104 for details
-		rootPart, err = getrootPartition(sshRunner, "/dev/disk/by-label/root")
-		if err != nil {
-			return err
-		}
-
-		if err := runGrowpart(sshRunner, rootPart); err != nil {
+		if err := growLVForMicroshift(sshRunner, lvFullName, rootPart); err != nil {
 			return err
 		}
 	}
@@ -145,12 +140,20 @@ func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset) error
 	return nil
 }
 
-func getrootPartition(sshRunner *crcssh.Runner, label string) (string, error) {
-	rootPart, _, err := sshRunner.Run("realpath", label)
+func getrootPartition(sshRunner *crcssh.Runner, preset crcPreset.Preset) (string, error) {
+	diskType := "xfs"
+	if preset == crcPreset.Microshift {
+		diskType = "LVM2_member"
+	}
+	part, _, err := sshRunner.RunPrivileged("Get device id", "/usr/sbin/blkid", "-t", fmt.Sprintf("TYPE=%s", diskType), "-o", "device")
 	if err != nil {
 		return "", err
 	}
-	rootPart = strings.TrimSpace(rootPart)
+	parts := strings.Split(strings.TrimSpace(part), "\n")
+	if len(parts) != 1 {
+		return "", fmt.Errorf("Unexpected number of devices: %s", part)
+	}
+	rootPart := strings.TrimSpace(parts[0])
 	if !strings.HasPrefix(rootPart, "/dev/vda") && !strings.HasPrefix(rootPart, "/dev/sda") {
 		return "", fmt.Errorf("Unexpected root device: %s", rootPart)
 	}
@@ -172,16 +175,7 @@ func runGrowpart(sshRunner *crcssh.Runner, rootPart string) error {
 	return nil
 }
 
-func growLVForMicroshift(sshRunner *crcssh.Runner, lvFullName string) error {
-	rootPart, _, err := sshRunner.RunPrivileged("Get PV disk path", "/usr/sbin/pvs", "-S", fmt.Sprintf("lv_full_name=%s", lvFullName), "-o", "pv_name", "--noheadings")
-	if err != nil {
-		return err
-	}
-	rootPart = strings.TrimSpace(rootPart)
-	if err := runGrowpart(sshRunner, rootPart); err != nil {
-		return err
-	}
-
+func growLVForMicroshift(sshRunner *crcssh.Runner, lvFullName string, rootPart string) error {
 	if _, _, err := sshRunner.RunPrivileged("Resizing the physical volume(PV)", "/usr/sbin/pvresize", rootPart); err != nil {
 		return err
 	}
