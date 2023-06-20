@@ -176,12 +176,12 @@ func runGrowpart(sshRunner *crcssh.Runner, rootPart string) error {
 }
 
 func growLVForMicroshift(sshRunner *crcssh.Runner, lvFullName string, rootPart string) error {
-	if _, _, err := sshRunner.RunPrivileged("Resizing the physical volume(PV)", "/usr/sbin/pvresize", rootPart); err != nil {
+	if _, _, err := sshRunner.RunPrivileged("Resizing the physical volume(PV)", "/usr/sbin/pvresize", "--devices", rootPart, rootPart); err != nil {
 		return err
 	}
 
 	// Get the size of volume group
-	sizeVG, _, err := sshRunner.RunPrivileged("Get the volume group size", "/usr/sbin/vgs", "--noheadings", "--nosuffix", "--units", "b", "-o", "vg_size")
+	sizeVG, _, err := sshRunner.RunPrivileged("Get the volume group size", "/usr/sbin/vgs", "--noheadings", "--nosuffix", "--units", "b", "-o", "vg_size", "--devices", rootPart)
 	if err != nil {
 		return err
 	}
@@ -191,7 +191,7 @@ func growLVForMicroshift(sshRunner *crcssh.Runner, lvFullName string, rootPart s
 	}
 
 	// Get the size of root lv
-	sizeLV, _, err := sshRunner.RunPrivileged("Get the size of root logical volume", "/usr/sbin/lvs", "-S", fmt.Sprintf("lv_full_name=%s", lvFullName), "--noheadings", "--nosuffix", "--units", "b", "-o", "lv_size")
+	sizeLV, _, err := sshRunner.RunPrivileged("Get the size of root logical volume", "/usr/sbin/lvs", "-S", fmt.Sprintf("lv_full_name=%s", lvFullName), "--noheadings", "--nosuffix", "--units", "b", "-o", "lv_size", "--devices", rootPart)
 	if err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ func growLVForMicroshift(sshRunner *crcssh.Runner, lvFullName string, rootPart s
 	lvPath := fmt.Sprintf("/dev/%s", lvFullName)
 	if sizeToIncrease > 1 {
 		logging.Info("Extending and resizing '/dev/rhel/root' logical volume")
-		if _, _, err := sshRunner.RunPrivileged("Extending and resizing the logical volume(LV)", "/usr/sbin/lvextend", "-L", fmt.Sprintf("+%db", sizeToIncrease), lvPath); err != nil {
+		if _, _, err := sshRunner.RunPrivileged("Extending and resizing the logical volume(LV)", "/usr/sbin/lvextend", "-L", fmt.Sprintf("+%db", sizeToIncrease), lvPath, "--devices", rootPart); err != nil {
 			return err
 		}
 	}
