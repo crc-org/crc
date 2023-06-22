@@ -924,6 +924,13 @@ func logBundleDate(crcBundleMetadata *bundle.CrcBundleInfo) {
 }
 
 func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Config, preset crcPreset.Preset, bundleInfo *bundle.CrcBundleInfo) error {
+	// Check if the bundle have `/opt/crc/route_controller.yaml` file and if it has
+	// then use it to create the resource for router controller.
+	if _, _, err := sshRunner.Run("ls", "/opt/crc/route_controller.yaml"); err == nil {
+		_, _, err := ocConfig.RunOcCommand("apply", "-f", "/opt/crc/route_controller.yaml")
+		return err
+	}
+	// TODO: Remove this resource creation after crc 2.24 release
 	bin, err := json.Marshal(v1.Pod{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",
