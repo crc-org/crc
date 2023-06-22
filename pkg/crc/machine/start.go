@@ -1033,13 +1033,10 @@ func startMicroshift(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.
 	if _, _, err := sshRunner.RunPrivileged("Starting microshift service", "systemctl", "start", "microshift"); err != nil {
 		return err
 	}
-	if err := sshRunner.CopyFileFromVM("/var/lib/microshift/resources/kubeadmin/kubeconfig", constants.KubeconfigFilePath, 0600); err != nil {
+	if err := sshRunner.CopyFileFromVM(fmt.Sprintf("/var/lib/microshift/resources/kubeadmin/api%s/kubeconfig", constants.ClusterDomain), constants.KubeconfigFilePath, 0600); err != nil {
 		return err
 	}
 	if err := sshRunner.CopyFile(constants.KubeconfigFilePath, "/opt/kubeconfig", 0644); err != nil {
-		return err
-	}
-	if err := updateServerDetailsToKubeConfig(constants.KubeconfigFilePath, constants.KubeconfigFilePath); err != nil {
 		return err
 	}
 

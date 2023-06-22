@@ -232,19 +232,6 @@ func contains(arr []string, str string) bool {
 	return false
 }
 
-func updateServerDetailsToKubeConfig(input, output string) error {
-	cfg, err := clientcmd.LoadFromFile(input)
-	if err != nil {
-		return err
-	}
-	for name, cluster := range cfg.Clusters {
-		if name == "microshift" && cluster.Server == "https://127.0.0.1:6443" {
-			cluster.Server = fmt.Sprintf("https://api%s:6443", constants.ClusterDomain)
-		}
-	}
-	return clientcmd.WriteToFile(*cfg, output)
-}
-
 func mergeKubeConfigFile(kubeConfigFile string) error {
 	globalConfigPath, kubeConf1, err := getGlobalKubeConfig()
 	if err != nil {
