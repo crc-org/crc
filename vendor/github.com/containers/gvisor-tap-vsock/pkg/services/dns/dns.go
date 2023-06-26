@@ -19,15 +19,27 @@ type dnsHandler struct {
 	zonesLock sync.RWMutex
 }
 
-func (h *dnsHandler) handle(w dns.ResponseWriter, r *dns.Msg) {
+func (h *dnsHandler) handle(w dns.ResponseWriter, r *dns.Msg, responseMessageSize int) {
 	m := new(dns.Msg)
 	m.SetReply(r)
 	m.RecursionAvailable = true
-	m.Compress = true
 	h.addAnswers(m)
+	edns0 := r.IsEdns0()
+	if edns0 != nil {
+		responseMessageSize = int(edns0.UDPSize())
+	}
+	m.Truncate(responseMessageSize)
 	if err := w.WriteMsg(m); err != nil {
 		log.Error(err)
 	}
+}
+
+func (h *dnsHandler) handleTCP(w dns.ResponseWriter, r *dns.Msg) {
+	h.handle(w, r, dns.MaxMsgSize)
+}
+
+func (h *dnsHandler) handleUDP(w dns.ResponseWriter, r *dns.Msg) {
+	h.handle(w, r, dns.MinMsgSize)
 }
 
 func (h *dnsHandler) addAnswers(m *dns.Msg) {
@@ -77,23 +89,6 @@ func (h *dnsHandler) addAnswers(m *dns.Msg) {
 			PreferGo: false,
 		}
 		switch q.Qtype {
-		case dns.TypeNS:
-			records, err := resolver.LookupNS(context.TODO(), q.Name)
-			if err != nil {
-				m.Rcode = dns.RcodeNameError
-				return
-			}
-			for _, ns := range records {
-				m.Answer = append(m.Answer, &dns.NS{
-					Hdr: dns.RR_Header{
-						Name:   q.Name,
-						Rrtype: dns.TypeNS,
-						Class:  dns.ClassINET,
-						Ttl:    0,
-					},
-					Ns: ns.Host,
-				})
-			}
 		case dns.TypeA:
 			ips, err := resolver.LookupIPAddr(context.TODO(), q.Name)
 			if err != nil {
@@ -114,6 +109,91 @@ func (h *dnsHandler) addAnswers(m *dns.Msg) {
 					A: ip.IP.To4(),
 				})
 			}
+		case dns.TypeCNAME:
+			cname, err := resolver.LookupCNAME(context.TODO(), q.Name)
+			if err != nil {
+				m.Rcode = dns.RcodeNameError
+				return
+			}
+			m.Answer = append(m.Answer, &dns.CNAME{
+				Hdr: dns.RR_Header{
+					Name:   q.Name,
+					Rrtype: dns.TypeCNAME,
+					Class:  dns.ClassINET,
+					Ttl:    0,
+				},
+				Target: cname,
+			})
+		case dns.TypeMX:
+			records, err := resolver.LookupMX(context.TODO(), q.Name)
+			if err != nil {
+				m.Rcode = dns.RcodeNameError
+				return
+			}
+			for _, mx := range records {
+				m.Answer = append(m.Answer, &dns.MX{
+					Hdr: dns.RR_Header{
+						Name:   q.Name,
+						Rrtype: dns.TypeMX,
+						Class:  dns.ClassINET,
+						Ttl:    0,
+					},
+					Mx:         mx.Host,
+					Preference: mx.Pref,
+				})
+			}
+		case dns.TypeNS:
+			records, err := resolver.LookupNS(context.TODO(), q.Name)
+			if err != nil {
+				m.Rcode = dns.RcodeNameError
+				return
+			}
+			for _, ns := range records {
+				m.Answer = append(m.Answer, &dns.NS{
+					Hdr: dns.RR_Header{
+						Name:   q.Name,
+						Rrtype: dns.TypeNS,
+						Class:  dns.ClassINET,
+						Ttl:    0,
+					},
+					Ns: ns.Host,
+				})
+			}
+		case dns.TypeSRV:
+			_, records, err := resolver.LookupSRV(context.TODO(), "", "", q.Name)
+			if err != nil {
+				m.Rcode = dns.RcodeNameError
+				return
+			}
+			for _, srv := range records {
+				m.Answer = append(m.Answer, &dns.SRV{
+					Hdr: dns.RR_Header{
+						Name:   q.Name,
+						Rrtype: dns.TypeSRV,
+						Class:  dns.ClassINET,
+						Ttl:    0,
+					},
+					Port:     srv.Port,
+					Priority: srv.Priority,
+					Target:   srv.Target,
+					Weight:   srv.Weight,
+				})
+			}
+		case dns.TypeTXT:
+			records, err := resolver.LookupTXT(context.TODO(), q.Name)
+			if err != nil {
+				m.Rcode = dns.RcodeNameError
+				return
+			}
+			m.Answer = append(m.Answer, &dns.TXT{
+				Hdr: dns.RR_Header{
+					Name:   q.Name,
+					Rrtype: dns.TypeTXT,
+					Class:  dns.ClassINET,
+					Ttl:    0,
+				},
+				Txt: records,
+			})
 		}
 	}
 }
@@ -131,7 +211,7 @@ func New(udpConn net.PacketConn, tcpLn net.Listener, zones []types.Zone) (*Serve
 
 func (s *Server) Serve() error {
 	mux := dns.NewServeMux()
-	mux.HandleFunc(".", s.handler.handle)
+	mux.HandleFunc(".", s.handler.handleUDP)
 	srv := &dns.Server{
 		PacketConn: s.udpConn,
 		Handler:    mux,
@@ -141,7 +221,7 @@ func (s *Server) Serve() error {
 
 func (s *Server) ServeTCP() error {
 	mux := dns.NewServeMux()
-	mux.HandleFunc(".", s.handler.handle)
+	mux.HandleFunc(".", s.handler.handleTCP)
 	tcpSrv := &dns.Server{
 		Listener: s.tcpLn,
 		Handler:  mux,
@@ -168,10 +248,22 @@ func (s *Server) Mux() http.Handler {
 			return
 		}
 
-		s.handler.zonesLock.Lock()
-		s.handler.zones = append([]types.Zone{req}, s.handler.zones...)
-		s.handler.zonesLock.Unlock()
+		s.addZone(req)
 		w.WriteHeader(http.StatusOK)
 	})
 	return mux
+}
+
+func (s *Server) addZone(req types.Zone) {
+	s.handler.zonesLock.Lock()
+	defer s.handler.zonesLock.Unlock()
+	for i, zone := range s.handler.zones {
+		if zone.Name == req.Name {
+			req.Records = append(req.Records, zone.Records...)
+			s.handler.zones[i] = req
+			return
+		}
+	}
+	// No existing zone for req.Name, add new one
+	s.handler.zones = append(s.handler.zones, req)
 }
