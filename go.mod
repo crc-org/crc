@@ -11,7 +11,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/cheggaaa/pb/v3 v3.1.0
-	github.com/containers/gvisor-tap-vsock v0.6.2-0.20230609094134-b79db04d368e
+	github.com/containers/gvisor-tap-vsock v0.6.2
 	github.com/containers/image/v5 v5.24.1
 	github.com/coreos/go-systemd/v22 v22.5.0
 	github.com/crc-org/admin-helper v0.0.12-0.20221012143549-fd5acd1c478e
@@ -50,12 +50,12 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 	github.com/yusufpapurcu/wmi v1.2.2
 	github.com/zalando/go-keyring v0.2.2
-	golang.org/x/crypto v0.9.0
+	golang.org/x/crypto v0.10.0
 	golang.org/x/net v0.10.0
-	golang.org/x/sync v0.2.0
-	golang.org/x/sys v0.8.0
-	golang.org/x/term v0.8.0
-	golang.org/x/text v0.9.0
+	golang.org/x/sync v0.3.0
+	golang.org/x/sys v0.9.0
+	golang.org/x/term v0.9.0
+	golang.org/x/text v0.10.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.25.6
 	k8s.io/apimachinery v0.25.6
@@ -144,7 +144,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mdlayher/socket v0.4.1 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
-	github.com/miekg/dns v1.1.54 // indirect
+	github.com/miekg/dns v1.1.55 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moby/sys/mountinfo v0.6.2 // indirect

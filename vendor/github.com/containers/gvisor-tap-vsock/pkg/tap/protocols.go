@@ -59,3 +59,10 @@ type bessProtocol struct {
 func (s *bessProtocol) Stream() bool {
 	return false
 }
+
+type vfkitProtocol struct {
+}
+
+func (s *vfkitProtocol) Stream() bool {
+	return false
+}

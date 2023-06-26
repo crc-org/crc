@@ -63,6 +63,8 @@ const (
 	BessProtocol Protocol = "bess"
 	// StdioProtocol is HyperKitProtocol without the handshake
 	StdioProtocol Protocol = "stdio"
+	// VfkitProtocol transfers bare L2 packets as SOCK_DGRAM.
+	VfkitProtocol Protocol = "vfkit"
 )
 
 type Zone struct {

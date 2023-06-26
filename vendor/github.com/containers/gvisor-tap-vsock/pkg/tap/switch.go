@@ -287,6 +287,8 @@ func protocolImplementation(protocol types.Protocol) protocol {
 		return &qemuProtocol{}
 	case types.BessProtocol:
 		return &bessProtocol{}
+	case types.VfkitProtocol:
+		return &vfkitProtocol{}
 	default:
 		return &hyperkitProtocol{}
 	}

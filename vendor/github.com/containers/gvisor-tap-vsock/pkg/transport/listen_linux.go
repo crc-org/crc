@@ -31,3 +31,17 @@ func Listen(endpoint string) (net.Listener, error) {
 		return nil, errors.New("unexpected scheme")
 	}
 }
+
+func ListenUnixgram(endpoint string) (*net.UnixConn, error) {
+	parsed, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, err
+	}
+	if parsed.Scheme != "unixgram" {
+		return nil, errors.New("unexpected scheme")
+	}
+	return net.ListenUnixgram("unixgram", &net.UnixAddr{
+		Name: parsed.Path,
+		Net:  "unixgram",
+	})
+}
