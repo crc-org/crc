@@ -117,8 +117,17 @@ func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset) error
 		return err
 	}
 
-	if err := runGrowpart(sshRunner, rootPart); err != nil {
-		return err
+	// with '/dev/[sv]da4' as input, run 'growpart /dev/[sv]da 4'
+	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Growing %s partition", rootPart), "/usr/bin/growpart", rootPart[:len("/dev/.da")], rootPart[len("/dev/.da"):]); err != nil {
+		var exitErr *ssh.ExitError
+		if !errors.As(err, &exitErr) {
+			return err
+		}
+		if exitErr.ExitStatus() != 1 {
+			return err
+		}
+		logging.Debugf("No free space after %s, nothing to do", rootPart)
+		return nil
 	}
 
 	if preset == crcPreset.Microshift {
@@ -158,21 +167,6 @@ func getrootPartition(sshRunner *crcssh.Runner, preset crcPreset.Preset) (string
 		return "", fmt.Errorf("Unexpected root device: %s", rootPart)
 	}
 	return rootPart, nil
-}
-
-func runGrowpart(sshRunner *crcssh.Runner, rootPart string) error {
-	// with '/dev/[sv]da4' as input, run 'growpart /dev/[sv]da 4'
-	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Growing %s partition", rootPart), "/usr/bin/growpart", rootPart[:len("/dev/.da")], rootPart[len("/dev/.da"):]); err != nil {
-		var exitErr *ssh.ExitError
-		if !errors.As(err, &exitErr) {
-			return err
-		}
-		if exitErr.ExitStatus() != 1 {
-			return err
-		}
-		logging.Debugf("No free space after %s, nothing to do", rootPart)
-	}
-	return nil
 }
 
 func growLVForMicroshift(sshRunner *crcssh.Runner, lvFullName string, rootPart string) error {
