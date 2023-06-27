@@ -1,0 +1,28 @@
+= Contributing to the documentation
+
+==
+
+.Prerequisites
+* Node.js
+
+.Procedure
+
+. Open a terminal and work from the docs directory:
++
+----
+$ cd docs
+----
+
+. Install Antora:
++
+----
+$ npm i
+----
+
+. Build the documentation:
++
+----
+$ npx antora antora-playbook.yml
+----
+
+. Browse the results in `docs/build/site`.

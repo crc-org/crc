@@ -1,0 +1,16 @@
+:description: Installing {prod}
+
+[id="installation_{context}"]
+= Installing {prod}
+
+include::partial$ref_minimum-system-requirements.adoc[leveloffset=+1]
+
+include::partial$ref_required-software-packages.adoc[leveloffset=+1]
+
+include::partial$proc_installing.adoc[leveloffset=+1]
+
+include::partial$con_about-usage-data-collection.adoc[leveloffset=+1]
+
+include::partial$proc_configuring-usage-data-collection.adoc[leveloffset=+1]
+
+include::partial$proc_upgrading.adoc[leveloffset=+1]

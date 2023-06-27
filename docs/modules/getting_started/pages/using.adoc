@@ -1,0 +1,16 @@
+[id="using_{context}"]
+= Using {prod}
+
+include::partial$con_about-presets.adoc[leveloffset=+1]
+
+include::partial$proc_setting-up.adoc[leveloffset=+1]
+
+include::partial$proc_starting-the-instance.adoc[leveloffset=+1]
+
+include::partial$assembly_accessing-the-openshift-cluster.adoc[leveloffset=+1]
+
+include::partial$proc_deploying-sample-application-with-odo.adoc[leveloffset=+1]
+
+include::partial$proc_stopping-the-instance.adoc[leveloffset=+1]
+
+include::partial$proc_deleting-the-instance.adoc[leveloffset=+1]

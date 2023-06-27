@@ -1,0 +1,62 @@
+[id="minimum-system-requirements_{context}"]
+= Minimum system requirements
+
+[role="_abstract"]
+{prod} has the following minimum hardware and operating system requirements.
+
+[id="minimum-system-requirements-hardware_{context}"]
+== Hardware requirements
+
+{prod} is supported on AMD64, Intel 64 processor and M1 architectures.
+The {okd} preset is not supported on the M1 architecture.
+{prod} does not support nested virtualization.
+
+Depending on the desired container runtime, {prod} requires the following system resources:
+
+=== For {ocp}
+
+* 4 physical CPU cores
+* 9 GB of free memory
+* 35 GB of storage space
+
+=== For {ushift}
+
+* 2 physical CPU cores
+* 4 GB of free memory
+* 35 GB of storage space
+
+[NOTE]
+====
+The {ocp} and {ushift} presets require these minimum resources to run in the {prod} instance.
+Some workloads might require more resources.
+To assign more resources to the {prod} instance, see link:{crc-gsg-url}#configuring-the-instance_gsg[Configuring the instance].
+====
+
+=== For the Podman container runtime
+
+* 2 physical CPU cores
+* 2 GB of free memory
+* 35 GB of storage space
+
+[id="minimum-system-requirements-operating-system_{context}"]
+== Operating system requirements
+
+{prod} requires the following minimum version of a supported operating system:
+
+=== {msw}
+
+* On {msw}, {prod} requires the Windows 10 Fall Creators Update (version 1709) or later.
+{prod} does not work on earlier versions of {msw}.
+{msw} 10 Home Edition is not supported.
+
+=== {mac}
+
+* On {mac}, {prod} requires {mac} 11 Big Sur or later.
+{prod} does not work on earlier versions of {mac}.
+
+=== Linux
+
+* On Linux, {prod} is supported only on the latest two {rhel}/{centos} 8 and 9 minor releases and on the latest two stable {fed} releases.
+* When using {rhel}, the machine running {prod} must be link:https://access.redhat.com/solutions/253273[registered with the Red Hat Customer Portal].
+* {ubuntu} 18.04 LTS or later and {debian} 10 or later are not supported and might require manual set up of the host machine.
+* See link:{crc-gsg-url}#required-software-packages_gsg[Required software packages] to install the required packages for your Linux distribution.

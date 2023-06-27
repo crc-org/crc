@@ -1,0 +1,12 @@
+:description: Configuring {prod}
+
+[id="configuring_{context}"]
+= Configuring {prod}
+
+include::partial$con_about-configuration.adoc[leveloffset=+1]
+
+include::partial$proc_viewing-configuration.adoc[leveloffset=+1]
+
+include::partial$proc_changing-the-selected-preset.adoc[leveloffset=+1]
+
+include::partial$proc_configuring-the-instance.adoc[leveloffset=+1]
