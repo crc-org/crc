@@ -24,7 +24,7 @@ $ {bin} config set preset __<name>__
 +
 Valid preset names are:
 +
-include::example$snip_{context}_preset_names.adoc[]
+include::example$snip_{project-context}_preset_names.adoc[]
 
 [role="_additional-resources"]
 .Additional resources

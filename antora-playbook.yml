@@ -34,6 +34,7 @@ asciidoc:
     attributes:
         icons: font
         nbsp: "&#160;"
+        project-context: crc
         # Platforms
         rh: "Red{nbsp}Hat"
         rhel: "Red{nbsp}Hat Enterprise{nbsp}Linux"
