@@ -1,7 +1,7 @@
 ---
 name: crc
 title: Getting started with CRC
-version: ~ # Unversioned component version
+version: main
 start_page: getting_started:introducing.adoc
 nav:
     - modules/getting_started/nav.adoc
