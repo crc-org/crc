@@ -6,14 +6,15 @@ site:
     robots: allow
 content:
     sources:
-        -   url: ../ # Point to Git repository
+        -   url: ./ # Point to Git repository
             branches: HEAD # Use local conntent
             edit_url: "https://github.com/crc-org/crc/edit/main/{path}"
             start_path: docs # Point to docs content
 output:
     clean: true # Delete stale content
+    dir: docs/build
 runtime:
-    cache_dir: ../.cache/antora # Use a local directory rather than $HOME
+    cache_dir: .cache/antora # Use a local directory rather than $HOME
     log:
         failure_level: warn # Fail on missing attributes
         level: debug # Extra verbose
@@ -21,13 +22,13 @@ ui:
     bundle:
         url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
         snapshot: true
-    supplemental_files: ./supplemental-ui
+    supplemental_files: docs/supplemental-ui
 urls:
     html_extension_style: indexify
     redirect_facility: static
-antora:
-    extensions:
-        - '@antora/lunr-extension'
+#antora:
+#    extensions:
+#        - '@antora/lunr-extension'
 asciidoc:
     sourcemap: true
     attributes:
