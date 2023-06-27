@@ -52,7 +52,7 @@ asciidoc:
         rh-prod: CRC
         bin: crc
         # Documentation naming
-        context: gsg
+        context: crc
         crc-gsg: CRC Getting Started Guide
         # URLs
         crc-download-url: https://console.redhat.com/openshift/create/local

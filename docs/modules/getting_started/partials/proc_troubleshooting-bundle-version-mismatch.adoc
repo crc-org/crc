@@ -17,4 +17,4 @@ FATA Bundle 'crc_hyperkit_4.2.8.crcbundle' was requested, but the existing VM is
 .Procedure
 . Issue the [command]`{bin} delete` command before attempting to start the instance:
 +
-include::snip_crc-delete.adoc[]
+include::partial$snip_crc-delete.adoc[]
