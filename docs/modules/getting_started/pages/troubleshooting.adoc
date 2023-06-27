@@ -1,0 +1,19 @@
+:description: Troubleshooting {prod}
+
+[id="troubleshooting_{context}"]
+= Troubleshooting {rh-prod}
+
+[NOTE]
+====
+The goal of {rh-prod} is to deliver an {ocp} environment for development and testing purposes.
+Issues occurring during installation or usage of specific {openshift} applications are outside of the scope of {prod}.
+Report such issues to the relevant project.
+====
+
+include::partial$proc_getting-shell-access-to-the-openshift-cluster.adoc[leveloffset=+1]
+
+include::partial$proc_troubleshooting-expired-certificates.adoc[leveloffset=+1]
+
+include::partial$proc_troubleshooting-bundle-version-mismatch.adoc[leveloffset=+1]
+
+include::partial$proc_troubleshooting-unknown-issues.adoc[leveloffset=+1]

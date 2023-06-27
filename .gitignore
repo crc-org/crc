@@ -1,7 +1,10 @@
 /out/
 /test/e2e/out/
 /test/integration/out/
+.cache
 /docs/build/
+/docs/node_modules
+/docs/package-lock.json
 /release/
 /release-info.json
 *.crcbundle

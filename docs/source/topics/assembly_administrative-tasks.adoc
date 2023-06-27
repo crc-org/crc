@@ -1,6 +1,0 @@
-[id="administrative-tasks_{context}"]
-= Administrative tasks
-
-include::proc_starting-monitoring.adoc[leveloffset=+1]
-
-include::proc_enabling-override-operators.adoc[leveloffset=+1]
