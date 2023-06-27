@@ -3,7 +3,9 @@
 
 [role="_abstract"]
 {prod} presets represent a managed container runtime, and the lower bounds of system resources required by the instance to run it.
-{prod} offers presets for {ocp}, {okd}, {ushift} and the Podman container runtime.
+{prod} offers presets for:
+
+include::example$snip_crc_preset_list.adoc[]
 
 On {msw} and {mac}, the {prod} guided installer prompts you for your desired preset.
 On Linux, the {ocp} preset is selected by default.

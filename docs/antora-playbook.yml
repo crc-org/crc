@@ -65,4 +65,3 @@ asciidoc:
         odo-docs-url-single-component: "{openshift-docs-url}/cli_reference/developer_cli_odo/creating_and_deploying_applications_with_odo/creating-a-single-component-application-with-odo.html"
         telemetry-notice-url: https://developers.redhat.com/article/tool-data-collection
         rhel-resolved-docs: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/configuring_and_managing_networking/using-different-dns-servers-for-different-domains_configuring-and-managing-networking
-

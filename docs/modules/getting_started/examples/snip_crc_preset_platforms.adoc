@@ -1,0 +1,25 @@
+.Preset and architecture compatibility
+|===
+| Preset | AMD64 | Intel 64 | M1
+
+| {ocp}
+| yes
+| yes
+| yes
+
+| {okd}
+| yes
+| yes
+| no
+
+| {ushift}
+| yes
+| yes
+| yes
+
+| Podman container runtime
+| yes
+| yes
+| yes
+
+|===

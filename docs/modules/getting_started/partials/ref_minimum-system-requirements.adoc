@@ -7,8 +7,10 @@
 [id="minimum-system-requirements-hardware_{context}"]
 == Hardware requirements
 
-{prod} is supported on AMD64, Intel 64 processor and M1 architectures.
-The {okd} preset is not supported on the M1 architecture.
+{prod} is supported on these architectures:
+
+include::example$snip_crc_preset_platforms.adoc[]
+
 {prod} does not support nested virtualization.
 
 Depending on the desired container runtime, {prod} requires the following system resources:
