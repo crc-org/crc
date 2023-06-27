@@ -25,7 +25,7 @@ $ {bin} stop
 
 . Delete the {prod} instance:
 +
-include::snip_crc-delete.adoc[]
+include::partial$snip_crc-delete.adoc[]
 
 . Clean up remaining changes from the [command]`{bin} setup` command:
 +
