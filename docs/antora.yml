@@ -1,5 +1,5 @@
 ---
-name: crc
+name: getting_started
 title: Getting started with CRC
 version: ~ # Unversioned component version
 start_page: getting_started:introducing.adoc
