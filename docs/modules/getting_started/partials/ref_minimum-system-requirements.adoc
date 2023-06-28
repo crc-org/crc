@@ -42,18 +42,18 @@ To assign more resources to the {prod} instance, see link:{crc-gsg-url}#configur
 
 {prod} requires the following minimum version of a supported operating system:
 
-=== {msw}
+=== Requirements on {msw}
 
 * On {msw}, {prod} requires the Windows 10 Fall Creators Update (version 1709) or later.
 {prod} does not work on earlier versions of {msw}.
 {msw} 10 Home Edition is not supported.
 
-=== {mac}
+=== Requirements on {mac}
 
 * On {mac}, {prod} requires {mac} 11 Big Sur or later.
 {prod} does not work on earlier versions of {mac}.
 
-=== Linux
+=== Requirements on Linux
 
 * On Linux, {prod} is supported only on the latest two {rhel}/{centos} 8 and 9 minor releases and on the latest two stable {fed} releases.
 * When using {rhel}, the machine running {prod} must be link:https://access.redhat.com/solutions/253273[registered with the Red Hat Customer Portal].
