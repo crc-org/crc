@@ -1,7 +1,7 @@
 ---
 site:
     title: CRC Documentation
-    start_page: crc:getting_started:introducing.adoc
+    start_page: getting_started:getting_started:introducing.adoc
     url: https://crc.dev
     robots: allow
 content:
