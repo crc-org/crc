@@ -1,4 +1,3 @@
-[id="upgrading_{context}"]
 = Upgrading {prod}
 
 Newer versions of the {prod} executable require manual set up to prevent potential incompatibilities with earlier versions.

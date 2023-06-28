@@ -1,4 +1,3 @@
-[id="about-configuration_{context}"]
 = About {prod} configuration
 
 Use the [command]`{bin} config` command to configure both the [command]`{bin}` executable and the {prod} instance.

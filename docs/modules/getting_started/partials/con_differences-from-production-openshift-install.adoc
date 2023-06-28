@@ -1,4 +1,3 @@
-[id="differences-from-production-openshift-install_{context}"]
 = Differences from a production {ocp} installation
 
 The {openshift} preset for {rh-prod} provides a regular {ocp} installation with the following notable differences:

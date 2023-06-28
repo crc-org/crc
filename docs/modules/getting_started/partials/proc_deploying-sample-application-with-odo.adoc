@@ -1,4 +1,3 @@
-[id="deploying-sample-application-with-odo_{context}"]
 = Deploying a sample application with `odo`
 
 You can use [command]`odo` to create {openshift} projects and applications from the command line.

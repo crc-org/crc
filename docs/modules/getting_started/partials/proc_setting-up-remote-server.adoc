@@ -1,4 +1,3 @@
-[id="setting-up-remote-server_{context}"]
 = Setting up {prod} on a remote server
 
 Configure a remote server to run an {ocp} cluster provided by {prod}.

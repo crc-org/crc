@@ -1,4 +1,3 @@
-[id="accessing-the-openshift-web-console_{context}"]
 = Accessing the {openshift} web console
 
 Access the {ocp} web console by using your web browser.

@@ -1,4 +1,3 @@
-[id="starting-monitoring_{context}"]
 = Starting monitoring
 
 {prod} disables cluster monitoring by default to ensure that {prod} can run on a typical notebook.

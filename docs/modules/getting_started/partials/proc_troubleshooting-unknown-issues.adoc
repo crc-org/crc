@@ -1,4 +1,3 @@
-[id="troubleshooting-unknown-issues_{context}"]
 = Troubleshooting unknown issues
 
 Resolve most issues by restarting {prod} with a clean state.

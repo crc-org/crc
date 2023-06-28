@@ -1,10 +1,8 @@
-[id="minimum-system-requirements_{context}"]
 = Minimum system requirements
 
 [role="_abstract"]
 {prod} has the following minimum hardware and operating system requirements.
 
-[id="minimum-system-requirements-hardware_{context}"]
 == Hardware requirements
 
 {prod} is supported on these architectures:
@@ -40,7 +38,6 @@ To assign more resources to the {prod} instance, see link:{crc-gsg-url}#configur
 * 2 GB of free memory
 * 35 GB of storage space
 
-[id="minimum-system-requirements-operating-system_{context}"]
 == Operating system requirements
 
 {prod} requires the following minimum version of a supported operating system:

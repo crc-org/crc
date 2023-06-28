@@ -1,4 +1,3 @@
-[id="about_{context}"]
 = About {prod}
 
 {rh-prod} brings a minimal {ocp} 4 cluster and Podman container runtime to your local computer.

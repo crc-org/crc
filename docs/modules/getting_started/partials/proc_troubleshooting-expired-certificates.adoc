@@ -1,4 +1,3 @@
-[id="troubleshooting-expired-certificates_{context}"]
 = Troubleshooting expired certificates
 
 The system bundle of {ocp} in each released [command]`{bin}` executable expires 1 year after the release.

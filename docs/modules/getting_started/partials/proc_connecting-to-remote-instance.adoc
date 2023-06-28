@@ -1,4 +1,3 @@
-[id="connecting-to-remote-instance_{context}"]
 = Connecting to a remote {prod} instance
 
 Use [application]`dnsmasq` to connect a client machine to a remote server running an {ocp} cluster managed by {prod}.

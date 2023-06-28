@@ -1,4 +1,3 @@
-[id="starting-the-instance_{context}"]
 = Starting the instance
 
 The [command]`{bin} start` command starts the {prod} instance and configured container runtime.
