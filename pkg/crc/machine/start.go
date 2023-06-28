@@ -275,7 +275,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	telemetry.SetCPUs(ctx, startConfig.CPUs)
 	telemetry.SetMemory(ctx, uint64(startConfig.Memory)*1024*1024)
 	telemetry.SetDiskSize(ctx, uint64(startConfig.DiskSize)*1024*1024*1024)
-	telemetry.SetPreset(ctx, startConfig.Preset)
 
 	if err := client.validateStartConfig(startConfig); err != nil {
 		return nil, err
