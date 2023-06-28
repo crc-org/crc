@@ -1,4 +1,3 @@
-[id="deleting-the-instance_{context}"]
 = Deleting the instance
 
 The [command]`{bin} delete` command deletes an existing {prod} instance.

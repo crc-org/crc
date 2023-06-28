@@ -1,4 +1,3 @@
-[id="configuring-usage-data-collection_{context}"]
 = Configuring usage data collection
 
 Consent for usage data collection can be granted or revoked by you at any time using the following configuration commands.

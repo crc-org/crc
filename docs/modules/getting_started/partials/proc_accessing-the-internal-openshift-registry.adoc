@@ -1,4 +1,3 @@
-[id="accessing-the-internal-openshift-registry_{context}"]
 = Accessing the internal {openshift} registry
 
 The {ocp} cluster running in the {prod} instance includes an internal container image registry by default.

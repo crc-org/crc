@@ -1,4 +1,3 @@
-[id="about-usage-data-collection_{example$snip_{project-context}}"]
 = About usage data collection
 
 {prod} prompts you before use for optional, anonymous usage data collection to assist with development.

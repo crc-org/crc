@@ -1,4 +1,3 @@
-[id="setting-up_{context}"]
 = Setting up {prod}
 
 [role="_abstract"]

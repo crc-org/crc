@@ -1,4 +1,3 @@
-[id="configuring-the-instance_{context}"]
 = Configuring the instance
 
 Use the `cpus` and `memory` properties to configure the default number of vCPUs and amount of memory available to the {prod} instance, respectively.

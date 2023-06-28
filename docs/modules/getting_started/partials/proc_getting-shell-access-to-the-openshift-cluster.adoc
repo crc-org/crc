@@ -1,4 +1,3 @@
-[id="getting-shell-access-to-the-openshift-cluster_{context}"]
 = Getting shell access to the {openshift} cluster
 
 To access the cluster for troubleshooting or debugging purposes, follow this procedure.

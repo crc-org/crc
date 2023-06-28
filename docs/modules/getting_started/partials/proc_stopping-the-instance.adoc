@@ -1,4 +1,3 @@
-[id="stopping-the-instance_{context}"]
 = Stopping the instance
 
 The [command]`{bin} stop` command stops the running {prod} instance and container runtime.

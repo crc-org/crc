@@ -1,4 +1,3 @@
-[id="troubleshooting-bundle-version-mismatch_{context}"]
 = Troubleshooting bundle version mismatch
 
 Created {prod} instances contain bundle information and instance data.

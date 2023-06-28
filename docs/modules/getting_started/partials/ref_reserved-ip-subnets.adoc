@@ -1,4 +1,3 @@
-[id="reserved-ip-subnets_{context}"]
 = Reserved IP subnets
 
 The {ocp} cluster managed by {prod} reserves IP subnets for internal use, which should not collide with your host network.

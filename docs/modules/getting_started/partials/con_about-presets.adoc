@@ -1,4 +1,3 @@
-[id="about-presets_{example$snip_{project-context}}"]
 = About presets
 
 [role="_abstract"]

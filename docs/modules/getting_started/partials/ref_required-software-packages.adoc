@@ -1,4 +1,3 @@
-[id="required-software-packages_{context}"]
 = Required software packages for Linux
 
 {prod} requires the `libvirt` and `NetworkManager` packages to run on Linux.
