@@ -12,7 +12,7 @@ These DNS domains are served by a `dnsmasq` DNS container running inside the {pr
 The [command]`{bin} setup` command detects and adjusts your system DNS configuration so that it can resolve these domains.
 Additional checks are done to verify DNS is properly configured when running [command]`{bin} start`.
 
-== Linux
+== DNS on Linux
 
 On Linux, depending on your distribution, {prod} expects the following DNS configuration:
 
