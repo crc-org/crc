@@ -168,6 +168,9 @@ func (c *Client) upload(action string, a analytics.Properties) error {
 	if c.config.Get(crcConfig.ConsentTelemetry).AsString() != "yes" {
 		return nil
 	}
+	// Add preset value as property for each event before uploading to segment
+	preset := crcConfig.GetPreset(c.config)
+	a = a.Set("preset", preset)
 
 	identify := c.identifyNew()
 	hash, err := identifyHash(identify)
