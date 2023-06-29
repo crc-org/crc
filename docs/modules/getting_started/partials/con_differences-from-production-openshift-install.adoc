@@ -14,7 +14,7 @@ This might cause other differences, particularly with external networking.
 The {ocp} cluster provided by {prod} also includes the following non-customizable cluster settings.
 These settings should not be modified:
 
-* Use the ***.crc.testing** domain.
+* The ***.crc.testing** domain.
 * The address range used for internal cluster communication.
 ** The cluster uses the **172** address range.
 This can cause issues when, for example, a proxy is run in the same address space.
