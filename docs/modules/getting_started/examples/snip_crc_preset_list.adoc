@@ -1,4 +1,4 @@
-* {ocp}
-* {okd}
-* {ushift}
-* Podman container runtime
+`openshift`:: {ocp}
+`okd`:: {okd}
+`microshift`::  {ushift}
+`podman`:: Podman container runtime
