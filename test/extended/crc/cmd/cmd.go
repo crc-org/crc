@@ -131,31 +131,16 @@ func WaitForClusterInState(state string) error {
 }
 
 func CheckCRCStatus(state string) error {
-	expressionOpenshift := `.*OpenShift: .*Running \(v\d+\.\d+\.\d+.*\).*`
-	expressionMicroshift := `.*MicroShift: .*Running \(v\d+\.\d+\.\d+.*\).*`
-	expressionPodman := `.*Podman: .*\d+\.\d+\.\d+.*`
-	var expression string
 
-	err := util.ExecuteCommand("crc config get preset")
-	if err != nil {
-		return err
-	}
+	// Podman status does not show Running, so need to OR it separately
+	expression := `.*CRC VM: *Running\s.*: *Running|.*CRC VM: *Running\s.*Podman: *\d+\.\d+\.\d+`
 
-	containsPreset := util.GetLastCommandOutput("stdout")
-	switch {
-	case strings.Contains(containsPreset, "podman"):
-		expression = expressionPodman
-	case strings.Contains(containsPreset, "microshift"):
-		expression = expressionMicroshift
-	default:
-		expression = expressionOpenshift
-	}
-
+	// Does not apply to Podman preset
 	if state == "stopped" {
-		expression = ".*OpenShift: .*Stopped.*"
+		expression = `.*CRC VM:.*\s.*: .*Stopped.*`
 	}
 
-	err = util.ExecuteCommand(CRC("status").ToString())
+	err := util.ExecuteCommand(CRC("status").ToString())
 	if err != nil {
 		return err
 	}
