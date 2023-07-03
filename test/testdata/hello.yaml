@@ -24,7 +24,7 @@ spec:
         deployment: hello
     spec:
       containers:
-      - image: image-registry.openshift-image-registry.svc:5000/testproj-img/hello:test
+      - image: image-registry.openshift-image-registry.svc:5000/testproj/hello:test
         imagePullPolicy: IfNotPresent
         name: hello
         ports:

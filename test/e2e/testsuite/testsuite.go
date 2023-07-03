@@ -251,6 +251,15 @@ func InitializeScenario(s *godog.ScenarioContext) {
 
 		for _, tag := range sc.Tags {
 
+			// delete testproj namespace after a Scenario that used it
+			if tag.Name == "@needs_namespace" {
+				err := util.ExecuteCommand("oc delete namespace testproj")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+			}
+
 			// move host's date 13 months back and turn timesync on
 			if tag.Name == "@timesync" {
 				err := util.ExecuteCommand("sudo date -s '-13 month'")
@@ -957,12 +966,12 @@ func PullLoginTagPushImageSucceeds(image string) error {
 		return err
 	}
 
-	_, err = cmd.RunPodmanExpectSuccess("tag", "quay.io/centos7/httpd-24-centos7", "default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test")
+	_, err = cmd.RunPodmanExpectSuccess("tag", "quay.io/centos7/httpd-24-centos7", "default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test")
 	if err != nil {
 		return err
 	}
 
-	_, err = cmd.RunPodmanExpectSuccess("push", "default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test", "--tls-verify=false")
+	_, err = cmd.RunPodmanExpectSuccess("push", "default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test", "--tls-verify=false")
 	if err != nil {
 		return err
 	}
