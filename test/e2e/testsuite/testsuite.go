@@ -683,6 +683,9 @@ func RemoveBundleFromCache(presetName string) error {
 func ConfigFileInCRCHomeContainsKeyMatchingValue(format string, configFile string, condition string, keyPath string, expectedValue string) error {
 
 	if expectedValue == "current bundle" {
+		if !userProvidedBundle {
+			return ConfigFileInCRCHomeContainsKey("JSON", "crc.json", "does not contain", "bundle")
+		}
 		expectedValue = fmt.Sprintf(".*%s", bundleName)
 	}
 	configPath := filepath.Join(util.CRCHome, configFile)
