@@ -7,12 +7,11 @@ Feature: 4 Openshift stories
 
 	# End-to-end health check
 
-	@darwin @linux @windows @startstop @testdata @story_health
+	@darwin @linux @windows @startstop @testdata @story_health @needs_namespace
 	Scenario: Overall cluster health
-		Then executing "oc create namespace testproj" succeeds
-		And executing "oc project testproj" succeeds
-		And executing "oc apply -f httpd-example.yaml" succeeds
-		When executing "oc rollout status deployment httpd-example" succeeds
+		Given executing "oc create namespace testproj" succeeds
+		When executing "oc apply -f httpd-example.yaml" succeeds
+		And executing "oc rollout status deployment httpd-example" succeeds
 		Then stdout should contain "successfully rolled out"
 		When executing "oc create configmap www-content --from-file=index.html=httpd-example-index.html" succeeds
 		Then stdout should contain "configmap/www-content created"
@@ -32,17 +31,15 @@ Feature: 4 Openshift stories
 		Then executing "curl -s http://httpd-example-testproj.apps-crc.testing" succeeds
 		And stdout should contain "Hello CRC!"
 		Then with up to "4" retries with wait period of "1m" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
-		And executing "oc delete namespace testproj" succeeds
 
 	# Local image to image-registry feature
 
-	@darwin @linux @windows @testdata @story_registry @mirror-registry
+	@darwin @linux @windows @testdata @story_registry @mirror-registry @needs_namespace
 	Scenario: Mirror image to OpenShift image registry
-		Given executing "oc create namespace testproj-img" succeeds
-		And executing "oc project testproj-img" succeeds
+		Given executing "oc create namespace testproj" succeeds
 		# mirror
 		When executing "oc registry login --insecure=true" succeeds
-		Then executing "oc image mirror quay.io/centos7/httpd-24-centos7:latest=default-route-openshift-image-registry.apps-crc.testing/testproj-img/hello:test --insecure=true --filter-by-os=linux/amd64" succeeds
+		Then executing "oc image mirror quay.io/centos7/httpd-24-centos7:latest=default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test --insecure=true --filter-by-os=linux/amd64" succeeds
 		And executing "oc set image-lookup hello" succeeds
 		# deploy
 		When executing "oc apply -f hello.yaml" succeeds
@@ -52,14 +49,11 @@ Feature: 4 Openshift stories
 		Then stdout should contain "Running"
 		When executing "oc logs deployment/hello" succeeds
 		Then stdout should contain "httpd"
-		# cleanup
-		And executing "oc delete namespace testproj-img" succeeds
 
-	@darwin @linux @windows @testdata @story_registry @local-registry
+	@darwin @linux @windows @testdata @story_registry @local-registry @needs_namespace
 	Scenario: Pull image locally, push to registry, deploy
 		Given podman command is available
-		And executing "oc create namespace testproj-img" succeeds
-		And executing "oc project testproj-img" succeeds
+		And executing "oc create namespace testproj" succeeds
 		When pulling image "quay.io/centos7/httpd-24-centos7", logging in, and pushing local image to internal registry succeeds
 		And executing "oc apply -f hello.yaml" succeeds
 		When executing "oc rollout status deployment hello" succeeds
@@ -68,12 +62,12 @@ Feature: 4 Openshift stories
 		Then stdout should contain "Running"
 		When executing "oc logs deployment/hello" succeeds
 		Then stdout should contain "httpd"
-		And executing "oc delete namespace testproj-img" succeeds
 
 	# Operator from marketplace
 
-	@darwin @linux @windows @testdata @story_marketplace @cleanup
+	@darwin @linux @windows @testdata @story_marketplace @cleanup @needs_namespace
 	Scenario: Install new operator
+		Given executing "oc create namespace testproj" succeeds
 		When executing "oc apply -f redis-sub.yaml" succeeds
 		Then with up to "20" retries with wait period of "30s" command "oc get csv" output matches ".*redis-operator\.(.*)Succeeded$"
 		# install redis operator
