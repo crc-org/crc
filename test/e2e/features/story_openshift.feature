@@ -2,7 +2,7 @@
 Feature: 4 Openshift stories
 
 	Background:
-		Given ensuring CRC cluster is running succeeds
+		Given ensuring CRC cluster is running
 		And ensuring user is logged in succeeds
 
 	# End-to-end health check

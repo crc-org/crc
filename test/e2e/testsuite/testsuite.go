@@ -495,8 +495,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		ExecuteSingleCommandWithExpectedExitStatus)
 	s.Step(`^execut(?:e|ing) podman command (.*) (succeeds|fails)$`,
 		ExecutingPodmanCommandSucceedsFails)
-	s.Step(`^ensuring CRC cluster is running (succeeds|fails)$`,
-		EnsureCRCIsRunningSucceedsOrFails)
+	s.Step(`^ensuring CRC cluster is running$`,
+		EnsureCRCIsRunning)
 	s.Step(`^ensuring user is logged in (succeeds|fails)`,
 		EnsureUserIsLoggedIntoClusterSucceedsOrFails)
 	s.Step(`^podman command is available$`,
@@ -800,58 +800,49 @@ func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, ex
 	cmd := fmt.Sprintf("%s -n %s -p '%s' %s", crcStart, nameserver, pullSecretFile, extraBundleArgs)
 	return util.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
-func EnsureCRCIsRunningSucceedsOrFails(expected string) error {
 
-	err := crcCmd.WaitForClusterInState("running")
+func EnsureCRCIsRunning() error {
 
-	// (1) If cluster is NOT expected to be Running and it is NOT running
-	if expected == "fails" && err != nil {
-		return nil
-	}
+	err := crcCmd.CheckCRCStatus("running")
 
-	// (2) If cluster is NOT expected to be Running but it IS running, stop it
-	if expected == "fails" && err == nil {
-		miniErr := util.ExecuteCommandSucceedsOrFails("crc stop", "succeeds")
-		if miniErr != nil {
-			return err
-		}
-		return nil
-	}
-
-	// (3) If cluster IS expected to be Running and it IS
-	if expected == "succeeds" && err == nil {
-		return nil
-	}
-
-	// (4) If cluster IS expected to be Running but is NOT, start it with 12000 memory
-	err = SetConfigPropertyToValueSucceedsOrFails("memory", "12000", expected)
+	// if cluster is not in a Running state
 	if err != nil {
-		return err
-	}
-
-	err = ExecuteSingleCommandWithExpectedExitStatus("setup", expected) // uses the right bundle argument if needed
-	if err != nil {
-		return err
-	}
-
-	if runtime.GOOS == "windows" {
-		err = StartCRCWithDefaultBundleAndNameServerSucceedsOrFails("10.75.5.25", expected)
-	} else {
-		err = StartCRCWithDefaultBundleSucceedsOrFails(expected)
-	}
-	if err != nil {
-		return err
-	}
-
-	// We're not testing if the cluster comes up fast enough, just need it Running
-	err = crcCmd.WaitForClusterInState("running")
-	if err != nil {
-		err = crcCmd.WaitForClusterInState("running")
+		// make sure cluster doesn't exist in unexpected state
+		err = ExecuteCRCCommand("cleanup")
 		if err != nil {
 			return err
 		}
-	}
 
+		// set up and start the cluster with lots of memory
+		err = SetConfigPropertyToValueSucceedsOrFails("memory", "12000", "succeeds")
+		if err != nil {
+			return err
+		}
+
+		err = ExecuteSingleCommandWithExpectedExitStatus("setup", "succeeds") // uses the right bundle argument if needed
+		if err != nil {
+			return err
+		}
+
+		if runtime.GOOS == "windows" {
+			err = StartCRCWithDefaultBundleAndNameServerSucceedsOrFails("10.75.5.25", "succeeds")
+		} else {
+			err = StartCRCWithDefaultBundleSucceedsOrFails("succeeds")
+		}
+		if err != nil {
+			return err
+		}
+
+		// We're not testing if the cluster comes up fast enough, just need it Running
+		err = crcCmd.WaitForClusterInState("running")
+		if err != nil {
+			err = crcCmd.WaitForClusterInState("running")
+			if err != nil {
+				return err
+			}
+		}
+
+	}
 	return nil
 }
 
