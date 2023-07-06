@@ -116,6 +116,14 @@ var (
 	PasswdFilePath     = filepath.Join(MachineInstanceDir, DefaultName, "passwd")
 )
 
+func InstanceDirName() string {
+	return InstanceName()
+}
+
+func InstanceName() string {
+	return "crc"
+}
+
 func GetDefaultBundlePath(preset crcpreset.Preset) string {
 	return filepath.Join(MachineCacheDir, GetDefaultBundle(preset))
 }
