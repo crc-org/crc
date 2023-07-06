@@ -22,7 +22,6 @@ func CreateHost(machineConfig config.MachineConfig) *libvirt.Driver {
 		libvirtDriver.Network = DefaultNetwork
 	}
 
-	libvirtDriver.StoragePool = DefaultStoragePool
 	libvirtDriver.SharedDirs = configureShareDirs(machineConfig)
 
 	return libvirtDriver
