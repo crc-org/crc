@@ -203,12 +203,12 @@ func removeCrcVM() (err error) {
 		// This means that there is no crc VM exist
 		return nil
 	}
-	stopVMCommand := fmt.Sprintf(`Stop-VM -Name "%s" -TurnOff -Force`, constants.DefaultName)
+	stopVMCommand := fmt.Sprintf(`Stop-VM -Name "%s" -TurnOff -Force`, constants.InstanceName())
 	if _, _, err := powershell.Execute(stopVMCommand); err != nil {
 		// ignore the error as this is useless (prefer not to use nolint here)
 		return err
 	}
-	removeVMCommand := fmt.Sprintf(`Remove-VM -Name "%s" -Force`, constants.DefaultName)
+	removeVMCommand := fmt.Sprintf(`Remove-VM -Name "%s" -Force`, constants.InstanceName())
 	if _, _, err := powershell.Execute(removeVMCommand); err != nil {
 		// ignore the error as this is useless (prefer not to use nolint here)
 		return err

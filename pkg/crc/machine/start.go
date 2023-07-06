@@ -1023,7 +1023,7 @@ func bundleMismatchWithPreset(preset crcPreset.Preset, bundleMetadata *bundle.Cr
 func updateCockpitConsoleBearerToken(sshRunner *crcssh.Runner) error {
 	logging.Info("Adding new bearer token for cockpit webconsole")
 
-	tokenPath := filepath.Join(constants.MachineInstanceDir, constants.DefaultName, "cockpit-bearer-token")
+	tokenPath := filepath.Join(constants.MachineInstanceDir, constants.InstanceDirName(), "cockpit-bearer-token")
 	token := cluster.GenerateCockpitBearerToken()
 
 	if err := os.WriteFile(tokenPath, []byte(token), 0600); err != nil {

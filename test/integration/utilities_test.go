@@ -98,7 +98,7 @@ func RunCRCExpectFail(args ...string) (string, error) {
 
 // Send command to CRC VM via SSH
 func SendCommandToVM(cmd string) (string, error) {
-	client := machine.NewClient(constants.DefaultName, false,
+	client := machine.NewClient(constants.InstanceName(), false,
 		crcConfig.New(crcConfig.NewEmptyInMemoryStorage(), crcConfig.NewEmptyInMemorySecretStorage()),
 	)
 	connectionDetails, err := client.ConnectionDetails()
