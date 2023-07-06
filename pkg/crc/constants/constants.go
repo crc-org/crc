@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	DefaultName     = "crc"
-	DefaultDiskSize = 31
+	DefaultClusterName = "crc"
+	DefaultDiskSize    = 31
 
 	DefaultPersistentVolumeSize = 15
 

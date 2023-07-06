@@ -29,7 +29,7 @@ func UseOCWithConfig(machineName string) Config {
 		OcExecutablePath: filepath.Join(constants.CrcOcBinDir, constants.OcExecutableName),
 		KubeconfigPath:   filepath.Join(constants.MachineInstanceDir, machineName, "kubeconfig"),
 		Context:          constants.DefaultContext,
-		Cluster:          constants.DefaultName,
+		Cluster:          constants.DefaultClusterName,
 		Timeout:          defaultTimeout,
 	}
 }
@@ -81,7 +81,7 @@ func UseOCWithSSH(sshRunner *ssh.Runner) Config {
 		OcExecutablePath: "oc",
 		KubeconfigPath:   "/opt/kubeconfig",
 		Context:          constants.DefaultContext,
-		Cluster:          constants.DefaultName,
+		Cluster:          constants.DefaultClusterName,
 		Timeout:          defaultTimeout,
 	}
 }
