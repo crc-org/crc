@@ -16,6 +16,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/libvirt"
+	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/systemd"
 	"github.com/crc-org/crc/v2/pkg/crc/systemd/states"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
@@ -576,48 +577,52 @@ func removeLibvirtCrcNetwork() error {
 	return nil
 }
 
-func removeCrcVM() error {
-	stdout, _, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "domstate", constants.InstanceName())
-	if err != nil {
-		//  User may have run `crc delete` before `crc cleanup`
-		//  in that case there is no crc vm so return early.
-		return nil
-	}
-	if strings.TrimSpace(stdout) == "running" {
-		_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "destroy", constants.InstanceName())
+func removeCrcVM(preset crcpreset.Preset) func() error {
+	return func() error {
+		stdout, _, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "domstate", constants.InstanceName(preset))
+		if err != nil {
+			//  User may have run `crc delete` before `crc cleanup`
+			//  in that case there is no crc vm so return early.
+			return nil
+		}
+		if strings.TrimSpace(stdout) == "running" {
+			_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "destroy", constants.InstanceName(preset))
+			if err != nil {
+				logging.Debugf("%v : %s", err, stderr)
+				return fmt.Errorf("Failed to destroy 'crc' VM")
+			}
+		}
+		_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "undefine", constants.InstanceName(preset))
 		if err != nil {
 			logging.Debugf("%v : %s", err, stderr)
-			return fmt.Errorf("Failed to destroy 'crc' VM")
+			return fmt.Errorf("Failed to undefine 'crc' VM")
 		}
-	}
-	_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "undefine", constants.InstanceName())
-	if err != nil {
-		logging.Debugf("%v : %s", err, stderr)
-		return fmt.Errorf("Failed to undefine 'crc' VM")
-	}
-	logging.Debug("'crc' VM is removed")
-	return nil
-}
-
-func removeLibvirtStoragePool() error {
-	_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "pool-info", constants.InstanceName())
-	if err != nil {
-		logging.Debugf("%v : %s", err, stderr)
-		// Pool does not exist
+		logging.Debug("'crc' VM is removed")
 		return nil
 	}
-	_, stderr, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "pool-destroy", constants.InstanceName())
-	if err != nil {
-		logging.Debugf("%v : %s", err, stderr)
-		// ignore error, we want to try to delete the pool regardless of success or not
+}
+
+func removeLibvirtStoragePool(preset crcpreset.Preset) func() error {
+	return func() error {
+		_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "pool-info", constants.InstanceName(preset))
+		if err != nil {
+			logging.Debugf("%v : %s", err, stderr)
+			// Pool does not exist
+			return nil
+		}
+		_, stderr, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "pool-destroy", constants.InstanceName(preset))
+		if err != nil {
+			logging.Debugf("%v : %s", err, stderr)
+			// ignore error, we want to try to delete the pool regardless of success or not
+		}
+		_, stderr, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "pool-undefine", constants.InstanceName(preset))
+		if err != nil {
+			logging.Debugf("%v : %s", err, stderr)
+			return fmt.Errorf("Failed to undefine 'crc' libvirt storage pool")
+		}
+		logging.Debug("'crc' libvirt storage has been removed")
+		return nil
 	}
-	_, stderr, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "pool-undefine", constants.InstanceName())
-	if err != nil {
-		logging.Debugf("%v : %s", err, stderr)
-		return fmt.Errorf("Failed to undefine 'crc' libvirt storage pool")
-	}
-	logging.Debug("'crc' libvirt storage has been removed")
-	return nil
 }
 
 func trimSpacesFromXML(str string) string {

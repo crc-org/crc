@@ -16,6 +16,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine"
+	"github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/semaphore"
@@ -45,7 +46,7 @@ func RunDiagnose(dir string) error {
 		file(constants.ConfigPath),
 		file(constants.LogFilePath),
 		file(constants.DaemonLogFilePath),
-		file(filepath.Join(constants.MachineBaseDir, "machines", constants.InstanceDirName(), "config.json")),
+		file(filepath.Join(constants.MachineBaseDir, "machines", constants.InstanceDirName(preset.OpenShift), "config.json")),
 		file("/etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf"),
 		file("/etc/NetworkManager/dnsmasq.d/crc.conf"),
 		file("/etc/hosts"),
@@ -231,7 +232,8 @@ func (collector *ContainerLogCollector) Collect(w Writer) error {
 func sshClient() (ssh.Client, error) {
 	cfg := crcConfig.New(crcConfig.NewEmptyInMemoryStorage(), crcConfig.NewEmptyInMemorySecretStorage())
 	crcConfig.RegisterSettings(cfg)
-	client := machine.NewClient(constants.InstanceName(), true, cfg)
+	preset := crcConfig.GetPreset(cfg)
+	client := machine.NewClient(constants.InstanceName(preset), true, cfg)
 	connectionDetails, err := client.ConnectionDetails()
 	if err != nil {
 		return nil, err

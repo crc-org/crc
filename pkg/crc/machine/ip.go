@@ -17,10 +17,11 @@ func (client *client) ConnectionDetails() (*types.ConnectionDetails, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot get IP")
 	}
+
 	return &types.ConnectionDetails{
 		IP:          ip,
 		SSHPort:     vm.SSHPort(),
 		SSHUsername: constants.DefaultSSHUser,
-		SSHKeys:     []string{constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath(), vm.bundle.GetSSHKeyPath()},
+		SSHKeys:     []string{constants.GetPrivateKeyPath(client.GetPreset()), constants.GetRsaPrivateKeyPath(client.GetPreset()), vm.bundle.GetSSHKeyPath()},
 	}, nil
 }

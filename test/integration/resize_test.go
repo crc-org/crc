@@ -4,11 +4,13 @@ import (
 	"os/exec"
 	"runtime"
 
+	"github.com/crc-org/crc/v2/pkg/crc/preset"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("vary VM parameters: memory cpus, disk", Label("openshift-preset", "vm-resize"), func() {
+	var preset = preset.OpenShift
 
 	Describe("use default values", func() {
 
@@ -49,20 +51,20 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Label("openshift-prese
 		})
 
 		It("check VM's memory size", func() {
-			out, err := SendCommandToVM("cat /proc/meminfo")
+			out, err := SendCommandToVM("cat /proc/meminfo", preset)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*11\d{6}`))
 		})
 
 		It("check VM's number of cpus", func() {
-			out, err := SendCommandToVM("cat /proc/cpuinfo")
+			out, err := SendCommandToVM("cat /proc/cpuinfo", preset)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`processor[\s]*\:[\s]*4`))
 			Expect(out).ShouldNot(MatchRegexp(`processor[\s]*\:[\s]*5`))
 		})
 
 		It("check VM's disk size", func() {
-			out, err := SendCommandToVM("df -h | grep sysroot")
+			out, err := SendCommandToVM("df -h | grep sysroot", preset)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`.*40G[\s].*[\s]/sysroot`))
 		})
@@ -80,20 +82,20 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Label("openshift-prese
 		})
 
 		It("check VM's memory size", func() {
-			out, err := SendCommandToVM("cat /proc/meminfo")
+			out, err := SendCommandToVM("cat /proc/meminfo", preset)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*12\d{6}`))
 		})
 
 		It("check VM's number of cpus", func() {
-			out, err := SendCommandToVM("cat /proc/cpuinfo")
+			out, err := SendCommandToVM("cat /proc/cpuinfo", preset)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`processor[\s]*\:[\s]*5`))
 			Expect(out).ShouldNot(MatchRegexp(`processor[\s]*\:[\s]*6`))
 		})
 
 		It("check VM's disk size", func() {
-			out, err := SendCommandToVM("df -h | grep sysroot")
+			out, err := SendCommandToVM("df -h | grep sysroot", preset)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`.*50G[\s].*[\s]/sysroot`))
 		})
@@ -130,13 +132,13 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Label("openshift-prese
 		})
 
 		It("check VM's memory size", func() {
-			out, err := SendCommandToVM("cat /proc/meminfo")
+			out, err := SendCommandToVM("cat /proc/meminfo", preset)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*9\d{6}`)) // there should be a check if cluster needs >9216MiB; it isn't there and mem gets scaled down regardless
 		})
 
 		It("check VM's number of cpus", func() {
-			out, err := SendCommandToVM("cat /proc/cpuinfo")
+			out, err := SendCommandToVM("cat /proc/cpuinfo", preset)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(out).Should(MatchRegexp(`processor[\s]*\:[\s]*3`))
 			Expect(out).ShouldNot(MatchRegexp(`processor[\s]*\:[\s]*4`))
@@ -144,7 +146,7 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Label("openshift-prese
 
 		if runtime.GOOS != "darwin" {
 			It("check VM's disk size", func() {
-				out, err := SendCommandToVM("df -h | grep sysroot")
+				out, err := SendCommandToVM("df -h | grep sysroot", preset)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(out).Should(MatchRegexp(`.*50G[\s].*[\s]/sysroot`))
 			})

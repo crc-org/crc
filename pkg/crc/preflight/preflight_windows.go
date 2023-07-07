@@ -72,12 +72,16 @@ var hypervPreflightChecks = []Check{
 	},
 }
 
-var cleanupCheckRemoveCrcVM = Check{
-	cleanupDescription: "Removing crc's virtual machine",
-	cleanup:            removeCrcVM,
-	flags:              CleanUpOnly,
+func cleanupChecks(preset crcpreset.Preset) []Check {
+	return []Check{
+		{
+			cleanupDescription: "Removing crc's virtual machine",
+			cleanup:            removeCrcVM(preset),
+			flags:              CleanUpOnly,
 
-	labels: labels{Os: Windows},
+			labels: labels{Os: Windows},
+		},
+	}
 }
 
 var vsockChecks = []Check{
@@ -219,7 +223,7 @@ func getChecks(bundlePath string, preset crcpreset.Preset, enableBundleQuayFallb
 	checks = append(checks, vsockChecks...)
 	checks = append(checks, bundleCheck(bundlePath, preset, enableBundleQuayFallback))
 	checks = append(checks, genericCleanupChecks...)
-	checks = append(checks, cleanupCheckRemoveCrcVM)
+	checks = append(checks, cleanupChecks(preset)...)
 	checks = append(checks, daemonTaskChecks...)
 	checks = append(checks, adminHelperServiceCheks...)
 	return checks

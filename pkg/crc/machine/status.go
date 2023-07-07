@@ -133,7 +133,7 @@ func (client *client) getDiskDetails(vm *virtualMachine) (int64, int64) {
 }
 
 func getOpenShiftStatus(ctx context.Context, ip string) types.OpenshiftStatus {
-	status, err := cluster.GetClusterOperatorsStatus(ctx, ip, constants.KubeconfigFilePath)
+	status, err := cluster.GetClusterOperatorsStatus(ctx, ip, constants.GetKubeconfigFilePath(preset.OpenShift))
 	if err != nil {
 		logging.Debugf("cannot get OpenShift status: %v", err)
 		return types.OpenshiftUnreachable
@@ -142,7 +142,7 @@ func getOpenShiftStatus(ctx context.Context, ip string) types.OpenshiftStatus {
 }
 
 func getMicroShiftStatus(ctx context.Context, ip string) types.OpenshiftStatus {
-	status, err := cluster.GetClusterNodeStatus(ctx, ip, constants.KubeconfigFilePath)
+	status, err := cluster.GetClusterNodeStatus(ctx, ip, constants.GetKubeconfigFilePath(preset.Microshift))
 	if err != nil {
 		logging.Debugf("failed to get microshift node status: %v", err)
 		return types.OpenshiftUnreachable

@@ -18,7 +18,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
+func libvirtPreflightChecks(preset crcpreset.Preset, distro *linux.OsRelease) []Check {
 	checks := []Check{
 		{
 			configKeySuffix:  "check-virt-enabled",
@@ -94,14 +94,14 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 		},
 		{
 			cleanupDescription: "Removing crc libvirt storage pool",
-			cleanup:            removeLibvirtStoragePool,
+			cleanup:            removeLibvirtStoragePool(preset),
 			flags:              CleanUpOnly,
 
 			labels: labels{Os: Linux},
 		},
 		{
 			cleanupDescription: "Removing crc's virtual machine",
-			cleanup:            removeCrcVM,
+			cleanup:            removeCrcVM(preset),
 			flags:              CleanUpOnly,
 
 			labels: labels{Os: Linux},
@@ -126,8 +126,7 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			fix:                fixDaemonSystemdSockets,
 			cleanupDescription: "Removing crc daemon systemd socket units",
 			cleanup:            removeDaemonSystemdSockets,
-
-			labels: labels{Os: Linux, SystemdUser: Supported},
+			labels:             labels{Os: Linux, SystemdUser: Supported},
 		},
 		{
 			checkDescription: "Checking if crc daemon will be autostarted",
@@ -369,7 +368,7 @@ func getChecks(distro *linux.OsRelease, bundlePath string, preset crcpreset.Pres
 	checks = append(checks, genericPreflightChecks(preset)...)
 	checks = append(checks, memoryCheck(preset))
 	checks = append(checks, genericCleanupChecks...)
-	checks = append(checks, libvirtPreflightChecks(distro)...)
+	checks = append(checks, libvirtPreflightChecks(preset, distro)...)
 	checks = append(checks, ubuntuPreflightChecks...)
 	checks = append(checks, nmPreflightChecks...)
 	checks = append(checks, systemdResolvedPreflightChecks...)

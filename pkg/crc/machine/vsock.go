@@ -87,7 +87,7 @@ const (
 
 func vsockPorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint) []types.ExposeRequest {
 	socketProtocol := types.UNIX
-	socketLocal := constants.GetHostDockerSocketPath()
+	socketLocal := constants.GetHostDockerSocketPath(preset)
 	if runtime.GOOS == "windows" {
 		socketProtocol = types.NPIPE
 		socketLocal = constants.DefaultPodmanNamedPipe
@@ -101,7 +101,7 @@ func vsockPorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint)
 		{
 			Protocol: socketProtocol,
 			Local:    socketLocal,
-			Remote:   getSSHTunnelURI(),
+			Remote:   getSSHTunnelURI(preset),
 		},
 	}
 
@@ -137,14 +137,14 @@ func vsockPorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint)
 	return exposeRequest
 }
 
-func getSSHTunnelURI() string {
+func getSSHTunnelURI(preset crcPreset.Preset) string {
 	u := url.URL{
 		Scheme:     "ssh-tunnel",
 		User:       url.User("core"),
 		Host:       net.JoinHostPort(virtualMachineIP, internalSSHPort),
 		Path:       "/run/podman/podman.sock",
 		ForceQuery: false,
-		RawQuery:   fmt.Sprintf("key=%s", url.QueryEscape(constants.GetPrivateKeyPath())),
+		RawQuery:   fmt.Sprintf("key=%s", url.QueryEscape(constants.GetPrivateKeyPath(preset))),
 	}
 	return u.String()
 }

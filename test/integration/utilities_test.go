@@ -13,6 +13,7 @@ import (
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/machine"
+	crcPreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 	"github.com/crc-org/crc/v2/test/extended/crc/cmd"
 	. "github.com/onsi/gomega"
@@ -97,8 +98,8 @@ func RunCRCExpectFail(args ...string) (string, error) {
 }
 
 // Send command to CRC VM via SSH
-func SendCommandToVM(cmd string) (string, error) {
-	client := machine.NewClient(constants.InstanceName(), false,
+func SendCommandToVM(cmd string, preset crcPreset.Preset) (string, error) {
+	client := machine.NewClient(constants.InstanceName(preset), false,
 		crcConfig.New(crcConfig.NewEmptyInMemoryStorage(), crcConfig.NewEmptyInMemorySecretStorage()),
 	)
 	connectionDetails, err := client.ConnectionDetails()

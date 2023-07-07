@@ -53,7 +53,7 @@ func runPodmanEnv() error {
 	// Todo: This need to fixed by using named pipe for windows
 	// https://docs.docker.com/desktop/faqs/#how-do-i-connect-to-the-remote-docker-engine-api
 	if runtime.GOOS != "windows" {
-		fmt.Println(shell.GetEnvString(userShell, "DOCKER_HOST", fmt.Sprintf("unix://%s", constants.GetHostDockerSocketPath())))
+		fmt.Println(shell.GetEnvString(userShell, "DOCKER_HOST", fmt.Sprintf("unix://%s", constants.GetHostDockerSocketPath(client.GetPreset()))))
 	} else {
 		fmt.Println(shell.GetEnvString(userShell, "DOCKER_HOST", "npipe:////./pipe/crc-podman"))
 	}

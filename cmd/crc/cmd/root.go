@@ -155,7 +155,8 @@ func newConfig() (*crcConfig.Config, *crcConfig.ViperStorage, error) {
 }
 
 func newMachine() machine.Client {
-	return machine.NewSynchronizedMachine(machine.NewClient(constants.InstanceName(), logging.IsDebug(), config))
+	preset := crcConfig.GetPreset(config)
+	return machine.NewSynchronizedMachine(machine.NewClient(constants.InstanceName(preset), logging.IsDebug(), config))
 }
 
 func addForceFlag(cmd *cobra.Command) {

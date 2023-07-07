@@ -18,6 +18,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/v2/pkg/crc/oc"
+	crcPreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 	crctls "github.com/crc-org/crc/v2/pkg/crc/tls"
 	"github.com/crc-org/crc/v2/pkg/crc/validation"
@@ -191,7 +192,7 @@ func EnsurePullSecretPresentInTheCluster(ctx context.Context, ocConfig oc.Config
 	return nil
 }
 
-func EnsureGeneratedClientCAPresentInTheCluster(ctx context.Context, ocConfig oc.Config, sshRunner *ssh.Runner, selfSignedCACert *x509.Certificate, adminCert string) error {
+func EnsureGeneratedClientCAPresentInTheCluster(ctx context.Context, ocConfig oc.Config, sshRunner *ssh.Runner, selfSignedCACert *x509.Certificate, adminCert string, preset crcPreset.Preset) error {
 	selfSignedCAPem := crctls.CertToPem(selfSignedCACert)
 	if err := WaitForOpenshiftResource(ctx, ocConfig, "configmaps"); err != nil {
 		return err
@@ -217,7 +218,7 @@ func EnsureGeneratedClientCAPresentInTheCluster(ctx context.Context, ocConfig oc
 	if err != nil {
 		return fmt.Errorf("Failed to patch admin-kubeconfig-client-ca config map with new CA` %v: %s", err, stderr)
 	}
-	if err := sshRunner.CopyFile(constants.KubeconfigFilePath, ocConfig.KubeconfigPath, 0644); err != nil {
+	if err := sshRunner.CopyFile(constants.GetKubeconfigFilePath(preset), ocConfig.KubeconfigPath, 0644); err != nil {
 		return fmt.Errorf("Failed to copy generated kubeconfig file to VM: %v", err)
 	}
 

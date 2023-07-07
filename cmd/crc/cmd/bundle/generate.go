@@ -1,14 +1,15 @@
 package bundle
 
 import (
-	"github.com/crc-org/crc/v2/pkg/crc/config"
+	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine"
+
 	"github.com/spf13/cobra"
 )
 
-func getGenerateCmd(config *config.Config) *cobra.Command {
+func getGenerateCmd(config *crcConfig.Config) *cobra.Command {
 	var forceStop bool
 	generateCmd := &cobra.Command{
 		Use:   "generate",
@@ -22,8 +23,9 @@ func getGenerateCmd(config *config.Config) *cobra.Command {
 	return generateCmd
 }
 
-func runGenerate(config *config.Config, forceStop bool) error {
-	client := machine.NewClient(constants.InstanceName(), logging.IsDebug(), config)
+func runGenerate(config *crcConfig.Config, forceStop bool) error {
+	preset := crcConfig.GetPreset(config)
+	client := machine.NewClient(constants.InstanceName(preset), logging.IsDebug(), config)
 
 	return client.GenerateBundle(forceStop)
 }
