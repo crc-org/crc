@@ -13,6 +13,7 @@ import (
 	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/crc/ssh"
 	"github.com/crc-org/crc/pkg/crc/validation"
+	crcos "github.com/crc-org/crc/pkg/os"
 	"github.com/docker/go-units"
 	"github.com/pkg/errors"
 )
@@ -54,7 +55,7 @@ var genericCleanupChecks = []Check{
 	},
 	{
 		cleanupDescription: "Removing older logs",
-		cleanup:            removeOldLogs,
+		cleanup:            removeAllLogs,
 		flags:              CleanUpOnly,
 
 		labels: None,
@@ -153,16 +154,11 @@ func removeCRCMachinesDir() error {
 	return nil
 }
 
-func removeOldLogs() error {
-	logFiles, err := filepath.Glob(filepath.Join(constants.CrcBaseDir, "*.log_*"))
-	if err != nil {
-		return fmt.Errorf("Failed to get old logs: %w", err)
-	}
-	for _, f := range logFiles {
-		logging.Debugf("Deleting %s log file", f)
-		if err := os.RemoveAll(f); err != nil {
-			return fmt.Errorf("Failed to delete %s: %w", f, err)
-		}
+func removeAllLogs() error {
+	// remove all log files, need close the logfile before deletion
+	logging.CloseLogging()
+	if err := crcos.RemoveFileGlob(filepath.Join(constants.CrcBaseDir, "*.log")); err != nil {
+		return fmt.Errorf("Failed to remove old log files: %w", err)
 	}
 	return nil
 }
