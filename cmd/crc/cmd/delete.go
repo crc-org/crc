@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/crc-org/crc/pkg/crc/constants"
 	crcErrors "github.com/crc-org/crc/pkg/crc/errors"
 	"github.com/crc-org/crc/pkg/crc/input"
 	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/machine"
+	crcos "github.com/crc-org/crc/pkg/os"
 	"github.com/spf13/cobra"
 )
 
@@ -41,9 +43,10 @@ func deleteMachine(client machine.Client, clearCache bool, cacheDir string, inte
 		yes := input.PromptUserForYesOrNo("Do you want to delete the instance cache", force)
 		if yes {
 			_ = os.RemoveAll(cacheDir)
-			// also delete the crc.log and crcd.log files
-			_ = os.Remove(constants.LogFilePath)
-			_ = os.Remove(constants.DaemonLogFilePath)
+			// also delete the crc-*.log files
+			if err := crcos.RemoveFileGlob(filepath.Join(constants.CrcBaseDir, "crc-*.log")); err != nil {
+				logging.Debug("Failed to find log files: ", err)
+			}
 		}
 	}
 
