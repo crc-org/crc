@@ -113,3 +113,17 @@ func RemoveFileIfExists(path string) error {
 func RunningUsingSSH() bool {
 	return os.Getenv("SSH_TTY") != ""
 }
+
+// RemoveFileGlob takes a glob pattern as string to remove the files and directories that matches
+func RemoveFileGlob(glob string) error {
+	matchedFiles, err := filepath.Glob(glob)
+	if err != nil {
+		return fmt.Errorf("Unable to find matches: %w", err)
+	}
+	for _, file := range matchedFiles {
+		if err = os.RemoveAll(file); err != nil {
+			return fmt.Errorf("Failed to delete file: %w", err)
+		}
+	}
+	return nil
+}
