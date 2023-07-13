@@ -29,8 +29,8 @@ var _ = Describe("podman preset", Label("podman-preset"), func() {
 		It("podman-env", func() {
 			// Do what 'eval $(crc podman-env) would do
 			path := os.ExpandEnv("${HOME}/.crc/bin/oc:$PATH")
-			csshk := os.ExpandEnv("${HOME}/.crc/machines/crc/id_ecdsa")
-			dh := os.ExpandEnv("unix:///${HOME}/.crc/machines/crc/docker.sock")
+			csshk := os.ExpandEnv("${HOME}/.crc/machines/crc-podman/id_ecdsa")
+			dh := os.ExpandEnv("unix:///${HOME}/.crc/machines/crc-podman/docker.sock")
 			ch := "ssh://core@127.0.0.1:2222/run/user/1000/podman/podman.sock"
 			if runtime.GOOS == "windows" {
 				userHomeDir, _ := os.UserHomeDir()
