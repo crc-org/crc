@@ -31,7 +31,7 @@ func newTestClient() *testClient {
 	fakeMachine := fakemachine.NewClient()
 	config := setupNewInMemoryConfig()
 
-	ts := httptest.NewServer(NewMux(config, fakeMachine, &mockLogger{}, &mockTelemetry{}))
+	ts := httptest.NewServer(newMockMux(config, fakeMachine, &mockTelemetry{}))
 
 	return &testClient{
 		apiClient.New(http.DefaultClient, ts.URL),
@@ -250,7 +250,7 @@ func TestTelemetry(t *testing.T) {
 	config := setupNewInMemoryConfig()
 
 	telemetry := &mockTelemetry{}
-	ts := httptest.NewServer(NewMux(config, fakeMachine, &mockLogger{}, telemetry))
+	ts := httptest.NewServer(newMockMux(config, fakeMachine, telemetry))
 	defer ts.Close()
 
 	client := apiClient.New(http.DefaultClient, ts.URL)
@@ -267,7 +267,7 @@ func TestPullSecret(t *testing.T) {
 	fakeMachine := fakemachine.NewClient()
 	config := setupNewInMemoryConfig()
 
-	ts := httptest.NewServer(NewMux(config, fakeMachine, &mockLogger{}, &mockTelemetry{}))
+	ts := httptest.NewServer(newMockMux(config, fakeMachine, &mockTelemetry{}))
 	defer ts.Close()
 
 	client := apiClient.New(http.DefaultClient, ts.URL)

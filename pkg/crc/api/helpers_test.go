@@ -1,9 +1,11 @@
 package api
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/crc-org/crc/v2/pkg/crc/config"
+	"github.com/crc-org/crc/v2/pkg/crc/machine"
 	"github.com/crc-org/crc/v2/pkg/crc/preflight"
 )
 
@@ -53,4 +55,15 @@ type mockTelemetry struct {
 func (m *mockTelemetry) UploadAction(action, _, _ string) error {
 	m.actions = append(m.actions, action)
 	return nil
+}
+
+func fakeMachineClientUpdater(_ *config.Config) machine.Client {
+	return nil
+}
+
+func newMockMux(cfg *config.Config, fakeMachine machine.Client, telemetry Telemetry) http.Handler {
+	handler := NewHandler(cfg, fakeMachine, &mockLogger{}, telemetry, fakeMachineClientUpdater)
+	server := newServerWithRoutes(handler)
+
+	return server.Handler()
 }

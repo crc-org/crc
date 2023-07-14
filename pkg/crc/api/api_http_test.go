@@ -47,7 +47,7 @@ func newMockServer(pullSecretPath string) *mockServer {
 	config := setupNewInMemoryConfig()
 	_, _ = config.Set(crcConfig.PullSecretFile, pullSecretPath)
 
-	handler := NewHandler(config, fakeMachine, &mockLogger{}, &mockTelemetry{})
+	handler := NewHandler(config, fakeMachine, &mockLogger{}, &mockTelemetry{}, fakeMachineClientUpdater)
 
 	return &mockServer{
 		server: newServerWithRoutes(handler),
