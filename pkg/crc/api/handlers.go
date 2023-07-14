@@ -7,7 +7,9 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/api/client"
 	"github.com/crc-org/crc/v2/pkg/crc/cluster"
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/errors"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
 	"github.com/crc-org/crc/v2/pkg/crc/preflight"
@@ -16,11 +18,14 @@ import (
 )
 
 type Handler struct {
-	Logger    Logger
-	Client    machine.Client
-	Config    *crcConfig.Config
-	Telemetry Telemetry
+	Logger              Logger
+	Client              machine.Client
+	Config              *crcConfig.Config
+	Telemetry           Telemetry
+	UpdateMachineClient MachineClientUpdaterFunc
 }
+
+type MachineClientUpdaterFunc func(config *crcConfig.Config) machine.Client
 
 type Logger interface {
 	Messages() []string
@@ -40,16 +45,31 @@ func (h *Handler) Logs(c *context) error {
 	})
 }
 
-func NewHandler(config *crcConfig.Config, machine machine.Client, logger Logger, telemetry Telemetry) *Handler {
+func NewHandler(config *crcConfig.Config, machine machine.Client, logger Logger, telemetry Telemetry, mcupdater MachineClientUpdaterFunc) *Handler {
 	return &Handler{
-		Client:    machine,
-		Config:    config,
-		Logger:    logger,
-		Telemetry: telemetry,
+		Client:              machine,
+		Config:              config,
+		Logger:              logger,
+		Telemetry:           telemetry,
+		UpdateMachineClient: mcupdater,
 	}
 }
 
+func (h *Handler) PrepareMachineClient() {
+	if client := h.UpdateMachineClient(h.Config); client != nil {
+		h.Client = client
+	}
+}
+
+func MachineClientUpdater(config *crcConfig.Config) machine.Client {
+	preset := crcConfig.GetPreset(config)
+	instanceName := constants.InstanceName(preset)
+
+	return machine.NewSynchronizedMachine(machine.NewClient(instanceName, logging.IsDebug(), config))
+}
+
 func (h *Handler) Status(c *context) error {
+	h.PrepareMachineClient()
 	exists, err := h.Client.Exists()
 	if err != nil {
 		return err
@@ -76,6 +96,7 @@ func (h *Handler) Status(c *context) error {
 }
 
 func (h *Handler) Stop(c *context) error {
+	h.PrepareMachineClient()
 	_, err := h.Client.Stop()
 	if err != nil {
 		return err
@@ -87,6 +108,7 @@ func (h *Handler) PowerOff(c *context) error {
 	if c.method != http.MethodPost {
 		return c.String(http.StatusMethodNotAllowed, "Only POST is allowed")
 	}
+	h.PrepareMachineClient()
 	if err := h.Client.PowerOff(); err != nil {
 		return err
 	}
@@ -106,6 +128,7 @@ func (h *Handler) Start(c *context) error {
 	}
 
 	startConfig := getStartConfig(h.Config, parsedArgs)
+	h.PrepareMachineClient()
 	res, err := h.Client.Start(gocontext.Background(), startConfig)
 	if err != nil {
 		return err
@@ -145,6 +168,7 @@ func (h *Handler) GetVersion(c *context) error {
 }
 
 func (h *Handler) Delete(c *context) error {
+	h.PrepareMachineClient()
 	err := h.Client.Delete()
 	if err != nil {
 		return err
@@ -153,6 +177,7 @@ func (h *Handler) Delete(c *context) error {
 }
 
 func (h *Handler) GetWebconsoleInfo(c *context) error {
+	h.PrepareMachineClient()
 	if err := machine.CheckIfMachineMissing(h.Client); err != nil {
 		// In case of machine doesn't exist then consoleResult error
 		// should be updated so that when rendering the result it have

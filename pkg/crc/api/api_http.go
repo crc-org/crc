@@ -9,7 +9,7 @@ import (
 )
 
 func NewMux(config *crcConfig.Config, machine machine.Client, logger Logger, telemetry Telemetry) http.Handler {
-	handler := NewHandler(config, machine, logger, telemetry)
+	handler := NewHandler(config, machine, logger, telemetry, MachineClientUpdater)
 
 	server := newServerWithRoutes(handler)
 
