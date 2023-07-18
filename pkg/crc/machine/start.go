@@ -1003,10 +1003,7 @@ func addPodmanSystemConnections(c *types.ConnectionDetails) error {
 	if err := podman.MakeRootlessSystemConnectionDefault(); err != nil {
 		return err
 	}
-	if err := podman.AddRootfulSystemConnection(c.SSHKeys[0], rootfulURI); err != nil {
-		return err
-	}
-	return nil
+	return podman.AddRootfulSystemConnection(c.SSHKeys[0], rootfulURI)
 }
 
 func startMicroshift(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.Config, pullSec cluster.PullSecretLoader) error {
@@ -1028,11 +1025,7 @@ func startMicroshift(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.
 		return err
 	}
 
-	if err := cluster.WaitForAPIServer(ctx, ocConfig); err != nil {
-		return err
-	}
-
-	return nil
+	return cluster.WaitForAPIServer(ctx, ocConfig)
 }
 
 // The containers.conf/podman marker file has a setting called machine_enabled in the engine section,
