@@ -207,9 +207,10 @@ github.com/crc-org/machine/libmachine/drivers/plugin/localbinary
 github.com/crc-org/machine/libmachine/drivers/rpc
 github.com/crc-org/machine/libmachine/state
 github.com/crc-org/machine/libmachine/version
-# github.com/crc-org/vfkit v0.0.4
-## explicit; go 1.17
-github.com/crc-org/vfkit/pkg/client
+# github.com/crc-org/vfkit v0.1.1
+## explicit; go 1.18
+github.com/crc-org/vfkit/pkg/config
+github.com/crc-org/vfkit/pkg/util
 # github.com/cucumber/gherkin-go/v19 v19.0.3
 ## explicit; go 1.13
 github.com/cucumber/gherkin-go/v19

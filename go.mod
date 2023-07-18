@@ -16,7 +16,7 @@ require (
 	github.com/coreos/go-systemd/v22 v22.5.0
 	github.com/crc-org/admin-helper v0.0.12-0.20221012143549-fd5acd1c478e
 	github.com/crc-org/machine v0.0.0-20221028075518-f9b43442196b
-	github.com/crc-org/vfkit v0.0.4
+	github.com/crc-org/vfkit v0.1.1
 	github.com/cucumber/godog v0.12.5
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/go-units v0.5.0

@@ -33,7 +33,7 @@ import (
 	crcos "github.com/crc-org/crc/pkg/os"
 	"github.com/crc-org/machine/libmachine/drivers"
 	"github.com/crc-org/machine/libmachine/state"
-	"github.com/crc-org/vfkit/pkg/client"
+	"github.com/crc-org/vfkit/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/v3/process"
 	log "github.com/sirupsen/logrus"
@@ -172,13 +172,13 @@ func (d *Driver) Start() error {
 		return err
 	}
 
-	bootLoader := client.NewBootloader(
+	bootLoader := config.NewLinuxBootloader(
 		d.VmlinuzPath,
 		"console=hvc0 "+d.Cmdline,
 		d.InitrdPath,
 	)
 
-	vm := client.NewVirtualMachine(
+	vm := config.NewVirtualMachine(
 		uint(d.CPU),
 		uint64(d.Memory),
 		bootLoader,
@@ -186,7 +186,7 @@ func (d *Driver) Start() error {
 
 	// console
 	logFile := d.ResolveStorePath("vfkit.log")
-	dev, err := client.VirtioSerialNew(logFile)
+	dev, err := config.VirtioSerialNew(logFile)
 	if err != nil {
 		return err
 	}
@@ -199,7 +199,7 @@ func (d *Driver) Start() error {
 	// 52:54:00 is the OUI used by QEMU
 	const mac = "52:54:00:70:2b:79"
 	if d.VirtioNet {
-		dev, err = client.VirtioNetNew(mac)
+		dev, err = config.VirtioNetNew(mac)
 		if err != nil {
 			return err
 		}
@@ -214,7 +214,7 @@ func (d *Driver) Start() error {
 		for _, sharedDir := range d.SharedDirs {
 			// TODO: add support for 'mount.ReadOnly'
 			// TODO: check format
-			dev, err := client.VirtioFsNew(sharedDir.Source, sharedDir.Tag)
+			dev, err := config.VirtioFsNew(sharedDir.Source, sharedDir.Tag)
 			if err != nil {
 				return err
 			}
@@ -226,7 +226,7 @@ func (d *Driver) Start() error {
 	}
 
 	// entropy
-	dev, err = client.VirtioRNGNew()
+	dev, err = config.VirtioRngNew()
 	if err != nil {
 		return err
 	}
@@ -237,7 +237,7 @@ func (d *Driver) Start() error {
 
 	// disk
 	diskPath := d.getDiskPath()
-	dev, err = client.VirtioBlkNew(diskPath)
+	dev, err = config.VirtioBlkNew(diskPath)
 	if err != nil {
 		return err
 	}
@@ -247,7 +247,7 @@ func (d *Driver) Start() error {
 	}
 
 	// virtio-vsock device
-	dev, err = client.VirtioVsockNew(d.DaemonVsockPort, d.VsockPath, true)
+	dev, err = config.VirtioVsockNew(d.DaemonVsockPort, d.VsockPath, true)
 	if err != nil {
 		return err
 	}
@@ -260,7 +260,7 @@ func (d *Driver) Start() error {
 	// d.QemuGAVsockPort will be missing from ~/.crc/machines/crc/config.json
 	// In such a case, assume the VM will not support time sync
 	if d.QemuGAVsockPort != 0 {
-		timesync, err := client.TimeSyncNew(d.QemuGAVsockPort)
+		timesync, err := config.TimeSyncNew(d.QemuGAVsockPort)
 		if err != nil {
 			return err
 		}
