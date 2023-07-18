@@ -33,7 +33,7 @@ func testCompress(t *testing.T, baseDir string) {
 
 	destDir := t.TempDir()
 
-	fileList, err := extract.Uncompress(testArchiveName, destDir, false)
+	fileList, err := extract.Uncompress(testArchiveName, destDir)
 	require.NoError(t, err)
 
 	_, d := filepath.Split(baseDir)
