@@ -19,7 +19,7 @@ var ipCmd = &cobra.Command{
 	},
 }
 
-func runIP(arguments []string) error {
+func runIP(_ []string) error {
 	client := newMachine()
 	if err := checkIfMachineMissing(client); err != nil {
 		return err

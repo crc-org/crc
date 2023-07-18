@@ -112,7 +112,7 @@ func (userRunner *systemctlUserRunner) RunPrivate(command string, args ...string
 	return userRunner.runner.RunPrivate("systemctl", append([]string{"--user"}, args...)...)
 }
 
-func (userRunner *systemctlUserRunner) RunPrivileged(reason string, cmdAndArgs ...string) (string, string, error) {
+func (userRunner *systemctlUserRunner) RunPrivileged(_ string, cmdAndArgs ...string) (string, string, error) {
 	command := cmdAndArgs[0]
 	args := cmdAndArgs[1:]
 	if command != "systemctl" {

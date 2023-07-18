@@ -102,7 +102,7 @@ func getAllPreflightChecks() []Check {
 	return getPreflightChecks(true, network.SystemNetworkingMode, constants.GetDefaultBundlePath(preset.OpenShift), preset.OpenShift)
 }
 
-func getChecks(mode network.Mode, bundlePath string, preset crcpreset.Preset) []Check {
+func getChecks(_ network.Mode, bundlePath string, preset crcpreset.Preset) []Check {
 	checks := []Check{}
 
 	checks = append(checks, nonWinPreflightChecks...)

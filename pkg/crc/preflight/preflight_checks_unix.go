@@ -33,7 +33,7 @@ var nonWinPreflightChecks = []Check{
 	},
 }
 
-func genericPreflightChecks(preset crcpreset.Preset) []Check {
+func genericPreflightChecks(_ crcpreset.Preset) []Check {
 	return []Check{
 		{
 			configKeySuffix:  "check-admin-helper-cached",

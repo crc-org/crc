@@ -8,6 +8,6 @@ import (
 	"runtime"
 )
 
-func copyDiskImage(dirName string) (string, string, error) {
+func copyDiskImage(_ string) (string, string, error) {
 	return "", "", fmt.Errorf("Not implemented for %s", runtime.GOOS)
 }

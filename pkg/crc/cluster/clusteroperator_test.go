@@ -39,7 +39,7 @@ type mockLister struct {
 	file string
 }
 
-func (r *mockLister) List(ctx context.Context, opts metav1.ListOptions) (*v1.ClusterOperatorList, error) {
+func (r *mockLister) List(_ context.Context, _ metav1.ListOptions) (*v1.ClusterOperatorList, error) {
 	bin, err := os.ReadFile(r.file)
 	if err != nil {
 		return nil, err

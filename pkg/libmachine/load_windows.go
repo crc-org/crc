@@ -7,7 +7,7 @@ import (
 	"github.com/crc-org/crc/pkg/libmachine/host"
 )
 
-func (api *Client) NewHost(driverName string, driverPath string, rawDriver []byte) (*host.Host, error) {
+func (api *Client) NewHost(_ string, driverPath string, rawDriver []byte) (*host.Host, error) {
 	driver := hyperv.NewDriver("", "")
 	if err := json.Unmarshal(rawDriver, &driver); err != nil {
 		return nil, err
