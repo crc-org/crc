@@ -1,6 +1,4 @@
 # Go Keyring library
-[![Build Status](https://travis-ci.org/zalando/go-keyring.svg?branch=master)](https://travis-ci.org/zalando/go-keyring)
-[![Build status](https://ci.appveyor.com/api/projects/status/l8hdbqng769sc2c5/branch/master?svg=true)](https://ci.appveyor.com/project/mikkeloscar/go-keyring/branch/master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/zalando/go-keyring)](https://goreportcard.com/report/github.com/zalando/go-keyring)
 [![GoDoc](https://godoc.org/github.com/zalando/go-keyring?status.svg)](https://godoc.org/github.com/zalando/go-keyring)
 

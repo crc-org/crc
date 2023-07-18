@@ -216,6 +216,7 @@ type DomainDiskSourceNetwork struct {
 	Initiator   *DomainDiskSourceNetworkInitiator `xml:"initiator"`
 	Snapshot    *DomainDiskSourceNetworkSnapshot  `xml:"snapshot"`
 	Config      *DomainDiskSourceNetworkConfig    `xml:"config"`
+	Reconnect   *DomainDiskSourceNetworkReconnect `xml:"reconnect"`
 	Auth        *DomainDiskAuth                   `xml:"auth"`
 }
 
@@ -238,6 +239,10 @@ type DomainDiskSourceNetworkSnapshot struct {
 
 type DomainDiskSourceNetworkConfig struct {
 	File string `xml:"file,attr"`
+}
+
+type DomainDiskSourceNetworkReconnect struct {
+	Delay string `xml:"delay,attr"`
 }
 
 type DomainDiskSourceVolume struct {
@@ -289,9 +294,9 @@ type DomainDiskTarget struct {
 }
 
 type DomainDiskEncryption struct {
-	Format string            `xml:"format,attr,omitempty"`
-	Engine string            `xml:"engine,attr,omitempty"`
-	Secret *DomainDiskSecret `xml:"secret"`
+	Format  string             `xml:"format,attr,omitempty"`
+	Engine  string             `xml:"engine,attr,omitempty"`
+	Secrets []DomainDiskSecret `xml:"secret"`
 }
 
 type DomainDiskReadOnly struct {
@@ -1394,6 +1399,7 @@ type DomainVideoModel struct {
 	VRam64     uint                   `xml:"vram64,attr,omitempty"`
 	VGAMem     uint                   `xml:"vgamem,attr,omitempty"`
 	Primary    string                 `xml:"primary,attr,omitempty"`
+	Blob       string                 `xml:"blob,attr,omitempty"`
 	Accel      *DomainVideoAccel      `xml:"acceleration"`
 	Resolution *DomainVideoResolution `xml:"resolution"`
 }
@@ -1474,13 +1480,14 @@ type DomainSoundCodec struct {
 }
 
 type DomainSound struct {
-	XMLName xml.Name           `xml:"sound"`
-	Model   string             `xml:"model,attr"`
-	Codec   []DomainSoundCodec `xml:"codec"`
-	Audio   *DomainSoundAudio  `xml:"audio"`
-	ACPI    *DomainDeviceACPI  `xml:"acpi"`
-	Alias   *DomainAlias       `xml:"alias"`
-	Address *DomainAddress     `xml:"address"`
+	XMLName      xml.Name           `xml:"sound"`
+	Model        string             `xml:"model,attr"`
+	MultiChannel string             `xml:"multichannel,attr,omitempty"`
+	Codec        []DomainSoundCodec `xml:"codec"`
+	Audio        *DomainSoundAudio  `xml:"audio"`
+	ACPI         *DomainDeviceACPI  `xml:"acpi"`
+	Alias        *DomainAlias       `xml:"alias"`
+	Address      *DomainAddress     `xml:"address"`
 }
 
 type DomainSoundAudio struct {
@@ -1856,6 +1863,10 @@ type DomainMemorydevTargetLabel struct {
 	Size *DomainMemorydevTargetSize `xml:"size"`
 }
 
+type DomainMemorydevTargetAddress struct {
+	Base *uint `xml:"base,attr"`
+}
+
 type DomainMemorydevTarget struct {
 	Size      *DomainMemorydevTargetSize      `xml:"size"`
 	Node      *DomainMemorydevTargetNode      `xml:"node"`
@@ -1863,6 +1874,7 @@ type DomainMemorydevTarget struct {
 	Block     *DomainMemorydevTargetBlock     `xml:"block"`
 	Requested *DomainMemorydevTargetRequested `xml:"requested"`
 	ReadOnly  *DomainMemorydevTargetReadOnly  `xml:"readonly"`
+	Address   *DomainMemorydevTargetAddress   `xml:"address"`
 }
 
 type DomainMemorydev struct {
@@ -2028,6 +2040,26 @@ type DomainShmemMSI struct {
 	IOEventFD string `xml:"ioeventfd,attr,omitempty"`
 }
 
+type DomainCrypto struct {
+	Model   string               `xml:"model,attr,omitempty"`
+	Type    string               `xml:"type,attr,omitempty"`
+	Backend *DomainCryptoBackend `xml:"backend"`
+	Alias   *DomainAlias         `xml:"alias"`
+	Address *DomainAddress       `xml:"address"`
+}
+
+type DomainCryptoBackend struct {
+	BuiltIn *DomainCryptoBackendBuiltIn `xml:"-"`
+	LKCF    *DomainCryptoBackendLKCF    `xml:"-"`
+	Queues  uint                        `xml:"queues,attr,omitempty"`
+}
+
+type DomainCryptoBackendBuiltIn struct {
+}
+
+type DomainCryptoBackendLKCF struct {
+}
+
 type DomainDeviceList struct {
 	Emulator     string              `xml:"emulator,omitempty"`
 	Disks        []DomainDisk        `xml:"disk"`
@@ -2050,7 +2082,7 @@ type DomainDeviceList struct {
 	RedirDevs    []DomainRedirDev    `xml:"redirdev"`
 	RedirFilters []DomainRedirFilter `xml:"redirfilter"`
 	Hubs         []DomainHub         `xml:"hub"`
-	Watchdog     *DomainWatchdog     `xml:"watchdog"`
+	Watchdogs    []DomainWatchdog    `xml:"watchdog"`
 	MemBalloon   *DomainMemBalloon   `xml:"memballoon"`
 	RNGs         []DomainRNG         `xml:"rng"`
 	NVRAM        *DomainNVRAM        `xml:"nvram"`
@@ -2059,6 +2091,7 @@ type DomainDeviceList struct {
 	Memorydevs   []DomainMemorydev   `xml:"memory"`
 	IOMMU        *DomainIOMMU        `xml:"iommu"`
 	VSock        *DomainVSock        `xml:"vsock"`
+	Crypto       []DomainCrypto      `xml:"crypto"`
 }
 
 type DomainMemory struct {
@@ -2134,6 +2167,7 @@ type DomainNVRam struct {
 	NVRam    string            `xml:",chardata"`
 	Source   *DomainDiskSource `xml:"source"`
 	Template string            `xml:"template,attr,omitempty"`
+	Format   string            `xml:"format,attr,omitempty"`
 }
 
 type DomainBootDevice struct {
@@ -2209,6 +2243,7 @@ type DomainLoader struct {
 	Secure    string `xml:"secure,attr,omitempty"`
 	Stateless string `xml:"stateless,attr,omitempty"`
 	Type      string `xml:"type,attr,omitempty"`
+	Format    string `xml:"format,attr,omitempty"`
 }
 
 type DomainACPI struct {
@@ -2308,8 +2343,9 @@ type DomainCPUCache struct {
 }
 
 type DomainCPUMaxPhysAddr struct {
-	Mode string `xml:"mode,attr"`
-	Bits uint   `xml:"bits,attr,omitempty"`
+	Mode  string `xml:"mode,attr"`
+	Bits  uint   `xml:"bits,attr,omitempty"`
+	Limit uint   `xml:"limit,attr,omitempty"`
 }
 
 type DomainCPU struct {
@@ -2878,10 +2914,17 @@ type DomainIOThreadIDs struct {
 	IOThreads []DomainIOThread `xml:"iothread"`
 }
 
+type DomainIOThreadPoll struct {
+	Max    *uint `xml:"max,attr"`
+	Grow   *uint `xml:"grow,attr"`
+	Shrink *uint `xml:"shrink,attr"`
+}
+
 type DomainIOThread struct {
-	ID      uint  `xml:"id,attr"`
-	PoolMin *uint `xml:"thread_pool_min,attr"`
-	PoolMax *uint `xml:"thread_pool_max,attr"`
+	ID      uint                `xml:"id,attr"`
+	PoolMin *uint               `xml:"thread_pool_min,attr"`
+	PoolMax *uint               `xml:"thread_pool_max,attr"`
+	Poll    *DomainIOThreadPoll `xml:"poll"`
 }
 
 type DomainDefaultIOThread struct {
@@ -5799,6 +5842,55 @@ func (d *DomainWatchdog) Marshal() (string, error) {
 	return string(doc), nil
 }
 
+func (a *DomainCryptoBackend) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	start.Name.Local = "backend"
+	if a.BuiltIn != nil {
+		start.Attr = append(start.Attr, xml.Attr{
+			xml.Name{Local: "model"}, "builtin",
+		})
+	} else if a.LKCF != nil {
+		start.Attr = append(start.Attr, xml.Attr{
+			xml.Name{Local: "model"}, "lkcf",
+		})
+	}
+	marshalUintAttr(&start, "queues", &a.Queues, "%d")
+	e.EncodeToken(start)
+	e.EncodeToken(start.End())
+	return nil
+}
+
+func (a *DomainCryptoBackend) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	typ, ok := getAttr(start.Attr, "model")
+	if !ok {
+		return fmt.Errorf("Missing 'model' attribute on domain crypto backend")
+	}
+	for _, attr := range start.Attr {
+		if attr.Name.Local == "queues" {
+			var v *uint
+			if err := unmarshalUintAttr(attr.Value, &v, 10); err != nil {
+				return err
+			}
+			if v != nil {
+				a.Queues = *v
+			}
+		}
+	}
+
+	if typ == "builtin" {
+		var builtin DomainCryptoBackendBuiltIn
+		a.BuiltIn = &builtin
+		d.Skip()
+		return nil
+	} else if typ == "lkcf" {
+		var lkcf DomainCryptoBackendLKCF
+		a.LKCF = &lkcf
+		d.Skip()
+		return nil
+	}
+
+	return nil
+}
+
 func marshalUintAttr(start *xml.StartElement, name string, val *uint, format string) {
 	if val != nil {
 		start.Attr = append(start.Attr, xml.Attr{
@@ -5813,6 +5905,13 @@ func marshalUint64Attr(start *xml.StartElement, name string, val *uint64, format
 			xml.Name{Local: name}, fmt.Sprintf(format, *val),
 		})
 	}
+}
+
+func (a *DomainMemorydevTargetAddress) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	marshalUintAttr(&start, "base", a.Base, "0x%08x")
+	e.EncodeToken(start)
+	e.EncodeToken(start.End())
+	return nil
 }
 
 func (a *DomainAddressPCI) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
@@ -6024,6 +6123,19 @@ func unmarshalUintAttr(valstr string, valptr **uint, base int) error {
 	}
 	vali := uint(val)
 	*valptr = &vali
+	return nil
+}
+
+func (a *DomainMemorydevTargetAddress) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	for _, attr := range start.Attr {
+		if attr.Name.Local == "base" {
+			if err := unmarshalUintAttr(attr.Value, &a.Base, 0); err != nil {
+				return err
+			}
+		}
+	}
+
+	d.Skip()
 	return nil
 }
 

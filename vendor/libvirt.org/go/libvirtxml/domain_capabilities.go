@@ -110,6 +110,7 @@ type DomainCapsDevices struct {
 	TPM        *DomainCapsDevice `xml:"tpm"`
 	Redirdev   *DomainCapsDevice `xml:"redirdev"`
 	Channel    *DomainCapsDevice `xml:"channel"`
+	Crypto     *DomainCapsDevice `xml:"crypto"`
 }
 
 type DomainCapsDevice struct {
