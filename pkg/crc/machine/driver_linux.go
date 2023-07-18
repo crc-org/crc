@@ -39,7 +39,7 @@ func updateDriverConfig(host *host.Host, driver *machineLibvirt.Driver) error {
 	return host.UpdateConfig(driverData)
 }
 
-func updateKernelArgs(vm *virtualMachine) error {
+func updateKernelArgs(_ *virtualMachine) error {
 	return nil
 }
 
@@ -49,6 +49,6 @@ func (r *RPCServerDriver) SetConfigRaw(data []byte, _ *struct{}) error {
 }
 */
 
-func updateDriverStruct(host *host.Host, driver *machineLibvirt.Driver) error {
+func updateDriverStruct(_ *host.Host, _ *machineLibvirt.Driver) error {
 	return drivers.ErrNotImplemented
 }

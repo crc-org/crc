@@ -30,7 +30,7 @@ func init() {
 	testsuite.ParseFlags()
 }
 
-func TestMain(m *testing.M) {
+func TestMain(_ *testing.M) {
 
 	pflag.Parse()
 

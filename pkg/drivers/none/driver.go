@@ -50,7 +50,7 @@ func (d *Driver) Remove() error {
 	return nil
 }
 
-func (d *Driver) UpdateConfigRaw(rawData []byte) error {
+func (d *Driver) UpdateConfigRaw(_ []byte) error {
 	return fmt.Errorf("hosts without a driver cannot be updated")
 }
 

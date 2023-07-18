@@ -79,12 +79,12 @@ func (r *mockSystemdRunner) Run(command string, args ...string) (string, string,
 	}
 }
 
-func (r *mockSystemdRunner) RunPrivate(command string, args ...string) (string, string, error) {
+func (r *mockSystemdRunner) RunPrivate(_ string, _ ...string) (string, string, error) {
 	r.test.FailNow()
 	return "", "", fmt.Errorf("Unexpected RunPrivate() call")
 }
 
-func (r *mockSystemdRunner) RunPrivileged(reason string, cmdAndArgs ...string) (string, string, error) {
+func (r *mockSystemdRunner) RunPrivileged(_ string, cmdAndArgs ...string) (string, string, error) {
 	privilegedCommands := []string{
 		"start",
 		"stop",

@@ -21,7 +21,7 @@ var ocEnvCmd = &cobra.Command{
 	},
 }
 
-func runOcEnv(args []string) error {
+func runOcEnv(_ []string) error {
 	userShell, err := shell.GetShell(forceShell)
 	if err != nil {
 		return fmt.Errorf("Error running the oc-env command: %s", err.Error())

@@ -55,7 +55,7 @@ func (c *Client) GetConsoleURL() (*types.ConsoleResult, error) {
 	}, nil
 }
 
-func (c *Client) GetProxyConfig(machineName string) (*httpproxy.ProxyConfig, error) {
+func (c *Client) GetProxyConfig(_ string) (*httpproxy.ProxyConfig, error) {
 	return nil, errors.New("not implemented")
 }
 
@@ -70,14 +70,14 @@ func (c *Client) PowerOff() error {
 	return nil
 }
 
-func (c *Client) GenerateBundle(forceStop bool) error {
+func (c *Client) GenerateBundle(_ bool) error {
 	if c.Failing {
 		return errors.New("bundle generation failed")
 	}
 	return nil
 }
 
-func (c *Client) Start(ctx context.Context, startConfig types.StartConfig) (*types.StartResult, error) {
+func (c *Client) Start(_ context.Context, _ types.StartConfig) (*types.StartResult, error) {
 	if c.Failing {
 		return nil, errors.New("Failed to start")
 	}

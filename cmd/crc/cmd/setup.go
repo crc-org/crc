@@ -43,7 +43,7 @@ var setupCmd = &cobra.Command{
 	},
 }
 
-func runSetup(arguments []string) error {
+func runSetup(_ []string) error {
 	if config.Get(crcConfig.ConsentTelemetry).AsString() == "" {
 		fmt.Println("CRC is constantly improving and we would like to know more about usage (more details at https://developers.redhat.com/article/tool-data-collection)")
 		fmt.Println("Your preference can be changed manually if desired using 'crc config set consent-telemetry <yes/no>'")
