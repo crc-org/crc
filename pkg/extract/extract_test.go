@@ -50,11 +50,11 @@ func TestUnCompressBundle(t *testing.T) {
 }
 
 func copyFileMap(orig fileMap) fileMap {
-	copy := fileMap{}
+	copiedMap := fileMap{}
 	for key, value := range orig {
-		copy[key] = value
+		copiedMap[key] = value
 	}
-	return copy
+	return copiedMap
 }
 
 // This checks that the list of files returned by Uncompress matches what we expect
