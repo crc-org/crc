@@ -59,7 +59,7 @@ require (
 	golang.org/x/term v0.10.0
 	golang.org/x/text v0.11.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.25.6
 	k8s.io/apimachinery v0.25.6
 	k8s.io/client-go v0.25.6
@@ -199,7 +199,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gvisor.dev/gvisor v0.0.0-20221216231429-a78e892a26d2 // indirect
 	inet.af/tcpproxy v0.0.0-20220326234310-be3ee21c9fa0 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
