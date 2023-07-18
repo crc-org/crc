@@ -21,11 +21,11 @@ const (
 
 const (
 	machineDriverCommand = "crc-driver-libvirt"
-	MachineDriverVersion = "0.13.5"
+	MachineDriverVersion = "0.13.6"
 )
 
 var (
-	MachineDriverDownloadURL = fmt.Sprintf("https://github.com/crc-org/machine-driver-libvirt/releases/download/%s/%s", MachineDriverVersion, machineDriverCommand)
+	MachineDriverDownloadURL = fmt.Sprintf("https://github.com/anjannath/crc-machine-driver-libvirt/releases/download/%s/%s", MachineDriverVersion, machineDriverCommand)
 )
 
 func MachineDriverPath() string {
