@@ -108,9 +108,8 @@ func Execute() {
 		var e exec.CodeExitError
 		if errors.As(err, &e) {
 			os.Exit(e.ExitStatus())
-		} else {
-			os.Exit(defaultErrorExitCode)
 		}
+		os.Exit(defaultErrorExitCode)
 	}
 	runPostrun()
 }
