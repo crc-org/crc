@@ -472,7 +472,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		// **************************
 		//  END OF PODMAN START CODE
 		// **************************
-		if err := configurePodmanProxy(ctx, sshRunner, proxyConfig); err != nil {
+		if err := configurePodmanProxy(sshRunner, proxyConfig); err != nil {
 			return nil, errors.Wrap(err, "Failed to configure proxy for podman")
 		}
 		if err := dns.AddPodmanHosts(instanceIP); err != nil {
@@ -818,7 +818,7 @@ func copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey *rsa.Priv
 	return updateClientCrtAndKeyToKubeconfig(clientKey, clientCert, srcKubeConfigPath, dstKubeConfigPath)
 }
 
-func configurePodmanProxy(ctx context.Context, sshRunner *crcssh.Runner, proxy *httpproxy.ProxyConfig) (err error) {
+func configurePodmanProxy(sshRunner *crcssh.Runner, proxy *httpproxy.ProxyConfig) (err error) {
 	if !proxy.IsEnabled() {
 		return nil
 	}
