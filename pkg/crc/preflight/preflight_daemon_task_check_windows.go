@@ -72,10 +72,8 @@ func checkIfDaemonTaskInstalled() error {
 		logging.Debugf("%s task is not installed: %v : %s", constants.DaemonTaskName, err, stderr)
 		return err
 	}
-	if err := checkIfOlderTask(); err != nil {
-		return err
-	}
-	return nil
+
+	return checkIfOlderTask()
 }
 
 func fixDaemonTaskInstalled() error {
