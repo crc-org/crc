@@ -33,7 +33,7 @@ func (e *VersionMismatchError) Error() string {
 	return fmt.Sprintf("%s version mismatch: %s expected but %s found in the cache", e.ExecutableName, e.ExpectedVersion, e.CurrentVersion)
 }
 
-func new(executablePath string, archiveURL string, version string, getVersion func(string) (string, error)) *Cache {
+func newCache(executablePath string, archiveURL string, version string, getVersion func(string) (string, error)) *Cache {
 	return &Cache{executablePath: executablePath, archiveURL: archiveURL, version: version, getVersion: getVersion}
 }
 
@@ -68,7 +68,7 @@ func getVersionGeneric(executablePath string, args ...string) (string, error) { 
 func NewAdminHelperCache() *Cache {
 	url := constants.GetAdminHelperURL()
 	version := version.GetAdminHelperVersion()
-	return new(constants.AdminHelperPath(),
+	return newCache(constants.AdminHelperPath(),
 		url,
 		version,
 		func(executable string) (string, error) {
