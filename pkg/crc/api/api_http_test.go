@@ -117,7 +117,7 @@ func post(resource string) request {
 	}
 }
 
-func delete(resource string) request {
+func deleteRequest(resource string) request {
 	return request{
 		httpMethod: http.MethodDelete,
 		resource:   resource,
@@ -240,7 +240,7 @@ var testCases = []testCase{
 
 	// delete
 	{
-		request:  delete("delete"),
+		request:  deleteRequest("delete"),
 		response: empty(),
 	},
 	{
@@ -250,7 +250,7 @@ var testCases = []testCase{
 
 	// delete with failure
 	{
-		request:     delete("delete"),
+		request:     deleteRequest("delete"),
 		failRequest: true,
 		// error message comes from fakemachine
 		response: httpError(500).withBody("delete failed\n"),
@@ -294,7 +294,7 @@ var testCases = []testCase{
 		response: httpError(500).withBody("invalid character 'x' looking for beginning of value\n"),
 	},
 	{
-		request:  delete("config?cpus"),
+		request:  deleteRequest("config?cpus"),
 		response: httpError(500).withBody("unexpected end of JSON input\n"),
 	},
 	{
@@ -373,13 +373,13 @@ var testCases = []testCase{
 var invalidHTTPMethods = []testCase{
 	// start
 	{
-		request:  delete("start"),
+		request:  deleteRequest("start"),
 		response: httpError(404).withBody("Not Found\n"),
 	},
 
 	// stop
 	{
-		request:  delete("stop"),
+		request:  deleteRequest("stop"),
 		response: httpError(404).withBody("Not Found\n"),
 	},
 
@@ -389,7 +389,7 @@ var invalidHTTPMethods = []testCase{
 		response: httpError(404).withBody("Not Found\n"),
 	},
 	{
-		request:  delete("poweroff"),
+		request:  deleteRequest("poweroff"),
 		response: httpError(404).withBody("Not Found\n"),
 	},
 
@@ -399,7 +399,7 @@ var invalidHTTPMethods = []testCase{
 		response: httpError(404).withBody("Not Found\n"),
 	},
 	{
-		request:  delete("status"),
+		request:  deleteRequest("status"),
 		response: httpError(404).withBody("Not Found\n"),
 	},
 
@@ -415,7 +415,7 @@ var invalidHTTPMethods = []testCase{
 		response: httpError(404).withBody("Not Found\n"),
 	},
 	{
-		request:  delete("version"),
+		request:  deleteRequest("version"),
 		response: httpError(404).withBody("Not Found\n"),
 	},
 
@@ -425,7 +425,7 @@ var invalidHTTPMethods = []testCase{
 		response: httpError(404).withBody("Not Found\n"),
 	},
 	{
-		request:  delete("webconsoleurl"),
+		request:  deleteRequest("webconsoleurl"),
 		response: httpError(404).withBody("Not Found\n"),
 	},
 
@@ -435,19 +435,19 @@ var invalidHTTPMethods = []testCase{
 		response: httpError(404).withBody("Not Found\n"),
 	},
 	{
-		request:  delete("logs"),
+		request:  deleteRequest("logs"),
 		response: httpError(404).withBody("Not Found\n"),
 	},
 
 	// telemetry
 	{
-		request:  delete("telemetry"),
+		request:  deleteRequest("telemetry"),
 		response: httpError(404).withBody("Not Found\n"),
 	},
 
 	// pull-secret
 	{
-		request: delete("pull-secret"),
+		request: deleteRequest("pull-secret"),
 		// other 404 return "not found", and others "404 not found"
 		response: httpError(404).withBody("Not Found\n"),
 	},
