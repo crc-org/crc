@@ -129,7 +129,7 @@ func (repo *Repository) Extract(path string) error {
 		_ = os.RemoveAll(tmpDir) // clean up after using it
 	}()
 
-	if _, err := extract.Uncompress(path, tmpDir, true); err != nil {
+	if _, err := extract.Uncompress(path, tmpDir); err != nil {
 		return err
 	}
 

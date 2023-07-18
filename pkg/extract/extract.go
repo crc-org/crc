@@ -27,7 +27,7 @@ func UncompressWithFilter(tarball, targetDir string, fileFilter func(string) boo
 	return uncompress(tarball, targetDir, fileFilter, false) // never show detailed output
 }
 
-func Uncompress(tarball, targetDir string, showProgress bool) ([]string, error) {
+func Uncompress(tarball, targetDir string) ([]string, error) {
 	return uncompress(tarball, targetDir, nil, terminal.IsShowTerminalOutput())
 }
 
