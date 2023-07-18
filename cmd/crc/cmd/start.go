@@ -283,10 +283,10 @@ func writeTemplatedMessage(writer io.Writer, s *startResult) error {
 		return writeOpenShiftTemplatedMessage(writer, s)
 	}
 	if s.ClusterConfig.ClusterType == preset.Microshift {
-		return writeMicroShiftTemplatedMessage(writer, s)
+		return writeMicroShiftTemplatedMessage(writer)
 	}
 
-	return writePodmanTemplatedMessage(writer, s)
+	return writePodmanTemplatedMessage(writer)
 }
 
 func writeOpenShiftTemplatedMessage(writer io.Writer, s *startResult) error {
@@ -314,7 +314,7 @@ func writeOpenShiftTemplatedMessage(writer io.Writer, s *startResult) error {
 	})
 }
 
-func writePodmanTemplatedMessage(writer io.Writer, s *startResult) error {
+func writePodmanTemplatedMessage(writer io.Writer) error {
 	parsed, err := template.New("template").Parse(startTemplateForPodman)
 	if err != nil {
 		return err
@@ -331,7 +331,7 @@ func writePodmanTemplatedMessage(writer io.Writer, s *startResult) error {
 	})
 }
 
-func writeMicroShiftTemplatedMessage(writer io.Writer, s *startResult) error {
+func writeMicroShiftTemplatedMessage(writer io.Writer) error {
 	parsed, err := template.New("template").Parse(startTemplateForMicroShift)
 	if err != nil {
 		return err
