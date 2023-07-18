@@ -263,8 +263,9 @@ lint: $(TOOLS_BINDIR)/golangci-lint
 	"$(TOOLS_BINDIR)"/golangci-lint run
 
 cross-lint: $(TOOLS_BINDIR)/golangci-lint
-	GOOS=darwin "$(TOOLS_BINDIR)"/golangci-lint run
-	GOOS=linux "$(TOOLS_BINDIR)"/golangci-lint run
+	GOARCH=amd64 GOOS=darwin "$(TOOLS_BINDIR)"/golangci-lint run
+	GOARCH=arm64 GOOS=darwin "$(TOOLS_BINDIR)"/golangci-lint run
+	GOARCH=amd64 GOOS=linux "$(TOOLS_BINDIR)"/golangci-lint run
 	GOARCH=amd64 GOOS=windows "$(TOOLS_BINDIR)"/golangci-lint run
 
 .PHONY: gen_release_info
