@@ -30,9 +30,11 @@ func BackupLogFile() {
 }
 
 func InitLogrus(logFilePath string) {
-	var err error
+	if lumberjackLogger != nil {
+		return
+	}
 
-	lumberjackLogger := &lumberjack.Logger{
+	lumberjackLogger = &lumberjack.Logger{
 		Filename:   logFilePath,
 		MaxSize:    5, // 5MB
 		MaxBackups: 2,
