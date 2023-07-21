@@ -17,6 +17,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/crc-org/crc/pkg/crc/logging"
+	crcstrings "github.com/crc-org/crc/pkg/strings"
 	openshiftapi "github.com/openshift/api/config/v1"
 	k8sapi "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -101,7 +102,7 @@ func getStatus(ctx context.Context, lister operatorLister, selector []string) (*
 
 	found := false
 	for _, c := range co.Items {
-		if len(selector) > 0 && !contains(c.ObjectMeta.Name, selector) {
+		if len(selector) > 0 && !crcstrings.Contains(selector, c.ObjectMeta.Name) {
 			continue
 		}
 		found = true
@@ -176,15 +177,6 @@ func GetClusterNodeStatus(ctx context.Context, ip string, kubeconfigFilePath str
 		logging.Debugf("Unexpected node status for %s", ns)
 	}
 	return status, nil
-}
-
-func contains(value string, list []string) bool {
-	for _, v := range list {
-		if v == value {
-			return true
-		}
-	}
-	return false
 }
 
 type operatorLister interface {
