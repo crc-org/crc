@@ -11,6 +11,7 @@ import (
 	winnet "github.com/crc-org/crc/pkg/os/windows/network"
 	"github.com/crc-org/crc/pkg/os/windows/powershell"
 	"github.com/crc-org/crc/pkg/os/windows/win32"
+	crcstrings "github.com/crc-org/crc/pkg/strings"
 )
 
 const (
@@ -30,7 +31,7 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
 
 	time.Sleep(2 * time.Second)
 
-	if !contains(getInterfaceNameserverValues(networkInterface), serviceConfig.IP) {
+	if !crcstrings.Contains(getInterfaceNameserverValues(networkInterface), serviceConfig.IP) {
 		return fmt.Errorf("Nameserver %s not successfully set on interface %s. Perhaps you can try this new network mode: https://github.com/crc-org/crc/wiki/VPN-support--with-an--userland-network-stack", serviceConfig.IP, networkInterface)
 	}
 	return nil
@@ -41,15 +42,6 @@ func getInterfaceNameserverValues(iface string) []string {
 	stdOut, _, _ := powershell.Execute(getDNSServerCommand)
 
 	return parseLines(stdOut)
-}
-
-func contains(s []string, e string) bool {
-	for _, v := range s {
-		if v == e {
-			return true
-		}
-	}
-	return false
 }
 
 func setInterfaceNameserverValue(iface string, address string) {
