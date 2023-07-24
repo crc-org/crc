@@ -94,18 +94,18 @@ func (d *Driver) GetState() (state.State, error) {
 		return state.Error, fmt.Errorf("Failed to find the VM status: %v - %s", err, stderr)
 	}
 
-	resp := crcstrings.SplitLines(stdout)
-	if len(resp) < 1 {
+	resp := crcstrings.FirstLine(stdout)
+	if resp == "" {
 		return state.Error, fmt.Errorf("unexpected Hyper-V state %s", stdout)
 	}
 
-	switch resp[0] {
+	switch resp {
 	case "Starting", "Running", "Stopping":
 		return state.Running, nil
 	case "Off":
 		return state.Stopped, nil
 	default:
-		return state.Error, fmt.Errorf("unexpected Hyper-V state %s", resp[0])
+		return state.Error, fmt.Errorf("unexpected Hyper-V state %s", resp)
 	}
 }
 
@@ -398,12 +398,12 @@ func (d *Driver) GetIP() (string, error) {
 		return "", err
 	}
 
-	resp := crcstrings.SplitLines(stdout)
-	if len(resp) < 1 {
+	resp := crcstrings.FirstLine(stdout)
+	if resp == "" {
 		return "", fmt.Errorf("IP not found")
 	}
 
-	return resp[0], nil
+	return resp, nil
 }
 
 func (d *Driver) GetSharedDirs() ([]drivers.SharedDir, error) {

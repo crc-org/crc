@@ -93,3 +93,46 @@ func TestSplitLines(t *testing.T) {
 		}
 	})
 }
+
+type firstLineTest struct {
+	input     string
+	firstLine string
+}
+
+var firstLineTests = map[string]firstLineTest{
+	"ThreeLines": {
+		input:     "line1\nline2\nline3\n",
+		firstLine: "line1",
+	},
+	"ThreeLinesNoFinalEOL": {
+		input:     "line1\nline2\nline3",
+		firstLine: "line1",
+	},
+	"WindowsEOL": {
+		input:     "line1\r\nline2\r\nline3\r\n",
+		firstLine: "line1",
+	},
+	"EmptyString": {
+		input:     "",
+		firstLine: "",
+	},
+	"EOLOnly": {
+		input:     "\n",
+		firstLine: "",
+	},
+	"NoEOL": {
+		input:     "line1",
+		firstLine: "line1",
+	},
+}
+
+func TestFirstLine(t *testing.T) {
+	t.Run("FirstLine", func(t *testing.T) {
+		for name, test := range firstLineTests {
+			t.Run(name, func(t *testing.T) {
+				firstLine := FirstLine(test.input)
+				assert.Equal(t, test.firstLine, firstLine)
+			})
+		}
+	})
+}

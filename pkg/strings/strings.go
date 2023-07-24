@@ -25,3 +25,12 @@ func SplitLines(input string) []string {
 
 	return output
 }
+
+func FirstLine(input string) string {
+	lines := SplitLines(input)
+	if len(lines) == 0 {
+		return ""
+	}
+
+	return lines[0]
+}
