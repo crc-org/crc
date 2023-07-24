@@ -12,6 +12,7 @@ import (
 	log "github.com/crc-org/crc/pkg/crc/logging"
 	crcos "github.com/crc-org/crc/pkg/os"
 	"github.com/crc-org/crc/pkg/os/windows/powershell"
+	crcstrings "github.com/crc-org/crc/pkg/strings"
 	"github.com/crc-org/machine/libmachine/drivers"
 	"github.com/crc-org/machine/libmachine/state"
 )
@@ -93,7 +94,7 @@ func (d *Driver) GetState() (state.State, error) {
 		return state.Error, fmt.Errorf("Failed to find the VM status: %v - %s", err, stderr)
 	}
 
-	resp := parseLines(stdout)
+	resp := crcstrings.SplitLines(stdout)
 	if len(resp) < 1 {
 		return state.Error, fmt.Errorf("unexpected Hyper-V state %s", stdout)
 	}
@@ -256,7 +257,7 @@ func (d *Driver) chooseVirtualSwitch() (string, error) {
 		return "", err
 	}
 
-	switches := parseLines(stdout)
+	switches := crcstrings.SplitLines(stdout)
 
 	found := false
 	for _, name := range switches {
@@ -397,7 +398,7 @@ func (d *Driver) GetIP() (string, error) {
 		return "", err
 	}
 
-	resp := parseLines(stdout)
+	resp := crcstrings.SplitLines(stdout)
 	if len(resp) < 1 {
 		return "", fmt.Errorf("IP not found")
 	}

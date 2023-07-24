@@ -1,13 +1,12 @@
 package hyperv
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
-	"strings"
 
 	log "github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/os/windows/powershell"
+	crcstrings "github.com/crc-org/crc/pkg/strings"
 )
 
 var (
@@ -26,24 +25,13 @@ func cmd(args ...string) error {
 	return err
 }
 
-func parseLines(stdout string) []string {
-	resp := []string{}
-
-	s := bufio.NewScanner(strings.NewReader(stdout))
-	for s.Scan() {
-		resp = append(resp, s.Text())
-	}
-
-	return resp
-}
-
 func hypervAvailable() error {
 	stdout, err := cmdOut("@(Get-Module -ListAvailable hyper-v).Name | Get-Unique")
 	if err != nil {
 		return err
 	}
 
-	resp := parseLines(stdout)
+	resp := crcstrings.SplitLines(stdout)
 	if resp[0] != "Hyper-V" {
 		return ErrNotInstalled
 	}
@@ -74,7 +62,7 @@ func isHypervAdministrator() bool {
 		return false
 	}
 
-	resp := parseLines(stdout)
+	resp := crcstrings.SplitLines(stdout)
 	return resp[0] == "True"
 }
 
@@ -84,7 +72,7 @@ func isWindowsAdministrator() (bool, error) {
 		return false, err
 	}
 
-	resp := parseLines(stdout)
+	resp := crcstrings.SplitLines(stdout)
 	return resp[0] == "True", nil
 }
 

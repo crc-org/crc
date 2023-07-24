@@ -50,3 +50,46 @@ func TestContains(t *testing.T) {
 		}
 	})
 }
+
+type splitLinesTest struct {
+	input       string
+	splitOutput []string
+}
+
+var splitLinesTests = map[string]splitLinesTest{
+	"ThreeLines": {
+		input:       "line1\nline2\nline3\n",
+		splitOutput: []string{"line1", "line2", "line3"},
+	},
+	"ThreeLinesNoFinalEOL": {
+		input:       "line1\nline2\nline3",
+		splitOutput: []string{"line1", "line2", "line3"},
+	},
+	"WindowsEOL": {
+		input:       "line1\r\nline2\r\nline3\r\n",
+		splitOutput: []string{"line1", "line2", "line3"},
+	},
+	"EmptyString": {
+		input:       "",
+		splitOutput: []string{},
+	},
+	"EOLOnly": {
+		input:       "\n",
+		splitOutput: []string{""},
+	},
+	"NoEOL": {
+		input:       "line1",
+		splitOutput: []string{"line1"},
+	},
+}
+
+func TestSplitLines(t *testing.T) {
+	t.Run("SplitLines", func(t *testing.T) {
+		for name, test := range splitLinesTests {
+			t.Run(name, func(t *testing.T) {
+				output := SplitLines(test.input)
+				assert.Equal(t, test.splitOutput, output)
+			})
+		}
+	})
+}
