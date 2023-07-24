@@ -1,9 +1,7 @@
 package dns
 
 import (
-	"bufio"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/crc-org/crc/pkg/crc/network"
@@ -41,7 +39,7 @@ func getInterfaceNameserverValues(iface string) []string {
 	getDNSServerCommand := fmt.Sprintf(`(Get-DnsClientServerAddress "%s")[0].ServerAddresses`, iface)
 	stdOut, _, _ := powershell.Execute(getDNSServerCommand)
 
-	return parseLines(stdOut)
+	return crcstrings.SplitLines(stdOut)
 }
 
 func setInterfaceNameserverValue(iface string, address string) {
@@ -50,15 +48,4 @@ func setInterfaceNameserverValue(iface string, address string) {
 
 	// ignore the error as this is useless (prefer not to use nolint here)
 	_ = win32.ShellExecuteAsAdmin(fmt.Sprintf("add dns server address to interface %s", iface), win32.HwndDesktop, exe, args, "", 0)
-}
-
-func parseLines(input string) []string {
-	output := []string{}
-
-	s := bufio.NewScanner(strings.NewReader(input))
-	for s.Scan() {
-		output = append(output, s.Text())
-	}
-
-	return output
 }
