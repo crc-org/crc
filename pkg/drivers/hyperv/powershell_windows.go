@@ -31,8 +31,8 @@ func hypervAvailable() error {
 		return err
 	}
 
-	resp := crcstrings.SplitLines(stdout)
-	if resp[0] != "Hyper-V" {
+	resp := crcstrings.FirstLine(stdout)
+	if resp != "Hyper-V" {
 		return ErrNotInstalled
 	}
 
@@ -62,8 +62,8 @@ func isHypervAdministrator() bool {
 		return false
 	}
 
-	resp := crcstrings.SplitLines(stdout)
-	return resp[0] == "True"
+	resp := crcstrings.FirstLine(stdout)
+	return resp == "True"
 }
 
 func isWindowsAdministrator() (bool, error) {
@@ -72,8 +72,8 @@ func isWindowsAdministrator() (bool, error) {
 		return false, err
 	}
 
-	resp := crcstrings.SplitLines(stdout)
-	return resp[0] == "True", nil
+	resp := crcstrings.FirstLine(stdout)
+	return resp == "True", nil
 }
 
 func quote(text string) string {
