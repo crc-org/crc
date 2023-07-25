@@ -55,7 +55,7 @@ func RunProxy() {
 	proxy := goproxy.NewProxyHttpServer()
 	proxy.OnRequest(goproxy.ReqHostMatches(regexp.MustCompile("^.*$"))).HandleConnect(goproxy.AlwaysMitm)
 
-	logfile := filepath.Join("test", "integration", "out", "goproxylogfile.log")
+	logfile := filepath.Join("out", "goproxylogfile.log")
 	f, err := os.OpenFile(logfile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Printf("error opening file: %v", err)
