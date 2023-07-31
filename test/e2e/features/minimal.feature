@@ -10,9 +10,17 @@ Feature: Minimal user story
         And starting CRC with default bundle succeeds
         Then checking that CRC is running
 
-        Examples:
+            @podman-preset
+            Scenarios:
             | preset-value |
             | podman       |
-            | microshift   |
-            | openshift    |
 
+            @microshift-preset
+            Scenarios:
+            | preset-value |
+            | microshift   |
+
+            @openshift-preset
+            Scenarios:
+            | preset-value |
+            | openshift    |
