@@ -75,4 +75,6 @@ spec:
       schedulerName: default-scheduler
       securityContext: 
         runAsNonRoot: true
+        seccompProfile:
+          type: "RuntimeDefault"
       terminationGracePeriodSeconds: 30
