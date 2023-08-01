@@ -250,7 +250,8 @@ e2e-story-marketplace: install
 	@go test $(REPOPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v --godog.tags="$(GOOS) && ~@startstop && @story_marketplace" --cleanup-home=false
 e2e-story-registry: install
 	@go test $(REPOPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v --godog.tags="$(GOOS) && ~@startstop && @story_registry" --cleanup-home=false
-
+e2e-story-microshift: install
+	@go test $(REPOPATH)/test/e2e -tags "$(BUILDTAGS)" --ldflags="$(VERSION_VARIABLES)" -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --godog.tags="$(GOOS) && @microshift" --cleanup-home=false
 
 .PHONY: fmt
 fmt: $(TOOLS_BINDIR)/goimports
