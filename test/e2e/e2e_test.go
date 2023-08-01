@@ -33,7 +33,7 @@ func init() {
 func TestMain(m *testing.M) {
 
 	pflag.Parse()
-
+	testsuite.GodogTags = opts.Tags
 	status := godog.TestSuite{
 		Name:                 "crc",
 		TestSuiteInitializer: testsuite.InitializeTestSuite,
