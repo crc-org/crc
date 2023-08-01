@@ -31,12 +31,7 @@ var (
 	testWithShell      string
 	CRCVersion         string
 
-	GodogFormat              string
-	GodogTags                string
-	GodogShowStepDefinitions bool
-	GodogStopOnFailure       bool
-	GodogNoColors            bool
-	GodogPaths               string
+	GodogTags string
 )
 
 func ParseFlags() {
