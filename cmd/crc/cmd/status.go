@@ -90,6 +90,14 @@ func runWatchStatus(writer io.Writer, client *daemonclient.Client, cacheDir stri
 			if err != nil {
 				return
 			}
+		} else if len(loadResult.CPUUse) > len(cpuBars) {
+			newCPUCount := len(loadResult.CPUUse) - len(cpuBars)
+			oldCPUCount := len(cpuBars)
+			for i := 0; i < newCPUCount; i++ {
+				bar := createCPUBar(oldCPUCount+i, writer)
+				barPull.Add(bar)
+				cpuBars = append(cpuBars, bar)
+			}
 		}
 
 		ramBar.SetTotal(loadResult.RAMSize)
@@ -111,17 +119,21 @@ func createBars(cpuUse []int64, writer io.Writer) (ramBar *pb.ProgressBar, cpuBa
 	ramBar.SetTemplateString(tmpl)
 
 	for i := range cpuUse {
-		bar := pb.New(101)
-		bar.SetWriter(writer)
-		bar.Set(pb.Static, true)
-		tmpl := fmt.Sprintf(`{{ green "CPU%d:" }} {{percent .}} {{string . "my_green_string" | green}} {{ bar . "[" "\u2588" "\u2588" " " "]"}}`, i)
-		bar.SetTemplateString(tmpl)
-		bar.SetMaxWidth(150)
-
+		bar := createCPUBar(i, writer)
 		cpuBars = append(cpuBars, bar)
 	}
 
 	return ramBar, cpuBars
+}
+
+func createCPUBar(cpuNum int, writer io.Writer) *pb.ProgressBar {
+	bar := pb.New(101)
+	bar.SetWriter(writer)
+	bar.Set(pb.Static, true)
+	tmpl := fmt.Sprintf(`{{ green "CPU%d:" }} {{percent .}} {{string . "my_green_string" | green}} {{ bar . "[" "\u2588" "\u2588" " " "]"}}`, cpuNum)
+	bar.SetTemplateString(tmpl)
+	bar.SetMaxWidth(150)
+	return bar
 }
 
 func getStatus(client *daemonclient.Client, cacheDir string) *status {
