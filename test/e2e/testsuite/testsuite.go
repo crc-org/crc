@@ -39,9 +39,9 @@ func ParseFlags() {
 	pflag.StringVar(&util.TestDir, "test-dir", "out", "Path to the directory in which to execute the tests")
 	pflag.StringVar(&testWithShell, "test-shell", "", "Specifies shell to be used for the testing.")
 
-	pflag.StringVar(&bundleLocation, "bundle-location", "/path/to/bundle.crcbundle", "Path to the bundle to be used in tests")
+	pflag.StringVar(&bundleLocation, "bundle-location", "", "Path to the bundle to be used in tests")
 	pflag.StringVar(&pullSecretFile, "pull-secret-file", "/path/to/pull-secret", "Path to the file containing pull secret")
-	pflag.StringVar(&CRCExecutable, "crc-binary", "/path/to/binary/crc", "Path to the CRC executable to be tested")
+	pflag.StringVar(&CRCExecutable, "crc-binary", "", "Path to the CRC executable to be tested")
 	pflag.BoolVar(&cleanupHome, "cleanup-home", false, "Try to remove crc home folder before starting the suite") // TODO: default=true
 	pflag.StringVar(&CRCVersion, "crc-version", "", "Version of CRC to be tested")
 }
