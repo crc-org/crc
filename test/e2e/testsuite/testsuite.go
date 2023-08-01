@@ -89,10 +89,10 @@ func InitializeTestSuite(tctx *godog.TestSuiteContext) {
 		}
 
 		if bundleLocation == "" {
-			fmt.Println("Expecting the bundle provided by the user")
 			userProvidedBundle = false
 			bundleName = constants.GetDefaultBundle(preset.OpenShift)
 		} else {
+			fmt.Println("Expecting the bundle provided by the user")
 			userProvidedBundle = true
 			_, bundleName = filepath.Split(bundleLocation)
 		}
