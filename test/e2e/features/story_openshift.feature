@@ -68,14 +68,12 @@ Feature: 4 Openshift stories
 	@darwin @linux @windows @testdata @story_marketplace @cleanup @needs_namespace
 	Scenario: Install new operator
 		Given executing "oc new-project testproj" succeeds
-		When executing "oc apply -f redis-sub.yaml" succeeds
-		Then with up to "20" retries with wait period of "30s" command "oc get csv" output matches ".*redis-operator\.(.*)Succeeded$"
-		# install redis operator
-		When executing "oc apply -f redis-cluster.yaml" succeeds
-		Then with up to "10" retries with wait period of "30s" command "oc get pods" output matches "redis-standalone-[a-z0-9]* .*Running.*"
-		When deleting a pod succeeds
-		Then stdout should match "^pod(.*)deleted$"
-		# after a while 1 pods should be up & running again
-		And with up to "10" retries with wait period of "30s" command "oc get pods" output matches "redis-standalone-[a-z0-9]* .*Running.*"
-
-
+		When executing "oc apply -f pipeline-sub.yaml" succeeds
+		Then with up to "10" retries with wait period of "30s" command "oc get csv" output matches ".*pipelines-operator(.*)Succeeded$"
+		When with up to "60" retries with wait period of "5s" command "oc explain task" output matches ".*KIND(.*)Task.*"
+		When with up to "60" retries with wait period of "5s" command "oc explain taskruns" output matches ".*KIND(.*)TaskRun.*"
+		# install tekton task
+		When executing "oc apply -f tekton-task.yaml" succeeds
+		Then with up to "60" retries with wait period of "5s" command "oc get taskruns" output matches "echo-task-run(.*)Succeeded.*"
+		When executing "oc logs --selector=tekton.dev/taskRun=echo-task-run" succeeds
+		Then stdout should contain "Hello World"

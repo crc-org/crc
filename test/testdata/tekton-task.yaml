@@ -1,0 +1,20 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: echo-task
+spec:
+  steps:
+    - image: registry.redhat.io/ubi7/ubi-minimal
+      name: echo
+      script: |
+        #!/bin/sh
+        echo "Hello World"  
+---
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  name: echo-task-run
+spec:
+  taskRef:
+    name: echo-task
