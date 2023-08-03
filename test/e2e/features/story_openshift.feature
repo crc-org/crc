@@ -7,7 +7,7 @@ Feature: 4 Openshift stories
 
 	# End-to-end health check
 
-	@darwin @linux @windows @startstop @testdata @story_health @needs_namespace
+	@darwin @linux @windows @testdata @story_health @needs_namespace
 	Scenario: Overall cluster health
 		Given executing "oc create namespace testproj" succeeds
 		When executing "oc apply -f httpd-example.yaml" succeeds
