@@ -245,11 +245,11 @@ e2e:
 e2e-stories: install e2e-story-health e2e-story-marketplace e2e-story-registry
 
 e2e-story-health: install
-	@go test $(REPOPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v --godog.tags="$(GOOS) && ~@startstop && @story_health" --cleanup-home=false
+	@go test $(REPOPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v $(CRC_BINARY) --godog.tags="$(GOOS) && ~@startstop && @story_health" --cleanup-home=false
 e2e-story-marketplace: install
-	@go test $(REPOPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v --godog.tags="$(GOOS) && ~@startstop && @story_marketplace" --cleanup-home=false
+	@go test $(REPOPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v $(CRC_BINARY) --godog.tags="$(GOOS) && ~@startstop && @story_marketplace" --cleanup-home=false
 e2e-story-registry: install
-	@go test $(REPOPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v --godog.tags="$(GOOS) && ~@startstop && @story_registry" --cleanup-home=false
+	@go test $(REPOPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v $(CRC_BINARY) --godog.tags="$(GOOS) && ~@startstop && @story_registry" --cleanup-home=false
 e2e-story-microshift: install
 	@go test $(REPOPATH)/test/e2e -tags "$(BUILDTAGS)" --ldflags="$(VERSION_VARIABLES)" -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --godog.tags="$(GOOS) && @microshift" --cleanup-home=false
 
