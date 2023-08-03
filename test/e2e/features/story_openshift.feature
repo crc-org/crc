@@ -9,7 +9,7 @@ Feature: 4 Openshift stories
 
 	@darwin @linux @windows @testdata @story_health @needs_namespace
 	Scenario: Overall cluster health
-		Given executing "oc create namespace testproj" succeeds
+		Given executing "oc new-project testproj" succeeds
 		When executing "oc apply -f httpd-example.yaml" succeeds
 		And executing "oc rollout status deployment httpd-example" succeeds
 		Then stdout should contain "successfully rolled out"
@@ -36,7 +36,7 @@ Feature: 4 Openshift stories
 
 	@darwin @linux @windows @testdata @story_registry @mirror-registry @needs_namespace
 	Scenario: Mirror image to OpenShift image registry
-		Given executing "oc create namespace testproj" succeeds
+		Given executing "oc new-project testproj" succeeds
 		# mirror
 		When executing "oc registry login --insecure=true" succeeds
 		Then executing "oc image mirror quay.io/centos7/httpd-24-centos7:latest=default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test --insecure=true --filter-by-os=linux/amd64" succeeds
@@ -53,7 +53,7 @@ Feature: 4 Openshift stories
 	@darwin @linux @windows @testdata @story_registry @local-registry @needs_namespace
 	Scenario: Pull image locally, push to registry, deploy
 		Given podman command is available
-		And executing "oc create namespace testproj" succeeds
+		And executing "oc new-project testproj" succeeds
 		When pulling image "quay.io/centos7/httpd-24-centos7", logging in, and pushing local image to internal registry succeeds
 		And executing "oc apply -f hello.yaml" succeeds
 		When executing "oc rollout status deployment hello" succeeds
@@ -67,7 +67,7 @@ Feature: 4 Openshift stories
 
 	@darwin @linux @windows @testdata @story_marketplace @cleanup @needs_namespace
 	Scenario: Install new operator
-		Given executing "oc create namespace testproj" succeeds
+		Given executing "oc new-project testproj" succeeds
 		When executing "oc apply -f redis-sub.yaml" succeeds
 		Then with up to "20" retries with wait period of "30s" command "oc get csv" output matches ".*redis-operator\.(.*)Succeeded$"
 		# install redis operator
