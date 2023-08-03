@@ -797,6 +797,9 @@ func StartCRCWithDefaultBundleAndNameServerSucceedsOrFails(nameserver string, ex
 }
 
 func EnsureCRCIsRunning() error {
+	if usingPreexistingCluster() {
+		return nil
+	}
 
 	err := crcCmd.CheckCRCStatus("running")
 
