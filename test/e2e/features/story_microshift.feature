@@ -6,6 +6,7 @@ Feature: Microshift test stories
 		And setting config property "network-mode" to value "user" succeeds
 		And executing single crc setup command succeeds
 		And starting CRC with default bundle succeeds
+		And ensuring oc command is available
 
 	# End-to-end health check
 

@@ -492,6 +492,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		ExecutingPodmanCommandSucceedsFails)
 	s.Step(`^ensuring CRC cluster is running$`,
 		EnsureCRCIsRunning)
+	s.Step(`^ensuring oc command is available$`,
+		EnsureOCCommandIsAvailable)
 	s.Step(`^ensuring user is logged in (succeeds|fails)`,
 		EnsureUserIsLoggedIntoClusterSucceedsOrFails)
 	s.Step(`^podman command is available$`,
@@ -845,19 +847,21 @@ func EnsureCRCIsRunning() error {
 }
 
 func EnsureUserIsLoggedIntoClusterSucceedsOrFails(expected string) error {
-
-	var err error
-
-	if runtime.GOOS == "windows" {
-		err = util.ExecuteCommandSucceedsOrFails("crc oc-env | Invoke-Expression", expected)
-	} else {
-		err = util.ExecuteCommandSucceedsOrFails("eval $(crc oc-env)", expected)
-	}
-	if err != nil {
+	if err := setOcEnv(); err != nil {
 		return err
 	}
-
 	return LoginToOcClusterSucceedsOrFails(expected)
+}
+
+func EnsureOCCommandIsAvailable() error {
+	return setOcEnv()
+}
+
+func setOcEnv() error {
+	if runtime.GOOS == "windows" {
+		return util.ExecuteCommandSucceedsOrFails("crc oc-env | Invoke-Expression", "succeeds")
+	}
+	return util.ExecuteCommandSucceedsOrFails("eval $(crc oc-env)", "succeeds")
 }
 
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
