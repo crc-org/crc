@@ -3,6 +3,7 @@ Feature: 4 Openshift stories
 
 	Background:
 		Given ensuring CRC cluster is running
+		And ensuring oc command is available
 		And executing "oc config view --raw -o jsonpath="{.clusters[?(@.name=='api-crc-testing:6443')].cluster.certificate-authority-data}"| base64 -d - > ca.crt" succeeds
 		And executing "echo | openssl s_client -connect api.crc.testing:6443 | openssl x509 -out server.crt" succeeds
 		And executing "openssl verify -CAfile ca.crt server.crt" succeeds
