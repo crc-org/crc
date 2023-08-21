@@ -49,6 +49,14 @@ func TestUnCompressBundle(t *testing.T) {
 	}
 }
 
+// check that archives containing ./ are extracted as expected
+func TestDotSlash(t *testing.T) {
+	var files fileMap = map[string]string{
+		"a.txt": "",
+	}
+	assert.NoError(t, testUncompress(t, filepath.Join("testdata", "dotslash.tar.gz"), nil, files))
+}
+
 func copyFileMap(orig fileMap) fileMap {
 	copiedMap := fileMap{}
 	for key, value := range orig {
