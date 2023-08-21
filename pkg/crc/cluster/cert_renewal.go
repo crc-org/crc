@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	crcerrors "github.com/crc-org/crc/pkg/crc/errors"
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/oc"
-	"github.com/crc-org/crc/pkg/crc/ssh"
+	crcerrors "github.com/crc-org/crc/v2/pkg/crc/errors"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/oc"
+	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 
 	k8scerts "k8s.io/api/certificates/v1beta1"
 )

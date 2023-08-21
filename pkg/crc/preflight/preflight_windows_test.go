@@ -3,10 +3,10 @@ package preflight
 import (
 	"testing"
 
-	"github.com/crc-org/crc/pkg/crc/config"
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/network"
-	"github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/config"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/network"
+	"github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/stretchr/testify/assert"
 )
 

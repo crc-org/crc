@@ -3,7 +3,7 @@ package preset
 import (
 	"fmt"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 )
 
 type Preset string

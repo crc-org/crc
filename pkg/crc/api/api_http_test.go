@@ -10,11 +10,11 @@ import (
 	"strings"
 	"testing"
 
-	crcConfig "github.com/crc-org/crc/pkg/crc/config"
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/machine/fakemachine"
-	"github.com/crc-org/crc/pkg/crc/preset"
-	"github.com/crc-org/crc/pkg/crc/version"
+	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/fakemachine"
+	"github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/version"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

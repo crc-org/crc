@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	apiClient "github.com/crc-org/crc/pkg/crc/api/client"
-	crcConfig "github.com/crc-org/crc/pkg/crc/config"
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/machine/fakemachine"
-	"github.com/crc-org/crc/pkg/crc/machine/types"
-	"github.com/crc-org/crc/pkg/crc/preset"
-	"github.com/crc-org/crc/pkg/crc/version"
+	apiClient "github.com/crc-org/crc/v2/pkg/crc/api/client"
+	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/fakemachine"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
+	"github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/version"
 	"github.com/stretchr/testify/assert"
 )
 

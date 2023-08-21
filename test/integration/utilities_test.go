@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	crcConfig "github.com/crc-org/crc/pkg/crc/config"
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/machine"
-	"github.com/crc-org/crc/pkg/crc/ssh"
-	"github.com/crc-org/crc/test/extended/crc/cmd"
+	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/machine"
+	"github.com/crc-org/crc/v2/pkg/crc/ssh"
+	"github.com/crc-org/crc/v2/test/extended/crc/cmd"
 	. "github.com/onsi/gomega"
 )
 

@@ -6,9 +6,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/crc-org/crc/pkg/crc/machine/state"
-	"github.com/crc-org/crc/pkg/crc/machine/types"
-	crcPreset "github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
+	crcPreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/stretchr/testify/assert"
 )
 

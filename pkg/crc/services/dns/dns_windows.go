@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/crc-org/crc/pkg/crc/network"
-	"github.com/crc-org/crc/pkg/crc/services"
-	winnet "github.com/crc-org/crc/pkg/os/windows/network"
-	"github.com/crc-org/crc/pkg/os/windows/powershell"
-	"github.com/crc-org/crc/pkg/os/windows/win32"
-	crcstrings "github.com/crc-org/crc/pkg/strings"
+	"github.com/crc-org/crc/v2/pkg/crc/network"
+	"github.com/crc-org/crc/v2/pkg/crc/services"
+	winnet "github.com/crc-org/crc/v2/pkg/os/windows/network"
+	"github.com/crc-org/crc/v2/pkg/os/windows/powershell"
+	"github.com/crc-org/crc/v2/pkg/os/windows/win32"
+	crcstrings "github.com/crc-org/crc/v2/pkg/strings"
 )
 
 const (
@@ -30,7 +30,7 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
 	time.Sleep(2 * time.Second)
 
 	if !crcstrings.Contains(getInterfaceNameserverValues(networkInterface), serviceConfig.IP) {
-		return fmt.Errorf("Nameserver %s not successfully set on interface %s. Perhaps you can try this new network mode: https://github.com/crc-org/crc/wiki/VPN-support--with-an--userland-network-stack", serviceConfig.IP, networkInterface)
+		return fmt.Errorf("Nameserver %s not successfully set on interface %s. Perhaps you can try this new network mode: https://github.com/crc-org/crc/v2/wiki/VPN-support--with-an--userland-network-stack", serviceConfig.IP, networkInterface)
 	}
 	return nil
 }

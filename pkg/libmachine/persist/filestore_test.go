@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/crc-org/crc/pkg/drivers/none"
-	"github.com/crc-org/crc/pkg/libmachine/host"
+	"github.com/crc-org/crc/v2/pkg/drivers/none"
+	"github.com/crc-org/crc/v2/pkg/libmachine/host"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -11,12 +11,12 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/crc-org/crc/pkg/crc/cache"
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/logging"
-	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
-	"github.com/crc-org/crc/pkg/crc/version"
-	crcos "github.com/crc-org/crc/pkg/os"
+	"github.com/crc-org/crc/v2/pkg/crc/cache"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/version"
+	crcos "github.com/crc-org/crc/v2/pkg/os"
 	"github.com/pkg/errors"
 )
 

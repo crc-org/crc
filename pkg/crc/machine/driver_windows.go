@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/crc-org/crc/pkg/crc/machine/config"
-	"github.com/crc-org/crc/pkg/crc/machine/hyperv"
-	machineHyperv "github.com/crc-org/crc/pkg/drivers/hyperv"
-	"github.com/crc-org/crc/pkg/libmachine"
-	"github.com/crc-org/crc/pkg/libmachine/host"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/config"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/hyperv"
+	machineHyperv "github.com/crc-org/crc/v2/pkg/drivers/hyperv"
+	"github.com/crc-org/crc/v2/pkg/libmachine"
+	"github.com/crc-org/crc/v2/pkg/libmachine/host"
 )
 
 func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {

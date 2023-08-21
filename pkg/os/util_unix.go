@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 )
 
 func WriteToFileAsRoot(reason, content, filepath string, mode os.FileMode) error {

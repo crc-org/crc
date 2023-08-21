@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/test/extended/util"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/test/extended/util"
 	"github.com/sirupsen/logrus"
 )
 

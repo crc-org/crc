@@ -5,8 +5,8 @@ package adminhelper
 
 import (
 	"github.com/crc-org/admin-helper/pkg/types"
-	"github.com/crc-org/crc/pkg/crc/constants"
-	crcos "github.com/crc-org/crc/pkg/os"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	crcos "github.com/crc-org/crc/v2/pkg/os"
 )
 
 func execute(args ...string) error {

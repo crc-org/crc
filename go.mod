@@ -1,4 +1,4 @@
-module github.com/crc-org/crc
+module github.com/crc-org/crc/v2
 
 go 1.19
 

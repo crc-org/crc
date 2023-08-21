@@ -6,10 +6,10 @@ import (
 	"io"
 	"os"
 
-	"github.com/crc-org/crc/pkg/crc/api/client"
-	"github.com/crc-org/crc/pkg/crc/daemonclient"
-	crcErrors "github.com/crc-org/crc/pkg/crc/errors"
-	"github.com/crc-org/crc/pkg/crc/machine/state"
+	"github.com/crc-org/crc/v2/pkg/crc/api/client"
+	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
+	crcErrors "github.com/crc-org/crc/v2/pkg/crc/errors"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 )

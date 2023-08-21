@@ -9,10 +9,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 
 	"github.com/asaskevich/govalidator"
-	crcstrings "github.com/crc-org/crc/pkg/strings"
+	crcstrings "github.com/crc-org/crc/v2/pkg/strings"
 	"github.com/pkg/errors"
 	"golang.org/x/net/http/httpproxy"
 )

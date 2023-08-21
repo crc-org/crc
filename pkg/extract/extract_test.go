@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
-	crcos "github.com/crc-org/crc/pkg/os"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	crcos "github.com/crc-org/crc/v2/pkg/os"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

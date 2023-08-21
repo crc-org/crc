@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/crc-org/crc/test/extended/crc/cmd"
+	"github.com/crc-org/crc/v2/test/extended/crc/cmd"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

@@ -1,7 +1,7 @@
 package dns
 
 import (
-	"github.com/crc-org/crc/pkg/crc/services"
+	"github.com/crc-org/crc/v2/pkg/crc/services"
 )
 
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {

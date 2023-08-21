@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/crc-org/crc/pkg/crc/constants"
-	crcerrors "github.com/crc-org/crc/pkg/crc/errors"
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/extract"
-	crcos "github.com/crc-org/crc/pkg/os"
-	crcstrings "github.com/crc-org/crc/pkg/strings"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	crcerrors "github.com/crc-org/crc/v2/pkg/crc/errors"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/extract"
+	crcos "github.com/crc-org/crc/v2/pkg/os"
+	crcstrings "github.com/crc-org/crc/v2/pkg/strings"
 	"github.com/pkg/errors"
 )
 

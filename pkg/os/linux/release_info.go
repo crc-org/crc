@@ -11,7 +11,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 )
 
 const releaseFile = "/etc/os-release"

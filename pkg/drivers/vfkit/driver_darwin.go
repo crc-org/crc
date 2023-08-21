@@ -28,9 +28,9 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/logging"
-	crcos "github.com/crc-org/crc/pkg/os"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	crcos "github.com/crc-org/crc/v2/pkg/os"
 	"github.com/crc-org/machine/libmachine/drivers"
 	"github.com/crc-org/machine/libmachine/state"
 	"github.com/crc-org/vfkit/pkg/config"

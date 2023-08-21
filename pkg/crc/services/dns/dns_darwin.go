@@ -9,11 +9,11 @@ import (
 	"text/template"
 	"time"
 
-	crcerrors "github.com/crc-org/crc/pkg/crc/errors"
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/network"
-	"github.com/crc-org/crc/pkg/crc/services"
-	crcos "github.com/crc-org/crc/pkg/os"
+	crcerrors "github.com/crc-org/crc/v2/pkg/crc/errors"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/network"
+	"github.com/crc-org/crc/v2/pkg/crc/services"
+	crcos "github.com/crc-org/crc/v2/pkg/os"
 	"github.com/pkg/errors"
 )
 

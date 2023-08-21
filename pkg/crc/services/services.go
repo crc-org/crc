@@ -1,9 +1,9 @@
 package services
 
 import (
-	"github.com/crc-org/crc/pkg/crc/machine/bundle"
-	"github.com/crc-org/crc/pkg/crc/network"
-	"github.com/crc-org/crc/pkg/crc/ssh"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/bundle"
+	"github.com/crc-org/crc/v2/pkg/crc/network"
+	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 )
 
 type ServicePostStartConfig struct {

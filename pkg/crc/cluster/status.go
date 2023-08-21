@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
 )
 
 // WaitForClusterStable checks that the cluster is running a number of consecutive times

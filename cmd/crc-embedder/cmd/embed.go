@@ -8,12 +8,12 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/download"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/download"
 
-	"github.com/crc-org/crc/pkg/crc/machine/libvirt"
-	"github.com/crc-org/crc/pkg/crc/machine/vfkit"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/libvirt"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/vfkit"
 
 	"github.com/YourFin/binappend"
 	"github.com/spf13/cobra"

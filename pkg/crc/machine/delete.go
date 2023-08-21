@@ -3,9 +3,9 @@ package machine
 import (
 	"os"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/podman"
-	"github.com/crc-org/crc/pkg/crc/ssh"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/podman"
+	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 	"github.com/pkg/errors"
 )
 

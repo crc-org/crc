@@ -3,7 +3,7 @@ package host
 import (
 	"testing"
 
-	"github.com/crc-org/crc/pkg/drivers/none"
+	"github.com/crc-org/crc/v2/pkg/drivers/none"
 	"github.com/stretchr/testify/assert"
 )
 

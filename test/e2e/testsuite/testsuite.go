@@ -12,11 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/preset"
-	"github.com/crc-org/crc/test/extended/crc/cmd"
-	crcCmd "github.com/crc-org/crc/test/extended/crc/cmd"
-	"github.com/crc-org/crc/test/extended/util"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/test/extended/crc/cmd"
+	crcCmd "github.com/crc-org/crc/v2/test/extended/crc/cmd"
+	"github.com/crc-org/crc/v2/test/extended/util"
 	"github.com/cucumber/godog"
 	"github.com/spf13/pflag"
 )

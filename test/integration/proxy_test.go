@@ -3,7 +3,7 @@ package test_test
 import (
 	"os/exec"
 
-	"github.com/crc-org/crc/test/extended/util"
+	"github.com/crc-org/crc/v2/test/extended/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

@@ -1,7 +1,7 @@
 package events
 
 import (
-	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/r3labs/sse/v2"
 	"github.com/sirupsen/logrus"
 )

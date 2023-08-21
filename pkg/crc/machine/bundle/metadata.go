@@ -14,12 +14,12 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/gpg"
-	"github.com/crc-org/crc/pkg/crc/image"
-	"github.com/crc-org/crc/pkg/crc/logging"
-	crcPreset "github.com/crc-org/crc/pkg/crc/preset"
-	"github.com/crc-org/crc/pkg/download"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/gpg"
+	"github.com/crc-org/crc/v2/pkg/crc/image"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	crcPreset "github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/download"
 )
 
 // Metadata structure to unmarshal the crc-bundle-info.json file

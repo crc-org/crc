@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/crc-org/crc/pkg/crc/ssh"
+	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 )
 
 // HasGivenNameserversConfigured returns true if the instance uses a provided nameserver.
