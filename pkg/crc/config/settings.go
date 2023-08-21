@@ -37,6 +37,7 @@ const (
 	EmergencyLogin           = "enable-emergency-login"
 	PersistentVolumeSize     = "persistent-volume-size"
 	EnableBundleQuayFallback = "enable-bundle-quay-fallback"
+	WSLNetworkAccess         = "wsl-network-access"
 )
 
 func RegisterSettings(cfg *Config) {
@@ -96,13 +97,15 @@ func RegisterSettings(cfg *Config) {
 	cfg.AddSetting(PersistentVolumeSize, constants.DefaultPersistentVolumeSize, validatePersistentVolumeSize, SuccessfullyApplied,
 		fmt.Sprintf("Total size in GiB of the persistent volume used by the CSI driver for %s preset (must be greater than or equal to '%d')", preset.Microshift, constants.DefaultPersistentVolumeSize))
 
-	// Shared directories configs
 	if runtime.GOOS == "windows" {
+		// Shared directories configs
 		cfg.AddSetting(SharedDirPassword, Secret(""), validateString, SuccessfullyApplied,
 			"Password used while using CIFS/SMB file sharing (It is the password for the current logged in user)")
-
 		cfg.AddSetting(EnableSharedDirs, false, validateSmbSharedDirs, SuccessfullyApplied,
 			"Mounts host's user profile folder at '/' in the CRC VM (true/false, default: false)")
+		// Setting to enable access to CRC vm from wsl
+		cfg.AddSetting(WSLNetworkAccess, false, ValidateBool, SuccessfullyApplied,
+			"Enable access to CRC VM within WSL environment (true/false, default: false)")
 	} else {
 		cfg.AddSetting(EnableSharedDirs, true, ValidateBool, SuccessfullyApplied,
 			"Mounts host's home directory at '/' in the CRC VM (true/false, default: true)")

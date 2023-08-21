@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -238,12 +239,7 @@ func run(configuration *types.Configuration) error {
 func gatewayAPIMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/hosts/add", func(w http.ResponseWriter, r *http.Request) {
-		acceptJSONStringArray(w, r, func(hostnames []string) error {
-			// Most of the time we will add a hosts entry to resolve this to 127.0.0.1
-			// On a Windows machine running WSL this is the "IP" of the machine within the WSL2 network,
-			// so it is accessible from both WSL2 and Windows
-			return adminhelper.AddToHostsFile(machine.VsockPrivateAddress(), hostnames...)
-		})
+		acceptJSONStringArray(w, r, addEntriesToHostsFile)
 	})
 	mux.HandleFunc("/hosts/remove", func(w http.ResponseWriter, r *http.Request) {
 		acceptJSONStringArray(w, r, func(hostnames []string) error {
@@ -251,6 +247,19 @@ func gatewayAPIMux() *http.ServeMux {
 		})
 	})
 	return mux
+}
+
+func addEntriesToHostsFile(hostnames []string) error {
+	// Most of the time we will add a hosts entry to resolv to 127.0.0.1
+	// On a Windows machine running WSL and config 'wsl-network-access' is true
+	// "IP" of the machine within the WSL2 network, so it is accessible from both WSL2 and Windows
+	if runtime.GOOS == "windows" {
+		if config.Get(crcConfig.WSLNetworkAccess).AsBool() {
+			log.Debugf("Enabling WSL to CRC network access")
+			return adminhelper.AddToHostsFile(machine.VsockPrivateAddress(), hostnames...)
+		}
+	}
+	return adminhelper.AddToHostsFile("127.0.0.1", hostnames...)
 }
 
 func networkAPIMux(vn *virtualnetwork.VirtualNetwork) *http.ServeMux {
