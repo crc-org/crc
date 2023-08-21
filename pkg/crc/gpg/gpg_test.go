@@ -3,7 +3,7 @@ package gpg
 import (
 	"testing"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/stretchr/testify/assert"
 )
 

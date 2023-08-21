@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/machine/state"
-	"github.com/crc-org/crc/pkg/crc/machine/types"
-	crcPreset "github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
+	crcPreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 )
 
 const startCancelTimeout = 15 * time.Second

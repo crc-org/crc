@@ -6,9 +6,9 @@ import (
 	"runtime"
 	"testing"
 
-	crcErrors "github.com/crc-org/crc/pkg/crc/errors"
-	"github.com/crc-org/crc/pkg/crc/preset"
-	"github.com/crc-org/crc/pkg/os/shell"
+	crcErrors "github.com/crc-org/crc/v2/pkg/crc/errors"
+	"github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/os/shell"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -5,10 +5,10 @@ import (
 	"errors"
 	"path/filepath"
 
-	"github.com/crc-org/crc/pkg/crc/machine/config"
-	"github.com/crc-org/crc/pkg/crc/machine/libvirt"
-	"github.com/crc-org/crc/pkg/libmachine"
-	"github.com/crc-org/crc/pkg/libmachine/host"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/config"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/libvirt"
+	"github.com/crc-org/crc/v2/pkg/libmachine"
+	"github.com/crc-org/crc/v2/pkg/libmachine/host"
 	machineLibvirt "github.com/crc-org/machine/drivers/libvirt"
 	"github.com/crc-org/machine/libmachine/drivers"
 )

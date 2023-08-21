@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/crc-org/crc/pkg/crc/machine/libvirt"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/libvirt"
 )
 
 func NewMachineDriverLibvirtCache() *Cache {

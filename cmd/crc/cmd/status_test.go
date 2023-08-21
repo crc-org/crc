@@ -8,13 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	mocks "github.com/crc-org/crc/test/mocks/api"
+	mocks "github.com/crc-org/crc/v2/test/mocks/api"
 
-	apiClient "github.com/crc-org/crc/pkg/crc/api/client"
-	"github.com/crc-org/crc/pkg/crc/daemonclient"
-	"github.com/crc-org/crc/pkg/crc/machine/state"
-	"github.com/crc-org/crc/pkg/crc/machine/types"
-	"github.com/crc-org/crc/pkg/crc/preset"
+	apiClient "github.com/crc-org/crc/v2/pkg/crc/api/client"
+	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
+	"github.com/crc-org/crc/v2/pkg/crc/preset"
 
 	"github.com/pkg/errors"
 

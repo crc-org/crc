@@ -4,8 +4,8 @@ import (
 	"net"
 	"os"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 )
 
 func vsockListener() (net.Listener, error) {

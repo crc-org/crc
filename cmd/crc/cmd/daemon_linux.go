@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/containers/gvisor-tap-vsock/pkg/transport"
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 
 	"github.com/coreos/go-systemd/v22/activation"
 	"github.com/coreos/go-systemd/v22/daemon"

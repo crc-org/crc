@@ -16,8 +16,8 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
-	crcstrings "github.com/crc-org/crc/pkg/strings"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	crcstrings "github.com/crc-org/crc/v2/pkg/strings"
 	openshiftapi "github.com/openshift/api/config/v1"
 	k8sapi "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

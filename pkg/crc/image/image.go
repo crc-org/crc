@@ -15,12 +15,12 @@ import (
 	"github.com/containers/image/v5/directory"
 	"github.com/containers/image/v5/docker"
 	"github.com/containers/image/v5/signature"
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/gpg"
-	"github.com/crc-org/crc/pkg/crc/logging"
-	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
-	"github.com/crc-org/crc/pkg/crc/version"
-	"github.com/crc-org/crc/pkg/extract"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/gpg"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/version"
+	"github.com/crc-org/crc/v2/pkg/extract"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 )
 

@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	networkclient "github.com/containers/gvisor-tap-vsock/pkg/client"
-	"github.com/crc-org/crc/pkg/crc/api/client"
-	crcversion "github.com/crc-org/crc/pkg/crc/version"
+	"github.com/crc-org/crc/v2/pkg/crc/api/client"
+	crcversion "github.com/crc-org/crc/v2/pkg/crc/version"
 	pkgerrors "github.com/pkg/errors"
 )
 

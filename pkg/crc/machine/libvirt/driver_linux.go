@@ -3,9 +3,9 @@ package libvirt
 import (
 	"fmt"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/machine/config"
-	"github.com/crc-org/crc/pkg/crc/network"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/config"
+	"github.com/crc-org/crc/v2/pkg/crc/network"
 	"github.com/crc-org/machine/drivers/libvirt"
 	"github.com/crc-org/machine/libmachine/drivers"
 )

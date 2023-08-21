@@ -4,12 +4,12 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/crc-org/crc/pkg/crc/cluster"
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/machine/bundle"
-	"github.com/crc-org/crc/pkg/crc/machine/types"
-	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
-	"github.com/crc-org/crc/pkg/libmachine"
+	"github.com/crc-org/crc/v2/pkg/crc/cluster"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/bundle"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
+	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
+	"github.com/crc-org/crc/v2/pkg/libmachine"
 	"github.com/crc-org/machine/libmachine/drivers"
 )
 

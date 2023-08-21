@@ -7,9 +7,9 @@ import (
 	"testing"
 	"unicode"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/preset"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/stretchr/testify/assert"

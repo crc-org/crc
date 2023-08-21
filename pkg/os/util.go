@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 )
 
 // ReplaceOrAddEnv changes the value of an environment variable if it exists otherwise add the new variable

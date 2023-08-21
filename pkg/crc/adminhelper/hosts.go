@@ -3,7 +3,7 @@ package adminhelper
 import (
 	"github.com/crc-org/admin-helper/pkg/hosts"
 	"github.com/crc-org/admin-helper/pkg/types"
-	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
 )
 
 // UpdateHostsFile updates the host's /etc/hosts file with Instance IP.

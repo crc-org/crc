@@ -5,14 +5,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 
-	"github.com/crc-org/crc/pkg/crc/adminhelper"
-	winnet "github.com/crc-org/crc/pkg/os/windows/network"
-	"github.com/crc-org/crc/pkg/os/windows/powershell"
+	"github.com/crc-org/crc/v2/pkg/crc/adminhelper"
+	winnet "github.com/crc-org/crc/v2/pkg/os/windows/network"
+	"github.com/crc-org/crc/v2/pkg/os/windows/powershell"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/machine/hyperv"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/hyperv"
 )
 
 const (

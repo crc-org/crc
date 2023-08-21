@@ -5,10 +5,10 @@ import (
 	"io"
 	"os"
 
-	crcConfig "github.com/crc-org/crc/pkg/crc/config"
-	"github.com/crc-org/crc/pkg/crc/logging"
-	crcPreset "github.com/crc-org/crc/pkg/crc/preset"
-	crcversion "github.com/crc-org/crc/pkg/crc/version"
+	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	crcPreset "github.com/crc-org/crc/v2/pkg/crc/preset"
+	crcversion "github.com/crc-org/crc/v2/pkg/crc/version"
 	"github.com/spf13/cobra"
 )
 

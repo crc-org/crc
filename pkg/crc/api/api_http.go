@@ -3,9 +3,9 @@ package api
 import (
 	"net/http"
 
-	"github.com/crc-org/crc/pkg/crc/cluster"
-	crcConfig "github.com/crc-org/crc/pkg/crc/config"
-	"github.com/crc-org/crc/pkg/crc/machine"
+	"github.com/crc-org/crc/v2/pkg/crc/cluster"
+	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
+	"github.com/crc-org/crc/v2/pkg/crc/machine"
 )
 
 func NewMux(config *crcConfig.Config, machine machine.Client, logger Logger, telemetry Telemetry) http.Handler {

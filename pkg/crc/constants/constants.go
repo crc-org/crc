@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"strings"
 
-	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
-	"github.com/crc-org/crc/pkg/crc/version"
+	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/version"
 )
 
 const (

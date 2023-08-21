@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/preset"
-	"github.com/crc-org/crc/pkg/download"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/download"
 )
 
 var (

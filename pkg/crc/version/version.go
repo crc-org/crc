@@ -5,11 +5,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
-	crcPreset "github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	crcPreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 )
 
-// The following variables are private fields and should be set when compiling with ldflags, for example --ldflags="-X github.com/crc-org/crc/pkg/version.crcVersion=vX.Y.Z
+// The following variables are private fields and should be set when compiling with ldflags, for example --ldflags="-X github.com/crc-org/crc/v2/pkg/version.crcVersion=vX.Y.Z
 var (
 	// The current version of minishift
 	crcVersion = "0.0.0-unset"

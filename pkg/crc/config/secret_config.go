@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/spf13/cast"
 	"github.com/zalando/go-keyring"
 )

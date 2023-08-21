@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	gossh "golang.org/x/crypto/ssh"
 )
 

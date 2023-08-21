@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	crcTerminal "github.com/crc-org/crc/pkg/os/terminal"
+	crcTerminal "github.com/crc-org/crc/v2/pkg/os/terminal"
 )
 
 func PromptUserForYesOrNo(message string, force bool) bool {

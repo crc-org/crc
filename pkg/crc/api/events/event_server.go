@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/machine"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/machine"
 	"github.com/r3labs/sse/v2"
 )
 

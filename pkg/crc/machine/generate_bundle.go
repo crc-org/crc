@@ -5,12 +5,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/crc-org/crc/pkg/crc/cluster"
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/machine/bundle"
-	"github.com/crc-org/crc/pkg/crc/oc"
-	crcssh "github.com/crc-org/crc/pkg/crc/ssh"
+	"github.com/crc-org/crc/v2/pkg/crc/cluster"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/bundle"
+	"github.com/crc-org/crc/v2/pkg/crc/oc"
+	crcssh "github.com/crc-org/crc/v2/pkg/crc/ssh"
 	"github.com/crc-org/machine/libmachine/state"
 	"github.com/pkg/errors"
 )

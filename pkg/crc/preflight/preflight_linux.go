@@ -6,14 +6,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
-	crcErrors "github.com/crc-org/crc/pkg/crc/errors"
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/network"
-	"github.com/crc-org/crc/pkg/crc/preset"
-	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
-	crcos "github.com/crc-org/crc/pkg/os"
-	"github.com/crc-org/crc/pkg/os/linux"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	crcErrors "github.com/crc-org/crc/v2/pkg/crc/errors"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/network"
+	"github.com/crc-org/crc/v2/pkg/crc/preset"
+	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
+	crcos "github.com/crc-org/crc/v2/pkg/os"
+	"github.com/crc-org/crc/v2/pkg/os/linux"
 
 	"golang.org/x/sys/unix"
 )

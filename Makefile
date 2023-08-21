@@ -32,7 +32,7 @@ GOARCH ?= $(shell go env GOARCH)
 HOST_BUILD_DIR=$(BUILD_DIR)/$(GOOS)-$(GOARCH)
 GOPATH ?= $(shell go env GOPATH)
 ORG := github.com/crc-org
-REPOPATH ?= $(ORG)/crc
+MODULEPATH ?= $(ORG)/crc/v2
 PACKAGE_DIR := packaging/$(GOOS)
 
 SOURCES := $(shell git ls-files  *.go ":^vendor")
@@ -56,13 +56,13 @@ __check_defined = \
       $(error Undefined $1$(if $2, ($2))))
 
 # Linker flags
-VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
-	-X $(REPOPATH)/pkg/crc/version.ocpVersion=$(OPENSHIFT_VERSION) \
-	-X $(REPOPATH)/pkg/crc/version.okdVersion=$(OKD_VERSION) \
-	-X $(REPOPATH)/pkg/crc/version.podmanVersion=$(PODMAN_VERSION) \
-	-X $(REPOPATH)/pkg/crc/version.microshiftVersion=$(MICROSHIFT_VERSION) \
-	-X $(REPOPATH)/pkg/crc/version.commitSha=$(COMMIT_SHA)
-RELEASE_VERSION_VARIABLES := -X $(REPOPATH)/pkg/crc/segment.WriteKey=cvpHsNcmGCJqVzf6YxrSnVlwFSAZaYtp
+VERSION_VARIABLES := -X $(MODULEPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
+	-X $(MODULEPATH)/pkg/crc/version.ocpVersion=$(OPENSHIFT_VERSION) \
+	-X $(MODULEPATH)/pkg/crc/version.okdVersion=$(OKD_VERSION) \
+	-X $(MODULEPATH)/pkg/crc/version.podmanVersion=$(PODMAN_VERSION) \
+	-X $(MODULEPATH)/pkg/crc/version.microshiftVersion=$(MICROSHIFT_VERSION) \
+	-X $(MODULEPATH)/pkg/crc/version.commitSha=$(COMMIT_SHA)
+RELEASE_VERSION_VARIABLES := -X $(MODULEPATH)/pkg/crc/segment.WriteKey=cvpHsNcmGCJqVzf6YxrSnVlwFSAZaYtp
 
 # https://golang.org/cmd/link/
 LDFLAGS := $(VERSION_VARIABLES) ${GO_EXTRA_LDFLAGS}
@@ -183,9 +183,9 @@ build_e2e: $(SOURCES)
 .PHONY: build_integration
 build_integration: $(SOURCES)
 	GOARCH=amd64 GOOS=linux   go test ./test/integration/ -tags "$(BUILDTAGS)" --ldflags="$(VERSION_VARIABLES)" -c -o $(BUILD_DIR)/linux-amd64/integration.test
-	GOARCH=amd64 GOOS=windows go test -tags "$(BUILDTAGS)" --ldflags="-X $(REPOPATH)/pkg/crc/version.installerBuild=true $(VERSION_VARIABLES)" ./test/integration/ -c -o $(BUILD_DIR)/windows-amd64/integration.test.exe
-	GOARCH=amd64 GOOS=darwin  go test -tags "$(BUILDTAGS)" --ldflags="-X $(REPOPATH)/pkg/crc/version.installerBuild=true $(VERSION_VARIABLES)" ./test/integration/ -c -o $(BUILD_DIR)/macos-amd64/integration.test
-	GOARCH=arm64 GOOS=darwin  go test -tags "$(BUILDTAGS)" --ldflags="-X $(REPOPATH)/pkg/crc/version.installerBuild=true $(VERSION_VARIABLES)" ./test/integration/ -c -o $(BUILD_DIR)/macos-arm64/integration.test
+	GOARCH=amd64 GOOS=windows go test -tags "$(BUILDTAGS)" --ldflags="-X $(MODULEPATH)/pkg/crc/version.installerBuild=true $(VERSION_VARIABLES)" ./test/integration/ -c -o $(BUILD_DIR)/windows-amd64/integration.test.exe
+	GOARCH=amd64 GOOS=darwin  go test -tags "$(BUILDTAGS)" --ldflags="-X $(MODULEPATH)/pkg/crc/version.installerBuild=true $(VERSION_VARIABLES)" ./test/integration/ -c -o $(BUILD_DIR)/macos-amd64/integration.test
+	GOARCH=arm64 GOOS=darwin  go test -tags "$(BUILDTAGS)" --ldflags="-X $(MODULEPATH)/pkg/crc/version.installerBuild=true $(VERSION_VARIABLES)" ./test/integration/ -c -o $(BUILD_DIR)/macos-arm64/integration.test
 
 #  Build the container image for e2e
 .PHONY: containerized_e2e
@@ -220,7 +220,7 @@ export BUNDLE_PATH = $(HOME)/Downloads/crc_libvirt_$(OPENSHIFT_VERSION)_$(GOARCH
 endif
 
 integration:
-	@go test -timeout=60m -tags "$(BUILDTAGS)" $(REPOPATH)/test/integration -v $(GINKGO_OPTS)
+	@go test -timeout=60m -tags "$(BUILDTAGS)" $(MODULEPATH)/test/integration -v $(GINKGO_OPTS)
 
 .PHONY: e2e ## Run e2e tests
 e2e:
@@ -238,20 +238,20 @@ ifndef VERSION_TO_TEST
 	VERSION_TO_TEST = --crc-version=$(CRC_VERSION)+$(COMMIT_SHA)
 endif
 e2e:
-	@go test --timeout=180m $(REPOPATH)/test/e2e -tags "$(BUILDTAGS)" --ldflags="$(VERSION_VARIABLES)" -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) $(GODOG_OPTS) $(CLEANUP_HOME) $(VERSION_TO_TEST) $(INSTALLER_PATH) $(USER_PASSWORD)
+	@go test --timeout=180m $(MODULEPATH)/test/e2e -tags "$(BUILDTAGS)" --ldflags="$(VERSION_VARIABLES)" -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) $(GODOG_OPTS) $(CLEANUP_HOME) $(VERSION_TO_TEST) $(INSTALLER_PATH) $(USER_PASSWORD)
 
 .PHONY: e2e-stories e2e-story-health e2e-story-marketplace e2e-story-registry
 # cluster must already be running, crc must be in the path
 e2e-stories: install e2e-story-health e2e-story-marketplace e2e-story-registry
 
 e2e-story-health: install
-	@go test $(REPOPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v $(CRC_BINARY) --godog.tags="$(GOOS) && ~@startstop && @story_health" --cleanup-home=false
+	@go test $(MODULEPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v $(CRC_BINARY) --godog.tags="$(GOOS) && ~@startstop && @story_health" --cleanup-home=false
 e2e-story-marketplace: install
-	@go test $(REPOPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v $(CRC_BINARY) --godog.tags="$(GOOS) && ~@startstop && @story_marketplace" --cleanup-home=false
+	@go test $(MODULEPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v $(CRC_BINARY) --godog.tags="$(GOOS) && ~@startstop && @story_marketplace" --cleanup-home=false
 e2e-story-registry: install
-	@go test $(REPOPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v $(CRC_BINARY) --godog.tags="$(GOOS) && ~@startstop && @story_registry" --cleanup-home=false
+	@go test $(MODULEPATH)/test/e2e --ldflags="$(VERSION_VARIABLES)" -v $(CRC_BINARY) --godog.tags="$(GOOS) && ~@startstop && @story_registry" --cleanup-home=false
 e2e-story-microshift: install
-	@go test $(REPOPATH)/test/e2e -tags "$(BUILDTAGS)" --ldflags="$(VERSION_VARIABLES)" -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --godog.tags="$(GOOS) && @microshift" --cleanup-home=false
+	@go test $(MODULEPATH)/test/e2e -tags "$(BUILDTAGS)" --ldflags="$(VERSION_VARIABLES)" -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --godog.tags="$(GOOS) && @microshift" --cleanup-home=false
 
 .PHONY: fmt
 fmt: $(TOOLS_BINDIR)/goimports
@@ -279,10 +279,10 @@ gen_release_info:
 linux-release-binary: LDFLAGS+= $(RELEASE_VERSION_VARIABLES)
 linux-release-binary: $(BUILD_DIR)/linux-amd64/crc
 
-macos-release-binary: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
+macos-release-binary: LDFLAGS+= -X '$(MODULEPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
 macos-release-binary: $(BUILD_DIR)/macos-universal/crc
 
-windows-release-binary: LDFLAGS+= -X '$(REPOPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
+windows-release-binary: LDFLAGS+= -X '$(MODULEPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
 windows-release-binary: $(BUILD_DIR)/windows-amd64/crc.exe
 
 .PHONY: release linux-release

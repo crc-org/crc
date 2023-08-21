@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/crc-org/crc/pkg/crc/machine/fakemachine"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/fakemachine"
 	"github.com/stretchr/testify/assert"
 )
 

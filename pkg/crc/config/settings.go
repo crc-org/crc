@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/network"
-	"github.com/crc-org/crc/pkg/crc/preset"
-	"github.com/crc-org/crc/pkg/crc/version"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/network"
+	"github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/version"
 )
 
 const (

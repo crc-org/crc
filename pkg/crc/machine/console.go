@@ -3,7 +3,7 @@ package machine
 import (
 	"fmt"
 
-	"github.com/crc-org/crc/pkg/crc/machine/types"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
 	"github.com/pkg/errors"
 )
 

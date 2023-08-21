@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/machine/config"
-	"github.com/crc-org/crc/pkg/crc/machine/vfkit"
-	machineVf "github.com/crc-org/crc/pkg/drivers/vfkit"
-	"github.com/crc-org/crc/pkg/libmachine"
-	"github.com/crc-org/crc/pkg/libmachine/host"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/config"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/vfkit"
+	machineVf "github.com/crc-org/crc/v2/pkg/drivers/vfkit"
+	"github.com/crc-org/crc/v2/pkg/libmachine"
+	"github.com/crc-org/crc/v2/pkg/libmachine/host"
 	"github.com/crc-org/machine/libmachine/drivers"
 )
 

@@ -9,11 +9,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/image"
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/machine/bundle"
-	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/image"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/bundle"
+	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/docker/go-units"
 	"github.com/pbnjay/memory"
 )

@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"strings"
 
-	crcstrings "github.com/crc-org/crc/pkg/strings"
+	crcstrings "github.com/crc-org/crc/v2/pkg/strings"
 	yaml "gopkg.in/yaml.v3"
 )
 

@@ -11,10 +11,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
-	"github.com/crc-org/crc/pkg/crc/version"
-	"github.com/crc-org/crc/pkg/os/terminal"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
+	"github.com/crc-org/crc/v2/pkg/crc/version"
+	"github.com/crc-org/crc/v2/pkg/os/terminal"
 
 	"github.com/cavaliergopher/grab/v3"
 	"github.com/cheggaaa/pb/v3"

@@ -1,8 +1,8 @@
 package machine
 
 import (
-	"github.com/crc-org/crc/pkg/crc/machine/config"
-	"github.com/crc-org/crc/pkg/libmachine/host"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/config"
+	"github.com/crc-org/crc/v2/pkg/libmachine/host"
 	libmachine "github.com/crc-org/machine/libmachine/drivers"
 )
 

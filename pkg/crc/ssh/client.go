@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	log "github.com/crc-org/crc/pkg/crc/logging"
+	log "github.com/crc-org/crc/v2/pkg/crc/logging"
 	"golang.org/x/crypto/ssh"
 )
 

@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	log "github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/os/windows/powershell"
-	crcstrings "github.com/crc-org/crc/pkg/strings"
+	log "github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/os/windows/powershell"
+	crcstrings "github.com/crc-org/crc/v2/pkg/strings"
 )
 
 var (

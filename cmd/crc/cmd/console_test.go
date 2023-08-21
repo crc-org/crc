@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"testing"
 
-	apiTypes "github.com/crc-org/crc/pkg/crc/api/client"
-	"github.com/crc-org/crc/pkg/crc/daemonclient"
-	"github.com/crc-org/crc/pkg/crc/machine/fakemachine"
-	"github.com/crc-org/crc/pkg/crc/machine/state"
-	"github.com/crc-org/crc/pkg/crc/machine/types"
-	mocks "github.com/crc-org/crc/test/mocks/api"
+	apiTypes "github.com/crc-org/crc/v2/pkg/crc/api/client"
+	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/fakemachine"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
+	mocks "github.com/crc-org/crc/v2/test/mocks/api"
 	"github.com/stretchr/testify/assert"
 )
 

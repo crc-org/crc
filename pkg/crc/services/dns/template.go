@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"text/template"
 
-	"github.com/crc-org/crc/pkg/crc/services"
+	"github.com/crc-org/crc/v2/pkg/crc/services"
 )
 
 const (

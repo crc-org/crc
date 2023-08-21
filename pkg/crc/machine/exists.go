@@ -3,7 +3,7 @@ package machine
 import (
 	"fmt"
 
-	crcErr "github.com/crc-org/crc/pkg/crc/errors"
+	crcErr "github.com/crc-org/crc/v2/pkg/crc/errors"
 )
 
 func (client *client) Exists() (bool, error) {

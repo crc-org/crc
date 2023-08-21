@@ -6,13 +6,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/version"
-	"github.com/crc-org/crc/pkg/download"
-	"github.com/crc-org/crc/pkg/embed"
-	"github.com/crc-org/crc/pkg/extract"
-	crcos "github.com/crc-org/crc/pkg/os"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/version"
+	"github.com/crc-org/crc/v2/pkg/download"
+	"github.com/crc-org/crc/v2/pkg/embed"
+	"github.com/crc-org/crc/v2/pkg/extract"
+	crcos "github.com/crc-org/crc/v2/pkg/os"
 	"github.com/pkg/errors"
 )
 

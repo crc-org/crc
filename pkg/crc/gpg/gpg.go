@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	goOpenpgp "golang.org/x/crypto/openpgp"             //nolint
 	goClearsign "golang.org/x/crypto/openpgp/clearsign" //nolint
 )

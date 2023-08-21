@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
-	crcpreset "github.com/crc-org/crc/pkg/crc/preset"
-	"github.com/crc-org/crc/pkg/crc/version"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/version"
 
 	"github.com/spf13/cast"
 	"github.com/stretchr/testify/assert"

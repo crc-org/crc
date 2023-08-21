@@ -7,15 +7,15 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/crc-org/crc/pkg/crc/adminhelper"
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/crc/errors"
-	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/network"
-	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
-	"github.com/crc-org/crc/pkg/crc/services"
-	"github.com/crc-org/crc/pkg/crc/systemd"
-	"github.com/crc-org/crc/pkg/crc/systemd/states"
+	"github.com/crc-org/crc/v2/pkg/crc/adminhelper"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/errors"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/network"
+	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
+	"github.com/crc-org/crc/v2/pkg/crc/services"
+	"github.com/crc-org/crc/v2/pkg/crc/systemd"
+	"github.com/crc-org/crc/v2/pkg/crc/systemd/states"
 )
 
 const (

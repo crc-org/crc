@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/crc-org/crc/pkg/crc/machine/state"
-	"github.com/crc-org/crc/pkg/crc/machine/types"
-	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
-	"github.com/crc-org/crc/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
+	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
+	"github.com/crc-org/crc/v2/pkg/crc/preset"
 )
 
 func NewClient() *Client {

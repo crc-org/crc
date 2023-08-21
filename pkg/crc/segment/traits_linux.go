@@ -3,7 +3,7 @@ package segment
 import (
 	"runtime"
 
-	"github.com/crc-org/crc/pkg/os/linux"
+	"github.com/crc-org/crc/v2/pkg/os/linux"
 	"github.com/segmentio/analytics-go/v3"
 )
 

@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/crc-org/crc/pkg/crc/constants"
-	"github.com/crc-org/crc/pkg/os/shell"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/os/shell"
 	"github.com/spf13/cobra"
 )
 

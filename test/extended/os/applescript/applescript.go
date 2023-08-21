@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/crc-org/crc/test/extended/util"
+	"github.com/crc-org/crc/v2/test/extended/util"
 )
 
 func ExecuteApplescript(scriptFilename string, args ...string) error {

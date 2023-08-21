@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/crc-org/crc/test/e2e/testsuite"
+	"github.com/crc-org/crc/v2/test/e2e/testsuite"
 	"github.com/cucumber/godog"
 	"github.com/spf13/pflag"
 )

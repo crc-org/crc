@@ -3,8 +3,8 @@ package libmachine
 import (
 	"encoding/json"
 
-	"github.com/crc-org/crc/pkg/drivers/vfkit"
-	"github.com/crc-org/crc/pkg/libmachine/host"
+	"github.com/crc-org/crc/v2/pkg/drivers/vfkit"
+	"github.com/crc-org/crc/v2/pkg/libmachine/host"
 )
 
 func (api *Client) NewHost(_ string, driverPath string, rawDriver []byte) (*host.Host, error) {
