@@ -169,8 +169,9 @@ func buildPath(baseDir, filename string) (string, error) {
 	path := filepath.Join(baseDir, filename) // #nosec G305
 
 	// Check for ZipSlip. More Info: https://snyk.io/research/zip-slip-vulnerability
-	if !strings.HasPrefix(path, filepath.Clean(baseDir)+string(os.PathSeparator)) {
-		return "", fmt.Errorf("%s: illegal file path", path)
+	baseDir = filepath.Clean(baseDir)
+	if path != baseDir && !strings.HasPrefix(path, baseDir+string(os.PathSeparator)) {
+		return "", fmt.Errorf("%s: illegal file path (expected prefix: %s)", path, baseDir+string(os.PathSeparator))
 	}
 
 	return path, nil
