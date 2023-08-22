@@ -865,6 +865,10 @@ func setOcEnv() error {
 }
 
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
+	// Since network-mode is only supported on Linux, we skip this property test for non-linux platforms
+	if property == "network-mode" && runtime.GOOS != "linux" {
+		return nil
+	}
 	if value == "current bundle" {
 		if !userProvidedBundle {
 			value = filepath.Join(util.CRCHome, "cache", bundleName)
