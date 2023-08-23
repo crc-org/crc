@@ -15,3 +15,15 @@ func TestValidateProxyURL(t *testing.T) {
 	assert.EqualError(t, ValidateProxyURL("company.com:8080", true), "HTTPS proxy URL 'company.com:8080' is not valid: url should start with http:// or https://")
 	assert.EqualError(t, ValidateProxyURL("https://company.com", false), "HTTP proxy URL 'https://company.com' is not valid: url should start with http://")
 }
+func TestTrimTrailingEOL(t *testing.T) {
+	assert.Equal(t, "foo\nbar", trimTrailingEOL("foo\nbar\n"))
+	assert.Equal(t, "foo", trimTrailingEOL("foo\n"))
+	assert.Equal(t, "foo", trimTrailingEOL("foo\r\n"))
+	assert.Equal(t, "foo\r\nbar", trimTrailingEOL("foo\r\nbar\r\n"))
+	assert.Equal(t, "foo\r\nbar", trimTrailingEOL("foo\r\nbar\r\n\r\n"))
+	assert.Equal(t, "foo\nbar", trimTrailingEOL("foo\nbar\n\n"))
+	assert.Equal(t, "foo\nbar", trimTrailingEOL("foo\nbar\n\n\n"))
+	assert.Equal(t, "", trimTrailingEOL("\r\n"))
+	assert.Equal(t, "", trimTrailingEOL("\n"))
+	assert.Equal(t, "", trimTrailingEOL(""))
+}

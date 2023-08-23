@@ -51,7 +51,7 @@ func readProxyCAData(proxyCAFile string) (string, error) {
 }
 
 func trimTrailingEOL(s string) string {
-	return strings.TrimRight(s, "\n")
+	return strings.TrimRight(s, "\r\n")
 }
 
 func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) (*ProxyConfig, error) {
