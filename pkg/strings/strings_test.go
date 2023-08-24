@@ -136,3 +136,16 @@ func TestFirstLine(t *testing.T) {
 		}
 	})
 }
+
+func TestTrimTrailingEOL(t *testing.T) {
+	assert.Equal(t, "foo\nbar", TrimTrailingEOL("foo\nbar\n"))
+	assert.Equal(t, "foo", TrimTrailingEOL("foo\n"))
+	assert.Equal(t, "foo", TrimTrailingEOL("foo\r\n"))
+	assert.Equal(t, "foo\r\nbar", TrimTrailingEOL("foo\r\nbar\r\n"))
+	assert.Equal(t, "foo\r\nbar", TrimTrailingEOL("foo\r\nbar\r\n\r\n"))
+	assert.Equal(t, "foo\nbar", TrimTrailingEOL("foo\nbar\n\n"))
+	assert.Equal(t, "foo\nbar", TrimTrailingEOL("foo\nbar\n\n\n"))
+	assert.Equal(t, "", TrimTrailingEOL("\r\n"))
+	assert.Equal(t, "", TrimTrailingEOL("\n"))
+	assert.Equal(t, "", TrimTrailingEOL(""))
+}

@@ -34,3 +34,7 @@ func FirstLine(input string) string {
 
 	return lines[0]
 }
+
+func TrimTrailingEOL(s string) string {
+	return strings.TrimRight(s, "\r\n")
+}
