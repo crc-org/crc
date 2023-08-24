@@ -12,6 +12,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/logging"
 
 	"github.com/asaskevich/govalidator"
+	crcstrings "github.com/crc-org/crc/pkg/strings"
 	"github.com/pkg/errors"
 	"golang.org/x/net/http/httpproxy"
 )
@@ -47,11 +48,7 @@ func readProxyCAData(proxyCAFile string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return trimTrailingEOL(string(proxyCACert)), nil
-}
-
-func trimTrailingEOL(s string) string {
-	return strings.TrimRight(s, "\r\n")
+	return crcstrings.TrimTrailingEOL(string(proxyCACert)), nil
 }
 
 func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) (*ProxyConfig, error) {

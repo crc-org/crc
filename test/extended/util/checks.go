@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 
+	crcstrings "github.com/crc-org/crc/pkg/strings"
 	yaml "gopkg.in/yaml.v3"
 )
 
@@ -91,7 +92,7 @@ func CompareExpectedWithActualNotMatchesRegex(notexpected string, actual string)
 }
 
 func CheckFormat(format string, actual string) error {
-	actual = strings.TrimRight(actual, "\n")
+	actual = crcstrings.TrimTrailingEOL(actual)
 	var err error
 	switch format {
 	case "URL":

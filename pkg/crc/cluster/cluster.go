@@ -21,6 +21,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/ssh"
 	crctls "github.com/crc-org/crc/pkg/crc/tls"
 	"github.com/crc-org/crc/pkg/crc/validation"
+	crcstrings "github.com/crc-org/crc/pkg/strings"
 	"github.com/pborman/uuid"
 )
 
@@ -134,7 +135,7 @@ func EnsureSSHKeyPresentInTheCluster(ctx context.Context, ocConfig oc.Config, ss
 	if err != nil {
 		return err
 	}
-	sshPublicKey := strings.TrimRight(string(sshPublicKeyByte), "\r\n")
+	sshPublicKey := crcstrings.TrimTrailingEOL(string(sshPublicKeyByte))
 	if err := WaitForOpenshiftResource(ctx, ocConfig, "machineconfigs"); err != nil {
 		return err
 	}
