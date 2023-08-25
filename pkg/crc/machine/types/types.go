@@ -43,6 +43,9 @@ type StartConfig struct {
 
 	// Persistent volume size
 	PersistentVolumeSize int
+
+	// Enable bundle quay fallback
+	EnableBundleQuayFallback bool
 }
 
 type ClusterConfig struct {

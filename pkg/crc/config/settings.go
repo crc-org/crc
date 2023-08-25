@@ -12,30 +12,31 @@ import (
 )
 
 const (
-	Bundle                  = "bundle"
-	CPUs                    = "cpus"
-	Memory                  = "memory"
-	DiskSize                = "disk-size"
-	NameServer              = "nameserver"
-	PullSecretFile          = "pull-secret-file"
-	DisableUpdateCheck      = "disable-update-check"
-	ExperimentalFeatures    = "enable-experimental-features"
-	NetworkMode             = "network-mode"
-	HostNetworkAccess       = "host-network-access"
-	HTTPProxy               = "http-proxy"
-	HTTPSProxy              = "https-proxy"
-	NoProxy                 = "no-proxy"
-	ProxyCAFile             = "proxy-ca-file"
-	ConsentTelemetry        = "consent-telemetry"
-	EnableClusterMonitoring = "enable-cluster-monitoring"
-	KubeAdminPassword       = "kubeadmin-password"
-	Preset                  = "preset"
-	EnableSharedDirs        = "enable-shared-dirs"
-	SharedDirPassword       = "shared-dir-password" // #nosec G101
-	IngressHTTPPort         = "ingress-http-port"
-	IngressHTTPSPort        = "ingress-https-port"
-	EmergencyLogin          = "enable-emergency-login"
-	PersistentVolumeSize    = "persistent-volume-size"
+	Bundle                   = "bundle"
+	CPUs                     = "cpus"
+	Memory                   = "memory"
+	DiskSize                 = "disk-size"
+	NameServer               = "nameserver"
+	PullSecretFile           = "pull-secret-file"
+	DisableUpdateCheck       = "disable-update-check"
+	ExperimentalFeatures     = "enable-experimental-features"
+	NetworkMode              = "network-mode"
+	HostNetworkAccess        = "host-network-access"
+	HTTPProxy                = "http-proxy"
+	HTTPSProxy               = "https-proxy"
+	NoProxy                  = "no-proxy"
+	ProxyCAFile              = "proxy-ca-file"
+	ConsentTelemetry         = "consent-telemetry"
+	EnableClusterMonitoring  = "enable-cluster-monitoring"
+	KubeAdminPassword        = "kubeadmin-password"
+	Preset                   = "preset"
+	EnableSharedDirs         = "enable-shared-dirs"
+	SharedDirPassword        = "shared-dir-password" // #nosec G101
+	IngressHTTPPort          = "ingress-http-port"
+	IngressHTTPSPort         = "ingress-https-port"
+	EmergencyLogin           = "enable-emergency-login"
+	PersistentVolumeSize     = "persistent-volume-size"
+	EnableBundleQuayFallback = "enable-bundle-quay-fallback"
 )
 
 func RegisterSettings(cfg *Config) {
@@ -137,6 +138,9 @@ func RegisterSettings(cfg *Config) {
 		fmt.Sprintf("HTTP port to use for OpenShift ingress/routes on the host (1024-65535, default: %d)", constants.OpenShiftIngressHTTPPort))
 	cfg.AddSetting(IngressHTTPSPort, constants.OpenShiftIngressHTTPSPort, validatePort, RequiresHTTPSPortChangeWarning,
 		fmt.Sprintf("HTTPS port to use for OpenShift ingress/routes on the host (1024-65535, default: %d)", constants.OpenShiftIngressHTTPSPort))
+
+	cfg.AddSetting(EnableBundleQuayFallback, false, ValidateBool, SuccessfullyApplied,
+		"If bundle download from the default location fails, fallback to quay.io (true/false, default: false)")
 
 	if err := cfg.RegisterNotifier(Preset, presetChanged); err != nil {
 		logging.Debugf("Failed to register notifier for Preset: %v", err)

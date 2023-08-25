@@ -83,6 +83,8 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		EmergencyLogin: config.Get(crcConfig.EmergencyLogin).AsBool(),
 
 		PersistentVolumeSize: config.Get(crcConfig.PersistentVolumeSize).AsInt(),
+
+		EnableBundleQuayFallback: config.Get(crcConfig.EnableBundleQuayFallback).AsBool(),
 	}
 
 	client := newMachine()

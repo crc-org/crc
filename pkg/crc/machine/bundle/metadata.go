@@ -337,7 +337,7 @@ func downloadDefault(preset crcPreset.Preset) (string, error) {
 	return downloadInfo.Download(constants.GetDefaultBundlePath(preset), 0664)
 }
 
-func Download(preset crcPreset.Preset, bundleURI string) (string, error) {
+func Download(preset crcPreset.Preset, bundleURI string, enableBundleQuayFallback bool) (string, error) {
 	// If we are asked to download
 	// ~/.crc/cache/crc_podman_libvirt_4.1.1.crcbundle, this means we want
 	// are downloading the default bundle for this release. This uses a
@@ -346,7 +346,12 @@ func Download(preset crcPreset.Preset, bundleURI string) (string, error) {
 	if bundleURI == constants.GetDefaultBundlePath(preset) {
 		switch preset {
 		case crcPreset.OpenShift, crcPreset.Microshift:
-			return downloadDefault(preset)
+			downloadedBundlePath, err := downloadDefault(preset)
+			if err != nil && enableBundleQuayFallback {
+				logging.Info("Unable to download bundle from mirror, falling back to quay")
+				return image.PullBundle(constants.GetDefaultBundleImageRegistry(preset))
+			}
+			return downloadedBundlePath, err
 		case crcPreset.Podman, crcPreset.OKD:
 			fallthrough
 		default:

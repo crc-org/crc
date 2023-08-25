@@ -343,26 +343,26 @@ func getAllPreflightChecks() []Check {
 	filter.SetDistro(distro())
 	filter.SetSystemdUser(distro())
 
-	return filter.Apply(getChecks(distro(), constants.GetDefaultBundlePath(preset.OpenShift), preset.OpenShift))
+	return filter.Apply(getChecks(distro(), constants.GetDefaultBundlePath(preset.OpenShift), preset.OpenShift, false))
 }
 
-func getPreflightChecks(_ bool, networkMode network.Mode, bundlePath string, preset crcpreset.Preset) []Check {
+func getPreflightChecks(_ bool, networkMode network.Mode, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) []Check {
 	usingSystemdResolved := checkSystemdResolvedIsRunning()
 
-	return getPreflightChecksForDistro(distro(), networkMode, usingSystemdResolved == nil, bundlePath, preset)
+	return getPreflightChecksForDistro(distro(), networkMode, usingSystemdResolved == nil, bundlePath, preset, enableBundleQuayFallback)
 }
 
-func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode, usingSystemdResolved bool, bundlePath string, preset crcpreset.Preset) []Check {
+func getPreflightChecksForDistro(distro *linux.OsRelease, networkMode network.Mode, usingSystemdResolved bool, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) []Check {
 	filter := newFilter()
 	filter.SetDistro(distro)
 	filter.SetSystemdUser(distro)
 	filter.SetNetworkMode(networkMode)
 	filter.SetSystemdResolved(usingSystemdResolved)
 
-	return filter.Apply(getChecks(distro, bundlePath, preset))
+	return filter.Apply(getChecks(distro, bundlePath, preset, enableBundleQuayFallback))
 }
 
-func getChecks(distro *linux.OsRelease, bundlePath string, preset crcpreset.Preset) []Check {
+func getChecks(distro *linux.OsRelease, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) []Check {
 	var checks []Check
 	checks = append(checks, nonWinPreflightChecks...)
 	checks = append(checks, wsl2PreflightCheck)
@@ -376,7 +376,7 @@ func getChecks(distro *linux.OsRelease, bundlePath string, preset crcpreset.Pres
 	checks = append(checks, dnsmasqPreflightChecks...)
 	checks = append(checks, libvirtNetworkPreflightChecks...)
 	checks = append(checks, vsockPreflightCheck)
-	checks = append(checks, bundleCheck(bundlePath, preset))
+	checks = append(checks, bundleCheck(bundlePath, preset, enableBundleQuayFallback))
 
 	return checks
 }

@@ -156,8 +156,9 @@ func getPreflightChecksHelper(config crcConfig.Storage) []Check {
 	mode := crcConfig.GetNetworkMode(config)
 	bundlePath := config.Get(crcConfig.Bundle).AsString()
 	preset := crcConfig.GetPreset(config)
+	enableBundleQuayFallback := config.Get(crcConfig.EnableBundleQuayFallback).AsBool()
 	logging.Infof("Using bundle path %s", bundlePath)
-	return getPreflightChecks(experimentalFeatures, mode, bundlePath, preset)
+	return getPreflightChecks(experimentalFeatures, mode, bundlePath, preset, enableBundleQuayFallback)
 }
 
 // StartPreflightChecks performs the preflight checks before starting the cluster

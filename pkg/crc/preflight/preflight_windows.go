@@ -207,17 +207,17 @@ func checkVsock() error {
 // Passing 'UserNetworkingMode' to getPreflightChecks currently achieves this
 // as there are no system networking specific checks
 func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true, network.UserNetworkingMode, constants.GetDefaultBundlePath(preset.OpenShift), preset.OpenShift)
+	return getPreflightChecks(true, network.UserNetworkingMode, constants.GetDefaultBundlePath(preset.OpenShift), preset.OpenShift, false)
 }
 
-func getChecks(bundlePath string, preset crcpreset.Preset) []Check {
+func getChecks(bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) []Check {
 	checks := []Check{}
 	checks = append(checks, memoryCheck(preset))
 	checks = append(checks, hypervPreflightChecks...)
 	checks = append(checks, crcUsersGroupExistsCheck)
 	checks = append(checks, userPartOfCrcUsersAndHypervAdminsGroupCheck)
 	checks = append(checks, vsockChecks...)
-	checks = append(checks, bundleCheck(bundlePath, preset))
+	checks = append(checks, bundleCheck(bundlePath, preset, enableBundleQuayFallback))
 	checks = append(checks, genericCleanupChecks...)
 	checks = append(checks, cleanupCheckRemoveCrcVM)
 	checks = append(checks, daemonTaskChecks...)
@@ -225,9 +225,9 @@ func getChecks(bundlePath string, preset crcpreset.Preset) []Check {
 	return checks
 }
 
-func getPreflightChecks(_ bool, networkMode network.Mode, bundlePath string, preset crcpreset.Preset) []Check {
+func getPreflightChecks(_ bool, networkMode network.Mode, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) []Check {
 	filter := newFilter()
 	filter.SetNetworkMode(networkMode)
 
-	return filter.Apply(getChecks(bundlePath, preset))
+	return filter.Apply(getChecks(bundlePath, preset, enableBundleQuayFallback))
 }
