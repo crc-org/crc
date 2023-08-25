@@ -40,9 +40,10 @@ const (
 
 	OkdPullSecret = `{"auths":{"fake":{"auth": "Zm9vOmJhcgo="}}}` // #nosec G101
 
-	RegistryURI   = "quay.io/crcont"
-	ClusterDomain = ".crc.testing"
-	AppsDomain    = ".apps-crc.testing"
+	RegistryURI         = "quay.io/crcont"
+	ClusterDomain       = ".crc.testing"
+	AppsDomain          = ".apps-crc.testing"
+	MicroShiftAppDomain = ".apps.crc.testing"
 
 	OpenShiftIngressHTTPPort  = 80
 	OpenShiftIngressHTTPSPort = 443
