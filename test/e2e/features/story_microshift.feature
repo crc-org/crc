@@ -3,12 +3,10 @@ Feature: Microshift test stories
 
 	Background:
 		Given setting config property "preset" to value "microshift" succeeds
-		And ensuring network mode user
 		And executing single crc setup command succeeds
 		And starting CRC with default bundle succeeds
 		And ensuring oc command is available
 		And ensuring microshift cluster is fully operational
-		
 	# End-to-end health check
 
 	@microshift @testdata @linux @windows @darwin @cleanup
