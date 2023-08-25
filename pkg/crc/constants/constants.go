@@ -234,6 +234,8 @@ func getImageName(preset crcpreset.Preset) string {
 		return "podman-bundle"
 	case crcpreset.OKD:
 		return "okd-bundle"
+	case crcpreset.Microshift:
+		return "microshift-bundle"
 	default:
 		return "openshift-bundle"
 	}
