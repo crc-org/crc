@@ -46,7 +46,7 @@ import (
 
 const minimumMemoryForMonitoring = 14336
 
-func getCrcBundleInfo(preset crcPreset.Preset, bundleName, bundlePath string) (*bundle.CrcBundleInfo, error) {
+func getCrcBundleInfo(preset crcPreset.Preset, bundleName, bundlePath string, enableBundleQuayFallback bool) (*bundle.CrcBundleInfo, error) {
 	bundleInfo, err := bundle.Use(bundleName)
 	if err == nil {
 		logging.Infof("Loading bundle: %s...", bundleName)
@@ -54,7 +54,7 @@ func getCrcBundleInfo(preset crcPreset.Preset, bundleName, bundlePath string) (*
 	}
 	logging.Debugf("Failed to load bundle %s: %v", bundleName, err)
 	logging.Infof("Downloading bundle: %s...", bundleName)
-	bundlePath, err = bundle.Download(preset, bundlePath)
+	bundlePath, err = bundle.Download(preset, bundlePath, enableBundleQuayFallback)
 	if err != nil {
 		return nil, err
 	}
@@ -284,7 +284,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	bundleName := bundle.GetBundleNameWithoutExtension(bundle.GetBundleNameFromURI(startConfig.BundlePath))
-	crcBundleMetadata, err := getCrcBundleInfo(startConfig.Preset, bundleName, startConfig.BundlePath)
+	crcBundleMetadata, err := getCrcBundleInfo(startConfig.Preset, bundleName, startConfig.BundlePath, startConfig.EnableBundleQuayFallback)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting bundle metadata")
 	}

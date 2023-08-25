@@ -18,13 +18,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-func bundleCheck(bundlePath string, preset crcpreset.Preset) Check {
+func bundleCheck(bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) Check {
 	return Check{
 		configKeySuffix:  "check-bundle-extracted",
 		checkDescription: "Checking if CRC bundle is extracted in '$HOME/.crc'",
 		check:            checkBundleExtracted(bundlePath),
 		fixDescription:   "Getting bundle for the CRC executable",
-		fix:              fixBundleExtracted(bundlePath, preset),
+		fix:              fixBundleExtracted(bundlePath, preset, enableBundleQuayFallback),
 		flags:            SetupOnly,
 
 		labels: None,
@@ -96,7 +96,7 @@ func checkBundleExtracted(bundlePath string) func() error {
 	}
 }
 
-func fixBundleExtracted(bundlePath string, preset crcpreset.Preset) func() error {
+func fixBundleExtracted(bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) func() error {
 	// Should be removed after 1.19 release
 	// This check will ensure correct mode for `~/.crc/cache` directory
 	// in case it exists.
@@ -112,7 +112,7 @@ func fixBundleExtracted(bundlePath string, preset crcpreset.Preset) func() error
 		}
 		var err error
 		logging.Infof("Downloading bundle: %s...", bundlePath)
-		if bundlePath, err = bundle.Download(preset, bundlePath); err != nil {
+		if bundlePath, err = bundle.Download(preset, bundlePath, enableBundleQuayFallback); err != nil {
 			return err
 		}
 

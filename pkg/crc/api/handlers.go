@@ -119,18 +119,19 @@ func (h *Handler) Start(c *context) error {
 
 func getStartConfig(cfg crcConfig.Storage, args client.StartConfig) types.StartConfig {
 	return types.StartConfig{
-		BundlePath:        cfg.Get(crcConfig.Bundle).AsString(),
-		Memory:            cfg.Get(crcConfig.Memory).AsInt(),
-		DiskSize:          cfg.Get(crcConfig.DiskSize).AsInt(),
-		CPUs:              cfg.Get(crcConfig.CPUs).AsInt(),
-		NameServer:        cfg.Get(crcConfig.NameServer).AsString(),
-		PullSecret:        cluster.NewNonInteractivePullSecretLoader(cfg, args.PullSecretFile),
-		KubeAdminPassword: cfg.Get(crcConfig.KubeAdminPassword).AsString(),
-		IngressHTTPPort:   cfg.Get(crcConfig.IngressHTTPPort).AsUInt(),
-		IngressHTTPSPort:  cfg.Get(crcConfig.IngressHTTPSPort).AsUInt(),
-		Preset:            crcConfig.GetPreset(cfg),
-		EnableSharedDirs:  cfg.Get(crcConfig.EnableSharedDirs).AsBool(),
-		EmergencyLogin:    cfg.Get(crcConfig.EmergencyLogin).AsBool(),
+		BundlePath:               cfg.Get(crcConfig.Bundle).AsString(),
+		Memory:                   cfg.Get(crcConfig.Memory).AsInt(),
+		DiskSize:                 cfg.Get(crcConfig.DiskSize).AsInt(),
+		CPUs:                     cfg.Get(crcConfig.CPUs).AsInt(),
+		NameServer:               cfg.Get(crcConfig.NameServer).AsString(),
+		PullSecret:               cluster.NewNonInteractivePullSecretLoader(cfg, args.PullSecretFile),
+		KubeAdminPassword:        cfg.Get(crcConfig.KubeAdminPassword).AsString(),
+		IngressHTTPPort:          cfg.Get(crcConfig.IngressHTTPPort).AsUInt(),
+		IngressHTTPSPort:         cfg.Get(crcConfig.IngressHTTPSPort).AsUInt(),
+		Preset:                   crcConfig.GetPreset(cfg),
+		EnableSharedDirs:         cfg.Get(crcConfig.EnableSharedDirs).AsBool(),
+		EmergencyLogin:           cfg.Get(crcConfig.EmergencyLogin).AsBool(),
+		EnableBundleQuayFallback: cfg.Get(crcConfig.EnableBundleQuayFallback).AsBool(),
 	}
 }
 
