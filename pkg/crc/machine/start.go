@@ -32,6 +32,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/systemd"
 	"github.com/crc-org/crc/pkg/crc/telemetry"
 	crctls "github.com/crc-org/crc/pkg/crc/tls"
+	"github.com/crc-org/crc/pkg/crc/validation"
 	"github.com/crc-org/crc/pkg/libmachine/host"
 	crcos "github.com/crc-org/crc/pkg/os"
 	"github.com/crc-org/machine/libmachine/drivers"
@@ -1050,11 +1051,7 @@ func addPodmanSystemConnections(c *types.ConnectionDetails) error {
 
 func startMicroshift(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.Config, pullSec cluster.PullSecretLoader) error {
 	logging.Infof("Starting Microshift service... [takes around 1min]")
-	content, err := pullSec.Value()
-	if err != nil {
-		return err
-	}
-	if err := sshRunner.CopyDataPrivileged([]byte(content), "/etc/crio/openshift-pull-secret", 0600); err != nil {
+	if err := ensurePullSecretPresentInVM(sshRunner, pullSec); err != nil {
 		return err
 	}
 	if _, _, err := sshRunner.RunPrivileged("Starting microshift service", "systemctl", "start", "microshift"); err != nil {
@@ -1068,6 +1065,20 @@ func startMicroshift(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.
 	}
 
 	return cluster.WaitForAPIServer(ctx, ocConfig)
+}
+
+func ensurePullSecretPresentInVM(sshRunner *crcssh.Runner, pullSec cluster.PullSecretLoader) error {
+	if pullSecret, _, err := sshRunner.RunPrivileged("Checking if pull secret already present in the VM", "cat", "/etc/crio/openshift-pull-secret"); err == nil {
+		if err := validation.ImagePullSecret(pullSecret); err == nil {
+			return nil
+		}
+	}
+	// pull secret is not present in VM or is invalid
+	content, err := pullSec.Value()
+	if err != nil {
+		return err
+	}
+	return sshRunner.CopyDataPrivileged([]byte(content), "/etc/crio/openshift-pull-secret", 0600)
 }
 
 // The containers.conf/podman marker file has a setting called machine_enabled in the engine section,
