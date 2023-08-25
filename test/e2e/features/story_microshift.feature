@@ -5,7 +5,6 @@ Feature: Microshift test stories
 		Given setting config property "preset" to value "microshift" succeeds
 		And setting config property "disk-size" to value "41" succeeds
 		And setting config property "persistent-volume-size" to value "20" succeeds
-		And ensuring network mode user
 		And executing single crc setup command succeeds
 		And starting CRC with default bundle succeeds
 		And get memory data "After start"
