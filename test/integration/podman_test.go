@@ -15,7 +15,7 @@ var _ = Describe("podman preset", Label("podman-preset"), func() {
 	Describe("basic use", func() {
 
 		It("write to config", func() {
-			Expect(RunCRCExpectSuccess("config", "set", "preset", "podman")).To(ContainSubstring("Changes to configuration property 'preset' are only applied when the CRC instance is created."))
+			Expect(RunCRCExpectSuccess("config", "set", "preset", "podman")).To(ContainSubstring("please run 'crc setup' before 'crc start'"))
 		})
 
 		It("setup CRC", func() {

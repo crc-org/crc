@@ -2,7 +2,10 @@ package config
 
 import (
 	"fmt"
+	"path/filepath"
 
+	"github.com/crc-org/crc/pkg/crc/constants"
+	"github.com/crc-org/crc/pkg/os"
 	"github.com/spf13/cast"
 )
 
@@ -19,9 +22,15 @@ func RequiresDeleteMsg(key string, _ interface{}) string {
 }
 
 func RequiresDeleteAndSetupMsg(key string, _ interface{}) string {
-	return fmt.Sprintf("Changes to configuration property '%s' are only applied when the CRC instance is created.\n"+
-		"If you already have a running CRC instance with different %s, then for this configuration change to take effect, "+
-		"delete the CRC instance with 'crc delete', setup it with `crc setup` and start it with 'crc start'.", key, key)
+	// since we cannot easily import the machine package here to check for existence of the CRC vm
+	// we rely on the existence of the machine config file to determine if a VM exists
+	if os.FileExists(filepath.Join(constants.MachineInstanceDir, "crc", "config.json")) {
+		return fmt.Sprintf("Changes to configuration property '%s' are only applied when the CRC instance is created.\n"+
+			"If you already have a running CRC instance with different %s, then for this configuration change to take effect, "+
+			"first delete the CRC instance with 'crc delete'. Then to confirm your system is ready, and you have the needed system bundle, "+
+			"please run 'crc setup' before 'crc start'.", key, key)
+	}
+	return "To confirm your system is ready, and you have the needed system bundle, please run 'crc setup' before 'crc start'."
 }
 
 func SuccessfullyApplied(key string, value interface{}) string {
