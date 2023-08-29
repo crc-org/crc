@@ -57,6 +57,13 @@ func TestDotSlash(t *testing.T) {
 	assert.NoError(t, testUncompress(t, filepath.Join("testdata", "dotslash.tar.gz"), nil, files))
 }
 
+func TestZipSlip(t *testing.T) {
+	archiveName := filepath.Join("testdata", "zipslip.tar.gz")
+	_, err := Uncompress(archiveName, t.TempDir())
+	logging.Infof("error: %v", err)
+	assert.ErrorContains(t, err, "illegal file path")
+}
+
 func copyFileMap(orig fileMap) fileMap {
 	copiedMap := fileMap{}
 	for key, value := range orig {
