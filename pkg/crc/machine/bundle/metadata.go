@@ -330,13 +330,6 @@ func downloadDefault(preset crcPreset.Preset) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	bundleNameFromURI, err := downloadInfo.GetSourceFilename()
-	if err != nil {
-		return "", err
-	}
-	if constants.GetDefaultBundle(preset) != bundleNameFromURI {
-		return "", fmt.Errorf("expected %s but found %s in Makefile", bundleNameFromURI, constants.GetDefaultBundle(preset))
-	}
 
 	return downloadInfo.Download(constants.GetDefaultBundlePath(preset), 0664)
 }
