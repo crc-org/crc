@@ -94,6 +94,8 @@ github.com/containers/gvisor-tap-vsock v0.7.1 h1:+Rc+sOPplrkQb/BUXeN0ug8TxjgyrIq
 github.com/containers/gvisor-tap-vsock v0.7.1/go.mod h1:WSSsjcuYZkvP8i0J+Ht3LF8yvysn3krD5zxQ74wz7y0=
 github.com/containers/image/v5 v5.29.0 h1:9+nhS/ZM7c4Kuzu5tJ0NMpxrgoryOJ2HAYTgG8Ny7j4=
 github.com/containers/image/v5 v5.29.0/go.mod h1:kQ7qcDsps424ZAz24thD+x7+dJw1vgur3A9tTDsj97E=
+github.com/containers/libhvee v0.4.1-0.20230901182836-fcf1478fdd75 h1:zrZ+yh2wI3zOKC9OC63OxdSoS/jOzamnDmRVbDvr0Ws=
+github.com/containers/libhvee v0.4.1-0.20230901182836-fcf1478fdd75/go.mod h1:I30im5oKCYBJMEa+r0jffZn+Yb5/8CnYeAJy+vb77Mg=
 github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01 h1:Qzk5C6cYglewc+UyGf6lc8Mj2UaPTHy/iF2De0/77CA=
 github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01/go.mod h1:9rfv8iPl1ZP7aqh9YA68wnZv2NUDbXdcdPHVz0pFbPY=
 github.com/containers/ocicrypt v1.1.9 h1:2Csfba4jse85Raxk5HIyEk8OwZNjRvfkhEGijOjIdEM=

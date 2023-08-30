@@ -12,7 +12,6 @@ import (
 	"github.com/crc-org/crc/v2/pkg/os/windows/powershell"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
-	"github.com/crc-org/crc/v2/pkg/crc/machine/hyperv"
 )
 
 const (
@@ -164,19 +163,6 @@ func fixUserPartOfCrcUsersAndHypervAdminsGroup() error {
 		return err
 	}
 	return errReboot
-}
-
-func checkIfHyperVVirtualSwitchExists() error {
-	switchName := hyperv.AlternativeNetwork
-
-	// use winnet instead
-	exists, foundName := winnet.SelectSwitchByNameOrDefault(switchName)
-	if exists {
-		logging.Info("Found Virtual Switch to use: ", foundName)
-		return nil
-	}
-
-	return fmt.Errorf("Virtual Switch not found")
 }
 
 func checkIfRunningAsNormalUser() error {
