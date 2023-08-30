@@ -325,7 +325,7 @@ func getDefaultBundleVerifiedHash(preset crcPreset.Preset) (string, error) {
 	return "", errors.New("default bundle's hash is missing or shasums are malformed")
 }
 
-func DownloadDefault(preset crcPreset.Preset) (string, error) {
+func downloadDefault(preset crcPreset.Preset) (string, error) {
 	downloadInfo, err := getBundleDownloadInfo(preset)
 	if err != nil {
 		return "", err
@@ -349,7 +349,7 @@ func Download(preset crcPreset.Preset, bundleURI string) (string, error) {
 	// bundles, their sha256sums are known and can be checked.
 	if bundleURI == constants.GetDefaultBundlePath(preset) {
 		if preset == crcPreset.OpenShift || preset == crcPreset.Microshift {
-			return DownloadDefault(preset)
+			return downloadDefault(preset)
 		}
 		return image.PullBundle(preset, "")
 	}
