@@ -45,7 +45,7 @@ func GetVerifiedClearsignedMsgV3(pubkey, clearSignedMsg string) (string, error) 
 	}
 	block, rest := goClearsign.Decode([]byte(clearSignedMsg))
 	if len(rest) != 0 {
-		return "", fmt.Errorf("Error decoding clear signed message: %w", err)
+		return "", fmt.Errorf("Error decoding clear signed message")
 	}
 	sig, err := io.ReadAll(block.ArmoredSignature.Body)
 	if err != nil {
