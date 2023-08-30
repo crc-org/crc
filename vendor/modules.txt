@@ -147,6 +147,11 @@ github.com/containers/image/v5/signature/simplesigning
 github.com/containers/image/v5/transports
 github.com/containers/image/v5/types
 github.com/containers/image/v5/version
+# github.com/containers/libhvee v0.4.1-0.20230901182836-fcf1478fdd75
+## explicit; go 1.18
+github.com/containers/libhvee/pkg/hypervctl
+github.com/containers/libhvee/pkg/kvp/ginsu
+github.com/containers/libhvee/pkg/wmiext
 # github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01
 ## explicit
 github.com/containers/libtrust

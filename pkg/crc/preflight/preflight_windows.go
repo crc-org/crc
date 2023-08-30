@@ -56,14 +56,6 @@ var hypervPreflightChecks = []Check{
 		labels: labels{Os: Windows},
 	},
 	{
-		configKeySuffix:  "check-hyperv-switch",
-		checkDescription: "Checking if the Hyper-V virtual switch exists",
-		check:            checkIfHyperVVirtualSwitchExists,
-		flags:            StartUpOnly,
-
-		labels: labels{Os: Windows, NetworkMode: System},
-	},
-	{
 		cleanupDescription: "Removing dns server from interface",
 		cleanup:            removeDNSServerAddress,
 		flags:              CleanUpOnly,

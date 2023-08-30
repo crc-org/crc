@@ -1,4 +1,4 @@
-package hyperv
+package libhvee
 
 import (
 	"path/filepath"
@@ -6,29 +6,17 @@ import (
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/config"
-	"github.com/crc-org/crc/v2/pkg/crc/network"
-	"github.com/crc-org/crc/v2/pkg/drivers/hyperv"
-	winnet "github.com/crc-org/crc/v2/pkg/os/windows/network"
+	"github.com/crc-org/crc/v2/pkg/drivers/libhvee"
 	"github.com/crc-org/machine/libmachine/drivers"
 )
 
-func CreateHost(machineConfig config.MachineConfig) *hyperv.Driver {
-	hypervDriver := hyperv.NewDriver(machineConfig.Name, constants.MachineBaseDir)
+func CreateHost(machineConfig config.MachineConfig) *libhvee.Driver {
+	libhveeDriver := libhvee.NewDriver(machineConfig.Name, constants.MachineBaseDir)
 
-	config.InitVMDriverFromMachineConfig(machineConfig, hypervDriver.VMDriver)
+	config.InitVMDriverFromMachineConfig(machineConfig, libhveeDriver.VMDriver)
 
-	hypervDriver.DisableDynamicMemory = true
-
-	if machineConfig.NetworkMode == network.UserNetworkingMode {
-		hypervDriver.VirtualSwitch = ""
-	} else {
-		// Determine the Virtual Switch to be used
-		_, switchName := winnet.SelectSwitchByNameOrDefault(AlternativeNetwork)
-		hypervDriver.VirtualSwitch = switchName
-	}
-
-	hypervDriver.SharedDirs = configureShareDirs(machineConfig)
-	return hypervDriver
+	libhveeDriver.SharedDirs = configureShareDirs(machineConfig)
+	return libhveeDriver
 }
 
 // converts a path like c:\users\crc to /mnt/c/users/crc
