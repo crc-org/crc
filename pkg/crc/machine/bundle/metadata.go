@@ -2,7 +2,6 @@ package bundle
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -298,7 +297,11 @@ func getBundleDownloadInfo(preset crcPreset.Preset) (*download.RemoteFile, error
 // then verifies it is signed by redhat release key, if signature is valid it returns the hash
 // for the default bundle of preset from the file
 func getDefaultBundleVerifiedHash(preset crcPreset.Preset) (string, error) {
-	res, err := download.InMemory(constants.GetDefaultBundleSignedHashURL(preset))
+	return getVerifiedHash(constants.GetDefaultBundleSignedHashURL(preset), constants.GetDefaultBundle(preset))
+}
+
+func getVerifiedHash(url string, file string) (string, error) {
+	res, err := download.InMemory(url)
 	if err != nil {
 		return "", err
 	}
@@ -317,12 +320,12 @@ func getDefaultBundleVerifiedHash(preset crcPreset.Preset) (string, error) {
 
 	lines := strings.Split(verifiedHashes, "\n")
 	for _, line := range lines {
-		if strings.HasSuffix(line, constants.GetDefaultBundle(preset)) {
-			sha256sum := strings.TrimSuffix(line, "  "+constants.GetDefaultBundle(preset))
+		if strings.HasSuffix(line, file) {
+			sha256sum := strings.TrimSuffix(line, "  "+file)
 			return sha256sum, nil
 		}
 	}
-	return "", errors.New("default bundle's hash is missing or shasums are malformed")
+	return "", fmt.Errorf("%s hash is missing or shasums are malformed", file)
 }
 
 func downloadDefault(preset crcPreset.Preset) (string, error) {
