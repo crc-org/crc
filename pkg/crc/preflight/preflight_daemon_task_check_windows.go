@@ -47,7 +47,7 @@ var (
   <Actions Context="Author">
     <Exec>
       <Command>powershell.exe</Command>
-      <Arguments>-WindowStyle Hidden -Command %s</Arguments>
+      <Arguments>-WindowStyle Hidden -ExecutionPolicy RemoteSigned -Command %s</Arguments>
     </Exec>
   </Actions>
 </Task>
