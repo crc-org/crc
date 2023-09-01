@@ -93,6 +93,13 @@ var vsockChecks = []Check{
 
 var daemonTaskChecks = []Check{
 	{
+		cleanupDescription: "Stop daemon process if it is running",
+		cleanup:            killDaemonProcessIfRunning,
+		flags:              CleanUpOnly,
+
+		labels: labels{Os: Windows},
+	},
+	{
 		configKeySuffix:    "check-daemon-task-posh-script-present",
 		checkDescription:   "Checking if the daemon task powershell script is present",
 		check:              checkDaemonPoshScript,

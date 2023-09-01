@@ -227,3 +227,12 @@ func checkDaemonPoshScript() error {
 func fixDaemonPoshScript() error {
 	return os.WriteFile(daemonPoshScriptPath, getDaemonPoshScriptContent(), 0600)
 }
+
+func killDaemonProcessIfRunning() error {
+	if daemonRunning() {
+		if err := killDaemonProcess(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
