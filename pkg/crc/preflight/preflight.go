@@ -151,13 +151,18 @@ func doRegisterSettings(cfg crcConfig.Schema, checks []Check) {
 	}
 }
 
-// StartPreflightChecks performs the preflight checks before starting the cluster
-func StartPreflightChecks(config crcConfig.Storage) error {
+func getPreflightChecksHelper(config crcConfig.Storage) []Check {
 	experimentalFeatures := config.Get(crcConfig.ExperimentalFeatures).AsBool()
 	mode := crcConfig.GetNetworkMode(config)
 	bundlePath := config.Get(crcConfig.Bundle).AsString()
 	preset := crcConfig.GetPreset(config)
-	if err := doPreflightChecks(config, getPreflightChecks(experimentalFeatures, mode, bundlePath, preset)); err != nil {
+	logging.Infof("Using bundle path %s", bundlePath)
+	return getPreflightChecks(experimentalFeatures, mode, bundlePath, preset)
+}
+
+// StartPreflightChecks performs the preflight checks before starting the cluster
+func StartPreflightChecks(config crcConfig.Storage) error {
+	if err := doPreflightChecks(config, getPreflightChecksHelper(config)); err != nil {
 		return &errors.PreflightError{Err: err}
 	}
 	return nil
@@ -165,12 +170,7 @@ func StartPreflightChecks(config crcConfig.Storage) error {
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
 func SetupHost(config crcConfig.Storage, checkOnly bool) error {
-	experimentalFeatures := config.Get(crcConfig.ExperimentalFeatures).AsBool()
-	mode := crcConfig.GetNetworkMode(config)
-	bundlePath := config.Get(crcConfig.Bundle).AsString()
-	preset := crcConfig.GetPreset(config)
-	logging.Infof("Using bundle path %s", bundlePath)
-	return doFixPreflightChecks(config, getPreflightChecks(experimentalFeatures, mode, bundlePath, preset), checkOnly)
+	return doFixPreflightChecks(config, getPreflightChecksHelper(config), checkOnly)
 }
 
 func RegisterSettings(config crcConfig.Schema) {
