@@ -344,10 +344,14 @@ func Download(preset crcPreset.Preset, bundleURI string) (string, error) {
 	// different codepath from user-specified URIs as for the default
 	// bundles, their sha256sums are known and can be checked.
 	if bundleURI == constants.GetDefaultBundlePath(preset) {
-		if preset == crcPreset.OpenShift || preset == crcPreset.Microshift {
+		switch preset {
+		case crcPreset.OpenShift, crcPreset.Microshift:
 			return downloadDefault(preset)
+		case crcPreset.Podman, crcPreset.OKD:
+			fallthrough
+		default:
+			return image.PullBundle(preset, "")
 		}
-		return image.PullBundle(preset, "")
 	}
 	switch {
 	case strings.HasPrefix(bundleURI, "http://"), strings.HasPrefix(bundleURI, "https://"):
