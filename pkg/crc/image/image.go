@@ -19,17 +19,12 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/gpg"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
-	"github.com/crc-org/crc/v2/pkg/crc/version"
 	"github.com/crc-org/crc/v2/pkg/extract"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 type imageHandler struct {
 	imageURI string
-}
-
-func defaultURI(preset crcpreset.Preset) string {
-	return fmt.Sprintf("//%s/%s:%s", constants.RegistryURI, getImageName(preset), version.GetBundleVersion(preset))
 }
 
 func ValidateURI(uri *url.URL) error {
@@ -101,17 +96,6 @@ func getLayerPath(m *v1.Manifest, index int, mediaType string) (string, error) {
 	return strings.TrimPrefix(m.Layers[index].Digest.String(), "sha256:"), nil
 }
 
-func getImageName(preset crcpreset.Preset) string {
-	switch preset {
-	case crcpreset.Podman:
-		return "podman-bundle"
-	case crcpreset.OKD:
-		return "okd-bundle"
-	default:
-		return "openshift-bundle"
-	}
-}
-
 func getPresetNameE(imageName string) (crcpreset.Preset, error) {
 	switch imageName {
 	case "openshift-bundle":
@@ -129,10 +113,7 @@ func GetPresetName(imageName string) crcpreset.Preset {
 	return preset
 }
 
-func PullBundle(preset crcpreset.Preset, imageURI string) (string, error) {
-	if imageURI == "" {
-		imageURI = defaultURI(preset)
-	}
+func PullBundle(imageURI string) (string, error) {
 	imgHandler := imageHandler{
 		imageURI: strings.TrimPrefix(imageURI, "docker:"),
 	}
