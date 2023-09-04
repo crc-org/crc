@@ -196,6 +196,9 @@ func TestConfigGetAll(t *testing.T) {
 		switch v := v.Value.(type) {
 		case int:
 			configs[k] = float64(v)
+		// when config of type Path is converted to JSON it is converted to string
+		case crcConfig.Path:
+			configs[k] = string(v)
 		default:
 			configs[k] = v
 		}

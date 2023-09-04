@@ -122,7 +122,7 @@ func RegisterSettings(cfg *Config) {
 		"HTTPS proxy URL (string, like 'https://my-proxy.com:8443')")
 	cfg.AddSetting(NoProxy, "", validateNoProxy, SuccessfullyApplied,
 		"Hosts, ipv4 addresses or CIDR which do not use a proxy (string, comma-separated list such as '127.0.0.1,192.168.100.1/24')")
-	cfg.AddSetting(ProxyCAFile, "", validatePath, SuccessfullyApplied,
+	cfg.AddSetting(ProxyCAFile, Path(""), validatePath, SuccessfullyApplied,
 		"Path to an HTTPS proxy certificate authority (CA)")
 
 	cfg.AddSetting(EnableClusterMonitoring, false, ValidateBool, SuccessfullyApplied,

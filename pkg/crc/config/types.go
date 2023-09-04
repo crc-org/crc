@@ -55,3 +55,10 @@ type RawStorage interface {
 	Set(key string, value interface{}) error
 	Unset(key string) error
 }
+
+// type Path is used for a setting which is a file path
+type Path string
+
+func (p Path) String() string {
+	return string(p)
+}
