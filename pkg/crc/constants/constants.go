@@ -221,3 +221,18 @@ func GetDefaultMemory(preset crcpreset.Preset) int {
 		return 9216
 	}
 }
+
+func GetDefaultBundleImageRegistry(preset crcpreset.Preset) string {
+	return fmt.Sprintf("//%s/%s:%s", RegistryURI, getImageName(preset), version.GetBundleVersion(preset))
+}
+
+func getImageName(preset crcpreset.Preset) string {
+	switch preset {
+	case crcpreset.Podman:
+		return "podman-bundle"
+	case crcpreset.OKD:
+		return "okd-bundle"
+	default:
+		return "openshift-bundle"
+	}
+}

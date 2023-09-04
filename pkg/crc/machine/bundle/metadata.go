@@ -350,14 +350,14 @@ func Download(preset crcPreset.Preset, bundleURI string) (string, error) {
 		case crcPreset.Podman, crcPreset.OKD:
 			fallthrough
 		default:
-			return image.PullBundle(preset, "")
+			return image.PullBundle(constants.GetDefaultBundleImageRegistry(preset))
 		}
 	}
 	switch {
 	case strings.HasPrefix(bundleURI, "http://"), strings.HasPrefix(bundleURI, "https://"):
 		return download.Download(bundleURI, constants.MachineCacheDir, 0644, nil)
 	case strings.HasPrefix(bundleURI, "docker://"):
-		return image.PullBundle(preset, bundleURI)
+		return image.PullBundle(bundleURI)
 	}
 	// the `bundleURI` parameter turned out to be a local path
 	return bundleURI, nil
