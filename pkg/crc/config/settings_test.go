@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
@@ -157,4 +158,27 @@ func TestUnsetPreset(t *testing.T) {
 		IsDefault: true,
 		IsSecret:  false,
 	}, cfg.Get(CPUs))
+}
+
+func TestPath(t *testing.T) {
+	cfg, err := newInMemoryConfig()
+	require.NoError(t, err)
+
+	assert.Equal(t, SettingValue{
+		Value:     Path(""),
+		Invalid:   false,
+		IsDefault: true,
+		IsSecret:  false,
+	}, cfg.Get(ProxyCAFile))
+
+	_, err = cfg.Set(ProxyCAFile, "testdata/foo.crt")
+	require.NoError(t, err)
+	expectedPath, err := filepath.Abs("testdata/foo.crt")
+	require.NoError(t, err)
+	assert.Equal(t, SettingValue{
+		Value:     Path(expectedPath),
+		Invalid:   false,
+		IsDefault: false,
+		IsSecret:  false,
+	}, cfg.Get(ProxyCAFile))
 }
