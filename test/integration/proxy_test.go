@@ -8,11 +8,11 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("", Label("openshift-preset", "goproxy"), func() {
+var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func() {
 
 	go util.RunProxy()
 
-	Describe("Behind proxy", func() {
+	Describe("Behind proxy", Serial, Ordered, func() {
 
 		networkMode := "user"
 		httpProxy := "http://127.0.0.1:8888"
