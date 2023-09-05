@@ -36,15 +36,18 @@ var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func
 
 	Describe("Behind proxy", Serial, Ordered, func() {
 
-		networkMode := "user"
 		httpProxy := "http://127.0.0.1:8888"
 		httpsProxy := "http://127.0.0.1:8888"
 		noProxy := ".testing"
 
+		if runtime.GOOS == "linux" {
+			httpProxy = "http://192.168.130.1:8888"
+			httpsProxy = "http://192.168.130.1:8888"
+		}
+
 		// Start goproxy
 
 		It("configure CRC", func() {
-			Expect(RunCRCExpectSuccess("config", "set", "network-mode", networkMode), ContainSubstring("Network mode"))
 			Expect(RunCRCExpectSuccess("config", "set", "http-proxy", httpProxy), ContainSubstring("Successfully configured http-proxy"))
 			Expect(RunCRCExpectSuccess("config", "set", "https-proxy", httpsProxy), ContainSubstring("Successfully configured https-proxy"))
 			Expect(RunCRCExpectSuccess("config", "set", "no-proxy", noProxy), ContainSubstring("Successfully configured no-proxy"))

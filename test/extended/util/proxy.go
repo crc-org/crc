@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 
 	"github.com/elazarl/goproxy"
 	log "github.com/sirupsen/logrus"
@@ -64,8 +65,13 @@ func RunProxy() {
 
 	log.SetOutput(f)
 
+	ipaddr := "127.0.0.1"        // user mode is default on windows and darwin
+	if runtime.GOOS == "linux" { // system mode is default on linux
+		ipaddr = "192.168.130.1"
+	}
+
 	verbose := flag.Bool("v", true, "should every proxy request be logged to stdout")
-	addr := flag.String("127.0.0.1", ":8888", "proxy listen address") // using network-mode=user
+	addr := flag.String(ipaddr, ":8888", "proxy listen address") // using network-mode=user
 	flag.Parse()
 	proxy.Verbose = *verbose
 	proxy.Logger = log.StandardLogger()
