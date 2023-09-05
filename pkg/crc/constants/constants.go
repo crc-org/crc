@@ -124,12 +124,8 @@ func InstanceName(preset crcpreset.Preset) string {
 	return fmt.Sprintf("crc-%s", preset.String())
 }
 
-func GetKubeconfigFilePath(preset crcpreset.Preset) string {
-	return filepath.Join(MachineInstanceDir, InstanceDirName(preset), "kubeconfig")
-}
-
-func GetPasswdFilePath(preset crcpreset.Preset) string {
-	return filepath.Join(MachineInstanceDir, InstanceDirName(preset), "passwd")
+func ResolveInstancePath(preset crcpreset.Preset, pathElems ...string) string {
+	return filepath.Join(MachineInstanceDir, InstanceDirName(preset), filepath.Join(pathElems...))
 }
 
 func GetDefaultBundlePath(preset crcpreset.Preset) string {
@@ -184,25 +180,46 @@ func EnsureBaseDirectoriesExist() error {
 	return nil
 }
 
+const (
+	InstanceDockerSocket      = "docker.sock"
+	InstanceKubeAdminPassword = "kubeadmin-password"
+	InstanceKubeconfig        = "kubeconfig"
+	InstancePasswd            = "passwd"
+	InstancePublicSSHKey      = "id_ecdsa.pub"
+	InstancePrivateSSHKey     = "id_ecdsa"
+	InstanceRsaPrivateKey     = "id_rsa"
+)
+
+func GetKubeconfigFilePath(preset crcpreset.Preset) string {
+	if preset != crcpreset.Podman {
+		return ResolveInstancePath(preset, InstanceKubeconfig)
+	}
+	return ""
+}
+
+func GetPasswdFilePath(preset crcpreset.Preset) string {
+	return ResolveInstancePath(preset, InstancePasswd)
+}
+
 func GetPublicKeyPath(preset crcpreset.Preset) string {
-	return filepath.Join(MachineInstanceDir, InstanceDirName(preset), "id_ecdsa.pub")
+	return ResolveInstancePath(preset, InstancePublicSSHKey)
 }
 
 func GetPrivateKeyPath(preset crcpreset.Preset) string {
-	return filepath.Join(MachineInstanceDir, InstanceDirName(preset), "id_ecdsa")
+	return ResolveInstancePath(preset, InstancePrivateSSHKey)
 }
 
 func GetHostDockerSocketPath(preset crcpreset.Preset) string {
-	return filepath.Join(MachineInstanceDir, InstanceDirName(preset), "docker.sock")
+	return ResolveInstancePath(preset, InstanceDockerSocket)
 }
 
 // For backward compatibility to v 1.20.0
 func GetRsaPrivateKeyPath(preset crcpreset.Preset) string {
-	return filepath.Join(MachineInstanceDir, InstanceDirName(preset), "id_rsa")
+	return ResolveInstancePath(preset, InstanceRsaPrivateKey)
 }
 
 func GetKubeAdminPasswordPath(preset crcpreset.Preset) string {
-	return filepath.Join(MachineInstanceDir, InstanceDirName(preset), "kubeadmin-password")
+	return ResolveInstancePath(preset, InstanceKubeAdminPassword)
 }
 
 // TODO: follow the same pattern as oc and podman above

@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -1021,7 +1020,7 @@ func bundleMismatchWithPreset(preset crcPreset.Preset, bundleMetadata *bundle.Cr
 func updateCockpitConsoleBearerTokenForPodmanPreset(sshRunner *crcssh.Runner) error {
 	logging.Info("Adding new bearer token for cockpit webconsole")
 
-	tokenPath := filepath.Join(constants.MachineInstanceDir, constants.InstanceDirName(crcPreset.Podman), "cockpit-bearer-token")
+	tokenPath := constants.ResolveInstancePath(crcPreset.Podman, "cockpit-bearer-token")
 	token := cluster.GenerateCockpitBearerToken()
 
 	if err := os.WriteFile(tokenPath, []byte(token), 0600); err != nil {

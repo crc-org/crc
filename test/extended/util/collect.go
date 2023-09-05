@@ -46,7 +46,7 @@ func RunDiagnose(dir string) error {
 		file(constants.ConfigPath),
 		file(constants.LogFilePath),
 		file(constants.DaemonLogFilePath),
-		file(filepath.Join(constants.MachineBaseDir, "machines", constants.InstanceDirName(preset.OpenShift), "config.json")),
+		file(constants.ResolveInstancePath(preset.OpenShift, "config.json")),
 		file("/etc/NetworkManager/conf.d/crc-nm-dnsmasq.conf"),
 		file("/etc/NetworkManager/dnsmasq.d/crc.conf"),
 		file("/etc/hosts"),

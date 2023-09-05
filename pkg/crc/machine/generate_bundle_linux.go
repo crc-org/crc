@@ -14,7 +14,7 @@ func copyDiskImage(destDir string, preset crcPreset.Preset) (string, string, err
 
 	imageName := fmt.Sprintf("%s.qcow2", constants.InstanceName(preset))
 
-	srcPath := filepath.Join(constants.MachineInstanceDir, constants.InstanceDirName(preset), imageName)
+	srcPath := constants.ResolveInstancePath(preset, imageName)
 	destPath := filepath.Join(destDir, imageName)
 
 	_, _, err := crcos.RunWithDefaultLocale("qemu-img", "convert", "-f", "qcow2", "-O", destFormat, srcPath, destPath)
