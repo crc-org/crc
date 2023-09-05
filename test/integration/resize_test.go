@@ -8,9 +8,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("vary VM parameters: memory cpus, disk", Label("openshift-preset", "vm-resize"), func() {
+var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label("openshift-preset", "vm-resize"), func() {
 
-	Describe("use default values", func() {
+	Describe("use default values", Serial, Ordered, func() {
 
 		It("setup CRC", func() {
 			if bundlePath == "" {
@@ -73,7 +73,7 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Label("openshift-prese
 
 	})
 
-	Describe("use custom values", func() {
+	Describe("use custom values", Serial, Ordered, func() {
 
 		It("start CRC", func() {
 			Expect(RunCRCExpectSuccess("start", "--memory", "13000", "--cpus", "6", "--disk-size", "50")).To(ContainSubstring("Started the OpenShift cluster"))
@@ -103,7 +103,7 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Label("openshift-prese
 		})
 	})
 
-	Describe("use flawed values", func() {
+	Describe("use flawed values", Serial, Ordered, func() {
 
 		It("start CRC with sub-minimum memory", func() { // less than min = 9216
 			Expect(RunCRCExpectFail("start", "--memory", "9000")).To(ContainSubstring("requires memory in MiB >= 9216"))
@@ -123,7 +123,7 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Label("openshift-prese
 		})
 	})
 
-	Describe("use default values again", func() {
+	Describe("use default values again", Serial, Ordered, func() {
 
 		It("start CRC", func() {
 			Expect(RunCRCExpectSuccess("start")).To(ContainSubstring("Started the OpenShift cluster")) // default values: "--memory", "9216", "--cpus", "4", "disk-size", "31"

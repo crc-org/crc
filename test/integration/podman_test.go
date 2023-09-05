@@ -10,9 +10,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("podman preset", Label("podman-preset"), func() {
+var _ = Describe("podman preset", Serial, Ordered, Label("podman-preset"), func() {
 
-	Describe("basic use", func() {
+	Describe("basic use", Serial, Ordered, func() {
 
 		It("write to config", func() {
 			Expect(RunCRCExpectSuccess("config", "set", "preset", "podman")).To(ContainSubstring("please run 'crc setup' before 'crc start'"))
