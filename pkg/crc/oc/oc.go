@@ -1,8 +1,6 @@
 package oc
 
 import (
-	"path/filepath"
-
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	crcPreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/ssh"
@@ -21,18 +19,6 @@ type Config struct {
 	Context          string
 	Cluster          string
 	Timeout          string
-}
-
-// UseOcWithConfig return the oc executable along with valid kubeconfig
-func UseOCWithConfig(machineName string) Config {
-	return Config{
-		Runner:           crcos.NewLocalCommandRunner(),
-		OcExecutablePath: filepath.Join(constants.CrcOcBinDir, constants.OcExecutableName),
-		KubeconfigPath:   filepath.Join(constants.MachineInstanceDir, machineName, "kubeconfig"),
-		Context:          constants.DefaultOCPContext,
-		Cluster:          constants.DefaultOCPClusterName,
-		Timeout:          defaultTimeout,
-	}
 }
 
 func (oc Config) WithFailFast() Config {
