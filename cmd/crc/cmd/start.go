@@ -81,6 +81,8 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		EnableSharedDirs:  config.Get(crcConfig.EnableSharedDirs).AsBool(),
 
 		EmergencyLogin: config.Get(crcConfig.EmergencyLogin).AsBool(),
+
+		PersistentVolumeSize: config.Get(crcConfig.PersistentVolumeSize).AsInt(),
 	}
 
 	client := newMachine()
