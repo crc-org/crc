@@ -41,6 +41,19 @@ func validateDiskSize(value interface{}) (bool, string) {
 	return true, ""
 }
 
+// validatePersistentVolumeSize checks if provided disk size is valid in the config
+func validatePersistentVolumeSize(value interface{}) (bool, string) {
+	diskSize, err := cast.ToIntE(value)
+	if err != nil {
+		return false, fmt.Sprintf("could not convert '%s' to integer", value)
+	}
+	if err := validation.ValidatePersistentVolumeSize(diskSize); err != nil {
+		return false, err.Error()
+	}
+
+	return true, ""
+}
+
 // validateCPUs checks if provided cpus count is valid in the config
 func validateCPUs(value interface{}, preset crcpreset.Preset) (bool, string) {
 	v, err := cast.ToIntE(value)

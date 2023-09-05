@@ -114,7 +114,7 @@ func (client *client) updateVMConfig(startConfig types.StartConfig, vm *virtualM
 	return nil
 }
 
-func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset) error {
+func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset, persistentVolumeSize int) error {
 	rootPart, err := getrootPartition(sshRunner, preset)
 	if err != nil {
 		return err
@@ -135,7 +135,7 @@ func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset) error
 
 	if preset == crcPreset.Microshift {
 		lvFullName := "rhel/root"
-		if err := growLVForMicroshift(sshRunner, lvFullName, rootPart); err != nil {
+		if err := growLVForMicroshift(sshRunner, lvFullName, rootPart, persistentVolumeSize); err != nil {
 			return err
 		}
 	}
@@ -172,7 +172,7 @@ func getrootPartition(sshRunner *crcssh.Runner, preset crcPreset.Preset) (string
 	return rootPart, nil
 }
 
-func growLVForMicroshift(sshRunner *crcssh.Runner, lvFullName string, rootPart string) error {
+func growLVForMicroshift(sshRunner *crcssh.Runner, lvFullName string, rootPart string, persistentVolumeSize int) error {
 	if _, _, err := sshRunner.RunPrivileged("Resizing the physical volume(PV)", "/usr/sbin/pvresize", "--devices", rootPart, rootPart); err != nil {
 		return err
 	}
@@ -197,8 +197,8 @@ func growLVForMicroshift(sshRunner *crcssh.Runner, lvFullName string, rootPart s
 		return err
 	}
 
-	// vgFree space as part of the bundle is default to ~15.02G (16127098880 byte)
-	vgFree := 16127098880
+	GB := 1073741824
+	vgFree := persistentVolumeSize * GB
 	expectedLVSize := vgSize - vgFree
 	sizeToIncrease := expectedLVSize - lvSize
 	lvPath := fmt.Sprintf("/dev/%s", lvFullName)
@@ -437,7 +437,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	// Trigger disk resize, this will be a no-op if no disk size change is needed
-	if err := growRootFileSystem(sshRunner, startConfig.Preset); err != nil {
+	if err := growRootFileSystem(sshRunner, startConfig.Preset, startConfig.PersistentVolumeSize); err != nil {
 		return nil, errors.Wrap(err, "Error updating filesystem size")
 	}
 

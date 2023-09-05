@@ -40,6 +40,9 @@ type StartConfig struct {
 
 	// Enable emergency login
 	EmergencyLogin bool
+
+	// Persistent volume size
+	PersistentVolumeSize int
 }
 
 type ClusterConfig struct {

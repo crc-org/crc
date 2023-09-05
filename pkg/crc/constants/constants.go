@@ -15,6 +15,8 @@ const (
 	DefaultName     = "crc"
 	DefaultDiskSize = 31
 
+	DefaultPersistentVolumeSize = 15
+
 	DefaultSSHUser = "core"
 	DefaultSSHPort = 22
 
