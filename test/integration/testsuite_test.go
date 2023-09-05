@@ -43,7 +43,7 @@ func TestTest(t *testing.T) {
 	}
 	reporterConfig.JUnitReport = filepath.Join("out", "integration.xml")
 
-	RunSpecs(t, "Test Suite", suiteConfig, reporterConfig)
+	RunSpecs(t, "Integration", suiteConfig, reporterConfig)
 
 }
 
@@ -51,9 +51,8 @@ var _ = BeforeSuite(func() {
 
 	// set userHome
 	usr, err := user.Current()
-	if err != nil {
-		Expect(err).NotTo(HaveOccurred())
-	}
+	Expect(err).NotTo(HaveOccurred())
+
 	userHome = usr.HomeDir
 
 	// set credPath
@@ -75,15 +74,15 @@ var _ = BeforeSuite(func() {
 
 		logrus.Infof("Error: Could not read GINKGO_OPTS.")
 		logrus.Infof("%v", err)
-		Expect(err).NotTo(HaveOccurred())
 	}
+	Expect(err).NotTo(HaveOccurred())
 
 	pullSecretPath = os.Getenv("PULL_SECRET_PATH") // this env var should contain location of pull-secret file
 	if err != nil {
 
 		logrus.Infof("Error: You need to set PULL_SECRET_PATH to find CRC useful.")
 		logrus.Infof("%v", err)
-		Expect(err).NotTo(HaveOccurred())
 	}
+	Expect(err).NotTo(HaveOccurred())
 
 })
