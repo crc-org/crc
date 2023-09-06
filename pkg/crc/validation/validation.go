@@ -87,6 +87,9 @@ func ValidateBundle(bundlePath string, preset crcpreset.Preset) error {
 	bundleName := bundle.GetBundleNameFromURI(bundlePath)
 	bundleMetadata, err := bundle.Get(bundleName)
 	if err != nil {
+		if bundlePath == constants.GetDefaultBundlePath(preset) {
+			return nil
+		}
 		return ValidateBundlePath(bundlePath, preset)
 	}
 	bundleMismatchWarning(bundleMetadata.GetBundleName(), preset)
