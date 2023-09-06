@@ -60,10 +60,8 @@ func runSetup(_ []string) error {
 		}
 	}
 
-	if !config.Get(crcConfig.Bundle).IsDefault {
-		if err := validation.ValidateBundlePath(config.Get(crcConfig.Bundle).AsString(), crcConfig.GetPreset(config)); err != nil {
-			return err
-		}
+	if err := validation.ValidateBundle(config.Get(crcConfig.Bundle).AsString(), crcConfig.GetPreset(config)); err != nil {
+		return err
 	}
 
 	// set global variable to force terminal output
