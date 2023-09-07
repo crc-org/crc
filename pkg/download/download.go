@@ -92,18 +92,12 @@ func Download(uri, destination string, mode os.FileMode, sha256sum []byte) (stri
 func InMemory(url string) (io.ReadCloser, error) {
 	client := grab.NewClient()
 	client.HTTPClient = &http.Client{Transport: httpproxy.HTTPTransport()}
+	client.UserAgent = version.UserAgent()
 
-	httpReq, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create http request: %w", err)
-	}
-	httpReq.Header.Set("User-Agent", version.UserAgent())
-
-	grabReq, err := grab.NewRequest("", "")
+	grabReq, err := grab.NewRequest("", url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create grab request: %w", err)
 	}
-	grabReq.HTTPRequest = httpReq
 	// do not write the downloaded file to disk
 	grabReq.NoStore = true
 
