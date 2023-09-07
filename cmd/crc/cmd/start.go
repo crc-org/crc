@@ -17,9 +17,9 @@ import (
 	"github.com/crc-org/crc/pkg/crc/daemonclient"
 	crcErrors "github.com/crc-org/crc/pkg/crc/errors"
 	"github.com/crc-org/crc/pkg/crc/logging"
+	"github.com/crc-org/crc/pkg/crc/machine/bundle"
 	"github.com/crc-org/crc/pkg/crc/machine/types"
 	"github.com/crc-org/crc/pkg/crc/network"
-	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/pkg/crc/preflight"
 	"github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/crc/validation"
@@ -214,7 +214,7 @@ func checkIfNewVersionAvailable(noUpdateCheck bool) error {
 }
 
 func newVersionAvailable() (bool, string, string, error) {
-	release, err := crcversion.GetCRCLatestVersionFromMirror(httpproxy.HTTPTransport())
+	release, err := bundle.FetchLatestReleaseInfo()
 	if err != nil {
 		return false, "", "", err
 	}
@@ -228,7 +228,7 @@ func newVersionAvailable() (bool, string, string, error) {
 	return release.Version.CrcVersion.GreaterThan(currentVersion), release.Version.CrcVersion.String(), downloadLink(release), nil
 }
 
-func downloadLink(release *crcversion.CrcReleaseInfo) string {
+func downloadLink(release *bundle.ReleaseInfo) string {
 	if link, ok := release.Links[runtime.GOOS]; ok {
 		return link
 	}
