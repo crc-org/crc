@@ -1,6 +1,7 @@
 package bundle
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -365,4 +366,36 @@ func Download(preset crcPreset.Preset, bundleURI string) (string, error) {
 	}
 	// the `bundleURI` parameter turned out to be a local path
 	return bundleURI, nil
+}
+
+type Version struct {
+	CrcVersion       *semver.Version `json:"crcVersion"`
+	GitSha           string          `json:"gitSha"`
+	OpenshiftVersion string          `json:"openshiftVersion"`
+}
+
+type ReleaseInfo struct {
+	Version Version           `json:"version"`
+	Links   map[string]string `json:"links"`
+}
+
+func FetchLatestReleaseInfo() (*ReleaseInfo, error) {
+	const releaseInfoLink = "https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/release-info.json"
+	response, err := download.InMemory(releaseInfoLink, version.UserAgent(), httpproxy.HTTPTransport())
+	if err != nil {
+		return nil, err
+	}
+	defer response.Close()
+
+	releaseMetaData, err := io.ReadAll(response)
+	if err != nil {
+		return nil, err
+	}
+
+	var releaseInfo ReleaseInfo
+	if err := json.Unmarshal(releaseMetaData, &releaseInfo); err != nil {
+		return nil, fmt.Errorf("Error unmarshaling JSON metadata: %v", err)
+	}
+
+	return &releaseInfo, nil
 }

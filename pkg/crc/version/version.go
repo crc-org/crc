@@ -1,17 +1,12 @@
 package version
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 
-	"github.com/Masterminds/semver/v3"
 	"github.com/crc-org/crc/pkg/crc/logging"
 	crcPreset "github.com/crc-org/crc/pkg/crc/preset"
-	"github.com/crc-org/crc/pkg/download"
 )
 
 // The following variables are private fields and should be set when compiling with ldflags, for example --ldflags="-X github.com/crc-org/crc/pkg/version.crcVersion=vX.Y.Z
@@ -40,22 +35,10 @@ var (
 )
 
 const (
-	releaseInfoLink = "https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/release-info.json"
 	// Tray version to be embedded in executable
 	crcTrayElectronVersion = "1.2.9"
 	crcAdminHelperVersion  = "0.0.12"
 )
-
-type CrcReleaseInfo struct {
-	Version Version           `json:"version"`
-	Links   map[string]string `json:"links"`
-}
-
-type Version struct {
-	CrcVersion       *semver.Version `json:"crcVersion"`
-	GitSha           string          `json:"gitSha"`
-	OpenshiftVersion string          `json:"openshiftVersion"`
-}
 
 func GetCRCVersion() string {
 	return crcVersion
@@ -108,26 +91,6 @@ func InstallPath() string {
 		return filepath.Dir(currentExecutablePath)
 	}
 	return filepath.Dir(src)
-}
-
-func GetCRCLatestVersionFromMirror(transport http.RoundTripper) (*CrcReleaseInfo, error) {
-	response, err := download.InMemory(releaseInfoLink, UserAgent(), transport)
-	if err != nil {
-		return nil, err
-	}
-	defer response.Close()
-
-	releaseMetaData, err := io.ReadAll(response)
-	if err != nil {
-		return nil, err
-	}
-
-	var releaseInfo CrcReleaseInfo
-	if err := json.Unmarshal(releaseMetaData, &releaseInfo); err != nil {
-		return nil, fmt.Errorf("Error unmarshaling JSON metadata: %v", err)
-	}
-
-	return &releaseInfo, nil
 }
 
 func GetDefaultPreset() crcPreset.Preset {
