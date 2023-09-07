@@ -13,6 +13,7 @@ import (
 
 	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
+	"github.com/crc-org/crc/pkg/crc/version"
 	"github.com/crc-org/crc/pkg/os/terminal"
 
 	"github.com/cavaliergopher/grab/v3"
@@ -88,15 +89,15 @@ func Download(uri, destination string, mode os.FileMode, sha256sum []byte) (stri
 
 // Download takes an URL and the User-Agent string to use in the http request
 // it takes  http.RoundTripper as the third argument to be used by the client
-func InMemory(url, userAgent string, transport http.RoundTripper) (io.ReadCloser, error) {
+func InMemory(url string) (io.ReadCloser, error) {
 	client := grab.NewClient()
-	client.HTTPClient = &http.Client{Transport: transport}
+	client.HTTPClient = &http.Client{Transport: httpproxy.HTTPTransport()}
 
 	httpReq, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create http request: %w", err)
 	}
-	httpReq.Header.Set("User-Agent", userAgent)
+	httpReq.Header.Set("User-Agent", version.UserAgent())
 
 	grabReq, err := grab.NewRequest("", "")
 	if err != nil {
