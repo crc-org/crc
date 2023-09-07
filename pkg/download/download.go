@@ -64,6 +64,7 @@ func Download(uri, destination string, mode os.FileMode, sha256sum []byte) (stri
 	logging.Debugf("Downloading %s to %s", uri, destination)
 
 	client := grab.NewClient()
+	client.UserAgent = version.UserAgent()
 	client.HTTPClient = &http.Client{Transport: httpproxy.HTTPTransport()}
 	req, err := grab.NewRequest(destination, uri)
 	if err != nil {
