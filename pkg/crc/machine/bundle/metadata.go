@@ -18,9 +18,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/gpg"
 	"github.com/crc-org/crc/pkg/crc/image"
 	"github.com/crc-org/crc/pkg/crc/logging"
-	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 	crcPreset "github.com/crc-org/crc/pkg/crc/preset"
-	"github.com/crc-org/crc/pkg/crc/version"
 	"github.com/crc-org/crc/pkg/download"
 )
 
@@ -300,10 +298,7 @@ func getBundleDownloadInfo(preset crcPreset.Preset) (*download.RemoteFile, error
 // then verifies it is signed by redhat release key, if signature is valid it returns the hash
 // for the default bundle of preset from the file
 func getDefaultBundleVerifiedHash(preset crcPreset.Preset) (string, error) {
-	res, err := download.InMemory(constants.GetDefaultBundleSignedHashURL(preset),
-		version.UserAgent(),
-		httpproxy.HTTPTransport(),
-	)
+	res, err := download.InMemory(constants.GetDefaultBundleSignedHashURL(preset))
 	if err != nil {
 		return "", err
 	}
@@ -381,7 +376,7 @@ type ReleaseInfo struct {
 
 func FetchLatestReleaseInfo() (*ReleaseInfo, error) {
 	const releaseInfoLink = "https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/release-info.json"
-	response, err := download.InMemory(releaseInfoLink, version.UserAgent(), httpproxy.HTTPTransport())
+	response, err := download.InMemory(releaseInfoLink)
 	if err != nil {
 		return nil, err
 	}
