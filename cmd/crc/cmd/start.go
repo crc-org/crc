@@ -281,7 +281,6 @@ type templateVariables struct {
 	CommandLinePrefix   string
 	PodmanRemote        string
 	FallbackPortWarning string
-	KubeConfigPath      string
 }
 
 func writeTemplatedMessage(writer io.Writer, s *startResult) error {
@@ -350,7 +349,6 @@ func writeMicroShiftTemplatedMessage(writer io.Writer) error {
 	return parsed.Execute(writer, &templateVariables{
 		EvalCommandLine:   shell.GenerateUsageHint(userShell, "crc oc-env"),
 		CommandLinePrefix: commandLinePrefix(userShell),
-		KubeConfigPath:    constants.KubeconfigFilePath,
 	})
 }
 
