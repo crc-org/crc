@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	crcPreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
 )
@@ -28,8 +29,8 @@ func UseOCWithConfig(machineName string) Config {
 		Runner:           crcos.NewLocalCommandRunner(),
 		OcExecutablePath: filepath.Join(constants.CrcOcBinDir, constants.OcExecutableName),
 		KubeconfigPath:   filepath.Join(constants.MachineInstanceDir, machineName, "kubeconfig"),
-		Context:          constants.DefaultContext,
-		Cluster:          constants.DefaultClusterName,
+		Context:          constants.DefaultOCPContext,
+		Cluster:          constants.DefaultOCPClusterName,
 		Timeout:          defaultTimeout,
 	}
 }
@@ -75,13 +76,23 @@ type SSHRunner struct {
 	Runner *ssh.Runner
 }
 
-func UseOCWithSSH(sshRunner *ssh.Runner) Config {
+func UseOCWithSSH(sshRunner *ssh.Runner, preset crcPreset.Preset) Config {
+	var context, clusterName string
+	switch preset {
+	case crcPreset.Microshift:
+		context = constants.DefaultMicroShiftContext
+		clusterName = constants.DefaultMicroShiftClusterName
+	case crcPreset.OpenShift:
+		context = constants.DefaultOCPContext
+		clusterName = constants.DefaultOCPClusterName
+	}
+
 	return Config{
 		Runner:           sshRunner,
 		OcExecutablePath: "oc",
 		KubeconfigPath:   "/opt/kubeconfig",
-		Context:          constants.DefaultContext,
-		Cluster:          constants.DefaultClusterName,
+		Context:          context,
+		Cluster:          clusterName,
 		Timeout:          defaultTimeout,
 	}
 }

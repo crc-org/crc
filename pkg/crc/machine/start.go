@@ -554,9 +554,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		//  END OF MICROSHIFT START CODE
 		// **************************
 		// Start the microshift and copy the generated kubeconfig file
-		ocConfig := oc.UseOCWithSSH(sshRunner)
-		ocConfig.Context = "microshift"
-		ocConfig.Cluster = "microshift"
+		ocConfig := oc.UseOCWithSSH(sshRunner, startConfig.Preset)
 
 		if err := startMicroshift(ctx, sshRunner, ocConfig, startConfig.PullSecret); err != nil {
 			return nil, err
@@ -591,7 +589,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Error starting kubelet")
 	}
 
-	ocConfig := oc.UseOCWithSSH(sshRunner)
+	ocConfig := oc.UseOCWithSSH(sshRunner, startConfig.Preset)
 
 	if err := cluster.ApproveCSRAndWaitForCertsRenewal(ctx, sshRunner, ocConfig, certsExpired[cluster.KubeletClientCert], certsExpired[cluster.KubeletServerCert]); err != nil {
 		logBundleDate(vm.bundle)

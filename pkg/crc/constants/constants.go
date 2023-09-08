@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	DefaultClusterName = "crc"
-	DefaultDiskSize    = 31
+	DefaultOCPClusterName        = "crc"
+	DefaultMicroShiftClusterName = "microshift"
+	DefaultDiskSize              = 31
 
 	DefaultPersistentVolumeSize = 15
 
@@ -30,7 +31,8 @@ const (
 	CRCMacTrayDownloadURL     = "https://github.com/crc-org/tray-electron/releases/download/%s/crc-tray-macos.tar.gz"
 	CRCWindowsTrayDownloadURL = "https://github.com/crc-org/tray-electron/releases/download/%s/crc-tray-windows.zip"
 	DefaultBundleURLBase      = "https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/%s/%s/%s"
-	DefaultContext            = "admin"
+	DefaultOCPContext         = "admin"
+	DefaultMicroShiftContext  = "microshift"
 	DaemonHTTPEndpoint        = "http://unix/api"
 	DaemonVsockPort           = 1024
 	DefaultPodmanNamedPipe    = `\\.\pipe\crc-podman`

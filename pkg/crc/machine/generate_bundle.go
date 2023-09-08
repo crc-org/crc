@@ -23,7 +23,7 @@ func (client *client) GenerateBundle(forceStop bool) error {
 	defer sshRunner.Close()
 
 	if bundleMetadata.IsOpenShift() {
-		ocConfig := oc.UseOCWithSSH(sshRunner)
+		ocConfig := oc.UseOCWithSSH(sshRunner, client.GetPreset())
 		if err := cluster.RemovePullSecretFromCluster(context.Background(), ocConfig, sshRunner); err != nil {
 			return errors.Wrap(err, "Error removing pull secret from cluster")
 		}
