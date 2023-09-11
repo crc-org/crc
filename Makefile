@@ -23,7 +23,7 @@ RELEASE_DIR ?= release
 # Docs build related variables
 DOCS_BUILD_DIR ?= docs/build
 DOCS_TEST_CONTAINER ?= quay.io/crcont/docs-builder:latest
-DOCS_BUILD_CONTAINER ?= docker.io/antora/antora:latest
+DOCS_BUILD_CONTAINER ?= quay.io/crcont/antora:latest
 DOCS_BUILD_TARGET ?= /docs/source/getting_started/master.adoc
 
 GOOS ?= $(shell go env GOOS)
@@ -141,7 +141,7 @@ test-rpmbuild: spec
 
 .PHONY: build_docs
 build_docs:
-	${CONTAINER_RUNTIME} run -v $(CURDIR):/antora:Z --rm $(DOCS_BUILD_CONTAINER) antora-playbook.yml
+	${CONTAINER_RUNTIME} run -v $(CURDIR):/antora:Z --rm $(DOCS_BUILD_CONTAINER) --stacktrace antora-playbook.yml
 
 .PHONY: docs_serve
 docs_serve: build_docs
