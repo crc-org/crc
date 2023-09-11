@@ -26,9 +26,9 @@ ui:
 urls:
   html_extension_style: indexify
   redirect_facility: static
-#antora:
-#    extensions:
-#        - '@antora/lunr-extension'
+antora:
+  extensions:
+    - "@antora/lunr-extension"
 asciidoc:
   sourcemap: true
   attributes:
