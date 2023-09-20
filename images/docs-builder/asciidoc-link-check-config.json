@@ -1,16 +1,26 @@
 {
-    "ignorePatterns": [
-        { "pattern": "^https://api.crc.testing" },
-        { "pattern": "^http://api.crc.testing" },
-        { "pattern": "https://console-openshift-console.apps-crc.testing" },
-        { "pattern": "http://proxy.example.com" }
-    ],
-    "httpHeaders": [
-        {
-          "urls": ["https://help.github.com"],
-          "headers": {
-            "Accept-Encoding": "gzip, deflate"
-          }
-        }
-    ]
+  "ignorePatterns": [
+    {
+      "pattern": "^https://api.crc.testing"
+    },
+    {
+      "pattern": "^http://api.crc.testing"
+    },
+    {
+      "pattern": "https://console-openshift-console.apps-crc.testing"
+    },
+    {
+      "pattern": "http://proxy.example.com"
+    }
+  ],
+  "httpHeaders": [
+    {
+      "urls": [
+        "https://help.github.com"
+      ],
+      "headers": {
+        "Accept-Encoding": "gzip, deflate"
+      }
+    }
+  ]
 }
