@@ -1,69 +1,69 @@
 ---
 site:
-    title: CRC Documentation
-    start_page: getting_started:getting_started:introducing.adoc
-    url: https://crc.dev
-    robots: allow
+  title: CRC Documentation
+  start_page: getting_started:getting_started:introducing.adoc
+  url: https://crc.dev
+  robots: allow
 content:
-    sources:
-        -   url: ./ # Point to Git repository
-            branches: HEAD # Use local conntent
-            edit_url: "https://github.com/crc-org/crc/edit/main/{path}"
-            start_path: docs # Point to docs content
+  sources:
+    - url: ./ # Point to Git repository
+      branches: HEAD # Use local conntent
+      edit_url: "https://github.com/crc-org/crc/edit/main/{path}"
+      start_path: docs # Point to docs content
 output:
-    clean: true # Delete stale content
-    dir: docs/build
+  clean: true # Delete stale content
+  dir: docs/build
 runtime:
-    cache_dir: .cache/antora # Use a local directory rather than $HOME
-    log:
-        failure_level: warn # Fail on missing attributes
-        level: debug # Extra verbose
+  cache_dir: .cache/antora # Use a local directory rather than $HOME
+  log:
+    failure_level: warn # Fail on missing attributes
+    level: debug # Extra verbose
 ui:
-    bundle:
-        url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
-        snapshot: true
-    supplemental_files: docs/supplemental-ui
+  bundle:
+    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
+    snapshot: true
+  supplemental_files: docs/supplemental-ui
 urls:
-    html_extension_style: indexify
-    redirect_facility: static
+  html_extension_style: indexify
+  redirect_facility: static
 #antora:
 #    extensions:
 #        - '@antora/lunr-extension'
 asciidoc:
-    sourcemap: true
-    attributes:
-        icons: font
-        nbsp: "&#160;"
-        project-context: crc
-        # Platforms
-        rh: "Red{nbsp}Hat"
-        rhel: "Red{nbsp}Hat Enterprise{nbsp}Linux"
-        fed: Fedora
-        centos: CentOS
-        mac: macOS
-        msw: Microsoft Windows
-        debian: Debian
-        ubuntu: Ubuntu
-        openshift: OpenShift
-        ocp: OpenShift Container Platform
-        okd: OKD
-        ushift: MicroShift
-        # Product naming
-        prod: CRC
-        rh-prod: CRC
-        bin: crc
-        # Documentation naming
-        context: crc
-        crc-gsg: CRC Getting Started Guide
-        # URLs
-        crc-download-url: https://console.redhat.com/openshift/create/local
-        crc-gsg-url: https://crc-org.github.io/crc/
-        openshift-installer-url: https://console.redhat.com/openshift/install
-        openshift-docs-url: https://docs.openshift.com/container-platform/latest
-        openshift-docs-url-landing-page: "{openshift-docs-url}/welcome/index.html#developer-activities"
-        oc-download-url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/
-        odo-docs-url: "{openshift-docs-url}/cli_reference/developer_cli_odo/understanding-odo.html"
-        odo-docs-url-installing: "{openshift-docs-url}/cli_reference/developer_cli_odo/installing-odo.html"
-        odo-docs-url-single-component: "{openshift-docs-url}/cli_reference/developer_cli_odo/creating_and_deploying_applications_with_odo/creating-a-single-component-application-with-odo.html"
-        telemetry-notice-url: https://developers.redhat.com/article/tool-data-collection
-        rhel-resolved-docs: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/configuring_and_managing_networking/using-different-dns-servers-for-different-domains_configuring-and-managing-networking
+  sourcemap: true
+  attributes:
+    icons: font
+    nbsp: "&#160;"
+    project-context: crc
+    # Platforms
+    rh: "Red{nbsp}Hat"
+    rhel: "Red{nbsp}Hat Enterprise{nbsp}Linux"
+    fed: Fedora
+    centos: CentOS
+    mac: macOS
+    msw: Microsoft Windows
+    debian: Debian
+    ubuntu: Ubuntu
+    openshift: OpenShift
+    ocp: OpenShift Container Platform
+    okd: OKD
+    ushift: MicroShift
+    # Product naming
+    prod: CRC
+    rh-prod: CRC
+    bin: crc
+    # Documentation naming
+    context: crc
+    crc-gsg: CRC Getting Started Guide
+    # URLs
+    crc-download-url: https://console.redhat.com/openshift/create/local
+    crc-gsg-url: https://crc-org.github.io/crc/
+    openshift-installer-url: https://console.redhat.com/openshift/install
+    openshift-docs-url: https://docs.openshift.com/container-platform/latest
+    openshift-docs-url-landing-page: "{openshift-docs-url}/welcome/index.html#developer-activities"
+    oc-download-url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/
+    odo-docs-url: "{openshift-docs-url}/cli_reference/developer_cli_odo/understanding-odo.html"
+    odo-docs-url-installing: "{openshift-docs-url}/cli_reference/developer_cli_odo/installing-odo.html"
+    odo-docs-url-single-component: "{openshift-docs-url}/cli_reference/developer_cli_odo/creating_and_deploying_applications_with_odo/creating-a-single-component-application-with-odo.html"
+    telemetry-notice-url: https://developers.redhat.com/article/tool-data-collection
+    rhel-resolved-docs: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/configuring_and_managing_networking/using-different-dns-servers-for-different-domains_configuring-and-managing-networking
