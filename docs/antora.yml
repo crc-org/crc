@@ -4,4 +4,4 @@ title: Getting started with CRC
 version: ~ # Unversioned component version
 start_page: getting_started:introducing.adoc
 nav:
-    - modules/getting_started/nav.adoc
+  - modules/getting_started/nav.adoc

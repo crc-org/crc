@@ -9,22 +9,22 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: scc-nonroot-v2
 rules:
-- apiGroups: 
-  - security.openshift.io
-  resources: 
-  - securitycontextconstraints
-  resourceNames: 
-  - nonroot-v2
-  verbs:  
-  - use
+  - apiGroups:
+      - security.openshift.io
+    resources:
+      - securitycontextconstraints
+    resourceNames:
+      - nonroot-v2
+    verbs:
+      - use
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: httpd-example-anyuid
 subjects:
-- kind: ServiceAccount
-  name: httpd-example
+  - kind: ServiceAccount
+    name: httpd-example
 roleRef:
   kind: Role
   name: scc-nonroot-v2
@@ -55,25 +55,25 @@ spec:
         app: httpd-example
     spec:
       containers:
-      - image: registry.access.redhat.com/ubi8/httpd-24
-        imagePullPolicy: Always
-        name: httpd-24
-        ports:
-        - containerPort: 8080
-          protocol: TCP
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
-        securityContext: 
-          runAsUser: 1001
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
+        - image: registry.access.redhat.com/ubi8/httpd-24
+          imagePullPolicy: Always
+          name: httpd-24
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          securityContext:
+            runAsUser: 1001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
       serviceAccountName: httpd-example
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
-      securityContext: 
+      securityContext:
         runAsNonRoot: true
         seccompProfile:
           type: "RuntimeDefault"
