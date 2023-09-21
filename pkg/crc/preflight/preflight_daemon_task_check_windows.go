@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
@@ -217,9 +218,25 @@ func getDaemonPoshScriptContent() []byte {
 func checkDaemonPoshScript() error {
 	if exists := crcos.FileExists(daemonPoshScriptPath); exists {
 		// check the script contains the path to the current executable
-		if err := crcos.FileContentMatches(daemonPoshScriptPath, getDaemonPoshScriptContent()); err == nil {
-			return nil
+		binPath, err := os.Executable()
+		if err != nil {
+			return fmt.Errorf("Unable to find the crc executable: %w", err)
 		}
+		binPath = strings.ReplaceAll(binPath, `\`, `\\`)
+		regx, err := regexp.Compile(fmt.Sprintf("[a-zA-Z]:\\%s", binPath[3:]))
+		if err != nil {
+			return fmt.Errorf("Error while compiling regex for crc exe path: %w", err)
+		}
+		f, err := os.ReadFile(daemonPoshScriptPath)
+		if err != nil {
+			return fmt.Errorf("Unable to read script file: %w", err)
+		}
+		match := regx.Find(f)
+		if len(match) == 0 {
+			return fmt.Errorf("crc executable path is not present in script")
+		}
+		logging.Debugf("Found crc executable path in script: %s", string(match))
+		return nil
 	}
 	return fmt.Errorf("Powershell script for running the daemon does not exist")
 }
