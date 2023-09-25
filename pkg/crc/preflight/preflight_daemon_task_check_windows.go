@@ -211,8 +211,10 @@ func getDaemonPoshScriptContent() []byte {
 	if err != nil {
 		return []byte{}
 	}
+	drive := filepath.VolumeName(binPath)
+	binPathWithSmallCaseDriveLetter := strings.Replace(binPath, drive, strings.ToLower(drive), 1)
 	daemonCmdArgs := `daemon --log-level debug`
-	return []byte(fmt.Sprintf(daemonPoshScriptTemplate, binPath, daemonCmdArgs))
+	return []byte(fmt.Sprintf(daemonPoshScriptTemplate, binPathWithSmallCaseDriveLetter, daemonCmdArgs))
 }
 
 func checkDaemonPoshScript() error {
