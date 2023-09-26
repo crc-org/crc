@@ -512,6 +512,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		ConfigFileInCRCHomeContainsKey)
 	s.Step(`removing file "(.*)" from CRC home folder succeeds$`,
 		DeleteFileFromCRCHome)
+	s.Step(`^decode base64 file "(.*)" to "(.*)"$`,
+		DecodeBase64File)
 
 	s.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
 
@@ -977,4 +979,15 @@ func PullLoginTagPushImageSucceeds(image string) error {
 	}
 
 	return nil
+}
+
+// Decode a file encoded with base64
+func DecodeBase64File(inputFile, outputFile string) error {
+	var cmd string
+	if runtime.GOOS == "windows" {
+		cmd = fmt.Sprintf("certutil.exe -decode %s %s", inputFile, outputFile)
+	} else {
+		cmd = fmt.Sprintf("base64 -d -i %s > %s", inputFile, outputFile)
+	}
+	return util.ExecuteCommandSucceedsOrFails(cmd, "succeeds")
 }
