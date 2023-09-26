@@ -2,7 +2,7 @@
 site:
   title: CRC Documentation
   start_page: getting_started:getting_started:introducing.adoc
-  url: https://crc.dev
+  url: https://crc.dev/crc
   robots: allow
 content:
   sources:
@@ -12,7 +12,7 @@ content:
       start_path: docs # Point to docs content
 output:
   clean: true # Delete stale content
-  dir: docs/build
+  dir: docs/build/crc
 runtime:
   cache_dir: .cache/antora # Use a local directory rather than $HOME
   log:
@@ -57,13 +57,12 @@ asciidoc:
     crc-gsg: CRC Getting Started Guide
     # URLs
     crc-download-url: https://console.redhat.com/openshift/create/local
-    crc-gsg-url: https://crc-org.github.io/crc/
-    openshift-installer-url: https://console.redhat.com/openshift/install
+    crc-gsg-url: https://crc.dev/crc/
+    openshift-installer-url: https://console.redhat.com/openshift/create
     openshift-docs-url: https://docs.openshift.com/container-platform/latest
     openshift-docs-url-landing-page: "{openshift-docs-url}/welcome/index.html#developer-activities"
     oc-download-url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/
-    odo-docs-url: "{openshift-docs-url}/cli_reference/developer_cli_odo/understanding-odo.html"
-    odo-docs-url-installing: "{openshift-docs-url}/cli_reference/developer_cli_odo/installing-odo.html"
-    odo-docs-url-single-component: "{openshift-docs-url}/cli_reference/developer_cli_odo/creating_and_deploying_applications_with_odo/creating-a-single-component-application-with-odo.html"
+    odo-docs-url: https://odo.dev/docs/introduction
+    odo-docs-url-installing: https://odo.dev/docs/overview/installation
     telemetry-notice-url: https://developers.redhat.com/article/tool-data-collection
     rhel-resolved-docs: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/configuring_and_managing_networking/using-different-dns-servers-for-different-domains_configuring-and-managing-networking
