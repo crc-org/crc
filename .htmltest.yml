@@ -1,0 +1,9 @@
+---
+# Configuration file for htmltest
+# See: https://github.com/wjdp/htmltest
+
+DirectoryPath: docs/build # Not build/site to avoid false positives on 404.html
+OutputDir: .cache/htmltest
+CacheExpires: "12h" # Default is 2 weeks.
+ExternalTimeout: 60 # (seconds) default is 15.
+# IgnoreURLs:

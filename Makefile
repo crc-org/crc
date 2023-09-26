@@ -22,8 +22,9 @@ RELEASE_DIR ?= release
 
 # Docs build related variables
 DOCS_BUILD_DIR ?= docs/build
-DOCS_TEST_CONTAINER ?= quay.io/crcont/docs-builder:latest
 DOCS_BUILD_CONTAINER ?= quay.io/crcont/antora:latest
+DOCS_SERVE_CONTAINER ?= docker.io/httpd:alpine
+DOCS_TEST_CONTAINER ?= docker.io/wjdp/htmltest:latest
 DOCS_BUILD_TARGET ?= /docs/source/getting_started/master.adoc
 
 GOOS ?= $(shell go env GOOS)
@@ -145,11 +146,11 @@ build_docs:
 
 .PHONY: docs_serve
 docs_serve: build_docs
-	${CONTAINER_RUNTIME} run -it -v $(CURDIR)/docs:/docs:Z --rm -p 8088:8088/tcp $(DOCS_TEST_CONTAINER) docs_serve
+	${CONTAINER_RUNTIME} run -it -v $(CURDIR)/docs/build:/usr/local/apache2/htdocs/:Z --rm -p 8088:80/tcp $(DOCS_SERVE_CONTAINER)
 
 .PHONY: docs_check_links
 docs_check_links:
-	${CONTAINER_RUNTIME} run -v $(CURDIR)/docs:/docs:Z --rm $(DOCS_TEST_CONTAINER) docs_check_links
+	${CONTAINER_RUNTIME} run -v $(CURDIR):/test:Z --rm $(DOCS_TEST_CONTAINER) -c .htmltest.yml
 
 .PHONY: clean_docs clean_macos_package
 clean_docs:
