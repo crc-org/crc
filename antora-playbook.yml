@@ -29,6 +29,7 @@ urls:
 antora:
   extensions:
     - "@antora/lunr-extension"
+    - ./docs/extensions/get-versions.js
 asciidoc:
   sourcemap: true
   attributes:
