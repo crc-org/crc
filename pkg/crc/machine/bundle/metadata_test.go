@@ -3,6 +3,8 @@ package bundle
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"unicode"
@@ -188,6 +190,11 @@ func TestGetBundleType(t *testing.T) {
 }
 
 func TestVerifiedHash(t *testing.T) {
+	// skip the test when running in disconnected env
+	if disconnected, _ := strconv.ParseBool(os.Getenv("CRC_IN_DISCONNECTED_ENV")); disconnected {
+		t.Skip("Skipping test since running in disconnected env")
+	}
+
 	sha256sum, err := getVerifiedHash("https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/crc/bundles/openshift/4.13.0/sha256sum.txt.sig", "crc_libvirt_4.13.0_amd64.crcbundle")
 	require.NoError(t, err)
 	require.Equal(t, "6aad57019aaab95b670378f569b3f4a16398da0358dd1057996453a8d6d92212", sha256sum)
