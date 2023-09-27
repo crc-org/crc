@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"runtime"
 
+	crcCmd "github.com/crc-org/crc/v2/test/extended/crc/cmd"
 	"github.com/crc-org/crc/v2/test/extended/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -69,6 +70,11 @@ var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func
 			} else {
 				Expect(RunCRCExpectSuccess("start", "-b", bundlePath, "-p", pullSecretPath)).To(ContainSubstring("Started the OpenShift cluster"))
 			}
+		})
+
+		It("wait for cluster in Running state", func() {
+			err := crcCmd.WaitForClusterInState("running")
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("login to cluster using crc-admin context", func() {
