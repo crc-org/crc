@@ -88,14 +88,26 @@ func Download(uri, destination string, mode os.FileMode, sha256sum []byte) (stri
 	return filename, nil
 }
 
-// Download takes an URL and the User-Agent string to use in the http request
-// it takes  http.RoundTripper as the third argument to be used by the client
-func InMemory(url string) (io.ReadCloser, error) {
+// InMemory takes a URL and returns a ReadCloser object to the downloaded file
+// or the file itself if the URL is a file:// URL. In case of failure it returns
+// the respective error.
+func InMemory(uri string) (io.ReadCloser, error) {
+	u, err := url.Parse(uri)
+	if err != nil {
+		return nil, err
+	}
+	if u.Scheme == "file" {
+		filePath, err := filepath.Abs(u.Path)
+		if err != nil {
+			return nil, err
+		}
+		return os.Open(filePath)
+	}
 	client := grab.NewClient()
 	client.HTTPClient = &http.Client{Transport: httpproxy.HTTPTransport()}
 	client.UserAgent = version.UserAgent()
 
-	grabReq, err := grab.NewRequest("", url)
+	grabReq, err := grab.NewRequest("", uri)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create grab request: %w", err)
 	}
