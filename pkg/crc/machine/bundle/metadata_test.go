@@ -3,6 +3,7 @@ package bundle
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"testing"
 	"unicode"
@@ -188,24 +189,25 @@ func TestGetBundleType(t *testing.T) {
 }
 
 func TestVerifiedHash(t *testing.T) {
-	sha256sum, err := getVerifiedHash("https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/crc/bundles/openshift/4.13.0/sha256sum.txt.sig", "crc_libvirt_4.13.0_amd64.crcbundle")
+	sha256sum, err := getVerifiedHash(testDataURI(t, "sha256sum_correct_4.13.0.txt.sig"), "crc_libvirt_4.13.0_amd64.crcbundle")
 	require.NoError(t, err)
 	require.Equal(t, "6aad57019aaab95b670378f569b3f4a16398da0358dd1057996453a8d6d92212", sha256sum)
 
 	// sha256sum.txt is unsigned
-	_, err = getVerifiedHash("https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/crc/bundles/openshift/4.13.0/sha256sum.txt", "crc_libvirt_4.13.0_amd64.crcbundle")
+	_, err = getVerifiedHash(testDataURI(t, "sha256sum.txt"), "crc_libvirt_4.13.0_amd64.crcbundle")
 	require.Error(t, err)
 
 	// sha256sum.txt.sig does not contain a sha256sum for fake.crcbundle
-	_, err = getVerifiedHash("https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/crc/bundles/openshift/4.13.0/sha256sum.txt.sig", "fake.crcbundle")
+	_, err = getVerifiedHash(testDataURI(t, "sha256sum_correct_4.13.0.txt.sig"), "fake.crcbundle")
 	require.Error(t, err)
 
-	// 4.10.1 bundles did not come with a sha256sum.txt.sig file
-	_, err = getVerifiedHash("https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/crc/bundles/openshift/4.10.1/sha256sum.txt.sig", "crc_libvirt_4.10.1_amd64.crcbundle")
-	require.Error(t, err)
-
-	// FIXME: replace with a URL in the crc-org namespace
 	// the sha256sum file is signed with a GPG key which is not Red Hat's
-	_, err = getVerifiedHash("https://github.com/cfergeau/crc/raw/bundle-download/pkg/crc/machine/bundle/testdata/sha256sum-4.13.0.txt.sig", "crc_libvirt_4.13.0_amd64.crcbundle")
+	_, err = getVerifiedHash(testDataURI(t, "sha256sum_incorrect_4.13.0.txt.sig"), "crc_libvirt_4.13.0_amd64.crcbundle")
 	require.ErrorContains(t, err, "signature made by unknown entity")
+}
+
+func testDataURI(t *testing.T, sha256sum string) string {
+	absPath, err := filepath.Abs(filepath.Join("testdata", sha256sum))
+	require.NoError(t, err)
+	return fmt.Sprintf("file:///%s", absPath)
 }
