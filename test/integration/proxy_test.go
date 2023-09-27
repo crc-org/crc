@@ -73,7 +73,7 @@ var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func
 
 		It("login to cluster using crc-admin context", func() {
 
-			err := AddOCToPath()
+			err := util.AddOCToPath()
 			Expect(err).NotTo(HaveOccurred())
 
 			cmd := exec.Command("oc", "config", "use-context", "crc-admin")

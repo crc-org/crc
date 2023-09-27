@@ -9,8 +9,11 @@ import (
 	"strings"
 	"time"
 
+	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/machine"
 	"github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 	"github.com/crc-org/crc/v2/pkg/download"
 )
 
@@ -210,4 +213,55 @@ func WriteTempFile(content string, name string) (string, error) {
 	defer tmpFile.Close()
 	_, err = tmpFile.WriteString(content)
 	return tmpFile.Name(), err
+}
+
+// Send command to CRC VM via SSH
+func SendCommandToVM(cmd string) (string, error) {
+	client := machine.NewClient(constants.DefaultName, false,
+		crcConfig.New(crcConfig.NewEmptyInMemoryStorage(), crcConfig.NewEmptyInMemorySecretStorage()),
+	)
+	connectionDetails, err := client.ConnectionDetails()
+	if err != nil {
+		return "", err
+	}
+	ssh, err := ssh.NewClient(connectionDetails.SSHUsername, connectionDetails.IP, connectionDetails.SSHPort, connectionDetails.SSHKeys...)
+	if err != nil {
+		return "", err
+	}
+	out, _, err := ssh.Run(cmd)
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
+}
+
+func AddOCToPath() error {
+	path := os.ExpandEnv("${HOME}/.crc/bin/oc:$PATH")
+	if runtime.GOOS == "windows" {
+		userHomeDir, err := os.UserHomeDir()
+		if err != nil {
+			return err
+		}
+		unexpandedPath := filepath.Join(userHomeDir, ".crc/bin/oc;${PATH}")
+		path = os.ExpandEnv(unexpandedPath)
+	}
+	err := os.Setenv("PATH", path)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func LoginToOcClusterSucceedsOrFails(expected string) error {
+
+	credentialsCommand := "crc console --credentials" //#nosec G101
+	err := ExecuteCommand(credentialsCommand)
+	if err != nil {
+		return err
+	}
+	out := GetLastCommandOutput("stdout")
+	ocLoginAsAdminCommand := strings.Split(out, "'")[3]
+
+	return ExecuteCommandSucceedsOrFails(ocLoginAsAdminCommand, expected)
 }

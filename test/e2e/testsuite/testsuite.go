@@ -473,7 +473,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^unsetting config property "(.*)" (succeeds|fails)$`,
 		crcCmd.UnsetConfigPropertySucceedsOrFails)
 	s.Step(`^login to the oc cluster (succeeds|fails)$`,
-		LoginToOcClusterSucceedsOrFails)
+		util.LoginToOcClusterSucceedsOrFails)
 	s.Step(`^setting kubeconfig context to "(.*)" (succeeds|fails)$`,
 		SetKubeConfigContextSucceedsOrFails)
 	s.Step(`^with up to "(\d+)" retries with wait period of "(\d*(?:ms|s|m))" http response from "(.*)" has status code "(\d+)"$`,
@@ -734,19 +734,6 @@ func ConfigFileInCRCHomeContainsKey(format string, configFile string, condition 
 	return nil
 }
 
-func LoginToOcClusterSucceedsOrFails(expected string) error {
-
-	credentialsCommand := "crc console --credentials" //#nosec G101
-	err := util.ExecuteCommand(credentialsCommand)
-	if err != nil {
-		return err
-	}
-	out := util.GetLastCommandOutput("stdout")
-	ocLoginAsAdminCommand := strings.Split(out, "'")[3]
-
-	return util.ExecuteCommandSucceedsOrFails(ocLoginAsAdminCommand, expected)
-}
-
 func SetKubeConfigContextSucceedsOrFails(context, expected string) error {
 	cmd := fmt.Sprintf("oc config use-context %s", context)
 	return util.ExecuteCommandSucceedsOrFails(cmd, expected)
@@ -852,7 +839,7 @@ func EnsureUserIsLoggedIntoClusterSucceedsOrFails(expected string) error {
 	if err := setOcEnv(); err != nil {
 		return err
 	}
-	return LoginToOcClusterSucceedsOrFails(expected)
+	return util.LoginToOcClusterSucceedsOrFails(expected)
 }
 
 func EnsureOCCommandIsAvailable() error {
