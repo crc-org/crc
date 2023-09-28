@@ -1,6 +1,6 @@
 module github.com/crc-org/crc/tools
 
-go 1.19
+go 1.20
 
 require (
 	github.com/cfergeau/gomod2rpmdeps v0.0.0-20210223144124-2042c4850ca8
