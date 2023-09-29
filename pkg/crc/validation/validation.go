@@ -68,10 +68,15 @@ func ValidateBundlePath(bundlePath string, preset crcpreset.Preset) error {
 	logging.Debugf("Got bundle path: %s", bundlePath)
 	if err := ValidateURL(bundlePath); err != nil {
 		var urlError *url.Error
+		var invalidPathError *invalidPath
+		// If error occur due to invalid path, then return with a more meaningful error message
+		if errors.As(err, &invalidPathError) {
+			return fmt.Errorf("%s is invalid or missing, run 'crc setup' to download the default bundle", bundlePath)
+		}
 		// Some local paths (for example relative paths) can't be parsed/validated by `ValidateURL` and will be validated here
 		if errors.As(err, &urlError) {
 			if err1 := ValidatePath(bundlePath); err1 != nil {
-				return err1
+				return fmt.Errorf("%s is invalid or missing, run 'crc setup' to download the default bundle", bundlePath)
 			}
 		} else {
 			return err
