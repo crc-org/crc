@@ -146,11 +146,11 @@ func ValidateURL(uri string) error {
 	}
 }
 
-type InvalidPath struct {
+type invalidPath struct {
 	path string
 }
 
-func (e *InvalidPath) Error() string {
+func (e *invalidPath) Error() string {
 	return fmt.Sprintf("file '%s' does not exist", e.path)
 
 }
@@ -158,7 +158,7 @@ func (e *InvalidPath) Error() string {
 // ValidatePath check if provide path is exist
 func ValidatePath(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return &InvalidPath{path: path}
+		return &invalidPath{path: path}
 	}
 	return nil
 }
