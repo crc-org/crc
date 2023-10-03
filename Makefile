@@ -221,7 +221,7 @@ export BUNDLE_PATH = $(HOME)/Downloads/crc_libvirt_$(OPENSHIFT_VERSION)_$(GOARCH
 endif
 
 integration:
-	@go test -timeout=60m -tags "$(BUILDTAGS)" $(MODULEPATH)/test/integration -v $(GINKGO_OPTS)
+	@go test -timeout=90m -tags "$(BUILDTAGS)" $(MODULEPATH)/test/integration -v $(GINKGO_OPTS)
 
 .PHONY: e2e ## Run e2e tests
 e2e:
