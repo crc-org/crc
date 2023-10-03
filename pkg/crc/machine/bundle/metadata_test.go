@@ -209,5 +209,5 @@ func TestVerifiedHash(t *testing.T) {
 func testDataURI(t *testing.T, sha256sum string) string {
 	absPath, err := filepath.Abs(filepath.Join("testdata", sha256sum))
 	require.NoError(t, err)
-	return fmt.Sprintf("file:///%s", absPath)
+	return fmt.Sprintf("file://%s", filepath.ToSlash(absPath))
 }
