@@ -514,6 +514,10 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		DeleteFileFromCRCHome)
 	s.Step(`^decode base64 file "(.*)" to "(.*)"$`,
 		DecodeBase64File)
+	s.Step(`^ensuring network mode user$`,
+		EnsureUserNetworkmode)
+	s.Step(`^ensuring microshift cluster is fully operational$`,
+		EnsureMicroshiftClusterIsOperational)
 
 	s.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
 
@@ -977,4 +981,40 @@ func DecodeBase64File(inputFile, outputFile string) error {
 		cmd = fmt.Sprintf("base64 -d -i %s > %s", inputFile, outputFile)
 	}
 	return util.ExecuteCommandSucceedsOrFails(cmd, "succeeds")
+}
+
+func EnsureUserNetworkmode() error {
+	if runtime.GOOS == "linux" {
+		return crcCmd.SetConfigPropertyToValueSucceedsOrFails(
+			"network-mode", "user", "succeeds")
+	}
+	return nil
+}
+
+// This function will wait until the microshift cluster got operational
+func EnsureMicroshiftClusterIsOperational() error {
+	// First wait until crc report the cluster as running
+	err := crcCmd.WaitForClusterInState("running")
+	if err != nil {
+		return err
+	}
+	// Define the services to declare the cluster operational
+	services := map[string]string{
+		".*dns-default.*2/2.*Running.*":    "oc get pods -n openshift-dns",
+		".*ovnkube-master.*4/4.*Running.*": "oc get pods -n openshift-ovn-kubernetes",
+		".*ovnkube-node.*1/1.*Running.*":   "oc get pods -n openshift-ovn-kubernetes"}
+
+	for operationalState, getPodCommand := range services {
+		var operational = false
+		for !operational {
+			if err := util.ExecuteCommandSucceedsOrFails(getPodCommand, "succeeds"); err != nil {
+				return err
+			}
+			operational = (nil == util.CommandReturnShouldMatch(
+				"stdout",
+				operationalState))
+		}
+	}
+
+	return nil
 }

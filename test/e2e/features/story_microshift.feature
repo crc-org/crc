@@ -3,14 +3,15 @@ Feature: Microshift test stories
 
 	Background:
 		Given setting config property "preset" to value "microshift" succeeds
-		And setting config property "network-mode" to value "user" succeeds
+		And ensuring network mode user
 		And executing single crc setup command succeeds
 		And starting CRC with default bundle succeeds
 		And ensuring oc command is available
-
+		And ensuring microshift cluster is fully operational
+		
 	# End-to-end health check
 
-	@microshift @testdata @linux @windows @darwin
+	@microshift @testdata @linux @windows @darwin @cleanup
 	Scenario: Start and expose a basic HTTP service and check after restart
 		Given executing "oc create namespace testproj" succeeds
 		And executing "oc config set-context --current --namespace=testproj" succeeds
