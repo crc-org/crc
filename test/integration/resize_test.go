@@ -4,11 +4,24 @@ import (
 	"os/exec"
 	"runtime"
 
+	"github.com/crc-org/crc/v2/test/extended/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label("openshift-preset", "vm-resize"), func() {
+
+	// runs 1x after all the It blocks (specs) inside this Describe node
+	AfterAll(func() {
+
+		// cleanup CRC
+		Expect(RunCRCExpectSuccess("cleanup")).To(MatchRegexp("Cleanup finished"))
+
+		// remove config file crc.json
+		err := util.RemoveCRCConfig()
+		Expect(err).NotTo(HaveOccurred())
+
+	})
 
 	Describe("use default values", Serial, Ordered, func() {
 
