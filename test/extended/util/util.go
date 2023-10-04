@@ -149,6 +149,19 @@ func RemoveCRCHome() error {
 	return fmt.Errorf("folder %s not removed as per request: %s present", CRCHome, keepFile)
 }
 
+func RemoveCRCConfig() error {
+	configFile := filepath.Join(CRCHome, "crc.json")
+
+	err := os.RemoveAll(configFile)
+
+	if err != nil {
+		fmt.Printf("Problem deleting CRC config file %s.\n", configFile)
+		return err
+	}
+
+	return nil
+}
+
 // MatchWithRetry will execute match function with expression as arg
 // for #iterations with a timeout
 func MatchWithRetry(expression string, match func(string) error, iterations, timeoutInSeconds int) error {

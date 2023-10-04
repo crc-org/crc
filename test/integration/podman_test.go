@@ -6,11 +6,24 @@ import (
 	"runtime"
 
 	"github.com/crc-org/crc/v2/test/extended/crc/cmd"
+	"github.com/crc-org/crc/v2/test/extended/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("podman preset", Serial, Ordered, Label("podman-preset"), func() {
+
+	// runs 1x after all the It blocks (specs) inside this Describe node
+	AfterAll(func() {
+
+		// cleanup CRC
+		Expect(RunCRCExpectSuccess("cleanup")).To(MatchRegexp("Cleanup finished"))
+
+		// remove config file crc.json
+		err := util.RemoveCRCConfig()
+		Expect(err).NotTo(HaveOccurred())
+
+	})
 
 	Describe("basic use", Serial, Ordered, func() {
 

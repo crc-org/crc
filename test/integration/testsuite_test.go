@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/crc-org/crc/v2/test/extended/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	gomegaformat "github.com/onsi/gomega/format"
@@ -49,13 +50,17 @@ func TestTest(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 
-	// set userHome
-	usr, err := user.Current()
+	// cleanup CRC
+	Expect(RunCRCExpectSuccess("cleanup")).To(MatchRegexp("Cleanup finished"))
+
+	// remove config file crc.json
+	err := util.RemoveCRCConfig()
 	Expect(err).NotTo(HaveOccurred())
 
+	// set userHome and credPath
+	usr, err := user.Current()
+	Expect(err).NotTo(HaveOccurred())
 	userHome = usr.HomeDir
-
-	// set credPath
 	credPath = filepath.Join(userHome, ".crc", "machines", "crc", "id_rsa")
 
 	// find out if bundle embedded in the binary

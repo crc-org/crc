@@ -1,7 +1,9 @@
 package test_test
 
 import (
+	"os"
 	"os/exec"
+	"runtime"
 
 	"github.com/crc-org/crc/v2/test/extended/util"
 	. "github.com/onsi/ginkgo/v2"
@@ -9,6 +11,26 @@ import (
 )
 
 var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func() {
+
+	// runs 1x after all the It blocks (specs) inside this Describe node
+	AfterAll(func() {
+
+		// cleanup CRC
+		Expect(RunCRCExpectSuccess("cleanup")).To(MatchRegexp("Cleanup finished"))
+
+		// remove config file crc.json
+		err := util.RemoveCRCConfig()
+		Expect(err).NotTo(HaveOccurred())
+
+		// HTTP_PROXY and HTTPS_PROXY vars were set implicitly
+		// unset them at the end
+		err = os.Unsetenv("HTTPS_PROXY")
+		Expect(err).NotTo(HaveOccurred())
+
+		err = os.Unsetenv("HTTP_PROXY")
+		Expect(err).NotTo(HaveOccurred())
+
+	})
 
 	go util.RunProxy()
 
