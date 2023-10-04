@@ -1068,7 +1068,7 @@ func startMicroshift(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.
 }
 
 func ensurePullSecretPresentInVM(sshRunner *crcssh.Runner, pullSec cluster.PullSecretLoader) error {
-	if pullSecret, _, err := sshRunner.RunPrivileged("Checking if pull secret already present in the VM", "cat", "/etc/crio/openshift-pull-secret"); err == nil {
+	if pullSecret, _, err := sshRunner.RunPrivate("sudo", "cat", "/etc/crio/openshift-pull-secret"); err == nil {
 		if err := validation.ImagePullSecret(pullSecret); err == nil {
 			return nil
 		}
