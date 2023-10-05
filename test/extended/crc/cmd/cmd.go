@@ -167,15 +167,6 @@ func CheckCRCExecutableState(state string) error {
 	}
 }
 
-func CheckMachineNotExists() error {
-	expression := `.*Machine does not exist.*`
-	err := util.ExecuteCommand(CRC("status").ToString())
-	if err != nil {
-		return err
-	}
-	return util.CommandReturnShouldMatch("stderr", expression)
-}
-
 func DeleteCRC() error {
 
 	_ = util.ExecuteCommand(CRC("delete").ToString())
