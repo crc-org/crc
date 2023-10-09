@@ -10,10 +10,12 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
 	"github.com/openshift/oc/pkg/helpers/tokencmd"
 	"k8s.io/apimachinery/third_party/forked/golang/netutil"
@@ -46,7 +48,7 @@ func updateClientCrtAndKeyToKubeconfig(clientKey, clientCrt []byte, srcKubeconfi
 	return clientcmd.WriteToFile(*cfg, destKubeconfigPath)
 }
 
-func writeKubeconfig(ip string, clusterConfig *types.ClusterConfig) error {
+func writeKubeconfig(ip string, clusterConfig *types.ClusterConfig, ingressHTTPSPort uint) error {
 	kubeconfig, cfg, err := getGlobalKubeConfig()
 	if err != nil {
 		return err
@@ -65,10 +67,10 @@ func writeKubeconfig(ip string, clusterConfig *types.ClusterConfig) error {
 		CertificateAuthorityData: ca,
 	}
 
-	if err := addContext(cfg, ip, clusterConfig, ca, adminContext, "kubeadmin", clusterConfig.KubeAdminPass); err != nil {
+	if err := addContext(cfg, ip, clusterConfig, ca, adminContext, "kubeadmin", clusterConfig.KubeAdminPass, ingressHTTPSPort); err != nil {
 		return err
 	}
-	if err := addContext(cfg, ip, clusterConfig, ca, developerContext, "developer", "developer"); err != nil {
+	if err := addContext(cfg, ip, clusterConfig, ca, developerContext, "developer", "developer", ingressHTTPSPort); err != nil {
 		return err
 	}
 
@@ -126,7 +128,7 @@ func hostname(clusterAPI string) (string, error) {
 	return strings.ReplaceAll(h, ".", "-"), nil
 }
 
-func addContext(cfg *api.Config, ip string, clusterConfig *types.ClusterConfig, ca []byte, context, username, password string) error {
+func addContext(cfg *api.Config, ip string, clusterConfig *types.ClusterConfig, ca []byte, context, username, password string, ingressHTTPSPort uint) error {
 	host, err := hostname(clusterConfig.ClusterAPI)
 	if err != nil {
 		return err
@@ -145,11 +147,19 @@ func addContext(cfg *api.Config, ip string, clusterConfig *types.ClusterConfig, 
 				MinVersion: tls.VersionTLS12,
 			},
 			DialContext: func(ctx gocontext.Context, network, address string) (net.Conn, error) {
-				port := strings.SplitN(address, ":", 2)[1]
+				logging.Debugf("Using address: %s", address)
+				hostname, port, err := net.SplitHostPort(address)
+				if err != nil {
+					return nil, err
+				}
+				if strings.HasSuffix(hostname, constants.AppsDomain) {
+					port = strconv.Itoa(int(ingressHTTPSPort))
+				}
 				dialer := net.Dialer{
 					Timeout:   30 * time.Second,
 					KeepAlive: 30 * time.Second,
 				}
+				logging.Debugf("Dialing to %s:%s", ip, port)
 				return dialer.Dial(network, fmt.Sprintf("%s:%s", ip, port))
 			},
 		},
