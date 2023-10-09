@@ -9,6 +9,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/network"
 	"github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/version"
+	"github.com/spf13/cast"
 )
 
 const (
@@ -148,10 +149,17 @@ func RegisterSettings(cfg *Config) {
 	if err := cfg.RegisterNotifier(Preset, presetChanged); err != nil {
 		logging.Debugf("Failed to register notifier for Preset: %v", err)
 	}
+	if err := cfg.RegisterNotifier(WSLNetworkAccess, wslNetworkAccessChanged); err != nil {
+		logging.Debugf("Failed to register notifier for wsl-network-access: %v", err)
+	}
 }
 
 func presetChanged(cfg *Config, _ string, _ interface{}) {
 	UpdateDefaults(cfg)
+}
+
+func wslNetworkAccessChanged(_ *Config, _ string, value interface{}) {
+	constants.WSLNetworkAccess = cast.ToBool(value)
 }
 
 func defaultCPUs(cfg Storage) int {

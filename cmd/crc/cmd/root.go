@@ -69,6 +69,9 @@ func init() {
 	rootCmd.AddCommand(cmdBundle.GetBundleCmd(config))
 
 	logging.AddLogLevelFlag(rootCmd.PersistentFlags())
+
+	// wsl-network-access
+	constants.WSLNetworkAccess = config.Get(crcConfig.WSLNetworkAccess).AsBool()
 }
 
 func runPrerun(cmd *cobra.Command) error {
