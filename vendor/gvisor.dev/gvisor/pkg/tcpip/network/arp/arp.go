@@ -169,14 +169,14 @@ func (e *endpoint) HandlePacket(pkt stack.PacketBufferPtr) {
 	switch h.Op() {
 	case header.ARPRequest:
 		stats.requestsReceived.Increment()
-		localAddr := tcpip.Address(h.ProtocolAddressTarget())
+		localAddr := tcpip.AddrFrom4Slice(h.ProtocolAddressTarget())
 
 		if !e.nic.CheckLocalAddress(header.IPv4ProtocolNumber, localAddr) {
 			stats.requestsReceivedUnknownTargetAddress.Increment()
 			return // we have no useful answer, ignore the request
 		}
 
-		remoteAddr := tcpip.Address(h.ProtocolAddressSender())
+		remoteAddr := tcpip.AddrFrom4Slice(h.ProtocolAddressSender())
 		remoteLinkAddr := tcpip.LinkAddress(h.HardwareAddressSender())
 
 		switch err := e.nic.HandleNeighborProbe(header.IPv4ProtocolNumber, remoteAddr, remoteLinkAddr); err.(type) {
@@ -223,19 +223,18 @@ func (e *endpoint) HandlePacket(pkt stack.PacketBufferPtr) {
 
 	case header.ARPReply:
 		stats.repliesReceived.Increment()
-		addr := tcpip.Address(h.ProtocolAddressSender())
+		addr := tcpip.AddrFrom4Slice(h.ProtocolAddressSender())
 		linkAddr := tcpip.LinkAddress(h.HardwareAddressSender())
 
 		e.mu.Lock()
 		e.dad.StopLocked(addr, &stack.DADDupAddrDetected{HolderLinkAddress: linkAddr})
 		e.mu.Unlock()
 
-		// The solicited, override, and isRouter flags are not available for ARP;
-		// they are only available for IPv6 Neighbor Advertisements.
 		switch err := e.nic.HandleNeighborConfirmation(header.IPv4ProtocolNumber, addr, linkAddr, stack.ReachabilityConfirmationFlags{
-			// Solicited and unsolicited (also referred to as gratuitous) ARP Replies
-			// are handled equivalently to a solicited Neighbor Advertisement.
-			Solicited: true,
+			// Only unicast ARP replies are considered solicited. Broadcast replies
+			// are gratuitous ARP replies and should not move neighbor entries to the
+			// reachable state.
+			Solicited: pkt.PktType == tcpip.PacketHost,
 			// If a different link address is received than the one cached, the entry
 			// should always go to Stale.
 			Override: false,
@@ -267,7 +266,7 @@ func (p *protocol) Number() tcpip.NetworkProtocolNumber { return ProtocolNumber 
 func (p *protocol) MinimumPacketSize() int              { return header.ARPSize }
 
 func (*protocol) ParseAddresses([]byte) (src, dst tcpip.Address) {
-	return "", ""
+	return tcpip.Address{}, tcpip.Address{}
 }
 
 func (p *protocol) NewEndpoint(nic stack.NetworkInterface, _ stack.TransportDispatcher) stack.NetworkEndpoint {
@@ -308,13 +307,13 @@ func (e *endpoint) LinkAddressRequest(targetAddr, localAddr tcpip.Address, remot
 		remoteLinkAddr = header.EthernetBroadcastAddress
 	}
 
-	if len(localAddr) == 0 {
+	if localAddr.BitLen() == 0 {
 		addr, err := e.nic.PrimaryAddress(header.IPv4ProtocolNumber)
 		if err != nil {
 			return err
 		}
 
-		if len(addr.Address) == 0 {
+		if addr.Address.BitLen() == 0 {
 			stats.outgoingRequestInterfaceHasNoLocalAddressErrors.Increment()
 			return &tcpip.ErrNetworkUnreachable{}
 		}
@@ -340,10 +339,10 @@ func (e *endpoint) sendARPRequest(localAddr, targetAddr tcpip.Address, remoteLin
 	// TODO(gvisor.dev/issue/4582): check copied length once TAP devices have a
 	// link address.
 	_ = copy(h.HardwareAddressSender(), e.nic.LinkAddress())
-	if n := copy(h.ProtocolAddressSender(), localAddr); n != header.IPv4AddressSize {
+	if n := copy(h.ProtocolAddressSender(), localAddr.AsSlice()); n != header.IPv4AddressSize {
 		panic(fmt.Sprintf("copied %d bytes, expected %d bytes", n, header.IPv4AddressSize))
 	}
-	if n := copy(h.ProtocolAddressTarget(), targetAddr); n != header.IPv4AddressSize {
+	if n := copy(h.ProtocolAddressTarget(), targetAddr.AsSlice()); n != header.IPv4AddressSize {
 		panic(fmt.Sprintf("copied %d bytes, expected %d bytes", n, header.IPv4AddressSize))
 	}
 

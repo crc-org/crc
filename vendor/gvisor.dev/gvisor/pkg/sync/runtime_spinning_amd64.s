@@ -1,4 +1,4 @@
-// Copyright 2022 The gVisor Authors.
+// Copyright 2018 The gVisor Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bufferv2
+//go:build amd64
 
-// saveData is invoked by stateify.
-func (b *Buffer) saveData() []byte {
-	return b.Flatten()
-}
+#include "textflag.h"
 
-// loadData is invoked by stateify.
-func (b *Buffer) loadData(data []byte) {
-	*b = MakeWithData(data)
-}
+#define NMSPINNING_OFFSET 92 // +checkoffset runtime schedt.nmspinning
+
+TEXT ·addrOfSpinning(SB),NOSPLIT|NOFRAME,$0-8
+	LEAQ runtime·sched(SB), AX
+	ADDQ $NMSPINNING_OFFSET, AX
+	MOVQ AX, ret+0(FP)
+	RET

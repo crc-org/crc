@@ -86,7 +86,7 @@ func (n *VirtualNetwork) Mux() *http.ServeMux {
 			DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
 				return gonet.DialContextTCP(ctx, n.stack, tcpip.FullAddress{
 					NIC:  1,
-					Addr: tcpip.Address(net.ParseIP(ip).To4()),
+					Addr: tcpip.AddrFrom4Slice(net.ParseIP(ip).To4()),
 					Port: uint16(port),
 				}, ipv4.ProtocolNumber)
 			},

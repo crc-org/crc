@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build go1.13 && !go1.21
-// +build go1.13,!go1.21
+//go:build go1.18 && !go1.22
+// +build go1.18,!go1.22
 
 // //go:linkname directives type-checked by checklinkname. Any other
 // non-linkname assumptions outside the Go 1 compatibility guarantee should
@@ -77,20 +77,6 @@ func Goready(gp uintptr, traceskip int, wakep bool) {
 		postGoReadyWakeSuppression()
 	}
 }
-
-// Values for the reason argument to gopark, from Go's src/runtime/runtime2.go.
-const (
-	WaitReasonSelect      uint8 = 9
-	WaitReasonChanReceive uint8 = 14
-	WaitReasonSemacquire  uint8 = 18
-)
-
-// Values for the traceEv argument to gopark, from Go's src/runtime/trace.go.
-const (
-	TraceEvGoBlockRecv   byte = 23
-	TraceEvGoBlockSelect byte = 24
-	TraceEvGoBlockSync   byte = 25
-)
 
 // Rand32 returns a non-cryptographically-secure random uint32.
 func Rand32() uint32 {
