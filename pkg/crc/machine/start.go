@@ -683,7 +683,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	logging.Info("Adding crc-admin and crc-developer contexts to kubeconfig...")
-	if err := writeKubeconfig(instanceIP, clusterConfig); err != nil {
+	if err := writeKubeconfig(instanceIP, clusterConfig, startConfig.IngressHTTPSPort); err != nil {
 		logging.Errorf("Cannot update kubeconfig: %v", err)
 	}
 
