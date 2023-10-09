@@ -61,12 +61,12 @@ func (e *Endpoint) DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pk
 }
 
 // DeliverLinkPacket implements stack.NetworkDispatcher.
-func (e *Endpoint) DeliverLinkPacket(protocol tcpip.NetworkProtocolNumber, pkt stack.PacketBufferPtr, incoming bool) {
+func (e *Endpoint) DeliverLinkPacket(protocol tcpip.NetworkProtocolNumber, pkt stack.PacketBufferPtr) {
 	e.mu.RLock()
 	d := e.dispatcher
 	e.mu.RUnlock()
 	if d != nil {
-		d.DeliverLinkPacket(protocol, pkt, incoming)
+		d.DeliverLinkPacket(protocol, pkt)
 	}
 }
 
@@ -146,4 +146,9 @@ func (e *Endpoint) ARPHardwareType() header.ARPHardwareType {
 // AddHeader implements stack.LinkEndpoint.AddHeader.
 func (e *Endpoint) AddHeader(pkt stack.PacketBufferPtr) {
 	e.child.AddHeader(pkt)
+}
+
+// ParseHeader implements stack.LinkEndpoint.ParseHeader.
+func (e *Endpoint) ParseHeader(pkt stack.PacketBufferPtr) bool {
+	return e.child.ParseHeader(pkt)
 }

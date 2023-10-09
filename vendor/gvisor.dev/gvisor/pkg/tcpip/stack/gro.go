@@ -15,6 +15,7 @@
 package stack
 
 import (
+	"bytes"
 	"fmt"
 	"time"
 
@@ -24,6 +25,9 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 )
 
+// TODO(b/256037250): Enable by default.
+// TODO(b/256037250): We parse headers here. We should save those headers in
+// PacketBuffers so they don't have to be re-parsed later.
 // TODO(b/256037250): I still see the occasional SACK block in the zero-loss
 // benchmark, which should not happen.
 // TODO(b/256037250): Some dispatchers, e.g. XDP and RecvMmsg, can receive
@@ -31,7 +35,6 @@ import (
 // opportunity for coalescing.
 // TODO(b/256037250): We're doing some header parsing here, which presents the
 // opportunity to skip it later.
-// TODO(b/256037250): Disarm or ignore the timer when GRO is empty.
 // TODO(b/256037250): We may be able to remove locking by pairing
 // groDispatchers with link endpoint dispatchers.
 
@@ -77,7 +80,7 @@ func (gb *groBucket) full() bool {
 
 // insert inserts pkt into the bucket.
 // +checklocks:gb.mu
-func (gb *groBucket) insert(pkt PacketBufferPtr, ipHdr header.IPv4, tcpHdr header.TCP, ep NetworkEndpoint) {
+func (gb *groBucket) insert(pkt PacketBufferPtr, ipHdr []byte, tcpHdr header.TCP, ep NetworkEndpoint) {
 	groPkt := &gb.packetsPrealloc[gb.allocIdxs[gb.count]]
 	*groPkt = groPacket{
 		pkt:           pkt,
@@ -85,7 +88,7 @@ func (gb *groBucket) insert(pkt PacketBufferPtr, ipHdr header.IPv4, tcpHdr heade
 		ep:            ep,
 		ipHdr:         ipHdr,
 		tcpHdr:        tcpHdr,
-		initialLength: ipHdr.TotalLength(),
+		initialLength: pkt.Data().Size(), // pkt.Data() contains network header.
 		idx:           groPkt.idx,
 	}
 	gb.count++
@@ -114,14 +117,15 @@ func (gb *groBucket) removeOne(pkt *groPacket) {
 	pkt.reset()
 }
 
-// findGROPacket returns the groPkt that matches ipHdr and tcpHdr, or nil if
+// findGROPacket4 returns the groPkt that matches ipHdr and tcpHdr, or nil if
 // none exists. It also returns whether the groPkt should be flushed based on
 // differences between the two headers.
 // +checklocks:gb.mu
-func (gb *groBucket) findGROPacket(ipHdr header.IPv4, tcpHdr header.TCP) (*groPacket, bool) {
+func (gb *groBucket) findGROPacket4(pkt PacketBufferPtr, ipHdr header.IPv4, tcpHdr header.TCP, ep NetworkEndpoint) (*groPacket, bool) {
 	for groPkt := gb.packets.Front(); groPkt != nil; groPkt = groPkt.Next() {
 		// Do the addresses match?
-		if ipHdr.SourceAddress() != groPkt.ipHdr.SourceAddress() || ipHdr.DestinationAddress() != groPkt.ipHdr.DestinationAddress() {
+		groIPHdr := header.IPv4(groPkt.ipHdr)
+		if ipHdr.SourceAddress() != groIPHdr.SourceAddress() || ipHdr.DestinationAddress() != groIPHdr.DestinationAddress() {
 			continue
 		}
 
@@ -134,31 +138,18 @@ func (gb *groBucket) findGROPacket(ipHdr header.IPv4, tcpHdr header.TCP) (*groPa
 
 		// IP checks.
 		TOS, _ := ipHdr.TOS()
-		groTOS, _ := groPkt.ipHdr.TOS()
-		if ipHdr.TTL() != groPkt.ipHdr.TTL() || TOS != groTOS {
+		groTOS, _ := groIPHdr.TOS()
+		if ipHdr.TTL() != groIPHdr.TTL() || TOS != groTOS {
 			return groPkt, true
 		}
 
 		// TCP checks.
-		flags := tcpHdr.Flags()
-		groPktFlags := groPkt.tcpHdr.Flags()
-		dataOff := tcpHdr.DataOffset()
-		if flags&header.TCPFlagCwr != 0 || // Is congestion control occurring?
-			(flags^groPktFlags)&^(header.TCPFlagCwr|header.TCPFlagFin|header.TCPFlagPsh) != 0 || // Do the flags differ besides CRW, FIN, and PSH?
-			tcpHdr.AckNumber() != groPkt.tcpHdr.AckNumber() || // Do the ACKs match?
-			dataOff != groPkt.tcpHdr.DataOffset() || // Are the TCP headers the same length?
-			groPkt.tcpHdr.SequenceNumber()+uint32(groPkt.payloadSize()) != tcpHdr.SequenceNumber() { // Does the incoming packet match the expected sequence number?
+		if shouldFlushTCP(groPkt, tcpHdr) {
 			return groPkt, true
-		}
-		// The options, including timestamps, must be identical.
-		for i := header.TCPMinimumSize; i < int(dataOff); i++ {
-			if tcpHdr[i] != groPkt.tcpHdr[i] {
-				return groPkt, true
-			}
 		}
 
 		// There's an upper limit on coalesced packet size.
-		if int(ipHdr.TotalLength())-header.IPv4MinimumSize-int(dataOff)+groPkt.pkt.Data().Size() >= groMaxPacketSize {
+		if pkt.Data().Size()-header.IPv4MinimumSize-int(tcpHdr.DataOffset())+groPkt.pkt.Data().Size() >= groMaxPacketSize {
 			return groPkt, true
 		}
 
@@ -166,6 +157,141 @@ func (gb *groBucket) findGROPacket(ipHdr header.IPv4, tcpHdr header.TCP) (*groPa
 	}
 
 	return nil, false
+}
+
+// findGROPacket6 returns the groPkt that matches ipHdr and tcpHdr, or nil if
+// none exists. It also returns whether the groPkt should be flushed based on
+// differences between the two headers.
+// +checklocks:gb.mu
+func (gb *groBucket) findGROPacket6(pkt PacketBufferPtr, ipHdr header.IPv6, tcpHdr header.TCP, ep NetworkEndpoint) (*groPacket, bool) {
+	for groPkt := gb.packets.Front(); groPkt != nil; groPkt = groPkt.Next() {
+		// Do the addresses match?
+		groIPHdr := header.IPv6(groPkt.ipHdr)
+		if ipHdr.SourceAddress() != groIPHdr.SourceAddress() || ipHdr.DestinationAddress() != groIPHdr.DestinationAddress() {
+			continue
+		}
+
+		// Need to check that headers are the same except:
+		// - Traffic class, a difference of which causes a flush.
+		// - Hop limit, a difference of which causes a flush.
+		// - Length, which is checked later.
+		// - Version, which is checked by an earlier call to IsValid().
+		trafficClass, flowLabel := ipHdr.TOS()
+		groTrafficClass, groFlowLabel := groIPHdr.TOS()
+		if flowLabel != groFlowLabel || ipHdr.NextHeader() != groIPHdr.NextHeader() {
+			continue
+		}
+		// Unlike IPv4, IPv6 packets with extension headers can be coalesced.
+		if !bytes.Equal(ipHdr[header.IPv6MinimumSize:], groIPHdr[header.IPv6MinimumSize:]) {
+			continue
+		}
+
+		// Do the ports match?
+		if tcpHdr.SourcePort() != groPkt.tcpHdr.SourcePort() || tcpHdr.DestinationPort() != groPkt.tcpHdr.DestinationPort() {
+			continue
+		}
+
+		// We've found a packet of the same flow.
+
+		// TCP checks.
+		if shouldFlushTCP(groPkt, tcpHdr) {
+			return groPkt, true
+		}
+
+		// Do the traffic class and hop limit match?
+		if trafficClass != groTrafficClass || ipHdr.HopLimit() != groIPHdr.HopLimit() {
+			return groPkt, true
+		}
+
+		// This limit is artificial for IPv6 -- we could allow even
+		// larger packets via jumbograms.
+		if pkt.Data().Size()-len(ipHdr)-int(tcpHdr.DataOffset())+groPkt.pkt.Data().Size() >= groMaxPacketSize {
+			return groPkt, true
+		}
+
+		return groPkt, false
+	}
+
+	return nil, false
+}
+
+// +checklocks:gb.mu
+func (gb *groBucket) found(gd *groDispatcher, groPkt *groPacket, flushGROPkt bool, pkt PacketBufferPtr, ipHdr []byte, tcpHdr header.TCP, ep NetworkEndpoint, updateIPHdr func([]byte, int)) {
+	// Flush groPkt or merge the packets.
+	pktSize := pkt.Data().Size()
+	flags := tcpHdr.Flags()
+	dataOff := tcpHdr.DataOffset()
+	tcpPayloadSize := pkt.Data().Size() - len(ipHdr) - int(dataOff)
+	if flushGROPkt {
+		// Flush the existing GRO packet. Don't hold bucket.mu while
+		// processing the packet.
+		pkt := groPkt.pkt
+		gb.removeOne(groPkt)
+		gb.mu.Unlock()
+		ep.HandlePacket(pkt)
+		pkt.DecRef()
+		gb.mu.Lock()
+		groPkt = nil
+	} else if groPkt != nil {
+		// Merge pkt in to GRO packet.
+		pkt.Data().TrimFront(len(ipHdr) + int(dataOff))
+		groPkt.pkt.Data().Merge(pkt.Data())
+		// Update the IP total length.
+		updateIPHdr(groPkt.ipHdr, tcpPayloadSize)
+		// Add flags from the packet to the GRO packet.
+		groPkt.tcpHdr.SetFlags(uint8(groPkt.tcpHdr.Flags() | (flags & (header.TCPFlagFin | header.TCPFlagPsh))))
+
+		pkt = nil
+	}
+
+	// Flush if the packet isn't the same size as the previous packets or
+	// if certain flags are set. The reason for checking size equality is:
+	// - If the packet is smaller than the others, this is likely the end
+	//   of some message. Peers will send MSS-sized packets until they have
+	//   insufficient data to do so.
+	// - If the packet is larger than the others, this packet is either
+	//   malformed, a local GSO packet, or has already been handled by host
+	//   GRO.
+	flush := header.TCPFlags(flags)&(header.TCPFlagUrg|header.TCPFlagPsh|header.TCPFlagRst|header.TCPFlagSyn|header.TCPFlagFin) != 0
+	flush = flush || tcpPayloadSize == 0
+	if groPkt != nil {
+		flush = flush || pktSize != groPkt.initialLength
+	}
+
+	switch {
+	case flush && groPkt != nil:
+		// A merge occurred and we need to flush groPkt.
+		pkt := groPkt.pkt
+		gb.removeOne(groPkt)
+		gb.mu.Unlock()
+		ep.HandlePacket(pkt)
+		pkt.DecRef()
+	case flush && groPkt == nil:
+		// No merge occurred and the incoming packet needs to be flushed.
+		gb.mu.Unlock()
+		ep.HandlePacket(pkt)
+	case !flush && groPkt == nil:
+		// New flow and we don't need to flush. Insert pkt into GRO.
+		if gb.full() {
+			// Head is always the oldest packet
+			toFlush := gb.removeOldest()
+			gb.insert(pkt.IncRef(), ipHdr, tcpHdr, ep)
+			gb.mu.Unlock()
+			ep.HandlePacket(toFlush)
+			toFlush.DecRef()
+		} else {
+			gb.insert(pkt.IncRef(), ipHdr, tcpHdr, ep)
+			gb.mu.Unlock()
+		}
+	default:
+		// A merge occurred and we don't need to flush anything.
+		gb.mu.Unlock()
+	}
+
+	// Schedule a timer if we never had one set before.
+	if gd.flushTimerState.CompareAndSwap(flushTimerUnset, flushTimerSet) {
+		gd.flushTimer.Reset(gd.getInterval())
+	}
 }
 
 // A groPacket is packet undergoing GRO. It may be several packets coalesced
@@ -177,8 +303,8 @@ type groPacket struct {
 	// pkt is the coalesced packet.
 	pkt PacketBufferPtr
 
-	// ipHdr is the IP header for the coalesced packet.
-	ipHdr header.IPv4
+	// ipHdr is the IP (v4 or v6) header for the coalesced packet.
+	ipHdr []byte
 
 	// tcpHdr is the TCP header for the coalesced packet.
 	tcpHdr header.TCP
@@ -193,7 +319,7 @@ type groPacket struct {
 	// used as a best-effort guess at MSS: senders will send MSS-sized
 	// packets until they run out of data, so we coalesce as long as
 	// packets are the same size.
-	initialLength uint16
+	initialLength int
 
 	// idx is the groPacket's index in its bucket packetsPrealloc. It is
 	// immutable.
@@ -209,27 +335,30 @@ func (pk *groPacket) reset() {
 
 // payloadSize is the payload size of the coalesced packet, which does not
 // include the network or transport headers.
-func (pk *groPacket) payloadSize() uint16 {
-	return pk.ipHdr.TotalLength() - header.IPv4MinimumSize - uint16(pk.tcpHdr.DataOffset())
+func (pk *groPacket) payloadSize() int {
+	return pk.pkt.Data().Size() - len(pk.ipHdr) - int(pk.tcpHdr.DataOffset())
 }
+
+// Values held in groDispatcher.flushTimerState.
+const (
+	flushTimerUnset = iota
+	flushTimerSet
+	flushTimerClosed
+)
 
 // groDispatcher coalesces incoming packets to increase throughput.
 type groDispatcher struct {
-	// newInterval notifies about changes to the interval.
-	newInterval chan struct{}
 	// intervalNS is the interval in nanoseconds.
 	intervalNS atomicbitops.Int64
-	// stop instructs the GRO dispatcher goroutine to stop.
-	stop chan struct{}
 
 	buckets [groNBuckets]groBucket
-	wg      sync.WaitGroup
+
+	flushTimerState atomicbitops.Int32
+	flushTimer      *time.Timer
 }
 
 func (gd *groDispatcher) init(interval time.Duration) {
 	gd.intervalNS.Store(interval.Nanoseconds())
-	gd.newInterval = make(chan struct{}, 1)
-	gd.stop = make(chan struct{})
 
 	for i := range gd.buckets {
 		bucket := &gd.buckets[i]
@@ -241,76 +370,72 @@ func (gd *groDispatcher) init(interval time.Duration) {
 		bucket.mu.Unlock()
 	}
 
-	gd.start(interval)
-}
+	// Create a timer to fire far from now and cancel it immediately.
+	//
+	// The timer will be reset when there is a need for it to fire.
+	gd.flushTimer = time.AfterFunc(time.Hour, func() {
+		if !gd.flushTimerState.CompareAndSwap(flushTimerSet, flushTimerUnset) {
+			// Timer was unset or GRO is closed, do nothing further.
+			return
+		}
 
-// start spawns a goroutine that flushes the GRO periodically based on the
-// interval.
-func (gd *groDispatcher) start(interval time.Duration) {
-	gd.wg.Add(1)
-
-	go func(interval time.Duration) {
-		defer gd.wg.Done()
-
-		var ch <-chan time.Time
+		interval := gd.getInterval()
 		if interval == 0 {
-			// Never run.
-			ch = make(<-chan time.Time)
-		} else {
-			ticker := time.NewTicker(interval)
-			ch = ticker.C
+			gd.flushAll()
+			return
 		}
-		for {
-			select {
-			case <-gd.newInterval:
-				interval = time.Duration(gd.intervalNS.Load()) * time.Nanosecond
-				if interval == 0 {
-					// Never run. Flush any existing GRO packets.
-					gd.flushAll()
-					ch = make(<-chan time.Time)
-				} else {
-					ticker := time.NewTicker(interval)
-					ch = ticker.C
-				}
-			case <-ch:
-				gd.flush()
-			case <-gd.stop:
-				return
-			}
+
+		if gd.flush() && gd.flushTimerState.CompareAndSwap(flushTimerUnset, flushTimerSet) {
+			// Only reset the timer if we have more packets and the timer was
+			// previously unset. If we have no packets left, the timer is already set
+			// or GRO is being closed, do not reset the timer.
+			gd.flushTimer.Reset(interval)
 		}
-	}(interval)
+	})
+	gd.flushTimer.Stop()
 }
 
 func (gd *groDispatcher) getInterval() time.Duration {
 	return time.Duration(gd.intervalNS.Load()) * time.Nanosecond
 }
 
+// setInterval is not thread-safe and so much be protected by callers.
 func (gd *groDispatcher) setInterval(interval time.Duration) {
 	gd.intervalNS.Store(interval.Nanoseconds())
-	gd.newInterval <- struct{}{}
+
+	if gd.flushTimerState.Load() == flushTimerSet {
+		// Timer was previously set, reset it.
+		gd.flushTimer.Reset(interval)
+	}
 }
 
 // dispatch sends pkt up the stack after it undergoes GRO coalescing.
 func (gd *groDispatcher) dispatch(pkt PacketBufferPtr, netProto tcpip.NetworkProtocolNumber, ep NetworkEndpoint) {
 	// If GRO is disabled simply pass the packet along.
-	if gd.intervalNS.Load() == 0 {
+	if gd.getInterval() == 0 {
 		ep.HandlePacket(pkt)
 		return
 	}
 
+	switch netProto {
+	case header.IPv4ProtocolNumber:
+		gd.dispatch4(pkt, ep)
+	case header.IPv6ProtocolNumber:
+		gd.dispatch6(pkt, ep)
+	default:
+		// We can't GRO this.
+		ep.HandlePacket(pkt)
+	}
+}
+
+func (gd *groDispatcher) dispatch4(pkt PacketBufferPtr, ep NetworkEndpoint) {
 	// Immediately get the IPv4 and TCP headers. We need a way to hash the
 	// packet into its bucket, which requires addresses and ports. Linux
 	// simply gets a hash passed by hardware, but we're not so lucky.
 
-	// We only GRO IPv4 packets.
-	if netProto != header.IPv4ProtocolNumber {
-		ep.HandlePacket(pkt)
-		return
-	}
-
-	// We only GRO TCP4 packets. The check for the transport protocol
-	// number is done below so that we can PullUp both the IP and TCP
-	// headers together.
+	// We only GRO TCP packets. The check for the transport protocol number
+	// is done below so that we can PullUp both the IP and TCP headers
+	// together.
 	hdrBytes, ok := pkt.Data().PullUp(header.IPv4MinimumSize + header.TCPMinimumSize)
 	if !ok {
 		ep.HandlePacket(pkt)
@@ -318,9 +443,9 @@ func (gd *groDispatcher) dispatch(pkt PacketBufferPtr, netProto tcpip.NetworkPro
 	}
 	ipHdr := header.IPv4(hdrBytes)
 
-	// We only handle atomic packets. That's the vast majority of traffic,
-	// and simplifies handling.
-	if ipHdr.FragmentOffset() != 0 || ipHdr.Flags()&header.IPv4FlagMoreFragments != 0 || ipHdr.Flags()&header.IPv4FlagDontFragment == 0 {
+	// We don't handle fragments. That should be the vast majority of
+	// traffic, and simplifies handling.
+	if ipHdr.FragmentOffset() != 0 || ipHdr.Flags()&header.IPv4FlagMoreFragments != 0 {
 		ep.HandlePacket(pkt)
 		return
 	}
@@ -331,6 +456,7 @@ func (gd *groDispatcher) dispatch(pkt PacketBufferPtr, netProto tcpip.NetworkPro
 		return
 	}
 	tcpHdr := header.TCP(hdrBytes[header.IPv4MinimumSize:])
+	ipHdr = ipHdr[:header.IPv4MinimumSize]
 	dataOff := tcpHdr.DataOffset()
 	if dataOff < header.TCPMinimumSize {
 		// Malformed packet: will be handled further up the stack.
@@ -348,14 +474,14 @@ func (gd *groDispatcher) dispatch(pkt PacketBufferPtr, netProto tcpip.NetworkPro
 
 	// If either checksum is bad, flush the packet. Since we don't know
 	// what bits were flipped, we can't identify this packet with a flow.
-	tcpPayloadSize := ipHdr.TotalLength() - header.IPv4MinimumSize - uint16(dataOff)
 	if !pkt.RXChecksumValidated {
 		if !ipHdr.IsValid(pkt.Data().Size()) || !ipHdr.IsChecksumValid() {
 			ep.HandlePacket(pkt)
 			return
 		}
 		payloadChecksum := pkt.Data().ChecksumAtOffset(header.IPv4MinimumSize + int(dataOff))
-		if !tcpHdr.IsChecksumValid(ipHdr.SourceAddress(), ipHdr.DestinationAddress(), payloadChecksum, tcpPayloadSize) {
+		tcpPayloadSize := pkt.Data().Size() - header.IPv4MinimumSize - int(dataOff)
+		if !tcpHdr.IsChecksumValid(ipHdr.SourceAddress(), ipHdr.DestinationAddress(), payloadChecksum, uint16(tcpPayloadSize)) {
 			ep.HandlePacket(pkt)
 			return
 		}
@@ -367,86 +493,118 @@ func (gd *groDispatcher) dispatch(pkt PacketBufferPtr, netProto tcpip.NetworkPro
 	// Now we can get the bucket for the packet.
 	bucket := &gd.buckets[gd.bucketForPacket(ipHdr, tcpHdr)&groNBucketsMask]
 	bucket.mu.Lock()
-	groPkt, flushGROPkt := bucket.findGROPacket(ipHdr, tcpHdr)
-
-	// Flush groPkt or merge the packets.
-	flags := tcpHdr.Flags()
-	if flushGROPkt {
-		// Flush the existing GRO packet. Don't hold bucket.mu while
-		// processing the packet.
-		pkt := groPkt.pkt
-		bucket.removeOne(groPkt)
-		bucket.mu.Unlock()
-		ep.HandlePacket(pkt)
-		pkt.DecRef()
-		bucket.mu.Lock()
-		groPkt = nil
-	} else if groPkt != nil {
-		// Merge pkt in to GRO packet.
-		buf := pkt.Data().ToBuffer()
-		buf.TrimFront(header.IPv4MinimumSize + int64(dataOff))
-		groPkt.pkt.Data().MergeBuffer(&buf)
-		buf.Release()
-		// Add flags from the packet to the GRO packet.
-		groPkt.tcpHdr.SetFlags(uint8(groPkt.tcpHdr.Flags() | (flags & (header.TCPFlagFin | header.TCPFlagPsh))))
-		// Update the IP total length.
-		groPkt.ipHdr.SetTotalLength(groPkt.ipHdr.TotalLength() + uint16(tcpPayloadSize))
-
-		pkt = PacketBufferPtr{}
-	}
-
-	// Flush if the packet isn't the same size as the previous packets or
-	// if certain flags are set. The reason for checking size equality is:
-	// - If the packet is smaller than the others, this is likely the end
-	//   of some message. Peers will send MSS-sized packets until they have
-	//   insufficient data to do so.
-	// - If the packet is larger than the others, this packet is either
-	//   malformed, a local GSO packet, or has already been handled by host
-	//   GRO.
-	flush := header.TCPFlags(flags)&(header.TCPFlagUrg|header.TCPFlagPsh|header.TCPFlagRst|header.TCPFlagSyn|header.TCPFlagFin) != 0
-	if groPkt != nil {
-		flush = flush || ipHdr.TotalLength() != groPkt.initialLength
-	}
-
-	switch {
-	case flush && groPkt != nil:
-		// A merge occurred and we need to flush groPkt.
-		pkt := groPkt.pkt
-		bucket.removeOne(groPkt)
-		bucket.mu.Unlock()
-		ep.HandlePacket(pkt)
-		pkt.DecRef()
-	case flush && groPkt == nil:
-		// No merge occurred and the incoming packet needs to be flushed.
-		bucket.mu.Unlock()
-		ep.HandlePacket(pkt)
-	case !flush && groPkt == nil:
-		// New flow and we don't need to flush. Insert pkt into GRO.
-		if bucket.full() {
-			// Head is always the oldest packet
-			toFlush := bucket.removeOldest()
-			bucket.insert(pkt.IncRef(), ipHdr, tcpHdr, ep)
-			bucket.mu.Unlock()
-			ep.HandlePacket(toFlush)
-			toFlush.DecRef()
-		} else {
-			bucket.insert(pkt.IncRef(), ipHdr, tcpHdr, ep)
-			bucket.mu.Unlock()
-		}
-	default:
-		// A merge occurred and we don't need to flush anything.
-		bucket.mu.Unlock()
-	}
+	groPkt, flushGROPkt := bucket.findGROPacket4(pkt, ipHdr, tcpHdr, ep)
+	bucket.found(gd, groPkt, flushGROPkt, pkt, ipHdr, tcpHdr, ep, updateIPv4Hdr)
 }
 
-func (gd *groDispatcher) bucketForPacket(ipHdr header.IPv4, tcpHdr header.TCP) int {
+func (gd *groDispatcher) dispatch6(pkt PacketBufferPtr, ep NetworkEndpoint) {
+	// Immediately get the IPv6 and TCP headers. We need a way to hash the
+	// packet into its bucket, which requires addresses and ports. Linux
+	// simply gets a hash passed by hardware, but we're not so lucky.
+
+	hdrBytes, ok := pkt.Data().PullUp(header.IPv6MinimumSize)
+	if !ok {
+		ep.HandlePacket(pkt)
+		return
+	}
+	ipHdr := header.IPv6(hdrBytes)
+
+	// Getting the IP header (+ extension headers) size is a bit of a pain
+	// on IPv6.
+	transProto := tcpip.TransportProtocolNumber(ipHdr.NextHeader())
+	buf := pkt.Data().ToBuffer()
+	buf.TrimFront(header.IPv6MinimumSize)
+	it := header.MakeIPv6PayloadIterator(header.IPv6ExtensionHeaderIdentifier(transProto), buf)
+	ipHdrSize := int(header.IPv6MinimumSize)
+	for {
+		transProto = tcpip.TransportProtocolNumber(it.NextHeaderIdentifier())
+		extHdr, done, err := it.Next()
+		if err != nil {
+			ep.HandlePacket(pkt)
+			return
+		}
+		if done {
+			break
+		}
+		switch extHdr.(type) {
+		// We can GRO these, so just skip over them.
+		case header.IPv6HopByHopOptionsExtHdr:
+		case header.IPv6RoutingExtHdr:
+		case header.IPv6DestinationOptionsExtHdr:
+		default:
+			// This is either a TCP header or something we can't handle.
+			ipHdrSize = int(it.HeaderOffset())
+			done = true
+		}
+		extHdr.Release()
+		if done {
+			break
+		}
+	}
+
+	hdrBytes, ok = pkt.Data().PullUp(ipHdrSize + header.TCPMinimumSize)
+	if !ok {
+		ep.HandlePacket(pkt)
+		return
+	}
+	ipHdr = header.IPv6(hdrBytes[:ipHdrSize])
+
+	// We only handle TCP packets.
+	if transProto != header.TCPProtocolNumber {
+		ep.HandlePacket(pkt)
+		return
+	}
+	tcpHdr := header.TCP(hdrBytes[ipHdrSize:])
+	dataOff := tcpHdr.DataOffset()
+	if dataOff < header.TCPMinimumSize {
+		// Malformed packet: will be handled further up the stack.
+		ep.HandlePacket(pkt)
+		return
+	}
+
+	hdrBytes, ok = pkt.Data().PullUp(ipHdrSize + int(dataOff))
+	if !ok {
+		// Malformed packet: will be handled further up the stack.
+		ep.HandlePacket(pkt)
+		return
+	}
+	tcpHdr = header.TCP(hdrBytes[ipHdrSize:])
+
+	// If either checksum is bad, flush the packet. Since we don't know
+	// what bits were flipped, we can't identify this packet with a flow.
+	if !pkt.RXChecksumValidated {
+		if !ipHdr.IsValid(pkt.Data().Size()) {
+			ep.HandlePacket(pkt)
+			return
+		}
+		payloadChecksum := pkt.Data().ChecksumAtOffset(ipHdrSize + int(dataOff))
+		tcpPayloadSize := pkt.Data().Size() - ipHdrSize - int(dataOff)
+		if !tcpHdr.IsChecksumValid(ipHdr.SourceAddress(), ipHdr.DestinationAddress(), payloadChecksum, uint16(tcpPayloadSize)) {
+			ep.HandlePacket(pkt)
+			return
+		}
+		// We've validated the checksum, no reason for others to do it
+		// again.
+		pkt.RXChecksumValidated = true
+	}
+
+	// Now we can get the bucket for the packet.
+	bucket := &gd.buckets[gd.bucketForPacket(ipHdr, tcpHdr)&groNBucketsMask]
+	bucket.mu.Lock()
+	groPkt, flushGROPkt := bucket.findGROPacket6(pkt, ipHdr, tcpHdr, ep)
+	bucket.found(gd, groPkt, flushGROPkt, pkt, ipHdr, tcpHdr, ep, updateIPv6Hdr)
+}
+
+func (gd *groDispatcher) bucketForPacket(ipHdr header.Network, tcpHdr header.TCP) int {
 	// TODO(b/256037250): Use jenkins or checksum. Write a test to print
 	// distribution.
 	var sum int
-	for _, val := range []byte(ipHdr.SourceAddress()) {
+	srcAddr := ipHdr.SourceAddress()
+	for _, val := range srcAddr.AsSlice() {
 		sum += int(val)
 	}
-	for _, val := range []byte(ipHdr.DestinationAddress()) {
+	dstAddr := ipHdr.DestinationAddress()
+	for _, val := range dstAddr.AsSlice() {
 		sum += int(val)
 	}
 	sum += int(tcpHdr.SourcePort())
@@ -455,17 +613,25 @@ func (gd *groDispatcher) bucketForPacket(ipHdr header.IPv4, tcpHdr header.TCP) i
 }
 
 // flush sends any packets older than interval up the stack.
-func (gd *groDispatcher) flush() {
+//
+// Returns true iff packets remain.
+func (gd *groDispatcher) flush() bool {
 	interval := gd.intervalNS.Load()
 	old := time.Now().Add(-time.Duration(interval) * time.Nanosecond)
-	gd.flushSince(old)
+	return gd.flushSinceOrEqualTo(old)
 }
 
-func (gd *groDispatcher) flushSince(old time.Time) {
+// flushSinceOrEqualTo sends any packets older than or equal to the specified
+// time.
+//
+// Returns true iff packets remain.
+func (gd *groDispatcher) flushSinceOrEqualTo(old time.Time) bool {
 	type pair struct {
 		pkt PacketBufferPtr
 		ep  NetworkEndpoint
 	}
+
+	hasMore := false
 
 	for i := range gd.buckets {
 		// Put packets in a slice so we don't have to hold bucket.mu
@@ -476,13 +642,14 @@ func (gd *groDispatcher) flushSince(old time.Time) {
 		bucket := &gd.buckets[i]
 		bucket.mu.Lock()
 		for groPkt := bucket.packets.Front(); groPkt != nil; groPkt = groPkt.Next() {
-			if groPkt.created.Before(old) {
-				pairs = append(pairs, pair{groPkt.pkt, groPkt.ep})
-				bucket.removeOne(groPkt)
-			} else {
+			if groPkt.created.After(old) {
 				// Packets are ordered by age, so we can move
 				// on once we find one that's too new.
+				hasMore = true
 				break
+			} else {
+				pairs = append(pairs, pair{groPkt.pkt, groPkt.ep})
+				bucket.removeOne(groPkt)
 			}
 		}
 		bucket.mu.Unlock()
@@ -492,22 +659,28 @@ func (gd *groDispatcher) flushSince(old time.Time) {
 			pair.pkt.DecRef()
 		}
 	}
+
+	return hasMore
 }
 
 func (gd *groDispatcher) flushAll() {
-	gd.flushSince(time.Now())
+	if gd.flushSinceOrEqualTo(time.Now()) {
+		panic("packets unexpectedly remain after flushing all")
+	}
 }
 
 // close stops the GRO goroutine and releases any held packets.
 func (gd *groDispatcher) close() {
-	gd.stop <- struct{}{}
-	gd.wg.Wait()
+	gd.flushTimer.Stop()
+	// Prevent the timer from being scheduled again.
+	gd.flushTimerState.Store(flushTimerClosed)
 
 	for i := range gd.buckets {
 		bucket := &gd.buckets[i]
 		bucket.mu.Lock()
-		for groPkt := bucket.packets.Front(); groPkt != nil; groPkt = groPkt.Next() {
+		for groPkt := bucket.packets.Front(); groPkt != nil; groPkt = bucket.packets.Front() {
 			groPkt.pkt.DecRef()
+			bucket.removeOne(groPkt)
 		}
 		bucket.mu.Unlock()
 	}
@@ -527,4 +700,31 @@ func (gd *groDispatcher) String() string {
 		bucket.mu.Unlock()
 	}
 	return ret
+}
+
+// shouldFlushTCP returns whether the TCP headers indicate that groPkt should
+// be flushed
+func shouldFlushTCP(groPkt *groPacket, tcpHdr header.TCP) bool {
+	flags := tcpHdr.Flags()
+	groPktFlags := groPkt.tcpHdr.Flags()
+	dataOff := tcpHdr.DataOffset()
+	if flags&header.TCPFlagCwr != 0 || // Is congestion control occurring?
+		(flags^groPktFlags)&^(header.TCPFlagCwr|header.TCPFlagFin|header.TCPFlagPsh) != 0 || // Do the flags differ besides CRW, FIN, and PSH?
+		tcpHdr.AckNumber() != groPkt.tcpHdr.AckNumber() || // Do the ACKs match?
+		dataOff != groPkt.tcpHdr.DataOffset() || // Are the TCP headers the same length?
+		groPkt.tcpHdr.SequenceNumber()+uint32(groPkt.payloadSize()) != tcpHdr.SequenceNumber() { // Does the incoming packet match the expected sequence number?
+		return true
+	}
+	// The options, including timestamps, must be identical.
+	return !bytes.Equal(tcpHdr[header.TCPMinimumSize:], groPkt.tcpHdr[header.TCPMinimumSize:])
+}
+
+func updateIPv4Hdr(ipHdrBytes []byte, newBytes int) {
+	ipHdr := header.IPv4(ipHdrBytes)
+	ipHdr.SetTotalLength(ipHdr.TotalLength() + uint16(newBytes))
+}
+
+func updateIPv6Hdr(ipHdrBytes []byte, newBytes int) {
+	ipHdr := header.IPv6(ipHdrBytes)
+	ipHdr.SetPayloadLength(ipHdr.PayloadLength() + uint16(newBytes))
 }

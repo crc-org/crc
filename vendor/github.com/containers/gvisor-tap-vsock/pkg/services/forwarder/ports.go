@@ -384,7 +384,7 @@ func tcpipAddress(nicID tcpip.NICID, remote string) (address tcpip.FullAddress, 
 
 	address = tcpip.FullAddress{
 		NIC:  nicID,
-		Addr: tcpip.Address(net.ParseIP(split[0]).To4()),
+		Addr: tcpip.AddrFrom4Slice(net.ParseIP(split[0]).To4()),
 		Port: uint16(port),
 	}
 

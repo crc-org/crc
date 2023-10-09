@@ -82,7 +82,7 @@ func dial(s *stack.Stack, nic int) (*gonet.UDPConn, error) {
 
 	if err := ep.Bind(tcpip.FullAddress{
 		NIC:  tcpip.NICID(nic),
-		Addr: "",
+		Addr: tcpip.Address{},
 		Port: uint16(serverPort),
 	}); err != nil {
 		ep.Close()

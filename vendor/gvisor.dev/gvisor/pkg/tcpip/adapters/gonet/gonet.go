@@ -24,7 +24,6 @@ import (
 	"net"
 	"time"
 
-	"gvisor.dev/gvisor/pkg/log"
 	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
@@ -454,7 +453,6 @@ func (c *TCPConn) LocalAddr() net.Addr {
 func (c *TCPConn) RemoteAddr() net.Addr {
 	a, err := c.ep.GetRemoteAddress()
 	if err != nil {
-		log.Warningf("ep.GetRemoteAddress() failed: %v", err)
 		return nil
 	}
 	return fullToTCPAddr(a)
@@ -471,11 +469,11 @@ func (c *TCPConn) newOpError(op string, err error) *net.OpError {
 }
 
 func fullToTCPAddr(addr tcpip.FullAddress) *net.TCPAddr {
-	return &net.TCPAddr{IP: net.IP(addr.Addr), Port: int(addr.Port)}
+	return &net.TCPAddr{IP: net.IP(addr.Addr.AsSlice()), Port: int(addr.Port)}
 }
 
 func fullToUDPAddr(addr tcpip.FullAddress) *net.UDPAddr {
-	return &net.UDPAddr{IP: net.IP(addr.Addr), Port: int(addr.Port)}
+	return &net.UDPAddr{IP: net.IP(addr.Addr.AsSlice()), Port: int(addr.Port)}
 }
 
 // DialTCP creates a new TCPConn connected to the specified address.
@@ -623,7 +621,6 @@ func (c *UDPConn) newRemoteOpError(op string, remote net.Addr, err error) *net.O
 func (c *UDPConn) RemoteAddr() net.Addr {
 	a, err := c.ep.GetRemoteAddress()
 	if err != nil {
-		log.Warningf("ep.GetRemoteAddress() failed: %v", err)
 		return nil
 	}
 	return fullToUDPAddr(a)
@@ -667,7 +664,7 @@ func (c *UDPConn) WriteTo(b []byte, addr net.Addr) (int, error) {
 	if addr != nil {
 		ua := addr.(*net.UDPAddr)
 		writeOptions.To = &tcpip.FullAddress{
-			Addr: tcpip.Address(ua.IP),
+			Addr: tcpip.AddrFromSlice(ua.IP),
 			Port: uint16(ua.Port),
 		}
 	}

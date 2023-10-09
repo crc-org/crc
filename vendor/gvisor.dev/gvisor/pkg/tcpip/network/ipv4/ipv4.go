@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"gvisor.dev/gvisor/pkg/atomicbitops"
-	"gvisor.dev/gvisor/pkg/bufferv2"
+	"gvisor.dev/gvisor/pkg/buffer"
 	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
@@ -77,6 +77,7 @@ var _ stack.MulticastForwardingNetworkEndpoint = (*endpoint)(nil)
 var _ stack.GroupAddressableEndpoint = (*endpoint)(nil)
 var _ stack.AddressableEndpoint = (*endpoint)(nil)
 var _ stack.NetworkEndpoint = (*endpoint)(nil)
+var _ IGMPEndpoint = (*endpoint)(nil)
 
 type endpoint struct {
 	nic        stack.NetworkInterface
@@ -107,6 +108,32 @@ type endpoint struct {
 
 	// +checklocks:mu
 	igmp igmpState
+}
+
+// SetIGMPVersion implements IGMPEndpoint.
+func (e *endpoint) SetIGMPVersion(v IGMPVersion) IGMPVersion {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return e.setIGMPVersionLocked(v)
+}
+
+// GetIGMPVersion implements IGMPEndpoint.
+func (e *endpoint) GetIGMPVersion() IGMPVersion {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return e.getIGMPVersionLocked()
+}
+
+// +checklocks:e.mu
+// +checklocksalias:e.igmp.ep.mu=e.mu
+func (e *endpoint) setIGMPVersionLocked(v IGMPVersion) IGMPVersion {
+	return e.igmp.setVersion(v)
+}
+
+// +checklocksread:e.mu
+// +checklocksalias:e.igmp.ep.mu=e.mu
+func (e *endpoint) getIGMPVersionLocked() IGMPVersion {
+	return e.igmp.getVersion()
 }
 
 // HandleLinkResolutionFailure implements stack.LinkResolvableNetworkEndpoint.
@@ -691,6 +718,8 @@ func (e *endpoint) forwardPacketWithRoute(route *stack.Route, pkt stack.PacketBu
 		// necessary and the bit is also set.
 		_ = e.protocol.returnError(&icmpReasonFragmentationNeeded{}, pkt, false /* deliveredLocally */)
 		return &ip.ErrMessageTooLong{}
+	case *tcpip.ErrNoBufferSpace:
+		return &ip.ErrOutgoingDeviceNoBufferSpace{}
 	default:
 		return &ip.ErrOther{Err: err}
 	}
@@ -744,7 +773,7 @@ func (e *endpoint) forwardUnicastPacket(pkt stack.PacketBufferPtr) ip.Forwarding
 		return nil
 	}
 
-	r, err := stk.FindRoute(0, "", dstAddr, ProtocolNumber, false /* multicastLoop */)
+	r, err := stk.FindRoute(0, tcpip.Address{}, dstAddr, ProtocolNumber, false /* multicastLoop */)
 	switch err.(type) {
 	case nil:
 	// TODO(https://gvisor.dev/issues/8105): We should not observe ErrHostUnreachable from route
@@ -854,6 +883,35 @@ func (e *endpoint) handleLocalPacket(pkt stack.PacketBufferPtr, canSkipRXChecksu
 }
 
 func validateAddressesForForwarding(h header.IPv4) ip.ForwardingError {
+	srcAddr := h.SourceAddress()
+
+	// As per RFC 5735 section 3,
+	//
+	//   0.0.0.0/8 - Addresses in this block refer to source hosts on "this"
+	//   network.  Address 0.0.0.0/32 may be used as a source address for this
+	//   host on this network; other addresses within 0.0.0.0/8 may be used to
+	//   refer to specified hosts on this network ([RFC1122], Section 3.2.1.3).
+	//
+	// And RFC 6890 section 2.2.2,
+	//
+	//                +----------------------+----------------------------+
+	//                | Attribute            | Value                      |
+	//                +----------------------+----------------------------+
+	//                | Address Block        | 0.0.0.0/8                  |
+	//                | Name                 | "This host on this network"|
+	//                | RFC                  | [RFC1122], Section 3.2.1.3 |
+	//                | Allocation Date      | September 1981             |
+	//                | Termination Date     | N/A                        |
+	//                | Source               | True                       |
+	//                | Destination          | False                      |
+	//                | Forwardable          | False                      |
+	//                | Global               | False                      |
+	//                | Reserved-by-Protocol | True                       |
+	//                +----------------------+----------------------------+
+	if header.IPv4CurrentNetworkSubnet.Contains(srcAddr) {
+		return &ip.ErrInitializingSourceAddress{}
+	}
+
 	// As per RFC 3927 section 7,
 	//
 	//   A router MUST NOT forward a packet with an IPv4 Link-Local source or
@@ -864,10 +922,10 @@ func validateAddressesForForwarding(h header.IPv4) ip.ForwardingError {
 	//   destination address MUST NOT forward the packet.  This prevents
 	//   forwarding of packets back onto the network segment from which they
 	//   originated, or to any other segment.
-	if header.IsV4LinkLocalUnicastAddress(h.SourceAddress()) {
+	if header.IsV4LinkLocalUnicastAddress(srcAddr) {
 		return &ip.ErrLinkLocalSourceAddress{}
 	}
-	if header.IsV4LinkLocalUnicastAddress(h.DestinationAddress()) || header.IsV4LinkLocalMulticastAddress(h.DestinationAddress()) {
+	if dstAddr := h.DestinationAddress(); header.IsV4LinkLocalUnicastAddress(dstAddr) || header.IsV4LinkLocalMulticastAddress(dstAddr) {
 		return &ip.ErrLinkLocalDestinationAddress{}
 	}
 	return nil
@@ -1105,9 +1163,11 @@ func (e *endpoint) handleValidatedPacket(h header.IPv4, pkt stack.PacketBufferPt
 // counters.
 func (e *endpoint) handleForwardingError(err ip.ForwardingError) {
 	stats := e.stats.ip
-	switch err.(type) {
+	switch err := err.(type) {
 	case nil:
 		return
+	case *ip.ErrInitializingSourceAddress:
+		stats.Forwarding.InitializingSource.Increment()
 	case *ip.ErrLinkLocalSourceAddress:
 		stats.Forwarding.LinkLocalSource.Increment()
 	case *ip.ErrLinkLocalDestinationAddress:
@@ -1126,6 +1186,8 @@ func (e *endpoint) handleForwardingError(err ip.ForwardingError) {
 		stats.Forwarding.UnexpectedMulticastInputInterface.Increment()
 	case *ip.ErrUnknownOutputEndpoint:
 		stats.Forwarding.UnknownOutputEndpoint.Increment()
+	case *ip.ErrOutgoingDeviceNoBufferSpace:
+		stats.Forwarding.OutgoingDeviceNoBufferSpace.Increment()
 	default:
 		panic(fmt.Sprintf("unrecognized forwarding error: %s", err))
 	}
@@ -1665,7 +1727,7 @@ func (p *protocol) forwardPendingMulticastPacket(pkt stack.PacketBufferPtr, inst
 }
 
 func (p *protocol) isUnicastAddress(addr tcpip.Address) bool {
-	if len(addr) != header.IPv4AddressSize {
+	if addr.BitLen() != header.IPv4AddressSizeBits {
 		return false
 	}
 
@@ -1699,7 +1761,7 @@ func (p *protocol) isSubnetLocalBroadcastAddress(addr tcpip.Address) bool {
 // returns the parsed IP header.
 //
 // Returns true if the IP header was successfully parsed.
-func (p *protocol) parseAndValidate(pkt stack.PacketBufferPtr) (*bufferv2.View, bool) {
+func (p *protocol) parseAndValidate(pkt stack.PacketBufferPtr) (*buffer.View, bool) {
 	transProtoNum, hasTransportHdr, ok := p.Parse(pkt)
 	if !ok {
 		return nil, false
@@ -1822,8 +1884,9 @@ func packetMustBeFragmented(pkt stack.PacketBufferPtr, networkMTU uint32) bool {
 // on a tcpip.Address (a string) without the need to convert it to a byte slice,
 // which would cause an allocation.
 func addressToUint32(addr tcpip.Address) uint32 {
-	_ = addr[3] // bounds check hint to compiler
-	return uint32(addr[0]) | uint32(addr[1])<<8 | uint32(addr[2])<<16 | uint32(addr[3])<<24
+	addrBytes := addr.As4()
+	_ = addrBytes[3] // bounds check hint to compiler
+	return uint32(addrBytes[0]) | uint32(addrBytes[1])<<8 | uint32(addrBytes[2])<<16 | uint32(addrBytes[3])<<24
 }
 
 // hashRoute calculates a hash value for the given source/destination pair using
@@ -2240,7 +2303,7 @@ func (e *endpoint) processIPOptions(pkt stack.PacketBufferPtr, opts header.IPv4O
 	// really forwarding packets as we may need to get two addresses, for rx and
 	// tx interfaces. We will also have to take usage into account.
 	localAddress := e.MainAddress().Address
-	if len(localAddress) == 0 {
+	if localAddress.BitLen() == 0 {
 		h := header.IPv4(pkt.NetworkHeader().Slice())
 		dstAddr := h.DestinationAddress()
 		if pkt.NetworkPacketInfo.LocalAddressBroadcast || header.IsV4MulticastAddress(dstAddr) {

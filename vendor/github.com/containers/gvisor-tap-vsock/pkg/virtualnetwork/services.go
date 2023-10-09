@@ -53,7 +53,7 @@ func addServices(configuration *types.Configuration, s *stack.Stack, ipPool *tap
 func parseNATTable(configuration *types.Configuration) map[tcpip.Address]tcpip.Address {
 	translation := make(map[tcpip.Address]tcpip.Address)
 	for source, destination := range configuration.NAT {
-		translation[tcpip.Address(net.ParseIP(source).To4())] = tcpip.Address(net.ParseIP(destination).To4())
+		translation[tcpip.AddrFrom4Slice(net.ParseIP(source).To4())] = tcpip.AddrFrom4Slice(net.ParseIP(destination).To4())
 	}
 	return translation
 }
@@ -61,7 +61,7 @@ func parseNATTable(configuration *types.Configuration) map[tcpip.Address]tcpip.A
 func dnsServer(configuration *types.Configuration, s *stack.Stack) (http.Handler, error) {
 	udpConn, err := gonet.DialUDP(s, &tcpip.FullAddress{
 		NIC:  1,
-		Addr: tcpip.Address(net.ParseIP(configuration.GatewayIP).To4()),
+		Addr: tcpip.AddrFrom4Slice(net.ParseIP(configuration.GatewayIP).To4()),
 		Port: uint16(53),
 	}, nil, ipv4.ProtocolNumber)
 	if err != nil {
@@ -70,7 +70,7 @@ func dnsServer(configuration *types.Configuration, s *stack.Stack) (http.Handler
 
 	tcpLn, err := gonet.ListenTCP(s, tcpip.FullAddress{
 		NIC:  1,
-		Addr: tcpip.Address(net.ParseIP(configuration.GatewayIP).To4()),
+		Addr: tcpip.AddrFrom4Slice(net.ParseIP(configuration.GatewayIP).To4()),
 		Port: uint16(53),
 	}, ipv4.ProtocolNumber)
 	if err != nil {

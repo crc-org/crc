@@ -115,7 +115,7 @@ func createStack(configuration *types.Configuration, endpoint stack.LinkEndpoint
 
 	if err := s.AddProtocolAddress(1, tcpip.ProtocolAddress{
 		Protocol:          ipv4.ProtocolNumber,
-		AddressWithPrefix: tcpip.Address(net.ParseIP(configuration.GatewayIP).To4()).WithPrefix(),
+		AddressWithPrefix: tcpip.AddrFrom4Slice(net.ParseIP(configuration.GatewayIP).To4()).WithPrefix(),
 	}, stack.AddressProperties{}); err != nil {
 		return nil, errors.New(err.String())
 	}
@@ -128,14 +128,14 @@ func createStack(configuration *types.Configuration, endpoint stack.LinkEndpoint
 		return nil, errors.Wrap(err, "cannot parse cidr")
 	}
 
-	subnet, err := tcpip.NewSubnet(tcpip.Address(parsedSubnet.IP), tcpip.AddressMask(parsedSubnet.Mask))
+	subnet, err := tcpip.NewSubnet(tcpip.AddrFromSlice(parsedSubnet.IP), tcpip.MaskFromBytes(parsedSubnet.Mask))
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot parse subnet")
 	}
 	s.SetRouteTable([]tcpip.Route{
 		{
 			Destination: subnet,
-			Gateway:     "",
+			Gateway:     tcpip.Address{},
 			NIC:         1,
 		},
 	})
