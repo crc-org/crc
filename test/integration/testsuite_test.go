@@ -50,17 +50,20 @@ func TestTest(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 
+	// set userHome
+	usr, err := user.Current()
+	Expect(err).NotTo(HaveOccurred())
+	userHome = usr.HomeDir
+	util.CRCHome = filepath.Join(userHome, ".crc")
+
 	// cleanup CRC
 	Expect(RunCRCExpectSuccess("cleanup")).To(MatchRegexp("Cleanup finished"))
 
 	// remove config file crc.json
-	err := util.RemoveCRCConfig()
+	err = util.RemoveCRCConfig()
 	Expect(err).NotTo(HaveOccurred())
 
-	// set userHome and credPath
-	usr, err := user.Current()
-	Expect(err).NotTo(HaveOccurred())
-	userHome = usr.HomeDir
+	// set credPath
 	credPath = filepath.Join(userHome, ".crc", "machines", "crc", "id_rsa")
 
 	// find out if bundle embedded in the binary
