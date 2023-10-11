@@ -236,3 +236,10 @@ func killDaemonProcessIfRunning() error {
 	}
 	return nil
 }
+
+func removeDaemonPoshScript() error {
+	if crcos.FileExists(daemonPoshScriptPath) {
+		return os.Remove(daemonPoshScriptPath)
+	}
+	return nil
+}
