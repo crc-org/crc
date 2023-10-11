@@ -106,7 +106,7 @@ var daemonTaskChecks = []Check{
 		fixDescription:     "Creating the daemon task powershell script",
 		fix:                fixDaemonPoshScript,
 		cleanupDescription: "Removing the daemon task powershell script",
-		cleanup:            func() error { return os.Remove(daemonPoshScriptPath) },
+		cleanup:            removeDaemonPoshScript,
 
 		labels: labels{Os: Windows},
 	},
