@@ -20,7 +20,7 @@ var nmPreflightChecks = []Check{
 		configKeySuffix:  "check-systemd-networkd-running",
 		checkDescription: "Checking if systemd-networkd is running",
 		check:            checkSystemdNetworkdIsNotRunning,
-		fixDescription:   "Network configuration with systemd-networkd is not supported. Perhaps you can try this new network mode: https://github.com/crc-org/crc/v2/wiki/VPN-support--with-an--userland-network-stack",
+		fixDescription:   "Network configuration with systemd-networkd is not supported. Perhaps you can try this new network mode: https://github.com/crc-org/crc/wiki/VPN-support--with-an--userland-network-stack",
 		flags:            NoFix,
 
 		labels: labels{Os: Linux, NetworkMode: System},
