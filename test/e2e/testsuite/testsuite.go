@@ -910,7 +910,7 @@ func PodmanCommandIsAvailable() error {
 		unexpandedPath := filepath.Join(userHomeDir, ".crc/bin/oc;${PATH}")
 		path = os.ExpandEnv(unexpandedPath)
 		csshk = filepath.Join(userHomeDir, ".crc/machines/crc/id_ecdsa")
-		dh = "npipe:////./pipe/rc-podman"
+		dh = "npipe:////./pipe/crc-podman"
 	}
 	if runtime.GOOS == "linux" {
 		ch = "ssh://core@192.168.130.11:22/run/user/1000/podman/podman.sock"
