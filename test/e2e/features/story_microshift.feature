@@ -3,7 +3,6 @@ Feature: Microshift test stories
 
 	Background:
 		Given setting config property "preset" to value "microshift" succeeds
-		And setting config property "network-mode" to value "user" succeeds
 		And executing single crc setup command succeeds
 		And starting CRC with default bundle succeeds
 		And ensuring oc command is available
