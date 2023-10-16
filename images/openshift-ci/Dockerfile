@@ -20,11 +20,7 @@ COPY --from=builder /go/src/github.com/crc-org/crc/images/openshift-ci/azure-cli
 
 RUN yum update -y && \
     yum install --setopt=tsflags=nodocs -y \
-    genisoimage \
-    gettext \
     google-cloud-sdk \
-    libvirt-client \
-    libvirt-libs \
     nss_wrapper \
     unzip \
     sshpass \
