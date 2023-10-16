@@ -19,8 +19,6 @@ The container connects through ssh to the target host and copy the right binary 
 **RESULTS_FILE**:*(Optional). File name for results xunit results. Default value: e2e.*  
 **CLEANUP_HOME**:*(Optional). Cleanup crc home folder or keep as it is to run test.*  
 **E2E_TAG_EXPRESSION**:*(Optional). Define e2e tag expression to select tests. If empty all tests available for the platform will be executed.*  
-**INSTALLER_PATH**:*(Required when testing mode ux). Path on target host holding the installer*  
-**USER_PASSWORD**:*(Required when testing mode ux). Password for the user with privileges to run the installer*  
 
 ## Samples
 
