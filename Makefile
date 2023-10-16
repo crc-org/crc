@@ -33,7 +33,7 @@ GOARCH ?= $(shell go env GOARCH)
 HOST_BUILD_DIR=$(BUILD_DIR)/$(GOOS)-$(GOARCH)
 GOPATH ?= $(shell go env GOPATH)
 ORG := github.com/crc-org
-MODULEPATH ?= $(ORG)/crc/v2
+MODULEPATH = $(ORG)/crc/v2
 PACKAGE_DIR := packaging/$(GOOS)
 
 SOURCES := $(shell git ls-files  *.go ":^vendor")
