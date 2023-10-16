@@ -291,6 +291,17 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if err := bundleMismatchWithPreset(startConfig.Preset, crcBundleMetadata); err != nil {
 		return nil, err
 	}
+	// check if VM for any other preset exists already
+	api, cleanup := createLibMachineClient()
+	defer cleanup()
+	for _, preset := range crcPreset.AllPresets() {
+		if preset == startConfig.Preset {
+			continue
+		}
+		if exists, _ := api.Exists(constants.InstanceName(preset)); exists {
+			return nil, fmt.Errorf("Found an existing VM with preset '%s'. Please delete your existing cluster and start again", preset.ForDisplay())
+		}
+	}
 
 	if !exists {
 		telemetry.SetStartType(ctx, telemetry.CreationStartType)
@@ -342,13 +353,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	defer vm.Close()
 
 	currentBundleName := vm.bundle.GetBundleName()
-	if currentBundleName != bundleName {
-		logging.Debugf("Bundle '%s' was requested, but the existing VM is using '%s'",
-			bundleName, currentBundleName)
-		return nil, fmt.Errorf("Bundle '%s' was requested, but the existing VM is using '%s'. Please delete your existing cluster and start again",
-			bundleName,
-			currentBundleName)
-	}
+
 	vmState, err := vm.State()
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting the machine state")
