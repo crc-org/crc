@@ -14,6 +14,7 @@ import (
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/version"
 	"github.com/crc-org/crc/v2/test/extended/crc/cmd"
 	crcCmd "github.com/crc-org/crc/v2/test/extended/crc/cmd"
 	"github.com/crc-org/crc/v2/test/extended/util"
@@ -34,6 +35,10 @@ var (
 	GodogTags string
 )
 
+func defaultCRCVersion() string {
+	return fmt.Sprintf("%s+%s", version.GetCRCVersion(), version.GetCommitSha())
+}
+
 func ParseFlags() {
 
 	pflag.StringVar(&util.TestDir, "test-dir", "out", "Path to the directory in which to execute the tests")
@@ -43,7 +48,7 @@ func ParseFlags() {
 	pflag.StringVar(&pullSecretFile, "pull-secret-file", "/path/to/pull-secret", "Path to the file containing pull secret")
 	pflag.StringVar(&CRCExecutable, "crc-binary", "", "Path to the CRC executable to be tested")
 	pflag.BoolVar(&cleanupHome, "cleanup-home", false, "Try to remove crc home folder before starting the suite") // TODO: default=true
-	pflag.StringVar(&CRCVersion, "crc-version", "", "Version of CRC to be tested")
+	pflag.StringVar(&CRCVersion, "crc-version", defaultCRCVersion(), "Version of CRC to be tested")
 }
 
 func InitializeTestSuite(tctx *godog.TestSuiteContext) {

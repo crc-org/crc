@@ -235,9 +235,6 @@ endif
 ifndef CRC_BINARY
 	CRC_BINARY = --crc-binary=$(GOPATH)/bin
 endif
-ifndef VERSION_TO_TEST
-	VERSION_TO_TEST = --crc-version=$(CRC_VERSION)+$(COMMIT_SHA)
-endif
 e2e:
 	@go test --timeout=180m $(MODULEPATH)/test/e2e -tags "$(BUILDTAGS)" --ldflags="$(VERSION_VARIABLES)" -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) $(GODOG_OPTS) $(CLEANUP_HOME) $(VERSION_TO_TEST)
 
