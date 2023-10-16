@@ -6,7 +6,7 @@ WORKDIR /go/src/github.com/crc-org/crc
 COPY . .
 RUN make release
 
-FROM quay.io/centos/centos:stream8
+FROM registry.access.redhat.com/ubi9/ubi
 COPY --from=builder /go/src/github.com/crc-org/crc /opt/crc
 COPY --from=builder /go/src/github.com/crc-org/crc/out/linux-amd64/crc /bin/crc
 COPY --from=builder /go/src/github.com/crc-org/crc/out/linux-amd64/e2e.test /bin/e2e.test
