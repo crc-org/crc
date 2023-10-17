@@ -75,6 +75,7 @@ Feature: 4 Openshift stories
 		Given executing "oc new-project testproj" succeeds
 		When executing "oc apply -f pipeline-sub.yaml" succeeds
 		Then with up to "10" retries with wait period of "30s" command "oc get csv" output matches ".*pipelines-operator(.*)Succeeded$"
+		Then with up to "20" retries with wait period of "30s" command "oc get pods -n openshift-pipelines" output matches ".*tekton-pipelines-webhook(.*)Running.*"
 		When with up to "60" retries with wait period of "5s" command "oc explain task" output matches ".*KIND(.*)Task.*"
 		When with up to "60" retries with wait period of "5s" command "oc explain taskruns" output matches ".*KIND(.*)TaskRun.*"
 		# install tekton task
