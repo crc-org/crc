@@ -53,6 +53,9 @@ var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func
 			Expect(RunCRCExpectSuccess("config", "set", "https-proxy", httpsProxy), ContainSubstring("Successfully configured https-proxy"))
 			Expect(RunCRCExpectSuccess("config", "set", "no-proxy", noProxy), ContainSubstring("Successfully configured no-proxy"))
 			Expect(RunCRCExpectSuccess("config", "set", "proxy-ca-file", util.CACertTempLocation), ContainSubstring("Successfully configured proxy-ca-file"))
+			if runtime.GOOS != "linux" {
+				Expect(RunCRCExpectSuccess("config", "set", "host-network-access", "true"), ContainSubstring("Changes to configuration property 'host-network-access' are only applied during 'crc setup'"))
+			}
 		})
 
 		It("setup CRC", func() {
