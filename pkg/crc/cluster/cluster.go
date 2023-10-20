@@ -507,6 +507,6 @@ func DeleteMCOLeaderLease(ctx context.Context, ocConfig oc.Config) error {
 	if err := WaitForOpenshiftResource(ctx, ocConfig, "lease"); err != nil {
 		return err
 	}
-	_, _, err := ocConfig.RunOcCommand("delete", "-n", "openshift-machine-config-operator", "lease", "--all")
+	_, _, err := ocConfig.RunOcCommand("delete", "-A", "lease", "--all")
 	return err
 }
