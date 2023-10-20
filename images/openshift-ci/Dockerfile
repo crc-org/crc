@@ -10,10 +10,10 @@ FROM registry.access.redhat.com/ubi9/ubi
 COPY --from=builder /go/src/github.com/crc-org/crc /opt/crc
 COPY --from=builder /go/src/github.com/crc-org/crc/out/linux-amd64/crc /bin/crc
 COPY --from=builder /go/src/github.com/crc-org/crc/out/linux-amd64/e2e.test /bin/e2e.test
-COPY --from=builder /go/src/github.com/crc-org/crc/out/linux-amd64/e2e.test /bin/integration.test
+COPY --from=builder /go/src/github.com/crc-org/crc/out/linux-amd64/integration.test /bin/integration.test
 COPY --from=builder /go/src/github.com/crc-org/crc/out/windows-amd64/crc.exe /opt/crc.exe
 COPY --from=builder /go/src/github.com/crc-org/crc/out/windows-amd64/e2e.test.exe /opt/e2e.test.exe
-COPY --from=builder /go/src/github.com/crc-org/crc/out/windows-amd64/e2e.test.exe /opt/integration.test.exe
+COPY --from=builder /go/src/github.com/crc-org/crc/out/windows-amd64/integration.test.exe /opt/integration.test.exe
 COPY --from=builder /go/src/github.com/crc-org/crc/images/openshift-ci/mock-nss.sh /bin/mock-nss.sh
 COPY --from=builder /go/src/github.com/crc-org/crc/images/openshift-ci/google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
 COPY --from=builder /go/src/github.com/crc-org/crc/images/openshift-ci/azure-cli.repo /etc/yum.repos.d/azure-cli.repo
