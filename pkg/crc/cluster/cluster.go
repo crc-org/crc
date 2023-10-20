@@ -497,8 +497,11 @@ func DeleteMCOLeaderLease(ctx context.Context, ocConfig oc.Config) error {
 	if err := WaitForOpenshiftResource(ctx, ocConfig, "configmap"); err != nil {
 		return err
 	}
-	if _, _, err := ocConfig.RunOcCommand("delete", "-n", "openshift-machine-config-operator", "configmap", "machine-config-controller"); err != nil {
-		return err
+
+	if _, stderr, err := ocConfig.RunOcCommand("delete", "-n", "openshift-machine-config-operator", "configmap", "machine-config-controller"); err != nil {
+		if !strings.Contains(stderr, "\"machine-config-controller\" not found") {
+			return err
+		}
 	}
 	// https://issues.redhat.com/browse/OCPBUGS-7583 as workaround
 	if err := WaitForOpenshiftResource(ctx, ocConfig, "lease"); err != nil {
