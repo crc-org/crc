@@ -1,11 +1,11 @@
-FROM registry.access.redhat.com/ubi8/go-toolset:1.19 as builder
+FROM registry.access.redhat.com/ubi9/go-toolset:1.19 as builder
 
 USER root
 WORKDIR /workspace
 COPY . .
 RUN make build_integration
 
-FROM registry.access.redhat.com/ubi8/ubi-minimal 
+FROM registry.access.redhat.com/ubi9/ubi-minimal 
 
 LABEL MAINTAINER "CRC <devtools-cdk@redhat.com>"
 
