@@ -25,7 +25,7 @@ const (
 	resolverFile = "/etc/resolver/testing"
 )
 
-func checkM1CPU() error {
+func checkAppleSilicon() error {
 	if strings.HasPrefix(cpuid.CPU.BrandName, "VirtualApple") {
 		logging.Debugf("Running with an emulated x86_64 CPU")
 		return fmt.Errorf("This version of CRC for AMD64/Intel64 CPUs is unsupported on Apple M1 hardware")

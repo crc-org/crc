@@ -143,7 +143,7 @@ func checkSupportedCPUArch() error {
 	if runtime.GOARCH == "amd64" || (runtime.GOARCH == "arm64" && runtime.GOOS == "darwin") {
 		return nil
 	}
-	return fmt.Errorf("CRC can only run on AMD64/Intel64 CPUs and M1 CPUs")
+	return fmt.Errorf("CRC can only run on AMD64/Intel64 CPUs and Apple silicon")
 }
 
 func runtimeExecutablePath() (string, error) {

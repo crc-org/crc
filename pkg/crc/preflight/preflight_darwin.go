@@ -14,9 +14,9 @@ import (
 var vfkitPreflightChecks = []Check{
 	{
 		configKeySuffix:  "check-m1-cpu",
-		checkDescription: "Checking if running emulated on a M1 CPU",
-		check:            checkM1CPU,
-		fixDescription:   "This version of CRC for AMD64/Intel64 CPUs is unsupported on Apple M1 hardware",
+		checkDescription: "Checking if running emulated on Apple silicon",
+		check:            checkAppleSilicon,
+		fixDescription:   "This version of CRC for AMD64/Intel64 CPUs is unsupported on Apple silicon",
 		flags:            NoFix,
 
 		labels: labels{Os: Darwin},
