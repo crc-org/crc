@@ -1,0 +1,232 @@
+name: Windows e2e
+
+on:
+  workflow_run:
+    workflows: [Build Windows installer]
+    types:
+      - completed
+  
+jobs:
+  windows:
+    runs-on: ubuntu-latest
+    permissions:
+      statuses: write # needed to update commit status (pending/failure/sucess)
+      checks: write # as documented in https://github.com/mikepenz/action-junit-report?tab=readme-ov-file#pr-run-permissions
+    strategy:
+      fail-fast: false
+      matrix:
+        windows-version: ['11']
+        windows-featurepack: ['23h2-ent']
+
+    steps:
+
+      - name: Download GH context  
+        id: download-gh-context-artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: ${{ github.event.workflow_run.workflow_id }}
+          name: gh_context
+
+      - name: Add correlation variables to GITHUB_ENV
+        run: |
+          set -xuo
+
+          # SHA used as ID to correlate artifacts between buld-tests, windows-installer, and windows-e2e workflows
+          echo "SHA=$(cat gh_context.json | jq -r '.sha')" >> "$GITHUB_ENV"
+
+          COMMIT_ID=$(cat gh_context.json | jq -r '.event.after')
+          # if this is a new PR, .event.after is empty, use .sha instead in that case
+          if [[ -z "$COMMIT_ID" ]]; then
+            COMMIT_ID=$(cat gh_context.json | jq -r '.sha')
+          fi
+
+          # COMMIT_SHA used to identify commit whose status needs to be set to reflect test results
+          echo "COMMIT_SHA=$COMMIT_ID" >> "$GITHUB_ENV"
+
+      - name: Add status to the PR check
+        run: |
+          set -xuo
+
+          OUTCOME="pending"
+          DESCRIPTION="Running e2e on Windows"
+          CONTEXT="win-ci-e2e"
+
+          # post result to commit status
+          curl -L -v \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ github.token }}" \
+          https://api.github.com/repos/${{ github.repository }}/statuses/${{ env.COMMIT_SHA }} \
+          -d "{\"state\":\"${OUTCOME}\", \"description\":\"${DESCRIPTION}\", \"context\":\"${CONTEXT}\", \"target_url\":\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
+
+      - name: Create instance
+        run: |
+          # Create instance
+          podman run -d --name windows-create --rm \
+            -v ${PWD}:/workspace:z \
+            -e ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }} \
+            -e ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }} \
+            -e ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }} \
+            -e ARM_CLIENT_SECRET='${{ secrets.ARM_CLIENT_SECRET }}' \
+            quay.io/rhqp/qenvs:v0.6.0 azure \
+              windows create \
+              --project-name 'windows-desktop' \
+              --backed-url 'file:///workspace' \
+              --conn-details-output '/workspace' \
+              --windows-version '${{ matrix.windows-version }}' \
+              --windows-featurepack '${{ matrix.windows-featurepack }}' \
+              --vmsize 'Standard_D8s_v4' \
+              --tags project=openshift-local,source=github,org=${{ github.repository_owner}} \
+              --spot
+          # Check logs 
+          podman logs -f windows-create
+
+      - name: Check instance system info
+        run: |
+          ssh -i id_rsa \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=1200 \
+            $(cat username)@$(cat host) "systeminfo"
+
+      - name: Download installer  
+        id: download-installer-artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: ${{ github.event.workflow_run.workflow_id }}
+          name: Windows Installer (windows-2022)
+
+      - name: Install CRC on host
+        run: |
+          # id_rsa for the host should be in pwd
+
+          HOST=$(cat host)
+          USER=$(cat username)
+          TARGET_FOLDER=crc-support
+          ASSET_FOLDER=/opt/crc-support
+          podman run --pull=always --rm -d --name crc-win-support \
+            -e TARGET_HOST=${HOST} \
+            -e TARGET_HOST_USERNAME=${USER} \
+            -e TARGET_HOST_KEY_PATH=/data/id_rsa \
+            -e TARGET_FOLDER=crc-support \
+            -e TARGET_CLEANUP='false' \
+            -e OUTPUT_FOLDER=/data \
+            -e DEBUG='true' \
+            -v ${PWD}:/data:z \
+            -v ${PWD}/crc-windows-installer.zip:${ASSET_FOLDER}/crc-windows-installer.zip:z \
+            quay.io/rhqp/crc-support:v0.0.4-windows ${TARGET_FOLDER}/run.ps1 \
+              -targetPath "/Users/${USER}/${TARGET_FOLDER}" \
+              -download 'false' \
+              -install 'true' \
+              -forceFresh 'false'
+          
+          # Check logs 
+          podman logs -f crc-win-support
+
+      - name: Write pull-secret
+        env:
+          PULL_SECRET: ${{ secrets.PULL_SECRET }}
+        run: |
+          echo $PULL_SECRET > pull-secret
+
+      - name: Download e2e image  
+        id: download-images-artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow_conclusion: completed
+          workflow: build-tests.yml
+          name: crc-e2e-id${{ env.SHA }}
+
+      - name: Run CRC e2e
+        run: |
+          # load crc-e2e image from tar file
+          podman load -i crc-e2e.tar
+
+          mkdir output
+          # id_rsa for the host should be in pwd 
+          
+          HOST=$(cat host)
+          USER=$(cat username)
+          # platform tag is inferred from the image
+          # empty runs the entire suite
+          E2E_TAGS=""
+          TARGET_FOLDER="crc-e2e"
+
+          podman run --rm -d --name crc-e2e \
+            -e PLATFORM=windows \
+            -e TARGET_HOST=${HOST} \
+            -e TARGET_HOST_USERNAME=${USER} \
+            -e TARGET_HOST_KEY_PATH=/opt/crc/id_rsa \
+            -e PULL_SECRET_FILE_PATH=/opt/crc/pull-secret \
+            -e E2E_TAG_EXPRESSION=${E2E_TAGS} \
+            -v $PWD/pull-secret:/opt/crc/pull-secret:Z \
+            -v $PWD/output:/output:Z \
+            -v $PWD/id_rsa:/opt/crc/id_rsa:Z \
+            quay.io/crcont/crc-e2e:id-${{ env.SHA }} \
+              -targetFolder ${TARGET_FOLDER} \
+              -junitResultsPath ${TARGET_FOLDER}/junit
+
+          # Check logs 
+          podman logs -f crc-e2e
+
+      - name: Test Report
+        id: test-report
+        uses: mikepenz/action-junit-report@v4
+        if: always() # always run even if the previous step fails
+        with:
+          fail_on_failure: true
+          include_passed: true
+          detailed_summary: true
+          require_tests:  true
+          report_paths: '**/*.xml'
+
+      - name: Upload e2e results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: E2E-results-windows-${{ matrix.windows-version }}${{ matrix.windows-featurepack }}
+          path: |
+            **/*.xml
+            **/*.results
+            **/*.log
+
+      - name: Update status of the PR check
+        if: always()
+        run: |
+          set -xuo
+          OUTCOME="success"
+          if [[ ${{steps.test-report.outcome}} != "success" ]]; then 
+            OUTCOME="failure";
+          fi
+
+          DESCRIPTION="Finished e2e on Windows"
+          CONTEXT="win-ci-e2e"
+
+          # post result to commit status
+          curl -L -v \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ github.token }}" \
+          https://api.github.com/repos/${{ github.repository }}/statuses/${{ env.COMMIT_SHA }} \
+          -d "{\"state\":\"${OUTCOME}\", \"description\":\"${DESCRIPTION}\", \"context\":\"${CONTEXT}\", \"target_url\":\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
+
+      - name: Destroy instance
+        if: always()
+        run: |
+          # Make sure lock is removed
+          rm -rf .pulumi/locks/*
+          
+          # Destroy instance
+          podman run -d --name windows-destroy --rm \
+            -v ${PWD}:/workspace:z \
+            -e ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }} \
+            -e ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }} \
+            -e ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }} \
+            -e ARM_CLIENT_SECRET='${{ secrets.ARM_CLIENT_SECRET }}' \
+            quay.io/rhqp/qenvs:v0.6.0 azure \
+              windows destroy \
+              --project-name 'windows-desktop' \
+              --backed-url 'file:///workspace'
+          # Check logs
+          podman logs -f windows-destroy
