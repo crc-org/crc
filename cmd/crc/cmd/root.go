@@ -56,7 +56,7 @@ func init() {
 	}
 
 	if err := setProxyDefaults(); err != nil {
-		logging.Fatal(err.Error())
+		logging.Warn(err.Error())
 	}
 
 	// Initiate segment client
