@@ -9,6 +9,7 @@ import (
 	"os/user"
 	"strings"
 
+	"github.com/crc-org/crc/v2/pkg/crc/cache"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/version"
@@ -188,9 +189,22 @@ func killDaemonProcessIfRunning() error {
 	return nil
 }
 
-func removeDaemonPoshScript() error {
-	if crcos.FileExists(daemonPoshScriptPath) {
-		return os.Remove(daemonPoshScriptPath)
+func checkWin32BackgroundLauncherInstalled() error {
+	c := cache.NewWin32BackgroundLauncherCache()
+	return c.CheckVersion()
+}
+
+func fixWin32BackgroundLauncherInstalled() error {
+	c := cache.NewWin32BackgroundLauncherCache()
+	return c.EnsureIsCached()
+}
+
+func removeWin32BackgroundLauncher() error {
+	if version.IsInstaller() {
+		return nil
+	}
+	if crcos.FileExists(constants.Win32BackgroundLauncherPath()) {
+		return os.Remove(constants.Win32BackgroundLauncherPath())
 	}
 	return nil
 }

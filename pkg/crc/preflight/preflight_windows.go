@@ -100,6 +100,17 @@ var daemonTaskChecks = []Check{
 		labels: labels{Os: Windows},
 	},
 	{
+		configKeySuffix:    "check-background-launcher-install",
+		checkDescription:   "Checking if the win32 background launcher is installed",
+		check:              checkWin32BackgroundLauncherInstalled,
+		fixDescription:     "Installing the win32 background launcher",
+		fix:                fixWin32BackgroundLauncherInstalled,
+		cleanupDescription: "Removing the win32 background launcher",
+		cleanup:            removeWin32BackgroundLauncher,
+
+		labels: labels{Os: Windows},
+	},
+	{
 		configKeySuffix:    "check-daemon-task-install",
 		checkDescription:   "Checking if the daemon task is installed",
 		check:              checkIfDaemonTaskInstalled,
