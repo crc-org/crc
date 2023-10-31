@@ -27,10 +27,11 @@ var (
 )
 
 const (
-	vfkitDriver      = "vfkit-driver"
-	vfkitEntitlement = "vfkit-entitlement"
-	libvirtDriver    = "libvirt-driver"
-	adminHelper      = "admin-helper"
+	vfkitDriver        = "vfkit-driver"
+	vfkitEntitlement   = "vfkit-entitlement"
+	libvirtDriver      = "libvirt-driver"
+	adminHelper        = "admin-helper"
+	backgroundLauncher = "background-launcher"
 )
 
 func init() {
@@ -116,7 +117,8 @@ var (
 			adminHelper:   {constants.GetAdminHelperURLForOs("linux"), 0755},
 		},
 		"windows": {
-			adminHelper: {constants.GetAdminHelperURLForOs("windows"), 0755},
+			adminHelper:        {constants.GetAdminHelperURLForOs("windows"), 0755},
+			backgroundLauncher: {constants.GetWin32BackgroundLauncherDownloadURL(), 0755},
 		},
 	}
 )
