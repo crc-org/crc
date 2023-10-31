@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"os/user"
-	"path/filepath"
 	"strings"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
@@ -46,62 +45,29 @@ var (
   </Triggers>
   <Actions Context="Author">
     <Exec>
-      <Command>powershell.exe</Command>
-      <Arguments>-WindowStyle Hidden -ExecutionPolicy RemoteSigned -Command %s</Arguments>
+      <Command>%s</Command>
+      <Arguments>%s</Arguments>
     </Exec>
   </Actions>
 </Task>
 `
 	errOlderVersion = fmt.Errorf("expected %s task to be on version '%s'", constants.DaemonTaskName, version.GetCRCVersion())
-
-	daemonPoshScriptTemplate = `# Following script is from https://stackoverflow.com/a/74976541
-function Hide-ConsoleWindow() {
-  $ShowWindowAsyncCode = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
-  $ShowWindowAsync = Add-Type -MemberDefinition $ShowWindowAsyncCode -name Win32ShowWindowAsync -namespace Win32Functions -PassThru
-
-  $hwnd = (Get-Process -PID $pid).MainWindowHandle
-  if ($hwnd -ne [System.IntPtr]::Zero) {
-    # When you got HWND of the console window:
-    # (It would appear that Windows Console Host is the default terminal application)
-    $ShowWindowAsync::ShowWindowAsync($hwnd, 0)
-  } else {
-    # When you failed to get HWND of the console window:
-    # (It would appear that Windows Terminal is the default terminal application)
-
-    # Mark the current console window with a unique string.
-    $UniqueWindowTitle = New-Guid
-    $Host.UI.RawUI.WindowTitle = $UniqueWindowTitle
-    $StringBuilder = New-Object System.Text.StringBuilder 1024
-
-    # Search the process that has the window title generated above.
-    $TerminalProcess = (Get-Process | Where-Object { $_.MainWindowTitle -eq $UniqueWindowTitle })
-    # Get the window handle of the terminal process.
-    # Note that GetConsoleWindow() in Win32 API returns the HWND of
-    # powershell.exe itself rather than the terminal process.
-    # When you call ShowWindowAsync(HWND, 0) with the HWND from GetConsoleWindow(),
-    # the Windows Terminal window will be just minimized rather than hidden.
-    $hwnd = $TerminalProcess.MainWindowHandle
-    if ($hwnd -ne [System.IntPtr]::Zero) {
-      $ShowWindowAsync::ShowWindowAsync($hwnd, 0)
-    } else {
-      Write-Host "Failed to hide the console window."
-    }
-  }
-}
-Hide-ConsoleWindow
-& "%s" %s`
 )
 
-func genDaemonTaskInstallTemplate(crcVersion, userName, daemonCommand string) (string, error) {
-	var escapedName bytes.Buffer
-	if err := xml.EscapeText(&escapedName, []byte(daemonCommand)); err != nil {
+func genDaemonTaskInstallTemplate(crcVersion, userName, backgroundLauncherPath, daemonCommand string) (string, error) {
+	var escapedDaemonCommand, escapedBackgroundLauncherPath bytes.Buffer
+	if err := xml.EscapeText(&escapedDaemonCommand, []byte(daemonCommand)); err != nil {
+		return "", err
+	}
+	if err := xml.EscapeText(&escapedBackgroundLauncherPath, []byte(backgroundLauncherPath)); err != nil {
 		return "", err
 	}
 
 	return fmt.Sprintf(daemonTaskTemplate,
 		crcVersion,
 		userName,
-		escapedName.String(),
+		escapedBackgroundLauncherPath.String(),
+		escapedDaemonCommand.String(),
 	), nil
 }
 
@@ -120,7 +86,16 @@ func fixDaemonTaskInstalled() error {
 	if err := removeDaemonTask(); err != nil {
 		return err
 	}
-	binPathWithArgs := fmt.Sprintf("& '%s'", daemonPoshScriptPath)
+	crcBinPath, err := os.Executable()
+	if err != nil {
+		return err
+	}
+
+	if !crcos.FileExists(constants.Win32BackgroundLauncherPath()) {
+		return fmt.Errorf("Missing background launcher binary at: %s", constants.Win32BackgroundLauncherPath())
+	}
+
+	binPathWithArgs := fmt.Sprintf(`"%s" daemon`, crcBinPath)
 	// Get current user along with domain
 	u, err := user.Current()
 	if err != nil {
@@ -129,6 +104,7 @@ func fixDaemonTaskInstalled() error {
 	taskContent, err := genDaemonTaskInstallTemplate(
 		version.GetCRCVersion(),
 		u.Username,
+		constants.Win32BackgroundLauncherPath(),
 		binPathWithArgs,
 	)
 	if err != nil {
@@ -201,31 +177,6 @@ func checkIfOlderTask() error {
 		return fmt.Errorf("%w but got '%s'", errOlderVersion, stdout)
 	}
 	return nil
-}
-
-var daemonPoshScriptPath = filepath.Join(constants.CrcBinDir, "hidden_daemon.ps1")
-
-func getDaemonPoshScriptContent() []byte {
-	binPath, err := os.Executable()
-	if err != nil {
-		return []byte{}
-	}
-	daemonCmdArgs := `daemon --log-level debug`
-	return []byte(fmt.Sprintf(daemonPoshScriptTemplate, binPath, daemonCmdArgs))
-}
-
-func checkDaemonPoshScript() error {
-	if exists := crcos.FileExists(daemonPoshScriptPath); exists {
-		// check the script contains the path to the current executable
-		if err := crcos.FileContentMatches(daemonPoshScriptPath, getDaemonPoshScriptContent()); err == nil {
-			return nil
-		}
-	}
-	return fmt.Errorf("Powershell script for running the daemon does not exist")
-}
-
-func fixDaemonPoshScript() error {
-	return os.WriteFile(daemonPoshScriptPath, getDaemonPoshScriptContent(), 0600)
 }
 
 func killDaemonProcessIfRunning() error {

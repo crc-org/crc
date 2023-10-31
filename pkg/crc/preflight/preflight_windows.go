@@ -100,17 +100,6 @@ var daemonTaskChecks = []Check{
 		labels: labels{Os: Windows},
 	},
 	{
-		configKeySuffix:    "check-daemon-task-posh-script-present",
-		checkDescription:   "Checking if the daemon task powershell script is present",
-		check:              checkDaemonPoshScript,
-		fixDescription:     "Creating the daemon task powershell script",
-		fix:                fixDaemonPoshScript,
-		cleanupDescription: "Removing the daemon task powershell script",
-		cleanup:            removeDaemonPoshScript,
-
-		labels: labels{Os: Windows},
-	},
-	{
 		configKeySuffix:    "check-daemon-task-install",
 		checkDescription:   "Checking if the daemon task is installed",
 		check:              checkIfDaemonTaskInstalled,
