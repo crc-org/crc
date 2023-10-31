@@ -35,7 +35,8 @@ var (
 )
 
 const (
-	crcAdminHelperVersion = "0.5.1"
+	crcAdminHelperVersion          = "0.5.1"
+	win32BackgroundLauncherVersion = "0.0.0.1"
 )
 
 func GetCRCVersion() string {
@@ -61,6 +62,10 @@ func GetBundleVersion(preset crcPreset.Preset) string {
 
 func GetAdminHelperVersion() string {
 	return crcAdminHelperVersion
+}
+
+func GetWin32BackgroundLauncherVersion() string {
+	return win32BackgroundLauncherVersion
 }
 
 func IsInstaller() bool {

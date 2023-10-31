@@ -54,6 +54,9 @@
                         <ServiceInstall Name="crcAdminHelper" Description="Perform administrative tasks for the user" Arguments="daemon" DisplayName="Red Hat OpenShift Local Admin Helper" ErrorControl="normal" Start="auto" Type="ownProcess" />
                         <ServiceControl Id="StartAdminHelperService" Name="crcAdminHelper" Start='install' Stop='both' Remove='uninstall' />
                     </Component>
+                    <Component Id="BackgroundLauncher" Guid="*">
+                        <File Id="BackgroundLauncher" Source="SourceDir\win32-background-launcher.exe" KeyPath="yes" DiskId="1" />
+                    </Component>
                     <Component Id="AddUserToCrcUsers" Guid="0C793EE7-109A-474B-9651-77E0A83BAF2D" KeyPath="yes">
                         <Condition>NOT UPGRADINGPRODUCTCODE AND NOT WIX_UPGRADE_DETECTED</Condition>
                         <util:User Id="LogonUser1" Domain="[%USERDOMAIN]" Name="[LogonUser]" CreateUser="no" RemoveOnUninstall="no">
@@ -123,6 +126,7 @@
         <Feature Id="DefaultFeature" Title="Install core features" Absent="disallow" Level="1">
             <ComponentRef Id="CrcExe" />
             <ComponentRef Id="AdminHelper" />
+            <ComponentRef Id="BackgroundLauncher" />
             <ComponentRef Id="AddToPath"/>
             <ComponentRef Id="AddUserToCrcUsers" />
             <ComponentRef Id="VsockRegistryEntry" />

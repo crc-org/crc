@@ -27,6 +27,7 @@ const (
 	DaemonLogFile             = "crcd.log"
 	CrcLandingPageURL         = "https://console.redhat.com/openshift/create/local" // #nosec G101
 	DefaultAdminHelperURLBase = "https://github.com/crc-org/admin-helper/releases/download/v%s/%s"
+	BackgroundLauncherURL     = "https://github.com/crc-org/win32-background-launcher/releases/download/v%s/%s"
 	DefaultBundleURLBase      = "https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/%s/%s/%s"
 	DefaultContext            = "admin"
 	DaemonHTTPEndpoint        = "http://unix/api"
@@ -47,6 +48,8 @@ const (
 
 	OpenShiftIngressHTTPPort  = 80
 	OpenShiftIngressHTTPSPort = 443
+
+	BackgroundLauncherExecutable = "win32-background-launcher.exe"
 )
 
 var adminHelperExecutableForOs = map[string]string{
@@ -145,6 +148,10 @@ func AdminHelperPath() string {
 	return ResolveHelperPath(GetAdminHelperExecutableForOs(runtime.GOOS))
 }
 
+func Win32BackgroundLauncherPath() string {
+	return ResolveHelperPath(BackgroundLauncherExecutable)
+}
+
 // GetHomeDir returns the home directory for the current user
 func GetHomeDir() string {
 	homeDir, err := os.UserHomeDir()
@@ -185,6 +192,11 @@ func GetRsaPrivateKeyPath() string {
 
 func GetKubeAdminPasswordPath() string {
 	return filepath.Join(MachineInstanceDir, DefaultName, "kubeadmin-password")
+}
+
+func GetWin32BackgroundLauncherDownloadURL() string {
+	return fmt.Sprintf(BackgroundLauncherURL,
+		version.GetWin32BackgroundLauncherVersion(), BackgroundLauncherExecutable)
 }
 
 func GetDefaultCPUs(preset crcpreset.Preset) int {
