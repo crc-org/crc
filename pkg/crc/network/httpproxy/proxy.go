@@ -29,6 +29,7 @@ type ProxyConfig struct {
 	noProxy     []string
 	ProxyCACert string
 	ProxyCAFile string
+	fromEnv     bool
 }
 
 func (p *ProxyConfig) String() string {
@@ -62,14 +63,17 @@ func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) (*Prox
 		HTTPSProxy:  httpsProxy,
 		ProxyCACert: proxyCAData,
 		ProxyCAFile: proxyCAFile,
+		fromEnv:     false,
 	}
 	envProxy := httpproxy.FromEnvironment()
 
-	if DefaultProxy.HTTPProxy == "" {
+	if DefaultProxy.HTTPProxy == "" && envProxy.HTTPProxy != "" {
 		DefaultProxy.HTTPProxy = envProxy.HTTPProxy
+		DefaultProxy.fromEnv = true
 	}
-	if DefaultProxy.HTTPSProxy == "" {
+	if DefaultProxy.HTTPSProxy == "" && envProxy.HTTPSProxy != "" {
 		DefaultProxy.HTTPSProxy = envProxy.HTTPSProxy
+		DefaultProxy.fromEnv = true
 	}
 	if noProxy == "" {
 		noProxy = envProxy.NoProxy
@@ -87,6 +91,7 @@ func NewProxyConfig() (*ProxyConfig, error) {
 		HTTPSProxy:  DefaultProxy.HTTPSProxy,
 		ProxyCACert: DefaultProxy.ProxyCACert,
 		ProxyCAFile: DefaultProxy.ProxyCAFile,
+		fromEnv:     DefaultProxy.fromEnv,
 	}
 
 	config.noProxy = defaultNoProxies
@@ -96,11 +101,17 @@ func NewProxyConfig() (*ProxyConfig, error) {
 
 	err := ValidateProxyURL(config.HTTPProxy, false)
 	if err != nil {
+		if config.fromEnv {
+			return nil, fmt.Errorf("Please check HTTP_PROXY env variable: %w", err)
+		}
 		return nil, err
 	}
 
 	err = ValidateProxyURL(config.HTTPSProxy, true)
 	if err != nil {
+		if config.fromEnv {
+			return nil, fmt.Errorf("Please check HTTPS_PROXY env variable: %w", err)
+		}
 		return nil, err
 	}
 
