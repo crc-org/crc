@@ -20,14 +20,6 @@ function installCheck() {
         return false;
 	}
 
-    var apps = system.applications.fromIdentifier('com.electron.crc-tray');
-    if(apps) {
-        my.result.title = 'Update failed';
-        my.result.message = 'Red Hat OpenShift Local dev preview is running. Please stop the application before updating.';
-        my.result.type = 'Fatal';
-        return false;
-    }
-
     if(!(system.compareVersions(system.version.ProductVersion, '11.0.0') >= 0)) {
         my.result.title = 'Unable to install';
         my.result.message = 'Red Hat OpenShift Local requires macOS 11 or later.';
@@ -39,14 +31,9 @@ function installCheck() {
     </script>
     <choices-outline>
         <line choice="crc"/>
-        <line choice="crc-tray"/>
     </choices-outline>
     <choice id="crc" title="Red Hat OpenShift Local" enabled="false" selected="true" visible="true">
         <pkg-ref id="crc.pkg"/>
     </choice>
     <pkg-ref id="crc.pkg" auth="Root">crc.pkg</pkg-ref>
-    <choice id="crc-tray" title="System Tray for Red Hat OpenShift Local" enabled="true" selected="false" visible="true">
-        <pkg-ref id="crc-tray.pkg"/>
-    </choice>
-    <pkg-ref id="crc-tray.pkg" auth="Root">crc-tray.pkg</pkg-ref>
 </installer-script>
