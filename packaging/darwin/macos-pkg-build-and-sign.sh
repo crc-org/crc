@@ -41,21 +41,16 @@ function signAppBundle() {
 }
 
 crcRootDir="${BASEDIR}/root-crc"
-trayRootDir="${BASEDIR}/root-crc-tray"
 crcBinDir="${crcRootDir}/usr/local/crc"
 
 version=$(cat "${BASEDIR}/VERSION")
 
 pkgbuild --analyze --root "${crcRootDir}" ${BASEDIR}/CrcComponents.plist
 plutil -replace BundleIsRelocatable -bool NO ${BASEDIR}/CrcComponents.plist
-pkgbuild --analyze --root "${trayRootDir}" ${BASEDIR}/TrayComponents.plist
-plutil -replace BundleIsRelocatable -bool NO ${BASEDIR}/TrayComponents.plist
 
 sign "${crcBinDir}/crc"
 sign "${crcBinDir}/crc-admin-helper-darwin"
 sign "${crcBinDir}/vfkit"
-
-signAppBundle "${trayRootDir}/Applications/Red Hat OpenShift Local.app"
 
 sudo chmod +sx "${crcBinDir}/crc-admin-helper-darwin"
 
@@ -66,18 +61,11 @@ pkgbuild --identifier com.redhat.crc --version ${version} \
   --component-plist "${BASEDIR}/CrcComponents.plist" \
   "${OUTPUT}/crc.pkg"
 
-pkgbuild --identifier com.redhat.crc-tray --version ${version} \
-  --root "${trayRootDir}" \
-  --install-location / \
-  --component-plist "${BASEDIR}/TrayComponents.plist" \
-  "${OUTPUT}/crc-tray.pkg"
-
 productbuild --distribution "${BASEDIR}/Distribution" \
   --resources "${BASEDIR}/Resources" \
   --package-path "${OUTPUT}" \
   "${OUTPUT}/crc-unsigned.pkg"
 rm "${OUTPUT}/crc.pkg"
-rm "${OUTPUT}/crc-tray.pkg"
 
 if [ ! "${NO_CODESIGN}" -eq "1" ]; then
   productsign --sign "${PRODUCTSIGN_IDENTITY}" "${OUTPUT}/crc-unsigned.pkg" "${OUTPUT}/crc-macos-installer.pkg"

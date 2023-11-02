@@ -161,7 +161,6 @@ clean_macos_package:
 	rm -f packaging/darwin/Resources/welcome.html
 	rm -f packaging/darwin/scripts/postinstall
 	rm -rf packaging/darwin/root-crc/
-	rm -rf packaging/darwin/root-crc-tray/
 
 clean_windows_msi:
 	rm -rf packaging/windows/msi
@@ -312,8 +311,6 @@ update-go-version:
 goversioncheck:
 	./verify-go-version.sh
 
-TRAY_TARBALL = crc-tray-macos.tar.gz
-
 .PHONY: embed-download-windows embed-download-darwin
 embed-download-windows embed-download-darwin: embed-download-%: $(HOST_BUILD_DIR)/crc-embedder
 ifeq ($(CUSTOM_EMBED),false)
@@ -329,13 +326,6 @@ packagedir: clean_macos_package embed-download-darwin macos-release-binary
 	echo -n $(CRC_VERSION) > packaging/darwin/VERSION
 
 	mkdir -p packaging/darwin/root-crc/Applications
-	mkdir -p packaging/darwin/root-crc-tray/Applications
-
-	# crc-tray.pkg
-	tar -C $(EMBED_DOWNLOAD_DIR) -xvzf $(EMBED_DOWNLOAD_DIR)/$(TRAY_TARBALL)
-	rm $(EMBED_DOWNLOAD_DIR)/$(TRAY_TARBALL)
-	mv $(EMBED_DOWNLOAD_DIR)/crc-tray-darwin-universal/crc-tray.app packaging/darwin/root-crc-tray/Applications/Red\ Hat\ OpenShift\ Local.app
-	rm -fr $(EMBED_DOWNLOAD_DIR)/crc-tray-darwin-universal
 
 	# crc.pkg
 	#ls $(EMBED_DOWNLOAD_DIR)
@@ -382,16 +372,14 @@ msidir: clean_windows_msi embed-download-windows $(HOST_BUILD_DIR)/GenMsiWxs win
 	mkdir -p $(PACKAGE_DIR)/msi
 	cp $(EMBED_DOWNLOAD_DIR)/* $(PACKAGE_DIR)/msi
 	cp $(HOST_BUILD_DIR)/crc.exe $(PACKAGE_DIR)/msi/$(CRC_EXE)
-	pwsh -NoProfile -Command "cd $(PACKAGE_DIR)/msi; Expand-Archive crc-tray-windows.zip -DestinationPath .\; Remove-Item crc-tray-windows.zip"
 	$(HOST_BUILD_DIR)/GenMsiWxs
 	cp -r $(PACKAGE_DIR)/Resources $(PACKAGE_DIR)/msi/
 	cp $(PACKAGE_DIR)/*.wxs $(PACKAGE_DIR)/msi
 	rm $(PACKAGE_DIR)/product.wxs
 
 $(BUILD_DIR)/windows-amd64/crc-windows-amd64.msi: msidir
-	heat.exe dir $(PACKAGE_DIR)/msi/crc-tray-win32-x64 -o $(PACKAGE_DIR)/msi/trayfiles.wxs -cg CrcTrayFiles -scom -sfrag -srd -sreg -gg -g1 -dr TRAYDIR
 	candle.exe -arch x64 -ext WixUtilExtension -o $(PACKAGE_DIR)/msi/ $(PACKAGE_DIR)/msi/*.wxs
-	light.exe -ext WixUIExtension -ext WixUtilExtension -sacl -spdb -sice:ICE61 -sice:ICE69 -b $(PACKAGE_DIR)/msi -b $(PACKAGE_DIR)/msi/crc-tray-win32-x64 -out $@ $(PACKAGE_DIR)/msi/*.wixobj
+	light.exe -ext WixUIExtension -ext WixUtilExtension -sacl -spdb -sice:ICE61 -sice:ICE69 -b $(PACKAGE_DIR)/msi -out $@ $(PACKAGE_DIR)/msi/*.wixobj
 
 CABS_MSI = "*.cab,crc-windows-amd64.msi"
 $(BUILD_DIR)/windows-amd64/crc-windows-installer.zip: $(BUILD_DIR)/windows-amd64/crc-windows-amd64.msi

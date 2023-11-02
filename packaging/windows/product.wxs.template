@@ -54,8 +54,6 @@
                         <ServiceInstall Name="crcAdminHelper" Description="Perform administrative tasks for the user" Arguments="daemon" DisplayName="Red Hat OpenShift Local Admin Helper" ErrorControl="normal" Start="auto" Type="ownProcess" />
                         <ServiceControl Id="StartAdminHelperService" Name="crcAdminHelper" Start='install' Stop='both' Remove='uninstall' />
                     </Component>
-                    <Directory Id="TRAYDIR">
-                    </Directory>
                     <Component Id="AddUserToCrcUsers" Guid="0C793EE7-109A-474B-9651-77E0A83BAF2D" KeyPath="yes">
                         <Condition>NOT UPGRADINGPRODUCTCODE AND NOT WIX_UPGRADE_DETECTED</Condition>
                         <util:User Id="LogonUser1" Domain="[%USERDOMAIN]" Name="[LogonUser]" CreateUser="no" RemoveOnUninstall="no">
@@ -72,19 +70,6 @@
                         </RegistryKey>
                     </Component>
                 </Directory>
-            </Directory>
-            <Directory Id="ProgramMenuFolder">
-                <Component Id="StartMenuEntry" Guid="*">
-                    <Shortcut Id="TrayStartMenuEntry"
-                            Name="Red Hat OpenShift Local"
-                            Target="[INSTALLDIR]crc-tray.exe"
-                            Icon="crcicon.ico"
-                            WorkingDirectory="AppDataFolder">
-                        <ShortcutProperty Key="System.AppUserModel.ID" Value="redhat.codereadycontainers.tray"/>
-                    </Shortcut>
-                    <RemoveFile Id="RemoveStartMenuEntry" Name="Red Hat OpenShift Local" On="uninstall" />
-                    <RegistryValue Root="HKCU" Key="Software\Red Hat\Red Hat OpenShift Local" Name="startmenu" Type="integer" Value="1" KeyPath="yes"/>
-                </Component>
             </Directory>
         </Directory>
 
@@ -123,8 +108,6 @@
             Sequence="execute"/>
         <CustomAction Id="RemoveSMBShare" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
 
-        <util:CloseApplication Id = "TrayRunning" Description="Please exit Red Hat OpenShift Local from tray and run the installation again." Target="crc-tray.exe" RebootPrompt="no" PromptToContinue="yes" />
-
         <InstallExecuteSequence>
             <Custom Action="CreateCrcGroup" Before="ConfigureUsers"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <Custom Action="AddUserToHypervAdminGroup" After="InstallHyperv"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
@@ -143,10 +126,6 @@
             <ComponentRef Id="AddToPath"/>
             <ComponentRef Id="AddUserToCrcUsers" />
             <ComponentRef Id="VsockRegistryEntry" />
-        </Feature>
-        <Feature Id="TrayFeature" Title="Install system tray" Absent="allow" Level="2">
-            <ComponentGroupRef Id="CrcTrayFiles" />
-            <ComponentRef Id="StartMenuEntry" />
         </Feature>
         <UI>
             <UIRef Id="WixUI_ErrorProgressText"/>

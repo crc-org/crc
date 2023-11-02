@@ -31,7 +31,6 @@ const (
 	vfkitEntitlement = "vfkit-entitlement"
 	libvirtDriver    = "libvirt-driver"
 	adminHelper      = "admin-helper"
-	tray             = "tray"
 )
 
 func init() {
@@ -110,7 +109,6 @@ var (
 		"darwin": {
 			vfkitDriver:      {vfkit.VfkitDownloadURL, 0755},
 			vfkitEntitlement: {vfkit.VfkitEntitlementsURL, 0644},
-			tray:             {constants.GetCRCMacTrayDownloadURL(), 0644},
 			adminHelper:      {constants.GetAdminHelperURLForOs("darwin"), 0755},
 		},
 		"linux": {
@@ -119,7 +117,6 @@ var (
 		},
 		"windows": {
 			adminHelper: {constants.GetAdminHelperURLForOs("windows"), 0755},
-			tray:        {constants.GetCRCWindowsTrayDownloadURL(), 0644},
 		},
 	}
 )
