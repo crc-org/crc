@@ -27,8 +27,6 @@ const (
 	DaemonLogFile             = "crcd.log"
 	CrcLandingPageURL         = "https://console.redhat.com/openshift/create/local" // #nosec G101
 	DefaultAdminHelperURLBase = "https://github.com/crc-org/admin-helper/releases/download/v%s/%s"
-	CRCMacTrayDownloadURL     = "https://github.com/crc-org/tray-electron/releases/download/%s/crc-tray-macos.tar.gz"
-	CRCWindowsTrayDownloadURL = "https://github.com/crc-org/tray-electron/releases/download/%s/crc-tray-windows.zip"
 	DefaultBundleURLBase      = "https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/%s/%s/%s"
 	DefaultContext            = "admin"
 	DaemonHTTPEndpoint        = "http://unix/api"
@@ -187,15 +185,6 @@ func GetRsaPrivateKeyPath() string {
 
 func GetKubeAdminPasswordPath() string {
 	return filepath.Join(MachineInstanceDir, DefaultName, "kubeadmin-password")
-}
-
-// TODO: follow the same pattern as oc and podman above
-func GetCRCMacTrayDownloadURL() string {
-	return fmt.Sprintf(CRCMacTrayDownloadURL, version.GetTrayVersion())
-}
-
-func GetCRCWindowsTrayDownloadURL() string {
-	return fmt.Sprintf(CRCWindowsTrayDownloadURL, version.GetTrayVersion())
 }
 
 func GetDefaultCPUs(preset crcpreset.Preset) int {
