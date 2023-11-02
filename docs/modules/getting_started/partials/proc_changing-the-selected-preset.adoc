@@ -3,8 +3,7 @@
 [role="_abstract"]
 You can change the container runtime used for the {prod} instance by selecting the desired preset.
 
-On {msw} and {mac}, you can change the selected preset using the system tray or command line interface.
-On Linux, use the command line interface.
+You can change the selected preset using the command line interface.
 
 [IMPORTANT]
 ====

@@ -36,7 +36,6 @@ $ {bin} cleanup
 [NOTE]
 ====
 The [command]`{bin} cleanup` command removes an existing {prod} instance and reverts changes to DNS entries created by the [command]`{bin} setup` command.
-On {mac}, the [command]`{bin} cleanup` command also removes the system tray.
 ====
 
 . Set up your host machine to reapply the changes:
