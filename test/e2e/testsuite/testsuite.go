@@ -545,9 +545,6 @@ func InitializeScenario(s *godog.ScenarioContext) {
 
 		return ctx, nil
 	})
-
-	// Extend the context with tray when supported
-	// ux.InitializeScenario(s, &bundleLocation, &pullSecretFile)
 }
 
 func usingPreexistingCluster() bool {

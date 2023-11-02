@@ -35,9 +35,7 @@ var (
 )
 
 const (
-	// Tray version to be embedded in executable
-	crcTrayElectronVersion = "1.2.9"
-	crcAdminHelperVersion  = "0.0.12"
+	crcAdminHelperVersion = "0.0.12"
 )
 
 func GetCRCVersion() string {
@@ -63,10 +61,6 @@ func GetBundleVersion(preset crcPreset.Preset) string {
 
 func GetAdminHelperVersion() string {
 	return crcAdminHelperVersion
-}
-
-func GetTrayVersion() string {
-	return crcTrayElectronVersion
 }
 
 func IsInstaller() bool {
