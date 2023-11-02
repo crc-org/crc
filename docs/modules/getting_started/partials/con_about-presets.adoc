@@ -9,7 +9,6 @@ include::example$snip_{project-context}_preset_list.adoc[]
 On {msw} and {mac}, the {prod} guided installer prompts you for your desired preset.
 On Linux, the {ocp} preset is selected by default.
 You can change this selection using the [command]`{bin} config` command before running the [command]`{bin} setup` command.
-You can change your selected preset from the system tray on {msw} and {mac} or from the command line on all supported operating systems.
 Only one preset can be active at a time.
 
 [role="_additional-resources"]
