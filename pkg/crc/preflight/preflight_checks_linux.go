@@ -2,6 +2,7 @@ package preflight
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -14,6 +15,7 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/crc-org/crc/v2/pkg/crc/cache"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/libvirt"
 	"github.com/crc-org/crc/v2/pkg/crc/systemd"
@@ -358,7 +360,19 @@ func checkDaemonSystemdService() error {
 	logging.Debug("Checking crc daemon systemd service")
 
 	// the daemon should not be running at the end of setup, as it must be restarted on upgrades
-	return checkSystemdUnit(daemonUnitName, daemonUnitContent(), false)
+	shouldNotBeRunningErr := checkSystemdUnit(daemonUnitName, daemonUnitContent(), false)
+	if shouldNotBeRunningErr == nil {
+		return nil
+	}
+	if !errors.Is(shouldNotBeRunningErr, unitShouldNotBeRunningErr(daemonUnitName)) {
+		return shouldNotBeRunningErr
+	}
+	// daemon is running, check its version
+	version, err := daemonclient.GetVersionFromDaemonAPI()
+	if err != nil {
+		return shouldNotBeRunningErr
+	}
+	return daemonclient.CheckIfOlderVersion(version)
 }
 
 func fixSystemdUnit(unitName string, unitContent string, shouldBeRunning bool) error {
