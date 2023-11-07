@@ -5,7 +5,7 @@
     <welcome file="welcome.html" mime-type="text/html" />
     <conclusion file="conclusion.html" mime-type="text/html" />
     <license file="LICENSE.txt"/>
-    <options customize="allow" allow-external-scripts="no"/>
+    <options customize="never" allow-external-scripts="no"/>
     <domains enable_localSystem="true" />
     <options rootVolumeOnly="true"/>
     <options hostArchitectures="x86_64,arm64" />
