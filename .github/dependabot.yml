@@ -1,0 +1,19 @@
+version: 2
+updates:
+- package-ecosystem: gomod
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+    - dependency-name: "github.com/openshift/*"
+    - dependency-name: "k8s.io/*"
+- package-ecosystem: gomod
+  directory: "/tools"
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: "weekly"
