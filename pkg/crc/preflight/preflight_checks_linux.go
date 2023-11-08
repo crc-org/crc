@@ -332,7 +332,7 @@ func checkSystemdUnit(unitName string, unitContent string, shouldBeRunning bool)
 	if !running && shouldBeRunning {
 		return fmt.Errorf("%s is not running", unitName)
 	} else if running && !shouldBeRunning {
-		return fmt.Errorf("%s is running", unitName)
+		return fmt.Errorf("%s should not be running", unitName)
 	}
 
 	logging.Debugf("Checking if %s has the expected content", unitName)
