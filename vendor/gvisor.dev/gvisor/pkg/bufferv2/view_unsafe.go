@@ -1,4 +1,4 @@
-// Copyright 2023 The gVisor Authors.
+// Copyright 2020 The gVisor Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build !amd64
+package bufferv2
 
-// This file is intentionally left blank. Other arches don't use
-// addrOfSpinning, but we still need an input to the nogo temlate rule.
+import (
+	"reflect"
+	"unsafe"
+)
+
+// BasePtr returns a pointer to the view's chunk.
+func (v *View) BasePtr() *byte {
+	hdr := (*reflect.SliceHeader)(unsafe.Pointer(&v.chunk.data))
+	return (*byte)(unsafe.Pointer(hdr.Data))
+}

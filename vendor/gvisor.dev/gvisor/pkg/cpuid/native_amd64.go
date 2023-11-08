@@ -215,12 +215,10 @@ func readMaxCPUFreq() {
 
 }
 
-// archInitialize initializes hostFeatureSet.
-func archInitialize() {
+func init() {
 	hostFeatureSet = FeatureSet{
 		Function: &Native{},
 	}.Fixed()
 
 	readMaxCPUFreq()
-	initHWCap()
 }

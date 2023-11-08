@@ -981,8 +981,8 @@ func (ct *ConnTrack) bucket(id tupleID) int {
 
 func (ct *ConnTrack) bucketWithTableLength(id tupleID, tableLength int) int {
 	h := jenkins.Sum32(ct.seed)
-	h.Write(id.srcAddr.AsSlice())
-	h.Write(id.dstAddr.AsSlice())
+	h.Write([]byte(id.srcAddr))
+	h.Write([]byte(id.dstAddr))
 	shortBuf := make([]byte, 2)
 	binary.LittleEndian.PutUint16(shortBuf, id.srcPortOrEchoRequestIdent)
 	h.Write([]byte(shortBuf))
@@ -1119,14 +1119,14 @@ func (ct *ConnTrack) originalDst(epID TransportEndpointID, netProto tcpip.Networ
 	t := ct.connForTID(tid)
 	if t == nil {
 		// Not a tracked connection.
-		return tcpip.Address{}, 0, &tcpip.ErrNotConnected{}
+		return "", 0, &tcpip.ErrNotConnected{}
 	}
 
 	t.conn.mu.RLock()
 	defer t.conn.mu.RUnlock()
 	if t.conn.destinationManip == manipNotPerformed {
 		// Unmanipulated destination.
-		return tcpip.Address{}, 0, &tcpip.ErrInvalidOptionValue{}
+		return "", 0, &tcpip.ErrInvalidOptionValue{}
 	}
 
 	id := t.conn.original.tupleID

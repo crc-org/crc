@@ -20,9 +20,7 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip"
 )
 
-// NeighborCacheSize is the size of the neighborCache. Exceeding this size will
-// result in the least recently used entry being evicted.
-const NeighborCacheSize = 512 // max entries per interface
+const neighborCacheSize = 512 // max entries per interface
 
 // NeighborStats holds metrics for the neighbor table.
 type NeighborStats struct {
@@ -89,7 +87,7 @@ func (n *neighborCache) getOrCreateEntry(remoteAddr tcpip.Address) *neighborEntr
 	// The entry that needs to be created must be dynamic since all static
 	// entries are directly added to the cache via addStaticEntry.
 	entry := newNeighborEntry(n, remoteAddr, n.state)
-	if n.mu.dynamic.count == NeighborCacheSize {
+	if n.mu.dynamic.count == neighborCacheSize {
 		e := n.mu.dynamic.lru.Back()
 		e.mu.Lock()
 
@@ -302,6 +300,6 @@ func (n *neighborCache) init(nic *nic, r LinkAddressResolver) {
 		linkRes: r,
 	}
 	n.mu.Lock()
-	n.mu.cache = make(map[tcpip.Address]*neighborEntry, NeighborCacheSize)
+	n.mu.cache = make(map[tcpip.Address]*neighborEntry, neighborCacheSize)
 	n.mu.Unlock()
 }

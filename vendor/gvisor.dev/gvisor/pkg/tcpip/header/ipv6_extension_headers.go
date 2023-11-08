@@ -21,7 +21,7 @@ import (
 	"io"
 	"math"
 
-	"gvisor.dev/gvisor/pkg/buffer"
+	"gvisor.dev/gvisor/pkg/bufferv2"
 	"gvisor.dev/gvisor/pkg/tcpip"
 )
 
@@ -163,7 +163,7 @@ type IPv6PayloadHeader interface {
 // it's no longer needed.
 type IPv6RawPayloadHeader struct {
 	Identifier IPv6ExtensionHeaderIdentifier
-	Buf        buffer.Buffer
+	Buf        bufferv2.Buffer
 }
 
 // isIPv6PayloadHeader implements IPv6PayloadHeader.isIPv6PayloadHeader.
@@ -176,7 +176,7 @@ func (i IPv6RawPayloadHeader) Release() {
 
 // ipv6OptionsExtHdr is an IPv6 extension header that holds options.
 type ipv6OptionsExtHdr struct {
-	buf *buffer.View
+	buf *bufferv2.View
 }
 
 // Release implements IPv6PayloadHeader.Release.
@@ -203,7 +203,7 @@ func (i ipv6OptionsExtHdr) Iter() IPv6OptionsExtHdrOptionsIterator {
 // modify the backing payload so long as the IPv6OptionsExtHdrOptionsIterator
 // obtained before modification is no longer used.
 type IPv6OptionsExtHdrOptionsIterator struct {
-	reader *buffer.View
+	reader *bufferv2.View
 
 	// optionOffset is the number of bytes from the first byte of the
 	// options field to the beginning of the current option.
@@ -299,7 +299,7 @@ var ErrMalformedIPv6ExtHdrOption = errors.New("malformed IPv6 extension header o
 // header option that is unknown by the parsing utilities.
 type IPv6UnknownExtHdrOption struct {
 	Identifier IPv6ExtHdrOptionIdentifier
-	Data       *buffer.View
+	Data       *bufferv2.View
 }
 
 // UnknownAction implements IPv6OptionUnknownAction.UnknownAction.
@@ -382,7 +382,7 @@ func (i *IPv6OptionsExtHdrOptionsIterator) Next() (IPv6ExtHdrOption, bool, error
 			}
 			return &IPv6RouterAlertOption{Value: IPv6RouterAlertValue(binary.BigEndian.Uint16(routerAlertValue[:]))}, false, nil
 		default:
-			bytes := buffer.NewView(int(length))
+			bytes := bufferv2.NewView(int(length))
 			if n, err := io.CopyN(bytes, i.reader, int64(length)); err != nil {
 				if err == io.EOF {
 					err = io.ErrUnexpectedEOF
@@ -416,7 +416,7 @@ func (IPv6DestinationOptionsExtHdr) isIPv6PayloadHeader() {}
 // IPv6RoutingExtHdr is a buffer holding the Routing extension header specific
 // data as outlined in RFC 8200 section 4.4.
 type IPv6RoutingExtHdr struct {
-	Buf *buffer.View
+	Buf *bufferv2.View
 }
 
 // isIPv6PayloadHeader implements IPv6PayloadHeader.isIPv6PayloadHeader.
@@ -488,7 +488,7 @@ type IPv6PayloadIterator struct {
 	// The identifier of the next header to parse.
 	nextHdrIdentifier IPv6ExtensionHeaderIdentifier
 
-	payload buffer.Buffer
+	payload bufferv2.Buffer
 
 	// Indicates to the iterator that it should return the remaining payload as a
 	// raw payload on the next call to Next.
@@ -521,7 +521,7 @@ func (i IPv6PayloadIterator) ParseOffset() uint32 {
 // MakeIPv6PayloadIterator returns an iterator over the IPv6 payload containing
 // extension headers, or a raw payload if the payload cannot be parsed. The
 // iterator takes ownership of the payload.
-func MakeIPv6PayloadIterator(nextHdrIdentifier IPv6ExtensionHeaderIdentifier, payload buffer.Buffer) IPv6PayloadIterator {
+func MakeIPv6PayloadIterator(nextHdrIdentifier IPv6ExtensionHeaderIdentifier, payload bufferv2.Buffer) IPv6PayloadIterator {
 	return IPv6PayloadIterator{
 		nextHdrIdentifier: nextHdrIdentifier,
 		payload:           payload,
@@ -543,7 +543,7 @@ func (i *IPv6PayloadIterator) Release() {
 func (i *IPv6PayloadIterator) AsRawHeader(consume bool) IPv6RawPayloadHeader {
 	identifier := i.nextHdrIdentifier
 
-	var buf buffer.Buffer
+	var buf bufferv2.Buffer
 	if consume {
 		// Since we consume the iterator, we return the payload as is.
 		buf = i.payload
@@ -638,12 +638,6 @@ func (i *IPv6PayloadIterator) Next() (IPv6PayloadHeader, bool, error) {
 	}
 }
 
-// NextHeaderIdentifier returns the identifier of the header next returned by
-// it.Next().
-func (i *IPv6PayloadIterator) NextHeaderIdentifier() IPv6ExtensionHeaderIdentifier {
-	return i.nextHdrIdentifier
-}
-
 // nextHeaderData returns the extension header's Next Header field and raw data.
 //
 // fragmentHdr indicates that the extension header being parsed is the Fragment
@@ -653,7 +647,7 @@ func (i *IPv6PayloadIterator) NextHeaderIdentifier() IPv6ExtensionHeaderIdentifi
 // If bytes is not nil, extension header specific data will be read into bytes
 // if it has enough capacity. If bytes is provided but does not have enough
 // capacity for the data, nextHeaderData will panic.
-func (i *IPv6PayloadIterator) nextHeaderData(fragmentHdr bool, bytes []byte) (IPv6ExtensionHeaderIdentifier, *buffer.View, error) {
+func (i *IPv6PayloadIterator) nextHeaderData(fragmentHdr bool, bytes []byte) (IPv6ExtensionHeaderIdentifier, *bufferv2.View, error) {
 	// We ignore the number of bytes read because we know we will only ever read
 	// at max 1 bytes since rune has a length of 1. If we read 0 bytes, the Read
 	// would return io.EOF to indicate that io.Reader has reached the end of the
@@ -700,7 +694,7 @@ func (i *IPv6PayloadIterator) nextHeaderData(fragmentHdr bool, bytes []byte) (IP
 		}
 		return IPv6ExtensionHeaderIdentifier(nextHdrIdentifier), nil, nil
 	}
-	v := buffer.NewView(bytesLen)
+	v := bufferv2.NewView(bytesLen)
 	if n, err := io.CopyN(v, &rdr, int64(bytesLen)); err != nil {
 		if err == io.EOF {
 			err = io.ErrUnexpectedEOF

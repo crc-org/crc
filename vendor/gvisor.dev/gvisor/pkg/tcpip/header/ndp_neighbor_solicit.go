@@ -38,12 +38,12 @@ const (
 
 // TargetAddress returns the value within the Target Address field.
 func (b NDPNeighborSolicit) TargetAddress() tcpip.Address {
-	return tcpip.AddrFrom16Slice(b[ndpNSTargetAddessOffset:][:IPv6AddressSize])
+	return tcpip.Address(b[ndpNSTargetAddessOffset:][:IPv6AddressSize])
 }
 
 // SetTargetAddress sets the value within the Target Address field.
 func (b NDPNeighborSolicit) SetTargetAddress(addr tcpip.Address) {
-	copy(b[ndpNSTargetAddessOffset:][:IPv6AddressSize], addr.AsSlice())
+	copy(b[ndpNSTargetAddessOffset:][:IPv6AddressSize], addr)
 }
 
 // Options returns an NDPOptions of the the options body.

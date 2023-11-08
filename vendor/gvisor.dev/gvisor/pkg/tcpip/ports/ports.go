@@ -27,11 +27,8 @@ import (
 )
 
 const (
-	firstEphemeral = 16000
-)
-
-var (
-	anyIPAddress = tcpip.Address{}
+	firstEphemeral               = 16000
+	anyIPAddress   tcpip.Address = ""
 )
 
 // Reservation describes a port reservation.

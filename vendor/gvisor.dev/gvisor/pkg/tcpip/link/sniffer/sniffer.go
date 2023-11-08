@@ -173,8 +173,8 @@ func (e *endpoint) WritePackets(pkts stack.PacketBufferList) (int, tcpip.Error) 
 func LogPacket(prefix string, dir Direction, protocol tcpip.NetworkProtocolNumber, pkt stack.PacketBufferPtr) {
 	// Figure out the network layer info.
 	var transProto uint8
-	var src tcpip.Address
-	var dst tcpip.Address
+	src := tcpip.Address("unknown")
+	dst := tcpip.Address("unknown")
 	var size uint16
 	var id uint32
 	var fragmentOffset uint16
@@ -232,8 +232,8 @@ func LogPacket(prefix string, dir Direction, protocol tcpip.NetworkProtocolNumbe
 			"%s%s arp %s (%s) -> %s (%s) valid:%t",
 			prefix,
 			directionPrefix,
-			tcpip.AddrFromSlice(arp.ProtocolAddressSender()), tcpip.LinkAddress(arp.HardwareAddressSender()),
-			tcpip.AddrFromSlice(arp.ProtocolAddressTarget()), tcpip.LinkAddress(arp.HardwareAddressTarget()),
+			tcpip.Address(arp.ProtocolAddressSender()), tcpip.LinkAddress(arp.HardwareAddressSender()),
+			tcpip.Address(arp.ProtocolAddressTarget()), tcpip.LinkAddress(arp.HardwareAddressTarget()),
 			arp.IsValid(),
 		)
 		return

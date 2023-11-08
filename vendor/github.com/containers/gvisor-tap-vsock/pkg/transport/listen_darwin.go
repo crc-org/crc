@@ -12,7 +12,11 @@ import (
 
 const DefaultURL = "vsock://null:1024/vm_directory"
 
-func listenURL(parsed *url.URL) (net.Listener, error) {
+func Listen(endpoint string) (net.Listener, error) {
+	parsed, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, err
+	}
 	switch parsed.Scheme {
 	case "vsock":
 		port, err := strconv.Atoi(parsed.Port())
@@ -27,8 +31,12 @@ func listenURL(parsed *url.URL) (net.Listener, error) {
 			Name: path,
 			Net:  "unix",
 		})
+	case "unix":
+		return net.Listen("unix", parsed.Path)
+	case "tcp":
+		return net.Listen("tcp", parsed.Host)
 	default:
-		return defaultListenURL(parsed)
+		return nil, errors.New("unexpected scheme")
 	}
 }
 

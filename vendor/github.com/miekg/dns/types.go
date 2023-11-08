@@ -236,9 +236,6 @@ var CertTypeToString = map[uint16]string{
 	CertOID:     "OID",
 }
 
-// Prefix for IPv4 encoded as IPv6 address
-const ipv4InIPv6Prefix = "::ffff:"
-
 //go:generate go run types_generate.go
 
 // Question holds a DNS question. Usually there is just one. While the
@@ -754,11 +751,6 @@ func (rr *AAAA) String() string {
 	if rr.AAAA == nil {
 		return rr.Hdr.String()
 	}
-
-	if rr.AAAA.To4() != nil {
-		return rr.Hdr.String() + ipv4InIPv6Prefix + rr.AAAA.String()
-	}
-
 	return rr.Hdr.String() + rr.AAAA.String()
 }
 
@@ -1525,7 +1517,7 @@ func (a *APLPrefix) str() string {
 	case net.IPv6len:
 		// add prefix for IPv4-mapped IPv6
 		if v4 := a.Network.IP.To4(); v4 != nil {
-			sb.WriteString(ipv4InIPv6Prefix)
+			sb.WriteString("::ffff:")
 		}
 		sb.WriteString(a.Network.IP.String())
 	}

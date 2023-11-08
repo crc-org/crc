@@ -24,9 +24,6 @@ import (
 	exec "golang.org/x/sys/execabs"
 
 	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/event/keys"
-	"golang.org/x/tools/internal/event/label"
-	"golang.org/x/tools/internal/event/tag"
 )
 
 // An Runner will run go command invocations and serialize
@@ -56,19 +53,9 @@ func (runner *Runner) initialize() {
 // 1.14: go: updating go.mod: existing contents have changed since last read
 var modConcurrencyError = regexp.MustCompile(`go:.*go.mod.*contents have changed`)
 
-// verb is an event label for the go command verb.
-var verb = keys.NewString("verb", "go command verb")
-
-func invLabels(inv Invocation) []label.Label {
-	return []label.Label{verb.Of(inv.Verb), tag.Directory.Of(inv.WorkingDir)}
-}
-
 // Run is a convenience wrapper around RunRaw.
 // It returns only stdout and a "friendly" error.
 func (runner *Runner) Run(ctx context.Context, inv Invocation) (*bytes.Buffer, error) {
-	ctx, done := event.Start(ctx, "gocommand.Runner.Run", invLabels(inv)...)
-	defer done()
-
 	stdout, _, friendly, _ := runner.RunRaw(ctx, inv)
 	return stdout, friendly
 }
@@ -76,9 +63,6 @@ func (runner *Runner) Run(ctx context.Context, inv Invocation) (*bytes.Buffer, e
 // RunPiped runs the invocation serially, always waiting for any concurrent
 // invocations to complete first.
 func (runner *Runner) RunPiped(ctx context.Context, inv Invocation, stdout, stderr io.Writer) error {
-	ctx, done := event.Start(ctx, "gocommand.Runner.RunPiped", invLabels(inv)...)
-	defer done()
-
 	_, err := runner.runPiped(ctx, inv, stdout, stderr)
 	return err
 }
@@ -86,8 +70,6 @@ func (runner *Runner) RunPiped(ctx context.Context, inv Invocation, stdout, stde
 // RunRaw runs the invocation, serializing requests only if they fight over
 // go.mod changes.
 func (runner *Runner) RunRaw(ctx context.Context, inv Invocation) (*bytes.Buffer, *bytes.Buffer, error, error) {
-	ctx, done := event.Start(ctx, "gocommand.Runner.RunRaw", invLabels(inv)...)
-	defer done()
 	// Make sure the runner is always initialized.
 	runner.initialize()
 
@@ -319,7 +301,7 @@ func runCmdContext(ctx context.Context, cmd *exec.Cmd) (err error) {
 					// Per https://pkg.go.dev/os#File.Close, the call to stdoutR.Close
 					// should cause the Read call in io.Copy to unblock and return
 					// immediately, but we still need to receive from stdoutErr to confirm
-					// that it has happened.
+					// that that has happened.
 					<-stdoutErr
 					err2 = ctx.Err()
 				}
@@ -333,7 +315,7 @@ func runCmdContext(ctx context.Context, cmd *exec.Cmd) (err error) {
 			// one goroutine at a time will call Write.”
 			//
 			// Since we're starting a goroutine that writes to cmd.Stdout, we must
-			// also update cmd.Stderr so that it still holds.
+			// also update cmd.Stderr so that that still holds.
 			func() {
 				defer func() { recover() }()
 				if cmd.Stderr == prevStdout {

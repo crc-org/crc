@@ -30,7 +30,7 @@ import (
 	"io"
 	"time"
 
-	"gvisor.dev/gvisor/pkg/buffer"
+	"gvisor.dev/gvisor/pkg/bufferv2"
 	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/checksum"
@@ -312,7 +312,7 @@ func (e *endpoint) Write(p tcpip.Payloader, opts tcpip.WriteOptions) (int64, tcp
 
 	if opts.To != nil {
 		// Raw sockets do not support sending to a IPv4 address on a IPv6 endpoint.
-		if netProto == header.IPv6ProtocolNumber && opts.To.Addr.BitLen() != header.IPv6AddressSizeBits {
+		if netProto == header.IPv6ProtocolNumber && len(opts.To.Addr) != header.IPv6AddressSize {
 			return 0, &tcpip.ErrInvalidOptionValue{}
 		}
 	}
@@ -356,7 +356,7 @@ func (e *endpoint) write(p tcpip.Payloader, opts tcpip.WriteOptions) (int64, tcp
 		return 0, &tcpip.ErrMessageTooLong{}
 	}
 
-	var payload buffer.Buffer
+	var payload bufferv2.Buffer
 	defer payload.Release()
 	if _, err := payload.WriteFromReader(p, int64(p.Len())); err != nil {
 		return 0, &tcpip.ErrBadBuffer{}
@@ -399,7 +399,7 @@ func (e *endpoint) Connect(addr tcpip.FullAddress) tcpip.Error {
 	netProto := e.net.NetProto()
 
 	// Raw sockets do not support connecting to a IPv4 address on a IPv6 endpoint.
-	if netProto == header.IPv6ProtocolNumber && addr.Addr.BitLen() != header.IPv6AddressSizeBits {
+	if netProto == header.IPv6ProtocolNumber && len(addr.Addr) != header.IPv6AddressSize {
 		return &tcpip.ErrAddressFamilyNotSupported{}
 	}
 
@@ -638,7 +638,7 @@ func (e *endpoint) HandlePacket(pkt stack.PacketBufferPtr) {
 			}
 
 			// If bound to an address, only accept data for that address.
-			if info.BindAddr != (tcpip.Address{}) && info.BindAddr != dstAddr {
+			if info.BindAddr != "" && info.BindAddr != dstAddr {
 				return false
 			}
 		default:
@@ -680,15 +680,15 @@ func (e *endpoint) HandlePacket(pkt stack.PacketBufferPtr) {
 		// TODO(https://gvisor.dev/issue/6517): Avoid the copy once S/R supports
 		// overlapping slices.
 		transportHeader := pkt.TransportHeader().Slice()
-		var combinedBuf buffer.Buffer
+		var combinedBuf bufferv2.Buffer
 		defer combinedBuf.Release()
 		switch info.NetProto {
 		case header.IPv4ProtocolNumber:
 			networkHeader := pkt.NetworkHeader().Slice()
-			headers := buffer.NewView(len(networkHeader) + len(transportHeader))
+			headers := bufferv2.NewView(len(networkHeader) + len(transportHeader))
 			headers.Write(networkHeader)
 			headers.Write(transportHeader)
-			combinedBuf = buffer.MakeWithView(headers)
+			combinedBuf = bufferv2.MakeWithView(headers)
 			pktBuf := pkt.Data().ToBuffer()
 			combinedBuf.Merge(&pktBuf)
 		case header.IPv6ProtocolNumber:
@@ -702,7 +702,7 @@ func (e *endpoint) HandlePacket(pkt stack.PacketBufferPtr) {
 				}
 			}
 
-			combinedBuf = buffer.MakeWithView(pkt.TransportHeader().View())
+			combinedBuf = bufferv2.MakeWithView(pkt.TransportHeader().View())
 			pktBuf := pkt.Data().ToBuffer()
 			combinedBuf.Merge(&pktBuf)
 
