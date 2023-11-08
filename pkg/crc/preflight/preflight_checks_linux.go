@@ -372,7 +372,7 @@ func checkDaemonSystemdService() error {
 	if err != nil {
 		return shouldNotBeRunningErr
 	}
-	return daemonclient.CheckIfOlderVersion(version)
+	return daemonclient.CheckVersionMismatch(version)
 }
 
 func fixSystemdUnit(unitName string, unitContent string, shouldBeRunning bool) error {

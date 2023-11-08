@@ -372,7 +372,7 @@ func checkDaemonStarted() error {
 	if err != nil {
 		return err
 	}
-	return daemonclient.CheckIfOlderVersion(v)
+	return daemonclient.CheckVersionMismatch(v)
 }
 
 func portFallbackWarning() string {

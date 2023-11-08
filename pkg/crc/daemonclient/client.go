@@ -39,7 +39,7 @@ func GetVersionFromDaemonAPI() (*client.VersionResult, error) {
 	return &version, nil
 }
 
-func CheckIfOlderVersion(version *client.VersionResult) error {
+func CheckVersionMismatch(version *client.VersionResult) error {
 	if version.CrcVersion != crcversion.GetCRCVersion() {
 		return fmt.Errorf("The executable version (%s) doesn't match the daemon version (%s)", crcversion.GetCRCVersion(), version.CrcVersion)
 	}
