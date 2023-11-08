@@ -1,4 +1,4 @@
-FROM registry.ci.openshift.org/openshift/release:rhel-8-release-golang-1.20-openshift-4.15 AS builder
+FROM registry.access.redhat.com/ubi8/go-toolset:1.20 AS builder
 
 USER root
 WORKDIR /workspace
