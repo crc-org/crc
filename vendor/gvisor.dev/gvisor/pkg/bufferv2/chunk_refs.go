@@ -1,4 +1,4 @@
-package buffer
+package bufferv2
 
 import (
 	"fmt"
@@ -43,8 +43,7 @@ type chunkRefs struct {
 // InitRefs initializes r with one reference and, if enabled, activates leak
 // checking.
 func (r *chunkRefs) InitRefs() {
-
-	r.refCount.RacyStore(1)
+	r.refCount.Store(1)
 	refs.Register(r)
 }
 

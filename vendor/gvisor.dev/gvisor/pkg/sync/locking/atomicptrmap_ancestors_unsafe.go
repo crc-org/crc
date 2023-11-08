@@ -324,7 +324,8 @@ func (shard *ancestorsapmShard) rehash(oldSlots unsafe.Pointer) {
 	}
 
 	newSlotsSlice := make([]ancestorsapmSlot, newSize)
-	newSlots := unsafe.Pointer(&newSlotsSlice[0])
+	newSlotsHeader := (*gohacks.SliceHeader)(unsafe.Pointer(&newSlotsSlice))
+	newSlots := newSlotsHeader.Data
 	newMask := newSize - 1
 
 	shard.dirtyMu.Lock()

@@ -5,7 +5,6 @@ import (
 	"net"
 	"strconv"
 	"strings"
-	"unicode"
 )
 
 const hexDigit = "0123456789abcdef"
@@ -331,18 +330,8 @@ func Fqdn(s string) string {
 
 // CanonicalName returns the domain name in canonical form. A name in canonical
 // form is lowercase and fully qualified. See Section 6.2 in RFC 4034.
-// According to the RFC all uppercase US-ASCII letters in the owner name of the
-// RR areeplaced by the corresponding lowercase US-ASCII letters.
 func CanonicalName(s string) string {
-	var result strings.Builder
-	for _, ch := range s {
-		if unicode.IsUpper(ch) && (ch >= 0x00 && ch <= 0x7F) {
-			result.WriteRune(unicode.ToLower(ch))
-		} else {
-			result.WriteRune(ch)
-		}
-	}
-	return Fqdn(result.String())
+	return strings.ToLower(Fqdn(s))
 }
 
 // Copied from the official Go code.

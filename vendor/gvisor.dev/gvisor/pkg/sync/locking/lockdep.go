@@ -72,23 +72,9 @@ type goroutineLocks map[*MutexClass]bool
 
 var routineLocks goroutineLocksAtomicPtrMap
 
-// maxChainLen is the maximum length of a lock chain.
-const maxChainLen = 32
-
 // checkLock checks that class isn't in the ancestors of prevClass.
 func checkLock(class *MutexClass, prevClass *MutexClass, chain []*MutexClass) {
 	chain = append(chain, prevClass)
-	if len(chain) >= maxChainLen {
-		// It can be a race condition with another thread that added
-		// the lock to the graph but don't complete the validation.
-		var b strings.Builder
-		fmt.Fprintf(&b, "WARNING: The maximum lock depth has been reached: %s", chain[0])
-		for i := 1; i < len(chain); i++ {
-			fmt.Fprintf(&b, "-> %s", chain[i])
-		}
-		log.Warningf("%s", b.String())
-		return
-	}
 	if c := prevClass.ancestors.Load(class); c != nil {
 		var b strings.Builder
 		fmt.Fprintf(&b, "WARNING: circular locking detected: %s -> %s:\n%s\n",
@@ -132,14 +118,10 @@ func AddGLock(class *MutexClass, lockNameIndex int) {
 		return
 	}
 
-	if (*currentLocks)[class] {
-		panic(fmt.Sprintf("nested locking: %s:\n%s", class, log.LocalStack(2)))
-	}
-	(*currentLocks)[class] = true
 	// Check dependencies and add locked mutexes to the ancestors list.
 	for prevClass := range *currentLocks {
 		if prevClass == class {
-			continue
+			panic(fmt.Sprintf("nested locking: %s:\n%s", class, log.LocalStack(2)))
 		}
 		checkLock(class, prevClass, nil)
 
@@ -148,6 +130,7 @@ func AddGLock(class *MutexClass, lockNameIndex int) {
 			class.ancestors.Store(prevClass, &stacks)
 		}
 	}
+	(*currentLocks)[class] = true
 }
 
 // DelGLock deletes a lock from the current goroutine.

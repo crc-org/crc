@@ -215,14 +215,17 @@ func ICMPv6(pkt stack.PacketBufferPtr) bool {
 		header.ICMPv6RouterAdvert,
 		header.ICMPv6NeighborSolicit,
 		header.ICMPv6NeighborAdvert,
-		header.ICMPv6RedirectMsg,
-		header.ICMPv6MulticastListenerQuery,
-		header.ICMPv6MulticastListenerReport,
-		header.ICMPv6MulticastListenerV2Report,
-		header.ICMPv6MulticastListenerDone:
+		header.ICMPv6RedirectMsg:
 		size := pkt.Data().Size()
 		if _, ok := pkt.TransportHeader().Consume(size); !ok {
 			panic(fmt.Sprintf("expected to consume the full data of size = %d bytes into transport header", size))
+		}
+	case header.ICMPv6MulticastListenerQuery,
+		header.ICMPv6MulticastListenerReport,
+		header.ICMPv6MulticastListenerDone:
+		size := header.ICMPv6HeaderSize + header.MLDMinimumSize
+		if _, ok := pkt.TransportHeader().Consume(size); !ok {
+			return false
 		}
 	case header.ICMPv6DstUnreachable,
 		header.ICMPv6PacketTooBig,

@@ -1,4 +1,4 @@
-package buffer
+package bufferv2
 
 // ElementMapper provides an identity mapping by default.
 //

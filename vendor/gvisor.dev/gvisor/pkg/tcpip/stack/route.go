@@ -136,7 +136,7 @@ func (r *Route) fieldsLocked() RouteInfo {
 //
 // Returns an empty route if validation fails.
 func constructAndValidateRoute(netProto tcpip.NetworkProtocolNumber, addressEndpoint AssignableAddressEndpoint, localAddressNIC, outgoingNIC *nic, gateway, localAddr, remoteAddr tcpip.Address, handleLocal, multicastLoop bool) *Route {
-	if localAddr.BitLen() == 0 {
+	if len(localAddr) == 0 {
 		localAddr = addressEndpoint.AddressWithPrefix().Address
 	}
 
@@ -146,7 +146,7 @@ func constructAndValidateRoute(netProto tcpip.NetworkProtocolNumber, addressEndp
 	}
 
 	// If no remote address is provided, use the local address.
-	if remoteAddr.BitLen() == 0 {
+	if len(remoteAddr) == 0 {
 		remoteAddr = localAddr
 	}
 
@@ -172,7 +172,7 @@ func makeRoute(netProto tcpip.NetworkProtocolNumber, gateway, localAddr, remoteA
 		panic(fmt.Sprintf("cannot create a route with NICs from different stacks"))
 	}
 
-	if localAddr.BitLen() == 0 {
+	if len(localAddr) == 0 {
 		localAddr = localAddressEndpoint.AddressWithPrefix().Address
 	}
 
@@ -182,7 +182,7 @@ func makeRoute(netProto tcpip.NetworkProtocolNumber, gateway, localAddr, remoteA
 	// link endpoint level. We can remove this check once loopback interfaces
 	// loop back packets at the network layer.
 	if !outgoingNIC.IsLoopback() {
-		if handleLocal && localAddr != (tcpip.Address{}) && remoteAddr == localAddr {
+		if handleLocal && localAddr != "" && remoteAddr == localAddr {
 			loop = PacketLoop
 		} else if multicastLoop && (header.IsV4MulticastAddress(remoteAddr) || header.IsV6MulticastAddress(remoteAddr)) {
 			loop |= PacketLoop
@@ -206,7 +206,7 @@ func makeRoute(netProto tcpip.NetworkProtocolNumber, gateway, localAddr, remoteA
 		}
 	}
 
-	if gateway.BitLen() > 0 {
+	if len(gateway) > 0 {
 		r.routeInfo.NextHop = gateway
 		return r
 	}
@@ -327,8 +327,8 @@ func (r *Route) HasSaveRestoreCapability() bool {
 	return r.outgoingNIC.NetworkLinkEndpoint.Capabilities()&CapabilitySaveRestore != 0
 }
 
-// HasDisconnectOkCapability returns true if the route supports disconnecting.
-func (r *Route) HasDisconnectOkCapability() bool {
+// HasDisconncetOkCapability returns true if the route supports disconnecting.
+func (r *Route) HasDisconncetOkCapability() bool {
 	return r.outgoingNIC.NetworkLinkEndpoint.Capabilities()&CapabilityDisconnectOk != 0
 }
 
@@ -434,7 +434,7 @@ func (r *Route) setCachedNeighborEntry(entry *neighborEntry) {
 }
 
 func (r *Route) nextHop() tcpip.Address {
-	if r.NextHop().BitLen() == 0 {
+	if len(r.NextHop()) == 0 {
 		return r.RemoteAddress()
 	}
 	return r.NextHop()

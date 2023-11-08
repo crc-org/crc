@@ -94,8 +94,6 @@ const (
 	// IGMPLeaveGroup indicates that the message type is a Leave Group
 	// notification message.
 	IGMPLeaveGroup IGMPType = 0x17
-	// IGMPv3MembershipReport indicates that the message type is a IGMPv3 report.
-	IGMPv3MembershipReport IGMPType = 0x22
 )
 
 // Type is the IGMP type field.
@@ -114,7 +112,7 @@ func (b IGMP) MaxRespTime() time.Duration {
 	//  messages, and specifies the maximum allowed time before sending a
 	//  responding report in units of 1/10 second.  In all other messages, it
 	//  is set to zero by the sender and ignored by receivers.
-	return DecisecondToDuration(uint16(b[igmpMaxRespTimeOffset]))
+	return DecisecondToDuration(b[igmpMaxRespTimeOffset])
 }
 
 // SetMaxRespTime sets the MaxRespTimeField.
@@ -132,13 +130,12 @@ func (b IGMP) SetChecksum(checksum uint16) {
 
 // GroupAddress gets the Group Address field.
 func (b IGMP) GroupAddress() tcpip.Address {
-	return tcpip.AddrFrom4([4]byte(b[igmpGroupAddressOffset:][:IPv4AddressSize]))
+	return tcpip.Address(b[igmpGroupAddressOffset:][:IPv4AddressSize])
 }
 
 // SetGroupAddress sets the Group Address field.
 func (b IGMP) SetGroupAddress(address tcpip.Address) {
-	addrBytes := address.As4()
-	if n := copy(b[igmpGroupAddressOffset:], addrBytes[:]); n != IPv4AddressSize {
+	if n := copy(b[igmpGroupAddressOffset:], address); n != IPv4AddressSize {
 		panic(fmt.Sprintf("copied %d bytes, expected %d", n, IPv4AddressSize))
 	}
 }
@@ -180,6 +177,6 @@ func IGMPCalculateChecksum(h IGMP) uint16 {
 
 // DecisecondToDuration converts a value representing deci-seconds to a
 // time.Duration.
-func DecisecondToDuration(ds uint16) time.Duration {
+func DecisecondToDuration(ds uint8) time.Duration {
 	return time.Duration(ds) * time.Second / 10
 }

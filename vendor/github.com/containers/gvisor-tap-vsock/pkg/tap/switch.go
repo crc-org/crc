@@ -13,7 +13,7 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"gvisor.dev/gvisor/pkg/buffer"
+	"gvisor.dev/gvisor/pkg/bufferv2"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
@@ -168,15 +168,14 @@ func (e *Switch) txBuf(id int, conn protocolConn, buf []byte) error {
 		size := conn.protocolImpl.(streamProtocol).Buf()
 		conn.protocolImpl.(streamProtocol).Write(size, len(buf))
 
-		if _, err := conn.Write(append(size, buf...)); err != nil {
+		if _, err := conn.Write(size); err != nil {
 			e.disconnect(id, conn)
 			return err
 		}
-	} else {
-		if _, err := conn.Write(buf); err != nil {
-			e.disconnect(id, conn)
-			return err
-		}
+	}
+	if _, err := conn.Write(buf); err != nil {
+		e.disconnect(id, conn)
+		return err
 	}
 	return nil
 }
@@ -262,7 +261,7 @@ func (e *Switch) rxBuf(_ context.Context, id int, buf []byte) {
 
 	if eth.DestinationAddress() != e.gateway.LinkAddress() {
 		pkt := stack.NewPacketBuffer(stack.PacketBufferOptions{
-			Payload: buffer.MakeWithData(buf),
+			Payload: bufferv2.MakeWithData(buf),
 		})
 		if err := e.tx(pkt); err != nil {
 			log.Error(err)
@@ -270,7 +269,7 @@ func (e *Switch) rxBuf(_ context.Context, id int, buf []byte) {
 		pkt.DecRef()
 	}
 	if eth.DestinationAddress() == e.gateway.LinkAddress() || eth.DestinationAddress() == header.EthernetBroadcastAddress {
-		data := buffer.MakeWithData(buf)
+		data := bufferv2.MakeWithData(buf)
 		data.TrimFront(header.EthernetMinimumSize)
 		pkt := stack.NewPacketBuffer(stack.PacketBufferOptions{
 			Payload: data,
