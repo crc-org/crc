@@ -12,7 +12,10 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 // Compatibility level 1: Stable within a major release for a minimum of 12 months or 3 minor releases (whichever is longer).
 // +openshift:compatibility-gen:level=1
 type Infrastructure struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+
+	// metadata is the standard object's metadata.
+	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// spec holds user settable values for configuration
@@ -111,7 +114,6 @@ type InfrastructureStatus struct {
 	// +kubebuilder:default=None
 	// +default="None"
 	// +kubebuilder:validation:Enum=None;AllNodes
-	// +openshift:enable:FeatureSets=TechPreviewNoUpgrade
 	// +optional
 	CPUPartitioning CPUPartitioningMode `json:"cpuPartitioning,omitempty"`
 }
@@ -312,8 +314,48 @@ type PlatformSpec struct {
 	External *ExternalPlatformSpec `json:"external,omitempty"`
 }
 
+// CloudControllerManagerState defines whether Cloud Controller Manager presence is expected or not
+type CloudControllerManagerState string
+
+const (
+	// Cloud Controller Manager is enabled and expected to be installed.
+	// This value indicates that new nodes should be tainted as uninitialized when created,
+	// preventing them from running workloads until they are initialized by the cloud controller manager.
+	CloudControllerManagerExternal CloudControllerManagerState = "External"
+
+	// Cloud Controller Manager is disabled and not expected to be installed.
+	// This value indicates that new nodes should not be tainted
+	// and no extra node initialization is expected from the cloud controller manager.
+	CloudControllerManagerNone CloudControllerManagerState = "None"
+)
+
+// CloudControllerManagerStatus holds the state of Cloud Controller Manager (a.k.a. CCM or CPI) related settings
+// +kubebuilder:validation:XValidation:rule="(has(self.state) == has(oldSelf.state)) || (!has(oldSelf.state) && self.state != \"External\")",message="state may not be added or removed once set"
+type CloudControllerManagerStatus struct {
+	// state determines whether or not an external Cloud Controller Manager is expected to
+	// be installed within the cluster.
+	// https://kubernetes.io/docs/tasks/administer-cluster/running-cloud-controller/#running-cloud-controller-manager
+	//
+	// Valid values are "External", "None" and omitted.
+	// When set to "External", new nodes will be tainted as uninitialized when created,
+	// preventing them from running workloads until they are initialized by the cloud controller manager.
+	// When omitted or set to "None", new nodes will be not tainted
+	// and no extra initialization from the cloud controller manager is expected.
+	// +kubebuilder:validation:Enum="";External;None
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="state is immutable once set"
+	// +optional
+	State CloudControllerManagerState `json:"state"`
+}
+
 // ExternalPlatformStatus holds the current status of the generic External infrastructure provider.
-type ExternalPlatformStatus struct{}
+// +kubebuilder:validation:XValidation:rule="has(self.cloudControllerManager) == has(oldSelf.cloudControllerManager)",message="cloudControllerManager may not be added or removed once set"
+type ExternalPlatformStatus struct {
+	// cloudControllerManager contains settings specific to the external Cloud Controller Manager (a.k.a. CCM or CPI).
+	// When omitted, new nodes will be not tainted
+	// and no extra initialization from the cloud controller manager is expected.
+	// +optional
+	CloudControllerManager CloudControllerManagerStatus `json:"cloudControllerManager"`
+}
 
 // PlatformStatus holds the current status specific to the underlying infrastructure provider
 // of the current cluster. Since these are used at status-level for the underlying cluster, it
@@ -537,12 +579,93 @@ const (
 type GCPPlatformSpec struct{}
 
 // GCPPlatformStatus holds the current status of the Google Cloud Platform infrastructure provider.
+// +openshift:validation:FeatureSetAwareXValidation:featureSet=CustomNoUpgrade;TechPreviewNoUpgrade,rule="!has(oldSelf.resourceLabels) && !has(self.resourceLabels) || has(oldSelf.resourceLabels) && has(self.resourceLabels)",message="resourceLabels may only be configured during installation"
+// +openshift:validation:FeatureSetAwareXValidation:featureSet=CustomNoUpgrade;TechPreviewNoUpgrade,rule="!has(oldSelf.resourceTags) && !has(self.resourceTags) || has(oldSelf.resourceTags) && has(self.resourceTags)",message="resourceTags may only be configured during installation"
 type GCPPlatformStatus struct {
 	// resourceGroupName is the Project ID for new GCP resources created for the cluster.
 	ProjectID string `json:"projectID"`
 
 	// region holds the region for new GCP resources created for the cluster.
 	Region string `json:"region"`
+
+	// resourceLabels is a list of additional labels to apply to GCP resources created for the cluster.
+	// See https://cloud.google.com/compute/docs/labeling-resources for information on labeling GCP resources.
+	// GCP supports a maximum of 64 labels per resource. OpenShift reserves 32 labels for internal use,
+	// allowing 32 labels for user configuration.
+	// +kubebuilder:validation:MaxItems=32
+	// +kubebuilder:validation:XValidation:rule="self.all(x, x in oldSelf) && oldSelf.all(x, x in self)",message="resourceLabels are immutable and may only be configured during installation"
+	// +listType=map
+	// +listMapKey=key
+	// +optional
+	// +openshift:enable:FeatureSets=CustomNoUpgrade;TechPreviewNoUpgrade
+	ResourceLabels []GCPResourceLabel `json:"resourceLabels,omitempty"`
+
+	// resourceTags is a list of additional tags to apply to GCP resources created for the cluster.
+	// See https://cloud.google.com/resource-manager/docs/tags/tags-overview for information on
+	// tagging GCP resources. GCP supports a maximum of 50 tags per resource.
+	// +kubebuilder:validation:MaxItems=50
+	// +kubebuilder:validation:XValidation:rule="self.all(x, x in oldSelf) && oldSelf.all(x, x in self)",message="resourceTags are immutable and may only be configured during installation"
+	// +listType=map
+	// +listMapKey=key
+	// +optional
+	// +openshift:enable:FeatureSets=CustomNoUpgrade;TechPreviewNoUpgrade
+	ResourceTags []GCPResourceTag `json:"resourceTags,omitempty"`
+}
+
+// GCPResourceLabel is a label to apply to GCP resources created for the cluster.
+type GCPResourceLabel struct {
+	// key is the key part of the label. A label key can have a maximum of 63 characters and cannot be empty.
+	// Label key must begin with a lowercase letter, and must contain only lowercase letters, numeric characters,
+	// and the following special characters `_-`. Label key must not have the reserved prefixes `kubernetes-io`
+	// and `openshift-io`.
+	// +kubebuilder:validation:XValidation:rule="!self.startsWith('openshift-io') && !self.startsWith('kubernetes-io')",message="label keys must not start with either `openshift-io` or `kubernetes-io`"
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=63
+	// +kubebuilder:validation:Pattern=`^[a-z][0-9a-z_-]{0,62}$`
+	Key string `json:"key"`
+
+	// value is the value part of the label. A label value can have a maximum of 63 characters and cannot be empty.
+	// Value must contain only lowercase letters, numeric characters, and the following special characters `_-`.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=63
+	// +kubebuilder:validation:Pattern=`^[0-9a-z_-]{1,63}$`
+	Value string `json:"value"`
+}
+
+// GCPResourceTag is a tag to apply to GCP resources created for the cluster.
+type GCPResourceTag struct {
+	// parentID is the ID of the hierarchical resource where the tags are defined,
+	// e.g. at the Organization or the Project level. To find the Organization or Project ID refer to the following pages:
+	// https://cloud.google.com/resource-manager/docs/creating-managing-organization#retrieving_your_organization_id,
+	// https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects.
+	// An OrganizationID must consist of decimal numbers, and cannot have leading zeroes.
+	// A ProjectID must be 6 to 30 characters in length, can only contain lowercase letters, numbers,
+	// and hyphens, and must start with a letter, and cannot end with a hyphen.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=32
+	// +kubebuilder:validation:Pattern=`(^[1-9][0-9]{0,31}$)|(^[a-z][a-z0-9-]{4,28}[a-z0-9]$)`
+	ParentID string `json:"parentID"`
+
+	// key is the key part of the tag. A tag key can have a maximum of 63 characters and cannot be empty.
+	// Tag key must begin and end with an alphanumeric character, and must contain only uppercase, lowercase
+	// alphanumeric characters, and the following special characters `._-`.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=63
+	// +kubebuilder:validation:Pattern=`^[a-zA-Z0-9]([0-9A-Za-z_.-]{0,61}[a-zA-Z0-9])?$`
+	Key string `json:"key"`
+
+	// value is the value part of the tag. A tag value can have a maximum of 63 characters and cannot be empty.
+	// Tag value must begin and end with an alphanumeric character, and must contain only uppercase, lowercase
+	// alphanumeric characters, and the following special characters `_-.@%=+:,*#&(){}[]` and spaces.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=63
+	// +kubebuilder:validation:Pattern=`^[a-zA-Z0-9]([0-9A-Za-z_.@%=+:,*#&()\[\]{}\-\s]{0,61}[a-zA-Z0-9])?$`
+	Value string `json:"value"`
 }
 
 // BareMetalPlatformLoadBalancer defines the load balancer used by the cluster on BareMetal platform.
@@ -618,7 +741,7 @@ type BareMetalPlatformStatus struct {
 	// loadBalancer defines how the load balancer used by the cluster is configured.
 	// +default={"type": "OpenShiftManagedDefault"}
 	// +kubebuilder:default={"type": "OpenShiftManagedDefault"}
-	// +openshift:enable:FeatureSets=TechPreviewNoUpgrade
+	// +openshift:enable:FeatureSets=CustomNoUpgrade;TechPreviewNoUpgrade
 	// +optional
 	LoadBalancer *BareMetalPlatformLoadBalancer `json:"loadBalancer,omitempty"`
 }
@@ -698,7 +821,6 @@ type OpenStackPlatformStatus struct {
 	// loadBalancer defines how the load balancer used by the cluster is configured.
 	// +default={"type": "OpenShiftManagedDefault"}
 	// +kubebuilder:default={"type": "OpenShiftManagedDefault"}
-	// +openshift:enable:FeatureSets=TechPreviewNoUpgrade
 	// +optional
 	LoadBalancer *OpenStackPlatformLoadBalancer `json:"loadBalancer,omitempty"`
 }
@@ -769,7 +891,7 @@ type OvirtPlatformStatus struct {
 	// loadBalancer defines how the load balancer used by the cluster is configured.
 	// +default={"type": "OpenShiftManagedDefault"}
 	// +kubebuilder:default={"type": "OpenShiftManagedDefault"}
-	// +openshift:enable:FeatureSets=TechPreviewNoUpgrade
+	// +openshift:enable:FeatureSets=CustomNoUpgrade;TechPreviewNoUpgrade
 	// +optional
 	LoadBalancer *OvirtPlatformLoadBalancer `json:"loadBalancer,omitempty"`
 }
@@ -1035,7 +1157,7 @@ type VSpherePlatformStatus struct {
 	// loadBalancer defines how the load balancer used by the cluster is configured.
 	// +default={"type": "OpenShiftManagedDefault"}
 	// +kubebuilder:default={"type": "OpenShiftManagedDefault"}
-	// +openshift:enable:FeatureSets=TechPreviewNoUpgrade
+	// +openshift:enable:FeatureSets=CustomNoUpgrade;TechPreviewNoUpgrade
 	// +optional
 	LoadBalancer *VSpherePlatformLoadBalancer `json:"loadBalancer,omitempty"`
 }
@@ -1318,7 +1440,7 @@ type NutanixPlatformStatus struct {
 	// loadBalancer defines how the load balancer used by the cluster is configured.
 	// +default={"type": "OpenShiftManagedDefault"}
 	// +kubebuilder:default={"type": "OpenShiftManagedDefault"}
-	// +openshift:enable:FeatureSets=TechPreviewNoUpgrade
+	// +openshift:enable:FeatureSets=CustomNoUpgrade;TechPreviewNoUpgrade
 	// +optional
 	LoadBalancer *NutanixPlatformLoadBalancer `json:"loadBalancer,omitempty"`
 }
@@ -1331,6 +1453,9 @@ type NutanixPlatformStatus struct {
 // +openshift:compatibility-gen:level=1
 type InfrastructureList struct {
 	metav1.TypeMeta `json:",inline"`
+
+	// metadata is the standard list's metadata.
+	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata"`
 
 	Items []Infrastructure `json:"items"`
