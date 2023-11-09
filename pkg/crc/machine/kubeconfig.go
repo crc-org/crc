@@ -165,7 +165,7 @@ func addContext(cfg *api.Config, ip string, clusterConfig *types.ClusterConfig, 
 			},
 		},
 	}
-	challengeHandler := challengehandlers.NewBasicChallengeHandler(restConfig.Host, nil /* in */, nil /* out */, nil /* passwordPrompter */, username, password)
+	challengeHandler := challengehandlers.NewBasicChallengeHandler(restConfig.Host, "" /* webconsoleURL */, nil /* in */, nil /* out */, nil /* passwordPrompter */, username, password)
 	token, err := tokenrequest.RequestTokenWithChallengeHandlers(restConfig, challengeHandler)
 	if err != nil {
 		return err
