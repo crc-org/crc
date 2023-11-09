@@ -33,38 +33,37 @@
 //
 // Example creating a domain XML document from configuration:
 //
-//  package main
+//	package main
 //
-//  import (
-//   "libvirt.org/go/libvirtxml"
-//  )
+//	import (
+//	 "libvirt.org/go/libvirtxml"
+//	)
 //
-//  func main() {
-//    domcfg := &libvirtxml.Domain{Type: "kvm", Name: "demo",
-//                                 UUID: "8f99e332-06c4-463a-9099-330fb244e1b3",
-//                                 ....}
-//    xmldoc, err := domcfg.Marshal()
-//  }
+//	func main() {
+//	  domcfg := &libvirtxml.Domain{Type: "kvm", Name: "demo",
+//	                               UUID: "8f99e332-06c4-463a-9099-330fb244e1b3",
+//	                               ....}
+//	  xmldoc, err := domcfg.Marshal()
+//	}
 //
 // Example parsing a domainXML document, in combination with libvirt-go
 //
-//  package main
+//	package main
 //
-//  import (
-//    "libvirt.org/go/libvirt"
-//    "libvirt.org/go/libvirtxml"
-//    "fmt"
-//  )
+//	import (
+//	  "libvirt.org/go/libvirt"
+//	  "libvirt.org/go/libvirtxml"
+//	  "fmt"
+//	)
 //
-//  func main() {
-//    conn, err := libvirt.NewConnect("qemu:///system")
-//    dom, err := conn.LookupDomainByName("demo")
-//    xmldoc, err := dom.GetXMLDesc(0)
+//	func main() {
+//	  conn, err := libvirt.NewConnect("qemu:///system")
+//	  dom, err := conn.LookupDomainByName("demo")
+//	  xmldoc, err := dom.GetXMLDesc(0)
 //
-//    domcfg := &libvirtxml.Domain{}
-//    err = domcfg.Unmarshal(xmldoc)
+//	  domcfg := &libvirtxml.Domain{}
+//	  err = domcfg.Unmarshal(xmldoc)
 //
-//    fmt.Printf("Virt type %s\n", domcfg.Type)
-//  }
-//
+//	  fmt.Printf("Virt type %s\n", domcfg.Type)
+//	}
 package libvirtxml

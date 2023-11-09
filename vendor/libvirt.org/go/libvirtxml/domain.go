@@ -159,6 +159,7 @@ type DomainDiskSource struct {
 	Volume        *DomainDiskSourceVolume    `xml:"-"`
 	NVME          *DomainDiskSourceNVME      `xml:"-"`
 	VHostUser     *DomainDiskSourceVHostUser `xml:"-"`
+	VHostVDPA     *DomainDiskSourceVHostVDPA `xml:"-"`
 	StartupPolicy string                     `xml:"startupPolicy,attr,omitempty"`
 	Index         uint                       `xml:"index,attr,omitempty"`
 	Encryption    *DomainDiskEncryption      `xml:"encryption"`
@@ -206,23 +207,31 @@ type DomainDiskSourceDir struct {
 }
 
 type DomainDiskSourceNetwork struct {
-	Protocol    string                            `xml:"protocol,attr,omitempty"`
-	Name        string                            `xml:"name,attr,omitempty"`
-	Query       string                            `xml:"query,attr,omitempty"`
-	TLS         string                            `xml:"tls,attr,omitempty"`
-	TLSHostname string                            `xml:"tlsHostname,attr,omitempty"`
-	Hosts       []DomainDiskSourceHost            `xml:"host"`
-	Identity    *DomainDiskSourceNetworkIdentity  `xml:"identity"`
-	Initiator   *DomainDiskSourceNetworkInitiator `xml:"initiator"`
-	Snapshot    *DomainDiskSourceNetworkSnapshot  `xml:"snapshot"`
-	Config      *DomainDiskSourceNetworkConfig    `xml:"config"`
-	Reconnect   *DomainDiskSourceNetworkReconnect `xml:"reconnect"`
-	Auth        *DomainDiskAuth                   `xml:"auth"`
+	Protocol    string                             `xml:"protocol,attr,omitempty"`
+	Name        string                             `xml:"name,attr,omitempty"`
+	Query       string                             `xml:"query,attr,omitempty"`
+	TLS         string                             `xml:"tls,attr,omitempty"`
+	TLSHostname string                             `xml:"tlsHostname,attr,omitempty"`
+	Hosts       []DomainDiskSourceHost             `xml:"host"`
+	Identity    *DomainDiskSourceNetworkIdentity   `xml:"identity"`
+	KnownHosts  *DomainDiskSourceNetworkKnownHosts `xml:"knownHosts"`
+	Initiator   *DomainDiskSourceNetworkInitiator  `xml:"initiator"`
+	Snapshot    *DomainDiskSourceNetworkSnapshot   `xml:"snapshot"`
+	Config      *DomainDiskSourceNetworkConfig     `xml:"config"`
+	Reconnect   *DomainDiskSourceNetworkReconnect  `xml:"reconnect"`
+	Auth        *DomainDiskAuth                    `xml:"auth"`
+}
+
+type DomainDiskSourceNetworkKnownHosts struct {
+	Path string `xml:"path,attr"`
 }
 
 type DomainDiskSourceNetworkIdentity struct {
-	User  string `xml:"user,attr"`
-	Group string `xml:"group,attr"`
+	User      string `xml:"user,attr,omitempty"`
+	Group     string `xml:"group,attr,omitempty"`
+	UserName  string `xml:"username,attr,omitempty"`
+	Keyfile   string `xml:"keyfile,attr,omitempty"`
+	AgentSock string `xml:"agentsock,attr,omitempty"`
 }
 
 type DomainDiskSourceNetworkInitiator struct {
@@ -254,6 +263,10 @@ type DomainDiskSourceVolume struct {
 
 type DomainDiskSourceVHostUser DomainChardevSource
 
+type DomainDiskSourceVHostVDPA struct {
+	Dev string `xml:"dev,attr"`
+}
+
 type DomainDiskMetadataCache struct {
 	MaxSize *DomainDiskMetadataCacheSize `xml:"max_size"`
 }
@@ -264,25 +277,26 @@ type DomainDiskMetadataCacheSize struct {
 }
 
 type DomainDiskDriver struct {
-	Name          string                   `xml:"name,attr,omitempty"`
-	Type          string                   `xml:"type,attr,omitempty"`
-	Cache         string                   `xml:"cache,attr,omitempty"`
-	ErrorPolicy   string                   `xml:"error_policy,attr,omitempty"`
-	RErrorPolicy  string                   `xml:"rerror_policy,attr,omitempty"`
-	IO            string                   `xml:"io,attr,omitempty"`
-	IOEventFD     string                   `xml:"ioeventfd,attr,omitempty"`
-	EventIDX      string                   `xml:"event_idx,attr,omitempty"`
-	CopyOnRead    string                   `xml:"copy_on_read,attr,omitempty"`
-	Discard       string                   `xml:"discard,attr,omitempty"`
-	IOThread      *uint                    `xml:"iothread,attr"`
-	DetectZeros   string                   `xml:"detect_zeroes,attr,omitempty"`
-	Queues        *uint                    `xml:"queues,attr"`
-	QueueSize     *uint                    `xml:"queue_size,attr"`
-	IOMMU         string                   `xml:"iommu,attr,omitempty"`
-	ATS           string                   `xml:"ats,attr,omitempty"`
-	Packed        string                   `xml:"packed,attr,omitempty"`
-	PagePerVQ     string                   `xml:"page_per_vq,attr,omitempty"`
-	MetadataCache *DomainDiskMetadataCache `xml:"metadata_cache"`
+	Name           string                   `xml:"name,attr,omitempty"`
+	Type           string                   `xml:"type,attr,omitempty"`
+	Cache          string                   `xml:"cache,attr,omitempty"`
+	ErrorPolicy    string                   `xml:"error_policy,attr,omitempty"`
+	RErrorPolicy   string                   `xml:"rerror_policy,attr,omitempty"`
+	IO             string                   `xml:"io,attr,omitempty"`
+	IOEventFD      string                   `xml:"ioeventfd,attr,omitempty"`
+	EventIDX       string                   `xml:"event_idx,attr,omitempty"`
+	CopyOnRead     string                   `xml:"copy_on_read,attr,omitempty"`
+	Discard        string                   `xml:"discard,attr,omitempty"`
+	DiscardNoUnref string                   `xml:"discard_no_unref,attr,omitempty"`
+	IOThread       *uint                    `xml:"iothread,attr"`
+	DetectZeros    string                   `xml:"detect_zeroes,attr,omitempty"`
+	Queues         *uint                    `xml:"queues,attr"`
+	QueueSize      *uint                    `xml:"queue_size,attr"`
+	IOMMU          string                   `xml:"iommu,attr,omitempty"`
+	ATS            string                   `xml:"ats,attr,omitempty"`
+	Packed         string                   `xml:"packed,attr,omitempty"`
+	PagePerVQ      string                   `xml:"page_per_vq,attr,omitempty"`
+	MetadataCache  *DomainDiskMetadataCache `xml:"metadata_cache"`
 }
 
 type DomainDiskTarget struct {
@@ -340,8 +354,9 @@ type DomainDiskGeometry struct {
 }
 
 type DomainDiskBlockIO struct {
-	LogicalBlockSize  uint `xml:"logical_block_size,attr,omitempty"`
-	PhysicalBlockSize uint `xml:"physical_block_size,attr,omitempty"`
+	LogicalBlockSize   uint `xml:"logical_block_size,attr,omitempty"`
+	PhysicalBlockSize  uint `xml:"physical_block_size,attr,omitempty"`
+	DiscardGranularity uint `xml:"discard_granularity,attr,omitempty"`
 }
 
 type DomainDiskFormat struct {
@@ -794,9 +809,9 @@ type DomainInterfaceCoalesceRXFrames struct {
 }
 
 type DomainROM struct {
-	Bar     string `xml:"bar,attr,omitempty"`
-	File    string `xml:"file,attr,omitempty"`
-	Enabled string `xml:"enabled,attr,omitempty"`
+	Bar     string  `xml:"bar,attr,omitempty"`
+	File    *string `xml:"file,attr"`
+	Enabled string  `xml:"enabled,attr,omitempty"`
 }
 
 type DomainInterfaceIP struct {
@@ -2641,33 +2656,38 @@ type DomainFeatureIBS struct {
 	Value string `xml:"value,attr"`
 }
 
+type DomainFeatureAsyncTeardown struct {
+	Enabled string `xml:"enabled,attr,omitempty"`
+}
+
 type DomainFeatureList struct {
-	PAE          *DomainFeature             `xml:"pae"`
-	ACPI         *DomainFeature             `xml:"acpi"`
-	APIC         *DomainFeatureAPIC         `xml:"apic"`
-	HAP          *DomainFeatureState        `xml:"hap"`
-	Viridian     *DomainFeature             `xml:"viridian"`
-	PrivNet      *DomainFeature             `xml:"privnet"`
-	HyperV       *DomainFeatureHyperV       `xml:"hyperv"`
-	KVM          *DomainFeatureKVM          `xml:"kvm"`
-	Xen          *DomainFeatureXen          `xml:"xen"`
-	PVSpinlock   *DomainFeatureState        `xml:"pvspinlock"`
-	PMU          *DomainFeatureState        `xml:"pmu"`
-	VMPort       *DomainFeatureState        `xml:"vmport"`
-	GIC          *DomainFeatureGIC          `xml:"gic"`
-	SMM          *DomainFeatureSMM          `xml:"smm"`
-	IOAPIC       *DomainFeatureIOAPIC       `xml:"ioapic"`
-	HPT          *DomainFeatureHPT          `xml:"hpt"`
-	HTM          *DomainFeatureState        `xml:"htm"`
-	NestedHV     *DomainFeatureState        `xml:"nested-hv"`
-	Capabilities *DomainFeatureCapabilities `xml:"capabilities"`
-	VMCoreInfo   *DomainFeatureState        `xml:"vmcoreinfo"`
-	MSRS         *DomainFeatureMSRS         `xml:"msrs"`
-	CCFAssist    *DomainFeatureState        `xml:"ccf-assist"`
-	CFPC         *DomainFeatureCFPC         `xml:"cfpc"`
-	SBBC         *DomainFeatureSBBC         `xml:"sbbc"`
-	IBS          *DomainFeatureIBS          `xml:"ibs"`
-	TCG          *DomainFeatureTCG          `xml:"tcg"`
+	PAE           *DomainFeature              `xml:"pae"`
+	ACPI          *DomainFeature              `xml:"acpi"`
+	APIC          *DomainFeatureAPIC          `xml:"apic"`
+	HAP           *DomainFeatureState         `xml:"hap"`
+	Viridian      *DomainFeature              `xml:"viridian"`
+	PrivNet       *DomainFeature              `xml:"privnet"`
+	HyperV        *DomainFeatureHyperV        `xml:"hyperv"`
+	KVM           *DomainFeatureKVM           `xml:"kvm"`
+	Xen           *DomainFeatureXen           `xml:"xen"`
+	PVSpinlock    *DomainFeatureState         `xml:"pvspinlock"`
+	PMU           *DomainFeatureState         `xml:"pmu"`
+	VMPort        *DomainFeatureState         `xml:"vmport"`
+	GIC           *DomainFeatureGIC           `xml:"gic"`
+	SMM           *DomainFeatureSMM           `xml:"smm"`
+	IOAPIC        *DomainFeatureIOAPIC        `xml:"ioapic"`
+	HPT           *DomainFeatureHPT           `xml:"hpt"`
+	HTM           *DomainFeatureState         `xml:"htm"`
+	NestedHV      *DomainFeatureState         `xml:"nested-hv"`
+	Capabilities  *DomainFeatureCapabilities  `xml:"capabilities"`
+	VMCoreInfo    *DomainFeatureState         `xml:"vmcoreinfo"`
+	MSRS          *DomainFeatureMSRS          `xml:"msrs"`
+	CCFAssist     *DomainFeatureState         `xml:"ccf-assist"`
+	CFPC          *DomainFeatureCFPC          `xml:"cfpc"`
+	SBBC          *DomainFeatureSBBC          `xml:"sbbc"`
+	IBS           *DomainFeatureIBS           `xml:"ibs"`
+	TCG           *DomainFeatureTCG           `xml:"tcg"`
+	AsyncTeardown *DomainFeatureAsyncTeardown `xml:"async-teardown"`
 }
 
 type DomainCPUTuneShares struct {
@@ -3367,6 +3387,11 @@ type domainDiskSourceVHostUser struct {
 	domainDiskSource
 }
 
+type domainDiskSourceVHostVDPA struct {
+	DomainDiskSourceVHostVDPA
+	domainDiskSource
+}
+
 func (a *DomainDiskSource) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	if a.File != nil {
 		if a.StartupPolicy == "" && a.Encryption == nil && a.File.File == "" {
@@ -3415,6 +3440,11 @@ func (a *DomainDiskSource) MarshalXML(e *xml.Encoder, start xml.StartElement) er
 	} else if a.VHostUser != nil {
 		vhost := domainDiskSourceVHostUser{
 			*a.VHostUser, domainDiskSource(*a),
+		}
+		return e.EncodeElement(&vhost, start)
+	} else if a.VHostVDPA != nil {
+		vhost := domainDiskSourceVHostVDPA{
+			*a.VHostVDPA, domainDiskSource(*a),
 		}
 		return e.EncodeElement(&vhost, start)
 	}
@@ -3499,6 +3529,16 @@ func (a *DomainDiskSource) UnmarshalXML(d *xml.Decoder, start xml.StartElement) 
 		}
 		*a = DomainDiskSource(vhost.domainDiskSource)
 		a.VHostUser = &vhost.DomainDiskSourceVHostUser
+	} else if a.VHostVDPA != nil {
+		vhost := domainDiskSourceVHostVDPA{
+			*a.VHostVDPA, domainDiskSource(*a),
+		}
+		err := d.DecodeElement(&vhost, &start)
+		if err != nil {
+			return err
+		}
+		*a = DomainDiskSource(vhost.domainDiskSource)
+		a.VHostVDPA = &vhost.DomainDiskSourceVHostVDPA
 	}
 	return nil
 }
@@ -3532,6 +3572,10 @@ func (a *DomainDiskBackingStore) MarshalXML(e *xml.Encoder, start xml.StartEleme
 			start.Attr = append(start.Attr, xml.Attr{
 				xml.Name{Local: "type"}, "vhostuser",
 			})
+		} else if a.Source.VHostVDPA != nil {
+			start.Attr = append(start.Attr, xml.Attr{
+				xml.Name{Local: "type"}, "vhostvdpa",
+			})
 		}
 	}
 	disk := domainDiskBackingStore(*a)
@@ -3556,6 +3600,8 @@ func (a *DomainDiskBackingStore) UnmarshalXML(d *xml.Decoder, start xml.StartEle
 		a.Source.Volume = &DomainDiskSourceVolume{}
 	} else if typ == "vhostuser" {
 		a.Source.VHostUser = &DomainDiskSourceVHostUser{}
+	} else if typ == "vhostvdpa" {
+		a.Source.VHostVDPA = &DomainDiskSourceVHostVDPA{}
 	}
 	disk := domainDiskBackingStore(*a)
 	err := d.DecodeElement(&disk, &start)
@@ -3608,6 +3654,10 @@ func (a *DomainDiskMirror) MarshalXML(e *xml.Encoder, start xml.StartElement) er
 			start.Attr = append(start.Attr, xml.Attr{
 				xml.Name{Local: "type"}, "vhostuser",
 			})
+		} else if a.Source.VHostVDPA != nil {
+			start.Attr = append(start.Attr, xml.Attr{
+				xml.Name{Local: "type"}, "vhostvdpa",
+			})
 		}
 	}
 	disk := domainDiskMirror(*a)
@@ -3632,6 +3682,8 @@ func (a *DomainDiskMirror) UnmarshalXML(d *xml.Decoder, start xml.StartElement) 
 		a.Source.Volume = &DomainDiskSourceVolume{}
 	} else if typ == "vhostuser" {
 		a.Source.VHostUser = &DomainDiskSourceVHostUser{}
+	} else if typ == "vhostvdpa" {
+		a.Source.VHostVDPA = &DomainDiskSourceVHostVDPA{}
 	}
 	disk := domainDiskMirror(*a)
 	err := d.DecodeElement(&disk, &start)
@@ -3693,6 +3745,10 @@ func (a *DomainDisk) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 			start.Attr = append(start.Attr, xml.Attr{
 				xml.Name{Local: "type"}, "vhostuser",
 			})
+		} else if a.Source.VHostVDPA != nil {
+			start.Attr = append(start.Attr, xml.Attr{
+				xml.Name{Local: "type"}, "vhostvdpa",
+			})
 		}
 	}
 	disk := domainDisk(*a)
@@ -3719,6 +3775,8 @@ func (a *DomainDisk) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error 
 		a.Source.NVME = &DomainDiskSourceNVME{}
 	} else if typ == "vhostuser" {
 		a.Source.VHostUser = &DomainDiskSourceVHostUser{}
+	} else if typ == "vhostvdpa" {
+		a.Source.VHostVDPA = &DomainDiskSourceVHostVDPA{}
 	}
 	disk := domainDisk(*a)
 	err := d.DecodeElement(&disk, &start)
@@ -6701,6 +6759,10 @@ func (a *DomainNVRam) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 			start.Attr = append(start.Attr, xml.Attr{
 				xml.Name{Local: "type"}, "vhostuser",
 			})
+		} else if a.Source.VHostVDPA != nil {
+			start.Attr = append(start.Attr, xml.Attr{
+				xml.Name{Local: "type"}, "vhostvdpa",
+			})
 		}
 	}
 	disk := domainNVRam(*a)
@@ -6726,6 +6788,8 @@ func (a *DomainNVRam) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error
 			a.Source.NVME = &DomainDiskSourceNVME{}
 		} else if typ == "vhostuser" {
 			a.Source.VHostUser = &DomainDiskSourceVHostUser{}
+		} else if typ == "vhostvdpa" {
+			a.Source.VHostVDPA = &DomainDiskSourceVHostVDPA{}
 		}
 	}
 	disk := domainNVRam(*a)

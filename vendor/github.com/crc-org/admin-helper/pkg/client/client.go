@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -33,7 +33,7 @@ func (c *Client) Version() (string, error) {
 	if res.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("unexpected status: %d", res.StatusCode)
 	}
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return "", err
 	}
@@ -51,7 +51,7 @@ func (c *Client) Add(req *types.AddRequest) error {
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		err, readErr := ioutil.ReadAll(res.Body)
+		err, readErr := io.ReadAll(res.Body)
 		if readErr != nil {
 			return fmt.Errorf("error while reading error message: %v", readErr)
 		}
@@ -71,7 +71,7 @@ func (c *Client) Remove(req *types.RemoveRequest) error {
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		err, readErr := ioutil.ReadAll(res.Body)
+		err, readErr := io.ReadAll(res.Body)
 		if readErr != nil {
 			return fmt.Errorf("error while reading error message: %v", readErr)
 		}
@@ -91,7 +91,7 @@ func (c *Client) Clean(req *types.CleanRequest) error {
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		err, readErr := ioutil.ReadAll(res.Body)
+		err, readErr := io.ReadAll(res.Body)
 		if readErr != nil {
 			return fmt.Errorf("error while reading error message: %v", readErr)
 		}

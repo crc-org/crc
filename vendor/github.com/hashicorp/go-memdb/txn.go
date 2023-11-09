@@ -52,16 +52,16 @@ func (txn *Txn) TrackChanges() {
 	}
 }
 
-// readableIndex returns a transaction usable for reading the given
-// index in a table. If a write transaction is in progress, we may need
-// to use an existing modified txn.
+// readableIndex returns a transaction usable for reading the given index in a
+// table. If the transaction is a write transaction with modifications, a clone of the
+// modified index will be returned.
 func (txn *Txn) readableIndex(table, index string) *iradix.Txn {
 	// Look for existing transaction
 	if txn.write && txn.modified != nil {
 		key := tableIndex{table, index}
 		exist, ok := txn.modified[key]
 		if ok {
-			return exist
+			return exist.Clone()
 		}
 	}
 
@@ -102,7 +102,8 @@ func (txn *Txn) writableIndex(table, index string) *iradix.Txn {
 }
 
 // Abort is used to cancel this transaction.
-// This is a noop for read transactions.
+// This is a noop for read transactions,
+// already aborted or commited transactions.
 func (txn *Txn) Abort() {
 	// Noop for a read transaction
 	if !txn.write {
@@ -124,7 +125,8 @@ func (txn *Txn) Abort() {
 }
 
 // Commit is used to finalize this transaction.
-// This is a noop for read transactions.
+// This is a noop for read transactions,
+// already aborted or committed transactions.
 func (txn *Txn) Commit() {
 	// Noop for a read transaction
 	if !txn.write {
@@ -170,7 +172,11 @@ func (txn *Txn) Commit() {
 	}
 }
 
-// Insert is used to add or update an object into the given table
+// Insert is used to add or update an object into the given table.
+//
+// When updating an object, the obj provided should be a copy rather
+// than a value updated in-place. Modifying values in-place that are already
+// inserted into MemDB is not supported behavior.
 func (txn *Txn) Insert(table string, obj interface{}) error {
 	if !txn.write {
 		return fmt.Errorf("cannot insert in read-only transaction")
@@ -293,8 +299,8 @@ func (txn *Txn) Insert(table string, obj interface{}) error {
 	return nil
 }
 
-// Delete is used to delete a single object from the given table
-// This object must already exist in the table
+// Delete is used to delete a single object from the given table.
+// This object must already exist in the table.
 func (txn *Txn) Delete(table string, obj interface{}) error {
 	if !txn.write {
 		return fmt.Errorf("cannot delete in read-only transaction")
@@ -317,7 +323,7 @@ func (txn *Txn) Delete(table string, obj interface{}) error {
 		return fmt.Errorf("object missing primary index")
 	}
 
-	// Lookup the object by ID first, check fi we should continue
+	// Lookup the object by ID first, check if we should continue
 	idTxn := txn.writableIndex(table, id)
 	existing, ok := idTxn.Get(idVal)
 	if !ok {
@@ -509,7 +515,19 @@ func (txn *Txn) DeleteAll(table, index string, args ...interface{}) (int, error)
 }
 
 // FirstWatch is used to return the first matching object for
-// the given constraints on the index along with the watch channel
+// the given constraints on the index along with the watch channel.
+//
+// Note that all values read in the transaction form a consistent snapshot
+// from the time when the transaction was created.
+//
+// The watch channel is closed when a subsequent write transaction
+// has updated the result of the query. Since each read transaction
+// operates on an isolated snapshot, a new read transaction must be
+// started to observe the changes that have been made.
+//
+// If the value of index ends with "_prefix", FirstWatch will perform a prefix
+// match instead of full match on the index. The registered indexer must implement
+// PrefixIndexer, otherwise an error is returned.
 func (txn *Txn) FirstWatch(table, index string, args ...interface{}) (<-chan struct{}, interface{}, error) {
 	// Get the index value
 	indexSchema, val, err := txn.getIndexValue(table, index, args...)
@@ -537,7 +555,19 @@ func (txn *Txn) FirstWatch(table, index string, args ...interface{}) (<-chan str
 }
 
 // LastWatch is used to return the last matching object for
-// the given constraints on the index along with the watch channel
+// the given constraints on the index along with the watch channel.
+//
+// Note that all values read in the transaction form a consistent snapshot
+// from the time when the transaction was created.
+//
+// The watch channel is closed when a subsequent write transaction
+// has updated the result of the query. Since each read transaction
+// operates on an isolated snapshot, a new read transaction must be
+// started to observe the changes that have been made.
+//
+// If the value of index ends with "_prefix", LastWatch will perform a prefix
+// match instead of full match on the index. The registered indexer must implement
+// PrefixIndexer, otherwise an error is returned.
 func (txn *Txn) LastWatch(table, index string, args ...interface{}) (<-chan struct{}, interface{}, error) {
 	// Get the index value
 	indexSchema, val, err := txn.getIndexValue(table, index, args...)
@@ -565,14 +595,20 @@ func (txn *Txn) LastWatch(table, index string, args ...interface{}) (<-chan stru
 }
 
 // First is used to return the first matching object for
-// the given constraints on the index
+// the given constraints on the index.
+//
+// Note that all values read in the transaction form a consistent snapshot
+// from the time when the transaction was created.
 func (txn *Txn) First(table, index string, args ...interface{}) (interface{}, error) {
 	_, val, err := txn.FirstWatch(table, index, args...)
 	return val, err
 }
 
 // Last is used to return the last matching object for
-// the given constraints on the index
+// the given constraints on the index.
+//
+// Note that all values read in the transaction form a consistent snapshot
+// from the time when the transaction was created.
 func (txn *Txn) Last(table, index string, args ...interface{}) (interface{}, error) {
 	_, val, err := txn.LastWatch(table, index, args...)
 	return val, err
@@ -585,6 +621,9 @@ func (txn *Txn) Last(table, index string, args ...interface{}) (interface{}, err
 // null and fail to find a leaf node). This should only be used where the prefix
 // given is capable of matching indexed entries directly, which typically only
 // applies to a custom indexer. See the unit test for an example.
+//
+// Note that all values read in the transaction form a consistent snapshot
+// from the time when the transaction was created.
 func (txn *Txn) LongestPrefix(table, index string, args ...interface{}) (interface{}, error) {
 	// Enforce that this only works on prefix indexes.
 	if !strings.HasSuffix(index, "_prefix") {
@@ -663,15 +702,42 @@ func (txn *Txn) getIndexValue(table, index string, args ...interface{}) (*IndexS
 	return indexSchema, val, err
 }
 
-// ResultIterator is used to iterate over a list of results
-// from a Get query on a table.
+// ResultIterator is used to iterate over a list of results from a query on a table.
+//
+// When a ResultIterator is created from a write transaction, the results from
+// Next will reflect a snapshot of the table at the time the ResultIterator is
+// created.
+// This means that calling Insert or Delete on a transaction while iterating is
+// allowed, but the changes made by Insert or Delete will not be observed in the
+// results returned from subsequent calls to Next. For example if an item is deleted
+// from the index used by the iterator it will still be returned by Next. If an
+// item is inserted into the index used by the iterator, it will not be returned
+// by Next. However, an iterator created after a call to Insert or Delete will
+// reflect the modifications.
+//
+// When a ResultIterator is created from a write transaction, and there are already
+// modifications to the index used by the iterator, the modification cache of the
+// index will be invalidated. This may result in some additional allocations if
+// the same node in the index is modified again.
 type ResultIterator interface {
 	WatchCh() <-chan struct{}
+	// Next returns the next result from the iterator. If there are no more results
+	// nil is returned.
 	Next() interface{}
 }
 
-// Get is used to construct a ResultIterator over all the
-// rows that match the given constraints of an index.
+// Get is used to construct a ResultIterator over all the rows that match the
+// given constraints of an index. The index values must match exactly (this
+// is not a range-based or prefix-based lookup) by default.
+//
+// Prefix lookups: if the named index implements PrefixIndexer, you may perform
+// prefix-based lookups by appending "_prefix" to the index name. In this
+// scenario, the index values given in args are treated as prefix lookups. For
+// example, a StringFieldIndex will match any string with the given value
+// as a prefix: "mem" matches "memdb".
+//
+// See the documentation for ResultIterator to understand the behaviour of the
+// returned ResultIterator.
 func (txn *Txn) Get(table, index string, args ...interface{}) (ResultIterator, error) {
 	indexIter, val, err := txn.getIndexIterator(table, index, args...)
 	if err != nil {
@@ -691,7 +757,12 @@ func (txn *Txn) Get(table, index string, args ...interface{}) (ResultIterator, e
 
 // GetReverse is used to construct a Reverse ResultIterator over all the
 // rows that match the given constraints of an index.
-// The returned ResultIterator's Next() will return the next Previous value
+// The returned ResultIterator's Next() will return the next Previous value.
+//
+// See the documentation on Get for details on arguments.
+//
+// See the documentation for ResultIterator to understand the behaviour of the
+// returned ResultIterator.
 func (txn *Txn) GetReverse(table, index string, args ...interface{}) (ResultIterator, error) {
 	indexIter, val, err := txn.getIndexIteratorReverse(table, index, args...)
 	if err != nil {
@@ -715,6 +786,13 @@ func (txn *Txn) GetReverse(table, index string, args ...interface{}) (ResultIter
 // range scans within an index. It is not possible to watch the resulting
 // iterator since the radix tree doesn't efficiently allow watching on lower
 // bound changes. The WatchCh returned will be nill and so will block forever.
+//
+// If the value of index ends with "_prefix", LowerBound will perform a prefix match instead of
+// a full match on the index. The registered index must implement PrefixIndexer,
+// otherwise an error is returned.
+//
+// See the documentation for ResultIterator to understand the behaviour of the
+// returned ResultIterator.
 func (txn *Txn) LowerBound(table, index string, args ...interface{}) (ResultIterator, error) {
 	indexIter, val, err := txn.getIndexIterator(table, index, args...)
 	if err != nil {
@@ -738,6 +816,9 @@ func (txn *Txn) LowerBound(table, index string, args ...interface{}) (ResultIter
 // resulting iterator since the radix tree doesn't efficiently allow watching
 // on lower bound changes. The WatchCh returned will be nill and so will block
 // forever.
+//
+// See the documentation for ResultIterator to understand the behaviour of the
+// returned ResultIterator.
 func (txn *Txn) ReverseLowerBound(table, index string, args ...interface{}) (ResultIterator, error) {
 	indexIter, val, err := txn.getIndexIteratorReverse(table, index, args...)
 	if err != nil {
@@ -850,7 +931,7 @@ func (txn *Txn) getIndexIterator(table, index string, args ...interface{}) (*ira
 	indexTxn := txn.readableIndex(table, indexSchema.Name)
 	indexRoot := indexTxn.Root()
 
-	// Get an interator over the index
+	// Get an iterator over the index
 	indexIter := indexRoot.Iterator()
 	return indexIter, val, nil
 }
