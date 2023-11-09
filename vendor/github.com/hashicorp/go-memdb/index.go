@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -307,8 +308,7 @@ func (i *IntFieldIndex) FromObject(obj interface{}) (bool, []byte, error) {
 
 	// Get the value and encode it
 	val := fv.Int()
-	buf := make([]byte, size)
-	binary.PutVarint(buf, val)
+	buf := encodeInt(val, size)
 
 	return true, buf, nil
 }
@@ -330,10 +330,34 @@ func (i *IntFieldIndex) FromArgs(args ...interface{}) ([]byte, error) {
 	}
 
 	val := v.Int()
-	buf := make([]byte, size)
-	binary.PutVarint(buf, val)
+	buf := encodeInt(val, size)
 
 	return buf, nil
+}
+
+func encodeInt(val int64, size int) []byte {
+	buf := make([]byte, size)
+
+	// This bit flips the sign bit on any sized signed twos-complement integer,
+	// which when truncated to a uint of the same size will bias the value such
+	// that the maximum negative int becomes 0, and the maximum positive int
+	// becomes the maximum positive uint.
+	scaled := val ^ int64(-1<<(size*8-1))
+
+	switch size {
+	case 1:
+		buf[0] = uint8(scaled)
+	case 2:
+		binary.BigEndian.PutUint16(buf, uint16(scaled))
+	case 4:
+		binary.BigEndian.PutUint32(buf, uint32(scaled))
+	case 8:
+		binary.BigEndian.PutUint64(buf, uint64(scaled))
+	default:
+		panic(fmt.Sprintf("unsupported int size parameter: %d", size))
+	}
+
+	return buf
 }
 
 // IsIntType returns whether the passed type is a type of int and the number
@@ -341,15 +365,15 @@ func (i *IntFieldIndex) FromArgs(args ...interface{}) ([]byte, error) {
 func IsIntType(k reflect.Kind) (size int, okay bool) {
 	switch k {
 	case reflect.Int:
-		return binary.MaxVarintLen64, true
+		return strconv.IntSize / 8, true
 	case reflect.Int8:
-		return 2, true
+		return 1, true
 	case reflect.Int16:
-		return binary.MaxVarintLen16, true
+		return 2, true
 	case reflect.Int32:
-		return binary.MaxVarintLen32, true
+		return 4, true
 	case reflect.Int64:
-		return binary.MaxVarintLen64, true
+		return 8, true
 	default:
 		return 0, false
 	}
@@ -380,8 +404,7 @@ func (u *UintFieldIndex) FromObject(obj interface{}) (bool, []byte, error) {
 
 	// Get the value and encode it
 	val := fv.Uint()
-	buf := make([]byte, size)
-	binary.PutUvarint(buf, val)
+	buf := encodeUInt(val, size)
 
 	return true, buf, nil
 }
@@ -403,10 +426,28 @@ func (u *UintFieldIndex) FromArgs(args ...interface{}) ([]byte, error) {
 	}
 
 	val := v.Uint()
-	buf := make([]byte, size)
-	binary.PutUvarint(buf, val)
+	buf := encodeUInt(val, size)
 
 	return buf, nil
+}
+
+func encodeUInt(val uint64, size int) []byte {
+	buf := make([]byte, size)
+
+	switch size {
+	case 1:
+		buf[0] = uint8(val)
+	case 2:
+		binary.BigEndian.PutUint16(buf, uint16(val))
+	case 4:
+		binary.BigEndian.PutUint32(buf, uint32(val))
+	case 8:
+		binary.BigEndian.PutUint64(buf, val)
+	default:
+		panic(fmt.Sprintf("unsupported uint size parameter: %d", size))
+	}
+
+	return buf
 }
 
 // IsUintType returns whether the passed type is a type of uint and the number
@@ -414,15 +455,15 @@ func (u *UintFieldIndex) FromArgs(args ...interface{}) ([]byte, error) {
 func IsUintType(k reflect.Kind) (size int, okay bool) {
 	switch k {
 	case reflect.Uint:
-		return binary.MaxVarintLen64, true
+		return strconv.IntSize / 8, true
 	case reflect.Uint8:
-		return 2, true
+		return 1, true
 	case reflect.Uint16:
-		return binary.MaxVarintLen16, true
+		return 2, true
 	case reflect.Uint32:
-		return binary.MaxVarintLen32, true
+		return 4, true
 	case reflect.Uint64:
-		return binary.MaxVarintLen64, true
+		return 8, true
 	default:
 		return 0, false
 	}
@@ -751,8 +792,6 @@ type CompoundMultiIndex struct {
 func (c *CompoundMultiIndex) FromObject(raw interface{}) (bool, [][]byte, error) {
 	// At each entry, builder is storing the results from the next index
 	builder := make([][][]byte, 0, len(c.Indexes))
-	// Start with something higher to avoid resizing if possible
-	out := make([][]byte, 0, len(c.Indexes)^3)
 
 forloop:
 	// This loop goes through each indexer and adds the value(s) provided to the next
@@ -794,6 +833,9 @@ forloop:
 		}
 	}
 
+	// Start with something higher to avoid resizing if possible
+	out := make([][]byte, 0, len(c.Indexes)^3)
+
 	// We are walking through the builder slice essentially in a depth-first fashion,
 	// building the prefix and leaves as we go. If AllowMissing is false, we only insert
 	// these full paths to leaves. Otherwise, we also insert each prefix along the way.
@@ -802,10 +844,16 @@ forloop:
 	// field specified as "abc", it is valid to call FromArgs with just "abc".
 	var walkVals func([]byte, int)
 	walkVals = func(currPrefix []byte, depth int) {
+		if depth >= len(builder) {
+			return
+		}
+
 		if depth == len(builder)-1 {
 			// These are the "leaves", so append directly
 			for _, v := range builder[depth] {
-				out = append(out, append(currPrefix, v...))
+				outcome := make([]byte, len(currPrefix))
+				copy(outcome, currPrefix)
+				out = append(out, append(outcome, v...))
 			}
 			return
 		}

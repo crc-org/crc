@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -129,6 +130,7 @@ func (proxy *ProxyHttpServer) handleHttps(w http.ResponseWriter, r *http.Request
 		}
 		targetSiteCon, err := proxy.connectDial(ctx, "tcp", host)
 		if err != nil {
+			ctx.Warnf("Error dialing to %s: %s", host, err.Error())
 			httpError(proxyClient, ctx, err)
 			return
 		}
@@ -246,11 +248,20 @@ func (proxy *ProxyHttpServer) handleHttps(w http.ResponseWriter, r *http.Request
 						return
 					}
 					if err != nil {
-						ctx.Warnf("Illegal URL %s", "https://"+r.Host+req.URL.Path)
+						if req.URL != nil {
+							ctx.Warnf("Illegal URL %s", "https://"+r.Host+req.URL.Path)
+						} else {
+							ctx.Warnf("Illegal URL %s", "https://"+r.Host)
+						}
 						return
 					}
 					removeProxyHeaders(ctx, req)
-					resp, err = ctx.RoundTrip(req)
+					resp, err = func() (*http.Response, error) {
+						// explicitly discard request body to avoid data races in certain RoundTripper implementations
+						// see https://github.com/golang/go/issues/61596#issuecomment-1652345131
+						defer req.Body.Close()
+						return ctx.RoundTrip(req)
+					}()
 					if err != nil {
 						ctx.Warnf("Cannot read TLS response from mitm'd server %v", err)
 						return
@@ -324,7 +335,8 @@ func (proxy *ProxyHttpServer) handleHttps(w http.ResponseWriter, r *http.Request
 }
 
 func httpError(w io.WriteCloser, ctx *ProxyCtx, err error) {
-	if _, err := io.WriteString(w, "HTTP/1.1 502 Bad Gateway\r\n\r\n"); err != nil {
+	errStr := fmt.Sprintf("HTTP/1.1 502 Bad Gateway\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(err.Error()), err.Error())
+	if _, err := io.WriteString(w, errStr); err != nil {
 		ctx.Warnf("Error responding to client: %s", err)
 	}
 	if err := w.Close(); err != nil {
@@ -369,7 +381,7 @@ func (proxy *ProxyHttpServer) NewConnectDialToProxyWithHandler(https_proxy strin
 		return nil
 	}
 	if u.Scheme == "" || u.Scheme == "http" {
-		if strings.IndexRune(u.Host, ':') == -1 {
+		if !strings.ContainsRune(u.Host, ':') {
 			u.Host += ":80"
 		}
 		return func(network, addr string) (net.Conn, error) {
@@ -409,7 +421,7 @@ func (proxy *ProxyHttpServer) NewConnectDialToProxyWithHandler(https_proxy strin
 		}
 	}
 	if u.Scheme == "https" || u.Scheme == "wss" {
-		if strings.IndexRune(u.Host, ':') == -1 {
+		if !strings.ContainsRune(u.Host, ':') {
 			u.Host += ":443"
 		}
 		return func(network, addr string) (net.Conn, error) {

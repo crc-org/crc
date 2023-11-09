@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/cucumber/gherkin-go/v19"
-	"github.com/cucumber/messages-go/v16"
+	gherkin "github.com/cucumber/gherkin/go/v26"
+	messages "github.com/cucumber/messages/go/v21"
 
+	"github.com/cucumber/godog/internal/flags"
 	"github.com/cucumber/godog/internal/models"
 	"github.com/cucumber/godog/internal/tags"
 )
@@ -32,8 +33,8 @@ func ExtractFeaturePathLine(p string) (string, int) {
 	return retPath, line
 }
 
-func parseFeatureFile(path string, newIDFunc func() string) (*models.Feature, error) {
-	reader, err := os.Open(path)
+func parseFeatureFile(fsys fs.FS, path string, newIDFunc func() string) (*models.Feature, error) {
+	reader, err := fsys.Open(path)
 	if err != nil {
 		return nil, err
 	}
@@ -53,9 +54,25 @@ func parseFeatureFile(path string, newIDFunc func() string) (*models.Feature, er
 	return &f, nil
 }
 
-func parseFeatureDir(dir string, newIDFunc func() string) ([]*models.Feature, error) {
+func parseBytes(path string, feature []byte, newIDFunc func() string) (*models.Feature, error) {
+	reader := bytes.NewReader(feature)
+
+	var buf bytes.Buffer
+	gherkinDocument, err := gherkin.ParseGherkinDocument(io.TeeReader(reader, &buf), newIDFunc)
+	if err != nil {
+		return nil, fmt.Errorf("%s - %v", path, err)
+	}
+
+	gherkinDocument.Uri = path
+	pickles := gherkin.Pickles(*gherkinDocument, path, newIDFunc)
+
+	f := models.Feature{GherkinDocument: gherkinDocument, Pickles: pickles, Content: buf.Bytes()}
+	return &f, nil
+}
+
+func parseFeatureDir(fsys fs.FS, dir string, newIDFunc func() string) ([]*models.Feature, error) {
 	var features []*models.Feature
-	return features, filepath.Walk(dir, func(p string, f os.FileInfo, err error) error {
+	return features, fs.WalkDir(fsys, dir, func(p string, f fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -68,7 +85,7 @@ func parseFeatureDir(dir string, newIDFunc func() string) ([]*models.Feature, er
 			return nil
 		}
 
-		feat, err := parseFeatureFile(p, newIDFunc)
+		feat, err := parseFeatureFile(fsys, p, newIDFunc)
 		if err != nil {
 			return err
 		}
@@ -78,21 +95,29 @@ func parseFeatureDir(dir string, newIDFunc func() string) ([]*models.Feature, er
 	})
 }
 
-func parsePath(path string, newIDFunc func() string) ([]*models.Feature, error) {
+func parsePath(fsys fs.FS, path string, newIDFunc func() string) ([]*models.Feature, error) {
 	var features []*models.Feature
 
 	path, line := ExtractFeaturePathLine(path)
 
-	fi, err := os.Stat(path)
+	fi, err := func() (fs.FileInfo, error) {
+		file, err := fsys.Open(path)
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
+
+		return file.Stat()
+	}()
 	if err != nil {
 		return features, err
 	}
 
 	if fi.IsDir() {
-		return parseFeatureDir(path, newIDFunc)
+		return parseFeatureDir(fsys, path, newIDFunc)
 	}
 
-	ft, err := parseFeatureFile(path, newIDFunc)
+	ft, err := parseFeatureFile(fsys, path, newIDFunc)
 	if err != nil {
 		return features, err
 	}
@@ -121,14 +146,14 @@ func parsePath(path string, newIDFunc func() string) ([]*models.Feature, error) 
 }
 
 // ParseFeatures ...
-func ParseFeatures(filter string, paths []string) ([]*models.Feature, error) {
+func ParseFeatures(fsys fs.FS, filter string, paths []string) ([]*models.Feature, error) {
 	var order int
 
 	featureIdxs := make(map[string]int)
 	uniqueFeatureURI := make(map[string]*models.Feature)
 	newIDFunc := (&messages.Incrementing{}).NewId
 	for _, path := range paths {
-		feats, err := parsePath(path, newIDFunc)
+		feats, err := parsePath(fsys, path, newIDFunc)
 
 		switch {
 		case os.IsNotExist(err):
@@ -149,6 +174,41 @@ func ParseFeatures(filter string, paths []string) ([]*models.Feature, error) {
 
 			order++
 		}
+	}
+
+	var features = make([]*models.Feature, len(uniqueFeatureURI))
+	for uri, feature := range uniqueFeatureURI {
+		idx := featureIdxs[uri]
+		features[idx] = feature
+	}
+
+	features = filterFeatures(filter, features)
+
+	return features, nil
+}
+
+type FeatureContent = flags.Feature
+
+func ParseFromBytes(filter string, featuresInputs []FeatureContent) ([]*models.Feature, error) {
+	var order int
+
+	featureIdxs := make(map[string]int)
+	uniqueFeatureURI := make(map[string]*models.Feature)
+	newIDFunc := (&messages.Incrementing{}).NewId
+	for _, f := range featuresInputs {
+		ft, err := parseBytes(f.Name, f.Contents, newIDFunc)
+		if err != nil {
+			return nil, err
+		}
+
+		if _, duplicate := uniqueFeatureURI[ft.Uri]; duplicate {
+			continue
+		}
+
+		uniqueFeatureURI[ft.Uri] = ft
+		featureIdxs[ft.Uri] = order
+
+		order++
 	}
 
 	var features = make([]*models.Feature, len(uniqueFeatureURI))

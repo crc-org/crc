@@ -68,13 +68,19 @@ type DomainCapsCPU struct {
 	Modes []DomainCapsCPUMode `xml:"mode"`
 }
 
+type DomainCapsCPUMaxPhysAddr struct {
+	Mode  string `xml:"mode,attr"`
+	Limit uint   `xml:"limit,attr"`
+}
+
 type DomainCapsCPUMode struct {
-	Name      string                 `xml:"name,attr"`
-	Supported string                 `xml:"supported,attr"`
-	Models    []DomainCapsCPUModel   `xml:"model"`
-	Vendor    string                 `xml:"vendor,omitempty"`
-	Features  []DomainCapsCPUFeature `xml:"feature"`
-	Enums     []DomainCapsEnum       `xml:"enum"`
+	Name        string                    `xml:"name,attr"`
+	Supported   string                    `xml:"supported,attr"`
+	Models      []DomainCapsCPUModel      `xml:"model"`
+	Vendor      string                    `xml:"vendor,omitempty"`
+	MaxPhysAddr *DomainCapsCPUMaxPhysAddr `xml:"maxphysaddr"`
+	Features    []DomainCapsCPUFeature    `xml:"feature"`
+	Enums       []DomainCapsEnum          `xml:"enum"`
 }
 
 type DomainCapsCPUModel struct {
@@ -124,6 +130,7 @@ type DomainCapsFeatures struct {
 	GenID             *DomainCapsFeatureGenID             `xml:"genid"`
 	BackingStoreInput *DomainCapsFeatureBackingStoreInput `xml:"backingStoreInput"`
 	Backup            *DomainCapsFeatureBackup            `xml:"backup"`
+	AsyncTeardown     *DomainCapsFeatureAsyncTeardown     `xml:"async-teardown"`
 	S390PV            *DomainCapsFeatureS390PV            `xml:"s390-pv"`
 	SEV               *DomainCapsFeatureSEV               `xml:"sev"`
 	SGX               *DomainCapsFeatureSGX               `xml:"sgx"`
@@ -148,6 +155,10 @@ type DomainCapsFeatureBackingStoreInput struct {
 }
 
 type DomainCapsFeatureBackup struct {
+	Supported string `xml:"supported,attr"`
+}
+
+type DomainCapsFeatureAsyncTeardown struct {
 	Supported string `xml:"supported,attr"`
 }
 

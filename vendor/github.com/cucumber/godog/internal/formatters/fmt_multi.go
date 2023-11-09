@@ -5,7 +5,7 @@ import (
 
 	"github.com/cucumber/godog/formatters"
 	"github.com/cucumber/godog/internal/storage"
-	"github.com/cucumber/messages-go/v16"
+	messages "github.com/cucumber/messages/go/v21"
 )
 
 // MultiFormatter passes test progress to multiple formatters.
@@ -15,9 +15,8 @@ type MultiFormatter struct {
 }
 
 type formatter struct {
-	fmt   formatters.FormatterFunc
-	out   io.Writer
-	close bool
+	fmt formatters.FormatterFunc
+	out io.Writer
 }
 
 type repeater []formatters.Formatter

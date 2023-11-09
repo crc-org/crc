@@ -21,17 +21,12 @@ import (
 	"crypto/tls"
 	"io"
 	"net"
-	"strings"
 )
 
 // AddSNIRoute appends a route to the ipPort listener that routes to
 // dest if the incoming TLS SNI server name is sni. If it doesn't
 // match, rule processing continues for any additional routes on
 // ipPort.
-//
-// By default, the proxy will route all ACME tls-sni-01 challenges
-// received on ipPort to all SNI dests. You can disable ACME routing
-// with AddStopACMESearch.
 //
 // The ipPort is any valid net.Listen TCP address.
 func (p *Proxy) AddSNIRoute(ipPort, sni string, dest Target) {
@@ -43,115 +38,43 @@ func (p *Proxy) AddSNIRoute(ipPort, sni string, dest Target) {
 // matcher. If it doesn't match, rule processing continues for any
 // additional routes on ipPort.
 //
-// By default, the proxy will route all ACME tls-sni-01 challenges
-// received on ipPort to all SNI dests. You can disable ACME routing
-// with AddStopACMESearch.
-//
 // The ipPort is any valid net.Listen TCP address.
 func (p *Proxy) AddSNIMatchRoute(ipPort string, matcher Matcher, dest Target) {
-	cfg := p.configFor(ipPort)
-	if !cfg.stopACME {
-		if len(cfg.acmeTargets) == 0 {
-			p.addRoute(ipPort, &acmeMatch{cfg})
-		}
-		cfg.acmeTargets = append(cfg.acmeTargets, dest)
-	}
-
-	p.addRoute(ipPort, sniMatch{matcher, dest})
+	p.addRoute(ipPort, sniMatch{matcher: matcher, target: dest})
 }
 
-// AddStopACMESearch prevents ACME probing of subsequent SNI routes.
-// Any ACME challenges on ipPort for SNI routes previously added
-// before this call will still be proxied to all possible SNI
-// backends.
-func (p *Proxy) AddStopACMESearch(ipPort string) {
-	p.configFor(ipPort).stopACME = true
+// SNITargetFunc is the func callback used by Proxy.AddSNIRouteFunc.
+type SNITargetFunc func(ctx context.Context, sniName string) (t Target, ok bool)
+
+// AddSNIRouteFunc adds a route to ipPort that matches an SNI request and calls
+// fn to map its nap to a target.
+func (p *Proxy) AddSNIRouteFunc(ipPort string, fn SNITargetFunc) {
+	p.addRoute(ipPort, sniMatch{targetFunc: fn})
 }
 
 type sniMatch struct {
 	matcher Matcher
 	target  Target
+
+	// Alternatively, if targetFunc is non-nil, it's used instead:
+	targetFunc SNITargetFunc
 }
 
 func (m sniMatch) match(br *bufio.Reader) (Target, string) {
 	sni := clientHelloServerName(br)
+	if sni == "" {
+		return nil, ""
+	}
+	if m.targetFunc != nil {
+		if t, ok := m.targetFunc(context.TODO(), sni); ok {
+			return t, sni
+		}
+		return nil, ""
+	}
 	if m.matcher(context.TODO(), sni) {
 		return m.target, sni
 	}
 	return nil, ""
-}
-
-// acmeMatch matches "*.acme.invalid" ACME tls-sni-01 challenges and
-// searches for a Target in cfg.acmeTargets that has the challenge
-// response.
-type acmeMatch struct {
-	cfg *config
-}
-
-func (m *acmeMatch) match(br *bufio.Reader) (Target, string) {
-	sni := clientHelloServerName(br)
-	if !strings.HasSuffix(sni, ".acme.invalid") {
-		return nil, ""
-	}
-
-	// TODO: cache. ACME issuers will hit multiple times in a short
-	// burst for each issuance event. A short TTL cache + singleflight
-	// should have an excellent hit rate.
-	// TODO: maybe an acme-specific timeout as well?
-	// TODO: plumb context upwards?
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	ch := make(chan Target, len(m.cfg.acmeTargets))
-	for _, target := range m.cfg.acmeTargets {
-		go tryACME(ctx, ch, target, sni)
-	}
-	for range m.cfg.acmeTargets {
-		if target := <-ch; target != nil {
-			return target, sni
-		}
-	}
-
-	// No target was happy with the provided challenge.
-	return nil, ""
-}
-
-func tryACME(ctx context.Context, ch chan<- Target, dest Target, sni string) {
-	var ret Target
-	defer func() { ch <- ret }()
-
-	conn, targetConn := net.Pipe()
-	defer conn.Close()
-	go dest.HandleConn(targetConn)
-
-	deadline, ok := ctx.Deadline()
-	if ok {
-		conn.SetDeadline(deadline)
-	}
-
-	client := tls.Client(conn, &tls.Config{
-		ServerName:         sni,
-		InsecureSkipVerify: true,
-	})
-	if err := client.Handshake(); err != nil {
-		// TODO: log?
-		return
-	}
-	certs := client.ConnectionState().PeerCertificates
-	if len(certs) == 0 {
-		// TODO: log?
-		return
-	}
-	// acme says the first cert offered by the server must match the
-	// challenge hostname.
-	if err := certs[0].VerifyHostname(sni); err != nil {
-		// TODO: log?
-		return
-	}
-
-	// Target presented what looks like a valid challenge
-	// response, send it back to the matcher.
-	ret = dest
 }
 
 // clientHelloServerName returns the SNI server name inside the TLS ClientHello,
