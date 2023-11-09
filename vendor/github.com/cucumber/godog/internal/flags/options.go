@@ -3,6 +3,7 @@ package flags
 import (
 	"context"
 	"io"
+	"io/fs"
 	"testing"
 )
 
@@ -64,4 +65,21 @@ type Options struct {
 
 	// TestingT runs scenarios as subtests.
 	TestingT *testing.T
+
+	// FeatureContents allows passing in each feature manually
+	// where the contents of each feature is stored as a byte slice
+	// in a map entry
+	FeatureContents []Feature
+
+	// FS allows passing in an `fs.FS` to read features from, such as an `embed.FS`
+	// or os.DirFS(string).
+	FS fs.FS
+
+	// ShowHelp enables suite to show CLI flags usage help and exit.
+	ShowHelp bool
+}
+
+type Feature struct {
+	Name     string
+	Contents []byte
 }

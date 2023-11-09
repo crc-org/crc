@@ -1,3 +1,8 @@
+v3.3.0 / 2023-10-31
+===================
+
+* Add groupId to context so the track events can related to both a user and distinct id and group
+  * Note: When updating to this version, verify the groupId is not being found using the Extra map.  The new groupId field will now take precedence.
 
 v3.1.0 / 2019-09-20
 ===================
