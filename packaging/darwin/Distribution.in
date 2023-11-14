@@ -20,9 +20,9 @@ function installCheck() {
         return false;
 	}
 
-    if(!(system.compareVersions(system.version.ProductVersion, '11.0.0') >= 0)) {
+    if(!(system.compareVersions(system.version.ProductVersion, '12.0.0') >= 0)) {
         my.result.title = 'Unable to install';
-        my.result.message = 'Red Hat OpenShift Local requires macOS 11 or later.';
+        my.result.message = 'Red Hat OpenShift Local requires macOS 12 or later.';
         my.result.type = 'Fatal';
         return false;
     }
