@@ -44,9 +44,9 @@ To assign more resources to the {prod} instance, see link:{crc-gsg-url}#configur
 
 === Requirements on {msw}
 
-* On {msw}, {prod} requires the Windows 10 Fall Creators Update (version 1709) or later.
+* On {msw}, {prod} requires fully updated {msw} 10 or {msw} 11.
 {prod} does not work on earlier versions of {msw}.
-{msw} 10 Home Edition is not supported.
+* {prod} does not work on {msw} 10 Home Edition.
 
 === Requirements on {mac}
 
