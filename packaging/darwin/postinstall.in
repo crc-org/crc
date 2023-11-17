@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+pkill -9 crc-tray || true
+rm -fr /Applications/Red\ Hat\ OpenShift\ Local.app || true
+
 rm -fr  /Applications/CodeReady\ Containers.app || true
 
 chmod 755 "__INSTALL_PATH__"/crc
