@@ -17,8 +17,8 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macOS-latest
-          - macOS-11
+          - macOS-13
+          - macOS-12
         go:
           - '1.20'
     steps:
