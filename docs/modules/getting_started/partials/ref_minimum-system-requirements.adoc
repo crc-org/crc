@@ -46,7 +46,7 @@ To assign more resources to the {prod} instance, see link:{crc-gsg-url}#configur
 
 * On {msw}, {prod} requires fully updated {msw} 10 or {msw} 11.
 {prod} does not work on earlier versions of {msw}.
-* {prod} does not work on {msw} 10 Home Edition.
+* {prod} does not work on {msw} Home Edition.
 
 === Requirements on {mac}
 
