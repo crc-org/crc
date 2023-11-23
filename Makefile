@@ -379,7 +379,7 @@ msidir: clean_windows_msi embed-download-windows $(HOST_BUILD_DIR)/GenMsiWxs win
 
 $(BUILD_DIR)/windows-amd64/crc-windows-amd64.msi: msidir
 	candle.exe -arch x64 -ext WixUtilExtension -o $(PACKAGE_DIR)/msi/ $(PACKAGE_DIR)/msi/*.wxs
-	light.exe -ext WixUIExtension -ext WixUtilExtension -sacl -spdb -sice:ICE61 -sice:ICE69 -b $(PACKAGE_DIR)/msi -out $@ $(PACKAGE_DIR)/msi/*.wixobj
+	light.exe -ext WixUIExtension -ext WixUtilExtension -sacl -spdb -sice:ICE61 -sice:ICE69 -b $(PACKAGE_DIR)/msi -loc $(PACKAGE_DIR)/WixUI_en.wxl -out $@ $(PACKAGE_DIR)/msi/*.wixobj
 
 CABS_MSI = "*.cab,crc-windows-amd64.msi"
 $(BUILD_DIR)/windows-amd64/crc-windows-installer.zip: $(BUILD_DIR)/windows-amd64/crc-windows-amd64.msi
