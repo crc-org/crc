@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
@@ -46,19 +45,14 @@ func killDaemonProcess() error {
 	return nil
 }
 
-// isDaemonProcess return true if any of the following conditions met
-// - crc daemon <options>
-// - crc --log-level=<level> daemon <options>
-// - crc --log-level <level> daemon <options>
+// isDaemonProcess return true if the cmdline contains the word daemon
+// since only one instance of the daemon is allowed to run this should
+// be enough to detect the daemon process
 func isDaemonProcess(cmdLine []string) bool {
-	if len(cmdLine) >= 2 && cmdLine[1] == "daemon" {
-		return true
-	}
-	if len(cmdLine) >= 3 && strings.HasPrefix(cmdLine[1], "--log-level") && cmdLine[2] == "daemon" {
-		return true
-	}
-	if len(cmdLine) >= 4 && cmdLine[1] == "--log-level" && cmdLine[3] == "daemon" {
-		return true
+	for _, arg := range cmdLine {
+		if arg == "daemon" {
+			return true
+		}
 	}
 	return false
 }
