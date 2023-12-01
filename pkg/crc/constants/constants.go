@@ -27,7 +27,7 @@ const (
 	DaemonLogFile             = "crcd.log"
 	CrcLandingPageURL         = "https://console.redhat.com/openshift/create/local" // #nosec G101
 	DefaultAdminHelperURLBase = "https://github.com/crc-org/admin-helper/releases/download/v%s/%s"
-	BackgroundLauncherURL     = "https://github.com/crc-org/win32-background-launcher/releases/download/v%s/%s"
+	BackgroundLauncherURL     = "https://github.com/crc-org/win32-background-launcher/releases/download/v%s/win32-background-launcher.exe"
 	DefaultBundleURLBase      = "https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/%s/%s/%s"
 	DefaultContext            = "admin"
 	DaemonHTTPEndpoint        = "http://unix/api"
@@ -49,7 +49,7 @@ const (
 	OpenShiftIngressHTTPPort  = 80
 	OpenShiftIngressHTTPSPort = 443
 
-	BackgroundLauncherExecutable = "win32-background-launcher.exe"
+	BackgroundLauncherExecutable = "crc-background-launcher.exe"
 )
 
 var adminHelperExecutableForOs = map[string]string{
@@ -196,7 +196,7 @@ func GetKubeAdminPasswordPath() string {
 
 func GetWin32BackgroundLauncherDownloadURL() string {
 	return fmt.Sprintf(BackgroundLauncherURL,
-		version.GetWin32BackgroundLauncherVersion(), BackgroundLauncherExecutable)
+		version.GetWin32BackgroundLauncherVersion())
 }
 
 func GetDefaultCPUs(preset crcpreset.Preset) int {

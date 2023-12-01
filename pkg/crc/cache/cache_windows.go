@@ -12,7 +12,7 @@ import (
 func NewWin32BackgroundLauncherCache() *Cache {
 	url := constants.GetWin32BackgroundLauncherDownloadURL()
 	version := version.GetWin32BackgroundLauncherVersion()
-	return newCache(constants.Win32BackgroundLauncherPath(),
+	cache := newCache(constants.Win32BackgroundLauncherPath(),
 		url,
 		version,
 		func(executable string) (string, error) {
@@ -23,4 +23,8 @@ func NewWin32BackgroundLauncherCache() *Cache {
 			return strings.TrimSpace(stdOut), nil
 		},
 	)
+	// upstream binary name is win32-background-launcher.exe
+	// but we want to name it as crc-background-launcher.exe
+	cache.ignoreNameMismatch = true
+	return cache
 }
