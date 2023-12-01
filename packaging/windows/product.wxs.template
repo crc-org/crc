@@ -55,7 +55,7 @@
                         <ServiceControl Id="StartAdminHelperService" Name="crcAdminHelper" Start='install' Stop='both' Remove='uninstall' />
                     </Component>
                     <Component Id="BackgroundLauncher" Guid="*">
-                        <File Id="BackgroundLauncher" Source="SourceDir\win32-background-launcher.exe" KeyPath="yes" DiskId="1" />
+                        <File Id="BackgroundLauncher" Source="SourceDir\win32-background-launcher.exe" Name="crc-background-launcher.exe" KeyPath="yes" DiskId="1" />
                     </Component>
                     <Component Id="AddUserToCrcUsers" Guid="0C793EE7-109A-474B-9651-77E0A83BAF2D" KeyPath="yes">
                         <Condition>NOT UPGRADINGPRODUCTCODE AND NOT WIX_UPGRADE_DETECTED</Condition>

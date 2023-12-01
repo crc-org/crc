@@ -17,10 +17,11 @@ import (
 )
 
 type Cache struct {
-	executablePath string
-	archiveURL     string
-	version        string
-	getVersion     func(string) (string, error)
+	executablePath     string
+	archiveURL         string
+	version            string
+	ignoreNameMismatch bool
+	getVersion         func(string) (string, error)
 }
 
 type VersionMismatchError struct {
@@ -127,14 +128,14 @@ func (c *Cache) cacheExecutable() error {
 		}
 	} else {
 		extractedFiles = append(extractedFiles, assetTmpFile)
-		if filepath.Base(assetTmpFile) != c.GetExecutableName() {
+		if filepath.Base(assetTmpFile) != c.GetExecutableName() && !c.ignoreNameMismatch {
 			logging.Warnf("Executable name is %s but extracted file name is %s", c.GetExecutableName(), filepath.Base(assetTmpFile))
 		}
 	}
 
 	// Copy the requested asset into its final destination
 	for _, extractedFilePath := range extractedFiles {
-		finalExecutablePath := filepath.Join(constants.CrcBinDir, filepath.Base(extractedFilePath))
+		finalExecutablePath := filepath.Join(constants.CrcBinDir, c.GetExecutableName())
 		// If the file exists then remove it (ignore error) first before copy because with `0500` permission
 		// it is not possible to overwrite the file.
 		os.Remove(finalExecutablePath)
