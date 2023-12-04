@@ -4,7 +4,27 @@ on:
     branches:
       - "main"
   pull_request: {}
+
 jobs:
+  save-gh-context:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+        
+      - name: Save the GH context in an artifact
+        shell: bash
+        env:
+          GH_CONTEXT: ${{ toJSON(github) }}
+        run: echo $GH_CONTEXT > gh_context.json
+
+      - name: Upload the GH context artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gh_context
+          path: ./gh_context.json
+
   build:
     runs-on: ${{ matrix.os }}
     strategy:
