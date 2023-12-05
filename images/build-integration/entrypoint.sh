@@ -90,7 +90,7 @@ else
         BINARY_EXEC+="BUNDLE_PATH=${BUNDLE_LOCATION} "
     fi
     BINARY_EXEC+="./${BINARY} > integration.results"
-	if  ${PLATFORM} == 'macos' ; then
+	if [[ ${PLATFORM} == 'macos' ]]; then
 		BINARY_EXEC="sudo su - ${TARGET_HOST_USERNAME} -c \"PATH=\$PATH:/usr/local/bin && ${BINARY_EXEC} \""
 	fi
 fi
