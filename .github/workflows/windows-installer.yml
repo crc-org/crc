@@ -11,7 +11,6 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - windows-2019
           - windows-2022
         go:
           - '1.20'
