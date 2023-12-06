@@ -17,7 +17,8 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
-	"github.com/openshift/oc/pkg/helpers/tokencmd"
+	"github.com/openshift/library-go/pkg/oauth/tokenrequest"
+	"github.com/openshift/library-go/pkg/oauth/tokenrequest/challengehandlers"
 	"k8s.io/apimachinery/third_party/forked/golang/netutil"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -138,7 +139,7 @@ func addContext(cfg *api.Config, ip string, clusterConfig *types.ClusterConfig, 
 	if !ok {
 		return fmt.Errorf("failed to parse root certificate")
 	}
-	token, err := tokencmd.RequestToken(&restclient.Config{
+	restConfig := &restclient.Config{
 		Proxy: clusterConfig.ProxyConfig.ProxyFunc(),
 		Host:  clusterConfig.ClusterAPI,
 		Transport: &http.Transport{
@@ -163,7 +164,9 @@ func addContext(cfg *api.Config, ip string, clusterConfig *types.ClusterConfig, 
 				return dialer.Dial(network, fmt.Sprintf("%s:%s", ip, port))
 			},
 		},
-	}, nil, username, password)
+	}
+	challengeHandler := challengehandlers.NewBasicChallengeHandler(restConfig.Host, nil /* in */, nil /* out */, nil /* passwordPrompter */, username, password)
+	token, err := tokenrequest.RequestTokenWithChallengeHandlers(restConfig, challengeHandler)
 	if err != nil {
 		return err
 	}
