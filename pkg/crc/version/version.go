@@ -35,7 +35,7 @@ var (
 )
 
 const (
-	crcAdminHelperVersion = "0.0.12"
+	crcAdminHelperVersion = "0.5.0"
 )
 
 func GetCRCVersion() string {
