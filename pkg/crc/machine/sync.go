@@ -10,6 +10,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
 	crcPreset "github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/events"
 )
 
 const startCancelTimeout = 15 * time.Second
@@ -69,6 +70,10 @@ func (s *Synchronized) Delete() error {
 
 	err := s.underlying.Delete()
 	s.syncOperationDone <- Deleting
+
+	if err == nil {
+		events.StatusChanged.Fire(events.StatusChangedEvent{State: state.NoVM})
+	}
 	return err
 }
 
@@ -80,6 +85,7 @@ func (s *Synchronized) prepareStart(startCancel context.CancelFunc) error {
 	}
 	s.startCancel = startCancel
 	s.currentState = Starting
+	events.StatusChanged.Fire(events.StatusChangedEvent{State: state.Starting})
 
 	return nil
 }
@@ -92,6 +98,13 @@ func (s *Synchronized) Start(ctx context.Context, startConfig types.StartConfig)
 
 	startResult, err := s.underlying.Start(ctx, startConfig)
 	s.syncOperationDone <- Starting
+
+	if err == nil {
+		events.StatusChanged.Fire(events.StatusChangedEvent{State: startResult.Status})
+	} else {
+		events.StatusChanged.Fire(events.StatusChangedEvent{State: state.Error, Error: err})
+	}
+
 	return startResult, err
 }
 
@@ -136,10 +149,16 @@ func (s *Synchronized) Stop() (state.State, error) {
 	if err := s.prepareStopDelete(Stopping); err != nil {
 		return state.Error, err
 	}
+	events.StatusChanged.Fire(events.StatusChangedEvent{State: state.Stopping})
 
 	st, err := s.underlying.Stop()
 	s.syncOperationDone <- Stopping
 
+	if err == nil {
+		events.StatusChanged.Fire(events.StatusChangedEvent{State: st})
+	} else {
+		events.StatusChanged.Fire(events.StatusChangedEvent{State: state.Error, Error: err})
+	}
 	return st, err
 }
 
@@ -160,7 +179,14 @@ func (s *Synchronized) ConnectionDetails() (*types.ConnectionDetails, error) {
 }
 
 func (s *Synchronized) PowerOff() error {
-	return s.underlying.PowerOff()
+	err := s.underlying.PowerOff()
+	if err != nil {
+		events.StatusChanged.Fire(events.StatusChangedEvent{State: state.Stopped})
+	} else {
+		events.StatusChanged.Fire(events.StatusChangedEvent{State: state.Error, Error: err})
+	}
+
+	return err
 }
 
 func (s *Synchronized) Status() (*types.ClusterStatusResult, error) {
