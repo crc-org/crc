@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strconv"
-	"strings"
 
-	"github.com/containers/libhvee/pkg/hypervctl"
 	log "github.com/crc-org/crc/v2/pkg/crc/logging"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
 	"github.com/crc-org/machine/libmachine/drivers"
 	"github.com/crc-org/machine/libmachine/state"
+
+	"github.com/containers/common/pkg/strongunits"
+	"github.com/containers/libhvee/pkg/hypervctl"
 )
 
 type Driver struct {
@@ -283,28 +283,23 @@ func (d *Driver) getDiskPath() string {
 	return d.ResolveStorePath(fmt.Sprintf("%s.%s", d.MachineName, d.ImageFormat))
 }
 
-func (d *Driver) resizeDisk(newSize int64) error {
+func (d *Driver) resizeDisk(newSizeBytes int64) error {
+
+	newSize := strongunits.B(newSizeBytes)
+
 	diskPath := d.getDiskPath()
-	out, err := cmdOut(fmt.Sprintf("@(Get-VHD -Path %s).Size", quote(diskPath)))
+	currentSize, err := hypervctl.GetDiskSize(diskPath)
 	if err != nil {
 		return fmt.Errorf("unable to get current size of crc.vhdx: %w", err)
 	}
-	currentSize, err := strconv.ParseInt(strings.TrimSpace(out), 10, 64)
-	if err != nil {
-		return fmt.Errorf("unable to convert disk size to int: %w", err)
-	}
-	if newSize == currentSize {
+	if newSize == currentSize.ToBytes() {
 		log.Debugf("%s is already %d bytes", diskPath, newSize)
 		return nil
 	}
-	if newSize < currentSize {
-		return fmt.Errorf("current disk image capacity is bigger than the requested size (%d > %d)", currentSize, newSize)
+	if newSize < currentSize.ToBytes() {
+		return fmt.Errorf("current disk image capacity is bigger than the requested size (%d > %d)", currentSize.ToBytes(), newSize)
 	}
 
-	log.Debugf("Resizing disk from %d bytes to %d bytes", currentSize, newSize)
-	return cmd("Hyper-V\\Resize-VHD",
-		"-Path",
-		quote(diskPath),
-		"-SizeBytes",
-		fmt.Sprintf("%d", newSize))
+	log.Debugf("Resizing disk from %d bytes to %d bytes", currentSize.ToBytes(), newSize.ToBytes())
+	return hypervctl.ResizeDisk(diskPath, strongunits.ToGiB(newSize))
 }

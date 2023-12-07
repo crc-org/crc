@@ -11,6 +11,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/cheggaaa/pb/v3 v3.1.5
+	github.com/containers/common v0.59.1
 	github.com/containers/gvisor-tap-vsock v0.7.5
 	github.com/containers/image/v5 v5.32.2
 	github.com/containers/libhvee v0.7.1
@@ -77,7 +78,6 @@ require (
 	github.com/areYouLazy/libhosty v1.1.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
-	github.com/containers/common v0.59.1 // indirect
 	github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01 // indirect
 	github.com/containers/ocicrypt v1.2.0 // indirect
 	github.com/containers/storage v1.55.0 // indirect
