@@ -56,6 +56,7 @@ func NewEventServer(machine machine.Client) *EventServer {
 
 	sseServer.CreateStream(Logs)
 	sseServer.CreateStream(ClusterLoad)
+	sseServer.CreateStream(StatusChange)
 	return eventServer
 }
 
@@ -69,6 +70,8 @@ func createEventStream(server *EventServer, streamID string) EventStream {
 		return newLogsStream(server)
 	case ClusterLoad:
 		return newClusterLoadStream(server)
+	case StatusChange:
+		return newStatusChangeStream(server)
 	}
 	return nil
 }
