@@ -10,6 +10,7 @@ const (
 	Stopped  State = "Stopped"
 	Stopping State = "Stopping"
 	Starting State = "Starting"
+	NoVM     State = "NoVM"
 	Error    State = "Error"
 )
 

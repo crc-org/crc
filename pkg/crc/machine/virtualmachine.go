@@ -32,6 +32,14 @@ func (err *MissingHostError) Error() string {
 	return fmt.Sprintf("no such libmachine vm: %s", err.name)
 }
 
+func (err *MissingHostError) Is(target error) bool {
+	var x *MissingHostError
+	if errors.As(target, &x) && x.name == err.name {
+		return true
+	}
+	return false
+}
+
 var errInvalidBundleMetadata = errors.New("Error loading bundle metadata")
 
 func loadVirtualMachine(name string, useVSock bool) (*virtualMachine, error) {
