@@ -114,7 +114,7 @@ func (vm *VirtualMachine) GetKeyValuePairs() (map[string]string, error) {
 	var service *wmiext.Service
 	var err error
 
-	if service, err = wmiext.NewLocalService(HyperVNamespace); err != nil {
+	if service, err = NewLocalHyperVService(); err != nil {
 		return nil, err
 	}
 
@@ -153,7 +153,7 @@ func (vm *VirtualMachine) kvpOperation(op string, key string, value string, ille
 	var vsms, job *wmiext.Instance
 	var err error
 
-	if service, err = wmiext.NewLocalService(HyperVNamespace); err != nil {
+	if service, err = NewLocalHyperVService(); err != nil {
 		return err
 	}
 	defer service.Close()
@@ -226,7 +226,7 @@ func (vm *VirtualMachine) stop(force bool) error {
 		res int32
 		srv *wmiext.Service
 	)
-	if srv, err = wmiext.NewLocalService(HyperVNamespace); err != nil {
+	if srv, err = NewLocalHyperVService(); err != nil {
 		return err
 	}
 	wmiInst, err := srv.FindFirstRelatedInstance(vm.Path(), "Msvm_ShutdownComponent")
@@ -303,12 +303,7 @@ func (vm *VirtualMachine) Start() error {
 
 func getService(_ *wmiext.Service) (*wmiext.Service, error) {
 	// any reason why when we instantiate a vm, we should NOT just embed a service?
-	return wmiext.NewLocalService(HyperVNamespace)
-}
-
-func (vm *VirtualMachine) list() ([]*HyperVConfig, error) {
-
-	return nil, ErrNotImplemented
+	return NewLocalHyperVService()
 }
 
 func (vm *VirtualMachine) GetConfig(diskPath string) (*HyperVConfig, error) {
@@ -326,13 +321,18 @@ func (vm *VirtualMachine) GetConfig(diskPath string) (*HyperVConfig, error) {
 		return nil, err
 	}
 	diskSize = uint64(diskPathInfo.Size())
+	mem := MemorySettings{}
+	if err := vm.getMemorySettings(&mem); err != nil {
+		return nil, err
+	}
 
 	config := HyperVConfig{
 		Hardware: HardwareConfig{
+			// TODO we could implement a getProcessorSettings like we did for memory
 			CPUs:     summary.NumberOfProcessors,
 			DiskPath: diskPath,
 			DiskSize: diskSize,
-			Memory:   summary.MemoryAvailable,
+			Memory:   mem.Limit,
 		},
 		Status: Statuses{
 			Created:  vm.InstallDate,
@@ -350,7 +350,7 @@ func (vm *VirtualMachine) GetConfig(diskPath string) (*HyperVConfig, error) {
 // SummaryRequestCommon and SummaryRequestNearAll provide predefined combinations for this
 // parameter
 func (vm *VirtualMachine) GetSummaryInformation(requestedFields SummaryRequestSet) (*SummaryInformation, error) {
-	service, err := wmiext.NewLocalService(HyperVNamespace)
+	service, err := NewLocalHyperVService()
 	if err != nil {
 		return nil, err
 	}
@@ -403,8 +403,8 @@ func (vmm *VirtualMachineManager) NewVirtualMachine(name string, config *Hardwar
 
 			// The API seems to require both of these even
 			// when not using dynamic memory
-			ms.Limit = uint64(config.Memory)
-			ms.VirtualQuantity = uint64(config.Memory)
+			ms.Limit = config.Memory
+			ms.VirtualQuantity = config.Memory
 		}).
 		PrepareProcessorSettings(func(ps *ProcessorSettings) {
 			ps.VirtualQuantity = uint64(config.CPUs) // 4 cores
@@ -468,9 +468,18 @@ func (vm *VirtualMachine) fetchExistingResourceSettings(service *wmiext.Service,
 	return service.FindFirstRelatedObject(path, resourceType, resourceSettings)
 }
 
+func (vm *VirtualMachine) getMemorySettings(m *MemorySettings) error {
+	service, err := NewLocalHyperVService()
+	if err != nil {
+		return err
+	}
+	defer service.Close()
+	return vm.fetchExistingResourceSettings(service, "Msvm_MemorySettingData", m)
+}
+
 // Update processor and/or mem
 func (vm *VirtualMachine) UpdateProcessorMemSettings(updateProcessor func(*ProcessorSettings), updateMemory func(*MemorySettings)) error {
-	service, err := wmiext.NewLocalService(HyperVNamespace)
+	service, err := NewLocalHyperVService()
 	if err != nil {
 		return err
 	}
@@ -496,8 +505,7 @@ func (vm *VirtualMachine) UpdateProcessorMemSettings(updateProcessor func(*Proce
 	}
 
 	if updateMemory != nil {
-		err = vm.fetchExistingResourceSettings(service, "Msvm_MemorySettingData", mem)
-		if err != nil {
+		if err := vm.getMemorySettings(mem); err != nil {
 			return err
 		}
 
@@ -548,7 +556,7 @@ func (vm *VirtualMachine) remove() (int32, error) {
 	if !Disabled.equal(vm.EnabledState) {
 		return -1, ErrMachineStateInvalid
 	}
-	if srv, err = wmiext.NewLocalService(HyperVNamespace); err != nil {
+	if srv, err = NewLocalHyperVService(); err != nil {
 		return -1, err
 	}
 

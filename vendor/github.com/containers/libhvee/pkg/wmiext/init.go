@@ -31,11 +31,6 @@ var (
 )
 
 const (
-	// WMI HRESULT values
-	WBEM_S_NO_ERROR     = 0
-	WBEM_S_FALSE        = 1
-	WBEM_S_NO_MORE_DATA = 0x40005
-
 	// WMI Generic flags
 	WBEM_FLAG_RETURN_WBEM_COMPLETE = 0x0
 	WBEM_FLAG_RETURN_IMMEDIATELY   = 0x10
@@ -107,7 +102,7 @@ func initSecurity() {
 		uintptr(0),                           // [in, optional] void                        *pAuthList,
 		uintptr(EOAC_NONE),                   // [in]           DWORD                       dwCapabilities,
 		uintptr(0))                           // [in, optional] void                        *pReserved3
-	if res < 0 {
-		logrus.Errorf("Unable to initialize COM security: %s", ole.NewError(res).Error())
+	if int(res) < 0 {
+		logrus.Errorf("Unable to initialize COM security: %s", NewWmiError(res).Error())
 	}
 }

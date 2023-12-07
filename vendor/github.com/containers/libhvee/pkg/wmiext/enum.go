@@ -76,8 +76,8 @@ func (e *Enum) Next() (instance *Instance, err error) {
 		uintptr(1),                          // [in]  ULONG            uCount,
 		uintptr(unsafe.Pointer(&apObjects)), // [out] IWbemClassObject **apObjects,
 		uintptr(unsafe.Pointer(&uReturned))) // [out] ULONG            *puReturned)
-	if res < 0 {
-		return nil, ole.NewError(res)
+	if int(res) < 0 {
+		return nil, NewWmiError(res)
 	}
 
 	if uReturned < 1 {
