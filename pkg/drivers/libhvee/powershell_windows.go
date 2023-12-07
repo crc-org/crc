@@ -76,10 +76,6 @@ func isWindowsAdministrator() (bool, error) {
 	return resp == "True", nil
 }
 
-func quote(text string) string {
-	return fmt.Sprintf("'%s'", text)
-}
-
 func smbShareExists(name string) bool {
 	if err := cmd(fmt.Sprintf("Get-SmbShare -Name %s", name)); err != nil {
 		return false
