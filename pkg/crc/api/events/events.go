@@ -3,8 +3,8 @@ package events
 import "github.com/r3labs/sse/v2"
 
 const (
-	LOGS   = "logs"   // Logs event channel, contains daemon logs
-	STATUS = "status" // status event channel, contains VM load info
+	Logs        = "logs"         // Logs event channel, contains daemon logs
+	ClusterLoad = "cluster_load" // status event channel, contains VM load info
 )
 
 type EventPublisher interface {

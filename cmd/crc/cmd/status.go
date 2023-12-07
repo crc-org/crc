@@ -88,7 +88,7 @@ func runWatchStatus(writer io.Writer, client *daemonclient.Client, cacheDir stri
 		}
 	}()
 
-	err = client.SSEClient.Status(func(loadResult *types.ClusterLoadResult) {
+	err = client.SSEClient.ClusterLoad(func(loadResult *types.ClusterLoadResult) {
 		if !isPoolInit {
 			ramBar, cpuBars = createBars(loadResult.CPUUse, writer)
 			barPool = pb.NewPool(append([]*pb.ProgressBar{ramBar}, cpuBars...)...)
