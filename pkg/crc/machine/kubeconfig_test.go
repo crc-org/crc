@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 var dummyKubeconfigFileContent = `apiVersion: v1
@@ -58,4 +60,64 @@ func TestUpdateUserCaAndKeyToKubeconfig(t *testing.T) {
 	userClientCA, err := adminClientCertificate(f.Name())
 	assert.NoError(t, err)
 	assert.Equal(t, "dummycert", userClientCA)
+}
+
+func createTempKubeConfig(config *api.Config) (string, error) {
+	tempFile, err := os.CreateTemp("", "kubeconfig-")
+	if err != nil {
+		return "", err
+	}
+	path := tempFile.Name()
+
+	err = clientcmd.WriteToFile(*config, path)
+	if err != nil {
+		os.Remove(path)
+		return "", err
+	}
+
+	return path, nil
+}
+
+func Test_mergeKubeConfigFile(t *testing.T) {
+	// Define two simple configurations
+	primaryConfig := api.NewConfig()
+	primaryConfig.Clusters["primary-cluster"] = &api.Cluster{Server: "https://primary.example.com"}
+	primaryConfig.AuthInfos["primary-user"] = &api.AuthInfo{Token: "primary-token"}
+	primaryConfig.Contexts["primary-context"] = &api.Context{Cluster: "primary-cluster", AuthInfo: "primary-user"}
+	primaryConfig.CurrentContext = "primary-context"
+
+	secondaryConfig := api.NewConfig()
+	secondaryConfig.Clusters["secondary-cluster"] = &api.Cluster{Server: "https://secondary.example.com"}
+	secondaryConfig.AuthInfos["secondary-user"] = &api.AuthInfo{Token: "secondary-token"}
+	secondaryConfig.Contexts["secondary-context"] = &api.Context{Cluster: "secondary-cluster", AuthInfo: "secondary-user"}
+	secondaryConfig.CurrentContext = "secondary-context"
+
+	// Create temporary kubeconfig files for the primary and secondary configurations
+	primaryConfigPath, err := createTempKubeConfig(primaryConfig)
+	assert.NoError(t, err, "failed to create temporary kubeconfig file")
+	defer os.Remove(primaryConfigPath)
+
+	secondaryConfigPath, err := createTempKubeConfig(secondaryConfig)
+	assert.NoError(t, err, "failed to create temporary kubeconfig file")
+	defer os.Remove(secondaryConfigPath)
+
+	err = mergeConfigHelper(secondaryConfigPath, primaryConfigPath)
+	assert.NoError(t, err, "failed to modify kubeconfig")
+
+	// Load the modified kubeconfig to ensure it was merged correctly
+	mergedConfig, err := clientcmd.LoadFromFile(primaryConfigPath)
+	assert.NoError(t, err, "failed to load merged kubeconfig")
+
+	for _, config := range []*api.Config{primaryConfig, secondaryConfig} {
+
+		for key := range config.AuthInfos {
+			assert.Contains(t, mergedConfig.AuthInfos, key, "expected authInfo not found")
+		}
+		for key := range config.Clusters {
+			assert.Contains(t, mergedConfig.Clusters, key, "expected cluster not found")
+		}
+		for key := range config.Contexts {
+			assert.Contains(t, mergedConfig.Contexts, key, "expected context not found")
+		}
+	}
 }

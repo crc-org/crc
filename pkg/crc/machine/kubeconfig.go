@@ -84,6 +84,10 @@ func writeKubeconfig(ip string, clusterConfig *types.ClusterConfig, ingressHTTPS
 
 func getGlobalKubeConfig() (string, *api.Config, error) {
 	kubeconfig := getGlobalKubeConfigPath()
+	return getKubeConfigFromFile(kubeconfig)
+}
+
+func getKubeConfigFromFile(kubeconfig string) (string, *api.Config, error) {
 	config, err := clientcmd.LoadFromFile(kubeconfig)
 	if err != nil && !os.IsNotExist(err) {
 		return "", nil, err
@@ -246,7 +250,12 @@ func contains(arr []string, str string) bool {
 }
 
 func mergeKubeConfigFile(kubeConfigFile string) error {
-	globalConfigPath, globalConf, err := getGlobalKubeConfig()
+	return mergeConfigHelper(kubeConfigFile, getGlobalKubeConfigPath())
+}
+
+func mergeConfigHelper(kubeConfigFile, globalConfigFile string) error {
+
+	globalConfigPath, globalConf, err := getKubeConfigFromFile(globalConfigFile)
 	if err != nil {
 		return err
 	}
