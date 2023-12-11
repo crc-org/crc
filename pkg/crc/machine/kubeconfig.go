@@ -256,23 +256,18 @@ func mergeKubeConfigFile(kubeConfigFile string) error {
 		return err
 	}
 	// Merge the currentConf to globalConfig
-	mergedConfig, err := clientcmd.NewDefaultClientConfig(*globalConf, &clientcmd.ConfigOverrides{}).ConfigAccess().GetStartingConfig()
-	if err != nil {
-		return err
-	}
-
 	for name, cluster := range currentConf.Clusters {
-		mergedConfig.Clusters[name] = cluster
+		globalConf.Clusters[name] = cluster
 	}
 
 	for name, authInfo := range currentConf.AuthInfos {
-		mergedConfig.AuthInfos[name] = authInfo
+		globalConf.AuthInfos[name] = authInfo
 	}
 
 	for name, context := range currentConf.Contexts {
-		mergedConfig.Contexts[name] = context
+		globalConf.Contexts[name] = context
 	}
 
-	mergedConfig.CurrentContext = currentConf.CurrentContext
-	return clientcmd.WriteToFile(*mergedConfig, globalConfigPath)
+	globalConf.CurrentContext = currentConf.CurrentContext
+	return clientcmd.WriteToFile(*globalConf, globalConfigPath)
 }
