@@ -246,32 +246,33 @@ func contains(arr []string, str string) bool {
 }
 
 func mergeKubeConfigFile(kubeConfigFile string) error {
-	globalConfigPath, kubeConf1, err := getGlobalKubeConfig()
-	if err != nil {
-		return err
-	}
-	kubeConf2, err := clientcmd.LoadFromFile(kubeConfigFile)
-	if err != nil {
-		return err
-	}
-	// Merge the kubeConf2 to globalConfig
-	mergedConfig, err := clientcmd.NewDefaultClientConfig(*kubeConf1, &clientcmd.ConfigOverrides{}).ConfigAccess().GetStartingConfig()
+	globalConfigPath, globalConf, err := getGlobalKubeConfig()
 	if err != nil {
 		return err
 	}
 
-	for name, cluster := range kubeConf2.Clusters {
+	currentConf, err := clientcmd.LoadFromFile(kubeConfigFile)
+	if err != nil {
+		return err
+	}
+	// Merge the currentConf to globalConfig
+	mergedConfig, err := clientcmd.NewDefaultClientConfig(*globalConf, &clientcmd.ConfigOverrides{}).ConfigAccess().GetStartingConfig()
+	if err != nil {
+		return err
+	}
+
+	for name, cluster := range currentConf.Clusters {
 		mergedConfig.Clusters[name] = cluster
 	}
 
-	for name, authInfo := range kubeConf2.AuthInfos {
+	for name, authInfo := range currentConf.AuthInfos {
 		mergedConfig.AuthInfos[name] = authInfo
 	}
 
-	for name, context := range kubeConf2.Contexts {
+	for name, context := range currentConf.Contexts {
 		mergedConfig.Contexts[name] = context
 	}
 
-	mergedConfig.CurrentContext = kubeConf2.CurrentContext
+	mergedConfig.CurrentContext = currentConf.CurrentContext
 	return clientcmd.WriteToFile(*mergedConfig, globalConfigPath)
 }
