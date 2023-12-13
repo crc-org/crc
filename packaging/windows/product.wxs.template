@@ -81,7 +81,7 @@
         <CustomAction Id="RemoveCrcGroupRollback" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="rollback" Impersonate="no" Return="ignore" />
         <SetProperty Action="CARemoveCrcDaemonTask" Id="RemoveCrcDaemonTask" Value='"[System64Folder]cmd.exe" /c schtasks /delete /TN crcDaemon /F' Before='RemoveFiles' Sequence="execute"/>
         <CustomAction Id="RemoveCrcDaemonTask" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
-        <SetProperty Action="CAInstallHyperv" Id="InstallHyperv" Value='"[System64Folder]dism.exe" /online /enable-feature /featureName:microsoft-hyper-v-all /NoRestart /quiet' Before="InstallHyperv" Sequence="execute"/>
+        <SetProperty Action="CAInstallHyperv" Id="InstallHyperv" Value='"[System64Folder]dism.exe" /online /enable-feature /featureName:microsoft-hyper-v-all /NoRestart' Before="InstallHyperv" Sequence="execute"/>
         <CustomAction Id="InstallHyperv" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
         <SetProperty Action="CAAddUserToHypervAdminGroup"
             Id="AddUserToHypervAdminGroup"
