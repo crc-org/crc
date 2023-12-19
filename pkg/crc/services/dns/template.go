@@ -8,9 +8,7 @@ import (
 )
 
 const (
-	dnsmasqConfTemplate = `user=root
-port= {{ .Port }}
-bind-interfaces
+	dnsmasqConfTemplate = `listen-address={{ .IP }}
 expand-hosts
 log-queries
 local=/{{ .ClusterName}}.{{ .BaseDomain }}/
@@ -38,7 +36,6 @@ func createDnsmasqDNSConfig(serviceConfig services.ServicePostStartConfig) error
 	dnsmasqConfFileValues := dnsmasqConfFileValues{
 		BaseDomain:  domain,
 		Hostname:    serviceConfig.BundleMetadata.Nodes[0].Hostname,
-		Port:        dnsServicePort,
 		AppsDomain:  serviceConfig.BundleMetadata.ClusterInfo.AppsDomain,
 		ClusterName: serviceConfig.BundleMetadata.ClusterInfo.ClusterName,
 		IP:          serviceConfig.IP,
@@ -50,7 +47,7 @@ func createDnsmasqDNSConfig(serviceConfig services.ServicePostStartConfig) error
 		return err
 	}
 
-	return serviceConfig.SSHRunner.CopyDataPrivileged([]byte(dnsConfig), "/var/srv/dnsmasq.conf", 0644)
+	return serviceConfig.SSHRunner.CopyDataPrivileged([]byte(dnsConfig), "/etc/dnsmasq.d/crc-dnsmasq.conf", 0644)
 }
 
 func createDNSConfigFile(values dnsmasqConfFileValues, tmpl string) (string, error) {
