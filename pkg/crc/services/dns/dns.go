@@ -20,9 +20,8 @@ import (
 
 const (
 	dnsServicePort    = 53
-	dnsContainerIP    = "10.88.0.8"
 	publicDNSQueryURI = "quay.io"
-	crcDnsmasqService = "crc-dnsmasq.service"
+	dnsmasqService    = "dnsmasq.service"
 )
 
 func init() {
@@ -54,12 +53,12 @@ func setupDnsmasq(serviceConfig services.ServicePostStartConfig) error {
 		return err
 	}
 	sd := systemd.NewInstanceSystemdCommander(serviceConfig.SSHRunner)
-	if state, err := sd.Status(crcDnsmasqService); err != nil || state != states.Running {
-		if err := sd.Enable(crcDnsmasqService); err != nil {
+	if state, err := sd.Status(dnsmasqService); err != nil || state != states.Running {
+		if err := sd.Enable(dnsmasqService); err != nil {
 			return err
 		}
 	}
-	return sd.Start(crcDnsmasqService)
+	return sd.Start(dnsmasqService)
 }
 
 func getResolvFileValues(serviceConfig services.ServicePostStartConfig) (network.ResolvFileValues, error) {
@@ -89,7 +88,7 @@ func dnsServers(serviceConfig services.ServicePostStartConfig) ([]network.NameSe
 	if err != nil {
 		return nil, err
 	}
-	return append([]network.NameServer{{IPAddress: dnsContainerIP}}, orgResolvValues.NameServers...), nil
+	return append([]network.NameServer{{IPAddress: serviceConfig.IP}}, orgResolvValues.NameServers...), nil
 }
 
 func CheckCRCLocalDNSReachable(ctx context.Context, serviceConfig services.ServicePostStartConfig) (string, error) {
