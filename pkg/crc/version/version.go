@@ -35,7 +35,7 @@ var (
 )
 
 const (
-	crcAdminHelperVersion          = "0.5.1"
+	crcAdminHelperVersion          = "0.5.2"
 	win32BackgroundLauncherVersion = "0.0.0.1"
 )
 
