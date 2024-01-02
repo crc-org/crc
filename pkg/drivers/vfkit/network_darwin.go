@@ -20,9 +20,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"net"
 	"os"
-	"os/exec"
 	"regexp"
 	"strings"
 
@@ -124,21 +122,4 @@ func parseDHCPdLeasesFile(file io.Reader) ([]DHCPEntry, error) {
 // trimMacAddress trimming "0" of the ten's digit
 func trimMACAddress(macAddress string) string {
 	return leadingZeroRegexp.ReplaceAllString(macAddress, "$1")
-}
-
-// GetNetAddr gets the network address for vmnet
-func GetNetAddr() (net.IP, error) {
-	plistPath := VMNetDomain + ".plist"
-	if _, err := os.Stat(plistPath); err != nil {
-		return nil, fmt.Errorf("stat: %v", err)
-	}
-	out, err := exec.Command("defaults", "read", VMNetDomain, SharedNetAddrKey).Output()
-	if err != nil {
-		return nil, err
-	}
-	ip := net.ParseIP(strings.TrimSpace(string(out)))
-	if ip == nil {
-		return nil, fmt.Errorf("could not get the network address for vmnet")
-	}
-	return ip, nil
 }
