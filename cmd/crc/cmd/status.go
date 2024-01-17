@@ -7,9 +7,11 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"text/tabwriter"
 
 	"github.com/cheggaaa/pb/v3"
+	"github.com/cheggaaa/pb/v3/termutil"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	crcErrors "github.com/crc-org/crc/v2/pkg/crc/errors"
@@ -74,28 +76,40 @@ func runWatchStatus(writer io.Writer, client *daemonclient.Client, cacheDir stri
 	}
 
 	var (
-		barPull *pb.Pool
+		barPool *pb.Pool
 		cpuBars []*pb.ProgressBar
 		ramBar  *pb.ProgressBar
 	)
 
-	isPullInit := false
+	var err error
+	isPoolInit := false
 
-	err := client.SSEClient.Status(func(loadResult *types.ClusterLoadResult) {
-		if !isPullInit {
+	defer func() {
+		if isPoolInit {
+			err = barPool.Stop()
+		}
+	}()
+
+	err = client.SSEClient.Status(func(loadResult *types.ClusterLoadResult) {
+		if !isPoolInit {
 			ramBar, cpuBars = createBars(loadResult.CPUUse, writer)
-			barPull = pb.NewPool(append([]*pb.ProgressBar{ramBar}, cpuBars...)...)
-			isPullInit = true
-			err := barPull.Start()
-			if err != nil {
+			barPool = pb.NewPool(append([]*pb.ProgressBar{ramBar}, cpuBars...)...)
+			if startErr := barPool.Start(); startErr != nil {
 				return
 			}
+			if runtime.GOOS == "windows" {
+				// Print and ignore the error to continue printing
+				if rawErr := termutil.RawModeOff(); rawErr != nil {
+					fmt.Fprintf(os.Stderr, "Failed to turn off raw mode due to error: %v\n", rawErr)
+				}
+			}
+			isPoolInit = true
 		} else if len(loadResult.CPUUse) > len(cpuBars) {
 			newCPUCount := len(loadResult.CPUUse) - len(cpuBars)
 			oldCPUCount := len(cpuBars)
 			for i := 0; i < newCPUCount; i++ {
 				bar := createCPUBar(oldCPUCount+i, writer)
-				barPull.Add(bar)
+				barPool.Add(bar)
 				cpuBars = append(cpuBars, bar)
 			}
 		}
@@ -114,7 +128,7 @@ func createBars(cpuUse []int64, writer io.Writer) (ramBar *pb.ProgressBar, cpuBa
 	ramBar.SetWriter(writer)
 	ramBar.Set(pb.Bytes, true)
 	ramBar.Set(pb.Static, true)
-	tmpl := `{{ red "RAM:" }} {{counters . }} {{percent .}} {{string . "my_green_string" | green}} {{ bar . "[" "\u2588" "\u2588" " " "]"}} `
+	tmpl := `{{ red "RAM:" }} {{counters . }} {{percent .}} {{ bar . "[" "\u2588" "\u2588" " " "]"}} `
 	ramBar.SetMaxWidth(151)
 	ramBar.SetTemplateString(tmpl)
 
@@ -130,7 +144,7 @@ func createCPUBar(cpuNum int, writer io.Writer) *pb.ProgressBar {
 	bar := pb.New(101)
 	bar.SetWriter(writer)
 	bar.Set(pb.Static, true)
-	tmpl := fmt.Sprintf(`{{ green "CPU%d:" }} {{percent .}} {{string . "my_green_string" | green}} {{ bar . "[" "\u2588" "\u2588" " " "]"}}`, cpuNum)
+	tmpl := fmt.Sprintf(`{{ green "CPU%d:" }} {{percent .}} {{ bar . "[" "\u2588" "\u2588" " " "]"}}`, cpuNum)
 	bar.SetTemplateString(tmpl)
 	bar.SetMaxWidth(150)
 	return bar
