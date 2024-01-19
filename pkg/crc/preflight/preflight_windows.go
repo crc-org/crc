@@ -221,6 +221,7 @@ func getChecks(bundlePath string, preset crcpreset.Preset, enableBundleQuayFallb
 	checks = append(checks, cleanupCheckRemoveCrcVM)
 	checks = append(checks, daemonTaskChecks...)
 	checks = append(checks, adminHelperServiceCheks...)
+	checks = append(checks, sshPortCheck())
 	return checks
 }
 

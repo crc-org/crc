@@ -78,7 +78,6 @@ const (
 	virtualMachineIP = "192.168.127.2"
 	hostVirtualIP    = "192.168.127.254"
 	internalSSHPort  = "22"
-	localIP          = "127.0.0.1"
 	remoteHTTPPort   = "80"
 	remoteHTTPSPort  = "443"
 	apiPort          = "6443"
@@ -95,7 +94,7 @@ func vsockPorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint)
 	exposeRequest := []types.ExposeRequest{
 		{
 			Protocol: "tcp",
-			Local:    net.JoinHostPort(localIP, strconv.Itoa(constants.VsockSSHPort)),
+			Local:    net.JoinHostPort(constants.LocalIP, strconv.Itoa(constants.VsockSSHPort)),
 			Remote:   net.JoinHostPort(virtualMachineIP, internalSSHPort),
 		},
 		{
@@ -110,7 +109,7 @@ func vsockPorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint)
 		exposeRequest = append(exposeRequest,
 			types.ExposeRequest{
 				Protocol: "tcp",
-				Local:    net.JoinHostPort(localIP, apiPort),
+				Local:    net.JoinHostPort(constants.LocalIP, apiPort),
 				Remote:   net.JoinHostPort(virtualMachineIP, apiPort),
 			},
 			types.ExposeRequest{
@@ -127,7 +126,7 @@ func vsockPorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint)
 		exposeRequest = append(exposeRequest,
 			types.ExposeRequest{
 				Protocol: "tcp",
-				Local:    net.JoinHostPort(localIP, cockpitPort),
+				Local:    net.JoinHostPort(constants.LocalIP, cockpitPort),
 				Remote:   net.JoinHostPort(virtualMachineIP, cockpitPort),
 			})
 	default:

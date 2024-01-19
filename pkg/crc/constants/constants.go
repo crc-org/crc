@@ -38,6 +38,7 @@ const (
 
 	VSockGateway = "192.168.127.1"
 	VsockSSHPort = 2222
+	LocalIP      = "127.0.0.1"
 
 	OkdPullSecret = `{"auths":{"fake":{"auth": "Zm9vOmJhcgo="}}}` // #nosec G101
 

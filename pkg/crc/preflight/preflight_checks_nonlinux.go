@@ -6,9 +6,12 @@ package preflight
 import (
 	"context"
 	"fmt"
+	"net"
 	"runtime"
+	"strconv"
 	"time"
 
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	crcerrors "github.com/crc-org/crc/v2/pkg/crc/errors"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
@@ -71,4 +74,42 @@ func waitForDaemonRunning() error {
 		}
 		return nil
 	}, 2*time.Second)
+}
+
+func sshPortCheck() Check {
+	return Check{
+		configKeySuffix:  "check-ssh-port",
+		checkDescription: "Checking SSH port availability",
+		check:            checkSSHPortFree(),
+		fixDescription:   fmt.Sprintf("crc uses %d to run SSH", constants.VsockSSHPort),
+		flags:            NoFix,
+		labels:           None,
+	}
+}
+
+func checkSSHPortFree() func() error {
+	return func() error {
+
+		host := net.JoinHostPort(constants.LocalIP, strconv.Itoa(constants.VsockSSHPort))
+
+		daemonClient := daemonclient.New()
+		exposed, err := daemonClient.NetworkClient.List()
+		if err == nil {
+			// if port already exported by vsock we could proceed
+			for _, e := range exposed {
+				if e.Local == host {
+					return nil
+				}
+			}
+		}
+
+		server, err := net.Listen("tcp", host)
+		// if it fails then the port is likely taken
+		if err != nil {
+			return fmt.Errorf("port %d already in use: %s", constants.VsockSSHPort, err)
+		}
+
+		// we successfully used and closed the port
+		return server.Close()
+	}
 }

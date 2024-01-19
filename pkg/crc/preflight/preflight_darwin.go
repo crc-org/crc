@@ -114,6 +114,7 @@ func getChecks(_ network.Mode, bundlePath string, preset crcpreset.Preset, enabl
 	checks = append(checks, bundleCheck(bundlePath, preset, enableBundleQuayFallback))
 	checks = append(checks, trayLaunchdCleanupChecks...)
 	checks = append(checks, daemonLaunchdChecks...)
+	checks = append(checks, sshPortCheck())
 
 	return checks
 }
