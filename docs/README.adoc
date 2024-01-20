@@ -12,4 +12,4 @@
 ----
 $ make docs_serve
 ----
-
+The documentation will be available locally at http://localhost:8088/.
