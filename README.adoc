@@ -46,7 +46,7 @@ See the link:https://crc-org.github.io/crc/[CRC Getting Started Guide].
 
 === Building the documentation
 
-You can find the source files for the documentation in the link:./docs/source[docs/source] directory.
+You can find the source files for the documentation in the link:./docs[docs] directory.
 
 To build the formatted documentation, link:https://github.com/containers/libpod/blob/master/install.md[install podman] then use the following:
 

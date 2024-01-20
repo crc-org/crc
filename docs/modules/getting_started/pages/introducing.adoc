@@ -1,4 +1,4 @@
-:description: Introducting  {prod}
+:description: Introducing  {prod}
 
 [id="introducing_{context}"]
 = Introducing {rh-prod}

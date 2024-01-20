@@ -8,6 +8,10 @@ Upgrading the {ocp} version might cause issues that are difficult to reproduce.
 * It uses a single node, which behaves as both a control plane and worker node.
 * It disables the Cluster Monitoring Operator by default.
 This disabled Operator causes the corresponding part of the web console to be non-functional.
+* It disables the following operators:
+** Cloud Credential Operator.
+** Cluster Autoscaler Operator.
+** Cloud Controller Manager Operator.
 * The {ocp} cluster runs in a virtual machine known as an __instance__.
 This might cause other differences, particularly with external networking.
 
