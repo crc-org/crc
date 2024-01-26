@@ -2,7 +2,7 @@ name: Windows e2e
 
 on:
   workflow_run:
-    workflows: [Build Windows installer]
+    workflows: [Build Windows artifacts]
     types:
       - completed
   
@@ -30,9 +30,6 @@ jobs:
       - name: Add correlation variables to GITHUB_ENV
         run: |
           set -xuo
-
-          # SHA used as ID to correlate artifacts between buld-tests, windows-installer, and windows-e2e workflows
-          echo "SHA=$(cat gh_context.json | jq -r '.sha')" >> "$GITHUB_ENV"
 
           COMMIT_ID=$(cat gh_context.json | jq -r '.event.after')
           # if this is a new PR, .event.after is empty, use .sha instead in that case
@@ -136,7 +133,7 @@ jobs:
         with:
           workflow_conclusion: completed
           workflow: build-tests.yml
-          name: crc-e2e-id${{ env.SHA }}
+          name: crc-e2e-gh
 
       - name: Run CRC e2e
         run: |
@@ -163,7 +160,7 @@ jobs:
             -v $PWD/pull-secret:/opt/crc/pull-secret:Z \
             -v $PWD/output:/output:Z \
             -v $PWD/id_rsa:/opt/crc/id_rsa:Z \
-            quay.io/crcont/crc-e2e:id-${{ env.SHA }} \
+            quay.io/crcont/crc-e2e:gh \
               -targetFolder ${TARGET_FOLDER} \
               -junitResultsPath ${TARGET_FOLDER}/junit
 

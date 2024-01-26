@@ -1,0 +1,99 @@
+name: Build Windows artifacts
+on:
+  push:
+    branches:
+      - "main"
+  pull_request: {}
+
+env:
+  IMAGE_NAME_E2E: crc-e2e
+  IMAGE_NAME_INTEGRATION: crc-integration
+
+jobs:
+  build-installer:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-2022
+        go:
+          - '1.20'
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Set path for heat.exe and light.exe
+        run: echo "$WIX\\bin" >>$GITHUB_PATH
+        shell: bash
+      - name: Build Windows installer
+        run: make out/windows-amd64/crc-windows-installer.zip
+      - name: Upload windows installer artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Windows Installer (${{ matrix.os }})
+          path: "./out/windows-amd64/crc-windows-installer.zip"
+
+  build-e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      
+      - name: Build and archive e2e image
+        # use github.sha as ID to correlate various workflows triggered by the same event
+        run: |
+          CRC_E2E_IMG_VERSION=gh make containerized_e2e
+          podman save -o ${{ env.IMAGE_NAME_E2E }}.tar quay.io/crcont/${{ env.IMAGE_NAME_E2E}}:gh
+
+      - name: Upload e2e image
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.IMAGE_NAME_E2E }}-gh
+          path: ${{ env.IMAGE_NAME_E2E }}.tar
+
+  build-integration:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      
+      - name: Build and archive integration image
+        # use github.sha as ID to correlate various workflows triggered by the same event
+        run: |
+          CRC_INTEGRATION_IMG_VERSION=gh make containerized_integration
+          podman save -o ${{ env.IMAGE_NAME_INTEGRATION }}.tar quay.io/crcont/${{ env.IMAGE_NAME_INTEGRATION }}:gh
+      
+      - name: Upload integration image
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.IMAGE_NAME_INTEGRATION }}-gh
+          path: ${{ env.IMAGE_NAME_INTEGRATION }}.tar
+
+  save-gh-context:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+        
+      - name: Save the GH context in an artifact
+        shell: bash
+        env:
+          GH_CONTEXT: ${{ toJSON(github) }}
+        run: echo $GH_CONTEXT > gh_context.json
+
+      - name: Upload the GH context artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gh_context
+          path: ./gh_context.json
