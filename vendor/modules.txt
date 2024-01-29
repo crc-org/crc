@@ -82,7 +82,7 @@ github.com/cloudflare/circl/math/mlsbset
 github.com/cloudflare/circl/sign
 github.com/cloudflare/circl/sign/ed25519
 github.com/cloudflare/circl/sign/ed448
-# github.com/containers/gvisor-tap-vsock v0.7.1
+# github.com/containers/gvisor-tap-vsock v0.7.2
 ## explicit; go 1.20
 github.com/containers/gvisor-tap-vsock/pkg/client
 github.com/containers/gvisor-tap-vsock/pkg/fs
@@ -348,8 +348,8 @@ github.com/golang/protobuf/ptypes/timestamp
 # github.com/goodhosts/hostsfile v0.1.1
 ## explicit; go 1.17
 github.com/goodhosts/hostsfile
-# github.com/google/btree v1.0.1
-## explicit; go 1.12
+# github.com/google/btree v1.1.2
+## explicit; go 1.18
 github.com/google/btree
 # github.com/google/gnostic v0.5.7-v3refs
 ## explicit; go 1.12
@@ -512,7 +512,7 @@ github.com/mdlayher/vsock
 # github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 ## explicit
 github.com/mgutz/ansi
-# github.com/miekg/dns v1.1.56
+# github.com/miekg/dns v1.1.57
 ## explicit; go 1.19
 github.com/miekg/dns
 # github.com/miekg/pkcs11 v1.1.1
@@ -536,7 +536,7 @@ github.com/munnerz/goautoneg
 # github.com/oklog/ulid v1.3.1
 ## explicit
 github.com/oklog/ulid
-# github.com/onsi/ginkgo/v2 v2.11.0
+# github.com/onsi/ginkgo/v2 v2.13.0
 ## explicit; go 1.18
 github.com/onsi/ginkgo/v2
 github.com/onsi/ginkgo/v2/config
@@ -558,7 +558,7 @@ github.com/onsi/ginkgo/v2/internal/parallel_support
 github.com/onsi/ginkgo/v2/internal/testingtproxy
 github.com/onsi/ginkgo/v2/reporters
 github.com/onsi/ginkgo/v2/types
-# github.com/onsi/gomega v1.27.10
+# github.com/onsi/gomega v1.30.0
 ## explicit; go 1.18
 github.com/onsi/gomega
 github.com/onsi/gomega/format
@@ -783,7 +783,7 @@ go.mozilla.org/pkcs7
 # go.uber.org/multierr v1.11.0
 ## explicit; go 1.19
 go.uber.org/multierr
-# golang.org/x/crypto v0.17.0
+# golang.org/x/crypto v0.18.0
 ## explicit; go 1.18
 golang.org/x/crypto/argon2
 golang.org/x/crypto/bcrypt
@@ -846,19 +846,19 @@ golang.org/x/net/trace
 ## explicit; go 1.18
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
-# golang.org/x/sync v0.5.0
+# golang.org/x/sync v0.6.0
 ## explicit; go 1.18
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.15.0
+# golang.org/x/sys v0.16.0
 ## explicit; go 1.18
 golang.org/x/sys/cpu
 golang.org/x/sys/execabs
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/term v0.15.0
+# golang.org/x/term v0.16.0
 ## explicit; go 1.18
 golang.org/x/term
 # golang.org/x/text v0.14.0
@@ -1029,7 +1029,7 @@ gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# gvisor.dev/gvisor v0.0.0-20230715022000-fd277b20b8db
+# gvisor.dev/gvisor v0.0.0-20231023213702-2691a8f9b1cf
 ## explicit; go 1.20
 gvisor.dev/gvisor/pkg/atomicbitops
 gvisor.dev/gvisor/pkg/bits

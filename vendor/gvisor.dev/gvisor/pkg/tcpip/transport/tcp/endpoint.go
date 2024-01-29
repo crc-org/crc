@@ -2059,11 +2059,16 @@ func (e *endpoint) GetSockOptInt(opt tcpip.SockOptInt) (int, tcpip.Error) {
 		return v, nil
 
 	case tcpip.MaxSegOption:
-		// This is just stubbed out. Linux never returns the user_mss
-		// value as it either returns the defaultMSS or returns the
-		// actual current MSS. Netstack just returns the defaultMSS
-		// always for now.
+		// Linux only returns user_mss value if user_mss is set and the socket is
+		// unconnected. Otherwise Linux returns the actual current MSS. Netstack
+		// mimics the user_mss behavior, but otherwise just returns the defaultMSS
+		// for now.
 		v := header.TCPDefaultMSS
+		e.LockUser()
+		if state := e.EndpointState(); e.userMSS > 0 && (state.internal() || state == StateClose || state == StateListen) {
+			v = int(e.userMSS)
+		}
+		e.UnlockUser()
 		return v, nil
 
 	case tcpip.MTUDiscoverOption:
@@ -2599,14 +2604,14 @@ func (e *endpoint) shutdownLocked(flags tcpip.ShutdownFlags) tcpip.Error {
 // Listen puts the endpoint in "listen" mode, which allows it to accept
 // new connections.
 func (e *endpoint) Listen(backlog int) tcpip.Error {
-	err := e.listen(backlog)
-	if err != nil {
+	if err := e.listen(backlog); err != nil {
 		if !err.IgnoreStats() {
 			e.stack.Stats().TCP.FailedConnectionAttempts.Increment()
 			e.stats.FailedConnectionAttempts.Increment()
 		}
+		return err
 	}
-	return err
+	return nil
 }
 
 func (e *endpoint) listen(backlog int) tcpip.Error {
