@@ -84,13 +84,13 @@ func HostKey(host string) ssh.PublicKey {
 	return nil
 }
 
-func CreateBastion(_url *url.URL, passPhrase string, identity string, initial net.Conn, connect ConnectCallback) (Bastion, error) {
+func CreateBastion(_url *url.URL, passPhrase string, identity string, initial net.Conn, connect ConnectCallback) (*Bastion, error) {
 	var authMethods []ssh.AuthMethod
 
 	if len(identity) > 0 {
 		s, err := PublicKey(identity, []byte(passPhrase))
 		if err != nil {
-			return Bastion{}, errors.Wrapf(err, "failed to parse identity %q", identity)
+			return nil, errors.Wrapf(err, "failed to parse identity %q", identity)
 		}
 		authMethods = append(authMethods, ssh.PublicKeys(s))
 	}
@@ -100,7 +100,7 @@ func CreateBastion(_url *url.URL, passPhrase string, identity string, initial ne
 	}
 
 	if len(authMethods) == 0 {
-		return Bastion{}, errors.New("No available auth methods")
+		return nil, errors.New("No available auth methods")
 	}
 
 	port := _url.Port()
@@ -149,7 +149,7 @@ func CreateBastion(_url *url.URL, passPhrase string, identity string, initial ne
 	}
 
 	bastion := Bastion{nil, config, _url.Hostname(), port, _url.Path, connect}
-	return bastion, bastion.reconnect(context.Background(), initial)
+	return &bastion, bastion.reconnect(context.Background(), initial)
 }
 
 func (bastion *Bastion) Reconnect(ctx context.Context) error {

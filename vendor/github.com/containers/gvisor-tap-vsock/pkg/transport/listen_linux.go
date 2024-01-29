@@ -17,6 +17,15 @@ func listenURL(parsed *url.URL) (net.Listener, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		if parsed.Hostname() != "" {
+			cid, err := strconv.Atoi(parsed.Hostname())
+			if err != nil {
+				return nil, err
+			}
+			return mdlayhervsock.ListenContextID(uint32(cid), uint32(port), nil)
+		}
+
 		return mdlayhervsock.Listen(uint32(port), nil)
 	case "unixpacket":
 		return net.Listen(parsed.Scheme, parsed.Path)
