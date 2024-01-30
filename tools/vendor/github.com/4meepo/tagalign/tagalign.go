@@ -22,6 +22,17 @@ const (
 	GolangciLintMode
 )
 
+type Style int
+
+const (
+	DefaultStyle Style = iota
+	StrictStyle
+)
+
+const (
+	errTagValueSyntax = "bad syntax for struct tag value"
+)
+
 func NewAnalyzer(options ...Option) *analysis.Analyzer {
 	return &analysis.Analyzer{
 		Name: "tagalign",
@@ -38,10 +49,16 @@ func Run(pass *analysis.Pass, options ...Option) []Issue {
 	for _, f := range pass.Files {
 		h := &Helper{
 			mode:  StandaloneMode,
+			style: DefaultStyle,
 			align: true,
 		}
 		for _, opt := range options {
 			opt(h)
+		}
+
+		//  StrictStyle must be used with WithAlign(true) and WithSort(...) together, or it will be ignored.
+		if h.style == StrictStyle && (!h.align || !h.sort) {
+			h.style = DefaultStyle
 		}
 
 		if !h.align && !h.sort {
@@ -61,6 +78,8 @@ func Run(pass *analysis.Pass, options ...Option) []Issue {
 
 type Helper struct {
 	mode Mode
+
+	style Style
 
 	align         bool     // whether enable tags align.
 	sort          bool     // whether enable tags sort.
@@ -182,16 +201,36 @@ func (w *Helper) Process(pass *analysis.Pass) { //nolint:gocognit
 
 		var maxTagNum int
 		var tagsGroup, notSortedTagsGroup [][]*structtag.Tag
-		for i, field := range fields {
-			offsets[i] = pass.Fset.Position(field.Tag.Pos()).Column
+
+		var uniqueKeys []string
+		addKey := func(k string) {
+			for _, key := range uniqueKeys {
+				if key == k {
+					return
+				}
+			}
+			uniqueKeys = append(uniqueKeys, k)
+		}
+
+		for i := 0; i < len(fields); {
+			field := fields[i]
+			column := pass.Fset.Position(field.Tag.Pos()).Column - 1
+			offsets[i] = column
+
 			tag, err := strconv.Unquote(field.Tag.Value)
 			if err != nil {
-				break
+				// if tag value is not a valid string, report it directly
+				w.report(pass, field, column, errTagValueSyntax, field.Tag.Value)
+				fields = removeField(fields, i)
+				continue
 			}
 
 			tags, err := structtag.Parse(tag)
 			if err != nil {
-				break
+				// if tag value is not a valid struct tag, report it directly
+				w.report(pass, field, column, err.Error(), field.Tag.Value)
+				fields = removeField(fields, i)
+				continue
 			}
 
 			maxTagNum = max(maxTagNum, tags.Len())
@@ -204,24 +243,47 @@ func (w *Helper) Process(pass *analysis.Pass) { //nolint:gocognit
 				notSortedTagsGroup = append(notSortedTagsGroup, cp)
 				sortBy(w.fixedTagOrder, tags)
 			}
-
+			for _, t := range tags.Tags() {
+				addKey(t.Key)
+			}
 			tagsGroup = append(tagsGroup, tags.Tags())
+
+			i++
 		}
 
-		// if w.align{
-		// record the max length of each column tag
-		tagMaxLens := make([]int, maxTagNum)
+		if w.sort && StrictStyle == w.style {
+			sortAllKeys(w.fixedTagOrder, uniqueKeys)
+			maxTagNum = len(uniqueKeys)
+		}
 
+		// record the max length of each column tag
+		type tagLen struct {
+			Key string // present only when sort enabled
+			Len int
+		}
+		tagMaxLens := make([]tagLen, maxTagNum)
 		for j := 0; j < maxTagNum; j++ {
 			var maxLength int
+			var key string
 			for i := 0; i < len(tagsGroup); i++ {
-				if len(tagsGroup[i]) <= j {
-					// in case of index out of range
-					continue
+				if w.style == StrictStyle {
+					key = uniqueKeys[j]
+					// search by key
+					for _, tag := range tagsGroup[i] {
+						if tag.Key == key {
+							maxLength = max(maxLength, len(tag.String()))
+							break
+						}
+					}
+				} else {
+					if len(tagsGroup[i]) <= j {
+						// in case of index out of range
+						continue
+					}
+					maxLength = max(maxLength, len(tagsGroup[i][j].String()))
 				}
-				maxLength = max(maxLength, len(tagsGroup[i][j].String()))
 			}
-			tagMaxLens[j] = maxLength
+			tagMaxLens[j] = tagLen{key, maxLength}
 		}
 
 		for i, field := range fields {
@@ -231,9 +293,28 @@ func (w *Helper) Process(pass *analysis.Pass) { //nolint:gocognit
 			if w.align {
 				// if align enabled, align tags.
 				newTagBuilder := strings.Builder{}
-				for i, tag := range tags {
-					format := alignFormat(tagMaxLens[i] + 1) // with an extra space
-					newTagBuilder.WriteString(fmt.Sprintf(format, tag.String()))
+				for i, n := 0, 0; i < len(tags) && n < len(tagMaxLens); {
+					tag := tags[i]
+					var format string
+					if w.style == StrictStyle {
+						if tagMaxLens[n].Key == tag.Key {
+							// match
+							format = alignFormat(tagMaxLens[n].Len + 1) // with an extra space
+							newTagBuilder.WriteString(fmt.Sprintf(format, tag.String()))
+							i++
+							n++
+						} else {
+							// tag missing
+							format = alignFormat(tagMaxLens[n].Len + 1)
+							newTagBuilder.WriteString(fmt.Sprintf(format, ""))
+							n++
+						}
+					} else {
+						format = alignFormat(tagMaxLens[n].Len + 1) // with an extra space
+						newTagBuilder.WriteString(fmt.Sprintf(format, tag.String()))
+						i++
+						n++
+					}
 				}
 				newTagStr = newTagBuilder.String()
 			} else {
@@ -249,7 +330,8 @@ func (w *Helper) Process(pass *analysis.Pass) { //nolint:gocognit
 				newTagStr = strings.Join(tagsStr, " ")
 			}
 
-			unquoteTag := strings.TrimSpace(newTagStr)
+			unquoteTag := strings.TrimRight(newTagStr, " ")
+			// unquoteTag := newTagStr
 			newTagValue := fmt.Sprintf("`%s`", unquoteTag)
 			if field.Tag.Value == newTagValue {
 				// nothing changed
@@ -258,19 +340,22 @@ func (w *Helper) Process(pass *analysis.Pass) { //nolint:gocognit
 
 			msg := "tag is not aligned, should be: " + unquoteTag
 
-			w.report(pass, field, offsets[i]-1, msg, newTagValue)
+			w.report(pass, field, offsets[i], msg, newTagValue)
 		}
 	}
 
 	// process single fields
 	for _, field := range w.singleFields {
+		column := pass.Fset.Position(field.Tag.Pos()).Column - 1
 		tag, err := strconv.Unquote(field.Tag.Value)
 		if err != nil {
+			w.report(pass, field, column, errTagValueSyntax, field.Tag.Value)
 			continue
 		}
 
 		tags, err := structtag.Parse(tag)
 		if err != nil {
+			w.report(pass, field, column, err.Error(), field.Tag.Value)
 			continue
 		}
 		originalTags := append([]*structtag.Tag(nil), tags.Tags()...)
@@ -278,20 +363,15 @@ func (w *Helper) Process(pass *analysis.Pass) { //nolint:gocognit
 			sortBy(w.fixedTagOrder, tags)
 		}
 
-		if reflect.DeepEqual(originalTags, tags.Tags()) {
-			// if tags order not changed, do nothing
-			continue
-		}
-
 		newTagValue := fmt.Sprintf("`%s`", tags.String())
-		if field.Tag.Value == newTagValue {
-			// nothing changed
+		if reflect.DeepEqual(originalTags, tags.Tags()) && field.Tag.Value == newTagValue {
+			// if tags order not changed, do nothing
 			continue
 		}
 
 		msg := "tag is not aligned , should be: " + tags.String()
 
-		w.report(pass, field, pass.Fset.Position(field.Tag.Pos()).Column-1, msg, newTagValue)
+		w.report(pass, field, column, msg, newTagValue)
 	}
 }
 
@@ -329,6 +409,27 @@ func sortBy(fixedOrder []string, tags *structtag.Tags) {
 	})
 }
 
+func sortAllKeys(fixedOrder []string, keys []string) {
+	sort.Slice(keys, func(i, j int) bool {
+		oi := findIndex(fixedOrder, keys[i])
+		oj := findIndex(fixedOrder, keys[j])
+
+		if oi == -1 && oj == -1 {
+			return keys[i] < keys[j]
+		}
+
+		if oi == -1 {
+			return false
+		}
+
+		if oj == -1 {
+			return true
+		}
+
+		return oi < oj
+	})
+}
+
 func findIndex(s []string, e string) int {
 	for i, a := range s {
 		if a == e {
@@ -347,4 +448,12 @@ func max(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func removeField(fields []*ast.Field, index int) []*ast.Field {
+	if index < 0 || index >= len(fields) {
+		return fields
+	}
+
+	return append(fields[:index], fields[index+1:]...)
 }

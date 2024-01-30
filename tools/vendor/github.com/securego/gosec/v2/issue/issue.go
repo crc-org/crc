@@ -87,6 +87,7 @@ var ruleToCWE = map[string]string{
 	"G504": "327",
 	"G505": "327",
 	"G601": "118",
+	"G602": "118",
 }
 
 // Issue is returned by a gosec rule if it discovers an issue with the scanned code.
@@ -177,11 +178,7 @@ func codeSnippetEndLine(node ast.Node, fobj *token.File) int64 {
 // New creates a new Issue
 func New(fobj *token.File, node ast.Node, ruleID, desc string, severity, confidence Score) *Issue {
 	name := fobj.Name()
-	start, end := fobj.Line(node.Pos()), fobj.Line(node.End())
-	line := strconv.Itoa(start)
-	if start != end {
-		line = fmt.Sprintf("%d-%d", start, end)
-	}
+	line := GetLine(fobj, node)
 	col := strconv.Itoa(fobj.Position(node.Pos()).Column)
 
 	var code string
@@ -215,4 +212,14 @@ func New(fobj *token.File, node ast.Node, ruleID, desc string, severity, confide
 func (i *Issue) WithSuppressions(suppressions []SuppressionInfo) *Issue {
 	i.Suppressions = suppressions
 	return i
+}
+
+// GetLine returns the line number of a given ast.Node
+func GetLine(fobj *token.File, node ast.Node) string {
+	start, end := fobj.Line(node.Pos()), fobj.Line(node.End())
+	line := strconv.Itoa(start)
+	if start != end {
+		line = fmt.Sprintf("%d-%d", start, end)
+	}
+	return line
 }
