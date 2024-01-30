@@ -50,7 +50,7 @@ require (
 	github.com/spf13/viper v1.17.0
 	github.com/stretchr/testify v1.8.4
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
-	github.com/yusufpapurcu/wmi v1.2.3
+	github.com/yusufpapurcu/wmi v1.2.4
 	github.com/zalando/go-keyring v0.2.3
 	golang.org/x/crypto v0.18.0
 	golang.org/x/net v0.19.0
