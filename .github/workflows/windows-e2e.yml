@@ -22,7 +22,7 @@ jobs:
 
       - name: Download GH context  
         id: download-gh-context-artifact
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           workflow: ${{ github.event.workflow_run.workflow_id }}
           name: gh_context
@@ -92,7 +92,7 @@ jobs:
 
       - name: Download installer  
         id: download-installer-artifact
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           workflow: ${{ github.event.workflow_run.workflow_id }}
           name: Windows Installer (windows-2022)
@@ -132,7 +132,7 @@ jobs:
 
       - name: Download e2e image  
         id: download-images-artifact
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           workflow_conclusion: completed
           workflow: build-tests.yml
