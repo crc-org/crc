@@ -3,6 +3,7 @@ package rules
 import (
 	"go/ast"
 	"go/token"
+	"go/types"
 
 	"github.com/securego/gosec/v2"
 	"github.com/securego/gosec/v2/issue"
@@ -26,6 +27,23 @@ func containsUnary(exprs []*ast.UnaryExpr, expr *ast.UnaryExpr) bool {
 		}
 	}
 	return false
+}
+
+func getIdentExpr(expr ast.Expr) (*ast.Ident, bool) {
+	return doGetIdentExpr(expr, false)
+}
+
+func doGetIdentExpr(expr ast.Expr, hasSelector bool) (*ast.Ident, bool) {
+	switch node := expr.(type) {
+	case *ast.Ident:
+		return node, hasSelector
+	case *ast.SelectorExpr:
+		return doGetIdentExpr(node.X, true)
+	case *ast.UnaryExpr:
+		return doGetIdentExpr(node.X, hasSelector)
+	default:
+		return nil, false
+	}
 }
 
 func (r *implicitAliasing) Match(n ast.Node, c *gosec.Context) (*issue.Issue, error) {
@@ -72,9 +90,13 @@ func (r *implicitAliasing) Match(n ast.Node, c *gosec.Context) (*issue.Issue, er
 		}
 
 		// If we find a unary op of & (reference) of an object within r.aliases, complain.
-		if ident, ok := node.X.(*ast.Ident); ok && node.Op.String() == "&" {
-			if _, contains := r.aliases[ident.Obj]; contains {
-				return c.NewIssue(n, r.ID(), r.What, r.Severity, r.Confidence), nil
+		if identExpr, hasSelector := getIdentExpr(node); identExpr != nil && node.Op.String() == "&" {
+			if _, contains := r.aliases[identExpr.Obj]; contains {
+				_, isPointer := c.Info.TypeOf(identExpr).(*types.Pointer)
+
+				if !hasSelector || !isPointer {
+					return c.NewIssue(n, r.ID(), r.What, r.Severity, r.Confidence), nil
+				}
 			}
 		}
 	case *ast.ReturnStmt:
