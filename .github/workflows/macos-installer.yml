@@ -30,7 +30,7 @@ jobs:
           limit-access-to-actor: true
         timeout-minutes: 30
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
