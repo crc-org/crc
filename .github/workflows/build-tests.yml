@@ -26,7 +26,7 @@ jobs:
           podman save -o ${{ env.IMAGE_NAME_E2E }}.tar quay.io/crcont/${{ env.IMAGE_NAME_E2E}}:id-${{ github.sha }}
 
       - name: Upload e2e image
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.IMAGE_NAME_E2E }}-id${{ github.sha }}
           path: ${{ env.IMAGE_NAME_E2E }}.tar
@@ -47,7 +47,7 @@ jobs:
           podman save -o ${{ env.IMAGE_NAME_INTEGRATION }}.tar quay.io/crcont/${{ env.IMAGE_NAME_INTEGRATION }}:id-${{ github.sha }}
       
       - name: Upload integration image
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.IMAGE_NAME_INTEGRATION }}-id${{ github.sha }}
           path: ${{ env.IMAGE_NAME_INTEGRATION }}.tar

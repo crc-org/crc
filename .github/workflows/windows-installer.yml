@@ -20,7 +20,7 @@ jobs:
         run: echo $GH_CONTEXT > gh_context.json
 
       - name: Upload the GH context artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: gh_context
           path: ./gh_context.json
@@ -47,7 +47,7 @@ jobs:
       - name: Build Windows installer
         run: make out/windows-amd64/crc-windows-installer.zip
       - name: Upload windows installer artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Windows Installer (${{ matrix.os }})
           path: "./out/windows-amd64/crc-windows-installer.zip"

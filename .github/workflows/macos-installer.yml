@@ -38,7 +38,7 @@ jobs:
       - name: Build macOS installer
         run: make NO_CODESIGN=1 out/macos-universal/crc-macos-installer.pkg
       - name: Upload macOS installer artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: macOS Installer (${{ matrix.os }})
           path: "./out/macos-universal/crc-macos-installer.pkg"
