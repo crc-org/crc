@@ -92,8 +92,8 @@ github.com/cncf/udpa/go v0.0.0-20200629203442-efcf912fb354/go.mod h1:WmhPx2Nbnht
 github.com/cncf/udpa/go v0.0.0-20201120205902-5459f2c99403/go.mod h1:WmhPx2Nbnhtbo57+VJT5O0JRkEi1Wbu0z5j0R8u5Hbk=
 github.com/containers/gvisor-tap-vsock v0.7.2 h1:6CyU5D85C0/DciRRd7W0bPljK4FAS+DPrrHEQMHfZKY=
 github.com/containers/gvisor-tap-vsock v0.7.2/go.mod h1:6NiTxh2GCVxZQLPzfuEB78/Osp2Usd9uf6nLdd6PiUY=
-github.com/containers/image/v5 v5.29.0 h1:9+nhS/ZM7c4Kuzu5tJ0NMpxrgoryOJ2HAYTgG8Ny7j4=
-github.com/containers/image/v5 v5.29.0/go.mod h1:kQ7qcDsps424ZAz24thD+x7+dJw1vgur3A9tTDsj97E=
+github.com/containers/image/v5 v5.29.1 h1:9COTXQpl3FgrW/jw/roLAWlW4TN9ly7/bCAKY76wYl8=
+github.com/containers/image/v5 v5.29.1/go.mod h1:kQ7qcDsps424ZAz24thD+x7+dJw1vgur3A9tTDsj97E=
 github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01 h1:Qzk5C6cYglewc+UyGf6lc8Mj2UaPTHy/iF2De0/77CA=
 github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01/go.mod h1:9rfv8iPl1ZP7aqh9YA68wnZv2NUDbXdcdPHVz0pFbPY=
 github.com/containers/ocicrypt v1.1.9 h1:2Csfba4jse85Raxk5HIyEk8OwZNjRvfkhEGijOjIdEM=
