@@ -10,7 +10,7 @@ require (
 	github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/cavaliergopher/grab/v3 v3.0.1
-	github.com/cheggaaa/pb/v3 v3.1.4
+	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/containers/gvisor-tap-vsock v0.7.2
 	github.com/containers/image/v5 v5.29.1
 	github.com/coreos/go-systemd/v22 v22.5.0
