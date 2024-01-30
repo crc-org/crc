@@ -11,7 +11,6 @@ import (
 	"github.com/containers/image/v5/manifest"
 	"github.com/containers/image/v5/signature/internal"
 	"github.com/opencontainers/go-digest"
-	"golang.org/x/exp/slices"
 )
 
 // SignOptions includes optional parameters for signing container images.
@@ -51,26 +50,15 @@ func SignDockerManifest(m []byte, dockerReference string, mech SigningMechanism,
 // using mech.
 func VerifyDockerManifestSignature(unverifiedSignature, unverifiedManifest []byte,
 	expectedDockerReference string, mech SigningMechanism, expectedKeyIdentity string) (*Signature, error) {
-	sig, _, err := VerifyImageManifestSignatureUsingKeyIdentityList(unverifiedSignature, unverifiedManifest, expectedDockerReference, mech, []string{expectedKeyIdentity})
-	return sig, err
-}
-
-// VerifyImageManifestSignatureUsingKeyIdentityList checks that unverifiedSignature uses one of the expectedKeyIdentities
-// to sign unverifiedManifest as expectedDockerReference, using mech. Returns the verified signature and the key identity that
-// was used to verify it.
-func VerifyImageManifestSignatureUsingKeyIdentityList(unverifiedSignature, unverifiedManifest []byte,
-	expectedDockerReference string, mech SigningMechanism, expectedKeyIdentities []string) (*Signature, string, error) {
 	expectedRef, err := reference.ParseNormalizedNamed(expectedDockerReference)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
-	var matchedKeyIdentity string
 	sig, err := verifyAndExtractSignature(mech, unverifiedSignature, signatureAcceptanceRules{
 		validateKeyIdentity: func(keyIdentity string) error {
-			if !slices.Contains(expectedKeyIdentities, keyIdentity) {
-				return internal.NewInvalidSignatureError(fmt.Sprintf("Signature by %s does not match expected fingerprints %v", keyIdentity, expectedKeyIdentities))
+			if keyIdentity != expectedKeyIdentity {
+				return internal.NewInvalidSignatureError(fmt.Sprintf("Signature by %s does not match expected fingerprint %s", keyIdentity, expectedKeyIdentity))
 			}
-			matchedKeyIdentity = keyIdentity
 			return nil
 		},
 		validateSignedDockerReference: func(signedDockerReference string) error {
@@ -96,7 +84,7 @@ func VerifyImageManifestSignatureUsingKeyIdentityList(unverifiedSignature, unver
 		},
 	})
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
-	return sig, matchedKeyIdentity, err
+	return sig, nil
 }

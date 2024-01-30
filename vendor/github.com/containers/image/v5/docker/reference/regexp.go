@@ -1,156 +1,143 @@
 package reference
 
-import (
-	"regexp"
-	"strings"
-
-	storageRegexp "github.com/containers/storage/pkg/regexp"
-)
-
-const (
-	// alphaNumeric defines the alpha numeric atom, typically a
-	// component of names. This only allows lower case characters and digits.
-	alphaNumeric = `[a-z0-9]+`
-
-	// separator defines the separators allowed to be embedded in name
-	// components. This allow one period, one or two underscore and multiple
-	// dashes. Repeated dashes and underscores are intentionally treated
-	// differently. In order to support valid hostnames as name components,
-	// supporting repeated dash was added. Additionally double underscore is
-	// now allowed as a separator to loosen the restriction for previously
-	// supported names.
-	separator = `(?:[._]|__|[-]*)`
-
-	// repository name to start with a component as defined by DomainRegexp
-	// and followed by an optional port.
-	domainComponent = `(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])`
-
-	// The string counterpart for TagRegexp.
-	tag = `[\w][\w.-]{0,127}`
-
-	// The string counterpart for DigestRegexp.
-	digestPat = `[A-Za-z][A-Za-z0-9]*(?:[-_+.][A-Za-z][A-Za-z0-9]*)*[:][[:xdigit:]]{32,}`
-
-	// The string counterpart for IdentifierRegexp.
-	identifier = `([a-f0-9]{64})`
-
-	// The string counterpart for ShortIdentifierRegexp.
-	shortIdentifier = `([a-f0-9]{6,64})`
-)
+import "regexp"
 
 var (
-	// nameComponent restricts registry path component names to start
+	// alphaNumericRegexp defines the alpha numeric atom, typically a
+	// component of names. This only allows lower case characters and digits.
+	alphaNumericRegexp = match(`[a-z0-9]+`)
+
+	// separatorRegexp defines the separators allowed to be embedded in name
+	// components. This allow one period, one or two underscore and multiple
+	// dashes.
+	separatorRegexp = match(`(?:[._]|__|[-]*)`)
+
+	// nameComponentRegexp restricts registry path component names to start
 	// with at least one letter or number, with following parts able to be
 	// separated by one period, one or two underscore and multiple dashes.
-	nameComponent = expression(
-		alphaNumeric,
-		optional(repeated(separator, alphaNumeric)))
+	nameComponentRegexp = expression(
+		alphaNumericRegexp,
+		optional(repeated(separatorRegexp, alphaNumericRegexp)))
 
-	domain = expression(
-		domainComponent,
-		optional(repeated(literal(`.`), domainComponent)),
-		optional(literal(`:`), `[0-9]+`))
+	// domainComponentRegexp restricts the registry domain component of a
+	// repository name to start with a component as defined by DomainRegexp
+	// and followed by an optional port.
+	domainComponentRegexp = match(`(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])`)
+
 	// DomainRegexp defines the structure of potential domain components
 	// that may be part of image names. This is purposely a subset of what is
 	// allowed by DNS to ensure backwards compatibility with Docker image
 	// names.
-	DomainRegexp = re(domain)
+	DomainRegexp = expression(
+		domainComponentRegexp,
+		optional(repeated(literal(`.`), domainComponentRegexp)),
+		optional(literal(`:`), match(`[0-9]+`)))
 
 	// TagRegexp matches valid tag names. From docker/docker:graph/tags.go.
-	TagRegexp = re(tag)
+	TagRegexp = match(`[\w][\w.-]{0,127}`)
 
-	anchoredTag = anchored(tag)
 	// anchoredTagRegexp matches valid tag names, anchored at the start and
 	// end of the matched string.
-	anchoredTagRegexp = storageRegexp.Delayed(anchoredTag)
+	anchoredTagRegexp = anchored(TagRegexp)
 
 	// DigestRegexp matches valid digests.
-	DigestRegexp = re(digestPat)
+	DigestRegexp = match(`[A-Za-z][A-Za-z0-9]*(?:[-_+.][A-Za-z][A-Za-z0-9]*)*[:][[:xdigit:]]{32,}`)
 
-	anchoredDigest = anchored(digestPat)
 	// anchoredDigestRegexp matches valid digests, anchored at the start and
 	// end of the matched string.
-	anchoredDigestRegexp = storageRegexp.Delayed(anchoredDigest)
+	anchoredDigestRegexp = anchored(DigestRegexp)
 
-	namePat = expression(
-		optional(domain, literal(`/`)),
-		nameComponent,
-		optional(repeated(literal(`/`), nameComponent)))
 	// NameRegexp is the format for the name component of references. The
 	// regexp has capturing groups for the domain and name part omitting
 	// the separating forward slash from either.
-	NameRegexp = re(namePat)
+	NameRegexp = expression(
+		optional(DomainRegexp, literal(`/`)),
+		nameComponentRegexp,
+		optional(repeated(literal(`/`), nameComponentRegexp)))
 
-	anchoredName = anchored(
-		optional(capture(domain), literal(`/`)),
-		capture(nameComponent,
-			optional(repeated(literal(`/`), nameComponent))))
 	// anchoredNameRegexp is used to parse a name value, capturing the
 	// domain and trailing components.
-	anchoredNameRegexp = storageRegexp.Delayed(anchoredName)
+	anchoredNameRegexp = anchored(
+		optional(capture(DomainRegexp), literal(`/`)),
+		capture(nameComponentRegexp,
+			optional(repeated(literal(`/`), nameComponentRegexp))))
 
-	referencePat = anchored(capture(namePat),
-		optional(literal(":"), capture(tag)),
-		optional(literal("@"), capture(digestPat)))
 	// ReferenceRegexp is the full supported format of a reference. The regexp
 	// is anchored and has capturing groups for name, tag, and digest
 	// components.
-	ReferenceRegexp = re(referencePat)
+	ReferenceRegexp = anchored(capture(NameRegexp),
+		optional(literal(":"), capture(TagRegexp)),
+		optional(literal("@"), capture(DigestRegexp)))
 
 	// IdentifierRegexp is the format for string identifier used as a
 	// content addressable identifier using sha256. These identifiers
 	// are like digests without the algorithm, since sha256 is used.
-	IdentifierRegexp = re(identifier)
+	IdentifierRegexp = match(`([a-f0-9]{64})`)
 
 	// ShortIdentifierRegexp is the format used to represent a prefix
 	// of an identifier. A prefix may be used to match a sha256 identifier
 	// within a list of trusted identifiers.
-	ShortIdentifierRegexp = re(shortIdentifier)
+	ShortIdentifierRegexp = match(`([a-f0-9]{6,64})`)
 
-	anchoredIdentifier = anchored(identifier)
 	// anchoredIdentifierRegexp is used to check or match an
 	// identifier value, anchored at start and end of string.
-	anchoredIdentifierRegexp = storageRegexp.Delayed(anchoredIdentifier)
+	anchoredIdentifierRegexp = anchored(IdentifierRegexp)
+
+	// anchoredShortIdentifierRegexp is used to check if a value
+	// is a possible identifier prefix, anchored at start and end
+	// of string.
+	anchoredShortIdentifierRegexp = anchored(ShortIdentifierRegexp)
 )
 
-// re compiles the string to a regular expression.
-var re = regexp.MustCompile
+// match compiles the string to a regular expression.
+var match = regexp.MustCompile
 
 // literal compiles s into a literal regular expression, escaping any regexp
 // reserved characters.
-func literal(s string) string {
-	return regexp.QuoteMeta(s)
+func literal(s string) *regexp.Regexp {
+	re := match(regexp.QuoteMeta(s))
+
+	if _, complete := re.LiteralPrefix(); !complete {
+		panic("must be a literal")
+	}
+
+	return re
 }
 
 // expression defines a full expression, where each regular expression must
 // follow the previous.
-func expression(res ...string) string {
-	return strings.Join(res, "")
+func expression(res ...*regexp.Regexp) *regexp.Regexp {
+	var s string
+	for _, re := range res {
+		s += re.String()
+	}
+
+	return match(s)
 }
 
 // optional wraps the expression in a non-capturing group and makes the
 // production optional.
-func optional(res ...string) string {
-	return group(expression(res...)) + `?`
+func optional(res ...*regexp.Regexp) *regexp.Regexp {
+	return match(group(expression(res...)).String() + `?`)
 }
 
 // repeated wraps the regexp in a non-capturing group to get one or more
 // matches.
-func repeated(res ...string) string {
-	return group(expression(res...)) + `+`
+func repeated(res ...*regexp.Regexp) *regexp.Regexp {
+	return match(group(expression(res...)).String() + `+`)
 }
 
 // group wraps the regexp in a non-capturing group.
-func group(res ...string) string {
-	return `(?:` + expression(res...) + `)`
+func group(res ...*regexp.Regexp) *regexp.Regexp {
+	return match(`(?:` + expression(res...).String() + `)`)
 }
 
 // capture wraps the expression in a capturing group.
-func capture(res ...string) string {
-	return `(` + expression(res...) + `)`
+func capture(res ...*regexp.Regexp) *regexp.Regexp {
+	return match(`(` + expression(res...).String() + `)`)
 }
 
 // anchored anchors the regular expression by adding start and end delimiters.
-func anchored(res ...string) string {
-	return `^` + expression(res...) + `$`
+func anchored(res ...*regexp.Regexp) *regexp.Regexp {
+	return match(`^` + expression(res...).String() + `$`)
 }

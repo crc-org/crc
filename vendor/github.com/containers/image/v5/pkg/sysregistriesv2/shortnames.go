@@ -14,7 +14,6 @@ import (
 	"github.com/containers/storage/pkg/homedir"
 	"github.com/containers/storage/pkg/lockfile"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
 )
 
 // defaultShortNameMode is the default mode of registries.conf files if the
@@ -309,7 +308,9 @@ func newShortNameAliasCache(path string, conf *shortNameAliasConf) (*shortNameAl
 // updateWithConfigurationFrom updates c with configuration from updates.
 // In case of conflict, updates is preferred.
 func (c *shortNameAliasCache) updateWithConfigurationFrom(updates *shortNameAliasCache) {
-	maps.Copy(c.namedAliases, updates.namedAliases)
+	for name, value := range updates.namedAliases {
+		c.namedAliases[name] = value
+	}
 }
 
 func loadShortNameAliasConf(confPath string) (*shortNameAliasConf, *shortNameAliasCache, error) {
@@ -334,7 +335,7 @@ func loadShortNameAliasConf(confPath string) (*shortNameAliasConf, *shortNameAli
 	return &conf, cache, nil
 }
 
-func shortNameAliasesConfPathAndLock(ctx *types.SystemContext) (string, *lockfile.LockFile, error) {
+func shortNameAliasesConfPathAndLock(ctx *types.SystemContext) (string, lockfile.Locker, error) {
 	shortNameAliasesConfPath, err := shortNameAliasesConfPath(ctx)
 	if err != nil {
 		return "", nil, err
@@ -345,6 +346,6 @@ func shortNameAliasesConfPathAndLock(ctx *types.SystemContext) (string, *lockfil
 	}
 
 	lockPath := shortNameAliasesConfPath + ".lock"
-	locker, err := lockfile.GetLockFile(lockPath)
+	locker, err := lockfile.GetLockfile(lockPath)
 	return shortNameAliasesConfPath, locker, err
 }

@@ -23,12 +23,6 @@ type v1OnlyBlobInfoCache struct {
 	types.BlobInfoCache
 }
 
-func (bic *v1OnlyBlobInfoCache) Open() {
-}
-
-func (bic *v1OnlyBlobInfoCache) Close() {
-}
-
 func (bic *v1OnlyBlobInfoCache) RecordDigestCompressorName(anyDigest digest.Digest, compressorName string) {
 }
 
