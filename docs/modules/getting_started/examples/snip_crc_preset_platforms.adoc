@@ -5,5 +5,4 @@ Preset, AMD64, Intel 64, Apple silicon
 {ocp}, yes, yes,  yes
 {okd}, yes, yes, no
 {ushift}, yes, yes, yes
-Podman container runtime, yes, yes, yes
 |===

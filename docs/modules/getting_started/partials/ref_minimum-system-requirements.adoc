@@ -32,12 +32,6 @@ Some workloads might require more resources.
 To assign more resources to the {prod} instance, see link:{crc-gsg-url}#configuring-the-instance_gsg[Configuring the instance].
 ====
 
-=== For the Podman container runtime
-
-* 2 physical CPU cores
-* 2 GB of free memory
-* 35 GB of storage space
-
 == Operating system requirements
 
 {prod} requires the following minimum version of a supported operating system:
