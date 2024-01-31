@@ -52,9 +52,9 @@ func (check *Check) shouldSkip(config crcConfig.Storage) bool {
 func (check *Check) doCheck(config crcConfig.Storage) error {
 	if check.checkDescription == "" {
 		panic(fmt.Sprintf("Should not happen, empty description for check '%s'", check.configKeySuffix))
-	} else {
-		logging.Infof("%s", check.checkDescription)
 	}
+
+	logging.Infof("%s", check.checkDescription)
 	if check.shouldSkip(config) {
 		logging.Warn("Skipping above check...")
 		return nil
