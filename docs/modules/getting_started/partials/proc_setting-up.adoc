@@ -21,14 +21,6 @@ Always run the [command]`{bin}` executable with your user account.
 ====
 
 .Procedure
-. (Optional) On Linux, the {ocp} preset is selected by default.
-To select the Podman container runtime preset:
-+
-[subs="+quotes,attributes"]
-----
-$ {bin} config set preset podman
-----
-
 . Set up your host machine for {prod}:
 +
 [subs="+quotes,attributes"]

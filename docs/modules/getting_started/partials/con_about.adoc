@@ -1,7 +1,7 @@
 = About {prod}
 
-{rh-prod} brings a minimal {ocp} 4 cluster and Podman container runtime to your local computer.
-These runtimes provide minimal environments for development and testing purposes.
+{rh-prod} brings a minimal {ocp} 4 cluster to your local computer.
+This runtime provides minimal environments for development and testing purposes.
 {prod} is mainly targeted at running on developers' desktops.
 For other {ocp} use cases, such as headless or multi-developer setups, use the link:{openshift-installer-url}[full {openshift} installer].
 

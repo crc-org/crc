@@ -5,5 +5,4 @@ Name, Preset
 `openshift`, {ocp}
 `okd`, {okd}
 `microshift`, {ushift}
-`podman`, Podman container runtime
 |===

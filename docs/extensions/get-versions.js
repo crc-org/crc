@@ -13,10 +13,6 @@ module.exports.register = function () {
       "grep '^OPENSHIFT_VERSION' Makefile | cut -d' ' -f3 | cut -d'.' -f-2 | tr -d '\n'",
       { encoding: "utf8" }
     );
-    const podman_ver = child_process.execSync(
-      "grep '^PODMAN_VERSION' Makefile | cut -d' ' -f3 | tr -d '\n'",
-      { encoding: "utf8" }
-    );
     const prod_ver_full = child_process.execSync(
       "grep '^CRC_VERSION' Makefile | cut -d' ' -f3 | tr -d '\n'",
       { encoding: "utf8" }
@@ -33,7 +29,6 @@ module.exports.register = function () {
     // Display versions
     console.log("OpenShift patch version: " + ocp_ver_full);
     console.log("OpenShift minor version: " + ocp_ver);
-    console.log("Podman version: " + podman_ver);
     console.log("CRC patch version: " + prod_ver_full);
     console.log("CRC minor version: " + prod_ver);
     console.log("MicroShift version: " + ushift_ver);
@@ -42,7 +37,6 @@ module.exports.register = function () {
     Object.assign(playbook.asciidoc.attributes, {
       "ocp-ver": ocp_ver,
       "ocp-ver-full": ocp_ver_full,
-      "podman-ver": podman_ver,
       "prod-ver": prod_ver,
       "prod-ver-full": prod_ver_full,
       "ushift-ver": ushift_ver,
