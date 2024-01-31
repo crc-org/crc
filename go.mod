@@ -12,7 +12,7 @@ require (
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/containers/gvisor-tap-vsock v0.7.2
-	github.com/containers/image/v5 v5.29.1
+	github.com/containers/image/v5 v5.29.2
 	github.com/coreos/go-systemd/v22 v22.5.0
 	github.com/crc-org/admin-helper v0.5.2
 	github.com/crc-org/machine v0.0.0-20221028075518-f9b43442196b
