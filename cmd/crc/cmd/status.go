@@ -7,11 +7,9 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"runtime"
 	"text/tabwriter"
 
 	"github.com/cheggaaa/pb/v3"
-	"github.com/cheggaaa/pb/v3/termutil"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	crcErrors "github.com/crc-org/crc/v2/pkg/crc/errors"
@@ -96,12 +94,6 @@ func runWatchStatus(writer io.Writer, client *daemonclient.Client, cacheDir stri
 			barPool = pb.NewPool(append([]*pb.ProgressBar{ramBar}, cpuBars...)...)
 			if startErr := barPool.Start(); startErr != nil {
 				return
-			}
-			if runtime.GOOS == "windows" {
-				// Print and ignore the error to continue printing
-				if rawErr := termutil.RawModeOff(); rawErr != nil {
-					fmt.Fprintf(os.Stderr, "Failed to turn off raw mode due to error: %v\n", rawErr)
-				}
 			}
 			isPoolInit = true
 		} else if len(loadResult.CPUUse) > len(cpuBars) {
