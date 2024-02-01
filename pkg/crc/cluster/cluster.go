@@ -510,3 +510,32 @@ func DeleteMCOLeaderLease(ctx context.Context, ocConfig oc.Config) error {
 	_, _, err := ocConfig.RunOcCommand("delete", "-A", "lease", "--all")
 	return err
 }
+
+func CheckCorePodsRunning(ctx context.Context, ocConfig oc.Config) error {
+	if err := WaitForOpenshiftResource(ctx, ocConfig, "pod"); err != nil {
+		return err
+	}
+	coreNameSpaces := []string{"kube-system", "openshift-dns", "openshift-ingress", "openshift-ovn-kubernetes", "openshift-service-ca"}
+	waitForPods := func() error {
+		for _, namespace := range coreNameSpaces {
+			if !podRunningForNamespace(ocConfig, namespace) {
+				logging.Debugf("Pods in %s namespace are not running", namespace)
+				return &errors.RetriableError{Err: fmt.Errorf("pods in %s namespace are not running", namespace)}
+			}
+		}
+		return nil
+	}
+	return errors.Retry(ctx, 2*time.Minute, waitForPods, 2*time.Second)
+}
+
+func podRunningForNamespace(ocConfig oc.Config, namespace string) bool {
+	stdout, stderr, err := ocConfig.WithFailFast().RunOcCommand("get", "pods", "-n", namespace, "--field-selector=status.phase!=Running")
+	if err != nil {
+		logging.Debugf("Failed to get pods in %s namespace, stderr: %s", namespace, stderr)
+		return false
+	}
+	if len(stdout) != 0 {
+		return false
+	}
+	return true
+}
