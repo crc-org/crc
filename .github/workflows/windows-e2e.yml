@@ -29,14 +29,14 @@ jobs:
 
       - name: Download e2e image  
         id: download-images-artifact
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           workflow: ${{ github.event.workflow_run.workflow_id }}
           name: crc-e2e-gh
 
       - name: Download installer  
         id: download-installer-artifact
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           workflow: ${{ github.event.workflow_run.workflow_id }}
           name: Windows Installer (windows-2022)
