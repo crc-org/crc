@@ -22,6 +22,11 @@ var presetMap = map[Preset]string{
 	Microshift: string(Microshift),
 }
 
+const (
+	PodmanDeprecatedWarning = "The Podman preset is deprecated and will be removed in a future release. Consider" +
+		" rather using a Podman Machine managed by Podman Desktop: https://podman-desktop.io"
+)
+
 func AllPresets() []Preset {
 	var keys []Preset
 	for k := range presetMap {
