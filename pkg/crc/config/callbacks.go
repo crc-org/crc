@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/os"
 	"github.com/spf13/cast"
 )
@@ -21,7 +23,11 @@ func RequiresDeleteMsg(key string, _ interface{}) string {
 		"delete the CRC instance with 'crc delete' and start it with 'crc start'.", key)
 }
 
-func RequiresDeleteAndSetupMsg(key string, _ interface{}) string {
+func RequiresDeleteAndSetupMsg(key string, value interface{}) string {
+
+	if key == Preset && value == string(preset.Podman) {
+		logging.Warn(preset.PodmanDeprecatedWarning)
+	}
 	// since we cannot easily import the machine package here to check for existence of the CRC vm
 	// we rely on the existence of the machine config file to determine if a VM exists
 	if os.FileExists(filepath.Join(constants.MachineInstanceDir, "crc", "config.json")) {
