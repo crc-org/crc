@@ -21,7 +21,7 @@ jobs:
           - '1.20'
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -44,7 +44,7 @@ jobs:
       
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Build and archive e2e image
         # use github.sha as ID to correlate various workflows triggered by the same event
@@ -65,7 +65,7 @@ jobs:
     
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Build and archive integration image
         # use github.sha as ID to correlate various workflows triggered by the same event
