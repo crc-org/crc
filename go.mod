@@ -25,7 +25,7 @@ require (
 	github.com/h2non/filetype v1.1.3
 	github.com/hectane/go-acl v0.0.0-20230122075934-ca0b05cb1adb
 	github.com/jinzhu/copier v0.4.0
-	github.com/klauspost/compress v1.17.5
+	github.com/klauspost/compress v1.17.6
 	github.com/klauspost/cpuid/v2 v2.2.6
 	github.com/kofalt/go-memoize v0.0.0-20220914132407-0b5d6a304579
 	github.com/mattn/go-colorable v0.1.13
