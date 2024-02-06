@@ -253,7 +253,9 @@ func AddOCToPath() error {
 	return nil
 }
 
-func LoginToOcClusterSucceedsOrFails(expected string) error {
+// LoginToOcCluster logs into the cluster as admin with oc command
+// 'options' should have a form of a string slice like: [--option1 --option2 --option3] (string slice)
+func LoginToOcCluster(options []string) error {
 
 	credentialsCommand := "crc console --credentials" //#nosec G101
 	err := ExecuteCommand(credentialsCommand)
@@ -263,5 +265,24 @@ func LoginToOcClusterSucceedsOrFails(expected string) error {
 	out := GetLastCommandOutput("stdout")
 	ocLoginAsAdminCommand := strings.Split(out, "'")[3]
 
-	return ExecuteCommandSucceedsOrFails(ocLoginAsAdminCommand, expected)
+	for _, option := range options {
+		ocLoginAsAdminCommand = ocLoginAsAdminCommand + " " + option
+	}
+
+	return ExecuteCommand(ocLoginAsAdminCommand)
+}
+
+// LoginToOcClusterSucceedsOrFails is a wrapper for LoginToOcCluster
+func LoginToOcClusterSucceedsOrFails(expected string) error {
+
+	if expected == "fails" {
+		err := LoginToOcCluster([]string{})
+		if err != nil {
+			return nil
+		}
+		_ = LogMessage("error:", "Login succeeded but was not supposed to")
+		return fmt.Errorf("Login succeeded but was not supposed to")
+	}
+
+	return LoginToOcCluster([]string{})
 }
