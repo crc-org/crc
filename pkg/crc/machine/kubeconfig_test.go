@@ -92,6 +92,12 @@ func Test_mergeKubeConfigFile(t *testing.T) {
 	secondaryConfig.Contexts["secondary-context"] = &api.Context{Cluster: "secondary-cluster", AuthInfo: "secondary-user"}
 	secondaryConfig.CurrentContext = "secondary-context"
 
+	secondaryConfigMerged := api.NewConfig()
+	secondaryConfigMerged.Clusters["secondary-cluster"] = &api.Cluster{Server: "https://secondary.example.com"}
+	secondaryConfigMerged.AuthInfos["secondary-user/secondary-example-com"] = &api.AuthInfo{Token: "secondary-token"}
+	secondaryConfigMerged.Contexts["secondary-context"] = &api.Context{Cluster: "secondary-cluster", AuthInfo: "secondary-user/secondary-example-com"}
+	secondaryConfigMerged.CurrentContext = "secondary-context"
+
 	// Create temporary kubeconfig files for the primary and secondary configurations
 	primaryConfigPath, err := createTempKubeConfig(primaryConfig)
 	assert.NoError(t, err, "failed to create temporary kubeconfig file")
@@ -108,7 +114,7 @@ func Test_mergeKubeConfigFile(t *testing.T) {
 	mergedConfig, err := clientcmd.LoadFromFile(primaryConfigPath)
 	assert.NoError(t, err, "failed to load merged kubeconfig")
 
-	for _, config := range []*api.Config{primaryConfig, secondaryConfig} {
+	for _, config := range []*api.Config{primaryConfig, secondaryConfigMerged} {
 
 		for key := range config.AuthInfos {
 			assert.Contains(t, mergedConfig.AuthInfos, key, "expected authInfo not found")

@@ -174,12 +174,19 @@ func addContext(cfg *api.Config, ip string, clusterConfig *types.ClusterConfig, 
 	if err != nil {
 		return err
 	}
-	cfg.AuthInfos[username] = &api.AuthInfo{
+
+	// append /clustername to AuthInfo
+	clusterUser, err := appendClusternameToUser(username, host)
+	if err != nil {
+		return err
+	}
+
+	cfg.AuthInfos[clusterUser] = &api.AuthInfo{
 		Token: token,
 	}
 	cfg.Contexts[context] = &api.Context{
 		Cluster:   host,
-		AuthInfo:  username,
+		AuthInfo:  clusterUser,
 		Namespace: "default",
 	}
 	return nil
@@ -264,19 +271,57 @@ func mergeConfigHelper(kubeConfigFile, globalConfigFile string) error {
 	if err != nil {
 		return err
 	}
+	// append cluster name to the AuthInfos
+	cfg, err := appendClusterToAuthinfos(currentConf)
+	if err != nil {
+		return err
+	}
 	// Merge the currentConf to globalConfig
-	for name, cluster := range currentConf.Clusters {
+	for name, cluster := range cfg.Clusters {
 		globalConf.Clusters[name] = cluster
 	}
 
-	for name, authInfo := range currentConf.AuthInfos {
+	for name, authInfo := range cfg.AuthInfos {
 		globalConf.AuthInfos[name] = authInfo
 	}
 
-	for name, context := range currentConf.Contexts {
+	for name, context := range cfg.Contexts {
 		globalConf.Contexts[name] = context
 	}
 
-	globalConf.CurrentContext = currentConf.CurrentContext
+	globalConf.CurrentContext = cfg.CurrentContext
 	return clientcmd.WriteToFile(*globalConf, globalConfigPath)
+}
+
+func appendClusterToAuthinfos(cfg *api.Config) (*api.Config, error) {
+	var clusterAPI string
+	for _, cluster := range cfg.Clusters {
+		clusterAPI = cluster.Server
+	}
+	for name, authInfo := range cfg.AuthInfos {
+		delete(cfg.AuthInfos, name)
+		username, err := appendClusternameToUser(name, clusterAPI)
+		if err != nil {
+			return cfg, err
+		}
+		cfg.AuthInfos[username] = authInfo
+	}
+	for _, ctx := range cfg.Contexts {
+		username, err := appendClusternameToUser(ctx.AuthInfo, clusterAPI)
+		if err != nil {
+			return cfg, err
+		}
+		ctx.AuthInfo = username
+	}
+	return cfg, nil
+}
+
+func appendClusternameToUser(username, clusterAPI string) (string, error) {
+	url, err := url.Parse(clusterAPI)
+	if err != nil {
+		return "", err
+	}
+	clusterURL := strings.ReplaceAll(url.Host, ".", "-")
+
+	return fmt.Sprintf("%s/%s", username, clusterURL), nil
 }
