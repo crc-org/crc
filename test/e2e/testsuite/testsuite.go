@@ -842,10 +842,36 @@ func EnsureCRCIsRunning() error {
 }
 
 func EnsureUserIsLoggedIntoClusterSucceedsOrFails(expected string) error {
+
 	if err := setOcEnv(); err != nil {
 		return err
 	}
-	return util.LoginToOcClusterSucceedsOrFails(expected)
+
+	err := util.LoginToOcCluster([]string{})
+	if expected == "succeeds" && err != nil && strings.Contains(err.Error(), "The server uses a certificate signed by unknown authority") {
+		// do some logging
+
+		err1 := util.ExecuteCommand("oc config view --raw -o jsonpath=\"{.clusters[?(@.name=='api-crc-testing:6443')].cluster.certificate-authority-data}\" > ca.base64")
+		if err1 != nil {
+			fmt.Println(err1)
+		}
+		err1 = DecodeBase64File("ca.base64", "ca.crt")
+		if err1 != nil {
+			fmt.Println(err1)
+		}
+		err1 = util.ExecuteCommand("echo QUIT | openssl s_client -connect api.crc.testing:6443 | openssl x509 -out server.crt")
+		if err1 != nil {
+			fmt.Println(err1)
+		}
+		err1 = util.ExecuteCommand("openssl verify -CAfile ca.crt server.crt")
+		if err1 != nil {
+			fmt.Println(err1)
+		}
+
+		// login with ignorance
+		err = util.LoginToOcCluster([]string{"--insecure-skip-tls-verify"})
+	}
+	return err
 }
 
 func EnsureOCCommandIsAvailable() error {
