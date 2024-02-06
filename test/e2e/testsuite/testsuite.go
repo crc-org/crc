@@ -31,6 +31,7 @@ var (
 	cleanupHome        bool
 	testWithShell      string
 	CRCVersion         string
+	CRCMemory          string
 
 	GodogTags string
 )
@@ -49,6 +50,7 @@ func ParseFlags() {
 	pflag.StringVar(&CRCExecutable, "crc-binary", "", "Path to the CRC executable to be tested")
 	pflag.BoolVar(&cleanupHome, "cleanup-home", false, "Try to remove crc home folder before starting the suite") // TODO: default=true
 	pflag.StringVar(&CRCVersion, "crc-version", defaultCRCVersion(), "Version of CRC to be tested")
+	pflag.StringVar(&CRCMemory, "crc-memory", "", "Memory for CRC VM in MiB")
 }
 
 func InitializeTestSuite(tctx *godog.TestSuiteContext) {
@@ -808,10 +810,12 @@ func EnsureCRCIsRunning() error {
 			return err
 		}
 
-		// set up and start the cluster with lots of memory
-		err = SetConfigPropertyToValueSucceedsOrFails("memory", "12000", "succeeds")
-		if err != nil {
-			return err
+		// set up and start the cluster with lots of memory, if specified
+		if CRCMemory != "" {
+			err = SetConfigPropertyToValueSucceedsOrFails("memory", CRCMemory, "succeeds")
+			if err != nil {
+				return err
+			}
 		}
 
 		err = ExecuteSingleCommandWithExpectedExitStatus("setup", "succeeds") // uses the right bundle argument if needed
