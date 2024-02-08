@@ -13,7 +13,7 @@ const (
 	rootfulConn  = "crc-root"
 )
 
-var podmanExecutablePath = filepath.Join(constants.CrcOcBinDir, constants.PodmanRemoteExecutableName)
+var podmanExecutablePath = filepath.Join(constants.CrcPodmanBinDir, constants.PodmanRemoteExecutableName)
 
 func run(args ...string) (string, string, error) {
 	return crcos.RunWithDefaultLocale(podmanExecutablePath, args...)
