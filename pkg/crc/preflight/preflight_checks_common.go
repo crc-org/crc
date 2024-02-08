@@ -155,3 +155,32 @@ func removeAllLogs() error {
 func removeCRCHostEntriesFromKnownHosts() error {
 	return ssh.RemoveCRCHostEntriesFromKnownHosts()
 }
+
+func checkPodmanInOcBinDir() error {
+	podmanBinPath := filepath.Join(constants.CrcOcBinDir, constants.PodmanRemoteExecutableName)
+	if crcos.FileExists(podmanBinPath) {
+		return fmt.Errorf("Found podman executable: %s", podmanBinPath)
+	}
+	return nil
+}
+
+func fixPodmanInOcBinDir() error {
+	podmanBinPath := filepath.Join(constants.CrcOcBinDir, constants.PodmanRemoteExecutableName)
+	if crcos.FileExists(podmanBinPath) {
+		logging.Debugf("Removing podman binary at: %s", podmanBinPath)
+		return os.Remove(podmanBinPath)
+	}
+	return nil
+}
+
+func removePodmanFromOcBinDirCheck() Check {
+	return Check{
+		configKeySuffix:  "check-podman-in-ocbindir",
+		checkDescription: fmt.Sprintf("Check if Podman binary exists in: %s", constants.CrcOcBinDir),
+		check:            checkPodmanInOcBinDir,
+		fixDescription:   fmt.Sprintf("Removing Podman binary from: %s", constants.CrcOcBinDir),
+		fix:              fixPodmanInOcBinDir,
+
+		labels: None,
+	}
+}

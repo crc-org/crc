@@ -212,6 +212,7 @@ func getAllPreflightChecks() []Check {
 func getChecks(bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) []Check {
 	checks := []Check{}
 	checks = append(checks, memoryCheck(preset))
+	checks = append(checks, removePodmanFromOcBinDirCheck())
 	checks = append(checks, hypervPreflightChecks...)
 	checks = append(checks, crcUsersGroupExistsCheck)
 	checks = append(checks, userPartOfCrcUsersAndHypervAdminsGroupCheck)

@@ -368,6 +368,7 @@ func getChecks(distro *linux.OsRelease, bundlePath string, preset crcpreset.Pres
 	checks = append(checks, wsl2PreflightCheck)
 	checks = append(checks, genericPreflightChecks(preset)...)
 	checks = append(checks, memoryCheck(preset))
+	checks = append(checks, removePodmanFromOcBinDirCheck())
 	checks = append(checks, genericCleanupChecks...)
 	checks = append(checks, libvirtPreflightChecks(distro)...)
 	checks = append(checks, ubuntuPreflightChecks...)
