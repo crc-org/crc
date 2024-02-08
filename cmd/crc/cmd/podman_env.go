@@ -42,7 +42,7 @@ func runPodmanEnv() error {
 	if root {
 		socket = constants.RootfulPodmanSocket
 	}
-	fmt.Println(shell.GetPathEnvString(userShell, constants.CrcOcBinDir))
+	fmt.Println(shell.GetPathEnvString(userShell, constants.CrcPodmanBinDir))
 	fmt.Println(shell.GetEnvString(userShell, "CONTAINER_SSHKEY", connectionDetails.SSHKeys[0]))
 	fmt.Println(shell.GetEnvString(userShell, "CONTAINER_HOST",
 		fmt.Sprintf("ssh://%s@%s:%d%s",
