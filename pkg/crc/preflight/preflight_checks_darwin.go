@@ -15,7 +15,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/machine/vfkit"
 	"github.com/crc-org/crc/v2/pkg/crc/version"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
-	"github.com/crc-org/crc/v2/pkg/os/launchd"
+	"github.com/crc-org/crc/v2/pkg/os/darwin/launchd"
 	"github.com/klauspost/cpuid/v2"
 	"golang.org/x/sys/unix"
 )
