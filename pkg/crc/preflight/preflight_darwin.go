@@ -10,6 +10,17 @@ import (
 	"github.com/crc-org/crc/v2/pkg/os/darwin/launchd"
 )
 
+// Deprecate warning for older version of mac<13.x
+var deprecationWarning = Check{
+	configKeySuffix:  "check-mac-version",
+	checkDescription: "Checking if running macOS version >= 13.x",
+	check:            deprecationNotice,
+	fixDescription:   "This version of macOS is going to be unsupported on CRC",
+	flags:            NoFix,
+
+	labels: labels{Os: Darwin},
+}
+
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
 var vfkitPreflightChecks = []Check{
 	{
@@ -105,6 +116,7 @@ func getAllPreflightChecks() []Check {
 func getChecks(_ network.Mode, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) []Check {
 	checks := []Check{}
 
+	checks = append(checks, deprecationWarning)
 	checks = append(checks, nonWinPreflightChecks...)
 	checks = append(checks, genericPreflightChecks(preset)...)
 	checks = append(checks, memoryCheck(preset))

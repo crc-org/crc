@@ -15,6 +15,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/machine/vfkit"
 	"github.com/crc-org/crc/v2/pkg/crc/version"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
+	"github.com/crc-org/crc/v2/pkg/os/darwin"
 	"github.com/crc-org/crc/v2/pkg/os/darwin/launchd"
 	"github.com/klauspost/cpuid/v2"
 	"golang.org/x/sys/unix"
@@ -223,4 +224,15 @@ func fixPlistFileExists(agentConfig launchd.AgentConfig) error {
 		return err
 	}
 	return waitForDaemonRunning()
+}
+
+func deprecationNotice() error {
+	supports, err := darwin.AtLeast("13.0.0")
+	if err != nil {
+		return err
+	}
+	if !supports {
+		logging.Warnf("This version of macOS is going to be unsupported for CRC, Please update to macOS 13 or newer")
+	}
+	return nil
 }

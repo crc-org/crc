@@ -26,6 +26,13 @@ function installCheck() {
         my.result.type = 'Fatal';
         return false;
     }
+
+    if(!(system.compareVersions(system.version.ProductVersion, '13.0.0') >= 0)) {
+        my.result.title = 'Deprecation warning';
+        my.result.message = 'This version of macOS is going to be unsupported for Red Hat OpenShift Local, Please update to macOS 13 or newer';
+        my.result.type = 'Warning';
+        return true;
+    }
     return true;
 }
     </script>
