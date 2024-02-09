@@ -23,14 +23,12 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 
-	"github.com/Masterminds/semver/v3"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
-	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
+	"github.com/crc-org/crc/v2/pkg/os/darwin"
 	"github.com/crc-org/machine/libmachine/drivers"
 	"github.com/crc-org/machine/libmachine/state"
 	"github.com/crc-org/vfkit/pkg/config"
@@ -488,36 +486,10 @@ func (d *Driver) sendSignal(s syscall.Signal) error {
 	return proc.SendSignal(s)
 }
 
-var (
-	once              sync.Once
-	macCurrentVersion string
-	errGettingVersion error
-)
-
 func (d *Driver) supportsVirtiofs() bool {
-	supportsVirtioFS, err := macosAtLeast("12.0.0")
+	supportsVirtioFS, err := darwin.AtLeast("12.0.0")
 	if err != nil {
 		log.Debugf("Not able to compare version: %v", err)
 	}
 	return supportsVirtioFS
-}
-
-func macosAtLeast(targetVersion string) (bool, error) {
-	once.Do(func() {
-		macCurrentVersion, errGettingVersion = syscall.Sysctl("kern.osproductversion")
-		logging.Debugf("kern.osproductversion is: %s", macCurrentVersion)
-	})
-	if errGettingVersion != nil {
-		return false, errGettingVersion
-	}
-
-	cVersion, err := semver.NewVersion(macCurrentVersion)
-	if err != nil {
-		return false, errors.Wrap(err, fmt.Sprintf("cannot parse %s", macCurrentVersion))
-	}
-	targetVersionStr, err := semver.NewVersion(targetVersion)
-	if err != nil {
-		return false, errors.Wrap(err, fmt.Sprintf("cannot parse %s", targetVersion))
-	}
-	return cVersion.Equal(targetVersionStr) || cVersion.GreaterThan(targetVersionStr), nil
 }
