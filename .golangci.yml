@@ -14,3 +14,10 @@ linters:
     - unused
     - misspell
     - revive
+
+issues:
+  exclude-rules:
+    - path: 'test/*'
+      text: 'dot-imports: should not use dot imports'
+      linters:
+        - revive
