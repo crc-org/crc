@@ -140,12 +140,11 @@ func CheckCRCStatus(state string) error {
 		expression = `.*CRC VM:.*\s.*: .*Stopped.*`
 	}
 
-	cmd := exec.Command("crc", "status")
-	out, err := cmd.Output()
+	err := util.ExecuteCommand("crc status")
 	if err != nil {
 		return err
 	}
-
+	out := util.GetLastCommandOutput("stdout")
 	err = util.CompareExpectedWithActualMatchesRegex(expression, string(out))
 	return err
 }
