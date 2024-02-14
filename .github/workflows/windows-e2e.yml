@@ -134,6 +134,18 @@ jobs:
           # Check logs 
           podman logs -f crc-win-support
 
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows Installer (windows-2022)
+          path: "crc-windows-installer.zip"
+
+      - name: Upload e2e image
+        uses: actions/upload-artifact@v4
+        with:
+          name: crc-e2e-gh
+          path: "crc-e2e.tar"
+
       - name: Run CRC e2e
         run: |
           # load crc-e2e image from tar file
