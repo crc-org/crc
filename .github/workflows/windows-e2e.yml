@@ -146,6 +146,31 @@ jobs:
           name: crc-e2e-gh
           path: "crc-e2e.tar"
 
+      - name: Check SSH connection to host
+        run: |
+          counter=30
+          HOST=$(cat host)
+          USER=$(cat username)
+          while [[ $counter -gt 0 ]]
+          do
+            echo "counter: ${counter}"
+            if ssh -i id_rsa -o ServerAliveInterval=30 -o ServerAliveCountMax=1200 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=3 -o BatchMode=yes ${USER}@${HOST} pwd
+            then
+              break
+            else
+              ((counter--))
+              sleep 10
+            fi
+          done
+
+          # fail or pass the step
+          if [[ $counter -gt 0 ]]
+          then
+            exit 0
+          else
+            exit 1
+          fi
+
       - name: Run CRC e2e
         run: |
           # load crc-e2e image from tar file
