@@ -176,7 +176,7 @@ func addContext(cfg *api.Config, ip string, clusterConfig *types.ClusterConfig, 
 	}
 
 	// append /clustername to AuthInfo
-	clusterUser, err := appendClusternameToUser(username, host)
+	clusterUser, err := appendClusternameToUser(username, clusterConfig.ClusterAPI)
 	if err != nil {
 		return err
 	}
