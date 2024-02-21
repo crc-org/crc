@@ -461,7 +461,7 @@ github.com/klauspost/compress/internal/cpuinfo
 github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
-# github.com/klauspost/cpuid/v2 v2.2.6
+# github.com/klauspost/cpuid/v2 v2.2.7
 ## explicit; go 1.15
 github.com/klauspost/cpuid/v2
 # github.com/klauspost/pgzip v1.2.6
