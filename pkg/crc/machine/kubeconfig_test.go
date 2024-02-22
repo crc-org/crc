@@ -127,3 +127,36 @@ func Test_mergeKubeConfigFile(t *testing.T) {
 		}
 	}
 }
+
+func Test_addContext(t *testing.T) {
+	type input struct {
+		clusterAPI string
+		username   string
+		context    string
+		token      string
+	}
+
+	tests := []struct {
+		in       input
+		expected string
+	}{
+		{
+			input{"https://abcdd.api.com", "foo", "foo@abcdd", "secretToken"},
+			"foo/abcdd-api-com",
+		},
+		{
+			input{"https://api.crc.testing:6443", "kubeadmin", "kubeadm", "secretToken"},
+			"kubeadmin/api-crc-testing:6443",
+		},
+	}
+
+	cfg := api.NewConfig()
+
+	for _, tt := range tests {
+		err := addContext(cfg, tt.in.clusterAPI, tt.in.context, tt.in.username, tt.in.token)
+		assert.NoError(t, err)
+		assert.Contains(t, cfg.Contexts, tt.in.context, "Expected context not found")
+		assert.Contains(t, cfg.AuthInfos, tt.expected, "Expected AuthInfo not found")
+		assert.Contains(t, cfg.AuthInfos[tt.expected].Token, tt.in.token, "Expected token not found")
+	}
+}
