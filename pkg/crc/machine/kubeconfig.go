@@ -68,10 +68,19 @@ func writeKubeconfig(ip string, clusterConfig *types.ClusterConfig, ingressHTTPS
 		CertificateAuthorityData: ca,
 	}
 
-	if err := addContext(cfg, ip, clusterConfig, ca, adminContext, "kubeadmin", clusterConfig.KubeAdminPass, ingressHTTPSPort); err != nil {
+	kubeadminToken, err := getTokenForUser("kubeadmin", clusterConfig.KubeAdminPass, ip, ca, clusterConfig, ingressHTTPSPort)
+	if err != nil {
 		return err
 	}
-	if err := addContext(cfg, ip, clusterConfig, ca, developerContext, "developer", "developer", ingressHTTPSPort); err != nil {
+	if err := addContext(cfg, clusterConfig.ClusterAPI, adminContext, "kubeadmin", kubeadminToken); err != nil {
+		return err
+	}
+
+	developerToken, err := getTokenForUser("developer", "developer", ip, ca, clusterConfig, ingressHTTPSPort)
+	if err != nil {
+		return err
+	}
+	if err := addContext(cfg, clusterConfig.ClusterAPI, developerContext, "developer", developerToken); err != nil {
 		return err
 	}
 
@@ -133,15 +142,34 @@ func hostname(clusterAPI string) (string, error) {
 	return strings.ReplaceAll(h, ".", "-"), nil
 }
 
-func addContext(cfg *api.Config, ip string, clusterConfig *types.ClusterConfig, ca []byte, context, username, password string, ingressHTTPSPort uint) error {
-	host, err := hostname(clusterConfig.ClusterAPI)
+func addContext(cfg *api.Config, clusterAPI, context, username, token string) error {
+	host, err := hostname(clusterAPI)
 	if err != nil {
 		return err
 	}
+
+	// append /clustername to AuthInfo
+	clusterUser, err := appendClusternameToUser(username, clusterAPI)
+	if err != nil {
+		return err
+	}
+
+	cfg.AuthInfos[clusterUser] = &api.AuthInfo{
+		Token: token,
+	}
+	cfg.Contexts[context] = &api.Context{
+		Cluster:   host,
+		AuthInfo:  clusterUser,
+		Namespace: "default",
+	}
+	return nil
+}
+
+func getTokenForUser(username, password, ip string, ca []byte, clusterConfig *types.ClusterConfig, ingressHTTPSPort uint) (string, error) {
 	roots := x509.NewCertPool()
 	ok := roots.AppendCertsFromPEM(ca)
 	if !ok {
-		return fmt.Errorf("failed to parse root certificate")
+		return "", fmt.Errorf("failed to parse root certificate")
 	}
 	restConfig := &restclient.Config{
 		Proxy: clusterConfig.ProxyConfig.ProxyFunc(),
@@ -172,24 +200,9 @@ func addContext(cfg *api.Config, ip string, clusterConfig *types.ClusterConfig, 
 	challengeHandler := challengehandlers.NewBasicChallengeHandler(restConfig.Host, "" /* webconsoleURL */, nil /* in */, nil /* out */, nil /* passwordPrompter */, username, password)
 	token, err := tokenrequest.RequestTokenWithChallengeHandlers(restConfig, challengeHandler)
 	if err != nil {
-		return err
+		return "", err
 	}
-
-	// append /clustername to AuthInfo
-	clusterUser, err := appendClusternameToUser(username, clusterConfig.ClusterAPI)
-	if err != nil {
-		return err
-	}
-
-	cfg.AuthInfos[clusterUser] = &api.AuthInfo{
-		Token: token,
-	}
-	cfg.Contexts[context] = &api.Context{
-		Cluster:   host,
-		AuthInfo:  clusterUser,
-		Namespace: "default",
-	}
-	return nil
+	return token, nil
 }
 
 // getGlobalKubeConfigPath returns the path to the first entry in the KUBECONFIG environment variable
