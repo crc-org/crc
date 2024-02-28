@@ -3,14 +3,11 @@ set -euxo pipefail
 
 BASEDIR=$(dirname "$0")
 OUTPUT=$1
-CODESIGN_IDENTITY=${CODESIGN_IDENTITY:-mock}
+CODESIGN_IDENTITY=${CODESIGN_IDENTITY:--}
 PRODUCTSIGN_IDENTITY=${PRODUCTSIGN_IDENTITY:-mock}
 NO_CODESIGN=${NO_CODESIGN:-0}
 
 function sign() {
-  if [ "${NO_CODESIGN}" -eq "1" ]; then
-    return
-  fi
   local opts=""
   entitlements="${BASEDIR}/$(basename "$1").entitlements"
   if [ -f "${entitlements}" ]; then
