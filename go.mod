@@ -63,7 +63,7 @@ require (
 	k8s.io/api v0.27.4
 	k8s.io/apimachinery v0.27.4
 	k8s.io/client-go v0.27.4
-	libvirt.org/go/libvirtxml v1.10000.0
+	libvirt.org/go/libvirtxml v1.10001.0
 )
 
 require (
