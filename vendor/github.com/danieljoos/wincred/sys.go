@@ -63,6 +63,7 @@ const (
 	// https://docs.microsoft.com/en-us/windows/desktop/Debug/system-error-codes
 	sysERROR_NOT_FOUND         = windows.Errno(1168)
 	sysERROR_INVALID_PARAMETER = windows.Errno(87)
+	sysERROR_BAD_USERNAME      = windows.Errno(2202)
 )
 
 // https://docs.microsoft.com/en-us/windows/desktop/api/wincred/nf-wincred-credreadw
