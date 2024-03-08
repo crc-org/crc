@@ -57,17 +57,6 @@ func TestCPUsValidate(t *testing.T) {
 		IsDefault: true,
 		IsSecret:  false,
 	}, cfg.Get(CPUs))
-
-	_, err = cfg.Set(Preset, crcpreset.Podman)
-	require.NoError(t, err)
-	_, err = cfg.Set(CPUs, defaultCPUs-1)
-	require.NoError(t, err)
-	assert.Equal(t, SettingValue{
-		Value:     defaultCPUs - 1,
-		Invalid:   false,
-		IsDefault: false,
-		IsSecret:  false,
-	}, cfg.Get(CPUs))
 }
 
 // Check that when changing preset, invalid memory values are reset to their
@@ -76,7 +65,7 @@ func TestSetPreset(t *testing.T) {
 	cfg, err := newInMemoryConfig()
 	require.NoError(t, err)
 
-	_, err = cfg.Set(Preset, crcpreset.Podman)
+	_, err = cfg.Set(Preset, crcpreset.Microshift)
 	require.NoError(t, err)
 	_, err = cfg.Set(Memory, 10000)
 	require.NoError(t, err)
@@ -118,7 +107,7 @@ func TestUnsetPreset(t *testing.T) {
 	cfg, err := newInMemoryConfig()
 	require.NoError(t, err)
 
-	_, err = cfg.Set(Preset, crcpreset.Podman)
+	_, err = cfg.Set(Preset, crcpreset.Microshift)
 	require.NoError(t, err)
 	_, err = cfg.Set(Memory, 10000)
 	require.NoError(t, err)

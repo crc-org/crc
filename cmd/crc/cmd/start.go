@@ -87,10 +87,6 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		EnableBundleQuayFallback: config.Get(crcConfig.EnableBundleQuayFallback).AsBool(),
 	}
 
-	if startConfig.Preset == preset.Podman {
-		logging.Warn(preset.PodmanDeprecatedWarning)
-	}
-
 	client := newMachine()
 	isRunning, _ := client.IsRunning()
 

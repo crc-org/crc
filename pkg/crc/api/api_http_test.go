@@ -265,7 +265,7 @@ var testCases = []testCase{
 	// version
 	{
 		request:  get("version"),
-		response: jSon(fmt.Sprintf(`{"CrcVersion":"%s","CommitSha":"%s","OpenshiftVersion":"%s","PodmanVersion":"%s"}`, version.GetCRCVersion(), version.GetCommitSha(), version.GetBundleVersion(preset.OpenShift), version.GetBundleVersion(preset.Podman))),
+		response: jSon(fmt.Sprintf(`{"CrcVersion":"%s","CommitSha":"%s","OpenshiftVersion":"%s"}`, version.GetCRCVersion(), version.GetCommitSha(), version.GetBundleVersion(preset.OpenShift))),
 	},
 
 	// version never fails

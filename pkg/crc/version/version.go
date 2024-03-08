@@ -49,8 +49,6 @@ func GetCommitSha() string {
 
 func GetBundleVersion(preset crcPreset.Preset) string {
 	switch preset {
-	case crcPreset.Podman:
-		return podmanVersion
 	case crcPreset.OKD:
 		return okdVersion
 	case crcPreset.Microshift:
