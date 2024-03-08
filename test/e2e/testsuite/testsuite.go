@@ -658,15 +658,9 @@ func FileExistsInCRCHome(fileName string) error {
 	return err
 }
 
-func RemoveBundleFromCache(presetName string) error {
+func RemoveBundleFromCache(_ string) error {
 
-	var p preset.Preset
-
-	if presetName == "podman" {
-		p = preset.Podman
-	} else {
-		p = preset.OpenShift
-	}
+	var p = preset.OpenShift
 
 	theBundle := util.GetBundlePath(p)
 	theFolder := strings.TrimSuffix(theBundle, ".crcbundle")

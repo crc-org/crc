@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -24,7 +23,6 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/network"
 	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/v2/pkg/crc/oc"
-	"github.com/crc-org/crc/v2/pkg/crc/podman"
 	crcPreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/services"
 	"github.com/crc-org/crc/v2/pkg/crc/services/dns"
@@ -356,11 +354,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 	if vmState == state.Running {
 		logging.Infof("A CRC VM for %s %s is already running", startConfig.Preset.ForDisplay(), vm.bundle.GetVersion())
-		if vm.bundle.IsPodman() {
-			return &types.StartResult{
-				Status: vmState,
-			}, nil
-		}
 		clusterConfig, err := getClusterConfig(vm.bundle)
 		if err != nil {
 			return nil, errors.Wrap(err, "Cannot create cluster configuration")
@@ -479,34 +472,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	proxyConfig, err := getProxyConfig(vm.bundle)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting proxy configuration")
-	}
-
-	if vm.bundle.IsPodman() {
-		// **************************
-		//  END OF PODMAN START CODE
-		// **************************
-		if err := configurePodmanProxy(sshRunner, proxyConfig); err != nil {
-			return nil, errors.Wrap(err, "Failed to configure proxy for podman")
-		}
-		if err := dns.AddPodmanHosts(instanceIP); err != nil {
-			return nil, errors.Wrap(err, "Failed to add podman host dns entry")
-		}
-
-		if err := updateCockpitConsoleBearerToken(sshRunner); err != nil {
-			return nil, fmt.Errorf("Failed to rotate bearer token for cockpit webconsole: %w", err)
-		}
-
-		c, err := client.ConnectionDetails()
-		if err != nil {
-			return nil, err
-		}
-		if err := addPodmanSystemConnections(c); err != nil {
-			return nil, err
-		}
-
-		return &types.StartResult{
-			Status: vmState,
-		}, nil
 	}
 
 	proxyConfig.ApplyToEnvironment()
@@ -854,58 +819,6 @@ func copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey *rsa.Priv
 	return updateClientCrtAndKeyToKubeconfig(clientKey, clientCert, srcKubeConfigPath, dstKubeConfigPath)
 }
 
-func configurePodmanProxy(sshRunner *crcssh.Runner, proxy *httpproxy.ProxyConfig) (err error) {
-	if !proxy.IsEnabled() {
-		return nil
-	}
-
-	_, _, err = sshRunner.RunPrivileged("creating /etc/environment.d/", "mkdir -p /etc/environment.d/")
-	if err != nil {
-		return err
-	}
-
-	proxyEnv := strings.Builder{}
-	if proxy.HTTPProxy != "" {
-		proxyEnv.WriteString(fmt.Sprintf("http_proxy=%s\n", proxy.HTTPProxy))
-		proxyEnv.WriteString(fmt.Sprintf("HTTP_PROXY=%s\n", proxy.HTTPProxy))
-	}
-	if proxy.HTTPSProxy != "" {
-		proxyEnv.WriteString(fmt.Sprintf("https_proxy=%s\n", proxy.HTTPSProxy))
-		proxyEnv.WriteString(fmt.Sprintf("HTTPS_PROXY=%s\n", proxy.HTTPSProxy))
-	}
-	if len(proxy.GetNoProxyString()) != 0 {
-		proxyEnv.WriteString(fmt.Sprintf("no_proxy=%s\n", proxy.GetNoProxyString()))
-		proxyEnv.WriteString(fmt.Sprintf("NO_PROXY=%s\n", proxy.GetNoProxyString()))
-	}
-	err = sshRunner.CopyDataPrivileged([]byte(proxyEnv.String()), "/etc/environment.d/proxy-env.conf", 0644)
-	if err != nil {
-		return err
-	}
-
-	_, _, err = sshRunner.RunPrivileged("creating /etc/systemd/system/podman.service.d/", "mkdir -p /etc/systemd/system/podman.service.d/")
-	if err != nil {
-		return err
-	}
-	podmanServiceConf := "[Service]\nEnvironmentFile=/etc/environment.d/proxy-env.conf\n"
-	err = sshRunner.CopyDataPrivileged([]byte(podmanServiceConf), "/etc/systemd/system/podman.service.d/proxy-env.conf", 0644)
-	if err != nil {
-		return err
-	}
-
-	systemdCommander := systemd.NewInstanceSystemdCommander(sshRunner)
-	err = systemdCommander.DaemonReload()
-	if err != nil {
-		return err
-	}
-	err = systemdCommander.User().DaemonReload()
-	if err != nil {
-		return err
-	}
-
-	return nil
-
-}
-
 func ensureProxyIsConfiguredInOpenShift(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, proxy *httpproxy.ProxyConfig) (err error) {
 	if !proxy.IsEnabled() {
 		return nil
@@ -990,7 +903,7 @@ func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Confi
 
 func getRouterControllerImage(preset crcPreset.Preset, bundleInfo *bundle.CrcBundleInfo) string {
 	if preset == crcPreset.OpenShift || preset == crcPreset.Microshift {
-		return fmt.Sprintf("quay.io/crcont/routes-controller:%s", bundleInfo.GetOpenshiftVersion())
+		return fmt.Sprintf("quay.io/crcont/routes-controller:%s", bundleInfo.GetVersion())
 	}
 	return "quay.io/crcont/routes-controller:latest"
 }
@@ -1018,35 +931,6 @@ func bundleMismatchWithPreset(preset crcPreset.Preset, bundleMetadata *bundle.Cr
 		return errors.Errorf("Preset %s is used but bundle is provided for %s preset", preset, bundleMetadata.GetBundleType())
 	}
 	return nil
-}
-
-func updateCockpitConsoleBearerToken(sshRunner *crcssh.Runner) error {
-	logging.Info("Adding new bearer token for cockpit webconsole")
-
-	tokenPath := filepath.Join(constants.MachineInstanceDir, constants.DefaultName, "cockpit-bearer-token")
-	token := cluster.GenerateCockpitBearerToken()
-
-	if err := os.WriteFile(tokenPath, []byte(token), 0600); err != nil {
-		return fmt.Errorf("failed to write cockpit bearer token: %w", err)
-	}
-
-	if err := sshRunner.CopyData([]byte(token), "/home/core/cockpit-bearer-token", 0600); err != nil {
-		return fmt.Errorf("failed to set token for cockpit: %w", err)
-	}
-
-	return nil
-}
-
-func addPodmanSystemConnections(c *types.ConnectionDetails) error {
-	rootlessURI := fmt.Sprintf("ssh://%s@%s:%d%s", c.SSHUsername, c.IP, c.SSHPort, constants.RootlessPodmanSocket)
-	rootfulURI := fmt.Sprintf("ssh://%s@%s:%d%s", c.SSHUsername, c.IP, c.SSHPort, constants.RootfulPodmanSocket)
-	if err := podman.AddRootlessSystemConnection(c.SSHKeys[0], rootlessURI); err != nil {
-		return err
-	}
-	if err := podman.MakeRootlessSystemConnectionDefault(); err != nil {
-		return err
-	}
-	return podman.AddRootfulSystemConnection(c.SSHKeys[0], rootfulURI)
 }
 
 func startMicroshift(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.Config, pullSec cluster.PullSecretLoader) error {

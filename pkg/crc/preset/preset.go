@@ -16,16 +16,10 @@ const (
 )
 
 var presetMap = map[Preset]string{
-	Podman:     string(Podman),
 	OpenShift:  string(OpenShift),
 	OKD:        string(OKD),
 	Microshift: string(Microshift),
 }
-
-const (
-	PodmanDeprecatedWarning = "The Podman preset is deprecated and will be removed in a future release. Consider" +
-		" rather using a Podman Machine managed by Podman Desktop: https://podman-desktop.io"
-)
 
 func AllPresets() []Preset {
 	var keys []Preset

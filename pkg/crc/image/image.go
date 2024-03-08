@@ -102,8 +102,6 @@ func getPresetNameE(imageName string) (crcpreset.Preset, error) {
 		return crcpreset.OpenShift, nil
 	case "okd-bundle":
 		return crcpreset.OKD, nil
-	case "podman-bundle":
-		return crcpreset.Podman, nil
 	case "microshift-bundle":
 		return crcpreset.Microshift, nil
 	default:
