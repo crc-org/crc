@@ -55,17 +55,16 @@ func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
 		return nil, err
 	}
 
-	if !bundleInfo.IsPodman() {
-		// TODO: update this logic after major release of bundle like 4.14
-		// As of now we are using this logic to support older bundles of microshift and it need to be updated
-		// to only provide app domain route information as per preset.
-		if !crcstrings.Contains([]string{constants.AppsDomain, constants.MicroShiftAppDomain}, fmt.Sprintf(".%s", bundleInfo.ClusterInfo.AppsDomain)) {
-			return nil, fmt.Errorf("unexpected bundle, it must have %s or %s apps domain", constants.AppsDomain, constants.MicroShiftAppDomain)
-		}
-		if bundleInfo.GetAPIHostname() != fmt.Sprintf("api%s", constants.ClusterDomain) {
-			return nil, fmt.Errorf("unexpected bundle, it must have %s base domain", constants.ClusterDomain)
-		}
+	// TODO: update this logic after major release of bundle like 4.14
+	// As of now we are using this logic to support older bundles of microshift and it need to be updated
+	// to only provide app domain route information as per preset.
+	if !crcstrings.Contains([]string{constants.AppsDomain, constants.MicroShiftAppDomain}, fmt.Sprintf(".%s", bundleInfo.ClusterInfo.AppsDomain)) {
+		return nil, fmt.Errorf("unexpected bundle, it must have %s or %s apps domain", constants.AppsDomain, constants.MicroShiftAppDomain)
 	}
+	if bundleInfo.GetAPIHostname() != fmt.Sprintf("api%s", constants.ClusterDomain) {
+		return nil, fmt.Errorf("unexpected bundle, it must have %s base domain", constants.ClusterDomain)
+	}
+
 	return &bundleInfo, nil
 }
 

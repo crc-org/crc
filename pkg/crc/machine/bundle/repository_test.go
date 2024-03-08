@@ -43,7 +43,7 @@ func TestExtract(t *testing.T) {
 
 	bundle, err := repo.Get(testBundle(t))
 	assert.NoError(t, err)
-	assert.Equal(t, "4.6.1", bundle.GetOpenshiftVersion())
+	assert.Equal(t, "4.6.1", bundle.GetVersion())
 
 	_ = os.Remove(bundle.GetKubeConfigPath())
 	bundle, err = repo.Get(testBundle(t))

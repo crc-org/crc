@@ -167,21 +167,12 @@ func (bundle *CrcBundleInfo) GetBundleBuildTime() (time.Time, error) {
 	return time.Parse(time.RFC3339, strings.TrimSpace(bundle.BuildInfo.BuildTime))
 }
 
-func (bundle *CrcBundleInfo) GetOpenshiftVersion() string {
+func (bundle *CrcBundleInfo) GetVersion() string {
 	return bundle.ClusterInfo.OpenShiftVersion.String()
 }
 
 func (bundle *CrcBundleInfo) GetPodmanVersion() string {
 	return bundle.Nodes[0].PodmanVersion
-}
-
-func (bundle *CrcBundleInfo) GetVersion() string {
-	switch bundle.GetBundleType() {
-	case crcPreset.Podman:
-		return bundle.GetPodmanVersion()
-	default:
-		return bundle.GetOpenshiftVersion()
-	}
 }
 
 func (bundle *CrcBundleInfo) GetBundleNameWithoutExtension() string {
@@ -205,22 +196,14 @@ func (bundle *CrcBundleInfo) IsMicroshift() bool {
 	return bundle.GetBundleType() == crcPreset.Microshift
 }
 
-func (bundle *CrcBundleInfo) IsPodman() bool {
-	return bundle.GetBundleType() == crcPreset.Podman
-}
-
 func (bundle *CrcBundleInfo) verify() error {
 	files := []string{
 		bundle.GetSSHKeyPath(),
 		bundle.GetDiskImagePath(),
 		bundle.GetKernelPath(),
 		bundle.GetInitramfsPath(),
-	}
-	if !bundle.IsPodman() {
-		files = append(files, []string{
-			bundle.GetOcPath(),
-			bundle.GetKubeConfigPath()}...)
-	}
+		bundle.GetOcPath(),
+		bundle.GetKubeConfigPath()}
 
 	for _, file := range files {
 		if file == "" {
@@ -352,7 +335,7 @@ func Download(preset crcPreset.Preset, bundleURI string, enableBundleQuayFallbac
 				return image.PullBundle(constants.GetDefaultBundleImageRegistry(preset))
 			}
 			return downloadedBundlePath, err
-		case crcPreset.Podman, crcPreset.OKD:
+		case crcPreset.OKD:
 			fallthrough
 		default:
 			return image.PullBundle(constants.GetDefaultBundleImageRegistry(preset))

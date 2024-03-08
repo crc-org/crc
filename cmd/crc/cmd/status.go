@@ -196,9 +196,6 @@ func (s *status) prettyPrintTo(writer io.Writer) error {
 	if s.Preset == preset.OpenShift {
 		lines = append(lines, line{"OpenShift", openshiftStatus(s)})
 	}
-	if s.Preset == preset.Podman {
-		lines = append(lines, line{"Podman", s.PodmanVersion})
-	}
 	if s.Preset == preset.Microshift {
 		lines = append(lines, line{"MicroShift", openshiftStatus(s)})
 	}

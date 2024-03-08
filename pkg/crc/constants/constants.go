@@ -205,7 +205,7 @@ func GetDefaultCPUs(preset crcpreset.Preset) int {
 	switch preset {
 	case crcpreset.OpenShift, crcpreset.OKD:
 		return 4
-	case crcpreset.Podman, crcpreset.Microshift:
+	case crcpreset.Microshift:
 		return 2
 	default:
 		// should not be reached

@@ -212,7 +212,3 @@ func addOpenShiftHosts(serviceConfig services.ServicePostStartConfig) error {
 		serviceConfig.BundleMetadata.GetAppHostname("canary-openshift-ingress-canary"),
 		serviceConfig.BundleMetadata.GetAppHostname("default-route-openshift-image-registry"))
 }
-
-func AddPodmanHosts(ip string) error {
-	return adminhelper.UpdateHostsFile(ip, "podman.crc.testing")
-}

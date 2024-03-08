@@ -36,7 +36,7 @@ func newInMemoryConfig() (*Config, error) {
 }
 
 // Check that with the default preset, we cannot set less CPUs than the defaultCPUs
-// but that it is allowed with a different preset with less requirements (podman)
+// but that it is allowed with a different preset with less requirements (microshift)
 func TestCPUsValidate(t *testing.T) {
 	cfg, err := newInMemoryConfig()
 	require.NoError(t, err)
@@ -58,7 +58,7 @@ func TestCPUsValidate(t *testing.T) {
 		IsSecret:  false,
 	}, cfg.Get(CPUs))
 
-	_, err = cfg.Set(Preset, crcpreset.Podman)
+	_, err = cfg.Set(Preset, crcpreset.Microshift)
 	require.NoError(t, err)
 	_, err = cfg.Set(CPUs, defaultCPUs-1)
 	require.NoError(t, err)
@@ -76,7 +76,7 @@ func TestSetPreset(t *testing.T) {
 	cfg, err := newInMemoryConfig()
 	require.NoError(t, err)
 
-	_, err = cfg.Set(Preset, crcpreset.Podman)
+	_, err = cfg.Set(Preset, crcpreset.Microshift)
 	require.NoError(t, err)
 	_, err = cfg.Set(Memory, 10800)
 	require.NoError(t, err)
@@ -118,7 +118,7 @@ func TestUnsetPreset(t *testing.T) {
 	cfg, err := newInMemoryConfig()
 	require.NoError(t, err)
 
-	_, err = cfg.Set(Preset, crcpreset.Podman)
+	_, err = cfg.Set(Preset, crcpreset.Microshift)
 	require.NoError(t, err)
 	_, err = cfg.Set(Memory, 10800)
 	require.NoError(t, err)
