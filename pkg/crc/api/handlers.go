@@ -140,6 +140,7 @@ func (h *Handler) GetVersion(c *context) error {
 		CrcVersion:       version.GetCRCVersion(),
 		CommitSha:        version.GetCommitSha(),
 		OpenshiftVersion: version.GetBundleVersion(preset.OpenShift),
+		PodmanVersion:    version.GetBundleVersion(preset.Podman),
 	})
 }
 

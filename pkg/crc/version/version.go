@@ -47,8 +47,13 @@ func GetCommitSha() string {
 	return commitSha
 }
 
+// GetBundleVersion returns the version of the binaries present
+// inside the bundle. The `PodmanVersion` in this case refers to
+// the version of the podman binary present inside the bundle.
 func GetBundleVersion(preset crcPreset.Preset) string {
 	switch preset {
+	case crcPreset.Podman:
+		return podmanVersion
 	case crcPreset.OKD:
 		return okdVersion
 	case crcPreset.Microshift:
