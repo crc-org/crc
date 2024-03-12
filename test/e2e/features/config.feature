@@ -19,7 +19,7 @@ Feature: Test configuration settings
         Examples: Config settings on Mac
             | property         | value1    | value2            |
             | cpus             | 5         | 3                 |
-            | memory           | 9217      | 4096              |
+            | memory           | 10753     | 4096              |
             | nameserver       | 120.0.0.1 | 999.999.999.999   |
             | pull-secret-file | /etc      | /nonexistent-file |
 
@@ -27,7 +27,7 @@ Feature: Test configuration settings
         Examples: Config settings on Linux
             | property         | value1    | value2            |
             | cpus             | 5         | 3                 |
-            | memory           | 9217      | 4096              |
+            | memory           | 10753     | 4096              |
             | nameserver       | 120.0.0.1 | 999.999.999.999   |
             | pull-secret-file | /etc      | /nonexistent-file |
 
@@ -35,7 +35,7 @@ Feature: Test configuration settings
         Examples: Config settings on Windows
             | property         | value1    | value2            |
             | cpus             | 5         | 3                 |
-            | memory           | 9217      | 4096              |
+            | memory           | 10753     | 4096              |
             | nameserver       | 120.0.0.1 | 999.999.999.999   |
             | pull-secret-file | /Users    | /nonexistent-file |
 

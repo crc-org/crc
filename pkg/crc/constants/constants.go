@@ -216,14 +216,14 @@ func GetDefaultCPUs(preset crcpreset.Preset) int {
 func GetDefaultMemory(preset crcpreset.Preset) int {
 	switch preset {
 	case crcpreset.OpenShift, crcpreset.OKD:
-		return 9216
+		return 10752
 	case crcpreset.Podman:
 		return 2048
 	case crcpreset.Microshift:
 		return 4096
 	default:
 		// should not be reached
-		return 9216
+		return 10752
 	}
 }
 

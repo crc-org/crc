@@ -78,10 +78,10 @@ func TestSetPreset(t *testing.T) {
 
 	_, err = cfg.Set(Preset, crcpreset.Podman)
 	require.NoError(t, err)
-	_, err = cfg.Set(Memory, 10000)
+	_, err = cfg.Set(Memory, 10800)
 	require.NoError(t, err)
 	assert.Equal(t, SettingValue{
-		Value:     10000,
+		Value:     10800,
 		Invalid:   false,
 		IsDefault: false,
 		IsSecret:  false,
@@ -99,7 +99,7 @@ func TestSetPreset(t *testing.T) {
 	_, err = cfg.Set(Preset, crcpreset.OpenShift)
 	require.NoError(t, err)
 	assert.Equal(t, SettingValue{
-		Value:     10000,
+		Value:     10800,
 		Invalid:   false,
 		IsDefault: false,
 		IsSecret:  false,
@@ -120,10 +120,10 @@ func TestUnsetPreset(t *testing.T) {
 
 	_, err = cfg.Set(Preset, crcpreset.Podman)
 	require.NoError(t, err)
-	_, err = cfg.Set(Memory, 10000)
+	_, err = cfg.Set(Memory, 10800)
 	require.NoError(t, err)
 	assert.Equal(t, SettingValue{
-		Value:     10000,
+		Value:     10800,
 		Invalid:   false,
 		IsDefault: false,
 		IsSecret:  false,
@@ -147,7 +147,7 @@ func TestUnsetPreset(t *testing.T) {
 		IsSecret:  false,
 	}, cfg.Get(Preset))
 	assert.Equal(t, SettingValue{
-		Value:     10000,
+		Value:     10800,
 		Invalid:   false,
 		IsDefault: false,
 		IsSecret:  false,
