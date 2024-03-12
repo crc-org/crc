@@ -67,7 +67,7 @@ var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func
 		})
 
 		It("start CRC", func() {
-			// default values: "--memory", "9216", "--cpus", "4", "disk-size", "31"
+			// default values: "--memory", "10752", "--cpus", "4", "disk-size", "31"
 			if bundlePath == "" {
 				Expect(RunCRCExpectSuccess("start", "-p", pullSecretPath)).To(ContainSubstring("Started the OpenShift cluster"))
 			} else {
