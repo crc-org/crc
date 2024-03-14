@@ -340,6 +340,10 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 	defer vm.Close()
 
+	// Return with an error redirecting user to use podman machine instead
+	if vm.bundle.IsPodman() {
+		return &types.StartResult{}, fmt.Errorf("error: %s", crcPreset.PodmanDeprecatedWarning)
+	}
 	currentBundleName := vm.bundle.GetBundleName()
 	if currentBundleName != bundleName {
 		logging.Debugf("Bundle '%s' was requested, but the existing VM is using '%s'",
@@ -679,6 +683,9 @@ func (client *client) IsRunning() (bool, error) {
 }
 
 func (client *client) validateStartConfig(startConfig types.StartConfig) error {
+	if startConfig.Preset == crcPreset.Podman {
+		return fmt.Errorf(crcPreset.PodmanDeprecatedWarning)
+	}
 	if client.monitoringEnabled() && startConfig.Memory < minimumMemoryForMonitoring {
 		return fmt.Errorf("Too little memory (%s) allocated to the virtual machine to start the monitoring stack, %s is the minimum",
 			units.BytesSize(float64(startConfig.Memory)*1024*1024),
