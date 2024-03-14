@@ -196,6 +196,10 @@ func (bundle *CrcBundleInfo) IsMicroshift() bool {
 	return bundle.GetBundleType() == crcPreset.Microshift
 }
 
+func (bundle *CrcBundleInfo) IsPodman() bool {
+	return bundle.GetBundleType() == crcPreset.Podman
+}
+
 func (bundle *CrcBundleInfo) verify() error {
 	files := []string{
 		bundle.GetSSHKeyPath(),
