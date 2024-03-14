@@ -18,8 +18,7 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	if err != nil {
 		if errors.Is(err, errMissingHost(client.name)) {
 			return &types.ClusterStatusResult{
-				CrcStatus:       state.Stopped,
-				OpenshiftStatus: types.OpenshiftStopped,
+				CrcStatus: state.NoVM,
 			}, nil
 		}
 		return nil, errors.Wrap(err, fmt.Sprintf("Cannot load '%s' virtual machine", client.name))
