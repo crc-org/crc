@@ -3,7 +3,15 @@ on:
   push:
     branches:
       - "main"
-  pull_request: {}
+    paths-ignore:
+      - 'docs/**'
+      - 'images/docs-builder/**'
+      - '*.adoc'
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'images/docs-builder/**'
+      - '*.adoc'
 
 env:
   IMAGE_NAME_E2E: crc-e2e
