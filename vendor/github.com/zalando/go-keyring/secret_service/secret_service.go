@@ -186,12 +186,7 @@ func (s *SecretService) CreateItem(collection dbus.BusObject, label string, attr
 // the prompt to the user.
 func (s *SecretService) handlePrompt(prompt dbus.ObjectPath) (bool, dbus.Variant, error) {
 	if prompt != dbus.ObjectPath("/") {
-		err := s.Object(serviceName, prompt).Call(promptInterface+".Prompt", 0, "").Err
-		if err != nil {
-			return false, dbus.MakeVariant(""), err
-		}
-
-		err = s.AddMatchSignal(dbus.WithMatchObjectPath(prompt),
+		err := s.AddMatchSignal(dbus.WithMatchObjectPath(prompt),
 			dbus.WithMatchInterface(promptInterface),
 		)
 		if err != nil {
@@ -204,6 +199,11 @@ func (s *SecretService) handlePrompt(prompt dbus.ObjectPath) (bool, dbus.Variant
 
 		promptSignal := make(chan *dbus.Signal, 1)
 		s.Signal(promptSignal)
+
+		err = s.Object(serviceName, prompt).Call(promptInterface+".Prompt", 0, "").Err
+		if err != nil {
+			return false, dbus.MakeVariant(""), err
+		}
 
 		signal := <-promptSignal
 		switch signal.Name {
