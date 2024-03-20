@@ -6,13 +6,13 @@ import (
 	"net"
 	"sync"
 
+	"github.com/inetaf/tcpproxy"
 	log "github.com/sirupsen/logrus"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
 	"gvisor.dev/gvisor/pkg/waiter"
-	"inet.af/tcpproxy"
 )
 
 const linkLocalSubnet = "169.254.0.0/16"
@@ -47,7 +47,7 @@ func TCP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mute
 		}
 
 		remote := tcpproxy.DialProxy{
-			DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
+			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
 				return outbound, nil
 			},
 		}
