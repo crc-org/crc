@@ -33,9 +33,9 @@ require (
 	github.com/onsi/ginkgo/v2 v2.17.1
 	github.com/onsi/gomega v1.31.1
 	github.com/opencontainers/image-spec v1.1.0
-	github.com/openshift/api v0.0.0-20231117205818-971e4ba78c9a
-	github.com/openshift/client-go v0.0.0-20230807132528-be5346fb33cb
-	github.com/openshift/library-go v0.0.0-20231123093547-fd1341f05ca8
+	github.com/openshift/api v0.0.0-20240228005710-4511c790cc60
+	github.com/openshift/client-go v0.0.0-20240109161853-2425b4b6d3b3
+	github.com/openshift/library-go v0.0.0-20240306175506-206f66c55642
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
 	github.com/pborman/uuid v1.2.1
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
@@ -60,9 +60,9 @@ require (
 	golang.org/x/text v0.14.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/api v0.27.4
-	k8s.io/apimachinery v0.27.4
-	k8s.io/client-go v0.27.4
+	k8s.io/api v0.28.8
+	k8s.io/apimachinery v0.28.8
+	k8s.io/client-go v0.28.8
 	libvirt.org/go/libvirtxml v1.10001.0
 )
 
@@ -111,9 +111,9 @@ require (
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/gofrs/uuid v4.3.1+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/google/gnostic v0.5.7-v3refs // indirect
+	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/go-containerregistry v0.19.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
@@ -202,8 +202,8 @@ require (
 	gvisor.dev/gvisor v0.0.0-20231023213702-2691a8f9b1cf // indirect
 	inet.af/tcpproxy v0.0.0-20231102063150-2862066fc2a9 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // indirect
-	k8s.io/utils v0.0.0-20230711102312-30195339c3c7 // indirect
+	k8s.io/kube-openapi v0.0.0-20230717233707-2695361300d9 // indirect
+	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.3.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
