@@ -17,12 +17,12 @@ import (
 
 	"github.com/containers/gvisor-tap-vsock/pkg/sshclient"
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
+	"github.com/inetaf/tcpproxy"
 	log "github.com/sirupsen/logrus"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv4"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
-	"inet.af/tcpproxy"
 )
 
 type PortsForwarder struct {
@@ -117,7 +117,7 @@ func (f *PortsForwarder) Expose(protocol types.TransportProtocol, local, remote 
 			var sshForward *sshclient.SSHForward
 			var connLock sync.Mutex
 
-			dialFn = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			dialFn = func(ctx context.Context, _, _ string) (net.Conn, error) {
 				connLock.Lock()
 				defer connLock.Unlock()
 
@@ -145,7 +145,7 @@ func (f *PortsForwarder) Expose(protocol types.TransportProtocol, local, remote 
 				return err
 			}
 
-			dialFn = func(ctx context.Context, network, addr string) (conn net.Conn, e error) {
+			dialFn = func(ctx context.Context, _, _ string) (conn net.Conn, e error) {
 				return gonet.DialContextTCP(ctx, f.stack, address, ipv4.ProtocolNumber)
 			}
 
@@ -232,7 +232,7 @@ func (f *PortsForwarder) Expose(protocol types.TransportProtocol, local, remote 
 		var p tcpproxy.Proxy
 		p.AddRoute(local, &tcpproxy.DialProxy{
 			Addr: remote,
-			DialContext: func(ctx context.Context, network, addr string) (conn net.Conn, e error) {
+			DialContext: func(ctx context.Context, _, _ string) (conn net.Conn, e error) {
 				return gonet.DialContextTCP(ctx, f.stack, address, ipv4.ProtocolNumber)
 			},
 		})
@@ -273,7 +273,7 @@ func (f *PortsForwarder) Unexpose(protocol types.TransportProtocol, local string
 
 func (f *PortsForwarder) Mux() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/all", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/all", func(w http.ResponseWriter, _ *http.Request) {
 		f.proxiesLock.Lock()
 		defer f.proxiesLock.Unlock()
 		ret := make([]proxy, 0)
