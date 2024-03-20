@@ -1064,7 +1064,10 @@ func startMicroshift(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.
 		return err
 	}
 
-	return cluster.WaitForAPIServer(ctx, ocConfig)
+	if err := cluster.WaitForAPIServer(ctx, ocConfig); err != nil {
+		return err
+	}
+	return cluster.CheckCorePodsRunning(ctx, ocConfig)
 }
 
 func ensurePullSecretPresentInVM(sshRunner *crcssh.Runner, pullSec cluster.PullSecretLoader) error {
