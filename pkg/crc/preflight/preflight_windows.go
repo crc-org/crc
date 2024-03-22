@@ -19,7 +19,8 @@ var hypervPreflightChecks = []Check{
 		configKeySuffix:  "check-administrator-user",
 		checkDescription: "Checking if running in a shell with administrator rights",
 		check:            checkIfRunningAsNormalUser,
-		flags:            StartUpOnly,
+		fixDescription:   "crc should be run in a shell without administrator rights",
+		flags:            NoFix,
 
 		labels: labels{Os: Windows},
 	},
@@ -27,7 +28,8 @@ var hypervPreflightChecks = []Check{
 		configKeySuffix:  "check-windows-version",
 		checkDescription: "Checking Windows release",
 		check:            checkVersionOfWindowsUpdate,
-		flags:            StartUpOnly,
+		fixDescription:   "Please manually update your Windows 10 installation",
+		flags:            NoFix,
 
 		labels: labels{Os: Windows},
 	},
@@ -35,7 +37,8 @@ var hypervPreflightChecks = []Check{
 		configKeySuffix:  "check-windows-edition",
 		checkDescription: "Checking Windows edition",
 		check:            checkWindowsEdition,
-		flags:            StartUpOnly,
+		fixDescription:   "Your Windows edition is not supported. Consider using Professional or Enterprise editions of Windows",
+		flags:            NoFix,
 
 		labels: labels{Os: Windows},
 	},
@@ -43,7 +46,8 @@ var hypervPreflightChecks = []Check{
 		configKeySuffix:  "check-hyperv-installed",
 		checkDescription: "Checking if Hyper-V is installed and operational",
 		check:            checkHyperVInstalled,
-		flags:            StartUpOnly,
+		fixDescription:   "Make sure you installed crc using the Windows installer and performed the required reboot",
+		flags:            NoFix,
 
 		labels: labels{Os: Windows},
 	},
@@ -51,7 +55,8 @@ var hypervPreflightChecks = []Check{
 		configKeySuffix:  "check-hyperv-service-running",
 		checkDescription: "Checking if Hyper-V service is enabled",
 		check:            checkHyperVServiceRunning,
-		flags:            StartUpOnly,
+		fixDescription:   "Make sure you installed crc using the Windows installer and performed the required reboot",
+		flags:            NoFix,
 
 		labels: labels{Os: Windows},
 	},
@@ -85,7 +90,8 @@ var vsockChecks = []Check{
 		configKeySuffix:  "check-vsock",
 		checkDescription: "Checking if vsock is correctly configured",
 		check:            checkVsock,
-		flags:            StartUpOnly,
+		fixDescription:   "Make sure you installed crc using the Windows installer and performed the required reboot",
+		flags:            NoFix,
 
 		labels: labels{Os: Windows, NetworkMode: User},
 	},
@@ -137,7 +143,7 @@ var adminHelperServiceCheks = []Check{
 		configKeySuffix:  "check-admin-helper-service-running",
 		checkDescription: "Checking admin helper service is running",
 		check:            checkIfAdminHelperServiceRunning,
-		fixDescription:   "Make sure you installed crc using the Windows installer and performed required reboot",
+		fixDescription:   "Make sure you installed crc using the Windows installer and performed the required reboot",
 		flags:            NoFix,
 
 		labels: labels{Os: Windows},
@@ -156,7 +162,8 @@ var crcUsersGroupExistsCheck = Check{
 		}
 		return nil
 	},
-	flags: StartUpOnly,
+	fixDescription: "Make sure you installed crc using the Windows installer and performed the required reboot",
+	flags:          NoFix,
 
 	labels: labels{Os: Windows},
 }
