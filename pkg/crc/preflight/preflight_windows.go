@@ -150,8 +150,8 @@ var adminHelperServiceCheks = []Check{
 	},
 }
 
-// 'crc-user' group is supposed to be created by the msi or chocolatey
-// this check makes sure that was done before stating crc, it does not
+// The 'crc-users' group is supposed to be created by the msi or chocolatey
+// this check makes sure that was done before starting crc, it does not
 // have a fix function since this'll be handled by the msi or choco
 var crcUsersGroupExistsCheck = Check{
 	configKeySuffix:  "check-crc-users-group-exists",
@@ -168,6 +168,10 @@ var crcUsersGroupExistsCheck = Check{
 	labels: labels{Os: Windows},
 }
 
+// When installed through chocolatey, `fixUserPartOfCrcUsersAndHypervAdminsGroup`
+// is needed as chocolatey is not doing this step.
+//
+// When installed with the MSI, the user should already be part of the required groups.
 var userPartOfCrcUsersAndHypervAdminsGroupCheck = Check{
 	configKeySuffix:  "check-user-in-crc-users-and-hyperv-admins-group",
 	checkDescription: "Checking if current user is in crc-users and Hyper-V admins group",
