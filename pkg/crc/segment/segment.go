@@ -140,7 +140,8 @@ func readIdentifyHash(identifyHashPath string) (uint64, error) {
 	}
 
 	if length := len(cachedHashBytes); length != 8 {
-		return 0, fmt.Errorf("Got %d bytes hash, expected 8", length)
+		logging.Warnf("Got %d bytes hash (expected 8), identify hash file will be regenerated", length)
+		return 0, nil
 	}
 
 	return binary.LittleEndian.Uint64(cachedHashBytes), nil
