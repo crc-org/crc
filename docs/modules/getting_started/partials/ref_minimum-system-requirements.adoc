@@ -16,7 +16,7 @@ Depending on the desired container runtime, {prod} requires the following system
 === For {ocp}
 
 * 4 physical CPU cores
-* 9 GB of free memory
+* 10.5 GB of free memory
 * 35 GB of storage space
 
 === For {ushift}
