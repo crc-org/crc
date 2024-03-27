@@ -1,50 +1,87 @@
 # Overview
 
-The container includes the e2e binary for all 3 platforms plus the required resources to run it.  
+This image contains the e2e suite of tests, and it is intended to run them agaisnt a target host, the logic to run the tests remotely is inherit from its base image: [deliverest](https://github.com/adrianriobo/deliverest), each platform and os has its own image.
 
-The container connects through ssh to the target host and copy the right binary for the platform, run e2e tests and pick the results and logs back.
+## Run
 
-## Envs
+The image version contains the specs about the plaftorm and the arch; then the test customization is made by the command executed within the image; as we can see the cmd should be defined depending on the platform:
 
-**PLATFORM**:*define target platform (windows, macos, linux).*
-**ARCH**:*define target arch (amd64, arm64). Default amd64
-**TARGET_HOST**:*dns or ip for the target host.*  
-**TARGET_HOST_USERNAME**:*username for target host.*  
-**TARGET_HOST_KEY_PATH**:*private key for user. (Mandatory if not TARGET_HOST_PASSWORD).*  
-**TARGET_HOST_PASSWORD**:*password for user. (Mandatory if not TARGET_HOST_KEY_PATH).*  
-**PULL_SECRET_FILE_PATH**: *pull secret file path (local to container).*  
-**BUNDLE_VERSION**:*(Mandatory if not BUNDLE_LOCATION). Testing agaisnt crc released version bundle version for crc released version.*
-**BUNDLE_LOCATION**:*(Mandatory if not BUNDLE_VERSION). When testing crc with custom bundle set the bundle location on target server.*  
-**RESULTS_PATH**:*(Optional). Path inside container to pick results and logs from e2e execution.*  
-**RESULTS_FILE**:*(Optional). File name for results xunit results. Default value: e2e.*  
-**CLEANUP_HOME**:*(Optional). Cleanup crc home folder or keep as it is to run test.*  
-**E2E_TAG_EXPRESSION**:*(Optional). Define e2e tag expression to select tests. If empty all tests available for the platform will be executed.*  
+* crc-e2e/run.ps1 ... (windows)
+* crc-e2e/run.sh ... (linux/darwin)
 
-## Samples
+And the execution is customized by the params addded, available params:
+
+* bundleLocation When testing a custom bundle we should pass the paht on the target host
+* e2eTagExpression To set an specific set of tests based on annotations 
+* targetFolder Name of the folder on the target host under $HOME where all the content will be copied
+* junitFilename Name for the junit file with the tests results
+* crcMemory Customize memory for the cluster to run the tests
+
+### Windows amd64
 
 ```bash
-# Run e2e on macos platform with ssh key and custom bundle
-podman run --rm -it --name crc-e2e \
-    -e PLATFORM=macos \
-    -e TARGET_HOST=$IP \
-    -e TARGET_HOST_USERNAME=$USER \
-    -e TARGET_HOST_KEY_PATH=/opt/crc/id_rsa \
-    -e PULL_SECRET_FILE_PATH=/opt/crc/pull-secret \
-    -e BUNDLE_LOCATION=/bundles/crc_hyperv_4.8.0-rc.3.crcbundle \
-    -v $PWD/pull-secret:/opt/crc/pull-secret:Z \
-    -v $PWD/id_rsa:/opt/crc/id_rsa:Z \
-    -v $PWD/output:/output:Z \
-    quay.io/crcont/crc-e2e:v1.29.0-465452f4
+podman run --rm -d --name crc-e2e-windows \
+    -e TARGET_HOST=XXXX \
+    -e TARGET_HOST_USERNAME=XXXX \
+    -e TARGET_HOST_KEY_PATH=/data/id_rsa \
+    -e TARGET_FOLDER=crc-e2e \
+    -e TARGET_RESULTS=results \
+    -e OUTPUT_FOLDER=/data \
+    -e DEBUG=true \
+    -v $PWD/pull-secret:/opt/crc/pull-secret:z \
+    -v $PWD:/data:z \
+    quay.io/crcont/crc-e2e:v2.34.0-windows-amd64  \
+        crc-e2e/run.ps1 -junitFilename crc-e2e-junit.xml
+```
 
-# Run e2e on windows platform with ssh password and crc released version
-podman run --rm -it --name crc-e2e \
-    -e PLATFORM=windows \
-    -e TARGET_HOST=$IP \
-    -e TARGET_HOST_USERNAME=$USER \
-    -e TARGET_HOST_PASSWORD=$PASSWORD \
-    -e PULL_SECRET_FILE_PATH=/opt/crc/pull-secret \
-    -e BUNDLE_VERSION=4.7.18 \
-    -v $PWD/pull-secret:/opt/crc/pull-secret:Z \
-    -v $PWD/output:/output:Z \
-    quay.io/crcont/crc-e2e:v1.29.0-465452f4
+### Mac arm64
+
+```bash
+podman run --rm -d --name crc-e2e-darwin \
+    -e TARGET_HOST=XXXX \
+    -e TARGET_HOST_USERNAME=XXXX \
+    -e TARGET_HOST_KEY_PATH=/data/id_rsa \
+    -e TARGET_FOLDER=crc-e2e \
+    -e TARGET_RESULTS=results \
+    -e OUTPUT_FOLDER=/data \
+    -e DEBUG=true \
+    -v $PWD/pull-secret:/opt/crc/pull-secret:z \
+    -v $PWD:/data:z \
+    quay.io/crcont/crc-e2e:v2.34.0-darwin-arm64  \
+        crc-e2e/run.sh --junitFilename crc-e2e-junit.xml 
+```
+
+### Mac amd64
+
+```bash
+podman run --rm -d --name crc-e2e-darwin \
+    -e TARGET_HOST=XXXX \
+    -e TARGET_HOST_USERNAME=XXXX \
+    -e TARGET_HOST_KEY_PATH=/data/id_rsa \
+    -e TARGET_FOLDER=crc-e2e \
+    -e TARGET_RESULTS=results \
+    -e OUTPUT_FOLDER=/data \
+    -e DEBUG=true \
+    -v $PWD/pull-secret:/opt/crc/pull-secret:z \
+    -v $PWD:/data:z \
+    quay.io/crcont/crc-e2e:v2.34.0-darwin-amd64  \
+        crc-e2e/run.sh --junitFilename crc-e2e-junit.xml 
+```
+
+
+### Linux amd64
+
+```bash
+podman run --rm -d --name crc-e2e-linux \
+    -e TARGET_HOST=XXXX \
+    -e TARGET_HOST_USERNAME=XXXX \
+    -e TARGET_HOST_KEY_PATH=/data/id_rsa \
+    -e TARGET_FOLDER=crc-e2e \
+    -e TARGET_RESULTS=results \
+    -e OUTPUT_FOLDER=/data \
+    -e DEBUG=true \
+    -v $PWD/pull-secret:/opt/crc/pull-secret:z \
+    -v $PWD:/data:z \
+    quay.io/crcont/crc-e2e:v2.34.0-linux-amd64  \
+        crc-e2e/run.sh --junitFilename crc-e2e-junit.xml 
 ```

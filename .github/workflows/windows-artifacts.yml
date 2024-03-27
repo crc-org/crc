@@ -23,69 +23,69 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - windows-2022
-        go:
-          - '1.20'
+        os: ['windows-2022']
+        go: ['1.20']
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ matrix.go }}
-      - name: Set path for heat.exe and light.exe
-        run: echo "$WIX\\bin" >>$GITHUB_PATH
-        shell: bash
-      - name: Build Windows installer
-        run: make out/windows-amd64/crc-windows-installer.zip
-      - name: Upload windows installer artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Windows Installer (${{ matrix.os }})
-          path: "./out/windows-amd64/crc-windows-installer.zip"
+    - name: Check out repository code
+      uses: actions/checkout@v4
 
-  build-e2e:
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go }}
+
+    - name: Set path for heat.exe and light.exe
+      shell: bash
+      run: echo "$WIX\\bin" >>$GITHUB_PATH
+      
+    - name: Build Windows installer
+      run: make out/windows-amd64/crc-windows-installer.zip
+      
+    - name: Upload windows installer artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-installer
+        path: "./out/windows-amd64/crc-windows-installer.zip"
+
+  build-qe:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      matrix:
+        os: ['darwin','windows', 'linux']
+        arch: ['amd64', 'arm64']
+        exclude:
+        - arch: 'arm64'
+          os: 'windows'
+        - arch: 'arm64'
+          os: 'linux'
       
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      
-      - name: Build and archive e2e image
-        # use github.sha as ID to correlate various workflows triggered by the same event
-        run: |
-          CRC_E2E_IMG_VERSION=gh make containerized_e2e
-          podman save -o ${{ env.IMAGE_NAME_E2E }}.tar quay.io/crcont/${{ env.IMAGE_NAME_E2E}}:gh
-
-      - name: Upload e2e image
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.IMAGE_NAME_E2E }}-gh
-          path: ${{ env.IMAGE_NAME_E2E }}.tar
-
-  build-integration:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
+    - name: Check out repository code
+      uses: actions/checkout@v4
     
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      
-      - name: Build and archive integration image
-        # use github.sha as ID to correlate various workflows triggered by the same event
-        run: |
-          CRC_INTEGRATION_IMG_VERSION=gh make containerized_integration
-          podman save -o ${{ env.IMAGE_NAME_INTEGRATION }}.tar quay.io/crcont/${{ env.IMAGE_NAME_INTEGRATION }}:gh
-      
-      - name: Upload integration image
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.IMAGE_NAME_INTEGRATION }}-gh
-          path: ${{ env.IMAGE_NAME_INTEGRATION }}.tar
+    - name: Build qe oci images ${{matrix.os}}-${{matrix.arch}}
+      run: |
+        # e2e
+        CRC_E2E_IMG_VERSION=gh ARCH=${{matrix.arch}} OS=${{matrix.os}} make containerized_e2e
+        podman save -o ${{ env.IMAGE_NAME_E2E }}-${{matrix.os}}-${{matrix.arch}}.tar \
+          quay.io/crcont/${{ env.IMAGE_NAME_E2E}}:gh-${{matrix.os}}-${{matrix.arch}}
+        # integration
+        CRC_INTEGRATION_IMG_VERSION=gh ARCH=${{matrix.arch}} OS=${{matrix.os}} make containerized_integration
+        podman save -o ${{ env.IMAGE_NAME_INTEGRATION }}-${{matrix.os}}-${{matrix.arch}}.tar \
+          quay.io/crcont/${{ env.IMAGE_NAME_INTEGRATION}}:gh-${{matrix.os}}-${{matrix.arch}}
+
+    - name: Upload e2e ${{matrix.os}}-${{matrix.arch}}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.IMAGE_NAME_E2E }}-${{matrix.os}}-${{matrix.arch}}
+        path: ${{ env.IMAGE_NAME_E2E }}-${{matrix.os}}-${{matrix.arch}}.tar
+
+    - name: Upload integration ${{matrix.os}}-${{matrix.arch}}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.IMAGE_NAME_INTEGRATION }}-${{matrix.os}}-${{matrix.arch}}
+        path: ${{ env.IMAGE_NAME_INTEGRATION }}-${{matrix.os}}-${{matrix.arch}}.tar
 
   save-gh-context:
     runs-on: ubuntu-latest
@@ -93,15 +93,13 @@ jobs:
       fail-fast: false
 
     steps:
-        
-      - name: Save the GH context in an artifact
-        shell: bash
-        env:
-          GH_CONTEXT: ${{ toJSON(github) }}
-        run: echo $GH_CONTEXT > gh_context.json
+    - name: Save the GH context in an artifact 
+      env:
+        GH_CONTEXT: ${{ toJSON(github) }}
+      run: echo $GH_CONTEXT > gh_context.json
 
-      - name: Upload the GH context artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: gh_context
-          path: ./gh_context.json
+    - name: Upload the GH context artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: gh-context
+        path: gh_context.json

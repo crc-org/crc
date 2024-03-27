@@ -1,0 +1,28 @@
+
+FROM registry.access.redhat.com/ubi9/go-toolset:1.20 AS builder
+
+USER root
+
+ARG OS 
+ARG ARCH
+WORKDIR /workspace
+COPY . .
+RUN GOARCH=${ARCH} GOOS=${OS} make build_e2e
+
+FROM quay.io/rhqp/deliverest:v0.0.5
+
+LABEL org.opencontainers.image.authors="CRCQE <devtools-crc-qe@redhat.com>"
+
+ARG OS 
+ARG ARCH
+
+ENV ASSETS_FOLDER=/opt/crc \
+    OS=${OS} \
+    ARCH=${ARCH}
+
+COPY --from=builder /workspace/out ${ASSETS_FOLDER}/bin
+COPY --from=builder /workspace/test/e2e/features ${ASSETS_FOLDER}/bin/features
+COPY --from=builder /workspace/test/testdata ${ASSETS_FOLDER}/testdata
+
+COPY images/build-e2e/lib/${OS}/* ${ASSETS_FOLDER}/
+
