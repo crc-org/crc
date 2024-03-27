@@ -138,7 +138,7 @@ func CreateBastion(_url *url.URL, passPhrase string, identity string, initial ne
 	}
 
 	if connect == nil {
-		connect = func(ctx context.Context, bastion *Bastion) (net.Conn, error) {
+		connect = func(_ context.Context, bastion *Bastion) (net.Conn, error) {
 			conn, err := net.DialTimeout("tcp",
 				net.JoinHostPort(bastion.Host, bastion.Port),
 				bastion.Config.Timeout,

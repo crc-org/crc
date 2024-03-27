@@ -231,7 +231,7 @@ func (s *Server) ServeTCP() error {
 
 func (s *Server) Mux() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/all", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/all", func(w http.ResponseWriter, _ *http.Request) {
 		s.handler.zonesLock.RLock()
 		_ = json.NewEncoder(w).Encode(s.handler.zones)
 		s.handler.zonesLock.RUnlock()
