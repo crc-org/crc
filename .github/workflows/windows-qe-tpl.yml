@@ -1,0 +1,217 @@
+# The template is intended to be used from a workflow run 
+# as it will pick the artifacts from the triger (through workflow_id param)
+name: windows-qe-tpl
+
+on:  
+  workflow_call:  
+    inputs:  
+      trigger-workflow-id:  
+        required: true  
+        type: string
+      qe-type:  
+        description: type of test; allowed values e2e or integration
+        required: true  
+        type: string
+      preset:
+        description: preset type only required if qe-type is e2e
+        type: string  
+
+jobs:
+  windows-qe:
+    runs-on: ubuntu-latest
+    permissions:
+      statuses: write # needed to update commit status (pending/failure/sucess)
+      checks: write # as documented in https://github.com/mikepenz/action-junit-report?tab=readme-ov-file#pr-run-permissions
+    strategy:
+      fail-fast: false
+      matrix:
+        windows-version: ['11']
+        windows-featurepack: ['23h2-ent']
+      
+    steps:
+    - name: Download gh context
+      id: download-gh-context-artifact
+      uses: dawidd6/action-download-artifact@v3
+      with:
+        workflow: ${{inputs.trigger-workflow-id}}
+        name: gh-context
+
+    - name: Download windows installer
+      id: download-windows-installer-artifact
+      uses: dawidd6/action-download-artifact@v3
+      with:
+        workflow: ${{inputs.trigger-workflow-id}}
+        name: windows-installer
+
+    - name: Download qe oci image
+      id: download-qe-oci-image-artifact
+      uses: dawidd6/action-download-artifact@v3
+      with:
+        workflow: ${{inputs.trigger-workflow-id}}
+        name: crc-${{inputs.qe-type}}-windows-amd64
+
+    - name: Correlate
+      env:
+        PULL_SECRET: ${{ secrets.PULL_SECRET }}
+      run: |
+        # Get origin commit sha for testing
+        commit_sha=$(cat gh_context.json | jq -r '.event.after')
+        if [[ -z "${commit_sha}" ]]; then
+          # on first PR creation .event.after is empty, then .sha is used as commit instead
+          commit_sha=$(cat gh_context.json | jq -r '.sha')
+        fi
+        echo "commit_sha=${commit_sha}" >> "$GITHUB_ENV"
+        
+        # Set status_context
+        status_context="ci/gh/${{inputs.qe-type}}"
+        if [[ "${{inputs.qe-type}}" == "e2e" ]]; then
+          status_context="${status_context}-${{inputs.preset}}"
+        fi
+        status_context="${status_context}/windows-${{matrix.windows-version}}-${{matrix.windows-featurepack}}"
+        echo "status_context=${status_context}" >> "$GITHUB_ENV"
+
+        # Save pull-secret as file
+        echo "${PULL_SECRET}" > pull-secret
+
+    - name: Add status to the PR check
+      run: |
+        set -xuo
+        # Status msg
+        data="{\"state\":\"pending\""
+        data="${data},\"description\":\"Running ${{inputs.qe-type}}-${{inputs.preset}} on Windows\""
+        data="${data},\"context\":\"${{ env.status_context }}\""
+        data="${data},\"target_url\":\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
+        # Create status by API call
+        curl -L -v -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ github.token }}" \
+          https://api.github.com/repos/${{ github.repository }}/statuses/${{ env.commit_sha }} \
+          -d "${data}"
+
+    - name: Create Windows instance
+      run: |
+        # Create instance
+        podman run -d --name windows-create --rm \
+          -v ${PWD}:/workspace:z \
+          -e ARM_TENANT_ID=${{secrets.ARM_TENANT_ID}} \
+          -e ARM_SUBSCRIPTION_ID=${{secrets.ARM_SUBSCRIPTION_ID}} \
+          -e ARM_CLIENT_ID=${{secrets.ARM_CLIENT_ID}} \
+          -e ARM_CLIENT_SECRET='${{secrets.ARM_CLIENT_SECRET}}' \
+          -e AZURE_STORAGE_ACCOUNT='${{ secrets.AZURE_STORAGE_ACCOUNT }}' \
+          -e AZURE_STORAGE_KEY='${{ secrets.AZURE_STORAGE_KEY }}' \
+          quay.io/rhqp/qenvs:v0.6.3 azure \
+            windows create \
+            --project-name 'windows-desktop-${{ matrix.windows-version }}-${{ matrix.windows-featurepack }}-${{inputs.qe-type}}-${{inputs.preset}}' \
+            --backed-url azblob://crc-qenvs-state/${{ env.commit_sha }} \
+            --conn-details-output '/workspace' \
+            --windows-version '${{matrix.windows-version}}' \
+            --windows-featurepack '${{matrix.windows-featurepack}}' \
+            --tags project=openshift-local,source=github,org=${{github.repository_owner}} \
+            --spot
+        podman logs -f windows-create
+
+    - name: Install CRC on host
+      run: |
+        podman run --rm -d --name crc-win-support \
+          -e TARGET_HOST=$(cat host) \
+          -e TARGET_HOST_USERNAME=$(cat username) \
+          -e TARGET_HOST_KEY_PATH=/data/id_rsa \
+          -e TARGET_FOLDER=crc-support \
+          -e TARGET_CLEANUP='false' \
+          -e OUTPUT_FOLDER=/data \
+          -e DEBUG='true' \
+          -v ${PWD}:/data:z \
+          -v ${PWD}/crc-windows-installer.zip:/opt/crc-support/crc-windows-installer.zip:z \
+          quay.io/rhqp/crc-support:v0.5-windows crc-support/run.ps1 \
+            -targetPath "/Users/$(cat username)/crc-support" \
+            -download 'false' \
+            -install 'true' \
+            -forceFresh 'false'
+        podman logs -f crc-win-support
+
+    - name: Run CRC ${{inputs.qe-type}}
+      run: |
+        # load image
+        podman load -i crc-${{inputs.qe-type}}-windows-amd64.tar
+        # run
+        cmd="crc-qe/run.ps1 -junitFilename crc-${{inputs.qe-type}}-junit.xml -targetFolder crc-qe"
+        if [[ "${{inputs.qe-type}}" == "e2e" ]]; then
+          if [[ "${{inputs.preset}}" == "microshift" ]]; then
+            cmd="${cmd} -e2eTagExpression '@story_microshift'"
+          else
+            cmd="${cmd} -e2eTagExpression '~@minimal && ~@story_microshift'"
+          fi
+        fi
+        podman run --rm -d --name crc-${{inputs.qe-type}} \
+          -e TARGET_HOST=$(cat host) \
+          -e TARGET_HOST_USERNAME=$(cat username) \
+          -e TARGET_HOST_KEY_PATH=/data/id_rsa \
+          -e TARGET_FOLDER=crc-qe \
+          -e TARGET_RESULTS=results \
+          -e OUTPUT_FOLDER=/data \
+          -e DEBUG=true \
+          -v $PWD/pull-secret:/opt/crc/pull-secret:z \
+          -v $PWD:/data:z \
+          quay.io/crcont/crc-${{inputs.qe-type}}:gh-windows-amd64 \
+              ${cmd} 
+        podman logs -f crc-${{inputs.qe-type}}
+
+    - name: Test Report
+      id: test-report
+      uses: mikepenz/action-junit-report@v4
+      if: always() 
+      with:
+        fail_on_failure: true
+        include_passed: true
+        detailed_summary: true
+        require_tests:  true
+        report_paths: '**/*.xml'
+
+    - name: Upload ${{inputs.qe-type}} results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: windows-${{inputs.qe-type}}-${{inputs.preset}}-${{matrix.windows-version}}${{matrix.windows-featurepack}}
+        path: |
+          **/*.xml
+          **/*.results
+          **/*.log
+
+    - name: Update status of the PR check
+      if: always()
+      run: |
+        set -xuo
+        # Status msg
+        data="{\"state\":\"success\""
+        if [[ ${{steps.test-report.outcome}} != "success" ]]; then 
+          data="{\"state\":\"failure\""
+        fi
+        data="${data},\"description\":\"Finished ${{inputs.qe-type}}-${{inputs.preset}} on Windows\""
+        data="${data},\"context\":\"${{ env.status_context }}\""
+        data="${data},\"target_url\":\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
+        # Create status by API call
+        curl -L -v -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ github.token }}" \
+          https://api.github.com/repos/${{ github.repository }}/statuses/${{ env.commit_sha }} \
+          -d "${data}"
+
+    - name: Destroy instance
+      if: always()
+      run: |
+        # Make sure lock is removed
+        rm -rf .pulumi/locks/*
+        # Destroy 
+        podman run -d --name windows-destroy --rm \
+          -v ${PWD}:/workspace:z \
+          -e ARM_TENANT_ID=${{secrets.ARM_TENANT_ID}} \
+          -e ARM_SUBSCRIPTION_ID=${{secrets.ARM_SUBSCRIPTION_ID}} \
+          -e ARM_CLIENT_ID=${{secrets.ARM_CLIENT_ID}} \
+          -e ARM_CLIENT_SECRET='${{secrets.ARM_CLIENT_SECRET}}' \
+          -e AZURE_STORAGE_ACCOUNT='${{ secrets.AZURE_STORAGE_ACCOUNT }}' \
+          -e AZURE_STORAGE_KEY='${{ secrets.AZURE_STORAGE_KEY }}' \
+          quay.io/rhqp/qenvs:v0.6.3 azure \
+            windows destroy \
+            --project-name 'windows-desktop-${{ matrix.windows-version }}-${{ matrix.windows-featurepack }}-${{inputs.qe-type}}-${{inputs.preset}}' \
+            --backed-url azblob://crc-qenvs-state/${{ env.commit_sha }} 
+        podman logs -f windows-destroy
