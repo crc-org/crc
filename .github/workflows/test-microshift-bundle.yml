@@ -1,0 +1,66 @@
+name: Run microshift integration
+on:
+  push:
+    branches: [ main ]
+  pull_request: {}
+jobs:
+  build:
+    name: Run microshift e2e integration 
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go:
+          - '1.20'
+    env:
+      SHELL: /bin/bash
+      KUBECONFIG: '/Users/runner/.kube/config'
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Build
+        run: |
+          make cross
+          sudo cp out/linux-amd64/crc ${HOME}/crc
+          make build_e2e
+          sudo cp out/linux-amd64/e2e.test ${HOME}/e2e.test
+          cp -r test/testdata ${HOME}/work/crc/testdata
+
+      - name: Install required virtualization software
+        run: |
+          sudo apt-get update
+          sudo apt install qemu-kvm libvirt-daemon libvirt-daemon-system
+          sudo usermod -a -G libvirt $USER
+      - name: Remove unwanted stuff to free up disk image
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+
+          sudo docker image prune --all --force
+
+          sudo swapoff -a
+          sudo rm -f /mnt/swapfile
+      - name: Write pull-secret
+        env:
+          PULL_SECRET: ${{ secrets.PULL_SECRET }}
+        run: |
+          echo $PULL_SECRET > ${HOME}/pull-secret
+
+      - name: Start the microshift e2e test
+        run: |
+          set +e
+          sudo -su $USER ${HOME}/e2e.test --pull-secret-file="${HOME}"/pull-secret \
+          --bundle-location="" \
+          --crc-binary=${HOME} \
+          --godog.tags="linux && @microshift" \
+          --godog.paths test/e2e/features/
+
