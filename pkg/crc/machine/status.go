@@ -35,9 +35,6 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 		CrcStatus: vmStatus,
 	}
 	switch {
-	case vm.bundle.IsPodman():
-		clusterStatusResult.PodmanVersion = vm.bundle.GetPodmanVersion()
-		clusterStatusResult.Preset = preset.Podman
 	case vm.bundle.IsMicroshift():
 		clusterStatusResult.OpenshiftStatus = types.OpenshiftStopped
 		clusterStatusResult.OpenshiftVersion = vm.bundle.GetOpenshiftVersion()

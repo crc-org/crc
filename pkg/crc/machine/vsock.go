@@ -122,13 +122,6 @@ func vsockPorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint)
 				Local:    fmt.Sprintf(":%d", ingressHTTPPort),
 				Remote:   net.JoinHostPort(virtualMachineIP, remoteHTTPPort),
 			})
-	case crcPreset.Podman:
-		exposeRequest = append(exposeRequest,
-			types.ExposeRequest{
-				Protocol: "tcp",
-				Local:    net.JoinHostPort(constants.LocalIP, cockpitPort),
-				Remote:   net.JoinHostPort(virtualMachineIP, cockpitPort),
-			})
 	default:
 		logging.Errorf("Invalid preset: %s", preset)
 	}

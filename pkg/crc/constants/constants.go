@@ -77,8 +77,6 @@ func BundleForPreset(preset crcpreset.Preset, version string) string {
 	bundleName.WriteString("crc")
 
 	switch preset {
-	case crcpreset.Podman:
-		bundleName.WriteString("_podman")
 	case crcpreset.OKD:
 		bundleName.WriteString("_okd")
 	case crcpreset.Microshift:
@@ -205,7 +203,7 @@ func GetDefaultCPUs(preset crcpreset.Preset) int {
 	switch preset {
 	case crcpreset.OpenShift, crcpreset.OKD:
 		return 4
-	case crcpreset.Podman, crcpreset.Microshift:
+	case crcpreset.Microshift:
 		return 2
 	default:
 		// should not be reached
@@ -217,8 +215,6 @@ func GetDefaultMemory(preset crcpreset.Preset) int {
 	switch preset {
 	case crcpreset.OpenShift, crcpreset.OKD:
 		return 9216
-	case crcpreset.Podman:
-		return 2048
 	case crcpreset.Microshift:
 		return 4096
 	default:
@@ -233,8 +229,6 @@ func GetDefaultBundleImageRegistry(preset crcpreset.Preset) string {
 
 func getImageName(preset crcpreset.Preset) string {
 	switch preset {
-	case crcpreset.Podman:
-		return "podman-bundle"
 	case crcpreset.OKD:
 		return "okd-bundle"
 	case crcpreset.Microshift:

@@ -176,12 +176,7 @@ func (bundle *CrcBundleInfo) GetPodmanVersion() string {
 }
 
 func (bundle *CrcBundleInfo) GetVersion() string {
-	switch bundle.GetBundleType() {
-	case crcPreset.Podman:
-		return bundle.GetPodmanVersion()
-	default:
-		return bundle.GetOpenshiftVersion()
-	}
+	return bundle.GetOpenshiftVersion()
 }
 
 func (bundle *CrcBundleInfo) GetBundleNameWithoutExtension() string {
@@ -216,11 +211,9 @@ func (bundle *CrcBundleInfo) verify() error {
 		bundle.GetKernelPath(),
 		bundle.GetInitramfsPath(),
 	}
-	if !bundle.IsPodman() {
-		files = append(files, []string{
-			bundle.GetOcPath(),
-			bundle.GetKubeConfigPath()}...)
-	}
+	files = append(files, []string{
+		bundle.GetOcPath(),
+		bundle.GetKubeConfigPath()}...)
 
 	for _, file := range files {
 		if file == "" {
@@ -352,7 +345,7 @@ func Download(preset crcPreset.Preset, bundleURI string, enableBundleQuayFallbac
 				return image.PullBundle(constants.GetDefaultBundleImageRegistry(preset))
 			}
 			return downloadedBundlePath, err
-		case crcPreset.Podman, crcPreset.OKD:
+		case crcPreset.OKD:
 			fallthrough
 		default:
 			return image.PullBundle(constants.GetDefaultBundleImageRegistry(preset))
