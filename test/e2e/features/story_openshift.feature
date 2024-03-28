@@ -2,7 +2,8 @@
 Feature: 4 Openshift stories
 
 	Background:
-		Given ensuring CRC cluster is running
+		Given setting config property "disk-size" to value "40" succeeds
+		And ensuring CRC cluster is running
 		And ensuring oc command is available
 		And ensuring user is logged in succeeds
 

@@ -17,7 +17,7 @@ func TestLoadHost(t *testing.T) {
         "IPAddress": "192.168.130.11",
         "MachineName": "crc",
         "BundleName": "crc_libvirt_4.6.6.crcbundle",
-        "Memory": 9216,
+        "Memory": 10752,
         "CPU": 4
     }`
 

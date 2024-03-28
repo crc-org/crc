@@ -34,7 +34,7 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 		})
 
 		It("start CRC", func() {
-			// default values: "--memory", "9216", "--cpus", "4", "disk-size", "31"
+			// default values: "--memory", "10752", "--cpus", "4", "disk-size", "31"
 			if bundlePath == "" {
 				Expect(RunCRCExpectSuccess("start", "--memory", "12000", "--cpus", "5", "--disk-size", "40", "-p", pullSecretPath)).To(ContainSubstring("Started the OpenShift cluster"))
 			} else {
@@ -118,8 +118,8 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 
 	Describe("use flawed values", Serial, Ordered, func() {
 
-		It("start CRC with sub-minimum memory", func() { // less than min = 9216
-			Expect(RunCRCExpectFail("start", "--memory", "9000")).To(ContainSubstring("requires memory in MiB >= 9216"))
+		It("start CRC with sub-minimum memory", func() { // less than min = 10752
+			Expect(RunCRCExpectFail("start", "--memory", "9000")).To(ContainSubstring("requires memory in MiB >= 10752"))
 		})
 		It("start CRC with sub-minimum cpus", func() { // fewer than min
 			Expect(RunCRCExpectFail("start", "--cpus", "3")).To(ContainSubstring("requires CPUs >= 4"))
@@ -139,13 +139,13 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 	Describe("use default values again", Serial, Ordered, func() {
 
 		It("start CRC", func() {
-			Expect(RunCRCExpectSuccess("start")).To(ContainSubstring("Started the OpenShift cluster")) // default values: "--memory", "9216", "--cpus", "4", "disk-size", "31"
+			Expect(RunCRCExpectSuccess("start")).To(ContainSubstring("Started the OpenShift cluster")) // default values: "--memory", "10752", "--cpus", "4", "disk-size", "31"
 		})
 
 		It("check VM's memory size", func() {
 			out, err := util.SendCommandToVM("cat /proc/meminfo")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*9\d{6}`)) // there should be a check if cluster needs >9216MiB; it isn't there and mem gets scaled down regardless
+			Expect(out).Should(MatchRegexp(`MemTotal:[\s]*9\d{6}`)) // there should be a check if cluster needs >10752MiB; it isn't there and mem gets scaled down regardless
 		})
 
 		It("check VM's number of cpus", func() {

@@ -223,7 +223,7 @@ func TestConfigGetMultiple(t *testing.T) {
 		apiClient.GetConfigResult{
 			Configs: map[string]interface{}{
 				"cpus":   float64(4),
-				"memory": float64(9216),
+				"memory": float64(10752),
 			},
 		},
 		configGetMultiplePropertyResult,
