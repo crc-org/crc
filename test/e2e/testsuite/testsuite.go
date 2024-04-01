@@ -1002,7 +1002,7 @@ func PullLoginTagPushImageSucceeds(image string) error {
 		return err
 	}
 
-	_, err = cmd.RunPodmanExpectSuccess("tag", "quay.io/centos7/httpd-24-centos7", "default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test")
+	_, err = cmd.RunPodmanExpectSuccess("tag", image, "default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test")
 	if err != nil {
 		return err
 	}

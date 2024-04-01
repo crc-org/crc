@@ -41,7 +41,7 @@ Feature: 4 Openshift stories
 		Given executing "oc new-project testproj" succeeds
 		# mirror
 		When executing "oc registry login --insecure=true" succeeds
-		Then executing "oc image mirror quay.io/centos7/httpd-24-centos7:latest=default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test --insecure=true --filter-by-os=linux/amd64" succeeds
+		Then executing "oc image mirror quay.io/centos7/httpd-24-centos7:centos7=default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test --insecure=true --filter-by-os=linux/amd64" succeeds
 		And executing "oc set image-lookup hello" succeeds
 		# deploy
 		When executing "oc apply -f hello.yaml" succeeds
@@ -56,7 +56,7 @@ Feature: 4 Openshift stories
 	Scenario: Pull image locally, push to registry, deploy
 		Given podman command is available
 		And executing "oc new-project testproj" succeeds
-		When pulling image "quay.io/centos7/httpd-24-centos7", logging in, and pushing local image to internal registry succeeds
+		When pulling image "quay.io/centos7/httpd-24-centos7:centos7", logging in, and pushing local image to internal registry succeeds
 		And executing "oc apply -f hello.yaml" succeeds
 		When executing "oc rollout status deployment hello" succeeds
 		Then stdout should contain "successfully rolled out"
