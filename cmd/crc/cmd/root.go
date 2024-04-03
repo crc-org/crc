@@ -61,7 +61,8 @@ func init() {
 
 	// Initiate segment client
 	if segmentClient, err = segment.NewClient(config, httpproxy.HTTPTransport()); err != nil {
-		logging.Fatal(err.Error())
+		logging.Warn(err.Error())
+		logging.Warn("Error during segment client initialization, telemetry will be unavailable in this session")
 	}
 
 	// subcommands
