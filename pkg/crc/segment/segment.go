@@ -39,17 +39,24 @@ type Client struct {
 	identifyHashPath string
 }
 
+var NoopClient = &Client{}
+
 func NewClient(config *crcConfig.Config, transport http.RoundTripper) (*Client, error) {
-	return newCustomClient(config, transport,
+	client, err := newCustomClient(config, transport,
 		filepath.Join(constants.GetHomeDir(), ".redhat", "anonymousId"),
 		filepath.Join(constants.CrcBaseDir, "segmentIdentifyHash"),
 		analytics.DefaultEndpoint)
+	if err != nil {
+		// Return empty client (noop client) -- telemetry will not be available
+		return NoopClient, err
+	}
+	return client, nil
 }
 
 func newCustomClient(config *crcConfig.Config, transport http.RoundTripper, telemetryFilePath, identifyHashFilePath, segmentEndpoint string) (*Client, error) {
 	userID, err := getUserIdentity(telemetryFilePath)
 	if err != nil {
-		return nil, err
+		return NoopClient, err
 	}
 	client, err := analytics.NewWithConfig(WriteKey, analytics.Config{
 		Endpoint: segmentEndpoint,
@@ -60,12 +67,12 @@ func newCustomClient(config *crcConfig.Config, transport http.RoundTripper, tele
 		Transport: transport,
 	})
 	if err != nil {
-		return nil, err
+		return NoopClient, err
 	}
 
 	identifyHash, err := readIdentifyHash(identifyHashFilePath)
 	if err != nil {
-		return nil, err
+		return NoopClient, err
 	}
 
 	return &Client{
@@ -79,15 +86,24 @@ func newCustomClient(config *crcConfig.Config, transport http.RoundTripper, tele
 }
 
 func (c *Client) Close() error {
+	if c == NoopClient {
+		return nil
+	}
 	return c.segmentClient.Close()
 }
 
 func (c *Client) UploadAction(action, source, status string) error {
+	if c == NoopClient {
+		return nil
+	}
 	return c.upload(action, baseProperties(source).
 		Set("status", status))
 }
 
 func (c *Client) UploadCmd(ctx context.Context, action string, duration time.Duration, err error) error {
+	if c == NoopClient {
+		return nil
+	}
 	return c.upload(action, properties(ctx, err, duration))
 }
 
@@ -159,6 +175,9 @@ func writeIdentifyHash(client *Client) error {
 }
 
 func (c *Client) identifyNew() *analytics.Identify {
+	if c == NoopClient {
+		return &analytics.Identify{}
+	}
 	return &analytics.Identify{
 		UserId: c.userID,
 		Traits: addConfigTraits(c.config, traits()),
@@ -166,6 +185,9 @@ func (c *Client) identifyNew() *analytics.Identify {
 }
 
 func (c *Client) upload(action string, a analytics.Properties) error {
+	if c == NoopClient {
+		return nil
+	}
 	if c.config.Get(crcConfig.ConsentTelemetry).AsString() != "yes" {
 		return nil
 	}
