@@ -53,7 +53,7 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.4
 	github.com/zalando/go-keyring v0.2.4
 	golang.org/x/crypto v0.21.0
-	golang.org/x/net v0.22.0
+	golang.org/x/net v0.23.0
 	golang.org/x/sync v0.6.0
 	golang.org/x/sys v0.18.0
 	golang.org/x/term v0.18.0
