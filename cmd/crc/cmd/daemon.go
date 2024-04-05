@@ -22,6 +22,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	plan9 "github.com/crc-org/crc/v2/pkg/crc/services/9p"
 	"github.com/docker/go-units"
 	"github.com/gorilla/handlers"
 	"github.com/pkg/errors"
@@ -200,6 +201,16 @@ func run(configuration *types.Configuration) error {
 			errCh <- errors.Wrap(err, "virtualnetwork http.Serve failed")
 		}
 	}()
+
+	// not sure if this should go over tcp or vsock
+	// vsock on Windows needs more config (registry key, ..)
+	ln9p, err := vn.Listen("tcp", net.JoinHostPort(configuration.GatewayIP, plan9.PortStr))
+	if err != nil {
+		return err
+	}
+	if err := plan9.StartShares([]plan9.Mount{{Listener: ln9p, Path: constants.GetHomeDir()}}); err != nil {
+		return err
+	}
 
 	startupDone()
 
