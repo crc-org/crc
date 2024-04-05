@@ -6,9 +6,7 @@ import (
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/config"
-	"github.com/crc-org/crc/v2/pkg/crc/network"
 	"github.com/crc-org/crc/v2/pkg/drivers/hyperv"
-	winnet "github.com/crc-org/crc/v2/pkg/os/windows/network"
 	"github.com/crc-org/machine/libmachine/drivers"
 )
 
@@ -18,14 +16,6 @@ func CreateHost(machineConfig config.MachineConfig) *hyperv.Driver {
 	config.InitVMDriverFromMachineConfig(machineConfig, hypervDriver.VMDriver)
 
 	hypervDriver.DisableDynamicMemory = true
-
-	if machineConfig.NetworkMode == network.UserNetworkingMode {
-		hypervDriver.VirtualSwitch = ""
-	} else {
-		// Determine the Virtual Switch to be used
-		_, switchName := winnet.SelectSwitchByNameOrDefault(AlternativeNetwork)
-		hypervDriver.VirtualSwitch = switchName
-	}
 
 	hypervDriver.SharedDirs = configureShareDirs(machineConfig)
 	return hypervDriver

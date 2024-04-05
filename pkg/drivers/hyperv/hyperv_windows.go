@@ -2,7 +2,6 @@ package hyperv
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os/exec"
 	"strconv"
@@ -19,7 +18,6 @@ import (
 
 type Driver struct {
 	*drivers.VMDriver
-	VirtualSwitch        string
 	MacAddress           string
 	DisableDynamicMemory bool
 }
@@ -130,16 +128,7 @@ func (d *Driver) PreCreateCheck() error {
 		return ErrNotAdministrator
 	}
 
-	if d.VirtualSwitch == "" {
-		return nil
-	}
-
-	// Check that there is a virtual switch already configured
-	if _, err := d.chooseVirtualSwitch(); err != nil {
-		return err
-	}
-
-	return err
+	return nil
 }
 
 func (d *Driver) getDiskPath() string {
@@ -183,24 +172,14 @@ func (d *Driver) Create() error {
 		"-Path", fmt.Sprintf("'%s'", d.ResolveStorePath(".")),
 		"-MemoryStartupBytes", toMb(d.Memory),
 	}
-	if d.VirtualSwitch != "" {
-		virtualSwitch, err := d.chooseVirtualSwitch()
-		if err != nil {
-			return err
-		}
-		log.Debugf("Using switch %q", virtualSwitch)
-		args = append(args, "-SwitchName", quote(virtualSwitch))
-	}
 
 	log.Debugf("Creating VM...")
 	if err := cmd(args...); err != nil {
 		return err
 	}
 
-	if d.VirtualSwitch == "" {
-		if err := cmd("Hyper-V\\Remove-VMNetworkAdapter", "-VMName", d.MachineName); err != nil {
-			return err
-		}
+	if err := cmd("Hyper-V\\Remove-VMNetworkAdapter", "-VMName", d.MachineName); err != nil {
+		return err
 	}
 
 	if d.DisableDynamicMemory {
@@ -215,14 +194,6 @@ func (d *Driver) Create() error {
 		if err := cmd("Hyper-V\\Set-VMProcessor",
 			d.MachineName,
 			"-Count", fmt.Sprintf("%d", d.CPU)); err != nil {
-			return err
-		}
-	}
-
-	if d.VirtualSwitch != "" && d.MacAddress != "" {
-		if err := cmd("Hyper-V\\Set-VMNetworkAdapter",
-			"-VMName", d.MachineName,
-			"-StaticMacAddress", fmt.Sprintf("\"%s\"", d.MacAddress)); err != nil {
 			return err
 		}
 	}
@@ -245,51 +216,6 @@ func (d *Driver) Create() error {
 
 	return d.resizeDisk(int64(d.DiskCapacity))
 
-}
-
-func (d *Driver) chooseVirtualSwitch() (string, error) {
-	if d.VirtualSwitch == "" {
-		return "", errors.New("no virtual switch given")
-	}
-
-	stdout, err := cmdOut("[Console]::OutputEncoding = [Text.Encoding]::UTF8; (Hyper-V\\Get-VMSwitch).Name")
-	if err != nil {
-		return "", err
-	}
-
-	switches := crcstrings.SplitLines(stdout)
-
-	found := false
-	for _, name := range switches {
-		if name == d.VirtualSwitch {
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		return "", fmt.Errorf("virtual switch %q not found", d.VirtualSwitch)
-	}
-
-	return d.VirtualSwitch, nil
-}
-
-// waitForIP waits until the host has a valid IP
-func (d *Driver) waitForIP() (string, error) {
-	if d.VirtualSwitch == "" {
-		return "", errors.New("no virtual switch given")
-	}
-
-	log.Debugf("Waiting for host to start...")
-
-	for {
-		ip, _ := d.GetIP()
-		if ip != "" {
-			return ip, nil
-		}
-
-		time.Sleep(1 * time.Second)
-	}
 }
 
 // waitStopped waits until the host is stopped
@@ -315,17 +241,6 @@ func (d *Driver) Start() error {
 	if err := cmd("Hyper-V\\Start-VM", d.MachineName); err != nil {
 		return err
 	}
-
-	if d.VirtualSwitch == "" {
-		return nil
-	}
-
-	ip, err := d.waitForIP()
-	if err != nil {
-		return err
-	}
-
-	d.IPAddress = ip
 
 	return nil
 }
@@ -378,32 +293,6 @@ func (d *Driver) Kill() error {
 	d.IPAddress = ""
 
 	return nil
-}
-
-func (d *Driver) GetIP() (string, error) {
-	if d.VirtualSwitch == "" {
-		return "", errors.New("no virtual switch given")
-	}
-
-	s, err := d.GetState()
-	if err != nil {
-		return "", err
-	}
-	if s != state.Running {
-		return "", drivers.ErrHostIsNotRunning
-	}
-
-	stdout, err := cmdOut("((", "Hyper-V\\Get-VM", d.MachineName, ").networkadapters[0]).ipaddresses[0]")
-	if err != nil {
-		return "", err
-	}
-
-	resp := crcstrings.FirstLine(stdout)
-	if resp == "" {
-		return "", fmt.Errorf("IP not found")
-	}
-
-	return resp, nil
 }
 
 func (d *Driver) GetSharedDirs() ([]drivers.SharedDir, error) {
