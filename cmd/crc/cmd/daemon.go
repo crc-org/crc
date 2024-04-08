@@ -177,7 +177,7 @@ func run(configuration *types.Configuration) error {
 		}
 	}()
 
-	ln, err := vn.Listen("tcp", fmt.Sprintf("%s:80", configuration.GatewayIP))
+	ln, err := vn.Listen("tcp", net.JoinHostPort(configuration.GatewayIP, "80"))
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func run(configuration *types.Configuration) error {
 		}
 	}()
 
-	networkListener, err := vn.Listen("tcp", fmt.Sprintf("%s:80", hostVirtualIP))
+	networkListener, err := vn.Listen("tcp", net.JoinHostPort(hostVirtualIP, "80"))
 	if err != nil {
 		return err
 	}
