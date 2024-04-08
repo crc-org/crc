@@ -1797,6 +1797,8 @@ type DomainHostdevSubsysPCIDriver struct {
 }
 
 type DomainHostdevSubsysPCI struct {
+	Display string                        `xml:"display,attr,omitempty"`
+	RamFB   string                        `xml:"ramfb,attr,omitempty"`
 	Driver  *DomainHostdevSubsysPCIDriver `xml:"driver"`
 	Source  *DomainHostdevSubsysPCISource `xml:"source"`
 	Teaming *DomainInterfaceTeaming       `xml:"teaming"`
