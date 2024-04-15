@@ -70,6 +70,12 @@ Feature: 4 Openshift stories
 	@darwin @linux @windows @testdata @story_marketplace @cleanup @needs_namespace
 	Scenario: Install new operator
 		Given executing "oc new-project testproj" succeeds
+		And executing "oc delete pods --all -n openshift-marketplace" succeeds
+		Then with up to "20" retries with wait period of "30s" command "oc get pods -n openshift-marketplace" output matches ".*certified-operators(.*)1/1(.*)Running.*"
+		Then with up to "4" retries with wait period of "30s" command "oc get pods -n openshift-marketplace" output matches ".*community-operators(.*)1/1(.*)Running.*"
+		Then with up to "4" retries with wait period of "30s" command "oc get pods -n openshift-marketplace" output matches ".*marketplace-operator(.*)1/1(.*)Running.*"
+		Then with up to "4" retries with wait period of "30s" command "oc get pods -n openshift-marketplace" output matches ".*redhat-marketplace(.*)1/1(.*)Running.*"
+		Then with up to "4" retries with wait period of "30s" command "oc get pods -n openshift-marketplace" output matches ".*redhat-operators(.*)1/1(.*)Running.*"
 		When executing "oc apply -f pipeline-sub.yaml" succeeds
 		Then with up to "10" retries with wait period of "30s" command "oc get csv" output matches ".*pipelines-operator(.*)Succeeded$"
 		Then with up to "20" retries with wait period of "30s" command "oc get pods -n openshift-pipelines" output matches ".*tekton-pipelines-webhook(.*)1/1(.*)Running.*"
