@@ -46,7 +46,6 @@ func approvePendingCSRs(ctx context.Context, ocConfig oc.Config, expectedSignerN
 func ApproveCSRAndWaitForCertsRenewal(ctx context.Context, sshRunner *ssh.Runner, ocConfig oc.Config, client, server bool) error {
 	const (
 		kubeletClientSignerName = "kubernetes.io/kube-apiserver-client-kubelet"
-		authClientSignerName    = "kubernetes.io/kube-apiserver-client"
 	)
 
 	// First, kubelet starts and tries to connect to API server. If its certificate is expired, it asks for a new one
@@ -59,14 +58,6 @@ func ApproveCSRAndWaitForCertsRenewal(ctx context.Context, sshRunner *ssh.Runner
 			return err
 		}
 
-		// This deleteCSR block only needed for 4.8 version and should be removed when we start shipping 4.9 or
-		// if the patch backported to 4.8 z stream.
-		// https://github.com/openshift/library-go/pull/1190 and https://github.com/openshift/cluster-authentication-operator/pull/475
-		// https://bugzilla.redhat.com/show_bug.cgi?id=1997906
-		if err := deleteCSR(ctx, ocConfig, authClientSignerName); err != nil {
-			logging.Debugf("Error deleting openshift-authenticator csr: %v", err)
-			return err
-		}
 		if err := crcerrors.Retry(ctx, 5*time.Minute, waitForCertRenewal(sshRunner, KubeletClientCert), time.Second*5); err != nil {
 			logging.Debugf("Error approving pending kube-apiserver-client-kubelet CSR: %v", err)
 			return err
