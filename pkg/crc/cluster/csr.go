@@ -9,7 +9,6 @@ import (
 	crcerrors "github.com/crc-org/crc/v2/pkg/crc/errors"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/oc"
-	"github.com/pkg/errors"
 	k8scerts "k8s.io/api/certificates/v1beta1"
 )
 
@@ -25,21 +24,6 @@ func WaitForOpenshiftResource(ctx context.Context, ocConfig oc.Config, resource 
 		return nil
 	}
 	return crcerrors.Retry(ctx, 80*time.Second, waitForAPIServer, time.Second)
-}
-
-func deleteCSR(ctx context.Context, ocConfig oc.Config, expectedSignerName string) error {
-	csrs, err := getCSRList(ctx, ocConfig, expectedSignerName)
-	if err != nil {
-		return err
-	}
-	for _, csr := range csrs.Items {
-		logging.Debugf("Deleting csr %s (signerName: %s)", csr.ObjectMeta.Name, expectedSignerName)
-		_, stderr, err := ocConfig.RunOcCommand("delete", "csr", csr.ObjectMeta.Name)
-		if err != nil {
-			return errors.Wrapf(err, stderr, "Not able to delete csr (%v : %s)")
-		}
-	}
-	return nil
 }
 
 func getCSRList(ctx context.Context, ocConfig oc.Config, expectedSignerName string) (*k8scerts.CertificateSigningRequestList, error) {
