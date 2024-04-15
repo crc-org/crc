@@ -45,7 +45,8 @@ func approvePendingCSRs(ctx context.Context, ocConfig oc.Config, expectedSignerN
 
 func ApproveCSRAndWaitForCertsRenewal(ctx context.Context, sshRunner *ssh.Runner, ocConfig oc.Config, client, server bool) error {
 	const (
-		kubeletClientSignerName = "kubernetes.io/kube-apiserver-client-kubelet"
+		kubeletClientSignerName  = "kubernetes.io/kube-apiserver-client-kubelet"
+		kubeletServingSignerName = "kubernetes.io/kubelet-serving"
 	)
 
 	// First, kubelet starts and tries to connect to API server. If its certificate is expired, it asks for a new one
@@ -55,6 +56,11 @@ func ApproveCSRAndWaitForCertsRenewal(ctx context.Context, sshRunner *ssh.Runner
 		logging.Info("Kubelet client certificate has expired, renewing it... [will take up to 8 minutes]")
 		if err := approvePendingCSRs(ctx, ocConfig, kubeletClientSignerName); err != nil {
 			logging.Debugf("Error approving pending kube-apiserver-client-kubelet CSRs: %v", err)
+			return err
+		}
+
+		if err := approvePendingCSRs(ctx, ocConfig, kubeletServingSignerName); err != nil {
+			logging.Debugf("Error approving pending kubelet-serving CSRs: %v", err)
 			return err
 		}
 
