@@ -18,7 +18,7 @@ func isPending(csr *k8scerts.CertificateSigningRequest) bool {
 }
 
 func approvePendingCSRs(ctx context.Context, ocConfig oc.Config, expectedSignerName string) error {
-	return crcerrors.Retry(ctx, 8*time.Minute, func() error {
+	return crcerrors.Retry(ctx, 10*time.Minute, func() error {
 		csrs, err := getCSRList(ctx, ocConfig, expectedSignerName)
 		if err != nil {
 			return &crcerrors.RetriableError{Err: err}
@@ -53,7 +53,7 @@ func ApproveCSRAndWaitForCertsRenewal(ctx context.Context, sshRunner *ssh.Runner
 	// Admin needs to approve it. The Kubernetes controller manager will then issue the cert, kubelet will fetch it and use it.
 	// Kubelet stores the cert in /var/lib/kubelet/pki/kubelet-client-current.pem
 	if client {
-		logging.Info("Kubelet client certificate has expired, renewing it... [will take up to 8 minutes]")
+		logging.Info("Kubelet client certificate has expired, renewing it... [will take up to 10 minutes]")
 		if err := approvePendingCSRs(ctx, ocConfig, kubeletClientSignerName); err != nil {
 			logging.Debugf("Error approving pending kube-apiserver-client-kubelet CSRs: %v", err)
 			return err
