@@ -44,11 +44,7 @@ jobs:
           path: "./out/macos-universal/crc-macos-installer.pkg"
       - name: Install crc pkg
         run: sudo installer -pkg out/macos-universal/crc-macos-installer.pkg -target /
-      - name: Set podman preset as part of config
-        run: crc config set preset podman
+      - name: Set microshift preset as part of config
+        run: crc config set preset microshift
       - name: Run crc setup command
         run: crc setup
-      - name: Wait 10 sec for the daemon to serve
-        run: sleep 10
-      - name: Run crc with podman preset
-        run: crc start
