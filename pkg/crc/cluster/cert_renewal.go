@@ -74,7 +74,7 @@ func ApproveCSRAndWaitForCertsRenewal(ctx context.Context, sshRunner *ssh.Runner
 	// After kubelet connected to the API server, if the serving cert is expireed, kubelet asks for a new CSR.
 	// This CSR is automatically approved by the cluster-machine-approver. The k8s controller manager issues the cert and kubelet fetches it.
 	if server {
-		logging.Info("Kubelet serving certificate has expired, waiting for automatic renewal... [will take up to 8 minutes]")
+		logging.Info("Kubelet serving certificate has expired, waiting for automatic renewal... [will take up to 5 minutes]")
 		return crcerrors.Retry(ctx, 5*time.Minute, waitForCertRenewal(sshRunner, KubeletServerCert), time.Second*5)
 	}
 	return nil
