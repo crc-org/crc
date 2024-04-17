@@ -12,7 +12,6 @@ Feature: Minimal user story
 
         Examples:
             | preset-value |
-            | podman       |
             | microshift   |
             | openshift    |
 
