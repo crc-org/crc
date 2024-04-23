@@ -1,4 +1,4 @@
-package plan9
+package fileserver
 
 import (
 	"fmt"
@@ -7,12 +7,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// StartVsockShares serving the given shares on Windows HVSocks for use by a Hyper-V VM.
+// Start serving the given shares on Windows HVSocks for use by a Hyper-V VM.
 // Mounts is formatted as a map of directory to be shared to vsock GUID.
-// The vsocks used must already be defined before StartVsockShares is called; it's
+// The vsocks used must already be defined before StartShares is called; it's
 // expected that the vsocks will be created and torn down by the program calling
 // gvproxy.
-func StartVsockShares(mounts map[string]string) (defErr error) {
+// TODO: The map here probably doesn't make sense.
+func StartHvsockShares(mounts map[string]string) (defErr error) {
 	plan9Mounts := []Mount{}
 	for path, guid := range mounts {
 		service, err := hvsock.GUIDFromString(guid)

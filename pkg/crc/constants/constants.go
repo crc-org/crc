@@ -51,6 +51,11 @@ const (
 	OpenShiftIngressHTTPSPort = 443
 
 	BackgroundLauncherExecutable = "crc-background-launcher.exe"
+
+	// from /etc/services:
+	// 9pfs            564/tcp                 # plan 9 file service
+	Plan9Port    = 564
+	Plan9PortStr = "564"
 )
 
 var adminHelperExecutableForOs = map[string]string{

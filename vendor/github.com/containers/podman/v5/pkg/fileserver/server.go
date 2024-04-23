@@ -1,16 +1,12 @@
-package plan9
+package fileserver
 
 import (
 	"fmt"
 	"net"
 
+	"github.com/containers/podman/v5/pkg/fileserver/plan9"
 	"github.com/sirupsen/logrus"
 )
-
-// from /etc/services:
-// 9pfs            564/tcp                 # plan 9 file service
-const Port = 564
-const PortStr = "564"
 
 type Mount struct {
 	Listener net.Listener
@@ -19,9 +15,9 @@ type Mount struct {
 
 func StartShares(plan9Mounts []Mount) (defErr error) {
 	for _, m := range plan9Mounts {
-		server, err := New9pServer(m.Listener, m.Path)
+		server, err := plan9.New9pServer(m.Listener, m.Path)
 		if err != nil {
-			return fmt.Errorf("serving directory %s on vsock %s: %w", m.Path, m.Listener.Addr().String(), err)
+			return fmt.Errorf("serving directory %s on %s: %w", m.Path, m.Listener.Addr().String(), err)
 		}
 		defer func() {
 			if defErr != nil {

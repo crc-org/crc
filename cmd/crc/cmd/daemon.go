@@ -15,6 +15,7 @@ import (
 
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	"github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork"
+	plan9 "github.com/containers/podman/v5/pkg/fileserver"
 	"github.com/crc-org/crc/v2/pkg/crc/adminhelper"
 	"github.com/crc-org/crc/v2/pkg/crc/api"
 	"github.com/crc-org/crc/v2/pkg/crc/api/events"
@@ -22,7 +23,6 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
-	plan9 "github.com/crc-org/crc/v2/pkg/crc/services/9p"
 	"github.com/docker/go-units"
 	"github.com/gorilla/handlers"
 	"github.com/pkg/errors"
@@ -204,7 +204,7 @@ func run(configuration *types.Configuration) error {
 
 	// not sure if this should go over tcp or vsock
 	// vsock on Windows needs more config (registry key, ..)
-	ln9p, err := vn.Listen("tcp", net.JoinHostPort(configuration.GatewayIP, plan9.PortStr))
+	ln9p, err := vn.Listen("tcp", net.JoinHostPort(configuration.GatewayIP, constants.Plan9PortStr))
 	if err != nil {
 		return err
 	}
