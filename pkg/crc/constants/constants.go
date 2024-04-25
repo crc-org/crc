@@ -164,7 +164,8 @@ func GetHomeDir() string {
 }
 
 // EnsureBaseDirectoriesExist creates ~/.crc, ~/.crc/bin and ~/.crc/cache directories if it is not present
-func EnsureBaseDirectoriesExist() error {
+func EnsureBaseDirectoriesExist(configDir string) error {
+	initialiseAllDirectories(configDir)
 	baseDirectories := []string{CrcBaseDir, MachineCacheDir, CrcBinDir}
 	for _, baseDir := range baseDirectories {
 		err := os.MkdirAll(baseDir, 0750)
@@ -173,6 +174,26 @@ func EnsureBaseDirectoriesExist() error {
 		}
 	}
 	return nil
+}
+
+func initialiseAllDirectories(crcDir string) {
+	if crcDir == "" {
+		return
+	}
+	CrcBaseDir = filepath.Join(crcDir, ".crc")
+	CrcBinDir = filepath.Join(CrcBaseDir, "bin")
+	CrcOcBinDir = filepath.Join(CrcBinDir, "oc")
+	CrcPodmanBinDir = filepath.Join(CrcBinDir, "podman")
+	CrcSymlinkPath = filepath.Join(CrcBinDir, "crc")
+	ConfigPath = filepath.Join(CrcBaseDir, ConfigFile)
+	LogFilePath = filepath.Join(CrcBaseDir, LogFile)
+	DaemonLogFilePath = filepath.Join(CrcBaseDir, DaemonLogFile)
+	MachineBaseDir = CrcBaseDir
+	MachineCacheDir = filepath.Join(MachineBaseDir, "cache")
+	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
+	DaemonSocketPath = filepath.Join(CrcBaseDir, "crc.sock")
+	KubeconfigFilePath = filepath.Join(MachineInstanceDir, DefaultName, "kubeconfig")
+	PasswdFilePath = filepath.Join(MachineInstanceDir, DefaultName, "passwd")
 }
 
 func GetPublicKeyPath() string {

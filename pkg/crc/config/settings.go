@@ -37,6 +37,7 @@ const (
 	EmergencyLogin           = "enable-emergency-login"
 	PersistentVolumeSize     = "persistent-volume-size"
 	EnableBundleQuayFallback = "enable-bundle-quay-fallback"
+	CrcDir                   = "crc-dir"
 )
 
 func RegisterSettings(cfg *Config) {
@@ -141,13 +142,18 @@ func RegisterSettings(cfg *Config) {
 
 	cfg.AddSetting(EnableBundleQuayFallback, false, ValidateBool, SuccessfullyApplied,
 		"If bundle download from the default location fails, fallback to quay.io (true/false, default: false)")
+	cfg.AddSetting(CrcDir, constants.GetHomeDir(), validateDirectory, RequiresCRCSetup,
+		"Location for .crc")
 
-	if err := cfg.RegisterNotifier(Preset, presetChanged); err != nil {
+	if err := cfg.RegisterNotifier(Preset, settingChanged); err != nil {
 		logging.Debugf("Failed to register notifier for Preset: %v", err)
+	}
+	if err := cfg.RegisterNotifier(CrcDir, settingChanged); err != nil {
+		logging.Debugf("Failed to register notifier for .crc directory: %v", err)
 	}
 }
 
-func presetChanged(cfg *Config, _ string, _ interface{}) {
+func settingChanged(cfg *Config, _ string, _ interface{}) {
 	UpdateDefaults(cfg)
 }
 
@@ -165,6 +171,10 @@ func defaultBundlePath(cfg Storage) string {
 
 func GetPreset(config Storage) preset.Preset {
 	return preset.ParsePreset(config.Get(Preset).AsString())
+}
+
+func GetConfigDir(config Storage) string {
+	return config.Get(CrcDir).AsString()
 }
 
 func defaultNetworkMode() network.Mode {
