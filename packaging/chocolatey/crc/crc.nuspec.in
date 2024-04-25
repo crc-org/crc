@@ -6,7 +6,7 @@
     <owners>anjannath</owners>
     <title>CRC - Runs Containers</title>
     <authors>https://github.com/crc-org</authors>
-    <projectUrl>https://crc.dev/blog/about</projectUrl>
+    <projectUrl>https://crc.dev/blog</projectUrl>
     <bugTrackerUrl>https://github.com/crc-org/crc/issues</bugTrackerUrl>
     <iconUrl>https://cdn.statically.io/gh/crc-org/blog/main/static/crc-upstream-logo.png</iconUrl>
     <licenseUrl>https://github.com/crc-org/crc/blob/main/LICENSE</licenseUrl>
