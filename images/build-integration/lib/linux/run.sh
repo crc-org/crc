@@ -32,14 +32,14 @@ done
 mkdir -p $targetFolder/results
 
 # Run tests
-PATH="$PATH:${HOME}/$targetFolder/bin"
-PULL_SECRET_PATH="${HOME}/$targetFolder/pull-secret"
+export PATH="$PATH:${HOME}/$targetFolder/bin"
+export PULL_SECRET_PATH="${HOME}/$targetFolder/pull-secret"
 if [ ! -z "$bundleLocation" ]
 then
-    BUNDLE_PATH="$bundleLocation"
+    export BUNDLE_PATH="$bundleLocation"
 fi
 cd $targetFolder/bin
-. integration.test > integration.results
+./integration.test > integration.results
 
 # Copy results
 cd ..
