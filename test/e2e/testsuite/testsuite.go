@@ -996,7 +996,7 @@ func PullLoginTagPushImageSucceeds(image string) error {
 		return err
 	}
 
-	_, err = cmd.RunPodmanExpectSuccess("push", "default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test", "--tls-verify=false")
+	_, err = cmd.RunPodmanExpectSuccess("push", "default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test", "--remove-signatures", "--tls-verify=false")
 	if err != nil {
 		return err
 	}
