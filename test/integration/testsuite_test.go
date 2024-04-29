@@ -63,6 +63,10 @@ var _ = BeforeSuite(func() {
 	err = util.RemoveCRCConfig()
 	Expect(err).NotTo(HaveOccurred())
 
+	// start shell instance
+	err = util.StartHostShellInstance("")
+	Expect(err).NotTo(HaveOccurred())
+
 	// set credPath
 	credPath = filepath.Join(userHome, ".crc", "machines", "crc", "id_rsa")
 
