@@ -56,9 +56,9 @@ jobs:
       run: |
         # Get origin commit sha for testing
         commit_sha=$(cat gh_context.json | jq -r '.event.after')
-        if [[ -z "${commit_sha}" ]]; then
+        if [[ -z "${commit_sha}" ]] || [[ "${commit_sha}" == null ]]; then
           # on first PR creation .event.after is empty, then .sha is used as commit instead
-          commit_sha=$(cat gh_context.json | jq -r '.sha')
+          commit_sha=$(cat gh_context.json | jq -r '.event.pull_request.head.sha')
         fi
         echo "commit_sha=${commit_sha}" >> "$GITHUB_ENV"
         
