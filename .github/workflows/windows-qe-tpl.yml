@@ -5,7 +5,8 @@ name: windows-qe-tpl
 on:  
   workflow_call:  
     inputs:  
-      trigger-workflow-id:  
+      trigger-workflow-run-id:  
+        description: run-id of the workflow which originate the execution and where the artifacts have been built
         required: true  
         type: string
       qe-type:  
@@ -31,24 +32,27 @@ jobs:
     steps:
     - name: Download gh context
       id: download-gh-context-artifact
-      uses: dawidd6/action-download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
-        workflow: ${{inputs.trigger-workflow-id}}
         name: gh-context
+        run-id: ${{inputs.trigger-workflow-run-id}}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Download windows installer
       id: download-windows-installer-artifact
-      uses: dawidd6/action-download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
-        workflow: ${{inputs.trigger-workflow-id}}
         name: windows-installer
-
+        run-id: ${{inputs.trigger-workflow-run-id}}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+      
     - name: Download qe oci image
       id: download-qe-oci-image-artifact
-      uses: dawidd6/action-download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
-        workflow: ${{inputs.trigger-workflow-id}}
         name: crc-${{inputs.qe-type}}-windows-amd64
+        run-id: ${{inputs.trigger-workflow-run-id}}
+        github-token: ${{ secrets.GITHUB_TOKEN }}git 
 
     - name: Correlate
       env:

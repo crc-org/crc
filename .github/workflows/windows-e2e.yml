@@ -22,7 +22,7 @@ jobs:
         - qe-type: 'integration'
           preset: 'microshift'
     with:
-      trigger-workflow-id: ${{ github.event.workflow_run.workflow_id }}
+      trigger-workflow-run-id: ${{ github.event.workflow_run.workflow_id }}
       qe-type: ${{matrix.qe-type}}
       preset: ${{matrix.preset}}
     secrets: inherit
