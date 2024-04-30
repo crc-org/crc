@@ -1,6 +1,6 @@
 all: install
 
-SHELL := /bin/bash
+SHELL := /bin/bash -o pipefail
 
 OPENSHIFT_VERSION ?= 4.15.10
 PODMAN_VERSION ?= 4.4.4
