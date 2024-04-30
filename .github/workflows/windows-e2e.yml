@@ -8,7 +8,7 @@ on:
   
 jobs:
   windows-e2e-ocp:
-    uses: crc-org/crc/.github/workflows/windows-qe-tpl.yml@main
+    uses: adrianriobo/crc/.github/workflows/windows-qe-tpl.yml@main
     strategy:
       fail-fast: false
       matrix:
