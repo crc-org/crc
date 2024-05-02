@@ -3,7 +3,6 @@ package tls
 import (
 	"crypto"
 	"crypto/ecdsa"
-	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
@@ -133,7 +132,7 @@ func SignedCertificate(
 	return x509.ParseCertificate(certBytes)
 }
 
-// generateSubjectKeyID generates a SHA-1 hash of the subject public key.
+// generateSubjectKeyID generates a SHA-256 hash of the subject public key.
 func generateSubjectKeyID(pub crypto.PublicKey) ([]byte, error) {
 	var publicKeyBytes []byte
 	var err error
@@ -145,7 +144,11 @@ func generateSubjectKeyID(pub crypto.PublicKey) ([]byte, error) {
 			return nil, errors.Wrap(err, "failed to Marshal ans1 public key")
 		}
 	case *ecdsa.PublicKey:
-		publicKeyBytes = elliptic.Marshal(pub.Curve, pub.X, pub.Y)
+		ecdhPubKey, err := pub.ECDH()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get ECDH public key")
+		}
+		publicKeyBytes = ecdhPubKey.Bytes()
 	default:
 		return nil, errors.New("only RSA and ECDSA public keys supported")
 	}
