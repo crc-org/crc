@@ -5,7 +5,7 @@ name: windows-qe-tpl
 on:  
   workflow_call:  
     inputs:  
-      trigger-workflow-id:  
+      trigger-workflow-run-id:  
         required: true  
         type: string
       qe-type:  
@@ -33,21 +33,21 @@ jobs:
       id: download-gh-context-artifact
       uses: dawidd6/action-download-artifact@v3
       with:
-        workflow: ${{inputs.trigger-workflow-id}}
+        workflow: ${{inputs.trigger-workflow-run-id}}
         name: gh-context
 
     - name: Download windows installer
       id: download-windows-installer-artifact
       uses: dawidd6/action-download-artifact@v3
       with:
-        workflow: ${{inputs.trigger-workflow-id}}
+        workflow: ${{inputs.trigger-workflow-run-id}}
         name: windows-installer
 
     - name: Download qe oci image
       id: download-qe-oci-image-artifact
       uses: dawidd6/action-download-artifact@v3
       with:
-        workflow: ${{inputs.trigger-workflow-id}}
+        workflow: ${{inputs.trigger-workflow-run-id}}
         name: crc-${{inputs.qe-type}}-windows-amd64
 
     - name: Correlate
