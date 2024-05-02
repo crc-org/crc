@@ -26,3 +26,6 @@ jobs:
           go-version: ${{ matrix.go }}
       - name: Build
         run: make check
+      - if: runner.os == 'Linux'
+        name: Go version check
+        run: make goversioncheck
