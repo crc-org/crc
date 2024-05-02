@@ -14,5 +14,7 @@ go mod edit -go ${golang_base_version} tools/go.mod
 sed -i "s,^\(FROM registry.ci.openshift.org/openshift/release:rhel-8-release-golang-\)1.[0-9]\+,\1${golang_base_version}," images/*/Dockerfile
 sed -i "s,^FROM registry.access.redhat.com/ubi8/go-toolset:[.0-9]\+,FROM registry.access.redhat.com/ubi8/go-toolset:${golang_base_version}," images/*/Dockerfile
 for f in .github/workflows/*.yml; do
-    yq eval --inplace ".jobs.build.strategy.matrix.go[0] = ${golang_base_version}" "$f";
+    if [ $(yq  eval '.jobs.build.strategy.matrix | has("go")' "$f") == "true" ]; then
+      yq eval --inplace ".jobs.build.strategy.matrix.go[0] = ${golang_base_version}" "$f";
+    fi
 done
