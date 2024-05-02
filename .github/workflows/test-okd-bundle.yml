@@ -1,7 +1,7 @@
 name: Test OKD bundle
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request: {}
 jobs:
   build:
@@ -28,7 +28,6 @@ jobs:
         run: |
           make cross
           sudo cp out/linux-amd64/crc /usr/local/bin/crc
-
       - name: Install required virtualization software
         run: |
           sudo apt-get update
@@ -46,7 +45,6 @@ jobs:
 
           sudo swapoff -a
           sudo rm -f /mnt/swapfile
-
       - name: Set the crc config
         run: |
           crc config set preset okd
