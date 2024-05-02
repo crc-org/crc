@@ -327,7 +327,7 @@ endif
 
 .PHONY: update-go-version
 update-go-version:
-	./update-go-version.sh 1.17
+	./update-go-version.sh 1.20
 
 .PHONY: goversioncheck
 goversioncheck:
