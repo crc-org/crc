@@ -31,24 +31,27 @@ jobs:
     steps:
     - name: Download gh context
       id: download-gh-context-artifact
-      uses: dawidd6/action-download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
-        workflow: ${{inputs.trigger-workflow-run-id}}
         name: gh-context
-
+        run-id: ${{inputs.trigger-workflow-run-id}}
+        github-token: ${{ github.token }}
+    
     - name: Download windows installer
       id: download-windows-installer-artifact
-      uses: dawidd6/action-download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
-        workflow: ${{inputs.trigger-workflow-run-id}}
         name: windows-installer
+        run-id: ${{inputs.trigger-workflow-run-id}}
+        github-token: ${{ github.token }}
 
     - name: Download qe oci image
       id: download-qe-oci-image-artifact
-      uses: dawidd6/action-download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
-        workflow: ${{inputs.trigger-workflow-run-id}}
         name: crc-${{inputs.qe-type}}-windows-amd64
+        run-id: ${{inputs.trigger-workflow-run-id}}
+        github-token: ${{ github.token }}
 
     - name: Correlate
       env:
