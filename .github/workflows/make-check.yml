@@ -16,7 +16,7 @@ jobs:
           - ubuntu-latest
           - ubuntu-20.04
         go:
-          - '1.20'
+          - '1.21'
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4

@@ -20,7 +20,7 @@ jobs:
           - macOS-13
           - macOS-12
         go:
-          - '1.20'
+          - '1.21'
     steps:
       # Enable tmate debugging of manually-triggered workflows if the input option was provided
       - name: Setup tmate session
