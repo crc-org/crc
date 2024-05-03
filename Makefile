@@ -29,6 +29,7 @@ DOCS_BUILD_TARGET ?= /docs/source/getting_started/master.adoc
 
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
+GOVERSION = 1.20
 
 HOST_BUILD_DIR=$(BUILD_DIR)/$(GOOS)-$(GOARCH)
 GOPATH ?= $(shell go env GOPATH)
@@ -327,7 +328,7 @@ endif
 
 .PHONY: update-go-version
 update-go-version:
-	./update-go-version.sh 1.20
+	./update-go-version.sh $(GOVERSION)
 
 .PHONY: goversioncheck
 goversioncheck:
