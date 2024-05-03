@@ -13,6 +13,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/systemd"
 	"github.com/crc-org/crc/v2/pkg/crc/systemd/states"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
+	crcstring "github.com/crc-org/crc/v2/pkg/strings"
 )
 
 var nmPreflightChecks = []Check{
@@ -275,6 +276,20 @@ func checkNetworkManagerIsRunning() error {
 }
 
 func checkSystemdResolvedIsRunning() error {
+	resolvFilePath := "/etc/resolv.conf"
+	// Check /ETC/RESOLV.CONF section in `man systemd-resolved`
+	systemdResolvedManageResolvFilePath := []string{"/run/systemd/resolve/stub-resolv.conf",
+		"/usr/lib/systemd/resolv.conf",
+		"/run/systemd/resolve/resolv.conf"}
+	// Check if /etc/resolv.conf is managed by systemd-resolved
+	rFilePath, err := filepath.EvalSymlinks(resolvFilePath)
+	logging.Debugf("resolv.conf file path: %s", rFilePath)
+	if err != nil {
+		return err
+	}
+	if !crcstring.Contains(systemdResolvedManageResolvFilePath, rFilePath) {
+		return fmt.Errorf("%s is not managed by systemd-resolved", resolvFilePath)
+	}
 	return checkSystemdServiceRunning("systemd-resolved.service")
 }
 
