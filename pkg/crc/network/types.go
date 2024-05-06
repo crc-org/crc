@@ -20,6 +20,22 @@ type ResolvFileValues struct {
 	NameServers   []NameServer
 }
 
+func (vals *ResolvFileValues) GetNameServer() []string {
+	var nameservers []string
+	for _, ns := range vals.NameServers {
+		nameservers = append(nameservers, ns.IPAddress)
+	}
+	return nameservers
+}
+
+func (vals *ResolvFileValues) GetSearchDomains() []string {
+	var searchDomains []string
+	for _, sd := range vals.SearchDomains {
+		searchDomains = append(searchDomains, sd.Domain)
+	}
+	return searchDomains
+}
+
 type Mode string
 
 func (m Mode) String() string {
