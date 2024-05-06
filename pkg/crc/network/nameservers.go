@@ -33,7 +33,7 @@ func GetResolvValuesFromInstance(sshRunner *ssh.Runner) (*ResolvFileValues, erro
 	return parseResolveConfFile(out)
 }
 
-func CreateResolvFileOnInstance(sshRunner *ssh.Runner, resolvFileValues ResolvFileValues) error {
+func UpdateResolvFileOnInstance(sshRunner *ssh.Runner, resolvFileValues ResolvFileValues) error {
 	sd := systemd.NewInstanceSystemdCommander(sshRunner)
 	// Check if ovs-configuration.service exist and if not then it is old bundle and use the same way to
 	// update resolve.conf file
