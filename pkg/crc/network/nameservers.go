@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/crc-org/crc/v2/pkg/crc/ssh"
+	"github.com/crc-org/crc/v2/pkg/crc/systemd"
+	"github.com/crc-org/crc/v2/pkg/crc/systemd/states"
 )
 
 // HasGivenNameserversConfigured returns true if the instance uses a provided nameserver.
@@ -32,13 +34,45 @@ func GetResolvValuesFromInstance(sshRunner *ssh.Runner) (*ResolvFileValues, erro
 }
 
 func CreateResolvFileOnInstance(sshRunner *ssh.Runner, resolvFileValues ResolvFileValues) error {
-	resolvFile, _ := CreateResolvFile(resolvFileValues)
+	sd := systemd.NewInstanceSystemdCommander(sshRunner)
+	// Check if ovs-configuration.service exist and if not then it is old bundle and use the same way to
+	// update resolve.conf file
+	if state, err := sd.Status("ovs-configuration.service"); err != nil || state == states.NotFound {
+		if err := replaceResolvConfFile(sshRunner, resolvFileValues); err != nil {
+			return fmt.Errorf("error updating resolv.conf file: %s", err)
+		}
+		return nil
+	}
 
-	err := sshRunner.CopyDataPrivileged([]byte(resolvFile), "/etc/resolv.conf", 0644)
+	if err := sd.Start("ovs-configuration.service"); err != nil {
+		return err
+	}
+
+	return updateNetworkManagerConfig(sd, sshRunner, resolvFileValues)
+}
+
+func replaceResolvConfFile(sshRunner *ssh.Runner, resolvFileValues ResolvFileValues) error {
+	resolvFile, err := CreateResolvFile(resolvFileValues)
+	if err != nil {
+		return fmt.Errorf("error to create resolv conf file: %v", err)
+	}
+	err = sshRunner.CopyDataPrivileged([]byte(resolvFile), "/etc/resolv.conf", 0644)
 	if err != nil {
 		return fmt.Errorf("Error creating /etc/resolv on instance: %s", err.Error())
 	}
 	return nil
+}
+
+func updateNetworkManagerConfig(sd *systemd.Commander, sshRunner *ssh.Runner, resolvFileValues ResolvFileValues) error {
+	nameservers := strings.Join(resolvFileValues.GetNameServer(), ",")
+	searchDomains := strings.Join(resolvFileValues.GetSearchDomains(), ",")
+	// When ovs-configuration service is running, name of the connection should be ovs-if-br-ex
+	_, stderr, err := sshRunner.RunPrivileged("Update resolv.conf file", "nmcli", "con", "modify", "ovs-if-br-ex",
+		"ipv4.dns", nameservers, "ipv4.dns-search", searchDomains)
+	if err != nil {
+		return fmt.Errorf("failed to update resolv.conf file %s: %v", stderr, err)
+	}
+	return sd.Restart("NetworkManager.service")
 }
 
 // AddNameserversToInstance will add additional nameservers to the end of the
