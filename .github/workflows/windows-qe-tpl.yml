@@ -110,11 +110,11 @@ jobs:
           quay.io/rhqp/qenvs:v0.6.3 azure \
             windows create \
             --project-name 'windows-desktop-${{ matrix.windows-version }}-${{ matrix.windows-featurepack }}-${{inputs.qe-type}}-${{inputs.preset}}' \
-            --backed-url azblob://crc-qenvs-state/${{ env.commit_sha }} \
+            --backed-url azblob://crc-qenvs-state/${{ github.repository }}-${{ github.run_id }} \
             --conn-details-output '/workspace' \
             --windows-version '${{matrix.windows-version}}' \
             --windows-featurepack '${{matrix.windows-featurepack}}' \
-            --tags project=openshift-local,source=github,org=${{github.repository_owner}} \
+            --tags project=openshift-local,source=github,org=${{github.repository_owner}},run=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }} \
             --spot
         podman logs -f windows-create
 
@@ -221,5 +221,5 @@ jobs:
           quay.io/rhqp/qenvs:v0.6.3 azure \
             windows destroy \
             --project-name 'windows-desktop-${{ matrix.windows-version }}-${{ matrix.windows-featurepack }}-${{inputs.qe-type}}-${{inputs.preset}}' \
-            --backed-url azblob://crc-qenvs-state/${{ env.commit_sha }} 
+            --backed-url azblob://crc-qenvs-state/${{ github.repository }}-${{ github.run_id }} 
         podman logs -f windows-destroy
