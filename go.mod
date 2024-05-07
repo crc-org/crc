@@ -17,7 +17,7 @@ require (
 	github.com/crc-org/admin-helper v0.5.2
 	github.com/crc-org/machine v0.0.0-20221028075518-f9b43442196b
 	github.com/crc-org/vfkit v0.5.1
-	github.com/cucumber/godog v0.14.0
+	github.com/cucumber/godog v0.14.1
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/go-units v0.5.0
 	github.com/elazarl/goproxy v0.0.0-20231117061959-7cc037d33fb5
