@@ -43,13 +43,14 @@ type DomainControllerPCIModel struct {
 }
 
 type DomainControllerPCITarget struct {
-	ChassisNr *uint
-	Chassis   *uint
-	Port      *uint
-	BusNr     *uint
-	Index     *uint
-	NUMANode  *uint
-	Hotplug   string
+	ChassisNr  *uint
+	Chassis    *uint
+	Port       *uint
+	BusNr      *uint
+	Index      *uint
+	NUMANode   *uint
+	Hotplug    string
+	MemReserve *uint64
 }
 
 type DomainControllerPCI struct {
@@ -3147,6 +3148,7 @@ func (a *DomainControllerPCITarget) MarshalXML(e *xml.Encoder, start xml.StartEl
 	marshalUintAttr(&start, "port", a.Port, "%d")
 	marshalUintAttr(&start, "busNr", a.BusNr, "%d")
 	marshalUintAttr(&start, "index", a.Index, "%d")
+	marshalUint64Attr(&start, "memReserve", a.MemReserve, "%d")
 	if a.Hotplug != "" {
 		start.Attr = append(start.Attr, xml.Attr{
 			xml.Name{Local: "hotplug"}, a.Hotplug,
@@ -3185,6 +3187,10 @@ func (a *DomainControllerPCITarget) UnmarshalXML(d *xml.Decoder, start xml.Start
 			}
 		} else if attr.Name.Local == "index" {
 			if err := unmarshalUintAttr(attr.Value, &a.Index, 10); err != nil {
+				return err
+			}
+		} else if attr.Name.Local == "memReserve" {
+			if err := unmarshalUint64Attr(attr.Value, &a.MemReserve, 10); err != nil {
 				return err
 			}
 		} else if attr.Name.Local == "hotplug" {
