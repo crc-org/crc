@@ -30,9 +30,8 @@ Name:           %{goname}
 Release:        1%{?dist}
 Summary:        CRC's main executable
 License:        APL 2.0
-ExcludeArch:    armv7hl i686
+ExcludeArch:    armv7hl i686 ppc64le s390x
 URL:            %{gourl}
-ExcludeArch:    s390x
 Source0:        %{gosource}
 
 #generate_buildrequires
@@ -81,14 +80,7 @@ install -m 0755 -vp %{gobuilddir}/src/%{goipath}/out/macos-universal/crc %{build
 %check
 # with fedora macros: gocheck
 export GOFLAGS="-mod=vendor"
-# crc uses `go test -race`, which triggers gvisor issues on ppc64le:
-# vendor/gvisor.dev/gvisor/pkg/sync/race_unsafe.go:47:6: missing function body
-# and a ppc64le implementation is indeed missing on ppc64le:
-# https://github.com/google/gvisor/blob/master/pkg/sync/race_unsafe.go
-# https://github.com/google/gvisor/tree/master/pkg/sync
-%ifnarch ppc64le
 make test
-%endif
 
 %files
 %license %{golicenses}
