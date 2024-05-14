@@ -19,6 +19,12 @@ CRC's main executable}
 %global golicenses    LICENSE
 %global godocs        *.md
 
+%ifarch x86_64
+%global gohostarch  amd64
+%endif
+%ifarch aarch64
+%global gohostarch  arm64
+%endif
 
 Name:           %{goname}
 Release:        1%{?dist}
@@ -65,7 +71,7 @@ make COMMIT_SHA=__COMMIT_SHA__ GO_EXTRA_LDFLAGS="-B 0x$(head -c20 /dev/urandom|o
 %install
 # with fedora macros: gopkginstall
 install -m 0755 -vd                     %{buildroot}%{_bindir}
-install -m 0755 -vp %{gobuilddir}/src/%{goipath}/out/linux-amd64/crc %{buildroot}%{_bindir}/
+install -m 0755 -vp %{gobuilddir}/src/%{goipath}/out/linux-%{gohostarch}/crc %{buildroot}%{_bindir}/
 
 install -d %{buildroot}%{_datadir}/%{name}-redistributable/{linux,macos,windows}
 install -m 0755 -vp %{gobuilddir}/src/%{goipath}/release/* %{buildroot}%{_datadir}/%{name}-redistributable/linux/
