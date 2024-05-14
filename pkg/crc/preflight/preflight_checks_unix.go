@@ -139,9 +139,18 @@ func fixAdminHelperExecutableCached() error {
 
 func checkSupportedCPUArch() error {
 	logging.Debugf("GOARCH is %s GOOS is %s", runtime.GOARCH, runtime.GOOS)
-	// Only supported arches are amd64, and arm64 on macOS
-	if runtime.GOARCH == "amd64" || (runtime.GOARCH == "arm64" && runtime.GOOS == "darwin") {
+	// Only supported arches are amd64, and arm64 on macOS & Linux
+	switch runtime.GOARCH {
+	case "amd64":
 		return nil
+	case "arm64":
+		if runtime.GOOS == "darwin" {
+			return nil
+		}
+		if runtime.GOOS == "linux" {
+			logging.Warnf("CRC is not officially supported on ARM64 CPUs for Linux.")
+			return nil
+		}
 	}
 	return fmt.Errorf("CRC can only run on AMD64/Intel64 CPUs and Apple silicon")
 }
