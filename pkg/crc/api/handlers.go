@@ -66,7 +66,6 @@ func (h *Handler) Status(c *context) error {
 		CrcStatus:        string(res.CrcStatus),
 		OpenshiftStatus:  string(res.OpenshiftStatus),
 		OpenshiftVersion: res.OpenshiftVersion,
-		PodmanVersion:    res.PodmanVersion,
 		DiskUse:          res.DiskUse,
 		DiskSize:         res.DiskSize,
 		RAMSize:          res.RAMSize,
