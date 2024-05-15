@@ -7,7 +7,6 @@
 toc::[]
 
 image:https://github.com/crc-org/crc/actions/workflows/make-check.yml/badge.svg?branch=main["main", link="https://github.com/crc-org/crc/actions/workflows/make-check.yml"]
-image:https://github.com/crc-org/crc/actions/workflows/windows-installer.yml/badge.svg["win msi", link="https://github.com/crc-org/crc/actions/workflows/windows-installer.yml"]
 image:https://github.com/crc-org/crc/actions/workflows/macos-installer.yml/badge.svg["macos pkg", link="https://github.com/crc-org/crc/actions/workflows/macos-installer.yml"]
 image:https://github.com/crc-org/crc/actions/workflows/make-rpm.yml/badge.svg["rpm", link="https://github.com/crc-org/crc/actions/workflows/make-rpm.yml"]
 image:https://github.com/crc-org/crc/actions/workflows/make-check-win.yml/badge.svg["win", link="https://github.com/crc-org/crc/actions/workflows/make-check-win.yml"]
