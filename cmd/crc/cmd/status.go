@@ -44,7 +44,6 @@ type status struct {
 	CrcStatus        string                       `json:"crcStatus,omitempty"`
 	OpenShiftStatus  types.OpenshiftStatus        `json:"openshiftStatus,omitempty"`
 	OpenShiftVersion string                       `json:"openshiftVersion,omitempty"`
-	PodmanVersion    string                       `json:"podmanVersion,omitempty"`
 	DiskUsage        int64                        `json:"diskUsage,omitempty"`
 	DiskSize         int64                        `json:"diskSize,omitempty"`
 	CacheUsage       int64                        `json:"cacheUsage,omitempty"`
@@ -168,7 +167,6 @@ func getStatus(client *daemonclient.Client, cacheDir string) *status {
 		CrcStatus:        clusterStatus.CrcStatus,
 		OpenShiftStatus:  types.OpenshiftStatus(clusterStatus.OpenshiftStatus),
 		OpenShiftVersion: clusterStatus.OpenshiftVersion,
-		PodmanVersion:    clusterStatus.PodmanVersion,
 		DiskUsage:        clusterStatus.DiskUse,
 		DiskSize:         clusterStatus.DiskSize,
 		RAMSize:          clusterStatus.RAMSize,

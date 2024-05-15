@@ -115,7 +115,6 @@ func TestJsonStatus(t *testing.T) {
   "crcStatus": "Running",
   "openshiftStatus": "Running",
   "openshiftVersion": "4.5.1",
-  "podmanVersion": "3.3.1",
   "diskUsage": 10000000000,
   "diskSize": 20000000000,
   "cacheUsage": 10000,
