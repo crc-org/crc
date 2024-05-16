@@ -9,7 +9,6 @@ import (
 type Preset string
 
 const (
-	Podman     Preset = "podman"
 	OpenShift  Preset = "openshift"
 	OKD        Preset = "okd"
 	Microshift Preset = "microshift"
@@ -20,11 +19,6 @@ var presetMap = map[Preset]string{
 	OKD:        string(OKD),
 	Microshift: string(Microshift),
 }
-
-const (
-	PodmanDeprecatedWarning = "The Podman preset is deprecated and will be removed in a future release. Consider" +
-		" rather using a Podman Machine managed by Podman Desktop: https://podman-desktop.io"
-)
 
 func AllPresets() []Preset {
 	var keys []Preset
@@ -44,8 +38,6 @@ func (preset Preset) String() string {
 
 func (preset Preset) ForDisplay() string {
 	switch preset {
-	case Podman:
-		return "Podman"
 	case OpenShift:
 		return "OpenShift"
 	case OKD:
@@ -57,9 +49,6 @@ func (preset Preset) ForDisplay() string {
 }
 
 func ParsePresetE(input string) (Preset, error) {
-	if string(Podman) == input {
-		return Podman, fmt.Errorf(PodmanDeprecatedWarning)
-	}
 	for pSet, pString := range presetMap {
 		if pString == input {
 			return pSet, nil
@@ -70,7 +59,7 @@ func ParsePresetE(input string) (Preset, error) {
 }
 func ParsePreset(input string) Preset {
 	preset, err := ParsePresetE(input)
-	if err != nil && preset != Podman {
+	if err != nil {
 		logging.Errorf("unexpected preset mode %s, using default", input)
 		return OpenShift
 	}

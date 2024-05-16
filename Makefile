@@ -3,7 +3,6 @@ all: install
 SHELL := /bin/bash -o pipefail
 
 OPENSHIFT_VERSION ?= 4.15.12
-PODMAN_VERSION ?= 4.4.4
 OKD_VERSION ?= 4.15.0-0.okd-2024-02-23-163410
 MICROSHIFT_VERSION ?= 4.15.12
 BUNDLE_EXTENSION = crcbundle
@@ -66,7 +65,6 @@ __check_defined = \
 VERSION_VARIABLES := -X $(MODULEPATH)/pkg/crc/version.crcVersion=$(CRC_VERSION) \
 	-X $(MODULEPATH)/pkg/crc/version.ocpVersion=$(OPENSHIFT_VERSION) \
 	-X $(MODULEPATH)/pkg/crc/version.okdVersion=$(OKD_VERSION) \
-	-X $(MODULEPATH)/pkg/crc/version.podmanVersion=$(PODMAN_VERSION) \
 	-X $(MODULEPATH)/pkg/crc/version.microshiftVersion=$(MICROSHIFT_VERSION) \
 	-X $(MODULEPATH)/pkg/crc/version.commitSha=$(COMMIT_SHA)
 RELEASE_VERSION_VARIABLES := -X $(MODULEPATH)/pkg/crc/segment.WriteKey=cvpHsNcmGCJqVzf6YxrSnVlwFSAZaYtp
@@ -293,7 +291,6 @@ gen_release_info:
 	@cat release-info.json.sample | sed s/@CRC_VERSION@/$(CRC_VERSION)/ > $(RELEASE_INFO)
 	@sed -i s/@GIT_COMMIT_SHA@/$(COMMIT_SHA)/ $(RELEASE_INFO)
 	@sed -i s/@OPENSHIFT_VERSION@/$(OPENSHIFT_VERSION)/ $(RELEASE_INFO)
-	@sed -i s/@PODMAN_VERSION@/$(PODMAN_VERSION)/ $(RELEASE_INFO)
 
 .PHONY: linux-release-binary macos-release-binary windows-release-binary
 linux-release-binary: LDFLAGS+= $(RELEASE_VERSION_VARIABLES)

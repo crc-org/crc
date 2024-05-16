@@ -257,12 +257,6 @@ Use the 'oc' command line interface:
   {{ .CommandLinePrefix }} {{ .EvalCommandLine }}
   {{ .CommandLinePrefix }} oc login -u {{ .ClusterConfig.DeveloperCredentials.Username }} {{ .ClusterConfig.URL }}
 `
-	startTemplateForPodman = `podman runtime is now running.
-
-Use the 'podman' command line interface:
-  {{ .CommandLinePrefix }} {{ .EvalCommandLine }}
-  {{ .CommandLinePrefix }} {{ .PodmanRemote }} COMMAND
-`
 	startTemplateForOKD = `NOTE:
 This cluster was built from OKD - The Community Distribution of Kubernetes that powers Red Hat OpenShift.
 If you find an issue, please report it at https://github.com/openshift/okd
@@ -279,7 +273,6 @@ type templateVariables struct {
 	ClusterConfig       *clusterConfig
 	EvalCommandLine     string
 	CommandLinePrefix   string
-	PodmanRemote        string
 	FallbackPortWarning string
 	KubeConfigPath      string
 }
@@ -288,11 +281,7 @@ func writeTemplatedMessage(writer io.Writer, s *startResult) error {
 	if s.ClusterConfig.ClusterType == preset.OpenShift || s.ClusterConfig.ClusterType == preset.OKD {
 		return writeOpenShiftTemplatedMessage(writer, s)
 	}
-	if s.ClusterConfig.ClusterType == preset.Microshift {
-		return writeMicroShiftTemplatedMessage(writer)
-	}
-
-	return writePodmanTemplatedMessage(writer)
+	return writeMicroShiftTemplatedMessage(writer)
 }
 
 func writeOpenShiftTemplatedMessage(writer io.Writer, s *startResult) error {
@@ -317,23 +306,6 @@ func writeOpenShiftTemplatedMessage(writer io.Writer, s *startResult) error {
 		ClusterConfig:     s.ClusterConfig,
 		EvalCommandLine:   shell.GenerateUsageHint(userShell, "crc oc-env"),
 		CommandLinePrefix: commandLinePrefix(userShell),
-	})
-}
-
-func writePodmanTemplatedMessage(writer io.Writer) error {
-	parsed, err := template.New("template").Parse(startTemplateForPodman)
-	if err != nil {
-		return err
-	}
-	userShell, err := shell.GetShell("")
-	if err != nil {
-		userShell = ""
-	}
-
-	return parsed.Execute(writer, &templateVariables{
-		EvalCommandLine:   shell.GenerateUsageHint(userShell, "crc podman-env"),
-		CommandLinePrefix: commandLinePrefix(userShell),
-		PodmanRemote:      constants.PodmanRemoteExecutableName,
 	})
 }
 
