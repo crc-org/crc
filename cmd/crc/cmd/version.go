@@ -37,7 +37,6 @@ type version struct {
 	Version          string `json:"version"`
 	Commit           string `json:"commit"`
 	OpenshiftVersion string `json:"openshiftVersion"`
-	PodmanVersion    string `json:"podmanVersion"`
 }
 
 func defaultVersion() *version {
@@ -45,7 +44,6 @@ func defaultVersion() *version {
 		Version:          crcversion.GetCRCVersion(),
 		Commit:           crcversion.GetCommitSha(),
 		OpenshiftVersion: crcversion.GetBundleVersion(crcPreset.OpenShift),
-		PodmanVersion:    crcversion.GetBundleVersion(crcPreset.Podman),
 	}
 }
 
@@ -62,6 +60,5 @@ func (v *version) lines() []string {
 	return []string{
 		fmt.Sprintf("CRC version: %s+%s\n", v.Version, v.Commit),
 		fmt.Sprintf("OpenShift version: %s\n", v.OpenshiftVersion),
-		fmt.Sprintf("Podman version: %s\n", v.PodmanVersion),
 	}
 }
