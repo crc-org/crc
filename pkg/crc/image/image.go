@@ -31,7 +31,7 @@ func ValidateURI(uri *url.URL) error {
 	/* For now we are very restrictive on the docker:// URLs we accept, it
 	 * has to contain the bundle version as the tag, and it has to use the
 	 * same image names as the official registry (openshift-bundle,
-	 * okd-bundle, podman-bundle). In future releases, we'll make this more
+	 * okd-bundle). In future releases, we'll make this more
 	 * flexible
 	 */
 	imageAndTag := strings.Split(path.Base(uri.Path), ":")
@@ -105,7 +105,7 @@ func getPresetNameE(imageName string) (crcpreset.Preset, error) {
 	case "microshift-bundle":
 		return crcpreset.Microshift, nil
 	default:
-		return crcpreset.OpenShift, fmt.Errorf("invalid image name '%s' (Should be openshift-bundle, okd-bundle, podman-bundle or microshift-bundle)", imageName)
+		return crcpreset.OpenShift, fmt.Errorf("invalid image name '%s' (Should be openshift-bundle, okd-bundle or microshift-bundle)", imageName)
 	}
 }
 func GetPresetName(imageName string) crcpreset.Preset {

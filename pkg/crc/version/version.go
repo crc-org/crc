@@ -20,9 +20,6 @@ var (
 	// OCP version which is used for the release.
 	ocpVersion = "0.0.0-unset"
 
-	// Podman version for podman specific bundles
-	podmanVersion = "0.0.0-unset"
-
 	okdVersion = "0.0.0-unset"
 
 	microshiftVersion = "0.0.0-unset"
@@ -52,8 +49,6 @@ func GetCommitSha() string {
 // the version of the podman binary present inside the bundle.
 func GetBundleVersion(preset crcPreset.Preset) string {
 	switch preset {
-	case crcPreset.Podman:
-		return podmanVersion
 	case crcPreset.OKD:
 		return okdVersion
 	case crcPreset.Microshift:

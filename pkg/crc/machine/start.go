@@ -340,10 +340,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 	defer vm.Close()
 
-	// Return with an error redirecting user to use podman machine instead
-	if vm.bundle.IsPodman() {
-		return &types.StartResult{}, fmt.Errorf("error: %s", crcPreset.PodmanDeprecatedWarning)
-	}
 	currentBundleName := vm.bundle.GetBundleName()
 	if currentBundleName != bundleName {
 		logging.Debugf("Bundle '%s' was requested, but the existing VM is using '%s'",
@@ -459,12 +455,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 	if startConfig.EnableSharedDirs {
 		if err := configureSharedDirs(vm, sshRunner); err != nil {
-			return nil, err
-		}
-	}
-
-	if !client.useVSock() {
-		if err := removeContainerConfFile(sshRunner); err != nil {
 			return nil, err
 		}
 	}
@@ -683,9 +673,6 @@ func (client *client) IsRunning() (bool, error) {
 }
 
 func (client *client) validateStartConfig(startConfig types.StartConfig) error {
-	if startConfig.Preset == crcPreset.Podman {
-		return fmt.Errorf(crcPreset.PodmanDeprecatedWarning)
-	}
 	if client.monitoringEnabled() && startConfig.Memory < minimumMemoryForMonitoring {
 		return fmt.Errorf("Too little memory (%s) allocated to the virtual machine to start the monitoring stack, %s is the minimum",
 			units.BytesSize(float64(startConfig.Memory)*1024*1024),
@@ -970,23 +957,4 @@ func ensurePullSecretPresentInVM(sshRunner *crcssh.Runner, pullSec cluster.PullS
 		return err
 	}
 	return sshRunner.CopyDataPrivileged([]byte(content), "/etc/crio/openshift-pull-secret", 0600)
-}
-
-// The containers.conf/podman marker file has a setting called machine_enabled in the engine section,
-// which lets the podman client know that a command is running on an instance created
-// with the podman machine command. This allows the use of gvisor-tap-vsock when a
-// container is created with an exposed port. However, this setting should be disabled
-// for system mode networking, so that it doesn't prevent the creation of containers that
-// need to expose a port.
-// - https://github.com/crc-org/crc/v2/issues/3515
-func removeContainerConfFile(sshRunner *crcssh.Runner) error {
-	// We would keep this for older bundles compatibility and remove it after
-	// 2.22.0 release.
-	if _, _, err := sshRunner.RunPrivileged("remove /etc/containers/containers.conf to disable machine_enabled", "rm -fr /etc/containers/containers.conf"); err != nil {
-		return errors.Wrap(err, "Failed to remove /etc/containers/containers.conf")
-	}
-	if _, _, err := sshRunner.RunPrivileged("remove /etc/containers/podman-machine marker file to disable machine_enabled", "rm -fr /etc/containers/podman-machine"); err != nil {
-		return errors.Wrap(err, "Failed to remove /etc/containers/podman-machine")
-	}
-	return nil
 }
