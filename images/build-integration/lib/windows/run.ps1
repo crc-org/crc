@@ -4,7 +4,9 @@ param(
     [Parameter(HelpMessage='Name of the folder on the target host under $HOME where all the content will be copied')]
     $targetFolder="crc-integration",
     [Parameter(HelpMessage='Name for the junit file with the tests results')]
-    $junitFilename="integration-junit.xml"
+    $junitFilename="integration-junit.xml",
+    [Parameter(HelpMessage='Test suite fails if it does not complete within the specified timeout. Default 90m')]
+    $suiteTimeout="90m"
 )
 
 # Prepare run e2e
@@ -22,7 +24,7 @@ if ($bundleLocation) {
 }
 # We need to copy the pull-secret to the target folder
 $env:PULL_SECRET_PATH="$env:HOME\$targetFolder\pull-secret"
-integration.test.exe > integration.results
+integration.test.exe --ginkgo.timeout $suiteTimeout > integration.results
 
 # Copy results
 cd ..
