@@ -4,6 +4,7 @@
 bundleLocation=""
 targetFolder="crc-integration"
 junitFilename="integration-junit.xml"
+suiteTimeout="90m"
 while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
@@ -19,6 +20,11 @@ while [[ $# -gt 0 ]]; do
         ;;
         -junitFilename)
         junitFilename="$2"
+        shift 
+        shift 
+        ;;
+        -suiteTimeout)
+        suiteTimeout="$2"
         shift 
         shift 
         ;;
@@ -39,7 +45,7 @@ then
     export BUNDLE_PATH="$bundleLocation"
 fi
 cd $targetFolder/bin
-./integration.test > integration.results
+./integration.test --ginkgo.timeout $suiteTimeout > integration.results
 
 # Copy results
 cd ..

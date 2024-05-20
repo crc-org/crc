@@ -25,6 +25,7 @@ And the execution is customized by the params addded, available params:
 * bundleLocation When testing a custom bundle we should pass the path on the target host
 * targetFolder Name of the folder on the target host under $HOME where all the content will be copied
 * junitFilename Name for the junit file with the tests results
+* suiteTimeout Set the timeout for running the suite. Default 90m
 
 ### Windows amd64
 
