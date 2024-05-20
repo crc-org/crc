@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"runtime"
 
-	crcCmd "github.com/crc-org/crc/v2/test/extended/crc/cmd"
+	crc "github.com/crc-org/crc/v2/test/extended/crc/cmd"
 	"github.com/crc-org/crc/v2/test/extended/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -59,24 +59,20 @@ var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func
 		})
 
 		It("setup CRC", func() {
-			if bundlePath == "" {
-				Expect(RunCRCExpectSuccess("setup")).To(ContainSubstring("Your system is correctly setup for using CRC"))
-			} else {
-				Expect(RunCRCExpectSuccess("setup", "-b", bundlePath)).To(ContainSubstring("Your system is correctly setup for using CRC"))
-			}
+			Expect(
+				crcSuccess("setup")).
+				To(ContainSubstring("Your system is correctly setup for using CRC"))
 		})
 
 		It("start CRC", func() {
 			// default values: "--memory", "10752", "--cpus", "4", "disk-size", "31"
-			if bundlePath == "" {
-				Expect(RunCRCExpectSuccess("start", "-p", pullSecretPath)).To(ContainSubstring("Started the OpenShift cluster"))
-			} else {
-				Expect(RunCRCExpectSuccess("start", "-b", bundlePath, "-p", pullSecretPath)).To(ContainSubstring("Started the OpenShift cluster"))
-			}
+			Expect(
+				crcSuccess("start", "-p", pullSecretPath)).
+				To(ContainSubstring("Started the OpenShift cluster"))
 		})
 
 		It("wait for cluster in Running state", func() {
-			err := crcCmd.WaitForClusterInState("running")
+			err := crc.WaitForClusterInState("running")
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -100,11 +96,15 @@ var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func
 		})
 
 		It("stop CRC", func() {
-			Expect(RunCRCExpectSuccess("stop", "-f")).To(MatchRegexp("[Ss]topped the instance"))
+			Expect(
+				crcSuccess("stop", "-f")).
+				To(MatchRegexp("[Ss]topped the instance"))
 		})
 
 		It("cleanup CRC", func() {
-			Expect(RunCRCExpectSuccess("cleanup")).To(MatchRegexp("Cleanup finished"))
+			Expect(
+				crcSuccess("cleanup")).
+				To(MatchRegexp("Cleanup finished"))
 		})
 
 	})

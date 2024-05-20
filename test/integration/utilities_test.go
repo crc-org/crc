@@ -89,3 +89,27 @@ func RunCRCExpectFail(args ...string) (string, error) {
 
 	return stderr, nil
 }
+
+// Helper function to run crc setup or start commands expecting success
+func crcSuccess(op string, args ...string) string {
+	return RunCRCExpectSuccess(
+		crcCmd(op, args...)...)
+}
+
+// Helper function to run crc setup or start commands expecting fails
+func crcFails(op string, args ...string) string {
+	output, _ := RunCRCExpectFail(
+		crcCmd(op, args...)...)
+	return output
+}
+
+// Helper function to add custom parameters if required
+func crcCmd(op string, args ...string) []string {
+	cmd := []string{op}
+	if op == "start" || op == "setup" {
+		if len(bundlePath) > 0 {
+			cmd = append(cmd, "-b", bundlePath)
+		}
+	}
+	return append(cmd, args...)
+}
