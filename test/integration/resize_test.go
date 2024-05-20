@@ -26,20 +26,15 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 	Describe("use default values", Serial, Ordered, func() {
 
 		It("setup CRC", func() {
-			if bundlePath == "" {
-				Expect(RunCRCExpectSuccess("setup")).To(ContainSubstring("Your system is correctly setup for using CRC"))
-			} else {
-				Expect(RunCRCExpectSuccess("setup", "-b", bundlePath)).To(ContainSubstring("Your system is correctly setup for using CRC"))
-			}
+			Expect(
+				crcSuccess("setup")).
+				To(ContainSubstring("Your system is correctly setup for using CRC"))
 		})
 
 		It("start CRC", func() {
-			// default values: "--memory", "10752", "--cpus", "4", "disk-size", "31"
-			if bundlePath == "" {
-				Expect(RunCRCExpectSuccess("start", "--memory", "12000", "--cpus", "5", "--disk-size", "40", "-p", pullSecretPath)).To(ContainSubstring("Started the OpenShift cluster"))
-			} else {
-				Expect(RunCRCExpectSuccess("start", "--memory", "12000", "--cpus", "5", "--disk-size", "40", "-b", bundlePath, "-p", pullSecretPath)).To(ContainSubstring("Started the OpenShift cluster"))
-			}
+			Expect(
+				crcSuccess("start", "--memory", "12000", "--cpus", "5", "--disk-size", "40", "-p", pullSecretPath)).
+				To(ContainSubstring("Started the OpenShift cluster"))
 		})
 
 		It("login to cluster using crc-admin context", func() {
@@ -81,7 +76,9 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 		})
 
 		It("stop CRC", func() {
-			Expect(RunCRCExpectSuccess("stop", "-f")).To(MatchRegexp("[Ss]topped the instance"))
+			Expect(
+				crcSuccess("stop", "-f")).
+				To(MatchRegexp("[Ss]topped the instance"))
 		})
 
 	})
@@ -89,7 +86,9 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 	Describe("use custom values", Serial, Ordered, func() {
 
 		It("start CRC", func() {
-			Expect(RunCRCExpectSuccess("start", "--memory", "13000", "--cpus", "6", "--disk-size", "50")).To(ContainSubstring("Started the OpenShift cluster"))
+			Expect(
+				crcSuccess("start", "--memory", "13000", "--cpus", "6", "--disk-size", "50")).
+				To(ContainSubstring("Started the OpenShift cluster"))
 		})
 
 		It("check VM's memory size", func() {
@@ -112,34 +111,46 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 		})
 
 		It("stop CRC", func() {
-			Expect(RunCRCExpectSuccess("stop", "-f")).To(MatchRegexp("[Ss]topped the instance"))
+			Expect(
+				crcSuccess("stop", "-f")).
+				To(MatchRegexp("[Ss]topped the instance"))
 		})
 	})
 
 	Describe("use flawed values", Serial, Ordered, func() {
 
 		It("start CRC with sub-minimum memory", func() { // less than min = 10752
-			Expect(RunCRCExpectFail("start", "--memory", "9000")).To(ContainSubstring("requires memory in MiB >= 10752"))
+			Expect(
+				crcFails("start", "--memory", "9000")).
+				To(ContainSubstring("requires memory in MiB >= 10752"))
 		})
 		It("start CRC with sub-minimum cpus", func() { // fewer than min
-			Expect(RunCRCExpectFail("start", "--cpus", "3")).To(ContainSubstring("requires CPUs >= 4"))
+			Expect(
+				crcFails("start", "--cpus", "3")).
+				To(ContainSubstring("requires CPUs >= 4"))
 		})
 		It("start CRC with smaller disk", func() { // bigger than default && smaller than current
+			diskSizeOutput := "current disk image capacity is bigger than the requested size"
 			if runtime.GOOS == "windows" {
-				Expect(RunCRCExpectFail("start", "--disk-size", "35")).To(ContainSubstring("Failed to set disk size to"))
-			} else {
-				Expect(RunCRCExpectFail("start", "--disk-size", "35")).To(ContainSubstring("current disk image capacity is bigger than the requested size"))
+				diskSizeOutput = "Failed to set disk size to"
 			}
+			Expect(
+				crcFails("start", "--disk-size", "35")).
+				To(ContainSubstring(diskSizeOutput))
 		})
 		It("start CRC with sub-minimum disk", func() { // smaller than min = default = 31GiB
-			Expect(RunCRCExpectFail("start", "--disk-size", "30")).To(ContainSubstring("requires disk size in GiB >= 31")) // TODO: message should be different on macOS!
+			Expect(
+				crcFails("start", "--disk-size", "30")).
+				To(ContainSubstring("requires disk size in GiB >= 31"))
 		})
 	})
 
 	Describe("use default values again", Serial, Ordered, func() {
 
 		It("start CRC", func() {
-			Expect(RunCRCExpectSuccess("start")).To(ContainSubstring("Started the OpenShift cluster")) // default values: "--memory", "10752", "--cpus", "4", "disk-size", "31"
+			Expect(
+				crcSuccess("start")).
+				To(ContainSubstring("Started the OpenShift cluster"))
 		})
 
 		It("check VM's memory size", func() {

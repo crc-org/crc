@@ -32,11 +32,16 @@ var _ = Describe("podman-remote", Serial, Ordered, Label("microshift-preset"), f
 		})
 
 		It("setup CRC", func() {
-			Expect(RunCRCExpectSuccess("setup")).To(ContainSubstring("Your system is correctly setup for using CRC"))
+			Expect(
+				crcSuccess("setup")).
+				To(ContainSubstring("Your system is correctly setup for using CRC"))
 		})
 
 		It("start CRC", func() {
-			Expect(RunCRCExpectSuccess("start", "-p", pullSecretPath)).To(ContainSubstring("Started the MicroShift cluster"))
+			// default values: "--memory", "10752", "--cpus", "4", "disk-size", "31"
+			Expect(
+				crcSuccess("start", "-p", pullSecretPath)).
+				To(ContainSubstring("Started the MicroShift cluster"))
 		})
 
 		It("podman-env", func() {
@@ -79,11 +84,15 @@ var _ = Describe("podman-remote", Serial, Ordered, Label("microshift-preset"), f
 		})
 
 		It("cleanup CRC", func() {
-			Expect(RunCRCExpectSuccess("cleanup")).To(MatchRegexp("Cleanup finished"))
+			Expect(
+				crcSuccess("cleanup")).
+				To(MatchRegexp("Cleanup finished"))
 		})
 
 		It("unset preset in config", func() {
-			Expect(RunCRCExpectSuccess("config", "unset", "preset")).To(ContainSubstring("Successfully unset configuration property 'preset'"))
+			Expect(
+				crcSuccess("config", "unset", "preset")).
+				To(ContainSubstring("Successfully unset configuration property 'preset'"))
 		})
 	})
 })
