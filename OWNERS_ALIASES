@@ -5,7 +5,6 @@ aliases:
     - cfergeau
     - praveenkumar
     - anjannath
-    - jsliacan
     - gbraad
     - evidolob
     - adrianriobo
@@ -21,10 +20,8 @@ aliases:
     - anjannath
     - gbraad
     - evidolob
-    - jsliacan
     - adrianriobo
     - themr0c
   test-reviewers:
-    - jsliacan
     - adrianriobo
 
