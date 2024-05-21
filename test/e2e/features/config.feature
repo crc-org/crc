@@ -152,3 +152,39 @@ Feature: Test configuration settings
         And executing crc setup command succeeds
         Then stderr should not contain "Skipping above check"
 
+    @linux @darwin @windows 
+    Scenario: CRC config set and get preset property (default cases) 
+        When setting config property "preset" to value "openshift" succeeds
+        And "JSON" config file "crc.json" in CRC home folder does not contain key "preset"
+        When getting config property "preset" succeeds
+        And stdout should contain "Configuration property 'preset' is not set"
+        And stdout should contain "openshift"
+        When unsetting config property "preset" succeeds
+        And stdout should contain "Successfully unset configuration property 'preset'"
+        And "JSON" config file "crc.json" in CRC home folder does not contain key "preset"
+        
+
+    Scenario: CRC config set and get preset property (positive cases) 
+        When setting config property "preset" to value "<preset-value>" succeeds
+        And "JSON" config file "crc.json" in CRC home folder contains key "preset" with value matching "<preset-value>" 
+        When getting config property "preset" succeeds
+        And stdout should contain "<preset-value>"
+        When unsetting config property "preset" succeeds
+        And stdout should contain "Successfully unset configuration property 'preset'"
+        And "JSON" config file "crc.json" in CRC home folder does not contain key "preset"
+        
+        @linux @darwin @windows 
+        Examples: Config property preset setting positive
+            | preset-value  |
+            | microshift    | 
+            | okd           | 
+            
+    Scenario: CRC config set preset (negtive cases) 
+        When setting config property "preset" to value "<preset-value>" fails
+        And stderr should contain "reason: Unknown preset" 
+
+        @linux @darwin @windows 
+        Examples: Config property getting
+            | preset-value | 
+            | podman       | 
+            | others       |

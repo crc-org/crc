@@ -125,6 +125,11 @@ func UnsetConfigPropertySucceedsOrFails(property string, expected string) error 
 	return util.ExecuteCommandSucceedsOrFails(cmd, expected)
 }
 
+func GetConfigPropertySucceedsOrFails(property string, expected string) error {
+	cmd := "crc config get " + property
+	return util.ExecuteCommandSucceedsOrFails(cmd, expected)
+}
+
 func WaitForClusterInState(state string) error {
 	return util.MatchRepetitionsWithRetry(state, CheckCRCStatus, clusterStateRepetition,
 		clusterStateRetryCount, clusterStateTimeout)

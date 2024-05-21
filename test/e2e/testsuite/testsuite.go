@@ -472,6 +472,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		StartCRCWithDefaultBundleAndNameServerSucceedsOrFails)
 	s.Step(`^setting config property "(.*)" to value "(.*)" (succeeds|fails)$`,
 		SetConfigPropertyToValueSucceedsOrFails)
+	s.Step(`^getting config property "(.*)" (succeeds|fails)$`,
+		crcCmd.GetConfigPropertySucceedsOrFails)
 	s.Step(`^unsetting config property "(.*)" (succeeds|fails)$`,
 		crcCmd.UnsetConfigPropertySucceedsOrFails)
 	s.Step(`^login to the oc cluster (succeeds|fails)$`,
