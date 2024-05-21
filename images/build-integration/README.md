@@ -26,6 +26,7 @@ And the execution is customized by the params addded, available params:
 * targetFolder Name of the folder on the target host under $HOME where all the content will be copied
 * junitFilename Name for the junit file with the tests results
 * suiteTimeout Set the timeout for running the suite. Default 90m
+* labelFilter Filter tests to be executed based on label expression
 
 ### Windows amd64
 

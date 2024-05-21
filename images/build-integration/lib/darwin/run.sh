@@ -5,6 +5,7 @@ bundleLocation=""
 targetFolder="crc-integration"
 junitFilename="integration-junit.xml"
 suiteTimeout="90m"
+labelFilter=""
 while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
@@ -28,6 +29,10 @@ while [[ $# -gt 0 ]]; do
         shift 
         shift 
         ;;
+        -labelFilter)
+        labelFilter="$2"
+        shift 
+        shift 
         *)    # unknown option
         shift 
         ;;
@@ -45,7 +50,12 @@ then
     export BUNDLE_PATH="$bundleLocation"
 fi
 cd $targetFolder/bin
-./integration.test --ginkgo.timeout $suiteTimeout > integration.results
+if [ ! -z "$labelFilter" ]
+then
+    ./integration.test --ginkgo.timeout $suiteTimeout --ginkgo.label-filter $labelFilter > integration.results
+else
+    ./integration.test --ginkgo.timeout $suiteTimeout > integration.results
+fi
 
 # Copy results
 cd ..
