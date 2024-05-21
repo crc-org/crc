@@ -6,7 +6,9 @@ param(
     [Parameter(HelpMessage='Name for the junit file with the tests results')]
     $junitFilename="integration-junit.xml",
     [Parameter(HelpMessage='Test suite fails if it does not complete within the specified timeout. Default 90m')]
-    $suiteTimeout="90m"
+    $suiteTimeout="90m",
+    [Parameter(HelpMessage='Filter tests to be executed based on label expression')]
+    $labelFilter=""
 )
 
 # Prepare run e2e
@@ -24,7 +26,12 @@ if ($bundleLocation) {
 }
 # We need to copy the pull-secret to the target folder
 $env:PULL_SECRET_PATH="$env:HOME\$targetFolder\pull-secret"
-integration.test.exe --ginkgo.timeout $suiteTimeout > integration.results
+if ($labelFilter) {
+    integration.test.exe --ginkgo.timeout $suiteTimeout --ginkgo.label-filter $labelFilter > integration.results
+} else {
+    integration.test.exe --ginkgo.timeout $suiteTimeout > integration.results
+}
+
 
 # Copy results
 cd ..
