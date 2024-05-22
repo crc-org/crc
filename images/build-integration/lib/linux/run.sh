@@ -34,7 +34,7 @@ while [[ $# -gt 0 ]]; do
         shift 
         shift 
         ;;
-        *)    # unknown option
+        *)
         shift 
         ;;
     esac
