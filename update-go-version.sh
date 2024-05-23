@@ -18,4 +18,7 @@ for f in .github/workflows/*.yml; do
     if [ $(yq  eval '.jobs.build.strategy.matrix | has("go")' "$f") == "true" ]; then
       yq eval --inplace ".jobs.build.strategy.matrix.go[0] = ${golang_base_version} | .jobs.build.strategy.matrix.go[0] style=\"single\"" "$f";
     fi
+    if [ $(yq  eval '.jobs.build-installer.strategy.matrix | has("go")' "$f") == "true" ]; then
+      yq eval --inplace ".jobs.build-installer.strategy.matrix.go[0] = ${golang_base_version} | .jobs.build-installer.strategy.matrix.go[0] style=\"single\"" "$f";
+    fi
 done
