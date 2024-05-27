@@ -56,9 +56,6 @@ type Node struct {
 	Kind          []string `json:"kind"`
 	Hostname      string   `json:"hostname"`
 	DiskImage     string   `json:"diskImage"`
-	KernelCmdLine string   `json:"kernelCmdLine,omitempty"`
-	Initramfs     string   `json:"initramfs,omitempty"`
-	Kernel        string   `json:"kernel,omitempty"`
 	InternalIP    string   `json:"internalIP"`
 	PodmanVersion string   `json:"podmanVersion,omitempty"`
 }
@@ -145,24 +142,6 @@ func (bundle *CrcBundleInfo) GetSSHKeyPath() string {
 	return bundle.resolvePath(bundle.ClusterInfo.SSHPrivateKeyFile)
 }
 
-func (bundle *CrcBundleInfo) GetKernelPath() string {
-	if bundle.Nodes[0].Kernel == "" {
-		return ""
-	}
-	return bundle.resolvePath(bundle.Nodes[0].Kernel)
-}
-
-func (bundle *CrcBundleInfo) GetInitramfsPath() string {
-	if bundle.Nodes[0].Initramfs == "" {
-		return ""
-	}
-	return bundle.resolvePath(bundle.Nodes[0].Initramfs)
-}
-
-func (bundle *CrcBundleInfo) GetKernelCommandLine() string {
-	return bundle.Nodes[0].KernelCmdLine
-}
-
 func (bundle *CrcBundleInfo) GetBundleBuildTime() (time.Time, error) {
 	return time.Parse(time.RFC3339, strings.TrimSpace(bundle.BuildInfo.BuildTime))
 }
@@ -200,8 +179,6 @@ func (bundle *CrcBundleInfo) verify() error {
 	files := []string{
 		bundle.GetSSHKeyPath(),
 		bundle.GetDiskImagePath(),
-		bundle.GetKernelPath(),
-		bundle.GetInitramfsPath(),
 		bundle.GetOcPath(),
 		bundle.GetKubeConfigPath()}
 

@@ -40,11 +40,8 @@ import (
 
 type Driver struct {
 	*drivers.VMDriver
-	VmlinuzPath string
-	Cmdline     string
-	InitrdPath  string
-	VfkitPath   string
-	VirtioNet   bool
+	VfkitPath string
+	VirtioNet bool
 
 	VsockPath       string
 	DaemonVsockPort uint

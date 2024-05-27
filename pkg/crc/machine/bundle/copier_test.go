@@ -63,8 +63,6 @@ func createDummyBundleFiles(t *testing.T, bundle *CrcBundleInfo) {
 		bundle.GetKubeConfigPath(),
 		bundle.GetSSHKeyPath(),
 		bundle.GetDiskImagePath(),
-		bundle.GetKernelPath(),
-		bundle.GetInitramfsPath(),
 	}
 
 	for _, file := range files {

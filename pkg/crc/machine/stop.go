@@ -23,9 +23,6 @@ func (client *client) Stop() (state.State, error) {
 			logging.Debugf("%v", err)
 		}
 	}
-	if err := updateKernelArgs(vm); err != nil {
-		logging.Debugf("%v", err)
-	}
 	logging.Info("Stopping the instance, this may take a few minutes...")
 	if err := vm.Stop(); err != nil {
 		status, stateErr := vm.State()
