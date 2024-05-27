@@ -20,7 +20,8 @@ func (l ByPosition) Less(i, j int) bool {
 }
 
 func LintFmtErrorfCalls(fset *token.FileSet, info types.Info, multipleWraps bool) []analysis.Diagnostic {
-	lints := []analysis.Diagnostic{}
+	var lints []analysis.Diagnostic
+
 	for expr, t := range info.Types {
 		// Search for error expressions that are the result of fmt.Errorf
 		// invocations.
@@ -159,7 +160,7 @@ func isFmtErrorfCallExpr(info types.Info, expr ast.Expr) (*ast.CallExpr, bool) {
 }
 
 func LintErrorComparisons(info *TypesInfoExt) []analysis.Diagnostic {
-	lints := []analysis.Diagnostic{}
+	var lints []analysis.Diagnostic
 
 	for expr := range info.TypesInfo.Types {
 		// Find == and != operations.
@@ -289,7 +290,7 @@ func switchComparesNonNil(switchStmt *ast.SwitchStmt) bool {
 }
 
 func LintErrorTypeAssertions(fset *token.FileSet, info *TypesInfoExt) []analysis.Diagnostic {
-	lints := []analysis.Diagnostic{}
+	var lints []analysis.Diagnostic
 
 	for expr := range info.TypesInfo.Types {
 		// Find type assertions.
@@ -304,6 +305,11 @@ func LintErrorTypeAssertions(fset *token.FileSet, info *TypesInfoExt) []analysis
 		}
 
 		if isNodeInErrorIsFunc(info, typeAssert) {
+			continue
+		}
+
+		// If the asserted type is not an error, allow the expression.
+		if !implementsError(info.TypesInfo.Types[typeAssert.Type].Type) {
 			continue
 		}
 

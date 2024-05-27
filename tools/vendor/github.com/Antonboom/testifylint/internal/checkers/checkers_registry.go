@@ -11,14 +11,19 @@ var registry = checkersRegistry{
 	{factory: asCheckerFactory(NewBoolCompare), enabledByDefault: true},
 	{factory: asCheckerFactory(NewEmpty), enabledByDefault: true},
 	{factory: asCheckerFactory(NewLen), enabledByDefault: true},
+	{factory: asCheckerFactory(NewNegativePositive), enabledByDefault: true},
 	{factory: asCheckerFactory(NewCompares), enabledByDefault: true},
 	{factory: asCheckerFactory(NewErrorNil), enabledByDefault: true},
+	{factory: asCheckerFactory(NewNilCompare), enabledByDefault: true},
 	{factory: asCheckerFactory(NewErrorIsAs), enabledByDefault: true},
-	{factory: asCheckerFactory(NewRequireError), enabledByDefault: true},
 	{factory: asCheckerFactory(NewExpectedActual), enabledByDefault: true},
 	{factory: asCheckerFactory(NewSuiteExtraAssertCall), enabledByDefault: true},
 	{factory: asCheckerFactory(NewSuiteDontUsePkg), enabledByDefault: true},
+	{factory: asCheckerFactory(NewUselessAssert), enabledByDefault: true},
 	// Advanced checkers.
+	{factory: asCheckerFactory(NewBlankImport), enabledByDefault: true},
+	{factory: asCheckerFactory(NewGoRequire), enabledByDefault: true},
+	{factory: asCheckerFactory(NewRequireError), enabledByDefault: true},
 	{factory: asCheckerFactory(NewSuiteTHelper), enabledByDefault: false},
 }
 

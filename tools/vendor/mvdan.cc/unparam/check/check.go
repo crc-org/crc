@@ -913,10 +913,12 @@ func recvPrefix(recv *ast.FieldList) string {
 		return expr.Name + "."
 	case *ast.IndexExpr:
 		return expr.X.(*ast.Ident).Name + "."
+	case *ast.ParenExpr:
+		return expr.X.(*ast.Ident).Name + "."
 	case *ast.IndexListExpr:
 		return expr.X.(*ast.Ident).Name + "."
 	default:
-		panic(fmt.Sprintf("unexepected receiver AST node: %T", expr))
+		panic(fmt.Sprintf("unexpected receiver AST node: %T", expr))
 	}
 }
 
