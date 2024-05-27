@@ -151,11 +151,11 @@ func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset, persi
 }
 
 func getrootPartition(sshRunner *crcssh.Runner, preset crcPreset.Preset) (string, error) {
-	diskType := "xfs"
+	cmd := "/usr/sbin/blkid --label root -o device"
 	if preset == crcPreset.Microshift {
-		diskType = "LVM2_member"
+		cmd = "/usr/sbin/blkid -t TYPE=LVM2_member -o device"
 	}
-	part, _, err := sshRunner.RunPrivileged("Get device id", "/usr/sbin/blkid", "-t", fmt.Sprintf("TYPE=%s", diskType), "-o", "device")
+	part, _, err := sshRunner.RunPrivileged("Get device id", cmd)
 	if err != nil {
 		return "", err
 	}
