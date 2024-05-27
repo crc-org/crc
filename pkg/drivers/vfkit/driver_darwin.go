@@ -170,11 +170,10 @@ func (d *Driver) Start() error {
 		return err
 	}
 
-	bootLoader := config.NewLinuxBootloader(
-		d.VmlinuzPath,
-		"console=hvc0 "+d.Cmdline,
-		d.InitrdPath,
-	)
+	efiStore := d.ResolveStorePath("efistore.nvram")
+	create := !crcos.FileExists(efiStore)
+
+	bootLoader := config.NewEFIBootloader(efiStore, create)
 
 	vm := config.NewVirtualMachine(
 		uint(d.CPU),
