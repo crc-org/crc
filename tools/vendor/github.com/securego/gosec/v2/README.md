@@ -1,5 +1,5 @@
 
-# gosec - Golang Security Checker
+# gosec - Go Security Checker
 
 Inspects source code for security problems by scanning the Go AST and SSA code representation.
 
@@ -105,7 +105,7 @@ jobs:
           # we let the report trigger content trigger a failure using the GitHub Security features.
           args: '-no-fail -fmt sarif -out results.sarif ./...'
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v1
+        uses: github/codeql-action/upload-sarif@v2
         with:
           # Path to SARIF file relative to the root of the repository
           sarif_file: results.sarif
@@ -113,16 +113,8 @@ jobs:
 
 ### Local Installation
 
-#### Go 1.16+
-
 ```bash
 go install github.com/securego/gosec/v2/cmd/gosec@latest
-```
-
-#### Go version < 1.16
-
-```bash
-go get -u github.com/securego/gosec/v2/cmd/gosec
 ```
 
 ## Usage
@@ -167,7 +159,7 @@ directory you can supply `./...` as the input argument.
 - G503: Import blocklist: crypto/rc4
 - G504: Import blocklist: net/http/cgi
 - G505: Import blocklist: crypto/sha1
-- G601: Implicit memory aliasing of items from a range statement
+- G601: Implicit memory aliasing of items from a range statement (only for Go 1.21 or lower)
 - G602: Slice access out of bounds
 
 ### Retired rules
@@ -237,6 +229,12 @@ You can also configure the hard-coded credentials rule `G101` with additional pa
     }
 }
 ```
+
+#### Go version
+
+Some rules require a specific Go version which is retrieved from the Go module file present in the project. If this version cannot be found, it will fallback to Go runtime version.
+
+The Go module version is parsed using the `go list` command which in some cases might lead to performance degradation. In this situation, the go module version can be easily provided by setting the environment variable `GOSECGOVERSION=go1.21.1`.
 
 ### Dependencies
 
@@ -393,7 +391,7 @@ schema-generate -i sarif-schema-2.1.0.json -o mypath/types.go
 ```
 
 Most of the MarshallJSON/UnmarshalJSON are removed except the one for PropertyBag which is handy to inline the additional properties. The rest can be removed.
-The URI,ID, UUID, GUID were renamed so it fits the Golang convention defined [here](https://github.com/golang/lint/blob/master/lint.go#L700)
+The URI,ID, UUID, GUID were renamed so it fits the Go convention defined [here](https://github.com/golang/lint/blob/master/lint.go#L700)
 
 ### Tests
 

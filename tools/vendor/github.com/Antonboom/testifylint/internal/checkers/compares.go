@@ -1,13 +1,10 @@
 package checkers
 
 import (
-	"bytes"
 	"go/ast"
 	"go/token"
 
 	"golang.org/x/tools/go/analysis"
-
-	"github.com/Antonboom/testifylint/internal/analysisutil"
 )
 
 // Compares detects situations like
@@ -18,6 +15,7 @@ import (
 //	assert.True(t, a >= b)
 //	assert.True(t, a < b)
 //	assert.True(t, a <= b)
+//	assert.False(t, a == b)
 //	...
 //
 // and requires
@@ -46,10 +44,10 @@ func (checker Compares) Check(pass *analysis.Pass, call *CallMeta) *analysis.Dia
 
 	var tokenToProposedFn map[token.Token]string
 
-	switch call.Fn.Name {
-	case "True", "Truef":
+	switch call.Fn.NameFTrimmed {
+	case "True":
 		tokenToProposedFn = tokenToProposedFnInsteadOfTrue
-	case "False", "Falsef":
+	case "False":
 		tokenToProposedFn = tokenToProposedFnInsteadOfFalse
 	default:
 		return nil
@@ -84,12 +82,4 @@ var tokenToProposedFnInsteadOfFalse = map[token.Token]string{
 	token.GEQ: "Less",
 	token.LSS: "GreaterOrEqual",
 	token.LEQ: "Greater",
-}
-
-// formatAsCallArgs joins a and b and return bytes like `a, b`.
-func formatAsCallArgs(pass *analysis.Pass, a, b ast.Node) []byte {
-	return bytes.Join([][]byte{
-		analysisutil.NodeBytes(pass.Fset, a),
-		analysisutil.NodeBytes(pass.Fset, b),
-	}, []byte(", "))
 }

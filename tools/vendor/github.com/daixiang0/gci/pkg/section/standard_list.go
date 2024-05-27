@@ -1,6 +1,6 @@
 package section
 
-// Code generated based on go1.21.0 X:arenas. DO NOT EDIT.
+// Code generated based on go1.22.0 X:boringcrypto,arenas. DO NOT EDIT.
 
 var standardPackages = map[string]struct{}{
 	"archive/tar":          {},
@@ -20,6 +20,7 @@ var standardPackages = map[string]struct{}{
 	"context":              {},
 	"crypto":               {},
 	"crypto/aes":           {},
+	"crypto/boring":        {},
 	"crypto/cipher":        {},
 	"crypto/des":           {},
 	"crypto/dsa":           {},
@@ -37,6 +38,7 @@ var standardPackages = map[string]struct{}{
 	"crypto/sha512":        {},
 	"crypto/subtle":        {},
 	"crypto/tls":           {},
+	"crypto/tls/fipsonly":  {},
 	"crypto/x509":          {},
 	"crypto/x509/pkix":     {},
 	"database/sql":         {},
@@ -78,6 +80,7 @@ var standardPackages = map[string]struct{}{
 	"go/scanner":           {},
 	"go/token":             {},
 	"go/types":             {},
+	"go/version":           {},
 	"hash":                 {},
 	"hash/adler32":         {},
 	"hash/crc32":           {},
@@ -106,6 +109,7 @@ var standardPackages = map[string]struct{}{
 	"math/bits":            {},
 	"math/cmplx":           {},
 	"math/rand":            {},
+	"math/rand/v2":         {},
 	"mime":                 {},
 	"mime/multipart":       {},
 	"mime/quotedprintable": {},
