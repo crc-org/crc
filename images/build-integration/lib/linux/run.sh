@@ -45,17 +45,13 @@ mkdir -p $targetFolder/results
 
 # Run tests
 export PATH="$PATH:${HOME}/$targetFolder/bin"
-export PULL_SECRET_PATH="${HOME}/$targetFolder/pull-secret"
-if [ ! -z "$bundleLocation" ]
-then
-    export BUNDLE_PATH="$bundleLocation"
-fi
+
 cd $targetFolder/bin
 if [ ! -z "$labelFilter" ]
 then
-    ./integration.test --ginkgo.timeout $suiteTimeout --ginkgo.label-filter $labelFilter > integration.results
+    ./integration.test --pull-secret-path="${HOME}/$targetFolder/pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout --ginkgo.label-filter $labelFilter > integration.results
 else
-    ./integration.test --ginkgo.timeout $suiteTimeout > integration.results
+    ./integration.test --pull-secret-path="${HOME}/$targetFolder/pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout > integration.results
 fi
 
 # Copy results

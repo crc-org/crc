@@ -12,6 +12,9 @@ import (
 	. "github.com/onsi/gomega"
 	gomegaformat "github.com/onsi/gomega/format"
 	"github.com/sirupsen/logrus"
+
+	"flag"
+	"github.com/spf13/pflag"
 )
 
 type VersionAnswer struct {
@@ -25,8 +28,21 @@ var userHome string
 var versionInfo VersionAnswer
 
 var bundlePath string
-var ginkgoOpts string
 var pullSecretPath string
+
+
+func TestMain(m *testing.M) {
+	RegisterFlags(flag.CommandLine)
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+	pflag.Parse()
+
+	os.Exit(m.Run())
+}
+
+func RegisterFlags(flags *flag.FlagSet) {
+	flags.StringVar(&bundlePath, "bundle-path", "", "Path to the bundle to be used in tests.")
+	flags.StringVar(&pullSecretPath, "pull-secret-path", "", "Path to the file containing pull secret.")
+}
 
 func TestTest(t *testing.T) {
 
@@ -76,25 +92,12 @@ var _ = BeforeSuite(func() {
 
 	Expect(err).NotTo(HaveOccurred())
 
-	bundlePath = os.Getenv("BUNDLE_PATH") // this env var should contain location of bundle
-	if bundlePath != "" {
+	if len(bundlePath) != 0 {
 		Expect(bundlePath).To(BeAnExistingFile())
 	}
 
-	ginkgoOpts = os.Getenv("GINKGO_OPTS")
-	if err != nil {
-
-		logrus.Infof("Error: Could not read GINKGO_OPTS.")
-		logrus.Infof("%v", err)
+	if len(pullSecretPath) == 0 {
+		logrus.Infof("Error: You need to set PULL_SECRET_PATH for CRC to function properly.")
 	}
-	Expect(err).NotTo(HaveOccurred())
-
-	pullSecretPath = os.Getenv("PULL_SECRET_PATH") // this env var should contain location of pull-secret file
-	if err != nil {
-
-		logrus.Infof("Error: You need to set PULL_SECRET_PATH to find CRC useful.")
-		logrus.Infof("%v", err)
-	}
-	Expect(err).NotTo(HaveOccurred())
-
+	Expect(pullSecretPath).NotTo(BeEmpty())
 })

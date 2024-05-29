@@ -231,17 +231,17 @@ containerized_integration: clean
 .PHONY: integration ## Run integration tests in Ginkgo
 integration:
 ifndef GINKGO_OPTS
-export GINKGO_OPTS = --ginkgo.label-filter=""
+GINKGO_OPTS = --ginkgo.label-filter=""
 endif
 ifndef PULL_SECRET_PATH
-export PULL_SECRET_PATH = $(HOME)/Downloads/crc-pull-secret
+PULL_SECRET_PATH = --pull-secret-path=$(HOME)/Downloads/crc-pull-secret
 endif
 ifndef BUNDLE_PATH
-export BUNDLE_PATH = $(HOME)/Downloads/crc_libvirt_$(OPENSHIFT_VERSION)_$(GOARCH).$(BUNDLE_EXTENSION)
+BUNDLE_PATH = --bundle-path=$(HOME)/Downloads/crc_libvirt_$(OPENSHIFT_VERSION)_$(GOARCH).$(BUNDLE_EXTENSION)
 endif
 
 integration:
-	@go test -timeout=90m -tags "$(BUILDTAGS)" $(MODULEPATH)/test/integration -v $(GINKGO_OPTS)
+	@go test -timeout=90m -tags "$(BUILDTAGS)" $(MODULEPATH)/test/integration $(PULL_SECRET_PATH) $(BUNDLE_PATH) -v $(GINKGO_OPTS) 
 
 .PHONY: e2e ## Run e2e tests
 e2e:
