@@ -21,15 +21,11 @@ New-Item -ItemType directory -Path "$env:HOME\$targetFolder\results" -Force
 
 # Run tests
 cd $targetFolder\bin
-if ($bundleLocation) {
-    $env:BUNDLE_PATH="$bundleLocation"
-}
-# We need to copy the pull-secret to the target folder
-$env:PULL_SECRET_PATH="$env:HOME\$targetFolder\pull-secret"
+
 if ($labelFilter) {
-    integration.test.exe --ginkgo.timeout $suiteTimeout --ginkgo.label-filter $labelFilter > integration.results
+    integration.test.exe --pull-secret-path="$env:HOME\$targetFolder\pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout --ginkgo.label-filter $labelFilter > integration.results
 } else {
-    integration.test.exe --ginkgo.timeout $suiteTimeout > integration.results
+    integration.test.exe --pull-secret-path="$env:HOME\$targetFolder\pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout > integration.results
 }
 
 
