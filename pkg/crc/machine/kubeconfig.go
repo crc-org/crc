@@ -198,11 +198,22 @@ func getTokenForUser(username, password, ip string, ca []byte, clusterConfig *ty
 		},
 	}
 	challengeHandler := challengehandlers.NewBasicChallengeHandler(restConfig.Host, "" /* webconsoleURL */, nil /* in */, nil /* out */, nil /* passwordPrompter */, username, password)
-	token, err := tokenrequest.RequestTokenWithChallengeHandlers(restConfig, challengeHandler)
+	token, err := requestTokenWithChallengeHandlers(restConfig, challengeHandler, ingressHTTPSPort)
 	if err != nil {
 		return "", err
 	}
 	return token, nil
+}
+
+func requestTokenWithChallengeHandlers(clientCfg *restclient.Config, handler *challengehandlers.BasicChallengeHandler, port uint) (string, error) {
+	o, err := tokenrequest.NewRequestTokenOptions(clientCfg, false).WithChallengeHandlers(handler)
+	if err != nil {
+		return "", err
+	}
+
+	portStr := strconv.Itoa(int(port))
+	o.Issuer = net.JoinHostPort(o.Issuer, portStr)
+	return o.RequestToken()
 }
 
 // getGlobalKubeConfigPath returns the path to the first entry in the KUBECONFIG environment variable
