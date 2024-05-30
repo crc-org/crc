@@ -34,7 +34,7 @@ while [[ $# -gt 0 ]]; do
         shift 
         shift 
         ;;
-        *)
+        *)    # unknown option
         shift 
         ;;
     esac
@@ -44,7 +44,7 @@ done
 mkdir -p $targetFolder/results
 
 # Run tests
-tags="${OS}"
+tags="linux"
 if [ ! -z "$e2eTagExpression" ]
 then
     tags="$tags && $e2eTagExpression"
