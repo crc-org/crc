@@ -112,10 +112,55 @@ func (client *client) updateVMConfig(startConfig types.StartConfig, vm *virtualM
 	return nil
 }
 
-func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset, persistentVolumeSize int) error {
-	rootPart, err := getrootPartition(sshRunner, preset)
+func restartHost(ctx context.Context, vm *virtualMachine, sshRunner *crcssh.Runner) error {
+	if err := vm.Driver.Stop(); err != nil {
+		return errors.Wrap(err, "Error re-starting machine at stop")
+	}
+	if err := startHost(ctx, vm); err != nil {
+		return errors.Wrap(err, "Error re-starting machine at start")
+	}
+	logging.Debug("Waiting until ssh is available")
+	if err := sshRunner.WaitForConnectivity(ctx, 300*time.Second); err != nil {
+		return errors.Wrap(err, "Failed to connect to the CRC VM with SSH -- virtual machine might be unreachable")
+	}
+	return nil
+}
+
+func ocpGetPVShiftSize(diskSize int, pvSize int) int {
+	defaultPvSize := constants.GetDefaultPersistentVolumeSize(crcPreset.OpenShift)
+	if pvSize > defaultPvSize {
+		return (diskSize - constants.DefaultDiskSize) - (pvSize - defaultPvSize)
+	}
+	return diskSize - constants.DefaultDiskSize
+}
+
+func growRootFileSystem(ctx context.Context, startConfig types.StartConfig, vm *virtualMachine, sshRunner *crcssh.Runner) error {
+	if startConfig.Preset == crcPreset.OpenShift {
+		sizeToMove := ocpGetPVShiftSize(startConfig.DiskSize, startConfig.PersistentVolumeSize)
+		_, _, err := sshRunner.RunPrivileged("move topolvm partition to end of disk", fmt.Sprintf("echo '+%dG,' | sudo sfdisk --move-data /dev/vda -N 5 --force", sizeToMove))
+		var exitErr *ssh.ExitError
+		if err != nil {
+			if !errors.As(err, &exitErr) {
+				return err
+			}
+			if exitErr.ExitStatus() != 1 {
+				return err
+			}
+		}
+		if err == nil {
+			logging.Info("Restart VM after moving topolvm partition to end")
+			if err := restartHost(ctx, vm, sshRunner); err != nil {
+				return fmt.Errorf("Failed to move topolvm partition to increase root partition size: %w", err)
+			}
+		}
+	}
+	rootPart, err := getrootPartition(sshRunner, startConfig.Preset)
 	if err != nil {
 		return err
+	}
+
+	if err := growPersistentVolume(sshRunner, startConfig.Preset, startConfig.PersistentVolumeSize); err != nil {
+		return fmt.Errorf("Unable to grow persistent volume partition: %w", err)
 	}
 
 	// with '/dev/[sv]da4' as input, run 'growpart /dev/[sv]da 4'
@@ -131,13 +176,6 @@ func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset, persi
 		return nil
 	}
 
-	if preset == crcPreset.Microshift {
-		lvFullName := "rhel/root"
-		if err := growLVForMicroshift(sshRunner, lvFullName, rootPart, persistentVolumeSize); err != nil {
-			return err
-		}
-	}
-
 	logging.Infof("Resizing %s filesystem", rootPart)
 	rootFS := "/sysroot"
 	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Remounting %s read/write", rootFS), "mount -o remount,rw", rootFS); err != nil {
@@ -147,6 +185,35 @@ func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset, persi
 		return err
 	}
 
+	return nil
+}
+
+func growPersistentVolume(sshRunner *crcssh.Runner, preset crcPreset.Preset, persistentVolumeSize int) error {
+	if preset == crcPreset.Microshift {
+		rootPart, err := getrootPartition(sshRunner, preset)
+		if err != nil {
+			return err
+		}
+		lvFullName := "rhel/root"
+		if err := growLVForMicroshift(sshRunner, lvFullName, rootPart, persistentVolumeSize); err != nil {
+			return err
+		}
+	}
+
+	if preset == crcPreset.OpenShift {
+		pvPartition := "/dev/vda5"
+		if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Growing %s partition", pvPartition), "/usr/bin/growpart", pvPartition[:len("/dev/.da")], pvPartition[len("/dev/.da"):]); err != nil {
+			var exitErr *ssh.ExitError
+			if !errors.As(err, &exitErr) {
+				return err
+			}
+			if exitErr.ExitStatus() != 1 {
+				return err
+			}
+			logging.Debugf("No free space after %s, nothing to do", pvPartition)
+			return nil
+		}
+	}
 	return nil
 }
 
@@ -430,7 +497,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	// Trigger disk resize, this will be a no-op if no disk size change is needed
-	if err := growRootFileSystem(sshRunner, startConfig.Preset, startConfig.PersistentVolumeSize); err != nil {
+	if err := growRootFileSystem(ctx, startConfig, vm, sshRunner); err != nil {
 		return nil, errors.Wrap(err, "Error updating filesystem size")
 	}
 
