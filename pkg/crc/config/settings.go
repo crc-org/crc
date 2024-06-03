@@ -72,6 +72,10 @@ func RegisterSettings(cfg *Config) {
 		return ValidateBool(value)
 	}
 
+	validPVSize := func(value interface{}) (bool, string) {
+		return validatePersistentVolumeSize(value, GetPreset(cfg))
+	}
+
 	// Preset setting should be on top because CPUs/Memory config depend on it.
 	cfg.AddSetting(Preset, version.GetDefaultPreset().String(), validatePreset, RequiresDeleteAndSetupMsg,
 		fmt.Sprintf("Virtual machine preset (valid values are: %s)", preset.AllPresets()))
@@ -93,8 +97,8 @@ func RegisterSettings(cfg *Config) {
 		"Enable experimental features (true/false, default: false)")
 	cfg.AddSetting(EmergencyLogin, false, ValidateBool, SuccessfullyApplied,
 		"Enable emergency login for 'core' user. Password is randomly generated. (true/false, default: false)")
-	cfg.AddSetting(PersistentVolumeSize, constants.DefaultPersistentVolumeSize, validatePersistentVolumeSize, SuccessfullyApplied,
-		fmt.Sprintf("Total size in GiB of the persistent volume used by the CSI driver for %s preset (must be greater than or equal to '%d')", preset.Microshift, constants.DefaultPersistentVolumeSize))
+	cfg.AddSetting(PersistentVolumeSize, defaultPVSize(cfg), validPVSize, SuccessfullyApplied,
+		fmt.Sprintf("Total size in GiB of the persistent volume used by the CSI driver (must be greater than or equal to '%d')", defaultPVSize(cfg)))
 
 	// Shared directories configs
 	if runtime.GOOS == "windows" {
@@ -153,6 +157,10 @@ func presetChanged(cfg *Config, _ string, _ interface{}) {
 
 func defaultCPUs(cfg Storage) int {
 	return constants.GetDefaultCPUs(GetPreset(cfg))
+}
+
+func defaultPVSize(cfg Storage) int {
+	return constants.GetDefaultPersistentVolumeSize(GetPreset(cfg))
 }
 
 func defaultMemory(cfg Storage) int {

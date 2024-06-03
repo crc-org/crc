@@ -15,8 +15,6 @@ const (
 	DefaultName     = "crc"
 	DefaultDiskSize = 31
 
-	DefaultPersistentVolumeSize = 15
-
 	DefaultSSHUser = "core"
 	DefaultSSHPort = 22
 
@@ -220,6 +218,18 @@ func GetDefaultMemory(preset crcpreset.Preset) int {
 	default:
 		// should not be reached
 		return 10752
+	}
+}
+
+func GetDefaultPersistentVolumeSize(preset crcpreset.Preset) int {
+	switch preset {
+	case crcpreset.OpenShift, crcpreset.OKD:
+		return 3
+	case crcpreset.Microshift:
+		return 15
+	default:
+		// should not be reached
+		return 3
 	}
 }
 

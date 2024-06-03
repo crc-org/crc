@@ -42,9 +42,9 @@ func ValidateDiskSize(value int) error {
 	return nil
 }
 
-func ValidatePersistentVolumeSize(value int) error {
-	if value < constants.DefaultPersistentVolumeSize {
-		return fmt.Errorf("requires disk size in GiB >= %d", constants.DefaultPersistentVolumeSize)
+func ValidatePersistentVolumeSize(value int, preset crcpreset.Preset) error {
+	if value < constants.GetDefaultPersistentVolumeSize(preset) {
+		return fmt.Errorf("requires disk size in GiB >= %d", constants.GetDefaultPersistentVolumeSize(preset))
 	}
 
 	return nil
