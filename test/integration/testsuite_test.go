@@ -2,6 +2,7 @@ package test_test
 
 import (
 	"encoding/json"
+	"flag"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -12,8 +13,6 @@ import (
 	. "github.com/onsi/gomega"
 	gomegaformat "github.com/onsi/gomega/format"
 	"github.com/sirupsen/logrus"
-
-	"flag"
 	"github.com/spf13/pflag"
 )
 
@@ -29,7 +28,6 @@ var versionInfo VersionAnswer
 
 var bundlePath string
 var pullSecretPath string
-
 
 func TestMain(m *testing.M) {
 	RegisterFlags(flag.CommandLine)
