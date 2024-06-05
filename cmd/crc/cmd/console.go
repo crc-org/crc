@@ -32,7 +32,7 @@ var consoleCmd = &cobra.Command{
 	Aliases: []string{"dashboard"},
 	Short:   "Open the OpenShift Web Console in the default browser",
 	Long:    `Open the OpenShift Web Console in the default browser or print its URL or credentials`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		return runConsole(os.Stdout, daemonclient.New(), consolePrintURL, consolePrintCredentials, outputFormat)
 	},
 }

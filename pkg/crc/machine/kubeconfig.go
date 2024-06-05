@@ -179,7 +179,7 @@ func getTokenForUser(username, password, ip string, ca []byte, clusterConfig *ty
 				RootCAs:    roots,
 				MinVersion: tls.VersionTLS12,
 			},
-			DialContext: func(ctx gocontext.Context, network, address string) (net.Conn, error) {
+			DialContext: func(_ gocontext.Context, network, address string) (net.Conn, error) {
 				logging.Debugf("Using address: %s", address)
 				hostname, port, err := net.SplitHostPort(address)
 				if err != nil {

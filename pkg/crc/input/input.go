@@ -16,7 +16,7 @@ func PromptUserForYesOrNo(message string, force bool) bool {
 	}
 	var response string
 	fmt.Printf(message + "? [y/N]: ")
-	fmt.Scanf("%s", &response)
+	_, _ = fmt.Scanf("%s", &response)
 
 	return strings.ToLower(response) == "y"
 }

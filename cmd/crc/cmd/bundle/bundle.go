@@ -10,7 +10,7 @@ func GetBundleCmd(config *config.Config) *cobra.Command {
 		Use:   "bundle SUBCOMMAND [flags]",
 		Short: "Manage CRC bundles",
 		Long:  "Manage CRC bundles",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, _ []string) {
 			_ = cmd.Help()
 		},
 	}

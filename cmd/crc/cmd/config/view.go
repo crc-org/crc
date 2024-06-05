@@ -31,7 +31,7 @@ func configViewCmd(config config.Storage) *cobra.Command {
 		Use:   "view",
 		Short: "Display all assigned crc configuration properties",
 		Long:  `Displays all assigned crc configuration properties and their values.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			tmpl, err := determineTemplate(configViewFormat)
 			if err != nil {
 				return err

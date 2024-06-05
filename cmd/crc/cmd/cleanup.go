@@ -19,7 +19,7 @@ var cleanupCmd = &cobra.Command{
 	Use:   "cleanup",
 	Short: "Undo config changes",
 	Long:  "Undo all the configuration changes done by 'crc setup' command",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		return runCleanup()
 	},
 }

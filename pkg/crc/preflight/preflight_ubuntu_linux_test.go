@@ -41,7 +41,7 @@ func TestCleanupAppArmor(t *testing.T) {
 }
 
 func writerVerifier(expected string) func(reason string, content string, filepath string, mode os.FileMode) error {
-	return func(reason, content, filepath string, mode os.FileMode) error {
+	return func(_, content, _ string, _ os.FileMode) error {
 		if content == expected {
 			return nil
 		}

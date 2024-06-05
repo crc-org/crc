@@ -14,7 +14,7 @@ func getGenerateCmd(config *config.Config) *cobra.Command {
 		Use:   "generate",
 		Short: "Generate a custom bundle from the running OpenShift cluster",
 		Long:  "Generate a custom bundle from the running OpenShift cluster",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			return runGenerate(config, forceStop)
 		},
 	}

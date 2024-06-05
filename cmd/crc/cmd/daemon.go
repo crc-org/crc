@@ -49,7 +49,7 @@ var daemonCmd = &cobra.Command{
 	Short:  "Run the crc daemon",
 	Long:   "Run the crc daemon",
 	Hidden: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		if running, _ := checkIfDaemonIsRunning(); running {
 			return errors.New("daemon is already running")
 		}

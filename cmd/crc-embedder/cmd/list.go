@@ -17,7 +17,7 @@ var listCmd = &cobra.Command{
 	Use:   "list [path to crc executable]",
 	Short: "List data files embedded in the crc executable",
 	Long:  `List all the data files which were embedded in the crc executable`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		runList(args)
 	},
 }

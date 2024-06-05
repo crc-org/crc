@@ -17,7 +17,7 @@ var podmanEnvCmd = &cobra.Command{
 	Use:   "podman-env",
 	Short: "Setup podman environment",
 	Long:  `Setup environment for 'podman' executable to access podman on CRC VM`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		return runPodmanEnv()
 	},
 }

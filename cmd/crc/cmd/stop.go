@@ -22,7 +22,7 @@ var stopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop the instance",
 	Long:  "Stop the instance",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		return runStop(os.Stdout, newMachine(), outputFormat != jsonFormat, globalForce, outputFormat)
 	},
 }
