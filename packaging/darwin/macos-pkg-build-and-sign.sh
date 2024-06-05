@@ -49,7 +49,7 @@ sign "${crcBinDir}/crc"
 sign "${crcBinDir}/crc-admin-helper-darwin"
 sign "${crcBinDir}/vfkit"
 
-sudo chmod +sx "${crcBinDir}/crc-admin-helper-darwin"
+chmod +sx "${crcBinDir}/crc-admin-helper-darwin"
 
 pkgbuild --identifier com.redhat.crc --version ${version} \
   --scripts "${BASEDIR}/scripts" \
