@@ -121,7 +121,8 @@ func loadFromKeyring() (string, error) {
 	}
 	var b bytes.Buffer
 	// #nosec G110
-	if _, err := io.Copy(&b, decompressor); err != nil {
+	_, err = io.Copy(&b, decompressor)
+	if err != nil {
 		return "", err
 	}
 	if err := decompressor.Close(); err != nil {
