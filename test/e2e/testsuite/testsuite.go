@@ -244,7 +244,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		return ctx, nil
 	})
 
-	s.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+	s.After(func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
 
 		for _, tag := range sc.Tags {
 
@@ -523,7 +523,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^ensuring microshift cluster is fully operational$`,
 		EnsureMicroshiftClusterIsOperational)
 
-	s.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+	s.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
 
 		if usingPreexistingCluster() {
 			// collecting diagnostics data is quite slow, and they

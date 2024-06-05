@@ -14,10 +14,10 @@ var rootCmd = &cobra.Command{
 	Short: "Build helper for crc for binary embedding",
 	Long: `crc-embedder is a command line utility for listing or appending binary data
 when building the crc executable for release`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRun: func(_ *cobra.Command, _ []string) {
 		runPrerun()
 	},
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+	PersistentPostRun: func(_ *cobra.Command, _ []string) {
 		runPostrun()
 	},
 }

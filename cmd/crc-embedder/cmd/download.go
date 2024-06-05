@@ -18,7 +18,7 @@ var downloadCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Use:   "download [destination directory]",
 	Short: "Download data files to embed in the crc executable",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, args []string) error {
 		return runDownload(args)
 	},
 }

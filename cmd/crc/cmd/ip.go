@@ -14,7 +14,7 @@ var ipCmd = &cobra.Command{
 	Use:   "ip",
 	Short: "Get IP address of the running OpenShift cluster",
 	Long:  "Get IP address of the running OpenShift cluster",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, args []string) error {
 		return runIP(args)
 	},
 }

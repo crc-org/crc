@@ -205,12 +205,12 @@ func kubernetesClientConfiguration(ip string, kubeconfigFilePath string) (*restc
 		return nil, err
 	}
 	// override dial to directly use the IP of the VM
-	config.Dial = func(ctx context.Context, network, address string) (net.Conn, error) {
+	config.Dial = func(ctx context.Context, _, _ string) (net.Conn, error) {
 		var d net.Dialer
 		return d.DialContext(ctx, "tcp", fmt.Sprintf("%s:6443", ip))
 	}
 	// discard any proxy configuration of the host
-	config.Proxy = func(request *http.Request) (*url.URL, error) {
+	config.Proxy = func(_ *http.Request) (*url.URL, error) {
 		return nil, nil
 	}
 	config.Timeout = 5 * time.Second

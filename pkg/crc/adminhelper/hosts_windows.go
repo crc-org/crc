@@ -17,7 +17,7 @@ func instance() helper {
 func Client() *client.Client {
 	return client.New(&http.Client{
 		Transport: &http.Transport{
-			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 				return winio.DialPipeContext(ctx, `\\.\pipe\crc-admin-helper`)
 			},
 		},

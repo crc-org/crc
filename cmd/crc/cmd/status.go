@@ -33,7 +33,7 @@ var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Display status of the OpenShift cluster",
 	Long:  "Show details about the OpenShift cluster",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		return runStatus(os.Stdout, daemonclient.New(), constants.MachineCacheDir, outputFormat, watch)
 	},
 }

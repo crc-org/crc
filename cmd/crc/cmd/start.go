@@ -50,7 +50,7 @@ var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start the instance",
 	Long:  "Start the instance",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		if err := viper.BindFlagSet(cmd.Flags()); err != nil {
 			return err
 		}

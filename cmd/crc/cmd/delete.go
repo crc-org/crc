@@ -30,7 +30,7 @@ var deleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete the instance",
 	Long:  "Delete the instance",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		return runDelete(os.Stdout, newMachine(), clearCache, constants.MachineCacheDir, outputFormat != jsonFormat, globalForce, outputFormat)
 	},
 }

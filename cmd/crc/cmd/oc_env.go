@@ -16,7 +16,7 @@ var ocEnvCmd = &cobra.Command{
 	Use:   "oc-env",
 	Short: "Add the 'oc' executable to PATH",
 	Long:  `Add the OpenShift client executable 'oc' to PATH`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, args []string) error {
 		return runOcEnv(args)
 	},
 }

@@ -44,7 +44,7 @@ type segmentResponse struct {
 func mockServer() (chan []byte, *httptest.Server) {
 	done := make(chan []byte, 1)
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		bin, err := io.ReadAll(r.Body)
 		if err != nil {
