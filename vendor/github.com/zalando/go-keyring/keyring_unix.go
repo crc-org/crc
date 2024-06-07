@@ -95,6 +95,12 @@ func (s secretServiceProvider) Get(service, user string) (string, error) {
 	}
 	defer svc.Close(session)
 
+	// unlock if invdividual item is locked
+	err = svc.Unlock(item)
+	if err != nil {
+		return "", err
+	}
+
 	secret, err := svc.GetSecret(item, session.Path())
 	if err != nil {
 		return "", err

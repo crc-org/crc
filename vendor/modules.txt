@@ -765,7 +765,7 @@ github.com/xi2/xz
 # github.com/yusufpapurcu/wmi v1.2.4
 ## explicit; go 1.16
 github.com/yusufpapurcu/wmi
-# github.com/zalando/go-keyring v0.2.4
+# github.com/zalando/go-keyring v0.2.5
 ## explicit; go 1.18
 github.com/zalando/go-keyring
 github.com/zalando/go-keyring/secret_service
