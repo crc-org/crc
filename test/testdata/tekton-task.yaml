@@ -5,7 +5,7 @@ metadata:
   name: echo-task
 spec:
   steps:
-    - image: registry.redhat.io/ubi7/ubi-minimal
+    - image: registry.redhat.io/ubi9/ubi-minimal
       name: echo
       script: |
         #!/bin/sh
