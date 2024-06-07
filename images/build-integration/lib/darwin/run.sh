@@ -32,7 +32,8 @@ while [[ $# -gt 0 ]]; do
         -labelFilter)
         labelFilter="$2"
         shift 
-        shift 
+        shift
+        ;; 
         *)    # unknown option
         shift 
         ;;
