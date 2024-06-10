@@ -16,7 +16,7 @@ var (
 )
 
 func isError(pass *analysis.Pass, expr ast.Expr) bool {
-	return implements(pass, expr, errorObj)
+	return pass.TypesInfo.TypeOf(expr) == errorType
 }
 
 func isErrorsIsCall(pass *analysis.Pass, ce *ast.CallExpr) bool {

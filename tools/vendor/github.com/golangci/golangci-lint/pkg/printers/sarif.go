@@ -70,6 +70,7 @@ func NewSarif(w io.Writer) *Sarif {
 func (p Sarif) Print(issues []result.Issue) error {
 	run := sarifRun{}
 	run.Tool.Driver.Name = "golangci-lint"
+	run.Results = make([]sarifResult, 0)
 
 	for i := range issues {
 		issue := issues[i]
@@ -88,8 +89,10 @@ func (p Sarif) Print(issues []result.Issue) error {
 					PhysicalLocation: sarifPhysicalLocation{
 						ArtifactLocation: sarifArtifactLocation{URI: issue.FilePath()},
 						Region: sarifRegion{
-							StartLine:   issue.Line(),
-							StartColumn: issue.Column(),
+							StartLine: issue.Line(),
+							// If startColumn is absent, it SHALL default to 1.
+							// https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/sarif-v2.1.0-errata01-os-complete.html#_Toc141790941
+							StartColumn: max(1, issue.Column()),
 						},
 					},
 				},

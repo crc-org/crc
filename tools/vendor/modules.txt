@@ -16,7 +16,7 @@ github.com/Antonboom/errname/pkg/analyzer
 # github.com/Antonboom/nilnil v0.1.9
 ## explicit; go 1.20
 github.com/Antonboom/nilnil/pkg/analyzer
-# github.com/Antonboom/testifylint v1.3.0
+# github.com/Antonboom/testifylint v1.3.1
 ## explicit; go 1.20
 github.com/Antonboom/testifylint/analyzer
 github.com/Antonboom/testifylint/internal/analysisutil
@@ -190,9 +190,10 @@ github.com/go-toolsmith/strparse
 # github.com/go-toolsmith/typep v1.1.0
 ## explicit; go 1.16
 github.com/go-toolsmith/typep
-# github.com/go-viper/mapstructure/v2 v2.0.0-alpha.1
+# github.com/go-viper/mapstructure/v2 v2.0.0
 ## explicit; go 1.18
 github.com/go-viper/mapstructure/v2
+github.com/go-viper/mapstructure/v2/internal/errors
 # github.com/go-xmlfmt/xmlfmt v1.1.2
 ## explicit
 github.com/go-xmlfmt/xmlfmt
@@ -229,7 +230,7 @@ github.com/golangci/dupl/syntax/golang
 github.com/golangci/gofmt/gofmt
 github.com/golangci/gofmt/gofmt/internal/diff
 github.com/golangci/gofmt/goimports
-# github.com/golangci/golangci-lint v1.59.0
+# github.com/golangci/golangci-lint v1.59.1
 ## explicit; go 1.21
 github.com/golangci/golangci-lint/cmd/golangci-lint
 github.com/golangci/golangci-lint/internal/cache
@@ -365,7 +366,7 @@ github.com/golangci/golangci-lint/pkg/report
 github.com/golangci/golangci-lint/pkg/result
 github.com/golangci/golangci-lint/pkg/result/processors
 github.com/golangci/golangci-lint/pkg/timeutils
-# github.com/golangci/misspell v0.5.1
+# github.com/golangci/misspell v0.6.0
 ## explicit; go 1.21
 github.com/golangci/misspell
 # github.com/golangci/modinfo v0.3.4
@@ -564,7 +565,7 @@ github.com/pelletier/go-toml/v2/unstable
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
-# github.com/polyfloyd/go-errorlint v1.5.1
+# github.com/polyfloyd/go-errorlint v1.5.2
 ## explicit; go 1.20
 github.com/polyfloyd/go-errorlint/errorlint
 # github.com/prometheus/client_golang v1.12.1
@@ -636,7 +637,7 @@ github.com/santhosh-tekuri/jsonschema/v5/httploader
 # github.com/sashamelentyev/interfacebloat v1.1.0
 ## explicit; go 1.18
 github.com/sashamelentyev/interfacebloat/pkg/analyzer
-# github.com/sashamelentyev/usestdlibvars v1.25.0
+# github.com/sashamelentyev/usestdlibvars v1.26.0
 ## explicit; go 1.20
 github.com/sashamelentyev/usestdlibvars/pkg/analyzer
 github.com/sashamelentyev/usestdlibvars/pkg/analyzer/internal/mapping
@@ -769,7 +770,7 @@ gitlab.com/bosi/decorder
 # go-simpler.org/musttag v0.12.2
 ## explicit; go 1.20
 go-simpler.org/musttag
-# go-simpler.org/sloglint v0.7.0
+# go-simpler.org/sloglint v0.7.1
 ## explicit; go 1.21
 go-simpler.org/sloglint
 # go.uber.org/atomic v1.7.0
@@ -983,6 +984,6 @@ mvdan.cc/gofumpt/internal/govendor/go/doc/comment
 mvdan.cc/gofumpt/internal/govendor/go/format
 mvdan.cc/gofumpt/internal/govendor/go/printer
 mvdan.cc/gofumpt/internal/version
-# mvdan.cc/unparam v0.0.0-20240427195214-063aff900ca1
-## explicit; go 1.20
+# mvdan.cc/unparam v0.0.0-20240528143540-8a5130ca722f
+## explicit; go 1.21
 mvdan.cc/unparam/check
