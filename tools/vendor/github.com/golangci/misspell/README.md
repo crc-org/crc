@@ -67,6 +67,23 @@ Usage of misspell:
   -w    Overwrite file with corrections (default is just to display)
 ```
 
+### Pre-commit hook
+
+To use misspell with [pre-commit](https://pre-commit.com/), add the following to your `.pre-commit-config.yaml`:
+
+
+```yaml
+- repo: https://github.com/golangci/misspell
+  rev: v0.6.0
+  hooks:
+    - id: misspell
+      # The hook will run on all files by default.
+      # To limit to some files only, use pre-commit patterns/types
+      # files: <pattern>
+      # exclude: <pattern>
+      # types: <types>
+```
+
 ## FAQ
 
 * [Automatic Corrections](#correct)

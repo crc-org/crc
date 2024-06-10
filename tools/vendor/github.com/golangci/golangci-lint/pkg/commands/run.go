@@ -152,6 +152,8 @@ func (c *runCommand) persistentPreRunE(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
+	c.log.Infof(c.buildInfo.String())
+
 	loader := config.NewLoader(c.log.Child(logutils.DebugKeyConfigReader), c.viper, cmd.Flags(), c.opts.LoaderOptions, c.cfg, args)
 
 	err := loader.Load(config.LoadOptions{CheckDeprecation: true, Validation: true})
@@ -171,7 +173,7 @@ func (c *runCommand) persistentPreRunE(cmd *cobra.Command, args []string) error 
 		runtime.GOMAXPROCS(c.cfg.Run.Concurrency)
 	}
 
-	return c.startTracing()
+	return nil
 }
 
 func (c *runCommand) persistentPostRunE(_ *cobra.Command, _ []string) error {
@@ -674,7 +676,7 @@ func computeBinarySalt(version string) ([]byte, error) {
 func computeConfigSalt(cfg *config.Config) ([]byte, error) {
 	lintersSettingsBytes, err := yaml.Marshal(cfg.LintersSettings)
 	if err != nil {
-		return nil, fmt.Errorf("failed to json marshal config linter settings: %w", err)
+		return nil, fmt.Errorf("failed to JSON marshal config linter settings: %w", err)
 	}
 
 	configData := bytes.NewBufferString("linters-settings=")

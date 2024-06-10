@@ -54,3 +54,8 @@ func isFloat(pass *analysis.Pass, expr ast.Expr) bool {
 	bt, ok := t.Underlying().(*types.Basic)
 	return ok && (bt.Info()&types.IsFloat > 0)
 }
+
+func isPointer(pass *analysis.Pass, expr ast.Expr) bool {
+	_, ok := pass.TypesInfo.TypeOf(expr).(*types.Pointer)
+	return ok
+}

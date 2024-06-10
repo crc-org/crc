@@ -223,7 +223,8 @@ func visit(pass *analysis.Pass, opts *Options, node ast.Node, stack []ast.Node) 
 	}
 
 	msgPos := funcInfo.argsPos - 1
-	if opts.StaticMsg && !isStaticMsg(call.Args[msgPos]) {
+	// NOTE: "With" functions have no message argument and must be skipped.
+	if opts.StaticMsg && msgPos >= 0 && !isStaticMsg(call.Args[msgPos]) {
 		pass.Reportf(call.Pos(), "message should be a string literal or a constant")
 	}
 
