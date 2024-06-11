@@ -89,7 +89,7 @@ vendorcheck:
 	./verify-vendor.sh
 
 .PHONY: check
-check: cross build_e2e_all $(HOST_BUILD_DIR)/crc-embedder test cross-lint vendorcheck build_integration_all
+check: cross build_e2e_all $(HOST_BUILD_DIR)/crc-embedder test cross-lint check-release-info vendorcheck build_integration_all
 
 # Start of the actual build targets
 
@@ -291,6 +291,9 @@ gen_release_info:
 	@cat release-info.json.sample | sed s/@CRC_VERSION@/$(CRC_VERSION)/ > $(RELEASE_INFO)
 	@sed -i s/@GIT_COMMIT_SHA@/$(COMMIT_SHA)/ $(RELEASE_INFO)
 	@sed -i s/@OPENSHIFT_VERSION@/$(OPENSHIFT_VERSION)/ $(RELEASE_INFO)
+
+check-release-info: gen_release_info
+	cat $(RELEASE_INFO) |jq .
 
 .PHONY: linux-release-binary macos-release-binary windows-release-binary
 linux-release-binary: LDFLAGS+= $(RELEASE_VERSION_VARIABLES)
