@@ -67,7 +67,7 @@ func updateNetworkManagerConfig(sd *systemd.Commander, sshRunner *ssh.Runner, re
 	nameservers := strings.Join(resolvFileValues.GetNameServer(), ",")
 	searchDomains := strings.Join(resolvFileValues.GetSearchDomains(), ",")
 	// When ovs-configuration service is running, name of the connection should be ovs-if-br-ex
-	_, stderr, err := sshRunner.RunPrivileged("Update resolv.conf file", "nmcli", "con", "modify", "ovs-if-br-ex",
+	_, stderr, err := sshRunner.RunPrivileged("Update resolv.conf file", "nmcli", "con", "modify", "--temporary", "ovs-if-br-ex",
 		"ipv4.dns", nameservers, "ipv4.dns-search", searchDomains)
 	if err != nil {
 		return fmt.Errorf("failed to update resolv.conf file %s: %v", stderr, err)
