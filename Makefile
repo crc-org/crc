@@ -289,8 +289,8 @@ cross-lint: $(TOOLS_BINDIR)/golangci-lint gen_release_info
 .PHONY: gen_release_info
 gen_release_info:
 	@cat release-info.json.sample | sed s/@CRC_VERSION@/$(CRC_VERSION)/ > $(RELEASE_INFO)
-	@sed -i s/@GIT_COMMIT_SHA@/$(COMMIT_SHA)/ $(RELEASE_INFO)
-	@sed -i s/@OPENSHIFT_VERSION@/$(OPENSHIFT_VERSION)/ $(RELEASE_INFO)
+	@sed -i'' -e s/@GIT_COMMIT_SHA@/$(COMMIT_SHA)/ $(RELEASE_INFO)
+	@sed -i'' -e s/@OPENSHIFT_VERSION@/$(OPENSHIFT_VERSION)/ $(RELEASE_INFO)
 
 .PHONY: linux-release-binary macos-release-binary windows-release-binary
 linux-release-binary: LDFLAGS+= $(RELEASE_VERSION_VARIABLES)
