@@ -128,8 +128,8 @@ generate_mocks: $(TOOLS_BINDIR)/mockery
 	$(TOOLS_BINDIR)/mockery --srcpkg ./pkg/crc/api/client --name Client --output test/mocks/api  --filename client.go
 
 .PHONY: test
-test:
-	go test -race --tags "build $(BUILDTAGS)" -v -ldflags="$(VERSION_VARIABLES)" ./pkg/... ./cmd/...
+test: gen_release_info
+	go test -race --tags "build $(BUILDTAGS)" -v -ldflags="$(VERSION_VARIABLES)" . ./pkg/... ./cmd/...
 
 .PHONY: spec test-rpmbuild
 
@@ -277,10 +277,10 @@ fmt: $(TOOLS_BINDIR)/goimports
 
 # Run golangci-lint against code
 .PHONY: lint cross-lint
-lint: $(TOOLS_BINDIR)/golangci-lint
+lint: $(TOOLS_BINDIR)/golangci-lint gen_release_info
 	"$(TOOLS_BINDIR)"/golangci-lint run
 
-cross-lint: $(TOOLS_BINDIR)/golangci-lint
+cross-lint: $(TOOLS_BINDIR)/golangci-lint gen_release_info
 	GOARCH=amd64 GOOS=darwin "$(TOOLS_BINDIR)"/golangci-lint run
 	GOARCH=arm64 GOOS=darwin "$(TOOLS_BINDIR)"/golangci-lint run
 	GOARCH=amd64 GOOS=linux "$(TOOLS_BINDIR)"/golangci-lint run
