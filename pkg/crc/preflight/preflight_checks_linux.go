@@ -604,7 +604,7 @@ func removeCrcVM() error {
 			return fmt.Errorf("Failed to destroy 'crc' VM")
 		}
 	}
-	_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "undefine", constants.DefaultName)
+	_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "undefine", "--nvram", constants.DefaultName)
 	if err != nil {
 		logging.Debugf("%v : %s", err, stderr)
 		return fmt.Errorf("Failed to undefine 'crc' VM")
