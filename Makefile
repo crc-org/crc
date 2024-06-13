@@ -311,7 +311,7 @@ linux-release: clean lint linux-release-binary embed_crc_helpers gen_release_inf
 	@cp LICENSE $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
 	tar cJSf $(RELEASE_DIR)/crc-linux-amd64.tar.xz -C $(BUILD_DIR) crc-linux-$(CRC_VERSION)-amd64 --owner=0 --group=0
 
-	@mv $(RELEASE_INFO) $(RELEASE_DIR)/$(RELEASE_INFO)
+	@cp $(RELEASE_INFO) $(RELEASE_DIR)/$(RELEASE_INFO)
 
 	cd $(RELEASE_DIR) && sha256sum * > sha256sum.txt
 
