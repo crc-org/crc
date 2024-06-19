@@ -22,6 +22,7 @@ import (
 	"github.com/ProtonMail/go-crypto/openpgp/internal/algorithm"
 	"github.com/ProtonMail/go-crypto/openpgp/internal/ecc"
 	"github.com/ProtonMail/go-crypto/openpgp/packet"
+	"github.com/ProtonMail/go-crypto/openpgp/symmetric"
 	"github.com/ProtonMail/go-crypto/openpgp/x25519"
 	"github.com/ProtonMail/go-crypto/openpgp/x448"
 )
@@ -308,6 +309,9 @@ func newSigner(config *packet.Config) (signer interface{}, err error) {
 			return nil, err
 		}
 		return priv, nil
+	case packet.ExperimentalPubKeyAlgoHMAC:
+		hash := algorithm.HashById[hashToHashId(config.Hash())]
+		return symmetric.HMACGenerateKey(config.Random(), hash)
 	default:
 		return nil, errors.InvalidArgumentError("unsupported public key algorithm")
 	}
@@ -350,6 +354,9 @@ func newDecrypter(config *packet.Config) (decrypter interface{}, err error) {
 		return x25519.GenerateKey(config.Random())
 	case packet.PubKeyAlgoEd448, packet.PubKeyAlgoX448: // When passing Ed448, we generate an x448 subkey
 		return x448.GenerateKey(config.Random())
+	case packet.ExperimentalPubKeyAlgoAEAD:
+		cipher := algorithm.CipherFunction(config.Cipher())
+		return symmetric.AEADGenerateKey(config.Random(), cipher)
 	default:
 		return nil, errors.InvalidArgumentError("unsupported public key algorithm")
 	}

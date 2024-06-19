@@ -17,7 +17,9 @@ import (
 	"github.com/ProtonMail/go-crypto/openpgp/ecdh"
 	"github.com/ProtonMail/go-crypto/openpgp/elgamal"
 	"github.com/ProtonMail/go-crypto/openpgp/errors"
+	"github.com/ProtonMail/go-crypto/openpgp/internal/algorithm"
 	"github.com/ProtonMail/go-crypto/openpgp/internal/encoding"
+	"github.com/ProtonMail/go-crypto/openpgp/symmetric"
 	"github.com/ProtonMail/go-crypto/openpgp/x25519"
 	"github.com/ProtonMail/go-crypto/openpgp/x448"
 )
@@ -37,6 +39,9 @@ type EncryptedKey struct {
 	ephemeralPublicX25519        *x25519.PublicKey // used for x25519
 	ephemeralPublicX448          *x448.PublicKey   // used for x448
 	encryptedSession             []byte            // used for x25519 and x448
+
+	nonce    []byte
+	aeadMode algorithm.AEADMode
 }
 
 func (e *EncryptedKey) parse(r io.Reader) (err error) {
@@ -133,6 +138,21 @@ func (e *EncryptedKey) parse(r io.Reader) (err error) {
 		if err != nil {
 			return
 		}
+	case ExperimentalPubKeyAlgoAEAD:
+		var aeadMode [1]byte
+		if _, err = readFull(r, aeadMode[:]); err != nil {
+			return
+		}
+		e.aeadMode = algorithm.AEADMode(aeadMode[0])
+		nonceLength := e.aeadMode.NonceLength()
+		e.nonce = make([]byte, nonceLength)
+		if _, err = readFull(r, e.nonce); err != nil {
+			return
+		}
+		e.encryptedMPI1 = new(encoding.ShortByteString)
+		if _, err = e.encryptedMPI1.ReadFrom(r); err != nil {
+			return
+		}
 	}
 	if e.Version < 6 {
 		switch e.Algo {
@@ -186,6 +206,9 @@ func (e *EncryptedKey) Decrypt(priv *PrivateKey, config *Config) error {
 		b, err = x25519.Decrypt(priv.PrivateKey.(*x25519.PrivateKey), e.ephemeralPublicX25519, e.encryptedSession)
 	case PubKeyAlgoX448:
 		b, err = x448.Decrypt(priv.PrivateKey.(*x448.PrivateKey), e.ephemeralPublicX448, e.encryptedSession)
+	case ExperimentalPubKeyAlgoAEAD:
+		priv := priv.PrivateKey.(*symmetric.AEADPrivateKey)
+		b, err = priv.Decrypt(e.nonce, e.encryptedMPI1.Bytes(), e.aeadMode)
 	default:
 		err = errors.InvalidArgumentError("cannot decrypt encrypted session key with private key of type " + strconv.Itoa(int(priv.PubKeyAlgo)))
 	}
@@ -195,7 +218,7 @@ func (e *EncryptedKey) Decrypt(priv *PrivateKey, config *Config) error {
 
 	var key []byte
 	switch priv.PubKeyAlgo {
-	case PubKeyAlgoRSA, PubKeyAlgoRSAEncryptOnly, PubKeyAlgoElGamal, PubKeyAlgoECDH:
+	case PubKeyAlgoRSA, PubKeyAlgoRSAEncryptOnly, PubKeyAlgoElGamal, PubKeyAlgoECDH, ExperimentalPubKeyAlgoAEAD:
 		keyOffset := 0
 		if e.Version < 6 {
 			e.CipherFunc = CipherFunction(b[0])
@@ -382,7 +405,7 @@ func SerializeEncryptedKeyAEADwithHiddenOption(w io.Writer, pub *PublicKey, ciph
 
 	var keyBlock []byte
 	switch pub.PubKeyAlgo {
-	case PubKeyAlgoRSA, PubKeyAlgoRSAEncryptOnly, PubKeyAlgoElGamal, PubKeyAlgoECDH:
+	case PubKeyAlgoRSA, PubKeyAlgoRSAEncryptOnly, PubKeyAlgoElGamal, PubKeyAlgoECDH, ExperimentalPubKeyAlgoAEAD:
 		lenKeyBlock := len(key) + 2
 		if version < 6 {
 			lenKeyBlock += 1 // cipher type included
@@ -410,7 +433,9 @@ func SerializeEncryptedKeyAEADwithHiddenOption(w io.Writer, pub *PublicKey, ciph
 		return serializeEncryptedKeyX25519(w, config.Random(), buf[:lenHeaderWritten], pub.PublicKey.(*x25519.PublicKey), keyBlock, byte(cipherFunc), version)
 	case PubKeyAlgoX448:
 		return serializeEncryptedKeyX448(w, config.Random(), buf[:lenHeaderWritten], pub.PublicKey.(*x448.PublicKey), keyBlock, byte(cipherFunc), version)
-	case PubKeyAlgoDSA, PubKeyAlgoRSASignOnly:
+	case ExperimentalPubKeyAlgoAEAD:
+		return serializeEncryptedKeyAEAD(w, config.Random(), buf[:lenHeaderWritten], pub.PublicKey.(*symmetric.AEADPublicKey), keyBlock, config.AEAD())
+	case PubKeyAlgoDSA, PubKeyAlgoRSASignOnly, ExperimentalPubKeyAlgoHMAC:
 		return errors.InvalidArgumentError("cannot encrypt to public key of type " + strconv.Itoa(int(pub.PubKeyAlgo)))
 	}
 
@@ -431,6 +456,36 @@ func SerializeEncryptedKey(w io.Writer, pub *PublicKey, cipherFunc CipherFunctio
 // If config is nil, sensible defaults will be used.
 func SerializeEncryptedKeyWithHiddenOption(w io.Writer, pub *PublicKey, cipherFunc CipherFunction, key []byte, hidden bool, config *Config) error {
 	return SerializeEncryptedKeyAEADwithHiddenOption(w, pub, cipherFunc, config.AEAD() != nil, key, hidden, config)
+}
+
+func (e *EncryptedKey) ProxyTransform(instance ForwardingInstance) (transformed *EncryptedKey, err error) {
+	if e.Algo != PubKeyAlgoECDH {
+		return nil, errors.InvalidArgumentError("invalid PKESK")
+	}
+
+	if e.KeyId != 0 && e.KeyId != instance.GetForwarderKeyId() {
+		return nil, errors.InvalidArgumentError("invalid key id in PKESK")
+	}
+
+	ephemeral := e.encryptedMPI1.Bytes()
+	transformedEphemeral, err := ecdh.ProxyTransform(ephemeral, instance.ProxyParameter)
+	if err != nil {
+		return nil, err
+	}
+
+	wrappedKey := e.encryptedMPI2.Bytes()
+	copiedWrappedKey := make([]byte, len(wrappedKey))
+	copy(copiedWrappedKey, wrappedKey)
+
+	transformed = &EncryptedKey{
+		Version:       e.Version,
+		KeyId:         instance.getForwardeeKeyIdOrZero(e.KeyId),
+		Algo:          e.Algo,
+		encryptedMPI1: encoding.NewMPI(transformedEphemeral),
+		encryptedMPI2: encoding.NewOID(copiedWrappedKey),
+	}
+
+	return transformed, nil
 }
 
 func serializeEncryptedKeyRSA(w io.Writer, rand io.Reader, header []byte, pub *rsa.PublicKey, keyBlock []byte) error {
@@ -547,6 +602,35 @@ func serializeEncryptedKeyX448(w io.Writer, rand io.Reader, header []byte, pub *
 		return err
 	}
 	return x448.EncodeFields(w, ephemeralPublicX448, ciphertext, cipherFunc, version == 6)
+}
+
+func serializeEncryptedKeyAEAD(w io.Writer, rand io.Reader, header []byte, pub *symmetric.AEADPublicKey, keyBlock []byte, config *AEADConfig) error {
+	mode := algorithm.AEADMode(config.Mode())
+	iv, ciphertextRaw, err := pub.Encrypt(rand, keyBlock, mode)
+	if err != nil {
+		return errors.InvalidArgumentError("AEAD encryption failed: " + err.Error())
+	}
+
+	ciphertextShortByteString := encoding.NewShortByteString(ciphertextRaw)
+
+	buffer := append([]byte{byte(mode)}, iv...)
+	buffer = append(buffer, ciphertextShortByteString.EncodedBytes()...)
+
+	packetLen := len(header) /* header length */
+	packetLen += int(len(buffer))
+
+	err = serializeHeader(w, packetTypeEncryptedKey, packetLen)
+	if err != nil {
+		return err
+	}
+
+	_, err = w.Write(header[:])
+	if err != nil {
+		return err
+	}
+
+	_, err = w.Write(buffer)
+	return err
 }
 
 func checksumKeyMaterial(key []byte) uint16 {
