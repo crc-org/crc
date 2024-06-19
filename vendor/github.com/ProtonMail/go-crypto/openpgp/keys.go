@@ -371,7 +371,7 @@ func (el EntityList) KeysByIdUsage(id uint64, requiredUsage byte) (keys []Key) {
 func (el EntityList) DecryptionKeys() (keys []Key) {
 	for _, e := range el {
 		for _, subKey := range e.Subkeys {
-			if subKey.PrivateKey != nil && subKey.Sig.FlagsValid && (subKey.Sig.FlagEncryptStorage || subKey.Sig.FlagEncryptCommunications) {
+			if subKey.PrivateKey != nil && subKey.Sig.FlagsValid && (subKey.Sig.FlagEncryptStorage || subKey.Sig.FlagEncryptCommunications || subKey.Sig.FlagForward) {
 				keys = append(keys, Key{e, subKey.PublicKey, subKey.PrivateKey, subKey.Sig, subKey.Revocations})
 			}
 		}
@@ -761,6 +761,10 @@ func (e *Entity) serializePrivate(w io.Writer, config *packet.Config, reSign boo
 // Serialize writes the public part of the given Entity to w, including
 // signatures from other entities. No private key material will be output.
 func (e *Entity) Serialize(w io.Writer) error {
+	if e.PrimaryKey.PubKeyAlgo == packet.ExperimentalPubKeyAlgoHMAC ||
+		e.PrimaryKey.PubKeyAlgo == packet.ExperimentalPubKeyAlgoAEAD {
+		return errors.InvalidArgumentError("Can't serialize symmetric primary key")
+	}
 	err := e.PrimaryKey.Serialize(w)
 	if err != nil {
 		return err
@@ -790,6 +794,16 @@ func (e *Entity) Serialize(w io.Writer) error {
 		}
 	}
 	for _, subkey := range e.Subkeys {
+		// The types of keys below are only useful as private keys. Thus, the
+		// public key packets contain no meaningful information and do not need
+		// to be serialized.
+		// Prevent public key export for forwarding keys, see forwarding section 4.1.
+		if subkey.PublicKey.PubKeyAlgo == packet.ExperimentalPubKeyAlgoHMAC ||
+			subkey.PublicKey.PubKeyAlgo == packet.ExperimentalPubKeyAlgoAEAD ||
+			subkey.Sig.FlagForward {
+			continue
+		}
+
 		err = subkey.PublicKey.Serialize(w)
 		if err != nil {
 			return err

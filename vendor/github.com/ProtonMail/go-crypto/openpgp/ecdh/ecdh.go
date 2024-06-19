@@ -9,16 +9,52 @@ package ecdh
 import (
 	"bytes"
 	"errors"
-	"io"
-
 	"github.com/ProtonMail/go-crypto/openpgp/aes/keywrap"
+	pgperrors "github.com/ProtonMail/go-crypto/openpgp/errors"
 	"github.com/ProtonMail/go-crypto/openpgp/internal/algorithm"
 	"github.com/ProtonMail/go-crypto/openpgp/internal/ecc"
+	"github.com/ProtonMail/go-crypto/openpgp/internal/ecc/curve25519"
+	"io"
+)
+
+const (
+	KDFVersion1 = 1
+	KDFVersionForwarding = 255
 )
 
 type KDF struct {
-	Hash   algorithm.Hash
-	Cipher algorithm.Cipher
+	Version                int // Defaults to v1; 255 for forwarding
+	Hash                   algorithm.Hash
+	Cipher                 algorithm.Cipher
+	ReplacementFingerprint []byte // (forwarding only) fingerprint to use instead of recipient's (20 octets)
+}
+
+func (kdf *KDF) Serialize(w io.Writer) (err error) {
+	switch kdf.Version {
+		case 0, KDFVersion1: // Default to v1 if unspecified
+			return kdf.serializeForHash(w)
+		case KDFVersionForwarding:
+			// Length || Version || Hash || Cipher || Replacement Fingerprint
+			length := byte(3 + len(kdf.ReplacementFingerprint))
+			if _, err := w.Write([]byte{length, KDFVersionForwarding, kdf.Hash.Id(), kdf.Cipher.Id()}); err != nil {
+				return err
+			}
+			if _, err := w.Write(kdf.ReplacementFingerprint); err != nil {
+				return err
+			}
+
+			return nil
+		default:
+			return errors.New("ecdh: invalid KDF version")
+	}
+}
+
+func (kdf *KDF) serializeForHash(w io.Writer) (err error) {
+	// Length || Version || Hash || Cipher
+	if _, err := w.Write([]byte{3, KDFVersion1, kdf.Hash.Id(), kdf.Cipher.Id()}); err != nil {
+		return err
+	}
+	return nil
 }
 
 type PublicKey struct {
@@ -32,13 +68,10 @@ type PrivateKey struct {
 	D []byte
 }
 
-func NewPublicKey(curve ecc.ECDHCurve, kdfHash algorithm.Hash, kdfCipher algorithm.Cipher) *PublicKey {
+func NewPublicKey(curve ecc.ECDHCurve, kdf KDF) *PublicKey {
 	return &PublicKey{
 		curve: curve,
-		KDF: KDF{
-			Hash:   kdfHash,
-			Cipher: kdfCipher,
-		},
+		KDF:   kdf,
 	}
 }
 
@@ -149,26 +182,31 @@ func Decrypt(priv *PrivateKey, vsG, c, curveOID, fingerprint []byte) (msg []byte
 }
 
 func buildKey(pub *PublicKey, zb []byte, curveOID, fingerprint []byte, stripLeading, stripTrailing bool) ([]byte, error) {
-	// Param = curve_OID_len || curve_OID || public_key_alg_ID || 03
-	//         || 01 || KDF_hash_ID || KEK_alg_ID for AESKeyWrap
+	// Param = curve_OID_len || curve_OID || public_key_alg_ID
+	//         || KDF_params for AESKeyWrap
 	//         || "Anonymous Sender    " || recipient_fingerprint;
 	param := new(bytes.Buffer)
 	if _, err := param.Write(curveOID); err != nil {
 		return nil, err
 	}
-	algKDF := []byte{18, 3, 1, pub.KDF.Hash.Id(), pub.KDF.Cipher.Id()}
-	if _, err := param.Write(algKDF); err != nil {
+	algo := []byte{18}
+	if _, err := param.Write(algo); err != nil {
 		return nil, err
 	}
+
+	if err := pub.KDF.serializeForHash(param); err != nil {
+		return nil, err
+	}
+
 	if _, err := param.Write([]byte("Anonymous Sender    ")); err != nil {
 		return nil, err
 	}
-	// For v5 keys, the 20 leftmost octets of the fingerprint are used.
-	if _, err := param.Write(fingerprint[:20]); err != nil {
-		return nil, err
+	if pub.KDF.ReplacementFingerprint != nil {
+		fingerprint = pub.KDF.ReplacementFingerprint
 	}
-	if param.Len()-len(curveOID) != 45 {
-		return nil, errors.New("ecdh: malformed KDF Param")
+
+	if _, err := param.Write(fingerprint); err != nil {
+		return nil, err
 	}
 
 	// MB = Hash ( 00 || 00 || 00 || 01 || ZB || Param );
@@ -207,4 +245,41 @@ func buildKey(pub *PublicKey, zb []byte, curveOID, fingerprint []byte, stripLead
 
 func Validate(priv *PrivateKey) error {
 	return priv.curve.ValidateECDH(priv.Point, priv.D)
+}
+
+func DeriveProxyParam(recipientKey, forwardeeKey *PrivateKey) (proxyParam []byte, err error) {
+	if recipientKey.GetCurve().GetCurveName() != "curve25519" {
+		return nil, pgperrors.InvalidArgumentError("recipient subkey is not curve25519")
+	}
+
+	if forwardeeKey.GetCurve().GetCurveName() != "curve25519" {
+		return nil, pgperrors.InvalidArgumentError("forwardee subkey is not curve25519")
+	}
+
+	c := ecc.NewCurve25519()
+
+	// Clamp and reverse two secrets
+	proxyParam, err = curve25519.DeriveProxyParam(c.MarshalByteSecret(recipientKey.D), c.MarshalByteSecret(forwardeeKey.D))
+
+	return proxyParam, err
+}
+
+func ProxyTransform(ephemeral, proxyParam []byte) ([]byte, error) {
+	c := ecc.NewCurve25519()
+
+	parsedEphemeral := c.UnmarshalBytePoint(ephemeral)
+	if parsedEphemeral == nil {
+		return nil, pgperrors.InvalidArgumentError("invalid ephemeral")
+	}
+
+	if len(proxyParam) != curve25519.ParamSize {
+		return nil, pgperrors.InvalidArgumentError("invalid proxy parameter")
+	}
+
+	transformed, err := curve25519.ProxyTransform(parsedEphemeral, proxyParam)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.MarshalBytePoint(transformed), nil
 }
