@@ -57,8 +57,8 @@ github.com/coreos/go-systemd/v22 v22.5.0 h1:RrqgGjYQKalulkV8NGVIfkXQf6YYmOyiJKk8
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
-github.com/crc-org/admin-helper v0.5.2 h1:ttfUSqVvHXcX1d24R/fGhzPVBMCxH/JolEqTWcaxkFE=
-github.com/crc-org/admin-helper v0.5.2/go.mod h1:0rrgOlFphlxPLC9kbm0WTdjXzRP2HPwEbbO5//1cMWw=
+github.com/crc-org/admin-helper v0.5.4 h1:Wq6wp6514MipPHHYdoL2VUyhUL9qh26wR1I3qPaVxf4=
+github.com/crc-org/admin-helper v0.5.4/go.mod h1:sFkqIILzKrt62CH1bJn5PSBFSdhaCyMdz6BG37N3TBE=
 github.com/crc-org/machine v0.0.0-20221028075518-f9b43442196b h1:VPbW5D21B1WToPvEA/EGwhi4e3lXevmRff9M1lUTc5g=
 github.com/crc-org/machine v0.0.0-20221028075518-f9b43442196b/go.mod h1:9bEsvgLE3LIPfvGATt9Mo73gG1CKKS6A/++VqOONKqc=
 github.com/crc-org/vfkit v0.5.1 h1:r1zNf1g1bLbgu5BgIQodirvYaIGWJQ91eS/PIgNO6lo=
