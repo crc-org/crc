@@ -14,7 +14,7 @@ require (
 	github.com/containers/gvisor-tap-vsock v0.7.4-0.20240320091526-a0238e52b61f
 	github.com/containers/image/v5 v5.31.0
 	github.com/coreos/go-systemd/v22 v22.5.0
-	github.com/crc-org/admin-helper v0.5.2
+	github.com/crc-org/admin-helper v0.5.4
 	github.com/crc-org/machine v0.0.0-20221028075518-f9b43442196b
 	github.com/crc-org/vfkit v0.5.1
 	github.com/cucumber/godog v0.14.1
