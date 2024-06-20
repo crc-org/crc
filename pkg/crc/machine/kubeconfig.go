@@ -211,8 +211,7 @@ func requestTokenWithChallengeHandlers(clientCfg *restclient.Config, handler *ch
 		return "", err
 	}
 
-	portStr := strconv.Itoa(int(port))
-	o.Issuer = net.JoinHostPort(o.Issuer, portStr)
+	o.Issuer = fmt.Sprintf("%s:%d", o.Issuer, port)
 	return o.RequestToken()
 }
 
