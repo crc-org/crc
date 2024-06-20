@@ -5,6 +5,7 @@ package libvirt
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 )
@@ -25,7 +26,7 @@ const (
 )
 
 var (
-	MachineDriverDownloadURL = fmt.Sprintf("https://github.com/crc-org/machine-driver-libvirt/releases/download/%s/%s", MachineDriverVersion, machineDriverCommand)
+	MachineDriverDownloadURL = fmt.Sprintf("https://github.com/crc-org/machine-driver-libvirt/releases/download/%s/%s-%s", MachineDriverVersion, machineDriverCommand, runtime.GOARCH)
 )
 
 func MachineDriverPath() string {
