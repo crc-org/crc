@@ -55,7 +55,7 @@ const (
 
 var adminHelperExecutableForOs = map[string]string{
 	"darwin":  "crc-admin-helper-darwin",
-	"linux":   "crc-admin-helper-linux",
+	"linux":   fmt.Sprintf("crc-admin-helper-linux-%s", runtime.GOARCH),
 	"windows": "crc-admin-helper-windows.exe",
 }
 
