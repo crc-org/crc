@@ -297,7 +297,7 @@ gen_release_info:
 
 .PHONY: linux-release-binary macos-release-binary windows-release-binary
 linux-release-binary: LDFLAGS+= $(RELEASE_VERSION_VARIABLES)
-linux-release-binary: $(BUILD_DIR)/linux-amd64/crc
+linux-release-binary: $(BUILD_DIR)/linux-${GOARCH}/crc
 
 macos-release-binary: LDFLAGS+= -X '$(MODULEPATH)/pkg/crc/version.installerBuild=true' $(RELEASE_VERSION_VARIABLES)
 macos-release-binary: $(BUILD_DIR)/macos-universal/crc
@@ -310,20 +310,20 @@ release: clean linux-release macos-release-binary windows-release-binary check
 linux-release: clean lint linux-release-binary embed_crc_helpers gen_release_info
 	mkdir $(RELEASE_DIR)
 
-	@mkdir -p $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
-	@cp LICENSE $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-amd64
-	tar cJSf $(RELEASE_DIR)/crc-linux-amd64.tar.xz -C $(BUILD_DIR) crc-linux-$(CRC_VERSION)-amd64 --owner=0 --group=0
+	@mkdir -p $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-${GOARCH}
+	@cp LICENSE $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-${GOARCH}
+	tar cJSf $(RELEASE_DIR)/crc-linux-${GOARCH}.tar.xz -C $(BUILD_DIR) crc-linux-$(CRC_VERSION)-${GOARCH} --owner=0 --group=0
 
 	@cp $(RELEASE_INFO) $(RELEASE_DIR)/$(RELEASE_INFO)
 
 	cd $(RELEASE_DIR) && sha256sum * > sha256sum.txt
 
 .PHONY: embed_crc_helpers
-embed_crc_helpers: $(BUILD_DIR)/linux-amd64/crc $(HOST_BUILD_DIR)/crc-embedder
+embed_crc_helpers: $(BUILD_DIR)/linux-${GOARCH}/crc $(HOST_BUILD_DIR)/crc-embedder
 ifeq ($(CUSTOM_EMBED),false)
-	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=linux $(BUILD_DIR)/linux-amd64/crc
+	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --goos=linux $(BUILD_DIR)/linux-${GOARCH}/crc
 else
-	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --cache-dir=$(EMBED_DOWNLOAD_DIR) --no-download --goos=linux $(BUILD_DIR)/linux-amd64/crc
+	$(HOST_BUILD_DIR)/crc-embedder embed --log-level debug --cache-dir=$(EMBED_DOWNLOAD_DIR) --no-download --goos=linux $(BUILD_DIR)/linux-${GOARCH}/crc
 endif
 
 .PHONY: update-go-version
