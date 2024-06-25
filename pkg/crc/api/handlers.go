@@ -50,14 +50,6 @@ func NewHandler(config *crcConfig.Config, machine machine.Client, logger Logger,
 }
 
 func (h *Handler) Status(c *context) error {
-	exists, err := h.Client.Exists()
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return c.String(http.StatusInternalServerError, string(errors.VMNotExist))
-	}
-
 	res, err := h.Client.Status()
 	if err != nil {
 		return err
