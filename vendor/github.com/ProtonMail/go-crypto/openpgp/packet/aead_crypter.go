@@ -173,10 +173,7 @@ func (ar *aeadDecrypter) validateFinalTag(tag []byte) error {
 	adata = append(adata, amountBytes...)
 	nonce := ar.computeNextNonce()
 	_, err := ar.aead.Open(nil, nonce, tag, adata)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // aeadEncrypter encrypts and writes bytes. It encrypts when necessary according
