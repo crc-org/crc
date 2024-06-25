@@ -1,4 +1,4 @@
-package hyperv
+package libhvee
 
 import (
 	"testing"

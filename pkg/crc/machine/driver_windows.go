@@ -5,28 +5,28 @@ import (
 	"errors"
 
 	"github.com/crc-org/crc/v2/pkg/crc/machine/config"
-	"github.com/crc-org/crc/v2/pkg/crc/machine/hyperv"
-	machineHyperv "github.com/crc-org/crc/v2/pkg/drivers/hyperv"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/libhvee"
+	machineLibhvee "github.com/crc-org/crc/v2/pkg/drivers/libhvee"
 	"github.com/crc-org/crc/v2/pkg/libmachine"
 	"github.com/crc-org/crc/v2/pkg/libmachine/host"
 )
 
 func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {
-	json, err := json.Marshal(hyperv.CreateHost(machineConfig))
+	json, err := json.Marshal(libhvee.CreateHost(machineConfig))
 	if err != nil {
 		return nil, errors.New("Failed to marshal driver options")
 	}
 	return api.NewHost("hyperv", "", json)
 }
 
-func loadDriverConfig(host *host.Host) (*machineHyperv.Driver, error) {
-	var hypervDriver machineHyperv.Driver
-	err := json.Unmarshal(host.RawDriver, &hypervDriver)
+func loadDriverConfig(host *host.Host) (*machineLibhvee.Driver, error) {
+	var libhveeDriver machineLibhvee.Driver
+	err := json.Unmarshal(host.RawDriver, &libhveeDriver)
 
-	return &hypervDriver, err
+	return &libhveeDriver, err
 }
 
-func updateDriverConfig(host *host.Host, driver *machineHyperv.Driver) error {
+func updateDriverConfig(host *host.Host, driver *machineLibhvee.Driver) error {
 	driverData, err := json.Marshal(driver)
 	if err != nil {
 		return err
@@ -38,7 +38,7 @@ func updateKernelArgs(_ *virtualMachine) error {
 	return nil
 }
 
-func updateDriverStruct(host *host.Host, driver *machineHyperv.Driver) error {
+func updateDriverStruct(host *host.Host, driver *machineLibhvee.Driver) error {
 	host.Driver = driver
 	return nil
 }

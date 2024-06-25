@@ -1,4 +1,4 @@
-package hyperv
+package libhvee
 
 import (
 	"errors"
@@ -74,14 +74,6 @@ func isWindowsAdministrator() (bool, error) {
 
 	resp := crcstrings.FirstLine(stdout)
 	return resp == "True", nil
-}
-
-func quote(text string) string {
-	return fmt.Sprintf("'%s'", text)
-}
-
-func toMb(value int) string {
-	return fmt.Sprintf("%dMB", value)
 }
 
 func smbShareExists(name string) bool {

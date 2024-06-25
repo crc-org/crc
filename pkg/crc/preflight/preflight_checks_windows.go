@@ -8,11 +8,9 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 
 	"github.com/crc-org/crc/v2/pkg/crc/adminhelper"
-	winnet "github.com/crc-org/crc/v2/pkg/os/windows/network"
 	"github.com/crc-org/crc/v2/pkg/os/windows/powershell"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
-	"github.com/crc-org/crc/v2/pkg/crc/machine/hyperv"
 )
 
 const (
@@ -166,36 +164,12 @@ func fixUserPartOfCrcUsersAndHypervAdminsGroup() error {
 	return errReboot
 }
 
-func checkIfHyperVVirtualSwitchExists() error {
-	switchName := hyperv.AlternativeNetwork
-
-	// use winnet instead
-	exists, foundName := winnet.SelectSwitchByNameOrDefault(switchName)
-	if exists {
-		logging.Info("Found Virtual Switch to use: ", foundName)
-		return nil
-	}
-
-	return fmt.Errorf("Virtual Switch not found")
-}
-
 func checkIfRunningAsNormalUser() error {
 	if !powershell.IsAdmin() {
 		return nil
 	}
 	logging.Debug("Ran as administrator")
 	return fmt.Errorf("crc should be run in a shell without administrator rights")
-}
-
-func removeDNSServerAddress() error {
-	resetDNSCommand := `Set-DnsClientServerAddress -InterfaceAlias ("vEthernet (crc)") -ResetServerAddresses`
-	if exist, defaultSwitch := winnet.GetDefaultSwitchName(); exist {
-		resetDNSCommand = fmt.Sprintf(`Set-DnsClientServerAddress -InterfaceAlias ("vEthernet (%s)","vEthernet (crc)") -ResetServerAddresses`, defaultSwitch)
-	}
-	if _, _, err := powershell.ExecuteAsAdmin("Remove dns entry for default switch", resetDNSCommand); err != nil {
-		return err
-	}
-	return nil
 }
 
 func removeCrcVM() (err error) {
