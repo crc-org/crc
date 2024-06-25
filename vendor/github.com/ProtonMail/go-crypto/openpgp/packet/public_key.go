@@ -708,10 +708,7 @@ func (pk *PublicKey) SerializeSignaturePrefix(w io.Writer) error {
 			byte(pLength >> 8),
 			byte(pLength),
 		})
-		if err != nil {
-			return err
-		}
-		return nil
+		return err
 	}
 	if _, err := w.Write([]byte{0x99, byte(pLength >> 8), byte(pLength)}); err != nil {
 		return err
@@ -889,6 +886,20 @@ func (pk *PublicKey) CanSign() bool {
 	return pk.PubKeyAlgo != PubKeyAlgoRSAEncryptOnly && pk.PubKeyAlgo != PubKeyAlgoElGamal && pk.PubKeyAlgo != PubKeyAlgoECDH
 }
 
+// VerifyHashTag returns nil iff sig appears to be a plausible signature of the data
+// hashed into signed, based solely on its HashTag. signed is mutated by this call.
+func VerifyHashTag(signed hash.Hash, sig *Signature) (err error) {
+	if sig.Version == 5 && (sig.SigType == 0x00 || sig.SigType == 0x01) {
+		sig.AddMetadataToHashSuffix()
+	}
+	signed.Write(sig.HashSuffix)
+	hashBytes := signed.Sum(nil)
+	if hashBytes[0] != sig.HashTag[0] || hashBytes[1] != sig.HashTag[1] {
+		return errors.SignatureError("hash tag doesn't match")
+	}
+	return nil
+}
+
 // VerifySignature returns nil iff sig is a valid signature, made by this
 // public key, of the data hashed into signed. signed is mutated by this call.
 func (pk *PublicKey) VerifySignature(signed hash.Hash, sig *Signature) (err error) {
@@ -983,6 +994,20 @@ func keySignatureHash(pk, signed signingKey, hashFunc hash.Hash) (h hash.Hash, e
 	return
 }
 
+// VerifyKeyHashTag returns nil iff sig appears to be a plausible signature over this
+// primary key and subkey, based solely on its HashTag.
+func (pk *PublicKey) VerifyKeyHashTag(signed *PublicKey, sig *Signature) error {
+	preparedHash, err := sig.PrepareVerify()
+	if err != nil {
+		return err
+	}
+	h, err := keySignatureHash(pk, signed, preparedHash)
+	if err != nil {
+		return err
+	}
+	return VerifyHashTag(h, sig)
+}
+
 // VerifyKeySignature returns nil iff sig is a valid signature, made by this
 // public key, of signed.
 func (pk *PublicKey) VerifyKeySignature(signed *PublicKey, sig *Signature) error {
@@ -1031,6 +1056,20 @@ func (pk *PublicKey) VerifyKeySignature(signed *PublicKey, sig *Signature) error
 
 func keyRevocationHash(pk signingKey, hashFunc hash.Hash) (err error) {
 	return pk.SerializeForHash(hashFunc)
+}
+
+// VerifyRevocationHashTag returns nil iff sig appears to be a plausible signature
+// over this public key, based solely on its HashTag.
+func (pk *PublicKey) VerifyRevocationHashTag(sig *Signature) (err error) {
+	preparedHash, err := sig.PrepareVerify()
+	if err != nil {
+		return err
+	}
+	err = keyRevocationHash(pk, preparedHash)
+	if err != nil {
+		return err
+	}
+	return VerifyHashTag(preparedHash, sig)
 }
 
 // VerifyRevocationSignature returns nil iff sig is a valid signature, made by this
@@ -1087,6 +1126,20 @@ func userIdSignatureHash(id string, pk *PublicKey, h hash.Hash) (err error) {
 // directKeySignatureHash returns a Hash of the message that needs to be signed.
 func directKeySignatureHash(pk *PublicKey, h hash.Hash) (err error) {
 	return pk.SerializeForHash(h)
+}
+
+// VerifyUserIdHashTag returns nil iff sig appears to be a plausible signature over this
+// public key and UserId, based solely on its HashTag
+func (pk *PublicKey) VerifyUserIdHashTag(id string, sig *Signature) (err error) {
+	preparedHash, err := sig.PrepareVerify()
+	if err != nil {
+		return err
+	}
+	err = userIdSignatureHash(id, pk, preparedHash)
+	if err != nil {
+		return err
+	}
+	return VerifyHashTag(preparedHash, sig)
 }
 
 // VerifyUserIdSignature returns nil iff sig is a valid signature, made by this

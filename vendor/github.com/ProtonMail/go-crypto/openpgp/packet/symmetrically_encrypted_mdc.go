@@ -241,9 +241,6 @@ func serializeSymmetricallyEncryptedMdc(ciphertext io.WriteCloser, c CipherFunct
 	if err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return
-	}
 	s, prefix := NewOCFBEncrypter(block, iv, OCFBNoResync)
 	_, err = ciphertext.Write(prefix)
 	if err != nil {
