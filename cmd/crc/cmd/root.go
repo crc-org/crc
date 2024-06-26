@@ -46,12 +46,13 @@ var (
 )
 
 func init() {
-	if err := constants.EnsureBaseDirectoriesExist(); err != nil {
-		logging.Fatal(err.Error())
-	}
 	var err error
 	config, viper, err = newConfig()
 	if err != nil {
+		logging.Fatal(err.Error())
+	}
+
+	if err := constants.EnsureBaseDirectoriesExist(crcConfig.GetConfigDir(config)); err != nil {
 		logging.Fatal(err.Error())
 	}
 

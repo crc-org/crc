@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -181,4 +182,29 @@ func TestPath(t *testing.T) {
 		IsDefault: false,
 		IsSecret:  false,
 	}, cfg.Get(ProxyCAFile))
+}
+
+func TestDirectory(t *testing.T) {
+	cfg, err := newInMemoryConfig()
+	require.NoError(t, err)
+
+	assert.Equal(t, SettingValue{
+		Value:     constants.GetHomeDir(),
+		Invalid:   false,
+		IsDefault: true,
+		IsSecret:  false,
+	}, cfg.Get(CrcDir))
+
+	tmpDir, err := os.MkdirTemp("", "tempdir")
+	require.NoError(t, err)
+	defer os.Remove(tmpDir)
+	_, err = cfg.Set(CrcDir, tmpDir)
+	require.NoError(t, err)
+
+	assert.Equal(t, SettingValue{
+		Value:     tmpDir,
+		Invalid:   false,
+		IsDefault: false,
+		IsSecret:  false,
+	}, cfg.Get(CrcDir))
 }
