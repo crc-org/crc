@@ -1,4 +1,0 @@
-- op: add
-  path: /metadata/annotations/formatted
-  value:
-     "true"
