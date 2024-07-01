@@ -3495,6 +3495,51 @@ var schemaYAML = typed.YAMLObject(`types:
         elementType:
           namedType: __untyped_deduced_
         elementRelationship: separable
+- name: com.github.openshift.api.config.v1alpha1.ClusterImagePolicy
+  map:
+    fields:
+    - name: apiVersion
+      type:
+        scalar: string
+    - name: kind
+      type:
+        scalar: string
+    - name: metadata
+      type:
+        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
+      default: {}
+    - name: spec
+      type:
+        namedType: com.github.openshift.api.config.v1alpha1.ClusterImagePolicySpec
+      default: {}
+    - name: status
+      type:
+        namedType: com.github.openshift.api.config.v1alpha1.ClusterImagePolicyStatus
+      default: {}
+- name: com.github.openshift.api.config.v1alpha1.ClusterImagePolicySpec
+  map:
+    fields:
+    - name: policy
+      type:
+        namedType: com.github.openshift.api.config.v1alpha1.Policy
+      default: {}
+    - name: scopes
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+- name: com.github.openshift.api.config.v1alpha1.ClusterImagePolicyStatus
+  map:
+    fields:
+    - name: conditions
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.apimachinery.pkg.apis.meta.v1.Condition
+          elementRelationship: associative
+          keys:
+          - type
 - name: com.github.openshift.api.config.v1alpha1.EtcdBackupSpec
   map:
     fields:
@@ -3514,6 +3559,21 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: string
       default: ""
+- name: com.github.openshift.api.config.v1alpha1.FulcioCAWithRekor
+  map:
+    fields:
+    - name: fulcioCAData
+      type:
+        scalar: string
+      default: ""
+    - name: fulcioSubject
+      type:
+        namedType: com.github.openshift.api.config.v1alpha1.PolicyFulcioSubject
+      default: {}
+    - name: rekorKeyData
+      type:
+        scalar: string
+      default: ""
 - name: com.github.openshift.api.config.v1alpha1.GatherConfig
   map:
     fields:
@@ -3526,6 +3586,51 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             scalar: string
           elementRelationship: atomic
+- name: com.github.openshift.api.config.v1alpha1.ImagePolicy
+  map:
+    fields:
+    - name: apiVersion
+      type:
+        scalar: string
+    - name: kind
+      type:
+        scalar: string
+    - name: metadata
+      type:
+        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
+      default: {}
+    - name: spec
+      type:
+        namedType: com.github.openshift.api.config.v1alpha1.ImagePolicySpec
+      default: {}
+    - name: status
+      type:
+        namedType: com.github.openshift.api.config.v1alpha1.ImagePolicyStatus
+      default: {}
+- name: com.github.openshift.api.config.v1alpha1.ImagePolicySpec
+  map:
+    fields:
+    - name: policy
+      type:
+        namedType: com.github.openshift.api.config.v1alpha1.Policy
+      default: {}
+    - name: scopes
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+- name: com.github.openshift.api.config.v1alpha1.ImagePolicyStatus
+  map:
+    fields:
+    - name: conditions
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.apimachinery.pkg.apis.meta.v1.Condition
+          elementRelationship: associative
+          keys:
+          - type
 - name: com.github.openshift.api.config.v1alpha1.InsightsDataGather
   map:
     fields:
@@ -3566,6 +3671,96 @@ var schemaYAML = typed.YAMLObject(`types:
         elementType:
           namedType: __untyped_deduced_
         elementRelationship: separable
+- name: com.github.openshift.api.config.v1alpha1.Policy
+  map:
+    fields:
+    - name: rootOfTrust
+      type:
+        namedType: com.github.openshift.api.config.v1alpha1.PolicyRootOfTrust
+      default: {}
+    - name: signedIdentity
+      type:
+        namedType: com.github.openshift.api.config.v1alpha1.PolicyIdentity
+      default: {}
+- name: com.github.openshift.api.config.v1alpha1.PolicyFulcioSubject
+  map:
+    fields:
+    - name: oidcIssuer
+      type:
+        scalar: string
+      default: ""
+    - name: signedEmail
+      type:
+        scalar: string
+      default: ""
+- name: com.github.openshift.api.config.v1alpha1.PolicyIdentity
+  map:
+    fields:
+    - name: exactRepository
+      type:
+        namedType: com.github.openshift.api.config.v1alpha1.PolicyMatchExactRepository
+    - name: matchPolicy
+      type:
+        scalar: string
+      default: ""
+    - name: remapIdentity
+      type:
+        namedType: com.github.openshift.api.config.v1alpha1.PolicyMatchRemapIdentity
+    unions:
+    - discriminator: matchPolicy
+      fields:
+      - fieldName: exactRepository
+        discriminatorValue: PolicyMatchExactRepository
+      - fieldName: remapIdentity
+        discriminatorValue: PolicyMatchRemapIdentity
+- name: com.github.openshift.api.config.v1alpha1.PolicyMatchExactRepository
+  map:
+    fields:
+    - name: repository
+      type:
+        scalar: string
+      default: ""
+- name: com.github.openshift.api.config.v1alpha1.PolicyMatchRemapIdentity
+  map:
+    fields:
+    - name: prefix
+      type:
+        scalar: string
+      default: ""
+    - name: signedPrefix
+      type:
+        scalar: string
+      default: ""
+- name: com.github.openshift.api.config.v1alpha1.PolicyRootOfTrust
+  map:
+    fields:
+    - name: fulcioCAWithRekor
+      type:
+        namedType: com.github.openshift.api.config.v1alpha1.FulcioCAWithRekor
+    - name: policyType
+      type:
+        scalar: string
+      default: ""
+    - name: publicKey
+      type:
+        namedType: com.github.openshift.api.config.v1alpha1.PublicKey
+    unions:
+    - discriminator: policyType
+      fields:
+      - fieldName: fulcioCAWithRekor
+        discriminatorValue: FulcioCAWithRekor
+      - fieldName: publicKey
+        discriminatorValue: PublicKey
+- name: com.github.openshift.api.config.v1alpha1.PublicKey
+  map:
+    fields:
+    - name: keyData
+      type:
+        scalar: string
+      default: ""
+    - name: rekorKeyData
+      type:
+        scalar: string
 - name: com.github.openshift.api.config.v1alpha1.RetentionNumberConfig
   map:
     fields:
