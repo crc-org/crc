@@ -269,7 +269,7 @@ func LoginToOcCluster(options []string) error {
 		ocLoginAsAdminCommand = ocLoginAsAdminCommand + " " + option
 	}
 
-	return ExecuteCommand(ocLoginAsAdminCommand)
+	return ExecuteCommandSucceedsOrFails(ocLoginAsAdminCommand, "succeeds")
 }
 
 // LoginToOcClusterSucceedsOrFails is a wrapper for LoginToOcCluster
