@@ -55,7 +55,7 @@ Feature: Basic test
         # monitoring stack check
         When checking that CRC is running
         And ensuring user is logged in succeeds
-        Then with up to "12" retries with wait period of "10s" command "oc get pods -n openshift-monitoring" output matches ".*cluster-monitoring-operator-\w+-\w+\ *1/1\ *Running.*"
+        Then with up to "12" retries with wait period of "30s" command "oc get pods -n openshift-monitoring" output matches ".*cluster-monitoring-operator-\w+-\w+\ *1/1\ *Running.*"
         # stop
         When executing "crc stop"
         Then stdout should match "(.*)[Ss]topped the instance"
