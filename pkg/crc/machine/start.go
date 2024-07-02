@@ -37,7 +37,6 @@ import (
 	libmachinestate "github.com/crc-org/machine/libmachine/state"
 	"github.com/docker/go-units"
 	"github.com/pkg/errors"
-	"golang.org/x/crypto/ssh"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -112,99 +111,16 @@ func (client *client) updateVMConfig(startConfig types.StartConfig, vm *virtualM
 	return nil
 }
 
-func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset, persistentVolumeSize int) error {
-	rootPart, err := getrootPartition(sshRunner, preset)
-	if err != nil {
-		return err
+func restartHost(ctx context.Context, vm *virtualMachine, sshRunner *crcssh.Runner) error {
+	if err := vm.Driver.Stop(); err != nil {
+		return errors.Wrap(err, "Error re-starting machine at stop")
 	}
-
-	// with '/dev/[sv]da4' as input, run 'growpart /dev/[sv]da 4'
-	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Growing %s partition", rootPart), "/usr/bin/growpart", rootPart[:len("/dev/.da")], rootPart[len("/dev/.da"):]); err != nil {
-		var exitErr *ssh.ExitError
-		if !errors.As(err, &exitErr) {
-			return err
-		}
-		if exitErr.ExitStatus() != 1 {
-			return err
-		}
-		logging.Debugf("No free space after %s, nothing to do", rootPart)
-		return nil
+	if err := startHost(ctx, vm); err != nil {
+		return errors.Wrap(err, "Error re-starting machine at start")
 	}
-
-	if preset == crcPreset.Microshift {
-		lvFullName := "rhel/root"
-		if err := growLVForMicroshift(sshRunner, lvFullName, rootPart, persistentVolumeSize); err != nil {
-			return err
-		}
-	}
-
-	logging.Infof("Resizing %s filesystem", rootPart)
-	rootFS := "/sysroot"
-	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Remounting %s read/write", rootFS), "mount -o remount,rw", rootFS); err != nil {
-		return err
-	}
-	if _, _, err = sshRunner.RunPrivileged(fmt.Sprintf("Growing %s filesystem", rootFS), "xfs_growfs", rootFS); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func getrootPartition(sshRunner *crcssh.Runner, preset crcPreset.Preset) (string, error) {
-	diskType := "xfs"
-	if preset == crcPreset.Microshift {
-		diskType = "LVM2_member"
-	}
-	part, _, err := sshRunner.RunPrivileged("Get device id", "/usr/sbin/blkid", "-t", fmt.Sprintf("TYPE=%s", diskType), "-o", "device")
-	if err != nil {
-		return "", err
-	}
-	parts := strings.Split(strings.TrimSpace(part), "\n")
-	if len(parts) != 1 {
-		return "", fmt.Errorf("Unexpected number of devices: %s", part)
-	}
-	rootPart := strings.TrimSpace(parts[0])
-	if !strings.HasPrefix(rootPart, "/dev/vda") && !strings.HasPrefix(rootPart, "/dev/sda") {
-		return "", fmt.Errorf("Unexpected root device: %s", rootPart)
-	}
-	return rootPart, nil
-}
-
-func growLVForMicroshift(sshRunner *crcssh.Runner, lvFullName string, rootPart string, persistentVolumeSize int) error {
-	if _, _, err := sshRunner.RunPrivileged("Resizing the physical volume(PV)", "/usr/sbin/pvresize", "--devices", rootPart, rootPart); err != nil {
-		return err
-	}
-
-	// Get the size of volume group
-	sizeVG, _, err := sshRunner.RunPrivileged("Get the volume group size", "/usr/sbin/vgs", "--noheadings", "--nosuffix", "--units", "b", "-o", "vg_size", "--devices", rootPart)
-	if err != nil {
-		return err
-	}
-	vgSize, err := strconv.Atoi(strings.TrimSpace(sizeVG))
-	if err != nil {
-		return err
-	}
-
-	// Get the size of root lv
-	sizeLV, _, err := sshRunner.RunPrivileged("Get the size of root logical volume", "/usr/sbin/lvs", "-S", fmt.Sprintf("lv_full_name=%s", lvFullName), "--noheadings", "--nosuffix", "--units", "b", "-o", "lv_size", "--devices", rootPart)
-	if err != nil {
-		return err
-	}
-	lvSize, err := strconv.Atoi(strings.TrimSpace(sizeLV))
-	if err != nil {
-		return err
-	}
-
-	GB := 1073741824
-	vgFree := persistentVolumeSize * GB
-	expectedLVSize := vgSize - vgFree
-	sizeToIncrease := expectedLVSize - lvSize
-	lvPath := fmt.Sprintf("/dev/%s", lvFullName)
-	if sizeToIncrease > 1 {
-		logging.Info("Extending and resizing '/dev/rhel/root' logical volume")
-		if _, _, err := sshRunner.RunPrivileged("Extending and resizing the logical volume(LV)", "/usr/sbin/lvextend", "-L", fmt.Sprintf("+%db", sizeToIncrease), lvPath, "--devices", rootPart); err != nil {
-			return err
-		}
+	logging.Debug("Waiting until ssh is available")
+	if err := sshRunner.WaitForConnectivity(ctx, 300*time.Second); err != nil {
+		return errors.Wrap(err, "Failed to connect to the CRC VM with SSH -- virtual machine might be unreachable")
 	}
 	return nil
 }
@@ -430,7 +346,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	// Trigger disk resize, this will be a no-op if no disk size change is needed
-	if err := growRootFileSystem(sshRunner, startConfig.Preset, startConfig.PersistentVolumeSize); err != nil {
+	if err := growRootFileSystem(ctx, startConfig, vm, sshRunner); err != nil {
 		return nil, errors.Wrap(err, "Error updating filesystem size")
 	}
 
