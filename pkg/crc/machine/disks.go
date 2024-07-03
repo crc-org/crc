@@ -16,7 +16,12 @@ import (
 )
 
 func moveTopolvmPartition(ctx context.Context, shiftSize int, vm *virtualMachine, sshRunner *crcssh.Runner) error {
-	_, _, err := sshRunner.RunPrivileged("move topolvm partition to end of disk", fmt.Sprintf("echo '+%dG,' | sudo sfdisk --move-data /dev/vda -N 5 --force", shiftSize))
+	pvPartition, err := getTopolvmPartition(sshRunner)
+	if err != nil {
+		return err
+	}
+	_, _, err = sshRunner.RunPrivileged("move topolvm partition to end of disk",
+		fmt.Sprintf("echo '+%dG,' | sudo sfdisk --move-data %s -N %s --force", shiftSize, pvPartition[:len("/dev/.da")], pvPartition[len("/dev/.da"):]))
 	var exitErr *ssh.ExitError
 	if err != nil {
 		if !errors.As(err, &exitErr) {
@@ -94,7 +99,10 @@ func growPersistentVolume(sshRunner *crcssh.Runner, preset crcPreset.Preset, per
 	}
 
 	if preset == crcPreset.OpenShift {
-		pvPartition := "/dev/vda5"
+		pvPartition, err := getTopolvmPartition(sshRunner)
+		if err != nil {
+			return err
+		}
 		if err := growPartition(sshRunner, pvPartition); err != nil {
 			return err
 		}
@@ -103,11 +111,20 @@ func growPersistentVolume(sshRunner *crcssh.Runner, preset crcPreset.Preset, per
 }
 
 func getrootPartition(sshRunner *crcssh.Runner, preset crcPreset.Preset) (string, error) {
-	query := "--label root"
 	if preset == crcPreset.Microshift {
-		query = "-t TYPE=LVM2_member"
+		return runBlkidQuery(sshRunner, "-t", "TYPE=LVM2_member")
 	}
-	part, _, err := sshRunner.RunPrivileged("Get device id", "/usr/sbin/blkid", query, "-o", "device")
+	return runBlkidQuery(sshRunner, "--label", "root")
+}
+
+func getTopolvmPartition(sshRunner *crcssh.Runner) (string, error) {
+	return runBlkidQuery(sshRunner, "-t", "PARTLABEL=topolvm")
+}
+
+func runBlkidQuery(sshRunner *crcssh.Runner, query ...string) (string, error) {
+	cmd := []string{"/usr/sbin/blkid", "-o", "device"}
+	cmd = append(cmd, query...)
+	part, _, err := sshRunner.RunPrivileged("Get device id", cmd...)
 	if err != nil {
 		return "", err
 	}
@@ -115,11 +132,11 @@ func getrootPartition(sshRunner *crcssh.Runner, preset crcPreset.Preset) (string
 	if len(parts) != 1 {
 		return "", fmt.Errorf("Unexpected number of devices: %s", part)
 	}
-	rootPart := strings.TrimSpace(parts[0])
-	if !strings.HasPrefix(rootPart, "/dev/vda") && !strings.HasPrefix(rootPart, "/dev/sda") {
-		return "", fmt.Errorf("Unexpected root device: %s", rootPart)
+	part = strings.TrimSpace(parts[0])
+	if !strings.HasPrefix(part, "/dev/vda") && !strings.HasPrefix(part, "/dev/sda") {
+		return "", fmt.Errorf("Unexpected device: %s", part)
 	}
-	return rootPart, nil
+	return part, nil
 }
 
 func growLVForMicroshift(sshRunner *crcssh.Runner, lvFullName string, rootPart string, persistentVolumeSize int) error {
