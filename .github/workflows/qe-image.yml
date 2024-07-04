@@ -1,0 +1,43 @@
+name: Push qe images for new tag
+on:
+  push:
+    tags:
+      - '*'
+env:
+  IMAGE_REGISTRY: quay.io
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        go:
+          - '1.21'
+        os: ['linux', 'windows', 'darwin']
+        arch: ['amd64', 'arm64']
+        exclude:
+          - arch: 'arm64'
+            os: 'windows'
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Log in to Quay.io
+        uses: redhat-actions/podman-login@v1
+        with:
+          username: ${{ secrets.QUAY_IO_USERNAME }}
+          password: ${{ secrets.QUAY_IO_PASSWORD }}
+          registry: ${{ env.IMAGE_REGISTRY }}
+      - name: create script of building and push images
+        run: |
+          cat <<EOF > build-qe-images.sh
+          !#/bin/bash
+          set -x
+          OS=${{matrix.os}} ARCH=${{matrix.arch}} CRC_INTEGRATION_IMG_VERSION=${{ github.ref_name }} make containerized_integration
+          podman push quay.io/crcont/crc-integration:${{ github.ref_name }}-${{matrix.os}}-${{matrix.arch}}
+          OS=${{matrix.os}} ARCH=${{matrix.arch}} CRC_E2E_IMG_VERSION=${{ github.ref_name }} make containerized_e2e
+          podman push quay.io/crcont/crc-e2e:${{ github.ref_name }}-${{matrix.os}}-${{matrix.arch}}
+          EOF
+      - name: run script to build and push images
+        run: |
+          chmod +x build-qe-images.sh
+          ./build-qe-images.sh
