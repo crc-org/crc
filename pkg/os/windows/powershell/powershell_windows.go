@@ -36,7 +36,8 @@ func Execute(args ...string) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	args = append([]string{"-NoProfile", "-NonInteractive", "-ExecutionPolicy", "RemoteSigned", "-Command", "$ProgressPreference = 'SilentlyContinue';"}, args...)
+	args = append([]string{"-NoProfile", "-NonInteractive", "-ExecutionPolicy", "RemoteSigned", "-Command",
+		"$ProgressPreference = 'SilentlyContinue';", "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new();"}, args...)
 	cmd := exec.Command(powershell, args...) // #nosec G204
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 
@@ -85,6 +86,7 @@ func ExecuteAsAdmin(reason, cmd string) (string, string, error) {
 
 func runAsCmds(powershell string) []string {
 	return []string{
+		`[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new();`,
 		`$myWindowsID = [System.Security.Principal.WindowsIdentity]::GetCurrent();`,
 		`$myWindowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal($myWindowsID);`,
 		`$adminRole = [System.Security.Principal.WindowsBuiltInRole]::Administrator;`,
