@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -55,6 +56,14 @@ type Executor struct {
 // driverPath finds the path of a driver binary by its name. The separate binary must be in the PATH and its name must be
 // `crc-machine-driverName`
 func driverPath(driverName string, binaryPath string) string {
+	driverName = fmt.Sprintf("crc-driver-%s-%s", driverName, runtime.GOARCH)
+	if binaryPath != "" {
+		return filepath.Join(binaryPath, driverName)
+	}
+	return driverName
+}
+
+func driverPathNoArch(driverName string, binaryPath string) string {
 	driverName = fmt.Sprintf("crc-driver-%s", driverName)
 	if binaryPath != "" {
 		return filepath.Join(binaryPath, driverName)
@@ -66,7 +75,11 @@ func NewPlugin(driverName string, binaryPath string) (*Plugin, error) {
 	driverPath := driverPath(driverName, binaryPath)
 	binaryPath, err := exec.LookPath(driverPath)
 	if err != nil {
-		return nil, err
+		driverPath = driverPathNoArch(driverName, binaryPath)
+		binaryPath, err = exec.LookPath(driverPath)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	log.Debugf("Found binary path at %s", binaryPath)

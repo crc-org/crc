@@ -202,7 +202,7 @@ github.com/coreos/go-systemd/v22/daemon
 github.com/crc-org/admin-helper/pkg/client
 github.com/crc-org/admin-helper/pkg/hosts
 github.com/crc-org/admin-helper/pkg/types
-# github.com/crc-org/machine v0.0.0-20221028075518-f9b43442196b
+# github.com/crc-org/machine v0.0.0-20240715101719-0c1bc9eb95f8
 ## explicit; go 1.17
 github.com/crc-org/machine/drivers/libvirt
 github.com/crc-org/machine/libmachine/drivers
