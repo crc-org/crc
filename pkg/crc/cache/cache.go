@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
@@ -44,6 +45,10 @@ func (c *Cache) GetExecutablePath() string {
 
 func (c *Cache) GetExecutableName() string {
 	return filepath.Base(c.executablePath)
+}
+
+func (c *Cache) GetExecutableNameWithArch() string {
+	return fmt.Sprintf("%s-%s", c.GetExecutableName(), runtime.GOARCH)
 }
 
 /* getVersionGeneric runs the cached executable with 'args', and assumes the version string
@@ -128,7 +133,7 @@ func (c *Cache) cacheExecutable() error {
 		}
 	} else {
 		extractedFiles = append(extractedFiles, assetTmpFile)
-		if filepath.Base(assetTmpFile) != c.GetExecutableName() && !c.ignoreNameMismatch {
+		if (filepath.Base(assetTmpFile) != c.GetExecutableName() && filepath.Base(assetTmpFile) != c.GetExecutableNameWithArch()) && !c.ignoreNameMismatch {
 			logging.Warnf("Executable name is %s but extracted file name is %s", c.GetExecutableName(), filepath.Base(assetTmpFile))
 		}
 	}
