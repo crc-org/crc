@@ -17,9 +17,10 @@ import (
 )
 
 type VersionAnswer struct {
-	Version          string `json:"version"`
-	Commit           string `json:"commit"`
-	OpenshiftVersion string `json:"openshiftVersion"`
+	Version           string `json:"version"`
+	Commit            string `json:"commit"`
+	OpenshiftVersion  string `json:"openshiftVersion"`
+	MicroshiftVersion string `json:"microshiftVersion"`
 }
 
 var credPath string
