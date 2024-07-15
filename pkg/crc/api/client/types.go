@@ -7,9 +7,10 @@ import (
 )
 
 type VersionResult struct {
-	CrcVersion       string
-	CommitSha        string
-	OpenshiftVersion string
+	CrcVersion        string
+	CommitSha         string
+	OpenshiftVersion  string
+	MicroshiftVersion string
 }
 
 type StartResult struct {

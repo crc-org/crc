@@ -136,9 +136,10 @@ func getStartConfig(cfg crcConfig.Storage, args client.StartConfig) types.StartC
 
 func (h *Handler) GetVersion(c *context) error {
 	return c.JSON(http.StatusOK, &client.VersionResult{
-		CrcVersion:       version.GetCRCVersion(),
-		CommitSha:        version.GetCommitSha(),
-		OpenshiftVersion: version.GetBundleVersion(preset.OpenShift),
+		CrcVersion:        version.GetCRCVersion(),
+		CommitSha:         version.GetCommitSha(),
+		OpenshiftVersion:  version.GetBundleVersion(preset.OpenShift),
+		MicroshiftVersion: version.GetBundleVersion(preset.Microshift),
 	})
 }
 

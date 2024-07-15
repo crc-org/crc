@@ -48,9 +48,10 @@ func TestVersion(t *testing.T) {
 	assert.Equal(
 		t,
 		apiClient.VersionResult{
-			CrcVersion:       version.GetCRCVersion(),
-			OpenshiftVersion: version.GetBundleVersion(preset.OpenShift),
-			CommitSha:        version.GetCommitSha(),
+			CrcVersion:        version.GetCRCVersion(),
+			OpenshiftVersion:  version.GetBundleVersion(preset.OpenShift),
+			MicroshiftVersion: version.GetBundleVersion(preset.Microshift),
+			CommitSha:         version.GetCommitSha(),
 		},
 		vr,
 	)
