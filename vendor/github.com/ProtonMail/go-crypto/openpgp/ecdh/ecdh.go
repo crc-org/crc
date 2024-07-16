@@ -9,16 +9,17 @@ package ecdh
 import (
 	"bytes"
 	"errors"
+	"io"
+
 	"github.com/ProtonMail/go-crypto/openpgp/aes/keywrap"
 	pgperrors "github.com/ProtonMail/go-crypto/openpgp/errors"
 	"github.com/ProtonMail/go-crypto/openpgp/internal/algorithm"
 	"github.com/ProtonMail/go-crypto/openpgp/internal/ecc"
 	"github.com/ProtonMail/go-crypto/openpgp/internal/ecc/curve25519"
-	"io"
 )
 
 const (
-	KDFVersion1 = 1
+	KDFVersion1          = 1
 	KDFVersionForwarding = 255
 )
 
@@ -31,21 +32,21 @@ type KDF struct {
 
 func (kdf *KDF) Serialize(w io.Writer) (err error) {
 	switch kdf.Version {
-		case 0, KDFVersion1: // Default to v1 if unspecified
-			return kdf.serializeForHash(w)
-		case KDFVersionForwarding:
-			// Length || Version || Hash || Cipher || Replacement Fingerprint
-			length := byte(3 + len(kdf.ReplacementFingerprint))
-			if _, err := w.Write([]byte{length, KDFVersionForwarding, kdf.Hash.Id(), kdf.Cipher.Id()}); err != nil {
-				return err
-			}
-			if _, err := w.Write(kdf.ReplacementFingerprint); err != nil {
-				return err
-			}
+	case 0, KDFVersion1: // Default to v1 if unspecified
+		return kdf.serializeForHash(w)
+	case KDFVersionForwarding:
+		// Length || Version || Hash || Cipher || Replacement Fingerprint
+		length := byte(3 + len(kdf.ReplacementFingerprint))
+		if _, err := w.Write([]byte{length, KDFVersionForwarding, kdf.Hash.Id(), kdf.Cipher.Id()}); err != nil {
+			return err
+		}
+		if _, err := w.Write(kdf.ReplacementFingerprint); err != nil {
+			return err
+		}
 
-			return nil
-		default:
-			return errors.New("ecdh: invalid KDF version")
+		return nil
+	default:
+		return errors.New("ecdh: invalid KDF version")
 	}
 }
 
@@ -201,6 +202,7 @@ func buildKey(pub *PublicKey, zb []byte, curveOID, fingerprint []byte, stripLead
 	if _, err := param.Write([]byte("Anonymous Sender    ")); err != nil {
 		return nil, err
 	}
+
 	if pub.KDF.ReplacementFingerprint != nil {
 		fingerprint = pub.KDF.ReplacementFingerprint
 	}

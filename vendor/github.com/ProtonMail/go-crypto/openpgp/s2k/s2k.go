@@ -300,6 +300,10 @@ func ParseIntoParams(r io.Reader) (params *Params, err error) {
 	return nil, errors.UnsupportedError("S2K function")
 }
 
+func (params *Params) Mode() Mode {
+	return params.mode
+}
+
 func (params *Params) Dummy() bool {
 	return params != nil && params.mode == GnuS2K
 }

@@ -35,6 +35,8 @@ const (
 	KeyFlagGroupKey
 )
 
+const SaltNotationName = "salt@notations.openpgpjs.org"
+
 // Signature represents a signature. See RFC 4880, section 5.2.
 type Signature struct {
 	Version    int
@@ -151,11 +153,16 @@ func (sig *Signature) parse(r io.Reader) (err error) {
 	if err != nil {
 		return
 	}
-	if buf[0] != 4 && buf[0] != 5 && buf[0] != 6 {
+	sig.Version = int(buf[0])
+	if sig.Version != 4 && sig.Version != 5 && sig.Version != 6 {
 		err = errors.UnsupportedError("signature packet version " + strconv.Itoa(int(buf[0])))
 		return
 	}
-	sig.Version = int(buf[0])
+
+	if V5Disabled && sig.Version == 5 {
+		return errors.UnsupportedError("support for parsing v5 entities is disabled; build with `-tags v5` if needed")
+	}
+
 	if sig.Version == 6 {
 		_, err = readFull(r, buf[:7])
 	} else {
@@ -520,11 +527,10 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 		}
 	case keyFlagsSubpacket:
 		// Key flags, section 5.2.3.21
+		sig.FlagsValid = true
 		if len(subpacket) == 0 {
-			err = errors.StructuralError("empty key flags subpacket")
 			return
 		}
-		sig.FlagsValid = true
 		if subpacket[0]&KeyFlagCertify != 0 {
 			sig.FlagCertify = true
 		}
@@ -888,6 +894,20 @@ func (sig *Signature) Sign(h hash.Hash, priv *PrivateKey, config *Config) (err e
 	}
 	sig.Version = priv.PublicKey.Version
 	sig.IssuerFingerprint = priv.PublicKey.Fingerprint
+	if sig.Version < 6 && config.RandomizeSignaturesViaNotation() {
+		sig.removeNotationsWithName(SaltNotationName)
+		salt, err := SignatureSaltForHash(sig.Hash, config.Random())
+		if err != nil {
+			return err
+		}
+		notation := Notation{
+			Name:            SaltNotationName,
+			Value:           salt,
+			IsCritical:      false,
+			IsHumanReadable: false,
+		}
+		sig.Notations = append(sig.Notations, &notation)
+	}
 	sig.outSubpackets, err = sig.buildSubpackets(priv.PublicKey)
 	if err != nil {
 		return err
@@ -1426,4 +1446,18 @@ func SignatureSaltForHash(hash crypto.Hash, randReader io.Reader) ([]byte, error
 		return nil, err
 	}
 	return salt, nil
+}
+
+// removeNotationsWithName removes all notations in this signature with the given name.
+func (sig *Signature) removeNotationsWithName(name string) {
+	if sig == nil || sig.Notations == nil {
+		return
+	}
+	updatedNotations := make([]*Notation, 0, len(sig.Notations))
+	for _, notation := range sig.Notations {
+		if notation.Name != name {
+			updatedNotations = append(updatedNotations, notation)
+		}
+	}
+	sig.Notations = updatedNotations
 }
