@@ -201,7 +201,12 @@ func (e *EncryptedKey) Decrypt(priv *PrivateKey, config *Config) error {
 		vsG := e.encryptedMPI1.Bytes()
 		m := e.encryptedMPI2.Bytes()
 		oid := priv.PublicKey.oid.EncodedBytes()
-		b, err = ecdh.Decrypt(priv.PrivateKey.(*ecdh.PrivateKey), vsG, m, oid, priv.PublicKey.Fingerprint[:])
+		fp := priv.PublicKey.Fingerprint[:]
+		if priv.PublicKey.Version == 5 {
+			// For v5 the, the fingerprint must be restricted to 20 bytes
+			fp = fp[:20]
+		}
+		b, err = ecdh.Decrypt(priv.PrivateKey.(*ecdh.PrivateKey), vsG, m, oid, fp)
 	case PubKeyAlgoX25519:
 		b, err = x25519.Decrypt(priv.PrivateKey.(*x25519.PrivateKey), e.ephemeralPublicX25519, e.encryptedSession)
 	case PubKeyAlgoX448:
