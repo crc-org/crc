@@ -128,6 +128,8 @@ func getStatus(ctx context.Context, lister operatorLister, selector []string) (*
 				}
 			case openshiftapi.OperatorUpgradeable:
 				continue
+			case openshiftapi.EvaluationConditionsDetected:
+				continue
 			case "Disabled": // non official status, used by insights and cluster baremetal operators
 				if con.Status == openshiftapi.ConditionTrue {
 					logging.Debug(c.ObjectMeta.Name, " operator is disabled, Reason: ", con.Reason)
