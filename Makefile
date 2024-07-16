@@ -311,7 +311,7 @@ linux-release: clean lint linux-release-binary embed_crc_helpers gen_release_inf
 	mkdir $(RELEASE_DIR)
 
 	@mkdir -p $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-${GOARCH}
-	@cp LICENSE $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-${GOARCH}
+	@cp LICENSE $(BUILD_DIR)/linux-${GOARCH}/crc $(BUILD_DIR)/crc-linux-$(CRC_VERSION)-${GOARCH}
 	tar cJSf $(RELEASE_DIR)/crc-linux-${GOARCH}.tar.xz -C $(BUILD_DIR) crc-linux-$(CRC_VERSION)-${GOARCH} --owner=0 --group=0
 
 	@cp $(RELEASE_INFO) $(RELEASE_DIR)/$(RELEASE_INFO)
