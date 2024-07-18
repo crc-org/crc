@@ -17,7 +17,7 @@ github.com/Microsoft/go-winio/internal/fs
 github.com/Microsoft/go-winio/internal/socket
 github.com/Microsoft/go-winio/internal/stringbuffer
 github.com/Microsoft/go-winio/pkg/guid
-# github.com/ProtonMail/go-crypto v1.1.0-alpha.4-proton
+# github.com/ProtonMail/go-crypto v1.1.0-alpha.5-proton
 ## explicit; go 1.17
 github.com/ProtonMail/go-crypto/bitcurves
 github.com/ProtonMail/go-crypto/brainpool
