@@ -32,7 +32,7 @@ const (
 	KubeletServerCert = "/var/lib/kubelet/pki/kubelet-server-current.pem"
 	KubeletClientCert = "/var/lib/kubelet/pki/kubelet-client-current.pem"
 
-	AggregatorClientCert = "/etc/kubernetes/static-pod-resources/kube-apiserver-certs/configmaps/aggregator-client-ca/ca-bundle.crt"
+	AggregatorClientCert = "/etc/kubernetes/static-pod-resources/kube-apiserver-certs/secrets/aggregator-client/tls.crt"
 )
 
 func CheckCertsValidity(sshRunner *ssh.Runner) (map[string]bool, error) {
