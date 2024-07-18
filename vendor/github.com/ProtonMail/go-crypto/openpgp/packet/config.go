@@ -19,6 +19,10 @@ var (
 		PubKeyAlgoElGamal: true,
 		PubKeyAlgoDSA:     true,
 	}
+	defaultRejectHashAlgorithms = map[crypto.Hash]bool{
+		crypto.MD5:       true,
+		crypto.RIPEMD160: true,
+	}
 	defaultRejectMessageHashAlgorithms = map[crypto.Hash]bool{
 		crypto.SHA1:      true,
 		crypto.MD5:       true,
@@ -104,6 +108,7 @@ type Config struct {
 	MinRSABits uint16
 	// Reject insecure algorithms, only works with v2 api
 	RejectPublicKeyAlgorithms   map[PublicKeyAlgorithm]bool
+	RejectHashAlgorithms        map[crypto.Hash]bool
 	RejectMessageHashAlgorithms map[crypto.Hash]bool
 	RejectCurves                map[Curve]bool
 	// "The validity period of the key.  This is the number of seconds after
@@ -337,6 +342,17 @@ func (c *Config) RejectPublicKeyAlgorithm(alg PublicKeyAlgorithm) bool {
 		rejectedAlgorithms = c.RejectPublicKeyAlgorithms
 	}
 	return rejectedAlgorithms[alg]
+}
+
+func (c *Config) RejectHashAlgorithm(hash crypto.Hash) bool {
+	var rejectedAlgorithms map[crypto.Hash]bool
+	if c == nil || c.RejectHashAlgorithms == nil {
+		// Default
+		rejectedAlgorithms = defaultRejectHashAlgorithms
+	} else {
+		rejectedAlgorithms = c.RejectHashAlgorithms
+	}
+	return rejectedAlgorithms[hash]
 }
 
 func (c *Config) RejectMessageHashAlgorithm(hash crypto.Hash) bool {

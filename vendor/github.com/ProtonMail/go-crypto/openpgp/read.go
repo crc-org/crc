@@ -410,7 +410,7 @@ func (scr *signatureCheckReader) Read(buf []byte) (int, error) {
 					key := scr.md.SignedBy
 					signatureError := key.PublicKey.VerifySignature(scr.h, sig)
 					if signatureError == nil {
-						signatureError = checkSignatureDetails(key, sig, scr.config)
+						signatureError = checkMessageSignatureDetails(key, sig, scr.config)
 					}
 					scr.md.Signature = sig
 					scr.md.SignatureError = signatureError
@@ -546,7 +546,7 @@ func verifyDetachedSignature(keyring KeyRing, signed, signature io.Reader, expec
 	for _, key := range keys {
 		err = key.PublicKey.VerifySignature(h, sig)
 		if err == nil {
-			return sig, key.Entity, checkSignatureDetails(&key, sig, config)
+			return sig, key.Entity, checkMessageSignatureDetails(&key, sig, config)
 		}
 	}
 
@@ -564,7 +564,7 @@ func CheckArmoredDetachedSignature(keyring KeyRing, signed, signature io.Reader,
 	return CheckDetachedSignature(keyring, signed, body, config)
 }
 
-// checkSignatureDetails returns an error if:
+// checkMessageSignatureDetails returns an error if:
 //   - The signature (or one of the binding signatures mentioned below)
 //     has a unknown critical notation data subpacket
 //   - The primary key of the signing entity is revoked
@@ -582,7 +582,7 @@ func CheckArmoredDetachedSignature(keyring KeyRing, signed, signature io.Reader,
 // NOTE: The order of these checks is important, as the caller may choose to
 // ignore ErrSignatureExpired or ErrKeyExpired errors, but should never
 // ignore any other errors.
-func checkSignatureDetails(key *Key, signature *packet.Signature, config *packet.Config) error {
+func checkMessageSignatureDetails(key *Key, signature *packet.Signature, config *packet.Config) error {
 	now := config.Now()
 	primarySelfSignature, primaryIdentity := key.Entity.PrimarySelfSignature()
 	signedBySubKey := key.PublicKey != key.Entity.PrimaryKey
