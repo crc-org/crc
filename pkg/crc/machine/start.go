@@ -552,7 +552,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	ocConfig := oc.UseOCWithSSH(sshRunner)
 
-	if err := cluster.ApproveCSRAndWaitForCertsRenewal(ctx, sshRunner, ocConfig, certsExpired[cluster.KubeletClientCert], certsExpired[cluster.KubeletServerCert]); err != nil {
+	if err := cluster.ApproveCSRAndWaitForCertsRenewal(ctx, sshRunner, ocConfig, certsExpired[cluster.KubeletClientCert], certsExpired[cluster.KubeletServerCert], certsExpired[cluster.AggregatorClientCert]); err != nil {
 		logBundleDate(vm.bundle)
 		return nil, errors.Wrap(err, "Failed to renew TLS certificates: please check if a newer CRC release is available")
 	}

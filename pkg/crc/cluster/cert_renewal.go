@@ -43,7 +43,7 @@ func approvePendingCSRs(ctx context.Context, ocConfig oc.Config, expectedSignerN
 	}, time.Second*5)
 }
 
-func ApproveCSRAndWaitForCertsRenewal(ctx context.Context, sshRunner *ssh.Runner, ocConfig oc.Config, client, server bool) error {
+func ApproveCSRAndWaitForCertsRenewal(ctx context.Context, sshRunner *ssh.Runner, ocConfig oc.Config, client, server, aggregratorClient bool) error {
 	const (
 		kubeletClientSignerName  = "kubernetes.io/kube-apiserver-client-kubelet"
 		kubeletServingSignerName = "kubernetes.io/kubelet-serving"
@@ -76,6 +76,10 @@ func ApproveCSRAndWaitForCertsRenewal(ctx context.Context, sshRunner *ssh.Runner
 	if server {
 		logging.Info("Kubelet serving certificate has expired, waiting for automatic renewal... [will take up to 5 minutes]")
 		return crcerrors.Retry(ctx, 5*time.Minute, waitForCertRenewal(sshRunner, KubeletServerCert), time.Second*5)
+	}
+	if aggregratorClient {
+		logging.Info("Kube API server certificate has expired, waiting for automatic renewal... [will take up to 8 minutes]")
+		return crcerrors.Retry(ctx, 8*time.Minute, waitForCertRenewal(sshRunner, AggregatorClientCert), time.Second*5)
 	}
 	return nil
 }
