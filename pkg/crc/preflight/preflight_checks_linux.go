@@ -36,7 +36,7 @@ func checkRunningInsideWSL2() error {
 		return err
 	}
 
-	if strings.Contains(string(version), "Microsoft") {
+	if strings.Contains(strings.ToLower(string(version)), "microsoft") {
 		logging.Debugf("Running inside WSL2 environment")
 		return fmt.Errorf("CRC is unsupported using WSL2")
 	}
