@@ -432,20 +432,6 @@ func WaitForPullSecretPresentOnInstanceDisk(ctx context.Context, sshRunner *ssh.
 	return errors.Retry(ctx, 7*time.Minute, pullSecretPresentFunc, 2*time.Second)
 }
 
-func WaitForRequestHeaderClientCaFile(ctx context.Context, sshRunner *ssh.Runner) error {
-	lookupRequestHeaderClientCa := func() error {
-		expired, err := checkCertValidity(sshRunner, AggregatorClientCert)
-		if err != nil {
-			return fmt.Errorf("Failed to the expiry date: %v", err)
-		}
-		if expired {
-			return &errors.RetriableError{Err: fmt.Errorf("certificate still expired")}
-		}
-		return nil
-	}
-	return errors.Retry(ctx, 8*time.Minute, lookupRequestHeaderClientCa, 2*time.Second)
-}
-
 func WaitForAPIServer(ctx context.Context, ocConfig oc.Config) error {
 	logging.Info("Waiting for kube-apiserver availability... [takes around 2min]")
 	waitForAPIServer := func() error {
@@ -458,23 +444,6 @@ func WaitForAPIServer(ctx context.Context, ocConfig oc.Config) error {
 		return nil
 	}
 	return errors.Retry(ctx, 4*time.Minute, waitForAPIServer, time.Second)
-}
-
-func DeleteOpenshiftAPIServerPods(ctx context.Context, ocConfig oc.Config) error {
-	if err := WaitForOpenshiftResource(ctx, ocConfig, "pod"); err != nil {
-		return err
-	}
-
-	deleteOpenshiftAPIServerPods := func() error {
-		cmdArgs := []string{"delete", "pod", "--all", "--force", "-n", "openshift-apiserver"}
-		_, stderr, err := ocConfig.WithFailFast().RunOcCommand(cmdArgs...)
-		if err != nil {
-			return &errors.RetriableError{Err: fmt.Errorf("Failed to delete pod from openshift-apiserver namespace %v: %s", err, stderr)}
-		}
-		return nil
-	}
-
-	return errors.Retry(ctx, 60*time.Second, deleteOpenshiftAPIServerPods, time.Second)
 }
 
 func CheckProxySettingsForOperator(ocConfig oc.Config, proxy *httpproxy.ProxyConfig, deployment, namespace string) (bool, error) {
