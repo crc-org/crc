@@ -20,14 +20,16 @@ type StartResult struct {
 }
 
 type ClusterStatusResult struct {
-	CrcStatus        string
-	OpenshiftStatus  string
-	OpenshiftVersion string `json:"OpenshiftVersion,omitempty"`
-	DiskUse          int64
-	DiskSize         int64
-	RAMUse           int64
-	RAMSize          int64
-	Preset           preset.Preset
+	CrcStatus            string
+	OpenshiftStatus      string
+	OpenshiftVersion     string `json:"OpenshiftVersion,omitempty"`
+	DiskUse              int64
+	DiskSize             int64
+	RAMUse               int64
+	RAMSize              int64
+	PersistentVolumeUse  int `json:"PersistentVolumeUse,omitempty"`
+	PersistentVolumeSize int `json:"PersistentVolumeSize,omitempty"`
+	Preset               preset.Preset
 }
 
 type ConsoleResult struct {

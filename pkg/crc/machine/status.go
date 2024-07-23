@@ -5,11 +5,13 @@ import (
 	"fmt"
 
 	"github.com/crc-org/crc/v2/pkg/crc/cluster"
+	"github.com/crc-org/crc/v2/pkg/crc/config"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
 	"github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/docker/go-units"
 	"github.com/pkg/errors"
 )
 
@@ -62,6 +64,7 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	switch {
 	case vm.bundle.IsMicroshift():
 		clusterStatusResult.OpenshiftStatus = getMicroShiftStatus(context.Background(), ip)
+		clusterStatusResult.PersistentVolumeUse, clusterStatusResult.PersistentVolumeSize = client.getPVCSize(vm)
 	case vm.bundle.IsOpenShift():
 		clusterStatusResult.OpenshiftStatus = getOpenShiftStatus(context.Background(), ip)
 	}
@@ -197,4 +200,20 @@ func (client *client) getCPUStatus(vm *virtualMachine) []int64 {
 
 	return cpuUsage
 
+}
+
+func (client *client) getPVCSize(vm *virtualMachine) (int, int) {
+	sshRunner, err := vm.SSHRunner()
+	if err != nil {
+		logging.Debugf("Cannot get SSH runner: %v", err)
+		return 0, 0
+	}
+	total := client.config.Get(config.PersistentVolumeSize)
+	defer sshRunner.Close()
+	used, err := cluster.GetPVCUsage(sshRunner)
+	if err != nil {
+		logging.Debugf("Cannot get PVC usage: %v", err)
+		return 0, 0
+	}
+	return used, total.AsInt() * units.GB
 }

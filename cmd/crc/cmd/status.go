@@ -39,18 +39,20 @@ var statusCmd = &cobra.Command{
 }
 
 type status struct {
-	Success          bool                         `json:"success"`
-	Error            *crcErrors.SerializableError `json:"error,omitempty"`
-	CrcStatus        string                       `json:"crcStatus,omitempty"`
-	OpenShiftStatus  types.OpenshiftStatus        `json:"openshiftStatus,omitempty"`
-	OpenShiftVersion string                       `json:"openshiftVersion,omitempty"`
-	DiskUsage        int64                        `json:"diskUsage,omitempty"`
-	DiskSize         int64                        `json:"diskSize,omitempty"`
-	CacheUsage       int64                        `json:"cacheUsage,omitempty"`
-	CacheDir         string                       `json:"cacheDir,omitempty"`
-	RAMSize          int64                        `json:"ramSize,omitempty"`
-	RAMUsage         int64                        `json:"ramUsage,omitempty"`
-	Preset           preset.Preset                `json:"preset"`
+	Success              bool                         `json:"success"`
+	Error                *crcErrors.SerializableError `json:"error,omitempty"`
+	CrcStatus            string                       `json:"crcStatus,omitempty"`
+	OpenShiftStatus      types.OpenshiftStatus        `json:"openshiftStatus,omitempty"`
+	OpenShiftVersion     string                       `json:"openshiftVersion,omitempty"`
+	DiskUsage            int64                        `json:"diskUsage,omitempty"`
+	DiskSize             int64                        `json:"diskSize,omitempty"`
+	CacheUsage           int64                        `json:"cacheUsage,omitempty"`
+	CacheDir             string                       `json:"cacheDir,omitempty"`
+	RAMSize              int64                        `json:"ramSize,omitempty"`
+	RAMUsage             int64                        `json:"ramUsage,omitempty"`
+	PersistentVolumeUse  int                          `json:"persistentVolumeUsage,omitempty"`
+	PersistentVolumeSize int                          `json:"persistentVolumeSize,omitempty"`
+	Preset               preset.Preset                `json:"preset"`
 }
 
 func runStatus(writer io.Writer, client *daemonclient.Client, cacheDir, outputFormat string, watch bool) error {
@@ -163,17 +165,19 @@ func getStatus(client *daemonclient.Client, cacheDir string) *status {
 	}
 
 	return &status{
-		Success:          true,
-		CrcStatus:        clusterStatus.CrcStatus,
-		OpenShiftStatus:  types.OpenshiftStatus(clusterStatus.OpenshiftStatus),
-		OpenShiftVersion: clusterStatus.OpenshiftVersion,
-		DiskUsage:        clusterStatus.DiskUse,
-		DiskSize:         clusterStatus.DiskSize,
-		RAMSize:          clusterStatus.RAMSize,
-		RAMUsage:         clusterStatus.RAMUse,
-		CacheUsage:       size,
-		CacheDir:         cacheDir,
-		Preset:           clusterStatus.Preset,
+		Success:              true,
+		CrcStatus:            clusterStatus.CrcStatus,
+		OpenShiftStatus:      types.OpenshiftStatus(clusterStatus.OpenshiftStatus),
+		OpenShiftVersion:     clusterStatus.OpenshiftVersion,
+		DiskUsage:            clusterStatus.DiskUse,
+		DiskSize:             clusterStatus.DiskSize,
+		RAMSize:              clusterStatus.RAMSize,
+		RAMUsage:             clusterStatus.RAMUse,
+		CacheUsage:           size,
+		PersistentVolumeUse:  clusterStatus.PersistentVolumeUse,
+		PersistentVolumeSize: clusterStatus.PersistentVolumeSize,
+		CacheDir:             cacheDir,
+		Preset:               clusterStatus.Preset,
 	}
 }
 
@@ -209,7 +213,14 @@ func (s *status) prettyPrintTo(writer io.Writer) error {
 		line{"Disk Usage", fmt.Sprintf(
 			"%s of %s (Inside the CRC VM)",
 			units.HumanSize(float64(s.DiskUsage)),
-			units.HumanSize(float64(s.DiskSize)))},
+			units.HumanSize(float64(s.DiskSize)))})
+	if s.Preset == preset.Microshift {
+		lines = append(lines, line{"Persistent Volume Usage", fmt.Sprintf(
+			"%s of %s (Allocated)",
+			units.HumanSize(float64(s.PersistentVolumeUse)),
+			units.HumanSize(float64(s.PersistentVolumeSize)))})
+	}
+	lines = append(lines,
 		line{"Cache Usage", units.HumanSize(float64(s.CacheUsage))},
 		line{"Cache Directory", s.CacheDir})
 

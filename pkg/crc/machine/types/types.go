@@ -72,14 +72,16 @@ type StopResult struct {
 }
 
 type ClusterStatusResult struct {
-	CrcStatus        state.State
-	OpenshiftStatus  OpenshiftStatus
-	OpenshiftVersion string
-	DiskUse          int64
-	DiskSize         int64
-	RAMUse           int64
-	RAMSize          int64
-	Preset           crcpreset.Preset
+	CrcStatus            state.State
+	OpenshiftStatus      OpenshiftStatus
+	OpenshiftVersion     string
+	DiskUse              int64
+	DiskSize             int64
+	RAMUse               int64
+	RAMSize              int64
+	PersistentVolumeUse  int
+	PersistentVolumeSize int
+	Preset               crcpreset.Preset
 }
 
 type ClusterLoadResult struct {
