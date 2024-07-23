@@ -63,14 +63,16 @@ func (h *Handler) Status(c *context) error {
 		return err
 	}
 	return c.JSON(http.StatusOK, client.ClusterStatusResult{
-		CrcStatus:        string(res.CrcStatus),
-		OpenshiftStatus:  string(res.OpenshiftStatus),
-		OpenshiftVersion: res.OpenshiftVersion,
-		DiskUse:          res.DiskUse,
-		DiskSize:         res.DiskSize,
-		RAMSize:          res.RAMSize,
-		RAMUse:           res.RAMUse,
-		Preset:           res.Preset,
+		CrcStatus:            string(res.CrcStatus),
+		OpenshiftStatus:      string(res.OpenshiftStatus),
+		OpenshiftVersion:     res.OpenshiftVersion,
+		DiskUse:              res.DiskUse,
+		DiskSize:             res.DiskSize,
+		RAMSize:              res.RAMSize,
+		RAMUse:               res.RAMUse,
+		PersistentVolumeUse:  res.PersistentVolumeUse,
+		PersistentVolumeSize: res.PersistentVolumeSize,
+		Preset:               res.Preset,
 	})
 }
 

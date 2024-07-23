@@ -130,6 +130,29 @@ func GetCPUUsage(sshRunner *ssh.Runner) ([]int64, error) {
 
 }
 
+func GetPVCUsage(sshRunner *ssh.Runner) (int, error) {
+	cmd := `#!/bin/bash
+mountpoints=$(lsblk --output=mountpoints | grep pvc | uniq | tr '\n' ' ')
+if [ -z "$mountpoints" ]; then
+    exit 0
+fi
+sudo df -B1 --output=size $mountpoints | awk ' { sum += $1 } END { printf "%d", sum} '
+`
+	out, _, err := sshRunner.Run("/bin/bash", "-c", cmd)
+	if err != nil {
+		return 0, err
+	}
+	out = strings.TrimSpace(out)
+	if len(out) == 0 {
+		return 0, nil
+	}
+	ans, err := strconv.Atoi(out)
+	if err != nil {
+		return 0, err
+	}
+	return ans, nil
+}
+
 func EnsureSSHKeyPresentInTheCluster(ctx context.Context, ocConfig oc.Config, sshPublicKeyPath string) error {
 	sshPublicKeyByte, err := os.ReadFile(sshPublicKeyPath)
 	if err != nil {
