@@ -49,14 +49,14 @@ func (r *getrandomReader) ReadContext(ctx context.Context, b []byte) (int, error
 		// initialized.
 		n, err := unix.Getrandom(b, unix.GRND_NONBLOCK)
 		if err == nil {
-			return n, err
+			return n, nil
 		}
 		select {
 		case <-ctx.Done():
 			return 0, ctx.Err()
 
 		default:
-			if err != nil && err != syscall.EAGAIN && err != syscall.EINTR {
+			if err != syscall.EAGAIN && err != syscall.EINTR {
 				return n, err
 			}
 		}
