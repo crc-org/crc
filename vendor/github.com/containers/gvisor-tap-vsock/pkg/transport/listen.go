@@ -4,12 +4,18 @@ import (
 	"errors"
 	"net"
 	"net/url"
+	"runtime"
+	"strings"
 )
 
 func defaultListenURL(url *url.URL) (net.Listener, error) {
 	switch url.Scheme {
 	case "unix":
-		return net.Listen(url.Scheme, url.Path)
+		path := url.Path
+		if runtime.GOOS == "windows" {
+			path = strings.TrimPrefix(path, "/")
+		}
+		return net.Listen(url.Scheme, path)
 	case "tcp":
 		return net.Listen("tcp", url.Host)
 	default:

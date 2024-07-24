@@ -7,6 +7,7 @@ import (
 	"net"
 	"sync"
 	"sync/atomic"
+	"syscall"
 
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	"github.com/google/gopacket"
@@ -167,18 +168,21 @@ func (e *Switch) txBuf(id int, conn protocolConn, buf []byte) error {
 	if conn.protocolImpl.Stream() {
 		size := conn.protocolImpl.(streamProtocol).Buf()
 		conn.protocolImpl.(streamProtocol).Write(size, len(buf))
-
-		if _, err := conn.Write(append(size, buf...)); err != nil {
-			e.disconnect(id, conn)
-			return err
-		}
-	} else {
-		if _, err := conn.Write(buf); err != nil {
-			e.disconnect(id, conn)
-			return err
-		}
+		buf = append(size, buf...)
 	}
-	return nil
+	for {
+		if _, err := conn.Write(buf); err != nil {
+			if errors.Is(err, syscall.ENOBUFS) {
+				// socket buffer can be full keep retrying sending the same data
+				// again until it works or we get a different error
+				// https://github.com/containers/gvisor-tap-vsock/issues/367
+				continue
+			}
+			e.disconnect(id, conn)
+			return err
+		}
+		return nil
+	}
 }
 
 func (e *Switch) disconnect(id int, conn net.Conn) {
