@@ -99,6 +99,13 @@ func WithOption(opt Option) Modifier {
 	}
 }
 
+// WithoutOption removes the DHCPv4 option with the given code
+func WithoutOption(code OptionCode) Modifier {
+	return func(d *DHCPv4) {
+		d.DeleteOption(code)
+	}
+}
+
 // WithUserClass adds a user class option to the packet.
 // The rfc parameter allows you to specify if the userclass should be
 // rfc compliant or not. More details in issue #113
@@ -150,6 +157,11 @@ func WithNetmask(mask net.IPMask) Modifier {
 // WithLeaseTime adds or updates an OptIPAddressLeaseTime
 func WithLeaseTime(leaseTime uint32) Modifier {
 	return WithOption(OptIPAddressLeaseTime(time.Duration(leaseTime) * time.Second))
+}
+
+// WithIPv6OnlyPreferred adds or updates an OptIPv6OnlyPreferred
+func WithIPv6OnlyPreferred(v6OnlyWait uint32) Modifier {
+	return WithOption(OptIPv6OnlyPreferred(time.Duration(v6OnlyWait) * time.Second))
 }
 
 // WithDomainSearchList adds or updates an OptionDomainSearch
