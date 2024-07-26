@@ -40,6 +40,14 @@ jobs:
         with:
           name: windows-installer
           path: "./out/windows-amd64/crc-windows-installer.zip"
+      - name: Build Linux binary
+        run: |
+          make out/linux-arm64/crc
+      - name: Upload linux binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-binary
+          path: "./out/linux-arm64/crc"
   build-qe:
     runs-on: ubuntu-latest
     strategy:

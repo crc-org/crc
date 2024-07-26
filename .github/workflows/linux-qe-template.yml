@@ -1,0 +1,217 @@
+name: linux-qe-template
+
+on:
+  workflow_call:  
+    inputs:  
+      trigger-workflow-run-id:  
+        required: true  
+        type: string
+      qe-type:  
+        description: type of test; allowed values e2e or integration
+        required: true  
+        type: string
+      preset:
+        description: preset type only required if qe-type is e2e
+        type: string  
+
+jobs:
+  linux-qe:
+    runs-on: [self-hosted, linux, testing-farm]
+    permissions:
+      statuses: write # needed to update commit status (pending/failure/sucess)
+      checks: write # as documented in https://github.com/mikepenz/action-junit-report?tab=readme-ov-file#pr-run-permissions
+    steps:
+      - name: prepare env
+        run: |
+          sudo yum install podman openssh-server -y
+
+          commit_sha=$(cat gh_context.json | jq -r '.event.after')
+          if [[ -z "${commit_sha}" ]] || [[ "${commit_sha}" == null ]]; then
+            # on first PR creation .event.after is empty, then .sha is used as commit instead
+            commit_sha=$(cat gh_context.json | jq -r '.event.pull_request.head.sha')
+          fi
+          echo "commit_sha=${commit_sha}" >> "$GITHUB_ENV"
+          mkdir ${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}
+          cd ${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}
+
+          # the target can only be accessed through a bastion (which can only be accessed from self-hosted runner) 
+          # as so we need to map the ssh-agent from the host to the containers used to access the target host
+          ssh-keygen -t rsa -N '' -f id_rsa -q 
+          eval $(ssh-agent -s)
+          echo $SSH_AUTH_SOCK > ssh_auth_sock
+          echo $SSH_AGENT_PID > ssh_agent_pid
+          ssh-add id_rsa
+
+      - name: reserve machine from testing farm
+        working-directory: ${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}
+        env: 
+          TESTING_FARM_API_TOKEN: ${{ secrets.TESTING_FARM_API_TOKEN }}
+          PULL_SECRET: ${{ secrets.PULL_SECRET }}
+        run: |
+          echo "${PULL_SECRET}" > pull-secret
+          export TESTING_FARM_API_TOKEN=${TESTING_FARM_API_TOKEN}
+          testing-farm reserve --compose Fedora-40 --duration 240 --arch aarch64 --hardware memory='>= 12 GB' --hardware virtualization.is-supported='true' --ssh-public-key id_rsa.pub --no-autoconnect | tee info
+          machine=`tail -n 1 info`
+          echo ${machine##*@} > host
+          echo crctest > username
+          echo proxy > bastion_username
+          echo testing-farm.io > bastion_host
+          request=`sed -n '4p' info`
+          echo ${request:1} > requestid
+
+          # connect to the reserved machine, create a non-root user for testing
+          ${machine:1}
+          new_user=crctest
+          useradd $new_user
+          echo "$new_user:redhat" | chpasswd
+          usermod -aG wheel $new_user
+          echo "$new_user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/crctest-users
+          mkdir -p /home/$new_user/.ssh
+          cp /root/.ssh/authorized_keys /home/$new_user/.ssh/
+          chown $new_user /home/$new_user/.ssh/authorized_keys
+          exit
+     
+      - name: Download linux binary
+        working-directory: ${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-binary
+          run-id: ${{inputs.trigger-workflow-run-id}}
+          github-token: ${{ github.token }}
+
+      - name: Download qe oci image
+        working-directory: ${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}
+        id: download-qe-oci-image-artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: crc-${{inputs.qe-type}}-linux-arm64
+          run-id: ${{inputs.trigger-workflow-run-id}}
+          github-token: ${{ github.token }}
+
+      - name: Add status to the PR check
+        run: |
+          set -xuo
+          # Status msg
+          data="{\"state\":\"pending\""
+          data="${data},\"description\":\"Running ${{inputs.qe-type}}-${{inputs.preset}} on Linux ARM64\""
+          data="${data},\"context\":\"${{ env.status_context }}\""
+          data="${data},\"target_url\":\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
+          # Create status by API call
+          curl -L -v -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            https://api.github.com/repos/${{ github.repository }}/statuses/${{ env.commit_sha }} \
+            -d "${data}"
+
+      - name: Install CRC on host
+        working-directory: ${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}
+        run: |
+          podman run --rm -d --privileged --name crc-linux-install-${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}} \
+            -e TARGET_HOST=$(cat host) \
+            -e TARGET_HOST_USERNAME=$(cat username) \
+            -e TARGET_HOST_KEY_PATH=/data/id_rsa \
+            -e BASTION_HOST_USERNAME=$(cat bastion_username) \
+            -e BASTION_HOST=$(cat bastion_host) \
+            -e TARGET_FOLDER=crc-support \
+            -e TARGET_CLEANUP='false' \
+            -e OUTPUT_FOLDER=/data \
+            -e DEBUG='true' \
+            -e SSH_AUTH_SOCK=$(cat ssh_auth_sock) \
+            -v "$(cat ssh_auth_sock):$(cat ssh_auth_sock)" \
+            -v ${PWD}:/data:z \
+            -v ${PWD}/crc:/opt/crc-support/crc:z \
+            quay.io/crc-org/ci-crc-support:v2.0.0-dev-linux crc-support/run.sh \
+             -targetPath "/root/crc-support" \
+             -install 'true' \
+             -aName 'crc' \
+             -freshEnv 'false' \
+             -download 'false' 
+          podman logs -f crc-linux-install-${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}
+
+      - name: Run CRC ${{inputs.qe-type}} test
+        working-directory: ${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}
+        run: |
+          # load image
+          podman load -i crc-${{inputs.qe-type}}-linux-arm64.tar
+          # run
+          cmd="crc-qe/run.sh -junitFilename crc-${{inputs.qe-type}}-junit.xml -targetFolder crc-qe"
+          if [[ "${{inputs.qe-type}}" == "e2e" ]]; then
+            if [[ "${{inputs.preset}}" == "microshift" ]]; then
+              cmd="${cmd} -e2eTagExpression '@story_microshift'"
+            else
+              cmd="${cmd} -e2eTagExpression '~@minimal && ~@story_microshift'"
+            fi
+          fi
+          podman run --rm -d --privileged --name crc-${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}} \
+            -e TARGET_HOST=$(cat host) \
+            -e TARGET_HOST_USERNAME=$(cat username) \
+            -e TARGET_HOST_KEY_PATH=/data/id_rsa \
+            -e BASTION_HOST_USERNAME=$(cat bastion_username) \
+            -e BASTION_HOST=$(cat bastion_host) \
+            -e TARGET_FOLDER=crc-qe \
+            -e TARGET_RESULTS=results \
+            -e OUTPUT_FOLDER=/data \
+            -e DEBUG=true \
+            -e SSH_AUTH_SOCK=$(cat ssh_auth_sock) \
+            -v "$(cat ssh_auth_sock):$(cat ssh_auth_sock)" \
+            -v $PWD/pull-secret:/opt/crc/pull-secret:z \
+            -v $PWD:/data:z \
+            quay.io/crcont/crc-${{inputs.qe-type}}:gh-linux-arm64 \
+                ${cmd} 
+          podman logs -f crc-${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}
+
+      - name: Test Report
+        working-directory: ${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}
+        id: test-report
+        uses: mikepenz/action-junit-report@v4
+        if: always() 
+        with:
+          fail_on_failure: true
+          include_passed: true
+          detailed_summary: true
+          require_tests:  true
+          report_paths: '**/*.xml'
+      
+      - name: Upload e2e results
+        working-directory: ${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: linux-${{inputs.qe-type}}-${{inputs.preset}}
+          path: |
+            **/*.xml
+            **/*.results
+            **/*.log
+
+      - name: Update status of the PR check
+        if: always()
+        run: |
+          set -xuo
+          # Status msg
+          data="{\"state\":\"success\""
+          if [[ ${{steps.test-report.outcome}} != "success" ]]; then 
+            data="{\"state\":\"failure\""
+          fi
+          data="${data},\"description\":\"Finished ${{inputs.qe-type}}-${{inputs.preset}} on Linux ARM64\""
+          data="${data},\"context\":\"${{ env.status_context }}\""
+          data="${data},\"target_url\":\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
+          # Create status by API call
+          curl -L -v -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            https://api.github.com/repos/${{ github.repository }}/statuses/${{ env.commit_sha }} \
+            -d "${data}"
+
+      - name: Return machine and clear env
+        env: 
+          TESTING_FARM_API_TOKEN: ${{ secrets.TESTING_FARM_API_TOKEN }}
+        working-directory: ${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}
+        run: |
+          export TESTING_FARM_API_TOKEN=${TESTING_FARM_API_TOKEN}
+          testing-farm cancel $(cat requestid) 
+          kill $(cat ${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}/ssh_agent_pid)
+          cd ..
+          rm -r ${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}
+          
+
+
