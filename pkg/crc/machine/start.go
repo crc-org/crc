@@ -112,14 +112,8 @@ func (client *client) updateVMConfig(startConfig types.StartConfig, vm *virtualM
 	return nil
 }
 
-func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset, persistentVolumeSize int) error {
-	rootPart, err := getrootPartition(sshRunner, preset)
-	if err != nil {
-		return err
-	}
-
-	// with '/dev/[sv]da4' as input, run 'growpart /dev/[sv]da 4'
-	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Growing %s partition", rootPart), "/usr/bin/growpart", rootPart[:len("/dev/.da")], rootPart[len("/dev/.da"):]); err != nil {
+func growPartition(sshRunner *crcssh.Runner, partition string) error {
+	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Growing %s partition", partition), "/usr/bin/growpart", partition[:len("/dev/.da")], partition[len("/dev/.da"):]); err != nil {
 		var exitErr *ssh.ExitError
 		if !errors.As(err, &exitErr) {
 			return err
@@ -127,7 +121,20 @@ func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset, persi
 		if exitErr.ExitStatus() != 1 {
 			return err
 		}
-		logging.Debugf("No free space after %s, nothing to do", rootPart)
+		logging.Debugf("No free space after %s, nothing to do", partition)
+		return nil
+	}
+	return nil
+}
+
+func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset, persistentVolumeSize int) error {
+	rootPart, err := getrootPartition(sshRunner, preset)
+	if err != nil {
+		return err
+	}
+
+	// with '/dev/[sv]da4' as input, run 'growpart /dev/[sv]da 4'
+	if err := growPartition(sshRunner, rootPart); err != nil {
 		return nil
 	}
 
