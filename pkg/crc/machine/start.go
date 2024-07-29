@@ -346,7 +346,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	// Trigger disk resize, this will be a no-op if no disk size change is needed
-	if err := growRootFileSystem(ctx, startConfig, vm, sshRunner); err != nil {
+	if err := growFileSystem(ctx, startConfig, vm, sshRunner); err != nil {
 		return nil, errors.Wrap(err, "Error updating filesystem size")
 	}
 

@@ -63,7 +63,7 @@ func ocpGetPVShiftSizeGiB(diskSize int, pvSize int) int {
 	return diskSize - constants.DefaultDiskSize
 }
 
-func growRootFileSystem(ctx context.Context, startConfig types.StartConfig, vm *virtualMachine, sshRunner *crcssh.Runner) error {
+func growFileSystem(ctx context.Context, startConfig types.StartConfig, vm *virtualMachine, sshRunner *crcssh.Runner) error {
 	if startConfig.Preset == crcPreset.OpenShift {
 		sizeToMove := ocpGetPVShiftSizeGiB(startConfig.DiskSize, startConfig.PersistentVolumeSize)
 		if err := moveTopolvmPartition(ctx, sizeToMove, vm, sshRunner); err != nil {
