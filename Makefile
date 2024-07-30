@@ -99,7 +99,7 @@ install: $(SOURCES)
 	go install -tags "$(BUILDTAGS)"  -ldflags="$(LDFLAGS)" $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
 $(BUILD_DIR)/macos-amd64/crc: $(SOURCES)
-	GOARCH=amd64 GOOS=darwin go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/macos-amd64/crc $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
+	GOARCH=amd64 GOOS=darwin go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $@ $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
 $(BUILD_DIR)/macos-arm64/crc: $(SOURCES)
 	GOARCH=arm64 GOOS=darwin go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $@ $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
