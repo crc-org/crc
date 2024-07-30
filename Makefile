@@ -37,6 +37,7 @@ MODULEPATH = $(ORG)/crc/v2
 PACKAGE_DIR := packaging/$(GOOS)
 
 SOURCES := $(shell git ls-files '*.go' ":^vendor")
+SOURCES := $(SOURCES) go.mod go.sum Makefile
 
 RELEASE_INFO := release-info.json
 
