@@ -36,7 +36,7 @@ ORG := github.com/crc-org
 MODULEPATH = $(ORG)/crc/v2
 PACKAGE_DIR := packaging/$(GOOS)
 
-SOURCES := $(shell git ls-files  *.go ":^vendor")
+SOURCES := $(shell git ls-files '*.go' ":^vendor")
 
 RELEASE_INFO := release-info.json
 
