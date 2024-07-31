@@ -44,7 +44,7 @@ To assign more resources to the {prod} instance, see link:{crc-gsg-url}#configur
 
 === Requirements on {mac}
 
-* On {mac}, {prod} requires {mac} 12 Monterey or later.
+* On {mac}, {prod} requires {mac} 13 Ventura or later.
 {prod} does not work on earlier versions of {mac}.
 
 === Requirements on Linux
