@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
+	"github.com/containers/common/pkg/strongunits"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	logging "github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
@@ -15,13 +17,13 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func moveTopolvmPartition(ctx context.Context, shiftSize int, vm *virtualMachine, sshRunner *crcssh.Runner) error {
+func moveTopolvmPartition(ctx context.Context, shiftSize strongunits.GiB, vm *virtualMachine, sshRunner *crcssh.Runner) error {
 	pvPartition, err := getTopolvmPartition(sshRunner)
 	if err != nil {
 		return err
 	}
 	_, _, err = sshRunner.RunPrivileged("move topolvm partition to end of disk",
-		fmt.Sprintf("echo '+%dG,' | sudo sfdisk --move-data %s -N %s --force", shiftSize, pvPartition[:len("/dev/.da")], pvPartition[len("/dev/.da"):]))
+		fmt.Sprintf("echo '+%dG,' | sudo sfdisk --lock --move-data %s -N %s --force", shiftSize, pvPartition[:len("/dev/.da")], pvPartition[len("/dev/.da"):]))
 	var exitErr *ssh.ExitError
 	if err != nil {
 		if !errors.As(err, &exitErr) {
@@ -55,19 +57,92 @@ func growPartition(sshRunner *crcssh.Runner, partition string) error {
 	return nil
 }
 
-func ocpGetPVShiftSizeGiB(diskSize int, pvSize int) int {
-	defaultPvSize := constants.GetDefaultPersistentVolumeSize(crcPreset.OpenShift)
-	if pvSize > defaultPvSize {
-		return (diskSize - constants.DefaultDiskSize) - (pvSize - defaultPvSize)
+func ocpGetPVShiftSizeGiB(sshRunner *crcssh.Runner, diskSize int, pvSize int) strongunits.GiB {
+	pvPartition, err := getTopolvmPartition(sshRunner)
+	if err != nil {
+		logging.Warnf("unable to get topolvm parition name: %v", err)
+		return 0
 	}
-	return diskSize - constants.DefaultDiskSize
+	currentPvSize, err := getBlockDeviceSizeGiB(sshRunner, pvPartition)
+	if err != nil {
+		logging.Warnf("unable to get effective topolvm parition size: %v", err)
+		return 0
+	}
+	currentDiskSize, err := getBlockDeviceSizeGiB(sshRunner, pvPartition[:len("/dev/.da")])
+	if err != nil {
+		logging.Warnf("unable to get effective disk size: %v", err)
+		return 0
+	}
+	rootPart, err := getrootPartition(sshRunner, crcPreset.OpenShift)
+	if err != nil {
+		logging.Warnf("unable to get root partition name: %v", err)
+		return 0
+	}
+	currentRootPartSize, err := getBlockDeviceSizeGiB(sshRunner, rootPart)
+	if err != nil {
+		logging.Warnf("unable to get effective disk size: %v", err)
+		return 0
+	}
+
+	logging.Debug("Current disk size: ", currentDiskSize)
+	logging.Debug("Current pv size: ", currentPvSize)
+	logging.Debug("Current root partition size: ", currentRootPartSize)
+
+	diskSizeGiB := strongunits.GiB(diskSize)
+	pvSizeGiB := strongunits.GiB(pvSize)
+
+	logging.Debug("Requested disk size: ", diskSizeGiB)
+	logging.Debug("Requested pv size: ", pvSizeGiB)
+
+	// if the disk size is not increased then no need to shift pv parition
+	if currentDiskSize == constants.DefaultDiskSize {
+		return 0
+	}
+
+	if pvSizeGiB > currentPvSize || diskSizeGiB > constants.DefaultDiskSize {
+		// calculating the space to move from the start of the disk including
+		// the root parition + 1GiB for partitions /boot and EFI
+		sizeOfRootAndOtherParts := currentRootPartSize + strongunits.GiB(uint64(1))
+		shiftSize := (currentDiskSize - sizeOfRootAndOtherParts) - pvSizeGiB
+
+		logging.Debug("Calculated pv partition shift size: ", shiftSize)
+
+		// when trying to subtract a bigger number from a smaller number there's overflow
+		if shiftSize == math.MaxUint64 {
+			return 0
+		}
+		return shiftSize
+	}
+
+	return 0
+}
+
+func getBlockDeviceSizeGiB(sshRunner *crcssh.Runner, device string) (strongunits.GiB, error) {
+	stdOut, _, err := sshRunner.Run("lsblk", "-b", "--output", "SIZE", "-n", "-d", device)
+	if err != nil {
+		return 0, err
+	}
+	stdOut = strings.TrimSuffix(stdOut, "\n")
+	logging.Debugf("Got size of %s using lsblk: %s", device, stdOut)
+	size, err := strconv.ParseUint(stdOut, 10, 64)
+	if err != nil {
+		logging.Warnf("unable to parse topolvm parition size: %v", err)
+		return 0, err
+	}
+	logging.Debugf("Size of %s in uint64: %d", device, size)
+
+	sizeBytes := strongunits.B(size)
+	logging.Debugf("Size of %s in GiB: %d", device, strongunits.ToGiB(sizeBytes))
+	return strongunits.ToGiB(sizeBytes), nil
 }
 
 func growFileSystem(ctx context.Context, startConfig types.StartConfig, vm *virtualMachine, sshRunner *crcssh.Runner) error {
 	if startConfig.Preset == crcPreset.OpenShift {
-		sizeToMove := ocpGetPVShiftSizeGiB(startConfig.DiskSize, startConfig.PersistentVolumeSize)
-		if err := moveTopolvmPartition(ctx, sizeToMove, vm, sshRunner); err != nil {
-			return err
+		sizeToMove := ocpGetPVShiftSizeGiB(sshRunner, startConfig.DiskSize, startConfig.PersistentVolumeSize)
+		if sizeToMove > 0 {
+			if err := moveTopolvmPartition(ctx, sizeToMove, vm, sshRunner); err != nil {
+				return err
+			}
 		}
 	}
 	rootPart, err := getrootPartition(sshRunner, startConfig.Preset)
