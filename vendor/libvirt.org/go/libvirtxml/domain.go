@@ -516,6 +516,10 @@ type DomainFilesystemBinaryThreadPool struct {
 	Size uint `xml:"size,attr,omitempty"`
 }
 
+type DomainFilesystemBinaryOpenFiles struct {
+	Max uint `xml:"max,attr,"`
+}
+
 type DomainFilesystemBinary struct {
 	Path       string                            `xml:"path,attr,omitempty"`
 	XAttr      string                            `xml:"xattr,attr,omitempty"`
@@ -523,6 +527,7 @@ type DomainFilesystemBinary struct {
 	Sandbox    *DomainFilesystemBinarySandbox    `xml:"sandbox"`
 	Lock       *DomainFilesystemBinaryLock       `xml:"lock"`
 	ThreadPool *DomainFilesystemBinaryThreadPool `xml:"thread_pool"`
+	OpenFiles  *DomainFilesystemBinaryOpenFiles  `xml:"openfiles"`
 }
 
 type DomainFilesystemIDMapEntry struct {
@@ -666,9 +671,9 @@ type DomainInterfaceSourceNull struct {
 
 type DomainInterfaceSourceVDS struct {
 	SwitchID     string `xml:"switchid,attr"`
-	PortID       int    `xml:"portid,attr"`
-	PortGroupID  string `xml:"portgroupid,attr"`
-	ConnectionID int    `xml:"connectionid,attr"`
+	PortID       int    `xml:"portid,attr,omitempty"`
+	PortGroupID  string `xml:"portgroupid,attr,omitempty"`
+	ConnectionID int    `xml:"connectionid,attr,omitempty"`
 }
 
 type DomainInterfaceSourceLocal struct {
@@ -2050,6 +2055,7 @@ type DomainTPMBackendEmulator struct {
 	Version         string                      `xml:"version,attr,omitempty"`
 	Encryption      *DomainTPMBackendEncryption `xml:"encryption"`
 	PersistentState string                      `xml:"persistent_state,attr,omitempty"`
+	Debug           uint                        `xml:"debug,attr,omitempty"`
 	ActivePCRBanks  *DomainTPMBackendPCRBanks   `xml:"active_pcr_banks"`
 }
 
@@ -2129,6 +2135,20 @@ type DomainCryptoBackendBuiltIn struct {
 type DomainCryptoBackendLKCF struct {
 }
 
+type DomainPStore struct {
+	Backend string            `xml:"backend,attr"`
+	Path    string            `xml:"path"`
+	Size    DomainPStoreSize  `xml:"size"`
+	ACPI    *DomainDeviceACPI `xml:"acpi"`
+	Alias   *DomainAlias      `xml:"alias"`
+	Address *DomainAddress    `xml:"address"`
+}
+
+type DomainPStoreSize struct {
+	Size uint64 `xml:",chardata"`
+	Unit string `xml:"unit,attr"`
+}
+
 type DomainDeviceList struct {
 	Emulator     string              `xml:"emulator,omitempty"`
 	Disks        []DomainDisk        `xml:"disk"`
@@ -2161,6 +2181,7 @@ type DomainDeviceList struct {
 	IOMMU        *DomainIOMMU        `xml:"iommu"`
 	VSock        *DomainVSock        `xml:"vsock"`
 	Crypto       []DomainCrypto      `xml:"crypto"`
+	PStore       *DomainPStore       `xml:"pstore"`
 }
 
 type DomainMemory struct {
