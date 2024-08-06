@@ -117,6 +117,7 @@ type DomainCapsDevices struct {
 	Redirdev   *DomainCapsDevice `xml:"redirdev"`
 	Channel    *DomainCapsDevice `xml:"channel"`
 	Crypto     *DomainCapsDevice `xml:"crypto"`
+	Interface  *DomainCapsDevice `xml:"interface"`
 }
 
 type DomainCapsDevice struct {
