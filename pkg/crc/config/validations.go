@@ -103,6 +103,13 @@ func validatePath(value interface{}) (bool, string) {
 	return true, ""
 }
 
+func validateDirectory(value interface{}) (bool, string) {
+	if err := validation.ValidateDirectory(cast.ToString(value)); err != nil {
+		return false, err.Error()
+	}
+	return true, ""
+}
+
 // validateHTTPProxy checks if given URI is valid for a HTTP proxy
 func validateHTTPProxy(value interface{}) (bool, string) {
 	if err := httpproxy.ValidateProxyURL(cast.ToString(value), false); err != nil {
