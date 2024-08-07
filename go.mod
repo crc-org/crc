@@ -11,6 +11,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/cheggaaa/pb/v3 v3.1.5
+	github.com/containers/common v0.60.0
 	github.com/containers/gvisor-tap-vsock v0.7.4
 	github.com/containers/image/v5 v5.32.0
 	github.com/coreos/go-systemd/v22 v22.5.0
