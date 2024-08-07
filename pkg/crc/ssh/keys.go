@@ -3,10 +3,10 @@ package ssh
 import (
 	"bufio"
 	"bytes"
-	"crypto/ecdsa"
-	"crypto/elliptic"
+	"crypto"
+	"crypto/ed25519"
 	"crypto/rand"
-	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"os"
@@ -33,23 +33,23 @@ type KeyPair struct {
 // This will return a private & public key encoded as DER.
 func NewKeyPair() (keyPair *KeyPair, err error) {
 
-	priv, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+	pub, priv, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		return nil, ErrKeyGeneration
 	}
 
-	privDer, err := x509.MarshalPKCS8PrivateKey(priv)
+	privMar, err := gossh.MarshalPrivateKey(crypto.PrivateKey(priv), "")
 	if err != nil {
 		return nil, ErrPrivateKey
 	}
 
-	pubSSH, err := gossh.NewPublicKey(&priv.PublicKey)
+	pubSSH, err := gossh.NewPublicKey(pub)
 	if err != nil {
 		return nil, ErrPublicKey
 	}
 
 	return &KeyPair{
-		PrivateKey: privDer,
+		PrivateKey: pem.EncodeToMemory(privMar),
 		PublicKey:  gossh.MarshalAuthorizedKey(pubSSH),
 	}, nil
 }

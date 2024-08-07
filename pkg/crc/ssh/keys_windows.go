@@ -1,7 +1,6 @@
 package ssh
 
 import (
-	"encoding/pem"
 	"os"
 
 	"github.com/hectane/go-acl"
@@ -35,7 +34,7 @@ func (kp *KeyPair) WriteToFile(privateKeyPath string, publicKeyPath string) erro
 	}{
 		{
 			File:  privateKeyPath,
-			Value: pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Headers: nil, Bytes: kp.PrivateKey}),
+			Value: kp.PrivateKey,
 		},
 		{
 			File:  publicKeyPath,

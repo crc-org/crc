@@ -174,11 +174,11 @@ func EnsureBaseDirectoriesExist() error {
 }
 
 func GetPublicKeyPath() string {
-	return filepath.Join(MachineInstanceDir, DefaultName, "id_ecdsa.pub")
+	return filepath.Join(MachineInstanceDir, DefaultName, "id_ed25519.pub")
 }
 
 func GetPrivateKeyPath() string {
-	return filepath.Join(MachineInstanceDir, DefaultName, "id_ecdsa")
+	return filepath.Join(MachineInstanceDir, DefaultName, "id_ed25519")
 }
 
 func GetHostDockerSocketPath() string {
