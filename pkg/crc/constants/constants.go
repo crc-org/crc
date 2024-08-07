@@ -185,9 +185,9 @@ func GetHostDockerSocketPath() string {
 	return filepath.Join(MachineInstanceDir, DefaultName, "docker.sock")
 }
 
-// For backward compatibility to v 1.20.0
-func GetRsaPrivateKeyPath() string {
-	return filepath.Join(MachineInstanceDir, DefaultName, "id_rsa")
+// For backward compatibility to v 2.40.0
+func GetECDSAPrivateKeyPath() string {
+	return filepath.Join(MachineInstanceDir, DefaultName, "id_ecdsa")
 }
 
 func GetKubeAdminPasswordPath() string {
