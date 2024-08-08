@@ -50,6 +50,7 @@ func clientConfig(user string, keys []string) (*ssh.ClientConfig, error) {
 
 		privateKey, err := ssh.ParsePrivateKey(key)
 		if err != nil {
+			log.Debugf("Failed to parse private key: %v\n", err)
 			return nil, err
 		}
 

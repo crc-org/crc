@@ -106,5 +106,5 @@ func (vm *virtualMachine) SSHRunner() (*ssh.Runner, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ssh.CreateRunner(ip, vm.SSHPort(), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath(), vm.bundle.GetSSHKeyPath())
+	return ssh.CreateRunner(ip, vm.SSHPort(), constants.GetPrivateKeyPath(), constants.GetECDSAPrivateKeyPath(), vm.bundle.GetSSHKeyPath())
 }
