@@ -15,9 +15,6 @@ func CreateHost(machineConfig config.MachineConfig) *vfkit.Driver {
 
 	config.InitVMDriverFromMachineConfig(machineConfig, vfDriver.VMDriver)
 
-	vfDriver.Cmdline = machineConfig.KernelCmdLine
-	vfDriver.VmlinuzPath = machineConfig.Kernel
-	vfDriver.InitrdPath = machineConfig.Initramfs
 	vfDriver.VfkitPath = ExecutablePath()
 
 	vfDriver.VirtioNet = machineConfig.NetworkMode == network.SystemNetworkingMode

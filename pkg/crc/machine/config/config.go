@@ -19,11 +19,6 @@ type MachineConfig struct {
 	SharedDirPassword string
 	SharedDirUsername string
 
-	// macOS specific configuration
-	KernelCmdLine string
-	Initramfs     string
-	Kernel        string
-
 	// Experimental features
 	NetworkMode network.Mode
 }

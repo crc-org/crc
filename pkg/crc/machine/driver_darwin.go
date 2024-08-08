@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/config"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/vfkit"
 	machineVf "github.com/crc-org/crc/v2/pkg/drivers/vfkit"
@@ -35,34 +34,6 @@ func updateDriverConfig(host *host.Host, driver *machineVf.Driver) error {
 	}
 
 	return host.UpdateConfig(driverData)
-}
-
-func updateKernelArgs(vm *virtualMachine) error {
-	logging.Info("Updating kernel args...")
-	sshRunner, err := vm.SSHRunner()
-	if err != nil {
-		return err
-	}
-	defer sshRunner.Close()
-
-	stdout, stderr, err := sshRunner.RunPrivileged("Get kernel args", `-- sh -c 'rpm-ostree kargs'`)
-	if err != nil {
-		logging.Errorf("Failed to get kernel args: %v - %s", err, stderr)
-		return err
-	}
-	logging.Debugf("Kernel args: %s", stdout)
-
-	vfkitDriver, err := loadDriverConfig(vm.Host)
-	if err != nil {
-		return err
-	}
-	logging.Debugf("Current Kernel args: %s", vfkitDriver.Cmdline)
-	vfkitDriver.Cmdline = stdout
-
-	if err := updateDriverConfig(vm.Host, vfkitDriver); err != nil {
-		return err
-	}
-	return vm.api.Save(vm.Host)
 }
 
 func updateDriverStruct(_ *host.Host, _ *machineVf.Driver) error {

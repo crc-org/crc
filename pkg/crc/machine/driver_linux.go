@@ -39,10 +39,6 @@ func updateDriverConfig(host *host.Host, driver *machineLibvirt.Driver) error {
 	return host.UpdateConfig(driverData)
 }
 
-func updateKernelArgs(_ *virtualMachine) error {
-	return nil
-}
-
 /*
 func (r *RPCServerDriver) SetConfigRaw(data []byte, _ *struct{}) error {
 	return json.Unmarshal(data, &r.ActualDriver)

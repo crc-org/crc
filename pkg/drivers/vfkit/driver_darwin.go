@@ -40,11 +40,8 @@ import (
 
 type Driver struct {
 	*drivers.VMDriver
-	VmlinuzPath string
-	Cmdline     string
-	InitrdPath  string
-	VfkitPath   string
-	VirtioNet   bool
+	VfkitPath string
+	VirtioNet bool
 
 	VsockPath       string
 	DaemonVsockPort uint
@@ -170,11 +167,10 @@ func (d *Driver) Start() error {
 		return err
 	}
 
-	bootLoader := config.NewLinuxBootloader(
-		d.VmlinuzPath,
-		"console=hvc0 "+d.Cmdline,
-		d.InitrdPath,
-	)
+	efiStore := d.ResolveStorePath("efistore.nvram")
+	create := !crcos.FileExists(efiStore)
+
+	bootLoader := config.NewEFIBootloader(efiStore, create)
 
 	vm := config.NewVirtualMachine(
 		uint(d.CPU),
