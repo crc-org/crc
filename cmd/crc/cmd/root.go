@@ -81,7 +81,7 @@ func runPrerun(cmd *cobra.Command) error {
 	logging.InitLogrus(logFile)
 
 	for _, str := range defaultVersion().lines() {
-		logging.Debugf(str)
+		logging.Debugf("%s", str)
 	}
 	return nil
 }
@@ -138,7 +138,7 @@ func setProxyDefaults() error {
 	}
 
 	if proxyConfig.IsEnabled() {
-		logging.Debugf(proxyConfig.String())
+		logging.Debugf("%s", proxyConfig.String())
 		proxyConfig.ApplyToEnvironment()
 	}
 	return nil
