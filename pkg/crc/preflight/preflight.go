@@ -72,7 +72,7 @@ func (check *Check) doFix() error {
 		panic(fmt.Sprintf("Should not happen, empty description for fix '%s'", check.configKeySuffix))
 	}
 	if check.flags&NoFix == NoFix {
-		return fmt.Errorf(check.fixDescription)
+		return fmt.Errorf("%s", check.fixDescription)
 	}
 
 	logging.Infof("%s", check.fixDescription)
