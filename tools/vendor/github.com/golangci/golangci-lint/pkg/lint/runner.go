@@ -208,11 +208,11 @@ func (r *Runner) printPerProcessorStat(stat map[string]processorStat) {
 	parts := make([]string, 0, len(stat))
 	for name, ps := range stat {
 		if ps.inCount != 0 {
-			parts = append(parts, fmt.Sprintf("%s: %d/%d", name, ps.outCount, ps.inCount))
+			parts = append(parts, fmt.Sprintf("%s: %d/%d", name, ps.inCount, ps.outCount))
 		}
 	}
 	if len(parts) != 0 {
-		r.Log.Infof("Processors filtering stat (out/in): %s", strings.Join(parts, ", "))
+		r.Log.Infof("Processors filtering stat (in/out): %s", strings.Join(parts, ", "))
 	}
 }
 
@@ -235,6 +235,7 @@ func (r *Runner) processIssues(issues []result.Issue, sw *timeutils.Stopwatch, s
 			issues = newIssues
 		}
 
+		// This is required by JSON serialization
 		if issues == nil {
 			issues = []result.Issue{}
 		}
