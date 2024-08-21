@@ -14,10 +14,6 @@ type RangeValInClosureRule struct{}
 func (*RangeValInClosureRule) Apply(file *lint.File, _ lint.Arguments) []lint.Failure {
 	var failures []lint.Failure
 
-	if file.Pkg.IsAtLeastGo122() {
-		return failures
-	}
-
 	walker := rangeValInClosure{
 		onFailure: func(failure lint.Failure) {
 			failures = append(failures, failure)

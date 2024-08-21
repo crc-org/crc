@@ -20,13 +20,18 @@ func (r *CommentSpacingsRule) configure(arguments lint.Arguments) {
 	defer r.Unlock()
 
 	if r.allowList == nil {
-		r.allowList = []string{}
+		r.allowList = []string{
+			"//go:",
+			"//revive:",
+			"//nolint:",
+		}
+
 		for _, arg := range arguments {
 			allow, ok := arg.(string) // Alt. non panicking version
 			if !ok {
 				panic(fmt.Sprintf("invalid argument %v for %s; expected string but got %T", arg, r.Name(), arg))
 			}
-			r.allowList = append(r.allowList, `//`+allow)
+			r.allowList = append(r.allowList, `//`+allow+`:`)
 		}
 	}
 }
@@ -82,5 +87,5 @@ func (r *CommentSpacingsRule) isAllowed(line string) bool {
 		}
 	}
 
-	return isDirectiveComment(line)
+	return false
 }

@@ -22,7 +22,7 @@ func (InvalidIssue) Name() string {
 }
 
 func (p InvalidIssue) Process(issues []result.Issue) ([]result.Issue, error) {
-	tcIssues := filterIssuesUnsafe(issues, func(issue *result.Issue) bool {
+	tcIssues := filterIssues(issues, func(issue *result.Issue) bool {
 		return issue.FromLinter == typeCheckName
 	})
 

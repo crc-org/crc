@@ -138,32 +138,16 @@ func getStructName(r *ast.FieldList) string {
 
 	switch v := t.(type) {
 	case *ast.StarExpr:
-		return extractFromStarExpr(v)
+		t = v.X
 	case *ast.IndexExpr:
-		return extractFromIndexExpr(v)
-	case *ast.Ident:
-		return v.Name
+		t = v.X
 	}
 
-	return defaultStructName
-}
-
-func extractFromStarExpr(expr *ast.StarExpr) string {
-	switch v := expr.X.(type) {
-	case *ast.IndexExpr:
-		return extractFromIndexExpr(v)
-	case *ast.Ident:
-		return v.Name
+	if p, _ := t.(*ast.Ident); p != nil {
+		result = p.Name
 	}
-	return defaultStructName
-}
 
-func extractFromIndexExpr(expr *ast.IndexExpr) string {
-	switch v := expr.X.(type) {
-	case *ast.Ident:
-		return v.Name
-	}
-	return defaultStructName
+	return result
 }
 
 func checkStructFields(fields *ast.FieldList, structName string, w *lintConfusingNames) {

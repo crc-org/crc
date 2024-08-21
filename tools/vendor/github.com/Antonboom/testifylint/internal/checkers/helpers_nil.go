@@ -14,5 +14,6 @@ func xorNil(first, second ast.Expr) (ast.Expr, bool) {
 }
 
 func isNil(expr ast.Expr) bool {
-	return isIdentWithName("nil", expr)
+	ident, ok := expr.(*ast.Ident)
+	return ok && ident.Name == "nil"
 }

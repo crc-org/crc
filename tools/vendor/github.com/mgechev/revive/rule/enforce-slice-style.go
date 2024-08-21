@@ -14,7 +14,6 @@ const (
 	enforceSliceStyleTypeAny     enforceSliceStyleType = "any"
 	enforceSliceStyleTypeMake    enforceSliceStyleType = "make"
 	enforceSliceStyleTypeLiteral enforceSliceStyleType = "literal"
-	enforceSliceStyleTypeNil     enforceSliceStyleType = "nil"
 )
 
 func sliceStyleFromString(s string) (enforceSliceStyleType, error) {
@@ -25,8 +24,6 @@ func sliceStyleFromString(s string) (enforceSliceStyleType, error) {
 		return enforceSliceStyleTypeMake, nil
 	case string(enforceSliceStyleTypeLiteral):
 		return enforceSliceStyleTypeLiteral, nil
-	case string(enforceSliceStyleTypeNil):
-		return enforceSliceStyleTypeNil, nil
 	default:
 		return enforceSliceStyleTypeAny, fmt.Errorf(
 			"invalid slice style: %s (expecting one of %v)",
@@ -35,7 +32,6 @@ func sliceStyleFromString(s string) (enforceSliceStyleType, error) {
 				enforceSliceStyleTypeAny,
 				enforceSliceStyleTypeMake,
 				enforceSliceStyleTypeLiteral,
-				enforceSliceStyleTypeNil,
 			},
 		)
 	}
@@ -90,10 +86,7 @@ func (r *EnforceSliceStyleRule) Apply(file *lint.File, arguments lint.Arguments)
 	ast.Inspect(astFile, func(n ast.Node) bool {
 		switch v := n.(type) {
 		case *ast.CompositeLit:
-			switch r.enforceSliceStyle {
-			case enforceSliceStyleTypeMake, enforceSliceStyleTypeNil:
-				// continue
-			default:
+			if r.enforceSliceStyle != enforceSliceStyleTypeMake {
 				return true
 			}
 
@@ -106,22 +99,14 @@ func (r *EnforceSliceStyleRule) Apply(file *lint.File, arguments lint.Arguments)
 				return true
 			}
 
-			var failureMessage string
-			if r.enforceSliceStyle == enforceSliceStyleTypeNil {
-				failureMessage = "use nil slice declaration (e.g. var args []type) instead of []type{}"
-			} else {
-				failureMessage = "use make([]type) instead of []type{} (or declare nil slice)"
-			}
 			failures = append(failures, lint.Failure{
 				Confidence: 1,
 				Node:       v,
 				Category:   "style",
-				Failure:    failureMessage,
+				Failure:    "use make([]type) instead of []type{} (or declare nil slice)",
 			})
 		case *ast.CallExpr:
-			switch r.enforceSliceStyle {
-			case enforceSliceStyleTypeLiteral, enforceSliceStyleTypeNil:
-			default:
+			if r.enforceSliceStyle != enforceSliceStyleTypeLiteral {
 				// skip any function calls, even if it's make([]type)
 				// we don't want to report it if literals are not enforced
 				return true
@@ -166,17 +151,11 @@ func (r *EnforceSliceStyleRule) Apply(file *lint.File, arguments lint.Arguments)
 				}
 			}
 
-			var failureMessage string
-			if r.enforceSliceStyle == enforceSliceStyleTypeNil {
-				failureMessage = "use nil slice declaration (e.g. var args []type) instead of make([]type, 0)"
-			} else {
-				failureMessage = "use []type{} instead of make([]type, 0) (or declare nil slice)"
-			}
 			failures = append(failures, lint.Failure{
 				Confidence: 1,
 				Node:       v.Args[0],
 				Category:   "style",
-				Failure:    failureMessage,
+				Failure:    "use []type{} instead of make([]type, 0) (or declare nil slice)",
 			})
 		}
 		return true

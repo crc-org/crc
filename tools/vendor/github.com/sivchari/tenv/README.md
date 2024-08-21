@@ -1,6 +1,6 @@
 # tenv
 
-<img title="Gopher" alt="tenv Gopher" src="./tenv.png" width="400">
+![tenv Gopher](./tenv.png "Gopher")
 
 
 [![test_and_lint](https://github.com/sivchari/tenv/actions/workflows/workflows.yml/badge.svg?branch=main)](https://github.com/sivchari/tenv/actions/workflows/workflows.yml)
@@ -10,7 +10,7 @@ tenv is analyzer that detects using os.Setenv instead of t.Setenv since Go1.17
 ## Instruction
 
 ```sh
-go install github.com/sivchari/tenv/cmd/tenv@latest
+go install github.com/sivchari/tenv/cmd/tenv
 ```
 
 ## Usage
@@ -39,7 +39,7 @@ func helper() {
 ```
 
 ```console
-go vet -vettool=$(which tenv) ./...
+go vet -vettool=(which tenv) ./...
 
 # a
 ./main_test.go:11:2: os.Setenv() can be replaced by `t.Setenv()` in TestMain
@@ -75,7 +75,7 @@ func helper() {
 ```
 
 ```console
-go vet -vettool=$(which tenv) -tenv.all ./...
+go vet -vettool=(which tenv) -tenv.all ./...
 
 # a
 ./main_test.go:11:2: os.Setenv() can be replaced by `t.Setenv()` in TestMain
@@ -89,7 +89,7 @@ go vet -vettool=$(which tenv) -tenv.all ./...
 ```yaml
 - run:
     name: install tenv
-    command: go install github.com/sivchari/tenv@latest
+    command: go install github.com/sivchari/tenv
 
 - run:
     name: run tenv
@@ -100,7 +100,7 @@ go vet -vettool=$(which tenv) -tenv.all ./...
 
 ```yaml
 - name: install tenv
-  run: go install github.com/sivchari/tenv@latest
+  run: go install github.com/sivchari/tenv
 
 - name: run tenv
   run: go vet -vettool=`which tenv` ./...
