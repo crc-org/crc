@@ -292,8 +292,6 @@ func (l *Loader) handleGoVersion() {
 
 	trimmedGoVersion := trimGoVersion(l.cfg.Run.Go)
 
-	l.cfg.LintersSettings.Revive.Go = trimmedGoVersion
-
 	l.cfg.LintersSettings.Gocritic.Go = trimmedGoVersion
 
 	// staticcheck related linters.
@@ -431,11 +429,6 @@ func (l *Loader) handleLinterOptionDeprecations() {
 	// Deprecated since v1.47.0
 	if l.cfg.LintersSettings.Stylecheck.GoVersion != "" {
 		l.log.Warnf("The configuration option `linters.stylecheck.go` is deprecated, please use global `run.go`.")
-	}
-
-	// Deprecated since v1.60.0
-	if !l.cfg.LintersSettings.Unused.ExportedIsUsed {
-		l.log.Warnf("The configuration option `linters.unused.exported-is-used` is deprecated.")
 	}
 
 	// Deprecated since v1.58.0

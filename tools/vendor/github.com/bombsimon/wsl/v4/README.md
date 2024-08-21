@@ -20,7 +20,7 @@ make something configurable!
 
 ```sh
 # Latest release
-go install github.com/bombsimon/wsl/v4/cmd/wsl@latest
+go install github.com/bombsimon/wsl/v4/cmd/wsl
 
 # Main branch
 go install github.com/bombsimon/wsl/v4/cmd/wsl@master

@@ -19,7 +19,7 @@ const (
 
 const DefaultSuiteExtraAssertCallMode = SuiteExtraAssertCallModeRemove
 
-// SuiteExtraAssertCall detects situations like
+// SuiteExtraAssertCall detects situation like
 //
 //	func (s *MySuite) TestSomething() {
 //		s.Assert().Equal(42, value)
