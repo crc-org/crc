@@ -940,14 +940,14 @@ func PodmanCommandIsAvailable() error {
 
 	// Do what 'eval $(crc podman-env) would do
 	path := os.ExpandEnv("${HOME}/.crc/bin/podman:$PATH")
-	csshk := os.ExpandEnv("${HOME}/.crc/machines/crc/id_ecdsa")
+	csshk := os.ExpandEnv("${HOME}/.crc/machines/crc/id_ed25519")
 	dh := os.ExpandEnv("unix:///${HOME}/.crc/machines/crc/docker.sock")
 	ch := "ssh://core@127.0.0.1:2222/run/user/1000/podman/podman.sock"
 	if runtime.GOOS == "windows" {
 		userHomeDir, _ := os.UserHomeDir()
 		unexpandedPath := filepath.Join(userHomeDir, ".crc/bin/podman;${PATH}")
 		path = os.ExpandEnv(unexpandedPath)
-		csshk = filepath.Join(userHomeDir, ".crc/machines/crc/id_ecdsa")
+		csshk = filepath.Join(userHomeDir, ".crc/machines/crc/id_ed25519")
 		dh = "npipe:////./pipe/crc-podman"
 	}
 	if runtime.GOOS == "linux" {
