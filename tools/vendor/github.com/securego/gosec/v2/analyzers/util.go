@@ -35,13 +35,6 @@ type SSAAnalyzerResult struct {
 	SSA    *buildssa.SSA
 }
 
-// BuildDefaultAnalyzers returns the default list of analyzers
-func BuildDefaultAnalyzers() []*analysis.Analyzer {
-	return []*analysis.Analyzer{
-		newSliceBoundsAnalyzer("G602", "Possible slice bounds out of range"),
-	}
-}
-
 // getSSAResult retrieves the SSA result from analysis pass
 func getSSAResult(pass *analysis.Pass) (*SSAAnalyzerResult, error) {
 	result, ok := pass.ResultOf[buildssa.Analyzer]
