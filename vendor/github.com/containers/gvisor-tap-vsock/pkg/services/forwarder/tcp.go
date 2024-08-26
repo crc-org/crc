@@ -6,13 +6,13 @@ import (
 	"net"
 	"sync"
 
-	"github.com/inetaf/tcpproxy"
 	log "github.com/sirupsen/logrus"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
 	"gvisor.dev/gvisor/pkg/waiter"
+	"inet.af/tcpproxy"
 )
 
 const linkLocalSubnet = "169.254.0.0/16"
