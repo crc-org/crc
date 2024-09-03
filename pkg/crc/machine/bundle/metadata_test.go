@@ -211,3 +211,83 @@ func testDataURI(t *testing.T, sha256sum string) string {
 	require.NoError(t, err)
 	return fmt.Sprintf("file://%s", filepath.ToSlash(absPath))
 }
+
+func TestGetBundleInfoFromNameValid(t *testing.T) {
+	valid := [][]string{
+		// crc_preset_driver_version_arch_customSuffix.crcbundle
+		{"crc_libvirt_4.16.7_amd64.crcbundle", preset.OpenShift.String(), "libvirt", "4.16.7", "amd64", ""},
+		{"crc_libvirt_4.16.7_amd64_232.crcbundle", preset.OpenShift.String(), "libvirt", "4.16.7", "amd64", "232"},
+		{"crc_microshift_libvirt_4.16.7_amd64.crcbundle", preset.Microshift.String(), "libvirt", "4.16.7", "amd64", ""},
+		{"crc_microshift_libvirt_4.16.7_amd64_2345.crcbundle", preset.Microshift.String(), "libvirt", "4.16.7", "amd64", "2345"},
+		{"crc_okd_vfkit_4.16.7_amd64.crcbundle", preset.OKD.String(), "vfkit", "4.16.7", "amd64", ""},
+		{"crc_okd_vfkit_4.16.7_amd64_2342465234654.crcbundle", preset.OKD.String(), "vfkit", "4.16.7", "amd64", "2342465234654"},
+		{"crc_hyperv_4.18.0_arm64.crcbundle", preset.OpenShift.String(), "hyperv", "4.18.0", "arm64", ""},
+
+		{"crc_hyperv_4.18_x86.crcbundle", preset.OpenShift.String(), "hyperv", "4.18", "x86", ""},
+		{"crc_microshift_hyperv_4.18_x86.crcbundle", preset.Microshift.String(), "hyperv", "4.18", "x86", ""},
+		{"crc_microshift_hyperv_4.18_x86_1233.crcbundle", preset.Microshift.String(), "hyperv", "4.18", "x86", "1233"},
+		{"crc_hyperv_4.18_x86_4566.crcbundle", preset.OpenShift.String(), "hyperv", "4.18", "x86", "4566"},
+		{"crc_ABCdrv_4.18.0_x86_4566.crcbundle", preset.OpenShift.String(), "ABCdrv", "4.18.0", "x86", "4566"},
+		{"crc_ABCdrv_4.18.1.2_x86_4566.crcbundle", preset.OpenShift.String(), "ABCdrv", "4.18.1.2", "x86", "4566"},
+		{"crc_hyperv_4.18_x86.crcbundle", preset.OpenShift.String(), "hyperv", "4.18", "x86", ""},
+		{"crc_ABCdrv_4.18.0_x86.crcbundle", preset.OpenShift.String(), "ABCdrv", "4.18.0", "x86", ""},
+		{"crc_ABCdrv_4.18.1.2_x86.crcbundle", preset.OpenShift.String(), "ABCdrv", "4.18.1.2", "x86", ""},
+		{"crc_hyperv_4.18_64bit.crcbundle", preset.OpenShift.String(), "hyperv", "4.18", "64bit", ""},
+		{"crc_hyperv_4.1_64bit.crcbundle", preset.OpenShift.String(), "hyperv", "4.1", "64bit", ""},
+
+		{"crc_openshift_libvirt_4.16.7_amd64.crcbundle", preset.OpenShift.String(), "libvirt", "4.16.7", "amd64", ""},
+		{"crc_openshift_libvirt_4.16.7_amd64_1.crcbundle", preset.OpenShift.String(), "libvirt", "4.16.7", "amd64", "1"},
+		{"crc_openshift_libvirt_00.00.00.00_amd64.crcbundle", preset.OpenShift.String(), "libvirt", "00.00.00.00", "amd64", ""},
+		{"crc_openshift_libvirt_00.00.00.00_amd64_100.crcbundle", preset.OpenShift.String(), "libvirt", "00.00.00.00", "amd64", "100"},
+		{"crc_libvirt_4.16.7_intel.crcbundle", preset.OpenShift.String(), "libvirt", "4.16.7", "intel", ""},
+		{"crc_libvirt_4.16.7_intel_23.crcbundle", preset.OpenShift.String(), "libvirt", "4.16.7", "intel", "23"},
+		{"crc_libvirt_4.16.7_64.crcbundle", preset.OpenShift.String(), "libvirt", "4.16.7", "64", ""},
+		{"crc_libvirt_4.16.7_64_132.crcbundle", preset.OpenShift.String(), "libvirt", "4.16.7", "64", "132"},
+		{"crc_microshift_libvirt_4.16.7_64.crcbundle", preset.Microshift.String(), "libvirt", "4.16.7", "64", ""},
+		{"crc_microshift_libvirt_4.16.7_64_123.crcbundle", preset.Microshift.String(), "libvirt", "4.16.7", "64", "123"},
+		{"crc_libvirt_4_amd64.crcbundle", preset.OpenShift.String(), "libvirt", "4", "amd64", ""},
+		{"crc_libvirt_4_amd64_0123.crcbundle", preset.OpenShift.String(), "libvirt", "4", "amd64", "0123"},
+		{"crc_okd_libvirt_4_amd64.crcbundle", preset.OKD.String(), "libvirt", "4", "amd64", ""},
+		{"crc_okd_libvirt_4_amd64_0123.crcbundle", preset.OKD.String(), "libvirt", "4", "amd64", "0123"},
+	}
+
+	for _, parts := range valid {
+		bundleInfo, err := GetBundleInfoFromName(parts[0])
+		assert.NoError(t, err)
+		assert.Equal(t, bundleInfo.Preset.String(), parts[1])
+		assert.Equal(t, bundleInfo.Driver, parts[2])
+		assert.Equal(t, bundleInfo.Version, parts[3])
+		assert.Equal(t, bundleInfo.Arch, parts[4])
+		assert.Equal(t, bundleInfo.CustomBundleSuffix, parts[5])
+	}
+}
+
+func TestGetBundleInfoFromNameInvalid(t *testing.T) {
+	// missing version
+	_, err := GetBundleInfoFromName("crc_libvirt_amd64.crcbundle")
+	assert.Error(t, err)
+
+	// missing crc prefix
+	_, err = GetBundleInfoFromName("libvirt_4.16.0_amd64.crcbundle")
+	assert.Error(t, err)
+
+	// missing arch
+	_, err = GetBundleInfoFromName("crc_microshift_libvirt_4.7.0.crcbundle")
+	assert.Error(t, err)
+
+	// non numeric suffix
+	_, err = GetBundleInfoFromName("crc_microshift_libvirt_4.7.0_x86_custom.crcbundle")
+	assert.Error(t, err)
+
+	// missing driver
+	_, err = GetBundleInfoFromName("crc_4.16.2_amd64_123.crcbundle")
+	assert.Error(t, err)
+
+	// missing driver and version
+	_, err = GetBundleInfoFromName("crc_amd64_123.crcbundle")
+	assert.Error(t, err)
+
+	// unknown preset
+	_, err = GetBundleInfoFromName("crc_nanoshift_libvirt_4.16.7_amd64_232.crcbundle")
+	assert.Error(t, err)
+}

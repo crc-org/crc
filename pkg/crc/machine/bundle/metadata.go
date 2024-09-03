@@ -52,6 +52,14 @@ type ClusterInfo struct {
 	OpenshiftPullSecret string          `json:"openshiftPullSecret,omitempty"`
 }
 
+type FilenameInfo struct {
+	Preset             crcPreset.Preset
+	Driver             string
+	Version            string
+	Arch               string
+	CustomBundleSuffix string
+}
+
 type Node struct {
 	Kind          []string `json:"kind"`
 	Hostname      string   `json:"hostname"`
@@ -242,6 +250,35 @@ func GetBundleNameFromURI(bundleURI string) string {
 		// local path
 		return filepath.Base(bundleURI)
 	}
+}
+
+// GetBundleInfoFromName Parses the bundle filename and returns a FilenameInfo struct
+func GetBundleInfoFromName(bundleName string) (*FilenameInfo, error) {
+	var filenameInfo FilenameInfo
+
+	// crc_preset_driver_version_arch_customSuffix.crcbundle
+	bundleNameRegex := regexp.MustCompile(`crc(?:(?:_)([[:alpha:]]+))?_([[:alpha:]]+)_([0-9.]+)_([[:alnum:]]+)(?:(?:_)([0-9]+))?\.crcbundle`)
+	filenameParts := bundleNameRegex.FindStringSubmatch(bundleName)
+
+	if filenameParts == nil {
+		return &filenameInfo, fmt.Errorf("bundle filename is in unrecognized format")
+	}
+
+	if filenameParts[1] == "" {
+		filenameInfo.Preset = crcPreset.OpenShift
+	} else {
+		parsedPreset, err := crcPreset.ParsePresetE(filenameParts[1])
+		if err != nil {
+			return &filenameInfo, err
+		}
+		filenameInfo.Preset = parsedPreset
+	}
+	filenameInfo.Driver = filenameParts[2]
+	filenameInfo.Version = filenameParts[3]
+	filenameInfo.Arch = filenameParts[4]
+	filenameInfo.CustomBundleSuffix = filenameParts[5]
+
+	return &filenameInfo, nil
 }
 
 func getBundleDownloadInfo(preset crcPreset.Preset) (*download.RemoteFile, error) {

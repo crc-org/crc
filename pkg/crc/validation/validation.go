@@ -95,8 +95,28 @@ func ValidateBundle(bundlePath string, preset crcpreset.Preset) error {
 		if bundlePath == constants.GetDefaultBundlePath(preset) {
 			return nil
 		}
-		return ValidateBundlePath(bundlePath, preset)
+
+		if err := ValidateBundlePath(bundlePath, preset); err != nil {
+			return err
+		}
+
+		bundleInfo, err := bundle.GetBundleInfoFromName(bundleName)
+		if err != nil {
+			return err
+		}
+
+		if err := BundleMismatchWithPresetFilename(preset, bundleInfo); err != nil {
+			logging.Fatal(err.Error())
+			return err
+		}
+		return nil
 	}
+
+	if err := BundleMismatchWithPresetMetadata(preset, bundleMetadata); err != nil {
+		logging.Fatal(err.Error())
+		return err
+	}
+
 	bundleMismatchWarning(bundleMetadata.GetBundleName(), preset)
 	/* 'bundle' is already unpacked in ~/.crc/cache */
 	return nil
@@ -115,6 +135,24 @@ func bundleMismatchWarning(userProvidedBundle string, preset crcpreset.Preset) {
 			logging.Warnf("Using %s bundle, but %s is expected for this release", userProvidedBundle, constants.GetDefaultBundle(preset))
 		}
 	}
+}
+
+// BundleMismatchWithPresetFilename checks whether the bundle matches the configured preset based on the bundle filename
+// (bundle is not downloaded or uncompressed yet)
+func BundleMismatchWithPresetFilename(preset crcpreset.Preset, bundleFilenameInfo *bundle.FilenameInfo) error {
+	if preset != bundleFilenameInfo.Preset {
+		return fmt.Errorf("Preset %s is used but bundle is provided for %s preset", preset, bundleFilenameInfo.Preset)
+	}
+	return nil
+}
+
+// BundleMismatchWithPresetMetadata checks whether the bundle matches the configured preset based on the bundle metadata
+// (bundle is already downloaded and uncompressed)
+func BundleMismatchWithPresetMetadata(preset crcpreset.Preset, bundleMetadata *bundle.CrcBundleInfo) error {
+	if preset != bundleMetadata.GetBundleType() {
+		return fmt.Errorf("Preset %s is used but bundle is provided for %s preset", preset, bundleMetadata.GetBundleType())
+	}
+	return nil
 }
 
 // ValidateIPAddress checks if provided IP is valid
