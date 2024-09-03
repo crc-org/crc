@@ -11,3 +11,5 @@
 /tmp-embed/
 /RPMS/
 /crc
+# GoLand metadata
+/.idea
