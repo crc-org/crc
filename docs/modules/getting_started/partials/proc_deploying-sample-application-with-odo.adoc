@@ -23,7 +23,7 @@ $ odo login -u developer -p developer
 +
 [subs="+quotes,attributes"]
 ----
-$ odo project create sample-app
+$ odo create project sample-app
 ----
 
 . Create a directory for your components:
