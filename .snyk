@@ -8,3 +8,4 @@ exclude:
     # Ignore vendor/ directory since we're not (yet) concerned with scanning
     # our dependencies on each CI run.
     - 'vendor/**'
+    - 'tools/vendor/**'
