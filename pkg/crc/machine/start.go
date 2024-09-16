@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
@@ -38,8 +37,6 @@ import (
 	"github.com/docker/go-units"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const minimumMemoryForMonitoring = 14336
@@ -519,7 +516,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 
 		if client.useVSock() {
-			if err := ensureRoutesControllerIsRunning(sshRunner, ocConfig, startConfig.Preset, vm.bundle); err != nil {
+			if err := ensureRoutesControllerIsRunning(sshRunner, ocConfig); err != nil {
 				return nil, err
 			}
 		}
@@ -587,7 +584,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	if client.useVSock() {
-		if err := ensureRoutesControllerIsRunning(sshRunner, ocConfig, startConfig.Preset, vm.bundle); err != nil {
+		if err := ensureRoutesControllerIsRunning(sshRunner, ocConfig); err != nil {
 			return nil, err
 		}
 	}
@@ -828,52 +825,15 @@ func logBundleDate(crcBundleMetadata *bundle.CrcBundleInfo) {
 	}
 }
 
-func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Config, preset crcPreset.Preset, bundleInfo *bundle.CrcBundleInfo) error {
+func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Config) error {
 	// Check if the bundle have `/opt/crc/routes-controller.yaml` file and if it has
 	// then use it to create the resource for the routes controller.
-	if _, _, err := sshRunner.Run("ls", "/opt/crc/routes-controller.yaml"); err == nil {
-		_, _, err := ocConfig.RunOcCommand("apply", "-f", "/opt/crc/routes-controller.yaml")
-		return err
-	}
-	// TODO: Remove this resource creation after crc 2.24 release
-	bin, err := json.Marshal(v1.Pod{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Pod",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "routes-controller",
-			Namespace: "openshift-ingress",
-		},
-		Spec: v1.PodSpec{
-			ServiceAccountName: "router",
-			Containers: []v1.Container{
-				{
-					Name:            "routes-controller",
-					Image:           getRouterControllerImage(preset, bundleInfo),
-					ImagePullPolicy: v1.PullIfNotPresent,
-				},
-			},
-		},
-	})
+	_, _, err := sshRunner.Run("ls", "/opt/crc/routes-controller.yaml")
 	if err != nil {
 		return err
 	}
-	if err := sshRunner.CopyData(bin, "/tmp/routes-controller.json", 0644); err != nil {
-		return err
-	}
-	_, _, err = ocConfig.RunOcCommand("apply", "-f", "/tmp/routes-controller.json")
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func getRouterControllerImage(preset crcPreset.Preset, bundleInfo *bundle.CrcBundleInfo) string {
-	if preset == crcPreset.OpenShift || preset == crcPreset.Microshift {
-		return fmt.Sprintf("quay.io/crcont/routes-controller:%s", bundleInfo.GetVersion())
-	}
-	return "quay.io/crcont/routes-controller:latest"
+	_, _, err = ocConfig.RunOcCommand("apply", "-f", "/opt/crc/routes-controller.yaml")
+	return err
 }
 
 func updateKubeconfig(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, kubeconfigFilePath string) error {
