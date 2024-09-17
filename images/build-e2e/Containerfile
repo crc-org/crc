@@ -1,5 +1,5 @@
 
-FROM registry.access.redhat.com/ubi8/go-toolset:1.21 AS builder
+FROM registry.ci.openshift.org/openshift/release:rhel-8-release-golang-1.21-openshift-4.17 AS builder
 
 USER root
 
