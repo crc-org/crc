@@ -8,6 +8,11 @@ on:
   
 jobs:
   windows-e2e-ocp:
+    # https://docs.github.com/en/webhooks/webhook-events-and-payloads#workflow_run
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      env.source_event == 'pull_request' &&
+      github.event.workflow_run.triggering_actor != 'dependabot[bot]'
     uses: crc-org/crc/.github/workflows/windows-qe-tpl.yml@main
     strategy:
       fail-fast: false
