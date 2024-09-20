@@ -404,14 +404,14 @@ func (d *Driver) findVfkitProcess() (*process.Process, error) {
 		return nil, errors.Wrapf(err, "error reading pidfile %s", pidFile)
 	}
 
-	exists, err := process.PidExists(int32(pid))
+	exists, err := process.PidExists(pid)
 	if err != nil {
 		return nil, err
 	}
 	if !exists {
 		return nil, nil
 	}
-	p, err := process.NewProcess(int32(pid))
+	p, err := process.NewProcess(pid)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("cannot find pid %d", pid))
 	}
@@ -434,18 +434,18 @@ func (d *Driver) findVfkitProcess() (*process.Process, error) {
 	return p, nil
 }
 
-func readPidFromFile(filename string) (int, error) {
+func readPidFromFile(filename string) (int32, error) {
 	bs, err := os.ReadFile(filename)
 	if err != nil {
 		return 0, err
 	}
 	content := strings.TrimSpace(string(bs))
-	pid, err := strconv.Atoi(content)
+	pid, err := strconv.ParseInt(content, 10, 32)
 	if err != nil {
 		return 0, errors.Wrapf(err, "parsing %s", filename)
 	}
 
-	return pid, nil
+	return int32(pid), nil
 }
 
 // recoverFromUncleanShutdown searches for an existing vfkit.pid file in
