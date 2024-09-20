@@ -149,7 +149,10 @@ jobs:
           else
             cmd="${cmd} -e2eTagExpression '~@minimal && ~@story_microshift'"
           fi
+        else
+          cmd="${cmd} -suiteTimeout 120m"
         fi
+
         podman run --rm -d --name crc-${{inputs.qe-type}} \
           -e TARGET_HOST=$(cat host) \
           -e TARGET_HOST_USERNAME=$(cat username) \
