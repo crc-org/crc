@@ -12,7 +12,7 @@ const (
 )
 
 // Uses "runas" as verb to execute as Elevated privileges
-func ShellExecuteAsAdmin(reason string, hwnd windows.Handle, file, parameters, directory string, showCmd int) error {
+func ShellExecuteAsAdmin(reason string, hwnd windows.Handle, file, parameters, directory string, showCmd int32) error {
 	logging.Infof("Will run as admin: %s", reason)
 	return ShellExecute(hwnd, "runas", file, parameters, directory, showCmd)
 }
@@ -26,7 +26,7 @@ func toUint16ptr(input string) *uint16 {
 	return uint16ptr
 }
 
-func ShellExecute(hwnd windows.Handle, verb, file, parameters, directory string, showCmd int) error {
+func ShellExecute(hwnd windows.Handle, verb, file, parameters, directory string, showCmd int32) error {
 	var op, params, dir *uint16
 	if len(verb) != 0 {
 		op = toUint16ptr(verb)
@@ -37,5 +37,5 @@ func ShellExecute(hwnd windows.Handle, verb, file, parameters, directory string,
 	if len(directory) != 0 {
 		dir = toUint16ptr(directory)
 	}
-	return windows.ShellExecute(hwnd, op, toUint16ptr(file), params, dir, int32(showCmd))
+	return windows.ShellExecute(hwnd, op, toUint16ptr(file), params, dir, showCmd)
 }
