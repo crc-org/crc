@@ -23,7 +23,7 @@ New-Item -ItemType directory -Path "$env:HOME\$targetFolder\results" -Force
 cd $targetFolder\bin
 
 if ($labelFilter) {
-    integration.test.exe --pull-secret-path="$env:HOME\$targetFolder\pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout --ginkgo.label-filter $labelFilter > integration.results
+    integration.test.exe --pull-secret-path="$env:HOME\$targetFolder\pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout --ginkgo.label-filter "$labelFilter" > integration.results
 } else {
     integration.test.exe --pull-secret-path="$env:HOME\$targetFolder\pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout > integration.results
 }
