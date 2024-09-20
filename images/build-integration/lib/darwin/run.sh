@@ -48,7 +48,7 @@ export PATH="$PATH:${HOME}/$targetFolder/bin"
 cd $targetFolder/bin
 if [ ! -z "$labelFilter" ]
 then
-    ./integration.test --pull-secret-path="${HOME}/$targetFolder/pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout --ginkgo.label-filter $labelFilter > integration.results
+    ./integration.test --pull-secret-path="${HOME}/$targetFolder/pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout --ginkgo.label-filter "$labelFilter" > integration.results
 else
     ./integration.test --pull-secret-path="${HOME}/$targetFolder/pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout > integration.results
 fi
