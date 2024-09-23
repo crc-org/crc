@@ -89,7 +89,7 @@ func (d *Driver) UpdateConfigRaw(rawConfig []byte) error {
 		}
 	}
 	if update.DiskCapacity != d.DiskCapacity {
-		if err := d.resizeDisk(int64(update.DiskCapacity)); err != nil {
+		if err := d.resizeDisk(update.DiskCapacity); err != nil {
 			log.Warnf("Machine: libhvee -> Failed to set disk size to %d", update.DiskCapacity)
 			return err
 		}
@@ -193,7 +193,7 @@ func (d *Driver) Create() error {
 
 	log.Debugf("Machine: libhvee -> creating: done")
 
-	return d.resizeDisk(int64(d.DiskCapacity))
+	return d.resizeDisk(d.DiskCapacity)
 
 }
 
@@ -283,7 +283,7 @@ func (d *Driver) getDiskPath() string {
 	return d.ResolveStorePath(fmt.Sprintf("%s.%s", d.MachineName, d.ImageFormat))
 }
 
-func (d *Driver) resizeDisk(newSizeBytes int64) error {
+func (d *Driver) resizeDisk(newSizeBytes uint64) error {
 
 	newSize := strongunits.B(newSizeBytes)
 
