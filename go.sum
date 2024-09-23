@@ -43,8 +43,8 @@ github.com/cloudflare/circl v1.3.7 h1:qlCDlTPz2n9fu58M0Nh1J/JzcFpfgkFHHX3O35r5vc
 github.com/cloudflare/circl v1.3.7/go.mod h1:sRTcRWXGLrKw6yIGJ+l7amYJFfAXbZG0kBSc8r4zxgA=
 github.com/containerd/log v0.1.0 h1:TCJt7ioM2cr/tfR8GPbGf9/VRAX8D2B4PjzCpfX540I=
 github.com/containerd/log v0.1.0/go.mod h1:VRRf09a7mHDIRezVKTRCrOq78v577GXq3bSa3EhrzVo=
-github.com/containers/common v0.59.1 h1:7VkmJN3YvD0jLFwaUjLHSRJ98JLffydiyOJjYr0dUTo=
-github.com/containers/common v0.59.1/go.mod h1:53VicJCZ2AD0O+Br7VVoyrS7viXF4YmwlTIocWUT8XE=
+github.com/containers/common v0.60.3 h1:pToT7gtFx/KWyMtWw98g4pIbW54i9KfGH2QrdN2s1io=
+github.com/containers/common v0.60.3/go.mod h1:I0upBi1qJX3QmzGbUOBN1LVP6RvkKhd3qQpZbQT+Q54=
 github.com/containers/gvisor-tap-vsock v0.7.5 h1:bTy4u3DOmmUPwurL6me2rsgfypAFDhyeJleUcQmBR/E=
 github.com/containers/gvisor-tap-vsock v0.7.5/go.mod h1:GW9jOqAEEGdaS20XwTYdm6KCYDHIulOE/yEEOabkoE4=
 github.com/containers/image/v5 v5.32.2 h1:SzNE2Y6sf9b1GJoC8qjCuMBXwQrACFp4p0RK15+4gmQ=
