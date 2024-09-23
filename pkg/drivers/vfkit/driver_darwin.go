@@ -19,6 +19,7 @@ package vfkit
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"os/exec"
 	"strconv"
@@ -97,20 +98,25 @@ func (d *Driver) getDiskPath() string {
 	return d.ResolveStorePath(fmt.Sprintf("%s.img", d.MachineName))
 }
 
-func (d *Driver) resize(newSize int64) error {
+func (d *Driver) resize(newSize uint64) error {
+	if newSize > math.MaxInt64 {
+		return fmt.Errorf("integer overflow detected for resize: %v", newSize)
+	}
+	// os.stat provide the size as int64 and os.Truncate use int64 as arg hence type casting to int64 from uint64
+	newSizeInt64 := int64(newSize)
 	diskPath := d.getDiskPath()
 	fi, err := os.Stat(diskPath)
 	if err != nil {
 		return err
 	}
-	if newSize == fi.Size() {
+	if newSizeInt64 == fi.Size() {
 		log.Debugf("%s is already %d bytes", diskPath, newSize)
 		return nil
 	}
-	if newSize < fi.Size() {
+	if newSizeInt64 < fi.Size() {
 		return fmt.Errorf("current disk image capacity is bigger than the requested size (%d > %d)", fi.Size(), newSize)
 	}
-	return os.Truncate(diskPath, newSize)
+	return os.Truncate(diskPath, newSizeInt64)
 
 }
 
@@ -132,7 +138,7 @@ func (d *Driver) Create() error {
 		return fmt.Errorf("%s is an unsupported disk image format", d.ImageFormat)
 	}
 
-	return d.resize(int64(d.DiskCapacity))
+	return d.resize(d.DiskCapacity)
 }
 
 func startVfkit(vfkitPath string, args []string) (*os.Process, error) {
@@ -342,7 +348,7 @@ func (d *Driver) UpdateConfigRaw(rawConfig []byte) error {
 		return err
 	}
 
-	err = d.resize(int64(newDriver.DiskCapacity))
+	err = d.resize(newDriver.DiskCapacity)
 	if err != nil {
 		log.Debugf("failed to resize disk image: %v", err)
 		return err
