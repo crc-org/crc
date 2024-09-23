@@ -1,6 +1,7 @@
 package shell
 
 import (
+	"math"
 	"os"
 	"testing"
 
@@ -18,15 +19,26 @@ func TestDetect(t *testing.T) {
 }
 
 func TestGetNameAndItsPpidOfCurrent(t *testing.T) {
-	shell, shellppid, err := getNameAndItsPpid(os.Getpid())
-
+	pid := os.Getpid()
+	if pid < 0 || pid > math.MaxUint32 {
+		assert.Fail(t, "integer overflow detected")
+	}
+	shell, shellppid, err := getNameAndItsPpid(uint32(pid))
 	assert.Equal(t, "shell.test.exe", shell)
-	assert.Equal(t, os.Getppid(), shellppid)
+	ppid := os.Getppid()
+	if ppid < 0 || ppid > math.MaxUint32 {
+		assert.Fail(t, "integer overflow detected")
+	}
+	assert.Equal(t, uint32(ppid), shellppid)
 	assert.NoError(t, err)
 }
 
 func TestGetNameAndItsPpidOfParent(t *testing.T) {
-	shell, _, err := getNameAndItsPpid(os.Getppid())
+	pid := os.Getppid()
+	if pid < 0 || pid > math.MaxUint32 {
+		assert.Fail(t, "integer overflow detected")
+	}
+	shell, _, err := getNameAndItsPpid(uint32(pid))
 
 	assert.Equal(t, "go.exe", shell)
 	assert.NoError(t, err)
