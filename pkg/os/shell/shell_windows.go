@@ -1,6 +1,8 @@
 package shell
 
 import (
+	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,7 +15,7 @@ var (
 )
 
 // re-implementation of private function in https://github.com/golang/go/blob/master/src/syscall/syscall_windows.go
-func getProcessEntry(pid int) (pe *syscall.ProcessEntry32, err error) {
+func getProcessEntry(pid uint32) (pe *syscall.ProcessEntry32, err error) {
 	snapshot, err := syscall.CreateToolhelp32Snapshot(syscall.TH32CS_SNAPPROCESS, 0)
 	if err != nil {
 		return nil, err
@@ -30,7 +32,7 @@ func getProcessEntry(pid int) (pe *syscall.ProcessEntry32, err error) {
 	}
 
 	for {
-		if processEntry.ProcessID == uint32(pid) {
+		if processEntry.ProcessID == pid {
 			pe = &processEntry
 			return
 		}
@@ -43,21 +45,25 @@ func getProcessEntry(pid int) (pe *syscall.ProcessEntry32, err error) {
 }
 
 // getNameAndItsPpid returns the exe file name its parent process id.
-func getNameAndItsPpid(pid int) (exefile string, parentid int, err error) {
+func getNameAndItsPpid(pid uint32) (exefile string, parentid uint32, err error) {
 	pe, err := getProcessEntry(pid)
 	if err != nil {
 		return "", 0, err
 	}
 
 	name := syscall.UTF16ToString(pe.ExeFile[:])
-	return name, int(pe.ParentProcessID), nil
+	return name, pe.ParentProcessID, nil
 }
 
 func detect() (string, error) {
 	shell := os.Getenv("SHELL")
 
 	if shell == "" {
-		shell, shellppid, err := getNameAndItsPpid(os.Getppid())
+		pid := os.Getppid()
+		if pid < 0 || pid > math.MaxUint32 {
+			return "", fmt.Errorf("integer overflow for pid: %v", pid)
+		}
+		shell, shellppid, err := getNameAndItsPpid(uint32(pid))
 		if err != nil {
 			return "cmd", err // defaulting to cmd
 		}
