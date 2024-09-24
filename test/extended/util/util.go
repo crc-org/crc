@@ -54,7 +54,7 @@ func CopyResourcesFromPath(resourcesPath string) error {
 		sFileName := filepath.Join(resourcesPath, file.Name())
 		fmt.Printf("Copying %s to %s\n", sFileName, destLoc)
 
-		sFile, err := os.Open(sFileName)
+		sFile, err := os.Open(filepath.Clean(sFileName))
 		if err != nil {
 			fmt.Printf("Error occurred opening file: %s", err)
 			return err
