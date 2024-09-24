@@ -205,7 +205,7 @@ func unzip(archive, target string, fileFilter func(string) bool, showProgress bo
 			continue
 		}
 
-		if err := unzipFile(file, path, showProgress); err != nil {
+		if err := unzipFile(file, filepath.Clean(path), showProgress); err != nil {
 			return nil, err
 		}
 		extractedFiles = append(extractedFiles, path)
