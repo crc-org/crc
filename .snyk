@@ -8,3 +8,19 @@ exclude:
     # Ignore vendor/ directory since we're not (yet) concerned with scanning
     # our dependencies on each CI run.
     - 'vendor/**'
+ignore:
+    '36cd2bbf-2574-47a0-b2e8-1ff1e355a224':
+     - 'cmd/crc/cmd/console.go':
+        reason: 'basic user developer'
+    '1c87c91c-7a5b-4d00-bffe-2621128e6c08':
+     - 'pkg/crc/config/settings.go':
+        reason: 'Just a default value overrided later'
+    '94e6303b-7d14-4caa-bcff-4a3ce7cff8be':
+     - 'pkg/crc/config/settings.go':
+        reason: 'Just a default value overrided later'
+    'f3f16cec-5785-4d62-8746-fab4e9a27f17':
+     - 'cmd/crc/cmd/start.go':
+        reason: 'basic developer password'
+    'fe3fa24e-67ae-4268-9148-1563b30bf9e6':
+     - 'cmd/crc/cmd/console.go':
+        reason: 'basic developer password'
