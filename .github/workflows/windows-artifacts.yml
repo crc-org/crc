@@ -50,8 +50,6 @@ jobs:
         exclude:
           - arch: 'arm64'
             os: 'windows'
-          - arch: 'arm64'
-            os: 'linux'
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -75,6 +73,20 @@ jobs:
         with:
           name: ${{ env.IMAGE_NAME_INTEGRATION }}-${{matrix.os}}-${{matrix.arch}}
           path: ${{ env.IMAGE_NAME_INTEGRATION }}-${{matrix.os}}-${{matrix.arch}}.tar
+      - name: Log in to Quay.io
+        if: github.event_name == 'push'
+        uses: redhat-actions/podman-login@v1
+        with:
+          username: ${{ secrets.QUAY_IO_USERNAME }}
+          password: ${{ secrets.QUAY_IO_PASSWORD }}
+          registry: ${{ env.IMAGE_REGISTRY }}
+      - name: Push image to quay
+        if: github.event_name == 'push'
+        run: |
+          podman tag quay.io/crcont/${{ env.IMAGE_NAME_INTEGRATION}}:gh-${{matrix.os}}-${{matrix.arch}} quay.io/crcont/${{ env.IMAGE_NAME_INTEGRATION}}:vnext-${{matrix.os}}-${{matrix.arch}}
+          podman push quay.io/crcont/${{ env.IMAGE_NAME_INTEGRATION}}:vnext-${{matrix.os}}-${{matrix.arch}}
+          podman tag quay.io/crcont/${{ env.IMAGE_NAME_E2E}}:gh-${{matrix.os}}-${{matrix.arch}} quay.io/crcont/${{ env.IMAGE_NAME_E2E}}:vnext-${{matrix.os}}-${{matrix.arch}}
+          podman push quay.io/crcont/${{ env.IMAGE_NAME_E2E}}:vnext-${{matrix.os}}-${{matrix.arch}}
   save-gh-context:
     runs-on: ubuntu-latest
     strategy:
