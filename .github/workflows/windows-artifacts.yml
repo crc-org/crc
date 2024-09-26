@@ -79,7 +79,7 @@ jobs:
         with:
           username: ${{ secrets.QUAY_IO_USERNAME }}
           password: ${{ secrets.QUAY_IO_PASSWORD }}
-          registry: ${{ env.IMAGE_REGISTRY }}
+          registry: quay.io
       - name: Push image to quay
         if: github.event_name == 'push'
         run: |
