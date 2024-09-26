@@ -31,5 +31,7 @@ e2e.test.exe --bundle-location=$bundleLocation --pull-secret-file=$env:HOME\$tar
 cd ..
 $r = Select-String -Pattern '<?xml version="1.0" encoding="UTF-8"?>' -Path results\e2e.results -list -SimpleMatch | select-object -First 1
 Get-Content results\e2e.results | Select -skip ($r.LineNumber -1) > results\$junitFilename
+(Get-Content results\$junitFilename) -replace "<failure", "<failure>" | Set-Content results\$junitFilename
+(Get-Content results\$junitFilename) -replace "></failure>", "</failure>" | Set-Content results\$junitFilename
 # Copy logs and diagnose
 cp -r bin\out\test-results\* results
