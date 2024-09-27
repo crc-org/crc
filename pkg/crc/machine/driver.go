@@ -21,7 +21,7 @@ func updateDriverValue(host *host.Host, setDriverValue valueSetter) error {
 	return updateDriverConfig(host, driver)
 }
 
-func setMemory(host *host.Host, memorySize int) error {
+func setMemory(host *host.Host, memorySize uint) error {
 	memorySetter := func(driver *libmachine.VMDriver) bool {
 		if driver.Memory == memorySize {
 			return false
@@ -33,7 +33,7 @@ func setMemory(host *host.Host, memorySize int) error {
 	return updateDriverValue(host, memorySetter)
 }
 
-func setVcpus(host *host.Host, vcpus int) error {
+func setVcpus(host *host.Host, vcpus uint) error {
 	vcpuSetter := func(driver *libmachine.VMDriver) bool {
 		if driver.CPU == vcpus {
 			return false

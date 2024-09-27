@@ -18,8 +18,8 @@ type VMDriver struct {
 	*BaseDriver
 	ImageSourcePath string
 	ImageFormat     string
-	Memory          int
-	CPU             int
+	Memory          uint
+	CPU             uint
 	DiskCapacity    uint64 // bytes
 	SharedDirs      []SharedDir
 }

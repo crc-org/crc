@@ -173,7 +173,7 @@ func (d *Driver) Start() error {
 	bootLoader := config.NewEFIBootloader(efiStore, create)
 
 	vm := config.NewVirtualMachine(
-		uint(d.CPU),
+		d.CPU,
 		uint64(d.Memory),
 		bootLoader,
 	)

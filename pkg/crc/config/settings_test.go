@@ -16,7 +16,7 @@ import (
 
 // override for ValidateMemory in validations.go to disable the physical memory check
 func validateMemoryNoPhysicalCheck(value interface{}, preset crcpreset.Preset) (bool, string) {
-	v, err := cast.ToIntE(value)
+	v, err := cast.ToUintE(value)
 	if err != nil {
 		return false, fmt.Sprintf("requires integer value in MiB >= %d", constants.GetDefaultMemory(preset))
 	}
@@ -81,7 +81,7 @@ func TestSetPreset(t *testing.T) {
 	_, err = cfg.Set(Memory, 10800)
 	require.NoError(t, err)
 	assert.Equal(t, SettingValue{
-		Value:     10800,
+		Value:     uint(10800),
 		Invalid:   false,
 		IsDefault: false,
 		IsSecret:  false,
@@ -89,7 +89,7 @@ func TestSetPreset(t *testing.T) {
 	_, err = cfg.Set(CPUs, 3)
 	require.NoError(t, err)
 	assert.Equal(t, SettingValue{
-		Value:     3,
+		Value:     uint(3),
 		Invalid:   false,
 		IsDefault: false,
 		IsSecret:  false,
@@ -99,13 +99,13 @@ func TestSetPreset(t *testing.T) {
 	_, err = cfg.Set(Preset, crcpreset.OpenShift)
 	require.NoError(t, err)
 	assert.Equal(t, SettingValue{
-		Value:     10800,
+		Value:     uint(10800),
 		Invalid:   false,
 		IsDefault: false,
 		IsSecret:  false,
 	}, cfg.Get(Memory))
 	assert.Equal(t, SettingValue{
-		Value:     4,
+		Value:     uint(4),
 		Invalid:   false,
 		IsDefault: true,
 		IsSecret:  false,
@@ -123,7 +123,7 @@ func TestUnsetPreset(t *testing.T) {
 	_, err = cfg.Set(Memory, 10800)
 	require.NoError(t, err)
 	assert.Equal(t, SettingValue{
-		Value:     10800,
+		Value:     uint(10800),
 		Invalid:   false,
 		IsDefault: false,
 		IsSecret:  false,
@@ -131,7 +131,7 @@ func TestUnsetPreset(t *testing.T) {
 	_, err = cfg.Set(CPUs, 3)
 	require.NoError(t, err)
 	assert.Equal(t, SettingValue{
-		Value:     3,
+		Value:     uint(3),
 		Invalid:   false,
 		IsDefault: false,
 		IsSecret:  false,
@@ -147,13 +147,13 @@ func TestUnsetPreset(t *testing.T) {
 		IsSecret:  false,
 	}, cfg.Get(Preset))
 	assert.Equal(t, SettingValue{
-		Value:     10800,
+		Value:     uint(10800),
 		Invalid:   false,
 		IsDefault: false,
 		IsSecret:  false,
 	}, cfg.Get(Memory))
 	assert.Equal(t, SettingValue{
-		Value:     4,
+		Value:     uint(4),
 		Invalid:   false,
 		IsDefault: true,
 		IsSecret:  false,

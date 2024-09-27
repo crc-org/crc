@@ -151,11 +151,11 @@ func presetChanged(cfg *Config, _ string, _ interface{}) {
 	UpdateDefaults(cfg)
 }
 
-func defaultCPUs(cfg Storage) int {
+func defaultCPUs(cfg Storage) uint {
 	return constants.GetDefaultCPUs(GetPreset(cfg))
 }
 
-func defaultMemory(cfg Storage) int {
+func defaultMemory(cfg Storage) uint {
 	return constants.GetDefaultMemory(GetPreset(cfg))
 }
 

@@ -199,7 +199,7 @@ func GetWin32BackgroundLauncherDownloadURL() string {
 		version.GetWin32BackgroundLauncherVersion())
 }
 
-func GetDefaultCPUs(preset crcpreset.Preset) int {
+func GetDefaultCPUs(preset crcpreset.Preset) uint {
 	switch preset {
 	case crcpreset.OpenShift, crcpreset.OKD:
 		return 4
@@ -211,7 +211,7 @@ func GetDefaultCPUs(preset crcpreset.Preset) int {
 	}
 }
 
-func GetDefaultMemory(preset crcpreset.Preset) int {
+func GetDefaultMemory(preset crcpreset.Preset) uint {
 	switch preset {
 	case crcpreset.OpenShift, crcpreset.OKD:
 		return 10752
