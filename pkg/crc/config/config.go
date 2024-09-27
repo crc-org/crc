@@ -95,6 +95,11 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf(invalidProp, value, key, err)
 		}
+	case uint:
+		castValue, err = cast.ToUintE(value)
+		if err != nil {
+			return "", fmt.Errorf(invalidProp, value, key, err)
+		}
 	case string, Secret:
 		castValue = cast.ToString(value)
 	case bool:
@@ -202,6 +207,13 @@ func (c *Config) Get(key string) SettingValue {
 	switch setting.defaultValue.(type) {
 	case int:
 		value, err = cast.ToIntE(value)
+		if err != nil {
+			return SettingValue{
+				Invalid: true,
+			}
+		}
+	case uint:
+		value, err = cast.ToUintE(value)
 		if err != nil {
 			return SettingValue{
 				Invalid: true,

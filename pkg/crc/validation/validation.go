@@ -19,7 +19,7 @@ import (
 )
 
 // ValidateCPUs checks if provided cpus count is valid
-func ValidateCPUs(value int, preset crcpreset.Preset) error {
+func ValidateCPUs(value uint, preset crcpreset.Preset) error {
 	if value < constants.GetDefaultCPUs(preset) {
 		return fmt.Errorf("requires CPUs >= %d", constants.GetDefaultCPUs(preset))
 	}
@@ -27,7 +27,7 @@ func ValidateCPUs(value int, preset crcpreset.Preset) error {
 }
 
 // ValidateMemory checks if provided Memory count is valid
-func ValidateMemory(value int, preset crcpreset.Preset) error {
+func ValidateMemory(value uint, preset crcpreset.Preset) error {
 	if value < constants.GetDefaultMemory(preset) {
 		return fmt.Errorf("requires memory in MiB >= %d", constants.GetDefaultMemory(preset))
 	}
@@ -51,7 +51,7 @@ func ValidatePersistentVolumeSize(value int) error {
 }
 
 // ValidateEnoughMemory checks if enough memory is installed on the host
-func ValidateEnoughMemory(value int) error {
+func ValidateEnoughMemory(value uint) error {
 	totalMemory := memory.TotalMemory()
 	logging.Debugf("Total memory of system is %d bytes", totalMemory)
 	valueBytes := value * 1024 * 1024

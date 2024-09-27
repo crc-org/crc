@@ -121,9 +121,9 @@ func (h *Handler) Start(c *context) error {
 func getStartConfig(cfg crcConfig.Storage, args client.StartConfig) types.StartConfig {
 	return types.StartConfig{
 		BundlePath:               cfg.Get(crcConfig.Bundle).AsString(),
-		Memory:                   cfg.Get(crcConfig.Memory).AsInt(),
+		Memory:                   cfg.Get(crcConfig.Memory).AsUInt(),
 		DiskSize:                 cfg.Get(crcConfig.DiskSize).AsInt(),
-		CPUs:                     cfg.Get(crcConfig.CPUs).AsInt(),
+		CPUs:                     cfg.Get(crcConfig.CPUs).AsUInt(),
 		NameServer:               cfg.Get(crcConfig.NameServer).AsString(),
 		PullSecret:               cluster.NewNonInteractivePullSecretLoader(cfg, args.PullSecretFile),
 		KubeAdminPassword:        cfg.Get(crcConfig.KubeAdminPassword).AsString(),

@@ -56,7 +56,7 @@ func validatePersistentVolumeSize(value interface{}) (bool, string) {
 
 // validateCPUs checks if provided cpus count is valid in the config
 func validateCPUs(value interface{}, preset crcpreset.Preset) (bool, string) {
-	v, err := cast.ToIntE(value)
+	v, err := cast.ToUintE(value)
 	if err != nil {
 		return false, fmt.Sprintf("requires integer value >= %d", constants.GetDefaultCPUs(preset))
 	}
@@ -69,7 +69,7 @@ func validateCPUs(value interface{}, preset crcpreset.Preset) (bool, string) {
 // validateMemory checks if provided memory is valid in the config
 // It's defined as a variable so that it can be overridden in tests to disable the physical memory check
 var validateMemory = func(value interface{}, preset crcpreset.Preset) (bool, string) {
-	v, err := cast.ToIntE(value)
+	v, err := cast.ToUintE(value)
 	if err != nil {
 		return false, fmt.Sprintf("requires integer value in MiB >= %d", constants.GetDefaultMemory(preset))
 	}

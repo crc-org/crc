@@ -7,9 +7,10 @@ type MachineConfig struct {
 	BundleName string
 
 	// Virtual machine configuration
-	Name              string
-	Memory            int
-	CPUs              int
+	Name string
+	// Memory holds value in MiB
+	Memory            uint
+	CPUs              uint
 	DiskSize          int
 	ImageSourcePath   string
 	ImageFormat       string
