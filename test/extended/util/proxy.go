@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	_ "embed" // blanks are good
-	"flag"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -70,12 +70,11 @@ func RunProxy() {
 		ipaddr = "192.168.130.1"
 	}
 
-	verbose := flag.Bool("v", true, "should every proxy request be logged to stdout")
-	addr := flag.String(ipaddr, ":8888", "proxy listen address") // using network-mode=user
-	flag.Parse()
-	proxy.Verbose = *verbose
+	addr := fmt.Sprintf("%s:8888", ipaddr)
+	proxy.Verbose = true
 	proxy.Logger = log.StandardLogger()
-	err = http.ListenAndServe(*addr, proxy) // #nosec G114
+
+	err = http.ListenAndServe(addr, proxy) // #nosec G114
 	if err != nil {
 		log.Printf("error running proxy: %s", err)
 	}
