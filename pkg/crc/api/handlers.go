@@ -122,7 +122,7 @@ func getStartConfig(cfg crcConfig.Storage, args client.StartConfig) types.StartC
 	return types.StartConfig{
 		BundlePath:               cfg.Get(crcConfig.Bundle).AsString(),
 		Memory:                   cfg.Get(crcConfig.Memory).AsUInt(),
-		DiskSize:                 cfg.Get(crcConfig.DiskSize).AsInt(),
+		DiskSize:                 cfg.Get(crcConfig.DiskSize).AsUInt(),
 		CPUs:                     cfg.Get(crcConfig.CPUs).AsUInt(),
 		NameServer:               cfg.Get(crcConfig.NameServer).AsString(),
 		PullSecret:               cluster.NewNonInteractivePullSecretLoader(cfg, args.PullSecretFile),
