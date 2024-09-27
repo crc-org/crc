@@ -186,7 +186,7 @@ func getTokenForUser(username, password, ip string, ca []byte, clusterConfig *ty
 					return nil, err
 				}
 				if strings.HasSuffix(hostname, constants.AppsDomain) {
-					port = strconv.Itoa(int(ingressHTTPSPort))
+					port = strconv.FormatUint(uint64(ingressHTTPSPort), 10)
 				}
 				dialer := net.Dialer{
 					Timeout:   30 * time.Second,
