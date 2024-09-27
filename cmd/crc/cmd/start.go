@@ -70,7 +70,7 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 	startConfig := types.StartConfig{
 		BundlePath:        config.Get(crcConfig.Bundle).AsString(),
 		Memory:            config.Get(crcConfig.Memory).AsUInt(),
-		DiskSize:          config.Get(crcConfig.DiskSize).AsInt(),
+		DiskSize:          config.Get(crcConfig.DiskSize).AsUInt(),
 		CPUs:              config.Get(crcConfig.CPUs).AsUInt(),
 		NameServer:        config.Get(crcConfig.NameServer).AsString(),
 		PullSecret:        cluster.NewInteractivePullSecretLoader(config),
@@ -187,7 +187,7 @@ func validateStartFlags() error {
 	if err := validation.ValidateCPUs(config.Get(crcConfig.CPUs).AsUInt(), crcConfig.GetPreset(config)); err != nil {
 		return err
 	}
-	if err := validation.ValidateDiskSize(config.Get(crcConfig.DiskSize).AsInt()); err != nil {
+	if err := validation.ValidateDiskSize(config.Get(crcConfig.DiskSize).AsUInt()); err != nil {
 		return err
 	}
 	if err := validation.ValidateBundle(config.Get(crcConfig.Bundle).AsString(), crcConfig.GetPreset(config)); err != nil {

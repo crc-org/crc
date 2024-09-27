@@ -4,7 +4,7 @@ import (
 	"github.com/crc-org/machine/libmachine/drivers"
 )
 
-func ConvertGiBToBytes(gib int) uint64 {
+func ConvertGiBToBytes(gib uint) uint64 {
 	return uint64(gib) * 1024 * 1024 * 1024
 }
 

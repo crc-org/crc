@@ -34,7 +34,7 @@ func ValidateMemory(value uint, preset crcpreset.Preset) error {
 	return ValidateEnoughMemory(value)
 }
 
-func ValidateDiskSize(value int) error {
+func ValidateDiskSize(value uint) error {
 	if value < constants.DefaultDiskSize {
 		return fmt.Errorf("requires disk size in GiB >= %d", constants.DefaultDiskSize)
 	}

@@ -30,7 +30,7 @@ func validateString(value interface{}) (bool, string) {
 
 // validateDiskSize checks if provided disk size is valid in the config
 func validateDiskSize(value interface{}) (bool, string) {
-	diskSize, err := cast.ToIntE(value)
+	diskSize, err := cast.ToUintE(value)
 	if err != nil {
 		return false, fmt.Sprintf("could not convert '%s' to integer", value)
 	}
