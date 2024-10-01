@@ -691,7 +691,8 @@ func (pk *PrivateKey) encrypt(key []byte, params *s2k.Params, s2kType S2KType, c
 	if params.Mode() == s2k.Argon2S2K && s2kType != S2KAEAD {
 		return errors.InvalidArgumentError("using Argon2 S2K without AEAD is not allowed")
 	}
-	if params.Mode() != s2k.Argon2S2K && params.Mode() != s2k.IteratedSaltedS2K {
+	if params.Mode() != s2k.Argon2S2K && params.Mode() != s2k.IteratedSaltedS2K &&
+		params.Mode() != s2k.SaltedS2K { // only allowed for high-entropy passphrases
 		return errors.InvalidArgumentError("insecure S2K mode")
 	}
 
