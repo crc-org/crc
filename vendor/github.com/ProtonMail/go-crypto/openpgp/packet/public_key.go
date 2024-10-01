@@ -66,9 +66,10 @@ func (pk *PublicKey) UpgradeToV5() {
 
 // UpgradeToV6 updates the version of the key to v6, and updates all necessary
 // fields.
-func (pk *PublicKey) UpgradeToV6() {
+func (pk *PublicKey) UpgradeToV6() error {
 	pk.Version = 6
 	pk.setFingerprintAndKeyId()
+	return pk.checkV6Compatibility()
 }
 
 // ReplaceKDF replaces the KDF instance, and updates all necessary fields.
@@ -364,6 +365,23 @@ func (pk *PublicKey) setFingerprintAndKeyId() {
 	}
 }
 
+func (pk *PublicKey) checkV6Compatibility() error {
+	// Implementations MUST NOT accept or generate version 6 key material using the deprecated OIDs.
+	switch pk.PubKeyAlgo {
+	case PubKeyAlgoECDH:
+		curveInfo := ecc.FindByOid(pk.oid)
+		if curveInfo == nil {
+			return errors.UnsupportedError(fmt.Sprintf("unknown oid: %x", pk.oid))
+		}
+		if curveInfo.GenName == ecc.Curve25519GenName {
+			return errors.StructuralError("cannot generate v6 key with deprecated OID: Curve25519Legacy")
+		}
+	case PubKeyAlgoEdDSA:
+		return errors.StructuralError("cannot generate v6 key with deprecated algorithm: EdDSALegacy")
+	}
+	return nil
+}
+
 // parseRSA parses RSA public key material from the given Reader. See RFC 4880,
 // section 5.5.2.
 func (pk *PublicKey) parseRSA(r io.Reader) (err error) {
@@ -488,6 +506,11 @@ func (pk *PublicKey) parseECDH(r io.Reader) (err error) {
 		return errors.UnsupportedError(fmt.Sprintf("unknown oid: %x", pk.oid))
 	}
 
+	if pk.Version == 6 && curveInfo.GenName == ecc.Curve25519GenName {
+		// Implementations MUST NOT accept or generate version 6 key material using the deprecated OIDs.
+		return errors.StructuralError("cannot read v6 key with deprecated OID: Curve25519Legacy")
+	}
+
 	pk.p = new(encoding.MPI)
 	if _, err = pk.p.ReadFrom(r); err != nil {
 		return
@@ -540,6 +563,11 @@ func (pk *PublicKey) parseECDH(r io.Reader) (err error) {
 }
 
 func (pk *PublicKey) parseEdDSA(r io.Reader) (err error) {
+	if pk.Version == 6 {
+		// Implementations MUST NOT accept or generate version 6 key material using the deprecated OIDs.
+		return errors.StructuralError("cannot generate v6 key with deprecated algorithm: EdDSALegacy")
+	}
+
 	pk.oid = new(encoding.OID)
 	if _, err = pk.oid.ReadFrom(r); err != nil {
 		return
