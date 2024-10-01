@@ -4,7 +4,7 @@ Feature: Basic test
     User explores some of the top-level CRC commands while going
     through the lifecycle of CRC.
 
-    @darwin @linux @windows
+    @darwin @linux @windows @release
     Scenario: CRC version
         When executing crc version command
         Then stdout should contain correct version
