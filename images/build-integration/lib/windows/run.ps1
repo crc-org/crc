@@ -17,19 +17,28 @@ mv $targetFolder/bin/integration.test $targetFolder/bin/integration.test.exe
 # Run e2e
 $env:PATH="$env:PATH;$env:HOME\$targetFolder\bin;"
 $env:SHELL="powershell"
-New-Item -ItemType directory -Path "$env:HOME\$targetFolder\results" -Force
+$targetFolderDir = "$env:HOME\$targetFolder"
+$resultsDir = "$targetFolderDir\results"
+
+New-Item -ItemType directory -Path "$resultsDir" -Force
 
 # Run tests
 cd $targetFolder\bin
 
 if ($labelFilter) {
-    integration.test.exe --pull-secret-path="$env:HOME\$targetFolder\pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout --ginkgo.label-filter "$labelFilter" > integration.results
+    integration.test.exe --pull-secret-path="$targetFolderDir\pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout --ginkgo.label-filter "$labelFilter" > integration.results
 } else {
-    integration.test.exe --pull-secret-path="$env:HOME\$targetFolder\pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout > integration.results
+    integration.test.exe --pull-secret-path="$targetFolderDir\pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout > integration.results
 }
 
 
 # Copy results
 cd ..
 cp bin\integration.results results\integration.results
-cp bin\out\integration.xml results\$junitFilename
+$prejunit = "$resultsDir\$junitFilename.pre"
+cp bin\out\integration.xml $prejunit
+
+$xslt = New-Object System.Xml.Xsl.XslCompiledTransform;
+$xslt.load("$targetFolderDir\filter.xsl")
+$xslt.transform( "$prejunit", "$resultsDir\$junitFilename" )
+rm "$prejunit"

@@ -56,4 +56,4 @@ fi
 # Copy results
 cd ..
 cp bin/integration.results results/integration.results
-cp bin/out/integration.xml results/$junitFilename
+cat bin/out/integration.xml | xsltproc filter.xsl - > results/$junitFilename
