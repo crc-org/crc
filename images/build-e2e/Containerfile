@@ -24,5 +24,6 @@ COPY --from=builder /workspace/out/${OS}-${ARCH} ${ASSETS_FOLDER}/bin
 COPY --from=builder /workspace/test/e2e/features ${ASSETS_FOLDER}/bin/features
 COPY --from=builder /workspace/test/testdata ${ASSETS_FOLDER}/testdata
 
+COPY images/build-e2e/common/* ${ASSETS_FOLDER}/
 COPY images/build-e2e/lib/${OS}/* ${ASSETS_FOLDER}/
 
