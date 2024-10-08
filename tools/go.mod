@@ -6,7 +6,7 @@ require (
 	github.com/cfergeau/gomod2rpmdeps v0.0.0-20210223144124-2042c4850ca8
 	github.com/golangci/golangci-lint v1.61.0
 	github.com/randall77/makefat v0.0.0-20210315173500-7ddd0e42c844
-	golang.org/x/tools v0.25.0
+	golang.org/x/tools v0.26.0
 )
 
 require (
@@ -179,7 +179,7 @@ require (
 	golang.org/x/exp/typeparams v0.0.0-20240314144324-c7f7c6466f7f // indirect
 	golang.org/x/mod v0.21.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.25.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
