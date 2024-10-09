@@ -1,0 +1,68 @@
+name: Run microshift integration
+
+on:
+  workflow_run:
+    workflows: [Build RPM]
+    types:
+      - completed
+
+jobs:
+  build:
+    name: Run microshift e2e integration 
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go:
+          - '1.20'
+    env:
+      SHELL: /bin/bash
+      KUBECONFIG: '/Users/runner/.kube/config'
+    steps:
+      - name: Download binary of crc
+        id: download-binary-crc-artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: linux binary and rpm
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Install required virtualization software
+        run: |
+          sudo apt-get update
+          sudo apt install qemu-kvm libvirt-daemon libvirt-daemon-system
+          sudo usermod -a -G libvirt $USER
+      - name: Remove unwanted stuff to free up disk image
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+
+          sudo docker image prune --all --force
+
+          sudo swapoff -a
+          sudo rm -f /mnt/swapfile
+      - name: Write pull-secret
+        env:
+          PULL_SECRET: ${{ secrets.PULL_SECRET }}
+        run: |
+          echo $PULL_SECRET > ${HOME}/pull-secret
+
+      - name: Start the microshift cluster
+        run: |
+          set +e
+          crc config preset microshift
+          crc setup
+          crc start -p ${HOME}/pull-secret
+
+      - name: Start the microshift e2e test
+        run: |
+          set +e
+          sudo -su $USER ${HOME}/e2e.test --pull-secret-file="${HOME}"/pull-secret \
+          --bundle-location="" \
+          --crc-binary=${HOME} \
+          --godog.tags="linux && @microshift" \
+          --godog.paths test/e2e/features/
+
