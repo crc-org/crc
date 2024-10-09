@@ -168,6 +168,16 @@ func ValidatePath(path string) error {
 	return nil
 }
 
+// ValidateDirectory checks if provided path exists and has sufficient permissions
+func ValidateDirectory(path string) error {
+	file, err := os.CreateTemp(path, "tempfile")
+	if err != nil {
+		return &invalidPath{path: path}
+	}
+	defer os.Remove(file.Name())
+	return nil
+}
+
 type imagePullSecret struct {
 	Auths map[string]map[string]interface{} `json:"auths"`
 }
