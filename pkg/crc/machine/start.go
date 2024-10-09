@@ -284,7 +284,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Error getting bundle metadata")
 	}
 
-	if err := bundleMismatchWithPreset(startConfig.Preset, crcBundleMetadata); err != nil {
+	if err := validation.BundleMismatchWithPresetMetadata(startConfig.Preset, crcBundleMetadata); err != nil {
 		return nil, err
 	}
 
@@ -850,13 +850,6 @@ func updateKubeconfig(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh
 	}
 	if err := cluster.EnsureGeneratedClientCAPresentInTheCluster(ctx, ocConfig, sshRunner, selfSignedCACert, adminClientCA); err != nil {
 		return errors.Wrap(err, "Failed to update user CA to cluster")
-	}
-	return nil
-}
-
-func bundleMismatchWithPreset(preset crcPreset.Preset, bundleMetadata *bundle.CrcBundleInfo) error {
-	if preset != bundleMetadata.GetBundleType() {
-		return errors.Errorf("Preset %s is used but bundle is provided for %s preset", preset, bundleMetadata.GetBundleType())
 	}
 	return nil
 }
