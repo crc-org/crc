@@ -21,8 +21,8 @@ func NewSSEClient(transport *http.Transport) *SSEClient {
 	}
 }
 
-func (c *SSEClient) Status(statusCallback func(*types.ClusterLoadResult)) error {
-	err := c.client.Subscribe("status", func(msg *sse.Event) {
+func (c *SSEClient) ClusterLoad(statusCallback func(*types.ClusterLoadResult)) error {
+	err := c.client.Subscribe("cluster_load", func(msg *sse.Event) {
 		wmState := &types.ClusterLoadResult{}
 		err := json.Unmarshal(msg.Data, wmState)
 		if err != nil {
