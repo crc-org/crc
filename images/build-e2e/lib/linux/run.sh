@@ -55,6 +55,6 @@ cd $targetFolder/bin
 # Transform results to junit
 cd ..
 init_line=$(grep -n '<?xml version="1.0" encoding="UTF-8"?>' results/e2e.results | awk '{split($0,n,":"); print n[1]}')
-tail -n +$init_line results/e2e.results > results/$junitFilename
+tail -n +$init_line results/e2e.results | xsltproc filter.xsl - > results/$junitFilename
 # Copy logs and diagnose
 cp -r bin/out/test-results/* results

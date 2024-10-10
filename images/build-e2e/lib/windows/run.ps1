@@ -17,19 +17,27 @@ mv $targetFolder/bin/e2e.test $targetFolder/bin/e2e.test.exe
 # Run e2e
 $env:PATH="$env:PATH;$env:HOME\$targetFolder\bin;"
 $env:SHELL="powershell"
-New-Item -ItemType directory -Path "$env:HOME\$targetFolder\results" -Force
+$targetFolderDir = "$env:HOME\$targetFolder"
+$resultsDir = "$targetFolderDir\results"
+New-Item -ItemType directory -Path "$resultsDir" -Force
 
 # Run tests
 $tags="windows"
 if ($e2eTagExpression) {
     $tags="$tags && $e2eTagExpression"
 }
+$dir = "$PWD"
 cd $targetFolder\bin
-e2e.test.exe --bundle-location=$bundleLocation --pull-secret-file=$env:HOME\$targetFolder\pull-secret --crc-memory=$crcMemory --cleanup-home=false --godog.tags="$tags" --godog.format=junit > $env:HOME\$targetFolder\results\e2e.results
+e2e.test.exe --bundle-location=$bundleLocation --pull-secret-file=$targetFolderdir\pull-secret --crc-memory=$crcMemory --cleanup-home=false --godog.tags="$tags" --godog.format=junit > $resultsDir\e2e.results
 
 # Transform results to junit
 cd ..
 $r = Select-String -Pattern '<?xml version="1.0" encoding="UTF-8"?>' -Path results\e2e.results -list -SimpleMatch | select-object -First 1
-Get-Content results\e2e.results | Select -skip ($r.LineNumber -1) > results\$junitFilename
+$prejunit = "$resultsDir\$junitFilename.pre"
+Get-Content "$resultsDir\e2e.results" | Select -skip ($r.LineNumber -1) > "$prejunit"
+$xslt = New-Object System.Xml.Xsl.XslCompiledTransform;
+$xslt.load("$targetFolderDir\filter.xsl")
+$xslt.transform( "$prejunit", "$resultsDir\$junitFilename" )
+rm "$prejunit"
 # Copy logs and diagnose
 cp -r bin\out\test-results\* results
