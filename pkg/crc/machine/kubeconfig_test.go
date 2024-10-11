@@ -52,6 +52,32 @@ func TestCleanKubeconfig(t *testing.T) {
 	assert.YAMLEq(t, string(expected), string(actual))
 }
 
+func TestCleanKubeConfigIdempotency(t *testing.T) {
+	// Given
+	dir := t.TempDir()
+	// When
+	assert.NoError(t, cleanKubeconfig(filepath.Join("testdata", "kubeconfig.out"), filepath.Join(dir, "kubeconfig")))
+	actual, err := os.ReadFile(filepath.Join(dir, "kubeconfig"))
+	// Then
+	assert.NoError(t, err)
+	expected, err := os.ReadFile(filepath.Join("testdata", "kubeconfig.out"))
+	assert.NoError(t, err)
+	assert.YAMLEq(t, string(expected), string(actual))
+}
+
+func TestCleanKubeConfigShouldDoNothingWhenClusterDomainIsNotEqualToCrcTesting(t *testing.T) {
+	// Given
+	dir := t.TempDir()
+	// When
+	assert.NoError(t, cleanKubeconfig(filepath.Join("testdata", "kubeconfig-without-api-crc-testing-cluster-domain"), filepath.Join(dir, "kubeconfig")))
+	actual, err := os.ReadFile(filepath.Join(dir, "kubeconfig"))
+	// Then
+	assert.NoError(t, err)
+	expected, err := os.ReadFile(filepath.Join("testdata", "kubeconfig-without-api-crc-testing-cluster-domain"))
+	assert.NoError(t, err)
+	assert.YAMLEq(t, string(expected), string(actual))
+}
+
 func TestUpdateUserCaAndKeyToKubeconfig(t *testing.T) {
 	f, err := os.CreateTemp("", "kubeconfig")
 	assert.NoError(t, err, "")
