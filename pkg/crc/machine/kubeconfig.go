@@ -50,7 +50,7 @@ func updateClientCrtAndKeyToKubeconfig(clientKey, clientCrt []byte, srcKubeconfi
 }
 
 func writeKubeconfig(ip string, clusterConfig *types.ClusterConfig, ingressHTTPSPort uint) error {
-	kubeconfig, cfg, err := getGlobalKubeConfig()
+	kubeconfig, cfg, err := GetGlobalKubeConfig()
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func writeKubeconfig(ip string, clusterConfig *types.ClusterConfig, ingressHTTPS
 	return clientcmd.WriteToFile(*cfg, kubeconfig)
 }
 
-func getGlobalKubeConfig() (string, *api.Config, error) {
+func GetGlobalKubeConfig() (string, *api.Config, error) {
 	kubeconfig := getGlobalKubeConfigPath()
 	return getKubeConfigFromFile(kubeconfig)
 }
