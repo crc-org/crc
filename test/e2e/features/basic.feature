@@ -60,6 +60,7 @@ Feature: Basic test
         When executing "crc stop"
         Then stdout should match "(.*)[Ss]topped the instance"
         And executing "oc whoami" fails
+        And kubeconfig is cleaned up
         # status check
         When checking that CRC is stopped
         And stdout should not contain "Running"
@@ -69,5 +70,6 @@ Feature: Basic test
         # delete
         When executing "crc delete -f" succeeds
         Then stdout should contain "Deleted the instance"
+        And kubeconfig is cleaned up
         # cleanup
         When executing crc cleanup command succeeds
