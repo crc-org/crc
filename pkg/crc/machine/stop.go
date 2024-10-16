@@ -1,6 +1,8 @@
 package machine
 
 import (
+	"os"
+
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
 	crcPreset "github.com/crc-org/crc/v2/pkg/crc/preset"
@@ -9,6 +11,11 @@ import (
 )
 
 func (client *client) Stop() (state.State, error) {
+	if err := cleanKubeconfig(getGlobalKubeConfigPath(), getGlobalKubeConfigPath()); err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			logging.Warnf("Failed to remove crc contexts from kubeconfig: %v", err)
+		}
+	}
 	if running, _ := client.IsRunning(); !running {
 		return state.Error, errors.New("Instance is already stopped")
 	}
