@@ -6,13 +6,13 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 <!-- identity transform -->
 <xsl:template match="@*|node()">
     <xsl:copy>
-            <xsl:apply-templates select="@*|node()"/>
+        <xsl:apply-templates select="@*|node()"/>
     </xsl:copy>
 </xsl:template>
 
 <xsl:template match="failure">
     <xsl:copy>
-        <xsl:value-of select="@message"/>
+        <xsl:value-of select="substring(@message,0,1000000)"/>
     </xsl:copy>
 </xsl:template>
 
