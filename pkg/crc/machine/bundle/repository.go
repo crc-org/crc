@@ -124,7 +124,7 @@ func (bundle *CrcBundleInfo) createSymlinkOrCopyPodmanRemote(binDir string) erro
 	return bundle.copyExecutableFromBundle(binDir, PodmanExecutable, constants.PodmanRemoteExecutableName)
 }
 
-func (repo *Repository) Extract(path string) error {
+func (repo *Repository) Extract(ctx context.Context, path string) error {
 	bundleName := filepath.Base(path)
 
 	tmpDir := filepath.Join(repo.CacheDir, "tmp-extract")
@@ -133,7 +133,7 @@ func (repo *Repository) Extract(path string) error {
 		_ = os.RemoveAll(tmpDir) // clean up after using it
 	}()
 
-	if _, err := extract.Uncompress(path, tmpDir); err != nil {
+	if _, err := extract.Uncompress(ctx, path, tmpDir); err != nil {
 		return err
 	}
 
@@ -198,8 +198,8 @@ func Use(bundleName string) (*CrcBundleInfo, error) {
 	return defaultRepo.Use(bundleName)
 }
 
-func Extract(path string) (*CrcBundleInfo, error) {
-	if err := defaultRepo.Extract(path); err != nil {
+func Extract(ctx context.Context, path string) (*CrcBundleInfo, error) {
+	if err := defaultRepo.Extract(ctx, path); err != nil {
 		return nil, err
 	}
 	return defaultRepo.Get(filepath.Base(path))
