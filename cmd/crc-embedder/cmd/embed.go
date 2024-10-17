@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path"
@@ -162,7 +163,7 @@ func downloadDataFiles(goos string, components []string, destDir string) ([]stri
 		if !shouldDownload(components, componentName) {
 			continue
 		}
-		filename, err := download.Download(dl.url, destDir, dl.permissions, nil)
+		filename, err := download.Download(context.TODO(), dl.url, destDir, dl.permissions, nil)
 		if err != nil {
 			return nil, err
 		}

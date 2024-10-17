@@ -1,6 +1,7 @@
 package preflight
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -112,12 +113,12 @@ func fixBundleExtracted(bundlePath string, preset crcpreset.Preset, enableBundle
 		}
 		var err error
 		logging.Infof("Downloading bundle: %s...", bundlePath)
-		if bundlePath, err = bundle.Download(preset, bundlePath, enableBundleQuayFallback); err != nil {
+		if bundlePath, err = bundle.Download(context.TODO(), preset, bundlePath, enableBundleQuayFallback); err != nil {
 			return err
 		}
 
 		logging.Infof("Uncompressing %s", bundlePath)
-		if _, err := bundle.Extract(bundlePath); err != nil {
+		if _, err := bundle.Extract(context.TODO(), bundlePath); err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				return errors.Wrap(err, "Use `crc setup -b <bundle-path>`")
 			}

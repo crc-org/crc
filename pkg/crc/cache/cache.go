@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -121,7 +122,7 @@ func (c *Cache) cacheExecutable() error {
 	// Check the file is tarball or not
 	if isTarball(assetTmpFile) {
 		// Extract the tarball and put it the cache directory.
-		extractedFiles, err = extract.UncompressWithFilter(assetTmpFile, tmpDir,
+		extractedFiles, err = extract.UncompressWithFilter(context.TODO(), assetTmpFile, tmpDir,
 			func(filename string) bool { return filepath.Base(filename) == c.GetExecutableName() })
 		if err != nil {
 			return errors.Wrapf(err, "Cannot uncompress '%s'", assetTmpFile)
@@ -153,7 +154,7 @@ func (c *Cache) getExecutable(destDir string) (string, error) {
 	destPath := filepath.Join(destDir, archiveName)
 	err := embed.Extract(archiveName, destPath)
 	if err != nil {
-		return download.Download(c.archiveURL, destDir, 0600, nil)
+		return download.Download(context.TODO(), c.archiveURL, destDir, 0600, nil)
 	}
 
 	return destPath, err

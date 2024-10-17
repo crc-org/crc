@@ -53,7 +53,7 @@ func (img *imageHandler) policyContext() (*signature.PolicyContext, error) {
 }
 
 // copyImage pulls the image from the registry and puts it to destination path
-func (img *imageHandler) copyImage(destPath string, reportWriter io.Writer) (*v1.Manifest, error) {
+func (img *imageHandler) copyImage(ctx context.Context, destPath string, reportWriter io.Writer) (*v1.Manifest, error) {
 	// Source Image from docker transport
 	srcImg := img.imageURI
 	srcRef, err := docker.ParseReference(srcImg)
@@ -71,7 +71,10 @@ func (img *imageHandler) copyImage(destPath string, reportWriter io.Writer) (*v1
 		return nil, err
 	}
 
-	manifestData, err := copy.Image(context.Background(), policyContext,
+	if ctx == nil {
+		panic("ctx is nil, this should not happen")
+	}
+	manifestData, err := copy.Image(ctx, policyContext,
 		destRef, srcRef, &copy.Options{
 			ReportWriter: reportWriter,
 		})
@@ -113,7 +116,7 @@ func GetPresetName(imageName string) crcpreset.Preset {
 	return preset
 }
 
-func PullBundle(imageURI string) (string, error) {
+func PullBundle(ctx context.Context, imageURI string) (string, error) {
 	imgHandler := imageHandler{
 		imageURI: strings.TrimPrefix(imageURI, "docker:"),
 	}
@@ -122,7 +125,7 @@ func PullBundle(imageURI string) (string, error) {
 		return "", err
 	}
 	defer os.RemoveAll(destDir)
-	imgManifest, err := imgHandler.copyImage(destDir, os.Stdout)
+	imgManifest, err := imgHandler.copyImage(ctx, destDir, os.Stdout)
 	if err != nil {
 		return "", err
 	}
@@ -132,7 +135,7 @@ func PullBundle(imageURI string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fileList, err := extract.Uncompress(filepath.Join(destDir, imgLayer), constants.MachineCacheDir)
+	fileList, err := extract.Uncompress(ctx, filepath.Join(destDir, imgLayer), constants.MachineCacheDir)
 	if err != nil {
 		return "", err
 	}

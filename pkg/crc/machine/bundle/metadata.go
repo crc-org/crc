@@ -1,6 +1,7 @@
 package bundle
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -337,16 +338,15 @@ func getVerifiedHash(url string, file string) (string, error) {
 	return "", fmt.Errorf("%s hash is missing or shasums are malformed", file)
 }
 
-func downloadDefault(preset crcPreset.Preset) (string, error) {
+func downloadDefault(ctx context.Context, preset crcPreset.Preset) (string, error) {
 	downloadInfo, err := getBundleDownloadInfo(preset)
 	if err != nil {
 		return "", err
 	}
-
-	return downloadInfo.Download(constants.GetDefaultBundlePath(preset), 0664)
+	return downloadInfo.Download(ctx, constants.GetDefaultBundlePath(preset), 0664)
 }
 
-func Download(preset crcPreset.Preset, bundleURI string, enableBundleQuayFallback bool) (string, error) {
+func Download(ctx context.Context, preset crcPreset.Preset, bundleURI string, enableBundleQuayFallback bool) (string, error) {
 	// If we are asked to download
 	// ~/.crc/cache/crc_podman_libvirt_4.1.1.crcbundle, this means we want
 	// are downloading the default bundle for this release. This uses a
@@ -355,23 +355,23 @@ func Download(preset crcPreset.Preset, bundleURI string, enableBundleQuayFallbac
 	if bundleURI == constants.GetDefaultBundlePath(preset) {
 		switch preset {
 		case crcPreset.OpenShift, crcPreset.Microshift:
-			downloadedBundlePath, err := downloadDefault(preset)
+			downloadedBundlePath, err := downloadDefault(ctx, preset)
 			if err != nil && enableBundleQuayFallback {
 				logging.Info("Unable to download bundle from mirror, falling back to quay")
-				return image.PullBundle(constants.GetDefaultBundleImageRegistry(preset))
+				return image.PullBundle(ctx, constants.GetDefaultBundleImageRegistry(preset))
 			}
 			return downloadedBundlePath, err
 		case crcPreset.OKD:
 			fallthrough
 		default:
-			return image.PullBundle(constants.GetDefaultBundleImageRegistry(preset))
+			return image.PullBundle(ctx, constants.GetDefaultBundleImageRegistry(preset))
 		}
 	}
 	switch {
 	case strings.HasPrefix(bundleURI, "http://"), strings.HasPrefix(bundleURI, "https://"):
-		return download.Download(bundleURI, constants.MachineCacheDir, 0644, nil)
+		return download.Download(ctx, bundleURI, constants.MachineCacheDir, 0644, nil)
 	case strings.HasPrefix(bundleURI, "docker://"):
-		return image.PullBundle(bundleURI)
+		return image.PullBundle(ctx, bundleURI)
 	}
 	// the `bundleURI` parameter turned out to be a local path
 	return bundleURI, nil
