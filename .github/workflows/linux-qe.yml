@@ -1,0 +1,118 @@
+name: tester-linux
+
+on:
+  workflow_run:
+    workflows: [Build Linux artifacts]
+    types:
+      - completed
+
+jobs:
+  tests:
+    runs-on: [self-hosted, linux, testing-farm]
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ['1.21']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+      
+      - name: prepare env
+        run: |
+          sudo yum install podman openssh-server git make -y
+          ssh-keygen -t rsa -N '' -f id_rsa -q 
+      
+      - name: reserve machine from testing farm
+        env: 
+          TESTING_FARM_API_TOKEN: ${{ secrets.TESTING_FARM_API_TOKEN }}
+        run: |
+          export TESTING_FARM_API_TOKEN=$TESTING_FARM_API_TOKEN
+          eval $(ssh-agent)
+          testing-farm reserve --compose Fedora-40 --arch aarch64 --ssh-public-key id_rsa.pub --no-autoconnect | tee info
+          machine=`tail -n 1 info`
+          echo ${machine##*@} > host
+          echo "root" > username
+          #ssh -o StrictHostKeyChecking=no -i id_rsa root@$host
+     
+      - name: Download linux binary
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-binary
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Download qe oci image
+        id: download-qe-oci-image-artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: crc-e2e-linux-arm64
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Correlate
+        env:
+          PULL_SECRET: ${{ secrets.PULL_SECRET }}
+        run: |
+          # Save pull-secret as file
+          echo "${PULL_SECRET}" > pull-secret
+
+      - name: Install CRC on host
+        run: |
+          podman run --rm -d --name crc-linux-install \
+            -e TARGET_HOST=$(cat host) \
+            -e TARGET_HOST_USERNAME=$(cat username) \
+            -e TARGET_HOST_KEY_PATH=/data/id_rsa \
+            -e TARGET_FOLDER=crc-support \
+            -e TARGET_CLEANUP='false' \
+            -e OUTPUT_FOLDER=/data \
+            -e DEBUG='true' \
+            -v ${PWD}:/data:z \
+            -v ${PWD}/crc:/opt/crc-support/crc:z \
+            quay.io/rhqp/crc-support:v0.6-linux crc-support/install.sh crc-support/crc
+          podman logs -f crc-linux-install
+
+      - name: Run CRC e2e test
+        run: |
+          # load image
+          podman load -i crc-e2e-linux-arm64.tar
+          # run
+          cmd="crc-qe/run.sh -junitFilename crc-e2e-junit.xml -targetFolder crc-qe"
+          cmd_microshift="${cmd} -e2eTagExpression '@story_microshift'"
+          cmd_openshift="${cmd} -e2eTagExpression '~@minimal && ~@story_microshift'"
+          podman run --rm -d --name crc-e2e \
+            -e TARGET_HOST=$(cat host) \
+            -e TARGET_HOST_USERNAME=$(cat username) \
+            -e TARGET_HOST_KEY_PATH=/data/id_rsa \
+            -e TARGET_FOLDER=crc-qe \
+            -e TARGET_RESULTS=results \
+            -e OUTPUT_FOLDER=/data \
+            -e DEBUG=true \
+            -v $PWD/pull-secret:/opt/crc/pull-secret:z \
+            -v $PWD:/data:z \
+            quay.io/crcont/crc-e2e:gh-linux-armd64 \
+                ${cmd_openshift} 
+          podman logs -f crc-e2e
+
+      - name: Test Report
+        id: test-report
+        uses: mikepenz/action-junit-report@v4
+        if: always() 
+        with:
+          fail_on_failure: true
+          include_passed: true
+          detailed_summary: true
+          require_tests:  true
+          report_paths: '**/*.xml'
+      
+      - name: Upload e2e results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: linux-e2e-test
+          path: |
+            **/*.xml
+            **/*.results
+            **/*.log
