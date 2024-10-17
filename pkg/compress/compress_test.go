@@ -1,6 +1,7 @@
 package compress
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -33,7 +34,7 @@ func testCompress(t *testing.T, baseDir string) {
 
 	destDir := t.TempDir()
 
-	fileList, err := extract.Uncompress(testArchiveName, destDir)
+	fileList, err := extract.Uncompress(context.TODO(), testArchiveName, destDir)
 	require.NoError(t, err)
 
 	_, d := filepath.Split(baseDir)

@@ -1,6 +1,7 @@
 package download
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -60,7 +61,7 @@ loop:
 
 // Download function takes sha256sum as hex decoded byte
 // something like hex.DecodeString("33daf4c03f86120fdfdc66bddf6bfff4661c7ca11c5d")
-func Download(uri, destination string, mode os.FileMode, sha256sum []byte) (string, error) {
+func Download(ctx context.Context, uri, destination string, mode os.FileMode, sha256sum []byte) (string, error) {
 	logging.Debugf("Downloading %s to %s", uri, destination)
 
 	client := grab.NewClient()
@@ -70,6 +71,12 @@ func Download(uri, destination string, mode os.FileMode, sha256sum []byte) (stri
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to get request from %s", uri)
 	}
+
+	if ctx == nil {
+		panic("ctx is nil, this should not happen")
+	}
+	req = req.WithContext(ctx)
+
 	if sha256sum != nil {
 		req.SetChecksum(sha256.New(), sha256sum, true)
 	}
@@ -131,12 +138,12 @@ func NewRemoteFile(uri, sha256sum string) *RemoteFile {
 
 }
 
-func (r *RemoteFile) Download(bundlePath string, mode os.FileMode) (string, error) {
-	sha256, err := hex.DecodeString(r.sha256sum)
+func (r *RemoteFile) Download(ctx context.Context, bundlePath string, mode os.FileMode) (string, error) {
+	sha256bytes, err := hex.DecodeString(r.sha256sum)
 	if err != nil {
 		return "", err
 	}
-	return Download(r.URI, bundlePath, mode, sha256)
+	return Download(ctx, r.URI, bundlePath, mode, sha256bytes)
 }
 
 func (r *RemoteFile) GetSha256Sum() string {

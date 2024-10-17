@@ -1,6 +1,7 @@
 package util
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -124,7 +125,7 @@ func DownloadBundle(bundleLocation string, bundleDestination string, bundleName 
 		return bundleDestination, err
 	}
 
-	filename, err := download.Download(bundleLocation, bundleDestination, 0644, nil)
+	filename, err := download.Download(context.TODO(), bundleLocation, bundleDestination, 0644, nil)
 	fmt.Printf("Downloading bundle from %s to %s.\n", bundleLocation, bundleDestination)
 	if err != nil {
 		return "", err
