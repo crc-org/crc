@@ -14,7 +14,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/cluster"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	crcerrors "github.com/crc-org/crc/v2/pkg/crc/errors"
-	logging "github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/bundle"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/config"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
@@ -41,7 +41,7 @@ import (
 
 const minimumMemoryForMonitoring = 14336
 
-func getCrcBundleInfo(preset crcPreset.Preset, bundleName, bundlePath string, enableBundleQuayFallback bool) (*bundle.CrcBundleInfo, error) {
+func getCrcBundleInfo(ctx context.Context, preset crcPreset.Preset, bundleName, bundlePath string, enableBundleQuayFallback bool) (*bundle.CrcBundleInfo, error) {
 	bundleInfo, err := bundle.Use(bundleName)
 	if err == nil {
 		logging.Infof("Loading bundle: %s...", bundleName)
@@ -49,12 +49,12 @@ func getCrcBundleInfo(preset crcPreset.Preset, bundleName, bundlePath string, en
 	}
 	logging.Debugf("Failed to load bundle %s: %v", bundleName, err)
 	logging.Infof("Downloading bundle: %s...", bundleName)
-	bundlePath, err = bundle.Download(preset, bundlePath, enableBundleQuayFallback)
+	bundlePath, err = bundle.Download(ctx, preset, bundlePath, enableBundleQuayFallback)
 	if err != nil {
 		return nil, err
 	}
 	logging.Infof("Extracting bundle: %s...", bundleName)
-	if _, err := bundle.Extract(bundlePath); err != nil {
+	if _, err := bundle.Extract(ctx, bundlePath); err != nil {
 		return nil, err
 	}
 	return bundle.Use(bundleName)
@@ -279,7 +279,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	bundleName := bundle.GetBundleNameWithoutExtension(bundle.GetBundleNameFromURI(startConfig.BundlePath))
-	crcBundleMetadata, err := getCrcBundleInfo(startConfig.Preset, bundleName, startConfig.BundlePath, startConfig.EnableBundleQuayFallback)
+	crcBundleMetadata, err := getCrcBundleInfo(ctx, startConfig.Preset, bundleName, startConfig.BundlePath, startConfig.EnableBundleQuayFallback)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting bundle metadata")
 	}
