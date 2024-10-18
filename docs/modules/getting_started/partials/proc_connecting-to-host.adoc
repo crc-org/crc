@@ -1,0 +1,24 @@
+= Access services from host to {prod}
+
+[NOTE]
+====
+**Perform this procedure when using user mode network which is default for Mac/Windows.**
+====
+
+If you have a service which is running on the host and want to consume it with {prod}
+
+. Ensure that you have enabled the proper config value
++
+----
+$ crc config set network-mode user
+$ crc config set host-network-access true
+----
+
+. If {prod} instance is already running then restart it (stop => start), otherwise just start it.
++
+----
+$ crc stop && crc start
+----
+
+. Assume your service is running on port `8080` on the host then to consume it to {prod} instance
+using `*host.crc.testing:8080*`
