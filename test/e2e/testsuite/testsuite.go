@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/machine"
 	"github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/version"
 	"github.com/crc-org/crc/v2/test/extended/crc/cmd"
@@ -522,6 +523,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		EnsureUserNetworkmode)
 	s.Step(`^ensuring microshift cluster is fully operational$`,
 		EnsureMicroshiftClusterIsOperational)
+	s.Step(`^kubeconfig is cleaned up$`,
+		EnsureKubeConfigIsCleanedUp)
 
 	s.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
 
@@ -1021,6 +1024,26 @@ func EnsureUserNetworkmode() error {
 	if runtime.GOOS == "linux" {
 		return crcCmd.SetConfigPropertyToValueSucceedsOrFails(
 			"network-mode", "user", "succeeds")
+	}
+	return nil
+}
+
+func EnsureKubeConfigIsCleanedUp() error {
+	kubeConfig, cfg, err := machine.GetGlobalKubeConfig()
+	if err != nil {
+		return err
+	}
+	if len(kubeConfig) == 0 {
+		return fmt.Errorf("unable to load kube config file while verifying kube config cleanup")
+	}
+	if cfg.CurrentContext != "" {
+		return fmt.Errorf("kube config's current context not cleaned up. [expected : \"\", actual : %s]", cfg.CurrentContext)
+	}
+	crcClusterDomain := fmt.Sprintf("https://api%s:6443", constants.ClusterDomain)
+	for name, cluster := range cfg.Clusters {
+		if cluster.Server == crcClusterDomain {
+			return fmt.Errorf("kube config's cluster %s is not cleaned up, it still contains a cluster with %s domain [expected : \"\", actual : %s]", name, crcClusterDomain, crcClusterDomain)
+		}
 	}
 	return nil
 }
