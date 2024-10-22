@@ -1,0 +1,146 @@
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: jkube-application-deploy-role
+      labels:
+        app: jkube-application-deploy-test
+    rules:
+      - apiGroups:
+          - ""
+        resources:
+          - secrets
+          - pods
+          - pods/log
+          - services
+          - events
+        verbs:
+          - create
+          - get
+          - list
+          - update
+          - watch
+          - patch
+      - apiGroups:
+          - apps.openshift.io
+        resources:
+          - deploymentconfigs
+        verbs:
+          - create
+          - get
+          - list
+          - update
+          - patch
+      - apiGroups:
+          - build.openshift.io
+        resources:
+          - buildconfigs
+          - buildconfigs/instantiatebinary
+          - builds
+        verbs: ["*"]
+      - apiGroups:
+          - image.openshift.io
+        resources:
+          - imagestreams
+        verbs:
+          - create
+          - get
+          - list
+          - update
+          - patch
+      - apiGroups:
+          - route.openshift.io
+        resources:
+          - routes
+        verbs:
+          - create
+          - get
+          - list
+          - update
+          - patch
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: jkube-application-deploy-binding
+      labels:
+        app: jkube-application-deploy-test
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: jkube-application-deploy-role
+    subjects:
+      - kind: ServiceAccount
+        name: jkube-application-deploy-sa
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: jkube-application-deploy-sa
+      labels:
+        app: jkube-application-deploy-test
+  - apiVersion: image.openshift.io/v1
+    kind: ImageStream
+    metadata:
+      labels:
+        app: jkube-application-deploy-test
+      name: jkube-application-deploy-is
+  - apiVersion: build.openshift.io/v1
+    kind: BuildConfig
+    metadata:
+      name: jkube-application-deploy-buildconfig
+      labels:
+        app: jkube-application-deploy-test
+    spec:
+      output:
+        to:
+          kind: ImageStreamTag
+          name: jkube-application-deploy-is:latest
+      source:
+        type: Dockerfile
+        dockerfile: |
+          FROM registry.access.redhat.com/ubi9/openjdk-17:1.20-2.1726695177
+          LABEL org.opencontainers.image.authors="CRCQE <devtools-crc-qe@redhat.com>"
+          USER root
+          # Install Git
+          RUN microdnf install -y git
+          RUN git clone https://github.com/eclipse-jkube/jkube.git
+          RUN chmod -R 775 /home/default/jkube
+          WORKDIR /home/default/jkube/quickstarts/maven/quarkus
+          RUN mkdir foo
+          ENTRYPOINT ["mvn", "package", "oc:build", "oc:resource", "oc:apply"]
+      strategy:
+        type: Docker
+  - apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    metadata:
+      labels:
+        app: jkube-application-deploy-test
+      name: jkube-application-deploy-test
+    spec:
+      replicas: 1
+      selector:
+        app: jkube-application-deploy-test
+      template:
+        metadata:
+          labels:
+            app: jkube-application-deploy-test
+          name: jkube-application-deploy-test
+        spec:
+          containers:
+            - image: jkube-application-deploy-is:latest
+              imagePullPolicy: IfNotPresent
+              name: maven-pod
+              securityContext:
+                privileged: false
+          serviceAccount: jkube-application-deploy-sa
+      triggers:
+        - type: ConfigChange
+        - imageChangeParams:
+            automatic: true
+            containerNames:
+              - maven-pod
+            from:
+              kind: ImageStreamTag
+              name: jkube-application-deploy-is:latest
+          type: ImageChange
