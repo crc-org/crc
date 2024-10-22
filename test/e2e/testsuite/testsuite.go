@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/user"
@@ -522,6 +523,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		EnsureUserNetworkmode)
 	s.Step(`^ensuring microshift cluster is fully operational$`,
 		EnsureMicroshiftClusterIsOperational)
+	s.Step(`^deployed application is running in cluster$`,
+		EnsureDeployedApplicationIsRunningInCluster)
 
 	s.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
 
@@ -1050,5 +1053,29 @@ func EnsureMicroshiftClusterIsOperational() error {
 		}
 	}
 
+	return nil
+}
+
+// EnsureDeployedApplicationIsRunningInCluster Added as a work-around as this isn't working as expected
+//
+//	Then executing "curl -s http://quarkus-jkube-quarkus-app-deploy-flow-test.apps-crc.testing" succeeds
+//	And stdout should contain "{\"applicationName\":\"JKube\",\"message\":\"Subatomic JKube really whips the llama's ass!\"}"
+func EnsureDeployedApplicationIsRunningInCluster() error {
+	var expectedResponse = "{\"applicationName\":\"JKube\",\"message\":\"Subatomic JKube really whips the llama's ass!\"}"
+	var appDeploymentNamespace = "jkube-quarkus-app-deploy-flow-test"
+	response, err := http.Get(fmt.Sprintf("http://%s-%s.apps-crc.testing", "quarkus", appDeploymentNamespace))
+	if err != nil {
+		return fmt.Errorf("failed to query deployed application endpoint, %s", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected response status code received, expected 200, actual %d", response.StatusCode)
+	}
+	responseData, err := io.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response body, %s", err)
+	}
+	if string(responseData) != expectedResponse {
+		return fmt.Errorf("unexpected response body, expected %s, actual %s", expectedResponse, string(responseData))
+	}
 	return nil
 }
