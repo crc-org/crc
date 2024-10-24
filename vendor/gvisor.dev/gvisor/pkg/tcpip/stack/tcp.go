@@ -15,6 +15,7 @@
 package stack
 
 import (
+	"context"
 	"time"
 
 	"gvisor.dev/gvisor/pkg/atomicbitops"
@@ -23,6 +24,19 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/internal/tcp"
 	"gvisor.dev/gvisor/pkg/tcpip/seqnum"
 )
+
+// contextID is this package's type for context.Context.Value keys.
+type contextID int
+
+const (
+	// CtxRestoreStack is a Context.Value key for the stack to be used in restore.
+	CtxRestoreStack contextID = iota
+)
+
+// RestoreStackFromContext returns the stack to be used during restore.
+func RestoreStackFromContext(ctx context.Context) *Stack {
+	return ctx.Value(CtxRestoreStack).(*Stack)
+}
 
 // TCPProbeFunc is the expected function type for a TCP probe function to be
 // passed to stack.AddTCPProbe.
@@ -71,6 +85,26 @@ type TCPCubicState struct {
 	// WEst is the window computed by CUBIC at time
 	// TimeSinceLastCongestion+RTT i.e WC(TimeSinceLastCongestion+RTT).
 	WEst float64
+
+	// EndSeq is the sequence number that, when cumulatively ACK'd, ends the
+	// HyStart round.
+	EndSeq seqnum.Value
+
+	// CurrRTT is the minimum round-trip time from the current round.
+	CurrRTT time.Duration
+
+	// LastRTT is the minimum round-trip time from the previous round.
+	LastRTT time.Duration
+
+	// SampleCount is the number of samples from the current round.
+	SampleCount uint
+
+	// LastAck is the time we received the most recent ACK (or start of round if
+	// more recent).
+	LastAck tcpip.MonotonicTime
+
+	// RoundStart is the time we started the most recent HyStart round.
+	RoundStart tcpip.MonotonicTime
 }
 
 // TCPRACKState is used to hold a copy of the internal RACK state when the

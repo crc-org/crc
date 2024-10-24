@@ -178,6 +178,9 @@ var (
 
 	// IPv4AllRoutersGroup is a multicast address for all routers.
 	IPv4AllRoutersGroup = tcpip.AddrFrom4([4]byte{0xe0, 0x00, 0x00, 0x02})
+
+	// IPv4Loopback is the loopback IPv4 address.
+	IPv4Loopback = tcpip.AddrFrom4([4]byte{0x7f, 0x00, 0x00, 0x01})
 )
 
 // Flags that may be set in an IPv4 packet.
@@ -344,6 +347,18 @@ func (b IPv4) SourceAddress() tcpip.Address {
 // header.
 func (b IPv4) DestinationAddress() tcpip.Address {
 	return tcpip.AddrFrom4([4]byte(b[dstAddr : dstAddr+IPv4AddressSize]))
+}
+
+// SourceAddressSlice returns the "source address" field of the IPv4 header as a
+// byte slice.
+func (b IPv4) SourceAddressSlice() []byte {
+	return []byte(b[srcAddr : srcAddr+IPv4AddressSize])
+}
+
+// DestinationAddressSlice returns the "destination address" field of the IPv4
+// header as a byte slice.
+func (b IPv4) DestinationAddressSlice() []byte {
+	return []byte(b[dstAddr : dstAddr+IPv4AddressSize])
 }
 
 // SetSourceAddressWithChecksumUpdate implements ChecksummableNetwork.
@@ -559,7 +574,7 @@ func IsV4LoopbackAddress(addr tcpip.Address) bool {
 
 // ========================= Options ==========================
 
-// An IPv4OptionType can hold the valuse for the Type in an IPv4 option.
+// An IPv4OptionType can hold the value for the Type in an IPv4 option.
 type IPv4OptionType byte
 
 // These constants are needed to identify individual options in the option list.
@@ -1137,9 +1152,7 @@ func (s IPv4OptionsSerializer) Serialize(b []byte) uint8 {
 	//  header ends on a 32 bit boundary. The padding is zero.
 	padded := padIPv4OptionsLength(total)
 	b = b[:padded-total]
-	for i := range b {
-		b[i] = 0
-	}
+	clear(b)
 	return padded
 }
 

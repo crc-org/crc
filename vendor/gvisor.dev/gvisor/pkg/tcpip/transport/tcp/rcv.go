@@ -30,7 +30,7 @@ import (
 // +stateify savable
 type receiver struct {
 	stack.TCPReceiverState
-	ep *endpoint
+	ep *Endpoint
 
 	// rcvWnd is the non-scaled receive window last advertised to the peer.
 	rcvWnd seqnum.Size
@@ -52,7 +52,7 @@ type receiver struct {
 	lastRcvdAckTime tcpip.MonotonicTime
 }
 
-func newReceiver(ep *endpoint, irs seqnum.Value, rcvWnd seqnum.Size, rcvWndScale uint8) *receiver {
+func newReceiver(ep *Endpoint, irs seqnum.Value, rcvWnd seqnum.Size, rcvWndScale uint8) *receiver {
 	return &receiver{
 		ep: ep,
 		TCPReceiverState: stack.TCPReceiverState{
@@ -554,7 +554,7 @@ func (r *receiver) handleTimeWaitSegment(s *segment) (resetTimeWait bool, newSyn
 	segLen := seqnum.Size(s.payloadSize())
 
 	// Just silently drop any RST packets in TIME_WAIT. We do not support
-	// TIME_WAIT assasination as a result we confirm w/ fix 1 as described
+	// TIME_WAIT assassination as a result we confirm w/ fix 1 as described
 	// in https://tools.ietf.org/html/rfc1337#section-3.
 	//
 	// This behavior overrides RFC793 page 70 where we transition to CLOSED

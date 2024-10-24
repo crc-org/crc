@@ -3,6 +3,8 @@
 package raw
 
 import (
+	"context"
+
 	"gvisor.dev/gvisor/pkg/state"
 )
 
@@ -38,17 +40,17 @@ func (p *rawPacket) StateSave(stateSinkObject state.Sink) {
 	stateSinkObject.Save(6, &p.ttlOrHopLimit)
 }
 
-func (p *rawPacket) afterLoad() {}
+func (p *rawPacket) afterLoad(context.Context) {}
 
 // +checklocksignore
-func (p *rawPacket) StateLoad(stateSourceObject state.Source) {
+func (p *rawPacket) StateLoad(ctx context.Context, stateSourceObject state.Source) {
 	stateSourceObject.Load(0, &p.rawPacketEntry)
 	stateSourceObject.Load(1, &p.data)
 	stateSourceObject.Load(3, &p.senderAddr)
 	stateSourceObject.Load(4, &p.packetInfo)
 	stateSourceObject.Load(5, &p.tosOrTClass)
 	stateSourceObject.Load(6, &p.ttlOrHopLimit)
-	stateSourceObject.LoadValue(2, new(int64), func(y any) { p.loadReceivedAt(y.(int64)) })
+	stateSourceObject.LoadValue(2, new(int64), func(y any) { p.loadReceivedAt(ctx, y.(int64)) })
 }
 
 func (e *endpoint) StateTypeName() string {
@@ -92,7 +94,7 @@ func (e *endpoint) StateSave(stateSinkObject state.Sink) {
 }
 
 // +checklocksignore
-func (e *endpoint) StateLoad(stateSourceObject state.Source) {
+func (e *endpoint) StateLoad(ctx context.Context, stateSourceObject state.Source) {
 	stateSourceObject.Load(0, &e.DefaultSocketOptionsHandler)
 	stateSourceObject.Load(1, &e.transProto)
 	stateSourceObject.Load(2, &e.waiterQueue)
@@ -106,7 +108,49 @@ func (e *endpoint) StateLoad(stateSourceObject state.Source) {
 	stateSourceObject.Load(10, &e.rcvDisabled)
 	stateSourceObject.Load(11, &e.ipv6ChecksumOffset)
 	stateSourceObject.Load(12, &e.icmpv6Filter)
-	stateSourceObject.AfterLoad(e.afterLoad)
+	stateSourceObject.AfterLoad(func() { e.afterLoad(ctx) })
+}
+
+func (e *EndpointFactory) StateTypeName() string {
+	return "pkg/tcpip/transport/raw.EndpointFactory"
+}
+
+func (e *EndpointFactory) StateFields() []string {
+	return []string{}
+}
+
+func (e *EndpointFactory) beforeSave() {}
+
+// +checklocksignore
+func (e *EndpointFactory) StateSave(stateSinkObject state.Sink) {
+	e.beforeSave()
+}
+
+func (e *EndpointFactory) afterLoad(context.Context) {}
+
+// +checklocksignore
+func (e *EndpointFactory) StateLoad(ctx context.Context, stateSourceObject state.Source) {
+}
+
+func (c *CreateOnlyFactory) StateTypeName() string {
+	return "pkg/tcpip/transport/raw.CreateOnlyFactory"
+}
+
+func (c *CreateOnlyFactory) StateFields() []string {
+	return []string{}
+}
+
+func (c *CreateOnlyFactory) beforeSave() {}
+
+// +checklocksignore
+func (c *CreateOnlyFactory) StateSave(stateSinkObject state.Sink) {
+	c.beforeSave()
+}
+
+func (c *CreateOnlyFactory) afterLoad(context.Context) {}
+
+// +checklocksignore
+func (c *CreateOnlyFactory) StateLoad(ctx context.Context, stateSourceObject state.Source) {
 }
 
 func (l *rawPacketList) StateTypeName() string {
@@ -129,10 +173,10 @@ func (l *rawPacketList) StateSave(stateSinkObject state.Sink) {
 	stateSinkObject.Save(1, &l.tail)
 }
 
-func (l *rawPacketList) afterLoad() {}
+func (l *rawPacketList) afterLoad(context.Context) {}
 
 // +checklocksignore
-func (l *rawPacketList) StateLoad(stateSourceObject state.Source) {
+func (l *rawPacketList) StateLoad(ctx context.Context, stateSourceObject state.Source) {
 	stateSourceObject.Load(0, &l.head)
 	stateSourceObject.Load(1, &l.tail)
 }
@@ -157,10 +201,10 @@ func (e *rawPacketEntry) StateSave(stateSinkObject state.Sink) {
 	stateSinkObject.Save(1, &e.prev)
 }
 
-func (e *rawPacketEntry) afterLoad() {}
+func (e *rawPacketEntry) afterLoad(context.Context) {}
 
 // +checklocksignore
-func (e *rawPacketEntry) StateLoad(stateSourceObject state.Source) {
+func (e *rawPacketEntry) StateLoad(ctx context.Context, stateSourceObject state.Source) {
 	stateSourceObject.Load(0, &e.next)
 	stateSourceObject.Load(1, &e.prev)
 }
@@ -168,6 +212,8 @@ func (e *rawPacketEntry) StateLoad(stateSourceObject state.Source) {
 func init() {
 	state.Register((*rawPacket)(nil))
 	state.Register((*endpoint)(nil))
+	state.Register((*EndpointFactory)(nil))
+	state.Register((*CreateOnlyFactory)(nil))
 	state.Register((*rawPacketList)(nil))
 	state.Register((*rawPacketEntry)(nil))
 }

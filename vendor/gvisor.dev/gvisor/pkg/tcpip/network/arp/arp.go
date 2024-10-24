@@ -45,6 +45,7 @@ var _ ip.DADProtocol = (*endpoint)(nil)
 // the link-layer is via stack.NetworkEndpoint.HandlePacket.
 var _ stack.NetworkEndpoint = (*endpoint)(nil)
 
+// +stateify savable
 type endpoint struct {
 	protocol *protocol
 
@@ -55,7 +56,7 @@ type endpoint struct {
 	stats sharedStats
 
 	// mu protects annotated fields below.
-	mu sync.Mutex
+	mu sync.Mutex `state:"nosave"`
 
 	// +checklocks:mu
 	dad ip.DAD
@@ -133,7 +134,7 @@ func (e *endpoint) MaxHeaderLength() uint16 {
 
 func (*endpoint) Close() {}
 
-func (*endpoint) WritePacket(*stack.Route, stack.NetworkHeaderParams, stack.PacketBufferPtr) tcpip.Error {
+func (*endpoint) WritePacket(*stack.Route, stack.NetworkHeaderParams, *stack.PacketBuffer) tcpip.Error {
 	return &tcpip.ErrNotSupported{}
 }
 
@@ -142,11 +143,11 @@ func (*endpoint) NetworkProtocolNumber() tcpip.NetworkProtocolNumber {
 	return ProtocolNumber
 }
 
-func (*endpoint) WriteHeaderIncludedPacket(*stack.Route, stack.PacketBufferPtr) tcpip.Error {
+func (*endpoint) WriteHeaderIncludedPacket(*stack.Route, *stack.PacketBuffer) tcpip.Error {
 	return &tcpip.ErrNotSupported{}
 }
 
-func (e *endpoint) HandlePacket(pkt stack.PacketBufferPtr) {
+func (e *endpoint) HandlePacket(pkt *stack.PacketBuffer) {
 	stats := e.stats.arp
 	stats.packetsReceived.Increment()
 
@@ -257,6 +258,7 @@ func (e *endpoint) Stats() stack.NetworkEndpointStats {
 
 var _ stack.NetworkProtocol = (*protocol)(nil)
 
+// +stateify savable
 type protocol struct {
 	stack   *stack.Stack
 	options Options
@@ -278,7 +280,7 @@ func (p *protocol) NewEndpoint(nic stack.NetworkInterface, _ stack.TransportDisp
 	e.mu.Lock()
 	e.dad.Init(&e.mu, p.options.DADConfigs, ip.DADOptions{
 		Clock:     p.stack.Clock(),
-		SecureRNG: p.stack.SecureRNG(),
+		SecureRNG: p.stack.SecureRNG().Reader,
 		// ARP does not support sending nonce values.
 		NonceSize: 0,
 		Protocol:  e,
@@ -383,11 +385,13 @@ func (*protocol) Close() {}
 func (*protocol) Wait() {}
 
 // Parse implements stack.NetworkProtocol.Parse.
-func (*protocol) Parse(pkt stack.PacketBufferPtr) (proto tcpip.TransportProtocolNumber, hasTransportHdr bool, ok bool) {
+func (*protocol) Parse(pkt *stack.PacketBuffer) (proto tcpip.TransportProtocolNumber, hasTransportHdr bool, ok bool) {
 	return 0, false, parse.ARP(pkt)
 }
 
 // Options holds options to configure a protocol.
+//
+// +stateify savable
 type Options struct {
 	// DADConfigs is the default DAD configurations used by ARP endpoints.
 	DADConfigs stack.DADConfigurations

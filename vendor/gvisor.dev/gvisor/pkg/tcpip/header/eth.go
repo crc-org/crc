@@ -46,6 +46,9 @@ const (
 	// EthernetMinimumSize is the minimum size of a valid ethernet frame.
 	EthernetMinimumSize = 14
 
+	// EthernetMaximumSize is the maximum size of a valid ethernet frame.
+	EthernetMaximumSize = 18
+
 	// EthernetAddressSize is the size, in bytes, of an ethernet address.
 	EthernetAddressSize = 6
 
@@ -82,7 +85,7 @@ const (
 	// capture all traffic.
 	EthernetProtocolAll tcpip.NetworkProtocolNumber = 0x0003
 
-	// EthernetProtocolPUP is the PARC Universial Packet protocol ethertype.
+	// EthernetProtocolPUP is the PARC Universal Packet protocol ethertype.
 	EthernetProtocolPUP tcpip.NetworkProtocolNumber = 0x0200
 )
 

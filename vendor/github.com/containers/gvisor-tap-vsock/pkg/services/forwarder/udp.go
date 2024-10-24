@@ -31,13 +31,25 @@ func UDP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mute
 		var wq waiter.Queue
 		ep, tcpErr := r.CreateEndpoint(&wq)
 		if tcpErr != nil {
-			log.Errorf("r.CreateEndpoint() = %v", tcpErr)
+			if _, ok := tcpErr.(*tcpip.ErrConnectionRefused); ok {
+				// transient error
+				log.Debugf("r.CreateEndpoint() = %v", tcpErr)
+			} else {
+				log.Errorf("r.CreateEndpoint() = %v", tcpErr)
+			}
 			return
 		}
 
-		p, _ := NewUDPProxy(&autoStoppingListener{underlying: gonet.NewUDPConn(s, &wq, ep)}, func() (net.Conn, error) {
+		p, _ := NewUDPProxy(&autoStoppingListener{underlying: gonet.NewUDPConn(&wq, ep)}, func() (net.Conn, error) {
 			return net.Dial("udp", fmt.Sprintf("%s:%d", localAddress, r.ID().LocalPort))
 		})
-		go p.Run()
+		go func() {
+			p.Run()
+
+			// note that at this point packets that are sent to the current forwarder session
+			// will be dropped. We will start processing the packets again when we get a new
+			// forwarder request.
+			ep.Close()
+		}()
 	})
 }
