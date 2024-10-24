@@ -28,7 +28,7 @@ import (
 //
 // +stateify savable
 type Buffer struct {
-	data viewList `state:".([]byte)"`
+	data ViewList `state:".([]byte)"`
 	size int64
 }
 
@@ -189,12 +189,9 @@ func (b *Buffer) GrowTo(length int64, zero bool) {
 			sz = int(length - b.size)
 		}
 
-		// Zero the written section; note that this pattern is
-		// specifically recognized and optimized by the compiler.
+		// Zero the written section.
 		if zero {
-			for i := v.write; i < v.write+sz; i++ {
-				v.chunk.data[i] = 0
-			}
+			clear(v.chunk.data[v.write : v.write+sz])
 		}
 
 		// Advance the index.
@@ -401,6 +398,12 @@ func (b *Buffer) Size() int64 {
 	return b.size
 }
 
+// AsViewList returns the ViewList backing b. Users may not save or modify the
+// ViewList returned.
+func (b *Buffer) AsViewList() ViewList {
+	return b.data
+}
+
 // Clone creates a copy-on-write clone of b. The underlying chunks are shared
 // until they are written to.
 func (b *Buffer) Clone() Buffer {
@@ -479,7 +482,7 @@ func (b *Buffer) Checksum(offset int) uint16 {
 // operation completes.
 func (b *Buffer) Merge(other *Buffer) {
 	b.data.PushBackList(&other.data)
-	other.data = viewList{}
+	other.data = ViewList{}
 
 	// Adjust sizes.
 	b.size += other.size
@@ -489,6 +492,18 @@ func (b *Buffer) Merge(other *Buffer) {
 // WriteFromReader writes to the buffer from an io.Reader. A maximum read size
 // of MaxChunkSize is enforced to prevent allocating views from the heap.
 func (b *Buffer) WriteFromReader(r io.Reader, count int64) (int64, error) {
+	return b.WriteFromReaderAndLimitedReader(r, count, nil)
+}
+
+// WriteFromReaderAndLimitedReader is the same as WriteFromReader, but
+// optimized to avoid allocations if a LimitedReader is passed in.
+//
+// This function clobbers the values of lr.
+func (b *Buffer) WriteFromReaderAndLimitedReader(r io.Reader, count int64, lr *io.LimitedReader) (int64, error) {
+	if lr == nil {
+		lr = &io.LimitedReader{}
+	}
+
 	var done int64
 	for done < count {
 		vsize := count - done
@@ -496,8 +511,9 @@ func (b *Buffer) WriteFromReader(r io.Reader, count int64) (int64, error) {
 			vsize = MaxChunkSize
 		}
 		v := NewView(int(vsize))
-		lr := io.LimitedReader{R: r, N: vsize}
-		n, err := io.Copy(v, &lr)
+		lr.R = r
+		lr.N = vsize
+		n, err := io.Copy(v, lr)
 		b.Append(v)
 		done += n
 		if err == io.EOF {
@@ -572,7 +588,7 @@ func (b *Buffer) readByte() (byte, error) {
 	return bt, nil
 }
 
-// AsBufferReader returns the Buffer as a BufferReader capabable of io methods.
+// AsBufferReader returns the Buffer as a BufferReader capable of io methods.
 // The new BufferReader takes ownership of b.
 func (b *Buffer) AsBufferReader() BufferReader {
 	return BufferReader{b}

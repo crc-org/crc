@@ -12,7 +12,7 @@ require (
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/containers/common v0.60.4
-	github.com/containers/gvisor-tap-vsock v0.7.5
+	github.com/containers/gvisor-tap-vsock v0.8.0
 	github.com/containers/image/v5 v5.32.2
 	github.com/containers/libhvee v0.7.1
 	github.com/coreos/go-systemd/v22 v22.5.0
@@ -161,6 +161,8 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/proglottis/gpgme v0.1.3 // indirect
+	github.com/qdm12/dns/v2 v2.0.0-rc6 // indirect
+	github.com/qdm12/gosettings v0.4.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
@@ -198,8 +200,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gvisor.dev/gvisor v0.0.0-20231023213702-2691a8f9b1cf // indirect
-	inet.af/tcpproxy v0.0.0-20231102063150-2862066fc2a9 // indirect
+	gvisor.dev/gvisor v0.0.0-20240916094835-a174eb65023f // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00 // indirect
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect

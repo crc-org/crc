@@ -21,13 +21,13 @@ import (
 )
 
 type VirtualDevice interface {
-	DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt stack.PacketBufferPtr)
+	DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer)
 	LinkAddress() tcpip.LinkAddress
 	IP() string
 }
 
 type NetworkSwitch interface {
-	DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt stack.PacketBufferPtr)
+	DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer)
 }
 
 type Switch struct {
@@ -72,7 +72,7 @@ func (e *Switch) Connect(ep VirtualDevice) {
 	e.gateway = ep
 }
 
-func (e *Switch) DeliverNetworkPacket(_ tcpip.NetworkProtocolNumber, pkt stack.PacketBufferPtr) {
+func (e *Switch) DeliverNetworkPacket(_ tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
 	if err := e.tx(pkt); err != nil {
 		log.Error(err)
 	}
@@ -80,7 +80,7 @@ func (e *Switch) DeliverNetworkPacket(_ tcpip.NetworkProtocolNumber, pkt stack.P
 
 func (e *Switch) Accept(ctx context.Context, rawConn net.Conn, protocol types.Protocol) error {
 	conn := protocolConn{Conn: rawConn, protocolImpl: protocolImplementation(protocol)}
-	log.Infof("new connection from %s to %s", conn.RemoteAddr().String(), conn.LocalAddr().String())
+	log.Debugf("new connection from %s to %s", conn.RemoteAddr().String(), conn.LocalAddr().String())
 	id, failed := e.connect(conn)
 	if failed {
 		log.Error("connection failed")
@@ -111,11 +111,11 @@ func (e *Switch) connect(conn protocolConn) (int, bool) {
 	return id, false
 }
 
-func (e *Switch) tx(pkt stack.PacketBufferPtr) error {
+func (e *Switch) tx(pkt *stack.PacketBuffer) error {
 	return e.txPkt(pkt)
 }
 
-func (e *Switch) txPkt(pkt stack.PacketBufferPtr) error {
+func (e *Switch) txPkt(pkt *stack.PacketBuffer) error {
 	e.writeLock.Lock()
 	defer e.writeLock.Unlock()
 

@@ -90,6 +90,8 @@ type IGMPEndpoint interface {
 }
 
 // IGMPOptions holds options for IGMP.
+//
+// +stateify savable
 type IGMPOptions struct {
 	// Enabled indicates whether IGMP will be performed.
 	//
@@ -107,6 +109,8 @@ var _ ip.MulticastGroupProtocol = (*igmpState)(nil)
 // igmpState is the per-interface IGMP state.
 //
 // igmpState.init() MUST be called after creating an IGMP state.
+//
+// +stateify savable
 type igmpState struct {
 	// The IPv4 endpoint this igmpState is for.
 	ep *endpoint
@@ -283,7 +287,7 @@ func (*igmpState) V2QueryMaxRespCodeToV1Delay(code uint16) time.Duration {
 func (igmp *igmpState) init(ep *endpoint) {
 	igmp.ep = ep
 	igmp.genericMulticastProtocol.Init(&ep.mu, ip.GenericMulticastProtocolOptions{
-		Rand:                      ep.protocol.stack.Rand(),
+		Rand:                      ep.protocol.stack.InsecureRNG(),
 		Clock:                     ep.protocol.stack.Clock(),
 		Protocol:                  igmp,
 		MaxUnsolicitedReportDelay: UnsolicitedReportIntervalMax,
@@ -328,7 +332,7 @@ func (igmp *igmpState) isSourceIPValidLocked(src tcpip.Address, messageType head
 }
 
 // +checklocks:igmp.ep.mu
-func (igmp *igmpState) isPacketValidLocked(pkt stack.PacketBufferPtr, messageType header.IGMPType, hasRouterAlertOption bool) bool {
+func (igmp *igmpState) isPacketValidLocked(pkt *stack.PacketBuffer, messageType header.IGMPType, hasRouterAlertOption bool) bool {
 	// We can safely assume that the IP header is valid if we got this far.
 	iph := header.IPv4(pkt.NetworkHeader().Slice())
 
@@ -346,7 +350,7 @@ func (igmp *igmpState) isPacketValidLocked(pkt stack.PacketBufferPtr, messageTyp
 // handleIGMP handles an IGMP packet.
 //
 // +checklocks:igmp.ep.mu
-func (igmp *igmpState) handleIGMP(pkt stack.PacketBufferPtr, hasRouterAlertOption bool) {
+func (igmp *igmpState) handleIGMP(pkt *stack.PacketBuffer, hasRouterAlertOption bool) {
 	received := igmp.ep.stats.igmp.packetsReceived
 	hdr, ok := pkt.Data().PullUp(pkt.Data().Size())
 	if !ok {
@@ -521,7 +525,7 @@ func (igmp *igmpState) writePacketInner(buf *buffer.View, reportStat tcpip.Multi
 	})
 	defer pkt.DecRef()
 
-	addressEndpoint := igmp.ep.acquireOutgoingPrimaryAddressRLocked(destAddress, false /* allowExpired */)
+	addressEndpoint := igmp.ep.acquireOutgoingPrimaryAddressRLocked(destAddress, tcpip.Address{} /* srcHint */, false /* allowExpired */)
 	if addressEndpoint == nil {
 		return false, nil
 	}
@@ -586,7 +590,7 @@ func (igmp *igmpState) softLeaveAll() {
 	igmp.genericMulticastProtocol.MakeAllNonMemberLocked()
 }
 
-// initializeAll attemps to initialize the IGMP state for each group that has
+// initializeAll attempts to initialize the IGMP state for each group that has
 // been joined locally.
 //
 // +checklocks:igmp.ep.mu
