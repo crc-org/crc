@@ -224,32 +224,25 @@ func TestGetBundleInfoFromNameValid(t *testing.T) {
 		{"crc_hyperv_4.18.0_arm64.crcbundle", preset.OpenShift.String(), "hyperv", "4.18.0", "arm64", ""},
 		{"crc_libvirt_4.18.0-ec.2_amd64.crcbundle", preset.OpenShift.String(), "libvirt", "4.18.0-ec.2", "amd64", ""},
 
-		{"crc_hyperv_4.18_x86.crcbundle", preset.OpenShift.String(), "hyperv", "4.18", "x86", ""},
-		{"crc_microshift_hyperv_4.18_x86.crcbundle", preset.Microshift.String(), "hyperv", "4.18", "x86", ""},
-		{"crc_microshift_hyperv_4.18_x86_1233.crcbundle", preset.Microshift.String(), "hyperv", "4.18", "x86", "1233"},
-		{"crc_hyperv_4.18_x86_4566.crcbundle", preset.OpenShift.String(), "hyperv", "4.18", "x86", "4566"},
-		{"crc_ABCdrv_4.18.0_x86_4566.crcbundle", preset.OpenShift.String(), "ABCdrv", "4.18.0", "x86", "4566"},
-		{"crc_ABCdrv_4.18.1.2_x86_4566.crcbundle", preset.OpenShift.String(), "ABCdrv", "4.18.1.2", "x86", "4566"},
-		{"crc_hyperv_4.18_x86.crcbundle", preset.OpenShift.String(), "hyperv", "4.18", "x86", ""},
+		{"crc_microshift_hyperv_4.18.0_x86.crcbundle", preset.Microshift.String(), "hyperv", "4.18.0", "x86", ""},
+		{"crc_microshift_hyperv_4.18.0_x86_1233.crcbundle", preset.Microshift.String(), "hyperv", "4.18.0", "x86", "1233"},
+		{"crc_hyperv_4.18.0_x86.crcbundle", preset.OpenShift.String(), "hyperv", "4.18.0", "x86", ""},
+		{"crc_hyperv_4.18.0_x86_123.crcbundle", preset.OpenShift.String(), "hyperv", "4.18.0", "x86", "123"},
 		{"crc_ABCdrv_4.18.0_x86.crcbundle", preset.OpenShift.String(), "ABCdrv", "4.18.0", "x86", ""},
-		{"crc_ABCdrv_4.18.1.2_x86.crcbundle", preset.OpenShift.String(), "ABCdrv", "4.18.1.2", "x86", ""},
-		{"crc_hyperv_4.18_64bit.crcbundle", preset.OpenShift.String(), "hyperv", "4.18", "64bit", ""},
-		{"crc_hyperv_4.1_64bit.crcbundle", preset.OpenShift.String(), "hyperv", "4.1", "64bit", ""},
+		{"crc_ABCdrv_4.18.0_x86_4566.crcbundle", preset.OpenShift.String(), "ABCdrv", "4.18.0", "x86", "4566"},
+		{"crc_hyperv_4.18.1_64bit.crcbundle", preset.OpenShift.String(), "hyperv", "4.18.1", "64bit", ""},
+		{"crc_hyperv_4.1.1-rc.0_64bit.crcbundle", preset.OpenShift.String(), "hyperv", "4.1.1-rc.0", "64bit", ""},
 
 		{"crc_openshift_libvirt_4.16.7_amd64.crcbundle", preset.OpenShift.String(), "libvirt", "4.16.7", "amd64", ""},
 		{"crc_openshift_libvirt_4.16.7_amd64_1.crcbundle", preset.OpenShift.String(), "libvirt", "4.16.7", "amd64", "1"},
-		{"crc_openshift_libvirt_00.00.00.00_amd64.crcbundle", preset.OpenShift.String(), "libvirt", "00.00.00.00", "amd64", ""},
-		{"crc_openshift_libvirt_00.00.00.00_amd64_100.crcbundle", preset.OpenShift.String(), "libvirt", "00.00.00.00", "amd64", "100"},
 		{"crc_libvirt_4.16.7_intel.crcbundle", preset.OpenShift.String(), "libvirt", "4.16.7", "intel", ""},
 		{"crc_libvirt_4.16.7_intel_23.crcbundle", preset.OpenShift.String(), "libvirt", "4.16.7", "intel", "23"},
 		{"crc_libvirt_4.16.7_64.crcbundle", preset.OpenShift.String(), "libvirt", "4.16.7", "64", ""},
 		{"crc_libvirt_4.16.7_64_132.crcbundle", preset.OpenShift.String(), "libvirt", "4.16.7", "64", "132"},
 		{"crc_microshift_libvirt_4.16.7_64.crcbundle", preset.Microshift.String(), "libvirt", "4.16.7", "64", ""},
 		{"crc_microshift_libvirt_4.16.7_64_123.crcbundle", preset.Microshift.String(), "libvirt", "4.16.7", "64", "123"},
-		{"crc_libvirt_4_amd64.crcbundle", preset.OpenShift.String(), "libvirt", "4", "amd64", ""},
-		{"crc_libvirt_4_amd64_0123.crcbundle", preset.OpenShift.String(), "libvirt", "4", "amd64", "0123"},
-		{"crc_okd_libvirt_4_amd64.crcbundle", preset.OKD.String(), "libvirt", "4", "amd64", ""},
-		{"crc_okd_libvirt_4_amd64_0123.crcbundle", preset.OKD.String(), "libvirt", "4", "amd64", "0123"},
+		{"crc_okd_libvirt_4.0.0_amd64.crcbundle", preset.OKD.String(), "libvirt", "4.0.0", "amd64", ""},
+		{"crc_okd_libvirt_4.0.0_amd64_0123.crcbundle", preset.OKD.String(), "libvirt", "4.0.0", "amd64", "0123"},
 	}
 
 	for _, parts := range valid {
@@ -266,6 +259,10 @@ func TestGetBundleInfoFromNameValid(t *testing.T) {
 func TestGetBundleInfoFromNameInvalid(t *testing.T) {
 	// missing version
 	_, err := GetBundleInfoFromName("crc_libvirt_amd64.crcbundle")
+	assert.Error(t, err)
+
+	// wrong version format
+	_, err = GetBundleInfoFromName("crc_hyperv_4.18_x86.crcbundle")
 	assert.Error(t, err)
 
 	// missing crc prefix

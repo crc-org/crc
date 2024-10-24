@@ -256,9 +256,21 @@ func GetBundleNameFromURI(bundleURI string) string {
 func GetBundleInfoFromName(bundleName string) (*FilenameInfo, error) {
 	var filenameInfo FilenameInfo
 
-	// crc_preset_driver_version_arch_customSuffix.crcbundle
-	bundleNameRegex := regexp.MustCompile(`crc(?:(?:_)([[:alpha:]]+))?_([[:alpha:]]+)_([[:alnum:].-]+)_([[:alnum:]]+)(?:(?:_)([0-9]+))?\.crcbundle`)
-	filenameParts := bundleNameRegex.FindStringSubmatch(bundleName)
+	/*
+		crc_preset_driver_version_arch_customSuffix.crcbundle
+
+		crc                      : Matches the fixed crc part
+		(?:(?:_)([[:alpha:]]+))? : Matches the preset part (optional)
+		([[:alpha:]]+)           : Matches the next mandatory alphabetic part (e.g., libvirt)
+		(%s = semverRegex)       : Matches the version in SemVer format (e.g., 4.16.7 or 4.16.7-ec.2)
+		([[:alnum:]]+)           : Matches the architecture or platform part (e.g. amd64)
+		(?:(?:_)([0-9]+))?       : Optionally matches a trailing number after an underscore (e.g. 2345).
+		\.crcbundle              : Matches the file extension .crcbundle
+	*/
+	semverRegex := "(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)(?:-(?:(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+(?:[0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?"
+	bundleRegex := `crc(?:(?:_)([[:alpha:]]+))?_([[:alpha:]]+)_(%s)_([[:alnum:]]+)(?:(?:_)([0-9]+))?\.crcbundle`
+	compiledRegex := regexp.MustCompile(fmt.Sprintf(bundleRegex, semverRegex))
+	filenameParts := compiledRegex.FindStringSubmatch(bundleName)
 
 	if filenameParts == nil {
 		return &filenameInfo, fmt.Errorf("bundle filename is in unrecognized format")
