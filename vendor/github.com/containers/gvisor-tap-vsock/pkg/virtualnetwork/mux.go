@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/containers/gvisor-tap-vsock/pkg/tcpproxy"
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	log "github.com/sirupsen/logrus"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv4"
-	"inet.af/tcpproxy"
 )
 
 func (n *VirtualNetwork) Mux() *http.ServeMux {

@@ -68,6 +68,7 @@
 package sleep
 
 import (
+	"context"
 	"sync/atomic"
 	"unsafe"
 
@@ -129,7 +130,7 @@ func (s *Sleeper) saveSharedList() *Waker {
 }
 
 // loadSharedList is invoked by stateify.
-func (s *Sleeper) loadSharedList(w *Waker) {
+func (s *Sleeper) loadSharedList(_ context.Context, w *Waker) {
 	atomic.StorePointer(&s.sharedList, unsafe.Pointer(w))
 }
 
@@ -206,7 +207,7 @@ func (s *Sleeper) nextWaker(block, wakepOrSleep bool) *Waker {
 			// See:runtime2.go in the go runtime package for
 			// the values to pass as the waitReason here.
 			const waitReasonSelect = 9
-			sync.Gopark(commitSleep, unsafe.Pointer(&s.waitingG), sync.WaitReasonSelect, sync.TraceEvGoBlockSelect, 0)
+			sync.Gopark(commitSleep, unsafe.Pointer(&s.waitingG), sync.WaitReasonSelect, sync.TraceBlockSelect, 0)
 		}
 
 		// Pull the shared list out and reverse it in the local
@@ -393,6 +394,7 @@ type Waker struct {
 	allWakersNext *Waker
 }
 
+// +stateify savable
 type wakerState struct {
 	asserted bool
 	other    *Sleeper
@@ -408,7 +410,7 @@ func (w *Waker) saveS() wakerState {
 }
 
 // loadS is invoked by stateify.
-func (w *Waker) loadS(ws wakerState) {
+func (w *Waker) loadS(_ context.Context, ws wakerState) {
 	if ws.asserted {
 		atomic.StorePointer(&w.s, unsafe.Pointer(&assertedSleeper))
 	} else {

@@ -95,8 +95,8 @@ github.com/cloudflare/circl/sign/ed448
 # github.com/containers/common v0.60.4
 ## explicit; go 1.21.0
 github.com/containers/common/pkg/strongunits
-# github.com/containers/gvisor-tap-vsock v0.7.5
-## explicit; go 1.21
+# github.com/containers/gvisor-tap-vsock v0.8.0
+## explicit; go 1.22.0
 github.com/containers/gvisor-tap-vsock/pkg/client
 github.com/containers/gvisor-tap-vsock/pkg/fs
 github.com/containers/gvisor-tap-vsock/pkg/net/stdio
@@ -105,6 +105,7 @@ github.com/containers/gvisor-tap-vsock/pkg/services/dns
 github.com/containers/gvisor-tap-vsock/pkg/services/forwarder
 github.com/containers/gvisor-tap-vsock/pkg/sshclient
 github.com/containers/gvisor-tap-vsock/pkg/tap
+github.com/containers/gvisor-tap-vsock/pkg/tcpproxy
 github.com/containers/gvisor-tap-vsock/pkg/transport
 github.com/containers/gvisor-tap-vsock/pkg/types
 github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork
@@ -650,6 +651,12 @@ github.com/power-devops/perfstat
 # github.com/proglottis/gpgme v0.1.3
 ## explicit; go 1.11
 github.com/proglottis/gpgme
+# github.com/qdm12/dns/v2 v2.0.0-rc6
+## explicit; go 1.21
+github.com/qdm12/dns/v2/pkg/nameserver
+# github.com/qdm12/gosettings v0.4.1
+## explicit; go 1.21
+github.com/qdm12/gosettings
 # github.com/r3labs/sse/v2 v2.10.0
 ## explicit; go 1.13
 github.com/r3labs/sse/v2
@@ -1036,8 +1043,8 @@ gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# gvisor.dev/gvisor v0.0.0-20231023213702-2691a8f9b1cf
-## explicit; go 1.20
+# gvisor.dev/gvisor v0.0.0-20240916094835-a174eb65023f
+## explicit; go 1.22.0
 gvisor.dev/gvisor/pkg/atomicbitops
 gvisor.dev/gvisor/pkg/bits
 gvisor.dev/gvisor/pkg/buffer
@@ -1082,9 +1089,6 @@ gvisor.dev/gvisor/pkg/tcpip/transport/tcp
 gvisor.dev/gvisor/pkg/tcpip/transport/tcpconntrack
 gvisor.dev/gvisor/pkg/tcpip/transport/udp
 gvisor.dev/gvisor/pkg/waiter
-# inet.af/tcpproxy v0.0.0-20231102063150-2862066fc2a9
-## explicit; go 1.16
-inet.af/tcpproxy
 # k8s.io/api v0.29.3
 ## explicit; go 1.21
 k8s.io/api/admissionregistration/v1

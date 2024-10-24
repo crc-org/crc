@@ -244,7 +244,7 @@ func (ds *decodeState) waitObject(ods *objectDecodeState, encoded wire.Object, c
 		// See decodeObject; we need to wait for the array (if non-nil).
 		ds.wait(ods, objectID(sv.Ref.Root), callback)
 	} else if iv, ok := encoded.(*wire.Interface); ok {
-		// It's an interface (wait recurisvely).
+		// It's an interface (wait recursively).
 		ds.waitObject(ods, iv.Value, callback)
 	} else if callback != nil {
 		// Nothing to wait for: execute the callback immediately.
@@ -385,7 +385,7 @@ func (ds *decodeState) decodeStruct(ods *objectDecodeState, obj reflect.Value, e
 	if sl, ok := obj.Addr().Interface().(SaverLoader); ok {
 		// Note: may be a registered empty struct which does not
 		// implement the saver/loader interfaces.
-		sl.StateLoad(Source{internal: od})
+		sl.StateLoad(ds.ctx, Source{internal: od})
 	}
 }
 
@@ -567,7 +567,7 @@ func (ds *decodeState) decodeObject(ods *objectDecodeState, obj reflect.Value, e
 	case *wire.Interface:
 		ds.decodeInterface(ods, obj, x)
 	default:
-		// Shoud not happen, not propagated as an error.
+		// Should not happen, not propagated as an error.
 		Failf("unknown object %#v for %q", encoded, obj.Type().Name())
 	}
 }
@@ -590,7 +590,7 @@ func (ds *decodeState) Load(obj reflect.Value) {
 	ds.pending.PushBack(rootOds)
 
 	// Read the number of objects.
-	numObjects, object, err := ReadHeader(ds.r)
+	numObjects, object, err := ReadHeader(&ds.r)
 	if err != nil {
 		Failf("header error: %w", err)
 	}
@@ -612,7 +612,7 @@ func (ds *decodeState) Load(obj reflect.Value) {
 		// decoding loop in state/pretty/pretty.printer.printStream().
 		for i := uint64(0); i < numObjects; {
 			// Unmarshal either a type object or object ID.
-			encoded = wire.Load(ds.r)
+			encoded = wire.Load(&ds.r)
 			switch we := encoded.(type) {
 			case *wire.Type:
 				ds.types.Register(we)
@@ -623,7 +623,7 @@ func (ds *decodeState) Load(obj reflect.Value) {
 				id = objectID(we)
 				i++
 				// Unmarshal and resolve the actual object.
-				encoded = wire.Load(ds.r)
+				encoded = wire.Load(&ds.r)
 				ods = ds.lookup(id)
 				if ods != nil {
 					// Decode the object.
@@ -691,7 +691,7 @@ func (ds *decodeState) Load(obj reflect.Value) {
 			}
 		}
 	}); err != nil {
-		Failf("error executing callbacks for %#v: %w", ods.obj.Interface(), err)
+		Failf("error executing callbacks: %w\nfor object %#v", err, ods.obj.Interface())
 	}
 
 	// Check if we have any remaining dependency cycles. If there are any
@@ -717,7 +717,7 @@ func (ds *decodeState) Load(obj reflect.Value) {
 // Each object written to the statefile is prefixed with a header. See
 // WriteHeader for more information; these functions are exported to allow
 // non-state writes to the file to play nice with debugging tools.
-func ReadHeader(r wire.Reader) (length uint64, object bool, err error) {
+func ReadHeader(r *wire.Reader) (length uint64, object bool, err error) {
 	// Read the header.
 	err = safely(func() {
 		length = wire.LoadUint(r)

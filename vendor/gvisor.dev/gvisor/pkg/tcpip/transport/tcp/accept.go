@@ -85,7 +85,7 @@ type listenContext struct {
 
 	// listenEP is a reference to the listening endpoint associated with
 	// this context. Can be nil if the context is created by the forwarder.
-	listenEP *endpoint
+	listenEP *Endpoint
 
 	// hasherMu protects hasher.
 	hasherMu sync.Mutex
@@ -107,7 +107,7 @@ func timeStamp(clock tcpip.Clock) uint32 {
 }
 
 // newListenContext creates a new listen context.
-func newListenContext(stk *stack.Stack, protocol *protocol, listenEP *endpoint, rcvWnd seqnum.Size, v6Only bool, netProto tcpip.NetworkProtocolNumber) *listenContext {
+func newListenContext(stk *stack.Stack, protocol *protocol, listenEP *Endpoint, rcvWnd seqnum.Size, v6Only bool, netProto tcpip.NetworkProtocolNumber) *listenContext {
 	l := &listenContext{
 		stack:    stk,
 		protocol: protocol,
@@ -119,7 +119,7 @@ func newListenContext(stk *stack.Stack, protocol *protocol, listenEP *endpoint, 
 	}
 
 	for i := range l.nonce {
-		if _, err := io.ReadFull(stk.SecureRNG(), l.nonce[i][:]); err != nil {
+		if _, err := io.ReadFull(stk.SecureRNG().Reader, l.nonce[i][:]); err != nil {
 			panic(err)
 		}
 	}
@@ -183,7 +183,7 @@ func (l *listenContext) isCookieValid(id stack.TransportEndpointID, cookie seqnu
 // the connection parameters given by the arguments. The newly created endpoint
 // will be locked.
 // +checklocksacquire:n.mu
-func (l *listenContext) createConnectingEndpoint(s *segment, rcvdSynOpts header.TCPSynOptions, queue *waiter.Queue) (n *endpoint, _ tcpip.Error) {
+func (l *listenContext) createConnectingEndpoint(s *segment, rcvdSynOpts header.TCPSynOptions, queue *waiter.Queue) (n *Endpoint, _ tcpip.Error) {
 	// Create a new endpoint.
 	netProto := l.netProto
 	if netProto == 0 {
@@ -302,7 +302,7 @@ func (l *listenContext) startHandshake(s *segment, opts header.TCPSynOptions, qu
 // established endpoint is returned.
 //
 // Precondition: if l.listenEP != nil, l.listenEP.mu must be locked.
-func (l *listenContext) performHandshake(s *segment, opts header.TCPSynOptions, queue *waiter.Queue, owner tcpip.PacketOwner) (*endpoint, tcpip.Error) {
+func (l *listenContext) performHandshake(s *segment, opts header.TCPSynOptions, queue *waiter.Queue, owner tcpip.PacketOwner) (*Endpoint, tcpip.Error) {
 	waitEntry, notifyCh := waiter.NewChannelEntry(waiter.WritableEvents)
 	queue.EventRegister(&waitEntry)
 	defer queue.EventUnregister(&waitEntry)
@@ -357,7 +357,7 @@ func (l *listenContext) performHandshake(s *segment, opts header.TCPSynOptions, 
 //
 // +checklocks:e.mu
 // +checklocks:n.mu
-func (e *endpoint) propagateInheritableOptionsLocked(n *endpoint) {
+func (e *Endpoint) propagateInheritableOptionsLocked(n *Endpoint) {
 	n.userTimeout = e.userTimeout
 	n.portFlags = e.portFlags
 	n.boundBindToDevice = e.boundBindToDevice
@@ -370,7 +370,7 @@ func (e *endpoint) propagateInheritableOptionsLocked(n *endpoint) {
 // Precondition: e.propagateInheritableOptionsLocked has been called.
 //
 // +checklocks:e.mu
-func (e *endpoint) reserveTupleLocked() bool {
+func (e *Endpoint) reserveTupleLocked() bool {
 	dest := tcpip.FullAddress{
 		Addr: e.TransportEndpointInfo.ID.RemoteAddress,
 		Port: e.TransportEndpointInfo.ID.RemotePort,
@@ -400,11 +400,11 @@ func (e *endpoint) reserveTupleLocked() bool {
 // This is strictly not required normally as a socket that was never accepted
 // can't really have any registered waiters except when stack.Wait() is called
 // which waits for all registered endpoints to stop and expects an EventHUp.
-func (e *endpoint) notifyAborted() {
+func (e *Endpoint) notifyAborted() {
 	e.waiterQueue.Notify(waiter.EventHUp | waiter.EventErr | waiter.ReadableEvents | waiter.WritableEvents)
 }
 
-func (e *endpoint) acceptQueueIsFull() bool {
+func (e *Endpoint) acceptQueueIsFull() bool {
 	e.acceptMu.Lock()
 	full := e.acceptQueue.isFull()
 	e.acceptMu.Unlock()
@@ -416,11 +416,11 @@ type acceptQueue struct {
 	// NB: this could be an endpointList, but ilist only permits endpoints to
 	// belong to one list at a time, and endpoints are already stored in the
 	// dispatcher's list.
-	endpoints list.List `state:".([]*endpoint)"`
+	endpoints list.List `state:".([]*Endpoint)"`
 
 	// pendingEndpoints is a set of all endpoints for which a handshake is
 	// in progress.
-	pendingEndpoints map[*endpoint]struct{}
+	pendingEndpoints map[*Endpoint]struct{}
 
 	// capacity is the maximum number of endpoints that can be in endpoints.
 	capacity int
@@ -434,7 +434,7 @@ func (a *acceptQueue) isFull() bool {
 // and needs to handle it.
 //
 // +checklocks:e.mu
-func (e *endpoint) handleListenSegment(ctx *listenContext, s *segment) tcpip.Error {
+func (e *Endpoint) handleListenSegment(ctx *listenContext, s *segment) tcpip.Error {
 	e.rcvQueueMu.Lock()
 	rcvClosed := e.RcvClosed
 	e.rcvQueueMu.Unlock()
@@ -544,6 +544,39 @@ func (e *endpoint) handleListenSegment(ctx *listenContext, s *segment) tcpip.Err
 		iss := s.ackNumber - 1
 		irs := s.sequenceNumber - 1
 
+		// As an edge case when SYN-COOKIES are in use and we receive a
+		// segment that has data and is valid we should check if it
+		// already matches a created endpoint and redirect the segment
+		// rather than try and create a new endpoint. This can happen
+		// where the final ACK for the handshake and other data packets
+		// arrive at the same time and are queued to the listening
+		// endpoint before the listening endpoint has had time to
+		// process the first ACK and create the endpoint that matches
+		// the incoming packet's full 5 tuple.
+		netProtos := []tcpip.NetworkProtocolNumber{s.pkt.NetworkProtocolNumber}
+		// If the local address is an IPv4 Address then also look for IPv6
+		// dual stack endpoints.
+		if s.id.LocalAddress.To4() != (tcpip.Address{}) {
+			netProtos = []tcpip.NetworkProtocolNumber{header.IPv4ProtocolNumber, header.IPv6ProtocolNumber}
+		}
+		for _, netProto := range netProtos {
+			if newEP := e.stack.FindTransportEndpoint(netProto, ProtocolNumber, s.id, s.pkt.NICID); newEP != nil && newEP != e {
+				tcpEP := newEP.(*Endpoint)
+				if !tcpEP.EndpointState().connected() {
+					continue
+				}
+				if !tcpEP.enqueueSegment(s) {
+					// Just silently drop the segment as we failed
+					// to queue, we don't want to generate a RST
+					// further below or try and create a new
+					// endpoint etc.
+					return nil
+				}
+				tcpEP.notifyProcessor()
+				return nil
+			}
+		}
+
 		// Since SYN cookies are in use this is potentially an ACK to a
 		// SYN-ACK we sent but don't have a half open connection state
 		// as cookies are being used to protect against a potential SYN
@@ -575,39 +608,6 @@ func (e *endpoint) handleListenSegment(ctx *listenContext, s *segment) tcpip.Err
 			// was opened and closed really quickly and a delayed
 			// ACK was received from the sender.
 			return replyWithReset(e.stack, s, e.sendTOS, e.ipv4TTL, e.ipv6HopLimit)
-		}
-
-		// As an edge case when SYN-COOKIES are in use and we receive a
-		// segment that has data and is valid we should check if it
-		// already matches a created endpoint and redirect the segment
-		// rather than try and create a new endpoint. This can happen
-		// where the final ACK for the handshake and other data packets
-		// arrive at the same time and are queued to the listening
-		// endpoint before the listening endpoint has had time to
-		// process the first ACK and create the endpoint that matches
-		// the incoming packet's full 5 tuple.
-		netProtos := []tcpip.NetworkProtocolNumber{s.pkt.NetworkProtocolNumber}
-		// If the local address is an IPv4 Address then also look for IPv6
-		// dual stack endpoints.
-		if s.id.LocalAddress.To4() != (tcpip.Address{}) {
-			netProtos = []tcpip.NetworkProtocolNumber{header.IPv4ProtocolNumber, header.IPv6ProtocolNumber}
-		}
-		for _, netProto := range netProtos {
-			if newEP := e.stack.FindTransportEndpoint(netProto, ProtocolNumber, s.id, s.pkt.NICID); newEP != nil && newEP != e {
-				tcpEP := newEP.(*endpoint)
-				if !tcpEP.EndpointState().connected() {
-					continue
-				}
-				if !tcpEP.enqueueSegment(s) {
-					// Just silently drop the segment as we failed
-					// to queue, we don't want to generate a RST
-					// further below or try and create a new
-					// endpoint etc.
-					return nil
-				}
-				tcpEP.notifyProcessor()
-				return nil
-			}
 		}
 
 		// Keep hold of acceptMu until the new endpoint is in the accept queue (or

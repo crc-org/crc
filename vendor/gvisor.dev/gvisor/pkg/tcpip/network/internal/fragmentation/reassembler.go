@@ -23,6 +23,7 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 )
 
+// +stateify savable
 type hole struct {
 	first  uint16
 	last   uint16
@@ -30,20 +31,21 @@ type hole struct {
 	final  bool
 	// pkt is the fragment packet if hole is filled. We keep the whole pkt rather
 	// than the fragmented payload to prevent binding to specific buffer types.
-	pkt stack.PacketBufferPtr
+	pkt *stack.PacketBuffer
 }
 
+// +stateify savable
 type reassembler struct {
 	reassemblerEntry
 	id        FragmentID
 	memSize   int
 	proto     uint8
-	mu        sync.Mutex
+	mu        sync.Mutex `state:"nosave"`
 	holes     []hole
 	filled    int
 	done      bool
 	createdAt tcpip.MonotonicTime
-	pkt       stack.PacketBufferPtr
+	pkt       *stack.PacketBuffer
 }
 
 func newReassembler(id FragmentID, clock tcpip.Clock) *reassembler {
@@ -60,7 +62,7 @@ func newReassembler(id FragmentID, clock tcpip.Clock) *reassembler {
 	return r
 }
 
-func (r *reassembler) process(first, last uint16, more bool, proto uint8, pkt stack.PacketBufferPtr) (stack.PacketBufferPtr, uint8, bool, int, error) {
+func (r *reassembler) process(first, last uint16, more bool, proto uint8, pkt *stack.PacketBuffer) (*stack.PacketBuffer, uint8, bool, int, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if r.done {
@@ -145,7 +147,7 @@ func (r *reassembler) process(first, last uint16, more bool, proto uint8, pkt st
 		// options received in the first fragment should be used - and they should
 		// override options from following fragments.
 		if first == 0 {
-			if !r.pkt.IsNil() {
+			if r.pkt != nil {
 				r.pkt.DecRef()
 			}
 			r.pkt = pkt.IncRef()

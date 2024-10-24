@@ -18,6 +18,7 @@
 package cpuid
 
 import (
+	"context"
 	"fmt"
 	"io"
 )
@@ -56,7 +57,7 @@ func (fs *FeatureSet) saveFunction() Static {
 }
 
 // loadFunction saves the function as a static query.
-func (fs *FeatureSet) loadFunction(s Static) {
+func (fs *FeatureSet) loadFunction(_ context.Context, s Static) {
 	fs.Function = s
 }
 
@@ -307,9 +308,9 @@ func (fs FeatureSet) HasFeature(feature Feature) bool {
 
 // WriteCPUInfoTo is to generate a section of one cpu in /proc/cpuinfo. This is
 // a minimal /proc/cpuinfo, it is missing some fields like "microcode" that are
-// not always printed in Linux. The bogomips field is simply made up.
-func (fs FeatureSet) WriteCPUInfoTo(cpu uint, w io.Writer) {
-	// Avoid many redunant calls here, since this can occasionally appear
+// not always printed in Linux. Several fields are simply made up.
+func (fs FeatureSet) WriteCPUInfoTo(cpu, numCPU uint, w io.Writer) {
+	// Avoid many redundant calls here, since this can occasionally appear
 	// in the hot path. Read all basic information up front, see above.
 	ax, _, _, _ := fs.query(featureInfo)
 	ef, em, _, f, m, _ := signatureSplit(ax)
@@ -321,6 +322,19 @@ func (fs FeatureSet) WriteCPUInfoTo(cpu uint, w io.Writer) {
 	fmt.Fprintf(w, "model name\t: %s\n", "unknown") // Unknown for now.
 	fmt.Fprintf(w, "stepping\t: %s\n", "unknown")   // Unknown for now.
 	fmt.Fprintf(w, "cpu MHz\t\t: %.3f\n", cpuFreqMHz)
+	// Pretend the CPU has 8192 KB of cache. Note that real /proc/cpuinfo exposes total L3 cache
+	// size on Intel and per-core L2 cache size on AMD (as of Linux 6.1.0), so the value of this
+	// field is not really important in practice. Any value that is chosen here will be wrong
+	// by an order of magnitude on a significant chunk of x86 machines.
+	// 8192 KB is selected because it is a reasonable size that will be effectively usable on
+	// lightly loaded machines - most machines have 1-4MB of L3 cache per core.
+	fmt.Fprintf(w, "cache size\t: 8192 KB\n")
+	fmt.Fprintf(w, "physical id\t: 0\n") // Pretend all CPUs are in the same socket.
+	fmt.Fprintf(w, "siblings\t: %d\n", numCPU)
+	fmt.Fprintf(w, "core id\t\t: %d\n", cpu)
+	fmt.Fprintf(w, "cpu cores\t: %d\n", numCPU) // Pretend each CPU is a distinct core (rather than a hyperthread).
+	fmt.Fprintf(w, "apicid\t\t: %d\n", cpu)
+	fmt.Fprintf(w, "initial apicid\t: %d\n", cpu)
 	fmt.Fprintf(w, "fpu\t\t: yes\n")
 	fmt.Fprintf(w, "fpu_exception\t: yes\n")
 	fmt.Fprintf(w, "cpuid level\t: %d\n", uint32(xSaveInfo)) // Same as ax in vendorID.
@@ -361,8 +375,22 @@ func (fs FeatureSet) Intel() bool {
 // If xSaveInfo isn't supported, cpuid will not fault but will
 // return bogus values.
 var (
-	xsaveSize    = native(In{Eax: uint32(xSaveInfo)}).Ebx
-	maxXsaveSize = native(In{Eax: uint32(xSaveInfo)}).Ecx
+	xsaveSize       = native(In{Eax: uint32(xSaveInfo)}).Ebx
+	maxXsaveSize    = native(In{Eax: uint32(xSaveInfo)}).Ecx
+	amxTileCfgSize  = native(In{Eax: uint32(xSaveInfo), Ecx: 17}).Eax
+	amxTileDataSize = native(In{Eax: uint32(xSaveInfo), Ecx: 18}).Eax
+)
+
+const (
+	// XCR0AMXMask are the bits that enable xsave to operate on AMX TILECFG
+	// and TILEDATA.
+	//
+	// Note: TILECFG and TILEDATA are always either both enabled or both
+	//       disabled.
+	//
+	// See Intel® 64 and IA-32 Architectures Software Developer’s Manual Vol.1
+	// section 13.3 for details.
+	XCR0AMXMask = uint64((1 << 17) | (1 << 18))
 )
 
 // ExtendedStateSize returns the number of bytes needed to save the "extended
@@ -384,7 +412,22 @@ func (fs FeatureSet) ExtendedStateSize() (size, align uint) {
 	return 512, 16
 }
 
+// AMXExtendedStateSize returns the number of bytes within the "extended state"
+// area that is used for AMX.
+func (fs FeatureSet) AMXExtendedStateSize() uint {
+	if fs.UseXsave() {
+		xcr0 := xgetbv(0)
+		if (xcr0 & XCR0AMXMask) != 0 {
+			return uint(amxTileCfgSize + amxTileDataSize)
+		}
+	}
+	return 0
+}
+
 // ValidXCR0Mask returns the valid bits in control register XCR0.
+//
+// Always exclude AMX bits, because we do not support it.
+// TODO(gvisor.dev/issues/9896): Implement AMX Support.
 //
 //go:nosplit
 func (fs FeatureSet) ValidXCR0Mask() uint64 {
@@ -392,7 +435,7 @@ func (fs FeatureSet) ValidXCR0Mask() uint64 {
 		return 0
 	}
 	ax, _, _, dx := fs.query(xSaveInfo)
-	return uint64(dx)<<32 | uint64(ax)
+	return (uint64(dx)<<32 | uint64(ax)) &^ XCR0AMXMask
 }
 
 // UseXsave returns the choice of fp state saving instruction.

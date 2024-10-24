@@ -26,6 +26,8 @@ import (
 )
 
 // RouteTable represents a multicast routing table.
+//
+// +stateify savable
 type RouteTable struct {
 	// Internally, installed and pending routes are stored and locked separately
 	// A couple of reasons for structuring the table this way:
@@ -43,13 +45,13 @@ type RouteTable struct {
 	// lock. This ensures that installed routes can continue to be read even when
 	// the pending routes are write locked.
 
-	installedMu sync.RWMutex
+	installedMu sync.RWMutex `state:"nosave"`
 	// Maintaining pointers ensures that the installed routes are exclusively
 	// locked only when a route is being installed.
 	// +checklocks:installedMu
 	installedRoutes map[stack.UnicastSourceAndMulticastDestination]*InstalledRoute
 
-	pendingMu sync.RWMutex
+	pendingMu sync.RWMutex `state:"nosave"`
 	// +checklocks:pendingMu
 	pendingRoutes map[stack.UnicastSourceAndMulticastDestination]PendingRoute
 	// cleanupPendingRoutesTimer is a timer that triggers a routine to remove
@@ -79,10 +81,12 @@ var (
 //
 // If a route is in the installed state, then it may be used to forward
 // multicast packets.
+//
+// +stateify savable
 type InstalledRoute struct {
 	stack.MulticastRoute
 
-	lastUsedTimestampMu sync.RWMutex
+	lastUsedTimestampMu sync.RWMutex `state:"nosave"`
 	// +checklocks:lastUsedTimestampMu
 	lastUsedTimestamp tcpip.MonotonicTime
 }
@@ -115,8 +119,10 @@ func (r *InstalledRoute) SetLastUsedTimestamp(monotonicTime tcpip.MonotonicTime)
 // A route is in the pending state if an installed route does not yet exist
 // for the entry. For such routes, packets are added to an expiring queue until
 // a route is installed.
+//
+// +stateify savable
 type PendingRoute struct {
-	packets []stack.PacketBufferPtr
+	packets []*stack.PacketBuffer
 
 	// expiration is the timestamp at which the pending route should be expired.
 	//
@@ -159,6 +165,8 @@ const (
 )
 
 // Config represents the options for configuring a RouteTable.
+//
+// +stateify savable
 type Config struct {
 	// MaxPendingQueueSize corresponds to the maximum number of queued packets
 	// for a pending route.
@@ -265,7 +273,7 @@ func (r *RouteTable) cleanupPendingRoutes() {
 
 func (r *RouteTable) newPendingRoute() PendingRoute {
 	return PendingRoute{
-		packets:    make([]stack.PacketBufferPtr, 0, r.config.MaxPendingQueueSize),
+		packets:    make([]*stack.PacketBuffer, 0, r.config.MaxPendingQueueSize),
 		expiration: r.config.Clock.NowMonotonic().Add(DefaultPendingRouteExpiration),
 	}
 }
@@ -326,7 +334,7 @@ func (e GetRouteResultState) String() string {
 //
 // If the relevant pending route queue is at max capacity, then returns false.
 // Otherwise, returns true.
-func (r *RouteTable) GetRouteOrInsertPending(key stack.UnicastSourceAndMulticastDestination, pkt stack.PacketBufferPtr) (GetRouteResult, bool) {
+func (r *RouteTable) GetRouteOrInsertPending(key stack.UnicastSourceAndMulticastDestination, pkt *stack.PacketBuffer) (GetRouteResult, bool) {
 	r.installedMu.RLock()
 	defer r.installedMu.RUnlock()
 
@@ -374,7 +382,7 @@ func (r *RouteTable) getOrCreatePendingRouteRLocked(key stack.UnicastSourceAndMu
 // returned. The caller assumes ownership of these packets and is responsible
 // for forwarding and releasing them. If an installed route already exists for
 // the provided key, then it is overwritten.
-func (r *RouteTable) AddInstalledRoute(key stack.UnicastSourceAndMulticastDestination, route *InstalledRoute) []stack.PacketBufferPtr {
+func (r *RouteTable) AddInstalledRoute(key stack.UnicastSourceAndMulticastDestination, route *InstalledRoute) []*stack.PacketBuffer {
 	r.installedMu.Lock()
 	defer r.installedMu.Unlock()
 	r.installedRoutes[key] = route

@@ -56,14 +56,14 @@ func (e *LinkEndpoint) IsAttached() bool {
 	return e.dispatcher != nil
 }
 
-func (e *LinkEndpoint) DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt stack.PacketBufferPtr) {
+func (e *LinkEndpoint) DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
 	e.dispatcher.DeliverNetworkPacket(protocol, pkt)
 }
 
-func (e *LinkEndpoint) AddHeader(_ stack.PacketBufferPtr) {
+func (e *LinkEndpoint) AddHeader(_ *stack.PacketBuffer) {
 }
 
-func (e *LinkEndpoint) ParseHeader(stack.PacketBufferPtr) bool { return true }
+func (e *LinkEndpoint) ParseHeader(*stack.PacketBuffer) bool { return true }
 
 func (e *LinkEndpoint) Capabilities() stack.LinkEndpointCapabilities {
 	return stack.CapabilityResolutionRequired | stack.CapabilityRXChecksumOffload
@@ -71,6 +71,10 @@ func (e *LinkEndpoint) Capabilities() stack.LinkEndpointCapabilities {
 
 func (e *LinkEndpoint) LinkAddress() tcpip.LinkAddress {
 	return e.mac
+}
+
+func (e *LinkEndpoint) SetLinkAddress(addr tcpip.LinkAddress) {
+	e.mac = addr
 }
 
 func (e *LinkEndpoint) MaxHeaderLength() uint16 {
@@ -81,8 +85,13 @@ func (e *LinkEndpoint) MTU() uint32 {
 	return uint32(e.mtu)
 }
 
-func (e *LinkEndpoint) Wait() {
+func (e *LinkEndpoint) SetMTU(mtu uint32) {
+	e.mtu = int(mtu)
 }
+
+func (e *LinkEndpoint) Wait()                     {}
+func (e *LinkEndpoint) Close()                    {}
+func (e *LinkEndpoint) SetOnCloseAction(_ func()) {}
 
 func (e *LinkEndpoint) WritePackets(pkts stack.PacketBufferList) (int, tcpip.Error) {
 	n := 0
@@ -95,7 +104,7 @@ func (e *LinkEndpoint) WritePackets(pkts stack.PacketBufferList) (int, tcpip.Err
 	return n, nil
 }
 
-func (e *LinkEndpoint) writePacket(r stack.RouteInfo, protocol tcpip.NetworkProtocolNumber, pkt stack.PacketBufferPtr) tcpip.Error {
+func (e *LinkEndpoint) writePacket(r stack.RouteInfo, protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) tcpip.Error {
 	// Preserve the src address if it's set in the route.
 	srcAddr := e.LinkAddress()
 	if r.LocalLinkAddress != "" {
@@ -128,7 +137,7 @@ func (e *LinkEndpoint) writePacket(r stack.RouteInfo, protocol tcpip.NetworkProt
 	return nil
 }
 
-func (e *LinkEndpoint) WriteRawPacket(_ stack.PacketBufferPtr) tcpip.Error {
+func (e *LinkEndpoint) WriteRawPacket(_ *stack.PacketBuffer) tcpip.Error {
 	return &tcpip.ErrNotSupported{}
 }
 

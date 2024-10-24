@@ -21,7 +21,6 @@ import (
 	"math"
 	"time"
 
-	"gvisor.dev/gvisor/pkg/buffer"
 	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/checksum"
@@ -40,7 +39,7 @@ type udpPacket struct {
 	senderAddress      tcpip.FullAddress
 	destinationAddress tcpip.FullAddress
 	packetInfo         tcpip.IPPacketInfo
-	pkt                stack.PacketBufferPtr
+	pkt                *stack.PacketBuffer
 	receivedAt         time.Time `state:".(int64)"`
 	// tosOrTClass stores either the Type of Service for IPv4 or the Traffic Class
 	// for IPv6.
@@ -64,7 +63,6 @@ type endpoint struct {
 	// change throughout the lifetime of the endpoint.
 	stack       *stack.Stack `state:"manual"`
 	waiterQueue *waiter.Queue
-	uniqueID    uint64
 	net         network.Endpoint
 	stats       tcpip.TransportEndpointStats
 	ops         tcpip.SocketOptions
@@ -111,7 +109,6 @@ func newEndpoint(s *stack.Stack, netProto tcpip.NetworkProtocolNumber, waiterQue
 	e := &endpoint{
 		stack:       s,
 		waiterQueue: waiterQueue,
-		uniqueID:    s.UniqueID(),
 	}
 	e.ops.InitHandler(e, e.stack, tcpip.GetStackSendBufferLimits, tcpip.GetStackReceiveBufferLimits)
 	e.ops.SetMulticastLoop(true)
@@ -136,11 +133,6 @@ func newEndpoint(s *stack.Stack, netProto tcpip.NetworkProtocolNumber, waiterQue
 // WakeupWriters implements tcpip.SocketOptionsHandler.
 func (e *endpoint) WakeupWriters() {
 	e.net.MaybeSignalWritable()
-}
-
-// UniqueID implements stack.TransportEndpoint.
-func (e *endpoint) UniqueID() uint64 {
-	return e.uniqueID
 }
 
 func (e *endpoint) LastError() tcpip.Error {
@@ -436,16 +428,8 @@ func (e *endpoint) prepareForWrite(p tcpip.Payloader, opts tcpip.WriteOptions) (
 		return udpPacketInfo{}, &tcpip.ErrMessageTooLong{}
 	}
 
-	var buf buffer.Buffer
-	if _, err := buf.WriteFromReader(p, int64(p.Len())); err != nil {
-		buf.Release()
-		ctx.Release()
-		return udpPacketInfo{}, &tcpip.ErrBadBuffer{}
-	}
-
 	return udpPacketInfo{
 		ctx:        ctx,
-		data:       buf,
 		localPort:  e.localPort,
 		remotePort: dst.Port,
 	}, nil
@@ -473,10 +457,10 @@ func (e *endpoint) write(p tcpip.Payloader, opts tcpip.WriteOptions) (int64, tcp
 	}
 	defer udpInfo.ctx.Release()
 
-	dataSz := udpInfo.data.Size()
+	dataSz := p.Len()
 	pktInfo := udpInfo.ctx.PacketInfo()
-	pkt := udpInfo.ctx.TryNewPacketBuffer(header.UDPMinimumSize+int(pktInfo.MaxHeaderLength), udpInfo.data)
-	if pkt.IsNil() {
+	pkt := udpInfo.ctx.TryNewPacketBufferFromPayloader(header.UDPMinimumSize+int(pktInfo.MaxHeaderLength), p)
+	if pkt == nil {
 		return 0, &tcpip.ErrWouldBlock{}
 	}
 	defer pkt.DecRef()
@@ -593,7 +577,6 @@ func (e *endpoint) GetSockOpt(opt tcpip.GettableSocketOption) tcpip.Error {
 // udpPacketInfo holds information needed to send a UDP packet.
 type udpPacketInfo struct {
 	ctx        network.WriteContext
-	data       buffer.Buffer
 	localPort  uint16
 	remotePort uint16
 }
@@ -679,16 +662,16 @@ func (e *endpoint) Connect(addr tcpip.FullAddress) tcpip.Error {
 
 		oldPortFlags := e.boundPortFlags
 
-		nextID, btd, err := e.registerWithStack(netProtos, nextID)
-		if err != nil {
-			return err
-		}
-
 		// Remove the old registration.
 		if e.localPort != 0 {
 			previousID.LocalPort = e.localPort
 			previousID.RemotePort = e.remotePort
 			e.stack.UnregisterTransportEndpoint(e.effectiveNetProtos, ProtocolNumber, previousID, e, oldPortFlags, e.boundBindToDevice)
+		}
+
+		nextID, btd, err := e.registerWithStack(netProtos, nextID)
+		if err != nil {
+			return err
 		}
 
 		e.localPort = nextID.LocalPort
@@ -773,7 +756,7 @@ func (e *endpoint) registerWithStack(netProtos []tcpip.NetworkProtocolNumber, id
 			BindToDevice: bindToDevice,
 			Dest:         tcpip.FullAddress{},
 		}
-		port, err := e.stack.ReservePort(e.stack.Rand(), portRes, nil /* testPort */)
+		port, err := e.stack.ReservePort(e.stack.SecureRNG(), portRes, nil /* testPort */)
 		if err != nil {
 			return id, bindToDevice, err
 		}
@@ -908,7 +891,7 @@ func (e *endpoint) Readiness(mask waiter.EventMask) waiter.EventMask {
 
 // HandlePacket is called by the stack when new packets arrive to this transport
 // endpoint.
-func (e *endpoint) HandlePacket(id stack.TransportEndpointID, pkt stack.PacketBufferPtr) {
+func (e *endpoint) HandlePacket(id stack.TransportEndpointID, pkt *stack.PacketBuffer) {
 	// Get the header then trim it from the view.
 	hdr := header.UDP(pkt.TransportHeader().Slice())
 	netHdr := pkt.Network()
@@ -1000,7 +983,7 @@ func (e *endpoint) HandlePacket(id stack.TransportEndpointID, pkt stack.PacketBu
 	}
 }
 
-func (e *endpoint) onICMPError(err tcpip.Error, transErr stack.TransportError, pkt stack.PacketBufferPtr) {
+func (e *endpoint) onICMPError(err tcpip.Error, transErr stack.TransportError, pkt *stack.PacketBuffer) {
 	// Update last error first.
 	e.lastErrorMu.Lock()
 	e.lastError = err
@@ -1050,7 +1033,7 @@ func (e *endpoint) onICMPError(err tcpip.Error, transErr stack.TransportError, p
 }
 
 // HandleError implements stack.TransportEndpoint.
-func (e *endpoint) HandleError(transErr stack.TransportError, pkt stack.PacketBufferPtr) {
+func (e *endpoint) HandleError(transErr stack.TransportError, pkt *stack.PacketBuffer) {
 	// TODO(gvisor.dev/issues/5270): Handle all transport errors.
 	switch transErr.Kind() {
 	case stack.DestinationPortUnreachableTransportError:

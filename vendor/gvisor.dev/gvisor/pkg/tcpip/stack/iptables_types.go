@@ -84,7 +84,7 @@ type IPTables struct {
 
 	reaper tcpip.Timer
 
-	mu ipTablesRWMutex
+	mu ipTablesRWMutex `state:"nosave"`
 	// v4Tables and v6tables map tableIDs to tables. They hold builtin
 	// tables only, not user tables.
 	//
@@ -101,6 +101,14 @@ type IPTables struct {
 	//
 	// +checklocks:mu
 	modified bool
+}
+
+// Modified returns whether iptables has been modified. It is inherently racy
+// and intended for use only in tests.
+func (it *IPTables) Modified() bool {
+	it.mu.Lock()
+	defer it.mu.Unlock()
+	return it.modified
 }
 
 // VisitTargets traverses all the targets of all tables and replaces each with
@@ -235,11 +243,31 @@ type IPHeaderFilter struct {
 	OutputInterfaceInvert bool
 }
 
+// EmptyFilter4 returns an initialized IPv4 header filter.
+func EmptyFilter4() IPHeaderFilter {
+	return IPHeaderFilter{
+		Dst:     tcpip.AddrFrom4([4]byte{}),
+		DstMask: tcpip.AddrFrom4([4]byte{}),
+		Src:     tcpip.AddrFrom4([4]byte{}),
+		SrcMask: tcpip.AddrFrom4([4]byte{}),
+	}
+}
+
+// EmptyFilter6 returns an initialized IPv6 header filter.
+func EmptyFilter6() IPHeaderFilter {
+	return IPHeaderFilter{
+		Dst:     tcpip.AddrFrom16([16]byte{}),
+		DstMask: tcpip.AddrFrom16([16]byte{}),
+		Src:     tcpip.AddrFrom16([16]byte{}),
+		SrcMask: tcpip.AddrFrom16([16]byte{}),
+	}
+}
+
 // match returns whether pkt matches the filter.
 //
 // Preconditions: pkt.NetworkHeader is set and is at least of the minimal IPv4
 // or IPv6 header length.
-func (fl IPHeaderFilter) match(pkt PacketBufferPtr, hook Hook, inNicName, outNicName string) bool {
+func (fl IPHeaderFilter) match(pkt *PacketBuffer, hook Hook, inNicName, outNicName string) bool {
 	// Extract header fields.
 	var (
 		transProto tcpip.TransportProtocolNumber
@@ -347,7 +375,7 @@ type Matcher interface {
 	// used for suspicious packets.
 	//
 	// Precondition: packet.NetworkHeader is set.
-	Match(hook Hook, packet PacketBufferPtr, inputInterfaceName, outputInterfaceName string) (matches bool, hotdrop bool)
+	Match(hook Hook, packet *PacketBuffer, inputInterfaceName, outputInterfaceName string) (matches bool, hotdrop bool)
 }
 
 // A Target is the interface for taking an action for a packet.
@@ -355,5 +383,5 @@ type Target interface {
 	// Action takes an action on the packet and returns a verdict on how
 	// traversal should (or should not) continue. If the return value is
 	// Jump, it also returns the index of the rule to jump to.
-	Action(PacketBufferPtr, Hook, *Route, AddressableEndpoint) (RuleVerdict, int)
+	Action(*PacketBuffer, Hook, *Route, AddressableEndpoint) (RuleVerdict, int)
 }

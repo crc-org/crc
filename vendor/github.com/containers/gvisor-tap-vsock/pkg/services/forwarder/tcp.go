@@ -6,13 +6,13 @@ import (
 	"net"
 	"sync"
 
+	"github.com/containers/gvisor-tap-vsock/pkg/tcpproxy"
 	log "github.com/sirupsen/logrus"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
 	"gvisor.dev/gvisor/pkg/waiter"
-	"inet.af/tcpproxy"
 )
 
 const linkLocalSubnet = "169.254.0.0/16"
@@ -42,7 +42,12 @@ func TCP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mute
 		ep, tcpErr := r.CreateEndpoint(&wq)
 		r.Complete(false)
 		if tcpErr != nil {
-			log.Errorf("r.CreateEndpoint() = %v", tcpErr)
+			if _, ok := tcpErr.(*tcpip.ErrConnectionRefused); ok {
+				// transient error
+				log.Debugf("r.CreateEndpoint() = %v", tcpErr)
+			} else {
+				log.Errorf("r.CreateEndpoint() = %v", tcpErr)
+			}
 			return
 		}
 

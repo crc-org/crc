@@ -89,7 +89,7 @@ func dial(s *stack.Stack, nic int) (*gonet.UDPConn, error) {
 		return nil, errors.New(err.String())
 	}
 
-	return gonet.NewUDPConn(s, &wq, ep), nil
+	return gonet.NewUDPConn(&wq, ep), nil
 }
 
 type Server struct {

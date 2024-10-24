@@ -27,34 +27,39 @@ const (
 	maxPendingPacketsPerResolution = 256
 )
 
+// +stateify savable
 type pendingPacket struct {
 	routeInfo RouteInfo
-	pkt       PacketBufferPtr
+	pkt       *PacketBuffer
+}
+
+// +stateify savable
+type packetsPendingLinkResolutionMu struct {
+	packetsPendingLinkResolutionMutex `state:"nosave"`
+
+	// The packets to send once the resolver completes.
+	//
+	// The link resolution channel is used as the key for this map.
+	packets map[<-chan struct{}][]pendingPacket
+
+	// FIFO of channels used to cancel the oldest goroutine waiting for
+	// link-address resolution.
+	//
+	// cancelChans holds the same channels that are used as keys to packets.
+	cancelChans []<-chan struct{}
 }
 
 // packetsPendingLinkResolution is a queue of packets pending link resolution.
 //
 // Once link resolution completes successfully, the packets will be written.
+//
+// +stateify savable
 type packetsPendingLinkResolution struct {
 	nic *nic
-
-	mu struct {
-		packetsPendingLinkResolutionMutex
-
-		// The packets to send once the resolver completes.
-		//
-		// The link resolution channel is used as the key for this map.
-		packets map[<-chan struct{}][]pendingPacket
-
-		// FIFO of channels used to cancel the oldest goroutine waiting for
-		// link-address resolution.
-		//
-		// cancelChans holds the same channels that are used as keys to packets.
-		cancelChans []<-chan struct{}
-	}
+	mu  packetsPendingLinkResolutionMu
 }
 
-func (f *packetsPendingLinkResolution) incrementOutgoingPacketErrors(pkt PacketBufferPtr) {
+func (f *packetsPendingLinkResolution) incrementOutgoingPacketErrors(pkt *PacketBuffer) {
 	f.nic.stack.stats.IP.OutgoingPacketErrors.Increment()
 
 	if ipEndpointStats, ok := f.nic.getNetworkEndpoint(pkt.NetworkProtocolNumber).Stats().(IPNetworkEndpointStats); ok {
@@ -113,7 +118,7 @@ func (f *packetsPendingLinkResolution) dequeue(ch <-chan struct{}, linkAddr tcpi
 // If the maximum number of pending resolutions is reached, the packets
 // associated with the oldest link resolution will be dequeued as if they failed
 // link resolution.
-func (f *packetsPendingLinkResolution) enqueue(r *Route, pkt PacketBufferPtr) tcpip.Error {
+func (f *packetsPendingLinkResolution) enqueue(r *Route, pkt *PacketBuffer) tcpip.Error {
 	f.mu.Lock()
 	// Make sure we attempt resolution while holding f's lock so that we avoid
 	// a race where link resolution completes before we enqueue the packets.
