@@ -222,6 +222,7 @@ func TestGetBundleInfoFromNameValid(t *testing.T) {
 		{"crc_okd_vfkit_4.16.7_amd64.crcbundle", preset.OKD.String(), "vfkit", "4.16.7", "amd64", ""},
 		{"crc_okd_vfkit_4.16.7_amd64_2342465234654.crcbundle", preset.OKD.String(), "vfkit", "4.16.7", "amd64", "2342465234654"},
 		{"crc_hyperv_4.18.0_arm64.crcbundle", preset.OpenShift.String(), "hyperv", "4.18.0", "arm64", ""},
+		{"crc_libvirt_4.18.0-ec.2_amd64.crcbundle", preset.OpenShift.String(), "libvirt", "4.18.0-ec.2", "amd64", ""},
 
 		{"crc_hyperv_4.18_x86.crcbundle", preset.OpenShift.String(), "hyperv", "4.18", "x86", ""},
 		{"crc_microshift_hyperv_4.18_x86.crcbundle", preset.Microshift.String(), "hyperv", "4.18", "x86", ""},
