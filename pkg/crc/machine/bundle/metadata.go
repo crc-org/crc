@@ -257,7 +257,7 @@ func GetBundleInfoFromName(bundleName string) (*FilenameInfo, error) {
 	var filenameInfo FilenameInfo
 
 	// crc_preset_driver_version_arch_customSuffix.crcbundle
-	bundleNameRegex := regexp.MustCompile(`crc(?:(?:_)([[:alpha:]]+))?_([[:alpha:]]+)_([0-9.]+)_([[:alnum:]]+)(?:(?:_)([0-9]+))?\.crcbundle`)
+	bundleNameRegex := regexp.MustCompile(`crc(?:(?:_)([[:alpha:]]+))?_([[:alpha:]]+)_([[:alnum:].-]+)_([[:alnum:]]+)(?:(?:_)([0-9]+))?\.crcbundle`)
 	filenameParts := bundleNameRegex.FindStringSubmatch(bundleName)
 
 	if filenameParts == nil {
