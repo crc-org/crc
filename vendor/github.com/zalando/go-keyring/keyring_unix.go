@@ -76,6 +76,31 @@ func (s secretServiceProvider) findItem(svc *ss.SecretService, service, user str
 	return results[0], nil
 }
 
+// findServiceItems looksup all items by service.
+func (s secretServiceProvider) findServiceItems(svc *ss.SecretService, service string) ([]dbus.ObjectPath, error) {
+	collection := svc.GetLoginCollection()
+
+	search := map[string]string{
+		"service": service,
+	}
+
+	err := svc.Unlock(collection.Path())
+	if err != nil {
+		return []dbus.ObjectPath{}, err
+	}
+
+	results, err := svc.SearchItems(collection, search)
+	if err != nil {
+		return []dbus.ObjectPath{}, err
+	}
+
+	if len(results) == 0 {
+		return []dbus.ObjectPath{}, ErrNotFound
+	}
+
+	return results, nil
+}
+
 // Get gets a secret from the keyring given a service name and a user.
 func (s secretServiceProvider) Get(service, user string) (string, error) {
 	svc, err := ss.NewSecretService()
@@ -122,6 +147,34 @@ func (s secretServiceProvider) Delete(service, user string) error {
 	}
 
 	return svc.Delete(item)
+}
+
+// DeleteAll deletes all secrets for a given service
+func (s secretServiceProvider) DeleteAll(service string) error {
+	// if service is empty, do nothing otherwise it might accidentally delete all secrets
+	if service == "" {
+		return ErrNotFound
+	}
+
+	svc, err := ss.NewSecretService()
+	if err != nil {
+		return err
+	}
+	// find all items for the service
+	items, err := s.findServiceItems(svc, service)
+	if err != nil {
+		if err == ErrNotFound {
+			return nil
+		}
+		return err
+	}
+	for _, item := range items {
+		err = svc.Delete(item)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func init() {

@@ -1,6 +1,7 @@
 package keyring
 
 import (
+	"strings"
 	"syscall"
 
 	"github.com/danieljoos/wincred"
@@ -57,6 +58,39 @@ func (k windowsKeychain) Delete(service, username string) error {
 	}
 
 	return cred.Delete()
+}
+
+func (k windowsKeychain) DeleteAll(service string) error {
+	// if service is empty, do nothing otherwise it might accidentally delete all secrets
+	if service == "" {
+		return ErrNotFound
+	}
+
+	creds, err := wincred.List()
+	if err != nil {
+		return err
+	}
+
+	prefix := k.credName(service, "")
+	deletedCount := 0
+
+	for _, cred := range creds {
+		if strings.HasPrefix(cred.TargetName, prefix) {
+			genericCred, err := wincred.GetGenericCredential(cred.TargetName)
+			if err != nil {
+				if err != syscall.ERROR_NOT_FOUND {
+					return err
+				}
+			} else {
+				err := genericCred.Delete()
+				if err != nil {
+					return err
+				}
+				deletedCount++
+			}
+		}
+	}
+	return nil
 }
 
 // credName combines service and username to a single string.

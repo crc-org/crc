@@ -21,3 +21,7 @@ func (fallbackServiceProvider) Get(service, user string) (string, error) {
 func (fallbackServiceProvider) Delete(service, user string) error {
 	return ErrUnsupportedPlatform
 }
+
+func (fallbackServiceProvider) DeleteAll(service string) error {
+	return ErrUnsupportedPlatform
+}

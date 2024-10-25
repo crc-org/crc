@@ -22,7 +22,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/alessio/shellescape"
+	"al.essio.dev/pkg/shellescape"
 )
 
 const (
@@ -111,6 +111,28 @@ func (k macOSXKeychain) Delete(service, username string) error {
 		err = ErrNotFound
 	}
 	return err
+}
+
+// DeleteAll deletes all secrets for a given service
+func (k macOSXKeychain) DeleteAll(service string) error {
+	// if service is empty, do nothing otherwise it might accidentally delete all secrets
+	if service == "" {
+		return ErrNotFound
+	}
+	// Delete each secret in a while loop until there is no more left
+	// under the service
+	for {
+		out, err := exec.Command(
+			execPathKeychain,
+			"delete-generic-password",
+			"-s", service).CombinedOutput()
+		if strings.Contains(string(out), "could not be found") {
+			return nil
+		} else if err != nil {
+			return err
+		}
+	}
+
 }
 
 func init() {
