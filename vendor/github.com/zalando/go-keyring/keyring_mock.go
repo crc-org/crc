@@ -50,6 +50,15 @@ func (m *mockProvider) Delete(service, user string) error {
 	return ErrNotFound
 }
 
+// DeleteAll deletes all secrets for a given service
+func (m *mockProvider) DeleteAll(service string) error {
+	if m.mockError != nil {
+		return m.mockError
+	}
+	delete(m.mockStore, service)
+	return nil
+}
+
 // MockInit sets the provider to a mocked memory store
 func MockInit() {
 	provider = &mockProvider{}
