@@ -92,9 +92,19 @@ func (shell *ShellInstance) ScanPipe(scanner *bufio.Scanner, buffer *bytes.Buffe
 		}
 
 		if strings.Contains(str, exitCodeIdentifier) && !strings.Contains(str, shell.checkExitCodeCmd) {
-			exitCode := strings.Split(str, "=")[1]
+			lastCommandExitCodeStr := str
+			exitCodeIdentifierIndex := strings.Index(lastCommandExitCodeStr, exitCodeIdentifier)
+			if exitCodeIdentifierIndex > 0 {
+				lastCommandExitCodeStr = lastCommandExitCodeStr[exitCodeIdentifierIndex:]
+				str = str[0:exitCodeIdentifierIndex]
+			} else {
+				str = ""
+			}
+
+			exitCode := strings.Split(lastCommandExitCodeStr, "=")[1]
 			shell.exitCodeChannel <- exitCode
-		} else {
+		}
+		if len(str) > 0 {
 			buffer.WriteString(str + "\n")
 		}
 	}
