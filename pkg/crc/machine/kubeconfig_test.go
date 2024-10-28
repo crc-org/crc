@@ -160,29 +160,40 @@ func Test_addContext(t *testing.T) {
 		username   string
 		context    string
 		token      string
+		namespace  string
+	}
+
+	type expected struct {
+		user      string
+		namespace string
 	}
 
 	tests := []struct {
 		in       input
-		expected string
+		expected expected
 	}{
 		{
-			input{"https://abcdd.api.com", "foo", "foo@abcdd", "secretToken"},
-			"foo/abcdd-api-com",
+			input{"https://abcdd.api.com", "foo", "foo@abcdd", "secretToken", "kube-system"},
+			expected{"foo/abcdd-api-com", "kube-system"},
 		},
 		{
-			input{"https://api.crc.testing:6443", "kubeadmin", "kubeadm", "secretToken"},
-			"kubeadmin/api-crc-testing:6443",
+			input{"https://api.crc.testing:6443", "kubeadmin", "kubeadm", "secretToken", "default"},
+			expected{"kubeadmin/api-crc-testing:6443", "default"},
+		},
+		{
+			input{"https://api.crc.testing:6443", "kubeadmin", "kubeadm", "secretToken", ""},
+			expected{"kubeadmin/api-crc-testing:6443", ""},
 		},
 	}
 
 	cfg := api.NewConfig()
 
 	for _, tt := range tests {
-		err := addContext(cfg, tt.in.clusterAPI, tt.in.context, tt.in.username, tt.in.token)
+		err := addContext(cfg, tt.in.clusterAPI, tt.in.context, tt.in.username, tt.in.token, tt.in.namespace)
 		assert.NoError(t, err)
 		assert.Contains(t, cfg.Contexts, tt.in.context, "Expected context not found")
-		assert.Contains(t, cfg.AuthInfos, tt.expected, "Expected AuthInfo not found")
-		assert.Contains(t, cfg.AuthInfos[tt.expected].Token, tt.in.token, "Expected token not found")
+		assert.Equal(t, cfg.Contexts[tt.in.context].Namespace, tt.expected.namespace, "Expected namespace not found")
+		assert.Contains(t, cfg.AuthInfos, tt.expected.user, "Expected AuthInfo not found")
+		assert.Contains(t, cfg.AuthInfos[tt.expected.user].Token, tt.in.token, "Expected token not found")
 	}
 }

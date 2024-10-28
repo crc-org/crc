@@ -72,7 +72,7 @@ func writeKubeconfig(ip string, clusterConfig *types.ClusterConfig, ingressHTTPS
 	if err != nil {
 		return err
 	}
-	if err := addContext(cfg, clusterConfig.ClusterAPI, adminContext, "kubeadmin", kubeadminToken); err != nil {
+	if err := addContext(cfg, clusterConfig.ClusterAPI, adminContext, "kubeadmin", kubeadminToken, "default"); err != nil {
 		return err
 	}
 
@@ -80,7 +80,7 @@ func writeKubeconfig(ip string, clusterConfig *types.ClusterConfig, ingressHTTPS
 	if err != nil {
 		return err
 	}
-	if err := addContext(cfg, clusterConfig.ClusterAPI, developerContext, "developer", developerToken); err != nil {
+	if err := addContext(cfg, clusterConfig.ClusterAPI, developerContext, "developer", developerToken, ""); err != nil {
 		return err
 	}
 
@@ -142,7 +142,7 @@ func hostname(clusterAPI string) (string, error) {
 	return strings.ReplaceAll(h, ".", "-"), nil
 }
 
-func addContext(cfg *api.Config, clusterAPI, context, username, token string) error {
+func addContext(cfg *api.Config, clusterAPI, context, username, token, namespace string) error {
 	host, err := hostname(clusterAPI)
 	if err != nil {
 		return err
@@ -160,7 +160,7 @@ func addContext(cfg *api.Config, clusterAPI, context, username, token string) er
 	cfg.Contexts[context] = &api.Context{
 		Cluster:   host,
 		AuthInfo:  clusterUser,
-		Namespace: "default",
+		Namespace: namespace,
 	}
 	return nil
 }
