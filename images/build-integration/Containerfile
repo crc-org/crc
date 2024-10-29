@@ -9,7 +9,7 @@ WORKDIR /workspace
 COPY . .
 RUN GOARCH=${ARCH} GOOS=${OS} make build_integration
 
-FROM quay.io/rhqp/deliverest:v0.0.6
+FROM quay.io/rhqp/deliverest:v0.0.7
 
 LABEL org.opencontainers.image.authors="CRCQE <devtools-crc-qe@redhat.com>"
 
