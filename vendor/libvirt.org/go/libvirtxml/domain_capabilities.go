@@ -80,6 +80,7 @@ type DomainCapsCPUMode struct {
 	Vendor      string                    `xml:"vendor,omitempty"`
 	MaxPhysAddr *DomainCapsCPUMaxPhysAddr `xml:"maxphysaddr"`
 	Features    []DomainCapsCPUFeature    `xml:"feature"`
+	Blockers    []DomainCapsCPUBlockers   `xml:"blockers"`
 	Enums       []DomainCapsEnum          `xml:"enum"`
 }
 
@@ -94,6 +95,15 @@ type DomainCapsCPUModel struct {
 type DomainCapsCPUFeature struct {
 	Policy string `xml:"policy,attr,omitempty"`
 	Name   string `xml:"name,attr"`
+}
+
+type DomainCapsCPUBlockers struct {
+	Model    string                        `xml:"model,attr"`
+	Features []DomainCapsCPUBlockedFeature `xml:"feature"`
+}
+
+type DomainCapsCPUBlockedFeature struct {
+	Name string `xml:"name,attr"`
 }
 
 type DomainCapsEnum struct {
