@@ -14,7 +14,7 @@ require (
 	github.com/containers/common v0.60.4
 	github.com/containers/gvisor-tap-vsock v0.8.0
 	github.com/containers/image/v5 v5.32.2
-	github.com/containers/libhvee v0.7.1
+	github.com/containers/libhvee v0.9.0
 	github.com/coreos/go-systemd/v22 v22.5.0
 	github.com/crc-org/admin-helper v0.5.4
 	github.com/crc-org/machine v0.0.0-20240926103419-a943b47fd48b
@@ -80,7 +80,7 @@ require (
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01 // indirect
 	github.com/containers/ocicrypt v1.2.0 // indirect
-	github.com/containers/storage v1.55.0 // indirect
+	github.com/containers/storage v1.55.1 // indirect
 	github.com/creack/pty v1.1.18 // indirect
 	github.com/cucumber/gherkin/go/v26 v26.2.0 // indirect
 	github.com/cucumber/messages/go/v21 v21.0.1 // indirect
