@@ -374,7 +374,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	logging.Infof("Starting CRC VM for %s %s...", startConfig.Preset, vm.Bundle().GetVersion())
 
 	if client.useVSock() {
-		if err := exposePorts(startConfig.Preset, startConfig.IngressHTTPPort, startConfig.IngressHTTPSPort); err != nil {
+		if err := vm.ExposePorts(startConfig.Preset, startConfig.IngressHTTPPort, startConfig.IngressHTTPSPort); err != nil {
 			return nil, err
 		}
 	}

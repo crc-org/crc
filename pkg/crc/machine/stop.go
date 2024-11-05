@@ -45,7 +45,7 @@ func (client *client) Stop() (state.State, error) {
 	}
 	// In case usermode networking make sure all the port bind on host should be released
 	if client.useVSock() {
-		return status, unexposePorts()
+		return status, vm.UnExposePorts()
 	}
 	return status, nil
 }
