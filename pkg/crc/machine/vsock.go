@@ -16,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func exposePorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint) error {
+func (vm *virtualMachine) ExposePorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint) error {
 	portsToExpose := vsockPorts(preset, ingressHTTPPort, ingressHTTPSPort)
 	daemonClient := daemonclient.New()
 	alreadyOpenedPorts, err := listOpenPorts(daemonClient)
@@ -47,7 +47,7 @@ func isOpened(exposed []types.ExposeRequest, port types.ExposeRequest) bool {
 	return false
 }
 
-func unexposePorts() error {
+func (vm *virtualMachine) UnExposePorts() error {
 	var mErr crcErrors.MultiError
 	daemonClient := daemonclient.New()
 	alreadyOpenedPorts, err := listOpenPorts(daemonClient)

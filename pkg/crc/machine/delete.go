@@ -22,7 +22,7 @@ func (client *client) Delete() error {
 
 	// In case usermode networking make sure all the port bind on host should be released
 	if client.useVSock() {
-		if err := unexposePorts(); err != nil {
+		if err := vm.UnExposePorts(); err != nil {
 			return err
 		}
 	}
