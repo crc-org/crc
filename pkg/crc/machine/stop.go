@@ -54,7 +54,7 @@ func (client *client) Stop() (state.State, error) {
 // is fixed. We should also ignore the openshift specific errors because stop
 // operation shouldn't depend on the openshift side. Without this graceful shutdown
 // takes around 6-7 mins.
-func stopAllContainers(vm *virtualMachine) error {
+func stopAllContainers(vm VirtualMachine) error {
 	logging.Info("Stopping kubelet and all containers...")
 	sshRunner, err := vm.SSHRunner()
 	if err != nil {

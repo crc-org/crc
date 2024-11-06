@@ -111,7 +111,7 @@ func loadVM(client *client) (*bundle.CrcBundleInfo, *crcssh.Runner, error) {
 	}
 	defer vm.Close()
 
-	currentState, err := vm.Driver.GetState()
+	currentState, err := vm.Driver().GetState()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Cannot get machine state")
 	}
@@ -124,5 +124,5 @@ func loadVM(client *client) (*bundle.CrcBundleInfo, *crcssh.Runner, error) {
 		return nil, nil, errors.Wrap(err, "Error creating the ssh client")
 	}
 
-	return vm.bundle, sshRunner, nil
+	return vm.Bundle(), sshRunner, nil
 }

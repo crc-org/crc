@@ -21,6 +21,6 @@ func (client *client) ConnectionDetails() (*types.ConnectionDetails, error) {
 		IP:          ip,
 		SSHPort:     vm.SSHPort(),
 		SSHUsername: constants.DefaultSSHUser,
-		SSHKeys:     []string{constants.GetPrivateKeyPath(), constants.GetECDSAPrivateKeyPath(), vm.bundle.GetSSHKeyPath()},
+		SSHKeys:     []string{constants.GetPrivateKeyPath(), constants.GetECDSAPrivateKeyPath(), vm.Bundle().GetSSHKeyPath()},
 	}, nil
 }
