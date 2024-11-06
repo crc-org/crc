@@ -51,6 +51,13 @@ func (err *MissingHostError) Error() string {
 
 var errInvalidBundleMetadata = errors.New("Error loading bundle metadata")
 
+func loadVirtualMachineLazily(vm VirtualMachine, name string, useVSock bool) (VirtualMachine, error) {
+	if vm != nil {
+		return vm, nil
+	}
+	return loadVirtualMachine(name, useVSock)
+}
+
 func loadVirtualMachine(name string, useVSock bool) (VirtualMachine, error) {
 	apiClient := libmachine.NewClient(constants.MachineBaseDir)
 	exists, err := apiClient.Exists(name)

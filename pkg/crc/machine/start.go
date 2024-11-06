@@ -631,7 +631,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 }
 
 func (client *client) IsRunning() (bool, error) {
-	vm, err := loadVirtualMachine(client.name, client.useVSock())
+	vm, err := loadVirtualMachineLazily(client.virtualMachine, client.name, client.useVSock())
 	if err != nil {
 		return false, errors.Wrap(err, "Cannot load machine")
 	}
