@@ -9,6 +9,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"text/template"
 
@@ -45,6 +46,10 @@ func checkRunningInsideWSL2() error {
 }
 
 func checkVirtualizationEnabled() error {
+	if runtime.GOARCH == "arm64" {
+		logging.Debug("Ignoring virtualization check for arm64")
+		return nil
+	}
 	logging.Debug("Checking if the vmx/svm flags are present in /proc/cpuinfo")
 	// Check if the cpu flags vmx or svm is present
 	flags, err := getCPUFlags()
