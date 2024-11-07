@@ -299,6 +299,14 @@ func InitializeScenario(s *godog.ScenarioContext) {
 					fmt.Println(err)
 					os.Exit(1)
 				}
+
+				if runtime.GOOS == "linux" {
+					err = crcCmd.UnsetConfigPropertySucceedsOrFails("network-mode", "succeeds") // unsetting property that is not set gives 0 exitcode, so this works
+					if err != nil {
+						fmt.Println(err)
+						os.Exit(1)
+					}
+				}
 			}
 
 			if tag.Name == "@proxy" {
