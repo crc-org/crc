@@ -32,7 +32,7 @@ func TestRenderActionPlainSuccess(t *testing.T) {
 			},
 			DeveloperCredentials: credentials{
 				Username: "developer",
-				Password: "developer",
+				Password: "secret",
 			},
 		},
 	}, out, ""))
@@ -118,7 +118,7 @@ Log in as administrator:
 
 Log in as user:
   Username: developer
-  Password: developer
+  Password: secret
 
 Use the 'oc' command line interface:
   $ eval $(crc oc-env)
@@ -136,7 +136,7 @@ Log in as administrator:
 
 Log in as user:
   Username: developer
-  Password: developer
+  Password: secret
 
 Use the 'oc' command line interface:
   PS> & crc oc-env | Invoke-Expression
@@ -154,7 +154,7 @@ Log in as administrator:
 
 Log in as user:
   Username: developer
-  Password: developer
+  Password: secret
 
 Use the 'oc' command line interface:
   > @FOR /f "tokens=*" %i IN ('crc oc-env') DO @call %i

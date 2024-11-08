@@ -142,7 +142,7 @@ func toClusterConfig(result *types.StartResult) *clusterConfig {
 		},
 		DeveloperCredentials: credentials{
 			Username: "developer",
-			Password: "developer",
+			Password: result.ClusterConfig.DeveloperPass,
 		},
 	}
 }
