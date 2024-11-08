@@ -197,6 +197,10 @@ func GetKubeAdminPasswordPath() string {
 	return filepath.Join(MachineInstanceDir, DefaultName, "kubeadmin-password")
 }
 
+func GetDeveloperPasswordPath() string {
+	return filepath.Join(MachineInstanceDir, DefaultName, "developer-password")
+}
+
 func GetWin32BackgroundLauncherDownloadURL() string {
 	return fmt.Sprintf(BackgroundLauncherURL,
 		version.GetWin32BackgroundLauncherVersion())

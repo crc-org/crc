@@ -21,9 +21,13 @@ func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*types.ClusterConfig, e
 		}, nil
 	}
 
-	kubeadminPassword, err := cluster.GetKubeadminPassword()
+	kubeadminPassword, err := cluster.GetUserPassword(constants.GetKubeAdminPasswordPath())
 	if err != nil {
 		return nil, fmt.Errorf("Error reading kubeadmin password from bundle %v", err)
+	}
+	developerPassword, err := cluster.GetUserPassword(constants.GetDeveloperPasswordPath())
+	if err != nil {
+		return nil, fmt.Errorf("error reading developer password from bundle %v", err)
 	}
 	proxyConfig, err := getProxyConfig(bundleInfo)
 	if err != nil {
@@ -38,6 +42,7 @@ func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*types.ClusterConfig, e
 		ClusterCACert: base64.StdEncoding.EncodeToString(clusterCACert),
 		KubeConfig:    bundleInfo.GetKubeConfigPath(),
 		KubeAdminPass: kubeadminPassword,
+		DeveloperPass: developerPassword,
 		WebConsoleURL: fmt.Sprintf("https://%s", bundleInfo.GetAppHostname("console-openshift-console")),
 		ClusterAPI:    fmt.Sprintf("https://%s:6443", bundleInfo.GetAPIHostname()),
 		ProxyConfig:   proxyConfig,
