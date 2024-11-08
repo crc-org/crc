@@ -7,6 +7,7 @@ package packet
 import (
 	"crypto/cipher"
 	"crypto/sha256"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -63,8 +64,11 @@ func (se *SymmetricallyEncrypted) associatedData() []byte {
 // decryptAead decrypts a V2 SEIPD packet (AEAD) as specified in
 // https://www.ietf.org/archive/id/draft-ietf-openpgp-crypto-refresh-07.html#section-5.13.2
 func (se *SymmetricallyEncrypted) decryptAead(inputKey []byte) (io.ReadCloser, error) {
-	aead, nonce := getSymmetricallyEncryptedAeadInstance(se.Cipher, se.Mode, inputKey, se.Salt[:], se.associatedData())
+	if se.Cipher.KeySize() != len(inputKey) {
+		return nil, errors.StructuralError(fmt.Sprintf("invalid session key length for cipher: got %d bytes, but expected %d bytes", len(inputKey), se.Cipher.KeySize()))
+	}
 
+	aead, nonce := getSymmetricallyEncryptedAeadInstance(se.Cipher, se.Mode, inputKey, se.Salt[:], se.associatedData())
 	// Carry the first tagLen bytes
 	tagLen := se.Mode.TagLength()
 	peekedBytes := make([]byte, tagLen)
