@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -142,10 +143,10 @@ func run(configuration *types.Configuration) error {
 			return
 		}
 		mux := http.NewServeMux()
-		mux.Handle("/network/", http.StripPrefix("/network", vn.Mux()))
+		mux.Handle("/network/", interceptResponseBodyMiddleware(http.StripPrefix("/network", vn.Mux()), logResponseBodyConditionally))
 		machineClient := newMachine()
-		mux.Handle("/api/", http.StripPrefix("/api", api.NewMux(config, machineClient, logging.Memory, segmentClient)))
-		mux.Handle("/events", http.StripPrefix("/events", events.NewEventServer(machineClient)))
+		mux.Handle("/api/", interceptResponseBodyMiddleware(http.StripPrefix("/api", api.NewMux(config, machineClient, logging.Memory, segmentClient)), logResponseBodyConditionally))
+		mux.Handle("/events", interceptResponseBodyMiddleware(http.StripPrefix("/events", events.NewEventServer(machineClient)), logResponseBodyConditionally))
 		s := &http.Server{
 			Handler:           handlers.LoggingHandler(os.Stderr, mux),
 			ReadHeaderTimeout: 10 * time.Second,
@@ -270,4 +271,12 @@ func acceptJSONStringArray(w http.ResponseWriter, r *http.Request, fun func(host
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func logResponseBodyConditionally(statusCode int, buffer *bytes.Buffer, r *http.Request) {
+	responseBody := buffer.String()
+	if statusCode != http.StatusOK && responseBody != "" {
+		log.Errorf("[%s] \"%s %s\" Response Body: %s\n", time.Now().Format("02/Jan/2006:15:04:05 -0700"),
+			r.Method, r.URL.Path, buffer.String())
+	}
 }
