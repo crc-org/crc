@@ -21,6 +21,14 @@ jobs:
       statuses: write # needed to update commit status (pending/failure/sucess)
       checks: write # as documented in https://github.com/mikepenz/action-junit-report?tab=readme-ov-file#pr-run-permissions
     steps:
+      - name: Download gh context
+        id: download-gh-context-artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gh-context
+          run-id: ${{inputs.trigger-workflow-run-id}}
+          github-token: ${{ github.token }}
+
       - name: prepare env
         run: |
           sudo yum install podman openssh-server -y
@@ -34,6 +42,7 @@ jobs:
 
           # the target can only be accessed through a bastion (which can only be accessed from self-hosted runner) 
           # as so we need to map the ssh-agent from the host to the containers used to access the target host
+          rm -f id_rsa id_rsa.pub
           ssh-keygen -t rsa -N '' -f id_rsa -q 
           eval $(ssh-agent -s)
           echo $SSH_AUTH_SOCK > ssh_auth_sock
