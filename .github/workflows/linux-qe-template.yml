@@ -32,12 +32,24 @@ jobs:
       - name: prepare
         run: |
           sudo yum install podman openssh-server -y
+
+          # Get origin commit sha for testing
           commit_sha=$(cat gh_context.json | jq -r '.event.after')
           if [[ -z "${commit_sha}" ]] || [[ "${commit_sha}" == null ]]; then
             # on first PR creation .event.after is empty, then .sha is used as commit instead
             commit_sha=$(cat gh_context.json | jq -r '.event.pull_request.head.sha')
           fi
           echo "commit_sha=${commit_sha}" >> "$GITHUB_ENV"
+
+          # Set status_context
+          status_context="ci/gh/${{inputs.qe-type}}"
+          if [[ "${{inputs.qe-type}}" == "e2e" ]]; then
+            status_context="${status_context}-${{inputs.preset}}"
+          fi
+          status_context="${status_context}/windows-${{matrix.windows-version}}-${{matrix.windows-featurepack}}"
+          echo "status_context=${status_context}" >> "$GITHUB_ENV"
+
+          echo "${PULL_SECRET}" > pull-secret
 
       - name: Download linux binary
         uses: actions/download-artifact@v4
@@ -94,17 +106,14 @@ jobs:
           request=`sed -n '4p' info`
           echo ${request:1} > requestid
 
-          # connect to the reserved machine, create a non-root user for testing
-          ${machine:1}
-          new_user=crctest
-          useradd $new_user
-          echo "$new_user:redhat" | chpasswd
-          usermod -aG wheel $new_user
-          echo "$new_user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/crctest-users
-          mkdir -p /home/$new_user/.ssh
-          cp /root/.ssh/authorized_keys /home/$new_user/.ssh/
-          chown $new_user /home/$new_user/.ssh/authorized_keys
-          exit
+          # Create a non-root user for testing on the reserved machine
+          ${machine:1} 'useradd crctest' < /dev/null
+          ${machine:1} 'echo "crctest:redhat" | chpasswd' < /dev/null
+          ${machine:1} 'usermod -aG wheel crctest' < /dev/null
+          ${machine:1} 'echo "crctest ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/crctest-users' < /dev/null
+          ${machine:1} 'mkdir -p /home/crctest/.ssh' < /dev/null
+          ${machine:1} 'cp /root/.ssh/authorized_keys /home/crctest/.ssh/' < /dev/null
+          ${machine:1} 'chown crctest /home/crctest/.ssh/authorized_keys' < /dev/null
 
           # Install CRC on the reserved machine
           podman run --rm -d --privileged --name crc-linux-install-${{inputs.qe-type}}-${{inputs.preset}} \
@@ -131,7 +140,7 @@ jobs:
 
           # load image
           podman load -i crc-${{inputs.qe-type}}-linux-arm64.tar
-          echo "${PULL_SECRET}" > pull-secret
+
           # run CRC test
           cmd="crc-qe/run.sh -junitFilename crc-${{inputs.qe-type}}-junit.xml -targetFolder crc-qe"
           if [[ "${{inputs.qe-type}}" == "e2e" ]]; then
