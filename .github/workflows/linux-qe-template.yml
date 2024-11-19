@@ -29,10 +29,9 @@ jobs:
           run-id: ${{inputs.trigger-workflow-run-id}}
           github-token: ${{ github.token }}
 
-      - name: prepare env
+      - name: prepare
         run: |
           sudo yum install podman openssh-server -y
-
           commit_sha=$(cat gh_context.json | jq -r '.event.after')
           if [[ -z "${commit_sha}" ]] || [[ "${commit_sha}" == null ]]; then
             # on first PR creation .event.after is empty, then .sha is used as commit instead
@@ -40,43 +39,6 @@ jobs:
           fi
           echo "commit_sha=${commit_sha}" >> "$GITHUB_ENV"
 
-          # the target can only be accessed through a bastion (which can only be accessed from self-hosted runner) 
-          # as so we need to map the ssh-agent from the host to the containers used to access the target host
-          rm -f id_rsa id_rsa.pub
-          ssh-keygen -t rsa -N '' -f id_rsa -q 
-          eval $(ssh-agent -s)
-          echo $SSH_AUTH_SOCK > ssh_auth_sock
-          echo $SSH_AGENT_PID > ssh_agent_pid
-          ssh-add id_rsa
-
-      - name: reserve machine from testing farm
-        env: 
-          TESTING_FARM_API_TOKEN: ${{ secrets.TESTING_FARM_API_TOKEN }}
-          PULL_SECRET: ${{ secrets.PULL_SECRET }}
-        run: |
-          echo "${PULL_SECRET}" > pull-secret
-          export TESTING_FARM_API_TOKEN=${TESTING_FARM_API_TOKEN}
-          testing-farm reserve --compose Fedora-40 --duration 240 --arch aarch64 --hardware memory='>= 12 GB' --hardware virtualization.is-supported='true' --ssh-public-key id_rsa.pub --no-autoconnect | tee info
-          machine=`tail -n 1 info`
-          echo ${machine##*@} > host
-          echo crctest > username
-          echo proxy > bastion_username
-          echo testing-farm.io > bastion_host
-          request=`sed -n '4p' info`
-          echo ${request:1} > requestid
-
-          # connect to the reserved machine, create a non-root user for testing
-          ${machine:1}
-          new_user=crctest
-          useradd $new_user
-          echo "$new_user:redhat" | chpasswd
-          usermod -aG wheel $new_user
-          echo "$new_user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/crctest-users
-          mkdir -p /home/$new_user/.ssh
-          cp /root/.ssh/authorized_keys /home/$new_user/.ssh/
-          chown $new_user /home/$new_user/.ssh/authorized_keys
-          exit
-     
       - name: Download linux binary
         uses: actions/download-artifact@v4
         with:
@@ -107,9 +69,45 @@ jobs:
             https://api.github.com/repos/${{ github.repository }}/statuses/${{ env.commit_sha }} \
             -d "${data}"
 
-      - name: Install CRC on host
+      - name: Reserve machine and test
+        env: 
+          TESTING_FARM_API_TOKEN: ${{ secrets.TESTING_FARM_API_TOKEN }}
+          PULL_SECRET: ${{ secrets.PULL_SECRET }}
         run: |
-          podman run --rm -d --privileged --name crc-linux-install-${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}} \
+          # the target can only be accessed through a bastion (which can only be accessed from self-hosted runner) 
+          # as so we need to map the ssh-agent from the host to the containers used to access the target host
+          rm -f id_rsa id_rsa.pub
+          ssh-keygen -t rsa -N '' -f id_rsa -q 
+          eval $(ssh-agent -s)
+          echo $SSH_AUTH_SOCK > ssh_auth_sock
+          echo $SSH_AGENT_PID > ssh_agent_pid
+          ssh-add id_rsa
+
+          # reserve machine from testing farm
+          export TESTING_FARM_API_TOKEN=${TESTING_FARM_API_TOKEN}
+          testing-farm reserve --compose Fedora-40 --duration 240 --arch aarch64 --hardware memory='>= 12 GB' --hardware virtualization.is-supported='true' --ssh-public-key id_rsa.pub --no-autoconnect | tee info
+          machine=`tail -n 1 info`
+          echo ${machine##*@} > host
+          echo crctest > username
+          echo proxy > bastion_username
+          echo testing-farm.io > bastion_host
+          request=`sed -n '4p' info`
+          echo ${request:1} > requestid
+
+          # connect to the reserved machine, create a non-root user for testing
+          ${machine:1}
+          new_user=crctest
+          useradd $new_user
+          echo "$new_user:redhat" | chpasswd
+          usermod -aG wheel $new_user
+          echo "$new_user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/crctest-users
+          mkdir -p /home/$new_user/.ssh
+          cp /root/.ssh/authorized_keys /home/$new_user/.ssh/
+          chown $new_user /home/$new_user/.ssh/authorized_keys
+          exit
+
+          # Install CRC on the reserved machine
+          podman run --rm -d --privileged --name crc-linux-install-${{inputs.qe-type}}-${{inputs.preset}} \
             -e TARGET_HOST=$(cat host) \
             -e TARGET_HOST_USERNAME=$(cat username) \
             -e TARGET_HOST_KEY_PATH=/data/id_rsa \
@@ -129,13 +127,12 @@ jobs:
              -aName 'crc' \
              -freshEnv 'false' \
              -download 'false' 
-          podman logs -f crc-linux-install-${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}
+          podman logs -f crc-linux-install-${{inputs.qe-type}}-${{inputs.preset}}
 
-      - name: Run CRC ${{inputs.qe-type}} test
-        run: |
           # load image
           podman load -i crc-${{inputs.qe-type}}-linux-arm64.tar
-          # run
+          echo "${PULL_SECRET}" > pull-secret
+          # run CRC test
           cmd="crc-qe/run.sh -junitFilename crc-${{inputs.qe-type}}-junit.xml -targetFolder crc-qe"
           if [[ "${{inputs.qe-type}}" == "e2e" ]]; then
             if [[ "${{inputs.preset}}" == "microshift" ]]; then
@@ -144,7 +141,7 @@ jobs:
               cmd="${cmd} -e2eTagExpression '~@minimal && ~@story_microshift'"
             fi
           fi
-          podman run --rm -d --privileged --name crc-${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}} \
+          podman run --rm -d --privileged --name crc-${{inputs.qe-type}}-${{inputs.preset}} \
             -e TARGET_HOST=$(cat host) \
             -e TARGET_HOST_USERNAME=$(cat username) \
             -e TARGET_HOST_KEY_PATH=/data/id_rsa \
@@ -160,7 +157,7 @@ jobs:
             -v $PWD:/data:z \
             quay.io/crcont/crc-${{inputs.qe-type}}:gh-linux-arm64 \
                 ${cmd} 
-          podman logs -f crc-${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}
+          podman logs -f crc-${{inputs.qe-type}}-${{inputs.preset}}
 
       - name: Test Report
         id: test-report
@@ -208,7 +205,6 @@ jobs:
         run: |
           export TESTING_FARM_API_TOKEN=${TESTING_FARM_API_TOKEN}
           testing-farm cancel $(cat requestid) 
-          kill $(cat ${{ env.commit_sha }}-${{inputs.qe-type}}-${{inputs.preset}}/ssh_agent_pid)
           
 
 
