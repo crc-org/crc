@@ -16,11 +16,14 @@ on:
 
 jobs:
   linux-qe:
-    runs-on: [self-hosted, linux, testing-farm]
+    runs-on: ubuntu-24.04
     permissions:
       statuses: write # needed to update commit status (pending/failure/sucess)
       checks: write # as documented in https://github.com/mikepenz/action-junit-report?tab=readme-ov-file#pr-run-permissions
     steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
       - name: Download gh context
         id: download-gh-context-artifact
         uses: actions/download-artifact@v4
@@ -31,7 +34,10 @@ jobs:
 
       - name: prepare
         run: |
-          sudo yum install podman openssh-server -y
+          # Install Testing farm CLI
+          pip3 install --user tft-cli
+          sudo apt install podman openssh-server -y
+          testing-farm --help
 
           # Get origin commit sha for testing
           commit_sha=$(cat gh_context.json | jq -r '.event.after')
@@ -46,10 +52,17 @@ jobs:
           if [[ "${{inputs.qe-type}}" == "e2e" ]]; then
             status_context="${status_context}-${{inputs.preset}}"
           fi
-          status_context="${status_context}/windows-${{matrix.windows-version}}-${{matrix.windows-featurepack}}"
+          status_context="${status_context}/Linux-ARM64"
           echo "status_context=${status_context}" >> "$GITHUB_ENV"
 
-          echo "${PULL_SECRET}" > pull-secret
+          ocp_version_line=$(cat Makefile | grep "OPENSHIFT_VERSION ?=")
+          ocp_bundle_v=${ocp_version_line##*= } 
+          echo "ocp_bundle_v=${ocp_bundle_v}" >> "$GITHUB_ENV"
+          echo "ocp_bundle_v=${ocp_bundle_v}"
+          microshift_version_line=$(cat Makefile | grep "MICROSHIFT_VERSION ?=")
+          microshift_bundle_v=${microshift_version_line##*= } 
+          echo "microshift_bundle_v=${microshift_bundle_v}" >> "$GITHUB_ENV"
+          echo "microshift_bundle_v=${microshift_bundle_v}"
 
       - name: Download linux binary
         uses: actions/download-artifact@v4
@@ -86,10 +99,14 @@ jobs:
           TESTING_FARM_API_TOKEN: ${{ secrets.TESTING_FARM_API_TOKEN }}
           PULL_SECRET: ${{ secrets.PULL_SECRET }}
         run: |
+          echo "${PULL_SECRET}" > pull-secret
+
           # the target can only be accessed through a bastion (which can only be accessed from self-hosted runner) 
           # as so we need to map the ssh-agent from the host to the containers used to access the target host
-          rm -f id_rsa id_rsa.pub
-          ssh-keygen -t rsa -N '' -f id_rsa -q 
+          
+          #rm -f id_rsa id_rsa.pub
+          ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa -q 
+          cp ~/.ssh/id_rsa .
           eval $(ssh-agent -s)
           echo $SSH_AUTH_SOCK > ssh_auth_sock
           echo $SSH_AGENT_PID > ssh_agent_pid
@@ -97,71 +114,100 @@ jobs:
 
           # reserve machine from testing farm
           export TESTING_FARM_API_TOKEN=${TESTING_FARM_API_TOKEN}
-          testing-farm reserve --compose Fedora-40 --duration 240 --arch aarch64 --hardware memory='>= 12 GB' --hardware virtualization.is-supported='true' --ssh-public-key id_rsa.pub --no-autoconnect | tee info
+          testing-farm reserve --compose Fedora-40 --duration 480 --arch aarch64 --hardware memory='>= 16 GB' --hardware virtualization.is-supported='true' --no-autoconnect | tee info
           machine=`tail -n 1 info`
           echo ${machine##*@} > host
           echo crctest > username
-          echo proxy > bastion_username
-          echo testing-farm.io > bastion_host
           request=`sed -n '4p' info`
           echo ${request:1} > requestid
 
           # Create a non-root user for testing on the reserved machine
-          ${machine:1} 'useradd crctest' < /dev/null
-          ${machine:1} 'echo "crctest:redhat" | chpasswd' < /dev/null
-          ${machine:1} 'usermod -aG wheel crctest' < /dev/null
-          ${machine:1} 'echo "crctest ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/crctest-users' < /dev/null
-          ${machine:1} 'mkdir -p /home/crctest/.ssh' < /dev/null
-          ${machine:1} 'cp /root/.ssh/authorized_keys /home/crctest/.ssh/' < /dev/null
-          ${machine:1} 'chown crctest /home/crctest/.ssh/authorized_keys' < /dev/null
+          ssh_cmd="ssh -o StrictHostKeyChecking=no ${machine##*ssh}"
+          echo $ssh_cmd
+          $ssh_cmd 'useradd crctest' < /dev/null
+          $ssh_cmd 'echo "crctest:redhat" | chpasswd' < /dev/null
+          $ssh_cmd 'usermod -aG wheel crctest' < /dev/null
+          $ssh_cmd 'echo "crctest ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/crctest-users' < /dev/null
+          $ssh_cmd 'mkdir -p /home/crctest/.ssh' < /dev/null
+          $ssh_cmd 'cp /root/.ssh/authorized_keys /home/crctest/.ssh/' < /dev/null
+          $ssh_cmd 'chown -R crctest:crctest /home/crctest/.ssh/'  < /dev/null
 
           # Install CRC on the reserved machine
+          echo "Start installing crc on reserved machine"
           podman run --rm -d --privileged --name crc-linux-install-${{inputs.qe-type}}-${{inputs.preset}} \
             -e TARGET_HOST=$(cat host) \
             -e TARGET_HOST_USERNAME=$(cat username) \
             -e TARGET_HOST_KEY_PATH=/data/id_rsa \
-            -e BASTION_HOST_USERNAME=$(cat bastion_username) \
-            -e BASTION_HOST=$(cat bastion_host) \
             -e TARGET_FOLDER=crc-support \
             -e TARGET_CLEANUP='false' \
             -e OUTPUT_FOLDER=/data \
             -e DEBUG='true' \
-            -e SSH_AUTH_SOCK=$(cat ssh_auth_sock) \
-            -v "$(cat ssh_auth_sock):$(cat ssh_auth_sock)" \
             -v ${PWD}:/data:z \
             -v ${PWD}/crc:/opt/crc-support/crc:z \
             quay.io/crc-org/ci-crc-support:v2.0.0-dev-linux crc-support/run.sh \
-             -targetPath "/root/crc-support" \
+             -targetPath "/home/crctest/crc-support" \
              -install 'true' \
              -aName 'crc' \
              -freshEnv 'false' \
              -download 'false' 
           podman logs -f crc-linux-install-${{inputs.qe-type}}-${{inputs.preset}}
 
+          # Download arm64 bundle in the reserved machine
+          echo "Start download bundle on reserved machine"
+          
+          if [[ "${{inputs.preset}}" == "microshift" ]]; then
+            bundle_url="https://crcqe-asia.s3.ap-south-1.amazonaws.com/bundles/microshift/${{ env.microshift_bundle_v }}-arm64"
+            bundle_name="crc_microshift_libvirt_${{ env.microshift_bundle_v }}_arm64.crcbundle"
+          else
+            bundle_url="https://crcqe-asia.s3.ap-south-1.amazonaws.com/bundles/openshift/${{ env.ocp_bundle_v }}-arm64"
+            bundle_name="crc_libvirt_${{ env.ocp_bundle_v }}_arm64.crcbundle"
+          fi
+          podman run --rm -d --privileged --name download_bundle \
+            -e TARGET_HOST=$(cat host) \
+            -e TARGET_HOST_USERNAME=$(cat username) \
+            -e TARGET_HOST_KEY_PATH=/data/id_rsa \
+            -e TARGET_FOLDER=crc-support \
+            -e TARGET_CLEANUP='false' \
+            -e OUTPUT_FOLDER=/data \
+            -e DEBUG='true' \
+            -v ${PWD}:/data:z \
+            quay.io/crc-org/ci-crc-support:v2.0.0-dev-linux crc-support/run.sh \
+             -targetPath "/home/crctest" \
+             -install 'false' \
+             -aBaseURL $bundle_url \
+             -aName $bundle_name \
+             -freshEnv 'false' \
+             -download 'true' 
+          podman logs -f download_bundle
+
           # load image
           podman load -i crc-${{inputs.qe-type}}-linux-arm64.tar
+          $ssh_cmd 'chmod +x /usr/local/bin/crc' < /dev/null
 
           # run CRC test
-          cmd="crc-qe/run.sh -junitFilename crc-${{inputs.qe-type}}-junit.xml -targetFolder crc-qe"
+          cmd="crc-qe/run.sh -bundleLocation /home/crctest/$bundle_name -junitFilename crc-${{inputs.qe-type}}-junit.xml -targetFolder crc-qe"
           if [[ "${{inputs.qe-type}}" == "e2e" ]]; then
             if [[ "${{inputs.preset}}" == "microshift" ]]; then
               cmd="${cmd} -e2eTagExpression '@story_microshift'"
             else
-              cmd="${cmd} -e2eTagExpression '~@minimal && ~@story_microshift'"
+              cmd="${cmd} -e2eTagExpression '~@minimal && ~@story_microshift && ~@cert_rotation'"
+            fi
+          else
+            if [[ "${{inputs.preset}}" == "microshift" ]]; then
+              cmd="${cmd} -labelFilter 'microshift-preset'"
+            else
+              cmd="${cmd} -labelFilter 'openshift-preset'"
             fi
           fi
+          echo "Start running test on reserved machine"
           podman run --rm -d --privileged --name crc-${{inputs.qe-type}}-${{inputs.preset}} \
             -e TARGET_HOST=$(cat host) \
             -e TARGET_HOST_USERNAME=$(cat username) \
             -e TARGET_HOST_KEY_PATH=/data/id_rsa \
-            -e BASTION_HOST_USERNAME=$(cat bastion_username) \
-            -e BASTION_HOST=$(cat bastion_host) \
             -e TARGET_FOLDER=crc-qe \
             -e TARGET_RESULTS=results \
             -e OUTPUT_FOLDER=/data \
             -e DEBUG=true \
-            -e SSH_AUTH_SOCK=$(cat ssh_auth_sock) \
-            -v "$(cat ssh_auth_sock):$(cat ssh_auth_sock)" \
             -v $PWD/pull-secret:/opt/crc/pull-secret:z \
             -v $PWD:/data:z \
             quay.io/crcont/crc-${{inputs.qe-type}}:gh-linux-arm64 \
@@ -189,6 +235,17 @@ jobs:
             **/*.results
             **/*.log
 
+      - name: Return machine and clear env
+        env: 
+          TESTING_FARM_API_TOKEN: ${{ secrets.TESTING_FARM_API_TOKEN }}
+        if: always()
+        run: |
+          export TESTING_FARM_API_TOKEN=${TESTING_FARM_API_TOKEN}
+          testing-farm cancel $(cat requestid) 
+          podman rmi quay.io/crcont/crc-${{inputs.qe-type}}:gh-linux-arm64
+          rm -r results
+          kill $(cat ssh_agent_pid)
+
       - name: Update status of the PR check
         if: always()
         run: |
@@ -208,12 +265,7 @@ jobs:
             https://api.github.com/repos/${{ github.repository }}/statuses/${{ env.commit_sha }} \
             -d "${data}"
 
-      - name: Return machine and clear env
-        env: 
-          TESTING_FARM_API_TOKEN: ${{ secrets.TESTING_FARM_API_TOKEN }}
-        run: |
-          export TESTING_FARM_API_TOKEN=${TESTING_FARM_API_TOKEN}
-          testing-farm cancel $(cat requestid) 
+      
           
 
 

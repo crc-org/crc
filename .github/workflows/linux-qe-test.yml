@@ -17,14 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         qe-type: ['e2e','integration']
-        preset: ['openshift', 'microshift', 'all']
-        exclude:
-        - qe-type: 'e2e'
-          preset: 'all'
-        - qe-type: 'integration'
-          preset: 'openshift'
-        - qe-type: 'integration'
-          preset: 'microshift'
+        preset: ['openshift', 'microshift']
     with:
       trigger-workflow-run-id: ${{ github.event.workflow_run.id }}
       qe-type: ${{matrix.qe-type}}
