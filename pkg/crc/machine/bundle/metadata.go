@@ -109,8 +109,12 @@ func (bundle *CrcBundleInfo) GetBundleName() string {
 	return bundle.Name
 }
 
+func (bundle *CrcBundleInfo) GetFQDN(shortName string) string {
+	return fmt.Sprintf("%s.%s.%s", shortName, bundle.ClusterInfo.ClusterName, bundle.ClusterInfo.BaseDomain)
+}
+
 func (bundle *CrcBundleInfo) GetAPIHostname() string {
-	return fmt.Sprintf("api.%s.%s", bundle.ClusterInfo.ClusterName, bundle.ClusterInfo.BaseDomain)
+	return bundle.GetFQDN("api")
 }
 
 func (bundle *CrcBundleInfo) GetAppHostname(appName string) string {

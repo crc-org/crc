@@ -289,3 +289,25 @@ func TestGetBundleInfoFromNameInvalid(t *testing.T) {
 	_, err = GetBundleInfoFromName("crc_nanoshift_libvirt_4.16.7_amd64_232.crcbundle")
 	assert.Error(t, err)
 }
+
+func TestGetFQDN(t *testing.T) {
+	tests := []struct {
+		name               string
+		shortName          string
+		expectedDomainName string
+	}{
+		{"api host name", "api", "api.crc.testing"},
+		{"vm host name", "host", "host.crc.testing"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Given
+			// When
+			hostName := parsedReference.GetFQDN(tt.shortName)
+
+			// Then
+			assert.Equal(t, tt.expectedDomainName, hostName)
+		})
+	}
+}
