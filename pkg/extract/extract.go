@@ -85,13 +85,6 @@ func uncompress(tarball, targetDir string, fileFilter func(string) bool, showPro
 	}
 }
 
-func min(a int64, b int64) int64 {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 func untar(reader io.Reader, targetDir string, fileFilter func(string) bool, showProgress bool) ([]string, error) {
 	var extractedFiles []string
 	tarReader := tar.NewReader(reader)
