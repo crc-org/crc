@@ -278,7 +278,11 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Cannot determine if VM exists")
 	}
 
-	bundleName := bundle.GetBundleNameWithoutExtension(bundle.GetBundleNameFromURI(startConfig.BundlePath))
+	bundleNameFromURI, err := bundle.GetBundleNameFromURI(startConfig.BundlePath)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting bundle name")
+	}
+	bundleName := bundle.GetBundleNameWithoutExtension(bundleNameFromURI)
 	crcBundleMetadata, err := getCrcBundleInfo(ctx, startConfig.Preset, bundleName, startConfig.BundlePath, startConfig.EnableBundleQuayFallback)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting bundle metadata")

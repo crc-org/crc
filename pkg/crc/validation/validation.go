@@ -83,13 +83,19 @@ func ValidateBundlePath(bundlePath string, preset crcpreset.Preset) error {
 		}
 	}
 
-	userProvidedBundle := bundle.GetBundleNameFromURI(bundlePath)
+	userProvidedBundle, err := bundle.GetBundleNameFromURI(bundlePath)
+	if err != nil {
+		return err
+	}
 	bundleMismatchWarning(userProvidedBundle, preset)
 	return nil
 }
 
 func ValidateBundle(bundlePath string, preset crcpreset.Preset) error {
-	bundleName := bundle.GetBundleNameFromURI(bundlePath)
+	bundleName, err := bundle.GetBundleNameFromURI(bundlePath)
+	if err != nil {
+		return err
+	}
 	bundleMetadata, err := bundle.Get(bundleName)
 	if err != nil {
 		if bundlePath == constants.GetDefaultBundlePath(preset) {

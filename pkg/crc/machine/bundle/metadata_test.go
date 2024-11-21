@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"unicode"
@@ -55,7 +56,7 @@ func jsonForBundleWithVersion(version, name string) string {
       {
         "name": "crc.qcow2",
         "format": "qcow2",
-	"size": "9",
+        "size": "9",
         "sha256sum": "245a0e5acd4f09000a9a5f37d731082ed1cf3fdcad1b5320cbe9b153c9fd82a4"
       }
     ],
@@ -310,4 +311,35 @@ func TestGetFQDN(t *testing.T) {
 			assert.Equal(t, tt.expectedDomainName, hostName)
 		})
 	}
+}
+
+func TestGetBundleNameFromURI(t *testing.T) {
+	// URI with no tag
+	bundleName, err := GetBundleNameFromURI("docker://quay.io/crcont/openshift-bundle")
+	assert.Equal(t, "", bundleName)
+	assert.Error(t, err)
+
+	// URI with tag
+	bundleName, err = GetBundleNameFromURI("docker://quay.io/crcont/openshift-bundle:4.17.3")
+	assert.Nil(t, err)
+	var osVirt string
+	switch runtime.GOOS {
+	case "darwin":
+		osVirt = "vfkit"
+	case "linux":
+		osVirt = "libvirt"
+	case "windows":
+		osVirt = "hyperv"
+	}
+	assert.Equal(t, fmt.Sprintf("crc_%s_4.17.3_%s.crcbundle", osVirt, runtime.GOARCH), bundleName)
+
+	// HTTPs
+	bundleName, err = GetBundleNameFromURI("https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/crc/bundles/openshift/4.17.3/crc_libvirt_4.17.3_amd64.crcbundle")
+	assert.Nil(t, err)
+	assert.Equal(t, "crc_libvirt_4.17.3_amd64.crcbundle", bundleName)
+
+	// Local file
+	bundleName, err = GetBundleNameFromURI("/home/user/Downloads/crc_libvirt_4.17.3_amd64.crcbundle")
+	assert.Nil(t, err)
+	assert.Equal(t, "crc_libvirt_4.17.3_amd64.crcbundle", bundleName)
 }
