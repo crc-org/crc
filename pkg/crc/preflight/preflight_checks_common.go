@@ -87,7 +87,11 @@ var genericCleanupChecks = []Check{
 func checkBundleExtracted(bundlePath string) func() error {
 	return func() error {
 		logging.Infof("Checking if %s exists", bundlePath)
-		bundleName := bundle.GetBundleNameFromURI(bundlePath)
+		bundleName, err := bundle.GetBundleNameFromURI(bundlePath)
+		if err != nil {
+			logging.Debugf("error getting bundle name from path %s: %v", bundlePath, err)
+			return err
+		}
 		if _, err := bundle.Get(bundleName); err != nil {
 			logging.Debugf("error getting bundle info for %s: %v", bundleName, err)
 			return err

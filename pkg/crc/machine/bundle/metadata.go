@@ -243,17 +243,19 @@ func GetCustomBundleName(bundleFilename string) string {
 	return fmt.Sprintf("%s_%d%s", baseName, time.Now().Unix(), bundleExtension)
 }
 
-func GetBundleNameFromURI(bundleURI string) string {
-	// the URI is expected to have been validated by validation.ValidateBundlePath first
+func GetBundleNameFromURI(bundleURI string) (string, error) {
 	switch {
 	case strings.HasPrefix(bundleURI, "docker://"):
 		imageAndTag := strings.Split(path.Base(bundleURI), ":")
-		return constants.BundleForPreset(image.GetPresetName(imageAndTag[0]), imageAndTag[1])
+		if len(imageAndTag) < 2 {
+			return "", fmt.Errorf("No tag found in bundle URI")
+		}
+		return constants.BundleForPreset(image.GetPresetName(imageAndTag[0]), imageAndTag[1]), nil
 	case strings.HasPrefix(bundleURI, "http://"), strings.HasPrefix(bundleURI, "https://"):
-		return path.Base(bundleURI)
+		return path.Base(bundleURI), nil
 	default:
 		// local path
-		return filepath.Base(bundleURI)
+		return filepath.Base(bundleURI), nil
 	}
 }
 
