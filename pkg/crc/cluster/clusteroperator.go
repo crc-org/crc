@@ -71,13 +71,6 @@ func joinWithLimit(names []string, maxNames int) string {
 	return ret
 }
 
-func min(a, b int) int {
-	if a > b {
-		return b
-	}
-	return a
-}
-
 func (status *Status) IsReady() bool {
 	return status.Available && !status.Progressing && !status.Degraded && !status.Disabled
 }
