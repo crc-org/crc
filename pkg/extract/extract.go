@@ -86,13 +86,6 @@ func uncompress(ctx context.Context, tarball, targetDir string, fileFilter func(
 	}
 }
 
-func min(a int64, b int64) int64 {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 func untar(ctx context.Context, reader io.Reader, targetDir string, fileFilter func(string) bool, showProgress bool) ([]string, error) {
 	var extractedFiles []string
 	tarReader := tar.NewReader(reader)
