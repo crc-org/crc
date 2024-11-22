@@ -195,12 +195,7 @@ func (s *status) prettyPrintTo(writer io.Writer) error {
 		{"CRC VM", s.CrcStatus},
 	}
 
-	if s.Preset == preset.OpenShift {
-		lines = append(lines, line{"OpenShift", openshiftStatus(s)})
-	}
-	if s.Preset == preset.Microshift {
-		lines = append(lines, line{"MicroShift", openshiftStatus(s)})
-	}
+	lines = append(lines, line{s.Preset.ForDisplay(), openshiftStatus(s)})
 
 	if s.RAMSize != -1 && s.RAMUsage != -1 {
 		lines = append(lines, line{"RAM Usage", fmt.Sprintf(

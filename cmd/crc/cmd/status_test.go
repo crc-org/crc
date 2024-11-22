@@ -190,3 +190,41 @@ Cache Directory: %s
 `
 	assert.Equal(t, fmt.Sprintf(expected, cacheDir), out.String())
 }
+
+func TestCrcStatusShouldLogInformationForConfiguredPresets(t *testing.T) {
+	tests := []struct {
+		name      string
+		preset    preset.Preset
+		statusLog string
+	}{
+		{"OpenShift preset should log OpenShift", preset.OpenShift, "OpenShift:       Running (v4.5.1)"},
+		{"OKD preset should log OKD", preset.OKD, "OKD:             Running (v4.5.1)"},
+		{"MicroShift preset should log MicroShift", preset.Microshift, "MicroShift:              Running (v4.5.1)"},
+		{"Unknown preset should log OpenShift", preset.ParsePreset("unknown"), "OpenShift:       Running (v4.5.1)"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Given
+			cacheDir := t.TempDir()
+			out := new(bytes.Buffer)
+			client := mocks.NewClient(t)
+			require.NoError(t, os.WriteFile(filepath.Join(cacheDir, "crc.qcow2"), make([]byte, 10000), 0600))
+			client.On("Status").Return(apiClient.ClusterStatusResult{
+				CrcStatus:        string(state.Running),
+				OpenshiftStatus:  string(types.OpenshiftRunning),
+				OpenshiftVersion: "4.5.1",
+				Preset:           tt.preset,
+			}, nil)
+
+			// When
+			err := runStatus(out, &daemonclient.Client{
+				APIClient: client,
+			}, cacheDir, "", false)
+
+			// Then
+			assert.NoError(t, err)
+			assert.Contains(t, out.String(), tt.statusLog)
+		})
+	}
+}
