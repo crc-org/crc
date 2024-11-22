@@ -15,6 +15,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+type openShiftStatusSupplierFunc func(context.Context, string) types.OpenshiftStatus
+
 func (client *client) Status() (*types.ClusterStatusResult, error) {
 	vm, err := loadVirtualMachine(client.name, client.useVSock())
 	if err != nil {
@@ -33,17 +35,33 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 		return nil, errors.Wrap(err, "Cannot get machine state")
 	}
 
-	clusterStatusResult := &types.ClusterStatusResult{
-		CrcStatus: vmStatus,
+	ip, err := vm.IP()
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting ip")
 	}
-	switch {
-	case vm.bundle.IsMicroshift():
-		clusterStatusResult.OpenshiftStatus = types.OpenshiftStopped
-		clusterStatusResult.OpenshiftVersion = vm.bundle.GetVersion()
+	ramSize, ramUse := client.getRAMStatus(vm)
+	diskSize, diskUse := client.getDiskDetails(vm)
+	pvSize, pvUse := client.getPVCSize(vm)
+	var openShiftStatusSupplier = getOpenShiftStatus
+	if vm.bundle.IsMicroshift() {
+		openShiftStatusSupplier = getMicroShiftStatus
+	}
+
+	return createClusterStatusResult(vmStatus, vm.bundle.GetBundleType(), vm.bundle.GetVersion(), ip, ramSize, ramUse, diskSize, diskUse, pvSize, pvUse, openShiftStatusSupplier)
+}
+
+func createClusterStatusResult(vmStatus state.State, bundleType preset.Preset, vmBundleVersion, vmIP string, diskSize, diskUse, ramSize, ramUse int64, pvUse, pvSize int, openShiftStatusSupplier openShiftStatusSupplierFunc) (*types.ClusterStatusResult, error) {
+	clusterStatusResult := &types.ClusterStatusResult{
+		CrcStatus:        vmStatus,
+		OpenshiftVersion: vmBundleVersion,
+		OpenshiftStatus:  types.OpenshiftStopped,
+	}
+	switch bundleType {
+	case preset.Microshift:
 		clusterStatusResult.Preset = preset.Microshift
+	case preset.OKD:
+		clusterStatusResult.Preset = preset.OKD
 	default:
-		clusterStatusResult.OpenshiftStatus = types.OpenshiftStopped
-		clusterStatusResult.OpenshiftVersion = vm.bundle.GetVersion()
 		clusterStatusResult.Preset = preset.OpenShift
 	}
 
@@ -51,27 +69,17 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 		return clusterStatusResult, nil
 	}
 
-	ip, err := vm.IP()
-	if err != nil {
-		return nil, errors.Wrap(err, "Error getting ip")
-	}
-
-	diskSize, diskUse := client.getDiskDetails(vm)
 	clusterStatusResult.CrcStatus = state.Running
 	clusterStatusResult.DiskUse = diskUse
 	clusterStatusResult.DiskSize = diskSize
-
-	switch {
-	case vm.bundle.IsMicroshift():
-		clusterStatusResult.OpenshiftStatus = getMicroShiftStatus(context.Background(), ip)
-		clusterStatusResult.PersistentVolumeUse, clusterStatusResult.PersistentVolumeSize = client.getPVCSize(vm)
-	case vm.bundle.IsOpenShift():
-		clusterStatusResult.OpenshiftStatus = getOpenShiftStatus(context.Background(), ip)
-	}
-
-	ramSize, ramUse := client.getRAMStatus(vm)
 	clusterStatusResult.RAMSize = ramSize
 	clusterStatusResult.RAMUse = ramUse
+	clusterStatusResult.OpenshiftStatus = openShiftStatusSupplier(context.Background(), vmIP)
+
+	if bundleType == preset.Microshift {
+		clusterStatusResult.PersistentVolumeUse = pvUse
+		clusterStatusResult.PersistentVolumeSize = pvSize
+	}
 
 	return clusterStatusResult, nil
 }
