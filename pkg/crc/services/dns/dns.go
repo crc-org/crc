@@ -20,7 +20,7 @@ import (
 
 const (
 	dnsServicePort    = 53
-	publicDNSQueryURI = "quay.io"
+	publicDNSQueryURI = "https://quay.io"
 	dnsmasqService    = "dnsmasq.service"
 )
 
