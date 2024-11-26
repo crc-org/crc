@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"runtime"
 	"strings"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
@@ -134,10 +135,17 @@ func validateYesNo(value interface{}) (bool, string) {
 	return false, "must be yes or no"
 }
 
+// validatePreset checks if given Preset is valid for CRC cluster creation
+// There is an additional check to throw unsupported operation exception in
+// case of using 'okd' preset value on top of ARM architecture.
 func validatePreset(value interface{}) (bool, string) {
-	_, err := crcpreset.ParsePresetE(cast.ToString(value))
+	parsedPreset, err := crcpreset.ParsePresetE(cast.ToString(value))
 	if err != nil {
 		return false, fmt.Sprintf("Unknown preset. Only %s are valid.", crcpreset.AllPresets())
+	}
+	arch := runtime.GOARCH
+	if parsedPreset == crcpreset.OKD && (arch == "arm" || arch == "arm64") {
+		return false, fmt.Sprintf("preset '%s' is not supported on %s architecture, please use different preset value", parsedPreset, runtime.GOARCH)
 	}
 	return true, ""
 }
