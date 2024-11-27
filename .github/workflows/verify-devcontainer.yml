@@ -1,0 +1,14 @@
+name: Verify make cross in devcontainer
+on:
+  push:
+    branches:
+      - "main"
+  pull_request: {}
+jobs:
+  verify-devcontainer:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Run `git clone` and `make cross` against devcontainer
+        run: >
+          podman run registry.access.redhat.com/ubi9/go-toolset:latest \
+            sh -c "git clone https://github.com/crc-org/crc --depth 1 && cd crc && make cross"
