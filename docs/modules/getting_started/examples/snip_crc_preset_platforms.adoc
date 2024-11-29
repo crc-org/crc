@@ -1,8 +1,0 @@
-.Preset and architecture compatibility
-[%header,format=csv,cols="3,1,1,1"]
-|===
-Preset, AMD64, Intel 64, Apple silicon
-{ocp}, yes, yes,  yes
-{okd}, yes, yes, no
-{ushift}, yes, yes, yes
-|===

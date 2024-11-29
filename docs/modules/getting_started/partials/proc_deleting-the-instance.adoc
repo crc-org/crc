@@ -1,8 +1,0 @@
-= Deleting the instance
-
-The [command]`{bin} delete` command deletes an existing {prod} instance.
-
-.Procedure
-* Delete the {prod} instance:
-+
-include::partial$snip_crc-delete.adoc[]

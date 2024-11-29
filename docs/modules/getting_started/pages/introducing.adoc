@@ -1,8 +1,0 @@
-:description: Introducing  {prod}
-
-[id="introducing_{context}"]
-= Introducing {rh-prod}
-
-include::partial$con_about.adoc[leveloffset=+1]
-
-include::partial$con_differences-from-production-openshift-install.adoc[leveloffset=+1]
