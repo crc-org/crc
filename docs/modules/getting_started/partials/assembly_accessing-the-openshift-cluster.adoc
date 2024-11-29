@@ -1,9 +1,0 @@
-= Accessing the {openshift} cluster
-
-Access the {ocp} cluster running in the {prod} instance by using the {ocp} web console or {openshift} CLI ([command]`oc`).
-
-include::partial$proc_accessing-the-openshift-web-console.adoc[leveloffset=+1]
-
-include::partial$proc_accessing-the-openshift-cluster-with-oc.adoc[leveloffset=+1]
-
-include::partial$proc_accessing-the-internal-openshift-registry.adoc[leveloffset=+1]

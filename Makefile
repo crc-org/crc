@@ -19,13 +19,6 @@ BUILD_DIR ?= out
 SOURCE_DIRS = cmd pkg test
 RELEASE_DIR ?= release
 
-# Docs build related variables
-DOCS_BUILD_DIR ?= docs/build
-DOCS_BUILD_CONTAINER ?= quay.io/crcont/antora:latest
-DOCS_SERVE_CONTAINER ?= docker.io/httpd:alpine
-DOCS_TEST_CONTAINER ?= docker.io/wjdp/htmltest:latest
-DOCS_BUILD_TARGET ?= /docs/source/getting_started/master.adoc
-
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 GOVERSION = 1.22
@@ -148,22 +141,6 @@ test-rpmbuild: spec
 	${CONTAINER_RUNTIME} rm test-rpmbuild
 	${CONTAINER_RUNTIME} rmi test-rpmbuild-img
 
-.PHONY: build_docs
-build_docs:
-	${CONTAINER_RUNTIME} run -v $(CURDIR):/antora$(SELINUX_VOLUME_LABEL) --rm $(DOCS_BUILD_CONTAINER) --stacktrace antora-playbook.yml
-
-.PHONY: docs_serve
-docs_serve: build_docs
-	${CONTAINER_RUNTIME} run -it -v $(CURDIR)/docs/build:/usr/local/apache2/htdocs/$(SELINUX_VOLUME_LABEL) --rm -p 8088:80/tcp $(DOCS_SERVE_CONTAINER)
-
-.PHONY: docs_check_links
-docs_check_links:
-	${CONTAINER_RUNTIME} run -v $(CURDIR):/test$(SELINUX_VOLUME_LABEL) --rm $(DOCS_TEST_CONTAINER) -c .htmltest.yml
-
-.PHONY: clean_docs clean_macos_package
-clean_docs:
-	rm -rf $(CURDIR)/docs/build
-
 clean_macos_package:
 	rm -f packaging/darwin/Distribution
 	rm -f packaging/darwin/Resources/welcome.html
@@ -175,7 +152,7 @@ clean_windows_msi:
 	rm -f $(HOST_BUILD_DIR)/split
 
 .PHONY: clean ## Remove all build artifacts
-clean: clean_docs clean_macos_package clean_windows_msi
+clean: clean_macos_package clean_windows_msi
 	rm -f $(GENERATED_RPM_FILES)
 	rm -rf $(BUILD_DIR)
 	rm -f $(GOPATH)/bin/crc
