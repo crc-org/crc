@@ -61,4 +61,12 @@ If your issue is not resolved by this procedure, perform the following steps:
 
 . link:https://github.com/crc-org/crc/issues[Search open issues] for the issue that you are encountering.
 . If no existing issue addresses the encountered issue, link:https://github.com/crc-org/crc/issues/new[create an issue] and link:https://help.github.com/en/articles/file-attachments-on-issues-and-pull-requests[attach the [filename]*_~/.crc/crc.log_* file] to the created issue.
-The [filename]*_~/.crc/crc.log_* file has detailed debugging and troubleshooting information which can help diagnose the problem that you are experiencing.
+The [filename]*_~/.crc/crc.log_* file has detailed debugging and troubleshooting information which can help diagnose the problem that you are experiencing. In case you're looking for more detailed information about virtual machine startup, state transitions and errors you can
+look into serial console logs created by virtual machine hypervisors. Here are the locations where you can find these logs:
+  - **libvirt**: In case of https://libvirt.org/kbase/debuglogs.html[libvirt], you can find the log file in `/var/log/libvirt/qemu/crc.log`
+  - **vfkit**: In case of https://github.com/crc-org/vfkit[vfkit], you can find log file in `~/.crc/vfkit.log`
+  - **hyper-v**: In case of Hyper-V, there are several options to get logs:
+    * **Event Logs for Hyper-V**: Go to start and open `Event Viewer`, then navigate to `Applications and Services Logs` → `Microsoft` → `Windows`. Here you should be able to find some options for `Hyper-V`,
+      click on `Hyper-V-VMMS` for Hyper-V Virtual Machine Management logs and `Hyper-V-Worker` for Hyper-V Worker logs.
+    * **VM Configuration Logs**: Each VM has a set of logs that can be found in the VM configuration folder. By default, this is located in the `C:\ProgramData\Microsoft\Windows\Hyper-V` folder. For each VM, there is a file called Virtual Machine Log File (`vmname.evtx`)
+      that records the events related to that particular VM.
