@@ -12,7 +12,7 @@ jobs:
       matrix:
         os:
           - macOS-13
-          - macOS-12
+          - macOS-14
           - ubuntu-latest
           - ubuntu-20.04
         go:
