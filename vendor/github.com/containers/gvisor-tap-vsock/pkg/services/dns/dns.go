@@ -16,17 +16,17 @@ import (
 )
 
 type dnsHandler struct {
-	zones      []types.Zone
-	zonesLock  sync.RWMutex
-	udpClient  *dns.Client
-	tcpClient  *dns.Client
-	hostsFile  *HostsFile
-	nameserver string
+	zones       []types.Zone
+	zonesLock   sync.RWMutex
+	udpClient   *dns.Client
+	tcpClient   *dns.Client
+	hostsFile   *HostsFile
+	nameservers []string
 }
 
 func newDNSHandler(zones []types.Zone) (*dnsHandler, error) {
 
-	nameserver, port, err := getDNSHostAndPort()
+	nameservers, err := getDNSHostAndPort()
 	if err != nil {
 		return nil, err
 	}
@@ -37,11 +37,11 @@ func newDNSHandler(zones []types.Zone) (*dnsHandler, error) {
 	}
 
 	return &dnsHandler{
-		zones:      zones,
-		tcpClient:  &dns.Client{Net: "tcp"},
-		udpClient:  &dns.Client{Net: "udp"},
-		nameserver: net.JoinHostPort(nameserver, port),
-		hostsFile:  hostsFile,
+		zones:       zones,
+		tcpClient:   &dns.Client{Net: "tcp"},
+		udpClient:   &dns.Client{Net: "udp"},
+		nameservers: nameservers,
+		hostsFile:   hostsFile,
 	}, nil
 
 }
@@ -145,15 +145,19 @@ func (h *dnsHandler) addAnswers(dnsClient *dns.Client, r *dns.Msg) *dns.Msg {
 			return m
 		}
 	}
-
-	r, _, err := dnsClient.Exchange(r, h.nameserver)
-	if err != nil {
-		log.Errorf("Error during DNS Exchange: %s", err)
-		m.Rcode = dns.RcodeNameError
-		return m
+	for _, nameserver := range h.nameservers {
+		msg := r.Copy()
+		r, _, err := dnsClient.Exchange(msg, nameserver)
+		// return first good answer
+		if err == nil {
+			return r
+		}
+		log.Debugf("Error during DNS Exchange: %s", err)
 	}
 
-	return r
+	// return the error if none of configured nameservers has right answer
+	m.Rcode = dns.RcodeNameError
+	return m
 }
 
 type Server struct {

@@ -3,24 +3,23 @@
 package dns
 
 import (
-	"net/netip"
+	"net"
 	"strconv"
 
 	qdmDns "github.com/qdm12/dns/v2/pkg/nameserver"
 )
 
-func getDNSHostAndPort() (string, string, error) {
+func getDNSHostAndPort() ([]string, error) {
 	nameservers := qdmDns.GetDNSServers()
 
-	var nameserver netip.AddrPort
+	var dnsServers []string
 	for _, n := range nameservers {
-		// return first non ipv6 nameserver
+		// return only ipv4 nameservers
 		if n.Addr().Is4() {
-			nameserver = n
-			break
+			dnsServers = append(dnsServers, net.JoinHostPort(n.Addr().String(), strconv.Itoa(int(n.Port()))))
 		}
 	}
 
-	return nameserver.Addr().String(), strconv.Itoa(int(nameserver.Port())), nil
+	return dnsServers, nil
 
 }

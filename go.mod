@@ -12,7 +12,7 @@ require (
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/containers/common v0.60.4
-	github.com/containers/gvisor-tap-vsock v0.8.0
+	github.com/containers/gvisor-tap-vsock v0.8.1
 	github.com/containers/image/v5 v5.32.2
 	github.com/containers/libhvee v0.9.0
 	github.com/coreos/go-systemd/v22 v22.5.0
@@ -95,7 +95,7 @@ require (
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.2 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
