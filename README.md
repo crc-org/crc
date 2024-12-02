@@ -34,23 +34,11 @@ CRC binaries with an embedded OpenShift disk image can be downloaded from [this 
 ### Using CRC
 The documentation for CRC is currently hosted by GitHub Pages.
 
-See the [CRC Getting Started Guide](https://crc-org.github.io/crc/).
+See the [Getting Started Guide](https://crc.dev/docs).
 
-### Building the documentation
-You can find the source files for the documentation in the [docs](https://github.com/crc-org/crc/blob/main/docs) directory.
-
-To build the formatted documentation, [install podman](https://github.com/containers/libpod/blob/master/install.md) then use the following:
-
-```shell
-$ git clone https://github.com/crc-org/crc
-$ cd crc
-$ make build_docs
-```
-
-This will create a `docs/build/master.html` file which you can view in your browser.
 
 ### Developing CRC
-Developers who want to work on CRC should visit the [Developing CRC](https://github.com/crc-org/crc/blob/main/developing.adoc) document.
+Developers who want to work on CRC should visit the [Developing CRC](https://github.com/crc-org/engineering-docs/blob/main/content/Developing.md) document.
 
 ## Community
 Contributions, questions, and comments are all welcomed and encouraged!
