@@ -1,0 +1,45 @@
+name: Task 🔧
+description: Internal things, technical debt, and to-do tasks to be performed
+labels: [kind/task]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Suggesting a new task 🔧
+
+        🤔  To make it easier for us to help you, please include as much useful information as possible.
+
+        Useful Links:
+          - 📄  Documentation: https://crc.dev/docs/introducing/
+          - 📝  Contributing: https://crc.dev/engineering-docs/
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Component
+      options:
+        - "Documentation"
+        - "VM Drivers"
+        - "Images"
+        - "Daemon"
+        - "CLI"
+        - "Quality Engineering"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Task description
+      description: Step by step details on how to proceed with task.
+      value: |
+        ### Description
+
+
+        ### Expected Behavior
+
+
+        ### Acceptance Criteria
+        - [ ] AC1

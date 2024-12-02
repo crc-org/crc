@@ -1,0 +1,170 @@
+name: Bug report 🐞
+description: Report a bug
+labels: [kind/bug]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Creating a new Bug 🐞
+        🔍  Before opening a new issue please search existing issues at https://github.com/crc-org/crc/issues
+
+        🤔  To make it easier for us to help you, please include as much useful information as possible.
+
+        Useful Links:
+          - 📄  Documentation: https://crc.dev/docs/introducing/
+          - 📝  Contributing: https://crc.dev/engineering-docs/
+
+  - type: textarea
+    id: general-info
+    attributes:
+      label: General information
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe the bug
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: Which Operating System are you running CRC on?
+      multiple: false
+      options:
+      - Linux
+      - macOS
+      - Windows
+    validations:
+      required: true
+
+  - type: dropdown
+    id: hypervisor
+    attributes:
+      label: Hypervisor
+      description: Which Operating System are you running CRC on?
+      multiple: false
+      options:
+      - KVM
+      - Hyper-V
+      - hyperkit
+      - vfkit
+    validations:
+      required: true
+
+  - type: dropdown
+    id: crcsetup
+    attributes:
+      label: Did you run `crc setup` before `crc start`?
+      description: Did you run `crc setup` before starting it ?
+      multiple: false
+      options:
+      - 'yes'
+      - 'no'
+    validations:
+      required: true
+
+  - type: dropdown
+    id: running-on
+    attributes:
+      label: Running on
+      description: Running CRC on
+      multiple: false
+      options:
+      - Laptop
+      - Baremetal-Server
+      - VM
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What are the steps to reproduce this bug ?
+      placeholder: |
+        1. Do '...'
+        2. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: version
+    attributes:
+      label: CRC version
+      placeholder: |
+        # Put `crc version` output here
+      description:
+      render: shell
+
+  - type: textarea
+    id: status
+    attributes:
+      label: CRC status
+      placeholder: |
+        # Put `crc status --log-level debug` output here
+      description:
+      render: shell
+
+  - type: textarea
+    id: config
+    attributes:
+      label: CRC config
+      placeholder: |
+        # Put `crc config view` output here
+      description:
+      render: shell
+
+  - type: textarea
+    id: host-os
+    attributes:
+      label: Host Operating System
+      placeholder: |
+        # Put the output of `cat /etc/os-release` in case of Linux
+        # put the output of `sw_vers` in case of Mac
+        # Put the output of `systeminfo` in case of Windows
+      description:
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+      placeholder:
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual behavior
+      description: A clear and concise description of what actually happens.
+      placeholder:
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: CRC Logs
+      placeholder: |
+        Before gather the logs try following if that fix your issue
+        ```bash
+        $ crc delete -f
+        $ crc cleanup
+        $ crc setup
+        $ crc start --log-level debug
+        ```
+        Please consider posting the output of `crc start --log-level debug`  on http://gist.github.com/ and post the link in the issue.
+      description:
+      render: shell
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.
+      placeholder:
+
