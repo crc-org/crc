@@ -22,7 +22,7 @@ import (
 func bundleCheck(bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) Check {
 	return Check{
 		configKeySuffix:  "check-bundle-extracted",
-		checkDescription: "Checking if CRC bundle is extracted in '$HOME/.crc'",
+		checkDescription: fmt.Sprintf("Checking if CRC bundle is extracted in %q", bundlePath),
 		check:            checkBundleExtracted(bundlePath),
 		fixDescription:   "Getting bundle for the CRC executable",
 		fix:              fixBundleExtracted(bundlePath, preset, enableBundleQuayFallback),
