@@ -2,9 +2,9 @@ all: install
 
 SHELL := /bin/bash -o pipefail
 
-OPENSHIFT_VERSION ?= 4.17.3
+OPENSHIFT_VERSION ?= 4.17.7
 OKD_VERSION ?= 4.15.0-0.okd-2024-02-23-163410
-MICROSHIFT_VERSION ?= 4.17.3
+MICROSHIFT_VERSION ?= 4.17.7
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 2.44.0
 COMMIT_SHA?=$(shell git rev-parse --short=6 HEAD)
