@@ -344,43 +344,49 @@ func getVerifiedHash(url string, file string) (string, error) {
 	return "", fmt.Errorf("%s hash is missing or shasums are malformed", file)
 }
 
-func downloadDefault(ctx context.Context, preset crcPreset.Preset) (string, error) {
+func downloadDefault(ctx context.Context, preset crcPreset.Preset) (io.Reader, string, error) {
 	downloadInfo, err := getBundleDownloadInfo(preset)
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 	return downloadInfo.Download(ctx, constants.GetDefaultBundlePath(preset), 0664)
 }
 
-func Download(ctx context.Context, preset crcPreset.Preset, bundleURI string, enableBundleQuayFallback bool) (string, error) {
+func Download(ctx context.Context, preset crcPreset.Preset, bundleURI string, enableBundleQuayFallback bool) (io.Reader, string, error) {
 	// If we are asked to download
 	// ~/.crc/cache/crc_podman_libvirt_4.1.1.crcbundle, this means we want
 	// are downloading the default bundle for this release. This uses a
 	// different codepath from user-specified URIs as for the default
 	// bundles, their sha256sums are known and can be checked.
+	var reader io.Reader
 	if bundleURI == constants.GetDefaultBundlePath(preset) {
 		switch preset {
 		case crcPreset.OpenShift, crcPreset.Microshift:
-			downloadedBundlePath, err := downloadDefault(ctx, preset)
+			var err error
+			var downloadedBundlePath string
+			reader, downloadedBundlePath, err = downloadDefault(ctx, preset)
 			if err != nil && enableBundleQuayFallback {
 				logging.Info("Unable to download bundle from mirror, falling back to quay")
-				return image.PullBundle(ctx, constants.GetDefaultBundleImageRegistry(preset))
+				bundle, err := image.PullBundle(ctx, constants.GetDefaultBundleImageRegistry(preset))
+				return nil, bundle, err
 			}
-			return downloadedBundlePath, err
+			return reader, downloadedBundlePath, err
 		case crcPreset.OKD:
 			fallthrough
 		default:
-			return image.PullBundle(ctx, constants.GetDefaultBundleImageRegistry(preset))
+			bundle, err := image.PullBundle(ctx, constants.GetDefaultBundleImageRegistry(preset))
+			return nil, bundle, err
 		}
 	}
 	switch {
 	case strings.HasPrefix(bundleURI, "http://"), strings.HasPrefix(bundleURI, "https://"):
 		return download.Download(ctx, bundleURI, constants.MachineCacheDir, 0644, nil)
 	case strings.HasPrefix(bundleURI, "docker://"):
-		return image.PullBundle(ctx, bundleURI)
+		bundle, err := image.PullBundle(ctx, bundleURI)
+		return nil, bundle, err
 	}
 	// the `bundleURI` parameter turned out to be a local path
-	return bundleURI, nil
+	return reader, bundleURI, nil
 }
 
 type Version struct {

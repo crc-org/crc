@@ -32,6 +32,20 @@ func Uncompress(ctx context.Context, tarball, targetDir string) ([]string, error
 	return uncompress(ctx, tarball, targetDir, nil, terminal.IsShowTerminalOutput())
 }
 
+func UncompressWithReader(ctx context.Context, reader io.Reader, targetDir string) ([]string, error) {
+	return uncompressWithReader(ctx, reader, targetDir, nil, terminal.IsShowTerminalOutput())
+}
+
+func uncompressWithReader(ctx context.Context, reader io.Reader, targetDir string, fileFilter func(string) bool, showProgress bool) ([]string, error) {
+	logging.Debugf("Uncompressing from reader to %s", targetDir)
+
+	reader, err := zstd.NewReader(reader)
+	if err != nil {
+		return nil, err
+	}
+	return untar(ctx, reader, targetDir, fileFilter, showProgress)
+}
+
 func uncompress(ctx context.Context, tarball, targetDir string, fileFilter func(string) bool, showProgress bool) ([]string, error) {
 	logging.Debugf("Uncompressing %s to %s", tarball, targetDir)
 

@@ -3,6 +3,7 @@ package preflight
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -116,13 +117,14 @@ func fixBundleExtracted(bundlePath string, preset crcpreset.Preset, enableBundle
 			return fmt.Errorf("Cannot create directory %s: %v", bundleDir, err)
 		}
 		var err error
+		var reader io.Reader
 		logging.Infof("Downloading bundle: %s...", bundlePath)
-		if bundlePath, err = bundle.Download(context.TODO(), preset, bundlePath, enableBundleQuayFallback); err != nil {
+		if reader, bundlePath, err = bundle.Download(context.TODO(), preset, bundlePath, enableBundleQuayFallback); err != nil {
 			return err
 		}
 
 		logging.Infof("Uncompressing %s", bundlePath)
-		if _, err := bundle.Extract(context.TODO(), bundlePath); err != nil {
+		if _, err := bundle.Extract(context.TODO(), reader, bundlePath); err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				return errors.Wrap(err, "Use `crc setup -b <bundle-path>`")
 			}
