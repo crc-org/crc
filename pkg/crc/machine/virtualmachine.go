@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/bundle"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
 	"github.com/crc-org/crc/v2/pkg/crc/ssh"
@@ -51,6 +52,7 @@ func loadVirtualMachine(name string, useVSock bool) (*virtualMachine, error) {
 
 	crcBundleMetadata, err := getBundleMetadataFromDriver(libmachineHost.Driver)
 	if err != nil {
+		logging.Debugf("Failed to get bundle metadata: %v", err)
 		err = errInvalidBundleMetadata
 	}
 
