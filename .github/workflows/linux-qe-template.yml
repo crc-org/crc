@@ -48,10 +48,7 @@ jobs:
           echo "commit_sha=${commit_sha}" >> "$GITHUB_ENV"
 
           # Set status_context
-          status_context="ci/gh/${{inputs.qe-type}}"
-          if [[ "${{inputs.qe-type}}" == "e2e" ]]; then
-            status_context="${status_context}-${{inputs.preset}}"
-          fi
+          status_context="ci/gh/${{inputs.qe-type}}-${{inputs.preset}}"
           status_context="${status_context}/Linux-ARM64"
           echo "status_context=${status_context}" >> "$GITHUB_ENV"
 
