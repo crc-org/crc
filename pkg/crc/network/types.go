@@ -2,7 +2,6 @@ package network
 
 import (
 	"fmt"
-	"runtime"
 
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/spf13/cast"
@@ -55,7 +54,7 @@ func parseMode(input string) (Mode, error) {
 	case string(SystemNetworkingMode), "default":
 		return SystemNetworkingMode, nil
 	default:
-		return SystemNetworkingMode, fmt.Errorf("Cannot parse mode '%s'", input)
+		return UserNetworkingMode, fmt.Errorf("Cannot parse mode '%s'", input)
 	}
 }
 func ParseMode(input string) Mode {
@@ -68,12 +67,7 @@ func ParseMode(input string) Mode {
 }
 
 func getDefaultMode() Mode {
-	switch runtime.GOOS {
-	case "linux":
-		return SystemNetworkingMode
-	default:
-		return UserNetworkingMode
-	}
+	return UserNetworkingMode
 }
 
 func ValidateMode(val interface{}) (bool, string) {

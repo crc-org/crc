@@ -168,10 +168,7 @@ func GetPreset(config Storage) preset.Preset {
 }
 
 func defaultNetworkMode() network.Mode {
-	if runtime.GOOS != "linux" {
-		return network.UserNetworkingMode
-	}
-	return network.SystemNetworkingMode
+	return network.UserNetworkingMode
 }
 
 func GetNetworkMode(config Storage) network.Mode {
