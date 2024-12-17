@@ -47,13 +47,11 @@ What is the _bottom-line_ functionality that needs testing? Describe in pseudo-c
 -->
 
 ## Contribution Checklist
-- [ ] I have read the [contributing guidelines](https://github.com/crc-org/crc/blob/main/developing.adoc)
-- [ ] My code follows the style guidelines of this project
 - [ ] I Keep It Small and Simple: The smaller the PR is, the easier it is to review and have it merged
 - [ ] I have performed a self-review of my code
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
-- [ ] I tested my code on specified platforms <!-- Only put an `x` in applicable platforms -->
+- [ ] Which platform have you tested the code changes on? <!-- Only put an `x` in applicable platforms -->
     - [ ] Linux
     - [ ] Windows
     - [ ] MacOS
