@@ -3,6 +3,7 @@ package daemonclient
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	networkclient "github.com/containers/gvisor-tap-vsock/pkg/client"
 	"github.com/crc-org/crc/v2/pkg/crc/api/client"
@@ -24,6 +25,7 @@ func New() *Client {
 			Transport: transport(),
 		}, "http://unix/network"),
 		APIClient: client.New(&http.Client{
+			Timeout:   30 * time.Second,
 			Transport: transport(),
 		}, "http://unix/api"),
 		SSEClient: client.NewSSEClient(transport()),
