@@ -35,10 +35,14 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 		return nil, errors.Wrap(err, "Cannot get machine state")
 	}
 
-	ip, err := vm.IP()
-	if err != nil {
-		return nil, errors.Wrap(err, "Error getting ip")
+	ip := ""
+	if vmStatus == state.Running {
+		ip, err = vm.IP()
+		if err != nil {
+			return nil, errors.Wrap(err, "Error getting ip")
+		}
 	}
+
 	ramSize, ramUse := client.getRAMStatus(vm)
 	diskSize, diskUse := client.getDiskDetails(vm)
 	pvSize, pvUse := client.getPVCSize(vm)
