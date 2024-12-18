@@ -61,6 +61,9 @@ Feature: Basic test
         Then stdout should match "(.*)[Ss]topped the instance"
         And executing "oc whoami" fails
         And kubeconfig is cleaned up
+        # Given CRC Cluster is stopped, When crc status is executed, Then crc should report that cluster is stopped without throwing any error
+        When executing "crc status"
+        Then stdout should match "(.*)Stopped"
         # status check
         When checking that CRC is stopped
         And stdout should not contain "Running"
