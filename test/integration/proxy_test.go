@@ -3,7 +3,6 @@ package test_test
 import (
 	"os"
 	"os/exec"
-	"runtime"
 
 	crc "github.com/crc-org/crc/v2/test/extended/crc/cmd"
 	"github.com/crc-org/crc/v2/test/extended/util"
@@ -41,11 +40,6 @@ var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func
 		httpsProxy := "http://127.0.0.1:8888"
 		noProxy := ".testing"
 
-		if runtime.GOOS == "linux" {
-			httpProxy = "http://192.168.130.1:8888"
-			httpsProxy = "http://192.168.130.1:8888"
-		}
-
 		// Start goproxy
 
 		It("configure CRC", func() {
@@ -53,9 +47,7 @@ var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func
 			Expect(RunCRCExpectSuccess("config", "set", "https-proxy", httpsProxy)).To(ContainSubstring("Successfully configured https-proxy"))
 			Expect(RunCRCExpectSuccess("config", "set", "no-proxy", noProxy)).To(ContainSubstring("Successfully configured no-proxy"))
 			Expect(RunCRCExpectSuccess("config", "set", "proxy-ca-file", util.CACertTempLocation)).To(ContainSubstring("Successfully configured proxy-ca-file"))
-			if runtime.GOOS != "linux" {
-				Expect(RunCRCExpectSuccess("config", "set", "host-network-access", "true")).To(ContainSubstring("Changes to configuration property 'host-network-access' are only applied during 'crc setup'"))
-			}
+			Expect(RunCRCExpectSuccess("config", "set", "host-network-access", "true")).To(ContainSubstring("Changes to configuration property 'host-network-access' are only applied during 'crc setup'"))
 		})
 
 		It("setup CRC", func() {

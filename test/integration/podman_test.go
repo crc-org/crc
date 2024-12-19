@@ -57,9 +57,6 @@ var _ = Describe("podman-remote", Serial, Ordered, Label("microshift-preset"), f
 				csshk = filepath.Join(userHomeDir, ".crc/machines/crc/id_ed25519")
 				dh = "npipe:////./pipe/crc-podman"
 			}
-			if runtime.GOOS == "linux" {
-				ch = "ssh://core@192.168.130.11:22/run/user/1000/podman/podman.sock"
-			}
 
 			os.Setenv("PATH", path)
 			os.Setenv("CONTAINER_SSHKEY", csshk)

@@ -79,18 +79,20 @@ Feature: Test configuration settings
         Examples:
             | property                             | value1 | value2 |
             | skip-check-bundle-extracted          | true   | false  |
-            | skip-check-crc-network               | true   | false  |
-            | skip-check-crc-network-active        | true   | false  |
             | skip-check-kvm-enabled               | true   | false  |
             | skip-check-libvirt-driver            | true   | false  |
             | skip-check-libvirt-installed         | true   | false  |
             | skip-check-libvirt-running           | true   | false  |
             | skip-check-libvirt-version           | true   | false  |
-            | skip-check-network-manager-installed | true   | false  |
-            | skip-check-network-manager-running   | true   | false  |
             | skip-check-root-user                 | true   | false  |
             | skip-check-user-in-libvirt-group     | true   | false  |
             | skip-check-virt-enabled              | true   | false  |
+    
+    # the following properties not suit for user notwork
+    #| skip-check-crc-network               | true   | false  | 
+    #| skip-check-crc-network-active        | true   | false  | 
+    #| skip-check-network-manager-installed | true   | false  | 
+    #| skip-check-network-manager-running   | true   | false  | 
 
         @windows
         Examples:
@@ -118,12 +120,9 @@ Feature: Test configuration settings
         When removing file "crc.json" from CRC home folder succeeds
         And executing single crc setup command succeeds
         And executing "sudo virsh net-list --name" succeeds
-        Then stdout contains "crc"
-        When executing "sudo virsh net-undefine crc && sudo virsh net-destroy crc" succeeds
-        And executing "sudo virsh net-list --name" succeeds
-        Then stdout should not contain "crc"
+        Then stdout contains "default"
 
-    @linux
+    @linux @system_network
     Scenario: Running `crc setup` with checks enabled restores destroyed network
         When setting config property "skip-check-crc-network" to value "false" succeeds
         And setting config property "skip-check-crc-network-active" to value "false" succeeds
@@ -131,7 +130,7 @@ Feature: Test configuration settings
         And executing "sudo virsh net-list --name" succeeds
         And stdout contains "crc"
 
-    @linux
+    @linux @system_network
     Scenario: Running `crc start` without `crc setup` and with checks disabled fails when network destroyed
         # Destroy network again
         When executing "sudo virsh net-undefine crc && sudo virsh net-destroy crc" succeeds
