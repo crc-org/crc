@@ -6,7 +6,6 @@ package shell
 import (
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 )
 
@@ -16,12 +15,11 @@ var (
 
 // detect detects user's current shell.
 func detect() (string, error) {
-	shell := os.Getenv("SHELL")
-
-	if shell == "" {
+	detectedShell := detectShellByInvokingCommand("", "ps", []string{"-o", "pid=,comm=", "--sort=-pid"})
+	if detectedShell == "" {
 		fmt.Printf("The default lines below are for a sh/bash shell, you can specify the shell you're using, with the --shell flag.\n\n")
 		return "", ErrUnknownShell
 	}
 
-	return filepath.Base(shell), nil
+	return filepath.Base(detectedShell), nil
 }
