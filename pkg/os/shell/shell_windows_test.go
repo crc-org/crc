@@ -43,3 +43,47 @@ func TestGetNameAndItsPpidOfParent(t *testing.T) {
 	assert.Equal(t, "go.exe", shell)
 	assert.NoError(t, err)
 }
+
+func TestSupportedShells(t *testing.T) {
+	assert.Equal(t, []string{"cmd", "powershell", "bash", "zsh", "fish"}, supportedShell)
+}
+
+func TestShellType(t *testing.T) {
+	tests := []struct {
+		name              string
+		userShell         string
+		expectedShellType string
+	}{
+		{"git bash", "C:\\Program Files\\Git\\usr\\bin\\bash.exe", "bash"},
+		{"windows subsystem for linux", "wsl.exe", "bash"},
+		{"powershell", "powershell", "powershell"},
+		{"cmd.exe", "cmd.exe", "cmd"},
+		{"pwsh", "pwsh.exe", "powershell"},
+		{"empty value", "", "cmd"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Given
+			CommandRunner = NewMockCommandRunner()
+			// When
+			result := shellType(tt.userShell, "cmd")
+			// Then
+			if result != tt.expectedShellType {
+				t.Errorf("shellType(%s) = %s; want %s", tt.userShell, result, tt.expectedShellType)
+			}
+		})
+	}
+}
+
+func TestDetectShellInWindowsSubsystemLinux(t *testing.T) {
+	// Given
+	mockCommandExecutor := NewMockCommandRunner()
+	CommandRunner = mockCommandExecutor
+
+	// When
+	shellType("wsl.exe", "cmd")
+
+	// Then
+	assert.Equal(t, "wsl", mockCommandExecutor.commandName)
+	assert.Equal(t, []string{"-e", "bash", "-c", "ps -ao pid=,comm= --sort=-pid"}, mockCommandExecutor.commandArgs)
+}

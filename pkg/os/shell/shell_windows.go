@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"unsafe"
 )
 
 var (
-	supportedShell = []string{"cmd", "powershell"}
+	supportedShell = []string{"cmd", "powershell", "bash", "zsh", "fish"}
 )
 
 // re-implementation of private function in https://github.com/golang/go/blob/master/src/syscall/syscall_windows.go
@@ -62,6 +63,10 @@ func shellType(shell string, defaultShell string) string {
 		return "powershell"
 	case strings.Contains(strings.ToLower(shell), "cmd"):
 		return "cmd"
+	case strings.Contains(strings.ToLower(shell), "wsl"):
+		return detectShellByInvokingCommand("bash", "wsl", []string{"-e", "bash", "-c", "ps -ao pid=,comm= --sort=-pid"})
+	case filepath.IsAbs(shell) && strings.Contains(strings.ToLower(shell), "bash"):
+		return "bash"
 	default:
 		return defaultShell
 	}
