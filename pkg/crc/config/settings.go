@@ -29,6 +29,7 @@ const (
 	ConsentTelemetry         = "consent-telemetry"
 	EnableClusterMonitoring  = "enable-cluster-monitoring"
 	KubeAdminPassword        = "kubeadmin-password"
+	DeveloperPassword        = "developer-password"
 	Preset                   = "preset"
 	EnableSharedDirs         = "enable-shared-dirs"
 	SharedDirPassword        = "shared-dir-password" // #nosec G101
@@ -134,6 +135,8 @@ func RegisterSettings(cfg *Config) {
 
 	cfg.AddSetting(KubeAdminPassword, "", validateString, SuccessfullyApplied,
 		"User defined kubeadmin password")
+	cfg.AddSetting(DeveloperPassword, constants.DefaultDeveloperPassword, validateString, SuccessfullyApplied,
+		"User defined developer password")
 	cfg.AddSetting(IngressHTTPPort, constants.OpenShiftIngressHTTPPort, validatePort, RequiresHTTPPortChangeWarning,
 		fmt.Sprintf("HTTP port to use for OpenShift ingress/routes on the host (1024-65535, default: %d)", constants.OpenShiftIngressHTTPPort))
 	cfg.AddSetting(IngressHTTPSPort, constants.OpenShiftIngressHTTPSPort, validatePort, RequiresHTTPSPortChangeWarning,

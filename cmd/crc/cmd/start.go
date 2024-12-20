@@ -77,6 +77,7 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		NameServer:        config.Get(crcConfig.NameServer).AsString(),
 		PullSecret:        cluster.NewInteractivePullSecretLoader(config),
 		KubeAdminPassword: config.Get(crcConfig.KubeAdminPassword).AsString(),
+		DeveloperPassword: config.Get(crcConfig.DeveloperPassword).AsString(),
 		Preset:            crcConfig.GetPreset(config),
 		IngressHTTPPort:   config.Get(crcConfig.IngressHTTPPort).AsUInt(),
 		IngressHTTPSPort:  config.Get(crcConfig.IngressHTTPSPort).AsUInt(),

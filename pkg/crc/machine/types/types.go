@@ -26,6 +26,9 @@ type StartConfig struct {
 	// User defined kubeadmin password
 	KubeAdminPassword string
 
+	// User defined developer password
+	DeveloperPassword string
+
 	// Preset
 	Preset crcpreset.Preset
 
