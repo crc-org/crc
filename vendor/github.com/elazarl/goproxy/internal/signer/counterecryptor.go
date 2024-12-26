@@ -1,9 +1,10 @@
-package goproxy
+package signer
 
 import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
@@ -17,7 +18,7 @@ type CounterEncryptorRand struct {
 	ix      int
 }
 
-func NewCounterEncryptorRandFromKey(key interface{}, seed []byte) (r CounterEncryptorRand, err error) {
+func NewCounterEncryptorRandFromKey(key any, seed []byte) (r CounterEncryptorRand, err error) {
 	var keyBytes []byte
 	switch key := key.(type) {
 	case *rsa.PrivateKey:
@@ -26,13 +27,16 @@ func NewCounterEncryptorRandFromKey(key interface{}, seed []byte) (r CounterEncr
 		if keyBytes, err = x509.MarshalECPrivateKey(key); err != nil {
 			return
 		}
+	case ed25519.PrivateKey:
+		if keyBytes, err = x509.MarshalPKCS8PrivateKey(key); err != nil {
+			return
+		}
 	default:
-		err = errors.New("only RSA and ECDSA keys supported")
-		return
+		return r, errors.New("only RSA, ED25519 and ECDSA keys supported")
 	}
 	h := sha256.New()
 	if r.cipher, err = aes.NewCipher(h.Sum(keyBytes)[:aes.BlockSize]); err != nil {
-		return
+		return r, err
 	}
 	r.counter = make([]byte, r.cipher.BlockSize())
 	if seed != nil {
@@ -40,7 +44,7 @@ func NewCounterEncryptorRandFromKey(key interface{}, seed []byte) (r CounterEncr
 	}
 	r.rand = make([]byte, r.cipher.BlockSize())
 	r.ix = len(r.rand)
-	return
+	return r, nil
 }
 
 func (c *CounterEncryptorRand) Seed(b []byte) {

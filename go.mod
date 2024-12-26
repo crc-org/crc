@@ -22,7 +22,7 @@ require (
 	github.com/cucumber/godog v0.15.0
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/go-units v0.5.0
-	github.com/elazarl/goproxy v0.0.0-20231117061959-7cc037d33fb5
+	github.com/elazarl/goproxy v1.2.1
 	github.com/gorilla/handlers v1.5.2
 	github.com/h2non/filetype v1.1.3
 	github.com/hectane/go-acl v0.0.0-20230122075934-ca0b05cb1adb

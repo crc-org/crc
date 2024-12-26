@@ -2,13 +2,13 @@ package goproxy
 
 import (
 	"bufio"
+	"errors"
 	"io"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"regexp"
-	"sync/atomic"
 )
 
 // The basic proxy type. Implements http.Handler.
@@ -26,12 +26,27 @@ type ProxyHttpServer struct {
 	respHandlers    []RespHandler
 	httpsHandlers   []HttpsHandler
 	Tr              *http.Transport
+	// ConnectionErrHandler will be invoked to return a custom response
+	// to clients (written using conn parameter), when goproxy fails to connect
+	// to a target proxy.
+	// The error is passed as function parameter and not inside the proxy
+	// context, to avoid race conditions.
+	ConnectionErrHandler func(conn io.Writer, ctx *ProxyCtx, err error)
 	// ConnectDial will be used to create TCP connections for CONNECT requests
 	// if nil Tr.Dial will be used
 	ConnectDial        func(network string, addr string) (net.Conn, error)
 	ConnectDialWithReq func(req *http.Request, network string, addr string) (net.Conn, error)
 	CertStore          CertStorage
 	KeepHeader         bool
+	AllowHTTP2         bool
+	// KeepAcceptEncoding, if true, prevents the proxy from dropping
+	// Accept-Encoding headers from the client.
+	//
+	// Note that the outbound http.Transport may still choose to add
+	// Accept-Encoding: gzip if the client did not explicitly send an
+	// Accept-Encoding header. To disable this behavior, set
+	// Tr.DisableCompression to true.
+	KeepAcceptEncoding bool
 }
 
 var hasPort = regexp.MustCompile(`:\d+$`)
@@ -43,24 +58,20 @@ func copyHeaders(dst, src http.Header, keepDestHeaders bool) {
 		}
 	}
 	for k, vs := range src {
-		for _, v := range vs {
-			dst.Add(k, v)
-		}
+		// direct assignment to avoid canonicalization
+		dst[k] = append([]string(nil), vs...)
 	}
 }
 
-func isEof(r *bufio.Reader) bool {
+func isEOF(r *bufio.Reader) bool {
 	_, err := r.Peek(1)
-	if err == io.EOF {
-		return true
-	}
-	return false
+	return errors.Is(err, io.EOF)
 }
 
 func (proxy *ProxyHttpServer) filterRequest(r *http.Request, ctx *ProxyCtx) (req *http.Request, resp *http.Response) {
 	req = r
 	for _, h := range proxy.reqHandlers {
-		req, resp = h.Handle(r, ctx)
+		req, resp = h.Handle(req, ctx)
 		// non-nil resp means the handler decided to skip sending the request
 		// and return canned response instead.
 		if resp != nil {
@@ -69,6 +80,7 @@ func (proxy *ProxyHttpServer) filterRequest(r *http.Request, ctx *ProxyCtx) (req
 	}
 	return
 }
+
 func (proxy *ProxyHttpServer) filterResponse(respOrig *http.Response, ctx *ProxyCtx) (resp *http.Response) {
 	resp = respOrig
 	for _, h := range proxy.respHandlers {
@@ -78,12 +90,15 @@ func (proxy *ProxyHttpServer) filterResponse(respOrig *http.Response, ctx *Proxy
 	return
 }
 
-func removeProxyHeaders(ctx *ProxyCtx, r *http.Request) {
+// RemoveProxyHeaders removes all proxy headers which should not propagate to the next hop.
+func RemoveProxyHeaders(ctx *ProxyCtx, r *http.Request) {
 	r.RequestURI = "" // this must be reset when serving a request with the client
 	ctx.Logf("Sending request %v %v", r.Method, r.URL.String())
-	// If no Accept-Encoding header exists, Transport will add the headers it can accept
-	// and would wrap the response body with the relevant reader.
-	r.Header.Del("Accept-Encoding")
+	if !ctx.Proxy.KeepAcceptEncoding {
+		// If no Accept-Encoding header exists, Transport will add the headers it can accept
+		// and would wrap the response body with the relevant reader.
+		r.Header.Del("Accept-Encoding")
+	}
 	// curl can add that, see
 	// https://jdebp.eu./FGA/web-proxy-connection-header.html
 	r.Header.Del("Proxy-Connection")
@@ -124,102 +139,22 @@ func (fw flushWriter) Write(p []byte) (int, error) {
 
 // Standard net/http function. Shouldn't be used directly, http.Serve will use it.
 func (proxy *ProxyHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	//r.Header["X-Forwarded-For"] = w.RemoteAddr()
-	if r.Method == "CONNECT" {
+	if r.Method == http.MethodConnect {
 		proxy.handleHttps(w, r)
 	} else {
-		ctx := &ProxyCtx{Req: r, Session: atomic.AddInt64(&proxy.sess, 1), Proxy: proxy}
-
-		var err error
-		ctx.Logf("Got request %v %v %v %v", r.URL.Path, r.Host, r.Method, r.URL.String())
-		if !r.URL.IsAbs() {
-			proxy.NonproxyHandler.ServeHTTP(w, r)
-			return
-		}
-		r, resp := proxy.filterRequest(r, ctx)
-
-		if resp == nil {
-			if isWebSocketRequest(r) {
-				ctx.Logf("Request looks like websocket upgrade.")
-				proxy.serveWebsocket(ctx, w, r)
-			}
-
-			if !proxy.KeepHeader {
-				removeProxyHeaders(ctx, r)
-			}
-			resp, err = ctx.RoundTrip(r)
-			if err != nil {
-				ctx.Error = err
-				resp = proxy.filterResponse(nil, ctx)
-
-			}
-			if resp != nil {
-				ctx.Logf("Received response %v", resp.Status)
-			}
-		}
-
-		var origBody io.ReadCloser
-
-		if resp != nil {
-			origBody = resp.Body
-			defer origBody.Close()
-		}
-
-		resp = proxy.filterResponse(resp, ctx)
-
-		if resp == nil {
-			var errorString string
-			if ctx.Error != nil {
-				errorString = "error read response " + r.URL.Host + " : " + ctx.Error.Error()
-				ctx.Logf(errorString)
-				http.Error(w, ctx.Error.Error(), 500)
-			} else {
-				errorString = "error read response " + r.URL.Host
-				ctx.Logf(errorString)
-				http.Error(w, errorString, 500)
-			}
-			return
-		}
-		ctx.Logf("Copying response to client %v [%d]", resp.Status, resp.StatusCode)
-		// http.ResponseWriter will take care of filling the correct response length
-		// Setting it now, might impose wrong value, contradicting the actual new
-		// body the user returned.
-		// We keep the original body to remove the header only if things changed.
-		// This will prevent problems with HEAD requests where there's no body, yet,
-		// the Content-Length header should be set.
-		if origBody != resp.Body {
-			resp.Header.Del("Content-Length")
-		}
-		copyHeaders(w.Header(), resp.Header, proxy.KeepDestinationHeaders)
-		w.WriteHeader(resp.StatusCode)
-		var copyWriter io.Writer = w
-		if w.Header().Get("content-type") == "text/event-stream" {
-			// server-side events, flush the buffered data to the client.
-			copyWriter = &flushWriter{w: w}
-		}
-
-		nr, err := io.Copy(copyWriter, resp.Body)
-		if err := resp.Body.Close(); err != nil {
-			ctx.Warnf("Can't close response body %v", err)
-		}
-		ctx.Logf("Copied %v bytes to client error=%v", nr, err)
+		proxy.handleHttp(w, r)
 	}
 }
 
-// NewProxyHttpServer creates and returns a proxy server, logging to stderr by default
+// NewProxyHttpServer creates and returns a proxy server, logging to stderr by default.
 func NewProxyHttpServer() *ProxyHttpServer {
 	proxy := ProxyHttpServer{
-		Logger:        log.New(os.Stderr, "", log.LstdFlags),
-		reqHandlers:   []ReqHandler{},
-		respHandlers:  []RespHandler{},
-		httpsHandlers: []HttpsHandler{},
+		Logger: log.New(os.Stderr, "", log.LstdFlags),
 		NonproxyHandler: http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			http.Error(w, "This is a proxy server. Does not respond to non-proxy requests.", 500)
+			http.Error(w, "This is a proxy server. Does not respond to non-proxy requests.", http.StatusInternalServerError)
 		}),
 		Tr: &http.Transport{TLSClientConfig: tlsClientSkipVerify, Proxy: http.ProxyFromEnvironment},
 	}
-
 	proxy.ConnectDial = dialerFromEnv(&proxy)
-
 	return &proxy
 }
