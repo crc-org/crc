@@ -25,11 +25,43 @@ func isWebSocketRequest(r *http.Request) bool {
 		headerContains(r.Header, "Upgrade", "websocket")
 }
 
-func (proxy *ProxyHttpServer) serveWebsocketTLS(ctx *ProxyCtx, w http.ResponseWriter, req *http.Request, tlsConfig *tls.Config, clientConn *tls.Conn) {
+func (proxy *ProxyHttpServer) serveWebsocketTLS(
+	ctx *ProxyCtx,
+	w http.ResponseWriter,
+	req *http.Request,
+	tlsConfig *tls.Config,
+	clientConn *tls.Conn,
+) {
 	targetURL := url.URL{Scheme: "wss", Host: req.URL.Host, Path: req.URL.Path}
 
 	// Connect to upstream
 	targetConn, err := tls.Dial("tcp", targetURL.Host, tlsConfig)
+	if err != nil {
+		ctx.Warnf("Error dialing target site: %v", err)
+		return
+	}
+	defer targetConn.Close()
+
+	// Perform handshake
+	if err := proxy.websocketHandshake(ctx, req, targetConn, clientConn); err != nil {
+		ctx.Warnf("Websocket handshake error: %v", err)
+		return
+	}
+
+	// Proxy wss connection
+	proxy.proxyWebsocket(ctx, targetConn, clientConn)
+}
+
+func (proxy *ProxyHttpServer) serveWebsocketHttpOverTLS(
+	ctx *ProxyCtx,
+	w http.ResponseWriter,
+	req *http.Request,
+	clientConn *tls.Conn,
+) {
+	targetURL := url.URL{Scheme: "ws", Host: req.URL.Host, Path: req.URL.Path}
+
+	// Connect to upstream
+	targetConn, err := proxy.connectDial(ctx, "tcp", targetURL.Host)
 	if err != nil {
 		ctx.Warnf("Error dialing target site: %v", err)
 		return
@@ -77,7 +109,12 @@ func (proxy *ProxyHttpServer) serveWebsocket(ctx *ProxyCtx, w http.ResponseWrite
 	proxy.proxyWebsocket(ctx, targetConn, clientConn)
 }
 
-func (proxy *ProxyHttpServer) websocketHandshake(ctx *ProxyCtx, req *http.Request, targetSiteConn io.ReadWriter, clientConn io.ReadWriter) error {
+func (proxy *ProxyHttpServer) websocketHandshake(
+	ctx *ProxyCtx,
+	req *http.Request,
+	targetSiteConn io.ReadWriter,
+	clientConn io.ReadWriter,
+) error {
 	// write handshake request to target
 	err := req.Write(targetSiteConn)
 	if err != nil {
