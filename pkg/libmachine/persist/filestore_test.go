@@ -1,10 +1,13 @@
 package persist
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/crc-org/crc/v2/pkg/drivers/none"
 	"github.com/crc-org/crc/v2/pkg/libmachine/host"
@@ -104,6 +107,27 @@ func TestStoreLoad(t *testing.T) {
 
 	realDriver := none.NewDriver(h.Name, store.MachinesDir)
 	assert.NoError(t, json.Unmarshal(rawDataDriver.Data, &realDriver))
+}
+
+func TestStoreExists_WhenExecuted_ThenLogFileNotFoundInDebugMode(t *testing.T) {
+	// Given
+	var logBuffer bytes.Buffer
+	logrus.SetOutput(&logBuffer)
+	oldDebugLevel := logrus.GetLevel()
+	logrus.SetLevel(logrus.DebugLevel)
+	defer logrus.SetOutput(os.Stdout)
+	defer logrus.SetLevel(oldDebugLevel)
+	store := getTestStore(t)
+	h := testHost()
+
+	// When
+	exists, err := store.Exists(h.Name)
+
+	// Then
+	assert.NoError(t, err)
+	assert.False(t, exists)
+	logContents := logBuffer.String()
+	assert.Contains(t, logContents, "file not found: ")
 }
 
 func testHost() *host.Host {

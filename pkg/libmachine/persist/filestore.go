@@ -83,9 +83,9 @@ func (s Filestore) SetExists(name string) error {
 func (s Filestore) Exists(name string) (bool, error) {
 	filename := filepath.Join(s.MachinesDir, name, fmt.Sprintf(".%s-exist", name))
 	_, err := os.Stat(filename)
-	log.Debugf("Checking file: %s", filename)
 
 	if os.IsNotExist(err) {
+		log.Debugf("file not found: %s", filename)
 		return false, nil
 	} else if err == nil {
 		return true, nil
