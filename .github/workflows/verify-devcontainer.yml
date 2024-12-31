@@ -7,8 +7,13 @@ on:
 jobs:
   verify-devcontainer:
     runs-on: ubuntu-24.04
+    container:
+      image: registry.access.redhat.com/ubi9/go-toolset:latest
+      options: --cpus 4
     steps:
-      - name: Run `git clone` and `make cross` against devcontainer
-        run: >
-          podman run registry.access.redhat.com/ubi9/go-toolset:latest \
-            sh -c "git clone https://github.com/crc-org/crc --depth 1 && cd crc && make cross"
+      - name: Run `git clone`
+        run: git clone https://github.com/crc-org/crc --depth 1
+      - name: Run `make cross`
+        run: |
+          cd crc
+          make cross
