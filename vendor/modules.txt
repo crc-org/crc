@@ -278,9 +278,10 @@ github.com/docker/go-connections/tlsconfig
 # github.com/docker/go-units v0.5.0
 ## explicit
 github.com/docker/go-units
-# github.com/elazarl/goproxy v1.2.2
+# github.com/elazarl/goproxy v1.2.4
 ## explicit; go 1.20
 github.com/elazarl/goproxy
+github.com/elazarl/goproxy/internal/http1parser
 github.com/elazarl/goproxy/internal/signer
 # github.com/emicklei/go-restful/v3 v3.11.0
 ## explicit; go 1.13
