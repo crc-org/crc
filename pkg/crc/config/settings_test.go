@@ -182,3 +182,183 @@ func TestPath(t *testing.T) {
 		IsSecret:  false,
 	}, cfg.Get(ProxyCAFile))
 }
+
+func TestWhenInvalidKeySetThenErrorIsThrown(t *testing.T) {
+	// Given
+	cfg, err := newInMemoryConfig()
+	require.NoError(t, err)
+
+	// When + Then
+	_, err = cfg.Set("i-dont-exist", "i-should-not-be-set")
+	assert.Error(t, err, "Configuration property 'i-dont-exist' does not exist")
+}
+
+var configDefaultValuesTestArguments = []struct {
+	key          string
+	defaultValue interface{}
+}{
+	{
+		KubeAdminPassword, "",
+	},
+	{
+		CPUs, uint(4),
+	},
+	{
+		Memory, uint(10752),
+	},
+	{
+		DiskSize, 31,
+	},
+	{
+		NameServer, "",
+	},
+	{
+		PullSecretFile, "",
+	},
+	{
+		DisableUpdateCheck, false,
+	},
+	{
+		ExperimentalFeatures, false,
+	},
+	{
+		EmergencyLogin, false,
+	},
+	{
+		PersistentVolumeSize, 15,
+	},
+	{
+		HostNetworkAccess, false,
+	},
+	{
+		HTTPProxy, "",
+	},
+	{
+		HTTPSProxy, "",
+	},
+	{
+		NoProxy, "",
+	},
+	{
+		ProxyCAFile, Path(""),
+	},
+	{
+		EnableClusterMonitoring, false,
+	},
+	{
+		ConsentTelemetry, "",
+	},
+	{
+		IngressHTTPPort, 80,
+	},
+	{
+		IngressHTTPSPort, 443,
+	},
+	{
+		EnableBundleQuayFallback, false,
+	},
+	{
+		Preset, "openshift",
+	},
+}
+
+func TestDefaultKeyValuesSetInConfig(t *testing.T) {
+	for _, tt := range configDefaultValuesTestArguments {
+		t.Run(tt.key, func(t *testing.T) {
+			// Given
+			cfg, err := newInMemoryConfig()
+			require.NoError(t, err)
+
+			// When + Then
+			assert.Equal(t, SettingValue{
+				Value:     tt.defaultValue,
+				Invalid:   false,
+				IsDefault: true,
+			}, cfg.Get(tt.key))
+		})
+	}
+}
+
+var configProvidedValuesTestArguments = []struct {
+	key           string
+	providedValue interface{}
+}{
+	{
+		KubeAdminPassword, "kubeadmin-secret-password",
+	},
+	{
+		CPUs, uint(8),
+	},
+	{
+		Memory, uint(21504),
+	},
+	{
+		DiskSize, 62,
+	},
+	{
+		NameServer, "127.0.0.1",
+	},
+	{
+		DisableUpdateCheck, true,
+	},
+	{
+		ExperimentalFeatures, true,
+	},
+	{
+		EmergencyLogin, true,
+	},
+	{
+		PersistentVolumeSize, 20,
+	},
+	{
+		HTTPProxy, "http://proxy-via-http-proxy-property:3128",
+	},
+	{
+		HTTPSProxy, "https://proxy-via-http-proxy-property:3128",
+	},
+	{
+		NoProxy, "http://no-proxy-property:3128",
+	},
+	{
+		EnableClusterMonitoring, true,
+	},
+	{
+		ConsentTelemetry, "yes",
+	},
+	{
+		IngressHTTPPort, 8080,
+	},
+	{
+		IngressHTTPSPort, 6443,
+	},
+	{
+		EnableBundleQuayFallback, true,
+	},
+	{
+		Preset, "microshift",
+	},
+}
+
+func TestSetProvidedValuesOverrideDefaultValuesInConfig(t *testing.T) {
+	for _, tt := range configProvidedValuesTestArguments {
+		t.Run(tt.key, func(t *testing.T) {
+
+			// When + Then
+
+			// Given
+			cfg, err := newInMemoryConfig()
+			require.NoError(t, err)
+
+			// When
+			_, err = cfg.Set(tt.key, tt.providedValue)
+			require.NoError(t, err)
+
+			// Then
+			assert.Equal(t, SettingValue{
+				Value:     tt.providedValue,
+				Invalid:   false,
+				IsDefault: false,
+			}, cfg.Get(tt.key))
+		})
+	}
+}
