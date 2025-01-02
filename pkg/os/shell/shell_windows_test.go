@@ -85,5 +85,5 @@ func TestDetectShellInWindowsSubsystemLinux(t *testing.T) {
 
 	// Then
 	assert.Equal(t, "wsl", mockCommandExecutor.commandName)
-	assert.Equal(t, []string{"-e", "bash", "-c", "ps -ao pid=,comm= --sort=-pid"}, mockCommandExecutor.commandArgs)
+	assert.Equal(t, []string{"-e", "bash", "-c", "ps -ao pid=,comm="}, mockCommandExecutor.commandArgs)
 }

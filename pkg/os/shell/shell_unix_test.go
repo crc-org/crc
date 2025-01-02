@@ -33,7 +33,7 @@ func TestUnknownShell(t *testing.T) {
 	assert.Greater(t, nBytesRead, int64(0))
 	assert.Equal(t, "The default lines below are for a sh/bash shell, you can specify the shell you're using, with the --shell flag.\n\n", buf.String())
 	assert.Equal(t, "ps", mockCommandExecutor.commandName)
-	assert.Equal(t, []string{"-o", "pid=,comm=", "--sort=-pid"}, mockCommandExecutor.commandArgs)
+	assert.Equal(t, []string{"-o", "pid=,comm="}, mockCommandExecutor.commandArgs)
 	assert.Empty(t, shell)
 }
 
@@ -78,7 +78,7 @@ func TestDetect_GivenPsOutputContainsShell_ThenReturnShellProcessWithMostRecentP
 
 			// Then
 			assert.Equal(t, "ps", mockCommandExecutor.commandName)
-			assert.Equal(t, []string{"-o", "pid=,comm=", "--sort=-pid"}, mockCommandExecutor.commandArgs)
+			assert.Equal(t, []string{"-o", "pid=,comm="}, mockCommandExecutor.commandArgs)
 			assert.Equal(t, tt.expectedShellType, shell)
 			assert.NoError(t, err)
 		})

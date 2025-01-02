@@ -64,7 +64,7 @@ func shellType(shell string, defaultShell string) string {
 	case strings.Contains(strings.ToLower(shell), "cmd"):
 		return "cmd"
 	case strings.Contains(strings.ToLower(shell), "wsl"):
-		return detectShellByInvokingCommand("bash", "wsl", []string{"-e", "bash", "-c", "ps -ao pid=,comm= --sort=-pid"})
+		return detectShellByInvokingCommand("bash", "wsl", []string{"-e", "bash", "-c", "ps -ao pid=,comm="})
 	case filepath.IsAbs(shell) && strings.Contains(strings.ToLower(shell), "bash"):
 		return "bash"
 	default:
