@@ -3,9 +3,11 @@ package shell
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
 )
 
@@ -174,13 +176,13 @@ func detectShellByInvokingCommand(defaultShell string, command string, args []st
 	if detectedShell == "" {
 		return defaultShell
 	}
+	logging.Debugf("Detected shell: %s", detectedShell)
 	return detectedShell
 }
 
 // inspectProcessOutputForRecentlyUsedShell inspects output of ps command to detect currently active shell session.
 //
-// Note : This method assumes that ps command has already sorted the processes by `pid` in reverse order.
-// It parses the output into a struct, filters process types by name and returns the first element.
+// It parses the output into a struct, filters process types by name then reverse sort it with pid and returns the first element.
 //
 // It takes one argument:
 //
@@ -222,6 +224,11 @@ func inspectProcessOutputForRecentlyUsedShell(psCommandOutput string) string {
 			}
 		}
 	}
+	// Reverse sort the processes by PID (higher to lower)
+	sort.Slice(processOutputs, func(i, j int) bool {
+		return processOutputs[i].processID > processOutputs[j].processID
+	})
+
 	if len(processOutputs) > 0 {
 		return processOutputs[0].output
 	}
