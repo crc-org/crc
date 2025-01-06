@@ -194,6 +194,10 @@ func IsExprError(pass *analysis.Pass, expr ast.Expr) bool {
 		return interfaces.ImplementsError(actualArgType)
 
 	case *gotypes.Pointer:
+		if interfaces.ImplementsError(t) {
+			return true
+		}
+
 		if tt, ok := t.Elem().(*gotypes.Named); ok {
 			return interfaces.ImplementsError(tt)
 		}

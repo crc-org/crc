@@ -41,13 +41,13 @@ func New(origMatcher, matcherClone *ast.CallExpr, pass *analysis.Pass, handler g
 	reverse := false
 	var assertFuncName string
 	for {
-		ok := false
-		assertFuncName, ok = handler.GetActualFuncName(origMatcher)
+		info, ok := handler.GetGomegaBasicInfo(origMatcher)
 		if !ok {
 			return nil, false
 		}
 
-		if assertFuncName != "Not" {
+		if info.MethodName != "Not" {
+			assertFuncName = info.MethodName
 			break
 		}
 

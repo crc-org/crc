@@ -1,11 +1,16 @@
 package config
 
 import (
+	"cmp"
+	"fmt"
 	"os"
+	"path/filepath"
+	"slices"
 	"strings"
 
 	hcversion "github.com/hashicorp/go-version"
-	"github.com/ldez/gomoddirectives"
+	"github.com/ldez/grignotin/gomod"
+	"golang.org/x/mod/modfile"
 )
 
 // Config encapsulates the config data specified in the golangci-lint YAML config file.
@@ -80,12 +85,7 @@ func detectGoVersion() string {
 		return goVersion
 	}
 
-	v := os.Getenv("GOVERSION")
-	if v != "" {
-		return v
-	}
-
-	return "1.17"
+	return cmp.Or(os.Getenv("GOVERSION"), "1.17")
 }
 
 // detectGoVersionFromGoMod tries to get Go version from go.mod.
@@ -93,8 +93,16 @@ func detectGoVersion() string {
 // else it returns `go` version if present,
 // else it returns empty.
 func detectGoVersionFromGoMod() string {
-	file, _ := gomoddirectives.GetModuleFile()
-	if file == nil {
+	modPath, err := gomod.GetGoModPath()
+	if err != nil {
+		modPath = detectGoModFallback()
+		if modPath == "" {
+			return ""
+		}
+	}
+
+	file, err := parseGoMod(modPath)
+	if err != nil {
 		return ""
 	}
 
@@ -109,4 +117,42 @@ func detectGoVersionFromGoMod() string {
 	}
 
 	return ""
+}
+
+func parseGoMod(goMod string) (*modfile.File, error) {
+	raw, err := os.ReadFile(filepath.Clean(goMod))
+	if err != nil {
+		return nil, fmt.Errorf("reading go.mod file: %w", err)
+	}
+
+	return modfile.Parse("go.mod", raw, nil)
+}
+
+func detectGoModFallback() string {
+	info, err := gomod.GetModuleInfo()
+	if err != nil {
+		return ""
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+
+	slices.SortFunc(info, func(a, b gomod.ModInfo) int {
+		return cmp.Compare(len(b.Path), len(a.Path))
+	})
+
+	goMod := info[0]
+	for _, m := range info {
+		if !strings.HasPrefix(wd, m.Dir) {
+			continue
+		}
+
+		goMod = m
+
+		break
+	}
+
+	return goMod.GoMod
 }

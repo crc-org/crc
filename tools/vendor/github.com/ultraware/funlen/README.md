@@ -16,6 +16,26 @@ The default values are used internally, but might to be adjusted for your specif
 
 Funlen is included in [golangci-lint](https://github.com/golangci/golangci-lint/). Install it and enable funlen.
 
+## Configuration
+
+Available configuration options:
+
+```yaml
+linters-settings:
+  funlen:
+    # Checks the number of lines in a function.
+    # If lower than 0, disable the check.
+    # Default: 60
+    lines: 60
+    # Checks the number of statements in a function.
+    # If lower than 0, disable the check.
+    # Default: 40
+    statements: 60
+    # Ignore comments when counting lines.
+    # Default false
+    ignore-comments: false
+```
+
 # Exclude for tests
 
 golangci-lint offers a way to exclude linters in certain cases. More info can be found here: https://golangci-lint.run/usage/configuration/#issues-configuration.

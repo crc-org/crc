@@ -14,24 +14,34 @@ type dotHandler struct {
 	pass *analysis.Pass
 }
 
-// GetActualFuncName returns the name of the gomega function, e.g. `Expect`
-func (h dotHandler) GetActualFuncName(expr *ast.CallExpr) (string, bool) {
-	switch actualFunc := expr.Fun.(type) {
-	case *ast.Ident:
-		return actualFunc.Name, true
-	case *ast.SelectorExpr:
-		if h.isGomegaVar(actualFunc.X) {
-			return actualFunc.Sel.Name, true
-		}
+// GetGomegaBasicInfo returns the name of the gomega function, e.g. `Expect` + some additional info
+func (h dotHandler) GetGomegaBasicInfo(expr *ast.CallExpr) (*GomegaBasicInfo, bool) {
+	info := &GomegaBasicInfo{}
+	for {
+		switch actualFunc := expr.Fun.(type) {
+		case *ast.Ident:
+			info.MethodName = actualFunc.Name
+			return info, true
+		case *ast.SelectorExpr:
+			if h.isGomegaVar(actualFunc.X) {
+				info.UseGomegaVar = true
+				info.MethodName = actualFunc.Sel.Name
+				return info, true
+			}
 
-		if x, ok := actualFunc.X.(*ast.CallExpr); ok {
-			return h.GetActualFuncName(x)
-		}
+			if actualFunc.Sel.Name == "Error" {
+				info.HasErrorMethod = true
+			}
 
-	case *ast.CallExpr:
-		return h.GetActualFuncName(actualFunc)
+			if x, ok := actualFunc.X.(*ast.CallExpr); ok {
+				expr = x
+			} else {
+				return nil, false
+			}
+		default:
+			return nil, false
+		}
 	}
-	return "", false
 }
 
 // ReplaceFunction replaces the function with another one, for fix suggestions
@@ -51,7 +61,7 @@ func (dotHandler) GetNewWrapperMatcher(name string, existing *ast.CallExpr) *ast
 	}
 }
 
-func (h dotHandler) GetActualExpr(assertionFunc *ast.SelectorExpr, errMethodExists *bool) *ast.CallExpr {
+func (h dotHandler) GetActualExpr(assertionFunc *ast.SelectorExpr) *ast.CallExpr {
 	actualExpr, ok := assertionFunc.X.(*ast.CallExpr)
 	if !ok {
 		return nil
@@ -66,11 +76,7 @@ func (h dotHandler) GetActualExpr(assertionFunc *ast.SelectorExpr, errMethodExis
 				return actualExpr
 			}
 		} else {
-			if fun.Sel.Name == "Error" {
-				*errMethodExists = true
-			}
-
-			return h.GetActualExpr(fun, errMethodExists)
+			return h.GetActualExpr(fun)
 		}
 	}
 	return nil

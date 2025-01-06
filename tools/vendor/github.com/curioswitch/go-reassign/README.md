@@ -47,7 +47,8 @@ Package variable reassignment is generally confusing, though, and we recommend a
 The `pattern` flag can be set to a regular expression to define what variables cannot be reassigned, and `.*` is 
 recommended if it works with your code.
 
-## Limitations
+## Development
 
-If a variable shadows the name of an import, an assignment of a field in the variable will trigger the linter. Shadowing
-can be confusing, so it's recommended to rename the variable.
+[mage](https://magefile.org/) is used for development. Run `go run mage.go -l` to see available targets.
+
+For example, to run checks before sending a PR, run `go run mage.go check`.

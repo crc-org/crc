@@ -48,23 +48,35 @@ func run(pass *analysis.Pass) (interface{}, error) {
 func reportImported(pass *analysis.Pass, expr ast.Expr, checkRE *regexp.Regexp, prefix string) {
 	switch x := expr.(type) {
 	case *ast.SelectorExpr:
-		if !checkRE.MatchString(x.Sel.Name) {
-			return
-		}
-
 		selectIdent, ok := x.X.(*ast.Ident)
 		if !ok {
 			return
 		}
 
+		var pkgPath string
 		if selectObj, ok := pass.TypesInfo.Uses[selectIdent]; ok {
-			if pkg, ok := selectObj.(*types.PkgName); !ok || pkg.Imported() == pass.Pkg {
+			pkg, ok := selectObj.(*types.PkgName)
+			if !ok || pkg.Imported() == pass.Pkg {
 				return
+			}
+			pkgPath = pkg.Imported().Path()
+		}
+
+		matches := false
+		if checkRE.MatchString(x.Sel.Name) {
+			matches = true
+		}
+		if !matches {
+			// Expression may include a package name, so check that too. Support was added later so we check
+			// just name and qualified name separately for compatibility.
+			if checkRE.MatchString(pkgPath + "." + x.Sel.Name) {
+				matches = true
 			}
 		}
 
-		pass.Reportf(expr.Pos(), "%s variable %s in other package %s", prefix, x.Sel.Name, selectIdent.Name)
-
+		if matches {
+			pass.Reportf(expr.Pos(), "%s variable %s in other package %s", prefix, x.Sel.Name, selectIdent.Name)
+		}
 	case *ast.Ident:
 		use, ok := pass.TypesInfo.Uses[x].(*types.Var)
 		if !ok {

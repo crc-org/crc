@@ -9,53 +9,8 @@ import (
 	"golang.org/x/tools/go/analysis"
 )
 
-// MessageType describes what should happen to fix the warning.
-type MessageType uint8
-
-// List of MessageTypes.
-const (
-	MessageTypeRemove MessageType = iota + 1
-	MessageTypeAdd
-)
-
-// RunningMode describes the mode the linter is run in. This can be either
-// native or golangci-lint.
-type RunningMode uint8
-
-const (
-	RunningModeNative RunningMode = iota
-	RunningModeGolangCI
-)
-
-// Message contains a message and diagnostic information.
-type Message struct {
-	// Diagnostic is what position the diagnostic should be put at. This isn't
-	// always the same as the fix start, f.ex. when we fix trailing newlines we
-	// put the diagnostic at the right bracket but we fix between the end of the
-	// last statement and the bracket.
-	Diagnostic token.Pos
-
-	// FixStart is the span start of the fix.
-	FixStart token.Pos
-
-	// FixEnd is the span end of the fix.
-	FixEnd token.Pos
-
-	// LineNumbers represent the actual line numbers in the file. This is set
-	// when finding the diagnostic to make it easier to suggest fixes in
-	// golangci-lint.
-	LineNumbers []int
-
-	// MessageType represents the type of message it is.
-	MessageType MessageType
-
-	// Message is the diagnostic to show.
-	Message string
-}
-
 // Settings contains settings for edge-cases.
 type Settings struct {
-	Mode      RunningMode
 	MultiIf   bool
 	MultiFunc bool
 }
@@ -86,47 +41,24 @@ func flags(settings *Settings) flag.FlagSet {
 	return *flags
 }
 
-func Run(pass *analysis.Pass, settings *Settings) []Message {
-	messages := []Message{}
-
+func Run(pass *analysis.Pass, settings *Settings) {
 	for _, file := range pass.Files {
 		filename := pass.Fset.Position(file.Pos()).Filename
+
 		if !strings.HasSuffix(filename, ".go") {
 			continue
 		}
 
 		fileMessages := runFile(file, pass.Fset, *settings)
 
-		if settings.Mode == RunningModeGolangCI {
-			messages = append(messages, fileMessages...)
-			continue
-		}
-
 		for _, message := range fileMessages {
-			pass.Report(analysis.Diagnostic{
-				Pos:      message.Diagnostic,
-				Category: "whitespace",
-				Message:  message.Message,
-				SuggestedFixes: []analysis.SuggestedFix{
-					{
-						TextEdits: []analysis.TextEdit{
-							{
-								Pos:     message.FixStart,
-								End:     message.FixEnd,
-								NewText: []byte("\n"),
-							},
-						},
-					},
-				},
-			})
+			pass.Report(message)
 		}
 	}
-
-	return messages
 }
 
-func runFile(file *ast.File, fset *token.FileSet, settings Settings) []Message {
-	var messages []Message
+func runFile(file *ast.File, fset *token.FileSet, settings Settings) []analysis.Diagnostic {
+	var messages []analysis.Diagnostic
 
 	for _, f := range file.Decls {
 		decl, ok := f.(*ast.FuncDecl)
@@ -146,7 +78,7 @@ func runFile(file *ast.File, fset *token.FileSet, settings Settings) []Message {
 type visitor struct {
 	comments    []*ast.CommentGroup
 	fset        *token.FileSet
-	messages    []Message
+	messages    []analysis.Diagnostic
 	wantNewline map[*ast.BlockStmt]bool
 	settings    Settings
 }
@@ -180,13 +112,16 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 		startMsg := checkStart(v.fset, opening, first)
 
 		if wantNewline && startMsg == nil && len(stmt.List) >= 1 {
-			v.messages = append(v.messages, Message{
-				Diagnostic:  opening,
-				FixStart:    stmt.List[0].Pos(),
-				FixEnd:      stmt.List[0].Pos(),
-				LineNumbers: []int{v.fset.PositionFor(stmt.List[0].Pos(), false).Line},
-				MessageType: MessageTypeAdd,
-				Message:     "multi-line statement should be followed by a newline",
+			v.messages = append(v.messages, analysis.Diagnostic{
+				Pos:     opening,
+				Message: "multi-line statement should be followed by a newline",
+				SuggestedFixes: []analysis.SuggestedFix{{
+					TextEdits: []analysis.TextEdit{{
+						Pos:     stmt.List[0].Pos(),
+						End:     stmt.List[0].Pos(),
+						NewText: []byte("\n"),
+					}},
+				}},
 			})
 		} else if !wantNewline && startMsg != nil {
 			v.messages = append(v.messages, *startMsg)
@@ -209,7 +144,7 @@ func checkMultiLine(v *visitor, body *ast.BlockStmt, stmtStart ast.Node) {
 }
 
 func posLine(fset *token.FileSet, pos token.Pos) int {
-	return fset.PositionFor(pos, false).Line
+	return fset.Position(pos).Line
 }
 
 func firstAndLast(comments []*ast.CommentGroup, fset *token.FileSet, stmt *ast.BlockStmt) (token.Pos, ast.Node, ast.Node) {
@@ -256,52 +191,46 @@ func firstAndLast(comments []*ast.CommentGroup, fset *token.FileSet, stmt *ast.B
 	return openingPos, first, last
 }
 
-func checkStart(fset *token.FileSet, start token.Pos, first ast.Node) *Message {
+func checkStart(fset *token.FileSet, start token.Pos, first ast.Node) *analysis.Diagnostic {
 	if first == nil {
 		return nil
 	}
 
 	if posLine(fset, start)+1 < posLine(fset, first.Pos()) {
-		return &Message{
-			Diagnostic:  start,
-			FixStart:    start,
-			FixEnd:      first.Pos(),
-			LineNumbers: linesBetween(fset, start, first.Pos()),
-			MessageType: MessageTypeRemove,
-			Message:     "unnecessary leading newline",
+		return &analysis.Diagnostic{
+			Pos:     start,
+			Message: "unnecessary leading newline",
+			SuggestedFixes: []analysis.SuggestedFix{{
+				TextEdits: []analysis.TextEdit{{
+					Pos:     start,
+					End:     first.Pos(),
+					NewText: []byte("\n"),
+				}},
+			}},
 		}
 	}
 
 	return nil
 }
 
-func checkEnd(fset *token.FileSet, end token.Pos, last ast.Node) *Message {
+func checkEnd(fset *token.FileSet, end token.Pos, last ast.Node) *analysis.Diagnostic {
 	if last == nil {
 		return nil
 	}
 
 	if posLine(fset, end)-1 > posLine(fset, last.End()) {
-		return &Message{
-			Diagnostic:  end,
-			FixStart:    last.End(),
-			FixEnd:      end,
-			LineNumbers: linesBetween(fset, last.End(), end),
-			MessageType: MessageTypeRemove,
-			Message:     "unnecessary trailing newline",
+		return &analysis.Diagnostic{
+			Pos:     end,
+			Message: "unnecessary trailing newline",
+			SuggestedFixes: []analysis.SuggestedFix{{
+				TextEdits: []analysis.TextEdit{{
+					Pos:     last.End(),
+					End:     end,
+					NewText: []byte("\n"),
+				}},
+			}},
 		}
 	}
 
 	return nil
-}
-
-func linesBetween(fset *token.FileSet, a, b token.Pos) []int {
-	lines := []int{}
-	aPosition := fset.PositionFor(a, false)
-	bPosition := fset.PositionFor(b, false)
-
-	for i := aPosition.Line + 1; i < bPosition.Line; i++ {
-		lines = append(lines, i)
-	}
-
-	return lines
 }

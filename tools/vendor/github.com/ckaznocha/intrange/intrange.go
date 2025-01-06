@@ -79,6 +79,8 @@ func checkForStmt(pass *analysis.Pass, forStmt *ast.ForStmt) {
 		return
 	}
 
+	initAssign := init.Tok == token.ASSIGN
+
 	if len(init.Lhs) != 1 || len(init.Rhs) != 1 {
 		return
 	}
@@ -97,16 +99,13 @@ func checkForStmt(pass *analysis.Pass, forStmt *ast.ForStmt) {
 		return
 	}
 
-	var nExpr ast.Expr
+	var (
+		operand               ast.Expr
+		hasEquivalentOperator bool
+	)
 
 	switch cond.Op {
-	case token.LSS: // ;i < n;
-		if isBenchmark(cond.Y) {
-			return
-		}
-
-		nExpr = findNExpr(cond.Y)
-
+	case token.LSS, token.LEQ: // ;i < n; || ;i <= n;
 		x, ok := cond.X.(*ast.Ident)
 		if !ok {
 			return
@@ -115,13 +114,10 @@ func checkForStmt(pass *analysis.Pass, forStmt *ast.ForStmt) {
 		if x.Name != initIdent.Name {
 			return
 		}
-	case token.GTR: // ;n > i;
-		if isBenchmark(cond.X) {
-			return
-		}
 
-		nExpr = findNExpr(cond.X)
-
+		hasEquivalentOperator = cond.Op == token.LEQ
+		operand = cond.Y
+	case token.GTR, token.GEQ: // ;n > i; || ;n >= i;
 		y, ok := cond.Y.(*ast.Ident)
 		if !ok {
 			return
@@ -130,6 +126,9 @@ func checkForStmt(pass *analysis.Pass, forStmt *ast.ForStmt) {
 		if y.Name != initIdent.Name {
 			return
 		}
+
+		hasEquivalentOperator = cond.Op == token.GEQ
+		operand = cond.X
 	default:
 		return
 	}
@@ -228,7 +227,7 @@ func checkForStmt(pass *analysis.Pass, forStmt *ast.ForStmt) {
 
 	bc := &bodyChecker{
 		initIdent: initIdent,
-		nExpr:     nExpr,
+		nExpr:     findNExpr(operand),
 	}
 
 	ast.Inspect(forStmt.Body, bc.check)
@@ -237,9 +236,50 @@ func checkForStmt(pass *analysis.Pass, forStmt *ast.ForStmt) {
 		return
 	}
 
+	if initAssign {
+		pass.Report(analysis.Diagnostic{
+			Pos:     forStmt.Pos(),
+			Message: msg + "\nBecause the key is not part of the loop's scope, take care to consider side effects.",
+		})
+
+		return
+	}
+
+	operandIsNumberLit := isNumberLit(operand)
+
+	if hasEquivalentOperator && !operandIsNumberLit {
+		return
+	}
+
+	rangeX := operandToString(
+		pass,
+		initIdent,
+		operand,
+		hasEquivalentOperator && operandIsNumberLit,
+	)
+
+	var replacement string
+	if bc.accessed {
+		replacement = fmt.Sprintf("%s := range %s", initIdent.Name, rangeX)
+	} else {
+		replacement = fmt.Sprintf("range %s", rangeX)
+	}
+
 	pass.Report(analysis.Diagnostic{
 		Pos:     forStmt.Pos(),
 		Message: msg,
+		SuggestedFixes: []analysis.SuggestedFix{
+			{
+				Message: fmt.Sprintf("Replace loop with `%s`", replacement),
+				TextEdits: []analysis.TextEdit{
+					{
+						Pos:     forStmt.Init.Pos(),
+						End:     forStmt.Post.End(),
+						NewText: []byte(replacement),
+					},
+				},
+			},
+		},
 	})
 }
 
@@ -363,26 +403,45 @@ func findNExpr(expr ast.Expr) ast.Expr {
 	}
 }
 
-func isBenchmark(expr ast.Expr) bool {
-	selectorExpr, ok := expr.(*ast.SelectorExpr)
-	if !ok {
-		return false
-	}
+func recursiveOperandToString(
+	expr ast.Expr,
+	incrementInt bool,
+) string {
+	switch e := expr.(type) {
+	case *ast.CallExpr:
+		args := ""
 
-	if selectorExpr.Sel.Name != "N" {
-		return false
-	}
+		for i, v := range e.Args {
+			if i > 0 {
+				args += ", "
+			}
 
-	ident, ok := selectorExpr.X.(*ast.Ident)
-	if !ok {
-		return false
-	}
+			args += recursiveOperandToString(v, incrementInt && len(e.Args) == 1)
+		}
 
-	if ident.Name == "b" {
-		return true
-	}
+		return recursiveOperandToString(e.Fun, false) + "(" + args + ")"
+	case *ast.BasicLit:
+		if incrementInt && e.Kind == token.INT {
+			v, err := strconv.Atoi(e.Value)
+			if err == nil {
+				return strconv.Itoa(v + 1)
+			}
 
-	return false
+			return e.Value
+		}
+
+		return e.Value
+	case *ast.Ident:
+		return e.Name
+	case *ast.SelectorExpr:
+		return recursiveOperandToString(e.X, false) + "." + recursiveOperandToString(e.Sel, false)
+	case *ast.IndexExpr:
+		return recursiveOperandToString(e.X, false) + "[" + recursiveOperandToString(e.Index, false) + "]"
+	case *ast.BinaryExpr:
+		return recursiveOperandToString(e.X, false) + " " + e.Op.String() + " " + recursiveOperandToString(e.Y, false)
+	default:
+		return ""
+	}
 }
 
 func identEqual(a, b ast.Expr) bool {
@@ -428,6 +487,7 @@ type bodyChecker struct {
 	initIdent *ast.Ident
 	nExpr     ast.Expr
 	modified  bool
+	accessed  bool
 }
 
 func (b *bodyChecker) check(n ast.Node) bool {
@@ -446,9 +506,53 @@ func (b *bodyChecker) check(n ast.Node) bool {
 
 			return false
 		}
+	case *ast.Ident:
+		if identEqual(stmt, b.initIdent) {
+			b.accessed = true
+		}
 	}
 
 	return true
+}
+
+func isNumberLit(exp ast.Expr) bool {
+	switch lit := exp.(type) {
+	case *ast.BasicLit:
+		if lit.Kind == token.INT {
+			return true
+		}
+
+		return false
+	case *ast.CallExpr:
+		switch fun := lit.Fun.(type) {
+		case *ast.Ident:
+			switch fun.Name {
+			case
+				"int",
+				"int8",
+				"int16",
+				"int32",
+				"int64",
+				"uint",
+				"uint8",
+				"uint16",
+				"uint32",
+				"uint64":
+			default:
+				return false
+			}
+		default:
+			return false
+		}
+
+		if len(lit.Args) != 1 {
+			return false
+		}
+
+		return isNumberLit(lit.Args[0])
+	default:
+		return false
+	}
 }
 
 func compareNumberLit(exp ast.Expr, val int) bool {
@@ -496,4 +600,28 @@ func compareNumberLit(exp ast.Expr, val int) bool {
 	default:
 		return false
 	}
+}
+
+func operandToString(
+	pass *analysis.Pass,
+	i *ast.Ident,
+	operand ast.Expr,
+	increment bool,
+) string {
+	s := recursiveOperandToString(operand, increment)
+	t := pass.TypesInfo.TypeOf(i)
+
+	if t == types.Typ[types.Int] {
+		if len(s) > 5 && s[:4] == "int(" && s[len(s)-1] == ')' {
+			s = s[4 : len(s)-1]
+		}
+
+		return s
+	}
+
+	if len(s) > 2 && s[len(s)-1] == ')' {
+		return s
+	}
+
+	return t.String() + "(" + s + ")"
 }

@@ -42,9 +42,9 @@ func (r NilCompareRule) isApplied(gexp *expression.GomegaExpression, config type
 		return false, false
 	}
 
-	isErr := actl.IsError() && !bool(config.SuppressErr)
+	isErr := actl.IsError() && !config.SuppressErr
 
-	if !isErr && bool(config.SuppressNil) {
+	if !isErr && config.SuppressNil {
 		return isErr, false
 	}
 

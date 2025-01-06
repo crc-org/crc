@@ -92,6 +92,12 @@ passing checks, set the `-default-signifies-exhasutive=false` flag.
 As a special case, if the type switch statement contains a `default` clause
 that always panics, then exhaustiveness checks are still performed.
 
+By default, `go-check-sumtype` will not include shared interfaces in the exhaustiviness check.
+This can be changed by setting the `-include-shared-interfaces=true` flag.
+When this flag is set, `go-check-sumtype` will not require that all concrete structs
+are listed in the switch statement, as long as the switch statement is exhaustive
+with respect to interfaces the structs implement.
+
 ## Details and motivation
 
 Sum types are otherwise known as discriminated unions. That is, a sum type is

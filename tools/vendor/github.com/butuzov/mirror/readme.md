@@ -2,6 +2,13 @@
 
 `mirror` suggests use of alternative functions/methods in order to gain performance boosts by avoiding unnecessary `[]byte/string` conversion calls. See [MIRROR_FUNCS.md](MIRROR_FUNCS.md) list of mirror functions you can use in go's stdlib.
 
+---
+
+[![United 24](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner-personal-page.svg)](https://u24.gov.ua/)
+[![Help Oleg Butuzov](https://raw.githubusercontent.com/butuzov/butuzov/main/personal.svg)](https://github.com/butuzov)
+
+---
+
 ## Linter Use Cases
 
 ### `github.com/argoproj/argo-cd`
@@ -86,13 +93,13 @@ util/cert/cert.go:82:10: avoid allocations with (*regexp.Regexp).MatchString (mi
 
   - flag `--tests` (e.g. `--tests=false`)
   - flag `--skip-files` (e.g. `--skip-files="_test.go"`)
-  - yaml confguration `run.skip-files`:
+  - yaml configuration `run.skip-files`:
     ```yaml
     run:
       skip-files:
         - '(.+)_test\.go'
     ```
-  - yaml confguration `issues.exclude-rules`:
+  - yaml configuration `issues.exclude-rules`:
     ```yaml
       issues:
         exclude-rules:
@@ -106,7 +113,7 @@ util/cert/cert.go:82:10: avoid allocations with (*regexp.Regexp).MatchString (mi
 
 ```shell
 # Update Assets (testdata/(strings|bytes|os|utf8|maphash|regexp|bufio).go)
-(task|make) generated
+(task|make) generate
 # Run Tests
 (task|make) tests
 # Lint Code

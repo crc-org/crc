@@ -28,7 +28,7 @@ func (r SucceedRule) Apply(gexp *expression.GomegaExpression, config types.Confi
 		return true
 	}
 
-	if bool(config.ForceSucceedForFuncs) && !gexp.GetActualArg().(*actual.ErrPayload).IsFunc() {
+	if config.ForceSucceedForFuncs && !gexp.GetActualArg().(*actual.ErrPayload).IsFunc() {
 		gexp.ReverseAssertionFuncLogic()
 		gexp.SetMatcherHaveOccurred()
 

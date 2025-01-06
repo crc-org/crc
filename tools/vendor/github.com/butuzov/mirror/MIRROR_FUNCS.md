@@ -1,201 +1,55 @@
-<tr>
-<td><code>func (*bufio.Writer) Write([]byte) (int, error)</code></td>
-<td><code>func (*bufio.Writer) WriteString(string) (int, error)</code></td>
-</tr>
-<tr>
-<td><code>func (*bufio.Writer) WriteRune(rune) (int, error)</code></td>
-<td><code>func (*bufio.Writer) WriteString(string) (int, error)</code></td>
-</tr>
-<tr>
-<td><code>func (*bytes.Buffer) Write([]byte) (int, error)</code></td>
-<td><code>func (*bytes.Buffer) WriteString(string) (int, error)</code></td>
-</tr>
-<tr>
-<td><code>func (*bytes.Buffer) WriteRune(rune) (int, error)</code></td>
-<td><code>func (*bytes.Buffer) WriteString(string) (int, error)</code></td>
-</tr>
-<tr>
-<td><code>func bytes.Compare([]byte, []byte) int</code></td>
-<td><code>func strings.Compare(string, string) int</code></td>
-</tr>
-<tr>
-<td><code>func bytes.Contains([]byte, []byte) bool</code></td>
-<td><code>func strings.Contains(string, string) bool</code></td>
-</tr>
-<tr>
-<td><code>func bytes.ContainsAny([]byte, string) bool</code></td>
-<td><code>func strings.ContainsAny(string, string) bool</code></td>
-</tr>
-<tr>
-<td><code>func bytes.ContainsRune([]byte, byte) bool</code></td>
-<td><code>func strings.ContainsRune(string, byte) bool</code></td>
-</tr>
-<tr>
-<td><code>func bytes.Count([]byte, []byte) int</code></td>
-<td><code>func strings.Count(string, string) int</code></td>
-</tr>
-<tr>
-<td><code>func bytes.EqualFold([]byte, []byte) bool</code></td>
-<td><code>func strings.EqualFold(string, string) bool</code></td>
-</tr>
-<tr>
-<td><code>func bytes.HasPrefix([]byte, []byte) bool</code></td>
-<td><code>func strings.HasPrefix(string, string) bool</code></td>
-</tr>
-<tr>
-<td><code>func bytes.HasSuffix([]byte, []byte) bool</code></td>
-<td><code>func strings.HasSuffix(string, string) bool</code></td>
-</tr>
-<tr>
-<td><code>func bytes.Index([]byte, []byte) int</code></td>
-<td><code>func strings.Index(string, string) int</code></td>
-</tr>
-<tr>
-<td><code>func bytes.IndexAny([]byte, string) int</code></td>
-<td><code>func strings.IndexAny(string, string) int</code></td>
-</tr>
-<tr>
-<td><code>func bytes.IndexByte([]byte, byte) int</code></td>
-<td><code>func strings.IndexByte(string, byte) int</code></td>
-</tr>
-<tr>
-<td><code>func bytes.IndexFunc([]byte, func(rune) bool) int</code></td>
-<td><code>func strings.IndexFunc(string, func(rune) bool) int</code></td>
-</tr>
-<tr>
-<td><code>func bytes.IndexRune([]byte, rune) int</code></td>
-<td><code>func strings.IndexRune(string, rune) int</code></td>
-</tr>
-<tr>
-<td><code>func bytes.LastIndex([]byte, []byte) int</code></td>
-<td><code>func strings.LastIndex(string, string) int</code></td>
-</tr>
-<tr>
-<td><code>func bytes.LastIndexAny([]byte, string) int</code></td>
-<td><code>func strings.LastIndexAny(string, string) int</code></td>
-</tr>
-<tr>
-<td><code>func bytes.LastIndexByte([]byte, byte) int</code></td>
-<td><code>func strings.LastIndexByte(string, byte) int</code></td>
-</tr>
-<tr>
-<td><code>func bytes.LastIndexFunc([]byte, func(rune) bool) int</code></td>
-<td><code>func strings.LastIndexFunc(string, func(rune) bool) int</code></td>
-</tr>
-<tr>
-<td><code>func bytes.NewBuffer([]byte) *bytes.Buffer</code></td>
-<td><code>func bytes.NewBufferString(string) *bytes.Buffer</code></td>
-</tr>
-<tr>
-<td><code>func (*httptest.ResponseRecorder) Write([]byte) (int, error)</code></td>
-<td><code>func (*httptest.ResponseRecorder) WriteString(string) (int, error)</code></td>
-</tr>
-<tr>
-<td><code>func (*maphash.Hash) Write([]byte) (int, error)</code></td>
-<td><code>func (*maphash.Hash) WriteString(string) (int, error)</code></td>
-</tr>
-<tr>
-<td><code>func (*os.File) Write([]byte) (int, error)</code></td>
-<td><code>func (*os.File) WriteString(string) (int, error)</code></td>
-</tr>
-<tr>
-<td><code>func regexp.Match(string, []byte) (bool, error)</code></td>
-<td><code>func regexp.MatchString(string, string) (bool, error)</code></td>
-</tr>
-<tr>
-<td><code>func (*regexp.Regexp) FindAllIndex([]byte, int) [][]int</code></td>
-<td><code>func (*regexp.Regexp) FindAllStringIndex(string, int) [][]int</code></td>
-</tr>
-<tr>
-<td><code>func (*regexp.Regexp) FindAllSubmatchIndex([]byte, int) [][]int</code></td>
-<td><code>func (*regexp.Regexp) FindAllStringSubmatchIndex(string, int) [][]int</code></td>
-</tr>
-<tr>
-<td><code>func (*regexp.Regexp) FindIndex([]byte) []int</code></td>
-<td><code>func (*regexp.Regexp) FindStringIndex(string) []int</code></td>
-</tr>
-<tr>
-<td><code>func (*regexp.Regexp) FindSubmatchIndex([]byte) []int</code></td>
-<td><code>func (*regexp.Regexp) FindStringSubmatchIndex(string) []int</code></td>
-</tr>
-<tr>
-<td><code>func (*regexp.Regexp) Match([]byte) bool</code></td>
-<td><code>func (*regexp.Regexp) MatchString(string) bool</code></td>
-</tr>
-<tr>
-<td><code>func (*strings.Builder) Write([]byte) (int, error)</code></td>
-<td><code>func (*strings.Builder) WriteString(string) (int, error)</code></td>
-</tr>
-<tr>
-<td><code>func (*strings.Builder) WriteRune(rune) (int, error)</code></td>
-<td><code>func (*strings.Builder) WriteString(string) (int, error)</code></td>
-</tr>
-<tr>
-<td><code>func strings.Compare(string) int</code></td>
-<td><code>func bytes.Compare([]byte) int</code></td>
-</tr>
-<tr>
-<td><code>func strings.Contains(string) bool</code></td>
-<td><code>func bytes.Contains([]byte) bool</code></td>
-</tr>
-<tr>
-<td><code>func strings.ContainsAny(string) bool</code></td>
-<td><code>func bytes.ContainsAny([]byte) bool</code></td>
-</tr>
-<tr>
-<td><code>func strings.ContainsRune(string) bool</code></td>
-<td><code>func bytes.ContainsRune([]byte) bool</code></td>
-</tr>
-<tr>
-<td><code>func strings.EqualFold(string) bool</code></td>
-<td><code>func bytes.EqualFold([]byte) bool</code></td>
-</tr>
-<tr>
-<td><code>func strings.HasPrefix(string) bool</code></td>
-<td><code>func bytes.HasPrefix([]byte) bool</code></td>
-</tr>
-<tr>
-<td><code>func strings.HasSuffix(string) bool</code></td>
-<td><code>func bytes.HasSuffix([]byte) bool</code></td>
-</tr>
-<tr>
-<td><code>func strings.Index(string) int</code></td>
-<td><code>func bytes.Index([]byte) int</code></td>
-</tr>
-<tr>
-<td><code>func strings.IndexFunc(string, func(r rune) bool) int</code></td>
-<td><code>func bytes.IndexFunc([]byte, func(r rune) bool) int</code></td>
-</tr>
-<tr>
-<td><code>func strings.LastIndex(string) int</code></td>
-<td><code>func bytes.LastIndex([]byte) int</code></td>
-</tr>
-<tr>
-<td><code>func strings.LastIndexAny(string) int</code></td>
-<td><code>func bytes.LastIndexAny([]byte) int</code></td>
-</tr>
-<tr>
-<td><code>func strings.LastIndexFunc(string, func(r rune) bool) int</code></td>
-<td><code>func bytes.LastIndexFunc([]byte, func(r rune) bool) int</code></td>
-</tr>
-<tr>
-<td><code>func utf8.DecodeLastRune([]byte) (rune, int)</code></td>
-<td><code>func utf8.DecodeLastRuneInString(string) (rune, int)</code></td>
-</tr>
-<tr>
-<td><code>func utf8.DecodeRune([]byte) (rune, int)</code></td>
-<td><code>func utf8.DecodeRuneInString(string) (rune, int)</code></td>
-</tr>
-<tr>
-<td><code>func utf8.FullRune([]byte) bool</code></td>
-<td><code>func utf8.FullRuneInString(string) bool</code></td>
-</tr>
-<tr>
-<td><code>func utf8.RuneCount([]byte) int</code></td>
-<td><code>func utf8.RuneCountInString(string) int</code></td>
-</tr>
-<tr>
-<td><code>func utf8.Valid([]byte) bool</code></td>
-<td><code>func utf8.ValidString(string) bool</code></td>
-</tr>
+<!-- This file is @generated by mirror-table, do not edit it manually -->
 
+| Function | Mirror |
+|----------|--------|
+| `func (*bufio.Writer) Write([]byte) (int, error)` | `func (*bufio.Writer) WriteString(string) (int, error)` |
+| `func (*bufio.Writer) WriteRune(rune) (int, error)` | `func (*bufio.Writer) WriteString(string) (int, error)` |
+| `func (*bytes.Buffer) Write([]byte) (int, error)` | `func (*bytes.Buffer) WriteString(string) (int, error)` |
+| `func (*bytes.Buffer) WriteRune(rune) (int, error)` | `func (*bytes.Buffer) WriteString(string) (int, error)` |
+| `func bytes.Compare([]byte, []byte) int` | `func strings.Compare(string, string) int` |
+| `func bytes.Contains([]byte, []byte) bool` | `func strings.Contains(string, string) bool` |
+| `func bytes.ContainsAny([]byte, string) bool` | `func strings.ContainsAny(string, string) bool` |
+| `func bytes.ContainsRune([]byte, byte) bool` | `func strings.ContainsRune(string, byte) bool` |
+| `func bytes.Count([]byte, []byte) int` | `func strings.Count(string, string) int` |
+| `func bytes.EqualFold([]byte, []byte) bool` | `func strings.EqualFold(string, string) bool` |
+| `func bytes.HasPrefix([]byte, []byte) bool` | `func strings.HasPrefix(string, string) bool` |
+| `func bytes.HasSuffix([]byte, []byte) bool` | `func strings.HasSuffix(string, string) bool` |
+| `func bytes.Index([]byte, []byte) int` | `func strings.Index(string, string) int` |
+| `func bytes.IndexAny([]byte, string) int` | `func strings.IndexAny(string, string) int` |
+| `func bytes.IndexByte([]byte, byte) int` | `func strings.IndexByte(string, byte) int` |
+| `func bytes.IndexFunc([]byte, func(rune) bool) int` | `func strings.IndexFunc(string, func(rune) bool) int` |
+| `func bytes.IndexRune([]byte, rune) int` | `func strings.IndexRune(string, rune) int` |
+| `func bytes.LastIndex([]byte, []byte) int` | `func strings.LastIndex(string, string) int` |
+| `func bytes.LastIndexAny([]byte, string) int` | `func strings.LastIndexAny(string, string) int` |
+| `func bytes.LastIndexByte([]byte, byte) int` | `func strings.LastIndexByte(string, byte) int` |
+| `func bytes.LastIndexFunc([]byte, func(rune) bool) int` | `func strings.LastIndexFunc(string, func(rune) bool) int` |
+| `func bytes.NewBuffer([]byte) *bytes.Buffer` | `func bytes.NewBufferString(string) *bytes.Buffer` |
+| `func (*httptest.ResponseRecorder) Write([]byte) (int, error)` | `func (*httptest.ResponseRecorder) WriteString(string) (int, error)` |
+| `func maphash.Bytes([]byte) uint64` | `func maphash.String(string) uint64` |
+| `func (*maphash.Hash) Write([]byte) (int, error)` | `func (*maphash.Hash) WriteString(string) (int, error)` |
+| `func (*os.File) Write([]byte) (int, error)` | `func (*os.File) WriteString(string) (int, error)` |
+| `func regexp.Match(string, []byte) (bool, error)` | `func regexp.MatchString(string, string) (bool, error)` |
+| `func (*regexp.Regexp) FindAllIndex([]byte, int) [][]int` | `func (*regexp.Regexp) FindAllStringIndex(string, int) [][]int` |
+| `func (*regexp.Regexp) FindAllSubmatchIndex([]byte, int) [][]int` | `func (*regexp.Regexp) FindAllStringSubmatchIndex(string, int) [][]int` |
+| `func (*regexp.Regexp) FindIndex([]byte) []int` | `func (*regexp.Regexp) FindStringIndex(string) []int` |
+| `func (*regexp.Regexp) FindSubmatchIndex([]byte) []int` | `func (*regexp.Regexp) FindStringSubmatchIndex(string) []int` |
+| `func (*regexp.Regexp) Match([]byte) bool` | `func (*regexp.Regexp) MatchString(string) bool` |
+| `func (*strings.Builder) Write([]byte) (int, error)` | `func (*strings.Builder) WriteString(string) (int, error)` |
+| `func (*strings.Builder) WriteRune(rune) (int, error)` | `func (*strings.Builder) WriteString(string) (int, error)` |
+| `func strings.Compare(string) int` | `func bytes.Compare([]byte) int` |
+| `func strings.Contains(string) bool` | `func bytes.Contains([]byte) bool` |
+| `func strings.ContainsAny(string) bool` | `func bytes.ContainsAny([]byte) bool` |
+| `func strings.ContainsRune(string) bool` | `func bytes.ContainsRune([]byte) bool` |
+| `func strings.EqualFold(string) bool` | `func bytes.EqualFold([]byte) bool` |
+| `func strings.HasPrefix(string) bool` | `func bytes.HasPrefix([]byte) bool` |
+| `func strings.HasSuffix(string) bool` | `func bytes.HasSuffix([]byte) bool` |
+| `func strings.Index(string) int` | `func bytes.Index([]byte) int` |
+| `func strings.IndexFunc(string, func(r rune) bool) int` | `func bytes.IndexFunc([]byte, func(r rune) bool) int` |
+| `func strings.LastIndex(string) int` | `func bytes.LastIndex([]byte) int` |
+| `func strings.LastIndexAny(string) int` | `func bytes.LastIndexAny([]byte) int` |
+| `func strings.LastIndexFunc(string, func(r rune) bool) int` | `func bytes.LastIndexFunc([]byte, func(r rune) bool) int` |
+| `func utf8.DecodeLastRune([]byte) (rune, int)` | `func utf8.DecodeLastRuneInString(string) (rune, int)` |
+| `func utf8.DecodeRune([]byte) (rune, int)` | `func utf8.DecodeRuneInString(string) (rune, int)` |
+| `func utf8.FullRune([]byte) bool` | `func utf8.FullRuneInString(string) bool` |
+| `func utf8.RuneCount([]byte) int` | `func utf8.RuneCountInString(string) int` |
+| `func utf8.Valid([]byte) bool` | `func utf8.ValidString(string) bool` |

@@ -14,7 +14,10 @@ import (
 )
 
 var (
-	reg = regexp.MustCompile(`<([/!]?)([^>]+?)(/?)>`)
+	reg           = regexp.MustCompile(`<([/!]?)([^>]+?)(/?)>`)
+	reXMLComments = regexp.MustCompile(`(?s)(<!--)(.*?)(-->)`)
+	reSpaces      = regexp.MustCompile(`(?s)>\s+<`)
+	reNewlines    = regexp.MustCompile(`\r*\n`)
 	// NL is the newline string used in XML output.
 	NL = "\n"
 )
@@ -33,20 +36,19 @@ func FormatXML(xmls, prefix, indent string, nestedTagsInComments ...bool) string
 	if len(nestedTagsInComments) > 0 {
 		nestedTagsInComment = nestedTagsInComments[0]
 	}
-	reXmlComments := regexp.MustCompile(`(?s)(<!--)(.*?)(-->)`)
-	src := regexp.MustCompile(`(?s)>\s+<`).ReplaceAllString(xmls, "><")
+	src := reSpaces.ReplaceAllString(xmls, "><")
 	if nestedTagsInComment {
-		src = reXmlComments.ReplaceAllStringFunc(src, func(m string) string {
-			parts := reXmlComments.FindStringSubmatch(m)
-			p2 := regexp.MustCompile(`\r*\n`).ReplaceAllString(parts[2], " ")
+		src = reXMLComments.ReplaceAllStringFunc(src, func(m string) string {
+			parts := reXMLComments.FindStringSubmatch(m)
+			p2 := reNewlines.ReplaceAllString(parts[2], " ")
 			return parts[1] + html.EscapeString(p2) + parts[3]
 		})
 	}
 	rf := replaceTag(prefix, indent)
 	r := prefix + reg.ReplaceAllStringFunc(src, rf)
 	if nestedTagsInComment {
-		r = reXmlComments.ReplaceAllStringFunc(r, func(m string) string {
-			parts := reXmlComments.FindStringSubmatch(m)
+		r = reXMLComments.ReplaceAllStringFunc(r, func(m string) string {
+			parts := reXMLComments.FindStringSubmatch(m)
 			return parts[1] + html.UnescapeString(parts[2]) + parts[3]
 		})
 	}

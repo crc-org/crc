@@ -54,9 +54,7 @@ func New(settings *config.DuplSettings) *goanalysis.Linter {
 }
 
 func runDupl(pass *analysis.Pass, settings *config.DuplSettings) ([]goanalysis.Issue, error) {
-	fileNames := internal.GetFileNames(pass)
-
-	issues, err := duplAPI.Run(fileNames, settings.Threshold)
+	issues, err := duplAPI.Run(internal.GetGoFileNames(pass), settings.Threshold)
 	if err != nil {
 		return nil, err
 	}

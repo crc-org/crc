@@ -24,7 +24,7 @@ func (r HaveOccurredRule) Apply(gexp *expression.GomegaExpression, config types.
 		return true
 	}
 
-	if bool(config.ForceSucceedForFuncs) && gexp.GetActualArg().(*actual.ErrPayload).IsFunc() {
+	if config.ForceSucceedForFuncs && gexp.GetActualArg().(*actual.ErrPayload).IsFunc() {
 		gexp.ReverseAssertionFuncLogic()
 		gexp.SetMatcherSucceed()
 		reportBuilder.AddIssue(true, "prefer using the Succeed matcher for error function, instead of HaveOccurred")

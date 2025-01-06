@@ -125,7 +125,7 @@ const (
 )
 
 func (n *nilNil) isDangerNilType(t types.Type) (bool, zeroValue) {
-	switch v := t.(type) {
+	switch v := types.Unalias(t).(type) {
 	case *types.Pointer:
 		return n.checkedTypes.Contains(ptrType), zeroValueNil
 

@@ -17,7 +17,6 @@ linters:
     - errcheck
     - errname
     - errorlint
-    - exhaustive # checks exhaustiveness of enum switch statements
     - exportloopref # checks for pointers to enclosing loop variables
     - gci
     - gochecknoinits # checks that no init functions are present in Go code
@@ -59,12 +58,6 @@ linters-settings:
       - standard # Standard section: captures all standard packages.
       - default # Default section: contains all imports that could not be matched to another section type.
       - prefix(github.com/jjti)
-  exhaustive:
-    # Program elements to check for exhaustiveness.
-    # Default: [ switch ]
-    check:
-      - switch
-      - map
   gocritic:
     settings:
       captLocal:

@@ -1,12 +1,14 @@
-all: build test lint
+.PHONY: clean lint test build
 
-download:
-	go mod download
+default: clean lint test build
 
-build: download
-	go build -C cmd/recvcheck
+clean:
+	rm -rf coverage.txt
 
-test:
+build:
+	go build -ldflags "-s -w" -trimpath ./cmd/recvcheck/
+
+test: clean
 	go test -race -coverprofile=coverage.txt .
 
 lint:

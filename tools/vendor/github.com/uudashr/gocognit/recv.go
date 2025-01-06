@@ -20,5 +20,6 @@ func recvString(recv ast.Expr) string {
 	case *ast.IndexListExpr:
 		return recvString(t.X)
 	}
+
 	return "BADRECV"
 }

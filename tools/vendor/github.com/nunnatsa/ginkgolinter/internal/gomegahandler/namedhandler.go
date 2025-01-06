@@ -18,28 +18,39 @@ type nameHandler struct {
 	pass *analysis.Pass
 }
 
-// GetActualFuncName returns the name of the gomega function, e.g. `Expect`
-func (g nameHandler) GetActualFuncName(expr *ast.CallExpr) (string, bool) {
-	selector, ok := expr.Fun.(*ast.SelectorExpr)
-	if !ok {
-		return "", false
-	}
-
-	switch x := selector.X.(type) {
-	case *ast.Ident:
-		if x.Name != g.name {
-			if !g.isGomegaVar(x) {
-				return "", false
-			}
+// GetGomegaBasicInfo returns the name of the gomega function, e.g. `Expect` + some additional info
+func (g nameHandler) GetGomegaBasicInfo(expr *ast.CallExpr) (*GomegaBasicInfo, bool) {
+	info := &GomegaBasicInfo{}
+	for {
+		selector, ok := expr.Fun.(*ast.SelectorExpr)
+		if !ok {
+			return nil, false
 		}
 
-		return selector.Sel.Name, true
+		if selector.Sel.Name == "Error" {
+			info.HasErrorMethod = true
+		}
 
-	case *ast.CallExpr:
-		return g.GetActualFuncName(x)
+		switch x := selector.X.(type) {
+		case *ast.Ident:
+			if x.Name != g.name {
+				if !g.isGomegaVar(x) {
+					return nil, false
+				}
+				info.UseGomegaVar = true
+			}
+
+			info.MethodName = selector.Sel.Name
+
+			return info, true
+
+		case *ast.CallExpr:
+			expr = x
+
+		default:
+			return nil, false
+		}
 	}
-
-	return "", false
 }
 
 // ReplaceFunction replaces the function with another one, for fix suggestions
@@ -51,7 +62,7 @@ func (g nameHandler) isGomegaVar(x ast.Expr) bool {
 	return gomegainfo.IsGomegaVar(x, g.pass)
 }
 
-func (g nameHandler) GetActualExpr(assertionFunc *ast.SelectorExpr, errMethodExists *bool) *ast.CallExpr {
+func (g nameHandler) GetActualExpr(assertionFunc *ast.SelectorExpr) *ast.CallExpr {
 	actualExpr, ok := assertionFunc.X.(*ast.CallExpr)
 	if !ok {
 		return nil
@@ -69,10 +80,7 @@ func (g nameHandler) GetActualExpr(assertionFunc *ast.SelectorExpr, errMethodExi
 				return actualExpr
 			}
 		} else {
-			if fun.Sel.Name == "Error" {
-				*errMethodExists = true
-			}
-			return g.GetActualExpr(fun, errMethodExists)
+			return g.GetActualExpr(fun)
 		}
 	}
 	return nil
