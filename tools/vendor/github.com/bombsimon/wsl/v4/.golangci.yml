@@ -39,36 +39,28 @@ linters:
   enable-all: true
   disable:
     - cyclop
-    - deadcode
     - depguard
     - dupl
     - dupword
-    - exhaustivestruct
     - exhaustruct
+    - exportloopref
     - forbidigo
     - funlen
     - gci
     - gocognit
     - gocyclo
     - godox
-    - golint
-    - gomnd
-    - ifshort
-    - interfacer
+    - mnd
     - lll
     - maintidx
-    - maligned
     - nakedret
     - nestif
     - nlreturn
-    - nosnakecase
     - paralleltest
     - prealloc
     - rowserrcheck
-    - scopelint
-    - structcheck
     - testpackage
-    - varcheck
+    - tparallel
     - varnamelen
     - wastedassign
 
@@ -76,5 +68,4 @@ issues:
   exclude-use-default: true
   max-issues-per-linter: 0
   max-same-issues: 0
-
 # vim: set sw=2 ts=2 et:

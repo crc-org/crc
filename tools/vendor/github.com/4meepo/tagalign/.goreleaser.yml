@@ -1,4 +1,4 @@
----
+version: 2
 project_name: tagalign
 
 release:

@@ -37,21 +37,19 @@ func NewAnalyzer() *analysis.Analyzer {
 
 	a := NewAnalyzerWithConfig(config)
 
-	var ignored bool
 	a.Flags.Init("ginkgolinter", flag.ExitOnError)
-	a.Flags.Var(&config.SuppressLen, "suppress-len-assertion", "Suppress warning for wrong length assertions")
-	a.Flags.Var(&config.SuppressNil, "suppress-nil-assertion", "Suppress warning for wrong nil assertions")
-	a.Flags.Var(&config.SuppressErr, "suppress-err-assertion", "Suppress warning for wrong error assertions")
-	a.Flags.Var(&config.SuppressCompare, "suppress-compare-assertion", "Suppress warning for wrong comparison assertions")
-	a.Flags.Var(&config.SuppressAsync, "suppress-async-assertion", "Suppress warning for function call in async assertion, like Eventually")
-	a.Flags.Var(&config.ValidateAsyncIntervals, "validate-async-intervals", "best effort validation of async intervals (timeout and polling); ignored the suppress-async-assertion flag is true")
-	a.Flags.Var(&config.SuppressTypeCompare, "suppress-type-compare-assertion", "Suppress warning for comparing values from different types, like int32 and uint32")
-	a.Flags.Var(&config.AllowHaveLen0, "allow-havelen-0", "Do not warn for HaveLen(0); default = false")
-	a.Flags.Var(&config.ForceExpectTo, "force-expect-to", "force using `Expect` with `To`, `ToNot` or `NotTo`. reject using `Expect` with `Should` or `ShouldNot`; default = false (not forced)")
-	a.Flags.BoolVar(&ignored, "suppress-focus-container", true, "Suppress warning for ginkgo focus containers like FDescribe, FContext, FWhen or FIt. Deprecated and ignored: use --forbid-focus-container instead")
-	a.Flags.Var(&config.ForbidFocus, "forbid-focus-container", "trigger a warning for ginkgo focus containers like FDescribe, FContext, FWhen or FIt; default = false.")
-	a.Flags.Var(&config.ForbidSpecPollution, "forbid-spec-pollution", "trigger a warning for variable assignments in ginkgo containers like Describe, Context and When, instead of in BeforeEach(); default = false.")
-	a.Flags.Var(&config.ForceSucceedForFuncs, "force-succeed", "force using the Succeed matcher for error functions, and the HaveOccurred matcher for non-function error values")
+	a.Flags.BoolVar(&config.SuppressLen, "suppress-len-assertion", config.SuppressLen, "Suppress warning for wrong length assertions")
+	a.Flags.BoolVar(&config.SuppressNil, "suppress-nil-assertion", config.SuppressNil, "Suppress warning for wrong nil assertions")
+	a.Flags.BoolVar(&config.SuppressErr, "suppress-err-assertion", config.SuppressErr, "Suppress warning for wrong error assertions")
+	a.Flags.BoolVar(&config.SuppressCompare, "suppress-compare-assertion", config.SuppressCompare, "Suppress warning for wrong comparison assertions")
+	a.Flags.BoolVar(&config.SuppressAsync, "suppress-async-assertion", config.SuppressAsync, "Suppress warning for function call in async assertion, like Eventually")
+	a.Flags.BoolVar(&config.ValidateAsyncIntervals, "validate-async-intervals", config.ValidateAsyncIntervals, "best effort validation of async intervals (timeout and polling); ignored the suppress-async-assertion flag is true")
+	a.Flags.BoolVar(&config.SuppressTypeCompare, "suppress-type-compare-assertion", config.SuppressTypeCompare, "Suppress warning for comparing values from different types, like int32 and uint32")
+	a.Flags.BoolVar(&config.AllowHaveLen0, "allow-havelen-0", config.AllowHaveLen0, "Do not warn for HaveLen(0); default = false")
+	a.Flags.BoolVar(&config.ForceExpectTo, "force-expect-to", config.ForceExpectTo, "force using `Expect` with `To`, `ToNot` or `NotTo`. reject using `Expect` with `Should` or `ShouldNot`; default = false (not forced)")
+	a.Flags.BoolVar(&config.ForbidFocus, "forbid-focus-container", config.ForbidFocus, "trigger a warning for ginkgo focus containers like FDescribe, FContext, FWhen or FIt; default = false.")
+	a.Flags.BoolVar(&config.ForbidSpecPollution, "forbid-spec-pollution", config.ForbidSpecPollution, "trigger a warning for variable assignments in ginkgo containers like Describe, Context and When, instead of in BeforeEach(); default = false.")
+	a.Flags.BoolVar(&config.ForceSucceedForFuncs, "force-succeed", config.ForceSucceedForFuncs, "force using the Succeed matcher for error functions, and the HaveOccurred matcher for non-function error values")
 
 	return a
 }

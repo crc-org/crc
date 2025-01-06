@@ -274,12 +274,28 @@ func (r *runner) run(pass *analysis.Pass) (interface{}, error) {
 				stmtTypName = removePkgPrefix(stmtTypName)
 			}
 
-			pass.Reportf(result.Pos(),
-				"%s function return %s interface at the %s result, abstract a single concrete implementation of %s",
+			msg := fmt.Sprintf("%s function return %s interface at the %s result, abstract a single concrete implementation of %s",
 				funcDecl.Name.Name,
 				retTypeName,
 				positionStr(currentIdx),
 				stmtTypName)
+
+			pass.Report(analysis.Diagnostic{
+				Pos:     result.Pos(),
+				Message: msg,
+				SuggestedFixes: []analysis.SuggestedFix{
+					{
+						Message: "Replace the interface return type with the concrete type",
+						TextEdits: []analysis.TextEdit{
+							{
+								Pos:     result.Pos(),
+								End:     result.End(),
+								NewText: []byte(stmtTypName),
+							},
+						},
+					},
+				},
+			})
 		}
 	})
 

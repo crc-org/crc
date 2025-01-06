@@ -48,7 +48,8 @@ func (r *runner) run(pass *analysis.Pass) (interface{}, error) {
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
 	// Collect all interface type declarations
-	ifaceDecls := make(map[string]token.Pos)
+	ifaceDecls := make(map[string]*ast.TypeSpec)
+	genDecls := make(map[string]*ast.GenDecl) // ifaceName -> GenDecl
 
 	nodeFilter := []ast.Node{
 		(*ast.GenDecl)(nil),
@@ -80,7 +81,7 @@ func (r *runner) run(pass *analysis.Pass) (interface{}, error) {
 
 			_, ok = ts.Type.(*ast.InterfaceType)
 			if !ok {
-				return
+				continue
 			}
 
 			if r.debug {
@@ -93,7 +94,8 @@ func (r *runner) run(pass *analysis.Pass) (interface{}, error) {
 				continue
 			}
 
-			ifaceDecls[ts.Name.Name] = ts.Pos()
+			ifaceDecls[ts.Name.Name] = ts
+			genDecls[ts.Name.Name] = decl
 		}
 	})
 
@@ -117,21 +119,51 @@ func (r *runner) run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		pos := ifaceDecls[ident.Name]
-		if pos == ident.Pos() {
+		ts, ok := ifaceDecls[ident.Name]
+		if !ok {
+			return
+		}
+
+		if ts.Pos() == ident.Pos() {
 			// The identifier is the interface type declaration
 			return
 		}
 
 		delete(ifaceDecls, ident.Name)
+		delete(genDecls, ident.Name)
 	})
 
 	if r.debug {
 		fmt.Printf("Package %s %s\n", pass.Pkg.Path(), pass.Pkg.Name())
 	}
 
-	for name, pos := range ifaceDecls {
-		pass.Reportf(pos, "interface %s is declared but not used within the package", name)
+	for name, ts := range ifaceDecls {
+		decl := genDecls[name]
+
+		var node ast.Node
+		if len(decl.Specs) == 1 {
+			node = decl
+		} else {
+			node = ts
+		}
+
+		msg := fmt.Sprintf("interface %s is declared but not used within the package", name)
+		pass.Report(analysis.Diagnostic{
+			Pos:     ts.Pos(),
+			Message: msg,
+			SuggestedFixes: []analysis.SuggestedFix{
+				{
+					Message: "Remove the unused interface declaration",
+					TextEdits: []analysis.TextEdit{
+						{
+							Pos:     node.Pos(),
+							End:     node.End(),
+							NewText: []byte{},
+						},
+					},
+				},
+			},
+		})
 	}
 
 	return nil, nil

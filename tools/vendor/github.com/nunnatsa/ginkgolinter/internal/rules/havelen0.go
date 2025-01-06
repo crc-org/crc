@@ -10,7 +10,7 @@ import (
 type HaveLen0 struct{}
 
 func (r *HaveLen0) isApplied(gexp *expression.GomegaExpression, config types.Config) bool {
-	return gexp.MatcherTypeIs(matcher.HaveLenZeroMatcherType) && !bool(config.AllowHaveLen0)
+	return gexp.MatcherTypeIs(matcher.HaveLenZeroMatcherType) && !config.AllowHaveLen0
 }
 
 func (r *HaveLen0) Apply(gexp *expression.GomegaExpression, config types.Config, reportBuilder *reports.Builder) bool {

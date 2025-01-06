@@ -20,7 +20,7 @@ const (
 type AsyncTimeIntervalsRule struct{}
 
 func (r AsyncTimeIntervalsRule) isApplied(gexp *expression.GomegaExpression, config types.Config) bool {
-	return !bool(config.SuppressAsync) && bool(config.ValidateAsyncIntervals) && gexp.IsAsync()
+	return !config.SuppressAsync && config.ValidateAsyncIntervals && gexp.IsAsync()
 }
 
 func (r AsyncTimeIntervalsRule) Apply(gexp *expression.GomegaExpression, config types.Config, reportBuilder *reports.Builder) bool {

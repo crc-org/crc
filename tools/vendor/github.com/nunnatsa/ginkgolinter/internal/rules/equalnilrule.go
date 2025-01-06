@@ -12,7 +12,7 @@ import (
 type EqualNilRule struct{}
 
 func (r EqualNilRule) isApplied(gexp *expression.GomegaExpression, config types.Config) bool {
-	return !bool(config.SuppressNil) &&
+	return !config.SuppressNil &&
 		gexp.MatcherTypeIs(matcher.EqualValueMatcherType)
 }
 

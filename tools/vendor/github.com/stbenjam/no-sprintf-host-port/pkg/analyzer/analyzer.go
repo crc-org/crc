@@ -29,7 +29,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		callExpr := node.(*ast.CallExpr)
 		if p, f, ok := getCallExprFunction(callExpr); ok && p == "fmt" && f == "Sprintf" {
 			if err := checkForHostPortConstruction(callExpr); err != nil {
-				pass.Reportf(node.Pos(), err.Error())
+				pass.Reportf(node.Pos(), "%s", err.Error())
 			}
 		}
 	})
@@ -52,7 +52,7 @@ func getCallExprFunction(callExpr *ast.CallExpr) (pkg string, fn string, result 
 
 // getStringLiteral returns the value at a position if it's a string literal.
 func getStringLiteral(args []ast.Expr, pos int) (string, bool) {
-	if len(args) < pos + 1 {
+	if len(args) < pos+1 {
 		return "", false
 	}
 
@@ -72,9 +72,9 @@ func getStringLiteral(args []ast.Expr, pos int) (string, bool) {
 // essentially scheme://%s:<something else>, or scheme://user:pass@%s:<something else>.
 //
 // Matching requirements:
-//		- Scheme as per RFC3986 is ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
-//		- A format string substitution in the host portion, preceded by an optional username/password@
-//  	- A colon indicating a port will be specified
+//   - Scheme as per RFC3986 is ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+//   - A format string substitution in the host portion, preceded by an optional username/password@
+//   - A colon indicating a port will be specified
 func checkForHostPortConstruction(sprintf *ast.CallExpr) error {
 	fs, ok := getStringLiteral(sprintf.Args, 0)
 	if !ok {

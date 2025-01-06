@@ -28,7 +28,7 @@ const (
 	UntypedRune string = "untyped rune"
 )
 
-// Violation describs what message we going to give to a particular code violation
+// Violation describes what message we going to give to a particular code violation
 type Violation struct {
 	Type     ViolationType //
 	Args     []int         // Indexes of the arguments needs to be checked
@@ -143,7 +143,7 @@ func (v *Violation) Diagnostic(fSet *token.FileSet) analysis.Diagnostic {
 		v.AltPackage = v.Package
 	}
 
-	// Hooray! we dont need to change package and redo imports.
+	// Hooray! we don't need to change package and redo imports.
 	if v.Type == Function && v.AltPackage == v.Package && noNl {
 		diagnostic.SuggestedFixes = []analysis.SuggestedFix{{
 			Message: "Fix Issue With",
@@ -166,7 +166,7 @@ type GolangIssue struct {
 	Original  string
 }
 
-// Issue intended to be used only within `golangci-lint`, bu you can use use it
+// Issue intended to be used only within `golangci-lint`, but you can use it
 // alongside Diagnostic if you wish.
 func (v *Violation) Issue(fSet *token.FileSet) GolangIssue {
 	issue := GolangIssue{

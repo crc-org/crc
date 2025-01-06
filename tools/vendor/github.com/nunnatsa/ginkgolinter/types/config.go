@@ -17,22 +17,22 @@ const (
 )
 
 type Config struct {
-	SuppressLen            Boolean
-	SuppressNil            Boolean
-	SuppressErr            Boolean
-	SuppressCompare        Boolean
-	SuppressAsync          Boolean
-	ForbidFocus            Boolean
-	SuppressTypeCompare    Boolean
-	AllowHaveLen0          Boolean
-	ForceExpectTo          Boolean
-	ValidateAsyncIntervals Boolean
-	ForbidSpecPollution    Boolean
-	ForceSucceedForFuncs   Boolean
+	SuppressLen            bool
+	SuppressNil            bool
+	SuppressErr            bool
+	SuppressCompare        bool
+	SuppressAsync          bool
+	ForbidFocus            bool
+	SuppressTypeCompare    bool
+	AllowHaveLen0          bool
+	ForceExpectTo          bool
+	ValidateAsyncIntervals bool
+	ForbidSpecPollution    bool
+	ForceSucceedForFuncs   bool
 }
 
 func (s *Config) AllTrue() bool {
-	return bool(s.SuppressLen && s.SuppressNil && s.SuppressErr && s.SuppressCompare && s.SuppressAsync && !s.ForbidFocus)
+	return s.SuppressLen && s.SuppressNil && s.SuppressErr && s.SuppressCompare && s.SuppressAsync && !s.ForbidFocus
 }
 
 func (s *Config) Clone() Config {

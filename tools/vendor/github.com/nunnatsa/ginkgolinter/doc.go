@@ -94,7 +94,7 @@ For example:
 	Eventually(func() bool { return true }, time.Second*10, 500*time.Millisecond).ProbeEvery(time.Millisecond * 500).Should(BeTrue())
 
 * async timing interval: non-time.Duration intervals [Style]
-gomega supports a few formats for timeout and polling intervals, when using the old format (the last two parameters of Eventually and Constantly):
+gomega supports a few formats for timeout and polling intervals, when using the old format (the last two parameters of Eventually and Consistently):
   * time.Duration
   * any kind of numeric value, as number of seconds
   * duration string like "12s"

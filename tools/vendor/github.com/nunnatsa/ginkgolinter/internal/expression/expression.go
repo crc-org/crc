@@ -27,7 +27,8 @@ type GomegaExpression struct {
 	origAssertionFuncName string
 	actualFuncName        string
 
-	isAsync bool
+	isAsync          bool
+	isUsingGomegaVar bool
 
 	actual  *actual.Actual
 	matcher *matcher.Matcher
@@ -36,8 +37,8 @@ type GomegaExpression struct {
 }
 
 func New(origExpr *ast.CallExpr, pass *analysis.Pass, handler gomegahandler.Handler, timePkg string) (*GomegaExpression, bool) {
-	actualMethodName, ok := handler.GetActualFuncName(origExpr)
-	if !ok || !gomegainfo.IsActualMethod(actualMethodName) {
+	info, ok := handler.GetGomegaBasicInfo(origExpr)
+	if !ok || !gomegainfo.IsActualMethod(info.MethodName) {
 		return nil, false
 	}
 
@@ -45,16 +46,14 @@ func New(origExpr *ast.CallExpr, pass *analysis.Pass, handler gomegahandler.Hand
 	if !ok || !gomegainfo.IsAssertionFunc(origSel.Sel.Name) {
 		return &GomegaExpression{
 			orig:           origExpr,
-			actualFuncName: actualMethodName,
+			actualFuncName: info.MethodName,
 		}, true
 	}
 
 	exprClone := astcopy.CallExpr(origExpr)
 	selClone := exprClone.Fun.(*ast.SelectorExpr)
 
-	errMethodExists := false
-
-	origActual := handler.GetActualExpr(origSel, &errMethodExists)
+	origActual := handler.GetActualExpr(origSel)
 	if origActual == nil {
 		return nil, false
 	}
@@ -64,7 +63,7 @@ func New(origExpr *ast.CallExpr, pass *analysis.Pass, handler gomegahandler.Hand
 		return nil, false
 	}
 
-	actl, ok := actual.New(origExpr, exprClone, origActual, actualClone, pass, handler, timePkg, errMethodExists)
+	actl, ok := actual.New(origExpr, exprClone, origActual, actualClone, pass, timePkg, info)
 	if !ok {
 		return nil, false
 	}
@@ -89,9 +88,10 @@ func New(origExpr *ast.CallExpr, pass *analysis.Pass, handler gomegahandler.Hand
 
 		assertionFuncName:     origSel.Sel.Name,
 		origAssertionFuncName: origSel.Sel.Name,
-		actualFuncName:        actualMethodName,
+		actualFuncName:        info.MethodName,
 
-		isAsync: actl.IsAsync(),
+		isAsync:          actl.IsAsync(),
+		isUsingGomegaVar: info.UseGomegaVar,
 
 		actual:  actl,
 		matcher: mtchr,
@@ -133,6 +133,10 @@ func (e *GomegaExpression) GetOrigAssertFuncName() string {
 
 func (e *GomegaExpression) IsAsync() bool {
 	return e.isAsync
+}
+
+func (e *GomegaExpression) IsUsingGomegaVar() bool {
+	return e.isUsingGomegaVar
 }
 
 func (e *GomegaExpression) ReverseAssertionFuncLogic() {
