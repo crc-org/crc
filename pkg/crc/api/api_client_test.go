@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/containers/common/pkg/strongunits"
+
 	apiClient "github.com/crc-org/crc/v2/pkg/crc/api/client"
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
@@ -68,10 +70,10 @@ func TestStatus(t *testing.T) {
 			CrcStatus:        "Running",
 			OpenshiftStatus:  "Running",
 			OpenshiftVersion: "4.5.1",
-			DiskUse:          int64(10000000000),
-			DiskSize:         int64(20000000000),
-			RAMUse:           int64(1000),
-			RAMSize:          int64(2000),
+			DiskUse:          strongunits.B(10000000000),
+			DiskSize:         strongunits.B(20000000000),
+			RAMUse:           strongunits.B(1000),
+			RAMSize:          strongunits.B(2000),
 			Preset:           preset.OpenShift,
 		},
 		statusResult,

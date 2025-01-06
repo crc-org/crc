@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/containers/common/pkg/strongunits"
 	"github.com/crc-org/crc/v2/pkg/crc/cluster"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
 	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
@@ -13,9 +14,9 @@ type StartConfig struct {
 	BundlePath string
 
 	// Hypervisor
-	Memory   uint // Memory size in MiB
+	Memory   strongunits.MiB // Memory size in MiB
 	CPUs     uint
-	DiskSize uint // Disk size in GiB
+	DiskSize strongunits.GiB // Disk size in GiB
 
 	// Nameserver
 	NameServer string
@@ -75,18 +76,18 @@ type ClusterStatusResult struct {
 	CrcStatus            state.State
 	OpenshiftStatus      OpenshiftStatus
 	OpenshiftVersion     string
-	DiskUse              int64
-	DiskSize             int64
-	RAMUse               int64
-	RAMSize              int64
-	PersistentVolumeUse  int
-	PersistentVolumeSize int
+	DiskUse              strongunits.B
+	DiskSize             strongunits.B
+	RAMUse               strongunits.B
+	RAMSize              strongunits.B
+	PersistentVolumeUse  strongunits.B
+	PersistentVolumeSize strongunits.B
 	Preset               crcpreset.Preset
 }
 
 type ClusterLoadResult struct {
-	RAMUse  int64
-	RAMSize int64
+	RAMUse  strongunits.B
+	RAMSize strongunits.B
 	CPUUse  []int64
 }
 

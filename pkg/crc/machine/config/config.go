@@ -1,6 +1,9 @@
 package config
 
-import "github.com/crc-org/crc/v2/pkg/crc/network"
+import (
+	"github.com/containers/common/pkg/strongunits"
+	"github.com/crc-org/crc/v2/pkg/crc/network"
+)
 
 type MachineConfig struct {
 	// CRC system bundle
@@ -9,10 +12,10 @@ type MachineConfig struct {
 	// Virtual machine configuration
 	Name string
 	// Memory holds value in MiB
-	Memory uint
+	Memory strongunits.MiB
 	CPUs   uint
 	// DiskSize holds value in GiB
-	DiskSize          uint
+	DiskSize          strongunits.GiB
 	ImageSourcePath   string
 	ImageFormat       string
 	SSHKeyPath        string

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/containers/common/pkg/strongunits"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
 	"github.com/crc-org/crc/v2/pkg/crc/preset"
@@ -23,12 +24,12 @@ type ClusterStatusResult struct {
 	CrcStatus            string
 	OpenshiftStatus      string
 	OpenshiftVersion     string `json:"OpenshiftVersion,omitempty"`
-	DiskUse              int64
-	DiskSize             int64
-	RAMUse               int64
-	RAMSize              int64
-	PersistentVolumeUse  int `json:"PersistentVolumeUse,omitempty"`
-	PersistentVolumeSize int `json:"PersistentVolumeSize,omitempty"`
+	DiskUse              strongunits.B
+	DiskSize             strongunits.B
+	RAMUse               strongunits.B
+	RAMSize              strongunits.B
+	PersistentVolumeUse  strongunits.B `json:"PersistentVolumeUse,omitempty"`
+	PersistentVolumeSize strongunits.B `json:"PersistentVolumeSize,omitempty"`
 	Preset               preset.Preset
 }
 

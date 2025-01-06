@@ -9,6 +9,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/containers/common/pkg/strongunits"
+
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/image"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
@@ -27,15 +29,15 @@ func ValidateCPUs(value uint, preset crcpreset.Preset) error {
 }
 
 // ValidateMemory checks if provided Memory count is valid
-func ValidateMemory(value uint, preset crcpreset.Preset) error {
+func ValidateMemory(value strongunits.MiB, preset crcpreset.Preset) error {
 	if value < constants.GetDefaultMemory(preset) {
 		return fmt.Errorf("requires memory in MiB >= %d", constants.GetDefaultMemory(preset))
 	}
 	return ValidateEnoughMemory(value)
 }
 
-func ValidateDiskSize(value uint) error {
-	if value < constants.DefaultDiskSize {
+func ValidateDiskSize(value strongunits.GiB) error {
+	if uint64(value) < constants.DefaultDiskSize {
 		return fmt.Errorf("requires disk size in GiB >= %d", constants.DefaultDiskSize)
 	}
 
@@ -51,14 +53,13 @@ func ValidatePersistentVolumeSize(value int) error {
 }
 
 // ValidateEnoughMemory checks if enough memory is installed on the host
-func ValidateEnoughMemory(value uint) error {
+func ValidateEnoughMemory(value strongunits.MiB) error {
 	totalMemory := memory.TotalMemory()
 	logging.Debugf("Total memory of system is %d bytes", totalMemory)
-	valueBytes := value * 1024 * 1024
-	if totalMemory < uint64(valueBytes) {
+	if totalMemory < uint64(value.ToBytes()) {
 		return fmt.Errorf("only %s of memory found (%s required)",
 			units.HumanSize(float64(totalMemory)),
-			units.HumanSize(float64(valueBytes)))
+			units.HumanSize(float64(value.ToBytes())))
 	}
 	return nil
 }

@@ -10,6 +10,8 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/containers/common/pkg/strongunits"
+
 	"github.com/Masterminds/semver/v3"
 	"github.com/crc-org/crc/v2/pkg/crc/cluster"
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
@@ -38,7 +40,7 @@ func init() {
 	flagSet.StringP(crcConfig.Bundle, "b", constants.GetDefaultBundlePath(crcConfig.GetPreset(config)), crcConfig.BundleHelpMsg(config))
 	flagSet.StringP(crcConfig.PullSecretFile, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
 	flagSet.UintP(crcConfig.CPUs, "c", constants.GetDefaultCPUs(crcConfig.GetPreset(config)), "Number of CPU cores to allocate to the instance")
-	flagSet.UintP(crcConfig.Memory, "m", constants.GetDefaultMemory(crcConfig.GetPreset(config)), "MiB of memory to allocate to the instance")
+	flagSet.UintP(crcConfig.Memory, "m", uint(constants.GetDefaultMemory(crcConfig.GetPreset(config))), "MiB of memory to allocate to the instance")
 	flagSet.UintP(crcConfig.DiskSize, "d", constants.DefaultDiskSize, "Total size in GiB of the disk used by the instance")
 	flagSet.StringP(crcConfig.NameServer, "n", "", "IPv4 address of nameserver to use for the instance")
 	flagSet.Bool(crcConfig.DisableUpdateCheck, false, "Don't check for update")
@@ -69,8 +71,8 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 
 	startConfig := types.StartConfig{
 		BundlePath:        config.Get(crcConfig.Bundle).AsString(),
-		Memory:            config.Get(crcConfig.Memory).AsUInt(),
-		DiskSize:          config.Get(crcConfig.DiskSize).AsUInt(),
+		Memory:            strongunits.MiB(config.Get(crcConfig.Memory).AsUInt()),
+		DiskSize:          strongunits.GiB(config.Get(crcConfig.DiskSize).AsUInt()),
 		CPUs:              config.Get(crcConfig.CPUs).AsUInt(),
 		NameServer:        config.Get(crcConfig.NameServer).AsString(),
 		PullSecret:        cluster.NewInteractivePullSecretLoader(config),
@@ -181,13 +183,13 @@ func (s *startResult) prettyPrintTo(writer io.Writer) error {
 }
 
 func validateStartFlags() error {
-	if err := validation.ValidateMemory(config.Get(crcConfig.Memory).AsUInt(), crcConfig.GetPreset(config)); err != nil {
+	if err := validation.ValidateMemory(strongunits.MiB(config.Get(crcConfig.Memory).AsUInt()), crcConfig.GetPreset(config)); err != nil {
 		return err
 	}
 	if err := validation.ValidateCPUs(config.Get(crcConfig.CPUs).AsUInt(), crcConfig.GetPreset(config)); err != nil {
 		return err
 	}
-	if err := validation.ValidateDiskSize(config.Get(crcConfig.DiskSize).AsUInt()); err != nil {
+	if err := validation.ValidateDiskSize(strongunits.GiB(config.Get(crcConfig.DiskSize).AsUInt())); err != nil {
 		return err
 	}
 	if err := validation.ValidateBundle(config.Get(crcConfig.Bundle).AsString(), crcConfig.GetPreset(config)); err != nil {

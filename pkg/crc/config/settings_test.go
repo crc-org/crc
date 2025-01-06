@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/containers/common/pkg/strongunits"
+
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/version"
@@ -16,11 +18,12 @@ import (
 
 // override for ValidateMemory in validations.go to disable the physical memory check
 func validateMemoryNoPhysicalCheck(value interface{}, preset crcpreset.Preset) (bool, string) {
-	v, err := cast.ToUintE(value)
+	valueAsInt, err := cast.ToUintE(value)
 	if err != nil {
 		return false, fmt.Sprintf("requires integer value in MiB >= %d", constants.GetDefaultMemory(preset))
 	}
-	if v < constants.GetDefaultMemory(preset) {
+	memory := strongunits.MiB(valueAsInt)
+	if memory < constants.GetDefaultMemory(preset) {
 		return false, fmt.Sprintf("requires memory in MiB >= %d", constants.GetDefaultMemory(preset))
 	}
 	return true, ""

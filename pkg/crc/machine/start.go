@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/containers/common/pkg/strongunits"
+
 	"github.com/crc-org/crc/v2/pkg/crc/cluster"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	crcerrors "github.com/crc-org/crc/v2/pkg/crc/errors"
@@ -39,7 +41,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-const minimumMemoryForMonitoring = 14336
+const minimumMemoryForMonitoring = strongunits.MiB(14336)
 
 func getCrcBundleInfo(ctx context.Context, preset crcPreset.Preset, bundleName, bundlePath string, enableBundleQuayFallback bool) (*bundle.CrcBundleInfo, error) {
 	bundleInfo, err := bundle.Use(bundleName)
@@ -265,8 +267,8 @@ func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
 
 func (client *client) Start(ctx context.Context, startConfig types.StartConfig) (*types.StartResult, error) {
 	telemetry.SetCPUs(ctx, startConfig.CPUs)
-	telemetry.SetMemory(ctx, uint64(startConfig.Memory)*1024*1024)
-	telemetry.SetDiskSize(ctx, uint64(startConfig.DiskSize)*1024*1024*1024)
+	telemetry.SetMemory(ctx, uint64(startConfig.Memory.ToBytes()))
+	telemetry.SetDiskSize(ctx, uint64(startConfig.DiskSize.ToBytes()))
 
 	if err := client.validateStartConfig(startConfig); err != nil {
 		return nil, err
@@ -650,8 +652,8 @@ func (client *client) IsRunning() (bool, error) {
 func (client *client) validateStartConfig(startConfig types.StartConfig) error {
 	if client.monitoringEnabled() && startConfig.Memory < minimumMemoryForMonitoring {
 		return fmt.Errorf("Too little memory (%s) allocated to the virtual machine to start the monitoring stack, %s is the minimum",
-			units.BytesSize(float64(startConfig.Memory)*1024*1024),
-			units.BytesSize(minimumMemoryForMonitoring*1024*1024))
+			units.BytesSize(float64(startConfig.Memory.ToBytes())),
+			units.BytesSize(float64(minimumMemoryForMonitoring.ToBytes())))
 	}
 	return nil
 }

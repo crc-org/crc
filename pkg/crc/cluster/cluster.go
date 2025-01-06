@@ -13,6 +13,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cast"
+
+	"github.com/containers/common/pkg/strongunits"
+
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/errors"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
@@ -64,46 +68,46 @@ func checkCertValidity(sshRunner *ssh.Runner, cert string) (bool, error) {
 }
 
 // Return size of disk, used space in bytes and the mountpoint
-func GetRootPartitionUsage(sshRunner *ssh.Runner) (int64, int64, error) {
+func GetRootPartitionUsage(sshRunner *ssh.Runner) (strongunits.B, strongunits.B, error) {
 	cmd := "df -B1 --output=size,used,target /sysroot | tail -1"
 
 	out, _, err := sshRunner.Run(cmd)
 
 	if err != nil {
-		return 0, 0, err
+		return strongunits.B(0), strongunits.B(0), err
 	}
 	diskDetails := strings.Split(strings.TrimSpace(out), " ")
 	diskSize, err := strconv.ParseInt(diskDetails[0], 10, 64)
 	if err != nil {
-		return 0, 0, err
+		return strongunits.B(0), strongunits.B(0), err
 	}
 	diskUsage, err := strconv.ParseInt(diskDetails[1], 10, 64)
 	if err != nil {
-		return 0, 0, err
+		return strongunits.B(0), strongunits.B(0), err
 	}
-	return diskSize, diskUsage, nil
+	return strongunits.B(cast.ToUint64(diskSize)), strongunits.B(cast.ToUint64(diskUsage)), nil
 }
 
 // GetRAMUsage return RAM size and RAM usage in bytes
-func GetRAMUsage(sshRunner *ssh.Runner) (int64, int64, error) {
+func GetRAMUsage(sshRunner *ssh.Runner) (strongunits.B, strongunits.B, error) {
 	cmd := "awk '/^Mem/ {print $2,$3}' <(free -b)"
 	out, _, err := sshRunner.Run(cmd)
 
 	if err != nil {
-		return 0, 0, err
+		return strongunits.B(0), strongunits.B(0), err
 	}
 
 	ramDetails := strings.Split(strings.TrimSpace(out), " ")
 	ramSize, err := strconv.ParseInt(ramDetails[0], 10, 64)
 	if err != nil {
-		return 0, 0, err
+		return strongunits.B(0), strongunits.B(0), err
 	}
 	ramUsage, err := strconv.ParseInt(ramDetails[1], 10, 64)
 	if err != nil {
-		return 0, 0, err
+		return strongunits.B(0), strongunits.B(0), err
 	}
 
-	return ramSize, ramUsage, nil
+	return strongunits.B(cast.ToUint64(ramSize)), strongunits.B(cast.ToUint64(ramUsage)), nil
 }
 
 // GetCPUUsage return CPU usage array, index correspond to CPU number, value is load % (values between 0 nad 100)
@@ -130,7 +134,7 @@ func GetCPUUsage(sshRunner *ssh.Runner) ([]int64, error) {
 
 }
 
-func GetPVCUsage(sshRunner *ssh.Runner) (int, error) {
+func GetPVCUsage(sshRunner *ssh.Runner) (strongunits.B, error) {
 	cmd := `#!/bin/bash
 mountpoints=$(lsblk --output=mountpoints | grep pvc | uniq | tr '\n' ' ')
 if [ -z "$mountpoints" ]; then
@@ -144,13 +148,13 @@ sudo df -B1 --output=size $mountpoints | awk ' { sum += $1 } END { printf "%d", 
 	}
 	out = strings.TrimSpace(out)
 	if len(out) == 0 {
-		return 0, nil
+		return strongunits.B(0), nil
 	}
 	ans, err := strconv.Atoi(out)
 	if err != nil {
-		return 0, err
+		return strongunits.B(0), err
 	}
-	return ans, nil
+	return strongunits.B(cast.ToUint64(ans)), nil
 }
 
 func EnsureSSHKeyPresentInTheCluster(ctx context.Context, ocConfig oc.Config, sshPublicKeyPath string) error {
