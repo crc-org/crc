@@ -29,6 +29,8 @@ func setUpClient(t *testing.T) *mocks.Client {
 		CrcStatus:        string(state.Running),
 		OpenshiftStatus:  string(types.OpenshiftRunning),
 		OpenshiftVersion: "4.5.1",
+		RAMUse:           8_000_000_000,
+		RAMSize:          10_000_000_000,
 		DiskUse:          10_000_000_000,
 		DiskSize:         20_000_000_000,
 		Preset:           preset.OpenShift,
@@ -59,7 +61,7 @@ func TestPlainStatus(t *testing.T) {
 
 	expected := `CRC VM:          Running
 OpenShift:       Running (v4.5.1)
-RAM Usage:       0B of 0B
+RAM Usage:       8GB of 10GB
 Disk Usage:      10GB of 20GB (Inside the CRC VM)
 Cache Usage:     10kB
 Cache Directory: %s
@@ -77,6 +79,8 @@ func TestStatusWithoutPodman(t *testing.T) {
 		CrcStatus:        string(state.Running),
 		OpenshiftStatus:  string(types.OpenshiftRunning),
 		OpenshiftVersion: "4.5.1",
+		RAMUse:           15_000_000_000,
+		RAMSize:          20_000_000_000,
 		DiskUse:          10_000_000_000,
 		DiskSize:         20_000_000_000,
 		Preset:           preset.OpenShift,
@@ -89,7 +93,7 @@ func TestStatusWithoutPodman(t *testing.T) {
 
 	expected := `CRC VM:          Running
 OpenShift:       Running (v4.5.1)
-RAM Usage:       0B of 0B
+RAM Usage:       15GB of 20GB
 Disk Usage:      10GB of 20GB (Inside the CRC VM)
 Cache Usage:     10kB
 Cache Directory: %s
@@ -118,6 +122,8 @@ func TestJsonStatus(t *testing.T) {
   "diskSize": 20000000000,
   "cacheUsage": 10000,
   "cacheDir": "%s",
+  "ramSize": 10000000000,
+  "ramUsage": 8000000000,
   "preset": "openshift"
 }
 `

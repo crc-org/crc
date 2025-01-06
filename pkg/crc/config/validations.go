@@ -5,6 +5,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/containers/common/pkg/strongunits"
+
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
 	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
@@ -31,10 +33,11 @@ func validateString(value interface{}) (bool, string) {
 
 // validateDiskSize checks if provided disk size is valid in the config
 func validateDiskSize(value interface{}) (bool, string) {
-	diskSize, err := cast.ToUintE(value)
+	valueAsInt, err := cast.ToUintE(value)
 	if err != nil {
 		return false, fmt.Sprintf("could not convert '%s' to integer", value)
 	}
+	diskSize := strongunits.GiB(valueAsInt)
 	if err := validation.ValidateDiskSize(diskSize); err != nil {
 		return false, err.Error()
 	}
@@ -70,11 +73,12 @@ func validateCPUs(value interface{}, preset crcpreset.Preset) (bool, string) {
 // validateMemory checks if provided memory is valid in the config
 // It's defined as a variable so that it can be overridden in tests to disable the physical memory check
 var validateMemory = func(value interface{}, preset crcpreset.Preset) (bool, string) {
-	v, err := cast.ToUintE(value)
+	valueAsInt, err := cast.ToUintE(value)
 	if err != nil {
 		return false, fmt.Sprintf("requires integer value in MiB >= %d", constants.GetDefaultMemory(preset))
 	}
-	if err := validation.ValidateMemory(v, preset); err != nil {
+	memory := strongunits.MiB(valueAsInt)
+	if err := validation.ValidateMemory(memory, preset); err != nil {
 		return false, err.Error()
 	}
 	return true, ""

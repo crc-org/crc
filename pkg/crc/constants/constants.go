@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/containers/common/pkg/strongunits"
+
 	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/version"
 )
@@ -211,15 +213,15 @@ func GetDefaultCPUs(preset crcpreset.Preset) uint {
 	}
 }
 
-func GetDefaultMemory(preset crcpreset.Preset) uint {
+func GetDefaultMemory(preset crcpreset.Preset) strongunits.MiB {
 	switch preset {
 	case crcpreset.OpenShift, crcpreset.OKD:
-		return 10752
+		return strongunits.MiB(10752)
 	case crcpreset.Microshift:
-		return 4096
+		return strongunits.MiB(4096)
 	default:
 		// should not be reached
-		return 10752
+		return strongunits.MiB(10752)
 	}
 }
 

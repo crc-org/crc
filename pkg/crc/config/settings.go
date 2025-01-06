@@ -156,7 +156,7 @@ func defaultCPUs(cfg Storage) uint {
 }
 
 func defaultMemory(cfg Storage) uint {
-	return constants.GetDefaultMemory(GetPreset(cfg))
+	return uint(constants.GetDefaultMemory(GetPreset(cfg)))
 }
 
 func defaultBundlePath(cfg Storage) string {
