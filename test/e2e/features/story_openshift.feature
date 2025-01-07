@@ -41,7 +41,7 @@ Feature: 4 Openshift stories
 		Given executing "oc new-project testproj" succeeds
 		# mirror
 		When executing "oc registry login --insecure=true" succeeds
-		Then executing "oc image mirror registry.access.redhat.com/ubi8/httpd-24:latest=default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test --insecure=true" succeeds
+		Then executing "oc image mirror registry.access.redhat.com/ubi8/httpd-24:latest=default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test --insecure=true --filter-by-os=linux" succeeds
 		And executing "oc set image-lookup hello" succeeds
 		# deploy
 		When executing "oc apply -f hello.yaml" succeeds
