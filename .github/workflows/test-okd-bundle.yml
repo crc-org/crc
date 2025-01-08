@@ -32,6 +32,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt install qemu-kvm libvirt-daemon libvirt-daemon-system
+          # This package may not be present depending on Ubuntu version
+          sudo apt install virtiofsd || true
           sudo usermod -a -G libvirt $USER
       - name: Remove unwanted stuff to free up disk image
         run: |
