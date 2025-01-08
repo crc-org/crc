@@ -215,7 +215,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 			if tag.Name == "@proxy" {
 
 				// start container with squid proxy
-				err := util.ExecuteCommand("podman run --name squid -d -p 3128:3128 quay.io/crcont/squid")
+				err := util.ExecuteCommand("podman run --name squid -d -p 3128:3128 quay.io/crcont/squid:5.5")
 				if err != nil {
 					fmt.Println(err)
 					os.Exit(1)
