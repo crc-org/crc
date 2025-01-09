@@ -7,7 +7,7 @@
 /docs/package-lock.json
 /release/
 /release-info.json
-/release-info.json-e
+/release-info.json.bak
 *.crcbundle
 /tmp-embed/
 /RPMS/
