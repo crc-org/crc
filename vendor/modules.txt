@@ -1347,7 +1347,7 @@ k8s.io/utils/integer
 k8s.io/utils/internal/third_party/forked/golang/net
 k8s.io/utils/net
 k8s.io/utils/strings/slices
-# libvirt.org/go/libvirtxml v1.10009.0
+# libvirt.org/go/libvirtxml v1.10010.0
 ## explicit; go 1.11
 libvirt.org/go/libvirtxml
 # sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd
