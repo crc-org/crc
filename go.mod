@@ -30,7 +30,7 @@ require (
 	github.com/klauspost/compress v1.17.11
 	github.com/klauspost/cpuid/v2 v2.2.9
 	github.com/kofalt/go-memoize v0.0.0-20220914132407-0b5d6a304579
-	github.com/mattn/go-colorable v0.1.13
+	github.com/mattn/go-colorable v0.1.14
 	github.com/mdlayher/vsock v1.2.1
 	github.com/onsi/ginkgo/v2 v2.22.2
 	github.com/onsi/gomega v1.36.2
