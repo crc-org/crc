@@ -3,11 +3,8 @@ package shell
 import (
 	"fmt"
 	"os"
-	"sort"
-	"strconv"
 	"strings"
 
-	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
 )
 
@@ -153,84 +150,4 @@ func IsWindowsSubsystemLinux() bool {
 		return true
 	}
 	return false
-}
-
-// detectShellByInvokingCommand is a utility method that tries to detect current shell in use by invoking `ps` command.
-// This method is extracted so that it could be used by unix systems as well as Windows (in case of WSL). It executes
-// the command provided in the method arguments and then passes the output to inspectProcessOutputForRecentlyUsedShell
-// for evaluation.
-//
-// It receives two arguments:
-// - defaultShell : default shell to revert back to in case it's unable to detect.
-// - command: command to be executed
-// - args: a string array containing command arguments
-//
-// It returns a string value representing current shell.
-func detectShellByInvokingCommand(defaultShell string, command string, args []string) string {
-	stdOut, _, err := CommandRunner.Run(command, args...)
-	if err != nil {
-		return defaultShell
-	}
-
-	detectedShell := inspectProcessOutputForRecentlyUsedShell(stdOut)
-	if detectedShell == "" {
-		return defaultShell
-	}
-	logging.Debugf("Detected shell: %s", detectedShell)
-	return detectedShell
-}
-
-// inspectProcessOutputForRecentlyUsedShell inspects output of ps command to detect currently active shell session.
-//
-// It parses the output into a struct, filters process types by name then reverse sort it with pid and returns the first element.
-//
-// It takes one argument:
-//
-// - psCommandOutput: output of ps command executed on a particular shell session
-//
-// It returns:
-//
-//   - a string value (one of `zsh`, `bash` or `fish`) for current shell environment in use. If it's not able to determine
-//     underlying shell type, it returns and empty string.
-//
-// This method tries to check all processes open and filters out shell sessions (one of `zsh`, `bash` or `fish)
-// It then returns first shell process.
-//
-// For example, if ps command gives this output:
-//
-//	2908 ps
-//	2889 fish
-//	823 bash
-//
-// Then this method would return `fish` as it's the first shell process.
-func inspectProcessOutputForRecentlyUsedShell(psCommandOutput string) string {
-	type ProcessOutput struct {
-		processID int
-		output    string
-	}
-	var processOutputs []ProcessOutput
-	lines := strings.Split(psCommandOutput, "\n")
-	for _, line := range lines {
-		lineParts := strings.Split(strings.TrimSpace(line), " ")
-		if len(lineParts) == 2 && (strings.Contains(lineParts[1], "zsh") ||
-			strings.Contains(lineParts[1], "bash") ||
-			strings.Contains(lineParts[1], "fish")) {
-			parsedProcessID, err := strconv.Atoi(lineParts[0])
-			if err == nil {
-				processOutputs = append(processOutputs, ProcessOutput{
-					processID: parsedProcessID,
-					output:    lineParts[1],
-				})
-			}
-		}
-	}
-	// Reverse sort the processes by PID (higher to lower)
-	sort.Slice(processOutputs, func(i, j int) bool {
-		return processOutputs[i].processID > processOutputs[j].processID
-	})
-
-	if len(processOutputs) > 0 {
-		return processOutputs[0].output
-	}
-	return ""
 }
