@@ -38,7 +38,6 @@ import (
 	libmachinestate "github.com/crc-org/machine/libmachine/state"
 	"github.com/docker/go-units"
 	"github.com/pkg/errors"
-	"golang.org/x/crypto/ssh"
 )
 
 const minimumMemoryForMonitoring = strongunits.MiB(14336)
@@ -117,35 +116,20 @@ func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset, persi
 		return err
 	}
 
-	// with '/dev/[sv]da4' as input, run 'growpart /dev/[sv]da 4'
-	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Growing %s partition", rootPart), "/usr/bin/growpart", rootPart[:len("/dev/.da")], rootPart[len("/dev/.da"):]); err != nil {
-		var exitErr *ssh.ExitError
-		if !errors.As(err, &exitErr) {
-			return err
-		}
-		if exitErr.ExitStatus() != 1 {
-			return err
-		}
-		logging.Debugf("No free space after %s, nothing to do", rootPart)
-		return nil
-	}
-
 	if preset == crcPreset.Microshift {
 		lvFullName := "rhel/root"
 		if err := growLVForMicroshift(sshRunner, lvFullName, rootPart, persistentVolumeSize); err != nil {
 			return err
 		}
+		logging.Infof("Resizing %s filesystem", rootPart)
+		rootFS := "/sysroot"
+		if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Remounting %s read/write", rootFS), "mount -o remount,rw", rootFS); err != nil {
+			return err
+		}
+		if _, _, err = sshRunner.RunPrivileged(fmt.Sprintf("Growing %s filesystem", rootFS), "xfs_growfs", rootFS); err != nil {
+			return err
+		}
 	}
-
-	logging.Infof("Resizing %s filesystem", rootPart)
-	rootFS := "/sysroot"
-	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Remounting %s read/write", rootFS), "mount -o remount,rw", rootFS); err != nil {
-		return err
-	}
-	if _, _, err = sshRunner.RunPrivileged(fmt.Sprintf("Growing %s filesystem", rootFS), "xfs_growfs", rootFS); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -427,11 +411,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	// dir and VM
 	if err := updateSSHKeyPair(sshRunner); err != nil {
 		return nil, errors.Wrap(err, "Error updating public key")
-	}
-
-	// Trigger disk resize, this will be a no-op if no disk size change is needed
-	if err := growRootFileSystem(sshRunner, startConfig.Preset, startConfig.PersistentVolumeSize); err != nil {
-		return nil, errors.Wrap(err, "Error updating filesystem size")
 	}
 
 	// Start network time synchronization if `CRC_DEBUG_ENABLE_STOP_NTP` is not set
