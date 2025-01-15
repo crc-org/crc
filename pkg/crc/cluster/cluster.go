@@ -26,7 +26,6 @@ import (
 	crctls "github.com/crc-org/crc/v2/pkg/crc/tls"
 	"github.com/crc-org/crc/v2/pkg/crc/validation"
 	crcstrings "github.com/crc-org/crc/v2/pkg/strings"
-	"github.com/pborman/uuid"
 )
 
 // #nosec G101
@@ -321,32 +320,6 @@ func RemoveOldRenderedMachineConfig(ocConfig oc.Config) error {
 			return fmt.Errorf("Failed to remove machineconfigpools %w: %s", err, stderr)
 		}
 	}
-	return nil
-}
-
-func EnsureClusterIDIsNotEmpty(ctx context.Context, ocConfig oc.Config) error {
-	if err := WaitForOpenshiftResource(ctx, ocConfig, "clusterversion"); err != nil {
-		return err
-	}
-
-	stdout, stderr, err := ocConfig.RunOcCommand("get", "clusterversion", "version", "-o", `jsonpath="{['spec']['clusterID']}"`)
-	if err != nil {
-		return fmt.Errorf("Failed to get clusterversion %v: %s", err, stderr)
-	}
-	if strings.TrimSpace(stdout) != "" {
-		return nil
-	}
-
-	logging.Info("Updating cluster ID...")
-	clusterID := uuid.New()
-	cmdArgs := []string{"patch", "clusterversion", "version", "-p",
-		fmt.Sprintf(`'{"spec":{"clusterID":"%s"}}'`, clusterID), "--type", "merge"}
-
-	_, stderr, err = ocConfig.RunOcCommand(cmdArgs...)
-	if err != nil {
-		return fmt.Errorf("Failed to update cluster ID %v: %s", err, stderr)
-	}
-
 	return nil
 }
 

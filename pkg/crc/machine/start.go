@@ -559,10 +559,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to update kubeadmin user password")
 	}
 
-	if err := cluster.EnsureClusterIDIsNotEmpty(ctx, ocConfig); err != nil {
-		return nil, errors.Wrap(err, "Failed to update cluster ID")
-	}
-
 	if client.monitoringEnabled() {
 		logging.Info("Enabling cluster monitoring operator...")
 		if err := cluster.StartMonitoring(ocConfig); err != nil {
