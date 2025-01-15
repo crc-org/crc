@@ -500,11 +500,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			return nil, err
 		}
 
-		if client.useVSock() {
-			if err := ensureRoutesControllerIsRunning(sshRunner, ocConfig); err != nil {
-				return nil, err
-			}
-		}
 		logging.Info("Adding microshift context to kubeconfig...")
 		if err := mergeKubeConfigFile(constants.KubeconfigFilePath); err != nil {
 			return nil, err
@@ -566,12 +561,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	if err := cluster.EnsureClusterIDIsNotEmpty(ctx, ocConfig); err != nil {
 		return nil, errors.Wrap(err, "Failed to update cluster ID")
-	}
-
-	if client.useVSock() {
-		if err := ensureRoutesControllerIsRunning(sshRunner, ocConfig); err != nil {
-			return nil, err
-		}
 	}
 
 	if client.monitoringEnabled() {
@@ -808,17 +797,6 @@ func logBundleDate(crcBundleMetadata *bundle.CrcBundleInfo) {
 			logging.Debugf("Bundle has been generated %d days ago", int(bundleAgeDays))
 		}
 	}
-}
-
-func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Config) error {
-	// Check if the bundle have `/opt/crc/routes-controller.yaml` file and if it has
-	// then use it to create the resource for the routes controller.
-	_, _, err := sshRunner.Run("ls", "/opt/crc/routes-controller.yaml")
-	if err != nil {
-		return err
-	}
-	_, _, err = ocConfig.RunOcCommand("apply", "-f", "/opt/crc/routes-controller.yaml")
-	return err
 }
 
 func updateKubeconfig(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, kubeconfigFilePath string) error {
