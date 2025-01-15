@@ -3,7 +3,6 @@ package cluster
 import (
 	"context"
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -183,40 +182,6 @@ func EnsureSSHKeyPresentInTheCluster(ctx context.Context, ocConfig oc.Config, ss
 	return nil
 }
 
-func EnsurePullSecretPresentInTheCluster(ctx context.Context, ocConfig oc.Config, pullSec PullSecretLoader) error {
-	if err := WaitForOpenshiftResource(ctx, ocConfig, "secret"); err != nil {
-		return err
-	}
-
-	stdout, stderr, err := ocConfig.RunOcCommandPrivate("get", "secret", "pull-secret", "-n", "openshift-config", "-o", `jsonpath="{['data']['\.dockerconfigjson']}"`)
-	if err != nil {
-		return fmt.Errorf("Failed to get pull secret %v: %s", err, stderr)
-	}
-	decoded, err := base64.StdEncoding.DecodeString(stdout)
-	if err != nil {
-		return err
-	}
-	if err := validation.ImagePullSecret(string(decoded)); err == nil {
-		return nil
-	}
-
-	logging.Info("Adding user's pull secret to the cluster...")
-	content, err := pullSec.Value()
-	if err != nil {
-		return err
-	}
-	base64OfPullSec := base64.StdEncoding.EncodeToString([]byte(content))
-	cmdArgs := []string{"patch", "secret", "pull-secret", "-p",
-		fmt.Sprintf(`'{"data":{".dockerconfigjson":"%s"}}'`, base64OfPullSec),
-		"-n", "openshift-config", "--type", "merge"}
-
-	_, stderr, err = ocConfig.RunOcCommandPrivate(cmdArgs...)
-	if err != nil {
-		return fmt.Errorf("Failed to add Pull secret %v: %s", err, stderr)
-	}
-	return nil
-}
-
 func EnsureGeneratedClientCAPresentInTheCluster(ctx context.Context, ocConfig oc.Config, sshRunner *ssh.Runner, selfSignedCACert *x509.Certificate, adminCert string) error {
 	selfSignedCAPem := crctls.CertToPem(selfSignedCACert)
 	if err := WaitForOpenshiftResource(ctx, ocConfig, "configmaps"); err != nil {
@@ -236,13 +201,10 @@ func EnsureGeneratedClientCAPresentInTheCluster(ctx context.Context, ocConfig oc
 	}
 
 	logging.Info("Updating root CA cert to admin-kubeconfig-client-ca configmap...")
-	jsonPath := fmt.Sprintf(`'{"data": {"ca-bundle.crt": %q}}'`, selfSignedCAPem)
-	cmdArgs := []string{"patch", "configmap", "admin-kubeconfig-client-ca",
-		"-n", "openshift-config", "--patch", jsonPath}
-	_, stderr, err = ocConfig.RunOcCommand(cmdArgs...)
-	if err != nil {
-		return fmt.Errorf("Failed to patch admin-kubeconfig-client-ca config map with new CA` %v: %s", err, stderr)
+	if err := sshRunner.CopyDataPrivileged(selfSignedCAPem, "/opt/crc/custom-ca.crt", 0644); err != nil {
+		return fmt.Errorf("Failed to copy generated CA file to VM: %v", err)
 	}
+
 	if err := sshRunner.CopyFile(constants.KubeconfigFilePath, ocConfig.KubeconfigPath, 0644); err != nil {
 		return fmt.Errorf("Failed to copy generated kubeconfig file to VM: %v", err)
 	}

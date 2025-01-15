@@ -277,8 +277,10 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if err := validation.BundleMismatchWithPresetMetadata(startConfig.Preset, crcBundleMetadata); err != nil {
 		return nil, err
 	}
+	var firstBoot bool
 
 	if !exists {
+		firstBoot = true
 		telemetry.SetStartType(ctx, telemetry.CreationStartType)
 
 		// Ask early for pull secret if it hasn't been requested yet
@@ -315,6 +317,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			return nil, errors.Wrap(err, "Error creating machine")
 		}
 	} else {
+		firstBoot = false
 		telemetry.SetStartType(ctx, telemetry.StartStartType)
 	}
 
@@ -426,6 +429,35 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 	}
 
+	// setup the env file for units to detect the network-mode either user or systemd
+	// refactor into a helper `setSystemdEnvFileValues`
+	if client.useVSock() {
+		envs := "CRC_NETWORK_MODE_USER=1" + "\n" +
+			"CRC_DEBUG_TEST=1" + "\n"
+
+		if err := sshRunner.CopyDataPrivileged([]byte(envs), "/etc/systemd/system/crc-env", 0644); err != nil {
+			return nil, errors.Wrap(err, "Unable to create the env file for CRC")
+		}
+	} else {
+		envs := "CRC_NETWORK_MODE_USER=0" + "\n" +
+			"CRC_DEBUG_TEST=1" + "\n"
+
+		if err := sshRunner.CopyDataPrivileged([]byte(envs), "/etc/systemd/system/crc-env", 0644); err != nil {
+			return nil, errors.Wrap(err, "Unable to create the env file for CRC")
+		}
+	}
+
+	// copy the pull secret into /opt/crc/pull-secret in the instance
+	if firstBoot {
+		pullSecret, err := startConfig.PullSecret.Value()
+		if err != nil {
+			return nil, err
+		}
+		if err := sshRunner.CopyDataPrivileged([]byte(pullSecret), "/opt/crc/pull-secret", 0600); err != nil {
+			return nil, errors.Wrap(err, "Unable to send pull-secret to instance")
+		}
+	}
+
 	// Add nameserver to VM if provided by User
 	if startConfig.NameServer != "" {
 		if err = addNameServerToInstance(sshRunner, startConfig.NameServer); err != nil {
@@ -511,6 +543,11 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}, nil
 	}
 
+	// Send the kubeadmin and developer new passwords to the VM
+	if err := cluster.UpdateKubeAdminUserPassword(ctx, sshRunner, startConfig.KubeAdminPassword); err != nil {
+		return nil, errors.Wrap(err, "Failed to update kubeadmin user password")
+	}
+
 	// Check the certs validity inside the vm
 	logging.Info("Verifying validity of the kubelet certificates...")
 	certsExpired, err := cluster.CheckCertsValidity(sshRunner)
@@ -543,20 +580,12 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, err
 	}
 
-	if err := cluster.EnsurePullSecretPresentInTheCluster(ctx, ocConfig, startConfig.PullSecret); err != nil {
-		return nil, errors.Wrap(err, "Failed to update cluster pull secret")
-	}
-
 	if err := cluster.EnsureSSHKeyPresentInTheCluster(ctx, ocConfig, constants.GetPublicKeyPath()); err != nil {
 		return nil, errors.Wrap(err, "Failed to update ssh public key to machine config")
 	}
 
 	if err := cluster.WaitForPullSecretPresentOnInstanceDisk(ctx, sshRunner); err != nil {
 		return nil, errors.Wrap(err, "Failed to update pull secret on the disk")
-	}
-
-	if err := cluster.UpdateKubeAdminUserPassword(ctx, ocConfig, startConfig.KubeAdminPassword); err != nil {
-		return nil, errors.Wrap(err, "Failed to update kubeadmin user password")
 	}
 
 	if client.monitoringEnabled() {
@@ -566,8 +595,10 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 	}
 
-	if err := updateKubeconfig(ctx, ocConfig, sshRunner, vm.bundle.GetKubeConfigPath()); err != nil {
-		return nil, errors.Wrap(err, "Failed to update kubeconfig file")
+	if firstBoot {
+		if err := updateKubeconfig(ctx, ocConfig, sshRunner, vm.bundle.GetKubeConfigPath()); err != nil {
+			return nil, errors.Wrap(err, "Failed to update kubeconfig file")
+		}
 	}
 
 	logging.Infof("Starting %s instance... [waiting for the cluster to stabilize]", startConfig.Preset)

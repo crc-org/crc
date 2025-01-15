@@ -13,7 +13,7 @@ import (
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
-	"github.com/crc-org/crc/v2/pkg/crc/oc"
+	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -29,7 +29,7 @@ func GenerateKubeAdminUserPassword() error {
 }
 
 // UpdateKubeAdminUserPassword updates the htpasswd secret
-func UpdateKubeAdminUserPassword(ctx context.Context, ocConfig oc.Config, newPassword string) error {
+func UpdateKubeAdminUserPassword(ctx context.Context, sshRunner *ssh.Runner, newPassword string) error {
 	if newPassword != "" {
 		logging.Infof("Overriding password for kubeadmin user")
 		if err := os.WriteFile(constants.GetKubeAdminPasswordPath(), []byte(strings.TrimSpace(newPassword)), 0600); err != nil {
@@ -41,38 +41,13 @@ func UpdateKubeAdminUserPassword(ctx context.Context, ocConfig oc.Config, newPas
 	if err != nil {
 		return fmt.Errorf("Cannot read the kubeadmin user password from file: %w", err)
 	}
-	credentials := map[string]string{
-		"developer": "developer",
-		"kubeadmin": kubeAdminPassword,
-	}
 
-	if err := WaitForOpenshiftResource(ctx, ocConfig, "secret"); err != nil {
+	if err := sshRunner.CopyDataPrivileged([]byte(kubeAdminPassword), "/opt/crc/pass_kubeadmin", 0600); err != nil {
 		return err
 	}
 
-	given, stderr, err := ocConfig.RunOcCommandPrivate("get", "secret", "htpass-secret", "-n", "openshift-config", "-o", `jsonpath="{.data.htpasswd}"`)
-	if err != nil {
-		return fmt.Errorf("%s:%v", stderr, err)
-	}
-	ok, externals, err := compareHtpasswd(given, credentials)
-	if err != nil {
+	if err := sshRunner.CopyDataPrivileged([]byte("developer"), "/opt/crc/pass_developer", 0600); err != nil {
 		return err
-	}
-	if ok {
-		return nil
-	}
-
-	logging.Infof("Changing the password for the kubeadmin user")
-	expected, err := getHtpasswd(credentials, externals)
-	if err != nil {
-		return err
-	}
-	cmdArgs := []string{"patch", "secret", "htpass-secret", "-p",
-		fmt.Sprintf(`'{"data":{"htpasswd":"%s"}}'`, expected),
-		"-n", "openshift-config", "--type", "merge"}
-	_, stderr, err = ocConfig.RunOcCommandPrivate(cmdArgs...)
-	if err != nil {
-		return fmt.Errorf("Failed to update kubeadmin password %v: %s", err, stderr)
 	}
 	return nil
 }
