@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/crc-org/crc/v2/pkg/crc/preset"
+
 	"github.com/crc-org/crc/v2/pkg/crc/api/client"
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	crcErrors "github.com/crc-org/crc/v2/pkg/crc/errors"
@@ -44,6 +46,9 @@ func showConsole(client *daemonclient.Client) (*client.ConsoleResult, error) {
 
 func runConsole(writer io.Writer, client *daemonclient.Client, consolePrintURL, consolePrintCredentials bool, outputFormat string) error {
 	result, err := showConsole(client)
+	if err == nil && result.ClusterConfig.ClusterType == preset.Microshift {
+		err = fmt.Errorf("error : this option is only supported for %s and %s preset", preset.OpenShift, preset.OKD)
+	}
 	return render(&consoleResult{
 		Success:                 err == nil,
 		state:                   toState(result),

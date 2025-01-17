@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/crc-org/crc/v2/pkg/crc/preset"
+
 	apiTypes "github.com/crc-org/crc/v2/pkg/crc/api/client"
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/fakemachine"
@@ -15,19 +17,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var DummyClusterConfig = types.ClusterConfig{
-	ClusterType:   "openshift",
-	ClusterCACert: "MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ",
-	KubeConfig:    "/tmp/kubeconfig",
-	KubeAdminPass: "foobar",
-	ClusterAPI:    "https://foo.testing:6443",
-	WebConsoleURL: "https://console.foo.testing:6443",
-	ProxyConfig:   nil,
+func setUpClientForConsole(t *testing.T) *daemonclient.Client {
+	return setUpClientForConsoleWithPreset(t, preset.OpenShift)
 }
 
-func setUpClientForConsole(t *testing.T) *daemonclient.Client {
+func setUpClientForConsoleWithPreset(t *testing.T, preset preset.Preset) *daemonclient.Client {
 	client := mocks.NewClient(t)
 
+	DummyClusterConfig := createDummyClusterConfig(preset)
 	client.On("WebconsoleURL").Return(
 		&apiTypes.ConsoleResult{
 			ClusterConfig: DummyClusterConfig,
@@ -35,6 +32,18 @@ func setUpClientForConsole(t *testing.T) *daemonclient.Client {
 		}, nil)
 	return &daemonclient.Client{
 		APIClient: client,
+	}
+}
+
+func createDummyClusterConfig(preset preset.Preset) types.ClusterConfig {
+	return types.ClusterConfig{
+		ClusterType:   preset,
+		ClusterCACert: "MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ",
+		KubeConfig:    "/tmp/kubeconfig",
+		KubeAdminPass: "foobar",
+		ClusterAPI:    "https://foo.testing:6443",
+		WebConsoleURL: "https://console.foo.testing:6443",
+		ProxyConfig:   nil,
 	}
 }
 
@@ -105,4 +114,13 @@ func TestConsoleJSONError(t *testing.T) {
 	out := new(bytes.Buffer)
 	assert.NoError(t, runConsole(out, setUpFailingClientForConsole(t), false, false, jsonFormat))
 	assert.JSONEq(t, `{"error":"console failed", "success":false}`, out.String())
+}
+
+func TestConsoleThrowsErrorInMicroShiftPreset(t *testing.T) {
+	// Given
+	out := new(bytes.Buffer)
+	// When
+	err := runConsole(out, setUpClientForConsoleWithPreset(t, preset.Microshift), false, false, "")
+	// Then
+	assert.EqualError(t, err, fmt.Sprintf("error : this option is only supported for %s and %s preset", preset.OpenShift, preset.OKD))
 }
