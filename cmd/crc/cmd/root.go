@@ -8,6 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/crc-org/crc/v2/pkg/crc/manpages"
+
+	"github.com/spf13/cobra/doc"
+
 	cmdBundle "github.com/crc-org/crc/v2/cmd/crc/cmd/bundle"
 	cmdConfig "github.com/crc-org/crc/v2/cmd/crc/cmd/config"
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
@@ -64,7 +68,6 @@ func init() {
 		logging.Warn(err.Error())
 		logging.Warn("Error during segment client initialization, telemetry will be unavailable in this session")
 	}
-
 	// subcommands
 	rootCmd.AddCommand(cmdConfig.GetConfigCmd(config))
 	rootCmd.AddCommand(cmdBundle.GetBundleCmd(config))
@@ -102,6 +105,10 @@ const (
 
 func Execute() {
 	attachMiddleware([]string{}, rootCmd)
+
+	if err := manpages.GenerateManPages(crcManPageGenerator, constants.CrcManPageDir); err != nil {
+		logging.Warn("Error generating man-pages")
+	}
 
 	if err := rootCmd.ExecuteContext(telemetry.NewContext(context.Background())); err != nil {
 		runPostrun()
@@ -185,4 +192,8 @@ func attachMiddleware(names []string, cmd *cobra.Command) {
 		src := cmd.RunE
 		cmd.RunE = executeWithLogging(fullCmd, src)
 	}
+}
+
+func crcManPageGenerator(targetDir string) error {
+	return doc.GenManTree(rootCmd, manpages.CrcManPageHeader, targetDir)
 }

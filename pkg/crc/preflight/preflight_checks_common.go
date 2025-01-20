@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/crc-org/crc/v2/pkg/crc/manpages"
+
 	"github.com/crc-org/crc/v2/pkg/crc/adminhelper"
 	"github.com/crc-org/crc/v2/pkg/crc/cluster"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
@@ -82,6 +84,12 @@ var genericCleanupChecks = []Check{
 
 		labels: None,
 	},
+	{
+		cleanupDescription: "Removing CRC manpages",
+		cleanup:            removeCrcManPages,
+		flags:              CleanUpOnly,
+		labels:             None,
+	},
 }
 
 func checkBundleExtracted(bundlePath string) func() error {
@@ -155,6 +163,10 @@ func removeAllLogs() error {
 		return fmt.Errorf("Failed to remove old log files: %w", err)
 	}
 	return nil
+}
+
+func removeCrcManPages() error {
+	return manpages.RemoveCrcManPages(constants.CrcManPageDir)
 }
 
 func removeCRCHostEntriesFromKnownHosts() error {
