@@ -104,6 +104,7 @@ func GetDefaultBundle(preset crcpreset.Preset) string {
 
 var (
 	CrcBaseDir         = filepath.Join(GetHomeDir(), ".crc")
+	CrcManPageDir      = filepath.Join(GetHomeDir(), ".local", "share", "man")
 	CrcBinDir          = filepath.Join(CrcBaseDir, "bin")
 	CrcOcBinDir        = filepath.Join(CrcBinDir, "oc")
 	CrcPodmanBinDir    = filepath.Join(CrcBinDir, "podman")
