@@ -9,6 +9,16 @@ import (
 	qdmDns "github.com/qdm12/dns/v2/pkg/nameserver"
 )
 
+func (r *dnsConfig) init() error {
+	nsList, err := getDNSHostAndPort()
+	if err != nil {
+		return err
+	}
+
+	r.nameservers = nsList
+	return nil
+}
+
 func getDNSHostAndPort() ([]string, error) {
 	nameservers := qdmDns.GetDNSServers()
 
@@ -21,5 +31,4 @@ func getDNSHostAndPort() ([]string, error) {
 	}
 
 	return dnsServers, nil
-
 }

@@ -3,22 +3,54 @@
 package dns
 
 import (
-	"errors"
 	"net"
 	"net/netip"
 
+	"github.com/containers/gvisor-tap-vsock/pkg/utils"
 	"github.com/miekg/dns"
 	log "github.com/sirupsen/logrus"
 )
 
-var errEmptyResolvConf = errors.New("no DNS servers configured in /etc/resolv.conf")
+func (r *dnsConfig) init() error {
+	if err := r.refreshNameservers(); err != nil {
+		return err
+	}
 
-func getDNSHostAndPort() ([]string, error) {
-	conf, err := dns.ClientConfigFromFile("/etc/resolv.conf")
+	w, err := utils.NewFileWatcher(etcResolvConfPath)
+	if err != nil {
+		return err
+	}
+
+	if err := w.Start(func() { _ = r.refreshNameservers() }); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *dnsConfig) refreshNameservers() error {
+	nsList, err := getDNSHostAndPort(etcResolvConfPath)
+	if err != nil {
+		log.Errorf("can't load dns nameservers: %v", err)
+		return err
+	}
+
+	log.Infof("reloading dns nameservers to %v", nsList)
+
+	r.mu.Lock()
+	r.nameservers = nsList
+	r.mu.Unlock()
+	return nil
+}
+
+const etcResolvConfPath = "/etc/resolv.conf"
+
+func getDNSHostAndPort(path string) ([]string, error) {
+	conf, err := dns.ClientConfigFromFile(path)
 	if err != nil {
 		return []string{}, err
 	}
-	var hosts = make([]string, len(conf.Servers))
+	hosts := make([]string, 0, len(conf.Servers))
 	for _, server := range conf.Servers {
 		dnsIP, err := netip.ParseAddr(server)
 		if err != nil {
@@ -31,8 +63,5 @@ func getDNSHostAndPort() ([]string, error) {
 		}
 	}
 
-	if len(hosts) == 0 {
-		return []string{}, errEmptyResolvConf
-	}
 	return hosts, nil
 }

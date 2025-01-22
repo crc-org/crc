@@ -16,17 +16,16 @@ import (
 )
 
 type dnsHandler struct {
-	zones       []types.Zone
-	zonesLock   sync.RWMutex
-	udpClient   *dns.Client
-	tcpClient   *dns.Client
-	hostsFile   *HostsFile
-	nameservers []string
+	zones     []types.Zone
+	zonesLock sync.RWMutex
+	udpClient *dns.Client
+	tcpClient *dns.Client
+	hostsFile *HostsFile
+	dnsConfig *dnsConfig
 }
 
 func newDNSHandler(zones []types.Zone) (*dnsHandler, error) {
-
-	nameservers, err := getDNSHostAndPort()
+	dnsConfig, err := newDNSConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -37,13 +36,12 @@ func newDNSHandler(zones []types.Zone) (*dnsHandler, error) {
 	}
 
 	return &dnsHandler{
-		zones:       zones,
-		tcpClient:   &dns.Client{Net: "tcp"},
-		udpClient:   &dns.Client{Net: "udp"},
-		nameservers: nameservers,
-		hostsFile:   hostsFile,
+		zones:     zones,
+		tcpClient: &dns.Client{Net: "tcp"},
+		udpClient: &dns.Client{Net: "udp"},
+		dnsConfig: dnsConfig,
+		hostsFile: hostsFile,
 	}, nil
-
 }
 
 func (h *dnsHandler) handle(w dns.ResponseWriter, dnsClient *dns.Client, r *dns.Msg, responseMessageSize int) {
@@ -145,7 +143,7 @@ func (h *dnsHandler) addAnswers(dnsClient *dns.Client, r *dns.Msg) *dns.Msg {
 			return m
 		}
 	}
-	for _, nameserver := range h.nameservers {
+	for _, nameserver := range h.dnsConfig.Nameservers() {
 		msg := r.Copy()
 		r, _, err := dnsClient.Exchange(msg, nameserver)
 		// return first good answer

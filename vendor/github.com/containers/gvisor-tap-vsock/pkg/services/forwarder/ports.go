@@ -25,11 +25,13 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 )
 
+type ProxyKey string
+
 type PortsForwarder struct {
 	stack *stack.Stack
 
 	proxiesLock sync.Mutex
-	proxies     map[string]proxy
+	proxies     map[ProxyKey]proxy
 }
 
 type proxy struct {
@@ -61,14 +63,14 @@ func (w CloseWrapper) Close() error {
 func NewPortsForwarder(s *stack.Stack) *PortsForwarder {
 	return &PortsForwarder{
 		stack:   s,
-		proxies: make(map[string]proxy),
+		proxies: make(map[ProxyKey]proxy),
 	}
 }
 
 func (f *PortsForwarder) Expose(protocol types.TransportProtocol, local, remote string) error {
 	f.proxiesLock.Lock()
 	defer f.proxiesLock.Unlock()
-	if _, ok := f.proxies[local]; ok {
+	if _, ok := f.proxies[key(protocol, local)]; ok {
 		return errors.New("proxy already running")
 	}
 
@@ -256,8 +258,8 @@ func (f *PortsForwarder) Expose(protocol types.TransportProtocol, local, remote 
 	return nil
 }
 
-func key(protocol types.TransportProtocol, local string) string {
-	return fmt.Sprintf("%s/%s", protocol, local)
+func key(protocol types.TransportProtocol, local string) ProxyKey {
+	return ProxyKey(fmt.Sprintf("%s/%s", protocol, local))
 }
 
 func (f *PortsForwarder) Unexpose(protocol types.TransportProtocol, local string) error {
