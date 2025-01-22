@@ -92,7 +92,7 @@ github.com/cloudflare/circl/sign/ed448
 # github.com/containers/common v0.60.4
 ## explicit; go 1.21.0
 github.com/containers/common/pkg/strongunits
-# github.com/containers/gvisor-tap-vsock v0.8.1
+# github.com/containers/gvisor-tap-vsock v0.8.2
 ## explicit; go 1.22.0
 github.com/containers/gvisor-tap-vsock/pkg/client
 github.com/containers/gvisor-tap-vsock/pkg/fs

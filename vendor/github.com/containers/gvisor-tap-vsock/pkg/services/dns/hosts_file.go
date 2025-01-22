@@ -2,11 +2,10 @@ package dns
 
 import (
 	"net"
-	"path/filepath"
 	"sync"
 
 	"github.com/areYouLazy/libhosty"
-	"github.com/fsnotify/fsnotify"
+	"github.com/containers/gvisor-tap-vsock/pkg/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -23,48 +22,31 @@ func NewHostsFile(hostsPath string) (*HostsFile, error) {
 	if err != nil {
 		return nil, err
 	}
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return nil, err
-	}
 
 	h := &HostsFile{
 		hostsFile:     hostsFile,
 		hostsFilePath: hostsFile.Config.FilePath,
 	}
-	go func() {
-		h.startWatch(watcher)
-	}()
+	if err := h.startWatch(); err != nil {
+		return nil, err
+	}
+
 	return h, nil
 }
 
-func (h *HostsFile) startWatch(w *fsnotify.Watcher) {
-	err := w.Add(filepath.Dir(h.hostsFilePath))
-
+func (h *HostsFile) startWatch() error {
+	watcher, err := utils.NewFileWatcher(h.hostsFilePath)
 	if err != nil {
-		log.Errorf("Hosts file adding watcher error:%s", err)
-		return
+		log.Errorf("Hosts file adding watcher error: %s", err)
+		return err
 	}
-	for {
-		select {
-		case err, ok := <-w.Errors:
-			if !ok {
-				return
-			}
-			log.Errorf("Hosts file watcher error:%s", err)
-		case event, ok := <-w.Events:
-			if !ok {
-				return
-			}
-			if event.Name == h.hostsFilePath && event.Op&fsnotify.Write == fsnotify.Write {
-				err := h.updateHostsFile()
-				if err != nil {
-					log.Errorf("Hosts file read error:%s", err)
-					return
-				}
-			}
-		}
+
+	if err := watcher.Start(h.updateHostsFile); err != nil {
+		log.Errorf("Hosts file adding watcher error: %s", err)
+		return err
 	}
+
+	return nil
 }
 
 func (h *HostsFile) LookupByHostname(name string) (net.IP, error) {
@@ -75,17 +57,17 @@ func (h *HostsFile) LookupByHostname(name string) (net.IP, error) {
 	return ip, err
 }
 
-func (h *HostsFile) updateHostsFile() error {
+func (h *HostsFile) updateHostsFile() {
 	newHosts, err := readHostsFile(h.hostsFilePath)
 	if err != nil {
-		return err
+		log.Errorf("Hosts file read error:%s", err)
+		return
 	}
 
 	h.hostsReadLock.Lock()
 	defer h.hostsReadLock.Unlock()
 
 	h.hostsFile = newHosts
-	return nil
 }
 
 func readHostsFile(hostsFilePath string) (*libhosty.HostsFile, error) {
