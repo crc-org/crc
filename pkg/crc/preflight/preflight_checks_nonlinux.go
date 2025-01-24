@@ -15,7 +15,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	crcerrors "github.com/crc-org/crc/v2/pkg/crc/errors"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
-	"github.com/shirou/gopsutil/v3/process"
+	"github.com/shirou/gopsutil/v4/process"
 )
 
 func killDaemonProcess() error {

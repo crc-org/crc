@@ -34,7 +34,7 @@ import (
 	"github.com/crc-org/machine/libmachine/state"
 	"github.com/crc-org/vfkit/pkg/config"
 	"github.com/pkg/errors"
-	"github.com/shirou/gopsutil/v3/process"
+	"github.com/shirou/gopsutil/v4/process"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )
