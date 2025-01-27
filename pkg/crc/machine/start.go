@@ -227,17 +227,17 @@ func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
 	}
 	logging.Infof("Configuring shared directories")
 	for _, mount := range sharedDirs {
-		// CoreOS makes / immutable, we need to handle this if we need to create a directory outside of /home and /mnt
-		isHomeOrMnt := strings.HasPrefix(mount.Target, "/home") || strings.HasPrefix(mount.Target, "/mnt")
-		if !isHomeOrMnt {
+		// Try to create the mount directory and if it fails then
+		// make the file system mutable and again try to create the
+		// mount directory.
+		// If the directory is already exists, then `mkdir -p` won't return an error.
+		if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Creating %s", mount.Target), "mkdir", "-p", mount.Target); err != nil {
 			if _, _, err := sshRunner.RunPrivileged("Making / mutable", "chattr", "-i", "/"); err != nil {
 				return err
 			}
-		}
-		if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Creating %s", mount.Target), "mkdir", "-p", mount.Target); err != nil {
-			return err
-		}
-		if !isHomeOrMnt {
+			if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Creating %s", mount.Target), "mkdir", "-p", mount.Target); err != nil {
+				return err
+			}
 			if _, _, err := sshRunner.RunPrivileged("Making / immutable again", "chattr", "+i", "/"); err != nil {
 				return err
 			}
