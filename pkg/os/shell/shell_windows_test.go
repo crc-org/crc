@@ -1,51 +1,137 @@
 package shell
 
 import (
-	"math"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDetect(t *testing.T) {
-	defer func(shell string) { os.Setenv("SHELL", shell) }(os.Getenv("SHELL"))
-	os.Setenv("SHELL", "")
+func TestDetect_WhenUnknownShell_ThenDefaultToCmdShell(t *testing.T) {
+	tests := []struct {
+		name              string
+		processTree       []MockedProcess
+		expectedShellType string
+	}{
+		{
+			"failure to get process details for given pid",
+			[]MockedProcess{},
+			"",
+		},
+		{
+			"failure while getting name of process",
+			[]MockedProcess{
+				{
+					name: "crc.exe",
+				},
+				{
+					nameGetFails: true,
+				},
+			},
+			"",
+		},
+		{
+			"failure while getting ppid of process",
+			[]MockedProcess{
+				{
+					name: "crc.exe",
+				},
+				{
+					parentGetFails: true,
+				},
+			},
+			"",
+		},
+		{
+			"failure when no shell process in process tree",
+			[]MockedProcess{
+				{
+					name: "crc.exe",
+				},
+				{
+					name: "unknown.exe",
+				},
+			},
+			"",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Given
+			currentProcessSupplier = func() AbstractProcess {
+				return createNewMockProcessTreeFrom(tt.processTree)
+			}
 
-	shell, err := detect()
+			// When
+			shell, err := detect()
 
-	assert.Contains(t, supportedShell, shell)
-	assert.NoError(t, err)
+			// Then
+			assert.NoError(t, err)
+			assert.Equal(t, "cmd", shell)
+		})
+	}
 }
 
-func TestGetNameAndItsPpidOfCurrent(t *testing.T) {
-	pid := os.Getpid()
-	if pid < 0 || pid > math.MaxUint32 {
-		assert.Fail(t, "integer overflow detected")
+func TestDetect_GivenProcessTree_ThenReturnShellProcessWithCorrespondingParentPID(t *testing.T) {
+	tests := []struct {
+		name              string
+		processTree       []MockedProcess
+		expectedShellType string
+	}{
+		{
+			"bash shell, then detect bash shell",
+			[]MockedProcess{
+				{
+					name: "crc.exe",
+				},
+				{
+					name: "bash.exe",
+				},
+			},
+			"bash",
+		},
+		{
+			"powershell, then detect powershell",
+			[]MockedProcess{
+				{
+					name: "crc.exe",
+				},
+				{
+					name: "powershell.exe",
+				},
+			},
+			"powershell",
+		},
+		{
+			"cmd shell, then detect fish shell",
+			[]MockedProcess{
+				{
+					name: "crc.exe",
+				},
+				{
+					name: "cmd.exe",
+				},
+			},
+			"cmd",
+		},
 	}
-	shell, shellppid, err := getNameAndItsPpid(uint32(pid))
-	assert.Equal(t, "shell.test.exe", shell)
-	ppid := os.Getppid()
-	if ppid < 0 || ppid > math.MaxUint32 {
-		assert.Fail(t, "integer overflow detected")
-	}
-	assert.Equal(t, uint32(ppid), shellppid)
-	assert.NoError(t, err)
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Given
+			currentProcessSupplier = func() AbstractProcess {
+				return createNewMockProcessTreeFrom(tt.processTree)
+			}
+			// When
+			shell, err := detect()
 
-func TestGetNameAndItsPpidOfParent(t *testing.T) {
-	pid := os.Getppid()
-	if pid < 0 || pid > math.MaxUint32 {
-		assert.Fail(t, "integer overflow detected")
+			// Then
+			assert.Equal(t, tt.expectedShellType, shell)
+			assert.NoError(t, err)
+		})
 	}
-	shell, _, err := getNameAndItsPpid(uint32(pid))
-
-	assert.Equal(t, "go.exe", shell)
-	assert.NoError(t, err)
 }
 
 func TestSupportedShells(t *testing.T) {
-	assert.Equal(t, []string{"cmd", "powershell", "bash", "zsh", "fish"}, supportedShell)
+	assert.Equal(t, []string{"cmd", "powershell", "wsl", "bash", "zsh", "fish"}, supportedShell)
 }
 
 func TestShellType(t *testing.T) {

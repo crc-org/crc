@@ -8,6 +8,10 @@ import (
 	"path/filepath"
 )
 
+var (
+	supportedShell = []string{"bash", "zsh", "fish"}
+)
+
 // detect detects user's current shell.
 func detect() (string, error) {
 	detectedShell := detectShellByCheckingProcessTree(currentProcessSupplier())
