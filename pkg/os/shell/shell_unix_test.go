@@ -5,34 +5,11 @@ package shell
 
 import (
 	"bytes"
-	"errors"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
-
-// MockedProcess is a mock implementation of AbstractProcess for testing purposes.
-type MockedProcess struct {
-	name           string
-	parent         *MockedProcess
-	nameGetFails   bool
-	parentGetFails bool
-}
-
-func (m MockedProcess) Parent() (AbstractProcess, error) {
-	if m.parentGetFails || m.parent == nil {
-		return nil, errors.New("failed to get the pid")
-	}
-	return m.parent, nil
-}
-
-func (m MockedProcess) Name() (string, error) {
-	if m.nameGetFails {
-		return "", errors.New("failed to get the name")
-	}
-	return m.name, nil
-}
 
 func TestUnknownShell(t *testing.T) {
 	tests := []struct {
@@ -182,17 +159,4 @@ func TestGetCurrentProcess(t *testing.T) {
 	currentProcessName, err := currentProcess.Name()
 	assert.NoError(t, err)
 	assert.Greater(t, len(currentProcessName), 0)
-}
-
-func createNewMockProcessTreeFrom(processes []MockedProcess) AbstractProcess {
-	if len(processes) == 0 {
-		return nil
-	}
-	head := &processes[0]
-	current := head
-	for i := 1; i < len(processes); i++ {
-		current.parent = &processes[i]
-		current = current.parent
-	}
-	return head
 }

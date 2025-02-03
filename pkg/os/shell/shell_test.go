@@ -1,6 +1,7 @@
 package shell
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -45,6 +46,28 @@ func (e *MockCommandRunner) RunPrivate(command string, args ...string) (string, 
 func (e *MockCommandRunner) RunPrivileged(_ string, cmdAndArgs ...string) (string, string, error) {
 	e.commandArgs = cmdAndArgs
 	return e.expectedOutputToReturn, e.expectedErrMessageToReturn, e.expectedErrToReturn
+}
+
+// MockedProcess is a mock implementation of AbstractProcess for testing purposes.
+type MockedProcess struct {
+	name           string
+	parent         *MockedProcess
+	nameGetFails   bool
+	parentGetFails bool
+}
+
+func (m MockedProcess) Parent() (AbstractProcess, error) {
+	if m.parentGetFails || m.parent == nil {
+		return nil, errors.New("failed to get the pid")
+	}
+	return m.parent, nil
+}
+
+func (m MockedProcess) Name() (string, error) {
+	if m.nameGetFails {
+		return "", errors.New("failed to get the name")
+	}
+	return m.name, nil
 }
 
 func TestGetPathEnvString(t *testing.T) {
@@ -178,4 +201,17 @@ func TestConvertToWindowsSubsystemLinuxPath(t *testing.T) {
 	// Then
 	assert.Equal(t, "wsl", mockCommandExecutor.commandName)
 	assert.Equal(t, []string{"-e", "bash", "-c", "wslpath -a 'C:\\Users\\foo\\.crc\\bin\\oc'"}, mockCommandExecutor.commandArgs)
+}
+
+func createNewMockProcessTreeFrom(processes []MockedProcess) AbstractProcess {
+	if len(processes) == 0 {
+		return nil
+	}
+	head := &processes[0]
+	current := head
+	for i := 1; i < len(processes); i++ {
+		current.parent = &processes[i]
+		current = current.parent
+	}
+	return head
 }
