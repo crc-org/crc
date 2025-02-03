@@ -1,63 +1,17 @@
 package shell
 
 import (
-	"fmt"
-	"math"
-	"os"
-	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
-	"syscall"
-	"unsafe"
 
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 )
 
 var (
-	supportedShell = []string{"cmd", "powershell", "bash", "zsh", "fish"}
+	supportedShell = []string{"cmd", "powershell", "wsl", "bash", "zsh", "fish"}
 )
-
-// re-implementation of private function in https://github.com/golang/go/blob/master/src/syscall/syscall_windows.go
-func getProcessEntry(pid uint32) (pe *syscall.ProcessEntry32, err error) {
-	snapshot, err := syscall.CreateToolhelp32Snapshot(syscall.TH32CS_SNAPPROCESS, 0)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		_ = syscall.CloseHandle(syscall.Handle(snapshot))
-	}()
-
-	var processEntry syscall.ProcessEntry32
-	processEntry.Size = uint32(unsafe.Sizeof(processEntry))
-	err = syscall.Process32First(snapshot, &processEntry)
-	if err != nil {
-		return nil, err
-	}
-
-	for {
-		if processEntry.ProcessID == pid {
-			pe = &processEntry
-			return
-		}
-
-		err = syscall.Process32Next(snapshot, &processEntry)
-		if err != nil {
-			return nil, err
-		}
-	}
-}
-
-// getNameAndItsPpid returns the exe file name its parent process id.
-func getNameAndItsPpid(pid uint32) (exefile string, parentid uint32, err error) {
-	pe, err := getProcessEntry(pid)
-	if err != nil {
-		return "", 0, err
-	}
-
-	name := syscall.UTF16ToString(pe.ExeFile[:])
-	return name, pe.ParentProcessID, nil
-}
 
 func shellType(shell string, defaultShell string) string {
 	switch {
@@ -69,7 +23,7 @@ func shellType(shell string, defaultShell string) string {
 		return "cmd"
 	case strings.Contains(strings.ToLower(shell), "wsl"):
 		return detectShellByInvokingCommand("bash", "wsl", []string{"-e", "bash", "-c", "ps -ao pid=,comm="})
-	case filepath.IsAbs(shell) && strings.Contains(strings.ToLower(shell), "bash"):
+	case strings.Contains(strings.ToLower(shell), "bash"):
 		return "bash"
 	default:
 		return defaultShell
@@ -77,31 +31,7 @@ func shellType(shell string, defaultShell string) string {
 }
 
 func detect() (string, error) {
-	shell := os.Getenv("SHELL")
-
-	if shell == "" {
-		pid := os.Getppid()
-		if pid < 0 || pid > math.MaxUint32 {
-			return "", fmt.Errorf("integer overflow for pid: %v", pid)
-		}
-		shell, shellppid, err := getNameAndItsPpid(uint32(pid))
-		if err != nil {
-			return "cmd", err // defaulting to cmd
-		}
-		shell = shellType(shell, "")
-		if shell == "" {
-			shell, _, err := getNameAndItsPpid(shellppid)
-			if err != nil {
-				return "cmd", err // defaulting to cmd
-			}
-			return shellType(shell, "cmd"), nil
-		}
-		return shell, nil
-	}
-
-	if os.Getenv("__fish_bin_dir") != "" {
-		return "fish", nil
-	}
+	shell := detectShellByCheckingProcessTree(currentProcessSupplier())
 
 	return shellType(shell, "cmd"), nil
 }
@@ -163,9 +93,9 @@ func inspectProcessOutputForRecentlyUsedShell(psCommandOutput string) string {
 	lines := strings.Split(psCommandOutput, "\n")
 	for _, line := range lines {
 		lineParts := strings.Split(strings.TrimSpace(line), " ")
-		if len(lineParts) == 2 && (strings.Contains(lineParts[1], "zsh") ||
-			strings.Contains(lineParts[1], "bash") ||
-			strings.Contains(lineParts[1], "fish")) {
+		if len(lineParts) == 2 && slices.ContainsFunc(supportedShell, func(listElem string) bool {
+			return strings.HasPrefix(lineParts[1], listElem)
+		}) {
 			parsedProcessID, err := strconv.Atoi(lineParts[0])
 			if err == nil {
 				processOutputs = append(processOutputs, ProcessOutput{

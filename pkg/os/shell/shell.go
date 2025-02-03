@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/shirou/gopsutil/v4/process"
@@ -208,7 +209,9 @@ func detectShellByCheckingProcessTree(p AbstractProcess) string {
 		if err != nil {
 			return ""
 		}
-		if processName == "zsh" || processName == "bash" || processName == "fish" {
+		if slices.ContainsFunc(supportedShell, func(listElem string) bool {
+			return strings.HasPrefix(processName, listElem)
+		}) {
 			return processName
 		}
 		p, err = p.Parent()
