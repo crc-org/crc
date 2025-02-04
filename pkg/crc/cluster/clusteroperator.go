@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -17,7 +18,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
-	crcstrings "github.com/crc-org/crc/v2/pkg/strings"
 	openshiftapi "github.com/openshift/api/config/v1"
 	k8sapi "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -95,7 +95,7 @@ func getStatus(ctx context.Context, lister operatorLister, selector []string) (*
 
 	found := false
 	for _, c := range co.Items {
-		if len(selector) > 0 && !crcstrings.Contains(selector, c.ObjectMeta.Name) {
+		if len(selector) > 0 && !slices.Contains(selector, c.ObjectMeta.Name) {
 			continue
 		}
 		found = true

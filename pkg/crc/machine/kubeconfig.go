@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -242,14 +243,14 @@ func cleanKubeconfig(input, output string) error {
 	var contextNames []string
 	authNames := make(map[string]struct{})
 	for name, context := range cfg.Contexts {
-		if contains(clusterNames, context.Cluster) {
+		if slices.Contains(clusterNames, context.Cluster) {
 			contextNames = append(contextNames, name)
 			authNames[context.AuthInfo] = struct{}{}
 		}
 	}
 	// keep auth if it is shared with other contexts
 	for _, context := range cfg.Contexts {
-		if !contains(clusterNames, context.Cluster) {
+		if !slices.Contains(clusterNames, context.Cluster) {
 			delete(authNames, context.AuthInfo)
 		}
 	}
@@ -268,15 +269,6 @@ func cleanKubeconfig(input, output string) error {
 	}
 
 	return clientcmd.WriteToFile(*cfg, output)
-}
-
-func contains(arr []string, str string) bool {
-	for _, a := range arr {
-		if a == str {
-			return true
-		}
-	}
-	return false
 }
 
 func mergeKubeConfigFile(kubeConfigFile string) error {

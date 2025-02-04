@@ -8,12 +8,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/systemd"
 	"github.com/crc-org/crc/v2/pkg/crc/systemd/states"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
-	crcstring "github.com/crc-org/crc/v2/pkg/strings"
 )
 
 var nmPreflightChecks = []Check{
@@ -287,7 +287,7 @@ func checkSystemdResolvedIsRunning() error {
 	if err != nil {
 		return err
 	}
-	if !crcstring.Contains(systemdResolvedManageResolvFilePath, rFilePath) {
+	if !slices.Contains(systemdResolvedManageResolvFilePath, rFilePath) {
 		return fmt.Errorf("%s is not managed by systemd-resolved", resolvFilePath)
 	}
 	return checkSystemdServiceRunning("systemd-resolved.service")
