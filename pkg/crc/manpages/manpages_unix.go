@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra/doc"
@@ -89,12 +90,7 @@ func appendToManPathEnvironmentVariable(folder string) error {
 
 func manPathAlreadyContains(manPathEnvVarValue string, folder string) bool {
 	manDirs := strings.Split(manPathEnvVarValue, string(os.PathListSeparator))
-	for _, manDir := range manDirs {
-		if manDir == folder {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(manDirs, folder)
 }
 
 func removeFromManPathEnvironmentVariable(manPathEnvVarValue string, folder string) error {
