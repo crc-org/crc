@@ -15,7 +15,7 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv4"
 )
 
-func (n *VirtualNetwork) Mux() *http.ServeMux {
+func (n *VirtualNetwork) ServicesMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.Handle("/services/", http.StripPrefix("/services", n.servicesMux))
 	mux.HandleFunc("/stats", func(w http.ResponseWriter, _ *http.Request) {
@@ -26,26 +26,6 @@ func (n *VirtualNetwork) Mux() *http.ServeMux {
 	})
 	mux.HandleFunc("/leases", func(w http.ResponseWriter, _ *http.Request) {
 		_ = json.NewEncoder(w).Encode(n.ipPool.Leases())
-	})
-	mux.HandleFunc(types.ConnectPath, func(w http.ResponseWriter, _ *http.Request) {
-		hj, ok := w.(http.Hijacker)
-		if !ok {
-			http.Error(w, "webserver doesn't support hijacking", http.StatusInternalServerError)
-			return
-		}
-		conn, bufrw, err := hj.Hijack()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer conn.Close()
-
-		if err := bufrw.Flush(); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		_ = n.networkSwitch.Accept(context.Background(), conn, n.configuration.Protocol)
 	})
 	mux.HandleFunc("/tunnel", func(w http.ResponseWriter, r *http.Request) {
 		ip := r.URL.Query().Get("ip")
@@ -95,6 +75,31 @@ func (n *VirtualNetwork) Mux() *http.ServeMux {
 			},
 		}
 		remote.HandleConn(conn)
+	})
+	return mux
+}
+
+func (n *VirtualNetwork) Mux() *http.ServeMux {
+	mux := n.ServicesMux()
+	mux.HandleFunc(types.ConnectPath, func(w http.ResponseWriter, _ *http.Request) {
+		hj, ok := w.(http.Hijacker)
+		if !ok {
+			http.Error(w, "webserver doesn't support hijacking", http.StatusInternalServerError)
+			return
+		}
+		conn, bufrw, err := hj.Hijack()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer conn.Close()
+
+		if err := bufrw.Flush(); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		_ = n.networkSwitch.Accept(context.Background(), conn, n.configuration.Protocol)
 	})
 	return mux
 }
