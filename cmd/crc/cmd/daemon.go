@@ -13,6 +13,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/crc-org/crc/v2/pkg/crc/api/client"
+	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
+
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	"github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork"
 	"github.com/crc-org/crc/v2/pkg/crc/adminhelper"
@@ -20,7 +23,6 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/api/events"
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
-	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/docker/go-units"
 	"github.com/gorilla/handlers"
@@ -29,18 +31,27 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var watchdog bool
+var (
+	watchdog              bool
+	daemonVersionSupplier func() (client.VersionResult, error)
+)
 
 func init() {
+	daemonVersionSupplier = func() (client.VersionResult, error) {
+		return daemonclient.New().APIClient.Version()
+	}
 	daemonCmd.Flags().BoolVar(&watchdog, "watchdog", false, "Monitor stdin and shutdown the daemon if stdin is closed")
 	rootCmd.AddCommand(daemonCmd)
 }
 
-const hostVirtualIP = "192.168.127.254"
+const (
+	hostVirtualIP           = "192.168.127.254"
+	ErrDaemonAlreadyRunning = "daemon has been started in the background"
+)
 
 func checkDaemonVersion() (bool, error) {
-	if _, err := daemonclient.New().APIClient.Version(); err == nil {
-		return true, errors.New("daemon is already running")
+	if _, err := daemonVersionSupplier(); err == nil {
+		return true, errors.New(ErrDaemonAlreadyRunning)
 	}
 	return false, nil
 }
@@ -52,7 +63,7 @@ var daemonCmd = &cobra.Command{
 	Hidden: true,
 	RunE: func(_ *cobra.Command, _ []string) error {
 		if running, _ := checkIfDaemonIsRunning(); running {
-			return errors.New("daemon is already running")
+			return errors.New(ErrDaemonAlreadyRunning)
 		}
 
 		virtualNetworkConfig := types.Configuration{
