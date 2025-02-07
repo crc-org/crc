@@ -3,14 +3,19 @@ package testsuite
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"os/user"
 	"path/filepath"
 	"runtime"
+	"slices"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/machine"
@@ -554,6 +559,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		EnsureMicroshiftClusterIsOperational)
 	s.Step(`^kubeconfig is cleaned up$`,
 		EnsureKubeConfigIsCleanedUp)
+	s.Step(`^persistent volume of size "([^"]*)"GB exists$`,
+		EnsureVMPartitionSizeCorrect)
 
 	s.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
 
@@ -1100,4 +1107,76 @@ func EnsureMicroshiftClusterIsOperational() error {
 	}
 
 	return nil
+}
+
+func EnsureVMPartitionSizeCorrect(expectedPVSizeStr string) error {
+	expectedPVSize, err := strconv.Atoi(expectedPVSizeStr)
+	if err != nil {
+		return fmt.Errorf("invalid expected persistent volume size provided in test input")
+	}
+	err = util.ExecuteCommand("crc ip")
+	if err != nil {
+		return fmt.Errorf("error in determining crc vm's ip address: %v", err)
+	}
+	crcIP := util.GetLastCommandOutput("stdout")
+	runner, err := ssh.CreateRunner(crcIP, 2222, filepath.Join(util.CRCHome, "machines", "crc", "id_ed25519"))
+	if err != nil {
+		return fmt.Errorf("error creating ssh runner: %v", err)
+	}
+	out, _, err := runner.Run("lsblk --json -oTYPE,SIZE")
+	if err != nil {
+		return fmt.Errorf("error in executing command in crc vm: %v", err)
+	}
+
+	actualPVSize, err := deserializeListBlockDeviceCommandOutputToExtractPVSize(out)
+	if err != nil {
+		return err
+	}
+	if actualPVSize != expectedPVSize {
+		return fmt.Errorf("expecting persistent volume size to be %d, got %d", expectedPVSize, actualPVSize)
+	}
+	return nil
+}
+
+func deserializeListBlockDeviceCommandOutputToExtractPVSize(lsblkOutput string) (int, error) {
+	type BlockDevice struct {
+		DeviceType string `json:"type"`
+		Size       string `json:"size"`
+	}
+	type Root struct {
+		BlockDevices []BlockDevice
+	}
+	var deviceRoot Root
+	err := json.Unmarshal([]byte(lsblkOutput), &deviceRoot)
+	if err != nil {
+		return -1, fmt.Errorf("error in unmarshalling lsblk output json: %v", err)
+	}
+	if len(deviceRoot.BlockDevices) == 0 {
+		return -1, fmt.Errorf("expecting lsblk output to contain a device, got empty list")
+	}
+
+	var lvmSize int
+	lvmBlockDeviceIndex := slices.IndexFunc(deviceRoot.BlockDevices, func(b BlockDevice) bool {
+		return b.DeviceType == "lvm"
+	})
+	if lvmBlockDeviceIndex == -1 {
+		return -1, fmt.Errorf("expecting lsblk output to contain a lvm device, got no device with type lvm")
+	}
+	_, err = fmt.Sscanf(deviceRoot.BlockDevices[lvmBlockDeviceIndex].Size, "%dG", &lvmSize)
+	if err != nil {
+		return -1, fmt.Errorf("error in scanning lvm device size: %v", err)
+	}
+
+	var diskSize int
+	diskDeviceIndex := slices.IndexFunc(deviceRoot.BlockDevices, func(b BlockDevice) bool {
+		return b.DeviceType == "disk"
+	})
+	if diskDeviceIndex == -1 {
+		return -1, fmt.Errorf("expecting lsblk output to contain a disk device, got no device with type disk")
+	}
+	_, err = fmt.Sscanf(deviceRoot.BlockDevices[diskDeviceIndex].Size, "%dG", &diskSize)
+	if err != nil {
+		return -1, fmt.Errorf("error in scanning disk device size: %v", err)
+	}
+	return diskSize - (lvmSize + 1), nil
 }
