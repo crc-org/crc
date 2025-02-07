@@ -6,15 +6,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"os/user"
 	"path/filepath"
 	"runtime"
+	"slices"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/containers/common/pkg/strongunits"
+	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 	"github.com/spf13/cast"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
@@ -562,6 +566,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		EnsureCrcVersionIsCorrect)
 	s.Step(`^ensure service "(.*)" is accessible via NodePort with response body "(.*)"$`,
 		EnsureApplicationIsAccessibleViaNodePort)
+	s.Step(`^persistent volume of size "([^"]*)"GB exists$`,
+		EnsureVMPartitionSizeCorrect)
 
 	s.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
 
@@ -1214,4 +1220,80 @@ func EnsureMicroshiftClusterIsOperational() error {
 	}
 
 	return nil
+}
+
+func EnsureVMPartitionSizeCorrect(expectedPVSizeStr string) error {
+	expectedPVSize, err := strconv.Atoi(expectedPVSizeStr)
+	if err != nil {
+		return fmt.Errorf("invalid expected persistent volume size provided in test input")
+	}
+	err = util.ExecuteCommand("crc ip")
+	if err != nil {
+		return fmt.Errorf("error in determining crc vm's ip address: %v", err)
+	}
+	crcIP := util.GetLastCommandOutput("stdout")
+	runner, err := ssh.CreateRunner(crcIP, 2222, filepath.Join(util.CRCHome, "machines", "crc", "id_ed25519"))
+	if err != nil {
+		return fmt.Errorf("error creating ssh runner: %v", err)
+	}
+	out, _, err := runner.Run("lsblk -oTYPE,SIZE -n")
+	if err != nil {
+		return fmt.Errorf("error in executing command in crc vm: %v", err)
+	}
+
+	actualPVSize, err := deserializeListBlockDeviceCommandOutputToExtractPVSize(out)
+	if err != nil {
+		return err
+	}
+	if actualPVSize != expectedPVSize {
+		return fmt.Errorf("expecting persistent volume size to be %d, got %d", expectedPVSize, actualPVSize)
+	}
+	return nil
+}
+
+func deserializeListBlockDeviceCommandOutputToExtractPVSize(lsblkOutput string) (int, error) {
+	type BlockDevice struct {
+		DeviceType string
+		Size       string
+	}
+	blockDevices := make([]BlockDevice, 0)
+	lines := strings.Split(lsblkOutput, "\n")
+
+	for _, line := range lines {
+		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			continue
+		}
+
+		blockDevices = append(blockDevices, BlockDevice{
+			DeviceType: fields[0],
+			Size:       fields[1],
+		})
+	}
+
+	var lvmSize int
+	lvmBlockDeviceIndex := slices.IndexFunc(blockDevices, func(b BlockDevice) bool {
+		return b.DeviceType == "lvm"
+	})
+	if lvmBlockDeviceIndex == -1 {
+		return -1, fmt.Errorf("expecting lsblk output to contain a lvm device, got no device with type lvm")
+	}
+	_, err := fmt.Sscanf(blockDevices[lvmBlockDeviceIndex].Size, "%dG", &lvmSize)
+	if err != nil {
+		return -1, fmt.Errorf("error in scanning lvm device size: %v", err)
+	}
+
+	var diskSize = math.MinInt64
+	for _, blockDevice := range blockDevices {
+		if blockDevice.DeviceType == "disk" {
+			diskSizeValue, err := strconv.ParseFloat(strings.TrimSuffix(blockDevice.Size, "G"), 64)
+			if err != nil {
+				return -1, fmt.Errorf("error in parsing disk size: %v", err)
+			}
+			if int(diskSizeValue) > diskSize {
+				diskSize = int(diskSizeValue)
+			}
+		}
+	}
+	return diskSize - (lvmSize + 1), nil
 }

@@ -17,30 +17,30 @@ Feature: Test configuration settings
         # always return to default values
         @darwin
         Examples: Config settings on Mac
-            | property           | value1    | value2            |
-            | cpus               | 5         | 3                 |
-            | memory             | 10753     | 4096              |
-            | nameserver         | 120.0.0.1 | 999.999.999.999   |
-            | pull-secret-file   | /etc      | /nonexistent-file |
-            | developer-password | secret1   |                   |
+            | property               | value1    | value2            |
+            | cpus                   | 5         | 3                 |
+            | memory                 | 10753     | 4096              |
+            | nameserver             | 120.0.0.1 | 999.999.999.999   |
+            | pull-secret-file       | /etc      | /nonexistent-file |
+            | persistent-volume-size | 20        | 5                 |
 
         @linux
         Examples: Config settings on Linux
-            | property           | value1    | value2            |
-            | cpus               | 5         | 3                 |
-            | memory             | 10753     | 4096              |
-            | nameserver         | 120.0.0.1 | 999.999.999.999   |
-            | pull-secret-file   | /etc      | /nonexistent-file |
-            | developer-password | secret1   |                   |
+            | property               | value1    | value2            |
+            | cpus                   | 5         | 3                 |
+            | memory                 | 10753     | 4096              |
+            | nameserver             | 120.0.0.1 | 999.999.999.999   |
+            | pull-secret-file       | /etc      | /nonexistent-file |
+            | persistent-volume-size | 20        | 5                 |
 
         @windows
         Examples: Config settings on Windows
-            | property           | value1    | value2            |
-            | cpus               | 5         | 3                 |
-            | memory             | 10753     | 4096              |
-            | nameserver         | 120.0.0.1 | 999.999.999.999   |
-            | pull-secret-file   | /Users    | /nonexistent-file |
-            | developer-password | secret1   |                   |
+            | property               | value1    | value2            |
+            | cpus                   | 5         | 3                 |
+            | memory                 | 10753     | 4096              |
+            | nameserver             | 120.0.0.1 | 999.999.999.999   |
+            | pull-secret-file       | /Users    | /nonexistent-file |
+            | persistent-volume-size | 20        | 5                 |
 
     @linux @darwin @windows
     Scenario: CRC config checks (bundle version)
