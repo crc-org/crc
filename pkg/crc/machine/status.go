@@ -54,7 +54,7 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 		openShiftStatusSupplier = getMicroShiftStatus
 	}
 
-	return createClusterStatusResult(vmStatus, vm.bundle.GetBundleType(), vm.bundle.GetVersion(), ip, ramSize, ramUse, diskSize, diskUse, pvSize, pvUse, openShiftStatusSupplier)
+	return createClusterStatusResult(vmStatus, vm.bundle.GetBundleType(), vm.bundle.GetVersion(), ip, diskSize, diskUse, ramSize, ramUse, pvUse, pvSize, openShiftStatusSupplier)
 }
 
 func createClusterStatusResult(vmStatus state.State, bundleType preset.Preset, vmBundleVersion, vmIP string, diskSize, diskUse, ramSize, ramUse strongunits.B, pvUse, pvSize strongunits.B, openShiftStatusSupplier openShiftStatusSupplierFunc) (*types.ClusterStatusResult, error) {
