@@ -14,7 +14,7 @@ jobs:
           - macOS-13
           - macOS-14
           - ubuntu-latest
-          - ubuntu-20.04
+          - ubuntu-22.04
         go:
           - '1.22'
     steps:
