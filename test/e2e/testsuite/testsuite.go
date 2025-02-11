@@ -554,6 +554,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		EnsureMicroshiftClusterIsOperational)
 	s.Step(`^kubeconfig is cleaned up$`,
 		EnsureKubeConfigIsCleanedUp)
+	s.Step(`^accessing crc man pages (succeeds|fails)$`,
+		EnsureCRCManPagesAvailability)
 
 	s.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
 
@@ -1069,6 +1071,32 @@ func EnsureKubeConfigIsCleanedUp() error {
 	for name, cluster := range cfg.Clusters {
 		if cluster.Server == crcClusterDomain {
 			return fmt.Errorf("kube config's cluster %s is not cleaned up, it still contains a cluster with %s domain [expected : \"\", actual : %s]", name, crcClusterDomain, crcClusterDomain)
+		}
+	}
+	return nil
+}
+
+func EnsureCRCManPagesAvailability(expectedStatus string) error {
+	expectedManFileList := []string{
+		"crc-bundle-generate.1.gz", "crc-config.1.gz", "crc-start.1.gz",
+		"crc-bundle.1.gz", "crc-console.1.gz", "crc-status.1.gz",
+		"crc-cleanup.1.gz", "crc-delete.1.gz", "crc-stop.1.gz",
+		"crc-config-get.1.gz", "crc-ip.1.gz", "crc-version.1.gz",
+		"crc-config-set.1.gz", "crc-oc-env.1.gz", "crc.1.gz",
+		"crc-config-unset.1.gz", "crc-podman-env.1.gz",
+		"crc-config-view.1.gz", "crc-setup.1.gz",
+	}
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("failed to get user home directory: %v", err)
+	}
+	manPageDir := filepath.Join(userHomeDir, ".local", "share", "man", "man1")
+	for _, manPage := range expectedManFileList {
+		manFile := filepath.Join(manPageDir, manPage)
+		manCommand := fmt.Sprintf("man -P cat %s", manFile)
+		err := util.ExecuteCommandSucceedsOrFails(manCommand, expectedStatus)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
