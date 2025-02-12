@@ -74,6 +74,7 @@ func (img *imageHandler) copyImage(ctx context.Context, destPath string, reportW
 	if ctx == nil {
 		panic("ctx is nil, this should not happen")
 	}
+
 	manifestData, err := copy.Image(ctx, policyContext,
 		destRef, srcRef, &copy.Options{
 			ReportWriter: reportWriter,
