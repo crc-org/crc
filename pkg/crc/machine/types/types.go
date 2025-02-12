@@ -27,6 +27,9 @@ type StartConfig struct {
 	// User defined kubeadmin password
 	KubeAdminPassword string
 
+	// User defined developer password
+	DeveloperPassword string
+
 	// Preset
 	Preset crcpreset.Preset
 
@@ -54,6 +57,7 @@ type ClusterConfig struct {
 	ClusterCACert string
 	KubeConfig    string
 	KubeAdminPass string
+	DeveloperPass string
 	ClusterAPI    string
 	WebConsoleURL string
 	ProxyConfig   *httpproxy.ProxyConfig

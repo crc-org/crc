@@ -32,6 +32,7 @@ const (
 	BackgroundLauncherURL     = "https://github.com/crc-org/win32-background-launcher/releases/download/v%s/win32-background-launcher.exe"
 	DefaultBundleURLBase      = "https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/%s/%s/%s"
 	DefaultContext            = "admin"
+	DefaultDeveloperPassword  = "developer"
 	DaemonHTTPEndpoint        = "http://unix/api"
 	DaemonVsockPort           = 1024
 	DefaultPodmanNamedPipe    = `\\.\pipe\crc-podman`
@@ -195,6 +196,10 @@ func GetECDSAPrivateKeyPath() string {
 
 func GetKubeAdminPasswordPath() string {
 	return filepath.Join(MachineInstanceDir, DefaultName, "kubeadmin-password")
+}
+
+func GetDeveloperPasswordPath() string {
+	return filepath.Join(MachineInstanceDir, DefaultName, "developer-password")
 }
 
 func GetWin32BackgroundLauncherDownloadURL() string {

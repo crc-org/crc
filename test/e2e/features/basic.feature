@@ -31,6 +31,7 @@ Feature: Basic test
     @darwin @linux @windows @cleanup
     Scenario: CRC start usecase
         Given executing "crc setup --check-only" fails
+        And unsetting config property "developer-password" succeeds
         # Request start with monitoring stack
         * setting config property "enable-cluster-monitoring" to value "true" succeeds
         * setting config property "memory" to value "16000" succeeds
@@ -38,6 +39,11 @@ Feature: Basic test
         And executing "man -P cat crc" succeeds
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"
+        And stdout should contain "Log in as administrator:"
+        And stdout should contain "  Username: kubeadmin"
+        And stdout should contain "Log in as user:"
+        And stdout should contain "  Username: developer"
+        And stdout should contain "  Password: developer"
         # Check if user can copy-paste login details for developer and kubeadmin users
         * stdout should match "(?s)(.*)oc login -u developer https:\/\/api\.crc\.testing:6443(.*)$"
         * stdout should match "(?s)(.*)https:\/\/console-openshift-console\.apps-crc\.testing(.*)$"

@@ -17,27 +17,30 @@ Feature: Test configuration settings
         # always return to default values
         @darwin
         Examples: Config settings on Mac
-            | property         | value1    | value2            |
-            | cpus             | 5         | 3                 |
-            | memory           | 10753     | 4096              |
-            | nameserver       | 120.0.0.1 | 999.999.999.999   |
-            | pull-secret-file | /etc      | /nonexistent-file |
+            | property           | value1    | value2            |
+            | cpus               | 5         | 3                 |
+            | memory             | 10753     | 4096              |
+            | nameserver         | 120.0.0.1 | 999.999.999.999   |
+            | pull-secret-file   | /etc      | /nonexistent-file |
+            | developer-password | secret1   |                   |
 
         @linux
         Examples: Config settings on Linux
-            | property         | value1    | value2            |
-            | cpus             | 5         | 3                 |
-            | memory           | 10753     | 4096              |
-            | nameserver       | 120.0.0.1 | 999.999.999.999   |
-            | pull-secret-file | /etc      | /nonexistent-file |
+            | property           | value1    | value2            |
+            | cpus               | 5         | 3                 |
+            | memory             | 10753     | 4096              |
+            | nameserver         | 120.0.0.1 | 999.999.999.999   |
+            | pull-secret-file   | /etc      | /nonexistent-file |
+            | developer-password | secret1   |                   |
 
         @windows
         Examples: Config settings on Windows
-            | property         | value1    | value2            |
-            | cpus             | 5         | 3                 |
-            | memory           | 10753     | 4096              |
-            | nameserver       | 120.0.0.1 | 999.999.999.999   |
-            | pull-secret-file | /Users    | /nonexistent-file |
+            | property           | value1    | value2            |
+            | cpus               | 5         | 3                 |
+            | memory             | 10753     | 4096              |
+            | nameserver         | 120.0.0.1 | 999.999.999.999   |
+            | pull-secret-file   | /Users    | /nonexistent-file |
+            | developer-password | secret1   |                   |
 
     @linux @darwin @windows
     Scenario: CRC config checks (bundle version)
@@ -171,14 +174,14 @@ Feature: Test configuration settings
         When unsetting config property "preset" succeeds
         And stdout should contain "Successfully unset configuration property 'preset'"
         And "JSON" config file "crc.json" in CRC home folder does not contain key "preset"
-        
-        @linux @darwin @windows 
+
+    @linux @darwin @windows
         Examples: Config property preset setting positive
             | preset-value  |
             | microshift    | 
             | okd           | 
             
-    Scenario: CRC config set preset (negtive cases) 
+    Scenario: CRC config set preset (negative cases)
         When setting config property "preset" to value "<preset-value>" fails
         And stderr should contain "reason: Unknown preset" 
 

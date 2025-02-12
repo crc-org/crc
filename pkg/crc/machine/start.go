@@ -581,7 +581,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to update pull secret on the disk")
 	}
 
-	if err := cluster.UpdateKubeAdminUserPassword(ctx, ocConfig, startConfig.KubeAdminPassword); err != nil {
+	if err := cluster.UpdateUserPasswords(ctx, ocConfig, startConfig.KubeAdminPassword, startConfig.DeveloperPassword); err != nil {
 		return nil, errors.Wrap(err, "Failed to update kubeadmin user password")
 	}
 
@@ -688,8 +688,11 @@ func createHost(machineConfig config.MachineConfig, preset crcPreset.Preset) err
 		return fmt.Errorf("Error generating ssh key pair: %v", err)
 	}
 	if preset == crcPreset.OpenShift || preset == crcPreset.OKD {
-		if err := cluster.GenerateKubeAdminUserPassword(); err != nil {
+		if err := cluster.GenerateUserPassword(constants.GetKubeAdminPasswordPath(), "kubeadmin"); err != nil {
 			return errors.Wrap(err, "Error generating new kubeadmin password")
+		}
+		if err = os.WriteFile(constants.GetDeveloperPasswordPath(), []byte(constants.DefaultDeveloperPassword), 0600); err != nil {
+			return errors.Wrap(err, "Error writing developer password")
 		}
 	}
 	if err := api.SetExists(vm.Name); err != nil {

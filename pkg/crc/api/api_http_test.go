@@ -167,11 +167,11 @@ var testCases = []testCase{
 	// start
 	{
 		request:  post("start"),
-		response: jSon(`{"Status":"","ClusterConfig":{"ClusterType":"openshift","ClusterCACert":"MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ","KubeConfig":"/tmp/kubeconfig","KubeAdminPass":"foobar","ClusterAPI":"https://foo.testing:6443","WebConsoleURL":"https://console.foo.testing:6443","ProxyConfig":null},"KubeletStarted":true}`),
+		response: jSon(`{"Status":"","ClusterConfig":{"ClusterType":"openshift","ClusterCACert":"MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ","KubeConfig":"/tmp/kubeconfig","KubeAdminPass":"foobar","DeveloperPass":"foobar","ClusterAPI":"https://foo.testing:6443","WebConsoleURL":"https://console.foo.testing:6443","ProxyConfig":null},"KubeletStarted":true}`),
 	},
 	{
 		request:  get("start"),
-		response: jSon(`{"Status":"","ClusterConfig":{"ClusterType":"openshift","ClusterCACert":"MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ","KubeConfig":"/tmp/kubeconfig","KubeAdminPass":"foobar","ClusterAPI":"https://foo.testing:6443","WebConsoleURL":"https://console.foo.testing:6443","ProxyConfig":null},"KubeletStarted":true}`),
+		response: jSon(`{"Status":"","ClusterConfig":{"ClusterType":"openshift","ClusterCACert":"MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ","KubeConfig":"/tmp/kubeconfig","KubeAdminPass":"foobar","DeveloperPass":"foobar","ClusterAPI":"https://foo.testing:6443","WebConsoleURL":"https://console.foo.testing:6443","ProxyConfig":null},"KubeletStarted":true}`),
 	},
 
 	// start with failure
@@ -273,7 +273,7 @@ var testCases = []testCase{
 	// webconsoleurl
 	{
 		request:  get("webconsoleurl"),
-		response: jSon(`{"ClusterConfig":{"ClusterType":"openshift","ClusterCACert":"MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ","KubeConfig":"/tmp/kubeconfig","KubeAdminPass":"foobar","ClusterAPI":"https://foo.testing:6443","WebConsoleURL":"https://console.foo.testing:6443","ProxyConfig":null},"State":"Running"}`),
+		response: jSon(`{"ClusterConfig":{"ClusterType":"openshift","ClusterCACert":"MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ","KubeConfig":"/tmp/kubeconfig","KubeAdminPass":"foobar","DeveloperPass":"foobar","ClusterAPI":"https://foo.testing:6443","WebConsoleURL":"https://console.foo.testing:6443","ProxyConfig":null},"State":"Running"}`),
 	},
 
 	// webconsoleurl with failure
