@@ -14,8 +14,6 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/network"
 	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/v2/pkg/crc/services"
-	"github.com/crc-org/crc/v2/pkg/crc/systemd"
-	"github.com/crc-org/crc/v2/pkg/crc/systemd/states"
 )
 
 const (
@@ -28,10 +26,6 @@ func init() {
 }
 
 func RunPostStart(serviceConfig services.ServicePostStartConfig) error {
-	if err := setupDnsmasq(serviceConfig); err != nil {
-		return err
-	}
-
 	if err := runPostStartForOS(serviceConfig); err != nil {
 		return err
 	}
@@ -42,23 +36,6 @@ func RunPostStart(serviceConfig services.ServicePostStartConfig) error {
 	}
 	// override resolv.conf file
 	return network.UpdateResolvFileOnInstance(serviceConfig.SSHRunner, resolvFileValues)
-}
-
-func setupDnsmasq(serviceConfig services.ServicePostStartConfig) error {
-	if serviceConfig.NetworkMode == network.UserNetworkingMode {
-		return nil
-	}
-
-	if err := createDnsmasqDNSConfig(serviceConfig); err != nil {
-		return err
-	}
-	sd := systemd.NewInstanceSystemdCommander(serviceConfig.SSHRunner)
-	if state, err := sd.Status(dnsmasqService); err != nil || state != states.Running {
-		if err := sd.Enable(dnsmasqService); err != nil {
-			return err
-		}
-	}
-	return sd.Start(dnsmasqService)
 }
 
 func getResolvFileValues(serviceConfig services.ServicePostStartConfig) (network.ResolvFileValues, error) {

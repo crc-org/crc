@@ -38,7 +38,6 @@ import (
 	libmachinestate "github.com/crc-org/machine/libmachine/state"
 	"github.com/docker/go-units"
 	"github.com/pkg/errors"
-	"golang.org/x/crypto/ssh"
 )
 
 const minimumMemoryForMonitoring = strongunits.MiB(14336)
@@ -117,35 +116,20 @@ func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset, persi
 		return err
 	}
 
-	// with '/dev/[sv]da4' as input, run 'growpart /dev/[sv]da 4'
-	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Growing %s partition", rootPart), "/usr/bin/growpart", rootPart[:len("/dev/.da")], rootPart[len("/dev/.da"):]); err != nil {
-		var exitErr *ssh.ExitError
-		if !errors.As(err, &exitErr) {
-			return err
-		}
-		if exitErr.ExitStatus() != 1 {
-			return err
-		}
-		logging.Debugf("No free space after %s, nothing to do", rootPart)
-		return nil
-	}
-
 	if preset == crcPreset.Microshift {
 		lvFullName := "rhel/root"
 		if err := growLVForMicroshift(sshRunner, lvFullName, rootPart, persistentVolumeSize); err != nil {
 			return err
 		}
+		logging.Infof("Resizing %s filesystem", rootPart)
+		rootFS := "/sysroot"
+		if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Remounting %s read/write", rootFS), "mount -o remount,rw", rootFS); err != nil {
+			return err
+		}
+		if _, _, err = sshRunner.RunPrivileged(fmt.Sprintf("Growing %s filesystem", rootFS), "xfs_growfs", rootFS); err != nil {
+			return err
+		}
 	}
-
-	logging.Infof("Resizing %s filesystem", rootPart)
-	rootFS := "/sysroot"
-	if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Remounting %s read/write", rootFS), "mount -o remount,rw", rootFS); err != nil {
-		return err
-	}
-	if _, _, err = sshRunner.RunPrivileged(fmt.Sprintf("Growing %s filesystem", rootFS), "xfs_growfs", rootFS); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -293,8 +277,10 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if err := validation.BundleMismatchWithPresetMetadata(startConfig.Preset, crcBundleMetadata); err != nil {
 		return nil, err
 	}
+	var firstBoot bool
 
 	if !exists {
+		firstBoot = true
 		telemetry.SetStartType(ctx, telemetry.CreationStartType)
 
 		// Ask early for pull secret if it hasn't been requested yet
@@ -331,6 +317,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			return nil, errors.Wrap(err, "Error creating machine")
 		}
 	} else {
+		firstBoot = false
 		telemetry.SetStartType(ctx, telemetry.StartStartType)
 	}
 
@@ -429,11 +416,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Error updating public key")
 	}
 
-	// Trigger disk resize, this will be a no-op if no disk size change is needed
-	if err := growRootFileSystem(sshRunner, startConfig.Preset, startConfig.PersistentVolumeSize); err != nil {
-		return nil, errors.Wrap(err, "Error updating filesystem size")
-	}
-
 	// Start network time synchronization if `CRC_DEBUG_ENABLE_STOP_NTP` is not set
 	if stopNtp, _ := strconv.ParseBool(os.Getenv("CRC_DEBUG_ENABLE_STOP_NTP")); stopNtp {
 		logging.Info("Stopping network time synchronization in CRC VM")
@@ -444,6 +426,35 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		dateCmd := fmt.Sprintf("date -s '%s'", time.Now().Format(time.UnixDate))
 		if _, _, err := sshRunner.RunPrivileged("Setting clock same as host", dateCmd); err != nil {
 			return nil, errors.Wrap(err, "Failed to set clock to same as host")
+		}
+	}
+
+	// setup the env file for units to detect the network-mode either user or systemd
+	// refactor into a helper `setSystemdEnvFileValues`
+	if client.useVSock() {
+		envs := "CRC_NETWORK_MODE_USER=1" + "\n" +
+			"CRC_DEBUG_TEST=1" + "\n"
+
+		if err := sshRunner.CopyDataPrivileged([]byte(envs), "/etc/systemd/system/crc-env", 0644); err != nil {
+			return nil, errors.Wrap(err, "Unable to create the env file for CRC")
+		}
+	} else {
+		envs := "CRC_NETWORK_MODE_USER=0" + "\n" +
+			"CRC_DEBUG_TEST=1" + "\n"
+
+		if err := sshRunner.CopyDataPrivileged([]byte(envs), "/etc/systemd/system/crc-env", 0644); err != nil {
+			return nil, errors.Wrap(err, "Unable to create the env file for CRC")
+		}
+	}
+
+	// copy the pull secret into /opt/crc/pull-secret in the instance
+	if firstBoot {
+		pullSecret, err := startConfig.PullSecret.Value()
+		if err != nil {
+			return nil, err
+		}
+		if err := sshRunner.CopyDataPrivileged([]byte(pullSecret), "/opt/crc/pull-secret", 0600); err != nil {
+			return nil, errors.Wrap(err, "Unable to send pull-secret to instance")
 		}
 	}
 
@@ -521,11 +532,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			return nil, err
 		}
 
-		if client.useVSock() {
-			if err := ensureRoutesControllerIsRunning(sshRunner, ocConfig); err != nil {
-				return nil, err
-			}
-		}
 		logging.Info("Adding microshift context to kubeconfig...")
 		if err := mergeKubeConfigFile(constants.KubeconfigFilePath); err != nil {
 			return nil, err
@@ -535,6 +541,11 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			ClusterConfig: types.ClusterConfig{ClusterType: startConfig.Preset},
 			Status:        vmState,
 		}, nil
+	}
+
+	// Send the kubeadmin and developer new passwords to the VM
+	if err := cluster.UpdateKubeAdminUserPassword(ctx, sshRunner, startConfig.KubeAdminPassword); err != nil {
+		return nil, errors.Wrap(err, "Failed to update kubeadmin user password")
 	}
 
 	// Check the certs validity inside the vm
@@ -569,30 +580,12 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, err
 	}
 
-	if err := cluster.EnsurePullSecretPresentInTheCluster(ctx, ocConfig, startConfig.PullSecret); err != nil {
-		return nil, errors.Wrap(err, "Failed to update cluster pull secret")
-	}
-
 	if err := cluster.EnsureSSHKeyPresentInTheCluster(ctx, ocConfig, constants.GetPublicKeyPath()); err != nil {
 		return nil, errors.Wrap(err, "Failed to update ssh public key to machine config")
 	}
 
 	if err := cluster.WaitForPullSecretPresentOnInstanceDisk(ctx, sshRunner); err != nil {
 		return nil, errors.Wrap(err, "Failed to update pull secret on the disk")
-	}
-
-	if err := cluster.UpdateKubeAdminUserPassword(ctx, ocConfig, startConfig.KubeAdminPassword); err != nil {
-		return nil, errors.Wrap(err, "Failed to update kubeadmin user password")
-	}
-
-	if err := cluster.EnsureClusterIDIsNotEmpty(ctx, ocConfig); err != nil {
-		return nil, errors.Wrap(err, "Failed to update cluster ID")
-	}
-
-	if client.useVSock() {
-		if err := ensureRoutesControllerIsRunning(sshRunner, ocConfig); err != nil {
-			return nil, err
-		}
 	}
 
 	if client.monitoringEnabled() {
@@ -602,8 +595,10 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 	}
 
-	if err := updateKubeconfig(ctx, ocConfig, sshRunner, vm.bundle.GetKubeConfigPath()); err != nil {
-		return nil, errors.Wrap(err, "Failed to update kubeconfig file")
+	if firstBoot {
+		if err := updateKubeconfig(ctx, ocConfig, sshRunner, vm.bundle.GetKubeConfigPath()); err != nil {
+			return nil, errors.Wrap(err, "Failed to update kubeconfig file")
+		}
 	}
 
 	logging.Infof("Starting %s instance... [waiting for the cluster to stabilize]", startConfig.Preset)
@@ -829,17 +824,6 @@ func logBundleDate(crcBundleMetadata *bundle.CrcBundleInfo) {
 			logging.Debugf("Bundle has been generated %d days ago", int(bundleAgeDays))
 		}
 	}
-}
-
-func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Config) error {
-	// Check if the bundle have `/opt/crc/routes-controller.yaml` file and if it has
-	// then use it to create the resource for the routes controller.
-	_, _, err := sshRunner.Run("ls", "/opt/crc/routes-controller.yaml")
-	if err != nil {
-		return err
-	}
-	_, _, err = ocConfig.RunOcCommand("apply", "-f", "/opt/crc/routes-controller.yaml")
-	return err
 }
 
 func updateKubeconfig(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, kubeconfigFilePath string) error {

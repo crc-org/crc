@@ -1,0 +1,12 @@
+{
+	"version": {
+		"crcVersion": "2.45.0",
+		"gitSha": "7d6313",
+		"openshiftVersion": "@OPENSHIFT_VERSION@"
+	},
+	"links": {
+	    "linux": "https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/crc/2.45.0/crc-linux-amd64.tar.xz",
+	    "darwin": "https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/crc/2.45.0/crc-macos-installer.pkg",
+	    "windows": "https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/crc/2.45.0/crc-windows-installer.zip"
+	}
+}
