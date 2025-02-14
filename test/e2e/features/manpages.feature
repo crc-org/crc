@@ -1,10 +1,57 @@
 @story_manpages
 Feature: Check generation and cleanup of manpages
 
-  @linux @darwin @cleanup
-  Scenario: verify man pages are generated after crc setup and deleted on cleanup
-    When executing single crc setup command succeeds
-    Then accessing crc man pages succeeds
+  @linux @darwin
+  Scenario Outline: verify man pages are accessible after setup
+    Given executing single crc setup command succeeds
+    Then executing "man -P cat 1 <crc-subcommand>" succeeds
 
-    When executing crc cleanup command succeeds
-    Then accessing crc man pages fails
+    @linux @darwin
+    Examples: Man pages to check
+      | crc-subcommand       |
+      | crc                  |
+      | crc-bundle-generate  |
+      | crc-config           |
+      | crc-start            |
+      | crc-bundle           |
+      | crc-console          |
+      | crc-status           |
+      | crc-cleanup          |
+      | crc-delete           |
+      | crc-stop             |
+      | crc-config-get       |
+      | crc-ip               |
+      | crc-version          |
+      | crc-config-set       |
+      | crc-oc-env           |
+      | crc-config-unset     |
+      | crc-podman-env       |
+      | crc-config-view      |
+      | crc-setup            |
+
+    Scenario Outline: verify man pages are NOT accessible after cleanup
+      Given executing crc cleanup command succeeds
+      Then executing "man -P cat 1 <crc-subcommand>" fails
+
+      @linux @darwin
+      Examples: Man pages to check
+        | crc-subcommand       |
+        | crc                  |
+        | crc-bundle-generate  |
+        | crc-config           |
+        | crc-start            |
+        | crc-bundle           |
+        | crc-console          |
+        | crc-status           |
+        | crc-cleanup          |
+        | crc-delete           |
+        | crc-stop             |
+        | crc-config-get       |
+        | crc-ip               |
+        | crc-version          |
+        | crc-config-set       |
+        | crc-oc-env           |
+        | crc-config-unset     |
+        | crc-podman-env       |
+        | crc-config-view      |
+        | crc-setup            |
