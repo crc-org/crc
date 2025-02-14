@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/crc-org/crc/v2/test/extended/crc/cmd"
+	"github.com/crc-org/crc/v2/test/extended/util"
 	. "github.com/onsi/gomega"
 )
 
@@ -21,8 +22,8 @@ type CRCBuilder struct {
 // NewCRCCommand returns a CRCBuilder for running CRC.
 func NewCRCCommand(args ...string) *CRCBuilder {
 	cmd := exec.Command("crc", args...)
-	cmd.Env = append(os.Environ(), "CRC_DISABLE_UPDATE_CHECK=true")
-	cmd.Env = append(os.Environ(), "CRC_LOG_LEVEL=debug")
+	cmd.Env = append(os.Environ(), util.EnvVariable("CRC_DISABLE_UPDATE_CHECK", "true"))
+	cmd.Env = append(cmd.Env, util.EnvVariable("CRC_LOG_LEVEL", "debug"))
 	return &CRCBuilder{
 		cmd: cmd,
 	}
