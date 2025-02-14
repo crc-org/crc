@@ -21,14 +21,17 @@ jobs:
       statuses: write # needed to update commit status (pending/failure/sucess)
       checks: write # as documented in https://github.com/mikepenz/action-junit-report?tab=readme-ov-file#pr-run-permissions
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
-
       - name: Download gh context
         id: download-gh-context-artifact
         uses: actions/download-artifact@v4
         with:
           name: gh-context
+          run-id: ${{inputs.trigger-workflow-run-id}}
+          github-token: ${{ github.token }}
+      - name: Download bundle_version
+        uses: actions/download-artifact@v4
+        with:
+          name: bundle_version
           run-id: ${{inputs.trigger-workflow-run-id}}
           github-token: ${{ github.token }}
 
@@ -52,12 +55,11 @@ jobs:
           status_context="${status_context}/Linux-ARM64"
           echo "status_context=${status_context}" >> "$GITHUB_ENV"
 
-          ocp_version_line=$(cat Makefile | grep "OPENSHIFT_VERSION ?=")
-          ocp_bundle_v=${ocp_version_line##*= } 
+          ocp_bundle_v=$(sed -n '1p' bundle_version.json)
           echo "ocp_bundle_v=${ocp_bundle_v}" >> "$GITHUB_ENV"
           echo "ocp_bundle_v=${ocp_bundle_v}"
-          microshift_version_line=$(cat Makefile | grep "MICROSHIFT_VERSION ?=")
-          microshift_bundle_v=${microshift_version_line##*= } 
+
+          microshift_bundle_v=$(sed -n '2p' bundle_version.json)
           echo "microshift_bundle_v=${microshift_bundle_v}" >> "$GITHUB_ENV"
           echo "microshift_bundle_v=${microshift_bundle_v}"
 
@@ -128,6 +130,7 @@ jobs:
           $ssh_cmd 'mkdir -p /home/crctest/.ssh' < /dev/null
           $ssh_cmd 'cp /root/.ssh/authorized_keys /home/crctest/.ssh/' < /dev/null
           $ssh_cmd 'chown -R crctest:crctest /home/crctest/.ssh/'  < /dev/null
+          $ssh_cmd 'dnf install podman -y'  < /dev/null
 
           # Install CRC on the reserved machine
           echo "Start installing crc on reserved machine"
