@@ -9,7 +9,6 @@ import (
 	machineVf "github.com/crc-org/crc/v2/pkg/drivers/vfkit"
 	"github.com/crc-org/crc/v2/pkg/libmachine"
 	"github.com/crc-org/crc/v2/pkg/libmachine/host"
-	"github.com/crc-org/machine/libmachine/drivers"
 )
 
 func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {
@@ -34,8 +33,4 @@ func updateDriverConfig(host *host.Host, driver *machineVf.Driver) error {
 	}
 
 	return host.UpdateConfig(driverData)
-}
-
-func updateDriverStruct(_ *host.Host, _ *machineVf.Driver) error {
-	return drivers.ErrNotImplemented
 }

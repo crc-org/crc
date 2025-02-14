@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"runtime"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
@@ -62,17 +61,6 @@ func RegisterSettings(cfg *Config) {
 		return validateBundlePath(value, GetPreset(cfg))
 	}
 
-	validateSmbSharedDirs := func(value interface{}) (bool, string) {
-		if !cfg.Get(HostNetworkAccess).AsBool() {
-			return false, fmt.Sprintf("%s can only be used with %s set to 'true'",
-				EnableSharedDirs, HostNetworkAccess)
-		}
-		if cfg.Get(SharedDirPassword).IsDefault {
-			return false, fmt.Sprintf("Please set '%s' first to enable shared directories", SharedDirPassword)
-		}
-		return ValidateBool(value)
-	}
-
 	// Preset setting should be on top because CPUs/Memory config depend on it.
 	cfg.AddSetting(Preset, version.GetDefaultPreset().String(), validatePreset, RequiresDeleteAndSetupMsg,
 		fmt.Sprintf("Virtual machine preset (valid values are: %s)", preset.AllPresets()))
@@ -96,18 +84,8 @@ func RegisterSettings(cfg *Config) {
 		"Enable emergency login for 'core' user. Password is randomly generated. (true/false, default: false)")
 	cfg.AddSetting(PersistentVolumeSize, constants.DefaultPersistentVolumeSize, validatePersistentVolumeSize, SuccessfullyApplied,
 		fmt.Sprintf("Total size in GiB of the persistent volume used by the CSI driver for %s preset (must be greater than or equal to '%d')", preset.Microshift, constants.DefaultPersistentVolumeSize))
-
-	// Shared directories configs
-	if runtime.GOOS == "windows" {
-		cfg.AddSetting(SharedDirPassword, Secret(""), validateString, SuccessfullyApplied,
-			"Password used while using CIFS/SMB file sharing (It is the password for the current logged in user)")
-
-		cfg.AddSetting(EnableSharedDirs, false, validateSmbSharedDirs, SuccessfullyApplied,
-			"Mounts host's user profile folder at '/' in the CRC VM (true/false, default: false)")
-	} else {
-		cfg.AddSetting(EnableSharedDirs, true, ValidateBool, SuccessfullyApplied,
-			"Mounts host's home directory at '/' in the CRC VM (true/false, default: true)")
-	}
+	cfg.AddSetting(EnableSharedDirs, true, ValidateBool, SuccessfullyApplied,
+		"Mounts the host's home directory into the CRC VM (true/false, default: true)")
 
 	if !version.IsInstaller() {
 		cfg.AddSetting(NetworkMode, string(defaultNetworkMode()), network.ValidateMode, network.SuccessfullyAppliedMode,
