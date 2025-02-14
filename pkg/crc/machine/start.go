@@ -100,14 +100,6 @@ func (client *client) updateVMConfig(startConfig types.StartConfig, vm *virtualM
 		}
 	}
 
-	// we want to set the shared dir password on-the-fly to be used
-	// we do not want this value to be persisted to disk
-	if startConfig.SharedDirPassword != "" {
-		if err := setSharedDirPassword(vm.Host, startConfig.SharedDirPassword); err != nil {
-			return fmt.Errorf("Failed to set shared dir password: %w", err)
-		}
-	}
-
 	return nil
 }
 
@@ -214,7 +206,7 @@ func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
 	if err != nil {
 		// the libvirt machine driver uses net/rpc, which wraps errors
 		// in rpc.ServerError, but without using golang 1.13 error
-		// wrapping feature. Moreover this package is marked as
+		// wrapping feature. Moreover, this package is marked as
 		// frozen/not accepting new features, so it's unlikely we'll
 		// ever be able to use errors.Is()
 		if err.Error() == drivers.ErrNotSupported.Error() || err.Error() == drivers.ErrNotImplemented.Error() {
@@ -247,16 +239,6 @@ func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
 		case "virtiofs":
 			if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Mounting %s", mount.Target), "mount", "-o", "context=\"system_u:object_r:container_file_t:s0\"", "-t", mount.Type, mount.Tag, mount.Target); err != nil {
 				return err
-			}
-
-		case "cifs":
-			smbUncPath := fmt.Sprintf("//%s/%s", hostVirtualIP, mount.Tag)
-			if _, _, err := sshRunner.RunPrivate("sudo", "mount", "-o", fmt.Sprintf("rw,uid=core,gid=core,username='%s',password='%s'", mount.Username, mount.Password), "-t", mount.Type, smbUncPath, mount.Target); err != nil {
-				err = &crcerrors.MaskedSecretError{
-					Err:    err,
-					Secret: mount.Password,
-				}
-				return fmt.Errorf("Failed to mount CIFS/SMB share '%s' please make sure configured password is correct: %w", mount.Tag, err)
 			}
 
 		case "9p":
