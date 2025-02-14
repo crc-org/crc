@@ -33,8 +33,3 @@ func updateDriverConfig(host *host.Host, driver *machineLibhvee.Driver) error {
 	}
 	return host.UpdateConfig(driverData)
 }
-
-func updateDriverStruct(host *host.Host, driver *machineLibhvee.Driver) error {
-	host.Driver = driver
-	return nil
-}

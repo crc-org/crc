@@ -10,7 +10,6 @@ import (
 	"github.com/crc-org/crc/v2/pkg/libmachine"
 	"github.com/crc-org/crc/v2/pkg/libmachine/host"
 	machineLibvirt "github.com/crc-org/machine/drivers/libvirt"
-	"github.com/crc-org/machine/libmachine/drivers"
 )
 
 func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {
@@ -44,7 +43,3 @@ func (r *RPCServerDriver) SetConfigRaw(data []byte, _ *struct{}) error {
 	return json.Unmarshal(data, &r.ActualDriver)
 }
 */
-
-func updateDriverStruct(_ *host.Host, _ *machineLibvirt.Driver) error {
-	return drivers.ErrNotImplemented
-}
