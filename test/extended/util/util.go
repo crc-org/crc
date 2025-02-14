@@ -22,6 +22,23 @@ var (
 	CRCHome string
 )
 
+func EnvVariable(key, value string) string {
+	var prefix = ""
+	var suffix = ""
+	if runtime.GOOS == "windows" {
+		prefix = "$env:"
+		suffix = ";"
+		switch value {
+		case "true":
+			value = "$true"
+		case "false":
+			value = "$false"
+		default:
+		}
+	}
+	return fmt.Sprintf("%s%s=%s%s", prefix, key, value, suffix)
+}
+
 func CopyFilesToTestDir() error {
 	cwd, err := os.Getwd()
 	if err != nil {
