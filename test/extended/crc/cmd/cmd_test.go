@@ -8,7 +8,8 @@ import (
 
 func TestCommand(t *testing.T) {
 	assert.Equal(t, "crc setup", Command{
-		command: "setup",
+		command:     "setup",
+		updateCheck: true,
 	}.ToString())
 	assert.Equal(t, "CRC_DEBUG_ENABLE_STOP_NTP=true crc start -b bundle", Command{
 		command:     "start -b bundle",
@@ -16,7 +17,8 @@ func TestCommand(t *testing.T) {
 		updateCheck: true,
 	}.ToString())
 	assert.Equal(t, "CRC_DISABLE_UPDATE_CHECK=true CRC_DEBUG_ENABLE_STOP_NTP=true crc start -b bundle", Command{
-		command:    "start -b bundle",
-		disableNTP: true,
+		command:     "start -b bundle",
+		disableNTP:  true,
+		updateCheck: false,
 	}.ToString())
 }
