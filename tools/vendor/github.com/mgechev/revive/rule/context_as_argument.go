@@ -4,37 +4,49 @@ import (
 	"fmt"
 	"go/ast"
 	"strings"
-	"sync"
 
 	"github.com/mgechev/revive/lint"
 )
 
-// ContextAsArgumentRule lints given else constructs.
+// ContextAsArgumentRule suggests that `context.Context` should be the first argument of a function.
 type ContextAsArgumentRule struct {
-	allowTypesLUT map[string]struct{}
-
-	configureOnce sync.Once
+	allowTypes map[string]struct{}
 }
 
 // Apply applies the rule to given file.
-func (r *ContextAsArgumentRule) Apply(file *lint.File, args lint.Arguments) []lint.Failure {
-	r.configureOnce.Do(func() { r.configure(args) })
-
+func (r *ContextAsArgumentRule) Apply(file *lint.File, _ lint.Arguments) []lint.Failure {
 	var failures []lint.Failure
-	walker := lintContextArguments{
-		allowTypesLUT: r.allowTypesLUT,
-		onFailure: func(failure lint.Failure) {
-			failures = append(failures, failure)
-		},
+	for _, decl := range file.AST.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || len(fn.Type.Params.List) <= 1 {
+			continue // not a function or a function with less than 2 parameters
+		}
+
+		fnArgs := fn.Type.Params.List
+
+		// A context.Context should be the first parameter of a function.
+		// Flag any that show up after the first.
+		isCtxStillAllowed := true
+		for _, arg := range fnArgs {
+			argIsCtx := isPkgDot(arg.Type, "context", "Context")
+			if argIsCtx && !isCtxStillAllowed {
+				failures = append(failures, lint.Failure{
+					Node:       arg,
+					Category:   lint.FailureCategoryArgOrder,
+					Failure:    "context.Context should be the first parameter of a function",
+					Confidence: 0.9,
+				})
+
+				break // only flag one
+			}
+
+			typeName := gofmt(arg.Type)
+			// a parameter of type context.Context is still allowed if the current arg type is in the allow types LookUpTable
+			_, isCtxStillAllowed = r.allowTypes[typeName]
+		}
 	}
 
-	ast.Walk(walker, file.AST)
-
 	return failures
-}
-
-func (r *ContextAsArgumentRule) configure(arguments lint.Arguments) {
-	r.allowTypesLUT = getAllowTypesFromArguments(arguments)
 }
 
 // Name returns the rule name.
@@ -42,59 +54,35 @@ func (*ContextAsArgumentRule) Name() string {
 	return "context-as-argument"
 }
 
-type lintContextArguments struct {
-	allowTypesLUT map[string]struct{}
-	onFailure     func(lint.Failure)
+// Configure validates the rule configuration, and configures the rule accordingly.
+//
+// Configuration implements the [lint.ConfigurableRule] interface.
+func (r *ContextAsArgumentRule) Configure(arguments lint.Arguments) error {
+	types, err := r.getAllowTypesFromArguments(arguments)
+	if err != nil {
+		return err
+	}
+	r.allowTypes = types
+	return nil
 }
 
-func (w lintContextArguments) Visit(n ast.Node) ast.Visitor {
-	fn, ok := n.(*ast.FuncDecl)
-	if !ok || len(fn.Type.Params.List) <= 1 {
-		return w
-	}
-
-	fnArgs := fn.Type.Params.List
-
-	// A context.Context should be the first parameter of a function.
-	// Flag any that show up after the first.
-	isCtxStillAllowed := true
-	for _, arg := range fnArgs {
-		argIsCtx := isPkgDot(arg.Type, "context", "Context")
-		if argIsCtx && !isCtxStillAllowed {
-			w.onFailure(lint.Failure{
-				Node:       arg,
-				Category:   "arg-order",
-				Failure:    "context.Context should be the first parameter of a function",
-				Confidence: 0.9,
-			})
-			break // only flag one
-		}
-
-		typeName := gofmt(arg.Type)
-		// a parameter of type context.Context is still allowed if the current arg type is in the LUT
-		_, isCtxStillAllowed = w.allowTypesLUT[typeName]
-	}
-
-	return nil // avoid visiting the function body
-}
-
-func getAllowTypesFromArguments(args lint.Arguments) map[string]struct{} {
+func (*ContextAsArgumentRule) getAllowTypesFromArguments(args lint.Arguments) (map[string]struct{}, error) {
 	allowTypesBefore := []string{}
 	if len(args) >= 1 {
 		argKV, ok := args[0].(map[string]any)
 		if !ok {
-			panic(fmt.Sprintf("Invalid argument to the context-as-argument rule. Expecting a k,v map, got %T", args[0]))
+			return nil, fmt.Errorf("invalid argument to the context-as-argument rule. Expecting a k,v map, got %T", args[0])
 		}
 		for k, v := range argKV {
 			switch k {
 			case "allowTypesBefore":
 				typesBefore, ok := v.(string)
 				if !ok {
-					panic(fmt.Sprintf("Invalid argument to the context-as-argument.allowTypesBefore rule. Expecting a string, got %T", v))
+					return nil, fmt.Errorf("invalid argument to the context-as-argument.allowTypesBefore rule. Expecting a string, got %T", v)
 				}
 				allowTypesBefore = append(allowTypesBefore, strings.Split(typesBefore, ",")...)
 			default:
-				panic(fmt.Sprintf("Invalid argument to the context-as-argument rule. Unrecognized key %s", k))
+				return nil, fmt.Errorf("invalid argument to the context-as-argument rule. Unrecognized key %s", k)
 			}
 		}
 	}
@@ -105,5 +93,5 @@ func getAllowTypesFromArguments(args lint.Arguments) map[string]struct{} {
 	}
 
 	result["context.Context"] = struct{}{} // context.Context is always allowed before another context.Context
-	return result
+	return result, nil
 }

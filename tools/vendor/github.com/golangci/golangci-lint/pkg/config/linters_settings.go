@@ -126,11 +126,16 @@ var defaultLintersSettings = LintersSettings{
 		AllowUnused:        false,
 	},
 	PerfSprint: PerfSprintSettings{
+		IntegerFormat: true,
 		IntConversion: true,
+		ErrorFormat:   true,
 		ErrError:      false,
 		ErrorF:        true,
+		StringFormat:  true,
 		SprintF1:      true,
 		StrConcat:     true,
+		BoolFormat:    true,
+		HexFormat:     true,
 	},
 	Prealloc: PreallocSettings{
 		Simple:     true,
@@ -183,7 +188,7 @@ var defaultLintersSettings = LintersSettings{
 		ContextTodo:       true,
 		OSChdir:           true,
 		OSMkdirTemp:       true,
-		OSSetenv:          false,
+		OSSetenv:          true,
 		OSTempDir:         false,
 		OSCreateTemp:      true,
 	},
@@ -223,6 +228,7 @@ type LintersSettings struct {
 	ErrorLint       ErrorLintSettings
 	Exhaustive      ExhaustiveSettings
 	Exhaustruct     ExhaustructSettings
+	Fatcontext      FatcontextSettings
 	Forbidigo       ForbidigoSettings
 	Funlen          FunlenSettings
 	Gci             GciSettings
@@ -428,6 +434,10 @@ type ExhaustiveSettings struct {
 type ExhaustructSettings struct {
 	Include []string `mapstructure:"include"`
 	Exclude []string `mapstructure:"exclude"`
+}
+
+type FatcontextSettings struct {
+	CheckStructPointers bool `mapstructure:"check-struct-pointers"`
 }
 
 type ForbidigoSettings struct {
@@ -786,11 +796,19 @@ type ParallelTestSettings struct {
 }
 
 type PerfSprintSettings struct {
+	IntegerFormat bool `mapstructure:"integer-format"`
 	IntConversion bool `mapstructure:"int-conversion"`
-	ErrError      bool `mapstructure:"err-error"`
-	ErrorF        bool `mapstructure:"errorf"`
-	SprintF1      bool `mapstructure:"sprintf1"`
-	StrConcat     bool `mapstructure:"strconcat"`
+
+	ErrorFormat bool `mapstructure:"error-format"`
+	ErrError    bool `mapstructure:"err-error"`
+	ErrorF      bool `mapstructure:"errorf"`
+
+	StringFormat bool `mapstructure:"string-format"`
+	SprintF1     bool `mapstructure:"sprintf1"`
+	StrConcat    bool `mapstructure:"strconcat"`
+
+	BoolFormat bool `mapstructure:"bool-format"`
+	HexFormat  bool `mapstructure:"hex-format"`
 }
 
 type PreallocSettings struct {

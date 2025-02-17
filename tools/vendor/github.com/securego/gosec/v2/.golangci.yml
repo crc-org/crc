@@ -23,6 +23,7 @@ linters:
     - nolintlint
     - revive
     - staticcheck
+    - testifylint
     - typecheck
     - unconvert
     - unparam
@@ -40,10 +41,14 @@ linters-settings:
      - all
      - '-SA1019'
 
+  testifylint:
+    enable-all: true
+
   revive:
     rules:
       - name: dot-imports
         disabled: true
+      - name: redefines-builtin-id
 
 run:
   timeout: 5m

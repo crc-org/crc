@@ -9,7 +9,7 @@ import (
 	"github.com/mgechev/revive/lint"
 )
 
-// ImportShadowingRule lints given else constructs.
+// ImportShadowingRule spots identifiers that shadow an import.
 type ImportShadowingRule struct{}
 
 // Apply applies the rule to given file.
@@ -28,7 +28,7 @@ func (*ImportShadowingRule) Apply(file *lint.File, _ lint.Arguments) []lint.Fail
 		onFailure: func(failure lint.Failure) {
 			failures = append(failures, failure)
 		},
-		alreadySeen: map[*ast.Object]struct{}{},
+		alreadySeen: map[*ast.Object]struct{}{}, // TODO: ast.Object is deprecated
 		skipIdents:  map[*ast.Ident]struct{}{},
 	}
 
@@ -62,7 +62,7 @@ type importShadowing struct {
 	packageNameIdent *ast.Ident
 	importNames      map[string]struct{}
 	onFailure        func(lint.Failure)
-	alreadySeen      map[*ast.Object]struct{}
+	alreadySeen      map[*ast.Object]struct{} // TODO: ast.Object is deprecated
 	skipIdents       map[*ast.Ident]struct{}
 }
 
@@ -103,7 +103,7 @@ func (w importShadowing) Visit(n ast.Node) ast.Visitor {
 			w.onFailure(lint.Failure{
 				Confidence: 1,
 				Node:       n,
-				Category:   "naming",
+				Category:   lint.FailureCategoryNaming,
 				Failure:    fmt.Sprintf("The name '%s' shadows an import name", id),
 			})
 

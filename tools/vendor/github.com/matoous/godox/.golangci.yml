@@ -1,10 +1,4 @@
 linters-settings:
-  depguard:
-    list-type: blacklist
-    include-go-root: true
-    packages:
-      # we are using "github.com/json-iterator/go" instead of json encoder from stdlib
-      - "encoding/json"
   dupl:
     threshold: 100
   gocritic:
@@ -19,10 +13,9 @@ linters-settings:
       - unnamedResult  # it is experimental currently and doesn't handle typed channels correctly
   gocyclo:
     min-complexity: 14 # TODO go lower
-  golint:
-    min-confidence: 0
   govet:
-    check-shadowing: true
+    enable:
+      - shadow
   goconst:
     min-len: 2
     min-occurrences: 3
@@ -30,31 +23,38 @@ linters-settings:
     local-prefixes: gitlab.skypicker.com/search-team/gonuts/conveyance-store
   lll:
     line-length: 140
-  maligned:
-    suggest-new: true
   misspell:
     locale: US
 
 linters:
   enable-all: true
   disable:
+    - depguard
     # prealloc is not recommended by `golangci-lint` developers.
     - prealloc
     - gochecknoglobals
 
+    # deprecated
+    - maligned
+    - exhaustivestruct
+    - nosnakecase
+    - scopelint
+    - structcheck
+    - ifshort
+    - varcheck
+    - deadcode
+    - golint
+    - interfacer
+
 issues:
+  exclude-dirs:
+    - "fixtures"
   exclude-rules:
     - path: _test\.go
       linters:
+        - exhaustruct
         - goconst
         - dupl
-
-    - path: fixtures
-      linters:
-        - gocritic
-        - varcheck
-        - deadcode
-        - unused
 
 run:
   modules-download-mode: readonly
@@ -62,7 +62,8 @@ run:
 # output configuration options
 output:
   # colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"
-  format: tab
+  formats:
+    - format: tab
 
   # print lines of code with issue, default is true
   print-issued-lines: true

@@ -7,7 +7,7 @@ import (
 	"github.com/mgechev/revive/lint"
 )
 
-// ModifiesParamRule lints given else constructs.
+// ModifiesParamRule warns on assignments to function parameters.
 type ModifiesParamRule struct{}
 
 // Apply applies the rule to given file.
@@ -73,7 +73,7 @@ func checkParam(id *ast.Ident, w *lintModifiesParamRule) {
 		w.onFailure(lint.Failure{
 			Confidence: 0.5, // confidence is low because of shadow variables
 			Node:       id,
-			Category:   "bad practice",
+			Category:   lint.FailureCategoryBadPractice,
 			Failure:    fmt.Sprintf("parameter '%s' seems to be modified", id),
 		})
 	}

@@ -8,7 +8,7 @@ import (
 	"github.com/mgechev/revive/lint"
 )
 
-// IncrementDecrementRule lints given else constructs.
+// IncrementDecrementRule lints `i += 1` and `i -= 1` constructs.
 type IncrementDecrementRule struct{}
 
 // Apply applies the rule to given file.
@@ -61,7 +61,7 @@ func (w lintIncrementDecrement) Visit(n ast.Node) ast.Visitor {
 	w.onFailure(lint.Failure{
 		Confidence: 0.8,
 		Node:       as,
-		Category:   "unary-op",
+		Category:   lint.FailureCategoryUnaryOp,
 		Failure:    fmt.Sprintf("should replace %s with %s%s", w.file.Render(as), w.file.Render(as.Lhs[0]), suffix),
 	})
 	return w

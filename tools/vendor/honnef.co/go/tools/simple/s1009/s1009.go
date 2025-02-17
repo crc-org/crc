@@ -41,6 +41,8 @@ var Analyzer = SCAnalyzer.Analyzer
 // run checks for the following redundant nil-checks:
 //
 //	if x == nil || len(x) == 0 {}
+//	if x == nil || len(x) < N {} (where N != 0)
+//	if x == nil || len(x) <= N {}
 //	if x != nil && len(x) != 0 {}
 //	if x != nil && len(x) == N {} (where N != 0)
 //	if x != nil && len(x) > N {}
@@ -99,9 +101,6 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		if !ok {
 			return
 		}
-		if eqNil && y.Op != token.EQL { // must be len(xx) *==* 0
-			return
-		}
 		yx, ok := y.X.(*ast.CallExpr)
 		if !ok {
 			return
@@ -122,15 +121,31 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		if eqNil && !code.IsIntegerLiteral(pass, y.Y, constant.MakeInt64(0)) { // must be len(x) == *0*
+		isConst, isZero := isConstZero(y.Y)
+		if !isConst {
 			return
 		}
 
-		if !eqNil {
-			isConst, isZero := isConstZero(y.Y)
-			if !isConst {
+		if eqNil {
+			switch y.Op {
+			case token.EQL:
+				// avoid false positive for "xx == nil || len(xx) == <non-zero>"
+				if !isZero {
+					return
+				}
+			case token.LEQ:
+				// ok
+			case token.LSS:
+				// avoid false positive for "xx == nil || len(xx) < 0"
+				if isZero {
+					return
+				}
+			default:
 				return
 			}
+		}
+
+		if !eqNil {
 			switch y.Op {
 			case token.EQL:
 				// avoid false positive for "xx != nil && len(xx) == 0"
@@ -157,13 +172,17 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		// finally check that xx type is one of array, slice, map or chan
 		// this is to prevent false positive in case if xx is a pointer to an array
 		typ := pass.TypesInfo.TypeOf(xx)
+		var nilType string
 		ok = typeutil.All(typ, func(term *types.Term) bool {
 			switch term.Type().Underlying().(type) {
 			case *types.Slice:
+				nilType = "nil slices"
 				return true
 			case *types.Map:
+				nilType = "nil maps"
 				return true
 			case *types.Chan:
+				nilType = "nil channels"
 				return true
 			case *types.Pointer:
 				return false
@@ -178,7 +197,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		report.Report(pass, expr, fmt.Sprintf("should omit nil check; len() for %s is defined as zero", typ), report.FilterGenerated())
+		report.Report(pass, expr, fmt.Sprintf("should omit nil check; len() for %s is defined as zero", nilType), report.FilterGenerated())
 	}
 	code.Preorder(pass, fn, (*ast.BinaryExpr)(nil))
 	return nil, nil

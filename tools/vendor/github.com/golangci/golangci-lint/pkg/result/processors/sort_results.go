@@ -10,11 +10,6 @@ import (
 	"github.com/golangci/golangci-lint/pkg/result"
 )
 
-// Base propose of this functionality to sort results (issues)
-// produced by various linters by analyzing code. We're achieving this
-// by sorting results.Issues using processor step, and chain based
-// rules that can compare different properties of the Issues struct.
-
 const (
 	orderNameFile     = "file"
 	orderNameLinter   = "linter"
@@ -31,13 +26,17 @@ var _ Processor = (*SortResults)(nil)
 
 type issueComparator func(a, b *result.Issue) int
 
+// SortResults sorts reports based on criteria:
+//   - file names, line numbers, positions
+//   - linter names
+//   - severity names
 type SortResults struct {
 	cmps map[string][]issueComparator
 
 	cfg *config.Output
 }
 
-func NewSortResults(cfg *config.Config) *SortResults {
+func NewSortResults(cfg *config.Output) *SortResults {
 	return &SortResults{
 		cmps: map[string][]issueComparator{
 			// For sorting we are comparing (in next order):
@@ -48,7 +47,7 @@ func NewSortResults(cfg *config.Config) *SortResults {
 			// For sorting we are comparing: severity
 			orderNameSeverity: {bySeverity},
 		},
-		cfg: &cfg.Output,
+		cfg: cfg,
 	}
 }
 

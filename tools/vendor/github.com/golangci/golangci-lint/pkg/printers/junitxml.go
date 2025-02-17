@@ -4,55 +4,30 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"sort"
+	"maps"
+	"slices"
 	"strings"
-
-	"golang.org/x/exp/maps"
 
 	"github.com/golangci/golangci-lint/pkg/result"
 )
 
-type testSuitesXML struct {
-	XMLName    xml.Name `xml:"testsuites"`
-	TestSuites []testSuiteXML
-}
-
-type testSuiteXML struct {
-	XMLName   xml.Name      `xml:"testsuite"`
-	Suite     string        `xml:"name,attr"`
-	Tests     int           `xml:"tests,attr"`
-	Errors    int           `xml:"errors,attr"`
-	Failures  int           `xml:"failures,attr"`
-	TestCases []testCaseXML `xml:"testcase"`
-}
-
-type testCaseXML struct {
-	Name      string     `xml:"name,attr"`
-	ClassName string     `xml:"classname,attr"`
-	Failure   failureXML `xml:"failure"`
-	File      string     `xml:"file,attr,omitempty"`
-	Line      int        `xml:"line,attr,omitempty"`
-}
-
-type failureXML struct {
-	Message string `xml:"message,attr"`
-	Type    string `xml:"type,attr"`
-	Content string `xml:",cdata"`
-}
-
-type JunitXML struct {
+// JUnitXML prints issues in the JUnit XML format.
+// There is no official specification for the JUnit XML file format,
+// and various tools generate and support different flavors of this format.
+// https://github.com/testmoapp/junitxml
+type JUnitXML struct {
 	extended bool
 	w        io.Writer
 }
 
-func NewJunitXML(extended bool, w io.Writer) *JunitXML {
-	return &JunitXML{
+func NewJUnitXML(w io.Writer, extended bool) *JUnitXML {
+	return &JUnitXML{
 		extended: extended,
 		w:        w,
 	}
 }
 
-func (p JunitXML) Print(issues []result.Issue) error {
+func (p JUnitXML) Print(issues []result.Issue) error {
 	suites := make(map[string]testSuiteXML) // use a map to group by file
 
 	for ind := range issues {
@@ -84,10 +59,9 @@ func (p JunitXML) Print(issues []result.Issue) error {
 	}
 
 	var res testSuitesXML
-	res.TestSuites = maps.Values(suites)
 
-	sort.Slice(res.TestSuites, func(i, j int) bool {
-		return res.TestSuites[i].Suite < res.TestSuites[j].Suite
+	res.TestSuites = slices.SortedFunc(maps.Values(suites), func(a testSuiteXML, b testSuiteXML) int {
+		return strings.Compare(a.Suite, b.Suite)
 	})
 
 	enc := xml.NewEncoder(p.w)
@@ -96,4 +70,32 @@ func (p JunitXML) Print(issues []result.Issue) error {
 		return err
 	}
 	return nil
+}
+
+type testSuitesXML struct {
+	XMLName    xml.Name `xml:"testsuites"`
+	TestSuites []testSuiteXML
+}
+
+type testSuiteXML struct {
+	XMLName   xml.Name      `xml:"testsuite"`
+	Suite     string        `xml:"name,attr"`
+	Tests     int           `xml:"tests,attr"`
+	Errors    int           `xml:"errors,attr"`
+	Failures  int           `xml:"failures,attr"`
+	TestCases []testCaseXML `xml:"testcase"`
+}
+
+type testCaseXML struct {
+	Name      string     `xml:"name,attr"`
+	ClassName string     `xml:"classname,attr"`
+	Failure   failureXML `xml:"failure"`
+	File      string     `xml:"file,attr,omitempty"`
+	Line      int        `xml:"line,attr,omitempty"`
+}
+
+type failureXML struct {
+	Message string `xml:"message,attr"`
+	Type    string `xml:"type,attr"`
+	Content string `xml:",cdata"`
 }

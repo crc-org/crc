@@ -1,5 +1,28 @@
-run:
-  timeout: 2m
+linters:
+  enable-all: true
+  disable:
+    - exportloopref # deprecated
+    - cyclop # duplicate of gocyclo
+    - sqlclosecheck # not relevant (SQL)
+    - rowserrcheck # not relevant (SQL)
+    - dupl
+    - lll
+    - nestif
+    - mnd
+    - err113
+    - nlreturn
+    - wsl
+    - exhaustive
+    - exhaustruct
+    - tparallel
+    - testpackage
+    - paralleltest
+    - forcetypeassert
+    - varnamelen
+    - prealloc # false-positives
+    - nonamedreturns
+    - nilerr
+    - depguard
 
 linters-settings:
   govet:
@@ -23,44 +46,9 @@ linters-settings:
   godox:
     keywords:
       - FIXME
-
-linters:
-  enable-all: true
-  disable:
-    - deadcode # deprecated
-    - exhaustivestruct # deprecated
-    - golint # deprecated
-    - ifshort # deprecated
-    - interfacer # deprecated
-    - maligned # deprecated
-    - nosnakecase # deprecated
-    - scopelint # deprecated
-    - structcheck # deprecated
-    - varcheck # deprecated
-    - cyclop # duplicate of gocyclo
-    - sqlclosecheck # not relevant (SQL)
-    - rowserrcheck # not relevant (SQL)
-    - execinquery # not relevant (SQL)
-    - dupl
-    - lll
-    - nestif
-    - gomnd
-    - goerr113
-    - nlreturn
-    - wsl
-    - exhaustive
-    - exhaustruct
-    - tparallel
-    - testpackage
-    - paralleltest
-    - ifshort
-    - forcetypeassert
-    - varnamelen
-    - prealloc # false-positives
-    - nosnakecase
-    - nonamedreturns
-    - nilerr
-    - depguard
+  gosec:
+    excludes:
+      - G115 # integer overflow conversion
 
 issues:
   exclude-use-default: false
@@ -78,3 +66,6 @@ issues:
     - path: cmd/revgrep/main.go
       linters:
         - forbidigo
+
+run:
+  timeout: 2m

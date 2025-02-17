@@ -3,33 +3,57 @@ package analyzer
 import (
 	"bytes"
 	"errors"
+	"flag"
 	"fmt"
 	"go/ast"
 	"go/printer"
 	"go/token"
-	"go/types"
+	"slices"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-var Analyzer = &analysis.Analyzer{
-	Name:     "fatcontext",
-	Doc:      "detects nested contexts in loops and function literals",
-	Run:      run,
-	Requires: []*analysis.Analyzer{inspect.Analyzer},
+const FlagCheckStructPointers = "check-struct-pointers"
+
+func NewAnalyzer() *analysis.Analyzer {
+	r := &runner{}
+
+	flags := flag.NewFlagSet("fatcontext", flag.ExitOnError)
+	flags.BoolVar(&r.DetectInStructPointers, FlagCheckStructPointers, false,
+		"set to true to detect potential fat contexts in struct pointers")
+
+	return &analysis.Analyzer{
+		Name:     "fatcontext",
+		Doc:      "detects nested contexts in loops and function literals",
+		Run:      r.run,
+		Flags:    *flags,
+		Requires: []*analysis.Analyzer{inspect.Analyzer},
+	}
 }
 
 var errUnknown = errors.New("unknown node type")
 
-func run(pass *analysis.Pass) (interface{}, error) {
+const (
+	categoryInLoop          = "nested context in loop"
+	categoryInFuncLit       = "nested context in function literal"
+	categoryInStructPointer = "potential nested context in struct pointer"
+	categoryUnsupported     = "unsupported nested context type"
+)
+
+type runner struct {
+	DetectInStructPointers bool
+}
+
+func (r *runner) run(pass *analysis.Pass) (interface{}, error) {
 	inspctr := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
 	nodeFilter := []ast.Node{
 		(*ast.ForStmt)(nil),
 		(*ast.RangeStmt)(nil),
 		(*ast.FuncLit)(nil),
+		(*ast.FuncDecl)(nil),
 	}
 
 	inspctr.Preorder(nodeFilter, func(node ast.Node) {
@@ -38,36 +62,26 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
+		if body == nil {
+			return
+		}
+
 		assignStmt := findNestedContext(pass, node, body.List)
 		if assignStmt == nil {
 			return
 		}
 
-		suggestedStmt := ast.AssignStmt{
-			Lhs:    assignStmt.Lhs,
-			TokPos: assignStmt.TokPos,
-			Tok:    token.DEFINE,
-			Rhs:    assignStmt.Rhs,
-		}
-		suggested, err := render(pass.Fset, &suggestedStmt)
+		category := getCategory(pass, node, assignStmt)
 
-		var fixes []analysis.SuggestedFix
-		if err == nil {
-			fixes = append(fixes, analysis.SuggestedFix{
-				Message: "replace `=` with `:=`",
-				TextEdits: []analysis.TextEdit{
-					{
-						Pos:     assignStmt.Pos(),
-						End:     assignStmt.End(),
-						NewText: suggested,
-					},
-				},
-			})
+		if r.shouldIgnoreReport(category) {
+			return
 		}
+
+		fixes := r.getSuggestedFixes(pass, assignStmt, category)
 
 		pass.Report(analysis.Diagnostic{
 			Pos:            assignStmt.Pos(),
-			Message:        getReportMessage(node),
+			Message:        category,
 			SuggestedFixes: fixes,
 		})
 	})
@@ -75,31 +89,69 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	return nil, nil
 }
 
-func getReportMessage(node ast.Node) string {
+func (r *runner) shouldIgnoreReport(category string) bool {
+	return category == categoryInStructPointer && !r.DetectInStructPointers
+}
+
+func (r *runner) getSuggestedFixes(pass *analysis.Pass, assignStmt *ast.AssignStmt, category string) []analysis.SuggestedFix {
+	switch category {
+	case categoryInStructPointer, categoryUnsupported:
+		return nil
+	}
+
+	suggestedStmt := ast.AssignStmt{
+		Lhs:    assignStmt.Lhs,
+		TokPos: assignStmt.TokPos,
+		Tok:    token.DEFINE,
+		Rhs:    assignStmt.Rhs,
+	}
+	suggested, err := render(pass.Fset, &suggestedStmt)
+
+	var fixes []analysis.SuggestedFix
+	if err == nil {
+		fixes = append(fixes, analysis.SuggestedFix{
+			Message: "replace `=` with `:=`",
+			TextEdits: []analysis.TextEdit{
+				{
+					Pos:     assignStmt.Pos(),
+					End:     assignStmt.End(),
+					NewText: suggested,
+				},
+			},
+		})
+	}
+
+	return fixes
+}
+
+func getCategory(pass *analysis.Pass, node ast.Node, assignStmt *ast.AssignStmt) string {
 	switch node.(type) {
 	case *ast.ForStmt, *ast.RangeStmt:
-		return "nested context in loop"
-	case *ast.FuncLit:
-		return "nested context in function literal"
+		return categoryInLoop
+	}
+
+	if isPointer(pass, assignStmt.Lhs[0]) {
+		return categoryInStructPointer
+	}
+
+	switch node.(type) {
+	case *ast.FuncLit, *ast.FuncDecl:
+		return categoryInFuncLit
 	default:
-		return "unsupported nested context type"
+		return categoryUnsupported
 	}
 }
 
 func getBody(node ast.Node) (*ast.BlockStmt, error) {
-	forStmt, ok := node.(*ast.ForStmt)
-	if ok {
-		return forStmt.Body, nil
-	}
-
-	rangeStmt, ok := node.(*ast.RangeStmt)
-	if ok {
-		return rangeStmt.Body, nil
-	}
-
-	funcLit, ok := node.(*ast.FuncLit)
-	if ok {
-		return funcLit.Body, nil
+	switch typedNode := node.(type) {
+	case *ast.ForStmt:
+		return typedNode.Body, nil
+	case *ast.RangeStmt:
+		return typedNode.Body, nil
+	case *ast.FuncLit:
+		return typedNode.Body, nil
+	case *ast.FuncDecl:
+		return typedNode.Body, nil
 	}
 
 	return nil, errUnknown
@@ -108,44 +160,29 @@ func getBody(node ast.Node) (*ast.BlockStmt, error) {
 func findNestedContext(pass *analysis.Pass, node ast.Node, stmts []ast.Stmt) *ast.AssignStmt {
 	for _, stmt := range stmts {
 		// Recurse if necessary
-		if inner, ok := stmt.(*ast.BlockStmt); ok {
-			found := findNestedContext(pass, node, inner.List)
-			if found != nil {
+		switch typedStmt := stmt.(type) {
+		case *ast.BlockStmt:
+			if found := findNestedContext(pass, node, typedStmt.List); found != nil {
 				return found
 			}
-		}
-
-		if inner, ok := stmt.(*ast.IfStmt); ok {
-			found := findNestedContext(pass, node, inner.Body.List)
-			if found != nil {
+		case *ast.IfStmt:
+			if found := findNestedContext(pass, node, typedStmt.Body.List); found != nil {
 				return found
 			}
-		}
-
-		if inner, ok := stmt.(*ast.SwitchStmt); ok {
-			found := findNestedContext(pass, node, inner.Body.List)
-			if found != nil {
+		case *ast.SwitchStmt:
+			if found := findNestedContext(pass, node, typedStmt.Body.List); found != nil {
 				return found
 			}
-		}
-
-		if inner, ok := stmt.(*ast.CaseClause); ok {
-			found := findNestedContext(pass, node, inner.Body)
-			if found != nil {
+		case *ast.CaseClause:
+			if found := findNestedContext(pass, node, typedStmt.Body); found != nil {
 				return found
 			}
-		}
-
-		if inner, ok := stmt.(*ast.SelectStmt); ok {
-			found := findNestedContext(pass, node, inner.Body.List)
-			if found != nil {
+		case *ast.SelectStmt:
+			if found := findNestedContext(pass, node, typedStmt.Body.List); found != nil {
 				return found
 			}
-		}
-
-		if inner, ok := stmt.(*ast.CommClause); ok {
-			found := findNestedContext(pass, node, inner.Body)
-			if found != nil {
+		case *ast.CommClause:
+			if found := findNestedContext(pass, node, typedStmt.Body); found != nil {
 				return found
 			}
 		}
@@ -169,13 +206,18 @@ func findNestedContext(pass *analysis.Pass, node ast.Node, stmts []ast.Stmt) *as
 			continue
 		}
 
+		// Ignore [context.Background] & [context.TODO].
+		if isContextFunction(assignStmt.Rhs[0], "Background", "TODO") {
+			continue
+		}
+
+		if isPointer(pass, assignStmt.Lhs[0]) {
+			return assignStmt
+		}
+
 		// allow assignment to non-pointer children of values defined within the loop
-		if lhs := getRootIdent(pass, assignStmt.Lhs[0]); lhs != nil {
-			if obj := pass.TypesInfo.ObjectOf(lhs); obj != nil {
-				if checkObjectScopeWithinNode(obj.Parent(), node) {
-					continue // definition is within the loop
-				}
-			}
+		if isWithinLoop(assignStmt.Lhs[0], node, pass) {
+			continue
 		}
 
 		return assignStmt
@@ -184,16 +226,51 @@ func findNestedContext(pass *analysis.Pass, node ast.Node, stmts []ast.Stmt) *as
 	return nil
 }
 
-func checkObjectScopeWithinNode(scope *types.Scope, node ast.Node) bool {
+// render returns the pretty-print of the given node
+func render(fset *token.FileSet, x interface{}) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := printer.Fprint(&buf, fset, x); err != nil {
+		return nil, fmt.Errorf("printing node: %w", err)
+	}
+	return buf.Bytes(), nil
+}
+
+func isContextFunction(exp ast.Expr, fnName ...string) bool {
+	call, ok := exp.(*ast.CallExpr)
+	if !ok {
+		return false
+	}
+
+	selector, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok {
+		return false
+	}
+
+	ident, ok := selector.X.(*ast.Ident)
+	if !ok {
+		return false
+	}
+
+	return ident.Name == "context" && slices.Contains(fnName, selector.Sel.Name)
+}
+
+func isWithinLoop(exp ast.Expr, node ast.Node, pass *analysis.Pass) bool {
+	lhs := getRootIdent(pass, exp)
+	if lhs == nil {
+		return false
+	}
+
+	obj := pass.TypesInfo.ObjectOf(lhs)
+	if obj == nil {
+		return false
+	}
+
+	scope := obj.Parent()
 	if scope == nil {
 		return false
 	}
 
-	if scope.Pos() >= node.Pos() && scope.End() <= node.End() {
-		return true
-	}
-
-	return false
+	return scope.Pos() >= node.Pos() && scope.End() <= node.End()
 }
 
 func getRootIdent(pass *analysis.Pass, node ast.Node) *ast.Ident {
@@ -214,11 +291,12 @@ func getRootIdent(pass *analysis.Pass, node ast.Node) *ast.Ident {
 	}
 }
 
-// render returns the pretty-print of the given node
-func render(fset *token.FileSet, x interface{}) ([]byte, error) {
-	var buf bytes.Buffer
-	if err := printer.Fprint(&buf, fset, x); err != nil {
-		return nil, fmt.Errorf("printing node: %w", err)
+func isPointer(pass *analysis.Pass, exp ast.Node) bool {
+	switch n := exp.(type) {
+	case *ast.SelectorExpr:
+		sel, ok := pass.TypesInfo.Selections[n]
+		return ok && sel.Indirect()
 	}
-	return buf.Bytes(), nil
+
+	return false
 }

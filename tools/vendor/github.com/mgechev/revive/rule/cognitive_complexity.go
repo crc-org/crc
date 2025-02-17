@@ -4,39 +4,38 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
-	"sync"
 
 	"github.com/mgechev/revive/lint"
 	"golang.org/x/tools/go/ast/astutil"
 )
 
-// CognitiveComplexityRule lints given else constructs.
+// CognitiveComplexityRule sets restriction for maximum cognitive complexity.
 type CognitiveComplexityRule struct {
 	maxComplexity int
-
-	configureOnce sync.Once
 }
 
 const defaultMaxCognitiveComplexity = 7
 
-func (r *CognitiveComplexityRule) configure(arguments lint.Arguments) {
+// Configure validates the rule configuration, and configures the rule accordingly.
+//
+// Configuration implements the [lint.ConfigurableRule] interface.
+func (r *CognitiveComplexityRule) Configure(arguments lint.Arguments) error {
 	if len(arguments) < 1 {
 		r.maxComplexity = defaultMaxCognitiveComplexity
-		return
+		return nil
 	}
 
 	complexity, ok := arguments[0].(int64)
 	if !ok {
-		panic(fmt.Sprintf("invalid argument type for cognitive-complexity, expected int64, got %T", arguments[0]))
+		return fmt.Errorf("invalid argument type for cognitive-complexity, expected int64, got %T", arguments[0])
 	}
 
 	r.maxComplexity = int(complexity)
+	return nil
 }
 
 // Apply applies the rule to given file.
-func (r *CognitiveComplexityRule) Apply(file *lint.File, arguments lint.Arguments) []lint.Failure {
-	r.configureOnce.Do(func() { r.configure(arguments) })
-
+func (r *CognitiveComplexityRule) Apply(file *lint.File, _ lint.Arguments) []lint.Failure {
 	var failures []lint.Failure
 
 	linter := cognitiveComplexityLinter{
@@ -67,12 +66,14 @@ func (w cognitiveComplexityLinter) lintCognitiveComplexity() {
 	f := w.file
 	for _, decl := range f.AST.Decls {
 		if fn, ok := decl.(*ast.FuncDecl); ok && fn.Body != nil {
-			v := cognitiveComplexityVisitor{}
+			v := cognitiveComplexityVisitor{
+				name: fn.Name,
+			}
 			c := v.subTreeComplexity(fn.Body)
 			if c > w.maxComplexity {
 				w.onFailure(lint.Failure{
 					Confidence: 1,
-					Category:   "maintenance",
+					Category:   lint.FailureCategoryMaintenance,
 					Failure:    fmt.Sprintf("function %s has cognitive complexity %d (> max enabled %d)", funcName(fn), c, w.maxComplexity),
 					Node:       fn,
 				})
@@ -82,13 +83,14 @@ func (w cognitiveComplexityLinter) lintCognitiveComplexity() {
 }
 
 type cognitiveComplexityVisitor struct {
+	name         *ast.Ident
 	complexity   int
 	nestingLevel int
 }
 
 // subTreeComplexity calculates the cognitive complexity of an AST-subtree.
-func (v cognitiveComplexityVisitor) subTreeComplexity(n ast.Node) int {
-	ast.Walk(&v, n)
+func (v *cognitiveComplexityVisitor) subTreeComplexity(n ast.Node) int {
+	ast.Walk(v, n)
 	return v.complexity
 }
 
@@ -120,13 +122,20 @@ func (v *cognitiveComplexityVisitor) Visit(n ast.Node) ast.Visitor {
 		return nil
 	case *ast.BinaryExpr:
 		v.complexity += v.binExpComplexity(n)
-		return nil // skip visiting binexp sub-tree (already visited by binExpComplexity)
+		return nil // skip visiting binexp subtree (already visited by binExpComplexity)
 	case *ast.BranchStmt:
 		if n.Label != nil {
 			v.complexity++
 		}
+	case *ast.CallExpr:
+		if ident, ok := n.Fun.(*ast.Ident); ok {
+			if ident.Obj == v.name.Obj && ident.Name == v.name.Name {
+				// called by same function directly (direct recursion)
+				v.complexity++
+				return nil
+			}
+		}
 	}
-	// TODO handle (at least) direct recursion
 
 	return v
 }
@@ -147,7 +156,7 @@ func (v *cognitiveComplexityVisitor) walk(complexityIncrement int, targets ...as
 	v.nestingLevel = nesting
 }
 
-func (cognitiveComplexityVisitor) binExpComplexity(n *ast.BinaryExpr) int {
+func (*cognitiveComplexityVisitor) binExpComplexity(n *ast.BinaryExpr) int {
 	calculator := binExprComplexityCalculator{opsStack: []token.Token{}}
 
 	astutil.Apply(n, calculator.pre, calculator.post)

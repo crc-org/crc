@@ -22,6 +22,7 @@ You may obtain a copy of the License [here](http://www.apache.org/licenses/LICEN
 [![Downloads](https://img.shields.io/github/downloads/securego/gosec/total.svg)](https://github.com/securego/gosec/releases)
 [![Docker Pulls](https://img.shields.io/docker/pulls/securego/gosec.svg)](https://hub.docker.com/r/securego/gosec/tags)
 [![Slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)](http://securego.slack.com)
+[![go-recipes](https://raw.githubusercontent.com/nikolaydubina/go-recipes/main/badge.svg?raw=true)](https://github.com/nikolaydubina/go-recipes)
 
 ## Install
 
@@ -211,30 +212,9 @@ A number of global settings can be provided in a configuration file as follows:
 $ gosec -conf config.json .
 ```
 
-Also some rules accept configuration. For instance on rule `G104`, it is possible to define packages along with a list
-of functions which will be skipped when auditing the not checked errors:
+#### Rule Configuration
 
-```JSON
-{
-    "G104": {
-        "ioutil": ["WriteFile"]
-    }
-}
-```
-
-You can also configure the hard-coded credentials rule `G101` with additional patterns, or adjust the entropy threshold:
-
-```JSON
-{
-    "G101": {
-        "pattern": "(?i)passwd|pass|password|pwd|secret|private_key|token",
-         "ignore_entropy": false,
-         "entropy_threshold": "80.0",
-         "per_char_threshold": "3.0",
-         "truncate": "32"
-    }
-}
-```
+Some rules accept configuration flags as well; these flags are documented in [RULES.md](https://github.com/securego/gosec/blob/master/RULES.md).
 
 #### Go version
 
@@ -308,7 +288,7 @@ func main() {
 	}
 
 	client := &http.Client{Transport: tr}
-	_, err := client.Get("https://golang.org/")
+	_, err := client.Get("https://go.dev/")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -355,7 +335,7 @@ comment.
 
 ### Build tags
 
-gosec is able to pass your [Go build tags](https://golang.org/pkg/go/build/) to the analyzer.
+gosec is able to pass your [Go build tags](https://pkg.go.dev/go/build/) to the analyzer.
 They can be provided as a comma separated list as follows:
 
 ```bash
@@ -386,6 +366,8 @@ $ gosec -fmt=json -out=results.json -stdout -verbose=text *.go
 **Note:** gosec generates the [generic issue import format](https://docs.sonarqube.org/latest/analysis/generic-issue/) for SonarQube, and a report has to be imported into SonarQube using `sonar.externalIssuesReportPaths=path/to/gosec-report.json`.
 
 ## Development
+
+[CONTRIBUTING.md](https://github.com/securego/gosec/blob/master/CONTRIBUTING.md) contains detailed information about adding new rules to gosec.
 
 ### Build
 

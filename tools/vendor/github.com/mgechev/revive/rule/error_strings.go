@@ -1,25 +1,26 @@
 package rule
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
 	"strconv"
 	"strings"
-	"sync"
 	"unicode"
 	"unicode/utf8"
 
 	"github.com/mgechev/revive/lint"
 )
 
-// ErrorStringsRule lints given else constructs.
+// ErrorStringsRule lints error strings.
 type ErrorStringsRule struct {
 	errorFunctions map[string]map[string]struct{}
-
-	configureOnce sync.Once
 }
 
-func (r *ErrorStringsRule) configure(arguments lint.Arguments) {
+// Configure validates the rule configuration, and configures the rule accordingly.
+//
+// Configuration implements the [lint.ConfigurableRule] interface.
+func (r *ErrorStringsRule) Configure(arguments lint.Arguments) error {
 	r.errorFunctions = map[string]map[string]struct{}{
 		"fmt": {
 			"Errorf": {},
@@ -46,15 +47,14 @@ func (r *ErrorStringsRule) configure(arguments lint.Arguments) {
 		}
 	}
 	if len(invalidCustomFunctions) != 0 {
-		panic("found invalid custom function: " + strings.Join(invalidCustomFunctions, ","))
+		return fmt.Errorf("found invalid custom function: %s", strings.Join(invalidCustomFunctions, ","))
 	}
+	return nil
 }
 
 // Apply applies the rule to given file.
-func (r *ErrorStringsRule) Apply(file *lint.File, arguments lint.Arguments) []lint.Failure {
+func (r *ErrorStringsRule) Apply(file *lint.File, _ lint.Arguments) []lint.Failure {
 	var failures []lint.Failure
-
-	r.configureOnce.Do(func() { r.configure(arguments) })
 
 	fileAst := file.AST
 	walker := lintErrorStrings{
@@ -115,7 +115,7 @@ func (w lintErrorStrings) Visit(n ast.Node) ast.Visitor {
 	w.onFailure(lint.Failure{
 		Node:       str,
 		Confidence: conf,
-		Category:   "errors",
+		Category:   lint.FailureCategoryErrors,
 		Failure:    "error strings should not be capitalized or end with punctuation or a newline",
 	})
 	return w

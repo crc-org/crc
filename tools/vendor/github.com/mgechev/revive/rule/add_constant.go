@@ -1,12 +1,12 @@
 package rule
 
 import (
+	"errors"
 	"fmt"
 	"go/ast"
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/mgechev/revive/lint"
 )
@@ -31,19 +31,15 @@ func (wl allowList) add(kind, list string) {
 	}
 }
 
-// AddConstantRule lints unused params in functions.
+// AddConstantRule suggests using constants instead of magic numbers and string literals.
 type AddConstantRule struct {
 	allowList       allowList
 	ignoreFunctions []*regexp.Regexp
 	strLitLimit     int
-
-	configureOnce sync.Once
 }
 
 // Apply applies the rule to given file.
-func (r *AddConstantRule) Apply(file *lint.File, arguments lint.Arguments) []lint.Failure {
-	r.configureOnce.Do(func() { r.configure(arguments) })
-
+func (r *AddConstantRule) Apply(file *lint.File, _ lint.Arguments) []lint.Failure {
 	var failures []lint.Failure
 
 	onFailure := func(failure lint.Failure) {
@@ -52,11 +48,11 @@ func (r *AddConstantRule) Apply(file *lint.File, arguments lint.Arguments) []lin
 
 	w := &lintAddConstantRule{
 		onFailure:       onFailure,
-		strLits:         make(map[string]int),
+		strLits:         map[string]int{},
 		strLitLimit:     r.strLitLimit,
 		allowList:       r.allowList,
 		ignoreFunctions: r.ignoreFunctions,
-		structTags:      make(map[*ast.BasicLit]struct{}),
+		structTags:      map[*ast.BasicLit]struct{}{},
 	}
 
 	ast.Walk(w, file.AST)
@@ -175,7 +171,7 @@ func (w *lintAddConstantRule) checkStrLit(n *ast.BasicLit) {
 			w.onFailure(lint.Failure{
 				Confidence: 1,
 				Node:       n,
-				Category:   "style",
+				Category:   lint.FailureCategoryStyle,
 				Failure:    fmt.Sprintf("string literal %s appears, at least, %d times, create a named constant for it", n.Value, w.strLits[n.Value]),
 			})
 			w.strLits[n.Value] = -1 // mark it to avoid failing again on the same literal
@@ -191,7 +187,7 @@ func (w *lintAddConstantRule) checkNumLit(kind string, n *ast.BasicLit) {
 	w.onFailure(lint.Failure{
 		Confidence: 1,
 		Node:       n,
-		Category:   "style",
+		Category:   lint.FailureCategoryStyle,
 		Failure:    fmt.Sprintf("avoid magic numbers like '%s', create a named constant for it", n.Value),
 	})
 }
@@ -201,67 +197,71 @@ func (w *lintAddConstantRule) isStructTag(n *ast.BasicLit) bool {
 	return ok
 }
 
-func (r *AddConstantRule) configure(arguments lint.Arguments) {
-	if r.allowList == nil {
-		r.strLitLimit = defaultStrLitLimit
-		r.allowList = newAllowList()
-		if len(arguments) > 0 {
-			args, ok := arguments[0].(map[string]any)
-			if !ok {
-				panic(fmt.Sprintf("Invalid argument to the add-constant rule. Expecting a k,v map, got %T", arguments[0]))
+// Configure validates the rule configuration, and configures the rule accordingly.
+//
+// Configuration implements the [lint.ConfigurableRule] interface.
+func (r *AddConstantRule) Configure(arguments lint.Arguments) error {
+	r.strLitLimit = defaultStrLitLimit
+	r.allowList = newAllowList()
+	if len(arguments) == 0 {
+		return nil
+	}
+	args, ok := arguments[0].(map[string]any)
+	if !ok {
+		return fmt.Errorf("invalid argument to the add-constant rule, expecting a k,v map. Got %T", arguments[0])
+	}
+	for k, v := range args {
+		kind := ""
+		switch k {
+		case "allowFloats":
+			kind = kindFLOAT
+			fallthrough
+		case "allowInts":
+			if kind == "" {
+				kind = kindINT
 			}
-			for k, v := range args {
-				kind := ""
-				switch k {
-				case "allowFloats":
-					kind = kindFLOAT
-					fallthrough
-				case "allowInts":
-					if kind == "" {
-						kind = kindINT
-					}
-					fallthrough
-				case "allowStrs":
-					if kind == "" {
-						kind = kindSTRING
-					}
-					list, ok := v.(string)
-					if !ok {
-						panic(fmt.Sprintf("Invalid argument to the add-constant rule, string expected. Got '%v' (%T)", v, v))
-					}
-					r.allowList.add(kind, list)
-				case "maxLitCount":
-					sl, ok := v.(string)
-					if !ok {
-						panic(fmt.Sprintf("Invalid argument to the add-constant rule, expecting string representation of an integer. Got '%v' (%T)", v, v))
-					}
+			fallthrough
+		case "allowStrs":
+			if kind == "" {
+				kind = kindSTRING
+			}
+			list, ok := v.(string)
+			if !ok {
+				return fmt.Errorf("invalid argument to the add-constant rule, string expected. Got '%v' (%T)", v, v)
+			}
+			r.allowList.add(kind, list)
+		case "maxLitCount":
+			sl, ok := v.(string)
+			if !ok {
+				return fmt.Errorf("invalid argument to the add-constant rule, expecting string representation of an integer. Got '%v' (%T)", v, v)
+			}
 
-					limit, err := strconv.Atoi(sl)
-					if err != nil {
-						panic(fmt.Sprintf("Invalid argument to the add-constant rule, expecting string representation of an integer. Got '%v'", v))
-					}
-					r.strLitLimit = limit
-				case "ignoreFuncs":
-					excludes, ok := v.(string)
-					if !ok {
-						panic(fmt.Sprintf("Invalid argument to the ignoreFuncs parameter of add-constant rule, string expected. Got '%v' (%T)", v, v))
-					}
+			limit, err := strconv.Atoi(sl)
+			if err != nil {
+				return fmt.Errorf("invalid argument to the add-constant rule, expecting string representation of an integer. Got '%v'", v)
+			}
+			r.strLitLimit = limit
+		case "ignoreFuncs":
+			excludes, ok := v.(string)
+			if !ok {
+				return fmt.Errorf("invalid argument to the ignoreFuncs parameter of add-constant rule, string expected. Got '%v' (%T)", v, v)
+			}
 
-					for _, exclude := range strings.Split(excludes, ",") {
-						exclude = strings.Trim(exclude, " ")
-						if exclude == "" {
-							panic("Invalid argument to the ignoreFuncs parameter of add-constant rule, expected regular expression must not be empty.")
-						}
-
-						exp, err := regexp.Compile(exclude)
-						if err != nil {
-							panic(fmt.Sprintf("Invalid argument to the ignoreFuncs parameter of add-constant rule: regexp %q does not compile: %v", exclude, err))
-						}
-
-						r.ignoreFunctions = append(r.ignoreFunctions, exp)
-					}
+			for _, exclude := range strings.Split(excludes, ",") {
+				exclude = strings.Trim(exclude, " ")
+				if exclude == "" {
+					return errors.New("invalid argument to the ignoreFuncs parameter of add-constant rule, expected regular expression must not be empty")
 				}
+
+				exp, err := regexp.Compile(exclude)
+				if err != nil {
+					return fmt.Errorf("invalid argument to the ignoreFuncs parameter of add-constant rule: regexp %q does not compile: %w", exclude, err)
+				}
+
+				r.ignoreFunctions = append(r.ignoreFunctions, exp)
 			}
 		}
 	}
+
+	return nil
 }

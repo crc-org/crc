@@ -2,7 +2,7 @@
 
 nilnesserr = nilness + nilerr
 
-`nilnesserr` is a linter for report return nil error in go. It combines the features of [nilness](https://cs.opensource.google/go/x/tools/+/refs/tags/v0.28.0:go/analysis/passes/nilness/nilness.go) and [nilerr](https://github.com/gostaticanalysis/nilerr), providing a concise way to detect return an unrelated/nil-values error.
+`nilnesserr` is a linter for report return nil error in Go. It combines the features of [nilness](https://cs.opensource.google/go/x/tools/+/refs/tags/v0.28.0:go/analysis/passes/nilness/nilness.go) and [nilerr](https://github.com/gostaticanalysis/nilerr), providing a concise way to detect return an unrelated/nil-values error.
 
 ## Case
 
@@ -24,7 +24,7 @@ if err2 != nil {
 - https://github.com/alingse/sundrylint/issues/4
 - https://github.com/alingse/nilnesserr/issues/1
 
-we use https://github.com/alingse/go-linter-runner to run linter on GitHub Actions for public golang repos
+We use https://github.com/alingse/go-linter-runner to run linter on GitHub Actions for public Go repos
 
 ## Install
 

@@ -3,42 +3,42 @@ package rule
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"go/token"
 	"strings"
-	"sync"
 	"unicode/utf8"
 
 	"github.com/mgechev/revive/lint"
 )
 
-// LineLengthLimitRule lints given else constructs.
+// LineLengthLimitRule lints number of characters in a line.
 type LineLengthLimitRule struct {
 	max int
-
-	configureOnce sync.Once
 }
 
 const defaultLineLengthLimit = 80
 
-func (r *LineLengthLimitRule) configure(arguments lint.Arguments) {
+// Configure validates the rule configuration, and configures the rule accordingly.
+//
+// Configuration implements the [lint.ConfigurableRule] interface.
+func (r *LineLengthLimitRule) Configure(arguments lint.Arguments) error {
 	if len(arguments) < 1 {
 		r.max = defaultLineLengthLimit
-		return
+		return nil
 	}
 
 	maxLength, ok := arguments[0].(int64) // Alt. non panicking version
 	if !ok || maxLength < 0 {
-		panic(`invalid value passed as argument number to the "line-length-limit" rule`)
+		return errors.New(`invalid value passed as argument number to the "line-length-limit" rule`)
 	}
 
 	r.max = int(maxLength)
+	return nil
 }
 
 // Apply applies the rule to given file.
-func (r *LineLengthLimitRule) Apply(file *lint.File, arguments lint.Arguments) []lint.Failure {
-	r.configureOnce.Do(func() { r.configure(arguments) })
-
+func (r *LineLengthLimitRule) Apply(file *lint.File, _ lint.Arguments) []lint.Failure {
 	var failures []lint.Failure
 
 	checker := lintLineLengthNum{
@@ -76,7 +76,7 @@ func (r lintLineLengthNum) check() {
 		c := utf8.RuneCountInString(t)
 		if c > r.max {
 			r.onFailure(lint.Failure{
-				Category: "code-style",
+				Category: lint.FailureCategoryCodeStyle,
 				Position: lint.FailurePosition{
 					// Offset not set; it is non-trivial, and doesn't appear to be needed.
 					Start: token.Position{

@@ -198,11 +198,11 @@ func (w *lintRedefinesBuiltinID) Visit(node ast.Node) ast.Visitor {
 	return w
 }
 
-func (w lintRedefinesBuiltinID) addFailure(node ast.Node, msg string) {
+func (w *lintRedefinesBuiltinID) addFailure(node ast.Node, msg string) {
 	w.onFailure(lint.Failure{
 		Confidence: 1,
 		Node:       node,
-		Category:   "logic",
+		Category:   lint.FailureCategoryLogic,
 		Failure:    msg,
 	})
 }

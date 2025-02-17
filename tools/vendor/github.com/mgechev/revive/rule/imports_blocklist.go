@@ -3,33 +3,34 @@ package rule
 import (
 	"fmt"
 	"regexp"
-	"sync"
 
 	"github.com/mgechev/revive/lint"
 )
 
-// ImportsBlocklistRule lints given else constructs.
+// ImportsBlocklistRule disallows importing the specified packages.
 type ImportsBlocklistRule struct {
 	blocklist []*regexp.Regexp
-
-	configureOnce sync.Once
 }
 
 var replaceImportRegexp = regexp.MustCompile(`/?\*\*/?`)
 
-func (r *ImportsBlocklistRule) configure(arguments lint.Arguments) {
+// Configure validates the rule configuration, and configures the rule accordingly.
+//
+// Configuration implements the [lint.ConfigurableRule] interface.
+func (r *ImportsBlocklistRule) Configure(arguments lint.Arguments) error {
 	r.blocklist = []*regexp.Regexp{}
 	for _, arg := range arguments {
 		argStr, ok := arg.(string)
 		if !ok {
-			panic(fmt.Sprintf("Invalid argument to the imports-blocklist rule. Expecting a string, got %T", arg))
+			return fmt.Errorf("invalid argument to the imports-blocklist rule. Expecting a string, got %T", arg)
 		}
 		regStr, err := regexp.Compile(fmt.Sprintf(`(?m)"%s"$`, replaceImportRegexp.ReplaceAllString(argStr, `(\W|\w)*`)))
 		if err != nil {
-			panic(fmt.Sprintf("Invalid argument to the imports-blocklist rule. Expecting %q to be a valid regular expression, got: %v", argStr, err))
+			return fmt.Errorf("invalid argument to the imports-blocklist rule. Expecting %q to be a valid regular expression, got: %w", argStr, err)
 		}
 		r.blocklist = append(r.blocklist, regStr)
 	}
+	return nil
 }
 
 func (r *ImportsBlocklistRule) isBlocklisted(path string) bool {
@@ -42,9 +43,7 @@ func (r *ImportsBlocklistRule) isBlocklisted(path string) bool {
 }
 
 // Apply applies the rule to given file.
-func (r *ImportsBlocklistRule) Apply(file *lint.File, arguments lint.Arguments) []lint.Failure {
-	r.configureOnce.Do(func() { r.configure(arguments) })
-
+func (r *ImportsBlocklistRule) Apply(file *lint.File, _ lint.Arguments) []lint.Failure {
 	var failures []lint.Failure
 
 	for _, is := range file.AST.Imports {
@@ -54,7 +53,7 @@ func (r *ImportsBlocklistRule) Apply(file *lint.File, arguments lint.Arguments) 
 				Confidence: 1,
 				Failure:    "should not use the following blocklisted import: " + path.Value,
 				Node:       is,
-				Category:   "imports",
+				Category:   lint.FailureCategoryImports,
 			})
 		}
 	}

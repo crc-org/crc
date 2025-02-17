@@ -3,7 +3,7 @@ package gomegainfo
 import (
 	"go/ast"
 	gotypes "go/types"
-	"regexp"
+	"strings"
 
 	"golang.org/x/tools/go/analysis"
 )
@@ -85,8 +85,6 @@ func IsAssertionFunc(name string) bool {
 	return false
 }
 
-var gomegaTypeRegex = regexp.MustCompile(`github\.com/onsi/gomega/(?:internal|types)\.Gomega`)
-
 func IsGomegaVar(x ast.Expr, pass *analysis.Pass) bool {
 	if tx, ok := pass.TypesInfo.Types[x]; ok {
 		return IsGomegaType(tx.Type)
@@ -105,9 +103,13 @@ func IsGomegaType(t gotypes.Type) bool {
 	case *gotypes.Named:
 		typeStr = ttx.String()
 
+	case *gotypes.Alias:
+		typeStr = ttx.String()
+
 	default:
 		return false
 	}
 
-	return gomegaTypeRegex.MatchString(typeStr)
+	return strings.Contains(typeStr, "github.com/onsi/gomega") &&
+		(strings.HasSuffix(typeStr, "Gomega") || strings.HasSuffix(typeStr, "WithT"))
 }

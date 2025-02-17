@@ -4,15 +4,89 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"sort"
+	"maps"
+	"slices"
+	"strings"
 
 	"github.com/go-xmlfmt/xmlfmt"
-	"golang.org/x/exp/maps"
 
+	"github.com/golangci/golangci-lint/pkg/logutils"
 	"github.com/golangci/golangci-lint/pkg/result"
 )
 
 const defaultCheckstyleSeverity = "error"
+
+// Checkstyle prints issues in the Checkstyle format.
+// https://checkstyle.org/config.html
+type Checkstyle struct {
+	log       logutils.Log
+	w         io.Writer
+	sanitizer severitySanitizer
+}
+
+func NewCheckstyle(log logutils.Log, w io.Writer) *Checkstyle {
+	return &Checkstyle{
+		log: log.Child(logutils.DebugKeyCheckstylePrinter),
+		w:   w,
+		sanitizer: severitySanitizer{
+			// https://checkstyle.org/config.html#Severity
+			// https://checkstyle.org/property_types.html#SeverityLevel
+			allowedSeverities: []string{"ignore", "info", "warning", defaultCheckstyleSeverity},
+			defaultSeverity:   defaultCheckstyleSeverity,
+		},
+	}
+}
+
+func (p *Checkstyle) Print(issues []result.Issue) error {
+	out := checkstyleOutput{
+		Version: "5.0",
+	}
+
+	files := map[string]*checkstyleFile{}
+
+	for i := range issues {
+		issue := &issues[i]
+		file, ok := files[issue.FilePath()]
+		if !ok {
+			file = &checkstyleFile{
+				Name: issue.FilePath(),
+			}
+
+			files[issue.FilePath()] = file
+		}
+
+		newError := &checkstyleError{
+			Column:   issue.Column(),
+			Line:     issue.Line(),
+			Message:  issue.Text,
+			Source:   issue.FromLinter,
+			Severity: p.sanitizer.Sanitize(issue.Severity),
+		}
+
+		file.Errors = append(file.Errors, newError)
+	}
+
+	err := p.sanitizer.Err()
+	if err != nil {
+		p.log.Infof("%v", err)
+	}
+
+	out.Files = slices.SortedFunc(maps.Values(files), func(a *checkstyleFile, b *checkstyleFile) int {
+		return strings.Compare(a.Name, b.Name)
+	})
+
+	data, err := xml.Marshal(&out)
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintf(p.w, "%s%s\n", xml.Header, xmlfmt.FormatXML(string(data), "", "  "))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 type checkstyleOutput struct {
 	XMLName xml.Name          `xml:"checkstyle"`
@@ -31,65 +105,4 @@ type checkstyleError struct {
 	Message  string `xml:"message,attr"`
 	Severity string `xml:"severity,attr"`
 	Source   string `xml:"source,attr"`
-}
-
-type Checkstyle struct {
-	w io.Writer
-}
-
-func NewCheckstyle(w io.Writer) *Checkstyle {
-	return &Checkstyle{w: w}
-}
-
-func (p Checkstyle) Print(issues []result.Issue) error {
-	out := checkstyleOutput{
-		Version: "5.0",
-	}
-
-	files := map[string]*checkstyleFile{}
-
-	for i := range issues {
-		issue := &issues[i]
-		file, ok := files[issue.FilePath()]
-		if !ok {
-			file = &checkstyleFile{
-				Name: issue.FilePath(),
-			}
-
-			files[issue.FilePath()] = file
-		}
-
-		severity := defaultCheckstyleSeverity
-		if issue.Severity != "" {
-			severity = issue.Severity
-		}
-
-		newError := &checkstyleError{
-			Column:   issue.Column(),
-			Line:     issue.Line(),
-			Message:  issue.Text,
-			Source:   issue.FromLinter,
-			Severity: severity,
-		}
-
-		file.Errors = append(file.Errors, newError)
-	}
-
-	out.Files = maps.Values(files)
-
-	sort.Slice(out.Files, func(i, j int) bool {
-		return out.Files[i].Name < out.Files[j].Name
-	})
-
-	data, err := xml.Marshal(&out)
-	if err != nil {
-		return err
-	}
-
-	_, err = fmt.Fprintf(p.w, "%s%s\n", xml.Header, xmlfmt.FormatXML(string(data), "", "  "))
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

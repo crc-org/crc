@@ -1,9 +1,9 @@
 package rule
 
 import (
+	"errors"
 	"fmt"
 	"go/ast"
-	"sync"
 
 	"github.com/mgechev/revive/lint"
 )
@@ -16,18 +16,19 @@ const (
 // UncheckedTypeAssertionRule lints missing or ignored `ok`-value in dynamic type casts.
 type UncheckedTypeAssertionRule struct {
 	acceptIgnoredAssertionResult bool
-
-	configureOnce sync.Once
 }
 
-func (r *UncheckedTypeAssertionRule) configure(arguments lint.Arguments) {
+// Configure validates the rule configuration, and configures the rule accordingly.
+//
+// Configuration implements the [lint.ConfigurableRule] interface.
+func (r *UncheckedTypeAssertionRule) Configure(arguments lint.Arguments) error {
 	if len(arguments) == 0 {
-		return
+		return nil
 	}
 
 	args, ok := arguments[0].(map[string]any)
 	if !ok {
-		panic("Unable to get arguments. Expected object of key-value-pairs.")
+		return errors.New("unable to get arguments. Expected object of key-value-pairs")
 	}
 
 	for k, v := range args {
@@ -35,18 +36,17 @@ func (r *UncheckedTypeAssertionRule) configure(arguments lint.Arguments) {
 		case "acceptIgnoredAssertionResult":
 			r.acceptIgnoredAssertionResult, ok = v.(bool)
 			if !ok {
-				panic(fmt.Sprintf("Unable to parse argument '%s'. Expected boolean.", k))
+				return fmt.Errorf("unable to parse argument '%s'. Expected boolean", k)
 			}
 		default:
-			panic(fmt.Sprintf("Unknown argument: %s", k))
+			return fmt.Errorf("unknown argument: %s", k)
 		}
 	}
+	return nil
 }
 
 // Apply applies the rule to given file.
-func (r *UncheckedTypeAssertionRule) Apply(file *lint.File, args lint.Arguments) []lint.Failure {
-	r.configureOnce.Do(func() { r.configure(args) })
-
+func (r *UncheckedTypeAssertionRule) Apply(file *lint.File, _ lint.Arguments) []lint.Failure {
 	var failures []lint.Failure
 
 	walker := &lintUncheckedTypeAssertion{
@@ -181,7 +181,7 @@ func (w *lintUncheckedTypeAssertion) Visit(node ast.Node) ast.Visitor {
 func (w *lintUncheckedTypeAssertion) addFailure(n *ast.TypeAssertExpr, why string) {
 	s := fmt.Sprintf("type cast result is unchecked in %v - %s", gofmt(n), why)
 	w.onFailure(lint.Failure{
-		Category:   "bad practice",
+		Category:   lint.FailureCategoryBadPractice,
 		Confidence: 1,
 		Node:       n,
 		Failure:    s,

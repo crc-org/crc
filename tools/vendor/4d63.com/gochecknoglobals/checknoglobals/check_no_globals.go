@@ -1,7 +1,6 @@
 package checknoglobals
 
 import (
-	"flag"
 	"fmt"
 	"go/ast"
 	"go/token"
@@ -37,16 +36,8 @@ func Analyzer() *analysis.Analyzer {
 		Name:             "gochecknoglobals",
 		Doc:              Doc,
 		Run:              checkNoGlobals,
-		Flags:            flags(),
 		RunDespiteErrors: true,
 	}
-}
-
-func flags() flag.FlagSet {
-	flags := flag.NewFlagSet("", flag.ExitOnError)
-	flags.Bool("t", false, "Include tests")
-
-	return *flags
 }
 
 func isAllowed(cm ast.CommentMap, v ast.Node, ti *types.Info) bool {
@@ -138,14 +129,9 @@ func hasEmbedComment(cm ast.CommentMap, n ast.Node) bool {
 }
 
 func checkNoGlobals(pass *analysis.Pass) (interface{}, error) {
-	includeTests := pass.Analyzer.Flags.Lookup("t").Value.(flag.Getter).Get().(bool)
-
 	for _, file := range pass.Files {
 		filename := pass.Fset.Position(file.Pos()).Filename
 		if !strings.HasSuffix(filename, ".go") {
-			continue
-		}
-		if !includeTests && strings.HasSuffix(filename, "_test.go") {
 			continue
 		}
 

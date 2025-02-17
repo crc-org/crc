@@ -1,9 +1,10 @@
 package processors
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
+
+	"github.com/ldez/grignotin/goenv"
 
 	"github.com/golangci/golangci-lint/pkg/goutil"
 	"github.com/golangci/golangci-lint/pkg/result"
@@ -11,42 +12,34 @@ import (
 
 var _ Processor = (*Cgo)(nil)
 
+// Cgo filters cgo artifacts.
+//
+// Some linters (e.g. gosec, etc.) return incorrect file paths for cgo files.
+//
+// Require absolute file path.
 type Cgo struct {
 	goCacheDir string
 }
 
-func NewCgo(goenv *goutil.Env) *Cgo {
+func NewCgo(env *goutil.Env) *Cgo {
 	return &Cgo{
-		goCacheDir: goenv.Get(goutil.EnvGoCache),
+		goCacheDir: env.Get(goenv.GOCACHE),
 	}
 }
 
-func (Cgo) Name() string {
+func (*Cgo) Name() string {
 	return "cgo"
 }
 
-func (p Cgo) Process(issues []result.Issue) ([]result.Issue, error) {
+func (p *Cgo) Process(issues []result.Issue) ([]result.Issue, error) {
 	return filterIssuesErr(issues, p.shouldPassIssue)
 }
 
-func (Cgo) Finish() {}
+func (*Cgo) Finish() {}
 
-func (p Cgo) shouldPassIssue(issue *result.Issue) (bool, error) {
-	// some linters (e.g. gosec, deadcode) return incorrect filepaths for cgo issues,
-	// also cgo files have strange issues looking like false positives.
-
-	// cache dir contains all preprocessed files including cgo files
-
-	issueFilePath := issue.FilePath()
-	if !filepath.IsAbs(issue.FilePath()) {
-		absPath, err := filepath.Abs(issue.FilePath())
-		if err != nil {
-			return false, fmt.Errorf("failed to build abs path for %q: %w", issue.FilePath(), err)
-		}
-		issueFilePath = absPath
-	}
-
-	if p.goCacheDir != "" && strings.HasPrefix(issueFilePath, p.goCacheDir) {
+func (p *Cgo) shouldPassIssue(issue *result.Issue) (bool, error) {
+	// [p.goCacheDir] contains all preprocessed files including cgo files.
+	if p.goCacheDir != "" && strings.HasPrefix(issue.FilePath(), p.goCacheDir) {
 		return false, nil
 	}
 

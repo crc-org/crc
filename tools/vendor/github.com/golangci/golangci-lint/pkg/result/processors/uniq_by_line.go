@@ -1,7 +1,6 @@
 package processors
 
 import (
-	"github.com/golangci/golangci-lint/pkg/config"
 	"github.com/golangci/golangci-lint/pkg/result"
 )
 
@@ -9,15 +8,16 @@ const uniqByLineLimit = 1
 
 var _ Processor = (*UniqByLine)(nil)
 
+// UniqByLine filters reports to keep only one report by line of code.
 type UniqByLine struct {
 	fileLineCounter fileLineCounter
-	cfg             *config.Config
+	enabled         bool
 }
 
-func NewUniqByLine(cfg *config.Config) *UniqByLine {
+func NewUniqByLine(enable bool) *UniqByLine {
 	return &UniqByLine{
 		fileLineCounter: fileLineCounter{},
-		cfg:             cfg,
+		enabled:         enable,
 	}
 }
 
@@ -26,7 +26,7 @@ func (*UniqByLine) Name() string {
 }
 
 func (p *UniqByLine) Process(issues []result.Issue) ([]result.Issue, error) {
-	if !p.cfg.Issues.UniqByLine {
+	if !p.enabled {
 		return issues, nil
 	}
 
@@ -36,12 +36,6 @@ func (p *UniqByLine) Process(issues []result.Issue) ([]result.Issue, error) {
 func (*UniqByLine) Finish() {}
 
 func (p *UniqByLine) shouldPassIssue(issue *result.Issue) bool {
-	if issue.SuggestedFixes != nil && p.cfg.Issues.NeedFix {
-		// if issue will be auto-fixed we shouldn't collapse issues:
-		// e.g. one line can contain 2 misspellings, they will be in 2 issues and misspell should fix both of them.
-		return true
-	}
-
 	if p.fileLineCounter.GetCount(issue) == uniqByLineLimit {
 		return false
 	}

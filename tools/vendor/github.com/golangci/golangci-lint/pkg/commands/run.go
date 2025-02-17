@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"maps"
 	"os"
 	"path/filepath"
 	"runtime"
 	"runtime/pprof"
 	"runtime/trace"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -24,7 +25,6 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.uber.org/automaxprocs/maxprocs"
-	"golang.org/x/exp/maps"
 	"gopkg.in/yaml.v3"
 
 	"github.com/golangci/golangci-lint/internal/cache"
@@ -194,7 +194,7 @@ func (c *runCommand) preRunE(_ *cobra.Command, args []string) error {
 
 	c.dbManager = dbManager
 
-	printer, err := printers.NewPrinter(c.log, &c.cfg.Output, c.reportData)
+	printer, err := printers.NewPrinter(c.log, &c.cfg.Output, c.reportData, c.cfg.GetBasePath())
 	if err != nil {
 		return err
 	}
@@ -217,7 +217,7 @@ func (c *runCommand) preRunE(_ *cobra.Command, args []string) error {
 
 	pkgLoader := lint.NewPackageLoader(c.log.Child(logutils.DebugKeyLoader), c.cfg, args, c.goenv, guard)
 
-	c.contextBuilder = lint.NewContextBuilder(c.cfg, pkgLoader, c.fileCache, pkgCache, guard)
+	c.contextBuilder = lint.NewContextBuilder(c.cfg, pkgLoader, pkgCache, guard)
 
 	if err = initHashSalt(c.buildInfo.Version, c.cfg); err != nil {
 		return fmt.Errorf("failed to init hash salt: %w", err)
@@ -452,8 +452,7 @@ func (c *runCommand) printStats(issues []result.Issue) {
 
 	c.cmd.Printf("%d issues:\n", len(issues))
 
-	keys := maps.Keys(stats)
-	sort.Strings(keys)
+	keys := slices.Sorted(maps.Keys(stats))
 
 	for _, key := range keys {
 		c.cmd.Printf("* %s: %d\n", key, stats[key])

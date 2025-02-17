@@ -1,5 +1,5 @@
 // This file was copy from https://cs.opensource.google/go/x/tools/+/master:go/analysis/passes/nilness/nilness.go
-// I modified some to check the error retrun
+// I modified some to check the error return
 
 // Copyright 2018 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
