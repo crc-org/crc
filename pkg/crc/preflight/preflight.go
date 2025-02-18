@@ -157,8 +157,9 @@ func getPreflightChecksHelper(config crcConfig.Storage) []Check {
 	bundlePath := config.Get(crcConfig.Bundle).AsString()
 	preset := crcConfig.GetPreset(config)
 	enableBundleQuayFallback := config.Get(crcConfig.EnableBundleQuayFallback).AsBool()
+	sharedDirEnabled := config.Get(crcConfig.EnableSharedDirs).AsBool()
 	logging.Infof("Using bundle path %s", bundlePath)
-	return getPreflightChecks(experimentalFeatures, mode, bundlePath, preset, enableBundleQuayFallback)
+	return getPreflightChecks(experimentalFeatures, mode, bundlePath, preset, enableBundleQuayFallback, sharedDirEnabled)
 }
 
 // StartPreflightChecks performs the preflight checks before starting the cluster
