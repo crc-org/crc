@@ -201,7 +201,7 @@ func checkVsock() error {
 // Passing 'UserNetworkingMode' to getPreflightChecks currently achieves this
 // as there are no system networking specific checks
 func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true, network.UserNetworkingMode, constants.GetDefaultBundlePath(crcpreset.OpenShift), crcpreset.OpenShift, false)
+	return getPreflightChecks(true, network.UserNetworkingMode, constants.GetDefaultBundlePath(crcpreset.OpenShift), crcpreset.OpenShift, true, true)
 }
 
 func getChecks(bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) []Check {
@@ -221,9 +221,10 @@ func getChecks(bundlePath string, preset crcpreset.Preset, enableBundleQuayFallb
 	return checks
 }
 
-func getPreflightChecks(_ bool, networkMode network.Mode, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) []Check {
+func getPreflightChecks(_ bool, networkMode network.Mode, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback, sharedDirEnabled bool) []Check {
 	filter := newFilter()
 	filter.SetNetworkMode(networkMode)
+	filter.SetSharedDirStatus(sharedDirEnabled)
 
 	return filter.Apply(getChecks(bundlePath, preset, enableBundleQuayFallback))
 }
