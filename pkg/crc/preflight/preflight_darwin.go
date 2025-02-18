@@ -110,7 +110,7 @@ var daemonLaunchdChecks = []Check{
 // Passing 'SystemNetworkingMode' to getPreflightChecks currently achieves this
 // as there are no user networking specific checks
 func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true, network.SystemNetworkingMode, constants.GetDefaultBundlePath(preset.OpenShift), preset.OpenShift, false)
+	return getPreflightChecks(true, network.SystemNetworkingMode, constants.GetDefaultBundlePath(preset.OpenShift), preset.OpenShift, false, false)
 }
 
 func getChecks(_ network.Mode, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) []Check {
