@@ -166,6 +166,32 @@ var userPartOfCrcUsersAndHypervAdminsGroupCheck = Check{
 	labels: labels{Os: Windows},
 }
 
+// Checks to verify and setup SMB share is created and file sharing is enabled
+var smbShareCreatedAndFileSharingEnabledChecks = []Check{
+	{
+		configKeySuffix:    "check-file-sharing-enabled",
+		checkDescription:   "Checking if Printer and File Sharing is enabled",
+		check:              checkFileAndPrinterSharingIsEnabled,
+		fixDescription:     "Enabling Printer and File Sharing",
+		fix:                fixFileAndPrinterSharing,
+		cleanupDescription: "Disabling Printer and File Sharing",
+		cleanup:            removeFirewallRuleAllowingPrinterAndFileSharing,
+
+		labels: labels{Os: Windows, SharedDir: Enabled},
+	},
+	{
+		configKeySuffix:    "check-smb-share-exists",
+		checkDescription:   "Checking if SMB share crc-dir0 exists",
+		check:              checkCRCSmbShareCreated,
+		fixDescription:     "Creating SMB share crc-dir0",
+		fix:                fixCRCSmbShareCreated,
+		cleanupDescription: "Removing SMB share crc-dir0",
+		cleanup:            removeSmbShare,
+
+		labels: labels{Os: Windows, SharedDir: Enabled},
+	},
+}
+
 var errReboot = errors.New("Please reboot your system and run 'crc setup' to complete the setup process")
 
 func username() string {
@@ -218,6 +244,7 @@ func getChecks(bundlePath string, preset crcpreset.Preset, enableBundleQuayFallb
 	checks = append(checks, daemonTaskChecks...)
 	checks = append(checks, adminHelperServiceCheks...)
 	checks = append(checks, sshPortCheck())
+	checks = append(checks, smbShareCreatedAndFileSharingEnabledChecks...)
 	return checks
 }
 
