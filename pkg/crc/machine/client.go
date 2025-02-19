@@ -30,21 +30,30 @@ type Client interface {
 }
 
 type client struct {
-	name   string
-	debug  bool
-	config crcConfig.Storage
+	name           string
+	debug          bool
+	config         crcConfig.Storage
+	virtualMachine VirtualMachine
 
 	diskDetails *memoize.Memoizer
 	ramDetails  *memoize.Memoizer
 }
 
 func NewClient(name string, debug bool, config crcConfig.Storage) Client {
+	return newClientWithVirtualMachine(name, debug, config, nil)
+}
+
+// newClientWithVirtualMachine creates a Client instance with an overridden VirtualMachine implementation.
+// It would not create a new VirtualMachine object. This method is primarily created for usage in tests so
+// that we can pass a fake VirtualMachine implementation.
+func newClientWithVirtualMachine(name string, debug bool, config crcConfig.Storage, vm VirtualMachine) Client {
 	return &client{
-		name:        name,
-		debug:       debug,
-		config:      config,
-		diskDetails: memoize.NewMemoizer(time.Minute, 5*time.Minute),
-		ramDetails:  memoize.NewMemoizer(30*time.Second, 2*time.Minute),
+		name:           name,
+		debug:          debug,
+		config:         config,
+		diskDetails:    memoize.NewMemoizer(time.Minute, 5*time.Minute),
+		ramDetails:     memoize.NewMemoizer(30*time.Second, 2*time.Minute),
+		virtualMachine: vm,
 	}
 }
 
