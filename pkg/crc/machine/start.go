@@ -440,6 +440,9 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		if _, _, err := sshRunner.RunPrivileged("Turning off the ntp server", "timedatectl set-ntp off"); err != nil {
 			return nil, errors.Wrap(err, "Failed to stop network time synchronization")
 		}
+		if _, _, err := sshRunner.RunPrivileged("Manual mode for chrony config", "tee /etc/chrony.conf <<< \"manual\""); err != nil {
+			return nil, errors.Wrap(err, "Failed to update manual mode for /etc/chrony.conf")
+		}
 		logging.Info("Setting clock to vm clock (UTC timezone)")
 		dateCmd := fmt.Sprintf("date -s '%s'", time.Now().Format(time.UnixDate))
 		if _, _, err := sshRunner.RunPrivileged("Setting clock same as host", dateCmd); err != nil {
