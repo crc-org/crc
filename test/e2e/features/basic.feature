@@ -43,6 +43,7 @@ Feature: Basic test
         * stdout should match "(?s)(.*)https:\/\/console-openshift-console\.apps-crc\.testing(.*)$"
         # status
         When checking that CRC is running
+        And checking the CRC status JSON output is valid
         # ip
         When executing crc ip command succeeds
         Then stdout should match "\d+\.\d+\.\d+\.\d+"
