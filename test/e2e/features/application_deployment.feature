@@ -30,8 +30,14 @@ Feature: Application Deployment Test
         And stdout should contain "1/1     Running"
         And executing "oc get svc -lapp=quarkus" succeeds
         Then stdout should contain "quarkus"
+        # Access application via Route
         And executing "oc get routes -lapp=quarkus" succeeds
         Then stdout should contain "quarkus"
         And with up to "4" retries with wait period of "1m" http response from "http://quarkus-testproj.apps-crc.testing" has status code "200"
         Then executing "curl -s http://quarkus-testproj.apps-crc.testing" succeeds
+        And stdout should contain "{"applicationName":"JKube","message":"Subatomic JKube really whips the llama's ass!"}"
+        # Access application via Service's NodePort
+        And executing "QUARKUS_NODEPORT=`oc get svc quarkus -o jsonpath='{.spec.ports[0].nodePort}'`" succeeds
+        And executing "CRC_IP=`crc ip`" succeeds
+        Then executing "curl -s http://$CRC_IP:$QUARKUS_NODEPORT" succeeds
         And stdout should contain "{"applicationName":"JKube","message":"Subatomic JKube really whips the llama's ass!"}"
