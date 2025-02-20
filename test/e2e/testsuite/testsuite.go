@@ -3,6 +3,7 @@ package testsuite
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,6 +12,9 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/containers/common/pkg/strongunits"
+	"github.com/spf13/cast"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/machine"
@@ -516,6 +520,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		CheckOutputMatchWithRetry)
 	s.Step(`^checking that CRC is (running|stopped)$`,
 		CheckCRCStatus)
+	s.Step(`^checking the CRC status JSON output is valid$`,
+		CheckCRCStatusJSONOutput)
 	s.Step(`^execut(?:e|ing) crc (.*) command$`,
 		ExecuteCRCCommand)
 	s.Step(`^execut(?:e|ing) crc (.*) command (.*)$`,
@@ -659,6 +665,52 @@ func CheckCRCStatus(state string) error {
 		return crcCmd.WaitForClusterInState(state)
 	}
 	return crcCmd.CheckCRCStatus(state)
+}
+
+func CheckCRCStatusJSONOutput() error {
+	err := util.ExecuteCommand("crc status -ojson")
+	if err != nil {
+		return err
+	}
+	crcStatusJSONOutput := util.GetLastCommandOutput("stdout")
+	var crcStatusJSONOutputObj map[string]interface{}
+	if err := json.Unmarshal([]byte(crcStatusJSONOutput), &crcStatusJSONOutputObj); err != nil {
+		return err
+	}
+	crcStatusSuccess := crcStatusJSONOutputObj["success"]
+	if crcStatusSuccess != true {
+		return fmt.Errorf("failure in asserting 'success' field of crc status json output, expectd : true, actual : %t", crcStatusSuccess)
+	}
+	crcStatus := crcStatusJSONOutputObj["crcStatus"]
+	if crcStatus != "Running" {
+		return fmt.Errorf("failure in asserting 'crcStatus' field of crc status json output, expectd : 'Running', actual : %s", crcStatus)
+	}
+	crcCacheDir := crcStatusJSONOutputObj["cacheDir"]
+	if crcCacheDir != filepath.Join(util.CRCHome, "cache") {
+		return fmt.Errorf("failure is asserting 'cacheDir' field of crc status json output, exected : %s, actual %s", filepath.Join(util.CRCHome, "cache"), crcCacheDir)
+	}
+	crcOpenShiftStatus := crcStatusJSONOutputObj["openshiftStatus"]
+	if crcOpenShiftStatus != "Running" {
+		return fmt.Errorf("failure in asserting 'openshiftStatus' field of crc status json output, expected : 'Running', actual : %s", crcOpenShiftStatus)
+	}
+	crcOpenShiftVersion := crcStatusJSONOutputObj["openshiftVersion"]
+	if !strings.HasPrefix(cast.ToString(crcOpenShiftVersion), "4.") {
+		return fmt.Errorf("failure in asserting 'openshiftVersion' field of crc status json output, expected with prefix: '4.', actual : %s", crcOpenShiftVersion)
+	}
+	crcPresetStr := crcStatusJSONOutputObj["preset"]
+	crcPreset, err := preset.ParsePresetE(crcPresetStr.(string))
+	if err != nil {
+		return fmt.Errorf("failure in asserting 'preset' field of crc status json output, %v", err)
+	}
+	crcDiskSize := crcStatusJSONOutputObj["diskSize"]
+	if strongunits.B(cast.ToUint64(crcDiskSize)) > strongunits.GiB(constants.DefaultDiskSize).ToBytes() {
+		return fmt.Errorf("failure in asserting 'diskSize' field of crc status json output, expected less than or equal to %d bytes, actual : %d bytes", strongunits.GiB(constants.DefaultDiskSize).ToBytes(), strongunits.B(cast.ToUint64(crcDiskSize)))
+	}
+	crcRAMSize := crcStatusJSONOutputObj["ramSize"]
+	if strongunits.B(cast.ToUint64(crcRAMSize)) > constants.GetDefaultMemory(crcPreset).ToBytes() {
+		return fmt.Errorf("failure in asserting 'ramSize' field of crc status json output, expected less than or equal to %d bytes, actual : %d bytes", constants.GetDefaultMemory(crcPreset).ToBytes(), cast.ToUint64(crcRAMSize))
+	}
+	return nil
 }
 
 func DeleteFileFromCRCHome(fileName string) error {
