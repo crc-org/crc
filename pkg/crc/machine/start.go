@@ -169,7 +169,7 @@ func getrootPartition(sshRunner *crcssh.Runner, preset crcPreset.Preset) (string
 	return rootPart, nil
 }
 
-func growLVForMicroshift(sshRunner *crcssh.Runner, lvFullName string, rootPart string, persistentVolumeSize int) error {
+func growLVForMicroshift(sshRunner crcos.CommandRunner, lvFullName string, rootPart string, persistentVolumeSize int) error {
 	if _, _, err := sshRunner.RunPrivileged("Resizing the physical volume(PV)", "/usr/sbin/pvresize", "--devices", rootPart, rootPart); err != nil {
 		return err
 	}
