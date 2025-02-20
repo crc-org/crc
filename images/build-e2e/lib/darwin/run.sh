@@ -4,6 +4,7 @@
 bundleLocation=""
 e2eTagExpression=""
 crcMemory=""
+crcBinaryDir="/usr/local/bin"
 targetFolder="crc-e2e"
 junitFilename="e2e-junit.xml"
 while [[ $# -gt 0 ]]; do
@@ -34,6 +35,11 @@ while [[ $# -gt 0 ]]; do
         shift 
         shift 
         ;;
+        -crcBinaryDir)
+        crcBinaryDir="$2"
+        shift
+        shift
+        ;;
         *)    # unknown option
         shift 
         ;;
@@ -50,7 +56,7 @@ then
     tags="$tags && $e2eTagExpression"
 fi
 cd $targetFolder/bin
-./e2e.test --bundle-location=$bundleLocation --pull-secret-file="${HOME}/$targetFolder/pull-secret" --cleanup-home=false --crc-memory=$crcMemory --godog.tags="$tags" --godog.format=junit > "${HOME}/$targetFolder/results/e2e.results"
+./e2e.test --bundle-location=$bundleLocation --pull-secret-file="${HOME}/$targetFolder/pull-secret" --crc-binary=$crcBinaryDir --cleanup-home=false --crc-memory=$crcMemory --godog.tags="$tags" --godog.format=junit > "${HOME}/$targetFolder/results/e2e.results"
 
 # Transform results to junit
 cd ..

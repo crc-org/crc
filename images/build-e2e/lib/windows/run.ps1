@@ -9,6 +9,8 @@ param(
     $junitFilename="e2e-junit.xml",
     [Parameter(HelpMessage='Customize memory for the cluster to run the tests')]
     $crcMemory=""
+    [Parameter(HelpMessage='Customize crc binary location')]
+    $crcBinaryDir="C:\Program Files\Red Hat OpenShift Local"
 )
 
 # Prepare run e2e
@@ -28,7 +30,7 @@ if ($e2eTagExpression) {
 }
 $dir = "$PWD"
 cd $targetFolder\bin
-e2e.test.exe --bundle-location=$bundleLocation --pull-secret-file=$targetFolderdir\pull-secret --crc-memory=$crcMemory --cleanup-home=false --godog.tags="$tags" --godog.format=junit > $resultsDir\e2e.results
+e2e.test.exe --bundle-location=$bundleLocation --pull-secret-file=$targetFolderdir\pull-secret --crc-binary=$crcBinaryDir --crc-memory=$crcMemory --cleanup-home=false --godog.tags="$tags" --godog.format=junit > $resultsDir\e2e.results
 
 # Transform results to junit
 cd ..
