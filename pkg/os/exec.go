@@ -10,6 +10,8 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 )
 
+var privilegedCommand = "sudo"
+
 func runCmd(command string, args []string, env map[string]string) (string, string, error) {
 	cmd := exec.Command(command, args...) // #nosec G204
 	if len(env) != 0 {
@@ -44,11 +46,15 @@ func runPrivate(command string, args []string, env map[string]string) (string, s
 // RunPrivileged executes a command using sudo
 // provide a reason why root is needed as the first argument
 func RunPrivileged(reason string, cmdAndArgs ...string) (string, string, error) {
-	sudo, err := exec.LookPath("sudo")
+	sudo, err := exec.LookPath(privilegedCommand)
 	if err != nil {
 		return "", "", errors.New("sudo executable not found")
 	}
 	logging.Infof("Using root access: %s", reason)
+	_, err = exec.LookPath(cmdAndArgs[0])
+	if err != nil {
+		return "", "", errors.New(cmdAndArgs[0] + " executable not found")
+	}
 	return run(sudo, cmdAndArgs, map[string]string{})
 }
 
