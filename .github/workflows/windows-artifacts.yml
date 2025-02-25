@@ -95,20 +95,11 @@ jobs:
           podman push quay.io/crcont/${{ env.IMAGE_NAME_INTEGRATION}}:vnext-${{matrix.os}}-${{matrix.arch}}
           podman tag quay.io/crcont/${{ env.IMAGE_NAME_E2E}}:gh-${{matrix.os}}-${{matrix.arch}} quay.io/crcont/${{ env.IMAGE_NAME_E2E}}:vnext-${{matrix.os}}-${{matrix.arch}}
           podman push quay.io/crcont/${{ env.IMAGE_NAME_E2E}}:vnext-${{matrix.os}}-${{matrix.arch}}
-  save-gh-context:
+  save-bundle-version:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
     steps:
-      - name: Save the GH context in an artifact
-        env:
-          GH_CONTEXT: ${{ toJSON(github) }}
-        run: echo $GH_CONTEXT > gh_context.json
-      - name: Upload the GH context artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: gh-context
-          path: gh_context.json
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Save the bundle version
