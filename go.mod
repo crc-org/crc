@@ -1,6 +1,7 @@
 module github.com/crc-org/crc/v2
 
 go 1.22.0
+toolchain go1.23.6
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
@@ -54,7 +55,7 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 	github.com/yusufpapurcu/wmi v1.2.4
 	github.com/zalando/go-keyring v0.2.6
-	golang.org/x/crypto v0.33.0
+	golang.org/x/crypto v0.35.0
 	golang.org/x/net v0.35.0
 	golang.org/x/sync v0.11.0
 	golang.org/x/sys v0.30.0
