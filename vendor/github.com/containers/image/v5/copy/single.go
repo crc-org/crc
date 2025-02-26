@@ -109,7 +109,7 @@ func (c *copier) copySingleImage(ctx context.Context, unparsedImage *image.Unpar
 		}
 	}
 
-	if err := checkImageDestinationForCurrentRuntime(ctx, c.options.DestinationCtx, src, c.dest); err != nil {
+	if err := prepareImageConfigForDest(ctx, c.options.DestinationCtx, src, c.dest); err != nil {
 		return copySingleImageResult{}, err
 	}
 
@@ -316,17 +316,17 @@ func (c *copier) copySingleImage(ctx context.Context, unparsedImage *image.Unpar
 	return res, nil
 }
 
-// checkImageDestinationForCurrentRuntime enforces dest.MustMatchRuntimeOS, if necessary.
-func checkImageDestinationForCurrentRuntime(ctx context.Context, sys *types.SystemContext, src types.Image, dest types.ImageDestination) error {
+// prepareImageConfigForDest enforces dest.MustMatchRuntimeOS and handles dest.NoteOriginalOCIConfig, if necessary.
+func prepareImageConfigForDest(ctx context.Context, sys *types.SystemContext, src types.Image, dest private.ImageDestination) error {
+	ociConfig, configErr := src.OCIConfig(ctx)
+	// Do not fail on configErr here, this might be an artifact
+	// and maybe nothing needs this to be a container image and to process the config.
+
 	if dest.MustMatchRuntimeOS() {
-		c, err := src.OCIConfig(ctx)
-		if err != nil {
-			return fmt.Errorf("parsing image configuration: %w", err)
+		if configErr != nil {
+			return fmt.Errorf("parsing image configuration: %w", configErr)
 		}
-		wantedPlatforms, err := platform.WantedPlatforms(sys)
-		if err != nil {
-			return fmt.Errorf("getting current platform information %#v: %w", sys, err)
-		}
+		wantedPlatforms := platform.WantedPlatforms(sys)
 
 		options := newOrderedSet()
 		match := false
@@ -334,7 +334,7 @@ func checkImageDestinationForCurrentRuntime(ctx context.Context, sys *types.Syst
 			// For a transitional period, this might trigger warnings because the Variant
 			// field was added to OCI config only recently. If this turns out to be too noisy,
 			// revert this check to only look for (OS, Architecture).
-			if platform.MatchesPlatform(c.Platform, wantedPlatform) {
+			if platform.MatchesPlatform(ociConfig.Platform, wantedPlatform) {
 				match = true
 				break
 			}
@@ -342,9 +342,14 @@ func checkImageDestinationForCurrentRuntime(ctx context.Context, sys *types.Syst
 		}
 		if !match {
 			logrus.Infof("Image operating system mismatch: image uses OS %q+architecture %q+%q, expecting one of %q",
-				c.OS, c.Architecture, c.Variant, strings.Join(options.list, ", "))
+				ociConfig.OS, ociConfig.Architecture, ociConfig.Variant, strings.Join(options.list, ", "))
 		}
 	}
+
+	if err := dest.NoteOriginalOCIConfig(ociConfig, configErr); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -822,11 +827,16 @@ func (ic *imageCopier) copyLayer(ctx context.Context, srcInfo types.BlobInfo, to
 				logrus.Debugf("Retrieved partial blob %v", srcInfo.Digest)
 				return true, updatedBlobInfoFromUpload(srcInfo, uploadedBlob), nil
 			}
-			logrus.Debugf("Failed to retrieve partial blob: %v", err)
-			return false, types.BlobInfo{}, nil
+			// On a "partial content not available" error, ignore it and retrieve the whole layer.
+			var perr private.ErrFallbackToOrdinaryLayerDownload
+			if errors.As(err, &perr) {
+				logrus.Debugf("Failed to retrieve partial blob: %v", err)
+				return false, types.BlobInfo{}, nil
+			}
+			return false, types.BlobInfo{}, err
 		}()
 		if err != nil {
-			return types.BlobInfo{}, "", err
+			return types.BlobInfo{}, "", fmt.Errorf("partial pull of blob %s: %w", srcInfo.Digest, err)
 		}
 		if reused {
 			return blobInfo, cachedDiffID, nil
