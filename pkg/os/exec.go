@@ -49,6 +49,10 @@ func RunPrivileged(reason string, cmdAndArgs ...string) (string, string, error) 
 		return "", "", errors.New("sudo executable not found")
 	}
 	logging.Infof("Using root access: %s", reason)
+	_, err = exec.LookPath(cmdAndArgs[0])
+	if err != nil {
+		return "", "", errors.New(cmdAndArgs[0] + " executable not found")
+	}
 	return run(sudo, cmdAndArgs, map[string]string{})
 }
 
