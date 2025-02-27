@@ -1,20 +1,20 @@
-# The template is intended to be used from a workflow run 
+# The template is intended to be used from a workflow run
 # as it will pick the artifacts from the triger (through workflow_id param)
 name: windows-qe-tpl
 
-on:  
-  workflow_call:  
-    inputs:  
-      trigger-workflow-run-id:  
-        required: true  
+on:
+  workflow_call:
+    inputs:
+      trigger-workflow-run-id:
+        required: true
         type: string
-      qe-type:  
+      qe-type:
         description: type of test; allowed values e2e or integration
-        required: true  
+        required: true
         type: string
       preset:
         description: preset type only required if qe-type is e2e
-        type: string  
+        type: string
 
 jobs:
   windows-qe:
@@ -32,16 +32,8 @@ jobs:
           windows-featurepack: '23h2-ent'
         - windows-version: '11'
           windows-featurepack: '22h2-ent'
-      
+
     steps:
-    - name: Download gh context
-      id: download-gh-context-artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: gh-context
-        run-id: ${{inputs.trigger-workflow-run-id}}
-        github-token: ${{ github.token }}
-    
     - name: Download windows installer
       id: download-windows-installer-artifact
       uses: actions/download-artifact@v4
@@ -63,13 +55,13 @@ jobs:
         PULL_SECRET: ${{ secrets.PULL_SECRET }}
       run: |
         # Get origin commit sha for testing
-        commit_sha=$(cat gh_context.json | jq -r '.event.after')
+        commit_sha=${{ github.event.workflow_run.head_commit.id }}
         if [[ -z "${commit_sha}" ]] || [[ "${commit_sha}" == null ]]; then
-          # on first PR creation .event.after is empty, then .sha is used as commit instead
-          commit_sha=$(cat gh_context.json | jq -r '.event.pull_request.head.sha')
+          # if .head_commit.id is empty, then .head_sha is used as commit instead
+          commit_sha=${{ github.event.workflow_run.head_sha }}
         fi
         echo "commit_sha=${commit_sha}" >> "$GITHUB_ENV"
-        
+
         # Set status_context
         status_context="ci/gh/${{inputs.qe-type}}"
         if [[ "${{inputs.qe-type}}" == "e2e" ]]; then
@@ -164,13 +156,13 @@ jobs:
           -v $PWD/pull-secret:/opt/crc/pull-secret:z \
           -v $PWD:/data:z \
           quay.io/crcont/crc-${{inputs.qe-type}}:gh-windows-amd64 \
-              ${cmd} 
+              ${cmd}
         podman logs -f crc-${{inputs.qe-type}}
 
     - name: Test Report
       id: test-report
       uses: mikepenz/action-junit-report@v5
-      if: always() 
+      if: always()
       with:
         fail_on_failure: true
         include_passed: true
@@ -194,7 +186,7 @@ jobs:
         set -xuo
         # Status msg
         data="{\"state\":\"success\""
-        if [[ ${{steps.test-report.outcome}} != "success" ]]; then 
+        if [[ ${{steps.test-report.outcome}} != "success" ]]; then
           data="{\"state\":\"failure\""
         fi
         data="${data},\"description\":\"Finished ${{inputs.qe-type}}-${{inputs.preset}} on Windows\""
@@ -212,7 +204,7 @@ jobs:
       run: |
         # Make sure lock is removed
         rm -rf .pulumi/locks/*
-        # Destroy 
+        # Destroy
         podman run -d --name windows-destroy --rm \
           -v ${PWD}:/workspace:z \
           -e ARM_TENANT_ID=${{secrets.ARM_TENANT_ID}} \
@@ -224,5 +216,5 @@ jobs:
           quay.io/redhat-developer/mapt:v0.6.9 azure \
             windows destroy \
             --project-name 'windows-desktop-${{ matrix.windows-version }}-${{ matrix.windows-featurepack }}-${{inputs.qe-type}}-${{inputs.preset}}' \
-            --backed-url azblob://crc-qenvs-state/${{ github.repository }}-${{ github.run_id }} 
+            --backed-url azblob://crc-qenvs-state/${{ github.repository }}-${{ github.run_id }}
         podman logs -f windows-destroy
