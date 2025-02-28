@@ -1,5 +1,5 @@
 param(
-    [Parameter(HelpMessage='When testing a custom bundle we should pass the paht on the target host')]
+    [Parameter(HelpMessage='When testing a custom bundle we should pass the path on the target host')]
     $bundleLocation="",
     [Parameter(HelpMessage='To set an specific set of tests based on annotations')]
     $e2eTagExpression="",
@@ -8,7 +8,7 @@ param(
     [Parameter(HelpMessage='Name for the junit file with the tests results')]
     $junitFilename="e2e-junit.xml",
     [Parameter(HelpMessage='Customize memory for the cluster to run the tests')]
-    $crcMemory=""
+    $crcMemory="",
     [Parameter(HelpMessage='Customize crc binary location')]
     $crcBinaryDir="C:\Program Files\Red Hat OpenShift Local"
 )
