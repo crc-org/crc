@@ -11,6 +11,7 @@ type LabelName uint32
 const (
 	Os LabelName = iota
 	NetworkMode
+	SharedDir
 
 	// Keep it last
 	// will be used in OS-specific go files to extend LabelName
@@ -28,6 +29,10 @@ const (
 	// network mode
 	User
 	System
+
+	// shared dir enabled/disable
+	Enabled
+	Disabled
 
 	// Keep it last
 	// will be used in OS-specific go files to extend LabelValue
@@ -63,6 +68,14 @@ func (filter preflightFilter) SetNetworkMode(networkMode network.Mode) {
 	case network.UserNetworkingMode:
 		filter[NetworkMode] = User
 	}
+}
+
+func (filter preflightFilter) SetSharedDirStatus(enabled bool) {
+	if enabled {
+		filter[SharedDir] = Enabled
+		return
+	}
+	filter[SharedDir] = Disabled
 }
 
 /* This will iterate over 'checks' and only keep the checks which match the filter:

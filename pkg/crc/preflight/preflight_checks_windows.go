@@ -1,7 +1,9 @@
 package preflight
 
 import (
+	"errors"
 	"fmt"
+	"os/user"
 	"strconv"
 	"strings"
 
@@ -206,6 +208,67 @@ func checkAdminHelperNamedPipeAccessible() error {
 	client := adminhelper.Client()
 	if _, err := client.Version(); err != nil {
 		return err
+	}
+	return nil
+}
+
+func checkFileAndPrinterSharingIsEnabled() error {
+	cmd := `(Get-NetFirewallRule -Group '@FirewallAPI.dll,-28502' | Where-Object {$_.Profile -eq 'Private, Public'}).Enabled`
+	stdout, stderr, err := powershell.Execute(cmd)
+	if err != nil {
+		return fmt.Errorf("unable to check if Printer and File Sharing is enabled %v: %s", err, stderr)
+	}
+	if strings.Contains(stdout, "False") {
+		return errors.New("Printer and File Sharing is disabled")
+	}
+	return nil
+}
+
+func fixFileAndPrinterSharing() error {
+	cmd := `Set-NetFirewallRule -Group '@FirewallAPI.dll,-28502' -Enabled True -Profile 'Private,Public'`
+	stdout, stderr, err := powershell.ExecuteAsAdmin("to enable Printer and File Sharing", cmd)
+	if err != nil {
+		return fmt.Errorf("unable to check if Printer and File Sharing is enabled %v: %s: %s", err, stdout, stderr)
+	}
+	return nil
+}
+
+func checkCRCSmbShareCreated() error {
+	cmd := `Get-SmbShare -Name crc-dir0`
+	stdout, stderr, err := powershell.Execute(cmd)
+	if err != nil {
+		return fmt.Errorf("unable to check if Printer and File Sharing is enabled %v: %s: %s", err, stdout, stderr)
+	}
+	return nil
+}
+
+func fixCRCSmbShareCreated() error {
+	u, err := user.Current()
+	if err != nil {
+		return fmt.Errorf("unable to get user information for homedir and username: %v", err)
+	}
+	cmd := fmt.Sprintf(`New-SmbShare -Name 'crc-dir0' -Path '%s' -FullAccess '%s'`, u.HomeDir, username())
+	_, stderr, err := powershell.ExecuteAsAdmin("create new SMB share for home directory", cmd)
+	if err != nil {
+		return fmt.Errorf("unable to get create new SMB share %v: %s", err, stderr)
+	}
+	return nil
+}
+
+func removeSmbShare() error {
+	cmd := `Remove-SmbShare -Name 'crc-dir0' -Force`
+	_, stderr, err := powershell.ExecuteAsAdmin("remove SMB share for home directory", cmd)
+	if err != nil {
+		return fmt.Errorf("unable to get create new SMB share %v: %s", err, stderr)
+	}
+	return nil
+}
+
+func removeFirewallRuleAllowingPrinterAndFileSharing() error {
+	cmd := `Set-NetFirewallRule -Group '@FirewallAPI.dll,-28502' -Enabled False -Profile 'Private,Public'`
+	stdout, stderr, err := powershell.ExecuteAsAdmin("to disable Printer and File Sharing", cmd)
+	if err != nil {
+		logging.Warnf("unable to turn off Printer and File Sharing %v: %s: %s", err, stdout, stderr)
 	}
 	return nil
 }
