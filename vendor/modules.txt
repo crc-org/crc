@@ -71,8 +71,8 @@ github.com/asaskevich/govalidator
 ## explicit; go 1.14
 github.com/cavaliergopher/grab/v3
 github.com/cavaliergopher/grab/v3/pkg/bps
-# github.com/cheggaaa/pb/v3 v3.1.6
-## explicit; go 1.17
+# github.com/cheggaaa/pb/v3 v3.1.7
+## explicit; go 1.18
 github.com/cheggaaa/pb/v3
 github.com/cheggaaa/pb/v3/termutil
 # github.com/cloudflare/circl v1.3.7
