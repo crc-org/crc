@@ -6,8 +6,7 @@ Feature: Basic test
 
     @darwin @linux @windows @release
     Scenario: CRC version
-        When executing crc version command
-        Then stdout should contain correct version
+        Then crc version has expected output
 
     @darwin @linux @windows
     Scenario: CRC help
