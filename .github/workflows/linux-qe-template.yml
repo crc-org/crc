@@ -1,18 +1,18 @@
 name: linux-qe-template
 
 on:
-  workflow_call:  
-    inputs:  
-      trigger-workflow-run-id:  
-        required: true  
+  workflow_call:
+    inputs:
+      trigger-workflow-run-id:
+        required: true
         type: string
-      qe-type:  
+      qe-type:
         description: type of test; allowed values e2e or integration
-        required: true  
+        required: true
         type: string
       preset:
         description: preset type only required if qe-type is e2e
-        type: string  
+        type: string
 
 jobs:
   linux-qe:
@@ -21,13 +21,6 @@ jobs:
       statuses: write # needed to update commit status (pending/failure/sucess)
       checks: write # as documented in https://github.com/mikepenz/action-junit-report?tab=readme-ov-file#pr-run-permissions
     steps:
-      - name: Download gh context
-        id: download-gh-context-artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: gh-context
-          run-id: ${{inputs.trigger-workflow-run-id}}
-          github-token: ${{ github.token }}
       - name: Download bundle_version
         uses: actions/download-artifact@v4
         with:
@@ -43,10 +36,10 @@ jobs:
           testing-farm --help
 
           # Get origin commit sha for testing
-          commit_sha=$(cat gh_context.json | jq -r '.event.after')
+          commit_sha=${{ github.event.workflow_run.head_commit.id }}
           if [[ -z "${commit_sha}" ]] || [[ "${commit_sha}" == null ]]; then
-            # on first PR creation .event.after is empty, then .sha is used as commit instead
-            commit_sha=$(cat gh_context.json | jq -r '.event.pull_request.head.sha')
+            # if .head_commit.id is empty, then .head_sha is used as commit instead
+            commit_sha=${{ github.event.workflow_run.head_sha }}
           fi
           echo "commit_sha=${commit_sha}" >> "$GITHUB_ENV"
 
@@ -94,17 +87,17 @@ jobs:
             -d "${data}"
 
       - name: Reserve machine and test
-        env: 
+        env:
           TESTING_FARM_API_TOKEN: ${{ secrets.TESTING_FARM_API_TOKEN }}
           PULL_SECRET: ${{ secrets.PULL_SECRET }}
         run: |
           echo "${PULL_SECRET}" > pull-secret
 
-          # the target can only be accessed through a bastion (which can only be accessed from self-hosted runner) 
+          # the target can only be accessed through a bastion (which can only be accessed from self-hosted runner)
           # as so we need to map the ssh-agent from the host to the containers used to access the target host
-          
+
           #rm -f id_rsa id_rsa.pub
-          ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa -q 
+          ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa -q
           cp ~/.ssh/id_rsa .
           eval $(ssh-agent -s)
           echo $SSH_AUTH_SOCK > ssh_auth_sock
@@ -149,12 +142,12 @@ jobs:
              -install 'true' \
              -aName 'crc' \
              -freshEnv 'false' \
-             -download 'false' 
+             -download 'false'
           podman logs -f crc-linux-install-${{inputs.qe-type}}-${{inputs.preset}}
 
           # Download arm64 bundle in the reserved machine
           echo "Start download bundle on reserved machine"
-          
+
           if [[ "${{inputs.preset}}" == "microshift" ]]; then
             bundle_url="https://crcqe-asia.s3.ap-south-1.amazonaws.com/bundles/microshift/${{ env.microshift_bundle_v }}-arm64"
             bundle_name="crc_microshift_libvirt_${{ env.microshift_bundle_v }}_arm64.crcbundle"
@@ -177,7 +170,7 @@ jobs:
              -aBaseURL $bundle_url \
              -aName $bundle_name \
              -freshEnv 'false' \
-             -download 'true' 
+             -download 'true'
           podman logs -f download_bundle
 
           # load image
@@ -211,20 +204,20 @@ jobs:
             -v $PWD/pull-secret:/opt/crc/pull-secret:z \
             -v $PWD:/data:z \
             quay.io/crcont/crc-${{inputs.qe-type}}:gh-linux-arm64 \
-                ${cmd} 
+                ${cmd}
           podman logs -f crc-${{inputs.qe-type}}-${{inputs.preset}}
 
       - name: Test Report
         id: test-report
         uses: mikepenz/action-junit-report@v5
-        if: always() 
+        if: always()
         with:
           fail_on_failure: true
           include_passed: true
           detailed_summary: true
           require_tests:  true
           report_paths: '**/*.xml'
-      
+
       - name: Upload e2e results
         uses: actions/upload-artifact@v4
         if: always()
@@ -236,12 +229,12 @@ jobs:
             **/*.log
 
       - name: Return machine and clear env
-        env: 
+        env:
           TESTING_FARM_API_TOKEN: ${{ secrets.TESTING_FARM_API_TOKEN }}
         if: always()
         run: |
           export TESTING_FARM_API_TOKEN=${TESTING_FARM_API_TOKEN}
-          testing-farm cancel $(cat requestid) 
+          testing-farm cancel $(cat requestid)
           podman rmi quay.io/crcont/crc-${{inputs.qe-type}}:gh-linux-arm64
           rm -r results
           kill $(cat ssh_agent_pid)
@@ -252,7 +245,7 @@ jobs:
           set -xuo
           # Status msg
           data="{\"state\":\"success\""
-          if [[ ${{steps.test-report.outcome}} != "success" ]]; then 
+          if [[ ${{steps.test-report.outcome}} != "success" ]]; then
             data="{\"state\":\"failure\""
           fi
           data="${data},\"description\":\"Finished ${{inputs.qe-type}}-${{inputs.preset}} on Linux ARM64\""
@@ -264,8 +257,3 @@ jobs:
             -H "Authorization: Bearer ${{ github.token }}" \
             https://api.github.com/repos/${{ github.repository }}/statuses/${{ env.commit_sha }} \
             -d "${data}"
-
-      
-          
-
-
