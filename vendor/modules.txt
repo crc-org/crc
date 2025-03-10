@@ -227,8 +227,6 @@ github.com/crc-org/machine/libmachine/version
 ## explicit; go 1.22.0
 github.com/crc-org/vfkit/pkg/config
 github.com/crc-org/vfkit/pkg/util
-# github.com/creack/pty v1.1.18
-## explicit; go 1.13
 # github.com/cucumber/gherkin/go/v26 v26.2.0
 ## explicit; go 1.19
 github.com/cucumber/gherkin/go/v26
@@ -446,6 +444,15 @@ github.com/hashicorp/hcl/json/token
 ## explicit; go 1.12
 github.com/hectane/go-acl
 github.com/hectane/go-acl/api
+# github.com/hugelgupf/p9 v0.3.0
+## explicit; go 1.20
+github.com/hugelgupf/p9/fsimpl/localfs
+github.com/hugelgupf/p9/fsimpl/templatefs
+github.com/hugelgupf/p9/fsimpl/xattr
+github.com/hugelgupf/p9/internal
+github.com/hugelgupf/p9/linux
+github.com/hugelgupf/p9/p9
+github.com/hugelgupf/p9/vecnet
 # github.com/imdario/mergo v0.3.13
 ## explicit; go 1.13
 github.com/imdario/mergo
@@ -643,7 +650,7 @@ github.com/pelletier/go-toml/v2/internal/characters
 github.com/pelletier/go-toml/v2/internal/danger
 github.com/pelletier/go-toml/v2/internal/tracker
 github.com/pelletier/go-toml/v2/unstable
-# github.com/pierrec/lz4/v4 v4.1.14
+# github.com/pierrec/lz4/v4 v4.1.18
 ## explicit; go 1.14
 github.com/pierrec/lz4/v4
 github.com/pierrec/lz4/v4/internal/lz4block
@@ -777,6 +784,7 @@ github.com/tklauser/numcpus
 ## explicit; go 1.21
 github.com/u-root/uio/rand
 github.com/u-root/uio/uio
+github.com/u-root/uio/ulog
 # github.com/ulikunitz/xz v0.5.12
 ## explicit; go 1.12
 github.com/ulikunitz/xz
