@@ -89,19 +89,12 @@ func (c Command) Execute() error {
 func (c Command) env() []string {
 	var env []string
 	if !c.updateCheck {
-		env = append(env, envVariable("CRC_DISABLE_UPDATE_CHECK", "true"))
+		env = append(env, util.EnvVariable("CRC_DISABLE_UPDATE_CHECK", "true"))
 	}
 	if c.disableNTP {
-		env = append(env, envVariable("CRC_DEBUG_ENABLE_STOP_NTP", "true"))
+		env = append(env, util.EnvVariable("CRC_DEBUG_ENABLE_STOP_NTP", "true"))
 	}
 	return env
-}
-
-func envVariable(key, value string) string {
-	if runtime.GOOS == "windows" {
-		return fmt.Sprintf("$env:%s=%s;", key, value)
-	}
-	return fmt.Sprintf("%s=%s", key, value)
 }
 
 func (c Command) validate() error {
