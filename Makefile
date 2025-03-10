@@ -21,7 +21,7 @@ RELEASE_DIR ?= release
 
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
-GOVERSION = 1.22
+GOVERSION = 1.23
 
 HOST_BUILD_DIR=$(BUILD_DIR)/$(GOOS)-$(GOARCH)
 GOPATH ?= $(shell go env GOPATH)
