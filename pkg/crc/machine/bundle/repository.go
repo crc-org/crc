@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -124,6 +125,36 @@ func (bundle *CrcBundleInfo) createSymlinkOrCopyPodmanRemote(binDir string) erro
 	return bundle.copyExecutableFromBundle(binDir, PodmanExecutable, constants.PodmanRemoteExecutableName)
 }
 
+func (repo *Repository) ExtractWithReader(ctx context.Context, reader io.Reader, path string) error {
+	logging.Debugf("Extracting bundle from reader")
+	bundleName := filepath.Base(path)
+
+	tmpDir := filepath.Join(repo.CacheDir, "tmp-extract")
+	_ = os.RemoveAll(tmpDir) // clean up before using it
+	defer func() {
+		_ = os.RemoveAll(tmpDir) // clean up after using it
+	}()
+
+	if _, err := extract.UncompressWithReader(ctx, reader, tmpDir); err != nil {
+		return err
+	}
+
+	bundleBaseDir := GetBundleNameWithoutExtension(bundleName)
+	bundleDir := filepath.Join(repo.CacheDir, bundleBaseDir)
+	_ = os.RemoveAll(bundleDir)
+	err := crcerrors.Retry(context.Background(), time.Minute, func() error {
+		if err := os.Rename(filepath.Join(tmpDir, bundleBaseDir), bundleDir); err != nil {
+			return &crcerrors.RetriableError{Err: err}
+		}
+		return nil
+	}, 5*time.Second)
+	if err != nil {
+		return err
+	}
+
+	return os.Chmod(bundleDir, 0755)
+}
+
 func (repo *Repository) Extract(ctx context.Context, path string) error {
 	bundleName := filepath.Base(path)
 
@@ -198,8 +229,15 @@ func Use(bundleName string) (*CrcBundleInfo, error) {
 	return defaultRepo.Use(bundleName)
 }
 
-func Extract(ctx context.Context, path string) (*CrcBundleInfo, error) {
-	if err := defaultRepo.Extract(ctx, path); err != nil {
+func Extract(ctx context.Context, reader io.Reader, path string) (*CrcBundleInfo, error) {
+	var err error
+	if reader == nil {
+		err = defaultRepo.Extract(ctx, path)
+	} else {
+		err = defaultRepo.ExtractWithReader(ctx, reader, path)
+	}
+
+	if err != nil {
 		return nil, err
 	}
 	return defaultRepo.Get(filepath.Base(path))

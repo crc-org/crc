@@ -2,97 +2,66 @@ package download
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
-	"time"
 
+	"github.com/cavaliergopher/grab/v3"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/v2/pkg/crc/version"
-	"github.com/crc-org/crc/v2/pkg/os/terminal"
-
-	"github.com/cavaliergopher/grab/v3"
-	"github.com/cheggaaa/pb/v3"
 	"github.com/pkg/errors"
 )
 
-func doRequest(client *grab.Client, req *grab.Request) (string, error) {
-	const minSizeForProgressBar = 100_000_000
-
-	resp := client.Do(req)
-	if resp.Size() < minSizeForProgressBar {
-		<-resp.Done
-		return resp.Filename, resp.Err()
-	}
-
-	t := time.NewTicker(500 * time.Millisecond)
-	defer t.Stop()
-	var bar *pb.ProgressBar
-	if terminal.IsShowTerminalOutput() {
-		bar = pb.Start64(resp.Size())
-		bar.Set(pb.Bytes, true)
-		// This is the same as the 'Default' template https://github.com/cheggaaa/pb/blob/224e0746e1e7b9c5309d6e2637264bfeb746d043/v3/preset.go#L8-L10
-		// except that the 'per second' suffix is changed to '/s' (by default it is ' p/s' which is unexpected)
-		progressBarTemplate := `{{with string . "prefix"}}{{.}} {{end}}{{counters . }} {{bar . }} {{percent . }} {{speed . "%s/s" "??/s"}}{{with string . "suffix"}} {{.}}{{end}}`
-		bar.SetTemplateString(progressBarTemplate)
-		defer bar.Finish()
-	}
-
-loop:
-	for {
-		select {
-		case <-t.C:
-			if terminal.IsShowTerminalOutput() {
-				bar.SetCurrent(resp.BytesComplete())
-			}
-		case <-resp.Done:
-			break loop
-		}
-	}
-
-	return resp.Filename, resp.Err()
-}
-
 // Download function takes sha256sum as hex decoded byte
 // something like hex.DecodeString("33daf4c03f86120fdfdc66bddf6bfff4661c7ca11c5d")
-func Download(ctx context.Context, uri, destination string, mode os.FileMode, sha256sum []byte) (string, error) {
+func Download(ctx context.Context, uri, destination string, mode os.FileMode, _ []byte) (io.Reader, string, error) {
 	logging.Debugf("Downloading %s to %s", uri, destination)
-
-	client := grab.NewClient()
-	client.UserAgent = version.UserAgent()
-	client.HTTPClient = &http.Client{Transport: httpproxy.HTTPTransport()}
-	req, err := grab.NewRequest(destination, uri)
-	if err != nil {
-		return "", errors.Wrapf(err, "unable to get request from %s", uri)
-	}
 
 	if ctx == nil {
 		panic("ctx is nil, this should not happen")
 	}
+	req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
+
+	if err != nil {
+		return nil, "", errors.Wrapf(err, "unable to get request from %s", uri)
+	}
+	client := http.Client{Transport: &http.Transport{}}
+
 	req = req.WithContext(ctx)
 
-	if sha256sum != nil {
-		req.SetChecksum(sha256.New(), sha256sum, true)
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, "", err
 	}
 
-	filename, err := doRequest(client, req)
+	var filename, dir string
+	if filepath.Ext(destination) == ".crcbundle" {
+		dir = filepath.Dir(destination)
+	} else {
+		dir = destination
+	}
+	if disposition, params, _ := mime.ParseMediaType(resp.Header.Get("Content-Disposition")); disposition == "attachment" {
+		filename = filepath.Join(dir, params["filename"])
+	} else {
+		filename = filepath.Join(dir, filepath.Base(resp.Request.URL.Path))
+	}
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode)
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 
 	if err := os.Chmod(filename, mode); err != nil {
 		_ = os.Remove(filename)
-		return "", err
+		return nil, "", err
 	}
 
-	logging.Debugf("Download saved to %v", filename)
-	return filename, nil
+	return io.TeeReader(resp.Body, file), filename, nil
 }
 
 // InMemory takes a URL and returns a ReadCloser object to the downloaded file
@@ -138,10 +107,10 @@ func NewRemoteFile(uri, sha256sum string) *RemoteFile {
 
 }
 
-func (r *RemoteFile) Download(ctx context.Context, bundlePath string, mode os.FileMode) (string, error) {
+func (r *RemoteFile) Download(ctx context.Context, bundlePath string, mode os.FileMode) (io.Reader, string, error) {
 	sha256bytes, err := hex.DecodeString(r.sha256sum)
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 	return Download(ctx, r.URI, bundlePath, mode, sha256bytes)
 }
