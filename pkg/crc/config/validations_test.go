@@ -136,3 +136,25 @@ func TestValidateNoProxy(t *testing.T) {
 		})
 	}
 }
+
+func TestValidatePersistentVolumeSize(t *testing.T) {
+	tests := []struct {
+		name                     string
+		persistentVolumeSize     string
+		expectedValidationResult bool
+	}{
+		{"equal to 15G", "15", true},
+		{"greater than 15G", "20", true},
+		{"less than 15G", "7", false},
+		{"invalid integer value", "an-elephant", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actualValidationResult, _ := validatePersistentVolumeSize(tt.persistentVolumeSize)
+			if actualValidationResult != tt.expectedValidationResult {
+				t.Errorf("validatePersistentVolumeSize(%s) : got %v, want %v", tt.persistentVolumeSize, actualValidationResult, tt.expectedValidationResult)
+			}
+		})
+	}
+}
