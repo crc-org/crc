@@ -66,69 +66,83 @@ var daemonCmd = &cobra.Command{
 			return errors.New(ErrDaemonAlreadyRunning)
 		}
 
-		virtualNetworkConfig := types.Configuration{
-			Debug:             false, // never log packets
-			CaptureFile:       os.Getenv("CRC_DAEMON_PCAP_FILE"),
-			MTU:               4000, // Large packets slightly improve the performance. Less small packets.
-			Subnet:            "192.168.127.0/24",
-			GatewayIP:         constants.VSockGateway,
-			GatewayMacAddress: "5a:94:ef:e4:0c:dd",
-			DHCPStaticLeases: map[string]string{
-				"192.168.127.2": "5a:94:ef:e4:0c:ee",
-			},
-			DNS: []types.Zone{
-				{
-					Name:      "apps-crc.testing.",
-					DefaultIP: net.ParseIP("192.168.127.2"),
-				},
-				{
-					Name: "crc.testing.",
-					Records: []types.Record{
-						{
-							Name: "host",
-							IP:   net.ParseIP(hostVirtualIP),
-						},
-						{
-							Name: "gateway",
-							IP:   net.ParseIP("192.168.127.1"),
-						},
-						{
-							Name: "api",
-							IP:   net.ParseIP("192.168.127.2"),
-						},
-						{
-							Name: "api-int",
-							IP:   net.ParseIP("192.168.127.2"),
-						},
-						{
-							Regexp: regexp.MustCompile("crc-(.*?)-master-0"),
-							IP:     net.ParseIP("192.168.126.11"),
-						},
-					},
-				},
-				{
-					Name: "containers.internal.",
-					Records: []types.Record{
-						{
-							Name: "gateway",
-							IP:   net.ParseIP(hostVirtualIP),
-						},
-					},
-				},
-			},
-			Protocol: types.HyperKitProtocol,
-		}
-		if config.Get(crcConfig.HostNetworkAccess).AsBool() {
-			log.Debugf("Enabling host network access")
-			if virtualNetworkConfig.NAT == nil {
-				virtualNetworkConfig.NAT = make(map[string]string)
-			}
-			virtualNetworkConfig.NAT[hostVirtualIP] = "127.0.0.1"
-		}
-		virtualNetworkConfig.GatewayVirtualIPs = []string{hostVirtualIP}
+		virtualNetworkConfig := createNewVirtualNetworkConfig(config)
 		err := run(&virtualNetworkConfig)
 		return err
 	},
+}
+
+func createNewVirtualNetworkConfig(providedConfig *crcConfig.Config) types.Configuration {
+	virtualNetworkConfig := types.Configuration{
+		Debug:             false, // never log packets
+		CaptureFile:       os.Getenv("CRC_DAEMON_PCAP_FILE"),
+		MTU:               4000, // Large packets slightly improve the performance. Less small packets.
+		Subnet:            "192.168.127.0/24",
+		GatewayIP:         constants.VSockGateway,
+		GatewayMacAddress: "5a:94:ef:e4:0c:dd",
+		DHCPStaticLeases: map[string]string{
+			"192.168.127.2": "5a:94:ef:e4:0c:ee",
+		},
+		DNS: []types.Zone{
+			{
+				Name:      "apps-crc.testing.",
+				DefaultIP: net.ParseIP("192.168.127.2"),
+			},
+			{
+				Name: "crc.testing.",
+				Records: []types.Record{
+					{
+						Name: "host",
+						IP:   net.ParseIP(hostVirtualIP),
+					},
+					{
+						Name: "gateway",
+						IP:   net.ParseIP("192.168.127.1"),
+					},
+					{
+						Name: "api",
+						IP:   net.ParseIP("192.168.127.2"),
+					},
+					{
+						Name: "api-int",
+						IP:   net.ParseIP("192.168.127.2"),
+					},
+					{
+						Regexp: regexp.MustCompile("crc-(.*?)-master-0"),
+						IP:     net.ParseIP("192.168.126.11"),
+					},
+				},
+			},
+			{
+				Name: "containers.internal.",
+				Records: []types.Record{
+					{
+						Name: "gateway",
+						IP:   net.ParseIP(hostVirtualIP),
+					},
+				},
+			},
+			{
+				Name: "docker.internal.",
+				Records: []types.Record{
+					{
+						Name: "gateway",
+						IP:   net.ParseIP(hostVirtualIP),
+					},
+				},
+			},
+		},
+		Protocol:          types.HyperKitProtocol,
+		GatewayVirtualIPs: []string{hostVirtualIP},
+	}
+	if providedConfig.Get(crcConfig.HostNetworkAccess).AsBool() {
+		log.Debugf("Enabling host network access")
+		if virtualNetworkConfig.NAT == nil {
+			virtualNetworkConfig.NAT = make(map[string]string)
+		}
+		virtualNetworkConfig.NAT[hostVirtualIP] = "127.0.0.1"
+	}
+	return virtualNetworkConfig
 }
 
 func run(configuration *types.Configuration) error {
