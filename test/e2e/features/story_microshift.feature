@@ -3,12 +3,17 @@ Feature: Microshift test stories
 
 	Background:
 		Given setting config property "preset" to value "microshift" succeeds
+		And setting config property "disk-size" to value "32" succeeds
+		And setting config property "persistent-volume-size" to value "16" succeeds
 		And ensuring network mode user
 		And executing single crc setup command succeeds
 		And starting CRC with default bundle succeeds
 		And ensuring oc command is available
 		And ensuring microshift cluster is fully operational
-		
+		And executing "crc status" succeeds
+		And stdout should contain "Persistent Volume Usage:"
+		And persistent volume of size "16"GB exists
+
 	# End-to-end health check
 
 	@microshift @testdata @linux @windows @darwin @cleanup
