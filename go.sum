@@ -42,8 +42,8 @@ github.com/cloudflare/circl v1.3.7 h1:qlCDlTPz2n9fu58M0Nh1J/JzcFpfgkFHHX3O35r5vc
 github.com/cloudflare/circl v1.3.7/go.mod h1:sRTcRWXGLrKw6yIGJ+l7amYJFfAXbZG0kBSc8r4zxgA=
 github.com/containerd/log v0.1.0 h1:TCJt7ioM2cr/tfR8GPbGf9/VRAX8D2B4PjzCpfX540I=
 github.com/containerd/log v0.1.0/go.mod h1:VRRf09a7mHDIRezVKTRCrOq78v577GXq3bSa3EhrzVo=
-github.com/containers/common v0.60.4 h1:H5+LAMHPZEqX6vVNOQ+IguVsaFl8kbO/SZ/VPXjxhy0=
-github.com/containers/common v0.60.4/go.mod h1:I0upBi1qJX3QmzGbUOBN1LVP6RvkKhd3qQpZbQT+Q54=
+github.com/containers/common v0.62.1 h1:durvu7Kelb8PYgX7bwuAg/d5LKj2hs3cAaqcU7Vnqus=
+github.com/containers/common v0.62.1/go.mod h1:n9cEboBmY3AnTk1alkq4t7sLM4plwkDCiaWbsf67YxE=
 github.com/containers/gvisor-tap-vsock v0.8.3 h1:Am3VdjXTn8Mn+dNhgkiRcCFOTSM8u9aWKLW3KTHOGjk=
 github.com/containers/gvisor-tap-vsock v0.8.3/go.mod h1:46MvrqNuRNbjV4ZsZ3mHVJjR2Eh+fpyRh72EvWWFFjU=
 github.com/containers/image/v5 v5.34.2 h1:3r1etun4uJYq5197tcymUcI1h6+zyzKS9PtRtBlEKMI=
@@ -468,8 +468,8 @@ golang.org/x/crypto v0.23.0/go.mod h1:CKFgDieR+mRhux2Lsu27y0fO304Db0wZe70UKqHu0v
 golang.org/x/crypto v0.30.0/go.mod h1:kDsLvtWBEx7MV9tJOj9bnXsPbxwJQ6csT/x4KIN4Ssk=
 golang.org/x/crypto v0.36.0 h1:AnAEvhDddvBdpY+uR+MyHmuZzzNqXSe/GvuDeob5L34=
 golang.org/x/crypto v0.36.0/go.mod h1:Y4J0ReaxCR1IMaabaSMugxJES1EpwhBHhv2bDHklZvc=
-golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67 h1:1UoZQm6f0P/ZO0w1Ri+f+ifG/gXhegadRdwBIXEFWDo=
-golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67/go.mod h1:qj5a5QZpwLU2NLQudwIN5koi3beDhSAlJwa67PuM98c=
+golang.org/x/exp v0.0.0-20250103183323-7d7fa50e5329 h1:9kj3STMvgqy3YA4VQXBrN7925ICMxD5wzMRcgA30588=
+golang.org/x/exp v0.0.0-20250103183323-7d7fa50e5329/go.mod h1:qj5a5QZpwLU2NLQudwIN5koi3beDhSAlJwa67PuM98c=
 golang.org/x/lint v0.0.0-20200302205851-738671d3881b/go.mod h1:3xt1FjdF8hUf6vQPIChWIBhFzV8gjjsPE/fR3IyQdNY=
 golang.org/x/mod v0.1.1-0.20191105210325-c90efee705ee/go.mod h1:QqPTAvyqsEbceGzBzNggFXnrqF1CaUcvgkdR5Ot7KZg=
 golang.org/x/mod v0.2.0/go.mod h1:s0Qsj1ACt9ePp/hMypM3fl4fZqREWJwdYDEqhRiZZUA=
