@@ -50,13 +50,15 @@ func getCrcBundleInfo(ctx context.Context, preset crcPreset.Preset, bundleName, 
 		return bundleInfo, nil
 	}
 	logging.Debugf("Failed to load bundle %s: %v", bundleName, err)
+
 	logging.Infof("Downloading bundle: %s...", bundleName)
-	bundlePath, err = bundle.Download(ctx, preset, bundlePath, enableBundleQuayFallback)
+	reader, bundlePath, err := bundle.Download(ctx, preset, bundlePath, enableBundleQuayFallback)
 	if err != nil {
 		return nil, err
 	}
+
 	logging.Infof("Extracting bundle: %s...", bundleName)
-	if _, err := bundle.Extract(ctx, bundlePath); err != nil {
+	if _, err := bundle.Extract(ctx, reader, bundlePath); err != nil {
 		return nil, err
 	}
 	return bundle.Use(bundleName)
