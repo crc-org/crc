@@ -24,7 +24,7 @@ $resultsDir = "$targetFolderDir\results"
 New-Item -ItemType directory -Path "$resultsDir" -Force
 
 # Run tests
-$tags="windows"
+$tags="x86_64,windows"
 if ($e2eTagExpression) {
     $tags="$tags && $e2eTagExpression"
 }
