@@ -162,7 +162,6 @@ Feature: Test configuration settings
         And stdout should contain "Successfully unset configuration property 'preset'"
         And "JSON" config file "crc.json" in CRC home folder does not contain key "preset"
         
-
     Scenario: CRC config set and get preset property (positive cases) 
         When setting config property "preset" to value "<preset-value>" succeeds
         And "JSON" config file "crc.json" in CRC home folder contains key "preset" with value matching "<preset-value>" 
@@ -172,11 +171,16 @@ Feature: Test configuration settings
         And stdout should contain "Successfully unset configuration property 'preset'"
         And "JSON" config file "crc.json" in CRC home folder does not contain key "preset"
         
-        @linux @darwin @windows 
+        @x86_64
         Examples: Config property preset setting positive
             | preset-value  |
             | microshift    | 
             | okd           | 
+
+        @arm64 @aarch64
+        Examples: Config property preset setting positive
+            | preset-value  |
+            | microshift    | 
             
     Scenario: CRC config set preset (negtive cases) 
         When setting config property "preset" to value "<preset-value>" fails
