@@ -50,7 +50,8 @@ done
 mkdir -p $targetFolder/results
 
 # Run tests
-tags="linux"
+arch=$(uname -m)
+tags="$arch,linux"
 if [ ! -z "$e2eTagExpression" ]
 then
     tags="$tags && $e2eTagExpression"
