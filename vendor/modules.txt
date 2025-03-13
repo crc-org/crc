@@ -89,8 +89,8 @@ github.com/cloudflare/circl/math/mlsbset
 github.com/cloudflare/circl/sign
 github.com/cloudflare/circl/sign/ed25519
 github.com/cloudflare/circl/sign/ed448
-# github.com/containers/common v0.60.4
-## explicit; go 1.21.0
+# github.com/containers/common v0.62.2
+## explicit; go 1.22.8
 github.com/containers/common/pkg/strongunits
 # github.com/containers/gvisor-tap-vsock v0.8.3
 ## explicit; go 1.22.0
@@ -846,7 +846,7 @@ golang.org/x/crypto/sha3
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
 golang.org/x/crypto/ssh/knownhosts
-# golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67
+# golang.org/x/exp v0.0.0-20250103183323-7d7fa50e5329
 ## explicit; go 1.22.0
 golang.org/x/exp/maps
 golang.org/x/exp/slices
