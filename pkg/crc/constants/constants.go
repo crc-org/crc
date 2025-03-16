@@ -38,9 +38,10 @@ const (
 	RootlessPodmanSocket      = "/run/user/1000/podman/podman.sock"
 	RootfulPodmanSocket       = "/run/podman/podman.sock"
 
-	VSockGateway = "192.168.127.1"
-	VsockSSHPort = 2222
-	LocalIP      = "127.0.0.1"
+	VSockGateway    = "192.168.127.1"
+	VsockSSHPort    = 2222
+	LocalIP         = "127.0.0.1"
+	VsockMacAddress = "5a:94:ef:e4:0c:ee"
 
 	OkdPullSecret = `{"auths":{"fake":{"auth": "Zm9vOmJhcgo="}}}` // #nosec G101
 

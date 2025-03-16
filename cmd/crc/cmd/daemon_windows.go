@@ -5,6 +5,7 @@ import (
 
 	"github.com/Microsoft/go-winio"
 	"github.com/containers/gvisor-tap-vsock/pkg/transport"
+	"github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 )
@@ -33,6 +34,10 @@ func httpListener() (net.Listener, error) {
 
 func checkIfDaemonIsRunning() (bool, error) {
 	return checkDaemonVersion()
+}
+
+func unixgramListener(_ *virtualnetwork.VirtualNetwork) (*net.UnixConn, error) {
+	return nil, nil
 }
 
 func startupDone() {

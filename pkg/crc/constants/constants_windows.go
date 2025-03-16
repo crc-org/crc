@@ -7,4 +7,5 @@ const (
 	DaemonHTTPNamedPipe        = `\\.\pipe\crc-http`
 	DaemonTaskName             = "crcDaemon"
 	AdminHelperServiceName     = "crcAdminHelper"
+	UnixgramSocketPath         = ""
 )
