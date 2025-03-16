@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,9 +11,11 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"runtime"
 	"syscall"
 	"time"
 
+	"github.com/containers/gvisor-tap-vsock/pkg/transport"
 	"github.com/crc-org/crc/v2/pkg/crc/api/client"
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 
@@ -132,11 +135,6 @@ var daemonCmd = &cobra.Command{
 }
 
 func run(configuration *types.Configuration) error {
-	vsockListener, err := vsockListener()
-	if err != nil {
-		return err
-	}
-
 	vn, err := virtualnetwork.New(configuration)
 	if err != nil {
 		return err
@@ -199,18 +197,46 @@ func run(configuration *types.Configuration) error {
 		}
 	}()
 
-	go func() {
-		mux := http.NewServeMux()
-		mux.Handle(types.ConnectPath, vn.Mux())
-		s := &http.Server{
-			Handler:      mux,
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 10 * time.Second,
+	if runtime.GOOS == "darwin" {
+		go func() {
+			_ = os.Remove(constants.UnixgramSocketPath)
+			conn, err := transport.ListenUnixgram(fmt.Sprintf("unixgram://%v", constants.UnixgramSocketPath))
+			if err != nil {
+				errCh <- errors.Wrap(err, "failed to listen unixgram")
+			}
+			fmt.Println("Listening on:", constants.UnixgramSocketPath)
+			vfkitConn, err := transport.AcceptVfkit(conn)
+			if err != nil {
+				errCh <- errors.Wrap(err, "failed to accept vfkit connection")
+			}
+			ctx := context.Background()
+			err = vn.AcceptVfkit(ctx, vfkitConn)
+			if err != nil {
+				// Don't return an error if the connection is closed
+				if !errors.Is(err, net.ErrClosed) {
+					errCh <- errors.Wrap(err, "failed to accept vfkit connection")
+				}
+				return
+			}
+		}()
+	} else {
+		vsockListener, err := vsockListener()
+		if err != nil {
+			return err
 		}
-		if err := s.Serve(vsockListener); err != nil {
-			errCh <- errors.Wrap(err, "virtualnetwork http.Serve failed")
-		}
-	}()
+		go func() {
+			mux := http.NewServeMux()
+			mux.Handle(types.ConnectPath, vn.Mux())
+			s := &http.Server{
+				Handler:      mux,
+				ReadTimeout:  10 * time.Second,
+				WriteTimeout: 10 * time.Second,
+			}
+			if err := s.Serve(vsockListener); err != nil {
+				errCh <- errors.Wrap(err, "virtualnetwork http.Serve failed")
+			}
+		}()
+	}
 
 	startupDone()
 

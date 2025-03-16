@@ -246,12 +246,12 @@ func (d *Driver) Start() error {
 		return err
 	}
 
-	// virtio-vsock device
-	dev, err = config.VirtioVsockNew(d.DaemonVsockPort, d.VsockPath, true)
+	netDev, err := config.VirtioNetNew("5a:94:ef:e4:0c:ee")
 	if err != nil {
 		return err
 	}
-	err = vm.AddDevice(dev)
+	netDev.SetUnixSocketPath(constants.UnixgramSocketPath)
+	err = vm.AddDevice(netDev)
 	if err != nil {
 		return err
 	}
