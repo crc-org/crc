@@ -47,6 +47,9 @@ type Driver struct {
 	VsockPath       string
 	DaemonVsockPort uint
 	QemuGAVsockPort uint
+
+	UnixgramMacAddress string
+	UnixgramSockPath   string
 }
 
 func NewDriver(hostName, storePath string) *Driver {
@@ -63,7 +66,9 @@ func NewDriver(hostName, storePath string) *Driver {
 		},
 		// needed when loading a VM which was created before
 		// DaemonVsockPort was introduced
-		DaemonVsockPort: constants.DaemonVsockPort,
+		DaemonVsockPort:    constants.DaemonVsockPort,
+		UnixgramSockPath:   constants.UnixgramSocketPath,
+		UnixgramMacAddress: constants.VsockMacAddress,
 	}
 }
 
@@ -246,14 +251,25 @@ func (d *Driver) Start() error {
 		return err
 	}
 
-	// virtio-vsock device
-	dev, err = config.VirtioVsockNew(d.DaemonVsockPort, d.VsockPath, true)
-	if err != nil {
-		return err
-	}
-	err = vm.AddDevice(dev)
-	if err != nil {
-		return err
+	if d.UnixgramSockPath == "" {
+		dev, err = config.VirtioVsockNew(d.DaemonVsockPort, d.VsockPath, true)
+		if err != nil {
+			return err
+		}
+		err = vm.AddDevice(dev)
+		if err != nil {
+			return err
+		}
+	} else {
+		netDev, err := config.VirtioNetNew(d.UnixgramMacAddress)
+		if err != nil {
+			return err
+		}
+		netDev.SetUnixSocketPath(d.UnixgramSockPath)
+		err = vm.AddDevice(netDev)
+		if err != nil {
+			return err
+		}
 	}
 
 	// when loading a VM created by a crc version predating this commit,

@@ -81,7 +81,7 @@ func createNewVirtualNetworkConfig(providedConfig *crcConfig.Config) types.Confi
 		GatewayIP:         constants.VSockGateway,
 		GatewayMacAddress: "5a:94:ef:e4:0c:dd",
 		DHCPStaticLeases: map[string]string{
-			"192.168.127.2": "5a:94:ef:e4:0c:ee",
+			"192.168.127.2": constants.VsockMacAddress,
 		},
 		DNS: []types.Zone{
 			{
@@ -146,11 +146,6 @@ func createNewVirtualNetworkConfig(providedConfig *crcConfig.Config) types.Confi
 }
 
 func run(configuration *types.Configuration) error {
-	vsockListener, err := vsockListener()
-	if err != nil {
-		return err
-	}
-
 	vn, err := virtualnetwork.New(configuration)
 	if err != nil {
 		return err
@@ -213,6 +208,21 @@ func run(configuration *types.Configuration) error {
 		}
 	}()
 
+	go func() {
+		_, err := unixgramListener(vn)
+		if err != nil {
+			// Don't return an error if the connection is closed
+			if !errors.Is(err, net.ErrClosed) {
+				errCh <- err
+			}
+			return
+		}
+	}()
+
+	vsockListener, err := vsockListener()
+	if err != nil {
+		return err
+	}
 	go func() {
 		mux := http.NewServeMux()
 		mux.Handle(types.ConnectPath, vn.Mux())

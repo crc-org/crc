@@ -1,11 +1,16 @@
 package cmd
 
 import (
+	"context"
+	"fmt"
 	"net"
 	"os"
 
+	"github.com/containers/gvisor-tap-vsock/pkg/transport"
+	"github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/pkg/errors"
 )
 
 func vsockListener() (net.Listener, error) {
@@ -26,6 +31,21 @@ func httpListener() (net.Listener, error) {
 		return nil, err
 	}
 	return ln, nil
+}
+
+func unixgramListener(vn *virtualnetwork.VirtualNetwork) (*net.UnixConn, error) {
+	_ = os.Remove(constants.UnixgramSocketPath)
+	conn, err := transport.ListenUnixgram(fmt.Sprintf("unixgram://%v", constants.UnixgramSocketPath))
+	if err != nil {
+		return conn, errors.Wrap(err, "failed to listen unixgram")
+	}
+	logging.Infof("listening on %s:", constants.UnixgramSocketPath)
+	vfkitConn, err := transport.AcceptVfkit(conn)
+	if err != nil {
+		return conn, errors.Wrap(err, "failed to accept vfkit connection")
+	}
+	err = vn.AcceptVfkit(context.Background(), vfkitConn)
+	return conn, errors.Wrap(err, "failed to accept vfkit connection")
 }
 
 func checkIfDaemonIsRunning() (bool, error) {
