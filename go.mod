@@ -16,7 +16,7 @@ require (
 	github.com/containers/image/v5 v5.34.2
 	github.com/containers/libhvee v0.9.0
 	github.com/coreos/go-systemd/v22 v22.5.0
-	github.com/crc-org/admin-helper v0.5.4
+	github.com/crc-org/admin-helper v0.5.5
 	github.com/crc-org/machine v0.0.0-20240926103419-a943b47fd48b
 	github.com/crc-org/vfkit v0.6.0
 	github.com/cucumber/godog v0.15.0
