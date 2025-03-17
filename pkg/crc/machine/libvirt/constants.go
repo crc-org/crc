@@ -21,7 +21,7 @@ const (
 )
 
 const (
-	MachineDriverVersion = "0.13.9"
+	MachineDriverVersion = "0.13.10"
 )
 
 var (
