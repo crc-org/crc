@@ -92,8 +92,8 @@ github.com/cloudflare/circl/sign/ed448
 # github.com/containers/common v0.62.2
 ## explicit; go 1.22.8
 github.com/containers/common/pkg/strongunits
-# github.com/containers/gvisor-tap-vsock v0.8.4
-## explicit; go 1.22.0
+# github.com/containers/gvisor-tap-vsock v0.8.5
+## explicit; go 1.23.0
 github.com/containers/gvisor-tap-vsock/pkg/client
 github.com/containers/gvisor-tap-vsock/pkg/fs
 github.com/containers/gvisor-tap-vsock/pkg/net/stdio
@@ -831,8 +831,8 @@ golang.org/x/crypto/ssh/knownhosts
 # golang.org/x/exp v0.0.0-20250103183323-7d7fa50e5329
 ## explicit; go 1.22.0
 golang.org/x/exp/maps
-# golang.org/x/mod v0.23.0
-## explicit; go 1.22.0
+# golang.org/x/mod v0.24.0
+## explicit; go 1.23.0
 golang.org/x/mod/semver
 # golang.org/x/net v0.37.0
 ## explicit; go 1.23.0
