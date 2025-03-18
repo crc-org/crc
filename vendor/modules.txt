@@ -223,8 +223,8 @@ github.com/crc-org/machine/libmachine/drivers/plugin/localbinary
 github.com/crc-org/machine/libmachine/drivers/rpc
 github.com/crc-org/machine/libmachine/state
 github.com/crc-org/machine/libmachine/version
-# github.com/crc-org/vfkit v0.6.0
-## explicit; go 1.22.0
+# github.com/crc-org/vfkit v0.6.1
+## explicit; go 1.23.0
 github.com/crc-org/vfkit/pkg/config
 github.com/crc-org/vfkit/pkg/util
 # github.com/creack/pty v1.1.18
@@ -831,8 +831,8 @@ golang.org/x/crypto/ssh/knownhosts
 # golang.org/x/exp v0.0.0-20250103183323-7d7fa50e5329
 ## explicit; go 1.22.0
 golang.org/x/exp/maps
-# golang.org/x/mod v0.23.0
-## explicit; go 1.22.0
+# golang.org/x/mod v0.24.0
+## explicit; go 1.23.0
 golang.org/x/mod/semver
 # golang.org/x/net v0.37.0
 ## explicit; go 1.23.0
