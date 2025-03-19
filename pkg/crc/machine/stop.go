@@ -20,7 +20,7 @@ func (client *client) Stop() (state.State, error) {
 	if running, _ := client.IsRunning(); !running {
 		return state.Error, errors.New("Instance is already stopped")
 	}
-	vm, err := loadVirtualMachine(client.name, client.useVSock())
+	vm, err := loadVirtualMachineLazily(client.virtualMachine, client.name, client.useVSock())
 	if err != nil {
 		return state.Error, errors.Wrap(err, "Cannot load machine")
 	}
@@ -45,7 +45,7 @@ func (client *client) Stop() (state.State, error) {
 	}
 	// In case usermode networking make sure all the port bind on host should be released
 	if client.useVSock() {
-		return status, unexposePorts()
+		return status, vm.UnExposePorts()
 	}
 	return status, nil
 }
@@ -54,7 +54,7 @@ func (client *client) Stop() (state.State, error) {
 // is fixed. We should also ignore the openshift specific errors because stop
 // operation shouldn't depend on the openshift side. Without this graceful shutdown
 // takes around 6-7 mins.
-func stopAllContainers(vm *virtualMachine) error {
+func stopAllContainers(vm VirtualMachine) error {
 	logging.Info("Stopping kubelet and all containers...")
 	sshRunner, err := vm.SSHRunner()
 	if err != nil {
