@@ -37,7 +37,4 @@ Feature: Application Deployment Test
         Then executing "curl -s http://quarkus-testproj.apps-crc.testing" succeeds
         And stdout should contain "{"applicationName":"JKube","message":"Subatomic JKube really whips the llama's ass!"}"
         # Access application via Service's NodePort
-        And executing "QUARKUS_NODEPORT=`oc get svc quarkus -o jsonpath='{.spec.ports[0].nodePort}'`" succeeds
-        And executing "CRC_IP=`crc ip`" succeeds
-        Then executing "curl -s http://$CRC_IP:$QUARKUS_NODEPORT" succeeds
-        And stdout should contain "{"applicationName":"JKube","message":"Subatomic JKube really whips the llama's ass!"}"
+        Then ensure service "quarkus" is accessible via NodePort with response body "{"applicationName":"JKube","message":"Subatomic JKube really whips the llama's ass!"}"
