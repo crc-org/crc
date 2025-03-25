@@ -95,23 +95,3 @@ jobs:
           podman push quay.io/crcont/${{ env.IMAGE_NAME_INTEGRATION}}:vnext-${{matrix.os}}-${{matrix.arch}}
           podman tag quay.io/crcont/${{ env.IMAGE_NAME_E2E}}:gh-${{matrix.os}}-${{matrix.arch}} quay.io/crcont/${{ env.IMAGE_NAME_E2E}}:vnext-${{matrix.os}}-${{matrix.arch}}
           podman push quay.io/crcont/${{ env.IMAGE_NAME_E2E}}:vnext-${{matrix.os}}-${{matrix.arch}}
-  save-bundle-version:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - name: Save the bundle version
-        run: |
-          ocp_version_line=$(cat Makefile | grep "OPENSHIFT_VERSION ?=")
-          ocp_bundle_v=${ocp_version_line##*= }
-          echo $ocp_bundle_v > bundle_version.json
-          microshift_version_line=$(cat Makefile | grep "MICROSHIFT_VERSION ?=")
-          microshift_bundle_v=${microshift_version_line##*= }
-          echo $microshift_bundle_v >> bundle_version.json
-      - name: Upload the ocp bundle version artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: bundle_version
-          path: bundle_version.json
