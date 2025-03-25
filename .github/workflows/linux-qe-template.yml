@@ -21,13 +21,6 @@ jobs:
       statuses: write # needed to update commit status (pending/failure/sucess)
       checks: write # as documented in https://github.com/mikepenz/action-junit-report?tab=readme-ov-file#pr-run-permissions
     steps:
-      - name: Download bundle_version
-        uses: actions/download-artifact@v4
-        with:
-          name: bundle_version
-          run-id: ${{inputs.trigger-workflow-run-id}}
-          github-token: ${{ github.token }}
-
       - name: prepare
         run: |
           # Install Testing farm CLI
@@ -47,14 +40,6 @@ jobs:
           status_context="ci/gh/${{inputs.qe-type}}-${{inputs.preset}}"
           status_context="${status_context}/Linux-ARM64"
           echo "status_context=${status_context}" >> "$GITHUB_ENV"
-
-          ocp_bundle_v=$(sed -n '1p' bundle_version.json)
-          echo "ocp_bundle_v=${ocp_bundle_v}" >> "$GITHUB_ENV"
-          echo "ocp_bundle_v=${ocp_bundle_v}"
-
-          microshift_bundle_v=$(sed -n '2p' bundle_version.json)
-          echo "microshift_bundle_v=${microshift_bundle_v}" >> "$GITHUB_ENV"
-          echo "microshift_bundle_v=${microshift_bundle_v}"
 
       - name: Download linux binary
         uses: actions/download-artifact@v4
@@ -145,40 +130,12 @@ jobs:
              -download 'false'
           podman logs -f crc-linux-install-${{inputs.qe-type}}-${{inputs.preset}}
 
-          # Download arm64 bundle in the reserved machine
-          echo "Start download bundle on reserved machine"
-
-          if [[ "${{inputs.preset}}" == "microshift" ]]; then
-            bundle_url="https://crcqe-asia.s3.ap-south-1.amazonaws.com/bundles/microshift/${{ env.microshift_bundle_v }}-arm64"
-            bundle_name="crc_microshift_libvirt_${{ env.microshift_bundle_v }}_arm64.crcbundle"
-          else
-            bundle_url="https://crcqe-asia.s3.ap-south-1.amazonaws.com/bundles/openshift/${{ env.ocp_bundle_v }}-arm64"
-            bundle_name="crc_libvirt_${{ env.ocp_bundle_v }}_arm64.crcbundle"
-          fi
-          podman run --rm -d --privileged --name download_bundle \
-            -e TARGET_HOST=$(cat host) \
-            -e TARGET_HOST_USERNAME=$(cat username) \
-            -e TARGET_HOST_KEY_PATH=/data/id_rsa \
-            -e TARGET_FOLDER=crc-support \
-            -e TARGET_CLEANUP='false' \
-            -e OUTPUT_FOLDER=/data \
-            -e DEBUG='true' \
-            -v ${PWD}:/data:z \
-            quay.io/crc-org/ci-crc-support:v2.0.0-dev-linux crc-support/run.sh \
-             -targetPath "/home/crctest" \
-             -install 'false' \
-             -aBaseURL $bundle_url \
-             -aName $bundle_name \
-             -freshEnv 'false' \
-             -download 'true'
-          podman logs -f download_bundle
-
           # load image
           podman load -i crc-${{inputs.qe-type}}-linux-arm64.tar
           $ssh_cmd 'chmod +x /usr/local/bin/crc' < /dev/null
 
           # run CRC test
-          cmd="crc-qe/run.sh -bundleLocation /home/crctest/$bundle_name -junitFilename crc-${{inputs.qe-type}}-junit.xml -targetFolder crc-qe"
+          cmd="crc-qe/run.sh -junitFilename crc-${{inputs.qe-type}}-junit.xml -targetFolder crc-qe"
           if [[ "${{inputs.qe-type}}" == "e2e" ]]; then
             if [[ "${{inputs.preset}}" == "microshift" ]]; then
               cmd="${cmd} -e2eTagExpression '@story_microshift'"
