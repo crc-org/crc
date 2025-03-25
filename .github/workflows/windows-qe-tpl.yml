@@ -108,7 +108,8 @@ jobs:
             --windows-version '${{matrix.windows-version}}' \
             --windows-featurepack '${{matrix.windows-featurepack}}' \
             --tags project=openshift-local,source=github,org=${{github.repository_owner}},run=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }} \
-            --spot
+            --spot \
+            --spot-excluded-regions southafricawest,australiacentral2
         podman logs -f windows-create
 
     - name: Install CRC on host
