@@ -14,4 +14,5 @@ const (
 var (
 	TapSocketPath        = filepath.Join(CrcBaseDir, "tap.sock")
 	DaemonHTTPSocketPath = filepath.Join(CrcBaseDir, "crc-http.sock")
+	UnixgramSocketPath   = filepath.Join(CrcBaseDir, "crc-unixgram.sock")
 )
