@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/user"
@@ -555,6 +556,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		EnsureKubeConfigIsCleanedUp)
 	s.Step(`^crc version has expected output$`,
 		EnsureCrcVersionIsCorrect)
+	s.Step(`^ensure service "(.*)" is accessible via NodePort with response body "(.*)"$`,
+		EnsureApplicationIsAccessibleViaNodePort)
 
 	s.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
 
@@ -1097,6 +1100,39 @@ func EnsureKubeConfigIsCleanedUp() error {
 		if cluster.Server == crcClusterDomain {
 			return fmt.Errorf("kube config's cluster %s is not cleaned up, it still contains a cluster with %s domain [expected : \"\", actual : %s]", name, crcClusterDomain, crcClusterDomain)
 		}
+	}
+	return nil
+}
+
+func EnsureApplicationIsAccessibleViaNodePort(svcName string, expectedResponseBody string) error {
+	crcIPCmdErr := util.ExecuteCommand("crc ip")
+	if crcIPCmdErr != nil {
+		return fmt.Errorf("crc ip command failed: %s", crcIPCmdErr.Error())
+	}
+	crcIP := util.GetLastCommandOutput("stdout")
+	serviceNodePortErr := util.ExecuteCommand(fmt.Sprintf("oc get svc %s -o jsonpath='{.spec.ports[0].nodePort}'", svcName))
+	if serviceNodePortErr != nil {
+		return fmt.Errorf("oc get svc command failed: %s", serviceNodePortErr.Error())
+	}
+	serviceNodePort := util.GetLastCommandOutput("stdout")
+	applicationURL := fmt.Sprintf("http://%s:%s", crcIP, serviceNodePort)
+	req, err := http.NewRequest(http.MethodGet, applicationURL, nil)
+	if err != nil {
+		return fmt.Errorf("unable to create http request for: %s, %s", applicationURL, err.Error())
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("unable to access application via NodePort Url: %s", applicationURL)
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("unable to access application via NodePort Url: %s, expected response code 200, got %d", applicationURL, resp.StatusCode)
+	}
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("unable to access application via NodePort Url: %s", applicationURL)
+	}
+	if string(responseBody) != expectedResponseBody {
+		return fmt.Errorf("unexpected response from url : %s, expected : %s, actual : %s", applicationURL, expectedResponseBody, string(responseBody))
 	}
 	return nil
 }
