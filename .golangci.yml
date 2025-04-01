@@ -1,23 +1,36 @@
+version: "2"
 run:
   build-tags:
     - build
     - containers_image_openpgp
-  timeout: 10m
-
 linters:
   enable:
+    - gocritic
+    - gosec
+    - misspell
     - errcheck
-    - goimports
     - gofmt
     - gosec
-    - gocritic
-    - unused
-    - misspell
-    - revive
-
-issues:
-  exclude-rules:
-    - path: 'test/*'
-      text: 'dot-imports: should not use dot imports'
-      linters:
-        - revive
+    - goimports
+    # - revive  # revive is flagging ginkgo and gomega dot-imports
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
