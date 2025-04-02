@@ -248,7 +248,7 @@ func GetBundleNameFromURI(bundleURI string) (string, error) {
 	case strings.HasPrefix(bundleURI, "docker://"):
 		imageAndTag := strings.Split(path.Base(bundleURI), ":")
 		if len(imageAndTag) < 2 {
-			return "", fmt.Errorf("No tag found in bundle URI")
+			return "", fmt.Errorf("no tag found in bundle URI")
 		}
 		return constants.BundleForPreset(image.GetPresetName(imageAndTag[0]), imageAndTag[1]), nil
 	case strings.HasPrefix(bundleURI, "http://"), strings.HasPrefix(bundleURI, "https://"):
@@ -329,7 +329,7 @@ func getVerifiedHash(url string, file string) (string, error) {
 
 	verifiedHashes, err := gpg.GetVerifiedClearsignedMsgV3(constants.RedHatReleaseKey, string(signedHashes))
 	if err != nil {
-		return "", fmt.Errorf("Invalid signature: %w", err)
+		return "", fmt.Errorf("invalid signature: %w", err)
 	}
 
 	logging.Debugf("Verified bundle hashes:\n%s", verifiedHashes)
@@ -409,7 +409,7 @@ func FetchLatestReleaseInfo() (*ReleaseInfo, error) {
 
 	var releaseInfo ReleaseInfo
 	if err := json.Unmarshal(releaseMetaData, &releaseInfo); err != nil {
-		return nil, fmt.Errorf("Error unmarshaling JSON metadata: %v", err)
+		return nil, fmt.Errorf("error unmarshaling JSON metadata: %v", err)
 	}
 
 	return &releaseInfo, nil

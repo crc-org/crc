@@ -126,7 +126,7 @@ func checkNetworkConnectivity() error {
 		logging.Debugf("Successfully pinged %s, network is up", ns.IPAddress)
 		return nil
 	}
-	return fmt.Errorf("Could not ping any nameservers")
+	return fmt.Errorf("could not ping any nameservers")
 }
 
 // Wait for Network wait till the network is up, since it is required to resolve external dnsquery
@@ -139,7 +139,7 @@ func waitForNetwork() error {
 		return nil
 	}
 	if err := crcerrors.Retry(context.Background(), 15*time.Second, retriableConnectivityCheck, time.Second); err != nil {
-		return fmt.Errorf("Host is not connected to internet")
+		return fmt.Errorf("host is not connected to internet")
 	}
 
 	return nil

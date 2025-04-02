@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	configPropDoesntExistMsg = "Configuration property '%s' does not exist"
-	invalidProp              = "Value '%v' for configuration property '%s' is invalid, reason: %s"
-	invalidType              = "Type %T for configuration property '%s' is invalid"
+	configPropDoesntExistMsg = "configuration property '%s' does not exist"
+	invalidProp              = "value '%v' for configuration property '%s' is invalid, reason: %s"
+	invalidType              = "type %T for configuration property '%s' is invalid"
 )
 
 type ValueChangedFunc func(config *Config, key string, value interface{})
@@ -170,7 +170,7 @@ func (c *Config) Unset(key string) (string, error) {
 
 func (c *Config) RegisterNotifier(key string, changeNotifier ValueChangedFunc) error {
 	if _, hasKey := c.valueChangeNotifiers[key]; hasKey {
-		return fmt.Errorf("Config change notifier already registered for %s", key)
+		return fmt.Errorf("config change notifier already registered for %s", key)
 	}
 
 	c.valueChangeNotifiers[key] = changeNotifier

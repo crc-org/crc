@@ -41,15 +41,15 @@ func Verify(filePath, signatureFilePath string) error {
 func GetVerifiedClearsignedMsgV3(pubkey, clearSignedMsg string) (string, error) {
 	k, err := goOpenpgp.ReadArmoredKeyRing(bytes.NewBufferString(pubkey))
 	if err != nil {
-		return "", fmt.Errorf("Unable to read pubkey: %w", err)
+		return "", fmt.Errorf("unable to read pubkey: %w", err)
 	}
 	block, rest := goClearsign.Decode([]byte(clearSignedMsg))
 	if len(rest) != 0 {
-		return "", fmt.Errorf("Error decoding clear signed message")
+		return "", fmt.Errorf("error decoding clear signed message")
 	}
 	sig, err := io.ReadAll(block.ArmoredSignature.Body)
 	if err != nil {
-		return "", fmt.Errorf("Error reading signature: %w", err)
+		return "", fmt.Errorf("error reading signature: %w", err)
 	}
 
 	// CheckDetachedSignature method expects the clear text msg
@@ -61,7 +61,7 @@ func GetVerifiedClearsignedMsgV3(pubkey, clearSignedMsg string) (string, error) 
 
 	id, err := goOpenpgp.CheckDetachedSignature(k, bytes.NewBufferString(canonicalizedMsgText), bytes.NewBuffer(sig))
 	if err != nil {
-		return "", fmt.Errorf("Invalid signature: %w", err)
+		return "", fmt.Errorf("invalid signature: %w", err)
 	}
 	logging.Debugf("Got valid signature from key id: %s", id.PrimaryKey.KeyIdString())
 	return trimEachLine(string(clearTextMsg)), nil

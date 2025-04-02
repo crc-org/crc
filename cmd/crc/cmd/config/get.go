@@ -16,13 +16,13 @@ func configGetCmd(config config.Storage) *cobra.Command {
 		Long:  `Gets a crc configuration property.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
-				return errors.New("Please provide a configuration property to get")
+				return errors.New("please provide a configuration property to get")
 			}
 			key := args[0]
 
 			v := config.Get(key)
 			if v.Invalid {
-				return fmt.Errorf("Configuration property '%s' does not exist", key)
+				return fmt.Errorf("configuration property '%s' does not exist", key)
 			}
 
 			telemetry.SetConfigurationKey(cmd.Context(), args[0])

@@ -46,7 +46,7 @@ func MigrateHost(name string, data []byte) (*Host, error) {
 		Driver: driver,
 	}
 	if err := json.Unmarshal(data, &h); err != nil {
-		return nil, fmt.Errorf("Error unmarshalling most recent host version: %s", err)
+		return nil, fmt.Errorf("error unmarshalling most recent host version: %s", err)
 	}
 	h.RawDriver = driver.Data
 	return &h, nil

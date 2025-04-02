@@ -9,5 +9,5 @@ import (
 )
 
 func copyDiskImage(_ string) (string, string, error) {
-	return "", "", fmt.Errorf("Not implemented for %s", runtime.GOOS)
+	return "", "", fmt.Errorf("not implemented for %s", runtime.GOOS)
 }

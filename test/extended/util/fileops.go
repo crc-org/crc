@@ -219,9 +219,9 @@ func ConfigFileContainsKeyMatchingValue(format string, configPath string, condit
 	}
 
 	if (condition == "contains") && !matches {
-		return fmt.Errorf("For key '%s' config contains unexpected value '%s'", keyPath, keyValue)
+		return fmt.Errorf("for key '%s' config contains unexpected value '%s'", keyPath, keyValue)
 	} else if (condition == "does not contain") && matches {
-		return fmt.Errorf("For key '%s' config contains value '%s', which it should not contain", keyPath, keyValue)
+		return fmt.Errorf("for key '%s' config contains value '%s', which it should not contain", keyPath, keyValue)
 	}
 
 	return nil
@@ -239,9 +239,9 @@ func ConfigFileContainsKey(format string, configPath string, condition string, k
 	}
 
 	if (condition == "contains") && (keyValue == "<nil>") {
-		return fmt.Errorf("Config does not contain any value for key %s", keyPath)
+		return fmt.Errorf("config does not contain any value for key %s", keyPath)
 	} else if (condition == "does not contain") && (keyValue != "<nil>") {
-		return fmt.Errorf("Config contains key %s with assigned value: %s", keyPath, keyValue)
+		return fmt.Errorf("config contains key %s with assigned value: %s", keyPath, keyValue)
 	}
 
 	return nil
@@ -252,16 +252,19 @@ func GetConfigKeyValue(configData []byte, format string, keyPath string) (string
 	var keyValue string
 	var values map[string]interface{}
 
-	if format == "JSON" {
+	switch format {
+	case "JSON":
 		err = json.Unmarshal(configData, &values)
 		if err != nil {
-			return "", fmt.Errorf("Error unmarshaling JSON: %s", err)
+			return "", fmt.Errorf("error unmarshaling JSON: %s", err)
 		}
-	} else if format == "YAML" {
+	case "YAML":
 		err = yaml.Unmarshal(configData, &values)
 		if err != nil {
-			return "", fmt.Errorf("Error unmarshaling YAML: %s", err)
+			return "", fmt.Errorf("error unmarshaling YAML: %s", err)
 		}
+	default:
+		return "", fmt.Errorf("unsupported format: %s", format)
 	}
 
 	keyPathArray := strings.Split(keyPath, ".")

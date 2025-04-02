@@ -33,7 +33,7 @@ func getCSRList(ctx context.Context, ocConfig oc.Config, expectedSignerName stri
 	}
 	output, stderr, err := ocConfig.WithFailFast().RunOcCommand("get", "csr", "-ojson")
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get all certificate signing requests: %v %s", err, stderr)
+		return nil, fmt.Errorf("failed to get all certificate signing requests: %v %s", err, stderr)
 	}
 	err = json.Unmarshal([]byte(output), &csrs)
 	if err != nil {
