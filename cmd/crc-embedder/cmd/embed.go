@@ -88,13 +88,13 @@ func embedFiles(executablePath string, filenames []string) error {
 		logging.Debugf("Embedding %s in %s", filename, executablePath)
 		f, err := os.Open(filename) // #nosec G304
 		if err != nil {
-			return fmt.Errorf("Failed to open %s: %v", filename, err)
+			return fmt.Errorf("failed to open %s: %v", filename, err)
 		}
 		defer f.Close()
 
 		err = appender.AppendStreamReader(path.Base(filename), f, false)
 		if err != nil {
-			return fmt.Errorf("Failed to append %s to %s: %v", filename, executablePath, err)
+			return fmt.Errorf("failed to append %s to %s: %v", filename, executablePath, err)
 		}
 	}
 
