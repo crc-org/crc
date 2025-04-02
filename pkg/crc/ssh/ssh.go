@@ -76,7 +76,7 @@ func (runner *Runner) CopyFileFromVM(srcFilename string, destFilename string, mo
 	command := fmt.Sprintf("sudo base64 %s", srcFilename)
 	stdout, stderr, err := runner.RunPrivate(command)
 	if err != nil {
-		return fmt.Errorf("Failed to get file content %s : %w", stderr, err)
+		return fmt.Errorf("failed to get file content %s : %w", stderr, err)
 	}
 	rawDecodedText, err := base64.StdEncoding.DecodeString(stdout)
 	if err != nil {
@@ -114,7 +114,7 @@ func (runner *Runner) runSSHCommand(command string, runPrivate bool) (string, st
 	if err != nil {
 		return string(stdout), string(stderr), fmt.Errorf(`ssh command error:
 command : %s
-err     : %w`+"\n", command, err)
+err     : %w`, command, err)
 	}
 
 	return string(stdout), string(stderr), nil

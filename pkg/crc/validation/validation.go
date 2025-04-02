@@ -148,7 +148,7 @@ func bundleMismatchWarning(userProvidedBundle string, preset crcpreset.Preset) {
 // (bundle is not downloaded or uncompressed yet)
 func BundleMismatchWithPresetFilename(preset crcpreset.Preset, bundleFilenameInfo *bundle.FilenameInfo) error {
 	if preset != bundleFilenameInfo.Preset {
-		return fmt.Errorf("Preset %s is used but bundle is provided for %s preset", preset, bundleFilenameInfo.Preset)
+		return fmt.Errorf("preset %s is used but bundle is provided for %s preset", preset, bundleFilenameInfo.Preset)
 	}
 	return nil
 }
@@ -157,7 +157,7 @@ func BundleMismatchWithPresetFilename(preset crcpreset.Preset, bundleFilenameInf
 // (bundle is already downloaded and uncompressed)
 func BundleMismatchWithPresetMetadata(preset crcpreset.Preset, bundleMetadata *bundle.CrcBundleInfo) error {
 	if preset != bundleMetadata.GetBundleType() {
-		return fmt.Errorf("Preset %s is used but bundle is provided for %s preset", preset, bundleMetadata.GetBundleType())
+		return fmt.Errorf("preset %s is used but bundle is provided for %s preset", preset, bundleMetadata.GetBundleType())
 	}
 	return nil
 }

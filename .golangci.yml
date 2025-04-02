@@ -1,5 +1,6 @@
 version: "2"
 run:
+  timeout: 10m
   build-tags:
     - build
     - containers_image_openpgp
@@ -9,10 +10,8 @@ linters:
     - gosec
     - misspell
     - errcheck
-    - gofmt
     - gosec
-    - goimports
-    # - revive  # revive is flagging ginkgo and gomega dot-imports
+    - revive
   exclusions:
     generated: lax
     presets:
@@ -20,17 +19,14 @@ linters:
       - common-false-positives
       - legacy
       - std-error-handling
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
+    rules:
+      path: 'test/integration/*'
+      text: 'dot-imports: should not use dot imports'
+      linters:
+        - revive
 formatters:
   enable:
     - gofmt
     - goimports
   exclusions:
     generated: lax
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
