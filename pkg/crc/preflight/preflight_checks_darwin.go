@@ -29,7 +29,7 @@ const (
 func checkAppleSilicon() error {
 	if strings.HasPrefix(cpuid.CPU.BrandName, "VirtualApple") {
 		logging.Debugf("Running with an emulated x86_64 CPU")
-		return fmt.Errorf("This version of CRC for AMD64/Intel64 CPUs is unsupported on Apple M1 hardware")
+		return fmt.Errorf("this version of CRC for AMD64/Intel64 CPUs is unsupported on Apple M1 hardware")
 	}
 
 	return nil
@@ -62,7 +62,7 @@ func fixVfkitInstallation() error {
 	logging.Debugf("Installing %s", h.GetExecutableName())
 
 	if err := h.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download %s : %v", h.GetExecutableName(), err)
+		return fmt.Errorf("unable to download %s : %v", h.GetExecutableName(), err)
 	}
 	return nil
 }
@@ -77,13 +77,13 @@ func fixResolverFilePermissions() error {
 		logging.Debugf("Creating %s directory", resolverDir)
 		stdOut, stdErr, err := crcos.RunPrivileged(fmt.Sprintf("Creating dir %s", resolverDir), "mkdir", resolverDir)
 		if err != nil {
-			return fmt.Errorf("Unable to create the resolver Dir: %s %v: %s", stdOut, err, stdErr)
+			return fmt.Errorf("unable to create the resolver Dir: %s %v: %s", stdOut, err, stdErr)
 		}
 	}
 	logging.Debugf("Making %s readable/writable by the current user", resolverFile)
 	stdOut, stdErr, err := crcos.RunPrivileged(fmt.Sprintf("Creating file %s", resolverFile), "touch", resolverFile)
 	if err != nil {
-		return fmt.Errorf("Unable to create the resolver file: %s %v: %s", stdOut, err, stdErr)
+		return fmt.Errorf("unable to create the resolver file: %s %v: %s", stdOut, err, stdErr)
 	}
 
 	return addFileWritePermissionToUser(resolverFile)
@@ -95,7 +95,7 @@ func removeResolverFile() error {
 		logging.Debugf("Removing %s file", resolverFile)
 		err := crcos.RemoveFileAsRoot(fmt.Sprintf("Removing file %s", resolverFile), resolverFile)
 		if err != nil {
-			return fmt.Errorf("Unable to delete the resolver File: %s %v", resolverFile, err)
+			return fmt.Errorf("unable to delete the resolver File: %s %v", resolverFile, err)
 		}
 	}
 	return nil
@@ -114,17 +114,17 @@ func addFileWritePermissionToUser(filename string) error {
 	currentUser, err := user.Current()
 	if err != nil {
 		logging.Debugf("user.Current() failed: %v", err)
-		return fmt.Errorf("Failed to get current user id")
+		return fmt.Errorf("failed to get current user id")
 	}
 
 	stdOut, stdErr, err := crcos.RunPrivileged(fmt.Sprintf("Changing ownership of %s", filename), "chown", currentUser.Username, filename)
 	if err != nil {
-		return fmt.Errorf("Unable to change ownership of the filename: %s %v: %s", stdOut, err, stdErr)
+		return fmt.Errorf("unable to change ownership of the filename: %s %v: %s", stdOut, err, stdErr)
 	}
 
 	err = os.Chmod(filename, 0600)
 	if err != nil {
-		return fmt.Errorf("Unable to change permissions of the filename: %s %v: %s", stdOut, err, stdErr)
+		return fmt.Errorf("unable to change permissions of the filename: %s %v: %s", stdOut, err, stdErr)
 	}
 	logging.Debugf("%s is readable/writable by current user", filename)
 
@@ -134,7 +134,7 @@ func addFileWritePermissionToUser(filename string) error {
 func killVfkitProcess() error {
 	pgrepPath, err := exec.LookPath("pgrep")
 	if err != nil {
-		return fmt.Errorf("Could not find 'pgrep'. %w", err)
+		return fmt.Errorf("could not find 'pgrep'. %w", err)
 	}
 	if _, _, err := crcos.RunWithDefaultLocale(pgrepPath, "-f", vfkit.ExecutablePath()); err != nil {
 		var exitErr *exec.ExitError
@@ -151,10 +151,10 @@ func killVfkitProcess() error {
 
 	pkillPath, err := exec.LookPath("pkill")
 	if err != nil {
-		return fmt.Errorf("Could not find 'pkill'. %w", err)
+		return fmt.Errorf("could not find 'pkill'. %w", err)
 	}
 	if _, _, err := crcos.RunWithDefaultLocale(pkillPath, "-SIGKILL", "-f", vfkit.ExecutablePath()); err != nil {
-		return fmt.Errorf("Failed to kill 'vfkit' process. %w", err)
+		return fmt.Errorf("failed to kill 'vfkit' process. %w", err)
 	}
 	return nil
 }

@@ -181,7 +181,7 @@ func TestParseLine(t *testing.T) {
 	assert.Equal(t, "gentoo", val)
 
 	_, _, err = parseLine(wtf)
-	assert.EqualError(t, err, "Expected LOTS=OF=EQUALS to split by '=' char into two strings, instead got 3 strings")
+	assert.EqualError(t, err, "expected LOTS=OF=EQUALS to split by '=' char into two strings, instead got 3 strings")
 
 	key, val, err = parseLine(blank)
 	assert.NoError(t, err)

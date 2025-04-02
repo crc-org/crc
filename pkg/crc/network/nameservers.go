@@ -58,7 +58,7 @@ func replaceResolvConfFile(sshRunner *ssh.Runner, resolvFileValues ResolvFileVal
 	}
 	err = sshRunner.CopyDataPrivileged([]byte(resolvFile), "/etc/resolv.conf", 0644)
 	if err != nil {
-		return fmt.Errorf("Error creating /etc/resolv on instance: %s", err.Error())
+		return fmt.Errorf("error creating /etc/resolv on instance: %s", err.Error())
 	}
 	return nil
 }
@@ -105,7 +105,7 @@ func GetResolvValuesFromHost() (*ResolvFileValues, error) {
 	*/
 
 	if err != nil {
-		return nil, fmt.Errorf("Failed to read resolv.conf: %v", err)
+		return nil, fmt.Errorf("failed to read resolv.conf: %v", err)
 	}
 	return parseResolveConfFile(string(out))
 }

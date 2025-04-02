@@ -152,13 +152,13 @@ func fixNetworkManagerConfigFile(path string, content string, perms os.FileMode)
 		perms,
 	)
 	if err != nil {
-		return fmt.Errorf("Failed to write config file: %s: %v", path, err)
+		return fmt.Errorf("failed to write config file: %s: %v", path, err)
 	}
 
 	logging.Debug("Reloading NetworkManager")
 	sd := systemd.NewHostSystemdCommander()
 	if err := sd.Reload("NetworkManager"); err != nil {
-		return fmt.Errorf("Failed to restart NetworkManager: %v", err)
+		return fmt.Errorf("failed to restart NetworkManager: %v", err)
 	}
 
 	return nil
@@ -176,13 +176,13 @@ func removeNetworkManagerConfigFile(path string) error {
 			path,
 		)
 		if err != nil {
-			return fmt.Errorf("Failed to remove NetworkManager configuration file: %s: %v", path, err)
+			return fmt.Errorf("failed to remove NetworkManager configuration file: %s: %v", path, err)
 		}
 
 		logging.Debug("Reloading NetworkManager")
 		sd := systemd.NewHostSystemdCommander()
 		if err := sd.Reload("NetworkManager"); err != nil {
-			return fmt.Errorf("Failed to restart NetworkManager: %v", err)
+			return fmt.Errorf("failed to restart NetworkManager: %v", err)
 		}
 	}
 	return nil
@@ -251,7 +251,7 @@ func checkNetworkManagerInstalled() error {
 	logging.Debug("Checking if 'nmcli' is available")
 	path, err := exec.LookPath("nmcli")
 	if err != nil {
-		return fmt.Errorf("NetworkManager cli nmcli was not found in path")
+		return fmt.Errorf("networkManager cli nmcli was not found in path")
 	}
 	logging.Debug("'nmcli' was found in ", path)
 	return nil

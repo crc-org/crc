@@ -82,7 +82,7 @@ func uncompress(ctx context.Context, tarball, targetDir string, fileFilter func(
 	case filetype.Is(header, "tar"):
 		return untar(ctx, file, targetDir, fileFilter, showProgress)
 	default:
-		return nil, fmt.Errorf("Unknown file format when trying to uncompress %s", tarball)
+		return nil, fmt.Errorf("unknown file format when trying to uncompress %s", tarball)
 	}
 }
 

@@ -121,7 +121,7 @@ func fixBundleExtracted(bundlePath string, preset crcpreset.Preset, enableBundle
 		bundleDir := filepath.Dir(constants.GetDefaultBundlePath(preset))
 		logging.Debugf("Ensuring directory %s exists", bundleDir)
 		if err := os.MkdirAll(bundleDir, 0775); err != nil {
-			return fmt.Errorf("Cannot create directory %s: %v", bundleDir, err)
+			return fmt.Errorf("cannot create directory %s: %v", bundleDir, err)
 		}
 		var err error
 		logging.Infof("Downloading bundle: %s...", bundlePath)
@@ -151,7 +151,7 @@ func removeHostsFileEntry() error {
 func removeCRCMachinesDir() error {
 	logging.Debug("Deleting machines directory")
 	if err := os.RemoveAll(constants.MachineInstanceDir); err != nil {
-		return fmt.Errorf("Failed to delete crc machines directory: %w", err)
+		return fmt.Errorf("failed to delete crc machines directory: %w", err)
 	}
 	return nil
 }
@@ -160,7 +160,7 @@ func removeAllLogs() error {
 	// remove all log files, need close the logfile before deletion
 	logging.CloseLogging()
 	if err := crcos.RemoveFileGlob(filepath.Join(constants.CrcBaseDir, "*.log")); err != nil {
-		return fmt.Errorf("Failed to remove old log files: %w", err)
+		return fmt.Errorf("failed to remove old log files: %w", err)
 	}
 	return nil
 }
@@ -176,7 +176,7 @@ func removeCRCHostEntriesFromKnownHosts() error {
 func checkPodmanInOcBinDir() error {
 	podmanBinPath := filepath.Join(constants.CrcOcBinDir, constants.PodmanRemoteExecutableName)
 	if crcos.FileExists(podmanBinPath) {
-		return fmt.Errorf("Found podman executable: %s", podmanBinPath)
+		return fmt.Errorf("found podman executable: %s", podmanBinPath)
 	}
 	return nil
 }

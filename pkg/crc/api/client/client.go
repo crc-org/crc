@@ -80,7 +80,7 @@ func (c *client) Start(config StartConfig) (StartResult, error) {
 
 	if config != (StartConfig{}) {
 		if err := json.NewEncoder(data).Encode(config); err != nil {
-			return sr, fmt.Errorf("Failed to encode data to JSON: %w", err)
+			return sr, fmt.Errorf("failed to encode data to JSON: %w", err)
 		}
 	}
 	body, err := c.sendPostRequest("/start", data)
@@ -140,11 +140,11 @@ func (c *client) SetConfig(configs SetConfigRequest) (SetOrUnsetConfigResult, er
 	var data = new(bytes.Buffer)
 
 	if len(configs.Properties) == 0 {
-		return scr, fmt.Errorf("No config key value pair provided to set")
+		return scr, fmt.Errorf("no config key value pair provided to set")
 	}
 
 	if err := json.NewEncoder(data).Encode(configs); err != nil {
-		return scr, fmt.Errorf("Failed to encode data to JSON: %w", err)
+		return scr, fmt.Errorf("failed to encode data to JSON: %w", err)
 	}
 
 	body, err := c.sendPostRequest("/config", data)
@@ -167,7 +167,7 @@ func (c *client) UnsetConfig(configs []string) (SetOrUnsetConfigResult, error) {
 		Properties: configs,
 	}
 	if err := json.NewEncoder(data).Encode(cfg); err != nil {
-		return ucr, fmt.Errorf("Failed to encode data to JSON: %w", err)
+		return ucr, fmt.Errorf("failed to encode data to JSON: %w", err)
 	}
 	body, err := c.sendDeleteRequest("/config", data)
 	if err != nil {
@@ -185,7 +185,7 @@ func (c *client) Telemetry(action string) error {
 		Action: action,
 	})
 	if err != nil {
-		return fmt.Errorf("Failed to encode data to JSON: %w", err)
+		return fmt.Errorf("failed to encode data to JSON: %w", err)
 	}
 
 	_, err = c.sendPostRequest("/telemetry", bytes.NewReader(data))
@@ -219,7 +219,7 @@ func (c *client) sendGetRequest(url string) ([]byte, error) {
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Unknown error reading response: %w", err)
+		return nil, fmt.Errorf("unknown error reading response: %w", err)
 	}
 
 	if res.StatusCode != http.StatusOK {
@@ -258,17 +258,17 @@ func (c *client) sendRequest(url string, method string, data io.Reader) ([]byte,
 	switch method {
 	case http.MethodPost:
 		if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated {
-			return nil, fmt.Errorf("Error occurred sending POST request to : %s : %d", url, res.StatusCode)
+			return nil, fmt.Errorf("error occurred sending POST request to : %s : %d", url, res.StatusCode)
 		}
 	case http.MethodDelete, http.MethodGet:
 		if res.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("Error occurred sending %s request to : %s : %d", method, url, res.StatusCode)
+			return nil, fmt.Errorf("error occurred sending %s request to : %s : %d", method, url, res.StatusCode)
 		}
 	}
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Unknown error reading response: %w", err)
+		return nil, fmt.Errorf("unknown error reading response: %w", err)
 	}
 	return body, nil
 }

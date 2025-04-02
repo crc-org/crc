@@ -309,7 +309,7 @@ func RunPodmanExpectFail(args ...string) (string, error) {
 	stdout, stderr, err := NewPodmanCommand(args...).ExecWithFullOutput()
 
 	if err == nil {
-		err = fmt.Errorf("Expected error but exited without error")
+		err = fmt.Errorf("expected error but exited without error")
 		return stdout, err
 	}
 

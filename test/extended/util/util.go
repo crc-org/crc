@@ -281,8 +281,8 @@ func LoginToOcClusterSucceedsOrFails(expected string) error {
 		if err != nil {
 			return nil
 		}
-		_ = LogMessage("error:", "Login succeeded but was not supposed to")
-		return fmt.Errorf("Login succeeded but was not supposed to")
+		_ = LogMessage("error:", "login succeeded but was not supposed to")
+		return fmt.Errorf("login succeeded but was not supposed to")
 	}
 
 	return LoginToOcCluster([]string{})

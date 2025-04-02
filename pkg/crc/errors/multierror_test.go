@@ -68,12 +68,12 @@ func TestRetryAfterSuccessAfterFailures(t *testing.T) {
 }
 
 func TestMultiErrorString(t *testing.T) {
-	assert.Equal(t, "Temporary Error: No Pending CSR (x4)", MultiError{
+	assert.Equal(t, "temporary Error: No Pending CSR (x4)", MultiError{
 		Errors: []error{
-			errors.New("Temporary Error: No Pending CSR"),
-			errors.New("Temporary Error: No Pending CSR"),
-			errors.New("Temporary Error: No Pending CSR"),
-			errors.New("Temporary Error: No Pending CSR"),
+			errors.New("temporary Error: No Pending CSR"),
+			errors.New("temporary Error: No Pending CSR"),
+			errors.New("temporary Error: No Pending CSR"),
+			errors.New("temporary Error: No Pending CSR"),
 		},
 	}.Error())
 

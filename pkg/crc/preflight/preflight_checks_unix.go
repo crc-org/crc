@@ -80,14 +80,14 @@ func setSuid(path string) error {
 
 	stdOut, stdErr, err := crcos.RunPrivileged(fmt.Sprintf("Changing ownership of %s", path), "chown", "root", path)
 	if err != nil {
-		return fmt.Errorf("Unable to set ownership of %s to root: %s %v: %s",
+		return fmt.Errorf("unable to set ownership of %s to root: %s %v: %s",
 			path, stdOut, err, stdErr)
 	}
 
 	/* Can't do this before the chown as the chown will reset the suid bit */
 	stdOut, stdErr, err = crcos.RunPrivileged(fmt.Sprintf("Setting suid for %s", path), "chmod", "u+s,g+x", path)
 	if err != nil {
-		return fmt.Errorf("Unable to set suid bit on %s: %s %v: %s", path, stdOut, err, stdErr)
+		return fmt.Errorf("unable to set suid bit on %s: %s %v: %s", path, stdOut, err, stdErr)
 	}
 	return nil
 }
@@ -152,7 +152,7 @@ func checkSupportedCPUArch() error {
 			return nil
 		}
 	}
-	return fmt.Errorf("CRC can only run on AMD64/Intel64 CPUs and Apple silicon")
+	return fmt.Errorf("cRC can only run on AMD64/Intel64 CPUs and Apple silicon")
 }
 
 func runtimeExecutablePath() (string, error) {

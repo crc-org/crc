@@ -54,7 +54,7 @@ func ParsePresetE(input string) (Preset, error) {
 			return pSet, nil
 		}
 	}
-	return OpenShift, fmt.Errorf("Cannot parse preset '%s'", input)
+	return OpenShift, fmt.Errorf("cannot parse preset '%s'", input)
 
 }
 func ParsePreset(input string) Preset {

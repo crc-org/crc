@@ -16,7 +16,7 @@ import (
 func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {
 	json, err := json.Marshal(libvirt.CreateHost(machineConfig))
 	if err != nil {
-		return nil, errors.New("Failed to marshal driver options")
+		return nil, errors.New("failed to marshal driver options")
 	}
 	return api.NewHost("libvirt", filepath.Dir(libvirt.MachineDriverPath()), json)
 }

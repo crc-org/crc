@@ -83,7 +83,7 @@ func RunCRCExpectFail(args ...string) (string, error) {
 	stdout, stderr, err := NewCRCCommand(args...).ExecWithFullOutput()
 
 	if err == nil {
-		err = fmt.Errorf("Expected error but exited without error")
+		err = fmt.Errorf("expected error but exited without error")
 		return stdout, err
 	}
 
