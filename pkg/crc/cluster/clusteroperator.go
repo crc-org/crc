@@ -95,7 +95,7 @@ func getStatus(ctx context.Context, lister operatorLister, selector []string) (*
 
 	found := false
 	for _, c := range co.Items {
-		if len(selector) > 0 && !slices.Contains(selector, c.ObjectMeta.Name) {
+		if len(selector) > 0 && !slices.Contains(selector, c.Name) {
 			continue
 		}
 		found = true
@@ -103,20 +103,20 @@ func getStatus(ctx context.Context, lister operatorLister, selector []string) (*
 			switch con.Type {
 			case openshiftapi.OperatorAvailable:
 				if con.Status != openshiftapi.ConditionTrue {
-					logging.Debug(c.ObjectMeta.Name, " operator not available, Reason: ", con.Reason)
-					cs.unavailable = append(cs.unavailable, c.ObjectMeta.Name)
+					logging.Debug(c.Name, " operator not available, Reason: ", con.Reason)
+					cs.unavailable = append(cs.unavailable, c.Name)
 					cs.Available = false
 				}
 			case openshiftapi.OperatorDegraded:
 				if con.Status == openshiftapi.ConditionTrue {
-					logging.Debug(c.ObjectMeta.Name, " operator is degraded, Reason: ", con.Reason)
-					cs.degraded = append(cs.degraded, c.ObjectMeta.Name)
+					logging.Debug(c.Name, " operator is degraded, Reason: ", con.Reason)
+					cs.degraded = append(cs.degraded, c.Name)
 					cs.Degraded = true
 				}
 			case openshiftapi.OperatorProgressing:
 				if con.Status == openshiftapi.ConditionTrue {
-					logging.Debug(c.ObjectMeta.Name, " operator is still progressing, Reason: ", con.Reason)
-					cs.progressing = append(cs.progressing, c.ObjectMeta.Name)
+					logging.Debug(c.Name, " operator is still progressing, Reason: ", con.Reason)
+					cs.progressing = append(cs.progressing, c.Name)
 					cs.Progressing = true
 				}
 			case openshiftapi.OperatorUpgradeable:
@@ -125,7 +125,7 @@ func getStatus(ctx context.Context, lister operatorLister, selector []string) (*
 				continue
 			case "Disabled": // non official status, used by insights and cluster baremetal operators
 				if con.Status == openshiftapi.ConditionTrue {
-					logging.Debug(c.ObjectMeta.Name, " operator is disabled, Reason: ", con.Reason)
+					logging.Debug(c.Name, " operator is disabled, Reason: ", con.Reason)
 					cs.Disabled = true
 				}
 			case "ManagementStateDegraded": // only for the network operator
@@ -133,7 +133,7 @@ func getStatus(ctx context.Context, lister operatorLister, selector []string) (*
 			case "RecentBackup": // only for etcd operator
 				continue
 			default:
-				logging.Debugf("Unexpected operator status for %s: %s", c.ObjectMeta.Name, con.Type)
+				logging.Debugf("Unexpected operator status for %s: %s", c.Name, con.Type)
 			}
 		}
 	}
