@@ -24,13 +24,13 @@ func checkVersionOfWindowsUpdate() error {
 	stdOut, _, err := powershell.Execute(windowsReleaseID)
 	if err != nil {
 		logging.Debug(err.Error())
-		return fmt.Errorf("Failed to get Windows release id")
+		return fmt.Errorf("failed to get Windows release id")
 	}
 	yourWindowsReleaseID, err := strconv.Atoi(strings.TrimSpace(stdOut))
 
 	if err != nil {
 		logging.Debug(err.Error())
-		return fmt.Errorf("Failed to parse Windows release id: %s", stdOut)
+		return fmt.Errorf("failed to parse Windows release id: %s", stdOut)
 	}
 
 	if yourWindowsReleaseID < minimumWindowsReleaseID {
@@ -45,7 +45,7 @@ func checkWindowsEdition() error {
 	stdOut, _, err := powershell.Execute(windowsEditionCmd)
 	if err != nil {
 		logging.Debug(err.Error())
-		return fmt.Errorf("Failed to get Windows edition")
+		return fmt.Errorf("failed to get Windows edition")
 	}
 
 	windowsEdition := strings.TrimSpace(stdOut)
@@ -64,20 +64,20 @@ func checkHyperVInstalled() error {
 	stdOut, _, err := powershell.Execute(checkHypervisorPresent)
 	if err != nil {
 		logging.Debug(err.Error())
-		return fmt.Errorf("Failed checking if Hyper-V is installed")
+		return fmt.Errorf("failed checking if Hyper-V is installed")
 	}
 	if !strings.Contains(stdOut, "True") {
-		return fmt.Errorf("Hyper-V not installed")
+		return fmt.Errorf("hyper-V not installed")
 	}
 
 	checkVmmsExists := `@(Get-Service vmms).Status`
 	_, stdErr, err := powershell.Execute(checkVmmsExists)
 	if err != nil {
 		logging.Debug(err.Error())
-		return fmt.Errorf("Failed checking if Hyper-V management service exists")
+		return fmt.Errorf("failed checking if Hyper-V management service exists")
 	}
 	if strings.Contains(stdErr, "Get-Service") {
-		return fmt.Errorf("Hyper-V management service not available")
+		return fmt.Errorf("hyper-V management service not available")
 	}
 
 	return nil
@@ -89,10 +89,10 @@ func checkHyperVServiceRunning() error {
 	stdOut, _, err := powershell.Execute(checkVmmsRunning)
 	if err != nil {
 		logging.Debug(err.Error())
-		return fmt.Errorf("Failed checking if Hyper-V is running")
+		return fmt.Errorf("failed checking if Hyper-V is running")
 	}
 	if strings.TrimSpace(stdOut) != "Running" {
-		return fmt.Errorf("Hyper-V Virtual Machine Management service not running")
+		return fmt.Errorf("hyper-V Virtual Machine Management service not running")
 	}
 
 	return nil
@@ -105,7 +105,7 @@ func checkUserPartOfCrcUsersAndHypervAdminsGroup() error {
 	}
 	logging.Debug("Checking current user is in the 'crc-user' group")
 	if !usernameInMembersList(username(), groupMembers) {
-		return fmt.Errorf("Could not find: %s in the 'crc-users' group", username())
+		return fmt.Errorf("could not find: %s in the 'crc-users' group", username())
 	}
 	// https://support.microsoft.com/en-us/help/243330/well-known-security-identifiers-in-windows-operating-systems
 	// BUILTIN\Hyper-V Administrators => S-1-5-32-578
@@ -115,7 +115,7 @@ func checkUserPartOfCrcUsersAndHypervAdminsGroup() error {
 	}
 	logging.Debug("Checking current user is in the 'Hyper-v Administrators' group")
 	if !usernameInMembersList(username(), groupMembers) {
-		return fmt.Errorf("Could not find: %s in the 'Hyper-v Administrators' group", username())
+		return fmt.Errorf("could not find: %s in the 'Hyper-v Administrators' group", username())
 	}
 	return nil
 }

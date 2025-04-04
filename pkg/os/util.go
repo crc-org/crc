@@ -63,15 +63,14 @@ func CopyFileContents(src string, dst string, permission os.FileMode) error {
 func FileContentMatches(path string, expectedContent []byte) error {
 	_, err := os.Stat(path)
 	if err != nil {
-		return fmt.Errorf("File not found: %s: %s", path, err.Error())
+		return fmt.Errorf("file not found: %s: %s", path, err.Error())
 	}
 	content, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
-		return fmt.Errorf("Error opening file: %s: %s", path, err.Error())
+		return fmt.Errorf("error opening file: %s: %s", path, err.Error())
 	}
 	if !bytes.Equal(content, expectedContent) {
-		return fmt.Errorf("File has unexpected content: %s", path)
-
+		return fmt.Errorf("file has unexpected content: %s", path)
 	}
 	return nil
 }
@@ -118,11 +117,11 @@ func RunningUsingSSH() bool {
 func RemoveFileGlob(glob string) error {
 	matchedFiles, err := filepath.Glob(glob)
 	if err != nil {
-		return fmt.Errorf("Unable to find matches: %w", err)
+		return fmt.Errorf("unable to find matches: %w", err)
 	}
 	for _, file := range matchedFiles {
 		if err = os.RemoveAll(file); err != nil {
-			return fmt.Errorf("Failed to delete file: %w", err)
+			return fmt.Errorf("failed to delete file: %w", err)
 		}
 	}
 	return nil

@@ -54,7 +54,7 @@ func parseMode(input string) (Mode, error) {
 	case string(SystemNetworkingMode), "default":
 		return SystemNetworkingMode, nil
 	default:
-		return UserNetworkingMode, fmt.Errorf("Cannot parse mode '%s'", input)
+		return UserNetworkingMode, fmt.Errorf("cannot parse mode '%s'", input)
 	}
 }
 func ParseMode(input string) Mode {

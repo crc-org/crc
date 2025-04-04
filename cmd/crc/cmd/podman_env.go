@@ -25,7 +25,7 @@ var podmanEnvCmd = &cobra.Command{
 func runPodmanEnv() error {
 	userShell, err := shell.GetShell(forceShell)
 	if err != nil {
-		return fmt.Errorf("Error running the podman-env command: %s", err.Error())
+		return fmt.Errorf("error running the podman-env command: %s", err.Error())
 	}
 
 	client := newMachine()

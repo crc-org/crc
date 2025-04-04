@@ -48,7 +48,7 @@ func (c *SecretStorage) Set(key string, value interface{}) error {
 	}
 	secret, err := cast.ToStringE(value)
 	if err != nil {
-		return fmt.Errorf("Failed to cast secret value to string: %w", err)
+		return fmt.Errorf("failed to cast secret value to string: %w", err)
 	}
 	return keyring.Set(c.secretService, key, secret)
 }

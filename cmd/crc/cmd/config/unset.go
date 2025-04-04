@@ -16,7 +16,7 @@ func configUnsetCmd(config config.Storage) *cobra.Command {
 		Long:  `Unsets a crc configuration property.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
-				return errors.New("Please provide a configuration property to unset")
+				return errors.New("please provide a configuration property to unset")
 			}
 			unsetMessage, err := config.Unset(args[0])
 			if err != nil {

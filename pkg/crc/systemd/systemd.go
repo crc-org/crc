@@ -58,9 +58,9 @@ func (c Commander) Status(name string) (states.State, error) {
 }
 
 func (c Commander) DaemonReload() error {
-	stdOut, stdErr, err := c.commandRunner.RunPrivileged("Executing systemctl daemon-reload command", "systemctl", "daemon-reload")
+	stdOut, stdErr, err := c.commandRunner.RunPrivileged("executing systemctl daemon-reload command", "systemctl", "daemon-reload")
 	if err != nil {
-		return fmt.Errorf("Executing systemctl daemon-reload failed: %s %v: %s", stdOut, err, stdErr)
+		return fmt.Errorf("executing systemctl daemon-reload failed: %s %v: %s", stdOut, err, stdErr)
 	}
 	return nil
 }
@@ -88,7 +88,7 @@ func (c Commander) service(name string, action actions.Action) (states.State, er
 			return state, nil
 		}
 
-		return states.Error, fmt.Errorf("Executing systemctl action failed: %s %v: %s", stdOut, err, stdErr)
+		return states.Error, fmt.Errorf("executing systemctl action failed: %s %v: %s", stdOut, err, stdErr)
 	}
 
 	return states.Compare(stdOut), nil
@@ -100,14 +100,14 @@ type systemctlUserRunner struct {
 
 func (userRunner *systemctlUserRunner) Run(command string, args ...string) (string, string, error) {
 	if command != "systemctl" {
-		return "", "", fmt.Errorf("Invalid command: '%s'", command)
+		return "", "", fmt.Errorf("invalid command: '%s'", command)
 	}
 	return userRunner.runner.Run("systemctl", append([]string{"--user"}, args...)...)
 }
 
 func (userRunner *systemctlUserRunner) RunPrivate(command string, args ...string) (string, string, error) {
 	if command != "systemctl" {
-		return "", "", fmt.Errorf("Invalid command: '%s'", command)
+		return "", "", fmt.Errorf("invalid command: '%s'", command)
 	}
 	return userRunner.runner.RunPrivate("systemctl", append([]string{"--user"}, args...)...)
 }
@@ -116,7 +116,7 @@ func (userRunner *systemctlUserRunner) RunPrivileged(_ string, cmdAndArgs ...str
 	command := cmdAndArgs[0]
 	args := cmdAndArgs[1:]
 	if command != "systemctl" {
-		return "", "", fmt.Errorf("Invalid command: '%s'", command)
+		return "", "", fmt.Errorf("invalid command: '%s'", command)
 	}
 	return userRunner.runner.Run("systemctl", append([]string{"--user"}, args...)...)
 }

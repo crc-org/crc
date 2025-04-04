@@ -22,7 +22,7 @@ func WriteToFileAsRoot(reason, content, filepath string, mode os.FileMode) error
 	buf := new(bytes.Buffer)
 	cmd.Stderr = buf
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("Failed writing to file as root: %s: %s: %v", filepath, buf.String(), err)
+		return fmt.Errorf("failed writing to file as root: %s: %s: %v", filepath, buf.String(), err)
 	}
 	if _, _, err := RunPrivileged(fmt.Sprintf("Changing permissions for %s to %o ", filepath, mode),
 		"chmod", strconv.FormatUint(uint64(mode), 8), filepath); err != nil {

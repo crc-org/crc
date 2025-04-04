@@ -39,7 +39,7 @@ func checkRunningInsideWSL2() error {
 
 	if strings.Contains(strings.ToLower(string(version)), "microsoft") {
 		logging.Debugf("Running inside WSL2 environment")
-		return fmt.Errorf("CRC is unsupported using WSL2")
+		return fmt.Errorf("cRC is unsupported using WSL2")
 	}
 
 	return nil
@@ -92,12 +92,12 @@ func fixKvmEnabled() error {
 	case strings.Contains(flags, "vmx"):
 		stdOut, stdErr, err := crcos.RunPrivileged("Loading kvm_intel kernel module", "modprobe", "kvm_intel")
 		if err != nil {
-			return fmt.Errorf("Failed to load kvm intel module: %s %v: %s", stdOut, err, stdErr)
+			return fmt.Errorf("failed to load kvm intel module: %s %v: %s", stdOut, err, stdErr)
 		}
 	case strings.Contains(flags, "svm"):
 		stdOut, stdErr, err := crcos.RunPrivileged("Loading kvm_amd kernel module", "modprobe", "kvm_amd")
 		if err != nil {
-			return fmt.Errorf("Failed to load kvm amd module: %s %v: %s", stdOut, err, stdErr)
+			return fmt.Errorf("failed to load kvm amd module: %s %v: %s", stdOut, err, stdErr)
 		}
 	default:
 		logging.Debug("Unable to detect processor details")
@@ -112,13 +112,13 @@ func getLibvirtCapabilities() (*libvirtxml.Caps, error) {
 	if err != nil {
 		stdOut, _, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///session", "capabilities")
 		if err != nil {
-			return nil, fmt.Errorf("Failed to run 'virsh capabilities': %v", err)
+			return nil, fmt.Errorf("failed to run 'virsh capabilities': %v", err)
 		}
 	}
 	caps := &libvirtxml.Caps{}
 	err = caps.Unmarshal(stdOut)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing 'virsh capabilities': %v", err)
+		return nil, fmt.Errorf("error parsing 'virsh capabilities': %v", err)
 	}
 
 	return caps, nil
@@ -147,7 +147,7 @@ func checkLibvirtInstalled() error {
 		}
 	}
 	if !foundHvm {
-		return fmt.Errorf("Could not find a %s hypervisor with 'hvm' capabilities", caps.Host.CPU.Arch)
+		return fmt.Errorf("could not find a %s hypervisor with 'hvm' capabilities", caps.Host.CPU.Arch)
 	}
 
 	return nil
@@ -158,7 +158,7 @@ func fixLibvirtInstalled(distro *linux.OsRelease) func() error {
 		logging.Debug("Trying to install libvirt")
 		stdOut, stdErr, err := crcos.RunPrivileged("Installing virtualization packages", "/bin/sh", "-c", installLibvirtCommand(distro))
 		if err != nil {
-			return fmt.Errorf("Could not install required packages: %s %v: %s", stdOut, err, stdErr)
+			return fmt.Errorf("could not install required packages: %s %v: %s", stdOut, err, stdErr)
 		}
 		logging.Debug("libvirt was successfully installed")
 		return nil
@@ -182,15 +182,15 @@ func checkLibvirtVersion() error {
 	logging.Debugf("Checking if libvirt version is >=%s", minSupportedLibvirtVersion)
 	stdOut, _, err := crcos.RunWithDefaultLocale("virsh", "-v")
 	if err != nil {
-		return fmt.Errorf("Failed to run virsh")
+		return fmt.Errorf("failed to run virsh")
 	}
 	installedLibvirtVersion, err := semver.NewVersion(strings.TrimSpace(stdOut))
 	if err != nil {
-		return fmt.Errorf("Unable to parse installed libvirt version %v", err)
+		return fmt.Errorf("unable to parse installed libvirt version %v", err)
 	}
 	supportedLibvirtVersion, err := semver.NewVersion(minSupportedLibvirtVersion)
 	if err != nil {
-		return fmt.Errorf("Unable to parse %s libvirt version %v", minSupportedLibvirtVersion, err)
+		return fmt.Errorf("unable to parse %s libvirt version %v", minSupportedLibvirtVersion, err)
 	}
 
 	if installedLibvirtVersion.LessThan(supportedLibvirtVersion) {
@@ -206,12 +206,12 @@ func checkUserPartOfLibvirtGroup() error {
 	currentUser, err := user.Current()
 	if err != nil {
 		logging.Debugf("user.Current() failed: %v", err)
-		return fmt.Errorf("Failed to get current user id")
+		return fmt.Errorf("failed to get current user id")
 	}
 	gids, err := currentUser.GroupIds()
 	if err != nil {
 		logging.Debugf("currentUser.GroupIds() failed: %v", err)
-		return fmt.Errorf("Failed to get the groups user '%s' belongs to", currentUser.Username)
+		return fmt.Errorf("failed to get the groups user '%s' belongs to", currentUser.Username)
 	}
 	for _, gid := range gids {
 		group, err := user.LookupGroupId(gid)
@@ -233,11 +233,11 @@ func fixUserPartOfLibvirtGroup() error {
 	currentUser, err := user.Current()
 	if err != nil {
 		logging.Debugf("user.Current() failed: %v", err)
-		return fmt.Errorf("Failed to get current user id")
+		return fmt.Errorf("failed to get current user id")
 	}
 	_, _, err = crcos.RunPrivileged("Adding user to the libvirt group", "usermod", "-a", "-G", "libvirt", currentUser.Username)
 	if err != nil {
-		return fmt.Errorf("Failed to add user to libvirt group")
+		return fmt.Errorf("failed to add user to libvirt group")
 	}
 	logging.Debug("Current user is in the libvirt group")
 
@@ -266,7 +266,7 @@ func checkCurrentGroups(distro *linux.OsRelease) func() error {
 				return nil
 			}
 		}
-		return fmt.Errorf("User in the currently active process is not part of the libvirt group")
+		return fmt.Errorf("user in the currently active process is not part of the libvirt group")
 	}
 }
 
@@ -481,7 +481,7 @@ func fixLibvirtServiceRunning() error {
 	 */
 	err := sd.Start("libvirtd")
 	if err != nil {
-		return fmt.Errorf("Failed to start libvirt service")
+		return fmt.Errorf("failed to start libvirt service")
 	}
 	logging.Debug("libvirtd.service is running")
 	return nil
@@ -508,7 +508,7 @@ func fixMachineDriverLibvirtInstalled() error {
 	logging.Debugf("Installing %s", machineDriverLibvirt.GetExecutableName())
 
 	if err := machineDriverLibvirt.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download %s: %v", machineDriverLibvirt.GetExecutableName(), err)
+		return fmt.Errorf("unable to download %s: %v", machineDriverLibvirt.GetExecutableName(), err)
 	}
 	logging.Debugf("%s is installed in %s", machineDriverLibvirt.GetExecutableName(), filepath.Dir(machineDriverLibvirt.GetExecutablePath()))
 	return nil
@@ -549,7 +549,7 @@ func fixLibvirtCrcNetworkAvailable() error {
 	netXMLDef, err := getLibvirtNetworkXML()
 	if err != nil {
 		logging.Debugf("getLibvirtNetworkXML() failed: %v", err)
-		return fmt.Errorf("Failed to read libvirt 'crc' network definition")
+		return fmt.Errorf("failed to read libvirt 'crc' network definition")
 	}
 
 	// For time being we are going to override the crc network according what we have in our binary template.
@@ -566,7 +566,7 @@ func fixLibvirtCrcNetworkAvailable() error {
 	err = cmd.Run()
 	if err != nil {
 		logging.Debugf("%v : %s", err, buf.String())
-		return fmt.Errorf("Failed to create libvirt 'crc' network: %v - %s", err, buf.String())
+		return fmt.Errorf("failed to create libvirt 'crc' network: %v - %s", err, buf.String())
 	}
 	logging.Debug("libvirt 'crc' network created")
 	return nil
@@ -583,13 +583,13 @@ func removeLibvirtCrcNetwork() error {
 	_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-destroy", libvirt.DefaultNetwork)
 	if err != nil {
 		logging.Debugf("%v : %s", err, stderr)
-		return fmt.Errorf("Failed to destroy libvirt 'crc' network")
+		return fmt.Errorf("failed to destroy libvirt 'crc' network")
 	}
 
 	_, stderr, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-undefine", libvirt.DefaultNetwork)
 	if err != nil {
 		logging.Debugf("%v : %s", err, stderr)
-		return fmt.Errorf("Failed to undefine libvirt 'crc' network")
+		return fmt.Errorf("failed to undefine libvirt 'crc' network")
 	}
 	logging.Debug("libvirt 'crc' network removed")
 	return nil
@@ -606,13 +606,13 @@ func removeCrcVM() error {
 		_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "destroy", constants.DefaultName)
 		if err != nil {
 			logging.Debugf("%v : %s", err, stderr)
-			return fmt.Errorf("Failed to destroy 'crc' VM")
+			return fmt.Errorf("failed to destroy 'crc' VM")
 		}
 	}
 	_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "undefine", "--nvram", constants.DefaultName)
 	if err != nil {
 		logging.Debugf("%v : %s", err, stderr)
-		return fmt.Errorf("Failed to undefine 'crc' VM")
+		return fmt.Errorf("failed to undefine 'crc' VM")
 	}
 	logging.Debug("'crc' VM is removed")
 	return nil
@@ -633,7 +633,7 @@ func removeLibvirtStoragePool() error {
 	_, stderr, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "pool-undefine", constants.DefaultName)
 	if err != nil {
 		logging.Debugf("%v : %s", err, stderr)
-		return fmt.Errorf("Failed to undefine 'crc' libvirt storage pool")
+		return fmt.Errorf("failed to undefine 'crc' libvirt storage pool")
 	}
 	logging.Debug("'crc' libvirt storage has been removed")
 	return nil
@@ -653,13 +653,13 @@ func checkLibvirtCrcNetworkDefinition() error {
 	logging.Debug("Checking if libvirt 'crc' definition is up to date")
 	stdOut, _, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-dumpxml", "--inactive", "crc")
 	if err != nil {
-		return fmt.Errorf("Failed to get 'crc' network XML: %s", err)
+		return fmt.Errorf("failed to get 'crc' network XML: %s", err)
 	}
 	stdOut = trimSpacesFromXML(stdOut)
 
 	netXMLDef, err := getLibvirtNetworkXML()
 	if err != nil {
-		return fmt.Errorf("Failed to generate 'crc' network XML from template: %s", err)
+		return fmt.Errorf("failed to generate 'crc' network XML from template: %s", err)
 	}
 	netXMLDef = trimSpacesFromXML(netXMLDef)
 
@@ -677,7 +677,7 @@ func checkLibvirtCrcNetworkActive() error {
 	logging.Debug("Checking if libvirt 'crc' network is active")
 	stdOut, _, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-info", "crc")
 	if err != nil {
-		return fmt.Errorf("Failed to query 'crc' network information")
+		return fmt.Errorf("failed to query 'crc' network information")
 	}
 	outputSlice := strings.Split(stdOut, "\n")
 
@@ -695,11 +695,11 @@ func fixLibvirtCrcNetworkActive() error {
 	logging.Debug("Starting libvirt 'crc' network")
 	stdOut, stdErr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-start", "crc")
 	if err != nil {
-		return fmt.Errorf("Failed to start libvirt 'crc' network %s %v: %s", stdOut, err, stdErr)
+		return fmt.Errorf("failed to start libvirt 'crc' network %s %v: %s", stdOut, err, stdErr)
 	}
 	stdOut, stdErr, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-autostart", "crc")
 	if err != nil {
-		return fmt.Errorf("Failed to autostart libvirt 'crc' network %s %v: %s", stdOut, err, stdErr)
+		return fmt.Errorf("failed to autostart libvirt 'crc' network %s %v: %s", stdOut, err, stdErr)
 	}
 	logging.Debug("libvirt 'crc' network started")
 	return nil
@@ -710,13 +710,13 @@ func getCPUFlags() (string, error) {
 	out, err := os.ReadFile("/proc/cpuinfo")
 	if err != nil {
 		logging.Debugf("Failed to read /proc/cpuinfo: %v", err)
-		return "", fmt.Errorf("Failed to read /proc/cpuinfo")
+		return "", fmt.Errorf("failed to read /proc/cpuinfo")
 	}
 	re := regexp.MustCompile(`flags.*:.*`)
 
 	flags := re.FindString(string(out))
 	if flags == "" {
-		return "", fmt.Errorf("Could not find cpu flags from /proc/cpuinfo")
+		return "", fmt.Errorf("could not find cpu flags from /proc/cpuinfo")
 	}
 	return flags, nil
 }

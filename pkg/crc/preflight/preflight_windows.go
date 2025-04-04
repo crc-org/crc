@@ -167,7 +167,7 @@ var userPartOfCrcUsersAndHypervAdminsGroupCheck = Check{
 	labels: labels{Os: Windows},
 }
 
-var errReboot = errors.New("Please reboot your system and run 'crc setup' to complete the setup process")
+var errReboot = errors.New("please reboot your system and run 'crc setup' to complete the setup process")
 
 func username() string {
 	if ok := win32.DomainJoined(); ok {

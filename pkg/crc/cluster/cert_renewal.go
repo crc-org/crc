@@ -29,15 +29,15 @@ func approvePendingCSRs(ctx context.Context, ocConfig oc.Config, expectedSignerN
 			if !isPending(csr) {
 				continue
 			}
-			logging.Debugf("Approving csr %s (signerName: %s)", csr.ObjectMeta.Name, expectedSignerName)
-			_, stderr, err := ocConfig.RunOcCommand("adm", "certificate", "approve", csr.ObjectMeta.Name)
+			logging.Debugf("Approving csr %s (signerName: %s)", csr.Name, expectedSignerName)
+			_, stderr, err := ocConfig.RunOcCommand("adm", "certificate", "approve", csr.Name)
 			if err != nil {
-				return fmt.Errorf("Not able to approve csr (%v : %s)", err, stderr)
+				return fmt.Errorf("not able to approve csr (%v : %s)", err, stderr)
 			}
 			csrsApproved = true
 		}
 		if !csrsApproved {
-			return &crcerrors.RetriableError{Err: fmt.Errorf("No Pending CSR with signerName %s", expectedSignerName)}
+			return &crcerrors.RetriableError{Err: fmt.Errorf("no Pending CSR with signerName %s", expectedSignerName)}
 		}
 		return nil
 	}, time.Second*5)
