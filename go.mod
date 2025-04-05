@@ -2,6 +2,8 @@ module github.com/crc-org/crc/v2
 
 go 1.23.0
 
+toolchain go1.24.1
+
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/Masterminds/semver/v3 v3.3.1
@@ -65,7 +67,7 @@ require (
 	k8s.io/api v0.29.3
 	k8s.io/apimachinery v0.29.3
 	k8s.io/client-go v0.29.3
-	libvirt.org/go/libvirtxml v1.11000.1
+	libvirt.org/go/libvirtxml v1.11001.0
 )
 
 require (
