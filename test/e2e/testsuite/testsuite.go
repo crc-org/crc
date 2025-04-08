@@ -18,7 +18,6 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/machine"
 	"github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/version"
-	"github.com/crc-org/crc/v2/test/extended/crc/cmd"
 	crcCmd "github.com/crc-org/crc/v2/test/extended/crc/cmd"
 	"github.com/crc-org/crc/v2/test/extended/util"
 	"github.com/cucumber/godog"
@@ -1026,16 +1025,16 @@ func ExecutingPodmanCommandSucceedsFails(command string, expected string) error 
 
 	var err error
 	if expected == "succeeds" {
-		_, err = cmd.RunPodmanExpectSuccess(strings.Split(command[1:len(command)-1], " ")...)
+		_, err = crcCmd.RunPodmanExpectSuccess(strings.Split(command[1:len(command)-1], " ")...)
 	} else if expected == "fails" {
-		_, err = cmd.RunPodmanExpectFail(strings.Split(command[1:len(command)-1], " ")...)
+		_, err = crcCmd.RunPodmanExpectFail(strings.Split(command[1:len(command)-1], " ")...)
 	}
 
 	return err
 }
 
 func PullLoginTagPushImageSucceeds(image string) error {
-	_, err := cmd.RunPodmanExpectSuccess("pull", image)
+	_, err := crcCmd.RunPodmanExpectSuccess("pull", image)
 	if err != nil {
 		return err
 	}
@@ -1047,17 +1046,17 @@ func PullLoginTagPushImageSucceeds(image string) error {
 
 	token := util.GetLastCommandOutput("stdout")
 	fmt.Println(token)
-	_, err = cmd.RunPodmanExpectSuccess("login", "-u", "kubeadmin", "-p", token, "default-route-openshift-image-registry.apps-crc.testing", "--tls-verify=false") // $(oc whoami -t)
+	_, err = crcCmd.RunPodmanExpectSuccess("login", "-u", "kubeadmin", "-p", token, "default-route-openshift-image-registry.apps-crc.testing", "--tls-verify=false") // $(oc whoami -t)
 	if err != nil {
 		return err
 	}
 
-	_, err = cmd.RunPodmanExpectSuccess("tag", image, "default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test")
+	_, err = crcCmd.RunPodmanExpectSuccess("tag", image, "default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test")
 	if err != nil {
 		return err
 	}
 
-	_, err = cmd.RunPodmanExpectSuccess("push", "default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test", "--remove-signatures", "--tls-verify=false")
+	_, err = crcCmd.RunPodmanExpectSuccess("push", "default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test", "--remove-signatures", "--tls-verify=false")
 	if err != nil {
 		return err
 	}
