@@ -62,11 +62,11 @@ cd $targetFolder/bin
 # Transform results to junit
 cd ..
 init_line=$(grep -n '<?xml version="1.0" encoding="UTF-8"?>' results/e2e.results | awk '{split($0,n,":"); print n[1]}')
-if which xsltproc &>/dev/null
-then
-  tail -n +$init_line results/e2e.results | xsltproc filter.xsl - > results/$junitFilename
-else
-  tail -n +$init_line results/e2e.results > results/$junitFilename
+if ! command -v xsltproc &>/dev/null
+then 
+  sudo yum install -y xsltproc || echo "Warning: Failed to install xsltproc"
 fi
+tail -n +$init_line results/e2e.results | xsltproc filter.xsl - > results/$junitFilename
+
 # Copy logs and diagnose
 cp -r bin/out/test-results/* results
