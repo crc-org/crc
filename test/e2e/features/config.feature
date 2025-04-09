@@ -22,6 +22,7 @@ Feature: Test configuration settings
             | memory           | 10753     | 4096              |
             | nameserver       | 120.0.0.1 | 999.999.999.999   |
             | pull-secret-file | /etc      | /nonexistent-file |
+            | persistent-volume-size | 20  | 5                 |
 
         @linux
         Examples: Config settings on Linux
@@ -30,6 +31,7 @@ Feature: Test configuration settings
             | memory           | 10753     | 4096              |
             | nameserver       | 120.0.0.1 | 999.999.999.999   |
             | pull-secret-file | /etc      | /nonexistent-file |
+            | persistent-volume-size | 20  | 5                 |
 
         @windows
         Examples: Config settings on Windows
@@ -38,6 +40,7 @@ Feature: Test configuration settings
             | memory           | 10753     | 4096              |
             | nameserver       | 120.0.0.1 | 999.999.999.999   |
             | pull-secret-file | /Users    | /nonexistent-file |
+            | persistent-volume-size | 20  | 5                 |
 
     @linux @darwin @windows
     Scenario: CRC config checks (bundle version)
