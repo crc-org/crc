@@ -204,6 +204,9 @@ var configDefaultValuesTestArguments = []struct {
 		KubeAdminPassword, "",
 	},
 	{
+		DeveloperPassword, "developer",
+	},
+	{
 		CPUs, uint(4),
 	},
 	{
@@ -288,6 +291,9 @@ var configProvidedValuesTestArguments = []struct {
 }{
 	{
 		KubeAdminPassword, "kubeadmin-secret-password",
+	},
+	{
+		DeveloperPassword, "developer-secret-password",
 	},
 	{
 		CPUs, uint(8),

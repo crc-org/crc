@@ -96,6 +96,7 @@ func TestStart(t *testing.T) {
 				ClusterCACert: "MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ",
 				KubeConfig:    "/tmp/kubeconfig",
 				KubeAdminPass: "foobar",
+				DeveloperPass: "foobar",
 				ClusterAPI:    "https://foo.testing:6443",
 				WebConsoleURL: "https://console.foo.testing:6443",
 				ProxyConfig:   nil,

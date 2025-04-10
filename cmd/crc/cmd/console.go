@@ -128,7 +128,7 @@ func toConsoleClusterConfig(result *client.ConsoleResult) *clusterConfig {
 		},
 		DeveloperCredentials: credentials{
 			Username: "developer",
-			Password: "developer",
+			Password: result.ClusterConfig.DeveloperPass,
 		},
 	}
 }

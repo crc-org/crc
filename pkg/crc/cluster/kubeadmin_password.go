@@ -17,33 +17,21 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// GenerateKubeAdminUserPassword creates and put updated kubeadmin password to ~/.crc/machine/crc/kubeadmin-password
-func GenerateKubeAdminUserPassword() error {
-	logging.Infof("Generating new password for the kubeadmin user")
-	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath()
-	kubeAdminPassword, err := GenerateRandomPasswordHash(23)
+// GenerateUserPassword creates and put updated password to ~/.crc/machine/crc/ directory
+func GenerateUserPassword(passwordFile string, user string) error {
+	logging.Infof("Generating new password for the %s user", user)
+	password, err := GenerateRandomPasswordHash(23)
 	if err != nil {
-		return fmt.Errorf("Cannot generate the kubeadmin user password: %w", err)
+		return fmt.Errorf("cannot generate the %s user password: %w", user, err)
 	}
-	return os.WriteFile(kubeAdminPasswordFile, []byte(kubeAdminPassword), 0600)
+	return os.WriteFile(passwordFile, []byte(password), 0600)
 }
 
-// UpdateKubeAdminUserPassword updates the htpasswd secret
-func UpdateKubeAdminUserPassword(ctx context.Context, ocConfig oc.Config, newPassword string) error {
-	if newPassword != "" {
-		logging.Infof("Overriding password for kubeadmin user")
-		if err := os.WriteFile(constants.GetKubeAdminPasswordPath(), []byte(strings.TrimSpace(newPassword)), 0600); err != nil {
-			return err
-		}
-	}
-
-	kubeAdminPassword, err := GetKubeadminPassword()
+// UpdateUserPasswords updates the htpasswd secret
+func UpdateUserPasswords(ctx context.Context, ocConfig oc.Config, newKubeAdminPassword string, newDeveloperPassword string) error {
+	credentials, err := resolveUserPasswords(newKubeAdminPassword, newDeveloperPassword, constants.GetKubeAdminPasswordPath(), constants.GetDeveloperPasswordPath())
 	if err != nil {
-		return fmt.Errorf("Cannot read the kubeadmin user password from file: %w", err)
-	}
-	credentials := map[string]string{
-		"developer": "developer",
-		"kubeadmin": kubeAdminPassword,
+		return err
 	}
 
 	if err := WaitForOpenshiftResource(ctx, ocConfig, "secret"); err != nil {
@@ -62,7 +50,7 @@ func UpdateKubeAdminUserPassword(ctx context.Context, ocConfig oc.Config, newPas
 		return nil
 	}
 
-	logging.Infof("Changing the password for the kubeadmin user")
+	logging.Infof("Changing the password for the users")
 	expected, err := getHtpasswd(credentials, externals)
 	if err != nil {
 		return err
@@ -72,14 +60,13 @@ func UpdateKubeAdminUserPassword(ctx context.Context, ocConfig oc.Config, newPas
 		"-n", "openshift-config", "--type", "merge"}
 	_, stderr, err = ocConfig.RunOcCommandPrivate(cmdArgs...)
 	if err != nil {
-		return fmt.Errorf("Failed to update kubeadmin password %v: %s", err, stderr)
+		return fmt.Errorf("failed to update user passwords %v: %s", err, stderr)
 	}
 	return nil
 }
 
-func GetKubeadminPassword() (string, error) {
-	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath()
-	rawData, err := os.ReadFile(kubeAdminPasswordFile)
+func GetUserPassword(passwordFile string) (string, error) {
+	rawData, err := os.ReadFile(passwordFile)
 	if err != nil {
 		return "", err
 	}
@@ -191,4 +178,32 @@ func testBCryptPassword(password, hash string) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func resolveUserPasswords(newKubeAdminPassword string, newDeveloperPassword string, kubeAdminPasswordPath string, developerPasswordPath string) (map[string]string, error) {
+	if newKubeAdminPassword != "" {
+		logging.Infof("Overriding password for kubeadmin user")
+		if err := os.WriteFile(kubeAdminPasswordPath, []byte(strings.TrimSpace(newKubeAdminPassword)), 0600); err != nil {
+			return nil, err
+		}
+	}
+	if newDeveloperPassword != "" {
+		logging.Infof("Overriding password for developer user")
+		if err := os.WriteFile(developerPasswordPath, []byte(strings.TrimSpace(newDeveloperPassword)), 0600); err != nil {
+			return nil, err
+		}
+	}
+
+	kubeAdminPassword, err := GetUserPassword(kubeAdminPasswordPath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read the kubeadmin user password from file: %w", err)
+	}
+	developerPassword, err := GetUserPassword(developerPasswordPath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read the developer user password from file: %w", err)
+	}
+	return map[string]string{
+		"developer": developerPassword,
+		"kubeadmin": kubeAdminPassword,
+	}, nil
 }

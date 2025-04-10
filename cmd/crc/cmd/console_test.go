@@ -41,6 +41,7 @@ func createDummyClusterConfig(preset preset.Preset) types.ClusterConfig {
 		ClusterCACert: "MIIDODCCAiCgAwIBAgIIRVfCKNUa1wIwDQYJ",
 		KubeConfig:    "/tmp/kubeconfig",
 		KubeAdminPass: "foobar",
+		DeveloperPass: "foobar",
 		ClusterAPI:    "https://foo.testing:6443",
 		WebConsoleURL: "https://console.foo.testing:6443",
 		ProxyConfig:   nil,
@@ -69,9 +70,9 @@ func TestConsolePlainError(t *testing.T) {
 }
 
 func TestConsoleWithPrintCredentialsPlainSuccess(t *testing.T) {
-	expectedOut := fmt.Sprintf(`To login as a regular user, run 'oc login -u developer -p developer %s'.
+	expectedOut := fmt.Sprintf(`To login as a regular user, run 'oc login -u developer -p %s %s'.
 To login as an admin, run 'oc login -u kubeadmin -p %s %s'
-`, fakemachine.DummyClusterConfig.ClusterAPI, fakemachine.DummyClusterConfig.KubeAdminPass, fakemachine.DummyClusterConfig.ClusterAPI)
+`, fakemachine.DummyClusterConfig.DeveloperPass, fakemachine.DummyClusterConfig.ClusterAPI, fakemachine.DummyClusterConfig.KubeAdminPass, fakemachine.DummyClusterConfig.ClusterAPI)
 	out := new(bytes.Buffer)
 	assert.NoError(t, runConsole(out, setUpClientForConsole(t), false, true, ""))
 	assert.Equal(t, expectedOut, out.String())
@@ -79,9 +80,9 @@ To login as an admin, run 'oc login -u kubeadmin -p %s %s'
 
 func TestConsoleWithPrintCredentialsAndURLPlainSuccess(t *testing.T) {
 	expectedOut := fmt.Sprintf(`%s
-To login as a regular user, run 'oc login -u developer -p developer %s'.
+To login as a regular user, run 'oc login -u developer -p %s %s'.
 To login as an admin, run 'oc login -u kubeadmin -p %s %s'
-`, fakemachine.DummyClusterConfig.WebConsoleURL, fakemachine.DummyClusterConfig.ClusterAPI, fakemachine.DummyClusterConfig.KubeAdminPass, fakemachine.DummyClusterConfig.ClusterAPI)
+`, fakemachine.DummyClusterConfig.WebConsoleURL, fakemachine.DummyClusterConfig.DeveloperPass, fakemachine.DummyClusterConfig.ClusterAPI, fakemachine.DummyClusterConfig.KubeAdminPass, fakemachine.DummyClusterConfig.ClusterAPI)
 	out := new(bytes.Buffer)
 	assert.NoError(t, runConsole(out, setUpClientForConsole(t), true, true, ""))
 	assert.Equal(t, expectedOut, out.String())
@@ -89,22 +90,22 @@ To login as an admin, run 'oc login -u kubeadmin -p %s %s'
 
 func TestConsoleJSONSuccess(t *testing.T) {
 	expectedJSONOut := fmt.Sprintf(`{
-  "success": true,
-  "clusterConfig": {
-    "clusterType": "openshift",
-    "cacert": "%s",
-    "webConsoleUrl": "%s",
-    "url": "%s",
-    "adminCredentials": {
-      "username": "kubeadmin",
-      "password": "%s"
-    },
-    "developerCredentials": {
-      "username": "developer",
-      "password": "developer"
-    }
-  }
-}`, fakemachine.DummyClusterConfig.ClusterCACert, fakemachine.DummyClusterConfig.WebConsoleURL, fakemachine.DummyClusterConfig.ClusterAPI, fakemachine.DummyClusterConfig.KubeAdminPass)
+	 "success": true,
+	 "clusterConfig": {
+	   "clusterType": "openshift",
+	   "cacert": "%s",
+	   "webConsoleUrl": "%s",
+	   "url": "%s",
+	   "adminCredentials": {
+	     "username": "kubeadmin",
+	     "password": "%s"
+	   },
+	   "developerCredentials": {
+	     "username": "developer",
+	     "password": "%s"
+	   }
+	 }
+	}`, fakemachine.DummyClusterConfig.ClusterCACert, fakemachine.DummyClusterConfig.WebConsoleURL, fakemachine.DummyClusterConfig.ClusterAPI, fakemachine.DummyClusterConfig.KubeAdminPass, fakemachine.DummyClusterConfig.DeveloperPass)
 	out := new(bytes.Buffer)
 	assert.NoError(t, runConsole(out, setUpClientForConsole(t), false, false, jsonFormat))
 	assert.JSONEq(t, expectedJSONOut, out.String())
