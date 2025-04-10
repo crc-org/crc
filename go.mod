@@ -13,7 +13,7 @@ require (
 	github.com/cheggaaa/pb/v3 v3.1.7
 	github.com/containers/common v0.62.2
 	github.com/containers/gvisor-tap-vsock v0.8.5
-	github.com/containers/image/v5 v5.34.2
+	github.com/containers/image/v5 v5.34.3
 	github.com/containers/libhvee v0.10.0
 	github.com/coreos/go-systemd/v22 v22.5.0
 	github.com/crc-org/admin-helper v0.5.5
