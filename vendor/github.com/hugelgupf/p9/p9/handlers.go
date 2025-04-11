@@ -228,7 +228,7 @@ func (t *tremove) handle(cs *connState) message {
 //
 // We don't support authentication, so this just returns ENOSYS.
 func (t *tauth) handle(cs *connState) message {
-	return newErr(linux.ENOSYS)
+	return newErr(linux.ENOENT)
 }
 
 // handle implements handler.handle.
