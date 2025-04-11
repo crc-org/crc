@@ -14,7 +14,7 @@ import (
 func newHost(api libmachine.API, machineConfig config.MachineConfig) (*host.Host, error) {
 	json, err := json.Marshal(libhvee.CreateHost(machineConfig))
 	if err != nil {
-		return nil, errors.New("Failed to marshal driver options")
+		return nil, errors.New("failed to marshal driver options")
 	}
 	return api.NewHost("hyperv", "", json)
 }

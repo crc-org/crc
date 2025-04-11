@@ -81,7 +81,7 @@ func (r *mockSystemdRunner) Run(command string, args ...string) (string, string,
 
 func (r *mockSystemdRunner) RunPrivate(_ string, _ ...string) (string, string, error) {
 	r.test.FailNow()
-	return "", "", fmt.Errorf("Unexpected RunPrivate() call")
+	return "", "", fmt.Errorf("unexpected RunPrivate() call")
 }
 
 func (r *mockSystemdRunner) RunPrivileged(_ string, cmdAndArgs ...string) (string, string, error) {
@@ -151,7 +151,7 @@ func (r *mockSystemdRunner) status(s states.State) (string, string, error) {
 	)
 
 	if r.failing {
-		return "error", "", fmt.Errorf("Failed to run systemd command")
+		return "error", "", fmt.Errorf("failed to run systemd command")
 	}
 	switch s {
 	case states.Running:

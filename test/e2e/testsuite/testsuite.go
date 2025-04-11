@@ -1022,12 +1022,14 @@ func PodmanCommandIsAvailable() error {
 }
 
 func ExecutingPodmanCommandSucceedsFails(command string, expected string) error {
-
 	var err error
-	if expected == "succeeds" {
+	switch expected {
+	case "succeeds":
 		_, err = crcCmd.RunPodmanExpectSuccess(strings.Split(command[1:len(command)-1], " ")...)
-	} else if expected == "fails" {
+	case "fails":
 		_, err = crcCmd.RunPodmanExpectFail(strings.Split(command[1:len(command)-1], " ")...)
+	default:
+		return fmt.Errorf("unknown expected value: %s", expected)
 	}
 
 	return err

@@ -155,7 +155,7 @@ func CheckCRCLocalDNSReachableFromHost(serviceConfig services.ServicePostStartCo
 	logging.Debugf("%s resolved to %s", apiHostname, ip)
 	if !matchIP(ip, serviceConfig.IP) {
 		logging.Warnf("%s resolved to %s but %s was expected", apiHostname, ip, serviceConfig.IP)
-		return fmt.Errorf("Invalid IP for %s", apiHostname)
+		return fmt.Errorf("invalid IP for %s", apiHostname)
 	}
 
 	if serviceConfig.NetworkMode == network.UserNetworkingMode {
@@ -189,7 +189,7 @@ func CheckCRCLocalDNSReachableFromHost(serviceConfig services.ServicePostStartCo
 	logging.Debugf("%s resolved to %s", appsHostname, ip)
 	if !matchIP(ip, serviceConfig.IP) {
 		logging.Warnf("%s resolved to %s but %s was expected", appsHostname, ip, serviceConfig.IP)
-		return fmt.Errorf("Invalid IP for %s", appsHostname)
+		return fmt.Errorf("invalid IP for %s", appsHostname)
 	}
 	return nil
 }

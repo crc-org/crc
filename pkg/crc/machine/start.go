@@ -104,7 +104,7 @@ func (client *client) updateVMConfig(startConfig types.StartConfig, vm *virtualM
 	// we do not want this value to be persisted to disk
 	if startConfig.SharedDirPassword != "" {
 		if err := setSharedDirPassword(vm.Host, startConfig.SharedDirPassword); err != nil {
-			return fmt.Errorf("Failed to set shared dir password: %w", err)
+			return fmt.Errorf("failed to set shared dir password: %w", err)
 		}
 	}
 
@@ -160,11 +160,11 @@ func getrootPartition(sshRunner *crcssh.Runner, preset crcPreset.Preset) (string
 	}
 	parts := strings.Split(strings.TrimSpace(part), "\n")
 	if len(parts) != 1 {
-		return "", fmt.Errorf("Unexpected number of devices: %s", part)
+		return "", fmt.Errorf("unexpected number of devices: %s", part)
 	}
 	rootPart := strings.TrimSpace(parts[0])
 	if !strings.HasPrefix(rootPart, "/dev/vda") && !strings.HasPrefix(rootPart, "/dev/sda") {
-		return "", fmt.Errorf("Unexpected root device: %s", rootPart)
+		return "", fmt.Errorf("unexpected root device: %s", rootPart)
 	}
 	return rootPart, nil
 }
@@ -255,10 +255,10 @@ func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
 					Err:    err,
 					Secret: mount.Password,
 				}
-				return fmt.Errorf("Failed to mount CIFS/SMB share '%s' please make sure configured password is correct: %w", mount.Tag, err)
+				return fmt.Errorf("failed to mount CIFS/SMB share '%s' please make sure configured password is correct: %w", mount.Tag, err)
 			}
 		default:
-			return fmt.Errorf("Unknown Shared dir type requested: %s", mount.Type)
+			return fmt.Errorf("unknown Shared dir type requested: %s", mount.Type)
 		}
 	}
 
@@ -344,7 +344,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if currentBundleName != bundleName {
 		logging.Debugf("Bundle '%s' was requested, but the existing VM is using '%s'",
 			bundleName, currentBundleName)
-		return nil, fmt.Errorf("Bundle '%s' was requested, but the existing VM is using '%s'. Please delete your existing cluster and start again",
+		return nil, fmt.Errorf("bundle '%s' was requested, but the existing VM is using '%s'. Please delete your existing cluster and start again",
 			bundleName,
 			currentBundleName)
 	}
@@ -654,7 +654,7 @@ func (client *client) IsRunning() (bool, error) {
 
 func (client *client) validateStartConfig(startConfig types.StartConfig) error {
 	if client.monitoringEnabled() && startConfig.Memory < minimumMemoryForMonitoring {
-		return fmt.Errorf("Too little memory (%s) allocated to the virtual machine to start the monitoring stack, %s is the minimum",
+		return fmt.Errorf("too little memory (%s) allocated to the virtual machine to start the monitoring stack, %s is the minimum",
 			units.BytesSize(float64(startConfig.Memory.ToBytes())),
 			units.BytesSize(float64(minimumMemoryForMonitoring.ToBytes())))
 	}
@@ -667,7 +667,7 @@ func createHost(machineConfig config.MachineConfig, preset crcPreset.Preset) err
 
 	vm, err := newHost(api, machineConfig)
 	if err != nil {
-		return fmt.Errorf("Error creating new host: %s", err)
+		return fmt.Errorf("error creating new host: %s", err)
 	}
 
 	logging.Debug("Running pre-create checks...")
@@ -677,18 +677,18 @@ func createHost(machineConfig config.MachineConfig, preset crcPreset.Preset) err
 	}
 
 	if err := api.Save(vm); err != nil {
-		return fmt.Errorf("Error saving host to store before attempting creation: %s", err)
+		return fmt.Errorf("error saving host to store before attempting creation: %s", err)
 	}
 
 	logging.Debug("Creating machine...")
 
 	if err := vm.Driver.Create(); err != nil {
-		return fmt.Errorf("Error in driver during machine creation: %s", err)
+		return fmt.Errorf("error in driver during machine creation: %s", err)
 	}
 
 	logging.Info("Generating new SSH key pair...")
 	if err := crcssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
-		return fmt.Errorf("Error generating ssh key pair: %v", err)
+		return fmt.Errorf("error generating ssh key pair: %v", err)
 	}
 	if preset == crcPreset.OpenShift || preset == crcPreset.OKD {
 		if err := cluster.GenerateKubeAdminUserPassword(); err != nil {
@@ -696,7 +696,7 @@ func createHost(machineConfig config.MachineConfig, preset crcPreset.Preset) err
 		}
 	}
 	if err := api.SetExists(vm.Name); err != nil {
-		return fmt.Errorf("Failed to record VM existence: %s", err)
+		return fmt.Errorf("failed to record VM existence: %s", err)
 	}
 
 	logging.Debug("Machine successfully created")
@@ -705,16 +705,16 @@ func createHost(machineConfig config.MachineConfig, preset crcPreset.Preset) err
 
 func startHost(ctx context.Context, vm *virtualMachine) error {
 	if err := vm.Driver.Start(); err != nil {
-		return fmt.Errorf("Error in driver during machine start: %s", err)
+		return fmt.Errorf("error in driver during machine start: %s", err)
 	}
 
 	if err := vm.api.Save(vm.Host); err != nil {
-		return fmt.Errorf("Error saving virtual machine to store after attempting creation: %s", err)
+		return fmt.Errorf("error saving virtual machine to store after attempting creation: %s", err)
 	}
 
 	logging.Debug("Waiting for machine to be running, this may take a few minutes...")
 	if err := crcerrors.Retry(ctx, 3*time.Minute, host.MachineInState(vm.Driver, libmachinestate.Running), 3*time.Second); err != nil {
-		return fmt.Errorf("Error waiting for machine to be running: %s", err)
+		return fmt.Errorf("error waiting for machine to be running: %s", err)
 	}
 
 	logging.Debug("Machine is up and running!")

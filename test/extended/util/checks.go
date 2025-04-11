@@ -121,7 +121,7 @@ func ValidateIP(inputString string) (bool, error) {
 func ValidateURL(inputString string) (bool, error) {
 	_, err := url.ParseRequestURI(inputString)
 	if err != nil {
-		return false, fmt.Errorf("URL '%s' is not an URL in valid format. Parsing error: %v", inputString, err)
+		return false, fmt.Errorf("uRL '%s' is not an URL in valid format. Parsing error: %v", inputString, err)
 	}
 
 	return true, nil
