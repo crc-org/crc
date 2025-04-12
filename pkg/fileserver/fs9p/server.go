@@ -1,4 +1,4 @@
-package plan9
+package fs9p
 
 import (
 	"fmt"
@@ -36,7 +36,7 @@ func New9pServer(listener net.Listener, exposeDir string) (*Server, error) {
 		return nil, fmt.Errorf("path to expose to machine must be a directory: %s", exposeDir)
 	}
 
-	server := p9.NewServer(localfs.Attacher(exposeDir), []p9.ServerOpt{}...)
+	server := p9.NewServer(localfs.Attacher(exposeDir))
 	if server == nil {
 		return nil, fmt.Errorf("p9.NewServer returned nil")
 	}

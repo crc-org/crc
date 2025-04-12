@@ -1,4 +1,4 @@
-package fileserver
+package fs9p
 
 import (
 	"fmt"

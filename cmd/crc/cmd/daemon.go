@@ -24,7 +24,7 @@ import (
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
-	plan9 "github.com/crc-org/crc/v2/pkg/fileserver"
+	"github.com/crc-org/crc/v2/pkg/fileserver/fs9p"
 	"github.com/docker/go-units"
 	"github.com/gorilla/handlers"
 	"github.com/pkg/errors"
@@ -242,7 +242,7 @@ func run(configuration *types.Configuration) error {
 	if err != nil {
 		return err
 	}
-	if err := plan9.StartShares([]plan9.Mount{{Listener: ln9p, Path: constants.GetHomeDir()}}); err != nil {
+	if err := fs9p.StartShares([]fs9p.Mount{{Listener: ln9p, Path: constants.GetHomeDir()}}); err != nil {
 		return err
 	}
 	// TODO matus
