@@ -1,4 +1,4 @@
-package fileserver
+package fs9p
 
 import (
 	"fmt"
@@ -12,7 +12,6 @@ import (
 // The vsocks used must already be defined before StartShares is called; it's
 // expected that the vsocks will be created and torn down by the program calling
 // gvproxy.
-// TODO: The map here probably doesn't make sense.
 func StartHvsockShares(mounts map[string]string) (defErr error) {
 	plan9Mounts := []Mount{}
 	for path, guid := range mounts {

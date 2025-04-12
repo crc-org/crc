@@ -1,10 +1,9 @@
-package fileserver
+package fs9p
 
 import (
 	"fmt"
 	"net"
 
-	"github.com/crc-org/crc/v2/pkg/fileserver/plan9"
 	"github.com/sirupsen/logrus"
 )
 
@@ -15,7 +14,7 @@ type Mount struct {
 
 func StartShares(plan9Mounts []Mount) (defErr error) {
 	for _, m := range plan9Mounts {
-		server, err := plan9.New9pServer(m.Listener, m.Path)
+		server, err := New9pServer(m.Listener, m.Path)
 		if err != nil {
 			return fmt.Errorf("serving directory %s on %s: %w", m.Path, m.Listener.Addr().String(), err)
 		}

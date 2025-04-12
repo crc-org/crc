@@ -1,4 +1,4 @@
-package plan9
+package fs9p
 
 import (
 	"fmt"
@@ -12,10 +12,7 @@ import (
 )
 
 type Server struct {
-	server *p9.Server
-	// TODO: Once server has a proper Close() we don't need this.
-	// This is basically just a short-circuit to actually close the server
-	// without that ability.
+	server   *p9.Server
 	listener net.Listener
 	// Errors from the server being started will come out here.
 	errChan chan error
@@ -36,15 +33,13 @@ func New9pServer(listener net.Listener, exposeDir string) (*Server, error) {
 		return nil, fmt.Errorf("path to expose to machine must be a directory: %s", exposeDir)
 	}
 
-	server := p9.NewServer(localfs.Attacher(exposeDir), []p9.ServerOpt{}...)
+	server := p9.NewServer(localfs.Attacher(exposeDir))
 	if server == nil {
 		return nil, fmt.Errorf("p9.NewServer returned nil")
 	}
 
 	errChan := make(chan error)
 
-	// TODO: Use a channel to pass back this if it occurs within a
-	// reasonable timeframe.
 	go func() {
 		errChan <- server.Serve(listener)
 		close(errChan)
