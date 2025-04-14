@@ -102,7 +102,7 @@ func NewProxyConfig() (*ProxyConfig, error) {
 	err := ValidateProxyURL(config.HTTPProxy, false)
 	if err != nil {
 		if config.fromEnv {
-			return nil, fmt.Errorf("Please check HTTP_PROXY env variable: %w", err)
+			return nil, fmt.Errorf("please check HTTP_PROXY env variable: %w", err)
 		}
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func NewProxyConfig() (*ProxyConfig, error) {
 	err = ValidateProxyURL(config.HTTPSProxy, true)
 	if err != nil {
 		if config.fromEnv {
-			return nil, fmt.Errorf("Please check HTTPS_PROXY env variable: %w", err)
+			return nil, fmt.Errorf("please check HTTPS_PROXY env variable: %w", err)
 		}
 		return nil, err
 	}
@@ -206,7 +206,7 @@ func ValidateProxyURL(proxyURL string, isHTTPSProxy bool) error {
 	}
 
 	if !govalidator.IsURL(proxyURL) {
-		return fmt.Errorf("Proxy URL '%s' is not valid", proxyURL)
+		return fmt.Errorf("proxy URL '%s' is not valid", proxyURL)
 	}
 	return nil
 }
@@ -222,7 +222,7 @@ func (p *ProxyConfig) tlsConfig() (*tls.Config, error) {
 	}
 	ok := caCertPool.AppendCertsFromPEM([]byte(p.ProxyCACert))
 	if !ok {
-		return nil, fmt.Errorf("Failed to append proxy CA to system CAs")
+		return nil, fmt.Errorf("failed to append proxy CA to system CAs")
 	}
 	return &tls.Config{
 		MinVersion: tls.VersionTLS12,

@@ -178,12 +178,12 @@ var testCases = []testCase{
 	{
 		request:     post("start"),
 		failRequest: true,
-		response:    httpError(500).withBody("Failed to start\n"),
+		response:    httpError(500).withBody("failed to start\n"),
 	},
 	{
 		request:     get("start"),
 		failRequest: true,
-		response:    httpError(500).withBody("Failed to start\n"),
+		response:    httpError(500).withBody("failed to start\n"),
 	},
 
 	// stop

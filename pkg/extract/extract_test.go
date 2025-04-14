@@ -85,7 +85,7 @@ func checkFileList(destDir string, extractedFiles []string, expectedFiles fileMa
 		}
 		_, found := expectedFiles[rel]
 		if !found {
-			return fmt.Errorf("Unexpected file '%s' in file list %v", rel, expectedFiles)
+			return fmt.Errorf("unexpected file '%s' in file list %v", rel, expectedFiles)
 		}
 		delete(expectedFiles, rel)
 	}
@@ -118,7 +118,7 @@ func checkFiles(destDir string, files fileMap) error {
 		}
 		expectedContent, found := files[archivePath]
 		if !found {
-			return fmt.Errorf("Unexpected extracted file '%s'", path)
+			return fmt.Errorf("unexpected extracted file '%s'", path)
 		}
 		delete(files, archivePath)
 
@@ -127,7 +127,7 @@ func checkFiles(destDir string, files fileMap) error {
 			return err
 		}
 		if string(data) != expectedContent {
-			return fmt.Errorf("Unexpected content for '%s': expected [%s], got [%s]", path, expectedContent, string(data))
+			return fmt.Errorf("unexpected content for '%s': expected [%s], got [%s]", path, expectedContent, string(data))
 		}
 		logging.Debugf("'%s' successfully checked", path)
 		return nil

@@ -23,7 +23,7 @@ func GenerateKubeAdminUserPassword() error {
 	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath()
 	kubeAdminPassword, err := GenerateRandomPasswordHash(23)
 	if err != nil {
-		return fmt.Errorf("Cannot generate the kubeadmin user password: %w", err)
+		return fmt.Errorf("cannot generate the kubeadmin user password: %w", err)
 	}
 	return os.WriteFile(kubeAdminPasswordFile, []byte(kubeAdminPassword), 0600)
 }
@@ -39,7 +39,7 @@ func UpdateKubeAdminUserPassword(ctx context.Context, ocConfig oc.Config, newPas
 
 	kubeAdminPassword, err := GetKubeadminPassword()
 	if err != nil {
-		return fmt.Errorf("Cannot read the kubeadmin user password from file: %w", err)
+		return fmt.Errorf("cannot read the kubeadmin user password from file: %w", err)
 	}
 	credentials := map[string]string{
 		"developer": "developer",
@@ -72,7 +72,7 @@ func UpdateKubeAdminUserPassword(ctx context.Context, ocConfig oc.Config, newPas
 		"-n", "openshift-config", "--type", "merge"}
 	_, stderr, err = ocConfig.RunOcCommandPrivate(cmdArgs...)
 	if err != nil {
-		return fmt.Errorf("Failed to update kubeadmin password %v: %s", err, stderr)
+		return fmt.Errorf("failed to update kubeadmin password %v: %s", err, stderr)
 	}
 	return nil
 }

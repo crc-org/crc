@@ -62,7 +62,7 @@ func getVersionGeneric(executablePath string, args ...string) (string, error) { 
 	parsedOutput := strings.Split(stdOut, ":")
 	if len(parsedOutput) < 2 {
 		logging.Debugf("failed to parse version information for %s: %s", executablePath, stdOut)
-		return "", fmt.Errorf("Unable to parse the version information of %s", executablePath)
+		return "", fmt.Errorf("unable to parse the version information of %s", executablePath)
 	}
 	return strings.TrimSpace(parsedOutput[1]), nil
 }

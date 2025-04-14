@@ -168,7 +168,7 @@ func EnsureSSHKeyPresentInTheCluster(ctx context.Context, ocConfig oc.Config, ss
 	}
 	stdout, stderr, err := ocConfig.RunOcCommand("get", "machineconfigs", "99-master-ssh", "-o", `jsonpath='{.spec.config.passwd.users[0].sshAuthorizedKeys[0]}'`)
 	if err != nil {
-		return fmt.Errorf("Failed to get machine configs %v: %s", err, stderr)
+		return fmt.Errorf("failed to get machine configs %v: %s", err, stderr)
 	}
 	if stdout == string(sshPublicKey) {
 		return nil
@@ -179,7 +179,7 @@ func EnsureSSHKeyPresentInTheCluster(ctx context.Context, ocConfig oc.Config, ss
 		"--type", "merge"}
 	_, stderr, err = ocConfig.RunOcCommand(cmdArgs...)
 	if err != nil {
-		return fmt.Errorf("Failed to update ssh key %v: %s", err, stderr)
+		return fmt.Errorf("failed to update ssh key %v: %s", err, stderr)
 	}
 	return nil
 }
@@ -191,7 +191,7 @@ func EnsurePullSecretPresentInTheCluster(ctx context.Context, ocConfig oc.Config
 
 	stdout, stderr, err := ocConfig.RunOcCommandPrivate("get", "secret", "pull-secret", "-n", "openshift-config", "-o", `jsonpath="{['data']['\.dockerconfigjson']}"`)
 	if err != nil {
-		return fmt.Errorf("Failed to get pull secret %v: %s", err, stderr)
+		return fmt.Errorf("failed to get pull secret %v: %s", err, stderr)
 	}
 	decoded, err := base64.StdEncoding.DecodeString(stdout)
 	if err != nil {
@@ -213,7 +213,7 @@ func EnsurePullSecretPresentInTheCluster(ctx context.Context, ocConfig oc.Config
 
 	_, stderr, err = ocConfig.RunOcCommandPrivate(cmdArgs...)
 	if err != nil {
-		return fmt.Errorf("Failed to add Pull secret %v: %s", err, stderr)
+		return fmt.Errorf("failed to add Pull secret %v: %s", err, stderr)
 	}
 	return nil
 }
@@ -225,7 +225,7 @@ func EnsureGeneratedClientCAPresentInTheCluster(ctx context.Context, ocConfig oc
 	}
 	clusterClientCA, stderr, err := ocConfig.RunOcCommand("get", "configmaps", "admin-kubeconfig-client-ca", "-n", "openshift-config", "-o", `jsonpath="{.data.ca-bundle\.crt}"`)
 	if err != nil {
-		return fmt.Errorf("Failed to get config map %v: %s", err, stderr)
+		return fmt.Errorf("failed to get config map %v: %s", err, stderr)
 	}
 
 	ok, err := crctls.VerifyCertificateAgainstRootCA(clusterClientCA, adminCert)
@@ -242,10 +242,10 @@ func EnsureGeneratedClientCAPresentInTheCluster(ctx context.Context, ocConfig oc
 		"-n", "openshift-config", "--patch", jsonPath}
 	_, stderr, err = ocConfig.RunOcCommand(cmdArgs...)
 	if err != nil {
-		return fmt.Errorf("Failed to patch admin-kubeconfig-client-ca config map with new CA` %v: %s", err, stderr)
+		return fmt.Errorf("failed to patch admin-kubeconfig-client-ca config map with new CA` %v: %s", err, stderr)
 	}
 	if err := sshRunner.CopyFile(constants.KubeconfigFilePath, ocConfig.KubeconfigPath, 0644); err != nil {
-		return fmt.Errorf("Failed to copy generated kubeconfig file to VM: %v", err)
+		return fmt.Errorf("failed to copy generated kubeconfig file to VM: %v", err)
 	}
 
 	return nil
@@ -259,7 +259,7 @@ func RemovePullSecretFromCluster(ctx context.Context, ocConfig oc.Config, sshRun
 
 	_, stderr, err := ocConfig.RunOcCommand(cmdArgs...)
 	if err != nil {
-		return fmt.Errorf("Failed to remove Pull secret %w: %s", err, stderr)
+		return fmt.Errorf("failed to remove Pull secret %w: %s", err, stderr)
 	}
 	return waitForPullSecretRemovedFromInstanceDisk(ctx, sshRunner)
 }
@@ -318,7 +318,7 @@ func RemoveOldRenderedMachineConfig(ocConfig oc.Config) error {
 	if deleteRenderedMachineConfig != "" {
 		_, stderr, err = ocConfig.RunOcCommand(fmt.Sprintf("delete %s", deleteRenderedMachineConfig))
 		if err != nil {
-			return fmt.Errorf("Failed to remove machineconfigpools %w: %s", err, stderr)
+			return fmt.Errorf("failed to remove machineconfigpools %w: %s", err, stderr)
 		}
 	}
 	return nil
@@ -331,7 +331,7 @@ func EnsureClusterIDIsNotEmpty(ctx context.Context, ocConfig oc.Config) error {
 
 	stdout, stderr, err := ocConfig.RunOcCommand("get", "clusterversion", "version", "-o", `jsonpath="{['spec']['clusterID']}"`)
 	if err != nil {
-		return fmt.Errorf("Failed to get clusterversion %v: %s", err, stderr)
+		return fmt.Errorf("failed to get clusterversion %v: %s", err, stderr)
 	}
 	if strings.TrimSpace(stdout) != "" {
 		return nil
@@ -344,7 +344,7 @@ func EnsureClusterIDIsNotEmpty(ctx context.Context, ocConfig oc.Config) error {
 
 	_, stderr, err = ocConfig.RunOcCommand(cmdArgs...)
 	if err != nil {
-		return fmt.Errorf("Failed to update cluster ID %v: %s", err, stderr)
+		return fmt.Errorf("failed to update cluster ID %v: %s", err, stderr)
 	}
 
 	return nil
@@ -389,13 +389,13 @@ func AddProxyConfigToCluster(ctx context.Context, sshRunner *ssh.Runner, ocConfi
 
 	patchEncode, err := json.Marshal(patch)
 	if err != nil {
-		return fmt.Errorf("Failed to encode to json: %v", err)
+		return fmt.Errorf("failed to encode to json: %v", err)
 	}
 	logging.Debugf("Patch string %s", string(patchEncode))
 
 	cmdArgs := []string{"patch", "proxy", "cluster", "-p", fmt.Sprintf("'%s'", string(patchEncode)), "--type", "merge"}
 	if _, stderr, err := ocConfig.RunOcCommandPrivate(cmdArgs...); err != nil {
-		return fmt.Errorf("Failed to add proxy details %v: %s", err, stderr)
+		return fmt.Errorf("failed to add proxy details %v: %s", err, stderr)
 	}
 	return nil
 }
@@ -423,7 +423,7 @@ func addProxyCACertToCluster(sshRunner *ssh.Runner, ocConfig oc.Config, proxy *h
 	}
 	cmdArgs := []string{"apply", "-f", proxyConfigMapFileName}
 	if _, stderr, err := ocConfig.RunOcCommandPrivate(cmdArgs...); err != nil {
-		return fmt.Errorf("Failed to add proxy cert details %v: %s", err, stderr)
+		return fmt.Errorf("failed to add proxy cert details %v: %s", err, stderr)
 	}
 	return nil
 }
