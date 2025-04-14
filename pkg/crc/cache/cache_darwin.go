@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"strings"
+
 	"github.com/crc-org/crc/v2/pkg/crc/machine/vfkit"
 )
 
@@ -9,5 +11,9 @@ func NewVfkitCache() *Cache {
 }
 
 func getVfkitVersion(executablePath string) (string, error) {
-	return getVersionGeneric(executablePath, "-v")
+	version, err := getVersionGeneric(executablePath, "-v")
+	if err != nil {
+		return version, err
+	}
+	return strings.TrimPrefix(version, "v"), nil
 }
