@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -24,6 +25,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/fileserver/fs9p"
 	"github.com/crc-org/machine/libmachine/drivers"
 	"github.com/docker/go-units"
 	"github.com/gorilla/handlers"
@@ -247,6 +249,31 @@ func run(configuration *types.Configuration) error {
 			errCh <- errors.Wrap(err, "virtualnetwork http.Serve failed")
 		}
 	}()
+
+	// 9p home directory sharing
+	if runtime.GOOS == "windows" && config.Get(crcConfig.EnableSharedDirs).AsBool() {
+		listener9p, err := vn.Listen("tcp", net.JoinHostPort(configuration.GatewayIP, fmt.Sprintf("%d", constants.Plan9TcpPort)))
+		if err != nil {
+			return err
+		}
+		server9p, err := fs9p.New9pServer(listener9p, constants.GetHomeDir())
+		if err != nil {
+			return err
+		}
+		if err := server9p.Start(); err != nil {
+			return err
+		}
+		defer func() {
+			if err := server9p.Stop(); err != nil {
+				logging.Warnf("error stopping 9p server: %v", err)
+			}
+		}()
+		go func() {
+			if err := server9p.WaitForError(); err != nil {
+				logging.Errorf("9p server error: %v", err)
+			}
+		}()
+	}
 
 	startupDone()
 

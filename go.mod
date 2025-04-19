@@ -4,6 +4,7 @@ go 1.24.2
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
+	github.com/DeedleFake/p9 v0.7.1
 	github.com/Masterminds/semver/v3 v3.4.0
 	github.com/Microsoft/go-winio v0.6.2
 	github.com/ProtonMail/go-crypto v1.3.0
