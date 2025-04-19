@@ -257,6 +257,11 @@ func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
 				}
 				return fmt.Errorf("Failed to mount CIFS/SMB share '%s' please make sure configured password is correct: %w", mount.Tag, err)
 			}
+		case "9p":
+			if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Mounting %s", mount.Target), "9pfs", "192.168.127.1", mount.Target); err != nil {
+				return err
+			}
+
 		default:
 			return fmt.Errorf("Unknown Shared dir type requested: %s", mount.Type)
 		}
