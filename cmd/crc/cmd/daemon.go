@@ -24,6 +24,7 @@ import (
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/fileserver/fs9p"
 	"github.com/docker/go-units"
 	"github.com/gorilla/handlers"
 	"github.com/pkg/errors"
@@ -234,6 +235,18 @@ func run(configuration *types.Configuration) error {
 			errCh <- errors.Wrap(err, "virtualnetwork http.Serve failed")
 		}
 	}()
+
+	// not sure if this should go over tcp or vsock
+	// vsock on Windows needs more config (registry key, ..)
+	ln9p, err := vn.Listen("tcp", net.JoinHostPort(configuration.GatewayIP, constants.Plan9PortStr))
+	if err != nil {
+		return err
+	}
+	if err := fs9p.StartShares([]fs9p.Mount{{Listener: ln9p, Path: constants.GetHomeDir()}}); err != nil {
+		return err
+	}
+	// TODO matus
+	fmt.Printf("Started 9P shares on %s\n", ln9p.Addr().String())
 
 	startupDone()
 
