@@ -209,13 +209,12 @@ func run(configuration *types.Configuration) error {
 	}()
 
 	go func() {
-		_, err := unixgramListener(vn)
-		if err != nil {
-			// Don't return an error if the connection is closed
-			if !errors.Is(err, net.ErrClosed) {
-				errCh <- err
+		for {
+			_, err := unixgramListener(vn)
+			if err != nil && !errors.Is(err, net.ErrClosed) {
+				logging.Errorf("unixgramListener error: %v", err)
 			}
-			return
+			time.Sleep(1 * time.Second)
 		}
 	}()
 
