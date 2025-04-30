@@ -77,7 +77,7 @@ func writeKubeconfig(ip string, clusterConfig *types.ClusterConfig, ingressHTTPS
 		return err
 	}
 
-	developerToken, err := getTokenForUser("developer", "developer", ip, ca, clusterConfig, ingressHTTPSPort)
+	developerToken, err := getTokenForUser("developer", clusterConfig.DeveloperPass, ip, ca, clusterConfig, ingressHTTPSPort)
 	if err != nil {
 		return err
 	}
