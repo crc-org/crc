@@ -14,14 +14,6 @@ aliases:
     - anjannath
     - gbraad
     - evidolob
-  doc-reviewers:
-    - cfergeau
-    - praveenkumar
-    - anjannath
-    - gbraad
-    - evidolob
-    - adrianriobo
-    - themr0c
   test-reviewers:
     - adrianriobo
 
