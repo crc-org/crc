@@ -24,6 +24,8 @@ const (
 	DeclScope Scope = "declarations"
 	// TopLevelScope is for all top level comments.
 	TopLevelScope Scope = "toplevel"
+	// NoInlineScope is for all except inline comments.
+	NoInlineScope Scope = "noinline"
 	// AllScope is for all comments.
 	AllScope Scope = "all"
 )

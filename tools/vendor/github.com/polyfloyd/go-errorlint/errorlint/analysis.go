@@ -17,7 +17,7 @@ func NewAnalyzer(opts ...Option) *analysis.Analyzer {
 
 	a := &analysis.Analyzer{
 		Name: "errorlint",
-		Doc:  "Source code linter for Go software that can be used to find code that will cause problems with the error wrapping scheme introduced in Go 1.13.",
+		Doc:  "Linter for error wrapping issues.",
 		Run:  run,
 	}
 

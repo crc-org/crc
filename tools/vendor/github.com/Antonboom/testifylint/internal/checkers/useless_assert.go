@@ -30,20 +30,38 @@ import (
 //	assert.False(t, num == num)
 //	assert.False(t, num != num)
 //
-//	assert.Empty(t, "")
-//	assert.False(t, false)
+//	assert.Empty(t, "value") // Any string literal.
+//	assert.Error(t, nil)
+//	assert.False(t, false) // Any bool literal.
 //	assert.Implements(t, (*any)(nil), new(Conn))
-//	assert.Negative(t, -42)
+//	assert.Negative(t, 42) // Any int literal.
 //	assert.Nil(t, nil)
 //	assert.NoError(t, nil)
-//	assert.NotEmpty(t, "value")
-//	assert.NotZero(t, 42)
-//	assert.NotZero(t, "value")
-//	assert.Positive(t, 42)
-//	assert.True(t, true)
-//	assert.Zero(t, 0)
-//	assert.Zero(t, "")
+//	assert.NotEmpty(t, "value") // Any string literal.
+//	assert.NotImplements(t, (*any)(nil), new(Conn))
+//	assert.NotNil(t, nil)
+//	assert.NotZero(t, 42)      // Any int literal.
+//	assert.NotZero(t, "value") // Any string literal.
+//	assert.NotZero(t, nil)
+//	assert.NotZero(t, false) // Any bool literal.
+//	assert.Positive(t, 42)   // Any int literal.
+//	assert.True(t, true)     // Any bool literal.
+//	assert.Zero(t, 42)       // Any int literal.
+//	assert.Zero(t, "value")  // Any string literal.
 //	assert.Zero(t, nil)
+//	assert.Zero(t, false) // Any bool literal.
+//
+//	assert.Negative(len(x))
+//	assert.Less(len(x), 0)
+//	assert.Greater(0, len(x))
+//	assert.GreaterOrEqual(len(x), 0)
+//	assert.LessOrEqual(0, len(x))
+//
+//	assert.Negative(uintVal)
+//	assert.Less(uintVal, 0)
+//	assert.Greater(0, uintVal)
+//	assert.GreaterOrEqual(uintVal, 0)
+//	assert.LessOrEqual(0, uintVal)
 type UselessAssert struct{}
 
 // NewUselessAssert constructs UselessAssert checker.
@@ -57,13 +75,13 @@ func (checker UselessAssert) Check(pass *analysis.Pass, call *CallMeta) *analysi
 
 	var isMeaningless bool
 	switch call.Fn.NameFTrimmed {
-	case "Empty":
-		isMeaningless = (len(call.Args) >= 1) && isEmptyStringLit(call.Args[0])
+	case "False", "True":
+		isMeaningless = (len(call.Args) >= 1) && isUntypedBool(pass, call.Args[0])
 
-	case "False":
-		isMeaningless = (len(call.Args) >= 1) && isUntypedFalse(pass, call.Args[0])
+	case "GreaterOrEqual", "Less":
+		isMeaningless = (len(call.Args) >= 2) && isAnyZero(call.Args[1]) && canNotBeNegative(pass, call.Args[0])
 
-	case "Implements":
+	case "Implements", "NotImplements":
 		if len(call.Args) < 2 {
 			return nil
 		}
@@ -71,29 +89,34 @@ func (checker UselessAssert) Check(pass *analysis.Pass, call *CallMeta) *analysi
 		elem, ok := isPointer(pass, call.Args[0])
 		isMeaningless = ok && isEmptyInterfaceType(elem)
 
-	case "Negative":
-		isMeaningless = (len(call.Args) >= 1) && isNegativeIntNumber(call.Args[0])
-
-	case "Nil", "NoError":
-		isMeaningless = (len(call.Args) >= 1) && isNil(call.Args[0])
-
-	case "NotEmpty":
-		isMeaningless = (len(call.Args) >= 1) && isNotEmptyStringLit(call.Args[0])
-
-	case "NotZero":
-		isMeaningless = (len(call.Args) >= 1) &&
-			(isNotEmptyStringLit(call.Args[0]) ||
-				isNegativeIntNumber(call.Args[0]) || isPositiveIntNumber(call.Args[0]))
+	case "LessOrEqual", "Greater":
+		isMeaningless = (len(call.Args) >= 2) && isAnyZero(call.Args[0]) && canNotBeNegative(pass, call.Args[1])
 
 	case "Positive":
-		isMeaningless = (len(call.Args) >= 1) && isPositiveIntNumber(call.Args[0])
+		if len(call.Args) < 1 {
+			return nil
+		}
+		_, isMeaningless = isIntBasicLit(call.Args[0])
 
-	case "True":
-		isMeaningless = (len(call.Args) >= 1) && isUntypedTrue(pass, call.Args[0])
+	case "Negative":
+		if len(call.Args) < 1 {
+			return nil
+		}
+		_, isInt := isIntBasicLit(call.Args[0])
+		isMeaningless = isInt || canNotBeNegative(pass, call.Args[0])
 
-	case "Zero":
-		isMeaningless = (len(call.Args) >= 1) &&
-			(isZero(call.Args[0]) || isEmptyStringLit(call.Args[0]) || isNil(call.Args[0]))
+	case "Error", "Nil", "NoError", "NotNil":
+		isMeaningless = (len(call.Args) >= 1) && isNil(call.Args[0])
+
+	case "Empty", "NotEmpty":
+		isMeaningless = (len(call.Args) >= 1) && isStringLit(call.Args[0])
+
+	case "NotZero", "Zero":
+		if len(call.Args) < 1 {
+			return nil
+		}
+		_, isInt := isIntBasicLit(call.Args[0])
+		isMeaningless = isInt || isStringLit(call.Args[0]) || isNil(call.Args[0]) || isUntypedBool(pass, call.Args[0])
 	}
 
 	if isMeaningless {
@@ -127,8 +150,10 @@ func (checker UselessAssert) checkSameVars(pass *analysis.Pass, call *CallMeta) 
 		"JSONEq",
 		"Less",
 		"LessOrEqual",
+		"NotElementsMatch",
 		"NotEqual",
 		"NotEqualValues",
+		"NotErrorAs",
 		"NotErrorIs",
 		"NotRegexp",
 		"NotSame",
@@ -162,4 +187,9 @@ func (checker UselessAssert) checkSameVars(pass *analysis.Pass, call *CallMeta) 
 		return newDiagnostic(checker.Name(), call, "asserting of the same variable")
 	}
 	return nil
+}
+
+func canNotBeNegative(pass *analysis.Pass, e ast.Expr) bool {
+	_, isLen := isBuiltinLenCall(pass, e)
+	return isLen || isUnsigned(pass, e)
 }

@@ -19,10 +19,10 @@ var builtins = []Func{
 	{"(*encoding/xml.Decoder).DecodeElement", "xml", 0, []string{"encoding/xml.Unmarshaler", "encoding.TextUnmarshaler"}},
 
 	// https://pkg.go.dev/gopkg.in/yaml.v3
-	{"gopkg.in/yaml.v3.Marshal", "yaml", 0, []string{"gopkg.in/yaml.v3.Marshaler"}},
-	{"gopkg.in/yaml.v3.Unmarshal", "yaml", 1, []string{"gopkg.in/yaml.v3.Unmarshaler"}},
-	{"(*gopkg.in/yaml.v3.Encoder).Encode", "yaml", 0, []string{"gopkg.in/yaml.v3.Marshaler"}},
-	{"(*gopkg.in/yaml.v3.Decoder).Decode", "yaml", 0, []string{"gopkg.in/yaml.v3.Unmarshaler"}},
+	{"gopkg.in/yaml.v3.Marshal", "yaml", 0, []string{"gopkg.in/yaml.v3.Marshaler", "encoding.TextMarshaler"}},
+	{"gopkg.in/yaml.v3.Unmarshal", "yaml", 1, []string{"gopkg.in/yaml.v3.Unmarshaler", "encoding.TextUnmarshaler"}},
+	{"(*gopkg.in/yaml.v3.Encoder).Encode", "yaml", 0, []string{"gopkg.in/yaml.v3.Marshaler", "encoding.TextMarshaler"}},
+	{"(*gopkg.in/yaml.v3.Decoder).Decode", "yaml", 0, []string{"gopkg.in/yaml.v3.Unmarshaler", "encoding.TextUnmarshaler"}},
 
 	// https://pkg.go.dev/github.com/BurntSushi/toml
 	{"github.com/BurntSushi/toml.Unmarshal", "toml", 1, []string{"github.com/BurntSushi/toml.Unmarshaler", "encoding.TextUnmarshaler"}},

@@ -37,7 +37,7 @@ Results can be exported to different report formats. Which can be imported into 
 ```yaml
 allowed:
   modules:                                                      # List of allowed modules
-    - gopkg.in/yaml.v2
+    - gopkg.in/yaml.v3
     - github.com/go-xmlfmt/xmlfmt
     - github.com/phayes/checkstyle
     - github.com/mitchellh/go-homedir
@@ -88,7 +88,7 @@ Flags:
 ```
 ╰─ ./gomodguard -r checkstyle -f gomodguard-checkstyle.xml ./...
 
-info: allowed modules, [gopkg.in/yaml.v2 github.com/go-xmlfmt/xmlfmt github.com/phayes/checkstyle github.com/mitchellh/go-homedir]
+info: allowed modules, [gopkg.in/yaml.v3 github.com/go-xmlfmt/xmlfmt github.com/phayes/checkstyle github.com/mitchellh/go-homedir]
 info: allowed module domains, [golang.org]
 info: blocked modules, [github.com/uudashr/go-module]
 info: found `2` blocked modules in the go.mod file, [github.com/gofrs/uuid github.com/uudashr/go-module]

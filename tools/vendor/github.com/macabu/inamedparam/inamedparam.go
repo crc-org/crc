@@ -33,14 +33,17 @@ func flags() flag.FlagSet {
 	return *flags
 }
 
-func run(pass *analysis.Pass) (interface{}, error) {
+func run(pass *analysis.Pass) (any, error) {
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
 	types := []ast.Node{
 		&ast.InterfaceType{},
 	}
 
-	skipSingleParam := pass.Analyzer.Flags.Lookup(flagSkipSingleParam).Value.(flag.Getter).Get().(bool)
+	var skipSingleParam bool
+	if f := pass.Analyzer.Flags.Lookup(flagSkipSingleParam); f != nil {
+		skipSingleParam, _ = f.Value.(flag.Getter).Get().(bool)
+	}
 
 	inspect.Preorder(types, func(n ast.Node) {
 		interfaceType, ok := n.(*ast.InterfaceType)

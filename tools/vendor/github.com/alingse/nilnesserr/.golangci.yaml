@@ -18,6 +18,10 @@ linters-settings:
         allow:
           - $gostd
           - github.com/alingse/nilnesserr
+  cyclop:
+    max-complexity: 12
+  lll:
+    line-length: 200
 
 issues:
   exclude-rules:
@@ -64,3 +68,8 @@ issues:
     - text: "newAnalyzer"
       linters:
         - unparam
+
+    - text: "indent-error-flow"
+      path: nilness.go
+      linters:
+        - revive

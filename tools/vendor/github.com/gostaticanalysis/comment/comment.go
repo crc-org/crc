@@ -52,7 +52,8 @@ func (maps Maps) Annotated(n ast.Node, annotation string) bool {
 
 // Ignore checks either specified AST node is ignored by the check.
 // It follows staticcheck style as the below.
-//   //lint:ignore Check1[,Check2,...,CheckN] reason
+//
+//	//lint:ignore Check1[,Check2,...,CheckN] reason
 func (maps Maps) Ignore(n ast.Node, check string) bool {
 	for _, cg := range maps.Comments(n) {
 		if hasIgnoreCheck(cg, check) {
@@ -64,7 +65,8 @@ func (maps Maps) Ignore(n ast.Node, check string) bool {
 
 // IgnorePos checks either specified postion of AST node is ignored by the check.
 // It follows staticcheck style as the below.
-//   //lint:ignore Check1[,Check2,...,CheckN] reason
+//
+//	//lint:ignore Check1[,Check2,...,CheckN] reason
 func (maps Maps) IgnorePos(pos token.Pos, check string) bool {
 	for _, cg := range maps.CommentsByPos(pos) {
 		if hasIgnoreCheck(cg, check) {
@@ -109,11 +111,26 @@ func (maps Maps) CommentsByPosLine(fset *token.FileSet, pos token.Pos) []*ast.Co
 	return nil
 }
 
+// Deprecated: This function does not work with multiple files.
 // IgnoreLine checks either specified lineof AST node is ignored by the check.
 // It follows staticcheck style as the below.
-//   //lint:ignore Check1[,Check2,...,CheckN] reason
+//
+//	//lint:ignore Check1[,Check2,...,CheckN] reason
 func (maps Maps) IgnoreLine(fset *token.FileSet, line int, check string) bool {
 	for _, cg := range maps.CommentsByLine(fset, line) {
+		if hasIgnoreCheck(cg, check) {
+			return true
+		}
+	}
+	return false
+}
+
+// IgnorePosLine checks either specified lineof AST node is ignored by the check.
+// It follows staticcheck style as the below.
+//
+//	//lint:ignore Check1[,Check2,...,CheckN] reason
+func (maps Maps) IgnorePosLine(fset *token.FileSet, pos token.Pos, check string) bool {
+	for _, cg := range maps.CommentsByPosLine(fset, pos) {
 		if hasIgnoreCheck(cg, check) {
 			return true
 		}

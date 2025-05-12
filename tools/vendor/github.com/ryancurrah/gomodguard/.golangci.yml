@@ -2,13 +2,13 @@
 linters:
   enable-all: true
   disable:
+    - tenv
     - lll
     - gomodguard
     - gochecknoglobals
     - paralleltest
     - varnamelen
     - exhaustruct
-    - gomnd
     - depguard
     - forbidigo
     - funlen

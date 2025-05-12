@@ -43,7 +43,7 @@ func (checker BoolCompare) Check(pass *analysis.Pass, call *CallMeta) *analysis.
 	}
 
 	newUseFnDiagnostic := func(proposed string, survivingArg ast.Expr, replaceStart, replaceEnd token.Pos) *analysis.Diagnostic {
-		if !isBuiltinBool(pass, survivingArg) {
+		if !hasBoolType(pass, survivingArg) {
 			if checker.ignoreCustomTypes {
 				return nil
 			}
@@ -65,7 +65,7 @@ func (checker BoolCompare) Check(pass *analysis.Pass, call *CallMeta) *analysis.
 	}
 
 	newNeedSimplifyDiagnostic := func(survivingArg ast.Expr, replaceStart, replaceEnd token.Pos) *analysis.Diagnostic {
-		if !isBuiltinBool(pass, survivingArg) {
+		if !hasBoolType(pass, survivingArg) {
 			if checker.ignoreCustomTypes {
 				return nil
 			}
@@ -103,7 +103,7 @@ func (checker BoolCompare) Check(pass *analysis.Pass, call *CallMeta) *analysis.
 		switch {
 		case xor(t1, t2):
 			survivingArg, _ := anyVal([]bool{t1, t2}, arg2, arg1)
-			if call.Fn.NameFTrimmed == "Exactly" && !isBuiltinBool(pass, survivingArg) {
+			if call.Fn.NameFTrimmed == "Exactly" && !hasBoolType(pass, survivingArg) {
 				// NOTE(a.telyshev): `Exactly` assumes no type conversion.
 				return nil
 			}
@@ -111,7 +111,7 @@ func (checker BoolCompare) Check(pass *analysis.Pass, call *CallMeta) *analysis.
 
 		case xor(f1, f2):
 			survivingArg, _ := anyVal([]bool{f1, f2}, arg2, arg1)
-			if call.Fn.NameFTrimmed == "Exactly" && !isBuiltinBool(pass, survivingArg) {
+			if call.Fn.NameFTrimmed == "Exactly" && !hasBoolType(pass, survivingArg) {
 				// NOTE(a.telyshev): `Exactly` assumes no type conversion.
 				return nil
 			}

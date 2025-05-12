@@ -131,13 +131,23 @@ func newSuggestedFuncReplacement(
 		proposedFn += "f"
 	}
 	return analysis.SuggestedFix{
-		Message: fmt.Sprintf("Replace `%s` with `%s`", call.Fn.Name, proposedFn),
-		TextEdits: append([]analysis.TextEdit{
-			{
-				Pos:     call.Fn.Pos(),
-				End:     call.Fn.End(),
-				NewText: []byte(proposedFn),
-			},
-		}, additionalEdits...),
+		Message:   fmt.Sprintf("Replace `%s` with `%s`", call.Fn.Name, proposedFn),
+		TextEdits: append([]analysis.TextEdit{newReplaceFnTextEdit(call.Fn, proposedFn)}, additionalEdits...),
+	}
+}
+
+func newReplaceFnTextEdit(callFn analysis.Range, proposedFn string) analysis.TextEdit {
+	return analysis.TextEdit{
+		Pos:     callFn.Pos(),
+		End:     callFn.End(),
+		NewText: []byte(proposedFn),
+	}
+}
+
+func newRemoveLastArgTextEdit(pass *analysis.Pass, callArgs []ast.Expr) analysis.TextEdit {
+	return analysis.TextEdit{
+		Pos:     callArgs[0].Pos(),
+		End:     callArgs[len(callArgs)-1].End(),
+		NewText: formatAsCallArgs(pass, callArgs[0:len(callArgs)-1]...),
 	}
 }

@@ -150,7 +150,7 @@ func getCompositeLitRelatedComments(stack []ast.Node, cm ast.CommentMap) []*ast.
 }
 
 func getStructType(pass *analysis.Pass, lit *ast.CompositeLit) (*types.Struct, *TypeInfo, bool) {
-	switch typ := pass.TypesInfo.TypeOf(lit).(type) {
+	switch typ := types.Unalias(pass.TypesInfo.TypeOf(lit)).(type) {
 	case *types.Named: // named type
 		if structTyp, ok := typ.Underlying().(*types.Struct); ok {
 			pkg := typ.Obj().Pkg()

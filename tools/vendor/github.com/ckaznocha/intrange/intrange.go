@@ -265,6 +265,15 @@ func checkForStmt(pass *analysis.Pass, forStmt *ast.ForStmt) {
 		replacement = fmt.Sprintf("range %s", rangeX)
 	}
 
+	if isFunctionOrMethodCall(operand) {
+		pass.Report(analysis.Diagnostic{
+			Pos:     forStmt.Pos(),
+			Message: msg + "\nBecause the key is returned by a function or method, take care to consider side effects.",
+		})
+
+		return
+	}
+
 	pass.Report(analysis.Diagnostic{
 		Pos:     forStmt.Pos(),
 		Message: msg,
@@ -315,12 +324,11 @@ func checkRangeStmt(pass *analysis.Pass, rangeStmt *ast.RangeStmt) {
 		return
 	}
 
-	fn, ok := x.Fun.(*ast.Ident)
-	if !ok {
+	if _, ok = x.Fun.(*ast.Ident); !ok {
 		return
 	}
 
-	if fn.Name != "len" || len(x.Args) != 1 {
+	if !isLen(x) {
 		return
 	}
 
@@ -385,7 +393,7 @@ func checkRangeStmt(pass *analysis.Pass, rangeStmt *ast.RangeStmt) {
 func findNExpr(expr ast.Expr) ast.Expr {
 	switch e := expr.(type) {
 	case *ast.CallExpr:
-		if fun, ok := e.Fun.(*ast.Ident); ok && fun.Name == "len" && len(e.Args) == 1 {
+		if isLen(e) {
 			return findNExpr(e.Args[0])
 		}
 
@@ -439,6 +447,8 @@ func recursiveOperandToString(
 		return recursiveOperandToString(e.X, false) + "[" + recursiveOperandToString(e.Index, false) + "]"
 	case *ast.BinaryExpr:
 		return recursiveOperandToString(e.X, false) + " " + e.Op.String() + " " + recursiveOperandToString(e.Y, false)
+	case *ast.StarExpr:
+		return "*" + recursiveOperandToString(e.X, false)
 	default:
 		return ""
 	}
@@ -526,19 +536,7 @@ func isNumberLit(exp ast.Expr) bool {
 	case *ast.CallExpr:
 		switch fun := lit.Fun.(type) {
 		case *ast.Ident:
-			switch fun.Name {
-			case
-				"int",
-				"int8",
-				"int16",
-				"int32",
-				"int64",
-				"uint",
-				"uint8",
-				"uint16",
-				"uint32",
-				"uint64":
-			default:
+			if !isIntCast(fun) {
 				return false
 			}
 		default:
@@ -573,19 +571,7 @@ func compareNumberLit(exp ast.Expr, val int) bool {
 	case *ast.CallExpr:
 		switch fun := lit.Fun.(type) {
 		case *ast.Ident:
-			switch fun.Name {
-			case
-				"int",
-				"int8",
-				"int16",
-				"int32",
-				"int64",
-				"uint",
-				"uint8",
-				"uint16",
-				"uint32",
-				"uint64":
-			default:
+			if !isIntCast(fun) {
 				return false
 			}
 		default:
@@ -623,5 +609,58 @@ func operandToString(
 		return s
 	}
 
+	if operandIdent, ok := operand.(*ast.Ident); ok {
+		if operandType := pass.TypesInfo.TypeOf(operandIdent); operandType != nil &&
+			operandType == t {
+			return s
+		}
+	}
+
 	return t.String() + "(" + s + ")"
+}
+
+func isFunctionOrMethodCall(expr ast.Expr) bool {
+	e, ok := expr.(*ast.CallExpr)
+	if !ok {
+		return false
+	}
+
+	fun, ok := e.Fun.(*ast.Ident)
+	if !ok {
+		return true
+	}
+
+	if isLen(e) || isIntCast(fun) {
+		return false
+	}
+
+	return true
+}
+
+func isIntCast(ident *ast.Ident) bool {
+	switch ident.Name {
+	case
+		"int",
+		"int8",
+		"int16",
+		"int32",
+		"int64",
+		"uint",
+		"uint8",
+		"uint16",
+		"uint32",
+		"uint64":
+		return true
+	default:
+		return false
+	}
+}
+
+func isLen(exp *ast.CallExpr) bool {
+	fun, ok := exp.Fun.(*ast.Ident)
+	if !ok {
+		return false
+	}
+
+	return fun.Name == "len" && len(exp.Args) == 1
 }

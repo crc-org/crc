@@ -19,9 +19,10 @@ With `sloglint` you can enforce various rules for `log/slog` based on your prefe
 * Enforce using either key-value pairs only or attributes only (optional)
 * Enforce not using global loggers (optional)
 * Enforce using methods that accept a context (optional)
-* Enforce using static log messages (optional)
+* Enforce using static messages (optional)
+* Enforce message style (optional)
 * Enforce using constants instead of raw keys (optional)
-* Enforce a single key naming convention (optional)
+* Enforce key naming convention (optional)
 * Enforce not using specific keys (optional)
 * Enforce putting arguments on separate lines (optional)
 
@@ -109,6 +110,24 @@ The report can be fixed by moving dynamic values to arguments:
 ```go
 slog.Info("a user has logged in", "user_id", 42)
 ```
+
+### Message style
+
+The `msg-style` option causes `sloglint` to check log messages for a particular style.
+
+Possible values are `lowercased` (report messages that begin with an uppercase letter)...
+
+```go
+slog.Info("Msg") // sloglint: message should be lowercased
+```
+
+...and `capitalized` (report messages that begin with a lowercase letter):
+
+```go
+slog.Info("msg") // sloglint: message should be capitalized
+```
+
+Special cases such as acronyms (e.g. `HTTP`, `U.S.`) are ignored.
 
 ### No raw keys
 

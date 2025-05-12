@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/constant"
 	"go/token"
+	"strings"
 
 	"honnef.co/go/tools/analysis/code"
 	"honnef.co/go/tools/analysis/facts/generated"
@@ -42,8 +43,14 @@ var (
 	checkIfReturnQRet = pattern.MustParse(`(ReturnStmt [ret@(Builtin (Or "true" "false"))])`)
 )
 
-func run(pass *analysis.Pass) (interface{}, error) {
+func run(pass *analysis.Pass) (any, error) {
+	var cm ast.CommentMap
 	fn := func(node ast.Node) {
+		if f, ok := node.(*ast.File); ok {
+			cm = ast.NewCommentMap(pass.Fset, f, f.Comments)
+			return
+		}
+
 		block := node.(*ast.BlockStmt)
 		l := len(block.List)
 		if l < 2 {
@@ -76,10 +83,32 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 		ret1 := m1.State["ret"].(*ast.Ident)
 		ret2 := m2.State["ret"].(*ast.Ident)
-
 		if ret1.Name == ret2.Name {
 			// we want the function to return true and false, not the
 			// same value both times.
+			return
+		}
+
+		hasComments := func(n ast.Node) bool {
+			cmf := cm.Filter(n)
+			for _, groups := range cmf {
+				for _, group := range groups {
+					for _, cmt := range group.List {
+						if strings.HasPrefix(cmt.Text, "//@ diag") {
+							// Staticcheck test cases use comments to mark
+							// expected diagnostics. Ignore these comments so we
+							// can test this check.
+							continue
+						}
+						return true
+					}
+				}
+			}
+			return false
+		}
+
+		// Don't flag if either branch is commented
+		if hasComments(n1) || hasComments(n2) {
 			return
 		}
 
@@ -94,7 +123,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				report.Render(pass, origCond), report.Render(pass, ret1), report.Render(pass, ret2)),
 			report.FilterGenerated())
 	}
-	code.Preorder(pass, fn, (*ast.BlockStmt)(nil))
+	code.Preorder(pass, fn, (*ast.File)(nil), (*ast.BlockStmt)(nil))
 	return nil, nil
 }
 

@@ -411,7 +411,7 @@ func (c *Checker) addImplementing(named *types.Named, iface *types.Interface) {
 }
 
 func findNamed(typ types.Type) *types.Named {
-	switch typ := typ.(type) {
+	switch typ := types.Unalias(typ).(type) {
 	case *types.Pointer:
 		return findNamed(typ.Elem())
 	case *types.Named:

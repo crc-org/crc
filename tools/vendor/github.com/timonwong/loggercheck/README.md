@@ -6,8 +6,8 @@ A linter checks the odd number of key and value pairs for common logger librarie
 - [kitlog](https://github.com/go-kit/log)
 - [klog](https://github.com/kubernetes/klog)
 - [logr](https://github.com/go-logr/logr)
-- [zap](https://github.com/uber-go/zap)
 - [log/slog](https://pkg.go.dev/log/slog)
+- [zap](https://github.com/uber-go/zap)
 
 It's recommended to use loggercheck with [golangci-lint](https://golangci-lint.run/usage/linters/#loggercheck).
 
@@ -27,7 +27,7 @@ go install github.com/timonwong/loggercheck/cmd/loggercheck
 ## Usage
 
 ```
-loggercheck: Checks key value pairs for common logger libraries (kitlog,logr,klog,zap).
+loggercheck: Checks key value pairs for common logger libraries (kitlog,klog,logr,slog,zap).
 
 Usage: loggercheck [-flag] [package]
 
@@ -43,7 +43,7 @@ Flags:
   -debug string
         debug flags, any subset of "fpstv"
   -disable value
-        comma-separated list of disabled logger checker (kitlog,klog,logr,zap) (default kitlog)
+        comma-separated list of disabled logger checker (kitlog,klog,logr,slog,zap) (default kitlog)
   -fix
         apply all suggested fixes
   -flags

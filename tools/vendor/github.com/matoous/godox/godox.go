@@ -1,3 +1,5 @@
+// Package godox is a linter that scans Go code for comments containing certain keywords
+// (like TODO, BUG, FIXME) which typically indicate areas that require attention.
 package godox
 
 import (
@@ -20,22 +22,17 @@ type Message struct {
 	Message string
 }
 
-func getMessages(comment *ast.Comment, fset *token.FileSet, keywords []string) []Message {
+func getMessages(comment *ast.Comment, fset *token.FileSet, keywords []string) ([]Message, error) {
 	commentText := extractComment(comment.Text)
 
-	b := bufio.NewReader(bytes.NewBufferString(commentText))
+	scanner := bufio.NewScanner(bytes.NewBufferString(commentText))
 
 	var comments []Message
 
-	for lineNum := 0; ; lineNum++ {
-		line, _, err := b.ReadLine()
-		if err != nil {
-			break
-		}
-
+	for lineNum := 0; scanner.Scan(); lineNum++ {
 		const minimumSize = 4
 
-		sComment := bytes.TrimSpace(line)
+		sComment := bytes.TrimSpace(scanner.Bytes())
 		if len(sComment) < minimumSize {
 			continue
 		}
@@ -68,21 +65,22 @@ func getMessages(comment *ast.Comment, fset *token.FileSet, keywords []string) [
 		}
 	}
 
-	return comments
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("scan: %w", err)
+	}
+
+	return comments, nil
 }
 
 func extractComment(commentText string) string {
 	switch commentText[1] {
 	case '/':
-		commentText = commentText[2:]
-		if len(commentText) > 0 && commentText[0] == ' ' {
-			commentText = commentText[1:]
-		}
+		return strings.TrimPrefix(commentText[2:], " ")
 	case '*':
-		commentText = commentText[2 : len(commentText)-2]
+		return commentText[2 : len(commentText)-2]
+	default:
+		return commentText
 	}
-
-	return commentText
 }
 
 func hasAlphanumRuneAdjacent(rest []byte) bool {
@@ -102,7 +100,7 @@ func hasAlphanumRuneAdjacent(rest []byte) bool {
 
 // Run runs the godox linter on given file.
 // Godox searches for comments starting with given keywords and reports them.
-func Run(file *ast.File, fset *token.FileSet, keywords ...string) []Message {
+func Run(file *ast.File, fset *token.FileSet, keywords ...string) ([]Message, error) {
 	if len(keywords) == 0 {
 		keywords = defaultKeywords
 	}
@@ -111,9 +109,14 @@ func Run(file *ast.File, fset *token.FileSet, keywords ...string) []Message {
 
 	for _, c := range file.Comments {
 		for _, ci := range c.List {
-			messages = append(messages, getMessages(ci, fset, keywords)...)
+			msgs, err := getMessages(ci, fset, keywords)
+			if err != nil {
+				return nil, err
+			}
+
+			messages = append(messages, msgs...)
 		}
 	}
 
-	return messages
+	return messages, nil
 }

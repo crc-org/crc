@@ -24,6 +24,7 @@ func NewDefault() Config {
 		Formatter: FormatterConfig{
 			CheckFormatString: true,
 			RequireFFuncs:     false,
+			RequireStringMsg:  true,
 		},
 		GoRequire: GoRequireConfig{
 			IgnoreHTTPHandlers: false,
@@ -66,6 +67,7 @@ type ExpectedActualConfig struct {
 type FormatterConfig struct {
 	CheckFormatString bool
 	RequireFFuncs     bool
+	RequireStringMsg  bool
 }
 
 // GoRequireConfig implements configuration of checkers.GoRequire.
@@ -133,7 +135,10 @@ func BindToFlags(cfg *Config, fs *flag.FlagSet) {
 		"to enable go vet's printf checks")
 	fs.BoolVar(&cfg.Formatter.RequireFFuncs,
 		"formatter.require-f-funcs", false,
-		"to require f-assertions (e.g. assert.Equalf) if format string is used, even if there are no variable-length variables.")
+		"to require f-assertions (e.g. assert.Equalf) if format string is used, even if there are no variable-length variables")
+	fs.BoolVar(&cfg.Formatter.RequireStringMsg,
+		"formatter.require-string-msg", true,
+		"to require that the first element of msgAndArgs (msg) has a string type")
 
 	fs.BoolVar(&cfg.GoRequire.IgnoreHTTPHandlers,
 		"go-require.ignore-http-handlers", false,

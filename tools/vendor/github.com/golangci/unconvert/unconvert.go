@@ -15,7 +15,6 @@ import (
 	"go/parser"
 	"go/token"
 	"go/types"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -87,7 +86,7 @@ func apply(file string, edits editSet) {
 		log.Fatal(err)
 	}
 
-	err = ioutil.WriteFile(file, buf.Bytes(), 0)
+	err = os.WriteFile(file, buf.Bytes(), 0)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -143,7 +142,7 @@ func print(conversions []token.Position) {
 		fmt.Printf("%s:%d:%d: unnecessary conversion\n", pos.Filename, pos.Line, pos.Column)
 		if *flagV {
 			if pos.Filename != file {
-				buf, err := ioutil.ReadFile(pos.Filename)
+				buf, err := os.ReadFile(pos.Filename)
 				if err != nil {
 					log.Fatal(err)
 				}

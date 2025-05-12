@@ -43,7 +43,7 @@ func (checker SuiteTHelper) Check(pass *analysis.Pass, inspector *inspector.Insp
 		}
 		rcvName := rcv.Names[0].Name
 
-		helperCallStr := fmt.Sprintf("%s.T().Helper()", rcvName)
+		helperCallStr := rcvName + ".T().Helper()"
 
 		firstStmt := fd.Body.List[0]
 		if analysisutil.NodeString(pass.Fset, firstStmt) == helperCallStr {

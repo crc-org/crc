@@ -90,14 +90,6 @@ func (s *formatState) scanNum() {
 	}
 }
 
-func stringIndexAt(s, substr string, start int) int {
-	idx := strings.Index(s[start:], substr)
-	if idx < 0 {
-		return idx
-	}
-	return idx + start
-}
-
 // parseIndex scans an index expression. It returns false if there is a syntax error.
 func (s *formatState) parseIndex() bool {
 	if s.nbytes == len(s.format) || s.format[s.nbytes] != '[' {
@@ -109,11 +101,12 @@ func (s *formatState) parseIndex() bool {
 	s.scanNum()
 	ok := true
 	if s.nbytes == len(s.format) || s.nbytes == start || s.format[s.nbytes] != ']' {
-		ok = false
-		s.nbytes = stringIndexAt(s.format, "]", start)
+		ok = false // syntax error is either missing "]" or invalid index.
+		s.nbytes = strings.Index(s.format[start:], "]")
 		if s.nbytes < 0 {
 			return false
 		}
+		s.nbytes = s.nbytes + start
 	}
 	arg32, err := strconv.ParseInt(s.format[start:s.nbytes], 10, 32)
 	if err != nil || !ok || arg32 <= 0 {

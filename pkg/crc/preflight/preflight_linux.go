@@ -10,7 +10,6 @@ import (
 	crcErrors "github.com/crc-org/crc/v2/pkg/crc/errors"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/network"
-	"github.com/crc-org/crc/v2/pkg/crc/preset"
 	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
 	"github.com/crc-org/crc/v2/pkg/os/linux"
@@ -343,7 +342,7 @@ func getAllPreflightChecks() []Check {
 	filter.SetDistro(distro())
 	filter.SetSystemdUser(distro())
 
-	return filter.Apply(getChecks(distro(), constants.GetDefaultBundlePath(preset.OpenShift), preset.OpenShift, false))
+	return filter.Apply(getChecks(distro(), constants.GetDefaultBundlePath(crcpreset.OpenShift), crcpreset.OpenShift, false))
 }
 
 func getPreflightChecks(_ bool, networkMode network.Mode, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) []Check {

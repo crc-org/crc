@@ -727,6 +727,14 @@ func (r *runner) getFunction(instr ssa.Instruction) (f *ssa.Function) {
 }
 
 func (r *runner) isCtxType(tp types.Type) bool {
+	if p, ok := tp.(*types.Pointer); ok {
+		// opaqueType is not exposed and lead to unreachable error.
+		// Related to https://github.com/golang/tools/blob/63229bc79404d8cf2fe4e88ad569168fe251d993/go/ssa/builder.go#L107
+		if p.Elem().String() == "deferStack" {
+			return false
+		}
+	}
+
 	return types.Identical(tp, r.ctxTyp) || types.Identical(tp, r.ctxPTyp)
 }
 

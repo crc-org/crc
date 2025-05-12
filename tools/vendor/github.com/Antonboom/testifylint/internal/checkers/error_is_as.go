@@ -6,6 +6,9 @@ import (
 	"go/types"
 
 	"golang.org/x/tools/go/analysis"
+
+	"github.com/Antonboom/testifylint/internal/analysisutil"
+	"github.com/Antonboom/testifylint/internal/testify"
 )
 
 // ErrorIsAs detects situations like
@@ -15,12 +18,14 @@ import (
 //	assert.True(t, errors.Is(err, errSentinel))
 //	assert.False(t, errors.Is(err, errSentinel))
 //	assert.True(t, errors.As(err, &target))
+//	assert.False(t, errors.As(err, &target))
 //
 // and requires
 //
 //	assert.ErrorIs(t, err, errSentinel)
 //	assert.NotErrorIs(t, err, errSentinel)
 //	assert.ErrorAs(t, err, &target)
+//	assert.NotErrorAs(t, err, &target)
 //
 // Also ErrorIsAs repeats go vet's "errorsas" check logic.
 type ErrorIsAs struct{}
@@ -32,7 +37,7 @@ func (ErrorIsAs) Name() string { return "error-is-as" }
 func (checker ErrorIsAs) Check(pass *analysis.Pass, call *CallMeta) *analysis.Diagnostic {
 	switch call.Fn.NameFTrimmed {
 	case "Error":
-		if len(call.Args) >= 2 && isError(pass, call.Args[1]) {
+		if len(call.Args) >= 2 && isError(pass, call.Args[1]) && !isAssertCollectT(pass, call.Selector.X) {
 			const proposed = "ErrorIs"
 			msg := fmt.Sprintf("invalid usage of %[1]s.Error, use %[1]s.%[2]s instead", call.SelectorXStr, proposed)
 			return newDiagnostic(checker.Name(), call, msg, newSuggestedFuncReplacement(call, proposed))
@@ -87,8 +92,14 @@ func (checker ErrorIsAs) Check(pass *analysis.Pass, call *CallMeta) *analysis.Di
 			return nil
 		}
 
-		if isErrorsIsCall(pass, ce) {
-			const proposed = "NotErrorIs"
+		var proposed string
+		switch {
+		case isErrorsIsCall(pass, ce):
+			proposed = "NotErrorIs"
+		case isErrorsAsCall(pass, ce):
+			proposed = "NotErrorAs"
+		}
+		if proposed != "" {
 			return newUseFunctionDiagnostic(checker.Name(), call, proposed,
 				analysis.TextEdit{
 					Pos:     ce.Pos(),
@@ -97,7 +108,7 @@ func (checker ErrorIsAs) Check(pass *analysis.Pass, call *CallMeta) *analysis.Di
 				})
 		}
 
-	case "ErrorAs":
+	case "ErrorAs", "NotErrorAs":
 		if len(call.Args) < 2 {
 			return nil
 		}
@@ -137,4 +148,19 @@ func (checker ErrorIsAs) Check(pass *analysis.Pass, call *CallMeta) *analysis.Di
 		}
 	}
 	return nil
+}
+
+func isAssertCollectT(pass *analysis.Pass, e ast.Expr) bool {
+	ptr, ok := pass.TypesInfo.TypeOf(e).(*types.Pointer)
+	if !ok {
+		return false
+	}
+
+	named, ok := ptr.Elem().(*types.Named)
+	if !ok {
+		return false
+	}
+
+	collectT := analysisutil.ObjectOf(pass.Pkg, testify.AssertPkgPath, "CollectT")
+	return named.Obj() == collectT
 }

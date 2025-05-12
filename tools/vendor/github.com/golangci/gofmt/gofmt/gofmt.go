@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/golangci/gofmt/gofmt/internal/diff"
+	"github.com/rogpeppe/go-internal/diff"
 	"golang.org/x/sync/semaphore"
 )
 

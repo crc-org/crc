@@ -78,7 +78,7 @@ func (*RedefinesBuiltinIDRule) Apply(file *lint.File, _ lint.Arguments) []lint.F
 	astFile := file.AST
 
 	builtFuncs := maps.Clone(builtFunctions)
-	if file.Pkg.IsAtLeastGo121() {
+	if file.Pkg.IsAtLeastGoVersion(lint.Go121) {
 		maps.Copy(builtFuncs, builtFunctionsAfterGo121)
 	}
 	w := &lintRedefinesBuiltinID{
@@ -198,11 +198,11 @@ func (w *lintRedefinesBuiltinID) Visit(node ast.Node) ast.Visitor {
 	return w
 }
 
-func (w lintRedefinesBuiltinID) addFailure(node ast.Node, msg string) {
+func (w *lintRedefinesBuiltinID) addFailure(node ast.Node, msg string) {
 	w.onFailure(lint.Failure{
 		Confidence: 1,
 		Node:       node,
-		Category:   "logic",
+		Category:   lint.FailureCategoryLogic,
 		Failure:    msg,
 	})
 }

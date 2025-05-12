@@ -6,7 +6,7 @@ import (
 	"github.com/mgechev/revive/lint"
 )
 
-// DuplicatedImportsRule lints given else constructs.
+// DuplicatedImportsRule looks for packages that are imported two or more times.
 type DuplicatedImportsRule struct{}
 
 // Apply applies the rule to given file.
@@ -22,7 +22,7 @@ func (*DuplicatedImportsRule) Apply(file *lint.File, _ lint.Arguments) []lint.Fa
 				Confidence: 1,
 				Failure:    fmt.Sprintf("Package %s already imported", path),
 				Node:       imp,
-				Category:   "imports",
+				Category:   lint.FailureCategoryImports,
 			})
 			continue
 		}

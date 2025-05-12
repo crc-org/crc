@@ -25,14 +25,21 @@ var (
 
 func pointer[T string | int | int32 | int64 | bool](v T) *T { return &v }
 
-func Run(pass *analysis.Pass, fastMath, safe bool) []token.Position {
+func SetFastMath(fastMath bool) {
+	// To avoid race condition, the settings should not be defined during the Run.
+	flagFastMath = pointer(fastMath)
+}
+
+func SetSafe(safe bool) {
+	// To avoid race condition, the settings should not be defined during the Run.
+	flagSafe = pointer(safe)
+}
+
+func Run(pass *analysis.Pass) []token.Position {
 	type res struct {
 		file  string
 		edits editSet
 	}
-
-	flagFastMath = pointer(fastMath)
-	flagSafe = pointer(safe)
 
 	ch := make(chan res)
 	var wg sync.WaitGroup

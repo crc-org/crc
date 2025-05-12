@@ -50,7 +50,6 @@ type analyzer struct {
 	fieldNames []string
 
 	skipGoVersionDetection bool
-	geGo124                bool
 }
 
 // NewAnalyzer create a new UseTesting.
@@ -93,7 +92,7 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, nil
 	}
 
-	a.geGo124 = a.isGoSupported(pass)
+	geGo124 := a.isGoSupported(pass)
 
 	insp, ok := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	if !ok {
@@ -112,14 +111,14 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 
 		switch fn := node.(type) {
 		case *ast.FuncDecl:
-			a.checkFunc(pass, fn.Type, fn.Body, fn.Name.Name)
+			a.checkFunc(pass, fn.Type, fn.Body, fn.Name.Name, geGo124)
 
 		case *ast.FuncLit:
 			if hasParentFunc(stack) {
 				return true
 			}
 
-			a.checkFunc(pass, fn.Type, fn.Body, "anonymous function")
+			a.checkFunc(pass, fn.Type, fn.Body, "anonymous function", geGo124)
 		}
 
 		return true
@@ -128,7 +127,7 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 	return nil, nil
 }
 
-func (a *analyzer) checkFunc(pass *analysis.Pass, ft *ast.FuncType, block *ast.BlockStmt, fnName string) {
+func (a *analyzer) checkFunc(pass *analysis.Pass, ft *ast.FuncType, block *ast.BlockStmt, fnName string, geGo124 bool) {
 	if len(ft.Params.List) < 1 {
 		return
 	}
@@ -141,10 +140,10 @@ func (a *analyzer) checkFunc(pass *analysis.Pass, ft *ast.FuncType, block *ast.B
 	ast.Inspect(block, func(n ast.Node) bool {
 		switch v := n.(type) {
 		case *ast.SelectorExpr:
-			return !a.reportSelector(pass, v, fnInfo)
+			return !a.reportSelector(pass, v, fnInfo, geGo124)
 
 		case *ast.Ident:
-			return !a.reportIdent(pass, v, fnInfo)
+			return !a.reportIdent(pass, v, fnInfo, geGo124)
 
 		case *ast.CallExpr:
 			return !a.reportCallExpr(pass, v, fnInfo)

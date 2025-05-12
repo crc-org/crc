@@ -3,34 +3,33 @@ package rule
 import (
 	"fmt"
 	"strings"
-	"sync"
 
 	"github.com/mgechev/revive/lint"
 )
 
-// CommentSpacingsRule check the whether there is a space between
+// CommentSpacingsRule check whether there is a space between
 // the comment symbol( // ) and the start of the comment text
 type CommentSpacingsRule struct {
 	allowList []string
-
-	configureOnce sync.Once
 }
 
-func (r *CommentSpacingsRule) configure(arguments lint.Arguments) {
+// Configure validates the rule configuration, and configures the rule accordingly.
+//
+// Configuration implements the [lint.ConfigurableRule] interface.
+func (r *CommentSpacingsRule) Configure(arguments lint.Arguments) error {
 	r.allowList = []string{}
 	for _, arg := range arguments {
 		allow, ok := arg.(string) // Alt. non panicking version
 		if !ok {
-			panic(fmt.Sprintf("invalid argument %v for %s; expected string but got %T", arg, r.Name(), arg))
+			return fmt.Errorf("invalid argument %v for %s; expected string but got %T", arg, r.Name(), arg)
 		}
 		r.allowList = append(r.allowList, `//`+allow)
 	}
+	return nil
 }
 
 // Apply the rule.
-func (r *CommentSpacingsRule) Apply(file *lint.File, args lint.Arguments) []lint.Failure {
-	r.configureOnce.Do(func() { r.configure(args) })
-
+func (r *CommentSpacingsRule) Apply(file *lint.File, _ lint.Arguments) []lint.Failure {
 	var failures []lint.Failure
 
 	for _, cg := range file.AST.Comments {
@@ -58,7 +57,7 @@ func (r *CommentSpacingsRule) Apply(file *lint.File, args lint.Arguments) []lint
 			failures = append(failures, lint.Failure{
 				Node:       comment,
 				Confidence: 1,
-				Category:   "style",
+				Category:   lint.FailureCategoryStyle,
 				Failure:    "no space between comment delimiter and comment text",
 			})
 		}

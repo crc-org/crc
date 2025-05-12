@@ -36,6 +36,7 @@ defaults are used:
 # Which comments to check:
 #   declarations - for top level declaration comments (default);
 #   toplevel     - for top level comments;
+#   noinline     - for all except inline comments;
 #   all          - for all comments.
 scope: declarations
 

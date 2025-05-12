@@ -47,12 +47,12 @@ func (ua *UncompiledAnalyzer) Compile() error {
 	return nil
 }
 
-func (settings LinterSettings) run(pass *analysis.Pass) (interface{}, error) {
-	s, err := settings.compile()
+func (s LinterSettings) run(pass *analysis.Pass) (interface{}, error) {
+	settings, err := s.compile()
 	if err != nil {
 		return nil, err
 	}
-	return s.run(pass)
+	return settings.run(pass)
 }
 
 func newAnalyzer(run func(*analysis.Pass) (interface{}, error)) *analysis.Analyzer {

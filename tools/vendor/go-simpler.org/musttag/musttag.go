@@ -49,9 +49,15 @@ func New(funcs ...Func) *analysis.Analyzer {
 			merge(funcs)
 			merge(flagFuncs)
 
-			mainModule, err := getMainModule()
-			if err != nil {
-				return nil, err
+			var mainModule string
+			if pass.Module != nil {
+				mainModule = pass.Module.Path
+			} else {
+				var err error
+				mainModule, err = getMainModule()
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			return run(pass, mainModule, allFuncs)

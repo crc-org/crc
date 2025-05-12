@@ -7,6 +7,8 @@ import (
 	"go/types"
 	"io"
 	"strings"
+
+	"golang.org/x/tools/go/types/typeutil"
 )
 
 var ErrInvalidRule = errors.New("invalid rule format")
@@ -41,9 +43,19 @@ func (rs *Ruleset) Match(fn *types.Func) bool {
 	return false
 }
 
-func receiverTypeOf(recvType types.Type) string {
-	buf := &strings.Builder{}
+var receiverTypeCache = typeutil.Map{}
 
+func receiverTypeOf(recvType types.Type) (repr string) {
+	if val := receiverTypeCache.At(recvType); val != nil {
+		repr, _ = val.(string)
+		return repr
+	}
+
+	defer func() {
+		receiverTypeCache.Set(recvType, repr)
+	}()
+
+	buf := &strings.Builder{}
 	var recvNamed *types.Named
 	switch recvType := recvType.(type) {
 	case *types.Pointer:

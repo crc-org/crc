@@ -11,38 +11,42 @@ Detects when some calls can be replaced by methods from the testing package.
 Recommended.
 
 ```yml
-linters-settings:
-  usetesting:
-    # Enable/disable `os.CreateTemp("", ...)` detections.
-    # Default: true
-    os-create-temp: false
+linters:
+  enable:
+    - usetesting
 
-    # Enable/disable `os.MkdirTemp()` detections.
-    # Default: true
-    os-mkdir-temp: false
-
-    # Enable/disable `os.Setenv()` detections.
-    # Default: false
-    os-setenv: true
-
-    # Enable/disable `os.TempDir()` detections.
-    # Default: false
-    os-temp-dir: true
+  settings:
+      usetesting:
+        # Enable/disable `os.CreateTemp("", ...)` detections.
+        # Default: true
+        os-create-temp: false
     
-    # Enable/disable `os.Chdir()` detections.
-    # Disabled if Go < 1.24.
-    # Default: true
-    os-chdir: false
-
-    # Enable/disable `context.Background()` detections.
-    # Disabled if Go < 1.24.
-    # Default: true
-    context-background: false
-
-    # Enable/disable `context.TODO()` detections.
-    # Disabled if Go < 1.24.
-    # Default: true
-    context-todo: false
+        # Enable/disable `os.MkdirTemp()` detections.
+        # Default: true
+        os-mkdir-temp: false
+    
+        # Enable/disable `os.Setenv()` detections.
+        # Default: true
+        os-setenv: false
+    
+        # Enable/disable `os.TempDir()` detections.
+        # Default: false
+        os-temp-dir: true
+        
+        # Enable/disable `os.Chdir()` detections.
+        # Disabled if Go < 1.24.
+        # Default: true
+        os-chdir: false
+    
+        # Enable/disable `context.Background()` detections.
+        # Disabled if Go < 1.24.
+        # Default: true
+        context-background: false
+    
+        # Enable/disable `context.TODO()` detections.
+        # Disabled if Go < 1.24.
+        # Default: true
+        context-todo: false
 ```
 
 ### As a CLI
