@@ -3,7 +3,6 @@ package nakedret
 import (
 	"bytes"
 	"errors"
-	"flag"
 	"fmt"
 	"go/ast"
 	"go/build"
@@ -22,19 +21,15 @@ import (
 
 const pwd = "./"
 
-func NakedReturnAnalyzer(defaultLines uint, skipTestFiles bool) *analysis.Analyzer {
-	nakedRet := &NakedReturnRunner{}
-	flags := flag.NewFlagSet("nakedret", flag.ExitOnError)
-	flags.UintVar(&nakedRet.MaxLength, "l", defaultLines, "maximum number of lines for a naked return function")
-	flags.BoolVar(&nakedRet.SkipTestFiles, "skip-test-files", skipTestFiles, "set to true to skip test files")
-	var analyzer = &analysis.Analyzer{
+func NakedReturnAnalyzer(nakedRet *NakedReturnRunner) *analysis.Analyzer {
+	a := &analysis.Analyzer{
 		Name:     "nakedret",
 		Doc:      "Checks that functions with naked returns are not longer than a maximum size (can be zero).",
 		Run:      nakedRet.run,
-		Flags:    *flags,
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 	}
-	return analyzer
+
+	return a
 }
 
 type NakedReturnRunner struct {
@@ -91,7 +86,7 @@ func checkNakedReturns(args []string, maxLength *uint, skipTestFiles bool, setEx
 		return errors.New("max length nil")
 	}
 
-	analyzer := NakedReturnAnalyzer(*maxLength, skipTestFiles)
+	analyzer := NakedReturnAnalyzer(&NakedReturnRunner{MaxLength: *maxLength, SkipTestFiles: skipTestFiles})
 	pass := &analysis.Pass{
 		Analyzer: analyzer,
 		Fset:     fset,

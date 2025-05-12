@@ -37,6 +37,7 @@ func defaultConfig() *Configuration {
 		AllowCuddleWithRHS:               []string{"Unlock", "RUnlock"},
 		ErrorVariableNames:               []string{"err"},
 		ForceCaseTrailingWhitespaceLimit: 0,
+		AllowCuddleUsedInBlock:           false,
 	}
 }
 
@@ -68,6 +69,7 @@ func (wa *wslAnalyzer) flags() flag.FlagSet {
 	flags.BoolVar(&wa.config.ForceExclusiveShortDeclarations, "force-short-decl-cuddling", false, "Force short declarations to cuddle by themselves")
 	flags.BoolVar(&wa.config.StrictAppend, "strict-append", true, "Strict rules for append")
 	flags.BoolVar(&wa.config.IncludeGenerated, "include-generated", false, "Include generated files")
+	flags.BoolVar(&wa.config.AllowCuddleUsedInBlock, "allow-cuddle-used-in-block", false, "Allow cuddling of variables used in block statements")
 	flags.IntVar(&wa.config.ForceCaseTrailingWhitespaceLimit, "force-case-trailing-whitespace", 0, "Force newlines for case blocks > this number.")
 
 	flags.Var(&multiStringValue{slicePtr: &wa.config.AllowCuddleWithCalls}, "allow-cuddle-with-calls", "Comma separated list of idents that can have cuddles after")
@@ -77,15 +79,19 @@ func (wa *wslAnalyzer) flags() flag.FlagSet {
 	return *flags
 }
 
-func (wa *wslAnalyzer) run(pass *analysis.Pass) (interface{}, error) {
+func (wa *wslAnalyzer) run(pass *analysis.Pass) (any, error) {
 	for _, file := range pass.Files {
 		filename := getFilename(pass.Fset, file)
 		if !strings.HasSuffix(filename, ".go") {
 			continue
 		}
 
-		// if the file is related to cgo the filename of the unadjusted position is a not a '.go' file.
 		fn := pass.Fset.PositionFor(file.Pos(), false).Filename
+
+		// if the file is related to cgo the filename of the unadjusted position is a not a '.go' file.
+		if !strings.HasSuffix(fn, ".go") {
+			continue
+		}
 
 		// The file is skipped if the "unadjusted" file is a Go file, and it's a generated file (ex: "_test.go" file).
 		// The other non-Go files are skipped by the first 'if' with the adjusted position.

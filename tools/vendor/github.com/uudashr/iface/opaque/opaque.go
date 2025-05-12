@@ -157,12 +157,15 @@ func (r *runner) run(pass *analysis.Pass) (interface{}, error) {
 						}
 
 						typ := pass.TypesInfo.TypeOf(res)
+						isNilStmt := isUntypedNil(typ)
 
 						if r.debug {
-							fmt.Printf("        Ident type: %v %v interface=%t\n", typ, reflect.TypeOf(typ), types.IsInterface(typ))
+							fmt.Printf("        Ident type: %v %v interface=%t, untypedNil=%t\n", typ, reflect.TypeOf(typ), types.IsInterface(typ), isNilStmt)
 						}
 
-						retStmtTypes[i][typ] = struct{}{}
+						if !isNilStmt {
+							retStmtTypes[i][typ] = struct{}{}
+						}
 					case *ast.UnaryExpr:
 						if r.debug {
 							fmt.Printf("       UnaryExpr X: %v \n", res.X)
@@ -300,6 +303,14 @@ func (r *runner) run(pass *analysis.Pass) (interface{}, error) {
 	})
 
 	return nil, nil
+}
+
+func isUntypedNil(typ types.Type) bool {
+	if b, ok := typ.(*types.Basic); ok {
+		return b.Kind() == types.UntypedNil
+	}
+
+	return false
 }
 
 func positionStr(idx int) string {

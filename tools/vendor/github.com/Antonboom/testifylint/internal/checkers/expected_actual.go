@@ -17,6 +17,8 @@ var DefaultExpectedVarPattern = regexp.MustCompile(
 // ExpectedActual detects situations like
 //
 //	assert.Equal(t, result, expected)
+//	assert.Equal(t, result, len(expected))
+//	assert.Equal(t, len(resultFields), len(expectedFields))
 //	assert.EqualExportedValues(t, resultObj, User{Name: "Anton"})
 //	assert.EqualValues(t, result, 42)
 //	assert.Exactly(t, result, int64(42))
@@ -37,6 +39,8 @@ var DefaultExpectedVarPattern = regexp.MustCompile(
 // and requires
 //
 //	assert.Equal(t, expected, result)
+//	assert.Equal(t, len(expected), result)
+//	assert.Equal(t, len(expectedFields), len(resultFields))
 //	assert.EqualExportedValues(t, User{Name: "Anton"}, resultObj)
 //	assert.EqualValues(t, 42, result)
 //	...
@@ -122,6 +126,9 @@ func (checker ExpectedActual) isExpectedValueCandidate(pass *analysis.Pass, expr
 		return true
 
 	case *ast.CallExpr:
+		if lv, ok := isBuiltinLenCall(pass, expr); ok {
+			return isIdentNamedAfterPattern(checker.expVarPattern, lv)
+		}
 		return isParenExpr(v) ||
 			isCastedBasicLitOrExpectedValue(v, checker.expVarPattern) ||
 			isExpectedValueFactory(pass, v, checker.expVarPattern)

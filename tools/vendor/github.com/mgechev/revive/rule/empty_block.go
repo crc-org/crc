@@ -6,7 +6,7 @@ import (
 	"github.com/mgechev/revive/lint"
 )
 
-// EmptyBlockRule lints given else constructs.
+// EmptyBlockRule warns on empty code blocks.
 type EmptyBlockRule struct{}
 
 // Apply applies the rule to given file.
@@ -17,7 +17,7 @@ func (*EmptyBlockRule) Apply(file *lint.File, _ lint.Arguments) []lint.Failure {
 		failures = append(failures, failure)
 	}
 
-	w := lintEmptyBlock{make(map[*ast.BlockStmt]bool), onFailure}
+	w := lintEmptyBlock{map[*ast.BlockStmt]bool{}, onFailure}
 	ast.Walk(w, file.AST)
 	return failures
 }
@@ -55,7 +55,7 @@ func (w lintEmptyBlock) Visit(node ast.Node) ast.Visitor {
 			w.onFailure(lint.Failure{
 				Confidence: 0.9,
 				Node:       n,
-				Category:   "logic",
+				Category:   lint.FailureCategoryLogic,
 				Failure:    "this block is empty, you can remove it",
 			})
 			return nil // skip visiting the range subtree (it will produce a duplicated failure)
@@ -65,7 +65,7 @@ func (w lintEmptyBlock) Visit(node ast.Node) ast.Visitor {
 			w.onFailure(lint.Failure{
 				Confidence: 1,
 				Node:       n,
-				Category:   "logic",
+				Category:   lint.FailureCategoryLogic,
 				Failure:    "this block is empty, you can remove it",
 			})
 		}

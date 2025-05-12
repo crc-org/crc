@@ -28,11 +28,6 @@ go install github.com/bombsimon/wsl/v4/cmd/wsl@master
 
 ## Usage
 
-> **Note**: This linter provides a fixer that can fix most issues with the
-> `--fix` flag. However, currently `golangci-lint` [does not support suggested
-> fixes](https://github.com/golangci/golangci-lint/issues/1779) so the `--fix`
-> flag in `golangci-lint` will **not** work.
-
 `wsl` uses the [analysis](https://pkg.go.dev/golang.org/x/tools/go/analysis)
 package meaning it will operate on package level with the default analysis flags
 and way of working.
@@ -47,8 +42,11 @@ wsl --allow-cuddle-declarations --fix ./...
 `wsl` is also integrated in [`golangci-lint`](https://golangci-lint.run)
 
 ```sh
-golangci-lint run --no-config --disable-all --enable wsl
+golangci-lint run --no-config --disable-all --enable wsl --fix
 ```
+
+> **Note**: If you're not sure what the diagnostic is trying to tell you, use
+> any of the fix approaches to fix the code for you.
 
 ## Issues and configuration
 
@@ -61,10 +59,6 @@ documentation](doc/configuration.md).
 
 Below are the available checklist for any hit from `wsl`. If you do not see any,
 feel free to raise an [issue](https://github.com/bombsimon/wsl/issues/new).
-
-> **Note**:  this linter doesn't take in consideration the issues that will be
-> fixed with `go fmt -s` so ensure that the code is properly formatted before
-> use.
 
 * [Anonymous switch statements should never be cuddled](doc/rules.md#anonymous-switch-statements-should-never-be-cuddled)
 * [Append only allowed to cuddle with appended value](doc/rules.md#append-only-allowed-to-cuddle-with-appended-value)

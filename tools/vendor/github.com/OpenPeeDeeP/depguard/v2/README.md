@@ -7,7 +7,7 @@ allow specific packages within a repository.
 ## Install
 
 ```bash
-go install github.com/OpenPeeDeeP/depguard@latest
+go install github.com/OpenPeeDeeP/depguard/cmd/depguard@latest
 ```
 
 ## Config
@@ -49,7 +49,7 @@ the linter's output.
 - `files` - list of file globs that will match this list of settings to compare against
 - `allow` - list of allowed packages
 - `deny` - map of packages that are not allowed where the value is a suggestion
-= `listMode` - the mode to use for package matching
+- `listMode` - the mode to use for package matching
 
 Files are matched using [Globs](https://github.com/gobwas/glob). If the files 
 list is empty, then all files will match that list. Prefixing a file
@@ -153,11 +153,29 @@ would be allowed.
 ```yaml
 Main:
   deny:
-  - github.com/OpenPeeDeeP/depguard$
+    github.com/OpenPeeDeeP/depguard$: Please use v2
 ```
 
-## Golangci-lint
+## golangci-lint
 
 This linter was built with
-[Golangci-lint](https://github.com/golangci/golangci-lint) in mind. It is compatible
-and read their docs to see how to implement all their linters, including this one.
+[golangci-lint](https://github.com/golangci/golangci-lint) in mind, read the [linters docs](https://golangci-lint.run/usage/linters/#depguard) to see how to configure all their linters, including this one.
+
+The config is similar to the YAML depguard config documented above, however due to [golangci-lint limitation](https://github.com/golangci/golangci-lint/pull/4227) the `deny` value must be provided as a list, with `pkg` and `desc` keys (otherwise a [panic](https://github.com/OpenPeeDeeP/depguard/issues/74) may occur):
+
+```yaml
+# golangci-lint config
+linters-settings:
+  depguard:
+    rules:
+      prevent_unmaintained_packages:
+        list-mode: lax # allow unless explicitely denied
+        files:
+          - $all
+          - "!$test"
+        allow:
+          - $gostd
+        deny:
+          - pkg: io/ioutil
+            desc: "replaced by io and os packages since Go 1.16: https://tip.golang.org/doc/go1.16#ioutil"
+```

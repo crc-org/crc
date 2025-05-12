@@ -1,5 +1,6 @@
 ignoreGeneratedHeader = false
 severity = "warning"
+exclude = ["./fixtures/..."]
 
 # confidence <= 0.2 generate a lot of errors from package-comments rule. It marks files that do not contain
 # package-level comments as a warning irrespective of existing package-level coment in one file.

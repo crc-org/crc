@@ -83,6 +83,10 @@ type WrapcheckConfig struct {
 	// returned from any function whose call is defined on a interface named 'Transactor'
 	// or 'Transaction' due to the name matching the regular expression `Transac(tor|tion)`.
 	IgnoreInterfaceRegexps []string `mapstructure:"ignoreInterfaceRegexps" yaml:"ignoreInterfaceRegexps"`
+
+	// ReportInternalErrors determines whether wrapcheck should report errors returned
+	// from inside the package.
+	ReportInternalErrors bool `mapstructure:"reportInternalErrors" yaml:"reportInternalErrors"`
 }
 
 func NewDefaultConfig() WrapcheckConfig {
@@ -273,16 +277,31 @@ func reportUnwrapped(
 	pkgGlobs []glob.Glob,
 ) {
 
+	if cfg.ReportInternalErrors {
+		// Check if the call is package-internal function
+		fnIdent, ok := call.Fun.(*ast.Ident)
+		if ok {
+			fnSig := pass.TypesInfo.ObjectOf(fnIdent).String()
+
+			// Check for ignored signatures
+			if checkSignature(cfg, regexpsSig, fnSig) {
+				return
+			}
+
+			pass.Reportf(tokenPos, "package-internal error should be wrapped: sig: %s", fnSig)
+			return
+		}
+	}
+
 	sel, ok := call.Fun.(*ast.SelectorExpr)
 	if !ok {
 		return
 	}
 
-	// Check for ignored signatures
 	fnSig := pass.TypesInfo.ObjectOf(sel.Sel).String()
-	if contains(cfg.IgnoreSigs, fnSig) || contains(cfg.ExtraIgnoreSigs, fnSig) {
-		return
-	} else if containsMatch(regexpsSig, fnSig) {
+
+	// Check for ignored signatures
+	if checkSignature(cfg, regexpsSig, fnSig) {
 		return
 	}
 
@@ -305,6 +324,17 @@ func reportUnwrapped(
 		pass.Reportf(tokenPos, "error returned from external package is unwrapped: sig: %s", fnSig)
 		return
 	}
+
+	// If `ReportInternalErrors` is true, report package-internal errors
+	if cfg.ReportInternalErrors {
+		pass.Reportf(tokenPos, "package-internal error should be wrapped: sig: %s", fnSig)
+		return
+	}
+}
+
+// checkSignature returns whether the function should be ignored.
+func checkSignature(cfg WrapcheckConfig, regexpsSig []*regexp.Regexp, fnSig string) bool {
+	return contains(cfg.IgnoreSigs, fnSig) || contains(cfg.ExtraIgnoreSigs, fnSig) || containsMatch(regexpsSig, fnSig)
 }
 
 // isInterface returns whether the function call is one defined on an interface.

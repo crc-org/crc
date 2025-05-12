@@ -15,6 +15,7 @@ linters-settings:
     local-prefixes: github.com/ckaznocha/intrange
   govet:
     enable:
+      - appends
       - asmdecl
       - assign
       - atomic
@@ -22,10 +23,11 @@ linters-settings:
       - bools
       - buildtag
       - cgocall
-      - composite
-      - copylock
-      - copyloopvar
+      - composites
+      - copylocks
       - deepequalerrors
+      - defers
+      - directive
       - errorsas
       - fieldalignment
       - findcall
@@ -37,18 +39,25 @@ linters-settings:
       - nilfunc
       - nilness
       - printf
+      - reflectvaluecompare
       - shadow
       - shift
+      - sigchanyzer
+      - slog
       - sortslice
       - stdmethods
+      - stdversion
       - stringintconv
       - structtag
       - testinggoroutine
       - tests
+      - timeformat
       - unmarshal
       - unreachable
       - unsafeptr
       - unusedresult
+      - unusedwrite
+      - waitgroup
   misspell:
     locale: US
 linters:

@@ -7,6 +7,7 @@ import (
 	"go/types"
 	"os"
 	"strings"
+	"sync"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -18,7 +19,7 @@ import (
 	"github.com/timonwong/loggercheck/internal/sets"
 )
 
-const Doc = `Checks key value pairs for common logger libraries (kitlog,klog,logr,zap).`
+const Doc = `Checks key value pairs for common logger libraries (kitlog,klog,logr,slog,zap).`
 
 func NewAnalyzer(opts ...Option) *analysis.Analyzer {
 	l := newLoggerCheck(opts...)
@@ -40,9 +41,11 @@ type loggercheck struct {
 	requireStringKey bool           // flag -requirestringkey
 	noPrintfLike     bool           // flag -noprintflike
 
-	rules                  []string         // used for external integration, for example golangci-lint
-	rulesetList            []rules.Ruleset  // populate at runtime
-	rulesetIndicesByImport map[string][]int // ruleset index, populate at runtime
+	rules       []string        // used for external integration, for example golangci-lint
+	rulesetList []rules.Ruleset // populate at runtime
+
+	rulesetIndicesByImportMu sync.Mutex
+	rulesetIndicesByImport   map[string][]int // ruleset index, populate at runtime
 }
 
 func newLoggerCheck(opts ...Option) *loggercheck {
@@ -54,7 +57,7 @@ func newLoggerCheck(opts ...Option) *loggercheck {
 	}
 
 	fs.StringVar(&l.ruleFile, "rulefile", "", "path to a file contains a list of rules")
-	fs.Var(&l.disable, "disable", "comma-separated list of disabled logger checker (kitlog,klog,logr,zap,slog)")
+	fs.Var(&l.disable, "disable", "comma-separated list of disabled logger checker (kitlog,klog,logr,slog,zap)")
 	fs.BoolVar(&l.requireStringKey, "requirestringkey", false, "require all logging keys to be inlined constant strings")
 	fs.BoolVar(&l.noPrintfLike, "noprintflike", false, "require printf-like format specifier not present in args")
 
@@ -85,7 +88,10 @@ func (l *loggercheck) getCheckerForFunc(fn *types.Func) checkers.Checker {
 	}
 
 	pkgPath := vendorLessPath(pkg.Path())
+
+	l.rulesetIndicesByImportMu.Lock()
 	indices := l.rulesetIndicesByImport[pkgPath]
+	l.rulesetIndicesByImportMu.Unlock()
 
 	for _, idx := range indices {
 		rs := &l.rulesetList[idx]
@@ -165,7 +171,10 @@ func (l *loggercheck) processConfig() error {
 	for i, rs := range l.rulesetList {
 		indices[rs.PackageImport] = append(indices[rs.PackageImport], i)
 	}
+
+	l.rulesetIndicesByImportMu.Lock()
 	l.rulesetIndicesByImport = indices
+	l.rulesetIndicesByImportMu.Unlock()
 
 	return nil
 }

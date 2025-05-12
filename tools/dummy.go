@@ -5,7 +5,7 @@ package buildtools
 
 import (
 	_ "github.com/cfergeau/gomod2rpmdeps/cmd/gomod2rpmdeps"
-	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
+	_ "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
 	_ "github.com/randall77/makefat"
 	_ "golang.org/x/tools/cmd/goimports"
 )

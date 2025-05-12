@@ -6,6 +6,19 @@ import (
 	"github.com/golangci/dupl/suffixtree"
 )
 
+// To avoid "goroutine stack exceeds" with gigantic slices (Composite Literals).
+// 10_000 => 0.89s
+// 20_000 => 1.53s
+// 30_000 => 2.57s
+// 40_000 => 3.89s
+// 50_000 => 5.58s
+// 60_000 => 7.95s
+// 70_000 => 10.15s
+// 80_000 => 13.11s
+// 90_000 => 16.62s
+// 100_000 => 21.42s
+const maxChildrenSerial = 10_000
+
 type Node struct {
 	Type     int
 	Filename string
@@ -40,7 +53,12 @@ func Serialize(n *Node) []*Node {
 func serial(n *Node, stream *[]*Node) int {
 	*stream = append(*stream, n)
 	var count int
-	for _, child := range n.Children {
+	for i, child := range n.Children {
+		// To avoid "goroutine stack exceeds" with gigantic slices (Composite Literals).
+		if i > maxChildrenSerial {
+			break
+		}
+
 		count += serial(child, stream)
 	}
 	n.Owns = count

@@ -1,26 +1,22 @@
 package rule
 
 import (
+	"errors"
 	"fmt"
 	"go/ast"
-	"sync"
 
 	"github.com/mgechev/revive/lint"
 )
 
-// MaxControlNestingRule lints given else constructs.
+// MaxControlNestingRule sets restriction for maximum nesting of control structures.
 type MaxControlNestingRule struct {
 	max int64
-
-	configureOnce sync.Once
 }
 
 const defaultMaxControlNesting = 5
 
 // Apply applies the rule to given file.
-func (r *MaxControlNestingRule) Apply(file *lint.File, arguments lint.Arguments) []lint.Failure {
-	r.configureOnce.Do(func() { r.configure(arguments) })
-
+func (r *MaxControlNestingRule) Apply(file *lint.File, _ lint.Arguments) []lint.Failure {
 	var failures []lint.Failure
 
 	fileAst := file.AST
@@ -55,7 +51,7 @@ func (w *lintMaxControlNesting) Visit(n ast.Node) ast.Visitor {
 			Failure:    fmt.Sprintf("control flow nesting exceeds %d", w.max),
 			Confidence: 1,
 			Node:       w.lastCtrlStmt,
-			Category:   "complexity",
+			Category:   lint.FailureCategoryComplexity,
 		})
 		return nil // stop visiting deeper
 	}
@@ -107,17 +103,24 @@ func (w *lintMaxControlNesting) walkControlledBlock(b ast.Node) {
 	w.nestingLevelAcc = oldNestingLevel
 }
 
-func (r *MaxControlNestingRule) configure(arguments lint.Arguments) {
+// Configure validates the rule configuration, and configures the rule accordingly.
+//
+// Configuration implements the [lint.ConfigurableRule] interface.
+func (r *MaxControlNestingRule) Configure(arguments lint.Arguments) error {
 	if len(arguments) < 1 {
 		r.max = defaultMaxControlNesting
-		return
+		return nil
 	}
 
-	checkNumberOfArguments(1, arguments, r.Name())
+	check := checkNumberOfArguments(1, arguments, r.Name())
+	if check != nil {
+		return check
+	}
 
 	maxNesting, ok := arguments[0].(int64) // Alt. non panicking version
 	if !ok {
-		panic(`invalid value passed as argument number to the "max-control-nesting" rule`)
+		return errors.New(`invalid value passed as argument number to the "max-control-nesting" rule`)
 	}
 	r.max = maxNesting
+	return nil
 }

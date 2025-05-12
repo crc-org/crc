@@ -8,7 +8,6 @@ import (
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/network"
-	"github.com/crc-org/crc/v2/pkg/crc/preset"
 	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/os/windows/powershell"
 	"github.com/crc-org/crc/v2/pkg/os/windows/win32"
@@ -202,7 +201,7 @@ func checkVsock() error {
 // Passing 'UserNetworkingMode' to getPreflightChecks currently achieves this
 // as there are no system networking specific checks
 func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true, network.UserNetworkingMode, constants.GetDefaultBundlePath(preset.OpenShift), preset.OpenShift, false)
+	return getPreflightChecks(true, network.UserNetworkingMode, constants.GetDefaultBundlePath(crcpreset.OpenShift), crcpreset.OpenShift, false)
 }
 
 func getChecks(bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) []Check {

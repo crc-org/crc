@@ -10,7 +10,7 @@ While this could be considered a beginner mistake, across time, multiple package
 
 ### Get Started
 
-    $ go get github.com/jgautheron/goconst/cmd/goconst
+    $ go install github.com/jgautheron/goconst/cmd/goconst@latest
     $ goconst ./...
 
 ### Usage
@@ -23,11 +23,12 @@ Usage:
 Flags:
 
   -ignore            exclude files matching the given regular expression
-  -ignore-strings    exclude strings matching the given regular expression  
+  -ignore-strings    exclude strings matching the given regular expression
   -ignore-tests      exclude tests from the search (default: true)
   -min-occurrences   report from how many occurrences (default: 2)
   -min-length        only report strings with the minimum given length (default: 3)
   -match-constant    look for existing constants matching the values
+  -find-duplicates   look for constants with identical values
   -numbers           search also for duplicated numbers
   -min          	   minimum value, only works with -numbers
   -max          	   maximum value, only works with -numbers
@@ -40,7 +41,40 @@ Examples:
   goconst -ignore "yacc|\.pb\." $GOPATH/src/github.com/cockroachdb/cockroach/...
   goconst -min-occurrences 3 -output json $GOPATH/src/github.com/cockroachdb/cockroach
   goconst -numbers -min 60 -max 512 .
+  goconst -min-occurrences 5 $(go list -m -f '{{.Dir}}')
 ```
+
+### Development
+
+#### Running Tests
+
+The project includes a comprehensive test suite. To run the tests:
+
+```bash
+# Run all tests
+go test ./...
+
+# Run tests with verbose output
+go test -v ./...
+
+# Run tests with race detector
+go test -race ./...
+
+# Run benchmarks
+go test -bench=. ./...
+
+# Check test coverage
+go test -cover ./...
+```
+
+#### Contributing
+
+Contributions are welcome! Before submitting a PR:
+
+1. Make sure all tests pass
+2. Add tests for new functionality
+3. Ensure your code passes linting checks
+4. Update documentation as needed
 
 ### Other static analysis tools
 
@@ -48,4 +82,5 @@ Examples:
 - [usedexports](https://github.com/jgautheron/usedexports): Find exported variables that could be unexported.
 
 ### License
+
 MIT

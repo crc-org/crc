@@ -200,4 +200,15 @@ var std = map[string]struct{}{
 	// added in Go v1.22 in compare to v1.21 (docker image)
 	"go/version":   {},
 	"math/rand/v2": {},
+	// added in Go v1.23 in compare to v1.22 (docker image)
+	"iter":    {},
+	"structs": {},
+	"unique":  {},
+	// added in Go v1.24 in compare to v1.23 (docker image)
+	"crypto/fips140": {},
+	"crypto/hkdf":    {},
+	"crypto/mlkem":   {},
+	"crypto/pbkdf2":  {},
+	"crypto/sha3":    {},
+	"weak":           {},
 }

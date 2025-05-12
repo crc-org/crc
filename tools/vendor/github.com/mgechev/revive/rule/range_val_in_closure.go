@@ -7,14 +7,14 @@ import (
 	"github.com/mgechev/revive/lint"
 )
 
-// RangeValInClosureRule lints given else constructs.
+// RangeValInClosureRule warns if range value is used in a closure dispatched as goroutine.
 type RangeValInClosureRule struct{}
 
 // Apply applies the rule to given file.
 func (*RangeValInClosureRule) Apply(file *lint.File, _ lint.Arguments) []lint.Failure {
 	var failures []lint.Failure
 
-	if file.Pkg.IsAtLeastGo122() {
+	if file.Pkg.IsAtLeastGoVersion(lint.Go122) {
 		return failures
 	}
 

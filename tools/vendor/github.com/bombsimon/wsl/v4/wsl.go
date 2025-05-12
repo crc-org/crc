@@ -179,6 +179,18 @@ type Configuration struct {
 	// errors even for generated files. Can be useful when developing
 	// generators.
 	IncludeGenerated bool
+
+	// AllowCuddleUsedInBlock will allowing cuddling of variables with block statements
+	// if they are used anywhere in the block. This defaults to false but setting
+	// it to true will allow the following example:
+	//
+	// var numbers []int
+	// for i := 0; i < 10; i++ {
+	// 	if 1 == 1 {
+	// 		numbers = append(numbers, i)
+	// 	}
+	// }
+	AllowCuddleUsedInBlock bool
 }
 
 // fix is a range to fixup.
@@ -304,12 +316,18 @@ func (p *processor) parseBlockStatements(statements []ast.Stmt) {
 			}
 		}
 
-		// We could potentially have a block which require us to check the first
-		// argument before ruling out an allowed cuddle.
-		var calledOrAssignedFirstInBlock []string
+		// Contains the union of all variable names used anywhere
+		// within the block body (if applicable) and is used to check
+		// if a preceding statement's variables are actually used within
+		// the block. This helps enforce rules about allowed cuddling.
+		var identifiersUsedInBlock []string
 
 		if firstBodyStatement != nil {
-			calledOrAssignedFirstInBlock = append(p.findLHS(firstBodyStatement), p.findRHS(firstBodyStatement)...)
+			if p.config.AllowCuddleUsedInBlock {
+				identifiersUsedInBlock = p.findUsedVariablesInStatement(stmt)
+			} else {
+				identifiersUsedInBlock = append(p.findLHS(firstBodyStatement), p.findRHS(firstBodyStatement)...)
+			}
 		}
 
 		var (
@@ -426,7 +444,7 @@ func (p *processor) parseBlockStatements(statements []ast.Stmt) {
 
 		reportNewlineTwoLinesAbove := func(n1, n2 ast.Node, reason string) {
 			if atLeastOneInListsMatch(rightAndLeftHandSide, assignedOnLineAbove) ||
-				atLeastOneInListsMatch(assignedOnLineAbove, calledOrAssignedFirstInBlock) {
+				atLeastOneInListsMatch(assignedOnLineAbove, identifiersUsedInBlock) {
 				// If both the assignment on the line above _and_ the assignment
 				// two lines above is part of line or first in block, add the
 				// newline as if non were.
@@ -435,7 +453,7 @@ func (p *processor) parseBlockStatements(statements []ast.Stmt) {
 
 				if isAssignmentTwoLinesAbove &&
 					(atLeastOneInListsMatch(rightAndLeftHandSide, assignedTwoLinesAbove) ||
-						atLeastOneInListsMatch(assignedTwoLinesAbove, calledOrAssignedFirstInBlock)) {
+						atLeastOneInListsMatch(assignedTwoLinesAbove, identifiersUsedInBlock)) {
 					p.addWhitespaceBeforeError(n1, reason)
 				} else {
 					// If the variable on the line above is allowed to be
@@ -507,7 +525,7 @@ func (p *processor) parseBlockStatements(statements []ast.Stmt) {
 				continue
 			}
 
-			if atLeastOneInListsMatch(assignedOnLineAbove, calledOrAssignedFirstInBlock) {
+			if atLeastOneInListsMatch(assignedOnLineAbove, identifiersUsedInBlock) {
 				continue
 			}
 
@@ -611,7 +629,7 @@ func (p *processor) parseBlockStatements(statements []ast.Stmt) {
 			}
 
 			if !atLeastOneInListsMatch(rightAndLeftHandSide, assignedOnLineAbove) {
-				if !atLeastOneInListsMatch(assignedOnLineAbove, calledOrAssignedFirstInBlock) {
+				if !atLeastOneInListsMatch(assignedOnLineAbove, identifiersUsedInBlock) {
 					p.addWhitespaceBeforeError(t, reasonRangeCuddledWithoutUse)
 				}
 			}
@@ -679,7 +697,7 @@ func (p *processor) parseBlockStatements(statements []ast.Stmt) {
 				}
 			}
 
-			if atLeastOneInListsMatch(assignedOnLineAbove, calledOrAssignedFirstInBlock) {
+			if atLeastOneInListsMatch(assignedOnLineAbove, identifiersUsedInBlock) {
 				continue
 			}
 
@@ -687,7 +705,7 @@ func (p *processor) parseBlockStatements(statements []ast.Stmt) {
 				p.addWhitespaceBeforeError(t, reasonDeferCuddledWithOtherVar)
 			}
 		case *ast.ForStmt:
-			if len(rightAndLeftHandSide) == 0 {
+			if len(rightAndLeftHandSide) == 0 && !p.config.AllowCuddleUsedInBlock {
 				p.addWhitespaceBeforeError(t, reasonForWithoutCondition)
 				continue
 			}
@@ -701,7 +719,7 @@ func (p *processor) parseBlockStatements(statements []ast.Stmt) {
 			// comments regarding variable usages on the line before or as the
 			// first line in the block for details.
 			if !atLeastOneInListsMatch(rightAndLeftHandSide, assignedOnLineAbove) {
-				if !atLeastOneInListsMatch(assignedOnLineAbove, calledOrAssignedFirstInBlock) {
+				if !atLeastOneInListsMatch(assignedOnLineAbove, identifiersUsedInBlock) {
 					p.addWhitespaceBeforeError(t, reasonForCuddledAssignWithoutUse)
 				}
 			}
@@ -742,6 +760,10 @@ func (p *processor) parseBlockStatements(statements []ast.Stmt) {
 
 			if !atLeastOneInListsMatch(rightAndLeftHandSide, assignedOnLineAbove) {
 				if len(rightAndLeftHandSide) == 0 {
+					if p.config.AllowCuddleUsedInBlock {
+						continue
+					}
+
 					p.addWhitespaceBeforeError(t, reasonAnonSwitchCuddled)
 				} else {
 					p.addWhitespaceBeforeError(t, reasonSwitchCuddledWithoutUse)
@@ -757,7 +779,7 @@ func (p *processor) parseBlockStatements(statements []ast.Stmt) {
 			if !atLeastOneInListsMatch(rightHandSide, assignedOnLineAbove) {
 				// Allow type assertion on variables used in the first case
 				// immediately.
-				if !atLeastOneInListsMatch(assignedOnLineAbove, calledOrAssignedFirstInBlock) {
+				if !atLeastOneInListsMatch(assignedOnLineAbove, identifiersUsedInBlock) {
 					p.addWhitespaceBeforeError(t, reasonTypeSwitchCuddledWithoutUse)
 				}
 			}
@@ -837,6 +859,32 @@ func (p *processor) firstBodyStatement(i int, allStmt []ast.Stmt) ast.Node {
 	}
 
 	return firstBodyStatement
+}
+
+// findUsedVariablesInStatement processes a statement,
+// returning a union of all variables used within it.
+func (p *processor) findUsedVariablesInStatement(stmt ast.Stmt) []string {
+	var (
+		used []string
+		seen = map[string]struct{}{}
+	)
+
+	// ast.Inspect walks the AST of the statement.
+	ast.Inspect(stmt, func(n ast.Node) bool {
+		// We're only interested in identifiers.
+		if ident, ok := n.(*ast.Ident); ok {
+			if _, exists := seen[ident.Name]; !exists {
+				seen[ident.Name] = struct{}{}
+
+				used = append(used, ident.Name)
+			}
+		}
+
+		// Continue walking the AST.
+		return true
+	})
+
+	return used
 }
 
 func (p *processor) findLHS(node ast.Node) []string {
@@ -1030,7 +1078,7 @@ func (p *processor) findBlockStmt(node ast.Node) []*ast.BlockStmt {
 // Known fields with X that are handled:
 // IndexExpr, ExprStmt, SelectorExpr, StarExpr, ParentExpr, TypeAssertExpr,
 // RangeStmt, UnaryExpr, ParenExpr, SliceExpr, IncDecStmt.
-func maybeX(node interface{}) (ast.Node, bool) {
+func maybeX(node any) (ast.Node, bool) {
 	maybeHasX := reflect.Indirect(reflect.ValueOf(node)).FieldByName("X")
 	if !maybeHasX.IsValid() {
 		return nil, false
@@ -1407,7 +1455,7 @@ func (p *processor) addErrorRange(reportAt, start, end token.Pos, reason string)
 	p.result[reportAt] = report
 }
 
-func (p *processor) addWarning(w string, pos token.Pos, t interface{}) {
+func (p *processor) addWarning(w string, pos token.Pos, t any) {
 	position := p.fileSet.Position(pos)
 
 	p.warnings = append(p.warnings,

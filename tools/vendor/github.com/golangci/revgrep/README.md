@@ -1,14 +1,14 @@
-# Overview
+## Overview
 
 `revgrep` is a CLI tool used to filter static analysis tools to only lines changed based on a commit reference.
 
-# Install
+## Install
 
 ```bash
-go get -u github.com/golangci/revgrep/...
+go install github.com/golangci/revgrep/cmd/revgrep@latest
 ```
 
-# Usage
+## Usage
 
 In the scenario below, a change was made causing a warning in `go vet` on line 5, but `go vet` will show all warnings.
 Using `revgrep`, you can show only warnings for lines of code that have been changed (in this case, hiding line 6).
@@ -42,7 +42,7 @@ from-rev filters issues to lines changed since (and including) this revision
               Regexp to match path, line number, optional column number, and message
 ```
 
-# Other Examples
+## Other Examples
 
 Issues between branches:
 ```bash

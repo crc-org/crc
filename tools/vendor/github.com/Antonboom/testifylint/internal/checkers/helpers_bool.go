@@ -14,6 +14,10 @@ var (
 	trueObj  = types.Universe.Lookup("true")
 )
 
+func isUntypedBool(pass *analysis.Pass, e ast.Expr) bool {
+	return isUntypedTrue(pass, e) || isUntypedFalse(pass, e)
+}
+
 func isUntypedTrue(pass *analysis.Pass, e ast.Expr) bool {
 	return analysisutil.IsObj(pass.TypesInfo, e, trueObj)
 }
@@ -22,7 +26,7 @@ func isUntypedFalse(pass *analysis.Pass, e ast.Expr) bool {
 	return analysisutil.IsObj(pass.TypesInfo, e, falseObj)
 }
 
-func isBuiltinBool(pass *analysis.Pass, e ast.Expr) bool {
+func hasBoolType(pass *analysis.Pass, e ast.Expr) bool {
 	basicType, ok := pass.TypesInfo.TypeOf(e).(*types.Basic)
 	return ok && basicType.Kind() == types.Bool
 }

@@ -203,6 +203,7 @@ func filterInterfaces(p *analysis.Pass, ft *ast.FuncType, di map[string]struct{}
 					typeParams = typeParams[:len(typeParams)-1]
 				}
 
+				// todo: write test for this (1.18&1.19 only?)
 				goVersion := runtime.Version()
 				if strings.HasPrefix(goVersion, "go1.18") || strings.HasPrefix(goVersion, "go1.19") {
 					typeParams = strings.ReplaceAll(typeParams, "|", " | ")

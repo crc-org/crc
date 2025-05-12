@@ -55,19 +55,21 @@ func (ff *FileFilter) MatchFileName(name string) bool {
 	return ff.rx.MatchString(name)
 }
 
-var fileFilterInvalidGlobRegexp = regexp.MustCompile(`[^/]\*\*[^/]`)
-var escapeRegexSymbols = ".+{}()[]^$"
+var (
+	fileFilterInvalidGlobRegexp = regexp.MustCompile(`[^/]\*\*[^/]`)
+	escapeRegexSymbols          = ".+{}()[]^$"
+)
 
 func (ff *FileFilter) prepareRegexp() error {
 	var err error
-	var src = ff.raw
+	src := ff.raw
 	if src == "TEST" {
 		src = "~_test\\.go"
 	}
 	if strings.HasPrefix(src, "~") {
 		ff.rx, err = regexp.Compile(src[1:])
 		if err != nil {
-			return fmt.Errorf("invalid file filter [%s], regexp compile error: [%v]", ff.raw, err)
+			return fmt.Errorf("invalid file filter [%s], regexp compile error: [%w]", ff.raw, err)
 		}
 		return nil
 	}
@@ -110,19 +112,19 @@ func (ff *FileFilter) prepareRegexp() error {
 		rxBuild.WriteByte('$')
 		ff.rx, err = regexp.Compile(rxBuild.String())
 		if err != nil {
-			return fmt.Errorf("invalid file filter [%s], regexp compile error after glob expand: [%v]", ff.raw, err)
+			return fmt.Errorf("invalid file filter [%s], regexp compile error after glob expand: [%w]", ff.raw, err)
 		}
 		return nil
 	}
 
-	// it's whole file mask, just escape dots and normilze separators
+	// it's whole file mask, just escape dots and normalize separators
 	fillRx := src
 	fillRx = strings.ReplaceAll(fillRx, "\\", "/")
 	fillRx = strings.ReplaceAll(fillRx, ".", `\.`)
 	fillRx = "^" + fillRx + "$"
 	ff.rx, err = regexp.Compile(fillRx)
 	if err != nil {
-		return fmt.Errorf("invalid file filter [%s], regexp compile full path: [%v]", ff.raw, err)
+		return fmt.Errorf("invalid file filter [%s], regexp compile full path: [%w]", ff.raw, err)
 	}
 	return nil
 }

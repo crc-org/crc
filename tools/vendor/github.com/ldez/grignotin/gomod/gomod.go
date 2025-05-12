@@ -1,8 +1,9 @@
-// Package gomod A function to get information about module (go list).
+// Package gomod A set of functions to get information about module (go list).
 package gomod
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ldez/grignotin/goenv"
 	"golang.org/x/mod/modfile"
 )
 
@@ -26,9 +28,9 @@ type ModInfo struct {
 }
 
 // GetModuleInfo gets modules information from `go list`.
-func GetModuleInfo() ([]ModInfo, error) {
+func GetModuleInfo(ctx context.Context) ([]ModInfo, error) {
 	// https://github.com/golang/go/issues/44753#issuecomment-790089020
-	cmd := exec.Command("go", "list", "-m", "-json")
+	cmd := exec.CommandContext(ctx, "go", "list", "-m", "-json")
 
 	out, err := cmd.Output()
 	if err != nil {
@@ -61,31 +63,9 @@ func GetModuleInfo() ([]ModInfo, error) {
 	return infos, nil
 }
 
-type goEnv struct {
-	GOMOD string `json:"GOMOD"` //nolint:tagliatelle // Based on en var name.
-}
-
-// GetGoModPath extracts go.mod path from "go env".
-func GetGoModPath() (string, error) {
-	cmd := exec.Command("go", "env", "-json", "GOMOD")
-
-	out, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("command %q: %w: %s", strings.Join(cmd.Args, " "), err, string(out))
-	}
-
-	v := &goEnv{}
-	err = json.NewDecoder(bytes.NewBuffer(out)).Decode(v)
-	if err != nil {
-		return "", err
-	}
-
-	return v.GOMOD, nil
-}
-
 // GetModulePath extracts module path from go.mod.
-func GetModulePath() (string, error) {
-	p, err := GetGoModPath()
+func GetModulePath(ctx context.Context) (string, error) {
+	p, err := goenv.GetOne(ctx, goenv.GOMOD)
 	if err != nil {
 		return "", err
 	}
@@ -96,4 +76,10 @@ func GetModulePath() (string, error) {
 	}
 
 	return modfile.ModulePath(b), nil
+}
+
+// GetGoModPath extracts go.mod path from "go env".
+// Deprecated: use `goenv.GetOne(context.Background(), goenv.GOMOD)` instead.
+func GetGoModPath() (string, error) {
+	return goenv.GetOne(context.Background(), goenv.GOMOD)
 }

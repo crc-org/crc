@@ -5,6 +5,11 @@ run:
     - build
     - containers_image_openpgp
 linters:
+  settings:
+    revive:
+      rules:
+        - name: dot-imports
+          disabled: true
   enable:
     - gocritic
     - gosec
@@ -12,8 +17,7 @@ linters:
     - errcheck
     - gosec
     - revive
-  disable:
-    - dotimports
+    - unused
   exclusions:
     generated: lax
     presets:

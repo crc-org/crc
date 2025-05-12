@@ -61,24 +61,14 @@ func isIntNumber(e ast.Expr, rhs int) bool {
 	return ok && (lhs == rhs)
 }
 
-func isNegativeIntNumber(e ast.Expr) bool {
-	v, ok := isIntBasicLit(e)
-	return ok && v < 0
-}
-
-func isPositiveIntNumber(e ast.Expr) bool {
-	v, ok := isIntBasicLit(e)
-	return ok && v > 0
+func isStringLit(e ast.Expr) bool {
+	bl, ok := e.(*ast.BasicLit)
+	return ok && bl.Kind == token.STRING
 }
 
 func isEmptyStringLit(e ast.Expr) bool {
 	bl, ok := e.(*ast.BasicLit)
-	return ok && bl.Kind == token.STRING && bl.Value == `""`
-}
-
-func isNotEmptyStringLit(e ast.Expr) bool {
-	bl, ok := e.(*ast.BasicLit)
-	return ok && bl.Kind == token.STRING && bl.Value != `""`
+	return ok && bl.Kind == token.STRING && (bl.Value == `""` || bl.Value == "``")
 }
 
 func isBasicLit(e ast.Expr) bool {
@@ -144,6 +134,11 @@ func isPointer(pass *analysis.Pass, e ast.Expr) (types.Type, bool) {
 	return ptr.Elem(), true
 }
 
+func isFunc(pass *analysis.Pass, e ast.Expr) bool {
+	_, ok := pass.TypesInfo.TypeOf(e).(*types.Signature)
+	return ok
+}
+
 // isByteArray returns true if expression is `[]byte` itself.
 func isByteArray(e ast.Expr) bool {
 	at, ok := e.(*ast.ArrayType)
@@ -170,13 +165,4 @@ func hasBytesType(pass *analysis.Pass, e ast.Expr) bool {
 func hasStringType(pass *analysis.Pass, e ast.Expr) bool {
 	basicType, ok := pass.TypesInfo.TypeOf(e).(*types.Basic)
 	return ok && basicType.Kind() == types.String
-}
-
-// untype returns v from type(v) expression or v itself if there is no type conversion.
-func untype(e ast.Expr) ast.Expr {
-	ce, ok := e.(*ast.CallExpr)
-	if !ok || len(ce.Args) != 1 {
-		return e
-	}
-	return ce.Args[0]
 }

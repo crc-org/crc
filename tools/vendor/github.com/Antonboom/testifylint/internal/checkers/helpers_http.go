@@ -24,7 +24,7 @@ func mimicHTTPHandler(pass *analysis.Pass, fType *ast.FuncType) bool {
 		return false
 	}
 
-	for i := 0; i < sig.Params().Len(); i++ {
+	for i := range sig.Params().Len() {
 		lhs := sig.Params().At(i).Type()
 		rhs := pass.TypesInfo.TypeOf(fType.Params.List[i].Type)
 		if !types.Identical(lhs, rhs) {

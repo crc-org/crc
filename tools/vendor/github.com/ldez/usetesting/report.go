@@ -102,7 +102,7 @@ func diagnosticOSCreateTemp(ce *ast.CallExpr, fnInfo *FuncInfo) analysis.Diagnos
 	return diagnostic
 }
 
-func (a *analyzer) reportSelector(pass *analysis.Pass, se *ast.SelectorExpr, fnInfo *FuncInfo) bool {
+func (a *analyzer) reportSelector(pass *analysis.Pass, se *ast.SelectorExpr, fnInfo *FuncInfo, geGo124 bool) bool {
 	if se.Sel == nil || !se.Sel.IsExported() {
 		return false
 	}
@@ -112,10 +112,10 @@ func (a *analyzer) reportSelector(pass *analysis.Pass, se *ast.SelectorExpr, fnI
 		return false
 	}
 
-	return a.report(pass, se, ident.Name, se.Sel.Name, fnInfo)
+	return a.report(pass, se, ident.Name, se.Sel.Name, fnInfo, geGo124)
 }
 
-func (a *analyzer) reportIdent(pass *analysis.Pass, ident *ast.Ident, fnInfo *FuncInfo) bool {
+func (a *analyzer) reportIdent(pass *analysis.Pass, ident *ast.Ident, fnInfo *FuncInfo, geGo124 bool) bool {
 	if !ident.IsExported() {
 		return false
 	}
@@ -126,11 +126,11 @@ func (a *analyzer) reportIdent(pass *analysis.Pass, ident *ast.Ident, fnInfo *Fu
 
 	pkgName := getPkgNameFromType(pass, ident)
 
-	return a.report(pass, ident, pkgName, ident.Name, fnInfo)
+	return a.report(pass, ident, pkgName, ident.Name, fnInfo, geGo124)
 }
 
 //nolint:gocyclo // The complexity is expected by the number of cases to check.
-func (a *analyzer) report(pass *analysis.Pass, rg analysis.Range, origPkgName, origName string, fnInfo *FuncInfo) bool {
+func (a *analyzer) report(pass *analysis.Pass, rg analysis.Range, origPkgName, origName string, fnInfo *FuncInfo, geGo124 bool) bool {
 	switch {
 	case a.osMkdirTemp && origPkgName == osPkgName && origName == mkdirTempName:
 		report(pass, rg, origPkgName, origName, tempDirName, fnInfo)
@@ -141,13 +141,13 @@ func (a *analyzer) report(pass *analysis.Pass, rg analysis.Range, origPkgName, o
 	case a.osSetenv && origPkgName == osPkgName && origName == setenvName:
 		report(pass, rg, origPkgName, origName, setenvName, fnInfo)
 
-	case a.geGo124 && a.osChdir && origPkgName == osPkgName && origName == chdirName:
+	case geGo124 && a.osChdir && origPkgName == osPkgName && origName == chdirName:
 		report(pass, rg, origPkgName, origName, chdirName, fnInfo)
 
-	case a.geGo124 && a.contextBackground && origPkgName == contextPkgName && origName == backgroundName:
+	case geGo124 && a.contextBackground && origPkgName == contextPkgName && origName == backgroundName:
 		report(pass, rg, origPkgName, origName, contextName, fnInfo)
 
-	case a.geGo124 && a.contextTodo && origPkgName == contextPkgName && origName == todoName:
+	case geGo124 && a.contextTodo && origPkgName == contextPkgName && origName == todoName:
 		report(pass, rg, origPkgName, origName, contextName, fnInfo)
 
 	default:

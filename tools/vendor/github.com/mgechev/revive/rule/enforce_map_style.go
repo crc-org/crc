@@ -3,7 +3,6 @@ package rule
 import (
 	"fmt"
 	"go/ast"
-	"sync"
 
 	"github.com/mgechev/revive/lint"
 )
@@ -40,39 +39,38 @@ func mapStyleFromString(s string) (enforceMapStyleType, error) {
 // EnforceMapStyleRule implements a rule to enforce `make(map[type]type)` over `map[type]type{}`.
 type EnforceMapStyleRule struct {
 	enforceMapStyle enforceMapStyleType
-
-	configureOnce sync.Once
 }
 
-func (r *EnforceMapStyleRule) configure(arguments lint.Arguments) {
+// Configure validates the rule configuration, and configures the rule accordingly.
+//
+// Configuration implements the [lint.ConfigurableRule] interface.
+func (r *EnforceMapStyleRule) Configure(arguments lint.Arguments) error {
 	if len(arguments) < 1 {
 		r.enforceMapStyle = enforceMapStyleTypeAny
-		return
+		return nil
 	}
 
 	enforceMapStyle, ok := arguments[0].(string)
 	if !ok {
-		panic(fmt.Sprintf("Invalid argument '%v' for 'enforce-map-style' rule. Expecting string, got %T", arguments[0], arguments[0]))
+		return fmt.Errorf("invalid argument '%v' for 'enforce-map-style' rule. Expecting string, got %T", arguments[0], arguments[0])
 	}
 
 	var err error
 	r.enforceMapStyle, err = mapStyleFromString(enforceMapStyle)
 	if err != nil {
-		panic(fmt.Sprintf("Invalid argument to the enforce-map-style rule: %v", err))
+		return fmt.Errorf("invalid argument to the enforce-map-style rule: %w", err)
 	}
+
+	return nil
 }
 
 // Apply applies the rule to given file.
-func (r *EnforceMapStyleRule) Apply(file *lint.File, arguments lint.Arguments) []lint.Failure {
-	r.configureOnce.Do(func() { r.configure(arguments) })
-
+func (r *EnforceMapStyleRule) Apply(file *lint.File, _ lint.Arguments) []lint.Failure {
 	if r.enforceMapStyle == enforceMapStyleTypeAny {
 		// this linter is not configured
 		return nil
 	}
-
 	var failures []lint.Failure
-
 	astFile := file.AST
 	ast.Inspect(astFile, func(n ast.Node) bool {
 		switch v := n.(type) {
@@ -93,7 +91,7 @@ func (r *EnforceMapStyleRule) Apply(file *lint.File, arguments lint.Arguments) [
 			failures = append(failures, lint.Failure{
 				Confidence: 1,
 				Node:       v,
-				Category:   "style",
+				Category:   lint.FailureCategoryStyle,
 				Failure:    "use make(map[type]type) instead of map[type]type{}",
 			})
 		case *ast.CallExpr:
@@ -121,7 +119,7 @@ func (r *EnforceMapStyleRule) Apply(file *lint.File, arguments lint.Arguments) [
 			failures = append(failures, lint.Failure{
 				Confidence: 1,
 				Node:       v.Args[0],
-				Category:   "style",
+				Category:   lint.FailureCategoryStyle,
 				Failure:    "use map[type]type{} instead of make(map[type]type)",
 			})
 		}

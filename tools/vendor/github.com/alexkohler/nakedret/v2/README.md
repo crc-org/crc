@@ -6,7 +6,7 @@ nakedret is a Go static analysis tool to find naked returns in functions greater
 Install Nakedret via go install:
 
 ```cmd
-go install github.com/alexkohler/nakedret/cmd/nakedret@latest
+go install github.com/alexkohler/nakedret/v2/cmd/nakedret@latest
 ```
 
 If you have not already added your `GOPATH/bin` directory to your `PATH` environment variable then you will need to do so.

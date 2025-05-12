@@ -7,10 +7,12 @@ import (
 
 const (
 	linterName = "nilnesserr"
-	linterDoc  = `This linter reports that it checks for err != nil, but it returns a different nil value error.
-powered by nilness and nilerr.`
+	linterDoc  = `Reports constructs that checks for err != nil, but returns a different nil value error.
+Powered by nilness and nilerr.`
 
-	linterMessage = "return a nil value error after check error"
+	linterReturnMessage       = "return a nil value error after check error"
+	linterCallMessage         = "call function with a nil value error after check error"
+	linterVariadicCallMessage = "call variadic function with a nil value error after check error"
 )
 
 type LinterSetting struct{}

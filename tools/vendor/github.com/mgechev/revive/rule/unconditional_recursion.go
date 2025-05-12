@@ -6,7 +6,7 @@ import (
 	"github.com/mgechev/revive/lint"
 )
 
-// UnconditionalRecursionRule lints given else constructs.
+// UnconditionalRecursionRule warns on function calls that will lead to infinite recursion.
 type UnconditionalRecursionRule struct{}
 
 // Apply applies the rule to given file.
@@ -17,8 +17,35 @@ func (*UnconditionalRecursionRule) Apply(file *lint.File, _ lint.Arguments) []li
 		failures = append(failures, failure)
 	}
 
-	w := lintUnconditionalRecursionRule{onFailure: onFailure}
-	ast.Walk(w, file.AST)
+	// Range over global declarations of the file to detect func/method declarations and analyze them
+	for _, decl := range file.AST.Decls {
+		n, ok := decl.(*ast.FuncDecl)
+		if !ok {
+			continue // not a func/method declaration
+		}
+
+		if n.Body == nil {
+			continue // func/method with empty body => it can not be recursive
+		}
+
+		var rec *ast.Ident
+		switch {
+		case n.Recv == nil:
+			rec = nil
+		case n.Recv.NumFields() < 1 || len(n.Recv.List[0].Names) < 1:
+			rec = &ast.Ident{Name: "_"}
+		default:
+			rec = n.Recv.List[0].Names[0]
+		}
+
+		w := &lintUnconditionalRecursionRule{
+			onFailure:   onFailure,
+			currentFunc: &funcStatus{&funcDesc{rec, n.Name}, false},
+		}
+
+		ast.Walk(w, n.Body)
+	}
+
 	return failures
 }
 
@@ -50,26 +77,14 @@ type lintUnconditionalRecursionRule struct {
 	inGoStatement bool
 }
 
-// Visit will traverse the file AST.
-// The rule is based in the following algorithm: inside each function body we search for calls to the function itself.
+// Visit will traverse function's body we search for calls to the function itself.
 // We do not search inside conditional control structures (if, for, switch, ...) because any recursive call inside them is conditioned
 // We do search inside conditional control structures are statements that will take the control out of the function (return, exit, panic)
 // If we find conditional control exits, it means the function is NOT unconditionally-recursive
 // If we find a recursive call before finding any conditional exit, a failure is generated
-// In resume: if we found a recursive call control-dependant from the entry point of the function then we raise a failure.
-func (w lintUnconditionalRecursionRule) Visit(node ast.Node) ast.Visitor {
+// In resume: if we found a recursive call control-dependent from the entry point of the function then we raise a failure.
+func (w *lintUnconditionalRecursionRule) Visit(node ast.Node) ast.Visitor {
 	switch n := node.(type) {
-	case *ast.FuncDecl:
-		var rec *ast.Ident
-		switch {
-		case n.Recv == nil:
-			rec = nil
-		case n.Recv.NumFields() < 1 || len(n.Recv.List[0].Names) < 1:
-			rec = &ast.Ident{Name: "_"}
-		default:
-			rec = n.Recv.List[0].Names[0]
-		}
-		w.currentFunc = &funcStatus{&funcDesc{rec, n.Name}, false}
 	case *ast.CallExpr:
 		// check if call arguments has a recursive call
 		for _, arg := range n.Args {
@@ -100,7 +115,7 @@ func (w lintUnconditionalRecursionRule) Visit(node ast.Node) ast.Visitor {
 			!w.currentFunc.seenConditionalExit && // there is a conditional exit in the function
 			w.currentFunc.funcDesc.equal(&funcDesc{selector, funcID}) {
 			w.onFailure(lint.Failure{
-				Category:   "logic",
+				Category:   lint.FailureCategoryLogic,
 				Confidence: 0.8,
 				Node:       n,
 				Failure:    "unconditional recursive call",
@@ -152,20 +167,7 @@ func (w *lintUnconditionalRecursionRule) updateFuncStatus(node ast.Node) {
 	w.currentFunc.seenConditionalExit = w.hasControlExit(node)
 }
 
-var exitFunctions = map[string]map[string]bool{
-	"os":      {"Exit": true},
-	"syscall": {"Exit": true},
-	"log": {
-		"Fatal":   true,
-		"Fatalf":  true,
-		"Fatalln": true,
-		"Panic":   true,
-		"Panicf":  true,
-		"Panicln": true,
-	},
-}
-
-func (lintUnconditionalRecursionRule) hasControlExit(node ast.Node) bool {
+func (*lintUnconditionalRecursionRule) hasControlExit(node ast.Node) bool {
 	// isExit returns true if the given node makes control exit the function
 	isExit := func(node ast.Node) bool {
 		switch n := node.(type) {
@@ -187,8 +189,7 @@ func (lintUnconditionalRecursionRule) hasControlExit(node ast.Node) bool {
 
 			functionName := se.Sel.Name
 			pkgName := id.Name
-			isCallToExitFunction := exitFunctions[pkgName] != nil && exitFunctions[pkgName][functionName]
-			if isCallToExitFunction {
+			if isCallToExitFunction(pkgName, functionName) {
 				return true
 			}
 		}

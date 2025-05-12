@@ -47,6 +47,9 @@ Actual detections:
   - `BinarySearch`
   - `BinarySearchFunc`
 
+- `golang.org/x/exp/constraints`:
+  - `Ordered`
+
 ## Usages
 
 ### Inside golangci-lint
@@ -110,3 +113,4 @@ func foo(m map[string]string) {
 - https://tip.golang.org/doc/go1.21#maps
 - https://tip.golang.org/doc/go1.21#slices
 - https://tip.golang.org/doc/go1.23#iterators
+- https://tip.golang.org/doc/go1.21#cmp

@@ -202,9 +202,9 @@ func (l LinterSettings) compile() (linterSettings, error) {
 	return li, nil
 }
 
-func (ls linterSettings) whichLists(fileName string) []*list {
+func (s linterSettings) whichLists(fileName string) []*list {
 	var matches []*list
-	for _, l := range ls {
+	for _, l := range s {
 		if l.fileMatch(fileName) {
 			matches = append(matches, l)
 		}
@@ -236,5 +236,13 @@ func strInPrefixList(str string, prefixList []string) (bool, int) {
 	if ioc[len(ioc)-1] == '$' {
 		return str == ioc[:len(ioc)-1], idx
 	}
-	return strings.HasPrefix(str, prefixList[idx]), idx
+
+	// There is no sep chars in ioc so it is a GOROOT import that is being matched to the import (str) (see $gostd expander)
+	// AND the import contains a period which GOROOT cannot have. This eliminates the go.evil.me/pkg scenario
+	// BUT should still allow /os/exec and ./os/exec imports which are very uncommon
+	if !strings.ContainsAny(ioc, "./") && strings.ContainsRune(str, '.') {
+		return false, idx
+	}
+
+	return strings.HasPrefix(str, ioc), idx
 }

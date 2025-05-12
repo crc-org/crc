@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Ignore represent a special instruction embebded in the source code.
+// Ignore represent a special instruction embedded in the source code.
 //
 // The directive can be as simple as
 //

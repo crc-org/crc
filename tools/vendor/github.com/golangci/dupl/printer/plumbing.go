@@ -1,50 +1,36 @@
 package printer
 
 import (
+	"fmt"
+	"io"
 	"sort"
 
 	"github.com/golangci/dupl/syntax"
 )
 
-type Clone clone
-
-func (c Clone) Filename() string {
-	return c.filename
-}
-
-func (c Clone) LineStart() int {
-	return c.lineStart
-}
-
-func (c Clone) LineEnd() int {
-	return c.lineEnd
-}
-
-type Issue struct {
-	From, To Clone
-}
-
-type Plumbing struct {
+type plumbing struct {
+	w io.Writer
 	ReadFile
 }
 
-func NewPlumbing(fread ReadFile) *Plumbing {
-	return &Plumbing{fread}
+func NewPlumbing(w io.Writer, fread ReadFile) Printer {
+	return &plumbing{w, fread}
 }
 
-func (p *Plumbing) MakeIssues(dups [][]*syntax.Node) ([]Issue, error) {
+func (p *plumbing) PrintHeader() error { return nil }
+
+func (p *plumbing) PrintClones(dups [][]*syntax.Node) error {
 	clones, err := prepareClonesInfo(p.ReadFile, dups)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	sort.Sort(byNameAndLine(clones))
-	var issues []Issue
 	for i, cl := range clones {
 		nextCl := clones[(i+1)%len(clones)]
-		issues = append(issues, Issue{
-			From: Clone(cl),
-			To:   Clone(nextCl),
-		})
+		fmt.Fprintf(p.w, "%s:%d-%d: duplicate of %s:%d-%d\n", cl.filename, cl.lineStart, cl.lineEnd,
+			nextCl.filename, nextCl.lineStart, nextCl.lineEnd)
 	}
-	return issues, nil
+	return nil
 }
+
+func (p *plumbing) PrintFooter() error { return nil }

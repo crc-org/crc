@@ -3,7 +3,7 @@ package gomegainfo
 import (
 	"go/ast"
 	gotypes "go/types"
-	"regexp"
+	"strings"
 
 	"golang.org/x/tools/go/analysis"
 )
@@ -85,29 +85,33 @@ func IsAssertionFunc(name string) bool {
 	return false
 }
 
-var gomegaTypeRegex = regexp.MustCompile(`github\.com/onsi/gomega/(?:internal|types)\.Gomega`)
-
 func IsGomegaVar(x ast.Expr, pass *analysis.Pass) bool {
-	if tx, ok := pass.TypesInfo.Types[x]; ok {
-		return IsGomegaType(tx.Type)
-	}
-
-	return false
-}
-
-func IsGomegaType(t gotypes.Type) bool {
-	var typeStr string
-	switch ttx := t.(type) {
-	case *gotypes.Pointer:
-		tp := ttx.Elem()
-		typeStr = tp.String()
-
-	case *gotypes.Named:
-		typeStr = ttx.String()
-
-	default:
+	if _, isIdent := x.(*ast.Ident); !isIdent {
 		return false
 	}
 
-	return gomegaTypeRegex.MatchString(typeStr)
+	tx, ok := pass.TypesInfo.Types[x]
+	if !ok {
+		return false
+	}
+
+	return IsGomegaType(tx.Type)
+}
+
+const (
+	gomegaStructType = "github.com/onsi/gomega/internal.Gomega"
+	gomegaInterface  = "github.com/onsi/gomega/types.Gomega"
+)
+
+func IsGomegaType(t gotypes.Type) bool {
+	switch ttx := gotypes.Unalias(t).(type) {
+	case *gotypes.Pointer:
+		return IsGomegaType(ttx.Elem())
+
+	case *gotypes.Named:
+		name := ttx.String()
+		return strings.HasSuffix(name, gomegaStructType) || strings.HasSuffix(name, gomegaInterface)
+	}
+
+	return false
 }
