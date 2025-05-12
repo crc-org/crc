@@ -16,7 +16,7 @@ import (
 var (
 	CommandRunner                           = crcos.NewLocalCommandRunner()
 	WindowsSubsystemLinuxKernelMetadataFile = "/proc/version"
-	ErrUnknownShell                         = errors.New("error: Unknown shell")
+	ErrUnknownShell                         = errors.New("Error: Unknown shell")
 	currentProcessSupplier                  = createCurrentProcess
 )
 

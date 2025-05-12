@@ -80,7 +80,7 @@ func (c *Client) GenerateBundle(_ bool) error {
 
 func (c *Client) Start(_ context.Context, _ types.StartConfig) (*types.StartResult, error) {
 	if c.Failing {
-		return nil, errors.New("failed to start")
+		return nil, errors.New("Failed to start")
 	}
 	return &types.StartResult{
 		ClusterConfig:  DummyClusterConfig,
