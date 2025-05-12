@@ -10,6 +10,8 @@ linters:
       rules:
         - name: dot-imports
           disabled: true
+    staticcheck:
+      checks: [ "all", "-ST1005" ]
   enable:
     - gocritic
     - gosec
@@ -18,6 +20,7 @@ linters:
     - gosec
     - revive
     - unused
+    - staticcheck
   exclusions:
     generated: lax
     presets:

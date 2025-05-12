@@ -30,7 +30,7 @@ type RetriableError struct {
 }
 
 func (r RetriableError) Error() string {
-	return "temporary Error: " + r.Err.Error()
+	return "Temporary Error: " + r.Err.Error()
 }
 
 // MultiError holds multiple errors
