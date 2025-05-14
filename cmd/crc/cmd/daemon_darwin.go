@@ -44,8 +44,14 @@ func unixgramListener(vn *virtualnetwork.VirtualNetwork) (*net.UnixConn, error) 
 	if err != nil {
 		return conn, errors.Wrap(err, "failed to accept vfkit connection")
 	}
-	err = vn.AcceptVfkit(context.Background(), vfkitConn)
-	return conn, errors.Wrap(err, "failed to accept vfkit connection")
+	go func() {
+		err := vn.AcceptVfkit(context.Background(), vfkitConn)
+		if err != nil {
+			logging.Errorf("failed to accept vfkit connection: %v", err)
+			return
+		}
+	}()
+	return conn, err
 }
 
 func checkIfDaemonIsRunning() (bool, error) {
