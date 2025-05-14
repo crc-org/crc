@@ -27,6 +27,12 @@ func CreateRunner(ip string, port int, privateKeys ...string) (*Runner, error) {
 	}, nil
 }
 
+func CreateRunnerWithClient(client Client) (*Runner, error) {
+	return &Runner{
+		client: client,
+	}, nil
+}
+
 func (runner *Runner) Close() {
 	runner.client.Close()
 }
