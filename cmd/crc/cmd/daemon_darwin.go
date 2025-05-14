@@ -33,19 +33,26 @@ func httpListener() (net.Listener, error) {
 	return ln, nil
 }
 
-func unixgramListener(vn *virtualnetwork.VirtualNetwork) (*net.UnixConn, error) {
+func setupUnixgramListener() (net.Conn, error) {
 	_ = os.Remove(constants.UnixgramSocketPath)
 	conn, err := transport.ListenUnixgram(fmt.Sprintf("unixgram://%v", constants.UnixgramSocketPath))
 	if err != nil {
-		return conn, errors.Wrap(err, "failed to listen unixgram")
+		return nil, errors.Wrap(err, "failed to listen unixgram")
 	}
-	logging.Infof("listening on %s:", constants.UnixgramSocketPath)
+	logging.Infof("listening on %s", constants.UnixgramSocketPath)
 	vfkitConn, err := transport.AcceptVfkit(conn)
 	if err != nil {
-		return conn, errors.Wrap(err, "failed to accept vfkit connection")
+		return nil, errors.Wrap(err, "failed to accept vfkit connection")
 	}
-	err = vn.AcceptVfkit(context.Background(), vfkitConn)
-	return conn, errors.Wrap(err, "failed to accept vfkit connection")
+	return vfkitConn, nil
+}
+
+func handleUnixgramConnection(ctx context.Context, vn *virtualnetwork.VirtualNetwork, vfkitConn net.Conn) {
+	defer vfkitConn.Close()
+	if err := vn.AcceptVfkit(ctx, vfkitConn); err != nil {
+		logging.Errorf("failed to accept vfkit connection: %v", err)
+	}
+	logging.Debugf("Closed connection from %s", vfkitConn.LocalAddr().String())
 }
 
 func checkIfDaemonIsRunning() (bool, error) {

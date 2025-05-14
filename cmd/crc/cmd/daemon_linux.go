@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -125,9 +126,11 @@ func httpListener() (net.Listener, error) {
 	return ln, nil
 }
 
-func unixgramListener(_ *virtualnetwork.VirtualNetwork) (*net.UnixConn, error) {
+func setupUnixgramListener() (net.Conn, error) {
 	return nil, nil
 }
+
+func handleUnixgramConnection(_ context.Context, _ *virtualnetwork.VirtualNetwork, _ net.Conn) {}
 
 func startupDone() {
 	_, _ = daemon.SdNotify(false, daemon.SdNotifyReady)
