@@ -345,7 +345,7 @@ func getAllPreflightChecks() []Check {
 	return filter.Apply(getChecks(distro(), constants.GetDefaultBundlePath(crcpreset.OpenShift), crcpreset.OpenShift, false))
 }
 
-func getPreflightChecks(_ bool, networkMode network.Mode, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) []Check {
+func getPreflightChecks(_ bool, networkMode network.Mode, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback, _ bool) []Check {
 	usingSystemdResolved := checkSystemdResolvedIsRunning()
 
 	return getPreflightChecksForDistro(distro(), networkMode, usingSystemdResolved == nil, bundlePath, preset, enableBundleQuayFallback)
