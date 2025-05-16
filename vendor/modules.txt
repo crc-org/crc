@@ -89,7 +89,7 @@ github.com/cloudflare/circl/math/mlsbset
 github.com/cloudflare/circl/sign
 github.com/cloudflare/circl/sign/ed25519
 github.com/cloudflare/circl/sign/ed448
-# github.com/containers/common v0.62.2
+# github.com/containers/common v0.62.3
 ## explicit; go 1.22.8
 github.com/containers/common/pkg/strongunits
 # github.com/containers/gvisor-tap-vsock v0.8.5
@@ -107,7 +107,7 @@ github.com/containers/gvisor-tap-vsock/pkg/transport
 github.com/containers/gvisor-tap-vsock/pkg/types
 github.com/containers/gvisor-tap-vsock/pkg/utils
 github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork
-# github.com/containers/image/v5 v5.34.2
+# github.com/containers/image/v5 v5.34.3
 ## explicit; go 1.22.8
 github.com/containers/image/v5/copy
 github.com/containers/image/v5/directory
