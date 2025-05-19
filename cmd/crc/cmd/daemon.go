@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -209,11 +210,18 @@ func run(configuration *types.Configuration) error {
 	}()
 
 	go func() {
+		var oldCancel context.CancelFunc
 		for {
-			_, err := unixgramListener(vn)
+			ctx, cancel := context.WithCancel(context.Background())
+			conn, err := unixgramListener(ctx, vn)
 			if err != nil && !errors.Is(err, net.ErrClosed) {
 				logging.Errorf("unixgramListener error: %v", err)
 			}
+			if oldCancel != nil {
+				logging.Warnf("New connection from %s. Closing old connection", conn.LocalAddr().String())
+				oldCancel()
+			}
+			oldCancel = cancel
 			time.Sleep(1 * time.Second)
 		}
 	}()

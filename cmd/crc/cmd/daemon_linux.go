@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -125,7 +126,7 @@ func httpListener() (net.Listener, error) {
 	return ln, nil
 }
 
-func unixgramListener(_ *virtualnetwork.VirtualNetwork) (*net.UnixConn, error) {
+func unixgramListener(_ context.Context, _ *virtualnetwork.VirtualNetwork) (*net.UnixConn, error) {
 	return nil, nil
 }
 

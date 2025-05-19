@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"net"
 
 	"github.com/Microsoft/go-winio"
@@ -36,7 +37,7 @@ func checkIfDaemonIsRunning() (bool, error) {
 	return checkDaemonVersion()
 }
 
-func unixgramListener(_ *virtualnetwork.VirtualNetwork) (*net.UnixConn, error) {
+func unixgramListener(_ context.Context, _ *virtualnetwork.VirtualNetwork) (*net.UnixConn, error) {
 	return nil, nil
 }
 
