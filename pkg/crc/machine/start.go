@@ -752,7 +752,7 @@ func enableEmergencyLogin(sshRunner *crcssh.Runner) error {
 		return err
 	}
 	logging.Infof("Emergency login password for core user is stored to %s", constants.PasswdFilePath)
-	_, _, err := sshRunner.Run(fmt.Sprintf("sudo passwd core --unlock && echo %s | sudo passwd core --stdin", b))
+	_, _, err := sshRunner.Run(fmt.Sprintf("sudo passwd core -f --unlock && echo %s | sudo passwd core --stdin", b))
 	return err
 }
 
