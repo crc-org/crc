@@ -491,12 +491,12 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	// Check DNS lookup before starting the kubelet
-	if queryOutput, err := dns.CheckCRCLocalDNSReachable(ctx, servicePostStartConfig); err != nil {
-		if !client.useVSock() {
+	logging.Info("Check internal and public DNS query...")
+	if !client.useVSock() {
+		if queryOutput, err := dns.CheckCRCLocalDNSReachable(ctx, servicePostStartConfig); err != nil {
 			return nil, errors.Wrapf(err, "Failed internal DNS query: %s", queryOutput)
 		}
 	}
-	logging.Info("Check internal and public DNS query...")
 
 	if queryOutput, err := dns.CheckCRCPublicDNSReachable(servicePostStartConfig); err != nil {
 		logging.Warnf("Failed public DNS query from the cluster: %v : %s", err, queryOutput)
