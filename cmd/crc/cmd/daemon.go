@@ -14,17 +14,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/crc-org/crc/v2/pkg/crc/api/client"
-	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
-
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	"github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork"
 	"github.com/crc-org/crc/v2/pkg/crc/adminhelper"
 	"github.com/crc-org/crc/v2/pkg/crc/api"
+	"github.com/crc-org/crc/v2/pkg/crc/api/client"
 	"github.com/crc-org/crc/v2/pkg/crc/api/events"
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/machine/libmachine/drivers"
 	"github.com/docker/go-units"
 	"github.com/gorilla/handlers"
 	"github.com/pkg/errors"
@@ -214,11 +214,16 @@ func run(configuration *types.Configuration) error {
 		for {
 			ctx, cancel := context.WithCancel(context.Background())
 			conn, err := unixgramListener(ctx, vn)
+			if err != nil && errors.Is(err, drivers.ErrNotImplemented) {
+				cancel()
+				break
+			}
 			if err != nil && !errors.Is(err, net.ErrClosed) {
 				logging.Errorf("unixgramListener error: %v", err)
 			}
+
 			if oldCancel != nil {
-				logging.Warnf("New connection from %s. Closing old connection", conn.LocalAddr().String())
+				logging.Warnf("New connection to %s. Closing old connection", conn.LocalAddr().String())
 				oldCancel()
 			}
 			oldCancel = cancel

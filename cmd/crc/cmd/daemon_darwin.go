@@ -39,7 +39,7 @@ func unixgramListener(ctx context.Context, vn *virtualnetwork.VirtualNetwork) (*
 	if err != nil {
 		return conn, errors.Wrap(err, "failed to listen unixgram")
 	}
-	logging.Infof("listening on %s:", constants.UnixgramSocketPath)
+	logging.Infof("listening on %s", constants.UnixgramSocketPath)
 	vfkitConn, err := transport.AcceptVfkit(conn)
 	if err != nil {
 		return conn, errors.Wrap(err, "failed to accept vfkit connection")

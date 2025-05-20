@@ -9,6 +9,7 @@ import (
 	"github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/machine/libmachine/drivers"
 )
 
 func vsockListener() (net.Listener, error) {
@@ -38,7 +39,7 @@ func checkIfDaemonIsRunning() (bool, error) {
 }
 
 func unixgramListener(_ context.Context, _ *virtualnetwork.VirtualNetwork) (*net.UnixConn, error) {
-	return nil, nil
+	return nil, drivers.ErrNotImplemented
 }
 
 func startupDone() {
