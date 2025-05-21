@@ -552,8 +552,6 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		DeleteFileFromCRCHome)
 	s.Step(`^decode base64 file "(.*)" to "(.*)"$`,
 		DecodeBase64File)
-	s.Step(`^ensuring network mode user$`,
-		EnsureUserNetworkmode)
 	s.Step(`^ensuring microshift cluster is fully operational$`,
 		EnsureMicroshiftClusterIsOperational)
 	s.Step(`^kubeconfig is cleaned up$`,
@@ -1004,10 +1002,6 @@ func setPodmanEnv() error {
 }
 
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
-	// Since network-mode is only supported on Linux, we skip this property test for non-linux platforms
-	if property == "network-mode" && runtime.GOOS != "linux" {
-		return nil
-	}
 	if value == "current bundle" {
 		if !userProvidedBundle {
 			value = filepath.Join(util.CRCHome, "cache", bundleName)
@@ -1125,14 +1119,6 @@ func DecodeBase64File(inputFile, outputFile string) error {
 		cmd = fmt.Sprintf("base64 -d -i %s > %s", inputFile, outputFile)
 	}
 	return util.ExecuteCommandSucceedsOrFails(cmd, "succeeds")
-}
-
-func EnsureUserNetworkmode() error {
-	if runtime.GOOS == "linux" {
-		return crcCmd.SetConfigPropertyToValueSucceedsOrFails(
-			"network-mode", "user", "succeeds")
-	}
-	return nil
 }
 
 func EnsureKubeConfigIsCleanedUp() error {
