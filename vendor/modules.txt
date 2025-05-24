@@ -277,6 +277,10 @@ github.com/docker/docker-credential-helpers/credentials
 # github.com/docker/go-connections v0.5.0
 ## explicit; go 1.18
 github.com/docker/go-connections/tlsconfig
+# github.com/docker/go-p9p v0.0.0-20191112112554-37d97cf40d03
+## explicit
+github.com/docker/go-p9p
+github.com/docker/go-p9p/ufs
 # github.com/docker/go-units v0.5.0
 ## explicit
 github.com/docker/go-units
