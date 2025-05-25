@@ -249,6 +249,8 @@ github.com/letsencrypt/boulder v0.0.0-20240620165639-de9c06129bec h1:2tTW6cDth2T
 github.com/letsencrypt/boulder v0.0.0-20240620165639-de9c06129bec/go.mod h1:TmwEoGCwIti7BCeJ9hescZgRtatxRE+A72pCoPfmcfk=
 github.com/linuxkit/virtsock v0.0.0-20220523201153-1a23e78aa7a2 h1:DZMFueDbfz6PNc1GwDRA8+6lBx1TB9UnxDQliCqR73Y=
 github.com/linuxkit/virtsock v0.0.0-20220523201153-1a23e78aa7a2/go.mod h1:SWzULI85WerrFt3u+nIm5F9l7EvxZTKQvd0InF3nmgM=
+github.com/lionkov/ninep v0.0.0-20160126022248-3bca0642e7d5 h1:RfPJyrCygnSmOQEYNNXIpFDRuqEgtjESbhU78j3LM7s=
+github.com/lionkov/ninep v0.0.0-20160126022248-3bca0642e7d5/go.mod h1:+5163D9FB1VEu3V1O3spPPrvsWnCCYCn1VErjsZWdNs=
 github.com/lufia/plan9stats v0.0.0-20240909124753-873cd0166683 h1:7UMa6KCCMjZEMDtTVdcGu0B1GmmC7QJKiCCjyTAWQy0=
 github.com/lufia/plan9stats v0.0.0-20240909124753-873cd0166683/go.mod h1:ilwx/Dta8jXAgpFYFvSWEMwxmbWXyiUHkd5FwyKhb5k=
 github.com/mailru/easyjson v0.7.7 h1:UGYAvKxe3sBsEDzO8ZeWOSlIQfWFlxbzLZe7hwFURr0=

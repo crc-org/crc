@@ -494,6 +494,11 @@ github.com/letsencrypt/boulder/strictyaml
 # github.com/linuxkit/virtsock v0.0.0-20220523201153-1a23e78aa7a2
 ## explicit; go 1.17
 github.com/linuxkit/virtsock/pkg/hvsock
+# github.com/lionkov/ninep v0.0.0-20160126022248-3bca0642e7d5
+## explicit
+github.com/lionkov/ninep
+github.com/lionkov/ninep/srv
+github.com/lionkov/ninep/srv/ufs
 # github.com/lufia/plan9stats v0.0.0-20240909124753-873cd0166683
 ## explicit; go 1.16
 github.com/lufia/plan9stats
