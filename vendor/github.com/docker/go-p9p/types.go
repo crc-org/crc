@@ -7,7 +7,7 @@ import (
 
 const (
 	// DefaultMSize messages size used to establish a session.
-	DefaultMSize = 64 << 10
+	DefaultMSize = 64 << 19
 
 	// DefaultVersion for this package. Currently, the only supported version.
 	DefaultVersion = "9P2000"
