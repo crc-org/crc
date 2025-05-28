@@ -13,7 +13,7 @@ import (
 func (client *client) Stop() (state.State, error) {
 	defer func(input, output string) {
 		err := cleanKubeconfig(input, output)
-		if !errors.Is(err, os.ErrNotExist) {
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			logging.Warnf("Failed to remove crc contexts from kubeconfig: %v", err)
 		}
 	}(getGlobalKubeConfigPath(), getGlobalKubeConfigPath())
