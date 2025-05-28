@@ -111,8 +111,8 @@ func Execute() {
 	}
 
 	if err := rootCmd.ExecuteContext(telemetry.NewContext(context.Background())); err != nil {
+		logging.Error(err.Error())
 		runPostrun()
-		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 		var e exec.CodeExitError
 		if errors.As(err, &e) {
 			os.Exit(e.ExitStatus())
