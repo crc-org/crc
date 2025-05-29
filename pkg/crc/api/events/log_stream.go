@@ -1,6 +1,8 @@
 package events
 
 import (
+	"bytes"
+
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/r3labs/sse/v2"
 	"github.com/sirupsen/logrus"
@@ -56,7 +58,10 @@ func (s *streamHook) Fire(entry *logrus.Entry) error {
 		return err
 	}
 
-	s.server.Publish(LOGS, &sse.Event{Event: []byte(LOGS), Data: line})
+	// remove "Line Feed"("\n") character which add was added by json.Encoder
+	line = bytes.TrimRight(line, "\n")
+
+	s.server.Publish(Logs, &sse.Event{Event: []byte(Logs), Data: line})
 	return nil
 }
 
