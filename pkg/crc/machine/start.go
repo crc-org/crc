@@ -580,10 +580,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to update ssh public key to machine config")
 	}
 
-	if err := cluster.WaitForPullSecretPresentOnInstanceDisk(ctx, sshRunner); err != nil {
-		return nil, errors.Wrap(err, "Failed to update pull secret on the disk")
-	}
-
 	if err := cluster.UpdateUserPasswords(ctx, ocConfig, startConfig.KubeAdminPassword, startConfig.DeveloperPassword); err != nil {
 		return nil, errors.Wrap(err, "Failed to update kubeadmin user password")
 	}
@@ -612,6 +608,10 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	logging.Infof("Starting %s instance... [waiting for the cluster to stabilize]", startConfig.Preset)
 	if err := cluster.WaitForClusterStable(ctx, instanceIP, constants.KubeconfigFilePath, proxyConfig); err != nil {
 		logging.Warnf("Cluster is not ready: %v", err)
+	}
+
+	if err := cluster.WaitForPullSecretPresentOnInstanceDisk(ctx, sshRunner); err != nil {
+		return nil, errors.Wrap(err, "Failed to update pull secret on the disk")
 	}
 
 	waitForProxyPropagation(ctx, ocConfig, proxyConfig)
