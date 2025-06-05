@@ -737,12 +737,12 @@ func CheckCRCStatusJSONOutput() error {
 		return fmt.Errorf("failure in asserting 'preset' field of crc status json output, %v", err)
 	}
 	crcDiskSize := crcStatusJSONOutputObj["diskSize"]
-	if strongunits.B(cast.ToUint64(crcDiskSize)) > strongunits.GiB(constants.DefaultDiskSize).ToBytes() {
-		return fmt.Errorf("failure in asserting 'diskSize' field of crc status json output, expected less than or equal to %d bytes, actual : %d bytes", strongunits.GiB(constants.DefaultDiskSize).ToBytes(), strongunits.B(cast.ToUint64(crcDiskSize)))
+	if strongunits.B(cast.ToUint64(crcDiskSize)) < strongunits.GiB(constants.DefaultDiskSize).ToBytes() {
+		return fmt.Errorf("failure in asserting 'diskSize' field of crc status json output, expected greater than or equal to %d bytes, actual : %d bytes", strongunits.GiB(constants.DefaultDiskSize).ToBytes(), strongunits.B(cast.ToUint64(crcDiskSize)))
 	}
 	crcRAMSize := crcStatusJSONOutputObj["ramSize"]
-	if strongunits.B(cast.ToUint64(crcRAMSize)) > constants.GetDefaultMemory(crcPreset).ToBytes() {
-		return fmt.Errorf("failure in asserting 'ramSize' field of crc status json output, expected less than or equal to %d bytes, actual : %d bytes", constants.GetDefaultMemory(crcPreset).ToBytes(), cast.ToUint64(crcRAMSize))
+	if strongunits.B(cast.ToUint64(crcRAMSize)) < constants.GetDefaultMemory(crcPreset).ToBytes() {
+		return fmt.Errorf("failure in asserting 'ramSize' field of crc status json output, expected greater than or equal to %d bytes, actual : %d bytes", constants.GetDefaultMemory(crcPreset).ToBytes(), cast.ToUint64(crcRAMSize))
 	}
 	return nil
 }
