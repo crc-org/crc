@@ -6,10 +6,70 @@ import (
 	"testing"
 
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/fakemachine"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
 	crcOs "github.com/crc-org/crc/v2/pkg/os"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestStop_WhenVMRunning_ThenShouldStopVirtualMachine(t *testing.T) {
+	// Given
+	crcConfigStorage := crcConfig.New(crcConfig.NewEmptyInMemoryStorage(), crcConfig.NewEmptyInMemorySecretStorage())
+	crcConfigStorage.AddSetting(crcConfig.NetworkMode, "user", crcConfig.ValidateBool, crcConfig.SuccessfullyApplied,
+		"network-mode")
+	_, err := crcConfigStorage.Set(crcConfig.NetworkMode, "true")
+	assert.NoError(t, err)
+	fakeVirtualMachine := fakemachine.NewFakeVirtualMachine(false, false)
+	client := newClientWithVirtualMachine("fake-virtual-machine", false, crcConfigStorage, fakeVirtualMachine)
+
+	// When
+	clusterState, stopErr := client.Stop()
+
+	// Then
+	assert.NoError(t, stopErr)
+	assert.Equal(t, clusterState, state.Stopped)
+	assert.Equal(t, fakeVirtualMachine.IsStopped, true)
+	assert.Equal(t, fakeVirtualMachine.FakeSSHClient.IsSSHClientClosed, true)
+	assert.Equal(t, fakeVirtualMachine.PortsExposed, false)
+}
+
+func TestStop_WhenStopVmFailed_ThenErrorThrown(t *testing.T) {
+	// Given
+	crcConfigStorage := crcConfig.New(crcConfig.NewEmptyInMemoryStorage(), crcConfig.NewEmptyInMemorySecretStorage())
+	crcConfigStorage.AddSetting(crcConfig.NetworkMode, "user", crcConfig.ValidateBool, crcConfig.SuccessfullyApplied,
+		"network-mode")
+	_, err := crcConfigStorage.Set(crcConfig.NetworkMode, "true")
+	assert.NoError(t, err)
+	fakeVirtualMachine := fakemachine.NewFakeVirtualMachine(true, false)
+	client := newClientWithVirtualMachine("fake-virtual-machine", false, crcConfigStorage, fakeVirtualMachine)
+
+	// When
+	_, stopErr := client.Stop()
+
+	// Then
+	assert.ErrorContains(t, stopErr, "Cannot stop machine: stopping failed")
+}
+
+func TestStop_WhenVMAlreadyStopped_ThenThrowError(t *testing.T) {
+	// Given
+	crcConfigStorage := crcConfig.New(crcConfig.NewEmptyInMemoryStorage(), crcConfig.NewEmptyInMemorySecretStorage())
+	crcConfigStorage.AddSetting(crcConfig.NetworkMode, "user", crcConfig.ValidateBool, crcConfig.SuccessfullyApplied,
+		"network-mode")
+	_, err := crcConfigStorage.Set(crcConfig.NetworkMode, "true")
+	assert.NoError(t, err)
+	fakeVirtualMachine := fakemachine.NewFakeVirtualMachine(false, false)
+	err = fakeVirtualMachine.Stop()
+	assert.NoError(t, err)
+	client := newClientWithVirtualMachine("fake-virtual-machine", false, crcConfigStorage, fakeVirtualMachine)
+
+	// When
+	clusterState, stopErr := client.Stop()
+
+	// Then
+	assert.EqualError(t, stopErr, "Instance is already stopped")
+	assert.Equal(t, clusterState, state.Error)
+	assert.Equal(t, fakeVirtualMachine.IsStopped, true)
+}
 
 func TestClient_WhenStopInvokedWithNonExistentVM_ThenThrowError(t *testing.T) {
 	// Given
