@@ -25,7 +25,7 @@ package ssa
 // populating fields such as Function.Body, .Params, and others.
 //
 // Building may create additional methods, including:
-// - wrapper methods (e.g. for embeddding, or implicit &recv)
+// - wrapper methods (e.g. for embedding, or implicit &recv)
 // - bound method closures (e.g. for use(recv.f))
 // - thunks (e.g. for use(I.f) or use(T.f))
 // - generic instances (e.g. to produce f[int] from f[any]).
@@ -2920,6 +2920,9 @@ func (b *builder) buildParamsOnly(fn *Function) {
 	for i, n := 0, params.Len(); i < n; i++ {
 		fn.addParamVar(params.At(i))
 	}
+
+	// clear out other function state (keep consistent with finishBody)
+	fn.subst = nil
 }
 
 // buildFromSyntax builds fn.Body from fn.syntax, which must be non-nil.
