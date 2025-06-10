@@ -744,7 +744,11 @@ func CheckCRCStatusJSONOutput() error {
 		return fmt.Errorf("failure in asserting 'diskSize' field of crc status json output, expected greater than or equal to %d bytes, actual : %d bytes", strongunits.GiB(constants.DefaultDiskSize).ToBytes(), strongunits.B(cast.ToUint64(crcDiskSize)))
 	}
 	crcRAMSize := crcStatusJSONOutputObj["ramSize"]
-	if strongunits.B(cast.ToUint64(crcRAMSize)) < constants.GetDefaultMemory(crcPreset).ToBytes() {
+	if strongunits.B(cast.ToUint64(crcRAMSize)) < (constants.GetDefaultMemory(crcPreset).ToBytes() - strongunits.GiB(1).ToBytes()) {
+		// This is a workaround for the fact that crc status json output
+		// which doesn't return the exact RAM size used to create the VM,
+		// but rather the `free -b` output, which is less than the actual RAM size.
+		// some amount of overhead memory used by the kernel and system components.
 		return fmt.Errorf("failure in asserting 'ramSize' field of crc status json output, expected greater than or equal to %d bytes, actual : %d bytes", constants.GetDefaultMemory(crcPreset).ToBytes(), cast.ToUint64(crcRAMSize))
 	}
 	return nil
