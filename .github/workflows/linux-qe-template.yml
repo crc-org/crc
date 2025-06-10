@@ -91,7 +91,7 @@ jobs:
 
           # reserve machine from testing farm
           export TESTING_FARM_API_TOKEN=${TESTING_FARM_API_TOKEN}
-          testing-farm reserve --compose Fedora-42 --duration 480 --arch aarch64 --hardware memory='>= 16 GB' --hardware virtualization.is-supported='true' --no-autoconnect | tee info
+          testing-farm reserve --compose Fedora-41 --duration 480 --arch aarch64 --hardware memory='>= 16 GB' --hardware virtualization.is-supported='true' --no-autoconnect | tee info
           machine=`tail -n 1 info`
           echo ${machine##*@} > host
           echo crctest > username
