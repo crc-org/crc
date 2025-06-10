@@ -737,7 +737,10 @@ func CheckCRCStatusJSONOutput() error {
 		return fmt.Errorf("failure in asserting 'preset' field of crc status json output, %v", err)
 	}
 	crcDiskSize := crcStatusJSONOutputObj["diskSize"]
-	if strongunits.B(cast.ToUint64(crcDiskSize)) < strongunits.GiB(constants.DefaultDiskSize).ToBytes() {
+	if strongunits.GiB(cast.ToUint64(crcDiskSize)) < strongunits.GiB(constants.DefaultDiskSize-1) {
+		// This is a workaround for the fact that crc status json output
+		// which doesn't return the actual disk size, but rather the
+		// size of `/sysroot` mount, which is less than the actual disk size.
 		return fmt.Errorf("failure in asserting 'diskSize' field of crc status json output, expected greater than or equal to %d bytes, actual : %d bytes", strongunits.GiB(constants.DefaultDiskSize).ToBytes(), strongunits.B(cast.ToUint64(crcDiskSize)))
 	}
 	crcRAMSize := crcStatusJSONOutputObj["ramSize"]
