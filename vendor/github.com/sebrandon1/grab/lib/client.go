@@ -1,4 +1,4 @@
-package grab
+package lib
 
 import (
 	"bytes"
@@ -81,7 +81,7 @@ func (c *Client) Do(req *Request) *Response {
 	resp := &Response{
 		Request:    req,
 		Start:      time.Now(),
-		Done:       make(chan struct{}, 0),
+		Done:       make(chan struct{}),
 		Filename:   req.Filename,
 		ctx:        ctx,
 		cancel:     cancel,
@@ -347,7 +347,12 @@ func (c *Client) headRequest(resp *Response) stateFunc {
 	if resp.err != nil {
 		return c.closeResponse
 	}
-	resp.HTTPResponse.Body.Close()
+	if resp.HTTPResponse.Body != nil {
+		if err := resp.HTTPResponse.Body.Close(); err != nil {
+			resp.err = fmt.Errorf("cannot close HEAD response body: %w", err)
+			return c.closeResponse
+		}
+	}
 
 	if resp.HTTPResponse.StatusCode != http.StatusOK {
 		return c.getRequest
@@ -455,9 +460,9 @@ func (c *Client) openWriter(resp *Response) stateFunc {
 		resp.writer = f
 
 		// seek to start or end
-		whence := os.SEEK_SET
+		whence := io.SeekStart
 		if resp.bytesResumed > 0 {
-			whence = os.SEEK_END
+			whence = io.SeekEnd
 		}
 		_, resp.err = f.Seek(0, whence)
 		if resp.err != nil {
@@ -504,7 +509,10 @@ func (c *Client) copyFile(resp *Response) stateFunc {
 	// the BeforeCopy didn't cancel the copy. If this was an existing
 	// file that is not going to be resumed, truncate the contents.
 	if t, ok := resp.writer.(truncater); ok && resp.fi != nil && !resp.DidResume {
-		t.Truncate(0)
+		if err := t.Truncate(0); err != nil {
+			resp.err = fmt.Errorf("cannot truncate file %q: %w", resp.Filename, err)
+			return c.closeResponse
+		}
 	}
 
 	bytesCopied, resp.err = resp.transfer.copy()
@@ -544,7 +552,19 @@ func (c *Client) copyFile(resp *Response) stateFunc {
 
 func closeWriter(resp *Response) {
 	if closer, ok := resp.writer.(io.Closer); ok {
-		closer.Close()
+		if err := closer.Close(); err != nil {
+			resp.err = fmt.Errorf("cannot close writer for %q: %w", resp.Filename, err)
+			// if we cannot close the writer, we cannot continue
+			if resp.err != nil && !resp.Request.NoStore && resp.Request.deleteOnError {
+				// if we cannot close the writer, we cannot continue
+				if err := os.Remove(resp.Filename); err != nil {
+					resp.err = fmt.Errorf(
+						"cannot remove file %q after error: %w",
+						resp.Filename, err)
+				}
+			}
+			return
+		}
 	}
 	resp.writer = nil
 }
@@ -557,7 +577,11 @@ func (c *Client) closeResponse(resp *Response) stateFunc {
 
 	resp.fi = nil
 	closeWriter(resp)
-	resp.closeResponseBody()
+	if err := resp.closeResponseBody(); err != nil {
+		// optionally log or ignore
+		resp.err = fmt.Errorf("cannot close response body for %q: %w", resp.Filename, err)
+		
+	}
 
 	resp.End = time.Now()
 	close(resp.Done)
