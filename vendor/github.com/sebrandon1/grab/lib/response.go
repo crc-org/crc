@@ -1,10 +1,10 @@
-package grab
+package lib
 
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"sync/atomic"
@@ -169,7 +169,7 @@ func (c *Response) Duration() time.Duration {
 		return c.End.Sub(c.Start)
 	}
 
-	return time.Now().Sub(c.Start)
+	return time.Since(c.Start)
 }
 
 // ETA returns the estimated time at which the the download will complete, given
@@ -204,7 +204,7 @@ func (c *Response) Open() (io.ReadCloser, error) {
 
 func (c *Response) openUnsafe() (io.ReadCloser, error) {
 	if c.Request.NoStore {
-		return ioutil.NopCloser(bytes.NewReader(c.storeBuffer.Bytes())), nil
+		return io.NopCloser(bytes.NewReader(c.storeBuffer.Bytes())), nil
 	}
 	return os.Open(c.Filename)
 }
@@ -225,8 +225,13 @@ func (c *Response) Bytes() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
-	return ioutil.ReadAll(f)
+	defer func() {
+		if err := f.Close(); err != nil {
+			// TODO: handle/log error if needed
+			fmt.Fprintf(os.Stderr, "error closing file: %v\n", err)
+		}
+	}()
+	return io.ReadAll(f)
 }
 
 func (c *Response) requestMethod() string {
@@ -241,7 +246,9 @@ func (c *Response) checksumUnsafe() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 	t := newTransfer(c.Request.Context(), nil, c.Request.hash, f, nil)
 	if _, err = t.copy(); err != nil {
 		return nil, err
