@@ -81,7 +81,7 @@ func sshPortCheck() Check {
 		configKeySuffix:  "check-ssh-port",
 		checkDescription: "Checking SSH port availability",
 		check:            checkSSHPortFree(),
-		fixDescription:   fmt.Sprintf("crc uses port %d to run SSH", constants.VsockSSHPort),
+		fixDescription:   fmt.Sprintf("crc requires port %d to run SSH", constants.VsockSSHPort),
 		flags:            NoFix,
 		labels:           None,
 	}
