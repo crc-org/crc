@@ -1,5 +1,5 @@
 /*
-Package grab provides a HTTP download manager implementation.
+package lib provides a HTTP download manager implementation.
 
 Get is the most simple way to download a file:
 
@@ -60,4 +60,4 @@ You can monitor the progress of downloads while they are transferring:
 		}
 	}
 */
-package grab
+package lib
