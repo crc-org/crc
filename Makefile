@@ -109,7 +109,7 @@ $(BUILD_DIR)/windows-amd64/crc.exe: $(SOURCES)
 $(HOST_BUILD_DIR)/crc-embedder: $(SOURCES)
 	go build --tags="build" -ldflags="$(LDFLAGS)" -o $(HOST_BUILD_DIR)/crc-embedder $(GO_EXTRA_BUILDFLAGS) ./cmd/crc-embedder
 
-.PHONY: cross ## Cross compiles all binaries
+.PHONY: macos-precheck cross ## Cross compiles all binaries
 cross: $(BUILD_DIR)/macos-arm64/crc $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/windows-amd64/crc.exe
 
 .PHONY: containerized ## Cross compile from container
@@ -415,3 +415,9 @@ ADMIN_HELPER_VERSION = 0.0.12
 		 -e 's/__HELPER_SCRIPT_CHECKSUM__/'$(HELPER_SCRIPT_HASH)'/g' \
 		 -e 's/__ADMIN_HELPER_VERSION__/'$(ADMIN_HELPER_VERSION)'/g' \
 	     $< >$@
+
+.PHONY: macos-precheck
+macos-precheck:
+ifeq ($(GOOS),darwin)
+	@command -v pkg-config >/dev/null 2>&1 || { echo >&2 "Error: pkg-config is not installed. Please run 'brew install pkg-config'."; exit 1; }
+endif
