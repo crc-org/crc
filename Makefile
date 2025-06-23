@@ -6,7 +6,7 @@ OPENSHIFT_VERSION ?= 4.19.0
 OKD_VERSION ?= 4.19.0-okd-scos.1
 MICROSHIFT_VERSION ?= 4.19.0
 BUNDLE_EXTENSION = crcbundle
-CRC_VERSION = 2.51.0
+CRC_VERSION = 2.52.0
 COMMIT_SHA?=$(shell git rev-parse --short=6 HEAD)
 MACOS_INSTALL_PATH = /usr/local/crc
 CONTAINER_RUNTIME ?= podman
