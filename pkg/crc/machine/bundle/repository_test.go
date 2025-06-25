@@ -40,7 +40,7 @@ func TestExtract(t *testing.T) {
 		OcBinDir: ocBinDir,
 	}
 
-	assert.NoError(t, repo.Extract(context.TODO(), filepath.Join("testdata", testBundle(t))))
+	assert.NoError(t, repo.Extract(context.Background(), filepath.Join("testdata", testBundle(t))))
 
 	bundle, err := repo.Get(testBundle(t))
 	assert.NoError(t, err)
