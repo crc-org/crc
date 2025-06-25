@@ -23,7 +23,7 @@ func copyFile(src, dst string, sparse bool) error {
 	defer out.Close()
 
 	if sparse {
-		if _, err = CopySparse(context.TODO(), out, in); err != nil {
+		if _, err = CopySparse(context.Background(), out, in); err != nil {
 			return err
 		}
 	} else {
