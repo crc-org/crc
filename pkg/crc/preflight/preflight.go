@@ -62,7 +62,7 @@ func (check *Check) doCheck(config crcConfig.Storage) error {
 
 	err := check.check()
 	if err != nil {
-		logging.Error(err.Error())
+		logging.Debug(err.Error())
 	}
 	return err
 }
