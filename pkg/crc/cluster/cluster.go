@@ -447,6 +447,9 @@ func (p *PullSecretMemoizer) Value() (string, error) {
 func WaitForPullSecretPresentOnInstanceDisk(ctx context.Context, sshRunner *ssh.Runner) error {
 	logging.Info("Waiting until the user's pull secret is written to the instance disk...")
 	pullSecretPresentFunc := func() error {
+		if err := sshRunner.WaitForConnectivity(ctx, 30*time.Second); err != nil {
+			return err
+		}
 		stdout, stderr, err := sshRunner.RunPrivate(fmt.Sprintf("sudo cat %s", vmPullSecretPath))
 		if err != nil {
 			return fmt.Errorf("failed to read %s file: %v: %s", vmPullSecretPath, err, stderr)
