@@ -3,17 +3,17 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/openshift/api/config/v1alpha1"
+	configv1alpha1 "github.com/openshift/api/config/v1alpha1"
 )
 
-// ClusterImagePolicySpecApplyConfiguration represents an declarative configuration of the ClusterImagePolicySpec type for use
+// ClusterImagePolicySpecApplyConfiguration represents a declarative configuration of the ClusterImagePolicySpec type for use
 // with apply.
 type ClusterImagePolicySpecApplyConfiguration struct {
-	Scopes []v1alpha1.ImageScope     `json:"scopes,omitempty"`
-	Policy *PolicyApplyConfiguration `json:"policy,omitempty"`
+	Scopes []configv1alpha1.ImageScope `json:"scopes,omitempty"`
+	Policy *PolicyApplyConfiguration   `json:"policy,omitempty"`
 }
 
-// ClusterImagePolicySpecApplyConfiguration constructs an declarative configuration of the ClusterImagePolicySpec type for use with
+// ClusterImagePolicySpecApplyConfiguration constructs a declarative configuration of the ClusterImagePolicySpec type for use with
 // apply.
 func ClusterImagePolicySpec() *ClusterImagePolicySpecApplyConfiguration {
 	return &ClusterImagePolicySpecApplyConfiguration{}
@@ -22,7 +22,7 @@ func ClusterImagePolicySpec() *ClusterImagePolicySpecApplyConfiguration {
 // WithScopes adds the given value to the Scopes field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Scopes field.
-func (b *ClusterImagePolicySpecApplyConfiguration) WithScopes(values ...v1alpha1.ImageScope) *ClusterImagePolicySpecApplyConfiguration {
+func (b *ClusterImagePolicySpecApplyConfiguration) WithScopes(values ...configv1alpha1.ImageScope) *ClusterImagePolicySpecApplyConfiguration {
 	for i := range values {
 		b.Scopes = append(b.Scopes, values[i])
 	}

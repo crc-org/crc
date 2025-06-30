@@ -3,18 +3,18 @@
 package v1
 
 import (
-	v1 "github.com/openshift/api/config/v1"
+	configv1 "github.com/openshift/api/config/v1"
 )
 
-// TokenIssuerApplyConfiguration represents an declarative configuration of the TokenIssuer type for use
+// TokenIssuerApplyConfiguration represents a declarative configuration of the TokenIssuer type for use
 // with apply.
 type TokenIssuerApplyConfiguration struct {
 	URL                  *string                                   `json:"issuerURL,omitempty"`
-	Audiences            []v1.TokenAudience                        `json:"audiences,omitempty"`
+	Audiences            []configv1.TokenAudience                  `json:"audiences,omitempty"`
 	CertificateAuthority *ConfigMapNameReferenceApplyConfiguration `json:"issuerCertificateAuthority,omitempty"`
 }
 
-// TokenIssuerApplyConfiguration constructs an declarative configuration of the TokenIssuer type for use with
+// TokenIssuerApplyConfiguration constructs a declarative configuration of the TokenIssuer type for use with
 // apply.
 func TokenIssuer() *TokenIssuerApplyConfiguration {
 	return &TokenIssuerApplyConfiguration{}
@@ -31,7 +31,7 @@ func (b *TokenIssuerApplyConfiguration) WithURL(value string) *TokenIssuerApplyC
 // WithAudiences adds the given value to the Audiences field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Audiences field.
-func (b *TokenIssuerApplyConfiguration) WithAudiences(values ...v1.TokenAudience) *TokenIssuerApplyConfiguration {
+func (b *TokenIssuerApplyConfiguration) WithAudiences(values ...configv1.TokenAudience) *TokenIssuerApplyConfiguration {
 	for i := range values {
 		b.Audiences = append(b.Audiences, values[i])
 	}
