@@ -2,7 +2,7 @@
 
 package v1
 
-// HubSourceStatusApplyConfiguration represents an declarative configuration of the HubSourceStatus type for use
+// HubSourceStatusApplyConfiguration represents a declarative configuration of the HubSourceStatus type for use
 // with apply.
 type HubSourceStatusApplyConfiguration struct {
 	*HubSourceApplyConfiguration `json:"HubSource,omitempty"`
@@ -10,7 +10,7 @@ type HubSourceStatusApplyConfiguration struct {
 	Message                      *string `json:"message,omitempty"`
 }
 
-// HubSourceStatusApplyConfiguration constructs an declarative configuration of the HubSourceStatus type for use with
+// HubSourceStatusApplyConfiguration constructs a declarative configuration of the HubSourceStatus type for use with
 // apply.
 func HubSourceStatus() *HubSourceStatusApplyConfiguration {
 	return &HubSourceStatusApplyConfiguration{}
@@ -21,7 +21,7 @@ func HubSourceStatus() *HubSourceStatusApplyConfiguration {
 // If called multiple times, the Name field is set to the value of the last call.
 func (b *HubSourceStatusApplyConfiguration) WithName(value string) *HubSourceStatusApplyConfiguration {
 	b.ensureHubSourceApplyConfigurationExists()
-	b.Name = &value
+	b.HubSourceApplyConfiguration.Name = &value
 	return b
 }
 
@@ -30,7 +30,7 @@ func (b *HubSourceStatusApplyConfiguration) WithName(value string) *HubSourceSta
 // If called multiple times, the Disabled field is set to the value of the last call.
 func (b *HubSourceStatusApplyConfiguration) WithDisabled(value bool) *HubSourceStatusApplyConfiguration {
 	b.ensureHubSourceApplyConfigurationExists()
-	b.Disabled = &value
+	b.HubSourceApplyConfiguration.Disabled = &value
 	return b
 }
 

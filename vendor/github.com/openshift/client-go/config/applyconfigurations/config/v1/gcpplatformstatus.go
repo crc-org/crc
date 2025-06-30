@@ -2,7 +2,7 @@
 
 package v1
 
-// GCPPlatformStatusApplyConfiguration represents an declarative configuration of the GCPPlatformStatus type for use
+// GCPPlatformStatusApplyConfiguration represents a declarative configuration of the GCPPlatformStatus type for use
 // with apply.
 type GCPPlatformStatusApplyConfiguration struct {
 	ProjectID               *string                                    `json:"projectID,omitempty"`
@@ -10,9 +10,10 @@ type GCPPlatformStatusApplyConfiguration struct {
 	ResourceLabels          []GCPResourceLabelApplyConfiguration       `json:"resourceLabels,omitempty"`
 	ResourceTags            []GCPResourceTagApplyConfiguration         `json:"resourceTags,omitempty"`
 	CloudLoadBalancerConfig *CloudLoadBalancerConfigApplyConfiguration `json:"cloudLoadBalancerConfig,omitempty"`
+	ServiceEndpoints        []GCPServiceEndpointApplyConfiguration     `json:"serviceEndpoints,omitempty"`
 }
 
-// GCPPlatformStatusApplyConfiguration constructs an declarative configuration of the GCPPlatformStatus type for use with
+// GCPPlatformStatusApplyConfiguration constructs a declarative configuration of the GCPPlatformStatus type for use with
 // apply.
 func GCPPlatformStatus() *GCPPlatformStatusApplyConfiguration {
 	return &GCPPlatformStatusApplyConfiguration{}
@@ -65,5 +66,18 @@ func (b *GCPPlatformStatusApplyConfiguration) WithResourceTags(values ...*GCPRes
 // If called multiple times, the CloudLoadBalancerConfig field is set to the value of the last call.
 func (b *GCPPlatformStatusApplyConfiguration) WithCloudLoadBalancerConfig(value *CloudLoadBalancerConfigApplyConfiguration) *GCPPlatformStatusApplyConfiguration {
 	b.CloudLoadBalancerConfig = value
+	return b
+}
+
+// WithServiceEndpoints adds the given value to the ServiceEndpoints field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ServiceEndpoints field.
+func (b *GCPPlatformStatusApplyConfiguration) WithServiceEndpoints(values ...*GCPServiceEndpointApplyConfiguration) *GCPPlatformStatusApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithServiceEndpoints")
+		}
+		b.ServiceEndpoints = append(b.ServiceEndpoints, *values[i])
+	}
 	return b
 }
