@@ -3,6 +3,7 @@ package rule
 import (
 	"go/ast"
 
+	"github.com/mgechev/revive/internal/astutils"
 	"github.com/mgechev/revive/lint"
 )
 
@@ -78,10 +79,10 @@ type lintUnconditionalRecursionRule struct {
 }
 
 // Visit will traverse function's body we search for calls to the function itself.
-// We do not search inside conditional control structures (if, for, switch, ...) because any recursive call inside them is conditioned
-// We do search inside conditional control structures are statements that will take the control out of the function (return, exit, panic)
-// If we find conditional control exits, it means the function is NOT unconditionally-recursive
-// If we find a recursive call before finding any conditional exit, a failure is generated
+// We do not search inside conditional control structures (if, for, switch, ...) because any recursive call inside them is conditioned.
+// We do search inside conditional control structures are statements that will take the control out of the function (return, exit, panic).
+// If we find conditional control exits, it means the function is NOT unconditionally-recursive.
+// If we find a recursive call before finding any conditional exit, a failure is generated.
 // In resume: if we found a recursive call control-dependent from the entry point of the function then we raise a failure.
 func (w *lintUnconditionalRecursionRule) Visit(node ast.Node) ast.Visitor {
 	switch n := node.(type) {
@@ -174,7 +175,7 @@ func (*lintUnconditionalRecursionRule) hasControlExit(node ast.Node) bool {
 		case *ast.ReturnStmt:
 			return true
 		case *ast.CallExpr:
-			if isIdent(n.Fun, "panic") {
+			if astutils.IsIdent(n.Fun, "panic") {
 				return true
 			}
 			se, ok := n.Fun.(*ast.SelectorExpr)
@@ -197,5 +198,5 @@ func (*lintUnconditionalRecursionRule) hasControlExit(node ast.Node) bool {
 		return false
 	}
 
-	return len(pick(node, isExit)) != 0
+	return len(astutils.PickNodes(node, isExit)) != 0
 }

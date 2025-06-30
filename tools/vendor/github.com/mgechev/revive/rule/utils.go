@@ -1,10 +1,7 @@
 package rule
 
 import (
-	"bytes"
 	"fmt"
-	"go/ast"
-	"go/printer"
 	"go/token"
 	"regexp"
 	"strings"
@@ -26,31 +23,6 @@ var exitFunctions = map[string]map[string]bool{
 	},
 }
 
-func isCgoExported(f *ast.FuncDecl) bool {
-	if f.Recv != nil || f.Doc == nil {
-		return false
-	}
-
-	cgoExport := regexp.MustCompile(fmt.Sprintf("(?m)^//export %s$", regexp.QuoteMeta(f.Name.Name)))
-	for _, c := range f.Doc.List {
-		if cgoExport.MatchString(c.Text) {
-			return true
-		}
-	}
-	return false
-}
-
-func isIdent(expr ast.Expr, ident string) bool {
-	id, ok := expr.(*ast.Ident)
-	return ok && id.Name == ident
-}
-
-// isPkgDot checks if the expression is <pkg>.<name>
-func isPkgDot(expr ast.Expr, pkg, name string) bool {
-	sel, ok := expr.(*ast.SelectorExpr)
-	return ok && isIdent(sel.X, pkg) && isIdent(sel.Sel, name)
-}
-
 func srcLine(src []byte, p token.Position) string {
 	// Run to end of line in both directions if not at line start/end.
 	lo, hi := p.Offset, p.Offset+1
@@ -63,49 +35,7 @@ func srcLine(src []byte, p token.Position) string {
 	return string(src[lo:hi])
 }
 
-// pick yields a list of nodes by picking them from a sub-ast with root node n.
-// Nodes are selected by applying the fselect function
-func pick(n ast.Node, fselect func(n ast.Node) bool) []ast.Node {
-	var result []ast.Node
-
-	if n == nil {
-		return result
-	}
-
-	onSelect := func(n ast.Node) {
-		result = append(result, n)
-	}
-	p := picker{fselect: fselect, onSelect: onSelect}
-	ast.Walk(p, n)
-	return result
-}
-
-type picker struct {
-	fselect  func(n ast.Node) bool
-	onSelect func(n ast.Node)
-}
-
-func (p picker) Visit(node ast.Node) ast.Visitor {
-	if p.fselect == nil {
-		return nil
-	}
-
-	if p.fselect(node) {
-		p.onSelect(node)
-	}
-
-	return p
-}
-
-// gofmt returns a string representation of an AST subtree.
-func gofmt(x any) string {
-	buf := bytes.Buffer{}
-	fs := token.NewFileSet()
-	printer.Fprint(&buf, fs, x)
-	return buf.String()
-}
-
-// checkNumberOfArguments fails if the given number of arguments is not, at least, the expected one
+// checkNumberOfArguments fails if the given number of arguments is not, at least, the expected one.
 func checkNumberOfArguments(expected int, args lint.Arguments, ruleName string) error {
 	if len(args) < expected {
 		return fmt.Errorf("not enough arguments for %s rule, expected %d, got %d. Please check the rule's documentation", ruleName, expected, len(args))
@@ -120,7 +50,7 @@ func isRuleOption(arg, name string) bool {
 
 // normalizeRuleOption returns an option name from the argument. It is lowercased and without hyphens.
 //
-// Example: normalizeRuleOption("allowTypesBefore"), normalizeRuleOption("allow-types-before") -> "allowtypesbefore"
+// Example: normalizeRuleOption("allowTypesBefore"), normalizeRuleOption("allow-types-before") -> "allowtypesbefore".
 func normalizeRuleOption(arg string) string {
 	return strings.ToLower(strings.ReplaceAll(arg, "-", ""))
 }
@@ -136,7 +66,7 @@ func isCallToExitFunction(pkgName, functionName string) bool {
 	return exitFunctions[pkgName] != nil && exitFunctions[pkgName][functionName]
 }
 
-// newInternalFailureError returns a slice of Failure with a single internal failure in it
+// newInternalFailureError returns a slice of Failure with a single internal failure in it.
 func newInternalFailureError(e error) []lint.Failure {
 	return []lint.Failure{lint.NewInternalFailure(e.Error())}
 }

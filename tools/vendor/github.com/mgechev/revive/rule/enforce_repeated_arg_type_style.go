@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 
+	"github.com/mgechev/revive/internal/astutils"
 	"github.com/mgechev/revive/lint"
 )
 
@@ -111,8 +112,7 @@ func (r *EnforceRepeatedArgTypeStyleRule) Apply(file *lint.File, _ lint.Argument
 
 	astFile := file.AST
 	ast.Inspect(astFile, func(n ast.Node) bool {
-		switch fn := n.(type) {
-		case *ast.FuncDecl:
+		if fn, ok := n.(*ast.FuncDecl); ok {
 			switch r.funcArgStyle {
 			case enforceRepeatedArgTypeStyleTypeFull:
 				if fn.Type.Params != nil {
@@ -131,8 +131,8 @@ func (r *EnforceRepeatedArgTypeStyleRule) Apply(file *lint.File, _ lint.Argument
 				if fn.Type.Params != nil {
 					var prevType ast.Expr
 					for _, field := range fn.Type.Params.List {
-						prevTypeStr := gofmt(prevType)
-						currentTypeStr := gofmt(field.Type)
+						prevTypeStr := astutils.GoFmt(prevType)
+						currentTypeStr := astutils.GoFmt(field.Type)
 						if currentTypeStr == prevTypeStr {
 							failures = append(failures, lint.Failure{
 								Confidence: 1,
@@ -164,8 +164,8 @@ func (r *EnforceRepeatedArgTypeStyleRule) Apply(file *lint.File, _ lint.Argument
 				if fn.Type.Results != nil {
 					var prevType ast.Expr
 					for _, field := range fn.Type.Results.List {
-						prevTypeStr := gofmt(prevType)
-						currentTypeStr := gofmt(field.Type)
+						prevTypeStr := astutils.GoFmt(prevType)
+						currentTypeStr := astutils.GoFmt(field.Type)
 						if field.Names != nil && currentTypeStr == prevTypeStr {
 							failures = append(failures, lint.Failure{
 								Confidence: 1,

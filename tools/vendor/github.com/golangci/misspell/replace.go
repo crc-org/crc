@@ -10,13 +10,6 @@ import (
 	"text/scanner"
 )
 
-func max(x, y int) int {
-	if x > y {
-		return x
-	}
-	return y
-}
-
 func inArray(haystack []string, needle string) bool {
 	return slices.ContainsFunc(haystack, func(word string) bool {
 		return strings.EqualFold(needle, word)
@@ -85,6 +78,112 @@ func (r *Replacer) Compile() {
 	r.engine = NewStringReplacer(r.Replacements...)
 }
 
+// ReplaceGo is a specialized routine for correcting Golang source files.
+// Currently only checks comments, not identifiers for spelling.
+func (r *Replacer) ReplaceGo(input string) (string, []Diff) {
+	var s scanner.Scanner
+	s.Init(strings.NewReader(input))
+	s.Mode = scanner.ScanIdents | scanner.ScanFloats | scanner.ScanChars | scanner.ScanStrings | scanner.ScanRawStrings | scanner.ScanComments
+	lastPos := 0
+	output := ""
+Loop:
+	for {
+		switch s.Scan() {
+		case scanner.Comment:
+			origComment := s.TokenText()
+			newComment := r.engine.Replace(origComment)
+
+			if origComment != newComment {
+				// s.Pos().Offset is the end of the current token
+				// subtract len(origComment) to get the start of the token
+				offset := s.Pos().Offset
+				output = output + input[lastPos:offset-len(origComment)] + newComment
+				lastPos = offset
+			}
+		case scanner.EOF:
+			break Loop
+		}
+	}
+
+	if lastPos == 0 {
+		// no changes, no copies
+		return input, nil
+	}
+	if lastPos < len(input) {
+		output += input[lastPos:]
+	}
+	diffs := make([]Diff, 0, 8)
+	buf := bytes.NewBuffer(make([]byte, 0, max(len(input), len(output))+100))
+	// faster that making a bytes.Buffer and bufio.ReadString
+	outlines := strings.SplitAfter(output, "\n")
+	inlines := strings.SplitAfter(input, "\n")
+	for i := range inlines {
+		if inlines[i] == outlines[i] {
+			buf.WriteString(outlines[i])
+			continue
+		}
+		r.recheckLine(inlines[i], i+1, buf, func(d Diff) {
+			diffs = append(diffs, d)
+		})
+	}
+
+	return buf.String(), diffs
+}
+
+// Replace is correcting misspellings in input, returning corrected version along with a list of diffs.
+func (r *Replacer) Replace(input string) (string, []Diff) {
+	output := r.engine.Replace(input)
+	if input == output {
+		return input, nil
+	}
+	diffs := make([]Diff, 0, 8)
+	buf := bytes.NewBuffer(make([]byte, 0, max(len(input), len(output))+100))
+	// faster that making a bytes.Buffer and bufio.ReadString
+	outlines := strings.SplitAfter(output, "\n")
+	inlines := strings.SplitAfter(input, "\n")
+	for i := range inlines {
+		if inlines[i] == outlines[i] {
+			buf.WriteString(outlines[i])
+			continue
+		}
+		r.recheckLine(inlines[i], i+1, buf, func(d Diff) {
+			diffs = append(diffs, d)
+		})
+	}
+
+	return buf.String(), diffs
+}
+
+// ReplaceReader applies spelling corrections to a reader stream.
+// Diffs are emitted through a callback.
+func (r *Replacer) ReplaceReader(raw io.Reader, w io.Writer, next func(Diff)) error {
+	var (
+		err     error
+		line    string
+		lineNum int
+	)
+	reader := bufio.NewReader(raw)
+	for err == nil {
+		lineNum++
+		line, err = reader.ReadString('\n')
+
+		// if it's EOF, then line has the last line
+		// don't like the check of err here and
+		// in for loop
+		if err != nil && err != io.EOF {
+			return err
+		}
+		// easily 5x faster than regexp+map
+		if line == r.engine.Replace(line) {
+			io.WriteString(w, line)
+			continue
+		}
+		// but it can be inaccurate, so we need to double-check
+		r.recheckLine(line, lineNum, w, next)
+	}
+	return nil
+}
+
 /*
 line1 and line2 are different
 extract words from each line1
@@ -136,110 +235,4 @@ func (r *Replacer) recheckLine(s string, lineNum int, buf io.Writer, next func(D
 		// Word got corrected into something unknown. Ignore it
 	}
 	io.WriteString(buf, s[first:])
-}
-
-// ReplaceGo is a specialized routine for correcting Golang source files.
-// Currently only checks comments, not identifiers for spelling.
-func (r *Replacer) ReplaceGo(input string) (string, []Diff) {
-	var s scanner.Scanner
-	s.Init(strings.NewReader(input))
-	s.Mode = scanner.ScanIdents | scanner.ScanFloats | scanner.ScanChars | scanner.ScanStrings | scanner.ScanRawStrings | scanner.ScanComments
-	lastPos := 0
-	output := ""
-Loop:
-	for {
-		switch s.Scan() {
-		case scanner.Comment:
-			origComment := s.TokenText()
-			newComment := r.engine.Replace(origComment)
-
-			if origComment != newComment {
-				// s.Pos().Offset is the end of the current token
-				// subtract len(origComment) to get the start of the token
-				offset := s.Pos().Offset
-				output = output + input[lastPos:offset-len(origComment)] + newComment
-				lastPos = offset
-			}
-		case scanner.EOF:
-			break Loop
-		}
-	}
-
-	if lastPos == 0 {
-		// no changes, no copies
-		return input, nil
-	}
-	if lastPos < len(input) {
-		output += input[lastPos:]
-	}
-	diffs := make([]Diff, 0, 8)
-	buf := bytes.NewBuffer(make([]byte, 0, max(len(input), len(output))+100))
-	// faster that making a bytes.Buffer and bufio.ReadString
-	outlines := strings.SplitAfter(output, "\n")
-	inlines := strings.SplitAfter(input, "\n")
-	for i := 0; i < len(inlines); i++ {
-		if inlines[i] == outlines[i] {
-			buf.WriteString(outlines[i])
-			continue
-		}
-		r.recheckLine(inlines[i], i+1, buf, func(d Diff) {
-			diffs = append(diffs, d)
-		})
-	}
-
-	return buf.String(), diffs
-}
-
-// Replace is correcting misspellings in input, returning corrected version along with a list of diffs.
-func (r *Replacer) Replace(input string) (string, []Diff) {
-	output := r.engine.Replace(input)
-	if input == output {
-		return input, nil
-	}
-	diffs := make([]Diff, 0, 8)
-	buf := bytes.NewBuffer(make([]byte, 0, max(len(input), len(output))+100))
-	// faster that making a bytes.Buffer and bufio.ReadString
-	outlines := strings.SplitAfter(output, "\n")
-	inlines := strings.SplitAfter(input, "\n")
-	for i := 0; i < len(inlines); i++ {
-		if inlines[i] == outlines[i] {
-			buf.WriteString(outlines[i])
-			continue
-		}
-		r.recheckLine(inlines[i], i+1, buf, func(d Diff) {
-			diffs = append(diffs, d)
-		})
-	}
-
-	return buf.String(), diffs
-}
-
-// ReplaceReader applies spelling corrections to a reader stream.
-// Diffs are emitted through a callback.
-func (r *Replacer) ReplaceReader(raw io.Reader, w io.Writer, next func(Diff)) error {
-	var (
-		err     error
-		line    string
-		lineNum int
-	)
-	reader := bufio.NewReader(raw)
-	for err == nil {
-		lineNum++
-		line, err = reader.ReadString('\n')
-
-		// if it's EOF, then line has the last line
-		// don't like the check of err here and
-		// in for loop
-		if err != nil && err != io.EOF {
-			return err
-		}
-		// easily 5x faster than regexp+map
-		if line == r.engine.Replace(line) {
-			io.WriteString(w, line)
-			continue
-		}
-		// but it can be inaccurate, so we need to double-check
-		r.recheckLine(line, lineNum, w, next)
-	}
-	return nil
 }

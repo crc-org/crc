@@ -191,7 +191,7 @@ func createSubstitutionsMapsFromTable(table map[string][]string) []map[string]st
 func createWordForSubstitutionMap(word string, substitutionMap map[string]string) string {
 	result := word
 	for key, value := range substitutionMap {
-		result = strings.Replace(result, value, key, -1)
+		result = strings.ReplaceAll(result, value, key)
 	}
 
 	return result
@@ -224,7 +224,7 @@ func copyMapRemovingSameValueFromOtherKeys(table map[string][]string, keyToFix s
 
 	for key, values := range table {
 		for _, value := range values {
-			if !(value == valueToFix && key != keyToFix) {
+			if value != valueToFix || key == keyToFix {
 				result[key] = append(result[key], value)
 			}
 		}

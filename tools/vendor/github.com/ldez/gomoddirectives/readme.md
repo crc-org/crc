@@ -16,43 +16,48 @@ linters:
   enable:
     - gomoddirectives
 
-linters-settings:
-  gomoddirectives:
-    # Allow local `replace` directives.
-    # Default: false
-    replace-local: true
-    
-    # List of allowed `replace` directives.
-    # Default: []
-    replace-allow-list:
-      - launchpad.net/gocheck
-    # Allow to not explain why the version has been retracted in the `retract` directives.
-    # Default: false
-    retract-allow-no-explanation: true
-    
-    # Forbid the use of the `exclude` directives.
-    # Default: false
-    exclude-forbidden: true
-
-    # Forbid the use of the `toolchain` directive.
-    # Default: false
-    toolchain-forbidden: true
-
-    # Defines a pattern to validate `toolchain` directive.
-    # Default: '' (no match)
-    toolchain-pattern: 'go1\.22\.\d+$'
-
-    # Forbid the use of the `tool` directives.
-    # Default: false
-    tool-forbidden: true
-
-    # Forbid the use of the `godebug` directive.
-    # Default: false
-    go-debug-forbidden: true
-
-    # Defines a pattern to validate `go` minimum version directive.
-    # Default: '' (no match)
-    go-version-pattern: '1\.\d+(\.0)?$'
+  settings:
+    gomoddirectives:
+      # Allow local `replace` directives.
+      # Default: false
+      replace-local: true
+      
+      # List of allowed `replace` directives.
+      # Default: []
+      replace-allow-list:
+        - launchpad.net/gocheck
+      
+      # Allow to not explain why the version has been retracted in the `retract` directives.
+      # Default: false
+      retract-allow-no-explanation: true
+      
+      # Forbid the use of the `exclude` directives.
+      # Default: false
+      exclude-forbidden: true
+  
+      # Forbid the use of the `ignore` directives.
+      # Default: false
+      exclude-ignore: true
+  
+      # Forbid the use of the `toolchain` directive.
+      # Default: false
+      toolchain-forbidden: true
+  
+      # Defines a pattern to validate `toolchain` directive.
+      # Default: '' (no match)
+      toolchain-pattern: 'go1\.22\.\d+$'
+  
+      # Forbid the use of the `tool` directives.
+      # Default: false
+      tool-forbidden: true
+  
+      # Forbid the use of the `godebug` directive.
+      # Default: false
+      go-debug-forbidden: true
+  
+      # Defines a pattern to validate `go` minimum version directive.
+      # Default: '' (no match)
+      go-version-pattern: '1\.\d+(\.0)?$'
 ```
 
 ### As a CLI
@@ -68,6 +73,8 @@ Flags:
   -goversion string
         Pattern to validate go min version directive
   -h    Show this help.
+  -ignore
+        Forbid the use of ignore directives
   -list value
         List of allowed replace directives
   -local
@@ -138,6 +145,25 @@ require (
 exclude (
     golang.org/x/crypto v1.4.5
     golang.org/x/text v1.6.7
+)
+```
+
+### [`ignore`](TODO) directives
+
+- Ban all `ignore` directives.
+
+```go
+module example.com/foo
+
+go 1.25
+
+require (
+	github.com/ldez/grignotin v0.4.1
+)
+
+ignore (
+    ./foo/bar/path
+    foo/bar
 )
 ```
 

@@ -35,45 +35,44 @@ var (
 
 func New(settings *config.ReviveSettings) *goanalysis.Linter {
 	var mu sync.Mutex
-	var resIssues []goanalysis.Issue
+	var resIssues []*goanalysis.Issue
 
 	analyzer := &analysis.Analyzer{
-		Name: goanalysis.TheOnlyAnalyzerName,
-		Doc:  goanalysis.TheOnlyanalyzerDoc,
+		Name: linterName,
+		Doc:  "Fast, configurable, extensible, flexible, and beautiful linter for Go. Drop-in replacement of golint.",
 		Run:  goanalysis.DummyRun,
 	}
 
-	return goanalysis.NewLinter(
-		linterName,
-		"Fast, configurable, extensible, flexible, and beautiful linter for Go. Drop-in replacement of golint.",
-		[]*analysis.Analyzer{analyzer},
-		nil,
-	).WithContextSetter(func(lintCtx *linter.Context) {
-		w, err := newWrapper(settings)
-		if err != nil {
-			lintCtx.Log.Errorf("setup revive: %v", err)
-			return
-		}
-
-		analyzer.Run = func(pass *analysis.Pass) (any, error) {
-			issues, err := w.run(pass)
+	return goanalysis.
+		NewLinterFromAnalyzer(analyzer).
+		WithContextSetter(func(lintCtx *linter.Context) {
+			w, err := newWrapper(settings)
 			if err != nil {
-				return nil, err
+				lintCtx.Log.Errorf("setup revive: %v", err)
+				return
 			}
 
-			if len(issues) == 0 {
+			analyzer.Run = func(pass *analysis.Pass) (any, error) {
+				issues, err := w.run(pass)
+				if err != nil {
+					return nil, err
+				}
+
+				if len(issues) == 0 {
+					return nil, nil
+				}
+
+				mu.Lock()
+				resIssues = append(resIssues, issues...)
+				mu.Unlock()
+
 				return nil, nil
 			}
-
-			mu.Lock()
-			resIssues = append(resIssues, issues...)
-			mu.Unlock()
-
-			return nil, nil
-		}
-	}).WithIssuesReporter(func(*linter.Context) []goanalysis.Issue {
-		return resIssues
-	}).WithLoadMode(goanalysis.LoadModeSyntax)
+		}).
+		WithIssuesReporter(func(*linter.Context) []*goanalysis.Issue {
+			return resIssues
+		}).
+		WithLoadMode(goanalysis.LoadModeSyntax)
 }
 
 type wrapper struct {
@@ -107,7 +106,7 @@ func newWrapper(settings *config.ReviveSettings) (*wrapper, error) {
 	}, nil
 }
 
-func (w *wrapper) run(pass *analysis.Pass) ([]goanalysis.Issue, error) {
+func (w *wrapper) run(pass *analysis.Pass) ([]*goanalysis.Issue, error) {
 	packages := [][]string{internal.GetGoFileNames(pass)}
 
 	failures, err := w.revive.Lint(packages, w.lintingRules, *w.conf)
@@ -115,7 +114,7 @@ func (w *wrapper) run(pass *analysis.Pass) ([]goanalysis.Issue, error) {
 		return nil, err
 	}
 
-	var issues []goanalysis.Issue
+	var issues []*goanalysis.Issue
 	for failure := range failures {
 		if failure.Confidence < w.conf.Confidence {
 			continue
@@ -127,7 +126,7 @@ func (w *wrapper) run(pass *analysis.Pass) ([]goanalysis.Issue, error) {
 	return issues, nil
 }
 
-func (w *wrapper) toIssue(pass *analysis.Pass, failure *lint.Failure) goanalysis.Issue {
+func (w *wrapper) toIssue(pass *analysis.Pass, failure *lint.Failure) *goanalysis.Issue {
 	lineRangeTo := failure.Position.End.Line
 	if failure.RuleName == (&rule.ExportedRule{}).Name() {
 		lineRangeTo = failure.Position.Start.Line
@@ -153,7 +152,7 @@ func (w *wrapper) toIssue(pass *analysis.Pass, failure *lint.Failure) goanalysis
 		f := pass.Fset.File(token.Pos(failure.Position.Start.Offset))
 
 		// Skip cgo files because the positions are wrong.
-		if failure.GetFilename() == f.Name() {
+		if failure.Filename() == f.Name() {
 			issue.SuggestedFixes = []analysis.SuggestedFix{{
 				TextEdits: []analysis.TextEdit{{
 					Pos:     f.LineStart(failure.Position.Start.Line),
@@ -270,7 +269,7 @@ func safeTomlSlice(r []any) []any {
 }
 
 // This element is not exported by revive, so we need copy the code.
-// Extracted from https://github.com/mgechev/revive/blob/v1.6.0/config/config.go#L16
+// Extracted from https://github.com/mgechev/revive/blob/v1.10.0/config/config.go#L16
 var defaultRules = []lint.Rule{
 	&rule.VarDeclarationsRule{},
 	&rule.PackageCommentsRule{},
@@ -298,66 +297,70 @@ var defaultRules = []lint.Rule{
 }
 
 var allRules = append([]lint.Rule{
-	&rule.ArgumentsLimitRule{},
-	&rule.CyclomaticRule{},
-	&rule.FileHeaderRule{},
-	&rule.ConfusingNamingRule{},
-	&rule.GetReturnRule{},
-	&rule.ModifiesParamRule{},
-	&rule.ConfusingResultsRule{},
-	&rule.DeepExitRule{},
 	&rule.AddConstantRule{},
-	&rule.FlagParamRule{},
-	&rule.UnnecessaryStmtRule{},
-	&rule.StructTagRule{},
-	&rule.ModifiesValRecRule{},
-	&rule.ConstantLogicalExprRule{},
-	&rule.BoolLiteralRule{},
-	&rule.ImportsBlocklistRule{},
-	&rule.FunctionResultsLimitRule{},
-	&rule.MaxPublicStructsRule{},
-	&rule.RangeValInClosureRule{},
-	&rule.RangeValAddress{},
-	&rule.WaitGroupByValueRule{},
+	&rule.ArgumentsLimitRule{},
 	&rule.AtomicRule{},
-	&rule.EmptyLinesRule{},
-	&rule.LineLengthLimitRule{},
-	&rule.CallToGCRule{},
-	&rule.DuplicatedImportsRule{},
-	&rule.ImportShadowingRule{},
-	&rule.BareReturnRule{},
-	&rule.UnusedReceiverRule{},
-	&rule.UnhandledErrorRule{},
-	&rule.CognitiveComplexityRule{},
-	&rule.StringOfIntRule{},
-	&rule.StringFormatRule{},
-	&rule.EarlyReturnRule{},
-	&rule.UnconditionalRecursionRule{},
-	&rule.IdenticalBranchesRule{},
-	&rule.DeferRule{},
-	&rule.UnexportedNamingRule{},
-	&rule.FunctionLength{},
-	&rule.NestedStructs{},
-	&rule.UselessBreak{},
-	&rule.UncheckedTypeAssertionRule{},
-	&rule.TimeEqualRule{},
 	&rule.BannedCharsRule{},
-	&rule.OptimizeOperandsOrderRule{},
-	&rule.UseAnyRule{},
-	&rule.DataRaceRule{},
+	&rule.BareReturnRule{},
+	&rule.BoolLiteralRule{},
+	&rule.CallToGCRule{},
+	&rule.CognitiveComplexityRule{},
+	&rule.CommentsDensityRule{},
 	&rule.CommentSpacingsRule{},
-	&rule.IfReturnRule{},
-	&rule.RedundantImportAlias{},
-	&rule.ImportAliasNamingRule{},
+	&rule.ConfusingNamingRule{},
+	&rule.ConfusingResultsRule{},
+	&rule.ConstantLogicalExprRule{},
+	&rule.CyclomaticRule{},
+	&rule.DataRaceRule{},
+	&rule.DeepExitRule{},
+	&rule.DeferRule{},
+	&rule.DuplicatedImportsRule{},
+	&rule.EarlyReturnRule{},
+	&rule.EmptyLinesRule{},
 	&rule.EnforceMapStyleRule{},
 	&rule.EnforceRepeatedArgTypeStyleRule{},
 	&rule.EnforceSliceStyleRule{},
-	&rule.MaxControlNestingRule{},
-	&rule.CommentsDensityRule{},
+	&rule.FileHeaderRule{},
 	&rule.FileLengthLimitRule{},
 	&rule.FilenameFormatRule{},
+	&rule.FlagParamRule{},
+	&rule.FunctionLength{},
+	&rule.FunctionResultsLimitRule{},
+	&rule.GetReturnRule{},
+	&rule.IdenticalBranchesRule{},
+	&rule.IfReturnRule{},
+	&rule.ImportAliasNamingRule{},
+	&rule.ImportsBlocklistRule{},
+	&rule.ImportShadowingRule{},
+	&rule.LineLengthLimitRule{},
+	&rule.MaxControlNestingRule{},
+	&rule.MaxPublicStructsRule{},
+	&rule.ModifiesParamRule{},
+	&rule.ModifiesValRecRule{},
+	&rule.NestedStructs{},
+	&rule.OptimizeOperandsOrderRule{},
+	&rule.RangeValAddress{},
+	&rule.RangeValInClosureRule{},
 	&rule.RedundantBuildTagRule{},
+	&rule.RedundantImportAlias{},
+	&rule.RedundantTestMainExitRule{},
+	&rule.StringFormatRule{},
+	&rule.StringOfIntRule{},
+	&rule.StructTagRule{},
+	&rule.TimeDateRule{},
+	&rule.TimeEqualRule{},
+	&rule.UncheckedTypeAssertionRule{},
+	&rule.UnconditionalRecursionRule{},
+	&rule.UnexportedNamingRule{},
+	&rule.UnhandledErrorRule{},
+	&rule.UnnecessaryFormatRule{},
+	&rule.UnnecessaryStmtRule{},
+	&rule.UnusedReceiverRule{},
+	&rule.UseAnyRule{},
 	&rule.UseErrorsNewRule{},
+	&rule.UseFmtPrintRule{},
+	&rule.UselessBreak{},
+	&rule.WaitGroupByValueRule{},
 }, defaultRules...)
 
 const defaultConfidence = 0.8
@@ -433,7 +436,7 @@ func displayRules(conf *lint.Config) {
 	slices.Sort(enabledRules)
 
 	debugf("All available rules (%d): %s.", len(allRules), strings.Join(extractRulesName(allRules), ", "))
-	debugf("Default rules (%d): %s.", len(allRules), strings.Join(extractRulesName(allRules), ", "))
+	debugf("Default rules (%d): %s.", len(defaultRules), strings.Join(extractRulesName(defaultRules), ", "))
 	debugf("Enabled by config rules (%d): %s.", len(enabledRules), strings.Join(enabledRules, ", "))
 
 	debugf("revive configuration: %#v", conf)

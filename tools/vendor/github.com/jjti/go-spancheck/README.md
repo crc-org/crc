@@ -97,6 +97,8 @@ Flags:
 
 ### Ignore Check Signatures
 
+This setting avoids false positives from utility functions that return spans (which are handled gracefully by callers of the function).
+
 The `span.SetStatus()` and `span.RecordError()` checks warn when there is:
 
 1. a path to return statement
@@ -133,6 +135,8 @@ spancheck -checks 'end,set-status,record-error' -ignore-check-signatures 'record
 ```
 
 ### Extra Start Span Signatures
+
+This setting informs spancheck of additional Span creation functions that should be linted (besides the library defaults).
 
 By default, Span creation will be tracked from calls to [(go.opentelemetry.io/otel/trace.Tracer).Start](https://github.com/open-telemetry/opentelemetry-go/blob/98b32a6c3a87fbee5d34c063b9096f416b250897/trace/trace.go#L523), [go.opencensus.io/trace.StartSpan](https://pkg.go.dev/go.opencensus.io/trace#StartSpan), or [go.opencensus.io/trace.StartSpanWithRemoteParent](https://github.com/census-instrumentation/opencensus-go/blob/v0.24.0/trace/trace_api.go#L66).
 
@@ -265,4 +269,6 @@ This linter is the product of liberal copying of:
 - [github.com/ghostiam/protogetter](https://github.com/ghostiam/protogetter/blob/main/testdata/Makefile) (test setup)
 
 And the contributions of:
+
 - [@trixnz](https://github.com/trixnz) who [added support for custom span start functions](https://github.com/jjti/go-spancheck/pull/16)
+- [@parsaaes](https://github.com/parsaaes) who [fixed a false negative bug in deferred methods that reference spans](https://github.com/jjti/go-spancheck/pull/31)

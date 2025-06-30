@@ -91,7 +91,7 @@ func (*NolintFilter) Name() string {
 	return "nolint_filter"
 }
 
-func (p *NolintFilter) Process(issues []result.Issue) ([]result.Issue, error) {
+func (p *NolintFilter) Process(issues []*result.Issue) ([]*result.Issue, error) {
 	// put nolintlint issues last because we process other issues first to determine which nolint directives are unused
 	sort.Stable(sortWithNolintlintLast(issues))
 	return filterIssuesErr(issues, p.shouldPassIssue)
@@ -185,8 +185,7 @@ func (p *NolintFilter) buildIgnoredRangesForFile(f *ast.File, fset *token.FileSe
 	ast.Walk(&e, f)
 
 	// TODO: merge all ranges: there are repeated ranges
-	allRanges := append([]ignoredRange{}, inlineRanges...)
-	allRanges = append(allRanges, e.expandedRanges...)
+	allRanges := slices.Concat(inlineRanges, e.expandedRanges)
 
 	return allRanges
 }
@@ -300,7 +299,7 @@ func (e *rangeExpander) Visit(node ast.Node) ast.Visitor {
 }
 
 // put nolintlint last
-type sortWithNolintlintLast []result.Issue
+type sortWithNolintlintLast []*result.Issue
 
 func (issues sortWithNolintlintLast) Len() int {
 	return len(issues)

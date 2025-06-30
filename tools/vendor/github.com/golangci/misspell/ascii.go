@@ -32,7 +32,7 @@ func StringEqualFold(s1, s2 string) bool {
 	if len(s1) != len(s2) {
 		return false
 	}
-	for i := 0; i < len(s1); i++ {
+	for i := range len(s1) {
 		c1 := s1[i]
 		c2 := s2[i]
 		// c1 & c2

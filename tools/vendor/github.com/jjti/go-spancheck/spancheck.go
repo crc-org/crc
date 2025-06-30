@@ -23,6 +23,12 @@ const (
 	spanOpenCensus                    // from go.opencensus.io/trace
 )
 
+const (
+	selNameEnd         = "End"
+	selNameSetStatus   = "SetStatus"
+	selNameRecordError = "RecordError"
+)
+
 // SpanTypes is a list of all span types by name.
 var SpanTypes = map[string]spanType{
 	"opentelemetry": spanOpenTelemetry,
@@ -183,7 +189,7 @@ func runFunc(pass *analysis.Pass, node ast.Node, config *Config) {
 	for _, sv := range spanVars {
 		if config.endCheckEnabled {
 			// Check if there's no End to the span.
-			if ret := getMissingSpanCalls(pass, g, sv, "End", func(_ *analysis.Pass, ret *ast.ReturnStmt) *ast.ReturnStmt { return ret }, nil, config.startSpanMatchers); ret != nil {
+			if ret := getMissingSpanCalls(pass, g, sv, selNameEnd, func(_ *analysis.Pass, ret *ast.ReturnStmt) *ast.ReturnStmt { return ret }, nil, config.startSpanMatchers); ret != nil {
 				pass.ReportRangef(sv.stmt, "%s.End is not called on all paths, possible memory leak", sv.vr.Name())
 				pass.ReportRangef(ret, "return can be reached without calling %s.End", sv.vr.Name())
 			}
@@ -191,7 +197,7 @@ func runFunc(pass *analysis.Pass, node ast.Node, config *Config) {
 
 		if config.setStatusEnabled {
 			// Check if there's no SetStatus to the span setting an error.
-			if ret := getMissingSpanCalls(pass, g, sv, "SetStatus", getErrorReturn, config.ignoreChecksSignatures, config.startSpanMatchers); ret != nil {
+			if ret := getMissingSpanCalls(pass, g, sv, selNameSetStatus, getErrorReturn, config.ignoreChecksSignatures, config.startSpanMatchers); ret != nil {
 				pass.ReportRangef(sv.stmt, "%s.SetStatus is not called on all paths", sv.vr.Name())
 				pass.ReportRangef(ret, "return can be reached without calling %s.SetStatus", sv.vr.Name())
 			}
@@ -199,7 +205,7 @@ func runFunc(pass *analysis.Pass, node ast.Node, config *Config) {
 
 		if config.recordErrorEnabled && sv.spanType == spanOpenTelemetry { // RecordError only exists in OpenTelemetry
 			// Check if there's no RecordError to the span setting an error.
-			if ret := getMissingSpanCalls(pass, g, sv, "RecordError", getErrorReturn, config.ignoreChecksSignatures, config.startSpanMatchers); ret != nil {
+			if ret := getMissingSpanCalls(pass, g, sv, selNameRecordError, getErrorReturn, config.ignoreChecksSignatures, config.startSpanMatchers); ret != nil {
 				pass.ReportRangef(sv.stmt, "%s.RecordError is not called on all paths", sv.vr.Name())
 				pass.ReportRangef(ret, "return can be reached without calling %s.RecordError", sv.vr.Name())
 			}
@@ -216,7 +222,7 @@ func isSpanStart(info *types.Info, n ast.Node, startSpanMatchers []spanStartMatc
 
 	fnSig := info.ObjectOf(sel.Sel).String()
 
-	// Check if the function is a span start function
+	// Check if the function is a span start function.
 	for _, matcher := range startSpanMatchers {
 		if matcher.signature.MatchString(fnSig) {
 			return matcher.spanType, true
@@ -399,6 +405,26 @@ func usesCall(
 				}
 
 				if g := cfgs.FuncLit(f); g != nil && len(g.Blocks) > 0 {
+					if selName == selNameEnd {
+						// Check if all returning blocks call end.
+						for _, b := range g.Blocks {
+							if b.Return() != nil && !usesCall(
+								pass,
+								b.Nodes,
+								sv,
+								selName,
+								ignoreCheckSig,
+								startSpanMatchers,
+								depth+1,
+							) {
+								return false
+							}
+						}
+
+						found = true
+						return false
+					}
+
 					for _, b := range g.Blocks {
 						if usesCall(
 							pass,

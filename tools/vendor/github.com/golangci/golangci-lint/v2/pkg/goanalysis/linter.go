@@ -13,11 +13,6 @@ import (
 	"github.com/golangci/golangci-lint/v2/pkg/result"
 )
 
-const (
-	TheOnlyAnalyzerName = "the_only_name"
-	TheOnlyanalyzerDoc  = "the_only_doc"
-)
-
 type LoadMode int
 
 func (loadMode LoadMode) String() string {
@@ -45,7 +40,7 @@ type Linter struct {
 	name, desc              string
 	analyzers               []*analysis.Analyzer
 	cfg                     map[string]map[string]any
-	issuesReporter          func(*linter.Context) []Issue
+	issuesReporter          func(*linter.Context) []*Issue
 	contextSetter           func(*linter.Context)
 	loadMode                LoadMode
 	needUseOriginalPackages bool
@@ -55,7 +50,11 @@ func NewLinter(name, desc string, analyzers []*analysis.Analyzer, cfg map[string
 	return &Linter{name: name, desc: desc, analyzers: analyzers, cfg: cfg}
 }
 
-func (lnt *Linter) Run(_ context.Context, lintCtx *linter.Context) ([]result.Issue, error) {
+func NewLinterFromAnalyzer(analyzer *analysis.Analyzer) *Linter {
+	return NewLinter(analyzer.Name, analyzer.Doc, []*analysis.Analyzer{analyzer}, nil)
+}
+
+func (lnt *Linter) Run(_ context.Context, lintCtx *linter.Context) ([]*result.Issue, error) {
 	if err := lnt.preRun(lintCtx); err != nil {
 		return nil, err
 	}
@@ -71,12 +70,49 @@ func (lnt *Linter) LoadMode() LoadMode {
 	return lnt.loadMode
 }
 
+func (lnt *Linter) WithDesc(desc string) *Linter {
+	lnt.desc = desc
+
+	return lnt
+}
+
+func (lnt *Linter) WithVersion(v int) *Linter {
+	if v == 0 {
+		return lnt
+	}
+
+	for _, analyzer := range lnt.analyzers {
+		if lnt.name != analyzer.Name {
+			continue
+		}
+
+		// The analyzer name should be the same as the linter name to avoid displaying the name inside the reports.
+		analyzer.Name = fmt.Sprintf("%s_v%d", analyzer.Name, v)
+	}
+
+	lnt.name = fmt.Sprintf("%s_v%d", lnt.name, v)
+
+	return lnt
+}
+
+func (lnt *Linter) WithConfig(cfg map[string]any) *Linter {
+	if len(cfg) == 0 {
+		return lnt
+	}
+
+	lnt.cfg = map[string]map[string]any{
+		lnt.name: cfg,
+	}
+
+	return lnt
+}
+
 func (lnt *Linter) WithLoadMode(loadMode LoadMode) *Linter {
 	lnt.loadMode = loadMode
 	return lnt
 }
 
-func (lnt *Linter) WithIssuesReporter(r func(*linter.Context) []Issue) *Linter {
+func (lnt *Linter) WithIssuesReporter(r func(*linter.Context) []*Issue) *Linter {
 	lnt.issuesReporter = r
 	return lnt
 }
@@ -176,7 +212,7 @@ func (lnt *Linter) useOriginalPackages() bool {
 	return lnt.needUseOriginalPackages
 }
 
-func (lnt *Linter) reportIssues(lintCtx *linter.Context) []Issue {
+func (lnt *Linter) reportIssues(lintCtx *linter.Context) []*Issue {
 	if lnt.issuesReporter != nil {
 		return lnt.issuesReporter(lintCtx)
 	}

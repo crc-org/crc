@@ -18,7 +18,7 @@ While this could be considered a beginner mistake, across time, multiple package
 ```
 Usage:
 
-  goconst ARGS <directory>
+  goconst ARGS <directory> [<directory>...]
 
 Flags:
 
@@ -27,13 +27,15 @@ Flags:
   -ignore-tests      exclude tests from the search (default: true)
   -min-occurrences   report from how many occurrences (default: 2)
   -min-length        only report strings with the minimum given length (default: 3)
-  -match-constant    look for existing constants matching the values
+  -match-constant    look for existing constants matching the strings
   -find-duplicates   look for constants with identical values
+  -eval-const-expr   enable evaluation of constant expressions (e.g., Prefix + "suffix")
   -numbers           search also for duplicated numbers
-  -min          	   minimum value, only works with -numbers
-  -max          	   maximum value, only works with -numbers
+  -min               minimum value, only works with -numbers
+  -max               maximum value, only works with -numbers
   -output            output formatting (text or json)
   -set-exit-status   Set exit status to 2 if any issues are found
+  -grouped           print single line per match, only works with -output text
 
 Examples:
 
@@ -42,6 +44,7 @@ Examples:
   goconst -min-occurrences 3 -output json $GOPATH/src/github.com/cockroachdb/cockroach
   goconst -numbers -min 60 -max 512 .
   goconst -min-occurrences 5 $(go list -m -f '{{.Dir}}')
+  goconst -eval-const-expr -match-constant . # Matches constant expressions like Prefix + "suffix"
 ```
 
 ### Development

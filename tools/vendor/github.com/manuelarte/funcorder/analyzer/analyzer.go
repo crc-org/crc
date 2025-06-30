@@ -7,13 +7,13 @@ import (
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
 
-	"github.com/manuelarte/funcorder/internal/features"
-	"github.com/manuelarte/funcorder/internal/fileprocessor"
+	"github.com/manuelarte/funcorder/internal"
 )
 
 const (
 	ConstructorCheckName  = "constructor"
 	StructMethodCheckName = "struct-method"
+	AlphabeticalCheckName = "alphabetical"
 )
 
 func NewAnalyzer() *analysis.Analyzer {
@@ -22,15 +22,17 @@ func NewAnalyzer() *analysis.Analyzer {
 	a := &analysis.Analyzer{
 		Name:     "funcorder",
 		Doc:      "checks the order of functions, methods, and constructors",
+		URL:      "https://github.com/manuelarte/funcorder",
 		Run:      f.run,
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 	}
 
 	a.Flags.BoolVar(&f.constructorCheck, ConstructorCheckName, true,
-		"Enable/disable feature to check constructors are placed after struct declaration")
+		"Checks that constructors are placed after the structure declaration.")
 	a.Flags.BoolVar(&f.structMethodCheck, StructMethodCheckName, true,
-		"Enable/disable feature to check whether the exported struct's methods "+
-			"are placed before the non-exported")
+		"Checks if the exported methods of a structure are placed before the unexported ones.")
+	a.Flags.BoolVar(&f.alphabeticalCheck, AlphabeticalCheckName, false,
+		"Checks if the constructors and/or structure methods are sorted alphabetically.")
 
 	return a
 }
@@ -38,19 +40,24 @@ func NewAnalyzer() *analysis.Analyzer {
 type funcorder struct {
 	constructorCheck  bool
 	structMethodCheck bool
+	alphabeticalCheck bool
 }
 
 func (f *funcorder) run(pass *analysis.Pass) (any, error) {
-	var enabledCheckers features.Feature
+	var enabledCheckers internal.Feature
 	if f.constructorCheck {
-		enabledCheckers |= features.ConstructorCheck
+		enabledCheckers.Enable(internal.ConstructorCheck)
 	}
 
 	if f.structMethodCheck {
-		enabledCheckers |= features.StructMethodCheck
+		enabledCheckers.Enable(internal.StructMethodCheck)
 	}
 
-	fp := fileprocessor.NewFileProcessor(enabledCheckers)
+	if f.alphabeticalCheck {
+		enabledCheckers.Enable(internal.AlphabeticalCheck)
+	}
+
+	fp := internal.NewFileProcessor(pass.Fset, enabledCheckers)
 
 	insp, found := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	if !found {

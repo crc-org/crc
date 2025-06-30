@@ -17,11 +17,9 @@ linters:
     - errcheck
     - errname
     - errorlint
-    - exportloopref # checks for pointers to enclosing loop variables
     - gci
     - gochecknoinits # checks that no init functions are present in Go code
     - gocritic
-    - gomnd
     - gosimple
     - govet
     - importas # enforces consistent import aliases
@@ -42,7 +40,6 @@ linters:
     - revive # fast, configurable, extensible, flexible, and beautiful linter for Go, drop-in replacement of golint
     - staticcheck
     - stylecheck
-    - tenv
     - thelper # detects golang test helpers without t.Helper() call and checks the consistency of test helpers
     - unconvert # removes unnecessary type conversions
     - unparam # reports unused function parameters
@@ -80,7 +77,7 @@ linters-settings:
   nestif:
     # Minimal complexity of if statements to report.
     # Default: 5
-    min-complexity: 4
+    min-complexity: 5
   nolintlint:
     # Enable to require an explanation of nonzero length after each nolint directive.
     # Default: false

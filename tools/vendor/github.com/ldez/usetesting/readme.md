@@ -40,13 +40,13 @@ linters:
     
         # Enable/disable `context.Background()` detections.
         # Disabled if Go < 1.24.
-        # Default: true
-        context-background: false
+        # Default: false
+        context-background: true
     
         # Enable/disable `context.TODO()` detections.
         # Disabled if Go < 1.24.
-        # Default: true
-        context-todo: false
+        # Default: false
+        context-todo: true
 ```
 
 ### As a CLI

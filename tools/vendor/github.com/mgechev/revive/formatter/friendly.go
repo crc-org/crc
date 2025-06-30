@@ -7,19 +7,11 @@ import (
 	"io"
 	"slices"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/fatih/color"
 	"github.com/mgechev/revive/lint"
-	"github.com/olekukonko/tablewriter"
 )
-
-func getErrorEmoji() string {
-	return color.RedString("✘")
-}
-
-func getWarningEmoji() string {
-	return color.YellowString("⚠")
-}
 
 // Friendly is an implementation of the Formatter interface
 // which formats the errors to JSON.
@@ -27,7 +19,7 @@ type Friendly struct {
 	Metadata lint.FormatterMetadata
 }
 
-// Name returns the name of the formatter
+// Name returns the name of the formatter.
 func (*Friendly) Name() string {
 	return "friendly"
 }
@@ -64,16 +56,19 @@ func (f *Friendly) printFriendlyFailure(sb *strings.Builder, failure lint.Failur
 	sb.WriteString("\n\n")
 }
 
-func (f *Friendly) printHeaderRow(sb *strings.Builder, failure lint.Failure, severity lint.Severity) {
-	emoji := getWarningEmoji()
+var errorEmoji = color.RedString("✘")
+var warningEmoji = color.YellowString("⚠")
+
+func (*Friendly) printHeaderRow(sb *strings.Builder, failure lint.Failure, severity lint.Severity) {
+	emoji := warningEmoji
 	if severity == lint.SeverityError {
-		emoji = getErrorEmoji()
+		emoji = errorEmoji
 	}
-	sb.WriteString(f.table([][]string{{emoji, ruleDescriptionURL(failure.RuleName), color.GreenString(failure.Failure)}}))
+	sb.WriteString(table([][]string{{emoji, ruleDescriptionURL(failure.RuleName), color.GreenString(failure.Failure)}}))
 }
 
 func (*Friendly) printFilePosition(sb *strings.Builder, failure lint.Failure) {
-	sb.WriteString(fmt.Sprintf("  %s:%d:%d", failure.GetFilename(), failure.Position.Start.Line, failure.Position.Start.Column))
+	fmt.Fprintf(sb, "  %s:%d:%d", failure.Filename(), failure.Position.Start.Line, failure.Position.Start.Column)
 }
 
 type statEntry struct {
@@ -82,9 +77,9 @@ type statEntry struct {
 }
 
 func (*Friendly) printSummary(w io.Writer, errors, warnings int) {
-	emoji := getWarningEmoji()
+	emoji := warningEmoji
 	if errors > 0 {
-		emoji = getErrorEmoji()
+		emoji = errorEmoji
 	}
 	problemsLabel := "problems"
 	if errors+warnings == 1 {
@@ -109,7 +104,7 @@ func (*Friendly) printSummary(w io.Writer, errors, warnings int) {
 	}
 }
 
-func (f *Friendly) printStatistics(w io.Writer, header string, stats map[string]int) {
+func (*Friendly) printStatistics(w io.Writer, header string, stats map[string]int) {
 	if len(stats) == 0 {
 		return
 	}
@@ -125,17 +120,19 @@ func (f *Friendly) printStatistics(w io.Writer, header string, stats map[string]
 		formatted = append(formatted, []string{color.GreenString(fmt.Sprintf("%d", entry.failures)), entry.name})
 	}
 	fmt.Fprintln(w, header)
-	fmt.Fprintln(w, f.table(formatted))
+	fmt.Fprintln(w, table(formatted))
 }
 
-func (*Friendly) table(rows [][]string) string {
-	buf := new(bytes.Buffer)
-	table := tablewriter.NewWriter(buf)
-	table.SetBorder(false)
-	table.SetColumnSeparator("")
-	table.SetRowSeparator("")
-	table.SetAutoWrapText(false)
-	table.AppendBulk(rows)
-	table.Render()
+func table(rows [][]string) string {
+	var buf bytes.Buffer
+	tw := tabwriter.NewWriter(&buf, 0, 0, 2, ' ', 0)
+	for _, row := range rows {
+		tw.Write([]byte{'\t'})
+		for _, col := range row {
+			tw.Write(append([]byte(col), '\t'))
+		}
+		tw.Write([]byte{'\n'})
+	}
+	tw.Flush()
 	return buf.String()
 }

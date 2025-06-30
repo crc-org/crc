@@ -20,40 +20,36 @@ const linterName = "dupl"
 
 func New(settings *config.DuplSettings) *goanalysis.Linter {
 	var mu sync.Mutex
-	var resIssues []goanalysis.Issue
+	var resIssues []*goanalysis.Issue
 
-	analyzer := &analysis.Analyzer{
-		Name: linterName,
-		Doc:  goanalysis.TheOnlyanalyzerDoc,
-		Run: func(pass *analysis.Pass) (any, error) {
-			issues, err := runDupl(pass, settings)
-			if err != nil {
-				return nil, err
-			}
+	return goanalysis.
+		NewLinterFromAnalyzer(&analysis.Analyzer{
+			Name: linterName,
+			Doc:  "Detects duplicate fragments of code.",
+			Run: func(pass *analysis.Pass) (any, error) {
+				issues, err := runDupl(pass, settings)
+				if err != nil {
+					return nil, err
+				}
 
-			if len(issues) == 0 {
+				if len(issues) == 0 {
+					return nil, nil
+				}
+
+				mu.Lock()
+				resIssues = append(resIssues, issues...)
+				mu.Unlock()
+
 				return nil, nil
-			}
-
-			mu.Lock()
-			resIssues = append(resIssues, issues...)
-			mu.Unlock()
-
-			return nil, nil
-		},
-	}
-
-	return goanalysis.NewLinter(
-		linterName,
-		"Detects duplicate fragments of code.",
-		[]*analysis.Analyzer{analyzer},
-		nil,
-	).WithIssuesReporter(func(*linter.Context) []goanalysis.Issue {
-		return resIssues
-	}).WithLoadMode(goanalysis.LoadModeSyntax)
+			},
+		}).
+		WithIssuesReporter(func(*linter.Context) []*goanalysis.Issue {
+			return resIssues
+		}).
+		WithLoadMode(goanalysis.LoadModeSyntax)
 }
 
-func runDupl(pass *analysis.Pass, settings *config.DuplSettings) ([]goanalysis.Issue, error) {
+func runDupl(pass *analysis.Pass, settings *config.DuplSettings) ([]*goanalysis.Issue, error) {
 	issues, err := duplAPI.Run(internal.GetGoFileNames(pass), settings.Threshold)
 	if err != nil {
 		return nil, err
@@ -63,7 +59,7 @@ func runDupl(pass *analysis.Pass, settings *config.DuplSettings) ([]goanalysis.I
 		return nil, nil
 	}
 
-	res := make([]goanalysis.Issue, 0, len(issues))
+	res := make([]*goanalysis.Issue, 0, len(issues))
 
 	for _, i := range issues {
 		toFilename, err := fsutils.ShortestRelPath(i.To.Filename(), "")
@@ -74,7 +70,7 @@ func runDupl(pass *analysis.Pass, settings *config.DuplSettings) ([]goanalysis.I
 		dupl := fmt.Sprintf("%s:%d-%d", toFilename, i.To.LineStart(), i.To.LineEnd())
 		text := fmt.Sprintf("%d-%d lines are duplicate of %s",
 			i.From.LineStart(), i.From.LineEnd(),
-			internal.FormatCode(dupl, nil))
+			internal.FormatCode(dupl))
 
 		res = append(res, goanalysis.NewIssue(&result.Issue{
 			Pos: token.Position{
