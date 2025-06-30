@@ -3,10 +3,11 @@ package rule
 import (
 	"go/ast"
 
+	"github.com/mgechev/revive/internal/astutils"
 	"github.com/mgechev/revive/lint"
 )
 
-// ConfusingResultsRule lints given function declarations
+// ConfusingResultsRule lints given function declarations.
 type ConfusingResultsRule struct{}
 
 // Apply applies the rule to given file.
@@ -28,7 +29,7 @@ func (*ConfusingResultsRule) Apply(file *lint.File, _ lint.Arguments) []lint.Fai
 
 		lastType := ""
 		for _, result := range funcDecl.Type.Results.List {
-			resultTypeName := gofmt(result.Type)
+			resultTypeName := astutils.GoFmt(result.Type)
 
 			if resultTypeName == lastType {
 				failures = append(failures, lint.Failure{

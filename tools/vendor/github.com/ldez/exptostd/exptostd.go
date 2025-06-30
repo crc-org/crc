@@ -365,7 +365,7 @@ func suggestedFixForKeysOrValues(callExpr *ast.CallExpr) (analysis.SuggestedFix,
 				Fun: &ast.Ident{Name: "make"},
 				Args: []ast.Expr{
 					&ast.ArrayType{
-						Elt: &ast.Ident{Name: "T"}, // TODO(ldez) improve the type detection.
+						Elt: &ast.Ident{Name: "FIXME"}, // TODO(ldez) improve the type detection.
 					},
 					&ast.BasicLit{Kind: token.INT, Value: "0"},
 					&ast.CallExpr{

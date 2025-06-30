@@ -177,7 +177,7 @@ func makeGenericReplacer(oldnew []string) *genericReplacer {
 	// Find each byte used, then assign them each an index.
 	for i := 0; i < len(oldnew); i += 2 {
 		key := strings.ToLower(oldnew[i])
-		for j := 0; j < len(key); j++ {
+		for j := range len(key) {
 			r.mapping[key[j]] = 1
 		}
 	}
@@ -202,42 +202,6 @@ func makeGenericReplacer(oldnew []string) *genericReplacer {
 		r.root.add(strings.ToLower(oldnew[i]), oldnew[i+1], len(oldnew)-i, r)
 	}
 	return r
-}
-
-func (r *genericReplacer) lookup(s string, ignoreRoot bool) (val string, keylen int, found bool) {
-	// Iterate down the trie to the end, and grab the value and keylen with
-	// the highest priority.
-	bestPriority := 0
-	node := &r.root
-	n := 0
-	for node != nil {
-		if node.priority > bestPriority && !(ignoreRoot && node == &r.root) {
-			bestPriority = node.priority
-			val = node.value
-			keylen = n
-			found = true
-		}
-
-		if s == "" {
-			break
-		}
-		if node.table != nil {
-			index := r.mapping[ByteToLower(s[0])]
-			if int(index) == r.tableSize {
-				break
-			}
-			node = node.table[index]
-			s = s[1:]
-			n++
-		} else if node.prefix != "" && StringHasPrefixFold(s, node.prefix) {
-			n += len(node.prefix)
-			s = s[len(node.prefix):]
-			node = node.next
-		} else {
-			break
-		}
-	}
-	return
 }
 
 func (r *genericReplacer) Replace(s string) string {
@@ -301,6 +265,42 @@ func (r *genericReplacer) WriteString(w io.Writer, s string) (n int, err error) 
 	if last != len(s) {
 		wn, err = sw.WriteString(s[last:])
 		n += wn
+	}
+	return
+}
+
+func (r *genericReplacer) lookup(s string, ignoreRoot bool) (val string, keylen int, found bool) {
+	// Iterate down the trie to the end, and grab the value and keylen with
+	// the highest priority.
+	bestPriority := 0
+	node := &r.root
+	n := 0
+	for node != nil {
+		if node.priority > bestPriority && (!ignoreRoot || node != &r.root) {
+			bestPriority = node.priority
+			val = node.value
+			keylen = n
+			found = true
+		}
+
+		if s == "" {
+			break
+		}
+		if node.table != nil {
+			index := r.mapping[ByteToLower(s[0])]
+			if int(index) == r.tableSize {
+				break
+			}
+			node = node.table[index]
+			s = s[1:]
+			n++
+		} else if node.prefix != "" && StringHasPrefixFold(s, node.prefix) {
+			n += len(node.prefix)
+			s = s[len(node.prefix):]
+			node = node.next
+		} else {
+			break
+		}
 	}
 	return
 }

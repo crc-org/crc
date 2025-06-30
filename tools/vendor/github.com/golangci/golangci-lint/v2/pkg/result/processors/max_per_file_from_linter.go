@@ -7,6 +7,7 @@ import (
 	"github.com/golangci/golangci-lint/v2/pkg/goformatters/gofumpt"
 	"github.com/golangci/golangci-lint/v2/pkg/goformatters/goimports"
 	"github.com/golangci/golangci-lint/v2/pkg/goformatters/golines"
+	"github.com/golangci/golangci-lint/v2/pkg/goformatters/swaggo"
 	"github.com/golangci/golangci-lint/v2/pkg/result"
 )
 
@@ -24,7 +25,7 @@ func NewMaxPerFileFromLinter(cfg *config.Config) *MaxPerFileFromLinter {
 	if !cfg.Issues.NeedFix {
 		// if we don't fix we do this limiting to not annoy user;
 		// otherwise we need to fix all issues in the file at once
-		for _, f := range []string{gofmt.Name, gofumpt.Name, goimports.Name, gci.Name, golines.Name} {
+		for _, f := range []string{gofmt.Name, gofumpt.Name, goimports.Name, gci.Name, golines.Name, swaggo.Name} {
 			maxPerFileFromLinterConfig[f] = 1
 		}
 	}
@@ -39,7 +40,7 @@ func (*MaxPerFileFromLinter) Name() string {
 	return "max_per_file_from_linter"
 }
 
-func (p *MaxPerFileFromLinter) Process(issues []result.Issue) ([]result.Issue, error) {
+func (p *MaxPerFileFromLinter) Process(issues []*result.Issue) ([]*result.Issue, error) {
 	return filterIssuesUnsafe(issues, func(issue *result.Issue) bool {
 		limit := p.maxPerFileFromLinterConfig[issue.FromLinter]
 		if limit == 0 {

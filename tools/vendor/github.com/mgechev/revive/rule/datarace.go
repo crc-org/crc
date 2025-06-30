@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 
+	"github.com/mgechev/revive/internal/astutils"
 	"github.com/mgechev/revive/lint"
 )
 
@@ -22,7 +23,7 @@ func (r *DataRaceRule) Apply(file *lint.File, _ lint.Arguments) []lint.Failure {
 
 		funcResults := funcDecl.Type.Results
 
-		// TODO: ast.Object is deprecated
+		//nolint:staticcheck // TODO: ast.Object is deprecated
 		returnIDs := map[*ast.Object]struct{}{}
 		if funcResults != nil {
 			returnIDs = r.extractReturnIDs(funcResults.List)
@@ -35,7 +36,7 @@ func (r *DataRaceRule) Apply(file *lint.File, _ lint.Arguments) []lint.Failure {
 		fl := &lintFunctionForDataRaces{
 			onFailure: onFailure,
 			returnIDs: returnIDs,
-			rangeIDs:  map[*ast.Object]struct{}{}, // TODO: ast.Object is deprecated
+			rangeIDs:  map[*ast.Object]struct{}{}, //nolint:staticcheck // TODO: ast.Object is deprecated
 			go122for:  isGo122,
 		}
 
@@ -50,7 +51,7 @@ func (*DataRaceRule) Name() string {
 	return "datarace"
 }
 
-// TODO: ast.Object is deprecated
+//nolint:staticcheck // TODO: ast.Object is deprecated
 func (*DataRaceRule) extractReturnIDs(fields []*ast.Field) map[*ast.Object]struct{} {
 	r := map[*ast.Object]struct{}{}
 	for _, f := range fields {
@@ -65,8 +66,8 @@ func (*DataRaceRule) extractReturnIDs(fields []*ast.Field) map[*ast.Object]struc
 type lintFunctionForDataRaces struct {
 	_         struct{}
 	onFailure func(failure lint.Failure)
-	returnIDs map[*ast.Object]struct{} // TODO: ast.Object is deprecated
-	rangeIDs  map[*ast.Object]struct{} // TODO: ast.Object is deprecated
+	returnIDs map[*ast.Object]struct{} //nolint:staticcheck // TODO: ast.Object is deprecated
+	rangeIDs  map[*ast.Object]struct{} //nolint:staticcheck // TODO: ast.Object is deprecated
 
 	go122for bool
 }
@@ -111,7 +112,7 @@ func (w lintFunctionForDataRaces) Visit(node ast.Node) ast.Visitor {
 			return ok
 		}
 
-		ids := pick(funcLit.Body, selectIDs)
+		ids := astutils.PickNodes(funcLit.Body, selectIDs)
 		for _, id := range ids {
 			id := id.(*ast.Ident)
 			_, isRangeID := w.rangeIDs[id.Obj]

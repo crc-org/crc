@@ -19,37 +19,33 @@ const linterName = "gocognit"
 
 func New(settings *config.GocognitSettings) *goanalysis.Linter {
 	var mu sync.Mutex
-	var resIssues []goanalysis.Issue
+	var resIssues []*goanalysis.Issue
 
-	analyzer := &analysis.Analyzer{
-		Name: goanalysis.TheOnlyAnalyzerName,
-		Doc:  goanalysis.TheOnlyanalyzerDoc,
-		Run: func(pass *analysis.Pass) (any, error) {
-			issues := runGocognit(pass, settings)
+	return goanalysis.
+		NewLinterFromAnalyzer(&analysis.Analyzer{
+			Name: linterName,
+			Doc:  "Computes and checks the cognitive complexity of functions",
+			Run: func(pass *analysis.Pass) (any, error) {
+				issues := runGocognit(pass, settings)
 
-			if len(issues) == 0 {
+				if len(issues) == 0 {
+					return nil, nil
+				}
+
+				mu.Lock()
+				resIssues = append(resIssues, issues...)
+				mu.Unlock()
+
 				return nil, nil
-			}
-
-			mu.Lock()
-			resIssues = append(resIssues, issues...)
-			mu.Unlock()
-
-			return nil, nil
-		},
-	}
-
-	return goanalysis.NewLinter(
-		linterName,
-		"Computes and checks the cognitive complexity of functions",
-		[]*analysis.Analyzer{analyzer},
-		nil,
-	).WithIssuesReporter(func(*linter.Context) []goanalysis.Issue {
-		return resIssues
-	}).WithLoadMode(goanalysis.LoadModeSyntax)
+			},
+		}).
+		WithIssuesReporter(func(*linter.Context) []*goanalysis.Issue {
+			return resIssues
+		}).
+		WithLoadMode(goanalysis.LoadModeSyntax)
 }
 
-func runGocognit(pass *analysis.Pass, settings *config.GocognitSettings) []goanalysis.Issue {
+func runGocognit(pass *analysis.Pass, settings *config.GocognitSettings) []*goanalysis.Issue {
 	var stats []gocognit.Stat
 	for _, f := range pass.Files {
 		stats = gocognit.ComplexityStats(f, pass.Fset, stats)
@@ -62,7 +58,7 @@ func runGocognit(pass *analysis.Pass, settings *config.GocognitSettings) []goana
 		return stats[i].Complexity > stats[j].Complexity
 	})
 
-	issues := make([]goanalysis.Issue, 0, len(stats))
+	issues := make([]*goanalysis.Issue, 0, len(stats))
 	for _, s := range stats {
 		if s.Complexity <= settings.MinComplexity {
 			break // Break as the stats is already sorted from greatest to least
@@ -71,7 +67,7 @@ func runGocognit(pass *analysis.Pass, settings *config.GocognitSettings) []goana
 		issues = append(issues, goanalysis.NewIssue(&result.Issue{
 			Pos: s.Pos,
 			Text: fmt.Sprintf("cognitive complexity %d of func %s is high (> %d)",
-				s.Complexity, internal.FormatCode(s.FuncName, nil), settings.MinComplexity),
+				s.Complexity, internal.FormatCode(s.FuncName), settings.MinComplexity),
 			FromLinter: linterName,
 		}, pass))
 	}

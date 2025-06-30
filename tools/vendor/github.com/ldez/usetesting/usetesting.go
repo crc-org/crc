@@ -76,8 +76,8 @@ func NewAnalyzer() *analysis.Analyzer {
 		Run:      l.run,
 	}
 
-	a.Flags.BoolVar(&l.contextBackground, "contextbackground", true, "Enable/disable context.Background() detections")
-	a.Flags.BoolVar(&l.contextTodo, "contexttodo", true, "Enable/disable context.TODO() detections")
+	a.Flags.BoolVar(&l.contextBackground, "contextbackground", false, "Enable/disable context.Background() detections")
+	a.Flags.BoolVar(&l.contextTodo, "contexttodo", false, "Enable/disable context.TODO() detections")
 	a.Flags.BoolVar(&l.osChdir, "oschdir", true, "Enable/disable os.Chdir() detections")
 	a.Flags.BoolVar(&l.osMkdirTemp, "osmkdirtemp", true, "Enable/disable os.MkdirTemp() detections")
 	a.Flags.BoolVar(&l.osSetenv, "ossetenv", false, "Enable/disable os.Setenv() detections")

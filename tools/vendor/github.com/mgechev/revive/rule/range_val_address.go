@@ -9,7 +9,7 @@ import (
 	"github.com/mgechev/revive/lint"
 )
 
-// RangeValAddress lints
+// RangeValAddress warns if address of range value is used dangerously.
 type RangeValAddress struct{}
 
 // Apply applies the rule to given file.
@@ -70,7 +70,7 @@ func (w rangeValAddress) Visit(node ast.Node) ast.Visitor {
 
 type rangeBodyVisitor struct {
 	valueIsStarExpr bool
-	valueID         *ast.Object // TODO: ast.Object is deprecated
+	valueID         *ast.Object //nolint:staticcheck // TODO: ast.Object is deprecated
 	onFailure       func(lint.Failure)
 }
 

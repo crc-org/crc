@@ -133,12 +133,12 @@ func (v *treeVisitor) addString(str string, pos token.Pos, typ Type) {
 	var unquotedStr string
 	if strings.HasPrefix(str, `"`) || strings.HasPrefix(str, "`") {
 		var err error
-		// Reuse strings from pool if possible to avoid allocations
-		sb := GetStringBuilder()
-		defer PutStringBuilder(sb)
-
 		unquotedStr, err = strconv.Unquote(str)
 		if err != nil {
+			// Reuse strings from pool if possible to avoid allocations
+			sb := GetStringBuilder()
+			defer PutStringBuilder(sb)
+
 			// If unquoting fails, manually strip quotes
 			// This avoids additional temporary strings
 			if len(str) >= 2 {
