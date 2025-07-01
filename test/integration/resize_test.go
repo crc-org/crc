@@ -1,8 +1,11 @@
 package test_test
 
 import (
+	"fmt"
+	"os"
 	"os/exec"
 	"runtime"
+	"time"
 
 	"github.com/crc-org/crc/v2/test/extended/util"
 	. "github.com/onsi/ginkgo/v2"
@@ -10,7 +13,7 @@ import (
 )
 
 var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label("openshift-preset", "vm-resize"), func() {
-
+	filename := "time-consume.txt"
 	// runs 1x after all the It blocks (specs) inside this Describe node
 	AfterAll(func() {
 
@@ -20,6 +23,11 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 		// remove config file crc.json
 		err := util.RemoveCRCConfig()
 		Expect(err).NotTo(HaveOccurred())
+
+		_, err = os.Stat(filename)
+		if err != nil {
+			fmt.Println("Failed to gathering time-consume data")
+		}
 
 	})
 
@@ -32,9 +40,13 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 		})
 
 		It("start CRC", func() {
-			Expect(
-				crcSuccess("start", "--memory", "12000", "--cpus", "5", "--disk-size", "40", "-p", pullSecretPath)).
-				To(ContainSubstring("Started the OpenShift cluster"))
+			start := time.Now()
+			message := crcSuccess("start", "--memory", "12000", "--cpus", "5", "--disk-size", "40", "-p", pullSecretPath)
+			duration := time.Since(start)
+			Expect(message).To(ContainSubstring("Started the OpenShift cluster"))
+
+			data := "crc start(default): " + duration.String() + "\n"
+			writeDataToFile(filename, data)
 		})
 
 		It("login to cluster using crc-admin context", func() {
@@ -76,9 +88,13 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 		})
 
 		It("stop CRC", func() {
-			Expect(
-				crcSuccess("stop", "-f")).
-				To(MatchRegexp("[Ss]topped the instance"))
+			start := time.Now()
+			message := crcSuccess("stop", "-f")
+			duration := time.Since(start)
+			Expect(message).To(MatchRegexp("[Ss]topped the instance"))
+
+			data := "crc stop(default):" + duration.String() + "\n"
+			writeDataToFile(filename, data)
 		})
 
 	})
@@ -86,9 +102,13 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 	Describe("use custom values", Serial, Ordered, func() {
 
 		It("start CRC", func() {
-			Expect(
-				crcSuccess("start", "--memory", "13000", "--cpus", "6", "--disk-size", "50")).
-				To(ContainSubstring("Started the OpenShift cluster"))
+			start := time.Now()
+			message := crcSuccess("start", "--memory", "13000", "--cpus", "6", "--disk-size", "50")
+			duration := time.Since(start)
+			Expect(message).To(ContainSubstring("Started the OpenShift cluster"))
+
+			data := "crc start(custom):" + duration.String() + "\n"
+			writeDataToFile(filename, data)
 		})
 
 		It("check VM's memory size", func() {
@@ -111,9 +131,13 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 		})
 
 		It("stop CRC", func() {
-			Expect(
-				crcSuccess("stop", "-f")).
-				To(MatchRegexp("[Ss]topped the instance"))
+			start := time.Now()
+			message := crcSuccess("stop", "-f")
+			duration := time.Since(start)
+			Expect(message).To(MatchRegexp("[Ss]topped the instance"))
+
+			data := "crc stop(custom):" + duration.String() + "\n"
+			writeDataToFile(filename, data)
 		})
 	})
 
@@ -148,9 +172,13 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 	Describe("use default values again", Serial, Ordered, func() {
 
 		It("start CRC", func() {
-			Expect(
-				crcSuccess("start")).
-				To(ContainSubstring("Started the OpenShift cluster"))
+			start := time.Now()
+			message := crcSuccess("start")
+			duration := time.Since(start)
+			Expect(message).To(ContainSubstring("Started the OpenShift cluster"))
+
+			data := "crc start(default2):" + duration.String() + "\n"
+			writeDataToFile(filename, data)
 		})
 
 		It("check VM's memory size", func() {
@@ -175,9 +203,14 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 		}
 
 		It("clean up", func() {
+			start := time.Now()
 			RunCRCExpectSuccess("stop", "-f")
+			duration := time.Since(start)
 			RunCRCExpectSuccess("delete", "-f")
 			RunCRCExpectSuccess("cleanup")
+
+			data := "crc stop(default2):" + duration.String() + "\n"
+			writeDataToFile(filename, data)
 
 		})
 	})
