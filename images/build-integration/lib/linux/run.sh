@@ -57,6 +57,9 @@ fi
 # Copy results
 cd ..
 cp bin/integration.results results/integration.results
+if [[ -f bin/time-consume.txt ]]; then
+  cp bin/time-consume.txt results/time-consume.txt
+fi
 if which xsltproc &>/dev/null
 then
   cat bin/out/integration.xml | xsltproc filter.xsl - > results/$junitFilename

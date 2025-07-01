@@ -35,6 +35,9 @@ if ($labelFilter) {
 # Copy results
 cd ..
 cp bin\integration.results results\integration.results
+if (Test-Path "bin/time-consume.txt") {
+    Copy-Item "bin/time-consume.txt" "results/time-consume.txt"
+}
 $prejunit = "$resultsDir\$junitFilename.pre"
 cp bin\out\integration.xml $prejunit
 
