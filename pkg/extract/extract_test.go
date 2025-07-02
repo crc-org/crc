@@ -60,7 +60,7 @@ func TestDotSlash(t *testing.T) {
 
 func TestZipSlip(t *testing.T) {
 	archiveName := filepath.Join("testdata", "zipslip.tar.gz")
-	_, err := Uncompress(context.TODO(), archiveName, t.TempDir())
+	_, err := Uncompress(context.Background(), archiveName, t.TempDir())
 	logging.Infof("error: %v", err)
 	assert.ErrorContains(t, err, "illegal file path")
 }
@@ -148,9 +148,9 @@ func testUncompress(t *testing.T, archiveName string, fileFilter func(string) bo
 	var fileList []string
 	var err error
 	if fileFilter != nil {
-		fileList, err = UncompressWithFilter(context.TODO(), archiveName, destDir, fileFilter)
+		fileList, err = UncompressWithFilter(context.Background(), archiveName, destDir, fileFilter)
 	} else {
-		fileList, err = Uncompress(context.TODO(), archiveName, destDir)
+		fileList, err = Uncompress(context.Background(), archiveName, destDir)
 	}
 	if err != nil {
 		return err
