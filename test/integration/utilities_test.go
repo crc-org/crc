@@ -114,3 +114,16 @@ func crcCmd(op string, args ...string) []string {
 	}
 	return append(cmd, args...)
 }
+
+func writeDataToFile(filename string, data string) {
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println("Failed to open file:", filename)
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(data)
+	if err != nil {
+		fmt.Println("Failed to write to file")
+	}
+}
