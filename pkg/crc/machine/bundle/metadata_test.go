@@ -316,10 +316,23 @@ func TestGetFQDN(t *testing.T) {
 }
 
 func TestGetBundleNameFromURI(t *testing.T) {
+	var noTagErr = &NoTagError{}
+	var unsupportedTagErr = &UnsupportedTagError{}
+
 	// URI with no tag
 	bundleName, err := GetBundleNameFromURI("docker://quay.io/crcont/openshift-bundle")
 	assert.Equal(t, "", bundleName)
-	assert.Error(t, err)
+	assert.ErrorAs(t, err, &noTagErr)
+
+	// URI with colon but no tag
+	bundleName, err = GetBundleNameFromURI("docker://quay.io/crcont/openshift-bundle:")
+	assert.Equal(t, "", bundleName)
+	assert.ErrorAs(t, err, &noTagErr)
+
+	// URI with 'latest' tag
+	bundleName, err = GetBundleNameFromURI("docker://quay.io/crcont/openshift-bundle:latest")
+	assert.Equal(t, "", bundleName)
+	assert.ErrorAs(t, err, &unsupportedTagErr)
 
 	// URI with tag
 	bundleName, err = GetBundleNameFromURI("docker://quay.io/crcont/openshift-bundle:4.17.3")
