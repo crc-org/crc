@@ -247,8 +247,11 @@ func GetBundleNameFromURI(bundleURI string) (string, error) {
 	switch {
 	case strings.HasPrefix(bundleURI, "docker://"):
 		imageAndTag := strings.Split(path.Base(bundleURI), ":")
-		if len(imageAndTag) < 2 {
+		if len(imageAndTag) < 2 || imageAndTag[1] == "" {
 			return "", fmt.Errorf("No tag found in bundle URI")
+		}
+		if imageAndTag[1] == "latest" {
+			return "", fmt.Errorf("'latest' tag is not supported; use a specific version")
 		}
 		return constants.BundleForPreset(image.GetPresetName(imageAndTag[0]), imageAndTag[1]), nil
 	case strings.HasPrefix(bundleURI, "http://"), strings.HasPrefix(bundleURI, "https://"):
@@ -262,7 +265,6 @@ func GetBundleNameFromURI(bundleURI string) (string, error) {
 // GetBundleInfoFromName Parses the bundle filename and returns a FilenameInfo struct
 func GetBundleInfoFromName(bundleName string) (*FilenameInfo, error) {
 	var filenameInfo FilenameInfo
-
 	/*
 		crc_preset_driver_version_arch_customSuffix.crcbundle
 

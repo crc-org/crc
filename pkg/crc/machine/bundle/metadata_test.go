@@ -321,6 +321,16 @@ func TestGetBundleNameFromURI(t *testing.T) {
 	assert.Equal(t, "", bundleName)
 	assert.Error(t, err)
 
+	// URI with colon but no tag
+	bundleName, err = GetBundleNameFromURI("docker://quay.io/crcont/openshift-bundle:")
+	assert.Equal(t, "", bundleName)
+	assert.Error(t, err)
+
+	// URI with 'latest' tag
+	bundleName, err = GetBundleNameFromURI("docker://quay.io/crcont/openshift-bundle:latest")
+	assert.Equal(t, "", bundleName)
+	assert.Error(t, err)
+
 	// URI with tag
 	bundleName, err = GetBundleNameFromURI("docker://quay.io/crcont/openshift-bundle:4.17.3")
 	assert.Nil(t, err)
