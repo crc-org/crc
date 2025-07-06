@@ -117,10 +117,16 @@ func GetExternalIPv4Addrs(addrs []net.Addr) ([]net.IP, error) {
 }
 
 // GenerateTransactionID generates a random 32-bits number suitable for use as
-// TransactionID
+// TransactionID.
 func GenerateTransactionID() (TransactionID, error) {
+	return GenerateTransactionIDWithContext(context.Background())
+}
+
+// GenerateTransactionIDWithContext generates a random 32-bits number suitable
+// for use as TransactionID.
+func GenerateTransactionIDWithContext(ctx context.Context) (TransactionID, error) {
 	var xid TransactionID
-	ctx, cancel := context.WithTimeout(context.Background(), RandomTimeout)
+	ctx, cancel := context.WithTimeout(ctx, RandomTimeout)
 	defer cancel()
 	n, err := rand.ReadContext(ctx, xid[:])
 	if err != nil {
@@ -133,13 +139,29 @@ func GenerateTransactionID() (TransactionID, error) {
 }
 
 // New creates a new DHCPv4 structure and fill it up with default values. It
-// won't be a valid DHCPv4 message so you will need to adjust its fields.
-// See also NewDiscovery, NewRequest, NewAcknowledge, NewInform and NewRelease.
+// won't be a valid DHCPv4 message so you will need to adjust its fields. See
+// also NewDiscovery, NewRequest, NewAcknowledge, NewInform and NewRelease.
 func New(modifiers ...Modifier) (*DHCPv4, error) {
 	xid, err := GenerateTransactionID()
 	if err != nil {
 		return nil, err
 	}
+	return newDHCPv4(xid, modifiers...), nil
+}
+
+// NewWithContext creates a new DHCPv4 structure and fill it up with default
+// values. It won't be a valid DHCPv4 message so you will need to adjust its
+// fields. See also NewDiscovery, NewRequest, NewAcknowledge, NewInform and
+// NewRelease.
+func NewWithContext(ctx context.Context, modifiers ...Modifier) (*DHCPv4, error) {
+	xid, err := GenerateTransactionIDWithContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return newDHCPv4(xid, modifiers...), nil
+}
+
+func newDHCPv4(xid TransactionID, modifiers ...Modifier) *DHCPv4 {
 	d := DHCPv4{
 		OpCode:        OpcodeBootRequest,
 		HWType:        iana.HWTypeEthernet,
@@ -157,7 +179,7 @@ func New(modifiers ...Modifier) (*DHCPv4, error) {
 	for _, mod := range modifiers {
 		mod(&d)
 	}
-	return &d, nil
+	return &d
 }
 
 // NewDiscoveryForInterface builds a new DHCPv4 Discovery message, with a default
@@ -600,6 +622,13 @@ func (d *DHCPv4) ClasslessStaticRoute() []*Route {
 // The NTP servers option is described by RFC 2132, Section 8.3.
 func (d *DHCPv4) NTPServers() []net.IP {
 	return GetIPs(OptionNTPServers, d.Options)
+}
+
+// NetBIOSNameServers parses the DHCPv4 NetBIOS Name Servers option if present.
+//
+// The NetBIOS over TCP/IP Name Server option is described by RFC 2132, Section 8.5.
+func (d *DHCPv4) NetBIOSNameServers() []net.IP {
+	return GetIPs(OptionNetBIOSOverTCPIPNameServer, d.Options)
 }
 
 // DNS parses the DHCPv4 Domain Name Server option if present.

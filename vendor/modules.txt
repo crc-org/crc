@@ -444,8 +444,8 @@ github.com/imdario/mergo
 # github.com/inconshreveable/mousetrap v1.1.0
 ## explicit; go 1.18
 github.com/inconshreveable/mousetrap
-# github.com/insomniacslk/dhcp v0.0.0-20240710054256-ddd8a41251c9
-## explicit; go 1.20
+# github.com/insomniacslk/dhcp v0.0.0-20250417080101-5f8cf70e8c5f
+## explicit; go 1.23.0
 github.com/insomniacslk/dhcp/dhcpv4
 github.com/insomniacslk/dhcp/dhcpv4/server4
 github.com/insomniacslk/dhcp/iana
