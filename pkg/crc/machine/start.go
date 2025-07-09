@@ -257,6 +257,14 @@ func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
 				}
 				return fmt.Errorf("Failed to mount CIFS/SMB share '%s' please make sure configured password is correct: %w", mount.Tag, err)
 			}
+		case "9p":
+			// ssh into the guest, do the equivalent of https://github.com/containers/podman/blob/main/cmd/podman/machine/client9p.go
+			// not sure yet how the 9p server will be started, but I'm considering REST requests to the daemon
+			// The daemon is long running, but the shares are tied to the VM lifetime
+			// can be the guest during the REST API calls, or the machine driver.
+			// most likely best to do this in the latter
+			return fmt.Errorf("9p is not yet supported: %s", mount.Type)
+
 		default:
 			return fmt.Errorf("Unknown Shared dir type requested: %s", mount.Type)
 		}
