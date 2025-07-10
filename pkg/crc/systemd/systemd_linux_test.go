@@ -42,6 +42,10 @@ func TestSystemdStatuses(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, states.Running.String(), status.String())
 
+	status, err = systemctl.Status("activating.service")
+	assert.NoError(t, err)
+	assert.Equal(t, states.Activating.String(), status.String())
+
 	status, err = systemctl.Status("listening.socket")
 	assert.NoError(t, err)
 	assert.Equal(t, states.Listening.String(), status.String())
@@ -68,6 +72,8 @@ func (r *mockSystemdRunner) Run(command string, args ...string) (string, string,
 	switch unitName {
 	case "running.service":
 		return r.status(states.Running)
+	case "activating.service":
+		return r.status(states.Activating)
 	case "listening.socket":
 		return r.status(states.Listening)
 	case "stopped.service":
@@ -140,7 +146,20 @@ TriggeredBy: ● listening.socket
    Main PID: 64922 (code=exited, status=0/SUCCESS)
         CPU: 327ms
 `
-	statusNotFound string = "Unit notfound.service could not be found."
+	statusNotFound   string = "Unit notfound.service could not be found."
+	statusActivating string = `● activating.service - activating service
+	 Loaded: loaded (/usr/lib/systemd/system/activating.service; enabled; vendor preset: enabled)
+	 Active: activating (start) since Tue 2020-11-24 14:52:20 CET; 15s ago
+	TriggeredBy: ● activating.socket
+	       Docs: man:activating(8)
+             https://activating.example.com
+	 Main PID: 224516 (activating)
+	    Tasks: 19 (limit: 32768)
+			   Memory: 36.9M
+			      CPU: 414ms
+				  	 CGroup: /system.slice/activating.service
+					 	 ├─ 19588 /usr/sbin/true
+`
 )
 
 func (r *mockSystemdRunner) status(s states.State) (string, string, error) {
@@ -158,6 +177,8 @@ func (r *mockSystemdRunner) status(s states.State) (string, string, error) {
 		stdout = statusRunning
 	case states.Listening:
 		stdout = statusListening
+	case states.Activating:
+		stdout = statusActivating
 	case states.Stopped:
 		stdout = statusStopped
 		err = errors.New("exit code: 3 - see EXIT STATUS in man systemctl")

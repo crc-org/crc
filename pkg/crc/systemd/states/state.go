@@ -10,6 +10,7 @@ const (
 	Unknown State = iota
 	Running
 	Listening
+	Activating
 	Stopped
 	NotFound
 	Error
@@ -19,6 +20,7 @@ var states = []string{
 	"unknown",
 	"active (running)",
 	"active (listening)",
+	"activating (start)",
 	"inactive (dead)",
 	"could not be found",
 	"error",
@@ -37,6 +39,9 @@ func Compare(input string) State {
 	}
 	if strings.Contains(input, states[Listening]) {
 		return Listening
+	}
+	if strings.Contains(input, states[Activating]) {
+		return Activating
 	}
 	if strings.Contains(input, states[Stopped]) {
 		return Stopped
