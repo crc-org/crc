@@ -28,6 +28,7 @@ import (
 	crcCmd "github.com/crc-org/crc/v2/test/extended/crc/cmd"
 	"github.com/crc-org/crc/v2/test/extended/util"
 	"github.com/cucumber/godog"
+	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/spf13/pflag"
 )
 
@@ -259,6 +260,12 @@ func InitializeScenario(s *godog.ScenarioContext) {
 				if err != nil {
 					fmt.Println(err)
 					os.Exit(1)
+				}
+			}
+
+			if tag.Name == "@story_health" {
+				if err := getCPUdata("Before start"); err != nil {
+					fmt.Printf("Failed to collect CPU data: %v\n", err)
 				}
 			}
 		}
@@ -568,6 +575,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		EnsureApplicationIsAccessibleViaNodePort)
 	s.Step(`^persistent volume of size "([^"]*)"GB exists$`,
 		EnsureVMPartitionSizeCorrect)
+	s.Step(`^get cpu data "([^"]*)"`,
+		getCPUdata)
 
 	s.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
 
@@ -1303,4 +1312,18 @@ func deserializeListBlockDeviceCommandOutputToExtractPVSize(lsblkOutput string) 
 		}
 	}
 	return diskSize - (lvmSize + 1), nil
+}
+
+func getCPUdata(content string) error {
+	cpuData, err := cpu.Percent(0, false)
+	if err != nil {
+		return fmt.Errorf("failed to get CPU data: %v", err)
+	}
+	if len(cpuData) == 0 {
+		return fmt.Errorf("no CPU data available")
+	}
+	data := fmt.Sprintf("%s: %.2f%%\n", content, cpuData)
+	wd, _ := os.Getwd()
+	file := filepath.Join(wd, "../test-results/cpu-consume.txt")
+	return util.WriteToFile(data, file)
 }
