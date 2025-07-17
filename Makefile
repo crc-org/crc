@@ -110,7 +110,7 @@ $(HOST_BUILD_DIR)/crc-embedder: $(SOURCES)
 	go build --tags="build" -ldflags="$(LDFLAGS)" -o $(HOST_BUILD_DIR)/crc-embedder $(GO_EXTRA_BUILDFLAGS) ./cmd/crc-embedder
 
 .PHONY: cross ## Cross compiles all binaries
-cross: $(BUILD_DIR)/macos-arm64/crc $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/windows-amd64/crc.exe
+cross: $(BUILD_DIR)/macos-arm64/crc $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/linux-arm64/crc $(BUILD_DIR)/windows-amd64/crc.exe
 
 .PHONY: containerized ## Cross compile from container
 containerized: clean
