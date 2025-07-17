@@ -45,7 +45,7 @@ type bState struct {
 	noPop           bool
 	autoRefresh     bool
 	buffers         [3]*bytes.Buffer
-	decorators      [2][]decor.Decorator
+	decorGroups     [2][]decor.Decorator
 	ewmaDecorators  []decor.EwmaDecorator
 	filler          BarFiller
 	extender        extenderFunc
@@ -117,7 +117,7 @@ func (b *Bar) ProxyWriter(w io.Writer) io.WriteCloser {
 	}
 }
 
-// ID returs id of the bar.
+// ID returns id of the bar.
 func (b *Bar) ID() int {
 	result := make(chan int)
 	select {
@@ -145,42 +145,28 @@ func (b *Bar) Current() int64 {
 // operation for example.
 func (b *Bar) SetRefill(amount int64) {
 	select {
-	case b.operateState <- func(s *bState) {
-		if amount < s.current {
-			s.refill = amount
-		} else {
-			s.refill = s.current
-		}
-	}:
+	case b.operateState <- func(s *bState) { s.refill = min(amount, s.current) }:
 	case <-b.ctx.Done():
 	}
 }
 
-// TraverseDecorators traverses available decorators and calls cb func
-// on each in a new goroutine. Decorators implementing decor.Wrapper
-// interface are unwrapped first.
+// TraverseDecorators traverses available decorators and calls `cb`
+// on each unwrapped one.
 func (b *Bar) TraverseDecorators(cb func(decor.Decorator)) {
 	select {
 	case b.operateState <- func(s *bState) {
-		var wg sync.WaitGroup
-		for _, decorators := range s.decorators {
-			wg.Add(len(decorators))
-			for _, d := range decorators {
-				d := d
-				go func() {
-					cb(unwrap(d))
-					wg.Done()
-				}()
+		for _, group := range s.decorGroups {
+			for _, d := range group {
+				cb(unwrap(d))
 			}
 		}
-		wg.Wait()
 	}:
 	case <-b.ctx.Done():
 	}
 }
 
 // EnableTriggerComplete enables triggering complete event. It's effective
-// only for bars which were constructed with `total <= 0`. If `curren >= total`
+// only for bars which were constructed with `total <= 0`. If `current >= total`
 // at the moment of call, complete event is triggered right away.
 func (b *Bar) EnableTriggerComplete() {
 	select {
@@ -283,10 +269,10 @@ func (b *Bar) EwmaIncrInt64(n int64, iterDur time.Duration) {
 		var wg sync.WaitGroup
 		wg.Add(len(s.ewmaDecorators))
 		for _, d := range s.ewmaDecorators {
-			d := d
+			// d := d // NOTE: uncomment for Go < 1.22, see /doc/faq#closures_and_goroutines
 			go func() {
+				defer wg.Done()
 				d.EwmaUpdate(n, iterDur)
-				wg.Done()
 			}()
 		}
 		s.current += n
@@ -312,10 +298,10 @@ func (b *Bar) EwmaSetCurrent(current int64, iterDur time.Duration) {
 		var wg sync.WaitGroup
 		wg.Add(len(s.ewmaDecorators))
 		for _, d := range s.ewmaDecorators {
-			d := d
+			// d := d // NOTE: uncomment for Go < 1.22, see /doc/faq#closures_and_goroutines
 			go func() {
+				defer wg.Done()
 				d.EwmaUpdate(n, iterDur)
-				wg.Done()
 			}()
 		}
 		s.current = current
@@ -402,13 +388,14 @@ func (b *Bar) Wait() {
 }
 
 func (b *Bar) serve(bs *bState) {
-	decoratorsOnShutdown := func(decorators []decor.Decorator) {
-		for _, d := range decorators {
+	defer b.container.bwg.Done()
+	decoratorsOnShutdown := func(group []decor.Decorator) {
+		for _, d := range group {
 			if d, ok := unwrap(d).(decor.ShutdownListener); ok {
 				b.container.bwg.Add(1)
 				go func() {
+					defer b.container.bwg.Done()
 					d.OnShutdown()
-					b.container.bwg.Done()
 				}()
 			}
 		}
@@ -418,13 +405,12 @@ func (b *Bar) serve(bs *bState) {
 		case op := <-b.operateState:
 			op(bs)
 		case <-b.ctx.Done():
-			decoratorsOnShutdown(bs.decorators[0])
-			decoratorsOnShutdown(bs.decorators[1])
+			decoratorsOnShutdown(bs.decorGroups[0])
+			decoratorsOnShutdown(bs.decorGroups[1])
 			// bar can be aborted by canceling parent ctx without calling b.Abort
 			bs.aborted = !bs.completed()
 			b.bs = bs
 			close(b.bsOk)
-			b.container.bwg.Done()
 			return
 		}
 	}
@@ -491,9 +477,9 @@ func (b *Bar) wSyncTable() syncTable {
 }
 
 func (s *bState) draw(stat decor.Statistics) (_ io.Reader, err error) {
-	decorFiller := func(buf *bytes.Buffer, decorators []decor.Decorator) (err error) {
-		for _, d := range decorators {
-			// need to call Decor in any case becase of width synchronization
+	decorFiller := func(buf *bytes.Buffer, group []decor.Decorator) (err error) {
+		for _, d := range group {
+			// need to call Decor in any case because of width synchronization
 			str, width := d.Decor(stat)
 			if err != nil {
 				continue
@@ -511,7 +497,7 @@ func (s *bState) draw(stat decor.Statistics) (_ io.Reader, err error) {
 	}
 
 	for i, buf := range s.buffers[:2] {
-		err = decorFiller(buf, s.decorators[i])
+		err = decorFiller(buf, s.decorGroups[i])
 		if err != nil {
 			return nil, err
 		}
@@ -545,32 +531,18 @@ func (s *bState) draw(stat decor.Statistics) (_ io.Reader, err error) {
 }
 
 func (s *bState) wSyncTable() (table syncTable) {
-	var count int
+	var start int
 	var row []chan int
 
-	for i, decorators := range s.decorators {
-		for _, d := range decorators {
+	for i, group := range s.decorGroups {
+		for _, d := range group {
 			if ch, ok := d.Sync(); ok {
 				row = append(row, ch)
-				count++
 			}
 		}
-		switch i {
-		case 0:
-			table[i] = row[0:count]
-		default:
-			table[i] = row[len(table[i-1]):count]
-		}
+		table[i], start = row[start:], len(row)
 	}
 	return table
-}
-
-func (s *bState) populateEwmaDecorators(decorators []decor.Decorator) {
-	for _, d := range decorators {
-		if d, ok := unwrap(d).(decor.EwmaDecorator); ok {
-			s.ewmaDecorators = append(s.ewmaDecorators, d)
-		}
-	}
 }
 
 func (s *bState) triggerCompletion(b *Bar) {
