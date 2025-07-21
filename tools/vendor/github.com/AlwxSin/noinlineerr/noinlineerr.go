@@ -57,9 +57,9 @@ func inlineErrorInspector(pass *analysis.Pass) func(n ast.Node) {
 				continue
 			}
 
-			// confirm type is error
+			// confirm type is error and it is used in condition
 			obj := pass.TypesInfo.ObjectOf(ident)
-			if !isError(obj) || ident.Name == "_" {
+			if !isError(obj) || ident.Name == "_" || !errorUsedInCondition(ifStmt.Cond, ident.Name) {
 				continue
 			}
 
@@ -131,4 +131,24 @@ func shadowVarsExists(name string, scope *types.Scope) bool {
 	}
 
 	return parentScope.Lookup(name) != nil
+}
+
+func errorUsedInCondition(cond ast.Expr, errIdentName string) bool {
+	used := false
+
+	ast.Inspect(cond, func(n ast.Node) bool {
+		ident, ok := n.(*ast.Ident)
+		if !ok {
+			return true
+		}
+
+		if ident.Name == errIdentName {
+			used = true
+			return false
+		}
+
+		return true
+	})
+
+	return used
 }

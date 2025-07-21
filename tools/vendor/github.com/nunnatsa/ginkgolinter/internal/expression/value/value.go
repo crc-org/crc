@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 
-	"github.com/nunnatsa/ginkgolinter/internal/interfaces"
+	"github.com/nunnatsa/ginkgolinter/internal/typecheck"
 )
 
 type Valuer interface {
@@ -191,22 +191,22 @@ func IsExprError(pass *analysis.Pass, expr ast.Expr) bool {
 	actualArgType := pass.TypesInfo.TypeOf(expr)
 	switch t := actualArgType.(type) {
 	case *gotypes.Named:
-		return interfaces.ImplementsError(actualArgType)
+		return typecheck.ImplementsError(actualArgType)
 
 	case *gotypes.Pointer:
-		if interfaces.ImplementsError(t) {
+		if typecheck.ImplementsError(t) {
 			return true
 		}
 
 		if tt, ok := t.Elem().(*gotypes.Named); ok {
-			return interfaces.ImplementsError(tt)
+			return typecheck.ImplementsError(tt)
 		}
 
 	case *gotypes.Tuple:
 		if t.Len() > 0 {
 			switch t0 := t.At(0).Type().(type) {
 			case *gotypes.Named, *gotypes.Pointer:
-				if interfaces.ImplementsError(t0) {
+				if typecheck.ImplementsError(t0) {
 					return true
 				}
 			}

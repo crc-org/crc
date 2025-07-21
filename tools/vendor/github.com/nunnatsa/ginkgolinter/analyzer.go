@@ -6,13 +6,13 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 
+	"github.com/nunnatsa/ginkgolinter/config"
 	"github.com/nunnatsa/ginkgolinter/linter"
-	"github.com/nunnatsa/ginkgolinter/types"
 	"github.com/nunnatsa/ginkgolinter/version"
 )
 
 // NewAnalyzerWithConfig returns an Analyzer.
-func NewAnalyzerWithConfig(config *types.Config) *analysis.Analyzer {
+func NewAnalyzerWithConfig(config *config.Config) *analysis.Analyzer {
 	theLinter := linter.NewGinkgoLinter(config)
 
 	return &analysis.Analyzer{
@@ -24,15 +24,16 @@ func NewAnalyzerWithConfig(config *types.Config) *analysis.Analyzer {
 
 // NewAnalyzer returns an Analyzer - the package interface with nogo
 func NewAnalyzer() *analysis.Analyzer {
-	config := &types.Config{
-		SuppressLen:          false,
-		SuppressNil:          false,
-		SuppressErr:          false,
-		SuppressCompare:      false,
-		ForbidFocus:          false,
-		AllowHaveLen0:        false,
-		ForceExpectTo:        false,
-		ForceSucceedForFuncs: false,
+	config := &config.Config{
+		SuppressLen:               false,
+		SuppressNil:               false,
+		SuppressErr:               false,
+		SuppressCompare:           false,
+		ForbidFocus:               false,
+		AllowHaveLen0:             false,
+		ForceExpectTo:             false,
+		ForceSucceedForFuncs:      false,
+		ForceAssertionDescription: false,
 	}
 
 	a := NewAnalyzerWithConfig(config)
@@ -50,6 +51,7 @@ func NewAnalyzer() *analysis.Analyzer {
 	a.Flags.BoolVar(&config.ForbidFocus, "forbid-focus-container", config.ForbidFocus, "trigger a warning for ginkgo focus containers like FDescribe, FContext, FWhen or FIt; default = false.")
 	a.Flags.BoolVar(&config.ForbidSpecPollution, "forbid-spec-pollution", config.ForbidSpecPollution, "trigger a warning for variable assignments in ginkgo containers like Describe, Context and When, instead of in BeforeEach(); default = false.")
 	a.Flags.BoolVar(&config.ForceSucceedForFuncs, "force-succeed", config.ForceSucceedForFuncs, "force using the Succeed matcher for error functions, and the HaveOccurred matcher for non-function error values")
+	a.Flags.BoolVar(&config.ForceAssertionDescription, "force-assertion-description", config.ForceAssertionDescription, "force adding assertion descriptions to gomega matchers; default = false")
 
 	return a
 }

@@ -113,4 +113,18 @@ For example:
   Expect(err).ToNot(Succeed())
 or
   Expect(funcRetError().ToNot(HaveOccurred())
+
+* force assertion descriptions [Style]
+  enforce that all assertions include an optional description message to improve test readability and debugging.
+  This rule is disabled by default. Use the --force-assertion-description flag to enable it.
+
+For example:
+  Expect("hello").To(Equal("hello")) // This will trigger a warning
+Should be:
+  Expect("hello").To(Equal("hello"), "greeting should match")
+
+The rule also works with async assertions and Expect calls inside Eventually:
+  Eventually(func() {
+    Expect(value).To(Equal(expected)) // This will also trigger a warning if no description
+  }).Should(Succeed(), "operation should complete successfully")
 `

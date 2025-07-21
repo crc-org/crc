@@ -5,14 +5,14 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 
-	"github.com/nunnatsa/ginkgolinter/types"
+	"github.com/nunnatsa/ginkgolinter/config"
 )
 
 // dotHandler is used when importing ginkgo with dot; i.e.
 // import . "github.com/onsi/ginkgo"
 type dotHandler struct{}
 
-func (h dotHandler) HandleGinkgoSpecs(expr ast.Expr, config types.Config, pass *analysis.Pass) bool {
+func (h dotHandler) HandleGinkgoSpecs(expr ast.Expr, config config.Config, pass *analysis.Pass) bool {
 	return handleGinkgoSpecs(expr, config, pass, h)
 }
 

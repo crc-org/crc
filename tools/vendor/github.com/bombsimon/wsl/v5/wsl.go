@@ -7,7 +7,6 @@ import (
 	"go/format"
 	"go/token"
 	"go/types"
-	"slices"
 
 	"golang.org/x/tools/go/analysis"
 )
@@ -540,7 +539,40 @@ func (w *WSL) checkError(
 
 	defer cursor.Save()()
 
-	if _, ok := ifStmt.(*ast.IfStmt); !ok {
+	// It must be an if statement
+	stmt, ok := ifStmt.(*ast.IfStmt)
+	if !ok {
+		return
+	}
+
+	// The condition must be a binary expression (X OP Y)
+	binaryExpr, ok := stmt.Cond.(*ast.BinaryExpr)
+	if !ok {
+		return
+	}
+
+	// We must do not equal or equal comparison (!= or ==)
+	if binaryExpr.Op != token.NEQ && binaryExpr.Op != token.EQL {
+		return
+	}
+
+	xIdent, ok := binaryExpr.X.(*ast.Ident)
+	if !ok {
+		return
+	}
+
+	// X is not an error so it's not error checking
+	if !w.implementsErr(xIdent) {
+		return
+	}
+
+	yIdent, ok := binaryExpr.Y.(*ast.Ident)
+	if !ok {
+		return
+	}
+
+	// Y is not compared with `nil`
+	if yIdent.Name != "nil" {
 		return
 	}
 
@@ -559,26 +591,8 @@ func (w *WSL) checkError(
 		return
 	}
 
-	// Ensure the previous node has at least one variable implementing the error
-	// interface.
-	if !slices.ContainsFunc(previousIdents, func(ident *ast.Ident) bool {
-		return w.implementsErr(ident)
-	}) {
-		return
-	}
-
-	// Ensure at least one variable from the previous node is used in the if
-	// statement.
-	ifIdents := identsFromNode(ifStmt, true)
-	if len(identIntersection(ifIdents, previousIdents)) == 0 {
-		return
-	}
-
-	// And that at least one ident in the if statement implements the error
-	// interface.
-	if !slices.ContainsFunc(ifIdents, func(ident *ast.Ident) bool {
-		return w.implementsErr(ident)
-	}) {
+	// Ensure that the error was defined on the line above.
+	if len(identIntersection([]*ast.Ident{xIdent}, previousIdents)) == 0 {
 		return
 	}
 

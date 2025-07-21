@@ -125,7 +125,6 @@ func getMatcherInfo(orig, clone *ast.CallExpr, matcherName string, pass *analysi
 
 	case haveOccurred:
 		return &HaveOccurredMatcher{}
-
 	}
 
 	return &UnspecifiedMatcher{matcherName: matcherName}

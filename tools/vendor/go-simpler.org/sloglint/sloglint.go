@@ -252,7 +252,7 @@ func visit(pass *analysis.Pass, opts *Options, node ast.Node, stack []ast.Node) 
 	msgPos := funcInfo.argsPos - 1
 
 	// NOTE: "With" functions have no message argument and must be skipped.
-	if opts.StaticMsg && msgPos >= 0 && !isStaticMsg(call.Args[msgPos]) {
+	if opts.StaticMsg && msgPos >= 0 && !isStaticMsg(pass.TypesInfo, call.Args[msgPos]) {
 		pass.Reportf(call.Args[msgPos].Pos(), "message should be a string literal or a constant")
 	}
 
@@ -440,17 +440,18 @@ func isContextInScope(info *types.Info, stack []ast.Node) bool {
 	return false
 }
 
-func isStaticMsg(msg ast.Expr) bool {
+func isStaticMsg(info *types.Info, msg ast.Expr) bool {
 	switch msg := msg.(type) {
 	case *ast.BasicLit: // e.g. slog.Info("msg")
 		return msg.Kind == token.STRING
 	case *ast.Ident: // e.g. const msg = "msg"; slog.Info(msg)
-		return msg.Obj != nil && msg.Obj.Kind == ast.Con
+		_, isConst := info.ObjectOf(msg).(*types.Const)
+		return isConst
 	case *ast.BinaryExpr: // e.g. slog.Info("x" + "y")
 		if msg.Op != token.ADD {
 			panic("unreachable") // only + can be applied to strings.
 		}
-		return isStaticMsg(msg.X) && isStaticMsg(msg.Y)
+		return isStaticMsg(info, msg.X) && isStaticMsg(info, msg.Y)
 	default:
 		return false
 	}

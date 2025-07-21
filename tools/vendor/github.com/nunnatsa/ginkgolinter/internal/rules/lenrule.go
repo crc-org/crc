@@ -3,21 +3,42 @@ package rules
 import (
 	"go/token"
 
+	"github.com/nunnatsa/ginkgolinter/config"
 	"github.com/nunnatsa/ginkgolinter/internal/expression"
 	"github.com/nunnatsa/ginkgolinter/internal/expression/actual"
 	"github.com/nunnatsa/ginkgolinter/internal/expression/matcher"
 	"github.com/nunnatsa/ginkgolinter/internal/reports"
-	"github.com/nunnatsa/ginkgolinter/types"
 )
 
 const wrongLengthWarningTemplate = "wrong length assertion"
 
-// LenRule does not allow using the len() function in actual with numeric comparison. Instead,
-// it suggests to use the HaveLen matcher, or the BeEmpty matcher, if comparing to zero.
+// LenRule discourages using the len() function directly in assertions with numeric comparisons.
+// Instead, it recommends using the HaveLen matcher for specific lengths, or BeEmpty when checking for zero length.
+//
+// Example:
+//
+//	var s []string
+//
+//	// Not recommended:
+//	Expect(len(s)).ToNot(Equal(0))
+//	Expect(len(s)).ToNot(BeNumerically("==", 0))
+//	Expect(len(s)).To(BeNumerically("!=", 0))
+//	Expect(len(s)).To(BeNumerically(">", 0))
+//	Expect(len(s) > 0).To(BeTrue())
+//
+//	// Preferred:
+//	Expect(s).ToNot(BeEmpty())
+//
+//	// Not recommended:
+//	Expect(len(s)).To(Equal(3))
+//	Expect(len(s)).To(BeNumerically("==", 3))
+//	Expect(len(s) == 3).To(BeTrue())
+//
+//	// Preferred:
+//	Expect(s).To(HaveLen(3))
 type LenRule struct{}
 
-func (r *LenRule) Apply(gexp *expression.GomegaExpression, config types.Config, reportBuilder *reports.Builder) bool {
-
+func (r *LenRule) Apply(gexp *expression.GomegaExpression, config config.Config, reportBuilder *reports.Builder) bool {
 	if !r.isApplied(gexp, config) {
 		return false
 	}
@@ -29,7 +50,7 @@ func (r *LenRule) Apply(gexp *expression.GomegaExpression, config types.Config, 
 	return false
 }
 
-func (r *LenRule) isApplied(gexp *expression.GomegaExpression, config types.Config) bool {
+func (r *LenRule) isApplied(gexp *expression.GomegaExpression, config config.Config) bool {
 	if config.SuppressLen {
 		return false
 	}
@@ -65,7 +86,6 @@ func (r *LenRule) fixExpression(gexp *expression.GomegaExpression) bool {
 }
 
 func (r *LenRule) fixEqual(gexp *expression.GomegaExpression) bool {
-
 	if gexp.MatcherTypeIs(matcher.EqualMatcherType) {
 		gexp.SetLenNumericMatcher()
 

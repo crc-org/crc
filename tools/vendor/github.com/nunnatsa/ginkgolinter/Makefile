@@ -24,7 +24,7 @@ build-for-linux:
 build-all: build build-for-linux build-for-mac build-for-windows
 
 test-cli:
-	cd tests; go test -v ./
+	RUN_CLI_TESTS=true go test -v ./tests/...
 
 test: unit-test test-cli
 

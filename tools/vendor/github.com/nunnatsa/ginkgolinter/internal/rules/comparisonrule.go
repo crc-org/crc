@@ -3,18 +3,29 @@ package rules
 import (
 	"go/token"
 
+	"github.com/nunnatsa/ginkgolinter/config"
 	"github.com/nunnatsa/ginkgolinter/internal/expression"
 	"github.com/nunnatsa/ginkgolinter/internal/expression/actual"
 	"github.com/nunnatsa/ginkgolinter/internal/expression/matcher"
 	"github.com/nunnatsa/ginkgolinter/internal/reports"
-	"github.com/nunnatsa/ginkgolinter/types"
 )
 
 const wrongCompareWarningTemplate = "wrong comparison assertion"
 
+// ComparisonRule rewrites assertions that use comparison operators into more idiomatic matcher-based assertions.
+//
+// Examples:
+//
+//	Expect(x == 5).To(BeTrue())      // becomes: Expect(x).To(Equal(5))
+//
+//	Expect(y != 0).To(BeTrue())      // becomes: Expect(y).NotTo(BeZero())
+//
+//	Expect(a > b).To(BeTrue())       // becomes: Expect(a).To(BeNumerically(">", b))
+//
+//	Expect(count <= max).To(BeTrue()) // becomes: Expect(count).To(BeNumerically("<=", max))
 type ComparisonRule struct{}
 
-func (r ComparisonRule) isApplied(gexp *expression.GomegaExpression, config types.Config) bool {
+func (r ComparisonRule) isApplied(gexp *expression.GomegaExpression, config config.Config) bool {
 	if config.SuppressCompare {
 		return false
 	}
@@ -22,7 +33,7 @@ func (r ComparisonRule) isApplied(gexp *expression.GomegaExpression, config type
 	return gexp.ActualArgTypeIs(actual.ComparisonActualArgType)
 }
 
-func (r ComparisonRule) Apply(gexp *expression.GomegaExpression, config types.Config, reportBuilder *reports.Builder) bool {
+func (r ComparisonRule) Apply(gexp *expression.GomegaExpression, config config.Config, reportBuilder *reports.Builder) bool {
 	if !r.isApplied(gexp, config) {
 		return false
 	}

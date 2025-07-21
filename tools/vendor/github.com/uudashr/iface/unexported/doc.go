@@ -1,4 +1,4 @@
-// Package unexported defines an Analyzer that identifies interfaces that are
-// not exported but are used in exported functions or methods as parameters or
-// return values.
+// Package unexported defines an Analyzer that detects interfaces which are
+// not exported but are used as parameters or return values in exported
+// functions or methods.
 package unexported

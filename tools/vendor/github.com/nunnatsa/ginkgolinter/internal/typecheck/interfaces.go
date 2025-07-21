@@ -1,4 +1,4 @@
-package interfaces
+package typecheck
 
 import (
 	"go/token"
@@ -67,10 +67,12 @@ func generateTheGomegaMatcherInfType() *gotypes.Interface {
 	}, nil)
 }
 
+// ImplementsError checks if a type implements the error interface
 func ImplementsError(t gotypes.Type) bool {
 	return gotypes.Implements(t, errorType)
 }
 
+// ImplementsGomegaMatcher checks if a type implements the GomegaMatcher interface
 func ImplementsGomegaMatcher(t gotypes.Type) bool {
 	return t != nil && gotypes.Implements(t, gomegaMatcherType)
 }

@@ -319,3 +319,10 @@ func (e *GomegaExpression) MatcherTypeIs(other matcher.Type) bool {
 func (e *GomegaExpression) FormatOrig(frm *formatter.GoFmtFormatter) string {
 	return frm.Format(e.orig)
 }
+
+func (e *GomegaExpression) HasDescription() bool {
+	if e == nil || e.orig == nil {
+		return false
+	}
+	return len(e.orig.Args) > 1
+}

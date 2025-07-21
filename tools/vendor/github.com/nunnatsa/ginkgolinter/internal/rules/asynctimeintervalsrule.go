@@ -4,10 +4,10 @@ import (
 	"go/ast"
 	"time"
 
+	"github.com/nunnatsa/ginkgolinter/config"
 	"github.com/nunnatsa/ginkgolinter/internal/expression"
 	"github.com/nunnatsa/ginkgolinter/internal/intervals"
 	"github.com/nunnatsa/ginkgolinter/internal/reports"
-	"github.com/nunnatsa/ginkgolinter/types"
 )
 
 const (
@@ -17,13 +17,43 @@ const (
 	pollingGreaterThanTimeout      = "timeout must not be shorter than the polling interval"
 )
 
+// AsyncTimeIntervalsRule ensures that the timeout and polling intervals are used correctly in asynchronous assertions.
+// It reports issues if:
+// - the timeout or polling is defined more than once
+//
+// Example:
+//
+//	// Bad:
+//	Eventually(someFunction).WithTimeout(1 * time.Second).WithTimeout(10 * time.Second).Should(Equal(5))
+//
+//	// or
+//	Eventually(someFunction, 10).WithTimeout(10 * time.Second).Should(Equal(5))
+//
+//	// Good:
+//	Eventually(someFunction).WithTimeout(10 * time.Second).Should(Equal(5))
+//
+// - the polling interval is greater than the timeout interval
+//
+//	// Bad:
+//	Eventually(someFunction).WithTimeout(1 * time.Second).WithPolling(10 * time.Second).Should(Equal(5))
+//
+//	// Good:
+//	Eventually(someFunction).WithTimeout(10 * time.Second).WithPolling(1 * time.Second).Should(Equal(5))
+//
+// - intervals are not using proper time.Duration types (e.g., using raw numbers instead of time.Duration)
+//
+//	// Bad:
+//	Eventually(someFunction, 10).Should(Equal(5))
+//
+//	// Good:
+//	Eventually(someFunction).WithTimeout(10 * time.Second).Should(Equal(5))
 type AsyncTimeIntervalsRule struct{}
 
-func (r AsyncTimeIntervalsRule) isApplied(gexp *expression.GomegaExpression, config types.Config) bool {
+func (r AsyncTimeIntervalsRule) isApplied(gexp *expression.GomegaExpression, config config.Config) bool {
 	return !config.SuppressAsync && config.ValidateAsyncIntervals && gexp.IsAsync()
 }
 
-func (r AsyncTimeIntervalsRule) Apply(gexp *expression.GomegaExpression, config types.Config, reportBuilder *reports.Builder) bool {
+func (r AsyncTimeIntervalsRule) Apply(gexp *expression.GomegaExpression, config config.Config, reportBuilder *reports.Builder) bool {
 	if r.isApplied(gexp, config) {
 		asyncArg := gexp.GetAsyncActualArg()
 		if asyncArg.TooManyTimeouts() {
