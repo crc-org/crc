@@ -14,7 +14,7 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-// Analyzer is the unused interface analyzer.
+// Analyzer detects unused interfaces in the package.
 var Analyzer = newAnalyzer()
 
 func newAnalyzer() *analysis.Analyzer {
@@ -22,7 +22,7 @@ func newAnalyzer() *analysis.Analyzer {
 
 	analyzer := &analysis.Analyzer{
 		Name:     "unused",
-		Doc:      "Identifies interfaces that are not used anywhere in the same package where the interface is defined",
+		Doc:      "Detects interfaces which are not used anywhere in the same package where they are defined.",
 		URL:      "https://pkg.go.dev/github.com/uudashr/iface/unused",
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 		Run:      r.run,
@@ -39,7 +39,7 @@ type runner struct {
 	exclude string
 }
 
-func (r *runner) run(pass *analysis.Pass) (interface{}, error) {
+func (r *runner) run(pass *analysis.Pass) (any, error) {
 	excludes := strings.Split(r.exclude, ",")
 	if slices.Contains(excludes, pass.Pkg.Path()) {
 		return nil, nil

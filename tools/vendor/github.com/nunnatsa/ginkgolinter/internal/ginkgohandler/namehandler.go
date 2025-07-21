@@ -5,7 +5,7 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 
-	"github.com/nunnatsa/ginkgolinter/types"
+	config "github.com/nunnatsa/ginkgolinter/config"
 )
 
 // nameHandler is used when importing ginkgo without name; i.e.
@@ -15,7 +15,7 @@ import (
 // import customname "github.com/onsi/ginkgo"
 type nameHandler string
 
-func (h nameHandler) HandleGinkgoSpecs(expr ast.Expr, config types.Config, pass *analysis.Pass) bool {
+func (h nameHandler) HandleGinkgoSpecs(expr ast.Expr, config config.Config, pass *analysis.Pass) bool {
 	return handleGinkgoSpecs(expr, config, pass, h)
 }
 
@@ -34,8 +34,8 @@ func (h nameHandler) isWrapContainer(exp *ast.CallExpr) bool {
 			return isWrapContainer(sel.Sel.Name)
 		}
 	}
-	return false
 
+	return false
 }
 
 func (h nameHandler) isFocusSpec(exp ast.Expr) bool {

@@ -1,36 +1,42 @@
 package rules
 
 import (
+	"github.com/nunnatsa/ginkgolinter/config"
 	"github.com/nunnatsa/ginkgolinter/internal/expression"
 	"github.com/nunnatsa/ginkgolinter/internal/reports"
-	"github.com/nunnatsa/ginkgolinter/types"
 )
 
+// Rule is the interface for all the linter rules
 type Rule interface {
-	Apply(*expression.GomegaExpression, types.Config, *reports.Builder) bool
+	// Apply applies the rule to the given gomega expression
+	Apply(*expression.GomegaExpression, config.Config, *reports.Builder) bool
 }
 
+// rules is the list of rules that are applied to a sync assertion expression.
 var rules = Rules{
 	&ForceExpectToRule{},
 	&LenRule{},
 	&CapRule{},
 	&ComparisonRule{},
 	&NilCompareRule{},
-	&ComparePointRule{},
+	&ComparePointerRule{},
 	&ErrorEqualNilRule{},
 	&MatchErrorRule{},
 	getMatcherOnlyRules(),
 	&EqualDifferentTypesRule{},
 	&HaveOccurredRule{},
 	&SucceedRule{},
+	&AssertionDescriptionRule{},
 }
 
+// asyncRules is the list of rules that are applied to an async assertion expression.
 var asyncRules = Rules{
 	&AsyncFuncCallRule{},
 	&AsyncTimeIntervalsRule{},
 	&ErrorEqualNilRule{},
 	&MatchErrorRule{},
 	&AsyncSucceedRule{},
+	&AssertionDescriptionRule{},
 	getMatcherOnlyRules(),
 }
 
@@ -44,7 +50,7 @@ func GetAsyncRules() Rules {
 
 type Rules []Rule
 
-func (r Rules) Apply(gexp *expression.GomegaExpression, config types.Config, reportBuilder *reports.Builder) bool {
+func (r Rules) Apply(gexp *expression.GomegaExpression, config config.Config, reportBuilder *reports.Builder) bool {
 	for _, rule := range r {
 		if rule.Apply(gexp, config, reportBuilder) {
 			return true

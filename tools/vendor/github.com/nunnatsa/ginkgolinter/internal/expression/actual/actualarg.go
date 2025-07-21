@@ -62,7 +62,6 @@ func getActualArgPayload(origActualExpr, actualExprClone *ast.CallExpr, pass *an
 		case *ast.BinaryExpr:
 			arg = parseBinaryExpr(expr, argExprClone.(*ast.BinaryExpr), pass)
 		}
-
 	}
 
 	if arg != nil {

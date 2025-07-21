@@ -107,8 +107,8 @@ func (g nameHandler) GetActualExprClone(origFunc, funcClone *ast.SelectorExpr) *
 		} else {
 			return g.GetActualExprClone(origFun, funClone)
 		}
-
 	}
+
 	return nil
 }
 

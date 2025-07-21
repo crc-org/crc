@@ -3,11 +3,11 @@ package rules
 import (
 	"go/ast"
 
+	"github.com/nunnatsa/ginkgolinter/config"
 	"github.com/nunnatsa/ginkgolinter/internal/expression"
 	"github.com/nunnatsa/ginkgolinter/internal/expression/actual"
 	"github.com/nunnatsa/ginkgolinter/internal/expression/matcher"
 	"github.com/nunnatsa/ginkgolinter/internal/reports"
-	"github.com/nunnatsa/ginkgolinter/types"
 )
 
 const (
@@ -20,11 +20,10 @@ const (
 
 // MatchErrorRule validates the usage of the MatchError matcher.
 //
-// # First, it checks that the actual value is actually an error
-//
+// First, it checks that the actual value is actually an error
 // Then, it checks the matcher itself: this matcher can be used in 3 different ways:
 //  1. With error type variable
-//  2. With another gomega matcher, to check the actual err.Error() value
+//  2. With a gomega matcher, to check the actual err.Error() value
 //  3. With function with a signature of func(error) bool. In this case, additional description
 //     string variable is required.
 type MatchErrorRule struct{}
@@ -33,7 +32,7 @@ func (r MatchErrorRule) isApplied(gexp *expression.GomegaExpression) bool {
 	return gexp.MatcherTypeIs(matcher.MatchErrorMatcherType | matcher.MultipleMatcherMatherType)
 }
 
-func (r MatchErrorRule) Apply(gexp *expression.GomegaExpression, _ types.Config, reportBuilder *reports.Builder) bool {
+func (r MatchErrorRule) Apply(gexp *expression.GomegaExpression, _ config.Config, reportBuilder *reports.Builder) bool {
 	if !r.isApplied(gexp) {
 		return false
 	}

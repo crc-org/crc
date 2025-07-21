@@ -1,17 +1,28 @@
 package rules
 
 import (
+	"github.com/nunnatsa/ginkgolinter/config"
 	"github.com/nunnatsa/ginkgolinter/internal/expression"
 	"github.com/nunnatsa/ginkgolinter/internal/expression/actual"
 	"github.com/nunnatsa/ginkgolinter/internal/expression/matcher"
 	"github.com/nunnatsa/ginkgolinter/internal/expression/value"
 	"github.com/nunnatsa/ginkgolinter/internal/reports"
-	"github.com/nunnatsa/ginkgolinter/types"
 )
 
+// ErrorEqualNilRule checks for correct usage of nil comparisons in error assertions.
+//
+// Example:
+//
+//	err := errors.New("error")
+//
+//	// Bad:
+//	Expect(err).To(Equal(nil))
+//
+//	// Good:
+//	Expect(x).ToNot(HaveOccurred())
 type ErrorEqualNilRule struct{}
 
-func (ErrorEqualNilRule) isApplied(gexp *expression.GomegaExpression, config types.Config) bool {
+func (ErrorEqualNilRule) isApplied(gexp *expression.GomegaExpression, config config.Config) bool {
 	if config.SuppressErr {
 		return false
 	}
@@ -24,7 +35,7 @@ func (ErrorEqualNilRule) isApplied(gexp *expression.GomegaExpression, config typ
 		gexp.MatcherTypeIs(matcher.BeNilMatcherType|matcher.EqualNilMatcherType)
 }
 
-func (r ErrorEqualNilRule) Apply(gexp *expression.GomegaExpression, config types.Config, reportBuilder *reports.Builder) bool {
+func (r ErrorEqualNilRule) Apply(gexp *expression.GomegaExpression, config config.Config, reportBuilder *reports.Builder) bool {
 	if !r.isApplied(gexp, config) {
 		return false
 	}

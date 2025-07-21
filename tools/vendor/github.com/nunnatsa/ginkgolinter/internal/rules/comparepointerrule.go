@@ -1,18 +1,32 @@
 package rules
 
 import (
+	"github.com/nunnatsa/ginkgolinter/config"
 	"github.com/nunnatsa/ginkgolinter/internal/expression"
 	"github.com/nunnatsa/ginkgolinter/internal/expression/actual"
 	"github.com/nunnatsa/ginkgolinter/internal/expression/matcher"
 	"github.com/nunnatsa/ginkgolinter/internal/reports"
-	"github.com/nunnatsa/ginkgolinter/types"
 )
 
 const comparePointerToValue = "comparing a pointer to a value will always fail"
 
-type ComparePointRule struct{}
+// ComparePointerRule checks for comparisons between a pointer and a value using matchers like Equal, BeEquivalentTo, or BeIdenticalTo.
+// Such comparisons will always fail, so this rule suggests using the HaveValue matcher instead.
+// It applies when the actual argument is a pointer and the matcher is not comparing to another pointer, interface, or nil.
+//
+// Example:
+//
+//	a := 5
+//	x := &a
+//
+//	// Bad:
+//	Expect(x).To(Equal(5))
+//
+//	// Good:
+//	Expect(x).To(HaveValue(5))
+type ComparePointerRule struct{}
 
-func (r ComparePointRule) isApplied(gexp *expression.GomegaExpression) bool {
+func (r ComparePointerRule) isApplied(gexp *expression.GomegaExpression) bool {
 	actl, ok := gexp.GetActualArg().(*actual.RegularArgPayload)
 	if !ok {
 		return false
@@ -21,7 +35,7 @@ func (r ComparePointRule) isApplied(gexp *expression.GomegaExpression) bool {
 	return actl.IsPointer()
 }
 
-func (r ComparePointRule) Apply(gexp *expression.GomegaExpression, config types.Config, reportBuilder *reports.Builder) bool {
+func (r ComparePointerRule) Apply(gexp *expression.GomegaExpression, config config.Config, reportBuilder *reports.Builder) bool {
 	if !r.isApplied(gexp) {
 		return false
 	}

@@ -5,13 +5,13 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 
+	"github.com/nunnatsa/ginkgolinter/config"
 	"github.com/nunnatsa/ginkgolinter/internal/expression"
 	"github.com/nunnatsa/ginkgolinter/internal/formatter"
 	"github.com/nunnatsa/ginkgolinter/internal/ginkgohandler"
 	"github.com/nunnatsa/ginkgolinter/internal/gomegahandler"
 	"github.com/nunnatsa/ginkgolinter/internal/reports"
 	"github.com/nunnatsa/ginkgolinter/internal/rules"
-	"github.com/nunnatsa/ginkgolinter/types"
 )
 
 // The ginkgolinter enforces standards of using ginkgo and gomega.
@@ -19,11 +19,11 @@ import (
 // For more details, look at the README.md file
 
 type GinkgoLinter struct {
-	config *types.Config
+	config *config.Config
 }
 
 // NewGinkgoLinter return new ginkgolinter object
-func NewGinkgoLinter(config *types.Config) *GinkgoLinter {
+func NewGinkgoLinter(config *config.Config) *GinkgoLinter {
 	return &GinkgoLinter{
 		config: config,
 	}
@@ -98,7 +98,7 @@ func (l *GinkgoLinter) Run(pass *analysis.Pass) (any, error) {
 	return nil, nil
 }
 
-func checkGomegaExpression(gexp *expression.GomegaExpression, config types.Config, reportBuilder *reports.Builder, pass *analysis.Pass) bool {
+func checkGomegaExpression(gexp *expression.GomegaExpression, config config.Config, reportBuilder *reports.Builder, pass *analysis.Pass) bool {
 	goNested := false
 	if rules.GetMissingAssertionRule().Apply(gexp, config, reportBuilder) {
 		goNested = true

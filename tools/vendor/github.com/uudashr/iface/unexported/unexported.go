@@ -12,7 +12,7 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-// Analyzer is the unexported interface analyzer.
+// Analyzer detects unexported interfaces used in exported functions or methods.
 var Analyzer = newAnalyzer()
 
 func newAnalyzer() *analysis.Analyzer {
@@ -20,7 +20,7 @@ func newAnalyzer() *analysis.Analyzer {
 
 	analyzer := &analysis.Analyzer{
 		Name:     "unexported",
-		Doc:      "Identifies interfaces that are not exported but are used in exported functions or methods as parameters or return values",
+		Doc:      "Detects interfaces which are not exported but are used as parameters or return values in exported functions or methods.",
 		URL:      "https://pkg.go.dev/github.com/uudashr/iface/visibility",
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 		Run:      r.run,

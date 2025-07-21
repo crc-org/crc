@@ -526,6 +526,33 @@ will trigger a warning with a suggestion to replace the mather to
 
 ***Note***: This rule **does** support auto-fix, when the `--fix` command line parameter is used.
 
+### Force assertion descriptions [STYLE]
+This rule enforces that all assertions include an optional description message to improve test readability and debugging.
+
+```go
+It("should test something", func() {
+    Expect("hello").To(Equal("hello")) // This will trigger a warning
+    Eventually(func() bool { return true }).Should(BeTrue()) // This will trigger a warning
+})
+```
+
+Should be:
+```go
+It("should test something", func() {
+    Expect("hello").To(Equal("hello"), "greeting should match")
+    Eventually(func() bool { return true }).Should(BeTrue(), "condition should eventually be true")
+})
+```
+
+The rule also works with async assertions and `Expect` calls inside `Eventually`:
+```go
+Eventually(func() {
+    Expect(value).To(Equal(expected)) // This will also trigger a warning if no description
+}).Should(Succeed(), "operation should complete successfully")
+```
+
+***This rule is disabled by default***. Use the `--force-assertion-description` command line flag to enable it.
+
 ## Suppress the linter
 ### Suppress warning from command line
 * Use the `--suppress-len-assertion` flag to suppress the wrong length and cap assertions warning

@@ -1,3 +1,3 @@
-// Package unused defines an Analyzer that indetifies interfaces that are not
-// used anywhere in the same package where the interface is defined.
+// Package unused defines an Analyzer that detects interfaces which are not
+// used anywhere in the same package where they are defined.
 package unused

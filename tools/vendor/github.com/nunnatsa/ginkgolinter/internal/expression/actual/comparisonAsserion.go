@@ -26,7 +26,6 @@ type FuncComparisonPayload struct {
 }
 
 func newFuncComparisonPayload(origLeft, leftClone *ast.CallExpr, origRight, rightClone ast.Expr, op token.Token, pass *analysis.Pass) (*FuncComparisonPayload, bool) {
-
 	funcName, ok := builtinFuncName(origLeft)
 	if !ok {
 		return nil, false

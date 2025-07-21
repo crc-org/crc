@@ -3,11 +3,11 @@ package rules
 import (
 	"go/token"
 
+	"github.com/nunnatsa/ginkgolinter/config"
 	"github.com/nunnatsa/ginkgolinter/internal/expression"
 	"github.com/nunnatsa/ginkgolinter/internal/expression/actual"
 	"github.com/nunnatsa/ginkgolinter/internal/expression/matcher"
 	"github.com/nunnatsa/ginkgolinter/internal/reports"
-	"github.com/nunnatsa/ginkgolinter/types"
 )
 
 const (
@@ -15,9 +15,28 @@ const (
 	wrongErrWarningTemplate = "wrong error assertion"
 )
 
+// NilCompareRule checks for correct usage of nil comparisons.
+// It suggests using the HaveOccurred() or Succeed() when comparing errors to nil, and BeNil for any other nil comparisons.
+//
+// Example:
+//
+//	// Bad:
+//	Expect(b == nil).To(BeTrue())
+//	Expect(b == nil).To(Equal(true))
+//
+//	// Good:
+//	Expect(b).To(BeNil())
+//
+//	// Bad:
+//	Expect(err == nil).To(BeTrue())
+//	Expect(errFn() == nil).To(Equal(false))
+//
+//	// Good:
+//	Expect(err).ToNot(HaveOccurred())
+//	Expect(errFn()).ToNot(Succeed())
 type NilCompareRule struct{}
 
-func (r NilCompareRule) Apply(gexp *expression.GomegaExpression, config types.Config, reportBuilder *reports.Builder) bool {
+func (r NilCompareRule) Apply(gexp *expression.GomegaExpression, config config.Config, reportBuilder *reports.Builder) bool {
 	isErr, ruleApplied := r.isApplied(gexp, config)
 	if !ruleApplied {
 		return false
@@ -32,7 +51,7 @@ func (r NilCompareRule) Apply(gexp *expression.GomegaExpression, config types.Co
 	return true
 }
 
-func (r NilCompareRule) isApplied(gexp *expression.GomegaExpression, config types.Config) (bool, bool) {
+func (r NilCompareRule) isApplied(gexp *expression.GomegaExpression, config config.Config) (bool, bool) {
 	if !gexp.MatcherTypeIs(matcher.EqualBoolValueMatcherType | matcher.BeTrueMatcherType | matcher.BeFalseMatcherType) {
 		return false, false
 	}

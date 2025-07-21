@@ -4,13 +4,13 @@ import (
 	gotypes "go/types"
 
 	"github.com/nunnatsa/ginkgolinter/internal/gomegainfo"
-	"github.com/nunnatsa/ginkgolinter/internal/interfaces"
+	"github.com/nunnatsa/ginkgolinter/internal/typecheck"
 )
 
 func getAsyncFuncArg(sig *gotypes.Signature) ArgPayload {
 	argType := FuncSigArgType
 	if sig.Results().Len() == 1 {
-		if interfaces.ImplementsError(sig.Results().At(0).Type().Underlying()) {
+		if typecheck.ImplementsError(sig.Results().At(0).Type().Underlying()) {
 			argType |= ErrFuncActualArgType | ErrorTypeArgType
 		}
 	}
