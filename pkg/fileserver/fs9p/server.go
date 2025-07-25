@@ -43,7 +43,7 @@ func New9pServer(listener net.Listener, exposeDir string) (*Server, error) {
 	// TODO: Use a channel to pass back this if it occurs within a
 	// reasonable timeframe.
 	go func() {
-		errChan <- proto.Serve(listener, p9.Proto(), p9.FSConnHandler(fs, 128*1024))
+		errChan <- proto.Serve(listener, p9.Proto(), p9.FSConnHandler(fs, 64<<19))
 		close(errChan)
 	}()
 
