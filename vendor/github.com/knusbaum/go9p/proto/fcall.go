@@ -50,7 +50,7 @@ const (
 )
 
 const (
-	MaxMsgLen = 65535 // 65k should be enough for anyone.
+	MaxMsgLen = 64<<19 // 65k should be enough for anyone.
 )
 
 // FCall - the interface that all FCall types imlement. The String
