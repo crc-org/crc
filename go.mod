@@ -1,6 +1,8 @@
 module github.com/crc-org/crc/v2
 
-go 1.23.0
+go 1.24.0
+
+toolchain go1.24.4
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
@@ -35,7 +37,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.38.0
 	github.com/opencontainers/image-spec v1.1.0
-	github.com/openshift/api v0.0.0-20250529074221-97812373b6b4
+	github.com/openshift/api v0.0.0-20250725072657-92b1455121e1
 	github.com/openshift/client-go v0.0.0-20250425165505-5f55ff6979a1
 	github.com/openshift/library-go v0.0.0-20250528093938-cc54847714a7
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
@@ -62,8 +64,8 @@ require (
 	golang.org/x/text v0.27.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/api v0.32.3
-	k8s.io/apimachinery v0.32.3
+	k8s.io/api v0.33.2
+	k8s.io/apimachinery v0.33.2
 	k8s.io/client-go v0.32.1
 	libvirt.org/go/libvirtxml v1.11005.0
 )
@@ -119,10 +121,9 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/google/gnostic-models v0.6.8 // indirect
+	github.com/google/gnostic-models v0.6.9 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-containerregistry v0.20.2 // indirect
-	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
 	github.com/google/pprof v0.0.0-20250403155104-27863c87afa6 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -201,9 +202,10 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gvisor.dev/gvisor v0.0.0-20240916094835-a174eb65023f // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f // indirect
+	k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff // indirect
 	k8s.io/utils v0.0.0-20241210054802-24370beab758 // indirect
 	sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 // indirect
+	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.6.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
