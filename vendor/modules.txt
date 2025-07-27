@@ -480,8 +480,8 @@ github.com/klauspost/cpuid/v2
 # github.com/klauspost/pgzip v1.2.6
 ## explicit
 github.com/klauspost/pgzip
-# github.com/kofalt/go-memoize v0.0.0-20220914132407-0b5d6a304579
-## explicit; go 1.19
+# github.com/kofalt/go-memoize v0.0.0-20240506050413-9e5eb99a0f2a
+## explicit; go 1.22
 github.com/kofalt/go-memoize
 # github.com/letsencrypt/boulder v0.0.0-20240620165639-de9c06129bec
 ## explicit; go 1.22.0
