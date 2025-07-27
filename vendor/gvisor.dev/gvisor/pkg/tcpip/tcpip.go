@@ -35,7 +35,6 @@ import (
 	"io"
 	"math"
 	"math/bits"
-	"math/rand"
 	"net"
 	"reflect"
 	"strconv"
@@ -43,6 +42,7 @@ import (
 	"time"
 
 	"gvisor.dev/gvisor/pkg/atomicbitops"
+	"gvisor.dev/gvisor/pkg/rand"
 	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/waiter"
 )
@@ -996,6 +996,13 @@ const (
 	// IPv6Checksum is used to request the stack to populate and validate the IPv6
 	// checksum for transport level headers.
 	IPv6Checksum
+
+	// PacketMMapVersionOption is used to set the packet mmap version.
+	PacketMMapVersionOption
+
+	// PacketMMapReserveOption is used to set the packet mmap reserved space
+	// between the aligned header and the payload.
+	PacketMMapReserveOption
 )
 
 const (
@@ -1184,6 +1191,30 @@ func (f *ICMPv6Filter) ShouldDeny(icmpType uint8) bool {
 func (*ICMPv6Filter) isGettableSocketOption() {}
 
 func (*ICMPv6Filter) isSettableSocketOption() {}
+
+// TpacketReq is the tpacket_req structure as described in
+// https://www.kernel.org/doc/Documentation/networking/packet_mmap.txt
+//
+// +stateify savable
+type TpacketReq struct {
+	TpBlockSize uint32
+	TpBlockNr   uint32
+	TpFrameSize uint32
+	TpFrameNr   uint32
+}
+
+func (*TpacketReq) isSettableSocketOption() {}
+
+// TpacketStats is the statistics for a packet_mmap ring buffer from
+// <linux/if_packet.h>.
+//
+// +stateify savable
+type TpacketStats struct {
+	Packets uint32
+	Dropped uint32
+}
+
+func (*TpacketStats) isGettableSocketOption() {}
 
 // EndpointState represents the state of an endpoint.
 type EndpointState uint8
@@ -1980,6 +2011,10 @@ type IPForwardingStats struct {
 	// Errors is the number of IP packets received which could not be
 	// successfully forwarded.
 	Errors *StatCounter
+
+	// OutgoingDeviceClosedForSend is the number of packets that were dropped due
+	// to the outgoing device being closed for send.
+	OutgoingDeviceClosedForSend *StatCounter
 
 	// LINT.ThenChange(network/internal/ip/stats.go:MultiCounterIPForwardingStats)
 }

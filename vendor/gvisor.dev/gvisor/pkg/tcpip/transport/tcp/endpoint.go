@@ -285,16 +285,12 @@ func (*Stats) IsEndpointStats() {}
 //
 // +stateify savable
 type sndQueueInfo struct {
-	sndQueueMu sync.Mutex `state:"nosave"`
-	stack.TCPSndBufState
-
-	// sndWaker is used to signal the protocol goroutine when there may be
-	// segments that need to be sent.
-	sndWaker sleep.Waker `state:"manual"`
+	sndQueueMu sndQueueMutex `state:"nosave"`
+	TCPSndBufState
 }
 
 // CloneState clones sq into other. It is not thread safe
-func (sq *sndQueueInfo) CloneState(other *stack.TCPSndBufState) {
+func (sq *sndQueueInfo) CloneState(other *TCPSndBufState) {
 	other.SndBufSize = sq.SndBufSize
 	other.SndBufUsed = sq.SndBufUsed
 	other.SndClosed = sq.SndClosed
@@ -342,9 +338,12 @@ func (sq *sndQueueInfo) CloneState(other *stack.TCPSndBufState) {
 // For more details please see the detailed documentation on
 // e.LockUser/e.UnlockUser methods.
 //
+// TODO(b/339664055): Checklocks should be used more extensively here. Coverage
+// is currently sparse.
+//
 // +stateify savable
 type Endpoint struct {
-	stack.TCPEndpointStateInner
+	TCPEndpointStateInner
 	stack.TransportEndpointInfo
 	tcpip.DefaultSocketOptionsHandler
 
@@ -355,7 +354,7 @@ type Endpoint struct {
 	endpointEntry `state:"nosave"`
 
 	// pendingProcessingMu protects pendingProcessing.
-	pendingProcessingMu sync.Mutex `state:"nosave"`
+	pendingProcessingMu pendingProcessingMutex `state:"nosave"`
 
 	// pendingProcessing is true if this endpoint is queued for processing
 	// to a TCP processor.
@@ -364,8 +363,8 @@ type Endpoint struct {
 
 	// The following fields are initialized at creation time and do not
 	// change throughout the lifetime of the endpoint.
-	stack       *stack.Stack  `state:"manual"`
-	protocol    *protocol     `state:"manual"`
+	stack       *stack.Stack
+	protocol    *protocol
 	waiterQueue *waiter.Queue `state:"wait"`
 
 	// hardError is meaningful only when state is stateError. It stores the
@@ -375,13 +374,13 @@ type Endpoint struct {
 
 	// lastError represents the last error that the endpoint reported;
 	// access to it is protected by the following mutex.
-	lastErrorMu sync.Mutex `state:"nosave"`
+	lastErrorMu lastErrorMutex `state:"nosave"`
 	lastError   tcpip.Error
 
-	rcvQueueMu sync.Mutex `state:"nosave"`
+	rcvQueueMu rcvQueueMutex `state:"nosave"`
 
 	// +checklocks:rcvQueueMu
-	stack.TCPRcvBufState
+	TCPRcvBufState
 
 	// rcvMemUsed tracks the total amount of memory in use by received segments
 	// held in rcvQueue, pendingRcvdSegments and the segment queue. This is used to
@@ -416,10 +415,10 @@ type Endpoint struct {
 	// state.
 	origEndpointState uint32 `state:"nosave"`
 
-	isPortReserved    bool `state:"manual"`
-	isRegistered      bool `state:"manual"`
+	isPortReserved    bool
+	isRegistered      bool
 	boundNICID        tcpip.NICID
-	route             *stack.Route `state:"manual"`
+	route             *stack.Route `state:"nosave"`
 	ipv4TTL           uint8
 	ipv6HopLimit      int16
 	isConnectNotified bool
@@ -524,10 +523,9 @@ type Endpoint struct {
 	// +checklocks:acceptMu
 	acceptQueue acceptQueue
 
-	// The following are only used from the protocol goroutine, and
-	// therefore don't need locks to protect them.
 	rcv *receiver `state:"wait"`
-	snd *sender   `state:"wait"`
+
+	snd *sender `state:"wait"`
 
 	// The goroutine drain completion notification channel.
 	drainDone chan struct{} `state:"nosave"`
@@ -541,7 +539,7 @@ type Endpoint struct {
 
 	// probe if not nil is invoked on every received segment. It is passed
 	// a copy of the current state of the endpoint.
-	probe stack.TCPProbeFunc `state:"nosave"`
+	probe TCPProbeFunc `state:"nosave"`
 
 	// The following are only used to assist the restore run to re-connect.
 	connectingAddress tcpip.Address
@@ -604,6 +602,11 @@ type Endpoint struct {
 	//
 	// +checklocks:mu
 	pmtud tcpip.PMTUDStrategy
+
+	// alsoBindToV4 indicates if `any` address was used to bind a port.
+	//
+	// +checklocks:mu
+	alsoBindToV4 bool
 }
 
 // calculateAdvertisedMSS calculates the MSS to advertise.
@@ -638,6 +641,7 @@ func (e *Endpoint) isOwnedByUser() bool {
 // should not be holding the lock for long and spinning reduces latency as we
 // avoid an expensive sleep/wakeup of the syscall goroutine).
 // +checklocksacquire:e.mu
+// +checklocksacquire:e.snd.ep.mu
 func (e *Endpoint) LockUser() {
 	const iterations = 5
 	for i := 0; i < iterations; i++ {
@@ -650,14 +654,14 @@ func (e *Endpoint) LockUser() {
 			if e.ownedByUser.Load() == 1 {
 				e.mu.Lock()
 				e.ownedByUser.Store(1)
-				return
+				return // +checklocksforce: this locks e.snd.ep.mu
 			}
 			// Spin but don't yield the processor since the lower half
 			// should yield the lock soon.
 			continue
 		}
 		e.ownedByUser.Store(1)
-		return
+		return // +checklocksforce: this locks e.snd.ep.mu
 	}
 
 	for i := 0; i < iterations; i++ {
@@ -670,7 +674,7 @@ func (e *Endpoint) LockUser() {
 			if e.ownedByUser.Load() == 1 {
 				e.mu.Lock()
 				e.ownedByUser.Store(1)
-				return
+				return // +checklocksforce: this locks e.snd.ep.mu
 			}
 			// Spin but yield the processor since the lower half
 			// should yield the lock soon.
@@ -678,7 +682,7 @@ func (e *Endpoint) LockUser() {
 			continue
 		}
 		e.ownedByUser.Store(1)
-		return
+		return // +checklocksforce: this locks e.snd.ep.mu
 	}
 
 	// Finally just give up and wait for the Lock.
@@ -830,11 +834,11 @@ func calculateTTL(route *stack.Route, ipv4TTL uint8, ipv6HopLimit int16) uint8 {
 //
 // +stateify savable
 type keepalive struct {
-	sync.Mutex `state:"nosave"`
-	idle       time.Duration
-	interval   time.Duration
-	count      int
-	unacked    int
+	keepaliveMutex `state:"nosave"`
+	idle           time.Duration
+	interval       time.Duration
+	count          int
+	unacked        int
 	// should never be a zero timer if the endpoint is not closed.
 	timer timer       `state:"nosave"`
 	waker sleep.Waker `state:"nosave"`
@@ -849,7 +853,7 @@ func newEndpoint(s *stack.Stack, protocol *protocol, netProto tcpip.NetworkProto
 			TransProto: header.TCPProtocolNumber,
 		},
 		sndQueueInfo: sndQueueInfo{
-			TCPSndBufState: stack.TCPSndBufState{
+			TCPSndBufState: TCPSndBufState{
 				SndMTU: math.MaxInt32,
 			},
 		},
@@ -910,10 +914,7 @@ func newEndpoint(s *stack.Stack, protocol *protocol, netProto tcpip.NetworkProto
 		e.maxSynRetries = uint8(synRetries)
 	}
 
-	if p := s.GetTCPProbe(); p != nil {
-		e.probe = p
-	}
-
+	e.probe = protocol.probe
 	e.segmentQueue.ep = e
 
 	// TODO(https://gvisor.dev/issues/7493): Defer creating the timer until TCP connection becomes
@@ -1014,21 +1015,19 @@ func (e *Endpoint) purgeReadQueue() {
 }
 
 // +checklocks:e.mu
+// +checklocksalias:e.snd.ep.mu=e.mu
 func (e *Endpoint) purgeWriteQueue() {
 	if e.snd != nil {
 		e.sndQueueInfo.sndQueueMu.Lock()
 		defer e.sndQueueInfo.sndQueueMu.Unlock()
 		e.snd.updateWriteNext(nil)
-		for {
-			s := e.snd.writeList.Front()
-			if s == nil {
-				break
-			}
+		for s := e.snd.writeList.Front(); s != nil; s = e.snd.writeList.Front() {
 			e.snd.writeList.Remove(s)
 			s.DecRef()
 		}
 		e.sndQueueInfo.SndBufUsed = 0
 		e.sndQueueInfo.SndClosed = true
+		e.snd.SndNxt = e.snd.SndUna
 	}
 }
 
@@ -1197,6 +1196,14 @@ func (e *Endpoint) cleanupLocked() {
 
 	if e.timeWaitTimer != nil {
 		e.timeWaitTimer.Stop()
+	}
+
+	// Remove current EP from its lEP acceptQueue.pendingEndpoint if exists.
+	if e.h != nil && e.h.listenEP != nil {
+		lEP := e.h.listenEP
+		lEP.acceptMu.Lock()
+		delete(lEP.acceptQueue.pendingEndpoints, e)
+		lEP.acceptMu.Unlock()
 	}
 
 	// Close all endpoints that might have been accepted by TCP but not by
@@ -1450,8 +1457,7 @@ func (e *Endpoint) Read(dst io.Writer, opts tcpip.ReadOptions) (tcpip.ReadResult
 			if memDelta > 0 {
 				// If the window was small before this read and if the read freed up
 				// enough buffer space, to either fit an aMSS or half a receive buffer
-				// (whichever smaller), then notify the protocol goroutine to send a
-				// window update.
+				// (whichever smaller), then send a window update.
 				if crossed, above := e.windowCrossedACKThresholdLocked(memDelta, int(e.ops.GetReceiveBufferSize())); crossed && above {
 					sendNonZeroWindowUpdate = true
 				}
@@ -1595,6 +1601,7 @@ func (e *Endpoint) readFromPayloader(p tcpip.Payloader, opts tcpip.WriteOptions,
 
 // queueSegment reads data from the payloader and returns a segment to be sent.
 // +checklocks:e.mu
+// +checklocksalias:e.snd.ep.mu=e.mu
 func (e *Endpoint) queueSegment(p tcpip.Payloader, opts tcpip.WriteOptions) (*segment, int, tcpip.Error) {
 	e.sndQueueInfo.sndQueueMu.Lock()
 	defer e.sndQueueInfo.sndQueueMu.Unlock()
@@ -2385,6 +2392,7 @@ func (e *Endpoint) registerEndpoint(addr tcpip.FullAddress, netProto tcpip.Netwo
 
 // connect connects the endpoint to its peer.
 // +checklocks:e.mu
+// +checklocksalias:e.snd.ep.mu=e.mu
 func (e *Endpoint) connect(addr tcpip.FullAddress, handshake bool) tcpip.Error {
 	connectingAddr := addr.Addr
 
@@ -2466,20 +2474,31 @@ func (e *Endpoint) connect(addr tcpip.FullAddress, handshake bool) tcpip.Error {
 	e.effectiveNetProtos = []tcpip.NetworkProtocolNumber{netProto}
 	e.connectingAddress = connectingAddr
 
+	if e.alsoBindToV4 {
+		// If the endpoint was bound to `any` address the port will be
+		// reserved for both IPv4 and IPv6 addresses. Release the port
+		// reservation for the IPv4 address here so that the future bind
+		// for IPv4 socket will not fail.
+		portRes := ports.Reservation{
+			Networks:  []tcpip.NetworkProtocolNumber{header.IPv4ProtocolNumber},
+			Transport: ProtocolNumber,
+			Port:      e.TransportEndpointInfo.ID.LocalPort,
+		}
+		e.stack.ReleasePort(portRes)
+	}
+
 	e.initGSO()
 
 	// Connect in the restore phase does not perform handshake. Restore its
 	// connection setting here.
 	if !handshake {
 		e.segmentQueue.mu.Lock()
-		for _, l := range []segmentList{e.segmentQueue.list, e.snd.writeList} {
+		for _, l := range []segmentList{e.segmentQueue.list, e.snd.writeList.writeList} {
 			for s := l.Front(); s != nil; s = s.Next() {
 				s.id = e.TransportEndpointInfo.ID
-				e.sndQueueInfo.sndWaker.Assert()
 			}
 		}
 		e.segmentQueue.mu.Unlock()
-		e.snd.ep.AssertLockHeld(e)
 		e.snd.updateMaxPayloadSize(int(e.route.MTU()), 0)
 		e.setEndpointState(StateEstablished)
 		// Set the new auto tuned send buffer size after entering
@@ -2522,6 +2541,7 @@ func (e *Endpoint) Shutdown(flags tcpip.ShutdownFlags) tcpip.Error {
 }
 
 // +checklocks:e.mu
+// +checklocksalias:e.snd.ep.mu=e.mu
 func (e *Endpoint) shutdownLocked(flags tcpip.ShutdownFlags) tcpip.Error {
 	e.shutdownFlags |= flags
 	switch {
@@ -2755,6 +2775,7 @@ func (e *Endpoint) bindLocked(addr tcpip.FullAddress) (err tcpip.Error) {
 		alsoBindToV4 := !e.ops.GetV6Only() && addr.Addr == tcpip.Address{} && stackHasV4
 		if alsoBindToV4 {
 			netProtos = append(netProtos, header.IPv4ProtocolNumber)
+			e.alsoBindToV4 = true
 		}
 	}
 
@@ -2962,8 +2983,11 @@ func (e *Endpoint) HandleError(transErr stack.TransportError, pkt *stack.PacketB
 	}
 }
 
-// updateSndBufferUsage is called by the protocol goroutine when room opens up
-// in the send buffer. The number of newly available bytes is v.
+// updateSndBufferUsage is called by when room opens up in the send buffer. The
+// number of newly available bytes is v.
+//
+// +checklocks:e.mu
+// +checklocksalias:e.snd.ep.mu=e.mu
 func (e *Endpoint) updateSndBufferUsage(v int) {
 	sendBufferSize := e.getSendBufferSize()
 	e.sndQueueInfo.sndQueueMu.Lock()
@@ -2987,9 +3011,8 @@ func (e *Endpoint) updateSndBufferUsage(v int) {
 	}
 }
 
-// readyToRead is called by the protocol goroutine when a new segment is ready
-// to be read, or when the connection is closed for receiving (in which case
-// s will be nil).
+// readyToRead is called when a new segment is ready to be read, or when the
+// connection is closed for receiving (in which case s will be nil).
 //
 // +checklocks:e.mu
 func (e *Endpoint) readyToRead(s *segment) {
@@ -3146,9 +3169,10 @@ func (e *Endpoint) maxOptionSize() (size int) {
 // used before invoking the probe.
 //
 // +checklocks:e.mu
-func (e *Endpoint) completeStateLocked(s *stack.TCPEndpointState) {
+// +checklocksalias:e.snd.ep.mu=e.mu
+func (e *Endpoint) completeStateLocked(s *TCPEndpointState) {
 	s.TCPEndpointStateInner = e.TCPEndpointStateInner
-	s.ID = stack.TCPEndpointID(e.TransportEndpointInfo.ID)
+	s.ID = TCPEndpointID(e.TransportEndpointInfo.ID)
 	s.SegTime = e.stack.Clock().NowMonotonic()
 	s.Receiver = e.rcv.TCPReceiverState
 	s.Sender = e.snd.TCPSenderState
@@ -3295,6 +3319,9 @@ func GetTCPReceiveBufferLimits(s tcpip.StackHandler) tcpip.ReceiveBufferSizeOpti
 
 // computeTCPSendBufferSize implements auto tuning of send buffer size and
 // returns the new send buffer size.
+//
+// +checklocks:e.mu
+// +checklocksalias:e.snd.ep.mu=e.mu
 func (e *Endpoint) computeTCPSendBufferSize() int64 {
 	curSndBufSz := int64(e.getSendBufferSize())
 
@@ -3329,4 +3356,13 @@ func (e *Endpoint) computeTCPSendBufferSize() int64 {
 // GetAcceptConn implements tcpip.SocketOptionsHandler.
 func (e *Endpoint) GetAcceptConn() bool {
 	return EndpointState(e.State()) == StateListen
+}
+
+// getExperimentOptionValue returns the experiment option value set on the
+// endpoint if experiment IP options are enabled on outgoing NIC of the route.
+func (e *Endpoint) getExperimentOptionValue(route *stack.Route) uint16 {
+	if nic, err := e.stack.GetNICByID(route.OutgoingNIC()); err == nil && nic.GetExperimentIPOptionEnabled() {
+		return e.ops.GetExperimentOptionValue()
+	}
+	return 0
 }

@@ -33,9 +33,8 @@ type pendingPacket struct {
 	pkt       *PacketBuffer
 }
 
-// +stateify savable
 type packetsPendingLinkResolutionMu struct {
-	packetsPendingLinkResolutionMutex `state:"nosave"`
+	packetsPendingLinkResolutionMutex
 
 	// The packets to send once the resolver completes.
 	//
@@ -56,7 +55,7 @@ type packetsPendingLinkResolutionMu struct {
 // +stateify savable
 type packetsPendingLinkResolution struct {
 	nic *nic
-	mu  packetsPendingLinkResolutionMu
+	mu  packetsPendingLinkResolutionMu `state:"nosave"`
 }
 
 func (f *packetsPendingLinkResolution) incrementOutgoingPacketErrors(pkt *PacketBuffer) {
@@ -150,7 +149,7 @@ func (f *packetsPendingLinkResolution) enqueue(r *Route, pkt *PacketBuffer) tcpi
 	packets, ok := f.mu.packets[ch]
 	packets = append(packets, pendingPacket{
 		routeInfo: routeInfo,
-		pkt:       pkt.IncRef(),
+		pkt:       pkt.Clone(),
 	})
 
 	if len(packets) > maxPendingPacketsPerResolution {

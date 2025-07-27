@@ -6,7 +6,7 @@ al.essio.dev/pkg/shellescape
 github.com/AlecAivazis/survey/v2
 github.com/AlecAivazis/survey/v2/core
 github.com/AlecAivazis/survey/v2/terminal
-# github.com/BurntSushi/toml v1.4.0
+# github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c
 ## explicit; go 1.18
 github.com/BurntSushi/toml
 github.com/BurntSushi/toml/internal
@@ -1047,24 +1047,19 @@ gopkg.in/natefinch/lumberjack.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# gvisor.dev/gvisor v0.0.0-20240916094835-a174eb65023f
-## explicit; go 1.22.0
+# gvisor.dev/gvisor v0.0.0-20250726022846-8a89a2fab4a2
+## explicit; go 1.23.1
 gvisor.dev/gvisor/pkg/atomicbitops
 gvisor.dev/gvisor/pkg/bits
 gvisor.dev/gvisor/pkg/buffer
-gvisor.dev/gvisor/pkg/context
 gvisor.dev/gvisor/pkg/cpuid
 gvisor.dev/gvisor/pkg/gohacks
 gvisor.dev/gvisor/pkg/goid
 gvisor.dev/gvisor/pkg/linewriter
 gvisor.dev/gvisor/pkg/log
 gvisor.dev/gvisor/pkg/rand
-gvisor.dev/gvisor/pkg/refs
 gvisor.dev/gvisor/pkg/sleep
-gvisor.dev/gvisor/pkg/state
-gvisor.dev/gvisor/pkg/state/wire
 gvisor.dev/gvisor/pkg/sync
-gvisor.dev/gvisor/pkg/sync/locking
 gvisor.dev/gvisor/pkg/tcpip
 gvisor.dev/gvisor/pkg/tcpip/adapters/gonet
 gvisor.dev/gvisor/pkg/tcpip/checksum

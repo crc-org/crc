@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"gvisor.dev/gvisor/pkg/buffer"
-	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 	"gvisor.dev/gvisor/pkg/tcpip/seqnum"
@@ -99,7 +98,9 @@ type lossRecovery interface {
 //
 // +stateify savable
 type sender struct {
-	stack.TCPSenderState
+	// +checklocks:ep.mu
+	TCPSenderState
+
 	ep *Endpoint
 
 	// lr is the loss recovery algorithm used by the sender.
@@ -124,7 +125,9 @@ type sender struct {
 	// writeList holds all writable data: both unsent data and
 	// sent-but-unacknowledged data. Alternatively: it holds all bytes
 	// starting from SND.UNA.
-	writeList segmentList
+	//
+	// +checklocks:ep.mu
+	writeList protectedWriteList
 
 	// resendTimer is used for RTOs.
 	resendTimer timer `state:"nosave"`
@@ -180,14 +183,62 @@ type sender struct {
 	corkTimer timer `state:"nosave"`
 }
 
+// protectedWriteList wraps the write list, checking for invalid state when
+// segments are added or removed.
+//
+// TODO(b/339664055): Revert once bug is fixed.
+//
+// +stateify savable
+type protectedWriteList struct {
+	writeList segmentList
+	set       map[*segment]struct{}
+}
+
+// Front returns the front of the write list.
+func (wl *protectedWriteList) Front() *segment {
+	return wl.writeList.Front()
+}
+
+// Back returns the back of the write list.
+func (wl *protectedWriteList) Back() *segment {
+	return wl.writeList.Back()
+}
+
+// Remove removes seg from the write list.
+func (wl *protectedWriteList) Remove(seg *segment) {
+	if _, ok := wl.set[seg]; !ok {
+		panic("segment not found write list")
+	}
+	wl.writeList.Remove(seg)
+	delete(wl.set, seg)
+}
+
+// PushBack pushes seg onto the back of the write list.
+func (wl *protectedWriteList) PushBack(seg *segment) {
+	if _, ok := wl.set[seg]; ok {
+		panic("segment already in write list")
+	}
+	wl.writeList.PushBack(seg)
+	wl.set[seg] = struct{}{}
+}
+
+// InsertAfter inserts seg after before.
+func (wl *protectedWriteList) InsertAfter(before, seg *segment) {
+	if _, ok := wl.set[seg]; ok {
+		panic("segment already in write list")
+	}
+	wl.writeList.InsertAfter(before, seg)
+	wl.set[seg] = struct{}{}
+}
+
 // rtt is a synchronization wrapper used to appease stateify. See the comment
 // in sender, where it is used.
 //
 // +stateify savable
 type rtt struct {
-	sync.Mutex `state:"nosave"`
+	rttMutex `state:"nosave"`
 
-	stack.TCPRTTState
+	TCPRTTState
 }
 
 // +checklocks:ep.mu
@@ -199,7 +250,7 @@ func newSender(ep *Endpoint, iss, irs seqnum.Value, sndWnd seqnum.Size, mss uint
 
 	s := &sender{
 		ep: ep,
-		TCPSenderState: stack.TCPSenderState{
+		TCPSenderState: TCPSenderState{
 			SndWnd:           sndWnd,
 			SndUna:           iss + 1,
 			SndNxt:           iss + 1,
@@ -207,7 +258,7 @@ func newSender(ep *Endpoint, iss, irs seqnum.Value, sndWnd seqnum.Size, mss uint
 			LastSendTime:     ep.stack.Clock().NowMonotonic(),
 			MaxPayloadSize:   maxPayloadSize,
 			MaxSentAck:       irs + 1,
-			FastRecovery: stack.TCPFastRecoveryState{
+			FastRecovery: TCPFastRecoveryState{
 				// See: https://tools.ietf.org/html/rfc6582#section-3.2 Step 1.
 				Last:      iss,
 				HighRxt:   iss,
@@ -216,8 +267,18 @@ func newSender(ep *Endpoint, iss, irs seqnum.Value, sndWnd seqnum.Size, mss uint
 			RTO: 1 * time.Second,
 		},
 		gso: ep.gso.Type != stack.GSONone,
+		writeList: protectedWriteList{
+			set: make(map[*segment]struct{}),
+		},
 	}
+	return newSenderHelper(ep, iss, irs, sndWnd, mss, sndWndScale, maxPayloadSize, s)
+}
 
+// newSenderHelper exists to sate checklocks.
+//
+// +checklocks:ep.mu
+// +checklocksalias:s.ep.mu=ep.mu
+func newSenderHelper(ep *Endpoint, iss, irs seqnum.Value, sndWnd seqnum.Size, mss uint16, sndWndScale int, maxPayloadSize int, s *sender) *sender {
 	if s.gso {
 		s.ep.gso.MSS = uint16(maxPayloadSize)
 	}
@@ -237,7 +298,6 @@ func newSender(ep *Endpoint, iss, irs seqnum.Value, sndWnd seqnum.Size, mss uint
 	s.probeTimer.init(s.ep.stack.Clock(), timerHandler(s.ep, s.probeTimerExpired))
 	s.corkTimer.init(s.ep.stack.Clock(), timerHandler(s.ep, s.corkTimerExpired))
 
-	s.ep.AssertLockHeld(ep)
 	s.updateMaxPayloadSize(int(ep.route.MTU()), 0)
 	// Initialize SACK Scoreboard after updating max payload size as we use
 	// the maxPayloadSize as the smss when determining if a segment is lost
@@ -269,6 +329,8 @@ func newSender(ep *Endpoint, iss, irs seqnum.Value, sndWnd seqnum.Size, mss uint
 // initCongestionControl initializes the specified congestion control module and
 // returns a handle to it. It also initializes the sndCwnd and sndSsThresh to
 // their initial values.
+//
+// +checklocks:s.ep.mu
 func (s *sender) initCongestionControl(congestionControlName tcpip.CongestionControlOption) congestionControl {
 	s.SndCwnd = InitialCwnd
 	s.Ssthresh = InitialSsthresh
@@ -369,6 +431,8 @@ func (s *sender) sendAck() {
 
 // updateRTO updates the retransmit timeout when a new roud-trip time is
 // available. This is done in accordance with section 2 of RFC 6298.
+//
+// +checklocks:s.ep.mu
 func (s *sender) updateRTO(rtt time.Duration) {
 	s.rtt.Lock()
 	if !s.rtt.TCPRTTState.SRTTInited {
@@ -418,6 +482,7 @@ func (s *sender) updateRTO(rtt time.Duration) {
 	}
 
 	s.RTO = s.rtt.TCPRTTState.SRTT + 4*s.rtt.TCPRTTState.RTTVar
+	s.RTTState = s.rtt.TCPRTTState
 	s.rtt.Unlock()
 	if s.RTO < s.minRTO {
 		s.RTO = s.minRTO
@@ -614,6 +679,8 @@ func (s *sender) pCount(seg *segment, maxPayloadSize int) int {
 
 // splitSeg splits a given segment at the size specified and inserts the
 // remainder as a new segment after the current one in the write list.
+//
+// +checklocks:s.ep.mu
 func (s *sender) splitSeg(seg *segment, size int) {
 	if seg.payloadSize() <= size {
 		return
@@ -649,6 +716,8 @@ func (s *sender) splitSeg(seg *segment, size int) {
 //
 // rescueRtx will be true only if nextSeg is a rescue retransmission as
 // described by Step 4) of the NextSeg algorithm.
+//
+// +checklocks:s.ep.mu
 func (s *sender) NextSeg(nextSegHint *segment) (nextSeg, hint *segment, rescueRtx bool) {
 	var s3 *segment
 	var s4 *segment
@@ -905,15 +974,17 @@ func (s *sender) maybeSendSegment(seg *segment, limit int, end seqnum.Value) (se
 		if seg.payloadSize() > available {
 			// A negative value causes splitSeg to panic anyways, so just panic
 			// earlier to get more information about the cause.
-			// TOOD(b/357457079): Remove this panic once the cause of negative values
-			// of "available" is understood.
-			if available < 0 {
-				panic(fmt.Sprintf("got available=%d, want available>=0. limit %d, s.MaxPayloadSize %d, seg.payloadSize() %d, gso.MaxSize %d, gso.MSS %d", available, limit, s.MaxPayloadSize, seg.payloadSize(), s.ep.gso.MaxSize, s.ep.gso.MSS))
-			}
 			s.splitSeg(seg, available)
 		}
 
 		segEnd = seg.sequenceNumber.Add(seqnum.Size(seg.payloadSize()))
+	}
+
+	// TODO(b/379932042): Below is the only place we update SND.NXT besides
+	// initialization. It's possible that we're increasing SND.NXT by
+	// trying to write a segment that isn't in the write list.
+	if _, ok := s.writeList.set[seg]; !ok {
+		panic("attempted to send segment not in write list")
 	}
 
 	s.sendSegment(seg)
@@ -950,6 +1021,7 @@ func (s *sender) sendZeroWindowProbe() {
 	s.resendTimer.enable(s.RTO)
 }
 
+// +checklocks:s.ep.mu
 func (s *sender) enableZeroWindowProbing() {
 	s.zeroWindowProbing = true
 	// We piggyback the probing on the retransmit timer with the
@@ -968,6 +1040,7 @@ func (s *sender) disableZeroWindowProbing() {
 	s.resendTimer.disable()
 }
 
+// +checklocks:s.ep.mu
 func (s *sender) postXmit(dataSent bool, shouldScheduleProbe bool) {
 	if dataSent {
 		// We sent data, so we should stop the keepalive timer to ensure
@@ -1023,9 +1096,10 @@ func (s *sender) sendData() {
 
 	var dataSent bool
 	for seg := s.writeNext; seg != nil && s.Outstanding < s.SndCwnd; seg = seg.Next() {
-		cwndLimit := (s.SndCwnd - s.Outstanding) * s.MaxPayloadSize
-		if cwndLimit < limit {
-			limit = cwndLimit
+		// NOTE(gvisor.dev/issue/11632): Use uint64 to avoid overflow.
+		cwndLimit := uint64(s.SndCwnd-s.Outstanding) * uint64(s.MaxPayloadSize)
+		if cwndLimit < uint64(limit) {
+			limit = int(cwndLimit)
 		}
 		if s.isAssignedSequenceNumber(seg) && s.ep.SACKPermitted && s.ep.scoreboard.IsSACKED(seg.sackBlock()) {
 			// Move writeNext along so that we don't try and scan data that
@@ -1044,6 +1118,7 @@ func (s *sender) sendData() {
 	s.postXmit(dataSent, true /* shouldScheduleProbe */)
 }
 
+// +checklocks:s.ep.mu
 func (s *sender) enterRecovery() {
 	// Initialize the variables used to detect spurious recovery after
 	// entering recovery.
@@ -1087,6 +1162,7 @@ func (s *sender) enterRecovery() {
 	s.ep.stack.Stats().TCP.FastRecovery.Increment()
 }
 
+// +checklocks:s.ep.mu
 func (s *sender) leaveRecovery() {
 	s.FastRecovery.Active = false
 	s.FastRecovery.MaxCwnd = 0
@@ -1109,6 +1185,8 @@ func (s *sender) isAssignedSequenceNumber(seg *segment) bool {
 // maintains the congestion window in number of packets and not bytes, so
 // SetPipe() here measures number of outstanding packets rather than actual
 // outstanding bytes in the network.
+//
+// +checklocks:s.ep.mu
 func (s *sender) SetPipe() {
 	// If SACK isn't permitted or it is permitted but recovery is not active
 	// then ignore pipe calculations.
@@ -1162,6 +1240,8 @@ func (s *sender) SetPipe() {
 // shouldEnterRecovery returns true if the sender should enter fast recovery
 // based on dupAck count and sack scoreboard.
 // See RFC 6675 section 5.
+//
+// +checklocks:s.ep.mu
 func (s *sender) shouldEnterRecovery() bool {
 	return s.DupAckCount >= nDupAckThreshold ||
 		(s.ep.SACKPermitted && s.ep.tcpRecovery&tcpip.TCPRACKLossDetection == 0 && s.ep.scoreboard.IsLost(s.SndUna))
@@ -1170,6 +1250,8 @@ func (s *sender) shouldEnterRecovery() bool {
 // detectLoss is called when an ack is received and returns whether a loss is
 // detected. It manages the state related to duplicate acks and determines if
 // a retransmit is needed according to the rules in RFC 6582 (NewReno).
+//
+// +checklocks:s.ep.mu
 func (s *sender) detectLoss(seg *segment) (fastRetransmit bool) {
 	// We're not in fast recovery yet.
 
@@ -1220,6 +1302,8 @@ func (s *sender) detectLoss(seg *segment) (fastRetransmit bool) {
 
 // isDupAck determines if seg is a duplicate ack as defined in
 // https://tools.ietf.org/html/rfc5681#section-2.
+//
+// +checklocks:s.ep.mu
 func (s *sender) isDupAck(seg *segment) bool {
 	// A TCP that utilizes selective acknowledgments (SACKs) [RFC2018, RFC2883]
 	// can leverage the SACK information to determine when an incoming ACK is a
@@ -1250,6 +1334,8 @@ func (s *sender) isDupAck(seg *segment) bool {
 //
 // See: https://tools.ietf.org/html/draft-ietf-tcpm-rack-08#section-7.2
 // steps 2 and 3.
+//
+// +checklocks:s.ep.mu
 func (s *sender) walkSACK(rcvdSeg *segment) bool {
 	s.rc.setDSACKSeen(false)
 
@@ -1367,6 +1453,7 @@ func (s *sender) recordRetransmitTS() {
 	s.retransmitTS = s.ep.tsValNow()
 }
 
+// +checklocks:s.ep.mu
 func (s *sender) detectSpuriousRecovery(hasDSACK bool, tsEchoReply uint32) {
 	// Return if the sender has already detected spurious recovery.
 	if s.spuriousRecovery {
@@ -1572,7 +1659,8 @@ func (s *sender) handleRcvdSegment(rcvdSeg *segment) {
 			// have no data, but do consume a sequence number.
 			seg := s.writeList.Front()
 			if seg == nil {
-				panic(fmt.Sprintf("invalid state: there are %d unacknowledged bytes left, but the write list is empty:\n%+v", ackLeft, s.TCPSenderState))
+				panic(fmt.Sprintf("invalid state: there are %d unacknowledged bytes left, but the write list is empty:\n"+
+					"TCPSenderState: %+v\nsender: %+v\nendpoint: %+v", ackLeft, s.TCPSenderState, s, s.ep))
 			}
 
 			datalen := seg.logicalLen()
@@ -1735,6 +1823,7 @@ func (s *sender) sendSegment(seg *segment) tcpip.Error {
 // flags and sequence number.
 // +checklocks:s.ep.mu
 // +checklocksalias:s.ep.rcv.ep.mu=s.ep.mu
+// +checklocksalias:s.ep.rcv.ep.snd.ep.mu=s.ep.mu
 func (s *sender) sendSegmentFromPacketBuffer(pkt *stack.PacketBuffer, flags header.TCPFlags, seq seqnum.Value) tcpip.Error {
 	s.LastSendTime = s.ep.stack.Clock().NowMonotonic()
 	if seq == s.RTTMeasureSeqNum {
@@ -1756,7 +1845,9 @@ func (s *sender) sendSegmentFromPacketBuffer(pkt *stack.PacketBuffer, flags head
 
 // sendEmptySegment sends a new empty segment, flags and sequence number.
 // +checklocks:s.ep.mu
+// +checklocksalias:s.ep.rcv.ep.snd.ep.mu=s.ep.mu
 // +checklocksalias:s.ep.rcv.ep.mu=s.ep.mu
+// +checklocksalias:s.ep.snd.ep.mu=s.ep.mu
 func (s *sender) sendEmptySegment(flags header.TCPFlags, seq seqnum.Value) tcpip.Error {
 	s.LastSendTime = s.ep.stack.Clock().NowMonotonic()
 	if seq == s.RTTMeasureSeqNum {

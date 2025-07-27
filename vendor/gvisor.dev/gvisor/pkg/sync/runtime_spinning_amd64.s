@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build amd64
+// https://go.dev/cl/669235 (1.25) adds a new schedt field prior to nmspinning.
+//go:build amd64 && !go1.25
 
 #include "textflag.h"
 

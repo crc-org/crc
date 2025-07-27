@@ -15,7 +15,9 @@
 package tcp
 
 import (
-	"gvisor.dev/gvisor/pkg/sync"
+	"fmt"
+
+	"gvisor.dev/gvisor/pkg/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 	"gvisor.dev/gvisor/pkg/tcpip/seqnum"
@@ -35,7 +37,7 @@ type Forwarder struct {
 	maxInFlight int
 	handler     func(*ForwarderRequest)
 
-	mu       sync.Mutex
+	mu       forwarderMutex
 	inFlight map[stack.TransportEndpointID]struct{}
 	listen   *listenContext
 }
@@ -108,7 +110,7 @@ func (f *Forwarder) HandlePacket(id stack.TransportEndpointID, pkt *stack.Packet
 // and passed to the client. Clients must eventually call Complete() on it, and
 // may optionally create an endpoint to represent it via CreateEndpoint.
 type ForwarderRequest struct {
-	mu         sync.Mutex
+	mu         forwarderRequestMutex
 	forwarder  *Forwarder
 	segment    *segment
 	synOptions header.TCPSynOptions
@@ -169,4 +171,57 @@ func (r *ForwarderRequest) CreateEndpoint(queue *waiter.Queue) (tcpip.Endpoint, 
 	}
 
 	return ep, nil
+}
+
+// ForwardedPacketExperimentOption returns the experiment option value from the
+// forwarded packet and a bool indicating whether an experiment option value was
+// found.
+func (r *ForwarderRequest) ForwardedPacketExperimentOption() (uint16, bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	switch r.segment.pkt.NetworkProtocolNumber {
+	case header.IPv4ProtocolNumber:
+		h := header.IPv4(r.segment.pkt.NetworkHeader().Slice())
+		opts := h.Options()
+		iter := opts.MakeIterator()
+		for {
+			opt, done, err := iter.Next()
+			if err != nil {
+				return 0, false
+			}
+			if done {
+				return 0, false
+			}
+			if opt.Type() == header.IPv4OptionExperimentType {
+				return opt.(*header.IPv4OptionExperiment).Value(), true
+			}
+		}
+	case header.IPv6ProtocolNumber:
+		h := header.IPv6(r.segment.pkt.NetworkHeader().Slice())
+		v := r.segment.pkt.NetworkHeader().View()
+		if v != nil {
+			v.TrimFront(header.IPv6MinimumSize)
+		}
+		buf := buffer.MakeWithView(v)
+		buf.Append(r.segment.pkt.TransportHeader().View())
+		dataBuf := r.segment.pkt.Data().ToBuffer()
+		buf.Merge(&dataBuf)
+		it := header.MakeIPv6PayloadIterator(header.IPv6ExtensionHeaderIdentifier(h.NextHeader()), buf)
+
+		for {
+			hdr, done, err := it.Next()
+			if done || err != nil {
+				break
+			}
+			if h, ok := hdr.(header.IPv6ExperimentExtHdr); ok {
+				hdr.Release()
+				return h.Value, true
+			}
+			hdr.Release()
+		}
+	default:
+		panic(fmt.Sprintf("Unexpected network protocol number %d", r.segment.pkt.NetworkProtocolNumber))
+	}
+	return 0, false
 }

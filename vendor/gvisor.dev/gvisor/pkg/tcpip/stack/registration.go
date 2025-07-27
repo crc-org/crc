@@ -58,6 +58,10 @@ type NetworkPacketInfo struct {
 	// address.
 	LocalAddressBroadcast bool
 
+	// LocalAddressTemporary is true if the packet's local address is a temporary
+	// address.
+	LocalAddressTemporary bool
+
 	// IsForwardedPacket is true if the packet is being forwarded.
 	IsForwardedPacket bool
 }
@@ -162,13 +166,78 @@ type PacketEndpoint interface {
 	// match the endpoint.
 	//
 	// Implementers should treat packet as immutable and should copy it
-	// before before modification.
+	// before modification.
 	//
 	// linkHeader may have a length of 0, in which case the PacketEndpoint
 	// should construct its own ethernet header for applications.
 	//
 	// HandlePacket may modify pkt.
 	HandlePacket(nicID tcpip.NICID, netProto tcpip.NetworkProtocolNumber, pkt *PacketBuffer)
+}
+
+// MappablePacketEndpoint is a packet endpoint that supports forwarding its
+// packets to a PacketMMapEndpoint.
+type MappablePacketEndpoint interface {
+	PacketEndpoint
+
+	// GetPacketMMapOpts returns the options for initializing a PacketMMapEndpoint
+	// for this endpoint.
+	GetPacketMMapOpts(req *tcpip.TpacketReq, isRx bool) PacketMMapOpts
+
+	// SetPacketMMapEndpoint sets the PacketMMapEndpoint for this endpoint. All
+	// packets received by this endpoint will be forwarded to the provided
+	// PacketMMapEndpoint.
+	SetPacketMMapEndpoint(ep PacketMMapEndpoint)
+
+	// GetPacketMMapEndpoint returns the PacketMMapEndpoint for this endpoint or
+	// nil if there is none.
+	GetPacketMMapEndpoint() PacketMMapEndpoint
+
+	// HandlePacketMMapCopy is a function that is called when a packet received is
+	// too large for the buffer size specified for the memory mapped endpoint. In
+	// this case, the packet is copied and passed to the original packet endpoint.
+	HandlePacketMMapCopy(nicID tcpip.NICID, netProto tcpip.NetworkProtocolNumber, pkt *PacketBuffer)
+}
+
+// PacketMMapOpts are the options for initializing a PacketMMapEndpoint.
+//
+// +stateify savable
+type PacketMMapOpts struct {
+	Req            *tcpip.TpacketReq
+	IsRx           bool
+	Cooked         bool
+	Stack          *Stack
+	Wq             *waiter.Queue
+	PacketEndpoint MappablePacketEndpoint
+	Version        int
+	Reserve        uint32
+}
+
+// PacketMMapEndpoint is the interface implemented by endpoints to handle memory
+// mapped packets over the packet transport protocol (PACKET_MMAP).
+type PacketMMapEndpoint interface {
+	// HandlePacket is called by the stack when new packets arrive that
+	// match the endpoint. It returns true if the packet was handled by the
+	// endpoint and false otherwise.
+	//
+	// Implementers should treat packet as immutable and should copy it
+	// before modification.
+	//
+	// linkHeader may have a length of 0, in which case the PacketEndpoint
+	// should construct its own ethernet header for applications.
+	//
+	// HandlePacket may modify pkt.
+	HandlePacket(nicID tcpip.NICID, netProto tcpip.NetworkProtocolNumber, pkt *PacketBuffer) bool
+
+	// Close releases any resources associated with the endpoint.
+	Close()
+
+	// Readiness returns the events that the endpoint is ready for.
+	Readiness(mask waiter.EventMask) waiter.EventMask
+
+	// Stats returns the statistics for the endpoint that can be used for
+	// getsockopt(PACKET_STATISTICS).
+	Stats() tcpip.TpacketStats
 }
 
 // UnknownDestinationPacketDisposition enumerates the possible return values from
@@ -243,6 +312,9 @@ type TransportProtocol interface {
 	// Resume resumes any protocol level background workers that were
 	// previously paused by Pause.
 	Resume()
+
+	// Restore starts any protocol level background workers during restore.
+	Restore()
 
 	// Parse sets pkt.TransportHeader and trims pkt.Data appropriately. It does
 	// neither and returns false if pkt.Data is too small, i.e. pkt.Data.Size() <
@@ -319,6 +391,10 @@ type NetworkHeaderParams struct {
 
 	// DF indicates whether the DF bit should be set.
 	DF bool
+
+	// ExperimentOptionValue is a 16 bit value that is set for the IP experiment
+	// option headers if it is not zero.
+	ExperimentOptionValue uint16
 }
 
 // GroupAddressableEndpoint is an endpoint that supports group addressing.
@@ -1142,7 +1218,7 @@ type NetworkLinkEndpoint interface {
 	// Close is called when the endpoint is removed from a stack.
 	Close()
 
-	// SetOnCloseAction sets the action that will be exected before closing the
+	// SetOnCloseAction sets the action that will be executed before closing the
 	// endpoint. It is used to destroy a network device when its endpoint
 	// is closed. Endpoints that are closed only after destroying their
 	// network devices can implement this method as no-op.

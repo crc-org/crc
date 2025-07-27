@@ -32,7 +32,7 @@ import (
 //
 // +stateify savable
 type epQueue struct {
-	mu   sync.Mutex `state:"nosave"`
+	mu   epQueueMutex `state:"nosave"`
 	list endpointList
 }
 
@@ -78,9 +78,8 @@ func (q *epQueue) empty() bool {
 //
 // +stateify savable
 type processor struct {
-	epQ     epQueue
-	sleeper sleep.Sleeper
-	// TODO(b/341946753): Restore them when netstack is savable.
+	epQ              epQueue
+	sleeper          sleep.Sleeper `state:"nosave"`
 	newEndpointWaker sleep.Waker   `state:"nosave"`
 	closeWaker       sleep.Waker   `state:"nosave"`
 	pauseWaker       sleep.Waker   `state:"nosave"`
@@ -366,7 +365,7 @@ type dispatcher struct {
 	processors []processor
 	wg         sync.WaitGroup `state:"nosave"`
 	hasher     jenkinsHasher
-	mu         sync.Mutex `state:"nosave"`
+	mu         dispatcherMutex `state:"nosave"`
 	// +checklocks:mu
 	paused bool
 	// +checklocks:mu
@@ -381,9 +380,18 @@ func (d *dispatcher) init(rng *rand.Rand, nProcessors int) {
 
 	d.mu.Lock()
 	defer d.mu.Unlock()
+
 	d.closed = false
 	d.processors = make([]processor, nProcessors)
 	d.hasher = jenkinsHasher{seed: rng.Uint32()}
+	d.startLocked()
+}
+
+// +checklocks:d.mu
+func (d *dispatcher) startLocked() {
+	if d.closed {
+		return
+	}
 	for i := range d.processors {
 		p := &d.processors[i]
 		p.sleeper.AddWaker(&p.newEndpointWaker)
@@ -397,6 +405,13 @@ func (d *dispatcher) init(rng *rand.Rand, nProcessors int) {
 		// that results in a heap-allocated function literal.
 		go p.start(&d.wg)
 	}
+}
+
+func (d *dispatcher) start() {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.startLocked()
 }
 
 // close closes a dispatcher and its processors.

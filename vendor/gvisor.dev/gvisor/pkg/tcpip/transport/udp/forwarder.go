@@ -20,19 +20,24 @@ import (
 	"gvisor.dev/gvisor/pkg/waiter"
 )
 
+// ForwarderHandler handles incoming requests. Returning true marks the
+// request as handled, returning false marks the request as unhandled.
+// Stack may send an ICMP port unreachable message for unhandled requests.
+type ForwarderHandler func(*ForwarderRequest) (handled bool)
+
 // Forwarder is a session request forwarder, which allows clients to decide
 // what to do with a session request, for example: ignore it, or process it.
 //
 // The canonical way of using it is to pass the Forwarder.HandlePacket function
 // to stack.SetTransportProtocolHandler.
 type Forwarder struct {
-	handler func(*ForwarderRequest)
+	handler ForwarderHandler
 
 	stack *stack.Stack
 }
 
 // NewForwarder allocates and initializes a new forwarder.
-func NewForwarder(s *stack.Stack, handler func(*ForwarderRequest)) *Forwarder {
+func NewForwarder(s *stack.Stack, handler ForwarderHandler) *Forwarder {
 	return &Forwarder{
 		stack:   s,
 		handler: handler,
@@ -44,13 +49,11 @@ func NewForwarder(s *stack.Stack, handler func(*ForwarderRequest)) *Forwarder {
 // This function is expected to be passed as an argument to the
 // stack.SetTransportProtocolHandler function.
 func (f *Forwarder) HandlePacket(id stack.TransportEndpointID, pkt *stack.PacketBuffer) bool {
-	f.handler(&ForwarderRequest{
+	return f.handler(&ForwarderRequest{
 		stack: f.stack,
 		id:    id,
-		pkt:   pkt.IncRef(),
+		pkt:   pkt.Clone(),
 	})
-
-	return true
 }
 
 // ForwarderRequest represents a session request received by the forwarder and
@@ -76,15 +79,17 @@ func (r *ForwarderRequest) CreateEndpoint(queue *waiter.Queue) (tcpip.Endpoint, 
 
 	netHdr := r.pkt.Network()
 	if err := ep.net.Bind(tcpip.FullAddress{NIC: r.pkt.NICID, Addr: netHdr.DestinationAddress(), Port: r.id.LocalPort}); err != nil {
+		ep.closeLocked()
 		return nil, err
 	}
 
 	if err := ep.net.Connect(tcpip.FullAddress{NIC: r.pkt.NICID, Addr: netHdr.SourceAddress(), Port: r.id.RemotePort}); err != nil {
+		ep.closeLocked()
 		return nil, err
 	}
 
 	if err := r.stack.RegisterTransportEndpoint([]tcpip.NetworkProtocolNumber{r.pkt.NetworkProtocolNumber}, ProtocolNumber, r.id, ep, ep.portFlags, tcpip.NICID(ep.ops.GetBindToDevice())); err != nil {
-		ep.Close()
+		ep.closeLocked()
 		return nil, err
 	}
 
