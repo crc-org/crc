@@ -29,6 +29,7 @@ import (
 	"github.com/crc-org/crc/v2/test/extended/util"
 	"github.com/cucumber/godog"
 	"github.com/shirou/gopsutil/v4/cpu"
+	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/spf13/pflag"
 )
 
@@ -266,6 +267,9 @@ func InitializeScenario(s *godog.ScenarioContext) {
 			if tag.Name == "@story_health" {
 				if err := getCPUdata("Before start"); err != nil {
 					fmt.Printf("Failed to collect CPU data: %v\n", err)
+				}
+				if err := getMemoryData("Before start"); err != nil {
+					fmt.Printf("Failed to collect memory data: %v\n", err)
 				}
 			}
 		}
@@ -577,6 +581,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		EnsureVMPartitionSizeCorrect)
 	s.Step(`^get cpu data "([^"]*)"`,
 		getCPUdata)
+	s.Step(`^get memory data "([^"]*)"`,
+		getMemoryData)
 
 	s.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
 
@@ -1325,5 +1331,13 @@ func getCPUdata(content string) error {
 	data := fmt.Sprintf("%s: %.2f%%\n", content, cpuData)
 	wd, _ := os.Getwd()
 	file := filepath.Join(wd, "../test-results/cpu-consume.txt")
+	return util.WriteToFile(data, file)
+}
+
+func getMemoryData(content string) error {
+	v, _ := mem.VirtualMemory()
+	data := fmt.Sprintf("%s, UsedPercent: %f%%, Free: %v Mib\n", content, v.UsedPercent, v.Free/1024/1024)
+	wd, _ := os.Getwd()
+	file := filepath.Join(wd, "../test-results/memory-consume.txt")
 	return util.WriteToFile(data, file)
 }
