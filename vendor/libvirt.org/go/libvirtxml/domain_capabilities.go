@@ -147,6 +147,7 @@ type DomainCapsFeatures struct {
 	AsyncTeardown     *DomainCapsFeatureAsyncTeardown     `xml:"async-teardown"`
 	S390PV            *DomainCapsFeatureS390PV            `xml:"s390-pv"`
 	PS2               *DomainCapsFeaturePS2               `xml:"ps2"`
+	TDX               *DomainCapsFeatureTDX               `xml:"tdx"`
 	SEV               *DomainCapsFeatureSEV               `xml:"sev"`
 	SGX               *DomainCapsFeatureSGX               `xml:"sgx"`
 	HyperV            *DomainCapsFeatureHyperV            `xml:"hyperv"`
@@ -183,6 +184,10 @@ type DomainCapsFeatureS390PV struct {
 }
 
 type DomainCapsFeaturePS2 struct {
+	Supported string `xml:"supported,attr"`
+}
+
+type DomainCapsFeatureTDX struct {
 	Supported string `xml:"supported,attr"`
 }
 
