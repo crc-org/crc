@@ -19,18 +19,18 @@ type TickListener struct {
 	tickPeriod time.Duration
 }
 
-func newStatusStream(server *EventServer) EventStream {
-	return newStream(NewStatusListener(server.machine), newEventPublisher(STATUS, server.sseServer))
+func newClusterLoadStream(server *EventServer) EventStream {
+	return newStream(newClusterLoadListener(server.machine), newEventPublisher(ClusterLoad, server.sseServer))
 }
 
-func NewStatusListener(machine crcMachine.Client) EventProducer {
+func newClusterLoadListener(machine crcMachine.Client) EventProducer {
 	getStatus := func() (interface{}, error) {
 		return machine.GetClusterLoad()
 	}
-	return NewTickListener(getStatus)
+	return newTickListener(getStatus)
 }
 
-func NewTickListener(generator genData) EventProducer {
+func newTickListener(generator genData) EventProducer {
 	return &TickListener{
 		done:       make(chan bool),
 		generator:  generator,
