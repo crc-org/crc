@@ -3,6 +3,7 @@ package private
 import (
 	"context"
 	"io"
+	"time"
 
 	"github.com/containers/image/v5/docker/reference"
 	"github.com/containers/image/v5/internal/blobinfocache"
@@ -117,6 +118,7 @@ type PutBlobOptions struct {
 // PutBlobPartialOptions are used in PutBlobPartial.
 type PutBlobPartialOptions struct {
 	Cache      blobinfocache.BlobInfoCache2 // Cache to use and/or update.
+	EmptyLayer bool                         // True if the blob is an "empty"/"throwaway" layer, and may not necessarily be physically represented.
 	LayerIndex int                          // A zero-based index of the layer within the image (PutBlobPartial is only called with layer-like blobs, not configs)
 }
 
@@ -170,6 +172,12 @@ type CommitOptions struct {
 	// What “resolved” means is transport-specific.
 	// Transports which don’t support reporting resolved references can ignore the field; the generic copy code writes "nil" into the value.
 	ReportResolvedReference *types.ImageReference
+	// Timestamp, if set, will force timestamps of content created in the destination to this value.
+	// Most transports don't support this.
+	//
+	// In oci-archive: destinations, this will set the create/mod/access timestamps in each tar entry
+	// (but not a timestamp of the created archive file).
+	Timestamp *time.Time
 }
 
 // ImageSourceChunk is a portion of a blob.
