@@ -17,8 +17,8 @@ import (
 const defaultRefreshRate = 150 * time.Millisecond
 const defaultHmQueueLength = 128
 
-// DoneError represents use after `(*Progress).Wait()` error.
-var DoneError = fmt.Errorf("%T instance can't be reused after %[1]T.Wait()", (*Progress)(nil))
+// ErrDone represents use after `(*Progress).Wait()` error.
+var ErrDone = fmt.Errorf("%T instance can't be reused after %[1]T.Wait()", (*Progress)(nil))
 
 // Progress represents a container that renders one or more progress bars.
 type Progress struct {
@@ -39,7 +39,7 @@ type pState struct {
 	idCount     int
 	popPriority int
 
-	// following are provided/overrided by user
+	// following are provided/overrode by user
 	hmQueueLen       int
 	reqWidth         int
 	refreshRate      time.Duration
@@ -149,7 +149,7 @@ func (p *Progress) MustAdd(total int64, filler BarFiller, options ...BarOption) 
 // Add creates a bar which renders itself by provided BarFiller.
 // If `total <= 0` triggering complete event by increment methods
 // is disabled. If called after `(*Progress).Wait()` then
-// `(nil, DoneError)` is returned.
+// `(nil, ErrDone)` is returned.
 func (p *Progress) Add(total int64, filler BarFiller, options ...BarOption) (*Bar, error) {
 	if filler == nil {
 		filler = NopStyle().Build()
@@ -171,7 +171,7 @@ func (p *Progress) Add(total int64, filler BarFiller, options ...BarOption) (*Ba
 	}:
 		return <-ch, nil
 	case <-p.done:
-		return nil, DoneError
+		return nil, ErrDone
 	}
 }
 
@@ -205,8 +205,7 @@ func (p *Progress) UpdateBarPriority(b *Bar, priority int, lazy bool) {
 // Write is implementation of io.Writer.
 // Writing to `*Progress` will print lines above a running bar.
 // Writes aren't flushed immediately, but at next refresh cycle.
-// If called after `(*Progress).Wait()` then `(0, DoneError)`
-// is returned.
+// If called after `(*Progress).Wait()` then `(0, ErrDone)` is returned.
 func (p *Progress) Write(b []byte) (int, error) {
 	type result struct {
 		n   int
@@ -221,7 +220,7 @@ func (p *Progress) Write(b []byte) (int, error) {
 		res := <-ch
 		return res.n, res.err
 	case <-p.done:
-		return 0, DoneError
+		return 0, ErrDone
 	}
 }
 
@@ -356,16 +355,18 @@ func (s *pState) render(cw *cwriter.Writer) (err error) {
 		height = width
 	}
 
+	var barCount int
 	for b := range iter {
+		barCount++
 		go b.render(width)
 	}
 
-	return s.flush(cw, height, iterPop)
+	return s.flush(cw, height, barCount, iterPop)
 }
 
-func (s *pState) flush(cw *cwriter.Writer, height int, iter <-chan *Bar) error {
-	var popCount int
-	var rows []io.Reader
+func (s *pState) flush(cw *cwriter.Writer, height, barCount int, iter <-chan *Bar) error {
+	var total, popCount int
+	rows := make([][]io.Reader, 0, barCount)
 
 	for b := range iter {
 		frame := <-b.frameCh
@@ -374,15 +375,16 @@ func (s *pState) flush(cw *cwriter.Writer, height int, iter <-chan *Bar) error {
 			b.cancel()
 			return frame.err // b.frameCh is buffered it's ok to return here
 		}
-		var usedRows int
+		var discarded int
 		for i := len(frame.rows) - 1; i >= 0; i-- {
-			if row := frame.rows[i]; len(rows) < height {
-				rows = append(rows, row)
-				usedRows++
+			if total < height {
+				total++
 			} else {
-				_, _ = io.Copy(io.Discard, row)
+				_, _ = io.Copy(io.Discard, frame.rows[i]) // Found IsInBounds
+				discarded++
 			}
 		}
+		rows = append(rows, frame.rows)
 
 		switch frame.shutdown {
 		case 1:
@@ -400,7 +402,7 @@ func (s *pState) flush(cw *cwriter.Writer, height int, iter <-chan *Bar) error {
 			}
 		case 2:
 			if s.popCompleted && !frame.noPop {
-				popCount += usedRows
+				popCount += len(frame.rows) - discarded
 				continue
 			}
 			fallthrough
@@ -410,13 +412,15 @@ func (s *pState) flush(cw *cwriter.Writer, height int, iter <-chan *Bar) error {
 	}
 
 	for i := len(rows) - 1; i >= 0; i-- {
-		_, err := cw.ReadFrom(rows[i])
-		if err != nil {
-			return err
+		for _, r := range rows[i] {
+			_, err := cw.ReadFrom(r)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	return cw.Flush(len(rows) - popCount)
+	return cw.Flush(total - popCount)
 }
 
 func (s pState) makeBarState(total int64, filler BarFiller, options ...BarOption) *bState {
@@ -440,6 +444,14 @@ func (s pState) makeBarState(total int64, filler BarFiller, options ...BarOption
 	for _, opt := range options {
 		if opt != nil {
 			opt(bs)
+		}
+	}
+
+	for _, group := range bs.decorGroups {
+		for _, d := range group {
+			if d, ok := unwrap(d).(decor.EwmaDecorator); ok {
+				bs.ewmaDecorators = append(bs.ewmaDecorators, d)
+			}
 		}
 	}
 

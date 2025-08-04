@@ -10,31 +10,29 @@ import (
 // BarOption is a func option to alter default behavior of a bar.
 type BarOption func(*bState)
 
-func inspect(decorators []decor.Decorator) (dest []decor.Decorator) {
-	for _, decorator := range decorators {
-		if decorator == nil {
-			continue
-		}
-		dest = append(dest, decorator)
-	}
-	return
-}
-
 // PrependDecorators let you inject decorators to the bar's left side.
 func PrependDecorators(decorators ...decor.Decorator) BarOption {
-	decorators = inspect(decorators)
+	var group []decor.Decorator
+	for _, decorator := range decorators {
+		if decorator != nil {
+			group = append(group, decorator)
+		}
+	}
 	return func(s *bState) {
-		s.populateEwmaDecorators(decorators)
-		s.decorators[0] = decorators
+		s.decorGroups[0] = group
 	}
 }
 
 // AppendDecorators let you inject decorators to the bar's right side.
 func AppendDecorators(decorators ...decor.Decorator) BarOption {
-	decorators = inspect(decorators)
+	var group []decor.Decorator
+	for _, decorator := range decorators {
+		if decorator != nil {
+			group = append(group, decorator)
+		}
+	}
 	return func(s *bState) {
-		s.populateEwmaDecorators(decorators)
-		s.decorators[1] = decorators
+		s.decorGroups[1] = group
 	}
 }
 
@@ -80,6 +78,25 @@ func BarFillerOnComplete(message string) BarOption {
 	return BarFillerMiddleware(func(base BarFiller) BarFiller {
 		return BarFillerFunc(func(w io.Writer, st decor.Statistics) error {
 			if st.Completed {
+				_, err := io.WriteString(w, message)
+				return err
+			}
+			return base.Fill(w, st)
+		})
+	})
+}
+
+// BarFillerClearOnAbort clears bar's filler on abort event.
+// It's shortcut for BarFillerOnAbort("").
+func BarFillerClearOnAbort() BarOption {
+	return BarFillerOnAbort("")
+}
+
+// BarFillerOnAbort replaces bar's filler with message, on abort event.
+func BarFillerOnAbort(message string) BarOption {
+	return BarFillerMiddleware(func(base BarFiller) BarFiller {
+		return BarFillerFunc(func(w io.Writer, st decor.Statistics) error {
+			if st.Aborted {
 				_, err := io.WriteString(w, message)
 				return err
 			}
