@@ -17,7 +17,6 @@ linters:
     - err113
     - exhaustruct
     - forbidigo
-    - funcorder
     - funlen
     - gocognit
     - gocyclo
@@ -29,6 +28,7 @@ linters:
     - nakedret
     - nestif
     - nlreturn
+    - noinlineerr
     - paralleltest
     - prealloc
     - rowserrcheck
@@ -37,6 +37,7 @@ linters:
     - tparallel
     - varnamelen
     - wastedassign
+    - wsl
 
   settings:
     depguard:
