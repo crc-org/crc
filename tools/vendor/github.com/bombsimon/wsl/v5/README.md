@@ -120,13 +120,15 @@ wsl [flags] </path/to/package/...>
 wsl --default none --enable branch,return --fix ./...
 ```
 
-`wsl` is also integrated in [`golangci-lint`][golangci-lint]
+`wsl` is also integrated in [`golangci-lint`][golangci-lint] but since v5 which
+had a bunch of breaking changes it's renamed to `wsl_v5`. The previous version
+of `wsl` is deprecated and will be removed from `golangci-lint` eventually.
 
 ```sh
-golangci-lint run --no-config --enable-only wsl --fix
+golangci-lint run --no-config --enable-only wsl_v5 --fix
 ```
 
-This is an exhaustive, default, configuration for `wsl` in `golangci-lint`.
+This is an exhaustive, default, configuration for `wsl_v5` in `golangci-lint`.
 
 ```yaml
 linters:

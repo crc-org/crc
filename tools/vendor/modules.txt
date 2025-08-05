@@ -96,7 +96,7 @@ github.com/blizzy78/varnamelen
 # github.com/bombsimon/wsl/v4 v4.7.0
 ## explicit; go 1.23
 github.com/bombsimon/wsl/v4
-# github.com/bombsimon/wsl/v5 v5.1.0
+# github.com/bombsimon/wsl/v5 v5.1.1
 ## explicit; go 1.23.0
 github.com/bombsimon/wsl/v5
 # github.com/breml/bidichk v0.3.3
@@ -161,7 +161,7 @@ github.com/ckaznocha/intrange
 ## explicit; go 1.21
 github.com/curioswitch/go-reassign
 github.com/curioswitch/go-reassign/internal/analyzer
-# github.com/daixiang0/gci v0.13.6
+# github.com/daixiang0/gci v0.13.7
 ## explicit; go 1.21
 github.com/daixiang0/gci/pkg/config
 github.com/daixiang0/gci/pkg/format
@@ -280,7 +280,7 @@ github.com/golangci/go-printf-func-name/pkg/analyzer
 # github.com/golangci/gofmt v0.0.0-20250106114630-d62b90e6713d
 ## explicit; go 1.22.0
 github.com/golangci/gofmt/gofmt
-# github.com/golangci/golangci-lint/v2 v2.3.0
+# github.com/golangci/golangci-lint/v2 v2.3.1
 ## explicit; go 1.23.0
 github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 github.com/golangci/golangci-lint/v2/internal/cache
@@ -552,8 +552,8 @@ github.com/ldez/exptostd
 # github.com/ldez/gomoddirectives v0.7.0
 ## explicit; go 1.23.0
 github.com/ldez/gomoddirectives
-# github.com/ldez/grignotin v0.9.0
-## explicit; go 1.22.0
+# github.com/ldez/grignotin v0.10.0
+## explicit; go 1.23.0
 github.com/ldez/grignotin/goenv
 github.com/ldez/grignotin/gomod
 # github.com/ldez/tagliatelle v0.7.1
@@ -765,7 +765,7 @@ github.com/sashamelentyev/interfacebloat/pkg/analyzer
 ## explicit; go 1.23.0
 github.com/sashamelentyev/usestdlibvars/pkg/analyzer
 github.com/sashamelentyev/usestdlibvars/pkg/analyzer/internal/mapping
-# github.com/securego/gosec/v2 v2.22.6
+# github.com/securego/gosec/v2 v2.22.7
 ## explicit; go 1.23.0
 github.com/securego/gosec/v2
 github.com/securego/gosec/v2/analyzers
@@ -778,7 +778,7 @@ github.com/sirupsen/logrus
 # github.com/sivchari/containedctx v1.0.3
 ## explicit; go 1.17
 github.com/sivchari/containedctx
-# github.com/sonatard/noctx v0.3.5
+# github.com/sonatard/noctx v0.4.0
 ## explicit; go 1.23.0
 github.com/sonatard/noctx
 # github.com/sourcegraph/go-diff v0.7.0
