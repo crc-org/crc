@@ -41,6 +41,7 @@ func Get(ctx context.Context, name ...string) (map[string]string, error) {
 	}
 
 	v := map[string]string{}
+
 	err = json.NewDecoder(bytes.NewBuffer(out)).Decode(&v)
 	if err != nil {
 		return nil, err

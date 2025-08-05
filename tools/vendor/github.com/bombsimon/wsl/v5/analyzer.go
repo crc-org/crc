@@ -2,13 +2,17 @@ package wsl
 
 import (
 	"flag"
+	"fmt"
 	"go/ast"
 	"go/token"
+	"os"
 	"strings"
 	"sync"
 
 	"golang.org/x/tools/go/analysis"
 )
+
+const version = "wsl version v5.1.1"
 
 func NewAnalyzer(config *Configuration) *analysis.Analyzer {
 	wa := &wslAnalyzer{config: config}
@@ -64,6 +68,7 @@ func (wa *wslAnalyzer) flags() flag.FlagSet {
 	flags.StringVar(&wa.defaultChecks, "default", "", "Can be 'all' for all checks or 'none' for no checks or empty for default checks")
 	flags.Var(&multiStringValue{slicePtr: &wa.enable}, "enable", "Comma separated list of checks to enable")
 	flags.Var(&multiStringValue{slicePtr: &wa.disable}, "disable", "Comma separated list of checks to disable")
+	flags.Var(new(versionFlag), "V", "print version and exit")
 
 	return *flags
 }
@@ -167,6 +172,20 @@ func (m *multiStringValue) String() string {
 	}
 
 	return strings.Join(*m.slicePtr, ", ")
+}
+
+// https://cs.opensource.google/go/x/tools/+/refs/tags/v0.35.0:go/analysis/internal/analysisflags/flags.go;l=188-237;drc=99337ebe7b90918701a41932abf121600b972e34
+type versionFlag string
+
+func (*versionFlag) IsBoolFlag() bool { return true }
+func (*versionFlag) Get() any         { return nil }
+func (*versionFlag) String() string   { return "" }
+
+func (*versionFlag) Set(_ string) error {
+	fmt.Println(version)
+	os.Exit(0)
+
+	return nil
 }
 
 func getFilename(fset *token.FileSet, file *ast.File) string {
