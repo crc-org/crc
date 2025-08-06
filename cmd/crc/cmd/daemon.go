@@ -254,7 +254,7 @@ func run(configuration *types.Configuration) error {
 	if err != nil {
 		return err
 	}
-	if err := fs9p.StartShares([]fs9p.Mount9p{{Listener: listener9p, Path: constants.GetHomeDir()}}); err != nil {
+	if _, err := fs9p.StartShares([]fs9p.Mount9p{{Listener: listener9p, Path: constants.GetHomeDir()}}); err != nil {
 		return err
 	}
 
