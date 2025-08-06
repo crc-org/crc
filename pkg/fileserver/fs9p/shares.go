@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/linuxkit/virtsock/pkg/hvsock"
 	"github.com/sirupsen/logrus"
 )
 
@@ -59,24 +58,6 @@ func StartShares(mounts []Mount9p) (servers []*Server, defErr error) {
 // StartVsockShares starts serving the given shares on vsocks instead of TCP sockets.
 // The vsocks used must already be defined before StartVsockShares is called.
 func StartVsockShares(mounts []VsockMount9p) ([]*Server, error) {
-	mounts9p := []Mount9p{}
-	for _, mount := range mounts {
-		service, err := hvsock.GUIDFromString(mount.VsockGUID)
-		if err != nil {
-			return nil, fmt.Errorf("parsing vsock guid %s: %w", mount.VsockGUID, err)
-		}
-
-		listener, err := hvsock.Listen(hvsock.Addr{
-			VMID:      hvsock.GUIDWildcard,
-			ServiceID: service,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("retrieving listener for vsock %s: %w", mount.VsockGUID, err)
-		}
-
-		logrus.Debugf("Going to serve directory %s on vsock %s", mount.Path, mount.VsockGUID)
-		mounts9p = append(mounts9p, Mount9p{Path: mount.Path, Listener: listener})
-	}
-
-	return StartShares(mounts9p)
+	// temporarily removed until vsock support is added into 9pfs client
+	return nil, nil
 }
