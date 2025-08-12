@@ -17,7 +17,7 @@ jobs:
       KUBECONFIG: '/Users/runner/.kube/config'
     steps:
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
       - name: Set up Go
