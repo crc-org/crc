@@ -925,7 +925,7 @@ go.uber.org/zap/zapcore
 # golang.org/x/exp/typeparams v0.0.0-20250620022241-b7579e27df2b
 ## explicit; go 1.23.0
 golang.org/x/exp/typeparams
-# golang.org/x/mod v0.26.0
+# golang.org/x/mod v0.27.0
 ## explicit; go 1.23.0
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/modfile
@@ -936,7 +936,7 @@ golang.org/x/mod/sumdb/dirhash
 ## explicit; go 1.23.0
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.34.0
+# golang.org/x/sys v0.35.0
 ## explicit; go 1.23.0
 golang.org/x/sys/unix
 golang.org/x/sys/windows
@@ -958,7 +958,7 @@ golang.org/x/text/runes
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# golang.org/x/tools v0.35.0
+# golang.org/x/tools v0.36.0
 ## explicit; go 1.23.0
 golang.org/x/tools/cmd/goimports
 golang.org/x/tools/go/analysis
