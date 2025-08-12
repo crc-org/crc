@@ -25,7 +25,7 @@ jobs:
         go: ['1.23']
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -60,7 +60,7 @@ jobs:
             os: 'windows'
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Build qe oci images ${{matrix.os}}-${{matrix.arch}}
         run: |
           # e2e

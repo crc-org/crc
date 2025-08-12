@@ -20,7 +20,7 @@ jobs:
             os: 'windows'
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Log in to Quay.io
         uses: redhat-actions/podman-login@v1
         with:
