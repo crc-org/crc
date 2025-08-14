@@ -2,7 +2,6 @@ package libhvee
 
 import (
 	"errors"
-	"fmt"
 
 	log "github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/os/windows/powershell"
@@ -18,11 +17,6 @@ var (
 func cmdOut(args ...string) (string, error) {
 	stdout, _, err := powershell.Execute(args...)
 	return stdout, err
-}
-
-func cmd(args ...string) error {
-	_, err := cmdOut(args...)
-	return err
 }
 
 func hypervAvailable() error {
@@ -74,11 +68,4 @@ func isWindowsAdministrator() (bool, error) {
 
 	resp := crcstrings.FirstLine(stdout)
 	return resp == "True", nil
-}
-
-func smbShareExists(name string) bool {
-	if err := cmd(fmt.Sprintf("Get-SmbShare -Name %s", name)); err != nil {
-		return false
-	}
-	return true
 }
