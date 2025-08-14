@@ -1,6 +1,7 @@
 package libhvee
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -35,22 +36,14 @@ func convertToUnixPath(path string) string {
 
 func configureShareDirs(machineConfig config.MachineConfig) []drivers.SharedDir {
 	var sharedDirs []drivers.SharedDir
-	for _, dir := range machineConfig.SharedDirs {
+	for i, dir := range machineConfig.SharedDirs {
 		sharedDir := drivers.SharedDir{
-			Source:   dir,
-			Target:   convertToUnixPath(dir),
-			Tag:      "crc-dir0", // smb share 'crc-dir0' is created in the msi
-			Type:     "cifs",
-			Username: machineConfig.SharedDirUsername,
-		}
-		sharedDir9p := drivers.SharedDir{
 			Source: dir,
-			Target: convertToUnixPath(dir) + "9p", // temporary solution until smb sharing is removed
-			Tag:    "crc-dir0",                    // same as above
-			//Tag:    fmt.Sprintf("dir%d", i),
-			Type: "9p",
+			Target: convertToUnixPath(dir),
+			Tag:    fmt.Sprintf("dir%d", i),
+			Type:   "9p",
 		}
-		sharedDirs = append(sharedDirs, sharedDir, sharedDir9p)
+		sharedDirs = append(sharedDirs, sharedDir)
 	}
 	return sharedDirs
 }
