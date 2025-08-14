@@ -128,7 +128,6 @@ func CreateBastion(_url *url.URL, passPhrase string, identity string, initial ne
 		HostKeyCallback: callback,
 		HostKeyAlgorithms: []string{
 			ssh.KeyAlgoRSA,
-			ssh.KeyAlgoDSA,
 			ssh.KeyAlgoECDSA256,
 			ssh.KeyAlgoECDSA384,
 			ssh.KeyAlgoECDSA521,

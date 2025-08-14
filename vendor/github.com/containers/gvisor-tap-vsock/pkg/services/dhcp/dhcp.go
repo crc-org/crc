@@ -3,6 +3,7 @@ package dhcp
 import (
 	"encoding/json"
 	"errors"
+	"math"
 	"net"
 	"net/http"
 	"time"
@@ -50,7 +51,13 @@ func handler(configuration *types.Configuration, ipPool *tap.IPPool) server4.Han
 		reply.UpdateOption(dhcpv4.Option{Code: dhcpv4.OptionSubnetMask, Value: dhcpv4.IP(parsedSubnet.Mask)})
 		reply.UpdateOption(dhcpv4.Option{Code: dhcpv4.OptionRouter, Value: dhcpv4.IP(net.ParseIP(configuration.GatewayIP))})
 		reply.UpdateOption(dhcpv4.Option{Code: dhcpv4.OptionDomainNameServer, Value: dhcpv4.IPs([]net.IP{net.ParseIP(configuration.GatewayIP)})})
-		reply.UpdateOption(dhcpv4.Option{Code: dhcpv4.OptionInterfaceMTU, Value: dhcpv4.Uint16(configuration.MTU)})
+
+		mtu := configuration.MTU
+		if mtu < 0 || mtu > math.MaxUint16 {
+			log.Errorf("dhcp: invalid MTU %d", mtu)
+		} else {
+			reply.UpdateOption(dhcpv4.Option{Code: dhcpv4.OptionInterfaceMTU, Value: dhcpv4.Uint16(mtu)})
+		}
 		reply.UpdateOption(dhcpv4.Option{Code: dhcpv4.OptionDNSDomainSearchList, Value: &rfc1035label.Labels{
 			Labels: configuration.DNSSearchDomains,
 		}})
@@ -60,6 +67,9 @@ func handler(configuration *types.Configuration, ipPool *tap.IPPool) server4.Han
 			reply.UpdateOption(dhcpv4.OptMessageType(dhcpv4.MessageTypeOffer))
 		case dhcpv4.MessageTypeRequest:
 			reply.UpdateOption(dhcpv4.OptMessageType(dhcpv4.MessageTypeAck))
+		case dhcpv4.MessageTypeRelease:
+			log.Debugf("dhcp: unhandled message type: %v", mt)
+			return
 		default:
 			log.Errorf("dhcp: unhandled message type: %v", mt)
 			return
@@ -71,7 +81,7 @@ func handler(configuration *types.Configuration, ipPool *tap.IPPool) server4.Han
 	}
 }
 
-func dial(s *stack.Stack, nic int) (*gonet.UDPConn, error) {
+func dial(s *stack.Stack, nic tcpip.NICID) (*gonet.UDPConn, error) {
 	var wq waiter.Queue
 	ep, err := s.NewEndpoint(udp.ProtocolNumber, ipv4.ProtocolNumber, &wq)
 	if err != nil {
@@ -98,7 +108,7 @@ type Server struct {
 }
 
 func New(configuration *types.Configuration, stack *stack.Stack, ipPool *tap.IPPool) (*Server, error) {
-	ln, err := dial(stack, 1)
+	ln, err := dial(stack, tcpip.NICID(1))
 	if err != nil {
 		return nil, err
 	}

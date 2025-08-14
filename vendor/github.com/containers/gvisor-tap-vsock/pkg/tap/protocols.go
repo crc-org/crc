@@ -2,6 +2,9 @@ package tap
 
 import (
 	"encoding/binary"
+	"math"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type protocol interface {
@@ -27,7 +30,11 @@ func (s *hyperkitProtocol) Buf() []byte {
 }
 
 func (s *hyperkitProtocol) Write(buf []byte, size int) {
-	binary.LittleEndian.PutUint16(buf, uint16(size))
+	if size < 0 || size > math.MaxUint16 {
+		log.Warnf("size out of range. Resetting to %d", math.MaxUint16)
+		size = math.MaxUint16
+	}
+	binary.LittleEndian.PutUint16(buf, uint16(size)) //#nosec: G115
 }
 
 func (s *hyperkitProtocol) Read(buf []byte) int {
@@ -46,7 +53,11 @@ func (s *qemuProtocol) Buf() []byte {
 }
 
 func (s *qemuProtocol) Write(buf []byte, size int) {
-	binary.BigEndian.PutUint32(buf, uint32(size))
+	if size > math.MaxUint32 {
+		log.Warnf("size exceeds max limit. Resetting to: %d", math.MaxInt32)
+		size = math.MaxUint32
+	}
+	binary.BigEndian.PutUint32(buf, uint32(size)) //#nosec: G115. Safely checked
 }
 
 func (s *qemuProtocol) Read(buf []byte) int {
