@@ -13,13 +13,13 @@ const DefaultURL = "vsock://:1024"
 func listenURL(parsed *url.URL) (net.Listener, error) {
 	switch parsed.Scheme {
 	case "vsock":
-		port, err := strconv.Atoi(parsed.Port())
+		port, err := strconv.ParseUint(parsed.Port(), 10, 32)
 		if err != nil {
 			return nil, err
 		}
 
 		if parsed.Hostname() != "" {
-			cid, err := strconv.Atoi(parsed.Hostname())
+			cid, err := strconv.ParseUint(parsed.Hostname(), 10, 32)
 			if err != nil {
 				return nil, err
 			}

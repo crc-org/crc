@@ -4,7 +4,9 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/binary"
+	"fmt"
 	"io"
+	"math"
 	"net"
 
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
@@ -41,6 +43,10 @@ func vpnkitHandshake(conn net.Conn, configuration *types.Configuration) error {
 	// https://github.com/moby/hyperkit/blob/2f061e447e1435cdf1b9eda364cea6414f2c606b/src/lib/pci_virtio_net_vpnkit.c#L131
 	resp := make([]byte, 258)
 	resp[0] = 0x01
+
+	if configuration.MTU < 0 || configuration.MTU > math.MaxUint16 {
+		return fmt.Errorf("invalid MTU: %d", configuration.MTU)
+	}
 	mtu := uint16(configuration.MTU)
 	binary.LittleEndian.PutUint16(resp[1:3], mtu)
 	binary.LittleEndian.PutUint16(resp[3:5], mtu+header.EthernetMinimumSize)
