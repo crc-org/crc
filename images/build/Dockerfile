@@ -1,4 +1,4 @@
-FROM registry.ci.openshift.org/openshift/release:rhel-8-release-golang-1.23-openshift-4.19 AS builder
+FROM registry.ci.openshift.org/openshift/release:rhel-9-release-golang-1.23-openshift-4.19 AS builder
 MAINTAINER CRC <devtools-cdk@redhat.com>
 
 WORKDIR /opt/src
