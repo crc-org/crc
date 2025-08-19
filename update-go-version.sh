@@ -13,9 +13,9 @@ go mod edit -go "${golang_base_version}.0"
 go mod edit -go "${golang_base_version}.1" tools/go.mod
 
 sed -i "s,^GOVERSION = 1.[0-9]\+,GOVERSION = ${golang_base_version}," Makefile
-sed -i "s,^\(FROM registry.ci.openshift.org/openshift/release:rhel-8-release-golang-\)1.[0-9]\+,\1${golang_base_version}," images/*/Dockerfile
-sed -i "s,^\(FROM registry.ci.openshift.org/openshift/release:rhel-8-release-golang-\)1.[0-9]\+,\1${golang_base_version}," images/*/Containerfile
-sed -i "s,\(registry.ci.openshift.org/openshift/release:rhel-8-release-golang-\)1.[0-9]\+,\1${golang_base_version}," .devcontainer/devcontainer.json
+sed -i "s,^\(FROM registry.ci.openshift.org/openshift/release:rhel-9-release-golang-\)1.[0-9]\+,\1${golang_base_version}," images/*/Dockerfile
+sed -i "s,^\(FROM registry.ci.openshift.org/openshift/release:rhel-9-release-golang-\)1.[0-9]\+,\1${golang_base_version}," images/*/Containerfile
+sed -i "s,\(registry.ci.openshift.org/openshift/release:rhel-9-release-golang-\)1.[0-9]\+,\1${golang_base_version}," .devcontainer/devcontainer.json
 for f in .github/workflows/*.yml; do
     if [ $(yq  eval '.jobs.build.strategy.matrix | has("go")' "$f") == "true" ]; then
       yq eval --inplace ".jobs.build.strategy.matrix.go[0] = ${golang_base_version} | .jobs.build.strategy.matrix.go[0] style=\"single\"" "$f";
@@ -25,4 +25,4 @@ for f in .github/workflows/*.yml; do
     fi
 done
 # Use sed for verify-devcontainer because image is from registry.ci.openshift
-sed -i "s,\(registry.ci.openshift.org/openshift/release:rhel-8-release-golang-\)1.[0-9]\+,\1${golang_base_version}," .github/workflows/verify-devcontainer.yml
+sed -i "s,\(registry.ci.openshift.org/openshift/release:rhel-9-release-golang-\)1.[0-9]\+,\1${golang_base_version}," .github/workflows/verify-devcontainer.yml
