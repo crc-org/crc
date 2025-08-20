@@ -8,7 +8,7 @@ jobs:
   verify-devcontainer:
     runs-on: ubuntu-24.04
     container:
-      image: registry.ci.openshift.org/openshift/release:rhel-9-release-golang-1.23-openshift-4.20
+      image: registry.ci.openshift.org/openshift/release:rhel-9-release-golang-1.24-openshift-4.20
       options: --cpus 4
     steps:
       - name: Run `git clone`
