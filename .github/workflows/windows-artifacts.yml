@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ['windows-2022']
-        go: ['1.23']
+        go: ['1.24']
     steps:
       - name: Check out repository code
         uses: actions/checkout@v5
