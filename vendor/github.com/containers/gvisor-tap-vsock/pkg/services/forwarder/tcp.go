@@ -17,11 +17,11 @@ import (
 
 const linkLocalSubnet = "169.254.0.0/16"
 
-func TCP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mutex) *tcp.Forwarder {
+func TCP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mutex, ec2MetadataAccess bool) *tcp.Forwarder {
 	return tcp.NewForwarder(s, 0, 10, func(r *tcp.ForwarderRequest) {
 		localAddress := r.ID().LocalAddress
 
-		if linkLocal().Contains(localAddress) {
+		if (!ec2MetadataAccess) && linkLocal().Contains(localAddress) {
 			r.Complete(true)
 			return
 		}

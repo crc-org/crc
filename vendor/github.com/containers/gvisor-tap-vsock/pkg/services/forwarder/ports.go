@@ -378,7 +378,7 @@ func tcpipAddress(nicID tcpip.NICID, remote string) (address tcpip.FullAddress, 
 		return address, errors.New("invalid remote addr")
 	}
 
-	port, err := strconv.Atoi(split[1])
+	port, err := strconv.ParseUint(split[1], 10, 16)
 	if err != nil {
 		return address, err
 
