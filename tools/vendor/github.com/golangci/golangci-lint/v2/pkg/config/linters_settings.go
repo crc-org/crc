@@ -421,8 +421,12 @@ type ExhaustiveSettings struct {
 }
 
 type ExhaustructSettings struct {
-	Include []string `mapstructure:"include"`
-	Exclude []string `mapstructure:"exclude"`
+	Include                []string `mapstructure:"include"`
+	Exclude                []string `mapstructure:"exclude"`
+	AllowEmpty             bool     `mapstructure:"allow-empty"`
+	AllowEmptyRx           []string `mapstructure:"allow-empty-rx"`
+	AllowEmptyReturns      bool     `mapstructure:"allow-empty-returns"`
+	AllowEmptyDeclarations bool     `mapstructure:"allow-empty-declarations"`
 }
 
 type FatcontextSettings struct {
@@ -838,7 +842,7 @@ type StaticCheckSettings struct {
 }
 
 func (s *StaticCheckSettings) HasConfiguration() bool {
-	return len(s.Initialisms) > 0 || len(s.HTTPStatusCodeWhitelist) > 0 || len(s.DotImportWhitelist) > 0 || len(s.Checks) > 0
+	return s.Initialisms == nil || s.HTTPStatusCodeWhitelist == nil || s.DotImportWhitelist == nil || s.Checks == nil
 }
 
 type TagAlignSettings struct {
