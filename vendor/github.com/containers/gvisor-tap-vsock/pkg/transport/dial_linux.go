@@ -18,11 +18,11 @@ func Dial(endpoint string) (net.Conn, string, error) {
 	}
 	switch parsed.Scheme {
 	case "vsock":
-		contextID, err := strconv.Atoi(parsed.Hostname())
+		contextID, err := strconv.ParseUint(parsed.Hostname(), 10, 32)
 		if err != nil {
 			return nil, "", err
 		}
-		port, err := strconv.Atoi(parsed.Port())
+		port, err := strconv.ParseUint(parsed.Port(), 10, 32)
 		if err != nil {
 			return nil, "", err
 		}

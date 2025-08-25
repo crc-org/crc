@@ -28,12 +28,11 @@ func (n *VirtualNetwork) DialContextTCP(ctx context.Context, addr string) (net.C
 	if err != nil {
 		return nil, err
 	}
-
 	return gonet.DialContextTCP(ctx, n.stack,
 		tcpip.FullAddress{
 			NIC:  1,
 			Addr: tcpip.AddrFrom4Slice(ip.To4()),
-			Port: uint16(port),
+			Port: port,
 		}, ipv4.ProtocolNumber)
 }
 
@@ -45,11 +44,11 @@ func (n *VirtualNetwork) Listen(network, addr string) (net.Listener, error) {
 	return gonet.ListenTCP(n.stack, tcpip.FullAddress{
 		NIC:  1,
 		Addr: tcpip.AddrFrom4Slice(ip.To4()),
-		Port: uint16(port),
+		Port: port,
 	}, ipv4.ProtocolNumber)
 }
 
-func splitIPPort(network string, addr string) (net.IP, uint64, error) {
+func splitIPPort(network string, addr string) (net.IP, uint16, error) {
 	if network != "tcp" {
 		return nil, 0, errors.New("only tcp is supported")
 	}
@@ -65,5 +64,5 @@ func splitIPPort(network string, addr string) (net.IP, uint64, error) {
 	if ip == nil {
 		return nil, 0, errors.New("invalid address, must be an IP")
 	}
-	return ip, port, nil
+	return ip, uint16(port), nil
 }
