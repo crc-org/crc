@@ -51,7 +51,7 @@ func newMigrateCommand(log logutils.Log, info BuildInfo) *migrateCommand {
 
 	migrateCmd := &cobra.Command{
 		Use:               "migrate",
-		Short:             "Migrate configuration file from v1 to v2",
+		Short:             "Migrate configuration file from v1 to v2.",
 		SilenceUsage:      true,
 		SilenceErrors:     true,
 		Args:              cobra.NoArgs,
@@ -93,7 +93,7 @@ func (c *migrateCommand) execute(_ *cobra.Command, _ []string) error {
 	}
 
 	c.log.Warnf("The configuration comments are not migrated.")
-	c.log.Warnf("Details about the migration: https://golangci-lint.run/product/migration-guide/")
+	c.log.Warnf("Details about the migration: https://golangci-lint.run/docs/product/migration-guide/")
 
 	c.log.Infof("Migrating v1 configuration file: %s", srcPath)
 
