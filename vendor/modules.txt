@@ -92,7 +92,7 @@ github.com/cloudflare/circl/sign/ed448
 # github.com/containers/common v0.62.2
 ## explicit; go 1.22.8
 github.com/containers/common/pkg/strongunits
-# github.com/containers/gvisor-tap-vsock v0.8.6
+# github.com/containers/gvisor-tap-vsock v0.8.7
 ## explicit; go 1.23.0
 github.com/containers/gvisor-tap-vsock/pkg/client
 github.com/containers/gvisor-tap-vsock/pkg/fs
@@ -523,8 +523,8 @@ github.com/mdlayher/vsock
 # github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 ## explicit
 github.com/mgutz/ansi
-# github.com/miekg/dns v1.1.65
-## explicit; go 1.22.0
+# github.com/miekg/dns v1.1.68
+## explicit; go 1.23.0
 github.com/miekg/dns
 # github.com/miekg/pkcs11 v1.1.1
 ## explicit; go 1.12

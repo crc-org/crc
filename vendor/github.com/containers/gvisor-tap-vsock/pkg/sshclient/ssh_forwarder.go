@@ -92,7 +92,7 @@ func connectForward(ctx context.Context, bastion *Bastion) (CloseWriteConn, erro
 			return nil, errors.Wrapf(err, "Couldn't reestablish ssh tunnel on path: %s", bastion.Path)
 		}
 		// Check if ssh connection is still alive
-		_, _, err = bastion.Client.Conn.SendRequest("alive@gvproxy", true, nil)
+		_, _, err = bastion.Client.SendRequest("alive@gvproxy", true, nil)
 		if err != nil {
 			for bastionRetries := 1; ; bastionRetries++ {
 				err = bastion.Reconnect(ctx)

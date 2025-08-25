@@ -13,7 +13,7 @@ import (
 
 type LinkEndpoint struct {
 	debug      bool
-	mtu        int
+	mtu        uint32
 	mac        tcpip.LinkAddress
 	ip         string
 	virtualIPs map[string]struct{}
@@ -22,7 +22,7 @@ type LinkEndpoint struct {
 	networkSwitch NetworkSwitch
 }
 
-func NewLinkEndpoint(debug bool, mtu int, macAddress string, ip string, virtualIPs []string) (*LinkEndpoint, error) {
+func NewLinkEndpoint(debug bool, mtu uint32, macAddress string, ip string, virtualIPs []string) (*LinkEndpoint, error) {
 	linkAddr, err := net.ParseMAC(macAddress)
 	if err != nil {
 		return nil, err
@@ -82,11 +82,11 @@ func (e *LinkEndpoint) MaxHeaderLength() uint16 {
 }
 
 func (e *LinkEndpoint) MTU() uint32 {
-	return uint32(e.mtu)
+	return e.mtu
 }
 
 func (e *LinkEndpoint) SetMTU(mtu uint32) {
-	e.mtu = int(mtu)
+	e.mtu = mtu
 }
 
 func (e *LinkEndpoint) Wait()                     {}
