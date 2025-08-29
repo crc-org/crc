@@ -11,7 +11,6 @@ import (
 
 	"github.com/containers/storage/pkg/chunked/internal/minimal"
 	"github.com/containers/storage/pkg/ioutils"
-	"github.com/klauspost/compress/zstd"
 	"github.com/opencontainers/go-digest"
 	"github.com/vbatts/tar-split/archive/tar"
 	"github.com/vbatts/tar-split/tar/asm"
@@ -142,10 +141,7 @@ func (rc *rollingChecksumReader) Read(b []byte) (bool, int, error) {
 	rc.IsLastChunkZeros = false
 
 	if rc.pendingHole > 0 {
-		toCopy := int64(len(b))
-		if rc.pendingHole < toCopy {
-			toCopy = rc.pendingHole
-		}
+		toCopy := min(rc.pendingHole, int64(len(b)))
 		rc.pendingHole -= toCopy
 		for i := int64(0); i < toCopy; i++ {
 			b[i] = 0
@@ -163,7 +159,7 @@ func (rc *rollingChecksumReader) Read(b []byte) (bool, int, error) {
 		return false, 0, io.EOF
 	}
 
-	for i := 0; i < len(b); i++ {
+	for i := range b {
 		holeLen, n, err := rc.reader.readByte()
 		if err != nil {
 			if err == io.EOF {
@@ -205,15 +201,15 @@ type tarSplitData struct {
 	compressed          *bytes.Buffer
 	digester            digest.Digester
 	uncompressedCounter *ioutils.WriteCounter
-	zstd                *zstd.Encoder
+	zstd                minimal.ZstdWriter
 	packer              storage.Packer
 }
 
-func newTarSplitData(level int) (*tarSplitData, error) {
+func newTarSplitData(createZstdWriter minimal.CreateZstdWriterFunc) (*tarSplitData, error) {
 	compressed := bytes.NewBuffer(nil)
 	digester := digest.Canonical.Digester()
 
-	zstdWriter, err := minimal.ZstdWriterWithLevel(io.MultiWriter(compressed, digester.Hash()), level)
+	zstdWriter, err := createZstdWriter(io.MultiWriter(compressed, digester.Hash()))
 	if err != nil {
 		return nil, err
 	}
@@ -230,11 +226,11 @@ func newTarSplitData(level int) (*tarSplitData, error) {
 	}, nil
 }
 
-func writeZstdChunkedStream(destFile io.Writer, outMetadata map[string]string, reader io.Reader, level int) error {
+func writeZstdChunkedStream(destFile io.Writer, outMetadata map[string]string, reader io.Reader, createZstdWriter minimal.CreateZstdWriterFunc) error {
 	// total written so far.  Used to retrieve partial offsets in the file
 	dest := ioutils.NewWriteCounter(destFile)
 
-	tarSplitData, err := newTarSplitData(level)
+	tarSplitData, err := newTarSplitData(createZstdWriter)
 	if err != nil {
 		return err
 	}
@@ -254,7 +250,7 @@ func writeZstdChunkedStream(destFile io.Writer, outMetadata map[string]string, r
 
 	buf := make([]byte, 4096)
 
-	zstdWriter, err := minimal.ZstdWriterWithLevel(dest, level)
+	zstdWriter, err := createZstdWriter(dest)
 	if err != nil {
 		return err
 	}
@@ -407,18 +403,11 @@ func writeZstdChunkedStream(destFile io.Writer, outMetadata map[string]string, r
 		return err
 	}
 
-	if err := zstdWriter.Flush(); err != nil {
-		zstdWriter.Close()
-		return err
-	}
 	if err := zstdWriter.Close(); err != nil {
 		return err
 	}
 	zstdWriter = nil
 
-	if err := tarSplitData.zstd.Flush(); err != nil {
-		return err
-	}
 	if err := tarSplitData.zstd.Close(); err != nil {
 		return err
 	}
@@ -430,7 +419,7 @@ func writeZstdChunkedStream(destFile io.Writer, outMetadata map[string]string, r
 		UncompressedSize: tarSplitData.uncompressedCounter.Count,
 	}
 
-	return minimal.WriteZstdChunkedManifest(dest, outMetadata, uint64(dest.Count), &ts, metadata, level)
+	return minimal.WriteZstdChunkedManifest(dest, outMetadata, uint64(dest.Count), &ts, metadata, createZstdWriter)
 }
 
 type zstdChunkedWriter struct {
@@ -457,7 +446,7 @@ func (w zstdChunkedWriter) Write(p []byte) (int, error) {
 	}
 }
 
-// zstdChunkedWriterWithLevel writes a zstd compressed tarball where each file is
+// makeZstdChunkedWriter writes a zstd compressed tarball where each file is
 // compressed separately so it can be addressed separately.  Idea based on CRFS:
 // https://github.com/google/crfs
 // The difference with CRFS is that the zstd compression is used instead of gzip.
@@ -472,12 +461,12 @@ func (w zstdChunkedWriter) Write(p []byte) (int, error) {
 // [SKIPPABLE FRAME 1]: [ZSTD SKIPPABLE FRAME, SIZE=MANIFEST LENGTH][MANIFEST]
 // [SKIPPABLE FRAME 2]: [ZSTD SKIPPABLE FRAME, SIZE=16][MANIFEST_OFFSET][MANIFEST_LENGTH][MANIFEST_LENGTH_UNCOMPRESSED][MANIFEST_TYPE][CHUNKED_ZSTD_MAGIC_NUMBER]
 // MANIFEST_OFFSET, MANIFEST_LENGTH, MANIFEST_LENGTH_UNCOMPRESSED and CHUNKED_ZSTD_MAGIC_NUMBER are 64 bits unsigned in little endian format.
-func zstdChunkedWriterWithLevel(out io.Writer, metadata map[string]string, level int) (io.WriteCloser, error) {
+func makeZstdChunkedWriter(out io.Writer, metadata map[string]string, createZstdWriter minimal.CreateZstdWriterFunc) (io.WriteCloser, error) {
 	ch := make(chan error, 1)
 	r, w := io.Pipe()
 
 	go func() {
-		ch <- writeZstdChunkedStream(out, metadata, r, level)
+		ch <- writeZstdChunkedStream(out, metadata, r, createZstdWriter)
 		_, _ = io.Copy(io.Discard, r) // Ordinarily writeZstdChunkedStream consumes all of r. If it fails, ensure the write end never blocks and eventually terminates.
 		r.Close()
 		close(ch)
@@ -496,5 +485,40 @@ func ZstdCompressor(r io.Writer, metadata map[string]string, level *int) (io.Wri
 		level = &l
 	}
 
-	return zstdChunkedWriterWithLevel(r, metadata, *level)
+	createZstdWriter := func(dest io.Writer) (minimal.ZstdWriter, error) {
+		return minimal.ZstdWriterWithLevel(dest, *level)
+	}
+
+	return makeZstdChunkedWriter(r, metadata, createZstdWriter)
+}
+
+type noCompression struct {
+	dest io.Writer
+}
+
+func (n *noCompression) Write(p []byte) (int, error) {
+	return n.dest.Write(p)
+}
+
+func (n *noCompression) Close() error {
+	return nil
+}
+
+func (n *noCompression) Flush() error {
+	return nil
+}
+
+func (n *noCompression) Reset(dest io.Writer) {
+	n.dest = dest
+}
+
+// NoCompression writes directly to the output file without any compression
+//
+// Such an output does not follow the zstd:chunked spec and cannot be generally consumed; this function
+// only exists for internal purposes and should not be called from outside c/storage.
+func NoCompression(r io.Writer, metadata map[string]string) (io.WriteCloser, error) {
+	createZstdWriter := func(dest io.Writer) (minimal.ZstdWriter, error) {
+		return &noCompression{dest: dest}, nil
+	}
+	return makeZstdChunkedWriter(r, metadata, createZstdWriter)
 }

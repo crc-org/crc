@@ -16,6 +16,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/containers/storage/pkg/fileutils"
 	"github.com/containers/storage/pkg/idtools"
@@ -52,7 +53,7 @@ type (
 		// This is additional data to be used by the converter.  It will
 		// not survive a round trip through JSON, so it's primarily
 		// intended for generating archives (i.e., converting writes).
-		WhiteoutData interface{}
+		WhiteoutData any
 		// When unpacking, specifies whether overwriting a directory with a
 		// non-directory is allowed and vice versa.
 		NoOverwriteDirNonDir bool
@@ -67,6 +68,8 @@ type (
 		CopyPass bool
 		// ForceMask, if set, indicates the permission mask used for created files.
 		ForceMask *os.FileMode
+		// Timestamp, if set, will be set in each header as create/mod/access time
+		Timestamp *time.Time
 	}
 )
 
@@ -78,10 +81,9 @@ const (
 	windows = "windows"
 	darwin  = "darwin"
 	freebsd = "freebsd"
-	linux   = "linux"
 )
 
-var xattrsToIgnore = map[string]interface{}{
+var xattrsToIgnore = map[string]any{
 	"security.selinux": true,
 }
 
@@ -179,6 +181,7 @@ func DecompressStream(archive io.Reader) (_ io.ReadCloser, Err error) {
 
 	defer func() {
 		if Err != nil {
+			// In the normal case, the buffer is embedded in the ReadCloser return.
 			p.Put(buf)
 		}
 	}()
@@ -375,7 +378,7 @@ type nosysFileInfo struct {
 	os.FileInfo
 }
 
-func (fi nosysFileInfo) Sys() interface{} {
+func (fi nosysFileInfo) Sys() any {
 	// A Sys value of type *tar.Header is safe as it is system-independent.
 	// The tar.FileInfoHeader function copies the fields into the returned
 	// header without performing any OS lookups.
@@ -475,7 +478,7 @@ type TarWhiteoutConverter interface {
 	ConvertReadWithHandler(*tar.Header, string, TarWhiteoutHandler) (bool, error)
 }
 
-type tarAppender struct {
+type tarWriter struct {
 	TarWriter *tar.Writer
 	Buffer    *bufio.Writer
 
@@ -494,15 +497,19 @@ type tarAppender struct {
 	// from the traditional behavior/format to get features like subsecond
 	// precision in timestamps.
 	CopyPass bool
+
+	// Timestamp, if set, will be set in each header as create/mod/access time
+	Timestamp *time.Time
 }
 
-func newTarAppender(idMapping *idtools.IDMappings, writer io.Writer, chownOpts *idtools.IDPair) *tarAppender {
-	return &tarAppender{
+func newTarWriter(idMapping *idtools.IDMappings, writer io.Writer, chownOpts *idtools.IDPair, timestamp *time.Time) *tarWriter {
+	return &tarWriter{
 		SeenFiles:  make(map[uint64]string),
 		TarWriter:  tar.NewWriter(writer),
 		Buffer:     pools.BufioWriter32KPool.Get(nil),
 		IDMappings: idMapping,
 		ChownOpts:  chownOpts,
+		Timestamp:  timestamp,
 	}
 }
 
@@ -521,11 +528,29 @@ func canonicalTarName(name string, isDir bool) (string, error) {
 	return name, nil
 }
 
-// addTarFile adds to the tar archive a file from `path` as `name`
-func (ta *tarAppender) addTarFile(path, name string) error {
+type addFileData struct {
+	// The path from which to read contents.
+	path string
+
+	// os.Stat for the above.
+	fi os.FileInfo
+
+	// The file header of the above.
+	hdr *tar.Header
+
+	// if present, an extra whiteout entry to write after the header.
+	extraWhiteout *tar.Header
+}
+
+// prepareAddFile generates the tar file header(s) for adding a file
+// from path as name to the tar archive, without writing to the
+// tar stream. Thus, any error may be ignored without corrupting the
+// tar file. A (nil, nil) return means that the file should be
+// ignored for non-error reasons.
+func (ta *tarWriter) prepareAddFile(path, name string) (*addFileData, error) {
 	fi, err := os.Lstat(path)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var link string
@@ -533,26 +558,26 @@ func (ta *tarAppender) addTarFile(path, name string) error {
 		var err error
 		link, err = os.Readlink(path)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 	if fi.Mode()&os.ModeSocket != 0 {
 		logrus.Infof("archive: skipping %q since it is a socket", path)
-		return nil
+		return nil, nil
 	}
 
 	hdr, err := FileInfoHeader(name, fi, link)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if err := readSecurityXattrToTarHeader(path, hdr); err != nil {
-		return err
+		return nil, err
 	}
 	if err := readUserXattrToTarHeader(path, hdr); err != nil {
-		return err
+		return nil, err
 	}
 	if err := ReadFileFlagsToTarHeader(path, hdr); err != nil {
-		return err
+		return nil, err
 	}
 	if ta.CopyPass {
 		copyPassHeader(hdr)
@@ -561,18 +586,13 @@ func (ta *tarAppender) addTarFile(path, name string) error {
 	// if it's not a directory and has more than 1 link,
 	// it's hard linked, so set the type flag accordingly
 	if !fi.IsDir() && hasHardlinks(fi) {
-		inode, err := getInodeFromStat(fi.Sys())
-		if err != nil {
-			return err
-		}
+		inode := getInodeFromStat(fi.Sys())
 		// a link should have a name that it links too
 		// and that linked name should be first in the tar archive
 		if oldpath, ok := ta.SeenFiles[inode]; ok {
 			hdr.Typeflag = tar.TypeLink
 			hdr.Linkname = oldpath
-			hdr.Size = 0 // This Must be here for the writer math to add up!
-		} else {
-			ta.SeenFiles[inode] = name
+			hdr.Size = 0 // This must be here for the writer math to add up!
 		}
 	}
 
@@ -582,11 +602,11 @@ func (ta *tarAppender) addTarFile(path, name string) error {
 	if !strings.HasPrefix(filepath.Base(hdr.Name), WhiteoutPrefix) && !ta.IDMappings.Empty() {
 		fileIDPair, err := getFileUIDGID(fi.Sys())
 		if err != nil {
-			return err
+			return nil, err
 		}
 		hdr.Uid, hdr.Gid, err = ta.IDMappings.ToContainer(fileIDPair)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -600,28 +620,57 @@ func (ta *tarAppender) addTarFile(path, name string) error {
 		hdr.Gname = ""
 	}
 
+	// if override timestamp set, replace all times with this
+	if ta.Timestamp != nil {
+		hdr.ModTime = *ta.Timestamp
+		hdr.AccessTime = *ta.Timestamp
+		hdr.ChangeTime = *ta.Timestamp
+	}
+
 	maybeTruncateHeaderModTime(hdr)
 
+	result := &addFileData{
+		path: path,
+		hdr:  hdr,
+		fi:   fi,
+	}
 	if ta.WhiteoutConverter != nil {
-		wo, err := ta.WhiteoutConverter.ConvertWrite(hdr, path, fi)
+		// The WhiteoutConverter suggests a generic mechanism,
+		// but this code is only used to convert between
+		// overlayfs (on-disk) and AUFS (in the tar file)
+		// whiteouts, and is initiated because the overlayfs
+		// storage driver returns OverlayWhiteoutFormat from
+		// Driver.getWhiteoutFormat().
+		//
+		// For AUFS, a directory with all its contents deleted
+		// should be represented as a directory containing a
+		// magic whiteout empty regular file, hence the
+		// extraWhiteout header returned here.
+		result.extraWhiteout, err = ta.WhiteoutConverter.ConvertWrite(hdr, path, fi)
 		if err != nil {
+			return nil, err
+		}
+	}
+
+	return result, nil
+}
+
+// addFile performs the write. An error here corrupts the tar file.
+func (ta *tarWriter) addFile(headers *addFileData) error {
+	hdr := headers.hdr
+	if headers.extraWhiteout != nil {
+		if hdr.Typeflag == tar.TypeReg && hdr.Size > 0 {
+			// If we write hdr with hdr.Size > 0, we have
+			// to write the body before we can write the
+			// extraWhiteout header. This can only happen
+			// if the contract for WhiteoutConverter is
+			// not honored, so bail out.
+			return fmt.Errorf("tar: cannot use extra whiteout with non-empty file %s", hdr.Name)
+		}
+		if err := ta.TarWriter.WriteHeader(hdr); err != nil {
 			return err
 		}
-
-		// If a new whiteout file exists, write original hdr, then
-		// replace hdr with wo to be written after. Whiteouts should
-		// always be written after the original. Note the original
-		// hdr may have been updated to be a whiteout with returning
-		// a whiteout header
-		if wo != nil {
-			if err := ta.TarWriter.WriteHeader(hdr); err != nil {
-				return err
-			}
-			if hdr.Typeflag == tar.TypeReg && hdr.Size > 0 {
-				return fmt.Errorf("tar: cannot use whiteout for non-empty file")
-			}
-			hdr = wo
-		}
+		hdr = headers.extraWhiteout
 	}
 
 	if err := ta.TarWriter.WriteHeader(hdr); err != nil {
@@ -629,7 +678,7 @@ func (ta *tarAppender) addTarFile(path, name string) error {
 	}
 
 	if hdr.Typeflag == tar.TypeReg && hdr.Size > 0 {
-		file, err := os.Open(path)
+		file, err := os.Open(headers.path)
 		if err != nil {
 			return err
 		}
@@ -647,10 +696,17 @@ func (ta *tarAppender) addTarFile(path, name string) error {
 		}
 	}
 
+	if !headers.fi.IsDir() && hasHardlinks(headers.fi) {
+		ino := getInodeFromStat(headers.fi.Sys())
+		if _, seen := ta.SeenFiles[ino]; !seen {
+			ta.SeenFiles[ino] = headers.hdr.Name
+		}
+	}
+
 	return nil
 }
 
-func createTarFile(path, extractDir string, hdr *tar.Header, reader io.Reader, Lchown bool, chownOpts *idtools.IDPair, inUserns, ignoreChownErrors bool, forceMask *os.FileMode, buffer []byte) error {
+func extractTarFileEntry(path, extractDir string, hdr *tar.Header, reader io.Reader, Lchown bool, chownOpts *idtools.IDPair, inUserns, ignoreChownErrors bool, forceMask *os.FileMode, buffer []byte) error {
 	// hdr.Mode is in linux format, which we can use for sycalls,
 	// but for os.Foo() calls we need the mode converted to os.FileMode,
 	// so use hdrInfo.Mode() (they differ for e.g. setuid bits)
@@ -673,7 +729,7 @@ func createTarFile(path, extractDir string, hdr *tar.Header, reader io.Reader, L
 	case tar.TypeDir:
 		// Create directory unless it exists as a directory already.
 		// In that case we just want to merge the two
-		if fi, err := os.Lstat(path); !(err == nil && fi.IsDir()) {
+		if fi, err := os.Lstat(path); err != nil || !fi.IsDir() {
 			if err := os.Mkdir(path, mask); err != nil {
 				return err
 			}
@@ -691,7 +747,9 @@ func createTarFile(path, extractDir string, hdr *tar.Header, reader io.Reader, L
 			file.Close()
 			return err
 		}
-		file.Close()
+		if err := file.Close(); err != nil {
+			return err
+		}
 
 	case tar.TypeBlock, tar.TypeChar:
 		if inUserns { // cannot create devices in a userns
@@ -837,183 +895,194 @@ func createTarFile(path, extractDir string, hdr *tar.Header, reader io.Reader, L
 }
 
 // Tar creates an archive from the directory at `path`, and returns it as a
-// stream of bytes.
+// stream of bytes. This is a convenience wrapper for [TarWithOptions].
 func Tar(path string, compression Compression) (io.ReadCloser, error) {
 	return TarWithOptions(path, &TarOptions{Compression: compression})
 }
 
-// TarWithOptions creates an archive from the directory at `path`, only including files whose relative
-// paths are included in `options.IncludeFiles` (if non-nil) or not in `options.ExcludePatterns`.
-func TarWithOptions(srcPath string, options *TarOptions) (io.ReadCloser, error) {
+func tarWithOptionsTo(dest io.WriteCloser, srcPath string, options *TarOptions) (result error) {
 	// Fix the source path to work with long path names. This is a no-op
 	// on platforms other than Windows.
 	srcPath = fixVolumePathPrefix(srcPath)
+	defer func() {
+		if err := dest.Close(); err != nil && result == nil {
+			result = err
+		}
+	}()
 
 	pm, err := fileutils.NewPatternMatcher(options.ExcludePatterns)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	pipeReader, pipeWriter := io.Pipe()
-
-	compressWriter, err := CompressStream(pipeWriter, options.Compression)
+	compressWriter, err := CompressStream(dest, options.Compression)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	go func() {
-		ta := newTarAppender(
-			idtools.NewIDMappingsFromMaps(options.UIDMaps, options.GIDMaps),
-			compressWriter,
-			options.ChownOpts,
-		)
-		ta.WhiteoutConverter = GetWhiteoutConverter(options.WhiteoutFormat, options.WhiteoutData)
-		ta.CopyPass = options.CopyPass
+	ta := newTarWriter(
+		idtools.NewIDMappingsFromMaps(options.UIDMaps, options.GIDMaps),
+		compressWriter,
+		options.ChownOpts,
+		options.Timestamp,
+	)
+	ta.WhiteoutConverter = GetWhiteoutConverter(options.WhiteoutFormat, options.WhiteoutData)
+	ta.CopyPass = options.CopyPass
 
-		defer func() {
-			// Make sure to check the error on Close.
-			if err := ta.TarWriter.Close(); err != nil {
-				logrus.Errorf("Can't close tar writer: %s", err)
-			}
-			if err := compressWriter.Close(); err != nil {
-				logrus.Errorf("Can't close compress writer: %s", err)
-			}
-			if err := pipeWriter.Close(); err != nil {
-				logrus.Errorf("Can't close pipe writer: %s", err)
-			}
-		}()
+	includeFiles := options.IncludeFiles
+	defer func() {
+		if err := compressWriter.Close(); err != nil && result == nil {
+			result = err
+		}
+	}()
 
-		// this buffer is needed for the duration of this piped stream
-		defer pools.BufioWriter32KPool.Put(ta.Buffer)
+	// this buffer is needed for the duration of this piped stream
+	defer pools.BufioWriter32KPool.Put(ta.Buffer)
 
-		// In general we log errors here but ignore them because
-		// during e.g. a diff operation the container can continue
-		// mutating the filesystem and we can see transient errors
-		// from this
+	// In general we log errors here but ignore them because
+	// during e.g. a diff operation the container can continue
+	// mutating the filesystem and we can see transient errors
+	// from this
 
-		stat, err := os.Lstat(srcPath)
-		if err != nil {
-			return
+	stat, err := os.Lstat(srcPath)
+	if err != nil {
+		return err
+	}
+
+	if !stat.IsDir() {
+		// We can't later join a non-dir with any includes because the
+		// 'walk' will error if "file/." is stat-ed and "file" is not a
+		// directory. So, we must split the source path and use the
+		// basename as the include.
+		if len(includeFiles) > 0 {
+			logrus.Warn("Tar: Can't archive a file with includes")
 		}
 
-		if !stat.IsDir() {
-			// We can't later join a non-dir with any includes because the
-			// 'walk' will error if "file/." is stat-ed and "file" is not a
-			// directory. So, we must split the source path and use the
-			// basename as the include.
-			if len(options.IncludeFiles) > 0 {
-				logrus.Warn("Tar: Can't archive a file with includes")
+		dir, base := SplitPathDirEntry(srcPath)
+		srcPath = dir
+		includeFiles = []string{base}
+	}
+
+	if len(includeFiles) == 0 {
+		includeFiles = []string{"."}
+	}
+
+	seen := make(map[string]bool)
+
+	for _, include := range includeFiles {
+		rebaseName := options.RebaseNames[include]
+
+		walkRoot := getWalkRoot(srcPath, include)
+		if err := filepath.WalkDir(walkRoot, func(filePath string, d fs.DirEntry, err error) error {
+			if err != nil {
+				logrus.Errorf("Tar: Can't stat file %s to tar: %s", srcPath, err)
+				return nil
 			}
 
-			dir, base := SplitPathDirEntry(srcPath)
-			srcPath = dir
-			options.IncludeFiles = []string{base}
-		}
+			relFilePath, err := filepath.Rel(srcPath, filePath)
+			if err != nil || (!options.IncludeSourceDir && relFilePath == "." && d.IsDir()) {
+				// Error getting relative path OR we are looking
+				// at the source directory path. Skip in both situations.
+				return nil //nolint: nilerr
+			}
 
-		if len(options.IncludeFiles) == 0 {
-			options.IncludeFiles = []string{"."}
-		}
+			if options.IncludeSourceDir && include == "." && relFilePath != "." {
+				relFilePath = strings.Join([]string{".", relFilePath}, string(filepath.Separator))
+			}
 
-		seen := make(map[string]bool)
+			skip := false
 
-		for _, include := range options.IncludeFiles {
-			rebaseName := options.RebaseNames[include]
-
-			walkRoot := getWalkRoot(srcPath, include)
-			if err := filepath.WalkDir(walkRoot, func(filePath string, d fs.DirEntry, err error) error {
+			// If "include" is an exact match for the current file
+			// then even if there's an "excludePatterns" pattern that
+			// matches it, don't skip it. IOW, assume an explicit 'include'
+			// is asking for that file no matter what - which is true
+			// for some files, like .dockerignore and Dockerfile (sometimes)
+			if include != relFilePath {
+				matches, err := pm.IsMatch(relFilePath)
 				if err != nil {
-					logrus.Errorf("Tar: Can't stat file %s to tar: %s", srcPath, err)
+					return fmt.Errorf("matching %s: %w", relFilePath, err)
+				}
+				skip = matches
+			}
+
+			if skip {
+				// If we want to skip this file and its a directory
+				// then we should first check to see if there's an
+				// excludes pattern (e.g. !dir/file) that starts with this
+				// dir. If so then we can't skip this dir.
+
+				// Its not a dir then so we can just return/skip.
+				if !d.IsDir() {
 					return nil
 				}
 
-				relFilePath, err := filepath.Rel(srcPath, filePath)
-				if err != nil || (!options.IncludeSourceDir && relFilePath == "." && d.IsDir()) {
-					// Error getting relative path OR we are looking
-					// at the source directory path. Skip in both situations.
-					return nil //nolint: nilerr
-				}
-
-				if options.IncludeSourceDir && include == "." && relFilePath != "." {
-					relFilePath = strings.Join([]string{".", relFilePath}, string(filepath.Separator))
-				}
-
-				skip := false
-
-				// If "include" is an exact match for the current file
-				// then even if there's an "excludePatterns" pattern that
-				// matches it, don't skip it. IOW, assume an explicit 'include'
-				// is asking for that file no matter what - which is true
-				// for some files, like .dockerignore and Dockerfile (sometimes)
-				if include != relFilePath {
-					matches, err := pm.IsMatch(relFilePath)
-					if err != nil {
-						return fmt.Errorf("matching %s: %w", relFilePath, err)
-					}
-					skip = matches
-				}
-
-				if skip {
-					// If we want to skip this file and its a directory
-					// then we should first check to see if there's an
-					// excludes pattern (e.g. !dir/file) that starts with this
-					// dir. If so then we can't skip this dir.
-
-					// Its not a dir then so we can just return/skip.
-					if !d.IsDir() {
-						return nil
-					}
-
-					// No exceptions (!...) in patterns so just skip dir
-					if !pm.Exclusions() {
-						return filepath.SkipDir
-					}
-
-					dirSlash := relFilePath + string(filepath.Separator)
-
-					for _, pat := range pm.Patterns() {
-						if !pat.Exclusion() {
-							continue
-						}
-						if strings.HasPrefix(pat.String()+string(filepath.Separator), dirSlash) {
-							// found a match - so can't skip this dir
-							return nil
-						}
-					}
-
-					// No matching exclusion dir so just skip dir
+				// No exceptions (!...) in patterns so just skip dir
+				if !pm.Exclusions() {
 					return filepath.SkipDir
 				}
 
-				if seen[relFilePath] {
-					return nil
-				}
-				seen[relFilePath] = true
+				dirSlash := relFilePath + string(filepath.Separator)
 
-				// Rename the base resource.
-				if rebaseName != "" {
-					var replacement string
-					if rebaseName != string(filepath.Separator) {
-						// Special case the root directory to replace with an
-						// empty string instead so that we don't end up with
-						// double slashes in the paths.
-						replacement = rebaseName
+				for _, pat := range pm.Patterns() {
+					if !pat.Exclusion() {
+						continue
 					}
-
-					relFilePath = strings.Replace(relFilePath, include, replacement, 1)
-				}
-
-				if err := ta.addTarFile(filePath, relFilePath); err != nil {
-					logrus.Errorf("Can't add file %s to tar: %s", filePath, err)
-					// if pipe is broken, stop writing tar stream to it
-					if err == io.ErrClosedPipe {
-						return err
+					if strings.HasPrefix(pat.String()+string(filepath.Separator), dirSlash) {
+						// found a match - so can't skip this dir
+						return nil
 					}
 				}
-				return nil
-			}); err != nil {
-				logrus.Errorf("%s", err)
-				return
+
+				// No matching exclusion dir so just skip dir
+				return filepath.SkipDir
 			}
+
+			if seen[relFilePath] {
+				return nil
+			}
+			seen[relFilePath] = true
+
+			// Rename the base resource.
+			if rebaseName != "" {
+				var replacement string
+				if rebaseName != string(filepath.Separator) {
+					// Special case the root directory to replace with an
+					// empty string instead so that we don't end up with
+					// double slashes in the paths.
+					replacement = rebaseName
+				}
+
+				relFilePath = strings.Replace(relFilePath, include, replacement, 1)
+			}
+
+			headers, err := ta.prepareAddFile(filePath, relFilePath)
+			if err != nil {
+				logrus.Errorf("Can't add file %s to tar: %s; skipping", filePath, err)
+			} else if headers != nil {
+				if err := ta.addFile(headers); err != nil {
+					return err
+				}
+			}
+			return nil
+		}); err != nil {
+			return err
+		}
+	}
+	return ta.TarWriter.Close()
+}
+
+// TarWithOptions creates an archive from the directory at `path`, only including files whose relative
+// paths are included in `options.IncludeFiles` (if non-nil) or not in `options.ExcludePatterns`.
+//
+// If used on a file system being modified concurrently,
+// TarWithOptions will create a valid tar archive, but may leave out
+// some files.
+func TarWithOptions(srcPath string, options *TarOptions) (io.ReadCloser, error) {
+	pipeReader, pipeWriter := io.Pipe()
+	go func() {
+		err := tarWithOptionsTo(pipeWriter, srcPath, options)
+		if pipeErr := pipeWriter.CloseWithError(err); pipeErr != nil {
+			logrus.Errorf("Can't close pipe writer: %s", pipeErr)
 		}
 	}()
 
@@ -1110,7 +1179,7 @@ loop:
 				continue
 			}
 
-			if !(fi.IsDir() && hdr.Typeflag == tar.TypeDir) {
+			if !fi.IsDir() || hdr.Typeflag != tar.TypeDir {
 				if err := os.RemoveAll(path); err != nil {
 					return err
 				}
@@ -1137,7 +1206,7 @@ loop:
 			chownOpts = &idtools.IDPair{UID: hdr.Uid, GID: hdr.Gid}
 		}
 
-		if err = createTarFile(path, dest, hdr, trBuf, doChown, chownOpts, options.InUserNS, options.IgnoreChownErrors, options.ForceMask, buffer); err != nil {
+		if err = extractTarFileEntry(path, dest, hdr, trBuf, doChown, chownOpts, options.InUserNS, options.IgnoreChownErrors, options.ForceMask, buffer); err != nil {
 			return err
 		}
 
@@ -1200,9 +1269,6 @@ func untarHandler(tarArchive io.Reader, dest string, options *TarOptions, decomp
 	dest = filepath.Clean(dest)
 	if options == nil {
 		options = &TarOptions{}
-	}
-	if options.ExcludePatterns == nil {
-		options.ExcludePatterns = []string{}
 	}
 
 	r := tarArchive
@@ -1389,7 +1455,7 @@ func remapIDs(readIDMappings, writeIDMappings *idtools.IDMappings, chownOpts *id
 		} else if runtime.GOOS == darwin {
 			uid, gid = hdr.Uid, hdr.Gid
 			if xstat, ok := hdr.PAXRecords[PaxSchilyXattr+idtools.ContainersOverrideXattr]; ok {
-				attrs := strings.Split(string(xstat), ":")
+				attrs := strings.Split(xstat, ":")
 				if len(attrs) >= 3 {
 					val, err := strconv.ParseUint(attrs[0], 10, 32)
 					if err != nil {
@@ -1427,7 +1493,7 @@ func NewTempArchive(src io.Reader, dir string) (*TempArchive, error) {
 	if _, err := io.Copy(f, src); err != nil {
 		return nil, err
 	}
-	if _, err := f.Seek(0, 0); err != nil {
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
 		return nil, err
 	}
 	st, err := f.Stat()
