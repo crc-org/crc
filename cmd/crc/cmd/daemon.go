@@ -24,6 +24,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/fileserver/fs9p"
 	"github.com/crc-org/machine/libmachine/drivers"
 	"github.com/docker/go-units"
 	"github.com/gorilla/handlers"
@@ -177,7 +178,7 @@ func run(configuration *types.Configuration) error {
 		}
 	}()
 
-	ln, err := vn.Listen("tcp", fmt.Sprintf("%s:80", configuration.GatewayIP))
+	ln, err := vn.Listen("tcp", net.JoinHostPort(configuration.GatewayIP, "80"))
 	if err != nil {
 		return err
 	}
@@ -193,7 +194,7 @@ func run(configuration *types.Configuration) error {
 		}
 	}()
 
-	networkListener, err := vn.Listen("tcp", fmt.Sprintf("%s:80", hostVirtualIP))
+	networkListener, err := vn.Listen("tcp", net.JoinHostPort(hostVirtualIP, "80"))
 	if err != nil {
 		return err
 	}
@@ -247,6 +248,15 @@ func run(configuration *types.Configuration) error {
 			errCh <- errors.Wrap(err, "virtualnetwork http.Serve failed")
 		}
 	}()
+
+	// 9p home directory sharing
+	listener9p, err := vn.Listen("tcp", net.JoinHostPort(configuration.GatewayIP, fmt.Sprintf("%d", constants.Plan9Port)))
+	if err != nil {
+		return err
+	}
+	if _, err := fs9p.StartShares([]fs9p.Mount9p{{Listener: listener9p, Path: constants.GetHomeDir()}}); err != nil {
+		return err
+	}
 
 	startupDone()
 
