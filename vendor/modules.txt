@@ -89,8 +89,8 @@ github.com/cloudflare/circl/math/mlsbset
 github.com/cloudflare/circl/sign
 github.com/cloudflare/circl/sign/ed25519
 github.com/cloudflare/circl/sign/ed448
-# github.com/containers/common v0.64.1
-## explicit; go 1.23.3
+# github.com/containers/common v0.62.2
+## explicit; go 1.22.8
 github.com/containers/common/pkg/strongunits
 # github.com/containers/gvisor-tap-vsock v0.8.7
 ## explicit; go 1.23.0
@@ -107,61 +107,8 @@ github.com/containers/gvisor-tap-vsock/pkg/transport
 github.com/containers/gvisor-tap-vsock/pkg/types
 github.com/containers/gvisor-tap-vsock/pkg/utils
 github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork
-# github.com/containers/image/v5 v5.36.1
+# github.com/containers/libhvee v0.10.1-0.20250829163521-178d10e67860
 ## explicit; go 1.23.3
-github.com/containers/image/v5/copy
-github.com/containers/image/v5/directory
-github.com/containers/image/v5/directory/explicitfilepath
-github.com/containers/image/v5/docker
-github.com/containers/image/v5/docker/policyconfiguration
-github.com/containers/image/v5/docker/reference
-github.com/containers/image/v5/internal/blobinfocache
-github.com/containers/image/v5/internal/image
-github.com/containers/image/v5/internal/imagedestination
-github.com/containers/image/v5/internal/imagedestination/impl
-github.com/containers/image/v5/internal/imagedestination/stubs
-github.com/containers/image/v5/internal/imagesource
-github.com/containers/image/v5/internal/imagesource/impl
-github.com/containers/image/v5/internal/imagesource/stubs
-github.com/containers/image/v5/internal/iolimits
-github.com/containers/image/v5/internal/manifest
-github.com/containers/image/v5/internal/multierr
-github.com/containers/image/v5/internal/pkg/platform
-github.com/containers/image/v5/internal/private
-github.com/containers/image/v5/internal/putblobdigest
-github.com/containers/image/v5/internal/rootless
-github.com/containers/image/v5/internal/set
-github.com/containers/image/v5/internal/signature
-github.com/containers/image/v5/internal/signer
-github.com/containers/image/v5/internal/streamdigest
-github.com/containers/image/v5/internal/tmpdir
-github.com/containers/image/v5/internal/unparsedimage
-github.com/containers/image/v5/internal/uploadreader
-github.com/containers/image/v5/internal/useragent
-github.com/containers/image/v5/manifest
-github.com/containers/image/v5/pkg/blobinfocache
-github.com/containers/image/v5/pkg/blobinfocache/internal/prioritize
-github.com/containers/image/v5/pkg/blobinfocache/memory
-github.com/containers/image/v5/pkg/blobinfocache/none
-github.com/containers/image/v5/pkg/blobinfocache/sqlite
-github.com/containers/image/v5/pkg/compression
-github.com/containers/image/v5/pkg/compression/internal
-github.com/containers/image/v5/pkg/compression/types
-github.com/containers/image/v5/pkg/docker/config
-github.com/containers/image/v5/pkg/strslice
-github.com/containers/image/v5/pkg/sysregistriesv2
-github.com/containers/image/v5/pkg/tlsclientconfig
-github.com/containers/image/v5/signature
-github.com/containers/image/v5/signature/internal
-github.com/containers/image/v5/signature/signer
-github.com/containers/image/v5/signature/sigstore
-github.com/containers/image/v5/signature/sigstore/internal
-github.com/containers/image/v5/signature/simplesigning
-github.com/containers/image/v5/transports
-github.com/containers/image/v5/types
-github.com/containers/image/v5/version
-# github.com/containers/libhvee v0.10.0
-## explicit; go 1.22.8
 github.com/containers/libhvee/pkg/hypervctl
 github.com/containers/libhvee/pkg/kvp/ginsu
 github.com/containers/libhvee/pkg/wmiext
@@ -184,26 +131,6 @@ github.com/containers/ocicrypt/keywrap/pkcs7
 github.com/containers/ocicrypt/spec
 github.com/containers/ocicrypt/utils
 github.com/containers/ocicrypt/utils/keyprovider
-# github.com/containers/storage v1.59.1
-## explicit; go 1.23.0
-github.com/containers/storage/internal/rawfilelock
-github.com/containers/storage/pkg/archive
-github.com/containers/storage/pkg/chunked/compressor
-github.com/containers/storage/pkg/chunked/internal/minimal
-github.com/containers/storage/pkg/chunked/toc
-github.com/containers/storage/pkg/fileutils
-github.com/containers/storage/pkg/homedir
-github.com/containers/storage/pkg/idtools
-github.com/containers/storage/pkg/ioutils
-github.com/containers/storage/pkg/lockfile
-github.com/containers/storage/pkg/longpath
-github.com/containers/storage/pkg/mount
-github.com/containers/storage/pkg/pools
-github.com/containers/storage/pkg/promise
-github.com/containers/storage/pkg/reexec
-github.com/containers/storage/pkg/regexp
-github.com/containers/storage/pkg/system
-github.com/containers/storage/pkg/unshare
 # github.com/coreos/go-systemd/v22 v22.6.0
 ## explicit; go 1.23
 github.com/coreos/go-systemd/v22/activation
@@ -268,14 +195,14 @@ github.com/distribution/reference
 ## explicit
 github.com/docker/distribution/registry/api/errcode
 github.com/docker/distribution/registry/api/v2
-# github.com/docker/docker v28.3.2+incompatible
+# github.com/docker/docker v28.3.3+incompatible
 ## explicit
 github.com/docker/docker/api/types/versions
 # github.com/docker/docker-credential-helpers v0.9.3
 ## explicit; go 1.21
 github.com/docker/docker-credential-helpers/client
 github.com/docker/docker-credential-helpers/credentials
-# github.com/docker/go-connections v0.5.0
+# github.com/docker/go-connections v0.6.0
 ## explicit; go 1.18
 github.com/docker/go-connections/tlsconfig
 # github.com/docker/go-units v0.5.0
@@ -485,7 +412,7 @@ github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.16
 ## explicit; go 1.9
 github.com/mattn/go-runewidth
-# github.com/mattn/go-sqlite3 v1.14.28
+# github.com/mattn/go-sqlite3 v1.14.30
 ## explicit; go 1.19
 github.com/mattn/go-sqlite3
 # github.com/mdlayher/socket v0.4.1
@@ -619,7 +546,7 @@ github.com/pmezard/go-difflib/difflib
 # github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55
 ## explicit; go 1.14
 github.com/power-devops/perfstat
-# github.com/proglottis/gpgme v0.1.4
+# github.com/proglottis/gpgme v0.1.5
 ## explicit; go 1.17
 github.com/proglottis/gpgme
 # github.com/r3labs/sse/v2 v2.10.0
@@ -634,8 +561,8 @@ github.com/russross/blackfriday/v2
 # github.com/sagikazarmark/locafero v0.7.0
 ## explicit; go 1.21
 github.com/sagikazarmark/locafero
-# github.com/secure-systems-lab/go-securesystemslib v0.9.0
-## explicit; go 1.20
+# github.com/secure-systems-lab/go-securesystemslib v0.9.1
+## explicit; go 1.23.0
 github.com/secure-systems-lab/go-securesystemslib/encrypted
 # github.com/segmentio/analytics-go/v3 v3.3.0
 ## explicit; go 1.17
@@ -758,6 +685,82 @@ github.com/yusufpapurcu/wmi
 ## explicit; go 1.18
 github.com/zalando/go-keyring
 github.com/zalando/go-keyring/secret_service
+# go.podman.io/common v0.0.0-20250826054041-6e4bed3c9118
+## explicit; go 1.23.3
+go.podman.io/common/pkg/strongunits
+# go.podman.io/image/v5 v5.36.1-0.20250820085751-a13b38f45723
+## explicit; go 1.23.3
+go.podman.io/image/v5/copy
+go.podman.io/image/v5/directory
+go.podman.io/image/v5/directory/explicitfilepath
+go.podman.io/image/v5/docker
+go.podman.io/image/v5/docker/policyconfiguration
+go.podman.io/image/v5/docker/reference
+go.podman.io/image/v5/internal/blobinfocache
+go.podman.io/image/v5/internal/image
+go.podman.io/image/v5/internal/imagedestination
+go.podman.io/image/v5/internal/imagedestination/impl
+go.podman.io/image/v5/internal/imagedestination/stubs
+go.podman.io/image/v5/internal/imagesource
+go.podman.io/image/v5/internal/imagesource/impl
+go.podman.io/image/v5/internal/imagesource/stubs
+go.podman.io/image/v5/internal/iolimits
+go.podman.io/image/v5/internal/manifest
+go.podman.io/image/v5/internal/multierr
+go.podman.io/image/v5/internal/pkg/platform
+go.podman.io/image/v5/internal/private
+go.podman.io/image/v5/internal/putblobdigest
+go.podman.io/image/v5/internal/rootless
+go.podman.io/image/v5/internal/set
+go.podman.io/image/v5/internal/signature
+go.podman.io/image/v5/internal/signer
+go.podman.io/image/v5/internal/streamdigest
+go.podman.io/image/v5/internal/tmpdir
+go.podman.io/image/v5/internal/unparsedimage
+go.podman.io/image/v5/internal/uploadreader
+go.podman.io/image/v5/internal/useragent
+go.podman.io/image/v5/manifest
+go.podman.io/image/v5/pkg/blobinfocache
+go.podman.io/image/v5/pkg/blobinfocache/internal/prioritize
+go.podman.io/image/v5/pkg/blobinfocache/memory
+go.podman.io/image/v5/pkg/blobinfocache/none
+go.podman.io/image/v5/pkg/blobinfocache/sqlite
+go.podman.io/image/v5/pkg/compression
+go.podman.io/image/v5/pkg/compression/internal
+go.podman.io/image/v5/pkg/compression/types
+go.podman.io/image/v5/pkg/docker/config
+go.podman.io/image/v5/pkg/strslice
+go.podman.io/image/v5/pkg/sysregistriesv2
+go.podman.io/image/v5/pkg/tlsclientconfig
+go.podman.io/image/v5/signature
+go.podman.io/image/v5/signature/internal
+go.podman.io/image/v5/signature/signer
+go.podman.io/image/v5/signature/sigstore
+go.podman.io/image/v5/signature/sigstore/internal
+go.podman.io/image/v5/signature/simplesigning
+go.podman.io/image/v5/transports
+go.podman.io/image/v5/types
+go.podman.io/image/v5/version
+# go.podman.io/storage v1.59.1-0.20250820085751-a13b38f45723
+## explicit; go 1.23.3
+go.podman.io/storage/internal/rawfilelock
+go.podman.io/storage/pkg/archive
+go.podman.io/storage/pkg/chunked/compressor
+go.podman.io/storage/pkg/chunked/internal/minimal
+go.podman.io/storage/pkg/chunked/toc
+go.podman.io/storage/pkg/fileutils
+go.podman.io/storage/pkg/homedir
+go.podman.io/storage/pkg/idtools
+go.podman.io/storage/pkg/ioutils
+go.podman.io/storage/pkg/lockfile
+go.podman.io/storage/pkg/longpath
+go.podman.io/storage/pkg/mount
+go.podman.io/storage/pkg/pools
+go.podman.io/storage/pkg/promise
+go.podman.io/storage/pkg/reexec
+go.podman.io/storage/pkg/regexp
+go.podman.io/storage/pkg/system
+go.podman.io/storage/pkg/unshare
 # go.uber.org/automaxprocs v1.6.0
 ## explicit; go 1.20
 go.uber.org/automaxprocs
@@ -1354,7 +1357,7 @@ sigs.k8s.io/structured-merge-diff/v4/merge
 sigs.k8s.io/structured-merge-diff/v4/schema
 sigs.k8s.io/structured-merge-diff/v4/typed
 sigs.k8s.io/structured-merge-diff/v4/value
-# sigs.k8s.io/yaml v1.5.0
+# sigs.k8s.io/yaml v1.6.0
 ## explicit; go 1.22
 sigs.k8s.io/yaml
 sigs.k8s.io/yaml/goyaml.v2
