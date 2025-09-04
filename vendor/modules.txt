@@ -107,7 +107,7 @@ github.com/containers/gvisor-tap-vsock/pkg/transport
 github.com/containers/gvisor-tap-vsock/pkg/types
 github.com/containers/gvisor-tap-vsock/pkg/utils
 github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork
-# github.com/containers/image/v5 v5.36.1
+# github.com/containers/image/v5 v5.36.2
 ## explicit; go 1.23.3
 github.com/containers/image/v5/copy
 github.com/containers/image/v5/directory
