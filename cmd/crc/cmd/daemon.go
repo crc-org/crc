@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -24,6 +25,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/fileserver/fs9p"
 	"github.com/crc-org/machine/libmachine/drivers"
 	"github.com/docker/go-units"
 	"github.com/gorilla/handlers"
@@ -247,6 +249,21 @@ func run(configuration *types.Configuration) error {
 			errCh <- errors.Wrap(err, "virtualnetwork http.Serve failed")
 		}
 	}()
+
+	// 9p home directory sharing
+	if runtime.GOOS == "windows" {
+		if _, err := fs9p.StartHvsockShares([]fs9p.HvsockMount9p{{Path: constants.GetHomeDir(), HvsockGUID: constants.Plan9HvsockGUID}}); err != nil {
+			logging.Warnf("Failed to start 9p file server on hvsock: %v", err)
+			logging.Warnf("Falling back to 9p over TCP")
+			listener9p, err := vn.Listen("tcp", net.JoinHostPort(configuration.GatewayIP, fmt.Sprintf("%d", constants.Plan9TcpPort)))
+			if err != nil {
+				return err
+			}
+			if _, err := fs9p.StartShares([]fs9p.Mount9p{{Listener: listener9p, Path: constants.GetHomeDir()}}); err != nil {
+				return err
+			}
+		}
+	}
 
 	startupDone()
 
