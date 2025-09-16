@@ -21,7 +21,7 @@ func (client *client) GetConsoleURL() (*types.ConsoleResult, error) {
 		return nil, errors.Wrap(err, "Error getting the state for virtual machine")
 	}
 
-	clusterConfig, err := getClusterConfig(vm.bundle)
+	clusterConfig, err := getClusterConfig(vm.Bundle())
 	if err != nil {
 		return nil, errors.Wrap(err, "Error loading cluster configuration")
 	}
