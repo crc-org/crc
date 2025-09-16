@@ -1,18 +1,21 @@
-package grab
+package lib
 
 import (
 	"context"
 	"io"
 	"sync/atomic"
 	"time"
-
-	"github.com/cavaliergopher/grab/v3/pkg/bps"
 )
+
+type gauge interface {
+	Sample(t time.Time, n int64)
+	BPS() float64
+}
 
 type transfer struct {
 	n     int64 // must be 64bit aligned on 386
 	ctx   context.Context
-	gauge bps.Gauge
+	gauge gauge
 	lim   RateLimiter
 	w     io.Writer
 	r     io.Reader
@@ -22,7 +25,7 @@ type transfer struct {
 func newTransfer(ctx context.Context, lim RateLimiter, dst io.Writer, src io.Reader, buf []byte) *transfer {
 	return &transfer{
 		ctx:   ctx,
-		gauge: bps.NewSMA(6), // five second moving average sampling every second
+		gauge: nil, // no-op gauge for now
 		lim:   lim,
 		w:     dst,
 		r:     src,
@@ -34,11 +37,6 @@ func newTransfer(ctx context.Context, lim RateLimiter, dst io.Writer, src io.Rea
 // of the given context.Context, reports progress in a thread-safe manner and
 // tracks the transfer rate.
 func (c *transfer) copy() (written int64, err error) {
-	// maintain a bps gauge in another goroutine
-	ctx, cancel := context.WithCancel(c.ctx)
-	defer cancel()
-	go bps.Watch(ctx, c.gauge, c.N, time.Second)
-
 	// start the transfer
 	if c.b == nil {
 		c.b = make([]byte, 32*1024)

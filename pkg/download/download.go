@@ -17,9 +17,9 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/version"
 	"github.com/crc-org/crc/v2/pkg/os/terminal"
 
-	"github.com/cavaliergopher/grab/v3"
 	"github.com/cheggaaa/pb/v3"
 	"github.com/pkg/errors"
+	grab "github.com/sebrandon1/grab/lib"
 )
 
 func doRequest(client *grab.Client, req *grab.Request) (string, error) {
