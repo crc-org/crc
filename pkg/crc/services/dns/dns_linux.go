@@ -7,5 +7,9 @@ import (
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
 	// We might need to set the firewall here to forward
 	// Update /etc/hosts file for host
-	return addOpenShiftHosts(serviceConfig)
+	if serviceConfig.ModifyHostsFile {
+		return addOpenShiftHosts(serviceConfig)
+	}
+
+	return nil
 }
