@@ -29,16 +29,19 @@ const ( // gomega matchers
 )
 
 type Matcher struct {
-	funcName     string
-	Orig         *ast.CallExpr
-	Clone        *ast.CallExpr
-	info         Info
-	reverseLogic bool
-	handler      gomegahandler.Handler
+	funcName      string
+	Orig          *ast.CallExpr
+	Clone         *ast.CallExpr
+	info          Info
+	reverseLogic  bool
+	handler       gomegahandler.Handler
+	hasNotMatcher bool // true if the matcher is wrapped with a "Not" matcher
 }
 
 func New(origMatcher, matcherClone *ast.CallExpr, pass *analysis.Pass, handler gomegahandler.Handler) (*Matcher, bool) {
 	reverse := false
+	hasNotMatcher := false
+
 	var assertFuncName string
 	for {
 		info, ok := handler.GetGomegaBasicInfo(origMatcher)
@@ -51,6 +54,7 @@ func New(origMatcher, matcherClone *ast.CallExpr, pass *analysis.Pass, handler g
 			break
 		}
 
+		hasNotMatcher = true
 		reverse = !reverse
 		origMatcher, ok = origMatcher.Args[0].(*ast.CallExpr)
 		if !ok {
@@ -60,17 +64,22 @@ func New(origMatcher, matcherClone *ast.CallExpr, pass *analysis.Pass, handler g
 	}
 
 	return &Matcher{
-		funcName:     assertFuncName,
-		Orig:         origMatcher,
-		Clone:        matcherClone,
-		info:         getMatcherInfo(origMatcher, matcherClone, assertFuncName, pass, handler),
-		reverseLogic: reverse,
-		handler:      handler,
+		funcName:      assertFuncName,
+		Orig:          origMatcher,
+		Clone:         matcherClone,
+		info:          getMatcherInfo(origMatcher, matcherClone, assertFuncName, pass, handler),
+		reverseLogic:  reverse,
+		hasNotMatcher: hasNotMatcher,
+		handler:       handler,
 	}, true
 }
 
 func (m *Matcher) ShouldReverseLogic() bool {
 	return m.reverseLogic
+}
+
+func (m *Matcher) HasNotMatcher() bool {
+	return m.hasNotMatcher
 }
 
 func (m *Matcher) GetMatcherInfo() Info {

@@ -12,7 +12,7 @@ import (
 	"golang.org/x/tools/go/analysis"
 )
 
-const version = "wsl version v5.1.1"
+const version = "wsl version v5.2.0"
 
 func NewAnalyzer(config *Configuration) *analysis.Analyzer {
 	wa := &wslAnalyzer{config: config}

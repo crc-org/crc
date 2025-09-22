@@ -22,12 +22,14 @@ import (
 // Config the tagliatelle configuration.
 type Config struct {
 	Base
+
 	Overrides []Overrides
 }
 
 // Overrides applies configuration overrides by package.
 type Overrides struct {
 	Base
+
 	Package string
 }
 
@@ -74,6 +76,7 @@ func run(pass *analysis.Pass, config Config) (any, error) {
 	}
 
 	cfg := config.Base
+
 	if pass.Module != nil {
 		radixTree := createRadixTree(config, pass.Module.Path)
 		_, cfg, _ = radixTree.Root().LongestPrefix([]byte(pass.Pkg.Path()))
@@ -160,7 +163,7 @@ func report(pass *analysis.Pass, config Base, key, convName, fieldName string, n
 	// This is an exception because of a bug.
 	// https://github.com/ldez/tagliatelle/issues/8
 	// For now, tagliatelle should try to remain neutral in terms of format.
-	if hasTagFlag(flags, "inline") {
+	if slices.Contains(flags, "inline") {
 		// skip for inline children (no name to lint)
 		return
 	}
@@ -187,6 +190,7 @@ func report(pass *analysis.Pass, config Base, key, convName, fieldName string, n
 
 func getFieldName(field *ast.Field) (string, error) {
 	var name string
+
 	for _, n := range field.Names {
 		if n.Name != "" {
 			name = n.Name
@@ -231,16 +235,6 @@ func lookupTagValue(tag *ast.BasicLit, key string) (name string, flags []string,
 	return values[0], values[1:], true
 }
 
-func hasTagFlag(flags []string, query string) bool {
-	for _, flag := range flags {
-		if flag == query {
-			return true
-		}
-	}
-
-	return false
-}
-
 func createRadixTree(config Config, modPath string) *iradix.Tree[Base] {
 	r := iradix.New[Base]()
 
@@ -261,7 +255,7 @@ func createRadixTree(config Config, modPath string) *iradix.Tree[Base] {
 			Ignore:       override.Ignore,
 		}
 
-		// If there is an override the base configuration is ignored.
+		// If there is an override, the base configuration is ignored.
 		if len(override.IgnoredFields) == 0 {
 			c.IgnoredFields = append(c.IgnoredFields, config.IgnoredFields...)
 		} else {

@@ -172,6 +172,9 @@ func getBody(node ast.Node) (*ast.BlockStmt, error) {
 }
 
 func findNestedContext(pass *analysis.Pass, node ast.Node, stmts []ast.Stmt) *ast.AssignStmt {
+	// Track which context variables have been reset to a known empty context
+	resetContexts := make(map[string]bool)
+
 	for _, stmt := range stmts {
 		// Recurse if necessary
 		stmtList := getStmtList(stmt)
@@ -198,8 +201,21 @@ func findNestedContext(pass *analysis.Pass, node ast.Node, stmts []ast.Stmt) *as
 			continue
 		}
 
-		// Ignore [context.Background] & [context.TODO].
+		// Get the variable name being assigned to
+		varName := getVarName(pass, assignStmt)
+
+		// If the assignment is to a known empty context, mark this variable as reset
 		if isContextFunction(assignStmt.Rhs[0], "Background", "TODO") {
+			if varName != "" {
+				resetContexts[varName] = true
+			}
+
+			continue
+		}
+
+		// If this variable was previously reset to a known empty context in this block,
+		// it's safe to modify it
+		if varName != "" && resetContexts[varName] {
 			continue
 		}
 
@@ -216,6 +232,21 @@ func findNestedContext(pass *analysis.Pass, node ast.Node, stmts []ast.Stmt) *as
 	}
 
 	return nil
+}
+
+func getVarName(pass *analysis.Pass, assignStmt *ast.AssignStmt) string {
+	varName := ""
+
+	if ident, ok := assignStmt.Lhs[0].(*ast.Ident); ok {
+		varName = ident.Name
+	} else if sel, ok := assignStmt.Lhs[0].(*ast.SelectorExpr); ok {
+		// For struct fields like tc.ctx
+		if rendered, err := render(pass.Fset, sel); err == nil {
+			varName = string(rendered)
+		}
+	}
+
+	return varName
 }
 
 func getStmtList(stmt ast.Stmt) []ast.Stmt {
@@ -240,7 +271,9 @@ func getStmtList(stmt ast.Stmt) []ast.Stmt {
 // render returns the pretty-print of the given node.
 func render(fset *token.FileSet, x interface{}) ([]byte, error) {
 	var buf bytes.Buffer
-	if err := printer.Fprint(&buf, fset, x); err != nil {
+
+	err := printer.Fprint(&buf, fset, x)
+	if err != nil {
 		return nil, fmt.Errorf("printing node: %w", err)
 	}
 

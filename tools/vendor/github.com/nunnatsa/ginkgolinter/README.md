@@ -553,6 +553,12 @@ Eventually(func() {
 
 ***This rule is disabled by default***. Use the `--force-assertion-description` command line flag to enable it.
 
+### Force NotTo() [STYLE]
+This rule enforces using the `NotTo()` or `ShouldNot()` assertion methods instead of `To(Not())` 
+or `Should(Not())`.
+
+***This rule is disabled by default***. Use the `--force-tonot` command line flag to enable it.
+
 ## Suppress the linter
 ### Suppress warning from command line
 * Use the `--suppress-len-assertion` flag to suppress the wrong length and cap assertions warning

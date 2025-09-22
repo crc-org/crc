@@ -20,8 +20,8 @@ type SuiteMethodSignature struct{}
 func NewSuiteMethodSignature() SuiteMethodSignature { return SuiteMethodSignature{} }
 func (SuiteMethodSignature) Name() string           { return "suite-method-signature" }
 
-func (checker SuiteMethodSignature) Check(pass *analysis.Pass, inspector *inspector.Inspector) (diags []analysis.Diagnostic) {
-	inspector.Preorder([]ast.Node{(*ast.FuncDecl)(nil)}, func(node ast.Node) {
+func (checker SuiteMethodSignature) Check(pass *analysis.Pass, insp *inspector.Inspector) (diags []analysis.Diagnostic) {
+	insp.Preorder([]ast.Node{(*ast.FuncDecl)(nil)}, func(node ast.Node) {
 		fd := node.(*ast.FuncDecl)
 		if !isSuiteMethod(pass, fd) {
 			return

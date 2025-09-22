@@ -25,20 +25,10 @@ type Issue struct {
 	Replacement string
 }
 
-// comment is an internal representation of AST comment entity with additional
-// data attached. The latter is used for creating a full replacement for
-// the line with issues.
-type comment struct {
-	lines []string       // unmodified lines from file
-	text  string         // concatenated `lines` with special parts excluded
-	start token.Position // position of the first symbol in comment
-	decl  bool           // whether comment is a declaration comment
-}
-
 // Run runs this linter on the provided code.
 func Run(file *ast.File, fset *token.FileSet, settings Settings) ([]Issue, error) {
 	pf, err := newParsedFile(file, fset)
-	if errors.Is(err, errEmptyInput) || errors.Is(err, errUnsuitableInput) {
+	if errors.Is(err, errEmptyInput) {
 		return nil, nil
 	}
 	if err != nil {

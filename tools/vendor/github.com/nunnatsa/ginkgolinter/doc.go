@@ -106,7 +106,7 @@ For example:
 	Eventually(context.Background(), func() bool { return true }, time.Second*60, 15).Should(BeTrue())
 
 * Success <=> Eventually usage [Style]
-  enforce that the Succeed() matcher will be used for error functions, and the HaveOccurred() matcher will
+  enforces that the Succeed() matcher will be used for error functions, and the HaveOccurred() matcher will
   be used for error values.
 
 For example:
@@ -115,7 +115,7 @@ or
   Expect(funcRetError().ToNot(HaveOccurred())
 
 * force assertion descriptions [Style]
-  enforce that all assertions include an optional description message to improve test readability and debugging.
+  enforces that all assertions include an optional description message to improve test readability and debugging.
   This rule is disabled by default. Use the --force-assertion-description flag to enable it.
 
 For example:
@@ -127,4 +127,7 @@ The rule also works with async assertions and Expect calls inside Eventually:
   Eventually(func() {
     Expect(value).To(Equal(expected)) // This will also trigger a warning if no description
   }).Should(Succeed(), "operation should complete successfully")
+
+* Force ToNot [Style]
+  enforces that ToNot() or ShouldNot() are used instead of To(Not()) or Should(Not()).
 `

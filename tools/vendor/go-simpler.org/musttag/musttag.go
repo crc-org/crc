@@ -60,7 +60,7 @@ func New(funcs ...Func) *analysis.Analyzer {
 				}
 			}
 
-			return run(pass, mainModule, allFuncs)
+			return nil, run(pass, mainModule, allFuncs)
 		},
 	}
 }
@@ -86,43 +86,34 @@ func flags(funcs *[]Func) flag.FlagSet {
 	return *fs
 }
 
-func run(pass *analysis.Pass, mainModule string, funcs map[string]Func) (_ any, err error) {
+func run(pass *analysis.Pass, mainModule string, funcs map[string]Func) error {
 	visit := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
-	filter := []ast.Node{(*ast.CallExpr)(nil)}
 
-	visit.Preorder(filter, func(node ast.Node) {
-		if err != nil {
-			return // there is already an error.
-		}
+	for node := range visit.PreorderSeq((*ast.CallExpr)(nil)) {
+		call := node.(*ast.CallExpr)
 
-		call, ok := node.(*ast.CallExpr)
+		callee, ok := typeutil.Callee(pass.TypesInfo, call).(*types.Func)
 		if !ok {
-			return
-		}
-
-		callee := typeutil.StaticCallee(pass.TypesInfo, call)
-		if callee == nil {
-			return
+			continue
 		}
 
 		fn, ok := funcs[cutVendor(callee.FullName())]
 		if !ok {
-			return
+			continue
 		}
 
 		if len(call.Args) <= fn.ArgPos {
-			err = fmt.Errorf("musttag: Func.ArgPos cannot be %d: %s accepts only %d argument(s)", fn.ArgPos, fn.Name, len(call.Args))
-			return
+			return fmt.Errorf("musttag: Func.ArgPos cannot be %d: %s accepts only %d argument(s)", fn.ArgPos, fn.Name, len(call.Args))
 		}
 
 		arg := call.Args[fn.ArgPos]
 		if ident, ok := arg.(*ast.Ident); ok && ident.Obj == nil {
-			return // e.g. json.Marshal(nil)
+			continue // e.g. json.Marshal(nil)
 		}
 
 		typ := pass.TypesInfo.TypeOf(arg)
 		if typ == nil {
-			return
+			continue
 		}
 
 		checker := checker{
@@ -132,13 +123,13 @@ func run(pass *analysis.Pass, mainModule string, funcs map[string]Func) (_ any, 
 			imports:        pass.Pkg.Imports(),
 		}
 		if checker.isValidType(typ, fn.Tag) {
-			return
+			continue
 		}
 
 		pass.Reportf(arg.Pos(), "the given struct should be annotated with the `%s` tag", fn.Tag)
-	})
+	}
 
-	return nil, err
+	return nil
 }
 
 type checker struct {
@@ -176,7 +167,6 @@ func (c *checker) parseStruct(typ types.Type) (*types.Struct, bool) {
 		return c.parseStruct(typ.Elem())
 	case *types.Map:
 		return c.parseStruct(typ.Elem())
-
 	case *types.Named: // a struct of the named type.
 		pkg := typ.Obj().Pkg()
 		if pkg == nil {
@@ -190,10 +180,8 @@ func (c *checker) parseStruct(typ types.Type) (*types.Struct, bool) {
 			return nil, false
 		}
 		return styp, true
-
 	case *types.Struct: // an anonymous struct.
 		return typ, true
-
 	default:
 		return nil, false
 	}
@@ -208,15 +196,12 @@ func (c *checker) isValidStruct(styp *types.Struct, tag string) bool {
 
 		tagValue, ok := reflect.StructTag(styp.Tag(i)).Lookup(tag)
 		if !ok {
-			// tag is not required for embedded types.
 			if !field.Embedded() {
-				return false
+				return false // tag is not required for embedded types.
 			}
 		}
-
-		// the field is explicitly ignored.
 		if tagValue == "-" {
-			continue
+			continue // the field is explicitly ignored.
 		}
 
 		if !c.isValidType(field.Type(), tag) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/token"
 	"go/types"
+	"slices"
 
 	"github.com/gostaticanalysis/comment"
 	"github.com/gostaticanalysis/comment/passes/commentmap"
@@ -24,15 +25,16 @@ var Analyzer = &analysis.Analyzer{
 
 const Doc = "nilerr checks returning nil when err is not nil"
 
-func run(pass *analysis.Pass) (interface{}, error) {
+func run(pass *analysis.Pass) (any, error) {
 	funcs := pass.ResultOf[buildssa.Analyzer].(*buildssa.SSA).SrcFuncs
 	cmaps := pass.ResultOf[commentmap.Analyzer].(comment.Maps)
 
 	reportFail := func(v ssa.Value, ret *ssa.Return, format string) {
 		pos := ret.Pos()
-		line := getNodeLineNumber(pass, ret)
-		errLines := getValueLineNumbers(pass, v)
-		if !cmaps.IgnoreLine(pass.Fset, line, "nilerr") {
+		if !cmaps.IgnorePos(pos, "nilerr") {
+			seen := map[string]struct{}{}
+			errLines := getValueLineNumbers(pass, v, seen)
+
 			var errLineText string
 			if len(errLines) == 1 {
 				errLineText = fmt.Sprintf("line %d", errLines[0])
@@ -65,12 +67,27 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	return nil, nil
 }
 
-func getValueLineNumbers(pass *analysis.Pass, v ssa.Value) []int {
+func getValueLineNumbers(pass *analysis.Pass, v ssa.Value, seen map[string]struct{}) []int {
 	if phi, ok := v.(*ssa.Phi); ok {
 		result := make([]int, 0, len(phi.Edges))
+
 		for _, edge := range phi.Edges {
-			result = append(result, getValueLineNumbers(pass, edge)...)
+			if _, ok := seen[edge.Name()]; ok {
+				if edge.Pos() == token.NoPos {
+					continue
+				}
+
+				result = append(result, pass.Fset.File(edge.Pos()).Line(edge.Pos()))
+				continue
+			}
+
+			seen[edge.Name()] = struct{}{}
+
+			result = append(result, getValueLineNumbers(pass, edge, seen)...)
 		}
+
+		slices.Sort(result)
+
 		return result
 	}
 
@@ -80,12 +97,12 @@ func getValueLineNumbers(pass *analysis.Pass, v ssa.Value) []int {
 	}
 
 	pos := value.Pos()
-	return []int{pass.Fset.File(pos).Line(pos)}
-}
 
-func getNodeLineNumber(pass *analysis.Pass, node ssa.Node) int {
-	pos := node.Pos()
-	return pass.Fset.File(pos).Line(pos)
+	if pos == token.NoPos {
+		return nil
+	}
+
+	return []int{pass.Fset.File(pos).Line(pos)}
 }
 
 var errType = types.Universe.Lookup("error").Type().Underlying().(*types.Interface)
@@ -177,10 +194,8 @@ func isReturnError(b *ssa.BasicBlock, errVal ssa.Value) *ssa.Return {
 		return nil
 	}
 
-	for _, v := range ret.Results {
-		if v == errVal {
-			return ret
-		}
+	if slices.Contains(ret.Results, errVal) {
+		return ret
 	}
 
 	return nil

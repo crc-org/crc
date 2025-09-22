@@ -37,7 +37,7 @@ func isTypedUnsignedIntNumber(e ast.Expr, v int) bool {
 	return isTypedIntNumber(e, v, "uint", "uint8", "uint16", "uint32", "uint64")
 }
 
-func isTypedIntNumber(e ast.Expr, v int, types ...string) bool {
+func isTypedIntNumber(e ast.Expr, v int, goTypes ...string) bool {
 	ce, ok := e.(*ast.CallExpr)
 	if !ok || len(ce.Args) != 1 {
 		return false
@@ -48,7 +48,7 @@ func isTypedIntNumber(e ast.Expr, v int, types ...string) bool {
 		return false
 	}
 
-	for _, t := range types {
+	for _, t := range goTypes {
 		if fn.Name == t {
 			return isIntNumber(ce.Args[0], v)
 		}
@@ -72,6 +72,12 @@ func isEmptyStringLit(e ast.Expr) bool {
 }
 
 func isBasicLit(e ast.Expr) bool {
+	if un, ok := e.(*ast.UnaryExpr); ok {
+		if un.Op == token.SUB {
+			return isBasicLit(un.X)
+		}
+	}
+
 	_, ok := e.(*ast.BasicLit)
 	return ok
 }

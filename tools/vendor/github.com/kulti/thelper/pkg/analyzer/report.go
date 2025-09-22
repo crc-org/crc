@@ -31,6 +31,7 @@ func (rr *reports) Filter(pos token.Pos) {
 		if rr.filter == nil {
 			rr.filter = make(map[token.Pos]struct{})
 		}
+
 		rr.filter[pos] = struct{}{}
 	}
 }
@@ -40,17 +41,19 @@ func (rr *reports) NoFilter(pos token.Pos) {
 		if rr.nofilter == nil {
 			rr.nofilter = make(map[token.Pos]struct{})
 		}
+
 		rr.nofilter[pos] = struct{}{}
 	}
 }
 
-func (rr reports) Flush(pass *analysis.Pass) {
+func (rr *reports) Flush(pass *analysis.Pass) {
 	for _, r := range rr.reports {
 		if _, ok := rr.filter[r.pos]; ok {
 			if _, ok := rr.nofilter[r.pos]; !ok {
 				continue
 			}
 		}
+
 		pass.Reportf(r.pos, r.format, r.args...)
 	}
 }

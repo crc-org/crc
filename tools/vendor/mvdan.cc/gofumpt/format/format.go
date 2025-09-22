@@ -114,6 +114,9 @@ func File(fset *token.FileSet, file *ast.File, opts Options) {
 		switch node := c.Node().(type) {
 		case *ast.FuncDecl:
 			topFuncType = node.Type
+			f.parentFuncTypes = append(f.parentFuncTypes, node.Type)
+		case *ast.FuncLit:
+			f.parentFuncTypes = append(f.parentFuncTypes, node.Type)
 		case *ast.FieldList:
 			ft, _ := c.Parent().(*ast.FuncType)
 			if ft == nil || ft != topFuncType {
@@ -149,6 +152,8 @@ func File(fset *token.FileSet, file *ast.File, opts Options) {
 
 		// Reset minSplitFactor and blockLevel.
 		switch node := c.Node().(type) {
+		case *ast.FuncDecl, *ast.FuncLit:
+			f.parentFuncTypes = f.parentFuncTypes[:len(f.parentFuncTypes)-1]
 		case *ast.FuncType:
 			if node == topFuncType {
 				f.minSplitFactor = 0.4
@@ -185,6 +190,10 @@ type fumpter struct {
 	blockLevel int
 
 	minSplitFactor float64
+
+	// parentFuncTypes is a stack of parent function types,
+	// used to determine return type information when clothing naked returns.
+	parentFuncTypes []*ast.FuncType
 }
 
 func (f *fumpter) commentsBetween(p1, p2 token.Pos) []*ast.CommentGroup {
@@ -300,21 +309,33 @@ func (f *fumpter) lineEnd(line int) token.Pos {
 	return f.file.LineStart(line+1) - 1
 }
 
-// rxCommentDirective covers all common Go comment directives:
+// rxCommentDirective covers all common Go comment directives, such as:
 //
 //	//go:          | standard Go directives, like go:noinline
 //	//some-words:  | similar to the syntax above, like lint:ignore or go-sumtype:decl
-//	//line         | inserted line information for cmd/compile
 //	//export       | to mark cgo funcs for exporting
 //	//extern       | C function declarations for gccgo
-//	//sys(nb)?     | syscall function wrapper prototypes
-//	//nolint       | nolint directive for golangci
+//	//line         | inserted line information for cmd/compile
 //	//noinspection | noinspection directive for GoLand and friends
+//	//nolint       | nolint directive for golangci
+//	//#nosec       | #nosec directive for gosec
 //	//NOSONAR      | NOSONAR directive for SonarQube
-//
-// Note that the "some-words:" matching expects a letter afterward, such as
-// "go:generate", to prevent matching false positives like "https://site".
-var rxCommentDirective = regexp.MustCompile(`^([a-z-]+:[a-z]+|line\b|export\b|extern\b|sys(nb)?\b|no(lint|inspection)\b)|NOSONAR\b`)
+//	//sys(nb)?     | syscall function wrapper prototypes
+var rxCommentDirective = regexp.MustCompile(
+	`^(?:` +
+		// Patterns directly from https://go.dev/doc/comment#syntax.
+		// Note that we adjust the first pattern to allow for //go-sumtype:decl,
+		// which is a tool that existed before the Go convention was documented.
+		`[a-z0-9-]+:[a-z0-9]` +
+		`|export ` +
+		`|extern ` +
+		`|line ` +
+		// Third-party patterns; we generally assume they end with a word boundary.
+		`|no(?:inspection|lint)\b` +
+		`|#nosec\b` +
+		`|NOSONAR\b` +
+		`|sys(?:nb)?\b` +
+		`)`)
 
 func (f *fumpter) applyPre(c *astutil.Cursor) {
 	f.splitLongLine(c)
@@ -685,6 +706,36 @@ func (f *fumpter) applyPre(c *astutil.Cursor) {
 	case *ast.AssignStmt:
 		// Only remove lines between the assignment token and the first right-hand side expression
 		f.removeLines(f.Line(node.TokPos), f.Line(node.Rhs[0].Pos()))
+
+	case *ast.ReturnStmt:
+		if len(node.Results) > 0 {
+			break
+		}
+		results := f.parentFuncTypes[len(f.parentFuncTypes)-1].Results
+		if results.NumFields() == 0 {
+			break
+		}
+
+		// The function has return values; let's clothe the return.
+		node.Results = make([]ast.Expr, 0, results.NumFields())
+	nameLoop:
+		for _, result := range results.List {
+			for _, ident := range result.Names {
+				name := ident.Name
+				if name == "_" { // we can't handle blank names just yet
+					node.Results = nil
+					break nameLoop
+				}
+				node.Results = append(node.Results, &ast.Ident{
+					// Use the Pos of the return statement, to not interfere with comment placement.
+					NamePos: node.Pos(),
+					Name:    name,
+				})
+			}
+		}
+		if len(node.Results) > 0 {
+			c.Replace(node)
+		}
 	}
 }
 
