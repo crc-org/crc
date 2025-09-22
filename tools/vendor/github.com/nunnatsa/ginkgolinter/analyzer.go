@@ -52,6 +52,7 @@ func NewAnalyzer() *analysis.Analyzer {
 	a.Flags.BoolVar(&config.ForbidSpecPollution, "forbid-spec-pollution", config.ForbidSpecPollution, "trigger a warning for variable assignments in ginkgo containers like Describe, Context and When, instead of in BeforeEach(); default = false.")
 	a.Flags.BoolVar(&config.ForceSucceedForFuncs, "force-succeed", config.ForceSucceedForFuncs, "force using the Succeed matcher for error functions, and the HaveOccurred matcher for non-function error values")
 	a.Flags.BoolVar(&config.ForceAssertionDescription, "force-assertion-description", config.ForceAssertionDescription, "force adding assertion descriptions to gomega matchers; default = false")
+	a.Flags.BoolVar(&config.ForeToNot, "force-tonot", config.ForeToNot, "force using `ToNot`, `ShouldNot` instead of To(Not()); default = false")
 
 	return a
 }

@@ -36,6 +36,12 @@ func f() error {
 }
 ```
 
+## How to use
+```
+$ go install github.com/gostaticanalysis/nilerr/cmd/nilerr@latest
+$ nilerr ./...
+```
+
 <!-- links -->
 [gopkg]: https://pkg.go.dev/github.com/gostaticanalysis/nilerr
 [gopkg-badge]: https://pkg.go.dev/badge/github.com/gostaticanalysis/nilerr?status.svg

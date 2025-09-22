@@ -15,6 +15,10 @@ import (
 //
 //	assert.Error(t, err, errSentinel)
 //	assert.NoError(t, err, errSentinel)
+//	assert.IsType(t, err, errSentinel)
+//	assert.IsType(t, (*http.MaxBytesError)(nil), err)
+//	assert.IsNotType(t, err, errSentinel)
+//	assert.IsNotType(t, store.NotFoundError{}, err)
 //	assert.True(t, errors.Is(err, errSentinel))
 //	assert.False(t, errors.Is(err, errSentinel))
 //	assert.True(t, errors.As(err, &target))
@@ -48,6 +52,18 @@ func (checker ErrorIsAs) Check(pass *analysis.Pass, call *CallMeta) *analysis.Di
 			const proposed = "NotErrorIs"
 			msg := fmt.Sprintf("invalid usage of %[1]s.NoError, use %[1]s.%[2]s instead", call.SelectorXStr, proposed)
 			return newDiagnostic(checker.Name(), call, msg, newSuggestedFuncReplacement(call, proposed))
+		}
+
+	case "IsType":
+		if len(call.Args) >= 2 && isError(pass, call.Args[0]) || isError(pass, call.Args[1]) {
+			msg := fmt.Sprintf("use %[1]s.ErrorIs or %[1]s.ErrorAs depending on the case", call.SelectorXStr)
+			return newDiagnostic(checker.Name(), call, msg)
+		}
+
+	case "IsNotType":
+		if len(call.Args) >= 2 && isError(pass, call.Args[0]) || isError(pass, call.Args[1]) {
+			msg := fmt.Sprintf("use %[1]s.NotErrorIs or %[1]s.NotErrorAs depending on the case", call.SelectorXStr)
+			return newDiagnostic(checker.Name(), call, msg)
 		}
 
 	case "True":

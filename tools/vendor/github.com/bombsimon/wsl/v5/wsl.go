@@ -128,11 +128,12 @@ func (w *WSL) checkStmt(stmt ast.Stmt, cursor *Cursor) {
 
 //nolint:unparam // False positive on `cursor`
 func (w *WSL) checkExpr(expr ast.Expr, cursor *Cursor) {
+	// This switch traverses all possible subexpressions in search
+	// of anonymous functions, no matter how unlikely or perhaps even
+	// semantically impossible it is.
 	switch s := expr.(type) {
-	// func() {}
 	case *ast.FuncLit:
 		w.checkBlock(s.Body)
-	// Call(args...)
 	case *ast.CallExpr:
 		w.checkExpr(s.Fun, cursor)
 
@@ -142,25 +143,79 @@ func (w *WSL) checkExpr(expr ast.Expr, cursor *Cursor) {
 	case *ast.StarExpr:
 		w.checkExpr(s.X, cursor)
 	case *ast.CompositeLit:
+		w.checkExpr(s.Type, cursor)
+
 		for _, e := range s.Elts {
 			w.checkExpr(e, cursor)
 		}
-	case *ast.ArrayType,
-		*ast.BasicLit,
-		*ast.BinaryExpr,
-		*ast.ChanType,
-		*ast.Ellipsis,
-		*ast.Ident,
-		*ast.IndexExpr,
-		*ast.IndexListExpr,
-		*ast.KeyValueExpr,
-		*ast.MapType,
-		*ast.ParenExpr,
-		*ast.SelectorExpr,
-		*ast.SliceExpr,
-		*ast.TypeAssertExpr,
-		*ast.UnaryExpr,
-		nil:
+	case *ast.KeyValueExpr:
+		w.checkExpr(s.Key, cursor)
+		w.checkExpr(s.Value, cursor)
+	case *ast.ArrayType:
+		w.checkExpr(s.Elt, cursor)
+		w.checkExpr(s.Len, cursor)
+	case *ast.BasicLit:
+	case *ast.BinaryExpr:
+		w.checkExpr(s.X, cursor)
+		w.checkExpr(s.Y, cursor)
+	case *ast.ChanType:
+		w.checkExpr(s.Value, cursor)
+	case *ast.Ellipsis:
+		w.checkExpr(s.Elt, cursor)
+	case *ast.FuncType:
+		if params := s.TypeParams; params != nil {
+			for _, f := range params.List {
+				w.checkExpr(f.Type, cursor)
+			}
+		}
+
+		if params := s.Params; params != nil {
+			for _, f := range params.List {
+				w.checkExpr(f.Type, cursor)
+			}
+		}
+
+		if results := s.Results; results != nil {
+			for _, f := range results.List {
+				w.checkExpr(f.Type, cursor)
+			}
+		}
+	case *ast.Ident:
+	case *ast.IndexExpr:
+		w.checkExpr(s.Index, cursor)
+		w.checkExpr(s.X, cursor)
+	case *ast.IndexListExpr:
+		w.checkExpr(s.X, cursor)
+
+		for _, e := range s.Indices {
+			w.checkExpr(e, cursor)
+		}
+	case *ast.InterfaceType:
+		for _, f := range s.Methods.List {
+			w.checkExpr(f.Type, cursor)
+		}
+	case *ast.MapType:
+		w.checkExpr(s.Key, cursor)
+		w.checkExpr(s.Value, cursor)
+	case *ast.ParenExpr:
+		w.checkExpr(s.X, cursor)
+	case *ast.SelectorExpr:
+		w.checkExpr(s.X, cursor)
+	case *ast.SliceExpr:
+		w.checkExpr(s.X, cursor)
+		w.checkExpr(s.Low, cursor)
+		w.checkExpr(s.High, cursor)
+		w.checkExpr(s.Max, cursor)
+	case *ast.StructType:
+		for _, f := range s.Fields.List {
+			w.checkExpr(f.Type, cursor)
+		}
+	case *ast.TypeAssertExpr:
+		w.checkExpr(s.X, cursor)
+		w.checkExpr(s.Type, cursor)
+	case *ast.UnaryExpr:
+		w.checkExpr(s.X, cursor)
+	case nil:
 	default:
 	}
 }
@@ -223,6 +278,10 @@ func (w *WSL) checkCuddlingMaxAllowed(
 	cursor *Cursor,
 	maxAllowedStatements int,
 ) {
+	if _, ok := cursor.Stmt().(*ast.LabeledStmt); ok {
+		return
+	}
+
 	previousNode := cursor.PreviousNode()
 
 	if previousNode != nil {
@@ -311,6 +370,10 @@ func (w *WSL) checkCuddlingMaxAllowed(
 
 func (w *WSL) checkCuddlingWithoutIntersection(stmt ast.Node, cursor *Cursor) {
 	if w.numberOfStatementsAbove(cursor) == 0 {
+		return
+	}
+
+	if _, ok := cursor.Stmt().(*ast.LabeledStmt); ok {
 		return
 	}
 
@@ -534,6 +597,10 @@ func (w *WSL) checkError(
 	cursor *Cursor,
 ) {
 	if _, ok := w.config.Checks[CheckErr]; !ok {
+		return
+	}
+
+	if _, ok := cursor.Stmt().(*ast.LabeledStmt); ok {
 		return
 	}
 

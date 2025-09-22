@@ -59,7 +59,7 @@ func (checker Empty) Check(pass *analysis.Pass, call *CallMeta) *analysis.Diagno
 	return checker.checkNotEmpty(pass, call)
 }
 
-func (checker Empty) checkEmpty(pass *analysis.Pass, call *CallMeta) *analysis.Diagnostic { //nolint:gocognit
+func (checker Empty) checkEmpty(pass *analysis.Pass, call *CallMeta) *analysis.Diagnostic { //nolint:gocognit // It is ok.
 	newUseEmptyDiagnostic := func(replaceStart, replaceEnd token.Pos, replaceWith ast.Expr) *analysis.Diagnostic {
 		const proposed = "Empty"
 		return newUseFunctionDiagnostic(checker.Name(), call, proposed,
@@ -136,7 +136,7 @@ func (checker Empty) checkEmpty(pass *analysis.Pass, call *CallMeta) *analysis.D
 	return nil
 }
 
-func (checker Empty) checkNotEmpty(pass *analysis.Pass, call *CallMeta) *analysis.Diagnostic { //nolint:gocognit
+func (checker Empty) checkNotEmpty(pass *analysis.Pass, call *CallMeta) *analysis.Diagnostic { //nolint:gocognit // It is ok.
 	newUseNotEmptyDiagnostic := func(replaceStart, replaceEnd token.Pos, replaceWith ast.Expr) *analysis.Diagnostic {
 		const proposed = "NotEmpty"
 		return newUseFunctionDiagnostic(checker.Name(), call, proposed,

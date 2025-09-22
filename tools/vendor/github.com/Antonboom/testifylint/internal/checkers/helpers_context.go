@@ -54,7 +54,7 @@ func findSurroundingFunc(pass *analysis.Pass, stack []ast.Node) *funcID {
 				isHTTPHandler = true
 			}
 
-			if i >= 2 { //nolint:nestif
+			if i >= 2 { //nolint:nestif // Already clear code.
 				if ce, ok := stack[i-1].(*ast.CallExpr); ok {
 					if se, ok := ce.Fun.(*ast.SelectorExpr); ok {
 						isTestCleanup = implementsTestingT(pass, se.X) && se.Sel != nil && (se.Sel.Name == "Cleanup")

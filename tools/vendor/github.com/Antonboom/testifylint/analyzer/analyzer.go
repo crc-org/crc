@@ -5,9 +5,9 @@ import (
 	"go/ast"
 
 	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
 
-	"github.com/Antonboom/testifylint/internal/analysisutil"
 	"github.com/Antonboom/testifylint/internal/checkers"
 	"github.com/Antonboom/testifylint/internal/config"
 	"github.com/Antonboom/testifylint/internal/testify"
@@ -24,9 +24,10 @@ func New() *analysis.Analyzer {
 	cfg := config.NewDefault()
 
 	analyzer := &analysis.Analyzer{
-		Name: name,
-		Doc:  doc,
-		URL:  url,
+		Name:     name,
+		Doc:      doc,
+		URL:      url,
+		Requires: []*analysis.Analyzer{inspect.Analyzer},
 		Run: func(pass *analysis.Pass) (any, error) {
 			regularCheckers, advancedCheckers, err := newCheckers(cfg)
 			if err != nil {
@@ -51,15 +52,13 @@ type testifyLint struct {
 }
 
 func (tl *testifyLint) run(pass *analysis.Pass) (any, error) {
-	filesToAnalysis := make([]*ast.File, 0, len(pass.Files))
-	for _, f := range pass.Files {
-		if !analysisutil.Imports(f, testify.AssertPkgPath, testify.RequirePkgPath, testify.SuitePkgPath) {
-			continue
-		}
-		filesToAnalysis = append(filesToAnalysis, f)
+	// NOTE(a.telyshev): There are no premature optimizations like "scan only _test.go" or
+	// "scan only files with testify imports", since it could lead to skip files
+	// with assertions (etc. test helpers in regular Go files or suite methods).
+	insp, ok := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+	if !ok {
+		return nil, nil
 	}
-
-	insp := inspector.New(filesToAnalysis)
 
 	// Regular checkers.
 	insp.Preorder([]ast.Node{(*ast.CallExpr)(nil)}, func(node ast.Node) {

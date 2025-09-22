@@ -55,7 +55,7 @@ func isStrictComparisonWith(
 	lhs predicate,
 	op token.Token,
 	rhs predicate,
-) (ast.Expr, ast.Expr, bool) {
+) (leftOperand ast.Expr, rightOperand ast.Expr, fact bool) {
 	be, ok := e.(*ast.BinaryExpr)
 	if !ok {
 		return nil, nil, false

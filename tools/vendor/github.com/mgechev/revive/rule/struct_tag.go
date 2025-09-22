@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/fatih/structtag"
+
 	"github.com/mgechev/revive/internal/astutils"
 	"github.com/mgechev/revive/lint"
 )
@@ -29,6 +30,7 @@ const (
 	keyProperties   tagKey = "properties"
 	keyProtobuf     tagKey = "protobuf"
 	keyRequired     tagKey = "required"
+	keySpanner      tagKey = "spanner"
 	keyTOML         tagKey = "toml"
 	keyURL          tagKey = "url"
 	keyValidate     tagKey = "validate"
@@ -48,6 +50,7 @@ var tagCheckers = map[tagKey]tagChecker{
 	keyProperties:   checkPropertiesTag,
 	keyProtobuf:     checkProtobufTag,
 	keyRequired:     checkRequiredTag,
+	keySpanner:      checkSpannerTag,
 	keyTOML:         checkTOMLTag,
 	keyURL:          checkURLTag,
 	keyValidate:     checkValidateTag,
@@ -177,6 +180,10 @@ func (w lintStructTagRule) checkTaggedField(checkCtx *checkContext, f *ast.Field
 			w.addFailureWithTagKey(f.Tag, msg, tag.Key)
 		}
 
+		if msg, ok := checkOptionsOnIgnoredField(tag); !ok {
+			w.addFailureWithTagKey(f.Tag, msg, tag.Key)
+		}
+
 		checker, ok := w.tagCheckers[tagKey(tag.Key)]
 		if !ok {
 			continue // we don't have a checker for the tag
@@ -197,7 +204,7 @@ func (w lintStructTagRule) checkTagNameIfNeed(checkCtx *checkContext, tag *struc
 
 	key := tagKey(tag.Key)
 	switch key {
-	case keyBSON, keyJSON, keyXML, keyYAML, keyProtobuf:
+	case keyBSON, keyJSON, keyXML, keyYAML, keyProtobuf, keySpanner:
 	default:
 		return "", true
 	}
@@ -479,8 +486,8 @@ func checkURLTag(checkCtx *checkContext, tag *structtag.Tag, _ ast.Expr) (messag
 	var delimiter = ""
 	for _, opt := range tag.Options {
 		switch opt {
-		case "int", "omitempty", "numbered", "brackets":
-		case "unix", "unixmilli", "unixnano": // TODO : check that the field is of type time.Time
+		case "int", "omitempty", "numbered", "brackets",
+			"unix", "unixmilli", "unixnano": // TODO : check that the field is of type time.Time
 		case "comma", "semicolon", "space":
 			if delimiter == "" {
 				delimiter = opt
@@ -557,6 +564,38 @@ func checkYAMLTag(checkCtx *checkContext, tag *structtag.Tag, _ ast.Expr) (messa
 	return "", true
 }
 
+func checkSpannerTag(checkCtx *checkContext, tag *structtag.Tag, _ ast.Expr) (message string, succeeded bool) {
+	for _, opt := range tag.Options {
+		if !checkCtx.isUserDefined(keySpanner, opt) {
+			return fmt.Sprintf(msgUnknownOption, opt), false
+		}
+	}
+
+	return "", true
+}
+
+// checkOptionsOnIgnoredField checks if an ignored struct field (tag name "-") has any options specified.
+// It returns a message and false if there are useless options present, or an empty message and true if valid.
+func checkOptionsOnIgnoredField(tag *structtag.Tag) (message string, succeeded bool) {
+	if tag.Name != "-" {
+		return "", true
+	}
+
+	switch len(tag.Options) {
+	case 0:
+		return "", true
+	case 1:
+		opt := strings.TrimSpace(tag.Options[0])
+		if opt == "" {
+			return "", true // accept "-," as options
+		}
+
+		return fmt.Sprintf("useless option %s for ignored field", opt), false
+	default:
+		return fmt.Sprintf("useless options %s for ignored field", strings.Join(tag.Options, ",")), false
+	}
+}
+
 func checkValidateOptionsAlternatives(checkCtx *checkContext, alternatives []string) (message string, succeeded bool) {
 	for _, alternative := range alternatives {
 		alternative := strings.TrimSpace(alternative)
@@ -596,9 +635,7 @@ func typeValueMatch(t ast.Expr, val string) bool {
 	case "int":
 		_, err := strconv.ParseInt(val, 10, 64)
 		typeMatches = err == nil
-	case "string":
-	case "nil":
-	default:
+	default: // "string", "nil", ...
 		// unchecked type
 	}
 

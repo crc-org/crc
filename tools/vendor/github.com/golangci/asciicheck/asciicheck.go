@@ -20,7 +20,7 @@ func NewAnalyzer() *analysis.Analyzer {
 }
 
 func run(pass *analysis.Pass) (any, error) {
-	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+	insp := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
 	nodeFilter := []ast.Node{
 		(*ast.File)(nil),
@@ -35,7 +35,7 @@ func run(pass *analysis.Pass) (any, error) {
 		(*ast.AssignStmt)(nil),
 	}
 
-	inspect.Preorder(nodeFilter, func(n ast.Node) {
+	insp.Preorder(nodeFilter, func(n ast.Node) {
 		switch n := n.(type) {
 		case *ast.File:
 			checkIdent(pass, n.Name)
@@ -71,6 +71,7 @@ func run(pass *analysis.Pass) (any, error) {
 			}
 		}
 	})
+
 	return nil, nil
 }
 
@@ -84,7 +85,7 @@ func checkIdent(pass *analysis.Pass, v *ast.Ident) {
 		pass.Report(
 			analysis.Diagnostic{
 				Pos:     v.Pos(),
-				Message: fmt.Sprintf("identifier \"%s\" contain non-ASCII character: %#U", v.Name, ch),
+				Message: fmt.Sprintf("identifier %q contain non-ASCII character: %#U", v.Name, ch),
 			},
 		)
 	}
@@ -94,6 +95,7 @@ func checkFieldList(pass *analysis.Pass, f *ast.FieldList) {
 	if f == nil {
 		return
 	}
+
 	for _, f := range f.List {
 		for _, name := range f.Names {
 			checkIdent(pass, name)

@@ -50,12 +50,12 @@ func (checker *RequireError) SetFnPattern(p *regexp.Regexp) *RequireError {
 	return checker
 }
 
-func (checker RequireError) Check(pass *analysis.Pass, inspector *inspector.Inspector) []analysis.Diagnostic {
+func (checker RequireError) Check(pass *analysis.Pass, insp *inspector.Inspector) []analysis.Diagnostic {
 	callsByFunc := make(map[funcID][]*callMeta)
 
 	// Stage 1. Collect meta information about any calls inside functions.
 
-	inspector.WithStack([]ast.Node{(*ast.CallExpr)(nil)}, func(node ast.Node, push bool, stack []ast.Node) bool {
+	insp.WithStack([]ast.Node{(*ast.CallExpr)(nil)}, func(node ast.Node, push bool, stack []ast.Node) bool {
 		if !push {
 			return false
 		}

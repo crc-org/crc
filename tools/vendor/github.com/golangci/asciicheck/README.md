@@ -1,13 +1,19 @@
-# asciicheck [![Go Report Card](https://goreportcard.com/badge/github.com/tdakkota/asciicheck)](https://goreportcard.com/report/github.com/tdakkota/asciicheck) [![codecov](https://codecov.io/gh/tdakkota/asciicheck/branch/master/graph/badge.svg)](https://codecov.io/gh/tdakkota/asciicheck) ![Go](https://github.com/tdakkota/asciicheck/workflows/Go/badge.svg)
+# asciicheck
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/golangci/asciicheck)](https://goreportcard.com/report/github.com/golangci/asciicheck)
+
 Simple linter to check that your code does not contain non-ASCII identifiers
 
-# Install
+The project has been moved to the golangci organization because the GitHub account of the original author (@tdakkota) is no longer available.
+
+## Install
   
-```
-go get -u github.com/tdakkota/asciicheck/cmd/asciicheck
+```bash
+go install github.com/golangci/asciicheck/cmd/asciicheck@latest
 ```
 
-# Reason to use
+## Reason to use
+
 So, do you see this code? Looks correct, isn't it?
 
 ```go
@@ -22,20 +28,24 @@ func main() {
 	fmt.Println(s)
 }
 ```
+
 But if you try to run it, you will get an error:
+
 ```
 ./prog.go:8:7: undefined: TestStruct
 ```
 What? `TestStruct` is defined above, but compiler thinks diffrent. Why?
 
 **Answer**:
+
 Because `TestStruct` is not `TеstStruct`.
 ```
 type TеstStruct struct{}
       ^ this 'e' (U+0435) is not 'e' (U+0065)
 ```
 
-# Usage
+## Usage
+
 asciicheck uses [`singlechecker`](https://pkg.go.dev/golang.org/x/tools/go/analysis/singlechecker) package to run:
 
 ```

@@ -11,10 +11,7 @@ import (
 	"strings"
 )
 
-var (
-	errEmptyInput      = errors.New("empty input")
-	errUnsuitableInput = errors.New("unsuitable input")
-)
+var errEmptyInput = errors.New("empty input")
 
 // specialReplacer is a replacer for some types of special lines in comments,
 // which shouldn't be checked. For example, if a comment ends with a block of

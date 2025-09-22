@@ -19,5 +19,5 @@ type RegularChecker interface {
 // AdvancedChecker implements complex Check logic different from trivial CallMeta check.
 type AdvancedChecker interface {
 	Checker
-	Check(pass *analysis.Pass, inspector *inspector.Inspector) []analysis.Diagnostic
+	Check(pass *analysis.Pass, insp *inspector.Inspector) []analysis.Diagnostic
 }
