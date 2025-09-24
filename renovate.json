@@ -1,7 +1,11 @@
 {
- "$schema": "https://docs.renovatebot.com/renovate-schema.json",
- "enabledManagers": ["tekton"],
- "tekton": {
-    "fileMatch": ["^\\.tekton/.*\\.ya?ml$"]
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "enabledManagers": [
+        "tekton"
+    ],
+    "tekton": {
+        "managerFilePatterns": [
+            "/^\\.tekton/.*\\.ya?ml$/"
+        ]
     }
 }
