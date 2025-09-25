@@ -50,11 +50,11 @@ func (client *client) Status() (*types.ClusterStatusResult, error) {
 	diskSize, diskUse := client.getDiskDetails(vm)
 	pvSize, pvUse := client.getPVCSize(vm)
 	var openShiftStatusSupplier = getOpenShiftStatus
-	if vm.bundle.IsMicroshift() {
+	if vm.Bundle().IsMicroshift() {
 		openShiftStatusSupplier = getMicroShiftStatus
 	}
 
-	return createClusterStatusResult(vmStatus, vm.bundle.GetBundleType(), vm.bundle.GetVersion(), ip, diskSize, diskUse, ramSize, ramUse, pvUse, pvSize, openShiftStatusSupplier)
+	return createClusterStatusResult(vmStatus, vm.Bundle().GetBundleType(), vm.Bundle().GetVersion(), ip, diskSize, diskUse, ramSize, ramUse, pvUse, pvSize, openShiftStatusSupplier)
 }
 
 func createClusterStatusResult(vmStatus state.State, bundleType preset.Preset, vmBundleVersion, vmIP string, diskSize, diskUse, ramSize, ramUse strongunits.B, pvUse, pvSize strongunits.B, openShiftStatusSupplier openShiftStatusSupplierFunc) (*types.ClusterStatusResult, error) {
@@ -127,7 +127,7 @@ func (client *client) GetClusterLoad() (*types.ClusterLoadResult, error) {
 	}, nil
 }
 
-func (client *client) getDiskDetails(vm *virtualMachine) (strongunits.B, strongunits.B) {
+func (client *client) getDiskDetails(vm VirtualMachine) (strongunits.B, strongunits.B) {
 	disk, err, _ := client.diskDetails.Memoize("disks", func() (interface{}, error) {
 		sshRunner, err := vm.SSHRunner()
 		if err != nil {
@@ -177,7 +177,7 @@ func getStatus(status *cluster.Status) types.OpenshiftStatus {
 	return types.OpenshiftStopped
 }
 
-func (client *client) getRAMStatus(vm *virtualMachine) (strongunits.B, strongunits.B) {
+func (client *client) getRAMStatus(vm VirtualMachine) (strongunits.B, strongunits.B) {
 	ram, err, _ := client.ramDetails.Memoize("ram", func() (interface{}, error) {
 		sshRunner, err := vm.SSHRunner()
 		if err != nil {
@@ -200,7 +200,7 @@ func (client *client) getRAMStatus(vm *virtualMachine) (strongunits.B, stronguni
 	return strongunits.B(used), strongunits.B(total)
 }
 
-func (client *client) getCPUStatus(vm *virtualMachine) []int64 {
+func (client *client) getCPUStatus(vm VirtualMachine) []int64 {
 	sshRunner, err := vm.SSHRunner()
 	if err != nil {
 		logging.Debugf("Cannot get SSH runner: %v", err)
@@ -218,7 +218,7 @@ func (client *client) getCPUStatus(vm *virtualMachine) []int64 {
 
 }
 
-func (client *client) getPVCSize(vm *virtualMachine) (strongunits.B, strongunits.B) {
+func (client *client) getPVCSize(vm VirtualMachine) (strongunits.B, strongunits.B) {
 	sshRunner, err := vm.SSHRunner()
 	if err != nil {
 		logging.Debugf("Cannot get SSH runner: %v", err)
