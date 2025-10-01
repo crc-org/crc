@@ -16,10 +16,8 @@ make vendor
 go mod verify
 
 echo "Diffing $(pwd)"
-git diff --exit-code vendor go.mod go.sum
 
-if [[ $? -eq 0 ]]
-then
+if git diff --exit-code vendor go.mod go.sum; then
   echo "$(pwd) up to date."
 else
   echo "$(pwd) is out of date. Please run make vendor"
