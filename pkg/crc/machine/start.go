@@ -264,8 +264,12 @@ func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
 			if _, _, err := sshRunner.RunPrivileged("Changing owner of mount directory", "chown", "core:core", mount.Target); err != nil {
 				return err
 			}
-			if _, _, err := sshRunner.Run("9pfs", constants.VSockGateway, mount.Target); err != nil {
-				return err
+			if _, _, err := sshRunner.Run("9pfs -V -p", fmt.Sprintf("%d", constants.Plan9HvsockPort), "2", mount.Target); err != nil {
+				logging.Warnf("Failed to connect to 9p server over hvsock: %v", err)
+				logging.Warnf("Falling back to 9p over TCP")
+				if _, _, err := sshRunner.Run("9pfs", constants.VSockGateway, mount.Target); err != nil {
+					return err
+				}
 			}
 
 		default:
