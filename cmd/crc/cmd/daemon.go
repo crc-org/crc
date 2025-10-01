@@ -252,15 +252,29 @@ func run(configuration *types.Configuration) error {
 
 	// 9p home directory sharing
 	if runtime.GOOS == "windows" {
-		listener9p, err := vn.Listen("tcp", net.JoinHostPort(configuration.GatewayIP, fmt.Sprintf("%d", constants.Plan9TcpPort)))
+		// 9p over hvsock
+		listener9pHvsock, err := fs9p.GetHvsockListener(constants.Plan9HvsockGUID)
 		if err != nil {
 			return err
 		}
-		server9p, err := fs9p.New9pServer(listener9p, constants.GetHomeDir())
+		server9pHvsock, err := fs9p.New9pServer(listener9pHvsock, constants.GetHomeDir())
 		if err != nil {
 			return err
 		}
-		if err := server9p.Start(); err != nil {
+		if err := server9pHvsock.Start(); err != nil {
+			return err
+		}
+
+		// 9p over TCP (as a backup)
+		listener9pTCP, err := vn.Listen("tcp", net.JoinHostPort(configuration.GatewayIP, fmt.Sprintf("%d", constants.Plan9TcpPort)))
+		if err != nil {
+			return err
+		}
+		server9pTCP, err := fs9p.New9pServer(listener9pTCP, constants.GetHomeDir())
+		if err != nil {
+			return err
+		}
+		if err := server9pTCP.Start(); err != nil {
 			return err
 		}
 	}
