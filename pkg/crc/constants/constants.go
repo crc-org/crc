@@ -55,6 +55,9 @@ const (
 	OpenShiftIngressHTTPSPort = 443
 
 	BackgroundLauncherExecutable = "crc-background-launcher.exe"
+
+	Plan9Msize   = 1024 * 1024
+	Plan9TcpPort = 564
 )
 
 var adminHelperExecutableForOs = map[string]string{
