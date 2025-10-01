@@ -56,8 +56,10 @@ const (
 
 	BackgroundLauncherExecutable = "crc-background-launcher.exe"
 
-	Plan9Msize   = 1024 * 1024
-	Plan9TcpPort = 564
+	Plan9Msize      = 1024 * 1024
+	Plan9TcpPort    = 564
+	Plan9HvsockGUID = "00009000-FACB-11E6-BD58-64006A7986D3"
+	Plan9HvsockPort = 36864
 )
 
 var adminHelperExecutableForOs = map[string]string{
