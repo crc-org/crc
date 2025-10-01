@@ -43,7 +43,14 @@ func configureShareDirs(machineConfig config.MachineConfig) []drivers.SharedDir 
 			Type:     "cifs",
 			Username: machineConfig.SharedDirUsername,
 		}
-		sharedDirs = append(sharedDirs, sharedDir)
+		sharedDir9p := drivers.SharedDir{
+			Source: dir,
+			Target: convertToUnixPath(dir) + "9p", // temporary solution until smb sharing is removed
+			Tag:    "crc-dir0",                    // same as above
+			//Tag:    fmt.Sprintf("dir%d", i),
+			Type: "9p",
+		}
+		sharedDirs = append(sharedDirs, sharedDir, sharedDir9p)
 	}
 	return sharedDirs
 }
