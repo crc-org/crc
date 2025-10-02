@@ -17,9 +17,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/containers/common/pkg/strongunits"
 	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 	"github.com/spf13/cast"
+	"go.podman.io/common/pkg/strongunits"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/machine"

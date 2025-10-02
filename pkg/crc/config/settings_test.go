@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/containers/common/pkg/strongunits"
+	"go.podman.io/common/pkg/strongunits"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
