@@ -10,7 +10,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/containers/common/pkg/strongunits"
+	"go.podman.io/common/pkg/strongunits"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/crc-org/crc/v2/pkg/crc/cluster"

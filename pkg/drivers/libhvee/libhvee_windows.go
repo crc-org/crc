@@ -11,8 +11,8 @@ import (
 	"github.com/crc-org/machine/libmachine/drivers"
 	"github.com/crc-org/machine/libmachine/state"
 
-	"github.com/containers/common/pkg/strongunits"
 	"github.com/containers/libhvee/pkg/hypervctl"
+	"go.podman.io/common/pkg/strongunits"
 )
 
 type Driver struct {
