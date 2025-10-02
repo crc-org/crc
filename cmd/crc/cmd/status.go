@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/cast"
 
-	"github.com/containers/common/pkg/strongunits"
+	"go.podman.io/common/pkg/strongunits"
 
 	"github.com/cheggaaa/pb/v3"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
