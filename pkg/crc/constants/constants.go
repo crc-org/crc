@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/containers/common/pkg/strongunits"
+	"go.podman.io/common/pkg/strongunits"
 
 	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/version"
