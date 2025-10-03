@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/containers/common/pkg/strongunits"
 	"github.com/crc-org/crc/v2/pkg/crc/network"
+	"go.podman.io/common/pkg/strongunits"
 )
 
 type MachineConfig struct {

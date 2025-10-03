@@ -1,9 +1,9 @@
 package machine
 
 import (
-	"github.com/containers/common/pkg/strongunits"
 	"github.com/crc-org/crc/v2/pkg/libmachine/host"
 	libmachine "github.com/crc-org/machine/libmachine/drivers"
+	"go.podman.io/common/pkg/strongunits"
 )
 
 type valueSetter func(driver *libmachine.VMDriver) bool

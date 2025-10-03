@@ -1,11 +1,11 @@
 package types
 
 import (
-	"github.com/containers/common/pkg/strongunits"
 	"github.com/crc-org/crc/v2/pkg/crc/cluster"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
 	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
 	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
+	"go.podman.io/common/pkg/strongunits"
 )
 
 type StartConfig struct {
