@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"github.com/crc-org/crc/v2/test/extended/crc/cmd"
 	"github.com/crc-org/crc/v2/test/extended/util"
@@ -12,7 +13,7 @@ import (
 )
 
 var _ = Describe("podman-remote", Serial, Ordered, Label("microshift-preset"), func() {
-
+	filename := "time-consume.txt"
 	// runs 1x after all the It blocks (specs) inside this Describe node
 	AfterAll(func() {
 
@@ -39,9 +40,12 @@ var _ = Describe("podman-remote", Serial, Ordered, Label("microshift-preset"), f
 
 		It("start CRC", func() {
 			// default values: "--memory", "10752", "--cpus", "4", "disk-size", "31"
-			Expect(
-				crcSuccess("start", "-p", pullSecretPath)).
-				To(ContainSubstring("Started the MicroShift cluster"))
+			start := time.Now()
+			message := crcSuccess("start", "-p", pullSecretPath)
+			duration := time.Since(start)
+			Expect(message).To(ContainSubstring("Started the MicroShift cluster"))
+			data := "crc start: " + duration.String() + "\n"
+			writeDataToFile(filename, data)
 		})
 
 		It("podman-env", func() {
