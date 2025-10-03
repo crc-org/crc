@@ -11,5 +11,10 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
 	if serviceConfig.NetworkMode != network.UserNetworkingMode {
 		return fmt.Errorf("only user-mode networking is supported on Windows")
 	}
-	return addOpenShiftHosts(serviceConfig)
+
+	if serviceConfig.ModifyHostsFile {
+		return addOpenShiftHosts(serviceConfig)
+	}
+
+	return nil
 }

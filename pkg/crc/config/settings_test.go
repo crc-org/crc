@@ -252,6 +252,9 @@ var configDefaultValuesTestArguments = []struct {
 		EnableClusterMonitoring, false,
 	},
 	{
+		ModifyHostsFile, true,
+	},
+	{
 		ConsentTelemetry, "",
 	},
 	{
@@ -330,6 +333,9 @@ var configProvidedValuesTestArguments = []struct {
 	},
 	{
 		EnableClusterMonitoring, true,
+	},
+	{
+		ModifyHostsFile, false,
 	},
 	{
 		ConsentTelemetry, "yes",

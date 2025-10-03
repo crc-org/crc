@@ -481,8 +481,9 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		SSHRunner: sshRunner,
 		IP:        instanceIP,
 		// TODO: should be more finegrained
-		BundleMetadata: *vm.bundle,
-		NetworkMode:    client.networkMode(),
+		BundleMetadata:  *vm.bundle,
+		NetworkMode:     client.networkMode(),
+		ModifyHostsFile: client.modifyHostsFile(),
 	}
 
 	// Run the DNS server inside the VM
