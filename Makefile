@@ -92,10 +92,10 @@ install: $(SOURCES)
 	go install -tags "$(BUILDTAGS)"  -ldflags="$(LDFLAGS)" $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
 $(BUILD_DIR)/macos-amd64/crc: $(SOURCES)
-	GOARCH=amd64 GOOS=darwin go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $@ $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
+	GOOS=darwin GOARCH=amd64 go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $@ $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
 $(BUILD_DIR)/macos-arm64/crc: $(SOURCES)
-	GOARCH=arm64 GOOS=darwin go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $@ $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
+	GOOS=darwin GOARCH=arm64 go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $@ $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
 $(BUILD_DIR)/linux-amd64/crc: $(SOURCES)
 	GOOS=linux GOARCH=amd64 go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $@ $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
@@ -104,7 +104,7 @@ $(BUILD_DIR)/linux-arm64/crc: $(SOURCES)
 	GOOS=linux GOARCH=arm64 go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $@ $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
 $(BUILD_DIR)/windows-amd64/crc.exe: $(SOURCES)
-	GOARCH=amd64 GOOS=windows go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $@ $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
+	GOOS=windows GOARCH=amd64 go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $@ $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
 $(HOST_BUILD_DIR)/crc-embedder: $(SOURCES)
 	go build --tags="build" -ldflags="$(LDFLAGS)" -o $(HOST_BUILD_DIR)/crc-embedder $(GO_EXTRA_BUILDFLAGS) ./cmd/crc-embedder
@@ -167,7 +167,7 @@ e2e_builder = GOOS=$(1) GOARCH=$(2) go test ./test/e2e/ -tags "$(BUILDTAGS)" --l
 build_e2e: $(SOURCES)
 	$(call e2e_builder,$(GOOS),$(GOARCH),e2e.test)
 
-build_e2e_all: $(SOURCES) 
+build_e2e_all: $(SOURCES)
 	$(call e2e_builder,linux,amd64,e2e.test)
 	$(call e2e_builder,windows,amd64,e2e.test.exe)
 	$(call e2e_builder,darwin,amd64,e2e.test)
@@ -187,7 +187,7 @@ containerized_e2e: clean
 ## Function to build the integration binary params: (os, param, ldflags, binary_name)
 integration_builder = GOOS=$(1) GOARCH=$(2) go test ./test/integration/ -tags "$(BUILDTAGS)" --ldflags="$(3)" -c -o $(BUILD_DIR)/$(1)-$(2)/$(4)
 
-build_integration: 
+build_integration:
 ILDFLAGS=$(LDFLAGS)
 ifneq ($(GOOS), linux)
 ILDFLAGS=$(LDFLAGS) -X $(MODULEPATH)/pkg/crc/version.installerBuild=true
@@ -195,13 +195,13 @@ endif
 build_integration: $(SOURCES)
 	$(call integration_builder,$(GOOS),$(GOARCH),$(ILDFLAGS),integration.test)
 
-build_integration_all: $(SOURCES) 
+build_integration_all: $(SOURCES)
 	$(call integration_builder,linux,amd64,$(LDFLAGS),integration.test)
 	$(call integration_builder,windows,amd64,$(LDFLAGS) -X $(MODULEPATH)/pkg/crc/version.installerBuild=true,integration.test.exe)
 	$(call integration_builder,darwin,amd64,$(LDFLAGS) -X $(MODULEPATH)/pkg/crc/version.installerBuild=true,integration.test)
 	$(call integration_builder,darwin,arm64,$(LDFLAGS) -X $(MODULEPATH)/pkg/crc/version.installerBuild=true,integration.test)
 
-containerized_integration: 
+containerized_integration:
 ifndef CRC_INTEGRATION_IMG_VERSION
 CRC_INTEGRATION_IMG_VERSION=v$(CRC_VERSION)-$(COMMIT_SHA)
 endif
@@ -222,7 +222,7 @@ BUNDLE_PATH = --bundle-path=$(HOME)/Downloads/crc_libvirt_$(OPENSHIFT_VERSION)_$
 endif
 
 integration:
-	@go test -timeout=90m -tags "$(BUILDTAGS)" $(MODULEPATH)/test/integration $(PULL_SECRET_PATH) $(BUNDLE_PATH) -v $(GINKGO_OPTS) 
+	@go test -timeout=90m -tags "$(BUILDTAGS)" $(MODULEPATH)/test/integration $(PULL_SECRET_PATH) $(BUNDLE_PATH) -v $(GINKGO_OPTS)
 
 .PHONY: e2e ## Run e2e tests
 e2e:
@@ -262,10 +262,10 @@ lint: $(TOOLS_BINDIR)/golangci-lint gen_release_info
 	"$(TOOLS_BINDIR)"/golangci-lint run
 
 cross-lint: $(TOOLS_BINDIR)/golangci-lint gen_release_info
-	GOARCH=amd64 GOOS=darwin "$(TOOLS_BINDIR)"/golangci-lint run
-	GOARCH=arm64 GOOS=darwin "$(TOOLS_BINDIR)"/golangci-lint run
-	GOARCH=amd64 GOOS=linux "$(TOOLS_BINDIR)"/golangci-lint run
-	GOARCH=amd64 GOOS=windows "$(TOOLS_BINDIR)"/golangci-lint run
+	GOOS=darwin GOARCH=amd64 "$(TOOLS_BINDIR)"/golangci-lint run
+	GOOS=darwin GOARCH=arm64 "$(TOOLS_BINDIR)"/golangci-lint run
+	GOOS=linux GOARCH=amd64 "$(TOOLS_BINDIR)"/golangci-lint run
+	GOOS=windows GOARCH=amd64 "$(TOOLS_BINDIR)"/golangci-lint run
 
 .PHONY: gen_release_info
 gen_release_info:
