@@ -1,6 +1,6 @@
 module github.com/crc-org/crc/v2
 
-go 1.24.0
+go 1.25
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
@@ -42,7 +42,7 @@ require (
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
 	github.com/r3labs/sse/v2 v2.10.0
-	github.com/sebrandon1/grab v0.0.4
+	github.com/sebrandon1/grab v0.0.7
 	github.com/segmentio/analytics-go/v3 v3.3.0
 	github.com/shirou/gopsutil/v4 v4.25.9
 	github.com/sirupsen/logrus v1.9.3
