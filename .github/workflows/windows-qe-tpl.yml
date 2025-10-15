@@ -99,7 +99,7 @@ jobs:
           -e ARM_CLIENT_SECRET='${{secrets.ARM_CLIENT_SECRET}}' \
           -e AZURE_STORAGE_ACCOUNT='${{ secrets.AZURE_STORAGE_ACCOUNT }}' \
           -e AZURE_STORAGE_KEY='${{ secrets.AZURE_STORAGE_KEY }}' \
-          quay.io/redhat-developer/mapt:v0.9.0 azure \
+          quay.io/redhat-developer/mapt:v0.9.9 azure \
             windows create \
             --project-name 'windows-desktop-${{ matrix.windows-version }}-${{ matrix.windows-featurepack }}-${{inputs.qe-type}}-${{inputs.preset}}' \
             --backed-url azblob://crc-qenvs-state/${{ github.repository }}-${{ github.run_id }} \
@@ -216,7 +216,7 @@ jobs:
           -e ARM_CLIENT_SECRET='${{secrets.ARM_CLIENT_SECRET}}' \
           -e AZURE_STORAGE_ACCOUNT='${{ secrets.AZURE_STORAGE_ACCOUNT }}' \
           -e AZURE_STORAGE_KEY='${{ secrets.AZURE_STORAGE_KEY }}' \
-          quay.io/redhat-developer/mapt:v0.9.0 azure \
+          quay.io/redhat-developer/mapt:v0.9.9 azure \
             windows destroy \
             --project-name 'windows-desktop-${{ matrix.windows-version }}-${{ matrix.windows-featurepack }}-${{inputs.qe-type}}-${{inputs.preset}}' \
             --backed-url azblob://crc-qenvs-state/${{ github.repository }}-${{ github.run_id }}
