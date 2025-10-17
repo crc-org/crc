@@ -90,6 +90,7 @@ jobs:
 
     - name: Create Windows instance
       run: |
+        sudo chmod -R 777 $GITHUB_WORKSPACE
         # Create instance
         podman run -d --name windows-create --rm \
           -v ${PWD}:/workspace:z \
