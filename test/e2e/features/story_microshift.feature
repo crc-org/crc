@@ -7,10 +7,7 @@ Feature: Microshift test stories
 		And setting config property "persistent-volume-size" to value "20" succeeds
 		And ensuring network mode user
 		And executing single crc setup command succeeds
-		And get cpu data "Before start"
-		And get memory data "Before start"
 		And starting CRC with default bundle succeeds
-		And get cpu data "After start"
 		And get memory data "After start"
 		And ensuring oc command is available
 		And ensuring microshift cluster is fully operational
@@ -20,8 +17,9 @@ Feature: Microshift test stories
 
 	# End-to-end health check
 
-	@microshift @testdata @linux @windows @darwin @cleanup
+	@microshift @testdata @linux @windows @darwin @cleanup @performance
 	Scenario: Start and expose a basic HTTP service and check after restart
+		And record timestamp "deployment"
 		Given executing "oc create namespace testproj" succeeds
 		And executing "oc config set-context --current --namespace=testproj" succeeds
 		When executing "oc apply -f httpd-example.yaml" succeeds
@@ -36,13 +34,13 @@ Feature: Microshift test stories
 		When executing "oc expose svc httpd-example" succeeds
 		Then stdout should contain "httpd-example exposed"
 		When with up to "20" retries with wait period of "5s" http response from "http://httpd-example-testproj.apps.crc.testing" has status code "200"
-		And get cpu data "After deployment"
 		And get memory data "After deployment"
 		Then executing "curl -s http://httpd-example-testproj.apps.crc.testing" succeeds
 		And stdout should contain "Hello CRC!"
+		And record timestamp "stop"
 		When executing "crc stop" succeeds
-		And get cpu data "After stop"
 		And get memory data "After stop"
+		And record timestamp "start again"
 		And starting CRC with default bundle succeeds
 		And checking that CRC is running
 		And with up to "4" retries with wait period of "1m" http response from "http://httpd-example-testproj.apps.crc.testing" has status code "200"
