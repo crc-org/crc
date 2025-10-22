@@ -9,11 +9,11 @@ Feature: 4 Openshift stories
 
 	# End-to-end health check
 
-	@darwin @linux @windows @testdata @story_health @needs_namespace
+	@darwin @linux @windows @testdata @story_health @needs_namespace @performance
 	Scenario: Overall cluster health
 		Given executing "oc new-project testproj" succeeds
-		And get cpu data "After start"
 		And get memory data "After start"
+		And record timestamp "deployment"
 		When executing "oc apply -f httpd-example.yaml" succeeds
 		And executing "oc rollout status deployment httpd-example" succeeds
 		Then stdout should contain "successfully rolled out"
@@ -25,14 +25,14 @@ Feature: 4 Openshift stories
 		Then stdout should contain "httpd-example exposed"
 		When executing "oc expose svc httpd-example" succeeds
 		Then stdout should contain "httpd-example exposed"
-		And get cpu data "After deployment"
-		And get memory data "After deployment"
 		When with up to "20" retries with wait period of "5s" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
 		Then executing "curl -s http://httpd-example-testproj.apps-crc.testing" succeeds
 		And stdout should contain "Hello CRC!"
+		And get memory data "After deployment"
+		And record timestamp "stop"
 		When executing "crc stop" succeeds
-		And get cpu data "After stop"
 		And get memory data "After stop"
+		And record timestamp "start again"
 		And starting CRC with default bundle succeeds
 		And checking that CRC is running
 		And with up to "4" retries with wait period of "1m" http response from "http://httpd-example-testproj.apps-crc.testing" has status code "200"
