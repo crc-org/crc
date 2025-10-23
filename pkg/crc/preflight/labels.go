@@ -14,7 +14,7 @@ const (
 
 	// Keep it last
 	// will be used in OS-specific go files to extend LabelName
-	lastLabelName // nolint
+	lastLabelName //nolint:unused
 )
 
 type LabelValue uint32
@@ -31,7 +31,7 @@ const (
 
 	// Keep it last
 	// will be used in OS-specific go files to extend LabelValue
-	lastLabelValue // nolint
+	lastLabelValue //nolint:unused
 )
 
 var (

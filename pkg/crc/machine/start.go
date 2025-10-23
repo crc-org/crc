@@ -746,7 +746,7 @@ func enableEmergencyLogin(sshRunner *crcssh.Runner) error {
 	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, 8)
 	for i := range b {
-		b[i] = charset[rand.Intn(len(charset))] //nolint
+		b[i] = charset[rand.Intn(len(charset))] //nolint:gosec
 	}
 	if err := os.WriteFile(constants.PasswdFilePath, b, 0600); err != nil {
 		return err
