@@ -65,7 +65,11 @@ func (client *client) GenerateBundle(forceStop bool) error {
 	if err != nil {
 		return err
 	}
-	defer copier.Cleanup() //nolint
+	defer func() {
+		if err := copier.Cleanup(); err != nil {
+			logging.Errorf("copier.Cleanup failed: %v", err)
+		}
+	}()
 	customBundleDir := copier.CachedPath()
 
 	if err := copier.CopyKubeConfig(); err != nil {

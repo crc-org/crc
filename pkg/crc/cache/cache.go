@@ -53,7 +53,7 @@ func (c *Cache) GetExecutableName() string {
  *
  * It returns <version> as a string
  */
-func getVersionGeneric(executablePath string, args ...string) (string, error) { //nolint:deadcode,unused
+func getVersionGeneric(executablePath string, args ...string) (string, error) { //nolint:unused
 	stdOut, _, err := crcos.RunWithDefaultLocale(executablePath, args...)
 	if err != nil {
 		logging.Debugf("failed to run executable %s: %v", executablePath, err)

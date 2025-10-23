@@ -23,7 +23,7 @@ import (
 	"github.com/yusufpapurcu/wmi"
 )
 
-// nolint
+//nolint:staticcheck
 type Win32_ComputerSystem struct {
 	Partofdomain bool
 }

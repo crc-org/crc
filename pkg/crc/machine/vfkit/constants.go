@@ -1,5 +1,4 @@
 //go:build darwin || build
-// +build darwin build
 
 package vfkit
 
