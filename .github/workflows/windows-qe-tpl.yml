@@ -113,6 +113,7 @@ jobs:
             --spot \
             --spot-excluded-regions southafricawest,australiacentral2,eastus2euap
         podman logs -f windows-create
+        sudo chown runner:runner host username id_rsa
 
     - name: Install CRC on host
       run: |
