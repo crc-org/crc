@@ -33,8 +33,12 @@ type resolverFileValues struct {
 
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
 	// Update /etc/hosts file for host
-	if err := addOpenShiftHosts(serviceConfig); err != nil {
-		return err
+	if serviceConfig.ModifyHostsFile {
+		if err := addOpenShiftHosts(serviceConfig); err != nil {
+			return err
+		}
+	} else {
+		logging.Infof("Skipping hosts file modification")
 	}
 
 	if serviceConfig.NetworkMode == network.UserNetworkingMode {
