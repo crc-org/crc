@@ -35,7 +35,7 @@ jobs:
           CRC_VERSION=${CRC_VERSION:1}
           choco push ./packaging/chocolatey/crc/crc.$CRC_VERSION.nupkg --source https://push.chocolatey.org/
       - name: Upload nupkg artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: crc-chocolatey-nupkg-${{ github.event.release.tag_name }}
           path: "./packaging/chocolatey/crc/*.nupkg"
