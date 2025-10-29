@@ -248,6 +248,7 @@ func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
 			if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Mounting %s", mount.Target), "mount", "-o", "context=\"system_u:object_r:container_file_t:s0\"", "-t", mount.Type, mount.Tag, mount.Target); err != nil {
 				return err
 			}
+
 		case "cifs":
 			smbUncPath := fmt.Sprintf("//%s/%s", hostVirtualIP, mount.Tag)
 			if _, _, err := sshRunner.RunPrivate("sudo", "mount", "-o", fmt.Sprintf("rw,uid=core,gid=core,username='%s',password='%s'", mount.Username, mount.Password), "-t", mount.Type, smbUncPath, mount.Target); err != nil {
@@ -257,6 +258,16 @@ func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
 				}
 				return fmt.Errorf("Failed to mount CIFS/SMB share '%s' please make sure configured password is correct: %w", mount.Tag, err)
 			}
+
+		case "9p":
+			// change owner to core user to allow mounting to it as a non-root user
+			if _, _, err := sshRunner.RunPrivileged("Changing owner of mount directory", "chown", "core:core", mount.Target); err != nil {
+				return err
+			}
+			if _, _, err := sshRunner.Run("9pfs", constants.VSockGateway, mount.Target); err != nil {
+				return err
+			}
+
 		default:
 			return fmt.Errorf("Unknown Shared dir type requested: %s", mount.Type)
 		}

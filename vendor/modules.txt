@@ -10,6 +10,12 @@ github.com/AlecAivazis/survey/v2/terminal
 ## explicit; go 1.18
 github.com/BurntSushi/toml
 github.com/BurntSushi/toml/internal
+# github.com/DeedleFake/p9 v0.7.1
+## explicit; go 1.24.0
+github.com/DeedleFake/p9
+github.com/DeedleFake/p9/internal/debug
+github.com/DeedleFake/p9/internal/util
+github.com/DeedleFake/p9/proto
 # github.com/Masterminds/semver/v3 v3.4.0
 ## explicit; go 1.21
 github.com/Masterminds/semver/v3
