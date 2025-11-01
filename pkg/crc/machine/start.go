@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/containers/common/pkg/strongunits"
+	"go.podman.io/common/pkg/strongunits"
 
 	"github.com/crc-org/crc/v2/pkg/crc/cluster"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"

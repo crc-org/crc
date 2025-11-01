@@ -11,16 +11,16 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/containers/image/v5/copy"
-	"github.com/containers/image/v5/directory"
-	"github.com/containers/image/v5/docker"
-	"github.com/containers/image/v5/signature"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/gpg"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/extract"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
+	"go.podman.io/image/v5/copy"
+	"go.podman.io/image/v5/directory"
+	"go.podman.io/image/v5/docker"
+	"go.podman.io/image/v5/signature"
 )
 
 type imageHandler struct {

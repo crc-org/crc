@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/containers/common/pkg/strongunits"
 	"github.com/stretchr/testify/assert"
+	"go.podman.io/common/pkg/strongunits"
 )
 
 type MockedSSHRunner struct {
