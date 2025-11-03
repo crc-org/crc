@@ -1,3 +1,4 @@
+// Package pkg_doc provides a checker for package godocs.
 package pkg_doc
 
 import (
@@ -10,15 +11,15 @@ import (
 )
 
 const (
-	PkgDocRule        = model.PkgDocRule
-	SinglePkgDocRule  = model.SinglePkgDocRule
-	RequirePkgDocRule = model.RequirePkgDocRule
+	pkgDocRule        = model.PkgDocRule
+	singlePkgDocRule  = model.SinglePkgDocRule
+	requirePkgDocRule = model.RequirePkgDocRule
 )
 
 var ruleSet = model.RuleSet{}.Add(
-	PkgDocRule,
-	SinglePkgDocRule,
-	RequirePkgDocRule,
+	pkgDocRule,
+	singlePkgDocRule,
+	requirePkgDocRule,
 )
 
 // PkgDocChecker checks package godocs.
@@ -46,18 +47,18 @@ const commandPkgName = "main"
 const commandTestPkgName = "main_test"
 
 func checkPkgDocRule(actx *model.AnalysisContext) {
-	if !actx.Config.IsAnyRuleApplicable(model.RuleSet{}.Add(PkgDocRule)) {
+	if !actx.Config.IsAnyRuleApplicable(model.RuleSet{}.Add(pkgDocRule)) {
 		return
 	}
 
 	includeTests := actx.Config.GetRuleOptions().PkgDocIncludeTests
 
-	for f, ir := range util.AnalysisApplicableFiles(actx, includeTests, model.RuleSet{}.Add(PkgDocRule)) {
+	for f, ir := range util.AnalysisApplicableFiles(actx, includeTests, model.RuleSet{}.Add(pkgDocRule)) {
 		if ir.PackageDoc == nil {
 			continue
 		}
 
-		if ir.PackageDoc.DisabledRules.All || ir.PackageDoc.DisabledRules.Rules.Has(PkgDocRule) {
+		if ir.PackageDoc.DisabledRules.All || ir.PackageDoc.DisabledRules.Rules.Has(pkgDocRule) {
 			continue
 		}
 
@@ -124,7 +125,7 @@ func checkPkgDocPrefix(text string, packageName string) (string, bool) {
 }
 
 func checkSinglePkgDocRule(actx *model.AnalysisContext) {
-	if !actx.Config.IsAnyRuleApplicable(model.RuleSet{}.Add(SinglePkgDocRule)) {
+	if !actx.Config.IsAnyRuleApplicable(model.RuleSet{}.Add(singlePkgDocRule)) {
 		return
 	}
 
@@ -132,12 +133,12 @@ func checkSinglePkgDocRule(actx *model.AnalysisContext) {
 
 	documentedPkgs := make(map[string][]*ast.File, 2)
 
-	for f, ir := range util.AnalysisApplicableFiles(actx, includeTests, model.RuleSet{}.Add(SinglePkgDocRule)) {
+	for f, ir := range util.AnalysisApplicableFiles(actx, includeTests, model.RuleSet{}.Add(singlePkgDocRule)) {
 		if ir.PackageDoc == nil || ir.PackageDoc.Text == "" {
 			continue
 		}
 
-		if ir.PackageDoc.DisabledRules.All || ir.PackageDoc.DisabledRules.Rules.Has(SinglePkgDocRule) {
+		if ir.PackageDoc.DisabledRules.All || ir.PackageDoc.DisabledRules.Rules.Has(singlePkgDocRule) {
 			continue
 		}
 
@@ -160,7 +161,7 @@ func checkSinglePkgDocRule(actx *model.AnalysisContext) {
 }
 
 func checkRequirePkgDocRule(actx *model.AnalysisContext) {
-	if !actx.Config.IsAnyRuleApplicable(model.RuleSet{}.Add(RequirePkgDocRule)) {
+	if !actx.Config.IsAnyRuleApplicable(model.RuleSet{}.Add(requirePkgDocRule)) {
 		return
 	}
 
@@ -168,7 +169,7 @@ func checkRequirePkgDocRule(actx *model.AnalysisContext) {
 
 	pkgFiles := make(map[string][]*ast.File, 2)
 
-	for f := range util.AnalysisApplicableFiles(actx, includeTests, model.RuleSet{}.Add(RequirePkgDocRule)) {
+	for f := range util.AnalysisApplicableFiles(actx, includeTests, model.RuleSet{}.Add(requirePkgDocRule)) {
 		pkg := f.Name.Name
 		if _, ok := pkgFiles[pkg]; !ok {
 			pkgFiles[pkg] = make([]*ast.File, 0, len(actx.Pass.Files))
@@ -185,7 +186,7 @@ func checkRequirePkgDocRule(actx *model.AnalysisContext) {
 				continue
 			}
 
-			if ir.PackageDoc.DisabledRules.All || ir.PackageDoc.DisabledRules.Rules.Has(RequirePkgDocRule) {
+			if ir.PackageDoc.DisabledRules.All || ir.PackageDoc.DisabledRules.Rules.Has(requirePkgDocRule) {
 				continue
 			}
 

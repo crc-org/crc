@@ -292,12 +292,12 @@ func (w *WSL) checkCuddlingMaxAllowed(
 	}
 
 	numStmtsAbove := w.numberOfStatementsAbove(cursor)
-	previousIdents := identsFromNode(previousNode, true)
+	previousIdents := w.identsFromNode(previousNode, true)
 
 	// If we don't have any statements above, we only care about potential error
 	// cuddling (for if statements) so check that.
 	if numStmtsAbove == 0 {
-		w.checkError(numStmtsAbove, stmt, previousNode, previousIdents, cursor)
+		w.checkError(numStmtsAbove, stmt, previousNode, cursor)
 		return
 	}
 
@@ -335,7 +335,7 @@ func (w *WSL) checkCuddlingMaxAllowed(
 	// FEATURE(AllowWholeBlock): Allow identifier used anywhere in block
 	// (including recursive blocks).
 	if w.config.AllowWholeBlock {
-		allIdentsInBlock := identsFromNode(stmt, false)
+		allIdentsInBlock := w.identsFromNode(stmt, false)
 		if checkIntersection(allIdentsInBlock) {
 			return
 		}
@@ -343,13 +343,13 @@ func (w *WSL) checkCuddlingMaxAllowed(
 
 	// FEATURE(AllowFirstInBlock): Allow identifiers used first in block.
 	if !w.config.AllowWholeBlock && w.config.AllowFirstInBlock {
-		firstStmtIdents := identsFromNode(firstBlockStmt, true)
+		firstStmtIdents := w.identsFromNode(firstBlockStmt, true)
 		if checkIntersection(firstStmtIdents) {
 			return
 		}
 	}
 
-	currentIdents := identsFromNode(stmt, true)
+	currentIdents := w.identsFromNode(stmt, true)
 	if checkIntersection(currentIdents) {
 		return
 	}
@@ -412,7 +412,7 @@ func (w *WSL) checkCuddlingWithoutIntersection(stmt ast.Node, cursor *Cursor) {
 	prevIsValidType := previousNode == nil || prevIsAssign || prevIsDecl || prevIsIncDec
 
 	if _, ok := w.config.Checks[CheckAssignExpr]; !ok {
-		if _, ok := previousNode.(*ast.ExprStmt); ok && hasIntersection(stmt, previousNode) {
+		if _, ok := previousNode.(*ast.ExprStmt); ok && w.hasIntersection(stmt, previousNode) {
 			prevIsValidType = prevIsValidType || ok
 		}
 	}
@@ -506,7 +506,7 @@ func (w *WSL) checkAppend(stmt *ast.AssignStmt, cursor *Cursor) {
 		return
 	}
 
-	if !hasIntersection(appendNode, previousNode) {
+	if !w.hasIntersection(appendNode, previousNode) {
 		w.addErrorNoIntersection(stmt.Pos(), CheckAppend)
 	}
 }
@@ -577,7 +577,7 @@ func (w *WSL) checkDefer(stmt *ast.DeferStmt, cursor *Cursor) {
 				cursor.Previous()
 				cursor.Previous()
 
-				if hasIntersection(cursor.Stmt(), stmt) {
+				if w.hasIntersection(cursor.Stmt(), stmt) {
 					return 1, false
 				}
 			}
@@ -593,7 +593,6 @@ func (w *WSL) checkError(
 	stmtsAbove int,
 	ifStmt ast.Node,
 	previousNode ast.Node,
-	previousIdents []*ast.Ident,
 	cursor *Cursor,
 ) {
 	if _, ok := w.config.Checks[CheckErr]; !ok {
@@ -609,6 +608,18 @@ func (w *WSL) checkError(
 	// It must be an if statement
 	stmt, ok := ifStmt.(*ast.IfStmt)
 	if !ok {
+		return
+	}
+
+	// If we actually have statements above we can't possibly need to remove any
+	// empty lines.
+	if stmtsAbove > 0 {
+		return
+	}
+
+	// If the error checking has an init condition (e.g. if err := f();) we
+	// don't want to check cuddling since the error is now assigned on this row.
+	if stmt.Init != nil {
 		return
 	}
 
@@ -643,22 +654,26 @@ func (w *WSL) checkError(
 		return
 	}
 
-	// Previous node must be assign or decl where the error was actually
-	// defined.
-	_, isAssign := previousNode.(*ast.AssignStmt)
-	_, isDecl := previousNode.(*ast.DeclStmt)
+	previousIdents := []*ast.Ident{}
 
-	if !isAssign && !isDecl {
-		return
+	if assign, ok := previousNode.(*ast.AssignStmt); ok {
+		for _, lhs := range assign.Lhs {
+			previousIdents = append(previousIdents, w.identsFromNode(lhs, true)...)
+		}
 	}
 
-	// If there are no statements above or the statement above doesn't contain
-	// any idents there can't be any error to cuddle.
-	if stmtsAbove > 0 || len(previousIdents) == 0 {
-		return
+	if decl, ok := previousNode.(*ast.DeclStmt); ok {
+		if genDecl, ok := decl.Decl.(*ast.GenDecl); ok {
+			for _, spec := range genDecl.Specs {
+				if vs, ok := spec.(*ast.ValueSpec); ok {
+					previousIdents = append(previousIdents, vs.Names...)
+				}
+			}
+		}
 	}
 
-	// Ensure that the error was defined on the line above.
+	// Ensure that the error checked on this line was assigned or declared in
+	// the previous statement.
 	if len(identIntersection([]*ast.Ident{xIdent}, previousIdents)) == 0 {
 		return
 	}
@@ -780,7 +795,6 @@ func (w *WSL) checkIf(stmt *ast.IfStmt, cursor *Cursor, isElse bool) {
 			w.numberOfStatementsAbove(cursor),
 			stmt,
 			previousNode,
-			identsFromNode(previousNode, true),
 			cursor,
 		)
 	}
@@ -1141,7 +1155,7 @@ func (w *WSL) maybeCheckBlock(
 		if check != CheckSwitch && check != CheckTypeSwitch && check != CheckSelect {
 			blockList = blockStmt.List
 		} else {
-			allowedIdents = identsFromCaseArms(node)
+			allowedIdents = w.identsFromCaseArms(node)
 		}
 
 		w.checkCuddlingBlock(node, blockList, allowedIdents, cursor, 1)
@@ -1289,13 +1303,13 @@ func asGenDeclWithValueSpecs(n ast.Node) *ast.GenDecl {
 	return genDecl
 }
 
-func hasIntersection(a, b ast.Node) bool {
-	return len(nodeIdentIntersection(a, b)) > 0
+func (w *WSL) hasIntersection(a, b ast.Node) bool {
+	return len(w.nodeIdentIntersection(a, b)) > 0
 }
 
-func nodeIdentIntersection(a, b ast.Node) []*ast.Ident {
-	aI := identsFromNode(a, true)
-	bI := identsFromNode(b, true)
+func (w *WSL) nodeIdentIntersection(a, b ast.Node) []*ast.Ident {
+	aI := w.identsFromNode(a, true)
+	bI := w.identsFromNode(b, true)
 
 	return identIntersection(aI, bI)
 }
@@ -1314,7 +1328,31 @@ func identIntersection(a, b []*ast.Ident) []*ast.Ident {
 	return intersects
 }
 
-func identsFromNode(node ast.Node, skipBlock bool) []*ast.Ident {
+func isTypeOrPredeclConst(obj types.Object) bool {
+	switch o := obj.(type) {
+	case *types.TypeName:
+		// Covers predeclared types ("string", "int", ...) and user types.
+		return true
+	case *types.Const:
+		// true/false/iota are universe consts.
+		return o.Parent() == types.Universe
+	case *types.Nil:
+		return true
+	case *types.PkgName:
+		// Skip package qualifiers like "fmt" in fmt.Println
+		return true
+	default:
+		return false
+	}
+}
+
+// identsFromNode returns all *ast.Ident in a node except:
+//   - type names (types.TypeName)
+//   - builtin constants from the universe (true, false, iota)
+//   - nil (*types.Nil)
+//   - package names (types.PkgName)
+//   - the blank identifier "_"
+func (w *WSL) identsFromNode(node ast.Node, skipBlock bool) []*ast.Ident {
 	var (
 		idents []*ast.Ident
 		seen   = map[string]struct{}{}
@@ -1324,6 +1362,24 @@ func identsFromNode(node ast.Node, skipBlock bool) []*ast.Ident {
 		return idents
 	}
 
+	addIdent := func(ident *ast.Ident) {
+		if ident == nil {
+			return
+		}
+
+		name := ident.Name
+		if name == "" || name == "_" {
+			return
+		}
+
+		if _, ok := seen[name]; ok {
+			return
+		}
+
+		idents = append(idents, ident)
+		seen[name] = struct{}{}
+	}
+
 	ast.Inspect(node, func(n ast.Node) bool {
 		if skipBlock {
 			if _, ok := n.(*ast.BlockStmt); ok {
@@ -1331,12 +1387,30 @@ func identsFromNode(node ast.Node, skipBlock bool) []*ast.Ident {
 			}
 		}
 
-		if ident, ok := n.(*ast.Ident); ok {
-			if _, exists := seen[ident.Name]; !exists {
-				idents = append(idents, ident)
-				seen[ident.Name] = struct{}{}
-			}
+		ident, ok := n.(*ast.Ident)
+		if !ok {
+			return true
 		}
+
+		// Prefer Uses over Defs; fall back to Defs if not a use site.
+		var typesObject types.Object
+		if obj := w.typeInfo.Uses[ident]; obj != nil {
+			typesObject = obj
+		} else if obj := w.typeInfo.Defs[ident]; obj != nil {
+			typesObject = obj
+		}
+
+		// Unresolved (could be a build-tag or syntax artifact). Keep it.
+		if typesObject == nil {
+			addIdent(ident)
+			return true
+		}
+
+		if isTypeOrPredeclConst(typesObject) {
+			return true
+		}
+
+		addIdent(ident)
 
 		return true
 	})
@@ -1344,14 +1418,14 @@ func identsFromNode(node ast.Node, skipBlock bool) []*ast.Ident {
 	return idents
 }
 
-func identsFromCaseArms(node ast.Node) []*ast.Ident {
+func (w *WSL) identsFromCaseArms(node ast.Node) []*ast.Ident {
 	var (
 		idents []*ast.Ident
 		nodes  []ast.Stmt
 		seen   = map[string]struct{}{}
 
 		addUnseen = func(node ast.Node) {
-			for _, ident := range identsFromNode(node, true) {
+			for _, ident := range w.identsFromNode(node, true) {
 				if _, ok := seen[ident.Name]; ok {
 					continue
 				}

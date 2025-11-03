@@ -32,6 +32,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 	nodeTypes := []ast.Node{
 		(*ast.BinaryExpr)(nil),
+		(*ast.AssignStmt)(nil),
 	}
 
 	inspect.Preorder(nodeTypes, check(pass))
@@ -52,25 +53,45 @@ func hasImport(pkg *types.Package, importPath string) bool {
 // check contains the logic for checking that time.Duration is used correctly in the code being analysed
 func check(pass *analysis.Pass) func(ast.Node) {
 	return func(node ast.Node) {
-		expr := node.(*ast.BinaryExpr)
-		// we are only interested in multiplication
-		if expr.Op != token.MUL {
-			return
-		}
-
-		// get the types of the two operands
-		x, xOK := pass.TypesInfo.Types[expr.X]
-		y, yOK := pass.TypesInfo.Types[expr.Y]
-
-		if !xOK || !yOK {
-			return
-		}
-
-		if isDuration(x.Type) && isDuration(y.Type) {
-			// check that both sides are acceptable expressions
-			if isUnacceptableExpr(pass, expr.X) && isUnacceptableExpr(pass, expr.Y) {
-				pass.Reportf(expr.Pos(), "Multiplication of durations: `%s`", formatNode(expr))
+		switch expr := node.(type) {
+		case *ast.BinaryExpr:
+			checkBinaryExpr(pass, expr)
+		case *ast.AssignStmt:
+			if expr.Tok != token.MUL_ASSIGN {
+				return
 			}
+			// '*=' assignment requires single-valued expressions
+			if len(expr.Lhs) != 1 || len(expr.Rhs) != 1 {
+				return
+			}
+			checkBinaryExpr(pass, &ast.BinaryExpr{
+				X:     expr.Lhs[0],
+				OpPos: expr.TokPos,
+				Op:    expr.Tok,
+				Y:     expr.Rhs[0],
+			})
+		}
+	}
+}
+
+func checkBinaryExpr(pass *analysis.Pass, expr *ast.BinaryExpr) {
+	// we are only interested in multiplication
+	if expr.Op != token.MUL && expr.Op != token.MUL_ASSIGN {
+		return
+	}
+
+	// get the types of the two operands
+	x, xOK := pass.TypesInfo.Types[expr.X]
+	y, yOK := pass.TypesInfo.Types[expr.Y]
+
+	if !xOK || !yOK {
+		return
+	}
+
+	if isDuration(x.Type) && isDuration(y.Type) {
+		// check that both sides are acceptable expressions
+		if isUnacceptableExpr(pass, expr.X) && isUnacceptableExpr(pass, expr.Y) {
+			pass.Reportf(expr.Pos(), "Multiplication of durations: `%s`", formatNode(expr))
 		}
 	}
 }

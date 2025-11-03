@@ -1,3 +1,5 @@
+// Package deprecated provides a checker for correct usage of deprecation
+// markers.
 package deprecated
 
 import (
@@ -9,10 +11,9 @@ import (
 	"github.com/godoc-lint/godoc-lint/pkg/util"
 )
 
-// DeprecatedRule is the corresponding rule name.
-const DeprecatedRule = model.DeprecatedRule
+const deprecatedRule = model.DeprecatedRule
 
-var ruleSet = model.RuleSet{}.Add(DeprecatedRule)
+var ruleSet = model.RuleSet{}.Add(deprecatedRule)
 
 // DeprecatedChecker checks correct usage of "Deprecated:" markers.
 type DeprecatedChecker struct{}
@@ -31,7 +32,7 @@ func (r *DeprecatedChecker) GetCoveredRules() model.RuleSet {
 func (r *DeprecatedChecker) Apply(actx *model.AnalysisContext) error {
 	docs := make(map[*model.CommentGroup]struct{}, 10*len(actx.InspectorResult.Files))
 
-	for _, ir := range util.AnalysisApplicableFiles(actx, false, model.RuleSet{}.Add(DeprecatedRule)) {
+	for _, ir := range util.AnalysisApplicableFiles(actx, false, model.RuleSet{}.Add(deprecatedRule)) {
 		if ir.PackageDoc != nil {
 			docs[ir.PackageDoc] = struct{}{}
 		}
@@ -58,13 +59,14 @@ func (r *DeprecatedChecker) Apply(actx *model.AnalysisContext) error {
 	return nil
 }
 
-// probableDeprecationRE finds probable deprecation markers, including the correct usage.
+// probableDeprecationRE finds probable deprecation markers, including the
+// correct usage.
 var probableDeprecationRE = regexp.MustCompile(`(?i)^deprecated:.?`)
 
 const correctDeprecationMarker = "Deprecated: "
 
 func checkDeprecations(actx *model.AnalysisContext, doc *model.CommentGroup) {
-	if doc.DisabledRules.All || doc.DisabledRules.Rules.Has(DeprecatedRule) {
+	if doc.DisabledRules.All || doc.DisabledRules.Rules.Has(deprecatedRule) {
 		return
 	}
 

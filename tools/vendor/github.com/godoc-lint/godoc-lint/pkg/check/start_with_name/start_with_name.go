@@ -1,3 +1,5 @@
+// Package start_with_name provides a checker for godocs starting with the
+// symbol name.
 package start_with_name
 
 import (
@@ -10,10 +12,9 @@ import (
 	"github.com/godoc-lint/godoc-lint/pkg/util"
 )
 
-// StartWithNameRule is the corresponding rule name.
-const StartWithNameRule = model.StartWithNameRule
+const startWithNameRule = model.StartWithNameRule
 
-var ruleSet = model.RuleSet{}.Add(StartWithNameRule)
+var ruleSet = model.RuleSet{}.Add(startWithNameRule)
 
 // StartWithNameChecker checks starter of godocs.
 type StartWithNameChecker struct{}
@@ -30,14 +31,14 @@ func (r *StartWithNameChecker) GetCoveredRules() model.RuleSet {
 
 // Apply implements the corresponding interface method.
 func (r *StartWithNameChecker) Apply(actx *model.AnalysisContext) error {
-	if !actx.Config.IsAnyRuleApplicable(model.RuleSet{}.Add(StartWithNameRule)) {
+	if !actx.Config.IsAnyRuleApplicable(model.RuleSet{}.Add(startWithNameRule)) {
 		return nil
 	}
 
 	includeTests := actx.Config.GetRuleOptions().StartWithNameIncludeTests
 	includePrivate := actx.Config.GetRuleOptions().StartWithNameIncludeUnexported
 
-	for _, ir := range util.AnalysisApplicableFiles(actx, includeTests, model.RuleSet{}.Add(StartWithNameRule)) {
+	for _, ir := range util.AnalysisApplicableFiles(actx, includeTests, model.RuleSet{}.Add(startWithNameRule)) {
 		for _, decl := range ir.SymbolDecl {
 			isExported := ast.IsExported(decl.Name)
 			if !isExported && !includePrivate {
@@ -52,7 +53,7 @@ func (r *StartWithNameChecker) Apply(actx *model.AnalysisContext) error {
 				continue
 			}
 
-			if decl.Doc.DisabledRules.All || decl.Doc.DisabledRules.Rules.Has(StartWithNameRule) {
+			if decl.Doc.DisabledRules.All || decl.Doc.DisabledRules.Rules.Has(startWithNameRule) {
 				continue
 			}
 

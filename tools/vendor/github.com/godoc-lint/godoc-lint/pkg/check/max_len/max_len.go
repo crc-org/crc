@@ -1,18 +1,19 @@
+// Package max_len provides a checker for maximum line length of godocs.
 package max_len
 
 import (
 	"fmt"
 	gdc "go/doc/comment"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/godoc-lint/godoc-lint/pkg/model"
 	"github.com/godoc-lint/godoc-lint/pkg/util"
 )
 
-// MaxLenRule is the corresponding rule name.
-const MaxLenRule = model.MaxLenRule
+const maxLenRule = model.MaxLenRule
 
-var ruleSet = model.RuleSet{}.Add(MaxLenRule)
+var ruleSet = model.RuleSet{}.Add(maxLenRule)
 
 // MaxLenChecker checks maximum line length of godocs.
 type MaxLenChecker struct{}
@@ -34,7 +35,7 @@ func (r *MaxLenChecker) Apply(actx *model.AnalysisContext) error {
 
 	docs := make(map[*model.CommentGroup]struct{}, 10*len(actx.InspectorResult.Files))
 
-	for _, ir := range util.AnalysisApplicableFiles(actx, includeTests, model.RuleSet{}.Add(MaxLenRule)) {
+	for _, ir := range util.AnalysisApplicableFiles(actx, includeTests, model.RuleSet{}.Add(maxLenRule)) {
 		if ir.PackageDoc != nil {
 			docs[ir.PackageDoc] = struct{}{}
 		}
@@ -57,7 +58,7 @@ func (r *MaxLenChecker) Apply(actx *model.AnalysisContext) error {
 }
 
 func checkMaxLen(actx *model.AnalysisContext, doc *model.CommentGroup, maxLen int) {
-	if doc.DisabledRules.All || doc.DisabledRules.Rules.Has(MaxLenRule) {
+	if doc.DisabledRules.All || doc.DisabledRules.Rules.Has(maxLenRule) {
 		return
 	}
 
@@ -78,13 +79,14 @@ func checkMaxLen(actx *model.AnalysisContext, doc *model.CommentGroup, maxLen in
 		Content: nonCodeBlocks,
 	}
 	text := string((&gdc.Printer{}).Comment(strippedCodeAndLinks))
-	lines := strings.Split(removeCarriageReturn(text), "\n")
+	linesIter := strings.SplitSeq(removeCarriageReturn(text), "\n")
 
-	for _, l := range lines {
-		if len(l) <= maxLen {
+	for l := range linesIter {
+		lineLen := utf8.RuneCountInString(l)
+		if lineLen <= maxLen {
 			continue
 		}
-		actx.Pass.ReportRangef(&doc.CG, "godoc line is too long (%d > %d)", len(l), maxLen)
+		actx.Pass.ReportRangef(&doc.CG, "godoc line is too long (%d > %d)", lineLen, maxLen)
 		break
 	}
 }

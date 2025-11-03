@@ -1,3 +1,4 @@
+// Package check provides a registry of checkers.
 package check
 
 import (

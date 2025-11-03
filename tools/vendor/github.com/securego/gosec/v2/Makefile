@@ -14,7 +14,6 @@ GO := GO111MODULE=on go
 GOPATH ?= $(shell $(GO) env GOPATH)
 GOBIN ?= $(GOPATH)/bin
 GOSEC ?= $(GOBIN)/gosec
-GINKGO ?= $(GOBIN)/ginkgo
 GO_MINOR_VERSION = $(shell $(GO) version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
 GOVULN_MIN_VERSION = 17
 GO_VERSION = 1.25
@@ -26,18 +25,13 @@ LDFLAGS = -ldflags "\
 default:
 	$(MAKE) build
 
-install-test-deps:
-	go install github.com/onsi/ginkgo/v2/ginkgo@latest
-	go install golang.org/x/crypto/...@latest
-	go install github.com/lib/pq/...@latest
-
 install-govulncheck:
 	@if [ $(GO_MINOR_VERSION) -gt $(GOVULN_MIN_VERSION) ]; then \
 		go install golang.org/x/vuln/cmd/govulncheck@latest; \
 	fi
 
-test: install-test-deps build-race fmt vet sec govulncheck
-	$(GINKGO) -v --fail-fast
+test: build-race fmt vet sec govulncheck
+	go run github.com/onsi/ginkgo/v2/ginkgo -- --ginkgo.v --ginkgo.fail-fast
 
 fmt:
 	@echo "FORMATTING"
@@ -62,7 +56,7 @@ govulncheck: install-govulncheck
 		govulncheck ./...; \
 	fi
 
-test-coverage: install-test-deps
+test-coverage:
 	go test -race -v -count=1 -coverprofile=coverage.out ./...
 
 build:

@@ -1,3 +1,4 @@
+// Package analysis provides the main analyzer implementation.
 package analysis
 
 import (

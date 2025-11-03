@@ -13,7 +13,8 @@ import (
 const Doc = `check that tests use t.Parallel() method
 It also checks that the t.Parallel is used if multiple tests cases are run as part of single test.
 As part of ensuring parallel tests works as expected it checks for reinitializing of the range value
-over the test cases.(https://tinyurl.com/y6555cy6)`
+over the test cases.(https://tinyurl.com/y6555cy6)
+With the -checkcleanup flag, it also checks that defer is not used with t.Parallel (use t.Cleanup instead).`
 
 func NewAnalyzer() *analysis.Analyzer {
 	return newParallelAnalyzer().analyzer
@@ -27,6 +28,7 @@ type parallelAnalyzer struct {
 	ignoreMissing         bool
 	ignoreMissingSubtests bool
 	ignoreLoopVar         bool
+	checkCleanup          bool
 }
 
 func newParallelAnalyzer() *parallelAnalyzer {
@@ -36,6 +38,7 @@ func newParallelAnalyzer() *parallelAnalyzer {
 	flags.BoolVar(&a.ignoreMissing, "i", false, "ignore missing calls to t.Parallel")
 	flags.BoolVar(&a.ignoreMissingSubtests, "ignoremissingsubtests", false, "ignore missing calls to t.Parallel in subtests")
 	flags.BoolVar(&a.ignoreLoopVar, "ignoreloopVar", false, "ignore loop variable detection")
+	flags.BoolVar(&a.checkCleanup, "checkcleanup", false, "check that defer is not used with t.Parallel (use t.Cleanup instead)")
 
 	a.analyzer = &analysis.Analyzer{
 		Name:  "paralleltest",
@@ -51,11 +54,13 @@ type testFunctionAnalysis struct {
 	funcCantParallelMethod,
 	rangeStatementOverTestCasesExists,
 	rangeStatementHasParallelMethod,
-	rangeStatementCantParallelMethod bool
+	rangeStatementCantParallelMethod,
+	funcHasDeferStatement bool
 	loopVariableUsedInRun *string
 	numberOfTestRun       int
 	positionOfTestRunNode []ast.Node
 	rangeNode             ast.Node
+	deferStatements       []ast.Node
 }
 
 type testRunAnalysis struct {
@@ -84,6 +89,7 @@ func (a *parallelAnalyzer) analyzeTestRun(pass *analysis.Pass, n ast.Node, testV
 					return true
 				})
 			} else if ident, ok := callExpr.Args[1].(*ast.Ident); ok {
+				// Case 2: Direct function identifier: t.Run("name", myFunc)
 				foundFunc := false
 				for _, file := range pass.Files {
 					for _, decl := range file.Decls {
@@ -104,6 +110,9 @@ func (a *parallelAnalyzer) analyzeTestRun(pass *analysis.Pass, n ast.Node, testV
 				if !foundFunc {
 					analysis.hasParallel = false
 				}
+			} else if builderCall, ok := callExpr.Args[1].(*ast.CallExpr); ok {
+				// Case 3: Function call that returns a function: t.Run("name", builder())
+				analysis.hasParallel = a.checkBuilderFunctionForParallel(pass, builderCall)
 			}
 		}
 
@@ -126,6 +135,12 @@ func (a *parallelAnalyzer) analyzeTestFunction(pass *analysis.Pass, funcDecl *as
 
 	for _, l := range funcDecl.Body.List {
 		switch v := l.(type) {
+		case *ast.DeferStmt:
+			if a.checkCleanup {
+				analysis.funcHasDeferStatement = true
+				analysis.deferStatements = append(analysis.deferStatements, v)
+			}
+
 		case *ast.ExprStmt:
 			ast.Inspect(v, func(n ast.Node) bool {
 				if !analysis.funcHasParallelMethod {
@@ -211,6 +226,89 @@ func (a *parallelAnalyzer) analyzeTestFunction(pass *analysis.Pass, funcDecl *as
 			}
 		}
 	}
+
+	if a.checkCleanup && analysis.funcHasParallelMethod && analysis.funcHasDeferStatement {
+		for _, deferStmt := range analysis.deferStatements {
+			pass.Reportf(deferStmt.Pos(), "Function %s uses defer with t.Parallel, use t.Cleanup instead to ensure cleanup runs after parallel subtests complete", funcDecl.Name.Name)
+		}
+	}
+}
+
+// checkBuilderFunctionForParallel analyzes a function call that returns a test function
+// to see if the returned function contains t.Parallel()
+func (a *parallelAnalyzer) checkBuilderFunctionForParallel(pass *analysis.Pass, builderCall *ast.CallExpr) bool {
+	// Get the name of the builder function being called
+	var builderFuncName string
+	switch fun := builderCall.Fun.(type) {
+	case *ast.Ident:
+		builderFuncName = fun.Name
+	case *ast.SelectorExpr:
+		// Handle method calls like obj.Builder()
+		builderFuncName = fun.Sel.Name
+	default:
+		return false
+	}
+
+	if builderFuncName == "" {
+		return false
+	}
+
+	// Find the builder function declaration
+	for _, file := range pass.Files {
+		for _, decl := range file.Decls {
+			funcDecl, ok := decl.(*ast.FuncDecl)
+			if !ok || funcDecl.Name.Name != builderFuncName {
+				continue
+			}
+
+			// Found the builder function, analyze it and return immediately
+			hasParallel := false
+			ast.Inspect(funcDecl, func(n ast.Node) bool {
+				// Look for return statements
+				returnStmt, ok := n.(*ast.ReturnStmt)
+				if !ok || len(returnStmt.Results) == 0 {
+					return true
+				}
+
+				// Check if the return value is a function literal
+				for _, result := range returnStmt.Results {
+					if funcLit, ok := result.(*ast.FuncLit); ok {
+						// Get the parameter name from the returned function
+						var paramName string
+						if funcLit.Type != nil && funcLit.Type.Params != nil && len(funcLit.Type.Params.List) > 0 {
+							param := funcLit.Type.Params.List[0]
+							if len(param.Names) > 0 {
+								paramName = param.Names[0].Name
+							}
+						}
+
+						// Inspect the returned function for t.Parallel()
+						if paramName != "" {
+							ast.Inspect(funcLit, func(p ast.Node) bool {
+								if methodParallelIsCalledInTestFunction(p, paramName) {
+									hasParallel = true
+									return false
+								}
+								return true
+							})
+
+							// Exit inspection immediately if we found t.Parallel()
+							if hasParallel {
+								return false
+							}
+						}
+					}
+				}
+				// Continue to next return statement if t.Parallel() not found yet
+				return true
+			})
+
+			// Return immediately after processing the matching function
+			return hasParallel
+		}
+	}
+
+	return false
 }
 
 func (a *parallelAnalyzer) run(pass *analysis.Pass) (interface{}, error) {

@@ -22,6 +22,8 @@ type PlainConfig struct {
 	Options *PlainRuleOptions `yaml:"options" mapstructure:"options"`
 }
 
+// PlainRuleOptions represents the plain rule options as users would provide via
+// a config file (e.g., a YAML file).
 type PlainRuleOptions struct {
 	MaxLenLength                   *uint `option:"max-len/length" yaml:"max-len/length" mapstructure:"max-len/length"`
 	MaxLenIncludeTests             *bool `option:"max-len/include-tests" yaml:"max-len/include-tests" mapstructure:"max-len/include-tests"`
@@ -73,6 +75,7 @@ func transferOptions(target *model.RuleOptions, source *PlainRuleOptions) {
 	}
 }
 
+// Validate validates the plain configuration.
 func (pcfg *PlainConfig) Validate() error {
 	var errs []error
 

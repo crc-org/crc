@@ -1,3 +1,4 @@
+// Package require_doc provides a checker that requires symbols to have godocs.
 package require_doc
 
 import (
@@ -9,10 +10,9 @@ import (
 	"github.com/godoc-lint/godoc-lint/pkg/util"
 )
 
-// RequireDocRule is the corresponding rule name.
-const RequireDocRule = model.RequireDocRule
+const requireDocRule = model.RequireDocRule
 
-var ruleSet = model.RuleSet{}.Add(RequireDocRule)
+var ruleSet = model.RuleSet{}.Add(requireDocRule)
 
 // RequireDocChecker checks required godocs.
 type RequireDocChecker struct{}
@@ -37,14 +37,14 @@ func (r *RequireDocChecker) Apply(actx *model.AnalysisContext) error {
 		return nil
 	}
 
-	for _, ir := range util.AnalysisApplicableFiles(actx, includeTests, model.RuleSet{}.Add(RequireDocRule)) {
+	for _, ir := range util.AnalysisApplicableFiles(actx, includeTests, model.RuleSet{}.Add(requireDocRule)) {
 		for _, decl := range ir.SymbolDecl {
 			isExported := ast.IsExported(decl.Name)
 			if isExported && !requirePublic || !isExported && !requirePrivate {
 				continue
 			}
 
-			if decl.Doc != nil && (decl.Doc.DisabledRules.All || decl.Doc.DisabledRules.Rules.Has(RequireDocRule)) {
+			if decl.Doc != nil && (decl.Doc.DisabledRules.All || decl.Doc.DisabledRules.Rules.Has(requireDocRule)) {
 				continue
 			}
 

@@ -25,7 +25,7 @@ var Analyzer = &analysis.Analyzer{
 
 const Doc = "nilerr checks returning nil when err is not nil"
 
-func run(pass *analysis.Pass) (any, error) {
+func run(pass *analysis.Pass) (interface{}, error) {
 	funcs := pass.ResultOf[buildssa.Analyzer].(*buildssa.SSA).SrcFuncs
 	cmaps := pass.ResultOf[commentmap.Analyzer].(comment.Maps)
 
@@ -67,6 +67,8 @@ func run(pass *analysis.Pass) (any, error) {
 	return nil, nil
 }
 
+// getValueLineNumbers returns the line numbers.
+// `seen` is used to avoid infinite loop.
 func getValueLineNumbers(pass *analysis.Pass, v ssa.Value, seen map[string]struct{}) []int {
 	if phi, ok := v.(*ssa.Phi); ok {
 		result := make([]int, 0, len(phi.Edges))
@@ -74,6 +76,7 @@ func getValueLineNumbers(pass *analysis.Pass, v ssa.Value, seen map[string]struc
 		for _, edge := range phi.Edges {
 			if _, ok := seen[edge.Name()]; ok {
 				if edge.Pos() == token.NoPos {
+					// Skip elements without a position.
 					continue
 				}
 
@@ -194,8 +197,10 @@ func isReturnError(b *ssa.BasicBlock, errVal ssa.Value) *ssa.Return {
 		return nil
 	}
 
-	if slices.Contains(ret.Results, errVal) {
-		return ret
+	for _, v := range ret.Results {
+		if v == errVal {
+			return ret
+		}
 	}
 
 	return nil
