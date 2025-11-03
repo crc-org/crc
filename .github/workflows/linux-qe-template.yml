@@ -166,7 +166,7 @@ jobs:
 
       - name: Test Report
         id: test-report
-        uses: mikepenz/action-junit-report@v5
+        uses: mikepenz/action-junit-report@v6
         if: always()
         with:
           fail_on_failure: true
