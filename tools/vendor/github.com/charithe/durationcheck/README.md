@@ -33,7 +33,7 @@ See the [test cases](testdata/src/a/a.go) for more examples of the types of erro
 Installation
 -------------
 
-Requires Go 1.11 or above.
+Requires Go 1.14 or above.
 
 ```
 go get -u github.com/charithe/durationcheck/cmd/durationcheck

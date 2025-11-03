@@ -131,6 +131,7 @@ var defaultLintersSettings = LintersSettings{
 		StrConcat:     true,
 		BoolFormat:    true,
 		HexFormat:     true,
+		ConcatLoop:    true,
 	},
 	Prealloc: PreallocSettings{
 		Simple:     true,
@@ -269,6 +270,7 @@ type LintersSettings struct {
 	Makezero                 MakezeroSettings                 `mapstructure:"makezero"`
 	Misspell                 MisspellSettings                 `mapstructure:"misspell"`
 	Mnd                      MndSettings                      `mapstructure:"mnd"`
+	Modernize                ModernizeSettings                `mapstructure:"modernize"`
 	MustTag                  MustTagSettings                  `mapstructure:"musttag"`
 	Nakedret                 NakedretSettings                 `mapstructure:"nakedret"`
 	Nestif                   NestifSettings                   `mapstructure:"nestif"`
@@ -384,8 +386,9 @@ type DuplSettings struct {
 }
 
 type DupWordSettings struct {
-	Keywords []string `mapstructure:"keywords"`
-	Ignore   []string `mapstructure:"ignore"`
+	Keywords     []string `mapstructure:"keywords"`
+	Ignore       []string `mapstructure:"ignore"`
+	CommentsOnly bool     `mapstructure:"comments-only"`
 }
 
 type EmbeddedStructFieldCheckSettings struct {
@@ -758,6 +761,10 @@ type MndSettings struct {
 	IgnoredFunctions []string `mapstructure:"ignored-functions"`
 }
 
+type ModernizeSettings struct {
+	Disable []string `mapstructure:"disable"`
+}
+
 type NoLintLintSettings struct {
 	RequireExplanation bool     `mapstructure:"require-explanation"`
 	RequireSpecific    bool     `mapstructure:"require-specific"`
@@ -789,6 +796,9 @@ type PerfSprintSettings struct {
 
 	BoolFormat bool `mapstructure:"bool-format"`
 	HexFormat  bool `mapstructure:"hex-format"`
+
+	ConcatLoop   bool `mapstructure:"concat-loop"`
+	LoopOtherOps bool `mapstructure:"loop-other-ops"`
 }
 
 type PreallocSettings struct {

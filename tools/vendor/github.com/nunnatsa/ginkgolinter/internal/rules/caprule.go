@@ -113,20 +113,17 @@ func (r *CapRule) fixComparison(gexp *expression.GomegaExpression) bool {
 	return true
 }
 
-func (r *CapRule) handleBeNumerically(gexp *expression.GomegaExpression, matcher *matcher.BeNumericallyMatcher) bool {
-	op := matcher.GetOp()
-	val := matcher.GetValue()
-	isValZero := val.String() == "0"
-	isValOne := val.String() == "1"
+func (r *CapRule) handleBeNumerically(gexp *expression.GomegaExpression, mtchr *matcher.BeNumericallyMatcher) bool {
+	op := mtchr.GetOp()
 
-	if (op == token.GTR && isValZero) || (op == token.GEQ && isValOne) {
-		gexp.ReverseAssertionFuncLogic()
-		gexp.SetMatcherCapZero()
-	} else if op == token.EQL {
-		gexp.SetMatcherCap(matcher.GetValueExpr())
+	if op == token.EQL {
+		gexp.SetMatcherCap(mtchr.GetValueExpr())
 	} else if op == token.NEQ {
 		gexp.ReverseAssertionFuncLogic()
-		gexp.SetMatcherCap(matcher.GetValueExpr())
+		gexp.SetMatcherCap(mtchr.GetValueExpr())
+	} else if gexp.MatcherTypeIs(matcher.GreaterThanZero) {
+		gexp.ReverseAssertionFuncLogic()
+		gexp.SetMatcherCapZero()
 	} else {
 		return false
 	}

@@ -32,6 +32,9 @@ func NewConfigBuilder(baseDir string) *ConfigBuilder {
 	}
 }
 
+// WithBaseDirPlainConfig sets the plain config for the base directory. This is
+// meant to be used for integrating with umbrella linters (e.g. golangci-lint)
+// where the root config comes from a different source/format.
 func (cb *ConfigBuilder) WithBaseDirPlainConfig(baseDirPlainConfig *PlainConfig) *ConfigBuilder {
 	cb.baseDirPlainConfig = baseDirPlainConfig
 	return cb

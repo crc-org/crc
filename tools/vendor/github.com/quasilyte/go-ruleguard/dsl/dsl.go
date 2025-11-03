@@ -16,6 +16,10 @@ type Matcher map[string]Var
 //	  `a/b/foo.Bar` type during the pattern execution.
 func (m Matcher) Import(pkgPath string) {}
 
+// ImportAs is like Import, but can handle "/v2" packages
+// and package name conflicts (e.g. "x/path" vs "y/path").
+func (m Matcher) ImportAs(pkgPath, localName string) {}
+
 // Match specifies a set of patterns that match a rule being defined.
 // Pattern matching succeeds if at least 1 pattern matches.
 //
@@ -106,7 +110,7 @@ type Var struct {
 	Const bool
 
 	// ConstSlice reports whether expr matched by var is a slice literal
-	// consisting of contant elements.
+	// consisting of constant elements.
 	//
 	// We need a separate Const-like predicate here because Go doesn't
 	// treat slices of const elements as constants, so including

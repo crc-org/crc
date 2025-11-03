@@ -374,6 +374,8 @@ func typeNameWithPackage(t types.Type) (typeName, packagePath string, ok bool) {
 	}
 
 	switch t := t.(type) {
+	case *types.Alias:
+		return typeNameWithPackage(t.Rhs())
 	case *types.Named:
 		obj := t.Obj()
 		pkg := obj.Pkg()

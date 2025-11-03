@@ -19,6 +19,7 @@ type InspectorResult struct {
 	Files map[*ast.File]*FileInspection
 }
 
+// FileInspection represents the inspection result for a single file.
 type FileInspection struct {
 	// DisabledRules contains information about rules disabled at top level.
 	DisabledRules InspectorResultDisableRules
@@ -43,11 +44,16 @@ type InspectorResultDisableRules struct {
 type SymbolDeclKind string
 
 const (
-	SymbolDeclKindBad   SymbolDeclKind = "bad"
-	SymbolDeclKindFunc  SymbolDeclKind = "func"
+	// SymbolDeclKindBad represents an unknown declaration kind.
+	SymbolDeclKindBad SymbolDeclKind = "bad"
+	// SymbolDeclKindFunc represents a function declaration kind.
+	SymbolDeclKindFunc SymbolDeclKind = "func"
+	// SymbolDeclKindConst represents a const declaration kind.
 	SymbolDeclKindConst SymbolDeclKind = "const"
-	SymbolDeclKindType  SymbolDeclKind = "type"
-	SymbolDeclKindVar   SymbolDeclKind = "var"
+	// SymbolDeclKindType represents a type declaration kind.
+	SymbolDeclKindType SymbolDeclKind = "type"
+	// SymbolDeclKindVar represents a var declaration kind.
+	SymbolDeclKindVar SymbolDeclKind = "var"
 )
 
 // SymbolDecl represents a top level declaration.

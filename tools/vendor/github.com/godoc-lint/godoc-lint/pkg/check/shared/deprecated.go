@@ -1,3 +1,4 @@
+// Package shared provides shared utilities for checkers.
 package shared
 
 import (
@@ -5,6 +6,8 @@ import (
 	"strings"
 )
 
+// HasDeprecatedParagraph reports whether the given comment blocks contain a
+// paragraph starting with deprecation marker.
 func HasDeprecatedParagraph(blocks []comment.Block) bool {
 	for _, block := range blocks {
 		par, ok := block.(*comment.Paragraph)

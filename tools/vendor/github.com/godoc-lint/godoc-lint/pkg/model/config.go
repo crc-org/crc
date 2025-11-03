@@ -15,16 +15,22 @@ type ConfigBuilder interface {
 	GetConfig(cwd string) (Config, error)
 }
 
+// DefaultSet defines the default set of rules to enable.
 type DefaultSet string
 
 const (
-	DefaultSetAll   DefaultSet = "all"
-	DefaultSetNone  DefaultSet = "none"
+	// DefaultSetAll enables all rules.
+	DefaultSetAll DefaultSet = "all"
+	// DefaultSetNone disables all rules.
+	DefaultSetNone DefaultSet = "none"
+	// DefaultSetBasic enables a basic set of rules.
 	DefaultSetBasic DefaultSet = "basic"
 
+	// DefaultDefaultSet is the default set of rules to enable.
 	DefaultDefaultSet = DefaultSetBasic
 )
 
+// DefaultSetToRules maps default sets to the corresponding rule sets.
 var DefaultSetToRules = map[DefaultSet]RuleSet{
 	DefaultSetAll:  AllRules,
 	DefaultSetNone: {},
@@ -38,6 +44,7 @@ var DefaultSetToRules = map[DefaultSet]RuleSet{
 	}(),
 }
 
+// DefaultSetValues holds the valid values for DefaultSet.
 var DefaultSetValues = func() []DefaultSet {
 	values := slices.Collect(maps.Keys(DefaultSetToRules))
 	slices.Sort(values)

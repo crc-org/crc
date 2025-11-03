@@ -1,3 +1,4 @@
+// Package compose provides composition of the linter components.
 package compose
 
 import (
@@ -10,6 +11,7 @@ import (
 	"github.com/godoc-lint/godoc-lint/pkg/model"
 )
 
+// Composition holds the composed components of the linter.
 type Composition struct {
 	Registry      model.Registry
 	ConfigBuilder model.ConfigBuilder
@@ -17,6 +19,7 @@ type Composition struct {
 	Analyzer      model.Analyzer
 }
 
+// CompositionConfig holds the configuration for composing the linter.
 type CompositionConfig struct {
 	BaseDir  string
 	ExitFunc func(int, error)
@@ -28,6 +31,7 @@ type CompositionConfig struct {
 	BaseDirPlainConfig *config.PlainConfig
 }
 
+// Compose composes the linter components based on the given configuration.
 func Compose(c CompositionConfig) *Composition {
 	if c.BaseDir == "" {
 		// It's a best effort to use the current working directory if not set.

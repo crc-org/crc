@@ -98,19 +98,24 @@ func NewAnalyzer() *analysis.Analyzer {
 	a.Flags.Init(Name, flag.ExitOnError)
 	a.Flags.Var(&analyzer.keywords, "keyword", "keywords for detecting duplicate words")
 	a.Flags.Var(&analyzer.ignoreWords, "ignore", "ignore words")
+	a.Flags.BoolVar(&analyzer.commentsOnly, "comments-only", false, "check only comments, skip strings")
 	a.Flags.Var(version{}, "V", "print version and exit")
 
 	return a
 }
 
 type analyzer struct {
-	keywords    keywords
-	ignoreWords ignore
+	keywords     keywords
+	ignoreWords  ignore
+	commentsOnly bool
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 	for _, file := range pass.Files {
 		a.fixDuplicateWordInComment(pass, file)
+	}
+	if a.commentsOnly {
+		return nil, nil
 	}
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	nodeFilter := []ast.Node{

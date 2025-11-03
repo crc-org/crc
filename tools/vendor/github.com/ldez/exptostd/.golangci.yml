@@ -27,6 +27,7 @@ linters:
     - testpackage
     - tparallel
     - varnamelen
+    - wsl # deprecated
   settings:
     depguard:
       rules:

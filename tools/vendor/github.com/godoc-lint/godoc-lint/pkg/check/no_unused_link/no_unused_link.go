@@ -1,3 +1,4 @@
+// Package no_unused_link provides a checker for unused links in godocs.
 package no_unused_link
 
 import (
@@ -5,10 +6,9 @@ import (
 	"github.com/godoc-lint/godoc-lint/pkg/util"
 )
 
-// NoUnusedLinkRule is the corresponding rule name.
-const NoUnusedLinkRule = model.NoUnusedLinkRule
+const noUnusedLinkRule = model.NoUnusedLinkRule
 
-var ruleSet = model.RuleSet{}.Add(NoUnusedLinkRule)
+var ruleSet = model.RuleSet{}.Add(noUnusedLinkRule)
 
 // NoUnusedLinkChecker checks for unused links.
 type NoUnusedLinkChecker struct{}
@@ -29,7 +29,7 @@ func (r *NoUnusedLinkChecker) Apply(actx *model.AnalysisContext) error {
 
 	docs := make(map[*model.CommentGroup]struct{}, 10*len(actx.InspectorResult.Files))
 
-	for _, ir := range util.AnalysisApplicableFiles(actx, includeTests, model.RuleSet{}.Add(NoUnusedLinkRule)) {
+	for _, ir := range util.AnalysisApplicableFiles(actx, includeTests, model.RuleSet{}.Add(noUnusedLinkRule)) {
 		if ir.PackageDoc != nil {
 			docs[ir.PackageDoc] = struct{}{}
 		}
@@ -52,7 +52,7 @@ func (r *NoUnusedLinkChecker) Apply(actx *model.AnalysisContext) error {
 }
 
 func checkNoUnusedLink(actx *model.AnalysisContext, doc *model.CommentGroup) {
-	if doc.DisabledRules.All || doc.DisabledRules.Rules.Has(NoUnusedLinkRule) {
+	if doc.DisabledRules.All || doc.DisabledRules.Rules.Has(noUnusedLinkRule) {
 		return
 	}
 

@@ -1,3 +1,4 @@
+// Package inspect provides the pre-run inspection analyzer.
 package inspect
 
 import (
