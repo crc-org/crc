@@ -224,9 +224,18 @@ type DomainCapsFeatureSGXSection struct {
 	Unit string `xml:"unit,attr"`
 }
 
+type DomainCapsFeatureHyperVDefaults struct {
+	Spinlocks        uint   `xml:"spinlocks,omitempty"`
+	STimerDirect     string `xml:"stimer_direct,omitempty"`
+	TLBFlushDirect   string `xml:"tlbflush_direct,omitempty"`
+	TLBFlushExtended string `xml:"tlbflush_extended,omitempty"`
+	VendorID         string `xml:"vendor_id,omitempty"`
+}
+
 type DomainCapsFeatureHyperV struct {
-	Supported string           `xml:"supported,attr"`
-	Enums     []DomainCapsEnum `xml:"enum"`
+	Supported string                           `xml:"supported,attr"`
+	Enums     []DomainCapsEnum                 `xml:"enum"`
+	Defaults  *DomainCapsFeatureHyperVDefaults `xml:"defaults"`
 }
 
 type DomainCapsFeatureLaunchSecurity struct {
