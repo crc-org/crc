@@ -2003,11 +2003,19 @@ type DomainMemorydevTarget struct {
 	Address         *DomainMemorydevTargetAddress   `xml:"address"`
 }
 
+type DomainMemorydevDriver struct {
+	IOMMU     string `xml:"iommu,attr,omitempty"`
+	ATS       string `xml:"ats,attr,omitempty"`
+	Packed    string `xml:"packed,attr,omitempty"`
+	PagePerVQ string `xml:"page_per_vq,attr,omitempty"`
+}
+
 type DomainMemorydev struct {
 	XMLName xml.Name               `xml:"memory"`
 	Model   string                 `xml:"model,attr"`
 	Access  string                 `xml:"access,attr,omitempty"`
 	Discard string                 `xml:"discard,attr,omitempty"`
+	Driver  *DomainMemorydevDriver `xml:"driver"`
 	UUID    string                 `xml:"uuid,omitempty"`
 	Source  *DomainMemorydevSource `xml:"source"`
 	Target  *DomainMemorydevTarget `xml:"target"`
