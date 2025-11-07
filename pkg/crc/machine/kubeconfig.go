@@ -194,7 +194,7 @@ func getTokenForUser(username, password, ip string, ca []byte, clusterConfig *ty
 					KeepAlive: 30 * time.Second,
 				}
 				logging.Debugf("Dialing to %s:%s", ip, port)
-				return dialer.Dial(network, fmt.Sprintf("%s:%s", ip, port))
+				return dialer.Dial(network, net.JoinHostPort(ip, port))
 			},
 		},
 	}
