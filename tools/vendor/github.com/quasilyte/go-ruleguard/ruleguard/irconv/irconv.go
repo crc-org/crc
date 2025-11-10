@@ -7,6 +7,7 @@ import (
 	"go/token"
 	"go/types"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -41,10 +42,11 @@ func ConvertFile(ctx *Context, f *ast.File) (result *ir.File, err error) {
 	}()
 
 	conv := &converter{
-		types: ctx.Types,
-		pkg:   ctx.Pkg,
-		fset:  ctx.Fset,
-		src:   ctx.Src,
+		types:         ctx.Types,
+		pkg:           ctx.Pkg,
+		fset:          ctx.Fset,
+		src:           ctx.Src,
+		versionPathRe: regexp.MustCompile(`^v[0-9]+$`),
 	}
 	result = conv.ConvertFile(f)
 	return result, nil
@@ -65,6 +67,8 @@ type converter struct {
 	pkg   *types.Package
 	fset  *token.FileSet
 	src   []byte
+
+	versionPathRe *regexp.Regexp
 
 	group      *ir.RuleGroup
 	groupFuncs []localMacroFunc
@@ -224,6 +228,11 @@ func (conv *converter) convertRuleGroup(decl *ast.FuncDecl) *ir.RuleGroup {
 				panic(conv.errorf(call, "Import() should be used before any rules definitions"))
 			}
 			conv.doMatcherImport(call)
+		case "ImportAs":
+			if seenRules {
+				panic(conv.errorf(call, "ImportAs() should be used before any rules definitions"))
+			}
+			conv.doMatcherImportAs(call)
 		default:
 			seenRules = true
 			conv.convertRuleExpr(call)
@@ -375,7 +384,24 @@ func (conv *converter) localDefine(assign *ast.AssignStmt) {
 
 func (conv *converter) doMatcherImport(call *ast.CallExpr) {
 	pkgPath := conv.parseStringArg(call.Args[0])
+
+	// Try to be at least somewhat module-aware.
+	// If the last path part is "/v%d", we might want to take
+	// the previous path part as a package name.
 	pkgName := path.Base(pkgPath)
+	if conv.versionPathRe.MatchString(pkgName) {
+		pkgName = path.Base(path.Dir(pkgPath))
+	}
+
+	conv.group.Imports = append(conv.group.Imports, ir.PackageImport{
+		Path: pkgPath,
+		Name: pkgName,
+	})
+}
+
+func (conv *converter) doMatcherImportAs(call *ast.CallExpr) {
+	pkgPath := conv.parseStringArg(call.Args[0])
+	pkgName := conv.parseStringArg(call.Args[1])
 	conv.group.Imports = append(conv.group.Imports, ir.PackageImport{
 		Path: pkgPath,
 		Name: pkgName,

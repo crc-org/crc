@@ -227,8 +227,8 @@ github.com/fzipp/gocyclo
 # github.com/ghostiam/protogetter v0.3.17
 ## explicit; go 1.24.0
 github.com/ghostiam/protogetter
-# github.com/go-critic/go-critic v0.14.0
-## explicit; go 1.23.0
+# github.com/go-critic/go-critic v0.14.2
+## explicit; go 1.24.0
 github.com/go-critic/go-critic/checkers
 github.com/go-critic/go-critic/checkers/internal/astwalk
 github.com/go-critic/go-critic/checkers/internal/lintutil
@@ -315,7 +315,7 @@ github.com/golangci/go-printf-func-name/pkg/analyzer
 # github.com/golangci/gofmt v0.0.0-20250106114630-d62b90e6713d
 ## explicit; go 1.22.0
 github.com/golangci/gofmt/gofmt
-# github.com/golangci/golangci-lint/v2 v2.6.0
+# github.com/golangci/golangci-lint/v2 v2.6.1
 ## explicit; go 1.24.0
 github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 github.com/golangci/golangci-lint/v2/internal/cache
@@ -567,8 +567,8 @@ github.com/jjti/go-spancheck
 # github.com/julz/importas v0.2.0
 ## explicit; go 1.20
 github.com/julz/importas
-# github.com/karamaru-alpha/copyloopvar v1.2.1
-## explicit; go 1.21
+# github.com/karamaru-alpha/copyloopvar v1.2.2
+## explicit; go 1.24.0
 github.com/karamaru-alpha/copyloopvar
 # github.com/kisielk/errcheck v1.9.0
 ## explicit; go 1.22.0
@@ -735,7 +735,7 @@ github.com/prometheus/common/model
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
-# github.com/quasilyte/go-ruleguard v0.4.4
+# github.com/quasilyte/go-ruleguard v0.4.5
 ## explicit; go 1.22.0
 github.com/quasilyte/go-ruleguard/internal/goenv
 github.com/quasilyte/go-ruleguard/internal/golist
@@ -957,7 +957,7 @@ go.uber.org/zap/internal/exit
 go.uber.org/zap/internal/pool
 go.uber.org/zap/internal/stacktrace
 go.uber.org/zap/zapcore
-# golang.org/x/exp/typeparams v0.0.0-20251002181428-27f1f14c8bb9
+# golang.org/x/exp/typeparams v0.0.0-20251023183803-a4bb9ffd2546
 ## explicit; go 1.24.0
 golang.org/x/exp/typeparams
 # golang.org/x/mod v0.29.0
