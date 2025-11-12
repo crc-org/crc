@@ -11,8 +11,8 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macOS-13
-          - macOS-14
+          - macOS-15
+          - macOS-26
           - ubuntu-latest
           - ubuntu-22.04
         go:
