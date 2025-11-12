@@ -75,7 +75,7 @@ default: install
 # Create and update the vendor directory
 .PHONY: vendor
 vendor:
-	go mod tidy -go $(GOVERSION).0
+	go mod tidy -go $(GOVERSION).2
 	go mod vendor
 
 .PHONY: vendorcheck

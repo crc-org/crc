@@ -9,8 +9,8 @@ set -euo pipefail
 golang_base_version=$1
 echo "Updating golang version to $golang_base_version"
 
-go mod edit -go "${golang_base_version}.0"
-go mod edit -go "${golang_base_version}.1" tools/go.mod
+go mod edit -go "${golang_base_version}.2"
+go mod edit -go "${golang_base_version}.2" tools/go.mod
 
 sed -i "s,^GOVERSION = 1.[0-9]\+,GOVERSION = ${golang_base_version}," Makefile
 sed -i "s,^\(FROM registry.ci.openshift.org/openshift/release:rhel-9-release-golang-\)1.[0-9]\+,\1${golang_base_version}," images/*/Dockerfile
