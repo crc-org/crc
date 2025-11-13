@@ -31,13 +31,13 @@ func utf16FromString(str string) []uint16 {
 
 // goBytes copies the given C byte array to a Go byte array (see `C.GoBytes`).
 // This function avoids having cgo as dependency.
-func goBytes(src uintptr, len uint32) []byte {
-	if src == uintptr(0) {
+func goBytes(src *byte, len uint32) []byte {
+	if src == nil || len == 0 {
 		return []byte{}
 	}
 	rv := make([]byte, len)
 	copy(rv, *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
-		Data: src,
+		Data: uintptr(unsafe.Pointer(src)),
 		Len:  int(len),
 		Cap:  int(len),
 	})))
@@ -59,7 +59,7 @@ func sysToCredential(cred *sysCREDENTIAL) (result *Credential) {
 	result.CredentialBlob = goBytes(cred.CredentialBlob, cred.CredentialBlobSize)
 	result.Attributes = make([]CredentialAttribute, cred.AttributeCount)
 	attrSlice := *(*[]sysCREDENTIAL_ATTRIBUTE)(unsafe.Pointer(&reflect.SliceHeader{
-		Data: cred.Attributes,
+		Data: uintptr(unsafe.Pointer(cred.Attributes)),
 		Len:  int(cred.AttributeCount),
 		Cap:  int(cred.AttributeCount),
 	}))
@@ -85,17 +85,13 @@ func sysFromCredential(cred *Credential) (result *sysCREDENTIAL) {
 	result.LastWritten = syscall.NsecToFiletime(cred.LastWritten.UnixNano())
 	result.CredentialBlobSize = uint32(len(cred.CredentialBlob))
 	if len(cred.CredentialBlob) > 0 {
-		result.CredentialBlob = uintptr(unsafe.Pointer(&cred.CredentialBlob[0]))
-	} else {
-		result.CredentialBlob = 0
+		result.CredentialBlob = &cred.CredentialBlob[0]
 	}
 	result.Persist = uint32(cred.Persist)
 	result.AttributeCount = uint32(len(cred.Attributes))
 	attributes := make([]sysCREDENTIAL_ATTRIBUTE, len(cred.Attributes))
 	if len(attributes) > 0 {
-		result.Attributes = uintptr(unsafe.Pointer(&attributes[0]))
-	} else {
-		result.Attributes = 0
+		result.Attributes = &attributes[0]
 	}
 	for i := range cred.Attributes {
 		inAttr := &cred.Attributes[i]
@@ -104,9 +100,7 @@ func sysFromCredential(cred *Credential) (result *sysCREDENTIAL) {
 		outAttr.Flags = 0
 		outAttr.ValueSize = uint32(len(inAttr.Value))
 		if len(inAttr.Value) > 0 {
-			outAttr.Value = uintptr(unsafe.Pointer(&inAttr.Value[0]))
-		} else {
-			outAttr.Value = 0
+			outAttr.Value = &inAttr.Value[0]
 		}
 	}
 	result.TargetAlias, _ = syscall.UTF16PtrFromString(cred.TargetAlias)

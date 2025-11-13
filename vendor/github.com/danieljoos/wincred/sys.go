@@ -5,6 +5,7 @@ package wincred
 
 import (
 	"reflect"
+	"runtime"
 	"syscall"
 	"unsafe"
 
@@ -33,10 +34,10 @@ type sysCREDENTIAL struct {
 	Comment            *uint16
 	LastWritten        windows.Filetime
 	CredentialBlobSize uint32
-	CredentialBlob     uintptr
+	CredentialBlob     *byte
 	Persist            uint32
 	AttributeCount     uint32
-	Attributes         uintptr
+	Attributes         *sysCREDENTIAL_ATTRIBUTE
 	TargetAlias        *uint16
 	UserName           *uint16
 }
@@ -46,7 +47,7 @@ type sysCREDENTIAL_ATTRIBUTE struct {
 	Keyword   *uint16
 	Flags     uint32
 	ValueSize uint32
-	Value     uintptr
+	Value     *byte
 }
 
 // https://docs.microsoft.com/en-us/windows/desktop/api/wincred/ns-wincred-_credentialw
@@ -93,6 +94,8 @@ func sysCredWrite(cred *Credential, typ sysCRED_TYPE) error {
 		uintptr(unsafe.Pointer(ncred)),
 		0,
 	)
+	// Make sure everything reachable from ncred stays alive through the call.
+	runtime.KeepAlive(ncred)
 	if ret == 0 {
 		return err
 	}
