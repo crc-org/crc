@@ -209,3 +209,12 @@ func checkAdminHelperNamedPipeAccessible() error {
 	}
 	return nil
 }
+
+// Windows doesn't need SUID, so these are no-ops
+func checkSuid(path string) error {
+	return nil
+}
+
+func setSuid(path string) error {
+	return nil
+}
