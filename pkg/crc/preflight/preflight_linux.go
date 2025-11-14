@@ -207,7 +207,7 @@ func checkVsock() error {
 	}
 
 	// Check for cap_net_bind_service capability with inheritable flag (+eip or =eip)
-	if err := checkCapabilities(executable, "cap_net_bind_service+eip", "cap_net_bind_service=eip"); err != nil {
+	if err := checkCapNetBindService(executable); err != nil {
 		return err
 	}
 
@@ -231,7 +231,7 @@ func fixVsock() error {
 	}
 
 	// Set cap_net_bind_service with inheritable flag for the CRC daemon
-	if err := setCapabilities(executable, "cap_net_bind_service=+eip"); err != nil {
+	if err := setCapNetBindService(executable); err != nil {
 		return err
 	}
 
@@ -376,6 +376,7 @@ func getChecks(distro *linux.OsRelease, bundlePath string, preset crcpreset.Pres
 	checks = append(checks, wsl2PreflightCheck)
 	checks = append(checks, genericPreflightChecks(preset)...)
 	checks = append(checks, memoryCheck(preset))
+	checks = append(checks, gvproxyCheck())
 	checks = append(checks, genericCleanupChecks...)
 	checks = append(checks, libvirtPreflightChecks(distro)...)
 	checks = append(checks, ubuntuPreflightChecks...)
@@ -447,4 +448,12 @@ func checkCapabilities(path string, expectedCaps ...string) error {
 	}
 
 	return fmt.Errorf("%s does not have expected capabilities (got: %s, expected one of: %v)", path, stdOut, expectedCaps)
+}
+
+func setCapNetBindService(path string) error {
+	return setCapabilities(path, "cap_net_bind_service=+eip")
+}
+
+func checkCapNetBindService(path string) error {
+	return checkCapabilities(path, "cap_net_bind_service+eip", "cap_net_bind_service=eip")
 }

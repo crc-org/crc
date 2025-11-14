@@ -338,6 +338,8 @@ packagedir: clean_macos_package embed-download-darwin macos-release-binary
 	#ls $(EMBED_DOWNLOAD_DIR)
 	mkdir -p packaging/darwin/root-crc/"$(MACOS_INSTALL_PATH)"
 	mv $(EMBED_DOWNLOAD_DIR)/vf.entitlements packaging/darwin/vfkit.entitlements
+	# upstream asset is gvproxy-darwin, but crc expects it to be named gvproxy in the install path
+	mv $(EMBED_DOWNLOAD_DIR)/gvproxy-darwin packaging/darwin/root-crc/"$(MACOS_INSTALL_PATH)"/gvproxy
 	mv $(EMBED_DOWNLOAD_DIR)/* packaging/darwin/root-crc/"$(MACOS_INSTALL_PATH)"
 	cp $(BUILD_DIR)/macos-universal/crc packaging/darwin/root-crc/"$(MACOS_INSTALL_PATH)"
 
