@@ -33,6 +33,7 @@ const (
 	libvirtDriver      = "libvirt-driver"
 	adminHelper        = "admin-helper"
 	backgroundLauncher = "background-launcher"
+	gvproxy            = "gvproxy"
 )
 
 func init() {
@@ -112,6 +113,7 @@ var (
 			vfkitDriver:      {vfkit.VfkitDownloadURL, 0755},
 			vfkitEntitlement: {vfkit.VfkitEntitlementsURL, 0644},
 			adminHelper:      {constants.GetAdminHelperURLForOs("darwin"), 0755},
+			gvproxy:          {constants.GetGvproxyURLForOs("darwin"), 0755},
 		},
 		"linux": {
 			libvirtDriver: {libvirt.MachineDriverDownloadURL, 0755},
@@ -120,6 +122,7 @@ var (
 		"windows": {
 			adminHelper:        {constants.GetAdminHelperURLForOs("windows"), 0755},
 			backgroundLauncher: {constants.GetWin32BackgroundLauncherDownloadURL(), 0755},
+			gvproxy:            {constants.GetGvproxyURLForOs("windows"), 0755},
 		},
 	}
 )

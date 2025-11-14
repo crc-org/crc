@@ -6,11 +6,13 @@ import (
 	"os"
 	"strings"
 
+	"github.com/crc-org/crc/v2/pkg/crc/cache"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	crcErrors "github.com/crc-org/crc/v2/pkg/crc/errors"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/network"
 	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/version"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
 	"github.com/crc-org/crc/v2/pkg/os/linux"
 
@@ -207,7 +209,7 @@ func checkVsock() error {
 	}
 
 	// Check for cap_net_bind_service capability with inheritable flag (+eip or =eip)
-	if err := checkCapabilities(executable, "cap_net_bind_service+eip", "cap_net_bind_service=eip"); err != nil {
+	if err := checkCapNetBindService(executable); err != nil {
 		return err
 	}
 
@@ -231,7 +233,7 @@ func fixVsock() error {
 	}
 
 	// Set cap_net_bind_service with inheritable flag for the CRC daemon
-	if err := setCapabilities(executable, "cap_net_bind_service=+eip"); err != nil {
+	if err := setCapNetBindService(executable); err != nil {
 		return err
 	}
 
@@ -376,6 +378,15 @@ func getChecks(distro *linux.OsRelease, bundlePath string, preset crcpreset.Pres
 	checks = append(checks, wsl2PreflightCheck)
 	checks = append(checks, genericPreflightChecks(preset)...)
 	checks = append(checks, memoryCheck(preset))
+	checks = append(checks, Check{
+		configKeySuffix:  "check-gvproxy-capabilities",
+		checkDescription: "Checking if gvproxy has the cap_net_bind_service capability",
+		check:            checkGvproxyCapNetBindService,
+		fixDescription:   "Setting cap_net_bind_service capability on gvproxy executable",
+		fix:              fixGvproxyCapNetBindService,
+
+		labels: None,
+	})
 	checks = append(checks, genericCleanupChecks...)
 	checks = append(checks, libvirtPreflightChecks(distro)...)
 	checks = append(checks, ubuntuPreflightChecks...)
@@ -447,4 +458,26 @@ func checkCapabilities(path string, expectedCaps ...string) error {
 	}
 
 	return fmt.Errorf("%s does not have expected capabilities (got: %s, expected one of: %v)", path, stdOut, expectedCaps)
+}
+
+func setCapNetBindService(path string) error {
+	return setCapabilities(path, "cap_net_bind_service=+eip")
+}
+
+func checkCapNetBindService(path string) error {
+	return checkCapabilities(path, "cap_net_bind_service+eip", "cap_net_bind_service=eip")
+}
+
+func checkGvproxyCapNetBindService() error {
+	if version.IsInstaller() {
+		return nil
+	}
+	return checkCapNetBindService(cache.NewGvproxyCache().GetExecutablePath())
+}
+
+func fixGvproxyCapNetBindService() error {
+	if version.IsInstaller() {
+		return nil
+	}
+	return setCapNetBindService(cache.NewGvproxyCache().GetExecutablePath())
 }
