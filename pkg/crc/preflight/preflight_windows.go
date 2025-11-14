@@ -223,6 +223,15 @@ func getChecks(bundlePath string, preset crcpreset.Preset, enableBundleQuayFallb
 	checks = append(checks, userPartOfCrcUsersAndHypervAdminsGroupCheck)
 	checks = append(checks, vsockChecks...)
 	checks = append(checks, bundleCheck(bundlePath, preset, enableBundleQuayFallback))
+	checks = append(checks, Check{
+		configKeySuffix:  "check-gvproxy-cached",
+		checkDescription: "Checking if gvproxy executable is cached",
+		check:            checkGVProxyExecutableCached,
+		fixDescription:   "Caching gvproxy executable",
+		fix:              fixGVProxyExecutableCached,
+
+		labels: None,
+	})
 	checks = append(checks, genericCleanupChecks...)
 	checks = append(checks, cleanupCheckRemoveCrcVM)
 	checks = append(checks, daemonTaskChecks...)
