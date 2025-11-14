@@ -123,6 +123,7 @@ func getChecks(_ network.Mode, bundlePath string, preset crcpreset.Preset, enabl
 	checks = append(checks, vfkitPreflightChecks...)
 	checks = append(checks, resolverPreflightChecks...)
 	checks = append(checks, bundleCheck(bundlePath, preset, enableBundleQuayFallback))
+	checks = append(checks, gvproxyCheck())
 	checks = append(checks, trayLaunchdCleanupChecks...)
 	checks = append(checks, daemonLaunchdChecks...)
 	checks = append(checks, sshPortCheck())
