@@ -29,6 +29,7 @@ const (
 	DaemonLogFile             = "crcd.log"
 	CrcLandingPageURL         = "https://console.redhat.com/openshift/create/local" // #nosec G101
 	DefaultAdminHelperURLBase = "https://github.com/crc-org/admin-helper/releases/download/v%s/%s"
+	DefaultGvproxyURLBase     = "https://github.com/containers/gvisor-tap-vsock/releases/download/%s/%s"
 	BackgroundLauncherURL     = "https://github.com/crc-org/win32-background-launcher/releases/download/v%s/win32-background-launcher.exe"
 	DefaultBundleURLBase      = "https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/%s/%s/%s"
 	DefaultContext            = "admin"
@@ -78,6 +79,24 @@ func GetAdminHelperURLForOs(os string) string {
 
 func GetAdminHelperURL() string {
 	return GetAdminHelperURLForOs(runtime.GOOS)
+}
+
+var gvproxyExecutableForOs = map[string]string{
+	"darwin":  "gvproxy-darwin",
+	"linux":   fmt.Sprintf("gvproxy-linux-%s", runtime.GOARCH),
+	"windows": "gvproxy-windows.exe",
+}
+
+func GetGvproxyExecutableForOs(os string) string {
+	return gvproxyExecutableForOs[os]
+}
+
+func GetGvproxyURLForOs(os string) string {
+	return fmt.Sprintf(DefaultGvproxyURLBase, version.GetGvproxyVersion(), GetGvproxyExecutableForOs(os))
+}
+
+func GetGvproxyURL() string {
+	return GetGvproxyURLForOs(runtime.GOOS)
 }
 
 func BundleForPreset(preset crcpreset.Preset, version string) string {
@@ -155,6 +174,10 @@ func ResolveHelperPath(executableName string) string {
 
 func AdminHelperPath() string {
 	return ResolveHelperPath(GetAdminHelperExecutableForOs(runtime.GOOS))
+}
+
+func GvproxyPath() string {
+	return ResolveHelperPath(GetGvproxyExecutableForOs(runtime.GOOS))
 }
 
 func Win32BackgroundLauncherPath() string {
