@@ -84,6 +84,24 @@ func NewAdminHelperCache() *Cache {
 	)
 }
 
+func NewGvproxyCache() *Cache {
+	url := constants.GetGvproxyURL()
+	version := version.GetGvproxyVersion()
+	return newCache(constants.GvproxyPath(),
+		url,
+		version,
+		func(executable string) (string, error) {
+			out, _, err := crcos.RunWithDefaultLocale(executable, "--version")
+			if err != nil {
+				return "", err
+			}
+			// gvproxy --version output format: "gvproxy version v0.8.7"
+			split := strings.Split(out, " ")
+			return strings.TrimSpace(split[len(split)-1]), nil
+		},
+	)
+}
+
 func (c *Cache) IsCached() bool {
 	if _, err := os.Stat(c.GetExecutablePath()); os.IsNotExist(err) {
 		return false
