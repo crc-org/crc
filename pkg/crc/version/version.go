@@ -33,6 +33,7 @@ var (
 
 const (
 	crcAdminHelperVersion          = "0.5.5"
+	gvproxyVersion                 = "v0.8.7"
 	win32BackgroundLauncherVersion = "0.0.0.1"
 )
 
@@ -60,6 +61,10 @@ func GetBundleVersion(preset crcPreset.Preset) string {
 
 func GetAdminHelperVersion() string {
 	return crcAdminHelperVersion
+}
+
+func GetGvproxyVersion() string {
+	return gvproxyVersion
 }
 
 func GetWin32BackgroundLauncherVersion() string {
