@@ -49,6 +49,7 @@ sign "${crcBinDir}/crc"
 sign "${crcBinDir}/crc-admin-helper-darwin"
 sign "${crcBinDir}/vfkit"
 sign "${crcBinDir}/gvproxy"
+sign "${crcBinDir}/macadam-darwin-universal"
 
 pkgbuild --identifier com.redhat.crc --version ${version} \
   --scripts "${BASEDIR}/scripts" \
