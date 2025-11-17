@@ -102,6 +102,24 @@ func NewGvproxyCache() *Cache {
 	)
 }
 
+func NewMacadamCache() *Cache {
+	url := constants.GetMacadamURL()
+	version := version.GetMacadamVersion()
+	return newCache(constants.MacadamPath(),
+		url,
+		version,
+		func(executable string) (string, error) {
+			out, _, err := crcos.RunWithDefaultLocale(executable, "--version")
+			if err != nil {
+				return "", err
+			}
+			// macadam version output format: "macadam version v0.2.0"
+			split := strings.Split(out, " ")
+			return strings.TrimSpace(split[len(split)-1]), nil
+		},
+	)
+}
+
 func (c *Cache) IsCached() bool {
 	if _, err := os.Stat(c.GetExecutablePath()); os.IsNotExist(err) {
 		return false
