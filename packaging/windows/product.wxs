@@ -73,6 +73,7 @@
             <ComponentRef Id="AdminHelper" />
             <ComponentRef Id="BackgroundLauncher" />
             <ComponentRef Id="Gvproxy" />
+            <ComponentRef Id="Macadam" />
             <ComponentRef Id="AddToPath" />
             <ComponentRef Id="VsockRegistryEntry" />
             <ComponentRef Id="Hvsock9pRegistryEntry" />
@@ -111,6 +112,9 @@
                 </Component>
                 <Component Id="Gvproxy">
                     <File Id="Gvproxy" Source=".\gvproxy-windows.exe" Name="gvproxy.exe" KeyPath="yes" DiskId="1" />
+                </Component>
+                <Component Id="Macadam">
+                    <File Id="Macadam" Source=".\macadam-windows-amd64.exe" KeyPath="yes" DiskId="1" />
                 </Component>
                 <Component Id="AddToPath" Guid="09C1E713-44DE-44C3-BDAD-72BE10C10542">
                     <CreateFolder />
