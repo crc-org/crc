@@ -54,6 +54,15 @@ func genericPreflightChecks(_ crcpreset.Preset) []Check {
 			labels: None,
 		},
 		{
+			configKeySuffix:  "check-macadam-cached",
+			checkDescription: "Checking if macadam executable is cached",
+			check:            checkMacadamExecutableCached,
+			fixDescription:   "Caching macadam executable",
+			fix:              fixMacadamExecutableCached,
+
+			labels: None,
+		},
+		{
 			configKeySuffix:  "check-supported-cpu-arch",
 			checkDescription: "Checking if running on a supported CPU architecture",
 			check:            checkSupportedCPUArch,
