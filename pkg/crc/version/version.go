@@ -34,6 +34,7 @@ var (
 const (
 	crcAdminHelperVersion          = "0.5.5"
 	gvproxyVersion                 = "v0.8.7"
+	macadamVersion                 = "v0.3.0"
 	win32BackgroundLauncherVersion = "0.0.0.1"
 )
 
@@ -65,6 +66,10 @@ func GetAdminHelperVersion() string {
 
 func GetGvproxyVersion() string {
 	return gvproxyVersion
+}
+
+func GetMacadamVersion() string {
+	return macadamVersion
 }
 
 func GetWin32BackgroundLauncherVersion() string {
