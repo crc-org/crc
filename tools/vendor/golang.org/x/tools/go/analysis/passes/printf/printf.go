@@ -18,11 +18,10 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/analysis/passes/internal/analysisutil"
 	"golang.org/x/tools/go/ast/edge"
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/internal/analysisinternal"
+	"golang.org/x/tools/internal/analysis/analyzerutil"
 	"golang.org/x/tools/internal/astutil"
 	"golang.org/x/tools/internal/fmtstr"
 	"golang.org/x/tools/internal/typeparams"
@@ -39,7 +38,7 @@ var doc string
 
 var Analyzer = &analysis.Analyzer{
 	Name:       "printf",
-	Doc:        analysisutil.MustExtractDoc(doc, "printf"),
+	Doc:        analyzerutil.MustExtractDoc(doc, "printf"),
 	URL:        "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/printf",
 	Requires:   []*analysis.Analyzer{inspect.Analyzer},
 	Run:        run,
@@ -695,9 +694,9 @@ func checkPrintf(pass *analysis.Pass, fileVersion string, kind Kind, call *ast.C
 // such as the position of the %v substring of "...%v...".
 func opRange(formatArg ast.Expr, op *fmtstr.Operation) analysis.Range {
 	if lit, ok := formatArg.(*ast.BasicLit); ok {
-		start, end, err := astutil.RangeInStringLiteral(lit, op.Range.Start, op.Range.End)
+		rng, err := astutil.RangeInStringLiteral(lit, op.Range.Start, op.Range.End)
 		if err == nil {
-			return analysisinternal.Range(start, end) // position of "%v"
+			return rng // position of "%v"
 		}
 	}
 	return formatArg // entire format string

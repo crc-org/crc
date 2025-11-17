@@ -176,7 +176,11 @@ This analyzer finds declarations of functions of this form:
 and suggests a fix to turn them into inlinable wrappers around
 go1.26's built-in new(expr) function:
 
+	//go:fix inline
 	func varOf(x int) *int { return new(x) }
+
+(The directive comment causes the 'inline' analyzer to suggest
+that calls to such functions are inlined.)
 
 In addition, this analyzer suggests a fix for each call
 to one of the functions before it is transformed, so that
@@ -187,9 +191,9 @@ is replaced by:
 
 	use(new(123))
 
-(Wrapper functions such as varOf are common when working with Go
+Wrapper functions such as varOf are common when working with Go
 serialization packages such as for JSON or protobuf, where pointers
-are often used to express optionality.)
+are often used to express optionality.
 
 # Analyzer omitzero
 
@@ -204,6 +208,22 @@ omits the field if the struct value is zero.
 Replacing `omitempty` with `omitzero` is a change in behavior. The
 original code would always encode the struct field, whereas the
 modified code will omit it if it is a zero-value.
+
+# Analyzer plusbuild
+
+plusbuild: remove obsolete //+build comments
+
+The plusbuild analyzer suggests a fix to remove obsolete build tags
+of the form:
+
+	//+build linux,amd64
+
+in files that also contain a Go 1.18-style tag such as:
+
+	//go:build linux && amd64
+
+(It does not check that the old and new tags are consistent;
+that is the job of the 'buildtag' analyzer in the vet suite.)
 
 # Analyzer rangeint
 
@@ -310,6 +330,44 @@ iterator offered by the same data type:
 	}
 
 where x is one of various well-known types in the standard library.
+
+# Analyzer stringscut
+
+stringscut: replace strings.Index etc. with strings.Cut
+
+This analyzer replaces certain patterns of use of [strings.Index] and string slicing by [strings.Cut], added in go1.18.
+
+For example:
+
+	idx := strings.Index(s, substr)
+	if idx >= 0 {
+	    return s[:idx]
+	}
+
+is replaced by:
+
+	before, _, ok := strings.Cut(s, substr)
+	if ok {
+	    return before
+	}
+
+And:
+
+	idx := strings.Index(s, substr)
+	if idx >= 0 {
+	    return
+	}
+
+is replaced by:
+
+	found := strings.Contains(s, substr)
+	if found {
+	    return
+	}
+
+It also handles variants using [strings.IndexByte] instead of Index, or the bytes package instead of strings.
+
+Fixes are offered only in cases in which there are no potential modifications of the idx, s, or substr expressions between their definition and use.
 
 # Analyzer stringscutprefix
 

@@ -14,10 +14,10 @@ import (
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/edge"
 	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/internal/analysisinternal"
-	"golang.org/x/tools/internal/analysisinternal/generated"
-	typeindexanalyzer "golang.org/x/tools/internal/analysisinternal/typeindex"
+	"golang.org/x/tools/internal/analysis/analyzerutil"
+	typeindexanalyzer "golang.org/x/tools/internal/analysis/typeindex"
 	"golang.org/x/tools/internal/astutil"
+	"golang.org/x/tools/internal/refactor"
 	"golang.org/x/tools/internal/typesinternal"
 	"golang.org/x/tools/internal/typesinternal/typeindex"
 	"golang.org/x/tools/internal/versions"
@@ -25,9 +25,8 @@ import (
 
 var ReflectTypeForAnalyzer = &analysis.Analyzer{
 	Name: "reflecttypefor",
-	Doc:  analysisinternal.MustExtractDoc(doc, "reflecttypefor"),
+	Doc:  analyzerutil.MustExtractDoc(doc, "reflecttypefor"),
 	Requires: []*analysis.Analyzer{
-		generated.Analyzer,
 		inspect.Analyzer,
 		typeindexanalyzer.Analyzer,
 	},
@@ -36,8 +35,6 @@ var ReflectTypeForAnalyzer = &analysis.Analyzer{
 }
 
 func reflecttypefor(pass *analysis.Pass) (any, error) {
-	skipGenerated(pass)
-
 	var (
 		index = pass.ResultOf[typeindexanalyzer.Analyzer].(*typeindex.Index)
 		info  = pass.TypesInfo
@@ -66,16 +63,15 @@ func reflecttypefor(pass *analysis.Pass) (any, error) {
 				obj := typeutil.Callee(info, call2)
 				if typesinternal.IsMethodNamed(obj, "reflect", "Type", "Elem") {
 					if ptr, ok := t.(*types.Pointer); ok {
-						// Have: reflect.TypeOf(...*T value...).Elem()
-						// => reflect.TypeFor[T]()
+						// Have: TypeOf(expr).Elem() where expr : *T
 						t = ptr.Elem()
-						edits = []analysis.TextEdit{
-							{
-								// delete .Elem()
-								Pos: call.End(),
-								End: call2.End(),
-							},
-						}
+						// reflect.TypeOf(expr).Elem()
+						//                     -------
+						// reflect.TypeOf(expr)
+						edits = []analysis.TextEdit{{
+							Pos: call.End(),
+							End: call2.End(),
+						}}
 					}
 				}
 			}
@@ -89,9 +85,10 @@ func reflecttypefor(pass *analysis.Pass) (any, error) {
 		}
 
 		file := astutil.EnclosingFile(curCall)
-		if versions.Before(info.FileVersions[file], "go1.22") {
+		if !analyzerutil.FileUsesGoVersion(pass, file, versions.Go1_22) {
 			continue // TypeFor requires go1.22
 		}
+		tokFile := pass.Fset.File(file.Pos())
 
 		// Format the type as valid Go syntax.
 		// TODO(adonovan): FileQualifier needs to respect
@@ -104,6 +101,14 @@ func reflecttypefor(pass *analysis.Pass) (any, error) {
 		if !ok {
 			continue // e.g. reflect was dot-imported
 		}
+
+		// If the call argument contains the last use
+		// of a variable, as in:
+		//	var zero T
+		//	reflect.TypeOf(zero)
+		// remove the declaration of that variable.
+		curArg0 := curCall.ChildAt(edge.CallExpr_Args, 0)
+		edits = append(edits, refactor.DeleteUnusedVars(index, info, tokFile, curArg0)...)
 
 		pass.Report(analysis.Diagnostic{
 			Pos:     call.Fun.Pos(),
