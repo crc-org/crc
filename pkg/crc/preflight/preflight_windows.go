@@ -232,6 +232,15 @@ func getChecks(bundlePath string, preset crcpreset.Preset, enableBundleQuayFallb
 
 		labels: None,
 	})
+	checks = append(checks, Check{
+		configKeySuffix:  "check-macadam-cached",
+		checkDescription: "Checking if macadam executable is cached",
+		check:            checkMacadamExecutableCached,
+		fixDescription:   "Caching macadam executable",
+		fix:              fixMacadamExecutableCached,
+
+		labels: None,
+	})
 	checks = append(checks, genericCleanupChecks...)
 	checks = append(checks, cleanupCheckRemoveCrcVM)
 	checks = append(checks, daemonTaskChecks...)

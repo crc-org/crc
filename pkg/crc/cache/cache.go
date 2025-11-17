@@ -110,6 +110,19 @@ func NewGvproxyCache() *Cache {
 	return cache
 }
 
+func NewMacadamCache() *Cache {
+	url := constants.GetMacadamURL()
+	version := version.GetMacadamVersion()
+	return newCache(constants.MacadamPath(),
+		url,
+		version,
+		func(executable string) (string, error) {
+			// macadam version output format: "macadam version v0.2.0"
+			return getVersionGeneric(executable, "--version")
+		},
+	)
+}
+
 func (c *Cache) IsCached() bool {
 	if _, err := os.Stat(c.GetExecutablePath()); os.IsNotExist(err) {
 		return false
