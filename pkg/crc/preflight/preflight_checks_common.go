@@ -49,6 +49,18 @@ func gvproxyCheck() Check {
 	}
 }
 
+func macadamCheck() Check {
+	return Check{
+		configKeySuffix:  "check-macadam-cached",
+		checkDescription: "Checking if macadam executable is cached",
+		check:            checkMacadamExecutableCached,
+		fixDescription:   "Caching macadam executable",
+		fix:              fixMacadamExecutableCached,
+
+		labels: None,
+	}
+}
+
 func memoryCheck(preset crcpreset.Preset) Check {
 	return Check{
 		configKeySuffix:  "check-ram",
@@ -223,5 +235,35 @@ func fixGVProxyExecutableCached() error {
 	if runtime.GOOS == "linux" {
 		return setSuid(gvproxy.GetExecutablePath())
 	}
+	return nil
+}
+
+// Check if macadam executable is cached or not
+func checkMacadamExecutableCached() error {
+	if version.IsInstaller() {
+		return nil
+	}
+
+	macadam := cache.NewMacadamCache()
+	if !macadam.IsCached() {
+		return errors.New("macadam executable is not cached")
+	}
+	if err := macadam.CheckVersion(); err != nil {
+		return errors.Wrap(err, "unexpected version of the macadam executable")
+	}
+	logging.Debug("macadam executable already cached")
+	return nil
+}
+
+func fixMacadamExecutableCached() error {
+	if version.IsInstaller() {
+		return nil
+	}
+
+	macadam := cache.NewMacadamCache()
+	if err := macadam.EnsureIsCached(); err != nil {
+		return errors.Wrap(err, "Unable to download macadam executable")
+	}
+	logging.Debug("macadam executable cached")
 	return nil
 }
