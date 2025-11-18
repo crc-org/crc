@@ -23,6 +23,7 @@ type Cache struct {
 	version            string
 	ignoreNameMismatch bool
 	getVersion         func(string) (string, error)
+	targetName         string // Optional: if set, rename the executable to this name
 }
 
 type VersionMismatchError struct {
@@ -87,7 +88,7 @@ func NewAdminHelperCache() *Cache {
 func NewGvproxyCache() *Cache {
 	url := constants.GetGvproxyURL()
 	version := version.GetGvproxyVersion()
-	return newCache(constants.GvproxyPath(),
+	cache := newCache(constants.GvproxyPath(),
 		url,
 		version,
 		func(executable string) (string, error) {
@@ -100,6 +101,8 @@ func NewGvproxyCache() *Cache {
 			return strings.TrimSpace(split[len(split)-1]), nil
 		},
 	)
+	cache.targetName = constants.GetGvproxyExecutableName()
+	return cache
 }
 
 func NewMacadamCache() *Cache {
@@ -172,7 +175,12 @@ func (c *Cache) cacheExecutable() error {
 
 	// Copy the requested asset into its final destination
 	for _, extractedFilePath := range extractedFiles {
-		finalExecutablePath := filepath.Join(constants.CrcBinDir, c.GetExecutableName())
+		// Use targetName if set, otherwise use the original executable name
+		finalName := c.GetExecutableName()
+		if c.targetName != "" {
+			finalName = c.targetName
+		}
+		finalExecutablePath := filepath.Join(constants.CrcBinDir, finalName)
 		// If the file exists then remove it (ignore error) first before copy because with `0500` permission
 		// it is not possible to overwrite the file.
 		os.Remove(finalExecutablePath)
