@@ -197,7 +197,12 @@ func AdminHelperPath() string {
 }
 
 func GvproxyPath() string {
-	return ResolveHelperPath(GetGvproxyExecutableForOs(runtime.GOOS))
+	// gvproxy is renamed to just "gvproxy" (or "gvproxy.exe" on Windows) for macadam compatibility
+	executableName := "gvproxy"
+	if runtime.GOOS == "windows" {
+		executableName = "gvproxy.exe"
+	}
+	return ResolveHelperPath(executableName)
 }
 
 func MacadamPath() string {
