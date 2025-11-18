@@ -25,7 +25,7 @@ func init() {
 	pflag.StringVar(&opts.Tags, "godog.tags", "", "Tags for godog test")
 	pflag.BoolVar(&opts.ShowStepDefinitions, "godog.definitions", false, "")
 	pflag.BoolVar(&opts.StopOnFailure, "godog.stop-on-failure", false, "Stop when failure is found")
-	pflag.BoolVar(&opts.NoColors, "godog.no-colors", false, "Disable colors in godog output")
+	pflag.BoolVar(&opts.NoColors, "godog.no-colors", true, "Disable colors in godog output")
 
 	testsuite.ParseFlags()
 }
