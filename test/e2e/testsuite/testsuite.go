@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/user"
+	"path"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -583,6 +584,16 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		getCPUdata)
 	s.Step(`^get memory data "([^"]*)"`,
 		getMemoryData)
+
+	// 9P file system checks
+	s.Step(`^directory "([^"]*)" exists$`,
+		util.DirectoryExist)
+	s.Step(`^listing files in directory "([^"]*)" should succeed$`,
+		listingFilesInDirectoryShouldSucceed)
+	s.Step(`^basic file operations in directory "([^"]*)" should succeed$`,
+		basicFileOperationsInDirectoryShouldSucceed)
+	s.Step(`^basic directory operations in directory "([^"]*)" should succeed$`,
+		basicDirectoryOperationsInDirectoryShouldSucceed)
 
 	s.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
 
@@ -1350,4 +1361,76 @@ func getMemoryData(content string) error {
 	}
 	file := filepath.Join(wd, "../test-results/memory-consume.txt")
 	return util.WriteToFile(data, file)
+}
+
+func listingFilesInDirectoryShouldSucceed(dirName string) error {
+	_, err := os.ReadDir(dirName)
+	if err != nil {
+		return fmt.Errorf("cannot list files: %v", err)
+	}
+	return nil
+}
+
+func basicFileOperationsInDirectoryShouldSucceed(dirName string) error {
+	filename := path.Join(dirName, "story_9pfs_test_file")
+	content := []byte("test content")
+
+	// Create
+	if err := os.WriteFile(filename, content, 0644); err != nil {
+		return fmt.Errorf("cannot create file in 9p mounted directory: %v", err)
+	}
+
+	// Read
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return fmt.Errorf("cannot read file in 9p mounted directory: %v", err)
+	}
+	if string(data) != string(content) {
+		return fmt.Errorf("file content mismatch in 9p mounted directory: got %s", string(data))
+	}
+
+	// Update
+	newContent := []byte("updated content")
+	if err := os.WriteFile(filename, newContent, 0644); err != nil {
+		return fmt.Errorf("cannot update file in 9p mounted directory: %v", err)
+	}
+
+	// Change permissions
+	if err := os.Chmod(filename, 0777); err != nil {
+		return fmt.Errorf("cannot chmod file in 9p mounted directory: %v", err)
+	}
+
+	// Delete
+	if err := os.Remove(filename); err != nil {
+		return fmt.Errorf("cannot delete file in 9p mounted directory: %v", err)
+	}
+
+	return nil
+}
+
+func basicDirectoryOperationsInDirectoryShouldSucceed(dirName string) error {
+	testDirName := path.Join(dirName, "story_9pfs_test_dir")
+
+	// Create
+	if err := os.Mkdir(testDirName, 0755); err != nil {
+		return fmt.Errorf("cannot create subdirectory in 9p mounted directory: %v", err)
+	}
+
+	// List
+	if _, err := os.ReadDir(testDirName); err != nil {
+		return fmt.Errorf("cannot list subdirectory in 9p mounted directory: %v", err)
+	}
+
+	// Rename
+	newTestDirName := filepath.Join(testDirName, "story_9pfs_test_dir_renamed")
+	if err := os.Rename(testDirName, newTestDirName); err != nil {
+		return fmt.Errorf("cannot rename subdirectory in 9p mounted directory: %v", err)
+	}
+
+	// Delete
+	if err := os.Remove(newTestDirName); err != nil {
+		return fmt.Errorf("cannot delete subdirectory in 9p mounted directory: %v", err)
+	}
+
+	return nil
 }

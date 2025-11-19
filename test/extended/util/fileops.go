@@ -49,6 +49,17 @@ func DirectoryShouldNotExist(dirName string) error {
 	return fmt.Errorf("directory %s exists", dirName)
 }
 
+func DirectoryExist(dirName string) error {
+	_, err := os.Stat(dirName)
+
+	if os.IsNotExist(err) {
+		return fmt.Errorf("directory %s does not exist, error: %v ", dirName, err)
+	} else if err != nil {
+		return fmt.Errorf("directory %s neither exists nor doesn't exist, error: %v", dirName, err)
+	}
+	return nil // == err
+}
+
 func FileShouldNotExist(fileName string) error {
 	if _, err := os.Stat(fileName); os.IsNotExist(err) {
 		return nil
