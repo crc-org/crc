@@ -13,7 +13,7 @@ func NewAnalyzer() *analysis.Analyzer {
 	return &analysis.Analyzer{
 		Name: "testableexamples",
 		Doc:  "linter checks if examples are testable (have an expected output)",
-		Run: func(pass *analysis.Pass) (interface{}, error) {
+		Run: func(pass *analysis.Pass) (any, error) {
 			testFiles := make([]*ast.File, 0, len(pass.Files))
 			for _, file := range pass.Files {
 				fileName := pass.Fset.File(file.Pos()).Name()
