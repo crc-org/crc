@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/user"
+	"path"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -583,6 +584,18 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		getCPUdata)
 	s.Step(`^get memory data "([^"]*)"`,
 		getMemoryData)
+
+	// 9P filesharing checks
+	s.Step(`^directory "([^"]*)" exists in VM$`,
+		directoryExistInVM)
+	s.Step(`^filesystem is mounted$`,
+		filesystemIsMounted)
+	s.Step(`^listing files in directory "([^"]*)" should succeed$`,
+		listingFilesInDirectoryShouldSucceed)
+	s.Step(`^basic file operations in directory "([^"]*)" should succeed$`,
+		basicFileOperationsInDirectoryShouldSucceed)
+	s.Step(`^basic directory operations in directory "([^"]*)" should succeed$`,
+		basicDirectoryOperationsInDirectoryShouldSucceed)
 
 	s.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
 
@@ -1350,4 +1363,117 @@ func getMemoryData(content string) error {
 	}
 	file := filepath.Join(wd, "../test-results/memory-consume.txt")
 	return util.WriteToFile(data, file)
+}
+
+func directoryExistInVM(dirName string) error {
+	_, err := util.SendCommandToVM(fmt.Sprintf("stat %s", dirName))
+	if err != nil {
+		return fmt.Errorf("directory '%s' does not exist: %v", dirName, err)
+	}
+	return nil
+}
+
+func filesystemIsMounted() error {
+	out, err := util.SendCommandToVM("mount")
+	if err != nil {
+		return fmt.Errorf("error running mount: %v", err)
+	}
+	if !strings.Contains(out, "fuse.9pfs") {
+		return fmt.Errorf("filesystem is not mounted")
+	}
+	return nil
+}
+
+func listingFilesInDirectoryShouldSucceed(dirName string) error {
+	out, err := util.SendCommandToVM(fmt.Sprintf("ls -l %s", dirName))
+	fmt.Println(out)
+	if err != nil {
+		return fmt.Errorf("cannot list files: %v", err)
+	}
+	return nil
+}
+
+func basicFileOperationsInDirectoryShouldSucceed(dirName string) error {
+	filename := path.Join(dirName, "story_9pfs_test_file")
+	content := "test content"
+
+	// Create
+	_, err := util.SendCommandToVM(fmt.Sprintf("> %s", filename))
+	if err != nil {
+		return fmt.Errorf("cannot create file in 9p mounted directory: %v", err)
+	}
+
+	// Write
+	_, err = util.SendCommandToVM(fmt.Sprintf("echo \"%s\" > %s", content, filename))
+	if err != nil {
+		return fmt.Errorf("cannot write to file in 9p mounted directory: %v", err)
+	}
+
+	// Read
+	out, err := util.SendCommandToVM(fmt.Sprintf("cat %s", filename))
+	if err != nil {
+		return fmt.Errorf("cannot read file in 9p mounted directory: %v", err)
+	}
+	if strings.TrimSpace(out) != content {
+		return fmt.Errorf("file content mismatch in 9p mounted directory: got '%s', should have '%s'", out, content)
+	}
+
+	// Update
+	newContent := "updated content"
+	_, err = util.SendCommandToVM(fmt.Sprintf("echo \"%s\" > %s", newContent, filename))
+	if err != nil {
+		return fmt.Errorf("cannot update file in 9p mounted directory: %v", err)
+	}
+	out, err = util.SendCommandToVM(fmt.Sprintf("cat %s", filename))
+	if err != nil {
+		return fmt.Errorf("cannot read updated file in 9p mounted directory: %v", err)
+	}
+	if strings.TrimSpace(out) != newContent {
+		return fmt.Errorf("file content mismatch in 9p mounted directory: got '%s', should have '%s'", out, newContent)
+	}
+
+	// Change permissions
+	_, err = util.SendCommandToVM(fmt.Sprintf("chmod 777 %s", filename))
+	if err != nil {
+		return fmt.Errorf("cannot chmod file in 9p mounted directory: %v", err)
+	}
+
+	// Rename
+	newFilename := path.Join(dirName, "story_9pfs_test_file_renamed")
+	_, err = util.SendCommandToVM(fmt.Sprintf("mv %s %s", filename, newFilename))
+	if err != nil {
+		return fmt.Errorf("cannot rename file in 9p mounted directory: %v", err)
+	}
+
+	// Delete
+	_, err = util.SendCommandToVM(fmt.Sprintf("rm %s", newFilename))
+	if err != nil {
+		return fmt.Errorf("cannot delete file in 9p mounted directory: %v", err)
+	}
+
+	return nil
+}
+
+func basicDirectoryOperationsInDirectoryShouldSucceed(dirName string) error {
+	testDirName := path.Join(dirName, "story_9pfs_test_dir")
+
+	// Create
+	_, err := util.SendCommandToVM(fmt.Sprintf("mkdir %s", testDirName))
+	if err != nil {
+		return fmt.Errorf("cannot create subdirectory in 9p mounted directory: %v", err)
+	}
+
+	// List
+	_, err = util.SendCommandToVM(fmt.Sprintf("ls %s", testDirName))
+	if err != nil {
+		return fmt.Errorf("cannot list subdirectory in 9p mounted directory: %v", err)
+	}
+
+	// Delete
+	_, err = util.SendCommandToVM(fmt.Sprintf("rmdir %s", testDirName))
+	if err != nil {
+		return fmt.Errorf("cannot delete subdirectory in 9p mounted directory: %v", err)
+	}
+
+	return nil
 }
