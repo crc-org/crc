@@ -243,9 +243,10 @@ func checkGVProxyExecutableCached() error {
 		return errors.Wrap(err, "unexpected version of the gvproxy executable")
 	}
 	logging.Debug("gvproxy executable already cached")
-	// SUID is only required on Linux (checkSuid is a no-op on Windows/macOS)
+	// On Linux, use capabilities instead of SUID to allow binding to privileged ports
+	// This prevents permission issues with sockets created by gvproxy
 	if runtime.GOOS == "linux" {
-		return checkSuid(gvproxy.GetExecutablePath())
+		return checkCapNetBindService(gvproxy.GetExecutablePath())
 	}
 	return nil
 }
@@ -260,9 +261,10 @@ func fixGVProxyExecutableCached() error {
 		return errors.Wrap(err, "Unable to download gvproxy executable")
 	}
 	logging.Debug("gvproxy executable cached")
-	// SUID is only required on Linux (setSuid is a no-op on Windows/macOS)
+	// On Linux, use capabilities instead of SUID to allow binding to privileged ports
+	// This prevents permission issues with sockets created by gvproxy
 	if runtime.GOOS == "linux" {
-		return setSuid(gvproxy.GetExecutablePath())
+		return setCapNetBindService(gvproxy.GetExecutablePath())
 	}
 	return nil
 }
