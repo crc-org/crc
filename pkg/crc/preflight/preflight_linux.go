@@ -194,13 +194,10 @@ func checkVsock() error {
 	if err != nil {
 		return err
 	}
-	getcap, _, err := crcos.RunWithDefaultLocale("getcap", executable)
-	if err != nil {
+
+	// Check for cap_net_bind_service capability with inheritable flag (+eip or =eip)
+	if err := checkCapabilities(executable, "cap_net_bind_service+eip", "cap_net_bind_service=eip"); err != nil {
 		return err
-	}
-	if !strings.Contains(getcap, "cap_net_bind_service+eip") &&
-		!strings.Contains(getcap, "cap_net_bind_service=eip") {
-		return fmt.Errorf("capabilities are not correct for %s", executable)
 	}
 
 	// This test is needed in order to trigger the move of the udev rule to its new location.
@@ -221,8 +218,9 @@ func fixVsock() error {
 	if err != nil {
 		return err
 	}
-	_, _, err = crcos.RunPrivileged(fmt.Sprintf("Setting CAP_NET_BIND_SERVICE capability for %s executable", executable), "setcap", "cap_net_bind_service=+eip", executable)
-	if err != nil {
+
+	// Set cap_net_bind_service with inheritable flag for the CRC daemon
+	if err := setCapabilities(executable, "cap_net_bind_service=+eip"); err != nil {
 		return err
 	}
 
@@ -406,4 +404,48 @@ func distro() *linux.OsRelease {
 		}
 	}
 	return distro
+}
+
+// setCapabilities sets Linux capabilities on a binary
+// capString should be in the format accepted by setcap, e.g. "cap_net_bind_service=+ep"
+func setCapabilities(path, capString string) error {
+	logging.Debugf("Setting capabilities '%s' on %s", capString, path)
+
+	_, _, err := crcos.RunPrivileged(
+		fmt.Sprintf("Setting capability for %s", path),
+		"setcap", capString, path)
+	if err != nil {
+		return fmt.Errorf("unable to set capability on %s: %v", path, err)
+	}
+	return nil
+}
+
+// checkCapabilities checks if a binary has specific Linux capabilities
+// expectedCaps is a list of capability strings to check for (e.g., "cap_net_bind_service+ep")
+func checkCapabilities(path string, expectedCaps ...string) error {
+	stdOut, _, err := crcos.RunWithDefaultLocale("getcap", path)
+	if err != nil {
+		return fmt.Errorf("unable to check capabilities on %s: %v", path, err)
+	}
+
+	// Check if any of the expected capability strings are present
+	for _, cap := range expectedCaps {
+		if strings.Contains(stdOut, cap) {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("%s does not have expected capabilities (got: %s, expected one of: %v)", path, stdOut, expectedCaps)
+}
+
+// setCapNetBindService sets the CAP_NET_BIND_SERVICE capability on a binary
+// This allows it to bind to privileged ports (< 1024) without running as root
+func setCapNetBindService(path string) error {
+	return setCapabilities(path, "cap_net_bind_service=+ep")
+}
+
+// checkCapNetBindService checks if the CAP_NET_BIND_SERVICE capability is set on a binary
+func checkCapNetBindService(path string) error {
+	// Accept both +ep and =ep formats
+	return checkCapabilities(path, "cap_net_bind_service+ep", "cap_net_bind_service=ep")
 }

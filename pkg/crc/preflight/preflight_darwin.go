@@ -136,3 +136,14 @@ func getPreflightChecks(_ bool, mode network.Mode, bundlePath string, preset crc
 
 	return filter.Apply(getChecks(mode, bundlePath, preset, enableBundleQuayFallback))
 }
+
+// Capability functions are no-ops on Darwin (macOS doesn't use Linux capabilities)
+func setCapNetBindService(path string) error {
+	// Not needed on Darwin
+	return nil
+}
+
+func checkCapNetBindService(path string) error {
+	// Not needed on Darwin
+	return nil
+}
