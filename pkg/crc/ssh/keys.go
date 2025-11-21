@@ -62,6 +62,12 @@ func GenerateSSHKey(path string) error {
 			return fmt.Errorf("error checking SSH key path %q: %w", path, err)
 		}
 
+		// Ensure parent directory exists
+		dir := filepath.Dir(path)
+		if err := os.MkdirAll(dir, 0o700); err != nil {
+			return fmt.Errorf("error creating directory for SSH keys: %w", err)
+		}
+
 		kp, err := NewKeyPair()
 		if err != nil {
 			return fmt.Errorf("error generating key pair: %w", err)
