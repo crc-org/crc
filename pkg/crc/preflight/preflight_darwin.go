@@ -123,6 +123,7 @@ func getChecks(_ network.Mode, bundlePath string, preset crcpreset.Preset, enabl
 	checks = append(checks, vfkitPreflightChecks...)
 	checks = append(checks, resolverPreflightChecks...)
 	checks = append(checks, bundleCheck(bundlePath, preset, enableBundleQuayFallback))
+	checks = append(checks, gvproxyCheck())
 	checks = append(checks, trayLaunchdCleanupChecks...)
 	checks = append(checks, daemonLaunchdChecks...)
 	checks = append(checks, sshPortCheck())
@@ -135,4 +136,15 @@ func getPreflightChecks(_ bool, mode network.Mode, bundlePath string, preset crc
 	filter.SetNetworkMode(mode)
 
 	return filter.Apply(getChecks(mode, bundlePath, preset, enableBundleQuayFallback))
+}
+
+// Capability functions are no-ops on Darwin (macOS doesn't use Linux capabilities)
+func setCapNetBindService(path string) error {
+	// Not needed on Darwin
+	return nil
+}
+
+func checkCapNetBindService(path string) error {
+	// Not needed on Darwin
+	return nil
 }
