@@ -200,21 +200,6 @@ func EnsurePullSecretPresentInTheCluster(ctx context.Context, ocConfig oc.Config
 	if err := validation.ImagePullSecret(string(decoded)); err == nil {
 		return nil
 	}
-
-	logging.Info("Adding user's pull secret to the cluster...")
-	content, err := pullSec.Value()
-	if err != nil {
-		return err
-	}
-	base64OfPullSec := base64.StdEncoding.EncodeToString([]byte(content))
-	cmdArgs := []string{"patch", "secret", "pull-secret", "-p",
-		fmt.Sprintf(`'{"data":{".dockerconfigjson":"%s"}}'`, base64OfPullSec),
-		"-n", "openshift-config", "--type", "merge"}
-
-	_, stderr, err = ocConfig.RunOcCommandPrivate(cmdArgs...)
-	if err != nil {
-		return fmt.Errorf("Failed to add Pull secret %v: %s", err, stderr)
-	}
 	return nil
 }
 
