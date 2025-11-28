@@ -94,9 +94,10 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 	isRunning, _ := client.IsRunning()
 
 	if !isRunning {
-		if err := checkDaemonStarted(); err != nil {
+		// TODO: Uncomment this when we need it only for admin-helper
+		/*if err := checkDaemonStarted(); err != nil {
 			return nil, err
-		}
+		}*/
 
 		if err := preflight.StartPreflightChecks(config); err != nil {
 			return nil, crcos.CodeExitError{
