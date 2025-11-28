@@ -9,9 +9,9 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/bundle"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
 	"github.com/crc-org/crc/v2/pkg/crc/oc"
 	crcssh "github.com/crc-org/crc/v2/pkg/crc/ssh"
-	"github.com/crc-org/machine/libmachine/state"
 	"github.com/pkg/errors"
 )
 
@@ -115,7 +115,7 @@ func loadVM(client *client) (*bundle.CrcBundleInfo, *crcssh.Runner, error) {
 	}
 	defer vm.Close()
 
-	currentState, err := vm.Driver.GetState()
+	currentState, err := vm.State()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Cannot get machine state")
 	}
