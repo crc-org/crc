@@ -7,9 +7,10 @@ import (
 )
 
 type ServicePostStartConfig struct {
-	Name           string
-	SSHRunner      *ssh.Runner
-	BundleMetadata bundle.CrcBundleInfo
-	IP             string
-	NetworkMode    network.Mode
+	Name            string
+	SSHRunner       *ssh.Runner
+	BundleMetadata  bundle.CrcBundleInfo
+	IP              string
+	NetworkMode     network.Mode
+	ModifyHostsFile bool
 }
