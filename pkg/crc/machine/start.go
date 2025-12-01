@@ -483,8 +483,9 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		SSHRunner: sshRunner,
 		IP:        instanceIP,
 		// TODO: should be more finegrained
-		BundleMetadata: *vm.bundle,
-		NetworkMode:    client.networkMode(),
+		BundleMetadata:  *vm.bundle,
+		NetworkMode:     client.networkMode(),
+		ModifyHostsFile: client.modifyHostsFile(),
 	}
 
 	// Run the DNS server inside the VM
@@ -508,7 +509,11 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	logging.Info("Check DNS query from host...")
 	if err := dns.CheckCRCLocalDNSReachableFromHost(servicePostStartConfig); err != nil {
 		if !client.useVSock() {
-			return nil, errors.Wrap(err, "Failed to query DNS from host")
+			msg := "Failed to query DNS from host"
+			if !servicePostStartConfig.ModifyHostsFile {
+				msg += " (modify-hosts-file=false). Ensure your system DNS/hosts entries resolve the CRC domains."
+			}
+			return nil, errors.Wrap(err, msg)
 		}
 		logging.Warn(fmt.Sprintf("Failed to query DNS from host: %v", err))
 	}

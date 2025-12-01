@@ -64,6 +64,10 @@ func (client *client) networkMode() network.Mode {
 	return crcConfig.GetNetworkMode(client.config)
 }
 
+func (client *client) modifyHostsFile() bool {
+	return client.config.Get(crcConfig.ModifyHostsFile).AsBool()
+}
+
 func (client *client) monitoringEnabled() bool {
 	return client.config.Get(crcConfig.EnableClusterMonitoring).AsBool()
 }

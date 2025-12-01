@@ -27,6 +27,7 @@ const (
 	ProxyCAFile              = "proxy-ca-file"
 	ConsentTelemetry         = "consent-telemetry"
 	EnableClusterMonitoring  = "enable-cluster-monitoring"
+	ModifyHostsFile          = "modify-hosts-file"
 	KubeAdminPassword        = "kubeadmin-password"
 	DeveloperPassword        = "developer-password"
 	Preset                   = "preset"
@@ -106,6 +107,9 @@ func RegisterSettings(cfg *Config) {
 
 	cfg.AddSetting(EnableClusterMonitoring, false, ValidateBool, SuccessfullyApplied,
 		"Enable cluster monitoring Operator (true/false, default: false)")
+
+	cfg.AddSetting(ModifyHostsFile, true, ValidateBool, SuccessfullyApplied,
+		"Allow CRC to modify the system hosts file (true/false, default: true)")
 
 	// Telemeter Configuration
 	cfg.AddSetting(ConsentTelemetry, "", validateYesNo, SuccessfullyApplied,
