@@ -91,6 +91,10 @@ check: cross build_e2e_all $(HOST_BUILD_DIR)/crc-embedder test cross-lint vendor
 install: $(SOURCES)
 	go install -tags "$(BUILDTAGS)"  -ldflags="$(LDFLAGS)" $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
+.PHONY: build
+build: $(SOURCES)
+	go build -tags "$(BUILDTAGS)"  -ldflags="$(LDFLAGS)" $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
+
 $(BUILD_DIR)/macos-amd64/crc: $(SOURCES)
 	GOOS=darwin GOARCH=amd64 go build -tags "$(BUILDTAGS)" -ldflags="$(LDFLAGS)" -o $@ $(GO_EXTRA_BUILDFLAGS) ./cmd/crc
 
