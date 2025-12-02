@@ -106,17 +106,6 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		}
 	}
 
-	if runtime.GOOS == "windows" {
-		username, err := crcos.GetCurrentUsername()
-		if err != nil {
-			return nil, err
-		}
-
-		// config SharedDirPassword ('shared-dir-password') only exists in windows
-		startConfig.SharedDirPassword = config.Get(crcConfig.SharedDirPassword).AsString()
-		startConfig.SharedDirUsername = username
-	}
-
 	return client.Start(ctx, startConfig)
 }
 
