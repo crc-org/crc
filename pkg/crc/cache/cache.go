@@ -59,6 +59,9 @@ func getVersionGeneric(executablePath string, args ...string) (string, error) { 
 		logging.Debugf("failed to run executable %s: %v", executablePath, err)
 		return "", err
 	}
+	if executablePath == "/usr/local/bin/krunkit" {
+		return strings.TrimSpace(strings.TrimPrefix(stdOut, "krunkit ")), nil
+	}
 	parsedOutput := strings.Split(stdOut, ":")
 	if len(parsedOutput) < 2 {
 		logging.Debugf("failed to parse version information for %s: %s", executablePath, stdOut)

@@ -77,7 +77,7 @@ func createNewVirtualNetworkConfig(providedConfig *crcConfig.Config) types.Confi
 	virtualNetworkConfig := types.Configuration{
 		Debug:             false, // never log packets
 		CaptureFile:       os.Getenv("CRC_DAEMON_PCAP_FILE"),
-		MTU:               4000, // Large packets slightly improve the performance. Less small packets.
+		MTU:               1500,
 		Subnet:            "192.168.127.0/24",
 		GatewayIP:         constants.VSockGateway,
 		GatewayMacAddress: "5a:94:ef:e4:0c:dd",
