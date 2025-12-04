@@ -143,6 +143,9 @@ func GetDefaultBundleSignedHashURL(preset crcpreset.Preset) string {
 }
 
 func ResolveHelperPath(executableName string) string {
+	if executableName == "krunkit" {
+		return "/usr/local/bin/krunkit"
+	}
 	if version.IsInstaller() {
 		return filepath.Join(version.InstallPath(), executableName)
 	}
