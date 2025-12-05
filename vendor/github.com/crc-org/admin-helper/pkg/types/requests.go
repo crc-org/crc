@@ -1,4 +1,4 @@
-package types
+package types //nolint:revive
 
 type AddRequest struct {
 	IP    string   `json:"ip"`
