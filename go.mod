@@ -13,7 +13,7 @@ require (
 	github.com/containers/gvisor-tap-vsock v0.8.7
 	github.com/containers/libhvee v0.10.1-0.20250902114412-a85aab2976a4
 	github.com/coreos/go-systemd/v22 v22.6.0
-	github.com/crc-org/admin-helper v0.5.5
+	github.com/crc-org/admin-helper v0.5.6
 	github.com/crc-org/machine v0.0.0-20240926103419-a943b47fd48b
 	github.com/crc-org/vfkit v0.6.1
 	github.com/cucumber/godog v0.15.1
