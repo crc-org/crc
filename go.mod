@@ -30,7 +30,7 @@ require (
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mdlayher/vsock v1.2.1
 	github.com/onsi/ginkgo/v2 v2.27.2
-	github.com/onsi/gomega v1.38.2
+	github.com/onsi/gomega v1.38.3
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/openshift/api v0.0.0-20250529074221-97812373b6b4
 	github.com/openshift/client-go v0.0.0-20250425165505-5f55ff6979a1
