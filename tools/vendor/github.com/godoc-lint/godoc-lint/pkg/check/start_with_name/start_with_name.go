@@ -45,6 +45,13 @@ func (r *StartWithNameChecker) Apply(actx *model.AnalysisContext) error {
 				continue
 			}
 
+			if decl.Name == "_" {
+				// Blank identifiers should be ignored; e.g.:
+				//
+				//   var _ = 0
+				continue
+			}
+
 			if decl.Kind == model.SymbolDeclKindBad {
 				continue
 			}

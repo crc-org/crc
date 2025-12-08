@@ -1,3 +1,4 @@
+// Package analyzer provides a static analysis tool that checks that fmt.Sprintf can be replaced with a faster alternative.
 package analyzer
 
 import (
@@ -118,7 +119,8 @@ func isConcatable(verb string) bool {
 	if strings.Count(verb, "%[1]s") > 1 {
 		return false
 	}
-	return (hasPrefix || hasSuffix) && !(hasPrefix && hasSuffix)
+	// TODO handle case hasPrefix and hasSuffix
+	return (hasPrefix || hasSuffix) && !(hasPrefix && hasSuffix) //nolint:staticcheck
 }
 
 func isStringAdd(st *ast.AssignStmt, idname string) ast.Expr {
@@ -171,6 +173,9 @@ func (n *perfSprint) reportConcatLoop(pass *analysis.Pass, neededPackages map[st
 				if ok {
 					_, ok = adds[id.Name]
 					if ok {
+						if x.Tok == token.ASSIGN && isStringAdd(x, id.Name) == nil {
+							addTODO = id.Name
+						}
 						return false
 					}
 				}
@@ -198,11 +203,15 @@ func (n *perfSprint) reportConcatLoop(pass *analysis.Pass, neededPackages map[st
 	// before the loop: declare the strings Builders
 	// during the loop: replace concatenation with Builder.WriteString
 	// after the loop: use the Builder.String to append to the pre-existing string
+	var prefixSb203 strings.Builder
+	var suffixSb203 strings.Builder
 	for _, k := range keys {
 		// lol
-		prefix += fmt.Sprintf("var %sSb%d strings.Builder\n", k, loopStartLine)
-		suffix += fmt.Sprintf("\n%s += %sSb%d.String()", k, k, loopStartLine)
+		prefixSb203.WriteString(fmt.Sprintf("var %sSb%d strings.Builder\n", k, loopStartLine))
+		suffixSb203.WriteString(fmt.Sprintf("\n%s += %sSb%d.String()", k, k, loopStartLine))
 	}
+	prefix += prefixSb203.String()
+	suffix += suffixSb203.String()
 	te := []analysis.TextEdit{
 		{
 			Pos:     node.Pos(),
