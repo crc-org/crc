@@ -44,6 +44,13 @@ func (r *RequireDocChecker) Apply(actx *model.AnalysisContext) error {
 				continue
 			}
 
+			if decl.Name == "_" {
+				// Blank identifiers should be ignored; e.g.:
+				//
+				//   var _ = 0
+				continue
+			}
+
 			if decl.Doc != nil && (decl.Doc.DisabledRules.All || decl.Doc.DisabledRules.Rules.Has(requireDocRule)) {
 				continue
 			}

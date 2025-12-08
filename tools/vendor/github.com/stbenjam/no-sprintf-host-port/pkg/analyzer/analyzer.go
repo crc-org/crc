@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/token"
 	"regexp"
+	"strings"
 
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
@@ -86,10 +87,20 @@ func checkForHostPortConstruction(sprintf *ast.CallExpr) error {
 		regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9+-.]*://[^/]*@%s:.*$`), // URL with basic auth
 	}
 
-	for _, re := range regexes {
-		if re.MatchString(fs) {
-			return fmt.Errorf("host:port in url should be constructed with net.JoinHostPort and not directly with fmt.Sprintf")
+	for idx, re := range regexes {
+		if !re.MatchString(fs) {
+			continue
 		}
+
+		// Match without basic auth and only handle cases where the hostname and optionally the port are specified.
+		if idx == 0 && len(sprintf.Args) <= 3 {
+			arg, ok := getStringLiteral(sprintf.Args, 1)
+			if ok && !strings.Contains(arg, ":") {
+				continue
+			}
+		}
+
+		return fmt.Errorf("host:port in url should be constructed with net.JoinHostPort and not directly with fmt.Sprintf")
 	}
 
 	return nil
