@@ -296,14 +296,13 @@ func (i *Inspector) extractCommentGroup(cg *ast.CommentGroup) *model.CommentGrou
 func extractDisableDirectivesInComment(s string) model.InspectorResultDisableRules {
 	result := model.InspectorResultDisableRules{}
 	for _, directive := range disableDirectivePattern.FindAllStringSubmatch(s, -1) {
-		args := string(directive[1])
+		args := directive[1]
 		if args == "" {
 			result.All = true
 			continue
 		}
 
-		names := strings.Split(strings.TrimSpace(args), " ")
-		for _, name := range names {
+		for name := range strings.SplitSeq(strings.TrimSpace(args), " ") {
 			if model.AllRules.Has(model.Rule(name)) {
 				result.Rules = result.Rules.Add(model.Rule(name))
 			}

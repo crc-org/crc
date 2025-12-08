@@ -43,7 +43,7 @@ func transferOptions(target *model.RuleOptions, source *PlainRuleOptions) {
 	resVT := resV.Type()
 
 	resOptionMap := make(map[string]string, resVT.NumField())
-	for i := 0; i < resVT.NumField(); i++ {
+	for i := range resVT.NumField() {
 		ft := resVT.Field(i)
 		key, ok := ft.Tag.Lookup("option")
 		if !ok {
@@ -54,7 +54,7 @@ func transferOptions(target *model.RuleOptions, source *PlainRuleOptions) {
 
 	v := reflect.ValueOf(source).Elem()
 	vt := v.Type()
-	for i := 0; i < vt.NumField(); i++ {
+	for i := range vt.NumField() {
 		ft := vt.Field(i)
 		key, ok := ft.Tag.Lookup("option")
 		if !ok {
