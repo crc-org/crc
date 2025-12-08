@@ -40,7 +40,7 @@ require (
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
 	github.com/r3labs/sse/v2 v2.10.0
-	github.com/sebrandon1/grab v0.0.8
+	github.com/sebrandon1/grab v0.0.9
 	github.com/segmentio/analytics-go/v3 v3.3.0
 	github.com/shirou/gopsutil/v4 v4.25.11
 	github.com/sirupsen/logrus v1.9.3

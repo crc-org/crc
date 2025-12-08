@@ -559,7 +559,7 @@ github.com/russross/blackfriday/v2
 # github.com/sagikazarmark/locafero v0.11.0
 ## explicit; go 1.23.0
 github.com/sagikazarmark/locafero
-# github.com/sebrandon1/grab v0.0.8
+# github.com/sebrandon1/grab v0.0.9
 ## explicit; go 1.24
 github.com/sebrandon1/grab/lib
 # github.com/secure-systems-lab/go-securesystemslib v0.9.1
