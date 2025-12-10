@@ -435,7 +435,7 @@ func (dev *VirtioNet) ToCmdLine() ([]string, error) {
 	case dev.Nat:
 		builder.WriteString(",nat")
 	case dev.UnixSocketPath != "":
-		fmt.Fprintf(&builder, ",unixSocketPath=%s", dev.UnixSocketPath)
+		fmt.Fprintf(&builder, ",type=unixgram,path=%s,vfkitMagic=on", dev.UnixSocketPath)
 	default:
 		fmt.Fprintf(&builder, ",fd=%d", dev.Socket.Fd())
 	}

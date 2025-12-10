@@ -275,16 +275,16 @@ func (d *Driver) Start() error {
 	// when loading a VM created by a crc version predating this commit,
 	// d.QemuGAVsockPort will be missing from ~/.crc/machines/crc/config.json
 	// In such a case, assume the VM will not support time sync
-	if d.QemuGAVsockPort != 0 {
-		timesync, err := config.TimeSyncNew(d.QemuGAVsockPort)
-		if err != nil {
-			return err
-		}
-		err = vm.AddDevice(timesync)
-		if err != nil {
-			return err
-		}
-	}
+	// if d.QemuGAVsockPort != 0 {
+	// 	timesync, err := config.TimeSyncNew(d.QemuGAVsockPort)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	err = vm.AddDevice(timesync)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	args, err := vm.ToCmdLine()
 	if err != nil {
@@ -443,15 +443,15 @@ func (d *Driver) findVfkitProcess() (*process.Process, error) {
 		return nil, nil
 	}
 
-	name, err := p.Name()
-	if err != nil {
-		return nil, err
-	}
-	if !strings.HasPrefix(name, "vfkit") {
-		// return InvalidExecutable error?
-		log.Debugf("pid %d is stale, and is being used by %s", pid, name)
-		return nil, nil
-	}
+	// name, err := p.Name()
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if !strings.HasPrefix(name, "vfkit") {
+	// 	// return InvalidExecutable error?
+	// 	log.Debugf("pid %d is stale, and is being used by %s", pid, name)
+	// 	return nil, nil
+	// }
 
 	return p, nil
 }

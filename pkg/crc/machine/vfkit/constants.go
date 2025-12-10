@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	VfkitVersion = "0.6.1"
-	vfkitCommand = "vfkit"
+	VfkitVersion = "1.1.1"
+	vfkitCommand = "krunkit"
 )
 
 var (
