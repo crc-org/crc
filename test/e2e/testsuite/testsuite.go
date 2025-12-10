@@ -28,7 +28,6 @@ import (
 	crcCmd "github.com/crc-org/crc/v2/test/extended/crc/cmd"
 	"github.com/crc-org/crc/v2/test/extended/util"
 	"github.com/cucumber/godog"
-	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/spf13/pflag"
 )
@@ -153,7 +152,7 @@ func InitializeTestSuite(tctx *godog.TestSuiteContext) {
 
 		err := crcCmd.DeleteCRC()
 		if err != nil {
-			fmt.Printf("Could not delete CRC VM: %s.", err)
+			fmt.Printf("Could not delete CRC VM: %s.\n", err)
 		}
 
 		err = util.LogMessage("info", "----- Cleaning Up -----")
@@ -169,6 +168,7 @@ func InitializeTestSuite(tctx *godog.TestSuiteContext) {
 }
 
 func InitializeScenario(s *godog.ScenarioContext) {
+	monitor := NewMonitor(1 * time.Second)
 
 	s.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 
@@ -264,12 +264,17 @@ func InitializeScenario(s *godog.ScenarioContext) {
 				}
 			}
 
-			if tag.Name == "@story_health" {
-				if err := getCPUdata("Before start"); err != nil {
-					fmt.Printf("Failed to collect CPU data: %v\n", err)
+			if tag.Name == "@performance" {
+				if err := monitor.Start(); err != nil {
+					fmt.Printf("Failed to start monitor: %v\n", err)
 				}
-				if err := getMemoryData("Before start"); err != nil {
-					fmt.Printf("Failed to collect memory data: %v\n", err)
+				err := getTimestamp("start")
+				if err != nil {
+					fmt.Printf("Failed to get finish getTimestamp: %v\n", err)
+				}
+				err = getMemoryData("Before start")
+				if err != nil {
+					fmt.Printf("Failed to get memory data: %v\n", err)
 				}
 			}
 		}
@@ -398,6 +403,16 @@ func InitializeScenario(s *godog.ScenarioContext) {
 				}
 			}
 
+			if tag.Name == "@performance" {
+				err := getTimestamp("finish")
+				if err != nil {
+					fmt.Printf("Failed to get finish getTimestamp: %v\n", err)
+				}
+				if err := monitor.Stop(); err != nil {
+					fmt.Printf("Failed to stop monitoring: %v\n", err)
+				}
+				fmt.Printf("Collection has stopped\n")
+			}
 		}
 
 		return ctx, nil
@@ -579,8 +594,8 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		EnsureApplicationIsAccessibleViaNodePort)
 	s.Step(`^persistent volume of size "([^"]*)"GB exists$`,
 		EnsureVMPartitionSizeCorrect)
-	s.Step(`^get cpu data "([^"]*)"`,
-		getCPUdata)
+	s.Step(`^record timestamp "([^"]*)"`,
+		getTimestamp)
 	s.Step(`^get memory data "([^"]*)"`,
 		getMemoryData)
 
@@ -1320,20 +1335,6 @@ func deserializeListBlockDeviceCommandOutputToExtractPVSize(lsblkOutput string) 
 	return diskSize - (lvmSize + 1), nil
 }
 
-func getCPUdata(content string) error {
-	cpuData, err := cpu.Percent(0, false)
-	if err != nil {
-		return fmt.Errorf("failed to get CPU data: %v", err)
-	}
-	if len(cpuData) == 0 {
-		return fmt.Errorf("no CPU data available")
-	}
-	data := fmt.Sprintf("%s: %.2f%%\n", content, cpuData)
-	wd, _ := os.Getwd()
-	file := filepath.Join(wd, "../test-results/cpu-consume.txt")
-	return util.WriteToFile(data, file)
-}
-
 func getMemoryData(content string) error {
 	v, err := mem.VirtualMemory()
 	if err != nil {
@@ -1349,5 +1350,16 @@ func getMemoryData(content string) error {
 		return fmt.Errorf("failed to get working directory: %v", err)
 	}
 	file := filepath.Join(wd, "../test-results/memory-consume.txt")
+	return util.WriteToFile(data, file)
+}
+
+func getTimestamp(content string) error {
+	data := fmt.Sprintf("[%s], %s\n",
+		time.Now().Format("15:04:05"), content)
+	wd, err := os.Getwd()
+	if err != nil {
+		fmt.Printf("failed to get working directory: %v\n", err)
+	}
+	file := filepath.Join(wd, "../test-results/time-stamp.txt")
 	return util.WriteToFile(data, file)
 }
