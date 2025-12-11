@@ -15,5 +15,6 @@ func GetBundleCmd(config *config.Config) *cobra.Command {
 		},
 	}
 	bundleCmd.AddCommand(getGenerateCmd(config))
+	bundleCmd.AddCommand(getDownloadCmd(config))
 	return bundleCmd
 }
