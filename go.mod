@@ -4,6 +4,7 @@ go 1.24.2
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
+	github.com/DeedleFake/p9 v0.7.1
 	github.com/Masterminds/semver/v3 v3.4.0
 	github.com/Microsoft/go-winio v0.6.2
 	github.com/ProtonMail/go-crypto v1.3.0
@@ -27,6 +28,7 @@ require (
 	github.com/klauspost/compress v1.18.2
 	github.com/klauspost/cpuid/v2 v2.3.0
 	github.com/kofalt/go-memoize v0.0.0-20220914132407-0b5d6a304579
+	github.com/linuxkit/virtsock v0.0.0-20220523201153-1a23e78aa7a2
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mdlayher/vsock v1.2.1
 	github.com/onsi/ginkgo/v2 v2.27.3
@@ -130,7 +132,6 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect
 	github.com/letsencrypt/boulder v0.0.0-20240620165639-de9c06129bec // indirect
-	github.com/linuxkit/virtsock v0.0.0-20220523201153-1a23e78aa7a2 // indirect
 	github.com/lufia/plan9stats v0.0.0-20240909124753-873cd0166683 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
