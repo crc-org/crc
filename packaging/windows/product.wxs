@@ -1,0 +1,131 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+    <?ifndef Version?>
+        <?error Version must be defined via command line argument?>
+    <?endif?>
+
+    <Package UpgradeCode="53DE5BFA-0E53-44E7-8D4F-07E37E59A9AB" Name="Red Hat OpenShift Local" Version="$(Version)" Manufacturer="Red Hat Inc." Language="1033" InstallerVersion="500">
+        <SummaryInformation Description="Red Hat OpenShift Local $(Version)" />
+        <Media Id="1" EmbedCab="yes" Cabinet="cab1.cab" />
+        <MajorUpgrade AllowDowngrades="yes" />
+        <WixVariable Id="WixUIBannerBmp" Value=".\Resources\banner.png" />
+        <WixVariable Id="WixUIDialogBmp" Value=".\Resources\background.png" />
+        <Icon Id="crcicon.ico" SourceFile=".\Resources\icon.ico" />
+        <Property Id="ARPPRODUCTICON" Value="crcicon.ico" />
+        <Property Id="CURRENTBUILD">
+            <RegistrySearch Id="CURRENTBUILDSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuild" Type="raw" />
+        </Property>
+        <Property Id="MINIMUMBUILD" Value="16299" Secure="yes"></Property>
+        <Launch Condition="Installed OR (CURRENTBUILD &gt;= MINIMUMBUILD)" Message="Red Hat OpenShift Local requires the Windows 10 Fall Creators Update (version 1709) or newer." />
+        <Property Id="WINDOWSEDITION" Secure="yes">
+            <RegistrySearch Id="WindowsEditionReg" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="EditionID" Type="raw" />
+        </Property>
+        <Launch Condition="Installed OR (WINDOWSEDITION &lt;&gt; &quot;Core&quot;)" Message="Red Hat OpenShift Local cannot run on Windows Home edition" />
+
+        <Property Id="CRCINSTALLED" Secure="yes">
+            <RegistrySearch Id="CrcInstalledReg" Root="HKCU" Key="Software\Red Hat\Red Hat OpenShift Local" Name="installed" Type="raw" />
+        </Property>
+
+        <Property Id="POWERSHELLEXE">
+            <RegistrySearch Id="POWERSHELLEXE" Type="raw" Root="HKLM" Key="SOFTWARE\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell" Name="Path" />
+        </Property>
+
+        <Property Id="USERFOLDER">
+            <DirectorySearch Id="userProfileSearch" Depth="0" Path="[%USERPROFILE]" />
+        </Property>
+
+        <Property Id="SHAREDDIRNAME" Secure="yes" Value="crc-dir0" />
+
+        <SetProperty Action="CACreateCrcUsersGroup" Id="CreateCrcGroup" Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /comment:"Group for Red Hat OpenShift Local users" /add' Before="CreateCrcGroup" Sequence="execute"/>
+        <CustomAction Id="CreateCrcGroup" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" />
+
+        <SetProperty Action="CARemoveCrcUsersGroup" Id="RemoveCrcGroup" Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /del' Before="RemoveCrcGroup" Sequence="execute"/>
+        <CustomAction Id="RemoveCrcGroup" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" />
+
+        <SetProperty Action="CARemoveCrcUsersGroupRollback" Id="RemoveCrcGroupRollback" Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /del' Before="RemoveCrcGroup" Sequence="execute"/>
+        <CustomAction Id="RemoveCrcGroupRollback" DllEntry="WixQuietExec" Execute="rollback" Impersonate="no" Return="ignore" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" />
+
+        <SetProperty Action="CARemoveCrcDaemonTask" Id="RemoveCrcDaemonTask" Value="&quot;[System64Folder]cmd.exe&quot; /c schtasks /delete /TN crcDaemon /F" Before="RemoveFiles" Sequence="execute" />
+        <CustomAction Id="RemoveCrcDaemonTask" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" />
+
+        <SetProperty Action="CAInstallHyperv" Id="InstallHyperv" Value="&quot;[System64Folder]dism.exe&quot; /online /enable-feature /featureName:microsoft-hyper-v-all /NoRestart /quiet" Before="InstallHyperv" Sequence="execute" />
+        <CustomAction Id="InstallHyperv" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" />
+
+        <SetProperty Action="CARemoveSMBShare" Id="RemoveSMBShare" Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Remove-SmbShare -Name '[SHAREDDIRNAME]' -Force&quot;" Before="RemoveSMBShare" Sequence="execute" />
+        <CustomAction Id="RemoveSMBShare" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" />
+
+        <InstallExecuteSequence>
+            <Custom Action="CreateCrcGroup" Before="Wix4ConfigureUsers_$(sys.BUILDARCHSHORT)" Condition="NOT Installed AND NOT REMOVE~=&quot;ALL&quot; AND NOT WIX_UPGRADE_DETECTED" />
+            <Custom Action="RemoveCrcGroup" After="RemoveFolders" Condition="Installed AND NOT PATCH AND REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
+            <Custom Action="InstallHyperv" After="InstallFiles" Condition="NOT Installed AND NOT REMOVE~=&quot;ALL&quot; AND NOT WIX_UPGRADE_DETECTED" />
+            <Custom Action="RemoveCrcDaemonTask" Before="RemoveFiles" Condition="Installed AND NOT UPGRADINGPRODUCTCODE" />
+            <Custom Action="RemoveSMBShare" After="RemoveCrcDaemonTask" Condition="Installed AND UPGRADINGPRODUCTCODE" />
+            <Custom Action="RemoveCrcGroupRollback" Before="CreateCrcGroup" Condition="NOT Installed AND NOT REMOVE~=&quot;ALL&quot; AND NOT WIX_UPGRADE_DETECTED" />
+            <ScheduleReboot After="InstallFinalize" Condition="NOT Installed AND NOT REMOVE~=&quot;ALL&quot; AND NOT WIX_UPGRADE_DETECTED" />
+        </InstallExecuteSequence>
+        <Feature Id="DefaultFeature" Title="Install core features" Level="1" AllowAbsent="no">
+            <ComponentRef Id="CrcExe" />
+            <ComponentRef Id="AdminHelper" />
+            <ComponentRef Id="BackgroundLauncher" />
+            <ComponentRef Id="AddToPath" />
+            <ComponentRef Id="VsockRegistryEntry" />
+            <ComponentRef Id="Hvsock9pRegistryEntry" />
+            <ComponentRef Id="CreateCrcUsersGroupAddUser" />
+            <ComponentRef Id="AddUserToHypervAdminsGroup" />
+        </Feature>
+        <UI>
+            <UIRef Id="WixUI_ErrorProgressText" />
+            <!-- Define the installer UI -->
+            <UIRef Id="WixUI_HK" />
+            <ProgressText Action="InstallHyperv" Message="Installing Hyper-V" />
+            <ProgressText Action="RemoveCrcDaemonTask" Message="Removing crcDaemon task" />
+            <ProgressText Action="RemoveSMBShare" Message="Removing share named: [SHAREDDIRNAME] for folder: [USERFOLDER]" />
+        </UI>
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+        <!-- this should help to propagate env var changes -->
+        <util:BroadcastEnvironmentChange />
+        <util:Group Id="HypervAdminsGroup" Name="Hyper-V Administrators" />
+        <util:Group Id="CrcUsersGroup" Name="crc-users" />
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="INSTALLDIR" Name="Red Hat OpenShift Local">
+                <Component Id="CrcExe">
+                    <File Id="CrcExe" Source=".\crc.exe" KeyPath="yes" DiskId="1" />
+                    <RemoveFile Id="RemoveInstallFiles" Name="*.*" On="uninstall" />
+                </Component>
+                <Component Id="AdminHelper">
+                    <File Id="AdminHelper" Source=".\crc-admin-helper-windows.exe" KeyPath="yes" DiskId="1" />
+                    <ServiceInstall Name="crcAdminHelper" Description="Perform administrative tasks for the user" Arguments="daemon" DisplayName="Red Hat OpenShift Local Admin Helper" ErrorControl="normal" Start="auto" Type="ownProcess" />
+                    <ServiceControl Id="StartAdminHelperService" Name="crcAdminHelper" Start="install" Stop="both" Remove="uninstall" />
+                </Component>
+                <Component Id="BackgroundLauncher">
+                    <File Id="BackgroundLauncher" Source=".\win32-background-launcher.exe" Name="crc-background-launcher.exe" KeyPath="yes" DiskId="1" />
+                </Component>
+                <Component Id="AddToPath" Guid="09C1E713-44DE-44C3-BDAD-72BE10C10542">
+                    <CreateFolder />
+                    <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes" />
+                </Component>
+                <Component Id="VsockRegistryEntry">
+                    <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices\00000400-FACB-11E6-BD58-64006A7986D3">
+                        <RegistryValue Type="string" Name="ElementName" Value="gvisor-tap-vsock" KeyPath="yes" />
+                    </RegistryKey>
+                </Component>
+                <Component Id="Hvsock9pRegistryEntry" Guid="*">
+                    <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices\00009000-FACB-11E6-BD58-64006A7986D3">
+                        <RegistryValue Type="string" Name="ElementName" Value="fs9p-hvsock" KeyPath="yes"/>
+                    </RegistryKey>
+                </Component>
+                <Component Id="CreateCrcUsersGroupAddUser" Guid="12DCE321-8645-43ED-9059-3DC5828A3B13">
+                    <util:User Id="CurrentUserCrcUsers" Name="[LogonUser]" Domain="[%USERDOMAIN]" CreateUser="no" FailIfExists="no">
+                        <util:GroupRef Id="CrcUsersGroup" />
+                    </util:User>
+                </Component>
+                <Component Id="AddUserToHypervAdminsGroup" Guid="CEE06E47-C46E-410E-9951-C5A4004198E6">
+                    <util:User Id="CurrentUserHypervAdmins" Name="[LogonUser]" Domain="[%USERDOMAIN]" CreateUser="no" FailIfExists="no" >
+                        <util:GroupRef Id="HypervAdminsGroup" />
+                    </util:User>
+                </Component>
+            </Directory>
+        </StandardDirectory>
+    </Package>
+</Wix>
+
