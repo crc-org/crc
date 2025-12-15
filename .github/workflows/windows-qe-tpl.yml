@@ -36,7 +36,7 @@ jobs:
     steps:
     - name: Download windows installer
       id: download-windows-installer-artifact
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: windows-installer
         run-id: ${{inputs.trigger-workflow-run-id}}
@@ -44,7 +44,7 @@ jobs:
 
     - name: Download qe oci image
       id: download-qe-oci-image-artifact
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: crc-${{inputs.qe-type}}-windows-amd64
         run-id: ${{inputs.trigger-workflow-run-id}}
