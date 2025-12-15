@@ -177,20 +177,31 @@ func username() string {
 
 const (
 	// This key is required to activate the vsock communication
-	registryDirectory = `HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices`
+	vsockRegistryDirectory = `HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices`
 	// First part of the key is the vsock port. The rest is not used and just a placeholder.
-	registryKey   = "00000400-FACB-11E6-BD58-64006A7986D3"
-	registryValue = "gvisor-tap-vsock"
+	gvisorVsockRegistryKey   = "00000400-FACB-11E6-BD58-64006A7986D3"
+	gvisorVsockRegistryValue = "gvisor-tap-vsock"
+	fs9pVsockRegistryKey     = "00009000-FACB-11E6-BD58-64006A7986D3"
+	fs9pVsockRegistryValue   = "fs9p-hvsock"
 )
 
 func checkVsock() error {
-	stdout, _, err := powershell.Execute(fmt.Sprintf(`Get-Item -Path "%s\%s"`, registryDirectory, registryKey))
+	stdout, _, err := powershell.Execute(fmt.Sprintf(`Get-Item -Path "%s\%s"`, vsockRegistryDirectory, gvisorVsockRegistryKey))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read gvisor vsock registry key: %w", err)
 	}
-	if !strings.Contains(stdout, registryValue) {
-		return errors.New("VSock registry key not correctly configured")
+	if !strings.Contains(stdout, gvisorVsockRegistryValue) {
+		return errors.New("VSock registry key for gvisor not correctly configured")
 	}
+
+	stdout, _, err = powershell.Execute(fmt.Sprintf(`Get-Item -Path "%s\%s"`, vsockRegistryDirectory, fs9pVsockRegistryKey))
+	if err != nil {
+		return fmt.Errorf("failed to read 9P vsock registry key: %w", err)
+	}
+	if !strings.Contains(stdout, fs9pVsockRegistryValue) {
+		return errors.New("VSock registry key for 9P not correctly configured")
+	}
+
 	return nil
 }
 
