@@ -42,7 +42,7 @@ jobs:
           echo "status_context=${status_context}" >> "$GITHUB_ENV"
 
       - name: Download linux binary
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: linux-binary
           run-id: ${{inputs.trigger-workflow-run-id}}
@@ -50,7 +50,7 @@ jobs:
 
       - name: Download qe oci image
         id: download-qe-oci-image-artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: crc-${{inputs.qe-type}}-linux-arm64
           run-id: ${{inputs.trigger-workflow-run-id}}
