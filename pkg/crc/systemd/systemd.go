@@ -71,6 +71,16 @@ func (c Commander) Result(name string) (results.Result, error) {
 	return results.Parse(output), nil
 }
 
+// ExecMainExitTimestamp returns the exit timestamp of a service's main process.
+// Returns empty string if the service has never run, otherwise returns the exit timestamp.
+func (c Commander) ExecMainExitTimestamp(name string) (string, error) {
+	stdOut, stdErr, err := c.commandRunner.Run("systemctl", "show", "--property", "ExecMainExitTimestamp", "--value", name)
+	if err != nil {
+		return "", fmt.Errorf("failed to get service main exit timestamp: %s %v: %s", stdOut, err, stdErr)
+	}
+	return strings.TrimSpace(stdOut), nil
+}
+
 func (c Commander) DaemonReload() error {
 	stdOut, stdErr, err := c.commandRunner.RunPrivileged("Executing systemctl daemon-reload command", "systemctl", "daemon-reload")
 	if err != nil {
