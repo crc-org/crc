@@ -2,7 +2,6 @@ package cluster
 
 import (
 	"context"
-	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -17,13 +16,13 @@ import (
 
 	"go.podman.io/common/pkg/strongunits"
 
-	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/errors"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/v2/pkg/crc/oc"
 	"github.com/crc-org/crc/v2/pkg/crc/ssh"
-	crctls "github.com/crc-org/crc/v2/pkg/crc/tls"
+	"github.com/crc-org/crc/v2/pkg/crc/systemd"
+	"github.com/crc-org/crc/v2/pkg/crc/systemd/states"
 	"github.com/crc-org/crc/v2/pkg/crc/validation"
 	crcstrings "github.com/crc-org/crc/v2/pkg/strings"
 	"github.com/pborman/uuid"
@@ -184,7 +183,54 @@ func EnsureSSHKeyPresentInTheCluster(ctx context.Context, ocConfig oc.Config, ss
 	return nil
 }
 
-func EnsurePullSecretPresentInTheCluster(ctx context.Context, ocConfig oc.Config, pullSec PullSecretLoader) error {
+// WaitForServiceSuccessfullyFinished waits for a systemd service to:
+// 1. Run (verified by checking ExecMainExitTimestamp changes)
+// 2. Finish (transition to Stopped state)
+// 3. Exit with Result=success
+func WaitForServiceSuccessfullyFinished(ctx context.Context, systemdRunner *systemd.Commander,
+	serviceName string, timeout, retryInterval time.Duration) error {
+	return errors.Retry(ctx, timeout, func() error {
+		state, err := systemdRunner.Status(serviceName)
+		if err != nil {
+			return &errors.RetriableError{Err: err}
+		}
+		logging.Debugf("Service %s is in state %s", serviceName, state)
+
+		if state != states.Stopped {
+			return &errors.RetriableError{Err: fmt.Errorf("service %s has not finished yet, current state: %s", serviceName, state)}
+		}
+
+		// Service is stopped, check if it ran by verifying timestamp changed
+		currentExecMainExitTimestamp, err := systemdRunner.ExecMainExitTimestamp(serviceName)
+		if err != nil {
+			return &errors.RetriableError{Err: err}
+		}
+		logging.Debugf("Service %s current ExecMainExitTimestamp: '%s'", serviceName, currentExecMainExitTimestamp)
+
+		if currentExecMainExitTimestamp == "" {
+			return &errors.RetriableError{Err: fmt.Errorf("service %s has not run yet (no exit timestamp)", serviceName)}
+		}
+
+		// Service has run and finished, now check if it succeeded
+		result, err := systemdRunner.Result(serviceName)
+		logging.Debugf("Service %s result is %s", serviceName, result)
+		if err != nil {
+			return &errors.RetriableError{Err: err}
+		}
+		if !result.IsSuccess() {
+			return fmt.Errorf("service %s finished with result: %s (expected success)", serviceName, result)
+		}
+
+		logging.Debugf("Service %s finished successfully", serviceName)
+		return nil
+	}, retryInterval)
+}
+
+func EnsurePullSecretPresentInTheCluster(ctx context.Context, systemdRunner *systemd.Commander, ocConfig oc.Config, pullSec PullSecretLoader) error {
+	// Wait for the service to finish successfully (30 seconds timeout, check every 2 seconds)
+	if err := WaitForServiceSuccessfullyFinished(ctx, systemdRunner, "crc-pullsecret.service", 30*time.Second, 2*time.Second); err != nil {
+		return err
+	}
 	if err := WaitForOpenshiftResource(ctx, ocConfig, "secret"); err != nil {
 		return err
 	}
@@ -200,39 +246,6 @@ func EnsurePullSecretPresentInTheCluster(ctx context.Context, ocConfig oc.Config
 	if err := validation.ImagePullSecret(string(decoded)); err == nil {
 		return nil
 	}
-	return nil
-}
-
-func EnsureGeneratedClientCAPresentInTheCluster(ctx context.Context, ocConfig oc.Config, sshRunner *ssh.Runner, selfSignedCACert *x509.Certificate, adminCert string) error {
-	selfSignedCAPem := crctls.CertToPem(selfSignedCACert)
-	if err := WaitForOpenshiftResource(ctx, ocConfig, "configmaps"); err != nil {
-		return err
-	}
-	clusterClientCA, stderr, err := ocConfig.RunOcCommand("get", "configmaps", "admin-kubeconfig-client-ca", "-n", "openshift-config", "-o", `jsonpath="{.data.ca-bundle\.crt}"`)
-	if err != nil {
-		return fmt.Errorf("Failed to get config map %v: %s", err, stderr)
-	}
-
-	ok, err := crctls.VerifyCertificateAgainstRootCA(clusterClientCA, adminCert)
-	if err != nil {
-		return err
-	}
-	if ok {
-		return nil
-	}
-
-	logging.Info("Updating root CA cert to admin-kubeconfig-client-ca configmap...")
-	jsonPath := fmt.Sprintf(`'{"data": {"ca-bundle.crt": %q}}'`, selfSignedCAPem)
-	cmdArgs := []string{"patch", "configmap", "admin-kubeconfig-client-ca",
-		"-n", "openshift-config", "--patch", jsonPath}
-	_, stderr, err = ocConfig.RunOcCommand(cmdArgs...)
-	if err != nil {
-		return fmt.Errorf("Failed to patch admin-kubeconfig-client-ca config map with new CA` %v: %s", err, stderr)
-	}
-	if err := sshRunner.CopyFile(constants.KubeconfigFilePath, ocConfig.KubeconfigPath, 0644); err != nil {
-		return fmt.Errorf("Failed to copy generated kubeconfig file to VM: %v", err)
-	}
-
 	return nil
 }
 
@@ -309,7 +322,10 @@ func RemoveOldRenderedMachineConfig(ocConfig oc.Config) error {
 	return nil
 }
 
-func EnsureClusterIDIsNotEmpty(ctx context.Context, ocConfig oc.Config) error {
+func EnsureClusterIDIsNotEmpty(ctx context.Context, systemdRunner *systemd.Commander, ocConfig oc.Config) error {
+	if err := WaitForServiceSuccessfullyFinished(ctx, systemdRunner, "ocp-clusterid.service", 30*time.Second, 2*time.Second); err != nil {
+		return err
+	}
 	if err := WaitForOpenshiftResource(ctx, ocConfig, "clusterversion"); err != nil {
 		return err
 	}
