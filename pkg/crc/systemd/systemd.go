@@ -2,9 +2,11 @@ package systemd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 	"github.com/crc-org/crc/v2/pkg/crc/systemd/actions"
+	"github.com/crc-org/crc/v2/pkg/crc/systemd/results"
 	"github.com/crc-org/crc/v2/pkg/crc/systemd/states"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
 )
@@ -55,6 +57,18 @@ func (c Commander) Stop(name string) error {
 func (c Commander) Status(name string) (states.State, error) {
 	return c.service(name, actions.Status)
 
+}
+
+// Result returns the result of a service execution (success, exit-code, etc.)
+func (c Commander) Result(name string) (results.Result, error) {
+	stdOut, stdErr, err := c.commandRunner.Run("systemctl", "show", "--property", "Result", "--value", name)
+	if err != nil {
+		return results.Unknown, fmt.Errorf("failed to get service result: %s %v: %s", stdOut, err, stdErr)
+	}
+
+	// Output format is "Result=success" or "Result=exit-code", etc.
+	output := strings.TrimSpace(stdOut)
+	return results.Parse(output), nil
 }
 
 func (c Commander) DaemonReload() error {
