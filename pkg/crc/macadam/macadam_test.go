@@ -12,18 +12,18 @@ func TestUseMacadam(t *testing.T) {
 	assert.NotNil(t, config.Runner)
 	assert.Equal(t, constants.MacadamPath(), config.MacadamExecutablePath)
 	assert.NotNil(t, config.Env)
-	assert.Equal(t, 0, len(config.Env))
+	assert.Equal(t, 1, len(config.Env))
 }
 
 func TestSetEnv(t *testing.T) {
 	config := UseMacadam()
 	configWithEnv := config.SetEnv("TEST_VAR", "test_value")
 
-	assert.Equal(t, 1, len(configWithEnv.Env))
+	assert.Equal(t, 2, len(configWithEnv.Env))
 	assert.Equal(t, "test_value", configWithEnv.Env["TEST_VAR"])
 
 	// Original config should be unchanged
-	assert.Equal(t, 0, len(config.Env))
+	assert.Equal(t, 1, len(config.Env))
 }
 
 func TestWithEnv(t *testing.T) {
@@ -44,7 +44,7 @@ func TestSetEnvChaining(t *testing.T) {
 	config := UseMacadam()
 	configWithEnv := config.SetEnv("VAR1", "value1").SetEnv("VAR2", "value2")
 
-	assert.Equal(t, 2, len(configWithEnv.Env))
+	assert.Equal(t, 3, len(configWithEnv.Env))
 	assert.Equal(t, "value1", configWithEnv.Env["VAR1"])
 	assert.Equal(t, "value2", configWithEnv.Env["VAR2"])
 }
