@@ -30,6 +30,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/services"
 	"github.com/crc-org/crc/v2/pkg/crc/services/dns"
 	crcssh "github.com/crc-org/crc/v2/pkg/crc/ssh"
+	"github.com/crc-org/crc/v2/pkg/crc/systemd"
 	"github.com/crc-org/crc/v2/pkg/crc/telemetry"
 	crctls "github.com/crc-org/crc/v2/pkg/crc/tls"
 	"github.com/crc-org/crc/v2/pkg/crc/validation"
@@ -483,8 +484,9 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if err := cluster.DeleteMCOLeaderLease(ctx, ocConfig); err != nil {
 		return nil, err
 	}
+	systemdRunner := systemd.NewInstanceSystemdCommander(sshRunner)
 
-	if err := cluster.EnsurePullSecretPresentInTheCluster(ctx, ocConfig, startConfig.PullSecret); err != nil {
+	if err := cluster.EnsurePullSecretPresentInTheCluster(ctx, systemdRunner, ocConfig, startConfig.PullSecret); err != nil {
 		return nil, errors.Wrap(err, "Failed to update cluster pull secret")
 	}
 
@@ -492,7 +494,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to update ssh public key to machine config")
 	}
 
-	if err := cluster.EnsureClusterIDIsNotEmpty(ctx, ocConfig); err != nil {
+	if err := cluster.EnsureClusterIDIsNotEmpty(ctx, systemdRunner, ocConfig); err != nil {
 		return nil, errors.Wrap(err, "Failed to update cluster ID")
 	}
 
