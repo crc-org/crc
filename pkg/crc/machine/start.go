@@ -2,8 +2,6 @@ package machine
 
 import (
 	"context"
-	"crypto/rsa"
-	"crypto/x509"
 	"fmt"
 	"math/rand"
 	"os"
@@ -31,7 +29,6 @@ import (
 	crcssh "github.com/crc-org/crc/v2/pkg/crc/ssh"
 	"github.com/crc-org/crc/v2/pkg/crc/systemd"
 	"github.com/crc-org/crc/v2/pkg/crc/telemetry"
-	crctls "github.com/crc-org/crc/v2/pkg/crc/tls"
 	"github.com/crc-org/crc/v2/pkg/crc/validation"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
 	"github.com/docker/go-units"
@@ -512,7 +509,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 	}
 
-	if err := updateKubeconfig(ctx, ocConfig, sshRunner, vm.bundle.GetKubeConfigPath()); err != nil {
+	if err := copyKubeconfigFileFromVMToHost(ctx, systemdRunner, sshRunner, constants.KubeconfigFilePath); err != nil {
 		return nil, errors.Wrap(err, "Failed to update kubeconfig file")
 	}
 
@@ -754,17 +751,6 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	return nil
 }
 
-func copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey *rsa.PrivateKey, selfSignedCACert *x509.Certificate, srcKubeConfigPath, dstKubeConfigPath string) error {
-	if _, err := os.Stat(constants.KubeconfigFilePath); err == nil {
-		return nil
-	}
-	clientKey, clientCert, err := crctls.GenerateClientCertificate(selfSignedCAKey, selfSignedCACert)
-	if err != nil {
-		return err
-	}
-	return updateClientCrtAndKeyToKubeconfig(clientKey, clientCert, srcKubeConfigPath, dstKubeConfigPath)
-}
-
 func logBundleDate(crcBundleMetadata *bundle.CrcBundleInfo) {
 	if buildTime, err := crcBundleMetadata.GetBundleBuildTime(); err == nil {
 		bundleAgeDays := time.Since(buildTime).Hours() / 24
@@ -786,13 +772,13 @@ func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Confi
 	return err
 }
 
-func updateKubeconfig(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, kubeconfigFilePath string) error {
-	selfSignedCAKey, selfSignedCACert, err := crctls.GetSelfSignedCA()
-	if err != nil {
-		return errors.Wrap(err, "Not able to generate root CA key and Cert")
+func copyKubeconfigFileFromVMToHost(ctx context.Context, systemdRunner *systemd.Commander, sshRunner *crcssh.Runner, kubeconfigFilePath string) error {
+	logging.Info("Waiting for the updated kubeconfig file to be available on the host...")
+	if err := cluster.WaitForServiceSuccessfullyFinished(ctx, systemdRunner, "ocp-cluster-ca.service", 180*time.Second, 2*time.Second); err != nil {
+		return err
 	}
-	if err := copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey, selfSignedCACert, kubeconfigFilePath, constants.KubeconfigFilePath); err != nil {
-		return errors.Wrapf(err, "Failed to copy kubeconfig file: %s", constants.KubeconfigFilePath)
+	if err := sshRunner.CopyFileFromVM("/opt/kubeconfig", kubeconfigFilePath, 0o600); err != nil {
+		return err
 	}
 	return nil
 }
