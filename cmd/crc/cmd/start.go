@@ -16,12 +16,10 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/cluster"
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
-	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	crcErrors "github.com/crc-org/crc/v2/pkg/crc/errors"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/bundle"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
-	"github.com/crc-org/crc/v2/pkg/crc/network"
 	"github.com/crc-org/crc/v2/pkg/crc/preflight"
 	"github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/validation"
@@ -327,17 +325,6 @@ func commandLinePrefix(shell string) string {
 		return ">"
 	}
 	return "$"
-}
-
-func checkDaemonStarted() error {
-	if crcConfig.GetNetworkMode(config) == network.SystemNetworkingMode {
-		return nil
-	}
-	v, err := daemonclient.GetVersionFromDaemonAPI()
-	if err != nil {
-		return err
-	}
-	return daemonclient.CheckVersionMismatch(v)
 }
 
 func portFallbackWarning() string {
