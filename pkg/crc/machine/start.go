@@ -29,6 +29,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/services"
 	"github.com/crc-org/crc/v2/pkg/crc/services/dns"
 	crcssh "github.com/crc-org/crc/v2/pkg/crc/ssh"
+	"github.com/crc-org/crc/v2/pkg/crc/systemd"
 	"github.com/crc-org/crc/v2/pkg/crc/telemetry"
 	crctls "github.com/crc-org/crc/v2/pkg/crc/tls"
 	"github.com/crc-org/crc/v2/pkg/crc/validation"
@@ -484,8 +485,9 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if err := cluster.DeleteMCOLeaderLease(ctx, ocConfig); err != nil {
 		return nil, err
 	}
+	systemdRunner := systemd.NewInstanceSystemdCommander(sshRunner)
 
-	if err := cluster.EnsurePullSecretPresentInTheCluster(ctx, ocConfig, startConfig.PullSecret); err != nil {
+	if err := cluster.EnsurePullSecretPresentInTheCluster(ctx, systemdRunner, ocConfig, startConfig.PullSecret); err != nil {
 		return nil, errors.Wrap(err, "Failed to update cluster pull secret")
 	}
 
@@ -493,7 +495,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to update ssh public key to machine config")
 	}
 
-	if err := cluster.EnsureClusterIDIsNotEmpty(ctx, ocConfig); err != nil {
+	if err := cluster.EnsureClusterIDIsNotEmpty(ctx, systemdRunner, ocConfig); err != nil {
 		return nil, errors.Wrap(err, "Failed to update cluster ID")
 	}
 
@@ -776,13 +778,6 @@ func updateKubeconfig(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh
 	}
 	if err := copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey, selfSignedCACert, kubeconfigFilePath, constants.KubeconfigFilePath); err != nil {
 		return errors.Wrapf(err, "Failed to copy kubeconfig file: %s", constants.KubeconfigFilePath)
-	}
-	adminClientCA, err := adminClientCertificate(constants.KubeconfigFilePath)
-	if err != nil {
-		return errors.Wrap(err, "Not able to get user CA")
-	}
-	if err := cluster.EnsureGeneratedClientCAPresentInTheCluster(ctx, ocConfig, sshRunner, selfSignedCACert, adminClientCA); err != nil {
-		return errors.Wrap(err, "Failed to update user CA to cluster")
 	}
 	return nil
 }
