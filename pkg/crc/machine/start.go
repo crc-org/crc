@@ -300,9 +300,17 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	// Configure internal DNS if using vsock/user-mode networking
 	if client.useVSock() {
-		if err := enableInternalDNS(vm.name, vm.bundle); err != nil {
+		gvClient, err := getGVProxyClient(vm.name)
+		if err != nil {
+			return nil, errors.Wrap(err, "Error getting gvproxy client")
+		}
+		if err := enableInternalDNS(gvClient); err != nil {
 			logging.Warnf("Failed to configure internal DNS: %v", err)
 			// Don't fail startup if DNS configuration fails, just warn
+		}
+		if err := exposePorts(gvClient, startConfig.Preset, startConfig.IngressHTTPPort, startConfig.IngressHTTPSPort); err != nil {
+			logging.Warnf("Failed to expose ports: %v", err)
+			// Don't fail startup if port exposure fails, just warn
 		}
 	}
 
