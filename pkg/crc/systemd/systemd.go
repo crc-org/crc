@@ -2,6 +2,7 @@ package systemd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 	"github.com/crc-org/crc/v2/pkg/crc/systemd/actions"
@@ -68,6 +69,16 @@ func (c Commander) Result(name string) (results.Result, error) {
 	// Output format is "Result=success" or "Result=exit-code", etc.
 	output := strings.TrimSpace(stdOut)
 	return results.Compare(output), nil
+}
+
+// ExecMainExitTimestamp returns the exit timestamp of a service's main process.
+// Returns empty string if the service has never run, otherwise returns the exit timestamp.
+func (c Commander) ExecMainExitTimestamp(name string) (string, error) {
+	stdOut, stdErr, err := c.commandRunner.Run("systemctl", "show", "-p", "ExecMainExitTimestamp", "--value", name)
+	if err != nil {
+		return "", fmt.Errorf("failed to get service main exit timestamp: %s %v: %s", stdOut, err, stdErr)
+	}
+	return strings.TrimSpace(stdOut), nil
 }
 
 func (c Commander) DaemonReload() error {
