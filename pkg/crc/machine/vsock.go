@@ -101,15 +101,6 @@ func enableInternalDNS(gvClient *gvproxyclient.Client) error {
 	return nil
 }
 
-func isOpened(exposed []types.ExposeRequest, port types.ExposeRequest) bool {
-	for _, alreadyOpenedPort := range exposed {
-		if port == alreadyOpenedPort {
-			return true
-		}
-	}
-	return false
-}
-
 const (
 	virtualMachineIP = "192.168.127.2"
 	hostVirtualIP    = "192.168.127.254"

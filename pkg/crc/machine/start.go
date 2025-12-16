@@ -2,8 +2,6 @@ package machine
 
 import (
 	"context"
-	"crypto/rsa"
-	"crypto/x509"
 	"fmt"
 	"math/rand"
 	"os"
@@ -24,7 +22,6 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
 	"github.com/crc-org/crc/v2/pkg/crc/network"
-	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/v2/pkg/crc/oc"
 	crcPreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/services"
@@ -32,7 +29,6 @@ import (
 	crcssh "github.com/crc-org/crc/v2/pkg/crc/ssh"
 	"github.com/crc-org/crc/v2/pkg/crc/systemd"
 	"github.com/crc-org/crc/v2/pkg/crc/telemetry"
-	crctls "github.com/crc-org/crc/v2/pkg/crc/tls"
 	"github.com/crc-org/crc/v2/pkg/crc/validation"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
 	"github.com/docker/go-units"
@@ -477,10 +473,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to renew TLS certificates: please check if a newer CRC release is available")
 	}
 
-	if err := ensureProxyIsConfiguredInOpenShift(ctx, ocConfig, sshRunner, proxyConfig); err != nil {
-		return nil, errors.Wrap(err, "Failed to update cluster proxy configuration")
-	}
-
 	if err := cluster.DeleteMCOLeaderLease(ctx, ocConfig); err != nil {
 		return nil, err
 	}
@@ -742,48 +734,6 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	/* This is specific to the podman bundle, but is required to drop the 'default' ssh key */
 	_, _, _ = sshRunner.Run("rm", "/home/core/.ssh/authorized_keys.d/ignition")
 	return nil
-}
-
-func copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey *rsa.PrivateKey, selfSignedCACert *x509.Certificate, srcKubeConfigPath, dstKubeConfigPath string) error {
-	if _, err := os.Stat(constants.KubeconfigFilePath); err == nil {
-		return nil
-	}
-	clientKey, clientCert, err := crctls.GenerateClientCertificate(selfSignedCAKey, selfSignedCACert)
-	if err != nil {
-		return err
-	}
-	return updateClientCrtAndKeyToKubeconfig(clientKey, clientCert, srcKubeConfigPath, dstKubeConfigPath)
-}
-
-func ensureProxyIsConfiguredInOpenShift(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, proxy *httpproxy.ProxyConfig) (err error) {
-	if !proxy.IsEnabled() {
-		return nil
-	}
-	logging.Info("Adding proxy configuration to the cluster...")
-	return cluster.AddProxyConfigToCluster(ctx, sshRunner, ocConfig, proxy)
-}
-
-func waitForProxyPropagation(ctx context.Context, ocConfig oc.Config, proxyConfig *httpproxy.ProxyConfig) {
-	if !proxyConfig.IsEnabled() {
-		return
-	}
-	logging.Info("Waiting for the proxy configuration to be applied...")
-	checkProxySettingsForOperator := func() error {
-		proxySet, err := cluster.CheckProxySettingsForOperator(ocConfig, proxyConfig, "marketplace-operator", "openshift-marketplace")
-		if err != nil {
-			logging.Debugf("Error getting proxy setting for openshift-marketplace operator %v", err)
-			return &crcerrors.RetriableError{Err: err}
-		}
-		if !proxySet {
-			logging.Debug("Proxy changes for cluster in progress")
-			return &crcerrors.RetriableError{Err: fmt.Errorf("")}
-		}
-		return nil
-	}
-
-	if err := crcerrors.Retry(ctx, 300*time.Second, checkProxySettingsForOperator, 2*time.Second); err != nil {
-		logging.Debug("Failed to propagate proxy settings to cluster")
-	}
 }
 
 func logBundleDate(crcBundleMetadata *bundle.CrcBundleInfo) {
