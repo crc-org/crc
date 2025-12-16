@@ -1,45 +1,46 @@
 package machine
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
-	"path/filepath"
+	"runtime"
 	"strconv"
 	"time"
 
+	gvproxyclient "github.com/containers/gvisor-tap-vsock/pkg/client"
+	"github.com/containers/gvisor-tap-vsock/pkg/types"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
+	crcPreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/pkg/errors"
 )
 
-// DNSRecord represents a DNS record entry
-type DNSRecord struct {
-	Name string `json:"Name"`
-	IP   string `json:"IP"`
+func exposePorts(gvClient *gvproxyclient.Client, preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint) error {
+	portsToExpose := vsockPorts(preset, ingressHTTPPort, ingressHTTPSPort)
+	for _, port := range portsToExpose {
+		if err := gvClient.Expose(&port); err != nil {
+			return errors.Wrapf(err, "failed to expose port %s -> %s", port.Local, port.Remote)
+		}
+	}
+	return nil
 }
 
-// DNSZone represents a DNS zone configuration with specific records
-type DNSZone struct {
-	Name    string      `json:"Name"`
-	Records []DNSRecord `json:"Records,omitempty"`
-}
-
-// DNSZoneWithDefault represents a DNS zone configuration with a default IP (wildcard)
-type DNSZoneWithDefault struct {
-	Name      string `json:"Name"`
-	DefaultIP string `json:"DefaultIP"`
-}
-
-// addDNSZoneToGVProxy adds a DNS zone to gvproxy via Unix socket
-func addDNSZoneToGVProxy(socketPath string, zoneData interface{}) error {
-	zoneJSON, err := json.Marshal(zoneData)
+func getGVProxyClient(vmName string) (*gvproxyclient.Client, error) {
+	m := getMacadamClient()
+	socketPath, err := m.GetGVProxySocketPath(vmName)
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal DNS zone to JSON")
+		return nil, errors.Wrapf(err, "failed to get gvproxy socket path")
+	}
+	if _, err := os.Stat(socketPath); err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("gvproxy socket does not exist at %s", socketPath)
+		}
+		return nil, errors.Wrapf(err, "failed to check gvproxy socket at %s", socketPath)
 	}
 
 	baseTransport := httpproxy.HTTPTransport()
@@ -60,62 +61,101 @@ func addDNSZoneToGVProxy(socketPath string, zoneData interface{}) error {
 		Timeout:   10 * time.Second,
 	}
 
-	req, err := http.NewRequest("POST", "http://gvproxy/services/dns/add", bytes.NewBuffer(zoneJSON))
-	if err != nil {
-		return errors.Wrap(err, "failed to create HTTP request")
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	logging.Debugf("Adding DNS zone to gvproxy: %s", string(zoneJSON))
-
-	resp, err := client.Do(req) //nolint:gosec
-	if err != nil {
-		return errors.Wrapf(err, "failed to add DNS zone via gvproxy socket %s", socketPath)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("gvproxy DNS service returned status %d", resp.StatusCode)
-	}
-
-	return nil
+	return gvproxyclient.New(client, "http://gvproxy"), nil
 }
 
 // enableInternalDNS configures the internal DNS server via gvproxy Unix socket
-func enableInternalDNS(vmName string, bundleInfo interface{}) error {
-	uid := os.Getuid()
-	socketPath := filepath.Join("/run", "user", strconv.Itoa(uid), "macadam", "qemu", fmt.Sprintf("%s-gvproxy-api.sock", vmName))
-
-	if _, err := os.Stat(socketPath); err != nil {
-		if os.IsNotExist(err) {
-			return fmt.Errorf("gvproxy socket does not exist at %s", socketPath)
-		}
-		return errors.Wrapf(err, "failed to check gvproxy socket at %s", socketPath)
-	}
-
-	zone1 := DNSZone{
+func enableInternalDNS(gvClient *gvproxyclient.Client) error {
+	zone1 := types.Zone{
 		Name: "crc.testing.",
-		Records: []DNSRecord{
-			{Name: "host", IP: "192.168.127.254"},
-			{Name: "api", IP: "192.168.127.2"},
-			{Name: "api-int", IP: "192.168.127.2"},
-			{Name: "crc", IP: "192.168.126.11"},
+		Records: []types.Record{
+			{Name: "host", IP: net.ParseIP("192.168.127.254")},
+			{Name: "api", IP: net.ParseIP("192.168.127.2")},
+			{Name: "api-int", IP: net.ParseIP("192.168.127.2")},
+			{Name: "crc", IP: net.ParseIP("192.168.126.11")},
 		},
 	}
 
-	if err := addDNSZoneToGVProxy(socketPath, zone1); err != nil {
-		return errors.Wrap(err, "failed to add crc.testing zone")
+	if err := gvClient.AddDNS(&zone1); err != nil {
+		return errors.Wrap(err, "failed to add DNS zone to gvproxy")
 	}
 
-	zone2 := DNSZoneWithDefault{
+	zone2 := types.Zone{
 		Name:      "apps-crc.testing.",
-		DefaultIP: "192.168.127.2",
+		DefaultIP: net.ParseIP("192.168.127.2"),
 	}
 
-	if err := addDNSZoneToGVProxy(socketPath, zone2); err != nil {
-		return errors.Wrap(err, "failed to add apps-crc.testing zone")
+	if err := gvClient.AddDNS(&zone2); err != nil {
+		return errors.Wrap(err, "failed to add DNS zone to gvproxy")
 	}
 
 	logging.Info("Successfully configured internal DNS server")
 	return nil
+}
+
+const (
+	virtualMachineIP = "192.168.127.2"
+	hostVirtualIP    = "192.168.127.254"
+	internalSSHPort  = "22"
+	remoteHTTPPort   = "80"
+	remoteHTTPSPort  = "443"
+	apiPort          = "6443"
+	cockpitPort      = "9090"
+)
+
+func vsockPorts(preset crcPreset.Preset, ingressHTTPPort, ingressHTTPSPort uint) []types.ExposeRequest {
+	socketProtocol := types.UNIX
+	socketLocal := constants.GetHostDockerSocketPath()
+	if runtime.GOOS == "windows" {
+		socketProtocol = types.NPIPE
+		socketLocal = constants.DefaultPodmanNamedPipe
+	}
+	exposeRequest := []types.ExposeRequest{
+		{
+			Protocol: "tcp",
+			Local:    net.JoinHostPort(constants.LocalIP, strconv.Itoa(constants.VsockSSHPort)),
+			Remote:   net.JoinHostPort(virtualMachineIP, internalSSHPort),
+		},
+		{
+			Protocol: socketProtocol,
+			Local:    socketLocal,
+			Remote:   getSSHTunnelURI(),
+		},
+	}
+
+	switch preset {
+	case crcPreset.OpenShift, crcPreset.OKD, crcPreset.Microshift:
+		exposeRequest = append(exposeRequest,
+			types.ExposeRequest{
+				Protocol: "tcp",
+				Local:    net.JoinHostPort(constants.LocalIP, apiPort),
+				Remote:   net.JoinHostPort(virtualMachineIP, apiPort),
+			},
+			types.ExposeRequest{
+				Protocol: "tcp",
+				Local:    fmt.Sprintf(":%d", ingressHTTPSPort),
+				Remote:   net.JoinHostPort(virtualMachineIP, remoteHTTPSPort),
+			},
+			types.ExposeRequest{
+				Protocol: "tcp",
+				Local:    fmt.Sprintf(":%d", ingressHTTPPort),
+				Remote:   net.JoinHostPort(virtualMachineIP, remoteHTTPPort),
+			})
+	default:
+		logging.Errorf("Invalid preset: %s", preset)
+	}
+
+	return exposeRequest
+}
+
+func getSSHTunnelURI() string {
+	u := url.URL{
+		Scheme:     "ssh-tunnel",
+		User:       url.User("core"),
+		Host:       net.JoinHostPort(virtualMachineIP, internalSSHPort),
+		Path:       "/run/podman/podman.sock",
+		ForceQuery: false,
+		RawQuery:   fmt.Sprintf("key=%s", url.QueryEscape(constants.GetPrivateKeyPath())),
+	}
+	return u.String()
 }
