@@ -60,8 +60,8 @@ github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46t
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/cpuguy83/go-md2man/v2 v2.0.7 h1:zbFlGlXEAKlwXpmvle3d8Oe3YnkKIK4xSRTd3sHPnBo=
 github.com/cpuguy83/go-md2man/v2 v2.0.7/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
-github.com/crc-org/admin-helper v0.5.6 h1:6qsyo1NWIrpvXsCiav5M9KfV+DVYlAslN9iBa/H7Mvo=
-github.com/crc-org/admin-helper v0.5.6/go.mod h1:uUpfMp53VBhPg3IdZ4kSSXG0cqZEsmvQd0AMiS9aHPo=
+github.com/crc-org/admin-helper v0.5.7 h1:HxzqnukUI/xk3v8kCLiO7ob8BNOeQDOb2tGvZ9iO+9s=
+github.com/crc-org/admin-helper v0.5.7/go.mod h1:7KWa8mm4Ct4bAn7oJm5d8vseNpBlpesmpyz7Bcr2QqI=
 github.com/crc-org/machine v0.0.0-20240926103419-a943b47fd48b h1:5577tKzQcPfd/i0dCekY32R9DUi677sNfhVLYKulBGM=
 github.com/crc-org/machine v0.0.0-20240926103419-a943b47fd48b/go.mod h1:trWeQimjfE3dJ8qWOxI4ePtYm13aecK42bf01s6h/Nc=
 github.com/crc-org/vfkit v0.6.1 h1:JepqPrgzKBuM/jximOcwA5ZnQPMcdarPRCrF4jHFau8=
