@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['windows-2022']
+        os: ['windows-2025']
         go: ['1.24']
     steps:
       - name: Check out repository code
@@ -30,9 +30,8 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go }}
-      - name: Set path for heat.exe and light.exe
-        shell: bash
-        run: echo "$WIX\\bin" >>$GITHUB_PATH
+      - name: Install DotNet.SDK.10
+        run: winget install --id Microsoft.DotNet.SDK.10 --source winget
       - name: Build Windows installer
         run: make out/windows-amd64/crc-windows-installer.zip
       - name: Upload windows installer artifact
