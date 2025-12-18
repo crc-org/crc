@@ -4,6 +4,9 @@ Feature: Verify 9pfs mount works
     Verify 9pfs mount of user's home directory is mounted, accessible
     and that basic file operations work. Only relevant on Windows.
 
+    Background:
+        Given ensuring CRC cluster is running
+
     Scenario: Test mounted home directory functionality
         Given home directory mount exists in VM
         And filesystem is mounted
