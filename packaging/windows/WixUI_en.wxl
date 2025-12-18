@@ -1,3 +1,0 @@
-<WixLocalization Culture="en-US" Codepage="1252" xmlns="http://wixtoolset.org/schemas/v4/wxl">
-    <String Id="WelcomeDlgDescription" Value="The Setup Wizard will install [ProductName] at [INSTALLDIR] on your computer. Click Next to continue or Cancel to exit the Setup Wizard." />
-</WixLocalization>
