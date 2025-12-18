@@ -363,32 +363,21 @@ $(BUILD_DIR)/macos-universal/crc-macos-installer.tar: packagedir
 	     -e 's/__OPENSHIFT_VERSION__/'$(OPENSHIFT_VERSION)'/g' \
 	     $< >$@
 
-$(HOST_BUILD_DIR)/GenMsiWxs: packaging/windows/gen_msi_wxs.go
-	go build -o $@ -ldflags="-X main.crcVersion=$(CRC_VERSION)" $<
 
 CRC_EXE=crc.exe
-BUNDLE_NAME=crc_hyperv_$(OPENSHIFT_VERSION).$(BUNDLE_EXTENSION)
-
 .PHONY: msidir
-msidir: clean_windows_msi embed-download-windows $(HOST_BUILD_DIR)/GenMsiWxs windows-release-binary $(PACKAGE_DIR)/product.wxs.template
-	mkdir -p $(PACKAGE_DIR)/msi
-	cp $(EMBED_DOWNLOAD_DIR)/* $(PACKAGE_DIR)/msi
-	cp $(HOST_BUILD_DIR)/crc.exe $(PACKAGE_DIR)/msi/$(CRC_EXE)
-	$(HOST_BUILD_DIR)/GenMsiWxs
-	cp -r $(PACKAGE_DIR)/Resources $(PACKAGE_DIR)/msi/
-	cp $(PACKAGE_DIR)/*.wxs $(PACKAGE_DIR)/msi
-	rm $(PACKAGE_DIR)/product.wxs
+msidir: clean_windows_msi embed-download-windows windows-release-binary
+	cp $(EMBED_DOWNLOAD_DIR)/* $(PACKAGE_DIR)/
+	cp $(HOST_BUILD_DIR)/crc.exe $(PACKAGE_DIR)/
 
 $(BUILD_DIR)/windows-amd64/crc-windows-amd64.msi: msidir
-	candle.exe -arch x64 -ext WixUtilExtension -o $(PACKAGE_DIR)/msi/ $(PACKAGE_DIR)/msi/*.wxs
-	light.exe -ext WixUIExtension -ext WixUtilExtension -sacl -spdb -sice:ICE61 -sice:ICE69 -b $(PACKAGE_DIR)/msi -loc $(PACKAGE_DIR)/WixUI_en.wxl -out $@ $(PACKAGE_DIR)/msi/*.wixobj
+	dotnet build $(PACKAGE_DIR)/crc-installer.wixproj --property:DefineConstants="Version=$(CRC_VERSION)" --output $(HOST_BUILD_DIR)
 
-CABS_MSI = "*.cab,crc-windows-amd64.msi"
+MSI=$(HOST_BUILD_DIR)/crc-windows-amd64.msi
 $(BUILD_DIR)/windows-amd64/crc-windows-installer.zip: $(BUILD_DIR)/windows-amd64/crc-windows-amd64.msi
 	rm -f $(HOST_BUILD_DIR)/crc.exe
 	rm -f $(HOST_BUILD_DIR)/crc-embedder
-	rm -f $(HOST_BUILD_DIR)/split
-	pwsh -NoProfile -Command "cd $(HOST_BUILD_DIR); Compress-Archive -Path $(CABS_MSI) -DestinationPath crc-windows-installer.zip"
+	pwsh -NoProfile -Command "Compress-Archive -Path $(MSI) -DestinationPath $(HOST_BUILD_DIR)/crc-windows-installer.zip"
 	cd $(@D) && sha256sum $(@F)>$(@F).sha256sum
 
 .PHONY: choco choco-clean
