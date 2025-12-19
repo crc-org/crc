@@ -7,4 +7,9 @@ const (
 	DaemonHTTPNamedPipe        = `\\.\pipe\crc-http`
 	DaemonTaskName             = "crcDaemon"
 	AdminHelperServiceName     = "crcAdminHelper"
+	KrunkitCommand             = ""
 )
+
+func Provider() string {
+	return ""
+}

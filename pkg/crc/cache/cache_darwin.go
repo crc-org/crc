@@ -7,11 +7,11 @@ import (
 )
 
 func NewVfkitCache() *Cache {
-	return newCache(vfkit.ExecutablePath(), vfkit.VfkitDownloadURL, vfkit.VfkitVersion, getVfkitVersion)
+	return newCache(vfkit.ExecutablePath(), vfkit.DownloadURL(), vfkit.Version(), getVfkitVersion)
 }
 
 func getVfkitVersion(executablePath string) (string, error) {
-	version, err := getVersionGeneric(executablePath, "-v")
+	version, err := getVersionGeneric(executablePath, "--version")
 	if err != nil {
 		return version, err
 	}

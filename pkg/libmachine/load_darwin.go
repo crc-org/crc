@@ -3,12 +3,13 @@ package libmachine
 import (
 	"encoding/json"
 
-	"github.com/crc-org/crc/v2/pkg/drivers/vfkit"
+	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	vfkitDriver "github.com/crc-org/crc/v2/pkg/drivers/vfkit"
 	"github.com/crc-org/crc/v2/pkg/libmachine/host"
 )
 
 func (api *Client) NewHost(_ string, driverPath string, rawDriver []byte) (*host.Host, error) {
-	driver := vfkit.NewDriver("", "")
+	driver := vfkitDriver.NewDriver("", "", constants.Provider())
 	if err := json.Unmarshal(rawDriver, &driver); err != nil {
 		return nil, err
 	}
@@ -29,10 +30,11 @@ func (api *Client) Load(name string) (*host.Host, error) {
 		return nil, err
 	}
 
-	driver := vfkit.NewDriver("", "")
+	driver := vfkitDriver.NewDriver("", "", constants.Provider())
 	if err := json.Unmarshal(h.RawDriver, &driver); err != nil {
 		return nil, err
 	}
+	driver.VfkitPath = constants.ResolveHelperPath(constants.Provider())
 	h.Driver = driver
 	return h, nil
 }
