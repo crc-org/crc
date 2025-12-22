@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
    <Fragment>
 
       <UI Id="WixUI_HK">
@@ -12,7 +11,6 @@
          <Property Id="ARPNOMODIFY" Value="1" />
          <Property Id="ARPNOREPAIR" Value="1" />
 
-         <DialogRef Id="BrowseDlg" />
          <DialogRef Id="DiskCostDlg" />
          <DialogRef Id="ErrorDlg" />
          <DialogRef Id="FatalError" />
@@ -25,48 +23,49 @@
 
          <!--   Make sure to include custom dialogs in the installer database via a DialogRef command,
                especially if they are not included explicitly in the publish chain below -->
-         <DialogRef Id="LicenseAgreementDlg_HK"/>
+         <DialogRef Id="LicenseAgreementDlg_HK" />
 
          <!-- Custom dialog to ask for removal of old version if an upgrade is detected -->
          <Dialog Id="OldVersionDlg" Width="240" Height="95" Title="[ProductName] Setup" NoMinimize="yes">
             <Control Id="Text" Type="Text" X="28" Y="15" Width="194" Height="50">
-               <Text>A previous version of Red Hat OpenShift Local is currently installed. By continuing the installation this version will be uninstalled. Do you want to continue?</Text>
+               <Text Value="A previous version of Red Hat OpenShift Local is currently installed. By continuing the installation this version will be uninstalled. Do you want to continue?" />
             </Control>
             <Control Id="Exit" Type="PushButton" X="123" Y="67" Width="62" Height="17" Default="yes" Cancel="yes" Text="No, Exit">
-               <Publish Event="EndDialog" Value="Exit">1</Publish>
+               <Publish Event="EndDialog" Value="Exit" />
             </Control>
             <Control Id="Next" Type="PushButton" X="55" Y="67" Width="62" Height="17" Text="Yes, Uninstall">
-               <Publish Event="EndDialog" Value="Return">1</Publish>
+               <Publish Event="EndDialog" Value="Return" />
             </Control>
          </Dialog>
 
-         <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+         <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999" />
 
-         <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="OldVersionDlg"><![CDATA[CRCINSTALLED << "#1"]]></Publish>
-         <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg_HK"><![CDATA[NOT (CRCINSTALLED << "#1")]]></Publish>
+         <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="OldVersionDlg" Condition="CRCINSTALLED &lt;&lt; &quot;#1&quot;" />
+         <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg_HK" Condition="NOT (CRCINSTALLED &lt;&lt; &quot;#1&quot;)" />
 
-         <Publish Dialog="OldVersionDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg_HK">1</Publish>
+         <Publish Dialog="OldVersionDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg_HK" />
 
-         <Publish Dialog="LicenseAgreementDlg_HK" Control="Back" Event="NewDialog" Value="WelcomeDlg">1</Publish>
-         <Publish Dialog="LicenseAgreementDlg_HK" Control="Next" Event="NewDialog" Value="VerifyReadyDlg">LicenseAccepted = "1"</Publish>
+         <Publish Dialog="LicenseAgreementDlg_HK" Control="Back" Event="NewDialog" Value="WelcomeDlg" />
+         <Publish Dialog="LicenseAgreementDlg_HK" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Condition="LicenseAccepted = &quot;1&quot;" />
 
-         <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg_HK">NOT Installed</Publish>
-         <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg">Installed</Publish>
+         <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg_HK" Condition="NOT Installed" />
+         <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Condition="Installed" />
 
-         <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg">1</Publish>
+         <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg" />
 
-         <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
-         <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
-         <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
+         <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg" />
+         <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg" />
+         <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg" />
       </UI>
 
       <UIRef Id="WixUI_Common" />
 
-      <CustomAction Id="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT" Property="WIXUI_EXITDIALOGOPTIONALTEXT" Value="To finish installation of  [ProductName] please restart your computer."/>
-      <CustomAction Id="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT_NOREBOOT" Property="WIXUI_EXITDIALOGOPTIONALTEXT" Value="Suceesfully installed [ProductName]."/>
+      <CustomAction Id="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT" Property="WIXUI_EXITDIALOGOPTIONALTEXT" Value="To finish installation of [ProductName] please restart your computer." />
+      <CustomAction Id="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT_NOREBOOT" Property="WIXUI_EXITDIALOGOPTIONALTEXT" Value="Successfully installed [ProductName]." />
       <InstallUISequence>
-         <Custom Action="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT" After="FindRelatedProducts"><![CDATA[NOT WIX_UPGRADE_DETECTED]]></Custom>
-         <Custom Action="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT_NOREBOOT" After="FindRelatedProducts"><![CDATA[WIX_UPGRADE_DETECTED]]></Custom>
+         <Custom Action="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT" After="FindRelatedProducts" Condition="NOT WIX_UPGRADE_DETECTED" />
+         <Custom Action="CA_Set_WIXUI_EXITDIALOGOPTIONALTEXT_NOREBOOT" After="FindRelatedProducts" Condition="WIX_UPGRADE_DETECTED" />
       </InstallUISequence>
    </Fragment>
 </Wix>
+
