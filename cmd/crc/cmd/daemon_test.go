@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"os"
 	"regexp"
@@ -153,4 +154,80 @@ func TestCreateNewVirtualNetworkConfig_WhenHostNetworkConfigSet_ThenSetNAT(t *te
 
 	// Then
 	assert.Equal(t, "127.0.0.1", virtualNetworkConfig.NAT["192.168.127.254"])
+}
+
+type fakeHostsFileEditor struct {
+	addCalled    bool
+	removeCalled bool
+	addIP        string
+	addHosts     []string
+	removeHosts  []string
+}
+
+func (fake *fakeHostsFileEditor) Add(ip string, hostnames ...string) error {
+	fake.addCalled = true
+	fake.addIP = ip
+	fake.addHosts = append([]string(nil), hostnames...)
+	return nil
+}
+
+func (fake *fakeHostsFileEditor) Remove(hostnames ...string) error {
+	fake.removeCalled = true
+	fake.removeHosts = append([]string(nil), hostnames...)
+	return nil
+}
+
+func TestGatewayAPIMux_HostsEndpointsRespectModifyHostsFile(t *testing.T) {
+	tests := []struct {
+		name             string
+		modifyHostsFile  bool
+		path             string
+		expectAddCalled  bool
+		expectRemoveCall bool
+	}{
+		{
+			name:            "add-enabled",
+			modifyHostsFile: true,
+			path:            "/hosts/add",
+			expectAddCalled: true,
+		},
+		{
+			name:            "add-disabled",
+			modifyHostsFile: false,
+			path:            "/hosts/add",
+		},
+		{
+			name:             "remove-enabled",
+			modifyHostsFile:  true,
+			path:             "/hosts/remove",
+			expectRemoveCall: true,
+		},
+		{
+			name:            "remove-disabled",
+			modifyHostsFile: false,
+			path:            "/hosts/remove",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// Given
+			cfg := crcConfig.New(crcConfig.NewEmptyInMemoryStorage(), crcConfig.NewEmptyInMemorySecretStorage())
+			crcConfig.RegisterSettings(cfg)
+			_, err := cfg.Set(crcConfig.ModifyHostsFile, test.modifyHostsFile)
+			assert.NoError(t, err)
+			hostsEditor := &fakeHostsFileEditor{}
+			mux := gatewayAPIMux(cfg, hostsEditor)
+			rec := httptest.NewRecorder()
+
+			// When
+			req := httptest.NewRequest(http.MethodPost, test.path, bytes.NewBufferString(`["api.crc.testing"]`))
+			mux.ServeHTTP(rec, req)
+
+			// Then
+			assert.Equal(t, http.StatusOK, rec.Code)
+			assert.Equal(t, test.expectAddCalled, hostsEditor.addCalled)
+			assert.Equal(t, test.expectRemoveCall, hostsEditor.removeCalled)
+		})
+	}
 }
