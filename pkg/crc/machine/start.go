@@ -483,8 +483,9 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		SSHRunner: sshRunner,
 		IP:        instanceIP,
 		// TODO: should be more finegrained
-		BundleMetadata: *vm.bundle,
-		NetworkMode:    client.networkMode(),
+		BundleMetadata:  *vm.bundle,
+		NetworkMode:     client.networkMode(),
+		ModifyHostsFile: client.modifyHostsFile(),
 	}
 
 	// Run the DNS server inside the VM
@@ -508,7 +509,11 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	logging.Info("Check DNS query from host...")
 	if err := dns.CheckCRCLocalDNSReachableFromHost(servicePostStartConfig); err != nil {
 		if !client.useVSock() {
-			return nil, errors.Wrap(err, "Failed to query DNS from host")
+			msg := "Failed to query DNS from host"
+			if !servicePostStartConfig.ModifyHostsFile {
+				msg += " (modify-hosts-file=false). Ensure your system DNS/hosts entries resolve the CRC domains."
+			}
+			return nil, errors.Wrap(err, msg)
 		}
 		logging.Warn(fmt.Sprintf("Failed to query DNS from host: %v", err))
 	}
@@ -696,7 +701,7 @@ func createHost(machineConfig config.MachineConfig, preset crcPreset.Preset) err
 		if err := cluster.GenerateUserPassword(constants.GetKubeAdminPasswordPath(), "kubeadmin"); err != nil {
 			return errors.Wrap(err, "Error generating new kubeadmin password")
 		}
-		if err = os.WriteFile(constants.GetDeveloperPasswordPath(), []byte(constants.DefaultDeveloperPassword), 0600); err != nil {
+		if err = os.WriteFile(constants.GetDeveloperPasswordPath(), []byte(constants.DefaultDeveloperPassword), 0o600); err != nil {
 			return errors.Wrap(err, "Error writing developer password")
 		}
 	}
@@ -750,7 +755,7 @@ func enableEmergencyLogin(sshRunner *crcssh.Runner) error {
 	for i := range b {
 		b[i] = charset[rand.Intn(len(charset))] //nolint:gosec
 	}
-	if err := os.WriteFile(constants.PasswdFilePath, b, 0600); err != nil {
+	if err := os.WriteFile(constants.PasswdFilePath, b, 0o600); err != nil {
 		return err
 	}
 	logging.Infof("Emergency login password for core user is stored to %s", constants.PasswdFilePath)
@@ -777,7 +782,7 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	}
 
 	logging.Info("Updating authorized keys...")
-	err = sshRunner.CopyData(publicKey, "/home/core/.ssh/authorized_keys", 0644)
+	err = sshRunner.CopyData(publicKey, "/home/core/.ssh/authorized_keys", 0o644)
 	if err != nil {
 		return err
 	}
@@ -876,10 +881,10 @@ func startMicroshift(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.
 	if _, _, err := sshRunner.RunPrivileged("Starting microshift service", "systemctl", "start", "microshift"); err != nil {
 		return err
 	}
-	if err := sshRunner.CopyFileFromVM(fmt.Sprintf("/var/lib/microshift/resources/kubeadmin/api%s/kubeconfig", constants.ClusterDomain), constants.KubeconfigFilePath, 0600); err != nil {
+	if err := sshRunner.CopyFileFromVM(fmt.Sprintf("/var/lib/microshift/resources/kubeadmin/api%s/kubeconfig", constants.ClusterDomain), constants.KubeconfigFilePath, 0o600); err != nil {
 		return err
 	}
-	if err := sshRunner.CopyFile(constants.KubeconfigFilePath, "/opt/kubeconfig", 0644); err != nil {
+	if err := sshRunner.CopyFile(constants.KubeconfigFilePath, "/opt/kubeconfig", 0o644); err != nil {
 		return err
 	}
 
@@ -897,5 +902,5 @@ func ensurePullSecretPresentInVM(sshRunner *crcssh.Runner, pullSec cluster.PullS
 	if err != nil {
 		return err
 	}
-	return sshRunner.CopyDataPrivileged([]byte(content), "/etc/crio/openshift-pull-secret", 0600)
+	return sshRunner.CopyDataPrivileged([]byte(content), "/etc/crio/openshift-pull-secret", 0o600)
 }

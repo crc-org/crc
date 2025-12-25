@@ -184,7 +184,7 @@ func run(configuration *types.Configuration) error {
 		return err
 	}
 	go func() {
-		mux := gatewayAPIMux()
+		mux := gatewayAPIMux(config, adminHelperHostsFileEditor{})
 		s := &http.Server{
 			Handler:      handlers.LoggingHandler(os.Stderr, mux),
 			ReadTimeout:  10 * time.Second,
@@ -331,18 +331,43 @@ func run(configuration *types.Configuration) error {
 	}
 }
 
+type HostsFileEditor interface {
+	Add(ip string, hostnames ...string) error
+	Remove(hostnames ...string) error
+}
+
+type adminHelperHostsFileEditor struct{}
+
+func (adminHelperHostsFileEditor) Add(ip string, hostnames ...string) error {
+	return adminhelper.AddToHostsFile(ip, hostnames...)
+}
+
+func (adminHelperHostsFileEditor) Remove(hostnames ...string) error {
+	return adminhelper.RemoveFromHostsFile(hostnames...)
+}
+
 // This API is only exposed in the virtual network (only the VM can reach this).
 // Any process inside the VM can reach it by connecting to gateway.crc.testing:80.
-func gatewayAPIMux() *http.ServeMux {
+func gatewayAPIMux(cfg *crcConfig.Config, hostsEditor HostsFileEditor) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/hosts/add", func(w http.ResponseWriter, r *http.Request) {
 		acceptJSONStringArray(w, r, func(hostnames []string) error {
-			return adminhelper.AddToHostsFile("127.0.0.1", hostnames...)
+			if !cfg.Get(crcConfig.ModifyHostsFile).AsBool() {
+				logging.Infof("Skipping hosts file modification because 'modify-hosts-file' is set to false")
+
+				return nil
+			}
+			return hostsEditor.Add("127.0.0.1", hostnames...)
 		})
 	})
 	mux.HandleFunc("/hosts/remove", func(w http.ResponseWriter, r *http.Request) {
 		acceptJSONStringArray(w, r, func(hostnames []string) error {
-			return adminhelper.RemoveFromHostsFile(hostnames...)
+			if !cfg.Get(crcConfig.ModifyHostsFile).AsBool() {
+				logging.Infof("Skipping hosts file modification because 'modify-hosts-file' is set to false")
+
+				return nil
+			}
+			return hostsEditor.Remove(hostnames...)
 		})
 	})
 	return mux
