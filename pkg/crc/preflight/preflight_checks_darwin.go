@@ -162,7 +162,10 @@ func killVfkitProcess() error {
 func getDaemonConfig() (*launchd.AgentConfig, error) {
 	logFilePath := filepath.Join(constants.CrcBaseDir, ".launchd-crcd.log")
 
-	env := map[string]string{"Version": version.GetCRCVersion()}
+	env := map[string]string{
+		"Version":      version.GetCRCVersion(),
+		"CRC_PROVIDER": constants.Provider(),
+	}
 	daemonConfig := launchd.AgentConfig{
 		Label:          constants.DaemonAgentLabel,
 		ExecutablePath: constants.CrcSymlinkPath,
