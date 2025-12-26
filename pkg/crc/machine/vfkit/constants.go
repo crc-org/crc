@@ -4,6 +4,7 @@ package vfkit
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 )
@@ -22,7 +23,11 @@ var (
 )
 
 func ExecutablePath() string {
-	return constants.ResolveHelperPath(constants.Provider())
+	provider := constants.Provider()
+	if provider == KrunkitCommand {
+		return filepath.Join(constants.CrcBinDir, provider)
+	}
+	return constants.ResolveHelperPath(provider)
 }
 
 func DownloadURL() string {
