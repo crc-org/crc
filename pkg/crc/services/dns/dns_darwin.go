@@ -33,8 +33,12 @@ type resolverFileValues struct {
 
 func runPostStartForOS(serviceConfig services.ServicePostStartConfig) error {
 	// Update /etc/hosts file for host
-	if err := addOpenShiftHosts(serviceConfig); err != nil {
-		return err
+	if serviceConfig.ModifyHostsFile {
+		if err := addOpenShiftHosts(serviceConfig); err != nil {
+			return err
+		}
+	} else {
+		logging.Infof("Skipping hosts file modification because 'modify-hosts-file' is set to false")
 	}
 
 	if serviceConfig.NetworkMode == network.UserNetworkingMode {
@@ -86,7 +90,7 @@ func createResolverFile(instanceIP string, domain string, filename string) (bool
 	}
 
 	path := filepath.Join("/", "etc", "resolver", filename)
-	return crcos.WriteFileIfContentChanged(path, resolverFile.Bytes(), 0644)
+	return crcos.WriteFileIfContentChanged(path, resolverFile.Bytes(), 0o644)
 }
 
 // restartNetwork is required to update the resolver file on OSx.
