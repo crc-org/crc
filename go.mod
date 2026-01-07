@@ -16,7 +16,7 @@ require (
 	github.com/coreos/go-systemd/v22 v22.6.0
 	github.com/crc-org/admin-helper v0.5.7
 	github.com/crc-org/machine v0.0.0-20240926103419-a943b47fd48b
-	github.com/crc-org/vfkit v0.6.1
+	github.com/crc-org/vfkit v0.6.2
 	github.com/cucumber/godog v0.15.1
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/go-units v0.5.0
@@ -80,7 +80,7 @@ require (
 	github.com/areYouLazy/libhosty v1.1.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
-	github.com/containers/common v0.62.2 // indirect
+	github.com/containers/common v0.64.2 // indirect
 	github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01 // indirect
 	github.com/containers/ocicrypt v1.2.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
@@ -180,7 +180,7 @@ require (
 	go.podman.io/storage v1.61.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/mod v0.30.0 // indirect
+	golang.org/x/mod v0.31.0 // indirect
 	golang.org/x/oauth2 v0.32.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
 	golang.org/x/tools v0.39.0 // indirect
