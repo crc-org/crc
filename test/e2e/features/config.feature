@@ -83,19 +83,14 @@ Feature: Test configuration settings
             | property                             | value1 | value2 |
             | skip-check-bundle-extracted          | true   | false  |
             | skip-check-kvm-enabled               | true   | false  |
-            | skip-check-libvirt-driver            | true   | false  |
-            | skip-check-libvirt-installed         | true   | false  |
-            | skip-check-libvirt-running           | true   | false  |
-            | skip-check-libvirt-version           | true   | false  |
             | skip-check-root-user                 | true   | false  |
-            | skip-check-user-in-libvirt-group     | true   | false  |
             | skip-check-virt-enabled              | true   | false  |
-    
+
     # the following properties not suit for user notwork
-    #| skip-check-crc-network               | true   | false  | 
-    #| skip-check-crc-network-active        | true   | false  | 
-    #| skip-check-network-manager-installed | true   | false  | 
-    #| skip-check-network-manager-running   | true   | false  | 
+    #| skip-check-crc-network               | true   | false  |
+    #| skip-check-crc-network-active        | true   | false  |
+    #| skip-check-network-manager-installed | true   | false  |
+    #| skip-check-network-manager-running   | true   | false  |
 
         @windows
         Examples:
@@ -154,8 +149,8 @@ Feature: Test configuration settings
         And executing crc setup command succeeds
         Then stderr should not contain "Skipping above check"
 
-    @linux @darwin @windows 
-    Scenario: CRC config set and get preset property (default cases) 
+    @linux @darwin @windows
+    Scenario: CRC config set and get preset property (default cases)
         When setting config property "preset" to value "openshift" succeeds
         And "JSON" config file "crc.json" in CRC home folder does not contain key "preset"
         When getting config property "preset" succeeds
@@ -164,33 +159,33 @@ Feature: Test configuration settings
         When unsetting config property "preset" succeeds
         And stdout should contain "Successfully unset configuration property 'preset'"
         And "JSON" config file "crc.json" in CRC home folder does not contain key "preset"
-        
-    Scenario: CRC config set and get preset property (positive cases) 
+
+    Scenario: CRC config set and get preset property (positive cases)
         When setting config property "preset" to value "<preset-value>" succeeds
-        And "JSON" config file "crc.json" in CRC home folder contains key "preset" with value matching "<preset-value>" 
+        And "JSON" config file "crc.json" in CRC home folder contains key "preset" with value matching "<preset-value>"
         When getting config property "preset" succeeds
         And stdout should contain "<preset-value>"
         When unsetting config property "preset" succeeds
         And stdout should contain "Successfully unset configuration property 'preset'"
         And "JSON" config file "crc.json" in CRC home folder does not contain key "preset"
-        
+
         @x86_64
         Examples: Config property preset setting positive
             | preset-value  |
-            | microshift    | 
-            | okd           | 
+            | microshift    |
+            | okd           |
 
         @arm64 @aarch64
         Examples: Config property preset setting positive
             | preset-value  |
-            | microshift    | 
-            
+            | microshift    |
+
     Scenario: CRC config set preset (negative cases)
         When setting config property "preset" to value "<preset-value>" fails
-        And stderr should contain "reason: Unknown preset" 
+        And stderr should contain "reason: Unknown preset"
 
-        @linux @darwin @windows 
+        @linux @darwin @windows
         Examples: Config property getting
-            | preset-value | 
-            | podman       | 
+            | preset-value |
+            | podman       |
             | others       |

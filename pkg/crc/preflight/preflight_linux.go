@@ -17,7 +17,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
+func qemuPreflightChecks(distro *linux.OsRelease) []Check {
 	checks := []Check{
 		{
 			configKeySuffix:  "check-virt-enabled",
@@ -38,63 +38,13 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			labels: labels{Os: Linux},
 		},
 		{
-			configKeySuffix:  "check-libvirt-installed",
-			checkDescription: "Checking if libvirt is installed",
-			check:            checkLibvirtInstalled,
-			fixDescription:   "Installing libvirt service and dependencies",
-			fix:              fixLibvirtInstalled(distro),
-
-			labels: labels{Os: Linux},
-		},
-		{
-			configKeySuffix:  "check-user-in-libvirt-group",
-			checkDescription: "Checking if user is part of libvirt group",
-			check:            checkUserPartOfLibvirtGroup,
-			fixDescription:   "Adding user to libvirt group",
-			fix:              fixUserPartOfLibvirtGroup,
-
-			labels: labels{Os: Linux},
-		},
-		{
-			configKeySuffix:  "check-libvirt-group-active",
-			checkDescription: "Checking if active user/process is currently part of the libvirt group",
-			check:            checkCurrentGroups(distro),
-			fixDescription:   "You need to logout, re-login, and run crc setup again before the user is effectively a member of the 'libvirt' group.",
-			flags:            NoFix,
-
-			labels: labels{Os: Linux},
-		},
-		{
-			configKeySuffix:  "check-libvirt-running",
-			checkDescription: "Checking if libvirt daemon is running",
-			check:            checkLibvirtServiceRunning,
-			fixDescription:   "Starting libvirt service",
-			fix:              fixLibvirtServiceRunning,
-
-			labels: labels{Os: Linux},
-		},
-		{
-			configKeySuffix:  "check-libvirt-version",
-			checkDescription: "Checking if a supported libvirt version is installed",
-			check:            checkLibvirtVersion,
-			fixDescription:   fmt.Sprintf("libvirt v%s or newer is required and must be updated manually", minSupportedLibvirtVersion),
-			flags:            NoFix,
-
-			labels: labels{Os: Linux},
-		},
-		{
-			configKeySuffix:  "check-libvirt-driver",
-			checkDescription: "Checking if crc-driver-libvirt is installed",
-			check:            checkMachineDriverLibvirtInstalled,
-			fixDescription:   "Installing crc-driver-libvirt",
-			fix:              fixMachineDriverLibvirtInstalled,
-
-			labels: labels{Os: Linux},
-		},
-		{
-			cleanupDescription: "Removing crc libvirt storage pool",
-			cleanup:            removeLibvirtStoragePool,
-			flags:              CleanUpOnly,
+			configKeySuffix:    "check-qemu-kvm-installed",
+			checkDescription:   "Checking if qemu-kvm is installed",
+			check:              checkQemuKvmInstalled,
+			fixDescription:     "Installing qemu-kvm",
+			fix:                fixQemuKvmInstalled(distro),
+			cleanupDescription: "Removing qemu-kvm symlink",
+			cleanup:            removeQemuKvmSymlink,
 
 			labels: labels{Os: Linux},
 		},
@@ -136,29 +86,6 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 		},
 	}
 	return checks
-}
-
-var libvirtNetworkPreflightChecks = []Check{
-	{
-		configKeySuffix:    "check-crc-network",
-		checkDescription:   "Checking if libvirt 'crc' network is available",
-		check:              checkLibvirtCrcNetworkAvailable,
-		fixDescription:     "Setting up libvirt 'crc' network",
-		fix:                fixLibvirtCrcNetworkAvailable,
-		cleanupDescription: "Removing 'crc' network from libvirt",
-		cleanup:            removeLibvirtCrcNetwork,
-
-		labels: labels{Os: Linux, NetworkMode: System},
-	},
-	{
-		configKeySuffix:  "check-crc-network-active",
-		checkDescription: "Checking if libvirt 'crc' network is active",
-		check:            checkLibvirtCrcNetworkActive,
-		fixDescription:   "Starting libvirt 'crc' network",
-		fix:              fixLibvirtCrcNetworkActive,
-
-		labels: labels{Os: Linux, NetworkMode: System},
-	},
 }
 
 var vsockPreflightCheck = Check{
@@ -232,7 +159,7 @@ func fixVsock() error {
 	if err != nil {
 		return err
 	}
-	udevRule := `KERNEL=="vsock", MODE="0660", OWNER="root", GROUP="libvirt"`
+	udevRule := `KERNEL=="vsock", MODE="0660", OWNER="root", GROUP="kvm"`
 	if crcos.FileContentMatches(vsockUdevLocalAdminRulesPath, []byte(udevRule)) != nil {
 		err = crcos.WriteToFileAsRoot("Creating udev rule for /dev/vsock", udevRule, vsockUdevLocalAdminRulesPath, 0644)
 		if err != nil {
@@ -368,12 +295,11 @@ func getChecks(distro *linux.OsRelease, bundlePath string, preset crcpreset.Pres
 	checks = append(checks, gvproxyCheck())
 	checks = append(checks, macadamCheck())
 	checks = append(checks, genericCleanupChecks...)
-	checks = append(checks, libvirtPreflightChecks(distro)...)
+	checks = append(checks, qemuPreflightChecks(distro)...)
 	checks = append(checks, ubuntuPreflightChecks...)
 	checks = append(checks, nmPreflightChecks...)
 	checks = append(checks, systemdResolvedPreflightChecks...)
 	checks = append(checks, dnsmasqPreflightChecks...)
-	checks = append(checks, libvirtNetworkPreflightChecks...)
 	checks = append(checks, vsockPreflightCheck)
 	checks = append(checks, bundleCheck(bundlePath, preset, enableBundleQuayFallback))
 
