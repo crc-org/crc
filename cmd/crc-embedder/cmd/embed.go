@@ -13,7 +13,6 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/download"
 
-	"github.com/crc-org/crc/v2/pkg/crc/machine/libvirt"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/vfkit"
 
 	"github.com/YourFin/binappend"
@@ -30,7 +29,6 @@ var (
 const (
 	vfkitDriver        = "vfkit-driver"
 	vfkitEntitlement   = "vfkit-entitlement"
-	libvirtDriver      = "libvirt-driver"
 	adminHelper        = "admin-helper"
 	backgroundLauncher = "background-launcher"
 	gvproxy            = "gvproxy"
@@ -118,8 +116,7 @@ var (
 			macadam:          {constants.GetMacadamURLForOs("darwin"), 0755},
 		},
 		"linux": {
-			libvirtDriver: {libvirt.MachineDriverDownloadURL, 0755},
-			adminHelper:   {constants.GetAdminHelperURLForOs("linux"), 0755},
+			adminHelper: {constants.GetAdminHelperURLForOs("linux"), 0755},
 		},
 		"windows": {
 			adminHelper:        {constants.GetAdminHelperURLForOs("windows"), 0755},
