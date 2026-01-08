@@ -187,6 +187,8 @@ func EnsureSSHKeyPresentInTheCluster(ctx context.Context, ocConfig oc.Config, ss
 // 1. Run (verified by checking ExecMainExitTimestamp changes)
 // 2. Finish (transition to Stopped state)
 // 3. Exit with Result=success
+// It also handles services that are skipped due to unmet conditions (e.g., ConditionPathExists).
+// When a service is skipped, its work was already done in a previous run.
 func WaitForServiceSuccessfullyFinished(ctx context.Context, systemdRunner *systemd.Commander,
 	serviceName string, timeout, retryInterval time.Duration) error {
 	return errors.Retry(ctx, timeout, func() error {
@@ -208,6 +210,21 @@ func WaitForServiceSuccessfullyFinished(ctx context.Context, systemdRunner *syst
 		logging.Debugf("Service %s current ExecMainExitTimestamp: '%s'", serviceName, currentExecMainExitTimestamp)
 
 		if currentExecMainExitTimestamp == "" {
+			// No exit timestamp means service didn't run. Check if it was skipped due to conditions.
+			// This can happen after system restart when ConditionPathExists marks work as already done.
+			wasSkipped, err := systemdRunner.WasSkippedDueToConditions(serviceName)
+			if err != nil {
+				return &errors.RetriableError{Err: err}
+			}
+			logging.Debugf("Service %s was skipped due to conditions: %v", serviceName, wasSkipped)
+
+			if wasSkipped {
+				// Service was skipped because conditions weren't met (e.g., .done file exists).
+				// This means the work was already completed in a previous run.
+				logging.Debugf("Service %s was skipped due to unmet conditions (work already done)", serviceName)
+				return nil
+			}
+
 			return &errors.RetriableError{Err: fmt.Errorf("service %s has not run yet (no exit timestamp)", serviceName)}
 		}
 
