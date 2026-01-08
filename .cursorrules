@@ -1,0 +1,67 @@
+# Cursor Commit Rules for crc-org/crc
+
+When generating git commit messages:
+- Follow the Conventional Commits specification format:
+    <type>[optional scope]: <subject>
+    [blank line]
+    [optional body explaining what changed and why]
+    [optional footer with references, breaking changes]
+- Use **imperative** and **present tense** in the subject line.
+- Limit the **subject line to ≈50–72 characters**; wrap body at ≈72.
+- Use meaningful scopes when it clarifies affected modules (e.g., `pkg`, `cmd`, `docs`, `test`, `tools`).
+- Prefer concise yet descriptive wording of **what changed** and **why**, not just **how**.
+- When applicable, reference related issues or pull request numbers in footer.
+
+# Allowed Commit Types
+feat:      add user-visible functionality or significant enhancements
+fix:       bug fix
+docs:      documentation only (e.g., README, docs/)
+style:     formatting, whitespace, linting (no code logic change)
+refactor:  code change that neither fixes a bug nor adds a feature
+perf:      performance improvement
+test:      adding or fixing tests
+ci:        continuous integration/config change (e.g., GitHub Actions)
+build:     build system or external dependency changes
+chore:     routine tasks without code change (scripts, config)
+
+# Type Rules
+feat:
+- New CLI subcommands or flags
+- New OpenShift, MicroShift, or podman integration options
+
+fix:
+- Correct unintended behaviors in cluster start/stop logic
+- Resolve crashes, error cases, CLI UX bugs
+
+docs:
+- Add or update CRC documentation pages
+- Fix README typos or incorrect instructions
+
+style:
+- Adjust formatting (go fmt), remove unused imports
+- Linters fixes; no functional impact
+
+refactor:
+- Extract utils, reorganize package structure
+- Rename internal functions for clarity
+
+perf:
+- Optimize CPU/memory usage in cluster operations
+
+test:
+- Add or improve unit/integration tests
+- Update CI test matrix
+
+ci:
+- CI workflow fixes or adjustments (e.g., GitHub workflows)
+
+build:
+- Update Go module versions
+- Changes to build scripts (Makefile, tooling)
+
+chore:
+- Non-code housekeeping (dependency cleanup, templating)
+
+# Footer Conventions
+- Close issues with “Closes #<number>.”
+- Denote breaking changes via `BREAKING CHANGE:` in body/footer.
