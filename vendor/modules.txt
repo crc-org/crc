@@ -153,7 +153,7 @@ github.com/crc-org/machine/libmachine/drivers/plugin/localbinary
 github.com/crc-org/machine/libmachine/drivers/rpc
 github.com/crc-org/machine/libmachine/state
 github.com/crc-org/machine/libmachine/version
-# github.com/crc-org/vfkit v0.6.2
+# github.com/crc-org/vfkit v0.6.3
 ## explicit; go 1.24.2
 github.com/crc-org/vfkit/pkg/config
 github.com/crc-org/vfkit/pkg/util

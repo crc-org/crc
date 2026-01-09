@@ -463,11 +463,17 @@ func (dev *VirtioNet) ToCmdLine() ([]string, error) {
 	case dev.Nat:
 		builder.WriteString(",nat")
 	case dev.UnixSocketPath != "":
-		builder.WriteString(",type=unixgram")
-		fmt.Fprintf(&builder, ",path=%s", dev.UnixSocketPath)
 		if dev.VfkitMagic {
-			builder.WriteString(",vfkitMagic=on")
+			// Use the old commandline syntax for backwards compatibility
+			// The pkg/config code is used by other projects as a go module to
+			// generate the command line to start vfkit. There is no guarantee
+			// that the `vfkit` binary these projects are using is the latest
+			// one with support for the new syntax.
+			// https://github.com/containers/podman/issues/27873
+			fmt.Fprintf(&builder, ",unixSocketPath=%s", dev.UnixSocketPath)
 		} else {
+			builder.WriteString(",type=unixgram")
+			fmt.Fprintf(&builder, ",path=%s", dev.UnixSocketPath)
 			builder.WriteString(",vfkitMagic=off")
 		}
 	default:
@@ -475,7 +481,7 @@ func (dev *VirtioNet) ToCmdLine() ([]string, error) {
 	}
 
 	if len(dev.MacAddress) != 0 {
-		builder.WriteString(fmt.Sprintf(",mac=%s", dev.MacAddress))
+		fmt.Fprintf(&builder, ",mac=%s", dev.MacAddress)
 	}
 
 	return []string{"--device", builder.String()}, nil
