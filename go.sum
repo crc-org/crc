@@ -64,8 +64,8 @@ github.com/crc-org/admin-helper v0.5.7 h1:HxzqnukUI/xk3v8kCLiO7ob8BNOeQDOb2tGvZ9
 github.com/crc-org/admin-helper v0.5.7/go.mod h1:7KWa8mm4Ct4bAn7oJm5d8vseNpBlpesmpyz7Bcr2QqI=
 github.com/crc-org/machine v0.0.0-20240926103419-a943b47fd48b h1:5577tKzQcPfd/i0dCekY32R9DUi677sNfhVLYKulBGM=
 github.com/crc-org/machine v0.0.0-20240926103419-a943b47fd48b/go.mod h1:trWeQimjfE3dJ8qWOxI4ePtYm13aecK42bf01s6h/Nc=
-github.com/crc-org/vfkit v0.6.2 h1:gVrvS8HAV5EcUCk4KB5tkUBlksTtmuOuprCmQ0IVzEo=
-github.com/crc-org/vfkit v0.6.2/go.mod h1:T3M65lVKGhrZHEcYlcSUstL6/Nm0BDbsb77HjlP8QIU=
+github.com/crc-org/vfkit v0.6.3 h1:X6pHxDWx0jQRV6TpzCmI4tfPyW/2R03HEEiS5vNnsBU=
+github.com/crc-org/vfkit v0.6.3/go.mod h1:jp0CkOQW5BAvSdJSV7OHUuTGRUo7+/fwaFHd+92pqR8=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/creack/pty v1.1.17/go.mod h1:MOBLtS5ELjhRRrroQr9kyvTxUAFNvYEK993ew/Vr4O4=
 github.com/creack/pty v1.1.18 h1:n56/Zwd5o6whRC5PMGretI4IdRLlmBXYNjScPaBgsbY=
