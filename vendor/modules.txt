@@ -147,7 +147,6 @@ github.com/crc-org/admin-helper/pkg/hosts
 github.com/crc-org/admin-helper/pkg/types
 # github.com/crc-org/machine v0.0.0-20240926103419-a943b47fd48b
 ## explicit; go 1.17
-github.com/crc-org/machine/drivers/libvirt
 github.com/crc-org/machine/libmachine/drivers
 github.com/crc-org/machine/libmachine/drivers/plugin/localbinary
 github.com/crc-org/machine/libmachine/drivers/rpc
@@ -1342,9 +1341,6 @@ k8s.io/utils/clock/testing
 k8s.io/utils/internal/third_party/forked/golang/net
 k8s.io/utils/net
 k8s.io/utils/ptr
-# libvirt.org/go/libvirtxml v1.11010.0
-## explicit; go 1.11
-libvirt.org/go/libvirtxml
 # sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8
 ## explicit; go 1.23
 sigs.k8s.io/json
