@@ -59,7 +59,7 @@ func getVersionGeneric(executablePath string, args ...string) (string, error) { 
 		logging.Debugf("failed to run executable %s: %v", executablePath, err)
 		return "", err
 	}
-	parsedOutput := strings.Split(stdOut, ":")
+	parsedOutput := strings.Split(stdOut, " ")
 	if len(parsedOutput) < 2 {
 		logging.Debugf("failed to parse version information for %s: %s", executablePath, stdOut)
 		return "", fmt.Errorf("Unable to parse the version information of %s", executablePath)
@@ -144,7 +144,45 @@ func (c *Cache) cacheExecutable() error {
 		if err != nil {
 			return err
 		}
+		if c.GetExecutableName() == constants.KrunkitCommand {
+			err = signKrunkit(finalExecutablePath)
+			if err != nil {
+				return err
+			}
+		}
 	}
+	return nil
+}
+
+func signKrunkit(executablePath string) error {
+	const krunkitEntitlements = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+    <key>com.apple.security.hypervisor</key>
+    <true/>
+</dict>
+</plist>
+`
+	tmpFile, err := os.CreateTemp("", "krunkit-entitlements-*.plist")
+	if err != nil {
+		return fmt.Errorf("failed to create temp entitlements file: %w", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.WriteString(krunkitEntitlements); err != nil {
+		tmpFile.Close()
+		return fmt.Errorf("failed to write entitlements: %w", err)
+	}
+	tmpFile.Close()
+
+	_, _, err = crcos.RunWithDefaultLocale("codesign", "-s", "-", "--entitlements", tmpFile.Name(), "--force", executablePath)
+	if err != nil {
+		return err
+	}
+	logging.Debugf("Signed %s", executablePath)
 	return nil
 }
 
@@ -183,7 +221,7 @@ func (c *Cache) CheckVersion() error {
 }
 
 func isTarball(filename string) bool {
-	tarballExtensions := []string{".tar", ".tar.gz", ".tar.xz", ".zip", ".tar.bz2", ".crcbundle"}
+	tarballExtensions := []string{".tar", ".tar.gz", ".tar.xz", ".zip", ".tar.bz2", ".crcbundle", ".tgz"}
 	for _, extension := range tarballExtensions {
 		if strings.HasSuffix(strings.ToLower(filename), extension) {
 			return true
