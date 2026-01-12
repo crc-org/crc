@@ -260,6 +260,20 @@ func (cb *ConfigBuilder) build(cwd string) (*config, error) {
 		}
 	}
 
+	var maxLenIgnore []*regexp.Regexp
+	rawMaxLenIgnore := def.Options.MaxLenIgnorePatterns
+	if pcfg.Options != nil && pcfg.Options.MaxLenIgnorePatterns != nil {
+		rawMaxLenIgnore = pcfg.Options.MaxLenIgnorePatterns
+	}
+	if len(rawMaxLenIgnore) > 0 {
+		rs, invalids := toValidRegexpSlice(rawMaxLenIgnore)
+		if len(invalids) > 0 {
+			errs = append(errs, fmt.Errorf("invalid max-len ignore pattern(s): %q", invalids))
+		} else {
+			maxLenIgnore = rs
+		}
+	}
+
 	if errs != nil {
 		return nil, errors.Join(errs...)
 	}
@@ -274,10 +288,12 @@ func (cb *ConfigBuilder) build(cwd string) (*config, error) {
 	// To avoid being too strict, we don't complain if a rule is enabled and disabled at the same time.
 
 	resolvedOptions := &model.RuleOptions{}
-	transferOptions(resolvedOptions, def.Options) // def.Options is never nil
+	transferPrimitiveOptions(resolvedOptions, def.Options) // def.Options is never nil
 	if pcfg.Options != nil {
-		transferOptions(resolvedOptions, pcfg.Options)
+		transferPrimitiveOptions(resolvedOptions, pcfg.Options)
 	}
+	resolvedOptions.MaxLenIgnorePatterns = maxLenIgnore
+
 	result.options = resolvedOptions
 
 	return result, nil
@@ -286,4 +302,26 @@ func (cb *ConfigBuilder) build(cwd string) (*config, error) {
 // SetOverride implements the corresponding interface method.
 func (cb *ConfigBuilder) SetOverride(override *model.ConfigOverride) {
 	cb.override = override
+}
+
+func transferPrimitiveOptions(target *model.RuleOptions, source *PlainRuleOptions) {
+	transferIfNotNil(&target.MaxLenLength, source.MaxLenLength)
+	transferIfNotNil(&target.MaxLenIncludeTests, source.MaxLenIncludeTests)
+	transferIfNotNil(&target.PkgDocIncludeTests, source.PkgDocIncludeTests)
+	transferIfNotNil(&target.SinglePkgDocIncludeTests, source.SinglePkgDocIncludeTests)
+	transferIfNotNil(&target.RequirePkgDocIncludeTests, source.RequirePkgDocIncludeTests)
+	transferIfNotNil(&target.RequireDocIncludeTests, source.RequireDocIncludeTests)
+	transferIfNotNil(&target.RequireDocIgnoreExported, source.RequireDocIgnoreExported)
+	transferIfNotNil(&target.RequireDocIgnoreUnexported, source.RequireDocIgnoreUnexported)
+	transferIfNotNil(&target.StartWithNameIncludeTests, source.StartWithNameIncludeTests)
+	transferIfNotNil(&target.StartWithNameIncludeUnexported, source.StartWithNameIncludeUnexported)
+	transferIfNotNil(&target.RequireStdlibDoclinkIncludeTests, source.RequireStdlibDoclinkIncludeTests)
+	transferIfNotNil(&target.NoUnusedLinkIncludeTests, source.NoUnusedLinkIncludeTests)
+}
+
+func transferIfNotNil[T any](dst *T, src *T) {
+	if src == nil {
+		return
+	}
+	*dst = *src
 }
