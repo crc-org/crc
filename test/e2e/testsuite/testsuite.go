@@ -558,21 +558,14 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		ExecuteCommandWithExpectedExitStatus)
 	s.Step(`^execut(?:e|ing) single crc (.*) command (.*)$`,
 		ExecuteSingleCommandWithExpectedExitStatus)
-	s.Step(`^execut(?:e|ing) podman command (.*) (succeeds|fails)$`,
-		ExecutingPodmanCommandSucceedsFails)
 	s.Step(`^ensuring CRC cluster is running$`,
 		EnsureCRCIsRunning)
 	s.Step(`^ensuring oc command is available$`,
 		EnsureOCCommandIsAvailable)
 	s.Step(`^ensuring user is logged in (succeeds|fails)`,
 		EnsureUserIsLoggedIntoClusterSucceedsOrFails)
-	s.Step(`^podman command is available$`,
-		PodmanCommandIsAvailable)
 	s.Step(`^deleting a pod (succeeds|fails)$`,
 		DeletingPodSucceedsOrFails)
-	s.Step(`^pulling image "(.*)", logging in, and pushing local image to internal registry succeeds$`,
-		PullLoginTagPushImageSucceeds)
-
 	// CRC file operations
 	s.Step(`^file "([^"]*)" exists in CRC home folder$`,
 		FileExistsInCRCHome)
@@ -1040,11 +1033,7 @@ func EnsureUserIsLoggedIntoClusterSucceedsOrFails(expected string) error {
 }
 
 func EnsureOCCommandIsAvailable() error {
-	err := setOcEnv()
-	if err != nil {
-		return err
-	}
-	return setPodmanEnv()
+	return setOcEnv()
 }
 
 func setOcEnv() error {
@@ -1052,13 +1041,6 @@ func setOcEnv() error {
 		return util.ExecuteCommandSucceedsOrFails("crc oc-env | Invoke-Expression", "succeeds")
 	}
 	return util.ExecuteCommandSucceedsOrFails("eval $(crc oc-env)", "succeeds")
-}
-
-func setPodmanEnv() error {
-	if runtime.GOOS == "windows" {
-		return util.ExecuteCommandSucceedsOrFails("crc podman-env | Invoke-Expression", "succeeds")
-	}
-	return util.ExecuteCommandSucceedsOrFails("eval $(crc podman-env)", "succeeds")
 }
 
 func SetConfigPropertyToValueSucceedsOrFails(property string, value string, expected string) error {
@@ -1104,74 +1086,6 @@ func DeletingPodSucceedsOrFails(expected string) error {
 		err = util.ExecuteCommandSucceedsOrFails("oc delete pod $POD --now", expected)
 	}
 	return err
-}
-
-func PodmanCommandIsAvailable() error {
-
-	// Do what 'eval $(crc podman-env) would do
-	path := os.ExpandEnv("${HOME}/.crc/bin/podman:$PATH")
-	csshk := os.ExpandEnv("${HOME}/.crc/machines/crc/id_ed25519")
-	dh := os.ExpandEnv("unix:///${HOME}/.crc/machines/crc/docker.sock")
-	ch := "ssh://core@127.0.0.1:2222/run/user/1000/podman/podman.sock"
-	if runtime.GOOS == "windows" {
-		userHomeDir, _ := os.UserHomeDir()
-		unexpandedPath := filepath.Join(userHomeDir, ".crc/bin/podman;${PATH}")
-		path = os.ExpandEnv(unexpandedPath)
-		csshk = filepath.Join(userHomeDir, ".crc/machines/crc/id_ed25519")
-		dh = "npipe:////./pipe/crc-podman"
-	}
-
-	os.Setenv("PATH", path)
-	os.Setenv("CONTAINER_SSHKEY", csshk)
-	os.Setenv("CONTAINER_HOST", ch)
-	os.Setenv("DOCKER_HOST", dh)
-
-	return nil
-
-}
-
-func ExecutingPodmanCommandSucceedsFails(command string, expected string) error {
-
-	var err error
-	switch expected {
-	case "succeeds":
-		_, err = crcCmd.RunPodmanExpectSuccess(strings.Split(command[1:len(command)-1], " ")...)
-	case "fails":
-		_, err = crcCmd.RunPodmanExpectFail(strings.Split(command[1:len(command)-1], " ")...)
-	}
-
-	return err
-}
-
-func PullLoginTagPushImageSucceeds(image string) error {
-	_, err := crcCmd.RunPodmanExpectSuccess("pull", image)
-	if err != nil {
-		return err
-	}
-
-	err = util.ExecuteCommand("oc whoami -t")
-	if err != nil {
-		return err
-	}
-
-	token := util.GetLastCommandOutput("stdout")
-	fmt.Println(token)
-	_, err = crcCmd.RunPodmanExpectSuccess("login", "-u", "kubeadmin", "-p", token, "default-route-openshift-image-registry.apps-crc.testing", "--tls-verify=false") // $(oc whoami -t)
-	if err != nil {
-		return err
-	}
-
-	_, err = crcCmd.RunPodmanExpectSuccess("tag", image, "default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test")
-	if err != nil {
-		return err
-	}
-
-	_, err = crcCmd.RunPodmanExpectSuccess("push", "default-route-openshift-image-registry.apps-crc.testing/testproj/hello:test", "--remove-signatures", "--tls-verify=false")
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // Decode a file encoded with base64

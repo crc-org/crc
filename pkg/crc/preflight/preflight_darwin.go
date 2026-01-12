@@ -119,7 +119,6 @@ func getChecks(_ network.Mode, bundlePath string, preset crcpreset.Preset, enabl
 	checks = append(checks, nonWinPreflightChecks...)
 	checks = append(checks, genericPreflightChecks(preset)...)
 	checks = append(checks, memoryCheck(preset))
-	checks = append(checks, removePodmanFromOcBinDirCheck())
 	checks = append(checks, genericCleanupChecks...)
 	checks = append(checks, vfkitPreflightChecks...)
 	checks = append(checks, resolverPreflightChecks...)

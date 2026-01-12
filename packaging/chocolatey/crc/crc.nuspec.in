@@ -12,11 +12,11 @@
     <licenseUrl>https://github.com/crc-org/crc/blob/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <tags>crc ocp openshift openshiftlocal okd podman</tags>
-    <summary>CRC is a tool to run containers. It manages a local OpenShift 4.x cluster, OKD cluster or a Podman VM optimized for testing and development purposes.</summary>
+    <summary>CRC is a tool to run containers. It manages a local OpenShift 4.x cluster, OKD cluster or a MicroShift cluster in a VM optimized for testing and development purposes.</summary>
     <description>
 ## CRC - Runs Containers
 
-CRC is a tool to run containers. It manages a local OpenShift 4.x cluster, OKD cluster or a Podman VM optimized for testing and development purposes.
+CRC is a tool to run containers. It manages a local OpenShift 4.x cluster, OKD cluster or a MicroShift cluster in a VM optimized for testing and development purposes.
 Learn more and contribute on [GitHub](https://github.com/crc-org/crc).
     </description>
     <releaseNotes>https://github.com/crc-org/crc/releases/tag/v__VERSION__</releaseNotes>

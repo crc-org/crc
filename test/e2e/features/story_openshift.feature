@@ -58,19 +58,6 @@ Feature: 4 Openshift stories
 		When executing "oc logs deployment/hello" succeeds
 		Then stdout should contain "httpd"
 
-	@darwin @linux @windows @testdata @story_registry @local-registry @needs_namespace
-	Scenario: Pull image locally, push to registry, deploy
-		Given podman command is available
-		And executing "oc new-project testproj" succeeds
-		When pulling image "registry.access.redhat.com/ubi8/httpd-24:latest", logging in, and pushing local image to internal registry succeeds
-		And executing "oc apply -f hello.yaml" succeeds
-		When executing "oc rollout status deployment hello" succeeds
-		Then stdout should contain "successfully rolled out"
-		And executing "oc get pods" succeeds
-		Then stdout should contain "Running"
-		When executing "oc logs deployment/hello" succeeds
-		Then stdout should contain "httpd"
-
 	# Operator from marketplace
 
 	@darwin @linux @windows @testdata @story_marketplace @cleanup @needs_namespace

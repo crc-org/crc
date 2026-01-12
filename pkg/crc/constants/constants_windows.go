@@ -1,10 +1,9 @@
 package constants
 
 const (
-	OcExecutableName           = "oc.exe"
-	PodmanRemoteExecutableName = "podman.exe"
-	TapSocketPath              = ""
-	DaemonHTTPNamedPipe        = `\\.\pipe\crc-http`
-	DaemonTaskName             = "crcDaemon"
-	AdminHelperServiceName     = "crcAdminHelper"
+	OcExecutableName       = "oc.exe"
+	TapSocketPath          = ""
+	DaemonHTTPNamedPipe    = `\\.\pipe\crc-http`
+	DaemonTaskName         = "crcDaemon"
+	AdminHelperServiceName = "crcAdminHelper"
 )

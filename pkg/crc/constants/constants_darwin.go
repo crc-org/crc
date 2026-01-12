@@ -5,10 +5,9 @@ import (
 )
 
 const (
-	OcExecutableName           = "oc"
-	PodmanRemoteExecutableName = "podman"
-	DaemonAgentLabel           = "com.redhat.crc.daemon"
-	QemuGuestAgentPort         = 1234
+	OcExecutableName   = "oc"
+	DaemonAgentLabel   = "com.redhat.crc.daemon"
+	QemuGuestAgentPort = 1234
 )
 
 var (
