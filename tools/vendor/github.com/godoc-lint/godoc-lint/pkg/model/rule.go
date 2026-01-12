@@ -16,6 +16,8 @@ const (
 	RequireDocRule Rule = "require-doc"
 	// DeprecatedRule represents the "deprecated" rule.
 	DeprecatedRule Rule = "deprecated"
+	// RequireStdlibDoclinkRule represents the "require-stdlib-doclink" rule.
+	RequireStdlibDoclinkRule Rule = "require-stdlib-doclink"
 	// MaxLenRule represents the "max-len" rule.
 	MaxLenRule Rule = "max-len"
 	// NoUnusedLinkRule represents the "no-unused-link" rule.
@@ -31,6 +33,7 @@ var AllRules = func() RuleSet {
 		StartWithNameRule,
 		RequireDocRule,
 		DeprecatedRule,
+		RequireStdlibDoclinkRule,
 		MaxLenRule,
 		NoUnusedLinkRule,
 	)

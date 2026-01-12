@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"go/token"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/ldez/grignotin/gomod"
 	"golang.org/x/mod/modfile"
+	"golang.org/x/mod/module"
 	"golang.org/x/tools/go/analysis"
 )
 
@@ -60,6 +62,7 @@ type Options struct {
 	ToolForbidden             bool
 	GoDebugForbidden          bool
 	GoVersionPattern          *regexp.Regexp
+	CheckModulePath           bool
 }
 
 // AnalyzePass analyzes a pass.
@@ -101,6 +104,7 @@ func Analyze(opts Options) ([]Result, error) {
 // AnalyzeFile analyzes a mod file.
 func AnalyzeFile(file *modfile.File, opts Options) []Result {
 	checks := []func(file *modfile.File, opts Options) []Result{
+		checkModulePath,
 		checkRetractDirectives,
 		checkExcludeDirectives,
 		checkToolDirectives,
@@ -117,6 +121,19 @@ func AnalyzeFile(file *modfile.File, opts Options) []Result {
 	}
 
 	return results
+}
+
+func checkModulePath(file *modfile.File, opts Options) []Result {
+	if file.Module == nil || !opts.CheckModulePath {
+		return nil
+	}
+
+	err := module.CheckPath(file.Module.Mod.Path)
+	if err != nil {
+		return []Result{NewResult(file, file.Module.Syntax, err.Error())}
+	}
+
+	return nil
 }
 
 func checkGoVersionDirectives(file *modfile.File, opts Options) []Result {
@@ -243,10 +260,8 @@ func checkReplaceDirective(opts Options, r *modfile.Replace) string {
 		return fmt.Sprintf("%s: %s", reasonReplaceLocal, r.Old.Path)
 	}
 
-	for _, v := range opts.ReplaceAllowList {
-		if r.Old.Path == v {
-			return ""
-		}
+	if slices.Contains(opts.ReplaceAllowList, r.Old.Path) {
+		return ""
 	}
 
 	return fmt.Sprintf("%s: %s", reasonReplace, r.Old.Path)

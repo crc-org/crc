@@ -71,11 +71,39 @@ type SymbolDecl struct {
 	// This is always false for non-type declaration (e.g., const or var).
 	IsTypeAlias bool
 
+	// IsMethod indicates whether the symbol is a method. For example:
+	//
+	//   func (Foo) Bar() {}
+	//   func (*Foo) Bar() {}
+	//   func (Foo[T]) Bar() {}
+	//   func (*Foo[T]) Bar() {}
+	//
+	// This field is false for non-function declarations.
+	IsMethod bool
+
 	// Name is the name of the declared symbol.
 	Name string
 
 	// Ident is the symbol identifier node.
 	Ident *ast.Ident
+
+	// MethodRecvBaseTypeName is the base type name of the method receiver, if
+	// the symbol is a method (See [Go spec]).
+	//
+	// Note that although an empty value is unexpected for method declarations,
+	// it's still possible (e.g. due to new language features that we don't yet
+	// support). So, users of this field should always check for empty values.
+	//
+	// In the examples below the base type name is "Foo":
+	//
+	//   func (Foo) Bar() {}
+	//   func (*Foo) Bar() {}
+	//   func (Foo[T]) BarFoo() {}
+	//
+	// This field is empty for non-method symbols.
+	//
+	// [Go spec]: https://go.dev/ref/spec#Method_declarations
+	MethodRecvBaseTypeName string
 
 	// MultiNameDecl determines whether the symbol is declared as part of a
 	// multi-name declaration spec; For example:
@@ -172,7 +200,7 @@ type SymbolDecl struct {
 	ParentDoc *CommentGroup
 }
 
-// CommentGroup represents an ast.CommentGroup and its parsed godoc instance.
+// CommentGroup represents an [ast.CommentGroup] and its parsed godoc instance.
 type CommentGroup struct {
 	// CG represents the AST comment group.
 	CG ast.CommentGroup
