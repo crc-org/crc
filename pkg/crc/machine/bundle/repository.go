@@ -27,9 +27,8 @@ const (
 )
 
 type Repository struct {
-	CacheDir     string
-	OcBinDir     string
-	PodmanBinDir string
+	CacheDir string
+	OcBinDir string
 }
 
 func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
@@ -91,9 +90,6 @@ func (repo *Repository) Use(bundleName string) (*CrcBundleInfo, error) {
 	if err := bundleInfo.createSymlinkOrCopyOpenShiftClient(repo.OcBinDir); err != nil {
 		return nil, err
 	}
-	if err := bundleInfo.createSymlinkOrCopyPodmanRemote(repo.PodmanBinDir); err != nil {
-		return nil, err
-	}
 	return bundleInfo, nil
 }
 
@@ -118,10 +114,6 @@ func (bundle *CrcBundleInfo) copyExecutableFromBundle(destDir string, fileType F
 
 func (bundle *CrcBundleInfo) createSymlinkOrCopyOpenShiftClient(ocBinDir string) error {
 	return bundle.copyExecutableFromBundle(ocBinDir, OcExecutable, constants.OcExecutableName)
-}
-
-func (bundle *CrcBundleInfo) createSymlinkOrCopyPodmanRemote(binDir string) error {
-	return bundle.copyExecutableFromBundle(binDir, PodmanExecutable, constants.PodmanRemoteExecutableName)
 }
 
 func (repo *Repository) Extract(ctx context.Context, path string) error {
@@ -181,9 +173,8 @@ func (repo *Repository) CalculateBundleSha256Sum(bundlePath string) (string, err
 }
 
 var defaultRepo = &Repository{
-	CacheDir:     constants.MachineCacheDir,
-	OcBinDir:     constants.CrcOcBinDir,
-	PodmanBinDir: constants.CrcPodmanBinDir,
+	CacheDir: constants.MachineCacheDir,
+	OcBinDir: constants.CrcOcBinDir,
 }
 
 func Get(bundleName string) (*CrcBundleInfo, error) {

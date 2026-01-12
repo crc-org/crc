@@ -33,7 +33,6 @@ Notable Changes
 ---
 
 - OpenShift %s
-- Podman %s
 - OKD %s
 %s
 
@@ -45,16 +44,12 @@ git shortlog
 EOF
 
 	changelog="$(git log --format="%h %s" "$lastReleasedVersion..$currentRepoTag")"
-	printf -v release_notes "$rn_template" "${currentRepoTag:1}" "$(ocp_version)" "$(podman_version)" "$(okd_version)" "$(notable_changes)" "$changelog"
+	printf -v release_notes "$rn_template" "${currentRepoTag:1}" "$(ocp_version)" "$(okd_version)" "$(notable_changes)" "$changelog"
 	echo "$release_notes"
 }
 
 function ocp_version() {
 	grep -oP "^OPENSHIFT_VERSION\s\?=\s\K\d\.\d+\.\d+$" Makefile
-}
-
-function podman_version() {
-	grep -oP "^PODMAN_VERSION\s\?=\s\K\d\.\d+\.\d+$" Makefile
 }
 
 function okd_version() {
@@ -104,4 +99,3 @@ else
 	echo "Release aborted!!"
 	exit 3
 fi
-

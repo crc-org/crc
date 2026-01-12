@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
@@ -42,7 +43,17 @@ func runPodmanEnv() error {
 	if root {
 		socket = constants.RootfulPodmanSocket
 	}
-	fmt.Println(shell.GetPathEnvString(userShell, constants.CrcPodmanBinDir))
+
+	// Warning about podman-remote binary not being shipped and this command will be removed in future releases
+	// (printed to stderr so it doesn't break eval)
+	fmt.Fprintln(os.Stderr, "NOTE: The podman-remote binary is no longer shipped with crc.")
+	fmt.Fprintln(os.Stderr, "To use podman with crc, install podman-remote from:")
+	fmt.Fprintln(os.Stderr, "https://podman.io/docs/installation")
+	fmt.Fprintln(os.Stderr, "In future releases, the podman-env command will be removed from crc.")
+	fmt.Fprintln(os.Stderr, "Please create an issue at https://github.com/crc-org/crc/issues with details")
+	fmt.Fprintln(os.Stderr, "if you think this command is still useful for your workflow.")
+	fmt.Fprintln(os.Stderr)
+
 	fmt.Println(shell.GetEnvString(userShell, "CONTAINER_SSHKEY", connectionDetails.SSHKeys[0]))
 	fmt.Println(shell.GetEnvString(userShell, "CONTAINER_HOST",
 		fmt.Sprintf("ssh://%s@%s:%d%s",
