@@ -1,27 +1,23 @@
-package golines
+package tags
 
 import (
 	"fmt"
-	"reflect"
 	"regexp"
+	"slices"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/dave/dst"
-	"github.com/fatih/structtag"
+	"github.com/golangci/golines/shorten/internal/annotation"
+	"github.com/ldez/structtags/parser"
 )
 
 var structTagRegexp = regexp.MustCompile("`([ ]*[a-zA-Z0-9_-]+:\".*\"[ ]*){2,}`")
 
-// HasMultiKeyTags returns whether the given lines have a multikey struct line.
-// It's used as an optimization step to avoid unnnecessary shortening rounds.
-func HasMultiKeyTags(lines []string) bool {
-	for _, line := range lines {
-		if structTagRegexp.MatchString(line) {
-			return true
-		}
-	}
-
-	return false
+// HasMultipleEntries returns whether the given lines have a multi-entries struct line.
+// It's used as an optimization step to avoid unnecessary shortening rounds.
+func HasMultipleEntries(lines []string) bool {
+	return slices.ContainsFunc(lines, structTagRegexp.MatchString)
 }
 
 // FormatStructTags formats struct tags so that the keys within each block of fields are aligned.
@@ -34,35 +30,54 @@ func FormatStructTags(fieldList *dst.FieldList) {
 		return
 	}
 
-	blockFields := []*dst.Field{}
+	var blockFields []*dst.Field
 
-	// Divide fields into "blocks" so that we don't do alignments across blank lines
-	for f, field := range fieldList.List {
-		if f == 0 || field.Decorations().Before == dst.EmptyLine {
-			alignTags(blockFields)
+	// Divide fields into "blocks" so that we don't do alignments across blank lines and comments.
+	for _, field := range fieldList.List {
+		if isEndFieldsBlock(field) {
+			align(blockFields)
+
 			blockFields = blockFields[:0]
 		}
 
 		blockFields = append(blockFields, field)
 	}
 
-	alignTags(blockFields)
+	align(blockFields)
 }
 
-// alignTags formats the struct tags within a single field block.
-func alignTags(fields []*dst.Field) {
+func isEndFieldsBlock(field *dst.Field) bool {
+	return field.Decorations().Before == dst.EmptyLine ||
+		slices.ContainsFunc(field.Decorations().Start.All(), func(s string) bool {
+			return !annotation.Is(s)
+		})
+}
+
+// align formats the struct tags within a single field block.
+// NOTE(ldez): all the code of `align` is not related to shorten,
+// instead of shortening a line, it increases the line length.
+// It must be either:
+// - disabled by default
+// - or the additional spaces should be an option
+// - or maybe removed.
+func align(fields []*dst.Field) {
 	if len(fields) == 0 {
 		return
 	}
 
 	maxTagWidths := map[string]int{}
-	tagKeys := []string{}
+
+	var tagKeys []string
+
 	tagKVs := make([]map[string]string, len(fields))
 
-	maxTypeWidth := 0
-	invalidWidths := false
+	var (
+		maxTypeWidth  int
+		invalidWidths bool
+	)
 
 	// First, scan over all field tags so that we can understand their values and widths
+
 	for f, field := range fields {
 		if len(field.Names) > 0 {
 			typeWidth, err := getWidth(field.Type)
@@ -84,34 +99,30 @@ func alignTags(fields []*dst.Field) {
 		if tagValue[0] != '`' || tagValue[len(tagValue)-1] != '`' {
 			continue
 		}
+
 		tagValue = tagValue[1 : len(tagValue)-1]
 
-		subTags, err := structtag.Parse(tagValue)
+		entries, err := parser.Tag(tagValue, newFiller())
 		if err != nil {
 			return
 		}
-		subTagKeys := subTags.Keys()
 
-		structTag := reflect.StructTag(tagValue)
-
-		for _, key := range subTagKeys {
-			value := structTag.Get(key)
-
+		for _, entry := range entries {
 			// Tag is key, value, and some extra chars (two quotes + one colon)
-			width := len(key) + tagValueLen(value) + 3
+			width := utf8.RuneCountInString(entry.Content)
 
-			if _, ok := maxTagWidths[key]; !ok {
-				maxTagWidths[key] = width
-				tagKeys = append(tagKeys, key)
-			} else if width > maxTagWidths[key] {
-				maxTagWidths[key] = width
+			if _, ok := maxTagWidths[entry.Key]; !ok {
+				maxTagWidths[entry.Key] = width
+				tagKeys = append(tagKeys, entry.Key)
+			} else if width > maxTagWidths[entry.Key] {
+				maxTagWidths[entry.Key] = width
 			}
 
 			if tagKVs[f] == nil {
 				tagKVs[f] = map[string]string{}
 			}
 
-			tagKVs[f][key] = value
+			tagKVs[f][entry.Key] = entry.Content
 		}
 	}
 
@@ -121,24 +132,22 @@ func alignTags(fields []*dst.Field) {
 			continue
 		}
 
-		tagComponents := []string{}
+		var tagComponents []string
 
 		if len(field.Names) == 0 && maxTypeWidth > 0 && !invalidWidths {
 			// Add extra spacing at beginning so that tag aligns with named field tags
 			tagComponents = append(tagComponents, "")
 
-			for i := 0; i < maxTypeWidth; i++ {
-				tagComponents[len(tagComponents)-1] += " "
-			}
+			tagComponents[len(tagComponents)-1] += strings.Repeat(" ", maxTypeWidth)
 		}
 
 		for _, key := range tagKeys {
-			value, ok := tagKVs[f][key]
+			content, ok := tagKVs[f][key]
 			lenUsed := 0
 
 			if ok {
-				tagComponents = append(tagComponents, fmt.Sprintf("%s:\"%s\"", key, value))
-				lenUsed += len(key) + tagValueLen(value) + 3
+				tagComponents = append(tagComponents, content)
+				lenUsed += utf8.RuneCountInString(content)
 			} else {
 				tagComponents = append(tagComponents, "")
 			}
@@ -146,25 +155,17 @@ func alignTags(fields []*dst.Field) {
 			if len(field.Names) > 0 || !invalidWidths {
 				lenRemaining := maxTagWidths[key] - lenUsed
 
-				for i := 0; i < lenRemaining; i++ {
-					tagComponents[len(tagComponents)-1] += " "
-				}
+				tagComponents[len(tagComponents)-1] += strings.Repeat(" ", lenRemaining)
 			}
 		}
 
-		updatedTagValue := strings.TrimRight(strings.Join(tagComponents, " "), " ")
-		field.Tag.Value = fmt.Sprintf("`%s`", updatedTagValue)
+		field.Tag.Value = fmt.Sprintf("`%s`",
+			strings.TrimRight(strings.Join(tagComponents, " "), " "))
 	}
 }
 
-// get real tag value's length, fix multi-byte character's length, such as `ï`
-// or `中文`
-func tagValueLen(s string) int {
-	return len([]rune(s))
-}
-
-// getWidth tries to guess the formatted width of a dst node expression. If this isn't (yet)
-// possible, it returns an error.
+// getWidth tries to guess the formatted width of a dst node expression.
+// If this isn't (yet) possible, it returns an error.
 func getWidth(node dst.Node) (int, error) {
 	switch n := node.(type) {
 	case *dst.ArrayType:
@@ -174,6 +175,7 @@ func getWidth(node dst.Node) (int, error) {
 		}
 
 		return 2 + eltWidth, nil
+
 	case *dst.ChanType:
 		valWidth, err := getWidth(n.Value)
 		if err != nil {
@@ -190,8 +192,10 @@ func getWidth(node dst.Node) (int, error) {
 
 		// Channel includes an arrow
 		return 7 + valWidth, nil
+
 	case *dst.Ident:
 		return len(n.Name), nil
+
 	case *dst.MapType:
 		keyWidth, err := getWidth(n.Key)
 		if err != nil {
@@ -204,6 +208,7 @@ func getWidth(node dst.Node) (int, error) {
 		}
 
 		return 5 + keyWidth + valWidth, nil
+
 	case *dst.StarExpr:
 		xWidth, err := getWidth(n.X)
 		if err != nil {
@@ -213,5 +218,5 @@ func getWidth(node dst.Node) (int, error) {
 		return 1 + xWidth, nil
 	}
 
-	return 0, fmt.Errorf("Could not get width of node %+v", node)
+	return 0, fmt.Errorf("could not get the width of node %+v", node)
 }

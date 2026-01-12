@@ -155,9 +155,11 @@ func (w *wrapper) toIssue(pass *analysis.Pass, failure *lint.Failure) *goanalysi
 		if failure.Filename() == f.Name() {
 			issue.SuggestedFixes = []analysis.SuggestedFix{{
 				TextEdits: []analysis.TextEdit{{
-					Pos:     f.LineStart(failure.Position.Start.Line),
-					End:     goanalysis.EndOfLinePos(f, failure.Position.End.Line),
-					NewText: []byte(failure.ReplacementLine),
+					Pos: f.LineStart(failure.Position.Start.Line),
+					End: goanalysis.EndOfLinePos(f, failure.Position.End.Line),
+					// ReplacementLine doesn't contain the full line (missing newline), so we have to add a newline.
+					// Also `failure.Position.End.Offset` is at the end of the node but not the line.
+					NewText: []byte(failure.ReplacementLine + "\n"),
 				}},
 			}}
 		}
@@ -208,11 +210,12 @@ func getConfig(cfg *config.ReviveSettings) (*lint.Config, error) {
 
 func createConfigMap(cfg *config.ReviveSettings) map[string]any {
 	rawRoot := map[string]any{
-		"confidence":     cfg.Confidence,
-		"severity":       cfg.Severity,
-		"errorCode":      cfg.ErrorCode,
-		"warningCode":    cfg.WarningCode,
-		"enableAllRules": cfg.EnableAllRules,
+		"confidence":         cfg.Confidence,
+		"severity":           cfg.Severity,
+		"errorCode":          cfg.ErrorCode,
+		"warningCode":        cfg.WarningCode,
+		"enableAllRules":     cfg.EnableAllRules,
+		"enableDefaultRules": cfg.EnableDefaultRules,
 
 		// Should be managed with `linters.exclusions.generated`.
 		"ignoreGeneratedHeader": false,

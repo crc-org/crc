@@ -269,86 +269,88 @@ func LintErrorComparisons(info *TypesInfoExt) []analysis.Diagnostic {
 			continue
 		}
 
-		if switchComparesNonNil(switchStmt) {
-			diagnostic := analysis.Diagnostic{
-				Message: "switch on an error will fail on wrapped errors. Use errors.Is to check for specific errors",
-				Pos:     problematicCaseClause.Pos(),
+		if !switchComparesNonNil(switchStmt) {
+			continue
+		}
+
+		diagnostic := analysis.Diagnostic{
+			Message: "switch on an error will fail on wrapped errors. Use errors.Is to check for specific errors",
+			Pos:     problematicCaseClause.Pos(),
+		}
+
+		// Create a simpler version of the fix for switch statements
+		// We'll transform: switch err { case ErrX: ... }
+		// To:             switch { case errors.Is(err, ErrX): ... }
+
+		// Create a new switch statement with an empty tag
+		newSwitchStmt := &ast.SwitchStmt{
+			Init: switchStmt.Init,
+			Tag:  nil, // Empty tag for the switch.
+			Body: &ast.BlockStmt{
+				List: make([]ast.Stmt, len(switchStmt.Body.List)),
+			},
+		}
+
+		// Convert each case to use errors.Is.
+		switchTagExpr := switchStmt.Tag // The error variable being checked.
+		for i, stmt := range switchStmt.Body.List {
+			origCaseClause := stmt.(*ast.CaseClause)
+
+			// Create a new case clause.
+			newCaseClause := &ast.CaseClause{
+				Body: origCaseClause.Body,
 			}
 
-			// Create a simpler version of the fix for switch statements
-			// We'll transform: switch err { case ErrX: ... }
-			// To:             switch { case errors.Is(err, ErrX): ... }
-
-			// Create a new switch statement with an empty tag
-			newSwitchStmt := &ast.SwitchStmt{
-				Init: switchStmt.Init,
-				Tag:  nil, // Empty tag for the switch.
-				Body: &ast.BlockStmt{
-					List: make([]ast.Stmt, len(switchStmt.Body.List)),
-				},
+			// If this is a default case (no expressions), keep it as-is.
+			if len(origCaseClause.List) == 0 {
+				newCaseClause.List = nil // Default case.
+				newSwitchStmt.Body.List[i] = newCaseClause
+				continue
 			}
 
-			// Convert each case to use errors.Is.
-			switchTagExpr := switchStmt.Tag // The error variable being checked.
-			for i, stmt := range switchStmt.Body.List {
-				origCaseClause := stmt.(*ast.CaseClause)
+			newCaseClause.List = make([]ast.Expr, 0, len(origCaseClause.List))
 
-				// Create a new case clause.
-				newCaseClause := &ast.CaseClause{
-					Body: origCaseClause.Body,
-				}
-
-				// If this is a default case (no expressions), keep it as-is.
-				if len(origCaseClause.List) == 0 {
-					newCaseClause.List = nil // Default case.
-					newSwitchStmt.Body.List[i] = newCaseClause
+			// Convert each case expression.
+			for _, caseExpr := range origCaseClause.List {
+				if isNil(caseExpr) {
+					// Keep nil checks as is: case err == nil:
+					newCaseClause.List = append(newCaseClause.List,
+						&ast.BinaryExpr{
+							X:  switchTagExpr,
+							Op: token.EQL,
+							Y:  caseExpr,
+						})
 					continue
 				}
-
-				newCaseClause.List = make([]ast.Expr, 0, len(origCaseClause.List))
-
-				// Convert each case expression.
-				for _, caseExpr := range origCaseClause.List {
-					if isNil(caseExpr) {
-						// Keep nil checks as is: case err == nil:
-						newCaseClause.List = append(newCaseClause.List,
-							&ast.BinaryExpr{
-								X:  switchTagExpr,
-								Op: token.EQL,
-								Y:  caseExpr,
-							})
-						continue
-					}
-					// Replace err == ErrX with errors.Is(err, ErrX).
-					newCaseClause.List = append(newCaseClause.List,
-						&ast.CallExpr{
-							Fun: &ast.SelectorExpr{
-								X:   ast.NewIdent("errors"),
-								Sel: ast.NewIdent("Is"),
-							},
-							Args: []ast.Expr{switchTagExpr, caseExpr},
-						})
-				}
-
-				newSwitchStmt.Body.List[i] = newCaseClause
+				// Replace err == ErrX with errors.Is(err, ErrX).
+				newCaseClause.List = append(newCaseClause.List,
+					&ast.CallExpr{
+						Fun: &ast.SelectorExpr{
+							X:   ast.NewIdent("errors"),
+							Sel: ast.NewIdent("Is"),
+						},
+						Args: []ast.Expr{switchTagExpr, caseExpr},
+					})
 			}
 
-			// Print the modified AST to get the fix text.
-			var buf bytes.Buffer
-			printer.Fprint(&buf, token.NewFileSet(), newSwitchStmt)
-			fixText := buf.String()
-
-			diagnostic.SuggestedFixes = []analysis.SuggestedFix{{
-				Message: "Convert to errors.Is() for error comparisons",
-				TextEdits: []analysis.TextEdit{{
-					Pos:     switchStmt.Pos(),
-					End:     switchStmt.End(),
-					NewText: []byte(fixText),
-				}},
-			}}
-
-			lints = append(lints, diagnostic)
+			newSwitchStmt.Body.List[i] = newCaseClause
 		}
+
+		// Print the modified AST to get the fix text.
+		var buf bytes.Buffer
+		printer.Fprint(&buf, token.NewFileSet(), newSwitchStmt)
+		fixText := buf.String()
+
+		diagnostic.SuggestedFixes = []analysis.SuggestedFix{{
+			Message: "Convert to errors.Is() for error comparisons",
+			TextEdits: []analysis.TextEdit{{
+				Pos:     switchStmt.Pos(),
+				End:     switchStmt.End(),
+				NewText: []byte(fixText),
+			}},
+		}}
+
+		lints = append(lints, diagnostic)
 	}
 
 	return lints
@@ -646,6 +648,9 @@ func LintErrorTypeAssertions(fset *token.FileSet, info *TypesInfoExt) []analysis
 		// Get the error variable being type-switched on
 		errExpr := typeAssert.X
 
+		// a flag to know if we can fix the issue with a [analysis.SuggestedFix]
+		canFix := true
+
 		// Determine if this is a type switch with assignment (switch e := err.(type))
 		var assignIdent *ast.Ident
 		var useShadowVar bool
@@ -653,8 +658,18 @@ func LintErrorTypeAssertions(fset *token.FileSet, info *TypesInfoExt) []analysis
 			// This is a type switch with assignment like: switch e := err.(type)
 			if len(assignStmt.Lhs) == 1 {
 				if id, ok := assignStmt.Lhs[0].(*ast.Ident); ok {
-					assignIdent = id
-					useShadowVar = true
+					if exprToString(errExpr) == id.Name {
+						// the switch with assignment is like switch err := err.(type)
+						// we cannot reuse err, otherwise it would lead to errors(err, &err)
+						canFix = false
+
+						// TODO - suggest a fix with a new variable name instead?
+						// the issue is with the fact each branch should have a new variable name
+					} else {
+						// the variable names are different, we can reuse the assigned variable
+						assignIdent = id
+						useShadowVar = true
+					}
 				}
 			}
 		}
@@ -670,8 +685,8 @@ func LintErrorTypeAssertions(fset *token.FileSet, info *TypesInfoExt) []analysis
 		for _, stmt := range typeSwitch.Body.List {
 			caseClause := stmt.(*ast.CaseClause)
 			for _, typeExpr := range caseClause.List {
-				// Skip default case (empty list)
-				if typeExpr != nil {
+				// Skip default case (empty list) and nil comparisons.
+				if typeExpr != nil && !isNil(typeExpr) {
 					caseTypes = append(caseTypes, typeExpr)
 				}
 			}
@@ -755,6 +770,16 @@ func LintErrorTypeAssertions(fset *token.FileSet, info *TypesInfoExt) []analysis
 			newCaseClause.List = make([]ast.Expr, len(caseClause.List))
 
 			for j, typeExpr := range caseClause.List {
+				// Nil cases should become err == nil.
+				if isNil(typeExpr) {
+					newCaseClause.List[j] = &ast.BinaryExpr{
+						X:  errExpr,
+						Op: token.EQL,
+						Y:  typeExpr,
+					}
+					continue
+				}
+
 				// Get the previously declared variable for this type.
 				varName := typeToVar[typeExpr]
 
@@ -802,20 +827,21 @@ func LintErrorTypeAssertions(fset *token.FileSet, info *TypesInfoExt) []analysis
 			newSwitchStmt.Body.List[i] = newCaseClause
 		}
 
-		// Print the resulting block to get the fix text.
-		var buf bytes.Buffer
-		printer.Fprint(&buf, token.NewFileSet(), blockStmt)
-		fixText := buf.String()
+		if canFix {
+			// Print the resulting block to get the fix text.
+			var buf bytes.Buffer
+			printer.Fprint(&buf, token.NewFileSet(), blockStmt)
+			fixText := buf.String()
 
-		diagnostic.SuggestedFixes = []analysis.SuggestedFix{{
-			Message: "Convert type switch to use errors.As",
-			TextEdits: []analysis.TextEdit{{
-				Pos:     typeSwitch.Pos(),
-				End:     typeSwitch.End(),
-				NewText: []byte(fixText),
-			}},
-		}}
-
+			diagnostic.SuggestedFixes = []analysis.SuggestedFix{{
+				Message: "Convert type switch to use errors.As",
+				TextEdits: []analysis.TextEdit{{
+					Pos:     typeSwitch.Pos(),
+					End:     typeSwitch.End(),
+					NewText: []byte(fixText),
+				}},
+			}}
+		}
 		lints = append(lints, diagnostic)
 	}
 

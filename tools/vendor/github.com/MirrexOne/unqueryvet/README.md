@@ -10,7 +10,14 @@ unqueryvet is a Go static analysis tool (linter) that detects `SELECT *` usage i
 
 - **Detects `SELECT *` in string literals** - Finds problematic queries in your Go code
 - **Constants and variables support** - Detects `SELECT *` in const and var declarations
-- **SQL Builder support** - Works with popular SQL builders like Squirrel, GORM, etc.
+- **String concatenation analysis** - Detects `SELECT *` in concatenated strings like `"SELECT * " + "FROM users"`
+- **Format string analysis** - Detects `SELECT *` in `fmt.Sprintf`, `log.Printf`, and other format functions
+- **Aliased wildcard detection** - Catches `SELECT t.*`, `SELECT alias.*` patterns
+- **Subquery detection** - Finds `SELECT *` inside subqueries and nested queries
+- **SQL Builder support** - Works with 8 popular SQL builders: Squirrel, GORM, SQLx, Ent, PGX, Bun, SQLBoiler, Jet
+- **Auto-fix suggestions** - Provides suggested fixes for detected violations
+- **File and function filtering** - Ignore specific files or functions using glob patterns
+- **Configurable severity** - Set diagnostic severity to "error" or "warning"
 - **Highly configurable** - Extensive configuration options for different use cases
 - **Supports `//nolint:unqueryvet`** - Standard Go linting suppression
 - **golangci-lint integration** - Works seamlessly with golangci-lint
@@ -32,6 +39,22 @@ Unqueryvet provides context-specific messages that explain WHY you should avoid 
 // Basic queries
 query := "SELECT * FROM users"
 // avoid SELECT * - explicitly specify needed columns for better performance, maintainability and stability
+
+// Aliased wildcards
+query := "SELECT t.* FROM users t"
+// avoid SELECT alias.* - explicitly specify columns like t.id, t.name for better maintainability
+
+// String concatenation
+query := "SELECT * " + "FROM users"
+// avoid SELECT * in concatenated string - explicitly specify needed columns
+
+// Format strings
+query := fmt.Sprintf("SELECT * FROM %s", tableName)
+// avoid SELECT * in format string - explicitly specify needed columns
+
+// Subqueries
+query := "SELECT id FROM (SELECT * FROM users)"
+// avoid SELECT * in subquery - explicitly specify needed columns
 
 // SQL Builders
 query := squirrel.Select("*").From("users")
@@ -89,6 +112,20 @@ var QueryOrders = "SELECT * FROM orders"
 query := "SELECT * FROM users"
 rows, err := db.Query("SELECT * FROM orders WHERE status = ?", "active")
 
+// Aliased wildcards
+query := "SELECT t.* FROM users t"
+query := "SELECT u.*, o.* FROM users u JOIN orders o ON u.id = o.user_id"
+
+// String concatenation
+query := "SELECT * " + "FROM users " + "WHERE id = ?"
+
+// Format strings
+query := fmt.Sprintf("SELECT * FROM %s WHERE id = %d", table, id)
+
+// Subqueries
+query := "SELECT id FROM (SELECT * FROM users)"
+query := "SELECT * FROM users WHERE id IN (SELECT * FROM orders)"
+
 // SQL builders with SELECT *
 query := squirrel.Select("*").From("products")
 query := builder.Select().Columns("*").From("inventory")
@@ -136,26 +173,94 @@ version: "2"
 
 linters:
   settings:
-      unqueryvet:
-        # Enable/disable SQL builder checking (default: true)
-        check-sql-builders: true
-    
-        # Default allowed patterns (automatically included):
-        # - COUNT(*), MAX(*), MIN(*) functions
-        # - information_schema, pg_catalog, sys schema queries
-        # You can add more patterns if needed:
-        # allowed-patterns:
-        #   - "SELECT \\* FROM temp_.*"
+    unqueryvet:
+      # Enable/disable SQL builder checking (default: true)
+      check-sql-builders: true
+
+      # Enable/disable aliased wildcard detection like SELECT t.* (default: true)
+      check-aliased-wildcard: true
+
+      # Enable/disable string concatenation analysis (default: true)
+      check-string-concat: true
+
+      # Enable/disable format string analysis like fmt.Sprintf (default: true)
+      check-format-strings: true
+
+      # Enable/disable strings.Builder analysis (default: true)
+      check-string-builder: true
+
+      # Enable/disable subquery analysis (default: true)
+      check-subqueries: true
+
+      # Diagnostic severity: "error" or "warning" (default: "warning")
+      severity: warning
+
+      # SQL builder libraries to check (all enabled by default)
+      sql-builders:
+        squirrel: true
+        gorm: true
+        sqlx: true
+        ent: true
+        pgx: true
+        bun: true
+        sqlboiler: true
+        jet: true
+
+      # Patterns for files to ignore (glob patterns)
+      # ignored-files:
+      #   - "*_test.go"
+      #   - "testdata/**"
+      #   - "mock_*.go"
+
+      # Functions to ignore (regex patterns)
+      # ignored-functions:
+      #   - "debug\\..*"
+      #   - "test.*"
+
+      # Default allowed patterns (automatically included):
+      # - COUNT(*), MAX(*), MIN(*) functions
+      # - information_schema, pg_catalog, sys schema queries
+      # You can add more patterns if needed:
+      # allowed-patterns:
+      #   - "SELECT \\* FROM temp_.*"
 ```
 
 ## Supported SQL Builders
 
-Unqueryvet supports popular SQL builders out of the box:
+Unqueryvet supports 8 popular SQL builders out of the box:
 
-- **Squirrel** - `squirrel.Select("*")`, `Select().Columns("*")`
-- **GORM** - Custom query methods
-- **SQLBoiler** - Generated query methods
-- **Custom builders** - Any builder using `Select()` patterns
+| Library | Package | Detection |
+|---------|---------|-----------|
+| **Squirrel** | `github.com/Masterminds/squirrel` | `Select("*")`, `Columns("*")` |
+| **GORM** | `gorm.io/gorm` | `Select("*")`, raw queries |
+| **SQLx** | `github.com/jmoiron/sqlx` | `Select()`, raw queries |
+| **Ent** | `entgo.io/ent` | Query builder patterns |
+| **PGX** | `github.com/jackc/pgx` | `Query()`, `QueryRow()` |
+| **Bun** | `github.com/uptrace/bun` | `NewSelect()`, raw queries |
+| **SQLBoiler** | `github.com/volatiletech/sqlboiler` | Generated query methods |
+| **Jet** | `github.com/go-jet/jet` | `SELECT()`, `STAR` |
+
+Each checker can be individually enabled/disabled via configuration.
+
+## Auto-Fix Suggestions
+
+Unqueryvet provides automatic fix suggestions for detected violations. When used with editors that support LSP or with `golangci-lint --fix`, you can quickly fix issues:
+
+```go
+// Before (violation detected)
+query := "SELECT * FROM users"
+
+// After auto-fix (with TODO placeholder)
+query := "SELECT id, /* TODO: specify columns */ FROM users"
+
+// SQL builder before
+squirrel.Select("*").From("users")
+
+// SQL builder after auto-fix
+squirrel.Select("id", /* TODO: specify columns */).From("users")
+```
+
+The auto-fix adds `/* TODO: specify columns */` as a reminder to manually specify the columns you actually need.
 
 ## Integration Examples
 
