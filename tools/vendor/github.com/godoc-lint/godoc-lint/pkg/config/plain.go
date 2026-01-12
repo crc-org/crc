@@ -3,7 +3,6 @@ package config
 import (
 	"errors"
 	"fmt"
-	"reflect"
 	"regexp"
 	"slices"
 
@@ -25,54 +24,19 @@ type PlainConfig struct {
 // PlainRuleOptions represents the plain rule options as users would provide via
 // a config file (e.g., a YAML file).
 type PlainRuleOptions struct {
-	MaxLenLength                   *uint `option:"max-len/length" yaml:"max-len/length" mapstructure:"max-len/length"`
-	MaxLenIncludeTests             *bool `option:"max-len/include-tests" yaml:"max-len/include-tests" mapstructure:"max-len/include-tests"`
-	PkgDocIncludeTests             *bool `option:"pkg-doc/include-tests" yaml:"pkg-doc/include-tests" mapstructure:"pkg-doc/include-tests"`
-	SinglePkgDocIncludeTests       *bool `option:"single-pkg-doc/include-tests" yaml:"single-pkg-doc/include-tests" mapstructure:"single-pkg-doc/include-tests"`
-	RequirePkgDocIncludeTests      *bool `option:"require-pkg-doc/include-tests" yaml:"require-pkg-doc/include-tests" mapstructure:"require-pkg-doc/include-tests"`
-	RequireDocIncludeTests         *bool `option:"require-doc/include-tests" yaml:"require-doc/include-tests" mapstructure:"require-doc/include-tests"`
-	RequireDocIgnoreExported       *bool `option:"require-doc/ignore-exported" yaml:"require-doc/ignore-exported" mapstructure:"require-doc/ignore-exported"`
-	RequireDocIgnoreUnexported     *bool `option:"require-doc/ignore-unexported" yaml:"require-doc/ignore-unexported" mapstructure:"require-doc/ignore-unexported"`
-	StartWithNameIncludeTests      *bool `option:"start-with-name/include-tests" yaml:"start-with-name/include-tests" mapstructure:"start-with-name/include-tests"`
-	StartWithNameIncludeUnexported *bool `option:"start-with-name/include-unexported" yaml:"start-with-name/include-unexported" mapstructure:"start-with-name/include-unexported"`
-	NoUnusedLinkIncludeTests       *bool `option:"no-unused-link/include-tests" yaml:"no-unused-link/include-tests" mapstructure:"no-unused-link/include-tests"`
-}
-
-func transferOptions(target *model.RuleOptions, source *PlainRuleOptions) {
-	resV := reflect.ValueOf(target).Elem()
-	resVT := resV.Type()
-
-	resOptionMap := make(map[string]string, resVT.NumField())
-	for i := range resVT.NumField() {
-		ft := resVT.Field(i)
-		key, ok := ft.Tag.Lookup("option")
-		if !ok {
-			continue
-		}
-		resOptionMap[key] = ft.Name
-	}
-
-	v := reflect.ValueOf(source).Elem()
-	vt := v.Type()
-	for i := range vt.NumField() {
-		ft := vt.Field(i)
-		key, ok := ft.Tag.Lookup("option")
-		if !ok {
-			continue
-		}
-		if ft.Type.Kind() != reflect.Pointer {
-			continue
-		}
-		f := v.Field(i)
-		if f.IsNil() {
-			continue
-		}
-		resFieldName, ok := resOptionMap[key]
-		if !ok {
-			continue
-		}
-		resV.FieldByName(resFieldName).Set(f.Elem())
-	}
+	MaxLenLength                     *uint    `yaml:"max-len/length" mapstructure:"max-len/length"`
+	MaxLenIncludeTests               *bool    `yaml:"max-len/include-tests" mapstructure:"max-len/include-tests"`
+	MaxLenIgnorePatterns             []string `yaml:"max-len/ignore-patterns" mapstructure:"max-len/ignore-patterns"`
+	PkgDocIncludeTests               *bool    `yaml:"pkg-doc/include-tests" mapstructure:"pkg-doc/include-tests"`
+	SinglePkgDocIncludeTests         *bool    `yaml:"single-pkg-doc/include-tests" mapstructure:"single-pkg-doc/include-tests"`
+	RequirePkgDocIncludeTests        *bool    `yaml:"require-pkg-doc/include-tests" mapstructure:"require-pkg-doc/include-tests"`
+	RequireDocIncludeTests           *bool    `yaml:"require-doc/include-tests" mapstructure:"require-doc/include-tests"`
+	RequireDocIgnoreExported         *bool    `yaml:"require-doc/ignore-exported" mapstructure:"require-doc/ignore-exported"`
+	RequireDocIgnoreUnexported       *bool    `yaml:"require-doc/ignore-unexported" mapstructure:"require-doc/ignore-unexported"`
+	StartWithNameIncludeTests        *bool    `yaml:"start-with-name/include-tests" mapstructure:"start-with-name/include-tests"`
+	StartWithNameIncludeUnexported   *bool    `yaml:"start-with-name/include-unexported" mapstructure:"start-with-name/include-unexported"`
+	RequireStdlibDoclinkIncludeTests *bool    `yaml:"require-stdlib-doclink/include-tests" mapstructure:"require-stdlib-doclink/include-tests"`
+	NoUnusedLinkIncludeTests         *bool    `yaml:"no-unused-link/include-tests" mapstructure:"no-unused-link/include-tests"`
 }
 
 // Validate validates the plain configuration.
@@ -99,6 +63,12 @@ func (pcfg *PlainConfig) Validate() error {
 
 	if invalids := getInvalidRegexps(pcfg.Exclude); len(invalids) > 0 {
 		errs = append(errs, fmt.Errorf("invalid exclusion pattern(s): %q", invalids))
+	}
+
+	if pcfg.Options != nil {
+		if invalids := getInvalidRegexps(pcfg.Options.MaxLenIgnorePatterns); len(invalids) > 0 {
+			errs = append(errs, fmt.Errorf("invalid max-len ignore pattern(s): %q", invalids))
+		}
 	}
 
 	if len(errs) > 0 {

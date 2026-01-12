@@ -4,11 +4,14 @@ package max_len
 import (
 	"fmt"
 	gdc "go/doc/comment"
+	"regexp"
+	"slices"
 	"strings"
 	"unicode/utf8"
 
 	"github.com/godoc-lint/godoc-lint/pkg/model"
 	"github.com/godoc-lint/godoc-lint/pkg/util"
+	"golang.org/x/tools/go/analysis"
 )
 
 const maxLenRule = model.MaxLenRule
@@ -32,6 +35,7 @@ func (r *MaxLenChecker) GetCoveredRules() model.RuleSet {
 func (r *MaxLenChecker) Apply(actx *model.AnalysisContext) error {
 	includeTests := actx.Config.GetRuleOptions().MaxLenIncludeTests
 	maxLen := int(actx.Config.GetRuleOptions().MaxLenLength)
+	ignoreRegexps := actx.Config.GetRuleOptions().MaxLenIgnorePatterns
 
 	docs := make(map[*model.CommentGroup]struct{}, 10*len(actx.InspectorResult.Files))
 
@@ -52,12 +56,12 @@ func (r *MaxLenChecker) Apply(actx *model.AnalysisContext) error {
 	}
 
 	for doc := range docs {
-		checkMaxLen(actx, doc, maxLen)
+		checkMaxLen(actx, doc, maxLen, ignoreRegexps)
 	}
 	return nil
 }
 
-func checkMaxLen(actx *model.AnalysisContext, doc *model.CommentGroup, maxLen int) {
+func checkMaxLen(actx *model.AnalysisContext, doc *model.CommentGroup, maxLen int, ignoreRegexps []*regexp.Regexp) {
 	if doc.DisabledRules.All || doc.DisabledRules.Rules.Has(maxLenRule) {
 		return
 	}
@@ -81,14 +85,68 @@ func checkMaxLen(actx *model.AnalysisContext, doc *model.CommentGroup, maxLen in
 	text := string((&gdc.Printer{}).Comment(strippedCodeAndLinks))
 	linesIter := strings.SplitSeq(removeCarriageReturn(text), "\n")
 
+	// This is a clone of the original comment list since we need to remove
+	// elements from it, if needed. The main purpose of this is to don't miss
+	// duplicate long lines.
+	cgl := slices.Clone(doc.CG.List)
+
 	for l := range linesIter {
 		lineLen := utf8.RuneCountInString(l)
 		if lineLen <= maxLen {
 			continue
 		}
-		actx.Pass.ReportRangef(&doc.CG, "godoc line is too long (%d > %d)", lineLen, maxLen)
-		break
+		if shouldIgnoreLine(l, ignoreRegexps) {
+			continue
+		}
+
+		// Here we try to find the accurate position of the line within the
+		// original comment group. Historically, we would use the entire godoc
+		// block range to report the issue (See #55).
+		//
+		// However, the following approach does not work with /*..*/ comment
+		// blocks, since for them individual lines are not separately available,
+		// i.e. all lines would be in a single ast.Comment instance and
+		// therefore the ast.Comment.Pos will always point to the starting /*
+		// token.
+
+		foundAt := -1
+		for i, c := range cgl {
+			// As of [ast.Comment] docs, c.Text does not include carriage
+			// returns (\r) that may have been present in the source. This is
+			// good, since we have already stripped them from the lines.
+			//
+			// If the comment is a //-style one, c.Text starts with "// ". Since
+			// we're only interested in //-style cases, it's enough to check for
+			// that prefix.
+			if c.Text == "// "+l {
+				foundAt = i
+				break
+			}
+		}
+
+		var rng analysis.Range
+		if foundAt != -1 {
+			rng = cgl[foundAt]
+			// Remove the found comment line from the list so that we don't miss
+			// duplicate long lines, or even reporting the same line number more
+			// than once while leaving the other(s).
+			cgl = slices.Delete(cgl, foundAt, foundAt+1)
+		} else {
+			// Fallback to reporting the entire godoc block.
+			rng = &doc.CG
+		}
+
+		actx.Pass.ReportRangef(rng, "godoc line is too long (%d > %d)", lineLen, maxLen)
 	}
+}
+
+func shouldIgnoreLine(line string, ignoreRegexps []*regexp.Regexp) bool {
+	for _, re := range ignoreRegexps {
+		if re.MatchString(line) {
+			return true
+		}
+	}
+	return false
 }
 
 func removeCarriageReturn(s string) string {
