@@ -61,8 +61,9 @@ func (d *Driver) UpdateConfigRaw(rawConfig []byte) error {
 		err = vm.UpdateProcessorMemSettings(
 			func(_ *hypervctl.ProcessorSettings) {},
 			func(ms *hypervctl.MemorySettings) {
-				ms.VirtualQuantity = uint64(update.Memory)
-				ms.Limit = uint64(update.Memory)
+				ms.MaximumBytes = uint64(update.Memory * 1024 * 1024)
+				ms.MinimumBytes = uint64(update.Memory * 1024 * 1024)
+				ms.StartupBytes = uint64(update.Memory * 1024 * 1024)
 			})
 
 		if err != nil {
@@ -80,7 +81,7 @@ func (d *Driver) UpdateConfigRaw(rawConfig []byte) error {
 
 		err = vm.UpdateProcessorMemSettings(
 			func(ps *hypervctl.ProcessorSettings) {
-				ps.VirtualQuantity = uint64(update.CPU)
+				ps.Count = int64(update.CPU)
 			},
 			func(_ *hypervctl.MemorySettings) {})
 
@@ -111,7 +112,7 @@ func (d *Driver) GetState() (state.State, error) {
 	}
 
 	log.Debugf("Machine: libhvee -> state: get")
-	vmState := vm.State()
+	vmState := vm.GetState()
 	switch vmState {
 	case hypervctl.Enabled:
 		log.Debugf("Machine: libhvee -> state: running")
@@ -156,13 +157,13 @@ func (d *Driver) Create() error {
 		PrepareMemorySettings(
 			func(ms *hypervctl.MemorySettings) {
 				ms.DynamicMemoryEnabled = d.DynamicMemory
-				ms.VirtualQuantity = uint64(d.Memory)
-				ms.Reservation = 1024
-				ms.Limit = uint64(d.Memory)
+				ms.MaximumBytes = uint64(d.Memory * 1024 * 1024)
+				ms.MinimumBytes = uint64(1024 * 1024 * 1024)
+				ms.StartupBytes = uint64(d.Memory * 1024 * 1024)
 			}).
 		PrepareProcessorSettings(
 			func(ps *hypervctl.ProcessorSettings) {
-				ps.VirtualQuantity = uint64(d.CPU)
+				ps.Count = int64(d.CPU)
 			}).
 		Build()
 
@@ -181,7 +182,7 @@ func (d *Driver) Create() error {
 		AddScsiController().
 		AddSyntheticDiskDrive(0).
 		DefineVirtualHardDisk(diskPath,
-			func(_ *hypervctl.VirtualHardDiskStorageSettings) {}).
+			func(_ *hypervctl.HardDiskDriveSettings) {}).
 		Finish().
 		Finish().
 		Finish().
