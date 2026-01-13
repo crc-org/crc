@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/crc-org/crc/v2/pkg/crc/adminhelper"
 	crc "github.com/crc-org/crc/v2/test/extended/crc/cmd"
 	"github.com/crc-org/crc/v2/test/extended/util"
 	. "github.com/onsi/ginkgo/v2"
@@ -36,24 +37,44 @@ var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func
 
 	Describe("Behind proxy", Serial, Ordered, func() {
 
-		httpProxy := "http://127.0.0.1:8888"
-		httpsProxy := "http://127.0.0.1:8888"
+		// Two-phase proxy configuration:
+		// Phase 1 (setup): Use 127.0.0.1 - directly accessible on host
+		// Phase 2 (start): Use host.crc.testing - resolves to 127.0.0.1 on host, 192.168.127.1 in VM
+		localhostProxy := "http://127.0.0.1:8888"
+		hostProxy := "http://host.crc.testing:8888"
 		noProxy := ".testing"
 
 		// Start goproxy
 
-		It("configure CRC", func() {
-			Expect(RunCRCExpectSuccess("config", "set", "http-proxy", httpProxy)).To(ContainSubstring("Successfully configured http-proxy"))
-			Expect(RunCRCExpectSuccess("config", "set", "https-proxy", httpsProxy)).To(ContainSubstring("Successfully configured https-proxy"))
+		It("configure CRC for setup with localhost proxy", func() {
+			// Use localhost proxy for setup phase - host can reach 127.0.0.1 directly
+			Expect(RunCRCExpectSuccess("config", "set", "http-proxy", localhostProxy)).To(ContainSubstring("Successfully configured http-proxy"))
+			Expect(RunCRCExpectSuccess("config", "set", "https-proxy", localhostProxy)).To(ContainSubstring("Successfully configured https-proxy"))
 			Expect(RunCRCExpectSuccess("config", "set", "no-proxy", noProxy)).To(ContainSubstring("Successfully configured no-proxy"))
 			Expect(RunCRCExpectSuccess("config", "set", "proxy-ca-file", util.CACertTempLocation)).To(ContainSubstring("Successfully configured proxy-ca-file"))
 			Expect(RunCRCExpectSuccess("config", "set", "host-network-access", "true")).To(ContainSubstring("Changes to configuration property 'host-network-access' are only applied during 'crc setup'"))
 		})
 
 		It("setup CRC", func() {
+			// Setup uses 127.0.0.1 proxy - works on host
 			Expect(
 				crcSuccess("setup")).
 				To(ContainSubstring("Your system is correctly setup for using CRC"))
+		})
+
+		It("add host.crc.testing to host's /etc/hosts", func() {
+			// After setup, adminhelper is available
+			// Add host.crc.testing -> 127.0.0.1 so host can resolve it to localhost proxy
+			err := adminhelper.AddToHostsFile("127.0.0.1", "host.crc.testing")
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("reconfigure CRC proxy for start with host.crc.testing", func() {
+			// Switch to host.crc.testing for start phase
+			// Host resolves to 127.0.0.1 (from /etc/hosts we just added)
+			// VM will resolve to 192.168.127.1 (we'll add to VM's /etc/hosts after start)
+			Expect(RunCRCExpectSuccess("config", "set", "http-proxy", hostProxy)).To(ContainSubstring("Successfully configured http-proxy"))
+			Expect(RunCRCExpectSuccess("config", "set", "https-proxy", hostProxy)).To(ContainSubstring("Successfully configured https-proxy"))
 		})
 
 		It("start CRC", func() {
