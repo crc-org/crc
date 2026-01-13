@@ -1,6 +1,7 @@
 package test_test
 
 import (
+	"net"
 	"os"
 	"os/exec"
 
@@ -34,6 +35,13 @@ var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func
 	})
 
 	go util.RunProxy()
+	Eventually(func() error {
+		conn, err := net.Dial("tcp", "127.0.0.1:8888")
+		if err == nil {
+			conn.Close()
+		}
+		return err
+	}).Should(Succeed())
 
 	Describe("Behind proxy", Serial, Ordered, func() {
 
