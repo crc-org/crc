@@ -1,9 +1,12 @@
 package test_test
 
 import (
+	"context"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/crc-org/crc/v2/pkg/crc/adminhelper"
 	crc "github.com/crc-org/crc/v2/test/extended/crc/cmd"
@@ -13,6 +16,42 @@ import (
 )
 
 var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func() {
+
+	var proxyServer *http.Server
+	var proxyCleanup func()
+
+	// Start proxy server before any tests run
+	BeforeAll(func() {
+		// Create proxy server - errors are caught here in the main goroutine
+		var err error
+		proxyServer, proxyCleanup, err = util.NewProxy()
+		Expect(err).NotTo(HaveOccurred())
+
+		ln, err := net.Listen("tcp", "127.0.0.1:8888")
+		Expect(err).NotTo(HaveOccurred())
+
+		errChan := make(chan error, 1)
+
+		go func() {
+			if err := proxyServer.Serve(ln); err != nil && err != http.ErrServerClosed {
+				errChan <- err
+			}
+		}()
+
+		// Wait for proxy to be ready
+		Eventually(func() error {
+			select {
+			case err := <-errChan:
+				return err
+			default:
+			}
+			conn, err := net.Dial("tcp", "127.0.0.1:8888")
+			if err == nil {
+				conn.Close()
+			}
+			return err
+		}).Should(Succeed())
+	})
 
 	// runs 1x after all the It blocks (specs) inside this Describe node
 	AfterAll(func() {
@@ -32,16 +71,19 @@ var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func
 		err = os.Unsetenv("HTTP_PROXY")
 		Expect(err).NotTo(HaveOccurred())
 
-	})
-
-	go util.RunProxy()
-	Eventually(func() error {
-		conn, err := net.Dial("tcp", "127.0.0.1:8888")
-		if err == nil {
-			conn.Close()
+		// Stop the proxy server
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if proxyServer != nil {
+			err = proxyServer.Shutdown(ctx)
+			Expect(err).NotTo(HaveOccurred())
 		}
-		return err
-	}).Should(Succeed())
+
+		// Close the log file
+		if proxyCleanup != nil {
+			proxyCleanup()
+		}
+	})
 
 	Describe("Behind proxy", Serial, Ordered, func() {
 
