@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"time"
 
 	"github.com/elazarl/goproxy"
 	log "github.com/sirupsen/logrus"
@@ -45,24 +46,36 @@ func setCA() error {
 	return nil
 }
 
-func RunProxy() {
-
-	err := setCA()
-	if err != nil {
-		log.Fatalf("error setting up the CA: %s", err)
+// NewProxy creates and configures a new proxy server.
+// Returns the server, a cleanup function to close the log file, and any error.
+// The caller is responsible for:
+//   - Starting the server with go server.ListenAndServe()
+//   - Shutting it down with server.Shutdown()
+//   - Calling the cleanup function after shutdown to close the log file
+func NewProxy() (*http.Server, func(), error) {
+	if err := setCA(); err != nil {
+		return nil, nil, fmt.Errorf("error setting up the CA: %w", err)
 	}
 
 	// Create a DEDICATED logger for the proxy instead of using the global one
 	proxyLogger := log.New()
 
-	logfile := filepath.Join("out", "goproxylogfile.log")
-	f, err := os.OpenFile(logfile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	var logFile *os.File
+	logfilePath := filepath.Join("out", "goproxylogfile.log")
+	f, err := os.OpenFile(logfilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Printf("error opening file: %v", err)
 		proxyLogger.SetOutput(os.Stderr)
 	} else {
-		defer f.Close()
+		logFile = f
 		proxyLogger.SetOutput(f)
+	}
+
+	// Cleanup function to close log file
+	cleanup := func() {
+		if logFile != nil {
+			logFile.Close()
+		}
 	}
 
 	proxy := goproxy.NewProxyHttpServer()
@@ -94,10 +107,13 @@ func RunProxy() {
 	proxy.Verbose = true
 	proxy.Logger = proxyLogger
 
-	proxyLogger.Infof("Starting goproxy on %s", addr)
-
-	err = http.ListenAndServe(addr, proxy) // #nosec G114
-	if err != nil {
-		proxyLogger.Errorf("error running proxy: %s", err)
+	server := &http.Server{
+		Addr:              addr,
+		Handler:           proxy,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
+
+	proxyLogger.Infof("Proxy server configured on %s", addr)
+
+	return server, cleanup, nil
 }
