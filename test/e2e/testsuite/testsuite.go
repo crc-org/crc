@@ -224,40 +224,6 @@ func InitializeScenario(s *godog.ScenarioContext) {
 				}
 			}
 
-			if tag.Name == "@proxy" {
-				// start container with squid proxy
-				err := util.ExecuteCommand("podman run --name squid -d -p 3128:3128 quay.io/crcont/squid")
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
-				err = util.ExecuteCommand("crc config set http-proxy http://host.crc.testing:3128")
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
-				err = util.ExecuteCommand("crc config set https-proxy http://host.crc.testing:3128")
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
-				err = util.ExecuteCommand("crc config set no-proxy .testing")
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
-				err = util.ExecuteCommand("crc config set host-network-access true")
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
-			}
-
 			if tag.Name == "@system_network" {
 				err = util.ExecuteCommand("crc config set network-mode system")
 				if err != nil {
@@ -345,55 +311,6 @@ func InitializeScenario(s *godog.ScenarioContext) {
 						fmt.Println(err)
 						os.Exit(1)
 					}
-				}
-			}
-
-			if tag.Name == "@proxy" {
-
-				err := util.ExecuteCommand("podman stop squid")
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
-				err = util.ExecuteCommand("podman rm squid")
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
-				err = crcCmd.UnsetConfigPropertySucceedsOrFails("http-proxy", "succeeds") // unsetting property that is not set gives 0 exitcode, so this works
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
-				err = crcCmd.UnsetConfigPropertySucceedsOrFails("https-proxy", "succeeds") // unsetting property that is not set gives 0 exitcode, so this works
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
-				err = crcCmd.UnsetConfigPropertySucceedsOrFails("no-proxy", "succeeds") // unsetting property that is not set gives 0 exitcode, so this works
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
-				// crc oc-env sets these three quietly if http(s)-proxy is set in crc config
-				if err := os.Unsetenv("HTTP_PROXY"); err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
-				if err := os.Unsetenv("HTTPS_PROXY"); err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
-				if err := os.Unsetenv("NO_PROXY"); err != nil {
-					fmt.Println(err)
-					os.Exit(1)
 				}
 			}
 
