@@ -17,6 +17,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	crcErrors "github.com/crc-org/crc/v2/pkg/crc/errors"
+	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
 	"github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/docker/go-units"
@@ -93,7 +94,7 @@ func runWatchStatus(writer io.Writer, client *daemonclient.Client, cacheDir stri
 		}
 	}()
 
-	err = client.SSEClient.Status(func(loadResult *types.ClusterLoadResult) {
+	err = client.SSEClient.ClusterLoad(func(loadResult *types.ClusterLoadResult) {
 		if !isPoolInit {
 			ramBar, cpuBars = createBars(loadResult.CPUUse, writer)
 			barPool = pb.NewPool(append([]*pb.ProgressBar{ramBar}, cpuBars...)...)
@@ -156,6 +157,9 @@ func getStatus(client *daemonclient.Client, cacheDir string) *status {
 			return &status{Success: false, Error: crcErrors.ToSerializableError(crcErrors.DaemonNotRunning)}
 		}
 		return &status{Success: false, Error: crcErrors.ToSerializableError(err)}
+	}
+	if clusterStatus.CrcStatus == string(state.NoVM) {
+		return &status{Success: false, Error: crcErrors.ToSerializableError(crcErrors.VMNotExist)}
 	}
 	var size int64
 	err = filepath.Walk(cacheDir, func(_ string, info os.FileInfo, err error) error {
