@@ -33,15 +33,15 @@ var vfkitPreflightChecks = []Check{
 	},
 	{
 		configKeySuffix:  "check-vfkit-installed",
-		checkDescription: "Checking if vfkit is installed",
+		checkDescription: "Checking if " + constants.Provider() + " is installed",
 		check:            checkVfkitInstalled,
-		fixDescription:   "Setting up virtualization with vfkit",
+		fixDescription:   "Setting up virtualization with " + constants.Provider(),
 		fix:              fixVfkitInstallation,
 
 		labels: labels{Os: Darwin},
 	},
 	{
-		cleanupDescription: "Stopping CRC vfkit process",
+		cleanupDescription: "Stopping CRC " + constants.Provider() + " process",
 		cleanup:            killVfkitProcess,
 		flags:              CleanUpOnly,
 

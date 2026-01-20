@@ -52,7 +52,7 @@ type Driver struct {
 	UnixgramSockPath   string
 }
 
-func NewDriver(hostName, storePath string) *Driver {
+func NewDriver(hostName, storePath, executableName string) *Driver {
 	// checks that vfdriver.Driver implements the libmachine.Driver interface
 	var _ drivers.Driver = &Driver{}
 	return &Driver{
@@ -69,6 +69,7 @@ func NewDriver(hostName, storePath string) *Driver {
 		DaemonVsockPort:    constants.DaemonVsockPort,
 		UnixgramSockPath:   constants.UnixgramSocketPath,
 		UnixgramMacAddress: constants.VsockMacAddress,
+		VfkitPath:          constants.ResolveHelperPath(executableName),
 	}
 }
 
@@ -272,20 +273,6 @@ func (d *Driver) Start() error {
 		}
 	}
 
-	// when loading a VM created by a crc version predating this commit,
-	// d.QemuGAVsockPort will be missing from ~/.crc/machines/crc/config.json
-	// In such a case, assume the VM will not support time sync
-	if d.QemuGAVsockPort != 0 {
-		timesync, err := config.TimeSyncNew(d.QemuGAVsockPort)
-		if err != nil {
-			return err
-		}
-		err = vm.AddDevice(timesync)
-		if err != nil {
-			return err
-		}
-	}
-
 	args, err := vm.ToCmdLine()
 	if err != nil {
 		return err
@@ -447,7 +434,7 @@ func (d *Driver) findVfkitProcess() (*process.Process, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !strings.HasPrefix(name, "vfkit") {
+	if !strings.HasPrefix(name, constants.Provider()) {
 		// return InvalidExecutable error?
 		log.Debugf("pid %d is stale, and is being used by %s", pid, name)
 		return nil, nil
