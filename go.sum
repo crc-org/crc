@@ -50,8 +50,6 @@ github.com/containers/common v0.64.2 h1:1xepE7QwQggUXxmyQ1Dbh6Cn0yd7ktk14sN3McSW
 github.com/containers/common v0.64.2/go.mod h1:o29GfYy4tefUuShm8mOn2AiL5Mpzdio+viHI7n24KJ4=
 github.com/containers/gvisor-tap-vsock v0.8.7 h1:mFMMU5CIXO9sbtsgECc90loUHx15km3AN6Zuhg3X4qM=
 github.com/containers/gvisor-tap-vsock v0.8.7/go.mod h1:Rf2gm4Lpac0IZbg8wwQDh7UuKCxHmnxar0hEZ08OXY8=
-github.com/containers/libhvee v0.10.1-0.20250902114412-a85aab2976a4 h1:gC6qBJ8Ptci6Bmbl58IuB95JK5UBSaAnvhZlrdXeCAE=
-github.com/containers/libhvee v0.10.1-0.20250902114412-a85aab2976a4/go.mod h1:9EqZ0olBgqpIjMUtMpk2bRrAnZ+nCJPSEf+c9bXB1WM=
 github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01 h1:Qzk5C6cYglewc+UyGf6lc8Mj2UaPTHy/iF2De0/77CA=
 github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01/go.mod h1:9rfv8iPl1ZP7aqh9YA68wnZv2NUDbXdcdPHVz0pFbPY=
 github.com/containers/ocicrypt v1.2.1 h1:0qIOTT9DoYwcKmxSt8QJt+VzMY18onl9jUXsxpVhSmM=
@@ -111,6 +109,8 @@ github.com/elazarl/goproxy v1.8.0 h1:dt561rX7UAYMeFRLtzFx6uQGl2TpL1dr6uCG23nFQSY
 github.com/elazarl/goproxy v1.8.0/go.mod h1:b5xm6W48AUHNpRTCvlnd0YVh+JafCCtsLsJZvvNTz+E=
 github.com/emicklei/go-restful/v3 v3.11.0 h1:rAQeMHw1c7zTmncogyy8VvRZwtkmkZ4FxERmMY4rD+g=
 github.com/emicklei/go-restful/v3 v3.11.0/go.mod h1:6n3XBCmQQb25CM2LCACGz8ukIrRry+4bhvbpWn3mrbc=
+github.com/evidolob/libhvee v0.0.0-20260106123805-51535f7335f7 h1:rQrmxLtMsFDpLqXFl25AC+XnS5Wj9LIM5YBmKrvbxTY=
+github.com/evidolob/libhvee v0.0.0-20260106123805-51535f7335f7/go.mod h1:Lz4c4ewwX8V34/SpX4gdGWtu7P43HDQPKfPEUwRnvpk=
 github.com/fatih/color v1.18.0 h1:S8gINlzdQ840/4pfAwic/ZE0djQEH3wM94VfqLTZcOM=
 github.com/fatih/color v1.18.0/go.mod h1:4FelSpRwEGDpQ12mAdzqdOukCy4u8WUtOY6lkT/6HfU=
 github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2Wg=

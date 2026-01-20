@@ -109,11 +109,11 @@ github.com/containers/gvisor-tap-vsock/pkg/transport
 github.com/containers/gvisor-tap-vsock/pkg/types
 github.com/containers/gvisor-tap-vsock/pkg/utils
 github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork
-# github.com/containers/libhvee v0.10.1-0.20250902114412-a85aab2976a4
+# github.com/containers/libhvee v0.10.1-0.20250902114412-a85aab2976a4 => github.com/evidolob/libhvee v0.0.0-20260106123805-51535f7335f7
 ## explicit; go 1.23.3
 github.com/containers/libhvee/pkg/hypervctl
 github.com/containers/libhvee/pkg/kvp/ginsu
-github.com/containers/libhvee/pkg/wmiext
+github.com/containers/libhvee/pkg/powershell
 # github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01
 ## explicit
 github.com/containers/libtrust
@@ -1360,3 +1360,4 @@ sigs.k8s.io/structured-merge-diff/v4/value
 ## explicit; go 1.22
 sigs.k8s.io/yaml
 sigs.k8s.io/yaml/goyaml.v2
+# github.com/containers/libhvee => github.com/evidolob/libhvee v0.0.0-20260106123805-51535f7335f7
