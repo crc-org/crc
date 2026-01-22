@@ -2,6 +2,7 @@ package test_test
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -14,6 +15,29 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+// runCRCWithLiveOutput runs a CRC command and streams output to os.Stdout/Stderr in real-time.
+// This helps diagnose hangs by showing progress as it happens.
+// Note: We use os.Stdout/Stderr directly instead of GinkgoWriter because GinkgoWriter
+// buffers output until the test completes, which defeats the purpose of real-time output.
+func runCRCWithLiveOutput(args ...string) error {
+	cmd := exec.Command("crc", args...)
+	cmd.Env = append(os.Environ(),
+		"CRC_DISABLE_UPDATE_CHECK=true",
+		"CRC_LOG_LEVEL=debug",
+	)
+
+	// Direct stdout and stderr to terminal for real-time output
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	_, _ = fmt.Fprintf(os.Stdout, "[%s] Starting: crc %v\n", time.Now().Format(time.RFC3339), args)
+
+	err := cmd.Run()
+
+	_, _ = fmt.Fprintf(os.Stdout, "[%s] Finished: crc %v (err=%v)\n", time.Now().Format(time.RFC3339), args, err)
+	return err
+}
 
 var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func() {
 
@@ -107,9 +131,13 @@ var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func
 
 		It("setup CRC", func() {
 			// Setup uses 127.0.0.1 proxy - works on host
-			Expect(
-				crcSuccess("setup")).
-				To(ContainSubstring("Your system is correctly setup for using CRC"))
+			// Use live output so we can see progress and diagnose hangs
+			args := []string{"setup"}
+			if len(bundlePath) > 0 {
+				args = append(args, "-b", bundlePath)
+			}
+			err := runCRCWithLiveOutput(args...)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("add host.crc.testing to host's /etc/hosts", func() {
@@ -129,9 +157,13 @@ var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func
 
 		It("start CRC", func() {
 			// default values: "--memory", "10752", "--cpus", "4", "disk-size", "31"
-			Expect(
-				crcSuccess("start", "-p", pullSecretPath)).
-				To(ContainSubstring("Started the OpenShift cluster"))
+			// Use live output so we can see progress and diagnose hangs
+			args := []string{"start", "-p", pullSecretPath}
+			if len(bundlePath) > 0 {
+				args = append(args, "-b", bundlePath)
+			}
+			err := runCRCWithLiveOutput(args...)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("wait for cluster in Running state", func() {
