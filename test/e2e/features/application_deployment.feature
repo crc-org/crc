@@ -5,6 +5,7 @@ Feature: Application Deployment Test
     deployed successfully and is accessible via route
 
     Background:
+        Given setting config property "disk-size" to value "40" succeeds
         Given ensuring CRC cluster is running
         And ensuring oc command is available
         And ensuring user is logged in succeeds
