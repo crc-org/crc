@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 
+	"github.com/crc-org/crc/v2/pkg/crc/cache"
 	"github.com/crc-org/crc/v2/pkg/crc/manpages"
+	"github.com/crc-org/crc/v2/pkg/crc/version"
 
 	"github.com/crc-org/crc/v2/pkg/crc/adminhelper"
 	"github.com/crc-org/crc/v2/pkg/crc/cluster"
@@ -29,6 +32,30 @@ func bundleCheck(bundlePath string, preset crcpreset.Preset, enableBundleQuayFal
 		fixDescription:   "Getting bundle for the CRC executable",
 		fix:              fixBundleExtracted(bundlePath, preset, enableBundleQuayFallback),
 		flags:            SetupOnly,
+
+		labels: None,
+	}
+}
+
+func gvproxyCheck() Check {
+	return Check{
+		configKeySuffix:  "check-gvproxy-cached",
+		checkDescription: "Checking if gvproxy executable is cached",
+		check:            checkGVProxyExecutableCached,
+		fixDescription:   "Caching gvproxy executable",
+		fix:              fixGVProxyExecutableCached,
+
+		labels: None,
+	}
+}
+
+func macadamCheck() Check {
+	return Check{
+		configKeySuffix:  "check-macadam-cached",
+		checkDescription: "Checking if macadam executable is cached",
+		check:            checkMacadamExecutableCached,
+		fixDescription:   "Caching macadam executable",
+		fix:              fixMacadamExecutableCached,
 
 		labels: None,
 	}
@@ -171,4 +198,74 @@ func removeCrcManPages() error {
 
 func removeCRCHostEntriesFromKnownHosts() error {
 	return ssh.RemoveCRCHostEntriesFromKnownHosts()
+}
+
+// Check if gvproxy executable is cached or not
+func checkGVProxyExecutableCached() error {
+	if version.IsInstaller() {
+		return nil
+	}
+
+	gvproxy := cache.NewGvproxyCache()
+	if !gvproxy.IsCached() {
+		return errors.New("gvproxy executable is not cached")
+	}
+	if err := gvproxy.CheckVersion(); err != nil {
+		return errors.Wrap(err, "unexpected version of the gvproxy executable")
+	}
+	logging.Debug("gvproxy executable already cached")
+	// On Linux, use capabilities instead of SUID to allow binding to privileged ports
+	// This prevents permission issues with sockets created by gvproxy
+	if runtime.GOOS == "linux" {
+		return checkCapNetBindService(gvproxy.GetExecutablePath())
+	}
+	return nil
+}
+
+func fixGVProxyExecutableCached() error {
+	if version.IsInstaller() {
+		return nil
+	}
+
+	gvproxy := cache.NewGvproxyCache()
+	if err := gvproxy.EnsureIsCached(); err != nil {
+		return errors.Wrap(err, "Unable to download gvproxy executable")
+	}
+	logging.Debug("gvproxy executable cached")
+	// On Linux, use capabilities instead of SUID to allow binding to privileged ports
+	// This prevents permission issues with sockets created by gvproxy
+	if runtime.GOOS == "linux" {
+		return setCapNetBindService(gvproxy.GetExecutablePath())
+	}
+	return nil
+}
+
+// Check if macadam executable is cached or not
+func checkMacadamExecutableCached() error {
+	if version.IsInstaller() {
+		return nil
+	}
+
+	macadam := cache.NewMacadamCache()
+	if !macadam.IsCached() {
+		return fmt.Errorf("macadam executable is not cached")
+	}
+	if err := macadam.CheckVersion(); err != nil {
+		return fmt.Errorf("unexpected version of the macadam executable: %w", err)
+	}
+	logging.Debug("macadam executable already cached")
+	return nil
+}
+
+func fixMacadamExecutableCached() error {
+	if version.IsInstaller() {
+		return nil
+	}
+
+	macadam := cache.NewMacadamCache()
+	if err := macadam.EnsureIsCached(); err != nil {
+		return fmt.Errorf("Unable to download macadam executable: %w", err)
+	}
+	logging.Debug("macadam executable cached")
+	return nil
 }

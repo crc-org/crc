@@ -2,8 +2,6 @@ package machine
 
 import (
 	"context"
-	"crypto/rsa"
-	"crypto/x509"
 	"fmt"
 	"math/rand"
 	"os"
@@ -13,16 +11,17 @@ import (
 
 	"go.podman.io/common/pkg/strongunits"
 
+	"github.com/crc-org/crc/v2/pkg/crc/cloudinit"
 	"github.com/crc-org/crc/v2/pkg/crc/cluster"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	crcerrors "github.com/crc-org/crc/v2/pkg/crc/errors"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/macadam"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/bundle"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/config"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
 	"github.com/crc-org/crc/v2/pkg/crc/network"
-	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/v2/pkg/crc/oc"
 	crcPreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/services"
@@ -30,12 +29,8 @@ import (
 	crcssh "github.com/crc-org/crc/v2/pkg/crc/ssh"
 	"github.com/crc-org/crc/v2/pkg/crc/systemd"
 	"github.com/crc-org/crc/v2/pkg/crc/telemetry"
-	crctls "github.com/crc-org/crc/v2/pkg/crc/tls"
 	"github.com/crc-org/crc/v2/pkg/crc/validation"
-	"github.com/crc-org/crc/v2/pkg/libmachine/host"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
-	"github.com/crc-org/machine/libmachine/drivers"
-	libmachinestate "github.com/crc-org/machine/libmachine/state"
 	"github.com/docker/go-units"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
@@ -62,46 +57,9 @@ func getCrcBundleInfo(ctx context.Context, preset crcPreset.Preset, bundleName, 
 	return bundle.Use(bundleName)
 }
 
-func (client *client) updateVMConfig(startConfig types.StartConfig, vm *virtualMachine) error {
-	/* Memory */
-	logging.Debugf("Updating CRC VM configuration")
-	if err := setMemory(vm.Host, startConfig.Memory); err != nil {
-		logging.Debugf("Failed to update CRC VM configuration: %v", err)
-		if err == drivers.ErrNotImplemented {
-			logging.Warn("Memory configuration change has been ignored as the machine driver does not support it")
-		} else {
-			return err
-		}
-	}
-	if err := setVcpus(vm.Host, startConfig.CPUs); err != nil {
-		logging.Debugf("Failed to update CRC VM configuration: %v", err)
-		if err == drivers.ErrNotImplemented {
-			logging.Warn("CPU configuration change has been ignored as the machine driver does not support it")
-		} else {
-			return err
-		}
-	}
-	if err := vm.api.Save(vm.Host); err != nil {
-		return err
-	}
-
-	/* Disk size */
-	if startConfig.DiskSize != constants.DefaultDiskSize {
-		if err := setDiskSize(vm.Host, startConfig.DiskSize); err != nil {
-			logging.Debugf("Failed to update CRC disk configuration: %v", err)
-			if err == drivers.ErrNotImplemented {
-				logging.Warn("Disk size configuration change has been ignored as the machine driver does not support it")
-			} else {
-				return err
-			}
-		}
-		if err := vm.api.Save(vm.Host); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
+// updateVMConfig is no longer needed with macadam as VM configuration
+// is set during initialization and cannot be changed afterwards
+// If configuration changes are needed, the VM must be deleted and recreated
 
 func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset, persistentVolumeSize int) error {
 	rootPart, err := getrootPartition(sshRunner, preset)
@@ -200,70 +158,10 @@ func growLVForMicroshift(sshRunner crcos.CommandRunner, lvFullName string, rootP
 	return nil
 }
 
-func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
-	logging.Debugf("Configuring shared directories")
-	sharedDirs, err := vm.Driver.GetSharedDirs()
-	if err != nil {
-		// the libvirt machine driver uses net/rpc, which wraps errors
-		// in rpc.ServerError, but without using golang 1.13 error
-		// wrapping feature. Moreover, this package is marked as
-		// frozen/not accepting new features, so it's unlikely we'll
-		// ever be able to use errors.Is()
-		if err.Error() == drivers.ErrNotSupported.Error() || err.Error() == drivers.ErrNotImplemented.Error() {
-			return nil
-		}
-		return err
-	}
-	if len(sharedDirs) == 0 {
-		return nil
-	}
-	logging.Infof("Configuring shared directories")
-	for _, mount := range sharedDirs {
-		// Try to create the mount directory and if it fails then
-		// make the file system mutable and again try to create the
-		// mount directory.
-		// If the directory is already exists, then `mkdir -p` won't return an error.
-		if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Creating %s", mount.Target), "mkdir", "-p", mount.Target); err != nil {
-			if _, _, err := sshRunner.RunPrivileged("Making / mutable", "chattr", "-i", "/"); err != nil {
-				return err
-			}
-			if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Creating %s", mount.Target), "mkdir", "-p", mount.Target); err != nil {
-				return err
-			}
-			if _, _, err := sshRunner.RunPrivileged("Making / immutable again", "chattr", "+i", "/"); err != nil {
-				return err
-			}
-		}
-		logging.Debugf("Mounting tag %s at %s", mount.Tag, mount.Target)
-		switch mount.Type {
-		case "virtiofs":
-			if _, _, err := sshRunner.RunPrivileged(fmt.Sprintf("Mounting %s", mount.Target), "mount", "-o", "context=\"system_u:object_r:container_file_t:s0\"", "-t", mount.Type, mount.Tag, mount.Target); err != nil {
-				return err
-			}
-
-		case "9p":
-			if vm.bundle.IsMicroshift() {
-				// temporarily disable 9P file sharing for microshift until
-				// new bundles are released
-				break
-			}
-			// change owner to core user to allow mounting to it as a non-root user
-			if _, _, err := sshRunner.RunPrivileged("Changing owner of mount directory", "chown", "core:core", mount.Target); err != nil {
-				return err
-			}
-			if _, _, err := sshRunner.Run("9pfs -V -p", fmt.Sprintf("%d", constants.Plan9HvsockPort), "2", mount.Target); err != nil {
-				logging.Warnf("Failed to connect to 9p server over hvsock: %v", err)
-				logging.Warnf("Falling back to 9p over TCP")
-				if _, _, err := sshRunner.Run("9pfs", constants.VSockGateway, mount.Target); err != nil {
-					return err
-				}
-			}
-
-		default:
-			return fmt.Errorf("Unknown Shared dir type requested: %s", mount.Type)
-		}
-	}
-
+func configureSharedDirs(_ *virtualMachine, _ *crcssh.Runner) error {
+	// TODO: Implement shared directory configuration for macadam
+	// For now, shared directories are not supported with macadam
+	logging.Debug("Shared directory configuration not yet implemented for macadam")
 	return nil
 }
 
@@ -329,7 +227,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		if crcBundleMetadata.IsOpenShift() {
 			machineConfig.KubeConfig = crcBundleMetadata.GetKubeConfigPath()
 		}
-		if err := createHost(machineConfig, crcBundleMetadata.GetBundleType()); err != nil {
+		if err := createHost(machineConfig, crcBundleMetadata.GetBundleType(), startConfig.PullSecret); err != nil {
 			return nil, errors.Wrap(err, "Error creating machine")
 		}
 	} else {
@@ -375,17 +273,10 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	logging.Infof("Starting CRC VM for %s %s...", startConfig.Preset, vm.bundle.GetVersion())
 
-	if client.useVSock() {
-		if err := exposePorts(startConfig.Preset, startConfig.IngressHTTPPort, startConfig.IngressHTTPSPort); err != nil {
-			return nil, err
-		}
-	}
+	// Note: With macadam, VM configuration is set during init and cannot be updated afterwards
+	// If config changes are needed, the VM must be recreated
 
-	if err := client.updateVMConfig(startConfig, vm); err != nil {
-		return nil, errors.Wrap(err, "Could not update CRC VM configuration")
-	}
-
-	if err := startHost(ctx, vm); err != nil {
+	if err := startHost(ctx, vm.name); err != nil {
 		return nil, errors.Wrap(err, "Error starting machine")
 	}
 
@@ -403,6 +294,23 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Error getting the IP")
 	}
 	logging.Infof("CRC instance is running with IP %s", instanceIP)
+
+	// Configure internal DNS if using vsock/user-mode networking
+	if client.useVSock() {
+		gvClient, err := getGVProxyClient(vm.name)
+		if err != nil {
+			return nil, errors.Wrap(err, "Error getting gvproxy client")
+		}
+		if err := enableInternalDNS(gvClient); err != nil {
+			logging.Warnf("Failed to configure internal DNS: %v", err)
+			// Don't fail startup if DNS configuration fails, just warn
+		}
+		if err := exposePorts(gvClient, startConfig.Preset, startConfig.IngressHTTPPort, startConfig.IngressHTTPSPort); err != nil {
+			logging.Warnf("Failed to expose ports: %v", err)
+			// Don't fail startup if port exposure fails, just warn
+		}
+	}
+
 	sshRunner, err := vm.SSHRunner()
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating the ssh client")
@@ -554,32 +462,23 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to check certificate validity")
 	}
 
-	logging.Info("Starting kubelet service")
-	sd := systemd.NewInstanceSystemdCommander(sshRunner)
-	if err := sd.Start("kubelet"); err != nil {
-		return nil, errors.Wrap(err, "Error starting kubelet")
-	}
-
 	ocConfig := oc.UseOCWithSSH(sshRunner)
+
+	if err := cluster.WaitForAPIServer(ctx, ocConfig); err != nil {
+		return nil, errors.Wrap(err, "Error waiting for apiserver")
+	}
 
 	if err := cluster.ApproveCSRAndWaitForCertsRenewal(ctx, sshRunner, ocConfig, certsExpired[cluster.KubeletClientCert], certsExpired[cluster.KubeletServerCert], certsExpired[cluster.AggregatorClientCert]); err != nil {
 		logBundleDate(vm.bundle)
 		return nil, errors.Wrap(err, "Failed to renew TLS certificates: please check if a newer CRC release is available")
 	}
 
-	if err := cluster.WaitForAPIServer(ctx, ocConfig); err != nil {
-		return nil, errors.Wrap(err, "Error waiting for apiserver")
-	}
-
-	if err := ensureProxyIsConfiguredInOpenShift(ctx, ocConfig, sshRunner, proxyConfig); err != nil {
-		return nil, errors.Wrap(err, "Failed to update cluster proxy configuration")
-	}
-
 	if err := cluster.DeleteMCOLeaderLease(ctx, ocConfig); err != nil {
 		return nil, err
 	}
+	systemdRunner := systemd.NewInstanceSystemdCommander(sshRunner)
 
-	if err := cluster.EnsurePullSecretPresentInTheCluster(ctx, ocConfig, startConfig.PullSecret); err != nil {
+	if err := cluster.EnsurePullSecretPresentInTheCluster(ctx, systemdRunner, ocConfig, startConfig.PullSecret); err != nil {
 		return nil, errors.Wrap(err, "Failed to update cluster pull secret")
 	}
 
@@ -587,11 +486,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to update ssh public key to machine config")
 	}
 
-	if err := cluster.UpdateUserPasswords(ctx, ocConfig, startConfig.KubeAdminPassword, startConfig.DeveloperPassword); err != nil {
-		return nil, errors.Wrap(err, "Failed to update kubeadmin user password")
-	}
-
-	if err := cluster.EnsureClusterIDIsNotEmpty(ctx, ocConfig); err != nil {
+	if err := cluster.EnsureClusterIDIsNotEmpty(ctx, systemdRunner, ocConfig); err != nil {
 		return nil, errors.Wrap(err, "Failed to update cluster ID")
 	}
 
@@ -608,7 +503,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 	}
 
-	if err := updateKubeconfig(ctx, ocConfig, sshRunner, vm.bundle.GetKubeConfigPath()); err != nil {
+	if err := copyKubeconfigFileFromVMToHost(ctx, systemdRunner, sshRunner, constants.KubeconfigFilePath); err != nil {
 		return nil, errors.Wrap(err, "Failed to update kubeconfig file")
 	}
 
@@ -621,7 +516,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to update pull secret on the disk")
 	}
 
-	waitForProxyPropagation(ctx, ocConfig, proxyConfig)
+	/*waitForProxyPropagation(ctx, ocConfig, proxyConfig)*/
 
 	clusterConfig, err := getClusterConfig(vm.bundle)
 	if err != nil {
@@ -641,14 +536,17 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 }
 
 func (client *client) IsRunning() (bool, error) {
-	vm, err := loadVirtualMachine(client.name, client.useVSock())
+	// Check if VM exists first
+	exists, err := vmExists(client.name)
 	if err != nil {
-		return false, errors.Wrap(err, "Cannot load machine")
+		return false, errors.Wrap(err, "Cannot check if machine exists")
 	}
-	defer vm.Close()
+	if !exists {
+		return false, nil
+	}
 
 	// get the actual state
-	vmState, err := vm.State()
+	vmState, err := getVMState(client.name)
 	if err != nil {
 		// but reports not started on error
 		return false, errors.Wrap(err, "Error getting the state")
@@ -668,62 +566,108 @@ func (client *client) validateStartConfig(startConfig types.StartConfig) error {
 	return nil
 }
 
-func createHost(machineConfig config.MachineConfig, preset crcPreset.Preset) error {
-	api, cleanup := createLibMachineClient()
-	defer cleanup()
-
-	vm, err := newHost(api, machineConfig)
-	if err != nil {
-		return fmt.Errorf("Error creating new host: %s", err)
-	}
-
-	logging.Debug("Running pre-create checks...")
-
-	if err := vm.Driver.PreCreateCheck(); err != nil {
-		return errors.Wrap(err, "error with pre-create check")
-	}
-
-	if err := api.Save(vm); err != nil {
-		return fmt.Errorf("Error saving host to store before attempting creation: %s", err)
-	}
-
-	logging.Debug("Creating machine...")
-
-	if err := vm.Driver.Create(); err != nil {
-		return fmt.Errorf("Error in driver during machine creation: %s", err)
-	}
-
+func createHost(machineConfig config.MachineConfig, preset crcPreset.Preset, pullSecret cluster.PullSecretLoader) error {
 	logging.Info("Generating new SSH key pair...")
 	if err := crcssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
 		return fmt.Errorf("Error generating ssh key pair: %v", err)
 	}
+
+	// Read the public key for cloud-init
+	pubKeyBytes, err := os.ReadFile(constants.GetPublicKeyPath())
+	if err != nil {
+		return fmt.Errorf("Error reading public key: %v", err)
+	}
+	publicKey := strings.TrimSpace(string(pubKeyBytes))
+
+	// Generate passwords for OpenShift/OKD
+	var kubeAdminPassword, developerPassword string
 	if preset == crcPreset.OpenShift || preset == crcPreset.OKD {
 		if err := cluster.GenerateUserPassword(constants.GetKubeAdminPasswordPath(), "kubeadmin"); err != nil {
 			return errors.Wrap(err, "Error generating new kubeadmin password")
 		}
-		if err = os.WriteFile(constants.GetDeveloperPasswordPath(), []byte(constants.DefaultDeveloperPassword), 0o600); err != nil {
+		kubeAdminPassBytes, err := os.ReadFile(constants.GetKubeAdminPasswordPath())
+		if err != nil {
+			return errors.Wrap(err, "Error reading kubeadmin password")
+		}
+		kubeAdminPassword = strings.TrimSpace(string(kubeAdminPassBytes))
+
+		developerPassword = constants.DefaultDeveloperPassword
+		if err = os.WriteFile(constants.GetDeveloperPasswordPath(), []byte(developerPassword), 0o600); err != nil {
 			return errors.Wrap(err, "Error writing developer password")
 		}
 	}
-	if err := api.SetExists(vm.Name); err != nil {
-		return fmt.Errorf("Failed to record VM existence: %s", err)
+
+	// pull secret is not present in VM or is invalid
+	content, err := pullSecret.Value()
+	if err != nil {
+		return errors.Wrap(err, "Error getting pull secret")
+	}
+
+	// Generate cloud-init user-data
+	logging.Debug("Generating cloud-init user-data...")
+	cloudInitOpts := cloudinit.UserDataOptions{
+		PublicKey:         publicKey,
+		PullSecret:        content,
+		KubeAdminPassword: kubeAdminPassword,
+		DeveloperPassword: developerPassword,
+	}
+
+	userDataPath, err := cloudinit.GenerateUserData(machineConfig.Name, cloudInitOpts)
+	if err != nil {
+		return fmt.Errorf("Error generating cloud-init user-data: %v", err)
+	}
+
+	// Prepare VM options for macadam
+	vmOpts := macadam.VMOptions{
+		DiskImagePath:   machineConfig.ImageSourcePath,
+		DiskSize:        uint64(machineConfig.DiskSize),
+		Memory:          uint64(machineConfig.Memory),
+		Name:            machineConfig.Name,
+		Username:        "core",
+		SSHIdentityPath: constants.GetPrivateKeyPath(),
+		CPUs:            uint64(machineConfig.CPUs),
+		CloudInitPath:   userDataPath,
+	}
+
+	// Initialize macadam and create the VM
+	logging.Debug("Creating machine with macadam...")
+	m := macadam.UseMacadam()
+	stdout, stderr, err := m.InitVM(vmOpts)
+	if err != nil {
+		return fmt.Errorf("Error in macadam during machine creation: %v\nStdout: %s\nStderr: %s", err, stdout, stderr)
+	}
+
+	// Save bundle metadata to config.json so we can retrieve it later
+	if err := saveBundleMetadataToConfig(machineConfig.Name, machineConfig.BundleName); err != nil {
+		logging.Warnf("Failed to save bundle metadata: %v", err)
+		// Non-fatal error, continue
 	}
 
 	logging.Debug("Machine successfully created")
 	return nil
 }
 
-func startHost(ctx context.Context, vm *virtualMachine) error {
-	if err := vm.Driver.Start(); err != nil {
+func startHost(ctx context.Context, vmName string) error {
+	m := getMacadamClient()
+	_, stdErr, err := m.StartVM(vmName)
+	fmt.Println("stdErr", stdErr)
+	// TODO: Ignoring error for now, we need to handle this better
+	// https://github.com/cfergeau/podman/pull/24
+	if err != nil && !strings.Contains(stdErr, "ssh error: ssh: handshake failed:") {
 		return fmt.Errorf("Error in driver during machine start: %s", err)
 	}
 
-	if err := vm.api.Save(vm.Host); err != nil {
-		return fmt.Errorf("Error saving virtual machine to store after attempting creation: %s", err)
-	}
-
 	logging.Debug("Waiting for machine to be running, this may take a few minutes...")
-	if err := crcerrors.Retry(ctx, 3*time.Minute, host.MachineInState(vm.Driver, libmachinestate.Running), 3*time.Second); err != nil {
+	if err := crcerrors.Retry(ctx, 3*time.Minute, func() error {
+		vmState, err := getVMState(vmName)
+		if err != nil {
+			return err
+		}
+		if vmState != state.Running {
+			return fmt.Errorf("machine not running yet, current state: %s", vmState)
+		}
+		return nil
+	}, 3*time.Second); err != nil {
 		return fmt.Errorf("Error waiting for machine to be running: %s", err)
 	}
 
@@ -792,48 +736,6 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	return nil
 }
 
-func copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey *rsa.PrivateKey, selfSignedCACert *x509.Certificate, srcKubeConfigPath, dstKubeConfigPath string) error {
-	if _, err := os.Stat(constants.KubeconfigFilePath); err == nil {
-		return nil
-	}
-	clientKey, clientCert, err := crctls.GenerateClientCertificate(selfSignedCAKey, selfSignedCACert)
-	if err != nil {
-		return err
-	}
-	return updateClientCrtAndKeyToKubeconfig(clientKey, clientCert, srcKubeConfigPath, dstKubeConfigPath)
-}
-
-func ensureProxyIsConfiguredInOpenShift(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, proxy *httpproxy.ProxyConfig) (err error) {
-	if !proxy.IsEnabled() {
-		return nil
-	}
-	logging.Info("Adding proxy configuration to the cluster...")
-	return cluster.AddProxyConfigToCluster(ctx, sshRunner, ocConfig, proxy)
-}
-
-func waitForProxyPropagation(ctx context.Context, ocConfig oc.Config, proxyConfig *httpproxy.ProxyConfig) {
-	if !proxyConfig.IsEnabled() {
-		return
-	}
-	logging.Info("Waiting for the proxy configuration to be applied...")
-	checkProxySettingsForOperator := func() error {
-		proxySet, err := cluster.CheckProxySettingsForOperator(ocConfig, proxyConfig, "marketplace-operator", "openshift-marketplace")
-		if err != nil {
-			logging.Debugf("Error getting proxy setting for openshift-marketplace operator %v", err)
-			return &crcerrors.RetriableError{Err: err}
-		}
-		if !proxySet {
-			logging.Debug("Proxy changes for cluster in progress")
-			return &crcerrors.RetriableError{Err: fmt.Errorf("")}
-		}
-		return nil
-	}
-
-	if err := crcerrors.Retry(ctx, 300*time.Second, checkProxySettingsForOperator, 2*time.Second); err != nil {
-		logging.Debug("Failed to propagate proxy settings to cluster")
-	}
-}
-
 func logBundleDate(crcBundleMetadata *bundle.CrcBundleInfo) {
 	if buildTime, err := crcBundleMetadata.GetBundleBuildTime(); err == nil {
 		bundleAgeDays := time.Since(buildTime).Hours() / 24
@@ -855,20 +757,13 @@ func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Confi
 	return err
 }
 
-func updateKubeconfig(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, kubeconfigFilePath string) error {
-	selfSignedCAKey, selfSignedCACert, err := crctls.GetSelfSignedCA()
-	if err != nil {
-		return errors.Wrap(err, "Not able to generate root CA key and Cert")
+func copyKubeconfigFileFromVMToHost(ctx context.Context, systemdRunner *systemd.Commander, sshRunner *crcssh.Runner, kubeconfigFilePath string) error {
+	logging.Info("Waiting for the updated kubeconfig file to be available on the host...")
+	if err := cluster.WaitForServiceSuccessfullyFinished(ctx, systemdRunner, "ocp-cluster-ca.service", 180*time.Second, 2*time.Second); err != nil {
+		return err
 	}
-	if err := copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey, selfSignedCACert, kubeconfigFilePath, constants.KubeconfigFilePath); err != nil {
-		return errors.Wrapf(err, "Failed to copy kubeconfig file: %s", constants.KubeconfigFilePath)
-	}
-	adminClientCA, err := adminClientCertificate(constants.KubeconfigFilePath)
-	if err != nil {
-		return errors.Wrap(err, "Not able to get user CA")
-	}
-	if err := cluster.EnsureGeneratedClientCAPresentInTheCluster(ctx, ocConfig, sshRunner, selfSignedCACert, adminClientCA); err != nil {
-		return errors.Wrap(err, "Failed to update user CA to cluster")
+	if err := sshRunner.CopyFileFromVM("/opt/kubeconfig", kubeconfigFilePath, 0o600); err != nil {
+		return err
 	}
 	return nil
 }

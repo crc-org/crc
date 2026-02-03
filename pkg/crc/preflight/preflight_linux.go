@@ -17,7 +17,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
+func qemuPreflightChecks(distro *linux.OsRelease) []Check {
 	checks := []Check{
 		{
 			configKeySuffix:  "check-virt-enabled",
@@ -38,63 +38,13 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			labels: labels{Os: Linux},
 		},
 		{
-			configKeySuffix:  "check-libvirt-installed",
-			checkDescription: "Checking if libvirt is installed",
-			check:            checkLibvirtInstalled,
-			fixDescription:   "Installing libvirt service and dependencies",
-			fix:              fixLibvirtInstalled(distro),
-
-			labels: labels{Os: Linux},
-		},
-		{
-			configKeySuffix:  "check-user-in-libvirt-group",
-			checkDescription: "Checking if user is part of libvirt group",
-			check:            checkUserPartOfLibvirtGroup,
-			fixDescription:   "Adding user to libvirt group",
-			fix:              fixUserPartOfLibvirtGroup,
-
-			labels: labels{Os: Linux},
-		},
-		{
-			configKeySuffix:  "check-libvirt-group-active",
-			checkDescription: "Checking if active user/process is currently part of the libvirt group",
-			check:            checkCurrentGroups(distro),
-			fixDescription:   "You need to logout, re-login, and run crc setup again before the user is effectively a member of the 'libvirt' group.",
-			flags:            NoFix,
-
-			labels: labels{Os: Linux},
-		},
-		{
-			configKeySuffix:  "check-libvirt-running",
-			checkDescription: "Checking if libvirt daemon is running",
-			check:            checkLibvirtServiceRunning,
-			fixDescription:   "Starting libvirt service",
-			fix:              fixLibvirtServiceRunning,
-
-			labels: labels{Os: Linux},
-		},
-		{
-			configKeySuffix:  "check-libvirt-version",
-			checkDescription: "Checking if a supported libvirt version is installed",
-			check:            checkLibvirtVersion,
-			fixDescription:   fmt.Sprintf("libvirt v%s or newer is required and must be updated manually", minSupportedLibvirtVersion),
-			flags:            NoFix,
-
-			labels: labels{Os: Linux},
-		},
-		{
-			configKeySuffix:  "check-libvirt-driver",
-			checkDescription: "Checking if crc-driver-libvirt is installed",
-			check:            checkMachineDriverLibvirtInstalled,
-			fixDescription:   "Installing crc-driver-libvirt",
-			fix:              fixMachineDriverLibvirtInstalled,
-
-			labels: labels{Os: Linux},
-		},
-		{
-			cleanupDescription: "Removing crc libvirt storage pool",
-			cleanup:            removeLibvirtStoragePool,
-			flags:              CleanUpOnly,
+			configKeySuffix:    "check-qemu-kvm-installed",
+			checkDescription:   "Checking if qemu-kvm is installed",
+			check:              checkQemuKvmInstalled,
+			fixDescription:     "Installing qemu-kvm",
+			fix:                fixQemuKvmInstalled(distro),
+			cleanupDescription: "Removing qemu-kvm symlink",
+			cleanup:            removeQemuKvmSymlink,
 
 			labels: labels{Os: Linux},
 		},
@@ -138,29 +88,6 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 	return checks
 }
 
-var libvirtNetworkPreflightChecks = []Check{
-	{
-		configKeySuffix:    "check-crc-network",
-		checkDescription:   "Checking if libvirt 'crc' network is available",
-		check:              checkLibvirtCrcNetworkAvailable,
-		fixDescription:     "Setting up libvirt 'crc' network",
-		fix:                fixLibvirtCrcNetworkAvailable,
-		cleanupDescription: "Removing 'crc' network from libvirt",
-		cleanup:            removeLibvirtCrcNetwork,
-
-		labels: labels{Os: Linux, NetworkMode: System},
-	},
-	{
-		configKeySuffix:  "check-crc-network-active",
-		checkDescription: "Checking if libvirt 'crc' network is active",
-		check:            checkLibvirtCrcNetworkActive,
-		fixDescription:   "Starting libvirt 'crc' network",
-		fix:              fixLibvirtCrcNetworkActive,
-
-		labels: labels{Os: Linux, NetworkMode: System},
-	},
-}
-
 var vsockPreflightCheck = Check{
 	configKeySuffix:    "check-vsock",
 	checkDescription:   "Checking if vsock is correctly configured",
@@ -194,13 +121,10 @@ func checkVsock() error {
 	if err != nil {
 		return err
 	}
-	getcap, _, err := crcos.RunWithDefaultLocale("getcap", executable)
-	if err != nil {
+
+	// Check for cap_net_bind_service capability with inheritable flag (+eip or =eip)
+	if err := checkCapabilities(executable, "cap_net_bind_service+eip", "cap_net_bind_service=eip"); err != nil {
 		return err
-	}
-	if !strings.Contains(getcap, "cap_net_bind_service+eip") &&
-		!strings.Contains(getcap, "cap_net_bind_service=eip") {
-		return fmt.Errorf("capabilities are not correct for %s", executable)
 	}
 
 	// This test is needed in order to trigger the move of the udev rule to its new location.
@@ -221,8 +145,9 @@ func fixVsock() error {
 	if err != nil {
 		return err
 	}
-	_, _, err = crcos.RunPrivileged(fmt.Sprintf("Setting CAP_NET_BIND_SERVICE capability for %s executable", executable), "setcap", "cap_net_bind_service=+eip", executable)
-	if err != nil {
+
+	// Set cap_net_bind_service with inheritable flag for the CRC daemon
+	if err := setCapabilities(executable, "cap_net_bind_service=+eip"); err != nil {
 		return err
 	}
 
@@ -234,7 +159,7 @@ func fixVsock() error {
 	if err != nil {
 		return err
 	}
-	udevRule := `KERNEL=="vsock", MODE="0660", OWNER="root", GROUP="libvirt"`
+	udevRule := `KERNEL=="vsock", MODE="0660", OWNER="root", GROUP="kvm"`
 	if crcos.FileContentMatches(vsockUdevLocalAdminRulesPath, []byte(udevRule)) != nil {
 		err = crcos.WriteToFileAsRoot("Creating udev rule for /dev/vsock", udevRule, vsockUdevLocalAdminRulesPath, 0644)
 		if err != nil {
@@ -367,13 +292,14 @@ func getChecks(distro *linux.OsRelease, bundlePath string, preset crcpreset.Pres
 	checks = append(checks, wsl2PreflightCheck)
 	checks = append(checks, genericPreflightChecks(preset)...)
 	checks = append(checks, memoryCheck(preset))
+	checks = append(checks, gvproxyCheck())
+	checks = append(checks, macadamCheck())
 	checks = append(checks, genericCleanupChecks...)
-	checks = append(checks, libvirtPreflightChecks(distro)...)
+	checks = append(checks, qemuPreflightChecks(distro)...)
 	checks = append(checks, ubuntuPreflightChecks...)
 	checks = append(checks, nmPreflightChecks...)
 	checks = append(checks, systemdResolvedPreflightChecks...)
 	checks = append(checks, dnsmasqPreflightChecks...)
-	checks = append(checks, libvirtNetworkPreflightChecks...)
 	checks = append(checks, vsockPreflightCheck)
 	checks = append(checks, bundleCheck(bundlePath, preset, enableBundleQuayFallback))
 
@@ -406,4 +332,48 @@ func distro() *linux.OsRelease {
 		}
 	}
 	return distro
+}
+
+// setCapabilities sets Linux capabilities on a binary
+// capString should be in the format accepted by setcap, e.g. "cap_net_bind_service=+ep"
+func setCapabilities(path, capString string) error {
+	logging.Debugf("Setting capabilities '%s' on %s", capString, path)
+
+	_, _, err := crcos.RunPrivileged(
+		fmt.Sprintf("Setting capability for %s", path),
+		"setcap", capString, path)
+	if err != nil {
+		return fmt.Errorf("unable to set capability on %s: %v", path, err)
+	}
+	return nil
+}
+
+// checkCapabilities checks if a binary has specific Linux capabilities
+// expectedCaps is a list of capability strings to check for (e.g., "cap_net_bind_service+ep")
+func checkCapabilities(path string, expectedCaps ...string) error {
+	stdOut, _, err := crcos.RunWithDefaultLocale("getcap", path)
+	if err != nil {
+		return fmt.Errorf("unable to check capabilities on %s: %v", path, err)
+	}
+
+	// Check if any of the expected capability strings are present
+	for _, cap := range expectedCaps {
+		if strings.Contains(stdOut, cap) {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("%s does not have expected capabilities (got: %s, expected one of: %v)", path, stdOut, expectedCaps)
+}
+
+// setCapNetBindService sets the CAP_NET_BIND_SERVICE capability on a binary
+// This allows it to bind to privileged ports (< 1024) without running as root
+func setCapNetBindService(path string) error {
+	return setCapabilities(path, "cap_net_bind_service=+ep")
+}
+
+// checkCapNetBindService checks if the CAP_NET_BIND_SERVICE capability is set on a binary
+func checkCapNetBindService(path string) error {
+	// Accept both +ep and =ep formats
+	return checkCapabilities(path, "cap_net_bind_service+ep", "cap_net_bind_service=ep")
 }

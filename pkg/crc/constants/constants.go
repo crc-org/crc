@@ -29,6 +29,8 @@ const (
 	DaemonLogFile             = "crcd.log"
 	CrcLandingPageURL         = "https://console.redhat.com/openshift/create/local" // #nosec G101
 	DefaultAdminHelperURLBase = "https://github.com/crc-org/admin-helper/releases/download/v%s/%s"
+	DefaultGvproxyURLBase     = "https://github.com/containers/gvisor-tap-vsock/releases/download/%s/%s"
+	DefaultMacadamURLBase     = "https://github.com/crc-org/macadam/releases/download/%s/%s"
 	BackgroundLauncherURL     = "https://github.com/crc-org/win32-background-launcher/releases/download/v%s/win32-background-launcher.exe"
 	DefaultBundleURLBase      = "https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/%s/%s/%s"
 	DefaultContext            = "admin"
@@ -78,6 +80,42 @@ func GetAdminHelperURLForOs(os string) string {
 
 func GetAdminHelperURL() string {
 	return GetAdminHelperURLForOs(runtime.GOOS)
+}
+
+var gvproxyExecutableForOs = map[string]string{
+	"darwin":  "gvproxy-darwin",
+	"linux":   fmt.Sprintf("gvproxy-linux-%s", runtime.GOARCH),
+	"windows": "gvproxy-windows.exe",
+}
+
+func GetGvproxyExecutableForOs(os string) string {
+	return gvproxyExecutableForOs[os]
+}
+
+func GetGvproxyURLForOs(os string) string {
+	return fmt.Sprintf(DefaultGvproxyURLBase, version.GetGvproxyVersion(), GetGvproxyExecutableForOs(os))
+}
+
+func GetGvproxyURL() string {
+	return GetGvproxyURLForOs(runtime.GOOS)
+}
+
+var macadamExecutableForOs = map[string]string{
+	"darwin":  fmt.Sprintf("macadam-darwin-%s", runtime.GOARCH),
+	"linux":   fmt.Sprintf("macadam-linux-%s", runtime.GOARCH),
+	"windows": fmt.Sprintf("macadam-windows-%s.exe", runtime.GOARCH),
+}
+
+func GetMacadamExecutableForOs(os string) string {
+	return macadamExecutableForOs[os]
+}
+
+func GetMacadamURLForOs(os string) string {
+	return fmt.Sprintf(DefaultMacadamURLBase, version.GetMacadamVersion(), GetMacadamExecutableForOs(os))
+}
+
+func GetMacadamURL() string {
+	return GetMacadamURLForOs(runtime.GOOS)
 }
 
 func BundleForPreset(preset crcpreset.Preset, version string) string {
@@ -155,6 +193,22 @@ func ResolveHelperPath(executableName string) string {
 
 func AdminHelperPath() string {
 	return ResolveHelperPath(GetAdminHelperExecutableForOs(runtime.GOOS))
+}
+
+func GetGvproxyExecutableName() string {
+	if runtime.GOOS == "windows" {
+		return "gvproxy.exe"
+	}
+	return "gvproxy"
+}
+
+func GvproxyPath() string {
+	// gvproxy is renamed to just "gvproxy" (or "gvproxy.exe" on Windows) for macadam compatibility
+	return ResolveHelperPath(GetGvproxyExecutableName())
+}
+
+func MacadamPath() string {
+	return ResolveHelperPath(GetMacadamExecutableForOs(runtime.GOOS))
 }
 
 func Win32BackgroundLauncherPath() string {
