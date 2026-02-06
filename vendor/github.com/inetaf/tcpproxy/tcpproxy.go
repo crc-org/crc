@@ -1,5 +1,3 @@
-// Copied from https://github.com/inetaf/tcpproxy/blob/91f861402626c6ba93eaa57ee257109c4f07bd00/tcpproxy.go
-
 // Copyright 2017 Google Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -81,6 +79,16 @@ type Proxy struct {
 	// function. If nil, net.Dial is used.
 	// The provided net is always "tcp".
 	ListenFunc func(net, laddr string) (net.Listener, error)
+}
+
+// Matcher reports whether hostname matches the Matcher's criteria.
+type Matcher func(ctx context.Context, hostname string) bool
+
+// equals is a trivial Matcher that implements string equality.
+func equals(want string) Matcher {
+	return func(_ context.Context, got string) bool {
+		return want == got
+	}
 }
 
 // config contains the proxying state for one listener.
@@ -337,7 +345,32 @@ func UnderlyingConn(c net.Conn) net.Conn {
 	return c
 }
 
-func goCloseConn(c net.Conn) { go c.Close() }
+func tcpConn(c net.Conn) (t *net.TCPConn, ok bool) {
+	if c, ok := UnderlyingConn(c).(*net.TCPConn); ok {
+		return c, ok
+	}
+	if c, ok := c.(*net.TCPConn); ok {
+		return c, ok
+	}
+	return nil, false
+}
+
+type closeReader interface{ CloseRead() error }
+type closeWriter interface{ CloseWrite() error }
+
+func closeRead(c net.Conn) {
+	// prefer the interfaces, for compatibility with e.g. gvisor/netstack.
+	if c, ok := UnderlyingConn(c).(closeReader); ok {
+		c.CloseRead()
+	}
+}
+
+func closeWrite(c net.Conn) {
+	// prefer the interfaces, for compatibility with e.g. gvisor/netstack.
+	if c, ok := UnderlyingConn(c).(closeWriter); ok {
+		c.CloseWrite()
+	}
+}
 
 // HandleConn implements the Target interface.
 func (dp *DialProxy) HandleConn(src net.Conn) {
@@ -354,32 +387,27 @@ func (dp *DialProxy) HandleConn(src net.Conn) {
 		dp.onDialError()(src, err)
 		return
 	}
-	defer goCloseConn(dst)
+	defer dst.Close()
 
 	if err = dp.sendProxyHeader(dst, src); err != nil {
 		dp.onDialError()(src, err)
 		return
 	}
-	defer goCloseConn(src)
+	defer src.Close()
 
 	if ka := dp.keepAlivePeriod(); ka > 0 {
-		if c, ok := UnderlyingConn(src).(*net.TCPConn); ok {
-			//nolint:errcheck
-			c.SetKeepAlive(true)
-			//nolint:errcheck
-			c.SetKeepAlivePeriod(ka)
-		}
-		if c, ok := dst.(*net.TCPConn); ok {
-			//nolint:errcheck
-			c.SetKeepAlive(true)
-			//nolint:errcheck
-			c.SetKeepAlivePeriod(ka)
+		for _, c := range []net.Conn{src, dst} {
+			if c, ok := tcpConn(c); ok {
+				c.SetKeepAlive(true)
+				c.SetKeepAlivePeriod(ka)
+			}
 		}
 	}
 
-	errc := make(chan error, 1)
+	errc := make(chan error, 2)
 	go proxyCopy(errc, src, dst)
 	go proxyCopy(errc, dst, src)
+	<-errc
 	<-errc
 }
 
@@ -416,6 +444,9 @@ func (dp *DialProxy) sendProxyHeader(w io.Writer, src net.Conn) error {
 // It's a named function instead of a func literal so users get
 // named goroutines in debug goroutine stack dumps.
 func proxyCopy(errc chan<- error, dst, src net.Conn) {
+	defer closeRead(src)
+	defer closeWrite(dst)
+
 	// Before we unwrap src and/or dst, copy any buffered data.
 	if wc, ok := src.(*Conn); ok && len(wc.Peeked) > 0 {
 		if _, err := dst.Write(wc.Peeked); err != nil {
@@ -462,7 +493,13 @@ func (dp *DialProxy) onDialError() func(src net.Conn, dstDialErr error) {
 		return dp.OnDialError
 	}
 	return func(src net.Conn, dstDialErr error) {
-		log.Printf("tcpproxy: for incoming conn %v, error dialing %q: %v", src.RemoteAddr().String(), dp.Addr, dstDialErr)
+		var remoteAddr string
+		if ra := src.RemoteAddr(); ra != nil {
+			remoteAddr = ra.String()
+		} else {
+			remoteAddr = fmt.Sprintf("[%T with nil RemoteAddr]", src)
+		}
+		log.Printf("tcpproxy: for incoming conn %v, error dialing %q: %v", remoteAddr, dp.Addr, dstDialErr)
 		src.Close()
 	}
 }

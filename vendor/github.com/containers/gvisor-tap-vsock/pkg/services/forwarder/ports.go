@@ -16,8 +16,8 @@ import (
 	"sync"
 
 	"github.com/containers/gvisor-tap-vsock/pkg/sshclient"
-	"github.com/containers/gvisor-tap-vsock/pkg/tcpproxy"
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
+	"github.com/inetaf/tcpproxy"
 	log "github.com/sirupsen/logrus"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
@@ -83,7 +83,7 @@ func (f *PortsForwarder) Expose(protocol types.TransportProtocol, local, remote 
 		}
 
 		// build the address from remoteURI
-		remoteAddr := fmt.Sprintf("%s:%s", remoteURI.Hostname(), remoteURI.Port())
+		remoteAddr := net.JoinHostPort(remoteURI.Hostname(), remoteURI.Port())
 
 		// dialFn opens remote connection for the proxy
 		var dialFn func(ctx context.Context, network, addr string) (conn net.Conn, e error)
@@ -107,7 +107,7 @@ func (f *PortsForwarder) Expose(protocol types.TransportProtocol, local, remote 
 
 			// default ssh port if not set
 			if remoteURI.Port() == "" {
-				remoteURI.Host = fmt.Sprintf("%s:%s", remoteURI.Hostname(), "22")
+				remoteURI.Host = net.JoinHostPort(remoteURI.Hostname(), "22")
 			}
 
 			// check the remoteURI path provided for nonsense
