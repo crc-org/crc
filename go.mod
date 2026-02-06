@@ -55,7 +55,7 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.4
 	github.com/zalando/go-keyring v0.2.6
 	go.podman.io/common v0.66.1
-	go.podman.io/image/v5 v5.38.0
+	go.podman.io/image/v5 v5.39.1
 	golang.org/x/crypto v0.47.0
 	golang.org/x/net v0.49.0
 	golang.org/x/sync v0.19.0
@@ -178,7 +178,7 @@ require (
 	github.com/vbatts/tar-split v0.12.1 // indirect
 	github.com/vbauerster/mpb/v8 v8.10.2 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	go.podman.io/storage v1.61.0 // indirect
+	go.podman.io/storage v1.62.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/mod v0.32.0 // indirect
