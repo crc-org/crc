@@ -14,7 +14,6 @@ import (
 
 	"github.com/containers/gvisor-tap-vsock/pkg/fs"
 	"github.com/containers/gvisor-tap-vsock/pkg/utils"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -89,7 +88,7 @@ func connectForward(ctx context.Context, bastion *Bastion) (CloseWriteConn, erro
 			return forward.(CloseWriteConn), nil
 		}
 		if retries > 2 {
-			return nil, errors.Wrapf(err, "Couldn't reestablish ssh tunnel on path: %s", bastion.Path)
+			return nil, fmt.Errorf("couldn't reestablish ssh tunnel on path: %s: %w", bastion.Path, err)
 		}
 		// Check if ssh connection is still alive
 		_, _, err = bastion.Client.SendRequest("alive@gvproxy", true, nil)
@@ -100,7 +99,7 @@ func connectForward(ctx context.Context, bastion *Bastion) (CloseWriteConn, erro
 					break
 				}
 				if bastionRetries > 2 || !utils.Sleep(ctx, 200*time.Millisecond) {
-					return nil, errors.Wrapf(err, "Couldn't reestablish ssh connection: %s", bastion.Host)
+					return nil, fmt.Errorf("couldn't reestablish ssh connection: %s: %w", bastion.Host, err)
 				}
 			}
 		}
@@ -125,7 +124,7 @@ func listenUnix(socketURI *url.URL) (net.Listener, error) {
 	defer fs.Umask(oldmask)
 	listener, err := net.Listen("unix", path)
 	if err != nil {
-		return listener, errors.Wrapf(err, "Error listening on socket: %s", socketURI.Path)
+		return listener, fmt.Errorf("error listening on socket: %s: %w", socketURI.Path, err)
 	}
 
 	return listener, nil
@@ -150,7 +149,7 @@ func setupProxy(ctx context.Context, socketURI *url.URL, dest *url.URL, identity
 	case "":
 		// empty URL = Tunnel Only, no Accept
 	default:
-		return &SSHForward{}, errors.Errorf("URI scheme not supported: %s", socketURI.Scheme)
+		return &SSHForward{}, fmt.Errorf("URI scheme not supported: %s", socketURI.Scheme)
 	}
 
 	connectFunc := func(ctx context.Context, bastion *Bastion) (net.Conn, error) {
@@ -187,13 +186,13 @@ func setupProxy(ctx context.Context, socketURI *url.URL, dest *url.URL, identity
 func acceptConnection(ctx context.Context, listener net.Listener, bastion *Bastion, socketURI *url.URL) error {
 	con, err := listener.Accept()
 	if err != nil {
-		return errors.Wrapf(err, "Error accepting on socket: %s", socketURI.Path)
+		return fmt.Errorf("error accepting on socket: %s: %w", socketURI.Path, err)
 	}
 
 	src, ok := con.(CloseWriteStream)
 	if !ok {
 		con.Close()
-		return errors.Wrapf(err, "Underlying socket does not support half-close %s", socketURI.Path)
+		return fmt.Errorf("underlying socket does not support half-close %s: %w", socketURI.Path, err)
 	}
 
 	var dest CloseWriteStream

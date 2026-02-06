@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/containers/gvisor-tap-vsock/pkg/net/stdio"
 	mdlayhervsock "github.com/mdlayher/vsock"
-	"github.com/pkg/errors"
 )
 
 func Dial(endpoint string) (net.Conn, string, error) {
