@@ -3,6 +3,7 @@ package sshclient
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -13,7 +14,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/knownhosts"
@@ -90,7 +90,7 @@ func CreateBastion(_url *url.URL, passPhrase string, identity string, initial ne
 	if len(identity) > 0 {
 		s, err := PublicKey(identity, []byte(passPhrase))
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse identity %q", identity)
+			return nil, fmt.Errorf("failed to parse identity %q: %w", identity, err)
 		}
 		authMethods = append(authMethods, ssh.PublicKeys(s))
 	}
@@ -100,7 +100,7 @@ func CreateBastion(_url *url.URL, passPhrase string, identity string, initial ne
 	}
 
 	if len(authMethods) == 0 {
-		return nil, errors.New("No available auth methods")
+		return nil, errors.New("no available auth methods")
 	}
 
 	port := _url.Port()
@@ -167,7 +167,7 @@ func (bastion *Bastion) reconnect(ctx context.Context, conn net.Conn) error {
 		conn, err = bastion.connect(ctx, bastion)
 	}
 	if err != nil {
-		return errors.Wrapf(err, "Connection to bastion host (%s) failed", bastion.Host)
+		return fmt.Errorf("connection to bastion host (%s) failed: %w", bastion.Host, err)
 	}
 	addr := net.JoinHostPort(bastion.Host, bastion.Port)
 	c, chans, reqs, err := ssh.NewClientConn(conn, addr, bastion.Config)

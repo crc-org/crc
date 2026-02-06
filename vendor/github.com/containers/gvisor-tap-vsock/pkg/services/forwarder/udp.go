@@ -1,8 +1,8 @@
 package forwarder
 
 import (
-	"fmt"
 	"net"
+	"strconv"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -41,7 +41,7 @@ func UDP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mute
 		}
 
 		p, _ := NewUDPProxy(&autoStoppingListener{underlying: gonet.NewUDPConn(&wq, ep)}, func() (net.Conn, error) {
-			return net.Dial("udp", fmt.Sprintf("%s:%d", localAddress, r.ID().LocalPort))
+			return net.Dial("udp", net.JoinHostPort(localAddress.String(), strconv.Itoa(int(r.ID().LocalPort))))
 		})
 		go func() {
 			p.Run()

@@ -1,14 +1,16 @@
 package virtualnetwork
 
 import (
+	"errors"
+	"fmt"
 	"math"
 	"net"
 	"net/http"
 	"os"
 
+	"github.com/containers/gvisor-tap-vsock/pkg/notification"
 	"github.com/containers/gvisor-tap-vsock/pkg/tap"
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
-	"github.com/pkg/errors"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/link/sniffer"
 	"gvisor.dev/gvisor/pkg/tcpip/network/arp"
@@ -27,10 +29,14 @@ type VirtualNetwork struct {
 	ipPool        *tap.IPPool
 }
 
+func (n *VirtualNetwork) SetNotificationSender(notificationSender *notification.NotificationSender) {
+	n.networkSwitch.SetNotificationSender(notificationSender)
+}
+
 func New(configuration *types.Configuration) (*VirtualNetwork, error) {
 	_, subnet, err := net.ParseCIDR(configuration.Subnet)
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot parse subnet cidr")
+		return nil, fmt.Errorf("cannot parse subnet cidr: %w", err)
 	}
 
 	var endpoint stack.LinkEndpoint
@@ -42,14 +48,14 @@ func New(configuration *types.Configuration) (*VirtualNetwork, error) {
 	}
 
 	mtu := configuration.MTU
-	if mtu < 0 || mtu > math.MaxUint32 {
+	if mtu < 0 || mtu > math.MaxInt32 {
 		return nil, errors.New("mtu is out of range")
 	}
 	tapEndpoint, err := tap.NewLinkEndpoint(configuration.Debug, uint32(mtu), configuration.GatewayMacAddress, configuration.GatewayIP, configuration.GatewayVirtualIPs)
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot create tap endpoint")
+		return nil, fmt.Errorf("cannot create tap endpoint: %w", err)
 	}
-	networkSwitch := tap.NewSwitch(configuration.Debug, mtu)
+	networkSwitch := tap.NewSwitch(configuration.Debug)
 	tapEndpoint.Connect(networkSwitch)
 	networkSwitch.Connect(tapEndpoint)
 
@@ -57,11 +63,11 @@ func New(configuration *types.Configuration) (*VirtualNetwork, error) {
 		_ = os.Remove(configuration.CaptureFile)
 		fd, err := os.Create(configuration.CaptureFile)
 		if err != nil {
-			return nil, errors.Wrap(err, "cannot create capture file")
+			return nil, fmt.Errorf("cannot create capture file: %w", err)
 		}
 		endpoint, err = sniffer.NewWithWriter(tapEndpoint, fd, math.MaxUint32)
 		if err != nil {
-			return nil, errors.Wrap(err, "cannot create sniffer")
+			return nil, fmt.Errorf("cannot create sniffer: %w", err)
 		}
 	} else {
 		endpoint = tapEndpoint
@@ -69,12 +75,12 @@ func New(configuration *types.Configuration) (*VirtualNetwork, error) {
 
 	stack, err := createStack(configuration, endpoint)
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot create network stack")
+		return nil, fmt.Errorf("cannot create network stack: %w", err)
 	}
 
 	mux, err := addServices(configuration, stack, ipPool)
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot add network services")
+		return nil, fmt.Errorf("cannot add network services: %w", err)
 	}
 
 	return &VirtualNetwork{
@@ -129,12 +135,12 @@ func createStack(configuration *types.Configuration, endpoint stack.LinkEndpoint
 
 	_, parsedSubnet, err := net.ParseCIDR(configuration.Subnet)
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot parse cidr")
+		return nil, fmt.Errorf("cannot parse cidr: %w", err)
 	}
 
 	subnet, err := tcpip.NewSubnet(tcpip.AddrFromSlice(parsedSubnet.IP), tcpip.MaskFromBytes(parsedSubnet.Mask))
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot parse subnet")
+		return nil, fmt.Errorf("cannot parse subnet: %w", err)
 	}
 	s.SetRouteTable([]tcpip.Route{
 		{

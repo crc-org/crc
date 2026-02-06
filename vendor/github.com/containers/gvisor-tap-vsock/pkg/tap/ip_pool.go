@@ -2,6 +2,7 @@ package tap
 
 import (
 	"errors"
+	"maps"
 	"math"
 	"net"
 	"sync"
@@ -28,9 +29,7 @@ func (p *IPPool) Leases() map[string]string {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	leases := map[string]string{}
-	for key, value := range p.leases {
-		leases[key] = value
-	}
+	maps.Copy(leases, p.leases)
 	return leases
 }
 
