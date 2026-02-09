@@ -282,6 +282,12 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Cannot determine if VM exists")
 	}
 
+	if exists {
+		if err := checkMachineInstanceDir(); err != nil {
+			return nil, err
+		}
+	}
+
 	bundleNameFromURI, err := bundle.GetBundleNameFromURI(startConfig.BundlePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting bundle name")
@@ -889,6 +895,19 @@ func startMicroshift(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.
 	}
 
 	return cluster.WaitForAPIServer(ctx, ocConfig)
+}
+
+func checkMachineInstanceDir() error {
+	requiredFiles := []string{
+		constants.GetPrivateKeyPath(),
+		constants.GetPublicKeyPath(),
+	}
+	for _, filePath := range requiredFiles {
+		if !crcos.FileExists(filePath) {
+			return fmt.Errorf("Required file %s is missing from the instance directory. Please delete the instance with 'crc delete' and recreate it with 'crc start'", filePath)
+		}
+	}
+	return nil
 }
 
 func ensurePullSecretPresentInVM(sshRunner *crcssh.Runner, pullSec cluster.PullSecretLoader) error {
