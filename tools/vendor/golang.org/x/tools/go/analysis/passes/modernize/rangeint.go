@@ -316,10 +316,10 @@ func isScalarLvalue(info *types.Info, curId inspector.Cursor) bool {
 	cur := curId
 
 	// Strip enclosing parens.
-	ek, _ := cur.ParentEdge()
+	ek := cur.ParentEdgeKind()
 	for ek == edge.ParenExpr_X {
 		cur = cur.Parent()
-		ek, _ = cur.ParentEdge()
+		ek = cur.ParentEdgeKind()
 	}
 
 	switch ek {
@@ -331,6 +331,11 @@ func isScalarLvalue(info *types.Info, curId inspector.Cursor) bool {
 		id := curId.Node().(*ast.Ident)
 		if v, ok := info.Defs[id]; ok && v.Pos() != id.Pos() {
 			return true // reassignment of i (i, j := 1, 2)
+		}
+	case edge.RangeStmt_Key:
+		rng := cur.Parent().Node().(*ast.RangeStmt)
+		if rng.Tok == token.ASSIGN {
+			return true // "for k, v = range x" is like an AssignStmt to k, v
 		}
 	case edge.IncDecStmt_X:
 		return true // i++, i--
