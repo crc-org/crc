@@ -8,11 +8,39 @@ updates:
   ignore:
     - dependency-name: "github.com/openshift/*"
     - dependency-name: "k8s.io/*"
+  groups:
+    golang-x:
+      patterns:
+        - "golang.org/x/*"
+    sigstore:
+      patterns:
+        - "github.com/sigstore/*"
+    containers:
+      patterns:
+        - "github.com/containers/*"
+    podman:
+      patterns:
+        - "go.podman.io/*"
+    google-grpc:
+      patterns:
+        - "google.golang.org/*"
+    testing:
+      patterns:
+        - "github.com/onsi/*"
+        - "github.com/cucumber/*"
+        - "github.com/stretchr/testify"
+    spf13-cli:
+      patterns:
+        - "github.com/spf13/*"
 - package-ecosystem: gomod
   directory: "/tools"
   schedule:
     interval: weekly
   open-pull-requests-limit: 10
+  groups:
+    golang-x:
+      patterns:
+        - "golang.org/x/*"
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
