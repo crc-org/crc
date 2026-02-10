@@ -66,3 +66,8 @@ type TelemetryRequest struct {
 	Source string `json:"source"`
 	Status string `json:"status"`
 }
+
+// ValidationError represents a single validation error in a structured JSON error response.
+type ValidationError struct {
+	Message string `json:"message"`
+}
