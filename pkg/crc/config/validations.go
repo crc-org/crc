@@ -154,6 +154,14 @@ func validatePreset(value interface{}) (bool, string) {
 	return true, ""
 }
 
+// validateRosetta checks if Rosetta can be enabled on this platform
+func validateRosetta(value interface{}) (bool, string) {
+	if runtime.GOOS != "darwin" || runtime.GOARCH != "arm64" {
+		return false, "Rosetta is only supported on Apple Silicon Macs"
+	}
+	return ValidateBool(value)
+}
+
 func validatePort(value interface{}) (bool, string) {
 	port, err := cast.ToUintE(value)
 	if err != nil {

@@ -26,4 +26,7 @@ type MachineConfig struct {
 
 	// Experimental features
 	NetworkMode network.Mode
+
+	// Rosetta for x86_64 emulation on Apple Silicon
+	EnableRosetta bool
 }
