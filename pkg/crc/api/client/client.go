@@ -258,11 +258,13 @@ func (c *client) sendRequest(url string, method string, data io.Reader) ([]byte,
 	switch method {
 	case http.MethodPost:
 		if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated {
-			return nil, fmt.Errorf("Error occurred sending POST request to : %s : %d", url, res.StatusCode)
+			body, _ := io.ReadAll(res.Body)
+			return nil, &HTTPError{URL: url, Method: method, StatusCode: res.StatusCode, Body: string(body)}
 		}
 	case http.MethodDelete, http.MethodGet:
 		if res.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("Error occurred sending %s request to : %s : %d", method, url, res.StatusCode)
+			body, _ := io.ReadAll(res.Body)
+			return nil, &HTTPError{URL: url, Method: method, StatusCode: res.StatusCode, Body: string(body)}
 		}
 	}
 
