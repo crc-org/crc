@@ -15,6 +15,8 @@ jobs:
         go:
           - '1.24'
     steps:
+      - name: Free disk space
+        uses: palmsoftware/quick-cleanup@v0
       - name: Check out repository code
         uses: actions/checkout@v6
       - name: Set up Go
