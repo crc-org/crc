@@ -13,7 +13,7 @@ jobs:
         os:
           - windows-2022
         go:
-          - '1.24'
+          - '1.25'
     steps:
       - name: Check out repository code
         uses: actions/checkout@v6

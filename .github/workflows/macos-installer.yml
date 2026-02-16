@@ -20,7 +20,7 @@ jobs:
           - macOS-15-intel
           - macOS-15
         go:
-          - '1.24'
+          - '1.25'
     steps:
       # Enable tmate debugging of manually-triggered workflows if the input option was provided
       - name: Setup tmate session
