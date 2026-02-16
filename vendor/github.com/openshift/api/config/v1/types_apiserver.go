@@ -58,9 +58,8 @@ type APIServerSpec struct {
 	Encryption APIServerEncryption `json:"encryption"`
 	// tlsSecurityProfile specifies settings for TLS connections for externally exposed servers.
 	//
-	// If unset, a default (which may change between releases) is chosen. Note that only Old,
-	// Intermediate and Custom profiles are currently supported, and the maximum available
-	// minTLSVersion is VersionTLS12.
+	// When omitted, this means no opinion and the platform is left to choose a reasonable default, which is subject to change over time.
+	// The current default is the Intermediate profile.
 	// +optional
 	TLSSecurityProfile *TLSSecurityProfile `json:"tlsSecurityProfile,omitempty"`
 	// audit specifies the settings for audit configuration to be applied to all OpenShift-provided
@@ -146,7 +145,7 @@ type AuditCustomRule struct {
 	// If unset, the 'Default' profile is used as the default.
 	//
 	// +required
-	Profile AuditProfileType `json:"profile,omitempty"`
+	Profile AuditProfileType `json:"profile"`
 }
 
 type APIServerServingCerts struct {
@@ -155,6 +154,7 @@ type APIServerServingCerts struct {
 	// the defaultServingCertificate will be used.
 	// +optional
 	// +listType=atomic
+	// +kubebuilder:validation:MaxItems=32
 	NamedCertificates []APIServerNamedServingCert `json:"namedCertificates,omitempty"`
 }
 
@@ -165,6 +165,7 @@ type APIServerNamedServingCert struct {
 	// Exact names trump over wildcard names. Explicit names defined here trump over extracted implicit names.
 	// +optional
 	// +listType=atomic
+	// +kubebuilder:validation:MaxItems=64
 	Names []string `json:"names,omitempty"`
 	// servingCertificate references a kubernetes.io/tls type secret containing the TLS cert info for serving secure traffic.
 	// The secret must exist in the openshift-config namespace and contain the following required fields:
