@@ -13,7 +13,7 @@ jobs:
         os:
           - ubuntu-latest
         go:
-          - '1.24'
+          - '1.25'
     steps:
       - name: Free disk space
         uses: palmsoftware/quick-cleanup@v0
