@@ -115,10 +115,11 @@ func (s *server) Handler() http.Handler {
 			return
 		}
 
-		w.WriteHeader(c.code)
 		for k, v := range c.headers {
 			w.Header().Set(k, v)
 		}
+		w.WriteHeader(c.code)
+
 		if _, err := w.Write(c.responseBody); err != nil {
 			logging.Error("Failed to send response: ", err)
 		}
