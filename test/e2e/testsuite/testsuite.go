@@ -305,6 +305,12 @@ func InitializeScenario(s *godog.ScenarioContext) {
 					os.Exit(1)
 				}
 
+				err = crcCmd.UnsetConfigPropertySucceedsOrFails("developer-password", "succeeds") // unsetting property that is not set gives 0 exitcode, so this works
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
 				if runtime.GOOS == "linux" {
 					err = crcCmd.UnsetConfigPropertySucceedsOrFails("network-mode", "succeeds") // unsetting property that is not set gives 0 exitcode, so this works
 					if err != nil {
