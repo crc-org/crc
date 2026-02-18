@@ -19,6 +19,11 @@ const (
 
 	DefaultPersistentVolumeSize = 15
 
+	// MinimumDiskSpaceForSetup is the minimum free disk space required to download and extract the bundle.
+	// 35 GiB accounts for the compressed bundle (~12 GiB) plus the extracted disk image (~31 GiB),
+	// minus the compressed bundle being deleted after extraction, plus headroom.
+	MinimumDiskSpaceForSetup = 35 * 1024 * 1024 * 1024
+
 	DefaultSSHUser = "core"
 	DefaultSSHPort = 22
 

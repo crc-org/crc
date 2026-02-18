@@ -64,6 +64,23 @@ func ValidateEnoughMemory(value strongunits.MiB) error {
 	return nil
 }
 
+// ValidateEnoughFreeSpace checks if enough free disk space is available at the given path
+func ValidateEnoughFreeSpace(path string, requiredBytes uint64) error {
+	freeSpace, err := freeDiskSpace(path)
+	if err != nil {
+		logging.Debugf("Unable to determine free disk space for %s: %v", path, err)
+		return nil // Don't block on error - fail open
+	}
+	logging.Debugf("Free disk space at %s: %d bytes", path, freeSpace)
+	if freeSpace < requiredBytes {
+		return fmt.Errorf("only %s of disk space free at %s (%s required)",
+			units.HumanSize(float64(freeSpace)),
+			path,
+			units.HumanSize(float64(requiredBytes)))
+	}
+	return nil
+}
+
 // ValidateBundlePath checks if the provided bundle path exist
 func ValidateBundlePath(bundlePath string, preset crcpreset.Preset) error {
 	logging.Debugf("Got bundle path: %s", bundlePath)
