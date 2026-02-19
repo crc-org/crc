@@ -54,7 +54,7 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 	github.com/yusufpapurcu/wmi v1.2.4
 	github.com/zalando/go-keyring v0.2.6
-	go.podman.io/common v0.66.1
+	go.podman.io/common v0.67.0
 	go.podman.io/image/v5 v5.39.1
 	golang.org/x/crypto v0.48.0
 	golang.org/x/net v0.50.0
