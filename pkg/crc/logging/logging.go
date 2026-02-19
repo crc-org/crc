@@ -3,9 +3,9 @@ package logging
 import (
 	"os"
 
+	terminal "github.com/crc-org/crc/v2/pkg/os/terminal"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
-	terminal "golang.org/x/term"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -53,7 +53,7 @@ func InitLogrus(logFilePath string) {
 
 	// Add hook to send error/fatal to stderr
 	logrus.AddHook(newstdErrHook(level, &logrus.TextFormatter{
-		ForceColors:            terminal.IsTerminal(int(os.Stderr.Fd())),
+		ForceColors:            terminal.IsRunningInTerminal(),
 		DisableTimestamp:       true,
 		DisableLevelTruncation: false,
 	}))

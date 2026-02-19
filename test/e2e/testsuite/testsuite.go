@@ -1060,7 +1060,7 @@ func EnsureApplicationIsAccessibleViaNodePort(svcName string, expectedResponseBo
 	if err != nil {
 		return fmt.Errorf("unable to create http request for: %s, %s", applicationURL, err.Error())
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req) // nolint:gosec // G704: URL is from cluster NodePort in e2e test
 	if err != nil {
 		return fmt.Errorf("unable to access application via NodePort Url: %s", applicationURL)
 	}

@@ -8,7 +8,7 @@ const mask = "*****"
 
 type MaskedSecretError struct {
 	Err    error
-	Secret string
+	Secret string // nolint:gosec
 }
 
 func (err *MaskedSecretError) Error() string {
