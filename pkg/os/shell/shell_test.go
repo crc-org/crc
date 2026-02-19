@@ -174,7 +174,7 @@ func TestIsWindowsSubsystemLinux_whenValidKernelInfoFile_thenReturnTrue(t *testi
 			defer func(wslVersionFile *os.File) {
 				err := wslVersionFile.Close()
 				assert.NoError(t, err)
-				err = os.Remove(wslVersionFile.Name())
+				err = os.Remove(wslVersionFile.Name()) // nolint:gosec // G703: paths from CreateTemp and caller
 				assert.NoError(t, err)
 			}(wslVersionFile)
 			numberOfBytesWritten, err := wslVersionFile.WriteString(tt.versionFileContent)

@@ -25,7 +25,7 @@ var (
 )
 
 type KeyPair struct {
-	PrivateKey []byte
+	PrivateKey []byte // nolint:gosec
 	PublicKey  []byte
 }
 
@@ -92,7 +92,7 @@ func RemoveCRCHostEntriesFromKnownHosts() error {
 	}
 	defer func() {
 		tempHostsFile.Close()
-		os.Remove(tempHostsFile.Name())
+		os.Remove(tempHostsFile.Name()) //nolint:gosec // G703: paths from CreateTemp
 	}()
 
 	if err := tempHostsFile.Chmod(0600); err != nil {
@@ -142,7 +142,7 @@ func RemoveCRCHostEntriesFromKnownHosts() error {
 		if err := tempHostsFile.Close(); err != nil {
 			return fmt.Errorf("Error closing temp file: %w", err)
 		}
-		return os.Rename(tempHostsFile.Name(), knownHostsPath)
+		return os.Rename(tempHostsFile.Name(), knownHostsPath) //nolint:gosec // G703: paths from CreateTemp
 	}
 	return nil
 }

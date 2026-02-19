@@ -122,7 +122,7 @@ func untar(ctx context.Context, reader io.Reader, targetDir string, fileFilter f
 
 		// if its a dir and it doesn't exist create it
 		case tar.TypeDir:
-			if err := os.MkdirAll(path, header.FileInfo().Mode()); err != nil {
+			if err := os.MkdirAll(path, header.FileInfo().Mode()); err != nil { // nolint:gosec // G703: paths from header.FileInfo()
 				return nil, err
 			}
 
@@ -139,11 +139,11 @@ func untar(ctx context.Context, reader io.Reader, targetDir string, fileFilter f
 
 func uncompressFile(ctx context.Context, tarReader io.Reader, fileInfo os.FileInfo, path string, showProgress bool) error {
 	// with a file filter, we may have skipped the intermediate directories, make sure they exist
-	if err := os.MkdirAll(filepath.Dir(path), 0750); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0750); err != nil { // nolint:gosec // G703: paths from filepath.Dir
 		return err
 	}
 
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, fileInfo.Mode())
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, fileInfo.Mode()) // nolint:gosec // G703: paths from filepath.Dir
 	if err != nil {
 		return err
 	}

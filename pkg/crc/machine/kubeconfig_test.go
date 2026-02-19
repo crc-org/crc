@@ -97,7 +97,7 @@ func createTempKubeConfig(config *api.Config) (string, error) {
 
 	err = clientcmd.WriteToFile(*config, path)
 	if err != nil {
-		os.Remove(path)
+		os.Remove(path) // nolint:gosec // G703: paths from CreateTemp and caller
 		return "", err
 	}
 
