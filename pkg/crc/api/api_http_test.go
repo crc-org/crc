@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/crc-org/crc/v2/pkg/crc/api/client"
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/fakemachine"
@@ -301,6 +303,10 @@ var testCases = []testCase{
 		request:  get("config?cpus").withBody("xx"),
 		response: jSon(`{"Configs":{"cpus":4}}`),
 	},
+	{
+		request:  post("config").withBody(`{"properties":{"cpus":0}}`),
+		response: httpError(500).withBody("[{\"message\":\"Value '0' for configuration property 'cpus' is invalid, reason: requires CPUs \\u003e= 4\"}]\n"),
+	},
 
 	// logs
 	{
@@ -503,4 +509,31 @@ func TestRoutes(t *testing.T) {
 			assert.Contains(t, routes[pattern], method, "routes[%s][%s] is missing from the API testcases", pattern, method)
 		}
 	}
+}
+
+func TestSetConfigMultipleErrors(t *testing.T) {
+	pullSecretPath := createDummyPullSecret(t)
+	defer os.Remove(pullSecretPath)
+	server := newMockServer(pullSecretPath)
+
+	// Send a request with multiple invalid config values
+	req := post("config").withBody(`{"properties":{"cpus":0,"memory":1}}`)
+	resp := sendRequest(server.Handler(), &req)
+
+	require.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+
+	body, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	var validationErrors []client.ValidationError
+	require.NoError(t, json.Unmarshal(body, &validationErrors))
+	require.Len(t, validationErrors, 2)
+
+	// Map iteration order is non-deterministic, so check membership rather than order
+	messages := make([]string, len(validationErrors))
+	for i, ve := range validationErrors {
+		messages[i] = ve.Message
+	}
+	assert.Contains(t, messages, "Value '0' for configuration property 'cpus' is invalid, reason: requires CPUs >= 4")
+	assert.Contains(t, messages, "Value '1' for configuration property 'memory' is invalid, reason: requires memory in MiB >= 10752")
 }
