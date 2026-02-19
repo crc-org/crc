@@ -277,21 +277,27 @@ func configureRosetta(sshRunner *crcssh.Runner) error {
 	}
 	if _, _, err := sshRunner.RunPrivileged("Mounting Rosetta share",
 		"mount", "-t", "virtiofs",
-		"-o", `context="system_u:object_r:container_file_t:s0"`,
+		"-o", `context="system_u:object_r:bin_t:s0"`,
 		"rosetta", "/media/rosetta"); err != nil {
 		return err
 	}
 
-	// Disable QEMU x86_64 binfmt registration if present
-	if _, _, err := sshRunner.RunPrivileged("Disabling QEMU x86_64 binfmt",
-		"bash", "-c", `"[ -f /proc/sys/fs/binfmt_misc/qemu-x86_64 ] && echo -1 > /proc/sys/fs/binfmt_misc/qemu-x86_64 || true"`); err != nil {
+	// Mask QEMU x86_64 binfmt config so systemd-binfmt won't register it
+	if _, _, err := sshRunner.RunPrivileged("Masking QEMU x86_64 binfmt config",
+		"ln", "-sf", "/dev/null", "/etc/binfmt.d/qemu-x86_64-static.conf"); err != nil {
 		return err
 	}
 
-	// Register Rosetta as the x86_64 binfmt handler
+	// Write Rosetta binfmt config for systemd-binfmt
 	rosettaBinfmt := `:rosetta:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00:\xff\xff\xff\xff\xff\xfe\xfe\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/media/rosetta/rosetta:CF`
-	if _, _, err := sshRunner.RunPrivileged("Registering Rosetta binfmt",
-		"bash", "-c", fmt.Sprintf(`"echo '%s' > /proc/sys/fs/binfmt_misc/register"`, rosettaBinfmt)); err != nil {
+	if _, _, err := sshRunner.RunPrivileged("Writing Rosetta binfmt config",
+		fmt.Sprintf("tee /etc/binfmt.d/rosetta.conf <<< '%s'", rosettaBinfmt)); err != nil {
+		return err
+	}
+
+	// Restart systemd-binfmt to apply the new handler
+	if _, _, err := sshRunner.RunPrivileged("Restarting systemd-binfmt",
+		"systemctl", "restart", "systemd-binfmt"); err != nil {
 		return err
 	}
 
