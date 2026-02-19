@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"slices"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
@@ -31,13 +32,31 @@ type Repository struct {
 	OcBinDir string
 }
 
+func buildPathChecked(baseDir, filename string) (string, error) {
+	path := filepath.Join(baseDir, filename) // #nosec G305
+
+	// Check for ZipSlip. More Info: https://snyk.io/research/zip-slip-vulnerability
+	baseDir = filepath.Clean(baseDir)
+	if path != baseDir && !strings.HasPrefix(path, baseDir+string(os.PathSeparator)) {
+		return "", fmt.Errorf("%s: illegal file path (expected prefix: %s)", path, baseDir+string(os.PathSeparator))
+	}
+
+	return path, nil
+}
+
 func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
-	path := filepath.Join(repo.CacheDir, GetBundleNameWithoutExtension(bundleName))
+	path, err := buildPathChecked(repo.CacheDir, GetBundleNameWithoutExtension(bundleName))
+	if err != nil {
+		return nil, err
+	}
 	if _, err := os.Stat(path); err != nil {
 		return nil, errors.Wrapf(err, "could not find cached bundle info in %s", path)
 	}
-	jsonFilepath := filepath.Join(path, metadataFilename)
-	content, err := os.ReadFile(filepath.Clean(jsonFilepath))
+	jsonFilepath, err := buildPathChecked(path, metadataFilename)
+	if err != nil {
+		return nil, err
+	}
+	content, err := os.ReadFile(jsonFilepath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error reading %s file", jsonFilepath)
 	}

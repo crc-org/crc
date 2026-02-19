@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -12,6 +13,7 @@ import (
 
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine"
 	"github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/ssh"
@@ -68,11 +70,15 @@ func CopyResourcesFromPath(resourcesPath string) error {
 	}
 	destLoc, _ := os.Getwd()
 	for _, file := range files {
-
 		sFileName := filepath.Join(resourcesPath, file.Name())
 		fmt.Printf("Copying %s to %s\n", sFileName, destLoc)
 
-		sFile, err := os.Open(filepath.Clean(sFileName))
+		sFileNamePath := filepath.Clean(sFileName)
+		if filepath.Dir(sFileNamePath) != resourcesPath {
+			logging.Warn(fmt.Sprintf("Skipping file %v because it's outside the test directory", file.Name()))
+			continue
+		}
+		sFile, err := os.Open(path.Clean(sFileNamePath))
 		if err != nil {
 			fmt.Printf("Error occurred opening file: %s", err)
 			return err

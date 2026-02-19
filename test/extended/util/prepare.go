@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 )
 
 var TestDir string
@@ -97,7 +99,12 @@ func CleanTestRunDir() error {
 	}
 
 	for _, file := range files {
-		err := os.RemoveAll(filepath.Clean(filepath.Join(TestRunDir, file.Name())))
+		path := filepath.Clean(filepath.Join(TestRunDir, file.Name()))
+		if filepath.Dir(path) != TestRunDir {
+			logging.Warn(fmt.Sprintf("Skipping file %v because it's outside the test directory", file.Name()))
+			continue
+		}
+		err := os.RemoveAll(path)
 		if err != nil {
 			return err
 		}
