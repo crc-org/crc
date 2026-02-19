@@ -108,7 +108,7 @@ func InMemory(uri string) (io.ReadCloser, error) {
 		if err != nil {
 			return nil, err
 		}
-		return os.Open(filePath)
+		return os.Open(filePath) // nolint:gosec
 	}
 	client := grab.NewClient()
 	client.HTTPClient = &http.Client{Transport: httpproxy.HTTPTransport()}

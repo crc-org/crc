@@ -130,13 +130,13 @@ func atomicWrite(bin []byte, configFile string) error {
 		return err
 	}
 	defer func() {
-		_ = os.Remove(tmpFile.Name())
+		_ = os.Remove(tmpFile.Name()) // nolint:gosec // G703: paths from CreateTemp
 	}()
 	if err := tmpFile.Close(); err != nil {
 		return err
 	}
-	if err := os.WriteFile(tmpFile.Name(), bin, 0600); err != nil {
+	if err := os.WriteFile(tmpFile.Name(), bin, 0600); err != nil { // nolint:gosec // G703: paths from CreateTemp
 		return err
 	}
-	return os.Rename(tmpFile.Name(), configFile)
+	return os.Rename(tmpFile.Name(), configFile) // nolint:gosec // G703: paths from CreateTemp and caller
 }

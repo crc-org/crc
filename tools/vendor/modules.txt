@@ -57,7 +57,7 @@ github.com/Djarvur/go-err113
 # github.com/Masterminds/semver/v3 v3.4.0
 ## explicit; go 1.21
 github.com/Masterminds/semver/v3
-# github.com/MirrexOne/unqueryvet v1.4.0
+# github.com/MirrexOne/unqueryvet v1.5.3
 ## explicit; go 1.24.0
 github.com/MirrexOne/unqueryvet
 github.com/MirrexOne/unqueryvet/internal/analyzer
@@ -67,7 +67,7 @@ github.com/MirrexOne/unqueryvet/pkg/config
 ## explicit; go 1.23.0
 github.com/OpenPeeDeeP/depguard/v2
 github.com/OpenPeeDeeP/depguard/v2/internal/utils
-# github.com/alecthomas/chroma/v2 v2.21.1
+# github.com/alecthomas/chroma/v2 v2.23.1
 ## explicit; go 1.22
 github.com/alecthomas/chroma/v2
 github.com/alecthomas/chroma/v2/formatters
@@ -82,7 +82,7 @@ github.com/alecthomas/go-check-sumtype
 # github.com/alexkohler/nakedret/v2 v2.0.6
 ## explicit; go 1.23.0
 github.com/alexkohler/nakedret/v2
-# github.com/alexkohler/prealloc v1.0.1
+# github.com/alexkohler/prealloc v1.0.2
 ## explicit; go 1.24.0
 github.com/alexkohler/prealloc/pkg
 # github.com/alfatraining/structtag v1.0.0
@@ -116,8 +116,8 @@ github.com/blizzy78/varnamelen
 # github.com/bombsimon/wsl/v4 v4.7.0
 ## explicit; go 1.23
 github.com/bombsimon/wsl/v4
-# github.com/bombsimon/wsl/v5 v5.3.0
-## explicit; go 1.23.0
+# github.com/bombsimon/wsl/v5 v5.6.0
+## explicit; go 1.24.0
 github.com/bombsimon/wsl/v5
 # github.com/breml/bidichk v0.3.3
 ## explicit; go 1.23.0
@@ -163,10 +163,9 @@ github.com/charmbracelet/colorprofile
 # github.com/charmbracelet/lipgloss v1.1.0
 ## explicit; go 1.18
 github.com/charmbracelet/lipgloss
-# github.com/charmbracelet/x/ansi v0.8.0
-## explicit; go 1.18
+# github.com/charmbracelet/x/ansi v0.10.1
+## explicit; go 1.23.0
 github.com/charmbracelet/x/ansi
-github.com/charmbracelet/x/ansi/kitty
 github.com/charmbracelet/x/ansi/parser
 # github.com/charmbracelet/x/cellbuf v0.0.13-0.20250311204145-2c3ea96c31dd
 ## explicit; go 1.18
@@ -228,7 +227,7 @@ github.com/fsnotify/fsnotify
 # github.com/fzipp/gocyclo v0.6.0
 ## explicit; go 1.18
 github.com/fzipp/gocyclo
-# github.com/ghostiam/protogetter v0.3.18
+# github.com/ghostiam/protogetter v0.3.20
 ## explicit; go 1.24.0
 github.com/ghostiam/protogetter
 # github.com/go-critic/go-critic v0.14.3
@@ -259,7 +258,7 @@ github.com/go-toolsmith/strparse
 # github.com/go-toolsmith/typep v1.1.0
 ## explicit; go 1.16
 github.com/go-toolsmith/typep
-# github.com/go-viper/mapstructure/v2 v2.4.0
+# github.com/go-viper/mapstructure/v2 v2.5.0
 ## explicit; go 1.18
 github.com/go-viper/mapstructure/v2
 github.com/go-viper/mapstructure/v2/internal/errors
@@ -276,7 +275,7 @@ github.com/gobwas/glob/syntax/ast
 github.com/gobwas/glob/syntax/lexer
 github.com/gobwas/glob/util/runes
 github.com/gobwas/glob/util/strings
-# github.com/godoc-lint/godoc-lint v0.11.1
+# github.com/godoc-lint/godoc-lint v0.11.2
 ## explicit; go 1.24.0
 github.com/godoc-lint/godoc-lint/pkg/analysis
 github.com/godoc-lint/godoc-lint/pkg/check
@@ -321,8 +320,8 @@ github.com/golangci/go-printf-func-name/pkg/analyzer
 # github.com/golangci/gofmt v0.0.0-20250106114630-d62b90e6713d
 ## explicit; go 1.22.0
 github.com/golangci/gofmt/gofmt
-# github.com/golangci/golangci-lint/v2 v2.8.0
-## explicit; go 1.24.0
+# github.com/golangci/golangci-lint/v2 v2.10.1
+## explicit; go 1.25.0
 github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 github.com/golangci/golangci-lint/v2/internal/cache
 github.com/golangci/golangci-lint/v2/internal/errorutil
@@ -490,7 +489,7 @@ github.com/golangci/golangci-lint/v2/pkg/report
 github.com/golangci/golangci-lint/v2/pkg/result
 github.com/golangci/golangci-lint/v2/pkg/result/processors
 github.com/golangci/golangci-lint/v2/pkg/timeutils
-# github.com/golangci/golines v0.14.0
+# github.com/golangci/golines v0.15.0
 ## explicit; go 1.24.0
 github.com/golangci/golines/shorten
 github.com/golangci/golines/shorten/internal
@@ -498,7 +497,7 @@ github.com/golangci/golines/shorten/internal/annotation
 github.com/golangci/golines/shorten/internal/comments
 github.com/golangci/golines/shorten/internal/graph
 github.com/golangci/golines/shorten/internal/tags
-# github.com/golangci/misspell v0.7.0
+# github.com/golangci/misspell v0.8.0
 ## explicit; go 1.23.0
 github.com/golangci/misspell
 # github.com/golangci/plugin-module-register v0.1.2
@@ -661,7 +660,7 @@ github.com/mattn/go-runewidth
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 ## explicit
 github.com/matttproud/golang_protobuf_extensions/pbutil
-# github.com/mgechev/revive v1.13.0
+# github.com/mgechev/revive v1.14.0
 ## explicit; go 1.24.0
 github.com/mgechev/revive/config
 github.com/mgechev/revive/formatter
@@ -695,8 +694,8 @@ github.com/nishanths/exhaustive
 # github.com/nishanths/predeclared v0.2.2
 ## explicit; go 1.14
 github.com/nishanths/predeclared/passes/predeclared
-# github.com/nunnatsa/ginkgolinter v0.21.2
-## explicit; go 1.24.0
+# github.com/nunnatsa/ginkgolinter v0.23.0
+## explicit; go 1.25.0
 github.com/nunnatsa/ginkgolinter
 github.com/nunnatsa/ginkgolinter/config
 github.com/nunnatsa/ginkgolinter/internal/expression
@@ -815,15 +814,17 @@ github.com/sashamelentyev/interfacebloat/pkg/analyzer
 ## explicit; go 1.23.0
 github.com/sashamelentyev/usestdlibvars/pkg/analyzer
 github.com/sashamelentyev/usestdlibvars/pkg/analyzer/internal/mapping
-# github.com/securego/gosec/v2 v2.22.11
+# github.com/securego/gosec/v2 v2.23.0
 ## explicit; go 1.24.0
 github.com/securego/gosec/v2
 github.com/securego/gosec/v2/analyzers
 github.com/securego/gosec/v2/cwe
+github.com/securego/gosec/v2/internal/ssautil
 github.com/securego/gosec/v2/issue
 github.com/securego/gosec/v2/rules
-# github.com/sirupsen/logrus v1.9.3
-## explicit; go 1.13
+github.com/securego/gosec/v2/taint
+# github.com/sirupsen/logrus v1.9.4
+## explicit; go 1.17
 github.com/sirupsen/logrus
 # github.com/sivchari/containedctx v1.0.3
 ## explicit; go 1.17
@@ -943,17 +944,12 @@ go-simpler.org/musttag
 # go-simpler.org/sloglint v0.11.1
 ## explicit; go 1.23.0
 go-simpler.org/sloglint
-# go.augendre.info/arangolint v0.3.1
+# go.augendre.info/arangolint v0.4.0
 ## explicit; go 1.24.0
 go.augendre.info/arangolint/pkg/analyzer
 # go.augendre.info/fatcontext v0.9.0
 ## explicit; go 1.23.0
 go.augendre.info/fatcontext/pkg/analyzer
-# go.uber.org/automaxprocs v1.6.0
-## explicit; go 1.20
-go.uber.org/automaxprocs/internal/cgroups
-go.uber.org/automaxprocs/internal/runtime
-go.uber.org/automaxprocs/maxprocs
 # go.uber.org/multierr v1.10.0
 ## explicit; go 1.19
 go.uber.org/multierr
@@ -971,7 +967,7 @@ go.uber.org/zap/zapcore
 # go.yaml.in/yaml/v3 v3.0.4
 ## explicit; go 1.16
 go.yaml.in/yaml/v3
-# golang.org/x/exp/typeparams v0.0.0-20251023183803-a4bb9ffd2546
+# golang.org/x/exp/typeparams v0.0.0-20260209203927-2842357ff358
 ## explicit; go 1.24.0
 golang.org/x/exp/typeparams
 # golang.org/x/mod v0.33.0
@@ -995,7 +991,7 @@ golang.org/x/telemetry/counter
 golang.org/x/telemetry/internal/counter
 golang.org/x/telemetry/internal/mmap
 golang.org/x/telemetry/internal/telemetry
-# golang.org/x/text v0.31.0
+# golang.org/x/text v0.34.0
 ## explicit; go 1.24.0
 golang.org/x/text/feature/plural
 golang.org/x/text/internal
@@ -1071,6 +1067,9 @@ golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/ast/edge
 golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/go/buildutil
+golang.org/x/tools/go/callgraph
+golang.org/x/tools/go/callgraph/cha
+golang.org/x/tools/go/callgraph/internal/chautil
 golang.org/x/tools/go/cfg
 golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/internal/cgo
@@ -1152,8 +1151,8 @@ gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# honnef.co/go/tools v0.6.1
-## explicit; go 1.23
+# honnef.co/go/tools v0.7.0
+## explicit; go 1.25.0
 honnef.co/go/tools/analysis/callcheck
 honnef.co/go/tools/analysis/code
 honnef.co/go/tools/analysis/edit
@@ -1171,8 +1170,10 @@ honnef.co/go/tools/go/ast/astutil
 honnef.co/go/tools/go/ir
 honnef.co/go/tools/go/ir/irutil
 honnef.co/go/tools/go/types/typeutil
+honnef.co/go/tools/internal/analysisinternal/typeindex
 honnef.co/go/tools/internal/passes/buildir
 honnef.co/go/tools/internal/sharedcheck
+honnef.co/go/tools/internal/typesinternal/typeindex
 honnef.co/go/tools/knowledge
 honnef.co/go/tools/pattern
 honnef.co/go/tools/printf
