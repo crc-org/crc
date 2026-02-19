@@ -54,8 +54,9 @@ func NewEventServer(machine machine.Client) *EventServer {
 		stream.RemoveSubscriber(sub)
 	}
 
-	sseServer.CreateStream(LOGS)
-	sseServer.CreateStream(STATUS)
+	sseServer.CreateStream(Logs)
+	sseServer.CreateStream(ClusterLoad)
+	sseServer.CreateStream(StatusChange)
 	return eventServer
 }
 
@@ -65,10 +66,12 @@ func (es *EventServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func createEventStream(server *EventServer, streamID string) EventStream {
 	switch streamID {
-	case LOGS:
+	case Logs:
 		return newLogsStream(server)
-	case STATUS:
-		return newStatusStream(server)
+	case ClusterLoad:
+		return newClusterLoadStream(server)
+	case StatusChange:
+		return newStatusChangeStream(server)
 	}
 	return nil
 }
