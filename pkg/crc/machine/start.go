@@ -284,20 +284,14 @@ func configureRosetta(sshRunner *crcssh.Runner) error {
 
 	// Disable QEMU x86_64 binfmt registration if present
 	if _, _, err := sshRunner.RunPrivileged("Disabling QEMU x86_64 binfmt",
-		"bash", "-c", "[ -f /proc/sys/fs/binfmt_misc/qemu-x86_64 ] && echo -1 > /proc/sys/fs/binfmt_misc/qemu-x86_64 || true"); err != nil {
+		"bash", "-c", `"[ -f /proc/sys/fs/binfmt_misc/qemu-x86_64 ] && echo -1 > /proc/sys/fs/binfmt_misc/qemu-x86_64 || true"`); err != nil {
 		return err
 	}
 
 	// Register Rosetta as the x86_64 binfmt handler
 	rosettaBinfmt := `:rosetta:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00:\xff\xff\xff\xff\xff\xfe\xfe\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/media/rosetta/rosetta:CF`
 	if _, _, err := sshRunner.RunPrivileged("Registering Rosetta binfmt",
-		"bash", "-c", fmt.Sprintf("echo '%s' > /proc/sys/fs/binfmt_misc/register", rosettaBinfmt)); err != nil {
-		return err
-	}
-
-	// Restart systemd-binfmt to pick up the new handler
-	if _, _, err := sshRunner.RunPrivileged("Restarting binfmt service",
-		"systemctl", "restart", "systemd-binfmt"); err != nil {
+		"bash", "-c", fmt.Sprintf(`"echo '%s' > /proc/sys/fs/binfmt_misc/register"`, rosettaBinfmt)); err != nil {
 		return err
 	}
 
