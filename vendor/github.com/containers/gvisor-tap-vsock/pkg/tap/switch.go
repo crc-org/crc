@@ -3,6 +3,7 @@ package tap
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -10,10 +11,10 @@ import (
 	"sync/atomic"
 	"syscall"
 
+	"github.com/containers/gvisor-tap-vsock/pkg/notification"
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"gvisor.dev/gvisor/pkg/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip"
@@ -35,8 +36,7 @@ type Switch struct {
 	Sent     uint64
 	Received uint64
 
-	debug               bool
-	maxTransmissionUnit int
+	debug bool
 
 	nextConnID int
 	conns      map[int]protocolConn
@@ -48,14 +48,15 @@ type Switch struct {
 	writeLock sync.Mutex
 
 	gateway VirtualDevice
+
+	notificationSender *notification.NotificationSender
 }
 
-func NewSwitch(debug bool, mtu int) *Switch {
+func NewSwitch(debug bool) *Switch {
 	return &Switch{
-		debug:               debug,
-		maxTransmissionUnit: mtu,
-		conns:               make(map[int]protocolConn),
-		cam:                 make(map[tcpip.LinkAddress]int),
+		debug: debug,
+		conns: make(map[int]protocolConn),
+		cam:   make(map[tcpip.LinkAddress]int),
 	}
 }
 
@@ -95,7 +96,8 @@ func (e *Switch) Accept(ctx context.Context, rawConn net.Conn, protocol types.Pr
 		e.disconnect(id, conn)
 	}()
 	if err := e.rx(ctx, id, conn); err != nil {
-		log.Error(errors.Wrapf(err, "cannot receive packets from %s, disconnecting", conn.RemoteAddr().String()))
+		err := fmt.Errorf("cannot receive packets from %s, disconnecting: %w", conn.RemoteAddr().String(), err)
+		log.Error(err)
 		return err
 	}
 	return nil
@@ -196,6 +198,12 @@ func (e *Switch) disconnect(id int, conn net.Conn) {
 
 	for address, targetConn := range e.cam {
 		if targetConn == id {
+			if e.notificationSender != nil {
+				e.notificationSender.Send(types.NotificationMessage{
+					NotificationType: types.ConnectionClosed,
+					MacAddress:       address.String(),
+				})
+			}
 			delete(e.cam, address)
 		}
 	}
@@ -223,7 +231,7 @@ loop:
 		}
 		n, err := conn.Read(buf)
 		if err != nil {
-			return errors.Wrap(err, "cannot read size from socket")
+			return fmt.Errorf("cannot read size from socket: %w", err)
 		}
 		e.rxBuf(ctx, id, buf[:n])
 	}
@@ -243,14 +251,14 @@ loop:
 		}
 		_, err := io.ReadFull(reader, sizeBuf)
 		if err != nil {
-			return errors.Wrap(err, "cannot read size from socket")
+			return fmt.Errorf("cannot read size from socket: %w", err)
 		}
 		size := sProtocol.Read(sizeBuf)
 
 		buf := make([]byte, size)
 		_, err = io.ReadFull(reader, buf)
 		if err != nil {
-			return errors.Wrap(err, "cannot read packet from socket")
+			return fmt.Errorf("cannot read packet from socket: %w", err)
 		}
 		e.rxBuf(ctx, id, buf)
 	}
@@ -266,8 +274,16 @@ func (e *Switch) rxBuf(_ context.Context, id int, buf []byte) {
 	eth := header.Ethernet(buf)
 
 	e.camLock.Lock()
+	_, exists := e.cam[eth.SourceAddress()]
 	e.cam[eth.SourceAddress()] = id
 	e.camLock.Unlock()
+
+	if !exists && e.notificationSender != nil {
+		e.notificationSender.Send(types.NotificationMessage{
+			NotificationType: types.ConnectionEstablished,
+			MacAddress:       eth.SourceAddress().String(),
+		})
+	}
 
 	if eth.DestinationAddress() != e.gateway.LinkAddress() {
 		pkt := stack.NewPacketBuffer(stack.PacketBufferOptions{
@@ -302,4 +318,8 @@ func protocolImplementation(protocol types.Protocol) protocol {
 	default:
 		return &hyperkitProtocol{}
 	}
+}
+
+func (e *Switch) SetNotificationSender(notificationSender *notification.NotificationSender) {
+	e.notificationSender = notificationSender
 }

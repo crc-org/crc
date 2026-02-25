@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	gopackages "golang.org/x/tools/go/packages"
+
 	"github.com/mgechev/revive/internal/astutils"
 	"github.com/mgechev/revive/internal/rule"
 	"github.com/mgechev/revive/lint"
@@ -37,36 +39,22 @@ var defaultBadPackageNames = map[string]struct{}{
 	"utils":         {},
 }
 
-var stdLibPackageNames = map[string]struct{}{
-	"bytes":   {},
-	"context": {},
-	"crypto":  {},
-	"errors":  {},
-	"fmt":     {},
-	"hash":    {},
-	"http":    {},
-	"io":      {},
-	"json":    {},
-	"math":    {},
-	"net":     {},
-	"os":      {},
-	"sort":    {},
-	"string":  {},
-	"time":    {},
-	"xml":     {},
-}
-
 // VarNamingRule lints the name of a variable.
 type VarNamingRule struct {
 	allowList []string
 	blockList []string
 
-	allowUpperCaseConst               bool                // if true - allows to use UPPER_SOME_NAMES for constants
-	skipInitialismNameChecks          bool                // if true - disable enforcing capitals for common initialisms
-	skipPackageNameChecks             bool                // if true - disable check for meaningless and user-defined bad package names
-	skipPackageNameCollisionWithGoStd bool                // if true - disable checks for collisions with Go standard library package names
-	extraBadPackageNames              map[string]struct{} // inactive if skipPackageNameChecks is false
-	pkgNameAlreadyChecked             syncSet             // set of packages names already checked
+	allowUpperCaseConst      bool                // if true - allows to use UPPER_SOME_NAMES for constants
+	skipInitialismNameChecks bool                // if true - disable enforcing capitals for common initialisms
+	skipPackageNameChecks    bool                // if true - disable check for meaningless and user-defined bad package names
+	extraBadPackageNames     map[string]struct{} // inactive if skipPackageNameChecks is false
+	pkgNameAlreadyChecked    syncSet             // set of packages names already checked
+
+	skipPackageNameCollisionWithGoStd bool // if true - disable checks for collisions with Go standard library package names
+	// stdPackageNames holds the names of standard library packages excluding internal and vendor.
+	// populated only if skipPackageNameCollisionWithGoStd is false.
+	// E.g., `net/http` stored as `http`, `math/rand/v2` - `rand` etc.
+	stdPackageNames map[string]struct{}
 }
 
 // Configure validates the rule configuration, and configures the rule accordingly.
@@ -128,13 +116,40 @@ func (r *VarNamingRule) Configure(arguments lint.Arguments) error {
 					}
 					r.extraBadPackageNames[strings.ToLower(n)] = struct{}{}
 				}
-			}
-			if isRuleOption(k, "skipPackageNameCollisionWithGoStd") {
-				r.skipPackageNameCollisionWithGoStd = true
+			case isRuleOption(k, "skipPackageNameCollisionWithGoStd"):
+				r.skipPackageNameCollisionWithGoStd = fmt.Sprint(v) == "true"
 			}
 		}
 	}
+	if !r.skipPackageNameCollisionWithGoStd && r.stdPackageNames == nil {
+		pkgs, err := gopackages.Load(nil, "std")
+		if err != nil {
+			return fmt.Errorf("load std packages: %w", err)
+		}
+
+		r.stdPackageNames = map[string]struct{}{}
+		for _, pkg := range pkgs {
+			if isInternalOrVendorPackage(pkg.PkgPath) {
+				continue
+			}
+			r.stdPackageNames[pkg.Name] = struct{}{}
+		}
+	}
+
 	return nil
+}
+
+// isInternalOrVendorPackage reports whether the path represents an internal or vendor directory.
+//
+// Borrowed and modified from
+// https://github.com/golang/pkgsite/blob/84333735ffe124f7bd904805fd488b93841de49f/internal/postgres/search.go#L1009-L1016
+func isInternalOrVendorPackage(path string) bool {
+	for p := range strings.SplitSeq(path, "/") {
+		if p == "internal" || p == "vendor" {
+			return true
+		}
+	}
+	return false
 }
 
 // Apply applies the rule to given file.
@@ -200,8 +215,10 @@ func (r *VarNamingRule) applyPackageCheckRules(file *lint.File, onFailure func(f
 		return
 	}
 
-	if _, ok := stdLibPackageNames[pkgNameLower]; ok && !r.skipPackageNameCollisionWithGoStd {
-		onFailure(r.pkgNameFailure(pkgNameNode, "avoid package names that conflict with Go standard library package names"))
+	if !r.skipPackageNameCollisionWithGoStd {
+		if _, ok := r.stdPackageNames[pkgNameLower]; ok {
+			onFailure(r.pkgNameFailure(pkgNameNode, "avoid package names that conflict with Go standard library package names"))
+		}
 	}
 
 	// Package names need slightly different handling than other names.
@@ -372,7 +389,8 @@ func (w *lintNames) Visit(n ast.Node) ast.Visitor {
 	return w
 }
 
-// isUpperCaseConst checks if a string is in constant name format like `SOME_CONST`, `SOME_CONST_2`, `X123_3`, `_SOME_PRIVATE_CONST`.
+// isUpperCaseConst checks if a string is in constant name format like `SOME_CONST`, `SOME_CONST_2`,
+// `X123_3`, `_SOME_PRIVATE_CONST`.
 // See #851, #865.
 func isUpperCaseConst(s string) bool {
 	if s == "" {
@@ -418,16 +436,16 @@ func isUpperOrDigit(r rune) bool {
 	return isUpper(r) || isDigit(r)
 }
 
-// isUpper checks if rune is a simple digit.
+// isDigit checks if rune is a simple digit.
 //
-// We don't use unicode.IsDigit as it returns true for a large variety of digits that are not 0-9.
+// We don't use [unicode.IsDigit] as it returns true for a large variety of digits that are not 0-9.
 func isDigit(r rune) bool {
 	return r >= '0' && r <= '9'
 }
 
 // isUpper checks if rune is ASCII upper case letter
 //
-// We restrict to A-Z because unicode.IsUpper returns true for a large variety of letters.
+// We restrict to A-Z because [unicode.IsUpper] returns true for a large variety of letters.
 func isUpper(r rune) bool {
 	return r >= 'A' && r <= 'Z'
 }
@@ -470,6 +488,7 @@ func getList(arg any, argName string) ([]string, error) {
 
 type syncSet struct {
 	sync.Mutex
+
 	elements map[string]struct{}
 }
 

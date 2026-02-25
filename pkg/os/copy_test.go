@@ -41,7 +41,7 @@ func TestCopyFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	data, err := os.ReadFile(destFilePath)
+	data, err := os.ReadFile(destFilePath) // nolint:gosec
 	if err != nil {
 		t.Fatal(err)
 	}

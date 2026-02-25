@@ -249,7 +249,7 @@ func (c *client) sendRequest(url string, method string, data io.Reader) ([]byte,
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	res, err := c.client.Do(req)
+	res, err := c.client.Do(req) //nolint:gosec // G704: SSRF vulnerability check not needed as the base URL is unix socket
 	if err != nil {
 		return nil, err
 	}

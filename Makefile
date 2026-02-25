@@ -2,11 +2,11 @@ all: install
 
 SHELL := /bin/bash -o pipefail
 
-OPENSHIFT_VERSION ?= 4.20.8
-OKD_VERSION ?= 4.20.0-okd-scos.11
-MICROSHIFT_VERSION ?= 4.20.0
+OPENSHIFT_VERSION ?= 4.21.0
+OKD_VERSION ?= 4.21.0-okd-scos.5
+MICROSHIFT_VERSION ?= 4.21.0
 BUNDLE_EXTENSION = crcbundle
-CRC_VERSION = 2.57.0
+CRC_VERSION = 2.58.0
 COMMIT_SHA?=$(shell git rev-parse --short=6 HEAD)
 MACOS_INSTALL_PATH = /usr/local/crc
 CONTAINER_RUNTIME ?= podman
@@ -21,7 +21,7 @@ RELEASE_DIR ?= release
 
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
-GOVERSION = 1.24
+GOVERSION = 1.25
 
 HOST_BUILD_DIR=$(BUILD_DIR)/$(GOOS)-$(GOARCH)
 GOPATH ?= $(shell go env GOPATH)
@@ -75,7 +75,7 @@ default: install
 # Create and update the vendor directory
 .PHONY: vendor
 vendor:
-	go mod tidy -go $(GOVERSION).2
+	go mod tidy -go $(GOVERSION).0
 	go mod vendor
 
 .PHONY: vendorcheck
@@ -113,12 +113,9 @@ $(HOST_BUILD_DIR)/crc-embedder: $(SOURCES)
 cross: $(BUILD_DIR)/macos-arm64/crc $(BUILD_DIR)/macos-amd64/crc $(BUILD_DIR)/linux-amd64/crc $(BUILD_DIR)/linux-arm64/crc $(BUILD_DIR)/windows-amd64/crc.exe
 
 .PHONY: containerized ## Cross compile from container
+containerized: image := $(shell grep -m 1 '^FROM' images/openshift-ci/Dockerfile | awk '{print $$2}')
 containerized: clean
-	${CONTAINER_RUNTIME} build -t crc-build -f images/build .
-	${CONTAINER_RUNTIME} run --name crc-cross crc-build make cross
-	${CONTAINER_RUNTIME} cp crc-cross:/opt/app-root/src/out ./
-	${CONTAINER_RUNTIME} rm crc-cross
-	${CONTAINER_RUNTIME} rmi crc-build
+	${CONTAINER_RUNTIME} run --rm -v ${PWD}:/data${SELINUX_VOLUME_LABEL} ${image} /bin/bash -c "cd /data && make cross"
 
 .PHONY: generate_mocks
 generate_mocks: $(TOOLS_BINDIR)/mockery

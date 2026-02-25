@@ -19,19 +19,12 @@ on:
 jobs:
   windows-qe:
     runs-on: ubuntu-latest
+    env:
+      windows-version: '11'
+      windows-featurepack: '23h2-ent'
     permissions:
       statuses: write # needed to update commit status (pending/failure/sucess)
       checks: write # as documented in https://github.com/mikepenz/action-junit-report?tab=readme-ov-file#pr-run-permissions
-    strategy:
-      fail-fast: false
-      matrix:
-        windows-version: ['10','11']
-        windows-featurepack: ['22h2-ent-g2', '23h2-ent']
-        exclude:
-        - windows-version: '10'
-          windows-featurepack: '23h2-ent'
-        - windows-version: '11'
-          windows-featurepack: '22h2-ent-g2'
 
     steps:
     - name: Download windows installer
@@ -67,7 +60,7 @@ jobs:
         if [[ "${{inputs.qe-type}}" == "e2e" ]]; then
           status_context="${status_context}-${{inputs.preset}}"
         fi
-        status_context="${status_context}/windows-${{matrix.windows-version}}-${{matrix.windows-featurepack}}"
+        status_context="${status_context}/windows-${{env.windows-version}}-${{env.windows-featurepack}}"
         echo "status_context=${status_context}" >> "$GITHUB_ENV"
 
         # Save pull-secret as file
@@ -102,13 +95,13 @@ jobs:
           -e AZURE_STORAGE_KEY='${{ secrets.AZURE_STORAGE_KEY }}' \
           quay.io/redhat-developer/mapt:v0.9.9 azure \
             windows create \
-            --project-name 'windows-desktop-${{ matrix.windows-version }}-${{ matrix.windows-featurepack }}-${{inputs.qe-type}}-${{inputs.preset}}' \
+            --project-name 'windows-desktop-${{ env.windows-version }}-${{ env.windows-featurepack }}-${{inputs.qe-type}}-${{inputs.preset}}' \
             --backed-url azblob://crc-qenvs-state/${{ github.repository }}-${{ github.run_id }} \
             --conn-details-output '/workspace' \
             --nested-virt \
             --cpus 8 \
-            --windows-version '${{matrix.windows-version}}' \
-            --windows-featurepack '${{matrix.windows-featurepack}}' \
+            --windows-version '${{env.windows-version}}' \
+            --windows-featurepack '${{env.windows-featurepack}}' \
             --tags project=openshift-local,source=github,org=${{github.repository_owner}},run=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }} \
             --spot \
             --spot-excluded-regions southafricawest,australiacentral2,eastus2euap
@@ -179,7 +172,7 @@ jobs:
       uses: actions/upload-artifact@v6
       if: always()
       with:
-        name: windows-${{inputs.qe-type}}-${{inputs.preset}}-${{matrix.windows-version}}${{matrix.windows-featurepack}}
+        name: windows-${{inputs.qe-type}}-${{inputs.preset}}-${{env.windows-version}}${{env.windows-featurepack}}
         path: |
           **/*.xml
           **/*.results
@@ -220,6 +213,6 @@ jobs:
           -e AZURE_STORAGE_KEY='${{ secrets.AZURE_STORAGE_KEY }}' \
           quay.io/redhat-developer/mapt:v0.9.9 azure \
             windows destroy \
-            --project-name 'windows-desktop-${{ matrix.windows-version }}-${{ matrix.windows-featurepack }}-${{inputs.qe-type}}-${{inputs.preset}}' \
+            --project-name 'windows-desktop-${{ env.windows-version }}-${{ env.windows-featurepack }}-${{inputs.qe-type}}-${{inputs.preset}}' \
             --backed-url azblob://crc-qenvs-state/${{ github.repository }}-${{ github.run_id }}
         podman logs -f windows-destroy

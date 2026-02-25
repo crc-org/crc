@@ -53,9 +53,9 @@ func (s *qemuProtocol) Buf() []byte {
 }
 
 func (s *qemuProtocol) Write(buf []byte, size int) {
-	if size > math.MaxUint32 {
+	if size > math.MaxInt32 {
 		log.Warnf("size exceeds max limit. Resetting to: %d", math.MaxInt32)
-		size = math.MaxUint32
+		size = math.MaxInt32
 	}
 	binary.BigEndian.PutUint32(buf, uint32(size)) //#nosec: G115. Safely checked
 }

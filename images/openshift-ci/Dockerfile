@@ -1,7 +1,7 @@
 # This Dockerfile is used by openshift CI
 # It builds an image containing crc and nss-wrapper for remote deployments, as well as the google cloud-sdk for nested GCE environments.
 
-FROM registry.ci.openshift.org/openshift/release:rhel-9-release-golang-1.24-openshift-4.20 AS builder
+FROM registry.ci.openshift.org/openshift/release:rhel-9-release-golang-1.25-openshift-4.21 AS builder
 WORKDIR /go/src/github.com/crc-org/crc
 COPY . .
 RUN make release

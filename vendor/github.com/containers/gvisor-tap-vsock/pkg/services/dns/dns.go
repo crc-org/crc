@@ -14,9 +14,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type upstreamResolver interface {
+	LookupIPAddr(ctx context.Context, host string) ([]net.IPAddr, error)
+	LookupCNAME(ctx context.Context, host string) (string, error)
+	LookupMX(ctx context.Context, name string) ([]*net.MX, error)
+	LookupNS(ctx context.Context, name string) ([]*net.NS, error)
+	LookupSRV(ctx context.Context, service, proto, name string) (string, []*net.SRV, error)
+	LookupTXT(ctx context.Context, name string) ([]string, error)
+}
+
 type dnsHandler struct {
 	zones     []types.Zone
 	zonesLock sync.RWMutex
+	upstream  upstreamResolver
 }
 
 func (h *dnsHandler) handle(w dns.ResponseWriter, r *dns.Msg, responseMessageSize int) {
@@ -87,15 +97,32 @@ func (h *dnsHandler) addLocalAnswers(m *dns.Msg, q dns.Question) bool {
 	return false
 }
 
+func splitTxt(s string) []string {
+	const k = 255
+	var c []string
+
+	if len(s) <= k {
+		return []string{s}
+	}
+
+	for len(s) > k {
+		c = append(c, s[:k])
+		s = s[k:]
+	}
+
+	if len(s) > 0 {
+		c = append(c, s)
+	}
+
+	return c
+}
 func (h *dnsHandler) addAnswers(m *dns.Msg) {
 	for _, q := range m.Question {
 		if done := h.addLocalAnswers(m, q); done {
 			return
 		}
 
-		resolver := net.Resolver{
-			PreferGo: false,
-		}
+		resolver := h.upstream
 		switch q.Qtype {
 		case dns.TypeA:
 			ips, err := resolver.LookupIPAddr(context.TODO(), q.Name)
@@ -188,20 +215,24 @@ func (h *dnsHandler) addAnswers(m *dns.Msg) {
 				})
 			}
 		case dns.TypeTXT:
-			records, err := resolver.LookupTXT(context.TODO(), q.Name)
+			txts, err := resolver.LookupTXT(context.TODO(), q.Name)
 			if err != nil {
 				m.Rcode = dns.RcodeNameError
 				return
 			}
-			m.Answer = append(m.Answer, &dns.TXT{
-				Hdr: dns.RR_Header{
-					Name:   q.Name,
-					Rrtype: dns.TypeTXT,
-					Class:  dns.ClassINET,
-					Ttl:    0,
-				},
-				Txt: records,
-			})
+
+			for _, txt := range txts {
+				m.Answer = append(m.Answer, &dns.TXT{
+					Hdr: dns.RR_Header{
+						Name:   q.Name,
+						Rrtype: dns.TypeTXT,
+						Class:  dns.ClassINET,
+						Ttl:    0,
+					},
+					Txt: splitTxt(txt),
+				})
+			}
+
 		}
 	}
 }
@@ -213,7 +244,14 @@ type Server struct {
 }
 
 func New(udpConn net.PacketConn, tcpLn net.Listener, zones []types.Zone) (*Server, error) {
-	handler := &dnsHandler{zones: zones}
+	upstream := &net.Resolver{
+		PreferGo: false,
+	}
+	return NewWithUpstreamResolver(udpConn, tcpLn, zones, upstream)
+}
+
+func NewWithUpstreamResolver(udpConn net.PacketConn, tcpLn net.Listener, zones []types.Zone, upstream upstreamResolver) (*Server, error) {
+	handler := &dnsHandler{zones: zones, upstream: upstream}
 	return &Server{udpConn: udpConn, tcpLn: tcpLn, handler: handler}, nil
 }
 

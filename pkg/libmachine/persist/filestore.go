@@ -31,7 +31,7 @@ func (s Filestore) saveToFile(data []byte, file string) error {
 	}
 	defer os.Remove(tmpfi.Name())
 
-	if err = os.WriteFile(tmpfi.Name(), data, 0600); err != nil {
+	if err = os.WriteFile(tmpfi.Name(), data, 0600); err != nil { // nolint:gosec // G703: paths from CreateTemp
 		return err
 	}
 
@@ -43,7 +43,7 @@ func (s Filestore) saveToFile(data []byte, file string) error {
 		return err
 	}
 
-	err = os.Rename(tmpfi.Name(), file)
+	err = os.Rename(tmpfi.Name(), file) // nolint:gosec // G703: paths from CreateTemp and caller
 	return err
 }
 

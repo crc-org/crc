@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	"math"
 	"os"
 
 	xterminal "golang.org/x/term"
@@ -17,5 +18,10 @@ func IsShowTerminalOutput() bool {
 }
 
 func IsRunningInTerminal() bool {
-	return xterminal.IsTerminal(int(os.Stdout.Fd()))
+	fd := os.Stdout.Fd()
+	if fd > math.MaxInt {
+		return false
+	} else {
+		return xterminal.IsTerminal(int(fd))
+	}
 }

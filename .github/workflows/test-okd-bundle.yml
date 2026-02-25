@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         go:
-          - '1.24'
+          - '1.25'
     env:
       SHELL: /bin/bash
       KUBECONFIG: '/Users/runner/.kube/config'

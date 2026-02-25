@@ -1,9 +1,8 @@
 package transport
 
 import (
+	"errors"
 	"net"
-
-	"github.com/pkg/errors"
 )
 
 func Dial(_ string) (net.Conn, string, error) {
