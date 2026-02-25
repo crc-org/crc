@@ -48,6 +48,21 @@ func memoryCheck(preset crcpreset.Preset) Check {
 	}
 }
 
+func diskSpaceCheck() Check {
+	return Check{
+		configKeySuffix:  "check-disk-space",
+		checkDescription: "Checking if enough disk space is available for the bundle",
+		check: func() error {
+			return validation.ValidateEnoughFreeSpace(constants.GetHomeDir(), constants.MinimumDiskSpaceForSetup)
+		},
+		fixDescription: fmt.Sprintf("crc requires at least %s of free disk space to unpack the bundle",
+			units.BytesSize(float64(constants.MinimumDiskSpaceForSetup))),
+		flags: NoFix,
+
+		labels: None,
+	}
+}
+
 var genericCleanupChecks = []Check{
 	{
 		cleanupDescription: "Removing CRC Machine Instance directory",
