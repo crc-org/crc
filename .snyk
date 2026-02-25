@@ -9,3 +9,10 @@ exclude:
     # our dependencies on each CI run.
     - 'vendor/**'
     - 'tools/vendor/**'
+  code:
+    # DefaultDeveloperPassword is the well-known default for a local-only dev
+    # cluster, not a secret.
+    - 'pkg/crc/constants/constants.go'
+    # file.Name() from os.ReadDir() cannot produce path traversal sequences;
+    # these are false positives.
+    - 'test/extended/**'

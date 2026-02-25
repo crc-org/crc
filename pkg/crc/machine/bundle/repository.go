@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"slices"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
@@ -32,11 +33,17 @@ type Repository struct {
 }
 
 func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
-	path := filepath.Join(repo.CacheDir, GetBundleNameWithoutExtension(bundleName))
+	path, err := buildPath(repo.CacheDir, GetBundleNameWithoutExtension(bundleName))
+	if err != nil {
+		return nil, err
+	}
 	if _, err := os.Stat(path); err != nil {
 		return nil, errors.Wrapf(err, "could not find cached bundle info in %s", path)
 	}
-	jsonFilepath := filepath.Join(path, metadataFilename)
+	jsonFilepath, err := buildPath(path, metadataFilename)
+	if err != nil {
+		return nil, err
+	}
 	content, err := os.ReadFile(filepath.Clean(jsonFilepath))
 	if err != nil {
 		return nil, errors.Wrapf(err, "error reading %s file", jsonFilepath)
@@ -65,6 +72,17 @@ func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
 	}
 
 	return &bundleInfo, nil
+}
+
+// buildPath safely joins baseDir and filename, returning an error if the
+// result would escape baseDir (ZipSlip-style path traversal).
+func buildPath(baseDir, filename string) (string, error) {
+	path := filepath.Join(baseDir, filename) // #nosec G305
+	baseDir = filepath.Clean(baseDir)
+	if path != baseDir && !strings.HasPrefix(path, baseDir+string(os.PathSeparator)) {
+		return "", fmt.Errorf("%s: illegal file path (expected prefix: %s)", path, baseDir+string(os.PathSeparator))
+	}
+	return path, nil
 }
 
 func checkVersion(bundleInfo CrcBundleInfo) error {

@@ -66,6 +66,14 @@ func testBundle(t *testing.T) string {
 	}
 }
 
+func TestGetRejectsPathTraversal(t *testing.T) {
+	dir := t.TempDir()
+	repo := &Repository{CacheDir: dir}
+
+	_, err := repo.Get("../../etc/passwd")
+	assert.ErrorContains(t, err, "illegal file path")
+}
+
 func TestVersionCheck(t *testing.T) {
 	dir := t.TempDir()
 
