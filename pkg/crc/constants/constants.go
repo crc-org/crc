@@ -19,6 +19,14 @@ const (
 
 	DefaultPersistentVolumeSize = 15
 
+	// EstimatedCompressedBundleSize is the approximate size in GiB of the compressed CRC bundle download.
+	EstimatedCompressedBundleSize = 12
+
+	// MinimumDiskSpaceForSetup is the minimum free disk space required to download and extract the bundle.
+	// During extraction the compressed bundle and the extracted disk image coexist on disk,
+	// so we need DefaultDiskSize + EstimatedCompressedBundleSize of free space.
+	MinimumDiskSpaceForSetup = (DefaultDiskSize + EstimatedCompressedBundleSize) * 1024 * 1024 * 1024
+
 	DefaultSSHUser = "core"
 	DefaultSSHPort = 22
 

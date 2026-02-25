@@ -42,6 +42,10 @@ jobs:
         with:
           name: macOS Installer (${{ matrix.os }})
           path: "./out/macos-universal/crc-macos-installer.pkg"
+      - name: Free disk space for crc setup
+        uses: palmsoftware/quick-cleanup@v0
+        with:
+          cleanup-mode: aggressive
       - name: Install crc pkg
         run: sudo installer -pkg out/macos-universal/crc-macos-installer.pkg -target /
       - name: Set microshift preset as part of config
