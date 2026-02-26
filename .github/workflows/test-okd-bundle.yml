@@ -33,18 +33,10 @@ jobs:
           sudo apt-get update
           sudo apt install qemu-kvm libvirt-daemon libvirt-daemon-system virtiofsd
           sudo usermod -a -G libvirt $USER
-      - name: Remove unwanted stuff to free up disk image
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-
-          sudo docker image prune --all --force
-
-          sudo swapoff -a
-          sudo rm -f /mnt/swapfile
+      - name: Free disk space
+        uses: palmsoftware/quick-cleanup@v0
+        with:
+          cleanup-mode: aggressive
       - name: Set the crc config
         run: |
           crc config set preset okd

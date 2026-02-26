@@ -58,6 +58,10 @@ jobs:
           - arch: 'arm64'
             os: 'windows'
     steps:
+      - name: Free disk space
+        uses: palmsoftware/quick-cleanup@v0
+        with:
+          cleanup-mode: aggressive
       - name: Check out repository code
         uses: actions/checkout@v6
       - name: Build qe oci images ${{matrix.os}}-${{matrix.arch}}
