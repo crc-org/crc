@@ -26,6 +26,8 @@ func CreateHost(machineConfig config.MachineConfig) *vfkit.Driver {
 
 	vfDriver.SharedDirs = configureShareDirs(machineConfig)
 
+	vfDriver.Rosetta = machineConfig.EnableRosetta
+
 	return vfDriver
 }
 
