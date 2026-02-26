@@ -36,8 +36,11 @@ func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
 	if _, err := os.Stat(path); err != nil {
 		return nil, errors.Wrapf(err, "could not find cached bundle info in %s", path)
 	}
-	jsonFilepath := filepath.Join(path, metadataFilename)
-	content, err := os.ReadFile(filepath.Clean(jsonFilepath))
+	jsonFilepath, err := extract.BuildPathChecked(path, metadataFilename)
+	if err != nil {
+		return nil, err
+	}
+	content, err := os.ReadFile(jsonFilepath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error reading %s file", jsonFilepath)
 	}

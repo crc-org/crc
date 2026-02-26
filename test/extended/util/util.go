@@ -16,6 +16,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 	"github.com/crc-org/crc/v2/pkg/download"
+	"github.com/crc-org/crc/v2/pkg/extract"
 )
 
 var (
@@ -69,10 +70,14 @@ func CopyResourcesFromPath(resourcesPath string) error {
 	destLoc, _ := os.Getwd()
 	for _, file := range files {
 
-		sFileName := filepath.Join(resourcesPath, file.Name())
+		sFileName, err := extract.BuildPathChecked(resourcesPath, file.Name())
+		if err != nil {
+			return err
+		}
+
 		fmt.Printf("Copying %s to %s\n", sFileName, destLoc)
 
-		sFile, err := os.Open(filepath.Clean(sFileName))
+		sFile, err := os.Open(sFileName)
 		if err != nil {
 			fmt.Printf("Error occurred opening file: %s", err)
 			return err

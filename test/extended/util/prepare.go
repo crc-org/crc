@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/crc-org/crc/v2/pkg/extract"
 )
 
 var TestDir string
@@ -97,7 +99,11 @@ func CleanTestRunDir() error {
 	}
 
 	for _, file := range files {
-		err := os.RemoveAll(filepath.Clean(filepath.Join(TestRunDir, file.Name())))
+		joinedPath, err := extract.BuildPathChecked(TestRunDir, file.Name())
+		if err != nil {
+			return err
+		}
+		err = os.RemoveAll(joinedPath)
 		if err != nil {
 			return err
 		}
