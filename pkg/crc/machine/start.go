@@ -282,14 +282,34 @@ func configureRosetta(sshRunner *crcssh.Runner) error {
 		return err
 	}
 
+	// Bind mount the Rosetta binary to a local path with shared propagation.
+	// This avoids virtiofs dropping file connections across namespace boundaries
+	// (e.g. buildah unshare), while preserving the virtiofs transport Rosetta requires.
+	if _, _, err := sshRunner.RunPrivileged("Making Rosetta mount shared",
+		"mount", "--make-shared", "/media/rosetta"); err != nil {
+		return err
+	}
+	if _, _, err := sshRunner.RunPrivileged("Creating local Rosetta directory",
+		"mkdir", "-p", "/var/lib/rosetta"); err != nil {
+		return err
+	}
+	if _, _, err := sshRunner.RunPrivileged("Creating bind mount target",
+		"touch", "/var/lib/rosetta/rosetta"); err != nil {
+		return err
+	}
+	if _, _, err := sshRunner.RunPrivileged("Bind mounting Rosetta binary to local path",
+		"mount", "--bind", "/media/rosetta/rosetta", "/var/lib/rosetta/rosetta"); err != nil {
+		return err
+	}
+
 	// Mask QEMU x86_64 binfmt config so systemd-binfmt won't register it
 	if _, _, err := sshRunner.RunPrivileged("Masking QEMU x86_64 binfmt config",
 		"ln", "-sf", "/dev/null", "/etc/binfmt.d/qemu-x86_64-static.conf"); err != nil {
 		return err
 	}
 
-	// Write Rosetta binfmt config for systemd-binfmt
-	rosettaBinfmt := `:rosetta:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00:\xff\xff\xff\xff\xff\xfe\xfe\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/media/rosetta/rosetta:CF`
+	// Write Rosetta binfmt config pointing to the bind mount path
+	rosettaBinfmt := `:rosetta:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00:\xff\xff\xff\xff\xff\xfe\xfe\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/var/lib/rosetta/rosetta:CF`
 	if _, _, err := sshRunner.RunPrivileged("Writing Rosetta binfmt config",
 		fmt.Sprintf("tee /etc/binfmt.d/rosetta.conf <<< '%s'", rosettaBinfmt)); err != nil {
 		return err
