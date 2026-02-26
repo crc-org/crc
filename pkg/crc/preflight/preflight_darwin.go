@@ -79,8 +79,8 @@ var rosettaPreflightCheck = Check{
 	configKeySuffix:  "check-rosetta-installed",
 	checkDescription: "Checking if Rosetta is installed",
 	check:            checkRosettaInstalled,
-	fixDescription:   "Installing Rosetta",
-	fix:              fixRosettaInstalled,
+	fixDescription:   "Rosetta is required for x86_64 emulation, install it with: softwareupdate --install-rosetta",
+	flags:            NoFix,
 
 	labels: labels{Os: Darwin},
 }

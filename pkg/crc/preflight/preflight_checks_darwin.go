@@ -235,14 +235,6 @@ func checkRosettaInstalled() error {
 	return nil
 }
 
-func fixRosettaInstalled() error {
-	logging.Infof("Installing Rosetta...")
-	_, stdErr, err := crcos.RunWithDefaultLocale("softwareupdate", "--install-rosetta", "--agree-to-license")
-	if err != nil {
-		return fmt.Errorf("Failed to install Rosetta: %v: %s", err, stdErr)
-	}
-	return nil
-}
 
 func deprecationNotice() error {
 	supports, err := darwin.AtLeast("13.0.0")
