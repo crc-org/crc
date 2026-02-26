@@ -1,8 +1,10 @@
 package lib
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 // Get sends a HTTP request and downloads the content of the requested URL to
@@ -41,8 +43,8 @@ func Get(dst, urlStr string) (*Response, error) {
 //
 // For control over HTTP client headers, redirect policy, and other settings,
 // create a Client instead.
-func GetBatch(workers int, dst string, urlStrs ...string) (<-chan *Response, error) {
-	fi, err := os.Stat(dst)
+func GetBatch(ctx context.Context, workers int, dst string, urlStrs ...string) (<-chan *Response, error) {
+	fi, err := os.Stat(filepath.Clean(dst)) //nolint:gosec // G703 - dst is an explicit caller-provided path
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +61,6 @@ func GetBatch(workers int, dst string, urlStrs ...string) (<-chan *Response, err
 		reqs[i] = req
 	}
 
-	ch := DefaultClient.DoBatch(workers, reqs...)
+	ch := DefaultClient.DoBatch(ctx, workers, reqs...)
 	return ch, nil
 }
