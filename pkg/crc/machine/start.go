@@ -309,7 +309,7 @@ func configureRosetta(sshRunner *crcssh.Runner) error {
 	}
 
 	// Write Rosetta binfmt config pointing to the bind mount path
-	rosettaBinfmt := `:rosetta:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00:\xff\xff\xff\xff\xff\xfe\xfe\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/var/lib/rosetta/rosetta:CF`
+	rosettaBinfmt := `:rosetta:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00:\xff\xff\xff\xff\xff\xfe\xfe\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/var/lib/rosetta/rosetta:CFP`
 	if _, _, err := sshRunner.RunPrivileged("Writing Rosetta binfmt config",
 		fmt.Sprintf("tee /etc/binfmt.d/rosetta.conf <<< '%s'", rosettaBinfmt)); err != nil {
 		return err
