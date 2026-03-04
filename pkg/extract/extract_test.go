@@ -65,6 +65,19 @@ func TestZipSlip(t *testing.T) {
 	assert.ErrorContains(t, err, "illegal file path")
 }
 
+func TestBuildPathChecked(t *testing.T) {
+	baseDir := "/tmp/testDir"
+	validFilename := "file.txt"
+	invalidFilename := "../../etc/passwd"
+
+	joinedValid, err := BuildPathChecked(baseDir, validFilename)
+	assert.NoError(t, err)
+	assert.Equal(t, filepath.Join(baseDir, validFilename), joinedValid)
+
+	_, err = BuildPathChecked(baseDir, invalidFilename)
+	assert.ErrorContains(t, err, "illegal file path")
+}
+
 func copyFileMap(orig fileMap) fileMap {
 	copiedMap := fileMap{}
 	for key, value := range orig {

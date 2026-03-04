@@ -107,7 +107,7 @@ func untar(ctx context.Context, reader io.Reader, targetDir string, fileFilter f
 		}
 
 		// the target location where the dir/file should be created
-		path, err := buildPath(targetDir, header.Name)
+		path, err := BuildPathChecked(targetDir, header.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -120,13 +120,13 @@ func untar(ctx context.Context, reader io.Reader, targetDir string, fileFilter f
 		// check the file type
 		switch header.Typeflag {
 
-		// if its a dir and it doesn't exist create it
+		// if it's a dir, and it doesn't exist, create it
 		case tar.TypeDir:
 			if err := os.MkdirAll(path, header.FileInfo().Mode()); err != nil { // nolint:gosec // G703: paths from header.FileInfo()
 				return nil, err
 			}
 
-		// if it's a file create it
+		// if it's a file, create it
 		case tar.TypeReg, tar.TypeGNUSparse:
 			// tar.Next() will externally only iterate files, so we might have to create intermediate directories here
 			if err := uncompressFile(ctx, tarReader, header.FileInfo(), path, showProgress); err != nil {
@@ -159,17 +159,19 @@ func uncompressFile(ctx context.Context, tarReader io.Reader, fileInfo os.FileIn
 	return file.Close()
 }
 
-func buildPath(baseDir, filename string) (string, error) {
+// BuildPathChecked joins filename to baseDir and checks for ZipSlip and path traversal vulnerabilities.
+// More info: https://snyk.io/research/zip-slip-vulnerability, https://learn.snyk.io/lesson/directory-traversal/?ecosystem=golang
+func BuildPathChecked(baseDir, filename string) (string, error) {
 	path := filepath.Join(baseDir, filename) // #nosec G305
-
-	// Check for ZipSlip. More Info: https://snyk.io/research/zip-slip-vulnerability
 	baseDir = filepath.Clean(baseDir)
-	if path != baseDir && !strings.HasPrefix(path, baseDir+string(os.PathSeparator)) {
-		return "", fmt.Errorf("%s: illegal file path (expected prefix: %s)", path, baseDir+string(os.PathSeparator))
+	// clean prefix to ensure it isn't "//" when baseDir is "/"
+	prefix := filepath.Clean(baseDir + string(os.PathSeparator))
+	if path != baseDir && !strings.HasPrefix(path, prefix) {
+		return "", fmt.Errorf("%s: illegal file path (expected prefix: %s)", path, prefix)
 	}
-
 	return path, nil
 }
+
 func unzip(ctx context.Context, archive, target string, fileFilter func(string) bool, showProgress bool) ([]string, error) {
 	var extractedFiles []string
 	reader, err := zip.OpenReader(archive)
@@ -182,7 +184,7 @@ func unzip(ctx context.Context, archive, target string, fileFilter func(string) 
 	}
 
 	for _, file := range reader.File {
-		path, err := buildPath(target, file.Name)
+		path, err := BuildPathChecked(target, file.Name)
 		if err != nil {
 			return nil, err
 		}

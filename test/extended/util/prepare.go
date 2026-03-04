@@ -96,8 +96,14 @@ func CleanTestRunDir() error {
 		return err
 	}
 
+	rootDir, err := os.OpenRoot(TestRunDir)
+	if err != nil {
+		return err
+	}
+	defer rootDir.Close()
+
 	for _, file := range files {
-		err := os.RemoveAll(filepath.Clean(filepath.Join(TestRunDir, file.Name())))
+		err = rootDir.RemoveAll(file.Name())
 		if err != nil {
 			return err
 		}
