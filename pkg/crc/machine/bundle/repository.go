@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -36,10 +37,14 @@ func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
 	if _, err := os.Stat(path); err != nil {
 		return nil, errors.Wrapf(err, "could not find cached bundle info in %s", path)
 	}
-	jsonFilepath := filepath.Join(path, metadataFilename)
-	content, err := os.ReadFile(filepath.Clean(jsonFilepath))
+	metadataFile, err := os.OpenInRoot(path, metadataFilename)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error reading %s file", jsonFilepath)
+		return nil, errors.Wrapf(err, "error opening metadata file")
+	}
+	defer metadataFile.Close()
+	content, err := io.ReadAll(metadataFile)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error reading %s file", filepath.Join(path, metadataFilename))
 	}
 	var bundleInfo CrcBundleInfo
 	if err := json.Unmarshal(content, &bundleInfo); err != nil {

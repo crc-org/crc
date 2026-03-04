@@ -68,11 +68,9 @@ func CopyResourcesFromPath(resourcesPath string) error {
 	}
 	destLoc, _ := os.Getwd()
 	for _, file := range files {
+		fmt.Printf("Copying %s to %s\n", filepath.Join(resourcesPath, file.Name()), destLoc)
 
-		sFileName := filepath.Join(resourcesPath, file.Name())
-		fmt.Printf("Copying %s to %s\n", sFileName, destLoc)
-
-		sFile, err := os.Open(filepath.Clean(sFileName))
+		sFile, err := os.OpenInRoot(resourcesPath, file.Name())
 		if err != nil {
 			fmt.Printf("Error occurred opening file: %s", err)
 			return err
@@ -112,7 +110,7 @@ func DownloadBundle(bundleLocation string, bundleDestination string, bundleName 
 
 	if bundleLocation[:4] != "http" {
 
-		// copy the file locall
+		// copy the file locally
 
 		if bundleDestination == "." {
 			bundleDestination, _ = os.Getwd()
@@ -242,11 +240,11 @@ func SendCommandToVM(cmd string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	ssh, err := ssh.NewClient(connectionDetails.SSHUsername, connectionDetails.IP, connectionDetails.SSHPort, connectionDetails.SSHKeys...)
+	sshClient, err := ssh.NewClient(connectionDetails.SSHUsername, connectionDetails.IP, connectionDetails.SSHPort, connectionDetails.SSHKeys...)
 	if err != nil {
 		return "", err
 	}
-	out, _, err := ssh.Run(cmd)
+	out, _, err := sshClient.Run(cmd)
 	if err != nil {
 		return "", err
 	}
