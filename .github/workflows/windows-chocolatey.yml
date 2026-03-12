@@ -25,7 +25,7 @@ jobs:
         shell: powershell
         run: make choco
       - name: Upload nupkg artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: crc-chocolatey-nupkg
           path: "./packaging/chocolatey/crc/*.nupkg"

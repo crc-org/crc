@@ -176,7 +176,7 @@ jobs:
           report_paths: '**/*.xml'
 
       - name: Upload e2e results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: linux-${{inputs.qe-type}}-${{inputs.preset}}
