@@ -169,7 +169,7 @@ jobs:
         report_paths: '**/*.xml'
 
     - name: Upload ${{inputs.qe-type}} results
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: windows-${{inputs.qe-type}}-${{inputs.preset}}-${{env.windows-version}}${{env.windows-featurepack}}

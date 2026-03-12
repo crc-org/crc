@@ -35,7 +35,7 @@ jobs:
       - name: Build Windows installer
         run: make out/windows-amd64/crc-windows-installer.zip
       - name: Upload windows installer artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: windows-installer
           path: "./out/windows-amd64/crc-windows-installer.zip"
@@ -43,7 +43,7 @@ jobs:
         run: |
           make out/linux-arm64/crc
       - name: Upload linux binary
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: linux-binary
           path: "./out/linux-arm64/crc"
@@ -75,12 +75,12 @@ jobs:
           podman save -o ${{ env.IMAGE_NAME_INTEGRATION }}-${{matrix.os}}-${{matrix.arch}}.tar \
             quay.io/crcont/${{ env.IMAGE_NAME_INTEGRATION}}:gh-${{matrix.os}}-${{matrix.arch}}
       - name: Upload e2e ${{matrix.os}}-${{matrix.arch}}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.IMAGE_NAME_E2E }}-${{matrix.os}}-${{matrix.arch}}
           path: ${{ env.IMAGE_NAME_E2E }}-${{matrix.os}}-${{matrix.arch}}.tar
       - name: Upload integration ${{matrix.os}}-${{matrix.arch}}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.IMAGE_NAME_INTEGRATION }}-${{matrix.os}}-${{matrix.arch}}
           path: ${{ env.IMAGE_NAME_INTEGRATION }}-${{matrix.os}}-${{matrix.arch}}.tar

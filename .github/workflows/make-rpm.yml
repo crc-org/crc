@@ -26,7 +26,7 @@ jobs:
       - name: Build rpm
         run: CONTAINER_RUNTIME=docker make test-rpmbuild
       - name: Upload linux binary and rpms
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: linux binary and rpm
           path: |
