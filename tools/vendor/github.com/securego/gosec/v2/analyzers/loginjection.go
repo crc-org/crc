@@ -24,13 +24,17 @@ import (
 func LogInjection() taint.Config {
 	return taint.Config{
 		Sources: []taint.Source{
+			// Type sources: tainted when received as parameters
 			{Package: "net/http", Name: "Request", Pointer: true},
 			{Package: "net/url", Name: "URL", Pointer: true},
-			{Package: "os", Name: "Args"},
-			{Package: "os", Name: "Getenv"},
+
+			// Function sources
+			{Package: "os", Name: "Args", IsFunc: true},
+			{Package: "os", Name: "Getenv", IsFunc: true},
+
+			// I/O sources
 			{Package: "bufio", Name: "Reader", Pointer: true},
 			{Package: "bufio", Name: "Scanner", Pointer: true},
-			{Package: "os", Name: "File", Pointer: true},
 		},
 		Sinks: []taint.Sink{
 			{Package: "log", Method: "Print"},
@@ -46,6 +50,29 @@ func LogInjection() taint.Config {
 			{Package: "log/slog", Method: "Warn"},
 			{Package: "log/slog", Method: "Error"},
 			{Package: "log/slog", Method: "Debug"},
+		},
+		Sanitizers: []taint.Sanitizer{
+			// strings.ReplaceAll can strip newlines/CRLF for log injection
+			{Package: "strings", Method: "ReplaceAll"},
+			// strconv.Quote safely quotes a string (escapes special chars)
+			{Package: "strconv", Method: "Quote"},
+			// url.QueryEscape encodes special characters
+			{Package: "net/url", Method: "QueryEscape"},
+
+			// JSON encoding escapes all special characters including newlines,
+			// producing structurally safe output for log entries.
+			{Package: "encoding/json", Method: "Marshal"},
+			{Package: "encoding/json", Method: "MarshalIndent"},
+
+			// Numeric conversions produce strings that cannot contain
+			// log injection characters (newlines, carriage returns).
+			{Package: "strconv", Method: "Atoi"},
+			{Package: "strconv", Method: "Itoa"},
+			{Package: "strconv", Method: "ParseInt"},
+			{Package: "strconv", Method: "ParseUint"},
+			{Package: "strconv", Method: "ParseFloat"},
+			{Package: "strconv", Method: "FormatInt"},
+			{Package: "strconv", Method: "FormatFloat"},
 		},
 	}
 }
