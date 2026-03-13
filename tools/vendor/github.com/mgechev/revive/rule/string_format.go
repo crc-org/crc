@@ -11,7 +11,7 @@ import (
 	"github.com/mgechev/revive/lint"
 )
 
-// StringFormatRule lints strings and/or comments according to a set of regular expressions given as Arguments.
+// StringFormatRule lints strings and/or comments according to a set of regular expressions given as arguments.
 type StringFormatRule struct {
 	rules []stringFormatSubrule
 }
@@ -87,6 +87,7 @@ const identRegex = "[_A-Za-z][_A-Za-z0-9]*"
 var parseStringFormatScope = regexp.MustCompile(
 	fmt.Sprintf("^(%s(?:\\.%s)?)(?:\\[([0-9]+)\\](?:\\.(%s))?)?$", identRegex, identRegex, identRegex))
 
+//revive:disable-next-line:function-result-limit
 func (r *StringFormatRule) parseArgument(argument any, ruleNum int) (scopes stringFormatSubruleScopes, regex *regexp.Regexp, negated bool, errorMessage string, err error) {
 	g, ok := argument.([]any) // Cast to generic slice first
 	if !ok {

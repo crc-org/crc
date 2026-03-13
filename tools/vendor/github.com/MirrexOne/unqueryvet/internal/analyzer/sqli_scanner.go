@@ -1,8 +1,10 @@
 package analyzer
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
+	"go/types"
 	"regexp"
 	"strings"
 
@@ -33,6 +35,8 @@ type SQLInjectionScanner struct {
 	userInputPatterns []string
 	// httpInputFuncs are functions that read HTTP input
 	httpInputFuncs map[string]map[string]bool
+	// pass is the current analysis pass
+	pass *analysis.Pass
 }
 
 // SQLInjectionViolation represents a detected SQL injection vulnerability.
@@ -126,7 +130,7 @@ func NewSQLInjectionScanner() *SQLInjectionScanner {
 			"user", "input", "param", "query", "search", "filter",
 			"id", "name", "email", "password", "username", "request",
 			"body", "form", "data", "value", "arg", "args",
-			"q", "s", "term", "keyword", "text", "content",
+			"term", "keyword", "text", "content",
 		},
 		httpInputFuncs: map[string]map[string]bool{
 			"http": {
@@ -171,6 +175,7 @@ var placeholderPattern = regexp.MustCompile(`(\?|\$\d+|:\w+|@\w+)`)
 
 // ScanFile scans a file for SQL injection vulnerabilities.
 func (s *SQLInjectionScanner) ScanFile(pass *analysis.Pass, file *ast.File) []SQLInjectionViolation {
+	s.pass = pass
 	var violations []SQLInjectionViolation
 
 	ast.Inspect(file, func(n ast.Node) bool {
@@ -200,100 +205,115 @@ func (s *SQLInjectionScanner) checkCallExpr(call *ast.CallExpr) *SQLInjectionVio
 		return nil
 	}
 
+	// Ignore *sql.Stmt calls since they don't take queries
+	if s.isStmtMethod(call) {
+		return nil
+	}
+
 	// If this is a parameterized query (first arg is string literal with placeholders,
 	// subsequent args are parameters), it's safe
 	if s.isParameterizedQuery(call) {
 		return nil
 	}
 
-	// Check arguments for dangerous patterns
-	for _, arg := range call.Args {
-		// Pattern 1: fmt.Sprintf result used as query
-		if innerCall, ok := arg.(*ast.CallExpr); ok {
-			if s.isDangerousFormatCall(innerCall) {
-				if s.containsUserInput(innerCall) {
-					return &SQLInjectionViolation{
-						Pos:        call.Pos(),
-						End:        call.End(),
-						Message:    "SQL INJECTION: fmt.Sprintf with user input passed to " + methodName + "()",
-						Severity:   SQLISeverityCritical,
-						VulnType:   "sprintf",
-						Suggestion: "Use parameterized queries with placeholders (?, $1, :name)",
-						CodeFix:    s.generateParameterizedFix(methodName, arg),
-					}
-				}
-				// Even without detected user input, format strings are suspicious
+	// Determine which argument is the query string
+	queryIdx := 0
+	if strings.HasSuffix(methodName, "Context") {
+		queryIdx = 1
+	}
+
+	if len(call.Args) <= queryIdx {
+		return nil
+	}
+
+	// Only check the query argument for dangerous patterns
+	arg := call.Args[queryIdx]
+
+	// Pattern 1: fmt.Sprintf result used as query
+	if innerCall, ok := arg.(*ast.CallExpr); ok {
+		if s.isDangerousFormatCall(innerCall) {
+			if s.containsUserInput(innerCall) {
 				return &SQLInjectionViolation{
 					Pos:        call.Pos(),
 					End:        call.End(),
-					Message:    "potential SQL injection: fmt.Sprintf result passed to " + methodName + "() - use parameterized queries",
-					Severity:   SQLISeverityHigh,
+					Message:    "SQL INJECTION: fmt.Sprintf with user input passed to " + methodName + "()",
+					Severity:   SQLISeverityCritical,
 					VulnType:   "sprintf",
-					Suggestion: "Replace fmt.Sprintf with parameterized query using placeholders",
+					Suggestion: "Use parameterized queries with placeholders (?, $1, :name)",
 					CodeFix:    s.generateParameterizedFix(methodName, arg),
 				}
 			}
-			// Check for HTTP input functions
-			if s.isHTTPInputCall(innerCall) {
+			// Even without detected user input, format strings are suspicious
+			return &SQLInjectionViolation{
+				Pos:        call.Pos(),
+				End:        call.End(),
+				Message:    "potential SQL injection: fmt.Sprintf result passed to " + methodName + "() - use parameterized queries",
+				Severity:   SQLISeverityHigh,
+				VulnType:   "sprintf",
+				Suggestion: "Replace fmt.Sprintf with parameterized query using placeholders",
+				CodeFix:    s.generateParameterizedFix(methodName, arg),
+			}
+		}
+		// Check for HTTP input functions
+		if s.isHTTPInputCall(innerCall) {
+			return &SQLInjectionViolation{
+				Pos:        call.Pos(),
+				End:        call.End(),
+				Message:    "SQL INJECTION: HTTP input directly used in " + methodName + "()",
+				Severity:   SQLISeverityCritical,
+				VulnType:   "tainted",
+				Suggestion: "Never use HTTP input directly in SQL - always use parameterized queries",
+			}
+		}
+	}
+
+	// Pattern 2: String concatenation used as query
+	if binExpr, ok := arg.(*ast.BinaryExpr); ok {
+		if binExpr.Op == token.ADD {
+			if s.containsTaintedVariable(binExpr) {
 				return &SQLInjectionViolation{
 					Pos:        call.Pos(),
 					End:        call.End(),
-					Message:    "SQL INJECTION: HTTP input directly used in " + methodName + "()",
+					Message:    "SQL INJECTION: string concatenation with user input in " + methodName + "()",
 					Severity:   SQLISeverityCritical,
-					VulnType:   "tainted",
-					Suggestion: "Never use HTTP input directly in SQL - always use parameterized queries",
+					VulnType:   "concat",
+					Suggestion: "Use parameterized queries instead of string concatenation",
+					CodeFix:    "Replace: db." + methodName + "(\"SELECT * FROM users WHERE id = \" + id)\nWith: db." + methodName + "(\"SELECT * FROM users WHERE id = ?\", id)",
 				}
 			}
-		}
-
-		// Pattern 2: String concatenation used as query
-		if binExpr, ok := arg.(*ast.BinaryExpr); ok {
-			if binExpr.Op == token.ADD {
-				if s.containsTaintedVariable(binExpr) {
-					return &SQLInjectionViolation{
-						Pos:        call.Pos(),
-						End:        call.End(),
-						Message:    "SQL INJECTION: string concatenation with user input in " + methodName + "()",
-						Severity:   SQLISeverityCritical,
-						VulnType:   "concat",
-						Suggestion: "Use parameterized queries instead of string concatenation",
-						CodeFix:    "Replace: db." + methodName + "(\"SELECT * FROM users WHERE id = \" + id)\nWith: db." + methodName + "(\"SELECT * FROM users WHERE id = ?\", id)",
-					}
-				}
-				if s.containsStringVariable(binExpr) {
-					return &SQLInjectionViolation{
-						Pos:        call.Pos(),
-						End:        call.End(),
-						Message:    "potential SQL injection: string concatenation in " + methodName + "()",
-						Severity:   SQLISeverityHigh,
-						VulnType:   "concat",
-						Suggestion: "Use parameterized queries instead of string concatenation",
-					}
-				}
-			}
-		}
-
-		// Pattern 3: Tainted variable used directly
-		if ident, ok := arg.(*ast.Ident); ok {
-			if s.isTaintedVariable(ident.Name) {
+			if s.containsStringVariable(binExpr) {
 				return &SQLInjectionViolation{
 					Pos:        call.Pos(),
 					End:        call.End(),
-					Message:    "SQL INJECTION: potentially tainted variable '" + ident.Name + "' used in " + methodName + "()",
+					Message:    "potential SQL injection: string concatenation in " + methodName + "()",
 					Severity:   SQLISeverityHigh,
-					VulnType:   "tainted",
-					Suggestion: "Validate and sanitize '" + ident.Name + "' or use parameterized queries",
+					VulnType:   "concat",
+					Suggestion: "Use parameterized queries instead of string concatenation",
 				}
 			}
-			if s.mightBeDynamicQuery(ident) {
-				return &SQLInjectionViolation{
-					Pos:        call.Pos(),
-					End:        call.End(),
-					Message:    "review SQL query in " + methodName + "(): ensure '" + ident.Name + "' is not built with user input",
-					Severity:   SQLISeverityMedium,
-					VulnType:   "variable",
-					Suggestion: "Audit the construction of '" + ident.Name + "' to ensure it doesn't contain user input",
-				}
+		}
+	}
+
+	// Pattern 3: Tainted variable used directly
+	if ident := getIdent(arg); ident != nil {
+		if s.isTaintedVariable(ident.Name) && !s.isConstant(arg) {
+			return &SQLInjectionViolation{
+				Pos:        call.Pos(),
+				End:        call.End(),
+				Message:    fmt.Sprintf("SQL INJECTION: potentially tainted variable '%s' used in %s ()", ident.Name, methodName),
+				Severity:   SQLISeverityHigh,
+				VulnType:   "tainted",
+				Suggestion: fmt.Sprintf("Validate and sanitize '%s' or use parameterized queries", ident.Name),
+			}
+		}
+		if s.mightBeDynamicQuery(ident) && !s.isConstant(arg) {
+			return &SQLInjectionViolation{
+				Pos:        call.Pos(),
+				End:        call.End(),
+				Message:    "review SQL query in " + methodName + "(): ensure '" + ident.Name + "' is not built with user input",
+				Severity:   SQLISeverityMedium,
+				VulnType:   "variable",
+				Suggestion: "Audit the construction of '" + ident.Name + "' to ensure it doesn't contain user input",
 			}
 		}
 	}
@@ -320,8 +340,8 @@ func (s *SQLInjectionScanner) checkORMRawMethod(call *ast.CallExpr, methodName s
 	// Check if first argument is a string literal (safe) or variable (needs review)
 	if _, ok := firstArg.(*ast.BasicLit); !ok {
 		// Not a string literal - might be dangerous
-		if ident, ok := firstArg.(*ast.Ident); ok {
-			if s.isTaintedVariable(ident.Name) {
+		if ident := getIdent(firstArg); ident != nil {
+			if s.isTaintedVariable(ident.Name) && !s.isConstant(firstArg) {
 				return &SQLInjectionViolation{
 					Pos:        call.Pos(),
 					End:        call.End(),
@@ -365,6 +385,78 @@ func (s *SQLInjectionScanner) isHTTPInputCall(call *ast.CallExpr) bool {
 	return httpMethods[methodName]
 }
 
+// isConstant checks if an expression refers to a constant.
+func (s *SQLInjectionScanner) isConstant(expr ast.Expr) bool {
+	if expr == nil {
+		return false
+	}
+	if s.pass != nil && s.pass.TypesInfo != nil {
+		if ident := getIdent(expr); ident != nil {
+			if obj := s.pass.TypesInfo.ObjectOf(ident); obj != nil {
+				_, ok := obj.(*types.Const)
+				return ok
+			}
+		}
+	}
+	if ident, ok := expr.(*ast.Ident); ok {
+		if ident.Obj != nil && ident.Obj.Kind == ast.Con {
+			return true
+		}
+	}
+	return false
+}
+
+// getIdent extracts an identifier from an expression (Ident or SelectorExpr).
+func getIdent(expr ast.Expr) *ast.Ident {
+	switch e := expr.(type) {
+	case *ast.Ident:
+		return e
+	case *ast.SelectorExpr:
+		return e.Sel
+	default:
+		return nil
+	}
+}
+
+// getConstantValue attempts to get the string value of a constant expression.
+func (s *SQLInjectionScanner) getConstantValue(expr ast.Expr) (string, bool) {
+	if expr == nil {
+		return "", false
+	}
+	if s.pass != nil && s.pass.TypesInfo != nil {
+		if ident := getIdent(expr); ident != nil {
+			if obj := s.pass.TypesInfo.ObjectOf(ident); obj != nil {
+				if c, ok := obj.(*types.Const); ok {
+					val := c.Val().ExactString()
+					// Remove quotes if it's a string constant
+					if strings.HasPrefix(val, "\"") && strings.HasSuffix(val, "\"") {
+						return val[1 : len(val)-1], true
+					}
+					return val, true
+				}
+			}
+		}
+	}
+	if ident, ok := expr.(*ast.Ident); ok {
+		if ident.Obj != nil && ident.Obj.Kind == ast.Con {
+			if vs, ok := ident.Obj.Decl.(*ast.ValueSpec); ok {
+				for i, name := range vs.Names {
+					if name.Name == ident.Name && i < len(vs.Values) {
+						if lit, ok := vs.Values[i].(*ast.BasicLit); ok && lit.Kind == token.STRING {
+							val := lit.Value
+							if strings.HasPrefix(val, "\"") && strings.HasSuffix(val, "\"") {
+								return val[1 : len(val)-1], true
+							}
+							return val, true
+						}
+					}
+				}
+			}
+		}
+	}
+	return "", false
+}
+
 // isTaintedVariable checks if a variable name suggests user input.
 func (s *SQLInjectionScanner) isTaintedVariable(name string) bool {
 	lowerName := strings.ToLower(name)
@@ -382,7 +474,7 @@ func (s *SQLInjectionScanner) containsTaintedVariable(expr ast.Expr) bool {
 
 	ast.Inspect(expr, func(n ast.Node) bool {
 		if ident, ok := n.(*ast.Ident); ok {
-			if s.isTaintedVariable(ident.Name) {
+			if s.isTaintedVariable(ident.Name) && !s.isConstant(ident) {
 				hasTainted = true
 				return false
 			}
@@ -398,23 +490,62 @@ func (s *SQLInjectionScanner) MarkVariableAsTainted(name string) {
 	s.taintedVariables[name] = true
 }
 
+// isStmtMethod checks if a call is a method on a prepared statement (e.g., *sql.Stmt).
+func (s *SQLInjectionScanner) isStmtMethod(call *ast.CallExpr) bool {
+	if sel, ok := call.Fun.(*ast.SelectorExpr); ok {
+		if s.pass != nil && s.pass.TypesInfo != nil {
+			if selObj := s.pass.TypesInfo.Uses[sel.Sel]; selObj != nil {
+				if sig, ok := selObj.Type().(*types.Signature); ok {
+					if recv := sig.Recv(); recv != nil {
+						recvType := recv.Type().String()
+						if strings.Contains(recvType, "sql.Stmt") || strings.Contains(recvType, "sqlx.Stmt") || strings.Contains(recvType, "NamedStmt") {
+							return true
+						}
+					}
+				}
+			}
+		} else {
+			// Fallback heuristic: if the receiver is named "stmt", assume it's a statement
+			if ident, ok := sel.X.(*ast.Ident); ok {
+				name := strings.ToLower(ident.Name)
+				if strings.Contains(name, "stmt") {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 // isParameterizedQuery checks if a call uses parameterized query syntax.
-// A parameterized query has a string literal with placeholders (?, $1, :name, @param)
-// as the first argument, with subsequent arguments providing the values.
+// A parameterized query has a string literal or constant with placeholders (?, $1, :name, @param)
+// as the query argument, with subsequent arguments providing the values.
 func (s *SQLInjectionScanner) isParameterizedQuery(call *ast.CallExpr) bool {
-	if len(call.Args) < 2 {
+	methodName := s.getMethodName(call)
+	queryIdx := 0
+	// Context-aware methods usually have the query as the second argument
+	if strings.HasSuffix(methodName, "Context") {
+		queryIdx = 1
+	}
+
+	if len(call.Args) <= queryIdx+1 {
 		return false
 	}
 
-	// First argument should be a string literal
-	firstArg := call.Args[0]
-	lit, ok := firstArg.(*ast.BasicLit)
-	if !ok || lit.Kind != token.STRING {
+	// Query argument should be a string literal or constant
+	queryArg := call.Args[queryIdx]
+	var queryStr string
+	if lit, ok := queryArg.(*ast.BasicLit); ok && lit.Kind == token.STRING {
+		queryStr = lit.Value
+	} else if val, ok := s.getConstantValue(queryArg); ok {
+		queryStr = val
+	}
+
+	if queryStr == "" {
 		return false
 	}
 
 	// Check if the string contains placeholder patterns
-	queryStr := lit.Value
 	return placeholderPattern.MatchString(queryStr)
 }
 
@@ -482,6 +613,10 @@ func (s *SQLInjectionScanner) containsUserInput(call *ast.CallExpr) bool {
 		}
 		// If argument is not a literal, it might be user input
 		if _, ok := arg.(*ast.BasicLit); !ok {
+			// Check if it's a constant (including exported constants from other packages)
+			if s.isConstant(arg) {
+				continue
+			}
 			return true
 		}
 	}
@@ -497,6 +632,9 @@ func (s *SQLInjectionScanner) containsStringVariable(expr ast.Expr) bool {
 		switch node := n.(type) {
 		case *ast.Ident:
 			// Check if this is a variable (not a constant)
+			if s.isConstant(node) {
+				return true
+			}
 			if node.Obj != nil {
 				hasVariable = true
 				return false
@@ -527,11 +665,19 @@ func (s *SQLInjectionScanner) isSQLStringConcat(expr *ast.BinaryExpr) bool {
 
 // isQueryString checks if an expression looks like a SQL query string.
 func (s *SQLInjectionScanner) isQueryString(expr ast.Expr) bool {
+	var val string
 	if lit, ok := expr.(*ast.BasicLit); ok && lit.Kind == token.STRING {
-		value := strings.ToUpper(lit.Value)
-		return sqlPattern.MatchString(value)
+		val = lit.Value
+	} else if v, ok := s.getConstantValue(expr); ok {
+		val = v
 	}
-	return false
+
+	if val == "" {
+		return false
+	}
+
+	value := strings.ToUpper(val)
+	return sqlPattern.MatchString(value)
 }
 
 // mightBeDynamicQuery checks if an identifier might be a dynamically built query.
@@ -583,6 +729,7 @@ func ScanFileAST(fset *token.FileSet, file *ast.File) []SQLInjectionViolation {
 // ScanFileNoPass scans a file for SQL injection vulnerabilities without analysis.Pass.
 // This is a method version for testing purposes.
 func (s *SQLInjectionScanner) ScanFileNoPass(fset *token.FileSet, file *ast.File) []SQLInjectionViolation {
+	s.pass = nil
 	var violations []SQLInjectionViolation
 
 	ast.Inspect(file, func(n ast.Node) bool {
