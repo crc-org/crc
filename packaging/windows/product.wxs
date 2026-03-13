@@ -1,4 +1,5 @@
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
 
     <?ifndef Version?>
         <?error Version must be defined via command line argument?>
@@ -36,6 +37,9 @@
 
         <Property Id="SHAREDDIRNAME" Secure="yes" Value="crc-dir0" />
 
+        <SetProperty Action="CAAddUserToHypervAdmins" Id="AddUserToHypervAdmins" Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Add-LocalGroupMember -SID 'S-1-5-32-578' -Member '[%USERDOMAIN]\[LogonUser]'&quot;" Before="AddUserToHypervAdmins" Sequence="execute" />
+        <CustomAction Id="AddUserToHypervAdmins" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" />
+
         <SetProperty Action="CACreateCrcUsersGroup" Id="CreateCrcGroup" Value='"[System64Folder]cmd.exe" /c net localgroup crc-users /comment:"Group for Red Hat OpenShift Local users" /add' Before="CreateCrcGroup" Sequence="execute"/>
         <CustomAction Id="CreateCrcGroup" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" />
 
@@ -55,6 +59,7 @@
         <CustomAction Id="RemoveSMBShare" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" />
 
         <InstallExecuteSequence>
+            <Custom Action="AddUserToHypervAdmins" Before="Wix4ConfigureUsers_$(sys.BUILDARCHSHORT)" Condition="NOT Installed AND NOT REMOVE~=&quot;ALL&quot; AND NOT WIX_UPGRADE_DETECTED" />
             <Custom Action="CreateCrcGroup" Before="Wix4ConfigureUsers_$(sys.BUILDARCHSHORT)" Condition="NOT Installed AND NOT REMOVE~=&quot;ALL&quot; AND NOT WIX_UPGRADE_DETECTED" />
             <Custom Action="RemoveCrcGroup" After="RemoveFolders" Condition="Installed AND NOT PATCH AND REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
             <Custom Action="InstallHyperv" After="InstallFiles" Condition="NOT Installed AND NOT REMOVE~=&quot;ALL&quot; AND NOT WIX_UPGRADE_DETECTED" />
@@ -71,7 +76,6 @@
             <ComponentRef Id="VsockRegistryEntry" />
             <ComponentRef Id="Hvsock9pRegistryEntry" />
             <ComponentRef Id="CreateCrcUsersGroupAddUser" />
-            <ComponentRef Id="AddUserToHypervAdminsGroup" />
         </Feature>
         <UI>
             <UIRef Id="WixUI_ErrorProgressText" />
@@ -84,7 +88,6 @@
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
         <!-- this should help to propagate env var changes -->
         <util:BroadcastEnvironmentChange />
-        <util:Group Id="HypervAdminsGroup" Name="Hyper-V Administrators" />
         <util:Group Id="CrcUsersGroup" Name="crc-users" />
         <StandardDirectory Id="ProgramFiles64Folder">
             <Directory Id="INSTALLDIR" Name="Red Hat OpenShift Local">
@@ -117,11 +120,6 @@
                 <Component Id="CreateCrcUsersGroupAddUser" Guid="12DCE321-8645-43ED-9059-3DC5828A3B13">
                     <util:User Id="CurrentUserCrcUsers" Name="[LogonUser]" Domain="[%USERDOMAIN]" CreateUser="no" FailIfExists="no">
                         <util:GroupRef Id="CrcUsersGroup" />
-                    </util:User>
-                </Component>
-                <Component Id="AddUserToHypervAdminsGroup" Guid="CEE06E47-C46E-410E-9951-C5A4004198E6">
-                    <util:User Id="CurrentUserHypervAdmins" Name="[LogonUser]" Domain="[%USERDOMAIN]" CreateUser="no" FailIfExists="no" >
-                        <util:GroupRef Id="HypervAdminsGroup" />
                     </util:User>
                 </Component>
             </Directory>
