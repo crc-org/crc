@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"sync"
 
+	"github.com/crc-org/crc/v2/pkg/crc/api/client"
+	"github.com/crc-org/crc/v2/pkg/crc/errors"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 )
 
@@ -111,6 +113,10 @@ func (s *server) Handler() http.Handler {
 			url:         r.URL,
 		}
 		if err := handler(c); err != nil {
+			if multiErr, ok := err.(errors.MultiError); ok {
+				writeMultiError(w, multiErr)
+				return
+			}
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -124,4 +130,21 @@ func (s *server) Handler() http.Handler {
 			logging.Error("Failed to send response: ", err)
 		}
 	})
+}
+
+func writeMultiError(w http.ResponseWriter, multiErr errors.MultiError) {
+	validationErrors := make([]client.ValidationError, 0, len(multiErr.Errors))
+	for _, e := range multiErr.Errors {
+		if e == nil {
+			continue
+		}
+		validationErrors = append(validationErrors, client.ValidationError{
+			Message: e.Error(),
+		})
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusUnprocessableEntity)
+	if err := json.NewEncoder(w).Encode(validationErrors); err != nil {
+		logging.Error("Failed to write error response: ", err)
+	}
 }
