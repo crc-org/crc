@@ -272,18 +272,6 @@ func systemdUnitRunning(sd *systemd.Commander, unitName string) bool {
 }
 
 const (
-	vsockUnitName     = "crc-vsock.socket"
-	vsockUnitTemplate = `[Unit]
-Description=CRC vsock socket
-
-[Socket]
-ListenStream=vsock::%d
-Service=crc-daemon.service
-
-[Install]
-WantedBy=default.target
-`
-
 	httpUnitName = "crc-http.socket"
 	httpUnit     = `[Unit]
 Description=CRC HTTP socket
@@ -296,12 +284,24 @@ Service=crc-daemon.service
 WantedBy=default.target
 `
 
+	adminHelperUnitName = "crc-admin-helper.socket"
+	adminHelperUnit     = `[Unit]
+Description=CRC admin helper socket
+
+[Socket]
+ListenStream=127.0.0.1:9764
+Service=crc-daemon.service
+
+[Install]
+WantedBy=default.target
+`
+
 	daemonUnitName     = "crc-daemon.service"
 	daemonUnitTemplate = `
 [Unit]
 Description=CRC daemon
 Requires=crc-http.socket
-Requires=crc-vsock.socket
+Requires=crc-admin-helper.socket
 
 [Service]
 # This allows systemd to know when startup is not complete (for example, because of a preflight failure)
@@ -310,8 +310,6 @@ Type=notify
 ExecStart=%s daemon
 `
 )
-
-var vsockUnit = fmt.Sprintf(vsockUnitTemplate, constants.DaemonVsockPort)
 
 func checkSystemdUnit(unitName string, unitContent string, shouldBeRunning bool) error {
 	sd := systemd.NewHostSystemdCommander().User()
@@ -340,7 +338,7 @@ func checkDaemonSystemdSockets() error {
 		return err
 	}
 
-	return checkSystemdUnit(vsockUnitName, vsockUnit, true)
+	return checkSystemdUnit(adminHelperUnitName, adminHelperUnit, true)
 }
 
 func checkDaemonSystemdService() error {
@@ -400,7 +398,7 @@ func fixDaemonSystemdSockets() error {
 		return err
 	}
 
-	return fixSystemdUnit(vsockUnitName, vsockUnit, true)
+	return fixSystemdUnit(adminHelperUnitName, adminHelperUnit, true)
 }
 
 func fixDaemonSystemdService() error {
@@ -416,8 +414,8 @@ func removeDaemonSystemdSockets() error {
 	_ = sd.Stop(httpUnitName)
 	os.Remove(systemd.UserUnitPath(httpUnitName))
 
-	_ = sd.Stop(vsockUnitName)
-	os.Remove(systemd.UserUnitPath(vsockUnitName))
+	_ = sd.Stop(adminHelperUnitName)
+	os.Remove(systemd.UserUnitPath(adminHelperUnitName))
 
 	return nil
 }
