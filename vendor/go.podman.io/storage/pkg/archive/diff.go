@@ -351,12 +351,10 @@ func applyLayerHandler(dest string, layer io.Reader, options *TarOptions, decomp
 	}()
 
 	if decompress {
-		decompressed, err := DecompressStream(layer)
+		layer, err = DecompressStream(layer)
 		if err != nil {
 			return 0, err
 		}
-		defer decompressed.Close()
-		layer = decompressed
 	}
 	return UnpackLayer(dest, layer, options)
 }

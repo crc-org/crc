@@ -9,7 +9,11 @@ type fastEncL4 struct {
 }
 
 func (e *fastEncL4) Encode(dst *tokens, src []byte) {
-	const hashShortBytes = 4
+	const (
+		inputMargin            = 12 - 1
+		minNonLiteralBlockSize = 1 + 1 + inputMargin
+		hashShortBytes         = 4
+	)
 	if debugDeflate && e.cur < 0 {
 		panic(fmt.Sprint("e.cur < 0: ", e.cur))
 	}

@@ -352,29 +352,22 @@ func WithConcurrentBlocks(b bool) EOption {
 	}
 }
 
-// maxJobSize caps the job size, so large windows still give several jobs.
-// A variable so tests can exercise the cap with small inputs.
-var maxJobSize = 256 << 20
-
 // jobSize returns the input section size per parallel job.
 func (o *encoderOptions) jobSize() int {
-	// Clamp before multiplying: windowSize*4 overflows a 32-bit int for
-	// windows of 512 MiB.
-	return max(min(o.windowSize, maxJobSize/4)*4, 512<<10)
+	s := max(o.windowSize*4, 512<<10)
+	return s
 }
 
 // overlapSize returns the overlap prefix size for parallel jobs.
 func (o *encoderOptions) overlapSize() int {
-	var s int
 	switch o.level {
 	case SpeedBestCompression:
-		s = o.windowSize / 2
+		return o.windowSize / 2
 	case SpeedBetterCompression:
-		s = o.windowSize / 4
+		return o.windowSize / 4
 	default:
-		s = o.windowSize / 8
+		return o.windowSize / 8
 	}
-	return min(s, o.jobSize()/2)
 }
 
 // WithEncoderDict allows to register a dictionary that will be used for the encode.

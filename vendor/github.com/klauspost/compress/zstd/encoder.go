@@ -109,7 +109,7 @@ func (e *Encoder) Reset(w io.Writer) {
 		js.jobSize = e.o.jobSize()
 		js.overlapSize = e.o.overlapSize()
 		// js.filling is allocated lazily on first Write/ReadFrom so callers
-		// that only use EncodeAll don't pay the jobSize cost (up to maxJobSize).
+		// that only use EncodeAll don't pay the (up to ~32 MB) jobSize cost.
 		js.filling = js.filling[:0]
 		if js.nextPrefix != nil {
 			js.putOverlapBuf(js.nextPrefix)
@@ -161,23 +161,15 @@ func (e *Encoder) Reset(w io.Writer) {
 // as a new, independent stream.
 // Options are applied on top of the existing options.
 // Some options cannot be changed on reset and will return an error.
-// If an option fails, the encoder is left unchanged.
 func (e *Encoder) ResetWithOptions(w io.Writer, opts ...EOption) error {
-	next := e.o
-	next.resetOpt = true
+	e.o.resetOpt = true
+	defer func() { e.o.resetOpt = false }()
+	hadDict := e.o.dict != nil
 	for _, o := range opts {
-		if err := o(&next); err != nil {
+		if err := o(&e.o); err != nil {
 			return err
 		}
 	}
-	next.resetOpt = false
-
-	e.shutdownJobWorkers()
-	e.state.wg.Wait()
-	e.state.wWg.Wait()
-
-	hadDict := e.o.dict != nil
-	e.o = next
 	hasDict := e.o.dict != nil
 	if e.o.concurrentBlocks && hasDict {
 		e.o.concurrentBlocks = false

@@ -26,7 +26,6 @@ func Compress(in []byte, s *Scratch) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer s.cleanup()
 
 	// Create histogram, if none was provided.
 	maxCount := s.maxCount
