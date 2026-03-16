@@ -117,12 +117,20 @@ func (c *Client) Do(req *Request) *Response {
 //
 // If an error occurs during any of the file transfers it will be accessible via
 // the associated Response.Err function.
-func (c *Client) DoChannel(reqch <-chan *Request, respch chan<- *Response) {
-	// TODO: enable cancelling of batch jobs
-	for req := range reqch {
-		resp := c.Do(req)
-		respch <- resp
-		<-resp.Done
+func (c *Client) DoChannel(ctx context.Context, reqch <-chan *Request, respch chan<- *Response) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case req, ok := <-reqch:
+			if !ok {
+				return
+			}
+			req = req.WithContext(ctx)
+			resp := c.Do(req)
+			respch <- resp
+			<-resp.Done
+		}
 	}
 }
 
@@ -138,7 +146,7 @@ func (c *Client) DoChannel(reqch <-chan *Request, respch chan<- *Response) {
 //
 // The returned Response channel is closed only after all of the given Requests
 // have completed, successfully or otherwise.
-func (c *Client) DoBatch(workers int, requests ...*Request) <-chan *Response {
+func (c *Client) DoBatch(ctx context.Context, workers int, requests ...*Request) <-chan *Response {
 	if workers < 1 {
 		workers = len(requests)
 	}
@@ -148,7 +156,7 @@ func (c *Client) DoBatch(workers int, requests ...*Request) <-chan *Response {
 	for i := 0; i < workers; i++ {
 		wg.Add(1)
 		go func() {
-			c.DoChannel(reqch, respch)
+			c.DoChannel(ctx, reqch, respch)
 			wg.Done()
 		}()
 	}
@@ -375,7 +383,19 @@ func (c *Client) getRequest(resp *Response) stateFunc {
 		return c.closeResponse
 	}
 
-	// TODO: check Content-Range
+	// check Content-Range header for resumed downloads
+	if resp.DidResume && resp.HTTPResponse.StatusCode == http.StatusPartialContent {
+		contentRange := resp.HTTPResponse.Header.Get("Content-Range")
+		if contentRange != "" {
+			var start int64
+			if _, err := fmt.Sscanf(contentRange, "bytes %d-", &start); err == nil {
+				if start != resp.bytesResumed {
+					resp.err = ErrBadLength
+					return c.closeResponse
+				}
+			}
+		}
+	}
 
 	// check status code
 	if !resp.Request.IgnoreBadStatusCodes {
@@ -405,7 +425,7 @@ func (c *Client) readResponse(resp *Response) stateFunc {
 	}
 
 	// check filename
-	if resp.Filename == "" {
+	if resp.Filename == "" && !resp.Request.NoStore {
 		filename, err := guessFilename(resp.HTTPResponse)
 		if err != nil {
 			resp.err = err
@@ -580,7 +600,7 @@ func (c *Client) closeResponse(resp *Response) stateFunc {
 	if err := resp.closeResponseBody(); err != nil {
 		// optionally log or ignore
 		resp.err = fmt.Errorf("cannot close response body for %q: %w", resp.Filename, err)
-		
+
 	}
 
 	resp.End = time.Now()

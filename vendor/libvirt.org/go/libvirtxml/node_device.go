@@ -196,6 +196,7 @@ type NodeDeviceSystemCapability struct {
 type NodeDeviceUSBDeviceCapability struct {
 	Bus     int              `xml:"bus"`
 	Device  int              `xml:"device"`
+	Port    int              `xml:"port"`
 	Product NodeDeviceIDName `xml:"product,omitempty"`
 	Vendor  NodeDeviceIDName `xml:"vendor,omitempty"`
 }

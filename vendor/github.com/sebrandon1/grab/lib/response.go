@@ -3,7 +3,6 @@ package lib
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -226,10 +225,7 @@ func (c *Response) Bytes() ([]byte, error) {
 		return nil, err
 	}
 	defer func() {
-		if err := f.Close(); err != nil {
-			// TODO: handle/log error if needed
-			fmt.Fprintf(os.Stderr, "error closing file: %v\n", err)
-		}
+		_ = f.Close()
 	}()
 	return io.ReadAll(f)
 }

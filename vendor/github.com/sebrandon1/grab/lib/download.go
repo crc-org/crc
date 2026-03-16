@@ -13,7 +13,7 @@ type DownloadResponse struct {
 // It is a wrapper around GetBatch, returning a channel of DownloadResponse for CLI and library use.
 func DownloadBatch(ctx context.Context, urls []string) (<-chan DownloadResponse, error) {
 	ch := make(chan DownloadResponse)
-	respch, err := GetBatch(0, ".", urls...)
+	respch, err := GetBatch(ctx, 0, ".", urls...)
 	if err != nil {
 		return nil, err
 	}
