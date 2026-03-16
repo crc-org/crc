@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,13 +9,10 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"regexp"
 	"runtime"
 	"syscall"
 	"time"
 
-	"github.com/containers/gvisor-tap-vsock/pkg/types"
-	"github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork"
 	"github.com/crc-org/crc/v2/pkg/crc/adminhelper"
 	"github.com/crc-org/crc/v2/pkg/crc/api"
 	"github.com/crc-org/crc/v2/pkg/crc/api/client"
@@ -26,8 +22,6 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/fileserver/fs9p"
-	"github.com/crc-org/machine/libmachine/drivers"
-	"github.com/docker/go-units"
 	"github.com/gorilla/handlers"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -47,10 +41,7 @@ func init() {
 	rootCmd.AddCommand(daemonCmd)
 }
 
-const (
-	hostVirtualIP           = "192.168.127.254"
-	ErrDaemonAlreadyRunning = "daemon has been started in the background"
-)
+const ErrDaemonAlreadyRunning = "daemon has been started in the background"
 
 func checkDaemonVersion() (bool, error) {
 	if _, err := daemonVersionSupplier(); err == nil {
@@ -69,93 +60,14 @@ var daemonCmd = &cobra.Command{
 			return errors.New(ErrDaemonAlreadyRunning)
 		}
 
-		virtualNetworkConfig := createNewVirtualNetworkConfig(config)
-		err := run(&virtualNetworkConfig)
-		return err
+		return run(config)
 	},
 }
 
-func createNewVirtualNetworkConfig(providedConfig *crcConfig.Config) types.Configuration {
-	virtualNetworkConfig := types.Configuration{
-		Debug:             false, // never log packets
-		CaptureFile:       os.Getenv("CRC_DAEMON_PCAP_FILE"),
-		MTU:               4000, // Large packets slightly improve the performance. Less small packets.
-		Subnet:            "192.168.127.0/24",
-		GatewayIP:         constants.VSockGateway,
-		GatewayMacAddress: "5a:94:ef:e4:0c:dd",
-		DHCPStaticLeases: map[string]string{
-			"192.168.127.2": constants.VsockMacAddress,
-		},
-		DNS: []types.Zone{
-			{
-				Name:      "apps-crc.testing.",
-				DefaultIP: net.ParseIP("192.168.127.2"),
-			},
-			{
-				Name: "crc.testing.",
-				Records: []types.Record{
-					{
-						Name: "host",
-						IP:   net.ParseIP(hostVirtualIP),
-					},
-					{
-						Name: "gateway",
-						IP:   net.ParseIP("192.168.127.1"),
-					},
-					{
-						Name: "api",
-						IP:   net.ParseIP("192.168.127.2"),
-					},
-					{
-						Name: "api-int",
-						IP:   net.ParseIP("192.168.127.2"),
-					},
-					{
-						Regexp: regexp.MustCompile("crc-(.*?)-master-0"),
-						IP:     net.ParseIP("192.168.126.11"),
-					},
-				},
-			},
-			{
-				Name: "containers.internal.",
-				Records: []types.Record{
-					{
-						Name: "gateway",
-						IP:   net.ParseIP(hostVirtualIP),
-					},
-				},
-			},
-			{
-				Name: "docker.internal.",
-				Records: []types.Record{
-					{
-						Name: "gateway",
-						IP:   net.ParseIP(hostVirtualIP),
-					},
-				},
-			},
-		},
-		Protocol:          types.HyperKitProtocol,
-		GatewayVirtualIPs: []string{hostVirtualIP},
-	}
-	if providedConfig.Get(crcConfig.HostNetworkAccess).AsBool() {
-		log.Debugf("Enabling host network access")
-		if virtualNetworkConfig.NAT == nil {
-			virtualNetworkConfig.NAT = make(map[string]string)
-		}
-		virtualNetworkConfig.NAT[hostVirtualIP] = "127.0.0.1"
-	}
-	return virtualNetworkConfig
-}
-
-func run(configuration *types.Configuration) error {
-	vn, err := virtualnetwork.New(configuration)
-	if err != nil {
-		return err
-	}
-
+func run(cfg *crcConfig.Config) error {
 	errCh := make(chan error)
 
+	// Main HTTP listener for /api and /events endpoints
 	listener, err := httpListener()
 	if err != nil {
 		return err
@@ -166,7 +78,6 @@ func run(configuration *types.Configuration) error {
 			return
 		}
 		mux := http.NewServeMux()
-		mux.Handle("/network/", interceptResponseBodyMiddleware(http.StripPrefix("/network", vn.Mux()), logResponseBodyConditionally))
 		machineClient := newMachine()
 		mux.Handle("/api/", interceptResponseBodyMiddleware(http.StripPrefix("/api", api.NewMux(config, machineClient, logging.Memory, segmentClient)), logResponseBodyConditionally))
 		mux.Handle("/events", interceptResponseBodyMiddleware(http.StripPrefix("/events", events.NewEventServer(machineClient)), logResponseBodyConditionally))
@@ -179,79 +90,30 @@ func run(configuration *types.Configuration) error {
 		}
 	}()
 
-	ln, err := vn.Listen("tcp", net.JoinHostPort(configuration.GatewayIP, "80"))
+	// Admin helper listener for /hosts endpoints (separate socket)
+	adminHelperLn, err := adminHelperListener()
 	if err != nil {
 		return err
 	}
+
 	go func() {
-		mux := gatewayAPIMux(config, adminHelperHostsFileEditor{})
+		if adminHelperLn == nil {
+			return
+		}
+		mux := gatewayAPIMux(cfg, adminHelperHostsFileEditor{})
 		s := &http.Server{
-			Handler:      handlers.LoggingHandler(os.Stderr, mux),
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 10 * time.Second,
+			Handler:           handlers.LoggingHandler(os.Stderr, mux),
+			ReadHeaderTimeout: 10 * time.Second,
+			ReadTimeout:       10 * time.Second,
+			WriteTimeout:      10 * time.Second,
 		}
-		if err := s.Serve(ln); err != nil {
-			errCh <- errors.Wrap(err, "gateway http.Serve failed")
-		}
-	}()
-
-	networkListener, err := vn.Listen("tcp", net.JoinHostPort(hostVirtualIP, "80"))
-	if err != nil {
-		return err
-	}
-	go func() {
-		mux := networkAPIMux(vn)
-		s := &http.Server{
-			Handler:      handlers.LoggingHandler(os.Stderr, mux),
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 10 * time.Second,
-		}
-		if err := s.Serve(networkListener); err != nil {
-			errCh <- errors.Wrap(err, "host virtual IP http.Serve failed")
+		if err := s.Serve(adminHelperLn); err != nil {
+			errCh <- errors.Wrap(err, "admin helper http.Serve failed")
 		}
 	}()
 
-	go func() {
-		var oldCancel context.CancelFunc
-		for {
-			ctx, cancel := context.WithCancel(context.Background())
-			conn, err := unixgramListener(ctx, vn)
-			if err != nil && errors.Is(err, drivers.ErrNotImplemented) {
-				cancel()
-				break
-			}
-			if err != nil && !errors.Is(err, net.ErrClosed) {
-				logging.Errorf("unixgramListener error: %v", err)
-			}
-
-			if oldCancel != nil {
-				logging.Warnf("New connection to %s. Closing old connection", conn.LocalAddr().String())
-				oldCancel()
-			}
-			oldCancel = cancel
-			time.Sleep(1 * time.Second)
-		}
-	}()
-
-	vsockListener, err := vsockListener()
-	if err != nil {
-		return err
-	}
-	go func() {
-		mux := http.NewServeMux()
-		mux.Handle(types.ConnectPath, vn.Mux())
-		s := &http.Server{
-			Handler:      mux,
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 10 * time.Second,
-		}
-		if err := s.Serve(vsockListener); err != nil {
-			errCh <- errors.Wrap(err, "virtualnetwork http.Serve failed")
-		}
-	}()
-
-	// 9p home directory sharing
-	if runtime.GOOS == "windows" && config.Get(crcConfig.EnableSharedDirs).AsBool() {
+	// 9p home directory sharing (Windows only)
+	if runtime.GOOS == "windows" && cfg.Get(crcConfig.EnableSharedDirs).AsBool() {
 		// 9p over hvsock
 		listener9pHvsock, err := fs9p.GetHvsockListener(constants.Plan9HvsockGUID)
 		if err != nil {
@@ -276,7 +138,7 @@ func run(configuration *types.Configuration) error {
 		}()
 
 		// 9p over TCP (as a backup)
-		listener9pTCP, err := vn.Listen("tcp", net.JoinHostPort(configuration.GatewayIP, fmt.Sprintf("%d", constants.Plan9TcpPort)))
+		listener9pTCP, err := net.Listen("tcp", fmt.Sprintf("%s:%d", constants.VSockGateway, constants.Plan9TcpPort))
 		if err != nil {
 			return err
 		}
@@ -300,15 +162,6 @@ func run(configuration *types.Configuration) error {
 	}
 
 	startupDone()
-
-	if logging.IsDebug() {
-		go func() {
-			for {
-				fmt.Printf("%v sent to the VM, %v received from the VM\n", units.HumanSize(float64(vn.BytesSent())), units.HumanSize(float64(vn.BytesReceived())))
-				time.Sleep(5 * time.Second)
-			}
-		}()
-	}
 
 	c := make(chan os.Signal, 1)
 
@@ -346,8 +199,8 @@ func (adminHelperHostsFileEditor) Remove(hostnames ...string) error {
 	return adminhelper.RemoveFromHostsFile(hostnames...)
 }
 
-// This API is only exposed in the virtual network (only the VM can reach this).
-// Any process inside the VM can reach it by connecting to gateway.crc.testing:80.
+// gatewayAPIMux creates the HTTP mux for the admin helper hosts file API.
+// This API allows adding and removing entries from the hosts file.
 func gatewayAPIMux(cfg *crcConfig.Config, hostsEditor HostsFileEditor) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/hosts/add", func(w http.ResponseWriter, r *http.Request) {
@@ -370,12 +223,6 @@ func gatewayAPIMux(cfg *crcConfig.Config, hostsEditor HostsFileEditor) *http.Ser
 			return hostsEditor.Remove(hostnames...)
 		})
 	})
-	return mux
-}
-
-func networkAPIMux(vn *virtualnetwork.VirtualNetwork) *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.Handle("/", vn.Mux())
 	return mux
 }
 
