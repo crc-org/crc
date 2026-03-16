@@ -142,7 +142,7 @@ var crcUsersGroupExistsCheck = Check{
 	checkDescription: "Checking if crc-users group exists",
 	check: func() error {
 		if _, _, err := powershell.Execute("Get-LocalGroup -Name crc-users"); err != nil {
-			return fmt.Errorf("'crc-users' group does not exist: %v", err)
+			return fmt.Errorf("'crc-users' group does not exist: %w", err)
 		}
 		return nil
 	},

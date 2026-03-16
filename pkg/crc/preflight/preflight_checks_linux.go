@@ -112,13 +112,13 @@ func getLibvirtCapabilities() (*libvirtxml.Caps, error) {
 	if err != nil {
 		stdOut, _, err = crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///session", "capabilities")
 		if err != nil {
-			return nil, fmt.Errorf("Failed to run 'virsh capabilities': %v", err)
+			return nil, fmt.Errorf("failed to run 'virsh capabilities': %w", err)
 		}
 	}
 	caps := &libvirtxml.Caps{}
 	err = caps.Unmarshal(stdOut)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing 'virsh capabilities': %v", err)
+		return nil, fmt.Errorf("error parsing 'virsh capabilities': %w", err)
 	}
 
 	return caps, nil
@@ -186,7 +186,7 @@ func checkLibvirtVersion() error {
 	}
 	installedLibvirtVersion, err := semver.NewVersion(strings.TrimSpace(stdOut))
 	if err != nil {
-		return fmt.Errorf("Unable to parse installed libvirt version %v", err)
+		return fmt.Errorf("unable to parse installed libvirt version: %w", err)
 	}
 	supportedLibvirtVersion, err := semver.NewVersion(minSupportedLibvirtVersion)
 	if err != nil {
@@ -566,7 +566,7 @@ func fixLibvirtCrcNetworkAvailable() error {
 	err = cmd.Run()
 	if err != nil {
 		logging.Debugf("%v : %s", err, buf.String())
-		return fmt.Errorf("Failed to create libvirt 'crc' network: %v - %s", err, buf.String())
+		return fmt.Errorf("failed to create libvirt 'crc' network: %w - %s", err, buf.String())
 	}
 	logging.Debug("libvirt 'crc' network created")
 	return nil
@@ -653,13 +653,13 @@ func checkLibvirtCrcNetworkDefinition() error {
 	logging.Debug("Checking if libvirt 'crc' definition is up to date")
 	stdOut, _, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "net-dumpxml", "--inactive", "crc")
 	if err != nil {
-		return fmt.Errorf("Failed to get 'crc' network XML: %s", err)
+		return fmt.Errorf("failed to get 'crc' network XML: %w", err)
 	}
 	stdOut = trimSpacesFromXML(stdOut)
 
 	netXMLDef, err := getLibvirtNetworkXML()
 	if err != nil {
-		return fmt.Errorf("Failed to generate 'crc' network XML from template: %s", err)
+		return fmt.Errorf("failed to generate 'crc' network XML from template: %w", err)
 	}
 	netXMLDef = trimSpacesFromXML(netXMLDef)
 

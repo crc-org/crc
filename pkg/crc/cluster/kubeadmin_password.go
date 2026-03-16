@@ -60,7 +60,7 @@ func UpdateUserPasswords(ctx context.Context, ocConfig oc.Config, newKubeAdminPa
 		"-n", "openshift-config", "--type", "merge"}
 	_, stderr, err = ocConfig.RunOcCommandPrivate(cmdArgs...)
 	if err != nil {
-		return fmt.Errorf("failed to update user passwords %v: %s", err, stderr)
+		return fmt.Errorf("failed to update user passwords %w: %s", err, stderr)
 	}
 	return nil
 }

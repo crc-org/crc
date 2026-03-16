@@ -680,7 +680,7 @@ func createHost(machineConfig config.MachineConfig, preset crcPreset.Preset) err
 
 	vm, err := newHost(api, machineConfig)
 	if err != nil {
-		return fmt.Errorf("Error creating new host: %s", err)
+		return fmt.Errorf("error creating new host: %w", err)
 	}
 
 	logging.Debug("Running pre-create checks...")
@@ -690,18 +690,18 @@ func createHost(machineConfig config.MachineConfig, preset crcPreset.Preset) err
 	}
 
 	if err := api.Save(vm); err != nil {
-		return fmt.Errorf("Error saving host to store before attempting creation: %s", err)
+		return fmt.Errorf("error saving host to store before attempting creation: %w", err)
 	}
 
 	logging.Debug("Creating machine...")
 
 	if err := vm.Driver.Create(); err != nil {
-		return fmt.Errorf("Error in driver during machine creation: %s", err)
+		return fmt.Errorf("error in driver during machine creation: %w", err)
 	}
 
 	logging.Info("Generating new SSH key pair...")
 	if err := crcssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
-		return fmt.Errorf("Error generating ssh key pair: %v", err)
+		return fmt.Errorf("error generating ssh key pair: %w", err)
 	}
 	if preset == crcPreset.OpenShift || preset == crcPreset.OKD {
 		if err := cluster.GenerateUserPassword(constants.GetKubeAdminPasswordPath(), "kubeadmin"); err != nil {
@@ -712,7 +712,7 @@ func createHost(machineConfig config.MachineConfig, preset crcPreset.Preset) err
 		}
 	}
 	if err := api.SetExists(vm.Name); err != nil {
-		return fmt.Errorf("Failed to record VM existence: %s", err)
+		return fmt.Errorf("failed to record VM existence: %w", err)
 	}
 
 	logging.Debug("Machine successfully created")
@@ -721,16 +721,16 @@ func createHost(machineConfig config.MachineConfig, preset crcPreset.Preset) err
 
 func startHost(ctx context.Context, vm *virtualMachine) error {
 	if err := vm.Driver.Start(); err != nil {
-		return fmt.Errorf("Error in driver during machine start: %s", err)
+		return fmt.Errorf("error in driver during machine start: %w", err)
 	}
 
 	if err := vm.api.Save(vm.Host); err != nil {
-		return fmt.Errorf("Error saving virtual machine to store after attempting creation: %s", err)
+		return fmt.Errorf("error saving virtual machine to store after attempting creation: %w", err)
 	}
 
 	logging.Debug("Waiting for machine to be running, this may take a few minutes...")
 	if err := crcerrors.Retry(ctx, 3*time.Minute, host.MachineInState(vm.Driver, libmachinestate.Running), 3*time.Second); err != nil {
-		return fmt.Errorf("Error waiting for machine to be running: %s", err)
+		return fmt.Errorf("error waiting for machine to be running: %w", err)
 	}
 
 	logging.Debug("Machine is up and running!")
