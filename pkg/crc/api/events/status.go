@@ -57,7 +57,7 @@ func (s *TickListener) Start(publisher EventPublisher) {
 
 				bytes, marshallError := json.Marshal(data)
 				if marshallError != nil {
-					logging.Errorf("unexpected error during status object to JSON conversion: %v", err)
+					logging.Errorf("unexpected error during status object to JSON conversion: %v", marshallError)
 					continue
 				}
 				publisher.Publish(&sse.Event{Event: []byte("status"), Data: bytes})
