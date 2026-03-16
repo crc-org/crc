@@ -77,7 +77,6 @@ func growRootFileSystem(sshRunner *crcssh.Runner, preset crcPreset.Preset, persi
 			return err
 		}
 		logging.Debugf("No free space after %s, nothing to do", rootPart)
-		return nil
 	}
 
 	if preset == crcPreset.Microshift {
