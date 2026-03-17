@@ -13,6 +13,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/macadam"
 	"github.com/crc-org/crc/v2/pkg/crc/systemd"
 	"github.com/crc-org/crc/v2/pkg/crc/systemd/states"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
@@ -440,23 +441,17 @@ func warnNoDaemonAutostart() error {
 }
 
 func removeCrcVM() error {
-	stdout, _, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "domstate", constants.DefaultName)
+	m := macadam.UseMacadam()
+	_, err := m.GetVMStatus(constants.DefaultName)
 	if err != nil {
 		//  User may have run `crc delete` before `crc cleanup`
 		//  in that case there is no crc vm so return early.
 		return nil
 	}
-	if strings.TrimSpace(stdout) == "running" {
-		_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "destroy", constants.DefaultName)
-		if err != nil {
-			logging.Debugf("%v : %s", err, stderr)
-			return fmt.Errorf("Failed to destroy 'crc' VM")
-		}
-	}
-	_, stderr, err := crcos.RunWithDefaultLocale("virsh", "--connect", "qemu:///system", "undefine", "--nvram", constants.DefaultName)
+	_, stderr, err := m.DeleteVM(constants.DefaultName)
 	if err != nil {
 		logging.Debugf("%v : %s", err, stderr)
-		return fmt.Errorf("Failed to undefine 'crc' VM")
+		return fmt.Errorf("Failed to remove 'crc' VM")
 	}
 	logging.Debug("'crc' VM is removed")
 	return nil
