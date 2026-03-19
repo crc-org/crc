@@ -86,11 +86,6 @@ Feature: Test configuration settings
             | skip-check-root-user                 | true   | false  |
             | skip-check-virt-enabled              | true   | false  |
 
-    # the following properties not suit for user notwork
-    #| skip-check-crc-network               | true   | false  |
-    #| skip-check-crc-network-active        | true   | false  |
-    #| skip-check-network-manager-installed | true   | false  |
-    #| skip-check-network-manager-running   | true   | false  |
 
         @windows
         Examples:
@@ -109,38 +104,9 @@ Feature: Test configuration settings
     @linux
     Scenario: Missing CRC setup
         Given executing single crc setup command succeeds
-        When executing "rm ~/.crc/bin/crc-driver-libvirt-*" succeeds
-        Then starting CRC with default bundle fails
+        When executing "rm ~/.crc/bin/macadam-linux-*" succeeds
+        When starting CRC with default bundle fails
         And stderr should contain "Preflight checks failed during `crc start`, please try to run `crc setup` first in case you haven't done so yet"
-
-    @linux
-    Scenario: Check network setup and destroy it, then check again
-        When removing file "crc.json" from CRC home folder succeeds
-        And executing single crc setup command succeeds
-        And executing "sudo virsh net-list --name" succeeds
-        Then stdout contains "default"
-
-    @linux @system_network
-    Scenario: Running `crc setup` with checks enabled restores destroyed network
-        When setting config property "skip-check-crc-network" to value "false" succeeds
-        And setting config property "skip-check-crc-network-active" to value "false" succeeds
-        Then executing single crc setup command succeeds
-        And executing "sudo virsh net-list --name" succeeds
-        And stdout contains "crc"
-
-    @linux @system_network
-    Scenario: Running `crc start` without `crc setup` and with checks disabled fails when network destroyed
-        # Destroy network again
-        When executing "sudo virsh net-undefine crc && sudo virsh net-destroy crc" succeeds
-        And executing "sudo virsh net-list --name" succeeds
-        Then stdout should not contain "crc"
-        # Disable checks
-        When setting config property "skip-check-crc-network" to value "true" succeeds
-        And setting config property "skip-check-crc-network-active" to value "true" succeeds
-
-        # Start CRC
-        Then starting CRC with default bundle fails
-        And stderr contains "Network not found: no network with matching name 'crc'"
 
     @linux
     Scenario: Clean-up

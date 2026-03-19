@@ -217,11 +217,6 @@ func InitializeScenario(s *godog.ScenarioContext) {
 					fmt.Println(err)
 					os.Exit(1)
 				}
-				err = util.ExecuteCommandWithRetry(10, "1s", "virsh --readonly -c qemu:///system capabilities", "contains", "<capabilities>")
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
 			}
 
 			if tag.Name == "@system_network" {
