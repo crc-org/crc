@@ -5,8 +5,11 @@ POSIX shells.
 
 The original Python package which this work was inspired by can be found
 at https://pypi.python.org/pypi/shellescape.
+
+Portions of this file are from al.essio.dev/pkg/shellescape, © 2016 Alessio Treglia under the MIT License.
+See LICENSE for more information.
 */
-package shellescape // "import al.essio.dev/pkg/shellescape"
+package shellescape
 
 /*
 The functionality provided by shellescape.Quote could be helpful
@@ -17,14 +20,9 @@ be appended to/used in the context of shell programs' command line arguments.
 import (
 	"regexp"
 	"strings"
-	"unicode"
 )
 
-var pattern *regexp.Regexp
-
-func init() {
-	pattern = regexp.MustCompile(`[^\w@%+=:,./-]`)
-}
+var pattern *regexp.Regexp = regexp.MustCompile(`[^\w@%+=:,./-]`)
 
 // Quote returns a shell-escaped version of the string s. The returned value
 // is a string that can safely be used as one token in a shell command line.
@@ -38,29 +36,4 @@ func Quote(s string) string {
 	}
 
 	return s
-}
-
-// QuoteCommand returns a shell-escaped version of the slice of strings.
-// The returned value is a string that can safely be used as shell command arguments.
-func QuoteCommand(args []string) string {
-	l := make([]string, len(args))
-
-	for i, s := range args {
-		l[i] = Quote(s)
-	}
-
-	return strings.Join(l, " ")
-}
-
-// StripUnsafe remove non-printable runes, e.g. control characters in
-// a string that is meant  for consumption by terminals that support
-// control characters.
-func StripUnsafe(s string) string {
-	return strings.Map(func(r rune) rune {
-		if unicode.IsPrint(r) {
-			return r
-		}
-
-		return -1
-	}, s)
 }
