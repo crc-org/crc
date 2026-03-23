@@ -53,7 +53,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 	github.com/yusufpapurcu/wmi v1.2.4
-	github.com/zalando/go-keyring v0.2.6
+	github.com/zalando/go-keyring v0.2.8
 	go.podman.io/common v0.67.0
 	go.podman.io/image/v5 v5.39.1
 	golang.org/x/crypto v0.49.0
@@ -71,7 +71,6 @@ require (
 )
 
 require (
-	al.essio.dev/pkg/shellescape v1.5.1 // indirect
 	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/RangelReale/osincli v0.0.0-20160924135400-fababb0555f2 // indirect
 	github.com/VividCortex/ewma v1.2.0 // indirect
@@ -109,7 +108,7 @@ require (
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
-	github.com/godbus/dbus/v5 v5.1.0 // indirect
+	github.com/godbus/dbus/v5 v5.2.2 // indirect
 	github.com/gofrs/uuid v4.3.1+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect

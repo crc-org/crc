@@ -22,7 +22,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"al.essio.dev/pkg/shellescape"
+	"github.com/zalando/go-keyring/internal/shellescape"
 )
 
 const (
