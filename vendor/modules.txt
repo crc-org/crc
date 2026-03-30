@@ -214,7 +214,7 @@ github.com/ebitengine/purego/internal/cgo
 github.com/ebitengine/purego/internal/fakecgo
 github.com/ebitengine/purego/internal/strings
 github.com/ebitengine/purego/internal/xreflect
-# github.com/elazarl/goproxy v1.8.2
+# github.com/elazarl/goproxy v1.8.3
 ## explicit; go 1.23.0
 github.com/elazarl/goproxy
 github.com/elazarl/goproxy/internal/http1parser
