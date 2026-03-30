@@ -86,13 +86,20 @@ func RemoveCRCHostEntriesFromKnownHosts() error {
 	}
 	defer f.Close()
 
-	tempHostsFile, err := os.CreateTemp(filepath.Join(constants.GetHomeDir(), ".ssh"), "crc")
+	sshDirRoot, err := os.OpenRoot(filepath.Join(constants.GetHomeDir(), ".ssh"))
+	if err != nil {
+		return err
+	}
+	defer sshDirRoot.Close()
+
+	tempHostsFile, err := os.CreateTemp(sshDirRoot.Name(), "crc")
 	if err != nil {
 		return fmt.Errorf("Unable to create temp file: %w", err)
 	}
+	tempHostsFilename := filepath.Base(tempHostsFile.Name())
 	defer func() {
-		tempHostsFile.Close()
-		os.Remove(tempHostsFile.Name()) //nolint:gosec // G703: paths from CreateTemp
+		_ = tempHostsFile.Close()
+		_ = sshDirRoot.Remove(tempHostsFilename)
 	}()
 
 	if err := tempHostsFile.Chmod(0600); err != nil {
@@ -142,7 +149,9 @@ func RemoveCRCHostEntriesFromKnownHosts() error {
 		if err := tempHostsFile.Close(); err != nil {
 			return fmt.Errorf("Error closing temp file: %w", err)
 		}
-		return os.Rename(tempHostsFile.Name(), knownHostsPath) //nolint:gosec // G703: paths from CreateTemp
+		// we need a path relative to the .ssh directory and the 'known_hosts'
+		// filename is known beforehand
+		return sshDirRoot.Rename(tempHostsFilename, "known_hosts")
 	}
 	return nil
 }

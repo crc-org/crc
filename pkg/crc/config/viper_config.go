@@ -125,18 +125,31 @@ func ensureConfigFileExists(file string) error {
 func atomicWrite(bin []byte, configFile string) error {
 	ext := filepath.Ext(configFile)
 	pattern := fmt.Sprintf("%s*%s", strings.TrimSuffix(filepath.Base(configFile), ext), ext)
-	tmpFile, err := os.CreateTemp(filepath.Dir(configFile), pattern)
+
+	rootDir, err := os.OpenRoot(filepath.Dir(configFile))
 	if err != nil {
 		return err
 	}
+	defer rootDir.Close()
+
+	tmpFile, err := os.CreateTemp(rootDir.Name(), pattern)
+	if err != nil {
+		return err
+	}
+
+	// make sure paths are not absolute
+	tmpFileFilename := filepath.Base(tmpFile.Name())
+	configFileFilename := filepath.Base(configFile)
+
 	defer func() {
-		_ = os.Remove(tmpFile.Name()) // nolint:gosec // G703: paths from CreateTemp
+		_ = rootDir.Remove(tmpFileFilename)
 	}()
-	if err := tmpFile.Close(); err != nil {
+
+	_, err = tmpFile.Write(bin)
+	_ = tmpFile.Close()
+	if err != nil {
 		return err
 	}
-	if err := os.WriteFile(tmpFile.Name(), bin, 0600); err != nil { // nolint:gosec // G703: paths from CreateTemp
-		return err
-	}
-	return os.Rename(tmpFile.Name(), configFile) // nolint:gosec // G703: paths from CreateTemp and caller
+
+	return rootDir.Rename(tmpFileFilename, configFileFilename)
 }

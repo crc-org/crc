@@ -7,15 +7,17 @@ import (
 	"os"
 )
 
+// nolint:gosec // G703 - paths are supplied by calling functions,
+// this function is not supposed to check them for path traversal
 func copyFile(src, dst string, sparse bool) error {
-	in, err := os.Open(src) // nolint:gosec
+	in, err := os.Open(src)
 	if err != nil {
 		return err
 	}
 
 	defer in.Close()
 
-	out, err := os.Create(dst) // nolint:gosec
+	out, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
@@ -32,12 +34,12 @@ func copyFile(src, dst string, sparse bool) error {
 		}
 	}
 
-	fi, err := os.Stat(src) // nolint:gosec
+	fi, err := os.Stat(src)
 	if err != nil {
 		return err
 	}
 
-	if err = os.Chmod(dst, fi.Mode()); err != nil { // nolint:gosec // G703: paths from Stat
+	if err = os.Chmod(dst, fi.Mode()); err != nil {
 		return err
 	}
 

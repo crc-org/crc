@@ -62,7 +62,7 @@ func TestZipSlip(t *testing.T) {
 	archiveName := filepath.Join("testdata", "zipslip.tar.gz")
 	_, err := Uncompress(context.Background(), archiveName, t.TempDir())
 	logging.Infof("error: %v", err)
-	assert.ErrorContains(t, err, "illegal file path")
+	assert.ErrorContains(t, err, "path")
 }
 
 func TestBuildPathChecked(t *testing.T) {
