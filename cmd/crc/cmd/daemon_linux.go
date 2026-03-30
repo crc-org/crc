@@ -1,25 +1,17 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"os"
 
-	"github.com/containers/gvisor-tap-vsock/pkg/transport"
-	"github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork"
 	"github.com/coreos/go-systemd/v22/activation"
 	"github.com/coreos/go-systemd/v22/daemon"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
-	"github.com/crc-org/machine/libmachine/drivers"
-	"github.com/mdlayher/vsock"
 )
 
-const (
-	vsockUnitName = "crc-vsock.socket"
-	httpUnitName  = "crc-http.socket"
-)
+const httpUnitName = "crc-http.socket"
 
 // listenerWithNames() cannot be called multiple times, call it once at
 // startup, and then use `systemdListeners` in the rest of the code
@@ -42,9 +34,6 @@ func checkIfDaemonIsRunning() (bool, error) {
 
 // listenersWithNames maps a listener name to a set of net.Listener instances.
 // This is the same code as https://github.com/coreos/go-systemd/blob/main/activation/listeners.go
-// with support for vsock
-//
-// This function can only be called once, subsequent calls will always return an empty list
 func listenersWithNames() (map[string][]net.Listener, error) {
 	files := activation.Files(true)
 	listeners := map[string][]net.Listener{}
@@ -52,13 +41,8 @@ func listenersWithNames() (map[string][]net.Listener, error) {
 	for _, f := range files {
 		pc, err := net.FileListener(f)
 		if err != nil {
-			logging.Debugf("socket-activation: net.FileListener() error, falling back to mdlayher/vsock.FileListener(): %v", err)
-			// net.FileListener does not support vsock, need to fallback to vsock-specific code
-			pc, err = vsock.FileListener(f)
-			if err != nil {
-				logging.Debugf("failed to create listener for %s: %v", f.Name(), err)
-				continue
-			}
+			logging.Debugf("socket-activation: net.FileListener() error: %v", err)
+			continue
 		}
 		current, ok := listeners[f.Name()]
 		if !ok {
@@ -86,25 +70,6 @@ func getSystemdListener(unitName string) (net.Listener, error) {
 	return listeners[0], nil
 }
 
-func vsockListener() (net.Listener, error) {
-	ln, err := getSystemdListener(vsockUnitName)
-	if err != nil {
-		return nil, err
-	}
-	if ln != nil {
-		logging.Infof("using socket provided by %s", vsockUnitName)
-		return ln, nil
-	}
-
-	// no socket activation, we need to create the listener
-	ln, err = transport.Listen(transport.DefaultURL)
-	logging.Infof("listening %s", transport.DefaultURL)
-	if err != nil {
-		return nil, err
-	}
-	return ln, nil
-}
-
 func httpListener() (net.Listener, error) {
 	// check for systemd socket-activation
 	ln, err := getSystemdListener(httpUnitName)
@@ -126,8 +91,14 @@ func httpListener() (net.Listener, error) {
 	return ln, nil
 }
 
-func unixgramListener(_ context.Context, _ *virtualnetwork.VirtualNetwork) (*net.UnixConn, error) {
-	return nil, drivers.ErrNotImplemented
+func adminHelperListener() (net.Listener, error) {
+	addr := "127.0.0.1:9764"
+	ln, err := net.Listen("tcp", addr)
+	logging.Infof("admin helper listening %s", addr)
+	if err != nil {
+		return nil, err
+	}
+	return ln, nil
 }
 
 func startupDone() {

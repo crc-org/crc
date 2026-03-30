@@ -16,12 +16,10 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/cluster"
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
-	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	crcErrors "github.com/crc-org/crc/v2/pkg/crc/errors"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/bundle"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/types"
-	"github.com/crc-org/crc/v2/pkg/crc/network"
 	"github.com/crc-org/crc/v2/pkg/crc/preflight"
 	"github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/validation"
@@ -94,9 +92,10 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 	isRunning, _ := client.IsRunning()
 
 	if !isRunning {
-		if err := checkDaemonStarted(); err != nil {
+		// TODO: Uncomment this when we need it only for admin-helper
+		/*if err := checkDaemonStarted(); err != nil {
 			return nil, err
-		}
+		}*/
 
 		if err := preflight.StartPreflightChecks(config); err != nil {
 			return nil, crcos.CodeExitError{
@@ -328,6 +327,8 @@ func commandLinePrefix(shell string) string {
 	return "$"
 }
 
+// TODO: Uncomment this when we need it only for admin-helper
+/*
 func checkDaemonStarted() error {
 	if crcConfig.GetNetworkMode(config) == network.SystemNetworkingMode {
 		return nil
@@ -338,6 +339,7 @@ func checkDaemonStarted() error {
 	}
 	return daemonclient.CheckVersionMismatch(v)
 }
+*/
 
 func portFallbackWarning() string {
 	var fallbackPortWarning string
