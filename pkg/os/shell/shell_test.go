@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type MockCommandRunner struct {
@@ -168,19 +169,20 @@ func TestIsWindowsSubsystemLinux_whenValidKernelInfoFile_thenReturnTrue(t *testi
 		t.Run(tt.name, func(t *testing.T) {
 			// Given
 			dir := t.TempDir()
-			wslVersionFilePath := filepath.Join(dir, "version")
-			wslVersionFile, err := os.Create(wslVersionFilePath)
-			assert.NoError(t, err)
+			rootDir, err := os.OpenRoot(dir)
+			require.NoError(t, err)
+			defer rootDir.Close()
+			wslVersionFilename := "version"
+			wslVersionFile, err := rootDir.Create(wslVersionFilename)
+			require.NoError(t, err)
 			defer func(wslVersionFile *os.File) {
-				err := wslVersionFile.Close()
-				assert.NoError(t, err)
-				err = os.Remove(wslVersionFile.Name()) // nolint:gosec // G703: paths from CreateTemp and caller
-				assert.NoError(t, err)
+				assert.NoError(t, wslVersionFile.Close())
+				assert.NoError(t, rootDir.Remove(wslVersionFilename))
 			}(wslVersionFile)
 			numberOfBytesWritten, err := wslVersionFile.WriteString(tt.versionFileContent)
 			assert.NoError(t, err)
 			assert.Greater(t, numberOfBytesWritten, 0)
-			WindowsSubsystemLinuxKernelMetadataFile = wslVersionFilePath
+			WindowsSubsystemLinuxKernelMetadataFile = filepath.Join(dir, wslVersionFilename)
 			// When
 			result := IsWindowsSubsystemLinux()
 

@@ -89,15 +89,22 @@ func TestUpdateUserCaAndKeyToKubeconfig(t *testing.T) {
 }
 
 func createTempKubeConfig(config *api.Config) (string, error) {
-	tempFile, err := os.CreateTemp("", "kubeconfig-")
+	tempDirRoot, err := os.OpenRoot(os.TempDir())
+	if err != nil {
+		return "", err
+	}
+	defer tempDirRoot.Close()
+
+	tempFile, err := os.CreateTemp(tempDirRoot.Name(), "kubeconfig-")
 	if err != nil {
 		return "", err
 	}
 	path := tempFile.Name()
+	tempFileFilename := filepath.Base(path)
 
 	err = clientcmd.WriteToFile(*config, path)
 	if err != nil {
-		os.Remove(path) // nolint:gosec // G703: paths from CreateTemp and caller
+		_ = tempDirRoot.Remove(tempFileFilename)
 		return "", err
 	}
 

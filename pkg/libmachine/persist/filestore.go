@@ -25,26 +25,33 @@ func (s Filestore) saveToFile(data []byte, file string) error {
 		return os.WriteFile(file, data, 0600)
 	}
 
-	tmpfi, err := os.CreateTemp(filepath.Dir(file), "config.json.tmp")
+	rootDir, err := os.OpenRoot(filepath.Dir(file))
 	if err != nil {
 		return err
 	}
-	defer os.Remove(tmpfi.Name())
+	defer rootDir.Close()
+	fileFilename := filepath.Base(file)
 
-	if err = os.WriteFile(tmpfi.Name(), data, 0600); err != nil { // nolint:gosec // G703: paths from CreateTemp
+	tmpFile, err := os.CreateTemp(rootDir.Name(), "config.json.tmp")
+	if err != nil {
+		return err
+	}
+	defer tmpFile.Close()
+	tmpFileFilename := filepath.Base(tmpFile.Name())
+
+	if err = rootDir.WriteFile(tmpFileFilename, data, 0600); err != nil {
 		return err
 	}
 
-	if err = tmpfi.Close(); err != nil {
+	if err = tmpFile.Close(); err != nil {
 		return err
 	}
 
-	if err = os.Remove(file); err != nil {
+	if err = rootDir.Rename(tmpFileFilename, fileFilename); err != nil {
 		return err
 	}
 
-	err = os.Rename(tmpfi.Name(), file) // nolint:gosec // G703: paths from CreateTemp and caller
-	return err
+	return nil
 }
 
 func (s Filestore) Save(host *host.Host) error {

@@ -90,6 +90,15 @@ func untar(ctx context.Context, reader io.Reader, targetDir string, fileFilter f
 	var extractedFiles []string
 	tarReader := tar.NewReader(reader)
 
+	if err := os.MkdirAll(targetDir, 0o755); err != nil {
+		return nil, err
+	}
+	targetDirRoot, err := os.OpenRoot(targetDir)
+	if err != nil {
+		return nil, err
+	}
+	defer targetDirRoot.Close()
+
 	for {
 		header, err := tarReader.Next()
 		switch {
@@ -107,10 +116,9 @@ func untar(ctx context.Context, reader io.Reader, targetDir string, fileFilter f
 		}
 
 		// the target location where the dir/file should be created
-		path, err := BuildPathChecked(targetDir, header.Name)
-		if err != nil {
-			return nil, err
-		}
+		// path must not be absolute, so it is not joined to targetDir
+		// and the filename is just cleaned
+		path := filepath.Clean(header.Name)
 
 		if fileFilter != nil && !fileFilter(path) {
 			logging.Debugf("untar: Skipping %s", path)
@@ -119,31 +127,31 @@ func untar(ctx context.Context, reader io.Reader, targetDir string, fileFilter f
 
 		// check the file type
 		switch header.Typeflag {
-
 		// if it's a dir, and it doesn't exist, create it
 		case tar.TypeDir:
-			if err := os.MkdirAll(path, header.FileInfo().Mode()); err != nil { // nolint:gosec // G703: paths from header.FileInfo()
+			if err := targetDirRoot.MkdirAll(path, header.FileInfo().Mode().Perm()); err != nil {
 				return nil, err
 			}
 
 		// if it's a file, create it
 		case tar.TypeReg, tar.TypeGNUSparse:
 			// tar.Next() will externally only iterate files, so we might have to create intermediate directories here
-			if err := uncompressFile(ctx, tarReader, header.FileInfo(), path, showProgress); err != nil {
+			if err := uncompressFile(ctx, tarReader, header.FileInfo(), targetDirRoot, path, showProgress); err != nil {
 				return nil, err
 			}
-			extractedFiles = append(extractedFiles, path)
+			// return full paths
+			extractedFiles = append(extractedFiles, filepath.Join(targetDirRoot.Name(), path))
 		}
 	}
 }
 
-func uncompressFile(ctx context.Context, tarReader io.Reader, fileInfo os.FileInfo, path string, showProgress bool) error {
+func uncompressFile(ctx context.Context, tarReader io.Reader, fileInfo os.FileInfo, rootDir *os.Root, path string, showProgress bool) error {
 	// with a file filter, we may have skipped the intermediate directories, make sure they exist
-	if err := os.MkdirAll(filepath.Dir(path), 0750); err != nil { // nolint:gosec // G703: paths from filepath.Dir
+	if err := rootDir.MkdirAll(filepath.Dir(path), 0o750); err != nil {
 		return err
 	}
 
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, fileInfo.Mode()) // nolint:gosec // G703: paths from filepath.Dir
+	file, err := rootDir.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, fileInfo.Mode().Perm())
 	if err != nil {
 		return err
 	}
@@ -178,46 +186,51 @@ func unzip(ctx context.Context, archive, target string, fileFilter func(string) 
 	if err != nil {
 		return nil, err
 	}
+	defer reader.Close()
 
-	if err := os.MkdirAll(target, 0750); err != nil {
+	if err := os.MkdirAll(target, 0o750); err != nil {
 		return nil, err
 	}
+	targetDirRoot, err := os.OpenRoot(target)
+	if err != nil {
+		return nil, err
+	}
+	defer targetDirRoot.Close()
 
 	for _, file := range reader.File {
-		path, err := BuildPathChecked(target, file.Name)
-		if err != nil {
-			return nil, err
-		}
+		// path must not be absolute, so it is not joined to targetDir
+		// and the filename is just cleaned
+		path := filepath.Clean(file.Name)
 
 		if fileFilter != nil && !fileFilter(path) {
 			logging.Debugf("untar: Skipping %s", path)
 			continue
 		}
 		if file.FileInfo().IsDir() {
-			err = os.MkdirAll(path, file.Mode())
-			if err != nil {
+			if err = targetDirRoot.MkdirAll(path, file.Mode().Perm()); err != nil {
 				return nil, err
 			}
 			continue
 		}
 
-		if err := unzipFile(ctx, file, filepath.Clean(path), showProgress); err != nil {
+		if err := unzipFile(ctx, file, targetDirRoot, path, showProgress); err != nil {
 			return nil, err
 		}
-		extractedFiles = append(extractedFiles, path)
+		// return full paths
+		extractedFiles = append(extractedFiles, filepath.Join(targetDirRoot.Name(), path))
 	}
 
 	return extractedFiles, nil
 }
 
-func unzipFile(ctx context.Context, file *zip.File, path string, showProgress bool) error {
+func unzipFile(ctx context.Context, file *zip.File, rootDir *os.Root, path string, showProgress bool) error {
 	fileReader, err := file.Open()
 	if err != nil {
 		return err
 	}
 	defer fileReader.Close()
 
-	return uncompressFile(ctx, fileReader, file.FileInfo(), path, showProgress)
+	return uncompressFile(ctx, fileReader, file.FileInfo(), rootDir, path, showProgress)
 }
 
 func progressBarReader(reader io.Reader, info os.FileInfo, showProgress bool) (io.Reader, func()) {

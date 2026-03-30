@@ -98,6 +98,7 @@ func Download(ctx context.Context, uri, destination string, mode os.FileMode, sh
 // InMemory takes a URL and returns a ReadCloser object to the downloaded file
 // or the file itself if the URL is a file:// URL. In case of failure it returns
 // the respective error.
+// nolint:gosec // G703 - root directory needed for path traversal check
 func InMemory(uri string) (io.ReadCloser, error) {
 	u, err := url.Parse(uri)
 	if err != nil {
@@ -108,7 +109,7 @@ func InMemory(uri string) (io.ReadCloser, error) {
 		if err != nil {
 			return nil, err
 		}
-		return os.Open(filePath) // nolint:gosec
+		return os.Open(filePath)
 	}
 	client := grab.NewClient()
 	client.HTTPClient = &http.Client{Transport: httpproxy.HTTPTransport()}
