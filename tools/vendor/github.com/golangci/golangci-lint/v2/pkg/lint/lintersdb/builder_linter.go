@@ -132,7 +132,7 @@ func NewLinterBuilder() *LinterBuilder {
 }
 
 // Build loads all the "internal" linters.
-// The configuration is use for the linter settings.
+// The configuration is used for the linter settings.
 func (LinterBuilder) Build(cfg *config.Config) ([]*linter.Config, error) {
 	if cfg == nil {
 		return nil, nil
@@ -557,6 +557,7 @@ func (LinterBuilder) Build(cfg *config.Config) ([]*linter.Config, error) {
 
 		linter.NewConfig(prealloc.New(&cfg.Linters.Settings.Prealloc)).
 			WithSince("v1.19.0").
+			WithLoadForGoAnalysis().
 			WithURL("https://github.com/alexkohler/prealloc"),
 
 		linter.NewConfig(predeclared.New(&cfg.Linters.Settings.Predeclared)).
