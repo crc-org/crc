@@ -54,11 +54,11 @@ func UpdateResolvFileOnInstance(sshRunner *ssh.Runner, resolvFileValues ResolvFi
 func replaceResolvConfFile(sshRunner *ssh.Runner, resolvFileValues ResolvFileValues) error {
 	resolvFile, err := CreateResolvFile(resolvFileValues)
 	if err != nil {
-		return fmt.Errorf("error creating resolv conf file: %w", err)
+		return fmt.Errorf("error creating resolv.conf file: %w", err)
 	}
 	err = sshRunner.CopyDataPrivileged([]byte(resolvFile), "/etc/resolv.conf", 0644)
 	if err != nil {
-		return fmt.Errorf("error creating /etc/resolv on instance: %w", err)
+		return fmt.Errorf("error creating /etc/resolv.conf on instance: %w", err)
 	}
 	return nil
 }
