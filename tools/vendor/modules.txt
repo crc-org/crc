@@ -57,7 +57,7 @@ github.com/Djarvur/go-err113
 # github.com/Masterminds/semver/v3 v3.4.0
 ## explicit; go 1.21
 github.com/Masterminds/semver/v3
-# github.com/MirrexOne/unqueryvet v1.5.3
+# github.com/MirrexOne/unqueryvet v1.5.4
 ## explicit; go 1.24.0
 github.com/MirrexOne/unqueryvet
 github.com/MirrexOne/unqueryvet/internal/analyzer
@@ -82,7 +82,7 @@ github.com/alecthomas/go-check-sumtype
 # github.com/alexkohler/nakedret/v2 v2.0.6
 ## explicit; go 1.23.0
 github.com/alexkohler/nakedret/v2
-# github.com/alexkohler/prealloc v1.0.2
+# github.com/alexkohler/prealloc v1.1.0
 ## explicit; go 1.24.0
 github.com/alexkohler/prealloc/pkg
 # github.com/alfatraining/structtag v1.0.0
@@ -212,8 +212,8 @@ github.com/dlclark/regexp2/syntax
 # github.com/ettle/strcase v0.2.0
 ## explicit; go 1.12
 github.com/ettle/strcase
-# github.com/fatih/color v1.18.0
-## explicit; go 1.17
+# github.com/fatih/color v1.19.0
+## explicit; go 1.25.0
 github.com/fatih/color
 # github.com/fatih/structtag v1.2.0
 ## explicit; go 1.12
@@ -320,7 +320,7 @@ github.com/golangci/go-printf-func-name/pkg/analyzer
 # github.com/golangci/gofmt v0.0.0-20250106114630-d62b90e6713d
 ## explicit; go 1.22.0
 github.com/golangci/gofmt/gofmt
-# github.com/golangci/golangci-lint/v2 v2.10.1
+# github.com/golangci/golangci-lint/v2 v2.11.4
 ## explicit; go 1.25.0
 github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 github.com/golangci/golangci-lint/v2/internal/cache
@@ -330,10 +330,9 @@ github.com/golangci/golangci-lint/v2/internal/go/cache
 github.com/golangci/golangci-lint/v2/internal/go/cacheprog
 github.com/golangci/golangci-lint/v2/internal/go/mmap
 github.com/golangci/golangci-lint/v2/internal/go/quoted
-github.com/golangci/golangci-lint/v2/internal/x/tools/analysisflags
-github.com/golangci/golangci-lint/v2/internal/x/tools/analysisinternal
 github.com/golangci/golangci-lint/v2/internal/x/tools/diff
 github.com/golangci/golangci-lint/v2/internal/x/tools/diff/lcs
+github.com/golangci/golangci-lint/v2/internal/x/tools/driverutil
 github.com/golangci/golangci-lint/v2/pkg/commands
 github.com/golangci/golangci-lint/v2/pkg/commands/internal
 github.com/golangci/golangci-lint/v2/pkg/commands/internal/migrate
@@ -580,7 +579,7 @@ github.com/julz/importas
 # github.com/karamaru-alpha/copyloopvar v1.2.2
 ## explicit; go 1.24.0
 github.com/karamaru-alpha/copyloopvar
-# github.com/kisielk/errcheck v1.9.0
+# github.com/kisielk/errcheck v1.10.0
 ## explicit; go 1.22.0
 github.com/kisielk/errcheck/errcheck
 # github.com/kkHAIKE/contextcheck v1.1.6
@@ -660,13 +659,14 @@ github.com/mattn/go-runewidth
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 ## explicit
 github.com/matttproud/golang_protobuf_extensions/pbutil
-# github.com/mgechev/revive v1.14.0
-## explicit; go 1.24.0
+# github.com/mgechev/revive v1.15.0
+## explicit; go 1.25.0
 github.com/mgechev/revive/config
 github.com/mgechev/revive/formatter
 github.com/mgechev/revive/internal/astutils
 github.com/mgechev/revive/internal/ifelse
 github.com/mgechev/revive/internal/rule
+github.com/mgechev/revive/internal/syncset
 github.com/mgechev/revive/internal/typeparams
 github.com/mgechev/revive/lint
 github.com/mgechev/revive/logging
@@ -797,8 +797,8 @@ github.com/rogpeppe/go-internal/robustio
 # github.com/ryancurrah/gomodguard v1.4.1
 ## explicit; go 1.23.0
 github.com/ryancurrah/gomodguard
-# github.com/ryanrolds/sqlclosecheck v0.5.1
-## explicit; go 1.20
+# github.com/ryanrolds/sqlclosecheck v0.6.0
+## explicit; go 1.25.0
 github.com/ryanrolds/sqlclosecheck/pkg/analyzer
 # github.com/sanposhiho/wastedassign/v2 v2.1.0
 ## explicit; go 1.18
@@ -814,8 +814,8 @@ github.com/sashamelentyev/interfacebloat/pkg/analyzer
 ## explicit; go 1.23.0
 github.com/sashamelentyev/usestdlibvars/pkg/analyzer
 github.com/sashamelentyev/usestdlibvars/pkg/analyzer/internal/mapping
-# github.com/securego/gosec/v2 v2.23.0
-## explicit; go 1.24.0
+# github.com/securego/gosec/v2 v2.24.8-0.20260309165252-619ce2117e08
+## explicit; go 1.25.0
 github.com/securego/gosec/v2
 github.com/securego/gosec/v2/analyzers
 github.com/securego/gosec/v2/cwe
@@ -829,7 +829,7 @@ github.com/sirupsen/logrus
 # github.com/sivchari/containedctx v1.0.3
 ## explicit; go 1.17
 github.com/sivchari/containedctx
-# github.com/sonatard/noctx v0.4.0
+# github.com/sonatard/noctx v0.5.1
 ## explicit; go 1.23.0
 github.com/sonatard/noctx
 # github.com/sourcegraph/go-diff v0.7.0
@@ -908,8 +908,8 @@ github.com/ultraware/funlen
 # github.com/ultraware/whitespace v0.2.0
 ## explicit; go 1.20
 github.com/ultraware/whitespace
-# github.com/uudashr/gocognit v1.2.0
-## explicit; go 1.19
+# github.com/uudashr/gocognit v1.2.1
+## explicit; go 1.24.0
 github.com/uudashr/gocognit
 # github.com/uudashr/iface v1.4.1
 ## explicit; go 1.23.0

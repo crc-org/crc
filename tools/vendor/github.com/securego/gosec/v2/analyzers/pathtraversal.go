@@ -24,13 +24,22 @@ import (
 func PathTraversal() taint.Config {
 	return taint.Config{
 		Sources: []taint.Source{
+			// Type sources: tainted when received as function parameters
 			{Package: "net/http", Name: "Request", Pointer: true},
 			{Package: "net/url", Name: "URL", Pointer: true},
-			{Package: "os", Name: "Args"},
-			{Package: "os", Name: "Getenv"},
 			{Package: "bufio", Name: "Reader", Pointer: true},
 			{Package: "bufio", Name: "Scanner", Pointer: true},
-			{Package: "os", Name: "File", Pointer: true},
+
+			// Function sources: always produce tainted data
+			{Package: "os", Name: "Args", IsFunc: true},
+			{Package: "os", Name: "Getenv", IsFunc: true},
+			{Package: "os", Name: "ReadFile", IsFunc: true},
+
+			// NOTE: os.File is NOT a source type. Reading from a locally-opened file
+			// with a hardcoded path is not tainted. The file path argument to os.Open
+			// is what the sink checks. If someone opens a file from user input and
+			// then reads from it, the taint flows through the path argument, not the
+			// File type itself.
 		},
 		Sinks: []taint.Sink{
 			{Package: "os", Method: "Open"},
@@ -52,6 +61,30 @@ func PathTraversal() taint.Config {
 			{Package: "io/ioutil", Method: "ReadDir"},
 			{Package: "path/filepath", Method: "Walk"},
 			{Package: "path/filepath", Method: "WalkDir"},
+		},
+		Sanitizers: []taint.Sanitizer{
+			// filepath.Clean normalizes and removes traversal components
+			{Package: "path/filepath", Method: "Clean"},
+			// filepath.Base extracts just the filename, removing directory traversal
+			{Package: "path/filepath", Method: "Base"},
+			// filepath.Rel computes a relative path safely
+			{Package: "path/filepath", Method: "Rel"},
+			// url.PathEscape escapes path components
+			{Package: "net/url", Method: "PathEscape"},
+
+			// path.Base and path.Clean provide identical traversal-stripping
+			// semantics as their filepath counterparts (the only difference is
+			// separator handling, which is irrelevant for security).
+			{Package: "path", Method: "Base"},
+			{Package: "path", Method: "Clean"},
+
+			// Integer conversions eliminate path traversal vectors entirely —
+			// the result can never contain "/" or ".." characters.
+			{Package: "strconv", Method: "Atoi"},
+			{Package: "strconv", Method: "ParseInt"},
+			{Package: "strconv", Method: "ParseUint"},
+			{Package: "strconv", Method: "ParseFloat"},
+			{Package: "strconv", Method: "ParseBool"},
 		},
 	}
 }

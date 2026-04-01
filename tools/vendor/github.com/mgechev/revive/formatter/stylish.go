@@ -9,11 +9,13 @@ import (
 	"github.com/mgechev/revive/lint"
 )
 
-// Stylish is an implementation of the Formatter interface
-// which formats the errors to JSON.
+// Stylish is an implementation of the [lint.Formatter] interface
+// which formats the errors to a stylish, human-readable format.
 type Stylish struct {
 	Metadata lint.FormatterMetadata
 }
+
+var _ lint.Formatter = (*Stylish)(nil)
 
 // Name returns the name of the formatter.
 func (*Stylish) Name() string {

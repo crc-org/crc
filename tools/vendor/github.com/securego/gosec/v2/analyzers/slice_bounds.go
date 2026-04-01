@@ -195,6 +195,10 @@ func runSliceBounds(pass *analysis.Pass) (result any, err error) {
 												issue.Low,
 												issue.High)
 										case *ssa.IndexAddr:
+											// Skip IndexAddr that directly accesses the original array (not the slice)
+											if s.X == instr {
+												continue
+											}
 											issues[s] = newIssue(
 												pass.Analyzer.Name,
 												"slice index out of range",
@@ -572,12 +576,45 @@ func (s *sliceBoundsState) extractIntValueIndexAddr(refinstr *ssa.IndexAddr, sli
 	base, offset := decomposeIndex(refinstr.Index)
 	var sliceIncr int
 
+	canNormalizeToBase := func(bin *ssa.BinOp) bool {
+		if bin == nil || refinstr == nil {
+			return false
+		}
+		binBlock := bin.Block()
+		idxBlock := refinstr.Block()
+		if binBlock == nil || idxBlock == nil {
+			return false
+		}
+		if binBlock != idxBlock {
+			return true
+		}
+		binPos := -1
+		idxPos := -1
+		for i, ins := range binBlock.Instrs {
+			if ins == bin {
+				binPos = i
+			}
+			if ins == refinstr {
+				idxPos = i
+			}
+			if binPos >= 0 && idxPos >= 0 {
+				break
+			}
+		}
+		if binPos < 0 || idxPos < 0 {
+			return false
+		}
+		return binPos < idxPos
+	}
+
 	// Case 1: Base is a constant (e.g., s[0+3])
 	if val, ok := GetConstantInt64(base); ok {
 		finalIdx := int(val) + offset
 		if !isSliceIndexInsideBounds(sliceCap+sliceIncr, finalIdx) {
 			return finalIdx, nil
 		}
+		// Constant index is within bounds; avoid BFS exploring shared SSA constant referrers
+		return 0, errNoFound
 	}
 
 	// Case 2: Base is a Phi node (loop counter)
@@ -634,16 +671,15 @@ func (s *sliceBoundsState) extractIntValueIndexAddr(refinstr *ssa.IndexAddr, sli
 							}
 							maxV := limit + incr
 
-							// If the limit is on 'next' (i+1 < limit), it still bounds 'i'
-							// In 'range n', i reaches n-1.
-							// Here we use a heuristic: if we find an upper bound, check it.
+							// If the limit is found on an incremented value (next or nBase != p),
+							// normalize it back to the base loop variable before applying index offset.
+							boundAdjust := 0
+							if (v == next && base != next && canNormalizeToBase(bin)) || (v == nBase && nBase != p && base != nBase) {
+								boundAdjust = -nOffset
+							}
+
 							if bound == lowerUnbounded || bound == upperBounded {
-								// Correct the max value of 'base' based on where the limit was found
-								finalMaxV := maxV
-								if v == nBase && nBase != p {
-									// if i + nOffset < limit, then i < limit - nOffset
-									finalMaxV = maxV - nOffset
-								}
+								finalMaxV := maxV + boundAdjust
 								if !isSliceIndexInsideBounds(sliceCap+sliceIncr, finalMaxV+offset) {
 									return finalMaxV + offset, nil
 								}
@@ -655,10 +691,11 @@ func (s *sliceBoundsState) extractIntValueIndexAddr(refinstr *ssa.IndexAddr, sli
 							incr := -1 // extractLenBound only handles LSS for now
 							maxV := limit + off + incr
 
-							finalMaxV := maxV
-							if v == nBase && nBase != p {
-								finalMaxV = maxV - nOffset
+							boundAdjust := 0
+							if (v == next && base != next && canNormalizeToBase(bin)) || (v == nBase && nBase != p && base != nBase) {
+								boundAdjust = -nOffset
 							}
+							finalMaxV := maxV + boundAdjust
 							if !isSliceIndexInsideBounds(sliceCap+sliceIncr, finalMaxV+offset) {
 								return finalMaxV + offset, nil
 							}
