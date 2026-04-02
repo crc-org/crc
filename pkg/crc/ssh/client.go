@@ -36,6 +36,8 @@ func NewClient(user string, host string, port int, keys ...string) (Client, erro
 	}, nil
 }
 
+// nolint:gosec // G703 - paths are supplied by calling functions,
+// this function is not supposed to check them for path traversal
 func clientConfig(user string, keys []string) (*ssh.ClientConfig, error) {
 	var (
 		privateKeys []ssh.Signer

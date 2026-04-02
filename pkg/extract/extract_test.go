@@ -115,7 +115,13 @@ func checkFiles(destDir string, files fileMap) error {
 	// We are going to remove elements from  the map, but we don't want to modify the map used by the caller
 	files = copyFileMap(files)
 
-	err := filepath.Walk(destDir, func(path string, info os.FileInfo, err error) error {
+	destDirRoot, err := os.OpenRoot(destDir)
+	if err != nil {
+		return err
+	}
+	defer destDirRoot.Close()
+
+	err = filepath.Walk(destDir, func(path string, info os.FileInfo, err error) error {
 		logging.Debugf("Walking %s", path)
 		if err != nil {
 			return err
@@ -135,7 +141,7 @@ func checkFiles(destDir string, files fileMap) error {
 		}
 		delete(files, archivePath)
 
-		data, err := os.ReadFile(path) // #nosec G304
+		data, err := destDirRoot.ReadFile(archivePath)
 		if err != nil {
 			return err
 		}
