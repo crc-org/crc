@@ -435,7 +435,7 @@ func FetchLatestReleaseInfo() (*ReleaseInfo, error) {
 
 	var releaseInfo ReleaseInfo
 	if err := json.Unmarshal(releaseMetaData, &releaseInfo); err != nil {
-		return nil, fmt.Errorf("Error unmarshaling JSON metadata: %v", err)
+		return nil, fmt.Errorf("error unmarshaling JSON metadata: %w", err)
 	}
 
 	return &releaseInfo, nil

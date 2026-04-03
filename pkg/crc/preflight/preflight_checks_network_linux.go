@@ -157,7 +157,7 @@ func fixNetworkManagerConfigFile(path string, content string, perms os.FileMode)
 	logging.Debug("Reloading NetworkManager")
 	sd := systemd.NewHostSystemdCommander()
 	if err := sd.Reload("NetworkManager"); err != nil {
-		return fmt.Errorf("Failed to restart NetworkManager: %v", err)
+		return fmt.Errorf("failed to reload NetworkManager: %w", err)
 	}
 
 	return nil
@@ -181,7 +181,7 @@ func removeNetworkManagerConfigFile(path string) error {
 		logging.Debug("Reloading NetworkManager")
 		sd := systemd.NewHostSystemdCommander()
 		if err := sd.Reload("NetworkManager"); err != nil {
-			return fmt.Errorf("Failed to restart NetworkManager: %v", err)
+			return fmt.Errorf("failed to reload NetworkManager: %w", err)
 		}
 	}
 	return nil

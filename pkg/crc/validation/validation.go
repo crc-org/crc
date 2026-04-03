@@ -225,7 +225,7 @@ func ImagePullSecret(secret string) error {
 	var s imagePullSecret
 	err := json.Unmarshal([]byte(secret), &s)
 	if err != nil {
-		return fmt.Errorf("invalid pull secret: %v", err)
+		return fmt.Errorf("invalid pull secret: %w", err)
 	}
 	if len(s.Auths) == 0 {
 		return fmt.Errorf("invalid pull secret: missing 'auths' JSON-object field")

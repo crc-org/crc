@@ -56,15 +56,15 @@ func GenerateManPages(manPageGenerator func(targetDir string) error, targetDir s
 		}
 		err = compressManPages(temporaryManPagesDir, manUserCommandTargetFolder)
 		if err != nil {
-			return fmt.Errorf("error in compressing man pages: %s", err.Error())
+			return fmt.Errorf("error in compressing man pages: %w", err)
 		}
 		err = appendToManPathEnvironmentVariable(targetDir)
 		if err != nil {
-			return fmt.Errorf("error updating MANPATH environment variable: %s", err.Error())
+			return fmt.Errorf("error updating MANPATH environment variable: %w", err)
 		}
 		err = os.RemoveAll(temporaryManPagesDir)
 		if err != nil {
-			return fmt.Errorf("error removing temporary man pages directory: %s", err.Error())
+			return fmt.Errorf("error removing temporary man pages directory: %w", err)
 		}
 	}
 	return nil
