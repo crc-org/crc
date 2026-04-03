@@ -14,6 +14,7 @@ import (
 
 	cmdBundle "github.com/crc-org/crc/v2/cmd/crc/cmd/bundle"
 	cmdConfig "github.com/crc-org/crc/v2/cmd/crc/cmd/config"
+	cmdVM "github.com/crc-org/crc/v2/cmd/crc/cmd/vm"
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	crcErr "github.com/crc-org/crc/v2/pkg/crc/errors"
@@ -71,6 +72,7 @@ func init() {
 	// subcommands
 	rootCmd.AddCommand(cmdConfig.GetConfigCmd(config))
 	rootCmd.AddCommand(cmdBundle.GetBundleCmd(config))
+	rootCmd.AddCommand(cmdVM.GetVMCmd(config))
 
 	logging.AddLogLevelFlag(rootCmd.PersistentFlags())
 }
