@@ -88,6 +88,8 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		PersistentVolumeSize: config.Get(crcConfig.PersistentVolumeSize).AsInt(),
 
 		EnableBundleQuayFallback: config.Get(crcConfig.EnableBundleQuayFallback).AsBool(),
+
+		EnableRosetta: config.Get(crcConfig.UseRosetta).AsBool(),
 	}
 
 	client := newMachine()
