@@ -116,3 +116,10 @@ type ConnectionDetails struct {
 	SSHUsername string
 	SSHKeys     []string
 }
+
+type ImageLoadConfig struct {
+	Source    string // tar file path or image reference
+	IsTar     bool
+	Namespace string // target namespace in internal registry
+	ImageName string // target image name:tag
+}

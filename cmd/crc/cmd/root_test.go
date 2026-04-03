@@ -34,6 +34,8 @@ func TestCrcManPageGenerator_WhenInvoked_GeneratesManPagesForAllCrcSubCommands(t
 		"crc-console.1",
 		"crc-delete.1",
 		"crc-generate-kubeconfig.1",
+		"crc-image-load.1",
+		"crc-image.1",
 		"crc-ip.1",
 		"crc-oc-env.1",
 		"crc-podman-env.1",
