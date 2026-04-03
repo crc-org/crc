@@ -117,6 +117,12 @@ func generateManPagesInTemporaryDirectory(manPageGenerator func(targetDir string
 }
 
 func compressManPages(manPagesSourceFolder string, manPagesTargetFolder string) error {
+	sourceRoot, err := os.OpenRoot(manPagesSourceFolder)
+	if err != nil {
+		return err
+	}
+	defer sourceRoot.Close()
+
 	return filepath.Walk(manPagesSourceFolder, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -126,7 +132,12 @@ func compressManPages(manPagesSourceFolder string, manPagesTargetFolder string) 
 			return nil
 		}
 
-		srcFile, err := os.Open(path)
+		relPath, err := filepath.Rel(manPagesSourceFolder, path)
+		if err != nil {
+			return err
+		}
+
+		srcFile, err := sourceRoot.Open(relPath)
 		if err != nil {
 			return err
 		}
@@ -160,12 +171,22 @@ func manPagesAlreadyGenerated(manPagesTargetFolder string) bool {
 
 func RemoveCrcManPages(manPageDir string) error {
 	manUserCommandTargetFolder := filepath.Join(manPageDir, "man1")
-	err := filepath.Walk(manUserCommandTargetFolder, func(path string, info os.FileInfo, err error) error {
+	targetRoot, err := os.OpenRoot(manUserCommandTargetFolder)
+	if err != nil {
+		return err
+	}
+	defer targetRoot.Close()
+
+	err = filepath.Walk(manUserCommandTargetFolder, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if !info.IsDir() && filepath.Base(path)[:len("crc")] == "crc" {
-			err = os.Remove(path)
+			relPath, err := filepath.Rel(manUserCommandTargetFolder, path)
+			if err != nil {
+				return err
+			}
+			err = targetRoot.Remove(relPath)
 			if err != nil {
 				return err
 			}

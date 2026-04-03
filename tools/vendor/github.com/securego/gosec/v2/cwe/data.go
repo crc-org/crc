@@ -43,6 +43,11 @@ var idWeaknesses = map[string]*Weakness{
 		Description: "The software constructs all or part of an SQL command using externally-influenced input from an upstream component, but it does not neutralize or incorrectly neutralizes special elements that could modify the intended SQL command when it is sent to a downstream component.",
 		Name:        "Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')",
 	},
+	"93": {
+		ID:          "93",
+		Description: "The software does not properly neutralize CRLF sequences before using externally-influenced input in protocol elements that rely on CRLF as delimiters, allowing attackers to inject additional commands or headers.",
+		Name:        "Improper Neutralization of CRLF Sequences ('CRLF Injection')",
+	},
 	"118": {
 		ID:          "118",
 		Description: "The software does not restrict or incorrectly restricts operations within the boundaries of a resource that is accessed using an index or pointer, such as memory or files.",
@@ -67,6 +72,11 @@ var idWeaknesses = map[string]*Weakness{
 		ID:          "276",
 		Description: "During installation, installed file permissions are set to allow anyone to modify those files.",
 		Name:        "Incorrect Default Permissions",
+	},
+	"287": {
+		ID:          "287",
+		Description: "The software does not perform or incorrectly performs authentication.",
+		Name:        "Improper Authentication",
 	},
 	"295": {
 		ID:          "295",
@@ -103,6 +113,11 @@ var idWeaknesses = map[string]*Weakness{
 		Description: "The product uses a Pseudo-Random Number Generator (PRNG) in a security context, but the PRNG's algorithm is not cryptographically strong.",
 		Name:        "Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG)",
 	},
+	"367": {
+		ID:          "367",
+		Description: "The software checks the state of a resource before using that resource, but the resource's state can change between the check and the use in a way that invalidates the results of the check.",
+		Name:        "Time-of-check Time-of-use (TOCTOU) Race Condition",
+	},
 	"377": {
 		ID:          "377",
 		Description: "Creating and using insecure temporary files can leave application and system data vulnerable to attack.",
@@ -117,6 +132,11 @@ var idWeaknesses = map[string]*Weakness{
 		ID:          "409",
 		Description: "The software does not handle or incorrectly handles a compressed input with a very high compression ratio that produces a large output.",
 		Name:        "Improper Handling of Highly Compressed Data (Data Amplification)",
+	},
+	"444": {
+		ID:          "444",
+		Description: "When malformed or unexpected HTTP requests are inconsistently interpreted by one or more entities in the data flow between the user and the web server, such as a proxy or firewall, attackers can abuse this discrepancy to smuggle requests to one system without the other system being aware of it.",
+		Name:        "Inconsistent Interpretation of HTTP Requests ('HTTP Request Smuggling')",
 	},
 	"499": {
 		ID:          "499",

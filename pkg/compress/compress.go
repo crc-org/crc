@@ -2,6 +2,7 @@ package compress
 
 import (
 	"archive/tar"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -32,6 +33,15 @@ func Compress(src, dest string) (err error) {
 	defer tarWriter.Close()
 
 	basePath, _ := filepath.Split(src)
+	if basePath == "" {
+		basePath = "."
+	}
+
+	basePathRoot, err := os.OpenRoot(basePath)
+	if err != nil {
+		return fmt.Errorf("failed to open root directory %s: %w", basePath, err)
+	}
+	defer basePathRoot.Close()
 
 	// Just use top level directory as part of tarball
 	// $ zstdcat crc_libvirt_4.7.1_custom.zstd  | tar t
@@ -57,7 +67,11 @@ func Compress(src, dest string) (err error) {
 			return err
 		}
 		if !fi.IsDir() {
-			data, err := os.Open(file)
+			relPath, err := filepath.Rel(basePath, file)
+			if err != nil {
+				return err
+			}
+			data, err := basePathRoot.Open(relPath)
 			if err != nil {
 				return err
 			}
