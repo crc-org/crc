@@ -26,6 +26,7 @@ type Client interface {
 	Stop() (state.State, error)
 	IsRunning() (bool, error)
 	GenerateBundle(forceStop bool) error
+	ImageLoad(cfg types.ImageLoadConfig) error
 	GetPreset() crcPreset.Preset
 }
 
