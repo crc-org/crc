@@ -55,7 +55,7 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.4
 	github.com/zalando/go-keyring v0.2.8
 	go.podman.io/common v0.67.0
-	go.podman.io/image/v5 v5.39.1
+	go.podman.io/image/v5 v5.39.2
 	golang.org/x/crypto v0.49.0
 	golang.org/x/net v0.52.0
 	golang.org/x/sync v0.20.0
