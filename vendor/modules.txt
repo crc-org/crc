@@ -681,7 +681,7 @@ github.com/yusufpapurcu/wmi
 github.com/zalando/go-keyring
 github.com/zalando/go-keyring/internal/shellescape
 github.com/zalando/go-keyring/secret_service
-# go.podman.io/common v0.67.0
+# go.podman.io/common v0.67.1
 ## explicit; go 1.24.2
 go.podman.io/common/pkg/strongunits
 # go.podman.io/image/v5 v5.39.2
