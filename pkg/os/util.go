@@ -37,24 +37,24 @@ func CopyFileContents(src string, dst string, permission os.FileMode) error {
 	logging.Debugf("Copying '%s' to '%s'", src, dst)
 	srcFile, err := os.Open(filepath.Clean(src))
 	if err != nil {
-		return fmt.Errorf("[%v] Cannot open src file '%s'", err, src)
+		return fmt.Errorf("cannot open src file '%s': %w", src, err)
 	}
 	defer srcFile.Close()
 
-	destFile, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE, permission)
+	destFile, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, permission)
 	if err != nil {
-		return fmt.Errorf("[%v] Cannot create dst file '%s'", err, dst)
+		return fmt.Errorf("cannot create dst file '%s': %w", dst, err)
 	}
 	defer destFile.Close()
 
 	_, err = io.Copy(destFile, srcFile)
 	if err != nil {
-		return fmt.Errorf("[%v] Cannot copy '%s' to '%s'", err, src, dst)
+		return fmt.Errorf("cannot copy '%s' to '%s': %w", src, dst, err)
 	}
 
 	err = destFile.Sync()
 	if err != nil {
-		return fmt.Errorf("[%v] Cannot sync '%s' to '%s'", err, src, dst)
+		return fmt.Errorf("cannot sync '%s' to '%s': %w", src, dst, err)
 	}
 
 	return destFile.Close()
@@ -63,15 +63,14 @@ func CopyFileContents(src string, dst string, permission os.FileMode) error {
 func FileContentMatches(path string, expectedContent []byte) error {
 	_, err := os.Stat(path)
 	if err != nil {
-		return fmt.Errorf("File not found: %s: %s", path, err.Error())
+		return fmt.Errorf("file not found: %s: %w", path, err)
 	}
 	content, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
-		return fmt.Errorf("Error opening file: %s: %s", path, err.Error())
+		return fmt.Errorf("error opening file: %s: %w", path, err)
 	}
 	if !bytes.Equal(content, expectedContent) {
-		return fmt.Errorf("File has unexpected content: %s", path)
-
+		return fmt.Errorf("file has unexpected content: %s", path)
 	}
 	return nil
 }
@@ -118,11 +117,11 @@ func RunningUsingSSH() bool {
 func RemoveFileGlob(glob string) error {
 	matchedFiles, err := filepath.Glob(glob)
 	if err != nil {
-		return fmt.Errorf("Unable to find matches: %w", err)
+		return fmt.Errorf("unable to find matches: %w", err)
 	}
 	for _, file := range matchedFiles {
 		if err = os.RemoveAll(file); err != nil {
-			return fmt.Errorf("Failed to delete file: %w", err)
+			return fmt.Errorf("failed to delete file: %w", err)
 		}
 	}
 	return nil

@@ -121,7 +121,7 @@ func fixBundleExtracted(bundlePath string, preset crcpreset.Preset, enableBundle
 		bundleDir := filepath.Dir(constants.GetDefaultBundlePath(preset))
 		logging.Debugf("Ensuring directory %s exists", bundleDir)
 		if err := os.MkdirAll(bundleDir, 0775); err != nil {
-			return fmt.Errorf("Cannot create directory %s: %v", bundleDir, err)
+			return fmt.Errorf("cannot create directory %s: %w", bundleDir, err)
 		}
 		var err error
 		logging.Infof("Downloading bundle: %s...", bundlePath)

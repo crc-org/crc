@@ -194,7 +194,7 @@ func removeCrcVM() (err error) {
 func checkIfAdminHelperServiceRunning() error {
 	stdout, stderr, err := powershell.Execute(fmt.Sprintf("(Get-Service %s).Status", constants.AdminHelperServiceName))
 	if err != nil {
-		return fmt.Errorf("%s service is not present %v: %s", constants.AdminHelperServiceName, err, stderr)
+		return fmt.Errorf("%s service is not present: %s: %w", constants.AdminHelperServiceName, stderr, err)
 	}
 	if strings.TrimSpace(stdout) != "Running" {
 		return fmt.Errorf("%s service is not running", constants.AdminHelperServiceName)

@@ -43,7 +43,7 @@ func (c *ViperStorage) viperInstance() (*viper.Viper, error) {
 	v.AutomaticEnv()
 	v.SetTypeByDefaultValue(true)
 	if err := v.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("error reading configuration file '%s': %v", c.configFile, err)
+		return nil, fmt.Errorf("error reading configuration file '%s': %w", c.configFile, err)
 	}
 	if c.flagSet == nil {
 		return v, nil

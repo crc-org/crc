@@ -59,16 +59,16 @@ func NewKeyPair() (keyPair *KeyPair, err error) {
 func GenerateSSHKey(path string) error {
 	if _, err := os.Stat(path); err != nil {
 		if !os.IsNotExist(err) {
-			return fmt.Errorf("Desired directory for SSH keys does not exist: %s", err)
+			return fmt.Errorf("error checking SSH key path %q: %w", path, err)
 		}
 
 		kp, err := NewKeyPair()
 		if err != nil {
-			return fmt.Errorf("Error generating key pair: %s", err)
+			return fmt.Errorf("error generating key pair: %w", err)
 		}
 
 		if err := kp.WriteToFile(path, fmt.Sprintf("%s.pub", path)); err != nil {
-			return fmt.Errorf("Error writing keys to file(s): %s", err)
+			return fmt.Errorf("error writing keys to file(s): %w", err)
 		}
 	}
 
@@ -82,7 +82,7 @@ func RemoveCRCHostEntriesFromKnownHosts() error {
 	}
 	f, err := os.Open(knownHostsPath)
 	if err != nil {
-		return fmt.Errorf("Unable to open user's 'known_hosts' file: %w", err)
+		return fmt.Errorf("unable to open user's 'known_hosts' file: %w", err)
 	}
 	defer f.Close()
 
@@ -94,7 +94,7 @@ func RemoveCRCHostEntriesFromKnownHosts() error {
 
 	tempHostsFile, err := os.CreateTemp(sshDirRoot.Name(), "crc")
 	if err != nil {
-		return fmt.Errorf("Unable to create temp file: %w", err)
+		return fmt.Errorf("unable to create temp file: %w", err)
 	}
 	tempHostsFilename := filepath.Base(tempHostsFile.Name())
 	defer func() {
@@ -103,7 +103,7 @@ func RemoveCRCHostEntriesFromKnownHosts() error {
 	}()
 
 	if err := tempHostsFile.Chmod(0600); err != nil {
-		return fmt.Errorf("Error trying to change permissions for temp file: %w", err)
+		return fmt.Errorf("error trying to change permissions for temp file: %w", err)
 	}
 
 	// return each line along with the newline '\n' marker
@@ -130,24 +130,24 @@ func RemoveCRCHostEntriesFromKnownHosts() error {
 			continue
 		}
 		if _, err := writer.WriteString(scanner.Text()); err != nil {
-			return fmt.Errorf("Error while writing hostsfile content to temp file: %w", err)
+			return fmt.Errorf("error while writing hostsfile content to temp file: %w", err)
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("Error while reading content from known_hosts file: %w", err)
+		return fmt.Errorf("error while reading content from known_hosts file: %w", err)
 	}
 
 	if err := writer.Flush(); err != nil {
-		return fmt.Errorf("Error while flushing buffered content to temp file: %w", err)
+		return fmt.Errorf("error while flushing buffered content to temp file: %w", err)
 	}
 
 	if foundCRCEntries {
 		if err := f.Close(); err != nil {
-			return fmt.Errorf("Error closing known_hosts file: %w", err)
+			return fmt.Errorf("error closing known_hosts file: %w", err)
 		}
 		if err := tempHostsFile.Close(); err != nil {
-			return fmt.Errorf("Error closing temp file: %w", err)
+			return fmt.Errorf("error closing temp file: %w", err)
 		}
 		// we need a path relative to the .ssh directory and the 'known_hosts'
 		// filename is known beforehand

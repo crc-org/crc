@@ -23,11 +23,11 @@ func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*types.ClusterConfig, e
 
 	kubeadminPassword, err := cluster.GetUserPassword(constants.GetKubeAdminPasswordPath())
 	if err != nil {
-		return nil, fmt.Errorf("Error reading kubeadmin password from bundle %v", err)
+		return nil, fmt.Errorf("error reading kubeadmin password from bundle: %w", err)
 	}
 	developerPassword, err := cluster.GetUserPassword(constants.GetDeveloperPasswordPath())
 	if err != nil {
-		return nil, fmt.Errorf("error reading developer password from bundle %v", err)
+		return nil, fmt.Errorf("error reading developer password from bundle: %w", err)
 	}
 	proxyConfig, err := getProxyConfig(bundleInfo)
 	if err != nil {

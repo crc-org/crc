@@ -108,7 +108,7 @@ func restartNetwork() error {
 		stdout, stderr, err = crcos.RunWithDefaultLocale("networksetup", "-setnetworkserviceenabled", netdevice, "on")
 		logging.Debugf("Enabling the %s Device (stdout: %s), (stderr: %s)", netdevice, stdout, stderr)
 		if err != nil {
-			return fmt.Errorf("%s: %v", stderr, err)
+			return fmt.Errorf("%s: %w", stderr, err)
 		}
 	}
 

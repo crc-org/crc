@@ -60,7 +60,7 @@ func (c Commander) Status(name string) (states.State, error) {
 func (c Commander) DaemonReload() error {
 	stdOut, stdErr, err := c.commandRunner.RunPrivileged("Executing systemctl daemon-reload command", "systemctl", "daemon-reload")
 	if err != nil {
-		return fmt.Errorf("Executing systemctl daemon-reload failed: %s %v: %s", stdOut, err, stdErr)
+		return fmt.Errorf("executing systemctl daemon-reload failed: %s: %s: %w", stdOut, stdErr, err)
 	}
 	return nil
 }
@@ -88,7 +88,7 @@ func (c Commander) service(name string, action actions.Action) (states.State, er
 			return state, nil
 		}
 
-		return states.Error, fmt.Errorf("Executing systemctl action failed: %s %v: %s", stdOut, err, stdErr)
+		return states.Error, fmt.Errorf("executing systemctl action failed: %s: %s: %w", stdOut, stdErr, err)
 	}
 
 	return states.Compare(stdOut), nil
