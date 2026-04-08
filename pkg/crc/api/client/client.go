@@ -255,20 +255,21 @@ func (c *client) sendRequest(url string, method string, data io.Reader) ([]byte,
 	}
 	defer res.Body.Close()
 
-	switch method {
-	case http.MethodPost:
-		if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated {
-			return nil, fmt.Errorf("Error occurred sending POST request to : %s : %d", url, res.StatusCode)
-		}
-	case http.MethodDelete, http.MethodGet:
-		if res.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("Error occurred sending %s request to : %s : %d", method, url, res.StatusCode)
-		}
-	}
-
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Unknown error reading response: %w", err)
+		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
+
+	isError := false
+	switch method {
+	case http.MethodPost:
+		isError = res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated
+	case http.MethodDelete, http.MethodGet:
+		isError = res.StatusCode != http.StatusOK
+	}
+	if isError {
+		return nil, &HTTPError{URL: url, Method: method, StatusCode: res.StatusCode, Body: string(body)}
+	}
+
 	return body, nil
 }
