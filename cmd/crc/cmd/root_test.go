@@ -23,7 +23,11 @@ func TestCrcManPageGenerator_WhenInvoked_GeneratesManPagesForAllCrcSubCommands(t
 		manPagesFiles = append(manPagesFiles, manPage.Name())
 	}
 	assert.ElementsMatch(t, []string{
+		"crc-bundle-clear.1",
+		"crc-bundle-download.1",
 		"crc-bundle-generate.1",
+		"crc-bundle-list.1",
+		"crc-bundle-prune.1",
 		"crc-bundle.1",
 		"crc-cleanup.1",
 		"crc-config-get.1",
