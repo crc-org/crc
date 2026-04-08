@@ -30,7 +30,8 @@ const (
 	CrcLandingPageURL         = "https://console.redhat.com/openshift/create/local" // #nosec G101
 	DefaultAdminHelperURLBase = "https://github.com/crc-org/admin-helper/releases/download/v%s/%s"
 	BackgroundLauncherURL     = "https://github.com/crc-org/win32-background-launcher/releases/download/v%s/win32-background-launcher.exe"
-	DefaultBundleURLBase      = "https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles/%s/%s/%s"
+	DefaultMirrorURL          = "https://mirror.openshift.com/pub/openshift-v4/clients/crc/bundles"
+	DefaultBundleURLBase      = DefaultMirrorURL + "/%s/%s/%s"
 	DefaultContext            = "admin"
 	DefaultDeveloperPassword  = "developer"
 	DaemonHTTPEndpoint        = "http://unix/api"
@@ -81,6 +82,10 @@ func GetAdminHelperURL() string {
 }
 
 func BundleForPreset(preset crcpreset.Preset, version string) string {
+	return BundleName(preset, version, runtime.GOARCH)
+}
+
+func BundleName(preset crcpreset.Preset, version string, arch string) string {
 	var bundleName strings.Builder
 
 	bundleName.WriteString("crc")
@@ -101,7 +106,7 @@ func BundleForPreset(preset crcpreset.Preset, version string) string {
 		bundleName.WriteString("_hyperv")
 	}
 
-	fmt.Fprintf(&bundleName, "_%s_%s.crcbundle", version, runtime.GOARCH)
+	fmt.Fprintf(&bundleName, "_%s_%s.crcbundle", version, arch)
 	return bundleName.String()
 }
 
