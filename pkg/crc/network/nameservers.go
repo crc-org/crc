@@ -39,7 +39,7 @@ func UpdateResolvFileOnInstance(sshRunner *ssh.Runner, resolvFileValues ResolvFi
 	// update resolve.conf file
 	if state, err := sd.Status("ovs-configuration.service"); err != nil || state == states.NotFound {
 		if err := replaceResolvConfFile(sshRunner, resolvFileValues); err != nil {
-			return fmt.Errorf("error updating resolv.conf file: %s", err)
+			return fmt.Errorf("error updating resolv.conf file: %w", err)
 		}
 		return nil
 	}
@@ -54,11 +54,11 @@ func UpdateResolvFileOnInstance(sshRunner *ssh.Runner, resolvFileValues ResolvFi
 func replaceResolvConfFile(sshRunner *ssh.Runner, resolvFileValues ResolvFileValues) error {
 	resolvFile, err := CreateResolvFile(resolvFileValues)
 	if err != nil {
-		return fmt.Errorf("error to create resolv conf file: %v", err)
+		return fmt.Errorf("error creating resolv.conf file: %w", err)
 	}
 	err = sshRunner.CopyDataPrivileged([]byte(resolvFile), "/etc/resolv.conf", 0644)
 	if err != nil {
-		return fmt.Errorf("Error creating /etc/resolv on instance: %s", err.Error())
+		return fmt.Errorf("error creating /etc/resolv.conf on instance: %w", err)
 	}
 	return nil
 }
@@ -70,7 +70,7 @@ func updateNetworkManagerConfig(sd *systemd.Commander, sshRunner *ssh.Runner, re
 	_, stderr, err := sshRunner.RunPrivileged("Update resolv.conf file", "nmcli", "con", "modify", "--temporary", "ovs-if-br-ex",
 		"ipv4.dns", nameservers, "ipv4.dns-search", searchDomains)
 	if err != nil {
-		return fmt.Errorf("failed to update resolv.conf file %s: %v", stderr, err)
+		return fmt.Errorf("failed to update resolv.conf file: %s: %w", stderr, err)
 	}
 	return sd.Restart("NetworkManager.service")
 }
@@ -90,7 +90,7 @@ func AddNameserversToInstance(sshRunner *ssh.Runner, nameservers []NameServer) e
 func addNameserverToInstance(sshRunner *ssh.Runner, nameserver NameServer) error {
 	_, _, err := sshRunner.Run(fmt.Sprintf("NS=%s; cat /etc/resolv.conf |grep -i \"^nameserver $NS\" || echo \"nameserver $NS\" | sudo tee -a /etc/resolv.conf", nameserver.IPAddress))
 	if err != nil {
-		return fmt.Errorf("%s: %s", "Error adding nameserver", err.Error())
+		return fmt.Errorf("error adding nameserver: %w", err)
 	}
 	return nil
 }
@@ -105,7 +105,7 @@ func GetResolvValuesFromHost() (*ResolvFileValues, error) {
 	*/
 
 	if err != nil {
-		return nil, fmt.Errorf("Failed to read resolv.conf: %v", err)
+		return nil, fmt.Errorf("failed to read resolv.conf: %w", err)
 	}
 	return parseResolveConfFile(string(out))
 }

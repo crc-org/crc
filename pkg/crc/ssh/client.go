@@ -79,7 +79,7 @@ func (client *NativeClient) session() (*ssh.Session, error) {
 		var err error
 		config, err := clientConfig(client.User, client.Keys)
 		if err != nil {
-			return nil, fmt.Errorf("Error getting config for native Go SSH: %s", err)
+			return nil, fmt.Errorf("error getting config for native Go SSH: %w", err)
 		}
 		client.conn, err = ssh.Dial("tcp", net.JoinHostPort(client.Hostname, strconv.Itoa(client.Port)), config)
 		if err != nil {

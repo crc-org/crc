@@ -62,7 +62,7 @@ func fixVfkitInstallation() error {
 	logging.Debugf("Installing %s", h.GetExecutableName())
 
 	if err := h.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download %s : %v", h.GetExecutableName(), err)
+		return fmt.Errorf("unable to download %s: %w", h.GetExecutableName(), err)
 	}
 	return nil
 }
@@ -77,13 +77,13 @@ func fixResolverFilePermissions() error {
 		logging.Debugf("Creating %s directory", resolverDir)
 		stdOut, stdErr, err := crcos.RunPrivileged(fmt.Sprintf("Creating dir %s", resolverDir), "mkdir", resolverDir)
 		if err != nil {
-			return fmt.Errorf("Unable to create the resolver Dir: %s %v: %s", stdOut, err, stdErr)
+			return fmt.Errorf("unable to create the resolver dir: %s: %s: %w", stdOut, stdErr, err)
 		}
 	}
 	logging.Debugf("Making %s readable/writable by the current user", resolverFile)
 	stdOut, stdErr, err := crcos.RunPrivileged(fmt.Sprintf("Creating file %s", resolverFile), "touch", resolverFile)
 	if err != nil {
-		return fmt.Errorf("Unable to create the resolver file: %s %v: %s", stdOut, err, stdErr)
+		return fmt.Errorf("unable to create the resolver file: %s: %s: %w", stdOut, stdErr, err)
 	}
 
 	return addFileWritePermissionToUser(resolverFile)
@@ -95,7 +95,7 @@ func removeResolverFile() error {
 		logging.Debugf("Removing %s file", resolverFile)
 		err := crcos.RemoveFileAsRoot(fmt.Sprintf("Removing file %s", resolverFile), resolverFile)
 		if err != nil {
-			return fmt.Errorf("Unable to delete the resolver File: %s %v", resolverFile, err)
+			return fmt.Errorf("unable to delete the resolver file: %s: %w", resolverFile, err)
 		}
 	}
 	return nil
@@ -114,17 +114,17 @@ func addFileWritePermissionToUser(filename string) error {
 	currentUser, err := user.Current()
 	if err != nil {
 		logging.Debugf("user.Current() failed: %v", err)
-		return fmt.Errorf("Failed to get current user id")
+		return fmt.Errorf("failed to get current user: %w", err)
 	}
 
 	stdOut, stdErr, err := crcos.RunPrivileged(fmt.Sprintf("Changing ownership of %s", filename), "chown", currentUser.Username, filename)
 	if err != nil {
-		return fmt.Errorf("Unable to change ownership of the filename: %s %v: %s", stdOut, err, stdErr)
+		return fmt.Errorf("unable to change ownership of the filename: %s: %s: %w", stdOut, stdErr, err)
 	}
 
 	err = os.Chmod(filename, 0600)
 	if err != nil {
-		return fmt.Errorf("Unable to change permissions of the filename: %s %v: %s", stdOut, err, stdErr)
+		return fmt.Errorf("unable to change permissions of the filename: %s: %s: %w", stdOut, stdErr, err)
 	}
 	logging.Debugf("%s is readable/writable by current user", filename)
 

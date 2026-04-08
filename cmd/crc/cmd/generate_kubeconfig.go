@@ -37,7 +37,7 @@ func runGenerateKubeconfig() error {
 
 	data, err := os.ReadFile(constants.KubeconfigFilePath)
 	if err != nil {
-		return fmt.Errorf("Error reading kubeconfig: %v", err)
+		return fmt.Errorf("error reading kubeconfig: %w", err)
 	}
 	fmt.Print(string(data))
 	return nil

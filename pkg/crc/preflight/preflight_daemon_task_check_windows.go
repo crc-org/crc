@@ -113,7 +113,7 @@ func fixDaemonTaskInstalled() error {
 	}
 
 	if _, stderr, err := powershell.Execute("Register-ScheduledTask", "-Xml", fmt.Sprintf(`'%s'`, taskContent), "-TaskName", constants.DaemonTaskName); err != nil {
-		return fmt.Errorf("failed to register %s task, %v: %s", constants.DaemonTaskName, err, stderr)
+		return fmt.Errorf("failed to register %s task: %s: %w", constants.DaemonTaskName, stderr, err)
 	}
 
 	return nil
@@ -172,7 +172,7 @@ func fixDaemonTaskRunning() error {
 func checkIfOlderTask() error {
 	stdout, stderr, err := powershell.Execute(fmt.Sprintf(`(Get-ScheduledTask -TaskName "%s").Version`, constants.DaemonTaskName))
 	if err != nil {
-		return fmt.Errorf("%s task is not running: %v : %s", constants.DaemonTaskName, err, stderr)
+		return fmt.Errorf("failed to get %s task version: %s: %w", constants.DaemonTaskName, stderr, err)
 	}
 	if strings.TrimSpace(stdout) != version.GetCRCVersion() {
 		return fmt.Errorf("%w but got '%s'", errOlderVersion, stdout)

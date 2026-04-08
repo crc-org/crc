@@ -29,11 +29,11 @@ func Verify(filePath, signatureFilePath string) error {
 
 	keyring, err := openpgp.ReadArmoredKeyRing(bytes.NewBufferString(constants.CrcOrgPublicKey))
 	if err != nil {
-		return fmt.Errorf("failed to parse public key: %s", err)
+		return fmt.Errorf("failed to parse public key: %w", err)
 	}
 
 	if _, err = openpgp.CheckArmoredDetachedSignature(keyring, data, signature, nil); err != nil {
-		return fmt.Errorf("failed to check signature: %s", err)
+		return fmt.Errorf("failed to check signature: %w", err)
 	}
 	return nil
 }
