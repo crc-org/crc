@@ -33,7 +33,7 @@ var (
 
 const (
 	crcAdminHelperVersion          = "0.5.7"
-	win32BackgroundLauncherVersion = "0.0.0.1"
+	win32BackgroundLauncherVersion = "0.0.0.2"
 )
 
 func GetCRCVersion() string {
