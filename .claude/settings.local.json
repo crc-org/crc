@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(make cross:*)",
+      "Bash(crc status:*)"
+    ]
+  }
+}
