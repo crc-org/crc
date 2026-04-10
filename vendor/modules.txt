@@ -59,9 +59,6 @@ github.com/YourFin/binappend
 # github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 ## explicit
 github.com/acarl005/stripansi
-# github.com/apparentlymart/go-cidr v1.1.0
-## explicit
-github.com/apparentlymart/go-cidr/cidr
 # github.com/areYouLazy/libhosty v1.1.0
 ## explicit; go 1.16
 github.com/areYouLazy/libhosty
@@ -94,18 +91,7 @@ github.com/containers/common/pkg/strongunits
 # github.com/containers/gvisor-tap-vsock v0.8.8
 ## explicit; go 1.24.0
 github.com/containers/gvisor-tap-vsock/pkg/client
-github.com/containers/gvisor-tap-vsock/pkg/fs
-github.com/containers/gvisor-tap-vsock/pkg/net/stdio
-github.com/containers/gvisor-tap-vsock/pkg/notification
-github.com/containers/gvisor-tap-vsock/pkg/services/dhcp
-github.com/containers/gvisor-tap-vsock/pkg/services/dns
-github.com/containers/gvisor-tap-vsock/pkg/services/forwarder
-github.com/containers/gvisor-tap-vsock/pkg/sshclient
-github.com/containers/gvisor-tap-vsock/pkg/tap
-github.com/containers/gvisor-tap-vsock/pkg/transport
 github.com/containers/gvisor-tap-vsock/pkg/types
-github.com/containers/gvisor-tap-vsock/pkg/utils
-github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork
 # github.com/containers/libhvee v0.10.1-0.20250902114412-a85aab2976a4
 ## explicit; go 1.23.3
 github.com/containers/libhvee/pkg/hypervctl
@@ -144,7 +130,6 @@ github.com/crc-org/admin-helper/pkg/hosts
 github.com/crc-org/admin-helper/pkg/types
 # github.com/crc-org/machine v0.0.0-20240926103419-a943b47fd48b
 ## explicit; go 1.17
-github.com/crc-org/machine/drivers/libvirt
 github.com/crc-org/machine/libmachine/drivers
 github.com/crc-org/machine/libmachine/drivers/plugin/localbinary
 github.com/crc-org/machine/libmachine/drivers/rpc
@@ -279,9 +264,6 @@ github.com/gogo/protobuf/sortkeys
 # github.com/golang/protobuf v1.5.4
 ## explicit; go 1.17
 github.com/golang/protobuf/proto
-# github.com/google/btree v1.1.3
-## explicit; go 1.18
-github.com/google/btree
 # github.com/google/gnostic-models v0.7.0
 ## explicit; go 1.22
 github.com/google/gnostic-models/compiler
@@ -299,10 +281,6 @@ github.com/google/go-cmp/cmp/internal/value
 # github.com/google/go-containerregistry v0.20.7
 ## explicit; go 1.24.0
 github.com/google/go-containerregistry/pkg/name
-# github.com/google/gopacket v1.1.19
-## explicit; go 1.12
-github.com/google/gopacket
-github.com/google/gopacket/layers
 # github.com/google/pprof v0.0.0-20260115054156-294ebfa9ad83
 ## explicit; go 1.24.0
 github.com/google/pprof/profile
@@ -337,16 +315,6 @@ github.com/hectane/go-acl/api
 # github.com/inconshreveable/mousetrap v1.1.0
 ## explicit; go 1.18
 github.com/inconshreveable/mousetrap
-# github.com/inetaf/tcpproxy v0.0.0-20250222171855-c4b9df066048
-## explicit; go 1.16
-github.com/inetaf/tcpproxy
-# github.com/insomniacslk/dhcp v0.0.0-20240710054256-ddd8a41251c9
-## explicit; go 1.20
-github.com/insomniacslk/dhcp/dhcpv4
-github.com/insomniacslk/dhcp/dhcpv4/server4
-github.com/insomniacslk/dhcp/iana
-github.com/insomniacslk/dhcp/interfaces
-github.com/insomniacslk/dhcp/rfc1035label
 # github.com/jinzhu/copier v0.4.0
 ## explicit; go 1.13
 github.com/jinzhu/copier
@@ -402,18 +370,9 @@ github.com/mattn/go-runewidth
 # github.com/mattn/go-sqlite3 v1.14.32
 ## explicit; go 1.19
 github.com/mattn/go-sqlite3
-# github.com/mdlayher/socket v0.4.1
-## explicit; go 1.20
-github.com/mdlayher/socket
-# github.com/mdlayher/vsock v1.2.1
-## explicit; go 1.20
-github.com/mdlayher/vsock
 # github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 ## explicit
 github.com/mgutz/ansi
-# github.com/miekg/dns v1.1.72
-## explicit; go 1.24.0
-github.com/miekg/dns
 # github.com/miekg/pkcs11 v1.1.1
 ## explicit; go 1.12
 github.com/miekg/pkcs11
@@ -435,8 +394,6 @@ github.com/modern-go/reflect2
 # github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
 ## explicit
 github.com/munnerz/goautoneg
-# github.com/nxadm/tail v1.4.11
-## explicit; go 1.13
 # github.com/onsi/ginkgo/v2 v2.28.1
 ## explicit; go 1.24.0
 github.com/onsi/ginkgo/v2
@@ -521,13 +478,6 @@ github.com/pelletier/go-toml/v2/internal/characters
 github.com/pelletier/go-toml/v2/internal/danger
 github.com/pelletier/go-toml/v2/internal/tracker
 github.com/pelletier/go-toml/v2/unstable
-# github.com/pierrec/lz4/v4 v4.1.14
-## explicit; go 1.14
-github.com/pierrec/lz4/v4
-github.com/pierrec/lz4/v4/internal/lz4block
-github.com/pierrec/lz4/v4/internal/lz4errors
-github.com/pierrec/lz4/v4/internal/lz4stream
-github.com/pierrec/lz4/v4/internal/xxh32
 # github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 ## explicit; go 1.14
 github.com/pkg/browser
@@ -646,10 +596,6 @@ github.com/tklauser/go-sysconf
 # github.com/tklauser/numcpus v0.11.0
 ## explicit; go 1.24.0
 github.com/tklauser/numcpus
-# github.com/u-root/uio v0.0.0-20240224005618-d2acac8f3701
-## explicit; go 1.21
-github.com/u-root/uio/rand
-github.com/u-root/uio/uio
 # github.com/ulikunitz/xz v0.5.15
 ## explicit; go 1.12
 github.com/ulikunitz/xz
@@ -798,7 +744,6 @@ golang.org/x/crypto/ssh/knownhosts
 golang.org/x/mod/semver
 # golang.org/x/net v0.52.0
 ## explicit; go 1.25.0
-golang.org/x/net/bpf
 golang.org/x/net/context
 golang.org/x/net/html
 golang.org/x/net/html/atom
@@ -810,11 +755,7 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/httpcommon
 golang.org/x/net/internal/httpsfv
-golang.org/x/net/internal/iana
-golang.org/x/net/internal/socket
 golang.org/x/net/internal/timeseries
-golang.org/x/net/ipv4
-golang.org/x/net/ipv6
 golang.org/x/net/trace
 # golang.org/x/oauth2 v0.34.0
 ## explicit; go 1.24.0
@@ -1009,52 +950,6 @@ gopkg.in/natefinch/lumberjack.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# gvisor.dev/gvisor v0.0.0-20240916094835-a174eb65023f
-## explicit; go 1.22.0
-gvisor.dev/gvisor/pkg/atomicbitops
-gvisor.dev/gvisor/pkg/bits
-gvisor.dev/gvisor/pkg/buffer
-gvisor.dev/gvisor/pkg/context
-gvisor.dev/gvisor/pkg/cpuid
-gvisor.dev/gvisor/pkg/gohacks
-gvisor.dev/gvisor/pkg/goid
-gvisor.dev/gvisor/pkg/linewriter
-gvisor.dev/gvisor/pkg/log
-gvisor.dev/gvisor/pkg/rand
-gvisor.dev/gvisor/pkg/refs
-gvisor.dev/gvisor/pkg/sleep
-gvisor.dev/gvisor/pkg/state
-gvisor.dev/gvisor/pkg/state/wire
-gvisor.dev/gvisor/pkg/sync
-gvisor.dev/gvisor/pkg/sync/locking
-gvisor.dev/gvisor/pkg/tcpip
-gvisor.dev/gvisor/pkg/tcpip/adapters/gonet
-gvisor.dev/gvisor/pkg/tcpip/checksum
-gvisor.dev/gvisor/pkg/tcpip/hash/jenkins
-gvisor.dev/gvisor/pkg/tcpip/header
-gvisor.dev/gvisor/pkg/tcpip/header/parse
-gvisor.dev/gvisor/pkg/tcpip/internal/tcp
-gvisor.dev/gvisor/pkg/tcpip/link/nested
-gvisor.dev/gvisor/pkg/tcpip/link/sniffer
-gvisor.dev/gvisor/pkg/tcpip/network/arp
-gvisor.dev/gvisor/pkg/tcpip/network/hash
-gvisor.dev/gvisor/pkg/tcpip/network/internal/fragmentation
-gvisor.dev/gvisor/pkg/tcpip/network/internal/ip
-gvisor.dev/gvisor/pkg/tcpip/network/internal/multicast
-gvisor.dev/gvisor/pkg/tcpip/network/ipv4
-gvisor.dev/gvisor/pkg/tcpip/ports
-gvisor.dev/gvisor/pkg/tcpip/seqnum
-gvisor.dev/gvisor/pkg/tcpip/stack
-gvisor.dev/gvisor/pkg/tcpip/transport
-gvisor.dev/gvisor/pkg/tcpip/transport/icmp
-gvisor.dev/gvisor/pkg/tcpip/transport/internal/network
-gvisor.dev/gvisor/pkg/tcpip/transport/internal/noop
-gvisor.dev/gvisor/pkg/tcpip/transport/packet
-gvisor.dev/gvisor/pkg/tcpip/transport/raw
-gvisor.dev/gvisor/pkg/tcpip/transport/tcp
-gvisor.dev/gvisor/pkg/tcpip/transport/tcpconntrack
-gvisor.dev/gvisor/pkg/tcpip/transport/udp
-gvisor.dev/gvisor/pkg/waiter
 # k8s.io/api v0.34.1
 ## explicit; go 1.24.0
 k8s.io/api/admissionregistration/v1
@@ -1335,9 +1230,6 @@ k8s.io/utils/clock
 k8s.io/utils/internal/third_party/forked/golang/net
 k8s.io/utils/net
 k8s.io/utils/ptr
-# libvirt.org/go/libvirtxml v1.12002.0
-## explicit; go 1.11
-libvirt.org/go/libvirtxml
 # sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8
 ## explicit; go 1.23
 sigs.k8s.io/json

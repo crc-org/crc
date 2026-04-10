@@ -1,23 +1,22 @@
 package machine
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/bundle"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/state"
 	"github.com/crc-org/crc/v2/pkg/crc/ssh"
-	"github.com/crc-org/crc/v2/pkg/libmachine"
-	libmachinehost "github.com/crc-org/crc/v2/pkg/libmachine/host"
 	"github.com/pkg/errors"
 )
 
 type virtualMachine struct {
-	name string
-	*libmachinehost.Host
+	name   string
 	bundle *bundle.CrcBundleInfo
-	api    libmachine.API
 	vsock  bool
 }
 
@@ -30,14 +29,18 @@ func errMissingHost(name string) *MissingHostError {
 }
 
 func (err *MissingHostError) Error() string {
-	return fmt.Sprintf("no such libmachine vm: %s", err.name)
+	return fmt.Sprintf("no such VM: %s", err.name)
 }
 
 var errInvalidBundleMetadata = errors.New("Error loading bundle metadata")
 
+// vmConfig stores metadata about the VM that persists across restarts
+type vmConfig struct {
+	BundleName string `json:"bundleName"`
+}
+
 func loadVirtualMachine(name string, useVSock bool) (*virtualMachine, error) {
-	apiClient := libmachine.NewClient(constants.MachineBaseDir)
-	exists, err := apiClient.Exists(name)
+	exists, err := vmExists(name)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot check if machine exists")
 	}
@@ -45,12 +48,7 @@ func loadVirtualMachine(name string, useVSock bool) (*virtualMachine, error) {
 		return nil, errMissingHost(name)
 	}
 
-	libmachineHost, err := apiClient.Load(name)
-	if err != nil {
-		return nil, errors.Wrap(err, "Cannot load machine")
-	}
-
-	crcBundleMetadata, err := getBundleMetadataFromDriver(libmachineHost.Driver)
+	crcBundleMetadata, err := getBundleMetadataFromConfig(name)
 	if err != nil {
 		logging.Debugf("Failed to get bundle metadata: %v", err)
 		err = errInvalidBundleMetadata
@@ -58,49 +56,90 @@ func loadVirtualMachine(name string, useVSock bool) (*virtualMachine, error) {
 
 	return &virtualMachine{
 		name:   name,
-		Host:   libmachineHost,
 		bundle: crcBundleMetadata,
-		api:    apiClient,
 		vsock:  useVSock,
 	}, err
 }
 
+func getBundleMetadataFromConfig(vmName string) (*bundle.CrcBundleInfo, error) {
+	// Try to read bundle name from a config file in the machine directory
+	configPath := filepath.Join(constants.MachineInstanceDir, vmName, "config.json")
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		// Fallback: try to get from the most recent bundle
+		logging.Debugf("config.json not found, using most recent bundle: %v", err)
+		bundles, err := bundle.List()
+		if err != nil || len(bundles) == 0 {
+			return nil, errors.New("no bundle information available")
+		}
+		// Use the first/most recent bundle
+		return &bundles[0], nil
+	}
+
+	// Parse config to get bundle name
+	var config vmConfig
+	if err := json.Unmarshal(data, &config); err != nil {
+		logging.Debugf("Failed to parse config.json, using most recent bundle: %v", err)
+		bundles, err := bundle.List()
+		if err != nil || len(bundles) == 0 {
+			return nil, errors.New("no bundle information available")
+		}
+		return &bundles[0], nil
+	}
+
+	// Get bundle info by name
+	return bundle.Get(config.BundleName)
+}
+
+// saveBundleMetadataToConfig saves the bundle name to a config file for later retrieval
+func saveBundleMetadataToConfig(vmName, bundleName string) error {
+	configDir := filepath.Join(constants.MachineInstanceDir, vmName)
+	if err := os.MkdirAll(configDir, 0750); err != nil {
+		return fmt.Errorf("failed to create config directory: %v", err)
+	}
+
+	config := vmConfig{
+		BundleName: bundleName,
+	}
+
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %v", err)
+	}
+
+	configPath := filepath.Join(configDir, "config.json")
+	if err := os.WriteFile(configPath, data, 0o600); err != nil {
+		return fmt.Errorf("failed to write config file: %v", err)
+	}
+
+	logging.Debugf("Saved bundle metadata to %s", configPath)
+	return nil
+}
+
 func (vm *virtualMachine) Close() error {
-	return vm.api.Close()
+	// No-op for macadam-based implementation
+	return nil
 }
 
 func (vm *virtualMachine) Remove() error {
-	if err := vm.Driver.Remove(); err != nil {
-		return errors.Wrap(err, "Driver cannot remove machine")
-	}
-
-	if err := vm.api.Remove(vm.name); err != nil {
+	m := getMacadamClient()
+	_, _, err := m.DeleteVM(vm.name)
+	if err != nil {
 		return errors.Wrap(err, "Cannot remove machine")
 	}
-
 	return nil
 }
 
 func (vm *virtualMachine) State() (state.State, error) {
-	vmStatus, err := vm.Driver.GetState()
-	if err != nil {
-		return state.Error, err
-	}
-	return state.FromMachine(vmStatus), nil
+	return getVMState(vm.name)
 }
 
 func (vm *virtualMachine) IP() (string, error) {
-	if vm.vsock {
-		return "127.0.0.1", nil
-	}
-	return vm.Driver.GetIP()
+	return getVMIP(vm.name, vm.vsock)
 }
 
-func (vm *virtualMachine) SSHPort() int {
-	if vm.vsock {
-		return constants.VsockSSHPort
-	}
-	return constants.DefaultSSHPort
+func (vm *virtualMachine) SSHPort() (int, error) {
+	return getVMSSHPort(vm.name, vm.vsock)
 }
 
 func (vm *virtualMachine) SSHRunner() (*ssh.Runner, error) {
@@ -108,5 +147,9 @@ func (vm *virtualMachine) SSHRunner() (*ssh.Runner, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ssh.CreateRunner(ip, vm.SSHPort(), constants.GetPrivateKeyPath(), constants.GetECDSAPrivateKeyPath(), vm.bundle.GetSSHKeyPath())
+	port, err := vm.SSHPort()
+	if err != nil {
+		return nil, err
+	}
+	return ssh.CreateRunner(ip, port, constants.GetPrivateKeyPath(), constants.GetECDSAPrivateKeyPath(), vm.bundle.GetSSHKeyPath())
 }
