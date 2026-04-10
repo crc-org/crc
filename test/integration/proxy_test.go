@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/crc-org/crc/v2/pkg/crc/adminhelper"
 	crc "github.com/crc-org/crc/v2/test/extended/crc/cmd"
 	"github.com/crc-org/crc/v2/test/extended/util"
 	. "github.com/onsi/ginkgo/v2"
@@ -141,9 +140,8 @@ var _ = Describe("", Serial, Ordered, Label("openshift-preset", "goproxy"), func
 		})
 
 		It("add host.crc.testing to host's /etc/hosts", func() {
-			// After setup, adminhelper is available
 			// Add host.crc.testing -> 127.0.0.1 so host can resolve it to localhost proxy
-			err := adminhelper.AddToHostsFile("127.0.0.1", "host.crc.testing")
+			err := addHostsEntry("127.0.0.1", "host.crc.testing")
 			Expect(err).NotTo(HaveOccurred())
 		})
 
