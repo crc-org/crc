@@ -75,6 +75,16 @@ var trayLaunchdCleanupChecks = []Check{
 		labels: labels{Os: Darwin},
 	},
 }
+var rosettaPreflightCheck = Check{
+	configKeySuffix:  "check-rosetta-installed",
+	checkDescription: "Checking if Rosetta is installed",
+	check:            checkRosettaInstalled,
+	fixDescription:   "Rosetta is required for x86_64 emulation, install it with: softwareupdate --install-rosetta",
+	flags:            NoFix,
+
+	labels: labels{Os: Darwin},
+}
+
 var resolverPreflightChecks = []Check{
 	{
 		configKeySuffix:    "check-resolver-file-permissions",
@@ -109,10 +119,10 @@ var daemonLaunchdChecks = []Check{
 // Passing 'SystemNetworkingMode' to getPreflightChecks currently achieves this
 // as there are no user networking specific checks
 func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true, network.SystemNetworkingMode, constants.GetDefaultBundlePath(crcpreset.OpenShift), crcpreset.OpenShift, false)
+	return getPreflightChecks(true, network.SystemNetworkingMode, constants.GetDefaultBundlePath(crcpreset.OpenShift), crcpreset.OpenShift, false, false)
 }
 
-func getChecks(_ network.Mode, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) []Check {
+func getChecks(_ network.Mode, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool, enableRosetta bool) []Check {
 	checks := []Check{}
 
 	checks = append(checks, deprecationWarning)
@@ -121,6 +131,9 @@ func getChecks(_ network.Mode, bundlePath string, preset crcpreset.Preset, enabl
 	checks = append(checks, memoryCheck(preset))
 	checks = append(checks, genericCleanupChecks...)
 	checks = append(checks, vfkitPreflightChecks...)
+	if enableRosetta {
+		checks = append(checks, rosettaPreflightCheck)
+	}
 	checks = append(checks, resolverPreflightChecks...)
 	checks = append(checks, bundleCheck(bundlePath, preset, enableBundleQuayFallback))
 	checks = append(checks, trayLaunchdCleanupChecks...)
@@ -130,9 +143,9 @@ func getChecks(_ network.Mode, bundlePath string, preset crcpreset.Preset, enabl
 	return checks
 }
 
-func getPreflightChecks(_ bool, mode network.Mode, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) []Check {
+func getPreflightChecks(_ bool, mode network.Mode, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool, enableRosetta bool) []Check {
 	filter := newFilter()
 	filter.SetNetworkMode(mode)
 
-	return filter.Apply(getChecks(mode, bundlePath, preset, enableBundleQuayFallback))
+	return filter.Apply(getChecks(mode, bundlePath, preset, enableBundleQuayFallback, enableRosetta))
 }

@@ -226,6 +226,16 @@ func fixPlistFileExists(agentConfig launchd.AgentConfig) error {
 	return waitForDaemonRunning()
 }
 
+const rosettaPath = "/Library/Apple/usr/libexec/oah/libRosettaRuntime"
+
+func checkRosettaInstalled() error {
+	if _, err := os.Stat(rosettaPath); err != nil {
+		return fmt.Errorf("Rosetta is not installed, which is required for x86_64 emulation")
+	}
+	return nil
+}
+
+
 func deprecationNotice() error {
 	supports, err := darwin.AtLeast("13.0.0")
 	if err != nil {
