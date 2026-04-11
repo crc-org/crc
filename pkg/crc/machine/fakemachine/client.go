@@ -123,6 +123,13 @@ func (c *Client) GetPreset() preset.Preset {
 	return preset.OpenShift
 }
 
+func (c *Client) ImageLoad(_ types.ImageLoadConfig) error {
+	if c.Failing {
+		return errors.New("image load failed")
+	}
+	return nil
+}
+
 func (c *Client) GetClusterLoad() (*types.ClusterLoadResult, error) {
 	return nil, errors.New("not implemented")
 }
