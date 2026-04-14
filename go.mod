@@ -12,7 +12,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/cheggaaa/pb/v3 v3.1.7
 	github.com/containers/gvisor-tap-vsock v0.8.8
-	github.com/containers/libhvee v0.10.1-0.20250902114412-a85aab2976a4
+	github.com/containers/libhvee v0.11.0
 	github.com/coreos/go-systemd/v22 v22.7.0
 	github.com/crc-org/admin-helper v0.5.7
 	github.com/crc-org/machine v0.0.0-20240926103419-a943b47fd48b
