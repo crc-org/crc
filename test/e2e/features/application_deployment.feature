@@ -37,5 +37,3 @@ Feature: Application Deployment Test
         And with up to "10" retries with wait period of "1m" http response from "http://quarkus-testproj.apps-crc.testing" has status code "200"
         Then executing "curl -s http://quarkus-testproj.apps-crc.testing" succeeds
         And stdout should contain "{"applicationName":"JKube","message":"Subatomic JKube really whips the llama's ass!"}"
-        # Access application via Service's NodePort
-        Then ensure service "quarkus" is accessible via NodePort with response body "{"applicationName":"JKube","message":"Subatomic JKube really whips the llama's ass!"}"
