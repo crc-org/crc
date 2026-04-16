@@ -231,7 +231,7 @@ func getChecks(bundlePath string, preset crcpreset.Preset, enableBundleQuayFallb
 	return checks
 }
 
-func getPreflightChecks(_ bool, networkMode network.Mode, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool) []Check {
+func getPreflightChecks(_ bool, networkMode network.Mode, bundlePath string, preset crcpreset.Preset, enableBundleQuayFallback bool, _ bool) []Check {
 	filter := newFilter()
 	filter.SetNetworkMode(networkMode)
 

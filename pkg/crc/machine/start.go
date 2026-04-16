@@ -267,6 +267,63 @@ func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
 	return nil
 }
 
+func configureRosetta(sshRunner *crcssh.Runner) error {
+	logging.Infof("Configuring Rosetta for x86_64 emulation")
+
+	// Create mount point and mount the Rosetta virtiofs share
+	if _, _, err := sshRunner.RunPrivileged("Creating Rosetta mount point",
+		"mkdir", "-p", "/media/rosetta"); err != nil {
+		return err
+	}
+	if _, _, err := sshRunner.RunPrivileged("Mounting Rosetta share",
+		"mount", "-t", "virtiofs",
+		"-o", `context="system_u:object_r:bin_t:s0"`,
+		"rosetta", "/media/rosetta"); err != nil {
+		return err
+	}
+
+	// Bind mount the Rosetta binary to a local path with shared propagation.
+	// This avoids virtiofs dropping file connections across namespace boundaries
+	// (e.g. buildah unshare), while preserving the virtiofs transport Rosetta requires.
+	if _, _, err := sshRunner.RunPrivileged("Making Rosetta mount shared",
+		"mount", "--make-shared", "/media/rosetta"); err != nil {
+		return err
+	}
+	if _, _, err := sshRunner.RunPrivileged("Creating local Rosetta directory",
+		"mkdir", "-p", "/var/lib/rosetta"); err != nil {
+		return err
+	}
+	if _, _, err := sshRunner.RunPrivileged("Creating bind mount target",
+		"touch", "/var/lib/rosetta/rosetta"); err != nil {
+		return err
+	}
+	if _, _, err := sshRunner.RunPrivileged("Bind mounting Rosetta binary to local path",
+		"mount", "--bind", "/media/rosetta/rosetta", "/var/lib/rosetta/rosetta"); err != nil {
+		return err
+	}
+
+	// Mask QEMU x86_64 binfmt config so systemd-binfmt won't register it
+	if _, _, err := sshRunner.RunPrivileged("Masking QEMU x86_64 binfmt config",
+		"ln", "-sf", "/dev/null", "/etc/binfmt.d/qemu-x86_64-static.conf"); err != nil {
+		return err
+	}
+
+	// Write Rosetta binfmt config pointing to the bind mount path
+	rosettaBinfmt := `:rosetta:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00:\xff\xff\xff\xff\xff\xfe\xfe\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/var/lib/rosetta/rosetta:CFP`
+	if _, _, err := sshRunner.RunPrivileged("Writing Rosetta binfmt config",
+		fmt.Sprintf("tee /etc/binfmt.d/rosetta.conf <<< '%s'", rosettaBinfmt)); err != nil {
+		return err
+	}
+
+	// Restart systemd-binfmt to apply the new handler
+	if _, _, err := sshRunner.RunPrivileged("Restarting systemd-binfmt",
+		"systemctl", "restart", "systemd-binfmt"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (client *client) Start(ctx context.Context, startConfig types.StartConfig) (*types.StartResult, error) {
 	telemetry.SetCPUs(ctx, startConfig.CPUs)
 	telemetry.SetMemory(ctx, uint64(startConfig.Memory.ToBytes()))
@@ -331,6 +388,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			SharedDirs:        sharedDirs,
 			SharedDirPassword: startConfig.SharedDirPassword,
 			SharedDirUsername: startConfig.SharedDirUsername,
+			EnableRosetta:    startConfig.EnableRosetta,
 		}
 		if crcBundleMetadata.IsOpenShift() {
 			machineConfig.KubeConfig = crcBundleMetadata.GetKubeConfigPath()
@@ -467,6 +525,11 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	if startConfig.EnableSharedDirs {
 		if err := configureSharedDirs(vm, sshRunner); err != nil {
 			return nil, err
+		}
+	}
+	if startConfig.EnableRosetta {
+		if err := configureRosetta(sshRunner); err != nil {
+			return nil, errors.Wrap(err, "Failed to configure Rosetta")
 		}
 	}
 

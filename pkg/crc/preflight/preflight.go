@@ -157,8 +157,9 @@ func getPreflightChecksHelper(config crcConfig.Storage) []Check {
 	bundlePath := config.Get(crcConfig.Bundle).AsString()
 	preset := crcConfig.GetPreset(config)
 	enableBundleQuayFallback := config.Get(crcConfig.EnableBundleQuayFallback).AsBool()
+	enableRosetta := config.Get(crcConfig.UseRosetta).AsBool()
 	logging.Infof("Using bundle path %s", bundlePath)
-	return getPreflightChecks(experimentalFeatures, mode, bundlePath, preset, enableBundleQuayFallback)
+	return getPreflightChecks(experimentalFeatures, mode, bundlePath, preset, enableBundleQuayFallback, enableRosetta)
 }
 
 // StartPreflightChecks performs the preflight checks before starting the cluster
