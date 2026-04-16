@@ -171,6 +171,10 @@ func (m *waitingMachine) GenerateBundle(_ bool) error {
 	return errors.New("not implemented")
 }
 
+func (m *waitingMachine) ImageLoad(_ types.ImageLoadConfig) error {
+	return errors.New("not implemented")
+}
+
 func (m *waitingMachine) GetPreset() crcPreset.Preset {
 	return crcPreset.OpenShift
 }
