@@ -35,7 +35,7 @@ var doc string
 // Suite lists all modernize analyzers.
 var Suite = []*analysis.Analyzer{
 	AnyAnalyzer,
-	atomicAnalyzer,
+	atomicTypesAnalyzer,
 	// AppendClippedAnalyzer, // not nil-preserving!
 	// BLoopAnalyzer, // may skew benchmark results, see golang/go#74967
 	FmtAppendfAnalyzer,
@@ -47,6 +47,7 @@ var Suite = []*analysis.Analyzer{
 	plusBuildAnalyzer,
 	RangeIntAnalyzer,
 	ReflectTypeForAnalyzer,
+	slicesbackwardAnalyzer,
 	SlicesContainsAnalyzer,
 	// SlicesDeleteAnalyzer, // not nil-preserving!
 	SlicesSortAnalyzer,
@@ -57,7 +58,7 @@ var Suite = []*analysis.Analyzer{
 	StringsBuilderAnalyzer,
 	TestingContextAnalyzer,
 	unsafeFuncsAnalyzer,
-	WaitGroupAnalyzer,
+	WaitGroupGoAnalyzer,
 }
 
 // -- helpers --
@@ -82,6 +83,12 @@ func isZeroIntConst(info *types.Info, e ast.Expr) bool {
 // isIntLiteral reports whether e is an integer with given value.
 func isIntLiteral(info *types.Info, e ast.Expr, n int64) bool {
 	return info.Types[e].Value == constant.MakeInt64(n)
+}
+
+// isInteger reports whether t is an integer type.
+func isInteger(t types.Type) bool {
+	basic, ok := t.Underlying().(*types.Basic)
+	return ok && basic.Info()&types.IsInteger != 0
 }
 
 // filesUsingGoVersion returns a cursor for each *ast.File in the inspector
