@@ -1,9 +1,7 @@
 package preflight
 
 import (
-	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
@@ -13,8 +11,6 @@ import (
 	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
 	"github.com/crc-org/crc/v2/pkg/os/linux"
-
-	"golang.org/x/sys/unix"
 )
 
 func qemuPreflightChecks(distro *linux.OsRelease) []Check {
@@ -98,15 +94,11 @@ func qemuPreflightChecks(distro *linux.OsRelease) []Check {
 }
 
 var vsockPreflightCheck = Check{
-	configKeySuffix:    "check-vsock",
-	checkDescription:   "Checking if vsock is correctly configured",
-	check:              checkVsock,
-	fixDescription:     "Setting up vsock support",
-	fix:                fixVsock,
 	cleanupDescription: "Removing vsock configuration",
 	cleanup:            removeVsockCrcSettings,
+	flags:              CleanUpOnly,
 
-	labels: labels{Os: Linux, NetworkMode: User},
+	labels: labels{Os: Linux},
 }
 
 var wsl2PreflightCheck = Check{
@@ -124,81 +116,6 @@ const (
 	vsockUdevLocalAdminRulesPath = "/etc/udev/rules.d/99-crc-vsock.rules"
 	vsockModuleAutoLoadConfPath  = "/etc/modules-load.d/vhost_vsock.conf"
 )
-
-func checkVsock() error {
-	executable, err := os.Executable()
-	if err != nil {
-		return err
-	}
-
-	// Check for cap_net_bind_service capability with inheritable flag (+eip or =eip)
-	if err := checkCapabilities(executable, "cap_net_bind_service+eip", "cap_net_bind_service=eip"); err != nil {
-		return err
-	}
-
-	// This test is needed in order to trigger the move of the udev rule to its new location.
-	// The old location was used in the 1.21 release.
-	if !crcos.FileExists(vsockUdevLocalAdminRulesPath) {
-		return errors.New("vsock udev rule does not exist")
-	}
-
-	err = unix.Access("/dev/vsock", unix.R_OK|unix.W_OK)
-	if err != nil {
-		return errors.New("/dev/vsock is not readable by the current user")
-	}
-	return nil
-}
-
-func fixVsock() error {
-	executable, err := os.Executable()
-	if err != nil {
-		return err
-	}
-
-	// Set cap_net_bind_service with inheritable flag for the CRC daemon
-	if err := setCapabilities(executable, "cap_net_bind_service=+eip"); err != nil {
-		return err
-	}
-
-	// Remove udev rule which was used in crc 1.21 - it's been moved to a new location
-	err = crcos.RemoveFileAsRoot(
-		fmt.Sprintf("Removing udev rule in %s", vsockUdevSystemRulesPath),
-		vsockUdevSystemRulesPath,
-	)
-	if err != nil {
-		return err
-	}
-	udevRule := `KERNEL=="vsock", MODE="0660", OWNER="root", GROUP="kvm"`
-	if crcos.FileContentMatches(vsockUdevLocalAdminRulesPath, []byte(udevRule)) != nil {
-		err = crcos.WriteToFileAsRoot("Creating udev rule for /dev/vsock", udevRule, vsockUdevLocalAdminRulesPath, 0644)
-		if err != nil {
-			return err
-		}
-		_, _, err = crcos.RunPrivileged("Reloading udev rules database", "udevadm", "control", "--reload")
-		if err != nil {
-			return err
-		}
-	}
-	if crcos.FileExists("/dev/vsock") && unix.Access("/dev/vsock", unix.R_OK|unix.W_OK) != nil {
-		_, _, err = crcos.RunPrivileged("Applying udev rule to /dev/vsock", "udevadm", "trigger", "/dev/vsock")
-		if err != nil {
-			return err
-		}
-	} else {
-		_, _, err = crcos.RunPrivileged("Loading vhost_vsock kernel module", "modprobe", "vhost_vsock")
-		if err != nil {
-			return err
-		}
-	}
-
-	if crcos.FileContentMatches(vsockModuleAutoLoadConfPath, []byte("vhost_vsock")) != nil {
-		err = crcos.WriteToFileAsRoot(fmt.Sprintf("Creating file %s", vsockModuleAutoLoadConfPath), "vhost_vsock", vsockModuleAutoLoadConfPath, 0644)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
 
 func removeVsockCrcSettings() error {
 	var mErr crcErrors.MultiError
