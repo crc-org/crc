@@ -38,10 +38,13 @@ func TestCrcManPageGenerator_WhenInvoked_GeneratesManPagesForAllCrcSubCommands(t
 		"crc-oc-env.1",
 		"crc-podman-env.1",
 		"crc-setup.1",
+		"crc-ssh.1",
 		"crc-start.1",
 		"crc-status.1",
 		"crc-stop.1",
 		"crc-version.1",
+		"crc-vm-stats.1",
+		"crc-vm.1",
 		"crc.1",
 	}, manPagesFiles)
 }
