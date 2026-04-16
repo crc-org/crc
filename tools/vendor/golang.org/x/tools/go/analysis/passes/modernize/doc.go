@@ -65,11 +65,11 @@ This analyzer is currently disabled by default as the
 transformation does not preserve the nilness of the base slice in
 all cases; see https://go.dev/issue/73557.
 
-# Analyzer atomic
+# Analyzer atomictypes
 
-atomic: replace basic types in sync/atomic calls with atomic types
+atomictypes: replace basic types in sync/atomic calls with atomic types
 
-The atomic analyzer suggests replacing the primitive sync/atomic functions with
+The atomictypes analyzer suggests replacing the primitive sync/atomic functions with
 the strongly typed atomic wrapper types introduced in Go1.19 (e.g.
 atomic.Int32). For example,
 
@@ -302,6 +302,28 @@ No fix is offered in cases when the runtime type is dynamic, such as:
 	reflect.TypeOf(r)
 
 or when the operand has potential side effects.
+
+# Analyzer slicesbackward
+
+slicesbackward: replace backward loops over slices with slices.Backward
+
+The slicesbackward analyzer suggests replacing manually-written backward
+loops of the form
+
+	for i := len(s) - 1; i >= 0; i-- {
+	    use(s[i])
+	}
+
+with the more readable Go 1.23 style using slices.Backward:
+
+	for _, v := range slices.Backward(s) {
+	    use(v)
+	}
+
+If the loop index is needed beyond just indexing into the slice, both
+the index and value variables are kept:
+
+	for i, v := range slices.Backward(s) { ... }
 
 # Analyzer slicescontains
 
@@ -544,11 +566,11 @@ where ptr is an unsafe.Pointer, is replaced by:
 
 	unsafe.Add(ptr, n)
 
-# Analyzer waitgroup
+# Analyzer waitgroupgo
 
-waitgroup: replace wg.Add(1)/go/wg.Done() with wg.Go
+waitgroupgo: replace wg.Add(1)/go/wg.Done() with wg.Go
 
-The waitgroup analyzer simplifies goroutine management with `sync.WaitGroup`.
+The waitgroupgo analyzer simplifies goroutine management with `sync.WaitGroup`.
 It replaces the common pattern
 
 	wg.Add(1)
