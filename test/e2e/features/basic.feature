@@ -63,7 +63,7 @@ Feature: Basic test
         And ensuring user is logged in succeeds
         Then with up to "12" retries with wait period of "30s" command "oc get pods -n openshift-monitoring" output matches ".*cluster-monitoring-operator-\w+-\w+\ *1/1\ *Running.*"
         # stop
-        When executing "crc stop"
+        When executing "crc stop -f"
         Then stdout should match "(.*)[Ss]topped the instance"
         And executing "oc whoami" fails
         And kubeconfig is cleaned up

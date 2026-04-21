@@ -30,7 +30,7 @@ Feature: 4 Openshift stories
 		And stdout should contain "Hello CRC!"
 		And get memory data "After deployment"
 		And record timestamp "stop"
-		When executing "crc stop" succeeds
+		When executing "crc stop -f" succeeds
 		And get memory data "After stop"
 		And record timestamp "start again"
 		And starting CRC with default bundle succeeds
