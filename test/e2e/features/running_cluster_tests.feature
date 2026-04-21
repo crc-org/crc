@@ -19,7 +19,7 @@ Feature: Test scenarios on a running cluster
 
     @linux @windows @darwin @cleanup
     Scenario: Override default developer password should be reflected during crc start
-        Given executing "crc stop" succeeds
+        Given executing "crc stop -f" succeeds
         And setting config property "developer-password" to value "secret-dev" succeeds
         When starting CRC with default bundle succeeds
         Then stdout should contain "Started the OpenShift cluster"

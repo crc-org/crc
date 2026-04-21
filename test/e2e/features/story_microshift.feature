@@ -38,7 +38,7 @@ Feature: Microshift test stories
 		Then executing "curl -s http://httpd-example-testproj.apps.crc.testing" succeeds
 		And stdout should contain "Hello CRC!"
 		And record timestamp "stop"
-		When executing "crc stop" succeeds
+		When executing "crc stop -f" succeeds
 		And get memory data "After stop"
 		And record timestamp "start again"
 		And starting CRC with default bundle succeeds
