@@ -3,7 +3,10 @@ Feature: 4 Openshift stories
 
 	Background:
 		Given setting config property "disk-size" to value "40" succeeds
+		And setting config property "developer-password" to value "secret-dev" succeeds
 		And ensuring CRC cluster is running
+		And executing "crc console --credentials" succeeds
+		And stdout should contain "oc login -u developer -p secret-dev"
 		And ensuring oc command is available
 		And ensuring user is logged in succeeds
 
