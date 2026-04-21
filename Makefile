@@ -4,7 +4,7 @@ SHELL := /bin/bash -o pipefail
 
 OPENSHIFT_VERSION ?= 4.21.8
 OKD_VERSION ?= 4.21.0-okd-scos.8
-MICROSHIFT_VERSION ?= 4.21.0
+MICROSHIFT_VERSION ?= 4.21.7
 BUNDLE_EXTENSION = crcbundle
 CRC_VERSION = 2.60.1
 COMMIT_SHA?=$(shell git rev-parse --short=6 HEAD)
