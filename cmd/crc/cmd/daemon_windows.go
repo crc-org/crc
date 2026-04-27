@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"net"
 
 	"github.com/Microsoft/go-winio"
@@ -46,7 +45,6 @@ func startSharedDirServers(enabled bool) (func(), error) {
 		return noop, nil
 	}
 
-	// 9p over hvsock
 	listener9pHvsock, err := fs9p.GetHvsockListener(constants.Plan9HvsockGUID)
 	if err != nil {
 		return noop, err
@@ -66,35 +64,6 @@ func startSharedDirServers(enabled bool) (func(), error) {
 	go func() {
 		if err := server9pHvsock.WaitForError(); err != nil {
 			logging.Errorf("9p server (hvsock) error: %v", err)
-		}
-	}()
-
-	// 9p over TCP (as a backup)
-	listener9pTCP, err := net.Listen("tcp", fmt.Sprintf("%s:%d", constants.VSockGateway, constants.Plan9TcpPort))
-	if err != nil {
-		cleanup()
-		return noop, err
-	}
-	server9pTCP, err := fs9p.New9pServer(listener9pTCP, constants.GetHomeDir())
-	if err != nil {
-		cleanup()
-		return noop, err
-	}
-	if err := server9pTCP.Start(); err != nil {
-		cleanup()
-		return noop, err
-	}
-	cleanup = func() {
-		if err := server9pHvsock.Stop(); err != nil {
-			logging.Warnf("error stopping 9p server (hvsock): %v", err)
-		}
-		if err := server9pTCP.Stop(); err != nil {
-			logging.Warnf("error stopping 9p server (tcp): %v", err)
-		}
-	}
-	go func() {
-		if err := server9pTCP.WaitForError(); err != nil {
-			logging.Errorf("9p server (tcp) error: %v", err)
 		}
 	}()
 
