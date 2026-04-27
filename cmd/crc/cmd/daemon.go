@@ -258,7 +258,7 @@ func run(configuration *types.Configuration) error {
 	}()
 
 	// 9p home directory sharing (Windows only)
-	cleanupSharedDirs, err := startSharedDirServers(vn, configuration.GatewayIP, config.Get(crcConfig.EnableSharedDirs).AsBool())
+	cleanupSharedDirs, err := startSharedDirServers(config.Get(crcConfig.EnableSharedDirs).AsBool())
 	if err != nil {
 		return err
 	}

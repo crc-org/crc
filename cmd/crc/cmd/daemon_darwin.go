@@ -73,6 +73,6 @@ func checkIfDaemonIsRunning() (bool, error) {
 func startupDone() {
 }
 
-func startSharedDirServers(_ *virtualnetwork.VirtualNetwork, _ string, _ bool) (func(), error) {
+func startSharedDirServers(_ bool) (func(), error) {
 	return func() {}, nil
 }
