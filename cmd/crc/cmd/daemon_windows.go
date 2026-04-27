@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"net"
 
 	"github.com/Microsoft/go-winio"
@@ -47,61 +46,31 @@ func unixgramListener(_ context.Context, _ *virtualnetwork.VirtualNetwork) (*net
 func startupDone() {
 }
 
-func startSharedDirServers(vn *virtualnetwork.VirtualNetwork, gatewayIP string, enabled bool) (func(), error) {
+func startSharedDirServers(enabled bool) (func(), error) {
 	noop := func() {}
 	if !enabled {
 		return noop, nil
 	}
 
-	// 9p over hvsock
-	listener9pHvsock, err := fs9p.GetHvsockListener(constants.Plan9HvsockGUID)
+	listener9p, err := fs9p.GetHvsockListener(constants.Plan9HvsockGUID)
 	if err != nil {
 		return noop, err
 	}
-	server9pHvsock, err := fs9p.New9pServer(listener9pHvsock, constants.GetHomeDir())
+	server9p, err := fs9p.New9pServer(listener9p, constants.GetHomeDir())
 	if err != nil {
 		return noop, err
 	}
-	if err := server9pHvsock.Start(); err != nil {
+	if err := server9p.Start(); err != nil {
 		return noop, err
 	}
 	cleanup := func() {
-		if err := server9pHvsock.Stop(); err != nil {
-			logging.Warnf("error stopping 9p server (hvsock): %v", err)
+		if err := server9p.Stop(); err != nil {
+			logging.Warnf("error stopping 9p server: %v", err)
 		}
 	}
 	go func() {
-		if err := server9pHvsock.WaitForError(); err != nil {
-			logging.Errorf("9p server (hvsock) error: %v", err)
-		}
-	}()
-
-	// 9p over TCP (as a backup)
-	listener9pTCP, err := vn.Listen("tcp", net.JoinHostPort(gatewayIP, fmt.Sprintf("%d", constants.Plan9TcpPort)))
-	if err != nil {
-		cleanup()
-		return noop, err
-	}
-	server9pTCP, err := fs9p.New9pServer(listener9pTCP, constants.GetHomeDir())
-	if err != nil {
-		cleanup()
-		return noop, err
-	}
-	if err := server9pTCP.Start(); err != nil {
-		cleanup()
-		return noop, err
-	}
-	cleanup = func() {
-		if err := server9pHvsock.Stop(); err != nil {
-			logging.Warnf("error stopping 9p server (hvsock): %v", err)
-		}
-		if err := server9pTCP.Stop(); err != nil {
-			logging.Warnf("error stopping 9p server (tcp): %v", err)
-		}
-	}
-	go func() {
-		if err := server9pTCP.WaitForError(); err != nil {
-			logging.Errorf("9p server (tcp) error: %v", err)
+		if err := server9p.WaitForError(); err != nil {
+			logging.Errorf("9p server error: %v", err)
 		}
 	}()
 

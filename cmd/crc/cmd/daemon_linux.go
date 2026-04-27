@@ -142,6 +142,6 @@ func startupDone() {
 	_, _ = daemon.SdNotify(false, daemon.SdNotifyReady)
 }
 
-func startSharedDirServers(_ *virtualnetwork.VirtualNetwork, _ string, _ bool) (func(), error) {
+func startSharedDirServers(_ bool) (func(), error) {
 	return func() {}, nil
 }
