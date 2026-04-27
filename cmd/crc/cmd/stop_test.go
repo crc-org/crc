@@ -41,3 +41,9 @@ func TestStopWithForceJSONError(t *testing.T) {
 	assert.NoError(t, runStop(out, fakemachine.NewFailingClient(), false, true, jsonFormat))
 	assert.JSONEq(t, `{"success": false, "forced": true, "error": "poweroff failed"}`, out.String())
 }
+
+func TestStopWithForceWhenVMInErrorState(t *testing.T) {
+	out := new(bytes.Buffer)
+	assert.NoError(t, runStop(out, fakemachine.NewStopFailsInErrorStateClient(), false, true, jsonFormat))
+	assert.JSONEq(t, `{"success": false, "forced": true, "error": "poweroff failed"}`, out.String())
+}

@@ -37,12 +37,7 @@ func stopMachine(client machine.Client, interactive, force bool) (bool, error) {
 		if !interactive && !force {
 			return false, err
 		}
-		// Here we are checking the VM state and if it is still running then
-		// Ask user to forcefully power off it.
-		if vmState == state.Running {
-			// Most of the time force kill don't work and libvirt throw
-			// Device or resource busy error. To make sure we give some
-			// graceful time to cluster before kill it.
+		if vmState != state.Stopped {
 			yes := input.PromptUserForYesOrNo("Do you want to force power off", force)
 			if yes {
 				err := client.PowerOff()
