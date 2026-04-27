@@ -20,8 +20,16 @@ func NewFailingClient() *Client {
 	}
 }
 
+func NewStopFailsInErrorStateClient() *Client {
+	return &Client{
+		Failing:      true,
+		StopRetState: state.Error,
+	}
+}
+
 type Client struct {
-	Failing bool
+	Failing      bool
+	StopRetState state.State
 }
 
 var DummyClusterConfig = types.ClusterConfig{
@@ -90,7 +98,11 @@ func (c *Client) Start(_ context.Context, _ types.StartConfig) (*types.StartResu
 
 func (c *Client) Stop() (state.State, error) {
 	if c.Failing {
-		return state.Running, errors.New("stop failed")
+		retState := state.Running
+		if c.StopRetState != "" {
+			retState = c.StopRetState
+		}
+		return retState, errors.New("stop failed")
 	}
 	return state.Stopped, nil
 }
