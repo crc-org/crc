@@ -3,9 +3,7 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -134,29 +132,6 @@ func run(cfg *crcConfig.Config) error {
 		go func() {
 			if err := server9pHvsock.WaitForError(); err != nil {
 				logging.Errorf("9p server (hvsock) error: %v", err)
-			}
-		}()
-
-		// 9p over TCP (as a backup)
-		listener9pTCP, err := net.Listen("tcp", fmt.Sprintf("%s:%d", constants.VSockGateway, constants.Plan9TcpPort))
-		if err != nil {
-			return err
-		}
-		server9pTCP, err := fs9p.New9pServer(listener9pTCP, constants.GetHomeDir())
-		if err != nil {
-			return err
-		}
-		if err := server9pTCP.Start(); err != nil {
-			return err
-		}
-		defer func() {
-			if err := server9pTCP.Stop(); err != nil {
-				logging.Warnf("error stopping 9p server (tcp): %v", err)
-			}
-		}()
-		go func() {
-			if err := server9pTCP.WaitForError(); err != nil {
-				logging.Errorf("9p server (tcp) error: %v", err)
 			}
 		}()
 	}
