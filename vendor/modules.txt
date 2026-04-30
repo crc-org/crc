@@ -13,7 +13,7 @@ github.com/DeedleFake/p9
 github.com/DeedleFake/p9/internal/debug
 github.com/DeedleFake/p9/internal/util
 github.com/DeedleFake/p9/proto
-# github.com/Masterminds/semver/v3 v3.4.0
+# github.com/Masterminds/semver/v3 v3.5.0
 ## explicit; go 1.21
 github.com/Masterminds/semver/v3
 # github.com/Microsoft/go-winio v0.6.2
