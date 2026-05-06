@@ -113,16 +113,26 @@ func (d *Driver) GetState() (state.State, error) {
 	log.Debugf("Machine: libhvee -> state: get")
 	vmState := vm.State()
 	switch vmState {
-	case hypervctl.Enabled:
-		log.Debugf("Machine: libhvee -> state: running")
+	case hypervctl.Enabled,
+		hypervctl.Starting,
+		hypervctl.ShuttingDown,
+		hypervctl.EnabledButOffline,
+		hypervctl.InTest,
+		hypervctl.Deferred,
+		hypervctl.Quiesce:
+		log.Debugf("Machine: libhvee -> state: running (%s)", vmState.String())
 		return state.Running, nil
 	case hypervctl.Disabled:
 		log.Debugf("Machine: libhvee -> state: stopped")
 		return state.Stopped, nil
+	case hypervctl.Unknown, hypervctl.Other, hypervctl.NotApplicable:
+		log.Debugf("Machine: libhvee -> state: error (%s)", vmState.String())
+		return state.Error, fmt.Errorf("unknown libhvee -> state: %s", vmState.String())
+	default:
+		vmStateName := fmt.Sprint(vmState) // guard if vmState is nil
+		log.Debugf("Machine: libhvee -> state: unexpected (%s)", vmStateName)
+		return state.Error, fmt.Errorf("not identified state (%s)", vmStateName)
 	}
-
-	log.Debugf("Machine: libhvee -> state: unknown")
-	return state.Error, fmt.Errorf("unknown state")
 }
 
 // PreCreateCheck checks that the machine creation process can be started safely.
