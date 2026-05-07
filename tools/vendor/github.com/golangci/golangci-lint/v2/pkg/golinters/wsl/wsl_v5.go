@@ -18,13 +18,12 @@ func NewV5(settings *config.WSLv5Settings) *goanalysis.Linter {
 		}
 
 		conf = &wsl.Configuration{
-			IncludeGenerated:    true, // force to true because golangci-lint already has a way to filter generated files.
-			AllowFirstInBlock:   settings.AllowFirstInBlock,
-			AllowWholeBlock:     settings.AllowWholeBlock,
-			BranchMaxLines:      settings.BranchMaxLines,
-			CaseMaxLines:        settings.CaseMaxLines,
-			CuddleMaxStatements: settings.CuddleMaxStatements,
-			Checks:              checkSet,
+			IncludeGenerated:  true, // force to true because golangci-lint already has a way to filter generated files.
+			AllowFirstInBlock: settings.AllowFirstInBlock,
+			AllowWholeBlock:   settings.AllowWholeBlock,
+			BranchMaxLines:    settings.BranchMaxLines,
+			CaseMaxLines:      settings.CaseMaxLines,
+			Checks:            checkSet,
 		}
 	}
 

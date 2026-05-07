@@ -76,10 +76,6 @@
       </rule>
     </state>
     <state name="type">
-      <rule pattern="[\{\}\(\)\[\]]">
-        <token type="Punctuation"/>
-        <pop depth="1"/>
-      </rule>
       <rule pattern="[^\W\d]\w*">
         <token type="NameClass"/>
         <pop depth="1"/>

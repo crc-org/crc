@@ -41,7 +41,7 @@ func readPasswordLine(reader io.Reader) ([]byte, error) {
 			if err == io.EOF && len(ret) > 0 {
 				return ret, nil
 			}
-			return ret, err //nolint:wrapcheck
+			return ret, err
 		}
 	}
 }

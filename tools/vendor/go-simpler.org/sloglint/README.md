@@ -1,296 +1,205 @@
 # sloglint
 
-[![checks](https://github.com/go-simpler/sloglint/actions/workflows/checks.yaml/badge.svg)](https://github.com/go-simpler/sloglint/actions/workflows/checks.yaml)
-[![docs](https://pkg.go.dev/badge/go-simpler.org/sloglint.svg)](https://pkg.go.dev/go-simpler.org/sloglint)
+[![checks](https://github.com/go-simpler/sloglint/actions/workflows/checks.yml/badge.svg)](https://github.com/go-simpler/sloglint/actions/workflows/checks.yml)
+[![pkg.go.dev](https://pkg.go.dev/badge/go-simpler.org/sloglint.svg)](https://pkg.go.dev/go-simpler.org/sloglint)
+[![goreportcard](https://goreportcard.com/badge/go-simpler.org/sloglint)](https://goreportcard.com/report/go-simpler.org/sloglint)
 [![codecov](https://codecov.io/gh/go-simpler/sloglint/branch/main/graph/badge.svg)](https://codecov.io/gh/go-simpler/sloglint)
 
 A Go linter that ensures consistent code style when using `log/slog`.
 
-## Install
+## 📌 About
 
-`sloglint` is part of [golangci-lint](https://golangci-lint.run), and this is the recommended way to use it.
+The `log/slog` API allows two different types of arguments: key-value pairs and attributes.
+While people may have different opinions about which one is better, most seem to agree on one thing: it should be consistent.
+With `sloglint` you can enforce various rules for `log/slog` based on your preferred code style.
+
+## 🚀 Features
+
+* Enforce not mixing key-value pairs and attributes (default)
+* Enforce using either key-value pairs only or attributes only (optional)
+* Enforce not using global loggers (optional)
+* Enforce using methods that accept a context (optional)
+* Enforce using static messages (optional)
+* Enforce message style (optional)
+* Enforce using constants instead of raw keys (optional)
+* Enforce key naming convention (optional)
+* Enforce not using specific keys (optional)
+* Enforce putting arguments on separate lines (optional)
+
+## 📦 Install
+
+`sloglint` is integrated into [`golangci-lint`][1], and this is the recommended way to use it.
+
+To enable the linter, add the following lines to `.golangci.yml`:
 
 ```yaml
-# .golangci.yaml
 linters:
   enable:
     - sloglint
 ```
 
-Alternatively, you can download a prebuilt binary from the [Releases](https://github.com/go-simpler/sloglint/releases) page to use `sloglint` standalone.
+Alternatively, you can download a prebuilt binary from the [Releases][2] page to use `sloglint` standalone.
 
-## Supported checks
+## 📋 Usage
 
-For `log/slog` functions:
-- [No global logger](#no-global-logger)
-- [Context only](#context-only)
-- [Discard handler](#discard-handler)
+Run `golangci-lint` with `sloglint` enabled.
+See the list of [available options][3] to configure the linter.
 
-For log messages:
-- [Static message](#static-message)
-- [Message style](#message-style)
-
-For log arguments:
-- [No mixed arguments](#no-mixed-arguments)
-- [Key-value pairs only](#key-value-pairs-only)
-- [Attributes only](#attributes-only)
-- [Arguments on separate lines](#arguments-on-separate-lines)
-
-For log keys:
-- [Constant keys](#constant-keys)
-- [Allowed keys](#allowed-keys)
-- [Forbidden keys](#forbidden-keys)
-- [Key naming case](#key-naming-case)
-
-The checks for log messages, arguments, and keys can also be used to analyze [custom functions](#custom-function-analysis).
-
-### No global logger
-
-Report the use of global loggers.
-Alternatively, only report the use of the `slog.Default()` logger.
-
-```go
-slog.Info("a user has logged in")
-// sloglint: global logger should not be used
-```
-
-```yaml
-# .golangci.yaml
-linters:
-  settings:
-    sloglint:
-      no-global: "all" # Or "default".
-```
-
-### Context only
-
-Report the use of functions without a `context.Context`.
-Alternatively, only report their use if a context exists within the scope of the outermost function.
-
-```go
-slog.Info("a user has logged in")
-// sloglint: InfoContext should be used instead
-```
-
-```yaml
-# .golangci.yaml
-linters:
-  settings:
-    sloglint:
-      context: "all" # Or "scope".
-```
-
-This check partially supports autofix.
-
-### Discard handler
-
-Suggest using `slog.DiscardHandler` when possible.
-
-```go
-slog.NewJSONHandler(io.Discard, nil)
-// sloglint: use slog.DiscardHandler instead
-```
-
-This check is enabled by default and supports autofix.
-
-### Static message
-
-Report dynamic log messages, such as those that are built with `fmt.Sprintf`.
-
-```go
-slog.Info(fmt.Sprintf("a user with id %d has logged in", 42))
-// sloglint: message should be a string literal or a constant
-```
-
-```yaml
-# .golangci.yaml
-linters:
-  settings:
-    sloglint:
-      static-msg: true
-```
-
-### Message style
-
-Report log messages that do not match a particular style.
-The supported styles are `lowercased` (the first letter is lowercase) and `capitalized` (the first letter is uppercase).
-
-```go
-slog.Info("A user has logged in")
-// sloglint: message should be lowercased
-```
-
-```yaml
-# .golangci.yaml
-linters:
-  settings:
-    sloglint:
-      msg-style: "lowercased" # Or "capitalized".
-```
+When using `sloglint` standalone, pass the options as flags of the same name.
 
 ### No mixed arguments
 
-Report the use of both key-value pairs and attributes within a single function call.
+The `no-mixed-args` option causes `sloglint` to report mixing key-values pairs and attributes within a single function call:
 
 ```go
-slog.Info("a user has logged in", "user_id", 42, slog.String("ip_address", "192.0.2.0"))
-// sloglint: key-value pairs and attributes should not be mixed
+slog.Info("a user has logged in", "user_id", 42, slog.String("ip_address", "192.0.2.0")) // sloglint: key-value pairs and attributes should not be mixed
 ```
 
-This check is enabled by default.
+It is enabled by default.
 
 ### Key-value pairs only
 
-Report any use of attributes as function call arguments.
+The `kv-only` option causes `sloglint` to report any use of attributes:
 
 ```go
-slog.Info("a user has logged in", slog.Int("user_id", 42))
-// sloglint: attributes should not be used
-```
-
-```yaml
-# .golangci.yaml
-linters:
-  settings:
-    sloglint:
-      kv-only: true
+slog.Info("a user has logged in", slog.Int("user_id", 42)) // sloglint: attributes should not be used
 ```
 
 ### Attributes only
 
-Report any use of key-value pairs as function call arguments.
+In contrast, the `attr-only` option causes `sloglint` to report any use of key-value pairs:
+
+```go
+slog.Info("a user has logged in", "user_id", 42) // sloglint: key-value pairs should not be used
+```
+
+### No global
+
+Some projects prefer to pass loggers as explicit dependencies.
+The `no-global` option causes `sloglint` to report the use of global loggers.
+
+```go
+slog.Info("a user has logged in", "user_id", 42) // sloglint: global logger should not be used
+```
+
+Possible values are `all` (report all global loggers) and `default` (report only the default `slog` logger).
+
+### Context only
+
+Some `slog.Handler` implementations make use of the given `context.Context` (e.g. to access context values).
+For them to work properly, you need to pass a context to all logger calls.
+The `context-only` option causes `sloglint` to report the use of methods without a context:
+
+```go
+slog.Info("a user has logged in") // sloglint: InfoContext should be used instead
+```
+
+Possible values are `all` (report all contextless calls) and `scope` (report only if a context exists in the scope of the outermost function).
+
+### Static messages
+
+To get the most out of structured logging, you may want to require log messages to be static.
+The `static-msg` option causes `sloglint` to report non-static messages:
+
+```go
+slog.Info(fmt.Sprintf("a user with id %d has logged in", 42)) // sloglint: message should be a string literal or a constant
+```
+
+The report can be fixed by moving dynamic values to arguments:
 
 ```go
 slog.Info("a user has logged in", "user_id", 42)
-// sloglint: key-value pairs should not be used
 ```
 
-```yaml
-# .golangci.yaml
-linters:
-  settings:
-    sloglint:
-      attr-only: true
-```
+### Message style
 
-### Arguments on separate lines
+The `msg-style` option causes `sloglint` to check log messages for a particular style.
 
-Report two or more arguments on the same line.
-A key-value pair is considered a single argument.
+Possible values are `lowercased` (report messages that begin with an uppercase letter)...
 
 ```go
-slog.Info("a user has logged in", "user_id", 42, "ip_address", "192.0.2.0")
-// sloglint: arguments should be put on separate lines
+slog.Info("Msg") // sloglint: message should be lowercased
 ```
 
-```yaml
-# .golangci.yaml
-linters:
-  settings:
-    sloglint:
-      args-on-sep-lines: true
-```
-
-### Constant keys
-
-Report the use of string literals as log keys.
+...and `capitalized` (report messages that begin with a lowercase letter):
 
 ```go
-slog.Info("a user has logged in", "user_id", 42)
-// sloglint: the "user_id" key should be a constant
+slog.Info("msg") // sloglint: message should be capitalized
 ```
 
-```yaml
-# .golangci.yaml
-linters:
-  settings:
-    sloglint:
-      no-raw-keys: true
-```
+Special cases such as acronyms (e.g. `HTTP`, `U.S.`) are ignored.
 
-### Allowed keys
+### No raw keys
 
-Report the use of log keys that are not explicitly allowed.
+To prevent typos, you may want to forbid the use of raw keys altogether.
+The `no-raw-keys` option causes `sloglint` to report the use of strings as keys
+(including `slog.Attr` calls, e.g. `slog.Int("user_id", 42)`):
 
 ```go
-slog.Info("a user has logged in", "id", 42)
-// sloglint: the "id" key is not allowed and should not be used
+slog.Info("a user has logged in", "user_id", 42) // sloglint: raw keys should not be used
 ```
 
-```yaml
-# .golangci.yaml
-linters:
-  settings:
-    sloglint:
-      allowed-keys:
-        - user_id
+This report can be fixed by using either constants...
+
+```go
+const UserId = "user_id"
+
+slog.Info("a user has logged in", UserId, 42)
 ```
+
+...or custom `slog.Attr` constructors:
+
+```go
+func UserId(value int) slog.Attr { return slog.Int("user_id", value) }
+
+slog.Info("a user has logged in", UserId(42))
+```
+
+> [!TIP]
+> Such helpers can be automatically generated for you by the [`sloggen`][4] tool. Give it a try too!
+
+### Key naming convention
+
+To ensure consistency in logs, you may want to enforce a single key naming convention.
+The `key-naming-case` option causes `sloglint` to report keys written in a case other than the given one:
+
+```go
+slog.Info("a user has logged in", "user-id", 42) // sloglint: keys should be written in snake_case
+```
+
+Possible values are `snake`, `kebab`, `camel`, or `pascal`.
 
 ### Forbidden keys
 
-Report the use of forbidden log keys.
-When using the standard `slog.JSONHandler` or `slog.TextHandler`,
-you may want to forbid the `time`, `level`, `msg`, and `source` keys,
-as these will be written by the handler.
+To prevent accidental use of reserved log keys, you may want to forbid specific keys altogether.
+The `forbidden-keys` option causes `sloglint` to report the use of forbidden keys:
 
 ```go
-slog.Info("a user has logged in", "time", time.Now())
-// sloglint: the "time" key is forbidden and should not be used
+slog.Info("a user has logged in", "reserved", 42) // sloglint: "reserved" key is forbidden and should not be used
 ```
 
-```yaml
-# .golangci.yaml
-linters:
-  settings:
-    sloglint:
-      forbidden-keys:
-        - time
-        - level
-        - msg
-        - source
-```
+For example, when using the standard `slog.JSONHandler` and `slog.TextHandler`,
+you may want to forbid the `time`, `level`, `msg`, and `source` keys, as these are used by the handlers.
 
-### Key naming case
+### Arguments on separate lines
 
-Report log keys that do not match a particular naming case.
-The supported cases are `snake_case`, `kebab-case`, `camelCase`, and `PascalCase`.
+To improve code readability, you may want to put arguments on separate lines, especially when using key-value pairs.
+The `args-on-sep-lines` option causes `sloglint` to report 2+ arguments on the same line:
 
 ```go
-slog.Info("a user has logged in", "user-id", 42)
-// sloglint: keys should be written in snake_case
+slog.Info("a user has logged in", "user_id", 42, "ip_address", "192.0.2.0") // sloglint: arguments should be put on separate lines
 ```
 
-```yaml
-# .golangci.yaml
-linters:
-  settings:
-    sloglint:
-      key-naming-case: "snake" # Or "kebab", "camel", "pascal".
+This report can be fixed by reformatting the code:
+
+```go
+slog.Info("a user has logged in",
+    "user_id", 42,
+    "ip_address", "192.0.2.0",
+)
 ```
 
-This check supports autofix.
-
-## Custom function analysis
-
-Analyze custom functions in addition to the standard `log/slog` functions.
-
-The following function properties must be specified:
-1. The full name of the function, including the package, e.g. `log/slog.Info`.
-If the function is a method, the receiver type must be wrapped in parentheses, e.g. `(*log/slog.Logger).Info`.
-2. The position of the `msg string` argument in the function signature, starting from 0.
-If there is no message in the function, a negative value must be passed.
-3. The position of the `args ...any` argument in the function signature, starting from 0.
-If there are no arguments in the function, a negative value must be passed.
-
-Here's an example for the [exp/slog](https://pkg.go.dev/golang.org/x/exp/slog) package, the predecessor of `log/slog`.
-
-```yaml
-# .golangci.yaml
-linters:
-  settings:
-    sloglint:
-      custom-funcs:
-        - name: "(*golang.org/x/exp/slog.Logger).InfoContext"
-          msg-pos: 1
-          args-pos: 2
-```
+[1]: https://golangci-lint.run
+[2]: https://github.com/go-simpler/sloglint/releases
+[3]: https://golangci-lint.run/usage/linters/#sloglint
+[4]: https://github.com/go-simpler/sloggen

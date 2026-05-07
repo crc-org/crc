@@ -50,7 +50,6 @@ func New(settings *config.GoConstSettings) *goanalysis.Linter {
 func runGoconst(pass *analysis.Pass, settings *config.GoConstSettings) ([]*goanalysis.Issue, error) {
 	cfg := goconstAPI.Config{
 		IgnoreStrings:        settings.IgnoreStringValues,
-		IgnoreTests:          settings.IgnoreTests,
 		MatchWithConstants:   settings.MatchWithConstants,
 		MinStringLength:      settings.MinStringLen,
 		MinOccurrences:       settings.MinOccurrencesCount,
@@ -60,7 +59,9 @@ func runGoconst(pass *analysis.Pass, settings *config.GoConstSettings) ([]*goana
 		ExcludeTypes:         map[goconstAPI.Type]bool{},
 		FindDuplicates:       settings.FindDuplicates,
 		EvalConstExpressions: settings.EvalConstExpressions,
-		IgnoreFunctions:      settings.IgnoreFunctions,
+
+		// Should be managed with `linters.exclusions.rules`.
+		IgnoreTests: false,
 	}
 
 	if settings.IgnoreCalls {

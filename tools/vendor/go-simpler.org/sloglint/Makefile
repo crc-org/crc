@@ -1,25 +1,28 @@
 .POSIX:
 .SUFFIXES:
 
-help:
-	@echo 'Available commands:'
-	@echo '  build       Build the project'
-	@echo '  fmt         Run formatters'
-	@echo '  lint        Run linters'
-	@echo '  test        Run tests'
-	@echo '  test/cover  Run tests and open coverage report'
-
-build:
-	@go build -o /dev/null ./...
-
-fmt:
-	@golangci-lint fmt
-
-lint:
-	@golangci-lint run --fix
+all: test lint
 
 test:
-	@go test -race -shuffle=on -coverprofile=coverage.out ./...
+	go test -race -shuffle=on -cover ./...
 
-test/cover: test
-	@go tool cover -html=coverage.out
+test/cover:
+	go test -race -shuffle=on -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out
+
+lint:
+	golangci-lint run
+
+tidy:
+	go mod tidy
+
+generate:
+	go generate ./...
+
+# run `make pre-commit` once to install the hook.
+pre-commit: .git/hooks/pre-commit test lint tidy generate
+	git diff --exit-code
+
+.git/hooks/pre-commit:
+	echo "make pre-commit" > .git/hooks/pre-commit
+	chmod +x .git/hooks/pre-commit

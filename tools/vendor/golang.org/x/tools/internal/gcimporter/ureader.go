@@ -11,7 +11,6 @@ import (
 	"go/token"
 	"go/types"
 	"sort"
-	"strings"
 
 	"golang.org/x/tools/internal/aliases"
 	"golang.org/x/tools/internal/pkgbits"
@@ -524,12 +523,6 @@ func (pr *pkgReader) objIdx(idx pkgbits.Index) (*types.Package, string) {
 		return objPkg, objName
 	}
 
-	// TODO(mark): This, like the above splitVargenSuffix, is not ideal.
-	// Ignore generic methods promoted to global scope.
-	if strings.Contains(objName, ".") {
-		return objPkg, objName
-	}
-
 	if objPkg.Scope().Lookup(objName) == nil {
 		dict := pr.objDictIdx(idx)
 
@@ -561,11 +554,15 @@ func (pr *pkgReader) objIdx(idx pkgbits.Index) (*types.Package, string) {
 
 		case pkgbits.ObjFunc:
 			pos := r.pos()
-			if r.Version().Has(pkgbits.GenericMethods) {
-				assert(!r.Bool()) // generic methods are read in their defining type
+			var rtparams []*types.TypeParam
+			var recv *types.Var
+			if r.Version().Has(pkgbits.GenericMethods) && r.Bool() {
+				r.selector()
+				rtparams = r.typeParamNames(true)
+				recv = r.param()
 			}
 			tparams := r.typeParamNames(false)
-			sig := r.signature(nil, nil, tparams)
+			sig := r.signature(recv, rtparams, tparams)
 			declare(types.NewFunc(pos, objPkg, objName, sig))
 
 		case pkgbits.ObjType:
@@ -633,29 +630,6 @@ func (pr *pkgReader) objIdx(idx pkgbits.Index) (*types.Package, string) {
 				named.AddMethod(r.method())
 			}
 
-			if r.Version().Has(pkgbits.GenericMethods) {
-				for range r.Len() {
-					// Careful: objIdx is used to read in package-scoped declarations, which
-					// methods are not. Instead, decode it here. This makes it easier to
-					// associate it with the type and avoids the main objIdx loop.
-					idx := r.Reloc(pkgbits.RelocObj)
-
-					r := pr.tempReader(pkgbits.RelocObj, idx, pkgbits.SyncObject1)
-					r.dict = pr.objDictIdx(idx)
-
-					pos := r.pos()
-					assert(r.Bool()) // generic method
-					pkg, name := r.selector()
-					rtparams := r.typeParamNames(true)
-					recv := r.param()
-					tparams := r.typeParamNames(false)
-					sig := r.signature(recv, rtparams, tparams)
-
-					pr.retireReader(r)
-					named.AddMethod(types.NewFunc(pos, pkg, name, sig))
-				}
-			}
-
 		case pkgbits.ObjVar:
 			pos := r.pos()
 			typ := r.typ()
@@ -679,7 +653,7 @@ func (pr *pkgReader) objDictIdx(idx pkgbits.Index) *readerDict {
 		}
 
 		nreceivers := 0
-		if r.Version().Has(pkgbits.GenericMethods) {
+		if r.Version().Has(pkgbits.GenericMethods) && r.Bool() {
 			nreceivers = r.Len()
 		}
 		nexplicits := r.Len()

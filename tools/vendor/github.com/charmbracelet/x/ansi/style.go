@@ -17,9 +17,7 @@ type Attr = int
 // Style represents an ANSI SGR (Select Graphic Rendition) style.
 type Style []string
 
-// NewStyle returns a new style with the given attributes. Attributes are SGR
-// (Select Graphic Rendition) codes that control text formatting like bold,
-// italic, colors, etc.
+// NewStyle returns a new style with the given attributes.
 func NewStyle(attrs ...Attr) Style {
 	if len(attrs) == 0 {
 		return Style{}
@@ -48,8 +46,7 @@ func (s Style) String() string {
 	return "\x1b[" + strings.Join(s, ";") + "m"
 }
 
-// Styled returns a styled string with the given style applied. The style is
-// applied at the beginning and reset at the end of the string.
+// Styled returns a styled string with the given style applied.
 func (s Style) Styled(str string) string {
 	if len(s) == 0 {
 		return str
@@ -57,446 +54,309 @@ func (s Style) Styled(str string) string {
 	return s.String() + str + ResetStyle
 }
 
-// Reset appends the reset style attribute to the style. This resets all
-// formatting attributes to their defaults.
+// Reset appends the reset style attribute to the style.
 func (s Style) Reset() Style {
-	return append(s, attrReset)
+	return append(s, resetAttr)
 }
 
-// Bold appends the bold or normal intensity style attribute to the style.
-// You can use [Style.Normal] to reset to normal intensity.
+// Bold appends the bold style attribute to the style.
 func (s Style) Bold() Style {
-	return append(s, attrBold)
+	return append(s, boldAttr)
 }
 
-// Faint appends the faint or normal intensity style attribute to the style.
-// You can use [Style.Normal] to reset to normal intensity.
+// Faint appends the faint style attribute to the style.
 func (s Style) Faint() Style {
-	return append(s, attrFaint)
+	return append(s, faintAttr)
 }
 
-// Italic appends the italic or no italic style attribute to the style.
-// When v is true, text is rendered in italic. When false, italic is disabled.
-func (s Style) Italic(v bool) Style {
-	if v {
-		return append(s, attrItalic)
-	}
-	return append(s, attrNoItalic)
+// Italic appends the italic style attribute to the style.
+func (s Style) Italic() Style {
+	return append(s, italicAttr)
 }
 
-// Underline appends the underline or no underline style attribute to the style.
-// When v is true, text is underlined. When false, underline is disabled.
-func (s Style) Underline(v bool) Style {
-	if v {
-		return append(s, attrUnderline)
-	}
-	return append(s, attrNoUnderline)
+// Underline appends the underline style attribute to the style.
+func (s Style) Underline() Style {
+	return append(s, underlineAttr)
 }
 
 // UnderlineStyle appends the underline style attribute to the style.
-// Supports various underline styles including single, double, curly, dotted,
-// and dashed.
-func (s Style) UnderlineStyle(u Underline) Style {
+func (s Style) UnderlineStyle(u UnderlineStyle) Style {
 	switch u {
-	case UnderlineNone:
-		return s.Underline(false)
-	case UnderlineSingle:
-		return s.Underline(true)
-	case UnderlineDouble:
-		return append(s, underlineDouble)
-	case UnderlineCurly:
-		return append(s, underlineCurly)
-	case UnderlineDotted:
-		return append(s, underlineDotted)
-	case UnderlineDashed:
-		return append(s, underlineDashed)
+	case NoUnderlineStyle:
+		return s.NoUnderline()
+	case SingleUnderlineStyle:
+		return s.Underline()
+	case DoubleUnderlineStyle:
+		return append(s, doubleUnderlineStyle)
+	case CurlyUnderlineStyle:
+		return append(s, curlyUnderlineStyle)
+	case DottedUnderlineStyle:
+		return append(s, dottedUnderlineStyle)
+	case DashedUnderlineStyle:
+		return append(s, dashedUnderlineStyle)
 	}
 	return s
 }
 
-// Blink appends the slow blink or no blink style attribute to the style.
-// When v is true, text blinks slowly (less than 150 per minute). When false,
-// blinking is disabled.
-func (s Style) Blink(v bool) Style {
-	if v {
-		return append(s, attrBlink)
-	}
-	return append(s, attrNoBlink)
+// DoubleUnderline appends the double underline style attribute to the style.
+// This is a convenience method for UnderlineStyle(DoubleUnderlineStyle).
+func (s Style) DoubleUnderline() Style {
+	return s.UnderlineStyle(DoubleUnderlineStyle)
 }
 
-// RapidBlink appends the rapid blink or no blink style attribute to the style.
-// When v is true, text blinks rapidly (150+ per minute). When false, blinking
-// is disabled.
-//
-// Note that this is not widely supported in terminal emulators.
-func (s Style) RapidBlink(v bool) Style {
-	if v {
-		return append(s, attrRapidBlink)
-	}
-	return append(s, attrNoBlink)
+// CurlyUnderline appends the curly underline style attribute to the style.
+// This is a convenience method for UnderlineStyle(CurlyUnderlineStyle).
+func (s Style) CurlyUnderline() Style {
+	return s.UnderlineStyle(CurlyUnderlineStyle)
 }
 
-// Reverse appends the reverse or no reverse style attribute to the style.
-// When v is true, foreground and background colors are swapped. When false,
-// reverse video is disabled.
-func (s Style) Reverse(v bool) Style {
-	if v {
-		return append(s, attrReverse)
-	}
-	return append(s, attrNoReverse)
+// DottedUnderline appends the dotted underline style attribute to the style.
+// This is a convenience method for UnderlineStyle(DottedUnderlineStyle).
+func (s Style) DottedUnderline() Style {
+	return s.UnderlineStyle(DottedUnderlineStyle)
 }
 
-// Conceal appends the conceal or no conceal style attribute to the style.
-// When v is true, text is hidden/concealed. When false, concealment is
-// disabled.
-func (s Style) Conceal(v bool) Style {
-	if v {
-		return append(s, attrConceal)
-	}
-	return append(s, attrNoConceal)
+// DashedUnderline appends the dashed underline style attribute to the style.
+// This is a convenience method for UnderlineStyle(DashedUnderlineStyle).
+func (s Style) DashedUnderline() Style {
+	return s.UnderlineStyle(DashedUnderlineStyle)
 }
 
-// Strikethrough appends the strikethrough or no strikethrough style attribute
-// to the style. When v is true, text is rendered with a horizontal line through
-// it. When false, strikethrough is disabled.
-func (s Style) Strikethrough(v bool) Style {
-	if v {
-		return append(s, attrStrikethrough)
-	}
-	return append(s, attrNoStrikethrough)
+// SlowBlink appends the slow blink style attribute to the style.
+func (s Style) SlowBlink() Style {
+	return append(s, slowBlinkAttr)
 }
 
-// Normal appends the normal intensity style attribute to the style. This
-// resets [Style.Bold] and [Style.Faint] attributes.
-func (s Style) Normal() Style {
-	return append(s, attrNormalIntensity)
+// RapidBlink appends the rapid blink style attribute to the style.
+func (s Style) RapidBlink() Style {
+	return append(s, rapidBlinkAttr)
+}
+
+// Reverse appends the reverse style attribute to the style.
+func (s Style) Reverse() Style {
+	return append(s, reverseAttr)
+}
+
+// Conceal appends the conceal style attribute to the style.
+func (s Style) Conceal() Style {
+	return append(s, concealAttr)
+}
+
+// Strikethrough appends the strikethrough style attribute to the style.
+func (s Style) Strikethrough() Style {
+	return append(s, strikethroughAttr)
+}
+
+// NormalIntensity appends the normal intensity style attribute to the style.
+func (s Style) NormalIntensity() Style {
+	return append(s, normalIntensityAttr)
 }
 
 // NoItalic appends the no italic style attribute to the style.
-//
-// Deprecated: use [Style.Italic](false) instead.
 func (s Style) NoItalic() Style {
-	return append(s, attrNoItalic)
+	return append(s, noItalicAttr)
 }
 
 // NoUnderline appends the no underline style attribute to the style.
-//
-// Deprecated: use [Style.Underline](false) instead.
 func (s Style) NoUnderline() Style {
-	return append(s, attrNoUnderline)
+	return append(s, noUnderlineAttr)
 }
 
 // NoBlink appends the no blink style attribute to the style.
-//
-// Deprecated: use [Style.Blink](false) or [Style.RapidBlink](false) instead.
 func (s Style) NoBlink() Style {
-	return append(s, attrNoBlink)
+	return append(s, noBlinkAttr)
 }
 
 // NoReverse appends the no reverse style attribute to the style.
-//
-// Deprecated: use [Style.Reverse](false) instead.
 func (s Style) NoReverse() Style {
-	return append(s, attrNoReverse)
+	return append(s, noReverseAttr)
 }
 
 // NoConceal appends the no conceal style attribute to the style.
-//
-// Deprecated: use [Style.Conceal](false) instead.
 func (s Style) NoConceal() Style {
-	return append(s, attrNoConceal)
+	return append(s, noConcealAttr)
 }
 
 // NoStrikethrough appends the no strikethrough style attribute to the style.
-//
-// Deprecated: use [Style.Strikethrough](false) instead.
 func (s Style) NoStrikethrough() Style {
-	return append(s, attrNoStrikethrough)
+	return append(s, noStrikethroughAttr)
 }
 
 // DefaultForegroundColor appends the default foreground color style attribute to the style.
-//
-// Deprecated: use [Style.ForegroundColor](nil) instead.
 func (s Style) DefaultForegroundColor() Style {
-	return append(s, attrDefaultForegroundColor)
+	return append(s, defaultForegroundColorAttr)
 }
 
 // DefaultBackgroundColor appends the default background color style attribute to the style.
-//
-// Deprecated: use [Style.BackgroundColor](nil) instead.
 func (s Style) DefaultBackgroundColor() Style {
-	return append(s, attrDefaultBackgroundColor)
+	return append(s, defaultBackgroundColorAttr)
 }
 
 // DefaultUnderlineColor appends the default underline color style attribute to the style.
-//
-// Deprecated: use [Style.UnderlineColor](nil) instead.
 func (s Style) DefaultUnderlineColor() Style {
-	return append(s, attrDefaultUnderlineColor)
+	return append(s, defaultUnderlineColorAttr)
 }
 
 // ForegroundColor appends the foreground color style attribute to the style.
-// If c is nil, the default foreground color is used. Supports [BasicColor],
-// [IndexedColor] (256-color), and [color.Color] (24-bit RGB).
 func (s Style) ForegroundColor(c Color) Style {
-	if c == nil {
-		return append(s, attrDefaultForegroundColor)
-	}
 	return append(s, foregroundColorString(c))
 }
 
 // BackgroundColor appends the background color style attribute to the style.
-// If c is nil, the default background color is used. Supports [BasicColor],
-// [IndexedColor] (256-color), and [color.Color] (24-bit RGB).
 func (s Style) BackgroundColor(c Color) Style {
-	if c == nil {
-		return append(s, attrDefaultBackgroundColor)
-	}
 	return append(s, backgroundColorString(c))
 }
 
 // UnderlineColor appends the underline color style attribute to the style.
-// If c is nil, the default underline color is used. Supports [BasicColor],
-// [IndexedColor] (256-color), and [color.Color] (24-bit RGB).
 func (s Style) UnderlineColor(c Color) Style {
-	if c == nil {
-		return append(s, attrDefaultUnderlineColor)
-	}
 	return append(s, underlineColorString(c))
 }
 
-// Underline represents an ANSI SGR (Select Graphic Rendition) underline style.
-type Underline = byte
-
 // UnderlineStyle represents an ANSI SGR (Select Graphic Rendition) underline
 // style.
-//
-// Deprecated: use [Underline] instead.
 type UnderlineStyle = byte
 
 const (
-	underlineDouble = "4:2"
-	underlineCurly  = "4:3"
-	underlineDotted = "4:4"
-	underlineDashed = "4:5"
+	doubleUnderlineStyle = "4:2"
+	curlyUnderlineStyle  = "4:3"
+	dottedUnderlineStyle = "4:4"
+	dashedUnderlineStyle = "4:5"
 )
 
-// Underline styles constants.
 const (
-	UnderlineNone Underline = iota
-	UnderlineSingle
-	UnderlineDouble
-	UnderlineCurly
-	UnderlineDotted
-	UnderlineDashed
-)
-
-// Underline styles constants.
-//
-// Deprecated: use [UnderlineNone], [UnderlineSingle], etc. instead.
-const (
-	NoUnderlineStyle Underline = iota
+	// NoUnderlineStyle is the default underline style.
+	NoUnderlineStyle UnderlineStyle = iota
+	// SingleUnderlineStyle is a single underline style.
 	SingleUnderlineStyle
+	// DoubleUnderlineStyle is a double underline style.
 	DoubleUnderlineStyle
+	// CurlyUnderlineStyle is a curly underline style.
 	CurlyUnderlineStyle
+	// DottedUnderlineStyle is a dotted underline style.
 	DottedUnderlineStyle
+	// DashedUnderlineStyle is a dashed underline style.
 	DashedUnderlineStyle
-)
-
-// Underline styles constants.
-//
-// Deprecated: use [UnderlineNone], [UnderlineSingle], etc. instead.
-const (
-	UnderlineStyleNone Underline = iota
-	UnderlineStyleSingle
-	UnderlineStyleDouble
-	UnderlineStyleCurly
-	UnderlineStyleDotted
-	UnderlineStyleDashed
 )
 
 // SGR (Select Graphic Rendition) style attributes.
 // See: https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
 const (
-	AttrReset                        Attr = 0
-	AttrBold                         Attr = 1
-	AttrFaint                        Attr = 2
-	AttrItalic                       Attr = 3
-	AttrUnderline                    Attr = 4
-	AttrBlink                        Attr = 5
-	AttrRapidBlink                   Attr = 6
-	AttrReverse                      Attr = 7
-	AttrConceal                      Attr = 8
-	AttrStrikethrough                Attr = 9
-	AttrNormalIntensity              Attr = 22
-	AttrNoItalic                     Attr = 23
-	AttrNoUnderline                  Attr = 24
-	AttrNoBlink                      Attr = 25
-	AttrNoReverse                    Attr = 27
-	AttrNoConceal                    Attr = 28
-	AttrNoStrikethrough              Attr = 29
-	AttrBlackForegroundColor         Attr = 30
-	AttrRedForegroundColor           Attr = 31
-	AttrGreenForegroundColor         Attr = 32
-	AttrYellowForegroundColor        Attr = 33
-	AttrBlueForegroundColor          Attr = 34
-	AttrMagentaForegroundColor       Attr = 35
-	AttrCyanForegroundColor          Attr = 36
-	AttrWhiteForegroundColor         Attr = 37
-	AttrExtendedForegroundColor      Attr = 38
-	AttrDefaultForegroundColor       Attr = 39
-	AttrBlackBackgroundColor         Attr = 40
-	AttrRedBackgroundColor           Attr = 41
-	AttrGreenBackgroundColor         Attr = 42
-	AttrYellowBackgroundColor        Attr = 43
-	AttrBlueBackgroundColor          Attr = 44
-	AttrMagentaBackgroundColor       Attr = 45
-	AttrCyanBackgroundColor          Attr = 46
-	AttrWhiteBackgroundColor         Attr = 47
-	AttrExtendedBackgroundColor      Attr = 48
-	AttrDefaultBackgroundColor       Attr = 49
-	AttrExtendedUnderlineColor       Attr = 58
-	AttrDefaultUnderlineColor        Attr = 59
-	AttrBrightBlackForegroundColor   Attr = 90
-	AttrBrightRedForegroundColor     Attr = 91
-	AttrBrightGreenForegroundColor   Attr = 92
-	AttrBrightYellowForegroundColor  Attr = 93
-	AttrBrightBlueForegroundColor    Attr = 94
-	AttrBrightMagentaForegroundColor Attr = 95
-	AttrBrightCyanForegroundColor    Attr = 96
-	AttrBrightWhiteForegroundColor   Attr = 97
-	AttrBrightBlackBackgroundColor   Attr = 100
-	AttrBrightRedBackgroundColor     Attr = 101
-	AttrBrightGreenBackgroundColor   Attr = 102
-	AttrBrightYellowBackgroundColor  Attr = 103
-	AttrBrightBlueBackgroundColor    Attr = 104
-	AttrBrightMagentaBackgroundColor Attr = 105
-	AttrBrightCyanBackgroundColor    Attr = 106
-	AttrBrightWhiteBackgroundColor   Attr = 107
+	ResetAttr                        Attr = 0
+	BoldAttr                         Attr = 1
+	FaintAttr                        Attr = 2
+	ItalicAttr                       Attr = 3
+	UnderlineAttr                    Attr = 4
+	SlowBlinkAttr                    Attr = 5
+	RapidBlinkAttr                   Attr = 6
+	ReverseAttr                      Attr = 7
+	ConcealAttr                      Attr = 8
+	StrikethroughAttr                Attr = 9
+	NormalIntensityAttr              Attr = 22
+	NoItalicAttr                     Attr = 23
+	NoUnderlineAttr                  Attr = 24
+	NoBlinkAttr                      Attr = 25
+	NoReverseAttr                    Attr = 27
+	NoConcealAttr                    Attr = 28
+	NoStrikethroughAttr              Attr = 29
+	BlackForegroundColorAttr         Attr = 30
+	RedForegroundColorAttr           Attr = 31
+	GreenForegroundColorAttr         Attr = 32
+	YellowForegroundColorAttr        Attr = 33
+	BlueForegroundColorAttr          Attr = 34
+	MagentaForegroundColorAttr       Attr = 35
+	CyanForegroundColorAttr          Attr = 36
+	WhiteForegroundColorAttr         Attr = 37
+	ExtendedForegroundColorAttr      Attr = 38
+	DefaultForegroundColorAttr       Attr = 39
+	BlackBackgroundColorAttr         Attr = 40
+	RedBackgroundColorAttr           Attr = 41
+	GreenBackgroundColorAttr         Attr = 42
+	YellowBackgroundColorAttr        Attr = 43
+	BlueBackgroundColorAttr          Attr = 44
+	MagentaBackgroundColorAttr       Attr = 45
+	CyanBackgroundColorAttr          Attr = 46
+	WhiteBackgroundColorAttr         Attr = 47
+	ExtendedBackgroundColorAttr      Attr = 48
+	DefaultBackgroundColorAttr       Attr = 49
+	ExtendedUnderlineColorAttr       Attr = 58
+	DefaultUnderlineColorAttr        Attr = 59
+	BrightBlackForegroundColorAttr   Attr = 90
+	BrightRedForegroundColorAttr     Attr = 91
+	BrightGreenForegroundColorAttr   Attr = 92
+	BrightYellowForegroundColorAttr  Attr = 93
+	BrightBlueForegroundColorAttr    Attr = 94
+	BrightMagentaForegroundColorAttr Attr = 95
+	BrightCyanForegroundColorAttr    Attr = 96
+	BrightWhiteForegroundColorAttr   Attr = 97
+	BrightBlackBackgroundColorAttr   Attr = 100
+	BrightRedBackgroundColorAttr     Attr = 101
+	BrightGreenBackgroundColorAttr   Attr = 102
+	BrightYellowBackgroundColorAttr  Attr = 103
+	BrightBlueBackgroundColorAttr    Attr = 104
+	BrightMagentaBackgroundColorAttr Attr = 105
+	BrightCyanBackgroundColorAttr    Attr = 106
+	BrightWhiteBackgroundColorAttr   Attr = 107
 
-	AttrRGBColorIntroducer      Attr = 2
-	AttrExtendedColorIntroducer Attr = 5
-)
-
-// SGR (Select Graphic Rendition) style attributes.
-//
-// Deprecated: use Attr* constants instead.
-const (
-	ResetAttr                        = AttrReset
-	BoldAttr                         = AttrBold
-	FaintAttr                        = AttrFaint
-	ItalicAttr                       = AttrItalic
-	UnderlineAttr                    = AttrUnderline
-	SlowBlinkAttr                    = AttrBlink
-	RapidBlinkAttr                   = AttrRapidBlink
-	ReverseAttr                      = AttrReverse
-	ConcealAttr                      = AttrConceal
-	StrikethroughAttr                = AttrStrikethrough
-	NormalIntensityAttr              = AttrNormalIntensity
-	NoItalicAttr                     = AttrNoItalic
-	NoUnderlineAttr                  = AttrNoUnderline
-	NoBlinkAttr                      = AttrNoBlink
-	NoReverseAttr                    = AttrNoReverse
-	NoConcealAttr                    = AttrNoConceal
-	NoStrikethroughAttr              = AttrNoStrikethrough
-	BlackForegroundColorAttr         = AttrBlackForegroundColor
-	RedForegroundColorAttr           = AttrRedForegroundColor
-	GreenForegroundColorAttr         = AttrGreenForegroundColor
-	YellowForegroundColorAttr        = AttrYellowForegroundColor
-	BlueForegroundColorAttr          = AttrBlueForegroundColor
-	MagentaForegroundColorAttr       = AttrMagentaForegroundColor
-	CyanForegroundColorAttr          = AttrCyanForegroundColor
-	WhiteForegroundColorAttr         = AttrWhiteForegroundColor
-	ExtendedForegroundColorAttr      = AttrExtendedForegroundColor
-	DefaultForegroundColorAttr       = AttrDefaultForegroundColor
-	BlackBackgroundColorAttr         = AttrBlackBackgroundColor
-	RedBackgroundColorAttr           = AttrRedBackgroundColor
-	GreenBackgroundColorAttr         = AttrGreenBackgroundColor
-	YellowBackgroundColorAttr        = AttrYellowBackgroundColor
-	BlueBackgroundColorAttr          = AttrBlueBackgroundColor
-	MagentaBackgroundColorAttr       = AttrMagentaBackgroundColor
-	CyanBackgroundColorAttr          = AttrCyanBackgroundColor
-	WhiteBackgroundColorAttr         = AttrWhiteBackgroundColor
-	ExtendedBackgroundColorAttr      = AttrExtendedBackgroundColor
-	DefaultBackgroundColorAttr       = AttrDefaultBackgroundColor
-	ExtendedUnderlineColorAttr       = AttrExtendedUnderlineColor
-	DefaultUnderlineColorAttr        = AttrDefaultUnderlineColor
-	BrightBlackForegroundColorAttr   = AttrBrightBlackForegroundColor
-	BrightRedForegroundColorAttr     = AttrBrightRedForegroundColor
-	BrightGreenForegroundColorAttr   = AttrBrightGreenForegroundColor
-	BrightYellowForegroundColorAttr  = AttrBrightYellowForegroundColor
-	BrightBlueForegroundColorAttr    = AttrBrightBlueForegroundColor
-	BrightMagentaForegroundColorAttr = AttrBrightMagentaForegroundColor
-	BrightCyanForegroundColorAttr    = AttrBrightCyanForegroundColor
-	BrightWhiteForegroundColorAttr   = AttrBrightWhiteForegroundColor
-	BrightBlackBackgroundColorAttr   = AttrBrightBlackBackgroundColor
-	BrightRedBackgroundColorAttr     = AttrBrightRedBackgroundColor
-	BrightGreenBackgroundColorAttr   = AttrBrightGreenBackgroundColor
-	BrightYellowBackgroundColorAttr  = AttrBrightYellowBackgroundColor
-	BrightBlueBackgroundColorAttr    = AttrBrightBlueBackgroundColor
-	BrightMagentaBackgroundColorAttr = AttrBrightMagentaBackgroundColor
-	BrightCyanBackgroundColorAttr    = AttrBrightCyanBackgroundColor
-	BrightWhiteBackgroundColorAttr   = AttrBrightWhiteBackgroundColor
-	RGBColorIntroducerAttr           = AttrRGBColorIntroducer
-	ExtendedColorIntroducerAttr      = AttrExtendedColorIntroducer
+	RGBColorIntroducerAttr      Attr = 2
+	ExtendedColorIntroducerAttr Attr = 5
 )
 
 const (
-	attrReset                        = "0"
-	attrBold                         = "1"
-	attrFaint                        = "2"
-	attrItalic                       = "3"
-	attrUnderline                    = "4"
-	attrBlink                        = "5"
-	attrRapidBlink                   = "6"
-	attrReverse                      = "7"
-	attrConceal                      = "8"
-	attrStrikethrough                = "9"
-	attrNormalIntensity              = "22"
-	attrNoItalic                     = "23"
-	attrNoUnderline                  = "24"
-	attrNoBlink                      = "25"
-	attrNoReverse                    = "27"
-	attrNoConceal                    = "28"
-	attrNoStrikethrough              = "29"
-	attrBlackForegroundColor         = "30"
-	attrRedForegroundColor           = "31"
-	attrGreenForegroundColor         = "32"
-	attrYellowForegroundColor        = "33"
-	attrBlueForegroundColor          = "34"
-	attrMagentaForegroundColor       = "35"
-	attrCyanForegroundColor          = "36"
-	attrWhiteForegroundColor         = "37"
-	attrExtendedForegroundColor      = "38"
-	attrDefaultForegroundColor       = "39"
-	attrBlackBackgroundColor         = "40"
-	attrRedBackgroundColor           = "41"
-	attrGreenBackgroundColor         = "42"
-	attrYellowBackgroundColor        = "43"
-	attrBlueBackgroundColor          = "44"
-	attrMagentaBackgroundColor       = "45"
-	attrCyanBackgroundColor          = "46"
-	attrWhiteBackgroundColor         = "47"
-	attrExtendedBackgroundColor      = "48"
-	attrDefaultBackgroundColor       = "49"
-	attrExtendedUnderlineColor       = "58"
-	attrDefaultUnderlineColor        = "59"
-	attrBrightBlackForegroundColor   = "90"
-	attrBrightRedForegroundColor     = "91"
-	attrBrightGreenForegroundColor   = "92"
-	attrBrightYellowForegroundColor  = "93"
-	attrBrightBlueForegroundColor    = "94"
-	attrBrightMagentaForegroundColor = "95"
-	attrBrightCyanForegroundColor    = "96"
-	attrBrightWhiteForegroundColor   = "97"
-	attrBrightBlackBackgroundColor   = "100"
-	attrBrightRedBackgroundColor     = "101"
-	attrBrightGreenBackgroundColor   = "102"
-	attrBrightYellowBackgroundColor  = "103"
-	attrBrightBlueBackgroundColor    = "104"
-	attrBrightMagentaBackgroundColor = "105"
-	attrBrightCyanBackgroundColor    = "106"
-	attrBrightWhiteBackgroundColor   = "107"
+	resetAttr                        = "0"
+	boldAttr                         = "1"
+	faintAttr                        = "2"
+	italicAttr                       = "3"
+	underlineAttr                    = "4"
+	slowBlinkAttr                    = "5"
+	rapidBlinkAttr                   = "6"
+	reverseAttr                      = "7"
+	concealAttr                      = "8"
+	strikethroughAttr                = "9"
+	normalIntensityAttr              = "22"
+	noItalicAttr                     = "23"
+	noUnderlineAttr                  = "24"
+	noBlinkAttr                      = "25"
+	noReverseAttr                    = "27"
+	noConcealAttr                    = "28"
+	noStrikethroughAttr              = "29"
+	blackForegroundColorAttr         = "30"
+	redForegroundColorAttr           = "31"
+	greenForegroundColorAttr         = "32"
+	yellowForegroundColorAttr        = "33"
+	blueForegroundColorAttr          = "34"
+	magentaForegroundColorAttr       = "35"
+	cyanForegroundColorAttr          = "36"
+	whiteForegroundColorAttr         = "37"
+	extendedForegroundColorAttr      = "38"
+	defaultForegroundColorAttr       = "39"
+	blackBackgroundColorAttr         = "40"
+	redBackgroundColorAttr           = "41"
+	greenBackgroundColorAttr         = "42"
+	yellowBackgroundColorAttr        = "43"
+	blueBackgroundColorAttr          = "44"
+	magentaBackgroundColorAttr       = "45"
+	cyanBackgroundColorAttr          = "46"
+	whiteBackgroundColorAttr         = "47"
+	extendedBackgroundColorAttr      = "48"
+	defaultBackgroundColorAttr       = "49"
+	extendedUnderlineColorAttr       = "58"
+	defaultUnderlineColorAttr        = "59"
+	brightBlackForegroundColorAttr   = "90"
+	brightRedForegroundColorAttr     = "91"
+	brightGreenForegroundColorAttr   = "92"
+	brightYellowForegroundColorAttr  = "93"
+	brightBlueForegroundColorAttr    = "94"
+	brightMagentaForegroundColorAttr = "95"
+	brightCyanForegroundColorAttr    = "96"
+	brightWhiteForegroundColorAttr   = "97"
+	brightBlackBackgroundColorAttr   = "100"
+	brightRedBackgroundColorAttr     = "101"
+	brightGreenBackgroundColorAttr   = "102"
+	brightYellowBackgroundColorAttr  = "103"
+	brightBlueBackgroundColorAttr    = "104"
+	brightMagentaBackgroundColorAttr = "105"
+	brightCyanBackgroundColorAttr    = "106"
+	brightWhiteBackgroundColorAttr   = "107"
 )
 
 // foregroundColorString returns the style SGR attribute for the given
@@ -504,44 +364,42 @@ const (
 // See: https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
 func foregroundColorString(c Color) string {
 	switch c := c.(type) {
-	case nil:
-		return attrDefaultForegroundColor
 	case BasicColor:
 		// 3-bit or 4-bit ANSI foreground
 		// "3<n>" or "9<n>" where n is the color number from 0 to 7
 		switch c {
 		case Black:
-			return attrBlackForegroundColor
+			return blackForegroundColorAttr
 		case Red:
-			return attrRedForegroundColor
+			return redForegroundColorAttr
 		case Green:
-			return attrGreenForegroundColor
+			return greenForegroundColorAttr
 		case Yellow:
-			return attrYellowForegroundColor
+			return yellowForegroundColorAttr
 		case Blue:
-			return attrBlueForegroundColor
+			return blueForegroundColorAttr
 		case Magenta:
-			return attrMagentaForegroundColor
+			return magentaForegroundColorAttr
 		case Cyan:
-			return attrCyanForegroundColor
+			return cyanForegroundColorAttr
 		case White:
-			return attrWhiteForegroundColor
+			return whiteForegroundColorAttr
 		case BrightBlack:
-			return attrBrightBlackForegroundColor
+			return brightBlackForegroundColorAttr
 		case BrightRed:
-			return attrBrightRedForegroundColor
+			return brightRedForegroundColorAttr
 		case BrightGreen:
-			return attrBrightGreenForegroundColor
+			return brightGreenForegroundColorAttr
 		case BrightYellow:
-			return attrBrightYellowForegroundColor
+			return brightYellowForegroundColorAttr
 		case BrightBlue:
-			return attrBrightBlueForegroundColor
+			return brightBlueForegroundColorAttr
 		case BrightMagenta:
-			return attrBrightMagentaForegroundColor
+			return brightMagentaForegroundColorAttr
 		case BrightCyan:
-			return attrBrightCyanForegroundColor
+			return brightCyanForegroundColorAttr
 		case BrightWhite:
-			return attrBrightWhiteForegroundColor
+			return brightWhiteForegroundColorAttr
 		}
 	case ExtendedColor:
 		// 256-color ANSI foreground
@@ -556,7 +414,7 @@ func foregroundColorString(c Color) string {
 			strconv.FormatUint(uint64(shift(g)), 10) + ";" +
 			strconv.FormatUint(uint64(shift(b)), 10)
 	}
-	return attrDefaultForegroundColor
+	return defaultForegroundColorAttr
 }
 
 // backgroundColorString returns the style SGR attribute for the given
@@ -564,44 +422,42 @@ func foregroundColorString(c Color) string {
 // See: https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
 func backgroundColorString(c Color) string {
 	switch c := c.(type) {
-	case nil:
-		return attrDefaultBackgroundColor
 	case BasicColor:
 		// 3-bit or 4-bit ANSI foreground
 		// "4<n>" or "10<n>" where n is the color number from 0 to 7
 		switch c {
 		case Black:
-			return attrBlackBackgroundColor
+			return blackBackgroundColorAttr
 		case Red:
-			return attrRedBackgroundColor
+			return redBackgroundColorAttr
 		case Green:
-			return attrGreenBackgroundColor
+			return greenBackgroundColorAttr
 		case Yellow:
-			return attrYellowBackgroundColor
+			return yellowBackgroundColorAttr
 		case Blue:
-			return attrBlueBackgroundColor
+			return blueBackgroundColorAttr
 		case Magenta:
-			return attrMagentaBackgroundColor
+			return magentaBackgroundColorAttr
 		case Cyan:
-			return attrCyanBackgroundColor
+			return cyanBackgroundColorAttr
 		case White:
-			return attrWhiteBackgroundColor
+			return whiteBackgroundColorAttr
 		case BrightBlack:
-			return attrBrightBlackBackgroundColor
+			return brightBlackBackgroundColorAttr
 		case BrightRed:
-			return attrBrightRedBackgroundColor
+			return brightRedBackgroundColorAttr
 		case BrightGreen:
-			return attrBrightGreenBackgroundColor
+			return brightGreenBackgroundColorAttr
 		case BrightYellow:
-			return attrBrightYellowBackgroundColor
+			return brightYellowBackgroundColorAttr
 		case BrightBlue:
-			return attrBrightBlueBackgroundColor
+			return brightBlueBackgroundColorAttr
 		case BrightMagenta:
-			return attrBrightMagentaBackgroundColor
+			return brightMagentaBackgroundColorAttr
 		case BrightCyan:
-			return attrBrightCyanBackgroundColor
+			return brightCyanBackgroundColorAttr
 		case BrightWhite:
-			return attrBrightWhiteBackgroundColor
+			return brightWhiteBackgroundColorAttr
 		}
 	case ExtendedColor:
 		// 256-color ANSI foreground
@@ -616,7 +472,7 @@ func backgroundColorString(c Color) string {
 			strconv.FormatUint(uint64(shift(g)), 10) + ";" +
 			strconv.FormatUint(uint64(shift(b)), 10)
 	}
-	return attrDefaultBackgroundColor
+	return defaultBackgroundColorAttr
 }
 
 // underlineColorString returns the style SGR attribute for the given underline
@@ -624,8 +480,6 @@ func backgroundColorString(c Color) string {
 // See: https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
 func underlineColorString(c Color) string {
 	switch c := c.(type) {
-	case nil:
-		return attrDefaultUnderlineColor
 	// NOTE: we can't use 3-bit and 4-bit ANSI color codes with underline
 	// color, use 256-color instead.
 	//
@@ -644,7 +498,7 @@ func underlineColorString(c Color) string {
 			strconv.FormatUint(uint64(shift(g)), 10) + ";" +
 			strconv.FormatUint(uint64(shift(b)), 10)
 	}
-	return attrDefaultUnderlineColor
+	return defaultUnderlineColorAttr
 }
 
 // ReadStyleColor decodes a color from a slice of parameters. It returns the
@@ -672,7 +526,7 @@ func underlineColorString(c Color) string {
 //  2. Support ignoring and omitting the color space id (second parameter) with respect to RGB colors
 //  3. Support ignoring and omitting the 6th parameter with respect to RGB and CMY colors
 //  4. Support reading RGBA colors
-func ReadStyleColor(params Params, co *color.Color) int {
+func ReadStyleColor(params Params, co *color.Color) (n int) {
 	if len(params) < 2 { // Need at least SGR type and color type
 		return 0
 	}
@@ -681,7 +535,7 @@ func ReadStyleColor(params Params, co *color.Color) int {
 	s := params[0]
 	p := params[1]
 	colorType := p.Param(0)
-	n := 2
+	n = 2
 
 	paramsfn := func() (p1, p2, p3, p4 int) {
 		// Where should we start reading the color?
@@ -740,7 +594,7 @@ func ReadStyleColor(params Params, co *color.Color) int {
 			B: uint8(b), //nolint:gosec
 			A: 0xff,
 		}
-		return n
+		return //nolint:nakedret
 
 	case 3: // CMY direct color
 		if len(params) < 5 {
@@ -758,7 +612,7 @@ func ReadStyleColor(params Params, co *color.Color) int {
 			Y: uint8(y), //nolint:gosec
 			K: 0,
 		}
-		return n
+		return //nolint:nakedret
 
 	case 4: // CMYK direct color
 		if len(params) < 6 {
@@ -776,7 +630,7 @@ func ReadStyleColor(params Params, co *color.Color) int {
 			Y: uint8(y), //nolint:gosec
 			K: uint8(k), //nolint:gosec
 		}
-		return n
+		return //nolint:nakedret
 
 	case 5: // indexed color
 		if len(params) < 3 {
@@ -811,7 +665,7 @@ func ReadStyleColor(params Params, co *color.Color) int {
 			B: uint8(b), //nolint:gosec
 			A: uint8(a), //nolint:gosec
 		}
-		return n
+		return //nolint:nakedret
 
 	default:
 		return 0

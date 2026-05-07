@@ -17,6 +17,7 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
+	"golang.org/x/tools/go/ast/edge"
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/internal/analysis/analyzerutil"
 	"golang.org/x/tools/internal/refactor"
@@ -34,26 +35,24 @@ var doc string
 // Suite lists all modernize analyzers.
 var Suite = []*analysis.Analyzer{
 	AnyAnalyzer,
-	AtomicTypesAnalyzer,
+	atomicTypesAnalyzer,
 	// AppendClippedAnalyzer, // not nil-preserving!
 	// BLoopAnalyzer, // may skew benchmark results, see golang/go#74967
-	EmbedLitAnalyzer,
-	ErrorsAsTypeAnalyzer,
-	// FmtAppendfAnalyzer, // makes code less clear, see golang/go#77581
+	FmtAppendfAnalyzer,
 	ForVarAnalyzer,
 	MapsLoopAnalyzer,
 	MinMaxAnalyzer,
 	NewExprAnalyzer,
 	OmitZeroAnalyzer,
-	PlusBuildAnalyzer,
+	plusBuildAnalyzer,
 	RangeIntAnalyzer,
 	ReflectTypeForAnalyzer,
-	slicesBackwardAnalyzer,
+	slicesbackwardAnalyzer,
 	SlicesContainsAnalyzer,
 	// SlicesDeleteAnalyzer, // not nil-preserving!
 	SlicesSortAnalyzer,
-	StdIteratorsAnalyzer,
-	StringsCutAnalyzer,
+	stditeratorsAnalyzer,
+	stringscutAnalyzer,
 	StringsCutPrefixAnalyzer,
 	StringsSeqAnalyzer,
 	StringsBuilderAnalyzer,
@@ -120,6 +119,15 @@ func within(pass *analysis.Pass, pkgs ...string) bool {
 	path := pass.Pkg.Path()
 	return packagepath.IsStdPackage(path) &&
 		moreiters.Contains(stdlib.Dependencies(pkgs...), path)
+}
+
+// unparenEnclosing removes enclosing parens from cur in
+// preparation for a call to [Cursor.ParentEdge].
+func unparenEnclosing(cur inspector.Cursor) inspector.Cursor {
+	for cur.ParentEdgeKind() == edge.ParenExpr_X {
+		cur = cur.Parent()
+	}
+	return cur
 }
 
 var (

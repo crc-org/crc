@@ -17,7 +17,6 @@ import (
 	"golang.org/x/tools/go/ast/edge"
 	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/internal/astutil"
 	"golang.org/x/tools/internal/typesinternal"
 )
 
@@ -218,9 +217,10 @@ func (ix *Index) Selection(path, typename, name string) types.Object {
 func (ix *Index) Calls(callee types.Object) iter.Seq[inspector.Cursor] {
 	return func(yield func(inspector.Cursor) bool) {
 		for cur := range ix.Uses(callee) {
+			ek := cur.ParentEdgeKind()
+
 			// The call may be of the form f() or x.f(),
 			// optionally with parens; ascend from f to call.
-			// See logic in [typesinternal.UsedIdent], to which this is dual.
 			//
 			// It is tempting but wrong to use the first
 			// CallExpr ancestor: we have to make sure the
@@ -229,20 +229,25 @@ func (ix *Index) Calls(callee types.Object) iter.Seq[inspector.Cursor] {
 			// Avoiding Enclosing is also significantly faster.
 
 			// inverse unparen: f -> (f)
-			cur = astutil.UnparenEnclosingCursor(cur)
-
-			// ascend selector (or qualified identifier): f -> x.f
-			if cur.ParentEdgeKind() == edge.SelectorExpr_Sel {
-				cur = astutil.UnparenEnclosingCursor(cur.Parent())
+			for ek == edge.ParenExpr_X {
+				cur = cur.Parent()
+				ek = cur.ParentEdgeKind()
 			}
 
-			// ascend typeparams: f -> f[T]; f -> f[T1, T2]
-			if ek := cur.ParentEdgeKind(); ek == edge.IndexExpr_X || ek == edge.IndexListExpr_X {
-				cur = astutil.UnparenEnclosingCursor(cur.Parent())
+			// ascend selector: f -> x.f
+			if ek == edge.SelectorExpr_Sel {
+				cur = cur.Parent()
+				ek = cur.ParentEdgeKind()
+			}
+
+			// inverse unparen again
+			for ek == edge.ParenExpr_X {
+				cur = cur.Parent()
+				ek = cur.ParentEdgeKind()
 			}
 
 			// ascend from f or x.f to call
-			if cur.ParentEdgeKind() == edge.CallExpr_Fun {
+			if ek == edge.CallExpr_Fun {
 				curCall := cur.Parent()
 				call := curCall.Node().(*ast.CallExpr)
 				if typeutil.Callee(ix.info, call) == callee {

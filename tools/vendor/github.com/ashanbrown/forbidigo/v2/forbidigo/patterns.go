@@ -8,7 +8,7 @@ import (
 	"regexp/syntax"
 	"strings"
 
-	"go.yaml.in/yaml/v3"
+	"gopkg.in/yaml.v3"
 )
 
 // pattern matches code that is not supposed to be used.

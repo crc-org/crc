@@ -2,47 +2,36 @@ package internal
 
 import (
 	"go/ast"
-	"strings"
 )
 
 type StructConstructor struct {
-	Constructor  *ast.FuncDecl
-	StructReturn *ast.Ident
+	constructor  *ast.FuncDecl
+	structReturn *ast.Ident
 }
 
-func NewStructConstructor(funcDec *ast.FuncDecl) *StructConstructor {
-	if !funcCanBeConstructor(funcDec) {
-		return nil
+func NewStructConstructor(funcDec *ast.FuncDecl) (StructConstructor, bool) {
+	if !FuncCanBeConstructor(funcDec) {
+		return StructConstructor{}, false
 	}
 
 	expr := funcDec.Type.Results.List[0].Type
 
-	returnType := getIdent(expr)
-	if returnType == nil {
-		return nil
+	returnType, ok := GetIdent(expr)
+	if !ok {
+		return StructConstructor{}, false
 	}
 
-	return &StructConstructor{
-		Constructor:  funcDec,
-		StructReturn: returnType,
-	}
+	return StructConstructor{
+		constructor:  funcDec,
+		structReturn: returnType,
+	}, true
 }
 
-func funcCanBeConstructor(n *ast.FuncDecl) bool {
-	if !n.Name.IsExported() || n.Recv != nil {
-		return false
-	}
+// GetStructReturn Return the struct linked to this "constructor".
+func (sc StructConstructor) GetStructReturn() *ast.Ident {
+	return sc.structReturn
+}
 
-	if n.Type.Results == nil || len(n.Type.Results.List) == 0 {
-		return false
-	}
-
-	for _, prefix := range []string{"new", "must"} {
-		if strings.HasPrefix(strings.ToLower(n.Name.Name), prefix) &&
-			len(n.Name.Name) > len(prefix) { // TODO(ldez): bug if the name is just `New`.
-			return true
-		}
-	}
-
-	return false
+func (sc StructConstructor) GetConstructor() *ast.FuncDecl {
+	return sc.constructor
 }

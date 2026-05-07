@@ -18,11 +18,18 @@ import (
 
 const name string = "ireturn" // linter name
 
+type validator interface {
+	IsValid(types.IFace) bool
+}
+
 type analyzer struct {
 	once           sync.Once
-	handler        config.Validator
+	mu             sync.RWMutex
+	handler        validator
 	err            error
 	disabledNolint bool
+
+	found []analysis.Diagnostic
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
@@ -77,11 +84,25 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 			}
 			seen[key] = true
 
-			pass.Report(issue.ExportDiagnostic())
+			a.addDiagnostic(issue.ExportDiagnostic())
 		}
 	})
 
+	// 02. Printing reports.
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for i := range a.found {
+		pass.Report(a.found[i])
+	}
+
 	return nil, nil
+}
+
+func (a *analyzer) addDiagnostic(d analysis.Diagnostic) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	a.found = append(a.found, d)
 }
 
 func (a *analyzer) readConfiguration(fs *flag.FlagSet) {
@@ -97,7 +118,13 @@ func (a *analyzer) readConfiguration(fs *flag.FlagSet) {
 		a.disabledNolint = fs.Lookup("nonolint").Value.String() == "true"
 	}
 
-	a.handler = cnf
+	// Second: validators implementation next
+	if validatorImpl, ok := cnf.(validator); ok {
+		a.handler = validatorImpl
+		return
+	}
+
+	a.handler = config.DefaultValidatorConfig()
 }
 
 func NewAnalyzer() *analysis.Analyzer {
@@ -169,7 +196,7 @@ func filterInterfaces(p *analysis.Pass, ft *ast.FuncType, di map[string]struct{}
 
 				typeParams := val.String()
 				prefix, suffix := "interface{", "}"
-				if strings.HasPrefix(typeParams, prefix) { //nolint:staticcheck
+				if strings.HasPrefix(typeParams, prefix) { //nolint:gosimple
 					typeParams = typeParams[len(prefix):]
 				}
 				if strings.HasSuffix(typeParams, suffix) {

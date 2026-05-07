@@ -8,13 +8,9 @@ import (
 	"github.com/butuzov/ireturn/analyzer/internal/types"
 )
 
-type Validator interface {
-	IsValid(i types.IFace) bool
-}
-
 var ErrCollisionOfInterests = errors.New("can't have both `-accept` and `-reject` specified at same time")
 
-func defaultValidatorConfig() *allowConfig {
+func DefaultValidatorConfig() *allowConfig {
 	return allowAll([]string{
 		types.NameEmpty,  // "empty": empty interfaces (interface{})
 		types.NameError,  // "error": for all error's
@@ -25,7 +21,7 @@ func defaultValidatorConfig() *allowConfig {
 
 // New is factory function that return allowConfig or rejectConfig depending
 // on provided arguments.
-func New(fs *flag.FlagSet) (Validator, error) {
+func New(fs *flag.FlagSet) (interface{}, error) {
 	var (
 		allowList  = toSlice(getFlagVal(fs, "allow"))
 		rejectList = toSlice(getFlagVal(fs, "reject"))
@@ -44,7 +40,7 @@ func New(fs *flag.FlagSet) (Validator, error) {
 	}
 
 	// can have none (defaults are used) at same time.
-	return defaultValidatorConfig(), nil
+	return nil, nil
 }
 
 // both constants used to cleanup items provided in comma separated list.

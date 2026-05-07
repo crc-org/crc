@@ -308,7 +308,6 @@ type RegexLexer struct {
 	rules          map[string][]*CompiledRule
 	fetchRulesFunc func() (Rules, error)
 	compileOnce    sync.Once
-	compileError   error
 }
 
 func (r *RegexLexer) String() string {
@@ -447,11 +446,8 @@ func (r *RegexLexer) needRules() error {
 	var err error
 	if r.fetchRulesFunc != nil {
 		r.compileOnce.Do(func() {
-			r.compileError = r.fetchRules()
+			err = r.fetchRules()
 		})
-		if r.compileError != nil {
-			return r.compileError
-		}
 	}
 	if err := r.maybeCompile(); err != nil {
 		return err
