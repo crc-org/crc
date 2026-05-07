@@ -16,6 +16,7 @@
   - [G104](#g104)
   - [G111](#g111)
   - [G117](#g117)
+  - [G118](#g118)
   - [G301, G302, G306, G307](#g301-g302-g306-g307)
 
 ## Rules List
@@ -38,12 +39,13 @@
 - G115 — Type conversion which leads to integer overflow (**SSA**)
 - G116 — Detect Trojan Source attacks using bidirectional Unicode characters (**AST**)
 - [G117](#g117) — Potential exposure of secrets via JSON/YAML/XML/TOML marshaling (**AST**)
-- G118 — Context propagation failure leading to goroutine/resource leaks (**SSA**)
+- [G118](#g118) — Context propagation failure leading to goroutine/resource leaks (**SSA**)
 - G119 — Unsafe redirect policy may propagate sensitive headers (**SSA**)
-- G120 — Unbounded form parsing in HTTP handlers can cause memory exhaustion (**SSA**)
+- G120 — Unbounded `ParseMultipartForm` in HTTP handlers can cause memory exhaustion (**Taint**)
 - G121 — Unsafe CrossOriginProtection bypass patterns (**SSA**)
 - G122 — Filesystem TOCTOU race risk in `filepath.Walk/WalkDir` callbacks (**SSA**)
 - G123 — TLS resumption may bypass `VerifyPeerCertificate` when `VerifyConnection` is unset (**SSA**)
+- G124 — Insecure HTTP cookie configuration missing Secure, HttpOnly, or SameSite attributes (**SSA**)
 
 ### G2xx: Injection Patterns
 
@@ -97,6 +99,9 @@
 - G705 — XSS via taint analysis (**Taint**)
 - G706 — Log injection via taint analysis (**Taint**)
 - G707 — SMTP command/header injection via taint analysis (**Taint**)
+- G708 — Server-side template injection via `text/template` (**Taint**)
+- G709 — Unsafe deserialization of untrusted data (**Taint**)
+- G710 — Open redirect via taint analysis (**Taint**)
 
 _Note: Implementation types used in this document:_
 - **AST**: rule implemented in `rules/` and evaluated on AST patterns
@@ -169,6 +174,106 @@ This replaces the default pattern.
   }
 }
 ```
+
+### G118
+
+`G118` detects three classes of context-propagation failure using SSA-level analysis:
+
+**1. Lost cancel function (CWE-400)**
+
+Reports when a `context.WithCancel`, `context.WithTimeout`, or `context.WithDeadline` call
+returns a cancel function that is never called, potentially leaking resources.
+
+```go
+// Flagged: cancel never called
+func work(ctx context.Context) {
+    child, _ := context.WithTimeout(ctx, time.Second)
+    _ = child
+}
+
+// Safe: cancel deferred
+func work(ctx context.Context) {
+    child, cancel := context.WithTimeout(ctx, time.Second)
+    defer cancel()
+    _ = child
+}
+```
+
+The following patterns are all recognised as *safe* (cancel is considered called):
+
+| Pattern | Description |
+|---|---|
+| `defer cancel()` | Direct deferred call |
+| `defer func() { cancel() }()` | Cancel in a deferred closure |
+| `cancelCopy := cancel; defer cancelCopy()` | Alias via variable |
+| `return ctx, cancel` | Cancel returned to caller (responsibility transferred) |
+| `s.cancelFn = cancel` + method `s.cancelFn()` | Stored in struct field, called via receiver method |
+| `s.cancel = cancel; defer s.cancel()` | Stored in struct field, deferred in same function |
+| `s.cancel = cancel; defer func() { s.cancel() }()` | Stored in struct field, called in closure |
+| Struct containing field is returned | Caller inherits cancel responsibility |
+| `var cancel CancelFunc` in `init()` + `cancel()` in another function | Package-level variable assigned in init, called in any function (e.g., signal handlers) |
+
+Example of package-level variable pattern:
+
+```go
+// Safe: cancel stored in package-level variable and called in signal handler
+var cancel context.CancelFunc
+
+func init() {
+    ctx, c := context.WithCancel(context.Background())
+    cancel = c
+}
+
+func handleShutdown() {
+    cancel() // Called from signal handler
+}
+```
+
+**2. Goroutine uses `context.Background`/`TODO` when request context is available (CWE-400)**
+
+Reports when a goroutine spawned inside an HTTP handler or a function accepting a
+`context.Context` / `*http.Request` uses `context.Background()` or `context.TODO()`
+instead of the request-scoped context.
+
+```go
+// Flagged
+func handler(w http.ResponseWriter, r *http.Request) {
+    go func() {
+        ctx := context.Background() // ignores request context
+        doWork(ctx)
+    }()
+}
+```
+
+**3. Long-running loop without `ctx.Done()` guard (CWE-400)**
+
+Reports an infinite loop that performs blocking I/O (e.g. `http.Get`, `db.Query`,
+`time.Sleep`, interface methods such as `Read`/`Write`) but never checks `ctx.Done()`,
+making the loop impossible to cancel.
+
+```go
+// Flagged
+func poll(ctx context.Context) {
+    for {
+        http.Get("https://example.com") // blocks, no cancellation path
+        time.Sleep(time.Second)
+    }
+}
+
+// Safe
+func poll(ctx context.Context) {
+    for {
+        select {
+        case <-ctx.Done():
+            return
+        case <-time.After(time.Second):
+            http.Get("https://example.com")
+        }
+    }
+}
+```
+
+Loops with an external exit path (e.g. a `break` or bounded `for i < n`) are not flagged.
 
 ### G301, G302, G306, G307
 

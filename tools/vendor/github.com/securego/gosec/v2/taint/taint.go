@@ -23,6 +23,12 @@ import (
 // maxTaintDepth limits recursion depth to prevent stack overflow on large codebases
 const maxTaintDepth = 50
 
+// maxCallerEdges caps the number of incoming call graph edges examined per function
+// in isParameterTainted. CHA over-approximates call graphs (every interface method
+// call fans out to ALL implementations), so a function can have thousands of callers.
+// Real taint flows come from direct/nearby callers, not the 33rd+ CHA-generated edge.
+const maxCallerEdges = 32
+
 // isContextType checks if a type is context.Context.
 // context.Context is a control-flow mechanism (deadlines, cancellation, request-scoped values)
 // that does not carry user-controlled data relevant to taint sinks like XSS.
@@ -211,14 +217,21 @@ type Config struct {
 }
 
 // Analyzer performs taint analysis on SSA programs.
+// paramKey identifies a specific parameter of a function for memoization.
+type paramKey struct {
+	fn       *ssa.Function
+	paramIdx int
+}
+
 type Analyzer struct {
-	config     *Config
-	sources    map[string]Source   // keyed by full type string
-	funcSrcs   map[string]Source   // function sources keyed by "pkg.Func"
-	sinks      map[string]Sink     // keyed by full function string
-	sanitizers map[string]struct{} // keyed by full function string
-	callGraph  *callgraph.Graph
-	prog       *ssa.Program // set at Analyze time for ArgTypeGuards resolution
+	config          *Config
+	sources         map[string]Source   // keyed by full type string
+	funcSrcs        map[string]Source   // function sources keyed by "pkg.Func"
+	sinks           map[string]Sink     // keyed by full function string
+	sanitizers      map[string]struct{} // keyed by full function string
+	callGraph       *callgraph.Graph
+	prog            *ssa.Program      // set at Analyze time for ArgTypeGuards resolution
+	paramTaintCache map[paramKey]bool // caches true results from isParameterTainted
 }
 
 // SetCallGraph injects a precomputed call graph.
@@ -309,12 +322,16 @@ func (a *Analyzer) Analyze(prog *ssa.Program, srcFuncs []*ssa.Function) []Result
 		a.callGraph = cha.CallGraph(prog)
 	}
 
+	a.paramTaintCache = make(map[paramKey]bool)
+
 	var results []Result
 
 	// Find all sink calls in the program
 	for _, fn := range srcFuncs {
 		results = append(results, a.analyzeFunctionSinks(fn)...)
 	}
+
+	a.paramTaintCache = nil
 
 	return results
 }
@@ -794,6 +811,33 @@ func (a *Analyzer) isSourceType(t types.Type) bool {
 	return false
 }
 
+// mayHaveExternalCallers reports whether fn could be invoked by code outside
+// the analyzed package — code that is invisible to the call graph.
+//
+// Exported bare functions (non-methods) are the primary case: frameworks
+// register them via dynamic dispatch that CHA cannot resolve, so the call
+// graph may lack edges even though the function IS called at runtime.
+//
+// Methods with a receiver are excluded because CHA resolves interface dispatch
+// to concrete methods, so their callers are generally visible in the graph.
+// Unexported functions are only callable within the package, and the call graph
+// covers intra-package calls comprehensively.
+func mayHaveExternalCallers(fn *ssa.Function) bool {
+	if fn.Signature == nil {
+		return false
+	}
+	// Methods — CHA handles interface dispatch; callers are visible.
+	if fn.Signature.Recv() != nil {
+		return false
+	}
+	// Closures / anonymous functions are never exported.
+	if fn.Parent() != nil {
+		return false
+	}
+	// Exported bare function — may be called by external frameworks.
+	return token.IsExported(fn.Name())
+}
+
 // isSourceFuncCall checks if a call invokes a known source function
 // (a function explicitly configured as producing tainted data, e.g., os.Getenv).
 func (a *Analyzer) isSourceFuncCall(call *ssa.Call) bool {
@@ -824,30 +868,65 @@ func (a *Analyzer) isParameterTainted(param *ssa.Parameter, fn *ssa.Function, vi
 		return false
 	}
 
-	// Check if parameter type is a source type.
-	// This is the ONLY place where type-based source matching should trigger
-	// automatic taint — because parameters represent data flowing IN from
-	// external callers we don't control.
-	if a.isSourceType(param.Type()) {
-		return true
-	}
-
-	// Use call graph to find callers and check their arguments
-	if a.callGraph == nil {
-		return false
-	}
-
-	node := a.callGraph.Nodes[fn]
-	if node == nil {
-		return false
-	}
-
+	// Resolve paramIdx early so we can use it for cache lookups.
 	paramIdx := -1
 	for i, p := range fn.Params {
 		if p == param {
 			paramIdx = i
 			break
 		}
+	}
+
+	// Check memoization cache (only true results are cached).
+	if paramIdx >= 0 && a.paramTaintCache != nil {
+		key := paramKey{fn: fn, paramIdx: paramIdx}
+		if a.paramTaintCache[key] {
+			return true
+		}
+	}
+
+	// Use call graph to find callers and check their arguments
+	if a.callGraph == nil {
+		// No call graph: fall back to type-based auto-taint for source-typed params
+		// (conservative — may produce false positives, but we have no callee info).
+		if a.isSourceType(param.Type()) {
+			if paramIdx >= 0 && a.paramTaintCache != nil {
+				a.paramTaintCache[paramKey{fn: fn, paramIdx: paramIdx}] = true
+			}
+			return true
+		}
+		return false
+	}
+
+	node := a.callGraph.Nodes[fn]
+
+	// Check if parameter type is a configured source type.
+	//
+	// Strategy:
+	//   1. No callers in call graph → definite entry point → auto-taint.
+	//   2. Exported bare function → may have invisible external callers
+	//      (framework dispatch) → auto-taint to avoid false negatives.
+	//   3. Has callers, not exported bare func → fall through to caller check.
+	//
+	// Case 2 addresses a class of false negatives where an internal caller
+	// with safe args suppresses taint for an exported entry point that is
+	// also called externally by a framework (issue #1629 + Barry review).
+	// Methods are excluded because CHA resolves interface dispatch, making
+	// their callers visible in the call graph.
+	if a.isSourceType(param.Type()) {
+		isEntryPoint := (node == nil || len(node.In) == 0)
+		if isEntryPoint || mayHaveExternalCallers(fn) {
+			if paramIdx >= 0 && a.paramTaintCache != nil {
+				a.paramTaintCache[paramKey{fn: fn, paramIdx: paramIdx}] = true
+			}
+			return true
+		}
+		// Has known callers and is not a handler — fall through to verify
+		// taint via those callers.
+	}
+
+	if node == nil {
+		return false
 	}
 
 	if paramIdx < 0 {
@@ -867,8 +946,14 @@ func (a *Analyzer) isParameterTainted(param *ssa.Parameter, fn *ssa.Function, vi
 		adjustedIdx = paramIdx
 	}
 
-	// Check each caller
+	// Check each caller, capping at maxCallerEdges to avoid combinatorial
+	// explosion from CHA over-approximation of interface method calls.
+	edgesChecked := 0
 	for _, inEdge := range node.In {
+		if edgesChecked >= maxCallerEdges {
+			break
+		}
+
 		site := inEdge.Site
 		if site == nil {
 			continue
@@ -877,7 +962,11 @@ func (a *Analyzer) isParameterTainted(param *ssa.Parameter, fn *ssa.Function, vi
 		callArgs := site.Common().Args
 
 		if adjustedIdx < len(callArgs) {
+			edgesChecked++
 			if a.isTainted(callArgs[adjustedIdx], inEdge.Caller.Func, visited, depth+1) {
+				if a.paramTaintCache != nil {
+					a.paramTaintCache[paramKey{fn: fn, paramIdx: paramIdx}] = true
+				}
 				return true
 			}
 		}
@@ -1018,6 +1107,10 @@ func (a *Analyzer) isFieldTaintedOnValue(v ssa.Value, fieldIdx int, fn *ssa.Func
 	case *ssa.Alloc:
 		return a.isFieldOfAllocTainted(val, fieldIdx, fn, visited, depth)
 	case *ssa.Phi:
+		if visited[v] {
+			return false
+		}
+		visited[v] = true
 		for _, edge := range val.Edges {
 			if a.isFieldTaintedOnValue(edge, fieldIdx, fn, visited, depth+1) {
 				return true
