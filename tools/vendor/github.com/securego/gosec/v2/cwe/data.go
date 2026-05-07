@@ -48,6 +48,11 @@ var idWeaknesses = map[string]*Weakness{
 		Description: "The software does not properly neutralize CRLF sequences before using externally-influenced input in protocol elements that rely on CRLF as delimiters, allowing attackers to inject additional commands or headers.",
 		Name:        "Improper Neutralization of CRLF Sequences ('CRLF Injection')",
 	},
+	"94": {
+		ID:          "94",
+		Description: "The software constructs all or part of a code segment using externally-influenced input from an upstream component, but it does not neutralize or incorrectly neutralizes special elements that could modify the syntax or behavior of the intended code segment.",
+		Name:        "Improper Control of Generation of Code ('Code Injection')",
+	},
 	"118": {
 		ID:          "118",
 		Description: "The software does not restrict or incorrectly restricts operations within the boundaries of a resource that is accessed using an index or pointer, such as memory or files.",
@@ -162,6 +167,26 @@ var idWeaknesses = map[string]*Weakness{
 		ID:          "1204",
 		Description: "The product uses a cryptographic primitive that uses an Initialization Vector (IV), but the product does not generate IVs that are sufficiently unpredictable or unique according to the expected cryptographic requirements for that primitive.",
 		Name:        "Generation of Weak Initialization Vector (IV)",
+	},
+	"117": {
+		ID:          "117",
+		Description: "The software does not neutralize or incorrectly neutralizes output that is written to logs.",
+		Name:        "Improper Output Neutralization for Logs",
+	},
+	"502": {
+		ID:          "502",
+		Description: "The application deserializes untrusted data without sufficiently verifying that the resulting data will be valid.",
+		Name:        "Deserialization of Untrusted Data",
+	},
+	"614": {
+		ID:          "614",
+		Description: "The Secure attribute for a sensitive cookie is not set, which could cause the user agent to send that cookie in plaintext over an HTTP session.",
+		Name:        "Sensitive Cookie in HTTPS Session Without 'Secure' Attribute",
+	},
+	"918": {
+		ID:          "918",
+		Description: "The web server receives a URL or similar request from an upstream component and retrieves the contents of this URL, but it does not sufficiently ensure that the request is being sent to the expected destination.",
+		Name:        "Server-Side Request Forgery (SSRF)",
 	},
 }
 
