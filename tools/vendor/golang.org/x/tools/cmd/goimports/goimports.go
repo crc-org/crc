@@ -19,7 +19,6 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"strings"
-	"testing"
 
 	"golang.org/x/telemetry/counter"
 	"golang.org/x/tools/internal/gocommand"
@@ -200,8 +199,7 @@ func walkDir(path string) {
 }
 
 func main() {
-	// Measure how many people still use goimports.
-	// (See https://go.dev/issue/78671 for one.)
+	// is anyone using this command?
 	counter.Open()
 	counter.Inc("tools/cmd:goimports")
 	runtime.GOMAXPROCS(runtime.NumCPU())
@@ -210,9 +208,7 @@ func main() {
 	// so that it can use defer and have them
 	// run before the exit.
 	gofmtMain()
-	if !testing.Testing() {
-		os.Exit(exitCode)
-	}
+	os.Exit(exitCode)
 }
 
 // parseFlags parses command line flags and returns the paths to process.

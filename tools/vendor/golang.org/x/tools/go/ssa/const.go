@@ -131,9 +131,7 @@ func nillable(t types.Type) bool {
 			return u != nil && nillable(u)
 		})
 	}
-	switch t := t.Underlying().(type) {
-	case *types.Basic:
-		return t.Kind() == types.UnsafePointer
+	switch t.Underlying().(type) {
 	case *types.Pointer, *types.Slice, *types.Chan, *types.Map, *types.Signature:
 		return true
 	case *types.Interface:
