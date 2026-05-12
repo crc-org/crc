@@ -1,7 +1,6 @@
 package transport
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -30,18 +29,4 @@ func listenURL(parsed *url.URL) (net.Listener, error) {
 	default:
 		return defaultListenURL(parsed)
 	}
-}
-
-func ListenUnixgram(endpoint string) (*net.UnixConn, error) {
-	parsed, err := url.Parse(endpoint)
-	if err != nil {
-		return nil, err
-	}
-	if parsed.Scheme != "unixgram" {
-		return nil, errors.New("unexpected scheme")
-	}
-	return net.ListenUnixgram("unixgram", &net.UnixAddr{
-		Name: parsed.Path,
-		Net:  "unixgram",
-	})
 }

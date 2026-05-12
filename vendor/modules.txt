@@ -59,7 +59,7 @@ github.com/YourFin/binappend
 # github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 ## explicit
 github.com/acarl005/stripansi
-# github.com/apparentlymart/go-cidr v1.1.0
+# github.com/apparentlymart/go-cidr v1.1.1
 ## explicit
 github.com/apparentlymart/go-cidr/cidr
 # github.com/areYouLazy/libhosty v1.1.0
@@ -91,8 +91,8 @@ github.com/cloudflare/circl/sign/ed448
 # github.com/containers/common v0.64.2
 ## explicit; go 1.23.3
 github.com/containers/common/pkg/strongunits
-# github.com/containers/gvisor-tap-vsock v0.8.8
-## explicit; go 1.24.0
+# github.com/containers/gvisor-tap-vsock v0.8.9
+## explicit; go 1.25.0
 github.com/containers/gvisor-tap-vsock/pkg/client
 github.com/containers/gvisor-tap-vsock/pkg/fs
 github.com/containers/gvisor-tap-vsock/pkg/net/stdio

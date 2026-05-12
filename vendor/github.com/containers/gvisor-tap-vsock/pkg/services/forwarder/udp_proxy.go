@@ -79,6 +79,10 @@ func (proxy *UDPProxy) replyLoop(proxyConn net.Conn, clientAddr net.Addr, client
 		_ = proxyConn.SetReadDeadline(time.Now().Add(UDPConnTrackTimeout))
 	again:
 		read, err := proxyConn.Read(readBuf)
+		if read == 0 && err == nil {
+			// treat this condition same as EOF
+			return
+		}
 		if err != nil {
 			if err, ok := err.(*net.OpError); ok && err.Err == syscall.ECONNREFUSED {
 				// This will happen if the last write failed

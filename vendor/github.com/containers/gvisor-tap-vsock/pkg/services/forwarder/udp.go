@@ -14,11 +14,11 @@ import (
 	"gvisor.dev/gvisor/pkg/waiter"
 )
 
-func UDP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mutex) *udp.Forwarder {
+func UDP(s *stack.Stack, nat map[tcpip.Address]tcpip.Address, natLock *sync.Mutex, ec2MetadataAccess bool) *udp.Forwarder {
 	return udp.NewForwarder(s, func(r *udp.ForwarderRequest) {
 		localAddress := r.ID().LocalAddress
 
-		if linkLocal().Contains(localAddress) || localAddress == header.IPv4Broadcast {
+		if (!ec2MetadataAccess) && linkLocal().Contains(localAddress) || (localAddress == header.IPv4Broadcast) {
 			return
 		}
 
