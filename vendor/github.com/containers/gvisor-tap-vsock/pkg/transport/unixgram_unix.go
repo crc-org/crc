@@ -1,4 +1,4 @@
-//go:build darwin
+//go:build !windows
 
 package transport
 
@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/url"
 	"syscall"
 )
 
@@ -86,6 +87,20 @@ func peekAddress(listeningConn *net.UnixConn) (*net.UnixAddr, error) {
 
 	vfkitAddr := &net.UnixAddr{Name: vfkitSockaddrUnix.Name, Net: "unixgram"}
 	return vfkitAddr, nil
+}
+
+func ListenUnixgram(endpoint string) (*net.UnixConn, error) {
+	parsed, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, err
+	}
+	if parsed.Scheme != "unixgram" {
+		return nil, errors.New("unexpected scheme")
+	}
+	return net.ListenUnixgram("unixgram", &net.UnixAddr{
+		Name: parsed.Path,
+		Net:  "unixgram",
+	})
 }
 
 func AcceptVfkit(listeningConn *net.UnixConn) (net.Conn, error) {

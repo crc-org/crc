@@ -11,7 +11,7 @@ require (
 	github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/cheggaaa/pb/v3 v3.1.7
-	github.com/containers/gvisor-tap-vsock v0.8.8
+	github.com/containers/gvisor-tap-vsock v0.8.9
 	github.com/containers/libhvee v0.11.0
 	github.com/coreos/go-systemd/v22 v22.7.0
 	github.com/crc-org/admin-helper v0.5.7
@@ -75,7 +75,7 @@ require (
 	github.com/RangelReale/osincli v0.0.0-20160924135400-fababb0555f2 // indirect
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d // indirect
-	github.com/apparentlymart/go-cidr v1.1.0 // indirect
+	github.com/apparentlymart/go-cidr v1.1.1 // indirect
 	github.com/areYouLazy/libhosty v1.1.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
