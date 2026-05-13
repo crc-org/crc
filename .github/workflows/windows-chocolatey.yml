@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - windows-2022
+          - windows-2025-vs2026
         go:
           - '1.25'
     steps:
