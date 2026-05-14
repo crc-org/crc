@@ -2022,8 +2022,7 @@ func resolveEffects(logf logger, args []*argument, effects []int, sg substGraph)
 		return string("RW"[btoi(effects)]) + i
 	}
 	removed := false
-	for i := len(args) - 1; i >= 0; i-- {
-		argi := args[i]
+	for i, argi := range slices.Backward(args) {
 		if sg.has(argi) && !argi.pure {
 			// i is not bound: check whether it must be bound due to hazards.
 			idx := slices.Index(effects, i)
@@ -2051,7 +2050,7 @@ func resolveEffects(logf logger, args []*argument, effects []int, sg substGraph)
 			}
 		}
 		if !sg.has(argi) {
-			for j := 0; j < i; j++ {
+			for j := range i {
 				argj := args[j]
 				if argj.pure {
 					continue
