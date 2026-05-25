@@ -31,8 +31,8 @@ require (
 	github.com/linuxkit/virtsock v0.0.0-20220523201153-1a23e78aa7a2
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mdlayher/vsock v1.2.1
-	github.com/onsi/ginkgo/v2 v2.28.3
-	github.com/onsi/gomega v1.40.0
+	github.com/onsi/ginkgo/v2 v2.29.0
+	github.com/onsi/gomega v1.41.0
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/openshift/api v0.0.0-20260105191300-d1c4dc4fd37b
 	github.com/openshift/client-go v0.0.0-20251205093018-96a6cbc1420c
