@@ -30,7 +30,7 @@ require (
 	github.com/kofalt/go-memoize v0.0.0-20220914132407-0b5d6a304579
 	github.com/linuxkit/virtsock v0.0.0-20220523201153-1a23e78aa7a2
 	github.com/mattn/go-colorable v0.1.14
-	github.com/mdlayher/vsock v1.2.1
+	github.com/mdlayher/vsock v1.3.0
 	github.com/onsi/ginkgo/v2 v2.29.0
 	github.com/onsi/gomega v1.41.0
 	github.com/opencontainers/image-spec v1.1.1
@@ -135,7 +135,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/mattn/go-sqlite3 v1.14.32 // indirect
-	github.com/mdlayher/socket v0.4.1 // indirect
+	github.com/mdlayher/socket v0.6.0 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/miekg/dns v1.1.72 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect
