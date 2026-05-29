@@ -29,7 +29,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.3.0
 	github.com/kofalt/go-memoize v0.0.0-20220914132407-0b5d6a304579
 	github.com/linuxkit/virtsock v0.0.0-20220523201153-1a23e78aa7a2
-	github.com/mattn/go-colorable v0.1.14
+	github.com/mattn/go-colorable v0.1.15
 	github.com/mdlayher/vsock v1.3.0
 	github.com/onsi/ginkgo/v2 v2.29.0
 	github.com/onsi/gomega v1.41.0
