@@ -98,11 +98,12 @@ func crcSuccess(op string, args ...string) string {
 }
 
 // Helper function to run crc setup or start commands expecting fails
-func crcFails(op string, args ...string) string {
+// Commented out since this is only used for resize test and that is ignore atm
+/*func crcFails(op string, args ...string) string {
 	output, _ := RunCRCExpectFail(
 		crcCmd(op, args...)...)
 	return output
-}
+}*/
 
 // Helper function to add custom parameters if required
 func crcCmd(op string, args ...string) []string {

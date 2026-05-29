@@ -223,6 +223,8 @@ func getChecks(bundlePath string, preset crcpreset.Preset, enableBundleQuayFallb
 	checks = append(checks, userPartOfCrcUsersAndHypervAdminsGroupCheck)
 	checks = append(checks, vsockChecks...)
 	checks = append(checks, bundleCheck(bundlePath, preset, enableBundleQuayFallback))
+	checks = append(checks, gvproxyCheck())
+	checks = append(checks, macadamCheck())
 	checks = append(checks, genericCleanupChecks...)
 	checks = append(checks, cleanupCheckRemoveCrcVM)
 	checks = append(checks, daemonTaskChecks...)
@@ -236,4 +238,15 @@ func getPreflightChecks(_ bool, networkMode network.Mode, bundlePath string, pre
 	filter.SetNetworkMode(networkMode)
 
 	return filter.Apply(getChecks(bundlePath, preset, enableBundleQuayFallback))
+}
+
+// Capability functions are no-ops on Windows (Windows doesn't use Linux capabilities)
+func setCapNetBindService(path string) error {
+	// Not needed on Windows
+	return nil
+}
+
+func checkCapNetBindService(path string) error {
+	// Not needed on Windows
+	return nil
 }
