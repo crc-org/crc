@@ -84,24 +84,41 @@ func (s *server) DELETE(pattern string, handler func(c *context) error) {
 
 func (s *server) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		status := http.StatusOK
+		defer func() {
+			entry := logging.WithFields(map[string]interface{}{
+				"method": r.Method,
+				"path":   r.URL.Path,
+				"status": status,
+			})
+			if status >= http.StatusBadRequest {
+				entry.Warn("api request")
+				return
+			}
+			entry.Info("api request")
+		}()
+
 		s.routesLock.RLock()
 		route, ok := s.routes[r.URL.Path]
 		if !ok {
 			s.routesLock.RUnlock()
-			http.Error(w, "Not Found", http.StatusNotFound)
+			status = http.StatusNotFound
+			http.Error(w, "Not Found", status)
 			return
 		}
 		handler, ok := route[r.Method]
 		if !ok {
 			s.routesLock.RUnlock()
-			http.Error(w, "Not Found", http.StatusNotFound)
+			status = http.StatusNotFound
+			http.Error(w, "Not Found", status)
 			return
 		}
 		s.routesLock.RUnlock()
 
 		requestBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			status = http.StatusInternalServerError
+			http.Error(w, err.Error(), status)
 			return
 		}
 		c := &context{
@@ -111,10 +128,12 @@ func (s *server) Handler() http.Handler {
 			url:         r.URL,
 		}
 		if err := handler(c); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			status = http.StatusInternalServerError
+			http.Error(w, err.Error(), status)
 			return
 		}
 
+		status = c.code
 		for k, v := range c.headers {
 			w.Header().Set(k, v)
 		}
