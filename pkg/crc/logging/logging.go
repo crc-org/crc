@@ -93,6 +93,10 @@ func Infof(s string, args ...interface{}) {
 	logrus.Infof(s, args...)
 }
 
+func WithFields(fields logrus.Fields) *logrus.Entry {
+	return logrus.WithFields(fields)
+}
+
 func Warn(args ...interface{}) {
 	logrus.Warn(args...)
 }
