@@ -2,7 +2,6 @@ package colorprofile
 
 import (
 	"bytes"
-	"fmt"
 	"image/color"
 	"io"
 	"strconv"
@@ -36,17 +35,13 @@ type Writer struct {
 
 // Write writes the given text to the underlying writer.
 func (w *Writer) Write(p []byte) (int, error) {
-	switch {
-	case w.Profile == TrueColor:
-		return w.Forward.Write(p) //nolint:wrapcheck
-	case w.Profile <= NoTTY:
-		_, err := io.WriteString(w.Forward, ansi.Strip(string(p)))
-		return len(p), err
-	case w.Profile == ASCII, w.Profile == ANSI, w.Profile == ANSI256:
-		_, err := w.downsample(p)
-		return len(p), err
+	switch w.Profile {
+	case TrueColor:
+		return w.Forward.Write(p)
+	case NoTTY:
+		return io.WriteString(w.Forward, ansi.Strip(string(p)))
 	default:
-		return 0, fmt.Errorf("invalid profile: %v", w.Profile)
+		return w.downsample(p)
 	}
 }
 
@@ -68,7 +63,7 @@ func (w *Writer) downsample(p []byte) (int, error) {
 		default:
 			// If we're not a style SGR sequence, just write the bytes.
 			if n, err := buf.Write(seq); err != nil {
-				return n, err //nolint:wrapcheck
+				return n, err
 			}
 		}
 
@@ -76,7 +71,7 @@ func (w *Writer) downsample(p []byte) (int, error) {
 		state = newState
 	}
 
-	return w.Forward.Write(buf.Bytes()) //nolint:wrapcheck
+	return w.Forward.Write(buf.Bytes())
 }
 
 // WriteString writes the given text to the underlying writer.
@@ -114,7 +109,7 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 			if w.Profile < ANSI {
 				continue
 			}
-			style = style.ForegroundColor(nil)
+			style = style.DefaultForegroundColor()
 		case 40, 41, 42, 43, 44, 45, 46, 47: // 8-bit background color
 			if w.Profile < ANSI {
 				continue
@@ -134,7 +129,7 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 			if w.Profile < ANSI {
 				continue
 			}
-			style = style.BackgroundColor(nil)
+			style = style.DefaultBackgroundColor()
 		case 58: // 16 or 24-bit underline color
 			var c color.Color
 			if n := ansi.ReadStyleColor(params[i:], &c); n > 0 {
@@ -148,7 +143,7 @@ func handleSgr(w *Writer, p *ansi.Parser, buf *bytes.Buffer) {
 			if w.Profile < ANSI {
 				continue
 			}
-			style = style.UnderlineColor(nil)
+			style = style.DefaultUnderlineColor()
 		case 90, 91, 92, 93, 94, 95, 96, 97: // 8-bit bright foreground color
 			if w.Profile < ANSI {
 				continue

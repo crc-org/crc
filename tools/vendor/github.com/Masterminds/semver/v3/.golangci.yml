@@ -1,42 +1,27 @@
-version: "2"
+run:
+  deadline: 2m
+
 linters:
-  default: none
+  disable-all: true
   enable:
-    - dupl
-    - errcheck
-    - gocyclo
-    - gosec
-    - govet
-    - ineffassign
     - misspell
-    - nakedret
-    - revive
+    - govet
     - staticcheck
+    - errcheck
     - unparam
-    - unused
-  settings:
-    dupl:
-      threshold: 600
-  exclusions:
-    generated: lax
-    presets:
-      - comments
-      - common-false-positives
-      - legacy
-      - std-error-handling
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
-formatters:
-  enable:
+    - ineffassign
+    - nakedret
+    - gocyclo
+    - dupl
     - goimports
-  settings:
-    gofmt:
-      simplify: true
-  exclusions:
-    generated: lax
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
+    - revive
+    - gosec
+    - gosimple
+    - typecheck
+    - unused
+
+linters-settings:
+  gofmt:
+    simplify: true
+  dupl:
+    threshold: 600

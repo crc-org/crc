@@ -4,16 +4,11 @@
 
 - [Checks](#checks)
   - [`after-block`](#after-block)
-  - [`after-decl`](#after-decl)
-  - [`after-defer`](#after-defer)
-  - [`after-expr`](#after-expr)
-  - [`after-go`](#after-go)
   - [`append`](#append)
   - [`assign`](#assign)
   - [`assign-exclusive`](#assign-exclusive)
   - [`assign-expr`](#assign-expr)
   - [`branch`](#branch)
-  - [`cuddle-group`](#cuddle-group)
   - [`decl`](#decl)
   - [`defer`](#defer)
   - [`err`](#err)
@@ -34,9 +29,7 @@
 - [Configuration](#configuration)
   - [`allow-first-in-block`](#allow-first-in-block)
   - [`allow-whole-block`](#allow-whole-block)
-  - [`branch-max-lines`](#branch-max-lines)
   - [`case-max-lines`](#case-max-lines)
-  - [`cuddle-max-statements`](#cuddle-max-statements)
 
 ## Checks
 
@@ -48,10 +41,9 @@ allowed and what's allowed.
 Block statements (`if`, `for`, `switch`, etc.) should be followed by a blank
 line to visually separate them from subsequent code.
 
-> [!IMPORTANT]
-> An exception is made for `defer` statements that follow an `if err != nil`
-> block when the defer references a variable assigned on the line above the if
-> statement. This is a common pattern for resource cleanup.
+> **NOTE** An exception is made for `defer` statements that follow an
+> `if err != nil` block when the defer references a variable assigned on the
+> line above the if statement. This is a common pattern for resource cleanup.
 
 <table>
 <thead><tr><th>Bad</th><th>Good</th></tr></thead>
@@ -105,206 +97,6 @@ defer f.Close()
 
 </td></tr>
 </tbody></table>
-
-[🔝](#table-of-content)
-
-### `after-decl`
-
-Declaration statements (`var`, `const`, `type`) should be followed by a blank
-line. Consecutive declarations of the same kind are allowed to cuddle, only the
-last one in a run needs the blank line.
-
-<table>
-<thead><tr><th>Bad</th><th>Good</th></tr></thead>
-<tbody>
-<tr><td valign="top">
-
-```go
-var x int // 1
-x = 1
-
-var (
-    a = 1
-    b = 2
-) // 2
-fmt.Println(a, b)
-```
-
-</td><td valign="top">
-
-```go
-var x int
-
-x = 1
-
-var (
-    a = 1
-    b = 2
-)
-
-fmt.Println(a, b)
-
-var a int
-var b int
-
-fmt.Println(a, b)
-```
-
-</td></tr>
-
-<tr><td valign="top">
-
-<sup>1</sup> Missing whitespace after declaration
-
-<sup>2</sup> Missing whitespace after declaration
-
-</td><td valign="top">
-
-</td></tr>
-</tbody></table>
-
-[🔝](#table-of-content)
-
-### `after-defer`
-
-`defer` statements should be followed by a blank line. Consecutive `defer`s
-are allowed to cuddle, only the last one in a run needs the blank line.
-
-<table>
-<thead><tr><th>Bad</th><th>Good</th></tr></thead>
-<tbody>
-<tr><td valign="top">
-
-```go
-f, err := os.Open("x")
-if err != nil {
-    return err
-}
-defer f.Close() // 1
-data := read(f)
-```
-
-</td><td valign="top">
-
-```go
-f, err := os.Open("x")
-if err != nil {
-    return err
-}
-defer f.Close()
-
-data := read(f)
-
-defer a()
-defer b()
-
-doWork()
-```
-
-</td></tr>
-
-<tr><td valign="top">
-
-<sup>1</sup> Missing whitespace after defer
-
-</td><td valign="top">
-
-</td></tr>
-</tbody></table>
-
-[🔝](#table-of-content)
-
-### `after-expr`
-
-Expression statements (e.g. function calls used for their side effects) should
-be followed by a blank line. Consecutive expression statements are allowed to
-cuddle, only the last one in a run needs the blank line.
-
-**Exception:** an expression statement that is immediately followed by a
-`defer` referencing the same variable is exempt (e.g. `mu.Lock()` /
-`defer mu.Unlock()`), since these two statements form a single logical unit.
-
-<table>
-<thead><tr><th>Bad</th><th>Good</th></tr></thead>
-<tbody>
-<tr><td valign="top">
-
-```go
-fmt.Println("hello") // 1
-x := 5
-
-fmt.Println(x)
-```
-
-</td><td valign="top">
-
-```go
-fmt.Println("hello")
-
-x := 5
-
-fmt.Println(x)
-
-log.Info("a")
-log.Info("b")
-
-doWork()
-```
-
-</td></tr>
-
-<tr><td valign="top">
-
-<sup>1</sup> Missing whitespace after expression
-
-</td><td valign="top">
-
-</td></tr>
-</tbody></table>
-
-[🔝](#table-of-content)
-
-### `after-go`
-
-`go` statements should be followed by a blank line. Consecutive `go`
-statements are allowed to cuddle, only the last one in a run needs the blank
-line.
-
-<table>
-<thead><tr><th>Bad</th><th>Good</th></tr></thead>
-<tbody>
-<tr><td valign="top">
-
-```go
-go work() // 1
-fmt.Println("next")
-```
-
-</td><td valign="top">
-
-```go
-go work()
-
-fmt.Println("next")
-
-go a()
-go b()
-
-fmt.Println("next")
-```
-
-</td></tr>
-
-<tr><td valign="top">
-
-<sup>1</sup> Missing whitespace after go
-
-</td><td valign="top">
-
-</td></tr>
-</tbody></table>
-
-[🔝](#table-of-content)
 
 ### `assign`
 
@@ -361,13 +153,9 @@ c := 3
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `branch`
 
-> [!NOTE]
-> Configurable via `branch-max-lines`. See [Configuration](#configuration) for
-> details.
+> Configurable via `branch-max-lines`
 
 Branch statement (`break`, `continue`, `fallthrough`, `goto`) should only be
 cuddled if the block is less than `n` lines where `n` is the value of
@@ -421,8 +209,6 @@ for {
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `decl`
 
 Declarations should never be cuddled. When grouping multiple declarations
@@ -430,9 +216,8 @@ together they should be declared in the same group with parenthesis into a
 single statement. The benefit of this is that it also aligns the declaration or
 assignment increasing readability.
 
-> [!IMPORTANT]
-> The fixer can't do smart adjustments if there are comments on the same line
-> as the declaration.
+> **NOTE** The fixer can't do smart adjustments if there are comments on the
+> same line as the declaration.
 
 <table>
 <thead><tr><th>Bad</th><th>Good</th></tr></thead>
@@ -491,8 +276,6 @@ var a string
 
 </td></tr>
 </tbody></table>
-
-[🔝](#table-of-content)
 
 ### `defer`
 
@@ -559,20 +342,16 @@ defer m.Unlock()
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `expr`
 
 Expressions can be multiple things and a big part of them are not handled by
 `wsl`. However all function calls are expressions which can be verified.
 
-> [!IMPORTANT]
-> This is one of the few rules with non-configurable exceptions. Given the
-> idiomatic way to acquire and release mutex locks and the fact that the `sync`
-> mutex from the standard library is so widely used, any call to `Lock`,
+> **NOTE** This is one of the few rules with non-configurable exceptions. Given
+> the idiomatic way to acquire and release mutex locks and the fact that the
+> `sync` mutex from the standard library is so widely used, any call to `Lock`,
 > `RWLock`, or `TryLock` can be cuddled above any other statement(s) and
-> similarly `Unlock` and `RWUnlock` can be cuddled below any other
-> statement(s).
+> similarly `Unlock` and `RWUnlock` can be cuddled below any other statement(s).
 
 <table>
 <thead><tr><th>Bad</th><th>Good</th></tr></thead>
@@ -614,19 +393,13 @@ fmt.Println(a)
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `for`
 
-> [!NOTE]
 > Configurable via `allow-first-in-block` to allow cuddling if the variable is
 > used _first_ in the block (enabled by default).
 >
 > Configurable via `allow-whole-block` to allow cuddling if the variable is used
 > _anywhere_ in the following block (disabled by default).
->
-> Configurable via `cuddle-max-statements` to change the maximum number of
-> cuddled statements allowed (default 1).
 >
 > See [Configuration](#configuration) for details.
 
@@ -702,8 +475,6 @@ for {
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `go`
 
 <table>
@@ -754,19 +525,13 @@ go Fn(someArg)
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `if`
 
-> [!NOTE]
 > Configurable via `allow-first-in-block` to allow cuddling if the variable is
 > used _first_ in the block (enabled by default).
 >
 > Configurable via `allow-whole-block` to allow cuddling if the variable is used
 > _anywhere_ in the following block (disabled by default).
->
-> Configurable via `cuddle-max-statements` to change the maximum number of
-> cuddled statements allowed (default 1).
 >
 > See [Configuration](#configuration) for details.
 
@@ -884,8 +649,6 @@ if xUsedLaterInBlock() {
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `inc-dec`
 
 <table>
@@ -930,8 +693,6 @@ j++
 
 </td></tr>
 </tbody></table>
-
-[🔝](#table-of-content)
 
 ### `label`
 
@@ -979,19 +740,13 @@ L2:
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `range`
 
-> [!NOTE]
 > Configurable via `allow-first-in-block` to allow cuddling if the variable is
 > used _first_ in the block (enabled by default).
 >
 > Configurable via `allow-whole-block` to allow cuddling if the variable is used
 > _anywhere_ in the following block (disabled by default).
->
-> Configurable via `cuddle-max-statements` to change the maximum number of
-> cuddled statements allowed (default 1).
 >
 > See [Configuration](#configuration) for details.
 
@@ -1061,13 +816,9 @@ for _, v := range s2 {
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `return`
 
-> [!NOTE]
-> Configurable via `branch-max-lines`. See [Configuration](#configuration) for
-> details.
+> Configurable via `branch-max-lines`
 
 Return statements is an important statement that is easiy to miss in larger code
 blocks. To better visualize the `return` statement and that the method is
@@ -1117,21 +868,15 @@ func Fn() int {
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `select`
 
 Identifiers used in case arms of select statements are allowed to be cuddled.
 
-> [!NOTE]
 > Configurable via `allow-first-in-block` to allow cuddling if the variable is
 > used _first_ in the block (enabled by default).
 >
 > Configurable via `allow-whole-block` to allow cuddling if the variable is used
 > _anywhere_ in the following block (disabled by default).
->
-> Configurable via `cuddle-max-statements` to change the maximum number of
-> cuddled statements allowed (default 1).
 >
 > See [Configuration](#configuration) for details.
 
@@ -1191,8 +936,6 @@ case <-stop:
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `send`
 
 Send statements should only be cuddled with a single variable that is used on
@@ -1235,23 +978,17 @@ b := 1
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `switch`
 
 In addition to checking the switch condition, switch statements also checks
 identifiers in all case arms. If a variable is used in one or more of the case
 arms it's allowed to be cuddled.
 
-> [!NOTE]
 > Configurable via `allow-first-in-block` to allow cuddling if the variable is
 > used _first_ in the block (enabled by default).
 >
 > Configurable via `allow-whole-block` to allow cuddling if the variable is used
 > _anywhere_ in the following block (disabled by default).
->
-> Configurable via `cuddle-max-statements` to change the maximum number of
-> cuddled statements allowed (default 1).
 >
 > See [Configuration](#configuration) for details.
 
@@ -1342,19 +1079,13 @@ case 2:
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `type-switch`
 
-> [!NOTE]
 > Configurable via `allow-first-in-block` to allow cuddling if the variable is
 > used _first_ in the block (enabled by default).
 >
 > Configurable via `allow-whole-block` to allow cuddling if the variable is used
 > _anywhere_ in the following block (disabled by default).
->
-> Configurable via `cuddle-max-statements` to change the maximum number of
-> cuddled statements allowed (default 1).
 >
 > See [Configuration](#configuration) for details.
 
@@ -1427,8 +1158,6 @@ case int64:
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `append`
 
 Append enables strict `append` checking where assignments that are
@@ -1476,8 +1205,6 @@ s = append(s, 2)
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `assign-exclusive`
 
 Assign exclusive does not allow mixing new assignments (`:=`) with
@@ -1520,8 +1247,6 @@ d = 4
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `assign-expr`
 
 Assignments are allowed to be cuddled with expressions, primarily to support
@@ -1560,8 +1285,6 @@ t1.Fn3()
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `err`
 
 <table>
@@ -1597,89 +1320,6 @@ if err != nil {
 </td></tr>
 </tbody></table>
 
-[🔝](#table-of-content)
-
-### `cuddle-group`
-
-Treats the cuddled chain above a trigger statement (`if`, `for`, `switch`,
-etc., `go`, `defer`, `send`) as a single unit. The chain stays cuddled with
-the trigger only when _every_ cuddled statement shares a variable with the
-trigger _and_ the number of sharing statements is within
-`cuddle-max-statements`.
-
-Without this check, the same violations are reported on a cuddled statement
-inside the chain, splitting the group between variables.
-
-<table>
-<thead><tr><th>Bad</th><th>Good</th></tr></thead>
-<tbody>
-<tr><td valign="top">
-
-```go
-// With the default cuddle-max-statements: 1
-a := 1
-b := 2
-if a > b { // 1
-    fmt.Println("ok")
-}
-
-// Mid-chain non-sharing
-notUsed := 1
-b := 2
-if b > 0 { // 2
-    fmt.Println("ok")
-}
-```
-
-</td><td valign="top">
-
-```go
-// With the default cuddle-max-statements: 1
-a := 1
-b := 2
-
-if a > b {
-    fmt.Println("ok")
-}
-
-// Without cuddle-group, the same input is fixed by
-// splitting between the cuddled variables instead:
-a := 1
-
-b := 2
-if a > b {
-    fmt.Println("ok")
-}
-
-// Mid-chain non-sharing — group still separated as
-// a unit:
-notUsed := 1
-b := 2
-
-if b > 0 {
-    fmt.Println("ok")
-}
-```
-
-</td></tr>
-
-<tr><td valign="top">
-
-<sup>1</sup> Two cuddled statements share a variable with `if`; with
-`cuddle-group` enabled the group stays cuddled and the blank line goes above
-the `if` instead of between the variables
-
-<sup>2</sup> Only one cuddled statement shares with `if`, but a non-sharing
-stmt (`notUsed`) is in the chain so `cuddle-group` separates the entire group
-from the `if` rather than splitting between `notUsed` and `b`
-
-</td><td valign="top">
-
-</td></tr>
-</tbody></table>
-
-[🔝](#table-of-content)
-
 ### `leading-whitespace`
 
 <table>
@@ -1706,8 +1346,6 @@ if true {
 
 </tbody></table>
 
-[🔝](#table-of-content)
-
 ### `trailing-whitespace`
 
 <table>
@@ -1733,8 +1371,6 @@ if true {
 </td></tr>
 
 </tbody></table>
-
-[🔝](#table-of-content)
 
 ## Configuration
 
@@ -1770,8 +1406,6 @@ if anotherVariable {
 }
 ```
 
-[🔝](#table-of-content)
-
 ### `allow-whole-block`
 
 This is similar to `allow-first-in-block` but now allows the lack of whitespace
@@ -1787,68 +1421,6 @@ if anotherVariable {
     }
 }
 ```
-
-[🔝](#table-of-content)
-
-### `branch-max-lines`
-
-When set to a value greater than 0, `return`, `break`, `continue`, `fallthrough`
-and `goto` statements that appear in a block with more than this many lines will
-require a blank line above them. The default is 2, meaning blocks of 3 or more
-lines require a blank line above the branch statement.
-
-<table>
-<thead><tr><th>Bad</th><th>Good</th></tr></thead>
-<tbody>
-<tr><td valign="top">
-
-```go
-// With branch-max-lines: 2 (default)
-func Fn() {
-    a, err := someFn()
-    if err != nil {
-        panic(err)
-    }
-
-    fmt.Println(a)
-    return // 1
-}
-```
-
-</td><td valign="top">
-
-```go
-// With branch-max-lines: 2 (default)
-func Fn() {
-    a, err := someFn()
-    if err != nil {
-        panic(err)
-    }
-
-    fmt.Println(a)
-
-    return
-}
-
-// Short block: no blank line required
-func ShortFn() int {
-    x := compute()
-    return x
-}
-```
-
-</td></tr>
-
-<tr><td valign="top">
-
-<sup>1</sup> Block has more than 2 lines, blank line required above
-
-</td><td valign="top">
-
-</td></tr>
-</tbody></table>
-
-[🔝](#table-of-content)
 
 ### `case-max-lines`
 
@@ -1972,89 +1544,3 @@ case 2:
 
 </td></tr>
 </tbody></table>
-
-[🔝](#table-of-content)
-
-### `cuddle-max-statements`
-
-Controls the maximum number of consecutive statements that may be cuddled
-(appear without a blank line) immediately above block statements (`if`, `for`,
-`switch`, etc.), `go`, `defer`, and `send`. The default is 1. Every cuddled
-statement must share at least one variable with the following block (respects
-`allow-first-in-block` and `allow-whole-block`).
-
-Setting it to `0` disallows any cuddling, the trigger always requires a blank
-line above it, even when the variable on the line above is used by the block.
-The recommended way to allow any number of statements is to set a really high
-number such as `9999`.
-
-<table>
-<thead><tr><th>Bad</th><th>Good</th></tr></thead>
-<tbody>
-<tr><td valign="top">
-
-```go
-// With cuddle-max-statements: 1 (default)
-a := 1
-b := 2
-if a < b { // 1
-    fmt.Println("ok")
-}
-
-a := 1
-b := 2
-c := 3
-if a+b+c > 0 { // 2
-    fmt.Println("ok")
-}
-
-// With cuddle-max-statements: 0
-a := 1
-if a > 0 { // 3
-    fmt.Println("ok")
-}
-```
-
-</td><td valign="top">
-
-```go
-// With cuddle-max-statements: 1 (default)
-a := 1
-
-b := 2
-if a < b {
-    fmt.Println("ok")
-}
-
-// With cuddle-max-statements: 2
-a := 1
-b := 2
-if a < b {
-    fmt.Println("ok")
-}
-
-// With cuddle-max-statements: 0
-a := 1
-
-if a > 0 {
-    fmt.Println("ok")
-}
-```
-
-</td></tr>
-
-<tr><td valign="top">
-
-<sup>1</sup> Two statements cuddled above `if`, exceeds default limit of 1
-
-<sup>2</sup> Three statements cuddled above `if`, exceeds limit of 2
-
-<sup>3</sup> One statement cuddled above `if`; with `0` even a single shared
-variable still requires a blank line above the trigger
-
-</td><td valign="top">
-
-</td></tr>
-</tbody></table>
-
-[🔝](#table-of-content)

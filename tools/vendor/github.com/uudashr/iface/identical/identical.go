@@ -55,31 +55,27 @@ func (r *runner) run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		r.debugf("GenDecl: %v specs=%d\n", decl.Tok, len(decl.Specs))
+		if r.debug {
+			fmt.Printf("GenDecl: %v specs=%d\n", decl.Tok, len(decl.Specs))
+		}
 
 		if decl.Tok != token.TYPE {
 			return
 		}
 
-		blockDir := directive.ParseIgnore(decl.Doc)
-		if blockDir != nil && blockDir.ShouldIgnore(pass.Analyzer.Name) {
-			return
-		}
-
 		for i, spec := range decl.Specs {
-			r.debugf(" spec[%d]: %v %T\n", i, spec, spec)
+			if r.debug {
+				fmt.Printf(" spec[%d]: %v %v\n", i, spec, reflect.TypeOf(spec))
+			}
 
 			ts, ok := spec.(*ast.TypeSpec)
 			if !ok {
-				// this code is unreachable since we already have guard the token type
-				continue
+				return
 			}
-
-			r.debugf("  -> ts.Type %T\n", ts.Type)
 
 			ifaceType, ok := ts.Type.(*ast.InterfaceType)
 			if !ok {
-				continue
+				return
 			}
 
 			if r.debug {
@@ -97,12 +93,9 @@ func (r *runner) run(pass *analysis.Pass) (interface{}, error) {
 				}
 			}
 
-			dir := directive.ParseIgnore(ts.Doc)
-			if dir == nil {
-				dir = blockDir
-			}
-
+			dir := directive.ParseIgnore(decl.Doc)
 			if dir != nil && dir.ShouldIgnore(pass.Analyzer.Name) {
+				// skip due to ignore directive
 				continue
 			}
 
@@ -110,12 +103,12 @@ func (r *runner) run(pass *analysis.Pass) (interface{}, error) {
 
 			obj := pass.TypesInfo.Defs[ts.Name]
 			if obj == nil {
-				continue
+				return
 			}
 
 			iface, ok := obj.Type().Underlying().(*types.Interface)
 			if !ok {
-				continue
+				return
 			}
 
 			ifaceTypes[ts.Name.Name] = iface
@@ -152,11 +145,5 @@ func (r *runner) run(pass *analysis.Pass) (interface{}, error) {
 func (r *runner) debugln(a ...any) {
 	if r.debug {
 		fmt.Println(a...)
-	}
-}
-
-func (r *runner) debugf(format string, a ...any) {
-	if r.debug {
-		fmt.Printf(format, a...)
 	}
 }

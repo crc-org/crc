@@ -1,5 +1,3 @@
-// Package term provides a platform-independent interfaces for interacting with
-// Terminal and TTY devices.
 package term
 
 // State contains platform-specific state of a terminal.

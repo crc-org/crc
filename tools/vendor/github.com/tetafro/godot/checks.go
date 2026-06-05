@@ -111,9 +111,7 @@ func checkPeriod(c comment) *Issue {
 	// Get the offset of the first symbol in the last line of the comment.
 	// This value is used only in golangci-lint to point to the problem,
 	// and to replace the line when running in auto-fix mode.
-	// For inline comments, the line starts before the comment, so we
-	// subtract the column offset to get the line start.
-	offset := c.start.Offset - (c.start.Column - 1)
+	offset := c.start.Offset
 	for i := 0; i < pos.line-1; i++ {
 		offset += len(c.lines[i]) + 1
 	}
@@ -220,9 +218,7 @@ func checkCapital(c comment) []Issue {
 		// Get the offset of the first symbol in the current issue's line.
 		// This value is used only in golangci-lint to point to the problem,
 		// and to replace the line when running in auto-fix mode.
-		// For inline comments, the line starts before the comment, so we
-		// subtract the column offset to get the line start.
-		offset := c.start.Offset - (c.start.Column - 1)
+		offset := c.start.Offset
 		for i := 0; i < pos.line-1; i++ {
 			offset += len(c.lines[i]) + 1
 		}

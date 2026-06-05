@@ -24,8 +24,9 @@ type configCommand struct {
 	viper *viper.Viper
 	cmd   *cobra.Command
 
-	opts     config.LoaderOptions
-	pathOpts pathOptions
+	opts       config.LoaderOptions
+	verifyOpts verifyOptions
+	pathOpts   pathOptions
 
 	buildInfo BuildInfo
 
@@ -76,6 +77,11 @@ func newConfigCommand(log logutils.Log, info BuildInfo) *configCommand {
 	flagSet.SortFlags = false // sort them as they are defined here
 
 	setupConfigFileFlagSet(flagSet, &c.opts)
+
+	// ex: --schema jsonschema/golangci.next.jsonschema.json
+	verifyFlagSet := verifyCommand.Flags()
+	verifyFlagSet.StringVar(&c.verifyOpts.schemaURL, "schema", "", color.GreenString("JSON schema URL"))
+	_ = verifyFlagSet.MarkHidden("schema")
 
 	pathFlagSet := pathCommand.Flags()
 	pathFlagSet.BoolVar(&c.pathOpts.JSON, "json", false, color.GreenString("Display as JSON"))

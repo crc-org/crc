@@ -45,9 +45,6 @@ type Config struct {
 	FindDuplicates bool
 	// EvalConstExpressions enables evaluation of constant expressions like Prefix + "suffix"
 	EvalConstExpressions bool
-	// IgnoreFunctions is a list of function names whose string arguments should be ignored.
-	// Supports direct calls (e.g., "println") and one-level qualified calls (e.g., "slog.Info").
-	IgnoreFunctions []string
 }
 
 // NewWithIgnorePatterns creates a new instance of the parser with support for multiple ignore patterns.
@@ -110,10 +107,6 @@ func RunWithConfig(files []*ast.File, fset *token.FileSet, typeInfo *types.Info,
 		cfg.MinOccurrences,
 		cfg.ExcludeTypes,
 	)
-
-	if len(cfg.IgnoreFunctions) > 0 {
-		p.SetIgnoreFunctions(cfg.IgnoreFunctions)
-	}
 
 	// Pre-allocate slice based on estimated result size
 	expectedIssues := len(files) * 5 // Assuming average of 5 issues per file
@@ -186,40 +179,34 @@ func RunWithConfig(files []*ast.File, fset *token.FileSet, typeInfo *types.Info,
 
 	sort.Strings(stringKeys)
 
-	// Emit one issue per file where the string appears, so that
-	// path-based exclusion can independently filter each one without
-	// suppressing legitimate findings in other files.
+	// Process strings in a predictable order for stable output
 	for _, str := range stringKeys {
 		positions := p.strs[str]
 		if len(positions) == 0 {
 			continue
 		}
 
-		occurrences := p.stringCount[str]
+		// Use the first position as representative
+		fi := positions[0]
 
-		var matchingConst string
+		// Create issue using the counted value to avoid recounting
+		issue := Issue{
+			Pos:              fi.Position,
+			OccurrencesCount: p.stringCount[str],
+			Str:              str,
+		}
+
+		// Check for matching constants
 		if len(p.consts) > 0 {
 			p.constMutex.RLock()
 			if csts, ok := p.consts[str]; ok && len(csts) > 0 {
-				matchingConst = csts[0].Name
+				// const should be in the same package and exported
+				issue.MatchingConst = csts[0].Name
 			}
 			p.constMutex.RUnlock()
 		}
 
-		seen := make(map[string]bool)
-		for _, pos := range positions {
-			if seen[pos.Filename] {
-				continue
-			}
-			seen[pos.Filename] = true
-
-			issueBuffer = append(issueBuffer, Issue{
-				Pos:              pos.Position,
-				OccurrencesCount: occurrences,
-				Str:              str,
-				MatchingConst:    matchingConst,
-			})
-		}
+		issueBuffer = append(issueBuffer, issue)
 	}
 
 	p.stringCountMutex.RUnlock()

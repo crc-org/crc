@@ -1650,7 +1650,9 @@ func (s *symbolSearcher) search(ctx context.Context, candidates []pkgDistance, p
 	}()
 
 	// Start the search.
-	wg.Go(func() {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
 		for i, c := range candidates {
 			select {
 			case loadExportsSem <- struct{}{}:
@@ -1679,7 +1681,7 @@ func (s *symbolSearcher) search(ctx context.Context, candidates []pkgDistance, p
 				rescv[i] <- pkg // may be nil
 			}()
 		}
-	})
+	}()
 
 	// Await the first (best) result.
 	for _, resc := range rescv {

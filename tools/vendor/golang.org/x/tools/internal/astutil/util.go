@@ -254,8 +254,3 @@ func needsParens(parentNode ast.Node, old, new ast.Expr) bool {
 	}
 	return false
 }
-
-func is[T any](n any) bool {
-	_, ok := n.(T)
-	return ok
-}

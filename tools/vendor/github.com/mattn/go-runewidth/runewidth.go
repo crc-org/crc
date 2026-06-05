@@ -3,9 +3,8 @@ package runewidth
 import (
 	"os"
 	"strings"
-	"unicode/utf8"
 
-	"github.com/clipperhouse/uax29/v2/graphemes"
+	"github.com/rivo/uniseg"
 )
 
 //go:generate go run script/generate.go
@@ -24,46 +23,8 @@ var (
 	}
 )
 
-var (
-	zerowidth table // combining + nonprint merged for faster zero-width lookup
-	widewidth table // ambiguous + doublewidth merged for EA path
-)
-
 func init() {
-	zerowidth = mergeIntervals(combining, nonprint)
-	widewidth = mergeIntervals(ambiguous, doublewidth)
 	handleEnv()
-}
-
-func mergeIntervals(t1, t2 table) table {
-	merged := make(table, 0, len(t1)+len(t2))
-	i, j := 0, 0
-	for i < len(t1) && j < len(t2) {
-		if t1[i].first <= t2[j].first {
-			merged = append(merged, t1[i])
-			i++
-		} else {
-			merged = append(merged, t2[j])
-			j++
-		}
-	}
-	merged = append(merged, t1[i:]...)
-	merged = append(merged, t2[j:]...)
-	if len(merged) == 0 {
-		return merged
-	}
-	result := merged[:1]
-	for _, iv := range merged[1:] {
-		last := &result[len(result)-1]
-		if iv.first <= last.last+1 {
-			if iv.last > last.last {
-				last.last = iv.last
-			}
-		} else {
-			result = append(result, iv)
-		}
-	}
-	return result
 }
 
 func handleEnv() {
@@ -90,11 +51,17 @@ type interval struct {
 
 type table []interval
 
+func inTables(r rune, ts ...table) bool {
+	for _, t := range ts {
+		if inTable(r, t) {
+			return true
+		}
+	}
+	return false
+}
+
 func inTable(r rune, t table) bool {
 	if r < t[0].first {
-		return false
-	}
-	if r > t[len(t)-1].last {
 		return false
 	}
 
@@ -160,7 +127,9 @@ func (c *Condition) RuneWidth(r rune) int {
 			return 0
 		case r < 0x300:
 			return 1
-		case inTable(r, zerowidth):
+		case inTable(r, narrow):
+			return 1
+		case inTables(r, nonprint, combining):
 			return 0
 		case inTable(r, doublewidth):
 			return 2
@@ -169,13 +138,13 @@ func (c *Condition) RuneWidth(r rune) int {
 		}
 	} else {
 		switch {
-		case inTable(r, zerowidth):
+		case inTables(r, nonprint, combining):
 			return 0
 		case inTable(r, narrow):
 			return 1
-		case inTable(r, widewidth):
+		case inTables(r, ambiguous, doublewidth):
 			return 2
-		case !c.StrictEmojiNeutral && inTable(r, emoji):
+		case !c.StrictEmojiNeutral && inTables(r, ambiguous, emoji, narrow):
 			return 2
 		default:
 			return 1
@@ -206,26 +175,10 @@ func (c *Condition) CreateLUT() {
 
 // StringWidth return width as you can see
 func (c *Condition) StringWidth(s string) (width int) {
-	if len(s) > 0 && len(s) <= utf8.UTFMax {
-		r, size := utf8.DecodeRuneInString(s)
-		if size == len(s) {
-			return c.RuneWidth(r)
-		}
-	}
-	// ASCII fast path: no grapheme clustering needed for pure ASCII
-	if isAllASCII(s) {
-		for i := 0; i < len(s); i++ {
-			b := s[i]
-			if b >= 0x20 && b != 0x7F {
-				width++
-			}
-		}
-		return
-	}
-	g := graphemes.FromString(s)
+	g := uniseg.NewGraphemes(s)
 	for g.Next() {
 		var chWidth int
-		for _, r := range g.Value() {
+		for _, r := range g.Runes() {
 			chWidth = c.RuneWidth(r)
 			if chWidth > 0 {
 				break // Our best guess at this point is to use the width of the first non-zero-width rune.
@@ -236,15 +189,6 @@ func (c *Condition) StringWidth(s string) (width int) {
 	return
 }
 
-func isAllASCII(s string) bool {
-	for i := 0; i < len(s); i++ {
-		if s[i] >= 0x80 {
-			return false
-		}
-	}
-	return true
-}
-
 // Truncate return string truncated with w cells
 func (c *Condition) Truncate(s string, w int, tail string) string {
 	if c.StringWidth(s) <= w {
@@ -253,17 +197,17 @@ func (c *Condition) Truncate(s string, w int, tail string) string {
 	w -= c.StringWidth(tail)
 	var width int
 	pos := len(s)
-	g := graphemes.FromString(s)
+	g := uniseg.NewGraphemes(s)
 	for g.Next() {
 		var chWidth int
-		for _, r := range g.Value() {
+		for _, r := range g.Runes() {
 			chWidth = c.RuneWidth(r)
 			if chWidth > 0 {
 				break // See StringWidth() for details.
 			}
 		}
 		if width+chWidth > w {
-			pos = g.Start()
+			pos, _ = g.Positions()
 			break
 		}
 		width += chWidth
@@ -280,10 +224,10 @@ func (c *Condition) TruncateLeft(s string, w int, prefix string) string {
 	var width int
 	pos := len(s)
 
-	g := graphemes.FromString(s)
+	g := uniseg.NewGraphemes(s)
 	for g.Next() {
 		var chWidth int
-		for _, r := range g.Value() {
+		for _, r := range g.Runes() {
 			chWidth = c.RuneWidth(r)
 			if chWidth > 0 {
 				break // See StringWidth() for details.
@@ -292,10 +236,10 @@ func (c *Condition) TruncateLeft(s string, w int, prefix string) string {
 
 		if width+chWidth > w {
 			if width < w {
-				pos = g.End()
+				_, pos = g.Positions()
 				prefix += strings.Repeat(" ", width+chWidth-w)
 			} else {
-				pos = g.Start()
+				pos, _ = g.Positions()
 			}
 
 			break
@@ -310,25 +254,24 @@ func (c *Condition) TruncateLeft(s string, w int, prefix string) string {
 // Wrap return string wrapped with w cells
 func (c *Condition) Wrap(s string, w int) string {
 	width := 0
-	var out strings.Builder
-	out.Grow(len(s) + len(s)/w + 1)
+	out := ""
 	for _, r := range s {
 		cw := c.RuneWidth(r)
 		if r == '\n' {
-			out.WriteRune(r)
+			out += string(r)
 			width = 0
 			continue
 		} else if width+cw > w {
-			out.WriteByte('\n')
+			out += "\n"
 			width = 0
-			out.WriteRune(r)
+			out += string(r)
 			width += cw
 			continue
 		}
-		out.WriteRune(r)
+		out += string(r)
 		width += cw
 	}
-	return out.String()
+	return out
 }
 
 // FillLeft return string filled in left by spaces in w cells
@@ -367,12 +310,7 @@ func RuneWidth(r rune) int {
 
 // IsAmbiguousWidth returns whether is ambiguous width or not.
 func IsAmbiguousWidth(r rune) bool {
-	return inTable(r, private) || inTable(r, ambiguous)
-}
-
-// IsCombiningWidth returns whether is combining width or not.
-func IsCombiningWidth(r rune) bool {
-	return inTable(r, combining)
+	return inTables(r, private, ambiguous)
 }
 
 // IsNeutralWidth returns whether is neutral width or not.

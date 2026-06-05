@@ -6,6 +6,7 @@ package colorful
 import (
 	"fmt"
 	"math"
+	"math/rand"
 )
 
 // The algorithm works in L*a*b* color space and converts to RGB in the end.
@@ -31,7 +32,7 @@ type SoftPaletteSettings struct {
 // as a new palette of distinctive colors. Falls back to K-medoid if the mean
 // happens to fall outside of the color-space, which can only happen if you
 // specify a CheckColor function.
-func SoftPaletteExWithRand(colorsCount int, settings SoftPaletteSettings, rand RandInterface) ([]Color, error) {
+func SoftPaletteEx(colorsCount int, settings SoftPaletteSettings) ([]Color, error) {
 
 	// Checks whether it's a valid RGB and also fulfills the potentially provided constraint.
 	check := func(col lab_t) bool {
@@ -78,7 +79,7 @@ func SoftPaletteExWithRand(colorsCount int, settings SoftPaletteSettings, rand R
 
 	// The actual k-means/medoid iterations
 	for i := 0; i < settings.Iterations; i++ {
-		// Reassigning the samples to clusters, i.e. to their closest mean.
+		// Reassing the samples to clusters, i.e. to their closest mean.
 		// By the way, also check if any sample is used as a medoid and if so, mark that.
 		for isample, sample := range samples {
 			samples_used[isample] = false
@@ -99,7 +100,7 @@ func SoftPaletteExWithRand(colorsCount int, settings SoftPaletteSettings, rand R
 
 		// Compute new means according to the samples.
 		for imean := range means {
-			// The new mean is the average of all samples belonging to it.
+			// The new mean is the average of all samples belonging to it..
 			nsamples := 0
 			newmean := lab_t{0.0, 0.0, 0.0}
 			for isample, sample := range samples {
@@ -147,17 +148,9 @@ func SoftPaletteExWithRand(colorsCount int, settings SoftPaletteSettings, rand R
 	return labs2cols(means), nil
 }
 
-func SoftPaletteEx(colorsCount int, settings SoftPaletteSettings) ([]Color, error) {
-	return SoftPaletteExWithRand(colorsCount, settings, getDefaultGlobalRand())
-}
-
 // A wrapper which uses common parameters.
-func SoftPaletteWithRand(colorsCount int, rand RandInterface) ([]Color, error) {
-	return SoftPaletteExWithRand(colorsCount, SoftPaletteSettings{nil, 50, false}, rand)
-}
-
 func SoftPalette(colorsCount int) ([]Color, error) {
-	return SoftPaletteWithRand(colorsCount, getDefaultGlobalRand())
+	return SoftPaletteEx(colorsCount, SoftPaletteSettings{nil, 50, false})
 }
 
 func in(haystack []lab_t, upto int, needle lab_t) bool {

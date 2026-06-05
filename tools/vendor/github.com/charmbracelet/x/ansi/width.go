@@ -4,6 +4,8 @@ import (
 	"bytes"
 
 	"github.com/charmbracelet/x/ansi/parser"
+	"github.com/mattn/go-runewidth"
+	"github.com/rivo/uniseg"
 )
 
 // Strip removes ANSI escape codes from a string.
@@ -81,16 +83,20 @@ func stringWidth(m Method, s string) int {
 	}
 
 	var (
-		pstate = parser.GroundState // initial state
-		width  int
+		pstate  = parser.GroundState // initial state
+		cluster string
+		width   int
 	)
 
 	for i := 0; i < len(s); i++ {
 		state, action := parser.Table.Transition(pstate, s[i])
-		if action == parser.PrintAction || state == parser.Utf8State {
-			cluster, w := FirstGraphemeCluster(s[i:], m)
+		if state == parser.Utf8State {
+			var w int
+			cluster, _, w, _ = uniseg.FirstGraphemeClusterInString(s[i:], -1)
+			if m == WcWidth {
+				w = runewidth.StringWidth(cluster)
+			}
 			width += w
-
 			i += len(cluster) - 1
 			pstate = parser.GroundState
 			continue

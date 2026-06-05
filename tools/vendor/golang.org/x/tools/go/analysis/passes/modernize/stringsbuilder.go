@@ -13,7 +13,6 @@ import (
 	"go/types"
 	"maps"
 	"slices"
-	"strings"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -48,7 +47,6 @@ func stringsbuilder(pass *analysis.Pass) (any, error) {
 	var (
 		inspect = pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 		index   = pass.ResultOf[typeindexanalyzer.Analyzer].(*typeindex.Index)
-		info    = pass.TypesInfo
 	)
 
 	// Gather all local string variables that appear on the
@@ -57,7 +55,7 @@ func stringsbuilder(pass *analysis.Pass) (any, error) {
 	for curAssign := range inspect.Root().Preorder((*ast.AssignStmt)(nil)) {
 		assign := curAssign.Node().(*ast.AssignStmt)
 		if assign.Tok == token.ADD_ASSIGN && is[*ast.Ident](assign.Lhs[0]) {
-			if v, ok := info.Uses[assign.Lhs[0].(*ast.Ident)].(*types.Var); ok &&
+			if v, ok := pass.TypesInfo.Uses[assign.Lhs[0].(*ast.Ident)].(*types.Var); ok &&
 				v.Kind() == types.LocalVar &&
 				types.Identical(v.Type(), builtinString.Type()) {
 				candidates[v] = true
@@ -77,7 +75,7 @@ func stringsbuilder(pass *analysis.Pass) (any, error) {
 	// Now check each candidate variable's decl and uses.
 nextcand:
 	for _, v := range slices.SortedFunc(maps.Keys(candidates), lexicalOrder) {
-		var edits, postEdits []analysis.TextEdit // postEdits are emitted last
+		var edits []analysis.TextEdit
 
 		// Check declaration of s has one of these forms:
 		//
@@ -102,13 +100,6 @@ nextcand:
 		if file == lastEditFile && v.Pos() < lastEditEnd {
 			continue
 		}
-		filename := pass.Fset.File(file.FileStart).Name()
-		// Suppress diagnostics in test files, where suggested fixes may increase
-		// verbosity, and performance doesn't matter as much.
-		// See https://go.dev/issue/78613
-		if strings.HasSuffix(filename, "_test.go") {
-			continue
-		}
 
 		ek := def.ParentEdgeKind()
 		if ek == edge.AssignStmt_Lhs &&
@@ -130,10 +121,10 @@ nextcand:
 
 			// Add strings import.
 			prefix, importEdits := refactor.AddImport(
-				info, astutil.EnclosingFile(def), "strings", "strings", "Builder", v.Pos())
+				pass.TypesInfo, astutil.EnclosingFile(def), "strings", "strings", "Builder", v.Pos())
 			edits = append(edits, importEdits...)
 
-			if isEmptyString(info, assign.Rhs[0]) {
+			if isEmptyString(pass.TypesInfo, assign.Rhs[0]) {
 				// s := ""
 				// ---------------------
 				// var s strings.Builder
@@ -180,7 +171,7 @@ nextcand:
 
 			// Add strings import.
 			prefix, importEdits := refactor.AddImport(
-				info, astutil.EnclosingFile(def), "strings", "strings", "Builder", v.Pos())
+				pass.TypesInfo, astutil.EnclosingFile(def), "strings", "strings", "Builder", v.Pos())
 			edits = append(edits, importEdits...)
 
 			spec := def.Parent().Node().(*ast.ValueSpec)
@@ -202,7 +193,7 @@ nextcand:
 				NewText: fmt.Appendf(nil, " %sBuilder", prefix),
 			})
 
-			if len(spec.Values) > 0 && !isEmptyString(info, spec.Values[0]) {
+			if len(spec.Values) > 0 && !isEmptyString(pass.TypesInfo, spec.Values[0]) {
 				if decl.Rparen.IsValid() {
 					// var decl with explicit parens:
 					//
@@ -282,8 +273,11 @@ nextcand:
 		)
 		for curUse := range index.Uses(v) {
 			// Strip enclosing parens around Ident.
-			curUse = astutil.UnparenEnclosingCursor(curUse)
 			ek := curUse.ParentEdgeKind()
+			for ek == edge.ParenExpr_X {
+				curUse = curUse.Parent()
+				ek = curUse.ParentEdgeKind()
+			}
 
 			// intervening reports whether cur has an ancestor of
 			// one of the given types that is within the scope of v.
@@ -321,21 +315,20 @@ nextcand:
 				// s +=          expr
 				//  -------------    -
 				// s.WriteString(expr)
-				edits = append(edits, analysis.TextEdit{
+				edits = append(edits, []analysis.TextEdit{
 					// replace " += " with ".WriteString("
-					Pos:     assign.Lhs[0].End(),
-					End:     assign.Rhs[0].Pos(),
-					NewText: []byte(".WriteString("),
-				})
-
-				// Delay inserting the closing parenthesis, in case it overlaps with a
-				// .String() edit, since it would need to come after.
-				postEdits = append(postEdits, analysis.TextEdit{
+					{
+						Pos:     assign.Lhs[0].End(),
+						End:     assign.Rhs[0].Pos(),
+						NewText: []byte(".WriteString("),
+					},
 					// insert ")"
-					Pos:     assign.End(),
-					End:     assign.End(),
-					NewText: []byte(")"),
-				})
+					{
+						Pos:     assign.End(),
+						End:     assign.End(),
+						NewText: []byte(")"),
+					},
+				}...)
 
 			} else if ek == edge.UnaryExpr_X &&
 				curUse.Parent().Node().(*ast.UnaryExpr).Op == token.AND {
@@ -363,8 +356,6 @@ nextcand:
 		if numLoopAssigns == 0 {
 			continue nextcand // no += in a loop; reject
 		}
-
-		edits = append(edits, postEdits...)
 
 		lastEditFile = file
 		lastEditEnd = edits[len(edits)-1].End

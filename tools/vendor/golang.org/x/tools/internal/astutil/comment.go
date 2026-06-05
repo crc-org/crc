@@ -8,7 +8,6 @@ import (
 	"go/ast"
 	"go/token"
 	"iter"
-	"sort"
 	"strings"
 )
 
@@ -115,25 +114,18 @@ func Directives(g *ast.CommentGroup) (res []*Directive) {
 }
 
 // Comments returns an iterator over the comments overlapping the specified interval.
-// Comments are sorted by position in the file, so we can use binary search.
 func Comments(file *ast.File, start, end token.Pos) iter.Seq[*ast.Comment] {
+	// TODO(adonovan): optimize use binary O(log n) instead of linear O(n) search.
 	return func(yield func(*ast.Comment) bool) {
-		// Find the first comment group that overlaps the range.
-		i := sort.Search(len(file.Comments), func(i int) bool {
-			return file.Comments[i].End() >= start
-		})
-		for _, cg := range file.Comments[i:] {
-			if cg.Pos() > end {
-				return
-			}
-			// Find the first comment in the group that overlaps the range.
-			j := sort.Search(len(cg.List), func(j int) bool {
-				return cg.List[j].End() >= start
-			})
-			for _, co := range cg.List[j:] {
+		for _, cg := range file.Comments {
+			for _, co := range cg.List {
 				if co.Pos() > end {
 					return
 				}
+				if co.End() < start {
+					continue
+				}
+
 				if !yield(co) {
 					return
 				}

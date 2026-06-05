@@ -3,13 +3,21 @@ package internal
 import (
 	"cmp"
 	"go/ast"
+	"go/token"
 	"slices"
 
 	"golang.org/x/tools/go/analysis"
 )
 
+type (
+	ExportedMethods   []*ast.FuncDecl
+	UnexportedMethods []*ast.FuncDecl
+)
+
 // StructHolder contains all the information around a Go struct.
 type StructHolder struct {
+	// The fileset
+	Fset *token.FileSet
 	// The features to be analyzed
 	Features Feature
 
@@ -23,42 +31,59 @@ type StructHolder struct {
 	StructMethods []*ast.FuncDecl
 }
 
+func (sh *StructHolder) AddConstructor(fn *ast.FuncDecl) {
+	sh.Constructors = append(sh.Constructors, fn)
+}
+
+func (sh *StructHolder) AddMethod(fn *ast.FuncDecl) {
+	sh.StructMethods = append(sh.StructMethods, fn)
+}
+
 // Analyze applies the linter to the struct holder.
-func (sh *StructHolder) Analyze(pass *analysis.Pass) {
+func (sh *StructHolder) Analyze() []analysis.Diagnostic {
 	// TODO maybe sort constructors and then report also, like NewXXX before MustXXX
 	slices.SortFunc(sh.StructMethods, func(a, b *ast.FuncDecl) int {
 		return cmp.Compare(a.Pos(), b.Pos())
 	})
 
-	// TODO also check that the methods are declared after the struct
+	var reports []analysis.Diagnostic
 
 	if sh.Features.IsEnabled(ConstructorCheck) {
-		sh.analyzeConstructor(pass)
+		reports = append(reports, sh.analyzeConstructor()...)
 	}
 
 	if sh.Features.IsEnabled(StructMethodCheck) {
-		sh.analyzeStructMethod(pass)
+		reports = append(reports, sh.analyzeStructMethod()...)
 	}
+
+	// TODO also check that the methods are declared after the struct
+	return reports
 }
 
-func (sh *StructHolder) analyzeConstructor(pass *analysis.Pass) {
+func (sh *StructHolder) analyzeConstructor() []analysis.Diagnostic {
+	var reports []analysis.Diagnostic
+
 	for i, constructor := range sh.Constructors {
 		if constructor.Pos() < sh.Struct.Pos() {
-			reportConstructorNotAfterStructType(pass, sh.Struct, constructor)
+			reports = append(reports, NewConstructorNotAfterStructType(sh.Struct, constructor))
 		}
 
 		if len(sh.StructMethods) > 0 && constructor.Pos() > sh.StructMethods[0].Pos() {
-			reportConstructorNotBeforeStructMethod(pass, sh.Struct, constructor, sh.StructMethods[0])
+			reports = append(reports, NewConstructorNotBeforeStructMethod(sh.Struct, constructor, sh.StructMethods[0]))
 		}
 
 		if sh.Features.IsEnabled(AlphabeticalCheck) &&
 			i < len(sh.Constructors)-1 && sh.Constructors[i].Name.Name > sh.Constructors[i+1].Name.Name {
-			reportAdjacentConstructorsNotSortedAlphabetically(pass, sh.Struct, sh.Constructors[i], sh.Constructors[i+1])
+			reports = append(reports,
+				NewAdjacentConstructorsNotSortedAlphabetically(sh.Struct, sh.Constructors[i], sh.Constructors[i+1]),
+			)
 		}
 	}
+
+	return reports
 }
 
-func (sh *StructHolder) analyzeStructMethod(pass *analysis.Pass) {
+func (sh *StructHolder) analyzeStructMethod() []analysis.Diagnostic {
 	var lastExportedMethod *ast.FuncDecl
 
 	for _, m := range sh.StructMethods {
@@ -75,46 +100,42 @@ func (sh *StructHolder) analyzeStructMethod(pass *analysis.Pass) {
 		}
 	}
 
+	var reports []analysis.Diagnostic
+
 	if lastExportedMethod != nil {
 		for _, m := range sh.StructMethods {
 			if m.Name.IsExported() || m.Pos() >= lastExportedMethod.Pos() {
 				continue
 			}
 
-			reportUnexportedMethodBeforeExportedForStruct(pass, sh.Struct, m, lastExportedMethod)
+			reports = append(reports, NewUnexportedMethodBeforeExportedForStruct(sh.Struct, m, lastExportedMethod))
 		}
 	}
 
 	if sh.Features.IsEnabled(AlphabeticalCheck) {
-		exported, unexported := splitExportedUnexported(sh.StructMethods)
-		sh.sortDiagnostics(pass, exported)
-		sh.sortDiagnostics(pass, unexported)
+		exported, unexported := SplitExportedUnexported(sh.StructMethods)
+		reports = slices.Concat(reports,
+			sortDiagnostics(sh.Struct, exported),
+			sortDiagnostics(sh.Struct, unexported),
+		)
 	}
+
+	return reports
 }
 
-func (sh *StructHolder) sortDiagnostics(pass *analysis.Pass, funcDecls []*ast.FuncDecl) {
+func sortDiagnostics(typeSpec *ast.TypeSpec, funcDecls []*ast.FuncDecl) []analysis.Diagnostic {
+	var reports []analysis.Diagnostic
+
 	for i := range funcDecls {
 		if i >= len(funcDecls)-1 {
 			continue
 		}
 
 		if funcDecls[i].Name.Name > funcDecls[i+1].Name.Name {
-			reportAdjacentStructMethodsNotSortedAlphabetically(pass, sh.Struct, funcDecls[i], funcDecls[i+1])
-		}
-	}
-}
-
-// splitExportedUnexported split functions/methods based on whether they are exported or not.
-//
-//nolint:nonamedreturns // names serve as documentation
-func splitExportedUnexported(funcDecls []*ast.FuncDecl) (exported, unexported []*ast.FuncDecl) {
-	for _, f := range funcDecls {
-		if f.Name.IsExported() {
-			exported = append(exported, f)
-		} else {
-			unexported = append(unexported, f)
+			reports = append(reports,
+				NewAdjacentStructMethodsNotSortedAlphabetically(typeSpec, funcDecls[i], funcDecls[i+1]))
 		}
 	}
 
-	return exported, unexported
+	return reports
 }
