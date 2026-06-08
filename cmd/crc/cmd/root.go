@@ -86,6 +86,12 @@ func runPrerun(cmd *cobra.Command) error {
 	for _, str := range defaultVersion().lines() {
 		logging.Debugf("%s", str)
 	}
+
+	if cmd != daemonCmd {
+		if err := constants.EnsureAdminHelperLogFileExists(); err != nil {
+			logging.Warn("Error creating admin helper log file: ", err.Error())
+		}
+	}
 	return nil
 }
 

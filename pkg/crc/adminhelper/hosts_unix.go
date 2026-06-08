@@ -9,7 +9,11 @@ import (
 )
 
 func execute(args ...string) error {
-	_, _, err := crcos.RunWithDefaultLocale(constants.AdminHelperPath(), args...)
+	adminHelperEnv := map[string]string{
+		// TODO: This should be replaced with a constant in the admin-helper package
+		"ADMIN_HELPER_LOG_FILE": constants.AdminHelperLogFilePath,
+	}
+	_, _, err := crcos.RunWithDefaultLocaleAndEnv(constants.AdminHelperPath(), adminHelperEnv, args...)
 	return err
 }
 
