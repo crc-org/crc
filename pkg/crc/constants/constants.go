@@ -27,6 +27,7 @@ const (
 	ConfigFile                = "crc.json"
 	LogFile                   = "crc.log"
 	DaemonLogFile             = "crcd.log"
+	AdminHelperLogFile        = "admin-helper.log"
 	CrcLandingPageURL         = "https://console.redhat.com/openshift/create/local" // #nosec G101
 	DefaultAdminHelperURLBase = "https://github.com/crc-org/admin-helper/releases/download/v%s/%s"
 	BackgroundLauncherURL     = "https://github.com/crc-org/win32-background-launcher/releases/download/v%s/win32-background-launcher.exe"
@@ -110,20 +111,21 @@ func GetDefaultBundle(preset crcpreset.Preset) string {
 }
 
 var (
-	CrcBaseDir         = filepath.Join(GetHomeDir(), ".crc")
-	CrcManPageDir      = filepath.Join(GetHomeDir(), ".local", "share", "man")
-	CrcBinDir          = filepath.Join(CrcBaseDir, "bin")
-	CrcOcBinDir        = filepath.Join(CrcBinDir, "oc")
-	CrcSymlinkPath     = filepath.Join(CrcBinDir, "crc")
-	ConfigPath         = filepath.Join(CrcBaseDir, ConfigFile)
-	LogFilePath        = filepath.Join(CrcBaseDir, LogFile)
-	DaemonLogFilePath  = filepath.Join(CrcBaseDir, DaemonLogFile)
-	MachineBaseDir     = CrcBaseDir
-	MachineCacheDir    = filepath.Join(MachineBaseDir, "cache")
-	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
-	DaemonSocketPath   = filepath.Join(CrcBaseDir, "crc.sock")
-	KubeconfigFilePath = filepath.Join(MachineInstanceDir, DefaultName, "kubeconfig")
-	PasswdFilePath     = filepath.Join(MachineInstanceDir, DefaultName, "passwd")
+	CrcBaseDir             = filepath.Join(GetHomeDir(), ".crc")
+	CrcManPageDir          = filepath.Join(GetHomeDir(), ".local", "share", "man")
+	CrcBinDir              = filepath.Join(CrcBaseDir, "bin")
+	CrcOcBinDir            = filepath.Join(CrcBinDir, "oc")
+	CrcSymlinkPath         = filepath.Join(CrcBinDir, "crc")
+	ConfigPath             = filepath.Join(CrcBaseDir, ConfigFile)
+	LogFilePath            = filepath.Join(CrcBaseDir, LogFile)
+	DaemonLogFilePath      = filepath.Join(CrcBaseDir, DaemonLogFile)
+	AdminHelperLogFilePath = filepath.Join(CrcBaseDir, AdminHelperLogFile)
+	MachineBaseDir         = CrcBaseDir
+	MachineCacheDir        = filepath.Join(MachineBaseDir, "cache")
+	MachineInstanceDir     = filepath.Join(MachineBaseDir, "machines")
+	DaemonSocketPath       = filepath.Join(CrcBaseDir, "crc.sock")
+	KubeconfigFilePath     = filepath.Join(MachineInstanceDir, DefaultName, "kubeconfig")
+	PasswdFilePath         = filepath.Join(MachineInstanceDir, DefaultName, "passwd")
 )
 
 func GetDefaultBundlePath(preset crcpreset.Preset) string {
@@ -178,6 +180,20 @@ func EnsureBaseDirectoriesExist() error {
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func EnsureAdminHelperLogFileExists() error {
+	info, err := os.Stat(AdminHelperLogFilePath)
+	if os.IsNotExist(err) {
+		return os.WriteFile(AdminHelperLogFilePath, []byte(""), 0600)
+	}
+	if err != nil {
+		return err
+	}
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("admin helper log path is not a regular file: %s", AdminHelperLogFilePath)
 	}
 	return nil
 }

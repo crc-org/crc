@@ -3,6 +3,7 @@ package os
 import (
 	"bytes"
 	"errors"
+	"maps"
 	"os"
 	"os/exec"
 	"strings"
@@ -62,6 +63,12 @@ var defaultLocaleEnv = map[string]string{"LC_ALL": "C", "LANG": "C"}
 
 func RunWithDefaultLocale(command string, args ...string) (string, string, error) {
 	return run(command, args, defaultLocaleEnv)
+}
+
+func RunWithDefaultLocaleAndEnv(command string, env map[string]string, args ...string) (string, string, error) {
+	localeEnv := maps.Clone(defaultLocaleEnv)
+	maps.Copy(localeEnv, env)
+	return run(command, args, localeEnv)
 }
 
 func RunWithDefaultLocalePrivate(command string, args ...string) (string, string, error) {
