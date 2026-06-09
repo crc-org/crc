@@ -98,6 +98,11 @@
                 <Component Id="AdminHelper">
                     <File Id="AdminHelper" Source=".\crc-admin-helper-windows.exe" KeyPath="yes" DiskId="1" />
                     <ServiceInstall Name="crcAdminHelper" Description="Perform administrative tasks for the user" Arguments="daemon" DisplayName="Red Hat OpenShift Local Admin Helper" ErrorControl="normal" Start="auto" Type="ownProcess" />
+                    <RegistryKey Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\crcAdminHelper">
+                        <RegistryValue Type="multiString" Name="Environment">
+                            <MultiStringValue Value="ADMIN_HELPER_LOG_FILE=[USERFOLDER]\.crc\admin-helper.log" />
+                        </RegistryValue>
+                    </RegistryKey>
                     <ServiceControl Id="StartAdminHelperService" Name="crcAdminHelper" Start="install" Stop="both" Remove="uninstall" />
                 </Component>
                 <Component Id="BackgroundLauncher">

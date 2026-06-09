@@ -54,7 +54,10 @@ function Install-AdminHelper([string]$AdminHelperPath) {
     if ($svc) {
         Write-Host "Red Hat OpenShift Local Admin Helper service is already installed"
     } else {
+        $logPath = Join-Path $env:USERPROFILE '.crc\admin-helper.log'
+        New-Item -ItemType File -Force -Path $logPath | Out-Null
         New-Service -Name 'crcAdminHelper' -DisplayName "Red Hat OpenShift Local Admin Helper" -Description "Perform administrative tasks for the user" -StartupType Automatic -BinaryPathName "$AdminHelperPath daemon" | Out-Null
+        New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\$CrcAdminHelperServiceName" -Name Environment -Value @("ADMIN_HELPER_LOG_FILE=$logPath") -PropertyType MultiString -Force | Out-Null
     }
     Start-Service -Name 'crcAdminHelper' -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
 }
