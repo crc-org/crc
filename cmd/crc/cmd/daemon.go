@@ -166,7 +166,7 @@ func run(configuration *types.Configuration) error {
 			return
 		}
 		mux := http.NewServeMux()
-		mux.Handle("/network/", interceptResponseBodyMiddleware(http.StripPrefix("/network", vn.Mux()), logResponseBodyConditionally))
+		mux.Handle("/network/", interceptResponseBodyMiddleware(logRequestMiddleware(http.StripPrefix("/network", vn.Mux()), "network request"), logResponseBodyConditionally))
 		machineClient := newMachine()
 		mux.Handle("/api/", interceptResponseBodyMiddleware(http.StripPrefix("/api", api.NewMux(config, machineClient, logging.Memory, segmentClient)), logResponseBodyConditionally))
 		mux.Handle("/events", interceptResponseBodyMiddleware(http.StripPrefix("/events", events.NewEventServer(machineClient)), logResponseBodyConditionally))
