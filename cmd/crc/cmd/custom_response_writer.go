@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"bytes"
+	"io"
 	"net/http"
+
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 )
 
 // CustomResponseWriter wraps the standard http.ResponseWriter and captures the response body
@@ -46,4 +49,47 @@ func interceptResponseBodyMiddleware(next http.Handler, bodyConsumer func(status
 		next.ServeHTTP(responseWriter, r)
 		bodyConsumer(responseWriter.statusCode, responseWriter.body, r)
 	})
+}
+
+// logRequestMiddleware logs every request to the daemon log file.
+func logRequestMiddleware(next http.Handler, label string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestBody, err := readRequestBodyForLogging(r)
+		if err != nil {
+			logging.Warnf("failed to read request body for %s %s: %v", r.Method, r.URL.Path, err)
+		}
+
+		responseWriter := NewCustomResponseWriter(w)
+		next.ServeHTTP(responseWriter, r)
+		logRequest(label, responseWriter.statusCode, r, requestBody)
+	})
+}
+
+func readRequestBodyForLogging(r *http.Request) ([]byte, error) {
+	if r.Method != http.MethodPost || r.Body == nil {
+		return nil, nil
+	}
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+	r.Body = io.NopCloser(bytes.NewReader(body))
+	return body, nil
+}
+
+func logRequest(label string, statusCode int, r *http.Request, requestBody []byte) {
+	fields := map[string]interface{}{
+		"method": r.Method,
+		"path":   r.URL.Path,
+		"status": statusCode,
+	}
+	if r.Method == http.MethodPost {
+		fields["body"] = string(requestBody)
+	}
+	entry := logging.WithFields(fields)
+	if statusCode >= http.StatusBadRequest {
+		entry.Warn(label)
+		return
+	}
+	entry.Info(label)
 }
