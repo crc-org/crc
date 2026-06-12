@@ -194,6 +194,10 @@ func (s *Synchronized) GenerateBundle(forceStop bool) error {
 	return s.underlying.GenerateBundle(forceStop)
 }
 
+func (s *Synchronized) ImageLoad(cfg types.ImageLoadConfig) error {
+	return s.underlying.ImageLoad(cfg)
+}
+
 func (s *Synchronized) GetPreset() crcPreset.Preset {
 	return s.underlying.GetPreset()
 }
