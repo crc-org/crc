@@ -7,6 +7,7 @@ rm -fr /Applications/Red\ Hat\ OpenShift\ Local.app || true
 rm -fr  /Applications/CodeReady\ Containers.app || true
 
 chmod 755 "__INSTALL_PATH__"/crc
+chmod u+s,g+x "__INSTALL_PATH__"/crc-admin-helper-darwin
 
 [ -d /usr/local/bin ] || mkdir /usr/local/bin
 
