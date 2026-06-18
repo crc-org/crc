@@ -24,7 +24,7 @@ jobs:
         with:
           cleanup-mode: aggressive
       - name: Check out repository code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Log in to Quay.io
         uses: redhat-actions/podman-login@v1
         with:

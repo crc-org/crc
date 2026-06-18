@@ -18,7 +18,7 @@ jobs:
       - name: Free disk space
         uses: palmsoftware/quick-cleanup@v0
       - name: Check out repository code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
