@@ -63,6 +63,30 @@ const (
 	Plan9HvsockPort = 36864
 )
 
+const RoutesNetworkPolicyYAML = `apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app: routes-controller
+  name: routes-controller
+  namespace: openshift-ingress
+spec:
+  egress:
+  - {}
+  ingress:
+  - ports:
+    - port: http
+      protocol: TCP
+    - port: https
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app: routes-controller
+  policyTypes:
+  - Ingress
+  - Egress
+`
+
 var adminHelperExecutableForOs = map[string]string{
 	"darwin":  "crc-admin-helper-darwin",
 	"linux":   fmt.Sprintf("crc-admin-helper-linux-%s", runtime.GOARCH),
