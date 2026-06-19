@@ -82,9 +82,9 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 		})
 
 		It("check VM's disk size", func() {
-			out, err := util.SendCommandToVM("df -h | grep sysroot")
+			out, err := util.SendCommandToVM("lsblk -d -n -e 7 -o SIZE")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(out).Should(MatchRegexp(`.*40G[\s].*[\s]/sysroot`))
+			Expect(out).Should(MatchRegexp(`^ *40G`))
 		})
 
 		It("stop CRC", func() {
@@ -125,9 +125,9 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 		})
 
 		It("check VM's disk size", func() {
-			out, err := util.SendCommandToVM("df -h | grep sysroot")
+			out, err := util.SendCommandToVM("lsblk -d -n -e 7 -o SIZE")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(out).Should(MatchRegexp(`.*50G[\s].*[\s]/sysroot`))
+			Expect(out).Should(MatchRegexp(`^ *50G`))
 		})
 
 		It("stop CRC", func() {
@@ -196,9 +196,9 @@ var _ = Describe("vary VM parameters: memory cpus, disk", Serial, Ordered, Label
 
 		if runtime.GOOS != "darwin" {
 			It("check VM's disk size", func() {
-				out, err := util.SendCommandToVM("df -h | grep sysroot")
+				out, err := util.SendCommandToVM("lsblk -d -n -e 7 -o SIZE")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(out).Should(MatchRegexp(`.*50G[\s].*[\s]/sysroot`))
+				Expect(out).Should(MatchRegexp(`^ *50G`))
 			})
 		}
 
