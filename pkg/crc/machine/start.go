@@ -858,6 +858,17 @@ func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Confi
 		return err
 	}
 	_, _, err = ocConfig.RunOcCommand("apply", "-f", "/opt/crc/routes-controller.yaml")
+	if err != nil {
+		return err
+	}
+	return ensureRoutesNetworkPolicy(sshRunner, ocConfig)
+}
+
+func ensureRoutesNetworkPolicy(sshRunner *crcssh.Runner, ocConfig oc.Config) error {
+	if err := sshRunner.CopyDataPrivileged([]byte(constants.RoutesNetworkPolicyYAML), "/opt/crc/routes-networkpolicy.yaml", 0o644); err != nil {
+		return err
+	}
+	_, _, err := ocConfig.RunOcCommand("apply", "-f", "/opt/crc/routes-networkpolicy.yaml")
 	return err
 }
 
