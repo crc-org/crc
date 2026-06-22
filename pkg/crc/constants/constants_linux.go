@@ -9,4 +9,4 @@ const (
 	TapSocketPath    = ""
 )
 
-var DaemonHTTPSocketPath = filepath.Join(CrcBaseDir, "crc-http.sock")
+var DaemonHTTPSocketPath = filepath.Join(SocketBaseDir, "crc-http.sock")

@@ -27,10 +27,10 @@ func httpListener() (net.Listener, error) {
 		InputBufferSize:  65536, // Use 64kB buffers to improve performance
 		OutputBufferSize: 65536,
 	})
-	logging.Infof("listening %s", constants.DaemonHTTPNamedPipe)
 	if err != nil {
 		return nil, err
 	}
+	logging.Infof("listening %s", constants.DaemonHTTPNamedPipe)
 	return ln, nil
 }
 

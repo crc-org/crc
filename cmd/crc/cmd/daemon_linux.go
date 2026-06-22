@@ -112,6 +112,10 @@ func httpListener() (net.Listener, error) {
 		return nil, err
 	}
 	if ln != nil {
+		if err = constants.EnsureSocketFilesPermissions(constants.DaemonHTTPSocketPath); err != nil {
+			_ = ln.Close()
+			return nil, err
+		}
 		logging.Infof("using socket provided by %s", httpUnitName)
 		return ln, nil
 	}
@@ -119,10 +123,14 @@ func httpListener() (net.Listener, error) {
 	// no socket activation, we need to create the listener
 	_ = os.Remove(constants.DaemonHTTPSocketPath)
 	ln, err = net.Listen("unix", constants.DaemonHTTPSocketPath)
-	logging.Infof("listening %s", constants.DaemonHTTPSocketPath)
 	if err != nil {
 		return nil, err
 	}
+	if err = constants.EnsureSocketFilesPermissions(constants.DaemonHTTPSocketPath); err != nil {
+		_ = ln.Close()
+		return nil, err
+	}
+	logging.Infof("listening %s", constants.DaemonHTTPSocketPath)
 	return ln, nil
 }
 
