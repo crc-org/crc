@@ -307,8 +307,10 @@ WantedBy=default.target
 Description=CRC HTTP socket
 
 [Socket]
-ListenStream=%h/.crc/crc-http.sock
+ListenStream=%h/.crc/sockets/crc-http.sock
 Service=crc-daemon.service
+SocketMode=0600
+DirectoryMode=0700
 
 [Install]
 WantedBy=default.target

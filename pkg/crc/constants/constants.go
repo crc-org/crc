@@ -123,7 +123,8 @@ var (
 	MachineBaseDir         = CrcBaseDir
 	MachineCacheDir        = filepath.Join(MachineBaseDir, "cache")
 	MachineInstanceDir     = filepath.Join(MachineBaseDir, "machines")
-	DaemonSocketPath       = filepath.Join(CrcBaseDir, "crc.sock")
+	SocketBaseDir          = filepath.Join(CrcBaseDir, "sockets")
+	DaemonSocketPath       = filepath.Join(SocketBaseDir, "crc.sock")
 	KubeconfigFilePath     = filepath.Join(MachineInstanceDir, DefaultName, "kubeconfig")
 	PasswdFilePath         = filepath.Join(MachineInstanceDir, DefaultName, "passwd")
 )
@@ -172,7 +173,7 @@ func GetHomeDir() string {
 	return homeDir
 }
 
-// EnsureBaseDirectoriesExist creates ~/.crc, ~/.crc/bin and ~/.crc/cache directories if it is not present
+// EnsureBaseDirectoriesExist creates ~/.crc, ~/.crc/bin, ~/.crc/cache, and ~/.crc/sockets directories if they are not present
 func EnsureBaseDirectoriesExist() error {
 	baseDirectories := []string{CrcBaseDir, MachineCacheDir, CrcBinDir}
 	for _, baseDir := range baseDirectories {
@@ -181,7 +182,19 @@ func EnsureBaseDirectoriesExist() error {
 			return err
 		}
 	}
-	return nil
+	return ensureSocketDirectoryExists()
+}
+
+func ensureSocketDirectoryExists() error {
+	err := os.MkdirAll(SocketBaseDir, 0700)
+	if err != nil {
+		return err
+	}
+	return os.Chmod(SocketBaseDir, 0700)
+}
+
+func EnsureSocketFilesPermissions(path string) error {
+	return os.Chmod(path, 0600)
 }
 
 func EnsureAdminHelperLogFileExists() error {
