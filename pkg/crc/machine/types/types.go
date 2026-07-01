@@ -49,6 +49,9 @@ type StartConfig struct {
 
 	// Enable bundle quay fallback
 	EnableBundleQuayFallback bool
+
+	// Enable Rosetta for x86_64 emulation on Apple Silicon
+	EnableRosetta bool
 }
 
 type ClusterConfig struct {
