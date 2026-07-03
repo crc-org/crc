@@ -221,6 +221,7 @@ type CapsHost struct {
 	NUMA              *CapsHostNUMATopology      `xml:"topology"`
 	Cache             *CapsHostCache             `xml:"cache"`
 	MemoryBandwidth   *CapsHostMemoryBandwidth   `xml:"memory_bandwidth"`
+	Energy            *CapsHostEnergy            `xml:"energy"`
 	SecModel          []CapsHostSecModel         `xml:"secmodel"`
 }
 
@@ -294,6 +295,19 @@ type CapsHostMemoryBandwidthMonitor struct {
 }
 
 type CapsHostMemoryBandwidthMonitorFeature struct {
+	Name string `xml:"name,attr"`
+}
+
+type CapsHostEnergy struct {
+	Monitor *CapsHostEnergyMonitor `xml:"monitor"`
+}
+
+type CapsHostEnergyMonitor struct {
+	MaxMonitors uint                           `xml:"maxMonitors,attr"`
+	Features    []CapsHostEnergyMonitorFeature `xml:"feature"`
+}
+
+type CapsHostEnergyMonitorFeature struct {
 	Name string `xml:"name,attr"`
 }
 
