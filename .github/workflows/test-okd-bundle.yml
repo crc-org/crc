@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     name: Run OKD bundle with crc
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
@@ -31,7 +31,7 @@ jobs:
       - name: Install required virtualization software
         run: |
           sudo apt-get update
-          sudo apt install qemu-kvm libvirt-daemon libvirt-daemon-system virtiofsd
+          sudo apt install qemu-system-x86 qemu-utils libvirt-daemon libvirt-daemon-system virtiofsd
           sudo usermod -a -G libvirt $USER
       - name: Free disk space
         uses: palmsoftware/quick-cleanup@v0
