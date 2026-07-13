@@ -19,7 +19,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/containers/common/pkg/strongunits"
+	"go.podman.io/common/pkg/strongunits"
 )
 
 // VirtualMachine is the top-level type. It describes the virtual machine

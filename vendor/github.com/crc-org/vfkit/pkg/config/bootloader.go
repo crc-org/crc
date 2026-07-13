@@ -119,7 +119,7 @@ func (bootloader *EFIBootloader) ToCmdLine() ([]string, error) {
 
 	builder := strings.Builder{}
 	builder.WriteString("efi")
-	builder.WriteString(fmt.Sprintf(",variable-store=%s", bootloader.EFIVariableStorePath))
+	fmt.Fprintf(&builder, ",variable-store=%s", bootloader.EFIVariableStorePath)
 	if bootloader.CreateVariableStore {
 		builder.WriteString(",create")
 	}

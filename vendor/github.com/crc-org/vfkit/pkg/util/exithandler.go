@@ -55,8 +55,8 @@ func setupExitSignalHandling(shutdownFunc func()) {
 // This function should be called when program finish work(i.e. when VM is turned off by guest OS)
 func ExecuteExitHandlers() {
 	exitRegistry.mutex.Lock()
+	defer exitRegistry.mutex.Unlock()
 	for _, handler := range exitRegistry.handlers {
 		handler()
 	}
-	exitRegistry.mutex.Unlock()
 }
