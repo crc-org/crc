@@ -477,7 +477,7 @@ func (dev *VirtioNet) ToCmdLine() ([]string, error) {
 			builder.WriteString(",vfkitMagic=off")
 		}
 	default:
-		fmt.Fprintf(&builder, ",fd=%d", dev.Socket.Fd())
+		fmt.Fprintf(&builder, ",fd=%d", dev.Socket.Fd()) // #nosec G705 -- CLI arg, not HTML
 	}
 
 	if len(dev.MacAddress) != 0 {
@@ -514,6 +514,9 @@ func (dev *VirtioNet) FromOptions(options []option) error {
 			fd, err := strconv.Atoi(option.value)
 			if err != nil {
 				return err
+			}
+			if fd < 0 || fd > math.MaxInt32 {
+				return fmt.Errorf("invalid file descriptor: %d", fd)
 			}
 			dev.Socket = os.NewFile(uintptr(fd), "vfkit virtio-net socket")
 		case "unixSocketPath":
