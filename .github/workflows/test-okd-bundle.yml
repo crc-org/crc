@@ -37,6 +37,9 @@ jobs:
         uses: palmsoftware/quick-cleanup@v0
         with:
           cleanup-mode: aggressive
+      - name: Remove the v1 registry conf which is deprecated and blocks okd bundle pull
+        run: |
+          sudo rm -f /etc/containers/registries.conf
       - name: Set the crc config
         run: |
           crc config set preset okd
