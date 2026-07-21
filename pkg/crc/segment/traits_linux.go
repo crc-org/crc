@@ -1,6 +1,7 @@
 package segment
 
 import (
+	"os"
 	"runtime"
 
 	"github.com/crc-org/crc/v2/pkg/os/linux"
@@ -17,5 +18,6 @@ func traits() analytics.Traits {
 	}
 	return base.
 		Set("os_release_name", details.Name).
-		Set("os_release_version_id", details.VersionID)
+		Set("os_release_version_id", details.VersionID).
+		Set("lang", os.Getenv("LANG"))
 }
