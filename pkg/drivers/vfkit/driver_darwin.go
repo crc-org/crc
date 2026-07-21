@@ -43,6 +43,7 @@ type Driver struct {
 	*drivers.VMDriver
 	VfkitPath string
 	VirtioNet bool
+	Rosetta   bool
 
 	VsockPath       string
 	DaemonVsockPort uint
@@ -227,6 +228,17 @@ func (d *Driver) Start() error {
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	// rosetta
+	if d.Rosetta {
+		rosettaDev, err := config.RosettaShareNew("rosetta")
+		if err != nil {
+			return err
+		}
+		if err := vm.AddDevice(rosettaDev); err != nil {
+			return err
 		}
 	}
 
