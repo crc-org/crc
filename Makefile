@@ -11,9 +11,6 @@ COMMIT_SHA?=$(shell git rev-parse --short=6 HEAD)
 MACOS_INSTALL_PATH = /usr/local/crc
 CONTAINER_RUNTIME ?= podman
 
-TOOLS_DIR := tools
-include tools/tools.mk
-
 # Go and compilation related variables
 BUILD_DIR ?= out
 SOURCE_DIRS = cmd pkg test
@@ -22,6 +19,7 @@ RELEASE_DIR ?= release
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 GOVERSION = 1.25
+TOOLS_DIR = tools
 
 HOST_BUILD_DIR=$(BUILD_DIR)/$(GOOS)-$(GOARCH)
 GOPATH ?= $(shell go env GOPATH)
@@ -77,6 +75,8 @@ default: install
 vendor:
 	go mod tidy -go $(GOVERSION).9
 	go mod vendor
+	cd $(TOOLS_DIR) && go mod tidy -go $(GOVERSION).9
+	cd $(TOOLS_DIR) && go mod vendor
 
 .PHONY: vendorcheck
 vendorcheck:
@@ -118,8 +118,9 @@ containerized: clean
 	${CONTAINER_RUNTIME} run --rm -v ${PWD}:/data${SELINUX_VOLUME_LABEL} ${image} /bin/bash -c "cd /data && make cross"
 
 .PHONY: generate_mocks
-generate_mocks: $(TOOLS_BINDIR)/mockery
-	$(TOOLS_BINDIR)/mockery --srcpkg ./pkg/crc/api/client --name Client --output test/mocks/api  --filename client.go
+generate_mocks:
+	$(eval MOCKERY := $(shell go -C $(TOOLS_DIR) tool -n mockery))
+	"$(MOCKERY)" --srcpkg ./pkg/crc/api/client --name Client --output test/mocks/api  --filename client.go
 
 .PHONY: test
 test: gen_release_info
@@ -250,19 +251,22 @@ e2e-story-microshift: install
 	@go test $(MODULEPATH)/test/e2e -tags "$(BUILDTAGS)" --ldflags="$(VERSION_VARIABLES)" -v $(PULL_SECRET_FILE) $(BUNDLE_LOCATION) $(CRC_BINARY) --godog.tags="$(GOOS) && @microshift" --cleanup-home=false
 
 .PHONY: fmt
-fmt: $(TOOLS_BINDIR)/goimports
-	@$(TOOLS_BINDIR)/goimports -l -w $(SOURCE_DIRS)
+fmt:
+	$(eval GOIMPORTS := $(shell go -C $(TOOLS_DIR) tool -n goimports))
+	@"$(GOIMPORTS)" -l -w $(SOURCE_DIRS)
 
 # Run golangci-lint against code
 .PHONY: lint cross-lint
-lint: $(TOOLS_BINDIR)/golangci-lint gen_release_info
-	"$(TOOLS_BINDIR)"/golangci-lint run
+lint: gen_release_info
+	$(eval GOLANGCI_LINT := $(shell go -C $(TOOLS_DIR) tool -n golangci-lint))
+	"$(GOLANGCI_LINT)" run
 
-cross-lint: $(TOOLS_BINDIR)/golangci-lint gen_release_info
-	GOOS=darwin GOARCH=amd64 "$(TOOLS_BINDIR)"/golangci-lint run
-	GOOS=darwin GOARCH=arm64 "$(TOOLS_BINDIR)"/golangci-lint run
-	GOOS=linux GOARCH=amd64 "$(TOOLS_BINDIR)"/golangci-lint run
-	GOOS=windows GOARCH=amd64 "$(TOOLS_BINDIR)"/golangci-lint run
+cross-lint: gen_release_info
+	$(eval GOLANGCI_LINT := $(shell go -C $(TOOLS_DIR) tool -n golangci-lint))
+	GOOS=darwin GOARCH=amd64 "$(GOLANGCI_LINT)" run
+	GOOS=darwin GOARCH=arm64 "$(GOLANGCI_LINT)" run
+	GOOS=linux GOARCH=amd64 "$(GOLANGCI_LINT)" run
+	GOOS=windows GOARCH=amd64 "$(GOLANGCI_LINT)" run
 
 .PHONY: gen_release_info
 gen_release_info:
@@ -317,9 +321,10 @@ ifeq ($(CUSTOM_EMBED),false)
 	$(HOST_BUILD_DIR)/crc-embedder download --goos=$* $(EMBED_DOWNLOAD_DIR)
 endif
 
-$(BUILD_DIR)/macos-universal/crc: $(BUILD_DIR)/macos-arm64/crc $(BUILD_DIR)/macos-amd64/crc $(TOOLS_BINDIR)/makefat
+$(BUILD_DIR)/macos-universal/crc: $(BUILD_DIR)/macos-arm64/crc $(BUILD_DIR)/macos-amd64/crc
 	mkdir -p out/macos-universal
-	cd $(BUILD_DIR) && "$(TOOLS_BINDIR)"/makefat macos-universal/crc macos-amd64/crc macos-arm64/crc
+	$(eval MAKEFAT := $(shell go -C $(TOOLS_DIR) tool -n makefat))
+	cd $(BUILD_DIR) && "$(MAKEFAT)" macos-universal/crc macos-amd64/crc macos-arm64/crc
 
 packagedir: clean_macos_package embed-download-darwin macos-release-binary
 	echo -n $(CRC_VERSION) > packaging/darwin/VERSION
@@ -347,8 +352,9 @@ $(BUILD_DIR)/macos-universal/crc-macos-installer.tar: packagedir
 	tar -C ./packaging -cvf $@ darwin
 	cd $(@D) && sha256sum $(@F)>$(@F).sha256sum
 
-%.spec: %.spec.in $(TOOLS_BINDIR)/gomod2rpmdeps
-	@"$(TOOLS_BINDIR)"/gomod2rpmdeps | sed -e '/__BUNDLED_PROVIDES__/r /dev/stdin' \
+%.spec: %.spec.in
+	$(eval GOMOD2RPMDEPS := $(shell go -C $(TOOLS_DIR) tool -n gomod2rpmdeps))
+	@"$(GOMOD2RPMDEPS)" | sed -e '/__BUNDLED_PROVIDES__/r /dev/stdin' \
 					   -e '/__BUNDLED_PROVIDES__/d' \
 					   -e 's/__VERSION__/'$(CRC_VERSION)'/g' \
 					   -e 's/__OPENSHIFT_VERSION__/'$(OPENSHIFT_VERSION)'/g' \

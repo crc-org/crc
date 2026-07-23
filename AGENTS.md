@@ -73,6 +73,6 @@ Files with `_linux.go`, `_darwin.go`, `_windows.go` suffixes throughout `cmd/crc
 ## Conventions
 
 - Commit message format: `area: Short description` (e.g., `daemon: Remove tcp fallback for 9p file sharing`)
-- Tools are managed via `tool` directives in `go.mod` — run tools with `go tool <name>` (golangci-lint, goimports, mockery, gomod2rpmdeps, makefat)
+- Tools are managed via `tool` directives in `tools/go.mod` (isolated from project deps) — the Makefile resolves tool binaries via `go -C tools tool -n <name>` (golangci-lint, goimports, mockery, gomod2rpmdeps, makefat)
 - Linter config: `.golangci.yml` (golangci-lint v2, 10min timeout, build tags: `build` + `containers_image_openpgp`)
 - Mocks generated with mockery into `test/mocks/`

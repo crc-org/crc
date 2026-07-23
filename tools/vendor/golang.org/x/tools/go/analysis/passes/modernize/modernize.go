@@ -38,7 +38,6 @@ var Suite = []*analysis.Analyzer{
 	EmbedLitAnalyzer,
 	ErrorsAsTypeAnalyzer,
 	ForVarAnalyzer,
-	importCommentAnalyzer, // awaiting public symbol
 	MapsLoopAnalyzer,
 	MinMaxAnalyzer,
 	NewExprAnalyzer,
