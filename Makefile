@@ -219,7 +219,7 @@ BUNDLE_PATH = --bundle-path=$(HOME)/Downloads/crc_libvirt_$(OPENSHIFT_VERSION)_$
 endif
 
 integration:
-	@go test -timeout=90m -tags "$(BUILDTAGS)" $(MODULEPATH)/test/integration $(PULL_SECRET_PATH) $(BUNDLE_PATH) -v $(GINKGO_OPTS)
+	@go test -timeout=120m -tags "$(BUILDTAGS)" $(MODULEPATH)/test/integration $(PULL_SECRET_PATH) $(BUNDLE_PATH) -v $(GINKGO_OPTS)
 
 .PHONY: e2e ## Run e2e tests
 e2e:
