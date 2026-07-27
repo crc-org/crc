@@ -128,7 +128,7 @@ func (f *DefaultRPCClientDriverFactory) NewRPCClientDriver(driverName string, dr
 		return nil, fmt.Errorf("Error attempting to get plugin server address for RPC: %s", err)
 	}
 
-	rpcclient, err := rpc.DialHTTP("tcp", addr)
+	rpcclient, err := rpc.DialHTTP("unix", addr)
 	if err != nil {
 		return nil, err
 	}

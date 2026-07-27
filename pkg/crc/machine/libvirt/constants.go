@@ -20,7 +20,7 @@ const (
 )
 
 const (
-	MachineDriverVersion = "0.13.10"
+	MachineDriverVersion = "0.13.11"
 )
 
 var (
