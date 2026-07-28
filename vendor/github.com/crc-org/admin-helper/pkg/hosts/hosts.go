@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -31,20 +32,65 @@ var (
 
 type Hosts struct {
 	sync.Mutex
-	File       *libhosty.HostsFile
-	HostFilter func(string) bool
+	File         *libhosty.HostsFile
+	HostFilter   func(string) bool
+	GoFileHandle *os.File
+	ReadOnly     bool
 }
 
-func New() (*Hosts, error) {
+func NewReadOnly() (*Hosts, error) {
+	return new(true)
+}
+
+// NewWritable opens the hosts file while still running as root (setuid),
+// then drops privileges to the invoking user.
+func NewWritable() (*Hosts, error) {
+	h, err := new(false)
+	if err != nil {
+		_ = DropPrivileges()
+		return nil, err
+	}
+	if err := DropPrivileges(); err != nil {
+		_ = h.closeFileHandle()
+		return nil, err
+	}
+	return h, nil
+}
+
+func new(readOnly bool) (*Hosts, error) {
 	file, err := libhosty.Init()
 	if err != nil {
 		return nil, err
 	}
 
+	var goFile *os.File
+	if !readOnly && runtime.GOOS != "windows" {
+		goFile, err = os.OpenFile(file.Config.FilePath, os.O_RDWR, 0)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &Hosts{
-		File:       file,
-		HostFilter: defaultFilter,
+		File:         file,
+		HostFilter:   defaultFilter,
+		GoFileHandle: goFile,
+		ReadOnly:     readOnly,
 	}, nil
+}
+
+func (h *Hosts) closeFileHandle() error {
+	if h.GoFileHandle == nil {
+		return nil
+	}
+	err := h.GoFileHandle.Close()
+	h.GoFileHandle = nil
+	return err
+}
+
+// Close releases the writable hosts file descriptor opened by NewWritable.
+func (h *Hosts) Close() error {
+	return h.closeFileHandle()
 }
 
 func defaultFilter(s string) bool {
@@ -117,7 +163,7 @@ func (h *Hosts) Add(ipRaw string, hosts []string) error {
 
 	h.addNewHostEntries(hostEntries, lines, ip)
 
-	return h.File.SaveHostsFile()
+	return h.saveHostsFile()
 }
 
 func (h *Hosts) addNewHostEntries(hostEntries []string, lines []*libhosty.HostsFileLine, ip net.IP) {
@@ -219,7 +265,7 @@ func (h *Hosts) Remove(hosts []string) error {
 		}
 	}
 
-	return h.File.SaveHostsFile()
+	return h.saveHostsFile()
 }
 
 func (h *Hosts) removeHostFromLine(line *libhosty.HostsFileLine, hostIdx int, i int) {
@@ -258,10 +304,23 @@ func (h *Hosts) Clean() error {
 		return emptyLineErr
 	}
 
-	return h.File.SaveHostsFile()
+	return h.saveHostsFile()
 }
 
+// checkIsWritable verifies the hosts file can be written.
+// On Unix, callers drop privileges after opening GoFileHandle while still root.
+// Re-opening the path for write would fail unprivileged, but the retained fd
+// remains writable—so skip the probe when GoFileHandle is already held.
+// On Windows, where there is no retained fd, fall back to opening the file.
 func (h *Hosts) checkIsWritable() error {
+	if h.ReadOnly {
+		return fmt.Errorf("hosts file is read only")
+	}
+
+	if h.GoFileHandle != nil {
+		return nil
+	}
+
 	file, err := os.OpenFile(h.File.Config.FilePath, os.O_WRONLY, 0660)
 	if err != nil {
 		return fmt.Errorf("host file not writable, try running with elevated privileges")
