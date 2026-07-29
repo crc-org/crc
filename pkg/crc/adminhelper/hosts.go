@@ -15,7 +15,7 @@ func UpdateHostsFile(instanceIP string, hostnames ...string) error {
 }
 
 func AddToHostsFile(instanceIP string, hostnames ...string) error {
-	hosts, err := hosts.New()
+	hosts, err := hosts.NewReadOnly()
 	if err != nil {
 		return err
 	}
