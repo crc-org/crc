@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"syscall"
 
 	"github.com/crc-org/crc/v2/pkg/crc/cache"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
@@ -73,6 +74,38 @@ func checkIfRunningAsNormalUser() error {
 	return errors.New("crc should not be run as root")
 }
 
+func setSuid(path string) error {
+	logging.Debugf("Making %s suid", path)
+
+	stdOut, stdErr, err := crcos.RunPrivileged(fmt.Sprintf("Changing ownership of %s", path), "chown", "root", path)
+	if err != nil {
+		return fmt.Errorf("unable to set ownership of %s to root: %s: %s: %w",
+			path, stdOut, stdErr, err)
+	}
+
+	/* Can't do this before the chown as the chown will reset the suid bit */
+	stdOut, stdErr, err = crcos.RunPrivileged(fmt.Sprintf("Setting suid for %s", path), "chmod", "u+s,g+x", path)
+	if err != nil {
+		return fmt.Errorf("unable to set suid bit on %s: %s: %s: %w", path, stdOut, stdErr, err)
+	}
+	return nil
+}
+
+func checkSuid(path string) error {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	if fi.Mode()&os.ModeSetuid == 0 {
+		return fmt.Errorf("%s does not have the SUID bit set (%s)", path, fi.Mode().String())
+	}
+	if fi.Sys().(*syscall.Stat_t).Uid != 0 {
+		return fmt.Errorf("%s is not owned by root", path)
+	}
+
+	return nil
+}
+
 // Check if helper executable is cached or not
 func checkAdminHelperExecutableCached() error {
 	if version.IsInstaller() {
@@ -87,7 +120,7 @@ func checkAdminHelperExecutableCached() error {
 		return errors.Wrap(err, "unexpected version of the crc-admin-helper executable")
 	}
 	logging.Debug("crc-admin-helper executable already cached")
-	return checkAdminHelperPrivileges(helper.GetExecutablePath())
+	return checkSuid(helper.GetExecutablePath())
 }
 
 func fixAdminHelperExecutableCached() error {
@@ -100,7 +133,7 @@ func fixAdminHelperExecutableCached() error {
 		return errors.Wrap(err, "Unable to download crc-admin-helper executable")
 	}
 	logging.Debug("crc-admin-helper executable cached")
-	return configureAdminHelperPrivileges(helper.GetExecutablePath())
+	return setSuid(helper.GetExecutablePath())
 }
 
 func checkSupportedCPUArch() error {
