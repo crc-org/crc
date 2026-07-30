@@ -86,7 +86,7 @@ jobs:
           path: ${{ env.IMAGE_NAME_INTEGRATION }}-${{matrix.os}}-${{matrix.arch}}.tar
       - name: Log in to Quay.io
         if: github.event_name == 'push'
-        uses: redhat-actions/podman-login@v1
+        uses: redhat-actions/podman-login@v2
         with:
           username: ${{ secrets.QUAY_IO_USERNAME }}
           password: ${{ secrets.QUAY_IO_PASSWORD }}
