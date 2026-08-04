@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/ssh"
 	"github.com/crc-org/crc/v2/pkg/crc/systemd"
 	"github.com/crc-org/crc/v2/pkg/crc/systemd/states"
@@ -70,7 +71,14 @@ func updateNetworkManagerConfig(sd *systemd.Commander, sshRunner *ssh.Runner, re
 	_, stderr, err := sshRunner.RunPrivileged("Update resolv.conf file", "nmcli", "con", "modify", "--temporary", "ovs-if-br-ex",
 		"ipv4.dns", nameservers, "ipv4.dns-search", searchDomains)
 	if err != nil {
-		return fmt.Errorf("failed to update resolv.conf file: %s: %w", stderr, err)
+		// The ovs-if-br-ex NetworkManager connection only exists when OVN's ovs-configuration
+		// builds the br-ex bridge. Bundles using a different CNI (for example Cilium) do not
+		// have this connection, so fall back to writing /etc/resolv.conf directly.
+		logging.Warnf("Unable to update resolv.conf through NetworkManager (%s), writing /etc/resolv.conf directly", stderr)
+		if fallbackErr := replaceResolvConfFile(sshRunner, resolvFileValues); fallbackErr != nil {
+			return fmt.Errorf("failed to update resolv.conf file: %s: %w", stderr, fallbackErr)
+		}
+		return nil
 	}
 	return sd.Restart("NetworkManager.service")
 }
