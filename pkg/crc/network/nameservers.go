@@ -73,7 +73,11 @@ func updateNetworkManagerConfig(sd *systemd.Commander, sshRunner *ssh.Runner, re
 	if err != nil {
 		// The ovs-if-br-ex NetworkManager connection only exists when OVN's ovs-configuration
 		// builds the br-ex bridge. Bundles using a different CNI (for example Cilium) do not
-		// have this connection, so fall back to writing /etc/resolv.conf directly.
+		// have this connection, so fall back to writing /etc/resolv.conf directly. Only do this
+		// for the missing-connection case; propagate any other nmcli failure.
+		if !strings.Contains(stderr, "unknown connection 'ovs-if-br-ex'") {
+			return fmt.Errorf("failed to update resolv.conf file: %s: %w", stderr, err)
+		}
 		logging.Warnf("Unable to update resolv.conf through NetworkManager (%s), writing /etc/resolv.conf directly", stderr)
 		if fallbackErr := replaceResolvConfFile(sshRunner, resolvFileValues); fallbackErr != nil {
 			return fmt.Errorf("failed to update resolv.conf file: %s: %w", stderr, fallbackErr)
