@@ -3,7 +3,10 @@
   [ to_entries[]
     | [
         "\t",(.key|@json),": &Dialect{\n",
-        "\t\t", (.key|@json),", ", (.value.name|@json),", ", (.value.native|@json), ", map[string][]string{\n"
+        "\t\tLanguage: ", (.key|@json), ",\n",
+        "\t\tName:     ", (.value.name|@json),",\n",
+        "\t\tNative:   ",(.value.native|@json),",\n",
+        "\t\tKeywords: map[string][]string{\n"
       ] + (
           [ .value
             | {"feature","rule","background","scenario","scenarioOutline","examples","given","when","then","and","but"}
@@ -14,7 +17,7 @@
           ]
       ) + [
         "\t\t},\n",
-        "\t\tmap[string]messages.StepKeywordType{\n"
+        "\t\tKeywordTypes: map[string]messages.StepKeywordType{\n"
       ] + (
         [ .value.given
           | (
@@ -79,15 +82,16 @@
           "\t\t\t\"* \": messages.StepKeywordType_UNKNOWN,\n"
         ]
       ) + [
-        "\t\t}",
-        "},\n"
+        "\t\t},\n",
+        "\t},\n"
       ]
     | add
   ]
   | add
   )
-| "package gherkin\n\n"
-+ "import messages \"github.com/cucumber/messages/go/v21\"\n\n"
+| "// Code generated from dialects_builtin.go.jq (make dialects_builtin.go); DO NOT EDIT.\n\n" # Standard header defined at https://golang.org/s/generatedcode
++ "package gherkin\n\n"
++ "import messages \"github.com/cucumber/messages/go/v34\"\n\n"
 + "// Builtin dialects for " + ([ $root | to_entries[] | .key+" ("+.value.name+")" ] | join(", ")) + "\n"
 + "func DialectsBuiltin() DialectProvider {\n"
 + "\treturn builtinDialects\n"

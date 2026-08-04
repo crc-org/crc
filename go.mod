@@ -17,7 +17,7 @@ require (
 	github.com/crc-org/admin-helper v0.5.8
 	github.com/crc-org/machine v0.0.0-20260721135927-5bcb8a00e0f1
 	github.com/crc-org/vfkit v0.6.4
-	github.com/cucumber/godog v0.15.1
+	github.com/cucumber/godog v0.16.0
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/docker/go-units v0.5.0
 	github.com/elazarl/goproxy v1.8.5
@@ -83,8 +83,8 @@ require (
 	github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01 // indirect
 	github.com/containers/ocicrypt v1.3.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
-	github.com/cucumber/gherkin/go/v26 v26.2.0 // indirect
-	github.com/cucumber/messages/go/v21 v21.0.1 // indirect
+	github.com/cucumber/gherkin/go/v42 v42.0.0 // indirect
+	github.com/cucumber/messages/go/v34 v34.2.0 // indirect
 	github.com/cyberphone/json-canonicalization v0.0.0-20241213102144-19d51d7fe467 // indirect
 	github.com/danieljoos/wincred v1.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -118,7 +118,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-memdb v1.3.4 // indirect
+	github.com/hashicorp/go-memdb v1.3.5 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/inetaf/tcpproxy v0.0.0-20250222171855-c4b9df066048 // indirect

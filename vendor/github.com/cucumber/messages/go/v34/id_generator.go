@@ -1,8 +1,9 @@
 package messages
 
 import (
-	"github.com/gofrs/uuid"
 	"strconv"
+
+	"github.com/google/uuid"
 )
 
 type IdGenerator interface {
@@ -24,5 +25,5 @@ type UUID struct {
 }
 
 func (i UUID) NewId() string {
-	return uuid.Must(uuid.NewV4()).String()
+	return uuid.New().String()
 }

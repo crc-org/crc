@@ -1,14 +1,17 @@
 package messages
 
 type Attachment struct {
-	Body              string                    `json:"body"`
-	ContentEncoding   AttachmentContentEncoding `json:"contentEncoding"`
-	FileName          string                    `json:"fileName,omitempty"`
-	MediaType         string                    `json:"mediaType"`
-	Source            *Source                   `json:"source,omitempty"`
-	TestCaseStartedId string                    `json:"testCaseStartedId,omitempty"`
-	TestStepId        string                    `json:"testStepId,omitempty"`
-	Url               string                    `json:"url,omitempty"`
+	Body                 string                    `json:"body"`
+	ContentEncoding      AttachmentContentEncoding `json:"contentEncoding"`
+	FileName             string                    `json:"fileName,omitempty"`
+	MediaType            string                    `json:"mediaType"`
+	Source               *Source                   `json:"source,omitempty"`
+	TestCaseStartedId    string                    `json:"testCaseStartedId,omitempty"`
+	TestStepId           string                    `json:"testStepId,omitempty"`
+	Url                  string                    `json:"url,omitempty"`
+	TestRunStartedId     string                    `json:"testRunStartedId,omitempty"`
+	TestRunHookStartedId string                    `json:"testRunHookStartedId,omitempty"`
+	Timestamp            *Timestamp                `json:"timestamp,omitempty"`
 }
 
 type Duration struct {
@@ -18,12 +21,14 @@ type Duration struct {
 
 type Envelope struct {
 	Attachment             *Attachment             `json:"attachment,omitempty"`
+	ExternalAttachment     *ExternalAttachment     `json:"externalAttachment,omitempty"`
 	GherkinDocument        *GherkinDocument        `json:"gherkinDocument,omitempty"`
 	Hook                   *Hook                   `json:"hook,omitempty"`
 	Meta                   *Meta                   `json:"meta,omitempty"`
 	ParameterType          *ParameterType          `json:"parameterType,omitempty"`
 	ParseError             *ParseError             `json:"parseError,omitempty"`
 	Pickle                 *Pickle                 `json:"pickle,omitempty"`
+	Suggestion             *Suggestion             `json:"suggestion,omitempty"`
 	Source                 *Source                 `json:"source,omitempty"`
 	StepDefinition         *StepDefinition         `json:"stepDefinition,omitempty"`
 	TestCase               *TestCase               `json:"testCase,omitempty"`
@@ -33,12 +38,24 @@ type Envelope struct {
 	TestRunStarted         *TestRunStarted         `json:"testRunStarted,omitempty"`
 	TestStepFinished       *TestStepFinished       `json:"testStepFinished,omitempty"`
 	TestStepStarted        *TestStepStarted        `json:"testStepStarted,omitempty"`
+	TestRunHookStarted     *TestRunHookStarted     `json:"testRunHookStarted,omitempty"`
+	TestRunHookFinished    *TestRunHookFinished    `json:"testRunHookFinished,omitempty"`
 	UndefinedParameterType *UndefinedParameterType `json:"undefinedParameterType,omitempty"`
 }
 
 type Exception struct {
-	Type    string `json:"type"`
-	Message string `json:"message,omitempty"`
+	Type       string `json:"type"`
+	Message    string `json:"message,omitempty"`
+	StackTrace string `json:"stackTrace,omitempty"`
+}
+
+type ExternalAttachment struct {
+	Url                  string     `json:"url"`
+	MediaType            string     `json:"mediaType"`
+	TestCaseStartedId    string     `json:"testCaseStartedId,omitempty"`
+	TestStepId           string     `json:"testStepId,omitempty"`
+	TestRunHookStartedId string     `json:"testRunHookStartedId,omitempty"`
+	Timestamp            *Timestamp `json:"timestamp,omitempty"`
 }
 
 type GherkinDocument struct {
@@ -158,6 +175,7 @@ type Hook struct {
 	Name            string           `json:"name,omitempty"`
 	SourceReference *SourceReference `json:"sourceReference"`
 	TagExpression   string           `json:"tagExpression,omitempty"`
+	Type            HookType         `json:"type,omitempty"`
 }
 
 type Location struct {
@@ -194,11 +212,12 @@ type Product struct {
 }
 
 type ParameterType struct {
-	Name                            string   `json:"name"`
-	RegularExpressions              []string `json:"regularExpressions"`
-	PreferForRegularExpressionMatch bool     `json:"preferForRegularExpressionMatch"`
-	UseForSnippets                  bool     `json:"useForSnippets"`
-	Id                              string   `json:"id"`
+	Name                            string           `json:"name"`
+	RegularExpressions              []string         `json:"regularExpressions"`
+	PreferForRegularExpressionMatch bool             `json:"preferForRegularExpressionMatch"`
+	UseForSnippets                  bool             `json:"useForSnippets"`
+	Id                              string           `json:"id"`
+	SourceReference                 *SourceReference `json:"sourceReference,omitempty"`
 }
 
 type ParseError struct {
@@ -209,6 +228,7 @@ type ParseError struct {
 type Pickle struct {
 	Id         string        `json:"id"`
 	Uri        string        `json:"uri"`
+	Location   *Location     `json:"location,omitempty"`
 	Name       string        `json:"name"`
 	Language   string        `json:"language"`
 	Steps      []*PickleStep `json:"steps"`
@@ -217,8 +237,9 @@ type Pickle struct {
 }
 
 type PickleDocString struct {
-	MediaType string `json:"mediaType,omitempty"`
-	Content   string `json:"content"`
+	ArgumentIndex int64  `json:"argumentIndex,omitempty"`
+	MediaType     string `json:"mediaType,omitempty"`
+	Content       string `json:"content"`
 }
 
 type PickleStep struct {
@@ -235,7 +256,8 @@ type PickleStepArgument struct {
 }
 
 type PickleTable struct {
-	Rows []*PickleTableRow `json:"rows"`
+	ArgumentIndex int64             `json:"argumentIndex,omitempty"`
+	Rows          []*PickleTableRow `json:"rows"`
 }
 
 type PickleTableCell struct {
@@ -287,14 +309,26 @@ type StepDefinitionPattern struct {
 	Type   StepDefinitionPatternType `json:"type"`
 }
 
+type Suggestion struct {
+	Id           string     `json:"id"`
+	PickleStepId string     `json:"pickleStepId"`
+	Snippets     []*Snippet `json:"snippets"`
+}
+
+type Snippet struct {
+	Language string `json:"language"`
+	Code     string `json:"code"`
+}
+
 type TestCase struct {
-	Id        string      `json:"id"`
-	PickleId  string      `json:"pickleId"`
-	TestSteps []*TestStep `json:"testSteps"`
+	Id               string      `json:"id"`
+	PickleId         string      `json:"pickleId"`
+	TestSteps        []*TestStep `json:"testSteps"`
+	TestRunStartedId string      `json:"testRunStartedId,omitempty"`
 }
 
 type Group struct {
-	Children []*Group `json:"children"`
+	Children []*Group `json:"children,omitempty"`
 	Start    int64    `json:"start,omitempty"`
 	Value    string   `json:"value,omitempty"`
 }
@@ -331,14 +365,30 @@ type TestCaseStarted struct {
 }
 
 type TestRunFinished struct {
-	Message   string     `json:"message,omitempty"`
-	Success   bool       `json:"success"`
-	Timestamp *Timestamp `json:"timestamp"`
-	Exception *Exception `json:"exception,omitempty"`
+	Message          string     `json:"message,omitempty"`
+	Success          bool       `json:"success"`
+	Timestamp        *Timestamp `json:"timestamp"`
+	Exception        *Exception `json:"exception,omitempty"`
+	TestRunStartedId string     `json:"testRunStartedId,omitempty"`
+}
+
+type TestRunHookFinished struct {
+	TestRunHookStartedId string          `json:"testRunHookStartedId"`
+	Result               *TestStepResult `json:"result"`
+	Timestamp            *Timestamp      `json:"timestamp"`
+}
+
+type TestRunHookStarted struct {
+	Id               string     `json:"id"`
+	TestRunStartedId string     `json:"testRunStartedId"`
+	HookId           string     `json:"hookId"`
+	WorkerId         string     `json:"workerId,omitempty"`
+	Timestamp        *Timestamp `json:"timestamp"`
 }
 
 type TestRunStarted struct {
 	Timestamp *Timestamp `json:"timestamp"`
+	Id        string     `json:"id,omitempty"`
 }
 
 type TestStepFinished struct {
@@ -386,6 +436,36 @@ func (e AttachmentContentEncoding) String() string {
 		return "BASE64"
 	default:
 		panic("Bad enum value for AttachmentContentEncoding")
+	}
+}
+
+type HookType string
+
+const (
+	HookType_BEFORE_TEST_RUN  HookType = "BEFORE_TEST_RUN"
+	HookType_AFTER_TEST_RUN   HookType = "AFTER_TEST_RUN"
+	HookType_BEFORE_TEST_CASE HookType = "BEFORE_TEST_CASE"
+	HookType_AFTER_TEST_CASE  HookType = "AFTER_TEST_CASE"
+	HookType_BEFORE_TEST_STEP HookType = "BEFORE_TEST_STEP"
+	HookType_AFTER_TEST_STEP  HookType = "AFTER_TEST_STEP"
+)
+
+func (e HookType) String() string {
+	switch e {
+	case HookType_BEFORE_TEST_RUN:
+		return "BEFORE_TEST_RUN"
+	case HookType_AFTER_TEST_RUN:
+		return "AFTER_TEST_RUN"
+	case HookType_BEFORE_TEST_CASE:
+		return "BEFORE_TEST_CASE"
+	case HookType_AFTER_TEST_CASE:
+		return "AFTER_TEST_CASE"
+	case HookType_BEFORE_TEST_STEP:
+		return "BEFORE_TEST_STEP"
+	case HookType_AFTER_TEST_STEP:
+		return "AFTER_TEST_STEP"
+	default:
+		panic("Bad enum value for HookType")
 	}
 }
 

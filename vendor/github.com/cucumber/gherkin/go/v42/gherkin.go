@@ -3,9 +3,10 @@ package gherkin
 import (
 	"bufio"
 	"fmt"
-	"github.com/cucumber/messages/go/v21"
 	"io"
 	"strings"
+
+	messages "github.com/cucumber/messages/go/v34"
 )
 
 type Parser interface {

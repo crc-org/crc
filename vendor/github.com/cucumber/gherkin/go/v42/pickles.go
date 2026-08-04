@@ -1,8 +1,9 @@
 package gherkin
 
 import (
-	"github.com/cucumber/messages/go/v21"
 	"strings"
+
+	"github.com/cucumber/messages/go/v34"
 )
 
 func Pickles(gherkinDocument messages.GherkinDocument, uri string, newId func() string) []*messages.Pickle {
@@ -119,6 +120,7 @@ func compileScenarioOutline(
 			pickles = append(pickles, &messages.Pickle{
 				Id:         id,
 				Uri:        uri,
+				Location:   valuesRow.Location,
 				Steps:      computedPickleSteps,
 				Tags:       tags,
 				Name:       name,
@@ -149,6 +151,7 @@ func compileScenario(
 	pickles = append(pickles, &messages.Pickle{
 		Id:         id,
 		Uri:        uri,
+		Location:   scenario.Location,
 		Steps:      steps,
 		Tags:       tags,
 		Name:       scenario.Name,
@@ -169,7 +172,9 @@ func pickleDataTable(table *messages.DataTable, variableCells []*messages.TableC
 		}
 		pickleTableRows[i] = &messages.PickleTableRow{Cells: pickleTableCells}
 	}
-	return &messages.PickleTable{Rows: pickleTableRows}
+	return &messages.PickleTable{
+		Rows: pickleTableRows,
+	}
 }
 
 func pickleDocString(docString *messages.DocString, variableCells []*messages.TableCell, valueCells []*messages.TableCell) *messages.PickleDocString {
@@ -223,17 +228,37 @@ func pickleStep(
 	if valuesRow != nil {
 		pickleStep.AstNodeIds = append(pickleStep.AstNodeIds, valuesRow.Id)
 	}
-	if step.DataTable != nil {
-		pickleStep.Argument = &messages.PickleStepArgument{
-			DataTable: pickleDataTable(step.DataTable, variableCells, valueCells),
-		}
-	}
-	if step.DocString != nil {
-		pickleStep.Argument = &messages.PickleStepArgument{
-			DocString: pickleDocString(step.DocString, variableCells, valueCells),
-		}
-	}
+	pickleStep.Argument = pickleStepArgument(step, variableCells, valueCells)
 	return pickleStep
+}
+
+func pickleStepArgument(step *messages.Step, variableCells []*messages.TableCell, valueCells []*messages.TableCell) *messages.PickleStepArgument {
+	dataTable := step.DataTable
+	docString := step.DocString
+
+	if dataTable != nil && docString != nil {
+		pickleStepArgument := &messages.PickleStepArgument{
+			DocString: pickleDocString(docString, variableCells, valueCells),
+			DataTable: pickleDataTable(dataTable, variableCells, valueCells),
+		}
+		if docString.Location.Line > dataTable.Location.Line {
+			pickleStepArgument.DataTable.ArgumentIndex = int64(1)
+			pickleStepArgument.DocString.ArgumentIndex = int64(2)
+		} else {
+			pickleStepArgument.DataTable.ArgumentIndex = int64(2)
+			pickleStepArgument.DocString.ArgumentIndex = int64(1)
+		}
+		return pickleStepArgument
+	} else if dataTable != nil {
+		return &messages.PickleStepArgument{
+			DataTable: pickleDataTable(dataTable, variableCells, valueCells),
+		}
+	} else if docString != nil {
+		return &messages.PickleStepArgument{
+			DocString: pickleDocString(docString, variableCells, valueCells),
+		}
+	}
+	return nil
 }
 
 func mapType(keywordType messages.StepKeywordType, previous messages.PickleStepType) messages.PickleStepType {

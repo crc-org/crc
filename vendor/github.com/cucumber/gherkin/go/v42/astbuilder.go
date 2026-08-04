@@ -1,7 +1,7 @@
 package gherkin
 
 import (
-	"github.com/cucumber/messages/go/v21"
+	"github.com/cucumber/messages/go/v34"
 	"strings"
 )
 
@@ -149,11 +149,10 @@ func (t *astBuilder) transformNode(node *astNode) (interface{}, error) {
 		dataTable := node.getSingle(RuleTypeDataTable, nil)
 		if dataTable != nil {
 			step.DataTable = dataTable.(*messages.DataTable)
-		} else {
-			docString := node.getSingle(RuleTypeDocString, nil)
-			if docString != nil {
-				step.DocString = docString.(*messages.DocString)
-			}
+		}
+		docString := node.getSingle(RuleTypeDocString, nil)
+		if docString != nil {
+			step.DocString = docString.(*messages.DocString)
 		}
 
 		return step, nil
