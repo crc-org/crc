@@ -106,6 +106,17 @@ func libvirtPreflightChecks(distro *linux.OsRelease) []Check {
 			labels: labels{Os: Linux},
 		},
 		{
+			configKeySuffix:    "check-rest-api-token",
+			checkDescription:   "Checking REST API token",
+			check:              checkRestAPIToken,
+			fixDescription:     "Creating REST API token",
+			fix:                fixRestAPIToken,
+			cleanupDescription: "Removing REST API token",
+			cleanup:            removeRestAPIToken,
+
+			labels: labels{Os: Linux},
+		},
+		{
 			configKeySuffix:    "check-daemon-systemd-unit",
 			checkDescription:   "Checking crc daemon systemd service",
 			check:              checkDaemonSystemdService,
