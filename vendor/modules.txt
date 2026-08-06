@@ -143,7 +143,7 @@ github.com/cpuguy83/go-md2man/v2/md2man
 github.com/crc-org/admin-helper/pkg/client
 github.com/crc-org/admin-helper/pkg/hosts
 github.com/crc-org/admin-helper/pkg/types
-# github.com/crc-org/machine v0.0.0-20260721135927-5bcb8a00e0f1
+# github.com/crc-org/machine v0.0.0-20260805175039-d3388f63e9f9
 ## explicit; go 1.17
 github.com/crc-org/machine/drivers/libvirt
 github.com/crc-org/machine/libmachine/drivers

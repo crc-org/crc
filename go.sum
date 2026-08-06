@@ -56,8 +56,8 @@ github.com/cpuguy83/go-md2man/v2 v2.0.7 h1:zbFlGlXEAKlwXpmvle3d8Oe3YnkKIK4xSRTd3
 github.com/cpuguy83/go-md2man/v2 v2.0.7/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/crc-org/admin-helper v0.5.8 h1:zXXzBgXrLXA+gNvtS2KdgtaD5WAB23ZNTSMUpfdE5U8=
 github.com/crc-org/admin-helper v0.5.8/go.mod h1:Xx2JCxgAdDSBhJHJ/vaBuioi94oA8Da9yRWBKeH7nic=
-github.com/crc-org/machine v0.0.0-20260721135927-5bcb8a00e0f1 h1:F+m/3LuzDqnGa9z+m8juGb1epcWAfUNsAoODfzIJkDI=
-github.com/crc-org/machine v0.0.0-20260721135927-5bcb8a00e0f1/go.mod h1:trWeQimjfE3dJ8qWOxI4ePtYm13aecK42bf01s6h/Nc=
+github.com/crc-org/machine v0.0.0-20260805175039-d3388f63e9f9 h1:gsI8puDdopuAxS/9ebNR+8ScXSy+7SxTGpGki2jVj7I=
+github.com/crc-org/machine v0.0.0-20260805175039-d3388f63e9f9/go.mod h1:trWeQimjfE3dJ8qWOxI4ePtYm13aecK42bf01s6h/Nc=
 github.com/crc-org/vfkit v0.6.4 h1:9UfAGABf0gb9PgRyOGvBeGq/9cQv5DKbJ4qHuN+Eh9k=
 github.com/crc-org/vfkit v0.6.4/go.mod h1:soPLDvhdsPbFasruB9b3lGx25Ahq2bD5CxyRQ0DCO+Y=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/crc-org/crc/v2/pkg/crc/manpages"
+	"github.com/crc-org/machine/libmachine/drivers/plugin/localbinary"
 
 	"github.com/spf13/cobra/doc"
 
@@ -53,6 +54,8 @@ func init() {
 	if err := constants.EnsureBaseDirectoriesExist(); err != nil {
 		logging.Fatal(err.Error())
 	}
+	// Set the socket directory for machine driver plugins
+	os.Setenv(localbinary.PluginEnvSocketDir, constants.SocketBaseDir)
 	var err error
 	config, viper, err = newConfig()
 	if err != nil {

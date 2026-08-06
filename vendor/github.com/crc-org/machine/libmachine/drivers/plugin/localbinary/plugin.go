@@ -26,6 +26,7 @@ const (
 	PluginEnvKey        = "MACHINE_PLUGIN_TOKEN"
 	PluginEnvVal        = "42"
 	PluginEnvDriverName = "MACHINE_PLUGIN_DRIVER_NAME"
+	PluginEnvSocketDir  = "MACHINE_PLUGIN_SOCKET_DIR"
 )
 
 type McnBinaryExecutor interface {

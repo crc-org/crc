@@ -15,7 +15,7 @@ require (
 	github.com/containers/libhvee v0.11.0
 	github.com/coreos/go-systemd/v22 v22.7.0
 	github.com/crc-org/admin-helper v0.5.8
-	github.com/crc-org/machine v0.0.0-20260721135927-5bcb8a00e0f1
+	github.com/crc-org/machine v0.0.0-20260805175039-d3388f63e9f9
 	github.com/crc-org/vfkit v0.6.4
 	github.com/cucumber/godog v0.16.0
 	github.com/cucumber/messages-go/v10 v10.0.3
