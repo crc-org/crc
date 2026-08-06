@@ -25,6 +25,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
+	"github.com/crc-org/crc/v2/pkg/crc/restapi"
 	"github.com/crc-org/crc/v2/pkg/fileserver/fs9p"
 	"github.com/crc-org/machine/libmachine/drivers"
 	"github.com/docker/go-units"
@@ -149,6 +150,14 @@ func createNewVirtualNetworkConfig(providedConfig *crcConfig.Config) types.Confi
 }
 
 func run(configuration *types.Configuration) error {
+	// Create the REST API token as soon as the daemon starts, independent of
+	// crc-httpd.socket systemd socket activatation.
+	// crc start also reuses this file when syncing the cluster Secret.
+	restAPIToken, err := restapi.LoadOrCreateToken(constants.RestAPITokenPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to load REST API token")
+	}
+
 	vn, err := virtualnetwork.New(configuration)
 	if err != nil {
 		return err
@@ -184,7 +193,7 @@ func run(configuration *types.Configuration) error {
 		return err
 	}
 	go func() {
-		mux := gatewayAPIMux(config, adminHelperHostsFileEditor{})
+		mux := gatewayAPIMux(config, adminHelperHostsFileEditor{}, restAPIToken)
 		s := &http.Server{
 			Handler:      handlers.LoggingHandler(os.Stderr, mux),
 			ReadTimeout:  10 * time.Second,
@@ -348,10 +357,11 @@ func (adminHelperHostsFileEditor) Remove(hostnames ...string) error {
 
 // This API is only exposed in the virtual network (only the VM can reach this).
 // Any process inside the VM can reach it by connecting to gateway.crc.testing:80.
-func gatewayAPIMux(cfg *crcConfig.Config, hostsEditor HostsFileEditor) *http.ServeMux {
+// Requests must include Authorization: Bearer <restAPIToken>.
+func gatewayAPIMux(cfg *crcConfig.Config, hostsEditor HostsFileEditor, restAPIToken string) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/hosts/add", func(w http.ResponseWriter, r *http.Request) {
-		acceptJSONStringArray(w, r, func(hostnames []string) error {
+		acceptJSONStringArray(w, r, restAPIToken, func(hostnames []string) error {
 			if !cfg.Get(crcConfig.ModifyHostsFile).AsBool() {
 				logging.Infof("Skipping hosts file modification because 'modify-hosts-file' is set to false")
 
@@ -361,7 +371,7 @@ func gatewayAPIMux(cfg *crcConfig.Config, hostsEditor HostsFileEditor) *http.Ser
 		})
 	})
 	mux.HandleFunc("/hosts/remove", func(w http.ResponseWriter, r *http.Request) {
-		acceptJSONStringArray(w, r, func(hostnames []string) error {
+		acceptJSONStringArray(w, r, restAPIToken, func(hostnames []string) error {
 			if !cfg.Get(crcConfig.ModifyHostsFile).AsBool() {
 				logging.Infof("Skipping hosts file modification because 'modify-hosts-file' is set to false")
 
@@ -379,9 +389,13 @@ func networkAPIMux(vn *virtualnetwork.VirtualNetwork) *http.ServeMux {
 	return mux
 }
 
-func acceptJSONStringArray(w http.ResponseWriter, r *http.Request, fun func(hostnames []string) error) {
+func acceptJSONStringArray(w http.ResponseWriter, r *http.Request, restAPIToken string, fun func(hostnames []string) error) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "post only", http.StatusBadRequest)
+		return
+	}
+	if !restapi.BearerTokenAuthorized(r.Header.Get("Authorization"), restAPIToken) {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 	var req []string

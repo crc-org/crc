@@ -28,6 +28,7 @@ const (
 	LogFile                   = "crc.log"
 	DaemonLogFile             = "crcd.log"
 	AdminHelperLogFile        = "admin-helper.log"
+	RestAPITokenFile          = "rest-api.token"
 	CrcLandingPageURL         = "https://console.redhat.com/openshift/create/local" // #nosec G101
 	DefaultAdminHelperURLBase = "https://github.com/crc-org/admin-helper/releases/download/v%s/%s"
 	BackgroundLauncherURL     = "https://github.com/crc-org/win32-background-launcher/releases/download/v%s/win32-background-launcher.exe"
@@ -144,6 +145,7 @@ var (
 	LogFilePath            = filepath.Join(CrcBaseDir, LogFile)
 	DaemonLogFilePath      = filepath.Join(CrcBaseDir, DaemonLogFile)
 	AdminHelperLogFilePath = filepath.Join(CrcBaseDir, AdminHelperLogFile)
+	RestAPITokenPath       = filepath.Join(CrcBaseDir, RestAPITokenFile)
 	MachineBaseDir         = CrcBaseDir
 	MachineCacheDir        = filepath.Join(MachineBaseDir, "cache")
 	MachineInstanceDir     = filepath.Join(MachineBaseDir, "machines")
