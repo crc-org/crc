@@ -91,6 +91,17 @@ var resolverPreflightChecks = []Check{
 
 var daemonLaunchdChecks = []Check{
 	{
+		configKeySuffix:    "check-rest-api-token",
+		checkDescription:   "Checking REST API token",
+		check:              checkRestAPIToken,
+		fixDescription:     "Creating REST API token",
+		fix:                fixRestAPIToken,
+		cleanupDescription: "Removing REST API token",
+		cleanup:            removeRestAPIToken,
+
+		labels: labels{Os: Darwin},
+	},
+	{
 		configKeySuffix:    "check-daemon-launchd-plist",
 		checkDescription:   "Checking if crc daemon plist file is present and loaded",
 		check:              checkIfDaemonPlistFileExists,
