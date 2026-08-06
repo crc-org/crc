@@ -12,6 +12,7 @@ import (
 
 	"github.com/crc-org/crc/v2/pkg/crc/cache"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/hostsapi"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
 	"github.com/crc-org/crc/v2/pkg/crc/version"
@@ -197,6 +198,36 @@ func fixCrcSymlink() error {
 func removeCrcSymlink() error {
 	if crcos.FileExists(constants.CrcSymlinkPath) {
 		return os.Remove(constants.CrcSymlinkPath)
+	}
+	return nil
+}
+func checkHostsAPIToken() error {
+	info, err := os.Stat(constants.HostsAPITokenPath)
+	if os.IsNotExist(err) {
+		return fmt.Errorf("hosts API token file does not exist at %s", constants.HostsAPITokenPath)
+	}
+	if err != nil {
+		return err
+	}
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("hosts API token path is not a regular file: %s", constants.HostsAPITokenPath)
+	}
+	if info.Size() == 0 {
+		return fmt.Errorf("hosts API token file is empty: %s", constants.HostsAPITokenPath)
+	}
+	return nil
+}
+
+func fixHostsAPIToken() error {
+	if _, err := hostsapi.LoadOrCreateToken(constants.HostsAPITokenPath); err != nil {
+		return fmt.Errorf("failed to create hosts API token: %w", err)
+	}
+	return nil
+}
+
+func removeHostsAPIToken() error {
+	if err := os.Remove(constants.HostsAPITokenPath); err != nil && !os.IsNotExist(err) {
+		return err
 	}
 	return nil
 }

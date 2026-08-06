@@ -109,6 +109,7 @@ func (fake *fakeHostsFileEditor) Remove(hostnames ...string) error {
 }
 
 func TestGatewayAPIMux_HostsEndpointsRespectModifyHostsFile(t *testing.T) {
+	const token = "test-hosts-api-token" // nolint:gosec
 	tests := []struct {
 		name             string
 		modifyHostsFile  bool
@@ -148,17 +149,50 @@ func TestGatewayAPIMux_HostsEndpointsRespectModifyHostsFile(t *testing.T) {
 			_, err := cfg.Set(crcConfig.ModifyHostsFile, test.modifyHostsFile)
 			assert.NoError(t, err)
 			hostsEditor := &fakeHostsFileEditor{}
-			mux := gatewayAPIMux(cfg, hostsEditor)
+			mux := gatewayAPIMux(cfg, hostsEditor, token)
 			rec := httptest.NewRecorder()
 
 			// When
 			req := httptest.NewRequest(http.MethodPost, test.path, bytes.NewBufferString(`["api.crc.testing"]`))
+			req.Header.Set("Authorization", "Bearer "+token)
 			mux.ServeHTTP(rec, req)
 
 			// Then
 			assert.Equal(t, http.StatusOK, rec.Code)
 			assert.Equal(t, test.expectAddCalled, hostsEditor.addCalled)
 			assert.Equal(t, test.expectRemoveCall, hostsEditor.removeCalled)
+		})
+	}
+}
+
+func TestGatewayAPIMux_HostsEndpointsRequireBearerToken(t *testing.T) {
+	cfg := crcConfig.New(crcConfig.NewEmptyInMemoryStorage(), crcConfig.NewEmptyInMemorySecretStorage())
+	crcConfig.RegisterSettings(cfg)
+	_, err := cfg.Set(crcConfig.ModifyHostsFile, true)
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name   string
+		header string
+	}{
+		{name: "missing"},
+		{name: "wrong", header: "Bearer other-token"},
+		{name: "not-bearer", header: "expected-token"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			hostsEditor := &fakeHostsFileEditor{}
+			mux := gatewayAPIMux(cfg, hostsEditor, "expected-token")
+			rec := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodPost, "/hosts/add", bytes.NewBufferString(`["api.crc.testing"]`))
+			if test.header != "" {
+				req.Header.Set("Authorization", test.header)
+			}
+			mux.ServeHTTP(rec, req)
+
+			assert.Equal(t, http.StatusUnauthorized, rec.Code)
+			assert.False(t, hostsEditor.addCalled)
 		})
 	}
 }

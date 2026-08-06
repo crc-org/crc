@@ -18,6 +18,7 @@ import (
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
+	"github.com/crc-org/crc/v2/pkg/crc/hostsapi"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/fileserver/fs9p"
 	"github.com/gorilla/handlers"
@@ -63,6 +64,14 @@ var daemonCmd = &cobra.Command{
 }
 
 func run(cfg *crcConfig.Config) error {
+	// Create the hosts API token as soon as the daemon starts, independent of
+	// which systemd socket activated us (crc-http.socket vs crc-admin-helper.socket).
+	// crc start also creates/reuses this file when syncing the cluster Secret.
+	hostsAPIToken, err := hostsapi.LoadOrCreateToken(constants.HostsAPITokenPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to load hosts API token")
+	}
+
 	errCh := make(chan error)
 
 	// Main HTTP listener for /api and /events endpoints
@@ -98,7 +107,7 @@ func run(cfg *crcConfig.Config) error {
 		if adminHelperLn == nil {
 			return
 		}
-		mux := gatewayAPIMux(cfg, adminHelperHostsFileEditor{})
+		mux := gatewayAPIMux(cfg, adminHelperHostsFileEditor{}, hostsAPIToken)
 		s := &http.Server{
 			Handler:           handlers.LoggingHandler(os.Stderr, mux),
 			ReadHeaderTimeout: 10 * time.Second,
@@ -176,10 +185,11 @@ func (adminHelperHostsFileEditor) Remove(hostnames ...string) error {
 
 // gatewayAPIMux creates the HTTP mux for the admin helper hosts file API.
 // This API allows adding and removing entries from the hosts file.
-func gatewayAPIMux(cfg *crcConfig.Config, hostsEditor HostsFileEditor) *http.ServeMux {
+// Requests must include Authorization: Bearer <hostsAPIToken>.
+func gatewayAPIMux(cfg *crcConfig.Config, hostsEditor HostsFileEditor, hostsAPIToken string) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/hosts/add", func(w http.ResponseWriter, r *http.Request) {
-		acceptJSONStringArray(w, r, func(hostnames []string) error {
+		acceptJSONStringArray(w, r, hostsAPIToken, func(hostnames []string) error {
 			if !cfg.Get(crcConfig.ModifyHostsFile).AsBool() {
 				logging.Infof("Skipping hosts file modification because 'modify-hosts-file' is set to false")
 
@@ -189,7 +199,7 @@ func gatewayAPIMux(cfg *crcConfig.Config, hostsEditor HostsFileEditor) *http.Ser
 		})
 	})
 	mux.HandleFunc("/hosts/remove", func(w http.ResponseWriter, r *http.Request) {
-		acceptJSONStringArray(w, r, func(hostnames []string) error {
+		acceptJSONStringArray(w, r, hostsAPIToken, func(hostnames []string) error {
 			if !cfg.Get(crcConfig.ModifyHostsFile).AsBool() {
 				logging.Infof("Skipping hosts file modification because 'modify-hosts-file' is set to false")
 
@@ -201,9 +211,13 @@ func gatewayAPIMux(cfg *crcConfig.Config, hostsEditor HostsFileEditor) *http.Ser
 	return mux
 }
 
-func acceptJSONStringArray(w http.ResponseWriter, r *http.Request, fun func(hostnames []string) error) {
+func acceptJSONStringArray(w http.ResponseWriter, r *http.Request, hostsAPIToken string, fun func(hostnames []string) error) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "post only", http.StatusBadRequest)
+		return
+	}
+	if !hostsapi.BearerTokenAuthorized(r.Header.Get("Authorization"), hostsAPIToken) {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 	var req []string

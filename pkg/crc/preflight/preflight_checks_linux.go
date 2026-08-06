@@ -341,7 +341,11 @@ func checkDaemonSystemdSockets() error {
 		return err
 	}
 
-	return checkSystemdUnit(adminHelperUnitName, adminHelperUnit, true)
+	if err := checkSystemdUnit(adminHelperUnitName, adminHelperUnit, true); err != nil {
+		return err
+	}
+
+	return checkHostsAPIToken()
 }
 
 func checkDaemonSystemdService() error {
@@ -401,7 +405,13 @@ func fixDaemonSystemdSockets() error {
 		return err
 	}
 
-	return fixSystemdUnit(adminHelperUnitName, adminHelperUnit, true)
+	if err := fixSystemdUnit(adminHelperUnitName, adminHelperUnit, true); err != nil {
+		return err
+	}
+
+	// Create the hosts API token when setting up the admin-helper socket so it
+	// exists before socket activation or crc start Secret sync.
+	return fixHostsAPIToken()
 }
 
 func fixDaemonSystemdService() error {
@@ -419,6 +429,7 @@ func removeDaemonSystemdSockets() error {
 
 	_ = sd.Stop(adminHelperUnitName)
 	os.Remove(systemd.UserUnitPath(adminHelperUnitName))
+	_ = removeHostsAPIToken()
 
 	return nil
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/cluster"
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	crcerrors "github.com/crc-org/crc/v2/pkg/crc/errors"
+	"github.com/crc-org/crc/v2/pkg/crc/hostsapi"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/macadam"
 	"github.com/crc-org/crc/v2/pkg/crc/machine/bundle"
@@ -445,7 +446,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 
 		if client.useVSock() {
-			if err := ensureRoutesControllerIsRunning(sshRunner, ocConfig); err != nil {
+			if err := ensureRoutesControllerIsRunning(ctx, sshRunner, ocConfig, instanceIP); err != nil {
 				return nil, err
 			}
 		}
@@ -495,8 +496,12 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to update cluster ID")
 	}
 
+	if err := copyKubeconfigFileFromVMToHost(ctx, systemdRunner, sshRunner, constants.KubeconfigFilePath); err != nil {
+		return nil, errors.Wrap(err, "Failed to update kubeconfig file")
+	}
+
 	if client.useVSock() {
-		if err := ensureRoutesControllerIsRunning(sshRunner, ocConfig); err != nil {
+		if err := ensureRoutesControllerIsRunning(ctx, sshRunner, ocConfig, instanceIP); err != nil {
 			return nil, err
 		}
 	}
@@ -506,10 +511,6 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		if err := cluster.StartMonitoring(ocConfig); err != nil {
 			return nil, errors.Wrap(err, "Cannot start monitoring stack")
 		}
-	}
-
-	if err := copyKubeconfigFileFromVMToHost(ctx, systemdRunner, sshRunner, constants.KubeconfigFilePath); err != nil {
-		return nil, errors.Wrap(err, "Failed to update kubeconfig file")
 	}
 
 	logging.Infof("Starting %s instance... [waiting for the cluster to stabilize]", startConfig.Preset)
@@ -760,18 +761,35 @@ func logBundleDate(crcBundleMetadata *bundle.CrcBundleInfo) {
 	}
 }
 
-func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Config) error {
+func ensureRoutesControllerIsRunning(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.Config, instanceIP string) error {
 	// Check if the bundle have `/opt/crc/routes-controller.yaml` file and if it has
 	// then use it to create the resource for the routes controller.
 	_, _, err := sshRunner.Run("ls", "/opt/crc/routes-controller.yaml")
 	if err != nil {
 		return err
 	}
+
+	// Secret must exist before routes-controller starts so it can mount CRC_HOSTS_API_TOKEN.
+	if err := ensureHostsAPITokenInCluster(ctx, instanceIP); err != nil {
+		return err
+	}
+
 	_, _, err = ocConfig.RunOcCommand("apply", "-f", "/opt/crc/routes-controller.yaml")
 	if err != nil {
 		return err
 	}
 	return ensureRoutesNetworkPolicy(sshRunner, ocConfig)
+}
+
+func ensureHostsAPITokenInCluster(ctx context.Context, instanceIP string) error {
+	token, err := hostsapi.LoadOrCreateToken(constants.HostsAPITokenPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to load hosts API token")
+	}
+	if err := cluster.EnsureHostsAPITokenSecret(ctx, instanceIP, constants.KubeconfigFilePath, token); err != nil {
+		return errors.Wrap(err, "failed to ensure hosts API token secret")
+	}
+	return nil
 }
 
 func ensureRoutesNetworkPolicy(sshRunner *crcssh.Runner, ocConfig oc.Config) error {

@@ -28,6 +28,7 @@ const (
 	LogFile                   = "crc.log"
 	DaemonLogFile             = "crcd.log"
 	AdminHelperLogFile        = "admin-helper.log"
+	HostsAPITokenFile         = "hosts-api.token"
 	CrcLandingPageURL         = "https://console.redhat.com/openshift/create/local" // #nosec G101
 	DefaultAdminHelperURLBase = "https://github.com/crc-org/admin-helper/releases/download/v%s/%s"
 	DefaultGvproxyURLBase     = "https://github.com/containers/gvisor-tap-vsock/releases/download/%s/%s"
@@ -182,6 +183,7 @@ var (
 	LogFilePath            = filepath.Join(CrcBaseDir, LogFile)
 	DaemonLogFilePath      = filepath.Join(CrcBaseDir, DaemonLogFile)
 	AdminHelperLogFilePath = filepath.Join(CrcBaseDir, AdminHelperLogFile)
+	HostsAPITokenPath      = filepath.Join(CrcBaseDir, HostsAPITokenFile)
 	MachineBaseDir         = CrcBaseDir
 	MachineCacheDir        = filepath.Join(MachineBaseDir, "cache")
 	MachineInstanceDir     = filepath.Join(MachineBaseDir, "machines")
