@@ -679,7 +679,7 @@ github.com/zalando/go-keyring/secret_service
 # go.podman.io/common v0.69.0
 ## explicit; go 1.25.7
 go.podman.io/common/pkg/strongunits
-# go.podman.io/image/v5 v5.41.0
+# go.podman.io/image/v5 v5.41.1
 ## explicit; go 1.25.7
 go.podman.io/image/v5/copy
 go.podman.io/image/v5/directory
