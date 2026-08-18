@@ -12,6 +12,7 @@ import (
 	"text/template"
 
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
+	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/os"
 )
 
@@ -115,12 +116,18 @@ func CheckPlist(config AgentConfig) error {
 
 // LoadPlist loads a launchd agents' plist file
 func LoadPlist(label string) error {
-	return runLaunchCtl("load", "-w", getPlistPath(label))
+	uid := goos.Getuid()
+	// This is required for migration from older versions
+	if err := runLaunchCtl("enable", fmt.Sprintf("user/%d/%s", uid, label)); err != nil {
+		logging.Debugf("Failed to enable launchd service %s: %v", label, err)
+	}
+	return runLaunchCtl("bootstrap", fmt.Sprintf("user/%d", uid), getPlistPath(label))
 }
 
 // UnloadPlist Unloads a launchd agent's service
 func UnloadPlist(label string) error {
-	return runLaunchCtl("unload", "-w", getPlistPath(label))
+	target := fmt.Sprintf("user/%d/%s", goos.Getuid(), label)
+	return runLaunchCtl("bootout", target)
 }
 
 // RemovePlist removes a launchd agent plist config file
