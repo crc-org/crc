@@ -42,6 +42,8 @@ const (
 	</dict>
 	<key>RunAtLoad</key>
 	<true/>
+	<key>LimitLoadToSessionType</key>
+	<string>Background</string>
 </dict>
 </plist>
 `
