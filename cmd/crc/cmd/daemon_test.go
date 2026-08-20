@@ -3,15 +3,12 @@ package cmd
 import (
 	"bytes"
 	"errors"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
-	"regexp"
 	"testing"
 
-	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	"github.com/crc-org/crc/v2/pkg/crc/api/client"
 	crcConfig "github.com/crc-org/crc/v2/pkg/crc/config"
 
@@ -90,72 +87,6 @@ func TestCheckDaemonVersion_WhenErrorReturnedWhileFetchingVersion_ThenReturnFals
 	assert.Equal(t, false, result)
 }
 
-func TestCreateNewVirtualNetworkConfig(t *testing.T) {
-	// Given
-	oldPcapFileEnvVal := os.Getenv("CRC_DAEMON_PCAP_FILE")
-	err := os.Setenv("CRC_DAEMON_PCAP_FILE", "/tmp/pcapfile")
-	assert.NoError(t, err)
-	defer func(key, value string) {
-		err := os.Setenv(key, value)
-		assert.NoError(t, err)
-	}("CRC_DAEMON_PCAP_FILE", oldPcapFileEnvVal)
-	testCrcConfig := crcConfig.New(crcConfig.NewEmptyInMemoryStorage(), crcConfig.NewEmptyInMemorySecretStorage())
-
-	// When
-	virtualNetworkConfig := createNewVirtualNetworkConfig(testCrcConfig)
-
-	// Then
-	assert.Equal(t, false, virtualNetworkConfig.Debug)
-	assert.Equal(t, "/tmp/pcapfile", virtualNetworkConfig.CaptureFile)
-	assert.Equal(t, 4000, virtualNetworkConfig.MTU)
-	assert.Equal(t, "192.168.127.0/24", virtualNetworkConfig.Subnet)
-	assert.Equal(t, "192.168.127.1", virtualNetworkConfig.GatewayIP)
-	assert.ElementsMatch(t, []string{"192.168.127.254"}, virtualNetworkConfig.GatewayVirtualIPs)
-	assert.Equal(t, "5a:94:ef:e4:0c:dd", virtualNetworkConfig.GatewayMacAddress)
-	assert.Equal(t, types.Protocol("hyperkit"), virtualNetworkConfig.Protocol)
-
-	assert.Len(t, virtualNetworkConfig.DHCPStaticLeases, 1)
-	assert.Equal(t, "5a:94:ef:e4:0c:ee", virtualNetworkConfig.DHCPStaticLeases["192.168.127.2"])
-
-	assert.Len(t, virtualNetworkConfig.DNS, 4)
-	assert.Equal(t, "apps-crc.testing.", virtualNetworkConfig.DNS[0].Name)
-	assert.Equal(t, net.ParseIP("192.168.127.2"), virtualNetworkConfig.DNS[0].DefaultIP)
-	assert.Equal(t, "crc.testing.", virtualNetworkConfig.DNS[1].Name)
-	assert.Equal(t, "host", virtualNetworkConfig.DNS[1].Records[0].Name)
-	assert.Equal(t, net.ParseIP("192.168.127.254"), virtualNetworkConfig.DNS[1].Records[0].IP)
-	assert.Equal(t, "gateway", virtualNetworkConfig.DNS[1].Records[1].Name)
-	assert.Equal(t, net.ParseIP("192.168.127.1"), virtualNetworkConfig.DNS[1].Records[1].IP)
-	assert.Equal(t, "api", virtualNetworkConfig.DNS[1].Records[2].Name)
-	assert.Equal(t, net.ParseIP("192.168.127.2"), virtualNetworkConfig.DNS[1].Records[2].IP)
-	assert.Equal(t, "api-int", virtualNetworkConfig.DNS[1].Records[3].Name)
-	assert.Equal(t, net.ParseIP("192.168.127.2"), virtualNetworkConfig.DNS[1].Records[3].IP)
-	assert.Equal(t, regexp.MustCompile("crc-(.*?)-master-0"), virtualNetworkConfig.DNS[1].Records[4].Regexp)
-	assert.Equal(t, net.ParseIP("192.168.126.11"), virtualNetworkConfig.DNS[1].Records[4].IP)
-
-	assert.Equal(t, "containers.internal.", virtualNetworkConfig.DNS[2].Name)
-	assert.Len(t, virtualNetworkConfig.DNS[2].Records, 1)
-	assert.Equal(t, "gateway", virtualNetworkConfig.DNS[2].Records[0].Name)
-	assert.Equal(t, net.ParseIP("192.168.127.254"), virtualNetworkConfig.DNS[2].Records[0].IP)
-	assert.Equal(t, "docker.internal.", virtualNetworkConfig.DNS[3].Name)
-	assert.Len(t, virtualNetworkConfig.DNS[3].Records, 1)
-	assert.Equal(t, "gateway", virtualNetworkConfig.DNS[3].Records[0].Name)
-	assert.Equal(t, net.ParseIP("192.168.127.254"), virtualNetworkConfig.DNS[3].Records[0].IP)
-}
-
-func TestCreateNewVirtualNetworkConfig_WhenHostNetworkConfigSet_ThenSetNAT(t *testing.T) {
-	// Given
-	testCrcConfig := crcConfig.New(crcConfig.NewEmptyInMemoryStorage(), crcConfig.NewEmptyInMemorySecretStorage())
-	testCrcConfig.AddSetting("host-network-access", false, crcConfig.ValidateBool, crcConfig.SuccessfullyApplied, "test message")
-	_, err := testCrcConfig.Set(crcConfig.HostNetworkAccess, true)
-	assert.NoError(t, err)
-
-	// When
-	virtualNetworkConfig := createNewVirtualNetworkConfig(testCrcConfig)
-
-	// Then
-	assert.Equal(t, "127.0.0.1", virtualNetworkConfig.NAT["192.168.127.254"])
-}
-
 type fakeHostsFileEditor struct {
 	addCalled    bool
 	removeCalled bool
@@ -178,6 +109,7 @@ func (fake *fakeHostsFileEditor) Remove(hostnames ...string) error {
 }
 
 func TestGatewayAPIMux_HostsEndpointsRespectModifyHostsFile(t *testing.T) {
+	const token = "test-hosts-api-token" // nolint:gosec
 	tests := []struct {
 		name             string
 		modifyHostsFile  bool
@@ -217,17 +149,50 @@ func TestGatewayAPIMux_HostsEndpointsRespectModifyHostsFile(t *testing.T) {
 			_, err := cfg.Set(crcConfig.ModifyHostsFile, test.modifyHostsFile)
 			assert.NoError(t, err)
 			hostsEditor := &fakeHostsFileEditor{}
-			mux := gatewayAPIMux(cfg, hostsEditor)
+			mux := gatewayAPIMux(cfg, hostsEditor, token)
 			rec := httptest.NewRecorder()
 
 			// When
 			req := httptest.NewRequest(http.MethodPost, test.path, bytes.NewBufferString(`["api.crc.testing"]`))
+			req.Header.Set("Authorization", "Bearer "+token)
 			mux.ServeHTTP(rec, req)
 
 			// Then
 			assert.Equal(t, http.StatusOK, rec.Code)
 			assert.Equal(t, test.expectAddCalled, hostsEditor.addCalled)
 			assert.Equal(t, test.expectRemoveCall, hostsEditor.removeCalled)
+		})
+	}
+}
+
+func TestGatewayAPIMux_HostsEndpointsRequireBearerToken(t *testing.T) {
+	cfg := crcConfig.New(crcConfig.NewEmptyInMemoryStorage(), crcConfig.NewEmptyInMemorySecretStorage())
+	crcConfig.RegisterSettings(cfg)
+	_, err := cfg.Set(crcConfig.ModifyHostsFile, true)
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name   string
+		header string
+	}{
+		{name: "missing"},
+		{name: "wrong", header: "Bearer other-token"},
+		{name: "not-bearer", header: "expected-token"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			hostsEditor := &fakeHostsFileEditor{}
+			mux := gatewayAPIMux(cfg, hostsEditor, "expected-token")
+			rec := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodPost, "/hosts/add", bytes.NewBufferString(`["api.crc.testing"]`))
+			if test.header != "" {
+				req.Header.Set("Authorization", test.header)
+			}
+			mux.ServeHTTP(rec, req)
+
+			assert.Equal(t, http.StatusUnauthorized, rec.Code)
+			assert.False(t, hostsEditor.addCalled)
 		})
 	}
 }

@@ -186,7 +186,7 @@ func checkIfDaemonPlistFileExists() error {
 	if !launchd.AgentRunning(daemonConfig.Label) && !daemonRunning() {
 		return fmt.Errorf("launchd agent '%s' is not running", daemonConfig.Label)
 	}
-	return nil
+	return checkHostsAPIToken()
 }
 
 func fixDaemonPlistFileExists() error {
@@ -199,14 +199,22 @@ func fixDaemonPlistFileExists() error {
 	if err != nil {
 		return err
 	}
-	return fixPlistFileExists(*daemonConfig)
+	if err := fixPlistFileExists(*daemonConfig); err != nil {
+		return err
+	}
+	// Create the hosts API token when setting up the daemon so it exists
+	// before crc start Secret sync.
+	return fixHostsAPIToken()
 }
 
 func removeDaemonPlistFile() error {
 	if err := launchd.UnloadPlist(constants.DaemonAgentLabel); err != nil {
 		return err
 	}
-	return launchd.RemovePlist(constants.DaemonAgentLabel)
+	if err := launchd.RemovePlist(constants.DaemonAgentLabel); err != nil {
+		return err
+	}
+	return removeHostsAPIToken()
 }
 
 func fixPlistFileExists(agentConfig launchd.AgentConfig) error {

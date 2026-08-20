@@ -23,6 +23,7 @@ type Cache struct {
 	version            string
 	ignoreNameMismatch bool
 	getVersion         func(string) (string, error)
+	targetName         string // Optional: if set, rename the executable to this name
 }
 
 type VersionMismatchError struct {
@@ -84,6 +85,44 @@ func NewAdminHelperCache() *Cache {
 	)
 }
 
+func NewGvproxyCache() *Cache {
+	url := constants.GetGvproxyURL()
+	version := version.GetGvproxyVersion()
+	cache := newCache(constants.GvproxyPath(),
+		url,
+		version,
+		func(executable string) (string, error) {
+			out, _, err := crcos.RunWithDefaultLocale(executable, "--version")
+			if err != nil {
+				return "", err
+			}
+			// gvproxy --version output format: "gvproxy version v0.8.7"
+			split := strings.Split(out, " ")
+			return strings.TrimSpace(split[len(split)-1]), nil
+		},
+	)
+	cache.targetName = constants.GetGvproxyExecutableName()
+	return cache
+}
+
+func NewMacadamCache() *Cache {
+	url := constants.GetMacadamURL()
+	version := version.GetMacadamVersion()
+	return newCache(constants.MacadamPath(),
+		url,
+		version,
+		func(executable string) (string, error) {
+			out, _, err := crcos.RunWithDefaultLocale(executable, "--version")
+			if err != nil {
+				return "", err
+			}
+			// macadam version output format: "macadam version v0.2.0"
+			split := strings.Split(out, " ")
+			return strings.TrimSpace(split[len(split)-1]), nil
+		},
+	)
+}
+
 func (c *Cache) IsCached() bool {
 	if _, err := os.Stat(c.GetExecutablePath()); os.IsNotExist(err) {
 		return false
@@ -136,7 +175,12 @@ func (c *Cache) cacheExecutable() error {
 
 	// Copy the requested asset into its final destination
 	for _, extractedFilePath := range extractedFiles {
-		finalExecutablePath := filepath.Join(constants.CrcBinDir, c.GetExecutableName())
+		// Use targetName if set, otherwise use the original executable name
+		finalName := c.GetExecutableName()
+		if c.targetName != "" {
+			finalName = c.targetName
+		}
+		finalExecutablePath := filepath.Join(constants.CrcBinDir, finalName)
 		// If the file exists then remove it (ignore error) first before copy because with `0500` permission
 		// it is not possible to overwrite the file.
 		os.Remove(finalExecutablePath)
