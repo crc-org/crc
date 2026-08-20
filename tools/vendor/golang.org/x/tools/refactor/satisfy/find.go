@@ -11,7 +11,7 @@
 // It requires well-typed inputs, and may panic otherwise.
 //
 // This package reimplements parts of the type checker. See
-// https://go.dev/issue/70638 for a proposal to expose the the work
+// https://go.dev/issue/70638 for a proposal to expose the work
 // already done by the type checker, which would make this package
 // redundant.
 package satisfy
@@ -355,7 +355,8 @@ func (f *Finder) expr(e ast.Expr) types.Type {
 		if e.Name == "_" { // e.g. "for _ = range x"
 			return tInvalid
 		}
-		panic("undefined ident: " + e.Name)
+		// There could be a missing definition, return an invalid type
+		return tInvalid
 
 	case *ast.Ellipsis:
 		if e.Elt != nil {
@@ -374,7 +375,14 @@ func (f *Finder) expr(e ast.Expr) types.Type {
 			case *types.Struct:
 				for i, elem := range e.Elts {
 					if kv, ok := elem.(*ast.KeyValueExpr); ok {
-						f.assign(f.info.Uses[kv.Key.(*ast.Ident)].Type(), f.expr(kv.Value))
+						// in weird code, kv.Key might not be an identifier
+						id, ok := kv.Key.(*ast.Ident)
+						if !ok || f.info.Uses[id] == nil {
+							f.expr(kv.Value)
+							continue
+
+						}
+						f.assign(f.info.Uses[id].Type(), f.expr(kv.Value))
 					} else {
 						f.assign(T.Field(i).Type(), f.expr(elem))
 					}
@@ -412,7 +420,10 @@ func (f *Finder) expr(e ast.Expr) types.Type {
 				f.expr(e.X)
 			}
 		} else {
-			return f.info.Uses[e.Sel].Type() // qualified identifier
+			if obj, ok := f.info.Uses[e.Sel]; ok {
+				return obj.Type() // qualified identifier
+			}
+			return tInvalid
 		}
 
 	case *ast.IndexExpr:

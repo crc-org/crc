@@ -15,13 +15,16 @@ causing build breakage. However, these problems are generally
 trivial to fix. We regard any modernizer whose fix changes program
 behavior to have a serious bug and will endeavor to fix it.
 
-To apply all modernization fixes en masse, you can use the
+Since Go 1.26, the 'go fix' command has included the modernize suite,
+so to apply all modernization fixes en masse, you can use the
 following command:
 
-	$ go run golang.org/x/tools/go/analysis/passes/modernize/cmd/modernize@latest -fix ./...
+	$ go fix ./...
 
-(Do not use "go get -tool" to add gopls as a dependency of your
-module; gopls commands must be built from their release branch.)
+If you need to run a modernizer added or modified since the Go
+release, you can use this standalone command:
+
+	$ go run golang.org/x/tools/go/analysis/passes/modernize/cmd/modernize@latest -fix ./...
 
 If the tool warns of conflicting fixes, you may need to run it more
 than once until it has applied all fixes cleanly. This command is
@@ -344,6 +347,21 @@ No fix is offered in cases when the runtime type is dynamic, such as:
 
 or when the operand has potential side effects.
 
+# Analyzer reflecttypeassert
+
+reflecttypeassert: replace v.Interface().(T) with reflect.TypeAssert[T](v)
+
+This analyzer suggests fixes to replace two-valued type assertions on
+the result of (reflect.Value).Interface with reflect.TypeAssert,
+introduced in go1.25, which avoids the intermediate allocation of an
+interface value, for example:
+
+	x, ok := v.Interface().(string)  ->  x, ok := reflect.TypeAssert[string](v)
+
+No fix is offered for single-valued assertions, since they panic when
+the assertion fails whereas reflect.TypeAssert does not. Nor is a fix
+offered for a type switch.
+
 # Analyzer slicesbackward
 
 slicesbackward: replace backward loops over slices with slices.Backward
@@ -365,6 +383,22 @@ If the loop index is needed beyond just indexing into the slice, both
 the index and value variables are kept:
 
 	for i, v := range slices.Backward(s) { ... }
+
+# Analyzer slicesclip
+
+slicesclip: replace three-index slice expressions with slices.Clip
+
+The slicesclip analyzer suggests replacing a full slice expression of
+the form
+
+	x[:len(x):len(x)]
+
+which clips the capacity of a slice to its length, with the simpler
+and more readable
+
+	slices.Clip(x)
+
+added in Go 1.21.
 
 # Analyzer slicescontains
 
@@ -422,7 +456,7 @@ or its "for elem := range x.Len()" equivalent by a range loop over an
 iterator offered by the same data type:
 
 	for elem := range x.All() {
-		use(x.At(i)
+		use(elem)
 	}
 
 where x is one of various well-known types in the standard library.

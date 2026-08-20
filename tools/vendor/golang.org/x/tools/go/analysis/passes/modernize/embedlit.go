@@ -33,7 +33,7 @@ var EmbedLitAnalyzer = &analysis.Analyzer{
 		typeindexanalyzer.Analyzer,
 	},
 	Run: runEmbedLit,
-	URL: "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/modernize#embedlit",
+	URL: "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/modernize#hdr-Analyzer_embedlit",
 }
 
 // Go1.27 introduced the ability to directly access embedded struct fields.
@@ -209,15 +209,25 @@ func embedlitCombine(pass *analysis.Pass, index *typeindex.Index, info *types.In
 	case edge.AssignStmt_Rhs:
 		assign := curLit.Parent().Node().(*ast.AssignStmt)
 		// TODO(mkalil): Handle lhs forms that aren't idents, i.e. x.y[i] = T{...}.
-		if id, ok := assign.Lhs[curLit.ParentEdgeIndex()].(*ast.Ident); ok {
+		// TODO(mkalil): Handle multi-assignments like t1, t2 := A{}, B{}
+		if len(assign.Lhs) != 1 {
+			return nil
+		}
+		if id, ok := assign.Lhs[0].(*ast.Ident); ok {
 			lhs = id
 			curStmt = curLit.Parent()
 		}
 	case edge.ValueSpec_Values:
 		spec := curLit.Parent().Node().(*ast.ValueSpec)
-		lhs = spec.Names[curLit.ParentEdgeIndex()]
+		// TODO(mkalil): Handle multi-declarations like var (x = A{}; y = B{}) or var x, y = ...
+		if len(spec.Names) != 1 {
+			return nil
+		}
+		lhs = spec.Names[0]
 		if decl, ok := moreiters.First(curLit.Enclosing((*ast.DeclStmt)(nil))); ok {
-			curStmt = decl
+			if gdecl, ok := decl.Node().(*ast.DeclStmt).Decl.(*ast.GenDecl); ok && len(gdecl.Specs) == 1 {
+				curStmt = decl
+			}
 		}
 	default:
 		return nil
@@ -231,7 +241,8 @@ func embedlitCombine(pass *analysis.Pass, index *typeindex.Index, info *types.In
 		tObj = info.ObjectOf(lhs)
 		// Marks the contiguous block of embedded field assign statements that will
 		// be moved into the struct initialization.
-		firstStmt, lastStmt inspector.Cursor
+		firstStmt, lastStmt  inspector.Cursor
+		hasEmbeddedSelection bool
 	)
 stmtloop:
 	for {
@@ -262,6 +273,15 @@ stmtloop:
 		if obj != tObj {
 			break
 		}
+		// The selection is from an embedded field if it directly
+		// assigns an embedded struct field (t.B = B{...}) or if
+		// the length of the index path is greater than one.
+		seln := info.Selections[sel]
+		if v, ok := seln.Obj().(*types.Var); ok && v.Embedded() ||
+			len(seln.Index()) > 1 {
+			hasEmbeddedSelection = true
+		}
+
 		rhsCur := curStmt.ChildAt(edge.AssignStmt_Rhs, 0)
 		if uses(index, rhsCur, tObj) {
 			break
@@ -284,7 +304,8 @@ stmtloop:
 		lastStmt = curStmt
 	}
 
-	if !firstStmt.Valid() {
+	if !firstStmt.Valid() || !hasEmbeddedSelection {
+		// We should not suggest a fix if none of the selections are from embedded fields.
 		return nil
 	}
 
