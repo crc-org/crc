@@ -10,7 +10,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.4.1
 	github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
-	github.com/cheggaaa/pb/v3 v3.2.0
+	github.com/cheggaaa/pb/v3 v3.2.1
 	github.com/containers/gvisor-tap-vsock v0.8.9
 	github.com/containers/libhvee v0.11.0
 	github.com/coreos/go-systemd/v22 v22.7.0
@@ -129,7 +129,7 @@ require (
 	github.com/klauspost/pgzip v1.2.6 // indirect
 	github.com/lufia/plan9stats v0.0.0-20240909124753-873cd0166683 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/mattn/go-isatty v0.0.22 // indirect
+	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mattn/go-runewidth v0.0.27 // indirect
 	github.com/mattn/go-sqlite3 v1.14.48 // indirect
 	github.com/mdlayher/socket v0.6.0 // indirect
