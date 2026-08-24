@@ -70,7 +70,7 @@ github.com/areYouLazy/libhosty
 github.com/asaskevich/govalidator
 # github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 ## explicit
-# github.com/cheggaaa/pb/v3 v3.2.0
+# github.com/cheggaaa/pb/v3 v3.2.1
 ## explicit; go 1.25.0
 github.com/cheggaaa/pb/v3
 github.com/cheggaaa/pb/v3/termutil
@@ -385,8 +385,8 @@ github.com/mailru/easyjson/jwriter
 # github.com/mattn/go-colorable v0.1.15
 ## explicit; go 1.18
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.22
-## explicit; go 1.21
+# github.com/mattn/go-isatty v0.0.24
+## explicit; go 1.20
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.27
 ## explicit; go 1.23
