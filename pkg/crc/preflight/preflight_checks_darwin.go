@@ -141,7 +141,7 @@ func killVfkitProcess() error {
 		if errors.As(err, &exitErr) {
 			/* 1: no processes matched */
 			if exitErr.ExitCode() == 1 {
-				logging.Debugf("No running 'vfkit' process started by crc")
+				logging.Debugf("No running 'vfkit' process started by crc, continuing")
 				return nil
 			}
 		}
@@ -204,7 +204,10 @@ func fixDaemonPlistFileExists() error {
 
 func removeDaemonPlistFile() error {
 	if err := launchd.UnloadPlist(constants.DaemonAgentLabel); err != nil {
-		return err
+		if !strings.Contains(err.Error(), "No such process") {
+			return err
+		}
+		logging.Debugf("Daemon plist not loaded, continuing")
 	}
 	return launchd.RemovePlist(constants.DaemonAgentLabel)
 }
