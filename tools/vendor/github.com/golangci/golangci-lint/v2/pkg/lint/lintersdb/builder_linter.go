@@ -257,6 +257,13 @@ func (LinterBuilder) Build(cfg *config.Config) ([]*linter.Config, error) {
 
 		linter.NewConfig(exhaustruct.New(&cfg.Linters.Settings.Exhaustruct)).
 			WithSince("v1.46.0").
+			DeprecatedWarning("new major version.", "v2.13.0",
+				linter.Replacement("exhaustruct_v5", nil, &cfg.Linters.Settings.Exhaustruct)).
+			WithLoadForGoAnalysis().
+			WithURL("https://github.com/GaijinEntertainment/go-exhaustruct"),
+
+		linter.NewConfig(exhaustruct.NewV5(&cfg.Linters.Settings.Exhaustructv5)).
+			WithSince("v2.13.0").
 			WithLoadForGoAnalysis().
 			WithURL("https://github.com/GaijinEntertainment/go-exhaustruct"),
 
@@ -373,7 +380,7 @@ func (LinterBuilder) Build(cfg *config.Config) ([]*linter.Config, error) {
 		linter.NewConfig(golines.New(&cfg.Linters.Settings.GoLines)).
 			WithSince("v2.0.0").
 			WithAutoFix().
-			WithURL("https://github.com/segmentio/golines"),
+			WithURL("https://github.com/golangci/golines"),
 
 		linter.NewConfig(goheader.New(&cfg.Linters.Settings.Goheader, placeholderReplacer)).
 			WithSince("v1.28.0").
@@ -391,6 +398,7 @@ func (LinterBuilder) Build(cfg *config.Config) ([]*linter.Config, error) {
 
 		linter.NewConfig(modernize.New(&cfg.Linters.Settings.Modernize)).
 			WithSince("v2.6.0").
+			WithAutoFix().
 			WithLoadForGoAnalysis().
 			WithURL("https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/modernize"),
 

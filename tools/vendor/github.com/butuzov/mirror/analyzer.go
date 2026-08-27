@@ -5,11 +5,11 @@ import (
 	"go/ast"
 	"strings"
 
-	"github.com/butuzov/mirror/internal/checker"
-
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
+
+	"github.com/butuzov/mirror/internal/checker"
 )
 
 func NewAnalyzer() *analysis.Analyzer {

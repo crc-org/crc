@@ -146,7 +146,7 @@ func (m *MatchErrorMatcherWithMatcher) NumArgs() int {
 
 func newMatchErrorMatcher(args []ast.Expr, pass *analysis.Pass) MatchErrorMatcher {
 	numArgs := len(args)
-	if value.IsExprError(pass, args[0]) {
+	if value.IsExprError(pass, args[0], false) {
 		return &MatchErrorMatcherWithErr{numArgs: numArgs}
 	}
 

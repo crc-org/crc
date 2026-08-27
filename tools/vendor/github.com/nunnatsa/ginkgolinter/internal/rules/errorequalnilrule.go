@@ -40,7 +40,7 @@ func (r ErrorEqualNilRule) Apply(gexp *expression.GomegaExpression, config confi
 		return false
 	}
 
-	if v, ok := gexp.GetActualArg().(value.Valuer); ok && v.IsFunc() || gexp.ActualArgTypeIs(actual.ErrFuncActualArgType) {
+	if v, ok := gexp.GetActualArg().(value.Valuer); ok && v.IsFunc() && !gexp.ActualArgTypeIs(actual.ErrorMethodArgType) || gexp.ActualArgTypeIs(actual.ErrFuncActualArgType) {
 		gexp.SetMatcherSucceed()
 	} else {
 		gexp.ReverseAssertionFuncLogic()

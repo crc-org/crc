@@ -8,10 +8,7 @@
 // Many of the types and functions in this package are proxies for the new APIs
 // introduced in the standard library with Go 1.18. For example, the
 // typeparams.Union type is an alias for go/types.Union, and the ForTypeSpec
-// function returns the value of the go/ast.TypeSpec.TypeParams field. At Go
-// versions older than 1.18 these helpers are implemented as stubs, allowing
-// users of this package to write code that handles generic constructs inline,
-// even if the Go version being used to compile does not support generics.
+// function returns the value of the go/ast.TypeSpec.TypeParams field.
 //
 // Additionally, this package contains common utilities for working with the
 // new generic constructs, to supplement the standard library APIs. Notably,
@@ -28,8 +25,12 @@ import (
 
 // Enabled reports whether type parameters are enabled in the current build
 // environment.
+//
+// Deprecated: Type parameters are always enabled. Or use go fix (after go1.26).
+//
+//go:fix inline
 func Enabled() bool {
-	return enabled
+	return true
 }
 
 // UnpackIndexExpr extracts data from AST nodes that represent index

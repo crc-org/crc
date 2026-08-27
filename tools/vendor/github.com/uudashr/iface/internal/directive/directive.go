@@ -74,3 +74,12 @@ func (i *Ignore) ShouldIgnore(name string) bool {
 
 	return i.hasName(name)
 }
+
+func ShouldIgnore(doc *ast.CommentGroup, name string) bool {
+	dir := ParseIgnore(doc)
+	if dir == nil {
+		return false
+	}
+
+	return dir.ShouldIgnore(name)
+}

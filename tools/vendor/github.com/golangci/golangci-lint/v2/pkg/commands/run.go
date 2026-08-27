@@ -250,8 +250,7 @@ func (c *runCommand) execute(_ *cobra.Command, _ []string) {
 	if err := c.runAndPrint(ctx); err != nil {
 		c.log.Errorf("Running error: %s", err)
 		if c.exitCode == exitcodes.Success {
-			var exitErr *exitcodes.ExitError
-			if errors.As(err, &exitErr) {
+			if exitErr, ok := errors.AsType[*exitcodes.ExitError](err); ok {
 				c.exitCode = exitErr.Code
 			} else {
 				c.exitCode = exitcodes.Failure
@@ -713,8 +712,7 @@ func computeGoModSalt() (string, error) {
 		return "", fmt.Errorf("failed to read go.mod: %w", err)
 	}
 
-	// NOTE: the variable `goModPath` is not used here to ensure getting the same hash, independently of the location, for the same content.
-	sum, err := dirhash.Hash1([]string{"go.mod"}, func(string) (io.ReadCloser, error) {
+	sum, err := dirhash.Hash1([]string{goModPath}, func(string) (io.ReadCloser, error) {
 		return io.NopCloser(bytes.NewReader(data)), nil
 	})
 	if err != nil {

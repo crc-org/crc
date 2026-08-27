@@ -16,7 +16,7 @@
       system:
       let
         pkgs = import nixpkgs { inherit system; };
-        go = pkgs.go_1_24;
+        go = pkgs.go_1_26;
         buildInputs = with pkgs; [
           go
           coreutils
