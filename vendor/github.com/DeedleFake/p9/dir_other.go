@@ -1,5 +1,4 @@
 //go:build !linux && !darwin && !plan9 && !windows
-// +build !linux,!darwin,!plan9,!windows
 
 package p9
 

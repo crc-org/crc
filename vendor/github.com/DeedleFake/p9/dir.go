@@ -2,6 +2,8 @@ package p9
 
 import (
 	"errors"
+	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 )
@@ -59,6 +61,9 @@ func (d Dir) WriteStat(p string, changes StatChanges) error {
 	}
 
 	length, ok := changes.Length()
+	if length > math.MaxInt64 {
+		return fmt.Errorf("truncate length too large: %d", length)
+	}
 	if ok {
 		err := os.Truncate(p, int64(length))
 		if err != nil {
