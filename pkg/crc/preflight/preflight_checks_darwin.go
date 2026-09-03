@@ -195,6 +195,16 @@ func fixDaemonPlistFileExists() error {
 			return err
 		}
 	}
+
+	// Ensure any old plist is fully cleaned up before creating a new one.
+	// This is necessary when upgrading from older CRC versions where the
+	// plist file may have different content or be loaded with deprecated
+	// launchctl commands.
+	if err := removeDaemonPlistFile(); err != nil {
+		logging.Debugf("Failed to remove old plist during setup: %v", err)
+		// Don't return error, try to create new plist anyway
+	}
+
 	daemonConfig, err := getDaemonConfig()
 	if err != nil {
 		return err

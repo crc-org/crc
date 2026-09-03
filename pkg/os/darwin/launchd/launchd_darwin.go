@@ -127,7 +127,18 @@ func LoadPlist(label string) error {
 // UnloadPlist Unloads a launchd agent's service
 func UnloadPlist(label string) error {
 	target := fmt.Sprintf("user/%d/%s", goos.Getuid(), label)
-	return runLaunchCtl("bootout", target)
+	err := runLaunchCtl("bootout", target)
+	if err != nil {
+		// Fallback to legacy unload command for migration from older CRC versions.
+		// Older versions used 'load -w', so try 'unload -w' to fully clean up.
+		logging.Debugf("bootout failed, trying legacy unload: %v", err)
+		if legacyErr := runLaunchCtl("unload", "-w", getPlistPath(label)); legacyErr != nil {
+			// Return the original bootout error, not the legacy error
+			return err
+		}
+		return nil
+	}
+	return nil
 }
 
 // RemovePlist removes a launchd agent plist config file
