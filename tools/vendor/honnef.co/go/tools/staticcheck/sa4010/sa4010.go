@@ -16,7 +16,10 @@ var SCAnalyzer = lint.InitializeAnalyzer(&lint.Analyzer{
 		Requires: []*analysis.Analyzer{buildir.Analyzer},
 	},
 	Doc: &lint.RawDocumentation{
-		Title:    `The result of \'append\' will never be observed anywhere`,
+		Title: `The result of \'append\' will never be observed anywhere`,
+		Text: `Calls to \'append\' produce a new slice value. When the result of
+\'append\' is assigned to a variable that is never subsequently read, the
+append operation may have an unintended effect.`,
 		Since:    "2017.1",
 		Severity: lint.SeverityWarning,
 		MergeIf:  lint.MergeIfAll,
@@ -54,7 +57,6 @@ func run(pass *analysis.Pass) (any, error) {
 	// This graph must only consist of the following instructions:
 	//
 	// - phi
-	// - sigma
 	// - slice
 	// - const nil
 	// - MakeSlice
@@ -62,8 +64,7 @@ func run(pass *analysis.Pass) (any, error) {
 	// - calls to append
 	//
 	// If this step succeeds, we look at all referrers of the values found in the first step, recursively.
-	// These referrers must either be in the set of values found in the first step,
-	// be DebugRefs,
+	// These referrers must either be in the set of values found in the first step
 	// or fulfill the same type requirements as step 1, with the exception of appends, which are forbidden.
 	//
 	// If both steps succeed then we know that the backing array hasn't been aliased in an observable manner.
@@ -90,8 +91,6 @@ func run(pass *analysis.Pass) (any, error) {
 				}
 			}
 			return true
-		case *ir.Sigma:
-			return validateArgument(v.X, seen)
 		case *ir.Slice:
 			return validateArgument(v.X, seen)
 		case *ir.Const:
@@ -112,27 +111,26 @@ func run(pass *analysis.Pass) (any, error) {
 
 	var validateReferrers func(v ir.Value, seen map[ir.Instruction]struct{}) bool
 	validateReferrers = func(v ir.Value, seen map[ir.Instruction]struct{}) bool {
-		for _, ref := range *v.Referrers() {
-			if _, ok := seen[ref]; ok {
-				continue
-			}
+		if refs := v.Referrers(); refs != nil {
+			for _, ref := range *refs {
+				if _, ok := seen[ref]; ok {
+					continue
+				}
 
-			seen[ref] = struct{}{}
-			switch ref.(type) {
-			case *ir.Phi:
-			case *ir.Sigma:
-			case *ir.Slice:
-			case *ir.Const:
-			case *ir.MakeSlice:
-			case *ir.Alloc:
-			case *ir.DebugRef:
-			default:
-				return false
-			}
-
-			if ref, ok := ref.(ir.Value); ok {
-				if !validateReferrers(ref, seen) {
+				seen[ref] = struct{}{}
+				switch ref.(type) {
+				case *ir.Phi:
+				case *ir.Slice:
+				case *ir.MakeSlice:
+				case *ir.Alloc:
+				default:
 					return false
+				}
+
+				if ref, ok := ref.(ir.Value); ok {
+					if !validateReferrers(ref, seen) {
+						return false
+					}
 				}
 			}
 		}
@@ -157,13 +155,8 @@ func run(pass *analysis.Pass) (any, error) {
 							continue
 						}
 						visited[ref] = true
-						if _, ok := ref.(*ir.DebugRef); ok {
-							continue
-						}
 						switch ref := ref.(type) {
 						case *ir.Phi:
-							walkRefs(*ref.Referrers())
-						case *ir.Sigma:
 							walkRefs(*ref.Referrers())
 						case ir.Value:
 							if !isAppend(ref) {
@@ -195,8 +188,9 @@ func run(pass *analysis.Pass) (any, error) {
 
 				seen2 := map[ir.Instruction]struct{}{}
 				for k := range seen {
-					// the only values we allow are also instructions, so this type assertion cannot fail
-					seen2[k.(ir.Instruction)] = struct{}{}
+					if k, ok := k.(ir.Instruction); ok {
+						seen2[k] = struct{}{}
+					}
 				}
 				seen2[ins] = struct{}{}
 				failed := false

@@ -12,6 +12,9 @@ var defaultLintersSettings = LintersSettings{
 	Asasalint: AsasalintSettings{
 		UseBuiltinExclusions: true,
 	},
+	CanonicalHeader: CanonicalHeaderSettings{
+		UseDefaultExclusions: true,
+	},
 	Decorder: DecorderSettings{
 		DecOrder:                  []string{"type", "const", "var", "func"},
 		DisableDecNumCheck:        true,
@@ -41,6 +44,11 @@ var defaultLintersSettings = LintersSettings{
 		ExplicitExhaustiveMap:      false,
 		ExplicitExhaustiveSwitch:   false,
 	},
+	Fatcontext: FatcontextSettings{
+		CheckStructPointers:   false,
+		CheckLoops:            true,
+		CheckFunctionLiterals: true,
+	},
 	Forbidigo: ForbidigoSettings{
 		ExcludeGodocExamples: true,
 	},
@@ -63,6 +71,7 @@ var defaultLintersSettings = LintersSettings{
 		MinOccurrencesCount: 3,
 		NumberMin:           3,
 		NumberMax:           3,
+		ExcludeTypes:        []string{"Call"},
 		IgnoreCalls:         true,
 	},
 	Gocritic: GoCriticSettings{
@@ -246,6 +255,7 @@ type LintersSettings struct {
 	Asasalint                AsasalintSettings                `mapstructure:"asasalint"`
 	BiDiChk                  BiDiChkSettings                  `mapstructure:"bidichk"`
 	BodyClose                BodyCloseSettings                `mapstructure:"bodyclose"`
+	CanonicalHeader          CanonicalHeaderSettings          `mapstructure:"canonicalheader"`
 	CopyLoopVar              CopyLoopVarSettings              `mapstructure:"copyloopvar"`
 	Cyclop                   CyclopSettings                   `mapstructure:"cyclop"`
 	Decorder                 DecorderSettings                 `mapstructure:"decorder"`
@@ -259,6 +269,7 @@ type LintersSettings struct {
 	ErrorLint                ErrorLintSettings                `mapstructure:"errorlint"`
 	Exhaustive               ExhaustiveSettings               `mapstructure:"exhaustive"`
 	Exhaustruct              ExhaustructSettings              `mapstructure:"exhaustruct"`
+	Exhaustructv5            ExhaustructV5Settings            `mapstructure:"exhaustruct_v5"`
 	Fatcontext               FatcontextSettings               `mapstructure:"fatcontext"`
 	Forbidigo                ForbidigoSettings                `mapstructure:"forbidigo"`
 	FuncOrder                FuncOrderSettings                `mapstructure:"funcorder"`
@@ -369,6 +380,11 @@ type BodyCloseSettings struct {
 	CheckConsumption bool `mapstructure:"check-consumption"`
 }
 
+type CanonicalHeaderSettings struct {
+	Exclusions           []string `mapstructure:"exclusions"`
+	UseDefaultExclusions bool     `mapstructure:"use-default-exclusions"`
+}
+
 type CopyLoopVarSettings struct {
 	CheckAlias bool `mapstructure:"check-alias"`
 }
@@ -414,9 +430,10 @@ type DuplSettings struct {
 }
 
 type DupWordSettings struct {
-	Keywords     []string `mapstructure:"keywords"`
-	Ignore       []string `mapstructure:"ignore"`
-	CommentsOnly bool     `mapstructure:"comments-only"`
+	Keywords       []string `mapstructure:"keywords"`
+	Ignore         []string `mapstructure:"ignore"`
+	CommentsOnly   bool     `mapstructure:"comments-only"`
+	SkipRawStrings bool     `mapstructure:"skip-raw-strings"`
 }
 
 type EmbeddedStructFieldCheckSettings struct {
@@ -462,6 +479,7 @@ type ExhaustiveSettings struct {
 	DefaultCaseRequired        bool     `mapstructure:"default-case-required"`
 }
 
+// Deprecated: use ExhaustructV5Settings instead.
 type ExhaustructSettings struct {
 	Include                []string `mapstructure:"include"`
 	Exclude                []string `mapstructure:"exclude"`
@@ -471,8 +489,21 @@ type ExhaustructSettings struct {
 	AllowEmptyDeclarations bool     `mapstructure:"allow-empty-declarations"`
 }
 
+type ExhaustructV5Settings struct {
+	EnforcePatterns        []string `mapstructure:"enforce-patterns"`
+	IgnorePatterns         []string `mapstructure:"ignore-patterns"`
+	OptionalPatterns       []string `mapstructure:"optional-patterns"`
+	AllowEmpty             bool     `mapstructure:"allow-empty"`
+	AllowEmptyPatterns     []string `mapstructure:"allow-empty-patterns"`
+	AllowEmptyReturns      bool     `mapstructure:"allow-empty-returns"`
+	AllowEmptyDeclarations bool     `mapstructure:"allow-empty-declarations"`
+	ExplicitMode           bool     `mapstructure:"explicit-mode"`
+}
+
 type FatcontextSettings struct {
-	CheckStructPointers bool `mapstructure:"check-struct-pointers"`
+	CheckStructPointers   bool `mapstructure:"check-struct-pointers"`
+	CheckLoops            bool `mapstructure:"check-loops"`
+	CheckFunctionLiterals bool `mapstructure:"check-function-literals"`
 }
 
 type ForbidigoSettings struct {
@@ -491,6 +522,7 @@ type FuncOrderSettings struct {
 	Constructor  bool `mapstructure:"constructor,omitempty"`
 	StructMethod bool `mapstructure:"struct-method,omitempty"`
 	Alphabetical bool `mapstructure:"alphabetical,omitempty"`
+	Function     bool `mapstructure:"function,omitempty"`
 }
 
 type FunlenSettings struct {
@@ -533,14 +565,20 @@ type GoConstSettings struct {
 	ParseNumbers         bool     `mapstructure:"numbers"`
 	NumberMin            int      `mapstructure:"min"`
 	NumberMax            int      `mapstructure:"max"`
-	IgnoreCalls          bool     `mapstructure:"ignore-calls"`
+	ExcludeTypes         []string `mapstructure:"exclude-types"`
 	FindDuplicates       bool     `mapstructure:"find-duplicates"`
 	EvalConstExpressions bool     `mapstructure:"eval-const-expressions"`
 	IgnoreFunctions      []string `mapstructure:"ignore-functions"`
+	IgnoreMapKeys        bool     `mapstructure:"ignore-map-keys"`
 
 	// This option cannot be managed with `linters.exclusions.rules`.
 	// Because the linter counts occurrences across all files in the package.
 	IgnoreTests bool `mapstructure:"ignore-tests"`
+
+	// NOTE(ldez): `ignore-calls` was here to have the same options as goconst as CLI.
+	//
+	// Deprecated: use ExcludeTypes instead.
+	IgnoreCalls bool `mapstructure:"ignore-calls"`
 
 	// Deprecated: use IgnoreStringValues instead.
 	IgnoreStrings string `mapstructure:"ignore-strings"`
@@ -601,7 +639,9 @@ type GoHeaderSettings struct {
 type GoModDirectivesSettings struct {
 	ReplaceAllowList          []string `mapstructure:"replace-allow-list"`
 	ReplaceLocal              bool     `mapstructure:"replace-local"`
+	ReplaceAllowAll           bool     `mapstructure:"replace-allow-all"`
 	ExcludeForbidden          bool     `mapstructure:"exclude-forbidden"`
+	IgnoreForbidden           bool     `mapstructure:"ignore-forbidden"`
 	RetractAllowNoExplanation bool     `mapstructure:"retract-allow-no-explanation"`
 	ToolchainForbidden        bool     `mapstructure:"toolchain-forbidden"`
 	ToolchainPattern          string   `mapstructure:"toolchain-pattern"`
@@ -827,7 +867,8 @@ type NoLintLintSettings struct {
 }
 
 type NoNamedReturnsSettings struct {
-	ReportErrorInDefer bool `mapstructure:"report-error-in-defer"`
+	ReportErrorInDefer      bool `mapstructure:"report-error-in-defer"`
+	AllowUnusedNamedReturns bool `mapstructure:"allow-unused-named-returns"`
 }
 
 type ParallelTestSettings struct {

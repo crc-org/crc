@@ -29,6 +29,7 @@ linters:
     - varnamelen
     - wrapcheck
     - wsl # deprecated
+    - gomodguard # deprecated
 
   settings:
     depguard:
@@ -51,6 +52,7 @@ linters:
     goconst:
       min-len: 3
       min-occurrences: 3
+      ignore-tests: true
     gocritic:
       disabled-checks:
         - sloppyReassign

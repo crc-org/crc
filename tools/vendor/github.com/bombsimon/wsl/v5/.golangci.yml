@@ -14,10 +14,13 @@ linters:
     - dupword
     - err113
     - exhaustruct
+    - exhaustruct_v5
     - forbidigo
     - funlen
     - gocognit
+    - goconst
     - godot
+    - gomodguard
     - lll
     - mnd
     - nlreturn

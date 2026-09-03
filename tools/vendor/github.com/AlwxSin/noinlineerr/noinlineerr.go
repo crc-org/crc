@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"go/ast"
 	"go/printer"
+	"go/token"
 	"go/types"
 
 	"golang.org/x/tools/go/analysis"
@@ -11,7 +12,13 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-const errMessage = "avoid inline error handling using `if err := ...; err != nil`; use plain assignment `err := ...`"
+func errMessage(tok token.Token) string {
+	if tok == token.ASSIGN {
+		return "avoid inline error handling using `if err = ...; err != nil`; use plain assignment `err = ...`"
+	}
+
+	return "avoid inline error handling using `if err := ...; err != nil`; use plain assignment `err := ...`"
+}
 
 func NewAnalyzer() *analysis.Analyzer {
 	return &analysis.Analyzer{
@@ -67,8 +74,8 @@ func inlineErrorInspector(pass *analysis.Pass) func(n ast.Node) {
 			// or there are any variables with same name
 			// then we can make a shadow conflict with other variables
 			// so don't do anything beside simple error message
-			if len(assignStmt.Lhs) != 1 || shadowVarsExists(ident.Name, pass.TypesInfo.Scopes[ifStmt]) {
-				pass.Reportf(ident.Pos(), errMessage)
+			if len(assignStmt.Lhs) != 1 || (assignStmt.Tok == token.DEFINE && shadowVarsExists(ident.Name, pass.TypesInfo.Scopes[ifStmt])) {
+				pass.Reportf(ident.Pos(), errMessage(assignStmt.Tok))
 				return
 			}
 
@@ -85,13 +92,13 @@ func inlineErrorInspector(pass *analysis.Pass) func(n ast.Node) {
 			pass.Report(analysis.Diagnostic{
 				Pos:     ident.Pos(),
 				End:     ident.End(),
-				Message: errMessage,
+				Message: errMessage(assignStmt.Tok),
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
 						Message: "move err assignment outside if",
 						TextEdits: []analysis.TextEdit{
 							{
-								// insert err := ... before if
+								// insert err := ... or err = ... before if
 								Pos:     ifStmt.Pos(),
 								End:     ifStmt.Pos(),
 								NewText: []byte(assignText + "\n"),

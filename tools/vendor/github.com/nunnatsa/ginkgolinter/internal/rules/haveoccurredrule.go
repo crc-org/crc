@@ -45,11 +45,13 @@ func (r HaveOccurredRule) Apply(gexp *expression.GomegaExpression, config config
 		return true
 	}
 
-	if config.ForceSucceedForFuncs && gexp.GetActualArg().(*actual.ErrPayload).IsFunc() {
-		gexp.ReverseAssertionFuncLogic()
-		gexp.SetMatcherSucceed()
-		reportBuilder.AddIssue(true, "prefer using the Succeed matcher for error function, instead of HaveOccurred")
-		return true
+	if config.ForceSucceedForFuncs {
+		if errPayload, ok := gexp.GetActualArg().(*actual.ErrPayload); ok && errPayload.IsFunc() {
+			gexp.ReverseAssertionFuncLogic()
+			gexp.SetMatcherSucceed()
+			reportBuilder.AddIssue(true, "prefer using the Succeed matcher for error function, instead of HaveOccurred")
+			return true
+		}
 	}
 
 	return false

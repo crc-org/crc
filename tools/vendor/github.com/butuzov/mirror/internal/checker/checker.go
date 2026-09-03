@@ -109,7 +109,7 @@ func (c *Checker) callConverts(ce *ast.CallExpr) bool {
 
 // register violations.
 func (c *Checker) register(violations []Violation) {
-	for _, v := range violations { // nolint: gocritic
+	for _, v := range violations { //nolint: gocritic
 		c.Violations = append(c.Violations, v)
 		if len(v.Struct) > 0 {
 			c.registerIdxPer(v.Package + "." + v.Struct)
@@ -141,7 +141,7 @@ func WrapType(info *types.Info) func(node ast.Expr) string {
 func WrapPrint(fSet *token.FileSet) func(ast.Node) []byte {
 	return func(node ast.Node) []byte {
 		var buf bytes.Buffer
-		printer.Fprint(&buf, fSet, node)
+		_ = printer.Fprint(&buf, fSet, node)
 		return buf.Bytes()
 	}
 }

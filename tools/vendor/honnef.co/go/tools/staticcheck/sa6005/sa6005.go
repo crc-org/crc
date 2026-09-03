@@ -1,6 +1,7 @@
 package sa6005
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
 
@@ -60,16 +61,18 @@ var (
 func run(pass *analysis.Pass) (any, error) {
 	for node, m := range code.Matches(pass, checkToLowerToUpperComparisonQ) {
 		rn := pattern.NodeToAST(checkToLowerToUpperComparisonR.Root, m.State).(ast.Expr)
+		method := "strings.EqualFold"
 		if m.State["tok"].(token.Token) == token.NEQ {
 			rn = &ast.UnaryExpr{
 				Op: token.NOT,
 				X:  rn,
 			}
+			method = "!" + method
 		}
 
 		report.Report(pass, node,
-			"should use strings.EqualFold instead",
-			report.Fixes(edit.Fix("Replace with strings.EqualFold", edit.ReplaceWithNode(pass.Fset, node, rn))))
+			fmt.Sprintf("should use %s instead", method),
+			report.Fixes(edit.Fix("replace with "+method, edit.ReplaceWithNode(pass.Fset, node, rn))))
 	}
 	return nil, nil
 }
