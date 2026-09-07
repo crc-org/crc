@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/spf13/cast"
@@ -22,16 +23,23 @@ func (s Secret) String() string {
 type SecretStorage struct {
 	secretService   string
 	storeAccessible bool
+	once            sync.Once
 }
 
 func NewSecretStorage() *SecretStorage {
 	return &SecretStorage{
-		secretService:   secretServiceName,
-		storeAccessible: keyringAccessible(),
+		secretService: secretServiceName,
 	}
 }
 
+func (c *SecretStorage) ensureInitialized() {
+	c.once.Do(func() {
+		c.storeAccessible = keyringAccessible()
+	})
+}
+
 func (c *SecretStorage) Get(key string) interface{} {
+	c.ensureInitialized()
 	if !c.storeAccessible {
 		return nil
 	}
@@ -43,6 +51,7 @@ func (c *SecretStorage) Get(key string) interface{} {
 }
 
 func (c *SecretStorage) Set(key string, value interface{}) error {
+	c.ensureInitialized()
 	if !c.storeAccessible {
 		return ErrSecretsNotAccessible
 	}
@@ -54,6 +63,7 @@ func (c *SecretStorage) Set(key string, value interface{}) error {
 }
 
 func (c *SecretStorage) Unset(key string) error {
+	c.ensureInitialized()
 	if !c.storeAccessible {
 		return ErrSecretsNotAccessible
 	}
@@ -76,8 +86,11 @@ func keyringAccessible() bool {
 
 func NewEmptyInMemorySecretStorage() *SecretStorage {
 	keyring.MockInit()
-	return &SecretStorage{
+	s := &SecretStorage{
 		secretService:   secretServiceName,
 		storeAccessible: true,
 	}
+	// Consume the once so ensureInitialized won't overwrite storeAccessible.
+	s.once.Do(func() {})
+	return s
 }
