@@ -213,6 +213,9 @@ func removeDaemonPlistFile() error {
 }
 
 func fixPlistFileExists(agentConfig launchd.AgentConfig) error {
+	// Unload the plist file to unregister the agent from launchd
+	// ignore error if the plist file is not loaded/exists
+	launchd.UnloadPlist(agentConfig.Label) //nolint:errcheck
 	logging.Debugf("Creating plist for %s", agentConfig.Label)
 	err := launchd.CreatePlist(agentConfig)
 	if err != nil {
