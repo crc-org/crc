@@ -127,7 +127,19 @@ func LoadPlist(label string) error {
 // UnloadPlist Unloads a launchd agent's service
 func UnloadPlist(label string) error {
 	target := fmt.Sprintf("user/%d/%s", goos.Getuid(), label)
-	return runLaunchCtl("bootout", target)
+	if err := runLaunchCtl("bootout", target); err != nil {
+		// The agent may be registered in a different launchd domain than
+		// the one targeted above (e.g. 'gui/<uid>', from an older CRC
+		// version or macOS auto-loading the LaunchAgent plist at login).
+		// In that case bootout reports "No such process" here even though
+		// the service is still active in the other domain, so always fall
+		// back to 'launchctl remove', which drops a job by label
+		// regardless of domain and won't conflict with a subsequently
+		// bootstrapped plist.
+		logging.Debugf("failed to bootout launchd agent '%s': %v, falling back to 'remove'", label, err)
+		return Remove(label)
+	}
+	return nil
 }
 
 // RemovePlist removes a launchd agent plist config file
