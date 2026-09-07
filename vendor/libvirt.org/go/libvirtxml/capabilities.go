@@ -363,15 +363,19 @@ type CapsGuestFeatureACPI struct {
 type CapsGuestFeatureIA64BE struct {
 }
 
+type CapsGuestFeatureExternalSnapshot struct {
+}
+
 type CapsGuestFeatures struct {
-	CPUSelection *CapsGuestFeatureCPUSelection `xml:"cpuselection"`
-	DeviceBoot   *CapsGuestFeatureDeviceBoot   `xml:"deviceboot"`
-	DiskSnapshot *CapsGuestFeatureDiskSnapshot `xml:"disksnapshot"`
-	PAE          *CapsGuestFeaturePAE          `xml:"pae"`
-	NonPAE       *CapsGuestFeatureNonPAE       `xml:"nonpae"`
-	APIC         *CapsGuestFeatureAPIC         `xml:"apic"`
-	ACPI         *CapsGuestFeatureACPI         `xml:"acpi"`
-	IA64BE       *CapsGuestFeatureIA64BE       `xml:"ia64_be"`
+	CPUSelection     *CapsGuestFeatureCPUSelection     `xml:"cpuselection"`
+	DeviceBoot       *CapsGuestFeatureDeviceBoot       `xml:"deviceboot"`
+	DiskSnapshot     *CapsGuestFeatureDiskSnapshot     `xml:"disksnapshot"`
+	PAE              *CapsGuestFeaturePAE              `xml:"pae"`
+	NonPAE           *CapsGuestFeatureNonPAE           `xml:"nonpae"`
+	APIC             *CapsGuestFeatureAPIC             `xml:"apic"`
+	ACPI             *CapsGuestFeatureACPI             `xml:"acpi"`
+	IA64BE           *CapsGuestFeatureIA64BE           `xml:"ia64_be"`
+	ExternalSnapshot *CapsGuestFeatureExternalSnapshot `xml:"externalSnapshot"`
 }
 
 type CapsGuest struct {
