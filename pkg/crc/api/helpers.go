@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"sync"
 
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 )
@@ -45,8 +44,7 @@ func (c *context) Code(code int) error {
 }
 
 type server struct {
-	routes     map[string]map[string]func(*context) error
-	routesLock sync.RWMutex
+	routes map[string]map[string]func(*context) error
 }
 
 func newServer() *server {
@@ -56,8 +54,6 @@ func newServer() *server {
 }
 
 func (s *server) GET(pattern string, handler func(c *context) error) {
-	s.routesLock.Lock()
-	defer s.routesLock.Unlock()
 	if _, ok := s.routes[pattern]; !ok {
 		s.routes[pattern] = make(map[string]func(*context) error)
 	}
@@ -65,8 +61,6 @@ func (s *server) GET(pattern string, handler func(c *context) error) {
 }
 
 func (s *server) POST(pattern string, handler func(c *context) error) {
-	s.routesLock.Lock()
-	defer s.routesLock.Unlock()
 	if _, ok := s.routes[pattern]; !ok {
 		s.routes[pattern] = make(map[string]func(*context) error)
 	}
@@ -74,8 +68,6 @@ func (s *server) POST(pattern string, handler func(c *context) error) {
 }
 
 func (s *server) DELETE(pattern string, handler func(c *context) error) {
-	s.routesLock.Lock()
-	defer s.routesLock.Unlock()
 	if _, ok := s.routes[pattern]; !ok {
 		s.routes[pattern] = make(map[string]func(*context) error)
 	}
@@ -98,22 +90,18 @@ func (s *server) Handler() http.Handler {
 			entry.Info("api request")
 		}()
 
-		s.routesLock.RLock()
 		route, ok := s.routes[r.URL.Path]
 		if !ok {
-			s.routesLock.RUnlock()
 			status = http.StatusNotFound
 			http.Error(w, "Not Found", status)
 			return
 		}
 		handler, ok := route[r.Method]
 		if !ok {
-			s.routesLock.RUnlock()
 			status = http.StatusNotFound
 			http.Error(w, "Not Found", status)
 			return
 		}
-		s.routesLock.RUnlock()
 
 		requestBody, err := io.ReadAll(r.Body)
 		if err != nil {
