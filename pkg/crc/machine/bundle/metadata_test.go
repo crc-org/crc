@@ -349,7 +349,7 @@ func TestGetBundleNameFromURI(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("crc_%s_4.17.3_%s.crcbundle", osVirt, runtime.GOARCH), bundleName)
 
 	// HTTPs
-	bundleName, err = GetBundleNameFromURI("https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/crc/bundles/openshift/4.17.3/crc_libvirt_4.17.3_amd64.crcbundle")
+	bundleName, err = GetBundleNameFromURI("https://developers.redhat.com/content-gateway/file/pub/cgw/crc/bundles/openshift/4.17.3/crc_libvirt_4.17.3_amd64.crcbundle")
 	assert.Nil(t, err)
 	assert.Equal(t, "crc_libvirt_4.17.3_amd64.crcbundle", bundleName)
 

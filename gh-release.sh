@@ -24,7 +24,7 @@ fi
 
 function prepare_release_notes() {
 	read -r -d '' rn_template << EOF
-Downloads are available at: https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/%s
+Downloads are available at: https://developers.redhat.com/content-gateway/rest/mirror/pub/cgw/crc/%s
 To use these binaries follow the instructions at https://console.redhat.com/openshift/create/local to obtain the needed pull-secret.
 
 -------

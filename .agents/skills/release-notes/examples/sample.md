@@ -16,7 +16,7 @@ The most notable changes since the previous release are:
 - In preflight checks don't error out when check fails [5]
 
 
-[0] https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/2.53.0
+[0] https://developers.redhat.com/content-gateway/rest/mirror/pub/cgw/crc/2.53.0
 [1] https://github.com/crc-org/crc/issues
 [2] https://crc.dev/docs
 [3] https://github.com/crc-org/crc/releases/tag/v2.53.0

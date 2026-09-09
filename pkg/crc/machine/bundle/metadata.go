@@ -421,7 +421,7 @@ type ReleaseInfo struct {
 }
 
 func FetchLatestReleaseInfo() (*ReleaseInfo, error) {
-	const releaseInfoLink = "https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/release-info.json"
+	const releaseInfoLink = "https://developers.redhat.com/content-gateway/rest/mirror/pub/cgw/crc/latest/release-info.json"
 	response, err := download.InMemory(releaseInfoLink)
 	if err != nil {
 		return nil, err
