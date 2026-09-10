@@ -38,6 +38,7 @@ const (
 	EmergencyLogin           = "enable-emergency-login"
 	PersistentVolumeSize     = "persistent-volume-size"
 	EnableBundleQuayFallback = "enable-bundle-quay-fallback"
+	UseRosetta               = "use-rosetta"
 )
 
 func RegisterSettings(cfg *Config) {
@@ -126,6 +127,9 @@ func RegisterSettings(cfg *Config) {
 
 	cfg.AddSetting(EnableBundleQuayFallback, false, ValidateBool, SuccessfullyApplied,
 		"If bundle download from the default location fails, fallback to quay.io (true/false, default: false)")
+
+	cfg.AddSetting(UseRosetta, false, validateRosetta, RequiresDeleteAndSetupMsg,
+		"Use Rosetta to run x86_64/amd64 containers on Apple Silicon (true/false, default: false)")
 
 	if err := cfg.RegisterNotifier(Preset, presetChanged); err != nil {
 		logging.Debugf("Failed to register notifier for Preset: %v", err)
