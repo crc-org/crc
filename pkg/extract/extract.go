@@ -19,7 +19,6 @@ import (
 	"github.com/h2non/filetype"
 	"github.com/klauspost/compress/zstd"
 	"github.com/pkg/errors"
-	"github.com/xi2/xz"
 )
 
 const minSizeForProgressBar = 100_000_000
@@ -58,12 +57,6 @@ func uncompress(ctx context.Context, tarball, targetDir string, fileFilter func(
 	}
 
 	switch {
-	case filetype.Is(header, "xz"):
-		reader, err := xz.NewReader(file, 0)
-		if err != nil {
-			return nil, err
-		}
-		return untar(ctx, reader, targetDir, fileFilter, showProgress)
 	case filetype.Is(header, "zst"):
 		reader, err := zstd.NewReader(file)
 		if err != nil {

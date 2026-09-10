@@ -27,7 +27,6 @@ var (
 		"test.tar",
 		"test.tar.gz",
 		"test.zip",
-		"test.tar.xz",
 		"test.tar.zst",
 	}
 )
