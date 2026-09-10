@@ -1,6 +1,6 @@
 module github.com/crc-org/crc/v2
 
-go 1.25.9
+go 1.26.0
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
@@ -56,10 +56,10 @@ require (
 	github.com/zalando/go-keyring v0.2.8
 	go.podman.io/common v0.69.1
 	go.podman.io/image/v5 v5.41.1
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.56.0
 	golang.org/x/net v0.58.0
-	golang.org/x/sync v0.22.0
-	golang.org/x/sys v0.47.0
+	golang.org/x/sync v0.23.0
+	golang.org/x/sys v0.48.0
 	golang.org/x/term v0.45.0
 	golang.org/x/text v0.41.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
