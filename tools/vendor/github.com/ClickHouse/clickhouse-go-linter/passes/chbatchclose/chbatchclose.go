@@ -146,26 +146,71 @@ func (a *analyzer) handleAssign(pass *analysis.Pass, assign *ast.AssignStmt, usa
 	}
 }
 
-// handleDefer checks if a defer statement calls Close() or Abort() on a tracked Batch variable.
+// handleDefer checks if a defer statement calls Close() on a tracked Batch variable.
+// Two shapes are supported:
+//   - direct selector call:           defer batch.Close()
+//   - immediately-invoked closure:    defer func() { ... batch.Close() ... }()
+//     (no params; nested FuncLits inside the closure body are not descended into)
 func handleDefer(deferStmt *ast.DeferStmt, usages map[string]*batchUsage) {
 	call := deferStmt.Call
-	sel, ok := call.Fun.(*ast.SelectorExpr)
-	if !ok {
-		return
-	}
-	varName := util.IdentName(sel.X)
-	if varName == "" {
-		return
-	}
-	u, exists := usages[varName]
-	if !exists {
-		return
-	}
 
-	switch sel.Sel.Name {
-	case "Close":
-		u.deferredClose = true
+	switch fun := call.Fun.(type) {
+	case *ast.SelectorExpr:
+		varName := util.IdentName(fun.X)
+		if varName == "" {
+			return
+		}
+		u, exists := usages[varName]
+		if !exists {
+			return
+		}
+		if fun.Sel.Name == "Close" {
+			u.deferredClose = true
+		}
+	case *ast.FuncLit:
+		// only no-arg closures are supported for the moment
+		if fun.Type.Params != nil && len(fun.Type.Params.List) > 0 {
+			return
+		}
+		handleDeferredClosure(fun.Body, usages)
 	}
+}
+
+// handleDeferredClosure walks the body of a deferred closure looking for
+// `<tracked>.Close()` calls. It does not descend into nested FuncLits, so
+// `defer func() { go func() { batch.Close() }() }()` and similar are not
+// treated as a valid defensive close.
+func handleDeferredClosure(body *ast.BlockStmt, usages map[string]*batchUsage) {
+	ast.Inspect(body, func(n ast.Node) bool {
+		if n == nil {
+			return false
+		}
+		// don't descend into nested closures (goroutines, callbacks, etc.)
+		if n != body {
+			if _, ok := n.(*ast.FuncLit); ok {
+				return false
+			}
+		}
+		call, ok := n.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+		sel, ok := call.Fun.(*ast.SelectorExpr)
+		if !ok {
+			return true
+		}
+		if sel.Sel.Name != "Close" {
+			return true
+		}
+		varName := util.IdentName(sel.X)
+		if varName == "" {
+			return true
+		}
+		if u, exists := usages[varName]; exists {
+			u.deferredClose = true
+		}
+		return true
+	})
 }
 
 // handleReturn checks if any return value is a tracked Batch variable.

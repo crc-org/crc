@@ -1,13 +1,24 @@
-# `mirror` [![Stand with Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://u24.gov.ua/) [![Code Coverage](https://coveralls.io/repos/github/butuzov/mirror/badge.svg?branch=main)](https://coveralls.io/github/butuzov/mirror?branch=main) [![build status](https://github.com/butuzov/mirror/actions/workflows/main.yaml/badge.svg?branch=main)]()
+# `mirror` [![Stand with Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://u24.gov.ua/) [![Code Coverage](https://coveralls.io/repos/github/butuzov/mirror/badge.svg?branch=main)](https://coveralls.io/github/butuzov/mirror?branch=main) [![build status](https://github.com/butuzov/mirror/actions/workflows/main.yaml/badge.svg?branch=main)]() [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg)](http://www.opensource.org/licenses/MIT)
 
-`mirror` suggests use of alternative functions/methods in order to gain performance boosts by avoiding unnecessary `[]byte/string` conversion calls. See [MIRROR_FUNCS.md](MIRROR_FUNCS.md) list of mirror functions you can use in go's stdlib.
+Use right mirror functions for string/[]byte performance bust
 
 ---
 
 [![United 24](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner-personal-page.svg)](https://u24.gov.ua/)
-[![Help Oleg Butuzov](https://raw.githubusercontent.com/butuzov/butuzov/main/personal.svg)](https://github.com/butuzov)
 
 ---
+
+`mirror` suggests use of alternative functions/methods in order to gain performance boosts by avoiding unnecessary `[]byte/string` conversion calls. See [MIRROR_FUNCS.md](MIRROR_FUNCS.md) list of mirror functions you can use in go's stdlib.
+
+## Install
+
+```
+go install github.com/butuzov/mirror/cmd/mirror@latest
+```
+
+### `golangci-lint`
+
+`golangci-lint` supports `mirror` since `v1.53.0`
 
 ## Linter Use Cases
 
@@ -33,16 +44,6 @@ func IsValidHostname(hostname string, fqdn bool) bool {
 }
 ```
 
-## Install
-
-```
-go install github.com/butuzov/mirror/cmd/mirror@latest
-```
-
-### `golangci-lint`
-`golangci-lint` supports `mirror` since `v1.53.0`
-
-
 ## How to use
 
 You run `mirror` with [`go vet`](https://pkg.go.dev/cmd/vet):
@@ -56,6 +57,7 @@ pkg/common/net/ssl/ssl.go:166:3: avoid allocations with (*os.File).WriteString
 ```
 
 Can be called directly:
+
 ```
 mirror ./...
 # https://github.com/cosmtrek/air
@@ -89,33 +91,33 @@ util/cert/cert.go:82:10: avoid allocations with (*regexp.Regexp).MatchString (mi
 - You can add checks for `_test.go` files with cli option `--with-tests`
 
 ### `golangci-lint`
-  With `golangci-lint` tests are checked by default and can be can be turned off by using the regular `golangci-lint` ways to do it:
 
-  - flag `--tests` (e.g. `--tests=false`)
-  - flag `--skip-files` (e.g. `--skip-files="_test.go"`)
-  - yaml configuration `run.skip-files`:
-    ```yaml
-    run:
-      skip-files:
-        - '(.+)_test\.go'
-    ```
-  - yaml configuration `issues.exclude-rules`:
-    ```yaml
-      issues:
-        exclude-rules:
-          - path: '(.+)_test\.go'
-            linters:
-              - mirror
-      ```
+With `golangci-lint` tests are checked by default and can be can be turned off by using the regular `golangci-lint` ways to do it:
 
+- flag `--tests` (e.g. `--tests=false`)
+- flag `--skip-files` (e.g. `--skip-files="_test.go"`)
+- yaml configuration `run.skip-files`:
+  ```yaml
+  run:
+    skip-files:
+      - '(.+)_test\.go'
+  ```
+- yaml configuration `issues.exclude-rules`:
+  ```yaml
+  issues:
+    exclude-rules:
+      - path: '(.+)_test\.go'
+        linters:
+          - mirror
+  ```
 
 ## Contributing
 
 ```shell
 # Update Assets (testdata/(strings|bytes|os|utf8|maphash|regexp|bufio).go)
-(task|make) generate
+task generate
 # Run Tests
-(task|make) tests
+task tests
 # Lint Code
-(task|make) lints
+task lints
 ```

@@ -20,26 +20,30 @@ import (
 type BuilderMode uint
 
 const (
-	PrintPackages            BuilderMode = 1 << iota // Print package inventory to stdout
-	PrintFunctions                                   // Print function IR code to stdout
-	PrintSource                                      // Print source code when printing function IR
-	LogSource                                        // Log source locations as IR builder progresses
-	SanityCheckFunctions                             // Perform sanity checking of function bodies
-	NaiveForm                                        // Build naïve IR form: don't replace local loads/stores with registers
-	GlobalDebug                                      // Enable debug info for all packages
-	SplitAfterNewInformation                         // Split live range after we learn something new about a value
+	PrintPackages        BuilderMode = 1 << iota // Print package inventory to stdout
+	PrintFunctions                               // Print function IR code to stdout
+	PrintSource                                  // Print source code when printing function IR
+	LogSource                                    // Log source locations as IR builder progresses
+	SanityCheckFunctions                         // Perform sanity checking of function bodies
+	NaiveForm                                    // Build naïve IR form: don't replace local loads/stores with registers
+	BuildSerially                                // Build packages serially, not in parallel.
+	GlobalDebug                                  // Enable debug info for all packages
+	BareInits                                    // Build init functions without guards or calls to dependent inits
+	InstantiateGenerics                          // Instantiate generics functions (monomorphize) while building
 )
 
 const BuilderModeDoc = `Options controlling the IR builder.
-The value is a sequence of zero or more of these symbols:
+The value is a sequence of zero or more of these letters:
 C	perform sanity [C]hecking of the IR form.
 D	include [D]ebug info for every function.
 P	print [P]ackage inventory.
 F	print [F]unction IR code.
 A	print [A]ST nodes responsible for IR instructions
 S	log [S]ource locations as IR builder progresses.
+L	build distinct packages seria[L]ly instead of in parallel.
 N	build [N]aive IR form: don't replace local loads/stores with registers.
-I	Split live range after a value is used as slice or array index
+I	build bare [I]nit functions: no init guards or calls to dependent inits.
+G   instantiate [G]eneric function bodies via monomorphization
 `
 
 func (m BuilderMode) String() string {
@@ -65,8 +69,14 @@ func (m BuilderMode) String() string {
 	if m&NaiveForm != 0 {
 		buf.WriteByte('N')
 	}
-	if m&SplitAfterNewInformation != 0 {
+	if m&BuildSerially != 0 {
+		buf.WriteByte('L')
+	}
+	if m&BareInits != 0 {
 		buf.WriteByte('I')
+	}
+	if m&InstantiateGenerics != 0 {
+		buf.WriteByte('G')
 	}
 	return buf.String()
 }
@@ -85,13 +95,17 @@ func (m *BuilderMode) Set(s string) error {
 		case 'A':
 			mode |= PrintSource
 		case 'S':
-			mode |= LogSource
+			mode |= LogSource | BuildSerially
 		case 'C':
 			mode |= SanityCheckFunctions
 		case 'N':
 			mode |= NaiveForm
+		case 'L':
+			mode |= BuildSerially
 		case 'I':
-			mode |= SplitAfterNewInformation
+			mode |= BareInits
+		case 'G':
+			mode |= InstantiateGenerics
 		default:
 			return fmt.Errorf("unknown BuilderMode option: %q", c)
 		}

@@ -104,9 +104,9 @@ func (v *Violation) suggest(fSet *token.FileSet) []byte {
 	buf.WriteByte('(')
 	for idx := range v.callExpr.Args {
 		if arg, ok := v.arguments[idx]; ok {
-			printer.Fprint(&buf, fSet, arg)
+			_ = printer.Fprint(&buf, fSet, arg)
 		} else {
-			printer.Fprint(&buf, fSet, v.callExpr.Args[idx])
+			_ = printer.Fprint(&buf, fSet, v.callExpr.Args[idx])
 		}
 
 		if idx != len(v.callExpr.Args)-1 {
@@ -126,7 +126,7 @@ func (v *Violation) Diagnostic(fSet *token.FileSet) analysis.Diagnostic {
 	}
 
 	var buf bytes.Buffer
-	printer.Fprint(&buf, fSet, v.callExpr)
+	_ = printer.Fprint(&buf, fSet, v.callExpr)
 	noNl := bytes.IndexByte(buf.Bytes(), '\n') < 0
 
 	// Struct based fix.
@@ -177,7 +177,7 @@ func (v *Violation) Issue(fSet *token.FileSet) GolangIssue {
 
 	// original expression (useful for debug & required for replace)
 	var buf bytes.Buffer
-	printer.Fprint(&buf, fSet, v.callExpr)
+	_ = printer.Fprint(&buf, fSet, v.callExpr)
 	issue.Original = buf.String()
 
 	noNl := strings.IndexByte(issue.Original, '\n') < 0

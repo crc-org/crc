@@ -99,15 +99,17 @@ func NewAnalyzer() *analysis.Analyzer {
 	a.Flags.Var(&analyzer.keywords, "keyword", "keywords for detecting duplicate words")
 	a.Flags.Var(&analyzer.ignoreWords, "ignore", "ignore words")
 	a.Flags.BoolVar(&analyzer.commentsOnly, "comments-only", false, "check only comments, skip strings")
+	a.Flags.BoolVar(&analyzer.skipRawStrings, "skip-raw-strings", false, "skip raw string literals (backtick-delimited)")
 	a.Flags.Var(version{}, "V", "print version and exit")
 
 	return a
 }
 
 type analyzer struct {
-	keywords     keywords
-	ignoreWords  ignore
-	commentsOnly bool
+	keywords        keywords
+	ignoreWords     ignore
+	commentsOnly    bool
+	skipRawStrings  bool
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
@@ -186,6 +188,9 @@ func (a *analyzer) fixDuplicateWordInString(pass *analysis.Pass, lit *ast.BasicL
 	if lit.Kind != token.STRING {
 		return
 	}
+	if a.skipRawStrings && len(lit.Value) > 0 && lit.Value[0] == '`' {
+		return
+	}
 	value, err := strconv.Unquote(lit.Value)
 	if err != nil {
 		fmt.Printf("lit.Value:%v, err: %v\n", lit.Value, err)
@@ -193,9 +198,14 @@ func (a *analyzer) fixDuplicateWordInString(pass *analysis.Pass, lit *ast.BasicL
 		value = lit.Value
 	}
 	quote := value != lit.Value
+	isRawString := quote && len(lit.Value) > 0 && lit.Value[0] == '`'
 	update, keyword, find := a.Check(value)
 	if quote {
-		update = strconv.Quote(update)
+		if isRawString {
+			update = "`" + update + "`"
+		} else {
+			update = strconv.Quote(update)
+		}
 	}
 	if find {
 		pass.Report(analysis.Diagnostic{Pos: lit.Pos(), End: lit.End(), Message: fmt.Sprintf(Message, keyword), SuggestedFixes: []analysis.SuggestedFix{{
@@ -268,8 +278,8 @@ func (a *analyzer) checkOneKey(raw, key string) (new string, findWord string, fi
 			// space start position
 			spaceStart = i
 			curWord = raw[wordStart:i]
-		} else if i == len(raw)-1 {
-			// last position
+		} else if i == len(raw)-1 && !unicode.IsSpace(r) {
+			// last position (non-space): write the final word
 			word := raw[wordStart:]
 			if ((key != "" && word == key) || key == "") && word == preWord {
 				if !a.excludeWords(cutTrailingCommas(word)) {
@@ -282,6 +292,25 @@ func (a *analyzer) checkOneKey(raw, key string) (new string, findWord string, fi
 			}
 		}
 		lastRune = r
+	}
+	// Flush remaining content when the string ends with whitespace:
+	// the last word (curWord) and trailing whitespace haven't been written yet.
+	if len(raw) > 0 && unicode.IsSpace(rune(raw[len(raw)-1])) {
+		if curWord != "" {
+			if ((key != "" && curWord == key) || key == "") && curWord == preWord && curWord != "" {
+				if !a.excludeWords(cutTrailingCommas(curWord)) {
+					find = true
+					findWordMap[curWord] = true
+				} else {
+					newLine.WriteString(lastSpace)
+					newLine.WriteString(curWord)
+				}
+			} else {
+				newLine.WriteString(lastSpace)
+				newLine.WriteString(curWord)
+			}
+		}
+		newLine.WriteString(raw[spaceStart:])
 	}
 	if find {
 		new = newLine.String()

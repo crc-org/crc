@@ -250,8 +250,7 @@ func (c *runCommand) execute(_ *cobra.Command, _ []string) {
 	if err := c.runAndPrint(ctx); err != nil {
 		c.log.Errorf("Running error: %s", err)
 		if c.exitCode == exitcodes.Success {
-			var exitErr *exitcodes.ExitError
-			if errors.As(err, &exitErr) {
+			if exitErr, ok := errors.AsType[*exitcodes.ExitError](err); ok {
 				c.exitCode = exitErr.Code
 			} else {
 				c.exitCode = exitcodes.Failure
@@ -641,6 +640,7 @@ func initHashSalt(logger logutils.Log, version string, cfg *config.Config) error
 	}
 
 	b := bytes.NewBuffer(binSalt)
+	b.WriteString("golangci-lint-cache/v2")
 	b.Write(configSalt)
 	b.WriteString(goModSalt)
 

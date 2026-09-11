@@ -121,6 +121,7 @@ type Parser struct {
 	numberMin, numberMax        int
 	excludeTypes                map[Type]bool
 	ignoreFunctions             map[string]struct{}
+	ignoreMapKeys               bool // Whether to ignore string literals used as map keys
 	maxConcurrency              int
 	evalConstExpressions        bool // Whether to evaluate constant expressions
 
@@ -283,6 +284,12 @@ func (p *Parser) SetIgnoreFunctions(names []string) {
 	p.ignoreFunctions = m
 }
 
+// SetIgnoreMapKeys configures whether string literals used as keys in map
+// literals should be ignored. The corresponding values are still reported.
+func (p *Parser) SetIgnoreMapKeys(ignore bool) {
+	p.ignoreMapKeys = ignore
+}
+
 // ParseTree will search the given path for occurrences that could be moved into constants.
 // If "..." is appended, the search will be recursive.
 //
@@ -327,6 +334,7 @@ func (p *Parser) parseTreeConcurrent(rootPath string, recursive bool) (Strings, 
 		// run type checker
 		info := &types.Info{
 			Types: make(map[ast.Expr]types.TypeAndValue),
+			Defs:  make(map[*ast.Ident]types.Object),
 		}
 
 		chkConfig := &types.Config{
@@ -438,6 +446,7 @@ func (p *Parser) parseTreeConcurrent(rootPath string, recursive bool) (Strings, 
 	// Type checking must be performed serially to avoid data races.
 	info := &types.Info{
 		Types: make(map[ast.Expr]types.TypeAndValue),
+		Defs:  make(map[*ast.Ident]types.Object),
 	}
 
 	chkConfig := &types.Config{
@@ -684,6 +693,7 @@ func (p *Parser) parseTreeBatched(rootPath string, recursive bool) (Strings, Con
 		// Type check -- must be processed serially to avoid data races
 		info := &types.Info{
 			Types: make(map[ast.Expr]types.TypeAndValue),
+			Defs:  make(map[*ast.Ident]types.Object),
 		}
 
 		chkConfig := &types.Config{
@@ -874,6 +884,13 @@ type ConstType struct {
 	// Interned strings to reduce memory usage
 	Name        string
 	packageName string
+	valueKey    string
+}
+
+// ValueKey returns the internal comparison key used to distinguish constants
+// whose display values may be approximate, such as high-precision numbers.
+func (c ConstType) ValueKey() string {
+	return c.valueKey
 }
 
 // ExtendedPos extends token.Position with package information.

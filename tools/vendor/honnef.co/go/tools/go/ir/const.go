@@ -7,24 +7,58 @@ package ir
 // This file defines the Const SSA value type.
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
 	"go/constant"
 	"go/types"
 	"strconv"
-	"strings"
 
 	"golang.org/x/exp/typeparams"
-	"honnef.co/go/tools/go/types/typeutil"
+	"honnef.co/go/tools/internal/xtools-internal/typesinternal"
 )
+
+// soleTypeKind returns a BasicInfo for which constant.Value can
+// represent all zero values for the types in the type set.
+//
+//	types.IsBoolean for false is a representative.
+//	types.IsInteger for 0
+//	types.IsString for ""
+//	0 otherwise.
+func soleTypeKind(typ types.Type) types.BasicInfo {
+	// State records the set of possible zero values (false, 0, "").
+	// Candidates (perhaps all) are eliminated during the type-set
+	// iteration, which executes at least once.
+	state := types.IsBoolean | types.IsInteger | types.IsString
+	underIs(typ, func(ut types.Type) bool {
+		var c types.BasicInfo
+		if t, ok := ut.(*types.Basic); ok {
+			c = t.Info()
+		}
+		if c&types.IsNumeric != 0 { // int/float/complex
+			c = types.IsInteger
+		}
+		state = state & c
+		return state != 0
+	})
+	return state
+}
 
 // NewConst returns a new constant of the specified value and type.
 // val must be valid according to the specification of Const.Value.
 func NewConst(val constant.Value, typ types.Type, source ast.Node) *Const {
+	if val == nil {
+		switch soleTypeKind(typ) {
+		case types.IsBoolean:
+			val = constant.MakeBool(false)
+		case types.IsInteger:
+			val = constant.MakeInt64(0)
+		case types.IsString:
+			val = constant.MakeString("")
+		}
+	}
 	c := &Const{
-		register: register{
-			typ: typ,
-		},
+		typ:   typ,
 		Value: val,
 	}
 	c.setSource(source)
@@ -50,95 +84,25 @@ func stringConst(s string, source ast.Node) *Const {
 
 // zeroConst returns a new "zero" constant of the specified type.
 func zeroConst(t types.Type, source ast.Node) Constant {
-	if _, ok := t.Underlying().(*types.Interface); ok && !typeparams.IsTypeParam(t) {
-		// Handle non-generic interface early to simplify following code.
-		return nilConst(t, source)
-	}
-
-	tset := typeutil.NewTypeSet(t)
-
-	switch typ := tset.CoreType().(type) {
-	case *types.Struct:
-		values := make([]Value, typ.NumFields())
-		for i := 0; i < typ.NumFields(); i++ {
-			values[i] = zeroConst(typ.Field(i).Type(), source)
-		}
-		ac := &AggregateConst{
-			register: register{typ: t},
-			Values:   values,
-		}
-		ac.setSource(source)
-		return ac
-	case *types.Tuple:
-		values := make([]Value, typ.Len())
-		for i := 0; i < typ.Len(); i++ {
-			values[i] = zeroConst(typ.At(i).Type(), source)
-		}
-		ac := &AggregateConst{
-			register: register{typ: t},
-			Values:   values,
-		}
-		ac.setSource(source)
-		return ac
-	}
-
-	isNillable := func(term *types.Term) bool {
-		switch typ := term.Type().Underlying().(type) {
-		case *types.Pointer, *types.Slice, *types.Interface, *types.Chan, *types.Map, *types.Signature, *typeutil.Iterator:
-			return true
-		case *types.Basic:
-			switch typ.Kind() {
-			case types.UnsafePointer, types.UntypedNil:
-				return true
-			default:
-				return false
-			}
-		default:
-			return false
-		}
-	}
-
-	isInfo := func(info types.BasicInfo) func(*types.Term) bool {
-		return func(term *types.Term) bool {
-			basic, ok := term.Type().Underlying().(*types.Basic)
-			if !ok {
-				return false
-			}
-			return (basic.Info() & info) != 0
-		}
-	}
-
-	isArray := func(term *types.Term) bool {
-		_, ok := term.Type().Underlying().(*types.Array)
-		return ok
-	}
-
-	switch {
-	case tset.All(isInfo(types.IsNumeric)):
-		return NewConst(constant.MakeInt64(0), t, source)
-	case tset.All(isInfo(types.IsString)):
-		return NewConst(constant.MakeString(""), t, source)
-	case tset.All(isInfo(types.IsBoolean)):
-		return NewConst(constant.MakeBool(false), t, source)
-	case tset.All(isNillable):
-		return nilConst(t, source)
-	case tset.All(isArray):
-		var k ArrayConst
-		k.setType(t)
-		k.setSource(source)
-		return &k
-	default:
-		var k GenericConst
-		k.setType(t)
-		k.setSource(source)
-		return &k
-	}
+	return NewConst(nil, t, source)
 }
 
 func (c *Const) RelString(from *types.Package) string {
 	var p string
 	if c.Value == nil {
-		p = "nil"
+		switch c.typ.(type) {
+		case *types.Array, *types.Struct:
+			p = "{}"
+		case *types.Alias:
+			switch c.typ.Underlying().(type) {
+			case *types.Array, *types.Struct:
+				p = "{}"
+			default:
+				p, _ = typesinternal.ZeroString(types.Unalias(c.typ), types.RelativeTo(from))
+			}
+		default:
+			p, _ = typesinternal.ZeroString(c.typ, types.RelativeTo(from))
+		}
 	} else if c.Value.Kind() == constant.String {
 		v := constant.StringVal(c.Value)
 		const max = 20
@@ -150,57 +114,82 @@ func (c *Const) RelString(from *types.Package) string {
 	} else {
 		p = c.Value.String()
 	}
-	return fmt.Sprintf("Const <%s> {%s}", relType(c.Type(), from), p)
+	return p + ":" + relType(c.Type(), from)
+}
+
+func (c *Const) Name() string {
+	return c.RelString(nil)
 }
 
 func (c *Const) String() string {
-	if c.block == nil {
-		// Constants don't have a block till late in the compilation process. But we want to print consts during
-		// debugging.
-		return c.RelString(nil)
-	}
-	return c.RelString(c.Parent().pkg())
+	return c.RelString(nil)
 }
 
-func (v *ArrayConst) RelString(pkg *types.Package) string {
-	return fmt.Sprintf("ArrayConst <%s>", relType(v.Type(), pkg))
+func (c *Const) Type() types.Type {
+	return c.typ
 }
 
-func (v *ArrayConst) String() string {
-	return v.RelString(v.Parent().pkg())
+func (c *Const) Referrers() *[]Instruction {
+	return nil
 }
+
+func (c *Const) Parent() *Function { return nil }
 
 func (v *AggregateConst) RelString(pkg *types.Package) string {
-	values := make([]string, len(v.Values))
-	for i, v := range v.Values {
-		if v != nil {
-			values[i] = v.Name()
-		} else {
-			values[i] = "nil"
+	var b bytes.Buffer
+	fmt.Fprint(&b, "const {")
+	for i, vv := range v.Values {
+		if i > 0 {
+			fmt.Fprint(&b, ", ")
 		}
+		fmt.Fprint(&b, relName(vv, v))
 	}
-	return fmt.Sprintf("AggregateConst <%s> (%s)", relType(v.Type(), pkg), strings.Join(values, ", "))
+	fmt.Fprint(&b, "}")
+	return b.String()
+}
+
+func (v *AggregateConst) Name() string {
+	return v.RelString(nil)
 }
 
 func (v *AggregateConst) String() string {
-	if v.block == nil {
-		return v.RelString(nil)
-	}
-	return v.RelString(v.Parent().pkg())
+	return v.RelString(nil)
 }
 
-func (v *GenericConst) RelString(pkg *types.Package) string {
-	return fmt.Sprintf("GenericConst <%s>", relType(v.Type(), pkg))
+func (v *AggregateConst) Type() types.Type {
+	return v.typ
 }
 
-func (v *GenericConst) String() string {
-	return v.RelString(v.Parent().pkg())
+func (v *AggregateConst) Referrers() *[]Instruction {
+	return nil
 }
+
+func (v *AggregateConst) Parent() *Function { return nil }
 
 // IsNil returns true if this constant represents a typed or untyped nil value.
 func (c *Const) IsNil() bool {
-	return c.Value == nil
+	return c.Value == nil && nillable(c.typ)
 }
+
+// nillable reports whether *new(T) == nil is legal for type T.
+func nillable(t types.Type) bool {
+	if typeparams.IsTypeParam(t) {
+		return underIs(t, func(u types.Type) bool {
+			// empty type set (u==nil) => any underlying types => not nillable
+			return u != nil && nillable(u)
+		})
+	}
+	switch t.Underlying().(type) {
+	case *types.Pointer, *types.Slice, *types.Chan, *types.Map, *types.Signature:
+		return true
+	case *types.Interface:
+		return true // basic interface.
+	default:
+		return false
+	}
+}
+
+// TODO(adonovan): move everything below into honnef.co/go/tools/go/ir/interp.
 
 // Int64 returns the numeric value of this constant truncated to fit
 // a signed 64-bit integer.
@@ -237,61 +226,16 @@ func (c *Const) Uint64() uint64 {
 // Float64 returns the numeric value of this constant truncated to fit
 // a float64.
 func (c *Const) Float64() float64 {
-	f, _ := constant.Float64Val(c.Value)
+	x := constant.ToFloat(c.Value) // (c.Value == nil) => x.Kind() == Unknown
+	f, _ := constant.Float64Val(x)
 	return f
 }
 
 // Complex128 returns the complex value of this constant truncated to
 // fit a complex128.
 func (c *Const) Complex128() complex128 {
-	re, _ := constant.Float64Val(constant.Real(c.Value))
-	im, _ := constant.Float64Val(constant.Imag(c.Value))
+	x := constant.ToComplex(c.Value) // (c.Value == nil) => x.Kind() == Unknown
+	re, _ := constant.Float64Val(constant.Real(x))
+	im, _ := constant.Float64Val(constant.Imag(x))
 	return complex(re, im)
-}
-
-func (c *Const) equal(o Constant) bool {
-	// TODO(dh): don't use == for types, this will miss identical pointer types, among others
-	oc, ok := o.(*Const)
-	if !ok {
-		return false
-	}
-	return c.typ == oc.typ && c.Value == oc.Value && c.source == oc.source
-}
-
-func (c *AggregateConst) equal(o Constant) bool {
-	oc, ok := o.(*AggregateConst)
-	if !ok {
-		return false
-	}
-	// TODO(dh): don't use == for types, this will miss identical pointer types, among others
-	if c.typ != oc.typ {
-		return false
-	}
-	if c.source != oc.source {
-		return false
-	}
-	for i, v := range c.Values {
-		if !v.(Constant).equal(oc.Values[i].(Constant)) {
-			return false
-		}
-	}
-	return true
-}
-
-func (c *ArrayConst) equal(o Constant) bool {
-	oc, ok := o.(*ArrayConst)
-	if !ok {
-		return false
-	}
-	// TODO(dh): don't use == for types, this will miss identical pointer types, among others
-	return c.typ == oc.typ && c.source == oc.source
-}
-
-func (c *GenericConst) equal(o Constant) bool {
-	oc, ok := o.(*GenericConst)
-	if !ok {
-		return false
-	}
-	// TODO(dh): don't use == for types, this will miss identical pointer types, among others
-	return c.typ == oc.typ && c.source == oc.source
 }
