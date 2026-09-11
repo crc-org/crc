@@ -1,10 +1,10 @@
 module github.com/crc-org/crc/v2
 
-go 1.25.9
+go 1.26.7
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
-	github.com/DeedleFake/p9 v0.7.1
+	github.com/DeedleFake/p9 v0.7.2
 	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/Microsoft/go-winio v0.6.2
 	github.com/ProtonMail/go-crypto v1.4.1

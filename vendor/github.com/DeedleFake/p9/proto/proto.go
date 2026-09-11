@@ -45,7 +45,7 @@ func NewProto(mapping map[uint8]reflect.Type) Proto {
 	rmap := make(map[uint8]reflect.Type, len(mapping))
 	smap := make(map[reflect.Type]uint8, len(mapping))
 	for id, t := range mapping {
-		if t.Kind() == reflect.Ptr {
+		if t.Kind() == reflect.Pointer {
 			t = t.Elem()
 		}
 
@@ -100,10 +100,6 @@ func (p Proto) Receive(r io.Reader, msize uint32) (msg any, tag uint16, err erro
 
 	t := p.TypeFromID(msgType)
 	if t == nil {
-		if err != nil {
-			return nil, NoTag, err
-		}
-
 		return nil, NoTag, util.Errorf("receive: invalid message type: %v", msgType)
 	}
 

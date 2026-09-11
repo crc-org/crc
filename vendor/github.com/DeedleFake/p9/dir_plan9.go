@@ -42,7 +42,7 @@ func (d Dir) GetQID(p string) (QID, error) {
 	}
 
 	return QID{
-		Type:    sys.Qid.Type,
+		Type:    QIDType(sys.Qid.Type),
 		Version: sys.Qid.Vers,
 		Path:    sys.Qid.Path,
 	}, nil
