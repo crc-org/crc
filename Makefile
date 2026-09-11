@@ -125,6 +125,14 @@ generate_mocks: $(TOOLS_BINDIR)/mockery
 test: gen_release_info
 	go test -race --tags "build $(BUILDTAGS)" -v -ldflags="$(VERSION_VARIABLES)" . ./pkg/... ./cmd/...
 
+.PHONY: coverage open-coverage
+coverage: gen_release_info
+	go test -race --tags "build $(BUILDTAGS)" -ldflags="$(VERSION_VARIABLES)" -coverprofile=coverage.out -covermode=atomic ./pkg/... ./cmd/...
+	go tool cover -func=coverage.out
+
+open-coverage: coverage
+	go tool cover -html=coverage.out
+
 .PHONY: spec test-rpmbuild
 
 GENERATED_RPM_FILES=packaging/rpm/crc.spec images/rpmbuild/Containerfile
