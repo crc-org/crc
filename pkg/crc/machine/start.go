@@ -25,6 +25,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/v2/pkg/crc/oc"
 	crcPreset "github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/restapi"
 	"github.com/crc-org/crc/v2/pkg/crc/services"
 	"github.com/crc-org/crc/v2/pkg/crc/services/dns"
 	crcssh "github.com/crc-org/crc/v2/pkg/crc/ssh"
@@ -538,7 +539,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 
 		if client.useVSock() {
-			if err := ensureRoutesControllerIsRunning(sshRunner, ocConfig); err != nil {
+			if err := ensureRoutesControllerIsRunning(ctx, sshRunner, ocConfig, instanceIP, vm.bundle.GetKubeConfigPath()); err != nil {
 				return nil, err
 			}
 		}
@@ -602,7 +603,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 	}
 
 	if client.useVSock() {
-		if err := ensureRoutesControllerIsRunning(sshRunner, ocConfig); err != nil {
+		if err := ensureRoutesControllerIsRunning(ctx, sshRunner, ocConfig, instanceIP, vm.bundle.GetKubeConfigPath()); err != nil {
 			return nil, err
 		}
 	}
@@ -850,18 +851,35 @@ func logBundleDate(crcBundleMetadata *bundle.CrcBundleInfo) {
 	}
 }
 
-func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Config) error {
+func ensureRoutesControllerIsRunning(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.Config, instanceIP string, kubeconfigFilePath string) error {
 	// Check if the bundle have `/opt/crc/routes-controller.yaml` file and if it has
 	// then use it to create the resource for the routes controller.
 	_, _, err := sshRunner.Run("ls", "/opt/crc/routes-controller.yaml")
 	if err != nil {
 		return err
 	}
+
+	// Secret must exist before routes-controller starts so it can mount CRC_REST_API_TOKEN.
+	if err := ensureRestAPITokenInCluster(ctx, instanceIP, kubeconfigFilePath); err != nil {
+		return err
+	}
+
 	_, _, err = ocConfig.RunOcCommand("apply", "-f", "/opt/crc/routes-controller.yaml")
 	if err != nil {
 		return err
 	}
 	return ensureRoutesNetworkPolicy(sshRunner, ocConfig)
+}
+
+func ensureRestAPITokenInCluster(ctx context.Context, instanceIP string, kubeconfigFilePath string) error {
+	token, err := restapi.LoadToken(constants.RestAPITokenPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to load REST API token")
+	}
+	if err := cluster.EnsureRestAPITokenSecret(ctx, instanceIP, kubeconfigFilePath, token); err != nil {
+		return errors.Wrap(err, "failed to ensure REST API token secret")
+	}
+	return nil
 }
 
 func ensureRoutesNetworkPolicy(sshRunner *crcssh.Runner, ocConfig oc.Config) error {

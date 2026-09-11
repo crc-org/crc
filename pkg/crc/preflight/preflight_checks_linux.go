@@ -359,7 +359,6 @@ func checkDaemonSystemdSockets() error {
 	if err := checkSystemdUnit(httpUnitName, httpUnit, true); err != nil {
 		return err
 	}
-
 	return checkSystemdUnit(vsockUnitName, vsockUnit, true)
 }
 
