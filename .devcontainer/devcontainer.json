@@ -1,6 +1,6 @@
 {
     "name": "CRC environment",
-    "image": "registry.ci.openshift.org/openshift/release:rhel-9-release-golang-1.25-openshift-4.21",
+    "image": "registry.ci.openshift.org/openshift/release:rhel-9-release-golang-1.26-openshift-4.22",
 
     "customizations": {
         "vscode": {

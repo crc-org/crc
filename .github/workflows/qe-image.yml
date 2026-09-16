@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         go:
-          - '1.25'
+          - '1.26'
         os: ['linux', 'windows', 'darwin']
         arch: ['amd64', 'arm64']
         exclude:
