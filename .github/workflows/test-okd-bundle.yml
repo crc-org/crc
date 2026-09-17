@@ -32,6 +32,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt install qemu-system-x86 qemu-utils libvirt-daemon libvirt-daemon-system virtiofsd
+
+          # Work around GitHub runner/AppArmor incompatibility for libvirt/QEMU
+          sudo tee /etc/libvirt/qemu.conf >/dev/null <<'EOF'
+          security_driver = "none"
+          EOF
+          sudo systemctl stop apparmor || true
+          sudo systemctl restart libvirtd
+
           sudo usermod -a -G libvirt $USER
       - name: Free disk space
         uses: palmsoftware/quick-cleanup@v0
