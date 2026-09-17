@@ -2,7 +2,7 @@ p9
 ==
 
 [![Go Report Card](https://www.goreportcard.com/badge/github.com/DeedleFake/p9)](https://www.goreportcard.com/report/github.com/DeedleFake/p9)
-[![GoDoc](http://www.godoc.org/github.com/DeedleFake/p9?status.svg)](http://www.godoc.org/github.com/DeedleFake/p9)
+[![GoDoc](https://pkg.go.dev/badge/github.com/DeedleFake/p9)](https://pkg.go.dev/github.com/DeedleFake/p9)
 
 An experimental Go package for dealing with 9P, the Plan 9 file protocol. The primary idea behind this package is to make building 9P servers and clients as simple as building HTTP servers and clients is in Go. Due to the complexity of the protocol compared to HTTP, this package is unlikely to reach that level of simplicity, but it's certainly simpler than many other existing packages.
 
