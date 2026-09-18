@@ -13,15 +13,8 @@ import (
 
 	"honnef.co/go/tools/go/ir"
 
-	//lint:ignore SA1019 go/loader is deprecated, but works fine for our tests
-	"golang.org/x/tools/go/loader"
 	"golang.org/x/tools/go/packages"
 )
-
-type Options struct {
-	// Which function, if any, to print in HTML form
-	PrintFunc string
-}
 
 // Packages creates an IR program for a set of packages.
 //
@@ -40,8 +33,26 @@ type Options struct {
 // packages with well-typed syntax trees.
 //
 // The mode parameter controls diagnostics and checking during IR construction.
-func Packages(initial []*packages.Package, mode ir.BuilderMode, opts *Options) (*ir.Program, []*ir.Package) {
-	return doPackages(initial, mode, false, opts)
+func Packages(initial []*packages.Package, mode ir.BuilderMode) (*ir.Program, []*ir.Package) {
+	// TODO(adonovan): opt: this calls CreatePackage far more than
+	// necessary: for all dependencies, not just the (non-initial)
+	// direct dependencies of the initial packages.
+	//
+	// But can it reasonably be changed without breaking the
+	// spirit and/or letter of the law above? Clients may notice
+	// if we call CreatePackage less, as methods like
+	// Program.FuncValue will return nil. Or must we provide a new
+	// function (and perhaps deprecate this one)? Is it worth it?
+	//
+	// Tim King makes the interesting point that it would be
+	// possible to entirely alleviate the client from the burden
+	// of calling CreatePackage for non-syntax packages, if we
+	// were to treat vars and funcs lazily in the same way we now
+	// treat methods. (In essence, try to move away from the
+	// notion of ir.Packages, and make the Program answer
+	// all reasonable questions about any types.Object.)
+
+	return doPackages(initial, mode, false)
 }
 
 // AllPackages creates an IR program for a set of packages plus all
@@ -61,21 +72,17 @@ func Packages(initial []*packages.Package, mode ir.BuilderMode, opts *Options) (
 // well-typed syntax trees.
 //
 // The mode parameter controls diagnostics and checking during IR construction.
-func AllPackages(initial []*packages.Package, mode ir.BuilderMode, opts *Options) (*ir.Program, []*ir.Package) {
-	return doPackages(initial, mode, true, opts)
+func AllPackages(initial []*packages.Package, mode ir.BuilderMode) (*ir.Program, []*ir.Package) {
+	return doPackages(initial, mode, true)
 }
 
-func doPackages(initial []*packages.Package, mode ir.BuilderMode, deps bool, opts *Options) (*ir.Program, []*ir.Package) {
-
+func doPackages(initial []*packages.Package, mode ir.BuilderMode, deps bool) (*ir.Program, []*ir.Package) {
 	var fset *token.FileSet
 	if len(initial) > 0 {
 		fset = initial[0].Fset
 	}
 
 	prog := ir.NewProgram(fset, mode)
-	if opts != nil {
-		prog.PrintFunc = opts.PrintFunc
-	}
 
 	isInitial := make(map[*packages.Package]bool, len(initial))
 	for _, p := range initial {
@@ -86,10 +93,12 @@ func doPackages(initial []*packages.Package, mode ir.BuilderMode, deps bool, opt
 	packages.Visit(initial, nil, func(p *packages.Package) {
 		if p.Types != nil && !p.IllTyped {
 			var files []*ast.File
+			var info *types.Info
 			if deps || isInitial[p] {
 				files = p.Syntax
+				info = p.TypesInfo
 			}
-			irmap[p] = prog.CreatePackage(p.Types, files, p.TypesInfo, true)
+			irmap[p] = prog.CreatePackage(p.Types, files, info, true)
 		}
 	})
 
@@ -100,30 +109,8 @@ func doPackages(initial []*packages.Package, mode ir.BuilderMode, deps bool, opt
 	return prog, irpkgs
 }
 
-// CreateProgram returns a new program in IR form, given a program
-// loaded from source.  An IR package is created for each transitively
-// error-free package of lprog.
-//
-// Code for bodies of functions is not built until Build is called
-// on the result.
-//
-// The mode parameter controls diagnostics and checking during IR construction.
-//
-// Deprecated: use golang.org/x/tools/go/packages and the Packages
-// function instead; see ir.ExampleLoadPackages.
-func CreateProgram(lprog *loader.Program, mode ir.BuilderMode) *ir.Program {
-	prog := ir.NewProgram(lprog.Fset, mode)
-
-	for _, info := range lprog.AllPackages {
-		if info.TransitivelyErrorFree {
-			prog.CreatePackage(info.Pkg, info.Files, &info.Info, info.Importable)
-		}
-	}
-
-	return prog
-}
-
-// BuildPackage builds an IR program with IR for a single package.
+// BuildPackage builds an IR program with IR intermediate
+// representation (IR) for all functions of a single package.
 //
 // It populates pkg by type-checking the specified file ASTs.  All
 // dependencies are loaded using the importer specified by tc, which
@@ -175,6 +162,25 @@ func BuildPackage(tc *types.Config, fset *token.FileSet, pkg *types.Package, fil
 		}
 	}
 	createAll(pkg.Imports())
+
+	// TODO(adonovan): we could replace createAll with just:
+	//
+	// // Create IR packages for all imports.
+	// for _, p := range pkg.Imports() {
+	// 	prog.CreatePackage(p, nil, nil, true)
+	// }
+	//
+	// (with minor changes to changes to ../builder_test.go as
+	// shown in CL 511715 PS 10.) But this would strictly violate
+	// the letter of the doc comment above, which says "all
+	// dependencies created".
+	//
+	// Tim makes the good point with some extra work we could
+	// remove the need for any CreatePackage calls except the
+	// ones with syntax (i.e. primary packages). Of course
+	// You wouldn't have ir.Packages and Members for as
+	// many things but no-one really uses that anyway.
+	// I wish I had done this from the outset.
 
 	// Create and build the primary package.
 	irpkg := prog.CreatePackage(pkg, files, info, false)

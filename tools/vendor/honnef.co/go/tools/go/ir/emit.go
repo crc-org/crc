@@ -13,8 +13,6 @@ import (
 	"go/token"
 	"go/types"
 
-	"honnef.co/go/tools/go/types/typeutil"
-
 	"golang.org/x/exp/typeparams"
 )
 
@@ -49,7 +47,7 @@ func emitNew(f *Function, typ types.Type, source ast.Node, comment string) *Allo
 // emits an Alloc instruction for it.
 //
 // (Use this function or emitNew for synthetic variables;
-// for source-level variables, use emitLocalVar.)
+// for source-level variables in the same function, use emitLocalVar.)
 func emitLocal(f *Function, t types.Type, source ast.Node, comment string) *Alloc {
 	local := emitAlloc(f, t, source, comment)
 	f.Locals = append(f.Locals, local)
@@ -58,8 +56,9 @@ func emitLocal(f *Function, t types.Type, source ast.Node, comment string) *Allo
 
 // emitLocalVar creates a local var for v and emits an Alloc instruction for it.
 // Subsequent calls to f.lookup(v) return it.
+// It applies the appropriate generic instantiation to the type.
 func emitLocalVar(f *Function, v *types.Var, source ast.Node) *Alloc {
-	alloc := emitLocal(f, v.Type(), source, v.Name())
+	alloc := emitLocal(f, f.typ(v.Type()), source, v.Name())
 	f.vars[v] = alloc
 	return alloc
 }
@@ -92,7 +91,7 @@ func emitDebugRef(f *Function, e ast.Expr, v Value, isAddr bool) {
 	f.emit(ref, nil)
 }
 
-func makeDebugRef(f *Function, e ast.Expr, v Value, isAddr bool) *DebugRef {
+func makeDebugRef(f *Function, e ast.Expr, v Value, isAddr bool) *debugRef {
 	if !f.debugInfo() {
 		return nil // debugging not enabled
 	}
@@ -100,18 +99,18 @@ func makeDebugRef(f *Function, e ast.Expr, v Value, isAddr bool) *DebugRef {
 		panic("nil")
 	}
 	var obj types.Object
-	e = unparen(e)
+	e = ast.Unparen(e)
 	if id, ok := e.(*ast.Ident); ok {
 		if isBlankIdent(id) {
 			return nil
 		}
-		obj = f.Pkg.objectOf(id)
+		obj = f.objectOf(id)
 		switch obj.(type) {
 		case *types.Nil, *types.Const, *types.Builtin:
 			return nil
 		}
 	}
-	return &DebugRef{
+	return &debugRef{
 		X:      v,
 		Expr:   e,
 		IsAddr: isAddr,
@@ -200,7 +199,7 @@ func emitCompare(f *Function, op token.Token, x, y Value, source ast.Node) Value
 
 // isValuePreserving returns true if a conversion from ut_src to
 // ut_dst is value-preserving, i.e. just a change of type.
-// Precondition: neither argument is a named type.
+// Precondition: neither argument is a named or alias type.
 func isValuePreserving(ut_src, ut_dst types.Type) bool {
 	// Identical underlying types?
 	if types.IdenticalIgnoreTags(ut_dst, ut_src) {
@@ -254,7 +253,7 @@ func emitConv(f *Function, val Value, t_dst types.Type, source ast.Node) Value {
 
 		// Untyped nil constant?  Return interface-typed nil constant.
 		if ut_src == tUntypedNil {
-			return emitConst(f, zeroConst(t_dst, source))
+			return zeroConst(t_dst, source)
 		}
 
 		// Convert (non-nil) "untyped" literals to their default type.
@@ -262,20 +261,19 @@ func emitConv(f *Function, val Value, t_dst types.Type, source ast.Node) Value {
 			val = emitConv(f, val, types.Default(ut_src), source)
 		}
 
-		f.Pkg.Prog.needMethodsOf(val.Type())
+		// Record the types of operands to MakeInterface, if
+		// non-parameterized, as they are the set of runtime types.
+		t := val.Type()
+		if !f.Prog.isParameterized(t) {
+			addMakeInterfaceType(f.Prog, t)
+		}
+
 		mi := &MakeInterface{X: val}
 		mi.setType(t_dst)
 		return f.emit(mi, source)
 	}
 
-	// In the common case, the typesets of src and dst are singletons
-	// and we emit an appropriate conversion. But if either contains
-	// a type parameter, the conversion may represent a cross product,
-	// in which case which we emit a MultiConvert.
-	tset_dst := typeutil.NewTypeSet(ut_dst)
-	tset_src := typeutil.NewTypeSet(ut_src)
-
-	// conversionCase describes an instruction pattern that may be emitted to
+	// conversionCase describes an instruction pattern that maybe emitted to
 	// model d <- s for d in dst_terms and s in src_terms.
 	// Multiple conversions can match the same pattern.
 	type conversionCase uint8
@@ -287,7 +285,8 @@ func emitConv(f *Function, val Value, t_dst types.Type, source ast.Node) Value {
 		sliceTo0ArrayPtr
 		convert
 	)
-
+	// classify the conversion case of a source type us to a destination type ud.
+	// us and ud are underlying types (not *Named or *Alias)
 	classify := func(s, d types.Type) conversionCase {
 		// Just a change of type, but not value or representation?
 		if isValuePreserving(s, d) {
@@ -331,13 +330,14 @@ func emitConv(f *Function, val Value, t_dst types.Type, source ast.Node) Value {
 	}
 
 	var classifications conversionCase
-	for _, s := range tset_src.Terms {
-		us := s.Type().Underlying()
-		for _, d := range tset_dst.Terms {
-			ud := d.Type().Underlying()
-			classifications |= classify(us, ud)
-		}
-	}
+	underIs(ut_src, func(us types.Type) bool {
+		return underIs(ut_dst, func(ud types.Type) bool {
+			if us != nil && ud != nil {
+				classifications |= classify(us, ud)
+			}
+			return classifications != 0
+		})
+	})
 	if classifications == 0 {
 		panic(fmt.Sprintf("in %s: cannot convert %s (%s) to %s", f, val, val.Type(), t_dst))
 	}
@@ -351,12 +351,12 @@ func emitConv(f *Function, val Value, t_dst types.Type, source ast.Node) Value {
 			// constant of the destination type and
 			// (initially) the same abstract value.
 			// We don't truncate the value yet.
-			return emitConst(f, NewConst(c.Value, t_dst, source))
+			return NewConst(c.Value, t_dst, source)
 		}
 		// Can we always convert from zero value without panicking?
 		const mayPanic = sliceToArray | sliceToArrayPtr
 		if c.Value == nil && classifications&mayPanic == 0 {
-			return emitConst(f, NewConst(nil, t_dst, source))
+			return NewConst(nil, t_dst, source)
 		}
 
 		// We're converting from constant to non-constant type,
@@ -380,26 +380,54 @@ func emitConv(f *Function, val Value, t_dst types.Type, source ast.Node) Value {
 		return f.emit(p, source)
 
 	case sliceTo0Array: // slice to zero-length arrays (constant)
-		return emitConst(f, zeroConst(t_dst, source))
+		return zeroConst(t_dst, source)
 
 	case convert: // representation-changing conversion
 		c := &Convert{X: val}
 		c.setType(t_dst)
 		return f.emit(c, source)
 
-	default: // multiple conversion
-		c := &MultiConvert{X: val, from: tset_src, to: tset_dst}
+	default: // The conversion represents a cross product.
+		c := &MultiConvert{X: val, from: t_src, to: t_dst}
 		c.setType(t_dst)
 		return f.emit(c, source)
 	}
 }
 
+// emitTypeCoercion emits to f code to coerce the type of a
+// Value v to exactly type typ, and returns the coerced value.
+//
+// Requires that coercing v.Typ() to typ is a value preserving change.
+//
+// Currently used only when v.Type() is a type instance of typ or vice versa.
+// A type v is a type instance of a type t if there exists a
+// type parameter substitution σ s.t. σ(v) == t. Example:
+//
+//	σ(func(T) T) == func(int) int for σ == [T ↦ int]
+//
+// This happens in instantiation wrappers for conversion
+// from an instantiation to a parameterized type (and vice versa)
+// with σ substituting f.typeparams by f.typeargs.
+func emitTypeCoercion(f *Function, v Value, typ types.Type, source ast.Node) Value {
+	if types.Identical(v.Type(), typ) {
+		return v // no coercion needed
+	}
+	// TODO(taking): for instances should we record which side is the instance?
+	c := &ChangeType{
+		X: v,
+	}
+	c.setType(typ)
+	f.emit(c, source)
+	return c
+}
+
 // emitStore emits to f an instruction to store value val at location
 // addr, applying implicit conversions as required by assignability rules.
 func emitStore(f *Function, addr, val Value, source ast.Node) *Store {
+	typ := deref(addr.Type())
 	s := &Store{
 		Addr: addr,
-		Val:  emitConv(f, val, deref(addr.Type()), source),
+		Val:  emitConv(f, val, typ, source),
 	}
 	f.emit(s, source)
 	return s
@@ -473,7 +501,7 @@ func emitTailCall(f *Function, call *Call, source ast.Node) {
 	} else {
 		call.typ = tresults
 	}
-	tuple := f.emit(call, source)
+	tuple := emitCall(f, call, source)
 	var ret Return
 	switch nr {
 	case 0:
@@ -491,13 +519,12 @@ func emitTailCall(f *Function, call *Call, source ast.Node) {
 		}
 	}
 
-	f.Exit = f.newBasicBlock("exit")
-	emitJump(f, f.Exit, source)
-	f.currentBlock = f.Exit
 	f.emit(&ret, source)
 	f.currentBlock = nil
 }
 
+// emitCall emits a call instruction. If the callee is "no return",
+// it also emits a panic to eliminate infeasible CFG edges.
 func emitCall(fn *Function, call *Call, source ast.Node) Value {
 	res := fn.emit(call, source)
 
@@ -508,9 +535,10 @@ func emitCall(fn *Function, call *Call, source ast.Node) Value {
 		fn.Prog.noReturn(callee.object) {
 		// Call doesn't return normally. Either it doesn't return at all
 		// (infinitely blocked or exitting the process), or it unwinds the stack
-		// (panic, runtime.Goexit). In case it unwinds, jump to the exit block.
-		fn.emit(new(Jump), source)
-		addEdge(fn.currentBlock, fn.Exit)
+		// (panic, runtime.Goexit). Model this as a panic.
+		fn.emit(&Panic{
+			X: emitConv(fn, vNoReturn, tEface, source),
+		}, source)
 		fn.currentBlock = fn.newBasicBlock("unreachable")
 	}
 
@@ -529,9 +557,8 @@ func emitImplicitSelections(f *Function, v Value, indices []int, source ast.Node
 		// We may have a generic type containing a pointer, or a pointer to a generic type containing a struct. A
 		// pointer to a generic containing a pointer to a struct shouldn't be possible because the outer pointer gets
 		// dereferenced implicitly before we get here.
-		fld := typeutil.CoreType(deref(v.Type())).Underlying().(*types.Struct).Field(index)
-
-		if isPointer(v.Type()) {
+		if isPointerCore(v.Type()) {
+			fld := fieldOf(deref(v.Type()), index)
 			instr := &FieldAddr{
 				X:     v,
 				Field: index,
@@ -539,10 +566,11 @@ func emitImplicitSelections(f *Function, v Value, indices []int, source ast.Node
 			instr.setType(types.NewPointer(fld.Type()))
 			v = f.emit(instr, source)
 			// Load the field's value iff indirectly embedded.
-			if isPointer(fld.Type()) {
+			if isPointerCore(fld.Type()) {
 				v = emitLoad(f, v, source)
 			}
 		} else {
+			fld := fieldOf(v.Type(), index)
 			instr := &Field{
 				X:     v,
 				Field: index,
@@ -561,12 +589,8 @@ func emitImplicitSelections(f *Function, v Value, indices []int, source ast.Node
 // field's value.
 // Ident id is used for position and debug info.
 func emitFieldSelection(f *Function, v Value, index int, wantAddr bool, id *ast.Ident) Value {
-	// We may have a generic type containing a pointer, or a pointer to a generic type containing a struct. A
-	// pointer to a generic containing a pointer to a struct shouldn't be possible because the outer pointer gets
-	// dereferenced implicitly before we get here.
-	vut := typeutil.CoreType(deref(v.Type())).Underlying().(*types.Struct)
-	fld := vut.Field(index)
-	if isPointer(v.Type()) {
+	if isPointerCore(v.Type()) {
+		fld := fieldOf(deref(v.Type()), index)
 		instr := &FieldAddr{
 			X:     v,
 			Field: index,
@@ -579,6 +603,7 @@ func emitFieldSelection(f *Function, v Value, index int, wantAddr bool, id *ast.
 			v = emitLoad(f, v, id)
 		}
 	} else {
+		fld := fieldOf(v.Type(), index)
 		instr := &Field{
 			X:     v,
 			Field: index,
@@ -591,68 +616,30 @@ func emitFieldSelection(f *Function, v Value, index int, wantAddr bool, id *ast.
 	return v
 }
 
-// zeroValue emits to f code to produce a zero value of type t,
-// and returns it.
-func zeroValue(f *Function, t types.Type, source ast.Node) Value {
-	return emitConst(f, zeroConst(t, source))
-}
+// createRecoverBlock emits to f a block of code to return after a
+// recovered panic, and sets f.Recover to it.
+//
+// If f's result parameters are named, the code loads and returns
+// their current values, otherwise it returns the zero values of their
+// type.
+//
+// Idempotent.
+func createRecoverBlock(f *Function) {
+	if f.Recover != nil {
+		return // already created
+	}
+	saved := f.currentBlock
 
-type constKey struct {
-	typ    types.Type
-	value  constant.Value
-	source ast.Node
-}
+	f.Recover = f.newBasicBlock("recover")
+	f.currentBlock = f.Recover
 
-func emitConst(f *Function, c Constant) Constant {
-	if f.consts == nil {
-		f.consts = map[constKey]constValue{}
+	var results []Value
+	// Reload NRPs to form value tuple.
+	for _, nr := range f.results {
+		results = append(results, emitLoad(f, nr, nr.source))
 	}
 
-	typ := c.Type()
-	var val constant.Value
-	switch c := c.(type) {
-	case *Const:
-		val = c.Value
-	case *ArrayConst, *GenericConst:
-		// These can only represent zero values, so all we need is the type
-	case *AggregateConst:
-		candidates, _ := f.aggregateConsts.At(c.typ)
-		for _, candidate := range candidates {
-			if c.equal(candidate) {
-				return candidate
-			}
-		}
+	f.emit(&Return{Results: results}, nil)
 
-		for i := range c.Values {
-			c.Values[i] = emitConst(f, c.Values[i].(Constant))
-		}
-
-		c.setBlock(f.Blocks[0])
-		rands := c.Operands(nil)
-		updateOperandsReferrers(c, rands)
-		candidates = append(candidates, c)
-		f.aggregateConsts.Set(c.typ, candidates)
-		return c
-
-	default:
-		panic(fmt.Sprintf("unexpected type %T", c))
-	}
-	k := constKey{
-		typ:    typ,
-		value:  val,
-		source: c.Source(),
-	}
-	dup, ok := f.consts[k]
-	if ok {
-		return dup.c
-	} else {
-		c.setBlock(f.Blocks[0])
-		f.consts[k] = constValue{
-			c:   c,
-			idx: len(f.consts),
-		}
-		rands := c.Operands(nil)
-		updateOperandsReferrers(c, rands)
-		return c
-	}
+	f.currentBlock = saved
 }

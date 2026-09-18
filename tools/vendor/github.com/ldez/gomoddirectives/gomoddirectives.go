@@ -52,6 +52,7 @@ func (r Result) String() string {
 
 // Options the analyzer options.
 type Options struct {
+	ReplaceAllowAll           bool
 	ReplaceAllowList          []string
 	ReplaceAllowLocal         bool
 	ExcludeForbidden          bool
@@ -252,6 +253,10 @@ func checkReplaceDirectives(file *modfile.File, opts Options) []Result {
 }
 
 func checkReplaceDirective(opts Options, r *modfile.Replace) string {
+	if opts.ReplaceAllowAll {
+		return ""
+	}
+
 	if isLocal(r) {
 		if opts.ReplaceAllowLocal {
 			return ""

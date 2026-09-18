@@ -8,6 +8,7 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 	"unicode/utf16"
@@ -62,6 +63,8 @@ type TerminalReader struct {
 	//nolint:unused,nolintlint
 	vtInput bool
 
+	eventScanner *eventScanner
+
 	// We use these buffers to decode UTF-16 sequences and graphemes from the
 	// Windows Console API and Win32-Input-Mode events.
 	utf16Half   [2]bool    // 0 key up, 1 key down
@@ -101,6 +104,12 @@ func NewTerminalReader(r io.Reader, termType string) *TerminalReader {
 	if d.table == nil {
 		d.table = buildKeysTable(d.Legacy, d.term, d.UseTerminfo)
 	}
+	evs := newEventScanner()
+	evs.EventDecoder = d.EventDecoder
+	evs.table = d.table
+	evs.lookup = d.lookup
+	evs.setLogger(d.logger)
+	d.eventScanner = evs
 	return d
 }
 
@@ -134,7 +143,11 @@ func (d *TerminalReader) StreamEvents(ctx context.Context, eventc chan<- Event) 
 	timeout := time.NewTimer(d.EscTimeout)
 	ttimeout := time.Now().Add(d.EscTimeout)
 
+	var wg sync.WaitGroup
+	wg.Add(1)
+
 	go func() {
+		defer wg.Done()
 		if err := d.streamData(ctx, readc); err != nil {
 			if errors.Is(err, io.EOF) || errors.Is(err, cancelreader.ErrCanceled) {
 				errc <- nil
@@ -148,10 +161,12 @@ func (d *TerminalReader) StreamEvents(ctx context.Context, eventc chan<- Event) 
 	for {
 		select {
 		case <-ctx.Done():
-			d.sendEvents(buf.Bytes(), true, eventc)
+			d.sendEvents(eventc, buf.Bytes(), true)
+			wg.Wait()
 			return nil
 		case err := <-errc:
-			d.sendEvents(buf.Bytes(), true, eventc)
+			d.sendEvents(eventc, buf.Bytes(), true)
+			wg.Wait()
 			return err // return the first error encountered
 		case <-timeout.C:
 			d.logf("timeout reached")
@@ -161,7 +176,7 @@ func (d *TerminalReader) StreamEvents(ctx context.Context, eventc chan<- Event) 
 			timedout := time.Now().After(ttimeout)
 			if buf.Len() > 0 && timedout {
 				d.logf("timeout expired, processing buffer")
-				n = d.sendEvents(buf.Bytes(), true, eventc)
+				n = d.sendEvents(eventc, buf.Bytes(), true)
 			}
 
 			if n > 0 {
@@ -185,7 +200,7 @@ func (d *TerminalReader) StreamEvents(ctx context.Context, eventc chan<- Event) 
 			d.logf("input: %q", read)
 			buf.Write(read)
 			ttimeout = time.Now().Add(d.EscTimeout)
-			n := d.sendEvents(buf.Bytes(), false, eventc)
+			n := d.sendEvents(eventc, buf.Bytes(), false)
 			if !timeout.Stop() {
 				// drain the channel if it was already running
 				select {
@@ -213,15 +228,43 @@ func (d *TerminalReader) SetLogger(logger Logger) {
 	d.logger = logger
 }
 
-func (d *TerminalReader) sendEvents(buf []byte, expired bool, eventc chan<- Event) int {
-	n, events := d.scanEvents(buf, expired)
+func (d *TerminalReader) sendEvents(eventc chan<- Event, buf []byte, expired bool) int {
+	n, events := d.eventScanner.scanEvents(buf, expired)
 	for _, event := range events {
 		eventc <- event
 	}
 	return n
 }
 
-func (d *TerminalReader) scanEvents(buf []byte, expired bool) (total int, events []Event) {
+// eventScanner scans the buffer for events and sends them to the event channel.
+type eventScanner struct {
+	EventDecoder
+
+	utf16Half   [2]bool    // 0 key up, 1 key down
+	utf16Buf    [2][2]rune // 0 key up, 1 key down
+	graphemeBuf [2][]rune  // 0 key up, 1 key down
+	paste       []byte
+	table       map[string]Key
+	lookup      bool
+	logger      Logger
+}
+
+// newEventScanner creates a new event scanner.
+func newEventScanner() *eventScanner {
+	return &eventScanner{}
+}
+
+// setLogger sets the logger to use for debugging. If nil, no logging will be
+// performed.
+func (d *eventScanner) setLogger(logger Logger) {
+	d.logger = logger
+}
+
+func (d *eventScanner) logf(format string, v ...interface{}) {
+	logf(d.logger, format, v...)
+}
+
+func (d *eventScanner) scanEvents(buf []byte, expired bool) (total int, events []Event) {
 	if len(buf) == 0 {
 		return 0, nil
 	}
@@ -344,7 +387,7 @@ func (d *TerminalReader) scanEvents(buf []byte, expired bool) (total int, events
 	return total, events
 }
 
-func (d *TerminalReader) encodeGraphemeBufs() []byte {
+func (d *eventScanner) encodeGraphemeBufs() []byte {
 	var b []byte
 	for kd := range d.graphemeBuf {
 		if len(d.graphemeBuf[kd]) > 0 {
@@ -387,7 +430,7 @@ func (d *TerminalReader) encodeGraphemeBufs() []byte {
 	return b
 }
 
-func (d *TerminalReader) storeGraphemeRune(kd int, r rune) {
+func (d *eventScanner) storeGraphemeRune(kd int, r rune) {
 	if d.utf16Half[kd] {
 		// We have a half pair that needs to be decoded.
 		d.utf16Half[kd] = false
@@ -408,9 +451,9 @@ func (d *TerminalReader) storeGraphemeRune(kd int, r rune) {
 // deserializeWin32Input deserializes the Win32 input events converting
 // KeyEventRecrods to bytes. Before returning the bytes, it will also try to
 // decode any UTF-16 pairs that might be present in the input buffer.
-func (d *TerminalReader) deserializeWin32Input(buf []byte) (int, []byte) {
-	p := parserPool.Get().(*ansi.Parser)
-	defer parserPool.Put(p)
+func (d *eventScanner) deserializeWin32Input(buf []byte) (int, []byte) {
+	p := ansi.GetParser()
+	defer ansi.PutParser(p)
 
 	var processed int
 	var state byte
@@ -449,8 +492,12 @@ func (d *TerminalReader) deserializeWin32Input(buf []byte) (int, []byte) {
 }
 
 func (d *TerminalReader) logf(format string, v ...interface{}) {
-	if d.logger == nil {
+	logf(d.logger, format, v...)
+}
+
+func logf(logger Logger, format string, v ...interface{}) {
+	if logger == nil {
 		return
 	}
-	d.logger.Printf(format, v...)
+	logger.Printf(format, v...)
 }

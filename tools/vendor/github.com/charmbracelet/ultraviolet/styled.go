@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"image/color"
 	"strings"
-	"sync"
 
 	"github.com/charmbracelet/x/ansi"
 )
@@ -39,6 +38,11 @@ func NewStyledString(str string) *StyledString {
 // It implements the [fmt.Stringer] interface.
 func (s *StyledString) String() string {
 	return s.Text
+}
+
+// Lines returns the styled string decomposed into a slice of [Line]s.
+func (s *StyledString) Lines(m ansi.Method) []Line {
+	return printString(nil, m, 0, 0, Rectangle{}, s.Text, false, "")
 }
 
 // Draw renders the styled string to the given buffer at the
@@ -92,74 +96,97 @@ func (s *StyledString) Bounds() Rectangle {
 	return Rect(0, 0, w, h)
 }
 
-var parserPool = &sync.Pool{
-	New: func() any {
-		return ansi.NewParser()
-	},
-}
-
-// printString draws a string starting at the given position.
+// printString draws a string starting at the given position. If s is nil, it
+// will build and return a slice of [Line]s instead (unwrapped, ignoring bounds).
 func printString[T []byte | string](
 	s Screen,
 	m WidthMethod,
 	x, y int,
 	bounds Rectangle, str T,
 	truncate bool, tail string,
-) {
-	// We don't need to use a large buffer parser here. [ansi.GetParser]
-	// returns a 4MB parsers which are too large for our use case. We use our
-	// own pool of parsers that are smaller and more efficient for our use
-	// case.
-	p := parserPool.Get().(*ansi.Parser)
-	defer parserPool.Put(p)
+) (lines []Line) {
+	p := ansi.GetParser()
+	defer ansi.PutParser(p)
 
 	var tailc Cell
 	if truncate && len(tail) > 0 {
 		tailc = *NewCell(m, tail)
 	}
 
-	decoder := ansi.DecodeSequenceWc[T]
+	// A [WidthMethod] the ansi package doesn't know about falls back to
+	// wcwidth, so the segmenter below always agrees with the decoder.
+	decoder, method := ansi.DecodeSequenceWc[T], ansi.WcWidth
 	if m == ansi.GraphemeWidth {
-		decoder = ansi.DecodeSequence[T]
+		decoder, method = ansi.DecodeSequence[T], ansi.GraphemeWidth
+	}
+
+	if s == nil {
+		lines = []Line{}
 	}
 
 	var cell Cell
 	var style Style
 	var link Link
 	var state byte
+	lastX, lastY := -1, -1 // last cell written, for folding in combining marks
 	for len(str) > 0 {
 		seq, width, n, newState := decoder(str, state, p)
-		switch width {
-		case 1, 2, 3, 4: // wide cells can go up to 4 cells wide
+		// The decoder's ASCII fast path doesn't check for trailing combining
+		// sequences, so re-decode as a full cluster when one starts here.
+		// The str[1] >= 0xc0 check skips the segmenter for plain ASCII.
+		if n == 1 && seq[0] > 0x1f && seq[0] < 0x7f && len(str) > 1 && str[1] >= 0xc0 {
+			if cluster, cw := ansi.FirstGraphemeCluster(str, method); len(cluster) > 1 {
+				seq, width, n = cluster, cw, len(cluster)
+			}
+		}
+		switch {
+		// Any positive width is a printable grapheme cluster. Wcwidth measures
+		// a cluster per codepoint, so this is not bounded by how wide a glyph
+		// can be: a ZWJ emoji sequence such as "👨‍👩‍👧‍👦" is eight columns,
+		// and capping the width here would fall through to the escape sequence
+		// branch and drop the cluster from the screen.
+		case width > 0:
 			cell.Width = width
 			cell.Content = string(seq)
+			cell.Style = style
+			cell.Link = link
 
-			if !truncate && x+cell.Width > bounds.Max.X && y+1 < bounds.Max.Y {
-				// Wrap the string to the width of the window
-				x = bounds.Min.X
-				y++
-			}
+			if s == nil {
+				// Building lines: unwrapped, no bounds
+				if y >= len(lines) {
+					lines = append(lines, Line{})
+				}
+				lines[y] = append(lines[y], cell)
+				lastX, lastY = len(lines[y])-1, y
+				x += width
+			} else {
+				// Drawing to screen: handle wrapping, truncation, and bounds
+				if !truncate && x+cell.Width > bounds.Max.X && y+1 < bounds.Max.Y {
+					// Wrap the string to the width of the window
+					x = bounds.Min.X
+					y++
+				}
 
-			pos := Pos(x, y)
-			if pos.In(bounds) {
-				if truncate && tailc.Width > 0 && x+cell.Width > bounds.Max.X-tailc.Width {
-					// Truncate the string and append the tail if any.
-					cell = tailc
-					cell.Style = style
-					cell.Link = link
-					s.SetCell(x, y, &cell)
-					x += tailc.Width
-				} else {
-					// Print the cell to the screen
-					cell.Style = style
-					cell.Link = link
-					s.SetCell(x, y, &cell)
-					x += width
+				pos := Pos(x, y)
+				if pos.In(bounds) {
+					if truncate && tailc.Width > 0 && x+cell.Width > bounds.Max.X-tailc.Width {
+						// Truncate the string and append the tail if any.
+						cell = tailc
+						cell.Style = style
+						cell.Link = link
+						s.SetCell(x, y, &cell)
+						lastX, lastY = x, y
+						x += tailc.Width
+					} else {
+						// Print the cell to the screen
+						s.SetCell(x, y, &cell)
+						lastX, lastY = x, y
+						x += width
+					}
 				}
 			}
 
-			// String is too long for the line, truncate it.
-			// Make sure we reset the cell for the next iteration.
+			// Reset cell for next iteration
 			cell = Cell{}
 		default:
 			// Valid sequences always have a non-zero Cmd.
@@ -172,11 +199,39 @@ func printString[T []byte | string](
 				// Hyperlinks
 				ReadLink(p.Data(), &link)
 			case ansi.Equal(seq, T("\n")):
+				if s == nil {
+					// When building lines, we need to ensure empty lines are represented.
+					if y >= len(lines) {
+						lines = append(lines, Line{})
+					}
+				}
 				y++
 				// Always treat a NL as CR-LF similar to Termios ONLCR.
 				fallthrough
 			case ansi.Equal(seq, T("\r")):
-				x = bounds.Min.X
+				if s == nil {
+					x = 0
+				} else {
+					x = bounds.Min.X
+				}
+			case len(seq) > 0 && seq[0] >= 0xc0:
+				// A zero-width grapheme, i.e. a combining mark the re-decode
+				// above couldn't fold because an escape sequence sits between
+				// it and its base, as in "a\x1b[31m\u0301". Every escape
+				// introducer is a C0 or C1 byte, so a UTF-8 lead byte here is
+				// always text. The mark belongs to the cell we last wrote; the
+				// accumulator below would let the next glyph clobber it.
+				if s == nil {
+					if lastY >= 0 && lastY < len(lines) && lastX < len(lines[lastY]) {
+						lines[lastY][lastX].Content += string(seq)
+					}
+				} else if lastX >= 0 {
+					if prev := s.CellAt(lastX, lastY); prev != nil {
+						folded := *prev
+						folded.Content += string(seq)
+						s.SetCell(lastX, lastY, &folded)
+					}
+				}
 			default:
 				cell.Content += string(seq)
 			}
@@ -185,13 +240,20 @@ func printString[T []byte | string](
 		// Advance the state and data
 		state = newState
 		str = str[n:]
+
+		if y >= bounds.Max.Y {
+			// We've reached the bottom of the bounds, stop processing further
+			// lines.
+			break
+		}
 	}
 
 	// Make sure to set the last cell if it's not empty.
-	if !cell.IsZero() {
+	if !cell.IsZero() && s != nil {
 		s.SetCell(x, y, &cell)
-		cell = Cell{}
 	}
+
+	return lines
 }
 
 // ReadStyle reads a Select Graphic Rendition (SGR) escape sequences from a
