@@ -14,6 +14,7 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/constants"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	crcpreset "github.com/crc-org/crc/v2/pkg/crc/preset"
+	"github.com/crc-org/crc/v2/pkg/crc/restapi"
 	"github.com/crc-org/crc/v2/pkg/crc/version"
 	crcos "github.com/crc-org/crc/v2/pkg/os"
 	"github.com/pkg/errors"
@@ -197,6 +198,34 @@ func fixCrcSymlink() error {
 func removeCrcSymlink() error {
 	if crcos.FileExists(constants.CrcSymlinkPath) {
 		return os.Remove(constants.CrcSymlinkPath)
+	}
+	return nil
+}
+func checkRestAPIToken() error {
+	info, err := os.Stat(constants.RestAPITokenPath)
+	if os.IsNotExist(err) {
+		return fmt.Errorf("REST API token file does not exist at %s", constants.RestAPITokenPath)
+	}
+	if err != nil {
+		return err
+	}
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("REST API token path is not a regular file: %s", constants.RestAPITokenPath)
+	}
+	_, err = restapi.LoadToken(constants.RestAPITokenPath)
+	return err
+}
+
+func fixRestAPIToken() error {
+	if _, err := restapi.LoadOrCreateToken(constants.RestAPITokenPath); err != nil {
+		return fmt.Errorf("failed to create REST API token: %w", err)
+	}
+	return nil
+}
+
+func removeRestAPIToken() error {
+	if err := os.Remove(constants.RestAPITokenPath); err != nil && !os.IsNotExist(err) {
+		return err
 	}
 	return nil
 }
