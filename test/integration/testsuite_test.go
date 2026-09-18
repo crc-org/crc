@@ -29,6 +29,8 @@ var versionInfo VersionAnswer
 
 var bundlePath string
 var pullSecretPath string
+var crcMemory string
+var crcDiskSize string
 
 func TestMain(m *testing.M) {
 	RegisterFlags(flag.CommandLine)
@@ -41,6 +43,8 @@ func TestMain(m *testing.M) {
 func RegisterFlags(flags *flag.FlagSet) {
 	flags.StringVar(&bundlePath, "bundle-path", "", "Path to the bundle to be used in tests.")
 	flags.StringVar(&pullSecretPath, "pull-secret-path", "", "Path to the file containing pull secret.")
+	flags.StringVar(&crcMemory, "crc-memory", "", "Memory for CRC VM in MiB.")
+	flags.StringVar(&crcDiskSize, "crc-disk-size", "", "Disk size for CRC VM in GiB.")
 }
 
 func TestTest(t *testing.T) {
@@ -77,6 +81,14 @@ var _ = BeforeSuite(func() {
 	// remove config file crc.json
 	err = util.RemoveCRCConfig()
 	Expect(err).NotTo(HaveOccurred())
+
+	if crcMemory != "" {
+		Expect(RunCRCExpectSuccess("config", "set", "memory", crcMemory)).To(ContainSubstring("Successfully configured memory"))
+	}
+
+	if crcDiskSize != "" {
+		Expect(RunCRCExpectSuccess("config", "set", "disk-size", crcDiskSize)).To(ContainSubstring("Successfully configured disk-size"))
+	}
 
 	// start shell instance
 	err = util.StartHostShellInstance("")
