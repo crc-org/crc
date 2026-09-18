@@ -12,6 +12,7 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"slices"
 	"strconv"
@@ -1077,24 +1078,46 @@ func EnsureMicroshiftClusterIsOperational() error {
 		return err
 	}
 	// Define the services to declare the cluster operational
+	// Use pod name prefix + allContainersReady check to avoid hardcoding
+	// container counts that change across versions
 	services := map[string]string{
-		".*dns-default.*2/2.*Running.*":    "oc get pods -n openshift-dns",
-		".*ovnkube-master.*4/4.*Running.*": "oc get pods -n openshift-ovn-kubernetes",
-		".*ovnkube-node.*1/1.*Running.*":   "oc get pods -n openshift-ovn-kubernetes"}
+		"dns-default":    "oc get pods -n openshift-dns",
+		"ovnkube-master": "oc get pods -n openshift-ovn-kubernetes",
+		"ovnkube-node":   "oc get pods -n openshift-ovn-kubernetes"}
 
-	for operationalState, getPodCommand := range services {
+	for podPrefix, getPodCommand := range services {
 		var operational = false
 		for !operational {
 			if err := util.ExecuteCommandSucceedsOrFails(getPodCommand, "succeeds"); err != nil {
 				return err
 			}
-			operational = (nil == util.CommandReturnShouldMatch(
-				"stdout",
-				operationalState))
+			operational = allContainersReady(
+				util.GetLastCommandOutput("stdout"), podPrefix)
 		}
 	}
 
 	return nil
+}
+
+// allContainersReady checks if a pod matching the given prefix has all
+// containers ready (READY x/x with x > 0) and is in Running status.
+func allContainersReady(output string, podPrefix string) bool {
+	readyRegex := regexp.MustCompile(`(\d+)/(\d+)`)
+	for _, line := range strings.Split(output, "\n") {
+		if !strings.Contains(line, podPrefix) || !strings.Contains(line, "Running") {
+			continue
+		}
+		match := readyRegex.FindStringSubmatch(line)
+		if match == nil {
+			continue
+		}
+		ready, _ := strconv.Atoi(match[1])
+		total, _ := strconv.Atoi(match[2])
+		if total > 0 && ready == total {
+			return true
+		}
+	}
+	return false
 }
 
 func EnsureVMPartitionSizeCorrect(expectedPVSizeStr string) error {
