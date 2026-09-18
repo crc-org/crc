@@ -53,8 +53,8 @@ require (
 	github.com/stretchr/testify v1.12.1
 	github.com/yusufpapurcu/wmi v1.2.4
 	github.com/zalando/go-keyring v0.2.8
-	go.podman.io/common v0.69.1
-	go.podman.io/image/v5 v5.41.1
+	go.podman.io/common v0.69.2
+	go.podman.io/image/v5 v5.41.2
 	golang.org/x/crypto v0.57.0
 	golang.org/x/net v0.59.0
 	golang.org/x/sync v0.23.0
@@ -70,6 +70,7 @@ require (
 )
 
 require (
+	cyphar.com/go-pathrs v0.2.5 // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/RangelReale/osincli v0.0.0-20160924135400-fababb0555f2 // indirect
 	github.com/VividCortex/ewma v1.2.0 // indirect
@@ -85,6 +86,7 @@ require (
 	github.com/cucumber/gherkin/go/v42 v42.0.0 // indirect
 	github.com/cucumber/messages/go/v34 v34.2.0 // indirect
 	github.com/cyberphone/json-canonicalization v0.0.0-20241213102144-19d51d7fe467 // indirect
+	github.com/cyphar/filepath-securejoin v0.7.0 // indirect
 	github.com/danieljoos/wincred v1.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/distribution/reference v0.6.0 // indirect
@@ -172,7 +174,7 @@ require (
 	github.com/vbauerster/mpb/v8 v8.14.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	go.podman.io/storage v1.64.0 // indirect
+	go.podman.io/storage v1.64.1 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/mod v0.41.0 // indirect
