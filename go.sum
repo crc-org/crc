@@ -1,3 +1,5 @@
+cyphar.com/go-pathrs v0.2.5 h1:SnX9FBvnoyn3lUs1dkMgZ52bAETpirNu3FTRh5HlRik=
+cyphar.com/go-pathrs v0.2.5/go.mod h1:y8f1EMG7r+hCuFf/rXsKqMJrJAUoADZGNh5/vZPKcGc=
 dario.cat/mergo v1.0.2 h1:85+piFYR1tMbRrLcDwR18y4UKJ3aH1Tbzi24VRW1TK8=
 dario.cat/mergo v1.0.2/go.mod h1:E/hbnu0NxMFBjpMIE34DRGLWqDy0g5FuKDhCb31ngxA=
 github.com/AlecAivazis/survey/v2 v2.3.7 h1:6I/u8FvytdGsgonrYsVn2t8t4QiRnh6QSTqkkhIiSjQ=
@@ -74,6 +76,8 @@ github.com/cucumber/messages/go/v34 v34.2.0 h1:VCbcNOMz+f8ccjjOOx1NLBNhwvE7/X49A
 github.com/cucumber/messages/go/v34 v34.2.0/go.mod h1:LYUPjqlTS1kS0pdkdf6sS5uirnjwiIzEGyXPezXNhL8=
 github.com/cyberphone/json-canonicalization v0.0.0-20241213102144-19d51d7fe467 h1:uX1JmpONuD549D73r6cgnxyUu18Zb7yHAy5AYU0Pm4Q=
 github.com/cyberphone/json-canonicalization v0.0.0-20241213102144-19d51d7fe467/go.mod h1:uzvlm1mxhHkdfqitSA92i7Se+S9ksOn3a3qmv/kyOCw=
+github.com/cyphar/filepath-securejoin v0.7.0 h1:s0Y3ITPy6sQn5xt54DuYvTF8hu134ooYLUb58DX/HjE=
+github.com/cyphar/filepath-securejoin v0.7.0/go.mod h1:ymLGms/u3BYaviIiuKFnUx8EkQEZeK6cInNoAPJA3o4=
 github.com/danieljoos/wincred v1.2.3 h1:v7dZC2x32Ut3nEfRH+vhoZGvN72+dQ/snVXo/vMFLdQ=
 github.com/danieljoos/wincred v1.2.3/go.mod h1:6qqX0WNrS4RzPZ1tnroDzq9kY3fu1KwE7MRLQK4X0bs=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -417,12 +421,12 @@ go.opentelemetry.io/otel/sdk/metric v1.44.0 h1:3LlKgI+VjbVsjNRFZJZAJ30WjXC5VkNRk
 go.opentelemetry.io/otel/sdk/metric v1.44.0/go.mod h1:5B5pMARnXxKhltooO4xUuCBorl65a4EpnTalObqOigA=
 go.opentelemetry.io/otel/trace v1.44.0 h1:jxF5CsGYCe74MCRx2X4g7WsY/VBKRqqpNvXlX/6gtIk=
 go.opentelemetry.io/otel/trace v1.44.0/go.mod h1:oLl1jrMQAVo6v3GAggN+1VH9VIz9iUSvW53sW1Q8PIE=
-go.podman.io/common v0.69.1 h1:hTIv8wzHJfHAMMZRocjv1849TiWrf5HDhH0eD74qJqY=
-go.podman.io/common v0.69.1/go.mod h1:g1iVXP+Xn/8He+96qpJw75pu054FRDQMiDGf2VKKspg=
-go.podman.io/image/v5 v5.41.1 h1:iPrhIt7/aNfRBMuzoxbMUVpQmR7Q75ahnrzkIC4JWLQ=
-go.podman.io/image/v5 v5.41.1/go.mod h1:wfgAlfczPK4ZZw/wn/Av2iJfb3z9Vv+RKWgjHNShzZk=
-go.podman.io/storage v1.64.0 h1:ryHCZO+Zl0ZG7OTHF+Qc4C0zLNuoe9W35zgE7mh2pYw=
-go.podman.io/storage v1.64.0/go.mod h1:ft0DzCRMZs1yn0rszmLYXEEwgd7IIc66JRwSRPUDwwc=
+go.podman.io/common v0.69.2 h1:5ZV7xkfFTOwgf21xaqNZSqjy9G9JVG7p2bF5Tj6IVjE=
+go.podman.io/common v0.69.2/go.mod h1:cQ1+nD9QcwnUGiuJHMX61SoYK5MU90NDbl0lLWmDF2s=
+go.podman.io/image/v5 v5.41.2 h1:YnVaFrGLPWSBmipKfNvlOsGcBtk5bUxlPxQ+A6CS/uo=
+go.podman.io/image/v5 v5.41.2/go.mod h1:T/bzxEFpdpAzyHabPmcq5K+my3wBsht22sFkFjJSKT4=
+go.podman.io/storage v1.64.1 h1:DqbG8scW/bD3xHiSRzV7O5fzn46qVC+SwmUN6C6Fr5w=
+go.podman.io/storage v1.64.1/go.mod h1:ft0DzCRMZs1yn0rszmLYXEEwgd7IIc66JRwSRPUDwwc=
 go.yaml.in/yaml/v2 v2.4.4 h1:tuyd0P+2Ont/d6e2rl3be67goVK4R6deVxCUX5vyPaQ=
 go.yaml.in/yaml/v2 v2.4.4/go.mod h1:gMZqIpDtDqOfM0uNfy0SkpRhvUryYH0Z6wdMYcacYXQ=
 go.yaml.in/yaml/v3 v3.0.4/go.mod h1:DhzuOOF2ATzADvBadXxruRBLzYTpT36CKvDb3+aBEFg=
