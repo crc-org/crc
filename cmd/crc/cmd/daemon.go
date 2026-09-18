@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
-	"runtime"
 	"syscall"
 	"time"
 
@@ -26,7 +25,6 @@ import (
 	"github.com/crc-org/crc/v2/pkg/crc/daemonclient"
 	"github.com/crc-org/crc/v2/pkg/crc/logging"
 	"github.com/crc-org/crc/v2/pkg/crc/restapi"
-	"github.com/crc-org/crc/v2/pkg/fileserver/fs9p"
 	"github.com/crc-org/machine/libmachine/drivers"
 	"github.com/docker/go-units"
 	"github.com/gorilla/handlers"
@@ -259,54 +257,12 @@ func run(configuration *types.Configuration) error {
 		}
 	}()
 
-	// 9p home directory sharing
-	if runtime.GOOS == "windows" && config.Get(crcConfig.EnableSharedDirs).AsBool() {
-		// 9p over hvsock
-		listener9pHvsock, err := fs9p.GetHvsockListener(constants.Plan9HvsockGUID)
-		if err != nil {
-			return err
-		}
-		server9pHvsock, err := fs9p.New9pServer(listener9pHvsock, constants.GetHomeDir())
-		if err != nil {
-			return err
-		}
-		if err := server9pHvsock.Start(); err != nil {
-			return err
-		}
-		defer func() {
-			if err := server9pHvsock.Stop(); err != nil {
-				logging.Warnf("error stopping 9p server (hvsock): %v", err)
-			}
-		}()
-		go func() {
-			if err := server9pHvsock.WaitForError(); err != nil {
-				logging.Errorf("9p server (hvsock) error: %v", err)
-			}
-		}()
-
-		// 9p over TCP (as a backup)
-		listener9pTCP, err := vn.Listen("tcp", net.JoinHostPort(configuration.GatewayIP, fmt.Sprintf("%d", constants.Plan9TcpPort)))
-		if err != nil {
-			return err
-		}
-		server9pTCP, err := fs9p.New9pServer(listener9pTCP, constants.GetHomeDir())
-		if err != nil {
-			return err
-		}
-		if err := server9pTCP.Start(); err != nil {
-			return err
-		}
-		defer func() {
-			if err := server9pTCP.Stop(); err != nil {
-				logging.Warnf("error stopping 9p server (tcp): %v", err)
-			}
-		}()
-		go func() {
-			if err := server9pTCP.WaitForError(); err != nil {
-				logging.Errorf("9p server (tcp) error: %v", err)
-			}
-		}()
+	// 9p home directory sharing (Windows only)
+	cleanupSharedDirs, err := startSharedDirServers(vn, configuration.GatewayIP, config.Get(crcConfig.EnableSharedDirs).AsBool())
+	if err != nil {
+		return err
 	}
+	defer cleanupSharedDirs()
 
 	startupDone()
 
