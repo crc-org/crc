@@ -63,8 +63,8 @@ func (s *Config) UpdateFromComment(commentGroup []*ast.CommentGroup) {
 		}
 
 		for _, cmnt := range cmntList.List {
-			commentLines := strings.Split(cmnt.Text, "\n")
-			for _, comment := range commentLines {
+			commentLines := strings.SplitSeq(cmnt.Text, "\n")
+			for comment := range commentLines {
 				comment = strings.TrimPrefix(comment, "//")
 				comment = strings.TrimPrefix(comment, "/*")
 				comment = strings.TrimSuffix(comment, "*/")

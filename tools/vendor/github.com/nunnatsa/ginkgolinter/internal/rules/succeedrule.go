@@ -54,7 +54,7 @@ func (r SucceedRule) Apply(gexp *expression.GomegaExpression, config config.Conf
 	}
 
 	if !gexp.ActualArgTypeIs(actual.ErrorTypeArgType) {
-		if gexp.IsActualTuple() {
+		if gexp.IsActualTuple() && !gexp.ActualArgTypeIs(actual.ErrorMethodNoErrArgType) {
 			reportBuilder.AddIssue(false, "the Success matcher does not support multiple values")
 		} else {
 			reportBuilder.AddIssue(false, "asserting a non-error type with Succeed matcher")
@@ -62,13 +62,15 @@ func (r SucceedRule) Apply(gexp *expression.GomegaExpression, config config.Conf
 		return true
 	}
 
-	if config.ForceSucceedForFuncs && !gexp.GetActualArg().(*actual.ErrPayload).IsFunc() {
-		gexp.ReverseAssertionFuncLogic()
-		gexp.SetMatcherHaveOccurred()
+	if config.ForceSucceedForFuncs {
+		if errPayload, ok := gexp.GetActualArg().(*actual.ErrPayload); ok && !errPayload.IsFunc() {
+			gexp.ReverseAssertionFuncLogic()
+			gexp.SetMatcherHaveOccurred()
 
-		reportBuilder.AddIssue(true, "prefer using the HaveOccurred matcher for non-function error value, instead of Succeed")
+			reportBuilder.AddIssue(true, "prefer using the HaveOccurred matcher for non-function error value, instead of Succeed")
 
-		return true
+			return true
+		}
 	}
 
 	return false
