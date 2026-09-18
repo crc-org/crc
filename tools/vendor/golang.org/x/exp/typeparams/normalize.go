@@ -192,9 +192,3 @@ func computeTermSetInternal(t types.Type, seen map[types.Type]*termSet, depth in
 	}
 	return tset, nil
 }
-
-// under is a facade for the go/types internal function of the same name. It is
-// used by typeterm.go.
-func under(t types.Type) types.Type {
-	return t.Underlying()
-}

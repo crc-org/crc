@@ -4,9 +4,12 @@
 package uv
 
 import (
+	"context"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"golang.org/x/sys/unix"
 )
 
 func openTTY() (inTty, outTty *os.File, err error) {
@@ -25,4 +28,12 @@ func suspend() (err error) {
 	// blocks until a CONT happens...
 	<-c
 	return
+}
+
+func notifyWinch(c chan os.Signal, sigs ...os.Signal) {
+	signal.Notify(c, append(sigs, unix.SIGWINCH)...)
+}
+
+func notifyWinchContext(ctx context.Context, sigs ...os.Signal) (context.Context, context.CancelFunc) {
+	return signal.NotifyContext(ctx, append(sigs, unix.SIGWINCH)...)
 }

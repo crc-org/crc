@@ -175,8 +175,9 @@ func (w *WSL) checkCuddlingMaxAllowed(
 	}
 
 	previousNode := cursor.PreviousNode()
+	previousStmtNode := unlabeledStmt(previousNode)
 	numStmtsAbove := w.numberOfStatementsAbove(cursor)
-	previousIdents := w.identsFromNode(previousNode, true)
+	previousIdents := w.identsFromNode(previousStmtNode, true)
 
 	// If we don't have any statements above, we only care about potential error
 	// cuddling (for if statements) so check that.
@@ -185,7 +186,7 @@ func (w *WSL) checkCuddlingMaxAllowed(
 		return
 	}
 
-	if w.isLockOrUnlock(stmt, previousNode) {
+	if w.isLockOrUnlock(stmt, previousStmtNode) {
 		return
 	}
 
@@ -195,7 +196,7 @@ func (w *WSL) checkCuddlingMaxAllowed(
 
 	// We're cuddled but not with an assign, declare, increment/decrement and
 	// we're not a statement with relaxed check.
-	if !isAssignDeclOrIncDec(previousNode) && !currRelaxesPrevType {
+	if !isAssignDeclOrIncDec(previousStmtNode) && !currRelaxesPrevType {
 		w.addErrorInvalidTypeCuddle(cursor.Stmt().Pos(), cursor.checkType)
 		return
 	}
@@ -1605,6 +1606,17 @@ func identsIntersect(a, b []*ast.Ident) bool {
 	}
 
 	return false
+}
+
+func unlabeledStmt(node ast.Node) ast.Node {
+	for {
+		labeled, ok := node.(*ast.LabeledStmt)
+		if !ok {
+			return node
+		}
+
+		node = labeled.Stmt
+	}
 }
 
 func isTypeOrPredeclConst(obj types.Object) bool {

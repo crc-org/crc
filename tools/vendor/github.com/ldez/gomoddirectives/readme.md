@@ -26,7 +26,11 @@ linters:
       # Default: []
       replace-allow-list:
         - launchpad.net/gocheck
-      
+
+      # Allow all `replace` directives.
+      # Default: false
+      replace-allow-all: true
+
       # Allow to not explain why the version has been retracted in the `retract` directives.
       # Default: false
       retract-allow-no-explanation: true
@@ -85,6 +89,8 @@ Flags:
         List of allowed replace directives
   -local
         Allow local replace directives
+  -all-replace
+        Allow all replace directives
   -retract-no-explanation
         Allow to use retract directives without explanation
   -tool
@@ -120,6 +126,7 @@ retract (
 - Ban all `replace` directives.
 - Allow only local `replace` directives.
 - Allow only some `replace` directives.
+- Allow all `replace` directives.
 - Detect duplicated `replace` directives.
 - Detect identical `replace` directives.
 

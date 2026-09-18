@@ -15,9 +15,13 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-// FlagCheckStructPointers is a possible flag for the analyzer.
-// Exported to make it usable in golangci-lint.
-const FlagCheckStructPointers = "check-struct-pointers"
+// Flags for the analyzer.
+// Exported to make them usable in golangci-lint.
+const (
+	FlagCheckStructPointers   = "check-struct-pointers"
+	FlagCheckLoops            = "check-loops"
+	FlagCheckFunctionLiterals = "check-function-literals"
+)
 
 // NewAnalyzer returns a fatcontext analyzer.
 func NewAnalyzer() *analysis.Analyzer {
@@ -26,6 +30,10 @@ func NewAnalyzer() *analysis.Analyzer {
 	flags := flag.NewFlagSet("fatcontext", flag.ExitOnError)
 	flags.BoolVar(&rnnr.DetectInStructPointers, FlagCheckStructPointers, false,
 		"set to true to detect potential fat contexts in struct pointers")
+	flags.BoolVar(&rnnr.CheckLoops, FlagCheckLoops, true,
+		"set to false to disable detection of fat contexts in loops")
+	flags.BoolVar(&rnnr.CheckFunctionLiterals, FlagCheckFunctionLiterals, true,
+		"set to false to disable detection of fat contexts in function literals")
 
 	return &analysis.Analyzer{
 		Name:     "fatcontext",
@@ -50,9 +58,11 @@ const (
 
 type runner struct {
 	DetectInStructPointers bool
+	CheckLoops             bool
+	CheckFunctionLiterals  bool
 }
 
-func (r *runner) run(pass *analysis.Pass) (interface{}, error) {
+func (r *runner) run(pass *analysis.Pass) (any, error) {
 	inspctr, typeValid := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	if !typeValid {
 		return nil, errInvalidAnalysis
@@ -99,7 +109,16 @@ func (r *runner) run(pass *analysis.Pass) (interface{}, error) {
 }
 
 func (r *runner) shouldIgnoreReport(category string) bool {
-	return category == categoryInStructPointer && !r.DetectInStructPointers
+	switch category {
+	case categoryInLoop:
+		return !r.CheckLoops
+	case categoryInFuncLit:
+		return !r.CheckFunctionLiterals
+	case categoryInStructPointer:
+		return !r.DetectInStructPointers
+	}
+
+	return false
 }
 
 func (r *runner) getSuggestedFixes(
@@ -268,7 +287,7 @@ func getStmtList(stmt ast.Stmt) []ast.Stmt {
 }
 
 // render returns the pretty-print of the given node.
-func render(fset *token.FileSet, x interface{}) ([]byte, error) {
+func render(fset *token.FileSet, x any) ([]byte, error) {
 	var buf bytes.Buffer
 
 	err := printer.Fprint(&buf, fset, x)

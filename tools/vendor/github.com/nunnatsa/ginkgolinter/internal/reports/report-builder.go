@@ -97,6 +97,8 @@ func (b *Builder) getMessage() string {
 	sb.WriteString(strings.Join(b.issues, "; "))
 
 	if b.suggestFix && len(b.fixOffer) != 0 {
+		//nolint:staticcheck
+		// staticcheck false positive
 		sb.WriteString(fmt.Sprintf(". Consider using `%s` instead", b.fixOffer))
 	}
 
