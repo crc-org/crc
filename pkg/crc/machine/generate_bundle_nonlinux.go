@@ -7,6 +7,6 @@ import (
 	"runtime"
 )
 
-func copyDiskImage(_ string) (string, string, error) {
-	return "", "", fmt.Errorf("Not implemented for %s", runtime.GOOS)
+func (client *client) GenerateBundle(_ bool) error {
+	return fmt.Errorf("Not implemented for %s", runtime.GOOS)
 }
