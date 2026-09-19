@@ -141,3 +141,7 @@ func unixgramListener(_ context.Context, _ *virtualnetwork.VirtualNetwork) (*net
 func startupDone() {
 	_, _ = daemon.SdNotify(false, daemon.SdNotifyReady)
 }
+
+func startSharedDirServers(_ *virtualnetwork.VirtualNetwork, _ string, _ bool) (func(), error) {
+	return func() {}, nil
+}

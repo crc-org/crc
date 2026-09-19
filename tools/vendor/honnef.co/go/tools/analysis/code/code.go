@@ -16,7 +16,6 @@ import (
 	"honnef.co/go/tools/analysis/facts/generated"
 	"honnef.co/go/tools/analysis/facts/purity"
 	"honnef.co/go/tools/analysis/facts/tokenfile"
-	"honnef.co/go/tools/go/ast/astutil"
 	"honnef.co/go/tools/go/types/typeutil"
 	"honnef.co/go/tools/knowledge"
 	"honnef.co/go/tools/pattern"
@@ -92,15 +91,18 @@ func SelectorName(pass *analysis.Pass, expr *ast.SelectorExpr) string {
 	info := pass.TypesInfo
 	sel := info.Selections[expr]
 	if sel == nil {
-		if x, ok := expr.X.(*ast.Ident); ok {
+		switch x := expr.X.(type) {
+		case *ast.Ident:
 			pkg, ok := info.ObjectOf(x).(*types.PkgName)
 			if !ok {
-				// This shouldn't happen
-				return fmt.Sprintf("%s.%s", x.Name, expr.Sel.Name)
+				return fmt.Sprintf("(%s).%s", info.TypeOf(x), expr.Sel.Name)
 			}
 			return fmt.Sprintf("%s.%s", pkg.Imported().Path(), expr.Sel.Name)
+		case *ast.SelectorExpr:
+			return fmt.Sprintf("(%s).%s", SelectorName(pass, x), expr.Sel.Name)
+		default:
+			panic(fmt.Sprintf("unsupported selector: %v", expr))
 		}
-		panic(fmt.Sprintf("unsupported selector: %v", expr))
 	}
 	if v, ok := sel.Obj().(*types.Var); ok && v.IsField() {
 		return fmt.Sprintf("(%s).%s", typeutil.DereferenceR(sel.Recv()), sel.Obj().Name())
@@ -169,7 +171,7 @@ func CallName(pass *analysis.Pass, call *ast.CallExpr) string {
 	// See the comment in typeutil.FuncName for why this doesn't require special handling
 	// of aliases.
 
-	fun := astutil.Unparen(call.Fun)
+	fun := ast.Unparen(call.Fun)
 
 	// Instantiating a function cannot return another generic function, so doing this once is enough
 	switch idx := fun.(type) {

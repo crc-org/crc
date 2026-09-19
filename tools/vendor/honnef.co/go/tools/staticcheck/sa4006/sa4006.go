@@ -3,6 +3,7 @@ package sa4006
 import (
 	"fmt"
 	"go/ast"
+	"go/token"
 
 	"honnef.co/go/tools/analysis/code"
 	"honnef.co/go/tools/analysis/facts/generated"
@@ -74,15 +75,6 @@ func run(pass *analysis.Pass) (any, error) {
 			}
 			for _, ref := range *refs {
 				switch ref := ref.(type) {
-				case *ir.DebugRef:
-				case *ir.Sigma:
-					if seen == nil {
-						seen = map[ir.Value]struct{}{}
-					}
-					seen[v] = struct{}{}
-					if hasUse(ref, seen) {
-						return true
-					}
 				case *ir.Phi:
 					if seen == nil {
 						seen = map[ir.Value]struct{}{}
@@ -99,6 +91,22 @@ func run(pass *analysis.Pass) (any, error) {
 		}
 
 		ast.Inspect(node, func(node ast.Node) bool {
+			inc, ok := node.(*ast.IncDecStmt)
+			if ok {
+				val, _ := fn.ValueForExpr(inc.X)
+				if val == nil {
+					return true
+				}
+				if _, ok := val.(*ir.Const); ok {
+					// a zero-valued constant, for example in 'foo := []string(nil)'
+					return true
+				}
+				if !hasUse(val, nil) {
+					report.Report(pass, inc, fmt.Sprintf("this value of %s is never used", inc.X))
+				}
+				return true
+			}
+
 			assign, ok := node.(*ast.AssignStmt)
 			if !ok {
 				return true
@@ -137,7 +145,12 @@ func run(pass *analysis.Pass) (any, error) {
 				}
 				val, _ := fn.ValueForExpr(rhs)
 				if val == nil {
-					continue
+					if assign.Tok != token.ASSIGN { // +=, *=, etc.
+						val, _ = fn.ValueForExpr(lhs)
+					}
+					if val == nil {
+						continue
+					}
 				}
 
 				if _, ok := val.(*ir.Const); ok {

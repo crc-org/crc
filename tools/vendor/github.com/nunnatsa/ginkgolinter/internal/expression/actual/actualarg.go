@@ -32,6 +32,7 @@ const (
 	TBParamArgType
 	MultiRetsArgType
 	ErrorMethodArgType
+	ErrorMethodNoErrArgType
 
 	ErrorTypeArgType
 
@@ -51,10 +52,10 @@ func getActualArgPayload(actualExprClone *ast.CallExpr, pass *analysis.Pass, inf
 
 	var arg ArgPayload
 
-	if info.HasErrorMethod {
-		arg = &ErrorMethodPayload{}
-	} else if value.IsExprError(pass, origArgExpr) {
-		arg = newErrPayload(origArgExpr, argExprClone, pass)
+	if value.IsExprError(pass, origArgExpr, info.HasErrorMethod) {
+		arg = newErrPayload(origArgExpr, argExprClone, pass, info.HasErrorMethod)
+	} else if info.HasErrorMethod {
+		arg = &ErrorMethodNoErrPayload{}
 	} else {
 		switch expr := origArgExpr.(type) {
 		case *ast.CallExpr:
@@ -179,9 +180,17 @@ type ErrPayload struct {
 	value.Valuer
 }
 
-func newErrPayload(orig, clone ast.Expr, pass *analysis.Pass) *ErrPayload {
+func newErrPayload(orig, clone ast.Expr, pass *analysis.Pass, withErrorMethod bool) ArgPayload {
+	v := value.GetValuerWithError(orig, clone, pass, withErrorMethod)
+
+	if withErrorMethod {
+		return &ErrorMethodPayload{
+			Valuer: v,
+		}
+	}
+
 	return &ErrPayload{
-		Valuer: value.GetValuer(orig, clone, pass),
+		Valuer: v,
 	}
 }
 
@@ -189,10 +198,18 @@ func (*ErrPayload) ArgType() ArgType {
 	return ErrActualArgType | ErrorTypeArgType
 }
 
-type ErrorMethodPayload struct{}
+type ErrorMethodNoErrPayload struct{}
+
+func (ErrorMethodNoErrPayload) ArgType() ArgType {
+	return ErrorMethodNoErrArgType
+}
+
+type ErrorMethodPayload struct {
+	value.Valuer
+}
 
 func (ErrorMethodPayload) ArgType() ArgType {
-	return ErrorMethodArgType | ErrorTypeArgType
+	return ErrorMethodArgType | ErrActualArgType | ErrorTypeArgType
 }
 
 func parseBinaryExpr(origActualExpr, argExprClone *ast.BinaryExpr, pass *analysis.Pass) ArgPayload {

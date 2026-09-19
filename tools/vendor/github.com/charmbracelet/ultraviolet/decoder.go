@@ -642,7 +642,7 @@ func (p *EventDecoder) parseCsi(b []byte) (int, Event) {
 				if !hOk || !wOk {
 					break
 				}
-				return i, WindowPixelSizeEvent{Width: width, Height: height}
+				return i, PixelSizeEvent{Width: width, Height: height}
 			}
 		case 6: // Report Terminal character cell size.
 			if paramsLen == 3 {
@@ -673,7 +673,7 @@ func (p *EventDecoder) parseCsi(b []byte) (int, Event) {
 				}
 				return i, MultiEvent{
 					WindowSizeEvent{Width: cellWidth, Height: cellHeight},
-					WindowPixelSizeEvent{Width: pixelWidth, Height: pixelHeight},
+					PixelSizeEvent{Width: pixelWidth, Height: pixelHeight},
 				}
 			}
 		}
@@ -1530,7 +1530,6 @@ func parseKittyKeyboard(params ansi.Params) (Event Event) {
 func parseKittyKeyboardExt(params ansi.Params, k KeyPressEvent) Event {
 	// Handle Kitty keyboard protocol
 	if len(params) > 2 && // We have at least 3 parameters
-		params[0].Param(1) == 1 && // The first parameter is 1 (defaults to 1)
 		params[1].HasMore() { // The second parameter is a subparameter (separated by a ":")
 		switch params[2].Param(1) { // The third parameter is the event type (defaults to 1)
 		case 2:

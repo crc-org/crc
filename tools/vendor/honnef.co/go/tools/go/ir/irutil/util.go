@@ -47,42 +47,31 @@ func Walk(b *ir.BasicBlock, fn func(*ir.BasicBlock) bool) {
 
 func Vararg(x *ir.Slice) ([]ir.Value, bool) {
 	var out []ir.Value
-	alloc, ok := ir.Unwrap(x.X).(*ir.Alloc)
+	alloc, ok := x.X.(*ir.Alloc)
 	if !ok {
 		return nil, false
 	}
-	var checkAlloc func(alloc ir.Value) bool
-	checkAlloc = func(alloc ir.Value) bool {
-		for _, ref := range *alloc.Referrers() {
-			if ref == x {
-				continue
-			}
-			if ref.Block() != x.Block() {
-				return false
-			}
-			switch ref := ref.(type) {
-			case *ir.IndexAddr:
-				idx := ref
-				if len(*idx.Referrers()) != 1 {
-					return false
-				}
-				store, ok := (*idx.Referrers())[0].(*ir.Store)
-				if !ok {
-					return false
-				}
-				out = append(out, store.Val)
-			case *ir.Copy:
-				if !checkAlloc(ref) {
-					return false
-				}
-			default:
-				return false
-			}
+	for _, ref := range *alloc.Referrers() {
+		if ref == x {
+			continue
 		}
-		return true
-	}
-	if !checkAlloc(alloc) {
-		return nil, false
+		if ref.Block() != x.Block() {
+			return nil, false
+		}
+		switch ref := ref.(type) {
+		case *ir.IndexAddr:
+			idx := ref
+			if len(*idx.Referrers()) != 1 {
+				return nil, false
+			}
+			store, ok := (*idx.Referrers())[0].(*ir.Store)
+			if !ok {
+				return nil, false
+			}
+			out = append(out, store.Val)
+		default:
+			return nil, false
+		}
 	}
 	return out, true
 }
@@ -111,16 +100,6 @@ func IsCallToAny(call *ir.CallCommon, names ...string) bool {
 	return slices.Contains(names, q)
 }
 
-func FilterDebug(instr []ir.Instruction) []ir.Instruction {
-	var out []ir.Instruction
-	for _, ins := range instr {
-		if _, ok := ins.(*ir.DebugRef); !ok {
-			out = append(out, ins)
-		}
-	}
-	return out
-}
-
 func IsExample(fn *ir.Function) bool {
 	if !strings.HasPrefix(fn.Name(), "Example") {
 		return false
@@ -132,7 +111,7 @@ func IsExample(fn *ir.Function) bool {
 	return strings.HasSuffix(f.Name(), "_test.go")
 }
 
-// Flatten recursively returns the underlying value of an ir.Sigma or
+// Flatten recursively returns the underlying value of an
 // ir.Phi node. If all edges in an ir.Phi node are the same (after
 // flattening), the flattened edge will get returned. If flattening is
 // not possible, nil is returned.
@@ -151,8 +130,6 @@ func Flatten(v ir.Value) ir.Value {
 		seen[v] = struct{}{}
 
 		switch v := v.(type) {
-		case *ir.Sigma:
-			dfs(v.X)
 		case *ir.Phi:
 			for _, e := range v.Edges {
 				dfs(e)
