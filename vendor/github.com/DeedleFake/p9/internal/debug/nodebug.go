@@ -1,5 +1,4 @@
 //go:build !p9debug
-// +build !p9debug
 
 package debug
 
