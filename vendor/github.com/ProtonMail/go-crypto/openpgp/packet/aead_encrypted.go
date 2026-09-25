@@ -63,7 +63,11 @@ func (ae *AEADEncrypted) Decrypt(ciph CipherFunction, key []byte) (io.ReadCloser
 // decrypted bytes can be read (see aeadDecrypter.Read()).
 func (ae *AEADEncrypted) decrypt(key []byte) (io.ReadCloser, error) {
 	blockCipher := ae.cipher.new(key)
-	aead := ae.mode.new(blockCipher)
+	aead, err := ae.mode.new(blockCipher)
+	if err != nil {
+		return nil, err
+	}
+
 	// Carry the first tagLen bytes
 	chunkSize := decodeAEADChunkSize(ae.chunkSizeByte)
 	tagLen := ae.mode.TagLength()
