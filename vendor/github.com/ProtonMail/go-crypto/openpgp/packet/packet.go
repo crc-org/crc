@@ -26,6 +26,18 @@ func readFull(r io.Reader, buf []byte) (n int, err error) {
 	return
 }
 
+// readN reads exactly n bytes from r.
+func readN(r io.Reader, n uint32) ([]byte, error) {
+	var buf bytes.Buffer
+	if _, err := io.CopyN(&buf, r, int64(n)); err != nil {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
 // readLength reads an OpenPGP length from r. See RFC 4880, section 4.2.2.
 func readLength(r io.Reader) (length int64, isPartial bool, err error) {
 	var buf [4]byte
@@ -511,8 +523,8 @@ const (
 	PubKeyAlgoRSASignOnly    PublicKeyAlgorithm = 3
 
 	// PQC DSA algorithms
-	PubKeyAlgoMldsa65Ed25519 = 30
-	PubKeyAlgoMldsa87Ed448   = 31
+	PubKeyAlgoMldsa65Ed25519  = 30
+	PubKeyAlgoMldsa87Ed448    = 31
 	PubKeyAlgoSlhdsaShake128s = 32
 	PubKeyAlgoSlhdsaShake128f = 33
 	PubKeyAlgoSlhdsaShake256s = 34

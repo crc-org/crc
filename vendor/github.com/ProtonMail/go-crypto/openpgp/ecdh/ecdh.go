@@ -203,6 +203,9 @@ func buildKey(pub *PublicKey, zb []byte, curveOID, fingerprint []byte, stripLead
 		return nil, err
 	}
 	mb := h.Sum(nil)
+	if len(mb) < pub.KDF.Cipher.KeySize() {
+		return nil, errors.New("ecdh: KDF hash output is shorter than the KDF cipher key size")
+	}
 
 	return mb[:pub.KDF.Cipher.KeySize()], nil // return oBits leftmost bits of MB.
 
