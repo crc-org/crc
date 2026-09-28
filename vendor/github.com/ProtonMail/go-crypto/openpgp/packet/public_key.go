@@ -560,6 +560,10 @@ func (pk *PublicKey) parseECDH(r io.Reader) (err error) {
 	if !ok {
 		return errors.UnsupportedError("unsupported ECDH KDF cipher: " + strconv.Itoa(int(pk.kdf.Bytes()[2])))
 	}
+	// RFC 6637, section 7: the KDF hash must be at least as long as the KEK.
+	if kdfHash.HashFunc().Size() < kdfCipher.KeySize() {
+		return errors.StructuralError("ECDH KDF hash output is shorter than the KDF cipher key size")
+	}
 
 	ecdhKey := ecdh.NewPublicKey(c, kdfHash, kdfCipher)
 	err = ecdhKey.UnmarshalPoint(pk.p.Bytes())
