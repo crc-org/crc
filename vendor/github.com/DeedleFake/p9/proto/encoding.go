@@ -99,8 +99,8 @@ func (e *encoder) encode(v reflect.Value) {
 		e.mode([]byte(v.String()))
 
 	case reflect.Struct:
-		for i := 0; i < v.NumField(); i++ {
-			e.encode(v.Field(i))
+		for _, field := range v.Fields() {
+			e.encode(field)
 		}
 
 	default:
@@ -173,8 +173,8 @@ func (d *decoder) decode(v reflect.Value) {
 		v.SetString(unsafe.String(unsafe.SliceData(buf), len(buf)))
 
 	case reflect.Struct:
-		for i := 0; i < v.NumField(); i++ {
-			d.decode(v.Field(i))
+		for _, field := range v.Fields() {
+			d.decode(field)
 		}
 
 	default:
