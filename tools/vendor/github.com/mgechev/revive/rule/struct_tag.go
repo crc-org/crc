@@ -97,6 +97,8 @@ func (checkCtx *checkContext) addCommonOption(opt string) {
 	checkCtx.commonOptions[opt] = true
 }
 
+var _ lint.ConfigurableRule = (*StructTagRule)(nil)
+
 // Configure validates the rule configuration, and configures the rule accordingly.
 //
 // Configuration implements the [lint.ConfigurableRule] interface.
@@ -569,7 +571,7 @@ func checkProtobufOptions(checkCtx *checkContext, options []string) (message str
 	seenOptions := map[string]bool{}
 	hasName := false
 	for _, opt := range options {
-		opt := strings.Split(opt, "=")[0]
+		opt, _, _ := strings.Cut(opt, "=")
 
 		if number, err := strconv.Atoi(opt); err == nil {
 			_, alreadySeen := checkCtx.usedTagNbr[number]
@@ -796,6 +798,7 @@ func (w lintStructTagRule) addFailureWithTagKey(n ast.Node, msg, tagKey string) 
 
 func (w lintStructTagRule) addFailuref(n ast.Node, msg string, args ...any) {
 	w.onFailure(lint.Failure{
+		Category:   lint.FailureCategoryBadPractice,
 		Node:       n,
 		Failure:    fmt.Sprintf(msg, args...),
 		Confidence: 1,

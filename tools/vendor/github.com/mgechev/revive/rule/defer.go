@@ -5,22 +5,25 @@ import (
 	"go/ast"
 
 	"github.com/mgechev/revive/internal/astutils"
+	"github.com/mgechev/revive/internal/config"
 	"github.com/mgechev/revive/lint"
 )
 
 var (
-	deferOptionLoop             = normalizeRuleOption("loop")
-	deferOptionCallChain        = normalizeRuleOption("callChain")
-	deferOptionMethodCall       = normalizeRuleOption("methodCall")
-	deferOptionReturn           = normalizeRuleOption("return")
-	deferOptionRecover          = normalizeRuleOption("recover")
-	deferOptionImmediateRecover = normalizeRuleOption("immediateRecover")
+	deferOptionLoop             = config.NormalizeOption("loop")
+	deferOptionCallChain        = config.NormalizeOption("callChain")
+	deferOptionMethodCall       = config.NormalizeOption("methodCall")
+	deferOptionReturn           = config.NormalizeOption("return")
+	deferOptionRecover          = config.NormalizeOption("recover")
+	deferOptionImmediateRecover = config.NormalizeOption("immediateRecover")
 )
 
 // DeferRule lints gotchas in defer statements.
 type DeferRule struct {
 	allow map[string]bool
 }
+
+var _ lint.ConfigurableRule = (*DeferRule)(nil)
 
 // Configure validates the rule configuration, and configures the rule accordingly.
 //
@@ -77,7 +80,7 @@ func (*DeferRule) allowFromArgs(args lint.Arguments) (map[string]bool, error) {
 		if !ok {
 			return nil, fmt.Errorf("invalid argument '%v' for 'defer' rule. Expecting string, got %T", subcase, subcase)
 		}
-		allow[normalizeRuleOption(sc)] = true
+		allow[config.NormalizeOption(sc)] = true
 	}
 
 	return allow, nil

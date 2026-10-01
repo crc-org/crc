@@ -61,7 +61,7 @@ func NewAnalyzerWithConfig(config Config) (*analysis.Analyzer, error) {
 }
 
 func newBaseAnalyzer(run func(*analysis.Pass) (any, error)) *analysis.Analyzer {
-	return &analysis.Analyzer{ //nolint:exhaustruct
+	return &analysis.Analyzer{
 		Name:     "exhaustruct",
 		Doc:      "Checks if all structure fields are initialized",
 		Run:      run,
@@ -94,7 +94,6 @@ func newProcessor(config *Config) (*structure.Processor, error) {
 
 	return structure.NewProcessor(
 		directive.NewScanner(fp),
-		structure.NewOriginScanner(fp),
 		structure.WithEnforce(enforce),
 		structure.WithIgnore(ignore),
 		structure.WithOptional(optional),
@@ -108,5 +107,5 @@ func run(pass *analysis.Pass, config *Config, processor *structure.Processor) {
 	}
 
 	newMissingFieldsVisitor(pass, config, processor).run()
-	runTagMigration(pass)
+	newTagMigrationVisitor(pass, processor).run()
 }

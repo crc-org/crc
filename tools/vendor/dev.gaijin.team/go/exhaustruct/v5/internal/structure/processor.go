@@ -4,23 +4,40 @@ import (
 	"go/token"
 	"go/types"
 
-	"golang.org/x/tools/go/analysis"
-
+	"dev.gaijin.team/go/exhaustruct/v5/internal/astutil"
 	"dev.gaijin.team/go/exhaustruct/v5/internal/cache"
 	"dev.gaijin.team/go/exhaustruct/v5/internal/directive"
 	"dev.gaijin.team/go/exhaustruct/v5/internal/pattern"
 )
 
+// structKey identifies a struct type in the struct cache.
+//
+// A source position cannot serve as that identity. Export data is not required
+// to carry a faithful one: gcimporter discards the column outright and clamps
+// any line past 64Ki to 1, so distinct declarations inside one dependency file
+// collapse onto a single token.Position. go/types objects, in contrast, are
+// unique per declaration per loaded package.
+type structKey struct {
+	// name is the type's TypeName, nil for anonymous structs.
+	name *types.TypeName
+	// strct is the underlying struct type. It alone identifies an anonymous
+	// struct, and guards against a shared TypeName for a named one.
+	strct *types.Struct
+	// callerPkg is set for anonymous structs only, whose metadata is derived
+	// from the package that uses them. Named types are caller-independent and
+	// share one entry across every package that references them.
+	callerPkg *types.Package
+}
+
 type Processor struct {
 	directives  *directive.Scanner
-	origins     *OriginScanner
-	fieldsCache *cache.Cache[*types.Struct, structFields]
-	structCache *cache.Cache[token.Position, *Struct]
+	fieldsCache *cache.Cache[*types.Struct, *structFields]
+	structCache *cache.Cache[structKey, *Struct]
 
-	enforce    pattern.List `exhaustruct:"optional"`
-	ignore     pattern.List `exhaustruct:"optional"`
-	optional   pattern.List `exhaustruct:"optional"`
-	allowEmpty pattern.List `exhaustruct:"optional"`
+	enforce    pattern.List //exhaustruct:optional
+	ignore     pattern.List //exhaustruct:optional
+	optional   pattern.List //exhaustruct:optional
+	allowEmpty pattern.List //exhaustruct:optional
 }
 
 type Option func(*Processor)
@@ -43,12 +60,11 @@ func WithAllowEmpty(patterns pattern.List) Option {
 
 const cachePreallocSize = 64
 
-func NewProcessor(directives *directive.Scanner, origins *OriginScanner, opts ...Option) *Processor {
+func NewProcessor(directives *directive.Scanner, opts ...Option) *Processor {
 	p := &Processor{
 		directives:  directives,
-		origins:     origins,
-		fieldsCache: cache.New[*types.Struct, structFields](cachePreallocSize),
-		structCache: cache.New[token.Position, *Struct](cachePreallocSize),
+		fieldsCache: cache.New[*types.Struct, *structFields](cachePreallocSize),
+		structCache: cache.New[structKey, *Struct](cachePreallocSize),
 	}
 
 	for _, opt := range opts {
@@ -79,33 +95,28 @@ func (p *Processor) ResolveStruct(
 	strct *types.Struct,
 	pos token.Pos,
 	callerPkg *types.Package,
-) (*Struct, []analysis.Diagnostic) {
+) *Struct {
 	if strct == nil {
-		return nil, nil
+		return nil
 	}
 
-	position := fset.Position(pos)
-
-	// Check cache before allocating
-	if position.IsValid() {
-		if cached, ok := p.structCache.Get(position); ok {
-			return cached, nil
-		}
+	key := structKey{name: typeName, strct: strct, callerPkg: nil}
+	if typeName == nil {
+		key.callerPkg = callerPkg
 	}
 
-	s := p.buildStruct(typeName, position, callerPkg)
+	// One entry per key, filled once: passes run concurrently, and two of them
+	// racing to build the same type would each pay for it and each hold a
+	// value the other does not.
+	return p.structCache.GetOrSet(key, func() *Struct {
+		s := p.buildStruct(typeName, astutil.PhysicalPosition(fset, pos), callerPkg)
 
-	diags := p.populateFields(fset, s, strct)
-	p.resolveStructOrigin(fset, s)
+		p.populateFields(fset, s, strct)
+		p.resolveStructDirectives(fset, s)
+		p.matchStructPatterns(s)
 
-	diags = append(diags, p.resolveStructDirectives(fset, s)...)
-	p.matchStructPatterns(s)
-
-	if s.Position.IsValid() {
-		p.structCache.Set(s.Position, s)
-	}
-
-	return s, diags
+		return s
+	})
 }
 
 // buildStruct creates Struct metadata from type info.
@@ -130,28 +141,26 @@ func (*Processor) buildStruct(typeName *types.TypeName, pos token.Position, call
 	}
 }
 
-func (p *Processor) getStructFields(fset *token.FileSet, strct *types.Struct) (structFields, []analysis.Diagnostic) {
+// getStructFields returns the raw field data of strct, from the cache when it
+// is there.
+func (p *Processor) getStructFields(fset *token.FileSet, strct *types.Struct) *structFields {
 	if fields, ok := p.fieldsCache.Get(strct); ok {
-		return fields, nil
+		return fields
 	}
 
-	fields, diags := p.resolveStructFields(fset, strct)
+	fields := p.resolveStructFields(fset, strct)
 
 	p.fieldsCache.Set(strct, fields)
 
-	return fields, diags
+	return fields
 }
 
-func (p *Processor) resolveStructFields(
-	fset *token.FileSet,
-	strct *types.Struct,
-) (structFields, []analysis.Diagnostic) {
-	result := structFields{
+func (p *Processor) resolveStructFields(fset *token.FileSet, strct *types.Struct) *structFields {
+	result := &structFields{
+		strct:       strct,
 		packagePath: "",
 		fields:      make([]fieldInfo, 0, strct.NumFields()),
 	}
-
-	var diags []analysis.Diagnostic
 
 	for f := range strct.Fields() {
 		if result.packagePath == "" && f.Pkg() != nil {
@@ -163,83 +172,171 @@ func (p *Processor) resolveStructFields(
 			exported: f.Exported(),
 		}
 
+		if f.Embedded() {
+			if embedded, ok := embeddedStruct(f.Type()); ok {
+				field.embedded = p.getStructFields(fset, embedded)
+			}
+		}
+
 		if p.directives != nil {
-			fieldPos := fset.Position(f.Pos())
-			dirs, d := p.directives.Lookup(fset, fieldPos)
+			o := p.directives.LookupPos(fset, f.Pos()).Optionality()
 
-			diags = append(diags, d...)
-
-			field.enforced = dirs.Contains(directive.Enforce)
-			field.optional = dirs.Contains(directive.Optional)
+			field.enforced = o.Enforced
+			field.optional = o.Optional
 		}
 
 		result.fields = append(result.fields, field)
 	}
 
-	return result, diags
+	return result
 }
 
-func (p *Processor) populateFields(fset *token.FileSet, s *Struct, strct *types.Struct) []analysis.Diagnostic {
-	resolved, diags := p.getStructFields(fset, strct)
+func (p *Processor) populateFields(fset *token.FileSet, s *Struct, strct *types.Struct) {
+	s.Fields = p.buildFields(s, p.getStructFields(fset, strct))
 
-	// Fields are external when declared in a different package than the struct type.
-	// This happens for derived types and aliases from external packages.
-	//
-	// Rationale behind that filtering is that noone except package that has declared
-	// the struct can access unexported fields, therefore we can simply filter them
-	// out to save up on storage. Usage of derived type from the package of structure
-	// definition is simply impossible since it will cause import cycle - thus, such
-	// filtering is safe.
-	fieldsExternal := resolved.packagePath != s.PackagePath()
+	s.Fields.paths = indexPromotion(&s.Fields)
+}
 
-	s.Fields = Fields{
-		PackagePath: resolved.packagePath,
-		Items:       make([]Field, 0, len(resolved.fields)),
+// buildFields turns resolved field data into the Struct's own view of it,
+// applying pattern matching and access filtering. Embedded structs are built
+// too, since a literal may name their fields directly.
+//
+// Fields are external when declared in a different package than the struct type.
+// This happens for derived types and aliases from external packages.
+//
+// Rationale behind that filtering is that noone except package that has declared
+// the struct can access unexported fields, therefore we can simply filter them
+// out to save up on storage. Usage of derived type from the package of structure
+// definition is simply impossible since it will cause import cycle - thus, such
+// filtering is safe. An unexported embedded field is the exception, since a
+// literal reaches the exported fields it promotes.
+//
+// The walk runs level by level and opens each struct once, at the depth it is
+// first reached and only where it is reached once. Go resolves a promoted name
+// to its shallowest occurrence and to none at all where two occurrences share a
+// depth, so every other reach promotes nothing a literal can write. Opening
+// them all would cost one subtree per path through the embedding graph, which
+// doubles with every layer that reaches the one below it twice.
+func (p *Processor) buildFields(s *Struct, resolved *structFields) Fields {
+	root, pending := p.levelFields(s, resolved)
+	opened := map[*types.Struct]bool{resolved.strct: true}
+
+	for level := attribute(&root, pending); len(level) > 0; {
+		occurrences := make(map[*types.Struct]int, len(level))
+
+		for _, e := range level {
+			occurrences[e.resolved.strct]++
+		}
+
+		var next []embeddedField
+
+		for _, e := range level {
+			if opened[e.resolved.strct] || occurrences[e.resolved.strct] > 1 {
+				continue
+			}
+
+			opened[e.resolved.strct] = true
+
+			sub, below := p.levelFields(s, e.resolved)
+
+			e.owner.Items[e.index].Embedded = &sub
+			next = append(next, attribute(&sub, below)...)
+		}
+
+		for r := range occurrences {
+			opened[r] = true
+		}
+
+		level = next
 	}
 
+	return root
+}
+
+// embeddedField is one embedded struct waiting to be opened, and the field of
+// an already built level that holds it.
+type embeddedField struct {
+	owner    *Fields
+	index    int
+	resolved *structFields
+}
+
+// attribute names owner as the level the pending fields belong to.
+func attribute(owner *Fields, pending []embeddedField) []embeddedField {
+	for i := range pending {
+		pending[i].owner = owner
+	}
+
+	return pending
+}
+
+// levelFields builds the fields of one struct, without opening the structs it
+// embeds, which it returns instead.
+func (p *Processor) levelFields(s *Struct, resolved *structFields) (Fields, []embeddedField) {
+	fieldsExternal := resolved.packagePath != s.PackagePath()
+
+	fields := Fields{
+		PackagePath: resolved.packagePath,
+		Items:       make([]Field, 0, len(resolved.fields)),
+		paths:       nil,
+	}
+
+	var pending []embeddedField
+
 	for _, sf := range resolved.fields {
-		if fieldsExternal && !sf.exported {
+		// An unexported field declared in another package can never be written
+		// here. An embedded one is still kept: a literal reaches the exported
+		// fields under it by promotion, and the embedded field itself stays
+		// unreported, since nothing may require what nobody can write.
+		if fieldsExternal && !sf.exported && sf.embedded == nil {
 			continue
 		}
 
+		// Promoted fields are addressed by the name a literal of s writes, so
+		// every level shares the outer type's path.
 		fieldPath := s.FullPath + "#" + sf.name
 
-		s.Fields.Items = append(s.Fields.Items, Field{
+		fields.Items = append(fields.Items, Field{
 			Name:            sf.name,
 			Exported:        sf.exported,
 			Enforced:        sf.enforced,
 			Optional:        sf.optional,
-			PatternEnforced: p.enforce.MatchFullString(fieldPath),
-			PatternOptional: p.optional.MatchFullString(fieldPath),
+			PatternEnforced: p.enforce.MatchFullStringExcept(fieldPath, s.FullPath),
+			PatternOptional: p.optional.MatchFullStringExcept(fieldPath, s.FullPath),
+			Embedded:        nil,
 		})
+
+		if sf.embedded != nil {
+			pending = append(pending, embeddedField{
+				owner:    nil,
+				index:    len(fields.Items) - 1,
+				resolved: sf.embedded,
+			})
+		}
 	}
 
-	return diags
+	return fields, pending
 }
 
-func (p *Processor) resolveStructOrigin(fset *token.FileSet, s *Struct) {
-	if !s.Position.IsValid() || s.Name == AnonymousName {
+// embeddedStruct returns the struct type an embedded field promotes fields
+// from. Embedded pointers yield nothing: a composite literal cannot reach
+// through them, so their fields are not promotable in this context.
+func embeddedStruct(typ types.Type) (*types.Struct, bool) {
+	strct, ok := types.Unalias(typ).Underlying().(*types.Struct)
+
+	return strct, ok
+}
+
+func (p *Processor) resolveStructDirectives(fset *token.FileSet, s *Struct) {
+	if p.directives == nil || !s.Position.IsValid() {
 		return
 	}
 
-	origin := p.origins.Lookup(fset, s.Position.Filename, s.Name)
-
-	s.IsAlias = origin == OriginAlias
-	s.IsDerived = origin == OriginDerived
-}
-
-func (p *Processor) resolveStructDirectives(fset *token.FileSet, s *Struct) []analysis.Diagnostic {
-	if p.directives == nil || !s.Position.IsValid() {
-		return nil
-	}
-
-	dirs, diags := p.directives.Lookup(fset, s.Position)
+	dirs := p.directives.Lookup(fset, s.Position)
 
 	s.Enforced = dirs.Contains(directive.Enforce)
 	s.Ignored = dirs.Contains(directive.Ignore)
 	s.Optional = dirs.Contains(directive.Optional)
-
-	return diags
 }
 
 func (p *Processor) matchStructPatterns(s *Struct) {

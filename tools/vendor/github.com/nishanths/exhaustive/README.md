@@ -38,7 +38,7 @@ possible to integrate `exhaustive` with your own analysis driver program.
 
 Given an enum:
 
-```
+```go
 package token // import "example.org/token"
 
 type Token int
@@ -54,7 +54,7 @@ const (
 
 and code that switches on the enum:
 
-```
+```go
 package calc
 
 import "example.org/token"
@@ -78,7 +78,7 @@ calc.go:6:2: missing cases in switch of type token.Token: token.Multiply, token.
 Specify flag `-check=switch,map` to additionally check exhaustiveness of keys
 in map literals. For example:
 
-```
+```go
 var m = map[token.Token]rune{
 	token.Add:      '+',
 	token.Subtract: '-',

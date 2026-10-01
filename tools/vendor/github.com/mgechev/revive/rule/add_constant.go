@@ -166,6 +166,10 @@ func (w *lintAddConstantRule) checkStrLit(n *ast.BasicLit) {
 	mustCheck := count > ignoreMarker
 	if mustCheck {
 		w.strLits[n.Value] = count + 1
+		val, _ := strconv.Unquote(n.Value)
+		if val == "" {
+			return
+		}
 		if w.strLits[n.Value] > w.strLitLimit {
 			w.onFailure(lint.Failure{
 				Confidence: 1,
@@ -195,6 +199,8 @@ func (w *lintAddConstantRule) isStructTag(n *ast.BasicLit) bool {
 	_, ok := w.structTags[n]
 	return ok
 }
+
+var _ lint.ConfigurableRule = (*AddConstantRule)(nil)
 
 // Configure validates the rule configuration, and configures the rule accordingly.
 //

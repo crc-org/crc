@@ -8,14 +8,29 @@ import (
 
 type Cache[K comparable, V any] struct {
 	entries map[K]V
-	mu      sync.RWMutex  `exhaustruct:"optional"`
-	hits    atomic.Uint64 `exhaustruct:"optional"`
-	misses  atomic.Uint64 `exhaustruct:"optional"`
+	// pending holds the keys a caller is computing. A second caller for one of
+	// them waits on it rather than computing again, and callers for other keys
+	// are not held up: the lock covers the maps, never the work.
+	pending map[K]*computation[V]
+	mu      sync.RWMutex  //exhaustruct:optional
+	hits    atomic.Uint64 //exhaustruct:optional
+	misses  atomic.Uint64 //exhaustruct:optional
+}
+
+// computation is one in-flight fill. The caller that opened it writes value,
+// marks it filled and closes done; every other caller reads both after done is
+// closed. A fill that panics closes done unfilled, and its waiters compute for
+// themselves.
+type computation[V any] struct {
+	done   chan struct{}
+	value  V    //exhaustruct:optional
+	filled bool //exhaustruct:optional
 }
 
 func New[K comparable, V any](initialCapacity int) *Cache[K, V] {
 	return &Cache[K, V]{
 		entries: make(map[K]V, initialCapacity),
+		pending: make(map[K]*computation[V]),
 	}
 }
 
@@ -56,37 +71,91 @@ func (c *Cache[K, V]) Set(key K, value V) {
 	c.mu.Unlock()
 }
 
-// GetOrSet uses double-check locking to avoid computing values that are
-// cached between the initial read check and acquiring the write lock.
+// GetOrSet returns the value stored under key, computing it once when it is
+// absent. Callers racing for one key all receive the value that computation
+// published: what the first of them computed, or what a Set that landed while
+// it computed stored, since that Set is the later of the two writes. A Set
+// after the publication is later still and leaves what was returned as stale
+// as any Get result. Callers for other keys run alongside them, since compute
+// is never called with the cache locked.
+//
+// A compute that panics releases the key: the panic reaches its own caller, and
+// every caller waiting on that fill computes for itself. Nothing is stored for
+// the key until one of them returns.
 func (c *Cache[K, V]) GetOrSet(key K, compute func() V) V {
-	c.mu.RLock()
+	for {
+		// A filled key is the common answer and needs no more than the read lock
+		// a Get takes, which keys with nothing in common do not hold each other
+		// out of. The exclusive lock is for opening or joining a computation.
+		if v, ok := c.Get(key); ok {
+			return v
+		}
 
-	if v, ok := c.entries[key]; ok {
-		c.mu.RUnlock()
-		c.hits.Add(1)
+		c.mu.Lock()
 
-		return v
+		if v, ok := c.entries[key]; ok {
+			c.mu.Unlock()
+			c.hits.Add(1)
+
+			return v
+		}
+
+		if pending, ok := c.pending[key]; ok {
+			c.mu.Unlock()
+
+			<-pending.done
+
+			if pending.filled {
+				c.hits.Add(1)
+
+				return pending.value
+			}
+
+			continue
+		}
+
+		pending := &computation[V]{done: make(chan struct{})}
+
+		c.pending[key] = pending
+		c.misses.Add(1)
+
+		c.mu.Unlock()
+
+		return c.fill(key, pending, compute)
 	}
+}
 
-	c.mu.RUnlock()
+// fill computes the value claimed under key and publishes it. The claim is
+// released and done is closed whether compute returns or panics, so a fill that
+// panics leaves no waiter parked and no key claimed for good.
+func (c *Cache[K, V]) fill(key K, pending *computation[V], compute func() V) (v V) {
+	defer func() {
+		c.mu.Lock()
 
-	c.mu.Lock()
-	defer c.mu.Unlock()
+		// A Set may have landed while the value was being computed. It is the
+		// later write of the two, and publishing over it would leave the key
+		// holding what neither order of the two produces.
+		if pending.filled {
+			if stored, ok := c.entries[key]; ok {
+				pending.value = stored
+			} else {
+				c.entries[key] = pending.value
+			}
+		}
 
-	// Double-check after acquiring write lock.
-	if v, ok := c.entries[key]; ok {
-		c.hits.Add(1)
+		delete(c.pending, key)
 
-		return v
-	}
+		c.mu.Unlock()
 
-	c.misses.Add(1)
+		close(pending.done)
 
-	v := compute()
+		v = pending.value
+	}()
 
-	c.entries[key] = v
+	pending.value = compute()
+	pending.filled = true
 
-	return v
+	return pending.value
 }
 
 func (c *Cache[K, V]) Stats() (hits, misses, size uint64) {

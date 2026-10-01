@@ -1,25 +1,17 @@
 package gochecksumtype
 
 import (
-	"flag"
 	"fmt"
 	"go/token"
 	"go/types"
-	"log"
+
+	"golang.org/x/tools/go/analysis"
 )
 
-var debug = flag.Bool("debug", false, "enable debug logging")
-
-func debugf(format string, args ...interface{}) {
-	if *debug {
-		log.Printf(format, args...)
-	}
-}
-
-// Error as returned by Run()
+// Error as returned by the analyzer
 type Error interface {
 	error
-	Pos() token.Position
+	Pos() token.Pos
 }
 
 // unsealedError corresponds to a declared sum type whose interface is not
@@ -28,12 +20,12 @@ type unsealedError struct {
 	Decl sumTypeDecl
 }
 
-func (e unsealedError) Pos() token.Position { return e.Decl.Pos }
+func (e unsealedError) Pos() token.Pos { return e.Decl.Pos }
 func (e unsealedError) Error() string {
 	return fmt.Sprintf(
-		"%s: interface '%s' is not sealed "+
+		"interface '%s' is not sealed "+
 			"(sealing requires at least one unexported method)",
-		e.Decl.Location(), e.Decl.TypeName)
+		e.Decl.TypeName)
 }
 
 // notFoundError corresponds to a declared sum type whose type definition
@@ -42,9 +34,9 @@ type notFoundError struct {
 	Decl sumTypeDecl
 }
 
-func (e notFoundError) Pos() token.Position { return e.Decl.Pos }
+func (e notFoundError) Pos() token.Pos { return e.Decl.Pos }
 func (e notFoundError) Error() string {
-	return fmt.Sprintf("%s: type '%s' is not defined", e.Decl.Location(), e.Decl.TypeName)
+	return fmt.Sprintf("type '%s' is not defined", e.Decl.TypeName)
 }
 
 // notInterfaceError corresponds to a declared sum type that does not
@@ -53,9 +45,9 @@ type notInterfaceError struct {
 	Decl sumTypeDecl
 }
 
-func (e notInterfaceError) Pos() token.Position { return e.Decl.Pos }
+func (e notInterfaceError) Pos() token.Pos { return e.Decl.Pos }
 func (e notInterfaceError) Error() string {
-	return fmt.Sprintf("%s: type '%s' is not an interface", e.Decl.Location(), e.Decl.TypeName)
+	return fmt.Sprintf("type '%s' is not an interface", e.Decl.TypeName)
 }
 
 // sumTypeDef corresponds to the definition of a Go interface that is
@@ -70,11 +62,11 @@ type sumTypeDef struct {
 // findSumTypeDefs attempts to find a Go type definition for each of the given
 // sum type declarations. If no such sum type definition could be found for
 // any of the given declarations, then an error is returned.
-func findSumTypeDefs(decls []sumTypeDecl) ([]sumTypeDef, []error) {
+func findSumTypeDefs(pass *analysis.Pass, decls []sumTypeDecl) ([]sumTypeDef, []error) {
 	defs := make([]sumTypeDef, 0, len(decls))
-	var errs []error
+	errs := make([]error, 0, len(decls))
 	for _, decl := range decls {
-		def, err := newSumTypeDef(decl.Package.Types, decl)
+		def, err := newSumTypeDef(pass, decl)
 		if err != nil {
 			errs = append(errs, err)
 			continue
@@ -94,7 +86,8 @@ func findSumTypeDefs(decls []sumTypeDecl) ([]sumTypeDef, []error) {
 //
 // If the decl corresponds to a type that isn't an interface containing at
 // least one unexported method, then this returns an error.
-func newSumTypeDef(pkg *types.Package, decl sumTypeDecl) (*sumTypeDef, error) {
+func newSumTypeDef(pass *analysis.Pass, decl sumTypeDecl) (*sumTypeDef, error) {
+	pkg := pass.Pkg
 	obj := pkg.Scope().Lookup(decl.TypeName)
 	if obj == nil {
 		return nil, nil
@@ -104,8 +97,8 @@ func newSumTypeDef(pkg *types.Package, decl sumTypeDecl) (*sumTypeDef, error) {
 		return nil, notInterfaceError{decl}
 	}
 	hasUnexported := false
-	for i := range iface.NumMethods() {
-		if !iface.Method(i).Exported() {
+	for method := range iface.Methods() {
+		if !method.Exported() {
 			hasUnexported = true
 			break
 		}
@@ -113,26 +106,29 @@ func newSumTypeDef(pkg *types.Package, decl sumTypeDecl) (*sumTypeDef, error) {
 	if !hasUnexported {
 		return nil, unsealedError{decl}
 	}
+	names := pkg.Scope().Names()
 	def := &sumTypeDef{
-		Decl: decl,
-		Ty:   iface,
+		Decl:     decl,
+		Ty:       iface,
+		Variants: make([]types.Object, 0, len(names)),
 	}
-	debugf("searching for variants of %s.%s\n", pkg.Path(), decl.TypeName)
-	for _, name := range pkg.Scope().Names() {
+	for _, name := range names {
 		obj, ok := pkg.Scope().Lookup(name).(*types.TypeName)
 		if !ok {
 			continue
 		}
-		ty := obj.Type()
+		ty, ok := obj.Type().(*types.Named)
+		if !ok {
+			continue
+		}
 		if types.Identical(ty.Underlying(), iface) {
 			continue
 		}
 		// Skip generic types.
-		if named, ok := ty.(*types.Named); ok && named.TypeParams() != nil {
+		if ty.TypeParams() != nil {
 			continue
 		}
 		if types.Implements(ty, iface) || types.Implements(types.NewPointer(ty), iface) {
-			debugf("  found variant: %s.%s\n", pkg.Path(), obj.Name())
 			def.Variants = append(def.Variants, obj)
 		}
 	}

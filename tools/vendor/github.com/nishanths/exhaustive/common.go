@@ -73,6 +73,9 @@ func fromTypeParam(pass *analysis.Pass, tp *types.TypeParam, typeparam bool) (re
 
 func fromType(pass *analysis.Pass, t types.Type, typeparam bool) (result []enumTypeAndMembers, ok bool) {
 	switch t := t.(type) {
+	case *types.Alias:
+		return fromType(pass, types.Unalias(t), typeparam)
+
 	case *types.Named:
 		return fromNamed(pass, t, typeparam)
 
@@ -223,7 +226,7 @@ func exprConstVal(e ast.Expr, info *types.Info) (constantValue, bool) {
 	}
 }
 
-// stripTypeConversions removing type conversions from the experession.
+// stripTypeConversions removing type conversions from the expression.
 func stripTypeConversions(e ast.Expr, info *types.Info) ast.Expr {
 	c, ok := e.(*ast.CallExpr)
 	if !ok {

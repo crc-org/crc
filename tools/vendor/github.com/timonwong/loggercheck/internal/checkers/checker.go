@@ -2,6 +2,7 @@ package checkers
 
 import (
 	"go/ast"
+	"go/token"
 	"go/types"
 
 	"golang.org/x/tools/go/analysis"
@@ -24,10 +25,54 @@ type Checker interface {
 	CheckPrintfLikeSpecifier(pass *analysis.Pass, args []ast.Expr)
 }
 
+var stringerType = func() *types.Interface {
+	stringMethod := types.NewFunc(token.NoPos, nil, "String", types.NewSignatureType(
+		nil,
+		nil,
+		nil,
+		types.NewTuple(),
+		types.NewTuple(types.NewVar(token.NoPos, nil, "", types.Typ[types.String])),
+		false,
+	))
+	iface := types.NewInterfaceType([]*types.Func{stringMethod}, nil)
+	iface.Complete()
+	return iface
+}()
+
+func checkStringerValues(pass *analysis.Pass, keyAndValues []ast.Expr) {
+	for i := 1; i < len(keyAndValues); i += 2 {
+		arg := keyAndValues[i]
+		typ := types.Unalias(pass.TypesInfo.TypeOf(arg))
+		ptr, ok := typ.(*types.Pointer)
+		if !ok {
+			continue
+		}
+
+		elem := types.Unalias(ptr.Elem())
+		if !types.Implements(elem, stringerType) || !types.Implements(ptr, stringerType) {
+			continue
+		}
+
+		pass.Report(analysis.Diagnostic{
+			Pos:      arg.Pos(),
+			End:      arg.End(),
+			Category: DiagnosticCategory,
+			Message:  "logging value may panic when nil because its element type implements fmt.Stringer",
+		})
+	}
+}
+
 func ExecuteChecker(c Checker, pass *analysis.Pass, call CallContext, cfg Config) {
 	params := call.Signature.Params()
 	nparams := params.Len() // variadic => nonzero
 	startIndex := nparams - 1
+
+	if len(call.Expr.Args) < startIndex {
+		// A multi-valued expression may expand to multiple arguments, but its
+		// individual values cannot be represented by separate AST expressions.
+		// Skip calls whose syntactic arguments cannot cover the fixed params.
+		return
+	}
 
 	iface, ok := types.Unalias(params.At(startIndex).Type().(*types.Slice).Elem()).(*types.Interface)
 	if !ok || !iface.Empty() {
@@ -50,6 +95,8 @@ func ExecuteChecker(c Checker, pass *analysis.Pass, call CallContext, cfg Config
 	if cfg.RequireStringKey {
 		c.CheckLoggingKey(pass, keyValuesArgs)
 	}
+
+	checkStringerValues(pass, keyValuesArgs)
 
 	if cfg.NoPrintfLike {
 		// Check all args

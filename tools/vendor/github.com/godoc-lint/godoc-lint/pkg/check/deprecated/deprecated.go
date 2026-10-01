@@ -99,7 +99,7 @@ func checkDeprecations(actx *model.AnalysisContext, doc *model.CommentGroup) {
 		if !ok || len(par.Text) == 0 {
 			continue
 		}
-		text, ok := (par.Text[0]).(comment.Plain)
+		text, ok := par.Text[0].(comment.Plain)
 		if !ok {
 			continue
 		}
