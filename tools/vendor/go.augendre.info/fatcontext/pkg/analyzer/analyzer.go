@@ -9,6 +9,7 @@ import (
 	"go/ast"
 	"go/printer"
 	"go/token"
+	"go/types"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -75,37 +76,123 @@ func (r *runner) run(pass *analysis.Pass) (any, error) {
 		(*ast.FuncDecl)(nil),
 	}
 
-	inspctr.Preorder(nodeFilter, func(node ast.Node) {
-		body, err := getBody(node)
-		if err != nil {
-			return
+	inspctr.WithStack(nodeFilter, func(node ast.Node, push bool, stack []ast.Node) bool {
+		if push {
+			r.check(pass, node, stack)
 		}
 
-		if body == nil {
-			return
-		}
-
-		assignStmt := findNestedContext(pass, node, body.List)
-		if assignStmt == nil {
-			return
-		}
-
-		category := getCategory(pass, node, assignStmt)
-
-		if r.shouldIgnoreReport(category) {
-			return
-		}
-
-		fixes := r.getSuggestedFixes(pass, assignStmt, category)
-
-		pass.Report(analysis.Diagnostic{
-			Pos:            assignStmt.Pos(),
-			Message:        category,
-			SuggestedFixes: fixes,
-		})
+		return true
 	})
 
 	return nil, nil //nolint:nilnil // we have no result to send to other analyzers
+}
+
+func (r *runner) check(pass *analysis.Pass, node ast.Node, stack []ast.Node) {
+	if funcLit, typeValid := node.(*ast.FuncLit); typeValid && isRunOnce(pass, funcLit, stack) {
+		return
+	}
+
+	body, err := getBody(node)
+	if err != nil {
+		return
+	}
+
+	if body == nil {
+		return
+	}
+
+	assignStmt := findNestedContext(pass, node, body.List)
+	if assignStmt == nil {
+		return
+	}
+
+	category := getCategory(pass, node, assignStmt)
+
+	if r.shouldIgnoreReport(category) {
+		return
+	}
+
+	fixes := r.getSuggestedFixes(pass, assignStmt, category)
+
+	pass.Report(analysis.Diagnostic{
+		Pos:            assignStmt.Pos(),
+		Message:        category,
+		SuggestedFixes: fixes,
+	})
+}
+
+// isRunOnce reports whether the function literal is guaranteed to run at most
+// once per execution of the statement registering it, in which case it cannot
+// grow the context it captures. Two shapes are recognized: `defer func() {}()`
+// and `t.Cleanup(func() {})`.
+func isRunOnce(pass *analysis.Pass, funcLit *ast.FuncLit, stack []ast.Node) bool {
+	// stack[len(stack)-1] is funcLit itself, its parent is the call wrapping it.
+	if len(stack) < 2 { //nolint:mnd // funcLit plus its parent.
+		return false
+	}
+
+	call, typeValid := stack[len(stack)-2].(*ast.CallExpr)
+	if !typeValid {
+		return false
+	}
+
+	var runOnce bool
+
+	if call.Fun == ast.Expr(funcLit) {
+		// Immediately invoked: only safe when the invocation is deferred.
+		if len(stack) < 3 { //nolint:mnd // funcLit, its call and the defer statement.
+			return false
+		}
+
+		_, runOnce = stack[len(stack)-3].(*ast.DeferStmt)
+	} else {
+		runOnce = isCleanupCall(pass, call)
+	}
+
+	if !runOnce {
+		return false
+	}
+
+	// Registering a run-once function literal from within a loop runs it once
+	// per iteration, which does grow the captured context.
+	for _, ancestor := range stack {
+		switch ancestor.(type) {
+		case *ast.ForStmt, *ast.RangeStmt:
+			return false
+		}
+	}
+
+	return true
+}
+
+// isCleanupCall reports whether the call is to testing.{T,B,TB}.Cleanup.
+func isCleanupCall(pass *analysis.Pass, call *ast.CallExpr) bool {
+	selector, typeValid := call.Fun.(*ast.SelectorExpr)
+	if !typeValid || selector.Sel.Name != "Cleanup" {
+		return false
+	}
+
+	typ := pass.TypesInfo.TypeOf(selector.X)
+	if ptr, isPtr := typ.(*types.Pointer); isPtr {
+		typ = ptr.Elem()
+	}
+
+	named, typeValid := typ.(*types.Named)
+	if !typeValid {
+		return false
+	}
+
+	obj := named.Obj()
+	if obj == nil || obj.Pkg() == nil || obj.Pkg().Path() != "testing" {
+		return false
+	}
+
+	switch obj.Name() {
+	case "T", "B", "TB":
+		return true
+	}
+
+	return false
 }
 
 func (r *runner) shouldIgnoreReport(category string) bool {

@@ -1,3 +1,4 @@
+version: 2
 project_name: go-check-sumtype
 release:
   github:
@@ -20,13 +21,14 @@ builds:
   binary: go-check-sumtype
 archives:
   -
-    format: tar.gz
-    name_template: '{{ .Binary }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{
-    .Arm }}{{ end }}'
+    format_overrides:
+      - formats: [tar.gz]
+    name_template: >-
+      {{ .Binary }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{.Arm }}{{ end }}
     files:
       - COPYING
       - README*
 snapshot:
-  name_template: SNAPSHOT-{{ .Commit }}
+  version_template:  SNAPSHOT-{{ .Commit }}
 checksum:
   name_template: '{{ .ProjectName }}-{{ .Version }}-checksums.txt'

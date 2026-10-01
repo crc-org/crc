@@ -566,7 +566,10 @@ func (f *fumpter) applyPre(c *astutil.Cursor) {
 		// Do this after the joining of lone declarations above,
 		// as joining single-line declarations makes then multi-line.
 		var lastMulti bool
-		var lastEnd token.Pos
+		// Anchor the first iteration at the package clause, so that the
+		// comments before it, such as a copyright header or package doc,
+		// are not mistaken for the first declaration's own comments.
+		lastEnd := node.Name.End()
 		for _, decl := range node.Decls {
 			pos := decl.Pos()
 			// Trailing inline comments on lastEnd's line belong to the
@@ -883,7 +886,9 @@ func (f *fumpter) applyPre(c *astutil.Cursor) {
 		// for simple single-value assignments. Skip multi-value assignments and
 		// binary expressions like long string concatenations, where a line break
 		// after the assignment token can improve readability.
-		if len(node.Rhs) == 1 {
+		// Skip comments in between as well, as joining their lines leaves the
+		// right-hand side at an indentation that gofmt would not produce.
+		if len(node.Rhs) == 1 && len(f.commentsBetween(node.TokPos, node.Rhs[0].Pos())) == 0 {
 			if _, ok := node.Rhs[0].(*ast.BinaryExpr); !ok {
 				f.removeLines(f.Line(node.TokPos), f.Line(node.Rhs[0].Pos()))
 			}
@@ -1222,7 +1227,8 @@ func (f *fumpter) joinStdImports(d *ast.GenDecl) {
 	var std, other []ast.Spec
 	firstGroup := true
 	lastEnd := d.Pos()
-	needsSort := false
+	// The original positions of the std imports which we move up.
+	var movedFrom []token.Pos
 
 	// If ModulePath is "foo/bar", we assume "foo/..." is not part of std.
 	// Users shouldn't declare modules that may collide with std this way,
@@ -1272,9 +1278,13 @@ func (f *fumpter) joinStdImports(d *ast.GenDecl) {
 			// so that the prefix "foo" for "foo/..." does not match "foobar".
 			path == modulePrefix || strings.HasPrefix(path, modulePrefix+"/"),
 
-			// To be conservative, if an import has a name or an inline
-			// comment, and isn't part of the top group, treat it as non-std.
-			!firstGroup && (spec.Name != nil || spec.Comment != nil):
+			// To be conservative, if an import has a name
+			// and isn't part of the top group, treat it as non-std.
+			!firstGroup && spec.Name != nil,
+
+			// Moving an import leaves its comments behind, as go/printer
+			// places them by position, so never move a commented import.
+			(!firstGroup || len(other) > 0) && (spec.Doc != nil || spec.Comment != nil):
 			other = append(other, spec)
 			continue
 		}
@@ -1282,10 +1292,18 @@ func (f *fumpter) joinStdImports(d *ast.GenDecl) {
 		// If we're moving this std import further up, reset its
 		// position, to avoid breaking comments.
 		if !firstGroup || len(other) > 0 {
+			movedFrom = append(movedFrom, spec.Pos())
 			setPos(reflect.ValueOf(spec), d.Pos())
-			needsSort = true
 		}
 		std = append(std, spec)
+	}
+	// Moving a std import up leaves its line behind with nothing on it,
+	// which go/printer would then print as an empty line,
+	// so drop those lines from the file's line table.
+	for _, pos := range movedFrom {
+		if line := f.Line(pos); line < f.file.LineCount() {
+			f.file.MergeLine(line)
+		}
 	}
 	// Ensure there is an empty line between std imports and other imports.
 	if len(std) > 0 && len(other) > 0 && f.Line(std[len(std)-1].End())+1 >= f.Line(other[0].Pos()) {
@@ -1301,7 +1319,7 @@ func (f *fumpter) joinStdImports(d *ast.GenDecl) {
 
 	// If we moved any std imports to the first group, we need to sort them
 	// again.
-	if needsSort {
+	if len(movedFrom) > 0 {
 		ast.SortImports(f.fset, f.astFile)
 	}
 }

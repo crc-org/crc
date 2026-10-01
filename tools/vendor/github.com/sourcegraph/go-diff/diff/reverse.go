@@ -4,17 +4,27 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strings"
 )
 
-// ReverseFileDiff takes a diff.FileDiff, and returns the reverse operation.
-// This is a FileDiff that undoes the edit of the original.
+// ErrCannotReverseCopy is returned when a Git copy diff cannot be reversed.
+var ErrCannotReverseCopy = errors.New("cannot reverse a git copy diff")
+
+// ReverseFileDiff takes a diff.FileDiff and returns the reverse operation.
+// This is a FileDiff that undoes the edit of the original. Git copy diffs
+// cannot be reversed because they do not contain enough information to delete
+// the copied file.
 func ReverseFileDiff(fd *FileDiff) (*FileDiff, error) {
+	extended, err := reverseExtendedHeaders(fd.Extended, fd.OrigName, fd.NewName)
+	if err != nil {
+		return nil, err
+	}
 	reverse := FileDiff{
 		OrigName: fd.NewName,
 		OrigTime: fd.NewTime,
 		NewName:  fd.OrigName,
 		NewTime:  fd.OrigTime,
-		Extended: fd.Extended,
+		Extended: extended,
 	}
 	for _, hunk := range fd.Hunks {
 		invHunk, err := reverseHunk(hunk)
@@ -24,6 +34,115 @@ func ReverseFileDiff(fd *FileDiff) (*FileDiff, error) {
 		reverse.Hunks = append(reverse.Hunks, invHunk)
 	}
 	return &reverse, nil
+}
+
+// reverseExtendedHeaders reverses the direction encoded in git's extended headers.
+func reverseExtendedHeaders(headers []string, origName, newName string) ([]string, error) {
+	parsed, ok := parseGitExtendedHeaders(headers)
+	if !ok {
+		return headers, nil
+	}
+	reversed := make([]string, len(headers))
+	copy(reversed, headers)
+	reversed[0] = reverseDiffGitHeader(reversed[0], origName, newName)
+	for i, header := range parsed {
+		switch header.kind {
+		case gitExtendedHeaderNewFileMode:
+			reversed[i] = gitExtendedHeaderDeletedFileMode + header.value()
+		case gitExtendedHeaderDeletedFileMode:
+			reversed[i] = gitExtendedHeaderNewFileMode + header.value()
+		case gitExtendedHeaderIndex:
+			reversed[i] = reverseIndexHeader(header)
+		case gitExtendedHeaderCopyFrom, gitExtendedHeaderCopyTo:
+			return nil, ErrCannotReverseCopy
+		}
+	}
+	swapHeaderValues(reversed, parsed, gitModeHeaderPair)
+	swapHeaderValues(reversed, parsed, gitRenameHeaderPair)
+	return reversed, nil
+}
+
+// reverseDiffGitHeader swaps the two path arguments while preserving their
+// original quoting. The parsed filenames are used only to reject malformed or
+// ambiguous input; names recovered from other headers can disambiguate Git's
+// unquoted paths containing spaces.
+func reverseDiffGitHeader(header, origName, newName string) string {
+	const prefix = gitExtendedHeaderDiff
+	args := header[len(prefix):]
+	lineEnding := ""
+	if strings.HasSuffix(args, "\r") {
+		args = strings.TrimSuffix(args, "\r")
+		lineEnding = "\r"
+	}
+
+	first, second, valid := parseDiffGitArgs(args)
+	if !valid {
+		return header
+	}
+
+	var rawFirst, rawSecond string
+	switch {
+	case first != "" && second != "":
+		var ok bool
+		rawFirst, rawSecond, ok = splitDiffGitArgs(args, first, second)
+		if !ok {
+			return header
+		}
+	case origName != "" && newName != "" && args == origName+" "+newName:
+		rawFirst, rawSecond = origName, newName
+	default:
+		return header
+	}
+
+	return prefix + rawSecond + " " + rawFirst + lineEnding
+}
+
+// splitDiffGitArgs locates the raw argument boundary after parseDiffGitArgs has
+// validated and decoded both paths.
+func splitDiffGitArgs(args, first, second string) (string, string, bool) {
+	if args[0] == '"' {
+		_, remainder, err := readQuotedFilename(args)
+		if err != nil || len(remainder) < 2 || remainder[0] != ' ' {
+			return "", "", false
+		}
+		return args[:len(args)-len(remainder)], remainder[1:], true
+	}
+	if args[len(args)-1] == '"' {
+		i := strings.IndexByte(args, '"')
+		if i < 2 || args[i-1] != ' ' {
+			return "", "", false
+		}
+		return args[:i-1], args[i:], true
+	}
+	if args != first+" "+second {
+		return "", "", false
+	}
+	return first, second, true
+}
+
+// swapHeaderValues exchanges the values of the first "from" header and the
+// first "to" header, leaving both prefixes where they are.
+func swapHeaderValues(headers []string, parsed gitExtendedHeaders, pair gitExtendedHeaderPair) {
+	from, to, ok := parsed.pairIndices(pair)
+	if !ok {
+		return
+	}
+	headers[from] = pair.from + parsed[to].value()
+	headers[to] = pair.to + parsed[from].value()
+}
+
+// reverseIndexHeader swaps the two blob hashes in an "index <old>..<new>[ <mode>]"
+// header, leaving the trailing mode (if any) alone.
+func reverseIndexHeader(header gitExtendedHeader) string {
+	oldHash, newHash, ok := strings.Cut(header.value(), "..")
+	if !ok || strings.ContainsAny(oldHash, " \r") {
+		return header.raw
+	}
+	prefix := gitExtendedHeaderIndex
+	if i := strings.IndexAny(newHash, " \r"); i >= 0 {
+		return prefix + newHash[:i] + ".." + oldHash + newHash[i:]
+	}
+	return prefix + newHash + ".." + oldHash
 }
 
 // ReverseMultiFileDiff reverses a series of FileDiffs.

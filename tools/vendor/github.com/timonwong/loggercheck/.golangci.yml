@@ -100,3 +100,6 @@ linters:
       - linters:
           - gocritic
         path: internal/checkers/printf/printf.go
+      - linters:
+          - goconst
+        path: ^(loggercheck_test\.go|internal/sets/string_test\.go)$

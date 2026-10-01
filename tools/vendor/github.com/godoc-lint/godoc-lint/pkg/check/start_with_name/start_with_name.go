@@ -123,7 +123,7 @@ var (
 )
 
 func matchSymbolName(text, symbol string) bool {
-	head := strings.SplitN(text, "\n", 2)[0]
+	head, _, _ := strings.Cut(text, "\n")
 	head, _ = strings.CutPrefix(head, "\r")
 	head = strings.SplitN(head, " ", 2)[0]
 	head = strings.SplitN(head, "\t", 2)[0]

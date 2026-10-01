@@ -108,7 +108,7 @@ var Analyzer = &analysis.Analyzer{
 func run(pass *analysis.Pass) (interface{}, error) {
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
-	for typ, members := range findEnums(fPackageScopeOnly, pass.Pkg, inspect, pass.TypesInfo) {
+	for typ, members := range findEnums(pass, fPackageScopeOnly, pass.Pkg, inspect, pass.TypesInfo) {
 		exportFact(pass, typ, members)
 	}
 

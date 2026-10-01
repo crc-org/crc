@@ -391,7 +391,10 @@ func typesNamed(info *types.Info, x ast.Expr) (*types.Named, bool) {
 		t = ptr.Elem()
 	}
 
-	named, ok := t.(*types.Named)
+	// A type declared as an alias of a message, as in `type Message = pb.Message`, is a
+	// types.Alias rather than the types.Named it aliases, so the message it stands for is reached
+	// through it.
+	named, ok := types.Unalias(t).(*types.Named)
 	if !ok {
 		return nil, false
 	}

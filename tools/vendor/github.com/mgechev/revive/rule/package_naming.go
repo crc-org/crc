@@ -10,6 +10,7 @@ import (
 
 	gopackages "golang.org/x/tools/go/packages"
 
+	"github.com/mgechev/revive/internal/rule"
 	"github.com/mgechev/revive/internal/syncset"
 	"github.com/mgechev/revive/lint"
 )
@@ -99,6 +100,8 @@ type PackageNamingRule struct {
 	// have already been checked and avoid duplicate checks across files in the same package.
 	alreadyCheckedNames *syncset.Set
 }
+
+var _ lint.ConfigurableRule = (*PackageNamingRule)(nil)
 
 // Configure validates the rule configuration, and configures the rule accordingly.
 //
@@ -251,7 +254,7 @@ func (r *PackageNamingRule) Apply(file *lint.File, _ lint.Arguments) []lint.Fail
 			onFailure(r.pkgNameFailure(node, "don't use package name %q that contains an underscore", pkgName))
 			return failures
 		}
-		if hasUpperCaseLetter(pkgNameWithoutTestSuffix) {
+		if rule.HasUpperCaseLetter(pkgNameWithoutTestSuffix) {
 			onFailure(r.pkgNameFailure(node, "don't use package name %q that contains MixedCaps", pkgName))
 			return failures
 		}
