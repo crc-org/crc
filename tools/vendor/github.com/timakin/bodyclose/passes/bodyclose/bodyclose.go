@@ -3,6 +3,8 @@ package bodyclose
 import (
 	"fmt"
 	"go/ast"
+	"go/parser"
+	"go/token"
 	"go/types"
 	"strconv"
 	"strings"
@@ -31,27 +33,30 @@ var checkConsumptionFlag bool
 const (
 	Doc = "checks whether HTTP response body is closed successfully"
 
-	nethttpPath = "net/http"
-	closeMethod = "Close"
+	nethttpPath              = "net/http"
+	closeMethod              = "Close"
+	responseHandledDirective = "bodyclose:handled"
 )
 
 type runner struct {
-	pass             *analysis.Pass
-	resObj           types.Object
-	resTyp           *types.Pointer
-	bodyObj          types.Object
-	closeMthd        *types.Func
-	skipFile         map[*ast.File]bool
-	checkConsumption bool
+	pass                      *analysis.Pass
+	resObj                    types.Object
+	resTyp                    *types.Pointer
+	bodyObj                   types.Object
+	closeMthd                 *types.Func
+	skipFile                  map[*ast.File]bool
+	responseHandledDirectives map[string]map[int]struct{}
+	checkConsumption          bool
 }
 
 // run executes an analysis for the pass
 func run(pass *analysis.Pass) (interface{}, error) {
 	r := runner{
-		pass:             pass,
-		checkConsumption: checkConsumptionFlag,
+		pass:                      pass,
+		skipFile:                  make(map[*ast.File]bool),
+		responseHandledDirectives: make(map[string]map[int]struct{}),
+		checkConsumption:          checkConsumptionFlag,
 	}
-	funcs := pass.ResultOf[buildssa.Analyzer].(*buildssa.SSA).SrcFuncs
 
 	r.resObj = analysisutil.LookupFromImports(pass.Pkg.Imports(), nethttpPath, "Response")
 	if r.resObj == nil {
@@ -91,7 +96,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		}
 	}
 
-	r.skipFile = map[*ast.File]bool{}
+	funcs := pass.ResultOf[buildssa.Analyzer].(*buildssa.SSA).SrcFuncs
 FuncLoop:
 	for _, f := range funcs {
 		// skip if the function is just referenced
@@ -118,9 +123,61 @@ FuncLoop:
 	return nil, nil
 }
 
+func (r *runner) responseHandledByDirective(call *ssa.Call) bool {
+	callee := call.Call.StaticCallee()
+	if callee == nil {
+		return false
+	}
+	fn, ok := callee.Object().(*types.Func)
+	if !ok {
+		return false
+	}
+
+	pos := r.pass.Fset.PositionFor(fn.Pos(), false)
+	if !pos.IsValid() || pos.Filename == "" {
+		return false
+	}
+
+	lines, ok := r.responseHandledDirectives[pos.Filename]
+	if !ok {
+		lines = responseHandledDirectiveLines(pos.Filename)
+		r.responseHandledDirectives[pos.Filename] = lines
+	}
+	_, ok = lines[pos.Line]
+	return ok
+}
+
+func responseHandledDirectiveLines(filename string) map[int]struct{} {
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
+	if err != nil {
+		return nil
+	}
+
+	lines := make(map[int]struct{})
+	for _, decl := range file.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Doc == nil {
+			continue
+		}
+		for _, comment := range fn.Doc.List {
+			text := strings.TrimSpace(strings.TrimPrefix(comment.Text, "//"))
+			if text == responseHandledDirective {
+				lines[fset.Position(fn.Name.Pos()).Line] = struct{}{}
+				break
+			}
+		}
+	}
+	return lines
+}
+
 func (r *runner) isopen(b *ssa.BasicBlock, i int) bool {
 	call, ok := r.getReqCall(b.Instrs[i])
 	if !ok {
+		return false
+	}
+
+	if r.responseHandledByDirective(call) {
 		return false
 	}
 

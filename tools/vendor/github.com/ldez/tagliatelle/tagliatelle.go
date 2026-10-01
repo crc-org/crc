@@ -68,7 +68,7 @@ func New(config Config) *analysis.Analyzer {
 func run(pass *analysis.Pass, config Config) (any, error) {
 	isp, ok := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	if !ok {
-		return nil, errors.New("missing inspect analyser")
+		return nil, errors.New("missing inspect analyzer")
 	}
 
 	nodeFilter := []ast.Node{
@@ -156,6 +156,13 @@ func report(pass *analysis.Pass, config Base, key, convName, fieldName string, n
 	// tagliatelle should try to remain neutral in terms of format.
 	if key == "xml" && strings.ContainsAny(value, ">:") {
 		// ignore XML names than contains path
+		return
+	}
+
+	// TODO(ldez): need to be rethink.
+	// For now, tagliatelle should try to remain neutral in terms of format.
+	if key == "json" && slices.Contains(flags, "embed") {
+		// skip for inline children (no name to lint)
 		return
 	}
 
@@ -266,17 +273,13 @@ func createRadixTree(config Config, modPath string) *iradix.Tree[Base] {
 		c.Rules = maps.Clone(config.Rules)
 
 		// Overrides the rule from the base.
-		for k, v := range override.Rules {
-			c.Rules[k] = v
-		}
+		maps.Copy(c.Rules, override.Rules)
 
 		// Copy the extended rules from the base.
 		c.ExtendedRules = maps.Clone(config.ExtendedRules)
 
 		// Overrides the extended rule from the base.
-		for k, v := range override.ExtendedRules {
-			c.ExtendedRules[k] = v
-		}
+		maps.Copy(c.ExtendedRules, override.ExtendedRules)
 
 		key := path.Join(modPath, override.Package)
 		if filepath.Base(modPath) == override.Package {

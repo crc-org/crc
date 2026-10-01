@@ -373,7 +373,7 @@ func (r *FileDiffReader) ReadExtendedHeaders() ([]string, error) {
 			r.fileHeaderLine = nil
 		}
 
-		if bytes.HasPrefix(line, []byte("diff --git ")) {
+		if bytes.HasPrefix(line, []byte(gitExtendedHeaderDiff)) {
 			if firstLine {
 				firstLine = false
 			} else {
@@ -466,7 +466,7 @@ func parseDiffGitArgs(diffArgs string) (string, string, bool) {
 				return first, second, true
 			}
 			// If the names don't have the a/ and b/ prefixes and they're equal, proceed.
-			if !(first[:2] == "a/" && second[:2] == "b/") && first == second {
+			if !(strings.HasPrefix(first, "a/") && strings.HasPrefix(second, "b/")) && first == second {
 				return first, second, true
 			}
 		}
@@ -508,43 +508,36 @@ func parseDiffGitArgs(diffArgs string) (string, string, bool) {
 // that follow. It updates fd fields from the parsed extended headers.
 func handleEmpty(fd *FileDiff) (wasEmpty bool) {
 	lineCount := len(fd.Extended)
-	if lineCount > 0 && !strings.HasPrefix(fd.Extended[0], "diff --git ") {
+	headers, ok := parseGitExtendedHeaders(fd.Extended)
+	if !ok {
 		return false
 	}
 
-	lineHasPrefix := func(idx int, prefix string) bool {
-		return strings.HasPrefix(fd.Extended[idx], prefix)
-	}
+	isCopy := (lineCount == 4 && headers.hasPairAt(2, gitCopyHeaderPair)) ||
+		(lineCount == 6 && headers.hasPairAt(2, gitCopyHeaderPair) && headers.hasKind(5, gitExtendedHeaderBinaryFiles)) ||
+		(lineCount == 6 && headers.hasPairAt(1, gitModeHeaderPair) && headers.hasPairAt(4, gitCopyHeaderPair))
 
-	linesHavePrefixes := func(idx1 int, prefix1 string, idx2 int, prefix2 string) bool {
-		return lineHasPrefix(idx1, prefix1) && lineHasPrefix(idx2, prefix2)
-	}
+	isRename := (lineCount == 4 && headers.hasPairAt(2, gitRenameHeaderPair)) ||
+		(lineCount == 5 && headers.hasPairAt(2, gitRenameHeaderPair) && headers.hasKind(4, gitExtendedHeaderBinaryFiles)) ||
+		(lineCount == 6 && headers.hasPairAt(2, gitRenameHeaderPair) && headers.hasKind(5, gitExtendedHeaderBinaryFiles)) ||
+		(lineCount == 6 && headers.hasPairAt(1, gitModeHeaderPair) && headers.hasPairAt(4, gitRenameHeaderPair))
 
-	isCopy := (lineCount == 4 && linesHavePrefixes(2, "copy from ", 3, "copy to ")) ||
-		(lineCount == 6 && linesHavePrefixes(2, "copy from ", 3, "copy to ") && lineHasPrefix(5, "Binary files ")) ||
-		(lineCount == 6 && linesHavePrefixes(1, "old mode ", 2, "new mode ") && linesHavePrefixes(4, "copy from ", 5, "copy to "))
+	isDeletedFile := (lineCount == 3 || lineCount == 4 && headers.hasKind(3, gitExtendedHeaderBinaryFiles) || lineCount > 4 && headers.hasKind(3, gitExtendedHeaderBinaryPatch)) &&
+		headers.hasKind(1, gitExtendedHeaderDeletedFileMode)
 
-	isRename := (lineCount == 4 && linesHavePrefixes(2, "rename from ", 3, "rename to ")) ||
-		(lineCount == 5 && linesHavePrefixes(2, "rename from ", 3, "rename to ") && lineHasPrefix(4, "Binary files ")) ||
-		(lineCount == 6 && linesHavePrefixes(2, "rename from ", 3, "rename to ") && lineHasPrefix(5, "Binary files ")) ||
-		(lineCount == 6 && linesHavePrefixes(1, "old mode ", 2, "new mode ") && linesHavePrefixes(4, "rename from ", 5, "rename to "))
+	isNewFile := (lineCount == 3 || lineCount == 4 && headers.hasKind(3, gitExtendedHeaderBinaryFiles) || lineCount > 4 && headers.hasKind(3, gitExtendedHeaderBinaryPatch)) &&
+		headers.hasKind(1, gitExtendedHeaderNewFileMode)
 
-	isDeletedFile := (lineCount == 3 || lineCount == 4 && lineHasPrefix(3, "Binary files ") || lineCount > 4 && lineHasPrefix(3, "GIT binary patch")) &&
-		lineHasPrefix(1, "deleted file mode ")
+	isModeChange := lineCount == 3 && headers.hasPairAt(1, gitModeHeaderPair)
 
-	isNewFile := (lineCount == 3 || lineCount == 4 && lineHasPrefix(3, "Binary files ") || lineCount > 4 && lineHasPrefix(3, "GIT binary patch")) &&
-		lineHasPrefix(1, "new file mode ")
-
-	isModeChange := lineCount == 3 && linesHavePrefixes(1, "old mode ", 2, "new mode ")
-
-	isBinaryPatch := lineCount == 3 && lineHasPrefix(2, "Binary files ") || lineCount > 3 && lineHasPrefix(2, "GIT binary patch")
+	isBinaryPatch := lineCount == 3 && headers.hasKind(2, gitExtendedHeaderBinaryFiles) || lineCount > 3 && headers.hasKind(2, gitExtendedHeaderBinaryPatch)
 
 	if !isModeChange && !isCopy && !isRename && !isBinaryPatch && !isNewFile && !isDeletedFile {
 		return false
 	}
 
 	var success bool
-	fd.OrigName, fd.NewName, success = parseDiffGitArgs(fd.Extended[0][len("diff --git "):])
+	fd.OrigName, fd.NewName, success = parseDiffGitArgs(headers[0].value())
 	if isNewFile {
 		fd.OrigName = "/dev/null"
 	}
@@ -555,13 +548,10 @@ func handleEmpty(fd *FileDiff) (wasEmpty bool) {
 
 	// For ambiguous 'diff --git' lines, try to reconstruct filenames using extended headers.
 	if success && (isCopy || isRename) && fd.OrigName == "" && fd.NewName == "" {
-		diffArgs := fd.Extended[0][len("diff --git "):]
+		diffArgs := headers[0].value()
 
-		tryReconstruct := func(header string, prefix string, whichFile int, result *string) {
-			if !strings.HasPrefix(header, prefix) {
-				return
-			}
-			rawFilename := header[len(prefix):]
+		tryReconstruct := func(header gitExtendedHeader, whichFile int, result *string) {
+			rawFilename := header.value()
 			rawFilename = strings.TrimSuffix(rawFilename, "\r")
 
 			// extract the filename prefix (e.g. "a/") from the 'diff --git' line.
@@ -578,11 +568,13 @@ func handleEmpty(fd *FileDiff) (wasEmpty bool) {
 			*result = diffArgs[prefixLetterIndex:prefixLetterIndex+2] + rawFilename
 		}
 
-		for _, header := range fd.Extended {
-			tryReconstruct(header, "copy from ", 1, &fd.OrigName)
-			tryReconstruct(header, "copy to ", 2, &fd.NewName)
-			tryReconstruct(header, "rename from ", 1, &fd.OrigName)
-			tryReconstruct(header, "rename to ", 2, &fd.NewName)
+		for _, header := range headers {
+			switch header.kind {
+			case gitExtendedHeaderCopyFrom, gitExtendedHeaderRenameFrom:
+				tryReconstruct(header, 1, &fd.OrigName)
+			case gitExtendedHeaderCopyTo, gitExtendedHeaderRenameTo:
+				tryReconstruct(header, 2, &fd.NewName)
+			}
 		}
 	}
 	return success

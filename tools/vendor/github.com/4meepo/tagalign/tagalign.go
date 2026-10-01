@@ -62,7 +62,7 @@ func Run(pass *analysis.Pass, options ...Option) {
 		}
 
 		ast.Inspect(f, func(n ast.Node) bool {
-			h.find(pass, n)
+			h.findNested(pass, n)
 			return true
 		})
 
@@ -126,9 +126,6 @@ func (w *Helper) find(pass *analysis.Pass, n ast.Node) {
 				split()
 
 				// check if the field is a struct
-				if _, ok := field.Type.(*ast.StructType); ok {
-					continue
-				}
 			}
 		}
 
@@ -136,6 +133,12 @@ func (w *Helper) find(pass *analysis.Pass, n ast.Node) {
 	}
 
 	split()
+}
+
+func (w *Helper) findNested(pass *analysis.Pass, n ast.Node) {
+	if v, ok := n.(*ast.StructType); ok {
+		w.find(pass, v)
+	}
 }
 
 func (w *Helper) report(pass *analysis.Pass, field *ast.Field, msg, replaceStr string) {

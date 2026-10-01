@@ -87,12 +87,12 @@ mysumtype.go:18:2: exhaustiveness check failed for sum type 'MySumType': missing
 
 Adding either a `default` clause or a clause to handle `*VariantB` will cause
 exhaustive checks to pass. To prevent `default` clauses from automatically
-passing checks, set the `-default-signifies-exhasutive=false` flag.
+passing checks, set the `-default-signifies-exhaustive=false` flag.
 
 As a special case, if the type switch statement contains a `default` clause
 that always panics, then exhaustiveness checks are still performed.
 
-By default, `go-check-sumtype` will not include shared interfaces in the exhaustiviness check.
+By default, `go-check-sumtype` will not include shared interfaces in the exhaustiveness check.
 This can be changed by setting the `-include-shared-interfaces=true` flag.
 When this flag is set, `go-check-sumtype` will not require that all concrete structs
 are listed in the switch statement, as long as the switch statement is exhaustive

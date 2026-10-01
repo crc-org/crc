@@ -3,7 +3,6 @@
 A linter that handle directives into `go.mod`.
 
 [![Sponsor](https://img.shields.io/badge/Sponsor%20me-%E2%9D%A4%EF%B8%8F-pink)](https://github.com/sponsors/ldez)
-[![Build Status](https://github.com/ldez/gomoddirectives/workflows/Main/badge.svg?branch=master)](https://github.com/ldez/gomoddirectives/actions)
 
 ## Usage
 
@@ -161,7 +160,7 @@ exclude (
 )
 ```
 
-### [`ignore`](TODO) directives
+### [`ignore`](https://go.dev/ref/mod#go-mod-file-ignore) directives
 
 - Ban all `ignore` directives.
 

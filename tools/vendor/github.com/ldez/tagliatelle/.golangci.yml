@@ -6,7 +6,9 @@ formatters:
     - gofumpt
   settings:
     gofumpt:
-      extra-rules: true
+      extra:
+        group-params: true
+        clothe-returns: true
 
 linters:
   default: all
@@ -17,9 +19,11 @@ linters:
     - errchkjson
     - exhaustive
     - exhaustruct
+    - exhaustruct_v5
     - forcetypeassert
     - lll
     - mnd
+    - gomodguard
     - nilnil
     - nlreturn
     - nonamedreturns
@@ -32,6 +36,7 @@ linters:
     - varnamelen
     - wrapcheck
     - wsl # Deprecated
+    - gomodguard # Deprecated
 
   settings:
     depguard:
@@ -48,6 +53,7 @@ linters:
     goconst:
       min-len: 5
       min-occurrences: 3
+      ignore-tests: true
     gocritic:
       disabled-checks:
         - sloppyReassign
@@ -77,6 +83,10 @@ linters:
     warn-unused: true
     presets:
       - comments
+    rules:
+      - path: cmd/tagliatelle/tagliatelle.go
+        linters:
+          - goconst
 
 issues:
   max-issues-per-linter: 0
