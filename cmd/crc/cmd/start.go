@@ -75,6 +75,7 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		DiskSize:          strongunits.GiB(config.Get(crcConfig.DiskSize).AsUInt()),
 		CPUs:              config.Get(crcConfig.CPUs).AsUInt(),
 		NameServer:        config.Get(crcConfig.NameServer).AsString(),
+		DNSSuffix:         config.Get(crcConfig.DNSSuffix).AsString(),
 		PullSecret:        cluster.NewInteractivePullSecretLoader(config),
 		KubeAdminPassword: config.Get(crcConfig.KubeAdminPassword).AsString(),
 		DeveloperPassword: config.Get(crcConfig.DeveloperPassword).AsString(),

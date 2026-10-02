@@ -3,6 +3,7 @@ package machine
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -14,6 +15,13 @@ type MockedSSHRunner struct {
 	mockedSSHCommandToOutput map[string]string
 	mockedSSHCommandToError  map[string]error
 	mockedSSHCommandToArgs   map[string]string
+
+	copiedFiles      map[string][]byte
+	copiedFileModes  map[string]os.FileMode
+	copyError        error
+
+	runOutput map[string]string
+	runError  map[string]error
 }
 
 func (r *MockedSSHRunner) RunPrivileged(reason string, cmdAndArgs ...string) (string, string, error) {
@@ -28,8 +36,18 @@ func (r *MockedSSHRunner) RunPrivileged(reason string, cmdAndArgs ...string) (st
 	return output, "", nil
 }
 
-func (r *MockedSSHRunner) Run(_ string, _ ...string) (string, string, error) {
-	// No-op
+func (r *MockedSSHRunner) Run(command string, args ...string) (string, string, error) {
+	key := strings.Join(append([]string{command}, args...), " ")
+	if r.runError != nil {
+		if err, ok := r.runError[key]; ok {
+			return "", "", err
+		}
+	}
+	if r.runOutput != nil {
+		if out, ok := r.runOutput[key]; ok {
+			return out, "", nil
+		}
+	}
 	return "", "", nil
 }
 
@@ -38,11 +56,24 @@ func (r *MockedSSHRunner) RunPrivate(_ string, _ ...string) (string, string, err
 	return "", "", nil
 }
 
+func (r *MockedSSHRunner) CopyDataPrivileged(data []byte, destFilename string, mode os.FileMode) error {
+	if r.copyError != nil {
+		return r.copyError
+	}
+	r.copiedFiles[destFilename] = data
+	r.copiedFileModes[destFilename] = mode
+	return nil
+}
+
 func NewMockedSSHRunner() *MockedSSHRunner {
 	return &MockedSSHRunner{
 		mockedSSHCommandToOutput: map[string]string{},
 		mockedSSHCommandToArgs:   map[string]string{},
 		mockedSSHCommandToError:  map[string]error{},
+		copiedFiles:              map[string][]byte{},
+		copiedFileModes:          map[string]os.FileMode{},
+		runOutput:                map[string]string{},
+		runError:                 map[string]error{},
 	}
 }
 
@@ -124,4 +155,63 @@ func TestGrowLVForMicroShift_WhenPhysicalVolumeAvailableForResize_ThenSizeToIncr
 			}
 		})
 	}
+}
+
+func TestReconcileDNSSuffix_WhenSuffixSet_ThenWriteFileAndRemoveDoneMarker(t *testing.T) {
+	runner := NewMockedSSHRunner()
+
+	err := reconcileDNSSuffix(runner, "my-domain.com")
+
+	assert.NoError(t, err)
+	assert.Equal(t, []byte("my-domain.com"), runner.copiedFiles[vmDNSSuffixPath])
+	assert.Equal(t, os.FileMode(0o644), runner.copiedFileModes[vmDNSSuffixPath])
+	assert.Contains(t, runner.mockedSSHCommandToArgs["remove ocp-custom-domain done marker"], vmCustomDomainDoneMarker)
+}
+
+func TestReconcileDNSSuffix_WhenSuffixUnsetAndFileExists_ThenRemoveFileAndDoneMarker(t *testing.T) {
+	runner := NewMockedSSHRunner()
+	// Simulate that /opt/crc/dns-suffix exists in the VM
+	runner.runOutput["test -f "+vmDNSSuffixPath] = ""
+
+	err := reconcileDNSSuffix(runner, "")
+
+	assert.NoError(t, err)
+	assert.Contains(t, runner.mockedSSHCommandToArgs["remove dns-suffix file"], vmDNSSuffixPath)
+	assert.Contains(t, runner.mockedSSHCommandToArgs["remove ocp-custom-domain done marker"], vmCustomDomainDoneMarker)
+	assert.Empty(t, runner.copiedFiles)
+}
+
+func TestReconcileDNSSuffix_WhenSuffixUnsetAndNoFileExists_ThenNoOp(t *testing.T) {
+	runner := NewMockedSSHRunner()
+	// Simulate that /opt/crc/dns-suffix does NOT exist
+	runner.runError = map[string]error{
+		"test -f " + vmDNSSuffixPath: errors.New("file not found"),
+	}
+
+	err := reconcileDNSSuffix(runner, "")
+
+	assert.NoError(t, err)
+	assert.Empty(t, runner.copiedFiles)
+	_, removeCalled := runner.mockedSSHCommandToArgs["remove dns-suffix file"]
+	assert.False(t, removeCalled)
+}
+
+func TestReconcileDNSSuffix_WhenCopyFails_ThenReturnError(t *testing.T) {
+	runner := NewMockedSSHRunner()
+	runner.copyError = errors.New("ssh connection lost")
+
+	err := reconcileDNSSuffix(runner, "my-domain.com")
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to write DNS suffix file")
+}
+
+func TestReconcileDNSSuffix_WhenRemoveDoneMarkerFails_ThenReturnError(t *testing.T) {
+	runner := NewMockedSSHRunner()
+	runner.mockedSSHCommandToError["remove ocp-custom-domain done marker"] = errors.New("permission denied")
+
+	err := reconcileDNSSuffix(runner, "my-domain.com")
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to remove ocp-custom-domain done marker")
 }
