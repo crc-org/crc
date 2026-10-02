@@ -8,7 +8,11 @@ param(
     [Parameter(HelpMessage='Test suite fails if it does not complete within the specified timeout. Default 90m')]
     $suiteTimeout="90m",
     [Parameter(HelpMessage='Filter tests to be executed based on label expression')]
-    $labelFilter=""
+    $labelFilter="",
+    [Parameter(HelpMessage='Customize memory for the cluster to run the tests')]
+    $crcMemory="",
+    [Parameter(HelpMessage='Customize disk size for the cluster to run the tests')]
+    $crcDiskSize=""
 )
 
 # Prepare run e2e
@@ -25,10 +29,18 @@ New-Item -ItemType directory -Path "$resultsDir" -Force
 # Run tests
 cd $targetFolder\bin
 
+$extraFlags = @()
+if ($crcMemory) {
+    $extraFlags += "--crc-memory=$crcMemory"
+}
+if ($crcDiskSize) {
+    $extraFlags += "--crc-disk-size=$crcDiskSize"
+}
+
 if ($labelFilter) {
-    integration.test.exe --pull-secret-path="$targetFolderDir\pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout --ginkgo.label-filter "$labelFilter" > integration.results
+    integration.test.exe --pull-secret-path="$targetFolderDir\pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout --ginkgo.label-filter "$labelFilter" @extraFlags > integration.results
 } else {
-    integration.test.exe --pull-secret-path="$targetFolderDir\pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout > integration.results
+    integration.test.exe --pull-secret-path="$targetFolderDir\pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout @extraFlags > integration.results
 }
 
 
