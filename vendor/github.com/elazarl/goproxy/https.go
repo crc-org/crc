@@ -493,11 +493,13 @@ func (proxy *ProxyHttpServer) handleHttps(w http.ResponseWriter, r *http.Request
 						hostToUse = r.Host // Fallback, if the internal Host header is missing
 					}
 
-					req.URL, err = url.Parse(scheme + "://" + hostToUse + req.URL.String())
+					urlToParse := scheme + "://" + hostToUse + req.URL.String()
+					parsedUrl, err := url.Parse(urlToParse)
 					if err != nil {
-						ctx.Warnf("Cannot parse URL %s: %v", scheme+"://"+hostToUse+req.URL.String(), err)
+						ctx.Warnf("Cannot parse URL %s: %v", urlToParse, err)
 						return
 					}
+					req.URL = parsedUrl
 				} else {
 					// Absolute-form request target
 					req.URL.Scheme = scheme
@@ -589,7 +591,11 @@ func (proxy *ProxyHttpServer) handleHttps(w http.ResponseWriter, r *http.Request
 							ctx.Warnf("Cannot flush response header from mitm'd client: %v", err)
 							return false
 						}
-						proxy.proxyWebsocket(ctx, wsConn, client)
+						// The client may have sent its first WebSocket frame in the
+						// same write as the upgrade request, so those bytes are still
+						// in the request parser's buffer. Replay them before the raw
+						// connection instead of leaving them stranded.
+						proxy.proxyWebsocket(ctx, wsConn, bufferedClientReader(clientReader.Reader(), client), client)
 						return false
 					}
 
