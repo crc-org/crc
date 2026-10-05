@@ -1,11 +1,13 @@
 package analytics
 
 import (
+	"math"
+	"math/rand"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/segmentio/backo-go"
 )
 
 // Instances of this type carry the different configuration options that may
@@ -61,6 +63,23 @@ type Config struct {
 	// If not set the client will fallback to use a default retry policy.
 	RetryAfter func(int) time.Duration
 
+	// Maximum number of counted backoff retries. Zero means use
+	// DefaultMaxRetries, per the zero-value convention above; there is no way to
+	// ask for no retries at all. Negative values are rejected.
+	MaxRetries int
+
+	// Wall-clock cap on total time spent in backoff retries. Defaults to DefaultMaxTotalBackoffDuration.
+	MaxTotalBackoffDuration time.Duration
+
+	// Wall-clock cap on total time spent retrying after 429 Retry-After responses. Defaults to DefaultMaxRateLimitDuration.
+	MaxRateLimitDuration time.Duration
+
+	// ShutdownTimeout bounds how long Close waits for in-flight retries before
+	// dropping their batches. It covers the whole remaining retry schedule,
+	// including the final request, which is issued with this as its deadline.
+	// Mirrors analytics-java's NETWORK_TERMINATION_TIMEOUT_S.
+	ShutdownTimeout time.Duration
+
 	// A function called by the client to generate unique message identifiers.
 	// The client uses a UUID generator if none is provided.
 	// This field is not exported and only exposed internally to let unit tests
@@ -86,11 +105,36 @@ const DefaultEndpoint = "https://api.segment.io"
 
 // This constant sets the default flush interval used by client instances if
 // none was explicitly set.
+// DefaultShutdownTimeout matches analytics-java's 75s network-executor
+// termination timeout.
+const DefaultShutdownTimeout = 75 * time.Second
+
 const DefaultInterval = 5 * time.Second
 
 // This constant sets the default batch size used by client instances if none
 // was explicitly set.
 const DefaultBatchSize = 250
+
+// DefaultMaxRetries is the default number of counted backoff retries.
+const DefaultMaxRetries = 10
+
+// DefaultMaxTotalBackoffDuration is the default wall-clock cap on total backoff time.
+const DefaultMaxTotalBackoffDuration = 12 * time.Hour
+
+// DefaultMaxRateLimitDuration is the default wall-clock cap on Retry-After retries.
+//
+// Rate-limited attempts are deliberately uncounted, so this duration is the only
+// thing bounding them. It is deliberately several times maxRetryAfterSeconds: when
+// the two are equal a single maximal Retry-After consumes the whole budget, leaving
+// one attempt and no retry at all.
+const DefaultMaxRateLimitDuration = 30 * time.Minute
+
+// maxRetryAfterSeconds is the cap applied to Retry-After header values. A guard
+// against an absurd header, not a second budget: waiting less than the server asked
+// for does not make the next attempt more likely to succeed, it just sends more
+// requests at something already rate-limiting us. How long we keep trying is
+// MaxRateLimitDuration's job.
+const maxRetryAfterSeconds = int64(300)
 
 // Verifies that fields that don't have zero-values are set to valid values,
 // returns an error describing the problem if a field was invalid.
@@ -111,6 +155,41 @@ func (c *Config) validate() error {
 		}
 	}
 
+	// Zero means "use the default" for these, per the zero-value convention above.
+	// Negatives used to survive into the retry loop, where they dropped every batch
+	// after its first failure instead of failing here.
+	if c.MaxRetries < 0 {
+		return ConfigError{
+			Reason: "negative retry counts are not supported",
+			Field:  "MaxRetries",
+			Value:  c.MaxRetries,
+		}
+	}
+
+	if c.MaxTotalBackoffDuration < 0 {
+		return ConfigError{
+			Reason: "negative backoff durations are not supported",
+			Field:  "MaxTotalBackoffDuration",
+			Value:  c.MaxTotalBackoffDuration,
+		}
+	}
+
+	if c.MaxRateLimitDuration < 0 {
+		return ConfigError{
+			Reason: "negative rate limit durations are not supported",
+			Field:  "MaxRateLimitDuration",
+			Value:  c.MaxRateLimitDuration,
+		}
+	}
+
+	if c.ShutdownTimeout < 0 {
+		return ConfigError{
+			Reason: "negative shutdown timeouts are not supported",
+			Field:  "ShutdownTimeout",
+			Value:  c.ShutdownTimeout,
+		}
+	}
+
 	return nil
 }
 
@@ -119,6 +198,10 @@ func (c *Config) validate() error {
 func makeConfig(c Config) Config {
 	if len(c.Endpoint) == 0 {
 		c.Endpoint = DefaultEndpoint
+	}
+
+	if c.ShutdownTimeout == 0 {
+		c.ShutdownTimeout = DefaultShutdownTimeout
 	}
 
 	if c.Interval == 0 {
@@ -142,7 +225,19 @@ func makeConfig(c Config) Config {
 	}
 
 	if c.RetryAfter == nil {
-		c.RetryAfter = backo.DefaultBacko().Duration
+		c.RetryAfter = defaultRetryAfter
+	}
+
+	if c.MaxRetries == 0 {
+		c.MaxRetries = DefaultMaxRetries
+	}
+
+	if c.MaxTotalBackoffDuration == 0 {
+		c.MaxTotalBackoffDuration = DefaultMaxTotalBackoffDuration
+	}
+
+	if c.MaxRateLimitDuration == 0 {
+		c.MaxRateLimitDuration = DefaultMaxRateLimitDuration
 	}
 
 	if c.uid == nil {
@@ -170,4 +265,41 @@ func makeConfig(c Config) Config {
 // function used for generating unique IDs.
 func uid() string {
 	return uuid.NewString()
+}
+
+// Jitter needs its own source: math/rand's global source is seeded
+// deterministically before Go 1.20, so every process would draw the same
+// sequence and stay in step with every other process anyway.
+var (
+	jitterMu   sync.Mutex
+	jitterRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+)
+
+func jitterFraction() float64 {
+	jitterMu.Lock()
+	defer jitterMu.Unlock()
+	return jitterRand.Float64()
+}
+
+// defaultRetryAfter returns how long to wait before counted backoff attempt n:
+// 500ms doubling to a 60s ceiling, then reduced by up to 50% at random.
+//
+// The jitter is applied after the clamp and only ever subtracts, so the ceiling
+// holds and clients that started backing off together spread out instead of
+// retrying in lockstep. Applying it before the clamp — which is what
+// backo-go does, and why it is no longer used here — collapses back to exactly
+// the cap once the exponential passes it, putting the whole fleet back in step
+// at the point the endpoint can least afford it.
+func defaultRetryAfter(attempt int) time.Duration {
+	const (
+		base    = float64(500 * time.Millisecond)
+		ceiling = float64(60 * time.Second)
+		jitter  = 0.5
+	)
+
+	delay := base * math.Pow(2, float64(attempt))
+	if delay > ceiling {
+		delay = ceiling
+	}
+	return time.Duration(delay - jitterFraction()*delay*jitter)
 }

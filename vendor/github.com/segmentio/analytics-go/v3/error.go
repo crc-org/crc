@@ -57,4 +57,12 @@ var (
 	// failed because the JSON representation of a message exceeded the upper
 	// limit.
 	ErrMessageTooBig = errors.New("the message exceeds the maximum allowed size")
+
+	// ErrBackoffBudgetExceeded is returned when the maximum total backoff
+	// duration is exceeded before a batch upload succeeds.
+	ErrBackoffBudgetExceeded = errors.New("max total backoff duration exceeded")
+
+	// ErrRateLimitBudgetExceeded is returned when the maximum rate-limit
+	// (429 Retry-After) duration is exceeded.
+	ErrRateLimitBudgetExceeded = errors.New("max rate limit duration exceeded")
 )
