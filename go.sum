@@ -324,8 +324,8 @@ github.com/sagikazarmark/locafero v0.11.0 h1:1iurJgmM9G3PA/I+wWYIOw/5SyBtxapeHDc
 github.com/sagikazarmark/locafero v0.11.0/go.mod h1:nVIGvgyzw595SUSUE6tvCp3YYTeHs15MvlmU87WwIik=
 github.com/santhosh-tekuri/jsonschema/v6 v6.0.2 h1:KRzFb2m7YtdldCEkzs6KqmJw4nqEVZGK7IN2kJkjTuQ=
 github.com/santhosh-tekuri/jsonschema/v6 v6.0.2/go.mod h1:JXeL+ps8p7/KNMjDQk3TCwPpBy0wYklyWTfbkIzdIFU=
-github.com/sebrandon1/grab v1.1.2 h1:zgbftUdbb1N9gH7WRSKyo/Gek94JXxlncP5AUoH0M9g=
-github.com/sebrandon1/grab v1.1.2/go.mod h1:FuIRfc0pfujvaIwghWljpmdnYNUXrI+S/lSNy0Uw188=
+github.com/sebrandon1/grab v1.2.0 h1:edFXeOl4Md1anPTcHvQDi0qVsH05N5onsZtBeUZwQJM=
+github.com/sebrandon1/grab v1.2.0/go.mod h1:uc8iXRFrVmuPPukIOysd3IYqBNd2uOtqWTQo0/9F/x0=
 github.com/secure-systems-lab/go-securesystemslib v0.11.0 h1:iuCR9kcMFD4QurdKrGvPLoKZLv9YvwPYVr0473BdtFs=
 github.com/secure-systems-lab/go-securesystemslib v0.11.0/go.mod h1:+PMOTjUGwHj2vcZ+TFKlb1tXRbrdWE1LYDT5i9JC80Q=
 github.com/segmentio/analytics-go/v3 v3.4.0 h1:8ACTF5ggK3W70b+kHId5SyxyWGYZ1sdgd/e8tb8jMRM=
