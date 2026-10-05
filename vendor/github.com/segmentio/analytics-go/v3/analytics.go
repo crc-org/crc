@@ -1,20 +1,19 @@
 package analytics
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"net/http"
 	"strconv"
 	"sync"
-
-	"bytes"
-	"encoding/json"
-	"net/http"
 	"time"
 )
 
 // Version of the client.
-const Version = "3.0.0"
+const Version = "3.4.0"
 
 // This interface is the main API exposed by the analytics package.
 // Values that satsify this interface are returned by the client constructors
@@ -243,10 +242,20 @@ func (c *client) sendAsync(msgs []message, wg *sync.WaitGroup, ex *executor) {
 	}
 }
 
+// httpError is returned by report() for non-2xx/3xx responses.
+type httpError struct {
+	StatusCode int
+	Retryable  bool
+	RetryAfter int64 // seconds from Retry-After header; 0 if absent
+	Body       string
+}
+
+func (e *httpError) Error() string {
+	return fmt.Sprintf("%d %s", e.StatusCode, e.Body)
+}
+
 // Send batch request.
 func (c *client) send(msgs []message) {
-	const attempts = 10
-
 	b, err := json.Marshal(batch{
 		MessageId: c.uid(),
 		SentAt:    c.now(),
@@ -260,28 +269,178 @@ func (c *client) send(msgs []message) {
 		return
 	}
 
-	for i := 0; i != attempts; i++ {
-		if err = c.upload(b); err == nil {
+	retry := retryState{client: c, msgs: msgs}
+	var shutdownDeadline time.Time
+	for {
+		retry.totalAttempts++
+
+		uploadErr := c.upload(b, retry.totalAttempts, shutdownDeadline)
+		if uploadErr == nil {
 			c.notifySuccess(msgs)
 			return
 		}
 
-		// Wait for either a retry timeout or the client to be closed.
-		select {
-		case <-time.After(c.RetryAfter(i)):
-		case <-c.quit:
-			c.errorf("%d messages dropped because they failed to be sent and the client was closed", len(msgs))
-			c.notifyFailure(msgs, err)
+		action := retry.classify(uploadErr)
+		var delay time.Duration
+		switch action {
+		case retryActionDrop:
 			return
+		case retryActionRateLimit, retryActionBackoff:
+			delay = retry.delay
+		}
+
+		timer := time.NewTimer(delay)
+		select {
+		case <-timer.C:
+		case <-c.quit:
+			// Stopped explicitly: time.After would leave the timer live until it
+			// fired, and this loop can run for hours with delays up to the
+			// Retry-After cap.
+			timer.Stop()
+			// Closing: finish the retry schedule so shutdown does not discard a
+			// batch the server asked us to resend, bounded by ShutdownTimeout
+			// rather than the much longer MaxRateLimitDuration.
+			if shutdownDeadline.IsZero() {
+				shutdownDeadline = time.Now().Add(c.ShutdownTimeout)
+			}
+			remaining := time.Until(shutdownDeadline)
+			if remaining <= 0 {
+				c.errorf("%d messages dropped because they failed to be sent and the client was closed", len(msgs))
+				c.notifyFailure(msgs, uploadErr)
+				return
+			}
+			if delay > remaining {
+				delay = remaining
+			}
+			time.Sleep(delay)
 		}
 	}
-
-	c.errorf("%d messages dropped because they failed to be sent after %d attempts", len(msgs), attempts)
-	c.notifyFailure(msgs, err)
 }
 
-// Upload serialized batch message.
-func (c *client) upload(b []byte) error {
+type retryAction int
+
+const (
+	retryActionBackoff   retryAction = iota
+	retryActionRateLimit retryAction = iota
+	retryActionDrop      retryAction = iota
+)
+
+// retryState tracks state across attempts within a single send call.
+type retryState struct {
+	client             *client
+	msgs               []message
+	totalAttempts      int
+	backoffAttempts    int
+	firstFailureTime   time.Time
+	rateLimitStartTime time.Time
+	delay              time.Duration
+}
+
+// classify determines what to do after a failed upload. It updates internal
+// counters, logs/notifies on terminal failures, and returns the action the
+// caller should take.
+func (r *retryState) classify(uploadErr error) retryAction {
+	c := r.client
+
+	httpErr, ok := uploadErr.(*httpError)
+	if !ok {
+		httpErr = &httpError{Retryable: true}
+	}
+
+	if !httpErr.Retryable {
+		c.errorf("messages dropped due to non-retryable error - %s", uploadErr)
+		c.notifyFailure(r.msgs, uploadErr)
+		return retryActionDrop
+	}
+
+	if httpErr.RetryAfter > 0 {
+		return r.handleRateLimit(httpErr)
+	}
+
+	return r.handleBackoff(uploadErr)
+}
+
+func (r *retryState) handleRateLimit(httpErr *httpError) retryAction {
+	c := r.client
+
+	now := c.now()
+	if r.rateLimitStartTime.IsZero() {
+		r.rateLimitStartTime = now
+	}
+
+	// One reading serves both the budget test and the clamp below. Reading the clock
+	// twice lets the budget expire between them and yields a negative remaining,
+	// which time.NewTimer treats as "fire immediately" rather than rejecting — so it
+	// would be harmless here, but only by accident of that behaviour.
+	remaining := c.MaxRateLimitDuration - now.Sub(r.rateLimitStartTime)
+	if remaining <= 0 {
+		c.errorf("messages dropped - %s", ErrRateLimitBudgetExceeded)
+		c.notifyFailure(r.msgs, ErrRateLimitBudgetExceeded)
+		return retryActionDrop
+	}
+
+	// A wait that will not fit ends the episode. Shortening it would send the next
+	// request inside the window the server asked us to wait out -- one it has
+	// already said it will not serve -- and since the budget is spent by then it
+	// would be the last attempt either way. Giving up here loses the same batch and
+	// sends one fewer request at something already rate-limiting us.
+	delay := time.Duration(httpErr.RetryAfter) * time.Second
+	if delay > remaining {
+		c.errorf("messages dropped - %s", ErrRateLimitBudgetExceeded)
+		c.notifyFailure(r.msgs, ErrRateLimitBudgetExceeded)
+		return retryActionDrop
+	}
+	r.delay = delay
+	return retryActionRateLimit
+}
+
+func (r *retryState) handleBackoff(lastErr error) retryAction {
+	c := r.client
+
+	// One reading serves the budget test and the clamp below, for the same reason
+	// as handleRateLimit.
+	now := c.now()
+	if r.firstFailureTime.IsZero() {
+		r.firstFailureTime = now
+	}
+
+	remaining := c.MaxTotalBackoffDuration - now.Sub(r.firstFailureTime)
+	if remaining <= 0 {
+		c.errorf("messages dropped - %s", ErrBackoffBudgetExceeded)
+		c.notifyFailure(r.msgs, ErrBackoffBudgetExceeded)
+		return retryActionDrop
+	}
+
+	r.backoffAttempts++
+	if r.backoffAttempts > c.MaxRetries {
+		c.errorf("%d messages dropped after %d attempts", len(r.msgs), r.totalAttempts)
+		c.notifyFailure(r.msgs, lastErr)
+		return retryActionDrop
+	}
+
+	// Same rule as the rate-limit path, for the simpler reason that a backoff
+	// outlasting the budget is a wait whose attempt can never happen.
+	delay := c.RetryAfter(r.backoffAttempts - 1)
+	if delay > remaining {
+		c.errorf("messages dropped - %s", ErrBackoffBudgetExceeded)
+		c.notifyFailure(r.msgs, ErrBackoffBudgetExceeded)
+		return retryActionDrop
+	}
+	if delay < 0 {
+		// RetryAfter is caller-supplied; a negative reaches time.NewTimer, which
+		// fires immediately and spins this loop at whatever rate the server answers.
+		delay = 0
+	}
+	r.delay = delay
+
+	return retryActionBackoff
+}
+
+// Upload serialized batch message. attempt is 1-based (1 = first attempt).
+// upload sends one attempt. A non-zero deadline bounds the request itself, so
+// Close cannot overrun ShutdownTimeout by a whole HTTP round trip while waiting
+// on a final attempt.
+func (c *client) upload(b []byte, attempt int, deadline time.Time) error {
 	url := c.Endpoint + "/v1/batch"
 	req, err := http.NewRequest("POST", url, bytes.NewReader(b))
 	if err != nil {
@@ -294,8 +453,18 @@ func (c *client) upload(b []byte) error {
 	req.Header.Add("Content-Length", strconv.Itoa(len(b)))
 	req.SetBasicAuth(c.key, "")
 
-	res, err := c.http.Do(req)
+	// Omitted on the first attempt so the server can tell a retry from a first try.
+	if attempt > 1 {
+		req.Header.Add("X-Retry-Count", strconv.Itoa(attempt-1))
+	}
 
+	if !deadline.IsZero() {
+		ctx, cancel := context.WithDeadline(req.Context(), deadline)
+		defer cancel()
+		req = req.WithContext(ctx)
+	}
+
+	res, err := c.http.Do(req)
 	if err != nil {
 		c.errorf("sending request - %s", err)
 		return err
@@ -306,21 +475,40 @@ func (c *client) upload(b []byte) error {
 }
 
 // Report on response body.
-func (c *client) report(res *http.Response) (err error) {
-	var body []byte
-
-	if res.StatusCode < 300 {
+func (c *client) report(res *http.Response) error {
+	if isSuccess(res.StatusCode) {
 		c.debugf("response %s", res.Status)
-		return
+		return nil
 	}
 
-	if body, err = ioutil.ReadAll(res.Body); err != nil {
+	// Read before the body: a mid-read I/O error must not lose the server's
+	// Retry-After and route this attempt onto the counted-backoff budget instead
+	// of the rate-limit one.
+	retryable := retryableStatus(res.StatusCode)
+	var retryAfterSecs int64
+	if retryable {
+		retryAfterSecs = parseRetryAfter(res.Header.Get("Retry-After"), maxRetryAfterSeconds)
+	}
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
 		c.errorf("response %d %s - %s", res.StatusCode, res.Status, err)
-		return
+		return &httpError{
+			StatusCode: res.StatusCode,
+			Retryable:  retryable,
+			RetryAfter: retryAfterSecs,
+			Body:       err.Error(),
+		}
 	}
 
 	c.logf("response %d %s – %s", res.StatusCode, res.Status, string(body))
-	return fmt.Errorf("%d %s", res.StatusCode, res.Status)
+
+	return &httpError{
+		StatusCode: res.StatusCode,
+		Retryable:  retryable,
+		RetryAfter: retryAfterSecs,
+		Body:       string(body),
+	}
 }
 
 // Batch loop.

@@ -2,6 +2,9 @@
 
 Segment analytics client for Go.
 
+### ⚠️ Maintenance ⚠️
+This library is in maintenance mode. It will send data as intended, but receive no new feature support and only critical maintenance updates from Segment.
+
 ## Installation
 
 The package can be simply installed via go get, we recommend that you use a
