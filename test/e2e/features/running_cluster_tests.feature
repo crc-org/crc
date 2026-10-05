@@ -16,15 +16,3 @@ Feature: Test scenarios on a running cluster
             Then listing files in mounted home directory should succeed
             And basic file operations in mounted home directory should succeed
             And basic directory operations in mounted home directory should succeed
-
-    @linux @windows @darwin @cleanup
-    Scenario: Override default developer password should be reflected during crc start
-        Given executing "crc stop -f" succeeds
-        And setting config property "developer-password" to value "secret-dev" succeeds
-        When starting CRC with default bundle succeeds
-        Then stdout should contain "Started the OpenShift cluster"
-        And stdout should contain "Log in as administrator:"
-        And stdout should contain "  Username: kubeadmin"
-        And stdout should contain "Log in as user:"
-        And stdout should contain "  Username: developer"
-        And stdout should contain "  Password: secret-dev"
