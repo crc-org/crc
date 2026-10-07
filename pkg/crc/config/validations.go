@@ -154,6 +154,14 @@ func validatePreset(value interface{}) (bool, string) {
 	return true, ""
 }
 
+func validateDNSSuffix(value interface{}) (bool, string) {
+	s := cast.ToString(value)
+	if strings.ContainsAny(s, " \t/:\\") {
+		return false, "must be a valid DNS suffix (e.g. 'nip.io', 'my-domain.com')"
+	}
+	return true, ""
+}
+
 func validatePort(value interface{}) (bool, string) {
 	port, err := cast.ToUintE(value)
 	if err != nil {

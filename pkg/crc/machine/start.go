@@ -554,6 +554,12 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}, nil
 	}
 
+	// Reconcile DNS suffix: write or remove /opt/crc/dns-suffix so that
+	// ocp-custom-domain.service uses the configured value on next run.
+	if err := reconcileDNSSuffix(sshRunner, startConfig.DNSSuffix); err != nil {
+		return nil, errors.Wrap(err, "Failed to configure DNS suffix in the VM")
+	}
+
 	// Check the certs validity inside the vm
 	logging.Info("Verifying validity of the kubelet certificates...")
 	certsExpired, err := cluster.CheckCertsValidity(sshRunner)
@@ -935,6 +941,43 @@ func checkMachineInstanceDir() error {
 		if !crcos.FileExists(filePath) {
 			return fmt.Errorf("Required file %s is missing from the instance directory. Please delete the instance with 'crc delete' and recreate it with 'crc start'", filePath)
 		}
+	}
+	return nil
+}
+
+const (
+	vmDNSSuffixPath          = "/opt/crc/dns-suffix"
+	vmCustomDomainDoneMarker = "/opt/crc/ocp-custom-domain.service.done"
+)
+
+type sshProvisioner interface {
+	Run(command string, args ...string) (string, string, error)
+	RunPrivileged(reason string, cmdAndArgs ...string) (string, string, error)
+	CopyDataPrivileged(data []byte, destFilename string, mode os.FileMode) error
+}
+
+func reconcileDNSSuffix(provisioner sshProvisioner, dnsSuffix string) error {
+	if dnsSuffix != "" {
+		logging.Infof("Setting DNS suffix to '%s'...", dnsSuffix)
+		if err := provisioner.CopyDataPrivileged([]byte(dnsSuffix), vmDNSSuffixPath, 0o644); err != nil {
+			return fmt.Errorf("failed to write DNS suffix file: %w", err)
+		}
+		if _, _, err := provisioner.RunPrivileged("remove ocp-custom-domain done marker", "rm", "-f", vmCustomDomainDoneMarker); err != nil {
+			return fmt.Errorf("failed to remove ocp-custom-domain done marker: %w", err)
+		}
+		return nil
+	}
+
+	// No DNS suffix configured: clean up if a previous suffix file exists
+	if _, _, err := provisioner.Run("test", "-f", vmDNSSuffixPath); err != nil {
+		return nil
+	}
+	logging.Info("Removing previously configured DNS suffix...")
+	if _, _, err := provisioner.RunPrivileged("remove dns-suffix file", "rm", "-f", vmDNSSuffixPath); err != nil {
+		return fmt.Errorf("failed to remove DNS suffix file: %w", err)
+	}
+	if _, _, err := provisioner.RunPrivileged("remove ocp-custom-domain done marker", "rm", "-f", vmCustomDomainDoneMarker); err != nil {
+		return fmt.Errorf("failed to remove ocp-custom-domain done marker: %w", err)
 	}
 	return nil
 }
