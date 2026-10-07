@@ -6,6 +6,8 @@ targetFolder="crc-integration"
 junitFilename="integration-junit.xml"
 suiteTimeout="90m"
 labelFilter=""
+crcMemory=""
+crcDiskSize=""
 while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
@@ -31,8 +33,18 @@ while [[ $# -gt 0 ]]; do
         ;;
         -labelFilter)
         labelFilter="$2"
-        shift 
-        shift 
+        shift
+        shift
+        ;;
+        -crcMemory)
+        crcMemory="$2"
+        shift
+        shift
+        ;;
+        -crcDiskSize)
+        crcDiskSize="$2"
+        shift
+        shift
         ;;
         *)    # unknown option
         shift 
@@ -47,11 +59,18 @@ mkdir -p $targetFolder/results
 export PATH="$PATH:${HOME}/$targetFolder/bin"
 
 cd $targetFolder/bin
+extraFlags=""
+if [ ! -z "$crcMemory" ]; then
+    extraFlags="$extraFlags --crc-memory=$crcMemory"
+fi
+if [ ! -z "$crcDiskSize" ]; then
+    extraFlags="$extraFlags --crc-disk-size=$crcDiskSize"
+fi
 if [ ! -z "$labelFilter" ]
 then
-    ./integration.test --pull-secret-path="${HOME}/$targetFolder/pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout --ginkgo.label-filter "$labelFilter" > integration.results
+    ./integration.test --pull-secret-path="${HOME}/$targetFolder/pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout --ginkgo.label-filter "$labelFilter" $extraFlags > integration.results
 else
-    ./integration.test --pull-secret-path="${HOME}/$targetFolder/pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout > integration.results
+    ./integration.test --pull-secret-path="${HOME}/$targetFolder/pull-secret" --bundle-path=$bundleLocation --ginkgo.timeout $suiteTimeout $extraFlags > integration.results
 fi
 
 # Copy results
