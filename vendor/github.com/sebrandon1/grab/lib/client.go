@@ -44,6 +44,15 @@ type Client struct {
 	// to the transfer progress statistics. The BufferSize of each request can
 	// be overridden on each Request object. Default: 32KB.
 	BufferSize int
+
+	// RetryLimit specifies the maximum number of retry attempts for transient
+	// HTTP errors (5xx status codes, 429, and transport errors). Default: 0
+	// (no retries).
+	RetryLimit int
+
+	// RetryDelay specifies the duration to wait between retry attempts.
+	// Default: 0 (no delay).
+	RetryDelay time.Duration
 }
 
 // NewClient returns a new file download Client, using default configuration.
@@ -377,32 +386,63 @@ func (c *Client) headRequest(resp *Response) stateFunc {
 	return c.readResponse
 }
 
-func (c *Client) getRequest(resp *Response) stateFunc {
-	resp.HTTPResponse, resp.err = c.doHTTPRequest(resp.Request.HTTPRequest)
-	if resp.err != nil {
-		return c.closeResponse
+func isTransientStatusCode(code int) bool {
+	switch code {
+	case 429, 500, 502, 503, 504:
+		return true
 	}
+	return false
+}
 
-	// check Content-Range header for resumed downloads
-	if resp.DidResume && resp.HTTPResponse.StatusCode == http.StatusPartialContent {
-		contentRange := resp.HTTPResponse.Header.Get("Content-Range")
-		if contentRange != "" {
-			var start int64
-			if _, err := fmt.Sscanf(contentRange, "bytes %d-", &start); err == nil {
-				if start != resp.bytesResumed {
-					resp.err = ErrBadLength
-					return c.closeResponse
+func (c *Client) getRequest(resp *Response) stateFunc {
+	for attempt := 0; attempt <= c.RetryLimit; attempt++ {
+		if attempt > 0 {
+			if resp.HTTPResponse != nil && resp.HTTPResponse.Body != nil {
+				_ = resp.HTTPResponse.Body.Close()
+				resp.HTTPResponse = nil
+			}
+			resp.err = nil
+			if c.RetryDelay > 0 {
+				time.Sleep(c.RetryDelay)
+			}
+		}
+
+		resp.HTTPResponse, resp.err = c.doHTTPRequest(resp.Request.HTTPRequest)
+		if resp.err != nil {
+			if attempt < c.RetryLimit {
+				continue
+			}
+			return c.closeResponse
+		}
+
+		// Retry on transient HTTP status codes before any other checks.
+		if !resp.Request.IgnoreBadStatusCodes && isTransientStatusCode(resp.HTTPResponse.StatusCode) && attempt < c.RetryLimit {
+			continue
+		}
+
+		// check Content-Range header for resumed downloads
+		if resp.DidResume && resp.HTTPResponse.StatusCode == http.StatusPartialContent {
+			contentRange := resp.HTTPResponse.Header.Get("Content-Range")
+			if contentRange != "" {
+				var start int64
+				if _, err := fmt.Sscanf(contentRange, "bytes %d-", &start); err == nil {
+					if start != resp.bytesResumed {
+						resp.err = ErrBadLength
+						return c.closeResponse
+					}
 				}
 			}
 		}
-	}
 
-	// check status code
-	if !resp.Request.IgnoreBadStatusCodes {
-		if resp.HTTPResponse.StatusCode < 200 || resp.HTTPResponse.StatusCode > 299 {
-			resp.err = StatusCodeError(resp.HTTPResponse.StatusCode)
-			return c.closeResponse
+		// check status code
+		if !resp.Request.IgnoreBadStatusCodes {
+			if resp.HTTPResponse.StatusCode < 200 || resp.HTTPResponse.StatusCode > 299 {
+				resp.err = StatusCodeError(resp.HTTPResponse.StatusCode)
+				return c.closeResponse
+			}
 		}
+
+		break
 	}
 
 	return c.readResponse

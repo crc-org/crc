@@ -16,9 +16,9 @@ This package provides the core Go library for downloading files from the interne
   - Downloads multiple files concurrently to the current directory.
   - Returns a channel of `DownloadResponse` for each file.
 
-- **GetBatch(workers int, dst string, urls ...string) (<-chan *Response, error)**
+- **GetBatch(ctx context.Context, workers int, dst string, urls ...string) (<-chan *Response, error)**
   - Lower-level API for advanced use cases. Downloads files to `dst` with a specified number of workers.
-  - Returns a channel of `*Response` for each file.
+  - Pass `workers=0` for one goroutine per URL (fully concurrent). Returns a channel of `*Response` for each file.
 
 - **Get(dst, url string) (*Response, error)**
   - Downloads a single file to the specified destination.
@@ -79,7 +79,6 @@ func main() {
 			continue
 		}
 		resp := client.Do(req)
-		<-resp.Done // wait for download to finish
 		if err := resp.Err(); err != nil {
 			log.Printf("Failed: %s (%v)", resp.Filename, err)
 		} else {

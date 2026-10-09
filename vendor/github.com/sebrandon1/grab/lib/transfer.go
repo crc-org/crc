@@ -3,6 +3,7 @@ package lib
 import (
 	"context"
 	"io"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -10,6 +11,47 @@ import (
 type gauge interface {
 	Sample(t time.Time, n int64)
 	BPS() float64
+}
+
+// bpsGauge computes bytes-per-second over a sliding time window.
+type bpsGauge struct {
+	mu      sync.Mutex
+	samples []bpsSample
+	window  time.Duration
+}
+
+type bpsSample struct {
+	t time.Time
+	n int64
+}
+
+func newBPSGauge(window time.Duration) *bpsGauge {
+	return &bpsGauge{window: window}
+}
+
+func (g *bpsGauge) Sample(t time.Time, n int64) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	g.samples = append(g.samples, bpsSample{t: t, n: n})
+	cutoff := t.Add(-g.window)
+	for len(g.samples) > 1 && g.samples[0].t.Before(cutoff) {
+		g.samples = g.samples[1:]
+	}
+}
+
+func (g *bpsGauge) BPS() float64 {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if len(g.samples) < 2 {
+		return 0
+	}
+	first := g.samples[0]
+	last := g.samples[len(g.samples)-1]
+	elapsed := last.t.Sub(first.t).Seconds()
+	if elapsed <= 0 {
+		return 0
+	}
+	return float64(last.n-first.n) / elapsed
 }
 
 type transfer struct {
@@ -25,7 +67,7 @@ type transfer struct {
 func newTransfer(ctx context.Context, lim RateLimiter, dst io.Writer, src io.Reader, buf []byte) *transfer {
 	return &transfer{
 		ctx:   ctx,
-		gauge: nil, // no-op gauge for now
+		gauge: newBPSGauge(5 * time.Second),
 		lim:   lim,
 		w:     dst,
 		r:     src,
@@ -55,6 +97,9 @@ func (c *transfer) copy() (written int64, err error) {
 			if nw > 0 {
 				written += int64(nw)
 				atomic.StoreInt64(&c.n, written)
+				if c.gauge != nil {
+					c.gauge.Sample(time.Now(), written)
+				}
 			}
 			if ew != nil {
 				err = ew
