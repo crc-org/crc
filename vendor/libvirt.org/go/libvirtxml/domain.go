@@ -2438,7 +2438,7 @@ type DomainSysInfoSMBIOS struct {
 	BaseBoard  []DomainSysInfoBaseBoard `xml:"baseBoard"`
 	Chassis    *DomainSysInfoChassis    `xml:"chassis"`
 	Processor  []DomainSysInfoProcessor `xml:"processor"`
-	Memory     []DomainSysInfoMemory    `xml:"memory"`
+	Memory     []DomainSysInfoMemory    `xml:"memory_device"`
 	OEMStrings *DomainSysInfoOEMStrings `xml:"oemStrings"`
 }
 
@@ -3016,7 +3016,7 @@ type DomainCPUCacheTuneMonitor struct {
 }
 
 type DomainCPUMemoryTune struct {
-	VCPUs   string                       `xml:"vcpus,attr"`
+	VCPUs   string                       `xml:"vcpus,attr,omitempty"`
 	Nodes   []DomainCPUMemoryTuneNode    `xml:"node"`
 	Monitor []DomainCPUMemoryTuneMonitor `xml:"monitor"`
 }
@@ -3032,11 +3032,11 @@ type DomainCPUMemoryTuneMonitor struct {
 }
 
 type DomainCPUEnergyTuneMonitor struct {
-	VCPUs string `xml:"vcpus,attr"`
+	VCPUs string `xml:"vcpus,attr,omitempty"`
 }
 
 type DomainCPUEnergyTune struct {
-	VCPUs   string                       `xml:"vcpus,attr"`
+	VCPUs   string                       `xml:"vcpus,attr,omitempty"`
 	ID      string                       `xml:"id,attr,omitempty"`
 	Monitor []DomainCPUEnergyTuneMonitor `xml:"monitor"`
 }
@@ -3327,6 +3327,7 @@ type Domain struct {
 	OnPoweroff      string                 `xml:"on_poweroff,omitempty"`
 	OnReboot        string                 `xml:"on_reboot,omitempty"`
 	OnCrash         string                 `xml:"on_crash,omitempty"`
+	OnLockFailure   string                 `xml:"on_lockfailure,omitempty"`
 	PM              *DomainPM              `xml:"pm"`
 	Perf            *DomainPerf            `xml:"perf"`
 	Devices         *DomainDeviceList      `xml:"devices"`
