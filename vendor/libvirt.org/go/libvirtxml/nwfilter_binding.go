@@ -35,6 +35,11 @@ type NWFilterBinding struct {
 	PortDev   *NWFilterBindingPortDev   `xml:"portdev"`
 	MAC       *NWFilterBindingMAC       `xml:"mac"`
 	FilterRef *NWFilterBindingFilterRef `xml:"filterref"`
+	Backend   *NWFilterBindingBackend   `xml:"backend"`
+}
+
+type NWFilterBindingBackend struct {
+	Name string `xml:"name,attr"`
 }
 
 type NWFilterBindingOwner struct {
