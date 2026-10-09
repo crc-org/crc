@@ -1,33 +1,32 @@
 /*
-package lib provides a HTTP download manager implementation.
+Package lib provides a HTTP download manager implementation.
 
 Get is the most simple way to download a file:
 
-	resp, err := grab.Get("/tmp", "http://example.com/example.zip")
+	resp, err := lib.Get("/tmp", "http://example.com/example.zip")
 	// ...
 
 Get will download the given URL and save it to the given destination directory.
-The destination filename will be determined automatically by grab using
+The destination filename will be determined automatically by lib using
 Content-Disposition headers returned by the remote server, or by inspecting the
 requested URL path.
 
 An empty destination string or "." means the transfer will be stored in the
 current working directory.
 
-If a destination file already exists, grab will assume it is a complete or
+If a destination file already exists, lib will assume it is a complete or
 partially complete download of the requested file. If the remote server supports
-resuming interrupted downloads, grab will resume downloading from the end of the
+resuming interrupted downloads, lib will resume downloading from the end of the
 partial file. If the server does not support resumed downloads, the file will be
-retransferred in its entirety. If the file is already complete, grab will return
+retransferred in its entirety. If the file is already complete, lib will return
 successfully.
 
 For control over the HTTP client, destination path, auto-resume, checksum
 validation and other settings, create a Client:
 
-	client := grab.NewClient()
-	client.HTTPClient.Transport.DisableCompression = true
+	client := lib.NewClient()
 
-	req, err := grab.NewRequest("/tmp", "http://example.com/example.zip")
+	req, err := lib.NewRequest("/tmp", "http://example.com/example.zip")
 	// ...
 	req.NoResume = true
 	req.HTTPRequest.Header.Set("Authorization", "Basic YWxhZGRpbjpvcGVuc2VzYW1l")
@@ -37,8 +36,8 @@ validation and other settings, create a Client:
 
 You can monitor the progress of downloads while they are transferring:
 
-	client := grab.NewClient()
-	req, err := grab.NewRequest("", "http://example.com/example.zip")
+	client := lib.NewClient()
+	req, err := lib.NewRequest("", "http://example.com/example.zip")
 	// ...
 	resp := client.Do(req)
 
