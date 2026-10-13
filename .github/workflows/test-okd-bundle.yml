@@ -31,16 +31,10 @@ jobs:
       - name: Install required virtualization software
         run: |
           sudo apt-get update
-          sudo apt install qemu-system-x86 qemu-utils libvirt-daemon libvirt-daemon-system virtiofsd
-
-          # Work around GitHub runner/AppArmor incompatibility for libvirt/QEMU
-          sudo tee /etc/libvirt/qemu.conf >/dev/null <<'EOF'
-          security_driver = "none"
-          EOF
+          sudo apt install qemu-system-x86 qemu-utils virtiofsd
           sudo systemctl stop apparmor || true
-          sudo systemctl restart libvirtd
 
-          sudo usermod -a -G libvirt $USER
+          sudo usermod -a -G kvm $USER
       - name: Free disk space
         uses: palmsoftware/quick-cleanup@v0
         with:
@@ -52,6 +46,13 @@ jobs:
         run: |
           crc config set preset okd
           crc config set network-mode user
+      - name: Setup upterm session
+        uses: owenthereal/action-upterm@v2
+        with:
+          # Restrict SSH to the user who triggered/re-ran the workflow
+          limit-access-to-actor: true
+          # End the session if nobody connects
+          wait-timeout-minutes: 30
       - name: Setup the crc
         run: sudo -su $USER crc setup
       - name: Start the crc
