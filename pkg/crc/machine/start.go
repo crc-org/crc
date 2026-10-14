@@ -243,11 +243,6 @@ func configureSharedDirs(vm *virtualMachine, sshRunner *crcssh.Runner) error {
 			}
 
 		case "9p":
-			if vm.bundle.IsMicroshift() {
-				// temporarily disable 9P file sharing for microshift until
-				// new bundles are released
-				break
-			}
 			// change owner to core user to allow mounting to it as a non-root user
 			if _, _, err := sshRunner.RunPrivileged("Changing owner of mount directory", "chown", "core:core", mount.Target); err != nil {
 				return err
